@@ -15,19 +15,16 @@ pub enum TaskStatus {
     /// Task is pending execution
     Pending,
     /// Task has been assigned to a node
-    Assigned { node_id: String },
+    Assigned { nodeid: String },
     /// Task is currently running
-    Running {
-        node_id: String,
-        started_at: Instant,
-    },
+    Running { nodeid: String, started_at: Instant },
     /// Task completed successfully
     Completed {
-        node_id: String,
+        nodeid: String,
         completed_at: Instant,
     },
     /// Task failed with an error
-    Failed { node_id: String, error: String },
+    Failed { nodeid: String, error: String },
     /// Task was cancelled
     Cancelled,
     /// Task timed out
@@ -57,7 +54,7 @@ pub struct Task {
     pub timeout: Option<Duration>,
     pub dependencies: Vec<String>,
     pub retry_count: usize,
-    pub max_retries: usize,
+    pub maxretries: usize,
     pub created_at: Instant,
     pub status: TaskStatus,
 }
@@ -73,7 +70,7 @@ impl Task {
             timeout: Some(Duration::from_secs(300)), // 5 minutes default
             dependencies: Vec::new(),
             retry_count: 0,
-            max_retries: 3,
+            maxretries: 3,
             created_at: Instant::now(),
             status: TaskStatus::Pending,
         }
@@ -98,14 +95,14 @@ impl Task {
     }
 
     /// Set maximum retry count
-    pub fn retries(mut self, max_retries: usize) -> Self {
-        self.max_retries = max_retries;
+    pub fn retries(mut self, maxretries: usize) -> Self {
+        self.maxretries = maxretries;
         self
     }
 
     /// Check if task can be retried
     pub fn can_retry(&self) -> bool {
-        self.retry_count < self.max_retries
+        self.retry_count < self.maxretries
     }
 
     /// Increment retry count
@@ -174,9 +171,9 @@ impl Workflow {
 
     /// Add a task to the workflow
     pub fn add_task(&mut self, task: Task) {
-        let task_id = task.id.clone();
-        self.tasks.insert(task_id.clone(), task);
-        self.execution_order.push(task_id);
+        let taskid = task.id.clone();
+        self.tasks.insert(taskid.clone(), task);
+        self.execution_order.push(taskid);
     }
 
     /// Get tasks that are ready to execute (dependencies satisfied)
@@ -190,8 +187,8 @@ impl Workflow {
             .collect()
     }
 
-    fn are_dependencies_satisfied(&self, task_id: &str) -> bool {
-        if let Some(task) = self.tasks.get(task_id) {
+    fn are_dependencies_satisfied(&self, taskid: &str) -> bool {
+        if let Some(task) = self.tasks.get(taskid) {
             task.dependencies.iter().all(|dep_id| {
                 if let Some(dep_task) = self.tasks.get(dep_id) {
                     matches!(dep_task.status, TaskStatus::Completed { .. })
@@ -225,7 +222,7 @@ impl Workflow {
 /// Node information for orchestration
 #[derive(Debug, Clone)]
 pub struct OrchestratorNode {
-    pub node_id: String,
+    pub nodeid: String,
     pub address: SocketAddr,
     pub capacity: usize,
     pub current_load: usize,
@@ -235,9 +232,9 @@ pub struct OrchestratorNode {
 
 impl OrchestratorNode {
     /// Create a new orchestrator node
-    pub fn id(node_id: String, address: SocketAddr, capacity: usize) -> Self {
+    pub fn id(nodeid: String, address: SocketAddr, capacity: usize) -> Self {
         Self {
-            node_id,
+            nodeid,
             address,
             capacity,
             current_load: 0,
@@ -247,8 +244,8 @@ impl OrchestratorNode {
     }
 
     /// Create a new orchestrator node (alias for id)
-    pub fn new(node_id: String, address: SocketAddr, capacity: usize) -> Self {
-        Self::id(node_id, address, capacity)
+    pub fn new(nodeid: String, address: SocketAddr, capacity: usize) -> Self {
+        Self::id(nodeid, address, capacity)
     }
 
     /// Check if node can accept more tasks
@@ -296,7 +293,7 @@ impl OrchestrationEngine {
                 "Failed to acquire nodes lock".to_string(),
             ))
         })?;
-        nodes.insert(node.node_id.clone(), node);
+        nodes.insert(node.nodeid.clone(), node);
         Ok(())
     }
 
@@ -327,10 +324,10 @@ impl OrchestrationEngine {
 
     /// Submit a single task for execution
     pub fn submit_task(&self, task: Task) -> CoreResult<()> {
-        let task_id = task.id.clone();
+        let taskid = task.id.clone();
 
         // Create a single-task workflow
-        let mut workflow = Workflow::new(format!("workflow_{task_id}"), task.name.to_string());
+        let mut workflow = Workflow::new(format!("workflow_{taskid}"), task.name.to_string());
         workflow.add_task(task);
 
         self.submit_workflow(workflow)
@@ -364,8 +361,8 @@ impl OrchestrationEngine {
 
         // Process tasks in priority order
         let mut tasks_to_assign = Vec::new();
-        while let Some(task_id) = task_queue.pop_front() {
-            tasks_to_assign.push(task_id);
+        while let Some(taskid) = task_queue.pop_front() {
+            tasks_to_assign.push(taskid);
         }
 
         // Sort by priority
@@ -379,7 +376,7 @@ impl OrchestrationEngine {
             priority_b.cmp(&priority_a) // Higher priority first
         });
 
-        for task_id in tasks_to_assign {
+        for taskid in tasks_to_assign {
             // Find an available node
             if let Some(available_node) = nodes
                 .values_mut()
@@ -387,21 +384,21 @@ impl OrchestrationEngine {
                 .min_by_key(|node| node.current_load)
             {
                 // Assign task to node
-                if let Some(task) = self.find_task_mut(&task_id, &mut workflows) {
+                if let Some(task) = self.find_task_mut(&taskid, &mut workflows) {
                     task.status = TaskStatus::Running {
-                        node_id: available_node.node_id.clone(),
+                        nodeid: available_node.nodeid.clone(),
                         started_at: Instant::now(),
                     };
 
                     available_node.current_load += 1;
-                    running_tasks.insert(task_id, (available_node.node_id.clone(), Instant::now()));
+                    running_tasks.insert(taskid, (available_node.nodeid.clone(), Instant::now()));
                 } else {
                     // Task not found, put it back in queue
-                    task_queue.push_back(task_id);
+                    task_queue.push_back(taskid);
                 }
             } else {
                 // No available nodes, put task back in queue
-                task_queue.push_back(task_id);
+                task_queue.push_back(taskid);
             }
         }
 
@@ -410,11 +407,11 @@ impl OrchestrationEngine {
 
     fn find_task_priority(
         &self,
-        task_id: &str,
+        taskid: &str,
         workflows: &HashMap<String, Workflow>,
     ) -> Option<TaskPriority> {
         for workflow in workflows.values() {
-            if let Some(task) = workflow.tasks.get(task_id) {
+            if let Some(task) = workflow.tasks.get(taskid) {
                 return Some(task.priority);
             }
         }
@@ -423,11 +420,11 @@ impl OrchestrationEngine {
 
     fn find_task_mut<'a>(
         &self,
-        task_id: &str,
+        taskid: &str,
         workflows: &'a mut HashMap<String, Workflow>,
     ) -> Option<&'a mut Task> {
         for workflow in workflows.values_mut() {
-            if let Some(task) = workflow.tasks.get_mut(task_id) {
+            if let Some(task) = workflow.tasks.get_mut(taskid) {
                 return Some(task);
             }
         }
@@ -435,7 +432,7 @@ impl OrchestrationEngine {
     }
 
     /// Mark a task as completed
-    pub fn complete_task(&mut self, task_id: &str) -> CoreResult<()> {
+    pub fn complete_task(&mut self, taskid: &str) -> CoreResult<()> {
         let mut workflows = self.workflows.lock().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire workflows lock".to_string(),
@@ -454,27 +451,27 @@ impl OrchestrationEngine {
             ))
         })?;
 
-        // Get the node_id from running tasks
-        let node_id = running_tasks
-            .get(task_id)
-            .map(|(node_id, _)| node_id.clone())
+        // Get the nodeid from running tasks
+        let nodeid = running_tasks
+            .get(taskid)
+            .map(|(nodeid, _)| nodeid.clone())
             .unwrap_or_else(|| "unknown".to_string());
 
         // Update task status
-        if let Some(task) = self.find_task_mut(task_id, &mut workflows) {
+        if let Some(task) = self.find_task_mut(taskid, &mut workflows) {
             task.status = TaskStatus::Completed {
-                node_id: node_id.clone(),
+                nodeid: nodeid.clone(),
                 completed_at: Instant::now(),
             };
         }
 
         // Update node load
-        if let Some(node) = nodes.get_mut(&node_id) {
+        if let Some(node) = nodes.get_mut(&nodeid) {
             node.current_load = node.current_load.saturating_sub(1);
         }
 
         // Remove from running tasks
-        running_tasks.remove(task_id);
+        running_tasks.remove(taskid);
 
         // Add newly ready tasks to queue
         self.queue_ready_tasks(&workflows)?;

@@ -85,11 +85,11 @@ impl RobustLoss for SquaredLoss {
         0.5 * r * r
     }
 
-    fn weight(&self_r: f64) -> f64 {
+    fn weight(&self, r: f64) -> f64 {
         1.0
     }
 
-    fn weight_derivative(&self_r: f64) -> f64 {
+    fn weight_derivative(&self, r: f64) -> f64 {
         0.0
     }
 }
@@ -108,9 +108,9 @@ impl HuberLoss {
     ///
     /// The delta parameter determines the transition from quadratic to linear behavior.
     /// Smaller delta provides more robustness but less efficiency.
-    pub fn new(_delta: f64) -> Self {
+    pub fn new(delta: f64) -> Self {
         assert!(_delta > 0.0, "Delta must be positive");
-        HuberLoss { _delta }
+        HuberLoss { delta: _delta }
     }
 }
 
@@ -402,7 +402,7 @@ where
         prev_weights = weights.clone();
 
         // Compute Jacobian
-        let (jac, _jac_evals) = match &jacobian {
+        let (jac, jac_evals) = match &jacobian {
             Some(jac_fn) => {
                 let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
                 njev += 1;
@@ -534,7 +534,7 @@ where
 /// Compute the total robust cost
 #[allow(dead_code)]
 fn compute_robust_cost<L: RobustLoss>(residuals: &Array1<f64>, loss: &L) -> f64 {
-    _residuals.iter().map(|&r| loss.loss(r)).sum()
+    residuals.iter().map(|&r| loss.loss(r)).sum()
 }
 
 /// Simple linear system solver (same as in least_squares.rs)
@@ -597,13 +597,13 @@ mod tests {
     fn test_robust_least_squares_linear() {
         // Linear regression with outliers
 
-        fn residual(_x: &[f64], data: &[f64]) -> Array1<f64> {
+        fn residual(x: &[f64], data: &[f64]) -> Array1<f64> {
             // data contains t values and y values concatenated
             let n = data.len() / 2;
             let t_values = &data[0..n];
             let y_values = &data[n..];
 
-            let params = _x;
+            let params = x;
             let mut res = Array1::zeros(n);
             for i in 0..n {
                 res[i] = y_values[i] - (params[0] + params[1] * t_values[i]);
@@ -611,7 +611,7 @@ mod tests {
             res
         }
 
-        fn jacobian(_x: &[f64], data: &[f64]) -> Array2<f64> {
+        fn jacobian(x: &[f64], data: &[f64]) -> Array2<f64> {
             let n = data.len() / 2;
             let t_values = &data[0..n];
 
@@ -649,7 +649,7 @@ mod tests {
             array![x[0] - 1.0, x[1] - 2.0]
         }
 
-        fn jacobian(_x: &[f64], _: &[f64]) -> Array2<f64> {
+        fn jacobian(x: &[f64], _: &[f64]) -> Array2<f64> {
             array![[1.0, 0.0], [0.0, 1.0]]
         }
 

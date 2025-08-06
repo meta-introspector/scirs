@@ -16,7 +16,7 @@ fn main() -> CoreResult<()> {
     demo_basic_conversion()?;
 
     // Error handling in batch conversions
-    demo_error_handling()?;
+    demoerror_handling()?;
 
     // SIMD-accelerated conversions
     demo_simd_conversions()?;
@@ -77,7 +77,7 @@ fn demo_basic_conversion() -> CoreResult<()> {
 
 /// Demonstrate error handling in batch conversions
 #[allow(dead_code)]
-fn demo_error_handling() -> CoreResult<()> {
+fn demoerror_handling() -> CoreResult<()> {
     println!("2. Error Handling in Batch Conversions");
     println!("======================================");
 
@@ -94,7 +94,7 @@ fn demo_error_handling() -> CoreResult<()> {
     ];
 
     // Convert with error reporting
-    let (converted, errors) = converter.convert_slice_with_errors::<f64, f32>(&problematic_data);
+    let (converted, errors) = converter.convert_slice_witherrors::<f64, f32>(&problematic_data);
 
     println!("Input data: {} elements", problematic_data.len());
     println!("Successfully converted: {} elements", converted.len());

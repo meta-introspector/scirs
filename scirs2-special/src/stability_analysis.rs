@@ -629,7 +629,7 @@ pub fn generate_stability_report() -> String {
 }
 
 #[allow(dead_code)]
-fn format_issue(_issue: &StabilityIssue) -> String {
+fn format_issue(issue: &StabilityIssue) -> String {
     match _issue {
         StabilityIssue::Overflow { params } => {
             let params_str = format_params(params);
@@ -681,7 +681,7 @@ fn format_issue(_issue: &StabilityIssue) -> String {
 }
 
 #[allow(dead_code)]
-fn format_params(_params: &[(String, f64)]) -> String {
+fn format_params(params: &[(String, f64)]) -> String {
     _params
         .iter()
         .map(|(name, value)| format!("{name}={value}"))

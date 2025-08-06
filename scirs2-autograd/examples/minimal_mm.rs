@@ -1,4 +1,4 @@
-use ag::tensor__ops::*;
+use ag::tensor_ops::*;
 use scirs2_autograd as ag;
 
 #[allow(dead_code)]

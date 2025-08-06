@@ -197,14 +197,14 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for Matrix2NormOp {
 
 /// Compute matrix 1-norm (maximum column sum)
 #[allow(dead_code)]
-fn compute_matrix_1_norm<F: Float>(_matrix: &ArrayView2<F>) -> F {
-    let (m, n) = _matrix.dim();
+fn compute_matrix_1_norm<F: Float>(matrix: &ArrayView2<F>) -> F {
+    let (m, n) = matrix.dim();
     let mut max_col_sum = F::zero();
 
     for j in 0..n {
         let mut col_sum = F::zero();
         for i in 0..m {
-            col_sum += _matrix[[i, j]].abs();
+            col_sum += matrix[[i, j]].abs();
         }
         if col_sum > max_col_sum {
             max_col_sum = col_sum;
@@ -216,8 +216,8 @@ fn compute_matrix_1_norm<F: Float>(_matrix: &ArrayView2<F>) -> F {
 
 /// Compute gradient for matrix 1-norm
 #[allow(dead_code)]
-fn compute_matrix_1_norm_gradient<F: Float>(_matrix: &ArrayView2<F>, grad_scalar: F) -> Array2<F> {
-    let (m, n) = _matrix.dim();
+fn compute_matrix_1_norm_gradient<F: Float>(_matrix: &ArrayView2<F>, gradscalar: F) -> Array2<F> {
+    let (m, n) = matrix.dim();
     let mut grad_matrix = Array2::zeros((m, n));
 
     // Find column with maximum sum
@@ -227,7 +227,7 @@ fn compute_matrix_1_norm_gradient<F: Float>(_matrix: &ArrayView2<F>, grad_scalar
     for j in 0..n {
         let mut col_sum = F::zero();
         for i in 0..m {
-            col_sum += _matrix[[i, j]].abs();
+            col_sum += matrix[[i, j]].abs();
         }
         if col_sum > max_col_sum {
             max_col_sum = col_sum;
@@ -237,7 +237,7 @@ fn compute_matrix_1_norm_gradient<F: Float>(_matrix: &ArrayView2<F>, grad_scalar
 
     // Gradient is sign of elements in the maximum column
     for i in 0..m {
-        let elem = _matrix[[i, max_col]];
+        let elem = matrix[[i, max_col]];
         grad_matrix[[i, max_col]] = if elem > F::zero() {
             grad_scalar
         } else if elem < F::zero() {
@@ -252,14 +252,14 @@ fn compute_matrix_1_norm_gradient<F: Float>(_matrix: &ArrayView2<F>, grad_scalar
 
 /// Compute matrix infinity-norm (maximum row sum)
 #[allow(dead_code)]
-fn compute_matrix_inf_norm<F: Float>(_matrix: &ArrayView2<F>) -> F {
-    let (m, n) = _matrix.dim();
+fn compute_matrix_inf_norm<F: Float>(matrix: &ArrayView2<F>) -> F {
+    let (m, n) = matrix.dim();
     let mut max_row_sum = F::zero();
 
     for i in 0..m {
         let mut row_sum = F::zero();
         for j in 0..n {
-            row_sum += _matrix[[i, j]].abs();
+            row_sum += matrix[[i, j]].abs();
         }
         if row_sum > max_row_sum {
             max_row_sum = row_sum;
@@ -275,7 +275,7 @@ fn compute_matrix_inf_norm_gradient<F: Float>(
     _matrix: &ArrayView2<F>,
     grad_scalar: F,
 ) -> Array2<F> {
-    let (m, n) = _matrix.dim();
+    let (m, n) = matrix.dim();
     let mut grad_matrix = Array2::zeros((m, n));
 
     // Find row with maximum sum
@@ -285,7 +285,7 @@ fn compute_matrix_inf_norm_gradient<F: Float>(
     for i in 0..m {
         let mut row_sum = F::zero();
         for j in 0..n {
-            row_sum += _matrix[[i, j]].abs();
+            row_sum += matrix[[i, j]].abs();
         }
         if row_sum > max_row_sum {
             max_row_sum = row_sum;
@@ -295,7 +295,7 @@ fn compute_matrix_inf_norm_gradient<F: Float>(
 
     // Gradient is sign of elements in the maximum row
     for j in 0..n {
-        let elem = _matrix[[max_row, j]];
+        let elem = matrix[[max_row, j]];
         grad_matrix[[max_row, j]] = if elem > F::zero() {
             grad_scalar
         } else if elem < F::zero() {
@@ -310,7 +310,7 @@ fn compute_matrix_inf_norm_gradient<F: Float>(
 
 /// Compute matrix 2-norm (largest singular value)
 #[allow(dead_code)]
-fn compute_matrix_2_norm<F: Float + ndarray::ScalarOperand>(_matrix: &ArrayView2<F>) -> F {
+fn compute_matrix_2_norm<F: Float + ndarray::ScalarOperand>(matrix: &ArrayView2<F>) -> F {
     // Use power iteration to find the largest singular value
     let (_, sigma_max) = power_iteration_2norm(_matrix, 50, F::from(1e-8).unwrap());
     sigma_max
@@ -411,8 +411,8 @@ fn compute_matrix_2_norm_gradient<F: Float + ndarray::ScalarOperand>(
 
 /// Compute the 1-norm of a matrix (maximum column sum)
 #[allow(dead_code)]
-pub fn norm1<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _matrix.graph();
+pub fn norm1<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = matrix.graph();
     Tensor::builder(g)
         .append_input(_matrix, false)
         .build(Matrix1NormOp)
@@ -420,8 +420,8 @@ pub fn norm1<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
 
 /// Compute the 2-norm of a matrix (largest singular value)
 #[allow(dead_code)]
-pub fn norm2<'g, F: Float + ndarray::ScalarOperand>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _matrix.graph();
+pub fn norm2<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = matrix.graph();
     Tensor::builder(g)
         .append_input(_matrix, false)
         .build(Matrix2NormOp)
@@ -429,8 +429,8 @@ pub fn norm2<'g, F: Float + ndarray::ScalarOperand>(_matrix: &Tensor<'g, F>) -> 
 
 /// Compute the infinity-norm of a matrix (maximum row sum)
 #[allow(dead_code)]
-pub fn norminf<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _matrix.graph();
+pub fn norminf<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = matrix.graph();
     Tensor::builder(g)
         .append_input(_matrix, false)
         .build(MatrixInfNormOp)
@@ -439,6 +439,6 @@ pub fn norminf<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
 /// Compute the Frobenius norm of a matrix
 /// This is an alias for the Frobenius norm in norm_ops.rs
 #[allow(dead_code)]
-pub fn normfro<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+pub fn normfro<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     crate::tensor_ops::norm_ops::frobenius_norm(_matrix)
 }

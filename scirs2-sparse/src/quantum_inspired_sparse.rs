@@ -165,11 +165,11 @@ enum QuantumCode {
 
 impl QuantumSparseProcessor {
     /// Create a new quantum-inspired sparse matrix processor
-    pub fn new(_config: QuantumSparseConfig) -> Self {
-        let qubit_count = _config.qubit_count;
+    pub fn new(config: QuantumSparseConfig) -> Self {
+        let qubit_count = config.qubit_count;
         let state_size = 1 << qubit_count; // 2^n states
 
-        let logical_qubit_count = _config.logical_qubits;
+        let logical_qubit_count = config.logical_qubits;
         let mut logical_qubits = Vec::new();
 
         // Initialize logical qubits with error correction
@@ -194,7 +194,7 @@ impl QuantumSparseProcessor {
         };
 
         Self {
-            config: _config,
+            config: config,
             quantum_state,
             measurement_cache: HashMap::new(),
             operation_counter: AtomicUsize::new(0),
@@ -778,7 +778,7 @@ impl QuantumSparseProcessor {
     }
 
     /// Measure syndrome strength for a logical qubit
-    fn measure_syndrome_strength(&self, logical_qubit: &LogicalQubit) -> f64 {
+    fn measure_syndrome_strength(&self, logicalqubit: &LogicalQubit) -> f64 {
         let mut syndrome_strength = 0.0;
 
         for &physical_qubit in &logical_qubit.physical_qubits {

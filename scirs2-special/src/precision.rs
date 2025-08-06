@@ -347,7 +347,7 @@ pub mod extreme {
     /// Rational approximation using Padé approximants
     ///
     /// Computes P(x)/Q(x) where P and Q are polynomials
-    pub fn pade_approximant(x: f64, p_coeffs: &[f64], q_coeffs: &[f64]) -> SpecialResult<f64> {
+    pub fn pade_approximant(x: f64, p_coeffs: &[f64], qcoeffs: &[f64]) -> SpecialResult<f64> {
         if p_coeffs.is_empty() || q_coeffs.is_empty() {
             return Err(SpecialError::DomainError(
                 "Coefficient arrays cannot be empty".to_string(),
@@ -383,16 +383,16 @@ pub mod extreme {
 /// Error analysis and precision estimation utilities
 pub mod error_analysis {
     /// Estimate the relative error in a computation
-    pub fn relative_error(_computed: f64, exact: f64) -> f64 {
+    pub fn relative_error(computed: f64, exact: f64) -> f64 {
         if exact == 0.0 {
-            _computed.abs()
+            computed.abs()
         } else {
             ((_computed - exact) / exact).abs()
         }
     }
 
     /// Estimate the number of accurate decimal digits
-    pub fn accurate_digits(_computed: f64, exact: f64) -> u32 {
+    pub fn accurate_digits(computed: f64, exact: f64) -> u32 {
         let rel_err = relative_error(_computed, exact);
         if rel_err == 0.0 {
             16 // Maximum for f64
@@ -402,7 +402,7 @@ pub mod error_analysis {
     }
 
     /// Check if a result meets the required precision threshold
-    pub fn check_precision(_computed: f64, exact: f64, required_digits: u32) -> bool {
+    pub fn check_precision(_computed: f64, exact: f64, requireddigits: u32) -> bool {
         accurate_digits(_computed, exact) >= required_digits
     }
 }

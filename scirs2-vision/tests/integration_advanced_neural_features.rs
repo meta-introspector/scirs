@@ -326,8 +326,8 @@ fn test_advanced_features_error_handling() -> Result<()> {
 // Helper functions
 
 #[allow(dead_code)]
-fn create_test_image(_size: (usize, usize)) -> Array2<f32> {
-    let (height, width) = _size;
+fn create_test_image(size: (usize, usize)) -> Array2<f32> {
+    let (height, width) = size;
     Array2::fromshape_fn((height, width), |(y, x)| {
         let fx = x as f32 / width as f32;
         let fy = y as f32 / height as f32;
@@ -340,8 +340,8 @@ fn create_test_image(_size: (usize, usize)) -> Array2<f32> {
 }
 
 #[allow(dead_code)]
-fn create_transformed_image(_image: &Array2<f32>) -> Result<Array2<f32>> {
-    let (height, width) = _image.dim();
+fn create_transformed_image(image: &Array2<f32>) -> Result<Array2<f32>> {
+    let (height, width) = image.dim();
     let mut transformed = Array2::zeros((height, width));
 
     // Apply simple translation
@@ -354,7 +354,7 @@ fn create_transformed_image(_image: &Array2<f32>) -> Result<Array2<f32>> {
             let src_y = y.saturating_sub(dy);
 
             if src_x < width && src_y < height {
-                transformed[[y, x]] = _image[[src_y, src_x]];
+                transformed[[y, x]] = image[[src_y, src_x]];
             }
         }
     }
@@ -363,15 +363,15 @@ fn create_transformed_image(_image: &Array2<f32>) -> Result<Array2<f32>> {
 }
 
 #[allow(dead_code)]
-fn add_noise(_image: &Array2<f32>, noise_level: f32) -> Array2<f32> {
-    _image.mapv(|x| {
+fn add_noise(_image: &Array2<f32>, noiselevel: f32) -> Array2<f32> {
+    image.mapv(|x| {
         let noise = (rand::random::<f32>() - 0.5) * noise_level;
         (x + noise).clamp(0.0, 1.0)
     })
 }
 
 #[allow(dead_code)]
-fn create_synthetic_detections(_frame_idx: usize) -> Vec<Detection> {
+fn create_synthetic_detections(_frameidx: usize) -> Vec<Detection> {
     let mut detections = Vec::new();
 
     // Create 2-3 moving objects

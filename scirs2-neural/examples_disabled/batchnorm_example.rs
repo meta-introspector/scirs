@@ -8,7 +8,7 @@ use scirs2_neural::layers::{BatchNorm, Conv2D, Dense, Layer, PaddingMode};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Batch Normalization Example");
     // Initialize random number generator with a fixed seed for reproducibility
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Create a sample CNN architecture with batch normalization
     // 1. Define input dimensions
     let batch_size = 2;

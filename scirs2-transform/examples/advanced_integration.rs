@@ -615,8 +615,8 @@ fn advanced_optimization(
 }
 
 #[allow(dead_code)]
-fn evaluate_pipeline_quality(_pipeline: &[TransformationConfig]) -> f64 {
-    if _pipeline.is_empty() {
+fn evaluate_pipeline_quality(pipeline: &[TransformationConfig]) -> f64 {
+    if pipeline.is_empty() {
         return 0.0;
     }
 
@@ -624,5 +624,5 @@ fn evaluate_pipeline_quality(_pipeline: &[TransformationConfig]) -> f64 {
         .iter()
         .map(|config| config.expected_performance)
         .sum::<f64>()
-        / _pipeline.len() as f64
+        / pipeline.len() as f64
 }

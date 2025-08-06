@@ -246,7 +246,7 @@ pub fn remez(
         let mut a_matrix = vec![vec![0.0; r]; r];
         let mut b_vector = vec![0.0; r];
 
-        for (i, &ext_idx) in extremal_freqs._iter().enumerate() {
+        for (i, &ext_idx) in extremal_freqs.iter().enumerate() {
             let omega = omega_grid[ext_idx];
 
             // Fill the matrix for the linear system
@@ -271,7 +271,7 @@ pub fn remez(
 
             // Evaluate the polynomial
             let mut p_omega = 0.0;
-            for (j, &coeff) in coeffs._iter().enumerate().take(r - 1) {
+            for (j, &coeff) in coeffs.iter().enumerate().take(r - 1) {
                 p_omega += coeff * (j as f64 * omega).cos();
             }
 
@@ -322,7 +322,7 @@ pub fn remez(
                 let n = i as f64 - (numtaps as f64 - 1.0) / 2.0;
 
                 *coeff = 0.0;
-                for (j, &c) in coeffs._iter().enumerate().take(r - 1) {
+                for (j, &c) in coeffs.iter().enumerate().take(r - 1) {
                     if j == 0 {
                         *coeff += c;
                     } else {
@@ -364,7 +364,7 @@ pub fn remez(
 ///
 /// * Window coefficients as a vector
 #[allow(dead_code)]
-fn generate_window(_length: usize, window_type: &str) -> SignalResult<Vec<f64>> {
+fn generate_window(_length: usize, windowtype: &str) -> SignalResult<Vec<f64>> {
     let mut window = vec![0.0; _length];
 
     match window_type.to_lowercase().as_str() {

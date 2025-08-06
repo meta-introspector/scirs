@@ -104,7 +104,7 @@ where
     /// # Returns
     ///
     /// A new ParallelLocalPolynomialRegression model
-    pub fn new(_points: Array2<F>, values: Array1<F>, bandwidth: F) -> InterpolateResult<Self> {
+    pub fn new(points: Array2<F>, values: Array1<F>, bandwidth: F) -> InterpolateResult<Self> {
         // Create standard LOESS model
         let loess = LocalPolynomialRegression::new(_points.clone(), values, bandwidth)?;
 
@@ -336,7 +336,7 @@ where
 
 /// Apply weight function to a normalized distance
 #[allow(dead_code)]
-fn apply_weight<F: Float + FromPrimitive>(r: F, weight_fn: WeightFunction) -> F {
+fn apply_weight<F: Float + FromPrimitive>(r: F, weightfn: WeightFunction) -> F {
     match weight_fn {
         WeightFunction::Gaussian => (-r * r).exp(),
         WeightFunction::WendlandC2 => {

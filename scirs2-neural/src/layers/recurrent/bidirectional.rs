@@ -308,13 +308,13 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Bidi
         Ok(grad_input)
     }
 
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         // Update forward layer
-        self.forward_layer.update(learning_rate)?;
+        self.forward_layer.update(learningrate)?;
 
         // Update backward layer if present
         if let Some(ref mut backward_layer) = self.backward_layer {
-            backward_layer.update(learning_rate)?;
+            backward_layer.update(learningrate)?;
         }
 
         Ok(())

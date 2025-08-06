@@ -533,33 +533,33 @@ where
 
 /// Enhanced Gram-Schmidt orthogonalization with multiple passes
 #[allow(dead_code)]
-fn enhanced_gram_schmidt_orthogonalization<F>(_vectors: &mut Array2<F>, tolerance: F)
+fn enhanced_gram_schmidt_orthogonalization<F>(vectors: &mut Array2<F>, tolerance: F)
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
-    let n = _vectors.ncols();
+    let n = vectors.ncols();
     let num_passes = 3; // Multiple passes for better orthogonality
 
     for _pass in 0..num_passes {
         for i in 0..n {
             // Orthogonalize against all previous _vectors
             for j in 0..i {
-                let vi = _vectors.column(i).to_owned();
-                let vj = _vectors.column(j).to_owned();
+                let vi = vectors.column(i).to_owned();
+                let vj = vectors.column(j).to_owned();
                 let proj = kahan_dot_product(&vi, &vj);
 
-                for k in 0.._vectors.nrows() {
-                    _vectors[[k, i]] -= proj * vj[k];
+                for k in 0..vectors.nrows() {
+                    vectors[[k, i]] -= proj * vj[k];
                 }
             }
 
             // Normalize with enhanced precision
-            let vi = _vectors.column(i).to_owned();
+            let vi = vectors.column(i).to_owned();
             let norm = kahan_dot_product(&vi, &vi).sqrt();
 
             if norm > tolerance {
-                for k in 0.._vectors.nrows() {
-                    _vectors[[k, i]] /= norm;
+                for k in 0..vectors.nrows() {
+                    vectors[[k, i]] /= norm;
                 }
             }
         }
@@ -760,7 +760,7 @@ where
 /// assert!(tol > 1e-13); // Looser tolerance for ill-conditioned matrix
 /// ```
 #[allow(dead_code)]
-pub fn adaptive_tolerance_selection<F>(_condition_number: F) -> F
+pub fn adaptive_tolerance_selection<F>(condition_number: F) -> F
 where
     F: Float + NumAssign,
 {
@@ -788,7 +788,7 @@ where
         F::from(1e8).unwrap_or_else(|| F::max_value() / F::from(10000.0).unwrap_or(F::one()));
     let threshold_1e4 = F::from(1e4).unwrap_or_else(|| F::from(10000.0).unwrap_or(F::one()));
 
-    if _condition_number > threshold_1e12 {
+    if condition_number > threshold_1e12 {
         base_tol
             * F::from(1000.0).unwrap_or_else(|| {
                 let ten = F::one()
@@ -803,9 +803,9 @@ where
                     + F::one();
                 ten * ten * ten
             })
-    } else if _condition_number > threshold_1e8 {
+    } else if condition_number > threshold_1e8 {
         base_tol * hundred
-    } else if _condition_number > threshold_1e4 {
+    } else if condition_number > threshold_1e4 {
         base_tol
             * F::from(10.0).unwrap_or_else(|| {
                 F::one()
@@ -858,10 +858,10 @@ mod tests {
 
         // Test eigvalsh
         let w1 = eigvalsh(&a.view(), None).unwrap();
-        let (w2_) = eigh(&a.view(), None).unwrap();
+        let (w2_, _) = eigh(&a.view(), None).unwrap();
 
         for i in 0..w1.len() {
-            assert_relative_eq!(w1[i], w2[i], epsilon = 1e-10);
+            assert_relative_eq!(w1[i], w2_[i], epsilon = 1e-10);
         }
     }
 

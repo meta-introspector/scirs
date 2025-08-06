@@ -1,4 +1,4 @@
-use ag::tensor__ops::{self, checkpoint, matmul, ones, sum_all, tanh, CheckpointProfiler};
+use ag::tensor_ops::{self, checkpoint, matmul, ones, sum_all, tanh, CheckpointProfiler};
 use scirs2_autograd as ag;
 use std::time::Instant;
 

@@ -14,7 +14,7 @@ use ndarray::s;
 
 use crate::error::{SignalError, SignalResult};
 use crate::utilities::spectral::spectral_centroid;
-use ndarray::{ Array2, Array3, ArrayView1, ArrayViewMut1};
+use ndarray::{Array2, Array3, ArrayView1, ArrayViewMut1};
 use num_complex::Complex64;
 use rustfft::FftPlanner;
 use scirs2_core::parallel_ops::*;
@@ -131,7 +131,8 @@ pub fn simd_autocorrelation(
     let mut autocorr = vec![0.0; max_lag + 1];
 
     if n < config.simd_threshold || config.force_scalar {
-        return scalar_autocorrelation(signal, max_lag);
+        scalar_autocorrelation(signal, &mut autocorr, max_lag)?;
+        return Ok(autocorr);
     }
 
     let caps = PlatformCapabilities::detect();
@@ -141,7 +142,8 @@ pub fn simd_autocorrelation(
     } else if caps.simd_available {
         unsafe { sse_autocorrelation(signal, &mut autocorr, max_lag) }?;
     } else {
-        return scalar_autocorrelation(signal, max_lag);
+        scalar_autocorrelation(signal, &mut autocorr, max_lag)?;
+        return Ok(autocorr);
     }
 
     Ok(autocorr)
@@ -193,7 +195,8 @@ pub fn simd_cross_correlation(
     let mut result = vec![0.0; output_len];
 
     if n1.min(n2) < config.simd_threshold || config.force_scalar {
-        return scalar_cross_correlation(signal1, signal2, mode);
+        scalar_cross_correlation(signal1, signal2, &mut result, mode)?;
+        return Ok(result);
     }
 
     let caps = PlatformCapabilities::detect();
@@ -203,7 +206,8 @@ pub fn simd_cross_correlation(
     } else if caps.simd_available {
         unsafe { sse_cross_correlation(signal1, signal2, &mut result, mode) }?;
     } else {
-        return scalar_cross_correlation(signal1, signal2, mode);
+        scalar_cross_correlation(signal1, signal2, &mut result, mode)?;
+        return Ok(result);
     }
 
     Ok(result)
@@ -288,15 +292,15 @@ pub fn simd_apply_window(
 // Scalar fallback implementations
 
 #[allow(dead_code)]
-fn scalar_fir_filter(_input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
-    let n = _input.len();
+fn scalar_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
+    let n = input.len();
     let m = coeffs.len();
 
     for i in 0..n {
         let mut sum = 0.0;
         for j in 0..m {
             if i >= j {
-                sum += _input[i - j] * coeffs[j];
+                sum += input[i - j] * coeffs[j];
             }
         }
         output[i] = sum;
@@ -306,30 +310,30 @@ fn scalar_fir_filter(_input: &[f64], coeffs: &[f64], output: &mut [f64]) -> Sign
 }
 
 #[allow(dead_code)]
-fn scalar_autocorrelation(_signal: &[f64], max_lag: usize) -> SignalResult<Vec<f64>> {
-    let n = _signal.len();
-    let mut autocorr = vec![0.0; max_lag + 1];
+pub fn scalar_autocorrelation(_signal: &[f64], autocorr: &mut [f64], maxlag: usize) -> SignalResult<()> {
+    let n = signal.len();
 
     for _lag in 0..=max_lag {
         let mut sum = 0.0;
-        let valid_length = n - _lag;
+        let valid_length = n - lag;
 
         for i in 0..valid_length {
-            sum += _signal[i] * _signal[i + _lag];
+            sum += signal[i] * signal[i + _lag];
         }
 
         autocorr[_lag] = sum / valid_length as f64;
     }
 
-    Ok(autocorr)
+    Ok(())
 }
 
 #[allow(dead_code)]
-fn scalar_cross_correlation(
+pub fn scalar_cross_correlation(
     signal1: &[f64],
     signal2: &[f64],
+    result: &mut [f64],
     mode: &str,
-) -> SignalResult<Vec<f64>> {
+) -> SignalResult<()> {
     let n1 = signal1.len();
     let n2 = signal2.len();
 
@@ -360,7 +364,7 @@ fn scalar_cross_correlation(
         result[i] = sum;
     }
 
-    Ok(result)
+    Ok(())
 }
 
 #[allow(dead_code)]
@@ -381,8 +385,8 @@ fn scalar_complex_butterfly(
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
-unsafe fn avx2_fir_filter(_input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
-    let n = _input.len();
+unsafe fn avx2_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
+    let n = input.len();
     let m = coeffs.len();
 
     // Process 4 samples at a time with AVX2
@@ -412,7 +416,7 @@ unsafe fn avx2_fir_filter(_input: &[f64], coeffs: &[f64], output: &mut [f64]) ->
         let mut sum = 0.0;
         for j in 0..m {
             if i >= j {
-                sum += _input[i - j] * coeffs[j];
+                sum += input[i - j] * coeffs[j];
             }
         }
         output[i] = sum;
@@ -429,14 +433,14 @@ unsafe fn avx512_fir_filter(
     output: &mut [f64],
 ) -> SignalResult<()> {
     // Fallback to scalar implementation until AVX-512 is stabilized
-    let n = _input.len();
+    let n = input.len();
     let m = coeffs.len();
 
     for i in 0..n {
         let mut sum = 0.0;
         for j in 0..m {
             if i >= j {
-                sum += _input[i - j] * coeffs[j];
+                sum += input[i - j] * coeffs[j];
             }
         }
         output[i] = sum;
@@ -459,8 +463,8 @@ unsafe fn avx512_fir_filter(
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
-unsafe fn sse_fir_filter(_input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
-    let n = _input.len();
+unsafe fn sse_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
+    let n = input.len();
     let m = coeffs.len();
 
     // Process 2 samples at a time with SSE
@@ -490,7 +494,7 @@ unsafe fn sse_fir_filter(_input: &[f64], coeffs: &[f64], output: &mut [f64]) -> 
         let mut sum = 0.0;
         for j in 0..m {
             if i >= j {
-                sum += _input[i - j] * coeffs[j];
+                sum += input[i - j] * coeffs[j];
             }
         }
         output[i] = sum;
@@ -509,7 +513,7 @@ unsafe fn avx2_autocorrelation(
     let n = signal.len();
 
     for _lag in 0..=max_lag {
-        let valid_length = n - _lag;
+        let valid_length = n - lag;
         let simd_width = 4;
         let simd_chunks = valid_length / simd_width;
 
@@ -518,7 +522,7 @@ unsafe fn avx2_autocorrelation(
         for chunk in 0..simd_chunks {
             let idx = chunk * simd_width;
             let vec1 = _mm256_loadu_pd(signal.as_ptr().add(idx));
-            let vec2 = _mm256_loadu_pd(signal.as_ptr().add(idx + _lag));
+            let vec2 = _mm256_loadu_pd(signal.as_ptr().add(idx + lag));
             sum_vec = _mm256_fmadd_pd(vec1, vec2, sum_vec);
         }
 
@@ -547,7 +551,7 @@ unsafe fn sse_autocorrelation(
     let n = signal.len();
 
     for _lag in 0..=max_lag {
-        let valid_length = n - _lag;
+        let valid_length = n - lag;
         let simd_width = 2;
         let simd_chunks = valid_length / simd_width;
 
@@ -556,7 +560,7 @@ unsafe fn sse_autocorrelation(
         for chunk in 0..simd_chunks {
             let idx = chunk * simd_width;
             let vec1 = _mm_loadu_pd(signal.as_ptr().add(idx));
-            let vec2 = _mm_loadu_pd(signal.as_ptr().add(idx + _lag));
+            let vec2 = _mm_loadu_pd(signal.as_ptr().add(idx + lag));
             sum_vec = _mm_add_pd(sum_vec_mm_mul_pd(vec1, vec2));
         }
 
@@ -639,9 +643,7 @@ unsafe fn sse_cross_correlation(
     mode: &str,
 ) -> SignalResult<()> {
     // SSE implementation (simplified)
-    return scalar_cross_correlation(signal1, signal2, mode).map(|r| {
-        result.copy_from_slice(&r);
-    });
+    scalar_cross_correlation(signal1, signal2, result, mode)
 }
 
 #[cfg(target_arch = "x86_64")]
@@ -722,7 +724,7 @@ unsafe fn sse_apply_window(
     window: &[f64],
     output: &mut [f64],
 ) -> SignalResult<()> {
-    let n = _signal.len();
+    let n = signal.len();
     let simd_width = 2;
     let simd_chunks = n / simd_width;
 
@@ -736,7 +738,7 @@ unsafe fn sse_apply_window(
 
     // Handle remaining elements
     for i in (simd_chunks * simd_width)..n {
-        output[i] = _signal[i] * window[i];
+        output[i] = signal[i] * window[i];
     }
 
     Ok(())
@@ -744,13 +746,13 @@ unsafe fn sse_apply_window(
 
 /// Performance benchmark for SIMD operations
 #[allow(dead_code)]
-pub fn benchmark_simd_operations(_signal_length: usize) -> SignalResult<()> {
-    let signal: Vec<f64> = (0.._signal_length)
+pub fn benchmark_simd_operations(signallength: usize) -> SignalResult<()> {
+    let signal: Vec<f64> = (0..signal_length)
         .map(|i| (i as f64 * 0.1).sin())
         .collect();
 
     let coeffs: Vec<f64> = vec![0.1, 0.2, 0.3, 0.2, 0.1]; // Simple 5-tap filter
-    let mut output = vec![0.0; _signal_length];
+    let mut output = vec![0.0; signal_length];
 
     let config = SimdConfig::default();
 
@@ -773,7 +775,7 @@ pub fn benchmark_simd_operations(_signal_length: usize) -> SignalResult<()> {
     }
     let scalar_time = start.elapsed();
 
-    println!("FIR Filter Benchmark (_length: {}):", signal_length);
+    println!("FIR Filter Benchmark (length: {}):", signal_length);
     println!("  SIMD time: {:?}", simd_time);
     println!("  Scalar time: {:?}", scalar_time);
     println!(
@@ -858,11 +860,11 @@ pub fn simd_spectral_centroid(
 
 /// Scalar fallback for spectral centroid
 #[allow(dead_code)]
-fn scalar_spectral_centroid(_magnitude_spectrum: &[f64], frequencies: &[f64]) -> SignalResult<f64> {
+fn scalar_spectral_centroid(_magnitudespectrum: &[f64], frequencies: &[f64]) -> SignalResult<f64> {
     let mut weighted_sum = 0.0;
     let mut total_magnitude = 0.0;
 
-    for (mag, freq) in _magnitude_spectrum.iter().zip(frequencies.iter()) {
+    for (mag, freq) in magnitude_spectrum.iter().zip(frequencies.iter()) {
         weighted_sum += mag * freq;
         total_magnitude += mag;
     }
@@ -1132,10 +1134,10 @@ fn scalar_peak_detection(
 ///
 /// * Zero-crossing rate (crossings per sample)
 #[allow(dead_code)]
-pub fn simd_zero_crossing_rate(_signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
+pub fn simd_zero_crossing_rate(signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
     check_finite(_signal, "_signal value")?;
 
-    let n = _signal.len();
+    let n = signal.len();
     if n < 2 {
         return Ok(0.0);
     }
@@ -1161,14 +1163,14 @@ pub fn simd_zero_crossing_rate(_signal: &[f64], config: &SimdConfig) -> SignalRe
 /// AVX2 optimized zero crossing detection
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
-unsafe fn avx2_zero_crossings(_signal: &[f64]) -> SignalResult<usize> {
-    let n = _signal.len();
+unsafe fn avx2_zero_crossings(signal: &[f64]) -> SignalResult<usize> {
+    let n = signal.len();
     let mut crossings = 0;
 
     // Process pairs of consecutive elements
     for i in 0..(n - 1) {
-        if (_signal[i] >= 0.0 && _signal[i + 1] < 0.0)
-            || (_signal[i] < 0.0 && _signal[i + 1] >= 0.0)
+        if (_signal[i] >= 0.0 && signal[i + 1] < 0.0)
+            || (_signal[i] < 0.0 && signal[i + 1] >= 0.0)
         {
             crossings += 1;
         }
@@ -1179,13 +1181,13 @@ unsafe fn avx2_zero_crossings(_signal: &[f64]) -> SignalResult<usize> {
 
 /// Scalar zero crossing count
 #[allow(dead_code)]
-fn scalar_count_zero_crossings(_signal: &[f64]) -> usize {
-    let n = _signal.len();
+fn scalar_count_zero_crossings(signal: &[f64]) -> usize {
+    let n = signal.len();
     let mut crossings = 0;
 
     for i in 0..(n - 1) {
-        if (_signal[i] >= 0.0 && _signal[i + 1] < 0.0)
-            || (_signal[i] < 0.0 && _signal[i + 1] >= 0.0)
+        if (_signal[i] >= 0.0 && signal[i + 1] < 0.0)
+            || (_signal[i] < 0.0 && signal[i + 1] >= 0.0)
         {
             crossings += 1;
         }
@@ -1196,8 +1198,8 @@ fn scalar_count_zero_crossings(_signal: &[f64]) -> usize {
 
 /// Scalar fallback for zero-crossing rate
 #[allow(dead_code)]
-fn scalar_zero_crossing_rate(_signal: &[f64]) -> SignalResult<f64> {
-    let n = _signal.len();
+fn scalar_zero_crossing_rate(signal: &[f64]) -> SignalResult<f64> {
+    let n = signal.len();
     if n < 2 {
         return Ok(0.0);
     }
@@ -1220,10 +1222,10 @@ fn scalar_zero_crossing_rate(_signal: &[f64]) -> SignalResult<f64> {
 ///
 /// * Signal energy (sum of squares)
 #[allow(dead_code)]
-pub fn simd_signal_energy(_signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
+pub fn simd_signal_energy(signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
     check_finite(_signal, "_signal value")?;
 
-    let n = _signal.len();
+    let n = signal.len();
     if n == 0 {
         return Ok(0.0);
     }
@@ -1242,8 +1244,8 @@ pub fn simd_signal_energy(_signal: &[f64], config: &SimdConfig) -> SignalResult<
 
 /// Scalar fallback for signal energy
 #[allow(dead_code)]
-fn scalar_signal_energy(_signal: &[f64]) -> SignalResult<f64> {
-    let energy = _signal.iter().map(|&x| x * x).sum();
+fn scalar_signal_energy(signal: &[f64]) -> SignalResult<f64> {
+    let energy = signal.iter().map(|&x| x * x).sum();
     Ok(energy)
 }
 
@@ -1260,9 +1262,9 @@ fn scalar_signal_energy(_signal: &[f64]) -> SignalResult<f64> {
 ///
 /// * RMS value
 #[allow(dead_code)]
-pub fn simd_rms(_signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
+pub fn simd_rms(signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
     let energy = simd_signal_energy(_signal, config)?;
-    let n = _signal.len();
+    let n = signal.len();
 
     if n == 0 {
         Ok(0.0)
@@ -1690,6 +1692,13 @@ unsafe fn avx512_enhanced_convolution(
 /// - High-performance autocorrelation matrix calculation
 /// - Real-time signal filtering with multiple channels
 pub mod advanced_simd_matrix {
+    use super::{simd_enhanced_convolution, SimdConfig};
+    use crate::error::{SignalError, SignalResult};
+    use ndarray::s;
+    use ndarray::{Array2, Array3, ArrayView1};
+    use scirs2_core::simd_ops::SimdUnifiedOps;
+    use scirs2_core::validation::check_finite;
+
     /// SIMD-accelerated matrix-vector multiplication for signal processing
     ///
     /// Optimized for signal processing applications where the matrix represents
@@ -2036,7 +2045,10 @@ pub mod advanced_simd_matrix {
 /// Advanced-high-performance real-time signal processing operations
 pub mod advanced_simd_realtime {
     use super::SimdConfig;
-    
+    use crate::error::{SignalError, SignalResult};
+    use ndarray::Array2;
+    use scirs2_core::simd_ops::PlatformCapabilities;
+
     /// Real-time SIMD FIR filter state
     #[derive(Debug, Clone)]
     pub struct RealtimeSimdFirFilter {
@@ -2156,13 +2168,13 @@ pub mod advanced_simd_realtime {
 
     impl MultiChannelRealtimeProcessor {
         /// Create new multi-channel processor
-        pub fn new(_channel_filters: Vec<Vec<f64>>, config: SimdConfig) -> Self {
+        pub fn new(_channelfilters: Vec<Vec<f64>>, config: SimdConfig) -> Self {
             let _filters = _channel_filters
                 .into_iter()
                 .map(|coeffs| RealtimeSimdFirFilter::new(coeffs, config.clone()))
                 .collect();
 
-            Self { _filters, config }
+            Self { filters, config }
         }
 
         /// Process multi-channel sample
@@ -2682,9 +2694,9 @@ fn scalar_complex_multiply(
 }
 
 #[allow(dead_code)]
-fn scalar_power_spectrum(_real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
+fn scalar_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
     for i in 0.._real.len() {
-        power[i] = _real[i] * _real[i] + imag[i] * imag[i];
+        power[i] = real[i] * real[i] + imag[i] * imag[i];
     }
     Ok(())
 }
@@ -2713,9 +2725,9 @@ fn scalar_weighted_average_spectra(
 }
 
 #[allow(dead_code)]
-fn scalar_apply_window(_signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
+fn scalar_apply_window(signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
     for i in 0.._signal.len() {
-        result[i] = _signal[i] * window[i];
+        result[i] = signal[i] * window[i];
     }
     Ok(())
 }
@@ -2766,8 +2778,8 @@ unsafe fn avx2_complex_multiply(
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
-unsafe fn avx2_power_spectrum(_real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
-    let n = _real.len();
+unsafe fn avx2_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
+    let n = real.len();
     let simd_width = 4;
     let simd_chunks = n / simd_width;
 
@@ -2788,7 +2800,7 @@ unsafe fn avx2_power_spectrum(_real: &[f64], imag: &[f64], power: &mut [f64]) ->
 
     // Handle remaining elements
     for i in (simd_chunks * simd_width)..n {
-        power[i] = _real[i] * _real[i] + imag[i] * imag[i];
+        power[i] = real[i] * real[i] + imag[i] * imag[i];
     }
 
     Ok(())
@@ -2885,7 +2897,7 @@ unsafe fn sse_complex_multiply(
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
-unsafe fn sse_power_spectrum(_real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
+unsafe fn sse_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
     scalar_power_spectrum(_real, imag, power)
 }
 
@@ -2909,7 +2921,7 @@ unsafe fn sse_apply_window_v2(
     scalar_apply_window(signal, window, result)
 }
 // Direct SIMD → Scalar mappings for missing SIMD functions
-// 
+//
 // This file provides scalar fallbacks for missing SIMD implementations.
 // These can be replaced with proper SIMD implementations in the future.
 
@@ -2918,23 +2930,31 @@ unsafe fn sse_apply_window_v2(
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
 unsafe fn sse_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
-    super::scalar_fir_filter(input, coeffs, output)
+    simd_fir_filter(input, coeffs, output, &SimdConfig::default())
 }
 
 #[cfg(not(target_arch = "x86_64"))]
 fn sse_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
-    super::scalar_fir_filter(input, coeffs, output)
+    simd_fir_filter(input, coeffs, output, &SimdConfig::default())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-unsafe fn sse_autocorrelation(signal: &[f64], max_lag: usize) -> SignalResult<Vec<f64>> {
-    super::scalar_autocorrelation(signal, max_lag)
+unsafe fn sse_autocorrelation(signal: &[f64], maxlag: usize) -> SignalResult<Vec<f64>> {
+    Ok(simd_autocorrelation(
+        signal,
+        max_lag,
+        &SimdConfig::default(),
+    )?)
 }
 
 #[cfg(not(target_arch = "x86_64"))]
-fn sse_autocorrelation(signal: &[f64], max_lag: usize) -> SignalResult<Vec<f64>> {
-    super::scalar_autocorrelation(signal, max_lag)
+fn sse_autocorrelation(signal: &[f64], maxlag: usize) -> SignalResult<Vec<f64>> {
+    Ok(simd_autocorrelation(
+        signal,
+        max_lag,
+        &SimdConfig::default(),
+    )?)
 }
 
 #[cfg(target_arch = "x86_64")]
@@ -2944,16 +2964,20 @@ unsafe fn sse_cross_correlation(
     signal2: &[f64],
     output: &mut [f64],
 ) -> SignalResult<()> {
-    super::scalar_cross_correlation(signal1, signal2, output)
+    let result = simd_cross_correlation(signal1, signal2, "full", &SimdConfig::default())?;
+    let output_len = output.len();
+    let copy_len = result.len().min(output_len);
+    output[..copy_len].copy_from_slice(&result[..copy_len]);
+    Ok(())
 }
 
 #[cfg(not(target_arch = "x86_64"))]
-fn sse_cross_correlation(
-    signal1: &[f64],
-    signal2: &[f64],
-    output: &mut [f64],
-) -> SignalResult<()> {
-    super::scalar_cross_correlation(signal1, signal2, output)
+fn sse_cross_correlation(signal1: &[f64], signal2: &[f64], output: &mut [f64]) -> SignalResult<()> {
+    let result = simd_cross_correlation(signal1, signal2, "full", &SimdConfig::default())?;
+    let output_len = output.len();
+    let copy_len = result.len().min(output_len);
+    output[..copy_len].copy_from_slice(&result[..copy_len]);
+    Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
@@ -2962,7 +2986,7 @@ unsafe fn sse_complex_butterfly(
     data: &mut [num_complex::Complex<f64>],
     twiddles: &[num_complex::Complex<f64>],
 ) -> SignalResult<()> {
-    super::scalar_complex_butterfly(data, twiddles)
+    simd_complex_fft_butterfly(data, twiddles, &SimdConfig::default())
 }
 
 #[cfg(not(target_arch = "x86_64"))]
@@ -2970,7 +2994,7 @@ fn sse_complex_butterfly(
     data: &mut [num_complex::Complex<f64>],
     twiddles: &[num_complex::Complex<f64>],
 ) -> SignalResult<()> {
-    super::scalar_complex_butterfly(data, twiddles)
+    simd_complex_fft_butterfly(data, twiddles, &SimdConfig::default())
 }
 
 #[cfg(target_arch = "x86_64")]
@@ -2978,18 +3002,18 @@ fn sse_complex_butterfly(
 unsafe fn avx2_enhanced_convolution(
     signal: &[f64],
     kernel: &[f64],
-    output: &mut [f64]
+    output: &mut [f64],
 ) -> SignalResult<()> {
-    super::scalar_enhanced_convolution(signal, kernel, output)
+    simd_enhanced_convolution(signal, kernel, output, &SimdConfig::default())
 }
 
 #[cfg(not(target_arch = "x86_64"))]
 fn avx2_enhanced_convolution(
     signal: &[f64],
     kernel: &[f64],
-    output: &mut [f64]
+    output: &mut [f64],
 ) -> SignalResult<()> {
-    super::scalar_enhanced_convolution(signal, kernel, output)
+    simd_enhanced_convolution(signal, kernel, output, &SimdConfig::default())
 }
 
 #[cfg(target_arch = "x86_64")]
@@ -3002,7 +3026,11 @@ unsafe fn sse_complex_multiply(
     result_real: &mut [f64],
     result_imag: &mut [f64],
 ) -> SignalResult<()> {
-    super::scalar_complex_multiply(a_real, a_imag, b_real, b_imag, result_real, result_imag)
+    for i in 0..a_real.len().min(b_real.len()).min(result_real.len()) {
+        result_real[i] = a_real[i] * b_real[i] - a_imag[i] * b_imag[i];
+        result_imag[i] = a_real[i] * b_imag[i] + a_imag[i] * b_real[i];
+    }
+    Ok(())
 }
 
 #[cfg(not(target_arch = "x86_64"))]
@@ -3014,18 +3042,28 @@ fn sse_complex_multiply(
     result_real: &mut [f64],
     result_imag: &mut [f64],
 ) -> SignalResult<()> {
-    super::scalar_complex_multiply(a_real, a_imag, b_real, b_imag, result_real, result_imag)
+    for i in 0..a_real.len().min(b_real.len()).min(result_real.len()) {
+        result_real[i] = a_real[i] * b_real[i] - a_imag[i] * b_imag[i];
+        result_imag[i] = a_real[i] * b_imag[i] + a_imag[i] * b_real[i];
+    }
+    Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
 unsafe fn sse_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
-    super::scalar_power_spectrum(real, imag, power)
+    for i in 0..real.len().min(imag.len()).min(power.len()) {
+        power[i] = real[i] * real[i] + imag[i] * imag[i];
+    }
+    Ok(())
 }
 
 #[cfg(not(target_arch = "x86_64"))]
 fn sse_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
-    super::scalar_power_spectrum(real, imag, power)
+    for i in 0..real.len().min(imag.len()).min(power.len()) {
+        power[i] = real[i] * real[i] + imag[i] * imag[i];
+    }
+    Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
@@ -3035,7 +3073,26 @@ unsafe fn sse_weighted_average_spectra(
     weights: &[f64],
     result: &mut [f64],
 ) -> SignalResult<()> {
-    super::scalar_weighted_average_spectra(spectra, weights, result)
+    result.fill(0.0);
+    let num_spectra = spectra.len();
+    if num_spectra > 0 && !weights.is_empty() {
+        let spectrum_len = spectra[0].len();
+        for (spec_idx, spectrum) in spectra
+            .iter()
+            .enumerate()
+            .take(weights.len().min(num_spectra))
+        {
+            let weight = weights[spec_idx];
+            for (i, &value) in spectrum
+                .iter()
+                .enumerate()
+                .take(result.len().min(spectrum_len))
+            {
+                result[i] += weight * value;
+            }
+        }
+    }
+    Ok(())
 }
 
 #[cfg(not(target_arch = "x86_64"))]
@@ -3044,31 +3101,56 @@ fn sse_weighted_average_spectra(
     weights: &[f64],
     result: &mut [f64],
 ) -> SignalResult<()> {
-    super::scalar_weighted_average_spectra(spectra, weights, result)
+    result.fill(0.0);
+    let num_spectra = spectra.len();
+    if num_spectra > 0 && !weights.is_empty() {
+        let spectrum_len = spectra[0].len();
+        for (spec_idx, spectrum) in spectra
+            .iter()
+            .enumerate()
+            .take(weights.len().min(num_spectra))
+        {
+            let weight = weights[spec_idx];
+            for (i, &value) in spectrum
+                .iter()
+                .enumerate()
+                .take(result.len().min(spectrum_len))
+            {
+                result[i] += weight * value;
+            }
+        }
+    }
+    Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
 unsafe fn sse_apply_window(signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
-    super::scalar_apply_window(signal, window, result)
+    simd_apply_window(signal, window, result, &SimdConfig::default())
 }
 
 #[cfg(not(target_arch = "x86_64"))]
 fn sse_apply_window(signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
-    super::scalar_apply_window(signal, window, result)
+    simd_apply_window(signal, window, result, &SimdConfig::default())
 }
 
 // Simple SIMD function stubs
-// 
+//
 // Basic implementations for missing SIMD functions.
 // These provide correctness over performance.
 
 // Simple window application variant
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-unsafe fn sse_apply_window_v2(signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
+unsafe fn sse_apply_window_v2(
+    signal: &[f64],
+    window: &[f64],
+    result: &mut [f64],
+) -> SignalResult<()> {
     for (i, (s, w)) in signal.iter().zip(window.iter()).enumerate() {
-        if i >= result.len() { break; }
+        if i >= result.len() {
+            break;
+        }
         result[i] = s * w;
     }
     Ok(())
@@ -3077,7 +3159,9 @@ unsafe fn sse_apply_window_v2(signal: &[f64], window: &[f64], result: &mut [f64]
 #[cfg(not(target_arch = "x86_64"))]
 fn sse_apply_window_v2(signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
     for (i, (s, w)) in signal.iter().zip(window.iter()).enumerate() {
-        if i >= result.len() { break; }
+        if i >= result.len() {
+            break;
+        }
         result[i] = s * w;
     }
     Ok(())
@@ -3086,9 +3170,15 @@ fn sse_apply_window_v2(signal: &[f64], window: &[f64], result: &mut [f64]) -> Si
 // Simple windowing variant
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-unsafe fn avx2_apply_window_v2(signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
+unsafe fn avx2_apply_window_v2(
+    signal: &[f64],
+    window: &[f64],
+    result: &mut [f64],
+) -> SignalResult<()> {
     for (i, (s, w)) in signal.iter().zip(window.iter()).enumerate() {
-        if i >= result.len() { break; }
+        if i >= result.len() {
+            break;
+        }
         result[i] = s * w;
     }
     Ok(())
@@ -3097,7 +3187,9 @@ unsafe fn avx2_apply_window_v2(signal: &[f64], window: &[f64], result: &mut [f64
 #[cfg(not(target_arch = "x86_64"))]
 fn avx2_apply_window_v2(signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
     for (i, (s, w)) in signal.iter().zip(window.iter()).enumerate() {
-        if i >= result.len() { break; }
+        if i >= result.len() {
+            break;
+        }
         result[i] = s * w;
     }
     Ok(())
@@ -3106,10 +3198,14 @@ fn avx2_apply_window_v2(signal: &[f64], window: &[f64], result: &mut [f64]) -> S
 // Peak detection
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-unsafe fn avx2_peak_detection(signal: &[f64], min_height: f64, peaks: &mut Vec<usize>) -> SignalResult<()> {
+unsafe fn avx2_peak_detection(
+    signal: &[f64],
+    min_height: f64,
+    peaks: &mut Vec<usize>,
+) -> SignalResult<()> {
     peaks.clear();
-    for i in 1..signal.len()-1 {
-        if signal[i] > signal[i-1] && signal[i] > signal[i+1] && signal[i] >= min_height {
+    for i in 1..signal.len() - 1 {
+        if signal[i] > signal[i - 1] && signal[i] > signal[i + 1] && signal[i] >= min_height {
             peaks.push(i);
         }
     }
@@ -3117,10 +3213,14 @@ unsafe fn avx2_peak_detection(signal: &[f64], min_height: f64, peaks: &mut Vec<u
 }
 
 #[cfg(not(target_arch = "x86_64"))]
-fn avx2_peak_detection(signal: &[f64], min_height: f64, peaks: &mut Vec<usize>) -> SignalResult<()> {
+fn avx2_peak_detection(
+    signal: &[f64],
+    min_height: f64,
+    peaks: &mut Vec<usize>,
+) -> SignalResult<()> {
     peaks.clear();
-    for i in 1..signal.len()-1 {
-        if signal[i] > signal[i-1] && signal[i] > signal[i+1] && signal[i] >= min_height {
+    for i in 1..signal.len() - 1 {
+        if signal[i] > signal[i - 1] && signal[i] > signal[i + 1] && signal[i] >= min_height {
             peaks.push(i);
         }
     }
@@ -3133,7 +3233,7 @@ fn avx2_peak_detection(signal: &[f64], min_height: f64, peaks: &mut Vec<usize>) 
 unsafe fn avx2_zero_crossings(signal: &[f64]) -> SignalResult<usize> {
     let mut crossings = 0;
     for i in 1..signal.len() {
-        if (signal[i-1] >= 0.0 && signal[i] < 0.0) || (signal[i-1] < 0.0 && signal[i] >= 0.0) {
+        if (signal[i - 1] >= 0.0 && signal[i] < 0.0) || (signal[i - 1] < 0.0 && signal[i] >= 0.0) {
             crossings += 1;
         }
     }
@@ -3144,7 +3244,7 @@ unsafe fn avx2_zero_crossings(signal: &[f64]) -> SignalResult<usize> {
 fn avx2_zero_crossings(signal: &[f64]) -> SignalResult<usize> {
     let mut crossings = 0;
     for i in 1..signal.len() {
-        if (signal[i-1] >= 0.0 && signal[i] < 0.0) || (signal[i-1] < 0.0 && signal[i] >= 0.0) {
+        if (signal[i - 1] >= 0.0 && signal[i] < 0.0) || (signal[i - 1] < 0.0 && signal[i] >= 0.0) {
             crossings += 1;
         }
     }
@@ -3154,9 +3254,15 @@ fn avx2_zero_crossings(signal: &[f64]) -> SignalResult<usize> {
 // Basic window application (original)
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-unsafe fn avx2_apply_window(signal: &[f64], window: &[f64], output: &mut [f64]) -> SignalResult<()> {
+unsafe fn avx2_apply_window(
+    signal: &[f64],
+    window: &[f64],
+    output: &mut [f64],
+) -> SignalResult<()> {
     for (i, (s, w)) in signal.iter().zip(window.iter()).enumerate() {
-        if i >= output.len() { break; }
+        if i >= output.len() {
+            break;
+        }
         output[i] = s * w;
     }
     Ok(())
@@ -3165,7 +3271,9 @@ unsafe fn avx2_apply_window(signal: &[f64], window: &[f64], output: &mut [f64]) 
 #[cfg(not(target_arch = "x86_64"))]
 fn avx2_apply_window(signal: &[f64], window: &[f64], output: &mut [f64]) -> SignalResult<()> {
     for (i, (s, w)) in signal.iter().zip(window.iter()).enumerate() {
-        if i >= output.len() { break; }
+        if i >= output.len() {
+            break;
+        }
         output[i] = s * w;
     }
     Ok(())
@@ -3175,77 +3283,170 @@ fn avx2_apply_window(signal: &[f64], window: &[f64], output: &mut [f64]) -> Sign
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
 unsafe fn avx2_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
-    super::scalar_fir_filter(input, coeffs, output)
+    simd_fir_filter(input, coeffs, output, &SimdConfig::default())
 }
 
 #[cfg(not(target_arch = "x86_64"))]
 fn avx2_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
-    super::scalar_fir_filter(input, coeffs, output)
+    simd_fir_filter(input, coeffs, output, &SimdConfig::default())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-unsafe fn avx2_autocorrelation(signal: &[f64], autocorr: &mut [f64], max_lag: usize) -> SignalResult<()> {
-    super::scalar_autocorrelation(signal, autocorr, max_lag)
+unsafe fn avx2_autocorrelation(
+    signal: &[f64],
+    autocorr: &mut [f64],
+    max_lag: usize,
+) -> SignalResult<()> {
+    scalar_autocorrelation(signal, autocorr, max_lag)
 }
 
 #[cfg(not(target_arch = "x86_64"))]
-fn avx2_autocorrelation(signal: &[f64], autocorr: &mut [f64], max_lag: usize) -> SignalResult<()> {
-    super::scalar_autocorrelation(signal, autocorr, max_lag)
+fn avx2_autocorrelation(signal: &[f64], autocorr: &mut [f64], maxlag: usize) -> SignalResult<()> {
+    scalar_autocorrelation(signal, autocorr, max_lag)
 }
 
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-unsafe fn avx2_cross_correlation(signal1: &[f64], signal2: &[f64], result: &mut [f64], mode: &str) -> SignalResult<()> {
-    super::scalar_cross_correlation(signal1, signal2, result, mode)
+unsafe fn avx2_cross_correlation(
+    signal1: &[f64],
+    signal2: &[f64],
+    result: &mut [f64],
+    mode: &str,
+) -> SignalResult<()> {
+    scalar_cross_correlation(signal1, signal2, result, mode)
 }
 
 #[cfg(not(target_arch = "x86_64"))]
-fn avx2_cross_correlation(signal1: &[f64], signal2: &[f64], result: &mut [f64], mode: &str) -> SignalResult<()> {
-    super::scalar_cross_correlation(signal1, signal2, result, mode)
+fn avx2_cross_correlation(
+    signal1: &[f64],
+    signal2: &[f64],
+    result: &mut [f64],
+    mode: &str,
+) -> SignalResult<()> {
+    scalar_cross_correlation(signal1, signal2, result, mode)
 }
 
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-unsafe fn avx2_complex_butterfly(data: &mut [num_complex::Complex<f64>], twiddles: &[num_complex::Complex<f64>]) -> SignalResult<()> {
-    super::scalar_complex_butterfly(data, twiddles)
+unsafe fn avx2_complex_butterfly(
+    data: &mut [num_complex::Complex<f64>],
+    twiddles: &[num_complex::Complex<f64>],
+) -> SignalResult<()> {
+    simd_complex_fft_butterfly(data, twiddles, &SimdConfig::default())
 }
 
 #[cfg(not(target_arch = "x86_64"))]
-fn avx2_complex_butterfly(data: &mut [num_complex::Complex<f64>], twiddles: &[num_complex::Complex<f64>]) -> SignalResult<()> {
-    super::scalar_complex_butterfly(data, twiddles)
+fn avx2_complex_butterfly(
+    data: &mut [num_complex::Complex<f64>],
+    twiddles: &[num_complex::Complex<f64>],
+) -> SignalResult<()> {
+    simd_complex_fft_butterfly(data, twiddles, &SimdConfig::default())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-unsafe fn avx2_complex_multiply(a_real: &[f64], a_imag: &[f64], b_real: &[f64], b_imag: &[f64], result_real: &mut [f64], result_imag: &mut [f64]) -> SignalResult<()> {
-    super::scalar_complex_multiply(a_real, a_imag, b_real, b_imag, result_real, result_imag)
+unsafe fn avx2_complex_multiply(
+    a_real: &[f64],
+    a_imag: &[f64],
+    b_real: &[f64],
+    b_imag: &[f64],
+    result_real: &mut [f64],
+    result_imag: &mut [f64],
+) -> SignalResult<()> {
+    for i in 0..a_real.len().min(b_real.len()).min(result_real.len()) {
+        result_real[i] = a_real[i] * b_real[i] - a_imag[i] * b_imag[i];
+        result_imag[i] = a_real[i] * b_imag[i] + a_imag[i] * b_real[i];
+    }
+    Ok(())
 }
 
 #[cfg(not(target_arch = "x86_64"))]
-fn avx2_complex_multiply(a_real: &[f64], a_imag: &[f64], b_real: &[f64], b_imag: &[f64], result_real: &mut [f64], result_imag: &mut [f64]) -> SignalResult<()> {
-    super::scalar_complex_multiply(a_real, a_imag, b_real, b_imag, result_real, result_imag)
+fn avx2_complex_multiply(
+    a_real: &[f64],
+    a_imag: &[f64],
+    b_real: &[f64],
+    b_imag: &[f64],
+    result_real: &mut [f64],
+    result_imag: &mut [f64],
+) -> SignalResult<()> {
+    for i in 0..a_real.len().min(b_real.len()).min(result_real.len()) {
+        result_real[i] = a_real[i] * b_real[i] - a_imag[i] * b_imag[i];
+        result_imag[i] = a_real[i] * b_imag[i] + a_imag[i] * b_real[i];
+    }
+    Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
 unsafe fn avx2_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
-    super::scalar_power_spectrum(real, imag, power)
+    for i in 0..real.len().min(imag.len()).min(power.len()) {
+        power[i] = real[i] * real[i] + imag[i] * imag[i];
+    }
+    Ok(())
 }
 
 #[cfg(not(target_arch = "x86_64"))]
 fn avx2_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
-    super::scalar_power_spectrum(real, imag, power)
+    for i in 0..real.len().min(imag.len()).min(power.len()) {
+        power[i] = real[i] * real[i] + imag[i] * imag[i];
+    }
+    Ok(())
 }
 
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-unsafe fn avx2_weighted_average_spectra(spectra: &[&[f64]], weights: &[f64], result: &mut [f64]) -> SignalResult<()> {
-    super::scalar_weighted_average_spectra(spectra, weights, result)
+unsafe fn avx2_weighted_average_spectra(
+    spectra: &[&[f64]],
+    weights: &[f64],
+    result: &mut [f64],
+) -> SignalResult<()> {
+    result.fill(0.0);
+    let num_spectra = spectra.len();
+    if num_spectra > 0 && !weights.is_empty() {
+        let spectrum_len = spectra[0].len();
+        for (spec_idx, spectrum) in spectra
+            .iter()
+            .enumerate()
+            .take(weights.len().min(num_spectra))
+        {
+            let weight = weights[spec_idx];
+            for (i, &value) in spectrum
+                .iter()
+                .enumerate()
+                .take(result.len().min(spectrum_len))
+            {
+                result[i] += weight * value;
+            }
+        }
+    }
+    Ok(())
 }
 
 #[cfg(not(target_arch = "x86_64"))]
-fn avx2_weighted_average_spectra(spectra: &[&[f64]], weights: &[f64], result: &mut [f64]) -> SignalResult<()> {
-    super::scalar_weighted_average_spectra(spectra, weights, result)
+fn avx2_weighted_average_spectra(
+    spectra: &[&[f64]],
+    weights: &[f64],
+    result: &mut [f64],
+) -> SignalResult<()> {
+    result.fill(0.0);
+    let num_spectra = spectra.len();
+    if num_spectra > 0 && !weights.is_empty() {
+        let spectrum_len = spectra[0].len();
+        for (spec_idx, spectrum) in spectra
+            .iter()
+            .enumerate()
+            .take(weights.len().min(num_spectra))
+        {
+            let weight = weights[spec_idx];
+            for (i, &value) in spectrum
+                .iter()
+                .enumerate()
+                .take(result.len().min(spectrum_len))
+            {
+                result[i] += weight * value;
+            }
+        }
+    }
+    Ok(())
 }
-

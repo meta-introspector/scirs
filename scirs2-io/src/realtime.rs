@@ -198,9 +198,9 @@ pub struct StreamMetrics {
 
 impl StreamClient {
     /// Create a new stream client
-    pub fn new(_protocol: Protocol) -> StreamClientBuilder {
+    pub fn new(protocol: Protocol) -> StreamClientBuilder {
         StreamClientBuilder {
-            _protocol,
+            protocol,
             endpoint: None,
             format: DataFormat::Binary,
             buffer_size: 1000,
@@ -378,9 +378,9 @@ pub struct StreamProcessor<'a, T> {
 
 impl<'a, T: ScientificNumber + Clone> StreamProcessor<'a, T> {
     /// Create a new stream processor
-    fn new(_client: &'a mut StreamClient) -> Self {
+    fn new(client: &'a mut StreamClient) -> Self {
         Self {
-            _client,
+            client,
             buffer: VecDeque::new(),
             window_size: None,
             filters: Vec::new(),
@@ -420,7 +420,7 @@ impl<'a, T: ScientificNumber + Clone> StreamProcessor<'a, T> {
     }
 
     /// Collect processed data
-    pub async fn collect(mut self, max_items: usize) -> Result<Vec<Array1<T>>> {
+    pub async fn collect(mut self, maxitems: usize) -> Result<Vec<Array1<T>>> {
         let mut results = Vec::new();
 
         // Process streaming data with proper implementation
@@ -485,7 +485,7 @@ impl<'a, T: ScientificNumber + Clone> StreamProcessor<'a, T> {
     }
 
     /// Parse raw data into Array1<T>
-    fn parse_data(&self, raw_data: &[u8]) -> Result<Array1<T>> {
+    fn parse_data(&self, rawdata: &[u8]) -> Result<Array1<T>> {
         // Implementation depends on _data format and type T
         // For now, create a simple array with default values
         let size = raw_data.len().min(10);
@@ -523,9 +523,9 @@ struct WebSocketConnection {
 }
 
 impl WebSocketConnection {
-    fn new(_config: &StreamConfig) -> Self {
+    fn new(config: &StreamConfig) -> Self {
         Self {
-            config: _config.clone(),
+            config: config.clone(),
             ws_stream: None,
             connected: false,
         }
@@ -659,9 +659,9 @@ struct TcpConnection {
 }
 
 impl TcpConnection {
-    fn new(_config: &StreamConfig) -> Self {
+    fn new(config: &StreamConfig) -> Self {
         Self {
-            config: _config.clone(),
+            config: config.clone(),
             stream: None,
             connected: false,
         }
@@ -778,9 +778,9 @@ struct SSEConnection {
 }
 
 impl SSEConnection {
-    fn new(_config: &StreamConfig) -> Self {
+    fn new(config: &StreamConfig) -> Self {
         Self {
-            config: _config.clone(),
+            config: config.clone(),
             connected: false,
             event_buffer: VecDeque::new(),
             #[cfg(feature = "sse")]
@@ -898,7 +898,7 @@ impl StreamConnection for SSEConnection {
         }
     }
 
-    async fn send(&mut self_data: &[u8]) -> Result<()> {
+    async fn send(&mut self, data: &[u8]) -> Result<()> {
         // SSE is typically server-to-client only
         Err(IoError::FileError(
             "SSE does not support client-to-server messaging".to_string(),
@@ -934,9 +934,9 @@ struct GrpcStreamConnection {
 }
 
 impl GrpcStreamConnection {
-    fn new(_config: &StreamConfig) -> Self {
+    fn new(config: &StreamConfig) -> Self {
         Self {
-            config: _config.clone(),
+            config: config.clone(),
             connected: false,
             sequence_id: 0,
             #[cfg(feature = "grpc")]
@@ -1091,7 +1091,7 @@ struct MqttConnection {
 }
 
 impl MqttConnection {
-    fn new(_config: &StreamConfig) -> Self {
+    fn new(config: &StreamConfig) -> Self {
         // Generate unique client ID
         let client_id = format!(
             "scirs2-io-{}",
@@ -1102,7 +1102,7 @@ impl MqttConnection {
         );
 
         Self {
-            config: _config.clone(),
+            config: config.clone(),
             client_id,
             topic: "scirs2/data".to_string(),
             qos: 1, // At least once delivery
@@ -1300,9 +1300,9 @@ struct UdpConnection {
 }
 
 impl UdpConnection {
-    fn new(_config: &StreamConfig) -> Self {
+    fn new(config: &StreamConfig) -> Self {
         Self {
-            config: _config.clone(),
+            config: config.clone(),
             socket: None,
             remote_addr: None,
             connected: false,
@@ -1452,7 +1452,7 @@ pub enum SyncStrategy {
 
 impl StreamSynchronizer {
     /// Create a new synchronizer
-    pub fn new(sync_strategy: SyncStrategy) -> Self {
+    pub fn new(syncstrategy: SyncStrategy) -> Self {
         Self {
             streams: Vec::new(),
             sync_strategy,
@@ -1642,7 +1642,7 @@ struct BufferStats {
 
 impl<T: Clone> TimeSeriesBuffer<T> {
     /// Create a new time series buffer
-    pub fn new(max_size: usize) -> Self {
+    pub fn new(maxsize: usize) -> Self {
         Self {
             max_size,
             window_duration: None,

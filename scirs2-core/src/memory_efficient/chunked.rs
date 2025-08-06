@@ -20,7 +20,7 @@ pub struct MemoryPatternOptimizer {
     /// NUMA nodes information
     pub numa_nodes: Vec<NumaNodeInfo>,
     /// Memory bandwidth measurement
-    pub memory_bandwidth: AtomicUsize, // MB/s
+    pub memorybandwidth: AtomicUsize, // MB/s
     /// Chunk processing times for adaptation
     pub processing_times: Vec<Duration>,
     /// Access pattern statistics
@@ -30,10 +30,10 @@ pub struct MemoryPatternOptimizer {
 /// NUMA node information for memory optimization
 #[derive(Debug, Clone)]
 pub struct NumaNodeInfo {
-    pub node_id: usize,
+    pub nodeid: usize,
     pub available_memory: usize,
     pub cpu_cores: Vec<usize>,
-    pub memory_bandwidth: usize, // MB/s
+    pub memorybandwidth: usize, // MB/s
 }
 
 /// Statistics for memory access patterns
@@ -43,7 +43,7 @@ pub struct AccessPatternStats {
     pub random_access_ratio: f64,
     pub strided_access_ratio: f64,
     pub cache_hit_ratio: f64,
-    pub memory_bandwidth_utilization: f64,
+    pub memorybandwidth_utilization: f64,
     pub last_updated: Option<Instant>,
 }
 
@@ -73,7 +73,7 @@ impl MemoryPatternOptimizer {
             l2_cache_size: Self::detect_l2_cache_size(),
             l3_cache_size: Self::detect_l3_cache_size(),
             numa_nodes: Self::detect_numa_topology(),
-            memory_bandwidth: AtomicUsize::new(0),
+            memorybandwidth: AtomicUsize::new(0),
             processing_times: Vec::new(),
             access_pattern_stats: AccessPatternStats::default(),
         }
@@ -120,15 +120,15 @@ impl MemoryPatternOptimizer {
             .unwrap_or(1);
 
         vec![NumaNodeInfo {
-            node_id: 0,
+            nodeid: 0,
             available_memory: 4 * 1024 * 1024 * 1024, // 4GB default
             cpu_cores: (0..cores).collect(),
-            memory_bandwidth: 25000, // 25GB/s typical
+            memorybandwidth: 25000, // 25GB/s typical
         }]
     }
 
     /// Calculate optimal chunk size for cache-aware processing
-    pub fn calculate_cache_aware_chunk_size<T>(&self, total_elements: usize) -> usize {
+    pub fn calculate_cache_aware_chunk_size<T>(&self, totalelements: usize) -> usize {
         let element_size = std::mem::size_of::<T>();
 
         // Target L2 cache for working set
@@ -145,15 +145,15 @@ impl MemoryPatternOptimizer {
     }
 
     /// Calculate NUMA-aware chunk distribution
-    pub fn threads(&self, total_elements: usize, num_threads: usize) -> Vec<(usize, usize)> {
+    pub fn threads(&self, total_elements: usize, numthreads: usize) -> Vec<(usize, usize)> {
         let mut chunks = Vec::new();
 
         if self.numa_nodes.len() <= 1 {
             // No NUMA, simple equal distribution
-            let chunk_size = total_elements / num_threads;
-            for i in 0..num_threads {
+            let chunk_size = total_elements / numthreads;
+            for i in 0..numthreads {
                 let start = i * chunk_size;
-                let end = if i == num_threads - 1 {
+                let end = if i == numthreads - 1 {
                     total_elements
                 } else {
                     (i + 1) * chunk_size
@@ -162,15 +162,15 @@ impl MemoryPatternOptimizer {
             }
         } else {
             // NUMA-aware distribution
-            let threads_per_node = num_threads / self.numa_nodes.len();
+            let threads_per_node = numthreads / self.numa_nodes.len();
             let elements_per_node = total_elements / self.numa_nodes.len();
 
-            for (node_idx, _node) in self.numa_nodes.iter().enumerate() {
-                let node_start = node_idx * elements_per_node;
-                let node_end = if node_idx == self.numa_nodes.len() - 1 {
+            for (nodeidx, node) in self.numa_nodes.iter().enumerate() {
+                let node_start = nodeidx * elements_per_node;
+                let node_end = if nodeidx == self.numa_nodes.len() - 1 {
                     total_elements
                 } else {
-                    (node_idx + 1) * elements_per_node
+                    (nodeidx + 1) * elements_per_node
                 };
 
                 let node_elements = node_end - node_start;
@@ -192,10 +192,10 @@ impl MemoryPatternOptimizer {
     }
 
     /// Adaptive chunk size calculation based on performance history
-    pub fn elements(&self, total_elements: usize) -> usize {
+    pub fn elements(&self, totalelements: usize) -> usize {
         if self.processing_times.is_empty() {
             // No history, use cache-aware default
-            return self.calculate_cache_aware_chunk_size::<u64>(total_elements);
+            return self.calculate_cache_aware_chunk_size::<u64>(totalelements);
         }
 
         // Analyze processing time trends
@@ -208,15 +208,15 @@ impl MemoryPatternOptimizer {
 
         if avg_time > target_time_ns {
             // Chunks taking too long, reduce size
-            let current_default = self.calculate_cache_aware_chunk_size::<u64>(total_elements);
+            let current_default = self.calculate_cache_aware_chunk_size::<u64>(totalelements);
             current_default * 3 / 4
         } else if avg_time < target_time_ns / 2 {
             // Chunks too small, increase size
-            let current_default = self.calculate_cache_aware_chunk_size::<u64>(total_elements);
+            let current_default = self.calculate_cache_aware_chunk_size::<u64>(totalelements);
             current_default * 5 / 4
         } else {
             // Good size
-            self.calculate_cache_aware_chunk_size::<u64>(total_elements)
+            self.calculate_cache_aware_chunk_size::<u64>(totalelements)
         }
     }
 
@@ -237,17 +237,17 @@ impl MemoryPatternOptimizer {
     }
 
     /// Get memory bandwidth estimation
-    pub fn get_memory_bandwidth(&self) -> usize {
-        self.memory_bandwidth.load(Ordering::Relaxed)
+    pub fn get_memorybandwidth(&self) -> usize {
+        self.memorybandwidth.load(Ordering::Relaxed)
     }
 
     /// Calculate bandwidth-optimized chunk size
-    pub fn calculate_bandwidth_optimized_chunk_size<T>(&self, total_elements: usize) -> usize {
+    pub fn calculatebandwidth_optimized_chunk_size<T>(&self, totalelements: usize) -> usize {
         let element_size = std::mem::size_of::<T>();
-        let bandwidth_mbps = self.get_memory_bandwidth();
+        let bandwidth_mbps = self.get_memorybandwidth();
 
         if bandwidth_mbps == 0 {
-            return self.calculate_cache_aware_chunk_size::<T>(total_elements);
+            return self.calculate_cache_aware_chunk_size::<T>(totalelements);
         }
 
         // Target chunk size that can be processed in 100ms at current bandwidth
@@ -256,7 +256,7 @@ impl MemoryPatternOptimizer {
 
         // Ensure reasonable bounds
         let min_chunk = self.cache_line_size / element_size;
-        let max_chunk = total_elements / 4; // Don't make chunks too large
+        let max_chunk = totalelements / 4; // Don't make chunks too large
 
         target_elements.clamp(min_chunk, max_chunk)
     }
@@ -270,7 +270,7 @@ impl Clone for MemoryPatternOptimizer {
             l2_cache_size: self.l2_cache_size,
             l3_cache_size: self.l3_cache_size,
             numa_nodes: self.numa_nodes.clone(),
-            memory_bandwidth: AtomicUsize::new(self.memory_bandwidth.load(Ordering::Relaxed)),
+            memorybandwidth: AtomicUsize::new(self.memorybandwidth.load(Ordering::Relaxed)),
             processing_times: self.processing_times.clone(),
             access_pattern_stats: self.access_pattern_stats.clone(),
         }
@@ -377,7 +377,7 @@ where
                         opt.calculate_cache_aware_chunk_size::<A>(total_elements)
                     }
                     AdvancedChunkingStrategy::BandwidthOptimized => {
-                        opt.calculate_bandwidth_optimized_chunk_size::<A>(total_elements)
+                        opt.calculatebandwidth_optimized_chunk_size::<A>(total_elements)
                     }
                     AdvancedChunkingStrategy::LatencyOptimized => {
                         // Smaller chunks for better latency
@@ -494,7 +494,7 @@ where
     }
 
     /// Apply a function to each chunk with performance monitoring and adaptive optimization
-    pub fn map_with_monitoring<F, B>(&mut self, f: F) -> Array<B, ndarray::Ix1>
+    pub fn map_withmonitoring<F, B>(&mut self, f: F) -> Array<B, ndarray::Ix1>
     where
         F: Fn(&Array<A, D>) -> B + Sync,
         B: Clone,
@@ -553,7 +553,7 @@ where
                 let results: Vec<B> = numa_chunks
                     .into_par_iter()
                     .enumerate()
-                    .map(|(i, _range)| {
+                    .map(|(i, range)| {
                         if !chunks.is_empty() {
                             f(&chunks[0])
                         } else {
@@ -617,7 +617,7 @@ where
     }
 
     /// Apply a function to each chunk with bandwidth-aware processing
-    pub fn map_bandwidth_aware<F, B>(&self, f: F) -> Array<B, ndarray::Ix1>
+    pub fn mapbandwidth_aware<F, B>(&self, f: F) -> Array<B, ndarray::Ix1>
     where
         F: Fn(&Array<A, D>) -> B + Sync,
         B: Clone,
@@ -626,12 +626,12 @@ where
         let mut results = Vec::with_capacity(chunks.len());
 
         if let Some(ref optimizer) = self.optimizer {
-            let bandwidth = optimizer.get_memory_bandwidth();
+            let bandwidth = optimizer.get_memorybandwidth();
 
             if bandwidth > 0 {
                 // Calculate optimal chunk size for current bandwidth
                 let bandwidth_chunk_size =
-                    optimizer.calculate_bandwidth_optimized_chunk_size::<A>(self.data.len());
+                    optimizer.calculatebandwidth_optimized_chunk_size::<A>(self.data.len());
 
                 // Process with bandwidth considerations
                 for chunk in chunks {
@@ -639,7 +639,7 @@ where
                     let result = f(&chunk);
                     let processing_time = chunk_start.elapsed();
 
-                    // Add small _delay if we're processing too fast for optimal bandwidth utilization
+                    // Add small delay if we're processing too fast for optimal bandwidth utilization
                     let expected_time_ms = (chunk.len() * std::mem::size_of::<A>()) as f64
                         / (bandwidth as f64 * 1000.0);
                     let expected_duration = Duration::from_millis(expected_time_ms as u64);
@@ -690,7 +690,7 @@ where
     }
 
     /// Measure and update memory bandwidth for the optimizer
-    pub fn measure_memory_bandwidth(&mut self) -> Option<usize> {
+    pub fn measure_memorybandwidth(&mut self) -> Option<usize> {
         if let Some(ref mut optimizer) = self.optimizer {
             let start_time = Instant::now();
             let chunk_size = 1024 * 1024; // 1MB test chunk
@@ -711,7 +711,7 @@ where
             } as usize;
 
             optimizer
-                .memory_bandwidth
+                .memorybandwidth
                 .store(bandwidth_mbps, std::sync::atomic::Ordering::Relaxed);
 
             // Prevent optimization from removing the test
@@ -732,8 +732,8 @@ where
     {
         if let Some(ref optimizer) = self.optimizer {
             // Measure bandwidth if not already done
-            if optimizer.get_memory_bandwidth() == 0 {
-                self.measure_memory_bandwidth();
+            if optimizer.get_memorybandwidth() == 0 {
+                self.measure_memorybandwidth();
             }
 
             // Choose optimization strategy based on data characteristics
@@ -747,14 +747,14 @@ where
                     self.map_cache_optimized(f)
                 }
                 ChunkingStrategy::Advanced(AdvancedChunkingStrategy::BandwidthOptimized) => {
-                    self.map_bandwidth_aware(f)
+                    self.mapbandwidth_aware(f)
                 }
                 ChunkingStrategy::Advanced(AdvancedChunkingStrategy::PowerAware) => {
                     self.map_power_aware(f)
                 }
                 ChunkingStrategy::Advanced(AdvancedChunkingStrategy::Adaptive) => {
                     // Use monitoring for adaptive optimization
-                    self.map_with_monitoring(f)
+                    self.map_withmonitoring(f)
                 }
                 _ => {
                     // Auto-select based on data size and system characteristics
@@ -777,26 +777,26 @@ where
     }
 
     /// Update access pattern statistics based on processing performance
-    pub fn update_access_pattern_statistics(&mut self, processing_times: &[Duration]) {
+    pub fn update_access_pattern_statistics(&mut self, processingtimes: &[Duration]) {
         if let Some(ref mut optimizer) = self.optimizer {
             // Calculate access pattern statistics from processing _times
-            let avg_time = if !processing_times.is_empty() {
-                processing_times.iter().map(|d| d.as_nanos()).sum::<u128>()
-                    / processing_times.len() as u128
+            let avg_time = if !processingtimes.is_empty() {
+                processingtimes.iter().map(|d| d.as_nanos()).sum::<u128>()
+                    / processingtimes.len() as u128
             } else {
                 0
             };
 
             // Estimate cache hit ratio based on performance consistency
-            let time_variance = if processing_times.len() > 1 {
-                let variance = processing_times
+            let time_variance = if processingtimes.len() > 1 {
+                let variance = processingtimes
                     .iter()
                     .map(|d| {
                         let diff = d.as_nanos() as i128 - avg_time as i128;
                         (diff * diff) as u128
                     })
                     .sum::<u128>()
-                    / (processing_times.len() - 1) as u128;
+                    / (processingtimes.len() - 1) as u128;
                 variance as f64 / avg_time as f64
             } else {
                 0.0
@@ -809,7 +809,7 @@ where
                 random_access_ratio: 0.1,
                 strided_access_ratio: 0.1,
                 cache_hit_ratio,
-                memory_bandwidth_utilization: 0.7, // Conservative estimate
+                memorybandwidth_utilization: 0.7, // Conservative estimate
                 last_updated: Some(Instant::now()),
             };
 

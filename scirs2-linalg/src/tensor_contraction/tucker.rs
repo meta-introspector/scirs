@@ -560,11 +560,11 @@ where
 
 // Helper function to unfold a tensor along a specified mode
 #[allow(dead_code)]
-fn unfold_tensor<A>(_tensor: &ArrayD<A>, mode: usize) -> LinalgResult<Array2<A>>
+fn unfold_tensor<A>(tensor: &ArrayD<A>, mode: usize) -> LinalgResult<Array2<A>>
 where
     A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,
 {
-    let shape = _tensor.shape();
+    let shape = tensor.shape();
 
     if mode >= shape.len() {
         return Err(LinalgError::ShapeError(format!(
@@ -588,13 +588,13 @@ where
     let mut result = Array2::zeros((mode_dim, other_dims_prod));
 
     // Helper function to calculate column index
-    fn calc_col_idx(_idx: &[usize], shape: &[usize], mode: usize) -> usize {
+    fn calc_col_idx(idx: &[usize], shape: &[usize], mode: usize) -> usize {
         let mut col_idx = 0;
         let mut stride = 1;
 
         for dim in (0..shape.len()).rev() {
             if dim != mode {
-                col_idx += _idx[dim] * stride;
+                col_idx += idx[dim] * stride;
                 stride *= shape[dim];
             }
         }
@@ -607,7 +607,7 @@ where
         let mode_idx = idx[mode];
         let idx_vec: Vec<usize> = idx.as_array_view().to_vec();
         let col_idx = calc_col_idx(&idx_vec, shape, mode);
-        result[[mode_idx, col_idx]] = _tensor[idx.clone()];
+        result[[mode_idx, col_idx]] = tensor[idx.clone()];
     }
 
     Ok(result)
@@ -639,7 +639,7 @@ where
         }
 
         // Project the tensor along this _mode
-        projected_tensor = mode_n_product(&projected_tensor.view(), &factor.view(), _mode)?;
+        projected_tensor = mode_n_product(&projected_tensor.view(), &factor.view(), mode)?;
     }
 
     // Unfold the projected tensor along the skipped _mode

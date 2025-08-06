@@ -168,7 +168,7 @@ fn main() -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn parse_config(_matches: &ArgMatches) -> Result<RegressionConfig> {
+fn parse_config(matches: &ArgMatches) -> Result<RegressionConfig> {
     let baseline_dir = PathBuf::from(_matches.get_one::<String>("baseline-dir").unwrap());
 
     let degradation_threshold: f64 = _matches
@@ -210,12 +210,13 @@ fn parse_config(_matches: &ArgMatches) -> Result<RegressionConfig> {
 }
 
 #[allow(dead_code)]
-fn parse_report_format(_format_str: &str) -> Result<CiReportFormat> {
-    match _format_str.to_lowercase().as_str() {
+fn parse_report_format(_formatstr: &str) -> Result<CiReportFormat> {
+    match format_str.to_lowercase().as_str() {
         "json" => Ok(CiReportFormat::Json),
         "junit-xml" => Ok(CiReportFormat::JunitXml),
         "markdown" => Ok(CiReportFormat::Markdown),
-        "github-actions" => Ok(CiReportFormat::GitHubActions, _ => Err(OptimError::InvalidConfig(format!(
+        "github-actions" => Ok(CiReportFormat::GitHubActions),
+        _ => Err(OptimError::InvalidConfig(format!(
             "Unknown format: {}",
             format_str
         ))),

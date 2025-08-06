@@ -102,7 +102,7 @@ struct SobolState {
 
 impl SobolState {
     /// Create a new SobolState with proper initialization
-    pub fn new(_dimension: usize) -> Result<Self> {
+    pub fn new(dimension: usize) -> Result<Self> {
         let direction_numbers = Self::init_direction_numbers(_dimension)?;
         Ok(Self {
             direction_numbers,
@@ -111,7 +111,7 @@ impl SobolState {
     }
 
     /// Initialize direction numbers for given dimension
-    fn init_direction_numbers(_dimension: usize) -> Result<Vec<Vec<u64>>> {
+    fn init_direction_numbers(dimension: usize) -> Result<Vec<Vec<u64>>> {
         let mut direction_numbers = vec![vec![0u64; 32]; _dimension];
 
         // First _dimension (standard powers of 2)
@@ -343,7 +343,7 @@ impl AdvancedQMCGenerator {
     }
 
     /// Initialize Niederreiter state
-    fn init_niederreiter_state(_dimension: usize, _seed: Option<u64>) -> Result<NiederreiterState> {
+    fn init_niederreiter_state(_dimension: usize, seed: Option<u64>) -> Result<NiederreiterState> {
         let generating_matrices = Self::generate_niederreiter_matrices(_dimension)?;
         let polynomial_coefficients = Self::get_primitive_polynomials(_dimension)?;
 
@@ -354,7 +354,7 @@ impl AdvancedQMCGenerator {
     }
 
     /// Initialize Faure state
-    fn init_faure_state(_dimension: usize, seed: Option<u64>) -> Result<FaureState> {
+    fn init_faure_state(dimension: usize, seed: Option<u64>) -> Result<FaureState> {
         let base = Self::smallest_prime_geq(_dimension as u32)?;
         let permutation_matrices = Self::generate_faure_permutations(_dimension, base, seed)?;
 
@@ -381,7 +381,7 @@ impl AdvancedQMCGenerator {
     }
 
     /// Initialize Optimal LHS state
-    fn init_optimal_lhs_state(_dimension: usize, seed: Option<u64>) -> Result<OptimalLHSState> {
+    fn init_optimal_lhs_state(dimension: usize, seed: Option<u64>) -> Result<OptimalLHSState> {
         let rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
             None => StdRng::from_rng(&mut rand::rng()),
@@ -574,7 +574,7 @@ impl AdvancedQMCGenerator {
     }
 
     /// Load Joe-Kuo direction numbers (simplified version)
-    fn load_joe_kuo_direction_numbers(_dimension: usize) -> Result<Vec<Vec<u64>>> {
+    fn load_joe_kuo_direction_numbers(dimension: usize) -> Result<Vec<Vec<u64>>> {
         let mut direction_numbers = vec![vec![0u64; 32]; _dimension];
 
         // First _dimension (standard powers of 2)
@@ -612,7 +612,7 @@ impl AdvancedQMCGenerator {
     }
 
     /// Get primitive polynomial for given degree
-    fn get_primitive_polynomial(_degree: usize) -> u32 {
+    fn get_primitive_polynomial(degree: usize) -> u32 {
         // Simplified set of primitive polynomials
         match _degree {
             2 => 0b111,      // x^2 + x + 1
@@ -655,7 +655,7 @@ impl AdvancedQMCGenerator {
     }
 
     /// Apply digital shift scrambling
-    fn apply_digital_shift(_value: u64, matrix: &Array2<u32>) -> u64 {
+    fn apply_digital_shift(value: u64, matrix: &Array2<u32>) -> u64 {
         let mut result = 0u64;
 
         for i in 0..32 {
@@ -687,7 +687,7 @@ impl AdvancedQMCGenerator {
 
             // Use Faure-Tezuka permutation pattern
             for i in 1..base {
-                let j = rng.random_range(0..i);
+                let j = rng.gen_range(0..i);
                 perm.swap(i as usize, j as usize);
             }
 
@@ -698,7 +698,7 @@ impl AdvancedQMCGenerator {
     }
 
     /// Compute optimal leap values for Generalized Halton
-    fn compute_optimal_leap_values(_bases: &[u32]) -> Vec<usize> {
+    fn compute_optimal_leap_values(bases: &[u32]) -> Vec<usize> {
         _bases
             .iter()
             .map(|&base| {
@@ -729,7 +729,7 @@ impl AdvancedQMCGenerator {
 
             // Enhanced shuffling with bias towards uniformity
             for i in (1..base).rev() {
-                let j = rng.random_range(0..i);
+                let j = rng.gen_range(0..i);
                 perm.swap(i as usize, j as usize);
             }
 
@@ -764,10 +764,10 @@ impl AdvancedQMCGenerator {
     }
 
     /// Helper methods from base implementation
-    fn radical_inverse(_index: usize, base: u32) -> Result<f64> {
+    fn radical_inverse(index: usize, base: u32) -> Result<f64> {
         let mut result = 0.0;
         let mut fraction = 1.0 / base as f64;
-        let mut i = _index;
+        let mut i = index;
 
         while i > 0 {
             result += (i % base as usize) as f64 * fraction;
@@ -778,10 +778,10 @@ impl AdvancedQMCGenerator {
         Ok(result)
     }
 
-    fn scrambled_radical_inverse(_index: usize, base: u32, permutation: &[u32]) -> Result<f64> {
+    fn scrambled_radical_inverse(index: usize, base: u32, permutation: &[u32]) -> Result<f64> {
         let mut result = 0.0;
         let mut fraction = 1.0 / base as f64;
-        let mut i = _index;
+        let mut i = index;
 
         while i > 0 {
             let digit = i % base as usize;
@@ -845,7 +845,7 @@ impl AdvancedQMCGenerator {
     }
 
     /// Generate proper Niederreiter generating matrices
-    fn generate_niederreiter_matrices(_dimension: usize) -> Result<Vec<Array2<u32>>> {
+    fn generate_niederreiter_matrices(dimension: usize) -> Result<Vec<Array2<u32>>> {
         let mut matrices = Vec::with_capacity(_dimension);
 
         // Get primitive polynomials for each _dimension
@@ -908,7 +908,7 @@ impl AdvancedQMCGenerator {
         Ok(matrices)
     }
 
-    fn get_primitive_polynomials(_dimension: usize) -> Result<Vec<Vec<u32>>> {
+    fn get_primitive_polynomials(dimension: usize) -> Result<Vec<Vec<u32>>> {
         // Production-quality primitive polynomials for finite fields GF(2^m)
         // These are irreducible polynomials over GF(2) that are commonly used in cryptography
         let primitive_polys = [
@@ -974,7 +974,7 @@ impl AdvancedQMCGenerator {
         for _ in 0..dimension {
             let mut matrix = Array2::zeros((base as usize, base as usize));
             for i in 0..base as usize {
-                let j = rng.random_range(0..base as usize);
+                let j = rng.gen_range(0..base as usize);
                 matrix[[i, j]] = 1;
             }
             matrices.push(matrix);
@@ -993,7 +993,7 @@ pub struct StratifiedSampler {
 
 impl StratifiedSampler {
     /// Create a new stratified sampler
-    pub fn new(_dimension: usize, config: StratifiedSamplingConfig) -> Result<Self> {
+    pub fn new(dimension: usize, config: StratifiedSamplingConfig) -> Result<Self> {
         let handler = global_error_handler();
 
         if _dimension == 0 {
@@ -1002,7 +1002,7 @@ impl StratifiedSampler {
                     ErrorCode::E1001,
                     "StratifiedSampler::new",
                     "_dimension",
-                    _dimension,
+                    dimension,
                     "Dimension must be positive",
                 )
                 .error);
@@ -1010,13 +1010,13 @@ impl StratifiedSampler {
 
         Ok(Self {
             config,
-            dimension: _dimension,
+            dimension: dimension,
             strata_counts: HashMap::new(),
         })
     }
 
     /// Generate stratified samples
-    pub fn generate(&mut self, n_samples_: usize, seed: Option<u64>) -> Result<Array2<f64>> {
+    pub fn generate(&mut self, nsamples_: usize, seed: Option<u64>) -> Result<Array2<f64>> {
         let handler = global_error_handler();
 
         if n_samples_ == 0 {
@@ -1059,7 +1059,7 @@ impl StratifiedSampler {
             for _ in 0..samples_in_stratum {
                 let point = self.sample_within_stratum(&stratum_indices, &mut rng)?;
                 for (dim, &val) in point.iter().enumerate() {
-                    _samples[[sample_idx, dim]] = val;
+                    samples[[sample_idx, dim]] = val;
                 }
                 sample_idx += 1;
 
@@ -1075,12 +1075,12 @@ impl StratifiedSampler {
 
         // Fill remaining _samples if needed
         while sample_idx < n_samples_ {
-            let random_stratum_idx = rng.random_range(0..total_strata);
+            let random_stratum_idx = rng.gen_range(0..total_strata);
             let stratum_indices = self.linear_to_multi_index(random_stratum_idx);
             let point = self.sample_within_stratum(&stratum_indices, &mut rng)?;
 
             for (dim, &val) in point.iter().enumerate() {
-                _samples[[sample_idx, dim]] = val;
+                samples[[sample_idx, dim]] = val;
             }
             sample_idx += 1;
         }
@@ -1089,7 +1089,7 @@ impl StratifiedSampler {
     }
 
     /// Convert linear stratum index to multi-dimensional indices
-    fn linear_to_multi_index(&self, linear_idx: usize) -> Vec<usize> {
+    fn linear_to_multi_index(&self, linearidx: usize) -> Vec<usize> {
         let mut indices = Vec::with_capacity(self.dimension);
         let mut remaining = linear_idx;
 

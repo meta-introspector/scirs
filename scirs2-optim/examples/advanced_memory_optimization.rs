@@ -38,7 +38,7 @@ struct AdvancedTrainer {
 }
 
 impl AdvancedTrainer {
-    fn new(_input_size: usize, output_size: usize, initial_batch_size: usize) -> Self {
+    fn new(_input_size: usize, output_size: usize, initial_batchsize: usize) -> Self {
         let weights = Array2::random((_input_size, output_size), Uniform::new(-0.1, 0.1));
         let bias = Array1::zeros(output_size);
 

@@ -58,8 +58,8 @@ pub struct QuantizationAwareTraining {
     calibration_stats: CalibrationStats,
 impl QuantizationAwareTraining {
     /// Create a new QAT manager
-    pub fn new(_config: QATConfig) -> Self {
-            _config,
+    pub fn new(config: QATConfig) -> Self {
+            config,
             quantizers: Vec::new(),
             calibration_stats: CalibrationStats::new(),
     
@@ -81,7 +81,7 @@ impl QuantizationAwareTraining {
             QuantizationScheme::Dynamic => DynamicQuantizer::new(self.config.activation_bits),
         quantizer.quantize(activations)
     /// Fake quantization for training
-    pub fn fake_quantize(&self, tensor: &ArrayView2<f32>, is_weight: bool) -> Result<Array2<f32>> {
+    pub fn fake_quantize(&self, tensor: &ArrayView2<f32>, isweight: bool) -> Result<Array2<f32>> {
         if !self.config.fake_quantize {
             return Ok(tensor.to_owned());
         let bits = if is_weight { self.config.weight_bits } else { self.config.activation_bits };
@@ -157,7 +157,7 @@ trait Quantizer {
 struct SymmetricQuantizer {
     bits: u8,
 impl SymmetricQuantizer {
-    fn new(_bits: u8) -> Self {
+    fn new(bits: u8) -> Self {
         Self { _bits }
 impl Quantizer for SymmetricQuantizer {
     fn quantize(&self, tensor: &ArrayView2<f32>) -> Result<QuantizedTensor> {

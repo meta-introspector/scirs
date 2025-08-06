@@ -28,7 +28,7 @@ impl Vocabulary {
     }
 
     /// Create a new vocabulary with a maximum size
-    pub fn with_max_size(_max_size: usize) -> Self {
+    pub fn with_max_size(_maxsize: usize) -> Self {
         Self {
             token_to_id: HashMap::new(),
             id_to_token: HashMap::new(),
@@ -37,7 +37,7 @@ impl Vocabulary {
     }
 
     /// Create a vocabulary from a list of tokens
-    pub fn from_tokens(_tokens: &[String]) -> Self {
+    pub fn from_tokens(tokens: &[String]) -> Self {
         let mut vocab = Self::new();
         for token in _tokens {
             vocab.add_token(token);
@@ -135,7 +135,7 @@ impl Vocabulary {
     }
 
     /// Prune the vocabulary to only include the most common tokens
-    pub fn prune(&mut self, token_counts: &HashMap<String, usize>, min_count: usize) {
+    pub fn prune(&mut self, token_counts: &HashMap<String, usize>, mincount: usize) {
         // Create a new vocabulary with only tokens that meet the minimum _count
         let mut new_token_to_id = HashMap::new();
         let mut new_id_to_token = HashMap::new();

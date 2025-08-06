@@ -4,7 +4,7 @@
 //! semantic similarity measures rather than traditional distance metrics. It includes
 //! algorithms optimized for document clustering, sentence clustering, and topic modeling.
 
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive, Zero};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -152,9 +152,9 @@ pub struct SemanticKMeans {
 
 impl SemanticKMeans {
     /// Create a new semantic K-means clusterer
-    pub fn new(_config: SemanticClusteringConfig) -> Self {
+    pub fn new(config: SemanticClusteringConfig) -> Self {
         Self {
-            _config,
+            config,
             centroids: None,
             labels: None,
             inertia: None,
@@ -163,7 +163,7 @@ impl SemanticKMeans {
     }
 
     /// Fit the model to text data
-    pub fn fit(&mut self, text_repr: &TextRepresentation) -> Result<()> {
+    pub fn fit(&mut self, textrepr: &TextRepresentation) -> Result<()> {
         let vectors = self.extract_vectors(text_repr)?;
         let preprocessed = self.preprocess_vectors(vectors)?;
 
@@ -174,7 +174,7 @@ impl SemanticKMeans {
     }
 
     /// Extract numerical vectors from text representation
-    fn extract_vectors(&self, text_repr: &TextRepresentation) -> Result<Array2<f64>> {
+    fn extract_vectors(&self, textrepr: &TextRepresentation) -> Result<Array2<f64>> {
         match text_repr {
             TextRepresentation::TfIdf { vectors, .. } => Ok(vectors.clone()),
             TextRepresentation::WordEmbeddings { vectors, .. } => Ok(vectors.clone()),
@@ -287,7 +287,7 @@ impl SemanticKMeans {
     }
 
     /// Reduce dimensionality using PCA (simplified)
-    fn reduce_dimensions(&self, matrix: Array2<f64>, target_dim: usize) -> Result<Array2<f64>> {
+    fn reduce_dimensions(&self, matrix: Array2<f64>, targetdim: usize) -> Result<Array2<f64>> {
         let (_n_samples, n_features) = matrix._dim();
 
         if target_dim >= n_features {
@@ -638,7 +638,7 @@ impl SemanticKMeans {
     }
 
     /// Predict cluster assignments for new text data
-    pub fn predict(&self, text_repr: &TextRepresentation) -> Result<Array1<usize>> {
+    pub fn predict(&self, textrepr: &TextRepresentation) -> Result<Array1<usize>> {
         let vectors = self.extract_vectors(text_repr)?;
         let preprocessed = self.preprocess_vectors(vectors)?;
 
@@ -683,16 +683,16 @@ pub struct SemanticHierarchical {
 
 impl SemanticHierarchical {
     /// Create a new semantic hierarchical clusterer
-    pub fn new(_config: SemanticClusteringConfig) -> Self {
+    pub fn new(config: SemanticClusteringConfig) -> Self {
         Self {
-            _config,
+            config,
             linkage_matrix: None,
             n_clusters: None,
         }
     }
 
     /// Fit hierarchical clustering to text data
-    pub fn fit(&mut self, text_repr: &TextRepresentation) -> Result<()> {
+    pub fn fit(&mut self, textrepr: &TextRepresentation) -> Result<()> {
         let vectors = self.extract_vectors(text_repr)?;
         let preprocessed = self.preprocess_vectors(vectors)?;
 
@@ -701,7 +701,7 @@ impl SemanticHierarchical {
     }
 
     /// Extract and preprocess vectors (same as SemanticKMeans)
-    fn extract_vectors(&self, text_repr: &TextRepresentation) -> Result<Array2<f64>> {
+    fn extract_vectors(&self, textrepr: &TextRepresentation) -> Result<Array2<f64>> {
         match text_repr {
             TextRepresentation::TfIdf { vectors, .. } => Ok(vectors.clone()),
             TextRepresentation::WordEmbeddings { vectors, .. } => Ok(vectors.clone()),
@@ -860,7 +860,7 @@ pub struct TopicBasedClustering {
 
 impl TopicBasedClustering {
     /// Create a new topic-based clusterer
-    pub fn new(_config: SemanticClusteringConfig, n_topics: usize) -> Self {
+    pub fn new(_config: SemanticClusteringConfig, ntopics: usize) -> Self {
         Self {
             _config_topics: None,
             document_topic_distributions: None,
@@ -869,7 +869,7 @@ impl TopicBasedClustering {
     }
 
     /// Fit topic-based clustering (simplified NMF-like approach)
-    pub fn fit(&mut self, text_repr: &TextRepresentation) -> Result<()> {
+    pub fn fit(&mut self, textrepr: &TextRepresentation) -> Result<()> {
         let vectors = self.extract_vectors(text_repr)?;
         let preprocessed = self.preprocess_vectors(vectors)?;
 
@@ -878,7 +878,7 @@ impl TopicBasedClustering {
     }
 
     /// Extract vectors from text representation
-    fn extract_vectors(&self, text_repr: &TextRepresentation) -> Result<Array2<f64>> {
+    fn extract_vectors(&self, textrepr: &TextRepresentation) -> Result<Array2<f64>> {
         match text_repr {
             TextRepresentation::TfIdf { vectors, .. } => Ok(vectors.clone()),
             TextRepresentation::DocumentTerm { matrix, .. } => Ok(matrix.clone()),
@@ -979,7 +979,7 @@ impl TopicBasedClustering {
     }
 
     /// Get cluster assignments based on dominant topics
-    pub fn predict(&self, text_repr: &TextRepresentation) -> Result<Array1<usize>> {
+    pub fn predict(&self, textrepr: &TextRepresentation) -> Result<Array1<usize>> {
         if let Some(ref doc_topics) = self.document_topic_distributions {
             let mut labels = Array1::zeros(doc_topics.nrows());
 

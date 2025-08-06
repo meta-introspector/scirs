@@ -77,7 +77,7 @@ fn report_simd_capabilities() {
 }
 
 #[allow(dead_code)]
-fn generate_test_data(_n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
+fn generate_test_data(_npoints: usize, dimensions: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
     Array2::fromshape_fn((_n_points, dimensions), |_| rng.gen_range(-10.0..10.0))
 }

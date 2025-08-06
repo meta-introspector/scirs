@@ -346,13 +346,13 @@ fn generate_color_image() -> (Array3<f64>, Array3<f64>) {
 
 /// Helper function to extract a color channel from a color image
 #[allow(dead_code)]
-fn extract_color_channel(_image: &Array3<f64>, channel: usize) -> Array2<f64> {
-    let (height, width_) = _image.dim();
+fn extract_color_channel(image: &Array3<f64>, channel: usize) -> Array2<f64> {
+    let (height, width_) = image.dim();
     let mut result = Array2::zeros((height, width));
 
     for i in 0..height {
         for j in 0..width {
-            result[[i, j]] = _image[[i, j, channel]];
+            result[[i, j]] = image[[i, j, channel]];
         }
     }
 
@@ -361,8 +361,8 @@ fn extract_color_channel(_image: &Array3<f64>, channel: usize) -> Array2<f64> {
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for 1D signals
 #[allow(dead_code)]
-fn calculate_snr(_clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
-    if _clean.len() != noisy.len() {
+fn calculate_snr(clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
+    if clean.len() != noisy.len() {
         return f64::NEG_INFINITY;
     }
 
@@ -370,8 +370,8 @@ fn calculate_snr(_clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
     let mut noise_power = 0.0;
 
     for i in 0.._clean.len() {
-        let diff = _clean[i] - noisy[i];
-        signal_power += _clean[i] * _clean[i];
+        let diff = clean[i] - noisy[i];
+        signal_power += clean[i] * clean[i];
         noise_power += diff * diff;
     }
 
@@ -384,19 +384,19 @@ fn calculate_snr(_clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for 2D images
 #[allow(dead_code)]
-fn calculate_image_snr(_clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
-    if _clean.dim() != noisy.dim() {
+fn calculate_image_snr(clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
+    if clean.dim() != noisy.dim() {
         return f64::NEG_INFINITY;
     }
 
-    let (height, width) = _clean.dim();
+    let (height, width) = clean.dim();
     let mut signal_power = 0.0;
     let mut noise_power = 0.0;
 
     for i in 0..height {
         for j in 0..width {
-            let diff = _clean[[i, j]] - noisy[[i, j]];
-            signal_power += _clean[[i, j]] * _clean[[i, j]];
+            let diff = clean[[i, j]] - noisy[[i, j]];
+            signal_power += clean[[i, j]] * clean[[i, j]];
             noise_power += diff * diff;
         }
     }
@@ -410,20 +410,20 @@ fn calculate_image_snr(_clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for color images
 #[allow(dead_code)]
-fn calculate_color_image_snr(_clean: &Array3<f64>, noisy: &Array3<f64>) -> f64 {
-    if _clean.dim() != noisy.dim() {
+fn calculate_color_image_snr(clean: &Array3<f64>, noisy: &Array3<f64>) -> f64 {
+    if clean.dim() != noisy.dim() {
         return f64::NEG_INFINITY;
     }
 
-    let (height, width, channels) = _clean.dim();
+    let (height, width, channels) = clean.dim();
     let mut signal_power = 0.0;
     let mut noise_power = 0.0;
 
     for i in 0..height {
         for j in 0..width {
             for c in 0..channels {
-                let diff = _clean[[i, j, c]] - noisy[[i, j, c]];
-                signal_power += _clean[[i, j, c]] * _clean[[i, j, c]];
+                let diff = clean[[i, j, c]] - noisy[[i, j, c]];
+                signal_power += clean[[i, j, c]] * clean[[i, j, c]];
                 noise_power += diff * diff;
             }
         }
@@ -458,7 +458,7 @@ fn save_signal_to_csv(
 
 /// Saves a 2D image to a CSV file for visualization
 #[allow(dead_code)]
-fn save_image_to_csv(_filename: &str, image: &Array2<f64>) {
+fn save_image_to_csv(filename: &str, image: &Array2<f64>) {
     let mut file = File::create(_filename).expect("Failed to create file");
 
     let (height, width) = image.dim();

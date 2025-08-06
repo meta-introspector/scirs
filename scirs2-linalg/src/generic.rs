@@ -284,8 +284,8 @@ pub trait PrecisionSelector {
     type HighPrecision: LinalgScalar;
     type LowPrecision: LinalgScalar;
 
-    fn should_use_high_precision(_input_condition: f64) -> bool {
-        _input_condition > 1e6
+    fn should_use_high_precision(_inputcondition: f64) -> bool {
+        _inputcondition > 1e6
     }
 }
 

@@ -67,7 +67,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             0 => "0-80 Hz".to_string(),
             1 => "80-200 Hz".to_string(),
             2 => "200-400 Hz".to_string(),
-            3 => "400-500 Hz".to_string(, _ => format!("Band {}", i),
+            3 => "400-500 Hz".to_string(),
+            _ => format!("Band {}", i),
         };
 
         println!(
@@ -180,7 +181,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Calculate RMS (Root Mean Square) of a signal
 #[allow(dead_code)]
-fn calculate_rms(_signal: &Array1<f64>) -> f64 {
-    let mean_square: f64 = _signal.iter().map(|&x| x * x).sum::<f64>() / _signal.len() as f64;
+fn calculate_rms(signal: &Array1<f64>) -> f64 {
+    let mean_square: f64 = signal.iter().map(|&x| x * x).sum::<f64>() / signal.len() as f64;
     mean_square.sqrt()
 }

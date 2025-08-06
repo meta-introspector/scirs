@@ -44,7 +44,7 @@ fn run_gpu_stress_test() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // Test 1: Large Matrix Operations
-    test_large_matrix_ops(&ctx)?;
+    test_largematrix_ops(&ctx)?;
 
     // Test 2: Massive Data Transfer
     test_massive_data_transfer(&ctx)?;
@@ -58,7 +58,7 @@ fn run_gpu_stress_test() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn test_large_matrix_operations(ctx: &GpuContext) -> Result<(), GpuError> {
+fn test_largematrix_operations(ctx: &GpuContext) -> Result<(), GpuError> {
     println!("Test 1: Large Matrix Operations");
     println!("================================");
 
@@ -84,8 +84,8 @@ fn test_large_matrix_operations(ctx: &GpuContext) -> Result<(), GpuError> {
 
         // Allocate GPU buffers
         let start = Instant::now();
-        let gpu_a = _ctx.create_buffer_from_slice(&a);
-        let gpu_b = _ctx.create_buffer_from_slice(&b);
+        let gpu_a = ctx.create_buffer_from_slice(&a);
+        let gpu_b = ctx.create_buffer_from_slice(&b);
         let alloc_time = start.elapsed();
         println!("  Allocation time: {:?}", alloc_time);
 
@@ -137,7 +137,7 @@ fn test_massive_data_transfer(ctx: &GpuContext) -> Result<(), GpuError> {
 
         // Upload to GPU
         let upload_start = Instant::now();
-        let gpu_buffer = _ctx.create_buffer_from_slice(&data);
+        let gpu_buffer = ctx.create_buffer_from_slice(&data);
         let upload_time = upload_start.elapsed();
 
         // Download from GPU
@@ -145,13 +145,13 @@ fn test_massive_data_transfer(ctx: &GpuContext) -> Result<(), GpuError> {
         let result = gpu_buffer.to_vec();
         let download_time = download_start.elapsed();
 
-        let upload_bandwidth = (size_mb as f64) / upload_time.as_secs_f64();
-        let download_bandwidth = (size_mb as f64) / download_time.as_secs_f64();
+        let uploadbandwidth = (size_mb as f64) / upload_time.as_secs_f64();
+        let downloadbandwidth = (size_mb as f64) / download_time.as_secs_f64();
 
-        println!("  Upload: {:?} ({:.2} MB/s)", upload_time, upload_bandwidth);
+        println!("  Upload: {:?} ({:.2} MB/s)", upload_time, uploadbandwidth);
         println!(
             "  Download: {:?} ({:.2} MB/s)",
-            download_time, download_bandwidth
+            download_time, downloadbandwidth
         );
     }
 
@@ -176,7 +176,7 @@ fn test_intensive_computation_loop(ctx: &GpuContext) -> Result<(), GpuError> {
         .collect();
 
     println!("Uploading to GPU...");
-    let gpu_data = _ctx.create_buffer_from_slice(&data);
+    let gpu_data = ctx.create_buffer_from_slice(&data);
 
     println!("Running 100 iterations of intensive computation...");
     let compute_start = Instant::now();

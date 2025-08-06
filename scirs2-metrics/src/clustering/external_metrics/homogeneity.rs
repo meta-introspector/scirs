@@ -86,13 +86,13 @@ where
     }
 
     // Count labels
-    let mut _true_counts: HashMap<String, usize> = HashMap::new();
+    let mut true_counts: HashMap<String, usize> = HashMap::new();
     for lt in labels_true.iter() {
         let key = format!("{lt:?}");
         *true_counts.entry(key).or_insert(0) += 1;
     }
 
-    let mut _pred_counts: HashMap<String, usize> = HashMap::new();
+    let mut pred_counts: HashMap<String, usize> = HashMap::new();
     for lp in labels_pred.iter() {
         let key = format!("{lp:?}");
         *pred_counts.entry(key).or_insert(0) += 1;

@@ -738,7 +738,7 @@ pub struct CacheOptimizedOperations {
 }
 
 impl CacheOptimizedOperations {
-    pub fn new(_capabilities: &AdvancedHardwareCapabilities) -> Self {
+    pub fn new(capabilities: &AdvancedHardwareCapabilities) -> Self {
         Self {
             l1_block_size: (_capabilities.l1_cache_size / 8).next_power_of_two().min(256),
             l2_block_size: (_capabilities.l2_cache_size / 8).next_power_of_two().min(2048),
@@ -788,7 +788,7 @@ impl CacheOptimizedOperations {
     }
     
     #[cfg(not(target_arch = "x86_64"))]
-    fn prefetch_memory(&self_ptr: *const f32, offset: usize) {
+    fn prefetch_memory(&selfptr: *const f32, offset: usize) {
         // No-op for non-x86 platforms
     }
 }

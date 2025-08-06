@@ -28,9 +28,9 @@ pub struct EarlyStoppingEstimator {
     min_delta: f64,
 impl EarlyStoppingEstimator {
     /// Create a new early stopping estimator
-    pub fn new(_epochs: usize) -> Self {
+    pub fn new(epochs: usize) -> Self {
         Self {
-            _epochs,
+            epochs,
             patience: 5,
             min_delta: 0.001,
         }
@@ -126,7 +126,7 @@ impl SuperNetEstimator {
     ) -> Result<()> {
         if self.is_trained {
             return Ok(());
-        if self.shared_weights.is_none() {
+        if self.sharedweights.is_none() {
             self.initialize_shared_weights()?;
         // Progressive training with different architectures
         for epoch in 0..self.warmup_epochs {
@@ -145,9 +145,9 @@ use rand::rng;
 use statrs::statistics::Statistics;
         let mut rng = rng();
         let mut architecture = Vec::new();
-        let num_layers = rng.random_range(3..8);
+        let num_layers = rng.gen_range(3..8);
         for _ in 0..num_layers {
-            let layer_type = match rng.random_range(0..4) {
+            let layer_type = match rng.gen_range(0..4) {
                 0 => format!("dense_{}"..[64, 128, 256, 512].choose(&mut rng).unwrap()),
                 1 => format!("conv_{}", [32, 64, 128, 256].choose(&mut rng).unwrap()),
                 2 => "dropout".to_string(, _ => "batchnorm".to_string(),
@@ -291,8 +291,8 @@ pub struct LearningCurveEstimator {
     extrapolate_to: usize,
 impl LearningCurveEstimator {
     /// Create a new learning curve estimator
-    pub fn new(_initial_epochs: usize, extrapolate_to: usize) -> Self {
-            _initial_epochs,
+    pub fn new(_initial_epochs: usize, extrapolateto: usize) -> Self {
+            initial_epochs,
             extrapolate_to,
 impl PerformanceEstimator for LearningCurveEstimator {
         // Collect learning curve for initial epochs

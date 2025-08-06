@@ -121,7 +121,7 @@ pub struct DataPartition<F: Float> {
 }
 
 impl<F: Float> DataPartition<F> {
-    pub fn new(partition_id: usize, data: Array2<F>, worker_id: usize) -> Self {
+    pub fn new(partition_id: usize, data: Array2<F>, workerid: usize) -> Self {
         let weight = 1.0; // Default weight
         Self {
             partition_id,
@@ -146,7 +146,7 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
     }
 
     /// Register a new worker for health monitoring
-    pub fn register_worker(&mut self, worker_id: usize) {
+    pub fn register_worker(&mut self, workerid: usize) {
         let health_info = WorkerHealthInfo {
             worker_id,
             status: WorkerStatus::Healthy,
@@ -237,7 +237,7 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
     }
 
     /// Update worker status based on performance metrics
-    fn update_worker_status(&mut self, worker_id: usize) -> Result<()> {
+    fn update_worker_status(&mut self, workerid: usize) -> Result<()> {
         if let Some(health) = self.worker_health.get_mut(&worker_id) {
             let performance_score = self.calculate_performance_score(health);
 
@@ -409,7 +409,7 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
     }
 
     /// Replace failed worker with a new worker
-    fn replace_failed_worker(&mut self, failed_worker_id: usize) -> Result<()> {
+    fn replace_failed_worker(&mut self, failed_workerid: usize) -> Result<()> {
         if !self.fault_config.auto_replace_workers {
             return Err(ClusteringError::InvalidInput(
                 "Worker replacement is disabled".to_string(),
@@ -550,7 +550,7 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
     }
 
     /// Get worker health status
-    pub fn get_worker_status(&self, worker_id: usize) -> Option<WorkerStatus> {
+    pub fn get_worker_status(&self, workerid: usize) -> Option<WorkerStatus> {
         self.worker_health.get(&worker_id).map(|h| h.status)
     }
 
@@ -590,7 +590,7 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
 
 impl WorkerHealthInfo {
     /// Check if worker is healthy based on heartbeat timeout
-    pub fn is_healthy(&self, timeout_ms: u64) -> bool {
+    pub fn is_healthy(&self, timeoutms: u64) -> bool {
         let current_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()

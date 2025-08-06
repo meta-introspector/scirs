@@ -115,7 +115,7 @@ where
 
 // A large ODE system for demonstration
 #[allow(dead_code)]
-fn large_ode_system(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
+fn large_ode_system(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let n = y.len();
     let mut result = Array1::zeros(n);
 

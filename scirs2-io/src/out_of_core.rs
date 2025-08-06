@@ -220,7 +220,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
 
     /// Open with custom configuration
     pub fn open_with_config<P: AsRef<Path>>(path: P, config: OutOfCoreConfig) -> Result<Self> {
-        let file_path = _path.as_ref().to_path_buf();
+        let file_path = path.as_ref().to_path_buf();
 
         // Open file and read metadata
         let mut file = File::open(&file_path)
@@ -270,7 +270,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Calculate chunk shape based on target chunk size
-    fn calculate_chunkshape(shape: &[usize], target_size: usize) -> Vec<usize> {
+    fn calculate_chunkshape(shape: &[usize], targetsize: usize) -> Vec<usize> {
         let ndim = shape.len();
         let elements_per_dim = (target_size as f64).powf(1.0 / ndim as f64) as usize;
 
@@ -286,7 +286,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Write metadata to file
-    fn write_metadata(_file: &mut File, metadata: &ArrayMetadata) -> Result<()> {
+    fn write_metadata(file: &mut File, metadata: &ArrayMetadata) -> Result<()> {
         let mut buffer = vec![0u8; Self::metadata_size()];
         let mut cursor = 0;
 
@@ -336,7 +336,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Read metadata from file
-    fn read_metadata(_file: &mut File) -> Result<ArrayMetadata> {
+    fn read_metadata(file: &mut File) -> Result<ArrayMetadata> {
         let mut buffer = vec![0u8; Self::metadata_size()];
         _file
             .read_exact(&mut buffer)
@@ -411,7 +411,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Get a chunk by its linear index
-    fn get_chunk(&self, chunk_id: usize) -> Result<Vec<T>> {
+    fn get_chunk(&self, chunkid: usize) -> Result<Vec<T>> {
         // Check cache first
         {
             let cache = self.cache.read().unwrap();
@@ -433,7 +433,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Read chunk from disk
-    fn read_chunk_from_disk(&self, chunk_id: usize) -> Result<Vec<T>> {
+    fn read_chunk_from_disk(&self, chunkid: usize) -> Result<Vec<T>> {
         if let Some(ref mmap) = self.mmap {
             let chunk_size = self.metadata.chunkshape.iter().product::<usize>();
             let offset = Self::metadata_size() + chunk_id * chunk_size * self.metadata.element_size;
@@ -495,7 +495,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Write chunk data to disk
-    fn write_chunk_to_disk(&self, chunk_id: usize, data: &[T]) -> Result<()> {
+    fn write_chunk_to_disk(&self, chunkid: usize, data: &[T]) -> Result<()> {
         let mut file = OpenOptions::new()
             .write(true)
             .create(true)
@@ -551,7 +551,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Update cache with new chunk
-    fn update_cache(&self, cache: &mut ChunkCache<T>, chunk_id: usize, data: Vec<T>) {
+    fn update_cache(&self, cache: &mut ChunkCache<T>, chunkid: usize, data: Vec<T>) {
         let chunk_size_bytes = data.len() * std::mem::size_of::<T>();
 
         // Evict chunks if necessary
@@ -589,7 +589,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Process array in chunks
-    pub fn process_chunks<F, R>(&self, chunk_size: usize, processor: F) -> Result<Vec<R>>
+    pub fn process_chunks<F, R>(&self, chunksize: usize, processor: F) -> Result<Vec<R>>
     where
         F: Fn(ArrayView<T, IxDyn>) -> Result<R>,
         R: Send,
@@ -613,7 +613,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Get shape of a specific chunk
-    fn get_chunkshape(&self, chunk_id: usize) -> IxDyn {
+    fn get_chunkshape(&self, chunkid: usize) -> IxDyn {
         // Calculate chunk coordinates
         let mut chunk_coords = Vec::with_capacity(self.metadata.shape.len());
         let mut temp_id = chunk_id;
@@ -1055,12 +1055,12 @@ pub struct OutOfCoreSorter<T> {
 
 impl<T: ScientificNumber + Ord + Clone> OutOfCoreSorter<T> {
     /// Create a new out-of-core sorter
-    pub fn new(_temp_dir: PathBuf, chunk_size: usize) -> Result<Self> {
+    pub fn new(_temp_dir: PathBuf, chunksize: usize) -> Result<Self> {
         std::fs::create_dir_all(&_temp_dir)
-            .map_err(|e| IoError::FileError(format!("Failed to create temp _dir: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to create temp dir: {}", e)))?;
 
         Ok(Self {
-            temp_dir: _temp_dir,
+            temp_dir: temp_dir,
             chunk_size,
             chunk_files: Vec::new(),
             _phantom: std::marker::PhantomData,
@@ -1161,13 +1161,13 @@ pub trait ArraySource<T>: Send + Sync {
 
 impl<T: Clone> VirtualArray<T> {
     /// Create a virtual array by concatenating along an axis
-    pub fn concatenate(_arrays: Vec<Box<dyn ArraySource<T>>>, axis: usize) -> Result<Self> {
-        if _arrays.is_empty() {
+    pub fn concatenate(arrays: Vec<Box<dyn ArraySource<T>>>, axis: usize) -> Result<Self> {
+        if arrays.is_empty() {
             return Err(IoError::ParseError("No _arrays provided".to_string()));
         }
 
         // Validate shapes
-        let firstshape = _arrays[0].shape();
+        let firstshape = arrays[0].shape();
         for array in &_arrays[1..] {
             let shape = array.shape();
             if shape.len() != firstshape.len() {
@@ -1188,10 +1188,10 @@ impl<T: Clone> VirtualArray<T> {
 
         // Calculate total shape
         let mut shape = firstshape.to_vec();
-        shape[axis] = _arrays.iter().map(|a| a.shape()[axis]).sum();
+        shape[axis] = arrays.iter().map(|a| a.shape()[axis]).sum();
 
         Ok(Self {
-            arrays: _arrays,
+            arrays: arrays,
             shape,
             axis,
         })
@@ -1329,7 +1329,7 @@ impl<T: ScientificNumber> ScientificNumberRead for T {
     fn read_le<R: Read>(reader: &mut R) -> Result<Self> {
         let size = std::mem::size_of::<T>();
         let mut bytes = vec![0u8; size];
-        _reader
+        reader
             .read_exact(&mut bytes)
             .map_err(|e| IoError::ParseError(format!("Failed to read numeric value: {}", e)))?;
         Ok(T::from_le_bytes(&bytes))

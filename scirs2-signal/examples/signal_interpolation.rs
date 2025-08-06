@@ -33,9 +33,9 @@ fn main() -> SignalResult<()> {
 
 /// Generate a sine wave signal with some missing values
 #[allow(dead_code)]
-fn generate_test_signal(_n_samples: usize, missing_rate: f64) -> Array1<f64> {
+fn generate_test_signal(_n_samples: usize, missingrate: f64) -> Array1<f64> {
     let mut signal = Array1::zeros(_n_samples);
-    let x = Array1::linspace(0.0, 10.0, _n_samples);
+    let x = Array1::linspace(0.0, 10.0, n_samples);
 
     // Generate sine wave
     for i in 0.._n_samples {
@@ -55,14 +55,14 @@ fn generate_test_signal(_n_samples: usize, missing_rate: f64) -> Array1<f64> {
 
 /// Export signal data to CSV for visualization
 #[allow(dead_code)]
-fn export_to_csv(_file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
+fn export_to_csv(_filename: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
     let mut file =
         File::create(_file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
 
     // Write header
     let header = signals
         .iter()
-        .map(|(name_)| _name.to_string())
+        .map(|(name_)| name.to_string())
         .collect::<Vec<String>>()
         .join(",");
     writeln!(file, "{}", header).map_err(|e| SignalError::ComputationError(e.to_string()))?;
@@ -92,7 +92,7 @@ fn export_to_csv(_file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRe
 
 /// Export 2D data to CSV for visualization
 #[allow(dead_code)]
-fn export_2d_to_csv(_file_name: &str, data: &Array2<f64>) -> SignalResult<()> {
+fn export_2d_to_csv(_filename: &str, data: &Array2<f64>) -> SignalResult<()> {
     let mut file =
         File::create(_file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
     let (n_rows, n_cols) = data.dim();
@@ -608,7 +608,7 @@ fn auto_interpolation_example() -> SignalResult<()> {
     let mut signal1 = reference.clone();
     let _rng = rand::rng();
     for i in 0..n_samples {
-        if _rng.random::<f64>() < 0.2 {
+        if rng.random::<f64>() < 0.2 {
             signal1[i] = f64::NAN;
         }
     }

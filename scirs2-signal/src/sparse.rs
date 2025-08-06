@@ -1,7 +1,7 @@
-use ndarray::s;
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2};
+use ndarray::s;
+use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
@@ -541,7 +541,8 @@ pub fn cosamp(
         proxy_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
         // Get the indices of the 2K largest entries
-        let selected_indices: Vec<usize> = proxy_values.iter().take(2 * k).map(|&(i_)| i).collect();
+        let selected_indices: Vec<usize> =
+            proxy_values.iter().take(2 * k).map(|&(i, _)| i).collect();
 
         // Merge with current support (non-zero indices in x)
         let mut support = Vec::new();
@@ -597,7 +598,7 @@ pub fn cosamp(
 
         // Create new solution with K largest entries
         let mut x_new = Array1::<f64>::zeros(n);
-        for &(i_) in temp_values.iter().take(k) {
+        for &(i, _) in temp_values.iter().take(k) {
             x_new[i] = x_temp[i];
         }
 
@@ -712,7 +713,7 @@ pub fn iht(
 
         // Create new solution with K largest entries
         let mut x_new = Array1::<f64>::zeros(n);
-        for &(i_) in values.iter().take(k) {
+        for &(i, _) in values.iter().take(k) {
             x_new[i] = x_grad[i];
         }
 
@@ -792,7 +793,7 @@ pub fn subspace_pursuit(
     initial_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
     // Initialize support with K largest correlations
-    let mut support: Vec<usize> = initial_values.iter().take(k).map(|&(i_)| i).collect();
+    let mut support: Vec<usize> = initial_values.iter().take(k).map(|&(i, _)| i).collect();
 
     // Subspace Pursuit iterations
     for _ in 0..config.max_iterations {
@@ -832,7 +833,7 @@ pub fn subspace_pursuit(
         corr_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
         // Get the indices of the K largest correlations
-        let new_candidates: Vec<usize> = corr_values.iter().take(k).map(|&(i_)| i).collect();
+        let new_candidates: Vec<usize> = corr_values.iter().take(k).map(|&(i, _)| i).collect();
 
         // Merge supports
         let mut merged_support = support.clone();
@@ -875,7 +876,7 @@ pub fn subspace_pursuit(
         merged_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
         // Update support with K largest coefficients
-        let new_support: Vec<usize> = merged_values.iter().take(k).map(|&(i_)| i).collect();
+        let new_support: Vec<usize> = merged_values.iter().take(k).map(|&(i, _)| i).collect();
 
         // Check if support has changed
         if support == new_support {
@@ -1362,8 +1363,8 @@ pub fn image_inpainting(
 pub fn random_sensing_matrix(m: usize, n: usize, seed: Option<u64>) -> Array2<f64> {
     // Initialize with random Gaussian entries
     let mut rng = match seed {
-        Some(s) => StdRng::from_seed([s as u8; 32]),
-        None => StdRng::from_seed([0u8; 32]), // Use deterministic seed for consistency
+        Some(s) => StdRng::seed_from_u64([s as u8; 32]),
+        None => StdRng::seed_from_u64([0u8; 32]), // Use deterministic seed for consistency
     };
 
     let normal = rand_distr::Normal::new(0.0, 1.0).unwrap();
@@ -1398,18 +1399,18 @@ pub fn random_sensing_matrix(m: usize, n: usize, seed: Option<u64>) -> Array2<f6
 ///
 /// * Coherence (maximum absolute inner product between normalized columns)
 #[allow(dead_code)]
-pub fn matrix_coherence(_phi: &Array2<f64>) -> SignalResult<f64> {
-    let (_, n) = _phi.dim();
+pub fn matrix_coherence(phi: &Array2<f64>) -> SignalResult<f64> {
+    let (_, n) = phi.dim();
 
     let mut max_coherence = 0.0;
 
     for i in 0..n {
-        let col_i = _phi.slice(s![.., i]);
+        let col_i = phi.slice(s![.., i]);
         let norm_i = vector_norm(&col_i.view(), 2)
             .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
 
         for j in i + 1..n {
-            let col_j = _phi.slice(s![.., j]);
+            let col_j = phi.slice(s![.., j]);
             let norm_j = vector_norm(&col_j.view(), 2)
                 .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
 
@@ -1434,8 +1435,8 @@ pub fn matrix_coherence(_phi: &Array2<f64>) -> SignalResult<f64> {
 ///
 /// * Estimated RIP constant
 #[allow(dead_code)]
-pub fn estimate_rip_constant(_phi: &Array2<f64>, s: usize) -> SignalResult<f64> {
-    let (_m, n) = _phi.dim();
+pub fn estimate_rip_constant(phi: &Array2<f64>, s: usize) -> SignalResult<f64> {
+    let (_m, n) = phi.dim();
 
     if s > n {
         return Err(SignalError::ValueError(
@@ -1473,7 +1474,7 @@ pub fn estimate_rip_constant(_phi: &Array2<f64>, s: usize) -> SignalResult<f64> 
         x.mapv_inplace(|val| val / x_norm);
 
         // Compute Phi * x
-        let y = _phi.dot(&x);
+        let y = phi.dot(&x);
 
         // Compute the ratio ||Phi * x||^2 / ||x||^2
         // Since x is normalized, ||x||^2 = 1

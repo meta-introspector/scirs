@@ -46,7 +46,7 @@ pub enum DSTType {
 /// let dst_coeffs = dst(&signal, Some(DSTType::Type2), Some("ortho")).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn dst<T>(x: &[T], dst_type: Option<DSTType>, norm: Option<&str>) -> FFTResult<Vec<f64>>
+pub fn dst<T>(x: &[T], dsttype: Option<DSTType>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug,
 {
@@ -60,7 +60,7 @@ where
         .collect::<FFTResult<Vec<_>>>()?;
 
     let _n = input.len();
-    let type_val = dst_type.unwrap_or(DSTType::Type2);
+    let type_val = dsttype.unwrap_or(DSTType::Type2);
 
     match type_val {
         DSTType::Type1 => dst1(&input, norm),
@@ -102,7 +102,7 @@ where
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn idst<T>(x: &[T], dst_type: Option<DSTType>, norm: Option<&str>) -> FFTResult<Vec<f64>>
+pub fn idst<T>(x: &[T], dsttype: Option<DSTType>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug,
 {
@@ -116,7 +116,7 @@ where
         .collect::<FFTResult<Vec<_>>>()?;
 
     let _n = input.len();
-    let type_val = dst_type.unwrap_or(DSTType::Type2);
+    let type_val = dsttype.unwrap_or(DSTType::Type2);
 
     // Inverse DST is computed by using a different DST _type
     match type_val {

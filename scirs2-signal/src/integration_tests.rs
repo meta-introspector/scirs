@@ -4,7 +4,7 @@
 // processing components work together to solve real-world problems. These tests
 // serve as both validation and documentation of the library's capabilities.
 
-use crate::denoise_adaptive__advanced::{adaptive_denoise_advanced, AdaptiveDenoisingConfig};
+use crate::denoise_adaptive_advanced::{adaptive_denoise_advanced, AdaptiveDenoisingConfig};
 use crate::dwt::Wavelet;
 use crate::dwt2d_enhanced::{enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig};
 use crate::error::{SignalError, SignalResult};
@@ -13,7 +13,7 @@ use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig};
 use crate::multitaper::enhanced::{enhanced_pmtm, MultitaperConfig};
 use crate::parametric::{estimate_arma, ARMethod};
 use crate::sysid::{estimate_transfer_function, TfEstimationMethod};
-use crate::validation__runner::{validate_signal_processing_library, ValidationConfig};
+use crate::validation_runner::{validate_signal_processing_library, ValidationConfig};
 use ndarray::{Array1, Array2};
 use rand::Rng;
 use statrs::statistics::Statistics;
@@ -68,12 +68,15 @@ fn test_biomedical_signal_pipeline() -> SignalResult<()> {
             let ti = t[i];
             let powerline_noise = 0.1 * (2.0 * PI * 50.0 * ti).sin(); // 50 Hz interference
             let baseline_wander = 0.2 * (2.0 * PI * 0.5 * ti).sin(); // Slow drift
-            let random_noise = 0.05 * rng.random_range(-1.0..1.0);
+            let random_noise = 0.05 * rng.gen_range(-1.0..1.0);
             signal + powerline_noise + baseline_wander + random_noise
         })
         .collect();
 
-    println!("📊 Generated {} samples of synthetic ECG data"..noisy_ecg.len());
+    println!(
+        "📊 Generated {} samples of synthetic ECG data",
+        noisy_ecg.len()
+    );
 
     // Step 1: Preprocessing - Remove baseline wander and powerline interference
     println!("🔧 Step 1: Preprocessing...");
@@ -136,7 +139,7 @@ fn test_biomedical_signal_pipeline() -> SignalResult<()> {
         .iter()
         .enumerate()
         .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap_or(0);
 
     let dominant_frequency = spectral_result.frequencies[max_power_idx];
@@ -251,10 +254,13 @@ fn test_audio_processing_pipeline() -> SignalResult<()> {
     let mut rng = rand::rng();
     let noisy_audio: Vec<f64> = audio_signal
         .iter()
-        .map(|&signal| signal + 0.01 * rng.random_range(-1.0..1.0))
+        .map(|&signal| signal + 0.01 * rng.gen_range(-1.0..1.0))
         .collect();
 
-    println!("📊 Generated {} samples of synthetic audio"..noisy_audio.len());
+    println!(
+        "📊 Generated {} samples of synthetic audio",
+        noisy_audio.len()
+    );
 
     // Step 1: Short-time spectral analysis
     println!("🔧 Step 1: Short-time spectral analysis...");
@@ -362,12 +368,15 @@ fn test_geophysical_processing_pipeline() -> SignalResult<()> {
         }
 
         // Add some seismic noise (more complex than white noise)
-        let noise = 0.2 * rng.random_range(-1.0..1.0) + 0.1 * (2.0 * PI * 50.0 * t).sin(); // Cultural noise
+        let noise = 0.2 * rng.gen_range(-1.0..1.0) + 0.1 * (2.0 * PI * 50.0 * t).sin(); // Cultural noise
 
         seismic_signal.push(sample + noise);
     }
 
-    println!("📊 Generated {} irregularly sampled seismic data points"..seismic_signal.len());
+    println!(
+        "📊 Generated {} irregularly sampled seismic data points",
+        seismic_signal.len()
+    );
 
     // Step 1: Lomb-Scargle periodogram for irregular data
     println!("🔧 Step 1: Lomb-Scargle spectral analysis...");
@@ -385,6 +394,7 @@ fn test_geophysical_processing_pipeline() -> SignalResult<()> {
 
     // Find peaks in the periodogram
     let mut detected_frequencies = Vec::new();
+    let power = &power_confidence.power;
     for i in 1..power.len() - 1 {
         if power[i] > power[i - 1] && power[i] > power[i + 1] && power[i] > 0.1 {
             detected_frequencies.push(frequencies[i]);
@@ -513,10 +523,10 @@ fn test_image_processing_pipeline() -> SignalResult<()> {
     let mut rng = rand::rng();
     let mut noisy_image = clean_image.clone();
     for element in noisy_image.iter_mut() {
-        *element += 0.2 * rng.random_range(-1.0..1.0);
+        *element += 0.2 * rng.gen_range(-1.0..1.0);
     }
 
-    println!("📊 Generated {}x{} test image"..height, width);
+    println!("📊 Generated {}x{} test image", height, width);
 
     // Step 1: 2D wavelet decomposition
     println!("🔧 Step 1: 2D wavelet decomposition...");
@@ -671,13 +681,13 @@ fn test_validation_pipeline() -> SignalResult<()> {
 
 /// Extract RR intervals from ECG signal
 #[allow(dead_code)]
-fn extract_rr_intervals(_ecg: &Array1<f64>, fs: f64) -> SignalResult<Vec<f64>> {
+fn extract_rr_intervals(ecg: &Array1<f64>, fs: f64) -> SignalResult<Vec<f64>> {
     let mut peaks = Vec::new();
-    let threshold = _ecg.iter().cloned().fold(0.0, f64::max) * 0.5; // Simple threshold
+    let threshold = ecg.iter().cloned().fold(0.0, f64::max) * 0.5; // Simple threshold
 
     // Simple peak detection
     for i in 1.._ecg.len() - 1 {
-        if _ecg[i] > _ecg[i - 1] && _ecg[i] > _ecg[i + 1] && _ecg[i] > threshold {
+        if ecg[i] > ecg[i - 1] && ecg[i] > ecg[i + 1] && ecg[i] > threshold {
             peaks.push(i as f64 / fs);
         }
     }
@@ -693,28 +703,28 @@ fn extract_rr_intervals(_ecg: &Array1<f64>, fs: f64) -> SignalResult<Vec<f64>> {
 
 /// Calculate heart rate variability (RMSSD)
 #[allow(dead_code)]
-fn calculate_hrv(_rr_intervals: &[f64]) -> SignalResult<f64> {
-    if _rr_intervals.len() < 2 {
+fn calculate_hrv(_rrintervals: &[f64]) -> SignalResult<f64> {
+    if rr_intervals.len() < 2 {
         return Ok(0.0);
     }
 
     let mut sum_sq_diff = 0.0;
-    for i in 1..rr_intervals.len() {
+    for i in 1.._rr_intervals.len() {
         let diff = rr_intervals[i] - rr_intervals[i - 1];
         sum_sq_diff += diff * diff;
     }
 
-    Ok((sum_sq_diff / (rr_intervals.len() - 1) as f64).sqrt())
+    Ok((sum_sq_diff / (_rr_intervals.len() - 1) as f64).sqrt())
 }
 
 /// Find fundamental frequency from spectrum
 #[allow(dead_code)]
-fn find_fundamental_frequency(_frequencies: &[f64], psd: &[f64]) -> SignalResult<f64> {
+fn find_fundamental_frequency(frequencies: &[f64], psd: &[f64]) -> SignalResult<f64> {
     // Find the frequency with maximum power in the musical range (80-1000 Hz)
     let mut max_power = 0.0;
     let mut fundamental = 440.0; // Default A4
 
-    for (i, &freq) in _frequencies.iter().enumerate() {
+    for (i, &freq) in frequencies.iter().enumerate() {
         if freq >= 80.0 && freq <= 1000.0 && i < psd.len() && psd[i] > max_power {
             max_power = psd[i];
             fundamental = freq;
@@ -787,9 +797,9 @@ fn recognize_chords(
 
 /// Classify chord based on frequencies (very simplified)
 #[allow(dead_code)]
-fn classify_chord(_frequencies: &[f64]) -> String {
+fn classify_chord(frequencies: &[f64]) -> String {
     // This is a very simplified chord classifier
-    let avg_freq = _frequencies.iter().sum::<f64>() / _frequencies.len() as f64;
+    let avg_freq = frequencies.iter().sum::<f64>() / frequencies.len() as f64;
 
     if avg_freq < 350.0 {
         "C major".to_string()
@@ -841,27 +851,27 @@ fn interpolate_irregular_data(
 
 /// Detect seismic events using STA/LTA algorithm
 #[allow(dead_code)]
-fn detect_seismic_events(_signal: &[f64], fs: f64) -> SignalResult<Vec<f64>> {
+fn detect_seismic_events(signal: &[f64], fs: f64) -> SignalResult<Vec<f64>> {
     let sta_window = (fs * 1.0) as usize; // 1 second short-term average
     let lta_window = (fs * 10.0) as usize; // 10 second long-term average
     let threshold = 3.0; // STA/LTA threshold
 
     let mut events = Vec::new();
 
-    if _signal.len() < lta_window + sta_window {
+    if signal.len() < lta_window + sta_window {
         return Ok(events);
     }
 
     for i in lta_window.._signal.len() - sta_window {
         // Calculate STA (Short-Term Average)
-        let sta = _signal[i..i + sta_window]
+        let sta = signal[i..i + sta_window]
             .iter()
             .map(|&x| x * x)
             .sum::<f64>()
             / sta_window as f64;
 
         // Calculate LTA (Long-Term Average)
-        let lta = _signal[i - lta_window..i]
+        let lta = signal[i - lta_window..i]
             .iter()
             .map(|&x| x * x)
             .sum::<f64>()
@@ -881,8 +891,8 @@ fn detect_seismic_events(_signal: &[f64], fs: f64) -> SignalResult<Vec<f64>> {
 
 /// Estimate noise level from coefficients using MAD
 #[allow(dead_code)]
-fn estimate_noise_level(_coeffs: &[f64]) -> f64 {
-    let mut abs_coeffs: Vec<f64> = _coeffs.iter().map(|&x: &f64| x.abs()).collect();
+fn estimate_noise_level(coeffs: &[f64]) -> f64 {
+    let mut abs_coeffs: Vec<f64> = coeffs.iter().map(|&x| x.abs()).collect();
     abs_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     if abs_coeffs.is_empty() {
@@ -894,8 +904,8 @@ fn estimate_noise_level(_coeffs: &[f64]) -> f64 {
 
 /// Apply soft thresholding to 2D array
 #[allow(dead_code)]
-fn apply_soft_threshold_2d(_array: &mut Array2<f64>, threshold: f64) {
-    for element in _array.iter_mut() {
+fn apply_soft_threshold_2d(array: &mut Array2<f64>, threshold: f64) {
+    for element in array.iter_mut() {
         if *element > threshold {
             *element -= threshold;
         } else if *element < -threshold {
@@ -908,7 +918,7 @@ fn apply_soft_threshold_2d(_array: &mut Array2<f64>, threshold: f64) {
 
 /// Calculate PSNR between two images
 #[allow(dead_code)]
-fn calculate_psnr(_reference: &Array2<f64>, test: &Array2<f64>) -> f64 {
+fn calculate_psnr(reference: &Array2<f64>, test: &Array2<f64>) -> f64 {
     let mse = _reference
         .iter()
         .zip(test.iter())

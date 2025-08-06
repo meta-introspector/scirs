@@ -343,12 +343,12 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> CutMix<A> {
 impl<A: Float + Debug + ScalarOperand + FromPrimitive, D: Dimension> Regularizer<A, D>
     for MixUp<A>
 {
-    fn apply(&self, _params: &Array<A, D>, _gradients: &mut Array<A, D>) -> Result<A> {
+    fn apply(&self, _params: &Array<A, D>, gradients: &mut Array<A, D>) -> Result<A> {
         // MixUp is applied to inputs and labels, not model parameters
         Ok(A::zero())
     }
 
-    fn penalty(&self, _params: &Array<A, D>) -> Result<A> {
+    fn penalty(&self, params: &Array<A, D>) -> Result<A> {
         // MixUp doesn't add a parameter penalty term
         Ok(A::zero())
     }
@@ -358,12 +358,12 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive, D: Dimension> Regularizer
 impl<A: Float + Debug + ScalarOperand + FromPrimitive, D: Dimension> Regularizer<A, D>
     for CutMix<A>
 {
-    fn apply(&self, _params: &Array<A, D>, _gradients: &mut Array<A, D>) -> Result<A> {
+    fn apply(&self, _params: &Array<A, D>, gradients: &mut Array<A, D>) -> Result<A> {
         // CutMix is applied to inputs and labels, not model parameters
         Ok(A::zero())
     }
 
-    fn penalty(&self, _params: &Array<A, D>) -> Result<A> {
+    fn penalty(&self, params: &Array<A, D>) -> Result<A> {
         // CutMix doesn't add a parameter penalty term
         Ok(A::zero())
     }
@@ -459,16 +459,7 @@ mod tests {
         let cutmix = CutMix::new(1.0).unwrap();
 
         // Create 2 5x5 images with 1 channel (larger for more reliable mixing)
-        let images = Array4::from_shape_fn(
-            (2, 1, 5, 5),
-            |(i_y_x)| {
-                if i == 0 {
-                    1.0
-                } else {
-                    2.0
-                }
-            },
-        );
+        let images = Array4::from_shape_fn((2, 1, 5, 5), |(i_y_x)| if i == 0 { 1.0 } else { 2.0 });
 
         let labels = array![[1.0, 0.0], [0.0, 1.0]];
 

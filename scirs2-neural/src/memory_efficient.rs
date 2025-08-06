@@ -82,7 +82,7 @@ pub struct MemoryPool<F: Float + Debug> {
     current_pool_size: usize,
 impl<F: Float + Debug + Clone + 'static> MemoryPool<F> {
     /// Create a new memory pool
-    pub fn new(_max_pool_size_mb: usize) -> Self {
+    pub fn new(_max_pool_sizemb: usize) -> Self {
             available_tensors: HashMap::new(),
             usage: Arc::new(Mutex::new(MemoryUsage::new())),
             max_pool_size: _max_pool_size_mb * 1024 * 1024,
@@ -166,16 +166,16 @@ pub struct GradientCheckpointing<F: Float + Debug> {
     memory_usage: Arc<RwLock<MemoryUsage>>,
 impl<F: Float + Debug + Clone + 'static + ndarray::ScalarOperand> GradientCheckpointing<F> {
     /// Create a new gradient checkpointing manager
-    pub fn new(_memory_threshold_mb: f64) -> Self {
+    pub fn new(_memory_thresholdmb: f64) -> Self {
             checkpoint_layers: Vec::new(),
             checkpoints: HashMap::new(),
             memory_threshold_mb,
             memory_usage: Arc::new(RwLock::new(MemoryUsage::new())),
     /// Add a layer as a checkpoint point
-    pub fn add_checkpoint_layer(&mut self, layer_name: String) {
+    pub fn add_checkpoint_layer(&mut self, layername: String) {
         self.checkpoint_layers.push(layer_name);
     /// Store activation at a checkpoint
-    pub fn store_checkpoint(&mut self, layer_name: &str, activation: ArrayD<F>) -> Result<()> {
+    pub fn store_checkpoint(&mut self, layername: &str, activation: ArrayD<F>) -> Result<()> {
         if self.checkpoint_layers.contains(&layer_name.to_string()) {
             // Calculate memory usage
             let bytes = activation.len() * std::mem::size_of::<F>();
@@ -191,7 +191,7 @@ impl<F: Float + Debug + Clone + 'static + ndarray::ScalarOperand> GradientCheckp
             self.checkpoints.insert(layer_name.to_string(), activation);
         Ok(())
     /// Retrieve activation from checkpoint
-    pub fn get_checkpoint(&self, layer_name: &str) -> Option<&ArrayD<F>> {
+    pub fn get_checkpoint(&self, layername: &str) -> Option<&ArrayD<F>> {
         self.checkpoints.get(layer_name)
     /// Clear checkpoints to free memory
     pub fn clear_checkpoints(&mut self) {
@@ -233,13 +233,13 @@ pub struct InPlaceOperations;
 impl InPlaceOperations {
     /// In-place ReLU activation
     pub fn relu_inplace<F: Float + Debug>(array: &mut ArrayD<F>) {
-        _array.mapv_inplace(|x| x.max(F::zero()));
+        array.mapv_inplace(|x| x.max(F::zero()));
     /// In-place sigmoid activation
     pub fn sigmoid_inplace<F: Float + Debug>(array: &mut ArrayD<F>) {
-        _array.mapv_inplace(|x| F::one() / (F::one() + (-x).exp()));
+        array.mapv_inplace(|x| F::one() / (F::one() + (-x).exp()));
     /// In-place tanh activation
     pub fn tanh_inplace<F: Float + Debug>(array: &mut ArrayD<F>) {
-        _array.mapv_inplace(|x| x.tanh());
+        array.mapv_inplace(|x| x.tanh());
     /// In-place addition
     pub fn add_inplace<F: Float + Debug>(target: &mut ArrayD<F>, source: &ArrayD<F>) -> Result<()> {
         if target.shape() != source.shape() {
@@ -250,12 +250,12 @@ impl InPlaceOperations {
             *t = *t + s;
     /// In-place scalar multiplication
     pub fn scale_inplace<F: Float + Debug>(array: &mut ArrayD<F>, factor: F) {
-        _array.mapv_inplace(|x| x * factor);
+        array.mapv_inplace(|x| x * factor);
     /// In-place normalization (subtract mean, divide by std)
     pub fn normalize_inplace<F: Float + Debug + Clone + num_traits::FromPrimitive>(
         array: &mut ArrayD<F>,
     ) -> Result<()> {
-        let mean = _array.mean().unwrap_or(F::zero());
+        let mean = array.mean().unwrap_or(F::zero());
         let variance = _array
             .mapv(|x| (x - mean) * (x - mean))
             .mean()
@@ -263,7 +263,7 @@ impl InPlaceOperations {
         let std_dev = variance.sqrt();
         if std_dev == F::zero() {
             return Ok(()); // Avoid division by zero
-        _array.mapv_inplace(|x| (x - mean) / std_dev);
+        array.mapv_inplace(|x| (x - mean) / std_dev);
     /// In-place dropout (sets elements to zero based on probability)
     pub fn dropout_inplace<F: Float + Debug>(
         dropout_rate: f64,
@@ -272,7 +272,7 @@ impl InPlaceOperations {
             return Ok(());
         let keep_prob = 1.0 - dropout_rate;
         let scale_factor = F::from(1.0 / keep_prob).unwrap();
-        for element in _array.iter_mut() {
+        for element in array.iter_mut() {
             if rand::random::<f64>() < dropout_rate {
                 *element = F::zero();
             } else {
@@ -286,7 +286,7 @@ pub struct MemoryAwareBatchProcessor<F: Float + Debug> {
     /// Current memory usage threshold
 impl<F: Float + Debug + Clone + 'static> MemoryAwareBatchProcessor<F> {
     /// Create a new memory-aware batch processor
-    pub fn new(_max_memory_mb: usize, memory_threshold_mb: f64, pool_size_mb: usize) -> Self {
+    pub fn new(_max_memory_mb: usize, memory_threshold_mb: f64, pool_sizemb: usize) -> Self {
             max_batch_size: Self::calculate_max_batch_size(_max_memory_mb),
             memory_pool: MemoryPool::new(pool_size_mb),
     /// Process batches with automatic size adjustment based on memory usage
@@ -323,7 +323,7 @@ impl<F: Float + Debug + Clone + 'static> MemoryAwareBatchProcessor<F> {
                 self.memory_pool.clear();
         Ok(results)
     /// Calculate maximum batch size based on available memory
-    fn calculate_max_batch_size(_max_memory_mb: usize) -> usize {
+    fn calculate_max_batch_size(_max_memorymb: usize) -> usize {
         // Heuristic: assume each sample uses ~1KB on average
         let max_memory_bytes = _max_memory_mb * 1024 * 1024;
         let bytes_per_sample = 1024; // 1KB per sample estimate
@@ -369,7 +369,7 @@ pub struct MemoryEfficientLayer {
     activation_cache: TTLSizedCache<String, ArrayD<f32>>,
 impl MemoryEfficientLayer {
     /// Create a new memory-efficient layer
-    pub fn new(_input_size: usize, output_size: usize, chunk_size: Option<usize>) -> Result<Self> {
+    pub fn new(_input_size: usize, output_size: usize, chunksize: Option<usize>) -> Result<Self> {
         let _weightsshape = [input_size, output_size];
         let default_chunk_size = chunk_size.unwrap_or(1024);
         #[cfg(feature = "memory_efficient")]
@@ -427,7 +427,7 @@ impl MemoryEfficientLayer {
                 .assign(&chunk_output);
         Ok(output.into_dyn())
     /// Memory-efficient forward pass for a single chunk
-    fn forward_chunk(&self, input_chunk: &ArrayView<f32, IxDyn>) -> Result<ndarray::Array2<f32>> {
+    fn forward_chunk(&self, inputchunk: &ArrayView<f32, IxDyn>) -> Result<ndarray::Array2<f32>> {
         let chunkshape = input_chunk.shape();
         let chunk_batch_size = chunkshape[0];
         // Use chunk-wise operation for memory efficiency

@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod enhanced_linalg_tests {
-    use ag::tensor__ops::linear_algebra::*;
-    use ag::tensor__ops::*;
+    use ag::tensor_ops::linear_algebra::*;
+    use ag::tensor_ops::*;
     #[allow(unused_imports)]
     use approx::assert_relative_eq;
     use ndarray::array;

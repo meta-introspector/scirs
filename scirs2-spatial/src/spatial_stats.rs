@@ -474,12 +474,12 @@ pub fn distance_weights_matrix<T: Float>(
                         }
                         "exponential" => (-_distance / bandwidth).exp(),
                         "gaussian" => {
-                            let exponent = -(_distance * _distance) / (bandwidth * bandwidth);
+                            let exponent = -(_distance * distance) / (bandwidth * bandwidth);
                             exponent.exp()
                         }
                         _ => {
                             return Err(SpatialError::ValueError(
-                                "Unknown decay _function. Use 'inverse', 'exponential', or 'gaussian'".to_string(),
+                                "Unknown decay function. Use 'inverse', 'exponential', or 'gaussian'".to_string(),
                             ));
                         }
                     };
@@ -529,9 +529,9 @@ pub fn clark_evans_index<T: Float>(
     _coordinates: &ArrayView2<T>,
     study_area: T,
 ) -> SpatialResult<T> {
-    let n = _coordinates.shape()[0];
+    let n = coordinates.shape()[0];
 
-    if _coordinates.shape()[1] != 2 {
+    if coordinates.shape()[1] != 2 {
         return Err(SpatialError::DimensionError(
             "Coordinates must be 2D (x, y)".to_string(),
         ));
@@ -551,8 +551,8 @@ pub fn clark_evans_index<T: Float>(
 
         for j in 0..n {
             if i != j {
-                let dx = _coordinates[[i, 0]] - _coordinates[[j, 0]];
-                let dy = _coordinates[[i, 1]] - _coordinates[[j, 1]];
+                let dx = coordinates[[i, 0]] - coordinates[[j, 0]];
+                let dy = coordinates[[i, 1]] - coordinates[[j, 1]];
                 let distance = (dx * dx + dy * dy).sqrt();
 
                 if distance < min_distance {

@@ -11,14 +11,14 @@ use crate::error::{NdimageError, NdimageResult};
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(_value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
 
 /// Helper function for safe conversion from float to usize
 #[allow(dead_code)]
 fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
-    _value.to_usize().ok_or_else(|| {
+    value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert float _value to usize"))
     })
 }
@@ -35,7 +35,7 @@ fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 ///
 /// * `Result<T>` - Processed coordinate
 #[allow(dead_code)]
-pub fn handle_boundary<T>(_coord: T, size: usize, mode: BoundaryMode) -> NdimageResult<T>
+pub fn handle_boundary<T>(coord: T, size: usize, mode: BoundaryMode) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
@@ -54,7 +54,7 @@ where
             // The actual handling would be done by the caller
             Err(NdimageError::InterpolationError(format!(
                 "Coordinate {:?} out of bounds for size {} with constant mode",
-                _coord, size
+                coord, size
             )))
         }
         BoundaryMode::Nearest => {
@@ -330,7 +330,7 @@ where
 
 /// Apply boundary condition to a coordinate
 #[allow(dead_code)]
-pub fn apply_boundary_condition(_coord: isize, dim_size: isize, mode: &BoundaryMode) -> usize {
+pub fn apply_boundary_condition(_coord: isize, dimsize: isize, mode: &BoundaryMode) -> usize {
     match mode {
         BoundaryMode::Constant => {
             if _coord < 0 || _coord >= dim_size {

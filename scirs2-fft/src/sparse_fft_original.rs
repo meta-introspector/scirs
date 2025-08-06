@@ -158,11 +158,11 @@ pub struct SparseFFT {
 
 impl SparseFFT {
     /// Create a new sparse FFT processor with the given configuration
-    pub fn new(_config: SparseFFTConfig) -> Self {
-        let seed = _config.seed.unwrap_or_else(rand::random);
+    pub fn new(config: SparseFFTConfig) -> Self {
+        let seed = config.seed.unwrap_or_else(rand::random);
         let rng = rand::rngs::StdRng::seed_from_u64(seed);
 
-        Self { _config, rng }
+        Self { config, rng }
     }
 
     /// Create a new sparse FFT processor with default configuration
@@ -644,7 +644,7 @@ impl SparseFFT {
                 }
             }
 
-            // If even _length, also copy the Nyquist component
+            // If even length, also copy the Nyquist component
             if original_length % 2 == 0 && target_length % 2 == 0 {
                 high_res_spectrum[target_nyquist] = spectrum[original_nyquist];
             }
@@ -2353,7 +2353,7 @@ mod tests {
     }
 
     /// Helper function to compute relative error between signals
-    fn compute_relative_error(_original: &[Complex64], reconstructed: &[Complex64]) -> f64 {
+    fn compute_relative_error(original: &[Complex64], reconstructed: &[Complex64]) -> f64 {
         // Make sure we're comparing signals of the same length
         let len = std::cmp::min(_original.len(), reconstructed.len());
 
@@ -2362,7 +2362,7 @@ mod tests {
         }
 
         // Normalize signals before comparing
-        let orig_energy: f64 = _original.iter().take(len).map(|c| c.norm_sqr()).sum();
+        let orig_energy: f64 = original.iter().take(len).map(|c| c.norm_sqr()).sum();
         let recon_energy: f64 = reconstructed.iter().take(len).map(|c| c.norm_sqr()).sum();
 
         // Compute scaling factors
@@ -2380,7 +2380,7 @@ mod tests {
         // Compute error between normalized signals
         let mut error_sum = 0.0;
         for i in 0..len {
-            let orig = _original[i] * orig_scale;
+            let orig = original[i] * orig_scale;
             let recon = reconstructed[i] * recon_scale;
             error_sum += (orig - recon).norm_sqr();
         }

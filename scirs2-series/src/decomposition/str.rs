@@ -110,11 +110,11 @@ pub struct STRResult<F> {
 /// println!("Residual: {:?}", result.residual);
 /// ```
 #[allow(dead_code)]
-pub fn str_decomposition<F>(_ts: &Array1<F>, options: &STROptions) -> Result<STRResult<F>>
+pub fn str_decomposition<F>(ts: &Array1<F>, options: &STROptions) -> Result<STRResult<F>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand + NumCast + std::iter::Sum,
 {
-    let n = _ts.len();
+    let n = ts.len();
 
     // Check inputs
     if n < 3 {
@@ -262,7 +262,7 @@ where
             // LASSO regression using coordinate descent
             solve_lasso(
                 &design_matrix,
-                _ts,
+                ts,
                 options.seasonal_lambda,
                 1000,
                 F::from(1e-6).unwrap(),
@@ -272,7 +272,7 @@ where
             // Elastic Net regression using coordinate descent
             solve_elastic_net(
                 &design_matrix,
-                _ts,
+                ts,
                 options.seasonal_lambda,
                 options.trend_lambda,
                 1000,
@@ -299,7 +299,7 @@ where
     }
 
     // Compute residuals
-    let mut residual = _ts.clone();
+    let mut residual = ts.clone();
     for i in 0..n {
         residual[i] = residual[i] - trend[i];
         for seasonal_component in &seasonal_components {
@@ -326,7 +326,7 @@ where
         trend,
         seasonal_components,
         residual,
-        original: _ts.clone(),
+        original: ts.clone(),
         trend_ci,
         seasonal_ci,
     };

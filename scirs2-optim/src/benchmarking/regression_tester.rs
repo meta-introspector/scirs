@@ -554,7 +554,7 @@ pub enum AlertStatus {
 
 impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<A> {
     /// Create a new regression tester
-    pub fn new(_config: RegressionConfig) -> Result<Self> {
+    pub fn new(config: RegressionConfig) -> Result<Self> {
         // Ensure baseline directory exists
         fs::create_dir_all(&_config.baseline_dir)?;
 
@@ -562,7 +562,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
             .unwrap_or_else(|_| PerformanceDatabase::new());
 
         let mut tester = Self {
-            config: _config.clone(),
+            config: config.clone(),
             performance_db,
             baselines: HashMap::new(),
             detectors: Vec::new(),
@@ -1505,8 +1505,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Extract memory usage information from benchmark result
-    fn extract_memory_usage(&self,
-        result: &BenchmarkResult<A>) -> Option<usize> {
+    fn extract_memory_usage(&self, result: &BenchmarkResult<A>) -> Option<usize> {
         // Use system memory profiling if available
         #[cfg(target_os = "linux")]
         {
@@ -1520,24 +1519,21 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Extract average memory usage
-    fn extract_avg_memory_usage(&self,
-        result: &BenchmarkResult<A>) -> Option<usize> {
+    fn extract_avg_memory_usage(&self, result: &BenchmarkResult<A>) -> Option<usize> {
         // For now, assume 80% of peak memory as average
         self.extract_memory_usage(result)
             .map(|peak| (peak as f64 * 0.8) as usize)
     }
 
     /// Extract allocation count (simplified)
-    fn extract_allocation_count(&self,
-        result: &BenchmarkResult<A>) -> Option<usize> {
+    fn extract_allocation_count(&self, result: &BenchmarkResult<A>) -> Option<usize> {
         // This would require memory profiling integration
         // For now, provide a reasonable estimate
         Some(1000) // Default estimate
     }
 
     /// Calculate memory efficiency score
-    fn calculate_memory_efficiency(&self,
-        result: &BenchmarkResult<A>) -> f64 {
+    fn calculate_memory_efficiency(&self, result: &BenchmarkResult<A>) -> f64 {
         // Simple efficiency calculation based on memory usage patterns
         0.85 // Default efficiency score
     }
@@ -1626,8 +1622,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Extract CPU utilization
-    fn extract_cpu_utilization(&self,
-        result: &BenchmarkResult<A>) -> Option<f64> {
+    fn extract_cpu_utilization(&self, result: &BenchmarkResult<A>) -> Option<f64> {
         // This would require system monitoring integration
         // For now, provide a reasonable estimate for single-threaded optimization
         Some(0.75) // 75% utilization estimate
@@ -1748,7 +1743,8 @@ impl<A: Float + Debug> RegressionDetector<A> for StatisticalTestDetector {
     fn detect_regression(
         &self,
         baseline: &PerformanceBaseline<A>,
-        current_metrics: &PerformanceMetrics<A>, _history: &VecDeque<PerformanceRecord<A>>,
+        current_metrics: &PerformanceMetrics<A>,
+        _history: &VecDeque<PerformanceRecord<A>>,
     ) -> Result<RegressionResult<A>> {
         // Simple t-test approximation for timing regression
         let current_time = current_metrics.timing.mean_time_ns as f64;
@@ -2003,7 +1999,7 @@ impl ChangePointDetector {
 impl<A: Float + Debug> RegressionDetector<A> for ChangePointDetector {
     fn detect_regression(
         &self,
-        _baseline: &PerformanceBaseline<A>, 
+        _baseline: &PerformanceBaseline<A>,
         _current_metrics: &PerformanceMetrics<A>,
         history: &VecDeque<PerformanceRecord<A>>,
     ) -> Result<RegressionResult<A>> {
@@ -2063,14 +2059,18 @@ impl<A: Float + Debug> RegressionDetector<A> for ChangePointDetector {
         let first_mean = first_half.iter().sum::<f64>() / first_half.len() as f64;
         let second_mean = second_half.iter().sum::<f64>() / second_half.len() as f64;
 
-        let change_percent = A::from((second_mean - first_mean) / first_mean).unwrap() * A::from(100.0).unwrap();
+        let change_percent =
+            A::from((second_mean - first_mean) / first_mean).unwrap() * A::from(100.0).unwrap();
         let change_detected = change_percent.abs() > A::from(5.0).unwrap(); // 5% change threshold
 
         Ok(RegressionResult {
             test_id: "change_point".to_string(),
             regression_detected: change_detected && change_percent > A::zero(),
             severity: if change_detected {
-                (change_percent.abs() / A::from(100.0).unwrap()).min(A::one()).to_f64().unwrap_or(0.0)
+                (change_percent.abs() / A::from(100.0).unwrap())
+                    .min(A::one())
+                    .to_f64()
+                    .unwrap_or(0.0)
             } else {
                 0.0
             },
@@ -2296,8 +2296,8 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> PerformanceDataba
     }
 
     /// Load database from disk
-    pub fn load(_base_dir: &Path) -> Result<Self> {
-        let db_path = _base_dir.join("performance_db.json");
+    pub fn load(_basedir: &Path) -> Result<Self> {
+        let db_path = base_dir.join("performance_db.json");
         if db_path.exists() {
             let data = fs::read_to_string(&db_path)?;
             let db = serde_json::from_str(&data)?;
@@ -2308,7 +2308,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> PerformanceDataba
     }
 
     /// Save database to disk
-    pub fn save(&self, base_dir: &Path) -> Result<()> {
+    pub fn save(&self, basedir: &Path) -> Result<()> {
         fs::create_dir_all(base_dir)?;
         let db_path = base_dir.join("performance_db.json");
         let data = serde_json::to_string_pretty(self)?;

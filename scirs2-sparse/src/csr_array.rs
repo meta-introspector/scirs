@@ -347,13 +347,13 @@ where
     }
 
     /// Checks if column indices are sorted for each row
-    fn check_sorted_indices(_indices: &Array1<usize>, indptr: &Array1<usize>) -> bool {
+    fn check_sorted_indices(indices: &Array1<usize>, indptr: &Array1<usize>) -> bool {
         for row in 0..indptr.len() - 1 {
             let start = indptr[row];
             let end = indptr[row + 1];
 
             for i in start..end.saturating_sub(1) {
-                if i + 1 < _indices.len() && _indices[i] > _indices[i + 1] {
+                if i + 1 < indices.len() && indices[i] > indices[i + 1] {
                     return false;
                 }
             }

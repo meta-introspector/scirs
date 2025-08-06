@@ -175,8 +175,8 @@ where
 ///
 /// Sets coefficients with absolute value less than the threshold to zero.
 #[allow(dead_code)]
-fn hard_threshold(_coeffs: &[f64], threshold: f64) -> Vec<f64> {
-    _coeffs
+fn hard_threshold(coeffs: &[f64], threshold: f64) -> Vec<f64> {
+    coeffs
         .iter()
         .map(|&x| if x.abs() <= threshold { 0.0 } else { x })
         .collect()
@@ -186,8 +186,8 @@ fn hard_threshold(_coeffs: &[f64], threshold: f64) -> Vec<f64> {
 ///
 /// Shrinks coefficients above the threshold toward zero by the threshold amount.
 #[allow(dead_code)]
-fn soft_threshold(_coeffs: &[f64], threshold: f64) -> Vec<f64> {
-    _coeffs
+fn soft_threshold(coeffs: &[f64], threshold: f64) -> Vec<f64> {
+    coeffs
         .iter()
         .map(|&x| {
             if x.abs() <= threshold {
@@ -203,8 +203,8 @@ fn soft_threshold(_coeffs: &[f64], threshold: f64) -> Vec<f64> {
 ///
 /// A compromise between hard and soft thresholding.
 #[allow(dead_code)]
-fn garrote_threshold(_coeffs: &[f64], threshold: f64) -> Vec<f64> {
-    _coeffs
+fn garrote_threshold(coeffs: &[f64], threshold: f64) -> Vec<f64> {
+    coeffs
         .iter()
         .map(|&x| {
             if x.abs() <= threshold {
@@ -218,26 +218,29 @@ fn garrote_threshold(_coeffs: &[f64], threshold: f64) -> Vec<f64> {
 
 /// Apply threshold to wavelet coefficients using specified method
 #[allow(dead_code)]
-pub fn threshold_coefficients(
-    _coeffs: &[f64],
-    threshold: f64,
-    method: ThresholdMethod,
-) -> Vec<f64> {
+pub fn threshold_coefficients(coeffs: &[f64], threshold: f64, method: ThresholdMethod) -> Vec<f64> {
     // Check if all coefficients are finite
-    for (i, &coeff) in _coeffs.iter().enumerate() {
+    for (i, &coeff) in coeffs.iter().enumerate() {
         if !coeff.is_finite() {
             eprintln!("Warning: Non-finite coefficient at index {}: {}", i, coeff);
         }
     }
 
     // Use SIMD-optimized version for larger arrays
-    if _coeffs.len() >= 64 {
-        simd_threshold_coefficients(_coeffs, threshold, method)
+    if coeffs.len() >= 64 {
+        let mut result = coeffs.to_vec();
+        let dwt2d_method = match method {
+            ThresholdMethod::Hard => crate::dwt2d::ThresholdMethod::Hard,
+            ThresholdMethod::Soft => crate::dwt2d::ThresholdMethod::Soft,
+            ThresholdMethod::Garrote => crate::dwt2d::ThresholdMethod::Garrote,
+        };
+        crate::dwt2d::simd_threshold_coefficients(&mut result, threshold, dwt2d_method);
+        result
     } else {
         match method {
-            ThresholdMethod::Hard => hard_threshold(_coeffs, threshold),
-            ThresholdMethod::Soft => soft_threshold(_coeffs, threshold),
-            ThresholdMethod::Garrote => garrote_threshold(_coeffs, threshold),
+            ThresholdMethod::Hard => hard_threshold(coeffs, threshold),
+            ThresholdMethod::Soft => soft_threshold(coeffs, threshold),
+            ThresholdMethod::Garrote => garrote_threshold(coeffs, threshold),
         }
     }
 }
@@ -267,8 +270,8 @@ fn simd_threshold_coefficients(
 /// AVX2-optimized thresholding implementation for denoising
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-fn simd_threshold_avx2(_coeffs: &[f64], threshold: f64, method: ThresholdMethod) -> Vec<f64> {
-    let len = _coeffs.len();
+fn simd_threshold_avx2(coeffs: &[f64], threshold: f64, method: ThresholdMethod) -> Vec<f64> {
+    let len = coeffs.len();
     let simd_len = len - (len % 4); // Process 4 elements at a time with AVX2
     let mut result = vec![0.0; len];
 
@@ -278,7 +281,7 @@ fn simd_threshold_avx2(_coeffs: &[f64], threshold: f64, method: ThresholdMethod)
         let one_vec = _mm256_set1_pd(1.0);
 
         for i in (0..simd_len).step_by(4) {
-            let data = _mm256_loadu_pd(_coeffs.as_ptr().add(i));
+            let data = _mm256_loadu_pd(coeffs.as_ptr().add(i));
 
             let thresholded = match method {
                 ThresholdMethod::Hard => {
@@ -317,24 +320,24 @@ fn simd_threshold_avx2(_coeffs: &[f64], threshold: f64, method: ThresholdMethod)
     for i in simd_len..len {
         result[i] = match method {
             ThresholdMethod::Hard => {
-                if _coeffs[i].abs() <= threshold {
+                if coeffs[i].abs() <= threshold {
                     0.0
                 } else {
-                    _coeffs[i]
+                    coeffs[i]
                 }
             }
             ThresholdMethod::Soft => {
-                if _coeffs[i].abs() <= threshold {
+                if coeffs[i].abs() <= threshold {
                     0.0
                 } else {
-                    _coeffs[i].signum() * (_coeffs[i].abs() - threshold)
+                    coeffs[i].signum() * (coeffs[i].abs() - threshold)
                 }
             }
             ThresholdMethod::Garrote => {
-                if _coeffs[i].abs() <= threshold {
+                if coeffs[i].abs() <= threshold {
                     0.0
                 } else {
-                    _coeffs[i] - (threshold * threshold / _coeffs[i])
+                    coeffs[i] - (threshold * threshold / coeffs[i])
                 }
             }
         };
@@ -346,54 +349,61 @@ fn simd_threshold_avx2(_coeffs: &[f64], threshold: f64, method: ThresholdMethod)
 /// Fallback scalar thresholding for non-x86_64 architectures
 #[cfg(not(target_arch = "x86_64"))]
 #[allow(dead_code)]
-fn simd_threshold_avx2(_coeffs: &[f64], threshold: f64, method: ThresholdMethod) -> Vec<f64> {
+fn simd_threshold_avx2(coeffs: &[f64], threshold: f64, method: ThresholdMethod) -> Vec<f64> {
     match method {
-        ThresholdMethod::Hard => hard_threshold(_coeffs, threshold),
-        ThresholdMethod::Soft => soft_threshold(_coeffs, threshold),
-        ThresholdMethod::Garrote => garrote_threshold(_coeffs, threshold),
+        ThresholdMethod::Hard => hard_threshold(coeffs, threshold),
+        ThresholdMethod::Soft => soft_threshold(coeffs, threshold),
+        ThresholdMethod::Garrote => garrote_threshold(coeffs, threshold),
     }
 }
 
 /// Compute the median absolute deviation of a vector
 #[allow(dead_code)]
-fn median_abs_deviation(_data: &[f64]) -> f64 {
-    if _data.is_empty() {
+fn median_abs_deviation(data: &[f64]) -> f64 {
+    if data.is_empty() {
         return 0.0;
     }
 
     // Use SIMD-optimized version for larger arrays
-    if _data.len() >= 128 {
-        simd_median_abs_deviation(_data)
+    if data.len() >= 128 {
+        simd_median_abs_deviation(data)
     } else {
-        scalar_median_abs_deviation(_data)
+        scalar_median_abs_deviation(data)
     }
 }
 
 /// SIMD-optimized median absolute deviation computation
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-fn simd_median_abs_deviation(_data: &[f64]) -> f64 {
+fn simd_median_abs_deviation(data: &[f64]) -> f64 {
     let caps = PlatformCapabilities::detect();
 
     if caps.avx2_available {
-        simd_mad_avx2(_data)
+        simd_mad_avx2(data)
     } else {
-        scalar_median_abs_deviation(_data)
+        scalar_median_abs_deviation(data)
     }
+}
+
+/// Non-x86_64 fallback for median absolute deviation computation
+#[cfg(not(target_arch = "x86_64"))]
+#[allow(dead_code)]
+fn simd_median_abs_deviation(data: &[f64]) -> f64 {
+    scalar_median_abs_deviation(data)
 }
 
 /// AVX2-optimized absolute value computation for MAD
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-fn simd_mad_avx2(_data: &[f64]) -> f64 {
-    let len = _data.len();
+fn simd_mad_avx2(data: &[f64]) -> f64 {
+    let len = data.len();
     let simd_len = len - (len % 4);
     let mut abs_values = vec![0.0; len];
 
     unsafe {
         // Compute absolute values using SIMD
         for i in (0..simd_len).step_by(4) {
-            let data_vec = _mm256_loadu_pd(_data.as_ptr().add(i));
+            let data_vec = _mm256_loadu_pd(data.as_ptr().add(i));
             let abs_vec = _mm256_andnot_pd(_mm256_set1_pd(-0.0), data_vec);
             _mm256_storeu_pd(abs_values.as_mut_ptr().add(i), abs_vec);
         }
@@ -401,7 +411,7 @@ fn simd_mad_avx2(_data: &[f64]) -> f64 {
 
     // Handle remaining elements
     for i in simd_len..len {
-        abs_values[i] = _data[i].abs();
+        abs_values[i] = data[i].abs();
     }
 
     // Sort to find median
@@ -421,7 +431,7 @@ fn simd_mad_avx2(_data: &[f64]) -> f64 {
         let median_vec = _mm256_set1_pd(median);
 
         for i in (0..simd_len).step_by(4) {
-            let data_vec = _mm256_loadu_pd(_data.as_ptr().add(i));
+            let data_vec = _mm256_loadu_pd(data.as_ptr().add(i));
             let diff = _mm256_sub_pd(data_vec, median_vec);
             let abs_diff = _mm256_andnot_pd(_mm256_set1_pd(-0.0), diff);
             _mm256_storeu_pd(deviations.as_mut_ptr().add(i), abs_diff);
@@ -430,7 +440,7 @@ fn simd_mad_avx2(_data: &[f64]) -> f64 {
 
     // Handle remaining elements
     for i in simd_len..len {
-        deviations[i] = (_data[i] - median).abs();
+        deviations[i] = (data[i] - median).abs();
     }
 
     // Sort deviations and find median
@@ -446,15 +456,15 @@ fn simd_mad_avx2(_data: &[f64]) -> f64 {
 /// Fallback scalar MAD for non-x86_64 architectures
 #[cfg(not(target_arch = "x86_64"))]
 #[allow(dead_code)]
-fn simd_mad_avx2(_data: &[f64]) -> f64 {
-    scalar_median_abs_deviation(_data)
+fn simd_mad_avx2(data: &[f64]) -> f64 {
+    scalar_median_abs_deviation(data)
 }
 
 /// Scalar implementation of median absolute deviation
 #[allow(dead_code)]
-fn scalar_median_abs_deviation(_data: &[f64]) -> f64 {
+fn scalar_median_abs_deviation(data: &[f64]) -> f64 {
     // Create a copy to avoid modifying the original
-    let mut values: Vec<f64> = _data.iter().map(|&x: &f64| x.abs()).collect();
+    let mut values: Vec<f64> = data.iter().map(|&x: &f64| x.abs()).collect();
     values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     // Find the median
@@ -466,7 +476,7 @@ fn scalar_median_abs_deviation(_data: &[f64]) -> f64 {
     };
 
     // Compute deviations from median
-    let deviations: Vec<f64> = _data.iter().map(|&x| (x - median).abs()).collect();
+    let deviations: Vec<f64> = data.iter().map(|&x| (x - median).abs()).collect();
 
     // Sort the deviations
     let mut sorted_deviations = deviations.clone();
@@ -531,7 +541,7 @@ mod tests {
         let mut rng = rand::rng();
         let mut noisy_signal = clean_signal.clone();
         for val in noisy_signal.iter_mut() {
-            *val += 0.2 * rng.random_range(-1.0..1.0);
+            *val += 0.2 * rng.gen_range(-1.0..1.0);
         }
 
         // Denoise using wavelet thresholding with limited decomposition level

@@ -177,7 +177,7 @@ where
         let phi = basis_functions(x_data.as_slice().unwrap(), beta.as_slice().unwrap());
         nfev += 1;
 
-        let (n_points, _n_basis) = phi.dim();
+        let (n_points, n_basis) = phi.dim();
         if n_points != n {
             return Err(crate::error::OptimizeError::ValueError(
                 "Basis functions returned wrong number of rows".to_string(),
@@ -449,8 +449,8 @@ where
 {
     // For simplicity, use normal equations with regularization
     // A proper implementation would use actual QR decomposition
-    let phi_t_phi = _phi.t().dot(_phi);
-    let phi_t_y = _phi.t().dot(y);
+    let phi_t_phi = phi.t().dot(_phi);
+    let phi_t_y = phi.t().dot(y);
 
     let mut regularized = phi_t_phi.clone();
     for i in 0..regularized.shape()[0] {

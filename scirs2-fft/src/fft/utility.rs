@@ -91,15 +91,15 @@ pub fn next_power_of_two(n: usize) -> usize {
 ///
 /// Returns an error if the input size is zero or n is zero
 #[allow(dead_code)]
-pub fn validate_fft_size(input_size: usize, n: Option<usize>) -> FFTResult<usize> {
-    if input_size == 0 {
+pub fn validate_fft_size(inputsize: usize, n: Option<usize>) -> FFTResult<usize> {
+    if inputsize == 0 {
         return Err(FFTError::ValueError("Input cannot be empty".to_string()));
     }
 
     match n {
         Some(0) => Err(FFTError::ValueError("FFT _size cannot be zero".to_string())),
         Some(_size) => Ok(_size),
-        None => Ok(next_power_of_two(input_size)),
+        None => Ok(next_power_of_two(inputsize)),
     }
 }
 
@@ -147,20 +147,20 @@ pub fn validate_fftshapes(inputshape: &[usize], shape: Option<&[usize]>) -> FFTR
 ///
 /// Returns an error if any axis is out of bounds
 #[allow(dead_code)]
-pub fn validate_fft_axes(_ndim: usize, axes: Option<&[usize]>) -> FFTResult<Vec<usize>> {
+pub fn validate_fft_axes(ndim: usize, axes: Option<&[usize]>) -> FFTResult<Vec<usize>> {
     match axes {
         Some(axes) => {
             // Check for axes out of bounds
             for &axis in axes {
-                if axis >= _ndim {
+                if axis >= ndim {
                     return Err(FFTError::ValueError(format!(
-                        "Axis {axis} out of bounds for array of dimension {_ndim}"
+                        "Axis {axis} out of bounds for array of dimension {ndim}"
                     )));
                 }
             }
             Ok(axes.to_vec())
         }
-        None => Ok((0.._ndim).collect()),
+        None => Ok((0..ndim).collect()),
     }
 }
 
@@ -189,11 +189,11 @@ pub fn zeros_like_complex(shape: &[usize]) -> ArrayD<Complex64> {
 ///
 /// A complex array with the same shape
 #[allow(dead_code)]
-pub fn real_to_complex<D>(_real_array: &Array<f64, D>) -> Array<Complex64, D>
+pub fn real_to_complex<D>(_realarray: &Array<f64, D>) -> Array<Complex64, D>
 where
     D: ndarray::Dimension,
 {
-    _real_array.mapv(|x| Complex64::new(x, 0.0))
+    _realarray.mapv(|x| Complex64::new(x, 0.0))
 }
 
 /// Extract the real part of a complex array
@@ -206,11 +206,11 @@ where
 ///
 /// A real array with the same shape
 #[allow(dead_code)]
-pub fn complex_to_real<D>(_complex_array: &Array<Complex64, D>) -> Array<f64, D>
+pub fn complex_to_real<D>(_complexarray: &Array<Complex64, D>) -> Array<f64, D>
 where
     D: ndarray::Dimension,
 {
-    _complex_array.mapv(|x| x.re)
+    _complexarray.mapv(|x| x.re)
 }
 
 /// Calculate the magnitude of a complex array (absolute values)
@@ -223,11 +223,11 @@ where
 ///
 /// A real array with the magnitude (absolute value) of each element
 #[allow(dead_code)]
-pub fn complex_magnitude<D>(_complex_array: &Array<Complex64, D>) -> Array<f64, D>
+pub fn complex_magnitude<D>(_complexarray: &Array<Complex64, D>) -> Array<f64, D>
 where
     D: ndarray::Dimension,
 {
-    _complex_array.mapv(|x| x.norm())
+    _complexarray.mapv(|x| x.norm())
 }
 
 /// Calculate the phase angle of a complex array (in radians)
@@ -240,11 +240,11 @@ where
 ///
 /// A real array with the phase angle of each element
 #[allow(dead_code)]
-pub fn complex_angle<D>(_complex_array: &Array<Complex64, D>) -> Array<f64, D>
+pub fn complex_angle<D>(_complexarray: &Array<Complex64, D>) -> Array<f64, D>
 where
     D: ndarray::Dimension,
 {
-    _complex_array.mapv(|x| x.arg())
+    _complexarray.mapv(|x| x.arg())
 }
 
 /// Calculate the power spectrum of a complex array (squared magnitude)
@@ -257,11 +257,11 @@ where
 ///
 /// A real array with the power spectrum (squared magnitude) of each element
 #[allow(dead_code)]
-pub fn power_spectrum<D>(_complex_array: &Array<Complex64, D>) -> Array<f64, D>
+pub fn power_spectrum<D>(_complexarray: &Array<Complex64, D>) -> Array<f64, D>
 where
     D: ndarray::Dimension,
 {
-    _complex_array.mapv(|x| x.norm_sqr())
+    _complexarray.mapv(|x| x.norm_sqr())
 }
 
 /// Convert an array slice to an index vector
@@ -275,6 +275,6 @@ where
 /// A vector of indices for the slice
 /// Marked as dead code but kept for API consistency
 #[allow(dead_code)]
-pub fn slice_to_indices(_slice: &[usize]) -> Vec<usize> {
-    _slice.to_vec()
+pub fn slice_to_indices(slice: &[usize]) -> Vec<usize> {
+    slice.to_vec()
 }

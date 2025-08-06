@@ -133,43 +133,43 @@ impl StreamingStft {
     ///
     /// # Returns
     /// * New streaming STFT processor instance
-    pub fn new(_config: StreamingStftConfig) -> SignalResult<Self> {
+    pub fn new(config: StreamingStftConfig) -> SignalResult<Self> {
         // Validate configuration
-        if _config.frame_length == 0 {
+        if config.frame_length == 0 {
             return Err(SignalError::ValueError(
                 "Frame length must be greater than 0".to_string(),
             ));
         }
 
-        if _config.hop_length == 0 {
+        if config.hop_length == 0 {
             return Err(SignalError::ValueError(
                 "Hop length must be greater than 0".to_string(),
             ));
         }
 
-        if _config.hop_length > _config.frame_length {
+        if config.hop_length > config.frame_length {
             return Err(SignalError::ValueError(
                 "Hop length should not exceed frame length".to_string(),
             ));
         }
 
-        if _config.power <= 0.0 {
+        if config.power <= 0.0 {
             return Err(SignalError::ValueError(
                 "Power must be positive".to_string(),
             ));
         }
 
         // Generate window function
-        let window = get_window(&_config.window, _config.frame_length, true)?;
+        let window = get_window(&_config.window, config.frame_length, true)?;
         let window_array = Array1::from(window);
 
         // Initialize input buffer
         let mut input_buffer = VecDeque::new();
 
         // Pre-fill buffer for centering if needed
-        if _config.center {
-            let pad_length = _config.frame_length / 2;
-            match _config.pad_mode.as_str() {
+        if config.center {
+            let pad_length = config.frame_length / 2;
+            match config.pad_mode.as_str() {
                 "constant" => {
                     for _ in 0..pad_length {
                         input_buffer.push_back(0.0);
@@ -185,7 +185,7 @@ impl StreamingStft {
                 _ => {
                     return Err(SignalError::ValueError(format!(
                         "Unknown pad mode: {}",
-                        _config.pad_mode
+                        config.pad_mode
                     )));
                 }
             }
@@ -195,7 +195,7 @@ impl StreamingStft {
         let fft_plan = None; // We'll use the direct FFT function
 
         Ok(Self {
-            _config,
+            config,
             window: window_array,
             input_buffer,
             samples_processed: 0,
@@ -227,7 +227,7 @@ impl StreamingStft {
             // Extract windowed _frame
             let mut _frame = Array1::<f64>::zeros(self.config.frame_length);
             for i in 0..self.config.frame_length {
-                _frame[i] = self.input_buffer[i];
+                frame[i] = self.input_buffer[i];
             }
 
             // Apply window
@@ -336,7 +336,7 @@ impl StreamingStft {
     }
 
     /// Get latency in seconds for given sample rate
-    pub fn get_latency_seconds(&self, sample_rate: f64) -> f64 {
+    pub fn get_latency_seconds(&self, samplerate: f64) -> f64 {
         self.get_latency_samples() as f64 / sample_rate
     }
 
@@ -400,7 +400,7 @@ impl StreamingStft {
     }
 
     /// Compute FFT of windowed frame
-    fn compute_fft(&self, windowed_frame: &Array1<f64>) -> SignalResult<Array1<Complex64>> {
+    fn compute_fft(&self, windowedframe: &Array1<f64>) -> SignalResult<Array1<Complex64>> {
         // Convert to slice for FFT function
         let frame_slice = windowed_frame.as_slice().unwrap();
 
@@ -497,7 +497,7 @@ impl RealTimeStft {
     ///
     /// # Returns
     /// * Number of new spectra available
-    pub fn process_block(&mut self, input_block: &Array1<f64>) -> SignalResult<usize> {
+    pub fn process_block(&mut self, inputblock: &Array1<f64>) -> SignalResult<usize> {
         if input_block.len() != self.block_size {
             return Err(SignalError::ValueError(format!(
                 "Input _block size {} does not match expected size {}",
@@ -585,6 +585,7 @@ pub struct RealTimeStftStatistics {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn test_streaming_stft_creation() {
         let config = StreamingStftConfig::default();

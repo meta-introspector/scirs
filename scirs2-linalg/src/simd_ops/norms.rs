@@ -23,11 +23,11 @@ use scirs2_core::simd_ops::SimdUnifiedOps;
 /// * Frobenius norm of the matrix
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_frobenius_norm_f32(_matrix: &ArrayView2<f32>) -> f32 {
+pub fn simd_frobenius_norm_f32(matrix: &ArrayView2<f32>) -> f32 {
     let mut sum_sq = 0.0f32;
 
     // Process row by row using unified SIMD operations
-    for row in _matrix.rows() {
+    for row in matrix.rows() {
         // Compute dot product of row with itself (sum of squares)
         sum_sq += f32::simd_dot(&row, &row);
     }
@@ -49,11 +49,11 @@ pub fn simd_frobenius_norm_f32(_matrix: &ArrayView2<f32>) -> f32 {
 /// * Frobenius norm of the matrix
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_frobenius_norm_f64(_matrix: &ArrayView2<f64>) -> f64 {
+pub fn simd_frobenius_norm_f64(matrix: &ArrayView2<f64>) -> f64 {
     let mut sum_sq = 0.0f64;
 
     // Process row by row using unified SIMD operations
-    for row in _matrix.rows() {
+    for row in matrix.rows() {
         // Compute dot product of row with itself (sum of squares)
         sum_sq += f64::simd_dot(&row, &row);
     }
@@ -72,9 +72,9 @@ pub fn simd_frobenius_norm_f64(_matrix: &ArrayView2<f64>) -> f64 {
 /// * Euclidean norm of the vector
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_vector_norm_f32(_vector: &ArrayView1<f32>) -> f32 {
+pub fn simd_vector_norm_f32(vector: &ArrayView1<f32>) -> f32 {
     // Use unified SIMD norm operation
-    f32::simd_norm(_vector)
+    f32::simd_norm(vector)
 }
 
 /// SIMD-accelerated vector 2-norm (Euclidean norm) for f64
@@ -88,9 +88,9 @@ pub fn simd_vector_norm_f32(_vector: &ArrayView1<f32>) -> f32 {
 /// * Euclidean norm of the vector
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_vector_norm_f64(_vector: &ArrayView1<f64>) -> f64 {
+pub fn simd_vector_norm_f64(vector: &ArrayView1<f64>) -> f64 {
     // Use unified SIMD norm operation
-    f64::simd_norm(_vector)
+    f64::simd_norm(vector)
 }
 
 /// SIMD-accelerated vector 1-norm (Manhattan norm) for f32
@@ -104,9 +104,9 @@ pub fn simd_vector_norm_f64(_vector: &ArrayView1<f64>) -> f64 {
 /// * 1-norm (sum of absolute values) of the vector
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_vector_norm1_f32(_vector: &ArrayView1<f32>) -> f32 {
+pub fn simd_vector_norm1_f32(vector: &ArrayView1<f32>) -> f32 {
     // Compute absolute values then sum
-    let abs_vec = f32::simd_abs(_vector);
+    let abs_vec = f32::simd_abs(vector);
     f32::simd_sum(&abs_vec.view())
 }
 
@@ -121,9 +121,9 @@ pub fn simd_vector_norm1_f32(_vector: &ArrayView1<f32>) -> f32 {
 /// * 1-norm (sum of absolute values) of the vector
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_vector_norm1_f64(_vector: &ArrayView1<f64>) -> f64 {
+pub fn simd_vector_norm1_f64(vector: &ArrayView1<f64>) -> f64 {
     // Compute absolute values then sum
-    let abs_vec = f64::simd_abs(_vector);
+    let abs_vec = f64::simd_abs(vector);
     f64::simd_sum(&abs_vec.view())
 }
 
@@ -138,9 +138,9 @@ pub fn simd_vector_norm1_f64(_vector: &ArrayView1<f64>) -> f64 {
 /// * Infinity norm (maximum absolute value) of the vector
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_vector_norm_inf_f32(_vector: &ArrayView1<f32>) -> f32 {
+pub fn simd_vector_norm_inf_f32(vector: &ArrayView1<f32>) -> f32 {
     // Compute absolute values then find maximum
-    let abs_vec = f32::simd_abs(_vector);
+    let abs_vec = f32::simd_abs(vector);
     f32::simd_max_element(&abs_vec.view())
 }
 
@@ -155,9 +155,9 @@ pub fn simd_vector_norm_inf_f32(_vector: &ArrayView1<f32>) -> f32 {
 /// * Infinity norm (maximum absolute value) of the vector
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_vector_norm_inf_f64(_vector: &ArrayView1<f64>) -> f64 {
+pub fn simd_vector_norm_inf_f64(vector: &ArrayView1<f64>) -> f64 {
     // Compute absolute values then find maximum
-    let abs_vec = f64::simd_abs(_vector);
+    let abs_vec = f64::simd_abs(vector);
     f64::simd_max_element(&abs_vec.view())
 }
 
@@ -172,11 +172,11 @@ pub fn simd_vector_norm_inf_f64(_vector: &ArrayView1<f64>) -> f64 {
 /// * 1-norm of the matrix
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_matrix_norm1_f32(_matrix: &ArrayView2<f32>) -> f32 {
+pub fn simd_matrix_norm1_f32(matrix: &ArrayView2<f32>) -> f32 {
     let mut max_col_sum = 0.0f32;
 
-    for j in 0.._matrix.ncols() {
-        let col = _matrix.column(j);
+    for j in 0..matrix.ncols() {
+        let col = matrix.column(j);
         let col_sum = simd_vector_norm1_f32(&col);
         max_col_sum = max_col_sum.max(col_sum);
     }
@@ -195,11 +195,11 @@ pub fn simd_matrix_norm1_f32(_matrix: &ArrayView2<f32>) -> f32 {
 /// * 1-norm of the matrix
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_matrix_norm1_f64(_matrix: &ArrayView2<f64>) -> f64 {
+pub fn simd_matrix_norm1_f64(matrix: &ArrayView2<f64>) -> f64 {
     let mut max_col_sum = 0.0f64;
 
-    for j in 0.._matrix.ncols() {
-        let col = _matrix.column(j);
+    for j in 0..matrix.ncols() {
+        let col = matrix.column(j);
         let col_sum = simd_vector_norm1_f64(&col);
         max_col_sum = max_col_sum.max(col_sum);
     }
@@ -218,11 +218,11 @@ pub fn simd_matrix_norm1_f64(_matrix: &ArrayView2<f64>) -> f64 {
 /// * Infinity norm of the matrix
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_matrix_norm_inf_f32(_matrix: &ArrayView2<f32>) -> f32 {
+pub fn simd_matrix_norm_inf_f32(matrix: &ArrayView2<f32>) -> f32 {
     let mut max_row_sum = 0.0f32;
 
-    for i in 0.._matrix.nrows() {
-        let row = _matrix.row(i);
+    for i in 0..matrix.nrows() {
+        let row = matrix.row(i);
         let row_sum = simd_vector_norm1_f32(&row);
         max_row_sum = max_row_sum.max(row_sum);
     }
@@ -241,11 +241,11 @@ pub fn simd_matrix_norm_inf_f32(_matrix: &ArrayView2<f32>) -> f32 {
 /// * Infinity norm of the matrix
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_matrix_norm_inf_f64(_matrix: &ArrayView2<f64>) -> f64 {
+pub fn simd_matrix_norm_inf_f64(matrix: &ArrayView2<f64>) -> f64 {
     let mut max_row_sum = 0.0f64;
 
-    for i in 0.._matrix.nrows() {
-        let row = _matrix.row(i);
+    for i in 0..matrix.nrows() {
+        let row = matrix.row(i);
         let row_sum = simd_vector_norm1_f64(&row);
         max_row_sum = max_row_sum.max(row_sum);
     }
@@ -367,7 +367,7 @@ mod tests {
     fn test_simd_large_vector() {
         // Test with larger vector to exercise SIMD processing
         let size = 100;
-        let vector: Array1<f32> = Array1::fromshape_fn(size, |i| (i as f32) * 0.1);
+        let vector: Array1<f32> = Array1::from_shape_fn(size, |i| (i as f32) * 0.1);
 
         let result = simd_vector_norm_f32(&vector.view());
 

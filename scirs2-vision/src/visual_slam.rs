@@ -12,7 +12,7 @@
 #![allow(missing_docs)]
 
 use crate::error::{Result, VisionError};
-use crate::scene__understanding::SceneAnalysisResult;
+use crate::scene_understanding::SceneAnalysisResult;
 use ndarray::{Array1, Array2, Array3, ArrayView3};
 use std::collections::HashMap;
 
@@ -873,7 +873,7 @@ impl VisualSLAMSystem {
 
         // Process each frame
         for (i, (frame, &timestamp)) in frames.iter().zip(timestamps.iter()).enumerate() {
-            let scene_analysis = scene_analyses.and_then(|_analyses| _analyses.get(i));
+            let scene_analysis = scene_analyses.and_then(|_analyses| analyses.get(i));
             let frame_result = self.process_frame(frame, timestamp, scene_analysis)?;
 
             // Accumulate results
@@ -958,14 +958,14 @@ impl VisualSLAMSystem {
     }
 
     // Helper methods (placeholder implementations)
-    fn adapt_processing_parameters(&mut self_budget: f64) -> Result<()> {
+    fn adapt_processing_parameters(&mut selfbudget: f64) -> Result<()> {
         // Adapt feature extraction, tracking, and optimization parameters
         // based on available computational _budget
         Ok(())
     }
 
     fn compute_trajectory_metrics(
-        &self_trajectory: &CameraTrajectory,
+        self_trajectory: &CameraTrajectory,
     ) -> Result<TrajectoryMetrics> {
         // Compute various _trajectory quality metrics
         Ok(TrajectoryMetrics {
@@ -1085,11 +1085,11 @@ impl CameraPoseEstimator {
         }
     }
 
-    fn initialize(&mut self_calibration: &Array2<f64>) -> Result<()> {
+    fn initialize(&mut selfcalibration: &Array2<f64>) -> Result<()> {
         Ok(())
     }
 
-    fn estimate_pose(&self_features: &[Feature2D], _timestamp: f64) -> Result<CameraPose> {
+    fn estimate_pose(self_features: &[Feature2D], timestamp: f64) -> Result<CameraPose> {
         Ok(CameraPose {
             position: Array1::zeros(3),
             rotation: Array1::from_vec(vec![1.0, 0.0, 0.0, 0.0]), // Identity quaternion
@@ -1132,11 +1132,11 @@ impl Map3DBuilder {
         }
     }
 
-    fn initialize(&mut self_frame: &ArrayView3<f32>) -> Result<()> {
+    fn initialize(&mut selfframe: &ArrayView3<f32>) -> Result<()> {
         Ok(())
     }
 
-    fn update_map(&mut self_features: &[Feature2D], _pose: &CameraPose) -> Result<Map3D> {
+    fn update_map(&mut self_features: &[Feature2D], pose: &CameraPose) -> Result<Map3D> {
         Ok(Map3D {
             landmarks: Vec::new(),
             structure: MapStructure {
@@ -1189,7 +1189,8 @@ impl LoopClosureDetector {
     }
 
     fn detect_closures(
-        &self_features: &[Feature2D], _pose: &CameraPose,
+        self_features: &[Feature2D],
+        _pose: &CameraPose,
     ) -> Result<Vec<LoopClosure>> {
         Ok(Vec::new()) // Placeholder
     }
@@ -1214,12 +1215,13 @@ impl BundleAdjustmentOptimizer {
         }
     }
 
-    fn optimize_map(&mut self_map: &Map3D_loop, _closures: &[LoopClosure]) -> Result<()> {
+    fn optimize_map(&mut self_map: &Map3D_loop, closures: &[LoopClosure]) -> Result<()> {
         Ok(())
     }
 
     fn global_optimization(
-        &mut self_trajectory: &CameraTrajectory_loop, _closures: &[LoopClosure],
+        &mut self_trajectory: &CameraTrajectory_loop,
+        _closures: &[LoopClosure],
     ) -> Result<Map3D> {
         Ok(Map3D {
             landmarks: Vec::new(),
@@ -1267,11 +1269,11 @@ impl AdvancedFeatureTracker {
         }
     }
 
-    fn initialize(&mut self_frame: &ArrayView3<f32>) -> Result<()> {
+    fn initialize(&mut selfframe: &ArrayView3<f32>) -> Result<()> {
         Ok(())
     }
 
-    fn extract_and_track_features(&mut self_frame: &ArrayView3<f32>) -> Result<Vec<Feature2D>> {
+    fn extract_and_track_features(&mut selfframe: &ArrayView3<f32>) -> Result<Vec<Feature2D>> {
         Ok(Vec::new()) // Placeholder
     }
 }
@@ -1300,7 +1302,8 @@ impl SemanticMapper {
     }
 
     fn update_semantic_map(
-        &mut self_scene: &SceneAnalysisResult, _pose: &CameraPose,
+        &mut self_scene: &SceneAnalysisResult,
+        _pose: &CameraPose,
     ) -> Result<SemanticMap> {
         Ok(SemanticMap {
             semantic_objects: Vec::new(),
@@ -1404,7 +1407,7 @@ pub fn process_visual_slam_realtime(
     processing_budget: Option<f64>,
 ) -> Result<SLAMResult> {
     match processing_budget {
-        Some(_budget) => slam_system.process_realtime(frame, timestamp, _budget),
+        Some(_budget) => slam_system.process_realtime(frame, timestamp, budget),
         None => slam_system.process_frame(frame, timestamp, None),
     }
 }

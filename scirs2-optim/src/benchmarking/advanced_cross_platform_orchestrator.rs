@@ -492,10 +492,10 @@ pub trait CloudInstance: std::fmt::Debug + Send + Sync {
     fn execute_command(&self, command: &str) -> Result<CommandOutput>;
     
     /// Upload file to instance
-    fn upload_file(&self, local_path: &Path, remote_path: &str) -> Result<()>;
+    fn upload_file(&self, local_path: &Path, remotepath: &str) -> Result<()>;
     
     /// Download file from instance
-    fn download_file(&self, remote_path: &str, local_path: &Path) -> Result<()>;
+    fn download_file(&self, remote_path: &str, localpath: &Path) -> Result<()>;
     
     /// Terminate instance
     fn terminate(&self) -> Result<()>;
@@ -576,25 +576,25 @@ pub struct ContainerManager {
 /// Container runtime interface
 pub trait ContainerRuntime: std::fmt::Debug {
     /// Build container image
-    fn build_image(&self, dockerfile_path: &Path, tag: &str) -> Result<String>;
+    fn build_image(&self, dockerfilepath: &Path, tag: &str) -> Result<String>;
     
     /// Run container
     fn run_container(&self, image: &str, config: &ContainerRunConfig) -> Result<String>;
     
     /// Stop container
-    fn stop_container(&self, container_id: &str) -> Result<()>;
+    fn stop_container(&self, containerid: &str) -> Result<()>;
     
     /// Remove container
-    fn remove_container(&self, container_id: &str) -> Result<()>;
+    fn remove_container(&self, containerid: &str) -> Result<()>;
     
     /// Execute command in container
-    fn exec_command(&self, container_id: &str, command: &str) -> Result<CommandOutput>;
+    fn exec_command(&self, containerid: &str, command: &str) -> Result<CommandOutput>;
     
     /// Get container logs
-    fn get_logs(&self, container_id: &str) -> Result<String>;
+    fn get_logs(&self, containerid: &str) -> Result<String>;
     
     /// Get container stats
-    fn get_stats(&self, container_id: &str) -> Result<ContainerStats>;
+    fn get_stats(&self, containerid: &str) -> Result<ContainerStats>;
 }
 
 /// Container run configuration
@@ -1095,7 +1095,7 @@ pub enum AlertLevel {
 
 impl CrossPlatformOrchestrator {
     /// Create a new cross-platform orchestrator
-    pub fn new(_config: OrchestratorConfig) -> Result<Self> {
+    pub fn new(config: OrchestratorConfig) -> Result<Self> {
         let cloud_providers = Self::initialize_cloud_providers(&_config.cloud_config)?;
         let container_manager = ContainerManager::new(_config.container_config.clone())?;
         let matrix_generator = TestMatrixGenerator::new(_config.matrix_config.clone())?;
@@ -1109,7 +1109,7 @@ impl CrossPlatformOrchestrator {
         };
 
         Ok(Self {
-            _config,
+            config,
             cloud_providers,
             container_manager,
             matrix_generator,
@@ -1181,7 +1181,7 @@ impl CrossPlatformOrchestrator {
     }
 
     /// Initialize cloud providers based on configuration
-    fn initialize_cloud_providers(_config: &CloudConfig) -> Result<Vec<Box<dyn CloudProvider>>> {
+    fn initialize_cloud_providers(config: &CloudConfig) -> Result<Vec<Box<dyn CloudProvider>>> {
         let mut providers: Vec<Box<dyn CloudProvider>> = Vec::new();
         
         if let Some(aws_config) = &_config.aws {
@@ -1872,9 +1872,9 @@ pub struct CompatibilityAnalysis {
 // Implementation stubs for supporting types
 
 impl TestMatrixGenerator {
-    fn new(_config: TestMatrixConfig) -> Result<Self> {
+    fn new(config: TestMatrixConfig) -> Result<Self> {
         Ok(Self {
-            _config,
+            config,
             generated_matrix: Vec::new(),
         })
     }
@@ -1916,14 +1916,14 @@ impl TestMatrixGenerator {
 }
 
 impl ContainerManager {
-    fn new(_config: ContainerConfig) -> Result<Self> {
-        let runtime_interface: Box<dyn ContainerRuntime + Send + Sync> = match _config.runtime {
+    fn new(config: ContainerConfig) -> Result<Self> {
+        let runtime_interface: Box<dyn ContainerRuntime + Send + Sync> = match config.runtime {
             ContainerRuntime::Docker => Box::new(DockerRuntime::new()?),
             ContainerRuntime::Podman => Box::new(PodmanRuntime::new()?, _ => return Err(OptimError::UnsupportedFeature("Container runtime not supported".to_string())),
         };
 
         Ok(Self {
-            _config,
+            config,
             active_containers: Arc::new(Mutex::new(HashMap::new())),
             runtime_interface,
         })
@@ -1951,11 +1951,11 @@ impl ContainerManager {
             image: image.clone(),
             status: ContainerStatus::Running,
             start_time: Instant::now(),
-            _config,
+            config,
         })
     }
 
-    async fn stop_container(&self, container_id: &str) -> Result<()> {
+    async fn stop_container(&self, containerid: &str) -> Result<()> {
         self.runtime_interface.stop_container(container_id)?;
         self.runtime_interface.remove_container(container_id)?;
         Ok(())
@@ -2080,7 +2080,7 @@ impl ResultAggregator {
 }
 
 impl PlatformResourceManager {
-    fn new(_limits: ResourceLimits) -> Result<Self> {
+    fn new(limits: ResourceLimits) -> Result<Self> {
         Ok(Self {
             allocations: HashMap::new(),
             usage_tracker: ResourceUsageTracker::new(_limits.clone()),
@@ -2098,21 +2098,21 @@ impl PlatformResourceManager {
 }
 
 impl ResourceUsageTracker {
-    fn new(_limits: ResourceLimits) -> Self {
+    fn new(limits: ResourceLimits) -> Self {
         Self {
             usage_history: Vec::new(),
             current_usage: ResourceUsage::default(),
-            _limits,
+            limits,
         }
     }
 }
 
 impl CostTracker {
-    fn new(_budget_limits: BudgetLimits) -> Self {
+    fn new(_budgetlimits: BudgetLimits) -> Self {
         Self {
             current_costs: CloudCosts::default(),
             cost_history: Vec::new(),
-            _budget_limits,
+            budget_limits,
             alerts: Vec::new(),
         }
     }
@@ -2126,8 +2126,8 @@ struct AwsProvider {
 }
 
 impl AwsProvider {
-    fn new(_config: AwsConfig) -> Result<Self> {
-        Ok(Self { _config })
+    fn new(config: AwsConfig) -> Result<Self> {
+        Ok(Self { config })
     }
 }
 
@@ -2231,8 +2231,8 @@ struct AzureProvider {
 }
 
 impl AzureProvider {
-    fn new(_config: AzureConfig) -> Result<Self> {
-        Ok(Self { _config })
+    fn new(config: AzureConfig) -> Result<Self> {
+        Ok(Self { config })
     }
 }
 
@@ -2258,8 +2258,8 @@ struct GcpProvider {
 }
 
 impl GcpProvider {
-    fn new(_config: GcpConfig) -> Result<Self> {
-        Ok(Self { _config })
+    fn new(config: GcpConfig) -> Result<Self> {
+        Ok(Self { config })
     }
 }
 
@@ -2285,8 +2285,8 @@ struct GitHubActionsProvider {
 }
 
 impl GitHubActionsProvider {
-    fn new(_config: GitHubActionsConfig) -> Result<Self> {
-        Ok(Self { _config })
+    fn new(config: GitHubActionsConfig) -> Result<Self> {
+        Ok(Self { config })
     }
 }
 
@@ -2312,8 +2312,8 @@ struct CustomProvider {
 }
 
 impl CustomProvider {
-    fn new(_config: CustomCloudConfig) -> Result<Self> {
-        Ok(Self { _config })
+    fn new(config: CustomCloudConfig) -> Result<Self> {
+        Ok(Self { config })
     }
 }
 
@@ -2345,16 +2345,16 @@ impl DockerRuntime {
 }
 
 impl ContainerRuntime for DockerRuntime {
-    fn build_image(&self, _dockerfile_path: &Path, _tag: &str) -> Result<String> {
+    fn build_image(&self, _dockerfile_path: &Path, tag: &str) -> Result<String> {
         Err(OptimError::NotImplemented("Docker build not implemented".to_string()))
     }
     fn run_container(&self,
         image: &str, _config: &ContainerRunConfig) -> Result<String> {
         Ok("dummy_container_id".to_string())
     }
-    fn stop_container(&self, _container_id: &str) -> Result<()> { Ok(()) }
-    fn remove_container(&self, _container_id: &str) -> Result<()> { Ok(()) }
-    fn exec_command(&self, _container_id: &str, _command: &str) -> Result<CommandOutput> {
+    fn stop_container(&self, _containerid: &str) -> Result<()> { Ok(()) }
+    fn remove_container(&self, _containerid: &str) -> Result<()> { Ok(()) }
+    fn exec_command(&self, _container_id: &str, command: &str) -> Result<CommandOutput> {
         Ok(CommandOutput {
             exit_code: 0,
             stdout: String::new(),
@@ -2362,8 +2362,8 @@ impl ContainerRuntime for DockerRuntime {
             duration: Duration::from_secs(1),
         })
     }
-    fn get_logs(&self, _container_id: &str) -> Result<String> { Ok(String::new()) }
-    fn get_stats(&self, _container_id: &str) -> Result<ContainerStats> {
+    fn get_logs(&self, _containerid: &str) -> Result<String> { Ok(String::new()) }
+    fn get_stats(&self, _containerid: &str) -> Result<ContainerStats> {
         Ok(ContainerStats::default())
     }
 }
@@ -2378,16 +2378,16 @@ impl PodmanRuntime {
 }
 
 impl ContainerRuntime for PodmanRuntime {
-    fn build_image(&self, _dockerfile_path: &Path, _tag: &str) -> Result<String> {
+    fn build_image(&self, _dockerfile_path: &Path, tag: &str) -> Result<String> {
         Err(OptimError::NotImplemented("Podman build not implemented".to_string()))
     }
     fn run_container(&self,
         image: &str, _config: &ContainerRunConfig) -> Result<String> {
         Ok("dummy_container_id".to_string())
     }
-    fn stop_container(&self, _container_id: &str) -> Result<()> { Ok(()) }
-    fn remove_container(&self, _container_id: &str) -> Result<()> { Ok(()) }
-    fn exec_command(&self, _container_id: &str, _command: &str) -> Result<CommandOutput> {
+    fn stop_container(&self, _containerid: &str) -> Result<()> { Ok(()) }
+    fn remove_container(&self, _containerid: &str) -> Result<()> { Ok(()) }
+    fn exec_command(&self, _container_id: &str, command: &str) -> Result<CommandOutput> {
         Ok(CommandOutput {
             exit_code: 0,
             stdout: String::new(),
@@ -2395,8 +2395,8 @@ impl ContainerRuntime for PodmanRuntime {
             duration: Duration::from_secs(1),
         })
     }
-    fn get_logs(&self, _container_id: &str) -> Result<String> { Ok(String::new()) }
-    fn get_stats(&self, _container_id: &str) -> Result<ContainerStats> {
+    fn get_logs(&self, _containerid: &str) -> Result<String> { Ok(String::new()) }
+    fn get_stats(&self, _containerid: &str) -> Result<ContainerStats> {
         Ok(ContainerStats::default())
     }
 }

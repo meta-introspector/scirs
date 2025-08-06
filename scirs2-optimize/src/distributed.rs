@@ -23,7 +23,7 @@ pub trait MPIInterface {
         T: Clone + Send + Sync;
 
     /// Gather data from all processes to root
-    fn gather<T>(&self, send_data: &[T], recv_data: Option<&mut [T]>, root: i32) -> ScirsResult<()>
+    fn gather<T>(&self, send_data: &[T], recvdata: Option<&mut [T]>, root: i32) -> ScirsResult<()>
     where
         T: Clone + Send + Sync;
 
@@ -178,13 +178,13 @@ pub struct DistributedOptimizationContext<M: MPIInterface> {
 
 impl<M: MPIInterface> DistributedOptimizationContext<M> {
     /// Create a new distributed optimization context
-    pub fn new(_mpi: M, config: DistributedConfig) -> Self {
-        let rank = _mpi.rank();
-        let size = _mpi.size();
+    pub fn new(mpi: M, config: DistributedConfig) -> Self {
+        let rank = mpi.rank();
+        let size = mpi.size();
         let work_distribution = WorkDistribution::new(rank, size, config.distribution_strategy);
 
         Self {
-            _mpi,
+            mpi,
             config,
             rank,
             size,
@@ -209,7 +209,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
     }
 
     /// Distribute work among processes
-    pub fn distribute_work(&mut self, total_work: usize) -> WorkAssignment {
+    pub fn distribute_work(&mut self, totalwork: usize) -> WorkAssignment {
         self.work_distribution.assign_work(total_work)
     }
 
@@ -225,7 +225,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
     }
 
     /// Gather results from all workers to master
-    pub fn gather_results(&self, local_result: &Array1<f64>) -> ScirsResult<Option<Array2<f64>>> {
+    pub fn gather_results(&self, localresult: &Array1<f64>) -> ScirsResult<Option<Array2<f64>>> {
         if self.is_master() {
             let total_size = local_result.len() * self.size as usize;
             let mut gathered_data = vec![0.0; total_size];
@@ -237,7 +237,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
 
             // Reshape into 2D array
             let _result =
-                Array2::fromshape_vec((self.size as usize, local_result.len()), gathered_data)
+                Array2::from_shape_vec((self.size as usize, local_result.len()), gathered_data)
                     .map_err(|e| {
                         ScirsError::InvalidInput(scirs2_core::error::ErrorContext::new(format!(
                             "Failed to reshape gathered data: {}",
@@ -252,7 +252,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
     }
 
     /// Perform all-reduce operation (sum)
-    pub fn allreduce_sum(&self, local_data: &Array1<f64>) -> ScirsResult<Array1<f64>> {
+    pub fn allreduce_sum(&self, localdata: &Array1<f64>) -> ScirsResult<Array1<f64>> {
         let mut result = Array1::zeros(local_data.len());
         self.mpi.allreduce(
             local_data.as_slice().unwrap(),
@@ -276,15 +276,15 @@ struct WorkDistribution {
 }
 
 impl WorkDistribution {
-    fn new(_rank: i32, size: i32, strategy: DistributionStrategy) -> Self {
+    fn new(rank: i32, size: i32, strategy: DistributionStrategy) -> Self {
         Self {
-            _rank,
+            rank,
             size,
             strategy,
         }
     }
 
-    fn assign_work(&self, total_work: usize) -> WorkAssignment {
+    fn assign_work(&self, totalwork: usize) -> WorkAssignment {
         match self.strategy {
             DistributionStrategy::DataParallel => self.data_parallel_assignment(total_work),
             DistributionStrategy::ModelParallel => self.model_parallel_assignment(total_work),
@@ -293,7 +293,7 @@ impl WorkDistribution {
         }
     }
 
-    fn data_parallel_assignment(&self, total_work: usize) -> WorkAssignment {
+    fn data_parallel_assignment(&self, totalwork: usize) -> WorkAssignment {
         let work_per_process = total_work / self.size as usize;
         let remainder = total_work % self.size as usize;
 
@@ -312,7 +312,7 @@ impl WorkDistribution {
         }
     }
 
-    fn model_parallel_assignment(&self, total_work: usize) -> WorkAssignment {
+    fn model_parallel_assignment(&self, totalwork: usize) -> WorkAssignment {
         // For model parallelism, each process handles different parameters
         WorkAssignment {
             start_index: 0,
@@ -321,12 +321,12 @@ impl WorkDistribution {
         }
     }
 
-    fn hybrid_assignment(&self, total_work: usize) -> WorkAssignment {
+    fn hybrid_assignment(&self, totalwork: usize) -> WorkAssignment {
         // Simplified hybrid: use data parallel for now
         self.data_parallel_assignment(total_work)
     }
 
-    fn master_worker_assignment(&self, total_work: usize) -> WorkAssignment {
+    fn master_worker_assignment(&self, totalwork: usize) -> WorkAssignment {
         if self.rank == 0 {
             // Master coordinates but may not do computation
             WorkAssignment {
@@ -413,7 +413,7 @@ pub mod algorithms {
         }
 
         /// Set mutation parameters
-        pub fn with_parameters(mut self, f_scale: f64, crossover_rate: f64) -> Self {
+        pub fn with_parameters(mut self, f_scale: f64, crossoverrate: f64) -> Self {
             self.f_scale = f_scale;
             self.crossover_rate = crossover_rate;
             self
@@ -509,7 +509,7 @@ pub mod algorithms {
             for i in 0..local_size {
                 for j in 0..dims {
                     let (low, high) = bounds[j];
-                    population[[i, j]] = rng.random_range(low..=high);
+                    population[[i, j]] = rng.gen_range(low..=high);
                 }
             }
 
@@ -570,7 +570,7 @@ pub mod algorithms {
                 // Select three random individuals
                 let mut indices = Vec::new();
                 while indices.len() < 3 {
-                    let idx = rng.random_range(0..pop_size);
+                    let idx = rng.gen_range(0..pop_size);
                     if idx != i && !indices.contains(&idx) {
                         indices.push(idx);
                     }
@@ -581,7 +581,7 @@ pub mod algorithms {
                 let c = indices[2];
 
                 // Mutation and crossover
-                let j_rand = rng.random_range(0..dims);
+                let j_rand = rng.gen_range(0..dims);
                 for j in 0..dims {
                     if rng.gen::<f64>() < self.crossover_rate || j == j_rand {
                         trial_population[[i, j]] = population[[a, j]]
@@ -642,7 +642,7 @@ pub mod algorithms {
             Ok(())
         }
 
-        fn check_convergence(&mut self, local_fitness: &Array1<f64>) -> ScirsResult<bool> {
+        fn check_convergence(&mut self, localfitness: &Array1<f64>) -> ScirsResult<bool> {
             let mean = local_fitness.mean().unwrap_or(0.0);
             let variance = local_fitness
                 .iter()
@@ -775,7 +775,7 @@ pub mod algorithms {
             for i in 0..local_size {
                 for j in 0..dims {
                     let (low, high) = bounds[j];
-                    positions[[i, j]] = rng.random_range(low..=high);
+                    positions[[i, j]] = rng.gen_range(low..=high);
                 }
             }
 
@@ -928,8 +928,8 @@ pub struct MockMPI {
 
 #[cfg(test)]
 impl MockMPI {
-    pub fn new(_rank: i32, size: i32) -> Self {
-        Self { _rank, size }
+    pub fn new(rank: i32, size: i32) -> Self {
+        Self { rank, size }
     }
 }
 
@@ -942,7 +942,7 @@ impl MPIInterface for MockMPI {
         self.size
     }
 
-    fn broadcast<T>(&self_data: &mut [T], _root: i32) -> ScirsResult<()>
+    fn broadcast<T>(self_data: &mut [T], root: i32) -> ScirsResult<()>
     where
         T: Clone + Send + Sync,
     {
@@ -981,13 +981,13 @@ impl MPIInterface for MockMPI {
     fn barrier(&self) -> ScirsResult<()> {
         Ok(())
     }
-    fn send<T>(&self, _data: &[T], _dest: i32, _tag: i32) -> ScirsResult<()>
+    fn send<T>(&self, _data: &[T], _dest: i32, tag: i32) -> ScirsResult<()>
     where
         T: Clone + Send + Sync,
     {
         Ok(())
     }
-    fn recv<T>(&self, _data: &mut [T], _source: i32, _tag: i32) -> ScirsResult<()>
+    fn recv<T>(&self, _data: &mut [T], _source: i32, tag: i32) -> ScirsResult<()>
     where
         T: Clone + Send + Sync,
     {

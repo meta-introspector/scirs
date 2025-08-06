@@ -13,6 +13,7 @@
 
 use crate::error::{MetricsError, Result};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
@@ -754,7 +755,8 @@ pub enum ResponseAction {
     /// Update widget data
     UpdateData {
         widget_id: String,
-        data: serde, json: Value,
+        data: Value,
+        json: Value,
     },
     /// Trigger another event
     TriggerEvent { event: WidgetEvent },
@@ -770,7 +772,8 @@ pub enum ResponseAction {
     /// Update dashboard state
     UpdateState {
         key: String,
-        value: serde, json: Value,
+        value: Value,
+        json: Value,
     },
 }
 
@@ -877,7 +880,7 @@ pub trait DataSource {
     fn subscribe(&mut self, callback: Box<dyn Fn(WidgetData) + Send + Sync>) -> Result<String>;
 
     /// Unsubscribe from data updates
-    fn unsubscribe(&mut self, subscription_id: &str) -> Result<()>;
+    fn unsubscribe(&mut self, subscriptionid: &str) -> Result<()>;
 
     /// Check if data source is active
     fn is_active(&self) -> bool;
@@ -1328,13 +1331,13 @@ pub trait RenderingEngine {
     fn initialize(&mut self, config: &DashboardConfig) -> Result<()>;
 
     /// Render dashboard
-    fn render_dashboard(&self, dashboard_state: &DashboardState) -> Result<RenderOutput>;
+    fn render_dashboard(&self, dashboardstate: &DashboardState) -> Result<RenderOutput>;
 
     /// Update widget rendering
-    fn update_widget(&self, widget_id: &str, widget_data: &WidgetData) -> Result<()>;
+    fn update_widget(&self, widget_id: &str, widgetdata: &WidgetData) -> Result<()>;
 
     /// Handle resize events
-    fn handle_resize(&self, new_size: Size) -> Result<()>;
+    fn handle_resize(&self, newsize: Size) -> Result<()>;
 
     /// Get rendering capabilities
     fn get_capabilities(&self) -> RenderingCapabilities;
@@ -1618,7 +1621,7 @@ pub struct StateChange {
     /// Old value
     pub old_value: Option<serde_json::Value>,
     /// New value
-    pub new_value: serde_json:: Value,
+    pub new_value: serde_json::Value,
     /// Author
     pub author: String,
     /// Timestamp
@@ -1855,19 +1858,19 @@ impl Default for ExportConfig {
 
 impl InteractiveDashboard {
     /// Create new interactive dashboard
-    pub fn new(_config: DashboardConfig) -> Result<Self> {
+    pub fn new(config: DashboardConfig) -> Result<Self> {
         Ok(Self {
-            _config: _config.clone(),
+            _config: _configclone(),
             widgets: Arc::new(RwLock::new(HashMap::new())),
             data_sources: Arc::new(RwLock::new(HashMap::new())),
             event_system: Arc::new(Mutex::new(EventSystem::new())),
-            layout_manager: Arc::new(Mutex::new(LayoutManager::new(_config.layout.clone()))),
+            layout_manager: Arc::new(Mutex::new(LayoutManager::new(_configlayout.clone()))),
             renderer: Arc::new(Mutex::new(Box::new(DefaultRenderingEngine::new()))),
             update_manager: Arc::new(Mutex::new(UpdateManager::new(
-                _config.realtime_config.clone(),
+                _configrealtime_configclone(),
             ))),
             collaboration: Arc::new(Mutex::new(CollaborationManager::new(
-                _config.collaboration_config.clone(),
+                _configcollaboration_configclone(),
             ))),
             state: Arc::new(RwLock::new(DashboardState::new(_config))),
         })
@@ -1884,7 +1887,7 @@ impl InteractiveDashboard {
     }
 
     /// Remove widget from dashboard
-    pub fn remove_widget(&self, widget_id: &str) -> Result<()> {
+    pub fn remove_widget(&self, widgetid: &str) -> Result<()> {
         let mut widgets = self.widgets.write().map_err(|_| {
             MetricsError::ComputationError("Failed to acquire widget lock".to_string())
         })?;
@@ -1893,7 +1896,7 @@ impl InteractiveDashboard {
     }
 
     /// Add data source
-    pub fn add_data_source(&self, data_source: Box<dyn DataSource + Send + Sync>) -> Result<()> {
+    pub fn add_data_source(&self, datasource: Box<dyn DataSource + Send + Sync>) -> Result<()> {
         let source_id = data_source.get_id().to_string();
         let mut sources = self.data_sources.write().map_err(|_| {
             MetricsError::ComputationError("Failed to acquire data _source lock".to_string())
@@ -2096,7 +2099,7 @@ impl EventSystem {
         if let Some(filter_config) = event.data.get("filter") {
             response
                 .state_changes
-                .insert("active_filter".to_string(), filter_config.clone());
+                .insert("active_filter".to_string(), filter_configclone());
         }
 
         Ok(())
@@ -2169,9 +2172,9 @@ impl EventSystem {
 }
 
 impl LayoutManager {
-    fn new(_config: LayoutConfig) -> Self {
+    fn new(config: LayoutConfig) -> Self {
         let mut manager = Self {
-            layout_config: _config.clone(),
+            layout_config: _configclone(),
             widget_layouts: HashMap::new(),
             constraints: Vec::new(),
             responsive_rules: Vec::new(),
@@ -2183,7 +2186,7 @@ impl LayoutManager {
     }
 
     /// Add widget to layout
-    pub fn add_widget(&mut self, widget_id: String, layout: WidgetLayout) -> Result<()> {
+    pub fn add_widget(&mut self, widgetid: String, layout: WidgetLayout) -> Result<()> {
         // Validate layout constraints
         self.validate_layout(&layout)?;
 
@@ -2198,7 +2201,7 @@ impl LayoutManager {
     }
 
     /// Update widget layout
-    pub fn update_widget_layout(&mut self, widget_id: &str, layout: WidgetLayout) -> Result<()> {
+    pub fn update_widget_layout(&mut self, widgetid: &str, layout: WidgetLayout) -> Result<()> {
         self.validate_layout(&layout)?;
 
         if let Some(current_layout) = self.widget_layouts.get_mut(widget_id) {
@@ -2210,7 +2213,7 @@ impl LayoutManager {
     }
 
     /// Remove widget from layout
-    pub fn remove_widget(&mut self, widget_id: &str) -> Result<()> {
+    pub fn remove_widget(&mut self, widgetid: &str) -> Result<()> {
         self.widget_layouts.remove(widget_id);
         self.remove_widget_constraints(widget_id);
         Ok(())
@@ -2218,7 +2221,7 @@ impl LayoutManager {
 
     /// Calculate layout for given viewport size
     pub fn calculate_layout(&self, viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
-        let mut positions = match self.layout_config.layout_type {
+        let mut positions = match self.layout_configlayout_type {
             LayoutType::Grid => self.calculate_grid_layout(&viewport)?,
             LayoutType::Flex => self.calculate_flex_layout(&viewport)?,
             LayoutType::Absolute => self.calculate_absolute_layout(&viewport)?,
@@ -2236,22 +2239,22 @@ impl LayoutManager {
     fn calculate_grid_layout(&self, viewport: &Size) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
 
-        if let Some(grid_config) = &self.layout_config.grid_config {
+        if let Some(grid_config) = &self.layout_configgrid_config {
             let cell_width = (viewport.width
-                - (grid_config.columns + 1) as f64 * grid_config.gap as f64)
-                / grid_config.columns as f64;
+                - (grid_configcolumns + 1) as f64 * grid_configgap as f64)
+                / grid_configcolumns as f64;
             let cell_height = (viewport.height
-                - (grid_config.rows + 1) as f64 * grid_config.gap as f64)
-                / grid_config.rows as f64;
+                - (grid_configrows + 1) as f64 * grid_configgap as f64)
+                / grid_configrows as f64;
 
             let mut current_row = 0;
             let mut current_col = 0;
 
             for (widget_id, widget_layout) in &self.widget_layouts {
-                let x = current_col as f64 * (cell_width + grid_config.gap as f64)
-                    + grid_config.gap as f64;
-                let y = current_row as f64 * (cell_height + grid_config.gap as f64)
-                    + grid_config.gap as f64;
+                let x = current_col as f64 * (cell_width + grid_configgap as f64)
+                    + grid_configgap as f64;
+                let y = current_row as f64 * (cell_height + grid_configgap as f64)
+                    + grid_configgap as f64;
 
                 let (span_cols, span_rows) = if let Some(grid_pos) = &widget_layout.grid_position {
                     (
@@ -2277,7 +2280,7 @@ impl LayoutManager {
 
                 // Move to next position
                 current_col += span_cols;
-                if current_col >= grid_config.columns {
+                if current_col >= grid_configcolumns {
                     current_col = 0;
                     current_row += 1;
                 }
@@ -2310,7 +2313,7 @@ impl LayoutManager {
             // Check if widget fits in current row
             if current_x + width > viewport.width as u32 {
                 current_x = 0;
-                current_y += row_height + self.layout_config.spacing.widget_spacing;
+                current_y += row_height + self.layout_configspacing.widget_spacing;
                 row_height = 0;
             }
 
@@ -2325,7 +2328,7 @@ impl LayoutManager {
                 },
             );
 
-            current_x += width + self.layout_config.spacing.widget_spacing;
+            current_x += width + self.layout_configspacing.widget_spacing;
             row_height = row_height.max(height);
         }
 
@@ -2334,7 +2337,8 @@ impl LayoutManager {
 
     /// Calculate absolute layout
     fn calculate_absolute_layout(
-        &self_viewport: &Size,
+        &self,
+        viewport: &Size,
     ) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
 
@@ -2356,11 +2360,11 @@ impl LayoutManager {
     fn calculate_masonry_layout(&self, viewport: &Size) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
 
-        if let Some(grid_config) = &self.layout_config.grid_config {
+        if let Some(grid_config) = &self.layout_configgrid_config {
             let column_width = (viewport.width
-                - (grid_config.columns + 1) as f64 * grid_config.gap as f64)
-                / grid_config.columns as f64;
-            let mut column_heights = vec![0u32; grid_config.columns as usize];
+                - (grid_configcolumns + 1) as f64 * grid_configgap as f64)
+                / grid_configcolumns as f64;
+            let mut column_heights = vec![0u32; grid_configcolumns as usize];
 
             for (widget_id, widget_layout) in &self.widget_layouts {
                 // Find shortest column
@@ -2368,11 +2372,11 @@ impl LayoutManager {
                     .iter()
                     .enumerate()
                     .min_by_key(|(_, &height)| height)
-                    .map(|(idx_)| idx)
+                    .map(|(idx, _)| idx)
                     .unwrap_or(0);
 
-                let x = shortest_column as f64 * (column_width + grid_config.gap as f64)
-                    + grid_config.gap as f64;
+                let x = shortest_column as f64 * (column_width + grid_configgap as f64)
+                    + grid_configgap as f64;
                 let y = column_heights[shortest_column];
 
                 let width = column_width;
@@ -2393,7 +2397,7 @@ impl LayoutManager {
                     },
                 );
 
-                column_heights[shortest_column] += height + grid_config.gap;
+                column_heights[shortest_column] += height + grid_configgap;
             }
         }
 
@@ -2425,7 +2429,7 @@ impl LayoutManager {
     }
 
     /// Apply layout constraints
-    fn apply_constraints(&mut self, widget_id: &str, layout: &WidgetLayout) -> Result<()> {
+    fn apply_constraints(&mut self, widgetid: &str, layout: &WidgetLayout) -> Result<()> {
         // Add basic constraint based on position and size
         if layout.position.x >= 0.0 && layout.position.y >= 0.0 {
             self.constraints.push(LayoutConstraint {
@@ -2445,7 +2449,7 @@ impl LayoutManager {
     }
 
     /// Remove widget constraints
-    fn remove_widget_constraints(&mut self, widget_id: &str) {
+    fn remove_widget_constraints(&mut self, widgetid: &str) {
         self.constraints
             .retain(|constraint| !constraint.target_widgets.contains(&widget_id.to_string()));
     }
@@ -2512,7 +2516,9 @@ impl LayoutManager {
 
     /// Apply individual layout change
     fn apply_layout_change(
-        &self_position: &mut WidgetPosition, _change: &LayoutChange,
+        &self,
+        position: &mut WidgetPosition,
+        change: &LayoutChange,
     ) -> Result<()> {
         // Implementation would modify _position based on _change
         Ok(())
@@ -2539,11 +2545,11 @@ impl DefaultRenderingEngine {
 }
 
 impl RenderingEngine for DefaultRenderingEngine {
-    fn initialize(&mut self_config: &DashboardConfig) -> Result<()> {
+    fn initialize(&mut self, config: &DashboardConfig) -> Result<()> {
         Ok(())
     }
 
-    fn render_dashboard(&self, dashboard_state: &DashboardState) -> Result<RenderOutput> {
+    fn render_dashboard(&self, dashboardstate: &DashboardState) -> Result<RenderOutput> {
         let start_time = Instant::now();
 
         // Generate comprehensive HTML structure
@@ -2658,11 +2664,11 @@ impl RenderingEngine for DefaultRenderingEngine {
         })
     }
 
-    fn update_widget(&self, _widget_id: &str, _widget_data: &WidgetData) -> Result<()> {
+    fn update_widget(&self, _widget_id: &str, _widgetdata: &WidgetData) -> Result<()> {
         Ok(())
     }
 
-    fn handle_resize(&self_new_size: Size) -> Result<()> {
+    fn handle_resize(&self, newsize: Size) -> Result<()> {
         Ok(())
     }
 
@@ -2676,9 +2682,9 @@ impl RenderingEngine for DefaultRenderingEngine {
 }
 
 impl UpdateManager {
-    fn new(_config: RealtimeConfig) -> Self {
+    fn new(config: RealtimeConfig) -> Self {
         Self {
-            _config,
+            config,
             subscriptions: HashMap::new(),
             update_queue: VecDeque::new(),
             statistics: UpdateStatistics {
@@ -2703,9 +2709,9 @@ impl UpdateManager {
 }
 
 impl CollaborationManager {
-    fn new(_config: Option<CollaborationConfig>) -> Self {
+    fn new(config: Option<CollaborationConfig>) -> Self {
         Self {
-            _config: _config.unwrap_or_else(|| CollaborationConfig {
+            _config: _configunwrap_or_else(|| CollaborationConfig {
                 enabled: false,
                 server_endpoint: String::new(),
                 auth_config: AuthConfig {
@@ -2752,7 +2758,8 @@ impl DefaultConflictResolver {
 
 impl ConflictResolver for DefaultConflictResolver {
     fn resolve_conflict(
-        self_base: &SharedState, _local: &SharedState,
+        self_base: &SharedState,
+        _local: &SharedState,
         remote: &SharedState,
     ) -> Result<SharedState> {
         // Last writer wins strategy
@@ -2770,9 +2777,9 @@ impl ConflictResolver for DefaultConflictResolver {
 }
 
 impl DashboardState {
-    fn new(_config: DashboardConfig) -> Self {
+    fn new(config: DashboardConfig) -> Self {
         Self {
-            _config,
+            config,
             widgets: HashMap::new(),
             filters: HashMap::new(),
             selection: None,
@@ -2821,7 +2828,7 @@ mod tests {
     fn test_layout_config_creation() {
         let layout = LayoutConfig::default();
         matches!(layout.layout_type, LayoutType::Grid);
-        assert!(layout.grid_config.is_some());
+        assert!(layout.grid_configis_some());
         assert!(layout.animations.enabled);
     }
 

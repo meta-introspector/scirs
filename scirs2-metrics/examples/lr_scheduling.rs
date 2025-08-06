@@ -95,15 +95,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             );
 
             println!("Scheduler configuration created:");
-            println!("  Initial LR: {}", scheduler_config.initial_lr);
-            println!("  Factor: {}", scheduler_config.factor);
-            println!("  Patience: {}", scheduler_config.patience);
-            println!("  Min LR: {}", scheduler_config.min_lr);
-            println!("  Mode: {}", scheduler_config.mode);
-            println!("  Metric: {}", scheduler_config.metric_name);
+            println!("  Initial LR: {}", scheduler_configinitial_lr);
+            println!("  Factor: {}", scheduler_configfactor);
+            println!("  Patience: {}", scheduler_configpatience);
+            println!("  Min LR: {}", scheduler_configmin_lr);
+            println!("  Mode: {}", scheduler_configmode);
+            println!("  Metric: {}", scheduler_configmetric_name);
 
             // Show how to extract configuration values
-            let (initial_lr, factor, patience, min_lr, mode) = scheduler_config.as_tuple();
+            let (initial_lr, factor, patience, min_lr, mode) = scheduler_configas_tuple();
             println!("\nConfiguration as tuple:");
             println!("  ({initial_lr}, {factor}, {patience}, {min_lr}, {mode})");
 
@@ -117,7 +117,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 /// Simulate training for one epoch
 #[allow(dead_code)]
-fn simulate_epoch_training(_current_val_loss: f64, learning_rate: f64) -> (f64, f64) {
+fn simulate_epoch_training(_current_val_loss: f64, learningrate: f64) -> (f64, f64) {
     // Simulate training _loss
     let train_loss = _current_val_loss * (0.8 + rand::random::<f64>() * 0.2);
 

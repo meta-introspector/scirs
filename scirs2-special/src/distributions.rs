@@ -646,7 +646,7 @@ fn kolmogorov_inverse_newton_improved<T: Float + FromPrimitive + Display>(
         }
 
         // Compute derivative using central difference with adaptive step size
-        let h = T::from_f64(1e-8).unwrap() * (T::one() + _x.abs());
+        let h = T::from_f64(1e-8).unwrap() * (T::one() + x.abs());
         let f_plus = kolmogorov(_x + h);
         let f_minus = kolmogorov(_x - h);
         let fprime = (f_plus - f_minus) / (T::from_f64(2.0).unwrap() * h);

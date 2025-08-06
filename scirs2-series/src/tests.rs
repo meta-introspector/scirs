@@ -306,36 +306,36 @@ where
 
 /// Calculate first difference
 #[allow(dead_code)]
-fn difference<S, F>(_data: &ArrayBase<S, Ix1>) -> Array1<F>
+fn difference<S, F>(data: &ArrayBase<S, Ix1>) -> Array1<F>
 where
     S: Data<Elem = F>,
     F: Float,
 {
-    let n = _data.len();
+    let n = data.len();
     let mut diff = Array1::zeros(n - 1);
     for i in 1..n {
-        diff[i - 1] = _data[i] - _data[i - 1];
+        diff[i - 1] = data[i] - data[i - 1];
     }
     diff
 }
 
 /// Lag a series
 #[allow(dead_code)]
-fn lag<S, F>(_data: &ArrayBase<S, Ix1>, k: usize) -> Result<Array1<F>>
+fn lag<S, F>(data: &ArrayBase<S, Ix1>, k: usize) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
     F: Float,
 {
-    if k >= _data.len() {
+    if k >= data.len() {
         return Err(TimeSeriesError::InvalidInput(
             "Lag exceeds series length".to_string(),
         ));
     }
 
-    let n = _data.len() - k;
+    let n = data.len() - k;
     let mut lagged = Array1::zeros(n);
     for i in 0..n {
-        lagged[i] = _data[i];
+        lagged[i] = data[i];
     }
     Ok(lagged)
 }
@@ -480,26 +480,26 @@ where
 
 /// Detrend with constant only
 #[allow(dead_code)]
-fn detrend_constant<S, F>(_data: &ArrayBase<S, Ix1>) -> Result<(Array1<F>, F)>
+fn detrend_constant<S, F>(data: &ArrayBase<S, Ix1>) -> Result<(Array1<F>, F)>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive,
 {
-    let mean = _data.mean().unwrap();
-    let residuals = _data.mapv(|x| x - mean);
+    let mean = data.mean().unwrap();
+    let residuals = data.mapv(|x| x - mean);
     Ok((residuals, mean))
 }
 
 /// Detrend with linear trend
 #[allow(dead_code)]
-fn detrend_linear<S, F>(_data: &ArrayBase<S, Ix1>) -> Result<(Array1<F>, Array1<F>)>
+fn detrend_linear<S, F>(data: &ArrayBase<S, Ix1>) -> Result<(Array1<F>, Array1<F>)>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + ScalarOperand,
 {
     use ndarray::Array2;
 
-    let n = _data.len();
+    let n = data.len();
     let mut x_mat = Array2::zeros((n, 2));
 
     // Design matrix: [1 t]
@@ -517,13 +517,13 @@ where
 
 /// Newey-West variance estimator
 #[allow(dead_code)]
-fn newey_west_variance<S, F>(_residuals: &ArrayBase<S, Ix1>, lags: usize) -> Result<F>
+fn newey_west_variance<S, F>(residuals: &ArrayBase<S, Ix1>, lags: usize) -> Result<F>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + ndarray::ScalarOperand,
 {
-    let n = _residuals.len();
-    let residuals_owned = _residuals.to_owned();
+    let n = residuals.len();
+    let residuals_owned = residuals.to_owned();
     let mut variance = residuals_owned.dot(&residuals_owned) / F::from(n).unwrap();
 
     // Add autocovariance terms with Bartlett weights
@@ -539,7 +539,7 @@ where
 
 /// Get ADF critical values (simplified)
 #[allow(dead_code)]
-fn get_adf_critical_values<F>(_n: usize, regression: ADFRegression) -> Result<CriticalValues<F>>
+fn get_adf_critical_values<F>(n: usize, regression: ADFRegression) -> Result<CriticalValues<F>>
 where
     F: Float + FromPrimitive,
 {
@@ -567,7 +567,7 @@ where
 
 /// Calculate ADF p-value (simplified)
 #[allow(dead_code)]
-fn calculate_adf_pvalue<F>(_test_stat: F, n: usize, regression: ADFRegression) -> Result<F>
+fn calculate_adf_pvalue<F>(_teststat: F, n: usize, regression: ADFRegression) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
@@ -588,7 +588,7 @@ where
 
 /// Get KPSS critical values
 #[allow(dead_code)]
-fn get_kpss_critical_values<F>(_test_type: KPSSType) -> Result<CriticalValues<F>>
+fn get_kpss_critical_values<F>(_testtype: KPSSType) -> Result<CriticalValues<F>>
 where
     F: Float + FromPrimitive,
 {
@@ -610,7 +610,7 @@ where
 
 /// Calculate KPSS p-value (simplified)
 #[allow(dead_code)]
-fn calculate_kpss_pvalue<F>(_test_stat: F, test_type: KPSSType) -> Result<F>
+fn calculate_kpss_pvalue<F>(_test_stat: F, testtype: KPSSType) -> Result<F>
 where
     F: Float + FromPrimitive,
 {

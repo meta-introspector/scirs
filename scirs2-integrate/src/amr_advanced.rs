@@ -103,7 +103,7 @@ pub enum RefinementFlag {
 /// Trait for refinement criteria
 pub trait RefinementCriterion<F: IntegrateFloat>: Send + Sync {
     /// Evaluate refinement criterion for a cell
-    fn evaluate(&self, _cell: &AdaptiveCell<F>, neighbors: &[&AdaptiveCell<F>]) -> F;
+    fn evaluate(&self, cell: &AdaptiveCell<F>, neighbors: &[&AdaptiveCell<F>]) -> F;
 
     /// Get criterion name
     fn name(&self) -> &'static str;
@@ -145,7 +145,7 @@ pub struct CurvatureRefinementCriterion<F: IntegrateFloat> {
 /// Load balancing strategy trait
 pub trait LoadBalancer<F: IntegrateFloat>: Send + Sync {
     /// Balance computational load across processors/threads
-    fn balance(&self, _hierarchy: &mut MeshHierarchy<F>) -> IntegrateResult<()>;
+    fn balance(&self, hierarchy: &mut MeshHierarchy<F>) -> IntegrateResult<()>;
 }
 
 /// Zoltan-style geometric load balancer
@@ -202,7 +202,7 @@ pub struct AMRAdaptationResult<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     /// Create new advanced AMR manager
-    pub fn new(_initial_mesh: AdaptiveMeshLevel<F>, max_levels: usize, min_cell_size: F) -> Self {
+    pub fn new(_initial_mesh: AdaptiveMeshLevel<F>, max_levels: usize, min_cellsize: F) -> Self {
         let mesh_hierarchy = MeshHierarchy {
             levels: vec![_initial_mesh],
             hierarchy_map: HashMap::new(),
@@ -214,7 +214,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
             refinement_criteria: Vec::new(),
             load_balancer: None,
             max_levels,
-            min_cell_size,
+            min_cell_size: min_cellsize,
             coarsening_tolerance: F::from(0.1).unwrap(),
             refinement_tolerance: F::from(1.0).unwrap(),
             adaptation_frequency: 1,
@@ -324,10 +324,10 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     /// Evaluate all refinement criteria for all cells
     fn evaluate_refinement_criteria(&mut self) -> IntegrateResult<()> {
         for level in &mut self.mesh_hierarchy.levels {
-            let cell_ids: Vec<CellId> = level.cells.keys().cloned().collect();
+            let cellids: Vec<CellId> = level.cells.keys().cloned().collect();
 
-            for cell_id in cell_ids {
-                if let Some(cell) = level.cells.get(&cell_id) {
+            for cellid in cellids {
+                if let Some(cell) = level.cells.get(&cellid) {
                     if !cell.is_active {
                         continue;
                     }
@@ -358,7 +358,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
                     };
 
                     // Update cell error estimate
-                    if let Some(cell) = level.cells.get_mut(&cell_id) {
+                    if let Some(cell) = level.cells.get_mut(&cellid) {
                         cell.error_estimate = error_estimate;
                     }
                 }
@@ -390,9 +390,9 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         }
 
         // Now flag cells based on collected information
-        for (level_idx, cell_id, error_estimate, level_num, cell_size) in cells_to_check {
+        for (level_idx, cellid, error_estimate, level_num, cell_size) in cells_to_check {
             if let Some(level) = self.mesh_hierarchy.levels.get_mut(level_idx) {
-                if let Some(cell) = level.cells.get_mut(&cell_id) {
+                if let Some(cell) = level.cells.get_mut(&cellid) {
                     // Refinement criterion
                     if error_estimate > self.refinement_tolerance
                         && level_num < self.max_levels
@@ -448,8 +448,8 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
                 .map(|cell| cell.id)
                 .collect();
 
-            for cell_id in cells_to_refine {
-                self.refine_cell(cell_id)?;
+            for cellid in cells_to_refine {
+                self.refine_cell(cellid)?;
                 cells_refined += 1;
             }
         }
@@ -458,9 +458,9 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Refine a single cell
-    fn refine_cell(&mut self, cell_id: CellId) -> IntegrateResult<()> {
-        let parent_cell = if let Some(level) = self.mesh_hierarchy.levels.get(cell_id.level) {
-            level.cells.get(&cell_id).cloned()
+    fn refine_cell(&mut self, cellid: CellId) -> IntegrateResult<()> {
+        let parent_cell = if let Some(level) = self.mesh_hierarchy.levels.get(cellid.level) {
+            level.cells.get(&cellid).cloned()
         } else {
             return Err(IntegrateError::ValueError("Invalid cell level".to_string()));
         };
@@ -469,7 +469,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
             parent_cell.ok_or_else(|| IntegrateError::ValueError("Cell not found".to_string()))?;
 
         // Create child level if it doesn't exist
-        let child_level = cell_id.level + 1;
+        let child_level = cellid.level + 1;
         while self.mesh_hierarchy.levels.len() <= child_level {
             let new_level = AdaptiveMeshLevel {
                 level: self.mesh_hierarchy.levels.len(),
@@ -517,7 +517,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
                 refinement_flag: RefinementFlag::None,
                 is_active: true,
                 neighbors: Vec::new(),
-                parent: Some(cell_id),
+                parent: Some(cellid),
                 children: Vec::new(),
             };
 
@@ -530,12 +530,12 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         // Update hierarchy map
         self.mesh_hierarchy
             .hierarchy_map
-            .insert(cell_id, child_ids.clone());
+            .insert(cellid, child_ids.clone());
 
         // Deactivate parent cell
-        if let Some(parent) = self.mesh_hierarchy.levels[cell_id.level]
+        if let Some(parent) = self.mesh_hierarchy.levels[cellid.level]
             .cells
-            .get_mut(&cell_id)
+            .get_mut(&cellid)
         {
             parent.is_active = false;
             parent.children = child_ids;
@@ -573,8 +573,8 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Coarsen children back to parent cell
-    fn coarsen_to_parent(&mut self, parent_id: CellId) -> IntegrateResult<bool> {
-        let child_ids = if let Some(children) = self.mesh_hierarchy.hierarchy_map.get(&parent_id) {
+    fn coarsen_to_parent(&mut self, parentid: CellId) -> IntegrateResult<bool> {
+        let child_ids = if let Some(children) = self.mesh_hierarchy.hierarchy_map.get(&parentid) {
             children.clone()
         } else {
             return Ok(false);
@@ -611,8 +611,8 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         }
 
         // Reactivate parent cell
-        if let Some(parent_level) = self.mesh_hierarchy.levels.get_mut(parent_id.level) {
-            if let Some(parent) = parent_level.cells.get_mut(&parent_id) {
+        if let Some(parent_level) = self.mesh_hierarchy.levels.get_mut(parentid.level) {
+            if let Some(parent) = parent_level.cells.get_mut(&parentid) {
                 parent.is_active = true;
                 parent.solution = avg_solution;
                 parent.children.clear();
@@ -628,7 +628,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         }
 
         // Remove from hierarchy map
-        self.mesh_hierarchy.hierarchy_map.remove(&parent_id);
+        self.mesh_hierarchy.hierarchy_map.remove(&parentid);
 
         Ok(true)
     }
@@ -639,15 +639,15 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         let mut all_neighbor_relationships: Vec<(CellId, Vec<CellId>)> = Vec::new();
 
         if let Some(mesh_level) = self.mesh_hierarchy.levels.get(level) {
-            let cell_ids: Vec<CellId> = mesh_level.cells.keys().cloned().collect();
+            let cellids: Vec<CellId> = mesh_level.cells.keys().cloned().collect();
 
             // Build spatial hash map for efficient neighbor searching
             let mut spatial_hash: HashMap<(i32, i32, i32), Vec<CellId>> = HashMap::new();
             let grid_spacing = mesh_level.grid_spacing;
 
             // Hash all cells based on their spatial location
-            for cell_id in &cell_ids {
-                if let Some(cell) = mesh_level.cells.get(cell_id) {
+            for cellid in &cellids {
+                if let Some(cell) = mesh_level.cells.get(cellid) {
                     if cell.center.len() >= 3 {
                         let hash_x = (cell.center[0] / grid_spacing)
                             .floor()
@@ -665,13 +665,13 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
                         spatial_hash
                             .entry((hash_x, hash_y, hash_z))
                             .or_default()
-                            .push(*cell_id);
+                            .push(*cellid);
                     }
                 }
             }
 
-            for cell_id in &cell_ids {
-                if let Some(cell) = mesh_level.cells.get(cell_id) {
+            for cellid in &cellids {
+                if let Some(cell) = mesh_level.cells.get(cellid) {
                     let mut neighbors = Vec::new();
 
                     if cell.center.len() >= 3 {
@@ -696,7 +696,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
 
                                     if let Some(potential_neighbors) = spatial_hash.get(&hash_key) {
                                         for &neighbor_id in potential_neighbors {
-                                            if neighbor_id != *cell_id {
+                                            if neighbor_id != *cellid {
                                                 if let Some(neighbor_cell) =
                                                     mesh_level.cells.get(&neighbor_id)
                                                 {
@@ -713,55 +713,55 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
                             }
                         }
                     }
-                    all_neighbor_relationships.push((*cell_id, neighbors));
+                    all_neighbor_relationships.push((*cellid, neighbors));
                 }
             }
         }
 
         // Now apply all neighbor relationships with mutable access
         if let Some(mesh_level) = self.mesh_hierarchy.levels.get_mut(level) {
-            for (cell_id, neighbors) in all_neighbor_relationships {
-                if let Some(cell) = mesh_level.cells.get_mut(&cell_id) {
+            for (cellid, neighbors) in all_neighbor_relationships {
+                if let Some(cell) = mesh_level.cells.get_mut(&cellid) {
                     cell.neighbors = neighbors;
                 }
             }
         }
 
         // Now update inter-level neighbors separately to avoid borrowing conflicts
-        let cell_ids: Vec<CellId> = if let Some(mesh_level) = self.mesh_hierarchy.levels.get(level)
+        let cellids: Vec<CellId> = if let Some(mesh_level) = self.mesh_hierarchy.levels.get(level)
         {
             mesh_level.cells.keys().cloned().collect()
         } else {
             Vec::new()
         };
 
-        for cell_id in cell_ids {
-            self.update_interlevel_neighbors(cell_id, level)?;
+        for cellid in cellids {
+            self.update_interlevel_neighbors(cellid, level)?;
         }
 
         Ok(())
     }
 
     /// Check if two cells are geometric neighbors
-    fn are_cells_neighbors(&self, _cell1: &AdaptiveCell<F>, cell2: &AdaptiveCell<F>) -> bool {
-        if _cell1.center.len() != cell2.center.len() || _cell1.center.len() < 3 {
+    fn are_cells_neighbors(&self, cell1: &AdaptiveCell<F>, cell2: &AdaptiveCell<F>) -> bool {
+        if cell1.center.len() != cell2.center.len() || cell1.center.len() < 3 {
             return false;
         }
 
-        let max_size = _cell1.size.max(cell2.size);
+        let max_size = cell1.size.max(cell2.size);
         let tolerance = max_size * F::from(1.1).unwrap(); // 10% tolerance
 
         // Calculate distance between cell centers
         let mut distance_squared = F::zero();
-        for i in 0.._cell1.center.len() {
-            let diff = _cell1.center[i] - cell2.center[i];
+        for i in 0..cell1.center.len() {
+            let diff = cell1.center[i] - cell2.center[i];
             distance_squared += diff * diff;
         }
 
         let distance = distance_squared.sqrt();
 
         // Cells are neighbors if distance is approximately equal to sum of half-sizes
-        let expected_distance = (_cell1.size + cell2.size) / F::from(2.0).unwrap();
+        let expected_distance = (cell1.size + cell2.size) / F::from(2.0).unwrap();
 
         distance <= tolerance && distance >= expected_distance * F::from(0.7).unwrap()
     }
@@ -769,7 +769,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     /// Update neighbor relationships across different mesh levels
     fn update_interlevel_neighbors(
         &mut self,
-        cell_id: CellId,
+        cellid: CellId,
         level: usize,
     ) -> IntegrateResult<()> {
         // Collect neighbor relationships first to avoid borrowing conflicts
@@ -782,10 +782,10 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
                 self.mesh_hierarchy.levels.get(level),
                 self.mesh_hierarchy.levels.get(level - 1),
             ) {
-                if let Some(current_cell) = current_level.cells.get(&cell_id) {
-                    for (coarser_cell_id, coarser_cell) in &coarser_level.cells {
+                if let Some(current_cell) = current_level.cells.get(&cellid) {
+                    for (coarser_cellid, coarser_cell) in &coarser_level.cells {
                         if self.are_cells_neighbors(current_cell, coarser_cell) {
-                            coarser_neighbors.push(*coarser_cell_id);
+                            coarser_neighbors.push(*coarser_cellid);
                         }
                     }
                 }
@@ -798,10 +798,10 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
                 self.mesh_hierarchy.levels.get(level),
                 self.mesh_hierarchy.levels.get(level + 1),
             ) {
-                if let Some(current_cell) = current_level.cells.get(&cell_id) {
-                    for (finer_cell_id, finer_cell) in &finer_level.cells {
+                if let Some(current_cell) = current_level.cells.get(&cellid) {
+                    for (finer_cellid, finer_cell) in &finer_level.cells {
                         if self.are_cells_neighbors(current_cell, finer_cell) {
-                            finer_neighbors.push(*finer_cell_id);
+                            finer_neighbors.push(*finer_cellid);
                         }
                     }
                 }
@@ -810,7 +810,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
 
         // Now apply the neighbor relationships with mutable access
         if let Some(current_level) = self.mesh_hierarchy.levels.get_mut(level) {
-            if let Some(current_cell) = current_level.cells.get_mut(&cell_id) {
+            if let Some(current_cell) = current_level.cells.get_mut(&cellid) {
                 for coarser_id in coarser_neighbors {
                     if !current_cell.neighbors.contains(&coarser_id) {
                         current_cell.neighbors.push(coarser_id);
@@ -842,19 +842,19 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
             let expected_neighbors = self.calculate_expected_neighbors();
 
             if let Some(mesh_level) = self.mesh_hierarchy.levels.get(level_idx) {
-                for (cell_id, cell) in &mesh_level.cells {
+                for (cellid, cell) in &mesh_level.cells {
                     // A cell is on the boundary if it has fewer neighbors than expected
                     // or if it's marked as a boundary cell
                     if cell.neighbors.len() < expected_neighbors
-                        || mesh_level.boundary_cells.contains(cell_id)
+                        || mesh_level.boundary_cells.contains(cellid)
                     {
-                        boundary_cells.insert(*cell_id);
+                        boundary_cells.insert(*cellid);
                     }
                 }
 
                 // Second pass: create ghost cells for parallel processing
-                for boundary_cell_id in &boundary_cells {
-                    if let Some(boundary_cell) = mesh_level.cells.get(boundary_cell_id) {
+                for boundary_cellid in &boundary_cells {
+                    if let Some(boundary_cell) = mesh_level.cells.get(boundary_cellid) {
                         // Create ghost cells in the expected neighbor positions
                         let ghost_cells =
                             self.create_ghost_cells_for_boundary(boundary_cell, level_idx)?;
@@ -937,13 +937,13 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         // Check if we need ghost _cells from coarser level
         if level > 0 {
             if let Some(current_level) = self.mesh_hierarchy.levels.get(level) {
-                for (cell_id, cell) in &current_level.cells {
+                for (cellid, cell) in &current_level.cells {
                     // If this fine cell doesn't have a parent at the coarser level,
                     // it might need ghost cell communication
                     if cell.parent.is_none() {
                         let ghost_id = CellId {
                             level: level - 1,
-                            index: 2_000_000 + cell_id.index,
+                            index: 2_000_000 + cellid.index,
                         };
                         ghost_cells.push(ghost_id);
                     }
@@ -954,13 +954,13 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         // Check if we need ghost _cells from finer level
         if level + 1 < self.mesh_hierarchy.levels.len() {
             if let Some(current_level) = self.mesh_hierarchy.levels.get(level) {
-                for (cell_id, cell) in &current_level.cells {
+                for (cellid, cell) in &current_level.cells {
                     // If this coarse cell has children at the finer level,
                     // it might need ghost cell communication
                     if !cell.children.is_empty() {
                         let ghost_id = CellId {
                             level: level + 1,
-                            index: 3_000_000 + cell_id.index,
+                            index: 3_000_000 + cellid.index,
                         };
                         ghost_cells.push(ghost_id);
                     }

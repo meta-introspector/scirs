@@ -43,7 +43,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)], noise_level: f64
 
 /// Calculate relative error between identified frequencies and ground truth
 #[allow(dead_code)]
-fn calculate_frequency_error(_result: &SparseFFTResult, true_frequencies: &[(usize, f64)]) -> f64 {
+fn calculate_frequency_error(_result: &SparseFFTResult, truefrequencies: &[(usize, f64)]) -> f64 {
     let mut min_error_sum = 0.0;
     let mut found_count = 0;
 
@@ -52,7 +52,7 @@ fn calculate_frequency_error(_result: &SparseFFTResult, true_frequencies: &[(usi
         let mut min_error = f64::MAX;
 
         // Find the closest detected frequency
-        for &detected_freq in _result.indices.iter() {
+        for &detected_freq in result.indices.iter() {
             let error =
                 (detected_freq as f64 - true_freq as f64).abs() / (true_freq as f64).max(1.0);
             if error < min_error {

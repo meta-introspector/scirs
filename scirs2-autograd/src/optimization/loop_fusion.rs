@@ -206,7 +206,7 @@ impl<F: Float> LoopFusionOptimizer<F> {
     }
 
     /// Find all element-wise operations in the graph
-    fn find_element_wise_operations(&self_graph: &Graph<F>) -> Vec<TensorID> {
+    fn find_element_wise_operations(selfgraph: &Graph<F>) -> Vec<TensorID> {
         // This is a simplified implementation - in practice, would need to
         // inspect the actual _graph structure and operation types
         Vec::new()
@@ -246,20 +246,20 @@ impl<F: Float> LoopFusionOptimizer<F> {
         let mut current_op = start_op;
 
         loop {
-            if visited.contains(&currentop) {
+            if visited.contains(&current_op) {
                 break;
             }
 
             // Check if current operation is fusable
             if let Some(fusableop) = self.classify_operation(current_op, graph) {
-                visited.insert(currentop);
+                visited.insert(current_op);
 
                 // For this example, assume shape is [100] - in practice would extract from graph
-                chain.add_operation(fusable_op, vec![100]);
+                chain.add_operation(fusableop, vec![100]);
 
                 // Find next operation in chain
                 if let Some(nextop) = self.find_next_fusable_operation(current_op, graph) {
-                    current_op = next_op;
+                    current_op = nextop;
                 } else {
                     break;
                 }
@@ -323,19 +323,19 @@ pub struct FusedKernel<F: Float> {
 
 impl<F: Float> FusedKernel<F> {
     /// Create a fused kernel from a fusion chain
-    pub fn from_chain(_chain: FusionChain<F>) -> Result<Self, OpError> {
+    pub fn from_chain(chain: FusionChain<F>) -> Result<Self, OpError> {
         let kernel_func = Self::compile_kernel(&_chain)?;
 
         Ok(Self {
-            _chain,
+            chain,
             kernel_func,
         })
     }
 
     /// Compile the fusion chain into an executable kernel
-    fn compile_kernel(_chain: &FusionChain<F>) -> KernelResult<F> {
-        let operations = _chain.operations.clone();
-        let _outputshape = _chain.outputshape.clone();
+    fn compile_kernel(chain: &FusionChain<F>) -> KernelResult<F> {
+        let operations = chain.operations.clone();
+        let _outputshape = chain.outputshape.clone();
 
         Ok(Box::new(
             move |inputs: &[&Array<F, IxDyn>]| -> Result<Array<F, IxDyn>, OpError> {
@@ -382,7 +382,7 @@ impl<F: Float> FusedKernel<F> {
     }
 
     /// Apply a unary function
-    pub fn apply_unary_function(_value: F, func: &UnaryFunction<F>) -> F {
+    pub fn apply_unary_function(value: F, func: &UnaryFunction<F>) -> F {
         match func {
             UnaryFunction::ReLU => {
                 if _value > F::zero() {
@@ -395,22 +395,22 @@ impl<F: Float> FusedKernel<F> {
                 let one = F::one();
                 one / (one + (-_value).exp())
             }
-            UnaryFunction::Tanh => _value.tanh(),
-            UnaryFunction::Square => _value * _value,
-            UnaryFunction::Sqrt => _value.sqrt(),
-            UnaryFunction::Exp => _value.exp(),
-            UnaryFunction::Log => _value.ln(),
-            UnaryFunction::Abs => _value.abs(),
+            UnaryFunction::Tanh => value.tanh(),
+            UnaryFunction::Square => _value * value,
+            UnaryFunction::Sqrt => value.sqrt(),
+            UnaryFunction::Exp => value.exp(),
+            UnaryFunction::Log => value.ln(),
+            UnaryFunction::Abs => value.abs(),
             UnaryFunction::Custom(f) => f(_value),
         }
     }
 
     /// Apply a scalar operation
-    pub fn apply_scalar_operation(_value: F, scalar: F, func: &BinaryFunction) -> F {
+    pub fn apply_scalar_operation(value: F, scalar: F, func: &BinaryFunction) -> F {
         match func {
             BinaryFunction::AddScalar => _value + scalar,
             BinaryFunction::MulScalar => _value * scalar,
-            BinaryFunction::Pow => _value.powf(scalar),
+            BinaryFunction::Pow => value.powf(scalar),
         }
     }
 
@@ -452,7 +452,7 @@ pub struct FusionStats<F: crate::Float> {
 
 impl<F: crate::Float> FusionStats<F> {
     /// Calculate memory bandwidth reduction
-    pub fn calculate_memory_reduction(&mut self, original_ops: usize) {
+    pub fn calculate_memory_reduction(&mut self, originalops: usize) {
         if original_ops > 0 {
             self.memory_bandwidth_reduction =
                 (original_ops - self.chains_identified) as f64 / original_ops as f64 * 100.0;
@@ -510,11 +510,11 @@ impl<F: Float> LoopFusionManager<F> {
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: FusionConfig) -> Self {
+    pub fn with_config(config: FusionConfig) -> Self {
         Self {
             optimizer: LoopFusionOptimizer::new(),
             kernels: Vec::new(),
-            _config,
+            config,
         }
     }
 
@@ -603,7 +603,7 @@ pub fn init_fusion_manager() -> Arc<Mutex<LoopFusionManager<f32>>> {
 
 /// Configure global fusion settings
 #[allow(dead_code)]
-pub fn configure_fusion(_config: FusionConfig) -> Result<(), OpError> {
+pub fn configure_fusion(config: FusionConfig) -> Result<(), OpError> {
     let manager = init_fusion_manager();
     let mut manager_guard = manager
         .lock()
@@ -614,9 +614,9 @@ pub fn configure_fusion(_config: FusionConfig) -> Result<(), OpError> {
 
 /// Enable or disable loop fusion globally
 #[allow(dead_code)]
-pub fn set_fusion_enabled(_enabled: bool) -> Result<(), OpError> {
+pub fn set_fusion_enabled(enabled: bool) -> Result<(), OpError> {
     let config = FusionConfig {
-        enable_fusion: _enabled,
+        enable_fusion: enabled,
         ..Default::default()
     };
     configure_fusion(config)

@@ -664,8 +664,8 @@ fn solve_matrix_equation_right<F: Float>(
 
 /// Compute Cholesky decomposition
 #[allow(dead_code)]
-fn compute_cholesky<F: Float>(_matrix: &ArrayView2<F>) -> Result<Array2<F>, OpError> {
-    let n = _matrix.shape()[0];
+fn compute_cholesky<F: Float>(matrix: &ArrayView2<F>) -> Result<Array2<F>, OpError> {
+    let n = matrix.shape()[0];
     let mut l = Array2::<F>::zeros((n, n));
 
     for i in 0..n {
@@ -676,7 +676,7 @@ fn compute_cholesky<F: Float>(_matrix: &ArrayView2<F>) -> Result<Array2<F>, OpEr
                 for k in 0..j {
                     sum += l[[j, k]] * l[[j, k]];
                 }
-                let diag_val = _matrix[[j, j]] - sum;
+                let diag_val = matrix[[j, j]] - sum;
                 if diag_val <= F::zero() {
                     return Err(OpError::Other("Matrix is not positive definite".into()));
                 }

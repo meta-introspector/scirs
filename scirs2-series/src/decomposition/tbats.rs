@@ -138,11 +138,11 @@ pub struct TBATSParameters {
 /// println!("Residuals: {:?}", result.residuals);
 /// ```
 #[allow(dead_code)]
-pub fn tbats_decomposition<F>(_ts: &Array1<F>, options: &TBATSOptions) -> Result<TBATSResult<F>>
+pub fn tbats_decomposition<F>(ts: &Array1<F>, options: &TBATSOptions) -> Result<TBATSResult<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum + ScalarOperand + NumCast,
 {
-    let n = _ts.len();
+    let n = ts.len();
 
     // Check inputs
     if n < 3 {
@@ -242,7 +242,7 @@ where
         seasonal_components,
         residuals,
         level,
-        original: _ts.clone(),
+        original: ts.clone(),
         transformed: if options.use_box_cox {
             Some(transformed_ts)
         } else {
@@ -257,13 +257,13 @@ where
 
 /// Estimate optimal Box-Cox lambda parameter
 #[allow(dead_code)]
-fn estimate_box_cox_lambda<F>(_ts: &Array1<F>) -> f64
+fn estimate_box_cox_lambda<F>(ts: &Array1<F>) -> f64
 where
     F: Float + FromPrimitive + Debug,
 {
     // Simplified estimation - in practice, would use profile likelihood
-    let variance = _ts.var(F::zero());
-    let mean = _ts.mean().unwrap_or(F::zero());
+    let variance = ts.var(F::zero());
+    let mean = ts.mean().unwrap_or(F::zero());
 
     if variance > F::zero() && mean >, F::zero() {
         // Use coefficient of variation to guide lambda selection
@@ -280,10 +280,10 @@ where
 
 /// Calculate the size of the state vector
 #[allow(dead_code)]
-fn calculate_state_size(_options: &TBATSOptions, fourier_terms: &[usize]) -> usize {
+fn calculate_state_size(_options: &TBATSOptions, fourierterms: &[usize]) -> usize {
     let mut size = 1; // Level
 
-    if _options.use_trend {
+    if options.use_trend {
         size += 1; // Trend
     }
 

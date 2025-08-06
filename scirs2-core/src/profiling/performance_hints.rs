@@ -267,13 +267,13 @@ impl PerformanceHints {
     }
 
     /// Estimate if the operation is suitable for chunking
-    pub fn should_chunk(&self, input_size: usize) -> bool {
+    pub fn should_chunk(&self, inputsize: usize) -> bool {
         match self.complexity {
             ComplexityClass::Quadratic
             | ComplexityClass::Cubic
             | ComplexityClass::Exponential
             | ComplexityClass::Factorial => true,
-            ComplexityClass::Linear | ComplexityClass::Linearithmic => input_size > 10000,
+            ComplexityClass::Linear | ComplexityClass::Linearithmic => inputsize > 10000,
             ComplexityClass::Constant | ComplexityClass::Logarithmic => false,
             ComplexityClass::Custom(_) => false,
         }
@@ -339,39 +339,39 @@ impl PerformanceHintRegistry {
     }
 
     /// Register performance hints for a function
-    pub fn register(&self, function_name: &str, hints: PerformanceHints) -> CoreResult<()> {
+    pub fn register(&self, functionname: &str, hints: PerformanceHints) -> CoreResult<()> {
         let mut hint_map = self.hints.write().map_err(|_| {
             CoreError::ComputationError(ErrorContext::new("Failed to acquire write lock"))
         })?;
-        hint_map.insert(function_name.to_string(), hints);
+        hint_map.insert(functionname.to_string(), hints);
         Ok(())
     }
 
     /// Get performance hints for a function
-    pub fn get_hint(&self, function_name: &str) -> CoreResult<Option<PerformanceHints>> {
+    pub fn get_hint(&self, functionname: &str) -> CoreResult<Option<PerformanceHints>> {
         let hint_map = self.hints.read().map_err(|_| {
             CoreError::ComputationError(ErrorContext::new("Failed to acquire read lock"))
         })?;
-        Ok(hint_map.get(function_name).cloned())
+        Ok(hint_map.get(functionname).cloned())
     }
 
     /// Record execution statistics
-    pub fn record_execution(&self, function_name: &str, duration: Duration) -> CoreResult<()> {
+    pub fn record_execution(&self, functionname: &str, duration: Duration) -> CoreResult<()> {
         let mut stats_map = self.execution_stats.write().map_err(|_| {
             CoreError::ComputationError(ErrorContext::new("Failed to acquire write lock"))
         })?;
 
-        let stats = stats_map.entry(function_name.to_string()).or_default();
+        let stats = stats_map.entry(functionname.to_string()).or_default();
         stats.update(std::time::Duration::from_secs(1));
         Ok(())
     }
 
     /// Get execution statistics for a function
-    pub fn get_stats(&self, function_name: &str) -> CoreResult<Option<ExecutionStats>> {
+    pub fn get_stats(&self, functionname: &str) -> CoreResult<Option<ExecutionStats>> {
         let stats_map = self.execution_stats.read().map_err(|_| {
             CoreError::ComputationError(ErrorContext::new("Failed to acquire read lock"))
         })?;
-        Ok(stats_map.get(function_name).cloned())
+        Ok(stats_map.get(functionname).cloned())
     }
 
     /// Get optimization recommendations based on hints and statistics
@@ -505,16 +505,16 @@ macro_rules! register_performance_hints {
 macro_rules! performance_hints {
     ($function_name:expr, {
         $(complexity: $complexity:expr,)?
-        $(simd_friendly: $simd:expr,)?
+        $(simdfriendly: $simd:expr,)?
         $(parallelizable: $parallel:expr,)?
-        $(gpu_friendly: $gpu:expr,)?
-        $(memory_pattern: $memory:expr,)?
-        $(cache_behavior: $cache:expr,)?
-        $(io_pattern: $io:expr,)?
-        $(optimization_level: $opt:expr,)?
-        $(expected_duration: $duration:expr,)?
-        $(memory_requirements: $mem:expr,)?
-        $(custom_hints: {$($key:expr => $value:expr),*$(,)?})?
+        $(gpufriendly: $gpu:expr,)?
+        $(memorypattern: $memory:expr,)?
+        $(cachebehavior: $cache:expr,)?
+        $(iopattern: $io:expr,)?
+        $(optimizationlevel: $opt:expr,)?
+        $(expectedduration: $duration:expr,)?
+        $(memoryrequirements: $mem:expr,)?
+        $(customhints: {$($key:expr => $value:expr),*$(,)?})?
     }) => {
         {
             let mut hints = $crate::profiling::performance_hints::PerformanceHints::new();
@@ -546,9 +546,9 @@ pub struct PerformanceTracker {
 
 impl PerformanceTracker {
     /// Start tracking performance for a function
-    pub fn new(function_name: &str) -> Self {
+    pub fn new(functionname: &str) -> Self {
         Self {
-            function_name: function_name.to_string(),
+            functionname: functionname.to_string(),
             start_time: Instant::now(),
         }
     }
@@ -567,7 +567,7 @@ macro_rules! track_performance {
         let tracker =
             $crate::profiling::performance_hints::PerformanceTracker::start($function_name);
         let result = $code;
-        _tracker.finish();
+        tracker.finish();
         result
     }};
 }

@@ -59,7 +59,7 @@ pub struct DiagnosticOptimizer {
 
 impl DiagnosticOptimizer {
     /// Create new diagnostic optimizer
-    pub fn new(_diagnostic_options: DiagnosticOptions) -> Self {
+    pub fn new(_diagnosticoptions: DiagnosticOptions) -> Self {
         Self {
             collector: Rc::new(RefCell::new(DiagnosticCollector::new(_diagnostic_options))),
             callbacks: Vec::new(),
@@ -73,7 +73,7 @@ impl DiagnosticOptimizer {
     }
 
     /// Add a simple progress callback
-    pub fn add_progress_callback(&mut self, every_n_nit: usize) {
+    pub fn add_progress_callback(&mut self, every_nnit: usize) {
         let mut last_printed = 0;
         self.add_callback(Box::new(move |info| {
             if info.iteration >= last_printed + every_n_nit {
@@ -90,7 +90,7 @@ impl DiagnosticOptimizer {
     }
 
     /// Add a convergence monitoring callback
-    pub fn add_convergence_monitor(&mut self, patience: usize, min_improvement: f64) {
+    pub fn add_convergence_monitor(&mut self, patience: usize, minimprovement: f64) {
         let mut best_f = f64::INFINITY;
         let mut no_improvement_count = 0;
 
@@ -111,7 +111,7 @@ impl DiagnosticOptimizer {
     }
 
     /// Add a time limit callback
-    pub fn add_time_limit(&mut self, max_duration: std::time::Duration) {
+    pub fn add_time_limit(&mut self, maxduration: std::time::Duration) {
         self.add_callback(Box::new(move |info| {
             if info.elapsed_time > max_duration {
                 CallbackResult::StopWithMessage("Time limit exceeded")
@@ -290,7 +290,7 @@ where
 
 /// Simple finite difference gradient
 #[allow(dead_code)]
-fn finite_diff_gradient<F>(_fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
+fn finite_diff_gradient<F>(fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
 where
     F: FnMut(&ArrayView1<f64>) -> f64,
 {

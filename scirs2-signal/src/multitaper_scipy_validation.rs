@@ -284,7 +284,7 @@ fn validate_sinusoid_estimation() -> SignalResult<TestResult> {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i_)| i)
+        .map(|(i_, _)| i_)
         .unwrap();
 
     let estimated_freq = result.frequencies[peak_idx];
@@ -401,7 +401,7 @@ fn validate_chirp_estimation() -> SignalResult<TestResult> {
         .frequencies
         .iter()
         .zip(result.psd.iter())
-        .filter(|(&f_)| f >= 10.0 && f <= 100.0)
+        .filter(|(&f_, _)| f_ >= 10.0 && f_ <= 100.0)
         .map(|(_, &p)| p)
         .sum::<f64>();
 
@@ -598,7 +598,7 @@ fn validate_numerical_stability_enhanced() -> SignalResult<TestResult> {
 
 /// Test signal processing with a given signal
 #[allow(dead_code)]
-fn test_signal_processing(_signal: &Array1<f64>) -> SignalResult<()> {
+fn test_signal_processing(signal: &Array1<f64>) -> SignalResult<()> {
     let config = MultitaperConfig {
         fs: 1000.0,
         nw: 4.0,
@@ -613,9 +613,9 @@ fn test_signal_processing(_signal: &Array1<f64>) -> SignalResult<()> {
 
 /// Generate test signal based on configuration
 #[allow(dead_code)]
-fn generate_test_signal(_config: &EnhancedTestSignalConfig) -> SignalResult<Array1<f64>> {
+fn generate_test_signal(config: &EnhancedTestSignalConfig) -> SignalResult<Array1<f64>> {
     let mut rng = rand::rng();
-    let dt = 1.0 / _config.fs;
+    let dt = 1.0 / config.fs;
     let t: Array1<f64> = Array1::fromshape_fn(_config.n_samples, |i| i as f64 * dt);
 
     let signal = match &_config.signal_type {
@@ -637,7 +637,7 @@ fn generate_test_signal(_config: &EnhancedTestSignalConfig) -> SignalResult<Arra
             signal
         }
         TestSignalType::Chirp { f0, f1, method: _ } => {
-            let duration = _config.n_samples as f64 / _config.fs;
+            let duration = config.n_samples as f64 / config.fs;
             chirp(&t, *f0, duration, *f1, "linear", None, None)
                 .map_err(|_| SignalError::InvalidInput("Failed to generate chirp".to_string()))?
         }
@@ -652,7 +652,7 @@ fn generate_test_signal(_config: &EnhancedTestSignalConfig) -> SignalResult<Arra
                 _ => {
                     // White noise fallback
                     Array1::fromshape_fn(_config.n_samples, |_| {
-                        amplitude * rng.random_range(-1.0..1.0)
+                        amplitude * rng.gen_range(-1.0..1.0)
                     })
                 }
             }
@@ -730,8 +730,8 @@ fn analyze_numerical_precision() -> SignalResult<PrecisionAnalysisResult> {
 
 /// Calculate overall validation score
 #[allow(dead_code)]
-fn calculate_overall_score(_test_results: &HashMap<String, TestResult>) -> f64 {
-    let total_tests = _test_results.len() as f64;
+fn calculate_overall_score(_testresults: &HashMap<String, TestResult>) -> f64 {
+    let total_tests = test_results.len() as f64;
     let passed_tests = _test_results
         .values()
         .filter(|result| result.passed)
@@ -768,7 +768,7 @@ fn generate_recommendations(
 
 /// Identify critical issues that need immediate attention
 #[allow(dead_code)]
-fn identify_critical_issues(test_results: &HashMap<String, TestResult>, issues: &mut Vec<String>) {
+fn identify_critical_issues(testresults: &HashMap<String, TestResult>, issues: &mut Vec<String>) {
     for (test_name, result) in test_results {
         if !result.passed && result.error_metric > 2.0 * result.threshold {
             issues.push(format!(
@@ -781,13 +781,13 @@ fn identify_critical_issues(test_results: &HashMap<String, TestResult>, issues: 
 
 /// Generate comprehensive validation report
 #[allow(dead_code)]
-pub fn generate_multitaper_validation_report(_result: &MultitaperScipyValidationResult) -> String {
+pub fn generate_multitaper_validation_report(result: &MultitaperScipyValidationResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Multitaper Spectral Estimation - SciPy Validation Report\n\n");
     report.push_str(&format!(
         "Overall Score: {:.1}/100\n\n",
-        _result.overall_score
+        result.overall_score
     ));
 
     // Test results summary
@@ -808,10 +808,10 @@ pub fn generate_multitaper_validation_report(_result: &MultitaperScipyValidation
     report.push_str("\n## Performance Comparison\n\n");
     report.push_str(&format!(
         "- Speed Ratio: {:.2}x\n- Memory Ratio: {:.2}x\n- SIMD Speedup: {:.2}x\n- Parallel Efficiency: {:.1}%\n",
-        _result.performance_comparison.speed_ratio,
-        _result.performance_comparison.memory_ratio,
-        _result.performance_comparison.simd_speedup,
-        _result.performance_comparison.parallel_efficiency * 100.0
+        result.performance_comparison.speed_ratio,
+        result.performance_comparison.memory_ratio,
+        result.performance_comparison.simd_speedup,
+        result.performance_comparison.parallel_efficiency * 100.0
     ));
 
     // Critical issues
@@ -875,7 +875,7 @@ fn validate_enhanced_sinusoid_estimation() -> SignalResult<TestResult> {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(i_)| i)
+            .map(|(i_, _)| i_)
             .unwrap();
 
         let estimated_freq = result.frequencies[peak_idx];

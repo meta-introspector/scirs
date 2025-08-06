@@ -109,7 +109,7 @@ where
     T: Clone + Default + PartialEq,
 {
     /// Create a new empty sparse matrix
-    pub fn new(_rows: usize, cols: usize) -> Self {
+    pub fn new(rows: usize, cols: usize) -> Self {
         Self {
             shape: (_rows, cols),
             nnz: 0,
@@ -122,13 +122,13 @@ where
     }
 
     /// Create a sparse matrix from COO data
-    pub fn from_coo(_coo: SparseMatrixCOO<T>) -> Self {
-        let nnz = _coo.values.len();
+    pub fn from_coo(coo: SparseMatrixCOO<T>) -> Self {
+        let nnz = coo.values.len();
         Self {
-            shape: (_coo.rows, _coo.cols),
+            shape: (_coo.rows, coo.cols),
             nnz,
             format: SparseFormat::COO,
-            coo: _coo,
+            coo: coo,
             csr: None,
             csc: None,
             metadata: HashMap::new(),
@@ -270,7 +270,7 @@ where
         // Extract values and column indices
         let values: Vec<T> = triplets
             .iter()
-            .map(|(_row, _col, val)| (*val).clone())
+            .map(|(_row, col, val)| (*val).clone())
             .collect();
         let col_indices: Vec<usize> = triplets.iter().map(|(_, col, _)| *col).collect();
 
@@ -327,9 +327,9 @@ where
         // Extract values and row indices
         let values: Vec<T> = triplets
             .iter()
-            .map(|(_row, _col, val)| (*val).clone())
+            .map(|(_row, col, val)| (*val).clone())
             .collect();
-        let row_indices: Vec<usize> = triplets.iter().map(|(row, _col, _val)| *row).collect();
+        let row_indices: Vec<usize> = triplets.iter().map(|(row, col, val)| *row).collect();
 
         Ok(SparseMatrixCSC {
             rows: self.shape.0,
@@ -416,14 +416,14 @@ where
     T: Clone + Default + PartialEq + PartialOrd,
 {
     /// Create a sparse matrix from a dense 2D array with threshold
-    pub fn from_dense_2d(_array: &Array2<T>, threshold: T) -> Result<Self> {
-        let (rows, cols) = _array.dim();
+    pub fn from_dense_2d(array: &Array2<T>, threshold: T) -> Result<Self> {
+        let (rows, cols) = array.dim();
         let mut sparse = Self::new(rows, cols);
 
         // Extract non-zero elements
         for i in 0..rows {
             for j in 0..cols {
-                let val = _array[[i, j]].clone();
+                let val = array[[i, j]].clone();
                 if val != threshold {
                     sparse.push(i, j, val)?;
                 }
@@ -434,23 +434,23 @@ where
     }
 
     /// Create a sparse matrix from a dense array with threshold (generic version)
-    pub fn from_dense<S, D>(_array: &ArrayBase<S, D>, threshold: T) -> Result<Self>
+    pub fn from_dense<S, D>(array: &ArrayBase<S, D>, threshold: T) -> Result<Self>
     where
         S: Data<Elem = T>,
         D: Dimension,
     {
-        if _array.ndim() != 2 {
+        if array.ndim() != 2 {
             return Err(IoError::ValidationError(
                 "Only 2D arrays are supported".to_string(),
             ));
         }
 
-        let shape = _array.shape();
+        let shape = array.shape();
         let (rows, cols) = (shape[0], shape[1]);
         let mut sparse = Self::new(rows, cols);
 
         // Extract non-zero elements using flatten with row-major indexing
-        for (linear_idx, val) in _array.iter().enumerate() {
+        for (linear_idx, val) in array.iter().enumerate() {
             if *val != threshold {
                 let row = linear_idx / cols;
                 let col = linear_idx % cols;
@@ -493,8 +493,8 @@ impl SparseMatrix<f64> {
     }
 
     /// Create from Matrix Market format
-    fn from_matrix_market(_mm_matrix: &MMSparseMatrix<f64>) -> Self {
-        let mut sparse = Self::new(_mm_matrix.rows, _mm_matrix.cols);
+    fn from_matrix_market(_mmmatrix: &MMSparseMatrix<f64>) -> Self {
+        let mut sparse = Self::new(_mm_matrix.rows, mm_matrix.cols);
 
         for entry in &_mm_matrix.entries {
             sparse.push(entry.row, entry.col, entry.value).unwrap();
@@ -503,14 +503,14 @@ impl SparseMatrix<f64> {
         // Copy metadata
         sparse
             .metadata
-            .insert("format".to_string(), _mm_matrix.header.format.to_string());
+            .insert("format".to_string(), mm_matrix.header.format.to_string());
         sparse.metadata.insert(
             "data_type".to_string(),
-            _mm_matrix.header.data_type.to_string(),
+            mm_matrix.header.data_type.to_string(),
         );
         sparse.metadata.insert(
             "symmetry".to_string(),
-            _mm_matrix.header.symmetry.to_string(),
+            mm_matrix.header.symmetry.to_string(),
         );
 
         sparse
@@ -615,8 +615,8 @@ pub mod ops {
     }
 
     /// Sparse matrix-vector multiplication (CSR format)
-    pub fn spmv(_matrix: &mut SparseMatrix<f64>, vector: &[f64]) -> Result<Vec<f64>> {
-        let (rows, cols) = _matrix.shape;
+    pub fn spmv(matrix: &mut SparseMatrix<f64>, vector: &[f64]) -> Result<Vec<f64>> {
+        let (rows, cols) = matrix.shape;
 
         if cols != vector.len() {
             return Err(IoError::ValidationError(
@@ -624,7 +624,7 @@ pub mod ops {
             ));
         }
 
-        let csr = _matrix.to_csr()?;
+        let csr = matrix.to_csr()?;
         let mut result = vec![0.0; rows];
 
         for (i, result_val) in result.iter_mut().enumerate().take(rows) {

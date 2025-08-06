@@ -399,9 +399,9 @@ pub struct AdvancedBenchmark {
 
 impl AdvancedBenchmark {
     /// Create a new advanced benchmark with configuration
-    pub fn new(_config: BenchmarkConfig) -> Self {
+    pub fn new(config: BenchmarkConfig) -> Self {
         Self {
-            _config,
+            config,
             memory_tracker: Arc::new(AtomicUsize::new(0)),
         }
     }
@@ -664,7 +664,7 @@ impl AdvancedBenchmark {
     }
 
     /// Calculate memory profile from memory usage samples
-    fn calculate_memory_profile(&self, memory_samples: &[usize]) -> MemoryProfile {
+    fn calculate_memory_profile(&self, memorysamples: &[usize]) -> MemoryProfile {
         if memory_samples.is_empty() {
             return MemoryProfile {
                 peak_memory_mb: 0.0,
@@ -1183,7 +1183,7 @@ impl AdvancedBenchmark {
 
 /// Create a comprehensive HTML report from benchmark results
 #[allow(dead_code)]
-pub fn create_comprehensive_report(_results: &BenchmarkResults, output_path: &str) -> Result<()> {
+pub fn create_comprehensive_report(_results: &BenchmarkResults, outputpath: &str) -> Result<()> {
     let html_content = generate_html_report(_results);
 
     std::fs::write(output_path, html_content)
@@ -1194,7 +1194,7 @@ pub fn create_comprehensive_report(_results: &BenchmarkResults, output_path: &st
 
 /// Generate HTML report content
 #[allow(dead_code)]
-fn generate_html_report(_results: &BenchmarkResults) -> String {
+fn generate_html_report(results: &BenchmarkResults) -> String {
     format!(
         r#"
 <!DOCTYPE html>
@@ -1261,25 +1261,25 @@ fn generate_html_report(_results: &BenchmarkResults) -> String {
 </body>
 </html>
 "#,
-        _results.timestamp,
-        _results.total_duration,
-        _results.system_info.os,
-        _results.system_info.cpu_cores,
+        results.timestamp,
+        results.total_duration,
+        results.system_info.os,
+        results.system_info.cpu_cores,
         generate_performance_table(_results),
         generate_regression_alerts_html(_results),
         generate_recommendations_html(_results),
-        _results.system_info.os,
-        _results.system_info.cpu_cores,
-        _results.system_info.total_memory_gb,
-        _results.system_info.rust_version,
-        _results.system_info.optimizations,
+        results.system_info.os,
+        results.system_info.cpu_cores,
+        results.system_info.total_memory_gb,
+        results.system_info.rust_version,
+        results.system_info.optimizations,
     )
 }
 
 /// Generate performance table HTML
 #[allow(dead_code)]
-fn generate_performance_table(_results: &BenchmarkResults) -> String {
-    _results.algorithm_results.iter()
+fn generate_performance_table(results: &BenchmarkResults) -> String {
+    results.algorithm_results.iter()
         .map(|(name, result)| {
             let quality = result.quality_metrics.silhouette_score
                 .map(|s| format!("{:.3}", s))
@@ -1300,8 +1300,8 @@ fn generate_performance_table(_results: &BenchmarkResults) -> String {
 
 /// Generate regression alerts HTML
 #[allow(dead_code)]
-fn generate_regression_alerts_html(_results: &BenchmarkResults) -> String {
-    if _results.regression_alerts.is_empty() {
+fn generate_regression_alerts_html(results: &BenchmarkResults) -> String {
+    if results.regression_alerts.is_empty() {
         "<p class=\"success\">No performance regressions detected.</p>".to_string()
     } else {
         _results
@@ -1326,7 +1326,7 @@ fn generate_regression_alerts_html(_results: &BenchmarkResults) -> String {
 
 /// Generate recommendations HTML
 #[allow(dead_code)]
-fn generate_recommendations_html(_results: &BenchmarkResults) -> String {
+fn generate_recommendations_html(results: &BenchmarkResults) -> String {
     _results
         .recommendations
         .iter()

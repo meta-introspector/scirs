@@ -34,7 +34,7 @@ pub struct ClientInfo {
 /// Sampling strategy trait
 pub trait SamplingStrategy: Send + Sync {
     /// Sample data from local dataset
-    fn sample(&self, data_size: usize, round: usize) -> Result<Vec<usize>>;
+    fn sample(&self, datasize: usize, round: usize) -> Result<Vec<usize>>;
 /// Random client selection
 pub struct RandomSelection {
     seed: Option<u64>,
@@ -44,7 +44,7 @@ impl RandomSelection {
         Self { seed: None }
     }
     /// Set seed for reproducibility
-    pub fn with_seed(_seed: u64) -> Self {
+    pub fn with_seed(seed: u64) -> Self {
         Self { seed: Some(_seed) }
 impl ClientSelection for RandomSelection {
         _client_info: &HashMap<usize, ClientInfo>,
@@ -78,8 +78,8 @@ impl ImportanceSelection {
             reliability_weight: 0.2,
         }
     /// Set weights
-    pub fn with_weights(_data: f32, compute: f32, reliability: f32) -> Self {
-            data_weight: _data,
+    pub fn with_weights(data: f32, compute: f32, reliability: f32) -> Self {
+            data_weight: data,
             compute_weight: compute,
             reliability_weight: reliability,
     /// Calculate client importance score
@@ -117,8 +117,8 @@ pub struct PowerAwareSelection {
     prefer_plugged: bool,
 impl PowerAwareSelection {
     /// Create new power-aware selection
-    pub fn new(_min_battery: f32) -> Self {
-            _min_battery,
+    pub fn new(_minbattery: f32) -> Self {
+            min_battery,
             prefer_plugged: true,
 impl ClientSelection for PowerAwareSelection {
         let mut eligible_clients: Vec<(usize, f32)> = available_clients
@@ -142,10 +142,10 @@ pub struct DiversitySelection {
     num_clusters: usize,
 impl DiversitySelection {
     /// Create new diversity selection
-    pub fn new(_num_clusters: usize) -> Self {
+    pub fn new(_numclusters: usize) -> Self {
         Self { _num_clusters }
     /// Simple clustering based on label distribution
-    fn cluster_clients(&self, client_info: &HashMap<usize, ClientInfo>) -> HashMap<usize, usize> {
+    fn cluster_clients(&self, clientinfo: &HashMap<usize, ClientInfo>) -> HashMap<usize, usize> {
         let mut clusters = HashMap::new();
         // Simple k-means style clustering on label distributions
         for (&client_id, info) in client_info {
@@ -188,7 +188,7 @@ impl ClientSelection for DiversitySelection {
 /// Uniform data sampling
 pub struct UniformSampling;
 impl SamplingStrategy for UniformSampling {
-    fn sample(&self, data_size: usize, _round: usize) -> Result<Vec<usize>> {
+    fn sample(&self, data_size: usize, round: usize) -> Result<Vec<usize>> {
         Ok((0..data_size).collect())
         "UniformSampling"
 /// Stratified sampling
@@ -197,7 +197,7 @@ pub struct StratifiedSampling {
     sample_fraction: f32,
 impl StratifiedSampling {
     /// Create new stratified sampling
-    pub fn new(_sample_fraction: f32) -> Self {
+    pub fn new(_samplefraction: f32) -> Self {
         Self { _sample_fraction }
 impl SamplingStrategy for StratifiedSampling {
         let sample_size = (data_size as f32 * self.sample_fraction) as usize;
@@ -211,10 +211,10 @@ pub struct CyclicSampling {
     batch_size: usize,
 impl CyclicSampling {
     /// Create new cyclic sampling
-    pub fn new(_batch_size: usize) -> Self {
+    pub fn new(_batchsize: usize) -> Self {
         Self { _batch_size }
 impl SamplingStrategy for CyclicSampling {
-    fn sample(&self, data_size: usize, round: usize) -> Result<Vec<usize>> {
+    fn sample(&self, datasize: usize, round: usize) -> Result<Vec<usize>> {
         let start = (round * self.batch_size) % data_size;
         let indices: Vec<usize> = (0..self.batch_size)
             .map(|i| (start + i) % data_size)

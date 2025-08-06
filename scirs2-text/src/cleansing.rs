@@ -4,7 +4,7 @@
 //! HTML stripping, URL handling, and various normalization operations.
 
 use crate::error::Result;
-use lazy__static::lazy_static;
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
 
@@ -757,7 +757,7 @@ pub fn expand_contractions(text: &str) -> String {
 
     // Sort contractions by length (descending) to avoid partial replacements
     let mut contractions: Vec<_> = CONTRACTIONS.iter().collect();
-    contractions.sort_by_key(|(k_)| std::cmp::Reverse(k.len()));
+    contractions.sort_by_key(|(k_, _)| std::cmp::Reverse(k_.len()));
 
     for (contraction, expansion) in contractions {
         let escaped = regex::escape(contraction);
@@ -773,7 +773,7 @@ pub fn expand_contractions(text: &str) -> String {
 /// Normalize Unicode text (NFD -> NFC)
 #[allow(dead_code)]
 pub fn normalize_unicode(text: &str) -> Result<String> {
-    use unicode__normalization::UnicodeNormalization;
+    use unicode_normalization::UnicodeNormalization;
     Ok(text.nfc().collect())
 }
 
@@ -802,7 +802,7 @@ pub fn normalize_whitespace(text: &str) -> String {
 /// Remove accents from text
 #[allow(dead_code)]
 pub fn remove_accents(text: &str) -> String {
-    use unicode__normalization::UnicodeNormalization;
+    use unicode_normalization::UnicodeNormalization;
 
     text.nfd()
         .filter(|c| !unicode_normalization::char::is_combining_mark(*c))

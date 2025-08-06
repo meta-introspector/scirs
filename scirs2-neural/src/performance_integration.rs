@@ -758,7 +758,7 @@ impl PerformanceMonitor {
         if self.performance_trends.len() > 1000 {
             self.performance_trends.drain(0..100); // Remove oldest 100
     /// Get fastest strategy for an operation type
-    pub fn get_fastest_strategy(&self, operation_type: &str) -> Option<OptimizationChoice> {
+    pub fn get_fastest_strategy(&self, operationtype: &str) -> Option<OptimizationChoice> {
         let relevant_samples: Vec<_> = self
             .performance_trends
             .filter(|sample| sample.operation == operation_type && sample.success)

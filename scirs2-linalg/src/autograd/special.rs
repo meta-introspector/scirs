@@ -48,7 +48,7 @@ pub fn pinv<F: Float + Debug + Send + Sync + 'static>(
 
     // Compute SVD: A = U * Σ * V^T
     // Simplified implementation for small matrices
-    let a_t_a = Array2::<F>::fromshape_fn((n, n), |ij| {
+    let a_t_a = Array2::<F>::from_shape_fn((n, n), |ij| {
         let (i, j) = (ij.0, ij.1);
         let mut sum = F::zero();
         for k in 0..m {
@@ -57,7 +57,7 @@ pub fn pinv<F: Float + Debug + Send + Sync + 'static>(
         sum
     });
 
-    let a_a_t = Array2::<F>::fromshape_fn((m, m), |ij| {
+    let a_a_t = Array2::<F>::from_shape_fn((m, m), |ij| {
         let (i, j) = (ij.0, ij.1);
         let mut sum = F::zero();
         for k in 0..n {
@@ -383,7 +383,7 @@ pub fn sqrtm<F: Float + Debug + Send + Sync + 'static>(a: &Tensor<F>) -> Autogra
         d_sqrt[[1, 1]] = lambda2.sqrt();
 
         // Compute A^(1/2) = V * D^(1/2) * V^(-1)
-        let v_d_sqrt = Array2::<F>::fromshape_fn((n, n), |ij| {
+        let v_d_sqrt = Array2::<F>::from_shape_fn((n, n), |ij| {
             let (i, j) = (ij.0, ij.1);
             let mut sum = F::zero();
             for k in 0..n {
@@ -392,7 +392,7 @@ pub fn sqrtm<F: Float + Debug + Send + Sync + 'static>(a: &Tensor<F>) -> Autogra
             sum
         });
 
-        result = Array2::<F>::fromshape_fn((n, n), |ij| {
+        result = Array2::<F>::from_shape_fn((n, n), |ij| {
             let (i, j) = (ij.0, ij.1);
             let mut sum = F::zero();
             for k in 0..n {
@@ -631,7 +631,7 @@ pub fn logm<F: Float + Debug + Send + Sync + 'static>(a: &Tensor<F>) -> Autograd
         d_log[[1, 1]] = lambda2.ln();
 
         // Compute log(A) = V * log(D) * V^(-1)
-        let v_d_log = Array2::<F>::fromshape_fn((n, n), |ij| {
+        let v_d_log = Array2::<F>::from_shape_fn((n, n), |ij| {
             let (i, j) = (ij.0, ij.1);
             let mut sum = F::zero();
             for k in 0..n {
@@ -640,7 +640,7 @@ pub fn logm<F: Float + Debug + Send + Sync + 'static>(a: &Tensor<F>) -> Autograd
             sum
         });
 
-        result = Array2::<F>::fromshape_fn((n, n), |ij| {
+        result = Array2::<F>::from_shape_fn((n, n), |ij| {
             let (i, j) = (ij.0, ij.1);
             let mut sum = F::zero();
             for k in 0..n {

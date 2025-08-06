@@ -915,16 +915,16 @@ fn apply_dirichlet_conditions_to_initial(
 
 /// Convert a MOL2DResult to a PDESolution
 impl From<MOL2DResult> for PDESolution<f64> {
-    fn from(_result: MOL2DResult) -> Self {
+    fn from(result: MOL2DResult) -> Self {
         let mut grids = Vec::new();
 
         // Add time grid
-        grids.push(_result.t.clone());
+        grids.push(result.t.clone());
 
         // Extract spatial grids from solution shape
-        let nt = _result.t.len();
-        let ny = _result.u.shape()[1];
-        let nx = _result.u.shape()[2];
+        let nt = result.t.len();
+        let ny = result.u.shape()[1];
+        let nx = result.u.shape()[2];
 
         // Create spatial grids (we don't have the actual grid values, so use linspace)
         let y_grid = Array1::linspace(0.0, 1.0, ny);
@@ -935,14 +935,14 @@ impl From<MOL2DResult> for PDESolution<f64> {
         // Convert the 3D array to 2D arrays, one per time step
         let mut values = Vec::new();
         for t_idx in 0..nt {
-            let time_slice = _result.u.slice(s![t_idx, .., ..]).to_owned();
+            let time_slice = result.u.slice(s![t_idx, .., ..]).to_owned();
             values.push(time_slice);
         }
 
         // Create solver info
         let info = PDESolverInfo {
             num_iterations: 0, // This information is not available directly
-            computation_time: _result.computation_time,
+            computation_time: result.computation_time,
             residual_norm: None,
             convergence_history: None,
             method: "Method of Lines (2D)".to_string(),

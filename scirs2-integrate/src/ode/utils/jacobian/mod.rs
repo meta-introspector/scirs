@@ -135,13 +135,13 @@ impl<F: IntegrateFloat> JacobianManager<F> {
     }
 
     /// Create a new Jacobian manager with specific strategy and structure
-    pub fn with_strategy(_strategy: JacobianStrategy, structure: JacobianStructure) -> Self {
+    pub fn with_strategy(strategy: JacobianStrategy, structure: JacobianStructure) -> Self {
         JacobianManager {
             jacobian: None,
             state_point: None,
             f_eval: None,
             age: 0,
-            max_age: match _strategy {
+            max_age: match strategy {
                 JacobianStrategy::ModifiedNewton => 50,
                 JacobianStrategy::BroydenUpdate => 20,
                 JacobianStrategy::ParallelFiniteDifference => 1,
@@ -152,7 +152,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 JacobianStrategy::AutoDiff => 1,
                 JacobianStrategy::Adaptive => 1,
             },
-            strategy: _strategy,
+            strategy: strategy,
             structure,
             condition_estimate: None,
             factorized: false,
@@ -162,13 +162,13 @@ impl<F: IntegrateFloat> JacobianManager<F> {
 
     /// Create a Jacobian manager with automatically selected strategy
     /// based on system size and structure
-    pub fn with_auto_strategy(_n_dim: usize, is_banded: bool) -> Self {
+    pub fn with_auto_strategy(_n_dim: usize, isbanded: bool) -> Self {
         let (strategy, structure) = if _n_dim > 100 {
             // For very large systems, use parallel computation
             let parallel_available = cfg!(feature = "parallel");
 
             if parallel_available {
-                if is_banded {
+                if isbanded {
                     (
                         JacobianStrategy::ParallelSparseFiniteDifference,
                         JacobianStructure::Banded {
@@ -204,14 +204,14 @@ impl<F: IntegrateFloat> JacobianManager<F> {
     }
 
     /// Check if the Jacobian needs to be recomputed
-    pub fn needs_update(&self, t: F, y: &Array1<F>, force_age: Option<usize>) -> bool {
+    pub fn needs_update(&self, t: F, y: &Array1<F>, forceage: Option<usize>) -> bool {
         // Always recompute if we don't have a Jacobian yet
         if self.jacobian.is_none() {
             return true;
         }
 
         // Check _age against threshold (possibly overridden)
-        let max_age = force_age.unwrap_or(self.max_age);
+        let max_age = forceage.unwrap_or(self.max_age);
         if self.age >= max_age {
             return true;
         }
@@ -608,13 +608,13 @@ impl<F: IntegrateFloat> JacobianManager<F> {
     }
 
     /// Update the age threshold for recomputation
-    pub fn set_max_age(&mut self, _max_age: usize) {
-        self.max_age = _max_age;
+    pub fn set_max_age(&mut self, _maxage: usize) {
+        self.max_age = _maxage;
     }
 
     /// Mark the Jacobian as factorized
-    pub fn mark_factorized(&mut self, _factorized: bool) {
-        self.factorized = _factorized;
+    pub fn mark_factorized(&mut self, factorized: bool) {
+        self.factorized = factorized;
     }
 
     /// Check if the Jacobian is factorized

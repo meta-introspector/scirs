@@ -119,7 +119,7 @@ where
     }
 
     /// Create framework with custom configuration
-    pub fn with_config(_config: AccelerationConfig) -> LinalgResult<Self> {
+    pub fn with_config(config: AccelerationConfig) -> LinalgResult<Self> {
         let backend_manager = Arc::new(Mutex::new(super::initialize_gpu_manager()?));
         let dispatcher = GpuOperationDispatcher::with_threshold(_config.min_gpu_size);
         let advanced_ops = AdvancedGpuOperations::new();
@@ -132,7 +132,7 @@ where
             kernel_manager,
             contexts: HashMap::new(),
             profiler: GpuPerformanceProfiler::default(),
-            config: _config,
+            config: config,
         })
     }
 
@@ -250,7 +250,7 @@ where
             matrices_a
                 .iter()
                 .zip(matrices_b.iter())
-                .map(|(_a, _b)| self.accelerated_matmul(_a_b))
+                .map(|(_a, b)| self.accelerated_matmul(_a_b))
                 .collect()
         }
     }
@@ -317,7 +317,8 @@ where
     fn calculate_context_score(
         &self,
         context: &dyn GpuContext,
-        operation: &str, _problem_size: usize,
+        operation: &str,
+        _problem_size: usize,
     ) -> f64 {
         let device_info = context.device_info();
         let mut score = 0.0;
@@ -353,7 +354,7 @@ where
     }
 
     /// Select optimal kernel variant for an operation
-    fn select_kernel_variant(&self, operation: &str, problem_size: usize) -> KernelVariant {
+    fn select_kernel_variant(&self, operation: &str, problemsize: usize) -> KernelVariant {
         if !self.config.auto_kernel_selection {
             return KernelVariant::Basic;
         }
@@ -928,7 +929,7 @@ where
     }
 
     /// Optimize memory layout for better performance
-    pub fn optimize_memory_layout(&mut self_context: &dyn super::GpuContext) -> LinalgResult<()> {
+    pub fn optimize_memory_layout(&mut selfcontext: &dyn super::GpuContext) -> LinalgResult<()> {
         // Implement memory defragmentation and layout optimization
         for (_, pool) in self.memory_pools.iter_mut() {
             pool.defragment()?;
@@ -961,7 +962,7 @@ where
     }
 
     fn gpu_tile_matmul(
-        &self_context: &dyn super::GpuContext,
+        self_context: &dyn super::GpuContext,
         a: &Array2<T>,
         b: &Array2<T>,
     ) -> LinalgResult<Array2<T>> {
@@ -983,7 +984,7 @@ where
         Ok(result)
     }
 
-    fn estimate_operation_time(&self, operation: &str, problem_size: usize) -> f64 {
+    fn estimate_operation_time(&self, operation: &str, problemsize: usize) -> f64 {
         // Estimate operation time based on historical data
         match operation {
             "matmul" => problem_size as f64 * 1e-9, // Rough estimate
@@ -1012,11 +1013,12 @@ where
 
 /// Handle for asynchronous stream operations
 pub struct StreamHandle<T> {
-    stream_id: String, _phantom: std::marker::PhantomData<T>,
+    stream_id: String,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> StreamHandle<T> {
-    fn new(_stream_id: String) -> Self {
+    fn new(_streamid: String) -> Self {
         Self {
             stream_id_phantom: std::marker::PhantomData,
         }
@@ -1036,7 +1038,7 @@ impl<T> StreamHandle<T> {
 }
 
 impl<T: Clone + Send + Sync + std::fmt::Debug + 'static> GpuMemoryPool<T> {
-    fn new(_max_size: usize) -> Self {
+    fn new(_maxsize: usize) -> Self {
         Self {
             free_buffers: HashMap::new(),
             allocated_buffers: Vec::new(),
@@ -1171,7 +1173,7 @@ impl PredictionModel {
         }
     }
 
-    fn update_enabled(&mut self_enable: bool) {
+    fn update_enabled(&mut selfenable: bool) {
         // Update prediction model state
     }
 }
@@ -1189,11 +1191,12 @@ impl<T> CompressionEngine<T> {
 /// Mock GPU buffer implementation for testing
 #[derive(Debug)]
 pub struct MockGpuBuffer<T> {
-    size: usize, phantom: std::marker::PhantomData<T>,
+    size: usize,
+    phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> MockGpuBuffer<T> {
-    pub fn new(_size: usize) -> Self {
+    pub fn new(size: usize) -> Self {
         Self {
             _size_phantom: std::marker::PhantomData,
         }
@@ -1208,11 +1211,11 @@ where
         self.size
     }
 
-    fn copy_from_host(&mut self_data: &[T]) -> LinalgResult<()> {
+    fn copy_from_host(&mut selfdata: &[T]) -> LinalgResult<()> {
         Ok(())
     }
 
-    fn copy_to_host(&self_data: &mut [T]) -> LinalgResult<()> {
+    fn copy_to_host(selfdata: &mut [T]) -> LinalgResult<()> {
         Ok(())
     }
 

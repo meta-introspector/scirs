@@ -21,7 +21,7 @@ impl Conv1dKernel {
             workgroup_size: [256, 1, 1],
             local_memory_usage: 2048, // Kernel data cache
             supports_tensor_cores: false,
-            operation_type: OperationType::ComputeIntensive,
+            operationtype: OperationType::ComputeIntensive,
             backend_metadata: HashMap::new(),
         };
 
@@ -208,7 +208,7 @@ impl GpuKernel for Conv1dKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        matches!(params.data_type, DataType::Float32 | DataType::Float64)
+        matches!(params.datatype, DataType::Float32 | DataType::Float64)
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
@@ -238,7 +238,7 @@ impl Conv2dKernel {
             workgroup_size: [16, 16, 1],
             local_memory_usage: 4096,    // Kernel and input tile cache
             supports_tensor_cores: true, // 2D convolutions can use tensor cores
-            operation_type: OperationType::ComputeIntensive,
+            operationtype: OperationType::ComputeIntensive,
             backend_metadata: HashMap::new(),
         };
 
@@ -480,7 +480,7 @@ impl GpuKernel for Conv2dKernel {
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
         matches!(
-            params.data_type,
+            params.datatype,
             DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16
         )
     }

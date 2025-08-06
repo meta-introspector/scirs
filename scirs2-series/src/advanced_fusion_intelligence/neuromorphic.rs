@@ -230,7 +230,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicProcessingUnit<F> {
     }
 
     /// Process spike patterns through neuromorphic layers
-    pub fn process_spikes(&mut self, input_spikes: &Array1<F>) -> Result<Array1<F>> {
+    pub fn process_spikes(&mut self, inputspikes: &Array1<F>) -> Result<Array1<F>> {
         // 1. Convert input to spike trains
         let spike_train = self.convert_to_spike_train(input_spikes)?;
         
@@ -314,7 +314,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicProcessingUnit<F> {
 
 impl<F: Float + Debug> AdvancedSpikingLayer<F> {
     /// Create new spiking layer
-    pub fn new(num_neurons: usize, num_connections: usize) -> Self {
+    pub fn new(num_neurons: usize, numconnections: usize) -> Self {
         let neurons = (0..num_neurons)
             .map(|_| SpikingNeuron {
                 potential: F::zero(),
@@ -340,7 +340,7 @@ impl<F: Float + Debug> AdvancedSpikingLayer<F> {
     }
 
     /// Update layer state with input spikes
-    pub fn update(&mut self, input_spikes: &[F]) -> Result<Vec<F>> {
+    pub fn update(&mut self, inputspikes: &[F]) -> Result<Vec<F>> {
         let mut output_spikes = vec![F::zero(); self.neurons.len()];
         
         for (i, neuron) in self.neurons.iter_mut().enumerate() {
@@ -379,7 +379,7 @@ impl<F: Float + Debug> SpikingNeuron<F> {
     }
 
     /// Update neuron state
-    pub fn update(&mut self, input_current: F, dt: F) -> bool {
+    pub fn update(&mut self, inputcurrent: F, dt: F) -> bool {
         // Leaky integrate-and-fire dynamics
         let decay_factor = (-dt / self.tau_membrane).exp();
         self.potential = self.potential * decay_factor + input_current * dt;
@@ -396,7 +396,7 @@ impl<F: Float + Debug> SpikingNeuron<F> {
 
 impl<F: Float + Debug> AdvancedDendriticTree<F> {
     /// Create new dendritic tree
-    pub fn new(num_branches: usize) -> Self {
+    pub fn new(numbranches: usize) -> Self {
         let branches = (0..num_branches)
             .map(|_| DendriticBranch {
                 length: F::from_f64(100.0).unwrap(),

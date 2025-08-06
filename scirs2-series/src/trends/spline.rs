@@ -53,15 +53,15 @@ use crate::error::{Result, TimeSeriesError};
 /// assert_eq!(trend.len(), ts.len());
 /// ```
 #[allow(dead_code)]
-pub fn estimate_spline_trend<F>(_ts: &Array1<F>, options: &SplineTrendOptions) -> Result<Array1<F>>
+pub fn estimate_spline_trend<F>(ts: &Array1<F>, options: &SplineTrendOptions) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if _ts.len() < 4 {
+    if ts.len() < 4 {
         return Err(TimeSeriesError::InsufficientData {
             message: "Time series too short for spline trend estimation".to_string(),
             required: 4,
-            actual: _ts.len(),
+            actual: ts.len(),
         });
     }
 
@@ -73,11 +73,11 @@ where
             if let Some(positions) = &options.knot_positions {
                 // Validate custom knot positions
                 for &pos in positions {
-                    if pos >= _ts.len() {
+                    if pos >= ts.len() {
                         return Err(TimeSeriesError::InvalidInput(format!(
                             "Custom knot position {} is out of bounds (time series length: {})",
                             pos,
-                            _ts.len()
+                            ts.len()
                         )));
                     }
                 }
@@ -103,7 +103,7 @@ where
         SplineType::NaturalCubic => fit_natural_cubic_spline(_ts, &knots, options.extrapolate),
         SplineType::BSpline => fit_bspline(_ts, &knots, options.degree, options.extrapolate),
         SplineType::PSpline => fit_pspline(
-            _ts,
+            ts,
             &knots,
             options.degree,
             F::from_f64(options.lambda).unwrap(),
@@ -114,47 +114,47 @@ where
 
 /// Generates uniformly spaced knot positions
 #[allow(dead_code)]
-fn generate_uniform_knots(n: usize, num_knots: usize) -> Vec<usize> {
+fn generate_uniform_knots(n: usize, numknots: usize) -> Vec<usize> {
     let mut _knots = Vec::with_capacity(num_knots);
 
     // Ensure first and last points are included
-    _knots.push(0);
+    knots.push(0);
 
     if num_knots > 2 {
         let step = (n - 1) as f64 / (num_knots - 1) as f64;
         for i in 1..(num_knots - 1) {
             let pos = (i as f64 * step).round() as usize;
-            _knots.push(pos);
+            knots.push(pos);
         }
     }
 
-    _knots.push(n - 1);
+    knots.push(n - 1);
     _knots
 }
 
 /// Generates knots at quantile positions of the data
 #[allow(dead_code)]
-fn generate_quantile_knots(n: usize, num_knots: usize) -> Vec<usize> {
+fn generate_quantile_knots(n: usize, numknots: usize) -> Vec<usize> {
     let mut _knots = Vec::with_capacity(num_knots);
 
     // Ensure first and last points are included
-    _knots.push(0);
+    knots.push(0);
 
     if num_knots > 2 {
         for i in 1..(num_knots - 1) {
             let quantile = i as f64 / (num_knots - 1) as f64;
             let pos = (quantile * (n - 1) as f64).round() as usize;
-            _knots.push(pos);
+            knots.push(pos);
         }
     }
 
-    _knots.push(n - 1);
+    knots.push(n - 1);
     _knots
 }
 
 /// Fits a cubic spline to the time series data
 #[allow(dead_code)]
-fn fit_cubic_spline<F>(_ts: &Array1<F>, knots: &[usize], extrapolate: bool) -> Result<Array1<F>>
+fn fit_cubic_spline<F>(ts: &Array1<F>, knots: &[usize], extrapolate: bool) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -164,7 +164,7 @@ where
         ));
     }
 
-    let n = _ts.len();
+    let n = ts.len();
     let mut result = Array1::<F>::zeros(n);
 
     // For cubic spline, we solve a tridiagonal system to find the second derivatives
@@ -183,9 +183,9 @@ where
         a[[i, i + 1]] = h_i / F::from_f64(6.0).unwrap();
 
         // Right-hand side
-        let f_i_minus_1 = _ts[knots[i - 1]];
-        let f_i = _ts[knots[i]];
-        let f_i_plus_1 = _ts[knots[i + 1]];
+        let f_i_minus_1 = ts[knots[i - 1]];
+        let f_i = ts[knots[i]];
+        let f_i_plus_1 = ts[knots[i + 1]];
 
         let rhs = (f_i_plus_1 - f_i) / h_i - (f_i - f_i_minus_1) / h_i_minus_1;
         b.push(rhs);
@@ -207,8 +207,8 @@ where
         let x_right = knots[i + 1];
         let h = F::from_usize(x_right - x_left).unwrap();
 
-        let y_left = _ts[x_left];
-        let y_right = _ts[x_right];
+        let y_left = ts[x_left];
+        let y_right = ts[x_right];
 
         let d2_left = second_derivs[i];
         let d2_right = second_derivs[i + 1];
@@ -234,7 +234,7 @@ where
         let x_0 = knots[0];
         let x_1 = knots[1];
         let h = F::from_usize(x_1 - x_0).unwrap();
-        let _slope_left = (_ts[x_1] - _ts[x_0]) / h
+        let _slope_left = (_ts[x_1] - ts[x_0]) / h
             - h * (F::from_f64(2.0).unwrap() * second_derivs[0] + second_derivs[1])
                 / F::from_f64(6.0).unwrap();
 
@@ -242,7 +242,7 @@ where
         let x_n_minus_1 = knots[num_knots - 2];
         let x_n = knots[num_knots - 1];
         let h = F::from_usize(x_n - x_n_minus_1).unwrap();
-        let _slope_right = (_ts[x_n] - _ts[x_n_minus_1]) / h
+        let _slope_right = (_ts[x_n] - ts[x_n_minus_1]) / h
             + h * (second_derivs[num_knots - 2]
                 + F::from_f64(2.0).unwrap() * second_derivs[num_knots - 1])
                 / F::from_f64(6.0).unwrap();
@@ -342,11 +342,11 @@ where
 
 /// Creates a B-spline basis matrix
 #[allow(dead_code)]
-fn create_bspline_basis<F>(_x_values: Vec<F>, knots: &[usize], degree: usize) -> Result<Array2<F>>
+fn create_bspline_basis<F>(_xvalues: Vec<F>, knots: &[usize], degree: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = _x_values.len();
+    let n = x_values.len();
 
     // For a B-spline of degree p with n knots, we have n+p-1 basis functions
     let num_basis = knots.len() + degree - 1;
@@ -421,12 +421,12 @@ where
 
 /// Solves a linear system for spline coefficients
 #[allow(dead_code)]
-fn solve_spline_system<F>(_basis: &Array2<F>, ts: &Array1<F>) -> Result<Vec<F>>
+fn solve_spline_system<F>(basis: &Array2<F>, ts: &Array1<F>) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
     let n = ts.len();
-    let p = _basis.shape()[1];
+    let p = basis.shape()[1];
 
     // Compute B'B
     let mut btb = Array2::<F>::zeros((p, p));
@@ -434,7 +434,7 @@ where
         for j in 0..p {
             let mut sum = F::zero();
             for k in 0..n {
-                sum = sum + _basis[[k, i]] * _basis[[k, j]];
+                sum = sum + basis[[k, i]] * basis[[k, j]];
             }
             btb[[i, j]] = sum;
         }
@@ -445,7 +445,7 @@ where
     for i in 0..p {
         let mut sum = F::zero();
         for k in 0..n {
-            sum = sum + _basis[[k, i]] * ts[k];
+            sum = sum + basis[[k, i]] * ts[k];
         }
         bty.push(sum);
     }
@@ -456,12 +456,12 @@ where
 
 /// Solves a regularized linear system for penalized spline coefficients
 #[allow(dead_code)]
-fn solve_regularized_system<F>(_basis: Array2<F>, ts: &Array1<F>, lambda: F) -> Result<Vec<F>>
+fn solve_regularized_system<F>(basis: Array2<F>, ts: &Array1<F>, lambda: F) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
     let n = ts.len();
-    let p = _basis.shape()[1];
+    let p = basis.shape()[1];
 
     // Compute B'B
     let mut btb = Array2::<F>::zeros((p, p));
@@ -469,7 +469,7 @@ where
         for j in 0..p {
             let mut sum = F::zero();
             for k in 0..n {
-                sum = sum + _basis[[k, i]] * _basis[[k, j]];
+                sum = sum + basis[[k, i]] * basis[[k, j]];
             }
             btb[[i, j]] = sum;
         }
@@ -507,7 +507,7 @@ where
     for i in 0..p {
         let mut sum = F::zero();
         for k in 0..n {
-            sum = sum + _basis[[k, i]] * ts[k];
+            sum = sum + basis[[k, i]] * ts[k];
         }
         bty.push(sum);
     }

@@ -511,7 +511,7 @@ pub struct RecommendedLimits {
 
 impl EnhancedPluginValidator {
     /// Create a new enhanced plugin validator
-    pub fn new(_config: ValidationConfig) -> Self {
+    pub fn new(config: ValidationConfig) -> Self {
         let static_analyzer = StaticAnalyzer::new();
         let runtime_validator = RuntimeValidator::new();
         let performance_tester = PerformanceTester::new();
@@ -1432,12 +1432,12 @@ mod tests {
         fn version(&self) -> &str { "1.0.0" }
         fn plugin_info(&self) -> PluginInfo { PluginInfo::default() }
         fn capabilities(&self) -> PluginCapabilities { PluginCapabilities::default() }
-        fn initialize(&mut self, _paramshape: &[usize]) -> Result<()> { Ok(()) }
+        fn initialize(&mut self, paramshape: &[usize]) -> Result<()> { Ok(()) }
         fn reset(&mut self) -> Result<()> { Ok(()) }
         fn get_config(&self) -> OptimizerConfig { OptimizerConfig::default() }
-        fn set_config(&mut self, _config: OptimizerConfig) -> Result<()> { Ok(()) }
+        fn set_config(&mut self, config: OptimizerConfig) -> Result<()> { Ok(()) }
         fn get_state(&self) -> Result<OptimizerState> { Ok(OptimizerState::default()) }
-        fn set_state(&mut self, _state: OptimizerState) -> Result<()> { Ok(()) }
+        fn set_state(&mut self, state: OptimizerState) -> Result<()> { Ok(()) }
         fn clone_plugin(&self) -> Box<dyn OptimizerPlugin<f64>> { Box::new(MockValidationPlugin) }
     }
 

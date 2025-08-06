@@ -476,15 +476,15 @@ where
     T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
     /// Create a new Jacobi preconditioner
-    pub fn new(_matrix: &DistributedMatrix<T>) -> LinalgResult<Self> {
+    pub fn new(matrix: &DistributedMatrix<T>) -> LinalgResult<Self> {
         // Extract diagonal elements
         let local_diag: Vec<T> = (0.._matrix.localshape().0)
-            .map(|i| _matrix.local_data()[[i, i]])
+            .map(|i| matrix.local_data()[[i, i]])
             .collect();
         
         let diagonal = DistributedVector::from_local(
             Array1::from_vec(local_diag),
-            _matrix.config.clone(),
+            matrix.config.clone(),
         )?;
         
         Ok(Self { diagonal })
@@ -544,7 +544,7 @@ mod tests {
     #[test]
     fn test_solver_interface() {
         // Create a simple 2x2 system
-        let matrix = Array2::fromshape_vec((2, 2), vec![2.0, 1.0, 1.0, 2.0]).unwrap();
+        let matrix = Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 2.0]).unwrap();
         let vector = Array1::from_vec(vec![3.0, 3.0]);
         
         let config = DistributedConfig::default();

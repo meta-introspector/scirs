@@ -686,10 +686,10 @@ where
             0
         };
 
-        let y_history = &y_values[history_start..];
+        let _yhistory = &y_values[history_start..];
 
         // Predict step using extrapolation
-        let y_pred = predict_fully_implicit(y_history, order);
+        let y_pred = predict_fully_implicit(_yhistory, order);
 
         // For the predictor's derivative, we use the BDF formula
         let y_prime_pred = if order == 1 {
@@ -866,8 +866,8 @@ where
 
                     // Historical terms: + Σ α_j * y_{n-j}
                     for j in 0..order {
-                        if j < y_history.len() {
-                            y_prime_new[i] += alpha[j] * y_history[y_history.len() - 1 - j][i];
+                        if j < _yhistory.len() {
+                            y_prime_new[i] += alpha[j] * _yhistory[_yhistory.len() - 1 - j][i];
                         }
                     }
 
@@ -1276,7 +1276,7 @@ where
 #[allow(dead_code)]
 fn predict_step<F>(
     x_history: &[Array1<F>],
-    y_history: &[Array1<F>],
+    _yhistory: &[Array1<F>],
     order: usize,
     h: F,
 ) -> (Array1<F>, Array1<F>)
@@ -1284,7 +1284,7 @@ where
     F: IntegrateFloat,
 {
     let n_x = x_history[0].len();
-    let n_y = y_history[0].len();
+    let n_y = _yhistory[0].len();
 
     let history_len = x_history.len();
 
@@ -1292,7 +1292,7 @@ where
         // For first step or first-order method, just use constant extrapolation
         return (
             x_history[history_len - 1].clone(),
-            y_history[history_len - 1].clone(),
+            _yhistory[history_len - 1].clone(),
         );
     }
 
@@ -1301,7 +1301,7 @@ where
 
     // Start with the most recent point
     let mut x_pred = x_history[history_len - 1].clone();
-    let mut y_pred = y_history[history_len - 1].clone();
+    let mut y_pred = _yhistory[history_len - 1].clone();
 
     // Simple linear extrapolation for order 2
     if order_to_use == 1 {
@@ -1312,8 +1312,8 @@ where
         }
 
         for i in 0..n_y {
-            y_pred[i] = y_history[history_len - 1][i]
-                + (y_history[history_len - 1][i] - y_history[history_len - 2][i]);
+            y_pred[i] = _yhistory[history_len - 1][i]
+                + (_yhistory[history_len - 1][i] - _yhistory[history_len - 2][i]);
         }
 
         return (x_pred, y_pred);
@@ -1330,8 +1330,8 @@ where
     }
 
     for i in 0..n_y {
-        y_pred[i] = y_history[history_len - 1][i]
-            + (y_history[history_len - 1][i] - y_history[history_len - 2][i]) * scaling;
+        y_pred[i] = _yhistory[history_len - 1][i]
+            + (_yhistory[history_len - 1][i] - _yhistory[history_len - 2][i]) * scaling;
     }
 
     (x_pred, y_pred)
@@ -1339,28 +1339,28 @@ where
 
 /// Predict the next state for fully implicit DAE
 #[allow(dead_code)]
-fn predict_fully_implicit<F>(_y_history: &[Array1<F>], order: usize) -> Array1<F>
+fn predict_fully_implicit<F>(_yhistory: &[Array1<F>], order: usize) -> Array1<F>
 where
     F: IntegrateFloat,
 {
-    let n = _y_history[0].len();
-    let history_len = _y_history.len();
+    let n = _yhistory[0].len();
+    let history_len = _yhistory.len();
 
     if history_len < 2 || order == 1 {
         // For first step or first-order method, just use constant extrapolation
-        return _y_history[history_len - 1].clone();
+        return _yhistory[history_len - 1].clone();
     }
 
     // For higher-order extrapolation, we'll use a simple polynomial predictor
     // For simplicity, we'll just use linear extrapolation here
     // In a full implementation, higher-order predictors would be used
 
-    let mut y_pred = _y_history[history_len - 1].clone();
+    let mut y_pred = _yhistory[history_len - 1].clone();
 
     // Simple linear extrapolation
     for i in 0..n {
-        y_pred[i] = _y_history[history_len - 1][i]
-            + (_y_history[history_len - 1][i] - _y_history[history_len - 2][i]);
+        y_pred[i] = _yhistory[history_len - 1][i]
+            + (_yhistory[history_len - 1][i] - _yhistory[history_len - 2][i]);
     }
 
     y_pred

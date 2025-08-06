@@ -103,14 +103,14 @@ fn main() -> IntegrateResult<()> {
     // Define event functions as closures
     let max_radius_event = {
         let max_radius_copy = max_radius;
-        Box::new(move |_t: f64, y: ArrayView1<f64>| max_radius_copy - y[0])
+        Box::new(move |t: f64, y: ArrayView1<f64>| max_radius_copy - y[0])
             as Box<dyn Fn(f64, ArrayView1<f64>) -> f64 + Send + Sync>
     };
 
     let height_event = {
         let alpha_copy = alpha;
         let target_height_copy = target_height;
-        Box::new(move |_t: f64, y: ArrayView1<f64>| {
+        Box::new(move |t: f64, y: ArrayView1<f64>| {
             let r = y[0];
             let height = alpha_copy * r * r;
             height - target_height_copy
@@ -119,9 +119,9 @@ fn main() -> IntegrateResult<()> {
 
     type EventFunc = Box<dyn Fn(f64, ArrayView1<f64>) -> f64 + Send + Sync>;
     let event_funcs: Vec<EventFunc> = vec![
-        // Event 1: Velocity changes sign (turning points), Box::new(|_t: f64, y: ArrayView1<f64>| y[1]),
+        // Event 1: Velocity changes sign (turning points), Box::new(|t: f64, y: ArrayView1<f64>| y[1]),
         // Event 2: Bead passes through origin
-        Box::new(|_t: f64, y: ArrayView1<f64>| y[0]),
+        Box::new(|t: f64, y: ArrayView1<f64>| y[0]),
         // Event 3: Bead reaches maximum allowed radius (terminal event)
         max_radius_event,
         // Event 4: Bead reaches specific height

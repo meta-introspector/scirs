@@ -1013,9 +1013,9 @@ enum TestPayload {
 
 impl SecurityAuditor {
     /// Create a new security auditor
-    pub fn new(_config: SecurityAuditConfig) -> Result<Self> {
+    pub fn new(config: SecurityAuditConfig) -> Result<Self> {
         Ok(Self {
-            config: _config,
+            config: config,
             input_validator: InputValidationAnalyzer::new(),
             privacy_analyzer: PrivacyGuaranteesAnalyzer::new(),
             memory_analyzer: MemorySafetyAnalyzer::new(),
@@ -1126,7 +1126,7 @@ impl SecurityAuditor {
     }
 
     /// Generate test payload based on payload type
-    fn generate_test_payload(&self, payload_type: &PayloadType) -> TestPayload {
+    fn generate_test_payload(&self, payloadtype: &PayloadType) -> TestPayload {
         match payload_type {
             PayloadType::NaNPayload => TestPayload::FloatArray(vec![f64::NAN, 1.0, 2.0]),
             PayloadType::InfinityPayload => {
@@ -1213,7 +1213,7 @@ impl SecurityAuditor {
     }
 
     /// Simulate optimizer with negative parameters
-    fn simulate_optimizer_with_negative_params(&self, learning_rate: f64) -> Result<()> {
+    fn simulate_optimizer_with_negative_params(&self, learningrate: f64) -> Result<()> {
         if learning_rate < 0.0 {
             return Err(OptimError::InvalidConfig(
                 "Negative learning _rate not allowed".to_string(),
@@ -1350,8 +1350,7 @@ impl SecurityAuditor {
     }
 
     /// Test membership inference attack resistance
-    fn test_membership_inference(&mut self,
-        test: &PrivacyTest) -> Result<()> {
+    fn test_membership_inference(&mut self, test: &PrivacyTest) -> Result<()> {
         // Simulate membership inference _test
         // This would involve training models and testing if membership can be inferred
 
@@ -1375,8 +1374,7 @@ impl SecurityAuditor {
     }
 
     /// Test budget exhaustion attack
-    fn test_budget_exhaustion(&mut self,
-        test: &PrivacyTest) -> Result<()> {
+    fn test_budget_exhaustion(&mut self, test: &PrivacyTest) -> Result<()> {
         // Simulate budget exhaustion _test
         let verification_result = BudgetVerificationResult {
             test_name: "Budget Exhaustion Test".to_string(),
@@ -1563,8 +1561,7 @@ impl SecurityAuditor {
     }
 
     /// Test precision loss
-    fn test_precision_loss(&mut self,
-        test: &NumericalStabilityTest) -> Result<()> {
+    fn test_precision_loss(&mut self, test: &NumericalStabilityTest) -> Result<()> {
         // Simulate precision tracking
         let precision_measurement = PrecisionMeasurement {
             step: 1,
@@ -1734,7 +1731,7 @@ impl SecurityAuditor {
     }
 
     /// Generate final audit results
-    fn generate_final_results(&mut self, start_time: Instant) {
+    fn generate_final_results(&mut self, starttime: Instant) {
         self.audit_results.timestamp = start_time;
 
         // Calculate overall security score
@@ -2306,7 +2303,7 @@ pub enum RiskImpact {
 }
 
 impl RiskImpact {
-    fn from_severity(_severity: &SeverityLevel) -> Self {
+    fn from_severity(severity: &SeverityLevel) -> Self {
         match _severity {
             SeverityLevel::Critical => RiskImpact::High,
             SeverityLevel::High => RiskImpact::High,

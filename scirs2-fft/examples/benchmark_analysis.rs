@@ -47,7 +47,7 @@ fn parse_benchmark_results() -> Result<Vec<BenchmarkData>, Box<dyn Error>> {
 
 /// Create performance comparison plot
 #[allow(dead_code)]
-fn create_performance_plot(_data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
+fn create_performance_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut plot = Plot::new();
 
     // Group _data by operation
@@ -96,7 +96,7 @@ fn create_performance_plot(_data: &[BenchmarkData]) -> Result<(), Box<dyn Error>
 
 /// Create memory usage plot
 #[allow(dead_code)]
-fn create_memory_plot(_data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
+fn create_memory_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut plot = Plot::new();
 
     // Group _data by operation
@@ -147,7 +147,7 @@ fn create_memory_plot(_data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
 
 /// Create accuracy comparison plot
 #[allow(dead_code)]
-fn create_accuracy_plot(_data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
+fn create_accuracy_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut plot = Plot::new();
 
     // Group _data by operation
@@ -198,7 +198,7 @@ fn create_accuracy_plot(_data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
 
 /// Create comparison table
 #[allow(dead_code)]
-fn create_comparison_table(_data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
+fn create_comparison_table(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut html = String::from(
         r#"
 <!DOCTYPE html>

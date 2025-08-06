@@ -180,9 +180,9 @@ pub struct PathwayAnalysis {
 
 impl EnzymeParameters {
     /// Create Michaelis-Menten enzyme parameters
-    pub fn michaelis_menten(_km: f64, vmax: f64) -> Self {
+    pub fn michaelis_menten(km: f64, vmax: f64) -> Self {
         Self {
-            mechanism: EnzymeMechanism::MichaelisMenten { km: _km, vmax },
+            mechanism: EnzymeMechanism::MichaelisMenten { km: km, vmax },
             temperature: 310.15, // 37°C
             ph: 7.4,
             ionic_strength: 0.15,
@@ -192,9 +192,9 @@ impl EnzymeParameters {
     }
 
     /// Create Hill equation enzyme parameters
-    pub fn hill(_kd: f64, vmax: f64, n: f64) -> Self {
+    pub fn hill(kd: f64, vmax: f64, n: f64) -> Self {
         Self {
-            mechanism: EnzymeMechanism::Hill { kd: _kd, vmax, n },
+            mechanism: EnzymeMechanism::Hill { kd: kd, vmax, n },
             temperature: 310.15,
             ph: 7.4,
             ionic_strength: 0.15,
@@ -230,13 +230,13 @@ impl EnzymeParameters {
     }
 
     /// Calculate reaction rate for this enzyme
-    pub fn calculate_rate(&self, _concentrations: &[f64]) -> f64 {
+    pub fn calculate_rate(&self, concentrations: &[f64]) -> f64 {
         let base_rate = match &self.mechanism {
             EnzymeMechanism::MichaelisMenten { km, vmax } => {
-                if _concentrations.is_empty() {
+                if concentrations.is_empty() {
                     return 0.0;
                 }
-                let s = _concentrations[0];
+                let s = concentrations[0];
                 vmax * s / (km + s)
             }
             EnzymeMechanism::OrderedSequential {
@@ -246,18 +246,18 @@ impl EnzymeParameters {
                 kq,
                 kcat,
             } => {
-                if _concentrations.len() < 2 {
+                if concentrations.len() < 2 {
                     return 0.0;
                 }
-                let a = _concentrations[0];
-                let b = _concentrations[1];
-                let p = if _concentrations.len() > 2 {
-                    _concentrations[2]
+                let a = concentrations[0];
+                let b = concentrations[1];
+                let p = if concentrations.len() > 2 {
+                    concentrations[2]
                 } else {
                     0.0
                 };
-                let q = if _concentrations.len() > 3 {
-                    _concentrations[3]
+                let q = if concentrations.len() > 3 {
+                    concentrations[3]
                 } else {
                     0.0
                 };
@@ -280,18 +280,18 @@ impl EnzymeParameters {
                 kcat,
                 alpha,
             } => {
-                if _concentrations.len() < 2 {
+                if concentrations.len() < 2 {
                     return 0.0;
                 }
-                let a = _concentrations[0];
-                let b = _concentrations[1];
-                let p = if _concentrations.len() > 2 {
-                    _concentrations[2]
+                let a = concentrations[0];
+                let b = concentrations[1];
+                let p = if concentrations.len() > 2 {
+                    concentrations[2]
                 } else {
                     0.0
                 };
-                let q = if _concentrations.len() > 3 {
-                    _concentrations[3]
+                let q = if concentrations.len() > 3 {
+                    concentrations[3]
                 } else {
                     0.0
                 };
@@ -318,18 +318,18 @@ impl EnzymeParameters {
                 kcat1,
                 kcat2,
             } => {
-                if _concentrations.len() < 2 {
+                if concentrations.len() < 2 {
                     return 0.0;
                 }
-                let a = _concentrations[0];
-                let b = _concentrations[1];
-                let p = if _concentrations.len() > 2 {
-                    _concentrations[2]
+                let a = concentrations[0];
+                let b = concentrations[1];
+                let p = if concentrations.len() > 2 {
+                    concentrations[2]
                 } else {
                     0.0
                 };
-                let q = if _concentrations.len() > 3 {
-                    _concentrations[3]
+                let q = if concentrations.len() > 3 {
+                    concentrations[3]
                 } else {
                     0.0
                 };
@@ -346,10 +346,10 @@ impl EnzymeParameters {
                 }
             }
             EnzymeMechanism::Hill { kd, vmax, n } => {
-                if _concentrations.is_empty() {
+                if concentrations.is_empty() {
                     return 0.0;
                 }
-                let s = _concentrations[0];
+                let s = concentrations[0];
                 let s_n = s.powf(*n);
                 let kd_n = kd.powf(*n);
                 vmax * s_n / (kd_n + s_n)
@@ -362,17 +362,17 @@ impl EnzymeParameters {
                 n_act,
                 n_inh,
             } => {
-                if _concentrations.is_empty() {
+                if concentrations.is_empty() {
                     return 0.0;
                 }
-                let s = _concentrations[0];
-                let activator = if _concentrations.len() > 1 {
-                    _concentrations[1]
+                let s = concentrations[0];
+                let activator = if concentrations.len() > 1 {
+                    concentrations[1]
                 } else {
                     0.0
                 };
-                let inhibitor = if _concentrations.len() > 2 {
-                    _concentrations[2]
+                let inhibitor = if concentrations.len() > 2 {
+                    concentrations[2]
                 } else {
                     0.0
                 };
@@ -452,35 +452,35 @@ impl EnzymeParameters {
 
 impl MetabolicPathway {
     /// Create a new empty metabolic pathway
-    pub fn new(_name: String, num_metabolites: usize, num_enzymes: usize) -> Self {
+    pub fn new(_name: String, num_metabolites: usize, numenzymes: usize) -> Self {
         Self {
             name: _name,
             enzymes: Vec::new(),
             metabolites: (0..num_metabolites).map(|i| format!("M{i}")).collect(),
-            stoichiometry_matrix: Array2::zeros((num_enzymes, num_metabolites)),
+            stoichiometry_matrix: Array2::zeros((numenzymes, num_metabolites)),
             regulations: Vec::new(),
             external_metabolites: HashMap::new(),
         }
     }
 
     /// Add an enzyme to the pathway
-    pub fn add_enzyme(&mut self, _enzyme: EnzymeDefinition) {
-        self.enzymes.push(_enzyme);
+    pub fn add_enzyme(&mut self, enzyme: EnzymeDefinition) {
+        self.enzymes.push(enzyme);
     }
 
     /// Add a regulatory relationship
-    pub fn add_regulation(&mut self, _regulation: Regulation) {
-        self.regulations.push(_regulation);
+    pub fn add_regulation(&mut self, regulation: Regulation) {
+        self.regulations.push(regulation);
     }
 
     /// Set external metabolite concentration
-    pub fn set_external_metabolite(&mut self, _metabolite_idx: usize, concentration: f64) {
+    pub fn set_external_metabolite(&mut self, _metaboliteidx: usize, concentration: f64) {
         self.external_metabolites
-            .insert(_metabolite_idx, concentration);
+            .insert(_metaboliteidx, concentration);
     }
 
     /// Calculate reaction rates for all enzymes
-    pub fn calculate_reaction_rates(&self, _concentrations: &Array1<f64>) -> Array1<f64> {
+    pub fn calculate_reaction_rates(&self, concentrations: &Array1<f64>) -> Array1<f64> {
         let mut rates = Array1::zeros(self.enzymes.len());
 
         for (i, enzyme) in self.enzymes.iter().enumerate() {
@@ -488,14 +488,14 @@ impl MetabolicPathway {
             let substrate_concentrations: Vec<f64> = enzyme
                 .substrates
                 .iter()
-                .map(|&idx| _concentrations.get(idx).copied().unwrap_or(0.0))
+                .map(|&idx| concentrations.get(idx).copied().unwrap_or(0.0))
                 .collect();
 
             // Get effector _concentrations for allosteric enzymes
             let effector_concentrations: Vec<f64> = enzyme
                 .effectors
                 .iter()
-                .map(|&idx| _concentrations.get(idx).copied().unwrap_or(0.0))
+                .map(|&idx| concentrations.get(idx).copied().unwrap_or(0.0))
                 .collect();
 
             // Combine substrate and effector _concentrations
@@ -506,7 +506,7 @@ impl MetabolicPathway {
             let base_rate = enzyme.parameters.calculate_rate(&all_concentrations);
 
             // Apply regulatory effects
-            let regulated_rate = self.apply_regulations(i, base_rate, _concentrations);
+            let regulated_rate = self.apply_regulations(i, base_rate, concentrations);
 
             rates[i] = regulated_rate * enzyme.enzyme_concentration * 1e-9; // Convert nM to M
         }
@@ -559,9 +559,9 @@ impl MetabolicPathway {
     }
 
     /// Calculate concentration time derivatives
-    pub fn calculate_derivatives(&self, _concentrations: &Array1<f64>) -> Array1<f64> {
-        let reaction_rates = self.calculate_reaction_rates(_concentrations);
-        let mut derivatives = Array1::zeros(_concentrations.len());
+    pub fn calculate_derivatives(&self, concentrations: &Array1<f64>) -> Array1<f64> {
+        let reaction_rates = self.calculate_reaction_rates(concentrations);
+        let mut derivatives = Array1::zeros(concentrations.len());
 
         // Apply stoichiometry matrix
         for (reaction_idx, &rate) in reaction_rates.iter().enumerate() {
@@ -586,39 +586,39 @@ impl MetabolicPathway {
     }
 
     /// Perform metabolic control analysis
-    pub fn control_analysis(&self, _steady_state_concentrations: &Array1<f64>) -> PathwayAnalysis {
+    pub fn control_analysis(&self, _steady_stateconcentrations: &Array1<f64>) -> PathwayAnalysis {
         let num_enzymes = self.enzymes.len();
-        let num_metabolites = _steady_state_concentrations.len();
+        let num_metabolites = _steady_stateconcentrations.len();
 
         // Calculate flux control coefficients
         let flux_control_coefficients =
-            self.calculate_flux_control_coefficients(_steady_state_concentrations);
+            self.calculate_flux_control_coefficients(_steady_stateconcentrations);
 
         // Calculate concentration control coefficients
         let concentration_control_coefficients = Array2::zeros((num_enzymes, num_metabolites));
 
         // Calculate elasticity coefficients
         let elasticity_coefficients =
-            self.calculate_elasticity_coefficients(_steady_state_concentrations);
+            self.calculate_elasticity_coefficients(_steady_stateconcentrations);
 
         // Calculate steady-state fluxes
-        let steady_state_fluxes = self.calculate_reaction_rates(_steady_state_concentrations);
+        let steady_state_fluxes = self.calculate_reaction_rates(_steady_stateconcentrations);
 
         PathwayAnalysis {
             flux_control_coefficients,
             concentration_control_coefficients,
             elasticity_coefficients,
             steady_state_fluxes,
-            steady_state_concentrations: _steady_state_concentrations.clone(),
+            steady_state_concentrations: _steady_stateconcentrations.clone(),
         }
     }
 
     /// Calculate flux control coefficients
-    fn calculate_flux_control_coefficients(&self, _concentrations: &Array1<f64>) -> Array1<f64> {
+    fn calculate_flux_control_coefficients(&self, concentrations: &Array1<f64>) -> Array1<f64> {
         let num_enzymes = self.enzymes.len();
         let mut flux_control_coefficients = Array1::zeros(num_enzymes);
 
-        let base_flux = self.calculate_reaction_rates(_concentrations).sum();
+        let base_flux = self.calculate_reaction_rates(concentrations).sum();
         let perturbation = 0.01; // 1% perturbation
 
         for i in 0..num_enzymes {
@@ -627,7 +627,7 @@ impl MetabolicPathway {
             perturbed_pathway.enzymes[i].enzyme_concentration *= 1.0 + perturbation;
 
             let perturbed_flux = perturbed_pathway
-                .calculate_reaction_rates(_concentrations)
+                .calculate_reaction_rates(concentrations)
                 .sum();
 
             // Calculate control coefficient
@@ -641,18 +641,18 @@ impl MetabolicPathway {
     }
 
     /// Calculate elasticity coefficients
-    fn calculate_elasticity_coefficients(&self, _concentrations: &Array1<f64>) -> Array2<f64> {
+    fn calculate_elasticity_coefficients(&self, concentrations: &Array1<f64>) -> Array2<f64> {
         let num_enzymes = self.enzymes.len();
-        let num_metabolites = _concentrations.len();
+        let num_metabolites = concentrations.len();
         let mut elasticity_coefficients = Array2::zeros((num_enzymes, num_metabolites));
 
-        let base_rates = self.calculate_reaction_rates(_concentrations);
+        let base_rates = self.calculate_reaction_rates(concentrations);
         let perturbation = 0.01; // 1% perturbation
 
         for enzyme_idx in 0..num_enzymes {
             for metabolite_idx in 0..num_metabolites {
-                if _concentrations[metabolite_idx] > 1e-12 {
-                    let mut perturbed_concentrations = _concentrations.clone();
+                if concentrations[metabolite_idx] > 1e-12 {
+                    let mut perturbed_concentrations = concentrations.clone();
                     perturbed_concentrations[metabolite_idx] *= 1.0 + perturbation;
 
                     let perturbed_rates = self.calculate_reaction_rates(&perturbed_concentrations);

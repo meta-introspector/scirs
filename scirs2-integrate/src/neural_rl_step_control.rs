@@ -101,7 +101,7 @@ pub struct Experience<F: IntegrateFloat> {
     /// Whether episode terminated
     pub done: bool,
     /// Temporal difference error for prioritization
-    pub td_error: F,
+    pub tderror: F,
     /// Timestamp of experience
     pub timestamp: Instant,
 }
@@ -158,7 +158,7 @@ pub struct TrainingConfiguration {
     /// Prioritized replay beta
     pub priority_beta: f64,
     /// Multi-step learning horizon
-    pub n_step: usize,
+    pub nstep: usize,
 }
 
 /// Performance analytics for RL training
@@ -217,13 +217,13 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
     pub fn initialize(
         &self,
         problem_size: usize,
-        initial_step_size: F,
+        initialstep_size: F,
         problem_type: &str,
     ) -> IntegrateResult<()> {
         // Initialize feature extractor
         {
             let mut extractor = self.feature_extractor.lock().unwrap();
-            extractor.initialize(problem_size, initial_step_size, problem_type)?;
+            extractor.initialize(problem_size, initialstep_size, problem_type)?;
         }
 
         // Initialize DQN with pre-trained weights if available
@@ -239,10 +239,10 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
     }
 
     /// Predict optimal step size using the trained RL agent
-    pub fn predict_optimal_step(
+    pub fn predict_optimalstep(
         &self,
-        current_step: F,
-        current_error: F,
+        currentstep: F,
+        currenterror: F,
         problem_state: &ProblemState<F>,
         performance_metrics: &PerformanceMetrics<F>,
     ) -> IntegrateResult<StepSizePrediction<F>> {
@@ -250,8 +250,8 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
         let state_features = {
             let mut extractor = self.feature_extractor.lock().unwrap();
             extractor.extract_features(
-                current_step,
-                current_error,
+                currentstep,
+                currenterror,
                 problem_state,
                 performance_metrics,
             )?
@@ -266,17 +266,17 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
         // Select action using epsilon-greedy policy
         let action = self.select_action(&q_values)?;
 
-        // Convert action to _step size multiplier
-        let step_multiplier = self.action_to_step_multiplier(action);
-        let predicted_step = current_step * step_multiplier;
+        // Convert action to step size multiplier
+        let step_multiplier = self.action_tostep_multiplier(action);
+        let predictedstep = currentstep * step_multiplier;
 
         // Apply safety constraints
-        let min_step = current_step * F::from(0.01).unwrap(); // Minimum 1% of current _step
-        let max_step = current_step * F::from(10.0).unwrap(); // Maximum 10x current _step
-        let safe_step = predicted_step.max(min_step).min(max_step);
+        let minstep = currentstep * F::from(0.01).unwrap(); // Minimum 1% of current _step
+        let maxstep = currentstep * F::from(10.0).unwrap(); // Maximum 10x current _step
+        let safestep = predictedstep.max(minstep).min(maxstep);
 
         Ok(StepSizePrediction {
-            predicted_step: safe_step,
+            predictedstep: safestep,
             step_multiplier,
             action_index: action,
             q_values: q_values.clone(),
@@ -301,7 +301,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
             reward,
             next_state: current_state.clone(),
             done,
-            td_error: F::zero(), // Will be calculated
+            tderror: F::zero(), // Will be calculated
             timestamp: Instant::now(),
         };
 
@@ -313,7 +313,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
 
         // Perform training if enough experiences are available
         if self.should_train()? {
-            self.perform_training_step()?;
+            self.perform_trainingstep()?;
         }
 
         // Update target network if needed
@@ -330,7 +330,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
         Ok(TrainingResult {
             loss: F::zero(),             // Would be actual loss from training
             q_value_estimate: F::zero(), // Average Q-value
-            td_error: F::zero(),         // Temporal difference error
+            tderror: F::zero(),         // Temporal difference error
             exploration_rate: F::from(self.training_config.epsilon).unwrap(),
             training_performed: self.should_train()?,
         })
@@ -355,7 +355,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
         // Launch neural RL compute shader
         gpu_context
             .launch_kernel(
-                "neural_adaptive_step_rl",
+                "neural_adaptivestep_rl",
                 (self.training_config.batch_size, 1, 1),
                 (32, 1, 1),
                 &[
@@ -452,7 +452,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
         Ok(())
     }
 
-    fn select_action(&self, q_values: &Array1<F>) -> IntegrateResult<usize> {
+    fn select_action(&self, qvalues: &Array1<F>) -> IntegrateResult<usize> {
         // Epsilon-greedy action selection
         let random_val: f64 = rand::random();
 
@@ -462,9 +462,9 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
         } else {
             // Exploitation: best Q-value
             let mut best_action = 0;
-            let mut best_q = q_values[0];
+            let mut best_q = qvalues[0];
 
-            for (i, &q_val) in q_values.iter().enumerate() {
+            for (i, &q_val) in qvalues.iter().enumerate() {
                 if q_val > best_q {
                     best_q = q_val;
                     best_action = i;
@@ -475,22 +475,22 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
         }
     }
 
-    fn action_to_step_multiplier(&self, _action: usize) -> F {
+    fn action_tostep_multiplier(&self, action: usize) -> F {
         // Map _action index to step size multiplier
         let multipliers = [
             0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7,
             1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2,
         ];
 
-        F::from(multipliers[_action.min(31)]).unwrap_or(F::one())
+        F::from(multipliers[action.min(31)]).unwrap_or(F::one())
     }
 
-    fn calculate_prediction_confidence(&self, _q_values: &Array1<F>) -> f64 {
+    fn calculate_prediction_confidence(&self, _qvalues: &Array1<F>) -> f64 {
         // Calculate confidence based on Q-value distribution
-        let max_q = _q_values
+        let max_q = _qvalues
             .iter()
             .fold(F::neg_infinity(), |acc, &x| acc.max(x));
-        let min_q = _q_values.iter().fold(F::infinity(), |acc, &x| acc.min(x));
+        let min_q = _qvalues.iter().fold(F::infinity(), |acc, &x| acc.min(x));
         let range = max_q - min_q;
 
         if range > F::zero() {
@@ -515,7 +515,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
         Ok(true) // Simplified - would track training steps
     }
 
-    fn perform_training_step(&self) -> IntegrateResult<()> {
+    fn perform_trainingstep(&self) -> IntegrateResult<()> {
         // Perform one step of DQN training
         self.gpu_accelerated_training()
     }
@@ -525,9 +525,9 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
         dqn.soft_update_target(self.training_config.tau)
     }
 
-    fn transfer_states_to_gpu(&self, _batch: &[Experience<F>]) -> IntegrateResult<gpu::GpuPtr<F>> {
+    fn transfer_states_to_gpu(&self, batch: &[Experience<F>]) -> IntegrateResult<gpu::GpuPtr<F>> {
         // Simplified GPU transfer - allocate GPU memory
-        let states: Vec<F> = _batch
+        let states: Vec<F> = batch
             .iter()
             .flat_map(|e| e.state.iter().cloned())
             .collect();
@@ -535,8 +535,8 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
             .map_err(|e| IntegrateError::ComputationError(format!("GPU allocation failed: {e:?}")))
     }
 
-    fn transfer_actions_to_gpu(&self, _batch: &[Experience<F>]) -> IntegrateResult<gpu::GpuPtr<F>> {
-        let actions: Vec<F> = _batch
+    fn transfer_actions_to_gpu(&self, batch: &[Experience<F>]) -> IntegrateResult<gpu::GpuPtr<F>> {
+        let actions: Vec<F> = batch
             .iter()
             .map(|e| F::from(e.action).unwrap_or(F::zero()))
             .collect();
@@ -544,8 +544,8 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
             .map_err(|e| IntegrateError::ComputationError(format!("GPU allocation failed: {e:?}")))
     }
 
-    fn transfer_rewards_to_gpu(&self, _batch: &[Experience<F>]) -> IntegrateResult<gpu::GpuPtr<F>> {
-        let rewards: Vec<F> = _batch.iter().map(|e| e.reward).collect();
+    fn transfer_rewards_to_gpu(&self, batch: &[Experience<F>]) -> IntegrateResult<gpu::GpuPtr<F>> {
+        let rewards: Vec<F> = batch.iter().map(|e| e.reward).collect();
         gpu::GpuPtr::allocate(rewards.len())
             .map_err(|e| IntegrateError::ComputationError(format!("GPU allocation failed: {e:?}")))
     }
@@ -596,11 +596,11 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + std::default::Default> 
         Ok(())
     }
 
-    pub fn forward(&self, _input: &Array1<F>) -> IntegrateResult<Array1<F>> {
-        if _input.len() != 64 {
+    pub fn forward(&self, input: &Array1<F>) -> IntegrateResult<Array1<F>> {
+        if input.len() != 64 {
             return Err(IntegrateError::ComputationError(format!(
                 "Input size {} != expected size 64",
-                _input.len()
+                input.len()
             )));
         }
 
@@ -609,7 +609,7 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + std::default::Default> 
         for i in 0..128 {
             let mut sum = self.weights.layer1_biases[i];
             for j in 0..64 {
-                sum += self.weights.layer1_weights[[i, j]] * _input[j];
+                sum += self.weights.layer1_weights[[i, j]] * input[j];
             }
             // Mish activation: x * tanh(ln(1 + exp(x)))
             let mish_val = sum * (F::one() + (-sum).exp()).ln().tanh();
@@ -655,11 +655,11 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + std::default::Default> 
         Ok(q_values)
     }
 
-    pub fn soft_update_target(&mut self, _tau: f64) -> IntegrateResult<()> {
+    pub fn soft_update_target(&mut self, tau: f64) -> IntegrateResult<()> {
         // Soft update of target network using Polyak averaging
-        // target_weights = _tau * main_weights + (1 - _tau) * target_weights
+        // target_weights = _tau * main_weights + (1 - tau) * target_weights
 
-        let tau_f = F::from(_tau).unwrap_or(F::from(0.005).unwrap());
+        let tau_f = F::from(tau).unwrap_or(F::from(0.005).unwrap());
         let one_minus_tau = F::one() - tau_f;
 
         // Update layer 1 weights
@@ -793,8 +793,8 @@ impl<F: IntegrateFloat> PrioritizedExperienceReplay<F> {
         })
     }
 
-    pub fn add_experience(&mut self, _experience: Experience<F>) -> IntegrateResult<()> {
-        self.buffer.push_back(_experience);
+    pub fn add_experience(&mut self, experience: Experience<F>) -> IntegrateResult<()> {
+        self.buffer.push_back(experience);
         if self.buffer.len() > self.config.max_size {
             self.buffer.pop_front();
         }
@@ -821,7 +821,7 @@ impl<F: IntegrateFloat> PrioritizedExperienceReplay<F> {
             .buffer
             .iter()
             .map(|exp| {
-                exp.td_error
+                exp.tderror
                     .to_f64()
                     .unwrap_or(1.0)
                     .powf(self.importance_sampling.beta_start)
@@ -848,7 +848,7 @@ impl<F: IntegrateFloat> PrioritizedExperienceReplay<F> {
 
             for (idx, experience) in self.buffer.iter().enumerate() {
                 let priority = experience
-                    .td_error
+                    .tderror
                     .to_f64()
                     .unwrap_or(1.0)
                     .powf(self.importance_sampling.beta_start);
@@ -862,7 +862,7 @@ impl<F: IntegrateFloat> PrioritizedExperienceReplay<F> {
 
             // Calculate importance sampling weight
             let experience_priority = self.buffer[selected_idx]
-                .td_error
+                .tderror
                 .to_f64()
                 .unwrap_or(1.0)
                 .powf(self.importance_sampling.beta_start);
@@ -895,7 +895,7 @@ impl<F: IntegrateFloat> PrioritizedExperienceReplay<F> {
             if *idx < self.buffer.len() {
                 // Update TD error which is used as priority
                 let clamped_priority = priority.max(1e-6); // Ensure minimum priority
-                self.buffer[*idx].td_error =
+                self.buffer[*idx].tderror =
                     F::from(clamped_priority).unwrap_or(F::from(1e-6).unwrap());
             }
         }
@@ -922,19 +922,19 @@ impl<F: IntegrateFloat + std::default::Default> StateFeatureExtractor<F> {
     pub fn initialize(
         &mut self,
         problem_size: usize,
-        initial_step: F,
+        initialstep: F,
         problem_type: &str,
     ) -> IntegrateResult<()> {
         self.problem_characteristics.problem_size = problem_size;
         self.problem_characteristics.problem_type = problem_type.to_string();
-        self.step_history.push_back(initial_step);
+        self.step_history.push_back(initialstep);
         Ok(())
     }
 
     pub fn extract_features(
         &mut self,
-        current_step: F,
-        current_error: F,
+        currentstep: F,
+        currenterror: F,
         _state: &ProblemState<F>,
         _performance_metrics: &PerformanceMetrics<F>,
     ) -> IntegrateResult<Array1<F>> {
@@ -942,18 +942,18 @@ impl<F: IntegrateFloat + std::default::Default> StateFeatureExtractor<F> {
         let mut features = Array1::zeros(64);
 
         // Error history features (8 elements)
-        for (i, &_error) in self.error_history.iter().take(8).enumerate() {
-            features[i] = _error;
+        for (i, &error) in self.error_history.iter().take(8).enumerate() {
+            features[i] = error;
         }
 
         // Step size history features (8 elements)
-        for (i, &_step) in self.step_history.iter().take(8).enumerate() {
-            features[8 + i] = _step;
+        for (i, &step) in self.step_history.iter().take(8).enumerate() {
+            features[8 + i] = step;
         }
 
         // Add current values to history
-        self.error_history.push_back(current_error);
-        self.step_history.push_back(current_step);
+        self.error_history.push_back(currenterror);
+        self.step_history.push_back(currentstep);
 
         // Limit history size
         if self.error_history.len() > 8 {
@@ -992,7 +992,7 @@ impl RLPerformanceAnalytics {
         }
     }
 
-    pub fn update_metrics(&mut self, _reward: f64, _action: usize) -> IntegrateResult<()> {
+    pub fn update_metrics(&mut self, _reward: f64, action: usize) -> IntegrateResult<()> {
         self.episode_rewards.push_back(_reward);
         if self.episode_rewards.len() > 1000 {
             self.episode_rewards.pop_front();
@@ -1005,7 +1005,7 @@ impl RLPerformanceAnalytics {
 
 #[derive(Debug, Clone)]
 pub struct StepSizePrediction<F: IntegrateFloat> {
-    pub predicted_step: F,
+    pub predictedstep: F,
     pub step_multiplier: F,
     pub action_index: usize,
     pub q_values: Array1<F>,
@@ -1017,7 +1017,7 @@ pub struct StepSizePrediction<F: IntegrateFloat> {
 pub struct TrainingResult<F: IntegrateFloat> {
     pub loss: F,
     pub q_value_estimate: F,
-    pub td_error: F,
+    pub tderror: F,
     pub exploration_rate: F,
     pub training_performed: bool,
 }
@@ -1045,7 +1045,7 @@ pub struct NetworkHyperparameters<F: IntegrateFloat> {
 
 #[derive(Debug, Clone, Default)]
 pub struct TrainingStatistics {
-    pub training_steps: usize,
+    pub trainingsteps: usize,
     pub episodes: usize,
     pub total_reward: f64,
 }
@@ -1053,7 +1053,7 @@ pub struct TrainingStatistics {
 impl TrainingStatistics {
     pub fn new() -> Self {
         Self {
-            training_steps: 0,
+            trainingsteps: 0,
             episodes: 0,
             total_reward: 0.0,
         }
@@ -1082,10 +1082,10 @@ pub struct SumTree {
 }
 
 impl SumTree {
-    pub fn new(_capacity: usize) -> Self {
+    pub fn new(capacity: usize) -> Self {
         SumTree {
-            capacity: _capacity,
-            tree: vec![0.0; 2 * _capacity - 1],
+            capacity: capacity,
+            tree: vec![0.0; 2 * capacity - 1],
             data_pointer: 0,
         }
     }
@@ -1102,7 +1102,7 @@ pub struct ReplayBufferConfig {
 pub struct ImportanceSamplingConfig {
     pub beta_start: f64,
     pub beta_end: f64,
-    pub beta_steps: usize,
+    pub betasteps: usize,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -1176,7 +1176,7 @@ impl Default for TrainingConfiguration {
             tau: 0.005,
             priority_alpha: 0.6,
             priority_beta: 0.4,
-            n_step: 3,
+            nstep: 3,
         }
     }
 }

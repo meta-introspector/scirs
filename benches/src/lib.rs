@@ -71,7 +71,7 @@ pub mod common {
     }
 
     /// Check if a computation result is numerically acceptable
-    pub fn is_numerically_acceptable(relative_error: f64, tolerance: f64) -> bool {
+    pub fn is_numerically_acceptable(relativeerror: f64, tolerance: f64) -> bool {
         relative_error < tolerance && relative_error.is_finite()
     }
 }

@@ -194,16 +194,16 @@ fn heat_system_f(
                 let idx_up = i * n_y + (j + 1);
 
                 // Finite difference approximation of Laplacian
-                let d2x = (_x[idx_left] - 2.0 * _x[idx] + _x[idx_right]) / (dx * dx);
-                let d2y = (_x[idx_down] - 2.0 * _x[idx] + _x[idx_up]) / (dy * dy);
+                let d2x = (_x[idx_left] - 2.0 * x[idx] + x[idx_right]) / (dx * dx);
+                let d2y = (_x[idx_down] - 2.0 * x[idx] + x[idx_up]) / (dy * dy);
 
                 f[idx] = alpha * (d2x + d2y);
             } else if i == 0 {
                 // Left boundary (controlled by algebraic constraints)
-                f[idx] = (_y[j] - _x[idx]) / 0.01; // Fast relaxation to algebraic value
+                f[idx] = (_y[j] - x[idx]) / 0.01; // Fast relaxation to algebraic value
             } else if i == n_x - 1 {
                 // Right boundary (fixed temperature)
-                f[idx] = (25.0 - _x[idx]) / 0.01; // Fixed temperature
+                f[idx] = (25.0 - x[idx]) / 0.01; // Fixed temperature
             } else if j == 0 {
                 // Bottom boundary (insulated)
                 f[idx] = 0.0; // No heat flux
@@ -256,8 +256,8 @@ fn heat_system_g(
         let boundary_temp =
             25.0 + 10.0 * (t * std::f64::consts::PI).sin() * (std::f64::consts::PI * y_pos).sin();
 
-        // The constraint: _y[j] = boundary_temp
-        g[j] = _y[j] - boundary_temp;
+        // The constraint: y[j] = boundary_temp
+        g[j] = y[j] - boundary_temp;
     }
 
     g

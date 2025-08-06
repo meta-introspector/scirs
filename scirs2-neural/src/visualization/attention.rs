@@ -215,9 +215,9 @@ impl<
     > AttentionVisualizer<F>
 {
     /// Create a new attention visualizer
-    pub fn new(_model: Sequential<F>, config: VisualizationConfig) -> Self {
+    pub fn new(model: Sequential<F>, config: VisualizationConfig) -> Self {
         Self {
-            _model,
+            model,
             config,
             attention_cache: HashMap::new(),
         }
@@ -238,7 +238,7 @@ impl<
             AttentionVisualizationType::AttentionFlow => self.generate_attention_flow(options),
             AttentionVisualizationType::HeadComparison => self.generate_head_comparison(options),
     /// Get cached attention data for a layer
-    pub fn get_cached_attention(&self, layer_name: &str) -> Option<&AttentionData<F>> {
+    pub fn get_cached_attention(&self, layername: &str) -> Option<&AttentionData<F>> {
         self.attention_cache.get(layer_name)
     /// Clear the attention cache
     pub fn clear_cache(&mut self) {
@@ -326,7 +326,7 @@ impl<
                     Some(HeadInfo {
                         head_index: 0,                              // Default to first head for now
                         total_heads: 8,                             // Common default
-                        head_dim: attention_weights.shape()[1] / 8, // Estimate
+                        head_dim: attentionweights.shape()[1] / 8, // Estimate
                     })
                     None
                 // Store attention data
@@ -849,14 +849,14 @@ impl<
             for i in start_row..end_row {
                 for j in start_col..end_col {
                     let weight = weights[[i, j]];
-                    head_weights.push(weight);
+                    headweights.push(weight);
                     if weight > max_weight {
                         max_weight = weight;
                     if weight < min_weight || min_weight == F::zero() {
                         min_weight = weight;
                     total_weight = total_weight + weight;
-            let avg_weight = if !head_weights.is_empty() {
-                total_weight / F::from(head_weights.len()).unwrap(), F::zero()
+            let avg_weight = if !headweights.is_empty() {
+                total_weight / F::from(headweights.len()).unwrap(), F::zero()
             };
             // Draw attention matrix for this head
             for (local_i, i) in (start_row..end_row).enumerate() {

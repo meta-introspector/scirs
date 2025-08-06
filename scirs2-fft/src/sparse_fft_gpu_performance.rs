@@ -126,7 +126,7 @@ impl PerformanceCollector {
     }
     
     /// Get best profile for a given signal size
-    pub fn get_best_profile(&self, signal_size: usize) -> Option<&PerformanceProfile> {
+    pub fn get_best_profile(&self, signalsize: usize) -> Option<&PerformanceProfile> {
         self.profiles
             .iter()
             .filter(|p| p.signal_size == signal_size)
@@ -134,17 +134,17 @@ impl PerformanceCollector {
     }
     
     /// Get best algorithm for a given signal size
-    pub fn get_best_algorithm(&self, signal_size: usize) -> Option<SparseFFTAlgorithm> {
+    pub fn get_best_algorithm(&self, signalsize: usize) -> Option<SparseFFTAlgorithm> {
         self.get_best_profile(signal_size).map(|p| p.algorithm)
     }
     
     /// Get best window function for a given signal size
-    pub fn get_best_window_function(&self, signal_size: usize) -> Option<WindowFunction> {
+    pub fn get_best_window_function(&self, signalsize: usize) -> Option<WindowFunction> {
         self.get_best_profile(signal_size).map(|p| p.window_function)
     }
     
     /// Get best kernel configuration for a given signal size
-    pub fn get_best_kernel_config(&self, signal_size: usize) -> Option<KernelConfig> {
+    pub fn get_best_kernel_config(&self, signalsize: usize) -> Option<KernelConfig> {
         self.get_best_profile(signal_size).map(|p| p.kernel_config.clone())
     }
 }
@@ -161,16 +161,16 @@ pub struct SparseFftAutoTuner {
 
 impl SparseFftAutoTuner {
     /// Create a new auto-tuner
-    pub fn new(_config: AutoTuneConfig, factory: KernelFactory) -> Self {
+    pub fn new(config: AutoTuneConfig, factory: KernelFactory) -> Self {
         Self {
-            _config,
+            config,
             collector: PerformanceCollector::new(),
             factory,
         }
     }
     
     /// Run auto-tuning
-    pub fn run_tuning<T>(&mut self, reference_signals: &[Vec<T>]) -> FFTResult<AutoTuneResult>
+    pub fn run_tuning<T>(&mut self, referencesignals: &[Vec<T>]) -> FFTResult<AutoTuneResult>
     where
         T: NumCast + Copy + Debug + 'static,
     {
@@ -464,14 +464,14 @@ impl KernelFactoryExt for KernelFactory {
 
 /// Get optimal algorithm for a given signal
 #[allow(dead_code)]
-pub fn get_optimal_algorithm<T>(_signal: &[T]) -> SparseFFTAlgorithm
+pub fn get_optimal_algorithm<T>(signal: &[T]) -> SparseFFTAlgorithm
 where
     T: NumCast + Copy + Debug + 'static,
 {
     // In a real implementation, this would analyze the _signal to determine the best algorithm
     // For now, just return a default based on the _signal size
     
-    let n = _signal.len();
+    let n = signal.len();
     
     if n < 4096 {
         SparseFFTAlgorithm::Sublinear // Fast for small signals
@@ -484,7 +484,7 @@ where
 
 /// Get optimal window function for a given signal
 #[allow(dead_code)]
-pub fn get_optimal_window_function<T>(_signal: &[T]) -> WindowFunction
+pub fn get_optimal_window_function<T>(signal: &[T]) -> WindowFunction
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -554,7 +554,7 @@ impl PerformanceManager {
     }
     
     /// Run auto-tuning
-    pub fn run_auto_tuning<T>(&mut self, reference_signals: &[Vec<T>]) -> FFTResult<()>
+    pub fn run_auto_tuning<T>(&mut self, referencesignals: &[Vec<T>]) -> FFTResult<()>
     where
         T: NumCast + Copy + Debug + 'static,
     {
@@ -569,7 +569,7 @@ impl PerformanceManager {
     }
     
     /// Get best configuration for a signal size
-    pub fn get_best_config(&self, signal_size: usize) -> Option<(KernelConfig, SparseFFTAlgorithm, WindowFunction)> {
+    pub fn get_best_config(&self, signalsize: usize) -> Option<(KernelConfig, SparseFFTAlgorithm, WindowFunction)> {
         // Find closest signal _size
         self.best_configs
             .iter()

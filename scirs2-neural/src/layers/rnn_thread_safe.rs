@@ -93,7 +93,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + 'static> ThreadSafeRNN<F> 
         // Initialize input-to-hidden weights
         let mut weight_ih_vec: Vec<F> = Vec::with_capacity(hidden_size * input_size);
         for _ in 0..(hidden_size * input_size) {
-            let rand_val = rng.random_range(-1.0f64..1.0f64);
+            let rand_val = rng.gen_range(-1.0f64..1.0f64);
             let val = F::from(rand_val).ok_or_else(|| {
                 NeuralError::InvalidArchitecture("Failed to convert random value".to_string())
             })?;
@@ -230,7 +230,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Thre
         // with the correct shape
         let grad_input = Array::zeros(input.dim());
         Ok(grad_input)
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         // Apply a small update to parameters (placeholder)
         let small_change = F::from(0.001).unwrap();
         let lr = small_change * learning_rate;
@@ -265,18 +265,18 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + 'static> ThreadSafeBidirec
     /// * `name` - Optional name for the layer
     /// # Returns
     /// * A new Bidirectional RNN wrapper
-    pub fn new(_layer: Box<dyn Layer<F> + Send + Sync>, name: Option<&str>) -> Result<Self> {
+    pub fn new(layer: Box<dyn Layer<F> + Send + Sync>, name: Option<&str>) -> Result<Self> {
         // For now, we'll create a dummy backward RNN with the same configuration
         // In a real implementation, we would create a proper clone of the _layer
-        let backward_layer = if let Some(rnn) = _layer.as_any().downcast_ref::<ThreadSafeRNN<F>>() {
+        let backward_layer = if let Some(rnn) = layer.as_any().downcast_ref::<ThreadSafeRNN<F>>() {
             // If it's a ThreadSafeRNN, create a new one with the same parameters
-            let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+            let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
             let backward_rnn =
                 ThreadSafeRNN::<F>::new(rnn.input_size, rnn.hidden_size, rnn.activation, &mut rng)?;
             Some(Box::new(backward_rnn) as Box<dyn Layer<F> + Send + Sync>)
             // If not, just set it to None for now
             None
-            forward_layer: _layer,
+            forward_layer: layer,
             backward_layer,
             name: name.map(|s| s.to_string()),
 // Custom implementation of Debug for ThreadSafeBidirectional
@@ -296,7 +296,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + 'static> Clone
         // It's provided just to satisfy the Clone trait requirement for debugging.
         // The cloned object will have empty layers.
         // Create a dummy RNN for the forward _layer
-        let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+        let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
         let dummy_rnn = ThreadSafeRNN::<F>::new(1, 1, RecurrentActivation::Tanh, &mut rng)
             .expect("Failed to create dummy RNN");
         Self {
@@ -306,7 +306,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + 'static> Clone
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F>
         // Run forward _layer
         let forward_output = self.forward_layer.forward(input)?;
-        // If we have a backward _layer, run it on reversed input and combine
+        // If we have a backward layer, run it on reversed input and combine
         if let Some(ref backward_layer) = self.backward_layer {
             // Reverse input along sequence dimension (axis 1)
             let mut reversed_input = input.to_owned();
@@ -323,7 +323,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F>
             let newshape = (shape[0], shape[1], shape[2] * shape[3]);
             let output = combined.into_shape_with_order(newshape)?.into_dyn();
             Ok(output)
-            // If no backward _layer, just return forward output
+            // If no backward layer, just return forward output
             Ok(forward_output)
         _input: &Array<F, IxDyn>,
         // Retrieve cached input
@@ -332,10 +332,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F>
         // For now, just return a placeholder gradient
         let grad_input = Array::zeros(_input.dim());
         // Update forward _layer
-        self.forward_layer.update(learning_rate)?;
+        self.forward_layer.update(learningrate)?;
         // Update backward _layer if present
         if let Some(ref mut backward_layer) = self.backward_layer {
-            backward_layer.update(learning_rate)?;
+            backward_layer.update(learningrate)?;
 /// Thread-safe version of LSTM for sequence processing
 /// This implementation uses Arc<RwLock<>> for thread safety.
 #[allow(dead_code)]
@@ -382,7 +382,7 @@ pub struct ThreadSafeLSTM<F: Float + Debug + Send + Sync> {
     states_cache: Arc<RwLock<Option<(Array<F, IxDyn>, Array<F, IxDyn>)>>>,
 impl<F: Float + Debug + Send + Sync + ScalarOperand + 'static> ThreadSafeLSTM<F> {
     /// Create a new thread-safe LSTM _layer
-    pub fn new<R: Rng>(_input, size: usize, hidden_size: usize, rng: &mut R) -> Result<Self> {
+    pub fn new<R: Rng>(_input, size: usize, hiddensize: usize, rng: &mut R) -> Result<Self> {
         // Helper function to create weights
         let create_weight = |rows: usize,
                              cols: usize,
@@ -391,7 +391,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + 'static> ThreadSafeLSTM<F>
          -> Result<Array<F, IxDyn>> {
             let mut weight_vec: Vec<F> = Vec::with_capacity(rows * cols);
             for _ in 0..(rows * cols) {
-                let rand_val = rng.random_range(-1.0f64..1.0f64);
+                let rand_val = rng.gen_range(-1.0f64..1.0f64);
                 let val = F::from(rand_val).ok_or_else(|| {
                     NeuralError::InvalidArchitecture("Failed to convert random value".to_string())
                 })?;

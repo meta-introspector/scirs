@@ -117,12 +117,12 @@ pub struct GpuMetricsComputer {
 
 impl GpuMetricsComputer {
     /// Create new GPU metrics computer with hardware detection
-    pub fn new(_config: GpuAccelConfig) -> Result<Self> {
+    pub fn new(config: GpuAccelConfig) -> Result<Self> {
         let capabilities = PlatformCapabilities::detect();
         let gpu_info = Self::detect_gpu_capabilities()?;
 
         Ok(Self {
-            _config,
+            config,
             capabilities,
             gpu_info,
             parallel_config: ParallelConfig::default(),
@@ -131,12 +131,12 @@ impl GpuMetricsComputer {
 
     /// Configure parallel processing
     pub fn with_parallel_config(mut self, config: ParallelConfig) -> Self {
-        self.parallel_config = _config;
+        self.parallel_config = config;
         self
     }
 
     /// Check if GPU acceleration should be used for given data size
-    pub fn should_use_gpu(&self, data_size: usize) -> bool {
+    pub fn should_use_gpu(&self, datasize: usize) -> bool {
         self.gpu_info.is_some() && data_size >= self.config.min_batch_size
     }
 
@@ -375,7 +375,7 @@ impl GpuMetricsComputer {
     }
 
     /// Estimate SM count based on compute capability and memory
-    fn estimate_sm_count(_compute_capability: (u32, u32), total_memory_bytes: usize) -> u32 {
+    fn estimate_sm_count(_computecapability: (u32, u32), total_memory_bytes: usize) -> u32 {
         let memory_gb = total_memory_bytes / (1024 * 1024 * 1024);
 
         match _compute_capability {
@@ -405,6 +405,7 @@ impl GpuMetricsComputer {
                 16.. => 80,
                 8..=15 => 60,
                 4..=7 => 20,
+                0..=3 => 10, // Very low memory systems
             },
         }
     }
@@ -420,7 +421,7 @@ impl GpuMetricsComputer {
     }
 
     /// Compute accuracy on GPU with intelligent fallback
-    pub fn gpu_accuracy(&self, y_true: &Array1<i32>, y_pred: &Array1<i32>) -> Result<f32> {
+    pub fn gpu_accuracy(&self, y_true: &Array1<i32>, ypred: &Array1<i32>) -> Result<f32> {
         if self.should_use_gpu(y_true.len()) {
             self.gpu_accuracy_kernel(y_true, y_pred)
         } else if self.config.enable_simd_fallback && self.capabilities.simd_available {
@@ -431,7 +432,7 @@ impl GpuMetricsComputer {
     }
 
     /// Compute MSE on GPU with SIMD fallback
-    pub fn gpu_mse<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
+    pub fn gpu_mse<F>(&self, y_true: &Array1<F>, ypred: &Array1<F>) -> Result<F>
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
@@ -445,7 +446,7 @@ impl GpuMetricsComputer {
     }
 
     /// SIMD-accelerated MSE computation
-    pub fn simd_mse<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
+    pub fn simd_mse<F>(&self, y_true: &Array1<F>, ypred: &Array1<F>) -> Result<F>
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
@@ -462,7 +463,7 @@ impl GpuMetricsComputer {
     }
 
     /// SIMD-accelerated accuracy computation
-    pub fn simd_accuracy(&self, y_true: &Array1<i32>, y_pred: &Array1<i32>) -> Result<f32> {
+    pub fn simd_accuracy(&self, y_true: &Array1<i32>, ypred: &Array1<i32>) -> Result<f32> {
         if y_true.len() != y_pred.len() {
             return Err(MetricsError::InvalidInput(
                 "Arrays must have same length".to_string(),
@@ -576,7 +577,7 @@ impl GpuMetricsComputer {
         use scirs2_core::parallel_ops::*;
 
         let batch_size = y_true_batch.nrows();
-        let chunk_size = self.parallel_config.min_chunk_size;
+        let chunk_size = self.parallel_configmin_chunk_size;
 
         // Process in parallel chunks
         let results: Result<Vec<HashMap<String, F>>> = (0..batch_size)
@@ -596,7 +597,7 @@ impl GpuMetricsComputer {
                             "mse" => self.simd_mse(&y_true_sample, &y_pred_sample)?,
                             "mae" => self.simd_mae(&y_true_sample, &y_pred_sample)?,
                             "r2_score" => self.simd_r2_score(&y_true_sample, &y_pred_sample)?,
-                        _ => F::zero(),
+                            _ => F::zero(),
                         };
                         sample_results.insert(metric.to_string(), result);
                     }
@@ -638,7 +639,7 @@ impl GpuMetricsComputer {
                     "mse" => self.cpu_mse(&y_true_sample, &y_pred_sample)?,
                     "mae" => self.cpu_mae(&y_true_sample, &y_pred_sample)?,
                     "r2_score" => self.cpu_r2_score(&y_true_sample, &y_pred_sample)?,
-                _ => F::zero(),
+                    _ => F::zero(),
                 };
                 sample_results.insert(metric.to_string(), result);
             }
@@ -652,7 +653,7 @@ impl GpuMetricsComputer {
     // GPU kernel implementations
 
     /// GPU kernel for accuracy computation
-    fn gpu_accuracy_kernel(&self, y_true: &Array1<i32>, y_pred: &Array1<i32>) -> Result<f32> {
+    fn gpu_accuracy_kernel(&self, y_true: &Array1<i32>, ypred: &Array1<i32>) -> Result<f32> {
         // Simulate GPU parallel computation
         let correct = y_true
             .iter()
@@ -664,7 +665,7 @@ impl GpuMetricsComputer {
     }
 
     /// GPU kernel for MSE computation
-    fn gpu_mse_kernel<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
+    fn gpu_mse_kernel<F>(&self, y_true: &Array1<F>, ypred: &Array1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
@@ -678,7 +679,7 @@ impl GpuMetricsComputer {
     }
 
     /// GPU kernel for MAE computation
-    fn gpu_mae_kernel<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
+    fn gpu_mae_kernel<F>(&self, y_true: &Array1<F>, ypred: &Array1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
@@ -692,7 +693,7 @@ impl GpuMetricsComputer {
     }
 
     /// GPU kernel for R² computation
-    fn gpu_r2_kernel<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
+    fn gpu_r2_kernel<F>(&self, y_true: &Array1<F>, ypred: &Array1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
@@ -719,7 +720,7 @@ impl GpuMetricsComputer {
     // SIMD implementations
 
     /// SIMD-accelerated MAE computation
-    pub fn simd_mae<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
+    pub fn simd_mae<F>(&self, y_true: &Array1<F>, ypred: &Array1<F>) -> Result<F>
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
@@ -736,7 +737,7 @@ impl GpuMetricsComputer {
     }
 
     /// SIMD-accelerated R² score computation
-    pub fn simd_r2_score<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
+    pub fn simd_r2_score<F>(&self, y_true: &Array1<F>, ypred: &Array1<F>) -> Result<F>
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
@@ -771,7 +772,7 @@ impl GpuMetricsComputer {
 
     // CPU fallback implementations
 
-    fn cpu_accuracy(&self, y_true: &Array1<i32>, y_pred: &Array1<i32>) -> Result<f32> {
+    fn cpu_accuracy(&self, y_true: &Array1<i32>, ypred: &Array1<i32>) -> Result<f32> {
         if y_true.len() != y_pred.len() {
             return Err(MetricsError::InvalidInput(
                 "Arrays must have the same length".to_string(),
@@ -787,7 +788,7 @@ impl GpuMetricsComputer {
         Ok(correct as f32 / y_true.len() as f32)
     }
 
-    fn cpu_mse<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
+    fn cpu_mse<F>(&self, y_true: &Array1<F>, ypred: &Array1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
@@ -807,7 +808,7 @@ impl GpuMetricsComputer {
         Ok(mse)
     }
 
-    fn cpu_mae<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
+    fn cpu_mae<F>(&self, y_true: &Array1<F>, ypred: &Array1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
@@ -827,7 +828,7 @@ impl GpuMetricsComputer {
         Ok(mae)
     }
 
-    fn cpu_r2_score<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
+    fn cpu_r2_score<F>(&self, y_true: &Array1<F>, ypred: &Array1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
@@ -1326,9 +1327,9 @@ impl AdvancedGpuOrchestrator {
 }
 
 impl LoadBalancer {
-    fn new(_strategy: LoadBalancingStrategy) -> Self {
+    fn new(strategy: LoadBalancingStrategy) -> Self {
         Self {
-            _strategy,
+            strategy,
             device_performance: HashMap::new(),
             device_memory_usage: HashMap::new(),
             current_index: 0,
@@ -1395,7 +1396,7 @@ impl LoadBalancer {
         let mut distribution = Vec::new();
         let mut current_start = 0;
 
-        for (idx_device) in devices.iter().enumerate() {
+        for (idx, device) in devices.iter().enumerate() {
             let work_size = work_per_device + if idx < remainder { 1 } else { 0 };
             let end = current_start + work_size;
             distribution.push((idx, (current_start, end)));
@@ -1407,11 +1408,11 @@ impl LoadBalancer {
 }
 
 impl GpuMemoryManager {
-    fn new(_strategy: MemoryAllocationStrategy) -> Self {
+    fn new(strategy: MemoryAllocationStrategy) -> Self {
         Self {
             device_pools: HashMap::new(),
             allocated_memory: HashMap::new(),
-            allocation_strategy: _strategy,
+            allocation_strategy: strategy,
         }
     }
 
@@ -1428,10 +1429,11 @@ impl GpuMemoryManager {
 }
 
 impl MemoryPool {
-    fn new(_total_size: usize) -> Self {
+    fn new(totalsize: usize) -> Self {
         Self {
             available_blocks: vec![MemoryBlock {
-                address: 0, size: _total_size,
+                address: 0,
+                size: total_size,
                 allocated_at: Instant::now(),
             }],
             allocated_blocks: Vec::new(),
@@ -1451,7 +1453,7 @@ impl PerformanceMonitor {
         }
     }
 
-    fn record_execution_time(&self, device_id: usize, duration: Duration) {
+    fn record_execution_time(&self, deviceid: usize, duration: Duration) {
         // Record execution time in a thread-safe manner
         // Note: In a production implementation, this would use proper synchronization
         // For now, we simulate the recording without actual thread synchronization
@@ -1500,7 +1502,7 @@ impl FaultToleranceManager {
         }
     }
 
-    fn check_device_health(&self, device_id: usize, device: &GpuInfo) -> Result<bool> {
+    fn check_device_health(&self, deviceid: usize, device: &GpuInfo) -> Result<bool> {
         // Comprehensive device health check
 
         // Check 1: Memory availability
@@ -1583,7 +1585,7 @@ impl FaultToleranceManager {
     }
 
     /// Execute a simple health test kernel
-    fn execute_health_test_kernel(&self, device_id: usize, device: &GpuInfo) -> bool {
+    fn execute_health_test_kernel(&self, deviceid: usize, device: &GpuInfo) -> bool {
         // Simulate a simple GPU health test
         // In a real implementation, this would execute a minimal compute kernel
 

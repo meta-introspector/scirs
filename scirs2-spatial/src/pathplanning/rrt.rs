@@ -113,12 +113,12 @@ impl Clone for RRTPlanner {
 
 impl RRTPlanner {
     /// Create a new RRT planner with the given configuration
-    pub fn new(_config: RRTConfig, dimension: usize) -> Self {
-        let seed = _config.seed.unwrap_or_else(rand::random);
+    pub fn new(config: RRTConfig, dimension: usize) -> Self {
+        let seed = config.seed.unwrap_or_else(rand::random);
         let rng = StdRng::seed_from_u64(seed);
 
         RRTPlanner {
-            config: _config,
+            config: config,
             collision_checker: None,
             rng,
             dimension,
@@ -129,7 +129,7 @@ impl RRTPlanner {
     /// Set the collision checking function
     ///
     /// The function should return true if there is a collision between the two points
-    pub fn with_collision_checker<F>(mut self, collision_checker: F) -> Self
+    pub fn with_collision_checker<F>(mut self, collisionchecker: F) -> Self
     where
         F: Fn(&Array1<f64>, &Array1<f64>) -> bool + 'static,
     {
@@ -181,7 +181,7 @@ impl RRTPlanner {
     }
 
     /// Sample a random point with goal bias
-    fn sample_with_goal_bias(&mut self, _goal: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
+    fn sample_with_goal_bias(&mut self, goal: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
         if self.rng.gen_range(0.0..1.0) < self.config.goal_bias {
             Ok(_goal.to_owned())
         } else {
@@ -202,12 +202,12 @@ impl RRTPlanner {
     }
 
     /// Compute a new point that is step_size distance from nearest toward random_point
-    fn steer(&self, _nearest: &ArrayView1<f64>, random_point: &ArrayView1<f64>) -> Array1<f64> {
-        let mut direction = random_point - _nearest;
+    fn steer(&self, _nearest: &ArrayView1<f64>, randompoint: &ArrayView1<f64>) -> Array1<f64> {
+        let mut direction = random_point - nearest;
         let norm = direction.iter().map(|&x| x * x).sum::<f64>().sqrt();
 
         if norm < 1e-10 {
-            return _nearest.to_owned();
+            return nearest.to_owned();
         }
 
         // Scale to step_size
@@ -219,7 +219,7 @@ impl RRTPlanner {
     }
 
     /// Check if there is a valid path between two points
-    fn is_valid_connection(&self, _from: &ArrayView1<f64>, to: &ArrayView1<f64>) -> bool {
+    fn is_valid_connection(&self, from: &ArrayView1<f64>, to: &ArrayView1<f64>) -> bool {
         if let Some(ref collision_checker) = self.collision_checker {
             !collision_checker(&_from.to_owned(), &to.to_owned())
         } else {
@@ -497,7 +497,7 @@ impl RRTPlanner {
 
     /// Update costs in a subtree after rewiring
     #[allow(clippy::only_used_in_recursion)]
-    fn update_subtree_costs(_nodes: &mut [RRTNode], node_idx: usize) {
+    fn update_subtree_costs(_nodes: &mut [RRTNode], nodeidx: usize) {
         // Find all children of this node
         let children: Vec<usize> = _nodes
             .iter()
@@ -509,12 +509,12 @@ impl RRTPlanner {
         // Update each child's cost and recursively update its subtree
         for &child_idx in &children {
             // Create temporary copies to avoid borrowing conflicts
-            let parent_cost = _nodes[node_idx].cost;
-            let parent_position = _nodes[node_idx].position.clone();
-            let child_position = _nodes[child_idx].position.clone();
+            let parent_cost = nodes[node_idx].cost;
+            let parent_position = nodes[node_idx].position.clone();
+            let child_position = nodes[child_idx].position.clone();
 
             let edge_cost = euclidean_distance(&parent_position.view(), &child_position.view());
-            _nodes[child_idx].cost = parent_cost + edge_cost;
+            nodes[child_idx].cost = parent_cost + edge_cost;
 
             // Recursively update this child's subtree
             Self::update_subtree_costs(_nodes, child_idx);
@@ -677,14 +677,14 @@ impl RRTPlanner {
     }
 
     /// Extract the path from the RRT tree
-    fn extract_path(_nodes: &[RRTNode], goal_idx: usize) -> Path<Array1<f64>> {
+    fn extract_path(_nodes: &[RRTNode], goalidx: usize) -> Path<Array1<f64>> {
         let mut path = Vec::new();
         let mut current_idx = Some(goal_idx);
-        let cost = _nodes[goal_idx].cost;
+        let cost = nodes[goal_idx].cost;
 
         while let Some(_idx) = current_idx {
             path.push(_nodes[_idx].position.clone());
-            current_idx = _nodes[_idx].parent;
+            current_idx = nodes[_idx].parent;
         }
 
         // Reverse to get start to goal
@@ -825,7 +825,7 @@ impl RRT2DPlanner {
     }
 
     /// Check if a point is inside a polygon using ray casting algorithm
-    fn point_in_polygon(_point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
+    fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
         if polygon.len() < 3 {
             return false;
         }
@@ -839,7 +839,7 @@ impl RRT2DPlanner {
             let xj = polygon[j][0];
             let yj = polygon[j][1];
 
-            let intersect = ((yi > _point[1]) != (yj > _point[1]))
+            let intersect = ((yi > point[1]) != (yj > point[1]))
                 && (_point[0] < (xj - xi) * (_point[1] - yi) / (yj - yi) + xi);
 
             if intersect {

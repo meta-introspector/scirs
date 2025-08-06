@@ -12,7 +12,7 @@ struct XORNetwork {
 }
 impl XORNetwork {
     fn new() -> Result<Self> {
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
         // Create two layers: 2 inputs -> 5 hidden -> 1 output
         let hidden_layer = Dense::new(2, 5, Some("relu"), &mut rng)?;
         let output_layer = Dense::new(5, 1, None, &mut rng)?;
@@ -54,10 +54,10 @@ impl XORNetwork {
         }
         Ok(())
 #[allow(dead_code)]
-fn custom_update_layer(_layer: &mut Dense<f32>, learning_rate: f32) -> Result<()> {
+fn custom_update_layer(_layer: &mut Dense<f32>, learningrate: f32) -> Result<()> {
     // Use the ParamLayer trait methods to access weights and gradients
-    let params = _layer.get_parameters();
-    let gradients = _layer.get_gradients();
+    let params = layer.get_parameters();
+    let gradients = layer.get_gradients();
     let weights = params[0];
     let biases = params[1];
     let dweights = gradients[0];
@@ -66,7 +66,7 @@ fn custom_update_layer(_layer: &mut Dense<f32>, learning_rate: f32) -> Result<()
     let new_weights = weights - &(dweights * learning_rate);
     let new_biases = biases - &(dbiases * learning_rate);
     // Set the updated parameters
-    _layer.set_parameters(vec![new_weights, new_biases])?;
+    layer.set_parameters(vec![new_weights, new_biases])?;
     Ok(())
 #[allow(dead_code)]
 fn main() -> Result<()> {

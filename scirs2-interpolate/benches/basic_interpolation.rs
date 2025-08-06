@@ -12,7 +12,7 @@ fn generate_test_data(n: usize) -> (Array1<f64>, Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn generate_query_points(n: usize, x_min: f64, x_max: f64) -> Array1<f64> {
+fn generate_query_points(n: usize, x_min: f64, xmax: f64) -> Array1<f64> {
     Array1::linspace(x_min + 0.1, x_max - 0.1, n)
 }
 

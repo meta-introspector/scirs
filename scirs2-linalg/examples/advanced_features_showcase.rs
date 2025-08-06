@@ -55,10 +55,10 @@ fn performance_optimization_demo() -> LinalgResult<()> {
         println!("\n📊 Testing with {}x{} matrices", size, size);
 
         // Create test matrices
-        let a = Array2::fromshape_fn((size, size), |(i, j)| {
+        let a = Array2::from_shape_fn((size, size), |(i, j)| {
             (i as f64 + 1.0) * (j as f64 + 1.0).sin()
         });
-        let b = Array2::fromshape_fn((size, size), |(i, j)| (i as f64 * j as f64 + 1.0).cos());
+        let b = Array2::from_shape_fn((size, size), |(i, j)| (i as f64 * j as f64 + 1.0).cos());
 
         // Serial matrix multiplication
         let start = Instant::now();
@@ -116,7 +116,7 @@ fn memory_efficiency_demo() -> LinalgResult<()> {
 
     // Large matrix that would benefit from memory-efficient processing
     let size = 100;
-    let a = Array2::fromshape_fn((size, size), |(i, j)| {
+    let a = Array2::from_shape_fn((size, size), |(i, j)| {
         if (i as i32 - j as i32).abs() <= 2 {
             (i + j) as f64 + 1.0
         } else {
@@ -147,7 +147,7 @@ fn memory_efficiency_demo() -> LinalgResult<()> {
     // Memory-efficient SVD with rank estimation
     println!("\n🔹 Memory-Efficient SVD");
     let start = Instant::now();
-    let (_u, s, _vt) = svd(&a.view(), false, None)?;
+    let (_u, s, vt) = svd(&a.view(), false, None)?;
     let svd_time = start.elapsed();
 
     println!("  SVD time: {:?}", svd_time);
@@ -249,7 +249,7 @@ fn numerical_stability_demo() -> LinalgResult<()> {
     println!("\n🔹 Graceful Degradation");
 
     // Create a nearly singular matrix
-    let mut nearly_singular = Array2::fromshape_fn((3, 3), |(i, j)| {
+    let mut nearly_singular = Array2::from_shape_fn((3, 3), |(i, j)| {
         if i == j {
             1.0
         } else if (i == 2 && j == 1) || (i == 1 && j == 2) {
@@ -289,7 +289,7 @@ fn specialized_algorithms_demo() -> LinalgResult<()> {
     println!("  {:?}", spd);
 
     // Specialized algorithms benefit from SPD structure
-    let (_eigenvals, _eigenvecs) = scirs2_linalg::eigh(&spd.view(), None)?;
+    let (_eigenvals, eigenvecs) = scirs2_linalg::eigh(&spd.view(), None)?;
     println!("  ✅ Symmetric eigenvalue decomposition successful");
 
     // Cholesky decomposition is more efficient for SPD matrices
@@ -306,7 +306,7 @@ fn specialized_algorithms_demo() -> LinalgResult<()> {
     println!("\n🔹 Banded Matrix Algorithms");
     let size = 50;
     let bandwidth = 3;
-    let banded = Array2::fromshape_fn((size, size), |(i, j)| {
+    let banded = Array2::from_shape_fn((size, size), |(i, j)| {
         if (i as i32 - j as i32).abs() <= bandwidth {
             (i + j + 1) as f64
         } else {
@@ -322,12 +322,12 @@ fn specialized_algorithms_demo() -> LinalgResult<()> {
     println!("  Sparsity: {:.1}%", sparsity * 100.0);
 
     // Specialized algorithms can exploit banded structure
-    let (_q, _r) = qr(&banded.view(), None)?;
+    let (_q, r) = qr(&banded.view(), None)?;
     println!("  ✅ QR decomposition on banded matrix successful");
 
     // Tridiagonal matrices (special case of banded)
     println!("\n🔹 Tridiagonal Matrix Algorithms");
-    let tridiag = Array2::fromshape_fn((10, 10), |(i, j)| {
+    let tridiag = Array2::from_shape_fn((10, 10), |(i, j)| {
         if i == j {
             2.0 // Main diagonal
         } else if (i as i32 - j as i32).abs() == 1 {
@@ -340,7 +340,7 @@ fn specialized_algorithms_demo() -> LinalgResult<()> {
     println!("  Symmetric tridiagonal matrix (discrete Laplacian)");
 
     // Eigenvalues of symmetric tridiagonal matrices can be computed very efficiently
-    let (tridiag_eigenvals, _eigenvecs) = scirs2_linalg::eigh(&tridiag.view(), None)?;
+    let (tridiag_eigenvals, eigenvecs) = scirs2_linalg::eigh(&tridiag.view(), None)?;
     println!(
         "  Eigenvalue range: [{:.6}, {:.6}]",
         tridiag_eigenvals[0],
@@ -369,8 +369,8 @@ fn adaptive_algorithms_demo() -> LinalgResult<()> {
             size, size, threshold
         );
 
-        let matrix = Array2::fromshape_fn((size, size), |(i, j)| ((i + 1) * (j + 1)) as f64);
-        let vector = Array1::fromshape_fn(size, |i| (i + 1) as f64);
+        let matrix = Array2::from_shape_fn((size, size), |(i, j)| ((i + 1) * (j + 1)) as f64);
+        let vector = Array1::from_shape_fn(size, |i| (i + 1) as f64);
 
         let config = WorkerConfig::new()
             .with_threshold(threshold)
@@ -408,7 +408,7 @@ fn adaptive_algorithms_demo() -> LinalgResult<()> {
     println!("\n🔹 Work-Stealing Effectiveness Demo");
 
     // Create an unbalanced workload
-    let unbalanced_matrix = Array2::fromshape_fn((100, 100), |(i, j)| {
+    let unbalanced_matrix = Array2::from_shape_fn((100, 100), |(i, j)| {
         if i < 50 {
             // Light computation for first half
             (i + j) as f64

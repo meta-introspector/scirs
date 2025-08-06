@@ -10,7 +10,7 @@ use std::f64::consts::PI;
 /// Simple RC charging circuit: C(dV/dt) + V/R = V_source/R
 /// State vector: [V_c] (capacitor voltage)
 #[allow(dead_code)]
-fn rc_charging_circuit(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
+fn rc_charging_circuit(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let v_c = y[0]; // Capacitor voltage
 
     // Circuit parameters
@@ -28,7 +28,7 @@ fn rc_charging_circuit(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 /// RL circuit: L(dI/dt) + R*I = V_source
 /// State vector: [I] (current)
 #[allow(dead_code)]
-fn rl_circuit(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
+fn rl_circuit(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let i = y[0]; // Current
 
     // Circuit parameters

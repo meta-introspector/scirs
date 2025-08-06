@@ -98,7 +98,7 @@ where
 ///
 /// # Arguments
 ///
-/// * `diag_values` - The values to place on the diagonal
+/// * `_diagvalues` - The values to place on the diagonal
 ///
 /// # Returns
 ///
@@ -111,23 +111,23 @@ where
 /// use scirs2_core::ndarray_ext::matrix::diag;
 ///
 /// let values = array![1, 2, 3];
-/// let diag_matrix = diag(values.view());
-/// assert_eq!(diag_matrix.shape(), &[3, 3]);
-/// assert_eq!(diag_matrix[[0, 0]], 1);
-/// assert_eq!(diag_matrix[[1, 1]], 2);
-/// assert_eq!(diag_matrix[[2, 2]], 3);
-/// assert_eq!(diag_matrix[[0, 1]], 0);
+/// let diagmatrix = diag(values.view());
+/// assert_eq!(diagmatrix.shape(), &[3, 3]);
+/// assert_eq!(diagmatrix[[0, 0]], 1);
+/// assert_eq!(diagmatrix[[1, 1]], 2);
+/// assert_eq!(diagmatrix[[2, 2]], 3);
+/// assert_eq!(diagmatrix[[0, 1]], 0);
 /// ```
 #[allow(dead_code)]
-pub fn _diag<T>(_diag_values: ArrayView<T, Ix1>) -> Array<T, Ix2>
+pub fn _diag<T>(_diagvalues: ArrayView<T, Ix1>) -> Array<T, Ix2>
 where
     T: Clone + Zero,
 {
-    let n = _diag_values.len();
+    let n = _diagvalues.len();
     let mut result = Array::<T, Ix2>::zeros((n, n));
 
     for i in 0..n {
-        result[[i, i]] = _diag_values[i].clone();
+        result[[i, i]] = _diagvalues[i].clone();
     }
 
     result
@@ -220,11 +220,11 @@ where
 /// assert_eq!(filled[[1, 2]], 7);
 /// ```
 #[allow(dead_code)]
-pub fn full<T>(_rows: usize, cols: usize, value: T) -> Array<T, Ix2>
+pub fn full<T>(rows: usize, cols: usize, value: T) -> Array<T, Ix2>
 where
     T: Clone,
 {
-    Array::<T, Ix2>::from_elem((_rows, cols), value)
+    Array::<T, Ix2>::from_elem((rows, cols), value)
 }
 
 /// Create a matrix filled with ones
@@ -249,11 +249,11 @@ where
 /// assert_eq!(ones_mat[[1, 2]], 1.0);
 /// ```
 #[allow(dead_code)]
-pub fn ones<T>(_rows: usize, cols: usize) -> Array<T, Ix2>
+pub fn ones<T>(rows: usize, cols: usize) -> Array<T, Ix2>
 where
     T: Clone + One,
 {
-    Array::<T, Ix2>::from_elem((_rows, cols), T::one())
+    Array::<T, Ix2>::from_elem((rows, cols), T::one())
 }
 
 /// Create a matrix filled with zeros
@@ -278,11 +278,11 @@ where
 /// assert_eq!(zeros_mat[[1, 2]], 0.0);
 /// ```
 #[allow(dead_code)]
-pub fn zeros<T>(_rows: usize, cols: usize) -> Array<T, Ix2>
+pub fn zeros<T>(rows: usize, cols: usize) -> Array<T, Ix2>
 where
     T: Clone + Zero,
 {
-    Array::<T, Ix2>::zeros((_rows, cols))
+    Array::<T, Ix2>::zeros((rows, cols))
 }
 
 /// Compute the Kronecker product of two 2D arrays
@@ -805,12 +805,12 @@ mod tests {
     #[test]
     fn test_diag() {
         let values = array![1, 2, 3];
-        let diag_matrix = _diag(values.view());
-        assert_eq!(diag_matrix.shape(), &[3, 3]);
-        assert_eq!(diag_matrix[[0, 0]], 1);
-        assert_eq!(diag_matrix[[1, 1]], 2);
-        assert_eq!(diag_matrix[[2, 2]], 3);
-        assert_eq!(diag_matrix[[0, 1]], 0);
+        let diagmatrix = _diag(values.view());
+        assert_eq!(diagmatrix.shape(), &[3, 3]);
+        assert_eq!(diagmatrix[[0, 0]], 1);
+        assert_eq!(diagmatrix[[1, 1]], 2);
+        assert_eq!(diagmatrix[[2, 2]], 3);
+        assert_eq!(diagmatrix[[0, 1]], 0);
     }
 
     #[test]

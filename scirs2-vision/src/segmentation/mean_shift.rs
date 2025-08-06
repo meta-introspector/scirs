@@ -80,8 +80,8 @@ impl Default for MeanShiftParams {
 /// assert_eq!(labels.dim(), (10, 10));
 /// ```
 #[allow(dead_code)]
-pub fn mean_shift(_img: &DynamicImage, params: &MeanShiftParams) -> Result<Array2<u32>> {
-    let rgb = _img.to_rgb8();
+pub fn mean_shift(img: &DynamicImage, params: &MeanShiftParams) -> Result<Array2<u32>> {
+    let rgb = img.to_rgb8();
     let (width, height) = rgb.dimensions();
 
     // Convert to feature space (x, y, L, a, b)
@@ -145,15 +145,15 @@ pub fn mean_shift(_img: &DynamicImage, params: &MeanShiftParams) -> Result<Array
 
 /// Convert image to feature space (x, y, L, a, b)
 #[allow(dead_code)]
-fn image_to_feature_space(_img: &RgbImage) -> Array2<f32> {
-    let (width, height) = _img.dimensions();
+fn image_to_feature_space(img: &RgbImage) -> Array2<f32> {
+    let (width, height) = img.dimensions();
     let n_pixels = (width * height) as usize;
     let mut features = Array2::zeros((n_pixels, 5));
 
     let mut idx = 0;
     for y in 0..height {
         for x in 0..width {
-            let rgb = _img.get_pixel(x, y);
+            let rgb = img.get_pixel(x, y);
             let (l, a, b) = rgb_to_lab(rgb[0], rgb[1], rgb[2]);
 
             features[[idx, 0]] = x as f32;
@@ -215,8 +215,8 @@ fn compute_mean_shift(
 
 /// Cluster modes and assign labels
 #[allow(dead_code)]
-fn cluster_modes(_modes: &Array2<f32>, spatial_bandwidth: f32, color_bandwidth: f32) -> Vec<u32> {
-    let n_points = _modes.nrows();
+fn cluster_modes(_modes: &Array2<f32>, spatial_bandwidth: f32, colorbandwidth: f32) -> Vec<u32> {
+    let n_points = modes.nrows();
     let mut labels = vec![u32::MAX; n_points];
     let mut current_label = 0u32;
 
@@ -234,8 +234,8 @@ fn cluster_modes(_modes: &Array2<f32>, spatial_bandwidth: f32, color_bandwidth: 
                 continue;
             }
 
-            let mode_i = _modes.slice(ndarray::s![i, ..]);
-            let mode_j = _modes.slice(ndarray::s![j, ..]);
+            let mode_i = modes.slice(ndarray::s![i, ..]);
+            let mode_j = modes.slice(ndarray::s![j, ..]);
 
             // Check if _modes are close enough
             let spatial_dist =
@@ -265,13 +265,13 @@ fn euclidean_distance(a: &Array1<f32>, b: &Array1<f32>) -> f32 {
 
 /// Merge small regions with neighbors
 #[allow(dead_code)]
-fn merge_small_regions(_labels: &Array2<u32>, min_size: usize) -> Array2<u32> {
-    let (height, width) = _labels.dim();
-    let mut result = _labels.clone();
+fn merge_small_regions(_labels: &Array2<u32>, minsize: usize) -> Array2<u32> {
+    let (height, width) = labels.dim();
+    let mut result = labels.clone();
 
     // Count region sizes
     let mut region_sizes = HashMap::new();
-    for &label in _labels.iter() {
+    for &label in labels.iter() {
         *region_sizes.entry(label).or_insert(0) += 1;
     }
 
@@ -366,13 +366,13 @@ fn rgb_to_lab(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
 
 /// Convert mean shift segmentation labels to color image
 #[allow(dead_code)]
-pub fn mean_shift_labels_to_color(_labels: &Array2<u32>) -> RgbImage {
-    let (height, width) = _labels.dim();
+pub fn mean_shift_labels_to_color(labels: &Array2<u32>) -> RgbImage {
+    let (height, width) = labels.dim();
     let mut result = RgbImage::new(width as u32, height as u32);
 
     // Find unique _labels
     let mut unique_labels = std::collections::HashSet::new();
-    for &label in _labels.iter() {
+    for &label in labels.iter() {
         unique_labels.insert(label);
     }
 
@@ -396,7 +396,7 @@ pub fn mean_shift_labels_to_color(_labels: &Array2<u32>) -> RgbImage {
     // Apply colors
     for y in 0..height {
         for x in 0..width {
-            let label = _labels[[y, x]];
+            let label = labels[[y, x]];
             let color = label_colors.get(&label).copied().unwrap_or([0, 0, 0]);
             result.put_pixel(x as u32, y as u32, Rgb(color));
         }

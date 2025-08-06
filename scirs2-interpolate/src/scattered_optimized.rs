@@ -37,9 +37,9 @@
 //! ```
 
 use crate::advanced::rbf::RBFKernel;
-use crate::cache__aware::{CacheOptimizedConfig, CacheOptimizedStats};
+use crate::cache_aware::{CacheOptimizedConfig, CacheOptimizedStats};
 use crate::error::{InterpolateError, InterpolateResult};
-use crate::spatial::enhanced__search::{EnhancedNearestNeighborSearcher, IndexType, SearchConfig};
+use crate::spatial::enhanced_search::{EnhancedNearestNeighborSearcher, IndexType, SearchConfig};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::parallel_ops::*;
@@ -373,7 +373,8 @@ where
 
     /// Build a single level in the hierarchy
     fn build_hierarchy_level(
-        points: &Array2<F>, _values: &Array1<F>,
+        points: &Array2<F>,
+        _values: &Array1<F>,
         bounding_box: &BoundingBox<F>,
         resolution: usize,
         config: &ScatteredConfig,
@@ -444,9 +445,9 @@ where
     }
 
     /// Convert linear cell index to n-dimensional coordinates
-    fn cell_index_to_coords(_index: usize, resolution: usize, n_dims: usize) -> Vec<usize> {
+    fn cell_index_to_coords(_index: usize, resolution: usize, ndims: usize) -> Vec<usize> {
         let mut coords = vec![0; n_dims];
-        let mut remaining = _index;
+        let mut remaining = index;
 
         for coord in coords.iter_mut().take(n_dims) {
             *coord = remaining % resolution;
@@ -457,9 +458,9 @@ where
     }
 
     /// Check if a point is within the given bounds
-    fn point_in_bounds(_point: &ArrayView1<F>, bounds: &BoundingBox<F>) -> bool {
+    fn point_in_bounds(point: &ArrayView1<F>, bounds: &BoundingBox<F>) -> bool {
         for i in 0.._point.len() {
-            if _point[i] < bounds.min[i] || _point[i] >= bounds.max[i] {
+            if point[i] < bounds.min[i] || point[i] >= bounds.max[i] {
                 return false;
             }
         }
@@ -552,7 +553,8 @@ where
     fn process_hierarchical_chunk(
         &self,
         chunk: &ArrayView2<F>,
-        hierarchy: &HierarchicalDecomposition<F>, _chunk_start: usize,
+        hierarchy: &HierarchicalDecomposition<F>,
+        _chunk_start: usize,
     ) -> InterpolateResult<Vec<F>> {
         let mut results = Vec::with_capacity(chunk.nrows());
 
@@ -691,7 +693,7 @@ where
     }
 
     /// Direct interpolation for small datasets
-    fn interpolate_direct(&self, query_points: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
+    fn interpolate_direct(&self, querypoints: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         let n_queries = query_points.nrows();
         let mut results = Array1::zeros(n_queries);
 

@@ -204,13 +204,13 @@ where
     let shape = input.shape();
     let mut indices = vec![0usize; input.ndim()];
 
-    _fn increment_indices(_indices: &mut [usize], shape: &[usize]) -> bool {
+    fn increment_indices(indices: &mut [usize], shape: &[usize]) -> bool {
         for i in (0.._indices.len()).rev() {
-            _indices[i] += 1;
-            if _indices[i] < shape[i] {
+            indices[i] += 1;
+            if indices[i] < shape[i] {
                 return true;
             }
-            _indices[i] = 0;
+            indices[i] = 0;
         }
         false
     }
@@ -222,7 +222,7 @@ where
         // Convert output to dynamic for assignment
         let mut output_dyn = output.view_mut().into_dyn();
         let dyn_indices = ndarray::IxDyn(&indices);
-        output_dyn[dyn_indices] = _value;
+        output_dyn[dyn_indices] = value;
 
         // Move to next position
         if !increment_indices(&mut indices, shape) {
@@ -262,13 +262,13 @@ where
             let mut kernel_indices = vec![0usize; handler.ndim()];
 
             // Helper function to increment kernel indices
-            fn increment_kernel_indices(_indices: &mut [usize], shape: &[usize]) -> bool {
+            fn increment_kernel_indices(indices: &mut [usize], shape: &[usize]) -> bool {
                 for i in (0.._indices.len()).rev() {
-                    _indices[i] += 1;
-                    if _indices[i] < shape[i] {
+                    indices[i] += 1;
+                    if indices[i] < shape[i] {
                         return true;
                     }
-                    _indices[i] = 0;
+                    indices[i] = 0;
                 }
                 false
             }

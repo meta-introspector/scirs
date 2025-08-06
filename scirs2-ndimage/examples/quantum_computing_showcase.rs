@@ -473,8 +473,7 @@ fn demonstrate_quantum_amplitude_amplification(
     .unwrap();
 
     let corner_feature =
-        Array2::fromshape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0])
-            .unwrap();
+        Array2::fromshape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0]).unwrap();
 
     let target_features = vec![edge_feature, corner_feature];
 
@@ -543,19 +542,19 @@ fn demonstrate_quantum_annealing_segmentation(
 // Helper functions
 
 #[allow(dead_code)]
-fn calculate_image_variance(_image: &Array2<f64>) -> f64 {
-    let mean = _image.sum() / _image.len() as f64;
-    let variance = _image.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _image.len() as f64;
+fn calculate_image_variance(image: &Array2<f64>) -> f64 {
+    let mean = image.sum() / image.len() as f64;
+    let variance = image.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / image.len() as f64;
     variance
 }
 
 #[allow(dead_code)]
-fn calculate_phase_std(_phases: &[f64]) -> f64 {
-    if _phases.is_empty() {
+fn calculate_phase_std(phases: &[f64]) -> f64 {
+    if phases.is_empty() {
         return 0.0;
     }
 
-    let mean = _phases.iter().sum::<f64>() / _phases.len() as f64;
-    let variance = _phases.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _phases.len() as f64;
+    let mean = phases.iter().sum::<f64>() / phases.len() as f64;
+    let variance = phases.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / phases.len() as f64;
     variance.sqrt()
 }

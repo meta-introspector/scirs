@@ -14,7 +14,7 @@ struct Embedding {
     weight: Array2<f32>,
 }
 impl Embedding {
-    fn new(_vocab_size: usize, embedding_dim: usize) -> Self {
+    fn new(_vocab_size: usize, embeddingdim: usize) -> Self {
         // Xavier/Glorot initialization
         let bound = (3.0 / embedding_dim as f32).sqrt();
         // Create a random number generator
@@ -50,7 +50,7 @@ struct PositionalEncoding {
     d_model: usize,
     encoding: Array2<f32>,
 impl PositionalEncoding {
-    fn new(_max_seq_len: usize, d_model: usize) -> Self {
+    fn new(_max_seq_len: usize, dmodel: usize) -> Self {
         // Create positional encoding matrix
         let mut encoding = Array2::<f32>::zeros((_max_seq_len, d_model));
         for pos in 0.._max_seq_len {
@@ -116,7 +116,7 @@ struct MultiHeadAttention {
     w_v: Array2<f32>, // [d_model, d_model]
     w_o: Array2<f32>, // [d_model, d_model]
 impl MultiHeadAttention {
-    fn new(_d_model: usize, num_heads: usize) -> Self {
+    fn new(_d_model: usize, numheads: usize) -> Self {
         assert!(
             d_model % num_heads == 0,
             "d_model must be divisible by num_heads"
@@ -249,12 +249,12 @@ struct FeedForward {
     w2: Array2<f32>, // [d_ff, d_model]
     b2: Array1<f32>, // [d_model]
 impl FeedForward {
-    fn new(_d_model: usize, d_ff: usize) -> Self {
+    fn new(_d_model: usize, dff: usize) -> Self {
         let bound1 = (6.0 / (_d_model + d_ff) as f32).sqrt();
-        let bound2 = (6.0 / (d_ff + _d_model) as f32).sqrt();
+        let bound2 = (6.0 / (d_ff + d_model) as f32).sqrt();
         let mut w1 = Array2::<f32>::zeros((_d_model, d_ff));
         let b1 = Array1::<f32>::zeros(d_ff);
-        let mut w2 = Array2::<f32>::zeros((d_ff, _d_model));
+        let mut w2 = Array2::<f32>::zeros((d_ff, d_model));
         let b2 = Array1::<f32>::zeros(_d_model);
         for elem in w1.iter_mut() {
             *elem = rng.gen_range(-bound1..bound1);
@@ -292,7 +292,7 @@ struct EncoderLayer {
     // Dropout rate
     dropout_rate: f32,
 impl EncoderLayer {
-    fn new(_d_model: usize, num_heads: usize, d_ff: usize, dropout_rate: f32) -> Self {
+    fn new(_d_model: usize, num_heads: usize, d_ff: usize, dropoutrate: f32) -> Self {
         let self_attn = MultiHeadAttention::new(_d_model, num_heads);
         let feed_forward = FeedForward::new(_d_model, d_ff);
         let norm1 = LayerNorm::new(_d_model, 1e-6);
@@ -413,7 +413,7 @@ impl Transformer {
         let decoder = Decoder::new(_d_model, num_decoder_layers, num_heads, d_ff, dropout_rate);
         // Create output projection
         let output_bound = (3.0 / (_d_model + tgt_vocab_size) as f32).sqrt();
-        let mut output_projection = Array2::<f32>::zeros((tgt_vocab_size, _d_model));
+        let mut output_projection = Array2::<f32>::zeros((tgt_vocab_size, d_model));
         for elem in output_projection.iter_mut() {
             *elem = rng.gen_range(-output_bound..output_bound);
         Transformer {
@@ -424,7 +424,7 @@ impl Transformer {
             output_projection,
             src_vocab_size,
             tgt_vocab_size,
-    fn create_padding_mask(&self, seq: &Array2<usize>, pad_idx: usize) -> Array3<f32> {
+    fn create_padding_mask(&self, seq: &Array2<usize>, padidx: usize) -> Array3<f32> {
         // seq: [batch_size, seq_len]
         // Creates mask where pad_idx positions are masked (0.0) and other positions are valid (1.0)
         let batch_size = seq.shape()[0];

@@ -95,7 +95,7 @@ where
 
 // Helper function to compute the Shapiro-Wilk test statistic and p-value
 #[allow(dead_code)]
-fn compute_shapiro_wilk_statistic<F>(sorted_data: &[F], n: usize) -> StatsResult<(F, F)>
+fn compute_shapiro_wilk_statistic<F>(sorteddata: &[F], n: usize) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
@@ -402,7 +402,7 @@ where
 
 // Helper function to compute the Anderson-Darling test statistic and p-value
 #[allow(dead_code)]
-fn compute_anderson_darling_statistic<F>(_z_data: &[F], n: usize) -> StatsResult<(F, F)>
+fn compute_anderson_darling_statistic<F>(_zdata: &[F], n: usize) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
@@ -411,7 +411,7 @@ where
     // Calculate the cumulative distribution function for each sorted _data point
     let mut s = F::zero();
 
-    for (i, &z) in _z_data.iter().enumerate() {
+    for (i, &z) in z_data.iter().enumerate() {
         // Calculate standard normal CDF at z
         let cdf = F::from(approx_normal_cdf(<f64 as NumCast>::from(z).unwrap())).unwrap();
 
@@ -441,7 +441,7 @@ where
 
 // Calculate the p-value for the Anderson-Darling test
 #[allow(dead_code)]
-fn calculate_anderson_darling_p_value<F: Float + NumCast>(_a_squared: F) -> F {
+fn calculate_anderson_darling_p_value<F: Float + NumCast>(_asquared: F) -> F {
     let a2 = <f64 as NumCast>::from(_a_squared).unwrap();
 
     // Use the approximation from D'Agostino and Stephens (1986)
@@ -551,7 +551,7 @@ where
 
 // Calculate the standardized test statistics for D'Agostino's K² test
 #[allow(dead_code)]
-fn calculate_dagostino_test_statistics<F>(_g1: F, g2: F, n: usize) -> StatsResult<(F, F)>
+fn calculate_dagostino_test_statistics<F>(g1: F, g2: F, n: usize) -> StatsResult<(F, F)>
 where
     F: Float + NumCast + std::fmt::Display,
 {

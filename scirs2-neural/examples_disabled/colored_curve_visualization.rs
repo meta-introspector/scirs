@@ -8,7 +8,7 @@ use scirs2_neural::utils::evaluation::{LearningCurve, ROCCurve};
 #[allow(dead_code)]
 fn main() {
     // Create a reproducible random number generator
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Example 1: ROC Curve with color
     println!("Example 1: ROC Curve Visualization (with color)\n");
     // Generate synthetic binary classification data

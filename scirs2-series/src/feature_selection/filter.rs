@@ -162,7 +162,7 @@ impl FilterMethods {
         n_bins: usize,
         n_features: Option<usize>,
     ) -> Result<FeatureSelectionResult> {
-        let (n_samples, n_feat) = _features.dim();
+        let (n_samples, n_feat) = features.dim();
 
         if n_samples != target.len() {
             return Err(TimeSeriesError::DimensionMismatch {
@@ -182,7 +182,7 @@ impl FilterMethods {
         let mut feature_scores = Array1::zeros(n_feat);
 
         for i in 0..n_feat {
-            let feature_col = _features.column(i);
+            let feature_col = features.column(i);
             let mi = Self::calculate_mutual_information(&feature_col, target, n_bins)?;
             feature_scores[i] = mi;
         }
@@ -485,7 +485,7 @@ impl FilterMethods {
         Ok(f_stat)
     }
 
-    fn f_critical_value(_alpha: f64, n: usize) -> f64 {
+    fn f_critical_value(alpha: f64, n: usize) -> f64 {
         // Simplified approximation for F(1, n-2) critical values
         // In practice, use proper F-distribution tables or functions
         match _alpha {

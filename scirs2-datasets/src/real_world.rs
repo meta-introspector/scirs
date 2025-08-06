@@ -49,14 +49,14 @@ pub struct RealWorldDatasets {
 
 impl RealWorldDatasets {
     /// Create a new real-world datasets manager
-    pub fn new(_config: RealWorldConfig) -> Result<Self> {
+    pub fn new(config: RealWorldConfig) -> Result<Self> {
         let cache = CacheManager::new()?;
         let registry = DatasetRegistry::new();
 
         Ok(Self {
             cache,
             registry,
-            _config,
+            config,
         })
     }
 
@@ -1025,7 +1025,7 @@ impl RealWorldDatasets {
                 let feature_names: Vec<String> = columns
                     .iter()
                     .filter(|&&_col| Some(_col) != target_col)
-                    .map(|&_col| _col.to_string())
+                    .map(|&_col| col.to_string())
                     .collect();
 
                 let metadata = crate::registry::DatasetMetadata {
@@ -1171,7 +1171,7 @@ impl RealWorldDatasets {
         let feature_names: Vec<String> = columns
             .iter()
             .filter(|&&_col| Some(_col) != target_col)
-            .map(|&_col| _col.to_string())
+            .map(|&_col| col.to_string())
             .collect();
 
         // Create metadata

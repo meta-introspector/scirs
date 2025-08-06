@@ -162,8 +162,8 @@ where
     let total = y_true.len();
     let mut correct = 0;
 
-    for (truth_pred) in y_true.iter().zip(y_pred.iter()) {
-        if (truth > &zero && _pred > &zero) || (truth == &zero && _pred == &zero) {
+    for (truth, pred) in y_true.iter().zip(y_pred.iter()) {
+        if (truth > &zero && pred > &zero) || (truth == &zero && pred == &zero) {
             correct += 1;
         }
     }
@@ -228,10 +228,10 @@ where
     let mut false_alarms = 0;
     let mut total_normal = 0;
 
-    for (truth_pred) in y_true.iter().zip(y_pred.iter()) {
+    for (truth, pred) in y_true.iter().zip(y_pred.iter()) {
         if truth == &zero {
             total_normal += 1;
-            if _pred > &zero {
+            if pred > &zero {
                 false_alarms += 1;
             }
         }
@@ -303,10 +303,10 @@ where
     let mut missed_anomalies = 0;
     let mut total_anomalies = 0;
 
-    for (truth_pred) in y_true.iter().zip(y_pred.iter()) {
+    for (truth, pred) in y_true.iter().zip(y_pred.iter()) {
         if truth > &zero {
             total_anomalies += 1;
-            if _pred == &zero {
+            if pred == &zero {
                 missed_anomalies += 1;
             }
         }
@@ -375,14 +375,14 @@ where
     }
 
     // Collect pairs of (_score, label) for sorting
-    let mut _score_label: Vec<_> = y_score
+    let mut score_label: Vec<_> = y_score
         .iter()
         .zip(y_true.iter())
         .map(|(s, l)| (s.to_f64().unwrap_or(0.0), l.to_f64().unwrap_or(0.0)))
         .collect();
 
     // Sort by _score in descending order
-    score_label.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+    score_label.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
     // Count total positives and negatives
     let positives: usize = y_true.iter().filter(|&&x| x > T::zero()).count();
@@ -405,7 +405,7 @@ where
         let (_score, label) = score_label[i];
 
         if (_score - prev_score).abs() < 1e-10 {
-            // Same _score, continue counting
+            // Same score, continue counting
             count_at_current_score += 1;
             if label > 0.0 {
                 pos_at_current_score += 1;
@@ -419,7 +419,7 @@ where
             current_rank += count_at_current_score as f64;
             count_at_current_score = 1;
             pos_at_current_score = if label > 0.0 { 1 } else { 0 };
-            prev_score = _score;
+            prev_score = score;
         }
     }
 
@@ -488,14 +488,14 @@ where
     }
 
     // Collect pairs of (_score, label) for sorting
-    let mut _score_label: Vec<_> = y_score
+    let mut score_label: Vec<_> = y_score
         .iter()
         .zip(y_true.iter())
         .map(|(s, l)| (s.to_f64().unwrap_or(0.0), l.to_f64().unwrap_or(0.0)))
         .collect();
 
     // Sort by _score in descending order
-    score_label.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+    score_label.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
     // Count total positives (anomalies)
     let total_positives: usize = y_true.iter().filter(|&&x| x > T::zero()).count();
@@ -1170,7 +1170,7 @@ where
     for (i, val) in y_true.iter().enumerate() {
         if val > &zero {
             if !in_segment {
-                in_segment = _true;
+                in_segment = true;
                 current_segment = vec![i];
             } else {
                 current_segment.push(i);
@@ -1374,11 +1374,11 @@ where
         for (i, &(start, end, center)) in anomaly_windows.iter().enumerate() {
             if pred_idx >= start && pred_idx <= end && !detected_windows.contains(&i) {
                 // True positive: prediction falls within an undetected anomaly _window
-                is_tp = _true;
+                is_tp = true;
                 detected_windows.insert(i);
 
                 // Calculate sigmoid scaling factor based on how early/late the detection is
-                // (relative to the center of the anomaly _window)
+                // (relative to the center of the anomaly window)
                 let relative_position = (pred_idx as isize - center as isize) as f64;
                 let sigmoid_scale = 1.0 / (1.0 + (0.5 * relative_position).exp());
 

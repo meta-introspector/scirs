@@ -141,7 +141,7 @@ pub trait StreamingInterpolator<T: Float + Debug + FromPrimitive> {
     fn predict(&mut self, x: T) -> InterpolateResult<T>;
 
     /// Predict values at multiple x-coordinates
-    fn predict_batch(&mut self, x_values: &[T]) -> InterpolateResult<Vec<T>>;
+    fn predict_batch(&mut self, xvalues: &[T]) -> InterpolateResult<Vec<T>>;
 
     /// Predict with uncertainty estimation
     fn predict_with_uncertainty(&mut self, x: T) -> InterpolateResult<(T, T)>;
@@ -175,9 +175,9 @@ pub struct OnlineSplineInterpolator<T: Float + Debug + FromPrimitive> {
 
 impl<T: Float + Debug + FromPrimitive + Zero> OnlineSplineInterpolator<T> {
     /// Create a new online spline interpolator
-    pub fn new(_config: StreamingConfig) -> Self {
+    pub fn new(config: StreamingConfig) -> Self {
         Self {
-            _config,
+            config,
             points: VecDeque::new(),
             spline_coeffs: None,
             x_sorted: Array1::zeros(0),
@@ -478,7 +478,7 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingInterpolator<T>
         result
     }
 
-    fn predict_batch(&mut self, x_values: &[T]) -> InterpolateResult<Vec<T>> {
+    fn predict_batch(&mut self, xvalues: &[T]) -> InterpolateResult<Vec<T>> {
         let mut results = Vec::with_capacity(x_values.len());
         for &x in x_values {
             results.push(self.predict(x)?);
@@ -558,9 +558,9 @@ pub struct StreamingRBFInterpolator<T: Float + Debug + FromPrimitive> {
 
 impl<T: Float + Debug + FromPrimitive + Zero> StreamingRBFInterpolator<T> {
     /// Create a new streaming RBF interpolator
-    pub fn new(_config: StreamingConfig, kernel_width: T) -> Self {
+    pub fn new(_config: StreamingConfig, kernelwidth: T) -> Self {
         Self {
-            _config,
+            config,
             points: VecDeque::new(),
             centers: Array1::zeros(0),
             weights: Array1::zeros(0),
@@ -733,7 +733,7 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingInterpolator<T>
         self.evaluate_rbf(x)
     }
 
-    fn predict_batch(&mut self, x_values: &[T]) -> InterpolateResult<Vec<T>> {
+    fn predict_batch(&mut self, xvalues: &[T]) -> InterpolateResult<Vec<T>> {
         let mut results = Vec::with_capacity(x_values.len());
         for &x in x_values {
             results.push(self.predict(x)?);
@@ -794,7 +794,7 @@ pub fn make_streaming_rbf_interpolator<T: Float + Debug + FromPrimitive + Zero>(
     kernel_width: Option<T>,
 ) -> StreamingRBFInterpolator<T> {
     let _width = kernel_width.unwrap_or_else(|| T::from_f64(1.0).unwrap());
-    StreamingRBFInterpolator::new(config.unwrap_or_default(), _width)
+    StreamingRBFInterpolator::new(config.unwrap_or_default(), width)
 }
 
 /// Ensemble streaming interpolator that combines multiple methods
@@ -869,7 +869,7 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingInterpolator<T>
         })
     }
 
-    fn predict_batch(&mut self, x_values: &[T]) -> InterpolateResult<Vec<T>> {
+    fn predict_batch(&mut self, xvalues: &[T]) -> InterpolateResult<Vec<T>> {
         let mut results = Vec::with_capacity(x_values.len());
         for &x in x_values {
             results.push(self.predict(x)?);

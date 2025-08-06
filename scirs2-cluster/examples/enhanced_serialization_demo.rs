@@ -79,7 +79,7 @@ fn create_sample_data() -> Result<Array2<f64>, Box<dyn std::error::Error>> {
 
 /// Demonstrate unified clustering workflow management
 #[allow(dead_code)]
-fn demo_unified_workflow(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_unified_workflow(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 Demo 1: Unified Clustering Workflow Management");
     println!("=================================================");
 
@@ -181,7 +181,7 @@ fn demo_unified_workflow(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::
 
 /// Demonstrate enhanced dendrogram JSON export
 #[allow(dead_code)]
-fn demo_dendrogram_json_export(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_dendrogram_json_export(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("🌳 Demo 2: Enhanced Dendrogram JSON Export");
     println!("==========================================");
 
@@ -199,7 +199,7 @@ fn demo_dendrogram_json_export(_data: &Array2<f64>) -> Result<(), Box<dyn std::e
 
     let hier_model = HierarchicalModel::new(
         linkage_matrix,
-        _data.nrows(),
+        data.nrows(),
         "ward".to_string(),
         Some(labels),
     );
@@ -246,7 +246,7 @@ fn demo_dendrogram_json_export(_data: &Array2<f64>) -> Result<(), Box<dyn std::e
 
 /// Demonstrate scikit-learn and SciPy compatibility
 #[allow(dead_code)]
-fn demo_sklearn_scipy_compatibility(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_sklearn_scipy_compatibility(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("🐍 Demo 3: Scikit-learn/SciPy Compatibility");
     println!("===========================================");
 
@@ -333,7 +333,7 @@ fn initialize_centroids(
 
 /// Create test scikit-learn compatible JSON data
 #[allow(dead_code)]
-fn create_sklearn_test_data(_centroids: &Array2<f64>) -> String {
+fn create_sklearn_test_data(centroids: &Array2<f64>) -> String {
     use serde__json::json;
 
     let _centroids_vec: Vec<Vec<f64>> = _centroids
@@ -344,7 +344,7 @@ fn create_sklearn_test_data(_centroids: &Array2<f64>) -> String {
 
     let sklearn_data = json!({
         "cluster_centers_": centroids_vec,
-        "n_clusters": _centroids.nrows(),
+        "n_clusters": centroids.nrows(),
         "n_iter_": 12,
         "inertia_": 45.7,
         "model_type": "KMeans",

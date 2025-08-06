@@ -4,7 +4,7 @@
 //! (Clustering Feature tree) to summarize the data and then applies a global clustering
 //! algorithm on the leaf nodes.
 
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView1, ArrayView2, ScalarOperand};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -26,17 +26,17 @@ struct ClusteringFeature<F: Float> {
 #[allow(dead_code)]
 impl<F: Float + FromPrimitive + ScalarOperand> ClusteringFeature<F> {
     /// Create a new CF from a single data point
-    fn new(_data_point: ArrayView1<F>) -> Self {
-        let squared_sum = _data_point.dot(&_data_point);
+    fn new(_datapoint: ArrayView1<F>) -> Self {
+        let squared_sum = data_point.dot(&_data_point);
         Self {
             n: 1,
-            linear_sum: _data_point.to_owned(),
+            linear_sum: data_point.to_owned(),
             squared_sum,
         }
     }
 
     /// Create an empty CF
-    fn empty(_n_features: usize) -> Self {
+    fn empty(_nfeatures: usize) -> Self {
         Self {
             n: 0,
             linear_sum: Array1::zeros(_n_features),
@@ -176,9 +176,9 @@ pub struct Birch<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
     /// Create a new BIRCH instance
-    pub fn new(_options: BirchOptions<F>) -> Self {
+    pub fn new(options: BirchOptions<F>) -> Self {
         Self {
-            _options,
+            options,
             root: None,
             leaf_entries: Vec::new(),
             n_features: None,
@@ -250,7 +250,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
     }
 
     /// Handle overflow when branching factor is exceeded
-    fn handle_overflow(&mut self, new_cf: ClusteringFeature<F>) -> Result<()> {
+    fn handle_overflow(&mut self, newcf: ClusteringFeature<F>) -> Result<()> {
         // Simple strategy: find the two closest CFs and merge them, then add the new CF
         if self.leaf_entries.len() < 2 {
             self.leaf_entries.push(new_cf);
@@ -573,7 +573,7 @@ pub struct BirchStatistics<F: Float> {
 /// let (centroids, labels) = birch(data.view(), options).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn birch<F>(_data: ArrayView2<F>, options: BirchOptions<F>) -> Result<(Array2<F>, Array1<i32>)>
+pub fn birch<F>(data: ArrayView2<F>, options: BirchOptions<F>) -> Result<(Array2<F>, Array1<i32>)>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand,
 {

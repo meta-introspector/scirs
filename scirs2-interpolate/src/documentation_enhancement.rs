@@ -338,9 +338,9 @@ pub struct EducationalValue {
 
 impl DocumentationEnhancer {
     /// Create a new documentation enhancer
-    pub fn new(_config: DocumentationConfig) -> Self {
+    pub fn new(config: DocumentationConfig) -> Self {
         Self {
-            _config,
+            config,
             analysis_results: Vec::new(),
             user_guides: Vec::new(),
             example_validations: Vec::new(),
@@ -548,7 +548,7 @@ impl DocumentationEnhancer {
     }
 
     /// Validate a specific example
-    fn validate_example(&self, example_id: &str) -> InterpolateResult<ExampleValidation> {
+    fn validate_example(&self, exampleid: &str) -> InterpolateResult<ExampleValidation> {
         // Simulate example validation
         let (compiles, executes, issues, suggestions) = match example_id {
             "basic_linear_interpolation" => (
@@ -1172,7 +1172,7 @@ let result = spline.evaluate_batch(&x_new.view())?;"#
     fn create_error_handling_example(&self) -> CodeExample {
         CodeExample {
             title: "Robust Error Handling".to_string(),
-            code: r#"fn safe_interpolate(x: &Array1<f64>, y: &Array1<f64>, x_new: &Array1<f64>) -> Result<Array1<f64>, String> {
+            code: r#"fn safe_interpolate(x: &Array1<f64>, y: &Array1<f64>, xnew: &Array1<f64>) -> Result<Array1<f64>, String> {
     if x.len() != y.len() {
         return Err("X and Y arrays must have the same length".to_string());
     }
@@ -1225,7 +1225,7 @@ if config.is_available() {
             title: "Method Selection Matrix".to_string(),
             code: r#"// Pseudo-code for method selection
 #[allow(dead_code)]
-fn select_method(_data_size: usize, smoothness_required: bool, has_derivatives: bool) -> InterpolationMethod {
+fn select_method(_data_size: usize, smoothness_required: bool, hasderivatives: bool) -> InterpolationMethod {
     match (_data_size, smoothness_required, has_derivatives) {
         (n, false_) if n < 1000 => InterpolationMethod::Linear,
         (n, true, false) if n < 10000 => InterpolationMethod::Cubic,
@@ -1260,7 +1260,7 @@ println!("Throughput: {} points/sec", x_new.len() as f64 / duration.as_secs_f64(
     fn create_robust_error_example(&self) -> CodeExample {
         CodeExample {
             title: "Comprehensive Error Handling".to_string(),
-            code: r#"fn robust_interpolate(x: &Array1<f64>, y: &Array1<f64>, x_new: &Array1<f64>) -> InterpolateResult<Array1<f64>> {
+            code: r#"fn robust_interpolate(x: &Array1<f64>, y: &Array1<f64>, xnew: &Array1<f64>) -> InterpolateResult<Array1<f64>> {
     // Validate inputs
     if x.is_empty() || y.is_empty() {
         return Err(InterpolateError::empty_data("interpolation"));

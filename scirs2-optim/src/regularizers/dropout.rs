@@ -25,7 +25,7 @@ use crate::regularizers::Regularizer;
 ///
 /// // Create a dropout regularizer with 0.5 dropout rate
 /// let seed = 42;
-/// let mut rng = SmallRng::seed_from_u64(seed);
+/// let mut rng = SmallRng::from_seed(seed);
 /// let mut dropout = Dropout::new(0.5f64, &mut rng);
 ///
 /// // Set to training mode
@@ -173,7 +173,7 @@ where
         Ok(A::zero())
     }
 
-    fn penalty(&self, _params: &Array<A, D>) -> Result<A> {
+    fn penalty(&self, params: &Array<A, D>) -> Result<A> {
         // Dropout doesn't add a penalty term to the loss
         Ok(A::zero())
     }

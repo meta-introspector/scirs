@@ -125,7 +125,7 @@ struct Mase {
 }
 
 impl Mase {
-    fn new(_baseline_mae: f64) -> Self {
+    fn new(_baselinemae: f64) -> Self {
         Self { _baseline_mae }
     }
 }

@@ -324,11 +324,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to find the index of the closest value in an array
 #[allow(dead_code)]
-fn find_closest_index(_arr: &Array1<f64>, value: f64) -> usize {
+fn find_closest_index(arr: &Array1<f64>, value: f64) -> usize {
     let mut min_dist = f64::MAX;
     let mut min_idx = 0;
 
-    for (i, &x) in _arr.iter().enumerate() {
+    for (i, &x) in arr.iter().enumerate() {
         let dist = (x - value).abs();
         if dist < min_dist {
             min_dist = dist;

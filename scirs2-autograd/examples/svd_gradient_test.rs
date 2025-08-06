@@ -1,4 +1,4 @@
-use ag::tensor__ops::*;
+use ag::tensor_ops::*;
 use ndarray::{array, Array2, Ix2};
 use scirs2_autograd as ag;
 

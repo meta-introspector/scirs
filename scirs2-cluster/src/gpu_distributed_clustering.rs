@@ -6,7 +6,7 @@
 
 use crate::advanced__clustering::{AdvancedClusterer, AdvancedClusteringResult};
 use crate::error::{ClusteringError, Result};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -213,10 +213,10 @@ pub struct HybridGpuDistributedResult {
 
 impl GpuAdvancedClusterer {
     /// Create new GPU-accelerated Advanced clusterer
-    pub fn new(_gpu_config: GpuAccelerationConfig) -> Self {
+    pub fn new(_gpuconfig: GpuAccelerationConfig) -> Self {
         Self {
             base_clusterer: AdvancedClusterer::new(),
-            gpu_config: _gpu_config.clone(),
+            gpu_config: gpu_config.clone(),
             memory_manager: GpuMemoryManager::new(&_gpu_config),
             kernel_executor: GpuKernelExecutor::new(&_gpu_config),
             performance_monitor: GpuPerformanceMonitor::new(),
@@ -713,9 +713,9 @@ pub struct GpuMemoryManager {
 }
 
 impl GpuMemoryManager {
-    pub fn new(_config: &GpuAccelerationConfig) -> Self {
+    pub fn new(config: &GpuAccelerationConfig) -> Self {
         Self {
-            _config: _config.clone(),
+            _config: config.clone(),
             allocated_memory: 0,
             peak_memory: 0,
         }
@@ -738,7 +738,7 @@ impl GpuMemoryManager {
         Ok(gpu_data)
     }
 
-    pub fn transfer_to_cpu(&self, gpu_tensor: &GpuTensor) -> Result<Array2<f64>> {
+    pub fn transfer_to_cpu(&self, gputensor: &GpuTensor) -> Result<Array2<f64>> {
         // Simulate CPU memory transfer
         Ok(Array2::zeros(gpu_tensor.shape))
     }
@@ -764,20 +764,20 @@ pub struct GpuKernelExecutor {
 }
 
 impl GpuKernelExecutor {
-    pub fn new(_config: &GpuAccelerationConfig) -> Self {
+    pub fn new(config: &GpuAccelerationConfig) -> Self {
         Self {
-            _config: _config.clone(),
+            _config: config.clone(),
             kernel_stats: GpuKernelStats::default(),
         }
     }
 
-    pub fn initialize_kernels(&mut self_datashape: (usize, usize)) -> Result<()> {
+    pub fn initialize_kernels(&mut selfdatashape: (usize, usize)) -> Result<()> {
         // Initialize GPU kernels based on data shape and configuration
         self.kernel_stats.kernels_initialized = true;
         Ok(())
     }
 
-    pub fn preprocess_data(&mut self, gpu_data: &GpuTensor) -> Result<GpuTensor> {
+    pub fn preprocess_data(&mut self, gpudata: &GpuTensor) -> Result<GpuTensor> {
         // GPU-accelerated _data preprocessing
         self.kernel_stats.preprocessing_kernel_calls += 1;
         Ok(gpu_data.clone())
@@ -853,9 +853,9 @@ pub struct DistributedLoadBalancer {
 }
 
 impl DistributedLoadBalancer {
-    pub fn new(_worker_configs: &[WorkerNodeConfig]) -> Self {
+    pub fn new(_workerconfigs: &[WorkerNodeConfig]) -> Self {
         Self {
-            worker_configs: _worker_configs.to_vec(),
+            worker_configs: worker_configs.to_vec(),
         }
     }
 

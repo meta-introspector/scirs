@@ -33,20 +33,20 @@ impl VarianceThreshold {
     ///
     /// # Examples
     /// ```
-    /// use scirs2__transform::selection::VarianceThreshold;
+    /// use scirs2_transform::selection::VarianceThreshold;
     ///
     /// // Remove features with variance less than 0.1
     /// let selector = VarianceThreshold::new(0.1);
     /// ```
-    pub fn new(_threshold: f64) -> Result<Self> {
-        if _threshold < 0.0 {
+    pub fn new(threshold: f64) -> Result<Self> {
+        if threshold < 0.0 {
             return Err(TransformError::InvalidInput(
                 "Threshold must be non-negative".to_string(),
             ));
         }
 
         Ok(VarianceThreshold {
-            _threshold,
+            threshold,
             variances_: None,
             selected_features_: None,
         })
@@ -231,7 +231,7 @@ impl VarianceThreshold {
     ///
     /// This method is not implemented for feature selection as it's not possible
     /// to reconstruct removed features.
-    pub fn inverse_transform<S>(&self_x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    pub fn inverse_transform<S>(selfx: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
     where
         S: Data,
         S::Elem: Float + NumCast,
@@ -275,9 +275,9 @@ where
     /// # Arguments
     /// * `n_features_to_select` - Number of features to select
     /// * `importance_func` - Function that computes feature importance scores
-    pub fn new(_n_features_to_select: usize, importance_func: F) -> Self {
+    pub fn new(n_features_to_select: usize, importancefunc: F) -> Self {
         RecursiveFeatureElimination {
-            _n_features_to_select,
+            n_features_to_select,
             step: 1,
             importance_func,
             selected_features_: None,
@@ -467,7 +467,7 @@ impl MutualInfoSelector {
     }
 
     /// Set number of neighbors for KNN estimation
-    pub fn with_n_neighbors(mut self, n_neighbors: usize) -> Self {
+    pub fn with_n_neighbors(mut self, nneighbors: usize) -> Self {
         self.n_neighbors = n_neighbors;
         self
     }
@@ -546,7 +546,7 @@ impl MutualInfoSelector {
         let mut scores = Array1::zeros(n_features);
 
         for j in 0..n_features {
-            let feature = "x".column(j).to_owned();
+            let feature = x.column(j).to_owned();
             scores[j] = self.estimate_mutual_info(&feature, y);
         }
 
@@ -776,7 +776,7 @@ mod tests {
             let mut scores = Array1::zeros(n_features);
 
             for j in 0..n_features {
-                let feature = "x".column(j);
+                let feature = x.column(j);
                 let corr = pearson_correlation(&feature.to_owned(), y);
                 scores[j] = corr.abs();
             }

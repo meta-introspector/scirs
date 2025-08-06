@@ -149,13 +149,13 @@ where
     }
     .map(|laplacian| {
         let _diag = if return_diag { Some(degrees) } else { None };
-        (laplacian, _diag)
+        (laplacian, diag)
     })
 }
 
 /// Compute out-degrees for all vertices
 #[allow(dead_code)]
-fn compute_out_degrees<T, S>(_graph: &S) -> SparseResult<Array1<T>>
+fn compute_out_degrees<T, S>(graph: &S) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
@@ -163,7 +163,7 @@ where
     let n = num_vertices(_graph);
     let mut degrees = Array1::zeros(n);
 
-    let (row_indices, _, values) = _graph.find();
+    let (row_indices, _, values) = graph.find();
 
     for (i, &row) in row_indices.iter().enumerate() {
         degrees[row] = degrees[row] + values[i];
@@ -174,7 +174,7 @@ where
 
 /// Compute in-degrees for all vertices
 #[allow(dead_code)]
-fn compute_in_degrees<T, S>(_graph: &S) -> SparseResult<Array1<T>>
+fn compute_in_degrees<T, S>(graph: &S) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
@@ -182,7 +182,7 @@ where
     let n = num_vertices(_graph);
     let mut degrees = Array1::zeros(n);
 
-    let (_, col_indices, values) = _graph.find();
+    let (_, col_indices, values) = graph.find();
 
     for (i, &col) in col_indices.iter().enumerate() {
         degrees[col] = degrees[col] + values[i];
@@ -364,7 +364,7 @@ where
 /// let degrees = degree_matrix(&graph, true).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn degree_matrix<T, S>(_graph: &S, use_out_degree: bool) -> SparseResult<Array1<T>>
+pub fn degree_matrix<T, S>(_graph: &S, use_outdegree: bool) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
@@ -396,7 +396,7 @@ where
 /// using sparse eigenvalue solvers. The smallest eigenvalue is always 0 for
 /// connected graphs, so we find the k=2 smallest eigenvalues and return the second one.
 #[allow(dead_code)]
-pub fn algebraic_connectivity<T, S>(_graph: &S, normalized: bool) -> SparseResult<T>
+pub fn algebraic_connectivity<T, S>(graph: &S, normalized: bool) -> SparseResult<T>
 where
     T: Float
         + Debug
@@ -415,7 +415,7 @@ where
 
     // Compute the Laplacian matrix
     let (laplacian_, _) = compute_laplacian_matrix(
-        _graph,
+        graph,
         if normalized {
             LaplacianType::Normalized
         } else {
@@ -524,19 +524,19 @@ where
 ///
 /// True if the matrix is a valid Laplacian, false otherwise
 #[allow(dead_code)]
-pub fn is_laplacian<T, S>(_matrix: &S, tol: T) -> SparseResult<bool>
+pub fn is_laplacian<T, S>(matrix: &S, tol: T) -> SparseResult<bool>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (n, m) = _matrix.shape();
+    let (n, m) = matrix.shape();
 
     // Must be square
     if n != m {
         return Ok(false);
     }
 
-    let (row_indices, col_indices, values) = _matrix.find();
+    let (row_indices, col_indices, values) = matrix.find();
 
     // Check row sums are approximately zero
     let mut row_sums = vec![T::zero(); n];

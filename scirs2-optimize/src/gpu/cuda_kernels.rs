@@ -19,7 +19,7 @@ pub struct FunctionEvaluationKernel {
 
 impl FunctionEvaluationKernel {
     /// Create a new function evaluation kernel
-    pub fn new(_context: Arc<GpuContext>) -> ScirsResult<Self> {
+    pub fn new(context: Arc<GpuContext>) -> ScirsResult<Self> {
         let kernel_source = r#"
             __global__ void evaluate_batch(
                 const double* points,
@@ -41,10 +41,10 @@ impl FunctionEvaluationKernel {
             }
         "#;
 
-        let kernel = _context.compile(kernel_source)?;
+        let kernel = context.compile(kernel_source)?;
 
         Ok(Self {
-            context: _context,
+            context: context,
             kernel,
         })
     }
@@ -75,7 +75,7 @@ pub struct GradientKernel {
 
 impl GradientKernel {
     /// Create a new gradient computation kernel
-    pub fn new(_context: Arc<GpuContext>) -> ScirsResult<Self> {
+    pub fn new(context: Arc<GpuContext>) -> ScirsResult<Self> {
         let kernel_source = r#"
             __global__ void compute_gradient_finite_diff(
                 const double* points,
@@ -96,10 +96,10 @@ impl GradientKernel {
             }
         "#;
 
-        let kernel = _context.compile(kernel_source)?;
+        let kernel = context.compile(kernel_source)?;
 
         Ok(Self {
-            context: _context,
+            context: context,
             kernel,
         })
     }
@@ -132,7 +132,7 @@ pub struct ParticleSwarmKernel {
 
 impl ParticleSwarmKernel {
     /// Create a new particle swarm kernel
-    pub fn new(_context: Arc<GpuContext>) -> ScirsResult<Self> {
+    pub fn new(context: Arc<GpuContext>) -> ScirsResult<Self> {
         let kernel_source = r#"
             __global__ void update_particles(
                 double* positions,
@@ -156,10 +156,10 @@ impl ParticleSwarmKernel {
             }
         "#;
 
-        let kernel = _context.compile(kernel_source)?;
+        let kernel = context.compile(kernel_source)?;
 
         Ok(Self {
-            context: _context,
+            context: context,
             kernel,
         })
     }
@@ -191,7 +191,7 @@ pub struct DifferentialEvolutionKernel {
 
 impl DifferentialEvolutionKernel {
     /// Create a new differential evolution kernel
-    pub fn new(_context: Arc<GpuContext>) -> ScirsResult<Self> {
+    pub fn new(context: Arc<GpuContext>) -> ScirsResult<Self> {
         let kernel_source = r#"
             __global__ void mutate_population(
                 const double* population,
@@ -211,10 +211,10 @@ impl DifferentialEvolutionKernel {
             }
         "#;
 
-        let kernel = _context.compile(kernel_source)?;
+        let kernel = context.compile(kernel_source)?;
 
         Ok(Self {
-            context: _context,
+            context: context,
             kernel,
         })
     }

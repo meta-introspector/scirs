@@ -147,34 +147,34 @@ struct SamplingTable {
 
 impl SamplingTable {
     /// Create a new sampling table from weights
-    fn new(_weights: &[f64]) -> Result<Self> {
-        if _weights.is_empty() {
+    fn new(weights: &[f64]) -> Result<Self> {
+        if weights.is_empty() {
             return Err(TextError::EmbeddingError("Weights cannot be empty".into()));
         }
 
         // Ensure all _weights are positive
-        if _weights.iter().any(|&w| w < 0.0) {
+        if weights.iter().any(|&w| w < 0.0) {
             return Err(TextError::EmbeddingError("Weights must be positive".into()));
         }
 
         // Compute the CDF
-        let sum: f64 = _weights.iter().sum();
+        let sum: f64 = weights.iter().sum();
         if sum <= 0.0 {
             return Err(TextError::EmbeddingError(
                 "Sum of _weights must be positive".into(),
             ));
         }
 
-        let mut cdf = Vec::with_capacity(_weights.len());
+        let mut cdf = Vec::with_capacity(weights.len());
         let mut total = 0.0;
 
-        for &w in _weights {
+        for &w in weights {
             total += w;
             cdf.push(total / sum);
         }
 
         Ok(Self {
-            cdf_weights: _weights.to_vec(),
+            cdfweights: weights.to_vec(),
         })
     }
 
@@ -328,10 +328,10 @@ impl Word2Vec {
     }
 
     /// Create a new Word2Vec model with the specified configuration
-    pub fn with_config(_config: Word2VecConfig) -> Self {
-        let learning_rate = _config.learning_rate;
+    pub fn with_config(config: Word2VecConfig) -> Self {
+        let learning_rate = config.learning_rate;
         Self {
-            _config,
+            config,
             vocabulary: Vocabulary::new(),
             input_embeddings: None,
             output_embeddings: None,
@@ -348,19 +348,19 @@ impl Word2Vec {
     }
 
     /// Set vector size
-    pub fn with_vector_size(mut self, vector_size: usize) -> Self {
+    pub fn with_vector_size(mut self, vectorsize: usize) -> Self {
         self.config.vector_size = vector_size;
         self
     }
 
     /// Set window size
-    pub fn with_window_size(mut self, window_size: usize) -> Self {
+    pub fn with_window_size(mut self, windowsize: usize) -> Self {
         self.config.window_size = window_size;
         self
     }
 
     /// Set minimum count
-    pub fn with_min_count(mut self, min_count: usize) -> Self {
+    pub fn with_min_count(mut self, mincount: usize) -> Self {
         self.config.min_count = min_count;
         self
     }
@@ -372,7 +372,7 @@ impl Word2Vec {
     }
 
     /// Set learning rate
-    pub fn with_learning_rate(mut self, learning_rate: f64) -> Self {
+    pub fn with_learning_rate(mut self, learningrate: f64) -> Self {
         self.config.learning_rate = learning_rate;
         self.current_learning_rate = learning_rate;
         self
@@ -385,7 +385,7 @@ impl Word2Vec {
     }
 
     /// Set number of negative samples
-    pub fn with_negative_samples(mut self, negative_samples: usize) -> Self {
+    pub fn with_negative_samples(mut self, negativesamples: usize) -> Self {
         self.config.negative_samples = negative_samples;
         self
     }
@@ -397,7 +397,7 @@ impl Word2Vec {
     }
 
     /// Set batch size
-    pub fn with_batch_size(mut self, batch_size: usize) -> Self {
+    pub fn with_batch_size(mut self, batchsize: usize) -> Self {
         self.config.batch_size = batch_size;
         self
     }
@@ -442,10 +442,10 @@ impl Word2Vec {
 
         // Initialize input and output embeddings with small random values
         let mut rng = rand::rng();
-        let input_embeddings = Array2::fromshape_fn((vocab_size, vector_size), |_| {
+        let input_embeddings = Array2::from_shape_fn((vocab_size, vector_size), |_| {
             (rng.random::<f64>() * 2.0 - 1.0) / vector_size as f64
         });
-        let output_embeddings = Array2::fromshape_fn((vocab_size, vector_size), |_| {
+        let output_embeddings = Array2::from_shape_fn((vocab_size, vector_size), |_| {
             (rng.random::<f64>() * 2.0 - 1.0) / vector_size as f64
         });
 
@@ -459,7 +459,7 @@ impl Word2Vec {
     }
 
     /// Create sampling table for negative sampling based on word frequencies
-    fn create_sampling_table(&mut self, word_counts: &HashMap<String, usize>) -> Result<()> {
+    fn create_sampling_table(&mut self, wordcounts: &HashMap<String, usize>) -> Result<()> {
         // Prepare sampling weights (unigram distribution raised to 3/4 power)
         let mut sampling_weights = vec![0.0; self.vocabulary.len()];
 
@@ -576,7 +576,7 @@ impl Word2Vec {
     }
 
     /// Get the frequency of a word in the vocabulary
-    fn get_word_frequency(&self, word_idx: usize) -> f64 {
+    fn get_word_frequency(&self, wordidx: usize) -> f64 {
         // This is a simplified version; ideal implementation would track actual frequencies
         // For now, we'll use the sampling table weights as a proxy
         if let Some(table) = &self.sampling_table {
@@ -793,7 +793,7 @@ impl Word2Vec {
     }
 
     /// Get the most similar words to a given word
-    pub fn most_similar(&self, word: &str, top_n: usize) -> Result<Vec<(String, f64)>> {
+    pub fn most_similar(&self, word: &str, topn: usize) -> Result<Vec<(String, f64)>> {
         let word_vec = self.get_word_vector(word)?;
         self.most_similar_by_vector(&word_vec, top_n, &[word])
     }
@@ -845,7 +845,7 @@ impl Word2Vec {
     }
 
     /// Compute the analogy: a is to b as c is to ?
-    pub fn analogy(&self, a: &str, b: &str, c: &str, top_n: usize) -> Result<Vec<(String, f64)>> {
+    pub fn analogy(&self, a: &str, b: &str, c: &str, topn: usize) -> Result<Vec<(String, f64)>> {
         if self.input_embeddings.is_none() {
             return Err(TextError::EmbeddingError(
                 "Model not trained. Call train() first".into(),
@@ -913,7 +913,7 @@ impl Word2Vec {
 
     /// Load a Word2Vec model from a file
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(_path).map_err(|e| TextError::IoError(e.to_string()))?;
+        let file = File::open(path).map_err(|e| TextError::IoError(e.to_string()))?;
         let mut reader = BufReader::new(file);
 
         // Read header

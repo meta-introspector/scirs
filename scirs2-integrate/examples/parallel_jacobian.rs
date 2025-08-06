@@ -118,7 +118,7 @@ fn benchmark_jacobian_strategies(
         ),
     ];
 
-    // If _sparse, also test _sparse strategies
+    // If sparse, also test _sparse strategies
     let sparse_strategies = if is_sparse {
         vec![
             (
@@ -140,7 +140,7 @@ fn benchmark_jacobian_strategies(
     // Time to compute one Jacobian with each strategy
     println!("1. Time to compute a single Jacobian:");
 
-    for &(strategy, _name) in &all_strategies {
+    for &(strategy, name) in &all_strategies {
         // Get point to evaluate Jacobian
         let t = 0.0;
         let y = initial_condition.clone();
@@ -160,13 +160,13 @@ fn benchmark_jacobian_strategies(
         let _ = jac_manager.update_jacobian(t, &y, &system_function.clone(), None)?;
         let elapsed = start.elapsed();
 
-        println!("{:30}: {:.3} ms", _name, elapsed.as_secs_f64() * 1000.0);
+        println!("{:30}: {:.3} ms", name, elapsed.as_secs_f64() * 1000.0);
     }
 
     // Time to solve the ODE with each strategy
     println!("\n2. Time to solve the ODE:");
 
-    for &(_strategy, _name) in &all_strategies {
+    for &(_strategy, name) in &all_strategies {
         // Set up options
         let _structure = if is_sparse {
             JacobianStructure::Sparse
@@ -200,7 +200,7 @@ fn benchmark_jacobian_strategies(
         )?;
         let elapsed = start.elapsed();
 
-        println!("{:30}: {:.3} ms", _name, elapsed.as_secs_f64() * 1000.0);
+        println!("{:30}: {:.3} ms", name, elapsed.as_secs_f64() * 1000.0);
         println!(
             "  - Steps: {}, Function evals: {}, Jacobian evals: {}",
             result.n_steps, result.n_eval, result.n_jac

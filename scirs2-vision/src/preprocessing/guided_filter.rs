@@ -120,8 +120,8 @@ pub fn guided_filter_color(
 
 /// Box filter (mean filter) implementation
 #[allow(dead_code)]
-fn box_filter(_input: &Array2<f32>, radius: usize) -> Array2<f32> {
-    let (height, width) = _input.dim();
+fn box_filter(input: &Array2<f32>, radius: usize) -> Array2<f32> {
+    let (height, width) = input.dim();
     let mut output = Array2::zeros((height, width));
 
     // Simple box filter implementation
@@ -139,7 +139,7 @@ fn box_filter(_input: &Array2<f32>, radius: usize) -> Array2<f32> {
             // Sum values in window
             for wy in y_start..y_end {
                 for wx in x_start..x_end {
-                    sum += _input[[wy, wx]];
+                    sum += input[[wy, wx]];
                     count += 1;
                 }
             }

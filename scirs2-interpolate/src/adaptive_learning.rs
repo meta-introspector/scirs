@@ -188,14 +188,14 @@ where
     /// # Returns
     ///
     /// A new `ActiveLearner` instance ready for adaptive sampling
-    pub fn new(_interpolator: MultiscaleBSpline<T>, strategy: SamplingStrategy) -> Self {
+    pub fn new(interpolator: MultiscaleBSpline<T>, strategy: SamplingStrategy) -> Self {
         // Extract domain bounds from the _interpolator
-        let x_data = _interpolator.x_data();
+        let x_data = interpolator.x_data();
         let domain_min = x_data[0];
         let domain_max = x_data[x_data.len() - 1];
 
         Self {
-            _interpolator,
+            interpolator,
             config: ActiveLearningConfig::default(),
             strategy,
             sample_points: Array1::zeros(0),
@@ -226,7 +226,7 @@ where
     }
 
     /// Set the maximum number of samples per iteration
-    pub fn with_max_samples_per_iteration(mut self, max_samples: usize) -> Self {
+    pub fn with_max_samples_per_iteration(mut self, maxsamples: usize) -> Self {
         self.config.max_samples_per_iteration = max_samples;
         self
     }
@@ -732,7 +732,7 @@ where
     }
 
     /// Check if a location is valid (respects minimum distance constraint)
-    fn is_valid_location(&self, location: T, existing_points: &[T]) -> bool {
+    fn is_valid_location(&self, location: T, existingpoints: &[T]) -> bool {
         // Check domain bounds
         if location < self.domain_min || location > self.domain_max {
             return false;

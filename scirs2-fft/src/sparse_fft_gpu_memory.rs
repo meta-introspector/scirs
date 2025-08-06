@@ -456,7 +456,7 @@ impl BufferDescriptor {
     }
 
     /// Copy data from host to device
-    pub fn copy_host_to_device(&self, host_data: &[u8]) -> FFTResult<()> {
+    pub fn copy_host_to_device(&self, hostdata: &[u8]) -> FFTResult<()> {
         match self.location {
             BufferLocation::Device => {
                 match self.backend {
@@ -469,7 +469,7 @@ impl BufferDescriptor {
                             ) {
                                 // CUDA API calls temporarily disabled until cudarc dependency is enabled
                                 /*
-                                device.htod_copy(host_data, device_ptr).map_err(|e| {
+                                device.htod_copy(hostdata, device_ptr).map_err(|e| {
                                     FFTError::ComputationError(format!(
                                         "Failed to copy _data to CUDA GPU: {:?}",
                                         e
@@ -481,7 +481,7 @@ impl BufferDescriptor {
                         }
 
                         // Fallback to host memory
-                        self.copy_to_host_memory(host_data)?;
+                        self.copy_to_host_memory(hostdata)?;
                     }
                     GPUBackend::HIP => {
                         #[cfg(feature = "hip")]
@@ -493,8 +493,8 @@ impl BufferDescriptor {
                                 unsafe {
                                     let result = hipMemcpyHtoD(
                                         device_ptr,
-                                        host_data.as_ptr() as *const std::os::raw::c_void,
-                                        host_data.len(),
+                                        hostdata.as_ptr() as *const std::os::raw::c_void,
+                                        hostdata.len(),
                                     );
                                     if result == hipError_t::hipSuccess {
                                         return Ok(());
@@ -510,7 +510,7 @@ impl BufferDescriptor {
                         }
 
                         // Fallback to host memory
-                        self.copy_to_host_memory(host_data)?;
+                        self.copy_to_host_memory(hostdata)?;
                     }
                     GPUBackend::SYCL => {
                         #[cfg(feature = "sycl")]
@@ -524,9 +524,9 @@ impl BufferDescriptor {
                                 // For placeholder implementation, simulate the copy
                                 unsafe {
                                     std::ptr::copy_nonoverlapping(
-                                        host_data.as_ptr(),
+                                        hostdata.as_ptr(),
                                         device_ptr as *mut u8,
-                                        host_data.len(),
+                                        hostdata.len(),
                                     );
                                 }
                                 return Ok(());
@@ -534,16 +534,16 @@ impl BufferDescriptor {
                         }
 
                         // Fallback to host memory
-                        self.copy_to_host_memory(host_data)?;
+                        self.copy_to_host_memory(hostdata)?;
                     }
                     _ => {
                         // CPU fallback
-                        self.copy_to_host_memory(host_data)?;
+                        self.copy_to_host_memory(hostdata)?;
                     }
                 }
             }
             BufferLocation::Host | BufferLocation::PinnedHost | BufferLocation::Unified => {
-                self.copy_to_host_memory(host_data)?;
+                self.copy_to_host_memory(hostdata)?;
             }
         }
 
@@ -551,13 +551,13 @@ impl BufferDescriptor {
     }
 
     /// Helper to copy data to host memory
-    fn copy_to_host_memory(&self, host_data: &[u8]) -> FFTResult<()> {
+    fn copy_to_host_memory(&self, hostdata: &[u8]) -> FFTResult<()> {
         if let Some(host_ptr) = self.host_ptr {
             unsafe {
                 std::ptr::copy_nonoverlapping(
-                    host_data.as_ptr(),
+                    hostdata.as_ptr(),
                     host_ptr as *mut u8,
-                    host_data.len(),
+                    hostdata.len(),
                 );
             }
         }
@@ -565,7 +565,7 @@ impl BufferDescriptor {
     }
 
     /// Copy data from device to host
-    pub fn copy_device_to_host(&self, host_data: &mut [u8]) -> FFTResult<()> {
+    pub fn copy_device_to_host(&self, hostdata: &mut [u8]) -> FFTResult<()> {
         match self.location {
             BufferLocation::Device => {
                 match self.backend {
@@ -578,7 +578,7 @@ impl BufferDescriptor {
                             ) {
                                 // CUDA API calls temporarily disabled until cudarc dependency is enabled
                                 /*
-                                device.dtoh_copy(device_ptr, host_data).map_err(|e| {
+                                device.dtoh_copy(device_ptr, hostdata).map_err(|e| {
                                     FFTError::ComputationError(format!(
                                         "Failed to copy _data from CUDA GPU: {:?}",
                                         e
@@ -590,7 +590,7 @@ impl BufferDescriptor {
                         }
 
                         // Fallback to host memory
-                        self.copy_from_host_memory(host_data)?;
+                        self.copy_from_host_memory(hostdata)?;
                     }
                     GPUBackend::HIP => {
                         #[cfg(feature = "hip")]
@@ -601,9 +601,9 @@ impl BufferDescriptor {
                                 /*
                                 unsafe {
                                     let result = hipMemcpyDtoH(
-                                        host_data.as_mut_ptr() as *mut std::os::raw::c_void,
+                                        hostdata.as_mut_ptr() as *mut std::os::raw::c_void,
                                         device_ptr,
-                                        host_data.len(),
+                                        hostdata.len(),
                                     );
                                     if result == hipError_t::hipSuccess {
                                         return Ok(());
@@ -619,7 +619,7 @@ impl BufferDescriptor {
                         }
 
                         // Fallback to host memory
-                        self.copy_from_host_memory(host_data)?;
+                        self.copy_from_host_memory(hostdata)?;
                     }
                     GPUBackend::SYCL => {
                         #[cfg(feature = "sycl")]
@@ -634,8 +634,8 @@ impl BufferDescriptor {
                                 unsafe {
                                     std::ptr::copy_nonoverlapping(
                                         device_ptr as *const u8,
-                                        host_data.as_mut_ptr(),
-                                        host_data.len(),
+                                        hostdata.as_mut_ptr(),
+                                        hostdata.len(),
                                     );
                                 }
                                 return Ok(());
@@ -643,16 +643,16 @@ impl BufferDescriptor {
                         }
 
                         // Fallback to host memory
-                        self.copy_from_host_memory(host_data)?;
+                        self.copy_from_host_memory(hostdata)?;
                     }
                     _ => {
                         // CPU fallback
-                        self.copy_from_host_memory(host_data)?;
+                        self.copy_from_host_memory(hostdata)?;
                     }
                 }
             }
             BufferLocation::Host | BufferLocation::PinnedHost | BufferLocation::Unified => {
-                self.copy_from_host_memory(host_data)?;
+                self.copy_from_host_memory(hostdata)?;
             }
         }
 
@@ -660,13 +660,13 @@ impl BufferDescriptor {
     }
 
     /// Helper to copy data from host memory
-    fn copy_from_host_memory(&self, host_data: &mut [u8]) -> FFTResult<()> {
+    fn copy_from_host_memory(&self, hostdata: &mut [u8]) -> FFTResult<()> {
         if let Some(host_ptr) = self.host_ptr {
             unsafe {
                 std::ptr::copy_nonoverlapping(
                     host_ptr as *const u8,
-                    host_data.as_mut_ptr(),
-                    host_data.len(),
+                    hostdata.as_mut_ptr(),
+                    hostdata.len(),
                 );
             }
         }

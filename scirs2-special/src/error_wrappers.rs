@@ -51,9 +51,9 @@ where
     F: Fn(T) -> T,
     T: Float + Display + Debug + FromPrimitive,
 {
-    pub fn new(_name: &'static str, func: F) -> Self {
+    pub fn new(name: &'static str, func: F) -> Self {
         Self {
-            name: _name,
+            name: name,
             func,
             config: ErrorConfig::default(),
             _phantom: std::marker::PhantomData,
@@ -118,7 +118,7 @@ where
     }
 
     /// Try to recover from an error
-    fn try_recover(&self, _x: T) -> Option<T> {
+    fn try_recover(&self, x: T) -> Option<T> {
         match self.config.default_recovery {
             RecoveryStrategy::ReturnDefault => Some(T::zero()),
             RecoveryStrategy::ClampToRange => {
@@ -147,9 +147,9 @@ where
     F: Fn(T, T) -> T,
     T: Float + Display + Debug + FromPrimitive,
 {
-    pub fn new(_name: &'static str, func: F) -> Self {
+    pub fn new(name: &'static str, func: F) -> Self {
         Self {
-            name: _name,
+            name: name,
             func,
             config: ErrorConfig::default(),
             _phantom: std::marker::PhantomData,
@@ -225,9 +225,9 @@ where
     F: Fn(&ArrayView1<T>) -> Array1<T>,
     T: Float + Display + Debug + FromPrimitive,
 {
-    pub fn new(_name: &'static str, func: F) -> Self {
+    pub fn new(name: &'static str, func: F) -> Self {
         Self {
-            name: _name,
+            name: name,
             func,
             config: ErrorConfig::default(),
             _phantom: std::marker::PhantomData,

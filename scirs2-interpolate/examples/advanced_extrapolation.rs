@@ -9,11 +9,11 @@ use scirs2__interpolate::{
 
 // Helper to run extrapolation for example points and display results
 #[allow(dead_code)]
-fn demonstrate_extrapolation<F>(_name: &str, extrap_values: &[(f64, f64)], f: F)
+fn demonstrate_extrapolation<F>(_name: &str, extrapvalues: &[(f64, f64)], f: F)
 where
     F: Fn(f64) -> Result<f64, String>,
 {
-    println!("--- {} Extrapolation ---", _name);
+    println!("--- {} Extrapolation ---", name);
     for &(x, expected) in extrap_values {
         match f(x) {
             Ok(value) => println!(

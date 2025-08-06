@@ -154,7 +154,7 @@ where
     /// // Should be approximately 1.0 (0.5 + 0.5)
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
-    pub fn evaluate(&self, x_new: F, y_new: F) -> InterpolateResult<F> {
+    pub fn evaluate(&self, x_new: F, ynew: F) -> InterpolateResult<F> {
         match self.kind {
             Interp2dKind::Linear => self.evaluate_linear(x_new, y_new),
             Interp2dKind::Cubic => self.evaluate_cubic(x_new, y_new),
@@ -219,7 +219,7 @@ where
     }
 
     /// Linear interpolation implementation
-    fn evaluate_linear(&self, x_new: F, y_new: F) -> InterpolateResult<F> {
+    fn evaluate_linear(&self, x_new: F, ynew: F) -> InterpolateResult<F> {
         // Find y index and interpolate along x for neighboring y values
         let y_idx = find_interval(&self.y.view(), y_new);
 
@@ -262,7 +262,7 @@ where
     }
 
     /// Cubic interpolation implementation
-    fn evaluate_cubic(&self, x_new: F, y_new: F) -> InterpolateResult<F> {
+    fn evaluate_cubic(&self, x_new: F, ynew: F) -> InterpolateResult<F> {
         // Create cubic splines for each x value across y
         let mut values_at_x = Array1::zeros(self.y.len());
 
@@ -277,7 +277,7 @@ where
         y_spline.evaluate(y_new)
     }
 
-    fn evaluate_quintic(&self, x_new: F, y_new: F) -> InterpolateResult<F> {
+    fn evaluate_quintic(&self, x_new: F, ynew: F) -> InterpolateResult<F> {
         // For quintic interpolation, we need higher-order splines
         // For simplicity, we'll use cubic splines with a refined grid approach
         // This is a basic implementation - true quintic would need quintic splines
@@ -300,7 +300,7 @@ where
 /// Check if array is sorted in ascending order
 #[allow(dead_code)]
 fn is_sorted<F: PartialOrd>(arr: &ArrayView1<F>) -> bool {
-    for window in _arr.windows(2) {
+    for window in arr.windows(2) {
         if window[0] > window[1] {
             return false;
         }
@@ -312,14 +312,14 @@ fn is_sorted<F: PartialOrd>(arr: &ArrayView1<F>) -> bool {
 #[allow(dead_code)]
 fn find_interval<F: PartialOrd>(arr: &ArrayView1<F>, value: F) -> usize {
     // Convert to slice to use binary_search_by
-    let slice: &[F] = _arr.as_slice().unwrap();
+    let slice: &[F] = arr.as_slice().unwrap();
     match slice.binary_search_by(|x| x.partial_cmp(&value).unwrap()) {
         Ok(idx) => idx,
         Err(idx) => {
             if idx == 0 {
                 0
-            } else if idx >= _arr.len() {
-                _arr.len() - 1
+            } else if idx >= arr.len() {
+                arr.len() - 1
             } else {
                 idx - 1
             }

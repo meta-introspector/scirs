@@ -277,14 +277,14 @@ impl ErrorMapper {
         summary.push_str(&format!("Found {} error categories:\n", by_category.len()));
 
         for (_category, errors) in by_category {
-            summary.push_str(&format!("  {}: {} errors\n", _category, errors.len()));
+            summary.push_str(&format!("  {}: {} errors\n", category, errors.len()));
         }
 
         summary
     }
 
     fn generate_error_summary_from_indices(
-        &self_errors: &[IntegrationError],
+        self_errors: &[IntegrationError],
         by_category: &HashMap<String, Vec<usize>>,
     ) -> String {
         let mut summary = String::new();
@@ -293,7 +293,7 @@ impl ErrorMapper {
         for (_category, error_indices) in by_category {
             summary.push_str(&format!(
                 "  {}: {} _errors\n",
-                _category,
+                category,
                 error_indices.len()
             ));
         }
@@ -301,7 +301,7 @@ impl ErrorMapper {
         summary
     }
 
-    fn generate_error_id(&self_enriched: &EnrichedError) -> String {
+    fn generate_error_id(selfenriched: &EnrichedError) -> String {
         // Generate unique error ID
         format!(
             "ERR_{}",
@@ -356,13 +356,15 @@ impl Default for ErrorMapper {
 
 /// Trait for error mapping between modules
 pub trait ErrorMapping: Send {
-    fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError;
+    fn map_error(&self, sourceerror: &dyn std::error::Error) -> IntegrationError;
 }
 
 /// Trait for error recovery strategies
 pub trait ErrorRecovery: Send {
-    fn attempt_recovery(&self_error: &IntegrationError)
-        -> Result<RecoveryAction, IntegrationError>;
+    fn attempt_recovery(
+        &self,
+        error: &IntegrationError,
+    ) -> Result<RecoveryAction, IntegrationError>;
 }
 
 /// Error context for tracking error origins
@@ -376,9 +378,9 @@ pub struct ErrorContext {
 
 impl ErrorContext {
     /// Create new error context
-    pub fn new(_module_name: String) -> Self {
+    pub fn new(_modulename: String) -> Self {
         Self {
-            _module_name,
+            module_name,
             function_name: None,
             operation: None,
             additional_info: HashMap::new(),
@@ -386,7 +388,7 @@ impl ErrorContext {
     }
 
     /// Add function name
-    pub fn with_function(mut self, function_name: String) -> Self {
+    pub fn with_function(mut self, functionname: String) -> Self {
         self.function_name = Some(function_name);
         self
     }
@@ -486,7 +488,7 @@ pub struct DocumentationLink {
 struct NeuralErrorMapping;
 
 impl ErrorMapping for NeuralErrorMapping {
-    fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
+    fn map_error(&self, sourceerror: &dyn std::error::Error) -> IntegrationError {
         let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("tensor") || error_str.contains("shape") {
@@ -494,9 +496,9 @@ impl ErrorMapping for NeuralErrorMapping {
                 "Neural module tensor _error: {source_error}"
             ))
         } else if error_str.contains("gradient") {
-            IntegrationError::ApiBoundary(format!("Neural module gradient _error: {source_error}"))
+            IntegrationError::ApiBoundary(format!("Neural module gradient error: {source_error}"))
         } else {
-            IntegrationError::ModuleCompatibility(format!("Neural module _error: {source_error}"))
+            IntegrationError::ModuleCompatibility(format!("Neural module error: {source_error}"))
         }
     }
 }
@@ -505,7 +507,7 @@ impl ErrorMapping for NeuralErrorMapping {
 struct OptimErrorMapping;
 
 impl ErrorMapping for OptimErrorMapping {
-    fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
+    fn map_error(&self, sourceerror: &dyn std::error::Error) -> IntegrationError {
         let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("parameter") || error_str.contains("optimizer") {
@@ -513,7 +515,7 @@ impl ErrorMapping for OptimErrorMapping {
                 "Optimizer configuration _error: {source_error}"
             ))
         } else if error_str.contains("learning_rate") {
-            IntegrationError::ConfigMismatch(format!("Learning rate _error: {source_error}"))
+            IntegrationError::ConfigMismatch(format!("Learning rate error: {source_error}"))
         } else {
             IntegrationError::ModuleCompatibility(format!(
                 "Optimization module _error: {source_error}"
@@ -526,11 +528,11 @@ impl ErrorMapping for OptimErrorMapping {
 struct LinalgErrorMapping;
 
 impl ErrorMapping for LinalgErrorMapping {
-    fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
+    fn map_error(&self, sourceerror: &dyn std::error::Error) -> IntegrationError {
         let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("matrix") || error_str.contains("dimension") {
-            IntegrationError::TensorConversion(format!("Matrix dimension _error: {source_error}"))
+            IntegrationError::TensorConversion(format!("Matrix dimension error: {source_error}"))
         } else if error_str.contains("singular") || error_str.contains("decomposition") {
             IntegrationError::ApiBoundary(format!(
                 "Linear algebra operation _error: {source_error}"
@@ -547,17 +549,17 @@ impl ErrorMapping for LinalgErrorMapping {
 struct CoreErrorMapping;
 
 impl ErrorMapping for CoreErrorMapping {
-    fn map_error(&self, source_error: &dyn std::error::Error) -> IntegrationError {
+    fn map_error(&self, sourceerror: &dyn std::error::Error) -> IntegrationError {
         let error_str = source_error.to_string().to_lowercase();
 
         if error_str.contains("config") {
-            IntegrationError::ConfigMismatch(format!("Core configuration _error: {source_error}"))
+            IntegrationError::ConfigMismatch(format!("Core configuration error: {source_error}"))
         } else if error_str.contains("type") || error_str.contains("conversion") {
             IntegrationError::TensorConversion(format!(
                 "Core type conversion _error: {source_error}"
             ))
         } else {
-            IntegrationError::ModuleCompatibility(format!("Core module _error: {source_error}"))
+            IntegrationError::ModuleCompatibility(format!("Core module error: {source_error}"))
         }
     }
 }
@@ -664,7 +666,7 @@ pub fn map_module_error(
 
 /// Push error context
 #[allow(dead_code)]
-pub fn push_error_context(_context: ErrorContext) -> Result<(), IntegrationError> {
+pub fn push_error_context(context: ErrorContext) -> Result<(), IntegrationError> {
     let mapper = init_error_mapper();
     let mut mapper_guard = mapper.lock().map_err(|_| {
         IntegrationError::ModuleCompatibility("Failed to acquire error mapper lock".to_string())
@@ -685,7 +687,7 @@ pub fn pop_error_context() -> Result<Option<ErrorContext>, IntegrationError> {
 
 /// Generate error report
 #[allow(dead_code)]
-pub fn generate_error_report(_error: &IntegrationError) -> Result<ErrorReport, IntegrationError> {
+pub fn generate_error_report(error: &IntegrationError) -> Result<ErrorReport, IntegrationError> {
     let mapper = init_error_mapper();
     let mapper_guard = mapper.lock().map_err(|_| {
         IntegrationError::ModuleCompatibility("Failed to acquire _error mapper lock".to_string())

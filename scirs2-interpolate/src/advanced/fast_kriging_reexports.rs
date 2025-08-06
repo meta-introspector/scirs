@@ -29,7 +29,7 @@
 //
 // The modular refactoring is in progress in the fast_kriging/ subdirectory.
 
-use crate::advanced::enhanced__kriging::{AnisotropicCovariance, TrendFunction};
+use crate::advanced::enhanced_kriging::{AnisotropicCovariance, TrendFunction};
 use crate::advanced::kriging::CovarianceFunction;
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
@@ -330,7 +330,8 @@ where
             trend_fn: TrendFunction::Constant,
             approx_method: FastKrigingMethod::Local,
             max_neighbors: DEFAULT_MAX_NEIGHBORS,
-            radius_multiplier: F::from_f64(DEFAULT_RADIUS_MULTIPLIER).unwrap(), _phantom: PhantomData,
+            radius_multiplier: F::from_f64(DEFAULT_RADIUS_MULTIPLIER).unwrap(),
+            _phantom: PhantomData,
         }
     }
 
@@ -347,25 +348,25 @@ where
     }
 
     /// Set covariance function
-    pub fn covariance_function(mut self, cov_fn: CovarianceFunction) -> Self {
+    pub fn covariance_function(mut self, covfn: CovarianceFunction) -> Self {
         self.cov_fn = cov_fn;
         self
     }
 
     /// Set length scales (one per dimension)
-    pub fn length_scales(mut self, length_scales: Array1<F>) -> Self {
+    pub fn length_scales(mut self, lengthscales: Array1<F>) -> Self {
         self.length_scales = Some(length_scales);
         self
     }
 
     /// Set a single isotropic length scale
-    pub fn length_scale(mut self, length_scale: F) -> Self {
+    pub fn length_scale(mut self, lengthscale: F) -> Self {
         self.sigma_sq = length_scale;
         self
     }
 
     /// Set signal variance
-    pub fn sigma_sq(mut self, sigma_sq: F) -> Self {
+    pub fn sigma_sq(mut self, sigmasq: F) -> Self {
         self.sigma_sq = sigma_sq;
         self
     }
@@ -377,7 +378,7 @@ where
     }
 
     /// Set trend function type
-    pub fn trend_function(mut self, trend_fn: TrendFunction) -> Self {
+    pub fn trend_function(mut self, trendfn: TrendFunction) -> Self {
         self.trend_fn = trend_fn;
         self
     }
@@ -389,7 +390,7 @@ where
     }
 
     /// Set maximum number of neighbors for local kriging
-    pub fn max_neighbors(mut self, max_neighbors: usize) -> Self {
+    pub fn max_neighbors(mut self, maxneighbors: usize) -> Self {
         self.max_neighbors = max_neighbors;
         self
     }
@@ -433,7 +434,8 @@ where
 
     /// Predict values at new points using fast approximation
     pub fn predict(
-        &self, _query_points: &ArrayView2<F>,
+        &self,
+        _query_points: &ArrayView2<F>,
     ) -> InterpolateResult<FastPredictionResult<F>> {
         // Implementation placeholder - will be completed in future update
         Err(InterpolateError::NotImplemented(
@@ -504,7 +506,11 @@ pub fn make_local_kriging<
         + std::ops::RemAssign
         + 'static,
 >(
-    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_max, neighbors: usize,
+    _points: &ArrayView2<F>,
+    _values: &ArrayView1<F>,
+    _cov_fn: CovarianceFunction_length,
+    _scale: F_max,
+    neighbors: usize,
 ) -> InterpolateResult<FastKriging<F>> {
     // Implementation placeholder - will be completed in future update
     Err(InterpolateError::NotImplemented(
@@ -573,7 +579,11 @@ pub fn make_fixed_rank_kriging<
         + std::ops::RemAssign
         + 'static,
 >(
-    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F, rank: usize,
+    _points: &ArrayView2<F>,
+    _values: &ArrayView1<F>,
+    _cov_fn: CovarianceFunction_length,
+    _scale: F,
+    rank: usize,
 ) -> InterpolateResult<FastKriging<F>> {
     // Implementation placeholder - will be completed in future update
     Err(InterpolateError::NotImplemented(
@@ -642,7 +652,11 @@ pub fn make_tapered_kriging<
         + std::ops::RemAssign
         + 'static,
 >(
-    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_taper, range: F,
+    _points: &ArrayView2<F>,
+    _values: &ArrayView1<F>,
+    _cov_fn: CovarianceFunction_length,
+    _scale: F_taper,
+    range: F,
 ) -> InterpolateResult<FastKriging<F>> {
     // Implementation placeholder - will be completed in future update
     Err(InterpolateError::NotImplemented(
@@ -711,7 +725,11 @@ pub fn make_hodlr_kriging<
         + std::ops::RemAssign
         + 'static,
 >(
-    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_leaf, size: usize,
+    _points: &ArrayView2<F>,
+    _values: &ArrayView1<F>,
+    _cov_fn: CovarianceFunction_length,
+    _scale: F_leaf,
+    size: usize,
 ) -> InterpolateResult<FastKriging<F>> {
     // Implementation placeholder - will be completed in future update
     Err(InterpolateError::NotImplemented(
@@ -737,7 +755,7 @@ pub fn make_hodlr_kriging<
 /// let method = select_approximation_method(10_000);
 /// ```
 #[allow(dead_code)]
-pub fn select_approximation_method(_n_points: usize) -> FastKrigingMethod {
+pub fn select_approximation_method(_npoints: usize) -> FastKrigingMethod {
     if _n_points < 500 {
         // For small datasets, local kriging is accurate and fast enough
         FastKrigingMethod::Local

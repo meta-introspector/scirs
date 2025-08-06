@@ -109,10 +109,10 @@ impl QmfBank {
     ///
     /// # Returns
     /// * QMF filter bank instance
-    pub fn new(_num_channels: usize, bank_type: FilterBankType) -> SignalResult<Self> {
-        if _num_channels < 2 {
+    pub fn new(num_channels: usize, banktype: FilterBankType) -> SignalResult<Self> {
+        if num_channels < 2 {
             return Err(SignalError::ValueError(
-                "Number of _channels must be at least 2".to_string(),
+                "Number of channels must be at least 2".to_string(),
             ));
         }
 
@@ -152,7 +152,7 @@ impl QmfBank {
     ) -> SignalResult<Self> {
         if num_channels < 2 {
             return Err(SignalError::ValueError(
-                "Number of _channels must be at least 2".to_string(),
+                "Number of channels must be at least 2".to_string(),
             ));
         }
 
@@ -187,7 +187,7 @@ impl QmfBank {
         };
 
         // Design Butterworth prototype filter
-        let (b_a) = butter(order, cutoff, FilterType::Lowpass)?;
+        let (b, a) = butter(order, cutoff, FilterType::Lowpass)?;
         Ok(Array1::from(b))
     }
 
@@ -498,7 +498,7 @@ impl QmfBank {
     }
 
     /// Compute aliasing distortion
-    fn compute_aliasing_distortion(&self, magnitude_responses: &Array2<f64>) -> f64 {
+    fn compute_aliasing_distortion(&self, magnituderesponses: &Array2<f64>) -> f64 {
         let mut max_aliasing = 0.0f64;
 
         for i in 0..magnitude_responses.ncols() {
@@ -516,7 +516,7 @@ impl QmfBank {
     }
 
     /// Compute amplitude distortion
-    fn compute_amplitude_distortion(&self, magnitude_responses: &Array2<f64>) -> f64 {
+    fn compute_amplitude_distortion(&self, magnituderesponses: &Array2<f64>) -> f64 {
         let mut max_distortion = 0.0f64;
 
         // Check passband ripple for each filter
@@ -539,7 +539,7 @@ impl QmfBank {
     }
 
     /// Compute stopband attenuation
-    fn compute_stopband_attenuation(&self, magnitude_responses: &Array2<f64>) -> f64 {
+    fn compute_stopband_attenuation(&self, magnituderesponses: &Array2<f64>) -> f64 {
         let mut min_attenuation = f64::INFINITY;
 
         for k in 0..self.num_channels {
@@ -587,7 +587,7 @@ impl WaveletFilterBank {
     ///
     /// # Returns
     /// * Wavelet filter bank instance
-    pub fn new(_wavelet_name: &str, levels: usize) -> SignalResult<Self> {
+    pub fn new(waveletname: &str, levels: usize) -> SignalResult<Self> {
         if levels == 0 {
             return Err(SignalError::ValueError(
                 "Number of levels must be greater than 0".to_string(),
@@ -609,8 +609,8 @@ impl WaveletFilterBank {
     }
 
     /// Parse wavelet name string to Wavelet enum
-    fn parse_wavelet_name(_name: &str) -> SignalResult<Wavelet> {
-        match _name.to_lowercase().as_str() {
+    fn parse_wavelet_name(name: &str) -> SignalResult<Wavelet> {
+        match name.to_lowercase().as_str() {
             "haar" => Ok(Wavelet::Haar),
             "db1" => Ok(Wavelet::DB(1)),
             "db2" => Ok(Wavelet::DB(2)),
@@ -1004,21 +1004,21 @@ impl IirStabilizer {
     }
 
     /// Find roots of polynomial (simplified implementation)
-    fn find_polynomial_roots(_coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> {
+    fn find_polynomial_roots(coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> {
         // This is a simplified implementation for demonstration
         // A full implementation would use a robust root-finding algorithm
         let mut roots = Vec::new();
 
-        if _coeffs.len() == 2 {
+        if coeffs.len() == 2 {
             // Linear case: ax + b = 0
-            if _coeffs[0] != 0.0 {
-                roots.push(Complex64::new(-_coeffs[1] / _coeffs[0], 0.0));
+            if coeffs[0] != 0.0 {
+                roots.push(Complex64::new(-_coeffs[1] / coeffs[0], 0.0));
             }
-        } else if _coeffs.len() == 3 {
+        } else if coeffs.len() == 3 {
             // Quadratic case: ax^2 + bx + c = 0
-            let a = _coeffs[0];
-            let b = _coeffs[1];
-            let c = _coeffs[2];
+            let a = coeffs[0];
+            let b = coeffs[1];
+            let c = coeffs[2];
 
             if a != 0.0 {
                 let discriminant = b * b - 4.0 * a * c;
@@ -1039,7 +1039,7 @@ impl IirStabilizer {
     }
 
     /// Reconstruct polynomial from roots
-    fn polynomial_from_roots(_roots: &[Complex64]) -> SignalResult<Array1<f64>> {
+    fn polynomial_from_roots(roots: &[Complex64]) -> SignalResult<Array1<f64>> {
         let mut coeffs = vec![1.0];
 
         for &root in _roots {
@@ -1071,6 +1071,7 @@ pub enum StabilizationMethod {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_qmf_bank_creation() {

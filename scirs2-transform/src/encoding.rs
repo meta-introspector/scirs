@@ -114,7 +114,7 @@ impl OneHotEncoder {
     ///
     /// # Returns
     /// * A new OneHotEncoder instance
-    pub fn new(_drop: Option<String>, handle_unknown: &str, sparse: bool) -> Result<Self> {
+    pub fn new(_drop: Option<String>, handleunknown: &str, sparse: bool) -> Result<Self> {
         if let Some(ref drop_strategy) = _drop {
             if drop_strategy != "first" && drop_strategy != "if_binary" {
                 return Err(TransformError::InvalidInput(
@@ -131,7 +131,7 @@ impl OneHotEncoder {
 
         Ok(OneHotEncoder {
             categories_: None,
-            _drop,
+            drop: drop,
             handle_unknown: handle_unknown.to_string(),
             sparse,
         })
@@ -400,7 +400,7 @@ impl OneHotEncoder {
     ///
     /// # Returns
     /// * `Result<Vec<String>>` - Names of output features
-    pub fn get_feature_names(&self, input_features: Option<&[String]>) -> Result<Vec<String>> {
+    pub fn get_feature_names(&self, inputfeatures: Option<&[String]>) -> Result<Vec<String>> {
         if self.categories_.is_none() {
             return Err(TransformError::TransformationError(
                 "OneHotEncoder has not been fitted".to_string(),
@@ -465,10 +465,10 @@ impl OrdinalEncoder {
     ///
     /// # Returns
     /// * A new OrdinalEncoder instance
-    pub fn new(_handle_unknown: &str, unknown_value: Option<f64>) -> Result<Self> {
-        if _handle_unknown != "error" && _handle_unknown != "use_encoded_value" {
+    pub fn new(handle_unknown: &str, unknownvalue: Option<f64>) -> Result<Self> {
+        if handle_unknown != "error" && handle_unknown != "use_encoded_value" {
             return Err(TransformError::InvalidInput(
-                "_handle_unknown must be 'error' or 'use_encoded_value'".to_string(),
+                "handle_unknown must be 'error' or 'use_encoded_value'".to_string(),
             ));
         }
 
@@ -667,7 +667,7 @@ impl TargetEncoder {
     ///
     /// # Returns
     /// * A new TargetEncoder instance
-    pub fn new(_strategy: &str, smoothing: f64, global_stat: f64) -> Result<Self> {
+    pub fn new(_strategy: &str, smoothing: f64, globalstat: f64) -> Result<Self> {
         if !["mean", "median", "count", "sum"].contains(&_strategy) {
             return Err(TransformError::InvalidInput(
                 "_strategy must be 'mean', 'median', 'count', or 'sum'".to_string(),
@@ -681,7 +681,7 @@ impl TargetEncoder {
         }
 
         Ok(TargetEncoder {
-            _strategy: _strategy.to_string(),
+            strategy: strategy.to_string(),
             smoothing,
             global_stat,
             encodings_: None,
@@ -691,10 +691,10 @@ impl TargetEncoder {
     }
 
     /// Creates a TargetEncoder with mean strategy and default smoothing
-    pub fn with_mean(_smoothing: f64) -> Self {
+    pub fn with_mean(smoothing: f64) -> Self {
         TargetEncoder {
             strategy: "mean".to_string(),
-            _smoothing,
+            smoothing,
             global_stat: 0.0,
             encodings_: None,
             is_fitted: false,
@@ -703,10 +703,10 @@ impl TargetEncoder {
     }
 
     /// Creates a TargetEncoder with median strategy
-    pub fn with_median(_smoothing: f64) -> Self {
+    pub fn with_median(smoothing: f64) -> Self {
         TargetEncoder {
             strategy: "median".to_string(),
-            _smoothing,
+            smoothing,
             global_stat: 0.0,
             encodings_: None,
             is_fitted: false,
@@ -1031,7 +1031,7 @@ impl TargetEncoder {
                         }
                         "count" => targets.len() as f64,
                         "sum" => targets.iter().sum::<f64>(),
-                    _ => unreachable!(),
+                        _ => unreachable!(),
                     };
 
                     category_encoding.insert(*category, encoded_value);
@@ -1087,10 +1087,10 @@ impl BinaryEncoder {
     ///
     /// # Returns
     /// * `Result<BinaryEncoder>` - The new encoder instance
-    pub fn new(_handle_unknown: &str) -> Result<Self> {
-        if _handle_unknown != "error" && _handle_unknown != "ignore" {
+    pub fn new(handleunknown: &str) -> Result<Self> {
+        if handle_unknown != "error" && handle_unknown != "ignore" {
             return Err(TransformError::InvalidInput(
-                "_handle_unknown must be 'error' or 'ignore'".to_string(),
+                "handle_unknown must be 'error' or 'ignore'".to_string(),
             ));
         }
 
@@ -1285,9 +1285,9 @@ impl BinaryEncoder {
     }
 
     /// Converts an integer to binary representation
-    fn int_to_binary(_value: usize, n_bits: usize) -> Vec<u8> {
+    fn int_to_binary(_value: usize, nbits: usize) -> Vec<u8> {
         let mut binary = Vec::with_capacity(n_bits);
-        let mut val = _value;
+        let mut val = value;
 
         for _ in 0..n_bits {
             binary.push((val & 1) as u8);
@@ -1328,7 +1328,7 @@ impl FrequencyEncoder {
     ///
     /// # Returns
     /// * `Result<FrequencyEncoder>` - The new encoder instance
-    pub fn new(_normalize: bool, handle_unknown: &str, unknown_value: f64) -> Result<Self> {
+    pub fn new(normalize: bool, handle_unknown: &str, unknownvalue: f64) -> Result<Self> {
         if !["error", "ignore", "use_encoded_value"].contains(&handle_unknown) {
             return Err(TransformError::InvalidInput(
                 "handle_unknown must be 'error', 'ignore', or 'use_encoded_value'".to_string(),
@@ -1337,7 +1337,7 @@ impl FrequencyEncoder {
 
         Ok(FrequencyEncoder {
             frequency_maps_: None,
-            _normalize,
+            normalize,
             handle_unknown: handle_unknown.to_string(),
             unknown_value,
             is_fitted: false,
@@ -1536,10 +1536,10 @@ impl WOEEncoder {
     ///
     /// # Returns
     /// * `Result<WOEEncoder>` - The new encoder instance
-    pub fn new(_regularization: f64, handle_unknown: &str, unknown_value: f64) -> Result<Self> {
-        if _regularization < 0.0 {
+    pub fn new(regularization: f64, handle_unknown: &str, unknownvalue: f64) -> Result<Self> {
+        if regularization < 0.0 {
             return Err(TransformError::InvalidInput(
-                "_regularization must be non-negative".to_string(),
+                "regularization must be non-negative".to_string(),
             ));
         }
 
@@ -1552,7 +1552,7 @@ impl WOEEncoder {
         Ok(WOEEncoder {
             woe_maps_: None,
             information_values_: None,
-            _regularization,
+            regularization,
             handle_unknown: handle_unknown.to_string(),
             unknown_value,
             global_woe_: 0.0,
@@ -1566,7 +1566,7 @@ impl WOEEncoder {
     }
 
     /// Creates a WOEEncoder with custom regularization
-    pub fn with_regularization(_regularization: f64) -> Result<Self> {
+    pub fn with_regularization(regularization: f64) -> Result<Self> {
         Self::new(_regularization, "global_woe", 0.0)
     }
 
@@ -2099,8 +2099,7 @@ mod tests {
 
     #[test]
     fn test_target_encoder_multi_feature() {
-        let x =
-            Array::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0]).unwrap();
+        let x = Array::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0]).unwrap();
         let y = vec![1.0, 2.0, 3.0, 4.0];
 
         let mut encoder = TargetEncoder::new("mean", 0.0, 0.0).unwrap();
@@ -2595,8 +2594,7 @@ mod tests {
 
     #[test]
     fn test_encoded_output_methods() {
-        let dense_array =
-            Array::fromshape_vec((2, 3), vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0]).unwrap();
+        let dense_array = Array::fromshape_vec((2, 3), vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0]).unwrap();
         let dense_output = EncodedOutput::Dense(dense_array);
 
         let mut sparse_matrix = SparseMatrix::new((2, 3));

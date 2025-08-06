@@ -404,9 +404,9 @@ pub struct PerformanceMetrics {
 
 impl MemoryLeakDetector {
     /// Create a new memory leak detector
-    pub fn new(_config: MemoryDetectionConfig) -> Self {
+    pub fn new(config: MemoryDetectionConfig) -> Self {
         let mut detector = Self {
-            config: _config.clone(),
+            config: config.clone(),
             allocation_tracker: AllocationTracker::new(),
             pattern_analyzer: MemoryPatternAnalyzer::new(),
             detectors: Vec::new(),
@@ -477,7 +477,7 @@ impl MemoryLeakDetector {
     }
 
     /// Record a deallocation event
-    pub fn record_deallocation(&mut self, allocation_id: usize) -> Result<()> {
+    pub fn record_deallocation(&mut self, allocationid: usize) -> Result<()> {
         self.allocation_tracker.record_deallocation(allocation_id)?;
         Ok(())
     }
@@ -721,7 +721,7 @@ impl AllocationTracker {
     }
 
     /// Record a deallocation
-    pub fn record_deallocation(&mut self, allocation_id: usize) -> Result<()> {
+    pub fn record_deallocation(&mut self, allocationid: usize) -> Result<()> {
         if let Some(info) = self.active_allocations.remove(&allocation_id) {
             self.total_deallocations.fetch_add(1, Ordering::Relaxed);
             self.current_memory_usage
@@ -865,7 +865,8 @@ impl GrowthBasedLeakDetector {
 
 impl LeakDetector for GrowthBasedLeakDetector {
     fn detect_leaks(
-        &self, _allocation_history: &VecDeque<AllocationEvent>,
+        &self,
+        _allocation_history: &VecDeque<AllocationEvent>,
         usage_snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<MemoryLeakResult> {
         if usage_snapshots.len() < 2 {
@@ -966,7 +967,9 @@ impl PatternBasedLeakDetector {
 
 impl LeakDetector for PatternBasedLeakDetector {
     fn detect_leaks(
-        &self, _allocation_history: &VecDeque<AllocationEvent>, _usage_snapshots: &VecDeque<MemoryUsageSnapshot>,
+        &self,
+        _allocation_history: &VecDeque<AllocationEvent>,
+        _usage_snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<MemoryLeakResult> {
         // Simplified pattern-based detection
         Ok(MemoryLeakResult {
@@ -1007,7 +1010,9 @@ impl StatisticalLeakDetector {
 
 impl LeakDetector for StatisticalLeakDetector {
     fn detect_leaks(
-        &self, _allocation_history: &VecDeque<AllocationEvent>, _usage_snapshots: &VecDeque<MemoryUsageSnapshot>,
+        &self,
+        _allocation_history: &VecDeque<AllocationEvent>,
+        _usage_snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<MemoryLeakResult> {
         // Simplified statistical detection
         Ok(MemoryLeakResult {
@@ -1152,7 +1157,8 @@ impl PoolingStrategy {
 impl OptimizationStrategy for PoolingStrategy {
     fn recommend(
         &self,
-        leak_result: &MemoryLeakResult, _history: &VecDeque<MemoryUsageSnapshot>,
+        leak_result: &MemoryLeakResult,
+        _history: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<OptimizationRecommendation>> {
         let mut recommendations = Vec::new();
 
@@ -1192,7 +1198,8 @@ impl InPlaceStrategy {
 impl OptimizationStrategy for InPlaceStrategy {
     fn recommend(
         &self,
-        leak_result: &MemoryLeakResult, _history: &VecDeque<MemoryUsageSnapshot>,
+        leak_result: &MemoryLeakResult,
+        _history: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<OptimizationRecommendation>> {
         let mut recommendations = Vec::new();
 
@@ -1232,7 +1239,9 @@ impl CacheStrategy {
 
 impl OptimizationStrategy for CacheStrategy {
     fn recommend(
-        &self, _leak_result: &MemoryLeakResult, _history: &VecDeque<MemoryUsageSnapshot>,
+        &self,
+        _leak_result: &MemoryLeakResult,
+        _history: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<OptimizationRecommendation>> {
         Ok(vec![OptimizationRecommendation {
             recommendation_type: RecommendationType::CacheOptimization,

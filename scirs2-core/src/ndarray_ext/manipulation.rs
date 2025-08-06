@@ -15,7 +15,7 @@ pub type GradientResult<T> = Result<(Array<T, Ix2>, Array<T, Ix2>), &'static str
 ///
 /// * `array` - The input 2D array
 /// * `flip_axis_0` - Whether to flip along axis 0 (rows)
-/// * `flip_axis_1` - Whether to flip along axis 1 (columns)
+/// * `flip_axis_0` - Whether to flip along axis 1 (columns)
 ///
 /// # Returns
 ///
@@ -42,7 +42,7 @@ pub type GradientResult<T> = Result<(Array<T, Ix2>, Array<T, Ix2>), &'static str
 /// assert_eq!(flipped_both, array![[6, 5, 4], [3, 2, 1]]);
 /// ```
 #[allow(dead_code)]
-pub fn flip_2d<T>(array: ArrayView<T, Ix2>, flip_axis_0: bool, flip_axis_1: bool) -> Array<T, Ix2>
+pub fn flip_2d<T>(array: ArrayView<T, Ix2>, flip_axis_0: bool, flipaxis_1: bool) -> Array<T, Ix2>
 where
     T: Clone + Zero,
 {
@@ -52,7 +52,7 @@ where
     for i in 0..rows {
         for j in 0..cols {
             let src_i = if flip_axis_0 { rows - 1 - i } else { i };
-            let src_j = if flip_axis_1 { cols - 1 - j } else { j };
+            let src_j = if flipaxis_1 { cols - 1 - j } else { j };
 
             result[[i, j]] = array[[src_i, src_j]].clone();
         }
@@ -165,7 +165,7 @@ where
 /// );
 /// ```
 #[allow(dead_code)]
-pub fn tile_2d<T>(array: ArrayView<T, Ix2>, reps_axis_0: usize, reps_axis_1: usize) -> Array<T, Ix2>
+pub fn tile_2d<T>(array: ArrayView<T, Ix2>, reps_axis_0: usize, repsaxis_1: usize) -> Array<T, Ix2>
 where
     T: Clone + Default + Zero,
 {
@@ -173,15 +173,15 @@ where
 
     // New dimensions after tiling
     let new_rows = rows * reps_axis_0;
-    let new_cols = cols * reps_axis_1;
+    let new_cols = cols * repsaxis_1;
 
     // Edge case - zero repetitions
-    if reps_axis_0 == 0 || reps_axis_1 == 0 {
+    if reps_axis_0 == 0 || repsaxis_1 == 0 {
         return Array::<T, Ix2>::default((0, 0));
     }
 
     // Edge case - one repetition
-    if reps_axis_0 == 1 && reps_axis_1 == 1 {
+    if reps_axis_0 == 1 && repsaxis_1 == 1 {
         return array.to_owned();
     }
 
@@ -267,7 +267,7 @@ where
                     let dest_i = i * repeats_axis_0 + i_rep;
                     let dest_j = j * repeats_axis_1 + j_rep;
 
-                    result[[dest_i, dest_j]] = array[[0, j]].clone();
+                    result[[dest_i, dest_j]] = array[[i, j]].clone();
                 }
             }
         }

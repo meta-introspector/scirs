@@ -27,7 +27,7 @@ impl SoftmaxKernel {
             workgroup_size: [256, 1, 1],
             local_memory_usage: 2048, // Need extra memory for reductions
             supports_tensor_cores: false,
-            operation_type: OperationType::ComputeIntensive,
+            operationtype: OperationType::ComputeIntensive,
             backend_metadata: HashMap::new(),
         };
 
@@ -483,7 +483,7 @@ impl GpuKernel for SoftmaxKernel {
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
         matches!(
-            params.data_type,
+            params.datatype,
             DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16
         )
     }

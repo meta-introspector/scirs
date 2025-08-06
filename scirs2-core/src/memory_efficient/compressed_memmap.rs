@@ -118,7 +118,7 @@ impl CompressedMemMapBuilder {
     /// Set the block size in elements.
     ///
     /// Larger blocks provide better compression but slower random access.
-    pub fn with_block_size(mut self, block_size: usize) -> Self {
+    pub fn with_block_size(mut self, blocksize: usize) -> Self {
         self.block_size = block_size;
         self
     }
@@ -145,7 +145,7 @@ impl CompressedMemMapBuilder {
     ///
     /// Larger cache sizes allow for more decompressed blocks to be held in memory,
     /// potentially improving performance for repeated access patterns.
-    pub fn with_cache_size(mut self, cache_size: usize) -> Self {
+    pub fn with_cache_size(mut self, cachesize: usize) -> Self {
         self.cache_size = cache_size;
         self
     }
@@ -482,7 +482,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
     /// # Returns
     ///
     /// `Ok(())` if successful, or an error
-    pub fn preload_block(&self, block_idx: usize) -> CoreResult<()> {
+    pub fn preload_block(&self, blockidx: usize) -> CoreResult<()> {
         if block_idx >= self.metadata.num_blocks {
             return Err(CoreError::IndexError(ErrorContext::new(format!(
                 "Block index {} out of bounds (max {})",
@@ -506,7 +506,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
     }
 
     /// Load a block from the compressed file.
-    fn load_block(&self, block_idx: usize) -> CoreResult<Vec<A>> {
+    fn load_block(&self, blockidx: usize) -> CoreResult<Vec<A>> {
         // Open the file
         let mut file = File::open(&self.path)?;
 
@@ -809,7 +809,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
     /// # Returns
     ///
     /// A vector of results, one for each block
-    pub fn process_blocks_with_size<F, R>(&self, block_size: usize, f: F) -> CoreResult<Vec<R>>
+    pub fn process_blocks_with_size<F, R>(&self, blocksize: usize, f: F) -> CoreResult<Vec<R>>
     where
         F: Fn(&[A], usize) -> R + Send + Sync + 'static,
         R: Send + 'static,
@@ -1060,7 +1060,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
     /// # Returns
     ///
     /// `true` if the block is in the cache, `false` otherwise
-    fn has_block(&self, block_idx: usize) -> bool {
+    fn has_block(&self, blockidx: usize) -> bool {
         let cache = self.cache.read().unwrap();
 
         // Check if the block is in the cache
@@ -1087,7 +1087,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
     /// # Returns
     ///
     /// The block if it is in the cache, `None` otherwise
-    fn get_block(&self, block_idx: usize) -> Option<Vec<A>> {
+    fn get_block(&self, blockidx: usize) -> Option<Vec<A>> {
         let mut cache = self.cache.write().unwrap();
 
         // Check if the block is in the cache
@@ -1118,7 +1118,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
     ///
     /// * `block_idx` - The index of the block to put
     /// * `block` - The block data
-    fn put_block(&self, block_idx: usize, block: Vec<A>) {
+    fn put_block(&self, blockidx: usize, block: Vec<A>) {
         let mut cache = self.cache.write().unwrap();
 
         // Check if we need to evict a block

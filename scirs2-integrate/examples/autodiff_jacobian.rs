@@ -142,16 +142,16 @@ fn main() -> IntegrateResult<()> {
 
 // Helper function for comparing solutions
 #[allow(dead_code)]
-fn solution_diff(_res1: &ODEResult<f64>, res2: &ODEResult<f64>) -> f64 {
+fn solution_diff(res1: &ODEResult<f64>, res2: &ODEResult<f64>) -> f64 {
     // Find common time points to compare
     let mut max_diff: f64 = 0.0;
 
     // Sample a few points for comparison
     let sample_times = [
-        _res1.t[0],
-        _res1.t[_res1.t.len() / 4],
-        _res1.t[_res1.t.len() / 2],
-        _res1.t[3 * _res1.t.len() / 4],
+        res1.t[0],
+        res1.t[_res1.t.len() / 4],
+        res1.t[_res1.t.len() / 2],
+        res1.t[3 * res1.t.len() / 4],
         *_res1.t.last().unwrap(),
     ];
 

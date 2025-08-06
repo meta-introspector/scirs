@@ -109,7 +109,7 @@ pub fn demonstrate_advanced_capabilities() -> NdimageResult<()> {
 
 /// Create a sample test image for validation
 #[allow(dead_code)]
-fn create_test_image(_height: usize, width: usize) -> Array2<f64> {
+fn create_test_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     // Create a complex test pattern with multiple features

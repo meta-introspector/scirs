@@ -26,9 +26,9 @@ pub struct ConservationLaw<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> ConservationLaw<F> {
     /// Create a new conservation law
-    pub fn new(_name: impl Into<String>, expression: SymbolicExpression<F>, tolerance: F) -> Self {
+    pub fn new(name: impl Into<String>, expression: SymbolicExpression<F>, tolerance: F) -> Self {
         ConservationLaw {
-            name: _name.into(),
+            name: name.into(),
             expression,
             conserved_value: None,
             tolerance,
@@ -61,8 +61,8 @@ impl<F: IntegrateFloat> ConservationLaw<F> {
     }
 
     /// Set the conserved value based on initial conditions
-    pub fn set_initial_value(&mut self, _t0: F, y0: ArrayView1<F>) -> IntegrateResult<()> {
-        self.conserved_value = Some(self.evaluate(_t0, y0)?);
+    pub fn set_initial_value(&mut self, t0: F, y0: ArrayView1<F>) -> IntegrateResult<()> {
+        self.conserved_value = Some(self.evaluate(t0, y0)?);
         Ok(())
     }
 }
@@ -429,14 +429,14 @@ pub struct ConservationEnforcer<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> ConservationEnforcer<F> {
     /// Create a new conservation enforcer
-    pub fn new(_laws: Vec<ConservationLaw<F>>) -> Self {
-        ConservationEnforcer { laws: _laws }
+    pub fn new(laws: Vec<ConservationLaw<F>>) -> Self {
+        ConservationEnforcer { laws }
     }
 
     /// Initialize conservation laws with initial conditions
-    pub fn initialize(&mut self, _t0: F, y0: ArrayView1<F>) -> IntegrateResult<()> {
+    pub fn initialize(&mut self, t0: F, y0: ArrayView1<F>) -> IntegrateResult<()> {
         for law in &mut self.laws {
-            law.set_initial_value(_t0, y0)?;
+            law.set_initial_value(t0, y0)?;
         }
         Ok(())
     }

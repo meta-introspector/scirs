@@ -134,7 +134,7 @@ pub struct RLTrainer<E: Environment> {
     episode_lengths: Vec<usize>,
 impl<E: Environment> RLTrainer<E> {
     /// Create a new RL trainer
-    pub fn new(_agent: Arc<dyn RLAgent>, environment: E, config: RLConfig) -> Self {
+    pub fn new(agent: Arc<dyn RLAgent>, environment: E, config: RLConfig) -> Self {
         let replay_buffer = if config.buffer_size > 0 {
             Some(ReplayBuffer::new(config.buffer_size))
         } else {
@@ -147,7 +147,7 @@ impl<E: Environment> RLTrainer<E> {
             episode_rewards: Vec::new(),
             episode_lengths: Vec::new(),
     /// Train the agent for a number of episodes
-    pub fn train(&mut self, num_episodes: usize) -> Result<TrainingStats> {
+    pub fn train(&mut self, numepisodes: usize) -> Result<TrainingStats> {
         let mut total_steps = 0;
         let mut episode_rewards = Vec::new();
         let mut episode_lengths = Vec::new();
@@ -211,7 +211,7 @@ impl<E: Environment> RLTrainer<E> {
                 / 100.0.min(self.episode_rewards.len() as f32),
         })
     /// Evaluate the agent
-    pub fn evaluate(&mut self, num_episodes: usize) -> Result<EvaluationStats> {
+    pub fn evaluate(&mut self, numepisodes: usize) -> Result<EvaluationStats> {
         for _ in 0..num_episodes {
             while !done && episode_length < 1000 {
                 let action = self.agent.act(&state.view(), false)?;

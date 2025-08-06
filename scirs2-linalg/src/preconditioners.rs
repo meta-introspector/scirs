@@ -120,45 +120,45 @@ impl PreconditionerConfig {
     }
 
     /// Set the preconditioner type
-    pub fn with_type(mut self, preconditioner_type: PreconditionerType) -> Self {
-        self.preconditioner_type = preconditioner_type;
+    pub fn with_type(mut self, preconditionertype: PreconditionerType) -> Self {
+        self.preconditioner_type = preconditionertype;
         self
     }
 
     /// Set the fill level for incomplete factorizations
-    pub fn with_fill_level(mut self, fill_level: usize) -> Self {
-        self.fill_level = fill_level;
+    pub fn with_fill_level(mut self, filllevel: usize) -> Self {
+        self.fill_level = filllevel;
         self
     }
 
     /// Set the drop tolerance
-    pub fn with_drop_tolerance(mut self, drop_tolerance: f64) -> Self {
-        self.drop_tolerance = drop_tolerance;
+    pub fn with_drop_tolerance(mut self, droptolerance: f64) -> Self {
+        self.drop_tolerance = droptolerance;
         self
     }
 
     /// Set multigrid parameters
-    pub fn with_multigrid(mut self, levels: usize, smoothing_iterations: usize) -> Self {
+    pub fn with_multigrid(mut self, levels: usize, smoothingiterations: usize) -> Self {
         self.mg_levels = levels;
-        self.mg_smoothing_iterations = smoothing_iterations;
+        self.mg_smoothing_iterations = smoothingiterations;
         self
     }
 
     /// Set block size for block methods
-    pub fn with_block_size(mut self, block_size: usize) -> Self {
-        self.block_size = block_size;
+    pub fn with_block_size(mut self, blocksize: usize) -> Self {
+        self.block_size = blocksize;
         self
     }
 
     /// Set domain overlap for Schwarz methods
-    pub fn with_domain_overlap(mut self, domain_overlap: usize) -> Self {
-        self.domain_overlap = domain_overlap;
+    pub fn with_domain_overlap(mut self, domainoverlap: usize) -> Self {
+        self.domain_overlap = domainoverlap;
         self
     }
 
     /// Set polynomial degree
-    pub fn with_polynomial_degree(mut self, polynomial_degree: usize) -> Self {
-        self.polynomial_degree = polynomial_degree;
+    pub fn with_polynomial_degree(mut self, polynomialdegree: usize) -> Self {
+        self.polynomial_degree = polynomialdegree;
         self
     }
 
@@ -169,8 +169,8 @@ impl PreconditionerConfig {
     }
 
     /// Set adaptive threshold
-    pub fn with_adaptive_threshold(mut self, adaptive_threshold: f64) -> Self {
-        self.adaptive_threshold = adaptive_threshold;
+    pub fn with_adaptive_threshold(mut self, adaptivethreshold: f64) -> Self {
+        self.adaptive_threshold = adaptivethreshold;
         self
     }
 }
@@ -207,8 +207,8 @@ where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     /// Create a diagonal preconditioner from matrix diagonal
-    pub fn new(_matrix: &ArrayView2<F>) -> LinalgResult<Self> {
-        let (m, n) = _matrix.dim();
+    pub fn new(matrix: &ArrayView2<F>) -> LinalgResult<Self> {
+        let (m, n) = matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
                 "Diagonal preconditioner requires square _matrix".to_string(),
@@ -217,7 +217,7 @@ where
 
         let mut inverse_diagonal = Array1::zeros(n);
         for i in 0..n {
-            let diag_elem = _matrix[[i, i]];
+            let diag_elem = matrix[[i, i]];
             if diag_elem.abs() < F::epsilon() {
                 // Regularize small diagonal elements
                 inverse_diagonal[i] = F::one();
@@ -259,8 +259,8 @@ where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     /// Create incomplete LU preconditioner with specified fill level
-    pub fn new(_matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
-        let (m, n) = _matrix.dim();
+    pub fn new(matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
+        let (m, n) = matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
                 "ILU preconditioner requires square _matrix".to_string(),
@@ -272,7 +272,7 @@ where
         let mut u_factor = Array2::zeros((n, n));
 
         // Copy _matrix to working array
-        let mut working_matrix = _matrix.to_owned();
+        let mut working_matrix = matrix.to_owned();
 
         // Perform incomplete LU factorization
         for k in 0..n {
@@ -383,8 +383,8 @@ where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     /// Create incomplete Cholesky preconditioner
-    pub fn new(_matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
-        let (m, n) = _matrix.dim();
+    pub fn new(matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
+        let (m, n) = matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
                 "Incomplete Cholesky requires square _matrix".to_string(),
@@ -392,7 +392,7 @@ where
         }
 
         let mut l_factor = Array2::zeros((n, n));
-        let mut working_matrix = _matrix.to_owned();
+        let mut working_matrix = matrix.to_owned();
 
         // Perform incomplete Cholesky factorization
         for k in 0..n {
@@ -490,8 +490,8 @@ where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     /// Create block Jacobi preconditioner with specified block size
-    pub fn new(_matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
-        let (m, n) = _matrix.dim();
+    pub fn new(matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
+        let (m, n) = matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
                 "Block Jacobi requires square _matrix".to_string(),
@@ -509,7 +509,7 @@ where
             let current_block_size = end_idx - start_idx;
 
             // Extract diagonal block
-            let block = _matrix.slice(ndarray::s![start_idx..end_idx, start_idx..end_idx]);
+            let block = matrix.slice(ndarray::s![start_idx..end_idx, start_idx..end_idx]);
 
             // Compute block inverse (using LU decomposition for robustness)
             let (p, l, u) = lu(&block, None)?;
@@ -608,8 +608,8 @@ where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     /// Create polynomial preconditioner using Neumann series
-    pub fn new(_matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
-        let (m, n) = _matrix.dim();
+    pub fn new(matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
+        let (m, n) = matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
                 "Polynomial preconditioner requires square _matrix".to_string(),
@@ -617,11 +617,11 @@ where
         }
 
         // Estimate spectral radius for scaling
-        let matrix_norm = matrix_norm(_matrix, "fro", None)?;
+        let matrix_norm = matrix_norm(matrix, "fro", None)?;
         let scaling = F::one() / matrix_norm;
 
         Ok(Self {
-            matrix: _matrix.to_owned(),
+            matrix: matrix.to_owned(),
             degree: config.polynomial_degree,
             scaling,
             size: n,
@@ -675,62 +675,62 @@ where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     /// Create adaptive preconditioner based on matrix properties
-    pub fn new(_matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
-        let (m, n) = _matrix.dim();
+    pub fn new(matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
+        let (m, n) = matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
                 "Preconditioner requires square _matrix".to_string(),
             ));
         }
 
-        // Analyze _matrix properties
-        let condition_estimate = Self::estimate_condition_number(_matrix)?;
-        let is_symmetric = Self::check_symmetry(_matrix);
-        let is_positive_definite = is_symmetric && Self::check_positive_definite(_matrix);
-        let sparsity = Self::estimate_sparsity(_matrix);
+        // Analyze matrix properties
+        let condition_estimate = Self::estimate_condition_number(matrix)?;
+        let is_symmetric = Self::check_symmetry(matrix);
+        let is_positive_definite = is_symmetric && Self::check_positive_definite(matrix);
+        let sparsity = Self::estimate_sparsity(matrix);
 
-        // Select preconditioner based on _matrix properties
+        // Select preconditioner based on matrix properties
         if condition_estimate < F::from(10.0).unwrap() {
             // Well-conditioned: use simple diagonal preconditioner
-            Ok(Self::Diagonal(DiagonalPreconditioner::new(_matrix)?))
-        } else if is_positive_definite && sparsity > 0.8 {
+            Ok(Self::Diagonal(DiagonalPreconditioner::new(matrix)?))
+        } else if is_positive_definite && sparsity > F::from(0.8).unwrap() {
             // Sparse SPD: use incomplete Cholesky
             Ok(Self::IncompleteCholesky(
-                IncompleteCholeskyPreconditioner::new(_matrix, config)?,
+                IncompleteCholeskyPreconditioner::new(matrix, config)?,
             ))
-        } else if sparsity > 0.7 {
+        } else if sparsity > F::from(0.7).unwrap() {
             // Sparse general: use incomplete LU
             Ok(Self::IncompleteLU(IncompleteLUPreconditioner::new(
-                _matrix, config,
+                matrix, config,
             )?))
         } else if n <= 1000 {
             // Medium size: use block Jacobi
             Ok(Self::BlockJacobi(BlockJacobiPreconditioner::new(
-                _matrix, config,
+                matrix, config,
             )?))
         } else {
             // Large dense: use polynomial preconditioner
             Ok(Self::Polynomial(PolynomialPreconditioner::new(
-                _matrix, config,
+                matrix, config,
             )?))
         }
     }
 
     /// Estimate condition number using power iteration
-    fn estimate_condition_number(_matrix: &ArrayView2<F>) -> LinalgResult<F> {
-        let n = _matrix.nrows();
+    fn estimate_condition_number(matrix: &ArrayView2<F>) -> LinalgResult<F> {
+        let n = matrix.nrows();
         let mut x = Array1::from_vec(vec![F::one(); n]);
         let norm_x = (x.iter().map(|&val| val * val).sum::<F>()).sqrt();
         x /= norm_x;
 
         // Power iteration for largest eigenvalue
         for _ in 0..10 {
-            let y = _matrix.dot(&x);
+            let y = matrix.dot(&x);
             let norm_y = (y.iter().map(|&val| val * val).sum::<F>()).sqrt();
             x = y / norm_y;
         }
 
-        let lambda_max = x.dot(&_matrix.dot(&x));
+        let lambda_max = x.dot(&matrix.dot(&x));
 
         // Rough estimate: condition number ≈ λ_max / λ_min
         // For simplicity, assume λ_min is roughly λ_max / n
@@ -738,8 +738,8 @@ where
     }
 
     /// Check if matrix is symmetric
-    fn check_symmetry(_matrix: &ArrayView2<F>) -> bool {
-        let (m, n) = _matrix.dim();
+    fn check_symmetry(matrix: &ArrayView2<F>) -> bool {
+        let (m, n) = matrix.dim();
         if m != n {
             return false;
         }
@@ -747,7 +747,7 @@ where
         let tolerance = F::from(1e-12).unwrap();
         for i in 0..n {
             for j in (i + 1)..n {
-                if (_matrix[[i, j]] - _matrix[[j, i]]).abs() > tolerance {
+                if (matrix[[i, j]] - matrix[[j, i]]).abs() > tolerance {
                     return false;
                 }
             }
@@ -756,28 +756,31 @@ where
     }
 
     /// Check if symmetric matrix is positive definite (simplified)
-    fn check_positive_definite(_matrix: &ArrayView2<F>) -> bool {
-        let n = _matrix.nrows();
+    fn check_positive_definite(matrix: &ArrayView2<F>) -> bool {
+        let n = matrix.nrows();
 
         // Check diagonal elements are positive
         for i in 0..n {
-            if _matrix[[i, i]] <= F::zero() {
+            if matrix[[i, i]] <= F::zero() {
                 return false;
             }
         }
 
         // Additional check: try Cholesky decomposition
-        cholesky(_matrix, None).is_ok()
+        cholesky(matrix, None).is_ok()
     }
 
     /// Estimate sparsity ratio
-    fn estimate_sparsity(_matrix: &ArrayView2<F>) -> f64 {
-        let (m, n) = _matrix.dim();
+    fn estimate_sparsity(matrix: &ArrayView2<F>) -> F {
+        let (m, n) = matrix.dim();
         let total_elements = m * n;
         let tolerance = F::from(1e-14).unwrap();
 
-        let zero_elements = _matrix.iter().filter(|&&val| val.abs() <= tolerance).count();
-        zero_elements as f64 / total_elements as f64
+        let zero_elements = matrix
+            .iter()
+            .filter(|&&val| val.abs() <= tolerance)
+            .count();
+        F::from(zero_elements).unwrap() / F::from(total_elements).unwrap()
     }
 }
 
@@ -911,8 +914,8 @@ where
         let ap = matrix.dot(&p);
         let alpha = rsold / p.dot(&ap);
 
-        x = &x + &p * alpha;
-        r = &r - &ap * alpha;
+        x.scaled_add(alpha, &p);
+        r.scaled_add(-alpha, &ap);
 
         // Check convergence
         let residual_norm = (r.iter().map(|&val| val * val).sum::<F>()).sqrt();
@@ -1006,7 +1009,7 @@ where
 
         // For simplicity, use approximate solution update
         // (Full GMRES would solve the least squares problem)
-        x = &x + &v[0] * (tolerance * F::from(0.1).unwrap());
+        x.scaled_add(tolerance * F::from(0.1).unwrap(), &v[0]);
     }
 
     Ok(x)
@@ -1045,7 +1048,8 @@ impl Default for PreconditionerAnalysis {
 /// Analyze preconditioner performance and effectiveness
 #[allow(dead_code)]
 pub fn analyze_preconditioner<F>(
-    matrix: &ArrayView2<F>, _preconditioner: &dyn PreconditionerOp<F>,
+    matrix: &ArrayView2<F>,
+    _preconditioner: &dyn PreconditionerOp<F>,
 ) -> LinalgResult<PreconditionerAnalysis>
 where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,

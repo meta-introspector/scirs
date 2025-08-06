@@ -64,12 +64,12 @@ static GLOBAL_WORKERS: Mutex<Option<usize>> = Mutex::new(None);
 /// set_global_workers(None);
 /// ```
 #[allow(dead_code)]
-pub fn set_global_workers(_workers: Option<usize>) {
+pub fn set_global_workers(workers: Option<usize>) {
     if let Ok(mut global) = GLOBAL_WORKERS.lock() {
-        *global = _workers;
+        *global = workers;
 
         // Set OpenMP environment variable if specified
-        if let Some(num_workers) = _workers {
+        if let Some(num_workers) = workers {
             std::env::set_var("OMP_NUM_THREADS", num_workers.to_string());
         } else {
             // Remove the environment variable to use system default
@@ -101,8 +101,8 @@ pub fn get_global_workers() -> Option<usize> {
 ///
 /// * Effective worker count to use
 #[allow(dead_code)]
-pub fn configure_workers(_workers: Option<usize>) -> Option<usize> {
-    match _workers {
+pub fn configure_workers(workers: Option<usize>) -> Option<usize> {
+    match workers {
         Some(count) => {
             // Operation-specific setting takes precedence
             std::env::set_var("OMP_NUM_THREADS", count.to_string());
@@ -159,8 +159,8 @@ impl WorkerConfig {
     }
 
     /// Set the chunk size for batched operations
-    pub fn with_chunk_size(mut self, chunk_size: usize) -> Self {
-        self.chunk_size = chunk_size;
+    pub fn with_chunk_size(mut self, chunksize: usize) -> Self {
+        self.chunk_size = chunksize;
         self
     }
 
@@ -188,9 +188,9 @@ impl ScopedWorkers {
     /// # Returns
     ///
     /// * ScopedWorkers guard that restores previous configuration on drop
-    pub fn new(_workers: Option<usize>) -> Self {
+    pub fn new(workers: Option<usize>) -> Self {
         let previous_workers = get_global_workers();
-        set_global_workers(_workers);
+        set_global_workers(workers);
         Self { previous_workers }
     }
 }
@@ -216,14 +216,14 @@ pub mod iter {
     /// # Returns
     ///
     /// * Vector of results from each chunk
-    pub fn parallel_chunks<T, R, F>(_items: &[T], chunk_size: usize, f: F) -> Vec<R>
+    pub fn parallel_chunks<T, R, F>(_items: &[T], chunksize: usize, f: F) -> Vec<R>
     where
         T: Send + Sync,
         R: Send,
         F: Fn(&[T]) -> R + Send + Sync,
     {
         _items
-            .chunks(chunk_size)
+            .chunks(chunksize)
             .collect::<Vec<_>>()
             .into_par_iter()
             .map(f)
@@ -240,13 +240,13 @@ pub mod iter {
     /// # Returns
     ///
     /// * Vector of results
-    pub fn parallel_enumerate<T, R, F>(_items: &[T], f: F) -> Vec<R>
+    pub fn parallel_enumerate<T, R, F>(items: &[T], f: F) -> Vec<R>
     where
         T: Send + Sync,
         R: Send,
         F: Fn(usize, &T) -> R + Send + Sync,
     {
-        _items
+        items
             .par_iter()
             .enumerate()
             .map(|(i, item)| f(i, item))
@@ -279,8 +279,8 @@ pub mod adaptive {
     /// # Returns
     ///
     /// * Recommended processing strategy
-    pub fn choose_strategy(_data_size: usize, config: &WorkerConfig) -> Strategy {
-        if _data_size < config.parallel_threshold {
+    pub fn choose_strategy(_datasize: usize, config: &WorkerConfig) -> Strategy {
+        if _datasize < config.parallel_threshold {
             Strategy::Serial
         } else {
             Strategy::Parallel
@@ -297,8 +297,8 @@ pub mod adaptive {
     /// # Returns
     ///
     /// * true if parallel processing is recommended
-    pub fn should_use_parallel(_data_size: usize, config: &WorkerConfig) -> bool {
-        matches!(choose_strategy(_data_size, config), Strategy::Parallel)
+    pub fn should_use_parallel(_datasize: usize, config: &WorkerConfig) -> bool {
+        matches!(choose_strategy(_datasize, config), Strategy::Parallel)
     }
 }
 
@@ -323,8 +323,8 @@ pub mod scheduler {
 
     impl WorkStealingScheduler {
         /// Create a new work-stealing scheduler
-        pub fn new(_config: &WorkerConfig) -> Self {
-            let num_workers = _config.workers.unwrap_or_else(|| {
+        pub fn new(config: &WorkerConfig) -> Self {
+            let num_workers = config.workers.unwrap_or_else(|| {
                 // Default to available parallelism or 4 threads
                 std::thread::available_parallelism()
                     .map(|n| n.get())
@@ -332,7 +332,7 @@ pub mod scheduler {
             });
             Self {
                 num_workers,
-                chunk_size: _config.chunk_size,
+                chunk_size: config.chunk_size,
                 adaptive_chunking: true,
             }
         }
@@ -414,10 +414,10 @@ pub mod scheduler {
         }
 
         /// Determine adaptive chunk size based on workload size
-        fn adaptive_chunk_size(&self, total_items: usize) -> usize {
+        fn adaptive_chunk_size(&self, totalitems: usize) -> usize {
             // Use smaller chunks for better load balancing on smaller workloads
             // and larger chunks for better cache efficiency on larger workloads
-            let items_per_worker = total_items / self.num_workers;
+            let items_per_worker = totalitems / self.num_workers;
 
             if items_per_worker < 100 {
                 // Small workload: use fine-grained chunks
@@ -529,9 +529,9 @@ pub mod scheduler {
 
     impl DynamicLoadBalancer {
         /// Create a new dynamic load balancer
-        pub fn new(_config: &WorkerConfig) -> Self {
+        pub fn new(config: &WorkerConfig) -> Self {
             Self {
-                scheduler: WorkStealingScheduler::new(_config),
+                scheduler: WorkStealingScheduler::new(config),
                 timing_stats: Arc::new(Mutex::new(TimingStats::default())),
             }
         }
@@ -649,9 +649,9 @@ pub mod scheduler {
 
     impl AdvancedWorkStealingScheduler {
         /// Create a new advanced work-stealing scheduler
-        pub fn new(_config: &WorkerConfig) -> Self {
+        pub fn new(config: &WorkerConfig) -> Self {
             Self {
-                base_scheduler: WorkStealingScheduler::new(_config),
+                base_scheduler: WorkStealingScheduler::new(config),
                 numa_aware: true,
                 cache_line_size: 64, // Common cache line size
                 work_queue_per_thread: true,
@@ -726,9 +726,9 @@ pub mod scheduler {
         }
 
         /// Enhanced adaptive chunk size calculation
-        fn adaptive_chunk_size_enhanced(&self, total_items: usize) -> usize {
+        fn adaptive_chunk_size_enhanced(&self, totalitems: usize) -> usize {
             let num_workers = self.base_scheduler.num_workers;
-            let items_per_worker = total_items / num_workers;
+            let items_per_worker = totalitems / num_workers;
 
             // Consider cache efficiency and load balancing
             let cache_optimal_size = self.cache_line_size / std::mem::size_of::<usize>();
@@ -1052,10 +1052,10 @@ pub mod thread_pool {
     }
 
     /// Initialize global thread pool with a specific profile
-    pub fn initialize_global_pool(_profile: ThreadPoolProfile) -> Result<(), String> {
+    pub fn initialize_global_pool(profile: ThreadPoolProfile) -> Result<(), String> {
         let pool = global_pool();
         let mut manager = pool.lock().unwrap();
-        manager.profile = _profile;
+        manager.profile = profile;
         manager.initialize()
     }
 
@@ -1070,14 +1070,14 @@ pub mod thread_pool {
 
     impl AdaptiveThreadPool {
         /// Create a new adaptive thread pool
-        pub fn new(_min_threads: usize, max_threads: usize) -> Self {
+        pub fn new(_min_threads: usize, maxthreads: usize) -> Self {
             let current = std::thread::available_parallelism()
                 .map(|n| n.get())
                 .unwrap_or(4);
 
             Self {
                 min_threads: _min_threads,
-                max_threads,
+                max_threads: maxthreads,
                 current_threads: Arc::new(Mutex::new(current)),
                 cpu_utilization: Arc::new(Mutex::new(0.0)),
             }
@@ -1171,7 +1171,7 @@ pub mod thread_pool {
         }
 
         /// Find optimal thread pool configuration for a workload
-        pub fn find_optimal_configuration<F>(_workload: F) -> ThreadPoolProfile
+        pub fn find_optimal_configuration<F>(workload: F) -> ThreadPoolProfile
         where
             F: Fn() -> f64 + Clone,
         {
@@ -1181,7 +1181,7 @@ pub mod thread_pool {
                 ThreadPoolProfile::LatencySensitive,
             ];
 
-            let results = benchmark_configurations(&profiles, _workload);
+            let results = benchmark_configurations(&profiles, workload);
 
             results
                 .into_iter()
@@ -1205,8 +1205,8 @@ pub mod thread_pool {
 
     impl EnhancedThreadPool {
         /// Create a new enhanced thread pool
-        pub fn new(_profile: ThreadPoolProfile) -> Self {
-            let base_pool = Arc::new(Mutex::new(ThreadPoolManager::new().with_profile(_profile)));
+        pub fn new(profile: ThreadPoolProfile) -> Self {
+            let base_pool = Arc::new(Mutex::new(ThreadPoolManager::new().with_profile(profile)));
 
             Self {
                 base_pool,
@@ -1473,10 +1473,10 @@ pub mod numa {
         }
 
         /// Get optimal thread distribution across NUMA nodes
-        pub fn optimal_thread_distribution(&self, total_threads: usize) -> Vec<usize> {
+        pub fn optimal_thread_distribution(&self, totalthreads: usize) -> Vec<usize> {
             let mut distribution = vec![0; self.num_nodes];
-            let threads_per_node = total_threads / self.num_nodes;
-            let remaining = total_threads % self.num_nodes;
+            let threads_per_node = totalthreads / self.num_nodes;
+            let remaining = totalthreads % self.num_nodes;
 
             for (i, item) in distribution.iter_mut().enumerate().take(self.num_nodes) {
                 *item = threads_per_node;
@@ -1503,8 +1503,8 @@ pub mod numa {
 
     impl NumaPartitioning {
         /// Choose optimal partitioning strategy
-        pub fn choose_optimal(_rows: usize, cols: usize, num_nodes: usize) -> Self {
-            if num_nodes == 1 {
+        pub fn choose_optimal(_rows: usize, cols: usize, numnodes: usize) -> Self {
+            if numnodes == 1 {
                 return NumaPartitioning::RowWise;
             }
 
@@ -1718,8 +1718,10 @@ pub mod numa {
 
     impl NumaMemoryStrategy {
         /// Create a new NUMA memory strategy
-        pub fn new(_topology: NumaTopology) -> Self {
-            Self { topology: _topology }
+        pub fn new(topology: NumaTopology) -> Self {
+            Self {
+                topology: topology,
+            }
         }
 
         /// Get recommended memory allocation for a matrix operation
@@ -1937,16 +1939,16 @@ pub mod numa {
 
     impl NumaWorkloadBalancer {
         /// Create a new NUMA workload balancer
-        pub fn new(_topology: NumaTopology) -> Self {
-            let load_history = Arc::new(Mutex::new(vec![0.0; _topology.num_nodes]));
+        pub fn new(topology: NumaTopology) -> Self {
+            let load_history = Arc::new(Mutex::new(vec![0.0; topology.num_nodes]));
             Self {
-                topology: _topology,
+                topology: topology,
                 load_history,
             }
         }
 
         /// Get optimal work distribution for a given workload
-        pub fn distribute_work(&self, total_work_units: usize) -> Vec<usize> {
+        pub fn distribute_work(&self, total_workunits: usize) -> Vec<usize> {
             let load_history = self.load_history.lock().unwrap();
 
             // Calculate load-adjusted capacity for each node
@@ -1966,7 +1968,7 @@ pub mod numa {
 
             // Distribute work proportionally
             let mut distribution = vec![0; self.topology.num_nodes];
-            let mut remaining_work = total_work_units;
+            let mut remaining_work = total_workunits;
 
             for i in 0..self.topology.num_nodes {
                 if i == self.topology.num_nodes - 1 {
@@ -1974,7 +1976,7 @@ pub mod numa {
                     distribution[i] = remaining_work;
                 } else {
                     let node_share =
-                        (node_capacities[i] / total_capacity * total_work_units as f64) as usize;
+                        (node_capacities[i] / total_capacity * total_workunits as f64) as usize;
                     distribution[i] = node_share;
                     remaining_work -= node_share;
                 }
@@ -2106,18 +2108,18 @@ pub mod affinity {
 
     impl CoreAffinity {
         /// Create affinity for specific cores
-        pub fn cores(_core_ids: Vec<usize>) -> Self {
+        pub fn cores(_coreids: Vec<usize>) -> Self {
             Self {
-                core_ids: _core_ids,
+                core_ids: _coreids,
                 allow_migration: false,
                 numa_node: None,
             }
         }
 
         /// Create affinity for a NUMA node
-        pub fn numa_node(_node_id: usize, topology: &NumaTopology) -> Self {
-            let core_ids = if _node_id < topology.cpus_per_node.len() {
-                topology.cpus_per_node[_node_id].clone()
+        pub fn numa_node(_nodeid: usize, topology: &NumaTopology) -> Self {
+            let core_ids = if _nodeid < topology.cpus_per_node.len() {
+                topology.cpus_per_node[_nodeid].clone()
             } else {
                 vec![]
             };
@@ -2125,7 +2127,7 @@ pub mod affinity {
             Self {
                 core_ids,
                 allow_migration: true,
-                numa_node: Some(_node_id),
+                numa_node: Some(_nodeid),
             }
         }
 
@@ -2145,26 +2147,26 @@ pub mod affinity {
 
     impl AffinityManager {
         /// Create a new affinity manager
-        pub fn new(_strategy: AffinityStrategy, topology: NumaTopology) -> Self {
+        pub fn new(strategy: AffinityStrategy, topology: NumaTopology) -> Self {
             let thread_assignments = Arc::new(Mutex::new(Vec::new()));
             Self {
-                strategy: _strategy,
+                strategy: strategy,
                 topology,
                 thread_assignments,
             }
         }
 
         /// Generate thread affinity assignments based on strategy
-        pub fn generate_assignments(&self, num_threads: usize) -> Vec<CoreAffinity> {
+        pub fn generate_assignments(&self, numthreads: usize) -> Vec<CoreAffinity> {
             match self.strategy {
                 AffinityStrategy::None => {
                     // No specific affinity
                     vec![]
                 }
-                AffinityStrategy::Pinned => self.generate_pinned_assignments(num_threads),
-                AffinityStrategy::NumaSpread => self.generate_numa_spread_assignments(num_threads),
+                AffinityStrategy::Pinned => self.generate_pinned_assignments(numthreads),
+                AffinityStrategy::NumaSpread => self.generate_numa_spread_assignments(numthreads),
                 AffinityStrategy::NumaCompact => {
-                    self.generate_numa_compact_assignments(num_threads)
+                    self.generate_numa_compact_assignments(numthreads)
                 }
                 AffinityStrategy::Custom => {
                     // Use existing assignments
@@ -2179,7 +2181,7 @@ pub mod affinity {
         }
 
         /// Generate pinned affinity assignments (one thread per core)
-        fn generate_pinned_assignments(&self, num_threads: usize) -> Vec<CoreAffinity> {
+        fn generate_pinned_assignments(&self, numthreads: usize) -> Vec<CoreAffinity> {
             let total_cores: usize = self
                 .topology
                 .cpus_per_node
@@ -2187,7 +2189,7 @@ pub mod affinity {
                 .map(|node| node.len())
                 .sum();
 
-            let effective_threads = std::cmp::min(num_threads, total_cores);
+            let effective_threads = std::cmp::min(numthreads, total_cores);
             let mut all_cores: Vec<usize> = self
                 .topology
                 .cpus_per_node
@@ -2204,10 +2206,10 @@ pub mod affinity {
         }
 
         /// Generate NUMA-spread assignments (distribute across nodes)
-        fn generate_numa_spread_assignments(&self, num_threads: usize) -> Vec<CoreAffinity> {
+        fn generate_numa_spread_assignments(&self, numthreads: usize) -> Vec<CoreAffinity> {
             let mut assignments = Vec::new();
-            let threads_per_node = num_threads / self.topology.num_nodes;
-            let extra_threads = num_threads % self.topology.num_nodes;
+            let threads_per_node = numthreads / self.topology.num_nodes;
+            let extra_threads = numthreads % self.topology.num_nodes;
 
             for (node_id, cores) in self.topology.cpus_per_node.iter().enumerate() {
                 let node_threads = threads_per_node + if node_id < extra_threads { 1 } else { 0 };
@@ -2228,9 +2230,9 @@ pub mod affinity {
         }
 
         /// Generate NUMA-compact assignments (fill nodes sequentially)
-        fn generate_numa_compact_assignments(&self, num_threads: usize) -> Vec<CoreAffinity> {
+        fn generate_numa_compact_assignments(&self, numthreads: usize) -> Vec<CoreAffinity> {
             let mut assignments = Vec::new();
-            let mut remaining_threads = num_threads;
+            let mut remaining_threads = numthreads;
 
             for (node_id, cores) in self.topology.cpus_per_node.iter().enumerate() {
                 if remaining_threads == 0 {
@@ -2261,25 +2263,28 @@ pub mod affinity {
         }
 
         /// Set custom affinity for a specific thread
-        pub fn set_thread_affinity(&self, thread_id: usize, affinity: CoreAffinity) {
+        pub fn set_thread_affinity(&self, threadid: usize, affinity: CoreAffinity) {
             let mut assignments = self.thread_assignments.lock().unwrap();
 
             // Expand vector if needed
-            while assignments.len() <= thread_id {
+            while assignments.len() <= threadid {
                 assignments.push(None);
             }
 
-            assignments[thread_id] = Some(affinity);
+            assignments[threadid] = Some(affinity);
         }
 
         /// Get affinity for a specific thread
-        pub fn get_thread_affinity(&self, thread_id: usize) -> Option<CoreAffinity> {
+        pub fn get_thread_affinity(&self, threadid: usize) -> Option<CoreAffinity> {
             let assignments = self.thread_assignments.lock().unwrap();
-            assignments.get(thread_id).and_then(|opt| opt.clone())
+            assignments.get(threadid).and_then(|opt| opt.clone())
         }
 
         /// Apply affinity settings to current thread (platform-specific)
-        pub fn apply_current_thread_affinity(&self, _affinity: &CoreAffinity) -> Result<(), String> {
+        pub fn apply_current_thread_affinity(
+            &self,
+            _affinity: &CoreAffinity,
+        ) -> Result<(), String> {
             // Note: This is a simplified implementation
             // In a real implementation, you would use platform-specific APIs:
             // - On Linux: sched_setaffinity, pthread_setaffinity_np
@@ -3891,14 +3896,14 @@ pub mod advanced_work_stealing {
         }
 
         /// Add work item with automatic priority classification
-        pub fn push(&self, item: T, estimated_cost: Duration, dependencies: Vec<usize>) -> usize {
+        pub fn push(&self, item: T, estimatedcost: Duration, dependencies: Vec<usize>) -> usize {
             let task_id = self.generate_task_id();
-            let priority = self.classify_priority(&estimated_cost, &dependencies);
+            let priority = self.classify_priority(&estimatedcost, &dependencies);
 
             let work_item = PriorityWorkItem {
                 data: item,
                 priority,
-                estimated_cost,
+                estimated_cost: estimatedcost,
                 dependencies,
                 task_id,
             };
@@ -3971,10 +3976,10 @@ pub mod advanced_work_stealing {
         }
 
         /// Classify task priority based on cost and dependencies
-        fn classify_priority(&self, estimated_cost: &Duration, dependencies: &[usize]) -> u32 {
-            let base_priority: u32 = if estimated_cost.as_millis() > 100 {
+        fn classify_priority(&self, estimatedcost: &Duration, dependencies: &[usize]) -> u32 {
+            let base_priority: u32 = if estimatedcost.as_millis() > 100 {
                 80 // High _cost tasks get high priority
-            } else if estimated_cost.as_millis() > 10 {
+            } else if estimatedcost.as_millis() > 10 {
                 50 // Medium _cost tasks
             } else {
                 20 // Low _cost tasks
@@ -3992,9 +3997,9 @@ pub mod advanced_work_stealing {
         }
 
         /// Record task completion for performance prediction
-        pub fn record_completion(&self, task_id: usize, actual_duration: Duration) {
+        pub fn record_completion(&self, task_id: usize, actualduration: Duration) {
             if let Ok(mut history) = self.completion_history.try_lock() {
-                history.push_back((task_id, actual_duration));
+                history.push_back((task_id, actualduration));
 
                 // Keep history bounded
                 if history.len() > 1000 {
@@ -4116,7 +4121,8 @@ pub mod advanced_work_stealing {
         fn adjust_for_history(
             &self,
             base_chunk: usize,
-            matrix_dims: (usize, usize), _operation_type: MatrixOperation,
+            matrix_dims: (usize, usize),
+            _operation_type: MatrixOperation,
         ) -> usize {
             if let Ok(history) = self.performance_history.lock() {
                 // Find similar operations in history
@@ -4196,24 +4202,24 @@ pub mod advanced_work_stealing {
 
     impl PredictiveLoadBalancer {
         /// Create new predictive load balancer
-        pub fn new(_num_workers: usize) -> Self {
+        pub fn new(_numworkers: usize) -> Self {
             Self {
                 execution_history: Mutex::new(std::collections::HashMap::new()),
-                worker_loads: Mutex::new(vec![0.0; _num_workers]),
+                worker_loads: Mutex::new(vec![0.0; _numworkers]),
                 model_weights: Mutex::new(vec![1.0; 4]), // Simple 4-feature model
             }
         }
 
         /// Predict execution time for a task
-        pub fn predict_execution_time(&self, task_features: &TaskFeatures) -> Duration {
+        pub fn predict_execution_time(&self, taskfeatures: &TaskFeatures) -> Duration {
             let weights = self.model_weights.lock().unwrap();
 
             // Extract _features
             let _features = [
-                task_features.data_size as f64,
-                task_features.complexity_factor,
-                task_features.memory_access_pattern as f64,
-                task_features.arithmetic_intensity,
+                taskfeatures.data_size as f64,
+                taskfeatures.complexity_factor,
+                taskfeatures.memory_access_pattern as f64,
+                taskfeatures.arithmetic_intensity,
             ];
 
             // Simple linear prediction
@@ -4228,12 +4234,12 @@ pub mod advanced_work_stealing {
         }
 
         /// Assign task to optimal worker based on predicted load
-        pub fn assign_task(&self, task_features: &TaskFeatures) -> usize {
-            let predicted_time = self.predict_execution_time(task_features);
+        pub fn assign_task(&self, taskfeatures: &TaskFeatures) -> usize {
+            let predicted_time = self.predict_execution_time(taskfeatures);
             let mut loads = self.worker_loads.lock().unwrap();
 
             // Find worker with minimum predicted finish time
-            let (best_worker, _min_load) = loads
+            let (best_worker, min_load) = loads
                 .iter()
                 .enumerate()
                 .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -4246,7 +4252,7 @@ pub mod advanced_work_stealing {
         }
 
         /// Update model with actual execution time
-        pub fn update_model(&self, task_features: &TaskFeatures, actual_time: Duration) {
+        pub fn update_model(&self, task_features: &TaskFeatures, actualtime: Duration) {
             // Record execution _time
             let task_type = format!(
                 "{}_{}",
@@ -4257,27 +4263,27 @@ pub mod advanced_work_stealing {
                 history
                     .entry(task_type)
                     .or_insert_with(Vec::new)
-                    .push(actual_time);
+                    .push(actualtime);
             }
 
             // Simple model update (in practice, would use more sophisticated ML)
-            self.update_weights(task_features, actual_time);
+            self.update_weights(task_features, actualtime);
         }
 
         /// Update worker load (when task completes)
-        pub fn update_worker_load(&self, worker_id: usize, completed_time: Duration) {
+        pub fn update_worker_load(&self, worker_id: usize, completedtime: Duration) {
             if let Ok(mut loads) = self.worker_loads.lock() {
                 if worker_id < loads.len() {
-                    loads[worker_id] -= completed_time.as_secs_f64();
+                    loads[worker_id] -= completedtime.as_secs_f64();
                     loads[worker_id] = loads[worker_id].max(0.0);
                 }
             }
         }
 
         /// Simple weight update using gradient descent-like approach
-        fn update_weights(&self, task_features: &TaskFeatures, actual_time: Duration) {
+        fn update_weights(&self, task_features: &TaskFeatures, actualtime: Duration) {
             let predicted_time = self.predict_execution_time(task_features);
-            let error = actual_time.as_secs_f64() - predicted_time.as_secs_f64();
+            let error = actualtime.as_secs_f64() - predicted_time.as_secs_f64();
 
             if let Ok(mut weights) = self.model_weights.lock() {
                 let learning_rate = 0.001;

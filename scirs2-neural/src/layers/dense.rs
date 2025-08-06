@@ -79,8 +79,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
         rng: &mut R,
     ) -> Result<Self> {
         // Create activation function from _name
-        let activation = if let Some(_name) = activation_name {
-            match _name.to_lowercase().as_str() {
+        let activation = if let Some(name) = activation_name {
+            match name.to_lowercase().as_str() {
                 "relu" => Some(Box::new(crate::activations_minimal::ReLU::new())
                     as Box<dyn Activation<F> + Send + Sync>),
                 "sigmoid" => Some(Box::new(crate::activations_minimal::Sigmoid::new())
@@ -257,7 +257,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
             cached_input
                 .into_shape_with_order(IxDyn(&[1, self.input_dim]))
                 .map_err(|e| {
-                    NeuralError::InferenceError(format!("Failed to reshape cached _input: {e}"))
+                    NeuralError::InferenceError(format!("Failed to reshape cached input: {e}"))
                 })?
         } else {
             cached_input
@@ -265,7 +265,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
 
         let batch_size = grad_2d.shape()[0];
 
-        // Compute weight gradients: dW = _input.T @ grad_output
+        // Compute weight gradients: dW = input.T @ grad_output
         let mut dweights = Array::zeros(IxDyn(&[self.input_dim, self.output_dim]));
         for i in 0..self.input_dim {
             for j in 0..self.output_dim {
@@ -312,7 +312,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
         Ok(grad_input)
     }
 
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         let dweights = {
             let dweights_guard = self.dweights.read().unwrap();
             dweights_guard.clone()
@@ -325,12 +325,12 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
         // Update weights and biases using gradient descent
         for i in 0..self.input_dim {
             for j in 0..self.output_dim {
-                self.weights[[i, j]] = self.weights[[i, j]] - learning_rate * dweights[[i, j]];
+                self.weights[[i, j]] = self.weights[[i, j]] - learningrate * dweights[[i, j]];
             }
         }
 
         for j in 0..self.output_dim {
-            self.biases[j] = self.biases[j] - learning_rate * dbiases[j];
+            self.biases[j] = self.biases[j] - learningrate * dbiases[j];
         }
 
         Ok(())

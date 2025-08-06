@@ -78,9 +78,9 @@ where
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: AdvancedSimdConfig) -> Self {
+    pub fn with_config(config: AdvancedSimdConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             _phantom: PhantomData,
         }
     }
@@ -393,7 +393,7 @@ where
             // Generate _bootstrap sample
             let mut bootstrap_sample = Array1::zeros(n);
             for j in 0..n {
-                let idx = rng.random_range(0..n);
+                let idx = rng.gen_range(0..n);
                 bootstrap_sample[j] = data[idx];
             }
 
@@ -484,17 +484,17 @@ where
         + std::iter::Sum<F>,
 {
     /// SIMD-optimized sum of cubes
-    fn simd_sum_cubes(_data: &ArrayView1<F>) -> F {
-        _data.iter().map(|&x| x * x * x).sum()
+    fn simd_sum_cubes(data: &ArrayView1<F>) -> F {
+        data.iter().map(|&x| x * x * x).sum()
     }
 
     /// SIMD-optimized sum of fourth powers
-    fn simd_sum_quads(_data: &ArrayView1<F>) -> F {
-        _data.iter().map(|&x| x * x * x * x).sum()
+    fn simd_sum_quads(data: &ArrayView1<F>) -> F {
+        data.iter().map(|&x| x * x * x * x).sum()
     }
 
     /// SIMD-optimized correlation coefficient
-    fn simd_correlation(x: &ArrayView1<F>, y: &ArrayView1<F>, mean_x: F, mean_y: F) -> F {
+    fn simd_correlation(x: &ArrayView1<F>, y: &ArrayView1<F>, mean_x: F, meany: F) -> F {
         let n = x.len();
         if n != y.len() {
             return F::zero();
@@ -528,7 +528,7 @@ impl AdvancedSimdOps<f64> for f64 {}
 
 /// High-level convenience functions
 #[allow(dead_code)]
-pub fn advanced_mean_simd<F>(_data: &ArrayView1<F>) -> StatsResult<F>
+pub fn advanced_mean_simd<F>(data: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float
         + NumCast
@@ -548,7 +548,7 @@ where
 }
 
 #[allow(dead_code)]
-pub fn advanced_std_simd<F>(_data: &ArrayView1<F>) -> StatsResult<F>
+pub fn advanced_std_simd<F>(data: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float
         + NumCast
@@ -568,7 +568,7 @@ where
 }
 
 #[allow(dead_code)]
-pub fn advanced_comprehensive_simd<F>(_data: &ArrayView1<F>) -> StatsResult<ComprehensiveStats<F>>
+pub fn advanced_comprehensive_simd<F>(data: &ArrayView1<F>) -> StatsResult<ComprehensiveStats<F>>
 where
     F: Float
         + NumCast
@@ -588,7 +588,7 @@ where
 
 /// Create RNG with optional seed
 #[allow(dead_code)]
-fn create_rng(_seed: Option<u64>) -> impl Rng {
+fn create_rng(seed: Option<u64>) -> impl Rng {
     use rand::{rngs::StdRng, SeedableRng};
     match _seed {
         Some(s) => StdRng::seed_from_u64(s),

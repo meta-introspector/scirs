@@ -143,7 +143,8 @@ where
     lambda: F,
     use_polynomial: bool,
     use_multiscale: bool,
-    scale_parameters: Option<Array1<F>>, _phantom: PhantomData<F>,
+    scale_parameters: Option<Array1<F>>,
+    _phantom: PhantomData<F>,
 }
 
 impl<F> Default for EnhancedRBFBuilder<F>
@@ -193,7 +194,8 @@ where
             lambda: F::from_f64(1e-10).unwrap(),
             use_polynomial: false,
             use_multiscale: false,
-            scale_parameters: None, _phantom: PhantomData,
+            scale_parameters: None,
+            _phantom: PhantomData,
         }
     }
 
@@ -232,7 +234,7 @@ where
     }
 
     /// Set anisotropic scale factors for each dimension
-    pub fn with_scale_factors(mut self, scale_factors: Array1<F>) -> Self {
+    pub fn with_scale_factors(mut self, scalefactors: Array1<F>) -> Self {
         // Ensure all scale _factors are positive
         if scale_factors.iter().any(|&s| s <= F::zero()) {
             panic!("scale _factors must be positive");
@@ -251,19 +253,19 @@ where
     }
 
     /// Enable or disable using a polynomial trend
-    pub fn with_polynomial(mut self, use_polynomial: bool) -> Self {
+    pub fn with_polynomial(mut self, usepolynomial: bool) -> Self {
         self.use_polynomial = use_polynomial;
         self
     }
 
     /// Enable or disable the multi-scale approach
-    pub fn with_multiscale(mut self, use_multiscale: bool) -> Self {
+    pub fn with_multiscale(mut self, usemultiscale: bool) -> Self {
         self.use_multiscale = use_multiscale;
         self
     }
 
     /// Set scale parameters for multi-scale approach
-    pub fn with_scale_parameters(mut self, scale_parameters: Array1<F>) -> Self {
+    pub fn with_scale_parameters(mut self, scaleparameters: Array1<F>) -> Self {
         if scale_parameters.iter().any(|&s| s <= F::zero()) {
             panic!("scale _parameters must be positive");
         }
@@ -454,7 +456,8 @@ where
             lambda: self.lambda,
             use_polynomial: self.use_polynomial,
             use_multiscale: self.use_multiscale,
-            scale_parameters: Some(scale_parameters), _phantom: PhantomData,
+            scale_parameters: Some(scale_parameters),
+            _phantom: PhantomData,
         })
     }
 
@@ -695,9 +698,9 @@ where
     }
 
     /// Calculate the Euclidean distance between two points with anisotropic scaling
-    fn scaled_distance(_p1: &ArrayView1<F>, p2: &ArrayView1<F>, scale_factors: &Array1<F>) -> F {
+    fn scaled_distance(_p1: &ArrayView1<F>, p2: &ArrayView1<F>, scalefactors: &Array1<F>) -> F {
         let mut sum_sq = F::zero();
-        for ((&x1, &x2), &scale) in _p1.iter().zip(p2.iter()).zip(scale_factors.iter()) {
+        for ((&x1, &x2), &scale) in p1.iter().zip(p2.iter()).zip(scale_factors.iter()) {
             let diff = (x1 - x2) / scale;
             sum_sq += diff * diff;
         }
@@ -927,15 +930,15 @@ where
     }
 
     /// Helper function to calculate mean distance between all pairs of points
-    fn calculate_mean_distance(_points: &ArrayView2<F>, scale_factors: &Array1<F>) -> F {
-        let n_points = _points.shape()[0];
+    fn calculate_mean_distance(_points: &ArrayView2<F>, scalefactors: &Array1<F>) -> F {
+        let n_points = points.shape()[0];
         let mut total_dist = F::zero();
         let mut pair_count = 0;
 
         for i in 0..n_points {
             for j in i + 1..n_points {
-                let point_i = _points.slice(ndarray::s![i, ..]);
-                let point_j = _points.slice(ndarray::s![j, ..]);
+                let point_i = points.slice(ndarray::s![i, ..]);
+                let point_j = points.slice(ndarray::s![j, ..]);
                 total_dist += Self::scaled_distance(&point_i, &point_j, scale_factors);
                 pair_count += 1;
             }
@@ -949,13 +952,13 @@ where
     }
 
     /// Helper function to extract a subset of points
-    fn extract_points_subset(_points: &ArrayView2<F>, indices: &[usize]) -> Array2<F> {
-        let n_dims = _points.shape()[1];
+    fn extract_points_subset(points: &ArrayView2<F>, indices: &[usize]) -> Array2<F> {
+        let n_dims = points.shape()[1];
         let mut subset = Array2::zeros((indices.len(), n_dims));
 
         for (i, &idx) in indices.iter().enumerate() {
             for j in 0..n_dims {
-                subset[[i, j]] = _points[[idx, j]];
+                subset[[i, j]] = points[[idx, j]];
             }
         }
 
@@ -963,11 +966,11 @@ where
     }
 
     /// Helper function to extract a subset of values
-    fn extract_values_subset(_values: &ArrayView1<F>, indices: &[usize]) -> Array1<F> {
+    fn extract_values_subset(values: &ArrayView1<F>, indices: &[usize]) -> Array1<F> {
         let mut subset = Array1::zeros(indices.len());
 
         for (i, &idx) in indices.iter().enumerate() {
-            subset[i] = _values[idx];
+            subset[i] = values[idx];
         }
 
         subset
@@ -1173,7 +1176,7 @@ where
     }
 
     /// Interpolate at new points
-    pub fn interpolate(&self, query_points: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
+    pub fn interpolate(&self, querypoints: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         // Check dimensions
         if query_points.shape()[1] != self._points.shape()[1] {
             return Err(InterpolateError::DimensionMismatch(
@@ -1536,7 +1539,7 @@ where
 ///
 /// An enhanced RBF interpolator with equivalent functionality
 #[allow(dead_code)]
-pub fn enhance_rbf<F>(_rbf: &RBFInterpolator<F>) -> InterpolateResult<EnhancedRBFInterpolator<F>>
+pub fn enhance_rbf<F>(rbf: &RBFInterpolator<F>) -> InterpolateResult<EnhancedRBFInterpolator<F>>
 where
     F: Float
         + FromPrimitive
@@ -1557,11 +1560,13 @@ where
         + 'static,
 {
     // Extract data from the standard RBF interpolator
-    let _points = _rbf.interpolate(&Array2::ones((1, 2)).view()).map_err(|_| {
-        InterpolateError::InvalidState(
-            "Failed to extract data from standard RBF interpolator".to_string(),
-        )
-    })?;
+    let _points = _rbf
+        .interpolate(&Array2::ones((1, 2)).view())
+        .map_err(|_| {
+            InterpolateError::InvalidState(
+                "Failed to extract data from standard RBF interpolator".to_string(),
+            )
+        })?;
 
     // Create an enhanced RBF interpolator with equivalent parameters
     EnhancedRBFInterpolator::builder()

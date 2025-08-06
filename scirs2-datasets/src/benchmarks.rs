@@ -36,9 +36,9 @@ pub struct BenchmarkResult {
 
 impl BenchmarkResult {
     /// Create a new benchmark result
-    pub fn new(_operation: String, parameters: HashMap<String, String>) -> Self {
+    pub fn new(operation: String, parameters: HashMap<String, String>) -> Self {
         Self {
-            _operation,
+            operation,
             parameters,
             duration: Duration::ZERO,
             memory_used: None,
@@ -72,7 +72,7 @@ impl BenchmarkResult {
     }
 
     /// Set memory usage
-    pub fn with_memory(mut self, memory_used: usize) -> Self {
+    pub fn with_memory(mut self, memoryused: usize) -> Self {
         self.memory_used = Some(memory_used);
         self
     }
@@ -129,9 +129,9 @@ pub struct BenchmarkSuite {
 
 impl BenchmarkSuite {
     /// Create a new benchmark suite
-    pub fn new(_name: String) -> Self {
+    pub fn new(name: String) -> Self {
         Self {
-            _name,
+            name,
             results: Vec::new(),
             total_duration: Duration::ZERO,
         }
@@ -252,7 +252,7 @@ impl BenchmarkRunner {
     }
 
     /// Set warmup iterations
-    pub fn with_warmup(mut self, warmup_iterations: usize) -> Self {
+    pub fn with_warmup(mut self, warmupiterations: usize) -> Self {
         self.warmup_iterations = warmup_iterations;
         self
     }
@@ -360,7 +360,7 @@ impl BenchmarkRunner {
                 bc_params,
                 || match load_breast_cancer() {
                     Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-                    Err(e) => Err(format!("Failed to load breast_cancer: {e}")),
+                    Err(e) => Err(format!("Failed to load breastcancer: {e}")),
                 },
             );
         suite.add_result(bc_result);
@@ -443,7 +443,7 @@ impl BenchmarkRunner {
     }
 
     /// Benchmark CSV loading performance
-    pub fn benchmark_csv_loading<P: AsRef<Path>>(&self, csv_path: P) -> BenchmarkSuite {
+    pub fn benchmark_csv_loading<P: AsRef<Path>>(&self, csvpath: P) -> BenchmarkSuite {
         let mut suite = BenchmarkSuite::new("CSV Loading".to_string());
         let _path = csv_path.as_ref();
 
@@ -457,7 +457,7 @@ impl BenchmarkRunner {
         // Standard CSV loading
         let std_params = HashMap::from([
             ("method".to_string(), "standard".to_string()),
-            ("file".to_string(), _path.to_string_lossy().to_string()),
+            ("file".to_string(), path.to_string_lossy().to_string()),
         ]);
         let std_result = self.run_benchmark("csv_standard", std_params, || {
             let config = CsvConfig::default().with_header(true);
@@ -471,7 +471,7 @@ impl BenchmarkRunner {
         // Parallel CSV loading
         let par_params = HashMap::from([
             ("method".to_string(), "parallel".to_string()),
-            ("file".to_string(), _path.to_string_lossy().to_string()),
+            ("file".to_string(), path.to_string_lossy().to_string()),
         ]);
         let par_result = self.run_benchmark("csv_parallel", par_params, || {
             let csv_config = CsvConfig::default().with_header(true);
@@ -522,8 +522,8 @@ pub struct PerformanceComparison {
 
 impl PerformanceComparison {
     /// Create a new performance comparison
-    pub fn new(_baseline: BenchmarkSuite, current: BenchmarkSuite) -> Self {
-        Self { _baseline, current }
+    pub fn new(baseline: BenchmarkSuite, current: BenchmarkSuite) -> Self {
+        Self { baseline, current }
     }
 
     /// Calculate speedup ratio for matching operations

@@ -31,7 +31,7 @@ impl ReLU {
         Self { alpha: 0.0 }
     }
     /// Create a new Leaky ReLU activation function with given alpha.
-    pub fn leaky(_alpha: f64) -> Self {
+    pub fn leaky(alpha: f64) -> Self {
         Self { _alpha }
     }
 }
@@ -105,7 +105,7 @@ pub struct LeakyReLU {
 
 impl LeakyReLU {
     /// Create a new LeakyReLU activation function with given alpha.
-    pub fn new(_alpha: f64) -> Self {
+    pub fn new(alpha: f64) -> Self {
         Self { _alpha }
     }
 }

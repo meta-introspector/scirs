@@ -82,13 +82,13 @@ impl AdvancedDatasetAnalyzer {
     }
 
     /// Configure GPU usage
-    pub fn with_gpu(mut self, use_gpu: bool) -> Self {
+    pub fn with_gpu(mut self, usegpu: bool) -> Self {
         self.use_gpu = use_gpu;
         self
     }
 
     /// Configure advanced-precision mode
-    pub fn with_advanced_precision(mut self, advanced_precision: bool) -> Self {
+    pub fn with_advanced_precision(mut self, advancedprecision: bool) -> Self {
         self.advanced_precision = advanced_precision;
         self
     }
@@ -731,14 +731,14 @@ impl AdvancedDatasetAnalyzer {
 
 /// Convenience function for advanced dataset analysis
 #[allow(dead_code)]
-pub fn analyze_dataset_advanced(_dataset: &Dataset) -> Result<AdvancedQualityMetrics> {
+pub fn analyze_dataset_advanced(dataset: &Dataset) -> Result<AdvancedQualityMetrics> {
     let analyzer = AdvancedDatasetAnalyzer::new();
     analyzer.analyze_dataset_quality(_dataset)
 }
 
 /// Convenience function for quick quality assessment
 #[allow(dead_code)]
-pub fn quick_quality_assessment(_dataset: &Dataset) -> Result<f64> {
+pub fn quick_quality_assessment(dataset: &Dataset) -> Result<f64> {
     let analyzer = AdvancedDatasetAnalyzer::new().with_advanced_precision(false);
     let metrics = analyzer.analyze_dataset_quality(_dataset)?;
     Ok(metrics.ml_quality_score)

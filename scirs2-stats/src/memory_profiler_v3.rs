@@ -211,10 +211,10 @@ struct CachedResult<F> {
 }
 
 impl<F: Float + Clone + std::fmt::Display> StatisticsCache<F> {
-    pub fn new(_max_entries: usize, max_memory: usize) -> Self {
+    pub fn new(_max_entries: usize, maxmemory: usize) -> Self {
         Self {
             cache: HashMap::new(),
-            max_entries: _max_entries,
+            max_entries: max_entries,
             max_memory,
             current_memory: 0,
             profiler: None,
@@ -262,7 +262,7 @@ impl<F: Float + Clone + std::fmt::Display> StatisticsCache<F> {
     }
 
     /// Evict entries to make room for new ones
-    fn maybe_evict(&mut self, needed_size: usize) {
+    fn maybe_evict(&mut self, neededsize: usize) {
         // Check memory limit
         while self.current_memory + needed_size > self.max_memory && !self.cache.is_empty() {
             self.evict_lru();
@@ -337,16 +337,16 @@ pub struct AdaptiveMemoryManager {
 }
 
 impl AdaptiveMemoryManager {
-    pub fn new(_profiler: Arc<MemoryProfiler>) -> Self {
+    pub fn new(profiler: Arc<MemoryProfiler>) -> Self {
         Self {
             memory_threshold_low: 100 * 1024 * 1024,   // 100MB
             memory_threshold_high: 1024 * 1024 * 1024, // 1GB
-            profiler: _profiler,
+            profiler: profiler,
         }
     }
 
     /// Choose optimal algorithm based on current memory usage
-    pub fn choose_algorithm(&self, data_size: usize) -> AlgorithmChoice {
+    pub fn choose_algorithm(&self, datasize: usize) -> AlgorithmChoice {
         let current_memory = *self.profiler.current_memory.lock().unwrap();
 
         if current_memory > self.memory_threshold_high {
@@ -374,7 +374,7 @@ impl AdaptiveMemoryManager {
     }
 
     /// Suggest chunk size based on available memory
-    pub fn suggest_chunk_size(&self, data_size: usize, element_size: usize) -> usize {
+    pub fn suggest_chunk_size(&self, data_size: usize, elementsize: usize) -> usize {
         let current_memory = *self.profiler.current_memory.lock().unwrap();
         let available_memory = self.memory_threshold_high.saturating_sub(current_memory);
 
@@ -407,13 +407,13 @@ impl<F> ProfiledStatistics<F>
 where
     F: Float + NumCast + Clone + Send + Sync + std::fmt::Display,
 {
-    pub fn new(_profiler: Arc<MemoryProfiler>) -> Self {
+    pub fn new(profiler: Arc<MemoryProfiler>) -> Self {
         let cache = StatisticsCache::new(1000, 50 * 1024 * 1024) // 50MB cache
             .with_profiler(_profiler.clone());
         let adaptive_manager = AdaptiveMemoryManager::new(_profiler.clone());
 
         Self {
-            profiler: _profiler.clone(),
+            profiler: profiler.clone(),
             cache,
             adaptive_manager,
         }

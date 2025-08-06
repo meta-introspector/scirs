@@ -28,9 +28,9 @@ pub struct BinaryAccuracy {
 
 impl BinaryAccuracy {
     /// Create a new binary accuracy metric with the given threshold
-    pub fn new(_threshold: f64) -> Self {
+    pub fn new(threshold: f64) -> Self {
         Self {
-            threshold: _threshold,
+            threshold: threshold,
         }
     }
 }

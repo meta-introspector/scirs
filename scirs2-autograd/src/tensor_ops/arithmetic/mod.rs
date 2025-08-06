@@ -12,7 +12,7 @@ use crate::tensor::Tensor;
 use crate::{Float, Graph};
 
 // Import internal operation modules
-use crate::tensor__ops::{binary_ops, math_ops, shape};
+use crate::tensor_ops::{binary_ops, math_ops, shape};
 
 /// Elementwise addition.
 ///
@@ -466,7 +466,7 @@ where
 ///    ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::arithmetic::maximum;
+/// use ag::tensor_ops::arithmetic::maximum;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![1., 2., 3.], g);
@@ -494,7 +494,7 @@ where
 ///    ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::arithmetic::minimum;
+/// use ag::tensor_ops::arithmetic::minimum;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![1., 2., 3.], g);
@@ -527,7 +527,7 @@ where
 ///    ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::arithmetic::equal;
+/// use ag::tensor_ops::arithmetic::equal;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![1., 2., 3.], g);
@@ -560,7 +560,7 @@ where
 ///    ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::arithmetic::not_equal;
+/// use ag::tensor_ops::arithmetic::not_equal;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![1., 2., 3.], g);
@@ -660,7 +660,7 @@ where
 ///    ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::arithmetic::floor;
+/// use ag::tensor_ops::arithmetic::floor;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![-1.7, -1.5, -0.2, 0.2, 1.5, 1.7, 2.0], g);
@@ -690,7 +690,7 @@ where
 ///    ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::arithmetic::ceil;
+/// use ag::tensor_ops::arithmetic::ceil;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![-1.7, -1.5, -0.2, 0.2, 1.5, 1.7, 2.0], g);
@@ -727,7 +727,7 @@ where
 
 /// Clamps values to the range [min_value, max_value]
 #[allow(dead_code)]
-pub fn clip<'graph, A, F: Float>(x: A, min_value: F, max_value: F) -> Tensor<'graph, F>
+pub fn clip<'graph, A, F: Float>(x: A, min_value: F, maxvalue: F) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
@@ -777,7 +777,7 @@ where
     A: AsRef<Tensor<'graph, F>> + Copy,
     B: AsRef<Tensor<'graph, F>> + Copy,
 {
-    use crate::tensor__ops::array_ops;
+    use crate::tensor_ops::array_ops;
     Tensor::builder(g)
         .append_input(shape_a.as_ref(), false)
         .append_input(shape_b.as_ref(), false)
@@ -787,7 +787,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tensor__ops::convert_to_tensor;
+    use crate::tensor_ops::convert_to_tensor;
     use approx::assert_relative_eq;
     use ndarray::array;
 

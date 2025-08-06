@@ -66,7 +66,7 @@ where
     // Start with random initial vector
     let mut rng = rand::rng();
     for i in 0..n {
-        v[[i, 0]] = T::from(rng.random_range(-0.5..0.5)).unwrap();
+        v[[i, 0]] = T::from(rng.gen_range(-0.5..0.5)).unwrap();
     }
     
     // Normalize initial vector
@@ -210,7 +210,7 @@ where
     // Start with random initial vector
     let mut rng = rand::rng();
     for i in 0..n {
-        v[[i, 0]] = T::from(rng.random_range(-0.5..0.5)).unwrap();
+        v[[i, 0]] = T::from(rng.gen_range(-0.5..0.5)).unwrap();
     }
     
     // Normalize initial vector
@@ -362,7 +362,7 @@ where
 
 /// Check convergence of Lanczos iteration
 #[allow(dead_code)]
-fn check_lanczos_convergence<T>(_alpha: &Array1<T>, beta: &Array1<T>, j: usize, tolerance: T) -> bool
+fn check_lanczos_convergence<T>(alpha: &Array1<T>, beta: &Array1<T>, j: usize, tolerance: T) -> bool
 where
     T: Float + Copy,
 {
@@ -372,7 +372,7 @@ where
     
     // Check if the off-diagonal elements are becoming small
     let off_diag_norm = beta[j].abs();
-    off_diag_norm < tolerance * _alpha[j - 1].abs()
+    off_diag_norm < tolerance * alpha[j - 1].abs()
 }
 
 /// Compute eigenvalues of a small Hessenberg matrix

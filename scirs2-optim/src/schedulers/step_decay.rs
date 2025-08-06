@@ -57,7 +57,7 @@ impl<A: Float + Debug> StepDecay<A> {
     /// * `initial_lr` - Initial learning rate
     /// * `gamma` - Multiplicative factor of learning rate decay
     /// * `step_size` - Number of steps between learning rate decay
-    pub fn new(initial_lr: A, gamma: A, step_size: usize) -> Self {
+    pub fn new(initial_lr: A, gamma: A, stepsize: usize) -> Self {
         Self {
             initial_lr,
             gamma,

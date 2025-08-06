@@ -31,8 +31,8 @@ use super::filters::WaveletFilters;
 /// assert!(((energy - 1.0) as f64).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn filter_energy(_filter: &[f64]) -> f64 {
-    _filter.iter().map(|&x| x * x).sum()
+pub fn filter_energy(filter: &[f64]) -> f64 {
+    filter.iter().map(|&x| x * x).sum()
 }
 
 /// Check if a set of wavelet filters satisfies the perfect reconstruction condition
@@ -140,9 +140,9 @@ pub fn check_perfect_reconstruction(
 /// assert!(((center_freq - 0.25) as f64).abs() < 0.1);
 /// ```
 #[allow(dead_code)]
-pub fn center_frequency(_filter: &[f64]) -> f64 {
+pub fn center_frequency(filter: &[f64]) -> f64 {
     let pi = std::f64::consts::PI;
-    let n = _filter.len();
+    let n = filter.len();
     
     // Calculate the first moment of the squared magnitude response
     let mut num = 0.0;
@@ -156,8 +156,8 @@ pub fn center_frequency(_filter: &[f64]) -> f64 {
         let mut resp_re = 0.0;
         let mut resp_im = 0.0;
         for i in 0..n {
-            resp_re += _filter[i] * (omega * i as f64).cos();
-            resp_im -= _filter[i] * (omega * i as f64).sin();
+            resp_re += filter[i] * (omega * i as f64).cos();
+            resp_im -= filter[i] * (omega * i as f64).sin();
         }
         
         // Squared magnitude response
@@ -202,7 +202,7 @@ pub fn center_frequency(_filter: &[f64]) -> f64 {
 /// assert_eq!(moments, 4); // DB4 has 4 vanishing moments
 /// ```
 #[allow(dead_code)]
-pub fn estimate_vanishing_moments(_highpass_filter: &[f64], tol: Option<f64>) -> usize {
+pub fn estimate_vanishing_moments(_highpassfilter: &[f64], tol: Option<f64>) -> usize {
     let tolerance = tol.unwrap_or(1e-10);
     let mut n_moments = 0;
     
@@ -211,7 +211,7 @@ pub fn estimate_vanishing_moments(_highpass_filter: &[f64], tol: Option<f64>) ->
         let mut moment = 0.0;
         
         // Calculate the k-th moment of the highpass _filter
-        for (i, &coef) in _highpass_filter.iter().enumerate() {
+        for (i, &coef) in highpass_filter.iter().enumerate() {
             moment += coef * (i as f64).powi(k as i32);
         }
         
@@ -246,19 +246,19 @@ pub fn estimate_vanishing_moments(_highpass_filter: &[f64], tol: Option<f64>) ->
 /// assert_eq!(length, 3); // Effective length is 3, not 6
 /// ```
 #[allow(dead_code)]
-pub fn effective_filter_length(_filter: &[f64], tol: Option<f64>) -> usize {
+pub fn effective_filter_length(filter: &[f64], tol: Option<f64>) -> usize {
     let tolerance = tol.unwrap_or(1e-10);
-    let n = _filter.len();
+    let n = filter.len();
     
     // Find first non-zero coefficient
     let mut start = 0;
-    while start < n && _filter[start].abs() <= tolerance {
+    while start < n && filter[start].abs() <= tolerance {
         start += 1;
     }
     
     // Find last non-zero coefficient
     let mut end = n;
-    while end > start && _filter[end - 1].abs() <= tolerance {
+    while end > start && filter[end - 1].abs() <= tolerance {
         end -= 1;
     }
     

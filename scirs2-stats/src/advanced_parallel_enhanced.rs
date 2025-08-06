@@ -111,7 +111,7 @@ pub struct AdvancedParallelProcessor {
 
 impl AdvancedParallelProcessor {
     /// Create new advanced parallel processor
-    pub fn new(_config: AdvancedParallelConfig) -> Self {
+    pub fn new(config: AdvancedParallelConfig) -> Self {
         let numa_topology = detect_numa_topology();
         let memory_hierarchy = detect_memory_hierarchy();
 
@@ -128,7 +128,7 @@ impl AdvancedParallelProcessor {
             ))),
             performance_monitor: Arc::new(RwLock::new(RealTimePerformanceMonitor::new())),
             thread_pool_manager: Arc::new(RwLock::new(ThreadPoolManager::new(&_config))),
-            _config,
+            config,
         }
     }
 
@@ -417,7 +417,7 @@ impl AdvancedParallelProcessor {
         }
     }
 
-    fn estimate_cache_efficiency(&self, data_size: usize) -> f64 {
+    fn estimate_cache_efficiency(&self, datasize: usize) -> f64 {
         // Simplified cache efficiency estimation based on data _size
         let l1_cache_size = 32 * 1024; // 32KB typical L1 cache
         let l2_cache_size = 256 * 1024; // 256KB typical L2 cache
@@ -434,7 +434,7 @@ impl AdvancedParallelProcessor {
         }
     }
 
-    fn estimate_numa_locality(&self, data_size: usize) -> f64 {
+    fn estimate_numa_locality(&self, datasize: usize) -> f64 {
         // Estimate NUMA locality potential based on data _size
         let numa_node_memory = 64 * 1024 * 1024 * 1024; // 64GB per NUMA node typical
 
@@ -1092,7 +1092,7 @@ pub struct PerformancePredictor {
 }
 
 impl PerformancePredictor {
-    pub fn new(_config: &AdvancedParallelConfig) -> Self {
+    pub fn new(config: &AdvancedParallelConfig) -> Self {
         Self {
             models: HashMap::new(),
             feature_cache: HashMap::new(),
@@ -1135,7 +1135,7 @@ pub struct IntelligentLoadBalancer {
 }
 
 impl IntelligentLoadBalancer {
-    pub fn new(_config: &AdvancedParallelConfig, numa_topology: &NumaTopology) -> Self {
+    pub fn new(_config: &AdvancedParallelConfig, numatopology: &NumaTopology) -> Self {
         Self {
             strategy: LoadBalancingIntelligence::MachineLearning,
             numa_topology: numa_topology.clone(),
@@ -1169,9 +1169,9 @@ pub struct NumaOptimizer {
 }
 
 impl NumaOptimizer {
-    pub fn new(_topology: NumaTopology) -> Self {
+    pub fn new(topology: NumaTopology) -> Self {
         Self {
-            _topology,
+            topology,
             placement_history: HashMap::new(),
         }
     }
@@ -1227,7 +1227,7 @@ pub struct AdvancedMemoryManager {
 }
 
 impl AdvancedMemoryManager {
-    pub fn new(_config: &AdvancedParallelConfig, memory_hierarchy: MemoryHierarchy) -> Self {
+    pub fn new(_config: &AdvancedParallelConfig, memoryhierarchy: MemoryHierarchy) -> Self {
         Self {
             memory_hierarchy,
             allocation_strategy: AllocationStrategy::NumaLocal,
@@ -1311,7 +1311,7 @@ pub struct ThreadPoolManager {
 }
 
 impl ThreadPoolManager {
-    pub fn new(_config: &AdvancedParallelConfig) -> Self {
+    pub fn new(config: &AdvancedParallelConfig) -> Self {
         Self {
             strategy: ThreadPoolStrategy::Adaptive,
             active_pools: HashMap::new(),
@@ -1341,7 +1341,7 @@ pub struct StreamingPerformancePredictor {
 }
 
 impl StreamingPerformancePredictor {
-    pub fn new(_config: &AdvancedParallelConfig) -> Self {
+    pub fn new(config: &AdvancedParallelConfig) -> Self {
         Self {
             prediction_model: StreamingPredictionModel::default(),
             adaptation_history: VecDeque::new(),
@@ -1465,10 +1465,10 @@ pub struct StreamingBuffer<D> {
 }
 
 impl<D> StreamingBuffer<D> {
-    pub fn new(_max_size: usize) -> Self {
+    pub fn new(_maxsize: usize) -> Self {
         Self {
             data: VecDeque::with_capacity(_max_size),
-            _max_size,
+            max_size,
             current_memory_footprint: 0,
         }
     }

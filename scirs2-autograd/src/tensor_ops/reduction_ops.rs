@@ -1,9 +1,9 @@
-use crate::ndarray__ext::{NdArray, NdArrayView};
 use crate::ndarray_ext;
+use crate::ndarray_ext::{NdArray, NdArrayView};
 use crate::op;
 use crate::tensor::Tensor;
-use crate::tensor__ops::*;
 use crate::tensor_ops;
+use crate::tensor_ops::*;
 use crate::Float;
 use ndarray;
 use std::f32;
@@ -132,9 +132,9 @@ fn preprocess_axes<T: Float>(
     sparse_axes: bool,
 ) -> Vec<usize> {
     if sparse_axes {
-        ndarray_ext::sparse_to_dense(_axes)
+        ndarray_ext::sparse_to_dense(axes)
     } else {
-        ndarray_ext::normalize_negative_axes(_axes, x.ndim())
+        ndarray_ext::normalize_negative_axes(axes, x.ndim())
     }
 }
 

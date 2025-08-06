@@ -6,9 +6,9 @@
 pub mod bpe;
 
 use crate::error::{Result, TextError};
-use lazy__static::lazy_static;
+use lazy_static::lazy_static;
 use regex::Regex;
-use unicode__segmentation::UnicodeSegmentation;
+use unicode_segmentation::UnicodeSegmentation;
 
 pub use bpe::{BpeConfig, BpeTokenizer, BpeVocabulary};
 
@@ -40,18 +40,18 @@ pub struct WordTokenizer {
 
 impl WordTokenizer {
     /// Create a new word tokenizer
-    pub fn new(_lowercase: bool) -> Self {
+    pub fn new(lowercase: bool) -> Self {
         Self {
-            _lowercase,
+            lowercase,
             pattern: None,
         }
     }
 
     /// Create a new word tokenizer with a custom pattern
-    pub fn with_pattern(_lowercase: bool, pattern: &str) -> Result<Self> {
+    pub fn with_pattern(lowercase: bool, pattern: &str) -> Result<Self> {
         match Regex::new(pattern) {
             Ok(regex) => Ok(Self {
-                _lowercase,
+                lowercase,
                 pattern: Some(regex),
             }),
             Err(e) => Err(TextError::TokenizationError(format!(
@@ -111,7 +111,7 @@ impl SentenceTokenizer {
     }
 
     /// Create a new sentence tokenizer with a custom pattern
-    pub fn with_pattern(_pattern: &str) -> Result<Self> {
+    pub fn with_pattern(pattern: &str) -> Result<Self> {
         match Regex::new(_pattern) {
             Ok(regex) => Ok(Self {
                 _pattern: Some(regex),
@@ -162,9 +162,9 @@ pub struct CharacterTokenizer {
 
 impl CharacterTokenizer {
     /// Create a new character tokenizer
-    pub fn new(_use_grapheme_clusters: bool) -> Self {
+    pub fn new(_use_graphemeclusters: bool) -> Self {
         Self {
-            _use_grapheme_clusters,
+            use_grapheme_clusters,
         }
     }
 }
@@ -222,7 +222,7 @@ impl NgramTokenizer {
     }
 
     /// Create an n-gram tokenizer with a range of n values
-    pub fn with_range(_min_n: usize, max_n: usize) -> Result<Self> {
+    pub fn with_range(_min_n: usize, maxn: usize) -> Result<Self> {
         if _min_n == 0 || max_n < _min_n {
             return Err(TextError::TokenizationError(
                 "Invalid _n-gram range".to_string(),
@@ -309,7 +309,7 @@ impl RegexTokenizer {
     /// # Arguments
     /// * `pattern` - The regex pattern to use
     /// * `gaps` - If true, the pattern matches token separators. If false, it matches tokens.
-    pub fn new(_pattern: &str, gaps: bool) -> Result<Self> {
+    pub fn new(pattern: &str, gaps: bool) -> Result<Self> {
         match Regex::new(_pattern) {
             Ok(regex) => Ok(Self {
                 _pattern: regex,

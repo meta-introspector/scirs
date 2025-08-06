@@ -381,9 +381,9 @@ pub enum IssueResolution {
 
 impl<T: InterpolationFloat> SciPyParityCompletion<T> {
     /// Create new SciPy parity completion validator
-    pub fn new(_config: ParityCompletionConfig) -> Self {
+    pub fn new(config: ParityCompletionConfig) -> Self {
         Self {
-            _config,
+            config,
             feature_analysis: FeatureAnalysis {
                 fully_implemented: Vec::new(),
                 partially_implemented: Vec::new(),

@@ -367,15 +367,15 @@ where
 
 /// Helper function to check matrix symmetry
 #[allow(dead_code)]
-fn check_matrix_symmetry<F>(_matrix: &ArrayView2<F>, name: &str) -> LinalgResult<()>
+fn check_matrix_symmetry<F>(matrix: &ArrayView2<F>, name: &str) -> LinalgResult<()>
 where
     F: Float + NumAssign,
 {
-    let n = _matrix.nrows();
+    let n = matrix.nrows();
 
     for i in 0..n {
         for j in 0..n {
-            if (_matrix[[i, j]] - _matrix[[j, i]]).abs() > F::epsilon() {
+            if (matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() {
                 return Err(LinalgError::ShapeError(format!(
                     "Matrix {name} must be symmetric for eigh_gen"
                 )));
@@ -398,8 +398,8 @@ mod tests {
         let a = array![[2.0, 1.0], [1.0, 2.0]];
         let b = Array2::eye(2); // Identity matrix
 
-        let (w_gen, _v_gen) = eig_gen(&a.view(), &b.view(), None).unwrap();
-        let (w_std, _v_std) = eig(&a.view(), None).unwrap();
+        let (w_gen, v_gen) = eig_gen(&a.view(), &b.view(), None).unwrap();
+        let (w_std, v_std) = eig(&a.view(), None).unwrap();
 
         // Sort eigenvalues for comparison
         let mut w_gen_sorted: Vec<_> = w_gen.iter().map(|x| x.re).collect();
@@ -422,7 +422,7 @@ mod tests {
         let a = array![[1.0, 0.0], [0.0, 2.0]];
         let b = array![[2.0, 0.0], [0.0, 1.0]];
 
-        let (w, _v) = eig_gen(&a.view(), &b.view(), None).unwrap();
+        let (w, v) = eig_gen(&a.view(), &b.view(), None).unwrap();
 
         // Sort eigenvalues for predictable testing
         let mut eigenvals: Vec<_> = w.iter().map(|x| x.re).collect();

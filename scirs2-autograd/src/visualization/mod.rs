@@ -67,7 +67,7 @@ impl<F: Float> GraphVisualizer<F> {
     }
 
     /// Create a new graph visualizer with custom configuration
-    pub fn with_config(_config: VisualizationConfig) -> Self {
+    pub fn with_config(config: VisualizationConfig) -> Self {
         Self {
             _config_phantom: std::marker::PhantomData,
         }
@@ -252,12 +252,13 @@ impl<F: Float> GraphVisualizer<F> {
     /// Traverse the graph to collect tensor IDs
     #[allow(dead_code)]
     fn traverse_graph(
-        self_graph: &Graph<F>,
+        &self,
+        graph: &Graph<F>,
         _tensor_ids: &mut [TensorID],
         _visited: &mut HashSet<TensorID>,
     ) -> Result<(), VisualizationError> {
         // This is a simplified traversal - in a real implementation,
-        // we would need access to the _graph's internal structure
+        // we would need access to the graph's internal structure
         // For now, return an empty traversal
         Ok(())
     }
@@ -288,15 +289,15 @@ impl<F: Float> GraphVisualizer<F> {
 
     /// Calculate the depth of a tensor in the graph
     #[allow(dead_code)]
-    fn calculate_tensor_depth(&self_tensor_id: TensorID_tensor, _ids: &[TensorID]) -> usize {
+    fn calculate_tensor_depth(&self, tensor_id: &TensorID, ids: &[TensorID]) -> usize {
         // Simplified depth calculation
         0
     }
 
     /// Collect nodes from the graph
     #[allow(dead_code)]
-    fn collect_nodes(self_graph: &Graph<F>) -> Result<Vec<TensorID>, VisualizationError> {
-        // Simplified - would collect actual nodes from _graph
+    fn collect_nodes(&self, graph: &Graph<F>) -> Result<Vec<TensorID>, VisualizationError> {
+        // Simplified - would collect actual nodes from graph
         Ok(vec![0, 1, 2])
     }
 
@@ -318,7 +319,7 @@ impl<F: Float> GraphVisualizer<F> {
 
     /// Get node style for rendering
     #[allow(dead_code)]
-    fn get_node_style(&self_node: &TensorID) -> String {
+    fn get_node_style(selfnode: &TensorID) -> String {
         "style=filled, fillcolor=lightblue".to_string()
     }
 
@@ -353,7 +354,7 @@ impl<F: Float> GraphVisualizer<F> {
 
     /// Get styling for a node based on its type
     #[allow(dead_code)]
-    fn get_tensor_style(&self_tensor_id: TensorID) -> String {
+    fn get_tensor_style(&self, tensorid: &TensorID) -> String {
         // In a real implementation, would check tensor type
         "fillcolor=lightblue, style=filled".to_string()
     }
@@ -387,7 +388,7 @@ impl<F: Float> GraphDebugger<F> {
     }
 
     /// Print graph statistics
-    pub fn print_stats(self_graph: &Graph<F>) -> Result<(), VisualizationError> {
+    pub fn print_stats(&self, graph: &Graph<F>) -> Result<(), VisualizationError> {
         println!("Graph Statistics:");
         println!("================");
 
@@ -401,7 +402,7 @@ impl<F: Float> GraphDebugger<F> {
     }
 
     /// Validate graph structure
-    pub fn validate_graph(self_graph: &Graph<F>) -> Result<Vec<String>, VisualizationError> {
+    pub fn validate_graph(&self, graph: &Graph<F>) -> Result<Vec<String>, VisualizationError> {
         let issues = Vec::new();
 
         // Check for common _graph issues
@@ -414,7 +415,7 @@ impl<F: Float> GraphDebugger<F> {
     }
 
     /// Find potential optimization opportunities
-    pub fn analyze_optimizations(self_graph: &Graph<F>) -> Result<Vec<String>, VisualizationError> {
+    pub fn analyze_optimizations(&self, graph: &Graph<F>) -> Result<Vec<String>, VisualizationError> {
         // Look for optimization opportunities:
         // - Common subexpressions
         // - Constant folding opportunities
@@ -450,7 +451,7 @@ impl<F: Float> GraphExplorer<F> {
     }
 
     /// Start an interactive session for exploring the graph
-    pub fn start_interactive(self_graph: &Graph<F>) -> Result<(), VisualizationError> {
+    pub fn start_interactive(selfgraph: &Graph<F>) -> Result<(), VisualizationError> {
         println!("Starting interactive _graph exploration...");
         println!("Commands: help, stats, visualize, quit");
 
@@ -461,7 +462,7 @@ impl<F: Float> GraphExplorer<F> {
     }
 
     /// Generate a summary of a specific tensor
-    pub fn summarize_tensor(&self_tensor_id: TensorID) -> Result<String, VisualizationError> {
+    pub fn summarize_tensor(&self, tensorid: &TensorID) -> Result<String, VisualizationError> {
         Ok("Tensor summary would go here".to_string())
     }
 }

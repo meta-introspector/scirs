@@ -11,7 +11,7 @@ use crate::tensor::{AsTensor, Tensor};
 use crate::Float;
 
 // Import internal operation modules
-use crate::tensor__ops::{array_ops, math_ops, reduction_ops, shape};
+use crate::tensor_ops::{array_ops, math_ops, reduction_ops, shape};
 
 /// Takes sum along specified axes.
 ///
@@ -25,7 +25,7 @@ use crate::tensor__ops::{array_ops, math_ops, reduction_ops, shape};
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::reduction::reduce_sum;
+/// use ag::tensor_ops::reduction::reduce_sum;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -37,7 +37,7 @@ use crate::tensor__ops::{array_ops, math_ops, reduction_ops, shape};
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn reduce_sum<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
+pub fn reduce_sum<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -65,7 +65,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::reduction::reduce_mean;
+/// use ag::tensor_ops::reduction::reduce_mean;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -74,7 +74,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn reduce_mean<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
+pub fn reduce_mean<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -102,7 +102,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::reduction::reduce_prod;
+/// use ag::tensor_ops::reduction::reduce_prod;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -111,7 +111,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn reduce_prod<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
+pub fn reduce_prod<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -139,7 +139,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::reduction::reduce_min;
+/// use ag::tensor_ops::reduction::reduce_min;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 4.], [2., 3.]], g);
@@ -148,7 +148,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn reduce_min<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
+pub fn reduce_min<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -176,7 +176,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::reduction::reduce_max;
+/// use ag::tensor_ops::reduction::reduce_max;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 4.], [2., 3.]], g);
@@ -185,7 +185,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn reduce_max<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
+pub fn reduce_max<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -213,7 +213,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::reduction::reduce_variance;
+/// use ag::tensor_ops::reduction::reduce_variance;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -250,7 +250,7 @@ where
 /// * `axes` - Axes along which to compute the standard deviation
 /// * `keep_dims` - If true, keeps reduced dimensions as size 1
 #[allow(dead_code)]
-pub fn reduce_std<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
+pub fn reduce_std<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -266,7 +266,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::reduction::sum_all;
+/// use ag::tensor_ops::reduction::sum_all;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -293,7 +293,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::reduction::mean_all;
+/// use ag::tensor_ops::reduction::mean_all;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -325,7 +325,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::reduction::argmax;
+/// use ag::tensor_ops::reduction::argmax;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 4.], [2., 3.]], g);
@@ -334,7 +334,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn argmax<'graph, A, F: Float>(x: A, axis: isize, keep_dims: bool) -> Tensor<'graph, F>
+pub fn argmax<'graph, A, F: Float>(x: A, axis: isize, keepdims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
@@ -360,7 +360,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::reduction::argmin;
+/// use ag::tensor_ops::reduction::argmin;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 4.], [2., 3.]], g);
@@ -369,7 +369,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn argmin<'graph, A, F: Float>(x: A, axis: isize, keep_dims: bool) -> Tensor<'graph, F>
+pub fn argmin<'graph, A, F: Float>(x: A, axis: isize, keepdims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
@@ -392,7 +392,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::reduction::reduce_logsumexp;
+/// use ag::tensor_ops::reduction::reduce_logsumexp;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![1., 2., 3.], g);
@@ -403,7 +403,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn reduce_logsumexp<'graph, A, F: Float>(x: A, axis: isize, keep_dim: bool) -> Tensor<'graph, F>
+pub fn reduce_logsumexp<'graph, A, F: Float>(x: A, axis: isize, keepdim: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
@@ -425,7 +425,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::reduction::add_n;
+/// use ag::tensor_ops::reduction::add_n;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::ones((&[2, 2]), g);
@@ -442,12 +442,12 @@ pub fn add_n<'graph, A, F: Float>(xs: &[A]) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
-    let len = _xs.len();
+    let len = xs.len();
     assert_ne!(len, 0);
     if len == 1 {
         *_xs[0].as_ref()
     } else {
-        let g = _xs[0].as_ref().graph();
+        let g = xs[0].as_ref().graph();
         let mut b = Tensor::builder(g);
         for x in _xs {
             b = b.append_input(x.as_ref(), false);
@@ -463,7 +463,7 @@ where
 /// * `axes` - Axes along which to compute the norm
 /// * `keep_dims` - If true, keeps reduced dimensions as size 1
 #[allow(dead_code)]
-pub fn l1_norm<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
+pub fn l1_norm<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -479,7 +479,7 @@ where
 /// * `axes` - Axes along which to compute the norm
 /// * `keep_dims` - If true, keeps reduced dimensions as size 1
 #[allow(dead_code)]
-pub fn l2_norm<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
+pub fn l2_norm<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -497,7 +497,7 @@ where
 /// * `axes` - Axes along which to compute the norm
 /// * `keep_dims` - If true, keeps reduced dimensions as size 1
 #[allow(dead_code)]
-pub fn lp_norm<'graph, A, AT, F: Float>(x: A, p: F, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
+pub fn lp_norm<'graph, A, AT, F: Float>(x: A, p: F, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -516,7 +516,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::reduction::frobenius_norm;
+/// use ag::tensor_ops::reduction::frobenius_norm;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[3., 4.], [0., 0.]], g);
@@ -542,7 +542,7 @@ where
 /// * `axes` - Axes along which to test
 /// * `keep_dims` - If true, keeps reduced dimensions as size 1
 #[allow(dead_code)]
-pub fn reduce_all<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
+pub fn reduce_all<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -562,7 +562,7 @@ where
 /// * `axes` - Axes along which to test
 /// * `keep_dims` - If true, keeps reduced dimensions as size 1
 #[allow(dead_code)]
-pub fn reduce_any<'graph, A, AT, F: Float>(x: A, axes: &AT, keep_dims: bool) -> Tensor<'graph, F>
+pub fn reduce_any<'graph, A, AT, F: Float>(x: A, axes: &AT, keepdims: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
@@ -578,7 +578,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tensor__ops::convert_to_tensor;
+    use crate::tensor_ops::convert_to_tensor;
     #[allow(unused_imports)]
     use approx::assert_relative_eq;
     use ndarray::array;

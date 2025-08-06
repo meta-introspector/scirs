@@ -39,7 +39,7 @@ pub struct NetworkArchitecture {
     /// Activation functions for each layer
     pub activation_functions: Vec<ActivationFunction>,
     /// Dropout rates for regularization
-    pub dropout_rates: Vec<f64>,
+    pub dropoutrates: Vec<f64>,
     /// Batch normalization layers
     pub batch_normalization: Vec<bool>,
     /// Skip connections (ResNet-style)
@@ -484,7 +484,7 @@ pub enum VariationalMethod {
 #[derive(Debug, Clone)]
 pub struct MCDropoutConfig {
     /// Dropout rate during inference
-    pub dropout_rate: f64,
+    pub dropoutrate: f64,
     /// Number of forward passes
     pub num_samples: usize,
     /// Use different dropout masks
@@ -1241,13 +1241,13 @@ pub enum FeedbackMechanism {
 
 impl BifurcationPredictionNetwork {
     /// Create a new bifurcation prediction network
-    pub fn new(input_size: usize, hidden_layers: Vec<usize>, output_size: usize) -> Self {
+    pub fn new(input_size: usize, hidden_layers: Vec<usize>, outputsize: usize) -> Self {
         let architecture = NetworkArchitecture {
             input_size,
             hidden_layers: hidden_layers.clone(),
-            output_size,
+            output_size: outputsize,
             activation_functions: vec![ActivationFunction::ReLU; hidden_layers.len() + 1],
-            dropout_rates: vec![0.0; hidden_layers.len() + 1],
+            dropoutrates: vec![0.0; hidden_layers.len() + 1],
             batch_normalization: vec![false; hidden_layers.len() + 1],
             skip_connections: Vec::new(),
         };
@@ -1309,8 +1309,8 @@ impl BifurcationPredictionNetwork {
             )?;
 
             // Apply dropout if training
-            if self.architecture.dropout_rates[i] > 0.0 {
-                activation = Self::apply_dropout(&activation, self.architecture.dropout_rates[i])?;
+            if self.architecture.dropoutrates[i] > 0.0 {
+                activation = Self::apply_dropout(&activation, self.architecture.dropoutrates[i])?;
             }
         }
 
@@ -1344,17 +1344,17 @@ impl BifurcationPredictionNetwork {
     }
 
     /// Apply dropout during training
-    fn apply_dropout(x: &Array1<f64>, dropout_rate: f64) -> IntegrateResult<Array1<f64>> {
-        if dropout_rate == 0.0 {
+    fn apply_dropout(x: &Array1<f64>, dropoutrate: f64) -> IntegrateResult<Array1<f64>> {
+        if dropoutrate == 0.0 {
             return Ok(x.clone());
         }
 
         let mut rng = rand::rng();
         let mask: Array1<f64> = Array1::from_shape_fn(x.len(), |_| {
-            if rng.random::<f64>() < dropout_rate {
+            if rng.random::<f64>() < dropoutrate {
                 0.0
             } else {
-                1.0 / (1.0 - dropout_rate)
+                1.0 / (1.0 - dropoutrate)
             }
         });
 
@@ -1514,16 +1514,16 @@ impl BifurcationPredictionNetwork {
     }
 
     /// Evaluate model performance
-    pub fn evaluate(&self, test_data: &[(Array1<f64>, Array1<f64>)]) -> IntegrateResult<f64> {
+    pub fn evaluate(&self, testdata: &[(Array1<f64>, Array1<f64>)]) -> IntegrateResult<f64> {
         let mut total_loss = 0.0;
 
-        for (input, target) in test_data {
+        for (input, target) in testdata {
             let prediction = self.forward(input)?;
             let loss = self.calculate_loss(&prediction, target)?;
             total_loss += loss;
         }
 
-        Ok(total_loss / test_data.len() as f64)
+        Ok(total_loss / testdata.len() as f64)
     }
 
     /// Get current learning rate

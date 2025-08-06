@@ -44,49 +44,49 @@ pub struct MemoryPool<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> MemoryPool<F> {
     /// Create a new memory pool
-    pub fn new(_max_total_memory: usize) -> Self {
+    pub fn new(_max_totalmemory: usize) -> Self {
         Self {
             buffers: std::collections::HashMap::new(),
-            max_buffer_size: _max_total_memory / 4, // Quarter of total for single buffer
+            max_buffer_size: _max_totalmemory / 4, // Quarter of total for single buffer
             total_allocated: 0,
-            max_total_memory: _max_total_memory,
+            max_total_memory: _max_totalmemory,
         }
     }
 
     /// Allocate a buffer of specified size
-    pub fn allocate(&mut self, _size: usize) -> PooledBuffer<F> {
-        if _size <= self.max_buffer_size {
+    pub fn allocate(&mut self, size: usize) -> PooledBuffer<F> {
+        if size <= self.max_buffer_size {
             // Try to reuse existing buffer
-            if let Some(queue) = self.buffers.get_mut(&_size) {
+            if let Some(queue) = self.buffers.get_mut(&size) {
                 if let Some(mut buffer) = queue.pop_front() {
                     buffer.clear();
-                    buffer.resize(_size, F::zero());
-                    return PooledBuffer::new(buffer, Some(_size));
+                    buffer.resize(size, F::zero());
+                    return PooledBuffer::new(buffer, Some(size));
                 }
             }
         }
 
         // Allocate new buffer
-        if self.total_allocated + _size * std::mem::size_of::<F>() <= self.max_total_memory {
-            let buffer = vec![F::zero(); _size];
-            self.total_allocated += _size * std::mem::size_of::<F>();
+        if self.total_allocated + size * std::mem::size_of::<F>() <= self.max_total_memory {
+            let buffer = vec![F::zero(); size];
+            self.total_allocated += size * std::mem::size_of::<F>();
 
-            if _size <= self.max_buffer_size {
-                PooledBuffer::new(buffer, Some(_size))
+            if size <= self.max_buffer_size {
+                PooledBuffer::new(buffer, Some(size))
             } else {
                 PooledBuffer::new(buffer, None)
             }
         } else {
             // Fallback to regular allocation if pool is full
-            PooledBuffer::new(vec![F::zero(); _size], None)
+            PooledBuffer::new(vec![F::zero(); size], None)
         }
     }
 
     /// Return a buffer to the pool
-    pub fn deallocate(&mut self, _buffer: Vec<F>) {
-        let size = _buffer.len();
+    pub fn deallocate(&mut self, buffer: Vec<F>) {
+        let size = buffer.len();
         if size <= self.max_buffer_size && self.buffers.len() < 100 {
-            self.buffers.entry(size).or_default().push_back(_buffer);
+            self.buffers.entry(size).or_default().push_back(buffer);
         } else {
             self.total_allocated = self
                 .total_allocated
@@ -126,10 +126,10 @@ pub struct PooledBuffer<F: IntegrateFloat> {
 }
 
 impl<F: IntegrateFloat> PooledBuffer<F> {
-    fn new(_buffer: Vec<F>, pool_size: Option<usize>) -> Self {
+    fn new(buffer: Vec<F>, poolsize: Option<usize>) -> Self {
         Self {
-            buffer: Some(_buffer),
-            pool_size,
+            buffer: Some(buffer),
+            pool_size: poolsize,
         }
     }
 
@@ -186,24 +186,24 @@ pub enum MatrixLayout {
 
 impl<F: IntegrateFloat> CacheFriendlyMatrix<F> {
     /// Create new matrix with specified layout
-    pub fn new(_rows: usize, cols: usize, layout: MatrixLayout) -> Self {
-        let data = vec![F::zero(); _rows * cols];
+    pub fn new(rows: usize, cols: usize, layout: MatrixLayout) -> Self {
+        let data = vec![F::zero(); rows * cols];
         Self {
             data,
-            rows: _rows,
+            rows: rows,
             cols,
             layout,
         }
     }
 
     /// Create from existing Array2 with optimal layout
-    pub fn from_array(_array: &Array2<F>) -> Self {
-        let (rows, cols) = _array.dim();
+    pub fn from_array(array: &Array2<F>) -> Self {
+        let (rows, cols) = array.dim();
         let mut matrix = Self::new(rows, cols, MatrixLayout::RowMajor);
 
         for i in 0..rows {
             for j in 0..cols {
-                matrix.set(i, j, _array[[i, j]]);
+                matrix.set(i, j, array[[i, j]]);
             }
         }
 
@@ -211,26 +211,26 @@ impl<F: IntegrateFloat> CacheFriendlyMatrix<F> {
     }
 
     /// Get element at (row, col)
-    pub fn get(&self, _row: usize, col: usize) -> F {
-        let index = self.compute_index(_row, col);
+    pub fn get(&self, row: usize, col: usize) -> F {
+        let index = self.compute_index(row, col);
         self.data[index]
     }
 
     /// Set element at (row, col)
-    pub fn set(&mut self, _row: usize, col: usize, value: F) {
-        let index = self.compute_index(_row, col);
+    pub fn set(&mut self, row: usize, col: usize, value: F) {
+        let index = self.compute_index(row, col);
         self.data[index] = value;
     }
 
     /// Compute linear index based on layout
-    fn compute_index(&self, _row: usize, col: usize) -> usize {
+    fn compute_index(&self, row: usize, col: usize) -> usize {
         match self.layout {
-            MatrixLayout::RowMajor => _row * self.cols + col,
-            MatrixLayout::ColumnMajor => col * self.rows + _row,
+            MatrixLayout::RowMajor => row * self.cols + col,
+            MatrixLayout::ColumnMajor => col * self.rows + row,
             MatrixLayout::Blocked { block_size } => {
-                let block_row = _row / block_size;
+                let block_row = row / block_size;
                 let block_col = col / block_size;
-                let in_block_row = _row % block_size;
+                let in_block_row = row % block_size;
                 let in_block_col = col % block_size;
 
                 let blocks_per_row = self.cols.div_ceil(block_size);
@@ -278,16 +278,16 @@ impl<F: IntegrateFloat> CacheFriendlyMatrix<F> {
     }
 
     /// Blocked matrix-vector multiplication for better cache performance
-    fn blocked_matvec(&self, x: ArrayView1<F>, mut y: ArrayViewMut1<F>, block_size: usize) {
-        let rows_blocks = self.rows.div_ceil(block_size);
-        let cols_blocks = self.cols.div_ceil(block_size);
+    fn blocked_matvec(&self, x: ArrayView1<F>, mut y: ArrayViewMut1<F>, blocksize: usize) {
+        let rows_blocks = self.rows.div_ceil(blocksize);
+        let cols_blocks = self.cols.div_ceil(blocksize);
 
         for i_block in 0..rows_blocks {
             for j_block in 0..cols_blocks {
-                let i_start = i_block * block_size;
-                let i_end = (i_start + block_size).min(self.rows);
-                let j_start = j_block * block_size;
-                let j_end = (j_start + block_size).min(self.cols);
+                let i_start = i_block * blocksize;
+                let i_end = (i_start + blocksize).min(self.rows);
+                let j_start = j_block * blocksize;
+                let j_end = (j_start + blocksize).min(self.cols);
 
                 for i in i_start..i_end {
                     let mut sum = F::zero();
@@ -314,17 +314,17 @@ pub struct BlockingStrategy {
 
 impl BlockingStrategy {
     /// Create blocking strategy with specified L1 block size
-    pub fn new(_l1_block_size: usize) -> Self {
+    pub fn new(_l1_blocksize: usize) -> Self {
         Self {
-            l1_block_size: _l1_block_size,
-            l2_block_size: _l1_block_size * 4,
-            l3_block_size: _l1_block_size * 16,
+            l1_block_size: _l1_blocksize,
+            l2_block_size: _l1_blocksize * 4,
+            l3_block_size: _l1_blocksize * 16,
         }
     }
 
     /// Get optimal block size for given matrix dimension and cache level
-    pub fn optimal_block_size(&self, _matrix_size: usize, cache_level: CacheLevel) -> usize {
-        let block_size = match cache_level {
+    pub fn optimal_block_size(&self, _matrix_size: usize, cachelevel: CacheLevel) -> usize {
+        let block_size = match cachelevel {
             CacheLevel::L1 => self.l1_block_size,
             CacheLevel::L2 => self.l2_block_size,
             CacheLevel::L3 => self.l3_block_size,
@@ -387,13 +387,13 @@ impl CacheAwareAlgorithms {
     }
 
     /// Memory-efficient reduction with minimal cache misses
-    pub fn reduction_blocked<F: IntegrateFloat>(data: ArrayView1<F>, block_size: usize) -> F {
+    pub fn reduction_blocked<F: IntegrateFloat>(data: ArrayView1<F>, blocksize: usize) -> F {
         let n = data.len();
         let mut partial_sums = Vec::new();
 
         // Compute partial sums for each block
-        for start in (0..n).step_by(block_size) {
-            let end = (start + block_size).min(n);
+        for start in (0..n).step_by(blocksize) {
+            let end = (start + blocksize).min(n);
             let mut sum = F::zero();
 
             for i in start..end {
@@ -460,7 +460,7 @@ pub struct MemoryPrefetch;
 impl MemoryPrefetch {
     /// Software prefetch hint (platform-specific)
     #[inline]
-    pub fn prefetch_read<T>(_ptr: *const T) {
+    pub fn prefetch_read<T>(ptr: *const T) {
         #[cfg(target_arch = "x86_64")]
         unsafe {
             std::arch::x86_64::_mm_prefetch(_ptr as *const i8, std::arch::x86_64::_MM_HINT_T0);
@@ -469,13 +469,13 @@ impl MemoryPrefetch {
         #[cfg(not(target_arch = "x86_64"))]
         {
             // Fallback for other architectures
-            let _ = _ptr;
+            let _ = ptr;
         }
     }
 
     /// Prefetch for write access
     #[inline]
-    pub fn prefetch_write<T>(_ptr: *const T) {
+    pub fn prefetch_write<T>(ptr: *const T) {
         #[cfg(target_arch = "x86_64")]
         unsafe {
             std::arch::x86_64::_mm_prefetch(_ptr as *const i8, std::arch::x86_64::_MM_HINT_T0);
@@ -484,13 +484,13 @@ impl MemoryPrefetch {
         #[cfg(not(target_arch = "x86_64"))]
         {
             // Fallback for other architectures
-            let _ = _ptr;
+            let _ = ptr;
         }
     }
 
     /// Stream data access pattern (non-temporal)
     #[inline]
-    pub fn prefetch_stream<T>(_ptr: *const T) {
+    pub fn prefetch_stream<T>(ptr: *const T) {
         #[cfg(target_arch = "x86_64")]
         unsafe {
             std::arch::x86_64::_mm_prefetch(_ptr as *const i8, std::arch::x86_64::_MM_HINT_NTA);
@@ -499,7 +499,7 @@ impl MemoryPrefetch {
         #[cfg(not(target_arch = "x86_64"))]
         {
             // Fallback for other architectures
-            let _ = _ptr;
+            let _ = ptr;
         }
     }
 }

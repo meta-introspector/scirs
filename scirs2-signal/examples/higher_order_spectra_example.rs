@@ -204,7 +204,7 @@ fn generate_uncoupled_signal() -> Array1<f64> {
 
 /// Generates a signal with phase coupling and a specific coupling angle
 #[allow(dead_code)]
-fn generate_phase_coupled_signal_with_angle(_angle: f64) -> Array1<f64> {
+fn generate_phase_coupled_signal_with_angle(angle: f64) -> Array1<f64> {
     // Signal parameters
     let n_samples = 2048;
     let fs = 1000.0;
@@ -219,7 +219,7 @@ fn generate_phase_coupled_signal_with_angle(_angle: f64) -> Array1<f64> {
     let signal = t.mapv(|ti| {
         (2.0 * PI * f1 * ti).sin()
             + (2.0 * PI * f2 * ti).sin()
-            + 0.5 * (2.0 * PI * f3 * ti + _angle).sin()
+            + 0.5 * (2.0 * PI * f3 * ti + angle).sin()
     });
 
     // Add some noise
@@ -262,9 +262,9 @@ fn save_matrix_to_csv(
 
 /// Saves two 1D arrays to CSV as columns
 #[allow(dead_code)]
-fn save_array_to_csv(_filename: &str, array1: &Array1<f64>, array2: &Array1<f64>) {
+fn save_array_to_csv(filename: &str, array1: &Array1<f64>, array2: &Array1<f64>) {
     let mut file =
-        File::create(_filename).unwrap_or_else(|_| panic!("Failed to create {}", _filename));
+        File::create(_filename).unwrap_or_else(|_| panic!("Failed to create {}", filename));
 
     // Write header
     writeln!(file, "x,y").expect("Failed to write header");

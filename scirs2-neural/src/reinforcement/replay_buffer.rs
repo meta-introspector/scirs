@@ -18,7 +18,7 @@ pub trait ReplayBufferTrait: Send + Sync {
         done: bool,
     ) -> Result<()>;
     /// Sample a batch of experiences (returns basic batch for common interface)
-    fn sample_batch(&self, batch_size: usize) -> Result<ExperienceBatch>;
+    fn sample_batch(&self, batchsize: usize) -> Result<ExperienceBatch>;
     /// Get the current size of the buffer
     fn len(&self) -> usize;
     /// Check if the buffer is empty
@@ -45,10 +45,10 @@ pub struct ReplayBuffer {
     capacity: usize,
 impl ReplayBuffer {
     /// Create a new replay buffer
-    pub fn new(_capacity: usize) -> Self {
+    pub fn new(capacity: usize) -> Self {
         Self {
             buffer: VecDeque::with_capacity(_capacity),
-            _capacity,
+            capacity,
         }
     pub fn add(
     ) -> Result<()> {
@@ -69,7 +69,7 @@ impl ReplayBuffer {
         info: std::collections::HashMap<String, f32>,
             info: Some(info),
     /// Sample a batch of experiences
-    pub fn sample(&self, batch_size: usize) -> Result<ExperienceBatch> {
+    pub fn sample(&self, batchsize: usize) -> Result<ExperienceBatch> {
         if self.buffer.len() < batch_size {
             return Err(crate::error::NeuralError::InvalidArgument(format!(
                 "Not enough experiences in buffer: {} < {}",
@@ -126,7 +126,7 @@ impl ReplayBuffer {
         self.buffer.clear();
 impl ReplayBufferTrait for ReplayBuffer {
         self.add(state, action, reward, next_state, done)
-    fn sample_batch(&self, batch_size: usize) -> Result<ExperienceBatch> {
+    fn sample_batch(&self, batchsize: usize) -> Result<ExperienceBatch> {
         self.sample(batch_size)
     fn len(&self) -> usize {
     fn capacity(&self) -> usize {
@@ -142,7 +142,7 @@ pub struct PrioritizedReplayBuffer {
     ptr: usize,
 impl PrioritizedReplayBuffer {
     /// Create a new prioritized replay buffer
-    pub fn new(_capacity: usize, alpha: f32, beta: f32) -> Self {
+    pub fn new(capacity: usize, alpha: f32, beta: f32) -> Self {
             buffer: Vec::with_capacity(_capacity),
             priorities: vec![1.0; _capacity],
             alpha,
@@ -159,7 +159,7 @@ impl PrioritizedReplayBuffer {
         self.priorities[self.ptr] = self.max_priority.powf(self.alpha);
         self.ptr = (self.ptr + 1) % self.capacity;
     /// Sample a batch with importance sampling weights
-    pub fn sample(&self, batch_size: usize) -> Result<(ExperienceBatch, Array1<f32>, Vec<usize>)> {
+    pub fn sample(&self, batchsize: usize) -> Result<(ExperienceBatch, Array1<f32>, Vec<usize>)> {
         // Calculate sampling probabilities
         let priorities = &self.priorities[..self.buffer.len()];
         let probs = self.calculate_probabilities(priorities);
@@ -171,7 +171,7 @@ impl PrioritizedReplayBuffer {
         let batch = self.create_batch(&indices)?;
         Ok((batch, weights, indices))
     /// Update priorities for sampled experiences
-    pub fn update_priorities(&mut self, indices: &[usize], td_errors: &[f32]) -> Result<()> {
+    pub fn update_priorities(&mut self, indices: &[usize], tderrors: &[f32]) -> Result<()> {
         if indices.len() != td_errors.len() {
                 "Indices and TD errors must have the same length".to_string(),
         for (&idx, &td_error) in indices.iter().zip(td_errors.iter()) {
@@ -183,7 +183,7 @@ impl PrioritizedReplayBuffer {
         let sum: f32 = priorities.iter().sum();
         priorities.iter().map(|&p| p / sum).collect()
     /// Sample indices based on probabilities
-    fn sample_indices(&self, probs: &[f32], batch_size: usize) -> Result<Vec<usize>> {
+    fn sample_indices(&self, probs: &[f32], batchsize: usize) -> Result<Vec<usize>> {
         use rand::prelude::*;
         use rand__distr::weighted::WeightedIndex;
         let dist = WeightedIndex::new(probs).map_err(|e| {
@@ -223,7 +223,7 @@ pub struct NStepReplayBuffer {
     gamma: f32,
 impl NStepReplayBuffer {
     /// Create a new n-step replay buffer
-    pub fn new(_capacity: usize, n: usize, gamma: f32) -> Self {
+    pub fn new(capacity: usize, n: usize, gamma: f32) -> Self {
             buffer: ReplayBuffer::new(_capacity),
             n_step_buffer: VecDeque::with_capacity(n),
             n,

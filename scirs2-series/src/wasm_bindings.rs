@@ -57,9 +57,9 @@ pub struct TimeSeriesData {
 impl TimeSeriesData {
     /// Create a new time series from JavaScript array
     #[wasm_bindgen(constructor)]
-    pub fn new(_values: &[f64]) -> TimeSeriesData {
+    pub fn new(values: &[f64]) -> TimeSeriesData {
         TimeSeriesData {
-            _values: _values.to_vec(),
+            _values: values.to_vec(),
             timestamps: None,
             frequency: None,
         }
@@ -151,9 +151,9 @@ impl WasmARIMA {
         seasonal_period: usize,
     ) -> WasmARIMA {
         let config = crate::arima_models::ArimaConfig {
-            _p,
-            _d,
-            _q,
+            p,
+            d,
+            q,
             seasonal_p,
             seasonal_d,
             seasonal_q,
@@ -321,9 +321,9 @@ pub struct DecompositionResult {
 impl WasmSTLDecomposition {
     /// Create a new STL decomposition
     #[wasm_bindgen(constructor)]
-    pub fn new(_period: usize) -> WasmSTLDecomposition {
+    pub fn new(period: usize) -> WasmSTLDecomposition {
         WasmSTLDecomposition {
-            _period,
+            period,
             options: STLOptions::default(),
         }
     }
@@ -408,7 +408,7 @@ pub struct WasmUtils;
 impl WasmUtils {
     /// Calculate basic statistics for time series
     #[wasm_bindgen]
-    pub fn calculate_stats(_data: &TimeSeriesData) -> std::result::Result<JsValue, JsValue> {
+    pub fn calculate_stats(data: &TimeSeriesData) -> std::result::Result<JsValue, JsValue> {
         let arr = Array1::from_vec(_data.values.clone());
         let stats = js_result!(calculate_basic_stats(&arr))?;
         Ok(serde_wasm_bindgen::to_value(&stats)?)
@@ -416,7 +416,7 @@ impl WasmUtils {
 
     /// Check if time series is stationary
     #[wasm_bindgen]
-    pub fn is_stationary(_data: &TimeSeriesData) -> std::result::Result<bool, JsValue> {
+    pub fn is_stationary(data: &TimeSeriesData) -> std::result::Result<bool, JsValue> {
         let arr = Array1::from_vec(_data.values.clone());
         let (_test_stat, p_value) = js_result!(is_stationary(&arr, None))?;
         // Consider stationary if p-value < 0.05 (5% significance level)
@@ -535,7 +535,7 @@ impl WasmAutoARIMA {
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 #[allow(dead_code)]
-pub fn create_time_series(_values: &[f64]) -> TimeSeriesData {
+pub fn create_time_series(values: &[f64]) -> TimeSeriesData {
     TimeSeriesData::new(_values)
 }
 
@@ -559,7 +559,7 @@ pub fn create_anomaly_detector() -> WasmAnomalyDetector {
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 #[allow(dead_code)]
-pub fn create_stl_decomposition(_period: usize) -> WasmSTLDecomposition {
+pub fn create_stl_decomposition(period: usize) -> WasmSTLDecomposition {
     WasmSTLDecomposition::new(_period)
 }
 

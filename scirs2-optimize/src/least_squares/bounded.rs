@@ -10,7 +10,7 @@
 //! use scirs2_optimize::{Bounds, least_squares::bounded::{bounded_least_squares, BoundedOptions}};
 //!
 //! // Define a function that returns the residuals
-//! fn residual(x: &[f64], _data: &[f64]) -> Array1<f64> {
+//! fn residual(x: &[f64], data: &[f64]) -> Array1<f64> {
 //!     array![
 //!         x[0] + 2.0 * x[1] - 2.0,
 //!         x[0] - x[1] - 1.0,
@@ -201,7 +201,7 @@ where
         let cost = 0.5 * res.iter().map(|&r| r * r).sum::<f64>();
 
         // Compute Jacobian
-        let (jac, _jac_evals) = match &jacobian {
+        let (jac, jac_evals) = match &jacobian {
             Some(jac_fn) => {
                 let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
                 njev += 1;
@@ -422,8 +422,8 @@ fn solve_trust_region_bounds(
 
 /// Compute predicted reduction in cost
 #[allow(dead_code)]
-fn compute_predicted_reduction(_jac: &Array2<f64>, res: &Array1<f64>, step: &Array1<f64>) -> f64 {
-    let jac_step = _jac.dot(step);
+fn compute_predicted_reduction(jac: &Array2<f64>, res: &Array1<f64>, step: &Array1<f64>) -> f64 {
+    let jac_step = jac.dot(step);
     let linear_term = res.dot(&jac_step);
     let quadratic_term = 0.5 * jac_step.dot(&jac_step);
 
@@ -446,7 +446,7 @@ mod tests {
     #[test]
     fn test_bounded_least_squares_simple() {
         // Overdetermined system with bounds
-        fn residual(x: &[f64], _data: &[f64]) -> Array1<f64> {
+        fn residual(x: &[f64], data: &[f64]) -> Array1<f64> {
             array![
                 x[0] + 2.0 * x[1] - 2.0,
                 x[0] - x[1] - 1.0,
@@ -478,7 +478,7 @@ mod tests {
     #[test]
     fn test_bounded_vs_unbounded() {
         // Problem where bounds affect the solution
-        fn residual(x: &[f64], _data: &[f64]) -> Array1<f64> {
+        fn residual(x: &[f64], data: &[f64]) -> Array1<f64> {
             array![
                 x[0] - 5.0, // Wants x[0] = 5.0
                 x[1] - 3.0  // Wants x[1] = 3.0

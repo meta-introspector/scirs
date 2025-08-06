@@ -166,13 +166,13 @@ struct LSTMCell {
     h_t: Option<Array2<f32>>, // Current hidden state [batch_size, hidden_size]
     c_t: Option<Array2<f32>>, // Current cell state [batch_size, hidden_size]
 impl LSTMCell {
-    fn new(_input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, batchsize: usize) -> Self {
         // Xavier/Glorot initialization
         let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         // Create a random number generator
         let mut rng = rand::rng();
         // Input gate weights
-        let mut w_ii = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_ii = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_hi = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_i = Array1::zeros(hidden_size);
         // Initialize with random values
@@ -186,13 +186,13 @@ impl LSTMCell {
         for elem in w_if.iter_mut() {
         for elem in w_hf.iter_mut() {
         // Cell gate weights
-        let mut w_ig = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_ig = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_hg = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_g = Array1::zeros(hidden_size);
         for elem in w_ig.iter_mut() {
         for elem in w_hg.iter_mut() {
         // Output gate weights
-        let mut w_io = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_io = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_ho = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_o = Array1::zeros(hidden_size);
         for elem in w_io.iter_mut() {
@@ -251,7 +251,7 @@ struct Attention {
     w_attn: Array2<f32>, // Attention weights
     v_attn: Array1<f32>, // Attention vector
 impl Attention {
-    fn new(_hidden_size: usize, enc_hidden_size: usize) -> Self {
+    fn new(_hidden_size: usize, enc_hiddensize: usize) -> Self {
         let bound = (6.0 / (hidden_size + enc_hidden_size) as f32).sqrt();
         let mut w_attn = Array2::<f32>::zeros((hidden_size + enc_hidden_size, hidden_size));
         for elem in w_attn.iter_mut() {
@@ -359,7 +359,7 @@ impl Decoder {
             output_size..attention,
             w_out,
             b_out,
-    fn init_state(&mut self, encoder_state: &Array3<f32>, encoder_cell: &Array3<f32>) {
+    fn init_state(&mut self, encoder_state: &Array3<f32>, encodercell: &Array3<f32>) {
         // encoder_state: [num_layers*directions, batch_size, enc_hidden_size]
         // We'll use the final state of the encoder as our initial state
         // For bidirectional encoders, we'll use the forward direction's state

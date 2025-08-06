@@ -361,7 +361,7 @@ impl<T: InterpolationFloat> SciPyCompatInterface<T> {
     }
 
     /// Get SciPy method compatibility information
-    pub fn get_method_info(&self, method_name: &str) -> Option<&SciPyMethod> {
+    pub fn get_method_info(&self, methodname: &str) -> Option<&SciPyMethod> {
         self.method_registry.get(method_name)
     }
 

@@ -110,7 +110,7 @@ pub struct GpuContext {
 
 impl GpuContext {
     /// Create a new GPU context
-    pub fn new(_config: GpuConfig) -> Result<Self> {
+    pub fn new(config: GpuConfig) -> Result<Self> {
         // Initialize GPU backend
         let device_info = Self::query_device_info(&_config.backend)?;
 
@@ -121,7 +121,7 @@ impl GpuContext {
         let memory_pool = Arc::new(Mutex::new(GpuMemoryPool::new(&_config.memory)?));
 
         Ok(Self {
-            _config,
+            config,
             device_info,
             memory_pool,
         })
@@ -278,7 +278,7 @@ impl GpuContext {
 
     // Private methods for different backends
 
-    fn query_device_info(_backend: &GpuBackend) -> Result<GpuDeviceInfo> {
+    fn query_device_info(backend: &GpuBackend) -> Result<GpuDeviceInfo> {
         match _backend {
             GpuBackend::Cuda { device_id } => Self::query_cuda_device_info(*device_id),
             GpuBackend::OpenCl {
@@ -297,9 +297,9 @@ impl GpuContext {
         }
     }
 
-    fn validate_config(_config: &GpuConfig, device_info: &GpuDeviceInfo) -> Result<()> {
+    fn validate_config(_config: &GpuConfig, deviceinfo: &GpuDeviceInfo) -> Result<()> {
         // Check memory requirements
-        if let Some(max_memory) = _config.memory.max_memory_mb {
+        if let Some(max_memory) = config.memory.max_memory_mb {
             if max_memory > device_info.available_memory_mb {
                 return Err(DatasetsError::GpuError(format!(
                     "Requested memory ({} MB) exceeds available memory ({} MB)",
@@ -309,17 +309,17 @@ impl GpuContext {
         }
 
         // Check double precision support
-        if _config.enable_double_precision && !device_info.supports_double_precision {
+        if config.enable_double_precision && !device_info.supports_double_precision {
             return Err(DatasetsError::GpuError(
                 "Double precision requested but not supported by device".to_string(),
             ));
         }
 
         // Check threads per block
-        if _config.threads_per_block > device_info.max_work_group_size {
+        if config.threads_per_block > device_info.max_work_group_size {
             return Err(DatasetsError::GpuError(format!(
                 "Threads per block ({}) exceeds device limit ({})",
-                _config.threads_per_block, device_info.max_work_group_size
+                config.threads_per_block, device_info.max_work_group_size
             )));
         }
 
@@ -417,7 +417,7 @@ impl GpuContext {
 
     // CUDA-specific implementations (simplified for demonstration)
 
-    fn query_cuda_device_info(_device_id: u32) -> Result<GpuDeviceInfo> {
+    fn query_cuda_device_info(_deviceid: u32) -> Result<GpuDeviceInfo> {
         // Simulate CUDA device query
         Ok(GpuDeviceInfo {
             name: format!("NVIDIA GPU {_device_id}"),
@@ -570,7 +570,7 @@ impl GpuContext {
 
     // OpenCL-specific implementations (simplified for demonstration)
 
-    fn query_opencl_device_info(_platform_id: u32, device_id: u32) -> Result<GpuDeviceInfo> {
+    fn query_opencl_device_info(_platform_id: u32, deviceid: u32) -> Result<GpuDeviceInfo> {
         // Simulate OpenCL device query
         Ok(GpuDeviceInfo {
             name: format!("OpenCL Device P{_platform_id}.D{device_id}"),
@@ -726,9 +726,9 @@ struct GpuMemoryPool {
 }
 
 impl GpuMemoryPool {
-    fn new(_config: &GpuMemoryConfig) -> Result<Self> {
+    fn new(config: &GpuMemoryConfig) -> Result<Self> {
         Ok(Self {
-            _config: _config.clone(),
+            _config: config.clone(),
         })
     }
 }
@@ -740,7 +740,7 @@ pub struct GpuBenchmark {
 
 impl GpuBenchmark {
     /// Create a new GPU benchmark
-    pub fn new(_config: GpuConfig) -> Result<Self> {
+    pub fn new(config: GpuConfig) -> Result<Self> {
         let context = GpuContext::new(_config)?;
         Ok(Self { context })
     }
@@ -1072,7 +1072,7 @@ mod tests {
     #[test]
     fn test_gpu_config_default() {
         let config = GpuConfig::default();
-        assert!(matches!(config.backend, GpuBackend::Cuda { device_id: 0 }));
+        assert!(matches!(config.backend, GpuBackend::Cuda { deviceid: 0 }));
         assert_eq!(config.threads_per_block, 256);
         assert!(config.enable_double_precision);
     }

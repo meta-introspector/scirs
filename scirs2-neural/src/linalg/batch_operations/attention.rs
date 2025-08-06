@@ -77,7 +77,7 @@ where
     }
     if value.shape()[0] != batch_size || value.shape()[1] != seq_len_k {
         return Err(NeuralError::ShapeMismatch(
-            format!("Value shape mismatch in scaled_dot_product_attention: key shape {:?}, value shape {:?}",
+            format!("Value shape mismatch in scaled_dot_productattention: key shape {:?}, value shape {:?}",
                    key.shape(), value.shape())
         ));
     if let Some(m) = mask {

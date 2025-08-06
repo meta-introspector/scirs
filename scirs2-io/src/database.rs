@@ -69,9 +69,9 @@ pub struct DatabaseConfig {
 
 impl DatabaseConfig {
     /// Create a new database configuration
-    pub fn new(_db_type: DatabaseType, database: impl Into<String>) -> Self {
+    pub fn new(_dbtype: DatabaseType, database: impl Into<String>) -> Self {
         Self {
-            db_type: _db_type,
+            db_type: db_type,
             host: None,
             port: None,
             database: database.into(),
@@ -179,10 +179,10 @@ enum QueryType {
 
 impl QueryBuilder {
     /// Create a SELECT query
-    pub fn select(_table: impl Into<String>) -> Self {
+    pub fn select(table: impl Into<String>) -> Self {
         Self {
             query_type: QueryType::Select,
-            table: _table.into(),
+            table: table.into(),
             columns: vec!["*".to_string()],
             conditions: Vec::new(),
             values: Vec::new(),
@@ -193,10 +193,10 @@ impl QueryBuilder {
     }
 
     /// Create an INSERT query
-    pub fn insert(_table: impl Into<String>) -> Self {
+    pub fn insert(table: impl Into<String>) -> Self {
         Self {
             query_type: QueryType::Insert,
-            table: _table.into(),
+            table: table.into(),
             columns: Vec::new(),
             conditions: Vec::new(),
             values: Vec::new(),
@@ -325,9 +325,9 @@ pub struct ResultSet {
 
 impl ResultSet {
     /// Create new result set
-    pub fn new(_columns: Vec<String>) -> Self {
+    pub fn new(columns: Vec<String>) -> Self {
         Self {
-            columns: _columns,
+            columns: columns,
             rows: Vec::new(),
             metadata: Metadata::new(),
         }
@@ -473,8 +473,8 @@ pub struct DatabaseConnector;
 
 impl DatabaseConnector {
     /// Create a new database connection
-    pub fn connect(_config: &DatabaseConfig) -> Result<Box<dyn DatabaseConnection>> {
-        match _config.db_type {
+    pub fn connect(config: &DatabaseConfig) -> Result<Box<dyn DatabaseConnection>> {
+        match config.db_type {
             #[cfg(feature = "sqlite")]
             DatabaseType::SQLite => Ok(Box::new(SQLiteConnection::new(_config)?)),
             #[cfg(not(feature = "sqlite"))]
@@ -504,7 +504,7 @@ impl DatabaseConnector {
             )),
             _ => Err(IoError::UnsupportedFormat(format!(
                 "Database type {:?} not yet implemented",
-                _config.db_type
+                config.db_type
             ))),
         }
     }
@@ -520,18 +520,18 @@ struct SQLiteConnection {
 
 #[cfg(feature = "sqlite")]
 impl SQLiteConnection {
-    fn new(_config: &DatabaseConfig) -> Result<Self> {
+    fn new(config: &DatabaseConfig) -> Result<Self> {
         let conn = SqliteConn::open(&_config.database)
             .map_err(|e| IoError::FileError(format!("Failed to open SQLite database: {}", e)))?;
 
         Ok(Self {
-            path: _config.database.clone(),
+            path: config.database.clone(),
             conn: Mutex::new(conn),
         })
     }
 
     /// Convert DataType enum to SQL type string
-    fn data_type_to_sql(&self, data_type: &DataType) -> &'static str {
+    fn data_type_to_sql(&self, datatype: &DataType) -> &'static str {
         match data_type {
             DataType::Integer => "INTEGER",
             DataType::BigInt => "BIGINT",
@@ -549,7 +549,7 @@ impl SQLiteConnection {
     }
 
     /// Convert SQL type string to DataType enum
-    fn sql_type_to_data_type(&self, sql_type: &str) -> DataType {
+    fn sql_type_to_data_type(&self, sqltype: &str) -> DataType {
         let sql_upper = sql_type.to_uppercase();
 
         if sql_upper.contains("INT") {
@@ -589,7 +589,7 @@ impl DatabaseConnection for SQLiteConnection {
         self.execute_sql(&sql, &[])
     }
 
-    fn execute_sql(&self, sql: &str, _params: &[serde_json::Value]) -> Result<ResultSet> {
+    fn execute_sql(&self, sql: &str, params: &[serde_json::Value]) -> Result<ResultSet> {
         let conn = self.conn.lock().map_err(|e| {
             IoError::DatabaseError(format!("Failed to lock database connection: {}", e))
         })?;
@@ -834,9 +834,9 @@ pub mod timeseries {
     }
 
     impl TimeSeriesQuery {
-        pub fn new(_measurement: impl Into<String>) -> Self {
+        pub fn new(measurement: impl Into<String>) -> Self {
             Self {
-                measurement: _measurement.into(),
+                measurement: measurement.into(),
                 start_time: None,
                 end_time: None,
                 tags: HashMap::new(),
@@ -877,11 +877,11 @@ pub mod bulk {
     }
 
     impl BulkLoader {
-        pub fn new(_table: impl Into<String>, columns: Vec<impl Into<String>>) -> Self {
+        pub fn new(table: impl Into<String>, columns: Vec<impl Into<String>>) -> Self {
             Self {
                 batch_size: 1000,
                 buffer: Vec::new(),
-                table: _table.into(),
+                table: table.into(),
                 columns: columns.into_iter().map(|c| c.into()).collect(),
             }
         }
@@ -908,7 +908,7 @@ pub mod bulk {
             Ok(())
         }
 
-        pub fn flush(&mut self, _conn: &dyn DatabaseConnection) -> Result<usize> {
+        pub fn flush(&mut self, conn: &dyn DatabaseConnection) -> Result<usize> {
             let total = self.buffer.len();
             // In real implementation, would batch insert
             self.buffer.clear();
@@ -926,7 +926,7 @@ struct PostgreSQLConnection {
 
 #[cfg(feature = "postgres")]
 impl PostgreSQLConnection {
-    async fn new(_config: &DatabaseConfig) -> Result<Self> {
+    async fn new(config: &DatabaseConfig) -> Result<Self> {
         // Create actual PostgreSQL connection pool
         let connection_string = Self::build_connection_string(_config);
 
@@ -943,20 +943,20 @@ impl PostgreSQLConnection {
             .map_err(|e| IoError::NetworkError(format!("PostgreSQL connection failed: {}", e)))?;
 
         Ok(Self {
-            config: _config.clone(),
+            config: config.clone(),
             pool: Some(pool),
         })
     }
 
-    fn build_connection_string(_config: &DatabaseConfig) -> String {
-        let host = _config.host.as_deref().unwrap_or("localhost");
-        let port = _config.port.unwrap_or(5432);
-        let user = _config.username.as_deref().unwrap_or("postgres");
-        let password = _config.password.as_deref().unwrap_or("");
+    fn build_connection_string(config: &DatabaseConfig) -> String {
+        let host = config.host.as_deref().unwrap_or("localhost");
+        let port = config.port.unwrap_or(5432);
+        let user = config.username.as_deref().unwrap_or("postgres");
+        let password = config.password.as_deref().unwrap_or("");
 
         format!(
             "postgresql://{}:{}@{}:{}/{}",
-            user, password, host, port, _config.database
+            user, password, host, port, config.database
         )
     }
 }
@@ -1338,7 +1338,7 @@ struct MySQLConnection {
 
 #[cfg(feature = "mysql")]
 impl MySQLConnection {
-    async fn new(_config: &DatabaseConfig) -> Result<Self> {
+    async fn new(config: &DatabaseConfig) -> Result<Self> {
         // Create actual MySQL connection pool
         let connection_string = Self::build_connection_string(_config);
 
@@ -1355,20 +1355,20 @@ impl MySQLConnection {
             .map_err(|e| IoError::NetworkError(format!("MySQL connection failed: {}", e)))?;
 
         Ok(Self {
-            config: _config.clone(),
+            config: config.clone(),
             pool: Some(pool),
         })
     }
 
-    fn build_connection_string(_config: &DatabaseConfig) -> String {
-        let host = _config.host.as_deref().unwrap_or("localhost");
-        let port = _config.port.unwrap_or(3306);
-        let user = _config.username.as_deref().unwrap_or("root");
-        let password = _config.password.as_deref().unwrap_or("");
+    fn build_connection_string(config: &DatabaseConfig) -> String {
+        let host = config.host.as_deref().unwrap_or("localhost");
+        let port = config.port.unwrap_or(3306);
+        let user = config.username.as_deref().unwrap_or("root");
+        let password = config.password.as_deref().unwrap_or("");
 
         format!(
             "mysql://{}:{}@{}:{}/{}",
-            user, password, host, port, _config.database
+            user, password, host, port, config.database
         )
     }
 }
@@ -1755,9 +1755,9 @@ struct DuckDBConnection {
 
 #[cfg(feature = "duckdb")]
 impl DuckDBConnection {
-    fn new(_config: &DatabaseConfig) -> Result<Self> {
+    fn new(config: &DatabaseConfig) -> Result<Self> {
         // Create actual DuckDB connection
-        let conn = if _config.database == ":memory:" {
+        let conn = if config.database == ":memory:" {
             DuckdbConn::open_in_memory()
         } else {
             DuckdbConn::open(&_config.database)
@@ -1765,7 +1765,7 @@ impl DuckDBConnection {
         .map_err(|e| IoError::ConnectionError(format!("DuckDB connection failed: {}", e)))?;
 
         Ok(Self {
-            config: _config.clone(),
+            config: config.clone(),
             connection: Some(conn),
         })
     }
@@ -2171,10 +2171,10 @@ pub struct ConnectionPool {
 }
 
 impl ConnectionPool {
-    pub fn new(_config: DatabaseConfig, max_connections: usize) -> Self {
+    pub fn new(_config: DatabaseConfig, maxconnections: usize) -> Self {
         Self {
-            db_type: _config.db_type,
-            config: _config,
+            db_type: config.db_type,
+            config: config,
             connections: Arc::new(Mutex::new(Vec::new())),
             max_connections,
         }
@@ -2231,12 +2231,12 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub fn new(_connection: Box<dyn DatabaseConnection>) -> Result<Self> {
+    pub fn new(connection: Box<dyn DatabaseConnection>) -> Result<Self> {
         let savepoint = format!("sp_{}", uuid::Uuid::new_v4());
-        _connection.execute_sql(&format!("SAVEPOINT {savepoint}"), &[])?;
+        connection.execute_sql(&format!("SAVEPOINT {savepoint}"), &[])?;
 
         Ok(Self {
-            connection: _connection,
+            connection: connection,
             savepoint,
             committed: false,
         })
@@ -2276,12 +2276,12 @@ pub struct PreparedStatement {
 }
 
 impl PreparedStatement {
-    pub fn new(_sql: impl Into<String>) -> Result<Self> {
-        let _sql = _sql.into();
-        let param_count = _sql.matches('?').count();
+    pub fn new(sql: impl Into<String>) -> Result<Self> {
+        let _sql = sql.into();
+        let param_count = sql.matches('?').count();
 
         Ok(Self {
-            sql: _sql,
+            sql: sql,
             param_count,
         })
     }
@@ -2452,7 +2452,7 @@ pub mod orm {
     /// Model trait for ORM functionality
     pub trait Model: Sized {
         fn table_name() -> &'static str;
-        fn from_row(_row: &[serde_json::Value]) -> Result<Self>;
+        fn from_row(row: &[serde_json::Value]) -> Result<Self>;
         fn to_row(&self) -> Vec<serde_json::Value>;
     }
 
@@ -2463,18 +2463,18 @@ pub mod orm {
     }
 
     impl<T: Model> ActiveRecord<T> {
-        pub fn new(_model: T) -> Self {
+        pub fn new(model: T) -> Self {
             Self {
-                model: _model,
+                model: model,
                 changed: false,
             }
         }
 
         /// Find by primary key
-        pub fn find(_conn: &dyn DatabaseConnection, id: serde_json::Value) -> Result<T> {
+        pub fn find(conn: &dyn DatabaseConnection, id: serde_json::Value) -> Result<T> {
             let query = QueryBuilder::select(T::table_name()).where_clause("id = ?");
 
-            let result = _conn.execute_sql(&query.build_sql(), &[id])?;
+            let result = conn.execute_sql(&query.build_sql(), &[id])?;
 
             if let Some(row) = result.rows.first() {
                 T::from_row(row)
@@ -2484,9 +2484,9 @@ pub mod orm {
         }
 
         /// Find all records
-        pub fn find_all(_conn: &dyn DatabaseConnection) -> Result<Vec<T>> {
+        pub fn find_all(conn: &dyn DatabaseConnection) -> Result<Vec<T>> {
             let query = QueryBuilder::select(T::table_name());
-            let result = _conn.query(&query)?;
+            let result = conn.query(&query)?;
 
             result.rows.iter().map(|row| T::from_row(row)).collect()
         }
@@ -2534,9 +2534,9 @@ pub mod cdc {
     }
 
     impl CDCListener {
-        pub fn new(_receiver: mpsc::Receiver<ChangeEvent>) -> Self {
+        pub fn new(receiver: mpsc::Receiver<ChangeEvent>) -> Self {
             Self {
-                receiver: _receiver,
+                receiver: receiver,
             }
         }
 
@@ -2557,7 +2557,7 @@ pub mod cdc {
     }
 
     impl CDCPublisher {
-        pub fn new(_sender: mpsc::Sender<ChangeEvent>) -> Self {
+        pub fn new(sender: mpsc::Sender<ChangeEvent>) -> Self {
             Self { sender: _sender }
         }
 
@@ -2611,7 +2611,7 @@ pub mod replication {
     }
 
     impl ReplicatedConnection {
-        pub fn new(_config: ReplicationConfig) -> Result<Self> {
+        pub fn new(config: ReplicationConfig) -> Result<Self> {
             let master = DatabaseConnector::connect(&_config.master)?;
             let replicas: Result<Vec<_>> = _config
                 .replicas
@@ -2622,7 +2622,7 @@ pub mod replication {
             Ok(Self {
                 master,
                 replicas: replicas?,
-                mode: _config.mode,
+                mode: config.mode,
                 read_preference: ReadPreference::Replica,
             })
         }
@@ -2718,7 +2718,7 @@ pub mod advanced_query {
 
     impl QueryAnalyzer {
         /// Analyze query performance
-        pub fn analyze(_query: &QueryBuilder, conn: &dyn DatabaseConnection) -> Result<QueryStats> {
+        pub fn analyze(query: &QueryBuilder, conn: &dyn DatabaseConnection) -> Result<QueryStats> {
             let start = std::time::Instant::now();
             let result = conn.query(_query)?;
             let execution_time = start.elapsed();
@@ -2732,8 +2732,8 @@ pub mod advanced_query {
         }
 
         /// Get query execution plan
-        pub fn explain(_query: &QueryBuilder, conn: &dyn DatabaseConnection) -> Result<String> {
-            let explain_sql = format!("EXPLAIN {}", _query.build_sql());
+        pub fn explain(query: &QueryBuilder, conn: &dyn DatabaseConnection) -> Result<String> {
+            let explain_sql = format!("EXPLAIN {}", query.build_sql());
             let result = conn.execute_sql(&explain_sql, &[])?;
 
             // Format execution plan

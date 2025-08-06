@@ -20,17 +20,17 @@ pub struct CorrelationResult<F> {
 
 impl<F: Float + std::fmt::Display> CorrelationResult<F> {
     /// Create a new correlation result with just the coefficient
-    pub fn new(_coefficient: F) -> Self {
+    pub fn new(coefficient: F) -> Self {
         Self {
-            coefficient: _coefficient,
+            coefficient: coefficient,
             p_value: None,
         }
     }
 
     /// Create a new correlation result with coefficient and p-value
-    pub fn with_p_value(_coefficient: F, p_value: F) -> Self {
+    pub fn with_p_value(_coefficient: F, pvalue: F) -> Self {
         Self {
-            coefficient: _coefficient,
+            coefficient: coefficient,
             p_value: Some(p_value),
         }
     }
@@ -248,9 +248,9 @@ pub struct TestResult<F> {
 
 impl<F: Float + std::fmt::Display> TestResult<F> {
     /// Create a basic test result
-    pub fn new(_statistic: F, p_value: F) -> Self {
+    pub fn new(_statistic: F, pvalue: F) -> Self {
         Self {
-            statistic: _statistic,
+            statistic: statistic,
             p_value,
             df: None,
             effect_size: None,
@@ -265,7 +265,7 @@ impl<F: Float + std::fmt::Display> TestResult<F> {
     }
 
     /// Add effect size
-    pub fn with_effect_size(mut self, effect_size: F) -> Self {
+    pub fn with_effect_size(mut self, effectsize: F) -> Self {
         self.effect_size = Some(effect_size);
         self
     }

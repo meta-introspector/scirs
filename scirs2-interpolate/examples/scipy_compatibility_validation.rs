@@ -215,7 +215,7 @@ fn main() -> InterpolateResult<()> {
 }
 
 #[allow(dead_code)]
-fn get_compatibility_level(_score: f64) -> &'static str {
+fn get_compatibility_level(score: f64) -> &'static str {
     match _score {
         s if s >= 0.95 => "Excellent - Full production ready",
         s if s >= 0.90 => "Very Good - Suitable for most use cases",
@@ -227,14 +227,14 @@ fn get_compatibility_level(_score: f64) -> &'static str {
 }
 
 #[allow(dead_code)]
-fn print_migration_guidance(_report: &scirs2_interpolate::CompatibilityReport) {
+fn print_migration_guidance(report: &scirs2_interpolate::CompatibilityReport) {
     println!("   When migrating from SciPy to scirs2-_interpolate:");
 
-    if _report.compatibility_score >= 0.90 {
+    if report.compatibility_score >= 0.90 {
         println!("   ✓ Migration should be straightforward");
         println!("   ✓ Most SciPy code will work with minimal changes");
         println!("   ✓ Performance should be similar or better");
-    } else if _report.compatibility_score >= 0.75 {
+    } else if report.compatibility_score >= 0.75 {
         println!("   ⚠ Migration requires some attention");
         println!("   ⚠ Review parameter differences carefully");
         println!("   ⚠ Test critical functionality thoroughly");

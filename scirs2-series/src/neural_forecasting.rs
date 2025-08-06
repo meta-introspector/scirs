@@ -130,7 +130,7 @@ pub struct LSTMCell<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
     /// Create new LSTM cell with random initialization
-    pub fn new(_input_size: usize, hidden_size: usize) -> Self {
+    pub fn new(_input_size: usize, hiddensize: usize) -> Self {
         let total_input_size = _input_size + hidden_size;
 
         // Initialize weights with Xavier/Glorot initialization
@@ -138,7 +138,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
         let std_dev = scale.sqrt();
 
         Self {
-            _input_size,
+            input_size,
             hidden_size,
             w_forget: Self::random_matrix(hidden_size, total_input_size, std_dev),
             w_input: Self::random_matrix(hidden_size, total_input_size, std_dev),
@@ -149,7 +149,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
     }
 
     /// Initialize random matrix with given standard deviation
-    fn random_matrix(_rows: usize, cols: usize, std_dev: F) -> Array2<F> {
+    fn random_matrix(_rows: usize, cols: usize, stddev: F) -> Array2<F> {
         let mut matrix = Array2::zeros((_rows, cols));
 
         // Simple pseudo-random initialization (for production, use proper RNG)
@@ -168,7 +168,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
     }
 
     /// Forward pass through LSTM cell
-    pub fn forward(&self, input: &Array1<F>, prev_state: &LSTMState<F>) -> Result<LSTMState<F>> {
+    pub fn forward(&self, input: &Array1<F>, prevstate: &LSTMState<F>) -> Result<LSTMState<F>> {
         if input.len() != self.input_size {
             return Err(TimeSeriesError::DimensionMismatch {
                 expected: self.input_size,
@@ -308,7 +308,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMNetwork<F> {
     }
 
     /// Forward pass through the network
-    pub fn forward(&self, input_sequence: &Array2<F>) -> Result<Array2<F>> {
+    pub fn forward(&self, inputsequence: &Array2<F>) -> Result<Array2<F>> {
         let (seq_len_input_size) = input_sequence.dim();
 
         if self.layers.is_empty() {
@@ -365,7 +365,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMNetwork<F> {
     }
 
     /// Generate forecast for multiple steps
-    pub fn forecast(&self, input_sequence: &Array2<F>, forecast_steps: usize) -> Result<Array1<F>> {
+    pub fn forecast(&self, input_sequence: &Array2<F>, forecaststeps: usize) -> Result<Array1<F>> {
         let (seq_len_) = input_sequence.dim();
 
         // Get the last hidden states from input _sequence
@@ -443,7 +443,7 @@ pub struct MultiHeadAttention<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> MultiHeadAttention<F> {
     /// Create new multi-head attention layer
-    pub fn new(_model_dim: usize, num_heads: usize) -> Result<Self> {
+    pub fn new(_model_dim: usize, numheads: usize) -> Result<Self> {
         if _model_dim % num_heads != 0 {
             return Err(TimeSeriesError::InvalidInput(
                 "Model dimension must be divisible by number of _heads".to_string(),
@@ -526,7 +526,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiHeadAttention<F> {
     }
 
     /// Reshape tensor for multi-head attention
-    fn reshape_for_attention(&self, tensor: &Array2<F>, seq_len: usize) -> Array3<F> {
+    fn reshape_for_attention(&self, tensor: &Array2<F>, seqlen: usize) -> Array3<F> {
         let mut reshaped = Array3::zeros((self.num_heads, seq_len, self.head_dim));
 
         for head in 0..self.num_heads {
@@ -542,7 +542,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiHeadAttention<F> {
     }
 
     /// Get specific attention head
-    fn get_head(&self, tensor: &Array3<F>, head: usize, seq_len: usize) -> Array2<F> {
+    fn get_head(&self, tensor: &Array3<F>, head: usize, seqlen: usize) -> Array2<F> {
         let mut head_tensor = Array2::zeros((seq_len, self.head_dim));
 
         for seq in 0..seq_len {
@@ -633,7 +633,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiHeadAttention<F> {
     }
 
     /// Concatenate attention heads
-    fn concatenate_heads(&self, heads: &[Array2<F>], seq_len: usize) -> Array2<F> {
+    fn concatenate_heads(&self, heads: &[Array2<F>], seqlen: usize) -> Array2<F> {
         let mut concatenated = Array2::zeros((seq_len, self.model_dim));
 
         for (head_idx, head) in heads.iter().enumerate() {
@@ -665,14 +665,14 @@ pub struct FeedForwardNetwork<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> FeedForwardNetwork<F> {
     /// Create new feed-forward network
-    pub fn new(_model_dim: usize, hidden_dim: usize, activation: ActivationFunction) -> Self {
+    pub fn new(_model_dim: usize, hiddendim: usize, activation: ActivationFunction) -> Self {
         let scale1 = F::from(2.0).unwrap() / F::from(_model_dim).unwrap();
         let std1 = scale1.sqrt();
         let scale2 = F::from(2.0).unwrap() / F::from(hidden_dim).unwrap();
         let std2 = scale2.sqrt();
 
         Self {
-            w1: LSTMCell::random_matrix(hidden_dim, _model_dim, std1),
+            w1: LSTMCell::random_matrix(hidden_dim, model_dim, std1),
             w2: LSTMCell::random_matrix(_model_dim, hidden_dim, std2),
             bias1: Array1::zeros(hidden_dim),
             bias2: Array1::zeros(_model_dim),
@@ -732,7 +732,7 @@ pub struct TransformerBlock<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> TransformerBlock<F> {
     /// Create new transformer block
-    pub fn new(_model_dim: usize, num_heads: usize, ffn_hidden_dim: usize) -> Result<Self> {
+    pub fn new(_model_dim: usize, num_heads: usize, ffn_hiddendim: usize) -> Result<Self> {
         let attention = MultiHeadAttention::new(_model_dim, num_heads)?;
         let ffn = FeedForwardNetwork::new(_model_dim, ffn_hidden_dim, ActivationFunction::ReLU);
 
@@ -743,7 +743,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> TransformerBlock<F> {
             ln1_beta: Array1::zeros(_model_dim),
             ln2_gamma: Array1::ones(_model_dim),
             ln2_beta: Array1::zeros(_model_dim),
-            _model_dim,
+            model_dim,
         })
     }
 
@@ -858,7 +858,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> TransformerForecaster<F> {
     }
 
     /// Create sinusoidal positional encoding
-    fn create_positional_encoding(_max_seq_len: usize, model_dim: usize) -> Array2<F> {
+    fn create_positional_encoding(_max_seq_len: usize, modeldim: usize) -> Array2<F> {
         let mut pe = Array2::zeros((_max_seq_len, model_dim));
 
         for pos in 0.._max_seq_len {
@@ -928,7 +928,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> TransformerForecaster<F> {
     }
 
     /// Generate forecast using the transformer model
-    pub fn forecast(&self, input_sequence: &Array2<F>, forecast_steps: usize) -> Result<Array1<F>> {
+    pub fn forecast(&self, input_sequence: &Array2<F>, forecaststeps: usize) -> Result<Array1<F>> {
         let (seq_len, input_dim) = input_sequence.dim();
         let mut extended_sequence = input_sequence.clone();
         let mut forecasts = Array1::zeros(forecast_steps);
@@ -1019,7 +1019,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
         // Input layer
         let input_size = backcast_size;
         let scale = F::from(2.0).unwrap() / F::from(input_size).unwrap();
-        _layers.push(LSTMCell::random_matrix(
+        layers.push(LSTMCell::random_matrix(
             hidden_size,
             input_size,
             scale.sqrt(),
@@ -1029,7 +1029,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
         // Hidden _layers
         for _ in 1..num_layers {
             let scale = F::from(2.0).unwrap() / F::from(hidden_size).unwrap();
-            _layers.push(LSTMCell::random_matrix(
+            layers.push(LSTMCell::random_matrix(
                 hidden_size,
                 hidden_size,
                 scale.sqrt(),
@@ -1039,7 +1039,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
 
         // Output _layers (theta generation)
         let scale = F::from(2.0).unwrap() / F::from(hidden_size).unwrap();
-        _layers.push(LSTMCell::random_matrix(
+        layers.push(LSTMCell::random_matrix(
             theta_size,
             hidden_size,
             scale.sqrt(),
@@ -1047,7 +1047,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
         biases.push(Array1::zeros(theta_size));
 
         Self {
-            _layers,
+            layers,
             biases,
             backcast_size,
             forecast_size,
@@ -1283,7 +1283,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsStack<F> {
             NBeatsStackType::Generic => {
                 let theta_size = backcast_size + forecast_size;
                 for _ in 0..num_blocks {
-                    _blocks.push(NBeatsBlock::new(
+                    blocks.push(NBeatsBlock::new(
                         backcast_size,
                         forecast_size,
                         hidden_size,
@@ -1294,13 +1294,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsStack<F> {
                 }
             }
             NBeatsStackType::Interpretable => {
-                // Half trend _blocks, half seasonal _blocks
+                // Half trend blocks, half seasonal _blocks
                 let trend_blocks = num_blocks / 2;
                 let seasonal_blocks = num_blocks - trend_blocks;
 
                 // Trend _blocks
                 for _ in 0..trend_blocks {
-                    _blocks.push(NBeatsBlock::new(
+                    blocks.push(NBeatsBlock::new(
                         backcast_size,
                         forecast_size,
                         hidden_size,
@@ -1313,7 +1313,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsStack<F> {
                 // Seasonal _blocks
                 for _ in 0..seasonal_blocks {
                     let theta_size = 2 * (backcast_size / 4).max(1); // Number of harmonics * 2
-                    _blocks.push(NBeatsBlock::new(
+                    blocks.push(NBeatsBlock::new(
                         backcast_size,
                         forecast_size,
                         hidden_size,
@@ -1325,7 +1325,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsStack<F> {
             }
         }
 
-        Self { _blocks, stack_type }
+        Self { blocks, stack_type }
     }
 
     /// Forward pass through the stack
@@ -1445,7 +1445,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsModel<F> {
     }
 
     /// Generate forecast for time series
-    pub fn forecast(&self, input_sequence: &Array1<F>) -> Result<Array1<F>> {
+    pub fn forecast(&self, inputsequence: &Array1<F>) -> Result<Array1<F>> {
         if input_sequence.len() < self.backcast_size {
             return Err(TimeSeriesError::InvalidInput(
                 "Input _sequence too short for backcast window".to_string(),
@@ -1537,19 +1537,19 @@ pub struct MambaBlock<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
     /// Create new Mamba block
-    pub fn new(_input_dim: usize, state_dim: usize, conv_size: usize, expand: usize) -> Self {
-        let inner_dim = expand * _input_dim;
+    pub fn new(_input_dim: usize, state_dim: usize, convsize: usize, expand: usize) -> Self {
+        let inner_dim = expand * input_dim;
         let dt_rank = (_input_dim / 16).max(1);
 
         // Initialize parameters with proper scaling
         let scale = F::from(1.0 / (_input_dim as f64).sqrt()).unwrap();
 
         Self {
-            _input_dim,
+            input_dim,
             state_dim,
             conv_size,
             expand,
-            in_proj: Self::init_weight(inner_dim * 2, _input_dim, scale),
+            in_proj: Self::init_weight(inner_dim * 2, input_dim, scale),
             conv1d: Self::init_weight(inner_dim, conv_size, scale),
             x_proj: Self::init_weight(dt_rank + state_dim * 2, inner_dim, scale),
             dt_proj: Self::init_weight(inner_dim, dt_rank, scale),
@@ -1564,7 +1564,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
     }
 
     /// Initialize weight matrix
-    fn init_weight(_out_dim: usize, in_dim: usize, scale: F) -> Array2<F> {
+    fn init_weight(_out_dim: usize, indim: usize, scale: F) -> Array2<F> {
         let mut weight = Array2::zeros((_out_dim, in_dim));
         for i in 0.._out_dim {
             for j in 0..in_dim {
@@ -1935,7 +1935,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
         output
     }
 
-    fn split_qkv(&self, qkv: &Array2<F>, seq_len: usize) -> (Array2<F>, Array2<F>, Array2<F>) {
+    fn split_qkv(&self, qkv: &Array2<F>, seqlen: usize) -> (Array2<F>, Array2<F>, Array2<F>) {
         let dim = self.model_dim;
         let mut q = Array2::zeros((seq_len, dim));
         let mut k = Array2::zeros((seq_len, dim));
@@ -1952,7 +1952,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
         (q, k, v)
     }
 
-    fn reshape_for_heads(&self, tensor: &Array2<F>, seq_len: usize) -> Array3<F> {
+    fn reshape_for_heads(&self, tensor: &Array2<F>, seqlen: usize) -> Array3<F> {
         let mut reshaped = Array3::zeros((self.num_heads, seq_len, self.head_dim));
 
         for head in 0..self.num_heads {
@@ -1967,7 +1967,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
         reshaped
     }
 
-    fn concatenate_heads(&self, tensor: &Array3<F>, seq_len: usize) -> Array2<F> {
+    fn concatenate_heads(&self, tensor: &Array3<F>, seqlen: usize) -> Array2<F> {
         let mut concatenated = Array2::zeros((seq_len, self.model_dim));
 
         for head in 0..self.num_heads {
@@ -2067,12 +2067,12 @@ pub struct LayerNorm<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> LayerNorm<F> {
     /// Create new layer normalization
-    pub fn new(_dim: usize) -> Self {
+    pub fn new(dim: usize) -> Self {
         Self {
             weight: Array1::ones(_dim),
             bias: Array1::zeros(_dim),
             eps: F::from(1e-5).unwrap(),
-            _dim,
+            dim,
         }
     }
 
@@ -2139,7 +2139,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MixtureOfExperts<F> {
 
         let mut _experts = Vec::new();
         for _ in 0..num_experts {
-            _experts.push(LSTMCell::random_matrix(output_dim, input_dim, std_dev));
+            experts.push(LSTMCell::random_matrix(output_dim, input_dim, std_dev));
         }
 
         let gate = LSTMCell::random_matrix(num_experts, input_dim, std_dev);
@@ -2147,7 +2147,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MixtureOfExperts<F> {
         Self {
             num_experts,
             top_k,
-            _experts,
+            experts,
             gate,
             input_dim,
             hidden_dim,
@@ -2272,7 +2272,7 @@ pub struct MultiQueryAttention<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
     /// Create new Multi-Query Attention layer
-    pub fn new(_model_dim: usize, num_heads: usize) -> crate::error::Result<Self> {
+    pub fn new(_model_dim: usize, numheads: usize) -> crate::error::Result<Self> {
         if _model_dim % num_heads != 0 {
             return Err(crate::error::TimeSeriesError::InvalidInput(
                 "Model dimension must be divisible by number of _heads".to_string(),
@@ -2390,7 +2390,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
         output
     }
 
-    fn reshape_queries(&self, queries: &Array2<F>, seq_len: usize) -> Array3<F> {
+    fn reshape_queries(&self, queries: &Array2<F>, seqlen: usize) -> Array3<F> {
         let mut reshaped = Array3::zeros((self.num_heads, seq_len, self.head_dim));
 
         for head in 0..self.num_heads {
@@ -2407,7 +2407,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
         reshaped
     }
 
-    fn get_query_head(&self, queries: &Array3<F>, head: usize, seq_len: usize) -> Array2<F> {
+    fn get_query_head(&self, queries: &Array3<F>, head: usize, seqlen: usize) -> Array2<F> {
         let mut head_queries = Array2::zeros((seq_len, self.head_dim));
 
         for seq in 0..seq_len {
@@ -2419,7 +2419,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
         head_queries
     }
 
-    fn concatenate_mqa_heads(&self, heads: &[Array2<F>], seq_len: usize) -> Array2<F> {
+    fn concatenate_mqa_heads(&self, heads: &[Array2<F>], seqlen: usize) -> Array2<F> {
         let mut concatenated = Array2::zeros((seq_len, self.model_dim));
 
         for (h, head_output) in heads.iter().enumerate() {
@@ -2484,12 +2484,12 @@ pub struct RotaryPositionalEmbedding<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> RotaryPositionalEmbedding<F> {
     /// Create new Rotary Position Embedding
-    pub fn new(_dim: usize, max_seq_len: usize) -> Self {
+    pub fn new(_dim: usize, max_seqlen: usize) -> Self {
         let base = F::from(10000.0).unwrap();
 
         // Precompute sin and cos values
-        let mut sin_cache = Array2::zeros((max_seq_len, _dim));
-        let mut cos_cache = Array2::zeros((max_seq_len, _dim));
+        let mut sin_cache = Array2::zeros((max_seq_len, dim));
+        let mut cos_cache = Array2::zeros((max_seq_len, dim));
 
         for pos in 0..max_seq_len {
             for i in 0.._dim / 2 {
@@ -2507,7 +2507,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RotaryPositionalEmbedding<F> {
         }
 
         Self {
-            _dim,
+            dim,
             max_seq_len,
             base,
             sin_cache,
@@ -2566,7 +2566,7 @@ pub struct ALiBiAttention<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> ALiBiAttention<F> {
     /// Create new ALiBi attention layer
-    pub fn new(_model_dim: usize, num_heads: usize) -> crate::error::Result<Self> {
+    pub fn new(_model_dim: usize, numheads: usize) -> crate::error::Result<Self> {
         let attention = MultiHeadAttention::new(_model_dim, num_heads)?;
 
         // Compute ALiBi slopes
@@ -2778,7 +2778,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> EnhancedTransformerBlock<F> {
 
         Ok(Self {
             attention_type,
-            _rope,
+            rope,
             ffn: FeedForwardNetwork::new(model_dim, ffn_hidden_dim, ActivationFunction::ReLU),
             norm1: LayerNorm::new(model_dim),
             norm2: LayerNorm::new(model_dim),
@@ -3053,7 +3053,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RingAttention<F> {
         output
     }
 
-    fn split_qkv(&self, qkv: &Array2<F>, seq_len: usize) -> (Array2<F>, Array2<F>, Array2<F>) {
+    fn split_qkv(&self, qkv: &Array2<F>, seqlen: usize) -> (Array2<F>, Array2<F>, Array2<F>) {
         let dim = self.model_dim;
         let mut q = Array2::zeros((seq_len, dim));
         let mut k = Array2::zeros((seq_len, dim));
@@ -3091,7 +3091,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RingAttention<F> {
         slice
     }
 
-    fn reshape_for_heads(&self, tensor: &Array2<F>, seq_len: usize) -> Array3<F> {
+    fn reshape_for_heads(&self, tensor: &Array2<F>, seqlen: usize) -> Array3<F> {
         let mut reshaped = Array3::zeros((self.num_heads, seq_len, self.head_dim));
 
         for head in 0..self.num_heads {
@@ -3107,7 +3107,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RingAttention<F> {
         reshaped
     }
 
-    fn get_head_slice(&self, tensor: &Array3<F>, head: usize, seq_len: usize) -> Array2<F> {
+    fn get_head_slice(&self, tensor: &Array3<F>, head: usize, seqlen: usize) -> Array2<F> {
         let mut slice = Array2::zeros((seq_len, self.head_dim));
 
         for seq in 0..seq_len {
@@ -3118,7 +3118,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RingAttention<F> {
         slice
     }
 
-    fn concatenate_ring_heads(&self, heads: &[Array2<F>], seq_len: usize) -> Array2<F> {
+    fn concatenate_ring_heads(&self, heads: &[Array2<F>], seqlen: usize) -> Array2<F> {
         let mut concatenated = Array2::zeros((seq_len, self.model_dim));
 
         for (h, head_output) in heads.iter().enumerate() {
@@ -3206,17 +3206,17 @@ pub struct HyenaAttention<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> HyenaAttention<F> {
     /// Create new Hyena Attention layer
-    pub fn new(_model_dim: usize, order: usize, max_seq_len: usize) -> Self {
+    pub fn new(_model_dim: usize, order: usize, max_seqlen: usize) -> Self {
         let scale = F::from(2.0).unwrap() / F::from(_model_dim).unwrap();
         let std_dev = scale.sqrt();
 
         // Input projection to order + 1 dimensions
-        let input_proj = LSTMCell::random_matrix((order + 1) * _model_dim, _model_dim, std_dev);
+        let input_proj = LSTMCell::random_matrix((order + 1) * model_dim, model_dim, std_dev);
 
         // Filter projections for each order
         let mut filter_projs = Vec::new();
         for _ in 0..order {
-            filter_projs.push(LSTMCell::random_matrix(_model_dim, _model_dim, std_dev));
+            filter_projs.push(LSTMCell::random_matrix(_model_dim, model_dim, std_dev));
         }
 
         // Convolution kernels (learnable filters)
@@ -3313,7 +3313,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> HyenaAttention<F> {
     }
 
     /// Split projected input into branches
-    fn split_into_branches(&self, projected: &Array2<F>, seq_len: usize) -> Vec<Array2<F>> {
+    fn split_into_branches(&self, projected: &Array2<F>, seqlen: usize) -> Vec<Array2<F>> {
         let mut branches = Vec::new();
 
         for branch_idx in 0..=self.order {
@@ -3333,7 +3333,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> HyenaAttention<F> {
     }
 
     /// Apply convolution to a branch
-    fn apply_convolution(&self, input: &Array2<F>, kernel_idx: usize) -> Array2<F> {
+    fn apply_convolution(&self, input: &Array2<F>, kernelidx: usize) -> Array2<F> {
         let (seq_len, model_dim) = input.dim();
         let kernel = &self.conv_kernels[kernel_idx];
         let kernel_size = kernel.len();
@@ -3585,7 +3585,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RetrievalAugmentedTimeSeries<F> {
     }
 
     /// Update memory bank with new patterns (for online learning)
-    pub fn update_memory(&mut self, new_pattern: &Array1<F>, pattern_key: &Array1<F>) {
+    pub fn update_memory(&mut self, new_pattern: &Array1<F>, patternkey: &Array1<F>) {
         // Simple replacement strategy: replace oldest entry
         // In practice, this could use more sophisticated strategies
         let replace_idx = 0; // For simplicity, always replace first entry
@@ -3812,7 +3812,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumSuperpositionAttention<F> 
     }
 
     /// Project quantum states back to classical space
-    fn project_to_classical_space(&self, quantum_states: &Array2<F>) -> Array2<F> {
+    fn project_to_classical_space(&self, quantumstates: &Array2<F>) -> Array2<F> {
         let (seq_len_) = quantum_states.dim();
         let mut classical_output = Array2::zeros((seq_len, self.model_dim));
 
@@ -3888,7 +3888,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumSuperpositionAttention<F> 
     }
 
     /// Adaptive fusion weight adjustment based on quantum coherence
-    pub fn adjust_fusion_weights(&mut self, quantum_coherence: F) {
+    pub fn adjust_fusion_weights(&mut self, quantumcoherence: F) {
         // Adjust weights based on quantum _coherence measure
         let coherence_factor = quantum_coherence.min(F::one()).max(F::zero());
 
@@ -4078,7 +4078,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> SpeculativeDecoder<F> {
     }
 
     /// Compute acceptance probability for speculative token
-    fn compute_acceptance_probability(&self, main_pred: &Array1<F>, candidate: &Array1<F>) -> F {
+    fn compute_acceptance_probability(&self, mainpred: &Array1<F>, candidate: &Array1<F>) -> F {
         // Compute cosine similarity as acceptance criterion
         let mut dot_product = F::zero();
         let mut main_norm_sq = F::zero();
@@ -4134,7 +4134,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> SpeculativeDecoder<F> {
     }
 
     /// Update acceptance threshold based on performance
-    pub fn update_acceptance_threshold(&mut self, acceptance_rate: F) {
+    pub fn update_acceptance_threshold(&mut self, acceptancerate: F) {
         let target_rate = F::from(0.7).unwrap(); // Target 70% acceptance _rate
         let learning_rate = F::from(0.01).unwrap();
 

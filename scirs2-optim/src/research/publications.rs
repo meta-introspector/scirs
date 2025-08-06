@@ -567,11 +567,11 @@ pub struct VenueConstraints {
 
 impl Publication {
     /// Create a new publication
-    pub fn new(_title: &str) -> Self {
+    pub fn new(title: &str) -> Self {
         let now = Utc::now();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
-            _title: _title.to_string(),
+            _title: title.to_string(),
             abstracttext: String::new(),
             authors: Vec::new(),
             publication_type: PublicationType::ConferencePaper,
@@ -603,7 +603,7 @@ impl Publication {
     }
     
     /// Set publication type
-    pub fn publication_type(mut self, pub_type: PublicationType) -> Self {
+    pub fn publication_type(mut self, pubtype: PublicationType) -> Self {
         self.publication_type = pub_type;
         self.modified_at = Utc::now();
         self
@@ -624,7 +624,7 @@ impl Publication {
     }
     
     /// Associate with experiment
-    pub fn add_experiment(&mut self, experiment_id: &str) {
+    pub fn add_experiment(&mut self, experimentid: &str) {
         self.experiment_ids.push(experiment_id.to_string());
         self.modified_at = Utc::now();
     }
@@ -890,7 +890,7 @@ impl Bibliography {
     }
     
     /// Load from BibTeX file
-    pub fn load_bibtex_file(&mut self, file_path: &PathBuf) -> Result<()> {
+    pub fn load_bibtex_file(&mut self, filepath: &PathBuf) -> Result<()> {
         let content = std::fs::read_to_string(file_path)?;
         self.parse_bibtex(&content)?;
         self.file_path = Some(file_path.clone());
@@ -969,7 +969,7 @@ impl Default for PublicationMetadata {
 
 impl PublicationGenerator {
     /// Create a new publication generator
-    pub fn new(_output_dir: PathBuf) -> Self {
+    pub fn new(_outputdir: PathBuf) -> Self {
         Self {
             templates: HashMap::new(),
             default_citation_style: CitationStyle::IEEE,

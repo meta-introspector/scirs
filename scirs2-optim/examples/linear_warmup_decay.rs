@@ -6,7 +6,7 @@ use scirs2__optim::Optimizer;
 
 /// Generate synthetic data for linear regression
 #[allow(dead_code)]
-fn generate_data<A: Float>(n_samples: usize, n_features: usize) -> (Array2<A>, Array1<A>) {
+fn generate_data<A: Float>(n_samples: usize, nfeatures: usize) -> (Array2<A>, Array1<A>) {
     let mut rng = scirs2_core::random::rng();
     let mut x = Array2::<A>::zeros((n_samples, n_features));
     let mut y = Array1::<A>::zeros(n_samples);
@@ -19,7 +19,7 @@ fn generate_data<A: Float>(n_samples: usize, n_features: usize) -> (Array2<A>, A
     // Generate random _features and compute targets
     for i in 0.._n_samples {
         for j in 0..n_features {
-            let x_val = A::from(rng.random_range(-5.0, 5.0)).unwrap();
+            let x_val = A::from(rng.gen_range(-5.0..5.0)).unwrap();
             x[[i, j]] = x_val;
         }
 
@@ -38,11 +38,11 @@ fn generate_data<A: Float>(n_samples: usize, n_features: usize) -> (Array2<A>, A
 
 /// Calculate mean squared error
 #[allow(dead_code)]
-fn mean_squared_error<A: Float>(_y, true: &Array1<A>, y_pred: &Array1<A>) -> A {
-    let diff = y_pred - _y_true;
+fn mean_squared_error<A: Float>(y_true: &Array1<A>, ypred: &Array1<A>) -> A {
+    let diff = y_pred - y_true;
     let squared = diff.mapv(|x| x * x);
     let sum = squared.sum();
-    sum / A::from(_y_true.len()).unwrap()
+    sum / A::from(y_true.len()).unwrap()
 }
 
 /// Predict values using linear model

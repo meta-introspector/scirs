@@ -217,7 +217,7 @@ impl PerformanceMonitor {
     }
 
     /// Register worker for monitoring
-    pub fn register_worker(&mut self, worker_id: usize) {
+    pub fn register_worker(&mut self, workerid: usize) {
         let worker_metrics = WorkerMetrics {
             worker_id,
             cpu_usage_history: VecDeque::new(),
@@ -630,7 +630,7 @@ impl PerformanceMonitor {
     }
 
     /// Analyze performance trends
-    fn analyze_trends(&self, metrics_history: &VecDeque<PerformanceMetrics>) -> PerformanceTrends {
+    fn analyze_trends(&self, metricshistory: &VecDeque<PerformanceMetrics>) -> PerformanceTrends {
         if metrics_history.len() < 5 {
             return PerformanceTrends {
                 throughput_trend: TrendDirection::Unknown,

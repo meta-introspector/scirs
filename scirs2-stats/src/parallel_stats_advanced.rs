@@ -298,17 +298,17 @@ pub struct MemoryPool {
 
 impl MemoryPool {
     /// Create new memory pool
-    pub fn new(_num_blocks: usize, block_size: usize) -> Self {
+    pub fn new(_num_blocks: usize, blocksize: usize) -> Self {
         let mut _blocks = Vec::with_capacity(_num_blocks);
         let mut available = Vec::with_capacity(_num_blocks);
 
         for i in 0.._num_blocks {
-            _blocks.push(vec![0u8; block_size]);
+            blocks.push(vec![0u8; block_size]);
             available.push(i);
         }
 
         Self {
-            _blocks,
+            blocks,
             available,
             block_size,
             total_allocations: 0,
@@ -596,7 +596,7 @@ pub enum MemoryLayoutStrategy {
 
 impl AdvancedParallelStatsProcessor {
     /// Create new advanced-parallel processor
-    pub fn new(_config: AdvancedParallelConfig) -> StatsResult<Self> {
+    pub fn new(config: AdvancedParallelConfig) -> StatsResult<Self> {
         let num_threads = _config
             .thread_pool_config
             .num_workers
@@ -619,7 +619,7 @@ impl AdvancedParallelStatsProcessor {
         }
 
         Ok(Self {
-            _config,
+            config,
             execution_contexts,
             work_queue: Arc::new(Mutex::new(Vec::new())),
             performance_history: Arc::new(Mutex::new(Vec::new())),
@@ -824,7 +824,7 @@ impl AdvancedParallelStatsProcessor {
     }
 
     /// Calculate optimal thread count for given data size
-    fn calculate_optimal_thread_count(&self, data_size: usize) -> usize {
+    fn calculate_optimal_thread_count(&self, datasize: usize) -> usize {
         let available_threads = self.execution_contexts.len();
         let min_work_per_thread = self.config.min_work_size;
 
@@ -843,7 +843,7 @@ impl AdvancedParallelStatsProcessor {
     }
 
     /// Estimate performance for given configuration
-    fn estimate_performance(&self, thread_count: usize, data_size: usize) -> f64 {
+    fn estimate_performance(&self, thread_count: usize, datasize: usize) -> f64 {
         // Simplified performance model
         let sequential_time = data_size as f64;
         let parallel_efficiency = 0.8; // Account for overhead
@@ -947,7 +947,7 @@ impl AdvancedParallelStatsProcessor {
     }
 
     /// Execute parallel work units
-    fn execute_parallel_work(&self, work_units: &[WorkUnit<Vec<f64>>]) -> StatsResult<Vec<f64>> {
+    fn execute_parallel_work(&self, workunits: &[WorkUnit<Vec<f64>>]) -> StatsResult<Vec<f64>> {
         let num_threads = work_units.len();
         let results = Arc::new(Mutex::new(vec![0.0; num_threads]));
         let work_units = Arc::new(work_units.to_vec());
@@ -1047,7 +1047,7 @@ impl AdvancedParallelStatsProcessor {
     }
 
     /// Combine mean results from parallel computation
-    fn combine_mean_results<F>(&self, partial_results: &[f64], total_count: usize) -> StatsResult<F>
+    fn combine_mean_results<F>(&self, partial_results: &[f64], totalcount: usize) -> StatsResult<F>
     where
         F: Float + NumCast + std::fmt::Display,
     {
@@ -1272,7 +1272,7 @@ pub fn create_advanced_parallel_processor() -> StatsResult<AdvancedParallelStats
 }
 
 #[allow(dead_code)]
-pub fn mean_advanced_parallel<F>(_data: ArrayView1<F>) -> StatsResult<AdvancedParallelResult<F>>
+pub fn mean_advanced_parallel<F>(data: ArrayView1<F>) -> StatsResult<AdvancedParallelResult<F>>
 where
     F: Float + NumCast + Send + Sync + Zero + std::iter::Sum + std::fmt::Display,
 {

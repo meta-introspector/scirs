@@ -1025,7 +1025,7 @@ where
     }
 
     /// Make predictions at new input points
-    pub fn predict(&self, x_test: &ArrayView2<F>) -> StatsResult<(Array1<F>, Array1<F>)> {
+    pub fn predict(&self, xtest: &ArrayView2<F>) -> StatsResult<(Array1<F>, Array1<F>)> {
         checkarray_finite(x_test, "x_test")?;
 
         let n_test = x_test.nrows();
@@ -1077,20 +1077,20 @@ where
         + std::fmt::Display,
 {
     /// Create new Bayesian neural network
-    pub fn new(_architecture: Vec<usize>, activations: Vec<ActivationType>) -> StatsResult<Self> {
-        if _architecture.len() < 2 {
+    pub fn new(architecture: Vec<usize>, activations: Vec<ActivationType>) -> StatsResult<Self> {
+        if architecture.len() < 2 {
             return Err(StatsError::InvalidArgument(
                 "Architecture must have at least input and output layers".to_string(),
             ));
         }
 
-        if activations.len() != _architecture.len() - 1 {
+        if activations.len() != architecture.len() - 1 {
             return Err(StatsError::InvalidArgument(
                 "Number of activations must equal number of layers - 1".to_string(),
             ));
         }
 
-        let n_layers = _architecture.len() - 1;
+        let n_layers = architecture.len() - 1;
 
         // Initialize priors with appropriate scales based on layer sizes
         let weight_priors = (0..n_layers)
@@ -1112,7 +1112,7 @@ where
             .collect();
 
         Ok(Self {
-            architecture: _architecture,
+            architecture: architecture,
             activations,
             weight_priors,
             bias_priors,
@@ -1221,7 +1221,7 @@ where
     }
 
     /// Sample parameters from priors
-    fn sample_from_normal(_mean: F, precision: F) -> StatsResult<F> {
+    fn sample_from_normal(mean: F, precision: F) -> StatsResult<F> {
         // Simple Box-Muller transform
         let u1 = F::from(0.5).unwrap(); // Would use actual random numbers
         let u2 = F::from(0.5).unwrap();

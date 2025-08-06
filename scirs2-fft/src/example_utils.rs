@@ -5,8 +5,8 @@ use num_complex::Complex;
 
 /// Print the first few values of a dynamic array
 #[allow(dead_code)]
-pub fn print_first_values(_arr: &ArrayD<Complex<f64>>, count: usize) {
-    let flat_view = _arr.view().intoshape(_arr.len()).unwrap();
+pub fn print_first_values(arr: &ArrayD<Complex<f64>>, count: usize) {
+    let flat_view = arr.view().intoshape(_arr.len()).unwrap();
     let display_count = count.min(flat_view.len());
     
     print!("[");

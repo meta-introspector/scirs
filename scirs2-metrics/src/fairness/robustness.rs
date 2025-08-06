@@ -543,7 +543,7 @@ where
     let n_flips = (n_samples as f64 * flip_prob).round() as usize;
 
     // Convert to vector for easier manipulation
-    let (mut perturbed_) = y_pred.to_owned().into_raw_vec_and_offset();
+    let mut perturbed = y_pred.to_owned().into_raw_vec();
 
     // Create indices to flip
     let mut indices: Vec<usize> = (0..n_samples).collect();
@@ -581,8 +581,8 @@ where
     let n_subsample = (n_samples as f64 * sample_fraction).round() as usize;
 
     // Convert to vectors
-    let (y_pred_vec_) = y_pred.to_owned().into_raw_vec_and_offset();
-    let (protected_vec_) = protected_group.to_owned().into_raw_vec_and_offset();
+    let y_pred_vec = y_pred.to_owned().into_raw_vec();
+    let protected_vec = protected_group.to_owned().into_raw_vec();
 
     // Create sample of indices
     let mut indices: Vec<usize> = (0..n_samples).collect();
@@ -634,7 +634,8 @@ where
 #[allow(dead_code)]
 fn perturb_by_noise<T>(
     y_pred: &Array1<T>,
-    noise_level: f64, _rng: &mut StdRng, // Prefix with underscore since we're not using it directly
+    noise_level: f64,
+    _rng: &mut StdRng, // Prefix with underscore since we're not using it directly
 ) -> Result<Array1<T>>
 where
     T: Real + PartialOrd + Clone,
@@ -642,7 +643,7 @@ where
     let n_samples = y_pred.len();
 
     // Get the values from the array
-    let (y_pred_vec_) = y_pred.to_owned().into_raw_vec_and_offset();
+    let y_pred_vec = y_pred.to_owned().into_raw_vec();
     let mut perturbed = Vec::with_capacity(n_samples);
 
     for i in 0..n_samples {

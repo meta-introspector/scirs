@@ -48,7 +48,7 @@ pub struct EnhancedMatFile {
 
 impl EnhancedMatFile {
     /// Create a new enhanced MAT file handler
-    pub fn new(_config: MatFileConfig) -> Self {
+    pub fn new(config: MatFileConfig) -> Self {
         Self { config: _config }
     }
 
@@ -85,7 +85,7 @@ impl EnhancedMatFile {
     }
 
     /// Estimate the size of a MatType
-    fn estimate_mat_type_size(_mat_type: &MatType) -> usize {
+    fn estimate_mat_type_size(_mattype: &MatType) -> usize {
         match _mat_type {
             MatType::Double(array) => array.len() * 8,
             MatType::Single(array) => array.len() * 4,
@@ -114,7 +114,7 @@ impl EnhancedMatFile {
         // Try to read as HDF5 file
         #[cfg(feature = "hdf5")]
         {
-            if let Ok(mut file) = std::fs::File::open(_path.as_ref()) {
+            if let Ok(mut file) = std::fs::File::open(path.as_ref()) {
                 use std::io::Read;
                 let mut magic = [0u8; 8];
                 if file.read_exact(&mut magic).is_ok() {
@@ -141,7 +141,7 @@ impl EnhancedMatFile {
 
     /// Write variables using MAT v7.3 format (fallback without HDF5)
     #[cfg(not(feature = "hdf5"))]
-    fn write_v73<P: AsRef<Path>>(self, path: &P, _vars: &HashMap<String, MatType>) -> Result<()> {
+    fn write_v73<P: AsRef<Path>>(self, path: &P, vars: &HashMap<String, MatType>) -> Result<()> {
         Err(IoError::Other(
             "MAT v7.3 format requires HDF5 feature".to_string(),
         ))
@@ -672,17 +672,17 @@ pub fn read_mat_enhanced<P: AsRef<Path>>(
 
 /// Create a complex number MatType
 #[allow(dead_code)]
-pub fn create_complex_array(_real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<MatType> {
+pub fn create_complex_array(real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<MatType> {
     use num_complex::Complex64;
 
-    if _real.shape() != imag.shape() {
+    if real.shape() != imag.shape() {
         return Err(IoError::FormatError(
             "Real and imaginary parts must have the same shape".to_string(),
         ));
     }
 
     // Create a complex array by combining _real and imaginary parts
-    let _complex_array = ArrayD::fromshape_fn(_real.raw_dim(), |idx| {
+    let _complex_array = ArrayD::from_shape_fn(_real.raw_dim(), |idx| {
         Complex64::new(_real[&idx], imag[&idx])
     });
 
@@ -697,13 +697,13 @@ pub fn create_complex_array(_real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<Mat
 
 /// Create a cell array MatType
 #[allow(dead_code)]
-pub fn create_cell_array(_cells: Vec<MatType>) -> MatType {
+pub fn create_cell_array(cells: Vec<MatType>) -> MatType {
     MatType::Cell(_cells)
 }
 
 /// Create a structure MatType
 #[allow(dead_code)]
-pub fn create_struct(_fields: HashMap<String, MatType>) -> MatType {
+pub fn create_struct(fields: HashMap<String, MatType>) -> MatType {
     MatType::Struct(_fields)
 }
 

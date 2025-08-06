@@ -193,7 +193,7 @@ where
 
 /// Identifies sparse arrays (both matrix and array types)
 #[allow(dead_code)]
-pub fn is_sparse<T>(_obj: &dyn SparseArray<T>) -> bool
+pub fn is_sparse<T>(obj: &dyn SparseArray<T>) -> bool
 where
     T: Float
         + Add<Output = T>
@@ -234,7 +234,7 @@ where
         + 'static,
 {
     /// Create a new SparseArrayBase from a dense ndarray.
-    pub fn new(_data: Array2<T>) -> Self {
+    pub fn new(data: Array2<T>) -> Self {
         Self { data: _data }
     }
 }

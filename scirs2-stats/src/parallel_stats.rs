@@ -248,7 +248,7 @@ where
 ///
 /// Correlation matrix
 #[allow(dead_code)]
-pub fn corrcoef_parallel<F, D>(_data: &ArrayBase<D, Ix2>) -> StatsResult<ndarray::Array2<F>>
+pub fn corrcoef_parallel<F, D>(data: &ArrayBase<D, Ix2>) -> StatsResult<ndarray::Array2<F>>
 where
     F: Float
         + NumCast
@@ -262,7 +262,7 @@ where
 {
     use crate::pearson_r;
 
-    let n_vars = _data.ncols();
+    let n_vars = data.ncols();
 
     if n_vars * n_vars < PARALLEL_THRESHOLD {
         // Use sequential version for small matrices
@@ -278,8 +278,8 @@ where
 
     // Compute correlations in parallel
     let correlations: Vec<((usize, usize), F)> = parallel_map(&pairs, |&(i, j)| {
-        let var_i = _data.slice(s![.., i]);
-        let var_j = _data.slice(s![.., j]);
+        let var_i = data.slice(s![.., i]);
+        let var_j = data.slice(s![.., j]);
         let corr = pearson_r(&var_i, &var_j)?;
         Ok(((i, j), corr))
     })
@@ -333,7 +333,7 @@ where
         // Sequential bootstrap for small number of _samples
         let _samples = bootstrap(&data.view(), n_samples_, seed)?;
         let mut results = Array1::zeros(n_samples_);
-        for (i, sample) in _samples.outer_iter().enumerate() {
+        for (i, sample) in samples.outer_iter().enumerate() {
             results[i] = statistic(&sample)?;
         }
         return Ok(results);

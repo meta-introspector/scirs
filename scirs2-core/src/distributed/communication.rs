@@ -12,13 +12,13 @@ use std::sync::{mpsc, Arc, Mutex};
 #[derive(Debug, Clone)]
 pub enum DistributedMessage {
     /// Task assignment message
-    TaskAssignment { task_id: String, payload: Vec<u8> },
+    TaskAssignment { taskid: String, payload: Vec<u8> },
     /// Result message
-    Result { task_id: String, result: Vec<u8> },
+    Result { taskid: String, result: Vec<u8> },
     /// Heartbeat message
-    Heartbeat { node_id: String, timestamp: u64 },
+    Heartbeat { nodeid: String, timestamp: u64 },
     /// Coordination message
-    Coordination { message_type: String, data: Vec<u8> },
+    Coordination { messagetype: String, data: Vec<u8> },
     /// Synchronization barrier
     Barrier {
         barrier_id: String,
@@ -28,7 +28,7 @@ pub enum DistributedMessage {
 
 /// Communication endpoint for a node
 pub struct CommunicationEndpoint {
-    node_id: String,
+    nodeid: String,
     address: SocketAddr,
     message_handlers: Arc<Mutex<HashMap<String, Box<dyn MessageHandler + Send + Sync>>>>,
     sender: mpsc::Sender<DistributedMessage>,
@@ -37,11 +37,11 @@ pub struct CommunicationEndpoint {
 
 impl CommunicationEndpoint {
     /// Create a new communication endpoint
-    pub fn new(node_id: String, address: SocketAddr) -> Self {
+    pub fn new(nodeid: String, address: SocketAddr) -> Self {
         let (sender, receiver) = mpsc::channel();
 
         Self {
-            node_id,
+            nodeid,
             address,
             message_handlers: Arc::new(Mutex::new(HashMap::new())),
             sender,
@@ -58,7 +58,7 @@ impl CommunicationEndpoint {
     }
 
     /// Register a message handler
-    pub fn register_handler<H>(&self, message_type: String, handler: H) -> CoreResult<()>
+    pub fn register_handler<H>(&self, messagetype: String, handler: H) -> CoreResult<()>
     where
         H: MessageHandler + Send + Sync + 'static,
     {
@@ -67,7 +67,7 @@ impl CommunicationEndpoint {
                 "Failed to acquire handlers lock".to_string(),
             ))
         })?;
-        handlers.insert(message_type, Box::new(handler));
+        handlers.insert(messagetype, Box::new(handler));
         Ok(())
     }
 
@@ -109,8 +109,8 @@ impl CommunicationEndpoint {
                     handler.handle(&message)?;
                 }
             }
-            DistributedMessage::Coordination { message_type, .. } => {
-                if let Some(handler) = handlers.get(message_type) {
+            DistributedMessage::Coordination { messagetype, .. } => {
+                if let Some(handler) = handlers.get(messagetype) {
                     handler.handle(&message)?;
                 }
             }
@@ -125,8 +125,8 @@ impl CommunicationEndpoint {
     }
 
     /// Get node ID
-    pub fn node_id(&self) -> &str {
-        &self.node_id
+    pub fn nodeid(&self) -> &str {
+        &self.nodeid
     }
 
     /// Get address
@@ -145,20 +145,20 @@ pub trait MessageHandler {
 #[derive(Debug)]
 pub struct HeartbeatHandler {
     #[allow(dead_code)]
-    node_id: String,
+    nodeid: String,
 }
 
 impl HeartbeatHandler {
     /// Create a new heartbeat handler
-    pub fn new(node_id: String) -> Self {
-        Self { node_id }
+    pub fn new(nodeid: String) -> Self {
+        Self { nodeid }
     }
 }
 
 impl MessageHandler for HeartbeatHandler {
     fn handle(&self, message: &DistributedMessage) -> CoreResult<()> {
-        if let DistributedMessage::Heartbeat { node_id, timestamp } = message {
-            println!("Received heartbeat from {node_id} at {timestamp}");
+        if let DistributedMessage::Heartbeat { nodeid, timestamp } = message {
+            println!("Received heartbeat from {nodeid} at {timestamp}");
         }
         Ok(())
     }
@@ -167,22 +167,22 @@ impl MessageHandler for HeartbeatHandler {
 /// Communication manager for coordinating distributed operations
 pub struct CommunicationManager {
     endpoints: HashMap<String, CommunicationEndpoint>,
-    local_node_id: String,
+    local_nodeid: String,
 }
 
 impl CommunicationManager {
     /// Create a new communication manager
-    pub fn new(local_node_id: String) -> Self {
+    pub fn new(local_nodeid: String) -> Self {
         Self {
             endpoints: HashMap::new(),
-            local_node_id,
+            local_nodeid,
         }
     }
 
     /// Add a communication endpoint
     pub fn add_endpoint(&mut self, endpoint: CommunicationEndpoint) {
-        let node_id = endpoint.node_id().to_string();
-        self.endpoints.insert(node_id, endpoint);
+        let nodeid = endpoint.nodeid().to_string();
+        self.endpoints.insert(nodeid, endpoint);
     }
 
     /// Broadcast a message to all nodes
@@ -194,12 +194,12 @@ impl CommunicationManager {
     }
 
     /// Send a message to a specific node
-    pub fn send_to(&self, node_id: &str, message: DistributedMessage) -> CoreResult<()> {
-        if let Some(endpoint) = self.endpoints.get(node_id) {
+    pub fn send_to(&self, nodeid: &str, message: DistributedMessage) -> CoreResult<()> {
+        if let Some(endpoint) = self.endpoints.get(nodeid) {
             endpoint.send_message(message)?;
         } else {
             return Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                "Unknown node: {node_id}"
+                "Unknown node: {nodeid}"
             ))));
         }
         Ok(())
@@ -214,8 +214,8 @@ impl CommunicationManager {
     }
 
     /// Get local node ID
-    pub fn local_node_id(&self) -> &str {
-        &self.local_node_id
+    pub fn local_nodeid(&self) -> &str {
+        &self.local_nodeid
     }
 }
 
@@ -229,7 +229,7 @@ mod tests {
         let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
         let endpoint = CommunicationEndpoint::new("node1".to_string(), address);
 
-        assert_eq!(endpoint.node_id(), "node1");
+        assert_eq!(endpoint.nodeid(), "node1");
         assert_eq!(endpoint.address(), address);
     }
 
@@ -237,7 +237,7 @@ mod tests {
     fn test_heartbeat_handler() {
         let handler = HeartbeatHandler::new("node1".to_string());
         let message = DistributedMessage::Heartbeat {
-            node_id: "node2".to_string(),
+            nodeid: "node2".to_string(),
             timestamp: 123456789,
         };
 
@@ -247,7 +247,7 @@ mod tests {
     #[test]
     fn test_communication_manager() {
         let mut manager = CommunicationManager::new("local_node".to_string());
-        assert_eq!(manager.local_node_id(), "local_node");
+        assert_eq!(manager.local_nodeid(), "local_node");
 
         let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
         let endpoint = CommunicationEndpoint::new("node1".to_string(), address);

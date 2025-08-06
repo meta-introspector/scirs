@@ -89,9 +89,9 @@ impl ComprehensiveValidator {
     }
 
     /// Create new validator with custom configuration
-    pub fn with_config(_config: ValidationConfig) -> Self {
+    pub fn with_config(config: ValidationConfig) -> Self {
         Self {
-            _config,
+            config,
             benchmarks: HashMap::new(),
             error_history: Vec::new(),
         }
@@ -421,7 +421,7 @@ where
     // Post-processing validation
     let report = validator.validate_output(&output, &_state, processing_time)?;
 
-    Ok((output, _state, report))
+    Ok((output, state, report))
 }
 
 #[cfg(test)]

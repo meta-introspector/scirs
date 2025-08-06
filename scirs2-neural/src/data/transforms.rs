@@ -27,11 +27,11 @@ pub struct StandardScaler<F: Float + Debug + ScalarOperand + FromPrimitive + Sen
     fit_per_sample: bool,
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> StandardScaler<F> {
     /// Create a new standard scaler
-    pub fn new(_fit_per_sample: bool) -> Self {
+    pub fn new(_fit_persample: bool) -> Self {
         Self {
             mean: None,
             std: None,
-            _fit_per_sample,
+            fit_per_sample,
         }
     }
     /// Fit the scaler to the data
@@ -111,7 +111,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> MinMaxScale
     /// Create a new MinMax scaler with default range [0, 1]
         Self::with_range(F::zero(), F::one(), fit_per_sample)
     /// Create a new MinMax scaler with custom range
-    pub fn with_range(_min_val: F, max_val: F, fit_per_sample: bool) -> Self {
+    pub fn with_range(_min_val: F, max_val: F, fit_persample: bool) -> Self {
             min: None,
             max: None,
             range: (_min_val, max_val),
@@ -186,7 +186,7 @@ pub struct OneHotEncoder<F: Float + Debug + ScalarOperand + FromPrimitive + Send
     _phantom: std::marker::PhantomData<F>,
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> OneHotEncoder<F> {
     /// Create a new one-hot encoder
-    pub fn new(_n_classes: usize) -> Self {
+    pub fn new(_nclasses: usize) -> Self {
             n_classes_phantom: std::marker::PhantomData,
     /// Transform class indices to one-hot encoded vectors
         let shape = data.shape();
@@ -203,7 +203,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> OneHotEncod
                 )));
             result[[i, class_idx]] = F::one();
     for OneHotEncoder<F>
-        format!("OneHotEncoder (n_classes: {})", self.n_classes)
+        format!("OneHotEncoder (nclasses: {})", self.n_classes)
 /// Compose multiple transforms into a single transform
 pub struct ComposeTransform<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> {
     /// List of transforms to apply in sequence
@@ -232,7 +232,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> Clone for C
                 .collect(),
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> ComposeTransform<F> {
     /// Create a new composition of transforms
-    pub fn new(_transforms: Vec<Box<dyn Transform<F> + Send + Sync>>) -> Self {
+    pub fn new(transforms: Vec<Box<dyn Transform<F> + Send + Sync>>) -> Self {
         Self { _transforms }
     for ComposeTransform<F>
         let mut data = input.clone();

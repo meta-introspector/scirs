@@ -301,6 +301,7 @@ fn ifft(x: &[Complex64]) -> SignalResult<Vec<Complex64>> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_czt_points() {

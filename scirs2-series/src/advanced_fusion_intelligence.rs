@@ -146,7 +146,7 @@ pub struct AutonomousDiscoverySystem<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> AdvancedFusionIntelligence<F> {
     /// Create new Advanced Fusion Intelligence system
-    pub fn new(num_cores: usize, qubits_per_core: usize) -> Result<Self> {
+    pub fn new(num_cores: usize, qubits_percore: usize) -> Result<Self> {
         let mut fusion_cores = Vec::new();
         
         // Initialize quantum-neuromorphic fusion cores

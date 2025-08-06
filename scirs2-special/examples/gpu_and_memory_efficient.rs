@@ -43,7 +43,7 @@ fn main() -> SpecialResult<()> {
 
 /// Test memory-efficient chunked processing
 #[allow(dead_code)]
-fn test_chunked_processing(_input: &Array1<f64>) -> SpecialResult<()> {
+fn test_chunked_processing(input: &Array1<f64>) -> SpecialResult<()> {
     use std::time::Instant;
 
     println!("\n  Memory-Efficient Chunked Processing:");
@@ -72,7 +72,7 @@ fn test_chunked_processing(_input: &Array1<f64>) -> SpecialResult<()> {
 /// Test GPU acceleration (only compiled with gpu feature)
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn test_gpu_acceleration(_input: &Array1<f64>) -> SpecialResult<()> {
+fn test_gpu_acceleration(input: &Array1<f64>) -> SpecialResult<()> {
     use std::time::Instant;
 
     println!("\n  GPU Acceleration (if available):");

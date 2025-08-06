@@ -65,7 +65,7 @@ pub struct AnovaResult<F> {
 /// let significant_differences = anova_result.p_value < 0.05;
 /// ```
 #[allow(dead_code)]
-pub fn one_way_anova<F>(_groups: &[&ArrayView1<F>]) -> StatsResult<AnovaResult<F>>
+pub fn one_way_anova<F>(groups: &[&ArrayView1<F>]) -> StatsResult<AnovaResult<F>>
 where
     F: Float
         + std::iter::Sum<F>
@@ -76,14 +76,14 @@ where
         + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     // Check if there are at least two _groups
-    if _groups.len() < 2 {
+    if groups.len() < 2 {
         return Err(StatsError::InvalidArgument(
             "At least two _groups are required for ANOVA".to_string(),
         ));
     }
 
     // Check if any group is empty
-    for (i, group) in _groups.iter().enumerate() {
+    for (i, group) in groups.iter().enumerate() {
         if group.is_empty() {
             return Err(StatsError::InvalidArgument(format!(
                 "Group {} is empty",
@@ -93,12 +93,12 @@ where
     }
 
     // Calculate the total number of observations
-    let n_total = _groups.iter().map(|group| group.len()).sum::<usize>();
+    let n_total = groups.iter().map(|group| group.len()).sum::<usize>();
 
     // Check if there's enough data for the analysis
-    if n_total <= _groups.len() {
+    if n_total <= groups.len() {
         return Err(StatsError::InvalidArgument(
-            "Not enough data for ANOVA (need more observations than _groups)".to_string(),
+            "Not enough data for ANOVA (need more observations than groups)".to_string(),
         ));
     }
 
@@ -134,7 +134,7 @@ where
     }
 
     // Calculate error and total sum of squares
-    for (group, &group_mean) in _groups.iter().zip(group_means.iter()) {
+    for (group, &group_mean) in groups.iter().zip(group_means.iter()) {
         for &value in group.iter() {
             ss_error = ss_error + (value - group_mean).powi(2);
             ss_total = ss_total + (value - grand_mean).powi(2);
@@ -142,8 +142,8 @@ where
     }
 
     // Degrees of freedom
-    let df_treatment = _groups.len() - 1;
-    let df_error = n_total - _groups.len();
+    let df_treatment = groups.len() - 1;
+    let df_error = n_total - groups.len();
 
     // Mean squares
     let ms_treatment = ss_treatment / F::from(df_treatment).unwrap();
@@ -219,7 +219,7 @@ where
 pub type TukeyHSDResult<F> = Vec<(usize, usize, F, F, bool)>;
 
 #[allow(dead_code)]
-pub fn tukey_hsd<F>(_groups: &[&ArrayView1<F>], alpha: F) -> StatsResult<TukeyHSDResult<F>>
+pub fn tukey_hsd<F>(groups: &[&ArrayView1<F>], alpha: F) -> StatsResult<TukeyHSDResult<F>>
 where
     F: Float
         + std::iter::Sum<F>
@@ -230,7 +230,7 @@ where
         + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     // Check if there are at least two _groups
-    if _groups.len() < 2 {
+    if groups.len() < 2 {
         return Err(StatsError::InvalidArgument(
             "At least two _groups are required for Tukey's HSD".to_string(),
         ));

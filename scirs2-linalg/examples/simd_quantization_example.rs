@@ -87,7 +87,7 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn generate_random_matrix(_rows: usize, cols: usize) -> Array2<f32> {
+fn generate_random_matrix(rows: usize, cols: usize) -> Array2<f32> {
     let mut matrix = Array2::zeros((_rows, cols));
 
     for i in 0.._rows {
@@ -100,7 +100,7 @@ fn generate_random_matrix(_rows: usize, cols: usize) -> Array2<f32> {
 }
 
 #[allow(dead_code)]
-fn generate_random_vector(_length: usize) -> Array1<f32> {
+fn generate_random_vector(length: usize) -> Array1<f32> {
     let mut vector = Array1::zeros(_length);
 
     for i in 0.._length {

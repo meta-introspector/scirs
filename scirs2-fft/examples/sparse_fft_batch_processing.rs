@@ -26,7 +26,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 
 // Helper to add noise to signals
 #[allow(dead_code)]
-fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
+fn add_noise(_signal: &[f64], noiselevel: f64) -> Vec<f64> {
     let mut rng = rand::rng();
     _signal
         .iter()
@@ -36,7 +36,7 @@ fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
 
 // Helper to create a batch of signals with varying parameters
 #[allow(dead_code)]
-fn create_test_batch(_count: usize) -> Vec<Vec<f64>> {
+fn create_test_batch(count: usize) -> Vec<Vec<f64>> {
     let mut signals = Vec::with_capacity(_count);
     let _rng = rand::rng();
 

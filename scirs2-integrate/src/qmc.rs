@@ -423,13 +423,13 @@ impl Faure {
     }
 
     /// Generate d-th coordinate using Faure construction
-    fn faure_coordinate(&self, _index: usize, dimension: usize, base: usize) -> f64 {
-        if _index == 0 {
+    fn faure_coordinate(&self, index: usize, dimension: usize, base: usize) -> f64 {
+        if index == 0 {
             return 0.0;
         }
 
-        // Convert _index to base-p representation and apply Faure matrix
-        let digits = self.to_base_digits(_index, base);
+        // Convert index to base-p representation and apply Faure matrix
+        let digits = self.to_base_digits(index, base);
         let mut result = 0.0;
         let mut base_power = base as f64;
 
@@ -614,7 +614,7 @@ where
     let delta = volume / (n_points as f64);
 
     // Prepare for multiple _estimates
-    let mut _estimates = Array1::<f64>::zeros(n_estimates);
+    let mut estimates = Array1::<f64>::zeros(n_estimates);
 
     // Generate independent samples and compute _estimates
     for i in 0..n_estimates {
@@ -645,13 +645,13 @@ where
                 sum_exp += (val - max_val).exp();
             }
 
-            _estimates[i] = max_val + sum_exp.ln() + delta.ln();
+            estimates[i] = max_val + sum_exp.ln() + delta.ln();
         } else {
             for j in 0..n_points {
                 sum += func(x.slice(s![j, ..]));
             }
 
-            _estimates[i] = sum * delta;
+            estimates[i] = sum * delta;
         }
 
         // Get a new QRNG for next estimate with different scrambling
@@ -663,19 +663,19 @@ where
     let integral = if log {
         let mut max_val = f64::NEG_INFINITY;
         for i in 0..n_estimates {
-            if _estimates[i] > max_val {
-                max_val = _estimates[i];
+            if estimates[i] > max_val {
+                max_val = estimates[i];
             }
         }
 
         let mut sum_exp = 0.0;
         for i in 0..n_estimates {
-            sum_exp += (_estimates[i] - max_val).exp();
+            sum_exp += (estimates[i] - max_val).exp();
         }
 
         max_val + (sum_exp / (n_estimates as f64)).ln()
     } else {
-        _estimates.sum() / (n_estimates as f64)
+        estimates.sum() / (n_estimates as f64)
     };
 
     // Compute standard error
@@ -686,7 +686,7 @@ where
             let mut variance = 0.0;
 
             for i in 0..n_estimates {
-                let diff = (_estimates[i] - mean).exp();
+                let diff = (estimates[i] - mean).exp();
                 variance += (diff - 1.0).powi(2);
             }
 
@@ -696,7 +696,7 @@ where
             let mean = integral;
             let mut variance = 0.0;
 
-            for estimate in _estimates.iter().take(n_estimates) {
+            for estimate in estimates.iter().take(n_estimates) {
                 variance += (estimate - mean).powi(2);
             }
 
@@ -920,7 +920,7 @@ where
             let mut sum = 0.0;
 
             for i in 0..n_points {
-                let point = _points.row(i);
+                let point = points.row(i);
 
                 // Transform from [0,1]^d to [a,b]^d
                 let mut transformed_point = Array1::zeros(a.len());
@@ -967,17 +967,17 @@ fn sequential_qmc_integration<F>(
 where
     F: Fn(ArrayView1<f64>) -> f64,
 {
-    let mut _estimates = Vec::with_capacity(n_estimates);
+    let mut estimates = Vec::with_capacity(n_estimates);
 
     for _ in 0..n_estimates {
         // Sample _points
-        let _points = qrng.random(n_points);
+        let points = qrng.random(n_points);
 
         // Transform _points to integration domain and evaluate function
         let mut sum = 0.0;
 
         for i in 0..n_points {
-            let point = _points.row(i);
+            let point = points.row(i);
 
             // Transform from [0,1]^d to [a,b]^d
             let mut transformed_point = Array1::zeros(a.len());
@@ -1003,10 +1003,10 @@ where
             sum * volume
         };
 
-        _estimates.push(estimate);
+        estimates.push(estimate);
     }
 
-    compute_qmc_result(_estimates, log, sign)
+    compute_qmc_result(estimates, log, sign)
 }
 
 #[allow(dead_code)]

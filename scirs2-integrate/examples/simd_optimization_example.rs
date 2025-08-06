@@ -237,7 +237,7 @@ fn demonstrate_simd_operations() -> Result<(), Box<dyn std::error::Error>> {
             ("Infinity norm", test_simd_inf_norm),
         ];
 
-        for (op_name, _test_func) in ops {
+        for (op_name, test_func) in ops {
             // SIMD version
             let start = Instant::now();
             let _result_simd = match op_name {
@@ -336,14 +336,14 @@ fn test_simd_min(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
 
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-fn test_simd_l2_norm(a: &ArrayView1<f64>, _b: &ArrayView1<f64>) -> f64 {
+fn test_simd_l2_norm(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
     // Note: SIMD methods are placeholders for demonstration
     a.iter().map(|x| x * x).sum::<f64>().sqrt()
 }
 
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-fn test_simd_inf_norm(a: &ArrayView1<f64>, _b: &ArrayView1<f64>) -> f64 {
+fn test_simd_inf_norm(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
     // Note: SIMD methods are placeholders for demonstration
     a.iter().map(|x| x.abs()).fold(0.0f64, |acc, x| acc.max(x))
 }

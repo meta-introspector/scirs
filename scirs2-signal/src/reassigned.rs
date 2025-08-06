@@ -1,7 +1,7 @@
-use ndarray::s;
 use crate::error::SignalResult;
 use crate::{spectral, window};
-use ndarray::{ Array1, Array2};
+use ndarray::s;
+use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use std::f64::consts::PI;
 
@@ -228,7 +228,7 @@ fn compute_stft(
     )?;
 
     // Extract the result
-    let (_f_t, zxx) = stft_result;
+    let (_f, t, zxx) = stft_result;
     let n_frames = zxx.len();
     let n_bins = n_fft / 2 + 1; // Only positive frequencies
 
@@ -376,8 +376,8 @@ pub fn smoothed_reassigned_spectrogram(
 
 /// Apply a simple 2D box smoothing filter to the spectrogram
 #[allow(dead_code)]
-fn smooth_spectrogram(_spectrogram: &Array2<f64>, width: usize) -> Array2<f64> {
-    let (n_bins, n_frames) = (_spectrogram.shape()[0], _spectrogram.shape()[1]);
+fn smooth_spectrogram(spectrogram: &Array2<f64>, width: usize) -> Array2<f64> {
+    let (n_bins, n_frames) = (_spectrogram.shape()[0], spectrogram.shape()[1]);
     let mut smoothed = Array2::zeros((n_bins, n_frames));
 
     // Half width of the filter
@@ -407,7 +407,7 @@ fn smooth_spectrogram(_spectrogram: &Array2<f64>, width: usize) -> Array2<f64> {
             // Apply the filter
             for fi in f_start..=f_end {
                 for tj in t_start..=t_end {
-                    sum += _spectrogram[[fi, tj]];
+                    sum += spectrogram[[fi, tj]];
                     count += 1;
                 }
             }
@@ -483,18 +483,18 @@ pub fn extract_ridges(
 
         // Update ridge structures
         for (i, &freq_idx) in peak_indices.iter().enumerate() {
-            if i >= _ridges.len() {
-                _ridges.push(Vec::new());
+            if i >= ridges.len() {
+                ridges.push(Vec::new());
             }
 
-            _ridges[i].push((t, frequencies[freq_idx]));
+            ridges[i].push((t, frequencies[freq_idx]));
         }
     }
 
     // Sort _ridges by average energy
-    _ridges.sort_by(|a, b| {
-        let avg_energy_a = a.iter().map(|(t_)| *t).sum::<usize>() as f64 / a.len() as f64;
-        let avg_energy_b = b.iter().map(|(t_)| *t).sum::<usize>() as f64 / b.len() as f64;
+    ridges.sort_by(|a, b| {
+        let avg_energy_a = a.iter().map(|(t, _)| *t).sum::<usize>() as f64 / a.len() as f64;
+        let avg_energy_b = b.iter().map(|(t, _)| *t).sum::<usize>() as f64 / b.len() as f64;
         avg_energy_b
             .partial_cmp(&avg_energy_a)
             .unwrap_or(std::cmp::Ordering::Equal)

@@ -76,7 +76,7 @@ impl Clone for VisionError {
 
 /// Convert GPU errors to vision errors
 impl From<scirs2_core::gpu::GpuError> for VisionError {
-    fn from(_err: scirs2_core::gpu::GpuError) -> Self {
+    fn from(err: scirs2_core::gpu::GpuError) -> Self {
         VisionError::GpuError(_err.to_string())
     }
 }
@@ -332,9 +332,9 @@ impl Default for SystemStateMonitor {
 
 impl ErrorRecoveryManager {
     /// Create a new error recovery manager
-    pub fn new(_config: RecoveryConfig) -> Self {
+    pub fn new(config: RecoveryConfig) -> Self {
         Self {
-            _config,
+            config,
             error_history: std::collections::VecDeque::with_capacity(1000),
             system_monitor: SystemStateMonitor::new(),
             recovery_stats: RecoveryStatistics::default(),
@@ -669,7 +669,7 @@ static ERROR_RECOVERY: std::sync::Mutex<Option<ErrorRecoveryManager>> = std::syn
 
 /// Initialize global error recovery manager
 #[allow(dead_code)]
-pub fn initialize_error_recovery(_config: RecoveryConfig) {
+pub fn initialize_error_recovery(config: RecoveryConfig) {
     let mut global_recovery = ERROR_RECOVERY.lock().unwrap();
     *global_recovery = Some(ErrorRecoveryManager::new(_config));
 }

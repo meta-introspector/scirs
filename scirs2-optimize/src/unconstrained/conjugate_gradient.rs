@@ -204,7 +204,7 @@ where
 {
     // Get bounds on the line search parameter
     let (a_min, a_max) = if let Some(b) = bounds {
-        compute_line_bounds(_x, direction, Some(b))
+        compute_line_bounds(x, direction, Some(b))
     } else {
         (f64::NEG_INFINITY, f64::INFINITY)
     };
@@ -219,7 +219,7 @@ where
     // If bounds fully constrain movement, return that constrained step
     if a_max <= 0.0 || a_min >= a_max {
         alpha = if a_max > 0.0 { a_max } else { 0.0 };
-        let x_new = _x + alpha * direction;
+        let x_new = x + alpha * direction;
         *nfev += 1;
         let f_new = fun(&x_new.view()).into();
         return (alpha, f_new);
@@ -227,7 +227,7 @@ where
 
     // Function to evaluate a point on the line
     let mut f_line = |alpha: f64| {
-        let mut x_new = _x + alpha * direction;
+        let mut x_new = x + alpha * direction;
 
         // Project onto bounds (if needed, should be a no-op if we calculated bounds correctly)
         if let Some(bounds) = bounds {

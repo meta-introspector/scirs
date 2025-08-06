@@ -162,7 +162,7 @@ mod simple_nn {
 
     impl<F: Float + FromPrimitive> DenseLayer<F> {
         /// Create a new dense layer with random initialization
-        pub fn new(_input_size: usize, output_size: usize) -> Self {
+        pub fn new(_input_size: usize, outputsize: usize) -> Self {
             // Initialize with small random values (simplified Xavier initialization)
             let scale = F::from(0.1).unwrap();
             let mut weights = Array2::zeros((_input_size, output_size));
@@ -217,9 +217,9 @@ mod simple_nn {
     /// Apply activation function to an array element-wise
     pub fn apply_activation<F: Float>(arr: &Array1<F>, activation: &str) -> Array1<F> {
         match activation {
-            "tanh" => _arr.mapv(tanh),
-            "sigmoid" => _arr.mapv(sigmoid),
-            "relu" => _arr.mapv(relu, _ => _arr.clone(),
+            "tanh" => arr.mapv(tanh),
+            "sigmoid" => arr.mapv(sigmoid),
+            "relu" => arr.mapv(relu, _ => arr.clone(),
         }
     }
 }
@@ -267,9 +267,9 @@ pub struct LSTMForecaster<F: Float + Debug + FromPrimitive> {
 
 impl<F: Float + Debug + FromPrimitive> LSTMForecaster<F> {
     /// Create a new LSTM forecaster
-    pub fn new(_config: LSTMConfig) -> Self {
+    pub fn new(config: LSTMConfig) -> Self {
         Self {
-            _config,
+            config,
             trained: false,
             loss_history: Vec::new(),
             input_layer: None,
@@ -296,7 +296,7 @@ impl<F: Float + Debug + FromPrimitive> LSTMForecaster<F> {
     }
 
     /// Simple training procedure using basic gradient approximation
-    fn train_simple(&mut self, x_train: &Array2<F>, y_train: &Array2<F>) -> Result<()> {
+    fn train_simple(&mut self, x_train: &Array2<F>, ytrain: &Array2<F>) -> Result<()> {
         if self.input_layer.is_none() {
             self.initialize_network();
         }
@@ -352,7 +352,7 @@ impl<F: Float + Debug + FromPrimitive> LSTMForecaster<F> {
     }
 
     /// Simplified weight update
-    fn update_weights_simple(&mut self, learning_rate: F) {
+    fn update_weights_simple(&mut self, learningrate: F) {
         let adjustment = learning_rate * F::from(0.001).unwrap();
 
         // Simple weight perturbation for demonstration
@@ -510,9 +510,9 @@ pub struct TransformerForecaster<F: Float + Debug + FromPrimitive> {
 
 impl<F: Float + Debug + FromPrimitive> TransformerForecaster<F> {
     /// Create a new Transformer forecaster
-    pub fn new(_config: TransformerConfig) -> Self {
+    pub fn new(config: TransformerConfig) -> Self {
         Self {
-            _config,
+            config,
             trained: false,
             loss_history: Vec::new(),
             attention_layer: None,
@@ -540,7 +540,7 @@ impl<F: Float + Debug + FromPrimitive> TransformerForecaster<F> {
     }
 
     /// Simple training using feedforward approximation of attention
-    fn train_simple(&mut self, x_train: &Array2<F>, y_train: &Array2<F>) -> Result<()> {
+    fn train_simple(&mut self, x_train: &Array2<F>, ytrain: &Array2<F>) -> Result<()> {
         if self.attention_layer.is_none() {
             self.initialize_network();
         }
@@ -735,9 +735,9 @@ pub struct NBeatsForecaster<F: Float + Debug + FromPrimitive> {
 
 impl<F: Float + Debug + FromPrimitive> NBeatsForecaster<F> {
     /// Create a new N-BEATS forecaster
-    pub fn new(_config: NBeatsConfig) -> Self {
+    pub fn new(config: NBeatsConfig) -> Self {
         Self {
-            _config,
+            config,
             trained: false,
             loss_history: Vec::new(),
             stack_layers: Vec::new(),
@@ -775,7 +775,7 @@ impl<F: Float + Debug + FromPrimitive> NBeatsForecaster<F> {
     }
 
     /// Training for N-BEATS model
-    fn train_simple(&mut self, x_train: &Array2<F>, y_train: &Array2<F>) -> Result<()> {
+    fn train_simple(&mut self, x_train: &Array2<F>, ytrain: &Array2<F>) -> Result<()> {
         if self.stack_layers.is_empty() {
             self.initialize_network();
         }
@@ -1053,14 +1053,14 @@ pub mod utils {
 
     /// Normalize data for neural network training
     pub fn normalize_data<F: Float + FromPrimitive>(data: &Array1<F>) -> Result<(Array1<F>, F, F)> {
-        if _data.is_empty() {
+        if data.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Data cannot be empty".to_string(),
             ));
         }
 
-        let min_val = _data.iter().cloned().fold(_data[0], F::min);
-        let max_val = _data.iter().cloned().fold(_data[0], F::max);
+        let min_val = data.iter().cloned().fold(_data[0], F::min);
+        let max_val = data.iter().cloned().fold(_data[0], F::max);
 
         if min_val == max_val {
             return Err(TimeSeriesError::InvalidInput(
@@ -1069,7 +1069,7 @@ pub mod utils {
         }
 
         let range = max_val - min_val;
-        let normalized = _data.mapv(|x| (x - min_val) / range);
+        let normalized = data.mapv(|x| (x - min_val) / range);
 
         Ok((normalized, min_val, max_val))
     }
@@ -1325,14 +1325,14 @@ pub mod advanced {
         MultiScaleNeuralForecaster<F>
     {
         /// Create new multi-scale neural forecaster
-        pub fn new(_config: MultiScaleConfig) -> Self {
+        pub fn new(config: MultiScaleConfig) -> Self {
             // Configure individual models for different time scales
             let short_term_config = LSTMConfig {
                 base: NeuralConfig {
-                    lookback_window: _config.short_term_window,
-                    forecast_horizon: _config.forecast_horizon,
+                    lookback_window: config.short_term_window,
+                    forecast_horizon: config.forecast_horizon,
                     epochs: 50,
-                    learning_rate: _config.learning_rate,
+                    learning_rate: config.learning_rate,
                     ..Default::default()
                 },
                 hidden_size: 32,
@@ -1342,10 +1342,10 @@ pub mod advanced {
 
             let medium_term_config = TransformerConfig {
                 base: NeuralConfig {
-                    lookback_window: _config.medium_term_window,
-                    forecast_horizon: _config.forecast_horizon,
+                    lookback_window: config.medium_term_window,
+                    forecast_horizon: config.forecast_horizon,
                     epochs: 30,
-                    learning_rate: _config.learning_rate * 0.5,
+                    learning_rate: config.learning_rate * 0.5,
                     ..Default::default()
                 },
                 d_model: 64,
@@ -1356,10 +1356,10 @@ pub mod advanced {
 
             let long_term_config = NBeatsConfig {
                 base: NeuralConfig {
-                    lookback_window: _config.long_term_window,
-                    forecast_horizon: _config.forecast_horizon,
+                    lookback_window: config.long_term_window,
+                    forecast_horizon: config.forecast_horizon,
                     epochs: 20,
-                    learning_rate: _config.learning_rate * 0.1,
+                    learning_rate: config.learning_rate * 0.1,
                     ..Default::default()
                 },
                 num_stacks: 3,
@@ -1376,7 +1376,7 @@ pub mod advanced {
                 medium_term: TransformerForecaster::new(medium_term_config),
                 long_term: NBeatsForecaster::new(long_term_config),
                 combination_weights: None,
-                _config,
+                config,
                 trained: false,
             }
         }
@@ -1550,7 +1550,7 @@ pub mod advanced {
             let long_pred = self.long_term.predict(steps)?;
 
             // Combine predictions using learned weights
-            let weights = self.combination_weights.as_ref().unwrap();
+            let weights = self.combinationweights.as_ref().unwrap();
             let combined_forecast = &short_pred.forecast * weights[0]
                 + &medium_pred.forecast * weights[1]
                 + &long_pred.forecast * weights[2];
@@ -1581,7 +1581,7 @@ pub mod advanced {
 
         /// Get the combination weights learned during training
         pub fn get_combination_weights(&self) -> Option<&Array1<F>> {
-            self.combination_weights.as_ref()
+            self.combinationweights.as_ref()
         }
     }
 
@@ -1635,11 +1635,11 @@ pub mod advanced {
 
     impl<F: Float + Debug + Clone + FromPrimitive> OnlineNeuralForecaster<F> {
         /// Create new online neural forecaster
-        pub fn new(_config: OnlineConfig) -> Self {
+        pub fn new(config: OnlineConfig) -> Self {
             let lstm_config = LSTMConfig {
                 base: NeuralConfig {
                     lookback_window: 24,
-                    forecast_horizon: _config.forecast_horizon,
+                    forecast_horizon: config.forecast_horizon,
                     epochs: 20,
                     learning_rate: 0.001,
                     batch_size: 16,
@@ -1654,11 +1654,11 @@ pub mod advanced {
             Self {
                 base_model: LSTMForecaster::new(lstm_config),
                 data_buffer: VecDeque::with_capacity(_config.buffer_size),
-                max_buffer_size: _config.buffer_size,
+                max_buffer_size: config.buffer_size,
                 incremental_lr: F::from(_config.incremental_learning_rate).unwrap(),
-                update_frequency: _config.update_frequency,
+                update_frequency: config.update_frequency,
                 observation_count: 0,
-                _config,
+                config,
             }
         }
 
@@ -1738,14 +1738,14 @@ pub mod advanced {
 
     impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> AttentionForecaster<F> {
         /// Create new attention-based forecaster
-        pub fn new(_config: NeuralConfig) -> Self {
+        pub fn new(config: NeuralConfig) -> Self {
             Self {
-                input_dim: _config.lookback_window,
+                input_dim: config.lookback_window,
                 hidden_dim: 64,
-                output_dim: _config.forecast_horizon,
+                output_dim: config.forecast_horizon,
                 attention_weights: None,
                 model_weights: None,
-                _config,
+                config,
                 trained: false,
                 loss_history: Vec::new(),
             }
@@ -1847,7 +1847,7 @@ pub mod advanced {
 
             // Store attention weights for interpretability
             self.attention_weights = Some(
-                Array2::fromshape_vec((1, attention_weights.len()), attention_weights.to_vec())
+                Array2::fromshape_vec((1, attentionweights.len()), attentionweights.to_vec())
                     .unwrap(),
             );
 
@@ -1921,7 +1921,7 @@ pub mod advanced {
 
         /// Get attention weights for interpretability
         pub fn get_attention_weights(&self) -> Option<&Array2<F>> {
-            self.attention_weights.as_ref()
+            self.attentionweights.as_ref()
         }
 
         /// Get training loss history
@@ -1936,7 +1936,7 @@ pub mod advanced {
                 input_dim: self.input_dim,
                 hidden_dim: self.hidden_dim,
                 output_dim: self.output_dim,
-                attention_weights: self.attention_weights.clone(),
+                attention_weights: self.attentionweights.clone(),
                 model_weights: self.model_weights.clone(),
                 config: self.config.clone(),
                 trained: self.trained,
@@ -1986,11 +1986,11 @@ pub mod advanced {
 
     impl<F: Float + Debug + Clone + FromPrimitive> EnsembleNeuralForecaster<F> {
         /// Create new ensemble forecaster
-        pub fn new(_ensemble_method: EnsembleMethod) -> Self {
+        pub fn new(_ensemblemethod: EnsembleMethod) -> Self {
             Self {
                 forecasters: Vec::new(),
                 weights: None,
-                _ensemble_method,
+                ensemble_method,
                 model_names: Vec::new(),
                 trained: false,
             }
@@ -2413,7 +2413,7 @@ pub mod advanced {
 
     impl<F: Float + Debug + Clone + FromPrimitive + 'static> NeuralAutoML<F> {
         /// Create new AutoML system
-        pub fn new(_search_strategy: SearchStrategy, max_evaluations: usize) -> Self {
+        pub fn new(_search_strategy: SearchStrategy, maxevaluations: usize) -> Self {
             let mut search_space = HashMap::new();
 
             // Define default search space

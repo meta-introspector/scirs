@@ -101,7 +101,7 @@ where
 
     // If _norm exceeds max_norm, scale gradients
     if _norm > max_norm {
-        let scale = max_norm / _norm;
+        let scale = max_norm / norm;
         for grad in gradients.iter_mut() {
             *grad = *grad * scale;
         }
@@ -134,17 +134,17 @@ where
 /// assert_eq!(gradients, Array1::from_vec(vec![-1.0, 0.0, 1.0, 0.0]));
 /// ```
 #[allow(dead_code)]
-pub fn gradient_centralization<A, D>(_gradients: &mut Array<A, D>) -> &mut Array<A, D>
+pub fn gradient_centralization<A, D>(gradients: &mut Array<A, D>) -> &mut Array<A, D>
 where
     A: Float + ScalarOperand + Debug,
     D: Dimension,
 {
     // Calculate mean
-    let sum = _gradients.iter().fold(A::zero(), |acc, &x| acc + x);
+    let sum = gradients.iter().fold(A::zero(), |acc, &x| acc + x);
     let mean = sum / A::from(_gradients.len()).unwrap_or(A::one());
 
     // Subtract mean from each element
-    for grad in _gradients.iter_mut() {
+    for grad in gradients.iter_mut() {
         *grad = *grad - mean;
     }
 
@@ -173,14 +173,14 @@ where
 /// assert_eq!(gradients, Array1::from_vec(vec![0.0, 0.02, 0.0, 0.3]));
 /// ```
 #[allow(dead_code)]
-pub fn zero_small_gradients<A, D>(_gradients: &mut Array<A, D>, threshold: A) -> &mut Array<A, D>
+pub fn zero_small_gradients<A, D>(gradients: &mut Array<A, D>, threshold: A) -> &mut Array<A, D>
 where
     A: Float + ScalarOperand + Debug,
     D: Dimension,
 {
     let abs_threshold = threshold.abs();
 
-    for grad in _gradients.iter_mut() {
+    for grad in gradients.iter_mut() {
         if grad.abs() < abs_threshold {
             *grad = A::zero();
         }

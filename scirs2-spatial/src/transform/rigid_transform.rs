@@ -122,11 +122,11 @@ impl RigidTransform {
     /// ];
     /// let transform = RigidTransform::from_matrix(&matrix.view()).unwrap();
     /// ```
-    pub fn from_matrix(_matrix: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
-        if _matrix.shape() != [4, 4] {
+    pub fn from_matrix(matrix: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
+        if matrix.shape() != [4, 4] {
             return Err(SpatialError::DimensionError(format!(
                 "Matrix must be 4x4, got {:?}",
-                _matrix.shape()
+                matrix.shape()
             )));
         }
 
@@ -148,14 +148,14 @@ impl RigidTransform {
         let mut rotation_matrix = Array2::<f64>::zeros((3, 3));
         for i in 0..3 {
             for j in 0..3 {
-                rotation_matrix[[i, j]] = _matrix[[i, j]];
+                rotation_matrix[[i, j]] = matrix[[i, j]];
             }
         }
 
         // Extract the translation part (right column, first 3 elements)
         let mut translation = Array1::<f64>::zeros(3);
         for i in 0..3 {
-            translation[i] = _matrix[[i, 3]];
+            translation[i] = matrix[[i, 3]];
         }
 
         // Create rotation from the extracted _matrix
@@ -273,8 +273,8 @@ impl RigidTransform {
     /// let transformed = transform.apply(&point.view());
     /// // Should be [1.0, 3.0, 3.0] (rotated then translated)
     /// ```
-    pub fn apply(&self, _point: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
-        if _point.len() != 3 {
+    pub fn apply(&self, point: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
+        if point.len() != 3 {
             return Err(SpatialError::DimensionError(
                 "Point must have 3 elements".to_string(),
             ));
@@ -307,18 +307,18 @@ impl RigidTransform {
     /// let points = array![[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]];
     /// let transformed = transform.apply_multiple(&points.view());
     /// ```
-    pub fn apply_multiple(&self, _points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
-        if _points.ncols() != 3 {
+    pub fn apply_multiple(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+        if points.ncols() != 3 {
             return Err(SpatialError::DimensionError(
                 "Each point must have 3 elements".to_string(),
             ));
         }
 
-        let npoints = _points.nrows();
+        let npoints = points.nrows();
         let mut result = Array2::<f64>::zeros((npoints, 3));
 
         for i in 0..npoints {
-            let point = _points.row(i);
+            let point = points.row(i);
             let transformed = self.apply(&point)?;
             for j in 0..3 {
                 result[[i, j]] = transformed[j];
@@ -383,11 +383,11 @@ impl RigidTransform {
     /// let combined = t1.compose(&t2);
     /// // Should have a translation of [1.0, 1.0, 0.0]
     /// ```
-    pub fn compose(&self, _other: &RigidTransform) -> SpatialResult<RigidTransform> {
+    pub fn compose(&self, other: &RigidTransform) -> SpatialResult<RigidTransform> {
         // Compose rotations
         let rotation = self.rotation.compose(&_other.rotation);
 
-        // Compose translations: self.translation + self.rotation * _other.translation
+        // Compose translations: self.translation + self.rotation * other.translation
         let rotated_trans = self.rotation.apply(&_other.translation.view())?;
         let translation = &self.translation + &rotated_trans;
 
@@ -442,17 +442,17 @@ impl RigidTransform {
     /// let transformed = transform.apply(&point.view());
     /// // Should be [1.0, 2.0, 3.0]
     /// ```
-    pub fn from_translation(_translation: &ArrayView1<f64>) -> SpatialResult<RigidTransform> {
-        if _translation.len() != 3 {
+    pub fn from_translation(translation: &ArrayView1<f64>) -> SpatialResult<RigidTransform> {
+        if translation.len() != 3 {
             return Err(SpatialError::DimensionError(format!(
                 "Translation must have 3 elements, got {}",
-                _translation.len()
+                translation.len()
             )));
         }
 
         Ok(RigidTransform {
             rotation: Rotation::from_quat(&array![1.0, 0.0, 0.0, 0.0].view()).unwrap(),
-            translation: _translation.to_owned(),
+            translation: translation.to_owned(),
         })
     }
 
@@ -479,9 +479,9 @@ impl RigidTransform {
     /// let transformed = transform.apply(&point.view());
     /// // Should be [0.0, 1.0, 0.0]
     /// ```
-    pub fn from_rotation(_rotation: Rotation) -> RigidTransform {
+    pub fn from_rotation(rotation: Rotation) -> RigidTransform {
         RigidTransform {
-            rotation: _rotation,
+            rotation: rotation,
             translation: Array1::<f64>::zeros(3),
         }
     }

@@ -24,7 +24,7 @@ struct SobolState {
 }
 
 impl SobolState {
-    fn new(_dimension: usize) -> Self {
+    fn new(dimension: usize) -> Self {
         let mut direction_numbers = Vec::new();
 
         // Initialize direction numbers for first few dimensions
@@ -50,7 +50,7 @@ impl SobolState {
         }
 
         SobolState {
-            _dimension,
+            dimension,
             count: 0,
             direction_numbers,
         }
@@ -434,7 +434,7 @@ where
     }
 
     /// Create mutant vector using differential evolution
-    fn create_mutant(&mut self, candidate_idx: usize) -> Array1<f64> {
+    fn create_mutant(&mut self, candidateidx: usize) -> Array1<f64> {
         let popsize = self.population.nrows();
         let mut mutant = Array1::zeros(self.ndim);
 
@@ -522,7 +522,7 @@ where
     }
 
     /// Create trial vector using crossover
-    fn create_trial(&mut self, candidate_idx: usize, mutant: &Array1<f64>) -> Array1<f64> {
+    fn create_trial(&mut self, candidateidx: usize, mutant: &Array1<f64>) -> Array1<f64> {
         let candidate = self.population.row(candidate_idx).to_owned();
         let mut trial = candidate.clone();
 

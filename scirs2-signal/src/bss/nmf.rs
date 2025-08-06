@@ -5,7 +5,7 @@ use ndarray::s;
 
 use super::BssConfig;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array2};
+use ndarray::Array2;
 use rand::{Rng, SeedableRng};
 
 #[allow(unused_imports)]
@@ -39,7 +39,7 @@ pub fn nmf(
 
     // Initialize random W and H matrices
     let mut rng = if let Some(seed) = config.random_seed {
-        rand::rngs::StdRng::from_seed([seed as u8; 32])
+        rand::rngs::StdRng::seed_from_u64([seed as u8; 32])
     } else {
         {
             // In rand 0.9, from_rng doesn't return Result but directly returns the PRNG
@@ -52,13 +52,13 @@ pub fn nmf(
 
     for i in 0..n_signals {
         for j in 0..n_components {
-            w[[i, j]] = rng.random_range(0.0..1.0);
+            w[[i, j]] = rng.gen_range(0.0..1.0);
         }
     }
 
     for i in 0..n_components {
         for j in 0..n_samples {
-            h[[i, j]] = rng.random_range(0.0..1.0);
+            h[[i, j]] = rng.gen_range(0.0..1.0);
         }
     }
 

@@ -12,7 +12,7 @@ mod scheduler;
 
 // Re-export scheduler functionality
 pub use scheduler::{
-    create_work_stealing_scheduler, create_work_stealing_scheduler_with_workers, get_worker_id,
+    create_work_stealing_scheduler, create_work_stealing_scheduler_with_workers, get_workerid,
     CloneableTask, ParallelTask, SchedulerConfig, SchedulerConfigBuilder, SchedulerStats,
     SchedulingPolicy, TaskHandle, TaskPriority, TaskStatus, WorkStealingArray,
     WorkStealingScheduler,

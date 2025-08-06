@@ -85,7 +85,7 @@ pub struct CoverageConfig {
     /// Output directory for reports
     pub output_directory: PathBuf,
     /// Include system/library code in coverage
-    pub include_system_code: bool,
+    pub include_systemcode: bool,
     /// File patterns to exclude from coverage
     pub exclude_patterns: Vec<String>,
     /// File patterns to include (if empty, includes all)
@@ -93,7 +93,7 @@ pub struct CoverageConfig {
     /// Enable real-time coverage updates
     pub real_time_updates: bool,
     /// Sampling rate for performance optimization (1.0 = 100%)
-    pub sampling_rate: f64,
+    pub samplingrate: f64,
     /// Enable historical tracking
     pub enable_history: bool,
     /// History retention period
@@ -101,7 +101,7 @@ pub struct CoverageConfig {
     /// Enable differential coverage
     pub enable_diff_coverage: bool,
     /// Base commit/branch for differential coverage
-    pub diff_base: Option<String>,
+    pub diffbase: Option<String>,
 }
 
 impl Default for CoverageConfig {
@@ -113,7 +113,7 @@ impl Default for CoverageConfig {
             integration_threshold: 60.0,
             report_formats: vec![ReportFormat::Html, ReportFormat::Json],
             output_directory: PathBuf::from("coverage_reports"),
-            include_system_code: false,
+            include_systemcode: false,
             exclude_patterns: vec![
                 "*/tests/*".to_string(),
                 "*/benches/*".to_string(),
@@ -121,11 +121,11 @@ impl Default for CoverageConfig {
             ],
             include_patterns: vec![],
             real_time_updates: true,
-            sampling_rate: 1.0,
+            samplingrate: 1.0,
             enable_history: true,
             history_retention: Duration::from_secs(30 * 24 * 60 * 60), // 30 days
             enable_diff_coverage: false,
-            diff_base: None,
+            diffbase: None,
         }
     }
 }
@@ -137,7 +137,7 @@ impl CoverageConfig {
             coverage_threshold: 85.0,
             branch_threshold: 75.0,
             integration_threshold: 70.0,
-            sampling_rate: 0.1, // 10% sampling for production
+            samplingrate: 0.1, // 10% sampling for production
             real_time_updates: false,
             ..Default::default()
         }
@@ -154,7 +154,7 @@ impl CoverageConfig {
             ],
             coverage_threshold: 75.0,
             real_time_updates: true,
-            sampling_rate: 1.0,
+            samplingrate: 1.0,
             ..Default::default()
         }
     }
@@ -192,7 +192,7 @@ impl CoverageConfig {
     /// Enable differential coverage
     pub fn with_diff_coverage(mut self, base: &str) -> Self {
         self.enable_diff_coverage = true;
-        self.diff_base = Some(base.to_string());
+        self.diffbase = Some(base.to_string());
         self
     }
 
@@ -847,7 +847,7 @@ impl CoverageAnalyzer {
     }
 
     /// Record line execution
-    pub fn record_line_execution(&self, file_path: &Path, line_number: u32) -> CoreResult<()> {
+    pub fn record_line_execution(&self, file_path: &Path, linenumber: u32) -> CoreResult<()> {
         if let Ok(mut coverage) = self.file_coverage.write() {
             let file_coverage =
                 coverage
@@ -864,7 +864,7 @@ impl CoverageAnalyzer {
                         collected_at: SystemTime::now(),
                     });
 
-            *file_coverage.line_hits.entry(line_number).or_insert(0) += 1;
+            *file_coverage.line_hits.entry(linenumber).or_insert(0) += 1;
         }
 
         Ok(())
@@ -1785,16 +1785,16 @@ impl CoverageAnalyzer {
     }
 
     /// Calculate function complexity (simplified)
-    fn calculate_complexity(start_line: u32, end_line: u32) -> u32 {
+    fn calculate_complexity(start_line: u32, endline: u32) -> u32 {
         // Simplified complexity calculation based on _line count
         // In a real implementation, this would analyze the AST
-        let line_count = end_line.saturating_sub(start_line) + 1;
+        let line_count = endline.saturating_sub(start_line) + 1;
         (line_count / 10).max(1) // Rough approximation
     }
 
     /// Calculate function complexity (instance method)
-    fn calculate_function_complexity(&self, start_line: u32, end_line: u32) -> u32 {
-        Self::calculate_complexity(start_line, end_line)
+    fn calculate_function_complexity(&self, start_line: u32, endline: u32) -> u32 {
+        Self::calculate_complexity(start_line, endline)
     }
 
     /// Find complex uncovered functions
@@ -1832,7 +1832,7 @@ impl CoverageAnalyzer {
             memory_overhead_bytes: memory_overhead,
             collection_duration: execution_time,
             instrumentation_points: self.performance_tracker.instrumentation_count,
-            sampling_effectiveness: self.config.sampling_rate,
+            sampling_effectiveness: self.config.samplingrate,
         }
     }
 

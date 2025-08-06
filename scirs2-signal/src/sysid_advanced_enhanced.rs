@@ -1054,11 +1054,11 @@ impl PerformanceMonitor {
         }
     }
 
-    fn record_method_time(&mut self, method: AdvancedAdvancedMethod, time_ms: f64) {
+    fn record_method_time(&mut self, method: AdvancedAdvancedMethod, timems: f64) {
         self.method_times.insert(method, time_ms);
     }
 
-    fn finalize(self, total_time: f64, simd_enabled: bool) -> PerformanceMetrics {
+    fn finalize(self, total_time: f64, simdenabled: bool) -> PerformanceMetrics {
         let simd_factor = if simd_enabled { 2.5 } else { 1.0 };
 
         PerformanceMetrics {
@@ -1160,7 +1160,7 @@ impl Default for SpecializationDomain {
 }
 
 impl SystemModel {
-    fn from_neural_network(_network: FeedforwardNetwork) -> SignalResult<Self> {
+    fn from_neural_network(network: FeedforwardNetwork) -> SignalResult<Self> {
         // Convert neural _network to ARX model (simplified)
         Ok(SystemModel::ARX {
             a: Array1::ones(3),
@@ -1201,7 +1201,7 @@ impl RealTimeTracker {
         Ok(self.current_parameters[0] * input)
     }
 
-    fn update_covariance_matrix(&mut self, forgetting_factor: f64) -> SignalResult<()> {
+    fn update_covariance_matrix(&mut self, forgettingfactor: f64) -> SignalResult<()> {
         self.parameter_covariance *= forgetting_factor;
         Ok(())
     }
@@ -1216,7 +1216,8 @@ impl RealTimeTracker {
     }
 
     fn handle_system_change(
-        &mut self_update: &ParameterUpdate,
+        &mut self,
+        _self_update: &ParameterUpdate,
         _config: &RealTimeConfig,
     ) -> SignalResult<()> {
         // Increase learning rates temporarily
@@ -1233,14 +1234,14 @@ impl RealTimeTracker {
 // Implementation of helper functions (simplified for brevity)
 
 #[allow(dead_code)]
-fn validate_identification_signals(_input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<()> {
-    if _input.len() != output.len() {
+fn validate_identification_signals(input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<()> {
+    if input.len() != output.len() {
         return Err(SignalError::ValueError(
             "Input and output signals must have the same length".to_string(),
         ));
     }
 
-    if _input.len() < 10 {
+    if input.len() < 10 {
         return Err(SignalError::ValueError(
             "Signals must have at least 10 samples for identification".to_string(),
         ));
@@ -1387,7 +1388,7 @@ fn build_model_ensemble(
 }
 
 #[allow(dead_code)]
-fn build_single_model_ensemble(_models: Vec<WeightedModel>) -> SignalResult<ModelEnsemble> {
+fn build_single_model_ensemble(models: Vec<WeightedModel>) -> SignalResult<ModelEnsemble> {
     // Select best single model
     let best_model = _models
         .into_iter()
@@ -1417,7 +1418,7 @@ fn perform_uncertainty_quantification(
 }
 
 #[allow(dead_code)]
-fn extract_neural_models(_models: &[WeightedModel]) -> NeuralModelCollection {
+fn extract_neural_models(models: &[WeightedModel]) -> NeuralModelCollection {
     // Extract neural _models from candidate _models
     NeuralModelCollection {
         feedforward_models: Vec::new(),
@@ -1433,11 +1434,11 @@ fn extract_neural_models(_models: &[WeightedModel]) -> NeuralModelCollection {
 }
 
 #[allow(dead_code)]
-fn select_best_base_model(_models: &[WeightedModel]) -> SignalResult<EnhancedSysIdResult> {
+fn select_best_base_model(models: &[WeightedModel]) -> SignalResult<EnhancedSysIdResult> {
     // Select best model for base result (simplified)
     // This would normally convert the best WeightedModel to EnhancedSysIdResult
     Ok(EnhancedSysIdResult {
-        model: _models[0].model.clone(),
+        model: models[0].model.clone(),
         parameters: ParameterEstimate {
             values: Array1::ones(3),
             covariance: Array2::eye(3),
@@ -1460,6 +1461,7 @@ fn select_best_base_model(_models: &[WeightedModel]) -> SignalResult<EnhancedSys
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_advanced_enhanced_system_identification() {

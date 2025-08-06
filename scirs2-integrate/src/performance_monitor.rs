@@ -25,7 +25,7 @@ pub struct PerformanceMetrics {
     /// Memory usage statistics
     pub memory_stats: MemoryStatistics,
     /// Algorithm-specific metrics
-    pub algorithm_metrics: HashMap<String, f64>,
+    pub algorithmmetrics: HashMap<String, f64>,
     /// Convergence history
     pub convergence_history: Vec<f64>,
     /// Step size adaptation history
@@ -85,7 +85,7 @@ impl Default for PerformanceMetrics {
                 deallocation_count: 0,
                 bandwidth_utilization: None,
             },
-            algorithm_metrics: HashMap::new(),
+            algorithmmetrics: HashMap::new(),
             convergence_history: Vec::new(),
             step_size_history: Vec::new(),
             error_estimates: Vec::new(),
@@ -110,26 +110,26 @@ impl PerformanceProfiler {
     }
 
     /// Start profiling a specific phase
-    pub fn start_phase(&mut self, phase_name: &str) {
+    pub fn start_phase(&mut self, phasename: &str) {
         if !self.is_active {
             return;
         }
         self.phase_timers
-            .insert(phase_name.to_string(), Instant::now());
+            .insert(phasename.to_string(), Instant::now());
     }
 
     /// End profiling a specific phase
-    pub fn end_phase(&mut self, phase_name: &str) {
+    pub fn end_phase(&mut self, phasename: &str) {
         if !self.is_active {
             return;
         }
 
-        if let Some(start_time) = self.phase_timers.remove(phase_name) {
+        if let Some(start_time) = self.phase_timers.remove(phasename) {
             let duration = start_time.elapsed();
             if let Ok(mut metrics) = self.metrics.lock() {
                 *metrics
                     .phase_times
-                    .entry(phase_name.to_string())
+                    .entry(phasename.to_string())
                     .or_insert(Duration::ZERO) += duration;
             }
         }
@@ -169,24 +169,24 @@ impl PerformanceProfiler {
     }
 
     /// Record convergence information
-    pub fn record_convergence(&mut self, residual_norm: f64) {
+    pub fn record_convergence(&mut self, residualnorm: f64) {
         if !self.is_active {
             return;
         }
 
         if let Ok(mut metrics) = self.metrics.lock() {
-            metrics.convergence_history.push(residual_norm);
+            metrics.convergence_history.push(residualnorm);
         }
     }
 
     /// Record step size adaptation
-    pub fn record_step_size(&mut self, step_size: f64) {
+    pub fn record_step_size(&mut self, stepsize: f64) {
         if !self.is_active {
             return;
         }
 
         if let Ok(mut metrics) = self.metrics.lock() {
-            metrics.step_size_history.push(step_size);
+            metrics.step_size_history.push(stepsize);
         }
     }
 
@@ -208,7 +208,7 @@ impl PerformanceProfiler {
         }
 
         if let Ok(mut metrics) = self.metrics.lock() {
-            metrics.algorithm_metrics.insert(name.to_string(), value);
+            metrics.algorithmmetrics.insert(name.to_string(), value);
         }
     }
 
@@ -228,12 +228,12 @@ impl PerformanceProfiler {
     }
 
     /// Estimate FLOPS based on operations and time
-    pub fn estimate_flops(&mut self, _operations: usize, time: Duration) {
+    pub fn estimate_flops(&mut self, operations: usize, time: Duration) {
         if !self.is_active || time.is_zero() {
             return;
         }
 
-        let flops = _operations as f64 / time.as_secs_f64();
+        let flops = operations as f64 / time.as_secs_f64();
         if let Ok(mut metrics) = self.metrics.lock() {
             metrics.cache_stats.flops = Some(flops);
         }
@@ -247,7 +247,7 @@ impl PerformanceProfiler {
             metrics.total_time = total_time;
 
             // Compute derived metrics
-            self.compute_efficiency_metrics(&mut metrics);
+            self.compute_efficiencymetrics(&mut metrics);
 
             metrics.clone()
         } else {
@@ -256,10 +256,10 @@ impl PerformanceProfiler {
     }
 
     /// Compute efficiency and derived metrics
-    fn compute_efficiency_metrics(&self, _metrics: &mut PerformanceMetrics) {
+    fn compute_efficiencymetrics(&self, metrics: &mut PerformanceMetrics) {
         // Compute convergence rate if we have history
-        if _metrics.convergence_history.len() > 1 {
-            let rates: Vec<f64> = _metrics
+        if metrics.convergence_history.len() > 1 {
+            let rates: Vec<f64> = metrics
                 .convergence_history
                 .windows(2)
                 .map(|window| {
@@ -273,50 +273,50 @@ impl PerformanceProfiler {
 
             if !rates.is_empty() {
                 let avg_rate = rates.iter().sum::<f64>() / rates.len() as f64;
-                _metrics
-                    .algorithm_metrics
+                metrics
+                    .algorithmmetrics
                     .insert("convergence_rate".to_string(), avg_rate);
             }
         }
 
         // Compute function evaluation efficiency
-        if _metrics.function_evaluations > 0 && !_metrics.total_time.is_zero() {
+        if metrics.function_evaluations > 0 && !metrics.total_time.is_zero() {
             let eval_rate =
-                _metrics.function_evaluations as f64 / _metrics.total_time.as_secs_f64();
-            _metrics
-                .algorithm_metrics
+                metrics.function_evaluations as f64 / metrics.total_time.as_secs_f64();
+            metrics
+                .algorithmmetrics
                 .insert("evaluations_per_second".to_string(), eval_rate);
         }
 
         // Compute step size statistics
-        if !_metrics.step_size_history.is_empty() {
-            let min_step = _metrics
+        if !metrics.step_size_history.is_empty() {
+            let min_step = metrics
                 .step_size_history
                 .iter()
                 .fold(f64::INFINITY, |a, &b| a.min(b));
-            let max_step = _metrics
+            let max_step = metrics
                 .step_size_history
                 .iter()
                 .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-            let avg_step = _metrics.step_size_history.iter().sum::<f64>()
-                / _metrics.step_size_history.len() as f64;
+            let avg_step = metrics.step_size_history.iter().sum::<f64>()
+                / metrics.step_size_history.len() as f64;
 
-            _metrics
-                .algorithm_metrics
+            metrics
+                .algorithmmetrics
                 .insert("min_step_size".to_string(), min_step);
-            _metrics
-                .algorithm_metrics
+            metrics
+                .algorithmmetrics
                 .insert("max_step_size".to_string(), max_step);
-            _metrics
-                .algorithm_metrics
+            metrics
+                .algorithmmetrics
                 .insert("avg_step_size".to_string(), avg_step);
         }
 
-        // Memory efficiency _metrics
-        if _metrics.memory_stats.peak_memory > 0 {
-            let memory_mb = _metrics.memory_stats.peak_memory as f64 / (1024.0 * 1024.0);
-            _metrics
-                .algorithm_metrics
+        // Memory efficiency metrics
+        if metrics.memory_stats.peak_memory > 0 {
+            let memory_mb = metrics.memory_stats.peak_memory as f64 / (1024.0 * 1024.0);
+            metrics
+                .algorithmmetrics
                 .insert("peak_memory_mb".to_string(), memory_mb);
         }
     }
@@ -342,12 +342,12 @@ pub struct PerformanceAnalyzer;
 
 impl PerformanceAnalyzer {
     /// Analyze convergence characteristics
-    pub fn analyze_convergence(_metrics: &PerformanceMetrics) -> ConvergenceAnalysis {
+    pub fn analyze_convergence(metrics: &PerformanceMetrics) -> ConvergenceAnalysis {
         let mut analysis = ConvergenceAnalysis::default();
 
-        if _metrics.convergence_history.len() >= 2 {
+        if metrics.convergence_history.len() >= 2 {
             // Linear convergence detection
-            let log_residuals: Vec<f64> = _metrics
+            let log_residuals: Vec<f64> = metrics
                 .convergence_history
                 .iter()
                 .filter(|&&r| r > 0.0)
@@ -375,21 +375,21 @@ impl PerformanceAnalyzer {
                 }
             }
 
-            analysis.final_residual = _metrics.convergence_history.last().copied();
-            analysis.initial_residual = _metrics.convergence_history.first().copied();
+            analysis.final_residual = metrics.convergence_history.last().copied();
+            analysis.initial_residual = metrics.convergence_history.first().copied();
         }
 
         analysis
     }
 
     /// Analyze performance bottlenecks
-    pub fn identify_bottlenecks(_metrics: &PerformanceMetrics) -> Vec<PerformanceBottleneck> {
+    pub fn identify_bottlenecks(metrics: &PerformanceMetrics) -> Vec<PerformanceBottleneck> {
         let mut bottlenecks = Vec::new();
 
         // Phase time analysis
-        let total_phase_time: Duration = _metrics.phase_times.values().sum();
+        let total_phase_time: Duration = metrics.phase_times.values().sum();
         if !total_phase_time.is_zero() {
-            for (phase, duration) in &_metrics.phase_times {
+            for (phase, duration) in &metrics.phase_times {
                 let percentage = duration.as_secs_f64() / total_phase_time.as_secs_f64() * 100.0;
                 if percentage > 30.0 {
                     bottlenecks.push(PerformanceBottleneck {
@@ -413,13 +413,13 @@ impl PerformanceAnalyzer {
         }
 
         // Memory usage analysis
-        if _metrics.memory_stats.peak_memory > 1024 * 1024 * 1024 {
+        if metrics.memory_stats.peak_memory > 1024 * 1024 * 1024 {
             // > 1GB
             bottlenecks.push(PerformanceBottleneck {
                 category: BottleneckCategory::Memory,
                 description: format!(
                     "High memory usage: {:.1} MB",
-                    _metrics.memory_stats.peak_memory as f64 / (1024.0 * 1024.0)
+                    metrics.memory_stats.peak_memory as f64 / (1024.0 * 1024.0)
                 ),
                 severity: Severity::Medium,
                 suggested_improvements: vec![
@@ -431,9 +431,9 @@ impl PerformanceAnalyzer {
         }
 
         // Function evaluation efficiency
-        if _metrics.function_evaluations > 0 && !_metrics.total_time.is_zero() {
+        if metrics.function_evaluations > 0 && !metrics.total_time.is_zero() {
             let eval_rate =
-                _metrics.function_evaluations as f64 / _metrics.total_time.as_secs_f64();
+                metrics.function_evaluations as f64 / metrics.total_time.as_secs_f64();
             if eval_rate < 100.0 {
                 // Less than 100 evaluations per second
                 bottlenecks.push(PerformanceBottleneck {
@@ -453,29 +453,29 @@ impl PerformanceAnalyzer {
     }
 
     /// Generate performance report
-    pub fn generate_report(_metrics: &PerformanceMetrics) -> PerformanceReport {
-        let convergence_analysis = Self::analyze_convergence(_metrics);
-        let bottlenecks = Self::identify_bottlenecks(_metrics);
+    pub fn generate_report(metrics: &PerformanceMetrics) -> PerformanceReport {
+        let convergence_analysis = Self::analyze_convergence(metrics);
+        let bottlenecks = Self::identify_bottlenecks(metrics);
 
         PerformanceReport {
-            metrics: _metrics.clone(),
+            metrics: metrics.clone(),
             convergence_analysis,
             bottlenecks,
-            recommendations: Self::generate_recommendations(_metrics),
+            recommendations: Self::generate_recommendations(metrics),
         }
     }
 
     /// Generate optimization recommendations
-    fn generate_recommendations(_metrics: &PerformanceMetrics) -> Vec<OptimizationRecommendation> {
+    fn generate_recommendations(metrics: &PerformanceMetrics) -> Vec<OptimizationRecommendation> {
         let mut recommendations = Vec::new();
 
         // Check step size adaptation
-        if !_metrics.step_size_history.is_empty() {
-            let min_step = _metrics
+        if !metrics.step_size_history.is_empty() {
+            let min_step = metrics
                 .step_size_history
                 .iter()
                 .fold(f64::INFINITY, |a, &b| a.min(b));
-            let max_step = _metrics
+            let max_step = metrics
                 .step_size_history
                 .iter()
                 .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -491,7 +491,7 @@ impl PerformanceAnalyzer {
         }
 
         // Check convergence efficiency
-        if let Some(rate) = _metrics.algorithm_metrics.get("convergence_rate") {
+        if let Some(rate) = metrics.algorithmmetrics.get("convergence_rate") {
             if *rate < 1.0 {
                 recommendations.push(OptimizationRecommendation {
                     category: "Convergence".to_string(),
@@ -572,7 +572,7 @@ impl PerformanceReport {
             self.metrics.function_evaluations
         );
 
-        if let Some(rate) = self.metrics.algorithm_metrics.get("evaluations_per_second") {
+        if let Some(rate) = self.metrics.algorithmmetrics.get("evaluations_per_second") {
             println!("Evaluation rate: {rate:.1} evals/sec");
         }
 

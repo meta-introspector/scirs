@@ -105,14 +105,14 @@ pub fn find_homography_from_matches(
     let mut dst_points = Vec::with_capacity(matches.len());
 
     for &(idx1, idx2_) in matches {
-        if idx1 >= keypoints1.len() || idx2 >= keypoints2.len() {
+        if idx1 >= keypoints1.len() || idx2_ >= keypoints2.len() {
             return Err(crate::error::VisionError::InvalidParameter(format!(
-                "Invalid keypoint indices: ({idx1}, {idx2})"
+                "Invalid keypoint indices: ({idx1}, {idx2_})"
             )));
         }
 
         let kp1 = &keypoints1[idx1];
-        let kp2 = &keypoints2[idx2];
+        let kp2 = &keypoints2[idx2_];
 
         src_points.push((kp1.x as f64, kp1.y as f64));
         dst_points.push((kp2.x as f64, kp2.y as f64));
@@ -241,7 +241,7 @@ pub fn perspective_transform(
     src_quad: &[(f64, f64); 4],
     dst_quad: &[(f64, f64); 4],
 ) -> Result<Homography> {
-    find_homography(src_quad, dst_quad, 1e-10, 0.99).map(|(h_)| h)
+    find_homography(src_quad, dst_quad, 1e-10, 0.99).map(|(h_, _)| h_)
 }
 
 /// Fit a rectangle to a set of points
@@ -254,8 +254,8 @@ pub fn perspective_transform(
 ///
 /// * Rectangle corners (top-left, top-right, bottom-right, bottom-left)
 #[allow(dead_code)]
-pub fn fit_rectangle(_points: &[(f64, f64)]) -> [(f64, f64); 4] {
-    if _points.is_empty() {
+pub fn fit_rectangle(points: &[(f64, f64)]) -> [(f64, f64); 4] {
+    if points.is_empty() {
         return [(0.0, 0.0); 4];
     }
 

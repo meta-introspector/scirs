@@ -136,8 +136,8 @@ where
     /// # Returns
     ///
     /// A symmetric COO matrix
-    pub fn from_coo(_matrix: &CooMatrix<T>) -> SparseResult<Self> {
-        let (rows, cols) = _matrix.shape();
+    pub fn from_coo(matrix: &CooMatrix<T>) -> SparseResult<Self> {
+        let (rows, cols) = matrix.shape();
 
         // Ensure _matrix is square
         if rows != cols {
@@ -158,9 +158,9 @@ where
         let mut row_indices = Vec::new();
         let mut col_indices = Vec::new();
 
-        let rows_vec = _matrix.row_indices();
-        let cols_vec = _matrix.col_indices();
-        let data_vec = _matrix.data();
+        let rows_vec = matrix.row_indices();
+        let cols_vec = matrix.col_indices();
+        let data_vec = matrix.data();
 
         for i in 0..data_vec.len() {
             let row = rows_vec[i];
@@ -191,8 +191,8 @@ where
     /// # Returns
     ///
     /// `true` if the matrix is symmetric, `false` otherwise
-    pub fn is_symmetric(_matrix: &CooMatrix<T>) -> bool {
-        let (rows, cols) = _matrix.shape();
+    pub fn is_symmetric(matrix: &CooMatrix<T>) -> bool {
+        let (rows, cols) = matrix.shape();
 
         // Must be square
         if rows != cols {
@@ -200,7 +200,7 @@ where
         }
 
         // Convert to dense to check symmetry (more efficient for COO format)
-        let dense = _matrix.to_dense();
+        let dense = matrix.to_dense();
 
         for i in 0..rows {
             for j in 0..i {
@@ -376,7 +376,7 @@ where
     /// # Returns
     ///
     /// SymCOO array
-    pub fn new(_matrix: SymCooMatrix<T>) -> Self {
+    pub fn new(matrix: SymCooMatrix<T>) -> Self {
         Self { inner: _matrix }
     }
 
@@ -432,7 +432,7 @@ where
                 for j in 0..i {
                     if (dense[i][j] - dense[j][i]).abs() > T::epsilon() {
                         return Err(SparseError::ValueError(
-                            "Input is not _symmetric. Use enforce_symmetric=true to force symmetry"
+                            "Input is not symmetric. Use enforce_symmetric=true to force symmetry"
                                 .to_string(),
                         ));
                     }
@@ -524,8 +524,8 @@ where
     /// # Returns
     ///
     /// A symmetric COO array
-    pub fn from_coo_array(_array: &CooArray<T>) -> SparseResult<Self> {
-        let shape = _array.shape();
+    pub fn from_coo_array(array: &CooArray<T>) -> SparseResult<Self> {
+        let shape = array.shape();
         let (rows, cols) = shape;
 
         // Ensure matrix is square
@@ -537,9 +537,9 @@ where
 
         // Create a temporary COO matrix to check symmetry
         let coo_matrix = CooMatrix::new(
-            _array.get_data().to_vec(),
-            _array.get_rows().to_vec(),
-            _array.get_cols().to_vec(),
+            array.get_data().to_vec(),
+            array.get_rows().to_vec(),
+            array.get_cols().to_vec(),
             shape,
         )?;
 

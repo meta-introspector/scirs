@@ -63,12 +63,12 @@ where
 ///
 /// * `Result<()>` - Ok if valid, Error otherwise
 #[allow(dead_code)]
-pub fn validate_structure<D>(_structure: &Array<bool, D>) -> NdimageResult<()>
+pub fn validate_structure<D>(structure: &Array<bool, D>) -> NdimageResult<()>
 where
     D: Dimension,
 {
     // Validate inputs
-    if _structure.ndim() == 0 {
+    if structure.ndim() == 0 {
         return Err(NdimageError::InvalidInput(
             "Structure cannot be 0-dimensional".into(),
         ));

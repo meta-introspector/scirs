@@ -242,14 +242,14 @@ pub struct OptimizationImpact {
 
 impl PerformanceProfiler {
     /// Create a new performance profiler
-    pub fn new(_config: ProfilerConfig) -> Self {
+    pub fn new(config: ProfilerConfig) -> Self {
         Self {
             timing_records: Arc::new(RwLock::new(HashMap::new())),
             memory_tracker: Arc::new(Mutex::new(MemoryTracker::default())),
             metrics_aggregator: Arc::new(Mutex::new(MetricsAggregator::new())),
             optimizer: Arc::new(Mutex::new(OptimizationEngine::new())),
             monitoring_active: Arc::new(Mutex::new(false)),
-            _config,
+            config,
         }
     }
 
@@ -436,17 +436,17 @@ impl PerformanceProfiler {
 
     // Helper methods
 
-    fn estimate_simd_utilization(&self, operation_name: &str, _array_size: usize) -> f64 {
+    fn estimate_simd_utilization(&self, operation_name: &str, _arraysize: usize) -> f64 {
         // This would integrate with actual SIMD performance counters in a real implementation
         // For now, provide estimates based on operation characteristics
         match operation_name {
-            _name if _name.contains("simd") => 0.85,
-            _name if _name.contains("convolution") => 0.70,
-            _name if _name.contains("filter") => 0.60_ => 0.30,
+            _name if name.contains("simd") => 0.85,
+            _name if name.contains("convolution") => 0.70,
+            _name if name.contains("filter") => 0.60_ => 0.30,
         }
     }
 
-    fn estimate_cache_hit_ratio(&self, array_size: usize) -> f64 {
+    fn estimate_cache_hit_ratio(&self, arraysize: usize) -> f64 {
         // Simple heuristic: smaller arrays have better cache hit ratios
         if array_size < 1024 * 1024 {
             // < 1MB for f64
@@ -559,7 +559,7 @@ impl MetricsAggregator {
         self.system_metrics.total_memory_allocated = total_memory_allocated;
     }
 
-    fn update_trends(&mut self_records: &HashMap<String, Vec<OperationTiming>>) {
+    fn update_trends(&mut selfrecords: &HashMap<String, Vec<OperationTiming>>) {
         // Simple trend analysis based on recent vs. older measurements
         // In a full implementation, this would use more sophisticated time series analysis
         self.trends.execution_time_trend = 0.0; // Placeholder
@@ -769,8 +769,8 @@ fn get_current_memory_usage() -> usize {
 }
 
 #[allow(dead_code)]
-fn calculate_throughput(_array_size: &[usize], execution_time: Duration) -> f64 {
-    let total_elements: usize = _array_size.iter().product();
+fn calculate_throughput(_array_size: &[usize], executiontime: Duration) -> f64 {
+    let total_elements: usize = array_size.iter().product();
     let time_seconds = execution_time.as_secs_f64();
 
     if time_seconds > 0.0 {

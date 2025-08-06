@@ -170,7 +170,7 @@ impl<T: Float + Send + Sync + num_traits::FromPrimitive> TrajectoryBatch<T> {
     }
 
     /// Compute Generalized Advantage Estimation (GAE)
-    pub fn compute_advantages(&mut self, gamma: T, lambda: T, next_value: T) -> Result<()> {
+    pub fn compute_advantages(&mut self, gamma: T, lambda: T, nextvalue: T) -> Result<()> {
         let batch_size = self.rewards.len();
         let mut gae = T::zero();
 
@@ -213,7 +213,7 @@ impl<T: Float + Send + Sync + num_traits::FromPrimitive> TrajectoryBatch<T> {
     }
 
     /// Get mini-batches for optimization
-    pub fn get_mini_batches(&self, mini_batch_size: usize) -> Vec<TrajectoryBatch<T>> {
+    pub fn get_mini_batches(&self, mini_batchsize: usize) -> Vec<TrajectoryBatch<T>> {
         let batch_size = self.observations.nrows();
         let n_mini_batches = (batch_size + mini_batch_size - 1) / mini_batch_size;
 
@@ -379,7 +379,7 @@ pub enum ScheduleType {
 
 impl<T: Float + Send + Sync> RLScheduler<T> {
     /// Create a new learning rate scheduler
-    pub fn new(initial_lr: T, schedule: ScheduleType) -> Self {
+    pub fn new(initiallr: T, schedule: ScheduleType) -> Self {
         Self {
             initial_lr,
             current_lr: initial_lr,

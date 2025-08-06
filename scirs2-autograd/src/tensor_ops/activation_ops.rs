@@ -1,9 +1,9 @@
-use crate::ndarray__ext::{NdArray, NdArrayView};
+use crate::ndarray_ext::{NdArray, NdArrayView};
 use crate::op;
 
 use crate::tensor::Tensor;
 
-use crate::tensor__ops::*;
+use crate::tensor_ops::*;
 use crate::Float;
 use ndarray;
 
@@ -409,7 +409,7 @@ impl<T: Float> op::Op<T> for PReLUGrad<T> {
         Ok(())
     }
 
-    fn grad<'a>(&self_ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
+    fn grad<'a>(selfctx: &mut crate::op::GradientContext<'a, 'a, T>) {
         // Second-order gradients not implemented
     }
 }
@@ -471,7 +471,7 @@ impl<T: Float> op::Op<T> for LearnableELUGrad<T> {
         Ok(())
     }
 
-    fn grad<'a>(&self_ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
+    fn grad<'a>(selfctx: &mut crate::op::GradientContext<'a, 'a, T>) {
         // Second-order gradients not implemented
     }
 }
@@ -540,7 +540,7 @@ impl<T: Float> op::Op<T> for LearnableSwishGrad<T> {
         Ok(())
     }
 
-    fn grad<'a>(&self_ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
+    fn grad<'a>(selfctx: &mut crate::op::GradientContext<'a, 'a, T>) {
         // Second-order gradients not implemented
     }
 }
@@ -633,7 +633,7 @@ impl<T: Float> op::Op<T> for AdaptiveActivationGrad<T> {
         Ok(())
     }
 
-    fn grad<'a>(&self_ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
+    fn grad<'a>(selfctx: &mut crate::op::GradientContext<'a, 'a, T>) {
         // Second-order gradients not implemented
     }
 }

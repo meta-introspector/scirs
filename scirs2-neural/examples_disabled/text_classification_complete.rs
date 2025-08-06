@@ -52,7 +52,7 @@ impl Vocabulary {
         }
     fn word_to_id(&self, word: &str) -> usize {
         self.word_to_id.get(word).copied().unwrap_or(1) // Default to <UNK>
-    fn tokenizetext(&self, text: &str, max_length: usize) -> Vec<usize> {
+    fn tokenizetext(&self, text: &str, maxlength: usize) -> Vec<usize> {
         let words: Vec<&str> = text.split_whitespace().collect();
         let mut tokens = vec![2]; // Start with <START> token
         for word in words.iter().take(max_length - 2) {
@@ -72,12 +72,12 @@ struct TextDataset {
     max_length: usize,
     num_classes: usize,
 impl TextDataset {
-    fn new(_max_length: usize, num_classes: usize) -> Self {
+    fn new(_max_length: usize, numclasses: usize) -> Self {
         let mut dataset = Self {
             texts: Vec::new(),
             labels: Vec::new(),
             vocab: Vocabulary::new(),
-            _max_length,
+            max_length,
             num_classes,
         // Build vocabulary with common words
         let common_words = vec![
@@ -162,9 +162,9 @@ impl TextDataset {
             self.vocab.add_word(word);
         self.texts.push(text.to_string());
         self.labels.push(label);
-    fn create_synthetic_dataset(_num_samples: usize, num_classes: usize, max_length: usize) -> Self {
+    fn create_synthetic_dataset(_num_samples: usize, num_classes: usize, maxlength: usize) -> Self {
         let mut dataset = Self::new(_max_length, num_classes);
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
         // Define sentiment patterns for each class
         let positive_words = vec![
             "fantastic",
@@ -191,7 +191,7 @@ impl TextDataset {
             }
             let text = text_parts.join(" ");
             dataset.add_sample(&text, class);
-    fn train_val_split(&self, val_ratio: f32) -> (Self, Self) {
+    fn train_val_split(&self, valratio: f32) -> (Self, Self) {
         let total_samples = self.len();
         let val_size = (total_samples as f32 * val_ratio) as usize;
         let train_size = total_samples - val_size;
@@ -312,7 +312,7 @@ fn calculatetext_metrics(
 fn traintext_classifier() -> StdResult<()> {
     println!("📝 Starting Text Classification Training Example");
     println!("{}", "=".repeat(60));
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Dataset parameters
     let num_samples = 800;
     let num_classes = 3;
@@ -427,7 +427,7 @@ fn traintext_classifier() -> StdResult<()> {
 #[allow(dead_code)]
 fn demonstrate_attention_model() -> StdResult<()> {
     println!("\n🎯 Attention-Based Model Demo:");
-    let mut rng = SmallRng::seed_from_u64(123);
+    let mut rng = SmallRng::from_seed(123);
     // Create attention model
     let model = build_attentiontext_model(1000, 128, 256, 3, 20, &mut rng)?;
     println!model.params(.iter().map(|p| p.len()).sum::<usize>()

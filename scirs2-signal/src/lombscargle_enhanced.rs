@@ -190,8 +190,8 @@ where
 
 /// Apply window function to values
 #[allow(dead_code)]
-fn apply_window(_values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
-    let n = _values.len();
+fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
+    let n = values.len();
 
     let window = match config.window {
         WindowType::None => vec![1.0; n],
@@ -238,7 +238,7 @@ fn apply_window(_values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec
     let window_sum: f64 = window.iter().sum();
 
     for i in 0..n {
-        windowed[i] = _values[i] * window[i] / window_sum.sqrt();
+        windowed[i] = values[i] * window[i] / window_sum.sqrt();
     }
 
     Ok(windowed)
@@ -246,9 +246,9 @@ fn apply_window(_values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec
 
 /// Compute frequency grid with oversampling
 #[allow(dead_code)]
-fn compute_frequency_grid(_times: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
-    let n = _times.len();
-    let t_span = _times[n - 1] - _times[0];
+fn compute_frequency_grid(times: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
+    let n = times.len();
+    let t_span = times[n - 1] - times[0];
 
     // Estimate average sampling rate
     let avg_dt = t_span / (n - 1) as f64;
@@ -416,7 +416,7 @@ fn bootstrap_confidence_intervals(
         let mut boot_values = Vec::with_capacity(n);
 
         for _ in 0..n {
-            let idx = rng.random_range(0..n);
+            let idx = rng.gen_range(0..n);
             boot_times.push(times[idx]);
             boot_values.push(values[idx]);
         }

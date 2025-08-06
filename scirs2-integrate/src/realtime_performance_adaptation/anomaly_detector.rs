@@ -60,7 +60,7 @@ impl PerformanceAnomalyDetector {
     }
 
     /// Execute recovery plan for detected anomalies
-    pub fn execute_recovery(&mut self, _anomalies: &[PerformanceAnomaly]) -> IntegrateResult<bool> {
+    pub fn execute_recovery(&mut self, anomalies: &[PerformanceAnomaly]) -> IntegrateResult<bool> {
         // Implementation would go here
         Ok(true)
     }

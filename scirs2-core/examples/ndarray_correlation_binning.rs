@@ -63,9 +63,9 @@ fn main() {
     let y_none = array![5.5, 2.1, 8.3, 3.7, 9.2, 1.5, 6.8, 4.2, 7.9, 3.3];
 
     println!("x: {x:?}");
-    println!("y_pos: {y_pos:?}");
-    println!("y_neg: {y_neg:?}");
-    println!("y_none: {y_none:?}");
+    println!("ypos: {y_pos:?}");
+    println!("yneg: {y_neg:?}");
+    println!("ynone: {y_none:?}");
 
     let corr_pos = corrcoef(x.view(), y_pos.view()).unwrap();
     let corr_neg = corrcoef(x.view(), y_neg.view()).unwrap();
@@ -88,17 +88,17 @@ fn main() {
     .unwrap();
 
     println!("\nCovariance matrix:");
-    let cov_matrix = cov(data.view(), 1).unwrap();
+    let covmatrix = cov(data.view(), 1).unwrap();
 
     println!("  Variances:");
-    println!("    Var(x): {:.2}", cov_matrix[[0, 0]]);
-    println!("    Var(y_pos): {:.2}", cov_matrix[[1, 1]]);
-    println!("    Var(y_neg): {:.2}", cov_matrix[[2, 2]]);
+    println!("    Var(x): {:.2}", covmatrix[[0, 0]]);
+    println!("    Var(y_pos): {:.2}", covmatrix[[1, 1]]);
+    println!("    Var(y_neg): {:.2}", covmatrix[[2, 2]]);
 
     println!("  Covariances:");
-    println!("    Cov(x, y_pos): {:.2}", cov_matrix[[0, 1]]);
-    println!("    Cov(x, y_neg): {:.2}", cov_matrix[[0, 2]]);
-    println!("    Cov(y_pos, y_neg): {:.2}", cov_matrix[[1, 2]]);
+    println!("    Cov(x, y_pos): {:.2}", covmatrix[[0, 1]]);
+    println!("    Cov(x, y_neg): {:.2}", covmatrix[[0, 2]]);
+    println!("    Cov(y_pos, y_neg): {:.2}", covmatrix[[1, 2]]);
 
     // Example 3: Quantile analysis
     println!("\n\n=== Quantile Analysis ===");

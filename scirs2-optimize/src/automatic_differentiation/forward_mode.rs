@@ -34,7 +34,7 @@ impl Default for ForwardADOptions {
 
 /// Compute gradient using forward-mode automatic differentiation
 #[allow(dead_code)]
-pub fn forward_gradient<F>(_func: F, x: &ArrayView1<f64>) -> Result<Array1<f64>, OptimizeError>
+pub fn forward_gradient<F>(func: F, x: &ArrayView1<f64>) -> Result<Array1<f64>, OptimizeError>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
@@ -120,27 +120,27 @@ pub struct SecondOrderDual {
 
 impl SecondOrderDual {
     /// Create a new second-order dual number
-    pub fn new(_value: f64, first: f64, second: f64) -> Self {
+    pub fn new(value: f64, first: f64, second: f64) -> Self {
         Self {
-            value: _value,
+            value: value,
             first,
             second,
         }
     }
 
     /// Create a constant (derivatives = 0)
-    pub fn constant(_value: f64) -> Self {
+    pub fn constant(value: f64) -> Self {
         Self {
-            value: _value,
+            value: value,
             first: 0.0,
             second: 0.0,
         }
     }
 
     /// Create a variable (first = 1, second = 0)
-    pub fn variable(_value: f64) -> Self {
+    pub fn variable(value: f64) -> Self {
         Self {
-            value: _value,
+            value: value,
             first: 1.0,
             second: 0.0,
         }
@@ -377,7 +377,7 @@ where
 
 /// Check if forward mode is preferred for the given problem dimensions
 #[allow(dead_code)]
-pub fn is_forward_mode_efficient(_input_dim: usize, output_dim: usize) -> bool {
+pub fn is_forward_mode_efficient(_input_dim: usize, outputdim: usize) -> bool {
     // Forward mode is efficient when input dimension is small
     // Cost is O(_input_dim * cost_of_function)
     _input_dim <= 10 || (_input_dim <= output_dim && _input_dim <= 50)

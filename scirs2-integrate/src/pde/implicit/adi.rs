@@ -859,15 +859,15 @@ impl ADI2D {
 
 /// Convert an ADIResult to a PDESolution
 impl From<ADIResult> for PDESolution<f64> {
-    fn from(_result: ADIResult) -> Self {
+    fn from(result: ADIResult) -> Self {
         let mut grids = Vec::new();
 
         // Add time grid
-        grids.push(_result.t.clone());
+        grids.push(result.t.clone());
 
         // Extract spatial grids from solution shape
-        let nx = _result.u[0].shape()[0];
-        let ny = _result.u[0].shape()[1];
+        let nx = result.u[0].shape()[0];
+        let ny = result.u[0].shape()[1];
 
         // Create spatial grids (we don't have the actual grid values, so use linspace)
         let x_grid = Array1::linspace(0.0, 1.0, nx);
@@ -878,7 +878,7 @@ impl From<ADIResult> for PDESolution<f64> {
 
         // Convert 3D arrays to 2D arrays for PDESolution format
         let mut values = Vec::new();
-        for u3d in _result.u {
+        for u3d in result.u {
             let mut u2d = Array2::zeros((nx, ny));
             for i in 0..nx {
                 for j in 0..ny {
@@ -890,8 +890,8 @@ impl From<ADIResult> for PDESolution<f64> {
 
         // Create solver info
         let info = PDESolverInfo {
-            num_iterations: _result.num_linear_solves,
-            computation_time: _result.computation_time,
+            num_iterations: result.num_linear_solves,
+            computation_time: result.computation_time,
             residual_norm: None,
             convergence_history: None,
             method: "ADI Method".to_string(),

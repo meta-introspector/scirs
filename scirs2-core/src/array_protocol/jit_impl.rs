@@ -171,7 +171,7 @@ impl LLVMFunctionFactory {
     }
 
     /// Compile a function using LLVM.
-    fn compile(&self, expression: &str, array_type_id: TypeId) -> CoreResult<Arc<dyn JITFunction>> {
+    fn compile(&self, expression: &str, array_typeid: TypeId) -> CoreResult<Arc<dyn JITFunction>> {
         // In a real implementation, this would use LLVM to compile the function
         // For now, we'll just create a placeholder function
 
@@ -179,7 +179,7 @@ impl LLVMFunctionFactory {
         let mut compile_info = HashMap::new();
         compile_info.insert("backend".to_string(), "LLVM".to_string());
         compile_info.insert("opt_level".to_string(), self.config.opt_level.to_string());
-        compile_info.insert("array_type".to_string(), format!("{array_type_id:?}"));
+        compile_info.insert("array_type".to_string(), format!("{array_typeid:?}"));
 
         // Create a function that just returns a constant value
         // In a real implementation, this would be a compiled function
@@ -200,22 +200,22 @@ impl JITFunctionFactory for LLVMFunctionFactory {
     fn create_jit_function(
         &self,
         expression: &str,
-        array_type_id: TypeId,
+        array_typeid: TypeId,
     ) -> CoreResult<Box<dyn JITFunction>> {
         // Check if the function is already in the cache
         if self.config.use_cache {
-            let cache_key = format!("{expression}-{array_type_id:?}");
+            let cache_key = format!("{expression}-{array_typeid:?}");
             if let Some(cached_fn) = self.cache.get(&cache_key) {
                 return Ok(cached_fn.as_ref().clone_box());
             }
         }
 
         // Compile the function
-        let jit_function = self.compile(expression, array_type_id)?;
+        let jit_function = self.compile(expression, array_typeid)?;
 
         if self.config.use_cache {
             // Add the function to the cache
-            let cache_key = format!("{expression}-{array_type_id:?}");
+            let cache_key = format!("{expression}-{array_typeid:?}");
             // In a real implementation, we'd need to handle this in a thread-safe way
             // For now, we'll just clone the function
             let mut cache = self.cache.clone();
@@ -226,7 +226,7 @@ impl JITFunctionFactory for LLVMFunctionFactory {
         Ok(jit_function.as_ref().clone_box())
     }
 
-    fn supports_array_type(&self, _array_type_id: TypeId) -> bool {
+    fn supports_array_type(&self, _array_typeid: TypeId) -> bool {
         // For simplicity, we'll say this factory supports all array types
         true
     }
@@ -251,7 +251,7 @@ impl CraneliftFunctionFactory {
     }
 
     /// Compile a function using Cranelift.
-    fn compile(&self, expression: &str, array_type_id: TypeId) -> CoreResult<Arc<dyn JITFunction>> {
+    fn compile(&self, expression: &str, array_typeid: TypeId) -> CoreResult<Arc<dyn JITFunction>> {
         // In a real implementation, this would use Cranelift to compile the function
         // For now, we'll just create a placeholder function
 
@@ -259,7 +259,7 @@ impl CraneliftFunctionFactory {
         let mut compile_info = HashMap::new();
         compile_info.insert("backend".to_string(), "Cranelift".to_string());
         compile_info.insert("opt_level".to_string(), self.config.opt_level.to_string());
-        compile_info.insert("array_type".to_string(), format!("{array_type_id:?}"));
+        compile_info.insert("array_type".to_string(), format!("{array_typeid:?}"));
 
         // Create a function that just returns a constant value
         // In a real implementation, this would be a compiled function
@@ -280,22 +280,22 @@ impl JITFunctionFactory for CraneliftFunctionFactory {
     fn create_jit_function(
         &self,
         expression: &str,
-        array_type_id: TypeId,
+        array_typeid: TypeId,
     ) -> CoreResult<Box<dyn JITFunction>> {
         // Check if the function is already in the cache
         if self.config.use_cache {
-            let cache_key = format!("{expression}-{array_type_id:?}");
+            let cache_key = format!("{expression}-{array_typeid:?}");
             if let Some(cached_fn) = self.cache.get(&cache_key) {
                 return Ok(cached_fn.as_ref().clone_box());
             }
         }
 
         // Compile the function
-        let jit_function = self.compile(expression, array_type_id)?;
+        let jit_function = self.compile(expression, array_typeid)?;
 
         if self.config.use_cache {
             // Add the function to the cache
-            let cache_key = format!("{expression}-{array_type_id:?}");
+            let cache_key = format!("{expression}-{array_typeid:?}");
             // In a real implementation, we'd need to handle this in a thread-safe way
             // For now, we'll just clone the function
             let mut cache = self.cache.clone();
@@ -306,7 +306,7 @@ impl JITFunctionFactory for CraneliftFunctionFactory {
         Ok(jit_function.as_ref().clone_box())
     }
 
-    fn supports_array_type(&self, _array_type_id: TypeId) -> bool {
+    fn supports_array_type(&self, _array_typeid: TypeId) -> bool {
         // For simplicity, we'll say this factory supports all array types
         true
     }
@@ -318,15 +318,15 @@ pub struct JITManager {
     factories: Vec<Box<dyn JITFunctionFactory>>,
 
     /// Default configuration for JIT compilation
-    default_config: JITConfig,
+    defaultconfig: JITConfig,
 }
 
 impl JITManager {
     /// Create a new JIT manager.
-    pub fn new(default_config: JITConfig) -> Self {
+    pub fn new(defaultconfig: JITConfig) -> Self {
         Self {
             factories: Vec::new(),
-            default_config,
+            defaultconfig,
         }
     }
 
@@ -338,10 +338,10 @@ impl JITManager {
     /// Get a JIT function factory that supports the given array type.
     pub fn get_factory_for_array_type(
         &self,
-        array_type_id: TypeId,
+        array_typeid: TypeId,
     ) -> Option<&dyn JITFunctionFactory> {
         for factory in &self.factories {
-            if factory.supports_array_type(array_type_id) {
+            if factory.supports_array_type(array_typeid) {
                 return Some(&**factory);
             }
         }
@@ -352,14 +352,14 @@ impl JITManager {
     pub fn compile(
         &self,
         expression: &str,
-        array_type_id: TypeId,
+        array_typeid: TypeId,
     ) -> CoreResult<Box<dyn JITFunction>> {
         // Find a factory that supports the array type
-        if let Some(factory) = self.get_factory_for_array_type(array_type_id) {
-            factory.create_jit_function(expression, array_type_id)
+        if let Some(factory) = self.get_factory_for_array_type(array_typeid) {
+            factory.create_jit_function(expression, array_typeid)
         } else {
             Err(CoreError::JITError(ErrorContext::new(format!(
-                "No JIT factory supports array type: {array_type_id:?}"
+                "No JIT factory supports array type: {array_typeid:?}"
             ))))
         }
     }
@@ -369,13 +369,13 @@ impl JITManager {
         // Create and register the default factories
         let llvm_config = JITConfig {
             backend: JITBackend::LLVM,
-            ..self.default_config.clone()
+            ..self.defaultconfig.clone()
         };
         let llvm_factory = Box::new(LLVMFunctionFactory::new(llvm_config));
 
         let cranelift_config = JITConfig {
             backend: JITBackend::Cranelift,
-            ..self.default_config.clone()
+            ..self.defaultconfig.clone()
         };
         let cranelift_factory = Box::new(CraneliftFunctionFactory::new(cranelift_config));
 
@@ -389,7 +389,7 @@ impl JITManager {
         static INSTANCE: LazyLock<RwLock<JITManager>> = LazyLock::new(|| {
             RwLock::new(JITManager {
                 factories: Vec::new(),
-                default_config: JITConfig {
+                defaultconfig: JITConfig {
                     backend: JITBackend::LLVM,
                     optimize: true,
                     opt_level: 2,
@@ -542,9 +542,9 @@ mod tests {
         let expression = "x + y";
 
         // Compile the function
-        let array_type_id = TypeId::of::<NdarrayWrapper<f64, ndarray::Ix2>>();
+        let array_typeid = TypeId::of::<NdarrayWrapper<f64, ndarray::Ix2>>();
         let jit_function = factory
-            .create_jit_function(expression, array_type_id)
+            .create_jit_function(expression, array_typeid)
             .unwrap();
 
         // Check the function's properties
@@ -560,14 +560,14 @@ mod tests {
         jit_manager.initialize();
 
         // Check that the factories were registered
-        let array_type_id = TypeId::of::<NdarrayWrapper<f64, ndarray::Ix2>>();
+        let array_typeid = TypeId::of::<NdarrayWrapper<f64, ndarray::Ix2>>();
         assert!(jit_manager
-            .get_factory_for_array_type(array_type_id)
+            .get_factory_for_array_type(array_typeid)
             .is_some());
 
         // Compile a function
         let expression = "x + y";
-        let jit_function = jit_manager.compile(expression, array_type_id).unwrap();
+        let jit_function = jit_manager.compile(expression, array_typeid).unwrap();
 
         // Check the function's properties
         assert_eq!(jit_function.source(), expression);

@@ -81,10 +81,10 @@ pub struct AdvancedParallelProcessor {
 
 impl AdvancedParallelProcessor {
     /// Create a new advanced-parallel processor
-    pub fn new(_config: AdvancedParallelConfig) -> Self {
+    pub fn new(config: AdvancedParallelConfig) -> Self {
         Self {
             adaptive_chunk_size: AtomicUsize::new(_config.min_chunk_size),
-            _config,
+            config,
             performance_history: Arc::new(Mutex::new(Vec::new())),
         }
     }
@@ -485,7 +485,7 @@ impl AdvancedParallelProcessor {
         (ideal_parallel_time / parallel_time).min(1.0)
     }
 
-    fn update_adaptive_chunk_size(&self, metrics: &ParallelExecutionMetrics, data_size: usize) {
+    fn update_adaptive_chunk_size(&self, metrics: &ParallelExecutionMetrics, datasize: usize) {
         let current_chunk_size = self.adaptive_chunk_size.load(Ordering::Relaxed);
 
         let new_chunk_size = if metrics.parallel_efficiency < 0.7 {
@@ -880,7 +880,7 @@ impl AdvancedParallelProcessor {
         })
     }
 
-    fn determine_time_series_threads(&self, num_windows: usize, window_size: usize) -> usize {
+    fn determine_time_series_threads(&self, num_windows: usize, windowsize: usize) -> usize {
         let workload = num_windows * window_size;
         let optimal_threads = (workload / self.config.min_chunk_size).min(self.config.max_threads);
         optimal_threads.max(1)

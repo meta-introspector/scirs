@@ -64,9 +64,7 @@ impl MPSContext {
     }
 
     /// Create a matrix descriptor
-    pub fn create_matrix_descriptor(
-        data_type: MPSDataType,
-    ) -> Result<MPSMatrixDescriptor, GpuError> {
+    pub fn creatematrix_descriptor(datatype: MPSDataType) -> Result<MPSMatrixDescriptor, GpuError> {
         use objc2::rc::Retained;
         use objc2_metal_performance__shaders::MPSMatrixDescriptor;
 
@@ -76,7 +74,7 @@ impl MPSContext {
                 rows,
                 columns,
                 row_bytes,
-                data_type.to_mps_data_type(),
+                datatype.to_mps_datatype(),
             )
         };
 
@@ -89,7 +87,7 @@ impl MPSContext {
     }
 
     /// Create an MPS matrix from a Metal buffer
-    pub fn create_matrix(
+    pub fn creatematrix(
         &self,
         buffer: &Buffer,
         descriptor: &MPSMatrixDescriptor,
@@ -346,7 +344,7 @@ pub enum MPSDataType {
 
 impl MPSDataType {
     /// Convert to Metal Performance Shaders data type
-    pub fn to_mps_data_type(&self) -> objc2_metal_performance_shaders::MPSDataType {
+    pub fn to_mps_datatype(&self) -> objc2_metal_performance_shaders::MPSDataType {
         match self {
             MPSDataType::Float16 => objc2_metal_performance_shaders::MPSDataType::Float16,
             MPSDataType::Float32 => objc2_metal_performance_shaders::MPSDataType::Float32,
@@ -367,7 +365,7 @@ pub struct MPSOperations {
 
 impl MPSOperations {
     /// Create new MPS operations wrapper
-    pub fn new(device: Device, command_queue: CommandQueue) -> Self {
+    pub fn new(device: Device, commandqueue: CommandQueue) -> Self {
         Self {
             context: MPSContext::new(device, command_queue),
         }
@@ -379,9 +377,9 @@ impl MPSOperations {
         rows: usize,
         columns: usize,
         row_bytes: usize,
-        data_type: MPSDataType,
+        datatype: MPSDataType,
     ) -> Result<MPSMatrixDescriptor, GpuError> {
-        MPSContext::create_matrix_descriptor(rows, columns, row_bytes, data_type)
+        MPSContext::creatematrix_descriptor(rows, columns, row_bytes, datatype)
     }
 
     /// Perform optimized matrix multiplication
@@ -413,23 +411,23 @@ impl MPSOperations {
             .ok_or_else(|| GpuError::Other("Buffer C is not a Metal buffer".to_string()))?;
 
         // Create matrix descriptors
-        let desc_a = Self::create_matrix_descriptor(m, k, k * 4, MPSDataType::Float32)?;
-        let desc_b = Self::create_matrix_descriptor(k, n, n * 4, MPSDataType::Float32)?;
-        let desc_c = Self::create_matrix_descriptor(m, n, n * 4, MPSDataType::Float32)?;
+        let desc_a = Self::creatematrix_descriptor(m, k, k * 4, MPSDataType::Float32)?;
+        let desc_b = Self::creatematrix_descriptor(k, n, n * 4, MPSDataType::Float32)?;
+        let desc_c = Self::creatematrix_descriptor(m, n, n * 4, MPSDataType::Float32)?;
 
         // Create MPS matrices from Metal buffers
         let matrix_a = self
             .context
-            .create_matrix(metal_buffer_a.metal_buffer(), &desc_a)?;
+            .creatematrix(metal_buffer_a.metal_buffer(), &desc_a)?;
         let matrix_b = self
             .context
-            .create_matrix(metal_buffer_b.metal_buffer(), &desc_b)?;
+            .creatematrix(metal_buffer_b.metal_buffer(), &desc_b)?;
         let matrix_c = self
             .context
-            .create_matrix(metal_buffer_c.metal_buffer(), &desc_c)?;
+            .creatematrix(metal_buffer_c.metal_buffer(), &desc_c)?;
 
         // Create matrix multiplication operation
-        let matmul_op = self.context.create_matrix_multiplication(
+        let matmul_op = self.context.creatematrix_multiplication(
             false, // transpose_left
             false, // transpose_right
             m,     // result_rows
@@ -467,18 +465,17 @@ impl MPSOperations {
             .ok_or_else(|| GpuError::Other("Output buffer is not a Metal buffer".to_string()))?;
 
         // Create matrix descriptors
-        let desc_input =
-            Self::create_matrix_descriptor(rows, cols, cols * 4, MPSDataType::Float32)?;
+        let desc_input = Self::creatematrix_descriptor(rows, cols, cols * 4, MPSDataType::Float32)?;
         let desc_output =
-            Self::create_matrix_descriptor(rows, cols, cols * 4, MPSDataType::Float32)?;
+            Self::creatematrix_descriptor(rows, cols, cols * 4, MPSDataType::Float32)?;
 
         // Create MPS matrices from Metal buffers
         let matrix_input = self
             .context
-            .create_matrix(metal_input.metal_buffer(), &desc_input)?;
+            .creatematrix(metal_input.metal_buffer(), &desc_input)?;
         let matrix_output = self
             .context
-            .create_matrix(metal_output.metal_buffer(), &desc_output)?;
+            .creatematrix(metal_output.metal_buffer(), &desc_output)?;
 
         // Create softmax operation
         let softmax_op = self.context.create_softmax(axis)?;
@@ -524,21 +521,20 @@ impl MPSOperations {
             .ok_or_else(|| GpuError::Other("Variance buffer is not a Metal buffer".to_string()))?;
 
         // Create matrix descriptors
-        let desc_input =
-            Self::create_matrix_descriptor(rows, cols, cols * 4, MPSDataType::Float32)?;
-        let desc_mean = Self::create_matrix_descriptor(rows, 1, 4, MPSDataType::Float32)?;
-        let desc_variance = Self::create_matrix_descriptor(rows, 1, 4, MPSDataType::Float32)?;
+        let desc_input = Self::creatematrix_descriptor(rows, cols, cols * 4, MPSDataType::Float32)?;
+        let desc_mean = Self::creatematrix_descriptor(rows, 1, 4, MPSDataType::Float32)?;
+        let desc_variance = Self::creatematrix_descriptor(rows, 1, 4, MPSDataType::Float32)?;
 
         // Create MPS matrices from Metal buffers
         let matrix_input = self
             .context
-            .create_matrix(metal_input.metal_buffer(), &desc_input)?;
+            .creatematrix(metal_input.metal_buffer(), &desc_input)?;
         let matrix_mean = self
             .context
-            .create_matrix(metal_mean.metal_buffer(), &desc_mean)?;
+            .creatematrix(metal_mean.metal_buffer(), &desc_mean)?;
         let matrix_variance = self
             .context
-            .create_matrix(metal_variance.metal_buffer(), &desc_variance)?;
+            .creatematrix(metal_variance.metal_buffer(), &desc_variance)?;
 
         // Create sum operation for mean calculation
         let sum_op = self.context.create_sum()?;
@@ -641,7 +637,7 @@ impl MPSOperations {
     }
 
     /// High-level interface for vector operations
-    pub fn vector_add(a_data: &[f32], b_data: &[f32]) -> Result<Vec<f32>, GpuError> {
+    pub fn vector_add(a_data: &[f32], bdata: &[f32]) -> Result<Vec<f32>, GpuError> {
         use crate::gpu::backends::metal::{MetalBufferOptions, MetalContext};
 
         if a_data.len() != b_data.len() {
@@ -778,13 +774,13 @@ mod tests {
     use crate::gpu::backends::metal::MetalContext;
 
     #[test]
-    fn test_mps_data_type_conversion() {
+    fn test_mps_datatype_conversion() {
         assert_eq!(
-            MPSDataType::Float32.to_mps_data_type(),
+            MPSDataType::Float32.to_mps_datatype(),
             objc2_metal_performance_shaders::MPSDataType::Float32
         );
         assert_eq!(
-            MPSDataType::Float16.to_mps_data_type(),
+            MPSDataType::Float16.to_mps_datatype(),
             objc2_metal_performance_shaders::MPSDataType::Float16
         );
     }
@@ -850,7 +846,7 @@ mod tests {
     }
 
     #[test]
-    fn test_gpu_matrix_multiplication() {
+    fn test_gpumatrix_multiplication() {
         // This test will only pass on macOS with Metal support
         if !cfg!(target_os = "macos") {
             println!("Skipping GPU test on non-macOS platform");
@@ -870,7 +866,7 @@ mod tests {
             let a = vec![1.0f32, 2.0, 3.0, 4.0]; // 2x2 matrix
             let b = vec![5.0f32, 6.0, 7.0, 8.0]; // 2x2 matrix
 
-            match mps_ops.gpu_matrix_multiply(&a, &b, 2, 2, 2) {
+            match mps_ops.gpumatrix_multiply(&a, &b, 2, 2, 2) {
                 Ok(result) => {
                     println!("GPU matrix multiplication completed: {:?}", result);
                     // Note: Since we're using MPS operations, this should work

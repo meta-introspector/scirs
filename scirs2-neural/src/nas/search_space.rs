@@ -151,14 +151,14 @@ pub struct ConnectionMatrix {
     pub connections: Vec<Vec<f32>>,
 impl SearchSpace {
     /// Create a new search space
-    pub fn new(_config: SearchSpaceConfig) -> Result<Self> {
+    pub fn new(config: SearchSpaceConfig) -> Result<Self> {
         let mut layer_choices = Vec::new();
         // Build layer choices based on _config
         for i in 0.._config.max_layers {
-            let optional = i >= _config.min_layers;
+            let optional = i >= config.min_layers;
             layer_choices.push(LayerChoice {
                 position: i,
-                choices: _config.layer_types.clone(),
+                choices: config.layer_types.clone(),
                 optional,
             });
         // Initialize connection matrix if branches are allowed
@@ -183,11 +183,11 @@ use rand::rng;
         let mut layers = Vec::new();
         let mut connections = Vec::new();
         // Sample number of layers
-        let num_layers = rng.random_range(self.config.min_layers..=self.config.max_layers);
+        let num_layers = rng.gen_range(self.config.min_layers..=self.config.max_layers);
         // Sample layers
         for i in 0..num_layers {
             if let Some(layer_choice) = self.layer_choices.get(i) {
-                let idx = rng.random_range(0..layer_choice.choices.len());
+                let idx = rng.gen_range(0..layer_choice.choices.len());
                 layers.push(layer_choice.choices[idx].clone());
             }
         // Sample connections if branches are allowed
@@ -229,13 +229,13 @@ use rand::rng;
             (self.config.width_multipliers.len() * self.config.depth_multipliers.len()) as f64;
         layer_combinations * connection_combinations * multiplier_combinations
     /// Mutate an architecture
-    pub fn mutate(&self, architecture: &Architecture, mutation_rate: f32) -> Result<Architecture> {
+    pub fn mutate(&self, architecture: &Architecture, mutationrate: f32) -> Result<Architecture> {
         let mut mutated = architecture.clone();
         // Mutate layers
         for (i, layer) in mutated.layers.iter_mut().enumerate() {
             if rng.random::<f32>() < mutation_rate {
                 if let Some(layer_choice) = self.layer_choices.get(i) {
-                    let idx = rng.random_range(0..layer_choice.choices.len());
+                    let idx = rng.gen_range(0..layer_choice.choices.len());
                     *layer = layer_choice.choices[idx].clone();
         // Add or remove layers
         if rng.random::<f32>() < mutation_rate {
@@ -246,7 +246,7 @@ use rand::rng;
                     mutated.layers.push(layer_choice.choices[idx].clone());
             } else if mutated.layers.len() > self.config.min_layers {
                 // Remove a layer
-                let idx = rng.random_range(0..mutated.layers.len());
+                let idx = rng.gen_range(0..mutated.layers.len());
                 mutated.layers.remove(idx);
                 // Update connections
                 mutated.connections.retain(|(i..j)| *i != idx && *j != idx);
@@ -284,7 +284,7 @@ use rand::rng;
         // Determine child length
         let min_len = parent1.layers.len().min(parent2.layers.len());
         let max_len = parent1.layers.len().max(parent2.layers.len());
-        let child_len = rng.random_range(min_len..=max_len);
+        let child_len = rng.gen_range(min_len..=max_len);
         let mut child_layers = Vec::new();
         let mut child_connections = Vec::new();
         // Crossover layers
@@ -325,12 +325,12 @@ use rand::rng;
             depth_multiplier,
 impl ConnectionMatrix {
     /// Create a new connection matrix
-    pub fn new(_num_layers: usize, skip_prob: f32) -> Self {
+    pub fn new(_num_layers: usize, skipprob: f32) -> Self {
         let mut connections = vec![vec![0.0; _num_layers]; _num_layers];
         // Initialize with skip connection probabilities
             for j in (i + 1).._num_layers {
                 connections[i][j] = skip_prob;
-            _num_layers,
+            num_layers,
 /// Represents a sampled architecture
 pub struct Architecture {
     /// Layers in the architecture
@@ -343,7 +343,7 @@ pub struct Architecture {
     pub depth_multiplier: f32,
 impl Architecture {
     /// Create a new architecture
-    pub fn new(_layers: Vec<LayerType>, connections: Vec<(usize, usize)>) -> Result<Self> {
+    pub fn new(layers: Vec<LayerType>, connections: Vec<(usize, usize)>) -> Result<Self> {
             width_multiplier: 1.0,
             depth_multiplier: 1.0,
     /// Create a new architecture with multipliers

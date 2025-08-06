@@ -30,7 +30,7 @@ pub fn tridiagonal_eigvalsh<F>(
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
-    let n = _diagonal.len();
+    let n = diagonal.len();
 
     if off_diagonal.len() != n - 1 {
         return Err(LinalgError::ShapeError(format!(
@@ -41,7 +41,7 @@ where
     }
 
     // Create copies of the inputs (will be modified during computation)
-    let d = _diagonal.to_owned();
+    let d = diagonal.to_owned();
     let mut e = off_diagonal.to_owned();
 
     // Result array for eigenvalues
@@ -176,7 +176,7 @@ pub fn tridiagonal_eigh<F>(
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
-    let n = _diagonal.len();
+    let n = diagonal.len();
 
     if off_diagonal.len() != n - 1 {
         return Err(LinalgError::ShapeError(format!(
@@ -189,7 +189,7 @@ where
     // Create tridiagonal matrix in full form
     let mut tri_matrix = Array2::zeros((n, n));
     for i in 0..n {
-        tri_matrix[[i, i]] = _diagonal[i];
+        tri_matrix[[i, i]] = diagonal[i];
         if i < n - 1 {
             tri_matrix[[i, i + 1]] = off_diagonal[i];
             tri_matrix[[i + 1, i]] = off_diagonal[i];

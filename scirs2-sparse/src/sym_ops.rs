@@ -57,11 +57,11 @@ use scirs2_core::parallel_ops::*;
 /// assert_eq!(y[2], 9.0);
 /// ```
 #[allow(dead_code)]
-pub fn sym_csr_matvec<T>(_matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+pub fn sym_csr_matvec<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Send + Sync,
 {
-    let (n, _) = _matrix.shape();
+    let (n, _) = matrix.shape();
     if x.len() != n {
         return Err(crate::error::SparseError::DimensionMismatch {
             expected: n,
@@ -69,7 +69,7 @@ where
         });
     }
 
-    let nnz = _matrix.nnz();
+    let nnz = matrix.nnz();
 
     // Use parallel implementation for larger matrices
     if nnz >= 1000 {
@@ -139,18 +139,18 @@ where
 
 /// Scalar fallback version of symmetric CSR matrix-vector multiplication
 #[allow(dead_code)]
-fn sym_csr_matvec_scalar<T>(_matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+fn sym_csr_matvec_scalar<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + Add<Output = T>,
 {
-    let (n, _) = _matrix.shape();
+    let (n, _) = matrix.shape();
     let mut y = Array1::zeros(n);
 
     // Standard scalar implementation
     for i in 0..n {
-        for j in _matrix.indptr[i].._matrix.indptr[i + 1] {
-            let col = _matrix.indices[j];
-            let val = _matrix.data[j];
+        for j in matrix.indptr[i].._matrix.indptr[i + 1] {
+            let col = matrix.indices[j];
+            let val = matrix.data[j];
 
             y[i] = y[i] + val * x[col];
 
@@ -205,11 +205,11 @@ where
 /// assert_eq!(y[2], 9.0);
 /// ```
 #[allow(dead_code)]
-pub fn sym_coo_matvec<T>(_matrix: &SymCooMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+pub fn sym_coo_matvec<T>(matrix: &SymCooMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + Add<Output = T>,
 {
-    let (n, _) = _matrix.shape();
+    let (n, _) = matrix.shape();
     if x.len() != n {
         return Err(crate::error::SparseError::DimensionMismatch {
             expected: n,
@@ -221,9 +221,9 @@ where
 
     // Process each non-zero element in the lower triangular part
     for i in 0.._matrix.data.len() {
-        let row = _matrix.rows[i];
-        let col = _matrix.cols[i];
-        let val = _matrix.data[i];
+        let row = matrix.rows[i];
+        let col = matrix.cols[i];
+        let val = matrix.data[i];
 
         y[row] = y[row] + val * x[col];
 
@@ -350,7 +350,7 @@ where
 /// assert_eq!(result, 59.0);
 /// ```
 #[allow(dead_code)]
-pub fn sym_csr_quadratic_form<T>(_matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<T>
+pub fn sym_csr_quadratic_form<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<T>
 where
     T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + Send + Sync,
 {
@@ -397,19 +397,19 @@ where
 /// assert_eq!(trace, 5.0);
 /// ```
 #[allow(dead_code)]
-pub fn sym_csr_trace<T>(_matrix: &SymCsrMatrix<T>) -> T
+pub fn sym_csr_trace<T>(matrix: &SymCsrMatrix<T>) -> T
 where
     T: Float + Debug + Copy + Add<Output = T>,
 {
-    let (n, _) = _matrix.shape();
+    let (n, _) = matrix.shape();
     let mut trace = T::zero();
 
     // Sum the diagonal elements
     for i in 0..n {
-        for j in _matrix.indptr[i].._matrix.indptr[i + 1] {
-            let col = _matrix.indices[j];
+        for j in matrix.indptr[i].._matrix.indptr[i + 1] {
+            let col = matrix.indices[j];
             if col == i {
-                trace = trace + _matrix.data[j];
+                trace = trace + matrix.data[j];
                 break;
             }
         }

@@ -241,7 +241,7 @@ where
                 u[[i, j]] = sum / Complex::<f64>::new(s[j], F::zero());
             }
         } else if j >= k && full_matrices {
-            // For full _matrices, extend with orthogonal vectors using modified Gram-Schmidt
+            // For full matrices, extend with orthogonal vectors using modified Gram-Schmidt
             
             // Start with a deterministic pattern to generate a starting vector
             for i in 0..m {

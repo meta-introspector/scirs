@@ -24,7 +24,7 @@
 //!
 //! // Configure production profiler
 //! let config = ProfileConfig::production()
-//!     .with_sampling_rate(1.0) // 100% sampling for doctest reliability
+//!     .with_samplingrate(1.0) // 100% sampling for doctest reliability
 //!     .with_bottleneck_detection(true)
 //!     .with_regression_detection(true);
 //!
@@ -34,7 +34,7 @@
 //! profiler.start_workload_analysis("matrix_operations", WorkloadType::ComputeIntensive)?;
 //!
 //! // Your production code here
-//! fn expensive_matrix_computation() -> f64 {
+//! fn expensivematrix_computation() -> f64 {
 //!     // Example expensive computation
 //!     let mut result = 0.0;
 //!     for i in 0..1000 {
@@ -44,7 +44,7 @@
 //!     }
 //!     result
 //! }
-//! let result = expensive_matrix_computation();
+//! let result = expensivematrix_computation();
 //!
 //! let report = profiler.finish_workload_analysis()?;
 //!
@@ -90,7 +90,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ProfileConfig {
     /// Sampling rate (0.0 to 1.0) for production environments
-    pub sampling_rate: f64,
+    pub samplingrate: f64,
     /// Enable automatic bottleneck detection
     pub enable_bottleneck_detection: bool,
     /// Enable performance regression detection
@@ -116,7 +116,7 @@ pub struct ProfileConfig {
 impl Default for ProfileConfig {
     fn default() -> Self {
         Self {
-            sampling_rate: 0.05, // 5% sampling by default
+            samplingrate: 0.05, // 5% sampling by default
             enable_bottleneck_detection: true,
             enable_regression_detection: true,
             max_memory_usage: 100 * 1024 * 1024, // 100MB limit
@@ -135,7 +135,7 @@ impl ProfileConfig {
     /// Create production-optimized configuration
     pub fn production() -> Self {
         Self {
-            sampling_rate: 0.01, // 1% sampling for minimal overhead
+            samplingrate: 0.01, // 1% sampling for minimal overhead
             detailed_call_stacks: false,
             max_memory_usage: 50 * 1024 * 1024, // 50MB limit
             ..Default::default()
@@ -145,7 +145,7 @@ impl ProfileConfig {
     /// Create development configuration with more detailed tracking
     pub fn development() -> Self {
         Self {
-            sampling_rate: 0.1, // 10% sampling
+            samplingrate: 0.1, // 10% sampling
             detailed_call_stacks: true,
             max_memory_usage: 500 * 1024 * 1024, // 500MB limit
             ..Default::default()
@@ -153,8 +153,8 @@ impl ProfileConfig {
     }
 
     /// Set sampling rate
-    pub fn with_sampling_rate(mut self, rate: f64) -> Self {
-        self.sampling_rate = rate.clamp(0.0, 1.0);
+    pub fn with_samplingrate(mut self, rate: f64) -> Self {
+        self.samplingrate = rate.clamp(0.0, 1.0);
         self
     }
 
@@ -569,14 +569,14 @@ impl ProductionProfiler {
         start_time: SystemTime,
     ) -> CoreResult<WorkloadAnalysisReport> {
         // For this example, we'll analyze the first active session
-        let session_id = {
+        let sessionid = {
             let sessions = self.active_sessions.read().map_err(|_| {
                 CoreError::from(std::io::Error::other("Failed to read active sessions"))
             })?;
             sessions.keys().next().cloned()
         };
 
-        let session_id = session_id
+        let sessionid = sessionid
             .ok_or_else(|| CoreError::from(std::io::Error::other("No active sessions")))?;
         self.finish_profiling_workload(workload_id, workload_type, start_time)
     }
@@ -630,7 +630,7 @@ impl ProductionProfiler {
         let session = session.unwrap();
 
         // Generate synthetic performance data for demonstration
-        let total_samples = (1000.0 * self.config.sampling_rate) as usize;
+        let total_samples = (1000.0 * self.config.samplingrate) as usize;
         let bottlenecks = self.identify_bottlenecks(workload_id)?;
         let regressions = self.detect_regressions(workload_id)?;
 
@@ -673,11 +673,11 @@ impl ProductionProfiler {
             .sampler
             .lock()
             .map_err(|_| CoreError::from(std::io::Error::other("Failed to lock sampler")))?;
-        Ok(rng.random::<f64>() < self.config.sampling_rate)
+        Ok(rng.random::<f64>() < self.config.samplingrate)
     }
 
     /// Identify performance bottlenecks using statistical analysis
-    fn identify_bottlenecks(&self, workload_id: &str) -> CoreResult<Vec<PerformanceBottleneck>> {
+    fn identify_bottlenecks(&self, workloadid: &str) -> CoreResult<Vec<PerformanceBottleneck>> {
         if !self.config.enable_bottleneck_detection {
             return Ok(Vec::new());
         }
@@ -733,7 +733,7 @@ impl ProductionProfiler {
     }
 
     /// Detect performance regressions compared to historical data
-    fn detect_regressions(&self, workload_id: &str) -> CoreResult<Vec<PerformanceRegression>> {
+    fn detect_regressions(&self, workloadid: &str) -> CoreResult<Vec<PerformanceRegression>> {
         if !self.config.enable_regression_detection {
             return Ok(Vec::new());
         }
@@ -743,7 +743,7 @@ impl ProductionProfiler {
         // In a real implementation, this would compare with actual historical data
         // For demonstration, we'll simulate regression detection
         if let Ok(history) = self.performance_history.lock() {
-            if let Some(historical_times) = history.get(workload_id) {
+            if let Some(historical_times) = history.get(workloadid) {
                 if !historical_times.is_empty() {
                     let baseline =
                         historical_times.iter().sum::<Duration>() / historical_times.len() as u32;
@@ -756,7 +756,7 @@ impl ProductionProfiler {
 
                     if change_percent.abs() > self.config.regression_threshold_percent {
                         regressions.push(PerformanceRegression {
-                            operation: workload_id.to_string(),
+                            operation: workloadid.to_string(),
                             baseline_time: baseline,
                             current_time: current,
                             change_percent,
@@ -772,7 +772,7 @@ impl ProductionProfiler {
     }
 
     /// Calculate comprehensive performance statistics
-    fn calculate_statistics(&self, workload_id: &str) -> CoreResult<PerformanceStatistics> {
+    fn calculate_statistics(&self, workloadid: &str) -> CoreResult<PerformanceStatistics> {
         // In a real implementation, this would analyze actual timing data
         // For demonstration, we'll generate realistic statistics
 
@@ -786,9 +786,9 @@ impl ProductionProfiler {
             std_deviation.as_millis() as f64 / mean_time.as_millis() as f64;
 
         // Calculate confidence interval (assuming normal distribution)
-        let margin_of_error = Duration::from_millis(8); // 1.96 * std_err for 95% CI
-        let confidence_interval_lower = mean_time.saturating_sub(margin_of_error);
-        let confidence_interval_upper = mean_time + margin_of_error;
+        let margin_oferror = Duration::from_millis(8); // 1.96 * std_err for 95% CI
+        let confidence_interval_lower = mean_time.saturating_sub(margin_oferror);
+        let confidence_interval_upper = mean_time + margin_oferror;
 
         Ok(PerformanceStatistics {
             mean_time,
@@ -849,10 +849,10 @@ impl ProductionProfiler {
     }
 
     /// Suggest optimizations for specific functions
-    fn get_performance_optimizations(&self, function_name: &str) -> Vec<String> {
+    fn get_performance_optimizations(&self, functionname: &str) -> Vec<String> {
         let mut optimizations = Vec::new();
 
-        match function_name {
+        match functionname {
             "matrix_multiply" => {
                 optimizations
                     .push("Consider using BLAS libraries for matrix operations".to_string());
@@ -946,12 +946,12 @@ impl ProductionProfiler {
     }
 
     /// Export profiling data for external analysis
-    pub fn generate_session_id(&self, workload_id: &str) -> CoreResult<String> {
+    pub fn generate_sessionid(&self, workloadid: &str) -> CoreResult<String> {
         #[cfg(feature = "serde")]
         {
             // Create a summary of profiling data
             let summary = serde_json::json!({
-                "workload_id": workload_id,
+                "workloadid": workloadid,
                 "config": self.config,
                 "resource_utilization": self.get_resource_utilization()?,
                 "exported_at": SystemTime::now()
@@ -1042,11 +1042,11 @@ mod tests {
     #[test]
     fn test_config_validation() {
         let config = ProfileConfig::production()
-            .with_sampling_rate(1.5) // Should be clamped to 1.0
+            .with_samplingrate(1.5) // Should be clamped to 1.0
             .with_bottleneck_detection(true)
             .with_regression_detection(true);
 
-        assert_eq!(config.sampling_rate, 1.0);
+        assert_eq!(config.samplingrate, 1.0);
         assert!(config.enable_bottleneck_detection);
         assert!(config.enable_regression_detection);
     }

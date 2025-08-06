@@ -20,7 +20,7 @@ use statrs::statistics::Statistics;
 
 /// Helper function to generate valid statistical data
 #[allow(dead_code)]
-fn generate_valid_data(_size: usize, gen: &mut Gen) -> Array1<f64> {
+fn generate_valid_data(size: usize, gen: &mut Gen) -> Array1<f64> {
     let mut data = Array1::zeros(_size);
     for i in 0.._size {
         data[i] = f64::arbitrary(gen).abs().min(1e6); // Bounded, positive
@@ -30,7 +30,7 @@ fn generate_valid_data(_size: usize, gen: &mut Gen) -> Array1<f64> {
 
 /// Helper function to generate valid correlation data (finite, not all equal)
 #[allow(dead_code)]
-fn generate_correlation_data(_size: usize, gen: &mut Gen) -> (Array1<f64>, Array1<f64>) {
+fn generate_correlation_data(size: usize, gen: &mut Gen) -> (Array1<f64>, Array1<f64>) {
     let mut x = Array1::zeros(_size);
     let mut y = Array1::zeros(_size);
 
@@ -55,22 +55,22 @@ mod descriptive_stats_properties {
     use super::*;
 
     #[quickcheck]
-    fn mean_bounds_property(_data: Vec<f64>) -> TestResult {
-        if _data.is_empty() || _data.iter().any(|x| !x.is_finite()) {
+    fn mean_bounds_property(data: Vec<f64>) -> TestResult {
+        if data.is_empty() || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
         let arr = Array1::from_vec(_data.clone());
         let mean_val = mean(&arr.view()).unwrap();
-        let min_val = _data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        let max_val = _data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
         TestResult::from_bool(mean_val >= min_val && mean_val <= max_val && mean_val.is_finite())
     }
 
     #[quickcheck]
-    fn variance_non_negative_property(_data: Vec<f64>) -> TestResult {
-        if _data.len() < 2 || _data.iter().any(|x| !x.is_finite()) {
+    fn variance_non_negative_property(data: Vec<f64>) -> TestResult {
+        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
@@ -81,8 +81,8 @@ mod descriptive_stats_properties {
     }
 
     #[quickcheck]
-    fn std_variance_relation_property(_data: Vec<f64>) -> TestResult {
-        if _data.len() < 2 || _data.iter().any(|x| !x.is_finite()) {
+    fn std_variance_relation_property(data: Vec<f64>) -> TestResult {
+        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
@@ -94,9 +94,9 @@ mod descriptive_stats_properties {
     }
 
     #[quickcheck]
-    fn mean_linearity_property(_data: Vec<f64>, a: f64, b: f64) -> TestResult {
-        if _data.is_empty()
-            || _data.iter().any(|x| !x.is_finite())
+    fn mean_linearity_property(data: Vec<f64>, a: f64, b: f64) -> TestResult {
+        if data.is_empty()
+            || data.iter().any(|x| !x.is_finite())
             || !a.is_finite()
             || !b.is_finite()
         {
@@ -116,9 +116,9 @@ mod descriptive_stats_properties {
     }
 
     #[quickcheck]
-    fn variance_scaling_property(_data: Vec<f64>, a: f64) -> TestResult {
-        if _data.len() < 2
-            || _data.iter().any(|x| !x.is_finite())
+    fn variance_scaling_property(data: Vec<f64>, a: f64) -> TestResult {
+        if data.len() < 2
+            || data.iter().any(|x| !x.is_finite())
             || !a.is_finite()
             || a.abs() > 1000.0
         {
@@ -140,14 +140,14 @@ mod descriptive_stats_properties {
     }
 
     #[quickcheck]
-    fn skewness_bounds_property(_data: Vec<f64>) -> TestResult {
-        if _data.len() < 3 || _data.iter().any(|x| !x.is_finite()) {
+    fn skewness_bounds_property(data: Vec<f64>) -> TestResult {
+        if data.len() < 3 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
         // Check that all values aren't the same (would give NaN)
-        let min_val = _data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        let max_val = _data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         if (max_val - min_val).abs() < 1e-10 {
             return TestResult::discard();
         }
@@ -160,14 +160,14 @@ mod descriptive_stats_properties {
     }
 
     #[quickcheck]
-    fn kurtosis_minimum_property(_data: Vec<f64>) -> TestResult {
-        if _data.len() < 4 || _data.iter().any(|x| !x.is_finite()) {
+    fn kurtosis_minimum_property(data: Vec<f64>) -> TestResult {
+        if data.len() < 4 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
         // Check that all values aren't the same
-        let min_val = _data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        let max_val = _data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         if (max_val - min_val).abs() < 1e-10 {
             return TestResult::discard();
         }
@@ -185,12 +185,12 @@ mod correlation_properties {
     use super::*;
 
     #[quickcheck]
-    fn correlation_bounds_property(_x_data: Vec<f64>, y_data: Vec<f64>) -> TestResult {
-        if _x_data.len() != y_data.len() || _x_data.len() < 2 {
+    fn correlation_bounds_property(_x_data: Vec<f64>, ydata: Vec<f64>) -> TestResult {
+        if x_data.len() != y_data.len() || x_data.len() < 2 {
             return TestResult::discard();
         }
 
-        if _x_data.iter().any(|x| !x.is_finite()) || y_data.iter().any(|x| !x.is_finite()) {
+        if x_data.iter().any(|x| !x.is_finite()) || y_data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
@@ -210,12 +210,12 @@ mod correlation_properties {
     }
 
     #[quickcheck]
-    fn correlation_symmetry_property(_x_data: Vec<f64>, y_data: Vec<f64>) -> TestResult {
-        if _x_data.len() != y_data.len() || _x_data.len() < 2 {
+    fn correlation_symmetry_property(_x_data: Vec<f64>, ydata: Vec<f64>) -> TestResult {
+        if x_data.len() != y_data.len() || x_data.len() < 2 {
             return TestResult::discard();
         }
 
-        if _x_data.iter().any(|x| !x.is_finite()) || y_data.iter().any(|x| !x.is_finite()) {
+        if x_data.iter().any(|x| !x.is_finite()) || y_data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
@@ -236,8 +236,8 @@ mod correlation_properties {
     }
 
     #[quickcheck]
-    fn perfect_correlation_property(_data: Vec<f64>, a: f64, b: f64) -> TestResult {
-        if _data.len() < 2 || _data.iter().any(|x| !x.is_finite()) {
+    fn perfect_correlation_property(data: Vec<f64>, a: f64, b: f64) -> TestResult {
+        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
@@ -261,13 +261,13 @@ mod correlation_properties {
     }
 
     #[quickcheck]
-    fn correlation_matrix_diagonal_property(_data: Vec<Vec<f64>>) -> TestResult {
-        if _data.len() < 2 || _data.iter().any(|row| row.len() < 2) {
+    fn correlation_matrix_diagonal_property(data: Vec<Vec<f64>>) -> TestResult {
+        if data.len() < 2 || data.iter().any(|row| row.len() < 2) {
             return TestResult::discard();
         }
 
         // Ensure all rows have the same length
-        let n_cols = _data[0].len();
+        let n_cols = data[0].len();
         if !_data.iter().all(|row| row.len() == n_cols) {
             return TestResult::discard();
         }
@@ -312,12 +312,12 @@ mod distribution_properties {
     use super::*;
 
     #[quickcheck]
-    fn normal_pdf_non_negative_property(_mu: f64, sigma: f64, x: f64) -> TestResult {
+    fn normal_pdf_non_negative_property(mu: f64, sigma: f64, x: f64) -> TestResult {
         if !_mu.is_finite() || !sigma.is_finite() || !x.is_finite() || sigma <= 0.0 {
             return TestResult::discard();
         }
 
-        if sigma > 1000.0 || _mu.abs() > 1000.0 || x.abs() > 1000.0 {
+        if sigma > 1000.0 || mu.abs() > 1000.0 || x.abs() > 1000.0 {
             return TestResult::discard();
         }
 
@@ -328,12 +328,12 @@ mod distribution_properties {
     }
 
     #[quickcheck]
-    fn normal_cdf_monotonic_property(_mu: f64, sigma: f64, x1: f64, x2: f64) -> TestResult {
+    fn normal_cdf_monotonic_property(mu: f64, sigma: f64, x1: f64, x2: f64) -> TestResult {
         if !_mu.is_finite() || !sigma.is_finite() || !x1.is_finite() || !x2.is_finite() {
             return TestResult::discard();
         }
 
-        if sigma <= 0.0 || sigma > 1000.0 || _mu.abs() > 1000.0 {
+        if sigma <= 0.0 || sigma > 1000.0 || mu.abs() > 1000.0 {
             return TestResult::discard();
         }
 
@@ -353,12 +353,12 @@ mod distribution_properties {
     }
 
     #[quickcheck]
-    fn normal_cdf_bounds_property(_mu: f64, sigma: f64, x: f64) -> TestResult {
+    fn normal_cdf_bounds_property(mu: f64, sigma: f64, x: f64) -> TestResult {
         if !_mu.is_finite() || !sigma.is_finite() || !x.is_finite() || sigma <= 0.0 {
             return TestResult::discard();
         }
 
-        if sigma > 1000.0 || _mu.abs() > 1000.0 || x.abs() > 1000.0 {
+        if sigma > 1000.0 || mu.abs() > 1000.0 || x.abs() > 1000.0 {
             return TestResult::discard();
         }
 
@@ -369,12 +369,12 @@ mod distribution_properties {
     }
 
     #[quickcheck]
-    fn uniform_pdf_bounds_property(_low: f64, high: f64, x: f64) -> TestResult {
+    fn uniform_pdf_bounds_property(low: f64, high: f64, x: f64) -> TestResult {
         if !_low.is_finite() || !high.is_finite() || !x.is_finite() || _low >= high {
             return TestResult::discard();
         }
 
-        if _low.abs() > 1000.0 || high.abs() > 1000.0 || x.abs() > 1000.0 {
+        if low.abs() > 1000.0 || high.abs() > 1000.0 || x.abs() > 1000.0 {
             return TestResult::discard();
         }
 
@@ -382,7 +382,7 @@ mod distribution_properties {
         let pdf_value = unif.pdf(x);
 
         let expected_pdf = if x >= _low && x < high {
-            1.0 / (high - _low)
+            1.0 / (high - low)
         } else {
             0.0
         };
@@ -393,12 +393,12 @@ mod distribution_properties {
     }
 
     #[quickcheck]
-    fn distribution_mean_variance_finite_property(_mu: f64, sigma: f64) -> TestResult {
+    fn distribution_mean_variance_finite_property(mu: f64, sigma: f64) -> TestResult {
         if !_mu.is_finite() || !sigma.is_finite() || sigma <= 0.0 {
             return TestResult::discard();
         }
 
-        if sigma > 1000.0 || _mu.abs() > 1000.0 {
+        if sigma > 1000.0 || mu.abs() > 1000.0 {
             return TestResult::discard();
         }
 
@@ -419,23 +419,23 @@ mod extended_properties {
     use super::*;
 
     #[quickcheck]
-    fn range_property(_data: Vec<f64>) -> TestResult {
-        if _data.len() < 2 || _data.iter().any(|x| !x.is_finite()) {
+    fn range_property(data: Vec<f64>) -> TestResult {
+        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
         let _arr = Array1::from_vec(_data.clone());
         // Calculate range manually since range function doesn't exist
-        let min_val = _data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        let max_val = _data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         let range_val = max_val - min_val;
 
         TestResult::from_bool(range_val >= 0.0 && range_val.is_finite())
     }
 
     #[quickcheck]
-    fn quantile_monotonicity_property(_data: Vec<f64>, q1: f64, q2: f64) -> TestResult {
-        if _data.len() < 2 || _data.iter().any(|x| !x.is_finite()) {
+    fn quantile_monotonicity_property(data: Vec<f64>, q1: f64, q2: f64) -> TestResult {
+        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
@@ -451,8 +451,8 @@ mod extended_properties {
     }
 
     #[quickcheck]
-    fn quantile_bounds_property(_data: Vec<f64>, q: f64) -> TestResult {
-        if _data.len() < 2 || _data.iter().any(|x| !x.is_finite()) {
+    fn quantile_bounds_property(data: Vec<f64>, q: f64) -> TestResult {
+        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
@@ -462,22 +462,22 @@ mod extended_properties {
 
         let arr = Array1::from_vec(_data.clone());
         let quant = quantile(&arr.view(), q, QuantileInterpolation::Linear).unwrap();
-        let min_val = _data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        let max_val = _data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
         TestResult::from_bool(quant >= min_val && quant <= max_val && quant.is_finite())
     }
 
     #[quickcheck]
-    fn median_middle_property(_data: Vec<f64>) -> TestResult {
-        if _data.len() < 3 || _data.iter().any(|x| !x.is_finite()) {
+    fn median_middle_property(data: Vec<f64>) -> TestResult {
+        if data.len() < 3 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
         let arr = Array1::from_vec(_data.clone());
         let median_val = median(&arr.view()).unwrap();
-        let min_val = _data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        let max_val = _data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
         TestResult::from_bool(
             median_val >= min_val && median_val <= max_val && median_val.is_finite(),
@@ -485,8 +485,8 @@ mod extended_properties {
     }
 
     #[quickcheck]
-    fn variance_translation_invariance(_data: Vec<f64>, c: f64) -> TestResult {
-        if _data.len() < 2 || _data.iter().any(|x| !x.is_finite()) || !c.is_finite() {
+    fn variance_translation_invariance(data: Vec<f64>, c: f64) -> TestResult {
+        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) || !c.is_finite() {
             return TestResult::discard();
         }
 
@@ -501,8 +501,8 @@ mod extended_properties {
     }
 
     #[quickcheck]
-    fn standardization_property(_data: Vec<f64>) -> TestResult {
-        if _data.len() < 3 || _data.iter().any(|x| !x.is_finite()) {
+    fn standardization_property(data: Vec<f64>) -> TestResult {
+        if data.len() < 3 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
@@ -530,8 +530,8 @@ mod robust_statistics_properties {
     use super::*;
 
     #[quickcheck]
-    fn median_outlier_resistance(_data: Vec<f64>, outlier_factor: f64) -> TestResult {
-        if _data.len() < 5 || _data.iter().any(|x| !x.is_finite()) {
+    fn median_outlier_resistance(_data: Vec<f64>, outlierfactor: f64) -> TestResult {
+        if data.len() < 5 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
@@ -543,7 +543,7 @@ mod robust_statistics_properties {
         let original_median = median(&arr.view()).unwrap();
 
         // Add extreme outlier
-        let mut with_outlier = _data;
+        let mut with_outlier = data;
         let max_val = with_outlier
             .iter()
             .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -562,14 +562,14 @@ mod robust_statistics_properties {
     }
 
     #[quickcheck]
-    fn mad_consistency_property(_data: Vec<f64>) -> TestResult {
-        if _data.len() < 3 || _data.iter().any(|x| !x.is_finite()) {
+    fn mad_consistency_property(data: Vec<f64>) -> TestResult {
+        if data.len() < 3 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
         // Check that all values aren't the same
-        let min_val = _data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        let max_val = _data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         if (max_val - min_val).abs() < 1e-10 {
             return TestResult::discard();
         }
@@ -598,7 +598,7 @@ mod advanced_distribution_properties {
     use super::*;
 
     #[quickcheck]
-    fn beta_distribution_bounds_property(_alpha: f64, beta_param: f64, x: f64) -> TestResult {
+    fn beta_distribution_bounds_property(_alpha: f64, betaparam: f64, x: f64) -> TestResult {
         if !_alpha.is_finite() || !beta_param.is_finite() || !x.is_finite() {
             return TestResult::discard();
         }
@@ -658,12 +658,12 @@ mod advanced_distribution_properties {
     }
 
     #[quickcheck]
-    fn distribution_cdf_pdf_consistency(_mu: f64, sigma: f64, x1: f64, x2: f64) -> TestResult {
+    fn distribution_cdf_pdf_consistency(mu: f64, sigma: f64, x1: f64, x2: f64) -> TestResult {
         if !_mu.is_finite() || !sigma.is_finite() || !x1.is_finite() || !x2.is_finite() {
             return TestResult::discard();
         }
 
-        if sigma <= 0.0 || sigma > 100.0 || _mu.abs() > 100.0 {
+        if sigma <= 0.0 || sigma > 100.0 || mu.abs() > 100.0 {
             return TestResult::discard();
         }
 
@@ -680,7 +680,7 @@ mod advanced_distribution_properties {
     }
 
     #[quickcheck]
-    fn distribution_symmetry_property(_sigma: f64, x: f64) -> TestResult {
+    fn distribution_symmetry_property(sigma: f64, x: f64) -> TestResult {
         if !_sigma.is_finite() || !x.is_finite() {
             return TestResult::discard();
         }
@@ -690,7 +690,7 @@ mod advanced_distribution_properties {
         }
 
         // Test symmetry of normal distribution around mean
-        let normal = norm(0.0, _sigma).unwrap();
+        let normal = norm(0.0, sigma).unwrap();
         let pdf_pos = normal.pdf(x);
         let pdf_neg = normal.pdf(-x);
 
@@ -704,8 +704,8 @@ mod simd_consistency_properties {
     use super::*;
 
     #[quickcheck]
-    fn simd_scalar_consistency_mean(_data: Vec<f64>) -> TestResult {
-        if _data.len() < 1 || _data.iter().any(|x| !x.is_finite()) {
+    fn simd_scalar_consistency_mean(data: Vec<f64>) -> TestResult {
+        if data.len() < 1 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
@@ -713,14 +713,14 @@ mod simd_consistency_properties {
         let simd_result = mean(&arr.view()).unwrap();
 
         // Compute scalar version manually
-        let scalar_result = _data.iter().sum::<f64>() / _data.len() as f64;
+        let scalar_result = data.iter().sum::<f64>() / data.len() as f64;
 
         TestResult::from_bool((simd_result - scalar_result).abs() < 1e-10)
     }
 
     #[quickcheck]
-    fn simd_scalar_consistency_variance(_data: Vec<f64>) -> TestResult {
-        if _data.len() < 2 || _data.iter().any(|x| !x.is_finite()) {
+    fn simd_scalar_consistency_variance(data: Vec<f64>) -> TestResult {
+        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
             return TestResult::discard();
         }
 
@@ -728,15 +728,15 @@ mod simd_consistency_properties {
         let simd_result = var(&arr.view(), 0, None).unwrap();
 
         // Compute scalar version manually
-        let mean_val = _data.iter().sum::<f64>() / _data.len() as f64;
+        let mean_val = data.iter().sum::<f64>() / data.len() as f64;
         let scalar_result =
-            _data.iter().map(|&x| (x - mean_val).powi(2)).sum::<f64>() / (_data.len() - 1) as f64;
+            data.iter().map(|&x| (x - mean_val).powi(2)).sum::<f64>() / (_data.len() - 1) as f64;
 
         TestResult::from_bool((simd_result - scalar_result).abs() < 1e-10)
     }
 
     #[quickcheck]
-    fn large_dataset_stability(_size: usize) -> TestResult {
+    fn large_dataset_stability(size: usize) -> TestResult {
         if _size < 100 || _size > 10000 {
             return TestResult::discard();
         }
@@ -766,7 +766,7 @@ mod numerical_stability_properties {
     use super::*;
 
     #[quickcheck]
-    fn tiny_values_stability(_exponent: i32) -> TestResult {
+    fn tiny_values_stability(exponent: i32) -> TestResult {
         if _exponent < -100 || _exponent > -10 {
             return TestResult::discard();
         }
@@ -784,7 +784,7 @@ mod numerical_stability_properties {
     }
 
     #[quickcheck]
-    fn large_values_stability(_exponent: i32) -> TestResult {
+    fn large_values_stability(exponent: i32) -> TestResult {
         if _exponent < 10 || _exponent > 100 {
             return TestResult::discard();
         }
@@ -800,14 +800,14 @@ mod numerical_stability_properties {
     }
 
     #[quickcheck]
-    fn near_identical_values_stability(_base: f64, epsilon_exp: i32) -> TestResult {
-        if !_base.is_finite() || _base.abs() > 1000.0 || epsilon_exp < -15 || epsilon_exp > -5 {
+    fn near_identical_values_stability(_base: f64, epsilonexp: i32) -> TestResult {
+        if !_base.is_finite() || base.abs() > 1000.0 || epsilon_exp < -15 || epsilon_exp > -5 {
             return TestResult::discard();
         }
 
         let epsilon = 10.0_f64.powi(epsilon_exp);
         let data = vec![
-            _base,
+            base,
             _base + epsilon,
             _base - epsilon,
             _base + 2.0 * epsilon,
@@ -825,7 +825,7 @@ mod numerical_stability_properties {
                 && var_val >= 0.0
                 && std_val.is_finite()
                 && std_val >= 0.0
-                && (mean_val - _base).abs() < epsilon * 10.0,
+                && (mean_val - base).abs() < epsilon * 10.0,
         )
     }
 }
@@ -836,13 +836,13 @@ mod multivariate_properties {
     use super::*;
 
     #[quickcheck]
-    fn correlation_matrix_properties(_data: Vec<Vec<f64>>) -> TestResult {
-        if _data.len() < 2 || _data.iter().any(|row| row.len() < 3) {
+    fn correlation_matrix_properties(data: Vec<Vec<f64>>) -> TestResult {
+        if data.len() < 2 || data.iter().any(|row| row.len() < 3) {
             return TestResult::discard();
         }
 
         // Ensure all rows have the same length
-        let n_cols = _data[0].len();
+        let n_cols = data[0].len();
         if !_data.iter().all(|row| row.len() == n_cols) {
             return TestResult::discard();
         }

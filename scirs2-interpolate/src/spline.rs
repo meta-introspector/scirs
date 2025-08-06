@@ -676,7 +676,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// # Returns
     ///
     /// The interpolated y value at `x_new`
-    pub fn evaluate(&self, x_new: F) -> InterpolateResult<F> {
+    pub fn evaluate(&self, xnew: F) -> InterpolateResult<F> {
         // Check if x_new is within the range
         if x_new < self.x[0] || x_new > self.x[self.x.len() - 1] {
             return Err(InterpolateError::OutOfBounds(
@@ -718,7 +718,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// # Returns
     ///
     /// The interpolated y values at `x_new`
-    pub fn evaluate_array(&self, x_new: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
+    pub fn evaluate_array(&self, xnew: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
         let mut result = Array1::zeros(x_new.len());
         for (i, &x) in x_new.iter().enumerate() {
             result[i] = self.evaluate(x)?;
@@ -736,7 +736,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// # Returns
     ///
     /// The derivative at `x_new`
-    pub fn derivative(&self, x_new: F) -> InterpolateResult<F> {
+    pub fn derivative(&self, xnew: F) -> InterpolateResult<F> {
         self.derivative_n(x_new, 1)
     }
 
@@ -750,7 +750,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// # Returns
     ///
     /// The nth derivative at `x_new`
-    pub fn derivative_n(&self, x_new: F, order: usize) -> InterpolateResult<F> {
+    pub fn derivative_n(&self, xnew: F, order: usize) -> InterpolateResult<F> {
         // Check order validity
         if order == 0 {
             return self.evaluate(x_new);
@@ -890,7 +890,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// # Returns
     ///
     /// Vector of root locations
-    pub fn find_roots(&self, tolerance: F, max_iterations: usize) -> InterpolateResult<Vec<F>> {
+    pub fn find_roots(&self, tolerance: F, maxiterations: usize) -> InterpolateResult<Vec<F>> {
         let mut roots = Vec::new();
         let n_segments = self.coeffs.nrows();
 
@@ -993,7 +993,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     }
 
     /// Evaluate with linear extrapolation (helper for SciPy compatibility)
-    fn evaluate_with_extrapolation(&self, x_new: F) -> InterpolateResult<F> {
+    fn evaluate_with_extrapolation(&self, xnew: F) -> InterpolateResult<F> {
         if x_new >= self.x[0] && x_new <= self.x[self.x.len() - 1] {
             return self.evaluate(x_new);
         }
@@ -1696,7 +1696,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     }
 
     /// Compute the integral of a single spline segment
-    fn integrate_segment(&self, idx: usize, x_start: F, x_end: F) -> InterpolateResult<F> {
+    fn integrate_segment(&self, idx: usize, x_start: F, xend: F) -> InterpolateResult<F> {
         let a = self.coeffs[[idx, 0]];
         let b = self.coeffs[[idx, 1]];
         let c = self.coeffs[[idx, 2]];
@@ -1757,7 +1757,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// # Returns
     ///
     /// Array containing [f(x), f'(x), f''(x), ...] up to the requested order
-    pub fn derivatives_all(&self, x_new: F, max_order: usize) -> InterpolateResult<Array1<F>> {
+    pub fn derivatives_all(&self, x_new: F, maxorder: usize) -> InterpolateResult<Array1<F>> {
         let _order = max_order.min(3);
         let mut result = Array1::zeros(_order + 1);
 
@@ -2106,7 +2106,8 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
                     + F::from_f64(2.0).unwrap() * c * dx
                     + F::from_f64(3.0).unwrap() * d * dx * dx),
                 2 => Ok(F::from_f64(2.0).unwrap() * c + F::from_f64(6.0).unwrap() * d * dx),
-                3 => Ok(F::from_f64(6.0).unwrap() * d, _ => unreachable!(),
+                3 => Ok(F::from_f64(6.0).unwrap() * d),
+                _ => unreachable!(),
             }
         }
     }
@@ -2180,7 +2181,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     }
 
     /// Evaluate spline at multiple points with bounds checking
-    pub fn evaluate_array_checked(&self, x_new: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
+    pub fn evaluate_array_checked(&self, xnew: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
         let mut result = Array1::zeros(x_new.len());
         let (x_min, x_max) = self.x_bounds();
 
@@ -2322,7 +2323,8 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// Find roots related to derivative discontinuities
     fn find_derivative_discontinuity_roots(
         &self,
-        tolerance: F_max, iterations: usize,
+        tolerance: F_max,
+        iterations: usize,
     ) -> InterpolateResult<Vec<F>> {
         let mut discontinuity_roots = Vec::new();
 
@@ -2344,7 +2346,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
                 let prev_third_deriv = prev_d_coeff * F::from_f64(6.0).unwrap_or_default();
 
                 // If signs are different, there's a discontinuity in the third derivative
-                if (third_deriv > F::zero()) != (prev_third_deriv >, F::zero()) {
+                if (third_deriv > F::zero()) != (prev_third_deriv > F::zero()) {
                     // Check if the function value at this knot is close to zero
                     let function_value = self.evaluate(x_knot)?;
                     if function_value.abs() < tolerance * F::from_f64(10.0).unwrap_or_default() {
@@ -3293,12 +3295,12 @@ pub fn make_interp_spline<F: InterpolationFloat>(
         "not-a-knot" => CubicSpline::new_not_a_knot(x, y),
         "clamped" => {
             if let Some(_params) = bc_params {
-                if _params.len() != 2 {
+                if params.len() != 2 {
                     return Err(InterpolateError::invalid_input(
                         "clamped boundary conditions require 2 parameters: [first_deriv_start, first_deriv_end]".to_string(),
                     ));
                 }
-                CubicSpline::new_clamped(x, y, _params[0], _params[1])
+                CubicSpline::new_clamped(x, y, params[0], params[1])
             } else {
                 Err(InterpolateError::invalid_input(
                     "clamped boundary conditions require bc_params: [first_deriv_start, first_deriv_end]".to_string(),
@@ -3443,7 +3445,7 @@ impl<F> crate::traits::Interpolator<F> for CubicSpline<F>
 where
     F: crate::traits::InterpolationFloat,
 {
-    fn evaluate(&self, query_points: &ArrayView2<F>) -> crate::InterpolateResult<Vec<F>> {
+    fn evaluate(&self, querypoints: &ArrayView2<F>) -> crate::InterpolateResult<Vec<F>> {
         if query_points.ncols() != 1 {
             return Err(crate::InterpolateError::invalid_input(
                 "CubicSpline only supports 1D interpolation",
@@ -3515,7 +3517,8 @@ pub fn cubic_spline_scipy<F: InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     bc_type: &str,
-    bc_values: Option<(F, F)>, _extrapolate: bool,
+    bc_values: Option<(F, F)>,
+    _extrapolate: bool,
 ) -> InterpolateResult<CubicSpline<F>> {
     match bc_type {
         "natural" => CubicSpline::new(x, y),
@@ -3529,8 +3532,9 @@ pub fn cubic_spline_scipy<F: InterpolationFloat>(
                 ))
             }
         }
-        "periodic" => CubicSpline::new_periodic(x, y, _ => Err(InterpolateError::invalid_input(format!(
-            "Unknown boundary condition _type: {}",
+        "periodic" => CubicSpline::new_periodic(x, y),
+        _ => Err(InterpolateError::invalid_input(format!(
+            "Unknown boundary condition type: {}",
             bc_type
         ))),
     }

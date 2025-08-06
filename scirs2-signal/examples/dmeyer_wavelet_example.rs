@@ -153,8 +153,8 @@ fn main() {
 
 // Helper function to apply thresholding to coefficients
 #[allow(dead_code)]
-fn apply_threshold(_coeffs: &mut [f64], threshold: f64) {
-    for val in _coeffs.iter_mut() {
+fn apply_threshold(coeffs: &mut [f64], threshold: f64) {
+    for val in coeffs.iter_mut() {
         if val.abs() < threshold {
             *val = 0.0;
         }

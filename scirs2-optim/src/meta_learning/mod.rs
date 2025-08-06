@@ -164,7 +164,8 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> MetaOptimizer<A, D> {
 
     /// Meta-parameter based hyperparameter prediction
     fn meta_parameter_prediction(
-        &self, _problem_features: &Array1<A>,
+        &self,
+        _problem_features: &Array1<A>,
     ) -> Result<HashMap<String, A>> {
         let mut hyperparams = HashMap::new();
 
@@ -226,9 +227,9 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> MetaOptimizer<A, D> {
 
 impl<A: Float + ScalarOperand + Debug> HyperparameterPredictor<A> {
     /// Create a new hyperparameter predictor
-    pub fn new(_input_size: usize, hidden_size: usize, output_size: usize) -> Self {
+    pub fn new(_input_size: usize, hidden_size: usize, outputsize: usize) -> Self {
         // Initialize with small random weights
-        let input_weights = Array2::from_shape_fn((hidden_size, _input_size), |_| {
+        let input_weights = Array2::from_shape_fn((hidden_size, input_size), |_| {
             A::from(0.01).unwrap()
                 * (A::from(rand::random::<f64>()).unwrap() - A::from(0.5).unwrap())
         });
@@ -482,9 +483,9 @@ pub struct HyperparameterOptimizer<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug> HyperparameterOptimizer<A> {
     /// Create a new hyperparameter optimizer
-    pub fn new(_strategy: HyperparameterStrategy) -> Self {
+    pub fn new(strategy: HyperparameterStrategy) -> Self {
         Self {
-            strategy: _strategy,
+            strategy: strategy,
             best_hyperparameters: None,
             best_performance: None,
             trial_history: Vec::new(),
@@ -571,7 +572,8 @@ impl<A: Float + ScalarOperand + Debug> HyperparameterOptimizer<A> {
     /// Bayesian optimization suggestion (simplified)
     fn suggest_bayesian_optimization(
         &self,
-        bounds: &HashMap<String, (f64, f64)>, _acquisition: AcquisitionFunction,
+        bounds: &HashMap<String, (f64, f64)>,
+        _acquisition: AcquisitionFunction,
     ) -> Result<HashMap<String, A>> {
         // Simplified Bayesian optimization - in practice, this would use a Gaussian process
         if self.trial_history.is_empty() {
@@ -677,7 +679,7 @@ pub struct NeuralOptimizer<A: Float, D: Dimension> {
 /// Trait for meta-optimizers
 pub trait MetaOptimizerTrait<A: Float> {
     /// Update meta-parameters
-    fn meta_step(&mut self, meta_gradients: &Array1<A>) -> Result<()>;
+    fn meta_step(&mut self, metagradients: &Array1<A>) -> Result<()>;
 
     /// Get current meta-parameters
     fn get_meta_parameters(&self) -> &Array1<A>;
@@ -694,16 +696,16 @@ pub struct SGDMetaOptimizer<A: Float> {
 
 impl<A: Float> SGDMetaOptimizer<A> {
     /// Create a new SGD meta-optimizer
-    pub fn new(_meta_params: Array1<A>, meta_lr: A) -> Self {
+    pub fn new(_meta_params: Array1<A>, metalr: A) -> Self {
         Self {
-            meta_params: _meta_params,
+            meta_params: meta_params,
             meta_lr,
         }
     }
 }
 
 impl<A: Float + ScalarOperand> MetaOptimizerTrait<A> for SGDMetaOptimizer<A> {
-    fn meta_step(&mut self, meta_gradients: &Array1<A>) -> Result<()> {
+    fn meta_step(&mut self, metagradients: &Array1<A>) -> Result<()> {
         if meta_gradients.len() != self.meta_params.len() {
             return Err(OptimError::DimensionMismatch(
                 "Meta-gradient dimension mismatch".to_string(),
@@ -740,7 +742,7 @@ pub struct UpdateNetwork<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug> UpdateNetwork<A> {
     /// Create a new update network
-    pub fn new(input_size: usize, output_size: usize) -> Self {
+    pub fn new(input_size: usize, outputsize: usize) -> Self {
         let weights = Array2::from_shape_fn((output_size, input_size), |_| {
             A::from(0.01).unwrap()
                 * (A::from(rand::random::<f64>()).unwrap() - A::from(0.5).unwrap())
@@ -756,7 +758,7 @@ impl<A: Float + ScalarOperand + Debug> UpdateNetwork<A> {
     }
 
     /// Compute parameter update given gradient features
-    pub fn compute_update(&self, gradient_features: &Array1<A>) -> Result<Array1<A>> {
+    pub fn compute_update(&self, gradientfeatures: &Array1<A>) -> Result<Array1<A>> {
         if gradient_features.len() != self.input_size {
             return Err(OptimError::DimensionMismatch(format!(
                 "Expected input size {}, got {}",
@@ -908,7 +910,7 @@ impl<A: Float + ScalarOperand + Debug + 'static, D: Dimension> NeuralOptimizer<A
     }
 
     /// Meta-learning step to update the neural network
-    pub fn meta_step(&mut self, meta_loss: A) -> Result<()> {
+    pub fn meta_step(&mut self, metaloss: A) -> Result<()> {
         // Compute meta-gradients using finite differences
         let current_params = self.update_network.get_parameters();
         let epsilon = A::from(1e-6).unwrap();

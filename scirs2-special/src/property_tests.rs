@@ -12,7 +12,7 @@ pub mod properties {
     use super::*;
 
     /// Test mathematical identities for gamma function
-    pub fn test_gamma_properties(_values: &[f64]) -> Vec<String> {
+    pub fn test_gamma_properties(values: &[f64]) -> Vec<String> {
         let mut errors = Vec::new();
 
         for &x in _values {
@@ -69,7 +69,7 @@ pub mod properties {
     }
 
     /// Test properties of Bessel functions
-    pub fn test_bessel_properties(_values: &[f64]) -> Vec<String> {
+    pub fn test_bessel_properties(values: &[f64]) -> Vec<String> {
         let mut errors = Vec::new();
 
         for &x in _values {
@@ -99,7 +99,7 @@ pub mod properties {
     }
 
     /// Test properties of error functions
-    pub fn test_erf_properties(_values: &[f64]) -> Vec<String> {
+    pub fn test_erf_properties(values: &[f64]) -> Vec<String> {
         let mut errors = Vec::new();
 
         for &x in _values {
@@ -170,7 +170,7 @@ pub mod properties {
     }
 
     /// Test properties of statistical functions
-    pub fn test_statistical_properties(_values: &[f64]) -> Vec<String> {
+    pub fn test_statistical_properties(values: &[f64]) -> Vec<String> {
         let mut errors = Vec::new();
 
         for &x in _values {

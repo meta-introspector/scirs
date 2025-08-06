@@ -48,7 +48,7 @@ pub struct BoundingBox {
     pub class_id: usize,
     pub confidence: f32,
 impl BoundingBox {
-    pub fn new(x: f32, y: f32, width: f32, height: f32, class_id: usize, confidence: f32) -> Self {
+    pub fn new(x: f32, y: f32, width: f32, height: f32, classid: usize, confidence: f32) -> Self {
             x,
             y,
             width,
@@ -74,9 +74,9 @@ pub struct DetectionDataset {
     config: DetectionConfig,
     rng: SmallRng,
 impl DetectionDataset {
-    pub fn new(_config: DetectionConfig, seed: u64) -> Self {
-            _config,
-            rng: SmallRng::seed_from_u64(seed),
+    pub fn new(config: DetectionConfig, seed: u64) -> Self {
+            config,
+            rng: SmallRng::from_seed(seed),
     /// Generate a synthetic image with objects and their labels
     pub fn generate_sample(&mut self) -> (Array3<f32>, Vec<BoundingBox>) {
         let (height, width) = self._config.input_size;
@@ -111,7 +111,7 @@ impl DetectionDataset {
                 obj_x..obj_y, obj_width, obj_height, class_id, 1.0,));
         (image, objects)
     /// Generate a batch of samples
-    pub fn generate_batch(&mut self, batch_size: usize) -> (Array4<f32>, Vec<Vec<BoundingBox>>) {
+    pub fn generate_batch(&mut self, batchsize: usize) -> (Array4<f32>, Vec<Vec<BoundingBox>>) {
         let mut images = Array4::<f32>::zeros((batch_size, 3, height, width));
         let mut all_objects = Vec::new();
         for i in 0..batch_size {
@@ -125,7 +125,7 @@ pub struct ObjectDetectionModel {
     classifier_head: Sequential<f32>,
     bbox_regressor: Sequential<f32>,
 impl ObjectDetectionModel {
-    pub fn new(_config: DetectionConfig, rng: &mut SmallRng) -> StdResult<Self> {
+    pub fn new(config: DetectionConfig, rng: &mut SmallRng) -> StdResult<Self> {
         // Feature extraction backbone (simplified ResNet-like)
         let mut feature_extractor = Sequential::new();
         // Initial conv block
@@ -148,13 +148,13 @@ impl ObjectDetectionModel {
         feature_extractor.add(AdaptiveMaxPool2D::new(_config.feature_map_size, None)?);
         // Classification head
         let mut classifier_head = Sequential::new();
-        let feature_dim = 256 * _config.feature_map_size.0 * _config.feature_map_size.1;
+        let feature_dim = 256 * config.feature_map_size.0 * config.feature_map_size.1;
         classifier_head.add(Dense::new(feature_dim, 512, Some("relu"), rng)?);
         classifier_head.add(Dropout::new(0.5, rng)?);
         classifier_head.add(Dense::new(512, 256, Some("relu"), rng)?);
         classifier_head.add(Dropout::new(0.3, rng)?);
         classifier_head.add(Dense::new(
-            _config.num_classes * _config.max_objects,
+            config.num_classes * config.max_objects,
             Some("softmax"),
         // Bounding box regression head
         let mut bbox_regressor = Sequential::new();
@@ -162,7 +162,7 @@ impl ObjectDetectionModel {
         bbox_regressor.add(Dropout::new(0.5, rng)?);
         bbox_regressor.add(Dense::new(512, 256, Some("relu"), rng)?);
         bbox_regressor.add(Dropout::new(0.3, rng)?);
-        bbox_regressor.add(Dense::new(256, 4 * _config.max_objects, None, rng)?); // 4 coordinates per object
+        bbox_regressor.add(Dense::new(256, 4 * config.max_objects, None, rng)?); // 4 coordinates per object
         Ok(Self {
             feature_extractor,
             classifier_head,
@@ -226,10 +226,10 @@ pub struct DetectionLoss {
     classification_weight: f32,
     regression_weight: f32,
 impl DetectionLoss {
-    pub fn new(_classification_weight: f32, regression_weight: f32) -> Self {
+    pub fn new(_classification_weight: f32, regressionweight: f32) -> Self {
             classification_loss: CrossEntropyLoss::new(1e-7),
             regression_loss: MeanSquaredError,
-            _classification_weight,
+            classification_weight,
             regression_weight,
     /// Compute combined detection loss
     pub fn compute_loss(
@@ -248,7 +248,7 @@ pub struct DetectionMetrics {
     iou_threshold: f32,
     confidence_threshold: f32,
 impl DetectionMetrics {
-    pub fn new(_iou_threshold: f32, confidence_threshold: f32) -> Self {
+    pub fn new(_iou_threshold: f32, confidencethreshold: f32) -> Self {
             iou_threshold,
             confidence_threshold,
     /// Calculate mean Average Precision (simplified version)
@@ -320,7 +320,7 @@ fn prepare_targets(
 #[allow(dead_code)]
 fn train_detection_model() -> StdResult<()> {
     println!("🎯 Starting Object Detection Training");
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     let config = DetectionConfig::default();
     println!("🚀 Starting model training...");
     // Create model
@@ -498,7 +498,7 @@ mod tests {
         let precision2 = metrics.calculate_precision(&pred2, &gt2);
         assert_eq!(precision2, 0.0);
     fn test_model_creation() -> StdResult<()> {
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
         let model = ObjectDetectionModel::new(config, &mut rng)?;
         // Test forward pass shape
         let batch_size = 2;

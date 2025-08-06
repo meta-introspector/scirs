@@ -470,7 +470,7 @@ where
                 consciousness_amplitude += quantum_state;
             }
 
-            // Consciousness measurement (collapse to classical _state)
+            // Consciousness measurement (collapse to classical state)
             let consciousness_probability = consciousness_amplitude.norm_sqr();
             consciousness_output[(y, x)] = consciousness_probability;
         }
@@ -674,9 +674,9 @@ where
             )?;
 
             // Apply adaptive combination
-            let adapted_value = consciousness_val * combination_weights.0
-                + neural_val * combination_weights.1
-                + causal_val * combination_weights.2;
+            let adapted_value = consciousness_val * combinationweights.0
+                + neural_val * combinationweights.1
+                + causal_val * combinationweights.2;
 
             adapted_output[(y, x)] = adapted_value;
         }
@@ -1285,7 +1285,7 @@ fn update_global_network_properties(
 }
 
 #[allow(dead_code)]
-fn image_to_temporal_representation<T>(_image: &ArrayView2<T>) -> NdimageResult<Array3<f64>>
+fn image_to_temporal_representation<T>(image: &ArrayView2<T>) -> NdimageResult<Array3<f64>>
 where
     T: Float + FromPrimitive + Copy,
 {
@@ -1444,13 +1444,13 @@ fn detect_causal_relationships(
 }
 
 #[allow(dead_code)]
-fn calculate_window_variance(_window: &[f64]) -> f64 {
-    if _window.is_empty() {
+fn calculate_window_variance(window: &[f64]) -> f64 {
+    if window.is_empty() {
         return 0.0;
     }
 
-    let mean = _window.iter().sum::<f64>() / _window.len() as f64;
-    let variance = _window.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _window.len() as f64;
+    let mean = window.iter().sum::<f64>() / window.len() as f64;
+    let variance = window.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / window.len() as f64;
 
     variance
 }
@@ -1854,12 +1854,12 @@ fn generate_consciousness_guided_output<T>(
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (height, width) = _original_image.dim();
+    let (height, width) = original_image.dim();
     let mut output = Array2::zeros((height, width));
 
     for y in 0..height {
         for x in 0..width {
-            let processed_val = _processed_response[(y, x)];
+            let processed_val = processed_response[(y, x)];
             output[(y, x)] = T::from_f64(processed_val).unwrap_or_else(|| T::zero());
         }
     }
@@ -1975,8 +1975,8 @@ fn update_efficiency_metrics(
 }
 
 #[allow(dead_code)]
-fn predict_future_load(_history: &VecDeque<AllocationSnapshot>) -> f64 {
-    if _history.len() < 2 {
+fn predict_future_load(history: &VecDeque<AllocationSnapshot>) -> f64 {
+    if history.len() < 2 {
         return 0.5; // Default moderate load
     }
 
@@ -2471,9 +2471,9 @@ fn calculate_spatial_consciousness_factor(
 
 /// Calculate temporal evolution factor
 #[allow(dead_code)]
-fn calculate_temporal_evolution_factor(_evolution_system: &QuantumConsciousnessEvolution) -> f64 {
-    let history_length = _evolution_system.evolution_history.len() as f64;
-    let evolution_strength = _evolution_system.evolution_rate * history_length.sqrt();
+fn calculate_temporal_evolution_factor(_evolutionsystem: &QuantumConsciousnessEvolution) -> f64 {
+    let history_length = evolution_system.evolution_history.len() as f64;
+    let evolution_strength = evolution_system.evolution_rate * history_length.sqrt();
 
     1.0 + 0.1 * evolution_strength.tanh()
 }
@@ -3057,9 +3057,9 @@ pub fn enhanced_meta_learning_with_temporal_fusion(
                 (y, x),
             )?;
 
-            enhanced_output[(y, x)] = temporal_val * fusion_weights.0
-                + hierarchical_val * fusion_weights.1
-                + strategy_val * fusion_weights.2;
+            enhanced_output[(y, x)] = temporal_val * fusionweights.0
+                + hierarchical_val * fusionweights.1
+                + strategy_val * fusionweights.2;
         }
     }
 
@@ -3178,7 +3178,7 @@ fn create_memory_trace(
 
     Ok(MemoryTrace {
         content,
-        _context,
+        context,
         importance,
         timestamp: 0, // Would be actual timestamp in real implementation
         access_count: 0,
@@ -3187,10 +3187,10 @@ fn create_memory_trace(
 
 /// Calculate importance score for memory trace
 #[allow(dead_code)]
-fn calculate_memory_importance(_content: &Array2<f64>) -> NdimageResult<f64> {
-    let mean = _content.sum() / _content.len() as f64;
-    let variance = _content.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _content.len() as f64;
-    let max_val = _content.iter().fold(0.0f64, |acc, &x| acc.max(x.abs()));
+fn calculate_memory_importance(content: &Array2<f64>) -> NdimageResult<f64> {
+    let mean = content.sum() / content.len() as f64;
+    let variance = content.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / content.len() as f64;
+    let max_val = content.iter().fold(0.0f64, |acc, &x| acc.max(x.abs()));
 
     // Importance combines magnitude, variance, and extremeness
     let importance = (mean.abs() + variance.sqrt() + max_val) / 3.0;
@@ -4297,7 +4297,7 @@ fn apply_quantum_optimization_feedback(
 }
 
 #[allow(dead_code)]
-fn calculate_coherence_preservation(_graph: &ResourceEntanglementGraph) -> NdimageResult<f64> {
+fn calculate_coherence_preservation(graph: &ResourceEntanglementGraph) -> NdimageResult<f64> {
     // Implementation would calculate quantum coherence preservation level
     Ok(0.85)
 }

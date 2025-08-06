@@ -89,18 +89,18 @@ fn euler_to_quat_xyz_intrinsic(x: f64, y: f64, z: f64) -> [f64; 4] {
 }
 
 #[allow(dead_code)]
-fn quat_from_axis_angle(_axis: [f64; 3], angle: f64) -> [f64; 4] {
+fn quat_from_axis_angle(axis: [f64; 3], angle: f64) -> [f64; 4] {
     let half_angle = angle / 2.0;
     let s = half_angle.sin();
-    [half_angle.cos(), _axis[0] * s, _axis[1] * s, _axis[2] * s]
+    [half_angle.cos(), axis[0] * s, axis[1] * s, axis[2] * s]
 }
 
 #[allow(dead_code)]
-fn quat_multiply(_q1: &[f64; 4], q2: &[f64; 4]) -> [f64; 4] {
+fn quat_multiply(q1: &[f64; 4], q2: &[f64; 4]) -> [f64; 4] {
     [
-        _q1[0] * q2[0] - _q1[1] * q2[1] - _q1[2] * q2[2] - _q1[3] * q2[3],
-        _q1[0] * q2[1] + _q1[1] * q2[0] + _q1[2] * q2[3] - _q1[3] * q2[2],
-        _q1[0] * q2[2] - _q1[1] * q2[3] + _q1[2] * q2[0] + _q1[3] * q2[1],
-        _q1[0] * q2[3] + _q1[1] * q2[2] - _q1[2] * q2[1] + _q1[3] * q2[0],
+        q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2] - q1[3] * q2[3],
+        q1[0] * q2[1] + q1[1] * q2[0] + q1[2] * q2[3] - q1[3] * q2[2],
+        q1[0] * q2[2] - q1[1] * q2[3] + q1[2] * q2[0] + q1[3] * q2[1],
+        q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1] + q1[3] * q2[0],
     ]
 }

@@ -18,8 +18,8 @@ use scirs2__fft::{fft, fft2, fftfreq, ifft, ifft2, FFTError};
 
 // Conversion from FFTError to NdimageError
 impl From<FFTError> for NdimageError {
-    fn from(_err: FFTError) -> Self {
-        NdimageError::ComputationError(format!("FFT error: {}", _err))
+    fn from(err: FFTError) -> Self {
+        NdimageError::ComputationError(format!("FFT error: {}", err))
     }
 }
 
@@ -101,11 +101,11 @@ where
 
 /// Apply 1D Gaussian filter in Fourier domain
 #[allow(dead_code)]
-fn fourier_gaussian_1d<T>(_input: &Array1<T>, sigma: T) -> NdimageResult<Array1<T>>
+fn fourier_gaussian_1d<T>(input: &Array1<T>, sigma: T) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
 {
-    let n = _input.len();
+    let n = input.len();
 
     // Convert to f64 for FFT
     let _input_f64: Vec<f64> = _input
@@ -144,11 +144,11 @@ where
 
 /// Apply 2D Gaussian filter in Fourier domain
 #[allow(dead_code)]
-fn fourier_gaussian_2d<T>(_input: &Array2<T>, sigma_y: T, sigma_x: T) -> NdimageResult<Array2<T>>
+fn fourier_gaussian_2d<T>(_input: &Array2<T>, sigma_y: T, sigmax: T) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
 {
-    let (ny, nx) = _input.dim();
+    let (ny, nx) = input.dim();
 
     // Convert to f64 Array2 for FFT
     let mut input_f64 = Array2::<f64>::zeros((ny, nx));
@@ -197,12 +197,12 @@ where
 ///
 /// This implementation uses separable 1D FFTs along each axis for efficiency
 #[allow(dead_code)]
-fn fourier_gaussian_nd<T, D>(_input: &Array<T, D>, sigma: &[T]) -> NdimageResult<Array<T, D>>
+fn fourier_gaussian_nd<T, D>(input: &Array<T, D>, sigma: &[T]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
 {
-    if _input.ndim() != sigma.len() {
+    if input.ndim() != sigma.len() {
         return Err(NdimageError::InvalidInput(
             "Sigma array length must match _input dimensions".into(),
         ));
@@ -210,14 +210,14 @@ where
 
     // For N-dimensional arrays, apply separable filtering
     // Use a simplified approach that works for common 3D case
-    if _input.ndim() == 3 {
+    if input.ndim() == 3 {
         return fourier_gaussian_3d(_input, sigma);
     }
 
     // For higher dimensions, fall back to a general but simpler approach
     // Convert to 1D, apply filter, and reshape back
-    let shape = _input.shape().to_vec();
-    let flat_input = _input.view().intoshape(_input.len())?;
+    let shape = input.shape().to_vec();
+    let flat_input = input.view().intoshape(_input.len())?;
 
     // Create equivalent 1D sigma (use geometric mean of all dimensions)
     let sigma_1d = {
@@ -239,7 +239,7 @@ where
 
 /// Apply 3D Gaussian filter in Fourier domain
 #[allow(dead_code)]
-fn fourier_gaussian_3d<T, D>(_input: &Array<T, D>, sigma: &[T]) -> NdimageResult<Array<T, D>>
+fn fourier_gaussian_3d<T, D>(input: &Array<T, D>, sigma: &[T]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
@@ -356,23 +356,23 @@ where
 ///
 /// * `Result<Array<T, D>>` - Filtered array
 #[allow(dead_code)]
-pub fn fourier_uniform<T, D>(_input: &Array<T, D>, size: &[usize]) -> NdimageResult<Array<T, D>>
+pub fn fourier_uniform<T, D>(input: &Array<T, D>, size: &[usize]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
 {
     // Validate inputs
-    if _input.ndim() == 0 {
+    if input.ndim() == 0 {
         return Err(NdimageError::InvalidInput(
             "Input array cannot be 0-dimensional".into(),
         ));
     }
 
-    if size.len() != _input.ndim() {
+    if size.len() != input.ndim() {
         return Err(NdimageError::DimensionError(format!(
             "Size must have same length as _input dimensions (got {} expected {})",
             size.len(),
-            _input.ndim()
+            input.ndim()
         )));
     }
 
@@ -384,7 +384,7 @@ where
         }
     }
 
-    match _input.ndim() {
+    match input.ndim() {
         1 => {
             let input_1d = _input
                 .view()
@@ -417,11 +417,11 @@ where
 
 /// Apply 1D uniform filter in Fourier domain
 #[allow(dead_code)]
-fn fourier_uniform_1d<T>(_input: &Array1<T>, size: usize) -> NdimageResult<Array1<T>>
+fn fourier_uniform_1d<T>(input: &Array1<T>, size: usize) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
 {
-    let n = _input.len();
+    let n = input.len();
 
     // Convert to f64 for FFT
     let _input_f64: Vec<f64> = _input
@@ -521,25 +521,25 @@ where
 
 /// Apply N-dimensional uniform filter in Fourier domain
 #[allow(dead_code)]
-fn fourier_uniform_nd<T, D>(_input: &Array<T, D>, size: &[usize]) -> NdimageResult<Array<T, D>>
+fn fourier_uniform_nd<T, D>(input: &Array<T, D>, size: &[usize]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
 {
-    if _input.ndim() != size.len() {
+    if input.ndim() != size.len() {
         return Err(NdimageError::InvalidInput(
             "Size array length must match _input dimensions".into(),
         ));
     }
 
     // For 3D case, implement separable filtering
-    if _input.ndim() == 3 {
+    if input.ndim() == 3 {
         return fourier_uniform_3d(_input, size);
     }
 
     // For higher dimensions, use simplified approach
-    let shape = _input.shape().to_vec();
-    let flat_input = _input.view().intoshape(_input.len())?;
+    let shape = input.shape().to_vec();
+    let flat_input = input.view().intoshape(_input.len())?;
 
     // Create equivalent 1D size (use geometric mean)
     let size_1d = {
@@ -558,7 +558,7 @@ where
 
 /// Apply 3D uniform filter in Fourier domain
 #[allow(dead_code)]
-fn fourier_uniform_3d<T, D>(_input: &Array<T, D>, size: &[usize]) -> NdimageResult<Array<T, D>>
+fn fourier_uniform_3d<T, D>(input: &Array<T, D>, size: &[usize]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
@@ -710,7 +710,8 @@ where
 
     let is_lowpass = match mode {
         "lowpass" => true,
-        "highpass" => false_ => {
+        "highpass" => false,
+        _ => {
             return Err(NdimageError::InvalidInput(
                 "Mode must be 'lowpass' or 'highpass'".into(),
             ))
@@ -1006,27 +1007,27 @@ where
 ///
 /// * `Result<Array<T, D>>` - Shifted array
 #[allow(dead_code)]
-pub fn fourier_shift<T, D>(_input: &Array<T, D>, shift: &[T]) -> NdimageResult<Array<T, D>>
+pub fn fourier_shift<T, D>(input: &Array<T, D>, shift: &[T]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
 {
     // Validate inputs
-    if _input.ndim() == 0 {
+    if input.ndim() == 0 {
         return Err(NdimageError::InvalidInput(
             "Input array cannot be 0-dimensional".into(),
         ));
     }
 
-    if shift.len() != _input.ndim() {
+    if shift.len() != input.ndim() {
         return Err(NdimageError::DimensionError(format!(
             "Shift must have same length as _input dimensions (got {} expected {})",
             shift.len(),
-            _input.ndim()
+            input.ndim()
         )));
     }
 
-    match _input.ndim() {
+    match input.ndim() {
         1 => {
             let input_1d = _input
                 .view()
@@ -1059,11 +1060,11 @@ where
 
 /// Apply 1D shift in Fourier domain
 #[allow(dead_code)]
-fn fourier_shift_1d<T>(_input: &Array1<T>, shift: T) -> NdimageResult<Array1<T>>
+fn fourier_shift_1d<T>(input: &Array1<T>, shift: T) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
 {
-    let n = _input.len();
+    let n = input.len();
 
     // Convert to f64 for FFT
     let _input_f64: Vec<f64> = _input
@@ -1103,11 +1104,11 @@ where
 
 /// Apply 2D shift in Fourier domain
 #[allow(dead_code)]
-fn fourier_shift_2d<T>(_input: &Array2<T>, shift_y: T, shift_x: T) -> NdimageResult<Array2<T>>
+fn fourier_shift_2d<T>(_input: &Array2<T>, shift_y: T, shiftx: T) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
 {
-    let (ny, nx) = _input.dim();
+    let (ny, nx) = input.dim();
 
     // Convert to f64 Array2 for FFT
     let mut input_f64 = Array2::<f64>::zeros((ny, nx));
@@ -1155,25 +1156,25 @@ where
 
 /// Apply N-dimensional shift in Fourier domain
 #[allow(dead_code)]
-fn fourier_shift_nd<T, D>(_input: &Array<T, D>, shift: &[T]) -> NdimageResult<Array<T, D>>
+fn fourier_shift_nd<T, D>(input: &Array<T, D>, shift: &[T]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
 {
-    if _input.ndim() != shift.len() {
+    if input.ndim() != shift.len() {
         return Err(NdimageError::InvalidInput(
             "Shift array length must match _input dimensions".into(),
         ));
     }
 
     // For 3D case, implement separable shifting
-    if _input.ndim() == 3 {
+    if input.ndim() == 3 {
         return fourier_shift_3d(_input, shift);
     }
 
     // For higher dimensions, use simplified approach
-    let shape = _input.shape().to_vec();
-    let flat_input = _input.view().intoshape(_input.len())?;
+    let shape = input.shape().to_vec();
+    let flat_input = input.view().intoshape(_input.len())?;
 
     // Create equivalent 1D shift (use mean of all shifts)
     let shift_1d = {
@@ -1192,7 +1193,7 @@ where
 
 /// Apply 3D shift in Fourier domain
 #[allow(dead_code)]
-fn fourier_shift_3d<T, D>(_input: &Array<T, D>, shift: &[T]) -> NdimageResult<Array<T, D>>
+fn fourier_shift_3d<T, D>(input: &Array<T, D>, shift: &[T]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
@@ -1447,7 +1448,7 @@ pub struct StreamingFourierGaussian<T> {
 }
 
 impl<T: Float + FromPrimitive + NumCast + Debug + Clone> StreamingFourierGaussian<T> {
-    pub fn new(_sigma: Vec<T>) -> Self {
+    pub fn new(sigma: Vec<T>) -> Self {
         Self { _sigma }
     }
 }
@@ -1467,7 +1468,7 @@ where
     }
 
     fn merge_overlap(
-        &self_output: &mut ArrayViewMut<T, D>, _new_chunk: &ArrayView<T, D>, _overlap_info: &OverlapInfo,
+        self_output: &mut ArrayViewMut<T, D>, _new_chunk: &ArrayView<T, D>, _overlap_info: &OverlapInfo,
     ) -> NdimageResult<()> {
         // Fourier domain filters handle boundaries naturally
         Ok(())
@@ -1498,7 +1499,8 @@ where
     match shape.len() {
         1 => processor.process_file::<ndarray::Ix1_>(input_path, output_path, shape, op),
         2 => processor.process_file::<ndarray::Ix2_>(input_path, output_path, shape, op),
-        3 => processor.process_file::<ndarray::Ix3_>(input_path, output_path, shape, op, _ => processor.process_file::<ndarray::IxDyn_>(input_path, output_path, shape, op),
+        3 => processor.process_file::<ndarray::Ix3_>(input_path, output_path, shape, op),
+        _ => processor.process_file::<ndarray::IxDyn_>(input_path, output_path, shape, op),
     }
 }
 
@@ -1508,7 +1510,7 @@ pub struct StreamingFourierUniform<T> {
 }
 
 impl<T: Float + FromPrimitive + NumCast + Debug + Clone> StreamingFourierUniform<T> {
-    pub fn new(_size: Vec<T>) -> Self {
+    pub fn new(size: Vec<T>) -> Self {
         Self { _size }
     }
 }
@@ -1530,7 +1532,7 @@ where
     }
 
     fn merge_overlap(
-        &self_output: &mut ArrayViewMut<T, D>, _new_chunk: &ArrayView<T, D>, _overlap_info: &OverlapInfo,
+        self_output: &mut ArrayViewMut<T, D>, _new_chunk: &ArrayView<T, D>, _overlap_info: &OverlapInfo,
     ) -> NdimageResult<()> {
         Ok(())
     }
@@ -1555,6 +1557,7 @@ where
     match shape.len() {
         1 => processor.process_file::<ndarray::Ix1_>(input_path, output_path, shape, op),
         2 => processor.process_file::<ndarray::Ix2_>(input_path, output_path, shape, op),
-        3 => processor.process_file::<ndarray::Ix3_>(input_path, output_path, shape, op, _ => processor.process_file::<ndarray::IxDyn_>(input_path, output_path, shape, op),
+        3 => processor.process_file::<ndarray::Ix3_>(input_path, output_path, shape, op),
+        _ => processor.process_file::<ndarray::IxDyn_>(input_path, output_path, shape, op),
     }
 }

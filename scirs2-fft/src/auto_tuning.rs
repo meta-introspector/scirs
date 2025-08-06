@@ -154,9 +154,9 @@ impl AutoTuner {
     }
 
     /// Create a new auto-tuner with custom configuration
-    pub fn with_config(_config: AutoTuneConfig) -> Self {
+    pub fn with_config(config: AutoTuneConfig) -> Self {
         let database =
-            Self::load_database(&_config.database_path).unwrap_or_else(|_| TuningDatabase {
+            Self::load_database(&config.database_path).unwrap_or_else(|_| TuningDatabase {
                 results: Vec::new(),
                 last_updated: std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
@@ -166,22 +166,22 @@ impl AutoTuner {
             });
 
         Self {
-            config: _config,
+            config: config,
             database,
             enabled: true,
         }
     }
 
     /// Load the tuning database from disk
-    fn load_database(_path: &Path) -> FFTResult<TuningDatabase> {
-        if !_path.exists() {
+    fn load_database(path: &Path) -> FFTResult<TuningDatabase> {
+        if !path.exists() {
             return Err(FFTError::IOError(format!(
                 "Tuning database file not found: {}",
-                _path.display()
+                path.display()
             )));
         }
 
-        let file = File::open(_path)
+        let file = File::open(path)
             .map_err(|e| FFTError::IOError(format!("Failed to open tuning database: {e}")))?;
 
         let reader = BufReader::new(file);

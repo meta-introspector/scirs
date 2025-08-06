@@ -96,7 +96,8 @@ where
         &mut self,
         x_train: &ArrayView2<F>,
         y_train: &ArrayView1<F>,
-        max_iter: usize, _learning_rate: F,
+        max_iter: usize,
+        _learning_rate: F,
         tolerance: F,
     ) -> InterpolateResult<()> {
         let _n_data = x_train.nrows();
@@ -153,7 +154,7 @@ where
     }
 
     /// Make predictions at new points
-    pub fn predict(&self, x_test: &ArrayView2<F>) -> InterpolateResult<(Array1<F>, Array1<F>)> {
+    pub fn predict(&self, xtest: &ArrayView2<F>) -> InterpolateResult<(Array1<F>, Array1<F>)> {
         let n_test = x_test.nrows();
 
         // Compute kernel matrices
@@ -244,7 +245,7 @@ where
     }
 
     /// Evaluate kernel function
-    fn kernel_function(&self, dist_sq: F) -> F {
+    fn kernel_function(&self, distsq: F) -> F {
         match self.kernel_params.kernel_type {
             KernelType::RBF => {
                 self.kernel_params.signal_variance * (-F::from_f64(0.5).unwrap() * dist_sq).exp()
@@ -397,8 +398,10 @@ where
     fn compute_elbo(
         &self,
         x_train: &ArrayView2<F>,
-        y_train: &ArrayView1<F>, _k_uu: &Array2<F>,
-        k_fu: &Array2<F>, _a_matrix: &Array2<F>,
+        y_train: &ArrayView1<F>,
+        _k_uu: &Array2<F>,
+        k_fu: &Array2<F>,
+        _a_matrix: &Array2<F>,
     ) -> InterpolateResult<F> {
         let n_data = x_train.nrows();
         let n_inducing = self.inducing_points.nrows();
@@ -472,7 +475,7 @@ where
         let mut _knots = Array1::zeros(n_knots);
         for i in 0..n_knots {
             let t = F::from_usize(i).unwrap() / F::from_usize(n_knots - 1).unwrap();
-            _knots[i] = x_min + t * (x_max - x_min);
+            knots[i] = x_min + t * (x_max - x_min);
         }
 
         // Build design matrix (B-spline basis - simplified)
@@ -504,7 +507,7 @@ where
 
         Ok(Self {
             coefficients,
-            _knots,
+            knots,
             coef_covariance,
             residual_std_error,
             degrees_of_freedom: dof,
@@ -570,8 +573,8 @@ where
     }
 
     /// Build penalty matrix for smoothing
-    fn build_penalty_matrix(_n_knots: usize) -> InterpolateResult<Array2<F>> {
-        let mut penalty = Array2::zeros((_n_knots, _n_knots));
+    fn build_penalty_matrix(_nknots: usize) -> InterpolateResult<Array2<F>> {
+        let mut penalty = Array2::zeros((_n_knots, n_knots));
 
         // Second-order difference penalty (simplified)
         for i in 2.._n_knots {
@@ -688,12 +691,13 @@ where
     F: Float + FromPrimitive + Debug + Display + std::iter::Sum,
 {
     /// Create new advanced bootstrap
-    pub fn new(_method: BootstrapMethod, n_samples: usize, block_size: usize) -> Self {
+    pub fn new(_method: BootstrapMethod, n_samples: usize, blocksize: usize) -> Self {
         Self {
             block_size,
-            _method,
+            method,
             n_samples,
-            seed: None, phantom: PhantomData,
+            seed: None,
+            phantom: PhantomData,
         }
     }
 
@@ -1167,9 +1171,9 @@ where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
 {
     /// Create a new BCa bootstrap
-    pub fn new(_n_bootstrap: usize, confidence_level: F, seed: Option<u64>) -> Self {
+    pub fn new(_n_bootstrap: usize, confidencelevel: F, seed: Option<u64>) -> Self {
         Self {
-            _n_bootstrap,
+            n_bootstrap,
             confidence_level,
             seed,
         }

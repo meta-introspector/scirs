@@ -31,14 +31,14 @@ use std::fmt::Debug;
 /// assert_eq!(arr_f32[0], 1.0f32);
 /// ```
 #[allow(dead_code)]
-pub fn convert<A, B>(_arr: &ArrayView1<A>) -> Array1<B>
+pub fn convert<A, B>(arr: &ArrayView1<A>) -> Array1<B>
 where
     A: Clone + Debug + ToPrimitive + Copy,
     B: Clone + Zero + NumCast + Debug,
 {
-    let mut result = Array1::<B>::zeros(_arr.len());
+    let mut result = Array1::<B>::zeros(arr.len());
 
-    for (i, &val) in _arr.iter().enumerate() {
+    for (i, &val) in arr.iter().enumerate() {
         result[i] = B::from(val).unwrap_or_else(|| {
             // This should never happen with normal floating point conversions
             // between f32 and f64, but we need to handle the case
@@ -72,17 +72,17 @@ where
 /// assert_eq!(arr_f32[[0, 0]], 1.0f32);
 /// ```
 #[allow(dead_code)]
-pub fn convert_2d<A, B>(_arr: &ArrayView2<A>) -> Array2<B>
+pub fn convert_2d<A, B>(arr: &ArrayView2<A>) -> Array2<B>
 where
     A: Clone + Debug + ToPrimitive + Copy,
     B: Clone + Zero + NumCast + Debug,
 {
-    let shape = _arr.shape();
+    let shape = arr.shape();
     let mut result = Array2::<B>::zeros((shape[0], shape[1]));
 
     for i in 0..shape[0] {
         for j in 0..shape[1] {
-            result[[i, j]] = B::from(_arr[[i, j]]).unwrap_or_else(|| B::zero());
+            result[[i, j]] = B::from(arr[[i, j]]).unwrap_or_else(|| B::zero());
         }
     }
 

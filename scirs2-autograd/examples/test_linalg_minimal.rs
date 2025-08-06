@@ -1,5 +1,5 @@
 // Minimal test of linear algebra operations
-use ag::tensor__ops::*;
+use ag::tensor_ops::*;
 use ndarray::array;
 use scirs2_autograd as ag;
 

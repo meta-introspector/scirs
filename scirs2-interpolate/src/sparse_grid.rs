@@ -67,7 +67,7 @@ pub struct MultiIndex {
 
 impl MultiIndex {
     /// Create a new multi-index
-    pub fn new(_indices: Vec<usize>) -> Self {
+    pub fn new(indices: Vec<usize>) -> Self {
         Self { _indices }
     }
 
@@ -87,7 +87,7 @@ impl MultiIndex {
     }
 
     /// Check if this multi-index is admissible for the given level
-    pub fn is_admissible(&self, max_level: usize, _dim: usize) -> bool {
+    pub fn is_admissible(&self, max_level: usize, dim: usize) -> bool {
         self.l1_norm() <= max_level
     }
 }
@@ -185,7 +185,7 @@ where
     }
 
     /// Set the maximum level for the sparse grid
-    pub fn with_max_level(mut self, max_level: usize) -> Self {
+    pub fn with_max_level(mut self, maxlevel: usize) -> Self {
         self.max_level = max_level;
         self
     }
@@ -392,7 +392,7 @@ where
     }
 
     /// Generate tensor product points for a multi-index
-    fn generate_tensor_product_points(&self, multi_idx: &MultiIndex) -> Vec<Vec<F>> {
+    fn generate_tensor_product_points(&self, multiidx: &MultiIndex) -> Vec<Vec<F>> {
         let mut points = vec![Vec::new()];
 
         for (dim, &level) in multi_idx.indices.iter().enumerate() {
@@ -435,7 +435,7 @@ where
     }
 
     /// Convert coordinates to multi-index representation
-    fn coords_to_multi_index(&self, coords: &[F], base_idx: &MultiIndex) -> MultiIndex {
+    fn coords_to_multi_index(&self, coords: &[F], baseidx: &MultiIndex) -> MultiIndex {
         // For simplicity, use a hash-based approach
         let mut indices = base_idx.indices.clone();
 
@@ -453,8 +453,9 @@ where
 
     /// Compute hierarchical surplus for a point
     fn compute_hierarchical_surplus(
-        &self_coords: &[F],
-        value: F_multi, idx: &MultiIndex,
+        self_coords: &[F],
+        value: F_multi,
+        idx: &MultiIndex,
     ) -> InterpolateResult<F> {
         // Simplified surplus computation
         // In a full implementation, this would compute the hierarchical surplus
@@ -636,7 +637,7 @@ where
     }
 
     /// Compute hierarchical weight for interpolation
-    fn compute_hierarchical_weight(&self, query: &[F], grid_point: &[F]) -> F {
+    fn compute_hierarchical_weight(&self, query: &[F], gridpoint: &[F]) -> F {
         let mut weight = F::one();
 
         for i in 0..self.dimension {

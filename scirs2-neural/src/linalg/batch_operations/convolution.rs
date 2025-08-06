@@ -424,7 +424,7 @@ pub fn max_pool2d_backward<F>(
 #[allow(dead_code)]
 pub fn adaptive_avg_pool2d_backward<F>(
     if dout.shape() != [batch_size, channels, output_height, output_width] {
-            format!("Gradient shape mismatch in adaptive_avg_pool2d_backward: dout shape {:?}, expected [{}, {}, {}, {}]",
+            format!("Gradient shape mismatch in adaptive_avg_pool2dbackward: dout shape {:?}, expected [{}, {}, {}, {}]",
                    dout.shape(), batch_size, channels, output_height, output_width)
     // Distribute gradients back to input
                     // Calculate input region that was averaged

@@ -86,7 +86,7 @@ impl<F: IntegrateFloat> BlockILUPreconditioner<F> {
         }
 
         // Compute -h*β*∂f/∂_y
-        let b_block = f_y.mapv(|_x| -h * beta * _x);
+        let b_block = f_y.mapv(|x| -h * beta * x);
 
         // Direct copies of the constraint Jacobians
         let c_block = g_x.clone();
@@ -290,25 +290,25 @@ impl<F: IntegrateFloat> BlockJacobiPreconditioner<F> {
     /// # Arguments
     /// * `jacobian` - The full Jacobian matrix to be preconditioned
     /// * `block_size` - Size of the diagonal blocks (typically related to the physics of the problem)
-    pub fn new(_jacobian: &Array2<F>, block_size: usize) -> Self {
-        let n = _jacobian.shape()[0];
+    pub fn new(jacobian: &Array2<F>, blocksize: usize) -> Self {
+        let n = jacobian.shape()[0];
 
         // Ensure block _size divides the matrix _size evenly
         assert!(
-            n % block_size == 0,
+            n % blocksize == 0,
             "Matrix _size must be divisible by block _size"
         );
 
-        let n_blocks = n / block_size;
+        let n_blocks = n / blocksize;
         let mut block_inverses = Vec::with_capacity(n_blocks);
 
         // Extract and invert each diagonal block
         for i in 0..n_blocks {
-            let start = i * block_size;
-            let end = start + block_size;
+            let start = i * blocksize;
+            let end = start + blocksize;
 
             // Extract the diagonal block
-            let block = _jacobian
+            let block = jacobian
                 .slice(ndarray::s![start..end, start..end])
                 .to_owned();
 
@@ -320,7 +320,7 @@ impl<F: IntegrateFloat> BlockJacobiPreconditioner<F> {
 
         BlockJacobiPreconditioner {
             n,
-            block_size,
+            block_size: blocksize,
             n_blocks,
             block_inverses,
         }
@@ -330,13 +330,13 @@ impl<F: IntegrateFloat> BlockJacobiPreconditioner<F> {
     ///
     /// For small blocks, we can compute the exact inverse.
     /// For larger blocks, we might use an approximate inverse.
-    fn compute_block_inverse(_block: &Array2<F>) -> Array2<F> {
-        let n = _block.shape()[0];
+    fn compute_block_inverse(block: &Array2<F>) -> Array2<F> {
+        let n = block.shape()[0];
         let mut result = Array2::<F>::zeros((n, n));
 
         // For 1x1 blocks, just take the reciprocal
         if n == 1 {
-            let val = _block[[0, 0]];
+            let val = block[[0, 0]];
             if val.abs() < F::from_f64(1e-14).unwrap() {
                 result[[0, 0]] = F::from_f64(1e-14).unwrap() * val.signum();
             } else {
@@ -347,10 +347,10 @@ impl<F: IntegrateFloat> BlockJacobiPreconditioner<F> {
 
         // For 2x2 blocks, use the analytic formula
         if n == 2 {
-            let a = _block[[0, 0]];
-            let b = _block[[0, 1]];
-            let c = _block[[1, 0]];
-            let d = _block[[1, 1]];
+            let a = block[[0, 0]];
+            let b = block[[0, 1]];
+            let c = block[[1, 0]];
+            let d = block[[1, 1]];
 
             let det = a * d - b * c;
             if det.abs() < F::from_f64(1e-14).unwrap() {
@@ -372,15 +372,15 @@ impl<F: IntegrateFloat> BlockJacobiPreconditioner<F> {
         // For 3x3 blocks, still use the analytic formula
         if n == 3 {
             // Extract the _block elements
-            let a = _block[[0, 0]];
-            let b = _block[[0, 1]];
-            let c = _block[[0, 2]];
-            let d = _block[[1, 0]];
-            let e = _block[[1, 1]];
-            let f = _block[[1, 2]];
-            let g = _block[[2, 0]];
-            let h = _block[[2, 1]];
-            let i = _block[[2, 2]];
+            let a = block[[0, 0]];
+            let b = block[[0, 1]];
+            let c = block[[0, 2]];
+            let d = block[[1, 0]];
+            let e = block[[1, 1]];
+            let f = block[[1, 2]];
+            let g = block[[2, 0]];
+            let h = block[[2, 1]];
+            let i = block[[2, 2]];
 
             // Compute the determinant
             let det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
@@ -442,7 +442,7 @@ impl<F: IntegrateFloat> BlockJacobiPreconditioner<F> {
 
         // Start with the identity matrix
         let mut inv = Array2::<F>::eye(n);
-        let mut lu = _block.clone();
+        let mut lu = block.clone();
 
         // Perform Gaussian elimination with pivoting
         for k in 0..n {

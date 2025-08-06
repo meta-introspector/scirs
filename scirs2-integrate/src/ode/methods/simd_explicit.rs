@@ -12,7 +12,7 @@ use ndarray::{Array1, ArrayView1};
 use std::f64::consts::PI;
 
 #[cfg(feature = "simd")]
-use crate::ode::utils::simd__ops::{SimdOdeOps};
+use crate::ode::utils::simd_ops::{SimdOdeOps};
 
 /// SIMD-accelerated 4th-order Runge-Kutta method
 ///

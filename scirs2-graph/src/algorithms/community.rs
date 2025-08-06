@@ -40,7 +40,7 @@ pub struct CommunityResult<N: Node> {
 
 impl<N: Node + Clone + Hash + Eq> CommunityResult<N> {
     /// Create a new CommunityResult from a node-to-community mapping
-    pub fn from_node_map(_node_communities: HashMap<N, usize>) -> Self {
+    pub fn from_node_map(_nodecommunities: HashMap<N, usize>) -> Self {
         let mut _communities: HashMap<usize, HashSet<N>> = HashMap::new();
 
         for (node, comm_id) in &_node_communities {
@@ -50,9 +50,9 @@ impl<N: Node + Clone + Hash + Eq> CommunityResult<N> {
                 .insert(node.clone());
         }
 
-        let mut _communities_vec: Vec<HashSet<N>> = _communities.into_values().collect();
+        let mut communities_vec: Vec<HashSet<N>> = communities.into_values().collect();
         communities_vec.sort_by_key(|c| c.len());
-        communities_vec.reverse(); // Largest _communities first
+        communities_vec.reverse(); // Largest communities first
 
         let num_communities = communities_vec.len();
 
@@ -65,12 +65,12 @@ impl<N: Node + Clone + Hash + Eq> CommunityResult<N> {
     }
 
     /// Create from a CommunityStructure (for backward compatibility)
-    pub fn from_community_structure(_cs: CommunityStructure<N>) -> Self {
+    pub fn from_community_structure(cs: CommunityStructure<N>) -> Self {
         let mut result = Self::from_node_map(_cs.node_communities);
         result.quality_score = Some(_cs.modularity);
         result
             .metadata
-            .insert("modularity".to_string(), _cs.modularity);
+            .insert("modularity".to_string(), cs.modularity);
         result
     }
 
@@ -93,7 +93,7 @@ impl<N: Node + Clone + Hash + Eq> CommunityResult<N> {
     }
 
     /// Get all nodes in a specific community
-    pub fn get_community_members(&self, community_id: usize) -> Option<&HashSet<N>> {
+    pub fn get_community_members(&self, communityid: usize) -> Option<&HashSet<N>> {
         self.communities.get(community_id)
     }
 }
@@ -149,7 +149,7 @@ impl<N: Node + Clone + Hash + Eq> CommunityResult<N> {
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn louvain_communities_result<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> CommunityResult<N>
+pub fn louvain_communities_result<N, E, Ix>(graph: &Graph<N, E, Ix>) -> CommunityResult<N>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
@@ -168,7 +168,7 @@ where
     note = "Use `louvain_communities_result` instead"
 )]
 #[allow(dead_code)]
-pub fn louvain_communities<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> CommunityStructure<N>
+pub fn louvain_communities<N, E, Ix>(graph: &Graph<N, E, Ix>) -> CommunityStructure<N>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
@@ -179,13 +179,13 @@ where
 
 /// Internal implementation of Louvain method
 #[allow(dead_code)]
-fn louvain_communities_legacy<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> CommunityStructure<N>
+fn louvain_communities_legacy<N, E, Ix>(graph: &Graph<N, E, Ix>) -> CommunityStructure<N>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
     Ix: petgraph::graph::IndexType,
 {
-    let n = _graph.node_count();
+    let n = graph.node_count();
     if n == 0 {
         return CommunityStructure {
             node_communities: HashMap::new(),
@@ -194,12 +194,12 @@ where
     }
 
     // Initialize each node in its own community
-    let mut communities: HashMap<petgraph::_graph::NodeIndex<Ix>, usize> = HashMap::new();
-    let mut node_degrees: HashMap<petgraph::_graph::NodeIndex<Ix>, f64> = HashMap::new();
+    let mut communities: HashMap<petgraph::graph::NodeIndex<Ix>, usize> = HashMap::new();
+    let mut node_degrees: HashMap<petgraph::graph::NodeIndex<Ix>, f64> = HashMap::new();
 
     // Calculate node degrees and total weight
     let mut m = 0.0; // Total weight of edges (sum of all edge weights)
-    for edge in _graph.inner().edge_references() {
+    for edge in graph.inner().edge_references() {
         m += (*edge.weight()).into();
     }
 
@@ -209,9 +209,9 @@ where
     }
 
     // Calculate node degrees
-    for node_idx in _graph.inner().node_indices() {
+    for node_idx in graph.inner().node_indices() {
         let mut degree = 0.0;
-        for edge in _graph.inner().edges(node_idx) {
+        for edge in graph.inner().edges(node_idx) {
             degree += (*edge.weight()).into();
         }
         node_degrees.insert(node_idx, degree);
@@ -228,7 +228,7 @@ where
         iterations += 1;
 
         // For each node, try to find a better community
-        for node_idx in _graph.inner().node_indices() {
+        for node_idx in graph.inner().node_indices() {
             let current_community = communities[&node_idx];
             let k_i = node_degrees[&node_idx]; // Degree of node i
 
@@ -237,15 +237,15 @@ where
 
             // Calculate sum of weights to each neighboring community
             let mut community_weights: HashMap<usize, f64> = HashMap::new();
-            for edge in _graph.inner().edges(node_idx) {
+            for edge in graph.inner().edges(node_idx) {
                 let neighbor_idx = edge.target();
                 let neighbor_community = communities[&neighbor_idx];
                 let edge_weight: f64 = (*edge.weight()).into();
-                *community_weights.entry(neighbor_community).or_insert(0.0) += edge_weight;
+                *communityweights.entry(neighbor_community).or_insert(0.0) += edge_weight;
             }
 
             // Add current node as a possible community
-            community_weights.entry(node_idx.index()).or_insert(0.0);
+            communityweights.entry(node_idx.index()).or_insert(0.0);
 
             // Find best community
             let mut best_community = node_idx.index();
@@ -551,20 +551,20 @@ where
 /// # Space Complexity
 /// O(n) for storing degree information and community assignments.
 #[allow(dead_code)]
-pub fn modularity<N, E, Ix>(_graph: &Graph<N, E, Ix>, communities: &HashMap<N, usize>) -> f64
+pub fn modularity<N, E, Ix>(graph: &Graph<N, E, Ix>, communities: &HashMap<N, usize>) -> f64
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Copy,
     Ix: IndexType,
 {
-    let n = _graph.node_count();
+    let n = graph.node_count();
     if n == 0 || communities.is_empty() {
         return 0.0;
     }
 
     // Calculate total edge weight
     let mut m = 0.0;
-    for edge in _graph.inner().edge_references() {
+    for edge in graph.inner().edge_references() {
         m += (*edge.weight()).into();
     }
 
@@ -574,11 +574,11 @@ where
 
     // Calculate node degrees
     let mut node_degrees: HashMap<N, f64> = HashMap::new();
-    for node in _graph.nodes() {
+    for node in graph.nodes() {
         let mut degree = 0.0;
-        if let Ok(neighbors) = _graph.neighbors(node) {
+        if let Ok(neighbors) = graph.neighbors(node) {
             for neighbor in neighbors {
-                if let Ok(weight) = _graph.edge_weight(node, &neighbor) {
+                if let Ok(weight) = graph.edge_weight(node, &neighbor) {
                     degree += weight.into();
                 }
             }
@@ -588,11 +588,11 @@ where
 
     // Calculate modularity
     let mut q = 0.0;
-    for node_i in _graph.nodes() {
-        for node_j in _graph.nodes() {
+    for node_i in graph.nodes() {
+        for node_j in graph.nodes() {
             if communities.get(node_i) == communities.get(node_j) {
                 // Check if edge exists
-                let a_ij = if let Ok(weight) = _graph.edge_weight(node_i, node_j) {
+                let a_ij = if let Ok(weight) = graph.edge_weight(node_i, node_j) {
                     weight.into()
                 } else {
                     0.0
@@ -710,8 +710,8 @@ where
         let accept = if delta > 0.0 {
             true
         } else {
-            // Accept with probability exp(delta / _temp)
-            let prob = (delta / _temp).exp();
+            // Accept with probability exp(delta / temp)
+            let prob = (delta / temp).exp();
             rng.random::<f64>() < prob
         };
 
@@ -1116,9 +1116,9 @@ fn compute_stationary_distribution(
     }
 
     // Initialize with degree-based probabilities
-    let total_weight: f64 = node_weights.iter().sum();
+    let total_weight: f64 = nodeweights.iter().sum();
     let mut pi = if total_weight > 0.0 {
-        node_weights.iter().map(|&w| w / total_weight).collect()
+        nodeweights.iter().map(|&w| w / total_weight).collect()
     } else {
         vec![1.0 / n as f64; n]
     };
@@ -1379,13 +1379,13 @@ where
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(i_)| i)
             .unwrap_or(0);
-        _communities.insert(node.clone(), max_fluid_idx);
+        communities.insert(node.clone(), max_fluid_idx);
     }
 
     // Renumber _communities to be consecutive
     let mut community_map: HashMap<usize, usize> = HashMap::new();
     let mut next_id = 0;
-    for &comm in _communities.values() {
+    for &comm in communities.values() {
         if let std::collections::hash_map::Entry::Vacant(e) = community_map.entry(comm) {
             e.insert(next_id);
             next_id += 1;
@@ -1393,7 +1393,7 @@ where
     }
 
     // Apply renumbering
-    for (_, comm) in _communities.iter_mut() {
+    for (_, comm) in communities.iter_mut() {
         *comm = community_map[comm];
     }
 
@@ -1401,7 +1401,7 @@ where
     let mod_score = modularity(graph, &_communities);
 
     CommunityStructure {
-        node_communities: _communities,
+        node_communities: communities,
         modularity: mod_score,
     }
 }
@@ -1824,7 +1824,8 @@ where
 )]
 #[allow(dead_code)]
 pub fn parallel_louvain_communities<N, E, Ix>(
-    graph: &Graph<N, E, Ix>, _max_iterations: usize,
+    graph: &Graph<N, E, Ix>,
+    _max_iterations: usize,
 ) -> CommunityStructure<N>
 where
     N: Node + Send + Sync + std::fmt::Debug,
@@ -1834,7 +1835,11 @@ where
     let nodes: Vec<N> = graph.node_indices().map(|idx| graph[idx].clone()).collect();
 
     // Calculate total edge weight
-    let m: f64 = graph.edge_indices().map(|idx| graph[idx].into()).sum::<f64>() / 2.0;
+    let m: f64 = graph
+        .edge_indices()
+        .map(|idx| graph[idx].into())
+        .sum::<f64>()
+        / 2.0;
 
     if m == 0.0 {
         // No edges, each node is its own community
@@ -2571,7 +2576,7 @@ mod tests {
 
         // Check dimensions
         assert_eq!(transition_matrix.len(), 3);
-        assert_eq!(node_weights.len(), 3);
+        assert_eq!(nodeweights.len(), 3);
 
         // Check that rows sum to 1 (or 0 for isolated nodes)
         for (i, row) in transition_matrix.iter().enumerate() {

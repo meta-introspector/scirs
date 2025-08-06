@@ -63,7 +63,7 @@ pub fn stability_metrics<F: IntegrateFloat>(t: &[F], y: &[Array1<F>]) -> F {
 ///
 /// A stiffness score (higher values indicate more stiffness)
 #[allow(dead_code)]
-pub fn stiffness_detector<F, Func>(t: &[F], y: &[Array1<F>], _f: &Func) -> F
+pub fn stiffness_detector<F, Func>(t: &[F], y: &[Array1<F>], f: &Func) -> F
 where
     F: IntegrateFloat,
     Func: Fn(F, ArrayView1<F>) -> Array1<F>,

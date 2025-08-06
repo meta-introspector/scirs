@@ -164,7 +164,7 @@ pub fn profile_fft_2d() -> Vec<MemoryProfile> {
 
 /// Generate memory usage report
 #[allow(dead_code)]
-pub fn generate_memory_report(_profiles: &[MemoryProfile]) {
+pub fn generate_memory_report(profiles: &[MemoryProfile]) {
     println!("=== Memory Usage Report ===");
     println!("Operation | Size | Est. Memory (MB) | Time (ms)");
     println!("{}", "-".repeat(70));

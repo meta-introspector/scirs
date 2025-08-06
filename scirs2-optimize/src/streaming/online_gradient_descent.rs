@@ -66,12 +66,12 @@ pub struct ByzantineFaultDetector {
 }
 
 impl ByzantineFaultDetector {
-    pub fn new(_fault_threshold: f64) -> Self {
+    pub fn new(_faultthreshold: f64) -> Self {
         Self {
             reputation_scores: HashMap::new(),
             suspicion_counters: HashMap::new(),
             deviation_history: HashMap::new(),
-            fault_threshold: _fault_threshold,
+            fault_threshold: fault_threshold,
             recovery_period: Duration::from_secs(300), // 5 minutes recovery
             last_detection_times: HashMap::new(),
         }
@@ -128,7 +128,7 @@ impl ByzantineFaultDetector {
     }
 
     /// Check if a node is currently suspected of Byzantine behavior
-    pub fn is_byzantine_suspected(&self, node_id: usize, current_time: Instant) -> bool {
+    pub fn is_byzantine_suspected(&self, node_id: usize, currenttime: Instant) -> bool {
         if let Some(&last_detection) = self.last_detection_times.get(&node_id) {
             if current_time.duration_since(last_detection) < self.recovery_period {
                 return true;
@@ -138,7 +138,7 @@ impl ByzantineFaultDetector {
     }
 
     /// Get trust weight for a node based on reputation
-    pub fn get_trust_weight(&self, node_id: usize) -> f64 {
+    pub fn get_trust_weight(&self, nodeid: usize) -> f64 {
         self.reputation_scores.get(&node_id).copied().unwrap_or(1.0)
     }
 }
@@ -163,13 +163,13 @@ pub struct ConsensusVotingState {
 }
 
 impl ConsensusVotingState {
-    pub fn new(_consensus_threshold: f64) -> Self {
+    pub fn new(_consensusthreshold: f64) -> Self {
         Self {
             round: 0,
             proposals: HashMap::new(),
             votes: HashMap::new(),
             voting_weights: HashMap::new(),
-            consensus_threshold: _consensus_threshold,
+            consensus_threshold: consensus_threshold,
             round_timeout: Duration::from_millis(100),
             round_start: None,
         }
@@ -184,13 +184,13 @@ impl ConsensusVotingState {
     }
 
     /// Add a parameter proposal
-    pub fn add_proposal(&mut self, node_id: usize, parameters: Array1<f64>) {
+    pub fn add_proposal(&mut self, nodeid: usize, parameters: Array1<f64>) {
         self.proposals.insert(node_id, parameters);
     }
 
     /// Cast a vote for a proposal
-    pub fn vote(&mut self, voter_id: usize, proposal_id: usize, weight: f64) {
-        self.voting_weights.insert(voter_id, weight);
+    pub fn vote(&mut self, voter_id: usize, proposalid: usize, weight: f64) {
+        self.votingweights.insert(voter_id, weight);
         self.votes.entry(proposal_id).or_default().push(voter_id);
     }
 
@@ -202,7 +202,7 @@ impl ConsensusVotingState {
         for (&proposal_id, voters) in &self.votes {
             let total_weight: f64 = voters
                 .iter()
-                .map(|&voter| self.voting_weights.get(&voter).copied().unwrap_or(1.0))
+                .map(|&voter| self.votingweights.get(&voter).copied().unwrap_or(1.0))
                 .sum();
 
             if total_weight > best_weight && total_weight >= self.consensus_threshold {
@@ -242,11 +242,11 @@ pub struct NetworkTopology {
 }
 
 impl NetworkTopology {
-    pub fn new(_num_nodes: usize) -> Self {
+    pub fn new(_numnodes: usize) -> Self {
         Self {
-            adjacency_matrix: Array2::zeros((_num_nodes, _num_nodes)),
-            delay_matrix: Array2::zeros((_num_nodes, _num_nodes)),
-            bandwidth_matrix: Array2::from_elem((_num_nodes, _num_nodes), 1.0),
+            adjacency_matrix: Array2::zeros((_num_nodes, num_nodes)),
+            delay_matrix: Array2::zeros((_num_nodes, num_nodes)),
+            bandwidth_matrix: Array2::from_elem((_num_nodes, num_nodes), 1.0),
             active_connections: HashMap::new(),
             reliability_scores: HashMap::new(),
         }
@@ -272,7 +272,7 @@ impl NetworkTopology {
     }
 
     /// Get neighbors of a node
-    pub fn get_neighbors(&self, node_id: usize) -> Vec<usize> {
+    pub fn get_neighbors(&self, nodeid: usize) -> Vec<usize> {
         self.active_connections
             .get(&node_id)
             .cloned()
@@ -442,7 +442,7 @@ impl FederatedAveragingState {
     }
 
     /// Add gradient from a peer node
-    pub fn add_peer_gradient(&mut self, peer_id: usize, gradient: Array1<f64>, data_count: usize) {
+    pub fn add_peer_gradient(&mut self, peer_id: usize, gradient: Array1<f64>, datacount: usize) {
         self.peer_gradients.insert(peer_id, gradient);
         self.peer_data_counts.insert(peer_id, data_count);
         self.last_updates.insert(peer_id, Instant::now());
@@ -451,12 +451,12 @@ impl FederatedAveragingState {
         let total_data: usize = self.peer_data_counts.values().sum();
         if total_data > 0 {
             let weight = data_count as f64 / total_data as f64;
-            self.peer_weights.insert(peer_id, weight);
+            self.peerweights.insert(peer_id, weight);
         }
     }
 
     /// Compute federated average gradient
-    pub fn compute_federated_gradient(&self, current_time: Instant) -> Option<Array1<f64>> {
+    pub fn compute_federated_gradient(&self, currenttime: Instant) -> Option<Array1<f64>> {
         if self.peer_gradients.is_empty() {
             return None;
         }
@@ -472,7 +472,7 @@ impl FederatedAveragingState {
                 }
             }
 
-            let weight = self.peer_weights.get(&peer_id).copied().unwrap_or(1.0);
+            let weight = self.peerweights.get(&peer_id).copied().unwrap_or(1.0);
 
             if let Some(ref mut sum) = weighted_sum {
                 *sum = &*sum + &(weight * gradient);
@@ -533,12 +533,12 @@ impl NetworkSynchronizationState {
     }
 
     /// Update clock offset for a node
-    pub fn update_clock_offset(&mut self, node_id: usize, offset: Duration) {
+    pub fn update_clock_offset(&mut self, nodeid: usize, offset: Duration) {
         self.clock_offsets.insert(node_id, offset);
     }
 
     /// Get synchronized timestamp
-    pub fn get_synchronized_time(&self, node_id: usize) -> Instant {
+    pub fn get_synchronized_time(&self, nodeid: usize) -> Instant {
         let now = Instant::now();
         if let Some(&offset) = self.clock_offsets.get(&node_id) {
             now - offset
@@ -587,7 +587,7 @@ impl<T: StreamingObjective + Clone> AdvancedAdvancedDistributedOnlineGD<T> {
     }
 
     /// Initialize network topology with peers
-    pub fn setup_network_topology(&mut self, peer_connections: &[(usize, usize, f64, f64)]) {
+    pub fn setup_network_topology(&mut self, peerconnections: &[(usize, usize, f64, f64)]) {
         for &(node1, node2, weight, delay) in peer_connections {
             self.consensus_node
                 .network_topology
@@ -714,7 +714,7 @@ impl<T: StreamingObjective + Clone> AdvancedAdvancedDistributedOnlineGD<T> {
         Ok(())
     }
 
-    fn handle_byzantine_alert(&mut self, suspected_node: usize, evidence: ByzantineEvidence) {
+    fn handle_byzantine_alert(&mut self, suspectednode: usize, evidence: ByzantineEvidence) {
         // Reduce trust in suspected _node
         let current_trust = self
             .consensus_node
@@ -841,7 +841,7 @@ impl<T: StreamingObjective + Clone> AdvancedAdvancedDistributedOnlineGD<T> {
 }
 
 impl<T: StreamingObjective + Clone> StreamingOptimizer for AdvancedAdvancedDistributedOnlineGD<T> {
-    fn update(&mut self, data_point: &StreamingDataPoint) -> Result<()> {
+    fn update(&mut self, datapoint: &StreamingDataPoint) -> Result<()> {
         let start_time = Instant::now();
 
         // Compute local gradient

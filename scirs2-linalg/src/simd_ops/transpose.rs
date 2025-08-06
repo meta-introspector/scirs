@@ -24,9 +24,9 @@ use scirs2_core::simd_ops::SimdUnifiedOps;
 /// * Transposed matrix
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_transpose_f32(_matrix: &ArrayView2<f32>) -> LinalgResult<Array2<f32>> {
+pub fn simd_transpose_f32(matrix: &ArrayView2<f32>) -> LinalgResult<Array2<f32>> {
     // Use unified SIMD transpose operation
-    Ok(f32::simd_transpose(_matrix))
+    Ok(f32::simd_transpose(matrix))
 }
 
 /// SIMD-accelerated matrix transpose for f64 values
@@ -42,9 +42,9 @@ pub fn simd_transpose_f32(_matrix: &ArrayView2<f32>) -> LinalgResult<Array2<f32>
 /// * Transposed matrix
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_transpose_f64(_matrix: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
+pub fn simd_transpose_f64(matrix: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
     // Use unified SIMD transpose operation
-    Ok(f64::simd_transpose(_matrix))
+    Ok(f64::simd_transpose(matrix))
 }
 
 // Note: Block transpose helper functions have been removed as we now use unified SIMD operations from scirs2-core
@@ -63,12 +63,12 @@ pub fn simd_transpose_f64(_matrix: &ArrayView2<f64>) -> LinalgResult<Array2<f64>
 /// * Result indicating success or failure
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_transpose_inplace_f32(_matrix: &mut Array2<f32>) -> LinalgResult<()> {
-    let (rows, cols) = _matrix.dim();
+pub fn simd_transpose_inplace_f32(matrix: &mut Array2<f32>) -> LinalgResult<()> {
+    let (rows, cols) = matrix.dim();
 
     if rows != cols {
         return Err(LinalgError::ShapeError(format!(
-            "In-place transpose requires square _matrix, got shape ({rows}, {cols})"
+            "In-place transpose requires square matrix, got shape ({rows}, {cols})"
         )));
     }
 
@@ -77,9 +77,9 @@ pub fn simd_transpose_inplace_f32(_matrix: &mut Array2<f32>) -> LinalgResult<()>
     let n = rows;
     for i in 0..n {
         for j in (i + 1)..n {
-            let temp = _matrix[[i, j]];
-            _matrix[[i, j]] = _matrix[[j, i]];
-            _matrix[[j, i]] = temp;
+            let temp = matrix[[i, j]];
+            matrix[[i, j]] = matrix[[j, i]];
+            matrix[[j, i]] = temp;
         }
     }
 
@@ -100,12 +100,12 @@ pub fn simd_transpose_inplace_f32(_matrix: &mut Array2<f32>) -> LinalgResult<()>
 /// * Result indicating success or failure
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_transpose_inplace_f64(_matrix: &mut Array2<f64>) -> LinalgResult<()> {
-    let (rows, cols) = _matrix.dim();
+pub fn simd_transpose_inplace_f64(matrix: &mut Array2<f64>) -> LinalgResult<()> {
+    let (rows, cols) = matrix.dim();
 
     if rows != cols {
         return Err(LinalgError::ShapeError(format!(
-            "In-place transpose requires square _matrix, got shape ({rows}, {cols})"
+            "In-place transpose requires square matrix, got shape ({rows}, {cols})"
         )));
     }
 
@@ -114,9 +114,9 @@ pub fn simd_transpose_inplace_f64(_matrix: &mut Array2<f64>) -> LinalgResult<()>
     let n = rows;
     for i in 0..n {
         for j in (i + 1)..n {
-            let temp = _matrix[[i, j]];
-            _matrix[[i, j]] = _matrix[[j, i]];
-            _matrix[[j, i]] = temp;
+            let temp = matrix[[i, j]];
+            matrix[[i, j]] = matrix[[j, i]];
+            matrix[[j, i]] = temp;
         }
     }
 

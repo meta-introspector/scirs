@@ -161,7 +161,7 @@ impl BenchmarkConfig {
     }
 
     /// Set sample sizes
-    pub fn with_sample_sizes(mut self, sample_sizes: Vec<usize>) -> Self {
+    pub fn with_sample_sizes(mut self, samplesizes: Vec<usize>) -> Self {
         self.sample_sizes = sample_sizes;
         self
     }
@@ -190,7 +190,7 @@ pub struct BenchmarkMeasurement {
 
 impl BenchmarkMeasurement {
     /// Create a new benchmark measurement
-    pub fn new(execution_time: Duration) -> Self {
+    pub fn new(executiontime: Duration) -> Self {
         Self {
             execution_time,
             duration: execution_time,
@@ -222,7 +222,7 @@ impl BenchmarkMeasurement {
     }
 
     /// Set input size
-    pub fn with_input_size(mut self, input_size: usize) -> Self {
+    pub fn with_input_size(mut self, inputsize: usize) -> Self {
         self.input_size = input_size;
         self
     }
@@ -311,13 +311,13 @@ impl BenchmarkResult {
     }
 
     /// Get throughput in operations per second
-    pub fn get_throughput(&self, operations_per_iteration: u64) -> f64 {
-        let avg_time_seconds = self.statistics.mean_execution_time.as_secs_f64();
+    pub fn get_throughput(&self, operations_periteration: u64) -> f64 {
+        let avg_time_seconds = self.statistics.meanexecution_time.as_secs_f64();
         operations_per_iteration as f64 / avg_time_seconds
     }
 
     /// Get memory efficiency (operations per MB)
-    pub fn get_memory_efficiency(&self, operations_per_iteration: u64) -> f64 {
+    pub fn get_memory_efficiency(&self, operations_periteration: u64) -> f64 {
         if self.statistics.mean_memory_usage == 0 {
             return f64::INFINITY;
         }
@@ -330,15 +330,15 @@ impl BenchmarkResult {
 #[derive(Debug, Clone, Default)]
 pub struct BenchmarkStatistics {
     /// Mean execution time
-    pub mean_execution_time: Duration,
+    pub meanexecution_time: Duration,
     /// Median execution time
-    pub median_execution_time: Duration,
+    pub medianexecution_time: Duration,
     /// Standard deviation of execution times
-    pub std_dev_execution_time: Duration,
+    pub std_devexecution_time: Duration,
     /// Minimum execution time
-    pub min_execution_time: Duration,
+    pub minexecution_time: Duration,
     /// Maximum execution time
-    pub max_execution_time: Duration,
+    pub maxexecution_time: Duration,
     /// Coefficient of variation for execution time
     pub coefficient_of_variation: f64,
     /// 95% confidence interval for mean
@@ -371,9 +371,9 @@ impl BenchmarkStatistics {
             .map(|d| d.as_nanos() as f64)
             .sum::<f64>()
             / execution_times.len() as f64;
-        let mean_execution_time = Duration::from_nanos(mean_nanos as u64);
+        let meanexecution_time = Duration::from_nanos(mean_nanos as u64);
 
-        let median_execution_time = if execution_times.len() % 2 == 0 {
+        let medianexecution_time = if execution_times.len() % 2 == 0 {
             let mid = execution_times.len() / 2;
             Duration::from_nanos(
                 ((execution_times[mid - 1].as_nanos() + execution_times[mid].as_nanos()) / 2)
@@ -391,10 +391,10 @@ impl BenchmarkStatistics {
             })
             .sum::<f64>()
             / execution_times.len() as f64;
-        let std_dev_execution_time = Duration::from_nanos(variance.sqrt() as u64);
+        let std_devexecution_time = Duration::from_nanos(variance.sqrt() as u64);
 
-        let min_execution_time = execution_times[0];
-        let max_execution_time = execution_times[execution_times.len() - 1];
+        let minexecution_time = execution_times[0];
+        let maxexecution_time = execution_times[execution_times.len() - 1];
 
         let coefficient_of_variation = if mean_nanos > 0.0 {
             (variance.sqrt()) / mean_nanos
@@ -404,11 +404,11 @@ impl BenchmarkStatistics {
 
         // Compute 95% confidence interval (assuming normal distribution)
         let t_value = 1.96; // For 95% confidence with large sample size
-        let standard_error = variance.sqrt() / (execution_times.len() as f64).sqrt();
-        let margin_of_error = t_value * standard_error;
+        let standarderror = variance.sqrt() / (execution_times.len() as f64).sqrt();
+        let margin_oferror = t_value * standarderror;
         let confidence_interval = (
-            Duration::from_nanos((mean_nanos - margin_of_error).max(0.0) as u64),
-            Duration::from_nanos((mean_nanos + margin_of_error) as u64),
+            Duration::from_nanos((mean_nanos - margin_oferror).max(0.0) as u64),
+            Duration::from_nanos((mean_nanos + margin_oferror) as u64),
         );
 
         // Memory statistics
@@ -427,11 +427,11 @@ impl BenchmarkStatistics {
             / measurements.len() as f64;
 
         Ok(BenchmarkStatistics {
-            mean_execution_time,
-            median_execution_time,
-            std_dev_execution_time,
-            min_execution_time,
-            max_execution_time,
+            meanexecution_time,
+            medianexecution_time,
+            std_devexecution_time,
+            minexecution_time,
+            maxexecution_time,
             coefficient_of_variation,
             confidence_interval,
             mean_memory_usage: mean_memory as usize,
@@ -441,7 +441,7 @@ impl BenchmarkStatistics {
     }
 
     /// Check if the measurements are statistically reliable
-    pub fn is_reliable(&self, max_cv: f64) -> bool {
+    pub fn is_reliable(&self, maxcv: f64) -> bool {
         self.coefficient_of_variation <= max_cv && self.sample_count >= 10
     }
 
@@ -475,7 +475,7 @@ impl BenchmarkRunner {
     }
 
     /// Run a benchmark function
-    pub fn run<F, T>(&self, name: &str, mut benchmark_fn: F) -> CoreResult<BenchmarkResult>
+    pub fn run<F, T>(&self, name: &str, mut benchmarkfn: F) -> CoreResult<BenchmarkResult>
     where
         F: FnMut() -> CoreResult<T>,
     {
@@ -697,7 +697,7 @@ impl BenchmarkSuite {
     }
 
     /// Add a benchmark to the suite
-    pub fn add_benchmark<F>(&mut self, benchmark_fn: F)
+    pub fn add_benchmark<F>(&mut self, benchmarkfn: F)
     where
         F: Fn(&BenchmarkRunner) -> CoreResult<BenchmarkResult> + Send + Sync + 'static,
     {
@@ -719,8 +719,8 @@ impl BenchmarkSuite {
                     println!(
                         "  {} completed: {:.3}ms ± {:.3}ms",
                         result.name,
-                        result.statistics.mean_execution_time.as_millis(),
-                        result.statistics.std_dev_execution_time.as_millis()
+                        result.statistics.meanexecution_time.as_millis(),
+                        result.statistics.std_devexecution_time.as_millis()
                     );
                     results.push(result);
                 }
@@ -752,7 +752,7 @@ impl BenchmarkSuite {
                 "{} {}: {:.3}ms (CV: {:.2}%)",
                 quality_indicator,
                 result.name,
-                result.statistics.mean_execution_time.as_millis(),
+                result.statistics.meanexecution_time.as_millis(),
                 result.statistics.coefficient_of_variation * 100.0
             );
 
@@ -864,7 +864,7 @@ pub struct PerformanceBottleneck {
 impl PerformanceBottleneck {
     /// Create a new performance bottleneck
     #[allow(dead_code)]
-    pub fn new(bottleneck_type: BottleneckType) -> Self {
+    pub fn new(bottlenecktype: BottleneckType) -> Self {
         Self {
             bottleneck_type,
             severity: 0.0,
@@ -917,7 +917,7 @@ pub struct BenchmarkResults {
 impl BenchmarkResults {
     /// Create a new benchmark results
     #[allow(dead_code)]
-    pub fn new(operation_name: String) -> Self {
+    pub fn new(operationname: String) -> Self {
         Self {
             operation_name,
             measurements: Vec::new(),
@@ -1135,8 +1135,8 @@ mod tests {
         let stats = BenchmarkStatistics::from_measurements(&measurements).unwrap();
 
         assert_eq!(stats.sample_count, 4);
-        assert!(stats.mean_execution_time > Duration::from_millis(95));
-        assert!(stats.mean_execution_time < Duration::from_millis(110));
+        assert!(stats.meanexecution_time > Duration::from_millis(95));
+        assert!(stats.meanexecution_time < Duration::from_millis(110));
         assert!(stats.coefficient_of_variation > 0.0);
     }
 
@@ -1157,6 +1157,6 @@ mod tests {
 
         assert_eq!(result.name, "test_benchmark");
         assert_eq!(result.measurements.len(), 5);
-        assert!(result.statistics.mean_execution_time > Duration::from_micros(50));
+        assert!(result.statistics.meanexecution_time > Duration::from_micros(50));
     }
 }

@@ -61,15 +61,15 @@ pub struct TestEvaluator<F: Float + Debug + ScalarOperand + FromPrimitive + Send
     prediction_outputs: Option<PredictionOutput<F>>,
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> TestEvaluator<F> {
     /// Create a new test set evaluator
-    pub fn new(_config: TestConfig) -> Result<Self> {
+    pub fn new(config: TestConfig) -> Result<Self> {
         // Create evaluator
         let eval_config = EvaluationConfig {
-            batch_size: _config.batch_size,
+            batch_size: config.batch_size,
             shuffle: false,
-            num_workers: _config.num_workers,
-            metrics: _config.metrics.clone(),
-            steps: _config.steps,
-            verbose: _config.verbose,
+            num_workers: config.num_workers,
+            metrics: config.metrics.clone(),
+            steps: config.steps,
+            verbose: config.verbose,
         };
         let evaluator = Evaluator::new(eval_config)?;
         Ok(Self {

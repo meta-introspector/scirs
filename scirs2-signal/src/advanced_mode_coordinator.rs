@@ -105,9 +105,9 @@ impl AdvancedCoordinator {
     }
 
     /// Create a new Advanced coordinator with custom configuration
-    pub fn with_config(_config: AdvancedConfig) -> Self {
+    pub fn with_config(config: AdvancedConfig) -> Self {
         Self {
-            _config,
+            config: config,
             performance_history: Vec::new(),
         }
     }
@@ -496,6 +496,7 @@ pub fn run_advanced_validation_with_config(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_advanced_coordinator_creation() {

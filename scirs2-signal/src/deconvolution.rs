@@ -1,7 +1,7 @@
-use ndarray::s;
 use crate::convolve;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2, Array3};
+use ndarray::s;
+use ndarray::{Array1, Array2, Array3};
 use rustfft::{num_complex::Complex, FftPlanner};
 
 // Signal deconvolution module
@@ -1454,7 +1454,7 @@ pub fn blind_deconvolution_2d(
 
 /// Helper function to create a Gaussian kernel for a PSF
 #[allow(dead_code)]
-fn create_gaussian_kernel(_size: usize) -> Array1<f64> {
+fn create_gaussian_kernel(size: usize) -> Array1<f64> {
     let half_size = _size as isize / 2;
     let mut kernel = Array1::<f64>::zeros(_size);
 
@@ -1477,7 +1477,7 @@ fn create_gaussian_kernel(_size: usize) -> Array1<f64> {
 
 /// Helper function to create a 2D Gaussian kernel for a PSF
 #[allow(dead_code)]
-fn create_gaussian_kernel_2d(_height: usize, width: usize) -> Array2<f64> {
+fn create_gaussian_kernel_2d(height: usize, width: usize) -> Array2<f64> {
     let half_h = _height as isize / 2;
     let half_w = width as isize / 2;
     let mut kernel = Array2::<f64>::zeros((_height, width));
@@ -1506,27 +1506,27 @@ fn create_gaussian_kernel_2d(_height: usize, width: usize) -> Array2<f64> {
 
 /// Helper function to apply Gaussian filtering to a 1D signal
 #[allow(dead_code)]
-fn gaussian_filter_1d(_signal: &Array1<f64>, sigma: f64) -> Array1<f64> {
-    let _n = _signal.len();
+fn gaussian_filter_1d(signal: &Array1<f64>, sigma: f64) -> Array1<f64> {
+    let _n = signal.len();
     let kernel_size = (6.0 * sigma).ceil() as usize;
     let kernel_size = kernel_size + (1 - kernel_size % 2); // Ensure odd size
 
     let kernel = create_gaussian_kernel(kernel_size);
 
     match convolve::convolve(
-        _signal.as_slice().unwrap(),
+        signal.as_slice().unwrap(),
         kernel.as_slice().unwrap(),
         "same",
     ) {
         Ok(filtered) => Array1::from_vec(filtered),
-        Err(_) => _signal.clone(),
+        Err(_) => signal.clone(),
     }
 }
 
 /// Helper function to apply Gaussian filtering to a 2D image
 #[allow(dead_code)]
-fn gaussian_filter_2d(_image: &Array2<f64>, sigma: f64) -> Array2<f64> {
-    let (_height_width) = _image.dim();
+fn gaussian_filter_2d(image: &Array2<f64>, sigma: f64) -> Array2<f64> {
+    let (_height_width) = image.dim();
     let kernel_size = (6.0 * sigma).ceil() as usize;
     let kernel_size = kernel_size + (1 - kernel_size % 2); // Ensure odd size
 
@@ -1534,7 +1534,7 @@ fn gaussian_filter_2d(_image: &Array2<f64>, sigma: f64) -> Array2<f64> {
 
     match convolve::convolve2d(_image, &kernel, "same") {
         Ok(filtered) => filtered,
-        Err(_) => _image.clone(),
+        Err(_) => image.clone(),
     }
 }
 
@@ -1693,11 +1693,11 @@ pub fn estimate_regularization_param(
             let h_abs_sq = h.norm_sqr();
 
             // Filter diagonal element (for effective degrees of freedom)
-            let filter_elem = h_abs_sq / (h_abs_sq + _param);
+            let filter_elem = h_abs_sq / (h_abs_sq + param);
             filter_diag[i] = filter_elem;
 
             // Apply filter to signal
-            let denom = h_abs_sq + _param;
+            let denom = h_abs_sq + param;
             if denom > 1e-10 {
                 result_complex[i] = signal_complex[i] * h_conj / denom;
             } else {
@@ -1740,7 +1740,7 @@ pub fn estimate_regularization_param(
 
         if gcv < min_gcv {
             min_gcv = gcv;
-            best_param = _param;
+            best_param = param;
         }
     }
 
@@ -1785,7 +1785,7 @@ pub fn optimal_deconvolution_1d(
         DeconvolutionMethod::CLEAN => clean_deconvolution_1d(signal, psf, 0.1, 0.01, config),
         DeconvolutionMethod::MaximumEntropy => mem_deconvolution_1d(signal, psf, reg_param, config),
         DeconvolutionMethod::Blind => {
-            let (deconvolved_) = blind_deconvolution_1d(signal, psf.len(), config)?;
+            let (deconvolved, _) = blind_deconvolution_1d(signal, psf.len(), config)?;
             Ok(deconvolved)
         }
     }

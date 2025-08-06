@@ -21,10 +21,10 @@ use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use rand::Rng;
+use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
-use statrs::statistics::Statistics;
 
 /// Quantum-inspired amplitude for representing processing states
 #[derive(Debug, Clone)]
@@ -37,8 +37,8 @@ pub struct QuantumAmplitude {
 
 impl QuantumAmplitude {
     /// Create a new quantum amplitude
-    pub fn new(_real: f64, imaginary: f64) -> Self {
-        Self { _real, imaginary }
+    pub fn new(real: f64, imaginary: f64) -> Self {
+        Self { real, imaginary }
     }
 
     /// Calculate the probability (amplitude squared)
@@ -71,7 +71,7 @@ pub struct QuantumProcessingState {
 
 impl QuantumProcessingState {
     /// Create a new quantum processing state
-    pub fn new(_stage_names: &[String]) -> Self {
+    pub fn new(_stagenames: &[String]) -> Self {
         let mut stage_amplitudes = HashMap::new();
 
         // Initialize amplitudes in superposition
@@ -92,7 +92,7 @@ impl QuantumProcessingState {
     }
 
     /// Apply quantum evolution to the state with entanglement effects
-    pub fn evolve(&mut self, time_step: f64, hamiltonian: &QuantumHamiltonian) {
+    pub fn evolve(&mut self, timestep: f64, hamiltonian: &QuantumHamiltonian) {
         // Advanced quantum evolution with entanglement and decoherence
         // |ψ(t+dt)⟩ = exp(-iHdt/ℏ)|ψ(t)⟩ with entanglement coupling
 
@@ -165,11 +165,11 @@ impl QuantumProcessingState {
     }
 
     /// Get the index of a stage name for matrix operations
-    fn get_stage_index(&self, stage_name: &str) -> Option<usize> {
+    fn get_stage_index(&self, stagename: &str) -> Option<usize> {
         self.stage_amplitudes
             .keys()
             .enumerate()
-            .find(|(_, _name)| _name.as_str() == stage_name)
+            .find(|(_, name)| name.as_str() == stage_name)
             .map(|(index_)| index)
     }
 
@@ -316,7 +316,7 @@ pub struct QuantumHamiltonian {
 
 impl QuantumHamiltonian {
     /// Create a new quantum Hamiltonian
-    pub fn new(_stage_names: &[String]) -> Self {
+    pub fn new(_stagenames: &[String]) -> Self {
         let mut stage_energies = HashMap::new();
         let mut external_fields = HashMap::new();
 
@@ -338,7 +338,7 @@ impl QuantumHamiltonian {
     }
 
     /// Update energies based on performance metrics
-    pub fn update_energies(&mut self, performance_metrics: &HashMap<String, f64>) {
+    pub fn update_energies(&mut self, performancemetrics: &HashMap<String, f64>) {
         for (stage_name, &performance) in performance_metrics {
             if let Some(energy) = self.stage_energies.get_mut(stage_name) {
                 // Higher performance = lower energy (more favorable)
@@ -378,7 +378,7 @@ pub struct QuantumStreamProcessor {
 
 impl QuantumStreamProcessor {
     /// Create a new quantum stream processor
-    pub fn new(_stage_names: Vec<String>) -> Self {
+    pub fn new(_stagenames: Vec<String>) -> Self {
         let quantum_state = QuantumProcessingState::new(&_stage_names);
         let hamiltonian = QuantumHamiltonian::new(&_stage_names);
         let performance_history = HashMap::new();
@@ -386,7 +386,7 @@ impl QuantumStreamProcessor {
         Self {
             quantum_state,
             hamiltonian,
-            _stage_names,
+            stage_names,
             performance_history,
             time_step: 0.01,
             last_measurement: Instant::now(),
@@ -437,7 +437,7 @@ impl QuantumStreamProcessor {
                 ];
 
                 let mut interference_value = 0.0;
-                for (pixel, weight) in neighbors.iter().zip(interference_weights.iter()) {
+                for (pixel, weight) in neighbors.iter().zip(interferenceweights.iter()) {
                     // Apply quantum phase based on pixel position
                     let phase = (x as f64 * 0.1 + y as f64 * 0.1) * self.quantum_state.global_phase;
                     let quantum_factor = (phase.cos() + 1.0) * 0.5; // Normalize to [0,1]
@@ -457,7 +457,7 @@ impl QuantumStreamProcessor {
     }
 
     /// Update performance metrics for adaptive optimization
-    pub fn update_performance(&mut self, stage_name: &str, performance: f64) {
+    pub fn update_performance(&mut self, stagename: &str, performance: f64) {
         self.performance_history
             .entry(stage_name.to_string())
             .or_default()
@@ -517,13 +517,13 @@ pub struct QuantumAnnealingStage {
 
 impl QuantumAnnealingStage {
     /// Create a new quantum annealing stage
-    pub fn new(_initial_parameters: HashMap<String, f64>) -> Self {
-        let best_parameters = _initial_parameters.clone();
+    pub fn new(_initialparameters: HashMap<String, f64>) -> Self {
+        let best_parameters = initial_parameters.clone();
 
         Self {
             temperature: 100.0,
             cooling_rate: 0.99,
-            _parameters: _initial_parameters,
+            _parameters: initial_parameters,
             best_parameters,
             best_cost: f64::INFINITY,
             step_counter: 0,
@@ -531,7 +531,7 @@ impl QuantumAnnealingStage {
     }
 
     /// Perform one annealing step
-    pub fn anneal_step(&mut self, cost_function: impl Fn(&HashMap<String, f64>) -> f64) -> f64 {
+    pub fn anneal_step(&mut self, costfunction: impl Fn(&HashMap<String, f64>) -> f64) -> f64 {
         let current_cost = cost_function(&self.parameters);
 
         // Generate neighbor solution
@@ -630,7 +630,7 @@ pub struct QuantumEntanglementStage {
 
 impl QuantumEntanglementStage {
     /// Create a new quantum entanglement stage
-    pub fn new(_feature_dimension: usize, entanglement_strength: f64) -> Self {
+    pub fn new(_feature_dimension: usize, entanglementstrength: f64) -> Self {
         Self {
             correlation_matrix: Array2::eye(_feature_dimension),
             entanglement_strength,
@@ -835,7 +835,7 @@ struct ProcessingVariant {
 
 impl QuantumSuperpositionStage {
     /// Create a new quantum superposition stage
-    pub fn new(_num_variants: usize) -> Self {
+    pub fn new(_numvariants: usize) -> Self {
         let mut processing_variants = Vec::new();
         let mut superposition_weights = Vec::new();
         let mut rng = rand::rng();
@@ -850,7 +850,7 @@ impl QuantumSuperpositionStage {
             };
 
             processing_variants.push(variant);
-            superposition_weights.push(1.0 / (num_variants as f64).sqrt());
+            superpositionweights.push(1.0 / (num_variants as f64).sqrt());
         }
 
         // Create interference pattern
@@ -917,8 +917,8 @@ impl QuantumSuperpositionStage {
     }
 
     /// Update superposition weights based on performance
-    pub fn update_weights(&mut self, performance_metrics: &[f64]) {
-        if performance_metrics.len() == self.superposition_weights.len() {
+    pub fn update_weights(&mut self, performancemetrics: &[f64]) {
+        if performance_metrics.len() == self.superpositionweights.len() {
             // Quantum-inspired weight update
             let total_performance: f64 = performance_metrics.iter().sum();
 
@@ -929,7 +929,7 @@ impl QuantumSuperpositionStage {
                 }
 
                 // Renormalize weights
-                let weight_sum: f64 = self.superposition_weights.iter().map(|w| w * w).sum();
+                let weight_sum: f64 = self.superpositionweights.iter().map(|w| w * w).sum();
                 let norm_factor = weight_sum.sqrt();
 
                 if norm_factor > 0.0 {
@@ -966,7 +966,7 @@ pub struct QuantumAdaptiveStreamPipeline {
 
 impl QuantumAdaptiveStreamPipeline {
     /// Create a new quantum adaptive streaming pipeline
-    pub fn new(_stage_names: Vec<String>) -> Self {
+    pub fn new(_stagenames: Vec<String>) -> Self {
         let quantum_processor = QuantumStreamProcessor::new(_stage_names);
 
         Self {

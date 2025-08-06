@@ -204,7 +204,7 @@ where
 /// let b_min = minimum_phase(&b, true).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn minimum_phase(b: &[f64], discrete_time: bool) -> SignalResult<Vec<f64>> {
+pub fn minimum_phase(b: &[f64], discretetime: bool) -> SignalResult<Vec<f64>> {
     if b.is_empty() {
         return Err(SignalError::ValueError(
             "Filter coefficients cannot be empty".to_string(),
@@ -356,15 +356,15 @@ pub fn group_delay(b: &[f64], a: &[f64], w: &[f64]) -> SignalResult<Vec<f64>> {
 /// let mf = matched_filter(&template, true).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn matched_filter(_template: &[f64], normalize: bool) -> SignalResult<Vec<f64>> {
-    if _template.is_empty() {
+pub fn matched_filter(template: &[f64], normalize: bool) -> SignalResult<Vec<f64>> {
+    if template.is_empty() {
         return Err(SignalError::ValueError(
             "Template cannot be empty".to_string(),
         ));
     }
 
     // Matched filter is the time-reversed (and conjugated for complex signals) _template
-    let mut mf: Vec<f64> = _template.iter().rev().copied().collect();
+    let mut mf: Vec<f64> = template.iter().rev().copied().collect();
 
     if normalize {
         // Normalize to unit energy
@@ -459,13 +459,13 @@ pub fn evaluate_transfer_function(b: &[f64], a: &[f64], w: f64) -> Complex64 {
 /// This is a basic implementation for demonstration purposes.
 /// Production code would use more robust algorithms like Jenkins-Traub or eigenvalue methods.
 #[allow(dead_code)]
-pub fn find_polynomial_roots(_coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
-    if _coeffs.is_empty() {
+pub fn find_polynomial_roots(coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
+    if coeffs.is_empty() {
         return Ok(Vec::new());
     }
 
     // Remove leading zeros
-    let mut trimmed_coeffs = _coeffs.to_vec();
+    let mut trimmed_coeffs = coeffs.to_vec();
     while trimmed_coeffs.len() > 1 && trimmed_coeffs[0].abs() < 1e-10 {
         trimmed_coeffs.remove(0);
     }
@@ -543,7 +543,7 @@ pub fn find_polynomial_roots(_coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
 
     // Filter out potential spurious roots
     for estimate in estimates {
-        let (p_val_) = evaluate_polynomial_and_derivative(&trimmed_coeffs, estimate);
+        let (p_val, _) = evaluate_polynomial_and_derivative(&trimmed_coeffs, estimate);
         if p_val.norm() < 1e-6 {
             roots.push(estimate);
         }
@@ -554,16 +554,16 @@ pub fn find_polynomial_roots(_coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
 
 /// Evaluate polynomial and its derivative at a complex point
 #[allow(dead_code)]
-fn evaluate_polynomial_and_derivative(_coeffs: &[f64], z: Complex64) -> (Complex64, Complex64) {
-    if _coeffs.is_empty() {
+fn evaluate_polynomial_and_derivative(coeffs: &[f64], z: Complex64) -> (Complex64, Complex64) {
+    if coeffs.is_empty() {
         return (Complex64::zero(), Complex64::zero());
     }
 
-    let n = _coeffs.len() - 1;
+    let n = coeffs.len() - 1;
     let mut p_val = Complex64::new(_coeffs[0], 0.0);
     let mut p_prime = Complex64::zero();
 
-    for (i, &coeff) in _coeffs.iter().enumerate().skip(1) {
+    for (i, &coeff) in coeffs.iter().enumerate().skip(1) {
         let power = (n - i) as i32;
         p_prime = p_prime * z + p_val * Complex64::new(power as f64, 0.0);
         p_val = p_val * z + Complex64::new(coeff, 0.0);
@@ -574,8 +574,8 @@ fn evaluate_polynomial_and_derivative(_coeffs: &[f64], z: Complex64) -> (Complex
 
 /// Reconstruct polynomial coefficients from roots
 #[allow(dead_code)]
-fn polynomial_from_roots(_roots: &[Complex64]) -> Vec<f64> {
-    if _roots.is_empty() {
+fn polynomial_from_roots(roots: &[Complex64]) -> Vec<f64> {
+    if roots.is_empty() {
         return vec![1.0];
     }
 

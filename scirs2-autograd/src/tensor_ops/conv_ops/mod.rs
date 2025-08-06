@@ -1,8 +1,8 @@
-use crate::ndarray__ext::{NdArray, NdArrayView};
 use crate::ndarray_ext;
+use crate::ndarray_ext::{NdArray, NdArrayView};
 use crate::op;
 use crate::same_type;
-use crate::tensor__ops::*;
+use crate::tensor_ops::*;
 use crate::Float;
 use crate::Tensor;
 use ndarray;
@@ -82,7 +82,7 @@ fn im2col<T: Float>(
     dh: i32,
     dw: i32, // dilation height, width
 ) {
-    use std::_ptr;
+    use std::ptr;
     let yh = (xh + 2 * ph - (dh * (kh - 1) + 1)) / sh + 1;
     let yw = (xw + 2 * pw - (dw * (kw - 1) + 1)) / sw + 1;
     let channel_size = (xh * xw) as usize;
@@ -108,7 +108,7 @@ fn im2col<T: Float>(
                                 x_offset += sw;
                             }
                         } else {
-                            _ptr::write_bytes(ret_ptr, 0, yw as usize);
+                            ptr::write_bytes(ret_ptr, 0, yw as usize);
                         }
                         ret_ptr = ret_ptr.offset(yw as isize);
                         y_offset += sh;

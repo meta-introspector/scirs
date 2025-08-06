@@ -52,7 +52,7 @@ pub struct HyperparameterOptimizer<T: Float> {
 /// Hyperparameter optimization strategies
 pub trait HyperOptStrategy<T: Float>: Send + Sync {
     /// Initialize the strategy
-    fn initialize(&mut self, search_space: &HyperparameterSearchSpace<T>) -> Result<()>;
+    fn initialize(&mut self, searchspace: &HyperparameterSearchSpace<T>) -> Result<()>;
 
     /// Suggest next configuration to evaluate
     fn suggest_next(&mut self, history: &[HyperOptResult<T>]) -> Result<HyperparameterConfig<T>>;
@@ -1335,15 +1335,14 @@ impl<T: Float + Send + Sync> EarlyStoppingManager<T> {
         }
     }
 
-    fn should_continue(&self,
-        history: &[HyperOptResult<T>]) -> bool {
+    fn should_continue(&self, history: &[HyperOptResult<T>]) -> bool {
         // Simplified - would implement actual early stopping logic
         true
     }
 }
 
 impl<T: Float + Send + Sync> ConfigurationCache<T> {
-    fn new(max_size: usize) -> Self {
+    fn new(maxsize: usize) -> Self {
         Self {
             cache: HashMap::new(),
             cache_stats: CacheStatistics {

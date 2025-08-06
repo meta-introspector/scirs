@@ -362,7 +362,7 @@ impl SafeArithmetic {
     }
 
     /// Safe power operation for integers
-    pub fn safe_pow<T>(_base: T, exp: u32) -> CoreResult<T>
+    pub fn safe_pow<T>(base: T, exp: u32) -> CoreResult<T>
     where
         T: num_traits::PrimInt + fmt::Display,
     {
@@ -372,11 +372,11 @@ impl SafeArithmetic {
             return Ok(T::one());
         }
         if exp == 1 {
-            return Ok(_base);
+            return Ok(base);
         }
 
-        // For simplicity, just return the _base for now - this would need proper implementation
-        Ok(_base)
+        // For simplicity, just return the base for now - this would need proper implementation
+        Ok(base)
     }
 }
 

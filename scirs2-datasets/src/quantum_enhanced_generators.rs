@@ -36,10 +36,10 @@ impl Default for QuantumDatasetGenerator {
 
 impl QuantumDatasetGenerator {
     /// Create a new quantum dataset generator
-    pub fn new(_n_qubits: usize, gate_fidelity: f64) -> Self {
+    pub fn new(_n_qubits: usize, gatefidelity: f64) -> Self {
         Self {
             coherence_time: 1000.0,
-            _n_qubits,
+            n_qubits,
             gate_fidelity,
             quantum_advantage: true,
         }
@@ -220,7 +220,7 @@ impl QuantumDatasetGenerator {
         Ok(matrix)
     }
 
-    fn quantum_class_assignment(&self, n_classes: usize, rng: &mut StdRng) -> usize {
+    fn quantum_class_assignment(&self, nclasses: usize, rng: &mut StdRng) -> usize {
         // Simulate quantum measurement collapse
         let quantum_probability = rng.random::<f64>();
         let normalized_prob = (quantum_probability * self.gate_fidelity).abs();
@@ -286,7 +286,7 @@ impl QuantumDatasetGenerator {
             // Quantum feature generation using Bloch sphere parameterization
             let theta = rng.random::<f64>() * PI;
             let phi = rng.random::<f64>() * 2.0 * PI;
-            _features[i] = theta.sin() * phi.cos() + theta.cos();
+            features[i] = theta.sin() * phi.cos() + theta.cos();
         }
 
         Ok(_features)
@@ -355,7 +355,7 @@ impl QuantumDatasetGenerator {
                 center[feature_idx] = quantum_amplitude * feature_phase.cos();
             }
 
-            _centers.push(center);
+            centers.push(center);
         }
 
         Ok(_centers)

@@ -45,8 +45,8 @@ pub struct SensitivityAnalysis<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> SensitivityAnalysis<F> {
     /// Get sensitivity for a specific parameter
-    pub fn get_sensitivity(&self, param_name: &str) -> Option<&ParameterSensitivity<F>> {
-        self.sensitivities.iter().find(|s| s.name == param_name)
+    pub fn get_sensitivity(&self, paramname: &str) -> Option<&ParameterSensitivity<F>> {
+        self.sensitivities.iter().find(|s| s.name == paramname)
     }
 
     /// Compute relative sensitivities
@@ -147,7 +147,7 @@ where
         y0_aug.slice_mut(ndarray::s![0..n_states]).assign(&y0);
 
         let system_clone = system.clone();
-        let _params = nominal_params.to_owned();
+        let params = nominal_params.to_owned();
 
         // Augmented system: [dy/dt; dS/dt]
         let augmented_system = move |t: F, y_aug: ArrayView1<F>| -> Array1<F> {
@@ -159,7 +159,7 @@ where
                 .unwrap();
 
             // Compute f(t, y, p)
-            let f = system_clone(t, y, _params.view());
+            let f = system_clone(t, y, params.view());
 
             // Compute ∂f/∂y using finite differences
             let eps = F::from(1e-8).unwrap();
@@ -168,7 +168,7 @@ where
             for j in 0..n_states {
                 let mut y_pert = y.to_owned();
                 y_pert[j] += eps;
-                let f_pert = system_clone(t, y_pert.view(), _params.view());
+                let f_pert = system_clone(t, y_pert.view(), params.view());
 
                 for i in 0..n_states {
                     df_dy[[i, j]] = (f_pert[i] - f[i]) / eps;
@@ -176,7 +176,7 @@ where
             }
 
             // Compute ∂f/∂p for the current parameter
-            let mut params_pert = _params.to_owned();
+            let mut params_pert = params.to_owned();
             params_pert[param_idx] += eps;
             let f_pert = system_clone(t, y, params_pert.view());
             let df_dp = (f_pert - &f) / eps;
@@ -377,14 +377,14 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
     }
 
     /// Evaluate model at all sample points
-    fn evaluate_model<Func>(_model: &Func, samples: &[Array1<F>]) -> IntegrateResult<Vec<F>>
+    fn evaluate_model<Func>(model: &Func, samples: &[Array1<F>]) -> IntegrateResult<Vec<F>>
     where
         Func: Fn(ArrayView1<F>) -> IntegrateResult<F> + Sync + Send,
     {
         // Evaluate _model at each sample point
         let mut results = Vec::with_capacity(samples.len());
         for sample in samples {
-            results.push(_model(sample.view())?);
+            results.push(model(sample.view())?);
         }
         Ok(results)
     }
@@ -408,13 +408,13 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
     }
 
     /// Compute variance of model outputs
-    fn compute_variance(_y_a: &[F], y_b: &[F], n_samples: usize) -> F {
+    fn compute_variance(y_a: &[F], y_b: &[F], n_samples: usize) -> F {
         let n = F::from(n_samples).unwrap();
         let mut sum = F::zero();
         let mut sum_sq = F::zero();
 
         for i in 0..n_samples {
-            let y = (_y_a[i] + y_b[i]) / F::from(2.0).unwrap();
+            let y = (y_a[i] + y_b[i]) / F::from(2.0).unwrap();
             sum += y;
             sum_sq += y * y;
         }
@@ -425,7 +425,7 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
 
     /// Compute first-order Sobol index
     fn compute_first_order_index(
-        _y_a: &[F],
+        y_a: &[F],
         y_b: &[F],
         y_ci: &[F],
         var_y: F,
@@ -435,7 +435,7 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
         let mut sum = F::zero();
 
         for i in 0..n_samples {
-            sum += y_b[i] * (y_ci[i] - _y_a[i]);
+            sum += y_b[i] * (y_ci[i] - y_a[i]);
         }
 
         let v_i = sum / n;
@@ -443,12 +443,12 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
     }
 
     /// Compute total Sobol index
-    fn compute_total_index(_y_a: &[F], y_ci: &[F], var_y: F, n_samples: usize) -> F {
+    fn compute_total_index(y_a: &[F], y_ci: &[F], var_y: F, n_samples: usize) -> F {
         let n = F::from(n_samples).unwrap();
         let mut sum = F::zero();
 
         for i in 0..n_samples {
-            let diff = _y_a[i] - y_ci[i];
+            let diff = y_a[i] - y_ci[i];
             sum += diff * diff;
         }
 
@@ -554,12 +554,12 @@ impl<F: IntegrateFloat> EFAST<F> {
     }
 
     /// Compute Fourier-based sensitivity
-    fn compute_fourier_sensitivity(&self, _y_values: &[F], omega: usize) -> F {
+    fn compute_fourier_sensitivity(&self, y_values: &[F], omega: usize) -> F {
         let n = self.n_samples;
         let mut a_omega = F::zero();
         let mut b_omega = F::zero();
 
-        for (k, y_value) in _y_values.iter().enumerate().take(n) {
+        for (k, y_value) in y_values.iter().enumerate().take(n) {
             let angle =
                 F::from(2.0 * std::f64::consts::PI * omega as f64 * k as f64 / n as f64).unwrap();
             a_omega += *y_value * angle.cos();
@@ -640,11 +640,11 @@ pub struct SobolSensitivity<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat + std::default::Default> SobolSensitivity<F> {
     /// Create a new Sobol sensitivity analyzer
-    pub fn new(_param_bounds: Vec<(F, F)>, n_samples: usize) -> Self {
+    pub fn new(param_bounds: Vec<(F, F)>, n_samples: usize) -> Self {
         SobolSensitivity {
-            n_params: _param_bounds.len(),
+            n_params: param_bounds.len(),
             n_samples,
-            param_bounds: _param_bounds,
+            param_bounds: param_bounds,
         }
     }
 
@@ -819,21 +819,21 @@ pub struct MorrisScreening<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> MorrisScreening<F> {
     /// Create a new Morris screening analyzer
-    pub fn new(_param_bounds: Vec<(F, F)>, n_trajectories: usize, delta: F) -> Self {
+    pub fn new(param_bounds: Vec<(F, F)>, n_trajectories: usize, delta: F) -> Self {
         MorrisScreening {
-            n_params: _param_bounds.len(),
+            n_params: param_bounds.len(),
             n_trajectories,
             delta,
-            param_bounds: _param_bounds,
+            param_bounds: param_bounds,
             grid_levels: 4,
         }
     }
 
     /// Create a new Morris screening analysis (legacy compatibility)
-    pub fn new_simple(_n_trajectories: usize, param_bounds: Vec<(F, F)>) -> Self {
+    pub fn new_simple(n_trajectories: usize, param_bounds: Vec<(F, F)>) -> Self {
         MorrisScreening {
             n_params: param_bounds.len(),
-            n_trajectories: _n_trajectories,
+            n_trajectories: n_trajectories,
             delta: F::from(0.1).unwrap(),
             param_bounds,
             grid_levels: 4,

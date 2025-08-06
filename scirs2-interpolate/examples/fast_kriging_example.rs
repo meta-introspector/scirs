@@ -169,7 +169,7 @@ fn generate_synthetic_data(
 
         // Assign to _points array
         for i in 0..n_points {
-            _points[[i, d]] = values[i] * 10.0; // Scale to [0, 10]
+            points[[i, d]] = values[i] * 10.0; // Scale to [0, 10]
         }
     }
 
@@ -179,14 +179,14 @@ fn generate_synthetic_data(
     // Generate values with spatial pattern (2D example)
     for i in 0..n_points {
         if n_dims >= 2 {
-            let x = _points[[i, 0]];
-            let y = _points[[i, 1]];
+            let x = points[[i, 0]];
+            let y = points[[i, 1]];
 
             // Pattern: f(x,y) = sin(x/2) + cos(y/3) + x*y/50
             values[i] = f64::sin(x / 2.0) + f64::cos(y / 3.0) + (x * y / 50.0);
         } else {
             // 1D fallback
-            let x = _points[[i, 0]];
+            let x = points[[i, 0]];
             values[i] = f64::sin(x / 2.0);
         }
 
@@ -199,7 +199,7 @@ fn generate_synthetic_data(
 
 /// Generate a grid of points for prediction
 #[allow(dead_code)]
-fn generate_prediction_grid(_n_grid: usize, n_dims: usize) -> Array2<f64> {
+fn generate_prediction_grid(_n_grid: usize, ndims: usize) -> Array2<f64> {
     // For dimensions > 2, we'll just create a line through the space
     if n_dims > 2 {
         let mut grid_points = Array2::zeros((_n_grid, n_dims));

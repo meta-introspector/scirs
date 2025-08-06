@@ -224,7 +224,7 @@ impl SimdMetrics {
     }
 
     /// SIMD-accelerated mean squared error computation
-    pub fn simd_mse<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    pub fn simd_mse<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
@@ -247,7 +247,7 @@ impl SimdMetrics {
     }
 
     /// SIMD-accelerated mean absolute error computation
-    pub fn simd_mae<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    pub fn simd_mae<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
@@ -268,7 +268,7 @@ impl SimdMetrics {
     }
 
     /// SIMD-accelerated R² score computation
-    pub fn simd_r2_score<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    pub fn simd_r2_score<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
@@ -645,7 +645,7 @@ impl SimdMetrics {
     }
 
     /// Simulated GPU kernel for MSE computation
-    fn gpu_mse_kernel<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    fn gpu_mse_kernel<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
@@ -660,7 +660,7 @@ impl SimdMetrics {
     }
 
     /// Simulated GPU kernel for MAE computation
-    fn gpu_mae_kernel<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    fn gpu_mae_kernel<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
@@ -674,7 +674,7 @@ impl SimdMetrics {
     }
 
     /// Simulated GPU kernel for R² computation
-    fn gpu_r2_kernel<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    fn gpu_r2_kernel<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
@@ -740,7 +740,7 @@ impl SimdMetrics {
         use scirs2_core::parallel_ops::*;
 
         let batch_size = y_true_batch.nrows();
-        let chunk_size = self.parallel_config.min_chunk_size;
+        let chunk_size = self.parallel_configmin_chunk_size;
 
         // Process in parallel chunks
         let results: Result<Vec<_>> = (0..batch_size)
@@ -783,7 +783,7 @@ impl SimdMetrics {
 
     // Fallback scalar implementations
 
-    fn scalar_mse<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    fn scalar_mse<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
@@ -796,7 +796,7 @@ impl SimdMetrics {
         Ok(mse)
     }
 
-    fn scalar_mae<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    fn scalar_mae<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
@@ -809,7 +809,7 @@ impl SimdMetrics {
         Ok(mae)
     }
 
-    fn scalar_r2_score<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    fn scalar_r2_score<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {

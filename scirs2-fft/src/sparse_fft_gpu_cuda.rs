@@ -41,7 +41,7 @@ pub struct GpuStream {
 }
 
 impl GpuStream {
-    pub fn new(device_id: i32) -> FFTResult<Self> {
+    pub fn new(deviceid: i32) -> FFTResult<Self> {
         Err(FFTError::NotImplementedError(
             "GPU streams need to be implemented with scirs2-core::gpu abstractions".to_string(),
         ))
@@ -98,8 +98,8 @@ pub struct GpuDeviceInfo {
 
 impl GpuDeviceInfo {
     /// Create GPU device info using core abstractions
-    pub fn new(_device_id: usize) -> FFTResult<Self> {
-        let device = GpuDevice::new(GpuBackend::default(), _device_id);
+    pub fn new(_deviceid: usize) -> FFTResult<Self> {
+        let device = GpuDevice::new(GpuBackend::default(), _deviceid);
         Ok(Self {
             device,
             initialized: true,
@@ -129,21 +129,21 @@ pub struct FftGpuContext {
 
 impl FftGpuContext {
     /// Create a new FFT GPU context for the specified device
-    pub fn new(device_id: i32) -> FFTResult<Self> {
+    pub fn new(deviceid: i32) -> FFTResult<Self> {
         // Create core GPU context
         let gpu_backend = scirs2_core::gpu::GpuBackend::Cuda;
         let core_context = scirs2_core::gpu::GpuContext::new(gpu_backend)
             .map_err(|e| FFTError::ComputationError(e.to_string()))?;
 
         // Create device info using core abstractions
-        let device_info = GpuDeviceInfo::new(device_id as usize)?;
+        let device_info = GpuDeviceInfo::new(deviceid as usize)?;
 
         // Create stream
-        let stream = GpuStream::new(device_id)?;
+        let stream = GpuStream::new(deviceid)?;
 
         Ok(Self {
             core_context,
-            device_id,
+            device_id: deviceid,
             device_info,
             stream,
             initialized: true,
@@ -161,13 +161,13 @@ impl FftGpuContext {
     }
 
     /// Allocate device memory
-    pub fn allocate(&self, size_bytes: usize) -> FFTResult<BufferDescriptor> {
+    pub fn allocate(&self, sizebytes: usize) -> FFTResult<BufferDescriptor> {
         // In a real implementation, this would call cudaMalloc
 
         // Use the global memory manager to track allocations
         let manager = get_global_memory_manager()?;
 
-        manager.allocate(size_bytes, BufferLocation::Device, BufferType::Work)
+        manager.allocate(sizebytes, BufferLocation::Device, BufferType::Work)
     }
 
     /// Free device memory
@@ -239,9 +239,9 @@ pub struct GpuSparseFFT {
 
 impl GpuSparseFFT {
     /// Create a new CUDA-accelerated sparse FFT processor
-    pub fn new(_device_id: i32, config: SparseFFTConfig) -> FFTResult<Self> {
+    pub fn new(_deviceid: i32, config: SparseFFTConfig) -> FFTResult<Self> {
         // Use FftGpuContext which wraps scirs2-core::gpu
-        let context = FftGpuContext::new(_device_id)?;
+        let context = FftGpuContext::new(_deviceid)?;
 
         Ok(Self {
             context,
@@ -253,7 +253,7 @@ impl GpuSparseFFT {
     }
 
     /// Initialize buffers for the given signal size
-    fn initialize_buffers(&mut self, signal_size: usize) -> FFTResult<()> {
+    fn initialize_buffers(&mut self, signalsize: usize) -> FFTResult<()> {
         // Free existing buffers if any
         self.free_buffers()?;
 
@@ -262,14 +262,14 @@ impl GpuSparseFFT {
 
         // Allocate input buffer
         let input_buffer = memory_manager.allocate(
-            signal_size * std::mem::size_of::<Complex64>(),
+            signalsize * std::mem::size_of::<Complex64>(),
             BufferLocation::Device,
             BufferType::Input,
         )?;
         self.input_buffer = Some(input_buffer);
 
         // Allocate output buffers (assuming worst case: all components are significant)
-        let max_components = self.config.sparsity.min(signal_size);
+        let max_components = self.config.sparsity.min(signalsize);
 
         let output_values_buffer = memory_manager.allocate(
             max_components * std::mem::size_of::<Complex64>(),

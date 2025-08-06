@@ -33,7 +33,7 @@ fn create_matrix_function_test_matrix(n: usize, scale: f64) -> Array2<f64> {
 /// Create a symmetric positive definite matrix for matrix functions
 #[allow(dead_code)]
 fn create_spd_matrix_scaled(n: usize, scale: f64) -> Array2<f64> {
-    let a = Array2::fromshape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1 * scale).sin());
+    let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1 * scale).sin());
     a.t().dot(&a) * scale + Array2::<f64>::eye(n) * (n as f64 * scale)
 }
 
@@ -52,7 +52,7 @@ fn create_nilpotent_matrix(n: usize) -> Array2<f64> {
 
 /// Create a matrix with specific eigenvalue distribution
 #[allow(dead_code)]
-fn create_eigenvalue_controlled_matrix(n: usize, min_eig: f64, max_eig: f64) -> Array2<f64> {
+fn create_eigenvalue_controlled_matrix(n: usize, min_eig: f64, maxeig: f64) -> Array2<f64> {
     // Create a diagonal matrix with controlled eigenvalues
     let mut diag = Array2::zeros((n, n));
     for i in 0..n {
@@ -68,7 +68,7 @@ fn create_eigenvalue_controlled_matrix(n: usize, min_eig: f64, max_eig: f64) -> 
 /// Create an orthogonal matrix for transformations
 #[allow(dead_code)]
 fn orthogonal_matrix(n: usize) -> Array2<f64> {
-    let a = Array2::fromshape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
+    let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
     let (q_) = qr(&a.view(), None).unwrap();
     q
 }

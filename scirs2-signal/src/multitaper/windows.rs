@@ -2,7 +2,7 @@ use ndarray::s;
 // DPSS (Slepian) window generation for multitaper spectral estimation.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
 use std::f64::consts::PI;
 
 #[allow(unused_imports)]
@@ -158,20 +158,20 @@ pub fn dpss(
 ///
 /// * Tuple of (eigenvalues, eigenvectors)
 #[allow(dead_code)]
-fn tridiagonal_eig(_diag: &[f64], offdiag: &[f64]) -> SignalResult<(Vec<f64>, Array2<f64>)> {
-    if _diag.is_empty() {
+fn tridiagonal_eig(diag: &[f64], offdiag: &[f64]) -> SignalResult<(Vec<f64>, Array2<f64>)> {
+    if diag.is_empty() {
         return Err(SignalError::ValueError(
             "Diagonal must have at least one element".to_string(),
         ));
     }
 
-    if offdiag.len() != _diag.len() - 1 {
+    if offdiag.len() != diag.len() - 1 {
         return Err(SignalError::ValueError(
             "Off-diagonal must have one fewer element than diagonal".to_string(),
         ));
     }
 
-    let mut n = _diag.len();
+    let mut n = diag.len();
     let mut eigvals = vec![0.0; n];
     let mut eigvecs = Array2::zeros((n, n));
 
@@ -181,7 +181,7 @@ fn tridiagonal_eig(_diag: &[f64], offdiag: &[f64]) -> SignalResult<(Vec<f64>, Ar
     }
 
     // Copy diagonal and off-diagonal elements
-    let mut a = _diag.to_vec();
+    let mut a = diag.to_vec();
     let mut b = offdiag.to_vec();
 
     // Number of iterations for QR algorithm

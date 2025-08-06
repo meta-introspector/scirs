@@ -197,7 +197,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Generate sample returns for demonstration purposes
 #[allow(dead_code)]
-fn generate_sample_returns(_annual_mean: f64, annual_vol: f64, n_periods: usize) -> Vec<f64> {
+fn generate_sample_returns(_annual_mean: f64, annual_vol: f64, nperiods: usize) -> Vec<f64> {
     use rand::prelude::*;
     use rand::rngs::StdRng;
     use rand_distr::Normal;

@@ -3,8 +3,8 @@
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayView2, Axis};
 use num_traits::Float;
-use std::collections::HashMap;
 use statrs::statistics::Statistics;
+use std::collections::HashMap;
 
 /// Global explainer for model-level insights
 pub struct GlobalExplainer<F: Float> {
@@ -30,7 +30,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         Self {
             n_samples: 1000,
             n_bootstrap: 100,
-            random_seed: None, _phantom: std::marker::PhantomData,
+            random_seed: None,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -224,7 +225,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         if max_interaction_order > 2 {
             for _order in 3..=max_interaction_order.min(n_features) {
                 let interactions =
-                    self.compute_higher_order_interactions(model, x_data, feature_names, _order)?;
+                    self.compute_higher_order_interactions(model, x_data, feature_names, order)?;
                 higher_order_interactions.insert(_order, interactions);
             }
         }
@@ -483,7 +484,11 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     }
 
     fn compute_higher_order_interactions<M>(
-        &self_model: &M_x, _data: &Array2<F>, _feature_names: &[String], _order: usize,
+        &self,
+        model: &M,
+        _data: &Array2<F>,
+        _feature_names: &[String],
+        _order: usize,
     ) -> Result<HashMap<String, F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
@@ -493,7 +498,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         Ok(HashMap::new())
     }
 
-    fn compute_total_interaction_strength(&self, pairwise_interactions: &HashMap<String, F>) -> F {
+    fn compute_total_interaction_strength(&self, pairwiseinteractions: &HashMap<String, F>) -> F {
         pairwise_interactions.values().cloned().sum()
     }
 
@@ -548,7 +553,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         Ok(sensitivity_sum / F::from(sample_size).unwrap())
     }
 
-    fn assess_model_linearity<M>(&self, model: &M, x_data: &Array2<F>) -> Result<F>
+    fn assess_model_linearity<M>(&self, model: &M, xdata: &Array2<F>) -> Result<F>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
@@ -584,7 +589,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         Ok(linearity_score)
     }
 
-    fn compute_prediction_uncertainty<M>(&self, model: &M, x_data: &Array2<F>) -> Result<F>
+    fn compute_prediction_uncertainty<M>(&self, model: &M, xdata: &Array2<F>) -> Result<F>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
@@ -593,7 +598,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         self.compute_variance(&predictions)
     }
 
-    fn compute_sample_coverage(&self, x_data: &Array2<F>) -> Result<F> {
+    fn compute_sample_coverage(&self, xdata: &Array2<F>) -> Result<F> {
         // Simplified coverage metric based on _data distribution
         let n_features = x_data.ncols();
         let mut coverage_score = F::zero();
@@ -625,11 +630,11 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         Ok(variance)
     }
 
-    fn get_feature_std(&self, x_data: &Array2<F>, feature_idx: usize) -> Result<F> {
+    fn get_feature_std(&self, x_data: &Array2<F>, featureidx: usize) -> Result<F> {
         self.compute_column_std(x_data, feature_idx)
     }
 
-    fn compute_column_std(&self, x_data: &Array2<F>, col_idx: usize) -> Result<F> {
+    fn compute_column_std(&self, x_data: &Array2<F>, colidx: usize) -> Result<F> {
         let column = x_data.column(col_idx);
         let mean = column.mean().unwrap_or(F::zero());
         let variance = column.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>()
@@ -637,7 +642,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         Ok(variance.sqrt())
     }
 
-    fn permute_column(&self, data: &mut Array2<F>, col_idx: usize) -> Result<()> {
+    fn permute_column(&self, data: &mut Array2<F>, colidx: usize) -> Result<()> {
         let mut column_values: Vec<F> = data.column(col_idx).to_vec();
 
         // Simple shuffle
@@ -653,7 +658,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         Ok(())
     }
 
-    fn compute_total_variance<M>(&self, model: &M, x_data: &Array2<F>) -> Result<F>
+    fn compute_total_variance<M>(&self, model: &M, xdata: &Array2<F>) -> Result<F>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
@@ -688,7 +693,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         Ok(original_variance - baseline_variance)
     }
 
-    fn estimate_effective_dof<M>(&self_model: &M, x_data: &Array2<F>) -> Result<F>
+    fn estimate_effective_dof<M>(&self, model: &M, xdata: &Array2<F>) -> Result<F>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
@@ -697,7 +702,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         Ok(F::from(x_data.ncols()).unwrap())
     }
 
-    fn compute_model_smoothness<M>(&self, model: &M, x_data: &Array2<F>) -> Result<F>
+    fn compute_model_smoothness<M>(&self, model: &M, xdata: &Array2<F>) -> Result<F>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
@@ -716,7 +721,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         Ok(smoothness)
     }
 
-    fn generate_bootstrap_indices(&self, n_samples: usize) -> Result<Vec<usize>> {
+    fn generate_bootstrap_indices(&self, nsamples: usize) -> Result<Vec<usize>> {
         let mut indices = Vec::with_capacity(n_samples);
         for i in 0..n_samples {
             let idx = (self.random_seed.unwrap_or(0) as usize + i) % n_samples;

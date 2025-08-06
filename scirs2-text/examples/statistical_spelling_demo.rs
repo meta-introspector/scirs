@@ -67,11 +67,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Function to train the language model with sample text
 #[allow(dead_code)]
-fn train_language_model(_corrector: &mut StatisticalCorrector) {
+fn train_language_model(corrector: &mut StatisticalCorrector) {
     println!("Training language model with sample text...");
 
     // Add sample training text
-    _corrector.add_trainingtext(SAMPLE_TRAINING_TEXT);
+    corrector.add_trainingtext(SAMPLE_TRAINING_TEXT);
 
     // Add more specialized training examples for context disambiguation
     let additional_examples = [
@@ -105,18 +105,18 @@ fn train_language_model(_corrector: &mut StatisticalCorrector) {
     ];
 
     for example in &additional_examples {
-        _corrector.add_trainingtext(example);
+        corrector.add_trainingtext(example);
     }
 
     println!(
         "Language model trained with {} words vocabulary\n",
-        _corrector.vocabulary_size()
+        corrector.vocabulary_size()
     );
 }
 
 // Function to add specific words for consistent example behavior
 #[allow(dead_code)]
-fn add_example_words(_corrector: &mut StatisticalCorrector) {
+fn add_example_words(corrector: &mut StatisticalCorrector) {
     // Add specific words to the dictionary
     let word_frequencies = [
         // Common misspelled words
@@ -143,7 +143,7 @@ fn add_example_words(_corrector: &mut StatisticalCorrector) {
     ];
 
     for (word, freq) in &word_frequencies {
-        _corrector.add_word(word, *freq);
+        corrector.add_word(word, *freq);
     }
 }
 
@@ -284,7 +284,7 @@ fn performance_test(
         "Performance comparison on text with {} characters:",
         testtext.len()
     );
-    println!("  - Dictionary _corrector: {dict_time:?}");
+    println!("  - Dictionary corrector: {dict_time:?}");
     println!("  - Statistical _corrector (without context): {non_context_time:?}");
     println!("  - Statistical _corrector (with context): {stat_time:?}");
 
@@ -356,10 +356,10 @@ fn configuration_demo() -> Result<(), Box<dyn std::error::Error>> {
         add_example_words(&mut corrector);
 
         println!("{name} configuration:");
-        println!("  max_edit_distance: {}", config.max_edit_distance);
-        println!("  language_model_weight: {}", config.language_model_weight);
-        println!("  edit_distance_weight: {}", config.edit_distance_weight);
-        println!("  use_context: {}", config.use_context);
+        println!("  max_editdistance: {}", config.max_edit_distance);
+        println!("  language_modelweight: {}", config.language_model_weight);
+        println!("  edit_distanceweight: {}", config.edit_distance_weight);
+        println!("  usecontext: {}", config.use_context);
 
         println!("\n  Correction examples:");
         for word in &test_cases {

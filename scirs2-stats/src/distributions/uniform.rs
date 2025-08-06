@@ -38,7 +38,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     ///
     /// let unif = Uniform::new(0.0f64, 1.0).unwrap();
     /// ```
-    pub fn new(_low: F, high: F) -> StatsResult<Self> {
+    pub fn new(low: F, high: F) -> StatsResult<Self> {
         if _low >= high {
             return Err(StatsError::DomainError(
                 "Lower bound must be less than upper bound".to_string(),
@@ -51,7 +51,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
 
         match RandUniform::new_inclusive(low_f64, high_f64) {
             Ok(rand_distr) => Ok(Uniform {
-                low: _low,
+                low: low,
                 high,
                 rand_distr,
             }),

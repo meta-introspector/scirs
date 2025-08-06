@@ -35,9 +35,9 @@ impl PolynomialFeatures {
     ///
     /// # Returns
     /// * A new PolynomialFeatures instance
-    pub fn new(_degree: usize, interaction_only: bool, include_bias: bool) -> Self {
+    pub fn new(degree: usize, interaction_only: bool, includebias: bool) -> Self {
         PolynomialFeatures {
-            _degree,
+            degree,
             interaction_only,
             include_bias,
         }
@@ -50,7 +50,7 @@ impl PolynomialFeatures {
     ///
     /// # Returns
     /// * The number of features that will be generated
-    pub fn n_output_features(&self, n_features: usize) -> usize {
+    pub fn n_output_features(&self, nfeatures: usize) -> usize {
         if n_features == 0 {
             return 0;
         }
@@ -194,7 +194,7 @@ impl PolynomialFeatures {
                 result: &mut Array2<f64>,
                 col_idx: &mut usize,
             ) -> Result<()> {
-                if _degree == 0 {
+                if degree == 0 {
                     // Skip the bias term and individual features
                     let sum: usize = powers.iter().sum();
                     if sum >= 2 && sum <= max_degree {
@@ -232,13 +232,13 @@ impl PolynomialFeatures {
 
                 for j in start..powers.len() {
                     // When interaction_only=true, _only consider powers of 0 or 1
-                    let max_power = if interaction_only { 1 } else { _degree };
+                    let max_power = if interaction_only { 1 } else { degree };
                     for p in 1..=max_power {
                         powers[j] += p;
                         generate_combinations(
                             powers,
                             j + 1,
-                            _degree - p,
+                            degree - p,
                             max_degree,
                             interaction_only,
                             array,
@@ -308,13 +308,13 @@ impl PolynomialFeatures {
 /// let binarized = binarize(&data, 0.0).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn binarize<S>(_array: &ArrayBase<S, Ix2>, threshold: f64) -> Result<Array2<f64>>
+pub fn binarize<S>(array: &ArrayBase<S, Ix2>, threshold: f64) -> Result<Array2<f64>>
 where
     S: Data,
     S::Elem: Float + NumCast,
 {
     // Enhanced input validation
-    if _array.is_empty() {
+    if array.is_empty() {
         return Err(TransformError::InvalidInput(
             "Input _array cannot be empty".to_string(),
         ));
@@ -326,7 +326,7 @@ where
         ));
     }
 
-    let array_f64 = _array.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
+    let array_f64 = array.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
 
     // Validate for NaN or infinite values
     for &val in array_f64.iter() {
@@ -413,7 +413,7 @@ where
         for j in 0..n_quantiles {
             let q = j as f64 / (n_quantiles - 1) as f64;
             let idx = (q * (sorted_data.len() - 1) as f64).round() as usize;
-            _quantiles[[i, j]] = sorted_data[idx];
+            quantiles[[i, j]] = sorted_data[idx];
         }
     }
 
@@ -791,8 +791,8 @@ where
 
 /// Estimate optimal lambda parameter using maximum likelihood estimation
 #[allow(dead_code)]
-fn estimate_optimal_lambda(_data: &[f64], method: &str) -> Result<f64> {
-    if _data.is_empty() {
+fn estimate_optimal_lambda(data: &[f64], method: &str) -> Result<f64> {
+    if data.is_empty() {
         return Err(TransformError::InvalidInput(
             "Empty _data for lambda estimation".to_string(),
         ));
@@ -801,7 +801,7 @@ fn estimate_optimal_lambda(_data: &[f64], method: &str) -> Result<f64> {
     // Check _data constraints based on transformation method
     if method == "box-cox" {
         // Box-Cox requires all positive values
-        if _data.iter().any(|&x| x <= 0.0) {
+        if data.iter().any(|&x| x <= 0.0) {
             return Err(TransformError::InvalidInput(
                 "Box-Cox transformation requires all positive values".to_string(),
             ));
@@ -827,7 +827,7 @@ fn estimate_optimal_lambda(_data: &[f64], method: &str) -> Result<f64> {
     // Refine with golden section search around the best point
     let tolerance = 1e-6;
     let refined_lambda = golden_section_search(
-        _data,
+        data,
         method,
         best_lambda - 0.5,
         best_lambda + 0.5,
@@ -839,8 +839,8 @@ fn estimate_optimal_lambda(_data: &[f64], method: &str) -> Result<f64> {
 
 /// Compute log-likelihood for given lambda parameter
 #[allow(dead_code)]
-fn compute_log_likelihood(_data: &[f64], lambda: f64, method: &str) -> Result<f64> {
-    let n = _data.len() as f64;
+fn compute_log_likelihood(data: &[f64], lambda: f64, method: &str) -> Result<f64> {
+    let n = data.len() as f64;
     let mut transformed_data = Vec::with_capacity(_data.len());
     let mut jacobian_sum = 0.0;
 
@@ -1015,7 +1015,7 @@ impl PowerTransformer {
     ///
     /// # Returns
     /// * A new PowerTransformer instance
-    pub fn new(_method: &str, standardize: bool) -> Result<Self> {
+    pub fn new(method: &str, standardize: bool) -> Result<Self> {
         if _method != "yeo-johnson" && _method != "box-cox" {
             return Err(TransformError::InvalidInput(
                 "_method must be 'yeo-johnson' or 'box-cox'".to_string(),
@@ -1023,7 +1023,7 @@ impl PowerTransformer {
         }
 
         Ok(PowerTransformer {
-            _method: _method.to_string(),
+            method: method.to_string(),
             standardize,
             lambdas_: None,
             means_: None,
@@ -1034,10 +1034,10 @@ impl PowerTransformer {
 
     /// Creates a new PowerTransformer with Yeo-Johnson method
     #[allow(dead_code)]
-    pub fn yeo_johnson(_standardize: bool) -> Self {
+    pub fn yeo_johnson(standardize: bool) -> Self {
         PowerTransformer {
             method: "yeo-johnson".to_string(),
-            _standardize,
+            standardize,
             lambdas_: None,
             means_: None,
             stds_: None,
@@ -1047,10 +1047,10 @@ impl PowerTransformer {
 
     /// Creates a new PowerTransformer with Box-Cox method
     #[allow(dead_code)]
-    pub fn box_cox(_standardize: bool) -> Self {
+    pub fn box_cox(standardize: bool) -> Self {
         PowerTransformer {
             method: "box-cox".to_string(),
-            _standardize,
+            standardize,
             lambdas_: None,
             means_: None,
             stds_: None,
@@ -1499,12 +1499,12 @@ fn box_cox_log_jacobian(x: f64, lambda: f64) -> f64 {
 /// # Returns
 /// * `Result<Array2<f64>>` - The log-transformed array
 #[allow(dead_code)]
-pub fn log_transform<S>(_array: &ArrayBase<S, Ix2>, epsilon: f64) -> Result<Array2<f64>>
+pub fn log_transform<S>(array: &ArrayBase<S, Ix2>, epsilon: f64) -> Result<Array2<f64>>
 where
     S: Data,
     S::Elem: Float + NumCast,
 {
-    let array_f64 = _array.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
+    let array_f64 = array.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
 
     if !array_f64.is_standard_layout() {
         return Err(TransformError::InvalidInput(

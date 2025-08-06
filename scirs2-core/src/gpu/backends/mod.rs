@@ -714,7 +714,7 @@ mod tests {
 
     // Mock tests to verify error handling in detection functions
     #[test]
-    fn test_detect_cuda_devices_error_handling() {
+    fn test_detect_cuda_deviceserror_handling() {
         // In the real implementation, detect_cuda_devices returns an error
         // when nvidia-smi is not available. We can't easily test this without
         // mocking the Command execution, but we can at least call the function
@@ -722,13 +722,13 @@ mod tests {
     }
 
     #[test]
-    fn test_detect_rocm_devices_error_handling() {
+    fn test_detect_rocm_deviceserror_handling() {
         // Similar to CUDA test
         let _ = detect_rocm_devices();
     }
 
     #[test]
-    fn test_detect_opencl_devices_error_handling() {
+    fn test_detect_opencl_deviceserror_handling() {
         // Similar to CUDA test
         let _ = detect_opencl_devices();
     }

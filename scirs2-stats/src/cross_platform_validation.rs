@@ -269,11 +269,11 @@ pub struct CrossPlatformValidator {
 
 impl CrossPlatformValidator {
     /// Create a new cross-platform validator
-    pub fn new(_config: CrossPlatformConfig) -> Self {
+    pub fn new(config: CrossPlatformConfig) -> Self {
         let platform_info = Self::detect_platform_info();
         
         Self {
-            _config,
+            config,
             platform_info,
         }
     }
@@ -1254,7 +1254,7 @@ impl CrossPlatformValidator {
     }
 
     /// Determine overall validation status
-    fn determine_overall_status(&self, test_results: &[TestResult], issues: &[CompatibilityIssue]) -> ValidationStatus {
+    fn determine_overall_status(&self, testresults: &[TestResult], issues: &[CompatibilityIssue]) -> ValidationStatus {
         let total_tests = test_results.len();
         let passed_tests = test_results.iter().filter(|t| matches!(t.status, TestStatus::Passed)).count();
         let failed_tests = test_results.iter().filter(|t| matches!(t.status, TestStatus::Failed)).count();

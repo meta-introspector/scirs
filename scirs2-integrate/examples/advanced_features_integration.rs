@@ -57,8 +57,8 @@ fn main() -> IntegrateResult<()> {
 
 /// Demonstrate Advanced Adaptive Mesh Refinement
 #[allow(dead_code)]
-fn demonstrate_advanced_amr(_profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
-    _profiler.start_phase("amr_demonstration");
+fn demonstrate_advanced_amr(profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
+    profiler.start_phase("amr_demonstration");
     println!("1. Advanced AMR Demonstration");
     println!("   Setting up adaptive mesh refinement for 2D heat equation...");
 
@@ -127,14 +127,14 @@ fn demonstrate_advanced_amr(_profiler: &mut PerformanceProfiler) -> IntegrateRes
         adaptation_result.load_balance_quality
     );
 
-    _profiler.end_phase("amr_demonstration");
+    profiler.end_phase("amr_demonstration");
     Ok(())
 }
 
 /// Demonstrate advanced error estimation techniques
 #[allow(dead_code)]
-fn demonstrate_error_estimation(_profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
-    _profiler.start_phase("error_estimation_demo");
+fn demonstrate_error_estimation(profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
+    profiler.start_phase("error_estimation_demo");
     println!("\n2. Advanced Error Estimation Demonstration");
     println!("   Using Richardson extrapolation and spectral analysis...");
 
@@ -174,14 +174,14 @@ fn demonstrate_error_estimation(_profiler: &mut PerformanceProfiler) -> Integrat
         }
     }
 
-    _profiler.end_phase("error_estimation_demo");
+    profiler.end_phase("error_estimation_demo");
     Ok(())
 }
 
 /// Demonstrate parallel optimization with vectorized operations
 #[allow(dead_code)]
-fn demonstrate_parallel_optimization(_profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
-    _profiler.start_phase("parallel_optimization_demo");
+fn demonstrate_parallel_optimization(profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
+    profiler.start_phase("parallel_optimization_demo");
     println!("\n3. Parallel Optimization Demonstration");
     println!("   Performing vectorized matrix operations...");
 
@@ -232,10 +232,10 @@ fn demonstrate_parallel_optimization(_profiler: &mut PerformanceProfiler) -> Int
             result.dim()
         );
 
-        _profiler.record_metric(&format!("{name}_time_ms"), duration.as_millis() as f64);
+        profiler.record_metric(&format!("{name}_time_ms"), duration.as_millis() as f64);
     }
 
-    _profiler.end_phase("parallel_optimization_demo");
+    profiler.end_phase("parallel_optimization_demo");
     Ok(())
 }
 

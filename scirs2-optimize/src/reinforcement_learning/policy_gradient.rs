@@ -45,7 +45,7 @@ pub struct MetaPolicyNetwork {
 
 impl MetaPolicyNetwork {
     /// Create new meta-policy network with hierarchical structure
-    pub fn new(_input_size: usize, output_size: usize, hidden_sizes: Vec<usize>) -> Self {
+    pub fn new(_input_size: usize, output_size: usize, hiddensizes: Vec<usize>) -> Self {
         let mut layer_sizes = vec![_input_size];
         layer_sizes.extend(hidden_sizes);
         layer_sizes.push(output_size);
@@ -145,7 +145,7 @@ impl MetaPolicyNetwork {
         current_input
     }
 
-    fn forward_meta(&self, input: &ArrayView1<f64>, meta_context: &Array1<f64>) -> Array1<f64> {
+    fn forward_meta(&self, input: &ArrayView1<f64>, metacontext: &Array1<f64>) -> Array1<f64> {
         // Combine input with meta-_context
         let mut meta_input = input.to_owned();
         for (i, &ctx) in meta_context.iter().enumerate() {
@@ -233,7 +233,7 @@ impl MetaPolicyNetwork {
         self.update_curriculum_difficulty(&meta_gradients);
     }
 
-    fn update_curriculum_difficulty(&mut self, meta_gradients: &MetaGradients) {
+    fn update_curriculum_difficulty(&mut self, metagradients: &MetaGradients) {
         let gradient_norm = meta_gradients
             .policy_gradients
             .iter()
@@ -395,10 +395,10 @@ pub struct MetaExperienceBuffer {
 }
 
 impl MetaExperienceBuffer {
-    pub fn new(_max_size: usize) -> Self {
+    pub fn new(_maxsize: usize) -> Self {
         Self {
             trajectories: VecDeque::with_capacity(_max_size),
-            _max_size,
+            max_size,
             class_weights: HashMap::new(),
         }
     }
@@ -419,7 +419,7 @@ impl MetaExperienceBuffer {
         }
     }
 
-    pub fn sample_meta_batch(&self, batch_size: usize) -> Vec<MetaTrajectory> {
+    pub fn sample_meta_batch(&self, batchsize: usize) -> Vec<MetaTrajectory> {
         let mut batch = Vec::new();
 
         for _ in 0..batch_size.min(self.trajectories.len()) {
@@ -434,14 +434,14 @@ impl MetaExperienceBuffer {
     }
 }
 
-impl AdvancedPolicyGradientOptimizer {
+impl AdvancedAdvancedPolicyGradientOptimizer {
     /// Create new advanced policy gradient optimizer
-    pub fn new(_config: RLOptimizationConfig, state_size: usize, action_size: usize) -> Self {
+    pub fn new(config: RLOptimizationConfig, state_size: usize, actionsize: usize) -> Self {
         let hidden_sizes = vec![state_size * 2, state_size * 3, state_size * 2];
         let meta_policy = MetaPolicyNetwork::new(state_size, action_size, hidden_sizes);
 
         Self {
-            _config,
+            config,
             meta_policy,
             reward_function: ImprovementReward::default(),
             meta_trajectories: VecDeque::with_capacity(1000),
@@ -580,7 +580,7 @@ impl AdvancedPolicyGradientOptimizer {
     }
 
     /// Compute meta-gradients for higher-order learning
-    fn compute_meta_gradients(&self, meta_batch: &[MetaTrajectory]) -> MetaGradients {
+    fn compute_meta_gradients(&self, metabatch: &[MetaTrajectory]) -> MetaGradients {
         let num_layers = self.meta_policy.layer_sizes.len() - 1;
         let max_size = *self.meta_policy.layer_sizes.iter().max().unwrap();
 
@@ -773,7 +773,7 @@ impl RLOptimizer for AdvancedAdvancedPolicyGradientOptimizer {
         self.decode_meta_action(&policy_output.view(), &meta_output.view())
     }
 
-    fn update(&mut self_experience: &Experience) -> Result<(), OptimizeError> {
+    fn update(&mut self, experience: &Experience) -> Result<(), OptimizeError> {
         // Meta-learning updates are done in batch after collecting trajectories
         Ok(())
     }

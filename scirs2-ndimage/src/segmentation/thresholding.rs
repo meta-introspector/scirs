@@ -11,7 +11,7 @@ use num_traits::{Float, FromPrimitive, NumAssign};
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(_value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
 
@@ -41,13 +41,13 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 /// let mask = threshold_binary(&image, 0.5).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn threshold_binary<T, D>(_image: &Array<T, D>, threshold: T) -> NdimageResult<Array<T, D>>
+pub fn threshold_binary<T, D>(image: &Array<T, D>, threshold: T) -> NdimageResult<Array<T, D>>
 where
     T: Float + NumAssign + std::fmt::Debug + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Apply threshold by mapping over the input array
-    let result = _image.mapv(|val| if val > threshold { T::one() } else { T::zero() });
+    let result = image.mapv(|val| if val > threshold { T::one() } else { T::zero() });
 
     Ok(result)
 }
@@ -82,7 +82,7 @@ where
 /// ```
 /// ```
 #[allow(dead_code)]
-pub fn otsu_threshold<T, D>(_image: &Array<T, D>, bins: usize) -> NdimageResult<(Array<T, D>, T)>
+pub fn otsu_threshold<T, D>(image: &Array<T, D>, bins: usize) -> NdimageResult<(Array<T, D>, T)>
 where
     T: Float + NumAssign + std::fmt::Debug + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
@@ -93,7 +93,7 @@ where
     let mut min_val = Float::infinity();
     let mut max_val = Float::neg_infinity();
 
-    for &val in _image.iter() {
+    for &val in image.iter() {
         if val < min_val {
             min_val = val;
         }
@@ -113,14 +113,14 @@ where
     let mut hist = vec![0; nbins];
     let bin_width = (max_val - min_val) / safe_usize_to_float(nbins)?;
 
-    for &val in _image.iter() {
+    for &val in image.iter() {
         let bin = ((val - min_val) / bin_width).to_usize().unwrap_or(0);
         let bin_index = std::cmp::min(bin, nbins - 1);
         hist[bin_index] += 1;
     }
 
     // Calculate total pixels
-    let total_pixels = _image.len();
+    let total_pixels = image.len();
 
     // Compute cumulative sums
     let mut cum_sum = vec![0; nbins];
@@ -267,9 +267,9 @@ where
                         let dist = safe_usize_to_float(dist_sq as usize)?.sqrt();
 
                         // Gaussian weight
-                        let sigma = safe_usize_to_float(radius)? / safe_f64, _to_float: <T>(2.0)?;
+                        let sigma = safe_usize_to_float(radius)? / safe_f64to_float::<T>(2.0)?;
                         let weight =
-                            (-dist * dist / (safe_f64, _to_float: <T>(2.0)? * sigma * sigma)).exp();
+                            (-dist * dist / (safe_f64to_float::<T>(2.0)? * sigma * sigma)).exp();
 
                         weighted_sum += val * weight;
                         weight_sum += weight;

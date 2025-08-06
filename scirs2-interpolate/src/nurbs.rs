@@ -250,7 +250,7 @@ where
     /// # Returns
     ///
     /// Array of points on the NURBS curve at the given parameter values
-    pub fn evaluate_array(&self, t_values: &ArrayView1<T>) -> InterpolateResult<Array2<T>> {
+    pub fn evaluate_array(&self, tvalues: &ArrayView1<T>) -> InterpolateResult<Array2<T>> {
         let n_points = t_values.len();
         let mut result = Array2::zeros((n_points, self.dimension));
 
@@ -499,7 +499,7 @@ where
         // Create a new NURBS curve
         NurbsCurve::new(
             &new_control_points.view(),
-            &new_weights.view(),
+            &newweights.view(),
             &new_knots.view(),
             p,
             self.bspline.extrapolate_mode(),
@@ -575,7 +575,7 @@ where
         // Compute all derivatives up to max_order
         for _order in 0..=max_order {
             for i in 0..n {
-                all_derivs[_order][i] = self.basis_function_derivative(i, t, _order)?;
+                all_derivs[_order][i] = self.basis_function_derivative(i, t, order)?;
             }
         }
 
@@ -745,7 +745,7 @@ where
     /// let first_deriv = &derivatives[1];
     /// let second_deriv = &derivatives[2];
     /// ```
-    pub fn derivatives_all(&self, t: T, max_order: usize) -> InterpolateResult<Vec<Array1<T>>> {
+    pub fn derivatives_all(&self, t: T, maxorder: usize) -> InterpolateResult<Vec<Array1<T>>> {
         let mut derivatives = Vec::with_capacity(max_order + 1);
 
         // Order 0 is the curve point itself
@@ -1030,7 +1030,7 @@ where
 
             let deriv_a = self.derivative(a, 1)?;
 
-            if (deriv_a[component] > T::zero()) == (deriv_c[component] >, T::zero()) {
+            if (deriv_a[component] > T::zero()) == (deriv_c[component] > T::zero()) {
                 a = c;
             } else {
                 b = c;
@@ -1868,7 +1868,7 @@ where
                 derivatives[i][0] = self.derivative_u(_u_v)?;
             } else {
                 // Higher order _u derivatives using generalized quotient rule
-                derivatives[i][0] = self.compute_higher_order_u_derivative(_u, _v, i)?;
+                derivatives[i][0] = self.compute_higher_order_u_derivative(_u, v, i)?;
             }
         }
 
@@ -1878,7 +1878,7 @@ where
                 derivatives[0][j] = self.derivative_v(_u_v)?;
             } else {
                 // Higher order _v derivatives using generalized quotient rule
-                derivatives[0][j] = self.compute_higher_order_v_derivative(_u, _v, j)?;
+                derivatives[0][j] = self.compute_higher_order_v_derivative(_u, v, j)?;
             }
         }
 
@@ -1889,7 +1889,7 @@ where
                     derivatives[i][j] = self.mixed_derivative(_u_v)?;
                 } else {
                     // Higher order mixed derivatives using generalized quotient rule
-                    derivatives[i][j] = self.compute_higher_order_mixed_derivative(_u, _v, i, j)?;
+                    derivatives[i][j] = self.compute_higher_order_mixed_derivative(_u, v, i, j)?;
                 }
             }
         }

@@ -594,40 +594,40 @@ where
 ///
 /// A transposed sparse matrix
 #[allow(dead_code)]
-pub fn sparse_transpose<T>(_sparse: &SparseMatrixView<T>) -> LinalgResult<SparseMatrixView<T>>
+pub fn sparse_transpose<T>(sparse: &SparseMatrixView<T>) -> LinalgResult<SparseMatrixView<T>>
 where
     T: Clone + Copy + Debug + Zero,
 {
     // Compute the number of non-zeros per column
-    let mut col_counts = vec![0; _sparse.cols];
-    for &col in &_sparse.indices {
+    let mut col_counts = vec![0; sparse.cols];
+    for &col in &sparse.indices {
         col_counts[col] += 1;
     }
 
     // Compute column pointers (cumulative sum)
-    let mut col_ptrs = vec![0; _sparse.cols + 1];
-    for i in 0.._sparse.cols {
+    let mut col_ptrs = vec![0; sparse.cols + 1];
+    for i in 0..sparse.cols {
         col_ptrs[i + 1] = col_ptrs[i] + col_counts[i];
     }
 
     // Fill the transposed matrix
-    let nnz = _sparse.nnz();
+    let nnz = sparse.nnz();
     let mut indices_t = vec![0; nnz];
     let mut data_t = vec![T::zero(); nnz];
-    let mut col_offsets = vec![0; _sparse.cols];
+    let mut col_offsets = vec![0; sparse.cols];
 
-    for row in 0.._sparse.rows {
-        for j in _sparse.indptr[row].._sparse.indptr[row + 1] {
-            let col = _sparse.indices[j];
+    for row in 0..sparse.rows {
+        for j in sparse.indptr[row]..sparse.indptr[row + 1] {
+            let col = sparse.indices[j];
             let dest = col_ptrs[col] + col_offsets[col];
 
             indices_t[dest] = row;
-            data_t[dest] = _sparse.data[j];
+            data_t[dest] = sparse.data[j];
             col_offsets[col] += 1;
         }
     }
 
-    SparseMatrixView::new(data_t, col_ptrs, indices_t, (_sparse.cols, _sparse.rows))
+    SparseMatrixView::new(data_t, col_ptrs, indices_t, (sparse.cols, sparse.rows))
 }
 
 /// Advanced sparse matrix operations and integration points
@@ -840,40 +840,40 @@ pub mod advanced {
     }
 
     /// Analyze sparse matrix structure for algorithm selection
-    pub fn analyze_sparse_structure<T>(_sparse: &SparseMatrixView<T>) -> SparseMatrixStats
+    pub fn analyze_sparse_structure<T>(sparse: &SparseMatrixView<T>) -> SparseMatrixStats
     where
         T: Float + Clone + Copy + Debug + PartialOrd,
     {
-        let total_elements = _sparse.nrows() * _sparse.ncols();
-        let sparsity_ratio = _sparse.nnz() as f64 / total_elements as f64;
-        let avg_nnz_per_row = _sparse.nnz() as f64 / _sparse.nrows() as f64;
+        let total_elements = sparse.nrows() * sparse.ncols();
+        let sparsity_ratio = sparse.nnz() as f64 / total_elements as f64;
+        let avg_nnz_per_row = sparse.nnz() as f64 / sparse.nrows() as f64;
 
         // Find maximum non-zeros per row
         let mut max_nnz_per_row = 0;
-        for i in 0.._sparse.nrows() {
-            let row_nnz = _sparse.indptr[i + 1] - _sparse.indptr[i];
+        for i in 0..sparse.nrows() {
+            let row_nnz = sparse.indptr[i + 1] - sparse.indptr[i];
             max_nnz_per_row = max_nnz_per_row.max(row_nnz);
         }
 
         // Estimate bandwidth (maximum distance from diagonal)
         let mut bandwidth = 0;
-        for i in 0.._sparse.nrows() {
-            for j in _sparse.indptr[i].._sparse.indptr[i + 1] {
-                let col = _sparse.indices[j];
+        for i in 0..sparse.nrows() {
+            for j in sparse.indptr[i]..sparse.indptr[i + 1] {
+                let col = sparse.indices[j];
                 let distance = i.abs_diff(col);
                 bandwidth = bandwidth.max(distance);
             }
         }
 
         // Check for symmetry (approximate check)
-        let is_symmetric = if _sparse.nrows() == _sparse.ncols() {
-            check_sparse_symmetry(_sparse)
+        let is_symmetric = if sparse.nrows() == sparse.ncols() {
+            check_sparse_symmetry(sparse)
         } else {
             false
         };
 
         // Check diagonal dominance
-        let is_diagonal_dominant = check_diagonal_dominance(_sparse);
+        let is_diagonal_dominant = check_diagonal_dominance(sparse);
 
         SparseMatrixStats {
             sparsity_ratio,
@@ -886,25 +886,25 @@ pub mod advanced {
     }
 
     /// Check if sparse matrix is approximately symmetric
-    fn check_sparse_symmetry<T>(_sparse: &SparseMatrixView<T>) -> bool
+    fn check_sparse_symmetry<T>(sparse: &SparseMatrixView<T>) -> bool
     where
         T: Float + Clone + Copy + Debug + PartialOrd,
     {
         // Create a map of (row, col) -> value for quick lookup
         let mut elements = HashMap::new();
 
-        for i in 0.._sparse.nrows() {
-            for j in _sparse.indptr[i].._sparse.indptr[i + 1] {
-                let col = _sparse.indices[j];
-                elements.insert((i, col), _sparse.data[j]);
+        for i in 0..sparse.nrows() {
+            for j in sparse.indptr[i]..sparse.indptr[i + 1] {
+                let col = sparse.indices[j];
+                elements.insert((i, col), sparse.data[j]);
             }
         }
 
         // Check if A[i,j] ≈ A[j,i] for all non-zero elements
-        for i in 0.._sparse.nrows() {
-            for j in _sparse.indptr[i].._sparse.indptr[i + 1] {
-                let col = _sparse.indices[j];
-                let val_ij = _sparse.data[j];
+        for i in 0..sparse.nrows() {
+            for j in sparse.indptr[i]..sparse.indptr[i + 1] {
+                let col = sparse.indices[j];
+                let val_ij = sparse.data[j];
 
                 if let Some(&val_ji) = elements.get(&(col, i)) {
                     let diff = (val_ij - val_ji).abs();
@@ -923,17 +923,17 @@ pub mod advanced {
     }
 
     /// Check if matrix is diagonally dominant
-    fn check_diagonal_dominance<T>(_sparse: &SparseMatrixView<T>) -> bool
+    fn check_diagonal_dominance<T>(sparse: &SparseMatrixView<T>) -> bool
     where
         T: Float + Clone + Copy + Debug + PartialOrd,
     {
-        for i in 0.._sparse.nrows() {
+        for i in 0..sparse.nrows() {
             let mut diag_val = T::zero();
             let mut off_diag_sum = T::zero();
 
-            for j in _sparse.indptr[i].._sparse.indptr[i + 1] {
-                let col = _sparse.indices[j];
-                let val = _sparse.data[j].abs();
+            for j in sparse.indptr[i]..sparse.indptr[i + 1] {
+                let col = sparse.indices[j];
+                let val = sparse.data[j].abs();
 
                 if col == i {
                     diag_val = val;
@@ -1052,10 +1052,10 @@ pub mod utils {
         // Analyze matrix sparsity
         let total_elements = matrix.len();
         let mut zero_count = 0;
-        let _threshold = T::epsilon() * T::from(1000.0).unwrap();
+        let threshold = T::epsilon() * T::from(1000.0).unwrap();
 
         for &val in matrix.iter() {
-            if val.abs() < _threshold {
+            if val.abs() < threshold {
                 zero_count += 1;
             }
         }
@@ -1064,7 +1064,7 @@ pub mod utils {
 
         if sparsity_ratio > sparsity_threshold {
             // Convert to sparse and solve
-            let sparse = sparse_from_ndarray(matrix, _threshold)?;
+            let sparse = sparse_from_ndarray(matrix, threshold)?;
             sparse.solve(rhs)
         } else {
             // Use dense solver

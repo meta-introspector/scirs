@@ -50,7 +50,7 @@ impl MultivariateLognormal {
     /// let sigma = array![[0.5, 0.2], [0.2, 0.5]];
     /// let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
     /// ```
-    pub fn new<D1, D2>(_mu: ArrayBase<D1, Ix1>, sigma: ArrayBase<D2, Ix2>) -> StatsResult<Self>
+    pub fn new<D1, D2>(mu: ArrayBase<D1, Ix1>, sigma: ArrayBase<D2, Ix2>) -> StatsResult<Self>
     where
         D1: Data<Elem = f64>,
         D2: Data<Elem = f64>,
@@ -62,7 +62,7 @@ impl MultivariateLognormal {
         let dim = mvn.dim();
 
         Ok(MultivariateLognormal {
-            mu: _mu.to_owned(),
+            mu: mu.to_owned(),
             sigma: sigma.to_owned(),
             dim,
             mvn,

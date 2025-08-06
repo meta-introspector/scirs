@@ -81,7 +81,7 @@ where
     D: Dimension,
 {
     /// Creates a new Lookahead optimizer with the given inner optimizer and default settings
-    pub fn new(inner_optimizer: O) -> Self {
+    pub fn new(inneroptimizer: O) -> Self {
         Self {
             inner_optimizer,
             alpha: A::from(0.5).unwrap(), // Default alpha is 0.5
@@ -95,7 +95,7 @@ where
     }
 
     /// Creates a new Lookahead optimizer with the specified alpha and k values
-    pub fn with_config(inner_optimizer: O, alpha: A, k: usize) -> Self {
+    pub fn with_config(inneroptimizer: O, alpha: A, k: usize) -> Self {
         Self {
             inner_optimizer,
             alpha,
@@ -259,7 +259,7 @@ where
         }
     }
 
-    fn set_learning_rate(&mut self, learning_rate: A) {
+    fn set_learning_rate(&mut self, learningrate: A) {
         self.inner_optimizer.set_learning_rate(learning_rate);
     }
 

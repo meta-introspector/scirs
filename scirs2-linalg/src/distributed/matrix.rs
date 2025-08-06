@@ -438,7 +438,7 @@ pub struct VectorDistribution {
 
 impl VectorDistribution {
     /// Create distribution for a vector
-    pub fn new(_global_length: usize, num_nodes: usize, node_rank: usize) -> Self {
+    pub fn new(_global_length: usize, num_nodes: usize, noderank: usize) -> Self {
         let elements_per_node = _global_length / num_nodes;
         let remainder = _global_length % num_nodes;
         
@@ -576,7 +576,7 @@ where
     
     // Private helper methods
     
-    fn allreduce_sum(&self, local_value: T) -> LinalgResult<T> {
+    fn allreduce_sum(&self, localvalue: T) -> LinalgResult<T> {
         // Simple implementation using gather and broadcast
         let value_matrix = Array2::from_elem((1, 1), local_value);
         
@@ -603,7 +603,7 @@ mod tests {
     
     #[test]
     fn test_distributed_matrix_creation() {
-        let matrix = Array2::fromshape_fn((6, 4), |(i, j)| (i * 4 + j) as f64);
+        let matrix = Array2::from_shape_fn((6, 4), |(i, j)| (i * 4 + j) as f64);
         let config = DistributedConfig::default()
             .with_num_nodes(2)
             .with_node_rank(0)
@@ -618,7 +618,7 @@ mod tests {
     
     #[test]
     fn test_distributed_vector_creation() {
-        let vector = Array1::fromshape_fn(10, |i| i as f64);
+        let vector = Array1::from_shape_fn(10, |i| i as f64);
         let config = DistributedConfig::default()
             .with_num_nodes(2)
             .with_node_rank(0);
@@ -641,8 +641,8 @@ mod tests {
     
     #[test]
     fn test_matrix_local_operations() {
-        let matrix1 = Array2::fromshape_fn((4, 4), |(i, j)| (i + j) as f64);
-        let matrix2 = Array2::fromshape_fn((4, 4), |(i, j)| (i * j) as f64);
+        let matrix1 = Array2::from_shape_fn((4, 4), |(i, j)| (i + j) as f64);
+        let matrix2 = Array2::from_shape_fn((4, 4), |(i, j)| (i * j) as f64);
         
         let config = DistributedConfig::default();
         

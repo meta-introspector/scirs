@@ -17,10 +17,10 @@ use std::collections::VecDeque;
 /// Multirate ODE system with fast and slow components
 pub trait MultirateSystem<F: IntegrateFloat> {
     /// Evaluate slow component: dy_slow/dt = f_slow(t, y_slow, y_fast)
-    fn slow_rhs(&self, t: F, y_slow: ArrayView1<F>, y_fast: ArrayView1<F>) -> Array1<F>;
+    fn slow_rhs(&self, t: F, y_slow: ArrayView1<F>, yfast: ArrayView1<F>) -> Array1<F>;
 
     /// Evaluate fast component: dy_fast/dt = f_fast(t, y_slow, y_fast)
-    fn fast_rhs(&self, t: F, y_slow: ArrayView1<F>, y_fast: ArrayView1<F>) -> Array1<F>;
+    fn fast_rhs(&self, t: F, y_slow: ArrayView1<F>, yfast: ArrayView1<F>) -> Array1<F>;
 
     /// Get dimension of slow variables
     fn slow_dim(&self) -> usize;
@@ -98,9 +98,9 @@ pub struct MultirateSolver<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> MultirateSolver<F> {
     /// Create new multirate solver
-    pub fn new(_options: MultirateOptions<F>) -> Self {
-        let current_macro_step = _options.macro_step;
-        let current_micro_step = match &_options.method {
+    pub fn new(options: MultirateOptions<F>) -> Self {
+        let current_macro_step = options.macro_step;
+        let current_micro_step = match &options.method {
             MultirateMethod::ExplicitMRK { micro_steps, .. } => {
                 current_macro_step / F::from(*micro_steps).unwrap()
             }
@@ -111,7 +111,7 @@ impl<F: IntegrateFloat> MultirateSolver<F> {
         };
 
         Self {
-            options: _options,
+            options: options,
             history: VecDeque::new(),
             current_macro_step,
             current_micro_step,
@@ -414,10 +414,10 @@ pub struct FastSlowOscillator<F: IntegrateFloat> {
 }
 
 impl<F: IntegrateFloat> MultirateSystem<F> for FastSlowOscillator<F> {
-    fn slow_rhs(&self, t: F, y_slow: ArrayView1<F>, y_fast: ArrayView1<F>) -> Array1<F> {
+    fn slow_rhs(&self, t: F, y_slow: ArrayView1<F>, yfast: ArrayView1<F>) -> Array1<F> {
         let x_slow = y_slow[0];
         let v_slow = y_slow[1];
-        let x_fast = y_fast[0];
+        let x_fast = yfast[0];
 
         // Slow dynamics: influenced by _fast oscillations
         let dx_slow_dt = v_slow;
@@ -426,10 +426,10 @@ impl<F: IntegrateFloat> MultirateSystem<F> for FastSlowOscillator<F> {
         Array1::from_vec(vec![dx_slow_dt, dv_slow_dt])
     }
 
-    fn fast_rhs(&self, t: F, y_slow: ArrayView1<F>, y_fast: ArrayView1<F>) -> Array1<F> {
+    fn fast_rhs(&self, t: F, y_slow: ArrayView1<F>, yfast: ArrayView1<F>) -> Array1<F> {
         let x_slow = y_slow[0];
-        let x_fast = y_fast[0];
-        let v_fast = y_fast[1];
+        let x_fast = yfast[0];
+        let v_fast = yfast[1];
 
         // Fast oscillator dynamics
         let dx_fast_dt = v_fast;

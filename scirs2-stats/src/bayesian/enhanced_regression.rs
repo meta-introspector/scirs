@@ -278,7 +278,7 @@ where
     fn fit_variational_bayes(&self) -> StatsResult<BayesianRegressionResult<F>> {
         let x = &self.design_matrix;
         let y = &self.response;
-        let (n, _p) = x.dim();
+        let (n, p) = x.dim();
 
         // Initialize variational parameters
         let mut q_beta_mean = self.prior.beta_mean.clone();
@@ -630,7 +630,7 @@ where
     }
 
     /// Compute log-likelihood for MCMC monitoring
-    fn compute_mcmc_log_likelihood(&self, beta: &Array1<F>, noise_precision: F) -> StatsResult<F> {
+    fn compute_mcmc_log_likelihood(&self, beta: &Array1<F>, noiseprecision: F) -> StatsResult<F> {
         let x = &self.design_matrix;
         let y = &self.response;
         let n = x.nrows() as f64;

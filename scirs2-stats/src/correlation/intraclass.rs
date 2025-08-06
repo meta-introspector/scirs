@@ -75,7 +75,7 @@ where
         ));
     }
 
-    // Set confidence _level, default to 0.95
+    // Set confidence level, default to 0.95
     let alpha = F::one() - conf_level.unwrap_or_else(|| F::from(0.95).unwrap());
 
     // Calculate mean for each subject and rater

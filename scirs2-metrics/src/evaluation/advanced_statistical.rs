@@ -82,7 +82,8 @@ pub struct AdvancedStatisticalAnalyzer<F: Float> {
     alpha: F,
     beta: F,
     confidence_level: F,
-    use_bayesian: bool, _phantom: std::marker::PhantomData<F>,
+    use_bayesian: bool,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> Default
@@ -100,7 +101,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
             alpha: F::from(0.05).unwrap(),
             beta: F::from(0.20).unwrap(),
             confidence_level: F::from(0.95).unwrap(),
-            use_bayesian: true, _phantom: std::marker::PhantomData,
+            use_bayesian: true,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -200,7 +202,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
     }
 
     /// Calculate Cohen's d effect size
-    fn cohens_d(&self, group_a: ArrayView1<F>, group_b: ArrayView1<F>) -> Result<F> {
+    fn cohens_d(&self, group_a: ArrayView1<F>, groupb: ArrayView1<F>) -> Result<F> {
         let mean_a = group_a.mean().unwrap_or(F::zero());
         let mean_b = group_b.mean().unwrap_or(F::zero());
 
@@ -276,7 +278,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
         let differences: Vec<F> = group_a
             .iter()
             .zip(group_b.iter())
-            .map(|(&_a, &_b)| _a - _b)
+            .map(|(&_a, &_b)| _a - b)
             .collect();
         let diff_array = Array1::from(differences);
 
@@ -325,7 +327,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
         }
 
         // Sort by value
-        combined.sort_by(|_a, _b| _a.0.partial_cmp(&_b.0).unwrap_or(std::cmp::Ordering::Equal));
+        combined.sort_by(|_a, _b| a.0.partial_cmp(&_b.0).unwrap_or(std::cmp::Ordering::Equal));
 
         // Calculate ranks (handling ties by averaging)
         let mut ranks = vec![F::zero(); combined.len()];
@@ -465,7 +467,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
     }
 
     /// Interpret effect size magnitude
-    pub fn interpret_effect_size(&self, cohens_d: F) -> EffectSizeMagnitude {
+    pub fn interpret_effect_size(&self, cohensd: F) -> EffectSizeMagnitude {
         let abs_d = cohens_d.abs();
 
         if abs_d < F::from(0.2).unwrap() {

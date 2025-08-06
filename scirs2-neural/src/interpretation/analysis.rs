@@ -85,7 +85,7 @@ where
     Ok(stats)
 /// Compute detailed statistics for layer activations
 #[allow(dead_code)]
-pub fn compute_layer_statistics<F>(_activations: &ArrayD<F>) -> Result<LayerAnalysisStats<F>>
+pub fn compute_layer_statistics<F>(activations: &ArrayD<F>) -> Result<LayerAnalysisStats<F>>
     let mean_activation = activations.mean().unwrap_or(F::zero());
     let variance = activations
         .mapv(|x| (x - mean_activation) * (x - mean_activation))
@@ -137,7 +137,7 @@ pub fn compute_layer_statistics<F>(_activations: &ArrayD<F>) -> Result<LayerAnal
     })
 /// Compute attribution statistics for a single attribution method
 #[allow(dead_code)]
-pub fn compute_attribution_statistics<F>(_attribution: &ArrayD<F>) -> AttributionStatistics<F>
+pub fn compute_attribution_statistics<F>(attribution: &ArrayD<F>) -> AttributionStatistics<F>
     let mean = attribution.mean().unwrap_or(F::zero());
     let abs_attribution = attribution.mapv(|x| x.abs());
     let mean_abs = abs_attribution.mean().unwrap_or(F::zero());
@@ -168,9 +168,9 @@ pub fn generate_interpretation_summary<F>(
         for i in 0..first_attribution.len() {
             let mut scores = Vec::new();
             for _attribution in attributions.values() {
-                if i < _attribution.len() {
+                if i < attribution.len() {
                     // Use iter() to access elements properly for multi-dimensional arrays
-                    if let Some(value) = _attribution.iter().nth(i) {
+                    if let Some(value) = attribution.iter().nth(i) {
                         scores.push(value.to_f64().unwrap_or(0.0));
                     }
                 }
@@ -218,7 +218,7 @@ pub fn find_most_important_features<F>(
         .collect()
 /// Compute interpretation confidence based on method consistency
 #[allow(dead_code)]
-pub fn compute_interpretation_confidence<F>(_attributions: &HashMap<String, ArrayD<F>>) -> f64
+pub fn compute_interpretation_confidence<F>(attributions: &HashMap<String, ArrayD<F>>) -> f64
     if attributions.len() < 2 {
         return 1.0; // Single method, assume full confidence
     // Compute pairwise correlations between attribution methods
@@ -257,7 +257,7 @@ pub fn compute_correlation<F>(x: &ArrayD<F>, y: &ArrayD<F>) -> f64
         numerator / denominator
 /// Analyze activation distribution patterns
 #[allow(dead_code)]
-pub fn analyze_activation_distribution<F>(_stats: &LayerAnalysisStats<F>) -> HashMap<String, f64>
+pub fn analyze_activation_distribution<F>(stats: &LayerAnalysisStats<F>) -> HashMap<String, f64>
     F: Float + Debug,
     let mut analysis = HashMap::new();
     analysis.insert(

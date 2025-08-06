@@ -195,7 +195,7 @@ where
 /// # Returns
 /// Angle in radians
 #[allow(dead_code)]
-pub fn radian<T>(_degrees: T) -> T
+pub fn radian<T>(degrees: T) -> T
 where
     T: Float + FromPrimitive,
 {
@@ -928,7 +928,7 @@ where
 /// # Returns
 /// Angular distance in radians
 #[allow(dead_code)]
-pub fn spherical_distance<T>(_lat1: T, lon1: T, lat2: T, lon2: T) -> SpecialResult<T>
+pub fn spherical_distance<T>(lat1: T, lon1: T, lat2: T, lon2: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy,
 {
@@ -938,10 +938,10 @@ where
     check_finite(lon2, "lon2 value")?;
 
     let two = T::from_f64(2.0).unwrap();
-    let dlat = (lat2 - _lat1) / two;
+    let dlat = (lat2 - lat1) / two;
     let dlon = (lon2 - lon1) / two;
 
-    let a = dlat.sin().powi(2) + _lat1.cos() * lat2.cos() * dlon.sin().powi(2);
+    let a = dlat.sin().powi(2) + lat1.cos() * lat2.cos() * dlon.sin().powi(2);
     Ok(two * a.sqrt().asin())
 }
 

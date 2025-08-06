@@ -9,9 +9,9 @@ use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;
 use std::fs;
+use std::path::PathBuf;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::path::PathBuf;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct LongRunAnalysisReport {
@@ -600,7 +600,8 @@ fn main() -> Result<()> {
     let output_content = match format.as_str() {
         "json" => generate_json_report(&analysis_report)?,
         "markdown" => generate_markdown_report(&analysis_report)?,
-        "github-actions" => generate_github_actions_report(&analysis_report)?_ => {
+        "github-actions" => generate_github_actions_report(&analysis_report)?,
+        _ => {
             return Err(OptimError::InvalidConfig(format!(
                 "Unknown format: {}",
                 format
@@ -684,15 +685,15 @@ struct SystemEvent {
 }
 
 #[allow(dead_code)]
-fn load_longrun_test_results(_path: &Path, verbose: bool) -> Result<LongRunTestData> {
+fn load_longrun_test_results(path: &Path, verbose: bool) -> Result<LongRunTestData> {
     if verbose {
-        println!("  Loading long-running test data from: {}", _path.display());
+        println!("  Loading long-running test data from: {}", path.display());
     }
 
     let content = fs::read_to_string(_path)?;
 
     // Try to parse as JSON first
-    if let Ok(data) = serde_json::from, _str::<LongRunTestData>(&content) {
+    if let Ok(data) = serde_json::from_str::<LongRunTestData>(&content) {
         return Ok(data);
     }
 
@@ -895,13 +896,13 @@ fn analyze_longrun_test_results(
 }
 
 #[allow(dead_code)]
-fn analyze_endurance(_data: &LongRunTestData) -> EnduranceAnalysis {
+fn analyze_endurance(data: &LongRunTestData) -> EnduranceAnalysis {
     // Analyze performance sustainability
     let perf_timeline = &_data.performance_timeline;
     let initial_perf = perf_timeline.first().map(|(_, p)| *p).unwrap_or(100.0);
     let final_perf = perf_timeline.last().map(|(_, p)| *p).unwrap_or(100.0);
     let decay_rate_per_day = ((initial_perf - final_perf) / initial_perf) * 100.0 * (24.0 * 3600.0)
-        / _data.total_duration_seconds;
+        / data.total_duration_seconds;
 
     let performance_sustainability = PerformanceSustainabilityAnalysis {
         performance_decay_rate_per_day: decay_rate_per_day,
@@ -932,7 +933,7 @@ fn analyze_endurance(_data: &LongRunTestData) -> EnduranceAnalysis {
     let initial_mem = mem_timeline.first().map(|(_, m)| *m).unwrap_or(100.0);
     let final_mem = mem_timeline.last().map(|(_, m)| *m).unwrap_or(100.0);
     let mem_growth_rate = ((final_mem - initial_mem) / initial_mem) * 100.0 * (24.0 * 3600.0)
-        / _data.total_duration_seconds;
+        / data.total_duration_seconds;
 
     let memory_sustainability = MemorySustainabilityAnalysis {
         memory_growth_sustainability: calculate_sustainability_score(mem_growth_rate),
@@ -966,7 +967,7 @@ fn analyze_endurance(_data: &LongRunTestData) -> EnduranceAnalysis {
     };
 
     // Analyze error accumulation
-    let total_errors: usize = _data.error_timeline.iter().map(|(_, e)| *e).sum();
+    let total_errors: usize = data.error_timeline.iter().map(|(_, e)| *e).sum();
     let error_rate_progression = ErrorRateProgression {
         initial_error_rate_per_hour: 0.5,
         final_error_rate_per_hour: 1.2,
@@ -1052,12 +1053,12 @@ fn analyze_endurance(_data: &LongRunTestData) -> EnduranceAnalysis {
 }
 
 #[allow(dead_code)]
-fn calculate_stability_coefficient(_timeline: &[(u64, f64)]) -> f64 {
-    if _timeline.len() < 2 {
+fn calculate_stability_coefficient(timeline: &[(u64, f64)]) -> f64 {
+    if timeline.len() < 2 {
         return 1.0;
     }
 
-    let mean = _timeline.iter().map(|(_, v)| *v).sum::<f64>() / _timeline.len() as f64;
+    let mean = timeline.iter().map(|(_, v)| *v).sum::<f64>() / timeline.len() as f64;
     let variance = _timeline
         .iter()
         .map(|(_, v)| (*v - mean).powi(2))
@@ -1073,7 +1074,7 @@ fn calculate_stability_coefficient(_timeline: &[(u64, f64)]) -> f64 {
 }
 
 #[allow(dead_code)]
-fn calculate_sustainability_score(_degradation_rate: f64) -> f64 {
+fn calculate_sustainability_score(_degradationrate: f64) -> f64 {
     if _degradation_rate <= 0.0 {
         1.0
     } else {
@@ -1095,7 +1096,7 @@ fn calculate_endurance_score(
 }
 
 #[allow(dead_code)]
-fn analyze_trends(_data: &LongRunTestData) -> TrendAnalysis {
+fn analyze_trends(data: &LongRunTestData) -> TrendAnalysis {
     // Simplified trend analysis
     TrendAnalysis {
         long_term_trends: vec![LongTermTrend {
@@ -1123,10 +1124,10 @@ fn analyze_trends(_data: &LongRunTestData) -> TrendAnalysis {
 }
 
 #[allow(dead_code)]
-fn analyze_reliability(_data: &LongRunTestData) -> ReliabilityAnalysis {
+fn analyze_reliability(data: &LongRunTestData) -> ReliabilityAnalysis {
     let failures = &_data.failure_events;
     let total_failures = failures.len();
-    let duration_hours = _data.total_duration_seconds / 3600.0;
+    let duration_hours = data.total_duration_seconds / 3600.0;
     let failure_rate = if duration_hours > 0.0 {
         (total_failures as f64 / duration_hours) * 1000.0
     } else {
@@ -1146,12 +1147,12 @@ fn analyze_reliability(_data: &LongRunTestData) -> ReliabilityAnalysis {
 
     let total_downtime: f64 = failures.iter().map(|f| f.downtime_seconds).sum();
     let availability_percent =
-        ((_data.total_duration_seconds - total_downtime) / _data.total_duration_seconds) * 100.0;
+        ((_data.total_duration_seconds - total_downtime) / data.total_duration_seconds) * 100.0;
 
     let availability_analysis = AvailabilityAnalysis {
         overall_availability_percent: availability_percent,
         planned_downtime_percent: 0.0,
-        unplanned_downtime_percent: (total_downtime / _data.total_duration_seconds) * 100.0,
+        unplanned_downtime_percent: (total_downtime / data.total_duration_seconds) * 100.0,
         availability_trend: -0.1, // Slight downward trend
         sla_compliance_percent: if availability_percent >= 99.0 {
             100.0
@@ -1210,7 +1211,8 @@ fn analyze_reliability(_data: &LongRunTestData) -> ReliabilityAnalysis {
 
 #[allow(dead_code)]
 fn calculate_reliability_score(
-    availability: &AvailabilityAnalysis, mtbf: &MtbfAnalysis,
+    availability: &AvailabilityAnalysis,
+    mtbf: &MtbfAnalysis,
     fault_tolerance: &FaultToleranceAssessment,
 ) -> f64 {
     let availability_score = availability.overall_availability_percent / 100.0;
@@ -1220,7 +1222,7 @@ fn calculate_reliability_score(
 }
 
 #[allow(dead_code)]
-fn analyze_longterm_resources(_data: &LongRunTestData) -> LongTermResourceAnalysis {
+fn analyze_longterm_resources(data: &LongRunTestData) -> LongTermResourceAnalysis {
     let cpu_trends = analyze_resource_trends(&_data.cpu_timeline);
     let memory_trends = analyze_resource_trends(&_data.memory_timeline);
 
@@ -1263,8 +1265,8 @@ fn analyze_longterm_resources(_data: &LongRunTestData) -> LongTermResourceAnalys
 }
 
 #[allow(dead_code)]
-fn analyze_resource_trends(_timeline: &[(u64, f64)]) -> ResourceTrendAnalysis {
-    if _timeline.is_empty() {
+fn analyze_resource_trends(timeline: &[(u64, f64)]) -> ResourceTrendAnalysis {
+    if timeline.is_empty() {
         return ResourceTrendAnalysis {
             average_utilization_percent: 0.0,
             peak_utilization_percent: 0.0,
@@ -1275,15 +1277,15 @@ fn analyze_resource_trends(_timeline: &[(u64, f64)]) -> ResourceTrendAnalysis {
         };
     }
 
-    let average = _timeline.iter().map(|(_, v)| *v).sum::<f64>() / _timeline.len() as f64;
-    let peak = _timeline.iter().map(|(_, v)| *v).fold(0.0, f64::max);
+    let average = timeline.iter().map(|(_, v)| *v).sum::<f64>() / timeline.len() as f64;
+    let peak = timeline.iter().map(|(_, v)| *v).fold(0.0, f64::max);
 
     // Calculate trend (simplified linear regression)
-    let trend = if _timeline.len() > 1 {
-        let first = _timeline.first().unwrap().1;
-        let last = _timeline.last().unwrap().1;
+    let trend = if timeline.len() > 1 {
+        let first = timeline.first().unwrap().1;
+        let last = timeline.last().unwrap().1;
         let time_span_days =
-            (_timeline.last().unwrap().0 - _timeline.first().unwrap().0) as f64 / (24.0 * 3600.0);
+            (_timeline.last().unwrap().0 - timeline.first().unwrap().0) as f64 / (24.0 * 3600.0);
         if time_span_days > 0.0 {
             (last - first) / time_span_days
         } else {
@@ -1294,7 +1296,7 @@ fn analyze_resource_trends(_timeline: &[(u64, f64)]) -> ResourceTrendAnalysis {
     };
 
     let volatility = calculate_stability_coefficient(_timeline);
-    let saturation_incidents = _timeline.iter().filter(|(_, v)| *v > 90.0).count();
+    let saturation_incidents = timeline.iter().filter(|(_, v)| *v > 90.0).count();
 
     let projected_saturation = if trend > 0.0 && peak < 100.0 {
         Some((100.0 - peak) / trend)
@@ -1313,7 +1315,7 @@ fn analyze_resource_trends(_timeline: &[(u64, f64)]) -> ResourceTrendAnalysis {
 }
 
 #[allow(dead_code)]
-fn analyze_longterm_degradation(_data: &LongRunTestData) -> LongTermDegradationAnalysis {
+fn analyze_longterm_degradation(data: &LongRunTestData) -> LongTermDegradationAnalysis {
     let performance_timeline = &_data.performance_timeline;
     let initial_perf = performance_timeline
         .first()
@@ -1520,50 +1522,50 @@ fn determine_test_status(
 }
 
 #[allow(dead_code)]
-fn generate_json_report(_report: &LongRunAnalysisReport) -> Result<String> {
+fn generate_json_report(report: &LongRunAnalysisReport) -> Result<String> {
     serde_json::to_string_pretty(_report).map_err(|e| OptimError::OptimizationError(e.to_string()))
 }
 
 #[allow(dead_code)]
-fn generate_markdown_report(_report: &LongRunAnalysisReport) -> Result<String> {
+fn generate_markdown_report(report: &LongRunAnalysisReport) -> Result<String> {
     let mut md = String::new();
 
     md.push_str("# Long-Running Test Analysis Report\n\n");
-    md.push_str(&format!("**Generated**: <t:{}:F>\n", _report.timestamp));
+    md.push_str(&format!("**Generated**: <t:{}:F>\n", report.timestamp));
     md.push_str(&format!(
         "**Test Duration**: {:.2} hours\n",
-        _report.summary.total_duration_hours
+        report.summary.total_duration_hours
     ));
     md.push_str(&format!(
         "**Total Samples**: {}\n\n",
-        _report.summary.total_samples
+        report.summary.total_samples
     ));
 
     // Executive Summary
     md.push_str("## Executive Summary\n\n");
     md.push_str(&format!(
         "- **Test Status**: {}\n",
-        _report.summary.test_status
+        report.summary.test_status
     ));
     md.push_str(&format!(
         "- **Overall Stability Score**: {:.3}\n",
-        _report.summary.overall_stability_score
+        report.summary.overall_stability_score
     ));
     md.push_str(&format!(
         "- **System Uptime**: {:.2}%\n",
-        _report.summary.uptime_percentage
+        report.summary.uptime_percentage
     ));
     md.push_str(&format!(
         "- **MTBF**: {:.2} hours\n",
-        _report.summary.mean_time_between_failures_hours
+        report.summary.mean_time_between_failures_hours
     ));
     md.push_str(&format!(
         "- **MTTR**: {:.2} minutes\n",
-        _report.summary.mean_time_to_recovery_minutes
+        report.summary.mean_time_to_recovery_minutes
     ));
     md.push_str(&format!(
         "- **Critical Issues**: {}\n\n",
-        _report.summary.critical_issues_detected
+        report.summary.critical_issues_detected
     ));
 
     // Key Findings
@@ -1625,7 +1627,7 @@ fn generate_markdown_report(_report: &LongRunAnalysisReport) -> Result<String> {
     // Recommendations
     if !_report.recommendations.is_empty() {
         md.push_str("## Critical Recommendations\n\n");
-        for (i, rec) in _report.recommendations.iter().take(5).enumerate() {
+        for (i, rec) in report.recommendations.iter().take(5).enumerate() {
             md.push_str(&format!(
                 "{}. **{}** (Priority: {}, Urgency: {})\n",
                 i + 1,
@@ -1678,32 +1680,32 @@ fn generate_markdown_report(_report: &LongRunAnalysisReport) -> Result<String> {
 }
 
 #[allow(dead_code)]
-fn generate_github_actions_report(_report: &LongRunAnalysisReport) -> Result<String> {
+fn generate_github_actions_report(report: &LongRunAnalysisReport) -> Result<String> {
     let json_report = generate_json_report(_report)?;
     let mut output = String::new();
 
     // Add GitHub Actions workflow commands
-    match _report.summary.test_status.as_str() {
+    match report.summary.test_status.as_str() {
         "failed" => {
             output
                 .push_str("::error::Long-running test failed! Critical system issues detected.\n");
             output.push_str(&format!(
                 "::error::{} critical issue(s) identified.\n",
-                _report.summary.critical_issues_detected
+                report.summary.critical_issues_detected
             ));
         }
         "degraded" => {
             output.push_str("::warning::Long-running test passed with degradation concerns.\n");
             output.push_str(&format!(
                 "::warning::System stability score: {:.3}\n",
-                _report.summary.overall_stability_score
+                report.summary.overall_stability_score
             ));
         }
         "passed" => {
             output.push_str("::notice::Long-running test passed successfully!\n");
             output.push_str(&format!(
                 "::notice:: System, uptime: {:.2}%\n",
-                _report.summary.uptime_percentage
+                report.summary.uptime_percentage
             ));
         }
         _ => {
@@ -1712,10 +1714,10 @@ fn generate_github_actions_report(_report: &LongRunAnalysisReport) -> Result<Str
     }
 
     // Add specific warnings for concerning metrics
-    if _report.summary.uptime_percentage < 99.0 {
+    if report.summary.uptime_percentage < 99.0 {
         output.push_str(&format!(
             "::warning::Low system uptime: {:.2}%\n",
-            _report.summary.uptime_percentage
+            report.summary.uptime_percentage
         ));
     }
 

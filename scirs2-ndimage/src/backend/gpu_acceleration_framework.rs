@@ -109,12 +109,12 @@ pub struct MetalBufferHandle {
 
 impl GpuMemoryPool {
     /// Create a new GPU memory pool
-    pub fn new(_config: MemoryPoolConfig) -> Self {
+    pub fn new(config: MemoryPoolConfig) -> Self {
         let pool = Self {
             buffers: Arc::new(Mutex::new(Vec::new())),
             total_allocated: Arc::new(Mutex::new(0)),
             peak_usage: Arc::new(Mutex::new(0)),
-            _config,
+            config,
         };
 
         // Pre-allocate initial buffers if pooling is enabled
@@ -330,13 +330,13 @@ impl GpuMemoryPool {
         BUFFER_ID_COUNTER.fetch_add(1, Ordering::Relaxed)
     }
 
-    fn calculate_fragmentation(_buffers: &[GpuBuffer]) -> f64 {
-        if _buffers.is_empty() {
+    fn calculate_fragmentation(buffers: &[GpuBuffer]) -> f64 {
+        if buffers.is_empty() {
             return 0.0;
         }
 
-        let total_size: usize = _buffers.iter().map(|b| b.size).sum();
-        let used_size: usize = _buffers.iter().filter(|b| b.in_use).map(|b| b.size).sum();
+        let total_size: usize = buffers.iter().map(|b| b.size).sum();
+        let used_size: usize = buffers.iter().filter(|b| b.in_use).map(|b| b.size).sum();
 
         if total_size == 0 {
             0.0
@@ -694,7 +694,7 @@ impl Default for GpuPerformanceMetrics {
 
 impl GpuAccelerationManager {
     /// Create a new GPU acceleration manager
-    pub fn new(_config: MemoryPoolConfig) -> NdimageResult<Self> {
+    pub fn new(config: MemoryPoolConfig) -> NdimageResult<Self> {
         Ok(Self {
             memory_pool: GpuMemoryPool::new(_config),
             kernel_cache: GpuKernelCache::new(),

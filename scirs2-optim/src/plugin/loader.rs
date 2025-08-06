@@ -507,10 +507,10 @@ pub enum ThreatType {
 
 impl PluginLoader {
     /// Create a new plugin loader
-    pub fn new(_config: LoaderConfig) -> Self {
+    pub fn new(config: LoaderConfig) -> Self {
         let security_manager = SecurityManager::new(_config.security_policy.clone());
         Self {
-            config: _config,
+            config: config,
             security_manager,
             loaded_plugins: HashMap::new(),
             dependency_graph: DependencyGraph::new(),
@@ -792,7 +792,8 @@ impl PluginLoader {
     fn load_plugin_from_registry(
         &mut self,
         name: &str,
-        version: Option<&str>, _config: &PluginConfig,
+        version: Option<&str>,
+        _config: &PluginConfig,
     ) -> Result<PluginLoadResult> {
         let start_time = std::time::Instant::now();
         let mut errors = Vec::new();
@@ -1133,10 +1134,12 @@ impl PluginLoader {
 
     /// Verify package signature (simulation)
     fn verify_package_signature(
-        &self, _package_path: &Path, _signature: &Option<String>,
+        &self,
+        _package_path: &Path,
+        _signature: &Option<String>,
     ) -> Result<bool> {
         // In production, this would verify cryptographic signatures
-        println!("🔐 Verifying package _signature...");
+        println!("🔐 Verifying package signature...");
         Ok(true) // Simulate successful verification
     }
 
@@ -1189,7 +1192,7 @@ impl PluginLoader {
     }
 
     /// Check if content type is allowed
-    fn is_allowed_content_type(&self, content_type: &str) -> bool {
+    fn is_allowed_content_type(&self, contenttype: &str) -> bool {
         matches!(
             content_type,
             "application/octet-stream"
@@ -1306,14 +1309,14 @@ impl DependencyGraph {
 }
 
 impl SecurityManager {
-    fn new(_policy: SecurityPolicy) -> Self {
+    fn new(policy: SecurityPolicy) -> Self {
         let crypto_validator = CryptographicValidator::new(
-            _policy.trusted_cas.clone(),
-            _policy.signature_verification.clone(),
+            policy.trusted_cas.clone(),
+            policy.signature_verification.clone(),
         );
 
         Self {
-            policy: _policy,
+            policy: policy,
             permission_validator: PermissionValidator::new(),
             code_scanner: CodeScanner::new(),
             crypto_validator,
@@ -1511,9 +1514,9 @@ impl PermissionValidator {
 }
 
 impl CryptographicValidator {
-    fn new(_trusted_cas: Vec<TrustedCA>, config: SignatureVerificationConfig) -> Self {
+    fn new(_trustedcas: Vec<TrustedCA>, config: SignatureVerificationConfig) -> Self {
         Self {
-            trusted_cas: _trusted_cas,
+            trusted_cas: trusted_cas,
             config,
         }
     }
@@ -1599,8 +1602,7 @@ impl CodeScanner {
         }
     }
 
-    fn scan_code(&self,
-        path: &Path) -> Result<Vec<SecurityThreat>> {
+    fn scan_code(&self, path: &Path) -> Result<Vec<SecurityThreat>> {
         // In a real implementation, this would scan the plugin code
         // for suspicious patterns and known malware signatures
         Ok(Vec::new())
@@ -1608,7 +1610,7 @@ impl CodeScanner {
 }
 
 impl PluginMetadata {
-    fn default_for_path(_path: &Path) -> Self {
+    fn default_for_path(path: &Path) -> Self {
         let name = _path
             .file_stem()
             .and_then(|s| s.to_str())
@@ -1796,8 +1798,7 @@ pub struct SecurityFileScanResult {
 
 impl SecurityManager {
     /// Scan individual file for security issues
-    pub fn scan_file(&self,
-        path: &Path) -> Result<SecurityFileScanResult> {
+    pub fn scan_file(&self, path: &Path) -> Result<SecurityFileScanResult> {
         // Placeholder implementation
         Ok(SecurityFileScanResult {
             safe: true,
@@ -1815,11 +1816,11 @@ impl PluginLoader {
 
 impl PluginLoadResult {
     /// Create a failed result with errors
-    pub fn failed_with_errors(_errors: Vec<String>) -> Self {
+    pub fn failed_with_errors(errors: Vec<String>) -> Self {
         Self {
             success: false,
             plugin_info: None,
-            errors: _errors,
+            errors: errors,
             warnings: Vec::new(),
             load_time: std::time::Duration::from_secs(0),
             security_results: SecurityScanResult::default(),

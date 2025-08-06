@@ -1,6 +1,6 @@
 use crate::op::{ComputeContext, GradientContext, Op, OpError};
 use crate::tensor::Tensor;
-use crate::tensor__ops::convert_to_tensor;
+use crate::tensor_ops::convert_to_tensor;
 use crate::Float;
 use ndarray::{Array1, Array2, ArrayView2, Ix2};
 use num_traits::FromPrimitive;
@@ -171,13 +171,13 @@ impl<F: Float + ndarray::ScalarOperand + FromPrimitive> Op<F> for SymmetricEigen
 
 /// Check if matrix is symmetric
 #[allow(dead_code)]
-fn is_symmetric<F: Float>(_matrix: &ArrayView2<F>) -> bool {
-    let n = _matrix.shape()[0];
+fn is_symmetric<F: Float>(matrix: &ArrayView2<F>) -> bool {
+    let n = matrix.shape()[0];
     let tol = F::epsilon() * F::from(10.0).unwrap();
 
     for i in 0..n {
         for j in i + 1..n {
-            if (_matrix[[i, j]] - _matrix[[j, i]]).abs() > tol {
+            if (_matrix[[i, j]] - matrix[[j, i]]).abs() > tol {
                 return false;
             }
         }

@@ -161,11 +161,11 @@ where
 
 /// Estimate optimal Box-Cox lambda parameter using maximum likelihood
 #[allow(dead_code)]
-fn estimate_box_cox_lambda<F>(_ts: &Array1<F>) -> Result<F>
+fn estimate_box_cox_lambda<F>(ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Display,
 {
-    let n = _ts.len();
+    let n = ts.len();
     let n_f = F::from(n).unwrap();
 
     // Search over a range of lambda values
@@ -178,9 +178,9 @@ where
 
         // Transform the data
         let transformed = if lambda.abs() < F::from(1e-10).unwrap() {
-            _ts.mapv(|x| x.ln())
+            ts.mapv(|x| x.ln())
         } else {
-            _ts.mapv(|x| (x.powf(lambda) - F::one()) / lambda)
+            ts.mapv(|x| (x.powf(lambda) - F::one()) / lambda)
         };
 
         // Calculate log-likelihood
@@ -197,7 +197,7 @@ where
             - n_f / F::from(2.0).unwrap();
 
         // Add Jacobian term: (λ - 1) * Σ ln(x_i)
-        let jacobian = (lambda - F::one()) * _ts.mapv(|x| x.ln()).sum();
+        let jacobian = (lambda - F::one()) * ts.mapv(|x| x.ln()).sum();
         let total_log_likelihood = log_likelihood + jacobian;
 
         if total_log_likelihood > best_log_likelihood {
@@ -313,7 +313,7 @@ where
         }
 
         let seasonal_diff =
-            Array1::fromshape_fn(result.len() - _lag, |i| result[i + _lag] - result[i]);
+            Array1::fromshape_fn(result.len() - lag, |i| result[i + _lag] - result[i]);
         result = seasonal_diff;
     }
 
@@ -630,7 +630,7 @@ where
     let y_diff = Array1::fromshape_fn(n - 1, |i| ts[i + 1] - ts[i]);
     let y_lag = Array1::fromshape_fn(n - 1, |i| ts[i]);
 
-    let start_idx = _lags;
+    let start_idx = lags;
     let regression_length = n - 1 - start_idx;
 
     if regression_length < 5 {
@@ -649,7 +649,7 @@ where
     if regression_type.contains('t') {
         n_regressors += 1;
     } // trend
-    n_regressors += _lags; // lagged differences
+    n_regressors += lags; // lagged differences
 
     let mut x_matrix = Array2::zeros((regression_length, n_regressors));
     let mut y_vector = Array1::zeros(regression_length);
@@ -734,24 +734,24 @@ where
 
 /// Simple OLS solver for small matrices
 #[allow(dead_code)]
-fn solve_ols_simple<F>(_xtx: &Array2<F>, xty: &Array1<F>) -> Result<Array1<F>>
+fn solve_ols_simple<F>(xtx: &Array2<F>, xty: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + Display + Clone,
 {
-    let n = _xtx.nrows();
+    let n = xtx.nrows();
 
     // Simple case: 1x1 matrix
     if n == 1 {
-        if _xtx[[0, 0]].abs() < F::from(1e-12).unwrap() {
+        if xtx[[0, 0]].abs() < F::from(1e-12).unwrap() {
             return Err(TimeSeriesError::NumericalInstability(
                 "Singular matrix in OLS".to_string(),
             ));
         }
-        return Ok(Array1::from_elem(1, xty[0] / _xtx[[0, 0]]));
+        return Ok(Array1::from_elem(1, xty[0] / xtx[[0, 0]]));
     }
 
     // For larger matrices, use simplified Gaussian elimination
-    let mut a = _xtx.clone();
+    let mut a = xtx.clone();
     let mut b = xty.clone();
 
     // Forward elimination
@@ -806,22 +806,22 @@ where
 
 /// Get diagonal element of pseudo-inverse (simplified)
 #[allow(dead_code)]
-fn pseudo_inverse_diag<F>(_matrix: &Array2<F>, idx: usize) -> Result<F>
+fn pseudo_inverse_diag<F>(matrix: &Array2<F>, idx: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
     // Simplified: just return 1/diagonal for well-conditioned case
-    if _matrix[[idx, idx]].abs() < F::from(1e-12).unwrap() {
+    if matrix[[idx, idx]].abs() < F::from(1e-12).unwrap() {
         return Err(TimeSeriesError::NumericalInstability(
             "Matrix is singular".to_string(),
         ));
     }
-    Ok(F::one() / _matrix[[idx, idx]])
+    Ok(F::one() / matrix[[idx, idx]])
 }
 
 /// Get ADF critical values (approximated)
 #[allow(dead_code)]
-fn get_adf_critical_values<F>(_regression_type: &str) -> Vec<(F, F)>
+fn get_adf_critical_values<F>(_regressiontype: &str) -> Vec<(F, F)>
 where
     F: Float + FromPrimitive,
 {
@@ -851,7 +851,7 @@ where
 
 /// Approximate p-value for ADF test (simplified)
 #[allow(dead_code)]
-fn approximate_adf_p_value<F>(_t_stat: F_regression, _type: &str) -> F
+fn approximate_adf_p_value<F>(_t_stat: F_regression, type: &str) -> F
 where
     F: Float + FromPrimitive,
 {
@@ -882,12 +882,12 @@ where
 ///
 /// Stationarity test results
 #[allow(dead_code)]
-pub fn kpss_test<F, S>(_ts: &ArrayBase<S, Ix1>, regression_type: &str) -> Result<StationarityTest<F>>
+pub fn kpss_test<F, S>(_ts: &ArrayBase<S, Ix1>, regressiontype: &str) -> Result<StationarityTest<F>>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Display + Clone,
 {
-    let n = _ts.len();
+    let n = ts.len();
     if n < 10 {
         return Err(TimeSeriesError::InsufficientData {
             message: "KPSS test requires at least 10 observations".to_string(),
@@ -905,8 +905,8 @@ where
         detrend_linear(_ts)?
     } else {
         // Remove mean (level)
-        let mean = _ts.sum() / F::from(n).unwrap();
-        _ts.mapv(|x| x - mean)
+        let mean = ts.sum() / F::from(n).unwrap();
+        ts.mapv(|x| x - mean)
     };
 
     // Calculate partial sums
@@ -945,12 +945,12 @@ where
 
 /// Remove linear trend from time series
 #[allow(dead_code)]
-fn detrend_linear<F, S>(_ts: &ArrayBase<S, Ix1>) -> Result<Array1<F>>
+fn detrend_linear<F, S>(ts: &ArrayBase<S, Ix1>) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = _ts.len();
+    let n = ts.len();
     let n_f = F::from(n).unwrap();
 
     // Create time index
@@ -958,7 +958,7 @@ where
 
     // Calculate linear regression coefficients
     let sum_t = time_index.sum();
-    let sum_y = _ts.sum();
+    let sum_y = ts.sum();
     let sum_tt = time_index.mapv(|t| t * t).sum();
     let sum_ty = time_index
         .iter()
@@ -991,15 +991,15 @@ where
 
 /// Estimate long-run variance using Newey-West estimator
 #[allow(dead_code)]
-fn estimate_long_run_variance<F>(_residuals: &Array1<F>) -> Result<F>
+fn estimate_long_run_variance<F>(residuals: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = _residuals.len();
+    let n = residuals.len();
     let n_f = F::from(n).unwrap();
 
     // Base variance
-    let mut variance = _residuals.mapv(|x| x * x).sum() / n_f;
+    let mut variance = residuals.mapv(|x| x * x).sum() / n_f;
 
     // Add autocovariance terms
     let max_lag = (n as f64).powf(1.0 / 3.0).floor() as usize; // Rule of thumb
@@ -1007,7 +1007,7 @@ where
     for lag in 1..=max_lag.min(n - 1) {
         let mut autocovariance = F::zero();
         for i in lag..n {
-            autocovariance = autocovariance + _residuals[i] * _residuals[i - lag];
+            autocovariance = autocovariance + residuals[i] * residuals[i - lag];
         }
         autocovariance = autocovariance / n_f;
 
@@ -1021,7 +1021,7 @@ where
 
 /// Get KPSS critical values
 #[allow(dead_code)]
-fn get_kpss_critical_values<F>(_include_trend: bool) -> Vec<(F, F)>
+fn get_kpss_critical_values<F>(_includetrend: bool) -> Vec<(F, F)>
 where
     F: Float + FromPrimitive,
 {
@@ -1042,7 +1042,7 @@ where
 
 /// Approximate p-value for KPSS test
 #[allow(dead_code)]
-fn approximate_kpss_p_value<F>(_lm_stat: F, include_trend: bool) -> F
+fn approximate_kpss_p_value<F>(_lm_stat: F, includetrend: bool) -> F
 where
     F: Float + FromPrimitive,
 {

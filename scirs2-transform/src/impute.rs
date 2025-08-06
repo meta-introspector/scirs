@@ -44,9 +44,9 @@ impl SimpleImputer {
     ///
     /// # Returns
     /// * A new SimpleImputer instance
-    pub fn new(_strategy: ImputeStrategy, missing_values: f64) -> Self {
+    pub fn new(strategy: ImputeStrategy, missingvalues: f64) -> Self {
         SimpleImputer {
-            _strategy,
+            strategy,
             missing_values,
             statistics_: None,
         }
@@ -60,7 +60,7 @@ impl SimpleImputer {
     /// # Returns
     /// * A new SimpleImputer instance
     #[allow(dead_code)]
-    pub fn with_strategy(_strategy: ImputeStrategy) -> Self {
+    pub fn with_strategy(strategy: ImputeStrategy) -> Self {
         Self::new(_strategy, f64::NAN)
     }
 
@@ -128,7 +128,7 @@ impl SimpleImputer {
                     let most_frequent_bits = counts
                         .into_iter()
                         .max_by_key(|(_, count)| *count)
-                        .map(|(bits_)| bits)
+                        .map(|(bits_, _)| bits_)
                         .unwrap_or(0);
 
                     f64::from_bits(most_frequent_bits)
@@ -250,9 +250,9 @@ impl MissingIndicator {
     ///
     /// # Returns
     /// * A new MissingIndicator instance
-    pub fn new(_missing_values: f64) -> Self {
+    pub fn new(missingvalues: f64) -> Self {
         MissingIndicator {
-            _missing_values,
+            missing_values,
             features_: None,
         }
     }
@@ -443,9 +443,9 @@ impl KNNImputer {
     }
 
     /// Creates a KNNImputer with specified number of neighbors and defaults for other parameters
-    pub fn with_n_neighbors(_n_neighbors: usize) -> Self {
+    pub fn with_n_neighbors(_nneighbors: usize) -> Self {
         Self::new(
-            _n_neighbors,
+            n_neighbors,
             DistanceMetric::Euclidean,
             WeightingScheme::Uniform,
             f64::NAN,
@@ -453,9 +453,9 @@ impl KNNImputer {
     }
 
     /// Creates a KNNImputer with distance weighting
-    pub fn with_distance_weighting(_n_neighbors: usize) -> Self {
+    pub fn with_distance_weighting(_nneighbors: usize) -> Self {
         Self::new(
-            _n_neighbors,
+            n_neighbors,
             DistanceMetric::Euclidean,
             WeightingScheme::Distance,
             f64::NAN,
@@ -593,7 +593,7 @@ impl KNNImputer {
         let neighbors: Vec<usize> = sorted_distances
             .into_iter()
             .take(self.n_neighbors)
-            .map(|(idx_)| _idx)
+            .map(|(idx_, _)| idx_)
             .collect();
 
         Ok(neighbors)
@@ -735,10 +735,10 @@ struct SimpleRegressor {
 
 impl SimpleRegressor {
     /// Create a new simple regressor
-    fn new(_include_intercept: bool, alpha: f64) -> Self {
+    fn new(includeintercept: bool, alpha: f64) -> Self {
         Self {
             coefficients: None,
-            _include_intercept,
+            include_intercept,
             alpha,
         }
     }
@@ -941,7 +941,7 @@ impl IterativeImputer {
     }
 
     /// Creates an IterativeImputer with specified max iterations and defaults for other parameters
-    pub fn with_max_iter(_max_iter: usize) -> Self {
+    pub fn with_max_iter(_maxiter: usize) -> Self {
         Self::new(_max_iter, 1e-3, ImputeStrategy::Mean, f64::NAN, 1e-6)
     }
 
@@ -958,7 +958,7 @@ impl IterativeImputer {
     }
 
     /// Set the minimum improvement threshold
-    pub fn with_min_improvement(mut self, min_improvement: f64) -> Self {
+    pub fn with_min_improvement(mut self, minimprovement: f64) -> Self {
         self.min_improvement = min_improvement;
         self
     }
@@ -1257,7 +1257,7 @@ impl IterativeImputer {
     }
 
     /// Compute total change between two imputation iterations
-    fn compute_total_change(&self, old_data: &Array2<f64>, new_data: &Array2<f64>) -> f64 {
+    fn compute_total_change(&self, old_data: &Array2<f64>, newdata: &Array2<f64>) -> f64 {
         let diff = new_data - old_data;
         diff.iter().map(|&x| x * x).sum::<f64>().sqrt()
     }

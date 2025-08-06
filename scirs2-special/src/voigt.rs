@@ -164,7 +164,7 @@ where
 /// - σ = fwhm_gaussian / (2√(2 ln 2))
 /// - γ = fwhm_lorentzian / 2
 #[allow(dead_code)]
-pub fn voigt_profile_fwhm<T>(x: T, fwhm_gaussian: T, fwhm_lorentzian: T) -> SpecialResult<T>
+pub fn voigt_profile_fwhm<T>(x: T, fwhm_gaussian: T, fwhmlorentzian: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {

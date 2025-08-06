@@ -12,23 +12,23 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 ///
 /// This implementation uses SIMD operations for partitioning when beneficial.
 #[allow(dead_code)]
-pub fn quickselect_simd<F>(_arr: &mut [F], k: usize) -> F
+pub fn quickselect_simd<F>(arr: &mut [F], k: usize) -> F
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
 {
-    if _arr.len() == 1 {
-        return _arr[0];
+    if arr.len() == 1 {
+        return arr[0];
     }
 
     let mut left = 0;
-    let mut right = _arr.len() - 1;
+    let mut right = arr.len() - 1;
     let optimizer = AutoOptimizer::new();
 
     while left < right {
         let pivot_idx = partition_simd(_arr, left, right, &optimizer);
 
         if k == pivot_idx {
-            return _arr[k];
+            return arr[k];
         } else if k < pivot_idx {
             right = pivot_idx - 1;
         } else {
@@ -36,18 +36,18 @@ where
         }
     }
 
-    _arr[k]
+    arr[k]
 }
 
 /// SIMD-optimized partition function for quickselect
 #[allow(dead_code)]
-fn partition_simd<F>(_arr: &mut [F], left: usize, right: usize, optimizer: &AutoOptimizer) -> usize
+fn partition_simd<F>(arr: &mut [F], left: usize, right: usize, optimizer: &AutoOptimizer) -> usize
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
 {
     // Choose pivot using median-of-three
     let mid = left + (right - left) / 2;
-    let pivot = median_of_three(_arr[left], _arr[mid], _arr[right]);
+    let pivot = median_of_three(_arr[left], arr[mid], arr[right]);
 
     let mut i = left;
     let mut j = right;
@@ -64,7 +64,7 @@ where
                 let mut found = false;
 
                 for offset in 0..chunk_size {
-                    if _arr[i + offset] >= pivot {
+                    if arr[i + offset] >= pivot {
                         i += offset;
                         found = true;
                         break;
@@ -84,7 +84,7 @@ where
                 let mut found = false;
 
                 for offset in 0..chunk_size {
-                    if _arr[j - offset] <= pivot {
+                    if arr[j - offset] <= pivot {
                         j -= offset;
                         found = true;
                         break;
@@ -99,10 +99,10 @@ where
             }
         } else {
             // Scalar path
-            while i < j && _arr[i] < pivot {
+            while i < j && arr[i] < pivot {
                 i += 1;
             }
-            while i < j && _arr[j] > pivot {
+            while i < j && arr[j] > pivot {
                 j -= 1;
             }
         }
@@ -111,7 +111,7 @@ where
             break;
         }
 
-        _arr.swap(i, j);
+        arr.swap(i, j);
         i += 1;
         j -= 1;
     }

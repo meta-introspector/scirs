@@ -18,7 +18,7 @@ pub struct NeuralODE {
 
 impl NeuralODE {
     /// Create new Neural ODE system
-    pub fn new(_state_size: usize, dt: f64) -> Self {
+    pub fn new(_statesize: usize, dt: f64) -> Self {
         Self {
             weights: Array1::from(vec![0.1; _state_size * _state_size]),
             state: Array1::zeros(_state_size),
@@ -36,7 +36,7 @@ impl NeuralODE {
         let mut derivative = Array1::zeros(n);
 
         // Neural dynamics: dx/dt = -Wx + u
-        // where W is weight matrix, x is state, u is input (objective _gradient)
+        // where W is weight matrix, x is state, u is input (objective gradient)
         for i in 0..n {
             for j in 0..n {
                 let weight_idx = i * n + j;
@@ -55,7 +55,7 @@ impl NeuralODE {
     }
 
     /// Integrate one step using Euler method
-    pub fn integrate_step(&mut self, objective_gradient: &ArrayView1<f64>) {
+    pub fn integrate_step(&mut self, objectivegradient: &ArrayView1<f64>) {
         let derivative = self.compute_derivative(&self.state.view(), objective_gradient);
 
         for i in 0..self.state.len() {
@@ -69,7 +69,7 @@ impl NeuralODE {
     }
 
     /// Set initial state
-    pub fn set_initial_state(&mut self, initial_state: &ArrayView1<f64>) {
+    pub fn set_initial_state(&mut self, initialstate: &ArrayView1<f64>) {
         self._state = initial_state.to_owned();
     }
 }
@@ -102,7 +102,7 @@ where
 
 /// Compute finite difference gradient
 #[allow(dead_code)]
-fn compute_finite_difference_gradient<F>(_objective: &F, params: &ArrayView1<f64>) -> Array1<f64>
+fn compute_finite_difference_gradient<F>(objective: &F, params: &ArrayView1<f64>) -> Array1<f64>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {

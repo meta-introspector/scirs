@@ -117,7 +117,7 @@ impl AsyncStreamingConfig {
     }
 
     /// Set operation timeout
-    pub fn timeout(mut self, timeout_ms: u64) -> Self {
+    pub fn timeout(mut self, timeoutms: u64) -> Self {
         self.operation_timeout_ms = Some(timeout_ms);
         self
     }
@@ -147,7 +147,7 @@ pub struct AsyncChunkedReader {
 impl AsyncChunkedReader {
     /// Create a new async chunked reader for the specified file
     pub async fn new<P: AsRef<Path>>(path: P, config: AsyncStreamingConfig) -> Result<Self> {
-        let file = File::open(_path.as_ref())
+        let file = File::open(path.as_ref())
             .await
             .map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
 
@@ -285,7 +285,7 @@ pub struct AsyncLineReader {
 impl AsyncLineReader {
     /// Create a new async line reader
     pub async fn new<P: AsRef<Path>>(path: P, config: AsyncStreamingConfig) -> Result<Self> {
-        let file = File::open(_path.as_ref())
+        let file = File::open(path.as_ref())
             .await
             .map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
 
@@ -445,7 +445,7 @@ impl AsyncStreamingStats {
     }
 
     /// Update statistics with chunk information
-    pub fn update_chunk(&mut self, bytes: u64, processing_time_ms: f64) {
+    pub fn update_chunk(&mut self, bytes: u64, processing_timems: f64) {
         self.bytes_processed += bytes;
         self.chunks_processed += 1;
         self.processing_time_ms += processing_time_ms;

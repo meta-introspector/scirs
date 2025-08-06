@@ -285,21 +285,21 @@ pub mod data_science {
     /// Calculate the Gini coefficient from a probability distribution
     ///
     /// Measures inequality in a distribution (0 = perfect equality, 1 = perfect inequality)
-    pub fn gini_coefficient(_probabilities: &ArrayView1<f64>) -> SpecialResult<f64> {
-        if _probabilities.iter().any(|&p| p < 0.0) {
+    pub fn gini_coefficient(probabilities: &ArrayView1<f64>) -> SpecialResult<f64> {
+        if probabilities.iter().any(|&p| p < 0.0) {
             return Err(crate::SpecialError::ValueError(
                 "Probabilities must be non-negative".to_string(),
             ));
         }
 
-        let sum: f64 = _probabilities.sum();
+        let sum: f64 = probabilities.sum();
         if sum == 0.0 {
             return Ok(0.0);
         }
 
         // Normalize _probabilities
-        let n = _probabilities.len();
-        let mut sorted_probs: Vec<f64> = _probabilities.to_vec();
+        let n = probabilities.len();
+        let mut sorted_probs: Vec<f64> = probabilities.to_vec();
         sorted_probs.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         let mut gini = 0.0;
@@ -315,7 +315,7 @@ pub mod data_science {
     /// # Arguments
     /// * `probabilities` - Probability distribution
     /// * `base` - Logarithm base (2 for bits, e for nats)
-    pub fn shannon_entropy(_probabilities: &ArrayView1<f64>, base: f64) -> SpecialResult<f64> {
+    pub fn shannon_entropy(probabilities: &ArrayView1<f64>, base: f64) -> SpecialResult<f64> {
         if base <= 0.0 || base == 1.0 {
             return Err(crate::SpecialError::ValueError(
                 "Base must be positive and not equal to 1".to_string(),
@@ -325,7 +325,7 @@ pub mod data_science {
         let mut entropy = 0.0;
         let log_base = base.ln();
 
-        for &p in _probabilities.iter() {
+        for &p in probabilities.iter() {
             if p > 0.0 {
                 entropy -= p * p.ln() / log_base;
             }
@@ -562,7 +562,7 @@ pub mod finance {
                 break;
             }
 
-            let diff = option_price - _price;
+            let diff = option_price - price;
             if diff.abs() < 1e-8 {
                 return Ok(vol);
             }
@@ -733,7 +733,7 @@ pub mod bioinformatics {
     /// * `ligand` - Ligand concentration array
     /// * `kd` - Dissociation constant
     /// * `n` - Hill coefficient
-    pub fn hill_equation(_ligand: &ArrayView1<f64>, kd: f64, n: f64) -> SpecialResult<Array1<f64>> {
+    pub fn hill_equation(ligand: &ArrayView1<f64>, kd: f64, n: f64) -> SpecialResult<Array1<f64>> {
         if kd <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Kd must be positive".to_string(),
@@ -742,7 +742,7 @@ pub mod bioinformatics {
 
         let mut fraction = Array1::zeros(_ligand.len());
 
-        for (i, &l) in _ligand.iter().enumerate() {
+        for (i, &l) in ligand.iter().enumerate() {
             if l < 0.0 {
                 return Err(crate::SpecialError::ValueError(
                     "Ligand concentration must be non-negative".to_string(),
@@ -795,7 +795,7 @@ pub mod geophysics {
     /// * `vp` - P-wave velocity
     /// * `vs` - S-wave velocity
     /// * `density` - Rock density
-    pub fn acoustic_impedance(_vp: f64, density: f64) -> SpecialResult<f64> {
+    pub fn acoustic_impedance(vp: f64, density: f64) -> SpecialResult<f64> {
         if _vp <= 0.0 || density <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Velocity and density must be positive".to_string(),
@@ -810,7 +810,7 @@ pub mod geophysics {
     /// # Arguments
     /// * `amplitude` - Maximum amplitude in micrometers
     /// * `distance` - Distance from epicenter in km
-    pub fn richter_magnitude(_amplitude: f64, distance: f64) -> SpecialResult<f64> {
+    pub fn richter_magnitude(amplitude: f64, distance: f64) -> SpecialResult<f64> {
         if _amplitude <= 0.0 || distance <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Amplitude and distance must be positive".to_string(),
@@ -853,7 +853,7 @@ pub mod geophysics {
             }
 
             let temp_ratio = 1.0 - l * h / t0;
-            _pressure[i] = sea_level_pressure * temp_ratio.powf(g * m / (r * l));
+            pressure[i] = sea_level_pressure * temp_ratio.powf(g * m / (r * l));
         }
 
         Ok(_pressure)
@@ -961,7 +961,7 @@ pub mod chemistry {
     /// # Arguments
     /// * `pressure` - Pressure array in Pa
     /// * `k` - Adsorption constant
-    pub fn langmuir_isotherm(_pressure: &ArrayView1<f64>, k: f64) -> SpecialResult<Array1<f64>> {
+    pub fn langmuir_isotherm(pressure: &ArrayView1<f64>, k: f64) -> SpecialResult<Array1<f64>> {
         if k <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Adsorption constant must be positive".to_string(),
@@ -970,7 +970,7 @@ pub mod chemistry {
 
         let mut coverage = Array1::zeros(_pressure.len());
 
-        for (i, &p) in _pressure.iter().enumerate() {
+        for (i, &p) in pressure.iter().enumerate() {
             if p < 0.0 {
                 return Err(crate::SpecialError::ValueError(
                     "Pressure must be non-negative".to_string(),
@@ -1059,7 +1059,7 @@ pub mod astronomy {
     /// # Arguments
     /// * `radius` - Stellar radius in solar radii
     /// * `temperature` - Effective temperature in Kelvin
-    pub fn stellar_luminosity(_radius: f64, temperature: f64) -> SpecialResult<f64> {
+    pub fn stellar_luminosity(radius: f64, temperature: f64) -> SpecialResult<f64> {
         if _radius <= 0.0 || temperature <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Radius and temperature must be positive".to_string(),
@@ -1109,7 +1109,7 @@ pub mod astronomy {
     /// # Arguments
     /// * `velocity` - Recession velocity in m/s
     /// * `relativistic` - Use relativistic formula if true
-    pub fn velocity_to_redshift(_velocity: f64, relativistic: bool) -> SpecialResult<f64> {
+    pub fn velocity_to_redshift(velocity: f64, relativistic: bool) -> SpecialResult<f64> {
         let c = 299792458.0; // Speed of light
 
         if _velocity >= c {

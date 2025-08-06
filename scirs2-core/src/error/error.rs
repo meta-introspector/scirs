@@ -349,14 +349,14 @@ macro_rules! error_context {
     };
     ($message:expr, $function:expr) => {
         $crate::error::ErrorContext::new($message).with_location(
-            $crate::error::ErrorLocation::with_function(file!(), line!(), $function),
+            $crate::error::ErrorLocation::new_with_function(file!(), line!(), $function),
         )
     };
 }
 
 /// Macro to create a domain error with location information
 #[macro_export]
-macro_rules! domain_error {
+macro_rules! domainerror {
     ($message:expr) => {
         $crate::error::CoreError::DomainError(error_context!($message))
     };
@@ -367,7 +367,7 @@ macro_rules! domain_error {
 
 /// Macro to create a dimension error with location information
 #[macro_export]
-macro_rules! dimension_error {
+macro_rules! dimensionerror {
     ($message:expr) => {
         $crate::error::CoreError::DimensionError(error_context!($message))
     };
@@ -378,7 +378,7 @@ macro_rules! dimension_error {
 
 /// Macro to create a value error with location information
 #[macro_export]
-macro_rules! value_error {
+macro_rules! valueerror {
     ($message:expr) => {
         $crate::error::CoreError::ValueError(error_context!($message))
     };
@@ -389,7 +389,7 @@ macro_rules! value_error {
 
 /// Macro to create a computation error with location information
 #[macro_export]
-macro_rules! computation_error {
+macro_rules! computationerror {
     ($message:expr) => {
         $crate::error::CoreError::ComputationError(error_context!($message))
     };
@@ -519,20 +519,20 @@ where
 /// * A CoreError with the original error as its cause
 #[must_use]
 #[allow(dead_code)]
-pub fn convert_error<E, S>(_error: E, message: S) -> CoreError
+pub fn converterror<E, S>(error: E, message: S) -> CoreError
 where
     E: std::error::Error + 'static,
     S: Into<String>,
 {
-    // Create a computation _error that contains the original _error
-    // We combine the provided message with the _error's own message for extra context
+    // Create a computation error that contains the original error
+    // We combine the provided message with the error's own message for extra context
     let message_str = message.into();
-    let error_message = format!("{message_str} | Original error: {_error}");
+    let error_message = format!("{message_str} | Original error: {error}");
 
     // For I/O errors we have direct conversion via From trait implementation
     // but we can't use it directly due to the generic bounds.
     // In a real implementation, you would use a match or if statement with
-    // type_id or another approach to distinguish _error types.
+    // type_id or another approach to distinguish error types.
 
     // For simplicity, we'll just use ComputationError as a general case
     CoreError::ComputationError(
@@ -552,13 +552,13 @@ where
 /// * A CoreError with the original error as its cause
 #[must_use]
 #[allow(dead_code)]
-pub fn chain_error<S>(_error: CoreError, message: S) -> CoreError
+pub fn chainerror<S>(error: CoreError, message: S) -> CoreError
 where
     S: Into<String>,
 {
     CoreError::ComputationError(
         ErrorContext::new(message)
             .with_location(ErrorLocation::new(file!(), line!()))
-            .with_cause(_error),
+            .with_cause(error),
     )
 }

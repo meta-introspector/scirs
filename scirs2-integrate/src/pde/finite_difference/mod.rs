@@ -380,14 +380,14 @@ pub fn second_derivative_matrix(
 
 /// Apply a differentiation matrix to a vector
 #[allow(dead_code)]
-pub fn apply_diff_matrix(_matrix: &Array2<f64>, u: &ArrayView1<f64>) -> PDEResult<Array1<f64>> {
-    if _matrix.shape()[1] != u.len() {
+pub fn apply_diff_matrix(matrix: &Array2<f64>, u: &ArrayView1<f64>) -> PDEResult<Array1<f64>> {
+    if matrix.shape()[1] != u.len() {
         return Err(PDEError::FiniteDifferenceError(format!(
             "Matrix columns ({}) must match vector length ({})",
-            _matrix.shape()[1],
+            matrix.shape()[1],
             u.len()
         )));
     }
 
-    Ok(_matrix.dot(u))
+    Ok(matrix.dot(u))
 }

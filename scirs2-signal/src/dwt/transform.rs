@@ -140,13 +140,13 @@ pub fn dwt_reconstruct(
     detail: &[f64],
     wavelet: Wavelet,
 ) -> SignalResult<Vec<f64>> {
-    if _approx.is_empty() || detail.is_empty() {
+    if approx.is_empty() || detail.is_empty() {
         return Err(SignalError::ValueError(
             "Input arrays are empty".to_string(),
         ));
     }
 
-    if _approx.len() != detail.len() {
+    if approx.len() != detail.len() {
         return Err(SignalError::ValueError(
             "Approximation and detail coefficients must have the same length".to_string(),
         ));
@@ -157,7 +157,7 @@ pub fn dwt_reconstruct(
     let filter_len = filters.rec_lo.len();
 
     // Apply inverse scaling for Haar wavelet to match the expected output
-    let mut scaled_approx = _approx.to_vec();
+    let mut scaled_approx = approx.to_vec();
     let mut scaled_detail = detail.to_vec();
 
     if let Wavelet::Haar = wavelet {
@@ -169,7 +169,7 @@ pub fn dwt_reconstruct(
     }
 
     // Calculate output length
-    let input_len = _approx.len();
+    let input_len = approx.len();
     let output_len = 2 * input_len;
 
     // Allocate output array

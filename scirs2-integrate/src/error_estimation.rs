@@ -108,10 +108,10 @@ pub struct ErrorDistribution<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
     /// Create new advanced error estimator
-    pub fn new(_tolerance: F, max_richardson_order: usize) -> Self {
+    pub fn new(tolerance: F, max_richardsonorder: usize) -> Self {
         Self {
-            tolerance: _tolerance,
-            max_richardson_order,
+            tolerance,
+            max_richardson_order: max_richardsonorder,
             solution_history: VecDeque::new(),
             step_size_history: VecDeque::new(),
             error_history: VecDeque::new(),
@@ -396,15 +396,15 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
     }
 
     /// Compute confidence in error estimate
-    fn compute_confidence(_result: &ErrorAnalysisResult<F>) -> F {
+    fn compute_confidence(result: &ErrorAnalysisResult<F>) -> F {
         let mut confidence_factors = Vec::new();
 
         // Confidence from multiple error estimates agreement
         let estimates = [
-            Some(_result.primary_estimate),
-            _result.richardson_error,
-            _result.spectral_error,
-            _result.defect_error,
+            Some(result.primary_estimate),
+            result.richardson_error,
+            result.spectral_error,
+            result.defect_error,
         ]
         .iter()
         .filter_map(|&est| est)
@@ -424,8 +424,8 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
         }
 
         // Confidence from solution quality
-        confidence_factors.push(_result.quality_metrics.smoothness);
-        confidence_factors.push(F::one() / (F::one() + _result.quality_metrics.oscillation_index));
+        confidence_factors.push(result.quality_metrics.smoothness);
+        confidence_factors.push(F::one() / (F::one() + result.quality_metrics.oscillation_index));
 
         // Average confidence factors
         if !confidence_factors.is_empty() {
@@ -437,25 +437,25 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
     }
 
     /// Recommend optimal step size based on error analysis
-    fn recommend_step_size(&self, _result: &ErrorAnalysisResult<F>, current_step: F) -> F {
+    fn recommend_step_size(&self, result: &ErrorAnalysisResult<F>, currentstep: F) -> F {
         let target_error = self.tolerance;
-        let current_error = _result.primary_estimate;
+        let current_error = result.primary_estimate;
 
         if current_error <= F::zero() {
-            return current_step;
+            return currentstep;
         }
 
         // Safety factor based on confidence
-        let safety_factor = F::from(0.8).unwrap() + F::from(0.15).unwrap() * _result.confidence;
+        let safety_factor = F::from(0.8).unwrap() + F::from(0.15).unwrap() * result.confidence;
 
         // Standard _step size controller (assumes 2nd order method)
         let ratio = (target_error / current_error).powf(F::from(0.5).unwrap());
-        let _basic_recommendation = current_step * ratio * safety_factor;
+        let _basic_recommendation = currentstep * ratio * safety_factor;
 
         // Adjust based on solution quality
-        let quality_factor = if _result.quality_metrics.oscillation_index > F::from(0.1).unwrap() {
+        let quality_factor = if result.quality_metrics.oscillation_index > F::from(0.1).unwrap() {
             F::from(0.7).unwrap() // Reduce _step size for oscillatory solutions
-        } else if _result.quality_metrics.smoothness > F::from(0.8).unwrap() {
+        } else if result.quality_metrics.smoothness > F::from(0.8).unwrap() {
             F::from(1.2).unwrap() // Increase _step size for smooth solutions
         } else {
             F::one()
@@ -468,23 +468,23 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
             .max(min_factor)
             .min(max_factor);
 
-        current_step * final_factor
+        currentstep * final_factor
     }
 }
 
 impl<F: IntegrateFloat> RichardsonExtrapolator<F> {
     /// Create new Richardson extrapolator
-    pub fn new(_order: usize) -> Self {
+    pub fn new(order: usize) -> Self {
         Self {
-            order: _order,
+            order: order,
             step_ratios: vec![F::from(0.5).unwrap(), F::from(0.25).unwrap()],
             solutions: Vec::new(),
         }
     }
 
     /// Add solution for extrapolation
-    pub fn add_solution(&mut self, _solution: Array1<F>) {
-        self.solutions.push(_solution);
+    pub fn add_solution(&mut self, solution: Array1<F>) {
+        self.solutions.push(solution);
         if self.solutions.len() > self.order + 1 {
             self.solutions.remove(0);
         }
@@ -530,17 +530,17 @@ impl<F: IntegrateFloat> RichardsonExtrapolator<F> {
 
 impl<F: IntegrateFloat> SpectralErrorIndicator<F> {
     /// Create new spectral error indicator
-    pub fn new(_window_size: usize, decay_threshold: F) -> Self {
+    pub fn new(window_size: usize, decaythreshold: F) -> Self {
         Self {
-            window_size: _window_size,
-            decay_threshold,
+            window_size,
+            decay_threshold: decaythreshold,
             history: VecDeque::new(),
         }
     }
 
     /// Add solution to history
-    pub fn add_solution(&mut self, _solution: Array1<F>) {
-        self.history.push_back(_solution);
+    pub fn add_solution(&mut self, solution: Array1<F>) {
+        self.history.push_back(solution);
         while self.history.len() > self.window_size {
             self.history.pop_front();
         }

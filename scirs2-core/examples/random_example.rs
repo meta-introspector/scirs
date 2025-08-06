@@ -158,7 +158,7 @@ fn sampling_functions_example() {
     let uniform01 = sampling::random_uniform01(&mut rng);
     let standard_normal = sampling::random_standard_normal(&mut rng);
     let custom_normal = sampling::random_normal(&mut rng, 10.0, 2.0);
-    let lognormal = sampling::random_lognormal(&mut rng, 0.0, 1.0);
+    let lognormal = sampling::randomlognormal(&mut rng, 0.0, 1.0);
     let exponential = sampling::random_exponential(&mut rng, 2.0);
 
     println!("Uniform[0,1): {:.6}", uniform01);

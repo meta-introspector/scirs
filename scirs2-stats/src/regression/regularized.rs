@@ -382,7 +382,7 @@ where
         // Add back the _mean of y
         _intercept = _intercept + y_mean;
 
-        transformed[0] = _intercept;
+        transformed[0] = intercept;
 
         // Adjust feature coefficients for the scaling
         for j in 0..p_features {
@@ -1102,7 +1102,7 @@ where
         let t_abs = crate::regression::utils::float_abs(t);
         let df_f = F::from(df_residuals).unwrap();
         let _ratio = t_abs / crate::regression::utils::float_sqrt(df_f + t_abs * t_abs);
-        let one_minus_ratio = F::one() - _ratio;
+        let one_minus_ratio = F::one() - ratio;
         F::from(2.0).unwrap() * one_minus_ratio
     });
 

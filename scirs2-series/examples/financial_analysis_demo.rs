@@ -94,7 +94,7 @@ fn generate_financial_data() -> (Array1<f64>, Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn generate_student_t(_df: f64, seed: u64) -> f64 {
+fn generate_student_t(df: f64, seed: u64) -> f64 {
     // Simple approximation to t-distribution using Box-Muller + scaling
     let u1 = ((seed * 7919 + 1013) % 10000) as f64 / 10000.0;
     let u2 = ((seed * 7907 + 1019) % 10000) as f64 / 10000.0;
@@ -111,7 +111,7 @@ fn generate_student_t(_df: f64, seed: u64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn financial_transformations_demo(_prices: &Array1<f64>) {
+fn financial_transformations_demo(prices: &Array1<f64>) {
     println!("  Applying financial transformations...");
 
     // Log transformation
@@ -120,7 +120,7 @@ fn financial_transformations_demo(_prices: &Array1<f64>) {
         Ok(log_prices) => {
             println!(
                 "    Log transformation: {} -> {} (range: {:.4} to {:.4})",
-                _prices.len(),
+                prices.len(),
                 log_prices.len(),
                 log_prices.iter().fold(f64::INFINITY, |a, &b| a.min(b)),
                 log_prices.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b))
@@ -168,7 +168,7 @@ fn financial_transformations_demo(_prices: &Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn garch_modeling_demo(_returns: &Array1<f64>) {
+fn garch_modeling_demo(returns: &Array1<f64>) {
     println!("  GARCH volatility modeling...");
 
     // Test different GARCH configurations
@@ -268,7 +268,7 @@ fn garch_modeling_demo(_returns: &Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn technical_indicators_demo(_prices: &Array1<f64>) {
+fn technical_indicators_demo(prices: &Array1<f64>) {
     println!("  Computing technical indicators...");
 
     let indicators = TechnicalIndicators::new();
@@ -287,7 +287,7 @@ fn technical_indicators_demo(_prices: &Array1<f64>) {
     // Bollinger Bands
     match indicators.bollinger_bands(_prices, 20, 2.0) {
         Ok((upper, middle, lower)) => {
-            let current_price = _prices.last().unwrap_or(&0.0);
+            let current_price = prices.last().unwrap_or(&0.0);
             let upper_val = upper.last().unwrap_or(&0.0);
             let lower_val = lower.last().unwrap_or(&0.0);
             let middle_val = middle.last().unwrap_or(&0.0);
@@ -347,10 +347,10 @@ fn technical_indicators_demo(_prices: &Array1<f64>) {
     }
 
     // Average True Range (ATR)
-    if let Ok(atr) = indicators.average_true_range(_prices, _prices, _prices, 14) {
+    if let Ok(atr) = indicators.average_true_range(_prices, prices, prices, 14) {
         // Simplified: using same array
         let current_atr = atr.last().unwrap_or(&0.0);
-        let current_price = _prices.last().unwrap_or(&0.0);
+        let current_price = prices.last().unwrap_or(&0.0);
         let atr_percentage = (current_atr / current_price) * 100.0;
         println!(
             "    ATR (14): {:.4} ({:.2}% of price)",
@@ -360,16 +360,16 @@ fn technical_indicators_demo(_prices: &Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn risk_metrics_demo(_returns: &Array1<f64>) {
+fn risk_metrics_demo(returns: &Array1<f64>) {
     println!("  Computing risk metrics...");
 
     let risk_calc = RiskMetrics::new();
 
     // Basic risk metrics
-    let mean_return = _returns.mean().unwrap_or(0.0);
-    let volatility = _returns.variance().sqrt();
-    let min_return = _returns.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let max_return = _returns.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    let mean_return = returns.mean().unwrap_or(0.0);
+    let volatility = returns.variance().sqrt();
+    let min_return = returns.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let max_return = returns.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
     println!("    Return statistics:");
     println!(
@@ -386,13 +386,13 @@ fn risk_metrics_demo(_returns: &Array1<f64>) {
 
     // Sharpe ratio (assuming risk-free rate of 2%)
     let risk_free_rate = 0.02 / 252.0; // Daily risk-free rate
-    let excess_returns: Array1<f64> = _returns.mapv(|r| r - risk_free_rate);
+    let excess_returns: Array1<f64> = returns.mapv(|r| r - risk_free_rate);
     let sharpe_ratio = excess_returns.mean().unwrap_or(0.0) / excess_returns.variance().sqrt();
     let annualized_sharpe = sharpe_ratio * (252.0_f64).sqrt();
     println!("    Sharpe ratio: {:.2} (annualized)", annualized_sharpe);
 
     // Downside deviation and Sortino ratio
-    let downside_returns: Vec<f64> = _returns.iter().filter(|&&r| r < 0.0).cloned().collect();
+    let downside_returns: Vec<f64> = returns.iter().filter(|&&r| r < 0.0).cloned().collect();
 
     if !downside_returns.is_empty() {
         let downside_deviation = (downside_returns.iter().map(|r| r * r).sum::<f64>()
@@ -548,7 +548,7 @@ fn portfolio_analysis_demo() {
 }
 
 #[allow(dead_code)]
-fn var_analysis_demo(_returns: &Array1<f64>) {
+fn var_analysis_demo(returns: &Array1<f64>) {
     println!("  Value at Risk (VaR) analysis...");
 
     let var_calc = VaRCalculator::new();
@@ -606,14 +606,14 @@ fn var_analysis_demo(_returns: &Array1<f64>) {
     println!("    VaR backtesting (95% confidence):");
     match var_calc.historical_var(_returns, 0.95) {
         Ok(var_95) => {
-            let violations: usize = _returns.iter().filter(|&&r| r < var_95).count();
-            let violation_rate = violations as f64 / _returns.len() as f64;
+            let violations: usize = returns.iter().filter(|&&r| r < var_95).count();
+            let violation_rate = violations as f64 / returns.len() as f64;
             let expected_rate = 0.05;
 
             println!(
                 "      Violations: {} out of {} ({:.2}%)",
                 violations,
-                _returns.len(),
+                returns.len(),
                 violation_rate * 100.0
             );
             println!("      Expected rate: {:.2}%", expected_rate * 100.0);
@@ -630,7 +630,7 @@ fn var_analysis_demo(_returns: &Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn backtesting_demo(_prices: &Array1<f64>) {
+fn backtesting_demo(prices: &Array1<f64>) {
     println!("  Strategy backtesting...");
 
     let engine = BacktestEngine::new();
@@ -692,7 +692,7 @@ fn backtesting_demo(_prices: &Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn advanced_features_demo(_prices: &Array1<f64>, returns: &Array1<f64>) {
+fn advanced_features_demo(prices: &Array1<f64>, returns: &Array1<f64>) {
     println!("  Advanced financial feature extraction...");
 
     let fin_features = FinancialFeatures::new();

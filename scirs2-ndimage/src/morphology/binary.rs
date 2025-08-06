@@ -613,7 +613,7 @@ fn binary_erosion_dyn(
                     }
                 }
 
-                // Get the _value, using border _value if out of bounds
+                // Get the value, using border _value if out of bounds
                 let val = if within_bounds {
                     let input_idx: Vec<_> = input_pos.iter().map(|&x| x as usize).collect();
                     temp[input_idx.as_slice()]
@@ -1146,7 +1146,7 @@ fn binary_dilation_dyn(
                     }
                 }
 
-                // Get the _value, using border _value if out of bounds
+                // Get the value, using border _value if out of bounds
                 let val = if within_bounds {
                     let input_idx: Vec<_> = input_pos.iter().map(|&x| x as usize).collect();
                     temp[input_idx.as_slice()]

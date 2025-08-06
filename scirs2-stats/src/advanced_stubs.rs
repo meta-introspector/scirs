@@ -122,8 +122,8 @@ pub struct AdvancedSimdOptimizer {
 }
 
 impl AdvancedSimdOptimizer {
-    pub fn new(_config: AdvancedSimdConfig) -> Self {
-        Self { _config }
+    pub fn new(config: AdvancedSimdConfig) -> Self {
+        Self { config }
     }
 
     pub fn advanced_batch_statistics<F, D>(

@@ -164,10 +164,10 @@ impl DetectionMetrics {
 
         for (&true_val, &pred_val) in y_true.iter().zip(y_pred.iter()) {
             match (true_val > 0.5, pred_val > 0.5) {
-                (_true, _true) => tp += 1.0,
-                (false, _true) => fp += 1.0,
+                (true, true) => tp += 1.0,
+                (false, true) => fp += 1.0,
                 (false, false) => tn += 1.0,
-                (_true, false) => fn_count += 1.0,
+                (true, false) => fn_count += 1.0,
             }
         }
 
@@ -212,7 +212,7 @@ impl DetectionMetrics {
     }
 
     /// Calculate Area Under Precision-Recall Curve
-    fn calculate_auc_pr(&self, y_true: &Array1<f64>, y_score: &Array1<f64>) -> Result<f64> {
+    fn calculate_auc_pr(&self, y_true: &Array1<f64>, yscore: &Array1<f64>) -> Result<f64> {
         // Create _score-label pairs and sort by _score (descending)
         let mut pairs: Vec<(f64, f64)> = y_score
             .iter()
@@ -674,8 +674,8 @@ impl TimeSeriesAnomalyMetrics {
                 (1, 1) => tp += 1,
                 (0, 1) => fp += 1,
                 (1, 0) => fn_count += 1, // FN
-                (0, 0) => {} // TN
-                _ => {} // Other cases
+                (0, 0) => {}             // TN
+                _ => {}                  // Other cases
             }
         }
 
@@ -703,14 +703,14 @@ impl TimeSeriesAnomalyMetrics {
             .iter()
             .enumerate()
             .filter(|(_, &val)| val == 1)
-            .map(|(idx_)| idx)
+            .map(|(idx, _)| idx)
             .collect();
 
         let pred_anomaly_points: Vec<usize> = y_pred
             .iter()
             .enumerate()
             .filter(|(_, &val)| val == 1)
-            .map(|(idx_)| idx)
+            .map(|(idx, _)| idx)
             .collect();
 
         // Point-adjust recall: fraction of _true anomalies detected within tolerance
@@ -821,7 +821,7 @@ impl TimeSeriesAnomalyMetrics {
     }
 
     /// Calculate NAB (Numenta Anomaly Benchmark) score
-    fn calculate_nab_score(&self, y_true: &Array1<i32>, y_pred: &Array1<i32>) -> Result<f64> {
+    fn calculate_nab_score(&self, y_true: &Array1<i32>, ypred: &Array1<i32>) -> Result<f64> {
         let mut score = 0.0;
         let true_ranges = self.find_anomaly_ranges(y_true);
 
@@ -838,27 +838,27 @@ impl TimeSeriesAnomalyMetrics {
                     if detection_position <= range_middle {
                         // Early detection bonus
                         score +=
-                            self.nab_weights.true_positive + self.nab_weights.early_detection_bonus;
+                            self.nabweights.true_positive + self.nabweights.early_detection_bonus;
                     } else {
                         // Late detection penalty
-                        score += self.nab_weights.true_positive
-                            + self.nab_weights.late_detection_penalty;
+                        score += self.nabweights.true_positive
+                            + self.nabweights.late_detection_penalty;
                     }
-                    range_detected = _true;
+                    range_detected = true;
                     // Additional detections in same range don't add score
                 }
             }
 
             if !range_detected {
                 // Missed anomaly
-                score += self.nab_weights.false_negative;
+                score += self.nabweights.false_negative;
             }
         }
 
         // Count false positives (detections outside _true anomaly ranges)
         for (i, &pred_val) in y_pred.iter().enumerate() {
             if pred_val == 1 && y_true[i] == 0 {
-                score += self.nab_weights.false_positive;
+                score += self.nabweights.false_positive;
             }
         }
 
@@ -888,7 +888,7 @@ impl TimeSeriesAnomalyMetrics {
                 (0, 1) => weighted_fp += weight,
                 (1, 0) => {} // FN - not used in precision calculation
                 (0, 0) => {} // TN - not used in precision calculation
-                _ => {} // Other cases
+                _ => {}      // Other cases
             }
         }
 

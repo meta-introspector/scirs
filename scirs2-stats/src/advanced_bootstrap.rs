@@ -264,8 +264,8 @@ where
         + std::fmt::Display,
 {
     /// Create new advanced bootstrap processor
-    pub fn new(_config: AdvancedBootstrapConfig) -> Self {
-        let rng = match _config.seed {
+    pub fn new(config: AdvancedBootstrapConfig) -> Self {
+        let rng = match config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
                 use rand::rng;
@@ -274,7 +274,7 @@ where
         };
 
         Self {
-            config: _config,
+            config: config,
             rng,
             _phantom: PhantomData,
         }
@@ -379,7 +379,7 @@ where
                     let mut resample = Array1::zeros(n);
 
                     for i in 0..n {
-                        let idx = local_rng.random_range(0..n);
+                        let idx = local_rng.gen_range(0..n);
                         resample[i] = data[idx];
                     }
 
@@ -397,7 +397,7 @@ where
                 let mut resample = Array1::zeros(n);
 
                 for j in 0..n {
-                    let idx = self.rng.random_range(0..n);
+                    let idx = self.rng.gen_range(0..n);
                     resample[j] = data[idx];
                 }
 
@@ -445,7 +445,7 @@ where
                 let group_size = group_data.len();
 
                 for _ in 0..group_size {
-                    let idx = self.rng.random_range(0..group_size);
+                    let idx = self.rng.gen_range(0..group_size);
                     resample[resample_idx] = group_data[idx].1;
                     resample_idx += 1;
                 }
@@ -518,7 +518,7 @@ where
                 break;
             }
 
-            let start_idx = self.rng.random_range(0..(n - block_length));
+            let start_idx = self.rng.gen_range(0..(n - block_length));
             let copy_length = std::cmp::min(block_length, n - pos);
 
             for i in 0..copy_length {
@@ -546,7 +546,7 @@ where
                 break;
             }
 
-            let start_idx = self.rng.random_range(0..n);
+            let start_idx = self.rng.gen_range(0..n);
             let copy_length = std::cmp::min(block_length, n - pos);
 
             for i in 0..copy_length {
@@ -588,7 +588,7 @@ where
         let mut pos = 0;
 
         while pos < n {
-            let block_idx = self.rng.random_range(0..blocks.len());
+            let block_idx = self.rng.gen_range(0..blocks.len());
             let block = &blocks[block_idx];
             let copy_length = std::cmp::min(block.len(), n - pos);
 
@@ -613,7 +613,7 @@ where
         let mut pos = 0;
 
         while pos < n {
-            let start_idx = self.rng.random_range(0..n);
+            let start_idx = self.rng.gen_range(0..n);
             let mut block_length = 1;
 
             // Generate random block _length using geometric distribution
@@ -653,7 +653,7 @@ where
                 break;
             }
 
-            let start_idx = self.rng.random_range(0..(n - block_length));
+            let start_idx = self.rng.gen_range(0..(n - block_length));
             let copy_length = std::cmp::min(block_length, n - pos);
 
             // Apply tapering weights
@@ -859,7 +859,7 @@ where
 
         // Shuffle the indices
         for i in (1..all_indices.len()).rev() {
-            let j = self.rng.random_range(0..i);
+            let j = self.rng.gen_range(0..i);
             all_indices.swap(i, j);
         }
 
@@ -1024,7 +1024,7 @@ where
     }
 
     /// Compute bias correction
-    fn compute_bias_correction(&self, bootstrap_samples: &Array1<F>, original_statistic: F) -> F {
+    fn compute_bias_correction(&self, bootstrap_samples: &Array1<F>, originalstatistic: F) -> F {
         let _count_below = bootstrap_samples
             .iter()
             .filter(|&&x| x < original_statistic)

@@ -30,7 +30,7 @@ where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     /// Create a new VAR model
-    pub fn new(_order: usize, n_vars: usize) -> Result<Self> {
+    pub fn new(_order: usize, nvars: usize) -> Result<Self> {
         if _order == 0 {
             return Err(TimeSeriesError::InvalidInput(
                 "VAR _order must be at least 1".to_string(),
@@ -47,7 +47,7 @@ where
         let covariance = Array2::eye(n_vars);
 
         Ok(Self {
-            _order,
+            order,
             n_vars,
             coefficients,
             intercept,
@@ -185,7 +185,7 @@ where
     }
 
     /// Calculate impulse response function
-    pub fn impulse_response(&self, periods: usize, shock_var: usize) -> Result<Array2<F>> {
+    pub fn impulse_response(&self, periods: usize, shockvar: usize) -> Result<Array2<F>> {
         if !self.is_fitted {
             return Err(TimeSeriesError::InvalidInput(
                 "Model must be fitted before calculating impulse response".to_string(),
@@ -271,7 +271,7 @@ where
     }
 
     /// Test for Granger causality
-    pub fn granger_causality(&self, cause_var: usize, effect_var: usize) -> Result<(F, F)> {
+    pub fn granger_causality(&self, cause_var: usize, effectvar: usize) -> Result<(F, F)> {
         if !self.is_fitted {
             return Err(TimeSeriesError::InvalidInput(
                 "Model must be fitted before testing Granger causality".to_string(),
@@ -341,7 +341,7 @@ where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     /// Create a new VECM model
-    pub fn new(_n_vars: usize, rank: usize, lag_order: usize) -> Result<Self> {
+    pub fn new(_n_vars: usize, rank: usize, lagorder: usize) -> Result<Self> {
         if rank >= _n_vars {
             return Err(TimeSeriesError::InvalidInput(
                 "Cointegration rank must be less than number of variables".to_string(),
@@ -394,14 +394,14 @@ where
 
 /// Helper function to solve normal equations (X'X)β = X'Y
 #[allow(dead_code)]
-fn solve_normal_equations<F>(_xtx: &Array2<F>, xty: &Array2<F>) -> Result<Array2<F>>
+fn solve_normal_equations<F>(xtx: &Array2<F>, xty: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    let n = _xtx.nrows();
+    let n = xtx.nrows();
     let _k = xty.ncols();
 
-    if n != _xtx.ncols() {
+    if n != xtx.ncols() {
         return Err(TimeSeriesError::InvalidInput(
             "X'X matrix must be square".to_string(),
         ));
@@ -643,7 +643,7 @@ where
 
         if criterion_value < best_criterion {
             best_criterion = criterion_value;
-            best_order = _order;
+            best_order = order;
         }
     }
 
@@ -652,12 +652,12 @@ where
 
 /// Calculate log determinant of a matrix using LU decomposition
 #[allow(dead_code)]
-fn matrix_log_determinant<F>(_matrix: &Array2<F>) -> F
+fn matrix_log_determinant<F>(matrix: &Array2<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    let n = _matrix.nrows();
-    if n != _matrix.ncols() {
+    let n = matrix.nrows();
+    if n != matrix.ncols() {
         return F::neg_infinity(); // Invalid _matrix
     }
 
@@ -666,7 +666,7 @@ where
     }
 
     // Create working copy for LU decomposition
-    let mut lu = _matrix.clone();
+    let mut lu = matrix.clone();
     let mut sign = F::one();
 
     // LU decomposition with partial pivoting
@@ -693,7 +693,7 @@ where
             sign = -sign; // Row swap changes determinant sign
         }
 
-        // Check for zero pivot (singular _matrix)
+        // Check for zero pivot (singular matrix)
         if lu[[col, col]].abs() < F::from(1e-12).unwrap() {
             return F::neg_infinity(); // log(0) = -infinity
         }

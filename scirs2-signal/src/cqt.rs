@@ -1,8 +1,8 @@
-use ndarray::s;
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle_enhanced::WindowType;
 use crate::window;
-use ndarray::{ Array, Array1, Array2};
+use ndarray::s;
+use ndarray::{Array, Array1, Array2};
 use num_complex::{Complex64, ComplexFloat};
 use scirs2_fft;
 use std::f64::consts::PI;
@@ -175,7 +175,7 @@ pub struct SparseKernel {
 /// // result.frequencies contains the center frequencies of each bin
 /// ```
 #[allow(dead_code)]
-pub fn constant_q_transform(_signal: &Array1<f64>, config: &CqtConfig) -> SignalResult<CqtResult> {
+pub fn constant_q_transform(signal: &Array1<f64>, config: &CqtConfig) -> SignalResult<CqtResult> {
     // Calculate the Q factor if not provided
     let q = config.q_factor.unwrap_or_else(|| {
         // Q = 1 / (2^(1/bins_per_octave) - 1)
@@ -353,8 +353,8 @@ fn compute_cqt_kernel(
 
 /// Compute the CQT of a single frame
 #[allow(dead_code)]
-fn compute_cqt_frame(_signal: &Array1<f64>, kernel: &CqtKernel) -> SignalResult<Vec<Complex64>> {
-    let n_signal = _signal.len();
+fn compute_cqt_frame(signal: &Array1<f64>, kernel: &CqtKernel) -> SignalResult<Vec<Complex64>> {
+    let n_signal = signal.len();
     let n_fft = kernel.n_fft;
 
     // Check if _signal is long enough
@@ -485,15 +485,15 @@ fn compute_cqt_spectrogram(
 
 /// Create window function of specified type and length
 #[allow(dead_code)]
-fn create_window(_window_type: &str, length: usize) -> SignalResult<Vec<f64>> {
-    match _window_type.to_lowercase().as_str() {
+fn create_window(windowtype: &str, length: usize) -> SignalResult<Vec<f64>> {
+    match window_type.to_lowercase().as_str() {
         "hann" | "hanning" => Ok(window::hann(length, true)?),
         "hamming" => Ok(window::hamming(length, true)?),
         "blackman" => Ok(window::blackman(length, true)?),
         "bartlett" => Ok(window::bartlett(length, true)?),
         "rectangular" | "boxcar" => Ok(window::boxcar(length, true)?),
         _ => Err(SignalError::ValueError(format!(
-            "Unsupported window _type: {}",
+            "Unsupported window type: {}",
             window_type
         ))),
     }
@@ -521,13 +521,13 @@ fn next_power_of_two(n: usize) -> usize {
 ///
 /// A 2D array containing the magnitude (or log magnitude) of the CQT coefficients
 #[allow(dead_code)]
-pub fn cqt_magnitude(_cqt: &CqtResult, log_scale: bool, ref_value: Option<f64>) -> Array2<f64> {
-    let mut magnitude = Array2::<f64>::zeros(_cqt._cqt.raw_dim());
+pub fn cqt_magnitude(_cqt: &CqtResult, log_scale: bool, refvalue: Option<f64>) -> Array2<f64> {
+    let mut magnitude = Array2::<f64>::zeros(_cqt.cqt.raw_dim());
 
-    // Compute magnitude (absolute _value) of complex coefficients
-    for i in 0.._cqt._cqt.shape()[0] {
-        for j in 0.._cqt._cqt.shape()[1] {
-            magnitude[[i, j]] = _cqt._cqt[[i, j]].norm();
+    // Compute magnitude (absolute value) of complex coefficients
+    for i in 0.._cqt.cqt.shape()[0] {
+        for j in 0.._cqt.cqt.shape()[1] {
+            magnitude[[i, j]] = cqt.cqt[[i, j]].norm();
         }
     }
 
@@ -558,13 +558,13 @@ pub fn cqt_magnitude(_cqt: &CqtResult, log_scale: bool, ref_value: Option<f64>) 
 ///
 /// A 2D array containing the phase of the CQT coefficients (in radians)
 #[allow(dead_code)]
-pub fn cqt_phase(_cqt: &CqtResult) -> Array2<f64> {
-    let mut phase = Array2::<f64>::zeros(_cqt._cqt.raw_dim());
+pub fn cqt_phase(cqt: &CqtResult) -> Array2<f64> {
+    let mut phase = Array2::<f64>::zeros(_cqt.cqt.raw_dim());
 
     // Compute phase (argument) of complex coefficients
-    for i in 0.._cqt._cqt.shape()[0] {
-        for j in 0.._cqt._cqt.shape()[1] {
-            phase[[i, j]] = _cqt._cqt[[i, j]].arg();
+    for i in 0.._cqt.cqt.shape()[0] {
+        for j in 0.._cqt.cqt.shape()[1] {
+            phase[[i, j]] = cqt.cqt[[i, j]].arg();
         }
     }
 
@@ -752,17 +752,17 @@ pub fn chromagram(
         if chroma_bin >= 0 && chroma_bin < n_chroma_bins as isize {
             for j in 0..n_frames {
                 // Add magnitudes
-                _chroma[[chroma_bin as usize, j]] += cqt.cqt[[i, j]].norm();
+                chroma[[chroma_bin as usize, j]] += cqt.cqt[[i, j]].norm();
             }
         }
     }
 
     // Normalize each frame
     for j in 0..n_frames {
-        let frame_sum = _chroma.slice(s![.., j]).sum();
+        let frame_sum = chroma.slice(s![.., j]).sum();
         if frame_sum > 0.0 {
             for i in 0..n_chroma_bins {
-                _chroma[[i, j]] /= frame_sum;
+                chroma[[i, j]] /= frame_sum;
             }
         }
     }
@@ -772,6 +772,7 @@ pub fn chromagram(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_create_window() {

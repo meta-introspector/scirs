@@ -11,7 +11,7 @@ fn main() -> Result<()> {
     println!("Model Architecture Visualization Example");
     println!("=======================================\n");
     // Initialize RNG with a fixed seed for reproducibility
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Example 1: MLP (Multilayer Perceptron) Architecture
     println!("\n--- Example 1: MLP Architecture ---\n");
     let mlp = create_mlp_model(&mut rng)?;
@@ -61,7 +61,7 @@ fn main() -> Result<()> {
 }
 // Create a simple MLP model
 #[allow(dead_code)]
-fn create_mlp_model(_rng: &mut SmallRng) -> Result<Sequential<f32>> {
+fn create_mlp_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let mut model = Sequential::new();
     // Hidden layers with decreasing sizes
     let dense1 = Dense::new(784, 512, Some("relu"), rng)?;
@@ -80,7 +80,7 @@ fn create_mlp_model(_rng: &mut SmallRng) -> Result<Sequential<f32>> {
     Ok(model)
 // Create a simple CNN model for MNIST
 #[allow(dead_code)]
-fn create_cnn_model(_rng: &mut SmallRng) -> Result<Sequential<f32>> {
+fn create_cnn_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     // First convolutional block
     let conv1 = Conv2D::new(
         1,                      // input channels
@@ -111,7 +111,7 @@ fn create_cnn_model(_rng: &mut SmallRng) -> Result<Sequential<f32>> {
 // Create a simple RNN (LSTM) model - Currently disabled due to thread safety constraints
 /*
 #[allow(dead_code)]
-fn create_rnn_model(_rng: &mut SmallRng) -> Result<Sequential<f32>> {
+fn create_rnn_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     // LSTM layers
     let lstm1 = LSTM::new(
         128,   // input size

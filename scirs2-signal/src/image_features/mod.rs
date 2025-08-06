@@ -186,12 +186,12 @@ where
     let width = shape[1];
 
     // Create views for each channel
-    let r_channel = Array2::fromshape_fn((height, width), |(i, j)| image[[i, j, 0]].into());
-    let g_channel = Array2::fromshape_fn((height, width), |(i, j)| image[[i, j, 1]].into());
-    let b_channel = Array2::fromshape_fn((height, width), |(i, j)| image[[i, j, 2]].into());
+    let r_channel = Array2::from_shape_fn((height, width), |(i, j)| image[[i, j, 0]].into());
+    let g_channel = Array2::from_shape_fn((height, width), |(i, j)| image[[i, j, 1]].into());
+    let b_channel = Array2::from_shape_fn((height, width), |(i, j)| image[[i, j, 2]].into());
 
     // Convert to grayscale for some features
-    let gray_image = Array2::fromshape_fn((height, width), |(i, j)| {
+    let gray_image = Array2::from_shape_fn((height, width), |(i, j)| {
         // Standard RGB to grayscale conversion
         0.299 * image[[i, j, 0]].into()
             + 0.587 * image[[i, j, 1]].into()

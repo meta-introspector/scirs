@@ -386,6 +386,7 @@ fn rational_approximation(x: f64) -> (usize, usize) {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_resample_identity() {

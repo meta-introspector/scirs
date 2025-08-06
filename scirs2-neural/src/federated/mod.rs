@@ -97,17 +97,17 @@ pub struct RoundStatistics {
     pub privacy_spent: Option<f64>,
 impl FederatedLearning {
     /// Create a new federated learning instance
-    pub fn new(_config: FederatedConfig, num_clients: usize) -> Result<Self> {
+    pub fn new(_config: FederatedConfig, numclients: usize) -> Result<Self> {
         let server = FederatedServer::new(ServerConfig::from(&_config))?;
         let mut clients = Vec::with_capacity(num_clients);
         for i in 0..num_clients {
             let client_config = ClientConfig {
                 client_id: i,
-                local_epochs: _config.local_epochs,
-                batch_size: _config.local_batch_size,
-                learning_rate: _config.learning_rate,
-                enable_privacy: _config.privacy_budget.is_some(),
-                privacy_budget: _config.privacy_budget,
+                local_epochs: config.local_epochs,
+                batch_size: config.local_batch_size,
+                learning_rate: config.learning_rate,
+                enable_privacy: config.privacy_budget.is_some(),
+                privacy_budget: config.privacy_budget,
             };
             clients.push(FederatedClient::new(client_config)?);
         Ok(Self {

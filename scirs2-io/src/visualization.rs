@@ -292,7 +292,7 @@ trait VisualizationExporter {
 
 /// Get appropriate exporter for format
 #[allow(dead_code)]
-fn get_exporter(_format: VisualizationFormat) -> Box<dyn VisualizationExporter> {
+fn get_exporter(format: VisualizationFormat) -> Box<dyn VisualizationExporter> {
     match _format {
         VisualizationFormat::PlotlyJson => Box::new(PlotlyExporter),
         VisualizationFormat::MatplotlibPython => Box::new(MatplotlibExporter),
@@ -316,7 +316,7 @@ impl VisualizationExporter for PlotlyExporter {
         _metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
-        let json_str = self.to_string(data, config, _metadata)?;
+        let json_str = self.to_string(data, config, metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(json_str.as_bytes()).map_err(IoError::Io)?;
         Ok(())
@@ -426,7 +426,7 @@ impl VisualizationExporter for MatplotlibExporter {
         _metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
-        let script = self.to_string(data, config, _metadata)?;
+        let script = self.to_string(data, config, metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(script.as_bytes()).map_err(IoError::Io)?;
         Ok(())
@@ -510,7 +510,7 @@ impl VisualizationExporter for GnuplotExporter {
         _metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
-        let script = self.to_string(data, config, _metadata)?;
+        let script = self.to_string(data, config, metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(script.as_bytes()).map_err(IoError::Io)?;
         Ok(())
@@ -599,7 +599,7 @@ impl VisualizationExporter for VegaLiteExporter {
         _metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
-        let spec = self.to_string(data, config, _metadata)?;
+        let spec = self.to_string(data, config, metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(spec.as_bytes()).map_err(IoError::Io)?;
         Ok(())
@@ -677,7 +677,7 @@ pub mod quick {
     }
 
     /// Quick histogram
-    pub fn plot_histogram(_values: &[f64], output: impl AsRef<Path>) -> Result<()> {
+    pub fn plot_histogram(values: &[f64], output: impl AsRef<Path>) -> Result<()> {
         VisualizationBuilder::new()
             .title("Histogram")
             .add_histogram(_values, None)
@@ -765,7 +765,7 @@ pub enum UpdateAction {
 #[cfg(feature = "async")]
 impl VisualizationServer {
     /// Create a new visualization server
-    pub async fn new(_port: u16) -> Result<Self> {
+    pub async fn new(port: u16) -> Result<Self> {
         let (tx, mut rx) = mpsc::channel(100);
 
         // Spawn server task
@@ -779,7 +779,7 @@ impl VisualizationServer {
         });
 
         Ok(Self {
-            _port,
+            port,
             update_channel: tx,
         })
     }
@@ -1022,11 +1022,11 @@ pub struct DashboardConfig {
 }
 
 impl DashboardBuilder {
-    pub fn new(_rows: usize, cols: usize) -> Self {
+    pub fn new(rows: usize, cols: usize) -> Self {
         Self {
             plots: Vec::new(),
             layout: DashboardLayout {
-                rows: _rows,
+                rows: rows,
                 cols,
                 spacing: 10.0,
             },
@@ -1141,7 +1141,7 @@ impl VisualizationExporter for D3Exporter {
         _metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
-        let html = self.to_string(data, config, _metadata)?;
+        let html = self.to_string(data, config, metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(html.as_bytes()).map_err(IoError::Io)?;
         Ok(())
@@ -1211,7 +1211,7 @@ impl VisualizationExporter for BokehExporter {
         _metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
-        let json = self.to_string(data, config, _metadata)?;
+        let json = self.to_string(data, config, metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(json.as_bytes()).map_err(IoError::Io)?;
         Ok(())
@@ -1238,7 +1238,7 @@ impl VisualizationExporter for BokehExporter {
 
 /// Get appropriate 3D exporter
 #[allow(dead_code)]
-fn get_3d_exporter(_format: VisualizationFormat) -> Box<dyn Visualization3DExporter> {
+fn get_3d_exporter(format: VisualizationFormat) -> Box<dyn Visualization3DExporter> {
     match _format {
         VisualizationFormat::PlotlyJson => Box::new(Plotly3DExporter),
         _ => Box::new(Plotly3DExporter), // Default to Plotly for 3D
@@ -1340,16 +1340,16 @@ pub mod external {
     }
 
     impl PlotlyCloud {
-        pub fn new(_api_key: String, username: String) -> Self {
+        pub fn new(_apikey: String, username: String) -> Self {
             Self {
-                api_key: _api_key,
+                api_key: api_key,
                 username,
             }
         }
 
         /// Upload visualization to Plotly cloud
         #[cfg(feature = "reqwest")]
-        pub fn upload(&self, plot_data: &str, filename: &str) -> Result<String> {
+        pub fn upload(&self, plotdata: &str, filename: &str) -> Result<String> {
             // Implementation would use reqwest to upload to Plotly API
             Ok(format!("https://plot.ly/~{}/{}", self.username, filename))
         }
@@ -1360,7 +1360,7 @@ pub mod external {
 
     impl JupyterIntegration {
         /// Generate notebook cell with visualization
-        pub fn create_cell(_viz: &VisualizationBuilder) -> serde_json::Value {
+        pub fn create_cell(viz: &VisualizationBuilder) -> serde_json::Value {
             serde_json::json!({
                 "cell_type": "code",
                 "execution_count": null,

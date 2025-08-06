@@ -92,7 +92,7 @@ impl<F: IntegrateFloat> ExactSolution<F> for PolynomialSolution<F> {
         result
     }
 
-    fn derivative(&self, coordinates: &[F], _variable: usize) -> F {
+    fn derivative(&self, coordinates: &[F], variable: usize) -> F {
         let t = coordinates[0];
         let mut result = F::zero();
         let mut t_power = F::one();
@@ -105,7 +105,7 @@ impl<F: IntegrateFloat> ExactSolution<F> for PolynomialSolution<F> {
         result
     }
 
-    fn second_derivative(&self, coordinates: &[F], _variable: usize) -> F {
+    fn second_derivative(&self, coordinates: &[F], variable: usize) -> F {
         let t = coordinates[0];
         let mut result = F::zero();
         let mut t_power = F::one();
@@ -145,8 +145,8 @@ impl<F: IntegrateFloat> TrigonometricSolution2D<F> {
     }
 
     /// Create sin(freq_x * x) * cos(freq_y * y)
-    pub fn simple(freq_x: F, freq_y: F) -> Self {
-        Self::new(freq_x, freq_y, F::zero(), F::zero())
+    pub fn simple(freq_x: F, freqy: F) -> Self {
+        Self::new(freq_x, freqy, F::zero(), F::zero())
     }
 }
 
@@ -212,10 +212,10 @@ pub struct MMSODEProblem<F: IntegrateFloat, S: ExactSolution<F>> {
 
 impl<F: IntegrateFloat, S: ExactSolution<F>> MMSODEProblem<F, S> {
     /// Create a new manufactured ODE problem
-    pub fn new(exact_solution: S, time_span: [F; 2]) -> Self {
+    pub fn new(exact_solution: S, timespan: [F; 2]) -> Self {
         Self {
             exact_solution,
-            time_span,
+            time_span: timespan,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -301,11 +301,11 @@ pub enum PDEType {
 
 impl<F: IntegrateFloat, S: ExactSolution<F>> MMSPDEProblem<F, S> {
     /// Create manufactured 2D Poisson problem: -∇²u = f
-    pub fn new_poisson_2d(exact_solution: S, domain_x: [F; 2], domain_y: [F; 2]) -> Self {
+    pub fn new_poisson_2d(exact_solution: S, domain_x: [F; 2], domainy: [F; 2]) -> Self {
         Self {
             exact_solution,
             domain_x,
-            domain_y,
+            domain_y: domainy,
             domain_z: None,
             pde_type: PDEType::Poisson2D,
             parameters: PDEParameters::default(),
@@ -372,13 +372,13 @@ impl<F: IntegrateFloat, S: ExactSolution<F>> MMSPDEProblem<F, S> {
     }
 
     /// Create manufactured 2D Helmholtz problem: ∇²u + k²u = f
-    pub fn new_helmholtz_2d(exact_solution: S, domain_x: [F; 2], domain_y: [F; 2], k: F) -> Self {
+    pub fn new_helmholtz_2d(exact_solution: S, domain_x: [F; 2], domainy: [F; 2], k: F) -> Self {
         let mut params = PDEParameters::default();
         params.helmholtz_k = k;
         Self {
             exact_solution,
             domain_x,
-            domain_y,
+            domain_y: domainy,
             domain_z: None,
             pde_type: PDEType::Helmholtz2D,
             parameters: params,
@@ -514,21 +514,21 @@ pub struct ConvergenceAnalysis<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> ConvergenceAnalysis<F> {
     /// Compute order of accuracy from grid sizes and errors
-    pub fn compute_order(_grid_sizes: Vec<F>, errors: Vec<F>) -> IntegrateResult<Self> {
-        if _grid_sizes.len() != errors.len() || _grid_sizes.len() < 2 {
+    pub fn compute_order(_gridsizes: Vec<F>, errors: Vec<F>) -> IntegrateResult<Self> {
+        if _gridsizes.len() != errors.len() || _gridsizes.len() < 2 {
             return Err(IntegrateError::ValueError(
                 "Need at least 2 points for convergence analysis".to_string(),
             ));
         }
 
         // Use least squares to fit log(error) = log(C) + p*log(h)
-        let n = _grid_sizes.len();
+        let n = _gridsizes.len();
         let mut sum_log_h = F::zero();
         let mut sum_log_e = F::zero();
         let mut sum_log_h_sq = F::zero();
         let mut sum_log_h_log_e = F::zero();
 
-        for (h, e) in _grid_sizes.iter().zip(errors.iter()) {
+        for (h, e) in _gridsizes.iter().zip(errors.iter()) {
             if *e <= F::zero() || *h <= F::zero() {
                 return Err(IntegrateError::ValueError(
                     "Grid sizes and errors must be positive".to_string(),
@@ -560,7 +560,7 @@ impl<F: IntegrateFloat> ConvergenceAnalysis<F> {
         let order_confidence = (order - confidence_delta, order + confidence_delta);
 
         Ok(Self {
-            grid_sizes: _grid_sizes,
+            grid_sizes: _gridsizes,
             errors,
             order,
             order_confidence,
@@ -568,8 +568,8 @@ impl<F: IntegrateFloat> ConvergenceAnalysis<F> {
     }
 
     /// Check if the computed order matches expected order within tolerance
-    pub fn verify_order(&self, expected_order: F, tolerance: F) -> bool {
-        (self.order - expected_order).abs() <= tolerance
+    pub fn verify_order(&self, expectedorder: F, tolerance: F) -> bool {
+        (self.order - expectedorder).abs() <= tolerance
     }
 }
 
@@ -689,17 +689,17 @@ pub struct ExponentialSolution<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> ExponentialSolution<F> {
     /// Create exp(decay_rate * t + phase) solution
-    pub fn new(_amplitude: F, decay_rate: F, phase: F) -> Self {
+    pub fn new(_amplitude: F, decayrate: F, phase: F) -> Self {
         Self {
             amplitude: _amplitude,
-            decay_rate,
+            decay_rate: decayrate,
             phase,
         }
     }
 
     /// Create simple exp(decay_rate * t) solution
-    pub fn simple(amplitude: F, decay_rate: F) -> Self {
-        Self::new(amplitude, decay_rate, F::zero())
+    pub fn simple(amplitude: F, decayrate: F) -> Self {
+        Self::new(amplitude, decayrate, F::zero())
     }
 }
 
@@ -709,12 +709,12 @@ impl<F: IntegrateFloat> ExactSolution<F> for ExponentialSolution<F> {
         self.amplitude * (self.decay_rate * t + self.phase).exp()
     }
 
-    fn derivative(&self, coordinates: &[F], _variable: usize) -> F {
+    fn derivative(&self, coordinates: &[F], variable: usize) -> F {
         let t = coordinates[0];
         self.amplitude * self.decay_rate * (self.decay_rate * t + self.phase).exp()
     }
 
-    fn second_derivative(&self, coordinates: &[F], _variable: usize) -> F {
+    fn second_derivative(&self, coordinates: &[F], variable: usize) -> F {
         let t = coordinates[0];
         self.amplitude
             * self.decay_rate
@@ -846,9 +846,9 @@ pub struct TrigonometricSolution3D<F: IntegrateFloat> {
 impl<F: IntegrateFloat> TrigonometricSolution3D<F> {
     /// Create sin(freq_x * x + phase_x) * cos(freq_y * y + phase_y) * sin(freq_z * z + phase_z)
     #[allow(clippy::too_many_arguments)]
-    pub fn new(_freq_x: F, freq_y: F, freq_z: F, phase_x: F, phase_y: F, phase_z: F) -> Self {
+    pub fn new(freq_x: F, freq_y: F, freq_z: F, phase_x: F, phase_y: F, phase_z: F) -> Self {
         Self {
-            freq_x: _freq_x,
+            freq_x,
             freq_y,
             freq_z,
             phase_x,
@@ -950,21 +950,21 @@ pub struct SystemVerification<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> SystemVerification<F> {
     /// Create new system verification
-    pub fn new(system_size: usize) -> Self {
-        let component_names = (0..system_size).map(|i| format!("Component {i}")).collect();
+    pub fn new(systemsize: usize) -> Self {
+        let component_names = (0..systemsize).map(|i| format!("Component {i}")).collect();
         Self {
-            system_size,
+            system_size: systemsize,
             component_names,
             _phantom: std::marker::PhantomData,
         }
     }
 
     /// Create with custom component names
-    pub fn with_names(component_names: Vec<String>) -> Self {
-        let system_size = component_names.len();
+    pub fn with_names(componentnames: Vec<String>) -> Self {
+        let system_size = componentnames.len();
         Self {
             system_size,
-            component_names,
+            component_names: componentnames,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -1022,8 +1022,8 @@ impl<F: IntegrateFloat> VerificationWorkflow<F> {
     }
 
     /// Add test case to workflow
-    pub fn add_test_case(&mut self, test_case: VerificationTestCase<F>) {
-        self.test_cases.push(test_case);
+    pub fn add_test_case(&mut self, testcase: VerificationTestCase<F>) {
+        self.test_cases.push(testcase);
     }
 
     /// Run all verification tests

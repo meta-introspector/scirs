@@ -1,6 +1,6 @@
 use crate::op::{ComputeContext, GradientContext, Op, OpError};
 use crate::tensor::Tensor;
-use crate::tensor__ops::convert_to_tensor;
+use crate::tensor_ops::convert_to_tensor;
 use crate::Float;
 use ndarray::{Array2, ArrayD, IxDyn};
 
@@ -330,7 +330,7 @@ fn compute_solutionshape(
 
     if xshape.is_empty() {
         // If no axes specified, use last dimensions
-        let ndim_b = _bshape.len();
+        let ndim_b = bshape.len();
         for &dim in ashape.iter().skip(ndim_a - ndim_b) {
             xshape.push(dim);
         }
@@ -383,8 +383,8 @@ fn compute_grad_a<F: Float>(
 // Einsum helpers
 
 #[allow(dead_code)]
-fn parse_einsum_pattern(_pattern: &str) -> Result<(Vec<String>, String), OpError> {
-    let parts: Vec<&str> = _pattern.split("->").collect();
+fn parse_einsum_pattern(pattern: &str) -> Result<(Vec<String>, String), OpError> {
+    let parts: Vec<&str> = pattern.split("->").collect();
     if parts.len() != 2 {
         return Err(OpError::Other("Invalid einsum _pattern".into()));
     }

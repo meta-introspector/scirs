@@ -12,7 +12,7 @@ use std::time::Instant;
 /// which is a crucial signaling pathway in cells involved in various processes including
 /// cell growth, differentiation, and survival.
 #[allow(dead_code)]
-fn mapk_cascade(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
+fn mapk_cascade(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables (concentrations)
     // y[0] = MAPKKK
     // y[1] = MAPKKK*     (active)
@@ -63,7 +63,7 @@ fn mapk_cascade(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 /// This is a classic example of a chemical oscillator - a reaction that
 /// naturally produces oscillations in concentration of various species.
 #[allow(dead_code)]
-fn belousov_zhabotinsky(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
+fn belousov_zhabotinsky(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = HBrO2 (bromous acid)
     // y[1] = Br⁻ (bromide ion)
@@ -90,7 +90,7 @@ fn belousov_zhabotinsky(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 /// This models the daily cycles in organisms through a negative feedback loop
 /// between gene expression, protein synthesis, and protein degradation.
 #[allow(dead_code)]
-fn circadian_rhythm(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
+fn circadian_rhythm(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = mRNA concentration
     // y[1] = cytosolic protein concentration
@@ -167,7 +167,7 @@ fn sir_epidemic(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 /// Used to model excitable media like neurons, showing characteristic
 /// action potential dynamics.
 #[allow(dead_code)]
-fn fitzhugh_nagumo(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
+fn fitzhugh_nagumo(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = v (membrane potential)
     // y[1] = w (recovery variable)
@@ -193,7 +193,7 @@ fn fitzhugh_nagumo(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 /// A classic example of deterministic chaos that arises from a simple
 /// set of ordinary differential equations.
 #[allow(dead_code)]
-fn lorenz(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
+fn lorenz(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = x (related to convective intensity)
     // y[1] = y (related to temperature difference)
@@ -498,8 +498,8 @@ fn visualize_bz_reaction() -> IntegrateResult<()> {
 
 /// Estimate the oscillation period from time series data
 #[allow(dead_code)]
-fn estimate_oscillation_period(_times: &[f64], values: &[f64]) -> IntegrateResult<f64> {
-    if _times.len() < 10 || values.len() < 10 {
+fn estimate_oscillation_period(times: &[f64], values: &[f64]) -> IntegrateResult<f64> {
+    if times.len() < 10 || values.len() < 10 {
         return Err(scirs2_integrate::error::IntegrateError::ComputationError(
             "Not enough data points to estimate period".to_string(),
         ));
@@ -525,7 +525,7 @@ fn estimate_oscillation_period(_times: &[f64], values: &[f64]) -> IntegrateResul
     // Calculate average period using time differences between peaks
     let mut total_period = 0.0;
     for i in 1..peaks.len() {
-        total_period += _times[peaks[i]] - _times[peaks[i - 1]];
+        total_period += times[peaks[i]] - times[peaks[i - 1]];
     }
 
     Ok(total_period / (peaks.len() - 1) as f64)

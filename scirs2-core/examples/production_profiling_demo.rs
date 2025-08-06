@@ -34,7 +34,7 @@ fn main() -> CoreResult<()> {
     println!();
 
     // Resource utilization monitoring
-    demo_resource_monitoring()?;
+    demo_resourcemonitoring()?;
 
     println!("\n✨ Production profiling demo completed successfully!");
     println!("\nThe production profiling system provides:");
@@ -57,14 +57,14 @@ fn demo_configuration_examples() -> CoreResult<()> {
 
     // Production environment - minimal overhead
     let production_config = ProfileConfig::production()
-        .with_sampling_rate(0.001) // 0.1% sampling for minimal overhead
+        .with_samplingrate(0.001) // 0.1% sampling for minimal overhead
         .with_bottleneck_detection(true)
         .with_regression_detection(true);
 
     println!("🏭 Production Environment:");
     println!(
         "  - Sampling Rate: {:.3}%",
-        production_config.sampling_rate * 100.0
+        production_config.samplingrate * 100.0
     );
     println!(
         "  - Memory Limit: {} MB",
@@ -81,15 +81,12 @@ fn demo_configuration_examples() -> CoreResult<()> {
 
     // Development environment - detailed tracking
     let dev_config = ProfileConfig::development()
-        .with_sampling_rate(0.1) // 10% sampling for development
+        .with_samplingrate(0.1) // 10% sampling for development
         .with_bottleneck_detection(true)
         .with_regression_detection(true);
 
     println!("\n🔧 Development Environment:");
-    println!(
-        "  - Sampling Rate: {:.1}%",
-        dev_config.sampling_rate * 100.0
-    );
+    println!("  - Sampling Rate: {:.1}%", dev_config.samplingrate * 100.0);
     println!(
         "  - Memory Limit: {} MB",
         dev_config.max_memory_usage / (1024 * 1024)
@@ -105,14 +102,14 @@ fn demo_configuration_examples() -> CoreResult<()> {
 
     // Staging environment - balanced approach
     let staging_config = ProfileConfig::default()
-        .with_sampling_rate(0.05) // 5% sampling
+        .with_samplingrate(0.05) // 5% sampling
         .with_bottleneck_detection(true)
         .with_regression_detection(true);
 
     println!("\n🎭 Staging Environment:");
     println!(
         "  - Sampling Rate: {:.1}%",
-        staging_config.sampling_rate * 100.0
+        staging_config.samplingrate * 100.0
     );
     println!(
         "  - Regression Threshold: {:.1}%",
@@ -136,7 +133,7 @@ fn demo_basic_workload_analysis() -> CoreResult<()> {
     profiler.start_workload_analysis("matrix_operations", WorkloadType::ComputeIntensive)?;
 
     // Simulate matrix operations
-    simulate_matrix_operations();
+    simulatematrix_operations();
 
     let report = profiler
         .finish_workload_analysis_by_id("matrix_operations", WorkloadType::ComputeIntensive)?;
@@ -206,7 +203,7 @@ fn demo_enterprise_features() -> CoreResult<()> {
     println!("---------------------------");
 
     let config = ProfileConfig::production()
-        .with_sampling_rate(0.01) // 1% sampling for enterprise demo
+        .with_samplingrate(0.01) // 1% sampling for enterprise demo
         .with_bottleneck_detection(true)
         .with_regression_detection(true);
 
@@ -369,7 +366,7 @@ fn demo_regression_detection() -> CoreResult<()> {
 }
 
 #[allow(dead_code)]
-fn demo_resource_monitoring() -> CoreResult<()> {
+fn demo_resourcemonitoring() -> CoreResult<()> {
     println!("🖥️  Resource Utilization Monitoring Demo");
     println!("----------------------------------------");
 
@@ -406,7 +403,7 @@ fn demo_resource_monitoring() -> CoreResult<()> {
 // Simulation functions for different workload types
 
 #[allow(dead_code)]
-fn simulate_matrix_operations() {
+fn simulatematrix_operations() {
     // Simulate CPU-intensive matrix operations
     for _ in 0..1000 {
         let result: f64 = (0..100).map(|i| (i as f64).sin().cos()).sum();

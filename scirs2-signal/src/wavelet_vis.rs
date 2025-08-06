@@ -41,7 +41,7 @@ use crate::error::{SignalError, SignalResult};
 use crate::swt2d::swt2d_decompose;
 #[cfg(feature = "parallel")]
 use crate::swt2d::Swt2dResult;
-use ndarray::{ Array2};
+use ndarray::Array2;
 use num_traits::Float;
 use std::fmt::Debug;
 
@@ -119,7 +119,7 @@ pub struct WaveletEnergy {
 /// assert_eq!(arranged.shape(), image.shape());
 /// ```
 #[allow(dead_code)]
-pub fn arrange_coefficients_2d(_decomposition: &Dwt2dResult) -> Array2<f64> {
+pub fn arrange_coefficients_2d(decomposition: &Dwt2dResult) -> Array2<f64> {
     let approx = &_decomposition.approx;
     let detail_h = &_decomposition.detail_h;
     let detail_v = &_decomposition.detail_v;
@@ -342,7 +342,7 @@ pub fn arrange_multilevel_coefficients_2d(
 /// assert!(((energy.approximation_percent + energy.detail_percent - 100.0) as f64).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn calculate_energy_2d(_decomposition: &Dwt2dResult) -> WaveletEnergy {
+pub fn calculate_energy_2d(decomposition: &Dwt2dResult) -> WaveletEnergy {
     let approx = &_decomposition.approx;
     let detail_h = &_decomposition.detail_h;
     let detail_v = &_decomposition.detail_v;
@@ -419,7 +419,7 @@ pub fn calculate_energy_2d(_decomposition: &Dwt2dResult) -> WaveletEnergy {
 /// ```
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-pub fn calculate_energy_swt2d(_decomposition: &Swt2dResult) -> WaveletEnergy {
+pub fn calculate_energy_swt2d(decomposition: &Swt2dResult) -> WaveletEnergy {
     let approx = &_decomposition.approx;
     let detail_h = &_decomposition.detail_h;
     let detail_v = &_decomposition.detail_v;
@@ -493,9 +493,9 @@ pub fn calculate_energy_swt2d(_decomposition: &Swt2dResult) -> WaveletEnergy {
 /// assert!(((energy.approximation_percent + energy.detail_percent - 100.0) as f64).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn calculate_energy_1d(_approx: &[f64], detail: &[f64]) -> WaveletEnergy {
+pub fn calculate_energy_1d(approx: &[f64], detail: &[f64]) -> WaveletEnergy {
     // Calculate energy (sum of squared coefficients)
-    let energy_approx = _approx.iter().map(|&x| x * x).sum::<f64>();
+    let energy_approx = approx.iter().map(|&x| x * x).sum::<f64>();
     let energy_detail = detail.iter().map(|&x| x * x).sum::<f64>();
 
     let total_energy = energy_approx + energy_detail;
@@ -864,9 +864,9 @@ where
 /// Common colormap functions for coefficient visualization.
 pub mod colormaps {
     /// Viridis colormap (perceptually uniform, color-blind friendly)
-    pub fn viridis(_value: f64) -> [u8; 3] {
+    pub fn viridis(value: f64) -> [u8; 3] {
         // Clamp _value to [0, 1]
-        let x = _value.clamp(0.0, 1.0);
+        let x = value.clamp(0.0, 1.0);
 
         // Viridis colormap approximation
         let r = (70.0 * x.powi(2) - 35.0 * x - 129.0 * x.powi(3) + 133.0).clamp(0.0, 255.0) as u8;
@@ -877,9 +877,9 @@ pub mod colormaps {
     }
 
     /// Plasma colormap (perceptually uniform)
-    pub fn plasma(_value: f64) -> [u8; 3] {
+    pub fn plasma(value: f64) -> [u8; 3] {
         // Clamp _value to [0, 1]
-        let x = _value.clamp(0.0, 1.0);
+        let x = value.clamp(0.0, 1.0);
 
         // Plasma colormap approximation
         let r = (255.0 * (0.05 + 0.82 * x + 1.15 * x.powi(2) - 1.82 * x.powi(3))).clamp(0.0, 255.0)
@@ -893,9 +893,9 @@ pub mod colormaps {
     }
 
     /// Sequential grayscale (black to white)
-    pub fn grayscale(_value: f64) -> [u8; 3] {
+    pub fn grayscale(value: f64) -> [u8; 3] {
         // Clamp _value to [0, 1]
-        let x = _value.clamp(0.0, 1.0);
+        let x = value.clamp(0.0, 1.0);
 
         // Grayscale is simple - same _value for R, G, and B
         let gray = (255.0 * x) as u8;
@@ -904,9 +904,9 @@ pub mod colormaps {
     }
 
     /// Diverging red-blue colormap (for positive/negative values)
-    pub fn diverging_rb(_value: f64) -> [u8; 3] {
+    pub fn diverging_rb(value: f64) -> [u8; 3] {
         // Clamp _value to [0, 1]
-        let x = _value.clamp(0.0, 1.0);
+        let x = value.clamp(0.0, 1.0);
 
         // Red for values < 0.5, blue for values > 0.5
         let r = if x < 0.5 {
@@ -928,9 +928,9 @@ pub mod colormaps {
     }
 
     /// Jet colormap (rainbow)
-    pub fn jet(_value: f64) -> [u8; 3] {
+    pub fn jet(value: f64) -> [u8; 3] {
         // Clamp _value to [0, 1]
-        let x = _value.clamp(0.0, 1.0);
+        let x = value.clamp(0.0, 1.0);
 
         // Jet colormap approximation
         let r = ((255.0 * (1.5 - 4.0 * (x - 0.75) as f64).abs()).clamp(0.0, 1.0)) as u8;
@@ -943,9 +943,10 @@ pub mod colormaps {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     // Helper function to create a test image
-    fn create_test_image(_size: usize) -> Array2<f64> {
-        let mut image = Array2::zeros((_size, _size));
+    fn create_test_image(size: usize) -> Array2<f64> {
+        let mut image = Array2::zeros((_size, size));
         for i in 0.._size {
             for j in 0.._size {
                 image[[i, j]] = (i * j) as f64;

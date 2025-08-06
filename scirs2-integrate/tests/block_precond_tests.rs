@@ -56,7 +56,7 @@ fn create_test_matrix(
 
 // Test helper: Create a right-hand side vector
 #[allow(dead_code)]
-fn create_rhs(_n_x: usize, n_y: usize) -> Array1<f64> {
+fn create_rhs(_n_x: usize, ny: usize) -> Array1<f64> {
     let mut rhs = Array1::zeros(_n_x + n_y);
 
     // Fill with representative values

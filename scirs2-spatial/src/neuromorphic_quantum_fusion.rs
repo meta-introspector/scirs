@@ -182,9 +182,9 @@ pub struct FusionMetrics {
 
 impl QuantumSpikingClusterer {
     /// Create new quantum spiking clusterer
-    pub fn new(_num_clusters: usize) -> Self {
+    pub fn new(_numclusters: usize) -> Self {
         Self {
-            num_clusters: _num_clusters,
+            num_clusters: num_clusters,
             quantum_superposition: false,
             stdp_enabled: false,
             quantum_entanglement: 0.0,
@@ -453,11 +453,11 @@ impl QuantumSpikingClusterer {
     }
 
     /// Calculate coordinate range for a dimension
-    fn calculate_coordinate_range(&self, _points: &ArrayView2<'_, f64>, dim: usize) -> (f64, f64) {
+    fn calculate_coordinate_range(&self, points: &ArrayView2<'_, f64>, dim: usize) -> (f64, f64) {
         let mut min_coord = f64::INFINITY;
         let mut max_coord = f64::NEG_INFINITY;
 
-        for point in _points.outer_iter() {
+        for point in points.outer_iter() {
             if dim < point.len() {
                 min_coord = min_coord.min(point[dim]);
                 max_coord = max_coord.max(point[dim]);
@@ -497,7 +497,7 @@ impl QuantumSpikingClusterer {
                     .await?;
 
                 // Update _centroids based on quantum neuron states
-                self.update_centroids_from_quantum_states(&mut _centroids)
+                self.update_centroids_from_quantum_states(&mut centroids)
                     .await?;
 
                 // Apply STDP if enabled
@@ -601,7 +601,7 @@ impl QuantumSpikingClusterer {
     }
 
     /// Calculate entanglement strength for a neuron
-    fn calculate_entanglement_strength(&mut self, _neuron_idx: usize) -> f64 {
+    fn calculate_entanglement_strength(&mut self, _neuronidx: usize) -> f64 {
         if _neuron_idx < self.quantum_neurons.len() {
             let neuron = &self.quantum_neurons[_neuron_idx];
             let num_entangled = neuron.entangled_neurons.len();
@@ -687,7 +687,7 @@ impl QuantumSpikingClusterer {
     }
 
     /// Apply bio-quantum coupling for adaptation
-    async fn apply_bio_quantum_coupling(&mut self, neuron_idx: usize) -> SpatialResult<()> {
+    async fn apply_bio_quantum_coupling(&mut self, neuronidx: usize) -> SpatialResult<()> {
         if neuron_idx < self.quantum_neurons.len() {
             let coupling_strength = self.quantum_neurons[neuron_idx].bio_quantum_coupling;
 
@@ -1028,7 +1028,7 @@ impl QuantumSpikingClusterer {
     }
 
     /// Calculate fusion performance metrics
-    fn calculate_fusion_metrics(&mut self, _centroids: &Array2<f64>, points: &ArrayView2<'_, f64>) {
+    fn calculate_fusion_metrics(&mut self, centroids: &Array2<f64>, points: &ArrayView2<'_, f64>) {
         // Calculate speedup factor
         let pure_classical_time = self.fusion_metrics.classical_time_ms * 3.0; // Estimated
         let fusion_time = self.fusion_metrics.total_time_ms;
@@ -1340,7 +1340,7 @@ impl NeuralQuantumOptimizer {
     }
 
     /// Initialize neural-quantum optimization system
-    async fn initialize_neural_quantum_system(&mut self, _param_dim: usize) -> SpatialResult<()> {
+    async fn initialize_neural_quantum_system(&mut self, _paramdim: usize) -> SpatialResult<()> {
         // Initialize neural network
         self.neural_network.clear();
         for _ in 0..5 {
@@ -1356,7 +1356,7 @@ impl NeuralQuantumOptimizer {
         }
 
         // Initialize quantum explorer
-        let num_qubits = _param_dim.next_power_of_two().trailing_zeros() as usize;
+        let num_qubits = param_dim.next_power_of_two().trailing_zeros() as usize;
         self.quantum_explorer = Some(QuantumState::uniform_superposition(num_qubits));
 
         Ok(())

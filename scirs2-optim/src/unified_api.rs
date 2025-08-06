@@ -52,13 +52,13 @@ impl<A: Float> OptimizerConfig<A> {
     }
 
     /// Set weight decay
-    pub fn weight_decay(mut self, weight_decay: A) -> Self {
+    pub fn weight_decay(mut self, weightdecay: A) -> Self {
         self.weight_decay = weight_decay;
         self
     }
 
     /// Set gradient clipping
-    pub fn grad_clip(mut self, grad_clip: A) -> Self {
+    pub fn grad_clip(mut self, gradclip: A) -> Self {
         self.grad_clip = Some(grad_clip);
         self
     }
@@ -128,7 +128,7 @@ impl<A: Float + ScalarOperand, D: Dimension> Parameter<A, D> {
     }
 
     /// Apply gradient clipping if specified
-    pub fn clip_grad(&mut self, max_norm: A) -> Result<()> {
+    pub fn clip_grad(&mut self, maxnorm: A) -> Result<()> {
         if let Some(ref mut grad) = self.grad {
             let _norm = grad
                 .iter()
@@ -136,7 +136,7 @@ impl<A: Float + ScalarOperand, D: Dimension> Parameter<A, D> {
                 .fold(A::zero(), |acc, x| acc + x)
                 .sqrt();
             if _norm > max_norm {
-                let scale = max_norm / _norm;
+                let scale = max_norm / norm;
                 grad.mapv_inplace(|x| x * scale);
             }
         }
@@ -182,7 +182,7 @@ pub trait UnifiedOptimizer<A: Float> {
     fn state_dict(&self) -> HashMap<String, Vec<u8>>;
 
     /// Load state from dictionary
-    fn load_state_dict(&mut self, state_dict: HashMap<String, Vec<u8>>) -> Result<()>;
+    fn load_state_dict(&mut self, statedict: HashMap<String, Vec<u8>>) -> Result<()>;
 }
 
 /// SGD optimizer with unified API
@@ -295,7 +295,7 @@ impl<A: Float + ScalarOperand + Debug> UnifiedOptimizer<A> for UnifiedSGD<A> {
         HashMap::new()
     }
 
-    fn load_state_dict(&mut self, _state_dict: HashMap<String, Vec<u8>>) -> Result<()> {
+    fn load_state_dict(&mut self, _statedict: HashMap<String, Vec<u8>>) -> Result<()> {
         // Simplified state deserialization
         Ok(())
     }
@@ -432,7 +432,7 @@ impl<A: Float + ScalarOperand + Debug> UnifiedOptimizer<A> for UnifiedAdam<A> {
         HashMap::new()
     }
 
-    fn load_state_dict(&mut self, _state_dict: HashMap<String, Vec<u8>>) -> Result<()> {
+    fn load_state_dict(&mut self, _statedict: HashMap<String, Vec<u8>>) -> Result<()> {
         // Simplified state deserialization
         Ok(())
     }

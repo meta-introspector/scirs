@@ -35,9 +35,9 @@ pub struct ECGAnalysis {
 
 impl ECGAnalysis {
     /// Create new ECG analysis
-    pub fn new(_signal: Array1<f64>, fs: f64) -> Result<Self> {
+    pub fn new(signal: Array1<f64>, fs: f64) -> Result<Self> {
         // Check if all _signal values are finite
-        if _signal.iter().any(|x| !x.is_finite()) {
+        if signal.iter().any(|x| !x.is_finite()) {
             return Err(TimeSeriesError::InvalidInput(
                 "Signal contains non-finite values".to_string(),
             ));
@@ -46,7 +46,7 @@ impl ECGAnalysis {
             .map_err(|e| TimeSeriesError::InvalidInput(e.to_string()))?;
 
         Ok(Self {
-            _signal,
+            signal,
             fs,
             r_peaks: None,
         })
@@ -275,7 +275,7 @@ impl ECGAnalysis {
     }
 
     /// Simple bandpass filter implementation
-    fn bandpass_filter(&self, low_freq: f64, high_freq: f64) -> Result<Array1<f64>> {
+    fn bandpass_filter(&self, low_freq: f64, highfreq: f64) -> Result<Array1<f64>> {
         // Simplified butterworth bandpass filter
         let nyquist = self.fs / 2.0;
         let low_norm = low_freq / nyquist;
@@ -320,23 +320,23 @@ pub struct EEGAnalysis {
 
 impl EEGAnalysis {
     /// Create new EEG analysis
-    pub fn new(_signals: Array2<f64>, fs: f64, channel_names: Vec<String>) -> Result<Self> {
+    pub fn new(_signals: Array2<f64>, fs: f64, channelnames: Vec<String>) -> Result<Self> {
         // Check if all signal values are finite
-        if _signals.iter().any(|x| !x.is_finite()) {
+        if signals.iter().any(|x| !x.is_finite()) {
             return Err(TimeSeriesError::InvalidInput(
                 "Signals contain non-finite values".to_string(),
             ));
         }
         check_positive(fs, "sampling_frequency")?;
 
-        if _signals.nrows() != channel_names.len() {
+        if signals.nrows() != channel_names.len() {
             return Err(TimeSeriesError::InvalidInput(
                 "Number of channels must match signal dimensions".to_string(),
             ));
         }
 
         Ok(Self {
-            _signals,
+            signals,
             fs,
             channel_names,
         })
@@ -372,7 +372,7 @@ impl EEGAnalysis {
     }
 
     /// Detect seizure activity using multiple features
-    pub fn detect_seizures(&self, threshold_multiplier: f64) -> Result<Vec<(usize, usize, usize)>> {
+    pub fn detect_seizures(&self, thresholdmultiplier: f64) -> Result<Vec<(usize, usize, usize)>> {
         let mut seizure_events = Vec::new();
         let window_size = (2.0 * self.fs) as usize; // 2-second windows
 
@@ -516,9 +516,9 @@ pub struct EMGAnalysis {
 
 impl EMGAnalysis {
     /// Create new EMG analysis
-    pub fn new(_signal: Array1<f64>, fs: f64) -> Result<Self> {
+    pub fn new(signal: Array1<f64>, fs: f64) -> Result<Self> {
         // Check if all _signal values are finite
-        if _signal.iter().any(|x| !x.is_finite()) {
+        if signal.iter().any(|x| !x.is_finite()) {
             return Err(TimeSeriesError::InvalidInput(
                 "Signal contains non-finite values".to_string(),
             ));
@@ -526,11 +526,11 @@ impl EMGAnalysis {
         check_positive(fs, "sampling_frequency")
             .map_err(|e| TimeSeriesError::InvalidInput(e.to_string()))?;
 
-        Ok(Self { _signal, fs })
+        Ok(Self { signal, fs })
     }
 
     /// Calculate muscle activation envelope
-    pub fn muscle_activation_envelope(&self, window_size: usize) -> Result<Array1<f64>> {
+    pub fn muscle_activation_envelope(&self, windowsize: usize) -> Result<Array1<f64>> {
         check_positive(window_size, "window_size")?;
 
         // Rectify signal (absolute value)
@@ -594,7 +594,7 @@ impl EMGAnalysis {
     }
 
     /// Onset detection for muscle contractions
-    pub fn detect_muscle_onsets(&self, threshold_factor: f64) -> Result<Vec<usize>> {
+    pub fn detect_muscle_onsets(&self, thresholdfactor: f64) -> Result<Vec<usize>> {
         let envelope = self.muscle_activation_envelope((0.05 * self.fs) as usize)?; // 50ms window
 
         let baseline =
@@ -779,7 +779,7 @@ impl BiomedicalAnalysis {
         let mut sync_metrics = HashMap::new();
 
         // Example: ECG-EEG synchronization (heart-brain coupling)
-        if let (Some(ref _ecg), Some(ref _eeg)) = (&self.ecg, &self.eeg) {
+        if let (Some(ref ecg), Some(ref eeg)) = (&self.ecg, &self.eeg) {
             // This would implement phase coupling analysis between cardiac and neural signals
             // Simplified implementation
             sync_metrics.insert("ECG_EEG_Coupling".to_string(), 0.5);

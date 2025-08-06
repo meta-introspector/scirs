@@ -256,12 +256,12 @@ where
 
 /// Helper function for matrix-vector multiplication
 #[allow(dead_code)]
-fn matrix_vector_multiply<T, S>(_matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+fn matrix_vector_multiply<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (rows, cols) = _matrix.shape();
+    let (rows, cols) = matrix.shape();
     if x.len() != cols {
         return Err(SparseError::DimensionMismatch {
             expected: cols,
@@ -270,7 +270,7 @@ where
     }
 
     let mut result = Array1::zeros(rows);
-    let (row_indices, col_indices, values) = _matrix.find();
+    let (row_indices, col_indices, values) = matrix.find();
 
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         result[i] = result[i] + values[k] * x[j];

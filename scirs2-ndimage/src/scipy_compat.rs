@@ -962,20 +962,20 @@ pub mod convenience {
     }
 
     /// Create a Gaussian filter operation
-    pub fn gaussian<T>(_sigma: T) -> FilterOperation<T> {
+    pub fn gaussian<T>(sigma: T) -> FilterOperation<T> {
         FilterOperation::Gaussian {
-            _sigma,
+            sigma,
             truncate: None,
         }
     }
 
     /// Create a uniform filter operation  
-    pub fn uniform(_size: Vec<usize>) -> FilterOperation<f64> {
+    pub fn uniform(size: Vec<usize>) -> FilterOperation<f64> {
         FilterOperation::Uniform { _size }
     }
 
     /// Create a median filter operation
-    pub fn median(_size: Vec<usize>) -> FilterOperation<f64> {
+    pub fn median(size: Vec<usize>) -> FilterOperation<f64> {
         FilterOperation::Median { _size }
     }
 

@@ -73,16 +73,16 @@ struct OperationInfo {
 
 impl GpuOperations {
     /// Create a new GPU operations manager
-    pub fn new(_config: GpuOperationsConfig) -> NdimageResult<Self> {
+    pub fn new(config: GpuOperationsConfig) -> NdimageResult<Self> {
         let acceleration_manager = Arc::new(GpuAccelerationManager::new(
-            _config.memory_pool_config.clone(),
+            config.memory_pool_config.clone(),
         )?);
         let device_manager = DeviceManager::new()?;
 
         let mut gpu_ops = Self {
             acceleration_manager,
             device_manager,
-            _config,
+            config,
             operation_registry: HashMap::new(),
         };
 
@@ -331,7 +331,7 @@ impl GpuOperations {
         Ok(())
     }
 
-    fn should_use_gpu<T, D>(&self, input: &ArrayView<T, D>, operation_name: &str) -> bool
+    fn should_use_gpu<T, D>(&self, input: &ArrayView<T, D>, operationname: &str) -> bool
     where
         T: Float + FromPrimitive,
         D: Dimension,
@@ -361,7 +361,7 @@ impl GpuOperations {
         true
     }
 
-    fn select_backend_for_operation(&self, operation_name: &str) -> NdimageResult<Backend> {
+    fn select_backend_for_operation(&self, operationname: &str) -> NdimageResult<Backend> {
         let capabilities = self.device_manager.get_capabilities();
 
         // Check operation preference
@@ -369,7 +369,8 @@ impl GpuOperations {
             match op_info.preferred_backend {
                 Backend::Cuda if capabilities.cuda_available => return Ok(Backend::Cuda),
                 Backend::OpenCL if capabilities.opencl_available => return Ok(Backend::OpenCL),
-                Backend::Metal if capabilities.metal_available => return Ok(Backend::Metal, _ => {}
+                Backend::Metal if capabilities.metal_available => return Ok(Backend::Metal),
+                _ => {}
             }
         }
 

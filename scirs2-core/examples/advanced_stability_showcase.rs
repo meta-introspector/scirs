@@ -10,7 +10,7 @@
 //!
 //! This showcases the "advanced mode" enhancements for 1.0 release preparation.
 
-use scirs2_core::api_versioning::Version;
+use scirs2_core::apiversioning::Version;
 use scirs2_core::stability::*;
 use std::thread;
 use std::time::{Duration, SystemTime};
@@ -35,10 +35,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     demonstrate_formal_verification(&manager)?;
 
     // Demonstrate runtime validation with chaos engineering
-    demonstrate_runtime_validation(&manager)?;
+    demonstrate_runtime_validation(&mut manager)?;
 
     // Demonstrate performance modeling
-    demonstrate_performance_modeling(&manager)?;
+    demonstrate_performance_modeling(&mut manager)?;
 
     // Demonstrate audit trail
     demonstrate_audit_trail(&manager)?;
@@ -59,7 +59,7 @@ fn demonstrate_advanced_contract_registration(
 
     // Create a high-performance matrix multiplication contract
     let matrix_contract = ApiContract {
-        api_name: "matrix_multiply".to_string(),
+        apiname: "matrix_multiply".to_string(),
         module: "linalg".to_string(),
         contract_hash: String::new(), // Will be calculated automatically
         created_at: SystemTime::UNIX_EPOCH, // Will be updated automatically
@@ -69,9 +69,9 @@ fn demonstrate_advanced_contract_registration(
         performance: PerformanceContract {
             time_complexity: ComplexityBound::Cubic, // O(n³) for naive implementation
             space_complexity: ComplexityBound::Quadratic, // O(n²) for output
-            max_execution_time: Some(Duration::from_secs(10)),
+            maxexecution_time: Some(Duration::from_secs(10)),
             min_throughput: Some(1000.0), // Operations per second
-            memory_bandwidth: Some(0.8),  // 80% memory bandwidth utilization
+            memorybandwidth: Some(0.8),   // 80% memory bandwidth utilization
         },
         numerical: NumericalContract {
             precision: PrecisionGuarantee::MachinePrecision,
@@ -159,7 +159,7 @@ fn demonstrate_formal_verification(
 /// Demonstrate runtime validation with chaos engineering
 #[allow(dead_code)]
 fn demonstrate_runtime_validation(
-    manager: &StabilityGuaranteeManager,
+    manager: &mut StabilityGuaranteeManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎯 Runtime Validation & Chaos Engineering");
     println!("==========================================");
@@ -179,7 +179,7 @@ fn demonstrate_runtime_validation(
         };
 
         print!("🔄 Validating call {} ... ", i + 1);
-        match manager.validate_runtime_call("matrix_multiply", "linalg", &call_context) {
+        match manager.validate_api_call("matrix_multiply", "linalg", &call_context) {
             Ok(()) => println!("✅ Passed"),
             Err(e) => println!("❌ Failed: {e}"),
         }
@@ -211,7 +211,7 @@ fn demonstrate_runtime_validation(
 /// Demonstrate advanced performance modeling
 #[allow(dead_code)]
 fn demonstrate_performance_modeling(
-    manager: &StabilityGuaranteeManager,
+    manager: &mut StabilityGuaranteeManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧠 Advanced Performance Modeling");
     println!("=================================");
@@ -230,7 +230,22 @@ fn demonstrate_performance_modeling(
         };
         let system_state = SystemState::current();
 
-        manager.record_performance("matrix_multiply", input_chars, performance, system_state);
+        // Convert RuntimePerformanceMetrics to PerformanceMetrics
+        let mut operation_times = std::collections::HashMap::new();
+        operation_times.insert("matrix_multiply".to_string(), performance.execution_time.as_secs_f64());
+        
+        let mut strategy_success_rates = std::collections::HashMap::new();
+        strategy_success_rates.insert(scirs2_core::performance_optimization::OptimizationStrategy::VectorOptimized, 0.9);
+        
+        let perf_metrics = scirs2_core::performance_optimization::PerformanceMetrics {
+            operation_times,
+            strategy_success_rates,
+            memorybandwidth_utilization: performance.memory_usage as f64 / (1024.0 * 1024.0 * 1024.0), // Convert to GB
+            cache_hit_rate: performance.cache_hit_rate,
+            parallel_efficiency: performance.cpu_usage / performance.thread_count as f64,
+        };
+        
+        manager.record_performance("matrix_multiply", "linalg", system_state, input_chars, perf_metrics);
 
         println!("📈 Recorded performance for {size}x{size} matrix");
     }
@@ -240,7 +255,7 @@ fn demonstrate_performance_modeling(
     let test_system = SystemState::current();
 
     if let Some(predicted) =
-        manager.predict_performance("matrix_multiply", &test_input, &test_system)
+        manager.predict_performance("matrix_multiply", test_input, &test_system)
     {
         println!("\n🔮 Performance Prediction for 3000x3000 matrix:");
         println!("   - Predicted time: {:?}", predicted.execution_time);
@@ -261,7 +276,7 @@ fn demonstrate_performance_modeling(
     }
 
     // Check model accuracy
-    if let Some(accuracy) = manager.get_model_accuracy(matrix_multiply) {
+    if let Some(accuracy) = manager.get_model_accuracy("matrix_multiply") {
         println!("🎯 Model accuracy: {:.1}%", accuracy * 100.0);
     }
 
@@ -357,7 +372,7 @@ fn demonstrate_usage_context_validation(
             "High-performance context",
             UsageContext {
                 required_stability: StabilityLevel::Stable,
-                max_execution_time: Some(Duration::from_millis(100)),
+                maxexecution_time: Some(Duration::from_millis(100)),
                 requires_thread_safety: true,
                 max_memory_usage: Some(512 * 1024 * 1024), // 512 MB
                 required_precision: Some(PrecisionGuarantee::MachinePrecision),
@@ -367,7 +382,7 @@ fn demonstrate_usage_context_validation(
             "Research context",
             UsageContext {
                 required_stability: StabilityLevel::Experimental,
-                max_execution_time: Some(Duration::from_secs(60)),
+                maxexecution_time: Some(Duration::from_secs(60)),
                 requires_thread_safety: false,
                 max_memory_usage: Some(8 * 1024 * 1024 * 1024), // 8 GB
                 required_precision: Some(PrecisionGuarantee::RelativeError(1e-12)),
@@ -377,7 +392,7 @@ fn demonstrate_usage_context_validation(
 
     for (name, context) in contexts {
         print!("🔍 Testing {name} ... ");
-        match manager.validate_api_usage("matrix_multiply", "linalg", &context) {
+        match manager.validate_usage("matrix_multiply", "linalg", &context) {
             Ok(()) => println!("✅ Compatible"),
             Err(e) => println!("❌ Incompatible: {e}"),
         }
@@ -408,7 +423,7 @@ mod tests {
         let mut manager = StabilityGuaranteeManager::new();
 
         let contract = ApiContract {
-            api_name: "test_api".to_string(),
+            apiname: "test_api".to_string(),
             module: "test_module".to_string(),
             contract_hash: String::new(),
             created_at: SystemTime::UNIX_EPOCH,
@@ -418,9 +433,9 @@ mod tests {
             performance: PerformanceContract {
                 time_complexity: ComplexityBound::Linear,
                 space_complexity: ComplexityBound::Constant,
-                max_execution_time: Some(Duration::from_millis(100)),
+                maxexecution_time: Some(Duration::from_millis(100)),
                 min_throughput: None,
-                memory_bandwidth: None,
+                memorybandwidth: None,
             },
             numerical: NumericalContract {
                 precision: PrecisionGuarantee::MachinePrecision,

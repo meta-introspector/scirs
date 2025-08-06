@@ -28,16 +28,16 @@ pub struct PerformanceReportGenerator {
 }
 
 impl PerformanceReportGenerator {
-    pub fn new(_output_dir: &str) -> io::Result<Self> {
+    pub fn new(_outputdir: &str) -> io::Result<Self> {
         std::fs::create_dir_all(_output_dir)?;
         Ok(Self {
             data_points: Vec::new(),
-            output_dir: _output_dir.to_string(),
+            output_dir: output_dir.to_string(),
         })
     }
 
     /// Add a performance data point
-    pub fn add_data_point(&mut self, data_point: PerformanceDataPoint) {
+    pub fn add_data_point(&mut self, datapoint: PerformanceDataPoint) {
         self.data_points.push(data_point);
     }
 

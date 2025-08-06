@@ -55,10 +55,10 @@ where
         });
     }
 
-    let _bins = n_bins.unwrap_or(5);
-    if _bins < 2 {
+    let bins = n_bins.unwrap_or(5);
+    if bins < 2 {
         return Err(MetricsError::InvalidArgument(
-            "Number of _bins must be at least 2".to_string(),
+            "Number of bins must be at least 2".to_string(),
         ));
     }
 
@@ -86,19 +86,19 @@ where
         .collect::<Result<Vec<f64>, MetricsError>>()?;
 
     // Define bin edges
-    let bin_width = 1.0 / _bins as f64;
-    let edges: Vec<f64> = (0..=_bins).map(|i| i as f64 * bin_width).collect();
+    let bin_width = 1.0 / bins as f64;
+    let edges: Vec<f64> = (0..=bins).map(|i| i as f64 * bin_width).collect();
 
     // Initialize arrays for results
-    let mut prob_true = vec![0.0; _bins];
-    let mut prob_pred = vec![0.0; _bins];
-    let mut counts = vec![0; _bins];
+    let mut prob_true = vec![0.0; bins];
+    let mut prob_pred = vec![0.0; bins];
+    let mut counts = vec![0; bins];
 
-    // Assign samples to _bins and compute statistics
+    // Assign samples to bins and compute statistics
     for (true_val, prob_val) in y_true_vec.iter().zip(y_prob_vec.iter()) {
         // Find the bin index
-        let mut bin_idx = _bins - 1;
-        for i in 0.._bins {
+        let mut bin_idx = bins - 1;
+        for i in 0..bins {
             if *prob_val < edges[i + 1] {
                 bin_idx = i;
                 break;
@@ -112,7 +112,7 @@ where
     }
 
     // Compute mean values for each bin
-    for i in 0.._bins {
+    for i in 0..bins {
         if counts[i] > 0 {
             prob_true[i] /= counts[i] as f64;
             prob_pred[i] /= counts[i] as f64;

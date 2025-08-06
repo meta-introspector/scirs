@@ -78,7 +78,7 @@ fn main() {
 
 // Create a simple test signal
 #[allow(dead_code)]
-fn create_signal(_size: usize) -> Vec<Complex64> {
+fn create_signal(size: usize) -> Vec<Complex64> {
     (0.._size)
         .map(|i| {
             let x = i as f64 / _size as f64;

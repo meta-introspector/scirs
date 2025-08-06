@@ -250,7 +250,7 @@ impl<T: Float + Default + Clone> CandleTensor<T> {
     }
     
     /// Set gradient requirement
-    pub fn set_requires_grad(&mut self, requires_grad: bool) {
+    pub fn set_requires_grad(&mut self, requiresgrad: bool) {
         self.requires_grad = requires_grad;
         if !requires_grad {
             self._grad = None;
@@ -373,12 +373,12 @@ impl<T: Float + Default + Clone> CandleTensor<T> {
 
 impl<T: Float + Default + Clone> CandleOptimizer<T> {
     /// Create new Candle optimizer
-    pub fn new(_config: CandleOptimizerConfig, device: CandleDevice) -> Result<Self> {
+    pub fn new(config: CandleOptimizerConfig, device: CandleDevice) -> Result<Self> {
         let autodiff_config = AutodiffConfig {
             enable_forward_mode: true,
             enable_reverse_mode: true,
             enable_hessian: true,
-            gradient_checkpointing: _config.gradient_checkpointing,
+            gradient_checkpointing: config.gradient_checkpointing,
             checkpoint_chunk_size: 1000,
             ..Default::default()
         };
@@ -391,14 +391,14 @@ impl<T: Float + Default + Clone> CandleOptimizer<T> {
         }
         
         let mixed_precision = MixedPrecisionConfig {
-            enabled: _config.auto_mixed_precision,
-            forward_precision: if _config.auto_mixed_precision { CandleDataType::F16 } else { CandleDataType::F32 },
+            enabled: config.auto_mixed_precision,
+            forward_precision: if config.auto_mixed_precision { CandleDataType::F16 } else { CandleDataType::F32 },
             backward_precision: CandleDataType::F32,
             param_precision: CandleDataType::F32,
             optimizer_precision: CandleDataType::F32,
-            loss_scaling: if _config.dynamic_loss_scaling {
+            loss_scaling: if config.dynamic_loss_scaling {
                 LossScalingStrategy::Dynamic {
-                    init_scale: _config.loss_scale,
+                    init_scale: config.loss_scale,
                     growth_factor: 2.0,
                     backoff_factor: 0.5,
                     growth_interval: 2000,
@@ -411,7 +411,7 @@ impl<T: Float + Default + Clone> CandleOptimizer<T> {
         Ok(Self {
             engine,
             tensors: HashMap::new(),
-            _config,
+            config,
             device,
             grad_buffer: HashMap::new(),
             mixed_precision,
@@ -435,7 +435,7 @@ impl<T: Float + Default + Clone> CandleOptimizer<T> {
     }
     
     /// Compute gradients for all registered tensors
-    pub fn backward(&mut self, loss_tensor: &str) -> Result<()> {
+    pub fn backward(&mut self, losstensor: &str) -> Result<()> {
         let loss_tensor = self.tensors.get(loss_tensor)
             .ok_or_else(|| OptimError::InvalidInput(format!("Loss _tensor '{}' not found", loss_tensor)))?;
         
@@ -448,8 +448,8 @@ impl<T: Float + Default + Clone> CandleOptimizer<T> {
                 
                 // Distribute gradients to tensors
                 for (name_tensor) in &mut self.tensors {
-                    if _tensor.requires_grad && _tensor.node_id.is_some() {
-                        let node_id = _tensor.node_id.unwrap();
+                    if tensor.requires_grad && tensor.node_id.is_some() {
+                        let node_id = tensor.node_id.unwrap();
                         if node_id < gradients.len() {
                             let scaled_grad = gradients[node_id] / scale_factor;
                             
@@ -461,7 +461,7 @@ impl<T: Float + Default + Clone> CandleOptimizer<T> {
                                     self.grad_buffer.insert(name.clone(), Array1::from_elem(_tensor.data.len(), scaled_grad));
                                 }
                             } else {
-                                _tensor.grad = Some(Array1::from_elem(_tensor.data.len(), scaled_grad));
+                                tensor.grad = Some(Array1::from_elem(_tensor.data.len(), scaled_grad));
                             }
                         }
                     }
@@ -541,7 +541,7 @@ impl<T: Float + Default + Clone> CandleOptimizer<T> {
     }
     
     /// Update loss scaling for dynamic strategies
-    pub fn update_loss_scale(&mut self, overflow_detected: bool) -> Result<()> {
+    pub fn update_loss_scale(&mut self, overflowdetected: bool) -> Result<()> {
         match &mut self.mixed_precision.loss_scaling {
             LossScalingStrategy::Dynamic {
                 init_scale,
@@ -799,7 +799,7 @@ pub mod utils {
     
     /// Convert Candle tensor to ndarray
     pub fn to_ndarray<T: Float + Clone>(tensor: &CandleTensor<T>) -> Array1<T> {
-        _tensor.data.clone()
+        tensor.data.clone()
     }
     
     /// Create tensor from scalar
@@ -822,11 +822,11 @@ pub mod utils {
     
     /// Check if two tensors are on the same device
     pub fn same_device<T: Float>(tensor1: &CandleTensor<T>, tensor2: &CandleTensor<T>) -> bool {
-        _tensor1.device == tensor2.device
+        tensor1.device == tensor2.device
     }
     
     /// Get device name as string
-    pub fn device_name(_device: &CandleDevice) -> String {
+    pub fn device_name(device: &CandleDevice) -> String {
         match _device {
             CandleDevice::Cpu => "cpu".to_string(),
             CandleDevice::Cuda(id) => format!("cuda:{}", id),
@@ -835,7 +835,7 @@ pub mod utils {
     }
     
     /// Get data type size in bytes
-    pub fn dtype_size(_dtype: CandleDataType) -> usize {
+    pub fn dtype_size(dtype: CandleDataType) -> usize {
         match _dtype {
             CandleDataType::F16 | CandleDataType::BF16 => 2,
             CandleDataType::F32 | CandleDataType::U32 => 4,

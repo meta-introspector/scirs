@@ -53,8 +53,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn analyze_toy_dataset_performance(_suites: &[BenchmarkSuite]) {
-    if let Some(toy_suite) = _suites.iter().find(|s| s.name == "Toy Datasets") {
+fn analyze_toy_dataset_performance(suites: &[BenchmarkSuite]) {
+    if let Some(toy_suite) = suites.iter().find(|s| s.name == "Toy Datasets") {
         println!("\n📊 TOY DATASET LOADING ANALYSIS");
         println!("{}", "-".repeat(40));
 
@@ -107,8 +107,8 @@ fn analyze_toy_dataset_performance(_suites: &[BenchmarkSuite]) {
 }
 
 #[allow(dead_code)]
-fn analyze_data_generation_performance(_suites: &[BenchmarkSuite]) {
-    if let Some(gen_suite) = _suites.iter().find(|s| s.name == "Data Generation") {
+fn analyze_data_generation_performance(suites: &[BenchmarkSuite]) {
+    if let Some(gen_suite) = suites.iter().find(|s| s.name == "Data Generation") {
         println!("\n🔬 DATA GENERATION ANALYSIS");
         println!("{}", "-".repeat(40));
 
@@ -177,13 +177,13 @@ fn analyze_generation_type(
 }
 
 #[allow(dead_code)]
-fn analyze_scaling_performance(_suite: &BenchmarkSuite) {
+fn analyze_scaling_performance(suite: &BenchmarkSuite) {
     println!("\n  📈 SCALING ANALYSIS:");
 
     // Group results by sample size
     let mut size_groups: HashMap<usize, Vec<_>> = HashMap::new();
 
-    for result in _suite.successful_results() {
+    for result in suite.successful_results() {
         size_groups.entry(result.samples).or_default().push(result);
     }
 
@@ -416,7 +416,7 @@ fn run_sklearn_generation_comparison() {
 }
 
 #[allow(dead_code)]
-fn generate_performance_report(_suites: &[BenchmarkSuite]) {
+fn generate_performance_report(suites: &[BenchmarkSuite]) {
     println!("\n📋 PERFORMANCE SUMMARY REPORT");
     println!("{}", "=".repeat(60));
 
@@ -458,7 +458,7 @@ fn generate_performance_report(_suites: &[BenchmarkSuite]) {
     // Recommendations
     println!("\n  💡 RECOMMENDATIONS:");
 
-    if let Some(gen_suite) = _suites.iter().find(|s| s.name == "Data Generation") {
+    if let Some(gen_suite) = suites.iter().find(|s| s.name == "Data Generation") {
         let successful = gen_suite.successful_results();
         let failed = gen_suite.failed_results();
 
@@ -486,12 +486,12 @@ fn generate_performance_report(_suites: &[BenchmarkSuite]) {
 }
 
 #[allow(dead_code)]
-fn format_duration(_duration: Duration) -> String {
-    if _duration.as_secs() > 0 {
-        format!("{:.2}s", _duration.as_secs_f64())
-    } else if _duration.as_millis() > 0 {
-        format!("{}ms", _duration.as_millis())
+fn format_duration(duration: Duration) -> String {
+    if duration.as_secs() > 0 {
+        format!("{:.2}s", duration.as_secs_f64())
+    } else if duration.as_millis() > 0 {
+        format!("{}ms", duration.as_millis())
     } else {
-        format!("{}μs", _duration.as_micros())
+        format!("{}μs", duration.as_micros())
     }
 }

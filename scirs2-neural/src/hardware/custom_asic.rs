@@ -205,7 +205,7 @@ pub struct CustomASIC {
     runtime_state: Arc<Mutex<RuntimeState>>,
 impl CustomASIC {
     /// Create a new custom ASIC device
-    pub fn new(_config: ASICConfig) -> Result<Self> {
+    pub fn new(config: ASICConfig) -> Result<Self> {
         let capabilities = Self::build_capabilities(&_config);
         let memory_manager = ASICMemoryManager::new(&_config.memory_hierarchy);
         let instruction_cache =
@@ -213,7 +213,7 @@ impl CustomASIC {
         let performance_counters = PerformanceCounters::new();
         let runtime_state = RuntimeState::new();
         Ok(Self {
-            _config,
+            config,
             capabilities,
             memory_manager: Arc::new(Mutex::new(memory_manager)),
             instruction_cache: Arc::new(Mutex::new(instruction_cache)),
@@ -222,13 +222,13 @@ impl CustomASIC {
         })
     }
     /// Build accelerator capabilities from ASIC config
-    fn build_capabilities(_config: &ASICConfig) -> AcceleratorCapabilities {
+    fn build_capabilities(config: &ASICConfig) -> AcceleratorCapabilities {
         // Calculate peak performance estimates
-        let peak_ops_per_cycle = _config.processing_elements as f32 * 2.0; // Estimate
+        let peak_ops_per_cycle = config.processing_elements as f32 * 2.0; // Estimate
         let clock_freq_ghz = 1.0; // Assume 1 GHz for simplicity
         let peak_tflops_fp32 = peak_ops_per_cycle * clock_freq_ghz;
         // Estimate memory bandwidth
-        let total_bandwidth = _config.memory_hierarchy.external_memory.bandwidth
+        let total_bandwidth = config.memory_hierarchy.external_memory.bandwidth
             + _config
                 .memory_hierarchy
                 .sram_levels
@@ -581,8 +581,8 @@ struct ASICMemoryManager {
     allocations: HashMap<usize, MemoryAllocation>,
     next_addr: usize,
 impl ASICMemoryManager {
-    fn new(_hierarchy: &MemoryHierarchy) -> Self {
-            hierarchy: _hierarchy.clone(),
+    fn new(hierarchy: &MemoryHierarchy) -> Self {
+            hierarchy: hierarchy.clone(),
             allocations: HashMap::new(),
             next_addr: 0,
 /// Memory allocation information
@@ -594,7 +594,7 @@ struct MemoryAllocation {
 struct InstructionCache {
     cache: HashMap<usize, Vec<ASICInstruction>>,
 impl InstructionCache {
-    fn new(_size: usize) -> Self {
+    fn new(size: usize) -> Self {
             size,
             cache: HashMap::new(),
 /// Performance counters

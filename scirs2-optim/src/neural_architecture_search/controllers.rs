@@ -20,7 +20,7 @@ use crate::error::{OptimError, Result};
 /// Base trait for architecture controllers
 pub trait ArchitectureController<T: Float>: Send + Sync {
     /// Initialize the controller
-    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<()>;
+    fn initialize(&mut self, searchspace: &SearchSpaceConfig) -> Result<()>;
 
     /// Generate new architecture
     fn generate_architecture(
@@ -531,9 +531,9 @@ impl<
     > RNNController<T>
 {
     /// Create new RNN controller
-    pub fn new(hidden_size: usize, num_layers: usize, vocab_size: usize) -> Result<Self> {
+    pub fn new(hidden_size: usize, num_layers: usize, vocabsize: usize) -> Result<Self> {
         let config = RNNControllerConfig {
-            hidden_size: hidden_size,
+            hidden_size,
             num_layers,
             rnn_type: RNNType::LSTM,
             dropout_rate: 0.1,
@@ -571,7 +571,7 @@ impl<
     }
 
     /// Forward pass through RNN
-    fn forward(&mut self, input_sequence: &[usize]) -> Result<Array2<T>> {
+    fn forward(&mut self, inputsequence: &[usize]) -> Result<Array2<T>> {
         let seq_len = input_sequence.len();
         let vocab_size = self.action_space.component_types.len();
         let mut outputs = Array2::zeros((seq_len, vocab_size));
@@ -728,7 +728,7 @@ impl<
             + ndarray::ScalarOperand,
     > ArchitectureController<T> for RNNController<T>
 {
-    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<()> {
+    fn initialize(&mut self, searchspace: &SearchSpaceConfig) -> Result<()> {
         self.search_space = Some(search_space.clone());
 
         // Initialize action _space from search _space
@@ -873,9 +873,9 @@ impl<T: Float + Default + Clone + Send + Sync + 'static + ndarray::ScalarOperand
     TransformerController<T>
 {
     /// Create new Transformer controller
-    pub fn new(model_dim: usize, num_heads: usize, num_layers: usize) -> Result<Self> {
+    pub fn new(model_dim: usize, num_heads: usize, numlayers: usize) -> Result<Self> {
         let config = TransformerConfig {
-            model_dim: model_dim,
+            model_dim,
             num_heads,
             num_layers,
             ff_dim: model_dim * 4,
@@ -887,7 +887,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static + ndarray::ScalarOperand
 
         let mut _layers = Vec::new();
         for _ in 0..num_layers {
-            _layers.push(TransformerLayer::new(model_dim, num_heads, model_dim * 4)?);
+            layers.push(TransformerLayer::new(model_dim, num_heads, model_dim * 4)?);
         }
 
         let positional_encoding = PositionalEncoding::new(config.max_sequence_length, model_dim)?;
@@ -897,7 +897,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static + ndarray::ScalarOperand
 
         Ok(Self {
             config,
-            layers: _layers,
+            layers: layers,
             positional_encoding,
             input_embedding,
             output_projection,
@@ -912,7 +912,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static + ndarray::ScalarOperand
 impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ArchitectureController<T>
     for TransformerController<T>
 {
-    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<()> {
+    fn initialize(&mut self, searchspace: &SearchSpaceConfig) -> Result<()> {
         self.search_space = Some(search_space.clone());
         self.generation_count = 0;
         Ok(())
@@ -969,7 +969,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ArchitectureCont
 
 impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> RandomController<T> {
     /// Create new random controller
-    pub fn new(_vocab_size: usize) -> Result<Self> {
+    pub fn new(_vocabsize: usize) -> Result<Self> {
         Ok(Self {
             component_types: vec![
                 ComponentType::Adam,
@@ -987,7 +987,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> RandomController
 impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ArchitectureController<T>
     for RandomController<T>
 {
-    fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<()> {
+    fn initialize(&mut self, searchspace: &SearchSpaceConfig) -> Result<()> {
         self.search_space = Some(search_space.clone());
         self.component_types = search_space
             .optimizer_components
@@ -1080,7 +1080,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ArchitectureCont
 
 // Implementation helpers for layers
 impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> RNNLayer<T> {
-    fn new(layer_type: RNNType, input_size: usize, hidden_size: usize) -> Result<Self> {
+    fn new(layer_type: RNNType, input_size: usize, hiddensize: usize) -> Result<Self> {
         let gate_size = match layer_type {
             RNNType::LSTM => hidden_size * 4,
             RNNType::GRU => hidden_size * 3,
@@ -1187,9 +1187,9 @@ impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> RNNLayer<T> 
 }
 
 impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> OutputLayer<T> {
-    fn new(_input_size: usize, output_size: usize, activation: ActivationType) -> Result<Self> {
+    fn new(_input_size: usize, outputsize: usize, activation: ActivationType) -> Result<Self> {
         Ok(Self {
-            weight: Array2::zeros((output_size, _input_size)),
+            weight: Array2::zeros((output_size, input_size)),
             bias: Array1::zeros(output_size),
             activation,
         })
@@ -1223,10 +1223,10 @@ impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> OutputLayer<
 }
 
 impl<T: Float + Default + Clone> EmbeddingLayer<T> {
-    fn new(_vocab_size: usize, embedding_dim: usize) -> Result<Self> {
+    fn new(_vocab_size: usize, embeddingdim: usize) -> Result<Self> {
         Ok(Self {
             embeddings: Array2::zeros((_vocab_size, embedding_dim)),
-            vocab_size: _vocab_size,
+            vocab_size: vocab_size,
             embedding_dim,
         })
     }
@@ -1244,7 +1244,7 @@ impl<T: Float + Default + Clone> EmbeddingLayer<T> {
 }
 
 impl<T: Float + Default + Clone> TransformerLayer<T> {
-    fn new(_model_dim: usize, num_heads: usize, ff_dim: usize) -> Result<Self> {
+    fn new(_model_dim: usize, num_heads: usize, ffdim: usize) -> Result<Self> {
         Ok(Self {
             attention: MultiHeadAttention::new(_model_dim, num_heads)?,
             feed_forward: FeedForward::new(_model_dim, ff_dim)?,
@@ -1256,26 +1256,26 @@ impl<T: Float + Default + Clone> TransformerLayer<T> {
 }
 
 impl<T: Float + Default + Clone> MultiHeadAttention<T> {
-    fn new(_model_dim: usize, num_heads: usize) -> Result<Self> {
+    fn new(_model_dim: usize, numheads: usize) -> Result<Self> {
         let head_dim = _model_dim / num_heads;
 
         Ok(Self {
             num_heads,
             head_dim,
-            query_proj: Array2::zeros((_model_dim, _model_dim)),
-            key_proj: Array2::zeros((_model_dim, _model_dim)),
-            value_proj: Array2::zeros((_model_dim, _model_dim)),
-            output_proj: Array2::zeros((_model_dim, _model_dim)),
+            query_proj: Array2::zeros((_model_dim, model_dim)),
+            key_proj: Array2::zeros((_model_dim, model_dim)),
+            value_proj: Array2::zeros((_model_dim, model_dim)),
+            output_proj: Array2::zeros((_model_dim, model_dim)),
             dropout: 0.1,
         })
     }
 }
 
 impl<T: Float + Default + Clone> FeedForward<T> {
-    fn new(_input_dim: usize, ff_dim: usize) -> Result<Self> {
+    fn new(_input_dim: usize, ffdim: usize) -> Result<Self> {
         Ok(Self {
             linear1: LinearLayer::new(_input_dim, ff_dim)?,
-            linear2: LinearLayer::new(ff_dim, _input_dim)?,
+            linear2: LinearLayer::new(ff_dim, input_dim)?,
             activation: ActivationType::ReLU,
             dropout: 0.1,
         })
@@ -1283,16 +1283,16 @@ impl<T: Float + Default + Clone> FeedForward<T> {
 }
 
 impl<T: Float + Default + Clone> LinearLayer<T> {
-    fn new(_input_dim: usize, output_dim: usize) -> Result<Self> {
+    fn new(_input_dim: usize, outputdim: usize) -> Result<Self> {
         Ok(Self {
-            weight: Array2::zeros((output_dim, _input_dim)),
+            weight: Array2::zeros((output_dim, input_dim)),
             bias: Array1::zeros(output_dim),
         })
     }
 }
 
 impl<T: Float + Default + Clone> LayerNorm<T> {
-    fn new(_dim: usize) -> Result<Self> {
+    fn new(dim: usize) -> Result<Self> {
         Ok(Self {
             scale: Array1::ones(_dim),
             shift: Array1::zeros(_dim),
@@ -1302,7 +1302,7 @@ impl<T: Float + Default + Clone> LayerNorm<T> {
 }
 
 impl<T: Float + Default + Clone> PositionalEncoding<T> {
-    fn new(max_length: usize, model_dim: usize) -> Result<Self> {
+    fn new(max_length: usize, modeldim: usize) -> Result<Self> {
         let mut encoding = Array2::zeros((max_length, model_dim));
 
         for pos in 0..max_length {

@@ -131,7 +131,7 @@ fn main() -> NdimageResult<()> {
     let install_instructions = generate_install_instructions();
 
     println!("   ✅ Generated setup.py ({} chars)", setup_py.len());
-    println!("   ✅ Generated __init__.py ({} chars)", init_py.len());
+    println!("   ✅ Generated _init__.py ({} chars)", init_py.len());
     println!(
         "   ✅ Generated installation instructions ({} chars)",
         install_instructions.len()
@@ -139,7 +139,7 @@ fn main() -> NdimageResult<()> {
 
     // Save setup files
     std::fs::write("examples/outputs/setup.py", &setup_py).expect("Failed to write setup.py");
-    std::fs::write("examples/outputs/__init__.py", &init_py).expect("Failed to write __init__.py");
+    std::fs::write("examples/outputs/__init__.py", &init_py).expect("Failed to write _init__.py");
     std::fs::write("examples/outputs/INSTALL.md", &install_instructions)
         .expect("Failed to write install instructions");
 
@@ -203,7 +203,7 @@ fn main() -> NdimageResult<()> {
     println!("   • python_api_docs.md - Complete API documentation");
     println!("   • *.rs files - PyO3 binding examples");
     println!("   • setup.py - Python package setup");
-    println!("   • __init__.py - Python package initialization");
+    println!("   • _init__.py - Python package initialization");
     println!("   • INSTALL.md - Installation instructions");
 
     println!("\n🚀 Next Steps for Full Python Bindings:");

@@ -135,30 +135,30 @@ impl WaveletPacket {
     }
 
     /// Reconstruct this node from its children
-    pub fn reconstruct(_left: &Self, right: &Self) -> SignalResult<Self> {
+    pub fn reconstruct(left: &Self, right: &Self) -> SignalResult<Self> {
         // Check that the nodes are siblings
-        if _left.level != right.level || _left.parent_position() != right.parent_position() {
+        if left.level != right.level || left.parent_position() != right.parent_position() {
             return Err(SignalError::ValueError(
                 "Nodes are not siblings".to_string(),
             ));
         }
 
         // Check that the wavelet and mode match
-        if _left.wavelet != right.wavelet || _left.mode != right.mode {
+        if left.wavelet != right.wavelet || left.mode != right.mode {
             return Err(SignalError::ValueError(
                 "Wavelet or mode mismatch between siblings".to_string(),
             ));
         }
 
         // Perform one level of inverse DWT
-        let reconstructed = dwt_reconstruct(&_left.data, &right.data, _left.wavelet)?;
+        let reconstructed = dwt_reconstruct(&_left.data, &right.data, left.wavelet)?;
 
         // Create parent node
         let parent = WaveletPacket::new(
-            _left.level - 1,
-            _left.parent_position().unwrap(),
+            left.level - 1,
+            left.parent_position().unwrap(),
             reconstructed,
-            _left.wavelet,
+            left.wavelet,
             &_left.mode,
         );
 
@@ -203,7 +203,7 @@ pub struct WaveletPacketTree {
 
 impl WaveletPacketTree {
     /// Create a new wavelet packet tree from a signal
-    pub fn new<T>(_data: &[T], wavelet: Wavelet, mode: Option<&str>) -> SignalResult<Self>
+    pub fn new<T>(data: &[T], wavelet: Wavelet, mode: Option<&str>) -> SignalResult<Self>
     where
         T: Float + NumCast + Debug,
     {
@@ -250,7 +250,7 @@ impl WaveletPacketTree {
             let nodes_at_level: Vec<(usize, usize)> = self
                 .nodes
                 .keys()
-                .filter(|(l_)| *l == current_level)
+                .filter(|(l_, _)| *l_ == current_level)
                 .cloned()
                 .collect();
 
@@ -639,6 +639,107 @@ impl WaveletPacketTree {
 
         min_orthogonality
     }
+
+    /// Get the best basis using a cost function
+    pub fn get_best_basis(&self, costfunction: &str) -> SignalResult<Vec<(usize, usize)>> {
+        // For now, implement a simple best basis selection using Shannon entropy
+        let mut best_basis = Vec::new();
+        
+        // Start from the deepest level and work backwards
+        for level in (0..=self.max_level).rev() {
+            let nodes = self.get_level(level);
+            for node in nodes {
+                // Calculate cost based on the function type
+                let _cost = match cost_function {
+                    "shannon" => {
+                        // Shannon entropy: -sum(p * log(p))
+                        let total_energy: f64 = node.data.iter().map(|x| x * x).sum();
+                        if total_energy > 1e-12 {
+                            node.data.iter()
+                                .map(|&x| {
+                                    let p = (x * x) / total_energy;
+                                    if p > 1e-12 { -p * p.ln() } else { 0.0 }
+                                })
+                                .sum::<f64>()
+                        } else {
+                            0.0
+                        }
+                    },
+                    _ => 0.0, // Default cost
+                };
+                
+                // Simple selection - include all leaf nodes for now
+                if level == self.max_level {
+                    best_basis.push((node.level, node.position));
+                }
+            }
+        }
+        
+        Ok(best_basis)
+    }
+
+    /// Get the depth (maximum level) of the tree
+    pub fn get_depth(&self) -> usize {
+        self.max_level
+    }
+
+    /// Get all nodes at a specific level (alias for get_level with different return type)
+    pub fn get_nodes_at_level(&self, level: usize) -> Vec<(usize, usize)> {
+        self.nodes
+            .keys()
+            .filter(|(l, _)| *l == level)
+            .cloned()
+            .collect()
+    }
+
+    /// Get all leaf nodes (nodes that don't have children)
+    pub fn get_leaf_nodes(&self) -> Vec<(usize, usize)> {
+        let mut leaf_nodes = Vec::new();
+        
+        for &(level, position) in self.nodes.keys() {
+            // A node is a leaf if it has no children
+            let left_child = (level + 1, position * 2);
+            let right_child = (level + 1, position * 2 + 1);
+            
+            if !self.nodes.contains_key(&left_child) && !self.nodes.contains_key(&right_child) {
+                leaf_nodes.push((level, position));
+            }
+        }
+        
+        leaf_nodes
+    }
+
+    /// Compute all costs for nodes in the tree using the specified entropy type
+    /// This is a placeholder implementation
+    #[allow(dead_code)]
+    pub fn compute_all_costs(&self, entropytype: &str) -> SignalResult<HashMap<(usize, usize), f64>> {
+        let mut costs = HashMap::new();
+        
+        for ((level, position), node) in &self.nodes {
+            let cost = match entropy_type {
+                "shannon" => {
+                    // Simple Shannon entropy calculation
+                    let energy: f64 = node.data.iter().map(|x| x * x).sum();
+                    if energy > 0.0 {
+                        -energy.ln()
+                    } else {
+                        0.0
+                    }
+                },
+                "norm" => {
+                    // L2 norm
+                    node.data.iter().map(|x| x * x).sum::<f64>().sqrt()
+                },
+                _ => {
+                    // Default to energy
+                    node.data.iter().map(|x| x * x).sum()
+                }
+            };
+            costs.insert((*level, *position), cost);
+        }
+        
+        Ok(costs)
+    }
 }
 
 /// Performs a full wavelet packet decomposition of a signal to a specified level.
@@ -726,8 +827,8 @@ where
 /// assert_eq!(coeffs.len(), 4);
 /// ```
 #[allow(dead_code)]
-pub fn get_level_coefficients(_tree: &WaveletPacketTree, level: usize) -> Vec<Vec<f64>> {
-    let mut nodes = _tree.get_level(level);
+pub fn get_level_coefficients(tree: &WaveletPacketTree, level: usize) -> Vec<Vec<f64>> {
+    let mut nodes = tree.get_level(level);
 
     // Sort by position (left to right)
     nodes.sort_by_key(|node| node.position);
@@ -780,6 +881,7 @@ pub fn reconstruct_from_nodes(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_wavelet_packet_path() {

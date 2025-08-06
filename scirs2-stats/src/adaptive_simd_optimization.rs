@@ -330,11 +330,11 @@ pub struct AdaptiveSimdOptimizer {
 
 impl AdaptiveSimdOptimizer {
     /// Create new adaptive SIMD optimizer
-    pub fn new(_config: AdaptiveSimdConfig) -> StatsResult<Self> {
+    pub fn new(config: AdaptiveSimdConfig) -> StatsResult<Self> {
         let hardware_capabilities = Self::detect_hardware_capabilities()?;
 
         Ok(Self {
-            config: _config,
+            config: config,
             hardware_capabilities,
             strategy_cache: Arc::new(Mutex::new(HashMap::new())),
             performance_cache: Arc::new(Mutex::new(HashMap::new())),

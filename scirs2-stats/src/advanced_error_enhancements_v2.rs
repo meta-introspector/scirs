@@ -448,9 +448,9 @@ pub struct RecoveryStatistics {
 
 impl AdvancedErrorEngine {
     /// Create new error enhancement engine
-    pub fn new(_config: ErrorEngineConfig) -> Self {
+    pub fn new(config: ErrorEngineConfig) -> Self {
         Self {
-            _config,
+            config,
             error_history: Vec::new(),
             performance_cache: HashMap::new(),
             recovery_stats: HashMap::new(),
@@ -746,12 +746,12 @@ use ndarray::Array1;
 use rand::{rng, seq::SliceRandom};
 
 #[allow(dead_code)]
-fn bootstrap_augment(_data: &Array1<f64>, target_size: usize) -> Array1<f64> {
+fn bootstrap_augment(_data: &Array1<f64>, targetsize: usize) -> Array1<f64> {
     let mut rng = rand::rng();
     let mut augmented = Vec::with_capacity(target_size);
     
     for _ in 0..target_size {
-        let sample = _data.as_slice().unwrap().choose(&mut rng).unwrap();
+        let sample = data.as_slice().unwrap().choose(&mut rng).unwrap();
         augmented.push(*sample);
     }
     
@@ -785,9 +785,9 @@ fn bootstrap_augment(_data: &Array1<f64>, target_size: usize) -> Array1<f64> {
                         r#"
 // Example: Ridge regularization for matrix operations
 #[allow(dead_code)]
-fn add_ridge_regularization(_matrix: &mut Array2<f64>, lambda: f64) {
+fn add_ridge_regularization(matrix: &mut Array2<f64>, lambda: f64) {
     for i in 0.._matrix.nrows().min(_matrix.ncols()) {
-        _matrix[[i, i]] += lambda;
+        matrix[[i, i]] += lambda;
     }
 }
 "#

@@ -48,7 +48,7 @@ mod tests {
     fn test_wasm_module_integration() {
         // Test that all modules work together
         let temp_dir = TempDir::new().unwrap();
-        let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+        let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
         // Create a simple model
         let mut model: Sequential<f32> = Sequential::new();
         let dense = Dense::new(10, 1, Some("relu"), &mut rng).unwrap();

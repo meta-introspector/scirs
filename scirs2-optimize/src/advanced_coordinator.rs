@@ -164,7 +164,7 @@ pub struct AdvancedState {
 }
 
 impl AdvancedState {
-    fn new(_num_params: usize, num_strategies: usize) -> Self {
+    fn new(_num_params: usize, numstrategies: usize) -> Self {
         Self {
             global_best_solution: Array1::zeros(_num_params),
             global_best_objective: f64::INFINITY,
@@ -204,23 +204,23 @@ pub struct AdvancedCoordinator {
 
 impl AdvancedCoordinator {
     /// Create new Advanced Coordinator
-    pub fn new(_config: AdvancedConfig, initial_params: &ArrayView1<f64>) -> Self {
+    pub fn new(_config: AdvancedConfig, initialparams: &ArrayView1<f64>) -> Self {
         let num_params = initial_params.len();
         let num_strategies = 3; // quantum, neuromorphic, meta-learning
         let state = AdvancedState::new(num_params, num_strategies);
 
         // Initialize optimizers based on configuration
-        let quantum_optimizer = if _config.enable_quantum {
+        let quantum_optimizer = if config.enable_quantum {
             Some(QuantumInspiredOptimizer::new(
                 initial_params,
-                _config.max_nit,
+                config.max_nit,
                 32, // quantum states
             ))
         } else {
             None
         };
 
-        let neuromorphic_optimizer = if _config.enable_neuromorphic {
+        let neuromorphic_optimizer = if config.enable_neuromorphic {
             let neuro_config = NeuromorphicConfig {
                 total_time: 10.0,
                 num_neurons: 200,
@@ -231,7 +231,7 @@ impl AdvancedCoordinator {
             None
         };
 
-        let meta_learning_optimizer = if _config.enable_meta_learning {
+        let meta_learning_optimizer = if config.enable_meta_learning {
             let meta_config = LearnedOptimizationConfig {
                 meta_training_episodes: 1000,
                 use_transformer: true,
@@ -244,7 +244,7 @@ impl AdvancedCoordinator {
         };
 
         Self {
-            config: _config,
+            config: config,
             state,
             quantum_optimizer,
             neuromorphic_optimizer,
@@ -647,7 +647,7 @@ impl AdvancedCoordinator {
     }
 
     /// Update performance tracking for strategy adaptation
-    fn update_performance_tracking(&mut self, current_objective: f64) -> Result<()> {
+    fn update_performance_tracking(&mut self, currentobjective: f64) -> Result<()> {
         self.state.performance_history.push_back(current_objective);
         if self.state.performance_history.len() > self.config.performance_memory_size {
             self.state.performance_history.pop_front();
@@ -813,9 +813,9 @@ struct CrossModalFusionEngine {
 }
 
 impl CrossModalFusionEngine {
-    fn new(_num_params: usize) -> Self {
+    fn new(_numparams: usize) -> Self {
         Self {
-            num_params: _num_params,
+            num_params: num_params,
         }
     }
 

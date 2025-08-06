@@ -179,7 +179,7 @@ where
                 for &(idx, val) in subseries {
                     indices.push(idx);
                     values.push(val);
-                    subseries_weights.push(weights[idx]);
+                    subseriesweights.push(weights[idx]);
                 }
 
                 // Convert to ndarray

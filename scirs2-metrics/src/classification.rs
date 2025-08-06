@@ -828,7 +828,7 @@ where
             auc += (false_positive - last_false_positive) as f64
                 * (true_positive + last_true_positive) as f64
                 / 2.0;
-            last_score = _score;
+            last_score = score;
             last_false_positive = false_positive;
             last_true_positive = true_positive;
         }
@@ -1021,7 +1021,7 @@ where
     D2: Dimension,
 {
     // Reuse lift_chart function to get the data
-    let (percentiles_, cum_gains) = lift_chart(y_true, y_score, n_bins)?;
+    let (percentiles, cum_gains) = lift_chart(y_true, y_score, n_bins)?;
     Ok((percentiles, cum_gains))
 }
 

@@ -102,7 +102,7 @@ where
     fn memory_requirement(&self, inputshape: &[usize]) -> usize;
 
     /// Check if this operation benefits from GPU acceleration
-    fn benefits_from_gpu(&self, array_size: usize) -> bool {
+    fn benefits_from_gpu(&self, arraysize: usize) -> bool {
         array_size > 50_000 // Default threshold
     }
 }
@@ -115,9 +115,9 @@ pub struct BackendExecutor {
 }
 
 impl BackendExecutor {
-    pub fn new(_config: BackendConfig) -> NdimageResult<Self> {
+    pub fn new(config: BackendConfig) -> NdimageResult<Self> {
         #[cfg(feature = "gpu")]
-        let gpu_context = match _config.backend {
+        let gpu_context = match config.backend {
             #[cfg(feature = "cuda")]
             Backend::Cuda => Some(Arc::new(CudaContext::new(_config.device_id)?)),
             #[cfg(feature = "opencl")]
@@ -128,7 +128,7 @@ impl BackendExecutor {
         };
 
         Ok(Self {
-            _config,
+            config,
             #[cfg(feature = "gpu")]
             gpu_context,
         })
@@ -161,7 +161,7 @@ impl BackendExecutor {
     }
 
     /// Select the best backend for an operation
-    fn select_backend<T, D, Op>(&self, op: &Op, array_size: usize) -> NdimageResult<Backend>
+    fn select_backend<T, D, Op>(&self, op: &Op, arraysize: usize) -> NdimageResult<Backend>
     where
         T: Float + FromPrimitive + Debug + Clone,
         D: Dimension,
@@ -238,8 +238,8 @@ pub struct GaussianFilterOp<T> {
 }
 
 impl<T: Float + FromPrimitive + Debug + Clone> GaussianFilterOp<T> {
-    pub fn new(_sigma: Vec<T>, truncate: Option<T>) -> Self {
-        Self { _sigma, truncate }
+    pub fn new(sigma: Vec<T>, truncate: Option<T>) -> Self {
+        Self { sigma, truncate }
     }
 }
 
@@ -277,7 +277,7 @@ where
         elements * std::mem::size_of::<T>() * 3
     }
 
-    fn benefits_from_gpu(&self, array_size: usize) -> bool {
+    fn benefits_from_gpu(&self, arraysize: usize) -> bool {
         // Gaussian filter benefits from GPU for large arrays
         array_size > 100_000
     }

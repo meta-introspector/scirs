@@ -546,7 +546,7 @@ impl TensorCoreOptimizer {
     }
 
     /// Update loss scale for automatic mixed precision
-    pub fn update_loss_scale(&mut self, loss_scale: f32) {
+    pub fn update_loss_scale(&mut self, lossscale: f32) {
         self.config.loss_scale = loss_scale;
     }
 
@@ -579,7 +579,7 @@ impl AMPManager {
     }
 
     /// Update loss scale based on overflow detection
-    pub fn update(&mut self, found_overflow: bool) -> f32 {
+    pub fn update(&mut self, foundoverflow: bool) -> f32 {
         if found_overflow {
             self.loss_scale *= self.backoff_factor;
             self.consecutive_unskipped = 0;

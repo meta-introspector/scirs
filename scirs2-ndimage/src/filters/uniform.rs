@@ -688,7 +688,7 @@ where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign,
     D: Dimension,
 {
-    let ndim = _input.ndim();
+    let ndim = input.ndim();
 
     // Helper function to convert linear index to n-dimensional coordinates
     fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {
@@ -760,8 +760,8 @@ where
 {
     use scirs2_core::parallel_ops::*;
 
-    let ndim = _input.ndim();
-    let total_elements = _input.len();
+    let ndim = input.ndim();
+    let total_elements = input.len();
 
     // Helper function to convert linear index to n-dimensional coordinates
     fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {
@@ -1150,15 +1150,15 @@ where
     };
 
     // Calculate padding for overlap between chunks
-    let pad_rows = _size[0];
-    let pad_cols = _size[1];
+    let pad_rows = size[0];
+    let pad_cols = size[1];
 
     // Create output array
     let mut output = Array2::zeros((rows, cols));
 
     // Calculate number of chunks
-    let num_row_chunks = (rows + _chunk_size - 1) / _chunk_size;
-    let num_col_chunks = (cols + _chunk_size - 1) / _chunk_size;
+    let num_row_chunks = (rows + _chunk_size - 1) / chunk_size;
+    let num_col_chunks = (cols + _chunk_size - 1) / chunk_size;
 
     // Process chunks in parallel using scirs2-core's parallel operations
     let chunk_indices: Vec<(usize, usize)> = (0..num_row_chunks)
@@ -1167,10 +1167,10 @@ where
 
     let process_chunk = |&(chunk_row, chunk_col): &(usize, usize)| -> Result<((usize, usize), Array2<T>), crate::error::NdimageError> {
         // Calculate chunk boundaries
-        let row_start = chunk_row * _chunk_size;
-        let row_end = std::cmp::min(row_start + _chunk_size, rows);
-        let col_start = chunk_col * _chunk_size;
-        let col_end = std::cmp::min(col_start + _chunk_size, cols);
+        let row_start = chunk_row * chunk_size;
+        let row_end = std::cmp::min(row_start + chunk_size, rows);
+        let col_start = chunk_col * chunk_size;
+        let col_end = std::cmp::min(col_start + chunk_size, cols);
 
         // Extract chunk with padding for boundary conditions
         let padded_row_start = row_start.saturating_sub(pad_rows);
@@ -1186,7 +1186,7 @@ where
         let chunk = chunk_slice.to_owned();
 
         // Apply uniform filter to the chunk
-        let filtered_chunk = uniform_filter_2d(&chunk, _size, &border_mode, &origin)?;
+        let filtered_chunk = uniform_filter_2d(&chunk, size, &border_mode, &origin)?;
 
         // Extract the non-padded portion
         let output_row_offset = row_start.saturating_sub(padded_row_start);
@@ -1207,10 +1207,10 @@ where
 
     // Reassemble the results
     for ((chunk_row, chunk_col), chunk_result) in chunk_results {
-        let row_start = chunk_row * _chunk_size;
-        let row_end = std::cmp::min(row_start + _chunk_size, rows);
-        let col_start = chunk_col * _chunk_size;
-        let col_end = std::cmp::min(col_start + _chunk_size, cols);
+        let row_start = chunk_row * chunk_size;
+        let row_end = std::cmp::min(row_start + chunk_size, rows);
+        let col_start = chunk_col * chunk_size;
+        let col_end = std::cmp::min(col_start + chunk_size, cols);
 
         let mut output_slice = output.slice_mut(s![row_start..row_end, col_start..col_end]);
         output_slice.assign(&chunk_result);
@@ -1241,7 +1241,7 @@ where
 {
     // For non-parallel version, just call the regular uniform filter
     // This ensures the API is consistent even when parallel feature is disabled
-    uniform_filter_2d(input, _size, &mode.unwrap_or(BorderMode::Reflect), &{
+    uniform_filter_2d(input, size, &mode.unwrap_or(BorderMode::Reflect), &{
         if let Some(orig) = origin {
             orig.to_vec()
         } else {

@@ -303,7 +303,7 @@ fn demonstrate_specific_validation() -> Result<(), Box<dyn std::error::Error>> {
     let results = validator.get_results();
     for result in results {
         println!(
-            "   {}: {} (max_diff: {:.2e})",
+            "   {}: {} (maxdiff: {:.2e})",
             result.test_name,
             if result.passed { "PASS" } else { "FAIL" },
             result.max_abs_diff

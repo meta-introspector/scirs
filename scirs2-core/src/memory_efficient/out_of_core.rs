@@ -127,12 +127,12 @@ where
     }
 
     /// Load a chunk of the array into memory
-    pub fn load_chunk(&self, chunk_index: usize) -> Result<Array<A, D>, CoreError> {
-        if chunk_index >= self.num_chunks() {
+    pub fn load_chunk(&self, chunkindex: usize) -> Result<Array<A, D>, CoreError> {
+        if chunkindex >= self.num_chunks() {
             return Err(CoreError::IndexError(
                 ErrorContext::new(format!(
                     "Chunk _index out of bounds: {} >= {}",
-                    chunk_index,
+                    chunkindex,
                     self.num_chunks()
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
@@ -144,8 +144,8 @@ where
         let total_size = self.size;
 
         // Calculate start and end indices for this chunk
-        let start_idx = chunk_index * chunk_size;
-        let end_idx = std::cmp::min((chunk_index + 1) * chunk_size, total_size);
+        let start_idx = chunkindex * chunk_size;
+        let end_idx = std::cmp::min((chunkindex + 1) * chunk_size, total_size);
         let actual_chunk_size = end_idx - start_idx;
 
         // Open the file

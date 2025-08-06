@@ -22,7 +22,7 @@ pub struct MemoryEfficientTrainer {
 }
 impl MemoryEfficientTrainer {
     /// Create a new memory-efficient trainer
-    pub fn new(_memory_budget_mb: usize) -> Self {
+    pub fn new(_memory_budgetmb: usize) -> Self {
         Self {
             gradient_accumulation: true,
             accumulation_steps: 4,
@@ -126,7 +126,7 @@ impl MemoryEfficientTrainer {
         grad /= batch_size;
         Ok(grad)
     /// Update model weights
-    fn update_weights(&self, model: &mut dyn Layer<f32>, learning_rate: f32) -> Result<()> {
+    fn update_weights(&self, model: &mut dyn Layer<f32>, learningrate: f32) -> Result<()> {
         // Simplified weight update - in practice would use optimizer
         Ok(())
     /// Update weights with accumulated gradients
@@ -149,7 +149,7 @@ impl GradientAccumulator {
             for (accumulated, new) in self.gradients.iter_mut().zip(std::iter::once(grads)) {
                 *accumulated += new;
     /// Average accumulated gradients
-    pub fn average(&mut self, num_steps: usize) {
+    pub fn average(&mut self, numsteps: usize) {
         let scale = 1.0 / num_steps as f32;
         for grad in &mut self.gradients {
             *grad *= scale;
@@ -171,9 +171,9 @@ struct MemoryPool {
     available: usize,
     buffers: VecDeque<Buffer>,
 impl MemoryPool {
-    fn new(_size: usize) -> Self {
-            total_size: _size,
-            available: _size,
+    fn new(size: usize) -> Self {
+            total_size: size,
+            available: size,
             buffers: VecDeque::new(),
     fn allocate(&mut self, size: usize) -> Option<Buffer> {
         // Try to reuse existing buffer
@@ -187,9 +187,9 @@ impl MemoryPool {
         if self.available >= _size {
             let buffer = Buffer {
                 data: vec![0.0; _size],
-                _size,
+                size,
                 in_use: true,
-            self.available -= _size;
+            self.available -= size;
             Some(buffer)
             None
     fn release(&mut self, mut buffer: Buffer) {
@@ -208,20 +208,20 @@ pub struct ActivationCheckpointing {
     checkpoints: Vec<CheckpointData>,
 impl ActivationCheckpointing {
     /// Create new activation checkpointing
-    pub fn new(_checkpoint_interval: usize) -> Self {
+    pub fn new(_checkpointinterval: usize) -> Self {
             checkpoint_interval,
             checkpoints: Vec::new(),
     /// Should checkpoint at this layer
-    pub fn should_checkpoint(&self, layer_idx: usize) -> bool {
+    pub fn should_checkpoint(&self, layeridx: usize) -> bool {
         layer_idx % self.checkpoint_interval == 0
     /// Save checkpoint
-    pub fn save_checkpoint(&mut self, layer_idx: usize, data: Array2<f32>) {
+    pub fn save_checkpoint(&mut self, layeridx: usize, data: Array2<f32>) {
         self.checkpoints.push(CheckpointData {
             layer_idx,
             activation: data,
         });
     /// Restore from checkpoint
-    pub fn restore_checkpoint(&self, layer_idx: usize) -> Option<&Array2<f32>> {
+    pub fn restore_checkpoint(&self, layeridx: usize) -> Option<&Array2<f32>> {
         self.checkpoints
             .iter()
             .find(|cp| cp.layer_idx == layer_idx)
@@ -238,7 +238,7 @@ pub struct EfficientDataLoader {
     pin_memory: bool,
 impl EfficientDataLoader {
     /// Create a new efficient data loader
-    pub fn new(_batch_size: usize) -> Self {
+    pub fn new(_batchsize: usize) -> Self {
             batch_size,
             prefetch_factor: 2,
             pin_memory: true,

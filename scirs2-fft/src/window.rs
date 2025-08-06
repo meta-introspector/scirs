@@ -105,7 +105,7 @@ impl FromStr for Window {
 /// assert_eq!(win.len(), 10);
 /// ```
 #[allow(dead_code)]
-pub fn get_window<T>(_window: T, n: usize, sym: bool) -> FFTResult<Array1<f64>>
+pub fn get_window<T>(window: T, n: usize, sym: bool) -> FFTResult<Array1<f64>>
 where
     T: Into<WindowParam>,
 {
@@ -115,7 +115,7 @@ where
         ));
     }
 
-    let window_param = _window.into();
+    let window_param = window.into();
     let window_type = match window_param {
         WindowParam::Type(wt) => wt,
         WindowParam::Name(s) => Window::from_str(&s)?,
@@ -152,8 +152,8 @@ pub enum WindowParam {
 }
 
 impl From<Window> for WindowParam {
-    fn from(_window: Window) -> Self {
-        WindowParam::Type(_window)
+    fn from(window: Window) -> Self {
+        WindowParam::Type(window)
     }
 }
 
@@ -690,8 +690,8 @@ where
 ///
 /// Returns an error if the window calculation fails.
 #[allow(dead_code)]
-pub fn enbw(_window: Window, n: usize) -> FFTResult<f64> {
-    let w = get_window(_window, n, true)?;
+pub fn enbw(window: Window, n: usize) -> FFTResult<f64> {
+    let w = get_window(window, n, true)?;
 
     let sum_squared = w.iter().map(|&x| x.powi(2)).sum::<f64>();
     let square_sum = w.iter().sum::<f64>().powi(2);

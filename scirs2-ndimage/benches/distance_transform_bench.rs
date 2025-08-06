@@ -8,7 +8,7 @@ use ndarray::{Array2, Array3, IxDyn};
 use scirs2__ndimage::morphology::{distance_transform_bf, distance_transform_edt};
 
 #[allow(dead_code)]
-fn create_test_pattern_2d(_rows: usize, cols: usize) -> Array2<bool> {
+fn create_test_pattern_2d(rows: usize, cols: usize) -> Array2<bool> {
     Array2::fromshape_fn((_rows, cols), |(i, j)| {
         // Create a pattern with some foreground regions
         let center_i = _rows / 2;
@@ -20,7 +20,7 @@ fn create_test_pattern_2d(_rows: usize, cols: usize) -> Array2<bool> {
 }
 
 #[allow(dead_code)]
-fn create_test_pattern_3d(_size_x: usize, size_y: usize, size_z: usize) -> Array3<bool> {
+fn create_test_pattern_3d(_size_x: usize, size_y: usize, sizez: usize) -> Array3<bool> {
     Array3::fromshape_fn((_size_x, size_y, size_z), |(i, j, k)| {
         // Create a 3D pattern with some complexity
         let center_i = _size_x / 2;

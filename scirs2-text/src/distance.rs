@@ -22,7 +22,7 @@ use std::collections::{HashMap, HashSet};
 ///
 /// * The Levenshtein distance between the two strings
 #[allow(dead_code)]
-pub fn levenshtein_distance(_s1: &str, s2: &str) -> usize {
+pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
     // Use SIMD-accelerated version when available
     #[cfg(feature = "simd")]
     {
@@ -31,14 +31,14 @@ pub fn levenshtein_distance(_s1: &str, s2: &str) -> usize {
 
     #[cfg(not(feature = "simd"))]
     {
-        if _s1.is_empty() {
+        if s1.is_empty() {
             return s2.chars().count();
         }
         if s2.is_empty() {
-            return _s1.chars().count();
+            return s1.chars().count();
         }
 
-        let _s1_chars: Vec<char> = _s1.chars().collect();
+        let s1_chars: Vec<char> = s1.chars().collect();
         let s2_chars: Vec<char> = s2.chars().collect();
 
         let m = s1_chars.len();
@@ -93,7 +93,7 @@ pub fn levenshtein_distance(_s1: &str, s2: &str) -> usize {
 ///
 /// * The normalized Levenshtein distance between the two strings
 #[allow(dead_code)]
-pub fn normalized_levenshtein_distance(_s1: &str, s2: &str) -> f64 {
+pub fn normalized_levenshtein_distance(s1: &str, s2: &str) -> f64 {
     let distance = levenshtein_distance(_s1, s2) as f64;
     let max_length = std::cmp::max(_s1.chars().count(), s2.chars().count()) as f64;
 
@@ -119,7 +119,7 @@ pub fn normalized_levenshtein_distance(_s1: &str, s2: &str) -> f64 {
 ///
 /// * Result containing the Jaccard similarity between the two strings
 #[allow(dead_code)]
-pub fn jaccard_similarity(_s1: &str, s2: &str, tokenizer: Option<&dyn Tokenizer>) -> Result<f64> {
+pub fn jaccard_similarity(s1: &str, s2: &str, tokenizer: Option<&dyn Tokenizer>) -> Result<f64> {
     // Use the provided tokenizer or default to word tokenizer
     let tokenizer = match tokenizer {
         Some(t) => t,
@@ -158,11 +158,11 @@ pub fn jaccard_similarity(_s1: &str, s2: &str, tokenizer: Option<&dyn Tokenizer>
 ///
 /// * Result containing the cosine similarity between the two vectors
 #[allow(dead_code)]
-pub fn cosine_similarity(_v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> Result<f64> {
-    if _v1.len() != v2.len() {
+pub fn cosine_similarity(v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> Result<f64> {
+    if v1.len() != v2.len() {
         return Err(TextError::DistanceError(format!(
             "Vectors must have the same dimension, got {} and {}",
-            _v1.len(),
+            v1.len(),
             v2.len()
         )));
     }
@@ -186,10 +186,10 @@ pub fn cosine_similarity(_v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> Result<f6
     #[cfg(not(feature = "simd"))]
     {
         // Calculate dot product manually since direct multiplication isn't implemented for ArrayView1
-        let dot_product: f64 = _v1.iter().zip(v2.iter()).map(|(&a, &b)| a * b).sum();
+        let dot_product: f64 = v1.iter().zip(v2.iter()).map(|(&a, &b)| a * b).sum();
 
         // Calculate norms manually
-        let norm1 = _v1.iter().map(|&x| x * x).sum::<f64>().sqrt();
+        let norm1 = v1.iter().map(|&x| x * x).sum::<f64>().sqrt();
         let norm2 = v2.iter().map(|&x| x * x).sum::<f64>().sqrt();
 
         if norm1 == 0.0 || norm2 == 0.0 {
@@ -280,12 +280,12 @@ pub fn text_cosine_similarity(
 ///
 /// * The Jaro-Winkler similarity between the two strings (0.0 to 1.0)
 #[allow(dead_code)]
-pub fn jaro_winkler_similarity(_s1: &str, s2: &str) -> f64 {
+pub fn jaro_winkler_similarity(s1: &str, s2: &str) -> f64 {
     // Compute Jaro similarity first
     let jaro_sim = jaro_similarity(_s1, s2);
 
     // Calculate the common prefix length (up to 4 characters)
-    let _s1_chars: Vec<char> = _s1.chars().collect();
+    let s1_chars: Vec<char> = s1.chars().collect();
     let s2_chars: Vec<char> = s2.chars().collect();
 
     let mut prefix_len = 0;
@@ -318,16 +318,16 @@ pub fn jaro_winkler_similarity(_s1: &str, s2: &str) -> f64 {
 ///
 /// * The Jaro similarity between the two strings (0.0 to 1.0)
 #[allow(dead_code)]
-fn jaro_similarity(_s1: &str, s2: &str) -> f64 {
-    if _s1.is_empty() && s2.is_empty() {
+fn jaro_similarity(s1: &str, s2: &str) -> f64 {
+    if s1.is_empty() && s2.is_empty() {
         return 1.0;
     }
 
-    if _s1.is_empty() || s2.is_empty() {
+    if s1.is_empty() || s2.is_empty() {
         return 0.0;
     }
 
-    let _s1_chars: Vec<char> = _s1.chars().collect();
+    let s1_chars: Vec<char> = s1.chars().collect();
     let s2_chars: Vec<char> = s2.chars().collect();
 
     let match_distance = std::cmp::max(s1_chars.len(), s2_chars.len()) / 2 - 1;

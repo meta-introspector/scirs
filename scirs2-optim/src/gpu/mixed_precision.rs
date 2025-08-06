@@ -81,10 +81,10 @@ pub struct DynamicLossScaler {
 
 impl DynamicLossScaler {
     /// Create a new dynamic loss scaler
-    pub fn new(_config: MixedPrecisionConfig) -> Self {
+    pub fn new(config: MixedPrecisionConfig) -> Self {
         Self {
-            scale: _config.init_scale,
-            _config,
+            scale: config.init_scale,
+            config,
             growth_tracker: 0,
             overflow_history: Vec::with_capacity(100),
         }
@@ -96,7 +96,7 @@ impl DynamicLossScaler {
     }
 
     /// Update scale based on overflow status
-    pub fn update(&mut self, has_overflow: bool) {
+    pub fn update(&mut self, hasoverflow: bool) {
         self.overflow_history.push(has_overflow);
         if self.overflow_history.len() > 100 {
             self.overflow_history.remove(0);
@@ -175,11 +175,11 @@ pub struct MixedPrecisionOptimizer<O, A: Float> {
 
 impl<O, A: Float> MixedPrecisionOptimizer<O, A> {
     /// Create a new mixed precision optimizer
-    pub fn new(_optimizer: O, config: MixedPrecisionConfig) -> Self {
+    pub fn new(optimizer: O, config: MixedPrecisionConfig) -> Self {
         let scaler = DynamicLossScaler::new(config.clone());
 
         Self {
-            _optimizer,
+            optimizer,
             scaler,
             gpu_context: None,
             master_weights: None,
@@ -287,7 +287,7 @@ pub mod tensor_core_utils {
     use super::*;
 
     /// Pad tensor dimensions for tensor core alignment
-    pub fn pad_for_tensor_cores(_size: usize, alignment: usize) -> usize {
+    pub fn pad_for_tensor_cores(size: usize, alignment: usize) -> usize {
         (_size + alignment - 1) / alignment * alignment
     }
 
@@ -334,7 +334,7 @@ pub struct MixedPrecisionUtils;
 
 impl MixedPrecisionUtils {
     /// Convert FP32 to FP16 with saturation
-    pub fn float_to_half(_values: &[f32]) -> Vec<u16> {
+    pub fn float_to_half(values: &[f32]) -> Vec<u16> {
         _values
             .iter()
             .map(|&v| {
@@ -345,12 +345,15 @@ impl MixedPrecisionUtils {
     }
 
     /// Convert FP16 to FP32
-    pub fn half_to_float(_values: &[u16]) -> Vec<f32> {
-        _values.iter().map(|&v| F16::from_bits(v).to_f32()).collect()
+    pub fn half_to_float(values: &[u16]) -> Vec<f32> {
+        _values
+            .iter()
+            .map(|&v| F16::from_bits(v).to_f32())
+            .collect()
     }
 
     /// Check if GPU supports tensor cores
-    pub fn has_tensor_core_support(_gpu_context: &GpuContext) -> bool {
+    pub fn has_tensor_core_support(_gpucontext: &GpuContext) -> bool {
         // Check compute capability
         // Volta (7.0), Turing (7.5), Ampere (8.0+) have tensor cores
         true // Placeholder
@@ -361,7 +364,7 @@ impl MixedPrecisionUtils {
 struct F16(u16);
 
 impl F16 {
-    fn from_f32(_v: f32) -> Self {
+    fn from_f32(v: f32) -> Self {
         // Simplified conversion
         F16(0)
     }
@@ -370,7 +373,7 @@ impl F16 {
         0.0
     }
 
-    fn from_bits(_bits: u16) -> Self {
+    fn from_bits(bits: u16) -> Self {
         F16(_bits)
     }
 

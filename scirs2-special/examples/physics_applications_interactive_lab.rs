@@ -957,11 +957,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn display_main_menu(_experiments: &[PhysicsExperiment]) {
+fn display_main_menu(experiments: &[PhysicsExperiment]) {
     println!("🔬 Available Physics Experiments:");
     println!();
 
-    for (i, exp) in _experiments.iter().enumerate() {
+    for (i, exp) in experiments.iter().enumerate() {
         println!("{}. {} 📊", i + 1, exp.title);
         println!("   {}", exp.description);
         println!(
@@ -1064,7 +1064,7 @@ fn run_experiment(
 }
 
 #[allow(dead_code)]
-fn display_current_parameters(_parameters: &HashMap<String, ExperimentParameter>) {
+fn display_current_parameters(parameters: &HashMap<String, ExperimentParameter>) {
     println!("🎛️  **Current Parameters:**");
     for (_, param) in _parameters {
         println!(
@@ -1075,7 +1075,7 @@ fn display_current_parameters(_parameters: &HashMap<String, ExperimentParameter>
 }
 
 #[allow(dead_code)]
-fn display_detailed_theory(_experiment: &PhysicsExperiment) {
+fn display_detailed_theory(experiment: &PhysicsExperiment) {
     println!("\n📚 **Detailed Mathematical Theory**");
     println!("{}", "=".repeat(35));
     println!();
@@ -1089,38 +1089,38 @@ fn display_detailed_theory(_experiment: &PhysicsExperiment) {
     println!("🔧 **Simulation Details:**");
     println!(
         "  • Time evolution: {}",
-        _experiment.simulation_engine.time_evolution
+        experiment.simulation_engine.time_evolution
     );
     println!(
         "  • Spatial dimensions: {}",
-        _experiment.simulation_engine.spatial_dimensions
+        experiment.simulation_engine.spatial_dimensions
     );
     println!(
         "  • Boundary conditions: {}",
-        _experiment.simulation_engine.boundary_conditions
+        experiment.simulation_engine.boundary_conditions
     );
     println!(
         "  • Numerical method: {}",
-        _experiment.simulation_engine.numerical_method
+        experiment.simulation_engine.numerical_method
     );
     println!();
 
     println!("📊 **Visualization:**");
     println!(
         "  • Plot type: {:?}",
-        _experiment.visualization_config.plot_type
+        experiment.visualization_config.plot_type
     );
     println!(
         "  • X-axis: {}",
-        _experiment.visualization_config.x_axis.label
+        experiment.visualization_config.x_axis.label
     );
     println!(
         "  • Y-axis: {}",
-        _experiment.visualization_config.y_axis.label
+        experiment.visualization_config.y_axis.label
     );
     println!(
         "  • Animation: {}",
-        _experiment.visualization_config.animation_enabled
+        experiment.visualization_config.animation_enabled
     );
     println!();
 
@@ -1129,8 +1129,8 @@ fn display_detailed_theory(_experiment: &PhysicsExperiment) {
 }
 
 #[allow(dead_code)]
-fn run_simulation(_experiment: &PhysicsExperiment) -> Result<(), Box<dyn std::error::Error>> {
-    match _experiment.id.as_str() {
+fn run_simulation(experiment: &PhysicsExperiment) -> Result<(), Box<dyn std::error::Error>> {
+    match experiment.id.as_str() {
         "quantum_harmonic_oscillator" => run_quantum_oscillator_simulation(),
         "cylindrical_wave_propagation" => run_wave_propagation_simulation(),
         "heat_diffusion" => run_heat_diffusion_simulation(),
@@ -1140,7 +1140,7 @@ fn run_simulation(_experiment: &PhysicsExperiment) -> Result<(), Box<dyn std::er
         "mie_scattering" => run_scattering_simulation(),
         "quantum_tunneling" => run_tunneling_simulation(),
         _ => {
-            println!("Simulation not yet implemented for this _experiment.");
+            println!("Simulation not yet implemented for this experiment.");
             Ok(())
         }
     }
@@ -1664,8 +1664,8 @@ fn y_n(n: i32, x: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn get_user_input(_prompt: &str) -> io::Result<String> {
-    print!("{}", _prompt);
+fn get_user_input(prompt: &str) -> io::Result<String> {
+    print!("{}", prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;

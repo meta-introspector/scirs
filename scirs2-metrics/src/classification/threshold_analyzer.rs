@@ -383,31 +383,31 @@ impl ThresholdAnalyzer {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.f1_score.partial_cmp(&b.f1_score).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap_or(0),
             OptimalThresholdStrategy::YoudensJ => metrics
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.youdens_j.partial_cmp(&b.youdens_j).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap_or(0),
             OptimalThresholdStrategy::MaxAccuracy => metrics
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.accuracy.partial_cmp(&b.accuracy).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap_or(0),
             OptimalThresholdStrategy::MaxMCC => metrics
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.mcc.partial_cmp(&b.mcc).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap_or(0),
             OptimalThresholdStrategy::MaxKappa => metrics
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.kappa.partial_cmp(&b.kappa).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap_or(0),
             OptimalThresholdStrategy::BalancedSensSpec => metrics
                 .iter()
@@ -417,7 +417,7 @@ impl ThresholdAnalyzer {
                     let b_diff = (b.tpr - b.specificity).abs();
                     a_diff.partial_cmp(&b_diff).unwrap()
                 })
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap_or(0),
             OptimalThresholdStrategy::BalancedPrecRecall => metrics
                 .iter()
@@ -427,7 +427,7 @@ impl ThresholdAnalyzer {
                     let b_diff = (b.precision - b.tpr).abs();
                     a_diff.partial_cmp(&b_diff).unwrap()
                 })
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap_or(0),
             OptimalThresholdStrategy::MinDistanceToOptimal => metrics
                 .iter()
@@ -437,7 +437,7 @@ impl ThresholdAnalyzer {
                     let b_dist = (b.fpr.powi(2) + (1.0 - b.tpr).powi(2)).sqrt();
                     a_dist.partial_cmp(&b_dist).unwrap()
                 })
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap_or(0),
             OptimalThresholdStrategy::Manual(threshold) => {
                 // Find the closest threshold
@@ -449,7 +449,7 @@ impl ThresholdAnalyzer {
                         let b_diff = (b.threshold - threshold).abs();
                         a_diff.partial_cmp(&b_diff).unwrap()
                     })
-                    .map(|(idx_)| idx)
+                    .map(|(idx, _)| idx)
                     .unwrap_or(0)
             }
         };
@@ -487,7 +487,7 @@ impl ThresholdAnalyzer {
                 let b_diff = (b - threshold).abs();
                 a_diff.partial_cmp(&b_diff).unwrap()
             })
-            .map(|(idx_)| idx)
+            .map(|(idx, _)| idx)
             .unwrap_or(0);
 
         // Get metrics - we know it's calculated at this point
@@ -540,7 +540,7 @@ impl ThresholdAnalyzer {
     /// # Returns
     ///
     /// * `Result<Vec<f64>>` - Values of the specified metric
-    pub fn get_metric_values(&mut self, metric_name: &str) -> Result<Vec<f64>> {
+    pub fn get_metric_values(&mut self, metricname: &str) -> Result<Vec<f64>> {
         let metrics = self.calculate_metrics()?;
 
         let values = match metric_name {

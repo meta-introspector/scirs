@@ -47,7 +47,7 @@ pub struct AdaptiveChunkingParams {
     pub optimize_for_parallel: bool,
 
     /// Number of worker threads to optimize for (when parallel is enabled)
-    pub num_workers: Option<usize>,
+    pub numworkers: Option<usize>,
 }
 
 impl Default for AdaptiveChunkingParams {
@@ -72,7 +72,7 @@ impl Default for AdaptiveChunkingParams {
             target_chunk_duration: Some(Duration::from_millis(100)), // Alpha 6: Default target 100ms per chunk
             consider_distribution: true,                             // Alpha 6: Enable by default
             optimize_for_parallel: cpu_cores > 1,                    // Alpha 6: Auto-detect
-            num_workers: Some(cpu_cores),
+            numworkers: Some(cpu_cores),
         }
     }
 }
@@ -327,8 +327,8 @@ impl<A: Clone + Copy + 'static + Send + Sync> AdaptiveChunking<A> for MemoryMapp
         parallel_params.optimize_for_parallel = true;
 
         // Set default number of workers if not specified
-        if parallel_params.num_workers.is_none() {
-            parallel_params.num_workers = Some(rayon::current_num_threads());
+        if parallel_params.numworkers.is_none() {
+            parallel_params.numworkers = Some(rayon::current_num_threads());
         }
 
         // Determine optimal chunking strategy for parallel processing
@@ -441,12 +441,12 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
     ) -> (usize, Vec<String>) {
         let mut chunksize = initial_chunksize;
 
-        if let Some(num_workers) = params.num_workers {
+        if let Some(numworkers) = params.numworkers {
             let total_elements = self.size;
 
-            // Ideally, we want at least num_workers * 2 chunks for good load balancing
+            // Ideally, we want at least numworkers * 2 chunks for good load balancing
             // Use checked arithmetic to prevent overflow
-            let target_num_chunks = num_workers.checked_mul(2).unwrap_or(num_workers);
+            let target_num_chunks = numworkers.checked_mul(2).unwrap_or(numworkers);
             let ideal_chunksize = if target_num_chunks > 0 {
                 total_elements / target_num_chunks
             } else {
@@ -457,7 +457,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
                 // Use the ideal chunk size for parallel processing
                 chunksize = ideal_chunksize;
                 decision_factors.push(format!(
-                    "Parallel optimization: Adjusted chunk size to {chunksize} for {num_workers} workers"
+                    "Parallel optimization: Adjusted chunk size to {chunksize} for {numworkers} workers"
                 ));
             } else if ideal_chunksize < params.min_chunksize {
                 // If ideal size is too small, use minimum size
@@ -469,7 +469,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
                         0
                     };
                 decision_factors.push(format!(
-                    "Parallel optimization: Using minimum chunk size {chunksize}, resulting in {actual_chunks} chunks for {num_workers} workers"
+                    "Parallel optimization: Using minimum chunk size {chunksize}, resulting in {actual_chunks} chunks for {numworkers} workers"
                 ));
             }
         } else {
@@ -533,8 +533,8 @@ impl AdaptiveChunkingBuilder {
     }
 
     /// Set the number of worker threads to optimize for.
-    pub fn with_num_workers(mut self, workers: usize) -> Self {
-        self.params.num_workers = Some(workers);
+    pub fn with_numworkers(mut self, workers: usize) -> Self {
+        self.params.numworkers = Some(workers);
         self
     }
 
@@ -577,19 +577,19 @@ pub mod alpha6_enhancements {
     #[allow(dead_code)]
     impl DynamicLoadBalancer {
         /// Create a new load balancer for the specified number of workers
-        pub fn new(num_workers: usize) -> Self {
+        pub fn new(numworkers: usize) -> Self {
             Self {
-                worker_performance: vec![1.0; num_workers], // Start with equal performance
-                current_loads: Arc::new((0..num_workers).map(|_| AtomicUsize::new(0)).collect()),
+                worker_performance: vec![1.0; numworkers], // Start with equal performance
+                current_loads: Arc::new((0..numworkers).map(|_| AtomicUsize::new(0)).collect()),
                 target_efficiency: 0.85, // Target 85% CPU utilization
             }
         }
 
         /// Calculate optimal chunk distribution based on worker performance
-        pub fn distribute_work(&self, total_work: usize) -> Vec<usize> {
+        pub fn distribute_work(&self, totalwork: usize) -> Vec<usize> {
             let total_performance: f64 = self.worker_performance.iter().sum();
             let mut distribution = Vec::new();
-            let mut remaining_work = total_work;
+            let mut remaining_work = totalwork;
 
             // Distribute work proportionally to performance, except for the last worker
             for (i, &performance) in self.worker_performance.iter().enumerate() {
@@ -597,7 +597,7 @@ pub mod alpha6_enhancements {
                     // Give all remaining work to the last worker
                     distribution.push(remaining_work);
                 } else {
-                    let work_share = (total_work as f64 * performance / total_performance) as usize;
+                    let work_share = (totalwork as f64 * performance / total_performance) as usize;
                     distribution.push(work_share);
                     remaining_work = remaining_work.saturating_sub(work_share);
                 }
@@ -609,18 +609,18 @@ pub mod alpha6_enhancements {
         /// Update worker performance metrics based on observed execution times
         pub fn update_performance(
             &mut self,
-            worker_id: usize,
+            workerid: usize,
             work_amount: usize,
             execution_time: Duration,
         ) {
-            if worker_id < self.worker_performance.len() {
+            if workerid < self.worker_performance.len() {
                 // Calculate performance as work/time (higher is better)
                 let performance = work_amount as f64 / execution_time.as_secs_f64();
 
                 // Exponential moving average to adapt to changing conditions
                 let alpha = 0.1; // Learning rate
-                self.worker_performance[worker_id] =
-                    (1.0 - alpha) * self.worker_performance[worker_id] + alpha * performance;
+                self.worker_performance[workerid] =
+                    (1.0 - alpha) * self.worker_performance[workerid] + alpha * performance;
             }
         }
     }
@@ -701,13 +701,13 @@ pub mod alpha6_enhancements {
 
     /// Alpha 6: NUMA-aware chunking for large multi-socket systems
     #[allow(dead_code)]
-    pub fn numa_aware_chunking(data_size: usize, num_numa_nodes: usize) -> ChunkingStrategy {
-        if num_numa_nodes <= 1 {
+    pub fn numa_aware_chunking(data_size: usize, num_numanodes: usize) -> ChunkingStrategy {
+        if num_numanodes <= 1 {
             return ChunkingStrategy::Auto;
         }
 
         // Try to align chunks with NUMA boundaries
-        let base_chunk_size = data_size / (num_numa_nodes * 2); // 2 chunks per NUMA node
+        let base_chunk_size = data_size / (num_numanodes * 2); // 2 chunks per NUMA node
         let aligned_chunk_size = align_to_cache_line(base_chunk_size);
 
         ChunkingStrategy::Fixed(aligned_chunk_size)
@@ -848,7 +848,7 @@ mod tests {
         let params = AdaptiveChunkingBuilder::new()
             .with_target_memory(10 * 1024 * 1024) // 10MB chunks
             .optimize_for_parallel(true)
-            .with_num_workers(4)
+            .with_numworkers(4)
             .build();
 
         // Calculate adaptive chunking

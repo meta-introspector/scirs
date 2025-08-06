@@ -38,12 +38,12 @@ use std::f64::consts::PI;
 /// let (b, a) = notch_filter(0.12, 35.0).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn notch_filter(_notch_freq: f64, quality_factor: f64) -> SignalResult<FilterCoefficients> {
-    validate_cutoff_frequency(_notch_freq)?;
+pub fn notch_filter(notch_freq: f64, qualityfactor: f64) -> SignalResult<FilterCoefficients> {
+    validate_cutoff_frequency(notch_freq)?;
 
     if quality_factor <= 0.0 {
         return Err(SignalError::ValueError(
-            "Quality _factor must be positive".to_string(),
+            "Quality factor must be positive".to_string(),
         ));
     }
 
@@ -162,12 +162,12 @@ pub fn comb_filter(
 /// let (b, a) = allpass_filter(0.2, 0.9).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn allpass_filter(_pole_frequency: f64, pole_radius: f64) -> SignalResult<FilterCoefficients> {
-    validate_cutoff_frequency(_pole_frequency)?;
+pub fn allpass_filter(pole_frequency: f64, poleradius: f64) -> SignalResult<FilterCoefficients> {
+    validate_cutoff_frequency(pole_frequency)?;
 
     if !(0.0..1.0).contains(&pole_radius) {
         return Err(SignalError::ValueError(
-            "Pole _radius must be between 0 and 1".to_string(),
+            "Pole radius must be between 0 and 1".to_string(),
         ));
     }
 
@@ -211,7 +211,7 @@ pub fn allpass_second_order(
 
     if !(0.0..1.0).contains(&pole_radius) {
         return Err(SignalError::ValueError(
-            "Pole _radius must be between 0 and 1".to_string(),
+            "Pole radius must be between 0 and 1".to_string(),
         ));
     }
 
@@ -255,10 +255,10 @@ pub fn allpass_second_order(
 /// let h = hilbert_filter(65).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn hilbert_filter(_num_taps: usize) -> SignalResult<Vec<f64>> {
-    if _num_taps < 3 {
+pub fn hilbert_filter(numtaps: usize) -> SignalResult<Vec<f64>> {
+    if num_taps < 3 {
         return Err(SignalError::ValueError(
-            "Number of _taps must be at least 3".to_string(),
+            "Number of taps must be at least 3".to_string(),
         ));
     }
 
@@ -319,10 +319,10 @@ pub fn hilbert_filter(_num_taps: usize) -> SignalResult<Vec<f64>> {
 /// let h = differentiator_filter(21).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn differentiator_filter(_num_taps: usize) -> SignalResult<Vec<f64>> {
-    if _num_taps < 3 {
+pub fn differentiator_filter(numtaps: usize) -> SignalResult<Vec<f64>> {
+    if num_taps < 3 {
         return Err(SignalError::ValueError(
-            "Number of _taps must be at least 3".to_string(),
+            "Number of taps must be at least 3".to_string(),
         ));
     }
 
@@ -377,10 +377,10 @@ pub fn differentiator_filter(_num_taps: usize) -> SignalResult<Vec<f64>> {
 /// let h = integrator_filter(21).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn integrator_filter(_num_taps: usize) -> SignalResult<Vec<f64>> {
-    if _num_taps < 3 {
+pub fn integrator_filter(numtaps: usize) -> SignalResult<Vec<f64>> {
+    if num_taps < 3 {
         return Err(SignalError::ValueError(
-            "Number of _taps must be at least 3".to_string(),
+            "Number of taps must be at least 3".to_string(),
         ));
     }
 
@@ -416,10 +416,10 @@ pub fn integrator_filter(_num_taps: usize) -> SignalResult<Vec<f64>> {
 /// let h = fractional_delay_filter(2.5, 21).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn fractional_delay_filter(_delay: f64, num_taps: usize) -> SignalResult<Vec<f64>> {
+pub fn fractional_delay_filter(_delay: f64, numtaps: usize) -> SignalResult<Vec<f64>> {
     if num_taps < 3 {
         return Err(SignalError::ValueError(
-            "Number of _taps must be at least 3".to_string(),
+            "Number of taps must be at least 3".to_string(),
         ));
     }
 
@@ -435,7 +435,7 @@ pub fn fractional_delay_filter(_delay: f64, num_taps: usize) -> SignalResult<Vec
     // Use sinc interpolation for fractional _delay
     for (i, item) in h.iter_mut().enumerate() {
         let n = i as f64 - center;
-        let shifted_n = n - _delay;
+        let shifted_n = n - delay;
 
         if shifted_n.abs() < 1e-10 {
             *item = 1.0; // sinc(0) = 1
@@ -477,10 +477,10 @@ pub fn fractional_delay_filter(_delay: f64, num_taps: usize) -> SignalResult<Vec
 /// let (b, a) = dc_blocker(0.995).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn dc_blocker(_pole_location: f64) -> SignalResult<FilterCoefficients> {
-    if _pole_location <= 0.0 || _pole_location >= 1.0 {
+pub fn dc_blocker(polelocation: f64) -> SignalResult<FilterCoefficients> {
+    if pole_location <= 0.0 || pole_location >= 1.0 {
         return Err(SignalError::ValueError(
-            "Pole _location must be between 0 and 1".to_string(),
+            "Pole location must be between 0 and 1".to_string(),
         ));
     }
 
@@ -551,6 +551,6 @@ pub fn peak_filter(
 }
 
 #[allow(dead_code)]
-fn tf(_num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
-    TransferFunction::new(_num, den)
+fn tf(num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
+    TransferFunction::new(_num, den, None).unwrap()
 }

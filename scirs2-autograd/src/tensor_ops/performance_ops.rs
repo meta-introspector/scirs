@@ -150,7 +150,7 @@ impl<F: Float> Op<F> for ParallelReductionOp {
         Ok(())
     }
 
-    fn grad(&self_ctx: &mut GradientContext<F>) {
+    fn grad(selfctx: &mut GradientContext<F>) {
         // Simplified gradient implementation
         // In practice, would implement proper gradient broadcasting
     }
@@ -160,7 +160,7 @@ impl<F: Float> Op<F> for ParallelReductionOp {
 
 /// Enable or disable SIMD optimizations
 #[allow(dead_code)]
-pub fn set_simd_enabled(_enabled: bool) {
+pub fn set_simd_enabled(enabled: bool) {
     SIMD_ENABLED.store(_enabled, Ordering::Relaxed);
 }
 
@@ -172,7 +172,7 @@ pub fn is_simd_enabled() -> bool {
 
 /// Enable or disable parallel processing
 #[allow(dead_code)]
-pub fn set_parallel_enabled(_enabled: bool) {
+pub fn set_parallel_enabled(enabled: bool) {
     PARALLEL_ENABLED.store(_enabled, Ordering::Relaxed);
 }
 
@@ -185,7 +185,7 @@ pub fn is_parallel_enabled() -> bool {
 /// SIMD-optimized element-wise addition
 #[allow(dead_code)]
 pub fn simd_add<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _left.graph();
+    let g = left.graph();
     Tensor::builder(g)
         .append_input(_left, false)
         .append_input(right, false)
@@ -197,7 +197,7 @@ pub fn simd_add<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Te
 /// SIMD-optimized element-wise multiplication
 #[allow(dead_code)]
 pub fn simd_mul<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _left.graph();
+    let g = left.graph();
     Tensor::builder(g)
         .append_input(_left, false)
         .append_input(right, false)
@@ -209,7 +209,7 @@ pub fn simd_mul<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Te
 /// SIMD-optimized ReLU activation
 #[allow(dead_code)]
 pub fn simd_relu<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _tensor.graph();
+    let g = tensor.graph();
     Tensor::builder(g)
         .append_input(_tensor, false)
         .build(SimdUnaryOp {
@@ -220,7 +220,7 @@ pub fn simd_relu<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 /// SIMD-optimized sigmoid activation
 #[allow(dead_code)]
 pub fn simd_sigmoid<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _tensor.graph();
+    let g = tensor.graph();
     Tensor::builder(g)
         .append_input(_tensor, false)
         .build(SimdUnaryOp {

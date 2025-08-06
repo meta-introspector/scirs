@@ -85,7 +85,7 @@ fn create_sample_scientific_data() -> Result<(), Box<dyn Error>> {
 
 /// Extract metadata from comment lines
 #[allow(dead_code)]
-fn extract_metadata_from_file(_file_path: &str) -> Result<HashMap<String, String>, Box<dyn Error>> {
+fn extract_metadata_from_file(_filepath: &str) -> Result<HashMap<String, String>, Box<dyn Error>> {
     let file = File::open(_file_path)?;
     let reader = std::io::BufReader::new(file);
     let mut metadata = HashMap::new();
@@ -441,9 +441,9 @@ struct ColumnStats {
 }
 
 impl ColumnStats {
-    fn new(_name: &str) -> Self {
+    fn new(name: &str) -> Self {
         Self {
-            name: _name.to_string(),
+            name: name.to_string(),
             count: 0,
             min: f64::INFINITY,
             max: f64::NEG_INFINITY,

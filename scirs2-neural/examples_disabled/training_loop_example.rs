@@ -287,7 +287,7 @@ fn main() -> Result<()> {
 }
 // Create a simple model for classification
 #[allow(dead_code)]
-fn create_model(_input_size: usize, num_classes: usize) -> Result<impl Layer<f32>> {
+fn create_model(_input_size: usize, numclasses: usize) -> Result<impl Layer<f32>> {
     // Create a mutable RNG for initialization
     let mut rng = rand::rng();
     // Create a simple neural network model with two hidden layers
@@ -305,8 +305,8 @@ fn create_model(_input_size: usize, num_classes: usize) -> Result<impl Layer<f32
     Ok(model)
 // Helper function to create a directory if it doesn't exist
 #[allow(dead_code)]
-fn create_dir_if_not_exists(_path: impl AsRef<Path>) -> Result<()> {
-    let _path = _path.as_ref();
+fn create_dir_if_not_exists(path: impl AsRef<Path>) -> Result<()> {
+    let _path = path.as_ref();
     if !_path.exists() {
         std::fs::create_dir_all(_path).map_err(|e| {
             scirs2_neural::error::NeuralError::IOError(format!(

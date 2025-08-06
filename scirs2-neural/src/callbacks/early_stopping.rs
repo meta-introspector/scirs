@@ -30,9 +30,9 @@ impl<F: Float + Debug + ScalarOperand> EarlyStopping<F> {
     /// * `patience` - Number of epochs with no improvement after which training will be stopped
     /// * `min_delta` - Minimum change in the monitored quantity to qualify as an improvement
     /// * `restore_best_weights` - Whether to restore the model weights from the epoch with the best value
-    pub fn new(_patience: usize, min_delta: F, restore_best_weights: bool) -> Self {
+    pub fn new(_patience: usize, min_delta: F, restore_bestweights: bool) -> Self {
         Self {
-            _patience,
+            patience,
             min_delta,
             _patience_counter: 0,
             best_value: None,

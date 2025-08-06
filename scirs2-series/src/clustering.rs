@@ -307,7 +307,7 @@ impl TimeSeriesClusterer {
     }
 
     /// Create a new clusterer with random seed
-    pub fn with_seed(_seed: u64) -> Self {
+    pub fn with_seed(seed: u64) -> Self {
         Self {
             random_seed: Some(_seed),
             correlation_analyzer: CorrelationAnalyzer::with_seed(_seed),
@@ -1196,7 +1196,7 @@ impl TimeSeriesClusterer {
         }
     }
 
-    fn get_neighbors(&self, distance_matrix: &Array2<f64>, point: usize, eps: f64) -> Vec<usize> {
+    fn get_neighbors(&self, distancematrix: &Array2<f64>, point: usize, eps: f64) -> Vec<usize> {
         (0..distance_matrix.nrows())
             .filter(|&i| i != point && distance_matrix[[point, i]] <= eps)
             .collect()

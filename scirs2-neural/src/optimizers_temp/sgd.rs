@@ -38,12 +38,12 @@ impl<F: Float + Debug> SGD<F> {
     /// # Arguments
     /// * `learning_rate` - Learning rate for the optimizer
     /// * `momentum` - Optional momentum factor (between 0 and 1)
-    pub fn new(_learning_rate: F, momentum: Option<F>) -> Self {
+    pub fn new(_learningrate: F, momentum: Option<F>) -> Self {
         let momentum_value = momentum.unwrap_or(F::zero());
         
         Self {
             inner: optim, optimizers: SGD::new_with_config(
-                _learning_rate,
+                learning_rate,
                 momentum_value,
                 F::zero() // No weight decay by default
             ),
@@ -54,7 +54,7 @@ impl<F: Float + Debug> SGD<F> {
     /// Create a new SGD optimizer with weight decay
     /// * `momentum` - Momentum factor (between 0 and 1)
     /// * `weight_decay` - Weight decay factor (L2 regularization)
-    pub fn new_with_decay(_learning_rate: F, momentum: F, weight_decay: F) -> Self {
+    pub fn new_with_decay(_learning_rate: F, momentum: F, weightdecay: F) -> Self {
                 momentum,
                 weight_decay
             weight_decay,
@@ -68,7 +68,7 @@ impl<F: Float + Debug> SGD<F> {
     pub fn get_weight_decay(&self) -> F {
         self.weight_decay
     /// Set the weight decay value
-    pub fn set_weight_decay(&mut self, weight_decay: F) {
+    pub fn set_weight_decay(&mut self, weightdecay: F) {
         self.weight_decay = weight_decay;
         self.inner.set_weight_decay(weight_decay);
 impl<F: Float + Debug> Optimizer<F> for SGD<F> {

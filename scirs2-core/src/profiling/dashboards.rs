@@ -394,8 +394,8 @@ impl Widget {
     }
 
     /// Set chart type
-    pub fn with_chart_type(mut self, chart_type: ChartType) -> Self {
-        self.chart_type = chart_type;
+    pub fn with_chart_type(mut self, charttype: ChartType) -> Self {
+        self.charttype = chart_type;
         self
     }
 
@@ -516,7 +516,7 @@ impl MetricTimeSeries {
     }
 
     /// Clean old data points
-    pub fn cleanup(&mut self, retention_period: Duration, max_points: usize) {
+    pub fn cleanup(&mut self, retention_period: Duration, maxpoints: usize) {
         let cutoff = SystemTime::now() - retention_period;
 
         // Remove old data points
@@ -529,7 +529,7 @@ impl MetricTimeSeries {
         }
 
         // Limit maximum number of points
-        while self.data_points.len() > max_points {
+        while self.data_points.len() > maxpoints {
             self.data_points.pop_front();
         }
     }
@@ -640,11 +640,11 @@ impl PerformanceDashboard {
     }
 
     /// Remove a widget from the dashboard
-    pub fn remove_widget(&mut self, widget_id: &str) -> CoreResult<()> {
-        self.widgets.remove(widget_id);
+    pub fn remove_widget(&mut self, widgetid: &str) -> CoreResult<()> {
+        self.widgets.remove(widgetid);
 
         // Remove associated metric data
-        let metrics_name = format!("widget_{widget_id}");
+        let metrics_name = format!("widget_{widgetid}");
         if let Ok(mut metrics) = self.metrics.write() {
             metrics.remove(&metrics_name);
         }
@@ -684,12 +684,12 @@ impl PerformanceDashboard {
 
     /// Update dashboard with new metric data
     pub fn update_metric(&mut self, source: &MetricSource, value: f64) -> CoreResult<()> {
-        let metric_name = self.metric_source_to_name(source);
+        let metricname = self.metric_source_to_name(source);
 
         if let Ok(mut metrics) = self.metrics.write() {
             let time_series = metrics
-                .entry(metric_name.clone())
-                .or_insert_with(|| MetricTimeSeries::new(&metric_name));
+                .entry(metricname.clone())
+                .or_insert_with(|| MetricTimeSeries::new(&metricname));
 
             time_series.add_point(value, None);
 
@@ -698,7 +698,7 @@ impl PerformanceDashboard {
         }
 
         // Check for alerts
-        self.check_alerts(&metric_name, value)?;
+        self.check_alerts(&metricname, value)?;
 
         self.last_update = Instant::now();
         Ok(())
@@ -753,10 +753,10 @@ impl PerformanceDashboard {
     }
 
     /// Import dashboard configuration
-    pub fn import_configuration(&mut self, config_json: &str) -> CoreResult<()> {
+    pub fn import_configuration(&mut self, configjson: &str) -> CoreResult<()> {
         #[cfg(feature = "serde")]
         {
-            let import_data: DashboardExport = serde_json::from_str(config_json).map_err(|e| {
+            let import_data: DashboardExport = serde_json::from_str(configjson).map_err(|e| {
                 CoreError::from(std::io::Error::other(format!(
                     "Failed to parse dashboard config: {e}"
                 )))
@@ -781,12 +781,12 @@ impl PerformanceDashboard {
     }
 
     /// Check for alert conditions
-    fn check_alerts(&self, metric_name: &str, value: f64) -> CoreResult<()> {
+    fn check_alerts(&self, metricname: &str, value: f64) -> CoreResult<()> {
         for widget in self.widgets.values() {
             if let Some(ref alert_config) = widget.alert_config {
                 let widget_metric = self.metric_source_to_name(&widget.metric_source);
 
-                if widget_metric == metric_name {
+                if widget_metric == metricname {
                     let triggered = match alert_config.condition {
                         AlertCondition::GreaterThan => value > alert_config.threshold,
                         AlertCondition::LessThan => value < alert_config.threshold,

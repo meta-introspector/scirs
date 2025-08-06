@@ -55,12 +55,12 @@ pub struct RANSState {
 
 impl RANSSolver {
     /// Create a new RANS solver
-    pub fn new(nx: usize, ny: usize, turbulence_model: RANSModel, reynolds_number: f64) -> Self {
+    pub fn new(nx: usize, ny: usize, turbulence_model: RANSModel, reynoldsnumber: f64) -> Self {
         Self {
             nx,
             ny,
             turbulence_model,
-            reynolds_number,
+            reynolds_number: reynoldsnumber,
             relaxation_factor: 0.7,
             constants: TurbulenceConstants::default(),
         }
@@ -523,18 +523,18 @@ impl RANSState {
     }
 
     /// Set initial conditions for lid-driven cavity
-    pub fn lid_driven_cavity(nx: usize, ny: usize, dx: f64, dy: f64, lid_velocity: f64) -> Self {
+    pub fn lid_driven_cavity(nx: usize, ny: usize, dx: f64, dy: f64, lidvelocity: f64) -> Self {
         let mut state = Self::new(nx, ny, dx, dy);
 
         // Set lid velocity
         for i in 0..nx {
-            state.mean_velocity[0][[i, ny - 1]] = lid_velocity;
+            state.mean_velocity[0][[i, ny - 1]] = lidvelocity;
         }
 
         // Initialize turbulence quantities
-        let turbulence_intensity = 0.05;
-        let k_inlet = 1.5 * (turbulence_intensity * lid_velocity).powi(2);
-        let epsilon_inlet = 0.09 * k_inlet.powf(1.5) / (0.1 * dx);
+        let turbulence_intensity = 0.05_f64;
+        let k_inlet: f64 = 1.5 * (turbulence_intensity * lidvelocity).powi(2);
+        let epsilon_inlet: f64 = 0.09 * k_inlet.powf(1.5_f64) / (0.1 * dx);
 
         state.turbulent_kinetic_energy.fill(k_inlet);
         state.dissipation_rate.fill(epsilon_inlet);

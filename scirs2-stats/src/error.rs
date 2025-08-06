@@ -55,8 +55,8 @@ pub enum StatsError {
 
 // NOTE: rand, distr: uniform::Error API has changed, commenting out for now
 // impl From<rand_distr::uniform::Error> for StatsError {
-//     fn from(_err: rand, distr: uniform::Error) -> Self {
-//         StatsError::DistributionError(format!("Uniform distribution error: {}", _err))
+//     fn from(err: rand, distr: uniform::Error) -> Self {
+//         StatsError::DistributionError(format!("Uniform distribution error: {}", err))
 //     }
 // }
 

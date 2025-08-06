@@ -263,12 +263,12 @@ where
     F: Float + NumCast + Copy + Send + Sync + 'static + std::fmt::Display + SimdUnifiedOps,
 {
     /// Create a new advanced-enhanced SIMD processor
-    pub fn new(_config: AdvancedSimdConfig) -> StatsResult<Self> {
+    pub fn new(config: AdvancedSimdConfig) -> StatsResult<Self> {
         let cpu_features = Self::detect_cpu_capabilities()?;
 
         Ok(Self {
             cpu_features,
-            config: _config,
+            config: config,
             performance_stats: Arc::new(RwLock::new(PerformanceStatistics::default())),
             algorithm_cache: Arc::new(RwLock::new(HashMap::new())),
             _phantom: PhantomData,
@@ -542,7 +542,7 @@ where
     }
 
     /// Update performance statistics
-    fn update_performance_stats(&self, algorithm: &str, execution_time_ns: u64) {
+    fn update_performance_stats(&self, algorithm: &str, execution_timens: u64) {
         if let Ok(mut stats) = self.performance_stats.write() {
             stats.total_operations += 1;
             stats.total_time_ns += execution_time_ns;
@@ -819,7 +819,7 @@ where
     }
 
     /// Auto-tuning for SIMD parameters based on runtime characteristics
-    pub fn auto_tune_parameters(&mut self, sample_data: &ArrayView1<F>) -> StatsResult<()> {
+    pub fn auto_tune_parameters(&mut self, sampledata: &ArrayView1<F>) -> StatsResult<()> {
         let _data_size = sample_data.len();
 
         // Benchmark different vectorization levels

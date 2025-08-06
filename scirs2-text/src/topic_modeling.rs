@@ -245,9 +245,9 @@ pub struct LatentDirichletAllocation {
 
 impl LatentDirichletAllocation {
     /// Create a new LDA model with the given configuration
-    pub fn new(_config: LdaConfig) -> Self {
+    pub fn new(config: LdaConfig) -> Self {
         Self {
-            _config,
+            config,
             components: None,
             exp_dirichlet_component: None,
             vocabulary: None,
@@ -258,16 +258,16 @@ impl LatentDirichletAllocation {
     }
 
     /// Create a new LDA model with default configuration
-    pub fn with_n_topics(_n_topics: usize) -> Self {
+    pub fn with_n_topics(_ntopics: usize) -> Self {
         let config = LdaConfig {
-            _n_topics,
+            n_topics,
             ..Default::default()
         };
         Self::new(config)
     }
 
     /// Fit the LDA model on a document-term matrix
-    pub fn fit(&mut self, doc_term_matrix: &Array2<f64>) -> Result<&mut Self> {
+    pub fn fit(&mut self, doc_termmatrix: &Array2<f64>) -> Result<&mut Self> {
         if doc_term_matrix.nrows() == 0 || doc_term_matrix.ncols() == 0 {
             return Err(TextError::InvalidInput(
                 "Document-term _matrix cannot be empty".to_string(),
@@ -306,7 +306,7 @@ impl LatentDirichletAllocation {
     }
 
     /// Transform documents to topic distribution
-    pub fn transform(&self, doc_term_matrix: &Array2<f64>) -> Result<Array2<f64>> {
+    pub fn transform(&self, doc_termmatrix: &Array2<f64>) -> Result<Array2<f64>> {
         if self.components.is_none() {
             return Err(TextError::ModelNotFitted(
                 "LDA model not fitted yet".to_string(),
@@ -348,7 +348,7 @@ impl LatentDirichletAllocation {
     }
 
     /// Fit and transform in one step
-    pub fn fit_transform(&mut self, doc_term_matrix: &Array2<f64>) -> Result<Array2<f64>> {
+    pub fn fit_transform(&mut self, doc_termmatrix: &Array2<f64>) -> Result<Array2<f64>> {
         self.fit(doc_term_matrix)?;
         self.transform(doc_term_matrix)
     }
@@ -634,12 +634,12 @@ impl LatentDirichletAllocation {
             for (local_idx, &doc_idx) in batch_docs.iter().enumerate() {
                 let doc = doc_term_matrix.row(doc_idx);
                 let _gamma = batch_gamma.row(local_idx);
-                let gamma_sum = _gamma.sum();
+                let gamma_sum = gamma.sum();
 
                 for (word_idx, &count) in doc.iter().enumerate() {
                     if count > 0.0 {
                         for topic_idx in 0..self.config.n_topics {
-                            let phi = _gamma[topic_idx] / gamma_sum;
+                            let phi = gamma[topic_idx] / gamma_sum;
                             batch_stats[[topic_idx, word_idx]] += count * phi;
                         }
                     }
@@ -754,7 +754,7 @@ impl LdaBuilder {
     }
 
     /// Set the number of topics
-    pub fn n_topics(mut self, n_topics: usize) -> Self {
+    pub fn n_topics(mut self, ntopics: usize) -> Self {
         self.config.n_topics = n_topics;
         self
     }
@@ -778,7 +778,7 @@ impl LdaBuilder {
     }
 
     /// Set the maximum iterations
-    pub fn max_iter(mut self, max_iter: usize) -> Self {
+    pub fn max_iter(mut self, maxiter: usize) -> Self {
         self.config.max_iter = max_iter;
         self
     }

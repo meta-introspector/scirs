@@ -299,13 +299,13 @@ impl Default for NASSearchStats {
 
 impl AdaptiveNASSystem {
     /// Create new adaptive NAS system
-    pub fn new(_config: LearnedOptimizationConfig) -> Self {
+    pub fn new(config: LearnedOptimizationConfig) -> Self {
         let vocabulary = ArchitectureVocabulary::new();
-        let controller = ArchitectureController::new(&vocabulary, _config.hidden_size);
-        let hidden_size = _config.hidden_size;
+        let controller = ArchitectureController::new(&vocabulary, config.hidden_size);
+        let hidden_size = config.hidden_size;
 
         Self {
-            config: _config,
+            config: config,
             architecture_population: Vec::new(),
             performance_history: HashMap::new(),
             controller,
@@ -586,12 +586,12 @@ impl AdaptiveNASSystem {
             let advantage = reward - baseline;
 
             // Update controller weights (simplified)
-            if i < self.controller.lstm_weights.len() {
-                for j in 0..self.controller.lstm_weights.nrows() {
-                    for k in 0..self.controller.lstm_weights.ncols() {
+            if i < self.controller.lstmweights.len() {
+                for j in 0..self.controller.lstmweights.nrows() {
+                    for k in 0..self.controller.lstmweights.ncols() {
                         let learning_rate = self.config.meta_learning_rate;
                         self.controller.lstm_weights
-                            [[i % self.controller.lstm_weights.len(), j, k]] +=
+                            [[i % self.controller.lstmweights.len(), j, k]] +=
                             learning_rate * advantage * 0.01;
                     }
                 }
@@ -820,19 +820,19 @@ impl AdaptiveNASSystem {
 
 impl ArchitectureController {
     /// Create new architecture controller
-    pub fn new(_vocabulary: &ArchitectureVocabulary, hidden_size: usize) -> Self {
+    pub fn new(_vocabulary: &ArchitectureVocabulary, hiddensize: usize) -> Self {
         Self {
             lstm_weights: Array3::fromshape_fn((4, hidden_size, hidden_size), |_| {
                 (rand::rng().gen_range(0.0..1.0) - 0.5) * 0.1
             }),
-            embedding_layer: Array2::fromshape_fn((hidden_size, _vocabulary.vocab_size), |_| {
+            embedding_layer: Array2::fromshape_fn((hidden_size, vocabulary.vocab_size), |_| {
                 (rand::rng().gen_range(0.0..1.0) - 0.5) * 0.1
             }),
             output_layer: Array2::fromshape_fn((_vocabulary.vocab_size, hidden_size), |_| {
                 (rand::rng().gen_range(0.0..1.0) - 0.5) * 0.1
             }),
             controller_state: Array1::zeros(hidden_size),
-            vocabulary: _vocabulary.clone(),
+            vocabulary: vocabulary.clone(),
         }
     }
 }
@@ -875,7 +875,7 @@ impl ArchitectureVocabulary {
 }
 
 impl LearnedOptimizer for AdaptiveNASSystem {
-    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
+    fn meta_train(&mut self, trainingtasks: &[TrainingTask]) -> OptimizeResult<()> {
         let problems: Vec<OptimizationProblem> = training_tasks
             .iter()
             .map(|task| task.problem.clone())

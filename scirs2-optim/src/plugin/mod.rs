@@ -50,7 +50,7 @@
 //!         PluginCapabilities::default()
 //!     }
 //!     
-//!     fn initialize(&mut self, _paramshapes: &[usize]) -> Result<()> { Ok(()) }
+//!     fn initialize(&mut self, paramshapes: &[usize]) -> Result<()> { Ok(()) }
 //!     fn reset(&mut self) -> Result<()> { Ok(()) }
 //!     fn get_config(&self) -> OptimizerConfig { OptimizerConfig::default() }
 //!     fn set_config(&mut self,

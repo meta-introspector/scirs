@@ -54,8 +54,8 @@ pub fn compress_jacobian_pattern(
 ///
 /// Two columns can have the same color if they don't both have nonzeros in the same row
 #[allow(dead_code)]
-fn color_jacobian_columns(_sparsity: &CsrArray<f64>) -> Result<Vec<usize>, OptimizeError> {
-    let (_m, n) = _sparsity.shape();
+fn color_jacobian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, OptimizeError> {
+    let (_m, n) = sparsity.shape();
     let mut coloring = vec![0; n];
 
     // For each column, find the lowest color that doesn't conflict
@@ -88,12 +88,12 @@ fn color_jacobian_columns(_sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optim
 
 /// Helper function to get rows where a column has nonzero entries
 #[allow(dead_code)]
-fn get_column_nonzero_rows(_sparsity: &CsrArray<f64>, col: usize) -> HashSet<usize> {
+fn get_column_nonzero_rows(sparsity: &CsrArray<f64>, col: usize) -> HashSet<usize> {
     let mut rows = HashSet::new();
-    let (m, _) = _sparsity.shape();
+    let (m, _) = sparsity.shape();
 
     for row in 0..m {
-        let val = _sparsity.get(row, col);
+        let val = sparsity.get(row, col);
         if val.abs() > 1e-15 {
             rows.insert(row);
         }
@@ -139,8 +139,8 @@ pub fn compress_hessian_pattern(
 /// 1. They are not adjacent (H[i,j] = 0)
 /// 2. They don't share any common neighbors
 #[allow(dead_code)]
-fn color_hessian_columns(_sparsity: &CsrArray<f64>) -> Result<Vec<usize>, OptimizeError> {
-    let (n, _) = _sparsity.shape();
+fn color_hessian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, OptimizeError> {
+    let (n, _) = sparsity.shape();
     let mut coloring = vec![0; n];
 
     // Build adjacency information for efficient neighbor lookup
@@ -182,14 +182,14 @@ fn color_hessian_columns(_sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optimi
 
 /// Build adjacency list representation of the sparsity pattern
 #[allow(dead_code)]
-fn build_adjacency_list(_sparsity: &CsrArray<f64>) -> Vec<HashSet<usize>> {
-    let (n, _) = _sparsity.shape();
+fn build_adjacency_list(sparsity: &CsrArray<f64>) -> Vec<HashSet<usize>> {
+    let (n, _) = sparsity.shape();
     let mut adjacency = vec![HashSet::new(); n];
 
     for i in 0..n {
         for j in 0..n {
             if i != j {
-                let val = _sparsity.get(i, j);
+                let val = sparsity.get(i, j);
                 if val.abs() > 1e-15 {
                     adjacency[i].insert(j);
                     adjacency[j].insert(i); // Symmetric

@@ -133,7 +133,7 @@ where
     }
 
     // Step 4: Compute QR decomposition of Y
-    let (q, _r) = qr(&y.view(), workers)?;
+    let (q, r) = qr(&y.view(), workers)?;
 
     // Step 5: Compute B = Q^T * A
     let b = q.t().dot(a);
@@ -498,7 +498,7 @@ where
 
     // Step 1: Compute leverage scores for column selection
     // Use randomized SVD to approximate the leverage scores efficiently
-    let (u_approx, _s_approx, _vt_approx) =
+    let (u_approx, s_approx, vt_approx) =
         randomized_svd(a, l.min(n), Some(oversampling), Some(1), workers)?;
 
     // Compute column leverage scores: ||U(i,:)||²₂ for each row i
@@ -562,7 +562,7 @@ where
 
     // Step 3: Compute row leverage scores using the transpose
     let a_t = a.t().to_owned();
-    let (u_row_approx, _s_row_approx, _vt_row_approx) =
+    let (u_row_approx, s_row_approx, vt_row_approx) =
         randomized_svd(&a_t.view(), l.min(m), Some(oversampling), Some(1), workers)?;
 
     let mut row_leverage_scores = Array1::zeros(m);
@@ -797,7 +797,7 @@ mod tests {
         let a = array![[2.0, 0.5], [0.5, 2.0]];
 
         match cur_decomposition(&a.view(), 2, Some(0), None) {
-            Ok((c, u, r, _col_indices, _row_indices)) => {
+            Ok((c, u, r, col_indices, row_indices)) => {
                 // Check dimensions
                 assert_eq!(c.shape(), [2, 2]);
                 assert_eq!(u.shape(), [2, 2]);
@@ -853,7 +853,7 @@ mod tests {
         let a = array![[2.0, 0.0, 1.0], [0.0, 3.0, 0.0], [1.0, 0.0, 2.0]];
 
         match cur_decomposition(&a.view(), 2, Some(0), None) {
-            Ok((c, _u, r, col_indices, row_indices)) => {
+            Ok((c, u, r, col_indices, row_indices)) => {
                 // Basic dimension checks
                 assert_eq!(c.shape()[0], 3);
                 assert_eq!(r.shape()[1], 3);

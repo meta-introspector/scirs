@@ -658,13 +658,13 @@ where
         let min = domain[[i, 0]];
         let max = domain[[i, 1]];
 
-        let mut _points = Vec::with_capacity(grid_points);
+        let mut points = Vec::with_capacity(grid_points);
         for j in 0..grid_points {
             let t = F::from(j as f64 / (grid_points - 1) as f64).unwrap();
-            _points.push(min + t * (max - min));
+            points.push(min + t * (max - min));
         }
 
-        grid_dimensions.push(_points);
+        grid_dimensions.push(points);
     }
 
     // Now generate all combinations of _points in the grid

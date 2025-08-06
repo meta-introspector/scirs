@@ -116,9 +116,9 @@ fn main() -> IntegrateResult<()> {
                 // When heater is OFF, detect if temperature drops below HEATER_ON_THRESHOLD
                 let event_funcs: Vec<EventFunc> = vec![
                     // Event 1: Temperature drops below heater-on threshold
-                    Box::new(|_t: f64, y: ArrayView1<f64>| y[0] - HEATER_ON_THRESHOLD),
+                    Box::new(|t: f64, y: ArrayView1<f64>| y[0] - HEATER_ON_THRESHOLD),
                     // Event 2: End of simulation
-                    Box::new(move |t: f64, _y: ArrayView1<f64>| t - t_end),
+                    Box::new(move |t: f64, y: ArrayView1<f64>| t - t_end),
                 ];
 
                 let event_specs = vec![
@@ -141,9 +141,9 @@ fn main() -> IntegrateResult<()> {
                 // When heater is ON, detect if temperature rises above HEATER_OFF_THRESHOLD
                 let event_funcs: Vec<EventFunc> = vec![
                     // Event 1: Temperature rises above heater-off threshold
-                    Box::new(|_t: f64, y: ArrayView1<f64>| y[0] - HEATER_OFF_THRESHOLD),
+                    Box::new(|t: f64, y: ArrayView1<f64>| y[0] - HEATER_OFF_THRESHOLD),
                     // Event 2: End of simulation
-                    Box::new(move |t: f64, _y: ArrayView1<f64>| t - t_end),
+                    Box::new(move |t: f64, y: ArrayView1<f64>| t - t_end),
                 ];
 
                 let event_specs = vec![
@@ -318,7 +318,7 @@ fn save_to_csv(
 
     // Write data
     for i in 0.._times.len() {
-        let t = _times[i];
+        let t = times[i];
 
         // Check if this time point is an event
         let is_event = event_times.iter().position(|&et| (et - t).abs() < 1e-6);

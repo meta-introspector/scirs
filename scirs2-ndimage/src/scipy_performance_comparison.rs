@@ -121,9 +121,9 @@ impl SciPyBenchmarkSuite {
     }
 
     /// Create a new benchmark suite with custom configuration
-    pub fn with_config(_config: BenchmarkConfig) -> Self {
+    pub fn with_config(config: BenchmarkConfig) -> Self {
         Self {
-            _config,
+            config,
             results: Vec::new(),
             accuracy_results: Vec::new(),
             compatibility_results: Vec::new(),
@@ -583,7 +583,7 @@ impl SciPyBenchmarkSuite {
 
 /// Estimate memory usage for given shape and data type size
 #[allow(dead_code)]
-fn estimate_memory_usage(shape: &[usize], dtype_size: usize) -> usize {
+fn estimate_memory_usage(shape: &[usize], dtypesize: usize) -> usize {
     shape.iter().product::<usize>() * dtype_size
 }
 

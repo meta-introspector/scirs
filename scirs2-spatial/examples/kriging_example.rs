@@ -403,7 +403,7 @@ fn uncertainty_example() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Helper function to create synthetic spatial data
 #[allow(dead_code)]
-fn create_synthetic_data(_n_points: usize, noise_level: f64) -> (Array2<f64>, Array1<f64>) {
+fn create_synthetic_data(_n_points: usize, noiselevel: f64) -> (Array2<f64>, Array1<f64>) {
     use rand::Rng;
     let mut rng = rand::rng();
 
@@ -414,8 +414,8 @@ fn create_synthetic_data(_n_points: usize, noise_level: f64) -> (Array2<f64>, Ar
         let x = rng.gen_range(0.0..10.0);
         let y = rng.gen_range(0.0..10.0);
 
-        _points[[i..0]] = x;
-        _points[[i, 1]] = y;
+        points[[i..0]] = x;
+        points[[i, 1]] = y;
 
         // Synthetic function with spatial correlation
         let true_value =
@@ -429,12 +429,12 @@ fn create_synthetic_data(_n_points: usize, noise_level: f64) -> (Array2<f64>, Ar
 
 /// Display variogram characteristics
 #[allow(dead_code)]
-fn display_variogram_info(_variogram: &VariogramModel) {
+fn display_variogram_info(variogram: &VariogramModel) {
     println!("Variogram characteristics:");
     println!("  Type: {_variogram:?}");
-    println!("  Effective range: {:.2}", _variogram.effective_range());
-    println!("  Sill: {:.2}", _variogram.sill());
-    println!("  Nugget: {:.2}", _variogram.nugget());
+    println!("  Effective range: {:.2}", variogram.effective_range());
+    println!("  Sill: {:.2}", variogram.sill());
+    println!("  Nugget: {:.2}", variogram.nugget());
 
     // Sample _variogram values at different distances
     println!("  Values at distances:");
@@ -443,7 +443,7 @@ fn display_variogram_info(_variogram: &VariogramModel) {
         println!(
             "    h = {:.1}: γ(h) = {:.3}",
             dist,
-            _variogram.evaluate(dist)
+            variogram.evaluate(dist)
         );
     }
 }

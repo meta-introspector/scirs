@@ -1359,7 +1359,7 @@ impl ParallelSpectralProcessor {
             let power = frequencies
                 .iter()
                 .zip(psd.iter())
-                .filter(|(&freq_)| freq >= low_freq && freq <= high_freq)
+                .filter(|(&freq_)| freq_ >= low_freq && freq_ <= high_freq)
                 .map(|(_, &power)| power)
                 .sum::<f64>();
 

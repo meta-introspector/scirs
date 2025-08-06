@@ -443,8 +443,8 @@ where
 ///
 /// This helps determine if per-channel quantization would be beneficial
 #[allow(dead_code)]
-fn estimate_column_variability(_matrix: &Array2<f32>) -> f32 {
-    let (_, cols) = _matrix.dim();
+fn estimate_column_variability(matrix: &Array2<f32>) -> f32 {
+    let (_, cols) = matrix.dim();
 
     if cols <= 1 {
         return 1.0;
@@ -454,7 +454,7 @@ fn estimate_column_variability(_matrix: &Array2<f32>) -> f32 {
     let mut max_range = 0.0f32;
 
     for col_idx in 0..cols {
-        let column = _matrix.slice(ndarray::s![.., col_idx]);
+        let column = matrix.slice(ndarray::s![.., col_idx]);
 
         let min_val = column.fold(f32::INFINITY, |acc, &x| acc.min(x));
         let max_val = column.fold(f32::NEG_INFINITY, |acc, &x| acc.max(x));
@@ -473,10 +473,10 @@ fn estimate_column_variability(_matrix: &Array2<f32>) -> f32 {
 
 /// Count the number of values in a matrix that are close to zero
 #[allow(dead_code)]
-fn count_near_zero_values(_matrix: &Array2<f32>, threshold: f32) -> usize {
+fn count_near_zero_values(matrix: &Array2<f32>, threshold: f32) -> usize {
     let mut count = 0;
 
-    for &val in _matrix.iter() {
+    for &val in matrix.iter() {
         if val.abs() < threshold {
             count += 1;
         }

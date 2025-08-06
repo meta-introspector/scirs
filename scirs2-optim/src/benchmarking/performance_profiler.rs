@@ -461,9 +461,9 @@ pub struct HardwareMetrics {
 
 impl<A: Float + Debug> PerformanceProfiler<A> {
     /// Create a new performance profiler
-    pub fn new(_config: ProfilerConfig) -> Self {
+    pub fn new(config: ProfilerConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             metrics: PerformanceMetrics::new(),
             memory_tracker: MemoryTracker::new(),
             efficiency_analyzer: EfficiencyAnalyzer::new(),
@@ -480,7 +480,7 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
     }
 
     /// Complete a profiling step
-    pub fn complete_step(&mut self, step_profiler: StepProfiler<A>) -> Result<()> {
+    pub fn complete_step(&mut self, stepprofiler: StepProfiler<A>) -> Result<()> {
         let step_timing = step_profiler.finalize()?;
 
         // Update metrics
@@ -538,7 +538,7 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
     }
 
     /// Update computational efficiency metrics
-    fn update_efficiency_metrics(&mut self, step_timing: &StepTiming) -> Result<()> {
+    fn update_efficiency_metrics(&mut self, steptiming: &StepTiming) -> Result<()> {
         // Estimate FLOPS for this step
         let estimated_flops = self.estimate_flops(step_timing);
         self.efficiency_analyzer
@@ -752,7 +752,7 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
         (self.current_step as f64 * 0.001).min(0.5)
     }
 
-    fn estimate_flops(&self, _step_timing: &StepTiming) -> f64 {
+    fn estimate_flops(&self, _steptiming: &StepTiming) -> f64 {
         // Simplified FLOPS estimation
         1e8 + (self.current_step as f64 * 1e6)
     }
@@ -941,17 +941,17 @@ pub struct StepProfiler<A: Float> {
 }
 
 impl<A: Float> StepProfiler<A> {
-    fn new(_step_number: usize, config: &ProfilerConfig) -> Self {
+    fn new(_stepnumber: usize, config: &ProfilerConfig) -> Self {
         Self {
-            step_number: _step_number,
+            step_number: step_number,
             start_time: Instant::now(),
             gradient_start: None,
             gradient_duration: None,
             update_start: None,
             update_duration: None,
             memory_start: None,
-            memory_duration: None, 
-            _config: config.clone(), 
+            memory_duration: None,
+            _config: config.clone(),
             _phantom: std::marker::PhantomData,
         }
     }

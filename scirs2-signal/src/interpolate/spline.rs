@@ -363,6 +363,7 @@ pub fn cubic_hermite_interpolate(
 /// Unit tests for spline interpolation methods
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn test_cubic_spline_interpolate_no_missing() {
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);

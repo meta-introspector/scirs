@@ -184,7 +184,7 @@ where
         .collect();
 
     // Combine chunk statistics
-    let (_total_mean, total_m2__, _total_count) = combine_welford_stats(&chunk_stats);
+    let (_total_mean, total_m2__, total_count) = combine_welford_stats(&chunk_stats);
 
     Ok(total_m2__ / F::from(n - ddof).unwrap())
 }
@@ -288,7 +288,7 @@ where
 
             // Generate bootstrap sample
             for i in 0..n {
-                let idx = rng.random_range(0..n);
+                let idx = rng.gen_range(0..n);
                 sample[i] = data_arc[idx];
             }
 
@@ -301,7 +301,7 @@ where
 
 /// Helper function for parallel sum on slices
 #[allow(dead_code)]
-fn parallel_sum_slice<F>(_slice: &[F], config: &ParallelConfig) -> F
+fn parallel_sum_slice<F>(slice: &[F], config: &ParallelConfig) -> F
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum + std::fmt::Display,
 {
@@ -314,12 +314,12 @@ where
 
 /// Helper function for parallel sum on indexed arrays
 #[allow(dead_code)]
-fn parallel_sum_indexed<F, D>(_arr: &ArrayBase<D, Ix1>, config: &ParallelConfig) -> F
+fn parallel_sum_indexed<F, D>(arr: &ArrayBase<D, Ix1>, config: &ParallelConfig) -> F
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
     D: Data<Elem = F> + Sync,
 {
-    let n = _arr.len();
+    let n = arr.len();
     let chunk_size = config.get_chunk_size(n);
     let n_chunks = (n + chunk_size - 1) / chunk_size;
 
@@ -332,7 +332,7 @@ where
             let end = (start + chunk_size).min(n);
 
             (start..end)
-                .map(|i| _arr[i])
+                .map(|i| arr[i])
                 .fold(F::zero(), |acc, val| acc + val)
         })
         .reduce(|| F::zero(), |a, b| a + b)
@@ -362,11 +362,11 @@ where
 
 /// Combine Welford statistics from parallel chunks
 #[allow(dead_code)]
-fn combine_welford_stats<F>(_stats: &[(F, F, usize)]) -> (F, F, usize)
+fn combine_welford_stats<F>(stats: &[(F, F, usize)]) -> (F, F, usize)
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    _stats.iter().fold(
+    stats.iter().fold(
         (F::zero(), F::zero(), 0),
         |(mean_a, m2_a, count_a), &(mean_b, m2_b, count_b)| {
             let count = count_a + count_b;
@@ -383,7 +383,7 @@ where
 
 /// Compute correlation between two vectors
 #[allow(dead_code)]
-fn compute_correlation_pair<F>(x: &ArrayView1<F>, y: &ArrayView1<F>, mean_x: F, mean_y: F) -> F
+fn compute_correlation_pair<F>(x: &ArrayView1<F>, y: &ArrayView1<F>, mean_x: F, meany: F) -> F
 where
     F: Float + NumCast + std::fmt::Display,
 {

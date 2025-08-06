@@ -667,7 +667,7 @@ fn demo_advanced_simd_memory() -> SignalResult<()> {
 
 /// Calculate RMS (Root Mean Square) of a signal
 #[allow(dead_code)]
-fn rms(_signal: &[f64]) -> f64 {
-    let sum_squares: f64 = _signal.iter().map(|&x| x * x).sum();
-    (sum_squares / _signal.len() as f64).sqrt()
+fn rms(signal: &[f64]) -> f64 {
+    let sum_squares: f64 = signal.iter().map(|&x| x * x).sum();
+    (sum_squares / signal.len() as f64).sqrt()
 }

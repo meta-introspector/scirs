@@ -95,7 +95,7 @@ pub struct ApiVersion {
     /// Feature flags supported in this version
     pub features: BTreeSet<String>,
     /// Breaking changes from previous version
-    pub breaking_changes: Vec<String>,
+    pub breakingchanges: Vec<String>,
     /// New features in this version
     pub new_features: Vec<String>,
     /// Bug fixes in this version
@@ -534,7 +534,7 @@ pub struct ApiVersionBuilder {
     support_status: SupportStatus,
     end_of_life: Option<chrono::DateTime<chrono::Utc>>,
     features: BTreeSet<String>,
-    breaking_changes: Vec<String>,
+    breakingchanges: Vec<String>,
     new_features: Vec<String>,
     bug_fixes: Vec<String>,
     deprecated_features: Vec<String>,
@@ -553,7 +553,7 @@ impl ApiVersionBuilder {
             support_status: SupportStatus::Active,
             end_of_life: None,
             features: BTreeSet::new(),
-            breaking_changes: Vec::new(),
+            breakingchanges: Vec::new(),
             new_features: Vec::new(),
             bug_fixes: Vec::new(),
             deprecated_features: Vec::new(),
@@ -600,7 +600,7 @@ impl ApiVersionBuilder {
     /// Add a breaking change
     #[must_use]
     pub fn breaking_change(mut self, change: &str) -> Self {
-        self.breaking_changes.push(change.to_string());
+        self.breakingchanges.push(change.to_string());
         self
     }
 
@@ -658,7 +658,7 @@ impl ApiVersionBuilder {
             support_status: self.support_status,
             end_of_life: self.end_of_life,
             features: self.features,
-            breaking_changes: self.breaking_changes,
+            breakingchanges: self.breakingchanges,
             new_features: self.new_features,
             bug_fixes: self.bug_fixes,
             deprecated_features: self.deprecated_features,

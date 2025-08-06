@@ -172,7 +172,7 @@ fn bench_reduction_ops(c: &mut Criterion) {
 
 /// Benchmark matrix operations
 #[allow(dead_code)]
-fn bench_matrix_ops(c: &mut Criterion) {
+fn benchmatrix_ops(c: &mut Criterion) {
     let mut group = c.benchmark_group(matrix_ops);
     group.measurement_time(Duration::from_secs(20));
 
@@ -391,7 +391,7 @@ criterion_group!(
     bench_array_creation,
     bench_element_wise_ops,
     bench_reduction_ops,
-    bench_matrix_ops,
+    benchmatrix_ops,
     bench_array_manipulation,
     bench_statistical_ops,
     bench_memory_ops

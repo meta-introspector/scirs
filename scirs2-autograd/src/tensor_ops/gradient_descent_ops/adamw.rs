@@ -1,4 +1,4 @@
-use crate::ndarray__ext::NdArray;
+use crate::ndarray_ext::NdArray;
 use crate::op::OpError;
 use crate::Float;
 

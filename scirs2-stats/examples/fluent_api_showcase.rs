@@ -297,9 +297,9 @@ fn display_api_benefits() {
     println!();
     println!("   // Custom configuration");
     println!("   let config = FluentStatsConfig {{");
-    println!("       auto_optimization_level: AutoOptimizationLevel::Intelligent,");
-    println!("       memory_strategy: MemoryStrategy::Adaptive,");
-    println!("       result_format: ResultFormat::Comprehensive,");
+    println!("       auto_optimizationlevel: AutoOptimizationLevel::Intelligent,");
+    println!("       memorystrategy: MemoryStrategy::Adaptive,");
+    println!("       resultformat: ResultFormat::Comprehensive,");
     println!("       ..Default::default()");
     println!("   }};");
     println!("   let results = stats_with(config).descriptive().mean().execute()?;");

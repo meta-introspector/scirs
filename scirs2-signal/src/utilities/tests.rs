@@ -7,11 +7,13 @@ use super::super::spectral::*;
 use crate::utilities::spectral::spectral_centroid;
 use crate::utilities::spectral::spectral_flux;
 use crate::utilities::spectral::spectral_rolloff;
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
+use approx::assert_relative_eq;
 
 #[allow(unused_imports)]
 #[cfg(test)]
 mod spectral_tests {
+    use super::*;
     #[test]
     fn test_energy_spectral_density() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];

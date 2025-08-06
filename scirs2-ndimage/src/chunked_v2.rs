@@ -193,8 +193,8 @@ struct UniformProcessorV2 {
 }
 
 impl UniformProcessorV2 {
-    fn new(_size: Vec<usize>, border_mode: BorderMode) -> Self {
-        Self { _size, border_mode }
+    fn new(_size: Vec<usize>, bordermode: BorderMode) -> Self {
+        Self { size, border_mode }
     }
 }
 
@@ -284,9 +284,9 @@ where
     T: Clone,
     D: Dimension,
 {
-    fn new(_kernel: Array<T, D>, border_mode: BorderMode) -> Self {
+    fn new(_kernel: Array<T, D>, bordermode: BorderMode) -> Self {
         Self {
-            _kernel,
+            kernel,
             border_mode,
         }
     }

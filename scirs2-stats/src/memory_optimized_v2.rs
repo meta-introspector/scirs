@@ -47,12 +47,12 @@ pub struct MemoryPool<F> {
 }
 
 impl<F: Float> MemoryPool<F> {
-    pub fn new(_config: MemoryConfig) -> Self {
+    pub fn new(config: MemoryConfig) -> Self {
         // Create pools for different sizes (powers of 2)
         let pools = vec![VecDeque::new(); 20]; // Up to 2^20 elements
         Self {
             pools: RefCell::new(pools),
-            config: _config,
+            config: config,
         }
     }
 
@@ -149,7 +149,11 @@ where
     let mut sum_sq_dev = F::zero();
     let mut c = F::zero(); // Kahan compensation
 
-    for chunk in x.exact_chunks(cache_elements) {
+    let chunk_size = cache_elements.min(n); // Ensure we don't have empty chunks
+    
+    // Process complete chunks
+    let mut processed = 0;
+    for chunk in x.exact_chunks(chunk_size) {
         for &val in chunk.iter() {
             let dev = val - mean;
             let sq_dev = dev * dev;
@@ -159,7 +163,21 @@ where
             let t = sum_sq_dev + y;
             c = (t - sum_sq_dev) - y;
             sum_sq_dev = t;
+            processed += 1;
         }
+    }
+    
+    // Process remainder elements
+    for i in processed..n {
+        let val = x[i];
+        let dev = val - mean;
+        let sq_dev = dev * dev;
+
+        // Kahan summation for squared deviations
+        let y = sq_dev - c;
+        let t = sum_sq_dev + y;
+        c = (t - sum_sq_dev) - y;
+        sum_sq_dev = t;
     }
 
     Ok(sum_sq_dev / F::from(n - ddof).unwrap())
@@ -184,9 +202,9 @@ where
     F: Float + NumCast,
     D: Data<Elem = F>,
 {
-    pub fn new(_data: &'a ArrayBase<D, Ix1>) -> Self {
+    pub fn new(data: &'a ArrayBase<D, Ix1>) -> Self {
         Self {
-            data: _data,
+            data: data,
             mean: RefCell::new(None),
             variance: RefCell::new(None),
             min: RefCell::new(None),
@@ -287,7 +305,7 @@ pub struct StreamingCovariance<F> {
 }
 
 impl<F: Float + NumCast + std::fmt::Display> StreamingCovariance<F> {
-    pub fn new(n_features: usize, pool: Rc<MemoryPool<F>>) -> Self {
+    pub fn new(nfeatures: usize, pool: Rc<MemoryPool<F>>) -> Self {
         Self {
             n: 0,
             means: vec![F::zero(); n_features],
@@ -356,7 +374,7 @@ pub struct MemoryMappedStats {
 
 #[cfg(feature = "memmap")]
 impl MemoryMappedStats {
-    pub fn new(_path: &std::path::Path) -> StatsResult<Self> {
+    pub fn new(path: &std::path::Path) -> StatsResult<Self> {
         use std::fs::OpenOptions;
 
         let file = OpenOptions::new()

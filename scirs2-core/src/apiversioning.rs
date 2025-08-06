@@ -29,15 +29,15 @@ impl Version {
     }
 
     /// Parse a version string like "1.2.3" or "1.2.3-beta.1"
-    pub fn parse(version_str: &str) -> Result<Self, String> {
+    pub fn parse(versionstr: &str) -> Result<Self, String> {
         // Split on '-' to handle version suffixes like "-beta.1"
-        let base_version = version_str.split('-').next().unwrap_or(version_str);
+        let base_version = versionstr.split('-').next().unwrap_or(versionstr);
 
         // Split the base version on '.'
         let parts: Vec<&str> = base_version.split('.').collect();
 
         if parts.len() < 3 {
-            return Err(format!("Invalid version format: {version_str}"));
+            return Err(format!("Invalid version format: {versionstr}"));
         }
 
         let major = parts[0].parse::<u32>().map_err(|_| parts[0].to_string())?;
@@ -91,8 +91,8 @@ pub trait Versioned {
 #[macro_export]
 macro_rules! since_version {
     ($major:expr, $minor:expr, $patch:expr) => {
-        fn since_version() -> $crate::api_versioning::Version {
-            $crate::api_versioning::Version::new($major, $minor, $patch)
+        fn since_version() -> $crate::apiversioning::Version {
+            $crate::apiversioning::Version::new($major, $minor, $patch)
         }
     };
 }
@@ -101,8 +101,8 @@ macro_rules! since_version {
 #[macro_export]
 macro_rules! deprecated_in {
     ($major:expr, $minor:expr, $patch:expr) => {
-        fn deprecated_version() -> Option<$crate::api_versioning::Version> {
-            Some($crate::api_versioning::Version::new($major, $minor, $patch))
+        fn deprecated_version() -> Option<$crate::apiversioning::Version> {
+            Some($crate::apiversioning::Version::new($major, $minor, $patch))
         }
     };
 }
@@ -119,7 +119,7 @@ pub struct ApiEntry {
     pub since: Version,
     pub deprecated: Option<Version>,
     pub replacement: Option<String>,
-    pub breaking_changes: Vec<BreakingChange>,
+    pub breakingchanges: Vec<BreakingChange>,
     pub example_usage: Option<String>,
     pub migration_example: Option<String>,
 }
@@ -170,7 +170,7 @@ impl VersionRegistry {
                 since,
                 deprecated: None,
                 replacement: None,
-                breaking_changes: Vec::new(),
+                breakingchanges: Vec::new(),
                 example_usage: None,
                 migration_example: None,
             });
@@ -200,7 +200,7 @@ impl VersionRegistry {
                 since,
                 deprecated: None,
                 replacement: None,
-                breaking_changes: Vec::new(),
+                breakingchanges: Vec::new(),
                 example_usage: Some(example.into()),
                 migration_example: None,
             });
@@ -245,14 +245,14 @@ impl VersionRegistry {
     /// Add a breaking change to an API
     pub fn add_breaking_change(
         &mut self,
-        api_name: &str,
+        apiname: &str,
         change: BreakingChange,
     ) -> Result<(), String> {
-        if let Some(entry) = self.entries.iter_mut().find(|e| e.name == api_name) {
-            entry.breaking_changes.push(change);
+        if let Some(entry) = self.entries.iter_mut().find(|e| e.name == apiname) {
+            entry.breakingchanges.push(change);
             Ok(())
         } else {
-            Err(format!("API '{api_name}' not found in registry"))
+            Err(format!("API '{apiname}' not found in registry"))
         }
     }
 
@@ -284,13 +284,13 @@ impl VersionRegistry {
         ));
 
         // Breaking changes analysis
-        let breaking_changes: Vec<_> = self
+        let breakingchanges: Vec<_> = self
             .entries
             .iter()
             .filter_map(|e| {
-                if !e.breaking_changes.is_empty() {
+                if !e.breakingchanges.is_empty() {
                     let relevant_changes: Vec<_> = e
-                        .breaking_changes
+                        .breakingchanges
                         .iter()
                         .filter(|bc| bc.version > *from && bc.version <= *to)
                         .collect();
@@ -305,10 +305,10 @@ impl VersionRegistry {
             })
             .collect();
 
-        if !breaking_changes.is_empty() {
+        if !breakingchanges.is_empty() {
             guide.push_str("## ⚠️ Breaking Changes\n\n");
 
-            for (api, changes) in breaking_changes {
+            for (api, changes) in breakingchanges {
                 guide.push_str(&format!(
                     "### {name} ({module})\n\n",
                     name = api.name,
@@ -496,7 +496,7 @@ pub struct Parameter {
     pub name: String,
     pub type_name: String,
     pub is_optional: bool,
-    pub default_value: Option<String>,
+    pub defaultvalue: Option<String>,
 }
 
 /// API visibility levels
@@ -565,7 +565,7 @@ pub struct CompatibilityCheckResult {
 /// Compatibility violation details
 #[derive(Debug, Clone)]
 pub struct CompatibilityViolation {
-    pub api_name: String,
+    pub apiname: String,
     pub violation_type: CompatibilityRuleType,
     pub severity: CompatibilitySeverity,
     pub description: String,
@@ -577,7 +577,7 @@ pub struct CompatibilityViolation {
 /// Compatibility warning
 #[derive(Debug, Clone)]
 pub struct CompatibilityWarning {
-    pub api_name: String,
+    pub apiname: String,
     pub message: String,
     pub impact: String,
 }
@@ -585,7 +585,7 @@ pub struct CompatibilityWarning {
 /// Compatibility suggestion
 #[derive(Debug, Clone)]
 pub struct CompatibilitySuggestion {
-    pub api_name: String,
+    pub apiname: String,
     pub suggestion: String,
     pub rationale: String,
 }
@@ -675,14 +675,14 @@ impl ApiCompatibilityChecker {
     }
 
     /// Check compatibility between current and frozen APIs
-    pub fn check_compatibility(&self, current_apis: &[ApiSignature]) -> CompatibilityCheckResult {
+    pub fn check_compatibility(&self, currentapis: &[ApiSignature]) -> CompatibilityCheckResult {
         let mut violations = Vec::new();
         let mut warnings = Vec::new();
         let mut suggestions = Vec::new();
 
         if self.freeze_status == ApiFreezeStatus::Unfrozen {
             warnings.push(CompatibilityWarning {
-                api_name: "*".to_string(),
+                apiname: "*".to_string(),
                 message: "APIs are not frozen - no compatibility checking performed".to_string(),
                 impact: "API changes may break compatibility".to_string(),
             });
@@ -699,12 +699,12 @@ impl ApiCompatibilityChecker {
         for frozen_api in &self.frozen_apis {
             if frozen_api.visibility == Visibility::Public
                 && frozen_api.stability == StabilityLevel::Stable
-                && !current_apis
+                && !currentapis
                     .iter()
                     .any(|api| api.name == frozen_api.name && api.module == frozen_api.module)
             {
                 violations.push(CompatibilityViolation {
-                    api_name: format!(
+                    apiname: format!(
                         "{module}::{name}",
                         module = frozen_api.module,
                         name = frozen_api.name
@@ -720,7 +720,7 @@ impl ApiCompatibilityChecker {
         }
 
         // Check for signature changes
-        for current_api in current_apis {
+        for current_api in currentapis {
             if let Some(frozen_api) = self
                 .frozen_apis
                 .iter()
@@ -734,7 +734,7 @@ impl ApiCompatibilityChecker {
 
                     if has_new_required {
                         violations.push(CompatibilityViolation {
-                            api_name: format!(
+                            apiname: format!(
                                 "{module}::{name}",
                                 module = current_api.module,
                                 name = current_api.name
@@ -753,7 +753,7 @@ impl ApiCompatibilityChecker {
                 // Check visibility reduction
                 if Self::is_visibility_reduced(&frozen_api.visibility, &current_api.visibility) {
                     violations.push(CompatibilityViolation {
-                        api_name: format!(
+                        apiname: format!(
                             "{module}::{name}",
                             module = current_api.module,
                             name = current_api.name
@@ -770,7 +770,7 @@ impl ApiCompatibilityChecker {
                 // Check return type changes
                 if frozen_api.return_type != current_api.return_type {
                     violations.push(CompatibilityViolation {
-                        api_name: format!(
+                        apiname: format!(
                             "{module}::{name}",
                             module = current_api.module,
                             name = current_api.name
@@ -797,7 +797,7 @@ impl ApiCompatibilityChecker {
                             && old_param.type_name != new_param.type_name
                         {
                             violations.push(CompatibilityViolation {
-                                api_name: {
+                                apiname: {
                                     let module = &current_api.module;
                                     let name = &current_api.name;
                                     format!("{module}::{name}")
@@ -821,7 +821,7 @@ impl ApiCompatibilityChecker {
                 // Check signature hash changes (catch-all for other changes)
                 if frozen_api.signature_hash != current_api.signature_hash
                     && !violations.iter().any(|v| {
-                        v.api_name
+                        v.apiname
                             == format!(
                                 "{module}::{name}",
                                 module = current_api.module,
@@ -830,7 +830,7 @@ impl ApiCompatibilityChecker {
                     })
                 {
                     violations.push(CompatibilityViolation {
-                        api_name: format!(
+                        apiname: format!(
                             "{module}::{name}",
                             module = current_api.module,
                             name = current_api.name
@@ -849,14 +849,14 @@ impl ApiCompatibilityChecker {
         }
 
         // Generate suggestions for new APIs
-        for current_api in current_apis {
+        for current_api in currentapis {
             if !self
                 .frozen_apis
                 .iter()
                 .any(|api| api.name == current_api.name && api.module == current_api.module)
             {
                 suggestions.push(CompatibilitySuggestion {
-                    api_name: format!(
+                    apiname: format!(
                         "{module}::{name}",
                         module = current_api.module,
                         name = current_api.name
@@ -910,7 +910,7 @@ impl ApiCompatibilityChecker {
                 report.push_str(&format!(
                     "{} **{}** ({:?}): {}\n",
                     severity_icon,
-                    violation.api_name,
+                    violation.apiname,
                     violation.violation_type,
                     violation.description
                 ));
@@ -927,7 +927,7 @@ impl ApiCompatibilityChecker {
             for warning in &result.warnings {
                 report.push_str(&format!(
                     "- **{}**: {} (Impact: {})\n",
-                    warning.api_name, warning.message, warning.impact
+                    warning.apiname, warning.message, warning.impact
                 ));
             }
             report.push('\n');
@@ -938,7 +938,7 @@ impl ApiCompatibilityChecker {
             for suggestion in &result.suggestions {
                 report.push_str(&format!(
                     "- **{}**: {} ({})\n",
-                    suggestion.api_name, suggestion.suggestion, suggestion.rationale
+                    suggestion.apiname, suggestion.suggestion, suggestion.rationale
                 ));
             }
             report.push('\n');
@@ -1026,7 +1026,7 @@ pub fn create_api_signature(
         param.name.hash(&mut hasher);
         param.type_name.hash(&mut hasher);
         param.is_optional.hash(&mut hasher);
-        if let Some(ref default) = param.default_value {
+        if let Some(ref default) = param.defaultvalue {
             default.hash(&mut hasher);
         }
     }
@@ -1067,13 +1067,13 @@ fn get_test_frozen_apis() -> Vec<ApiSignature> {
                     name: "a".to_string(),
                     type_name: "&ArrayView1<Self>".to_string(),
                     is_optional: false,
-                    default_value: None,
+                    defaultvalue: None,
                 },
                 Parameter {
                     name: "b".to_string(),
                     type_name: "&ArrayView1<Self>".to_string(),
                     is_optional: false,
-                    default_value: None,
+                    defaultvalue: None,
                 },
             ],
             Some("Array1<Self>".to_string()),
@@ -1088,13 +1088,13 @@ fn get_test_frozen_apis() -> Vec<ApiSignature> {
                     name: "a".to_string(),
                     type_name: "&ArrayView1<Self>".to_string(),
                     is_optional: false,
-                    default_value: None,
+                    defaultvalue: None,
                 },
                 Parameter {
                     name: "b".to_string(),
                     type_name: "&ArrayView1<Self>".to_string(),
                     is_optional: false,
-                    default_value: None,
+                    defaultvalue: None,
                 },
             ],
             Some("Array1<Self>".to_string()),
@@ -1109,13 +1109,13 @@ fn get_test_frozen_apis() -> Vec<ApiSignature> {
                     name: "a".to_string(),
                     type_name: "&ArrayView1<Self>".to_string(),
                     is_optional: false,
-                    default_value: None,
+                    defaultvalue: None,
                 },
                 Parameter {
                     name: "b".to_string(),
                     type_name: "&ArrayView1<Self>".to_string(),
                     is_optional: false,
-                    default_value: None,
+                    defaultvalue: None,
                 },
             ],
             Some("Self".to_string()),
@@ -1131,13 +1131,13 @@ fn get_test_frozen_apis() -> Vec<ApiSignature> {
                     name: "a".to_string(),
                     type_name: "&ArrayView1<Self>".to_string(),
                     is_optional: false,
-                    default_value: None,
+                    defaultvalue: None,
                 },
                 Parameter {
                     name: "b".to_string(),
                     type_name: "&ArrayView1<Self>".to_string(),
                     is_optional: false,
-                    default_value: None,
+                    defaultvalue: None,
                 },
             ],
             Some("Array1<Self>".to_string()),
@@ -1152,19 +1152,19 @@ fn get_test_frozen_apis() -> Vec<ApiSignature> {
                     name: "a".to_string(),
                     type_name: "&ArrayView1<Self>".to_string(),
                     is_optional: false,
-                    default_value: None,
+                    defaultvalue: None,
                 },
                 Parameter {
                     name: "b".to_string(),
                     type_name: "&ArrayView1<Self>".to_string(),
                     is_optional: false,
-                    default_value: None,
+                    defaultvalue: None,
                 },
                 Parameter {
                     name: "c".to_string(),
                     type_name: "&ArrayView1<Self>".to_string(),
                     is_optional: false,
-                    default_value: None,
+                    defaultvalue: None,
                 },
             ],
             Some("Array1<Self>".to_string()),
@@ -1173,7 +1173,7 @@ fn get_test_frozen_apis() -> Vec<ApiSignature> {
         ),
         create_api_signature(
             "Version",
-            "api_versioning",
+            "apiversioning",
             vec![],
             None,
             Visibility::Public,
@@ -1181,7 +1181,7 @@ fn get_test_frozen_apis() -> Vec<ApiSignature> {
         ),
         create_api_signature(
             "ApiCompatibilityChecker",
-            "api_versioning",
+            "apiversioning",
             vec![],
             None,
             Visibility::Public,
@@ -1306,7 +1306,7 @@ mod tests {
                 name: "param1".to_string(),
                 type_name: "i32".to_string(),
                 is_optional: false,
-                default_value: None,
+                defaultvalue: None,
             }],
             Some("String".to_string()),
             Visibility::Public,
@@ -1334,7 +1334,7 @@ mod tests {
                 name: "param1".to_string(),
                 type_name: "i32".to_string(),
                 is_optional: false,
-                default_value: None,
+                defaultvalue: None,
             }],
             Some("String".to_string()),
             Visibility::Public,
@@ -1351,7 +1351,7 @@ mod tests {
                 name: "param1".to_string(),
                 type_name: "f64".to_string(), // Changed type
                 is_optional: false,
-                default_value: None,
+                defaultvalue: None,
             }],
             Some("String".to_string()),
             Visibility::Public,
@@ -1447,7 +1447,7 @@ mod tests {
                 name: "param1".to_string(),
                 type_name: "i32".to_string(),
                 is_optional: false,
-                default_value: None,
+                defaultvalue: None,
             }],
             None,
             Visibility::Public,
@@ -1465,13 +1465,13 @@ mod tests {
                     name: "param1".to_string(),
                     type_name: "i32".to_string(),
                     is_optional: false,
-                    default_value: None,
+                    defaultvalue: None,
                 },
                 Parameter {
                     name: "param2".to_string(),
                     type_name: "String".to_string(),
                     is_optional: false, // New required parameter
-                    default_value: None,
+                    defaultvalue: None,
                 },
             ],
             None,
@@ -1537,7 +1537,7 @@ mod tests {
                 name: "param".to_string(),
                 type_name: "i32".to_string(),
                 is_optional: false,
-                default_value: None,
+                defaultvalue: None,
             }],
             Some("String".to_string()),
             Visibility::Public,

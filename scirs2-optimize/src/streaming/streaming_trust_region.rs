@@ -197,7 +197,7 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
     }
 
     /// Update trust region radius based on success ratio
-    fn update_trust_radius(&mut self, ratio: f64, step_norm: f64) {
+    fn update_trust_radius(&mut self, ratio: f64, stepnorm: f64) {
         const VERY_SUCCESSFUL: f64 = 0.75;
         const SUCCESSFUL: f64 = 0.25;
         const EXPANSION_FACTOR: f64 = 2.0;
@@ -220,7 +220,7 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
 }
 
 impl<T: StreamingObjective + Clone> StreamingOptimizer for StreamingTrustRegion<T> {
-    fn update(&mut self, data_point: &StreamingDataPoint) -> Result<()> {
+    fn update(&mut self, datapoint: &StreamingDataPoint) -> Result<()> {
         let start_time = std::time::Instant::now();
 
         // Evaluate current function value

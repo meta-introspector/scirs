@@ -8,6 +8,7 @@
 use crate::base::{DiGraph, EdgeWeight, Graph, Node};
 use crate::error::{GraphError, Result};
 use rand::prelude::*;
+use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -16,7 +17,6 @@ use std::hash::Hash;
 use std::io::{BufReader, BufWriter, Write};
 use std::path::Path;
 use std::sync::atomic::AtomicUsize;
-use rand::seq::SliceRandom;
 
 /// Configuration for Node2Vec embedding algorithm
 #[derive(Debug, Clone)]
@@ -273,16 +273,16 @@ pub struct NegativeSampler<N: Node> {
 
 impl<N: Node> NegativeSampler<N> {
     /// Create a new negative sampler from graph
-    pub fn new<E, Ix>(_graph: &Graph<N, E, Ix>) -> Self
+    pub fn new<E, Ix>(graph: &Graph<N, E, Ix>) -> Self
     where
         N: Clone + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
-        let vocabulary: Vec<N> = _graph.nodes().into_iter().cloned().collect();
+        let vocabulary: Vec<N> = graph.nodes().into_iter().cloned().collect();
         let node_degrees = vocabulary
             .iter()
-            .map(|node| _graph.degree(node) as f64)
+            .map(|node| graph.degree(node) as f64)
             .collect::<Vec<_>>();
 
         // Use subsampling with power 0.75 as in Word2Vec
@@ -358,17 +358,15 @@ pub struct Embedding {
 
 impl Embedding {
     /// Create a new embedding with given dimensions
-    pub fn new(_dimensions: usize) -> Self {
+    pub fn new(dimensions: usize) -> Self {
         Embedding {
             vector: vec![0.0; _dimensions],
         }
     }
 
     /// Create a random embedding
-    pub fn random(_dimensions: usize, rng: &mut impl Rng) -> Self {
-        let vector: Vec<f64> = (0.._dimensions)
-            .map(|_| rng.gen_range(-0.5..0.5))
-            .collect();
+    pub fn random(dimensions: usize, rng: &mut impl Rng) -> Self {
+        let vector: Vec<f64> = (0.._dimensions).map(|_| rng.gen_range(-0.5..0.5)).collect();
         Embedding { vector }
     }
 
@@ -461,7 +459,7 @@ impl Embedding {
     }
 
     /// Update embedding using gradient (SIMD optimized)
-    pub fn update_gradient(&mut self, gradient: &[f64], learning_rate: f64) {
+    pub fn update_gradient(&mut self, gradient: &[f64], learningrate: f64) {
         for (emb, &grad) in self.vector.iter_mut().zip(gradient.iter()) {
             *emb -= learning_rate * grad;
         }
@@ -481,11 +479,11 @@ pub struct EmbeddingModel<N: Node> {
 
 impl<N: Node> EmbeddingModel<N> {
     /// Create a new embedding model
-    pub fn new(_dimensions: usize) -> Self {
+    pub fn new(dimensions: usize) -> Self {
         EmbeddingModel {
             embeddings: HashMap::new(),
             context_embeddings: HashMap::new(),
-            _dimensions,
+            dimensions,
         }
     }
 
@@ -655,7 +653,8 @@ impl<N: Node> EmbeddingModel<N> {
         pairs: &[ContextPair<N>],
         negative_sampler: &NegativeSampler<N>,
         learning_rate: f64,
-        negative_samples: usize, _rng: &mut impl Rng,
+        negative_samples: usize,
+        _rng: &mut impl Rng,
     ) -> Result<()>
     where
         N: Clone + Send + Sync,
@@ -754,7 +753,8 @@ impl<N: Node> EmbeddingModel<N> {
         pairs: &[ContextPair<N>],
         negative_sampler: &NegativeSampler<N>,
         learning_rate: f64,
-        negative_samples: usize, _rng: &mut impl Rng,
+        negative_samples: usize,
+        _rng: &mut impl Rng,
     ) -> Result<()>
     where
         N: Clone + Send + Sync,
@@ -877,7 +877,7 @@ impl<N: Node> EmbeddingModel<N> {
     /// Returns AUC score for predicting missing edges
     #[allow(dead_code)]
     pub fn evaluate_link_prediction<E, Ix>(
-        &self_graph: &Graph<N, E, Ix>,
+        self_graph: &Graph<N, E, Ix>,
         test_edges: &[(N, N)],
         negative_edges: &[(N, N)],
     ) -> Result<f64>
@@ -889,7 +889,7 @@ impl<N: Node> EmbeddingModel<N> {
         let mut scores = Vec::new();
         let mut labels = Vec::new();
 
-        // Positive examples (existing _edges)
+        // Positive examples (existing edges)
         for (u, v) in test_edges {
             if let (Some(u_emb), Some(v_emb)) = (self.embeddings.get(u), self.embeddings.get(v)) {
                 let similarity = u_emb.cosine_similarity(v_emb)?;
@@ -898,7 +898,7 @@ impl<N: Node> EmbeddingModel<N> {
             }
         }
 
-        // Negative examples (non-existing _edges)
+        // Negative examples (non-existing edges)
         for (u, v) in negative_edges {
             if let (Some(u_emb), Some(v_emb)) = (self.embeddings.get(u), self.embeddings.get(v)) {
                 let similarity = u_emb.cosine_similarity(v_emb)?;
@@ -913,15 +913,15 @@ impl<N: Node> EmbeddingModel<N> {
     }
 
     /// Calculate AUC (Area Under Curve) for binary classification
-    fn calculate_auc(_scores: &[f64], labels: &[f64]) -> Result<f64> {
-        if _scores.len() != labels.len() {
+    fn calculate_auc(scores: &[f64], labels: &[f64]) -> Result<f64> {
+        if scores.len() != labels.len() {
             return Err(GraphError::ComputationError(
                 "Scores and labels must have same length".to_string(),
             ));
         }
 
         // Create sorted pairs (score, label)
-        let mut pairs: Vec<_> = _scores.iter().zip(labels.iter()).collect();
+        let mut pairs: Vec<_> = scores.iter().zip(labels.iter()).collect();
         pairs.sort_by(|a, b| b.0.partial_cmp(a.0).unwrap_or(std::cmp::Ordering::Equal));
 
         let mut tp = 0.0; // True positives
@@ -1242,7 +1242,8 @@ impl<N: Node> RandomWalkGenerator<N> {
     /// Create a new random walk generator
     pub fn new() -> Self {
         RandomWalkGenerator {
-            rng: rand::rng(), _phantom: std::marker::PhantomData,
+            rng: rand::rng(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -1382,7 +1383,7 @@ impl<N: Node> RandomWalkGenerator<N> {
         let mut _walks = Vec::new();
         for _ in 0..num_walks {
             let walk = self.simple_random_walk(graph, start, walk_length)?;
-            _walks.push(walk);
+            walks.push(walk);
         }
         Ok(_walks)
     }
@@ -1397,10 +1398,10 @@ pub struct Node2Vec<N: Node> {
 
 impl<N: Node> Node2Vec<N> {
     /// Create a new Node2Vec instance
-    pub fn new(_config: Node2VecConfig) -> Self {
+    pub fn new(config: Node2VecConfig) -> Self {
         Node2Vec {
             model: EmbeddingModel::new(_config.dimensions),
-            _config,
+            config,
             walk_generator: RandomWalkGenerator::new(),
         }
     }
@@ -1503,10 +1504,10 @@ pub struct DeepWalk<N: Node> {
 
 impl<N: Node> DeepWalk<N> {
     /// Create a new DeepWalk instance
-    pub fn new(_config: DeepWalkConfig) -> Self {
+    pub fn new(config: DeepWalkConfig) -> Self {
         DeepWalk {
             model: EmbeddingModel::new(_config.dimensions),
-            _config,
+            config,
             walk_generator: RandomWalkGenerator::new(),
         }
     }
@@ -1620,9 +1621,9 @@ pub struct AdvancedEmbeddingTrainer<N: Node> {
 }
 
 impl<N: Node + Clone + Hash + Eq> AdvancedEmbeddingTrainer<N> {
-    pub fn new(_config: OptimizationConfig) -> Self {
+    pub fn new(config: OptimizationConfig) -> Self {
         AdvancedEmbeddingTrainer {
-            _config,
+            config,
             optimizer_state: OptimizerState::new(),
             metrics_history: Vec::new(),
             current_metrics: TrainingMetrics::default(),
@@ -1638,7 +1639,7 @@ impl<N: Node + Clone + Hash + Eq> AdvancedEmbeddingTrainer<N> {
     }
 
     /// Compute adaptive learning rate based on schedule
-    pub fn compute_learning_rate(&self, epoch: usize, total_epochs: usize) -> f64 {
+    pub fn compute_learning_rate(&self, epoch: usize, totalepochs: usize) -> f64 {
         let progress = epoch as f64 / total_epochs as f64;
 
         match self.config.lr_schedule {
@@ -1871,7 +1872,7 @@ pub struct FastGraphEmbedding<N: Node> {
 }
 
 impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FastGraphEmbedding<N> {
-    pub fn new(_dimensions: usize, quality_factor: usize) -> Self {
+    pub fn new(_dimensions: usize, qualityfactor: usize) -> Self {
         let pool_size = 1000; // Preallocate 1000 vectors
         let mut memory_pool = Vec::with_capacity(pool_size);
         for _ in 0..pool_size {
@@ -1883,9 +1884,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FastGraphEmbedding<N> {
         let projection_size = _dimensions * quality_factor;
         let mut projection_matrix = Vec::new();
         for _ in 0..projection_size {
-            let row: Vec<f32> = (0.._dimensions)
-                .map(|_| rng.gen_range(-1.0..1.0))
-                .collect();
+            let row: Vec<f32> = (0.._dimensions).map(|_| rng.gen_range(-1.0..1.0)).collect();
             projection_matrix.push(row);
         }
 
@@ -2040,11 +2039,11 @@ pub struct Graph2Vec<N: Node> {
 }
 
 impl<N: Node + Clone + Hash + Eq> Graph2Vec<N> {
-    pub fn new(_dimensions: usize, wl_iterations: usize, min_pattern_freq: usize) -> Self {
+    pub fn new(_dimensions: usize, wl_iterations: usize, min_patternfreq: usize) -> Self {
         Graph2Vec {
             vocabulary: HashMap::new(),
             graph_embeddings: HashMap::new(),
-            _dimensions,
+            dimensions,
             wl_iterations,
             min_pattern_freq_phantom: std::marker::PhantomData,
         }
@@ -2053,7 +2052,8 @@ impl<N: Node + Clone + Hash + Eq> Graph2Vec<N> {
     /// Extract graph-level features using Weisfeiler-Lehman kernel
     pub fn extract_wl_features<E, Ix>(
         &mut self,
-        graph: &Graph<N, E, Ix>, _graph_id: &str,
+        graph: &Graph<N, E, Ix>,
+        _graph_id: &str,
     ) -> Result<Vec<String>>
     where
         N: std::fmt::Debug,
@@ -2190,12 +2190,12 @@ impl<N: Node + Clone + Hash + Eq> Graph2Vec<N> {
     }
 
     /// Get embedding for a graph
-    pub fn get_graph_embedding(&self, graph_id: &str) -> Option<&Vec<f64>> {
+    pub fn get_graph_embedding(&self, graphid: &str) -> Option<&Vec<f64>> {
         self.graph_embeddings.get(graph_id)
     }
 
     /// Compute similarity between two graphs
-    pub fn graph_similarity(&self, graph_id1: &str, graph_id2: &str) -> f64 {
+    pub fn graph_similarity(&self, graph_id1: &str, graphid2: &str) -> f64 {
         if let (Some(emb1), Some(emb2)) = (
             self.graph_embeddings.get(graph_id1),
             self.graph_embeddings.get(graph_id2),

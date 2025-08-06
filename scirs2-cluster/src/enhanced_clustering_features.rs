@@ -414,7 +414,7 @@ impl TransformerClusterEmbedder {
         }
     }
 
-    fn layer_normalize(&self, embeddings: &Array2<f64>, norm_idx: usize) -> Result<Array2<f64>> {
+    fn layer_normalize(&self, embeddings: &Array2<f64>, normidx: usize) -> Result<Array2<f64>> {
         let (seq_len, embed_dim) = embeddings.dim();
         let mut normalized = embeddings.clone();
 
@@ -465,14 +465,14 @@ impl TransformerClusterEmbedder {
         }
 
         let ffn_weights = &self.ffn_layers[layer_idx];
-        let hidden_dim = ffn_weights.ncols();
+        let hidden_dim = ffnweights.ncols();
 
         // First linear layer with ReLU activation
         let mut hidden = Array2::zeros((seq_len, hidden_dim));
         for i in 0..seq_len {
             for j in 0..hidden_dim {
                 for k in 0..embed_dim {
-                    if k < ffn_weights.nrows() {
+                    if k < ffnweights.nrows() {
                         hidden[[i, j]] += embeddings[[i, k]] * ffn_weights[[k, j]];
                     }
                 }
@@ -487,12 +487,12 @@ impl TransformerClusterEmbedder {
             for j in 0..embed_dim {
                 for k in 0..hidden_dim {
                     // Simplified projection (using transpose-like operation)
-                    let weight_idx = (k * embed_dim + j) % ffn_weights.len();
+                    let weight_idx = (k * embed_dim + j) % ffnweights.len();
                     let (wi, wj) = (
-                        weight_idx / ffn_weights.ncols(),
-                        weight_idx % ffn_weights.ncols(),
+                        weight_idx / ffnweights.ncols(),
+                        weight_idx % ffnweights.ncols(),
                     );
-                    if wi < ffn_weights.nrows() && wj < ffn_weights.ncols() {
+                    if wi < ffnweights.nrows() && wj < ffnweights.ncols() {
                         output[[i, j]] += hidden[[i, k]] * ffn_weights[[wi, wj]];
                     }
                 }
@@ -818,7 +818,7 @@ impl ReinforcementLearningAgent {
         Ok(rewards)
     }
 
-    fn compute_local_density(&self, data: &ArrayView2<f64>, point_idx: usize) -> f64 {
+    fn compute_local_density(&self, data: &ArrayView2<f64>, pointidx: usize) -> f64 {
         let mut density = 0.0;
         let n_samples = data.nrows();
 
@@ -836,7 +836,7 @@ impl ReinforcementLearningAgent {
         density / (n_samples - 1) as f64
     }
 
-    fn evaluate_embedding_quality(&self, embeddings: &Array2<f64>, point_idx: usize) -> f64 {
+    fn evaluate_embedding_quality(&self, embeddings: &Array2<f64>, pointidx: usize) -> f64 {
         // Simple quality metric based on embedding norm and distribution
         let mut norm = 0.0;
         for j in 0..embeddings.ncols() {
@@ -888,7 +888,7 @@ impl NeuralArchitectureSearchEngine {
         Ok(total_score / n_samples as f64)
     }
 
-    fn compute_embedding_variance(&self, embeddings: &Array2<f64>, sample_idx: usize) -> f64 {
+    fn compute_embedding_variance(&self, embeddings: &Array2<f64>, sampleidx: usize) -> f64 {
         let mut variance = 0.0;
         let embed_dim = embeddings.ncols();
 
@@ -1075,7 +1075,7 @@ impl DeepEnsembleCoordinator {
         agreement_scores
     }
 
-    fn compute_local_density_uncertainty(&self, data: &ArrayView2<f64>, point_idx: usize) -> f64 {
+    fn compute_local_density_uncertainty(&self, data: &ArrayView2<f64>, pointidx: usize) -> f64 {
         let n_samples = data.nrows();
         let mut local_density = 0.0;
 

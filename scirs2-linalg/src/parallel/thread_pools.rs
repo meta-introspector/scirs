@@ -471,14 +471,14 @@ pub struct AdvancedPerformanceThreadPool {
 
 impl AdvancedPerformanceThreadPool {
     /// Create a new advanced-performance thread pool
-    pub fn new(_config: AdvancedThreadPoolConfig) -> LinalgResult<Self> {
+    pub fn new(config: AdvancedThreadPoolConfig) -> LinalgResult<Self> {
         let stats = Arc::new(Mutex::new(AdvancedPerformanceStats::default()));
-        let thread_manager = Arc::new(Mutex::new(DynamicThreadManager::new(&_config.base_config)?));
+        let thread_manager = Arc::new(Mutex::new(DynamicThreadManager::new(&config.base_config)?));
         let workload_predictor = Arc::new(Mutex::new(WorkloadPredictor::new()));
         let profiler = Arc::new(Mutex::new(ThreadPoolProfiler::new()));
 
         Ok(Self {
-            config: _config,
+            config: config,
             stats,
             thread_manager,
             workload_predictor,
@@ -492,7 +492,7 @@ impl AdvancedPerformanceThreadPool {
     }
 
     /// Execute a closure with optimal thread configuration
-    pub fn execute<F, R>(&self, operation_type: OperationType, task: F) -> LinalgResult<R>
+    pub fn execute<F, R>(&self, operationtype: OperationType, task: F) -> LinalgResult<R>
     where
         F: FnOnce() -> R + Send,
         R: Send,
@@ -501,7 +501,7 @@ impl AdvancedPerformanceThreadPool {
 
         // Predict optimal configuration
         let predictor = self.workload_predictor.lock().unwrap();
-        let predicted_characteristics = predictor.predict_workload(&operation_type);
+        let predicted_characteristics = predictor.predict_workload(&operationtype);
         drop(predictor);
 
         // Adapt thread pool based on prediction
@@ -517,13 +517,13 @@ impl AdvancedPerformanceThreadPool {
         let execution_time = start_time.elapsed();
         {
             let mut stats = self.stats.lock().unwrap();
-            stats.record_execution(operation_type, execution_time);
+            stats.record_execution(operationtype, execution_time);
         }
 
         // Update workload predictor with actual performance
         {
             let mut predictor = self.workload_predictor.lock().unwrap();
-            predictor.update_performance(operation_type, execution_time);
+            predictor.update_performance(operationtype, execution_time);
         }
 
         Ok(result)
@@ -549,10 +549,10 @@ pub struct DynamicThreadManager {
 
 impl DynamicThreadManager {
     /// Create a new dynamic thread manager
-    pub fn new(_config: &ThreadPoolConfig) -> LinalgResult<Self> {
+    pub fn new(config: &ThreadPoolConfig) -> LinalgResult<Self> {
         Ok(Self {
-            config: _config.clone(),
-            current_threads: _config.active_threads,
+            config: config.clone(),
+            current_threads: config.active_threads,
             cpu_utilization_history: Vec::new(),
             last_scaling_time: Instant::now(),
             scaling_history: Vec::new(),
@@ -721,17 +721,17 @@ impl WorkloadPredictor {
     }
 
     /// Predict workload characteristics for an operation type
-    pub fn predict_workload(&self, operation_type: &OperationType) -> WorkloadCharacteristics {
+    pub fn predict_workload(&self, operationtype: &OperationType) -> WorkloadCharacteristics {
         self.characteristics_cache
-            .get(operation_type)
+            .get(operationtype)
             .cloned()
-            .unwrap_or_else(|| self.default_characteristics_for_operation(operation_type))
+            .unwrap_or_else(|| self.default_characteristics_for_operation(operationtype))
     }
 
     /// Update performance data with actual execution results
-    pub fn update_performance(&mut self, operation_type: OperationType, execution_time: Duration) {
+    pub fn update_performance(&mut self, operation_type: OperationType, executiontime: Duration) {
         let history = self.performance_history.entry(operation_type).or_default();
-        history.push(execution_time);
+        history.push(executiontime);
 
         // Maintain reasonable history size
         if history.len() > 100 {
@@ -743,10 +743,10 @@ impl WorkloadPredictor {
     }
 
     /// Update workload characteristics based on performance history
-    fn update_characteristics(&mut self, operation_type: OperationType) {
-        let characteristics = self.default_characteristics_for_operation(&operation_type);
+    fn update_characteristics(&mut self, operationtype: OperationType) {
+        let characteristics = self.default_characteristics_for_operation(&operationtype);
         self.characteristics_cache
-            .insert(operation_type, characteristics);
+            .insert(operationtype, characteristics);
     }
 
     /// Get default characteristics for an operation type
@@ -831,8 +831,8 @@ impl ThreadPoolProfiler {
     }
 
     /// Get profile metrics for an operation type
-    pub fn get_metrics(&self, operation_type: &OperationType) -> Option<&ProfileMetrics> {
-        self.profile_metrics.get(operation_type)
+    pub fn get_metrics(&self, operationtype: &OperationType) -> Option<&ProfileMetrics> {
+        self.profile_metrics.get(operationtype)
     }
 }
 
@@ -870,7 +870,7 @@ impl ProfileMetrics {
     }
 
     /// Record an execution
-    pub fn record_execution(&mut self, execution_time: Duration, thread_count: usize) {
+    pub fn record_execution(&mut self, execution_time: Duration, threadcount: usize) {
         let old_avg = self.avg_execution_time;
         self.total_executions += 1;
 
@@ -888,7 +888,7 @@ impl ProfileMetrics {
 
         // Update optimal thread _count heuristic
         if execution_time < self.avg_execution_time {
-            self.optimal_thread_count = thread_count;
+            self.optimal_thread_count = threadcount;
         }
     }
 
@@ -1065,13 +1065,13 @@ impl Default for AdvancedPerformanceStats {
 
 impl AdvancedPerformanceStats {
     /// Record execution performance
-    pub fn record_execution(&mut self, operation_type: OperationType, execution_time: Duration) {
+    pub fn record_execution(&mut self, operation_type: OperationType, executiontime: Duration) {
         self.thread_pool_stats.total_tasks += 1;
-        self.thread_pool_stats.total_execution_time += execution_time;
+        self.thread_pool_stats.total_execution_time += executiontime;
 
         // Update performance trends
         let trends = self.performance_trends.entry(operation_type).or_default();
-        trends.push(execution_time.as_secs_f64() * 1000.0); // Store as milliseconds
+        trends.push(executiontime.as_secs_f64() * 1000.0); // Store as milliseconds
 
         // Maintain reasonable trend history
         if trends.len() > 100 {
@@ -1135,11 +1135,11 @@ pub struct ScopedThreadPool {
 
 impl ScopedThreadPool {
     /// Create a new scoped thread pool
-    pub fn new(_config: ThreadPoolConfig, cleanup_timeout: Duration) -> Self {
+    pub fn new(_config: ThreadPoolConfig, cleanuptimeout: Duration) -> Self {
         Self {
             config: _config,
             created_at: Instant::now(),
-            cleanup_timeout,
+            cleanup_timeout: cleanuptimeout,
         }
     }
 

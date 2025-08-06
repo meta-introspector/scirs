@@ -86,12 +86,12 @@ pub struct LatencyPredictor {
     platform: HardwarePlatform,
 impl LatencyPredictor {
     /// Create a new latency predictor for a platform
-    pub fn new(_platform: HardwarePlatform) -> Self {
+    pub fn new(platform: HardwarePlatform) -> Self {
         let mut predictor = Self {
             operation_latencies: HashMap::new(),
             memory_costs: HashMap::new(),
             parallelization_factors: HashMap::new(),
-            _platform,
+            platform,
         };
         predictor.initialize_platform_characteristics();
         predictor
@@ -327,7 +327,7 @@ impl EnergyPredictor {
                     .insert("conv2d".to_string(), 100.0);
                     .insert("memory".to_string(), 30.0);
     /// Predict energy consumption for an architecture
-    pub fn predict_energy(&self, architecture: &Architecture, latency_ms: f64) -> Result<f64> {
+    pub fn predict_energy(&self, architecture: &Architecture, latencyms: f64) -> Result<f64> {
         let mut total_energy = 0.0;
         // Compute dynamic energy (computation)
             let layer_energy = self.compute_layer_energy(layer)?;
@@ -361,17 +361,17 @@ pub struct HardwareAwareSearch {
     violation_history: Vec<HashMap<String, f64>>,
 impl HardwareAwareSearch {
     /// Create a new hardware-aware search
-    pub fn new(_constraints: HardwareConstraints) -> Self {
+    pub fn new(constraints: HardwareConstraints) -> Self {
         let latency_predictor = LatencyPredictor::new(_constraints.platform.clone());
         let memory_predictor = MemoryPredictor::new(_constraints.platform.clone());
         let energy_predictor = EnergyPredictor::new(_constraints.platform.clone());
         let mut constraint_weights = HashMap::new();
-        constraint_weights.insert("latency".to_string(), 0.3);
-        constraint_weights.insert("memory".to_string(), 0.25);
-        constraint_weights.insert("energy".to_string(), 0.2);
-        constraint_weights.insert("model_size".to_string(), 0.15);
-        constraint_weights.insert("throughput".to_string(), 0.1);
-            _constraints,
+        constraintweights.insert("latency".to_string(), 0.3);
+        constraintweights.insert("memory".to_string(), 0.25);
+        constraintweights.insert("energy".to_string(), 0.2);
+        constraintweights.insert("model_size".to_string(), 0.15);
+        constraintweights.insert("throughput".to_string(), 0.1);
+            constraints,
             latency_predictor,
             memory_predictor,
             energy_predictor,
@@ -421,7 +421,7 @@ impl HardwareAwareSearch {
         let mut weighted_score = 0.0;
         let mut total_weight = 0.0;
         for (constraint, &violation) in violations {
-            if let Some(&weight) = self.constraint_weights.get(constraint) {
+            if let Some(&weight) = self.constraintweights.get(constraint) {
                 weighted_score += violation * weight;
                 total_weight += weight;
         if total_weight > 0.0 {
@@ -495,11 +495,11 @@ impl HardwareAwareSearch {
         // Increase weights for frequently violated constraints
         for (constraint, avg_violation) in avg_violations {
             if avg_violation > 0.1 {
-                if let Some(weight) = self.constraint_weights.get_mut(&constraint) {
+                if let Some(weight) = self.constraintweights.get_mut(&constraint) {
                     *weight = (*weight * 1.1).min(0.5); // Cap at 50%
         // Normalize weights
-        let total_weight: f64 = self.constraint_weights.values().sum();
-            for weight in self.constraint_weights.values_mut() {
+        let total_weight: f64 = self.constraintweights.values().sum();
+            for weight in self.constraintweights.values_mut() {
                 *weight /= total_weight;
     /// Get platform characteristics summary
     pub fn get_platform_summary(&self) -> String {

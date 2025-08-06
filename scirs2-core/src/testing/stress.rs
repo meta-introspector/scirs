@@ -123,7 +123,7 @@ pub struct StressTestResult {
 
 impl StressTestResult {
     /// Create a new stress test result
-    pub fn new(test_name: String) -> Self {
+    pub fn new(testname: String) -> Self {
         Self {
             test_name,
             peak_memory: 0,
@@ -174,7 +174,7 @@ impl StressTestResult {
     }
 
     /// Set error
-    pub fn with_error(mut self, error: String) -> Self {
+    pub fn witherror(mut self, error: String) -> Self {
         self.error = Some(error);
         self
     }
@@ -225,7 +225,7 @@ impl MemoryStressTester {
                     }
                 }
                 Err(e) => {
-                    result = result.with_error(format!(
+                    result = result.witherror(format!(
                         "Allocation failed at {} bytes: {:?}",
                         current_memory, e
                     ));

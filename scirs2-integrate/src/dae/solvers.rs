@@ -260,14 +260,14 @@ where
 ///
 /// This is a helper function for the semi-explicit DAE solver
 #[allow(dead_code)]
-fn solve_matrix_system<F>(_matrix: ArrayView2<F>, b: ArrayView1<F>) -> IntegrateResult<Array1<F>>
+fn solve_matrix_system<F>(matrix: ArrayView2<F>, b: ArrayView1<F>) -> IntegrateResult<Array1<F>>
 where
     F: IntegrateFloat + std::default::Default,
 {
     use crate::dae::utils::linear_solvers::solve_linear_system;
 
     // Use our custom solver to solve the system
-    solve_linear_system(&_matrix.view(), &b.view()).map_err(|err| {
+    solve_linear_system(&matrix.view(), &b.view()).map_err(|err| {
         IntegrateError::ComputationError(format!("Failed to solve linear system: {err}"))
     })
 }
@@ -1101,7 +1101,7 @@ where
     FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
     GFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
 {
-    // After index _reduction, we can solve the system as a standard index-1 DAE
+    // After index reduction, we can solve the system as a standard index-1 DAE
     // Use BDF method for semi-explicit DAE systems
     use crate::dae::methods::bdf_dae::bdf_semi_explicit_dae;
 

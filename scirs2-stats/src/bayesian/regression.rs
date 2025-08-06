@@ -54,7 +54,7 @@ pub struct BayesianRegressionResult {
 
 impl BayesianLinearRegression {
     /// Create a new Bayesian linear regression model
-    pub fn new(n_features: usize, fit_intercept: bool) -> StatsResult<Self> {
+    pub fn new(n_features: usize, fitintercept: bool) -> StatsResult<Self> {
         check_positive(n_features, "n_features")?;
 
         // Default to weakly informative priors
@@ -384,7 +384,7 @@ impl ARDBayesianRegression {
     }
 
     /// Set maximum iterations
-    pub fn with_max_iter(mut self, max_iter: usize) -> Self {
+    pub fn with_max_iter(mut self, maxiter: usize) -> Self {
         self.max_iter = max_iter;
         self
     }

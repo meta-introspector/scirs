@@ -114,7 +114,7 @@ pub struct InMemoryDataProvider {
 }
 
 impl InMemoryDataProvider {
-    pub fn new(_data: Vec<f64>) -> Self {
+    pub fn new(data: Vec<f64>) -> Self {
         Self { _data }
     }
 }
@@ -136,10 +136,10 @@ impl DataProvider for InMemoryDataProvider {
 /// Stochastic gradient function trait
 pub trait StochasticGradientFunction {
     /// Compute gradient on a batch of data
-    fn compute_gradient(&mut self, x: &ArrayView1<f64>, batch_data: &[f64]) -> Array1<f64>;
+    fn compute_gradient(&mut self, x: &ArrayView1<f64>, batchdata: &[f64]) -> Array1<f64>;
 
     /// Compute function value on a batch of data
-    fn compute_value(&mut self, x: &ArrayView1<f64>, batch_data: &[f64]) -> f64;
+    fn compute_value(&mut self, x: &ArrayView1<f64>, batchdata: &[f64]) -> f64;
 }
 
 /// Wrapper for regular gradient functions
@@ -153,8 +153,8 @@ where
     F: FnMut(&ArrayView1<f64>) -> f64,
     G: FnMut(&ArrayView1<f64>) -> Array1<f64>,
 {
-    pub fn new(_func: F, grad: G) -> Self {
-        Self { _func, grad }
+    pub fn new(func: F, grad: G) -> Self {
+        Self { func, grad }
     }
 }
 
@@ -163,11 +163,11 @@ where
     F: FnMut(&ArrayView1<f64>) -> f64,
     G: FnMut(&ArrayView1<f64>) -> Array1<f64>,
 {
-    fn compute_gradient(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> Array1<f64> {
+    fn compute_gradient(&mut self, x: &ArrayView1<f64>, _batchdata: &[f64]) -> Array1<f64> {
         (self.grad)(x)
     }
 
-    fn compute_value(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> f64 {
+    fn compute_value(&mut self, x: &ArrayView1<f64>, _batchdata: &[f64]) -> f64 {
         (self.func)(x)
     }
 }
@@ -205,17 +205,17 @@ pub fn update_learning_rate(
 
 /// Clip gradients to prevent exploding gradients
 #[allow(dead_code)]
-pub fn clip_gradients(_gradient: &mut Array1<f64>, max_norm: f64) {
-    let grad_norm = _gradient.mapv(|x| x * x).sum().sqrt();
+pub fn clip_gradients(_gradient: &mut Array1<f64>, maxnorm: f64) {
+    let grad_norm = gradient.mapv(|x| x * x).sum().sqrt();
     if grad_norm > max_norm {
         let scale = max_norm / grad_norm;
-        _gradient.mapv_inplace(|x| x * scale);
+        gradient.mapv_inplace(|x| x * scale);
     }
 }
 
 /// Generate random batch indices
 #[allow(dead_code)]
-pub fn generate_batch_indices(_num_samples: usize, batch_size: usize, shuffle: bool) -> Vec<usize> {
+pub fn generate_batch_indices(_num_samples: usize, batchsize: usize, shuffle: bool) -> Vec<usize> {
     let mut indices: Vec<usize> = (0.._num_samples).collect();
 
     if shuffle {
@@ -325,7 +325,10 @@ pub fn create_stochastic_options_for_problem(
             learning_rate: 0.001,
             max_iter: 1000,
             batch_size: Some(32.min(dataset_size / 10)),
-            lr_schedule: LearningRateSchedule::ExponentialDecay { decay, rate: 0.95 },
+            lr_schedule: LearningRateSchedule::ExponentialDecay {
+                decay: 0.99,
+                rate: 0.95,
+            },
             gradient_clip: Some(1.0),
             early_stopping_patience: Some(50),
             ..Default::default()
@@ -360,7 +363,10 @@ pub fn create_stochastic_options_for_problem(
             learning_rate: 0.01,
             max_iter: 1000,
             batch_size: Some(64.min(dataset_size / 5)),
-            lr_schedule: LearningRateSchedule::InverseTimeDecay { decay, rate: 0.001 },
+            lr_schedule: LearningRateSchedule::InverseTimeDecay {
+                decay: 1.0,
+                rate: 0.001,
+            },
             gradient_clip: Some(2.0),
             early_stopping_patience: Some(100),
             ..Default::default()

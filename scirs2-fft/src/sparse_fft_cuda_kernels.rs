@@ -15,7 +15,7 @@ use std::fmt::Debug;
 pub struct CUDAWindowKernel;
 
 impl CUDAWindowKernel {
-    pub fn new(_window: WindowFunction) -> Self {
+    pub fn new(window: WindowFunction) -> Self {
         Self
     }
 
@@ -28,11 +28,11 @@ impl CUDAWindowKernel {
 pub struct CUDASublinearSparseFFTKernel;
 
 impl CUDASublinearSparseFFTKernel {
-    pub fn new(_algorithm: SparseFFTAlgorithm) -> Self {
+    pub fn new(algorithm: SparseFFTAlgorithm) -> Self {
         Self
     }
 
-    pub fn execute<T>(&self, input: &[T], _k: usize) -> FFTResult<SparseFFTResult>
+    pub fn execute<T>(&self, input: &[T], k: usize) -> FFTResult<SparseFFTResult>
     where
         T: NumCast + Copy + Debug,
     {
@@ -61,7 +61,7 @@ impl CUDACompressedSensingSparseFFTKernel {
         Self
     }
 
-    pub fn execute<T>(&self, input: &[T], _k: usize) -> FFTResult<SparseFFTResult>
+    pub fn execute<T>(&self, input: &[T], k: usize) -> FFTResult<SparseFFTResult>
     where
         T: NumCast + Copy + Debug,
     {

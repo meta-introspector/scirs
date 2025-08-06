@@ -256,7 +256,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     /// # Returns
     ///
     /// A `Result` containing the interpolated values at the given points.
-    pub fn evaluate(&self, x_new: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    pub fn evaluate(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         let n = x_new.len();
         let mut result = Array1::zeros(n);
 
@@ -268,7 +268,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     }
 
     /// Evaluate the tension spline at a single point.
-    fn evaluate_single(&self, x_val: T) -> InterpolateResult<T> {
+    fn evaluate_single(&self, xval: T) -> InterpolateResult<T> {
         let n = self.x.len();
 
         // Handle extrapolation
@@ -307,7 +307,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     }
 
     /// Evaluate the spline on a specific segment.
-    fn evaluate_segment(&self, idx: usize, x_val: T) -> InterpolateResult<T> {
+    fn evaluate_segment(&self, idx: usize, xval: T) -> InterpolateResult<T> {
         let dx = x_val - self.x[idx];
 
         // If tension is essentially zero, use cubic formula
@@ -369,7 +369,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     }
 
     /// Calculate derivative of the tension spline at a single point.
-    fn derivative_single(&self, deriv_order: usize, x_val: T) -> InterpolateResult<T> {
+    fn derivative_single(&self, deriv_order: usize, xval: T) -> InterpolateResult<T> {
         let n = self.x.len();
 
         // Handle extrapolation
@@ -408,7 +408,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     }
 
     /// Calculate derivative of the spline on a specific segment.
-    fn derivative_segment(&self, deriv_order: usize, idx: usize, x_val: T) -> InterpolateResult<T> {
+    fn derivative_segment(&self, deriv_order: usize, idx: usize, xval: T) -> InterpolateResult<T> {
         let dx = x_val - self.x[idx];
 
         // If tension is essentially zero, use cubic formula derivatives
@@ -422,7 +422,8 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
                 0 => Ok(a + dx * (b + dx * (c + dx * d))),
                 1 => Ok(b + dx * (T::from(2.0).unwrap() * c + T::from(3.0).unwrap() * dx * d)),
                 2 => Ok(T::from(2.0).unwrap() * c + T::from(6.0).unwrap() * dx * d),
-                3 => Ok(T::from(6.0).unwrap() * d, _ => Err(InterpolateError::InvalidValue(
+                3 => Ok(T::from(6.0).unwrap() * d),
+                _ => Err(InterpolateError::InvalidValue(
                     "Derivative _order must be ≤ 3".to_string(),
                 )),
             };
@@ -439,7 +440,8 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
             0 => Ok(a + b * dx + c * (p * dx).sinh() + d * (p * dx).cosh()),
             1 => Ok(b + c * p * (p * dx).cosh() + d * p * (p * dx).sinh()),
             2 => Ok(c * p * p * (p * dx).sinh() + d * p * p * (p * dx).cosh()),
-            3 => Ok(c * p * p * p * (p * dx).cosh() + d * p * p * p * (p * dx).sinh(), _ => Err(InterpolateError::InvalidValue(
+            3 => Ok(c * p * p * p * (p * dx).cosh() + d * p * p * p * (p * dx).sinh()),
+            _ => Err(InterpolateError::InvalidValue(
                 "Derivative _order must be ≤ 3".to_string(),
             )),
         }
@@ -483,7 +485,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     /// let first_deriv = derivatives[1];
     /// let second_deriv = derivatives[2];
     /// ```
-    pub fn derivatives_all(&self, x_val: T, max_order: usize) -> InterpolateResult<Vec<T>> {
+    pub fn derivatives_all(&self, x_val: T, maxorder: usize) -> InterpolateResult<Vec<T>> {
         let mut derivatives = Vec::with_capacity(max_order + 1);
 
         for _order in 0..=max_order {
@@ -942,7 +944,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
 
             let deriv_a = self.derivative_single(1, a)?;
 
-            if (deriv_a > T::zero()) == (deriv_c >, T::zero()) {
+            if (deriv_a > T::zero()) == (deriv_c > T::zero()) {
                 a = c;
             } else {
                 b = c;

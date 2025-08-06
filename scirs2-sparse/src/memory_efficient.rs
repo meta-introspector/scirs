@@ -27,11 +27,11 @@ pub struct MemoryTracker {
 
 impl MemoryTracker {
     /// Create a new memory tracker with given limit
-    pub fn new(_memory_limit: usize) -> Self {
+    pub fn new(_memorylimit: usize) -> Self {
         Self {
             current_usage: 0,
             peak_usage: 0,
-            memory_limit: _memory_limit,
+            memory_limit: memory_limit,
         }
     }
 
@@ -127,7 +127,7 @@ where
 
         // Track memory allocation
         if let Some(_tracker) = memory_tracker.as_mut() {
-            _tracker.allocate(chunk_memory)?;
+            tracker.allocate(chunk_memory)?;
         }
 
         // Extract chunk data
@@ -149,7 +149,7 @@ where
 
         // Deallocate chunk memory
         if let Some(_tracker) = memory_tracker.as_mut() {
-            _tracker.deallocate(chunk_memory);
+            tracker.deallocate(chunk_memory);
         }
     }
 
@@ -175,11 +175,11 @@ where
     T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
 {
     /// Create a new out-of-core processor
-    pub fn new(_memory_limit: usize) -> Self {
+    pub fn new(_memorylimit: usize) -> Self {
         let chunk_size = _memory_limit / (8 * std::mem::size_of::<T>()); // Conservative estimate
 
         Self {
-            memory_limit: _memory_limit,
+            memory_limit: memory_limit,
             chunk_size,
             temp_storage: VecDeque::new(),
         }
@@ -524,11 +524,11 @@ where
     T: Float + Debug + Copy + 'static,
 {
     /// Create a new memory pool
-    pub fn new(_pool_size_limit: usize) -> Self {
+    pub fn new(_pool_sizelimit: usize) -> Self {
         Self {
             available_buffers: Vec::new(),
             allocated_buffers: Vec::new(),
-            pool_size_limit: _pool_size_limit,
+            pool_size_limit: pool_size_limit,
         }
     }
 
@@ -601,13 +601,13 @@ impl ChunkedOperations {
             // Estimate memory for this chunk
             let chunk_memory = current_chunk_size * a_cols * element_size * 2; // For both matrices
 
-            if let Some(ref mut _tracker) = memory_tracker {
+            if let Some(ref mut tracker) = memory_tracker {
                 if !_tracker.can_allocate(chunk_memory) {
                     return Err(SparseError::ValueError(
                         "Insufficient memory for chunked addition".to_string(),
                     ));
                 }
-                _tracker.allocate(chunk_memory)?;
+                tracker.allocate(chunk_memory)?;
             }
 
             // Use HashMap to efficiently combine elements
@@ -649,8 +649,8 @@ impl ChunkedOperations {
                 }
             }
 
-            if let Some(ref mut _tracker) = memory_tracker {
-                _tracker.deallocate(chunk_memory);
+            if let Some(ref mut tracker) = memory_tracker {
+                tracker.deallocate(chunk_memory);
             }
         }
 
@@ -689,13 +689,13 @@ impl ChunkedOperations {
             // Estimate memory for this chunk
             let chunk_memory = current_chunk_size * cols * element_size;
 
-            if let Some(ref mut _tracker) = memory_tracker {
+            if let Some(ref mut tracker) = memory_tracker {
                 if !_tracker.can_allocate(chunk_memory) {
                     return Err(SparseError::ValueError(
                         "Insufficient memory for chunked scaling".to_string(),
                     ));
                 }
-                _tracker.allocate(chunk_memory)?;
+                tracker.allocate(chunk_memory)?;
             }
 
             // Extract and scale elements in the current chunk
@@ -712,8 +712,8 @@ impl ChunkedOperations {
                 }
             }
 
-            if let Some(ref mut _tracker) = memory_tracker {
-                _tracker.deallocate(chunk_memory);
+            if let Some(ref mut tracker) = memory_tracker {
+                tracker.deallocate(chunk_memory);
             }
         }
 
@@ -749,13 +749,13 @@ impl ChunkedOperations {
             // Estimate memory for this chunk
             let chunk_memory = current_chunk_size * cols * element_size;
 
-            if let Some(ref mut _tracker) = memory_tracker {
+            if let Some(ref mut tracker) = memory_tracker {
                 if !_tracker.can_allocate(chunk_memory) {
                     return Err(SparseError::ValueError(
                         "Insufficient memory for format conversion".to_string(),
                     ));
                 }
-                _tracker.allocate(chunk_memory)?;
+                tracker.allocate(chunk_memory)?;
             }
 
             // Extract triplets for this chunk
@@ -770,8 +770,8 @@ impl ChunkedOperations {
 
             all_triplets.extend(chunk_triplets);
 
-            if let Some(ref mut _tracker) = memory_tracker {
-                _tracker.deallocate(chunk_memory);
+            if let Some(ref mut tracker) = memory_tracker {
+                tracker.deallocate(chunk_memory);
             }
         }
 
@@ -809,13 +809,13 @@ impl ChunkedOperations {
         let element_size = std::mem::size_of::<usize>();
         let memory_needed = rows * element_size * 4; // Conservative estimate
 
-        if let Some(ref mut _tracker) = memory_tracker {
+        if let Some(ref mut tracker) = memory_tracker {
             if !_tracker.can_allocate(memory_needed) {
                 return Err(SparseError::ValueError(
                     "Insufficient memory for bandwidth reduction".to_string(),
                 ));
             }
-            _tracker.allocate(memory_needed)?;
+            tracker.allocate(memory_needed)?;
         }
 
         // Build adjacency list representation
@@ -902,8 +902,8 @@ impl ChunkedOperations {
         let reordered_matrix =
             CsrArray::from_triplets(&perm_rows, &perm_cols, &perm_values, (rows, cols), false)?;
 
-        if let Some(ref mut _tracker) = memory_tracker {
-            _tracker.deallocate(memory_needed);
+        if let Some(ref mut tracker) = memory_tracker {
+            tracker.deallocate(memory_needed);
         }
 
         Ok((ordering, reordered_matrix))

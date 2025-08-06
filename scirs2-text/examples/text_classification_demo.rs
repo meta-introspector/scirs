@@ -85,7 +85,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut test_labels = Vec::new();
 
     for label in &train_dataset.labels {
-        _train_labels.push(if label == "positive" { 1 } else { 0 });
+        train_labels.push(if label == "positive" { 1 } else { 0 });
     }
 
     for label in &test_dataset.labels {

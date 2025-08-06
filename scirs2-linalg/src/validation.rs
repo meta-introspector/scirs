@@ -20,11 +20,11 @@ use num_traits::Float;
 /// * `Ok(())` if the matrix is not empty
 /// * `Err(LinalgError)` if the matrix is empty
 #[allow(dead_code)]
-pub fn validate_not_empty_matrix<F>(_matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
+pub fn validate_not_empty_matrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
 {
-    if _matrix.is_empty() {
+    if matrix.is_empty() {
         return Err(LinalgError::ShapeError(format!(
             "{operation} failed: Input _matrix cannot be empty"
         )));
@@ -44,11 +44,11 @@ where
 /// * `Ok(())` if the vector is not empty
 /// * `Err(LinalgError)` if the vector is empty
 #[allow(dead_code)]
-pub fn validate_not_empty_vector<F>(_vector: &ArrayView1<F>, operation: &str) -> LinalgResult<()>
+pub fn validate_not_empty_vector<F>(vector: &ArrayView1<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
 {
-    if _vector.is_empty() {
+    if vector.is_empty() {
         return Err(LinalgError::ShapeError(format!(
             "{operation} failed: Input _vector cannot be empty"
         )));
@@ -68,13 +68,13 @@ where
 /// * `Ok(())` if the matrix is square
 /// * `Err(LinalgError)` if the matrix is not square
 #[allow(dead_code)]
-pub fn validate_square_matrix<F>(_matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
+pub fn validate_square_matrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
 {
-    if _matrix.nrows() != _matrix.ncols() {
-        let rows = _matrix.nrows();
-        let cols = _matrix.ncols();
+    if matrix.nrows() != matrix.ncols() {
+        let rows = matrix.nrows();
+        let cols = matrix.ncols();
         return Err(LinalgError::ShapeError(format!(
             "{operation} failed: Matrix must be square\\nMatrix shape: {rows}×{cols}\\nExpected: Square _matrix (n×n)"
         )));
@@ -161,11 +161,11 @@ where
 /// * `Ok(())` if all values are finite
 /// * `Err(LinalgError)` if any value is non-finite
 #[allow(dead_code)]
-pub fn validate_finite_matrix<F>(_matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
+pub fn validate_finite_matrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
 {
-    for &val in _matrix.iter() {
+    for &val in matrix.iter() {
         if !val.is_finite() {
             return Err(LinalgError::InvalidInputError(format!(
                 "{operation} failed: Matrix contains non-finite values"
@@ -187,11 +187,11 @@ where
 /// * `Ok(())` if all values are finite
 /// * `Err(LinalgError)` if any value is non-finite
 #[allow(dead_code)]
-pub fn validate_finite_vector<F>(_vector: &ArrayView1<F>, operation: &str) -> LinalgResult<()>
+pub fn validate_finite_vector<F>(vector: &ArrayView1<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
 {
-    for &val in _vector.iter() {
+    for &val in vector.iter() {
         if !val.is_finite() {
             return Err(LinalgError::InvalidInputError(format!(
                 "{operation} failed: Vector contains non-finite values"

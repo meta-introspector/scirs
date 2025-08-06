@@ -375,15 +375,15 @@ pub struct HyperparameterTuningStats {
 
 impl LearnedHyperparameterTuner {
     /// Create new learned hyperparameter tuner
-    pub fn new(_config: LearnedOptimizationConfig) -> Self {
+    pub fn new(config: LearnedOptimizationConfig) -> Self {
         let hyperparameter_space = HyperparameterSpace::create_default_space();
         let performance_database = PerformanceDatabase::new();
         let bayesian_optimizer = BayesianOptimizer::new();
         let multi_fidelity_evaluator = MultiFidelityEvaluator::new();
-        let hidden_size = _config.hidden_size;
+        let hidden_size = config.hidden_size;
 
         Self {
-            config: _config,
+            config: config,
             hyperparameter_space,
             performance_database,
             bayesian_optimizer,
@@ -567,7 +567,7 @@ impl LearnedHyperparameterTuner {
         });
 
         // Select top configurations
-        for (record, _similarity) in similarities.into_iter().take(5) {
+        for (record, similarity) in similarities.into_iter().take(5) {
             configs.push(record.config.clone());
         }
 
@@ -1031,19 +1031,19 @@ impl HyperparameterSpace {
 
 impl HyperparameterConfig {
     /// Create new hyperparameter configuration
-    pub fn new(_parameters: HashMap<String, ParameterValue>) -> Self {
+    pub fn new(parameters: HashMap<String, ParameterValue>) -> Self {
         let config_hash = Self::compute_hash(&_parameters);
         let embedding = Self::compute_embedding(&_parameters);
 
         Self {
-            parameters: _parameters,
+            parameters: parameters,
             config_hash,
             embedding,
         }
     }
 
     /// Compute hash for configuration
-    fn compute_hash(_parameters: &HashMap<String, ParameterValue>) -> u64 {
+    fn compute_hash(parameters: &HashMap<String, ParameterValue>) -> u64 {
         // Simplified hash computation
         let mut hash = 0u64;
         for (key, value) in _parameters {
@@ -1062,7 +1062,7 @@ impl HyperparameterConfig {
     }
 
     /// Hash parameter value
-    fn hash_parameter_value(_value: &ParameterValue) -> u64 {
+    fn hash_parameter_value(value: &ParameterValue) -> u64 {
         match _value {
             ParameterValue::Continuous(v) => v.to_bits(),
             ParameterValue::Discrete(v) => *v as u64,
@@ -1071,7 +1071,7 @@ impl HyperparameterConfig {
     }
 
     /// Compute embedding for configuration
-    fn compute_embedding(_parameters: &HashMap<String, ParameterValue>) -> Array1<f64> {
+    fn compute_embedding(parameters: &HashMap<String, ParameterValue>) -> Array1<f64> {
         let mut embedding = Array1::zeros(32); // Fixed embedding size
 
         let mut idx = 0;
@@ -1276,7 +1276,7 @@ impl Default for HyperparameterTuningStats {
 }
 
 impl LearnedOptimizer for LearnedHyperparameterTuner {
-    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
+    fn meta_train(&mut self, trainingtasks: &[TrainingTask]) -> OptimizeResult<()> {
         for task in training_tasks {
             // Create simple objective for training
             let training_objective = |x: &ArrayView1<f64>| x.iter().map(|&xi| xi * xi).sum::<f64>();

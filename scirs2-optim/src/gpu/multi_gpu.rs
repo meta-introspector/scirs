@@ -140,7 +140,7 @@ impl CommunicationPerformanceMonitor {
         }
     }
 
-    fn record_communication(&mut self, strategy: SyncStrategy, data_bytes: u64, time_us: u64) {
+    fn record_communication(&mut self, strategy: SyncStrategy, data_bytes: u64, timeus: u64) {
         self.total_comm_time_us += time_us;
         self.total_data_bytes += data_bytes;
         self.comm_operations += 1;
@@ -168,7 +168,7 @@ impl CommunicationPerformanceMonitor {
         }
     }
 
-    fn get_optimal_strategy(&self, tensor_size: usize) -> SyncStrategy {
+    fn get_optimal_strategy(&self, tensorsize: usize) -> SyncStrategy {
         let mut best_strategy = SyncStrategy::RingAllReduce;
         let mut best_score = 0.0;
 
@@ -203,7 +203,7 @@ impl StrategyPerformanceMetrics {
         }
     }
 
-    fn update(&mut self, bandwidth_gb_s: f64, latency_us: u64) {
+    fn update(&mut self, bandwidth_gb_s: f64, latencyus: u64) {
         self.bandwidth_samples.push_back(bandwidth_gb_s);
         self.latency_samples.push_back(latency_us);
 
@@ -221,7 +221,7 @@ impl StrategyPerformanceMetrics {
         self.efficiency_score = avg_bandwidth / (avg_latency / 1000.0); // Bandwidth per ms
     }
 
-    fn calculate_score(&self, tensor_size: usize) -> f64 {
+    fn calculate_score(&self, tensorsize: usize) -> f64 {
         // Higher score for better efficiency, adjusted for tensor _size
         let size_factor = if tensor_size > 1000000 { 2.0 } else { 1.0 }; // Favor strategies for large tensors
         self.efficiency_score * size_factor
@@ -254,7 +254,7 @@ impl AdaptiveCommunicationSelector {
         }
     }
 
-    fn should_evaluate_strategy(&self, current_step: usize) -> bool {
+    fn should_evaluate_strategy(&self, currentstep: usize) -> bool {
         current_step - self.last_switch_step >= self.switch_cooldown
     }
 
@@ -354,7 +354,8 @@ impl<A: Float> MultiGpuSync<A> {
             perf_monitor,
             adaptive_selector,
             async_handles,
-            step_counter: 0, _phantom: PhantomData,
+            step_counter: 0,
+            _phantom: PhantomData,
         })
     }
 
@@ -852,7 +853,7 @@ pub struct MultiGpuSetup {
 
 impl MultiGpuSetup {
     /// Initialize multi-GPU setup
-    pub fn new(_num_gpus: usize, max_param_size: usize) -> Result<Self, GpuOptimError> {
+    pub fn new(_num_gpus: usize, max_paramsize: usize) -> Result<Self, GpuOptimError> {
         let mut contexts = Vec::new();
         let mut sync_managers = Vec::new();
 
@@ -862,7 +863,7 @@ impl MultiGpuSetup {
 
             // Create sync manager
             let config = MultiGpuConfig {
-                _num_gpus,
+                num_gpus,
                 rank,
                 ..Default::default()
             };

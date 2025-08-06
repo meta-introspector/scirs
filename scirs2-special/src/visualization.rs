@@ -87,12 +87,12 @@ pub struct MultiPlot {
 }
 
 impl MultiPlot {
-    pub fn new(_config: PlotConfig) -> Self {
+    pub fn new(config: PlotConfig) -> Self {
         Self {
             functions: Vec::new(),
             labels: Vec::new(),
             x_range: (-10.0, 10.0),
-            _config,
+            config,
         }
     }
 
@@ -333,7 +333,7 @@ pub mod polynomial_plots {
     use crate::legendre;
 
     /// Plot Legendre polynomials
-    pub fn plot_legendre<P: AsRef<Path>>(path: P, max_n: usize) -> Result<(), Box<dyn Error>> {
+    pub fn plot_legendre<P: AsRef<Path>>(path: P, maxn: usize) -> Result<(), Box<dyn Error>> {
         let config = PlotConfig {
             title: format!("Legendre Polynomials P_n(x) for _n = 0..{}", max_n),
             ..Default::default()
@@ -342,7 +342,7 @@ pub mod polynomial_plots {
         let mut plot = MultiPlot::new(config).set_x_range(-1.0, 1.0);
 
         for _n in 0..=max_n {
-            plot = plot.add_function(Box::new(move |x| legendre(_n, x)), &format!("P_{}", _n));
+            plot = plot.add_function(Box::new(move |x| legendre(_n, x)), &format!("P_{}", n));
         }
 
         plot.plot(_path)
@@ -362,7 +362,7 @@ pub mod surface_plots {
 
     /// Plot a 3D surface for functions of two variables
     #[cfg(feature = "plotting")]
-    pub fn plot_3d_surface<P, F>(_path: P, f: F, title: &str) -> Result<(), Box<dyn Error>>
+    pub fn plot_3d_surface<P, F>(path: P, f: F, title: &str) -> Result<(), Box<dyn Error>>
     where
         P: AsRef<Path>,
         F: Fn(f64, f64) -> f64,
@@ -666,8 +666,8 @@ pub mod interactive {
         function getSpecialFunction(functionName) {{
             const _name = functionName.toLowerCase();
             if (_name.includes('gamma')) return gamma;
-            if (_name.includes('bessel') && _name.includes('j0')) return besselJ0;
-            if (_name.includes('error') || _name.includes('erf')) return erf;
+            if (_name.includes('bessel') && name.includes('j0')) return besselJ0;
+            if (_name.includes('error') || name.includes('erf')) return erf;
             if (_name.includes('airy')) return airyAi;
             // Default fallback - could add more functions as needed
             return Math.sin;

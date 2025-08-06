@@ -4,7 +4,7 @@
 //! compatible with SciPy's validation patterns and provide consistent
 //! error messages across all clustering algorithms.
 
-use ndarray::{ArrayView1, ArrayView1, ArrayView2, Axis};
+use ndarray::{ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -174,7 +174,7 @@ pub fn validate_clustering_data<F: Float + FromPrimitive + Debug + PartialOrd>(
 /// Validate that all values in the data are finite
 #[allow(dead_code)]
 fn validate_finite_values<F: Float + Debug>(data: ArrayView2<F>, prefix: &str) -> Result<()> {
-    for (i, row) in _data.axis_iter(Axis(0)).enumerate() {
+    for (i, row) in data.axis_iter(Axis(0)).enumerate() {
         for (j, &value) in row.iter().enumerate() {
             if !value.is_finite() {
                 return Err(ClusteringError::InvalidInput(format!(
@@ -201,7 +201,7 @@ fn validate_finite_values<F: Float + Debug>(data: ArrayView2<F>, prefix: &str) -
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
 #[allow(dead_code)]
-pub fn validate_n_clusters(_n_clusters: usize, n_samples: usize, algorithm: &str) -> Result<()> {
+pub fn validate_n_clusters(_n_clusters: usize, nsamples: usize, algorithm: &str) -> Result<()> {
     if _n_clusters == 0 {
         return Err(ClusteringError::InvalidInput(format!(
             "{}: Number of _clusters must be positive, got 0",
@@ -395,14 +395,14 @@ pub fn validate_cluster_initialization<F: Float + FromPrimitive + Debug + Partia
 
     if init_clusters != n_clusters {
         return Err(ClusteringError::InvalidInput(format!(
-            "{}: Initial cluster centers must have {} _clusters, got {}",
+            "{}: Initial cluster centers must have {} clusters, got {}",
             algorithm, n_clusters, init_clusters
         )));
     }
 
     if init_features != n_features {
         return Err(ClusteringError::InvalidInput(format!(
-            "{}: Initial cluster centers must have {} _features, got {}",
+            "{}: Initial cluster centers must have {} features, got {}",
             algorithm, n_features, init_features
         )));
     }
@@ -543,7 +543,7 @@ pub fn suggest_clustering_algorithm<F: Float + FromPrimitive + Debug + PartialOr
                 "Small number of _clusters: K-means with k-means++ initialization recommended",
             );
         } else {
-            suggestions.push("Many _clusters: Consider hierarchical clustering or DBSCAN");
+            suggestions.push("Many clusters: Consider hierarchical clustering or DBSCAN");
         }
     } else {
         suggestions.push(
@@ -607,7 +607,7 @@ mod tests {
         assert!(validate_sample_weights(weights.view(), 3, "Test").is_ok());
 
         let negative_weights = Array1::from_vec(vec![1.0, -2.0, 3.0]);
-        assert!(validate_sample_weights(negative_weights.view(), 3, "Test").is_err());
+        assert!(validate_sample_weights(negativeweights.view(), 3, "Test").is_err());
 
         let wrong_size = Array1::from_vec(vec![1.0, 2.0]);
         assert!(validate_sample_weights(wrong_size.view(), 3, "Test").is_err());

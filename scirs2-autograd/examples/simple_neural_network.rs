@@ -1,7 +1,7 @@
-use ag::ndarray__ext::ArrayRng;
+use ag::ndarray_ext::ArrayRng;
 use ag::optimizers::adam::Adam;
 use ag::prelude::*;
-use ag::tensor__ops::*;
+use ag::tensor_ops::*;
 use scirs2_autograd as ag;
 
 // NOTE: This example currently has issues with the Variable op implementation.

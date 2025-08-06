@@ -300,7 +300,7 @@ fn demonstrate_specific_validations() -> Result<(), Box<dyn std::error::Error>> 
 /// Analyze streaming performance metrics in detail
 #[allow(dead_code)]
 fn analyze_streaming_performance(
-    results: &scirs2_signal::wpt_enhanced_modern, _validation::EnhancedModernValidationResult,
+    results: &scirs2_signal::wpt_enhanced_modern_validation::EnhancedModernValidationResult,
 ) {
     let streaming = &results.streaming_validation;
 
@@ -343,7 +343,7 @@ fn analyze_streaming_performance(
 /// Analyze precision metrics in detail
 #[allow(dead_code)]
 fn analyze_precision_metrics(
-    results: &scirs2_signal::wpt_enhanced_modern, _validation::EnhancedModernValidationResult,
+    results: &scirs2_signal::wpt_enhanced_modern_validation::EnhancedModernValidationResult,
 ) {
     let precision = &results.precision_validation;
 
@@ -378,7 +378,7 @@ fn analyze_precision_metrics(
 /// Analyze resource usage metrics in detail
 #[allow(dead_code)]
 fn analyze_resource_usage(
-    results: &scirs2_signal::wpt_enhanced_modern, _validation::EnhancedModernValidationResult,
+    results: &scirs2_signal::wpt_enhanced_modern_validation::EnhancedModernValidationResult,
 ) {
     let resources = &results.resource_validation;
 

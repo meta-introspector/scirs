@@ -170,21 +170,21 @@ where
 
 // Helper function to calculate the mean
 #[allow(dead_code)]
-fn calculate_mean<F>(_data: &[F]) -> F
+fn calculate_mean<F>(data: &[F]) -> F
 where
     F: Float + std::iter::Sum<F> + std::fmt::Display,
 {
-    let sum = _data.iter().cloned().sum::<F>();
+    let sum = data.iter().cloned().sum::<F>();
     sum / F::from(_data.len()).unwrap()
 }
 
 // Helper function to calculate the median
 #[allow(dead_code)]
-fn calculate_median<F>(_data: &[F]) -> F
+fn calculate_median<F>(data: &[F]) -> F
 where
     F: Float + Copy + std::fmt::Display,
 {
-    let mut sorted = _data.to_vec();
+    let mut sorted = data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     let n = sorted.len();
@@ -199,7 +199,7 @@ where
 
 // Helper function to trim from both ends of a sorted array
 #[allow(dead_code)]
-fn trim_both<F>(sorted_data: &[F], proportion: F) -> Vec<F>
+fn trim_both<F>(sorteddata: &[F], proportion: F) -> Vec<F>
 where
     F: Float + Copy + std::fmt::Display,
 {
@@ -264,7 +264,7 @@ fn beta_cdf(x: f64, a: f64, b: f64) -> f64 {
 
 // Continued fraction expansion for the incomplete beta function
 #[allow(dead_code)]
-fn beta_continued_fraction(x: f64, a: f64, b: f64, max_iter: usize, eps: f64) -> f64 {
+fn beta_continued_fraction(x: f64, a: f64, b: f64, maxiter: usize, eps: f64) -> f64 {
     let qab = a + b;
     let qap = a + 1.0;
     let qam = a - 1.0;
@@ -393,7 +393,7 @@ fn gamma_function(x: f64) -> f64 {
 /// let equal_variances = p_value >= 0.05;
 /// ```
 #[allow(dead_code)]
-pub fn bartlett<F>(_samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
+pub fn bartlett<F>(samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
 where
     F: Float
         + std::iter::Sum<F>
@@ -403,7 +403,7 @@ where
         + std::fmt::Display,
 {
     // Check if there are at least two groups
-    let k = _samples.len();
+    let k = samples.len();
     if k < 2 {
         return Err(StatsError::InvalidArgument(
             "At least two _samples are required for Bartlett's test".to_string(),
@@ -411,7 +411,7 @@ where
     }
 
     // Check if any group is empty
-    for (i, sample) in _samples.iter().enumerate() {
+    for (i, sample) in samples.iter().enumerate() {
         if sample.is_empty() {
             return Err(StatsError::InvalidArgument(format!(
                 "Sample {} is empty",
@@ -637,7 +637,7 @@ fn gamma_continued_fraction(a: f64, x: f64) -> f64 {
 /// let equal_variances = p_value >= 0.05;
 /// ```
 #[allow(dead_code)]
-pub fn brown_forsythe<F>(_samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
+pub fn brown_forsythe<F>(samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
 where
     F: Float
         + std::iter::Sum<F>

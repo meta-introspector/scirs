@@ -148,11 +148,11 @@ where
     ///
     /// # Returns
     /// A new `DokArray` containing non-zero elements from the input array
-    pub fn from_array(_array: &Array2<T>) -> Self {
-        let shape = (_array.shape()[0], _array.shape()[1]);
+    pub fn from_array(array: &Array2<T>) -> Self {
+        let shape = (_array.shape()[0], array.shape()[1]);
         let mut dok = Self::new(shape);
 
-        for ((i, j), &value) in _array.indexed_iter() {
+        for ((i, j), &value) in array.indexed_iter() {
             if !value.is_zero() {
                 dok.data.insert((i, j), value);
             }
@@ -350,7 +350,7 @@ where
 
     fn dot(&self, other: &dyn SparseArray<T>) -> SparseResult<Box<dyn SparseArray<T>>> {
         let (_m, n) = self.shape();
-        let (p, _q) = other.shape();
+        let (p, q) = other.shape();
 
         if n != p {
             return Err(SparseError::DimensionMismatch {
@@ -471,7 +471,7 @@ where
                 let (rows_, _) = self.shape();
                 let mut result = DokArray::new((rows_, 1));
 
-                for (&(row, _col), &value) in &self.data {
+                for (&(row, col), &value) in &self.data {
                     let current = result.get(row, 0);
                     result.set(row, 0, current + value)?;
                 }
@@ -611,8 +611,9 @@ mod tests {
 
     #[test]
     fn test_dok_array_from_array() {
-        let dense = Array::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
-            .unwrap();
+        let dense =
+            Array::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
+                .unwrap();
 
         let array = DokArray::from_array(&dense);
 

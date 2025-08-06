@@ -605,7 +605,7 @@ impl RecordArray {
             let new_names: Vec<String> = record
                 .names
                 .iter()
-                .filter(|field_name| *field_name != name)
+                .filter(|fieldname| *fieldname != name)
                 .cloned()
                 .collect();
 
@@ -627,8 +627,8 @@ impl RecordArray {
 
         // Rebuild field_indices map
         self.field_indices.clear();
-        for (i, field_name) in self.names.iter().enumerate() {
-            self.field_indices.insert(field_name.clone(), i);
+        for (i, fieldname) in self.names.iter().enumerate() {
+            self.field_indices.insert(fieldname.clone(), i);
         }
 
         Ok(())
@@ -638,7 +638,7 @@ impl RecordArray {
     ///
     /// # Errors
     /// Returns `ArrayError::ValueError` if old field is not found or new field already exists.
-    pub fn name_8(&mut self, old_name: &str, new_name: &str) -> Result<(), ArrayError> {
+    pub fn name_8(&mut self, old_name: &str, newname: &str) -> Result<(), ArrayError> {
         // Check if old field exists
         if !self.field_indices.contains_key(old_name) {
             return Err(ArrayError::ValueError(format!(
@@ -647,9 +647,9 @@ impl RecordArray {
         }
 
         // Check if new field already exists
-        if self.field_indices.contains_key(new_name) {
+        if self.field_indices.contains_key(newname) {
             return Err(ArrayError::ValueError(format!(
-                "Field '{new_name}' already exists"
+                "Field '{newname}' already exists"
             )));
         }
 
@@ -658,7 +658,7 @@ impl RecordArray {
             // Get the value for the field
             if let Some(value) = record.fields.remove(old_name) {
                 // Add field with new name
-                record.add_field(new_name, value);
+                record.add_field(newname, value);
 
                 // Update names
                 let old_index = record
@@ -666,21 +666,21 @@ impl RecordArray {
                     .iter()
                     .position(|name| name == old_name)
                     .expect("Failed to create RecordArray in test");
-                record.names[old_index] = new_name.to_string();
+                record.names[old_index] = newname.to_string();
             }
         }
 
         // Update names in RecordArray
         let old_index = self.field_indices[old_name];
-        self.names[old_index] = new_name.to_string();
+        self.names[old_index] = newname.to_string();
 
         // Update field_indices
         self.field_indices.remove(old_name);
-        self.field_indices.insert(new_name.to_string(), old_index);
+        self.field_indices.insert(newname.to_string(), old_index);
 
         // Update field_titles if the old name had a title
         if let Some(title) = self.field_titles.remove(old_name) {
-            self.field_titles.insert(new_name.to_string(), title);
+            self.field_titles.insert(newname.to_string(), title);
         }
 
         Ok(())

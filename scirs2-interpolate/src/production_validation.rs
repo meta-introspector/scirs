@@ -113,8 +113,8 @@ pub struct ProductionValidator {
 
 impl ProductionValidator {
     /// Create a new production validator
-    pub fn new(_config: ProductionValidationConfig) -> Self {
-        Self { _config }
+    pub fn new(config: ProductionValidationConfig) -> Self {
+        Self { config }
     }
 
     /// Run comprehensive production validation
@@ -599,7 +599,7 @@ impl ProductionValidator {
 
         // Test evaluation at a few points
         let test_x = F::from(5.0).unwrap();
-        let _result = _spline.evaluate(test_x)?;
+        let _result = spline.evaluate(test_x)?;
 
         Ok(())
     }

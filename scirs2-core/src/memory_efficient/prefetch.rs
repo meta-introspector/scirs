@@ -110,8 +110,8 @@ impl PrefetchConfigBuilder {
     }
 
     /// Enable or disable asynchronous prefetching.
-    pub const fn async_prefetch(mut self, async_prefetch: bool) -> Self {
-        self.config.async_prefetch = async_prefetch;
+    pub const fn async_prefetch(mut self, asyncprefetch: bool) -> Self {
+        self.config.async_prefetch = asyncprefetch;
         self
     }
 
@@ -130,7 +130,7 @@ impl PrefetchConfigBuilder {
 /// Trait for tracking and predicting access patterns.
 pub trait AccessPatternTracker: std::fmt::Debug {
     /// Record an access to a block.
-    fn record_access(&mut self, block_idx: usize);
+    fn record_access(&mut self, blockidx: usize);
 
     /// Predict which blocks will be accessed next.
     fn predict_next_blocks(&self, count: usize) -> Vec<usize>;
@@ -224,9 +224,9 @@ impl BlockAccessTracker {
 }
 
 impl AccessPatternTracker for BlockAccessTracker {
-    fn record_access(&mut self, block_idx: usize) {
+    fn record_access(&mut self, blockidx: usize) {
         // Add to history and remove oldest if needed
-        self.history.push_back(block_idx);
+        self.history.push_back(blockidx);
 
         if self.history.len() > self.config.history_size {
             self.history.pop_front();
@@ -351,13 +351,13 @@ impl PrefetchingState {
 
     /// Record an access to a block.
     #[allow(dead_code)]
-    pub fn idx(&mut self, block_idx: usize) {
-        self.tracker.record_access(block_idx);
+    pub fn idx(&mut self, blockidx: usize) {
+        self.tracker.record_access(blockidx);
 
         // Update stats if this was a prefetched block
-        if self.prefetched.contains(&block_idx) {
+        if self.prefetched.contains(&blockidx) {
             self.stats.prefetch_hits += 1;
-            self.prefetched.remove(&block_idx);
+            self.prefetched.remove(&blockidx);
         } else {
             self.stats.prefetch_misses += 1;
         }
@@ -390,15 +390,15 @@ impl PrefetchingState {
 
     /// Mark a block as being prefetched.
     #[allow(dead_code)]
-    pub fn idx_2(&mut self, block_idx: usize) {
-        self.prefetching.insert(block_idx);
+    pub fn idx_2(&mut self, blockidx: usize) {
+        self.prefetching.insert(blockidx);
     }
 
     /// Mark a block as prefetched and available in the cache.
     #[allow(dead_code)]
-    pub fn idx_3(&mut self, block_idx: usize) {
-        self.prefetching.remove(&block_idx);
-        self.prefetched.insert(block_idx);
+    pub fn idx_3(&mut self, blockidx: usize) {
+        self.prefetching.remove(&blockidx);
+        self.prefetched.insert(blockidx);
         self.stats.prefetch_count += 1;
     }
 
@@ -607,7 +607,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
     }
 
     /// Request prefetching of a specific block through the background thread.
-    fn request_prefetch(&self, block_idx: usize) -> CoreResult<()> {
+    fn request_prefetch(&self, blockidx: usize) -> CoreResult<()> {
         if let Some(sender) = &self.prefetch_sender {
             sender
                 .send(PrefetchCommand::Prefetch(block_idx))
@@ -699,7 +699,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> Prefetching for PrefetchingCompres
         Ok(guard.stats())
     }
 
-    fn prefetch_block_by_idx(&mut self, block_idx: usize) -> CoreResult<()> {
+    fn prefetch_block_by_idx(&mut self, blockidx: usize) -> CoreResult<()> {
         if !self.prefetching_enabled {
             return Ok(());
         }

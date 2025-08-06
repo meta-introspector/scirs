@@ -118,9 +118,9 @@ pub struct HSSNode<F> {
 
 impl ClusterNode {
     /// Create a new cluster node
-    pub fn new(_start: usize, end: usize, level: usize) -> Self {
+    pub fn new(start: usize, end: usize, level: usize) -> Self {
         Self {
-            start: _start,
+            start: start,
             end,
             left: None,
             right: None,
@@ -162,7 +162,7 @@ where
     /// use ndarray::Array2;
     /// use scirs2_linalg::hierarchical::HMatrix;
     ///
-    /// let matrix = Array2::fromshape_fn((100, 100), |(i, j)| {
+    /// let matrix = Array2::from_shape_fn((100, 100), |(i, j)| {
     ///     1.0 / (1.0 + (i as f64 - j as f64).abs())
     /// });
     /// let h_matrix = HMatrix::from_dense(&matrix.view(), 1e-6, 20, 32).unwrap();
@@ -173,15 +173,15 @@ where
         max_rank: usize,
         min_block_size: usize,
     ) -> LinalgResult<Self> {
-        let _size = matrix.nrows();
-        if _size != matrix.ncols() {
+        let size = matrix.nrows();
+        if size != matrix.ncols() {
             return Err(LinalgError::ShapeError(
                 "Matrix must be square for H-matrix construction".to_string(),
             ));
         }
 
-        let row_cluster = build_cluster_tree(0, _size, min_block_size);
-        let col_cluster = build_cluster_tree(0, _size, min_block_size);
+        let row_cluster = build_cluster_tree(0, size, min_block_size);
+        let col_cluster = build_cluster_tree(0, size, min_block_size);
 
         let root_block = Self::build_hmatrix_block(
             matrix,
@@ -193,7 +193,7 @@ where
         )?;
 
         Ok(HMatrix {
-            size: _size,
+            size: size,
             root_block,
             tolerance,
             max_rank,
@@ -490,15 +490,15 @@ where
     /// # Returns
     ///
     /// * HSS matrix representation
-    pub fn from_dense(_matrix: &ArrayView2<F>, tolerance: F) -> LinalgResult<Self> {
-        let size = _matrix.nrows();
-        if size != _matrix.ncols() {
+    pub fn from_dense(matrix: &ArrayView2<F>, tolerance: F) -> LinalgResult<Self> {
+        let size = matrix.nrows();
+        if size != matrix.ncols() {
             return Err(LinalgError::ShapeError(
                 "Matrix must be square for HSS construction".to_string(),
             ));
         }
 
-        let tree = Self::build_hss_tree(_matrix, 0, size, 0, tolerance)?;
+        let tree = Self::build_hss_tree(matrix, 0, size, 0, tolerance)?;
 
         Ok(HSSMatrix {
             size,
@@ -655,15 +655,15 @@ where
 
 /// Build cluster tree for hierarchical matrix construction
 #[allow(dead_code)]
-pub fn build_cluster_tree(_start: usize, end: usize, min_size: usize) -> ClusterNode {
-    if end - _start <= min_size {
-        return ClusterNode::new(_start, end, 0);
+pub fn build_cluster_tree(start: usize, end: usize, minsize: usize) -> ClusterNode {
+    if end - start <= minsize {
+        return ClusterNode::new(start, end, 0);
     }
 
-    let mid = (_start + end) / 2;
-    let mut node = ClusterNode::new(_start, end, 0);
-    node.left = Some(Box::new(build_cluster_tree(_start, mid, min_size)));
-    node.right = Some(Box::new(build_cluster_tree(mid, end, min_size)));
+    let mid = (start + end) / 2;
+    let mut node = ClusterNode::new(start, end, 0);
+    node.left = Some(Box::new(build_cluster_tree(start, mid, minsize)));
+    node.right = Some(Box::new(build_cluster_tree(mid, end, minsize)));
 
     node
 }
@@ -806,7 +806,7 @@ mod tests {
 
     #[test]
     fn test_hmatrix_memory_info() {
-        let matrix = Array2::fromshape_fn((128, 128), |(i, j)| {
+        let matrix = Array2::from_shape_fn((128, 128), |(i, j)| {
             1.0 / (1.0 + (i as f64 - j as f64).abs())
         });
 
@@ -821,7 +821,7 @@ mod tests {
     #[test]
     fn test_hss_matrix_basic() {
         // Create a simple HSS-like matrix
-        let matrix = Array2::fromshape_fn((16, 16), |(i, j)| {
+        let matrix = Array2::from_shape_fn((16, 16), |(i, j)| {
             if (i as i32 - j as i32).abs() <= 1 {
                 1.0 // Near diagonal
             } else {
@@ -832,7 +832,7 @@ mod tests {
         let hss_matrix = HSSMatrix::from_dense(&matrix.view(), 1e-6).unwrap();
 
         // Test matrix-vector multiplication
-        let x = Array1::fromshape_fn(16, |i| (i + 1) as f64);
+        let x = Array1::from_shape_fn(16, |i| (i + 1) as f64);
         let y_dense = matrix.dot(&x);
         let y_hss = hss_matrix.matvec(&x.view()).unwrap();
 

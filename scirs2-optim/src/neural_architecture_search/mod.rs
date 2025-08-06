@@ -1263,7 +1263,7 @@ impl<
     > NeuralArchitectureSearch<T>
 {
     /// Create a new Neural Architecture Search engine
-    pub fn new(_config: NASConfig<T>) -> Result<Self> {
+    pub fn new(config: NASConfig<T>) -> Result<Self> {
         // Initialize search strategy
         let search_strategy = Self::create_search_strategy(&_config)?;
 
@@ -1271,7 +1271,7 @@ impl<
         let evaluator = PerformanceEvaluator::new(_config.evaluation_config.clone())?;
 
         // Initialize multi-objective optimizer if needed
-        let multi_objective_optimizer = if _config.multi_objective_config.objectives.len() > 1 {
+        let multi_objective_optimizer = if config.multi_objective_config.objectives.len() > 1 {
             Some(Self::create_multi_objective_optimizer(
                 &_config.multi_objective_config,
             )?)
@@ -1283,7 +1283,7 @@ impl<
         let architecture_controller = Self::create_architecture_controller(&_config)?;
 
         // Initialize progressive search if enabled
-        let progressive_search = if _config.progressive_search {
+        let progressive_search = if config.progressive_search {
             Some(ProgressiveNAS::new(&_config)?)
         } else {
             None
@@ -1293,14 +1293,14 @@ impl<
         let resource_monitor = ResourceMonitor::new(_config.resource_constraints.clone());
 
         // Initialize performance predictor if enabled
-        let performance_predictor = if _config.enable_performance_prediction {
+        let performance_predictor = if config.enable_performance_prediction {
             Some(PerformancePredictor::new(&_config.evaluation_config)?)
         } else {
             None
         };
 
         Ok(Self {
-            config: _config,
+            config: config,
             search_strategy,
             evaluator,
             multi_objective_optimizer,
@@ -1650,15 +1650,15 @@ impl<
 
     /// Helper method implementations would continue...
     // Helper method implementations
-    fn create_search_strategy(_config: &NASConfig<T>) -> Result<Box<dyn SearchStrategy<T>>> {
-        match _config.search_strategy {
+    fn create_search_strategy(config: &NASConfig<T>) -> Result<Box<dyn SearchStrategy<T>>> {
+        match config.search_strategy {
             SearchStrategyType::Random => {
                 let strategy = search_strategies::RandomSearch::new(Some(42));
                 Ok(Box::new(strategy))
             }
             SearchStrategyType::Evolutionary => {
                 let strategy = search_strategies::EvolutionarySearch::new(
-                    _config.population_size,
+                    config.population_size,
                     0.1, // mutation_rate
                     0.8, // crossover_rate
                     3,   // tournament_size
@@ -1700,8 +1700,12 @@ impl<
             }
             _ => {
                 // Default to evolutionary search for other types
-                let strategy =
-                    search_strategies::EvolutionarySearch::new(_config.population_size, 0.1, 0.8, 3);
+                let strategy = search_strategies::EvolutionarySearch::new(
+                    config.population_size,
+                    0.1,
+                    0.8,
+                    3,
+                );
                 Ok(Box::new(strategy))
             }
         }
@@ -1832,7 +1836,7 @@ impl<
         })
     }
 
-    fn component_type_to_u8(&self, component_type: &ComponentType) -> u8 {
+    fn component_type_to_u8(&self, componenttype: &ComponentType) -> u8 {
         match component_type {
             ComponentType::SGD => 0,
             ComponentType::Adam => 1,
@@ -1873,7 +1877,7 @@ impl<
         }
     }
 
-    fn connection_type_to_u8(&self, connection_type: &ConnectionType) -> u8 {
+    fn connection_type_to_u8(&self, connectiontype: &ConnectionType) -> u8 {
         match connection_type {
             ConnectionType::Sequential => 0,
             ConnectionType::Parallel => 1,
@@ -2047,12 +2051,12 @@ impl<
         Ok(())
     }
 
-    fn finalize_search(&self, _search_time: Duration) -> Result<SearchResults<T>> {
+    fn finalize_search(&self, _searchtime: Duration) -> Result<SearchResults<T>> {
         Ok(SearchResults {
             best_architectures: self.best_architectures.clone(),
             pareto_front: self.pareto_front.clone(),
             search_statistics: self.search_statistics.clone(),
-            total_search_time: _search_time,
+            total_search_time: search_time,
             resource_usage_summary: ResourceUsage {
                 memory_gb: T::from(10.0).unwrap(),
                 cpu_time_seconds: T::from(3600.0).unwrap(),
@@ -2100,7 +2104,7 @@ impl<T: Float> Default for SearchStatistics<T> {
 }
 
 impl<T: Float + Send + Sync> ResourceMonitor<T> {
-    fn new(_constraints: ResourceConstraints<T>) -> Self {
+    fn new(constraints: ResourceConstraints<T>) -> Self {
         Self {
             current_usage: ResourceUsage {
                 memory_gb: T::zero(),
@@ -2111,7 +2115,7 @@ impl<T: Float + Send + Sync> ResourceMonitor<T> {
                 network_gb: T::zero(),
             },
             usage_history: VecDeque::new(),
-            limits: _constraints,
+            limits: constraints,
             monitoring_enabled: true,
             violation_count: 0,
         }

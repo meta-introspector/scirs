@@ -183,7 +183,7 @@ impl Default for ICOptions {
 /// let lu_result = lu_decomposition(&matrix, 0.1).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn lu_decomposition<T, S>(_matrix: &S, pivot_threshold: f64) -> SparseResult<LUResult<T>>
+pub fn lu_decomposition<T, S>(_matrix: &S, pivotthreshold: f64) -> SparseResult<LUResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
     S: SparseArray<T>,
@@ -379,15 +379,15 @@ where
 /// let qr_result = qr_decomposition(&matrix).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn qr_decomposition<T, S>(_matrix: &S) -> SparseResult<QRResult<T>>
+pub fn qr_decomposition<T, S>(matrix: &S) -> SparseResult<QRResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
     S: SparseArray<T>,
 {
-    let (m, n) = _matrix.shape();
+    let (m, n) = matrix.shape();
 
     // Convert to dense for QR (sparse QR is complex)
-    let dense_matrix = _matrix.to_array();
+    let dense_matrix = matrix.to_array();
 
     // Simple Gram-Schmidt QR decomposition
     let mut q = Array2::zeros((m, n));
@@ -466,12 +466,12 @@ where
 /// let chol_result = cholesky_decomposition(&matrix).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn cholesky_decomposition<T, S>(_matrix: &S) -> SparseResult<CholeskyResult<T>>
+pub fn cholesky_decomposition<T, S>(matrix: &S) -> SparseResult<CholeskyResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
     S: SparseArray<T>,
 {
-    let (n, m) = _matrix.shape();
+    let (n, m) = matrix.shape();
     if n != m {
         return Err(SparseError::ValueError(
             "Matrix must be square for Cholesky decomposition".to_string(),
@@ -479,7 +479,7 @@ where
     }
 
     // Convert to working format
-    let (row_indices, col_indices, values) = _matrix.find();
+    let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
         row_indices.as_slice().unwrap(),
         col_indices.as_slice().unwrap(),
@@ -888,13 +888,13 @@ where
 ///
 /// Incomplete LU decomposition result
 #[allow(dead_code)]
-pub fn incomplete_lu<T, S>(_matrix: &S, options: Option<ILUOptions>) -> SparseResult<LUResult<T>>
+pub fn incomplete_lu<T, S>(matrix: &S, options: Option<ILUOptions>) -> SparseResult<LUResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
     S: SparseArray<T>,
 {
     let opts = options.unwrap_or_default();
-    let (n, m) = _matrix.shape();
+    let (n, m) = matrix.shape();
 
     if n != m {
         return Err(SparseError::ValueError(
@@ -903,7 +903,7 @@ where
     }
 
     // Convert to working format
-    let (row_indices, col_indices, values) = _matrix.find();
+    let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
         row_indices.as_slice().unwrap(),
         col_indices.as_slice().unwrap(),
@@ -1075,10 +1075,10 @@ impl<T> SparseWorkingMatrix<T>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
 {
-    fn from_triplets(_rows: &[usize], cols: &[usize], values: &[T], n: usize) -> Self {
+    fn from_triplets(rows: &[usize], cols: &[usize], values: &[T], n: usize) -> Self {
         let mut data = HashMap::new();
 
-        for (i, (&row, &col)) in _rows.iter().zip(cols.iter()).enumerate() {
+        for (i, (&row, &col)) in rows.iter().zip(cols.iter()).enumerate() {
             data.insert((row, col), values[i]);
         }
 
@@ -1164,7 +1164,7 @@ where
     let row_scales = vec![T::one(); matrix.n];
     let col_perm: Vec<usize> = (0..matrix.n).collect();
 
-    let (pivot_row, _pivot_col) = find_enhanced_pivot(matrix, k, p, &col_perm, &row_scales, &opts)?;
+    let (pivot_row, pivot_col) = find_enhanced_pivot(matrix, k, p, &col_perm, &row_scales, &opts)?;
     Ok(pivot_row)
 }
 
@@ -1334,7 +1334,7 @@ type LuFactors<T> = (
 );
 
 #[allow(dead_code)]
-fn extract_lu_factors<T>(_matrix: &SparseWorkingMatrix<T>, p: &[usize], n: usize) -> LuFactors<T>
+fn extract_lu_factors<T>(matrix: &SparseWorkingMatrix<T>, p: &[usize], n: usize) -> LuFactors<T>
 where
     T: Float + Debug + Copy,
 {
@@ -1355,7 +1355,7 @@ where
         l_vals.push(T::one());
 
         for j in 0..n {
-            let val = _matrix.get(actual_row, j);
+            let val = matrix.get(actual_row, j);
             if !val.is_zero() {
                 if j < i {
                     // Below diagonal - goes to L
@@ -1404,18 +1404,18 @@ where
 
 /// Convert dense matrix to sparse
 #[allow(dead_code)]
-fn dense_to_sparse<T>(_matrix: &Array2<T>) -> SparseResult<CsrArray<T>>
+fn dense_to_sparse<T>(matrix: &Array2<T>) -> SparseResult<CsrArray<T>>
 where
     T: Float + Debug + Copy,
 {
-    let (m, n) = _matrix.dim();
+    let (m, n) = matrix.dim();
     let mut rows = Vec::new();
     let mut cols = Vec::new();
     let mut vals = Vec::new();
 
     for i in 0..m {
         for j in 0..n {
-            let val = _matrix[[i, j]];
+            let val = matrix[[i, j]];
             if !val.is_zero() {
                 rows.push(i);
                 cols.push(j);

@@ -453,14 +453,14 @@ impl MOLWaveEquation1D {
 
 /// Convert a MOLHyperbolicResult to a PDESolution
 impl From<MOLHyperbolicResult> for PDESolution<f64> {
-    fn from(_result: MOLHyperbolicResult) -> Self {
+    fn from(result: MOLHyperbolicResult) -> Self {
         let mut grids = Vec::new();
 
         // Add time grid
-        grids.push(_result.t.clone());
+        grids.push(result.t.clone());
 
         // Extract spatial grid from solution
-        let nx = _result.u.shape()[1];
+        let nx = result.u.shape()[1];
 
         // Note: For a proper implementation, the spatial grid should be provided
         let spatial_grid = Array1::linspace(0.0, 1.0, nx);
@@ -469,14 +469,14 @@ impl From<MOLHyperbolicResult> for PDESolution<f64> {
         // Create solver info
         let info = PDESolverInfo {
             num_iterations: 0, // This information is not available directly
-            computation_time: _result.computation_time,
+            computation_time: result.computation_time,
             residual_norm: None,
             convergence_history: None,
             method: "Method of Lines (Hyperbolic)".to_string(),
         };
 
         // For hyperbolic PDEs, we return both u and u_t as values
-        let values = vec![_result.u, _result.u_t];
+        let values = vec![result.u, result.u_t];
 
         PDESolution {
             grids,

@@ -172,7 +172,7 @@ pub struct EWMA<F: Float> {
 
 impl<F: Float + Debug> EWMA<F> {
     /// Create new EWMA tracker
-    pub fn new(_alpha: F) -> Result<Self> {
+    pub fn new(alpha: F) -> Result<Self> {
         if _alpha <= F::zero() || _alpha >, F::one() {
             return Err(TimeSeriesError::InvalidParameter {
                 name: "_alpha".to_string(),
@@ -181,7 +181,7 @@ impl<F: Float + Debug> EWMA<F> {
         }
 
         Ok(Self {
-            _alpha,
+            alpha,
             current_value: None,
             variance: None,
         })
@@ -242,10 +242,10 @@ pub struct CusumDetector<F: Float> {
 
 impl<F: Float + Debug> CusumDetector<F> {
     /// Create new CUSUM detector
-    pub fn new(_threshold: F, drift: F) -> Self {
+    pub fn new(threshold: F, drift: F) -> Self {
         Self {
             mean_estimate: F::zero(),
-            _threshold,
+            threshold,
             cusum_pos: F::zero(),
             cusum_neg: F::zero(),
             count: 0,
@@ -311,7 +311,7 @@ pub struct StreamingAnalyzer<F: Float + Debug> {
 
 impl<F: Float + Debug> StreamingAnalyzer<F> {
     /// Create new streaming analyzer
-    pub fn new(_config: StreamConfig) -> Result<Self> {
+    pub fn new(config: StreamConfig) -> Result<Self> {
         let ewma = EWMA::new(F::from(0.1).unwrap())?;
         let cusum = CusumDetector::new(
             F::from(_config.change_detection_threshold).unwrap(),
@@ -319,7 +319,7 @@ impl<F: Float + Debug> StreamingAnalyzer<F> {
         );
 
         Ok(Self {
-            _config,
+            config,
             buffer: VecDeque::new(),
             timestamps: VecDeque::new(),
             stats: OnlineStats::new(),
@@ -530,22 +530,22 @@ pub struct MultiSeriesAnalyzer<F: Float + Debug> {
 
 impl<F: Float + Debug> MultiSeriesAnalyzer<F> {
     /// Create new multi-series analyzer
-    pub fn new(_config: StreamConfig) -> Self {
+    pub fn new(config: StreamConfig) -> Self {
         Self {
             analyzers: HashMap::new(),
-            _config,
+            config,
         }
     }
 
     /// Add new time series to track
-    pub fn add_series(&mut self, series_id: String) -> Result<()> {
+    pub fn add_series(&mut self, seriesid: String) -> Result<()> {
         let analyzer = StreamingAnalyzer::new(self.config.clone())?;
         self.analyzers.insert(series_id, analyzer);
         Ok(())
     }
 
     /// Add observation to specific series
-    pub fn add_observation(&mut self, series_id: &str, value: F) -> Result<()> {
+    pub fn add_observation(&mut self, seriesid: &str, value: F) -> Result<()> {
         if let Some(analyzer) = self.analyzers.get_mut(series_id) {
             analyzer.add_observation(value)
         } else {
@@ -556,12 +556,12 @@ impl<F: Float + Debug> MultiSeriesAnalyzer<F> {
     }
 
     /// Get analyzer for specific series
-    pub fn get_analyzer(&self, series_id: &str) -> Option<&StreamingAnalyzer<F>> {
+    pub fn get_analyzer(&self, seriesid: &str) -> Option<&StreamingAnalyzer<F>> {
         self.analyzers.get(series_id)
     }
 
     /// Get mutable analyzer for specific series
-    pub fn get_analyzer_mut(&mut self, series_id: &str) -> Option<&mut StreamingAnalyzer<F>> {
+    pub fn get_analyzer_mut(&mut self, seriesid: &str) -> Option<&mut StreamingAnalyzer<F>> {
         self.analyzers.get_mut(series_id)
     }
 
@@ -571,7 +571,7 @@ impl<F: Float + Debug> MultiSeriesAnalyzer<F> {
     }
 
     /// Remove series
-    pub fn remove_series(&mut self, series_id: &str) -> bool {
+    pub fn remove_series(&mut self, seriesid: &str) -> bool {
         self.analyzers.remove(series_id).is_some()
     }
 
@@ -842,10 +842,10 @@ pub mod feature_engineering {
 
     impl<F: Float + Debug + Clone + FromPrimitive> StreamingFeatureExtractor<F> {
         /// Create new streaming feature extractor
-        pub fn new(_max_window_size: usize, feature_configs: Vec<FeatureConfig>) -> Self {
+        pub fn new(_max_window_size: usize, featureconfigs: Vec<FeatureConfig>) -> Self {
             Self {
                 window_buffer: VecDeque::with_capacity(_max_window_size),
-                _max_window_size,
+                max_window_size,
                 feature_configs,
                 cached_stats: HashMap::new(),
                 feature_history: VecDeque::with_capacity(100),
@@ -912,7 +912,7 @@ pub mod feature_engineering {
         }
 
         /// Compute specific feature type
-        fn compute_feature(&self, feature_type: &FeatureType, data: &[F]) -> Result<F> {
+        fn compute_feature(&self, featuretype: &FeatureType, data: &[F]) -> Result<F> {
             if data.is_empty() {
                 return Ok(F::zero());
             }
@@ -1206,7 +1206,7 @@ pub mod feature_engineering {
         }
 
         /// Compute spectral rolloff
-        fn compute_spectral_rolloff(&self, data: &[F], rolloff_threshold: f64) -> Result<F> {
+        fn compute_spectral_rolloff(&self, data: &[F], rolloffthreshold: f64) -> Result<F> {
             if data.is_empty() {
                 return Ok(F::zero());
             }
@@ -1475,7 +1475,7 @@ pub mod feature_engineering {
         }
 
         /// Compute Bollinger Bands position
-        fn compute_bollinger_bands(&self, data: &[F], period: usize, num_std: f64) -> Result<F> {
+        fn compute_bollinger_bands(&self, data: &[F], period: usize, numstd: f64) -> Result<F> {
             if data.len() < period {
                 return Ok(F::from(0.5).unwrap()); // Middle position
             }
@@ -1681,7 +1681,7 @@ pub mod adaptive {
 
     impl<F: Float + Debug + Clone + FromPrimitive> AdaptiveLinearRegression<F> {
         /// Create new adaptive linear regression
-        pub fn new(_num_features: usize, forgetting_factor: F, regularization: F) -> Result<Self> {
+        pub fn new(_num_features: usize, forgettingfactor: F, regularization: F) -> Result<Self> {
             if forgetting_factor <= F::zero() || forgetting_factor >, F::one() {
                 return Err(TimeSeriesError::InvalidParameter {
                     name: "forgetting_factor".to_string(),
@@ -1847,7 +1847,7 @@ pub mod adaptive {
 
     impl<F: Float + Debug + Clone + FromPrimitive> AdaptiveARIMA<F> {
         /// Create new adaptive ARIMA model
-        pub fn new(p: usize, d: usize, q: usize, learning_rate: F) -> Self {
+        pub fn new(p: usize, d: usize, q: usize, learningrate: F) -> Self {
             Self {
                 p,
                 d,
@@ -1985,7 +1985,7 @@ pub mod adaptive {
         }
 
         /// Initialize MA parameters (simplified)
-        fn initialize_ma_parameters(&mut self_data: &[F]) -> Result<()> {
+        fn initialize_ma_parameters(&mut selfdata: &[F]) -> Result<()> {
             // Simple initialization: small random values
             for i in 0..self.q {
                 self.ma_coeffs[i] = F::from(0.1).unwrap() * F::from((i + 1) as f64 * 0.1).unwrap();
@@ -2027,7 +2027,7 @@ pub mod adaptive {
         }
 
         /// Update parameters using gradient descent
-        fn update_parameters(&mut self_observation: F, residual: F) -> Result<()> {
+        fn update_parameters(&mut selfobservation: F, residual: F) -> Result<()> {
             let processed_data: Vec<F> = if self.d > 0 {
                 self.apply_differencing_to_series()
             } else {
@@ -2524,12 +2524,12 @@ pub mod advanced {
 
     impl<F: Float + Debug + Clone> StreamingPatternMatcher<F> {
         /// Create new pattern matcher
-        pub fn new(_max_buffer_size: usize, threshold: F) -> Self {
+        pub fn new(_max_buffersize: usize, threshold: F) -> Self {
             Self {
                 patterns: Vec::new(),
                 pattern_names: Vec::new(),
                 buffer: VecDeque::with_capacity(_max_buffer_size),
-                _max_buffer_size,
+                max_buffer_size,
                 threshold,
             }
         }
@@ -2649,11 +2649,11 @@ pub mod advanced {
 
     impl<F: Float + Debug + Clone + Default> CircularBuffer<F> {
         /// Create new circular buffer
-        pub fn new(_capacity: usize) -> Self {
+        pub fn new(capacity: usize) -> Self {
             Self {
                 buffer: vec![F::default(); _capacity],
                 position: 0,
-                _capacity,
+                capacity,
                 is_full: false,
             }
         }
@@ -2716,7 +2716,7 @@ pub mod advanced {
         }
 
         /// Calculate statistics over recent window
-        pub fn window_stats(&self, window_size: usize) -> OnlineStats<F> {
+        pub fn window_stats(&self, windowsize: usize) -> OnlineStats<F> {
             let recent_data = self.recent(window_size);
             let mut stats = OnlineStats::new();
 

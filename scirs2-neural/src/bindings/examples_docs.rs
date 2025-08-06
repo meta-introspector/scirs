@@ -14,8 +14,8 @@ pub struct ExamplesDocsGenerator<'a> {
 }
 impl<'a> ExamplesDocsGenerator<'a> {
     /// Create a new examples and docs generator
-    pub fn new(_config: &'a BindingConfig, output_dir: &'a PathBuf) -> Self {
-        Self { _config, output_dir }
+    pub fn new(_config: &'a BindingConfig, outputdir: &'a PathBuf) -> Self {
+        Self { config, output_dir }
     }
     /// Generate examples and documentation
     pub fn generate(&self) -> Result<(Vec<PathBuf>, Vec<PathBuf>)> {

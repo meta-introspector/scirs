@@ -52,7 +52,7 @@ pub use rand::{Rng, RngCore};
 
 /// Compatibility wrapper for updated rand API
 /// In rand 0.9, provides a convenient alias for rng() wrapped in Random
-/// This allows usage like: scirs2, core: random::rng().random_range(0..100)
+/// This allows usage like: scirs2, core: random::rng().gen_range(0..100)
 #[allow(dead_code)]
 pub fn rng() -> Random<rand::rngs::ThreadRng> {
     Random { rng: rand::rng() }
@@ -227,15 +227,15 @@ pub mod sampling {
     }
 
     /// Sample from a normal distribution with given mean and standard deviation
-    pub fn random_normal<R: Rng>(rng: &mut Random<R>, mean: f64, std_dev: f64) -> f64 {
-        rdistr::Normal::new(mean, std_dev)
+    pub fn random_normal<R: Rng>(rng: &mut Random<R>, mean: f64, stddev: f64) -> f64 {
+        rdistr::Normal::new(mean, stddev)
             .unwrap()
             .sample(&mut rng.rng)
     }
 
     /// Sample from a log-normal distribution
-    pub fn random_lognormal<R: Rng>(rng: &mut Random<R>, mean: f64, std_dev: f64) -> f64 {
-        rdistr::LogNormal::new(mean, std_dev)
+    pub fn randomlognormal<R: Rng>(rng: &mut Random<R>, mean: f64, stddev: f64) -> f64 {
+        rdistr::LogNormal::new(mean, stddev)
             .unwrap()
             .sample(&mut rng.rng)
     }
@@ -724,19 +724,19 @@ pub mod variance_reduction {
         }
 
         /// Estimate the optimal control coefficient
-        pub fn estimate_coefficient(&mut self, target_samples: &[f64], control_samples: &[f64]) {
+        pub fn estimate_coefficient(&mut self, target_samples: &[f64], controlsamples: &[f64]) {
             let n = target_samples.len() as f64;
 
             let target_mean = target_samples.iter().sum::<f64>() / n;
-            let control_sample_mean = control_samples.iter().sum::<f64>() / n;
+            let control_sample_mean = controlsamples.iter().sum::<f64>() / n;
 
             let numerator: f64 = target_samples
                 .iter()
-                .zip(control_samples.iter())
+                .zip(controlsamples.iter())
                 .map(|(&y, &x)| (y - target_mean) * (x - control_sample_mean))
                 .sum();
 
-            let denominator: f64 = control_samples
+            let denominator: f64 = controlsamples
                 .iter()
                 .map(|&x| (x - control_sample_mean).powi(2))
                 .sum();
@@ -794,18 +794,18 @@ pub mod importance_sampling {
             F: Fn(f64) -> f64,
             G: Fn(f64) -> f64,
         {
-            let mut _samples = Vec::with_capacity(n_samples);
+            let mut samples = Vec::with_capacity(n_samples);
             let mut weights = Vec::with_capacity(n_samples);
 
             for _ in 0..n_samples {
                 let sample = proposal_sampler(&mut self.rng);
                 let weight = target_pdf(sample) / proposal_pdf(sample);
 
-                _samples.push(sample);
+                samples.push(sample);
                 weights.push(weight);
             }
 
-            (_samples, weights)
+            (samples, weights)
         }
 
         /// Estimate expectation using importance sampling
@@ -839,7 +839,7 @@ pub mod importance_sampling {
         /// Adaptive importance sampling with mixture proposal
         pub fn adaptive_sampling<F>(
             &mut self,
-            target_log_pdf: F,
+            targetlog_pdf: F,
             initial_samples: usize,
             adaptation_rounds: usize,
         ) -> Vec<f64>
@@ -865,10 +865,10 @@ pub mod importance_sampling {
                     let sample = self.rng.sample(normal_dist);
 
                     // Manual calculation of log PDF for normal distribution
-                    let normal_log_pdf = -0.5 * ((sample - proposal_mean) / proposal_std).powi(2)
+                    let normallog_pdf = -0.5 * ((sample - proposal_mean) / proposal_std).powi(2)
                         - 0.5 * (2.0 * std::f64::consts::PI).ln()
                         - proposal_std.ln();
-                    let log_weight = target_log_pdf(sample) - normal_log_pdf;
+                    let log_weight = targetlog_pdf(sample) - normallog_pdf;
 
                     round_sample_vec.push(sample);
                     weights.push(log_weight.exp());
@@ -1287,7 +1287,7 @@ mod tests {
 
     #[test]
     fn test_latin_hypercube_sampling() {
-        let mut lhs = quasi_monte_carlo::LatinHypercubeSampling::with_default_rng(2);
+        let mut lhs = quasi_monte_carlo::LatinHypercubeSampling::new(2);
         let samples = lhs.generate_samples(10);
 
         assert_eq!(samples.shape(), &[10, 2]);
@@ -1381,7 +1381,7 @@ mod tests {
 
     #[test]
     fn test_control_variate() {
-        let mut control = variance_reduction::ControlVariate::new(0.5);
+        let mut control = variance_reduction::ControlVariate::mean(0.5);
 
         let target = vec![0.1, 0.3, 0.7, 0.9];
         let control_samples = vec![0.2, 0.4, 0.6, 0.8];

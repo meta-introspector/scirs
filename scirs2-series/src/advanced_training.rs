@@ -251,12 +251,12 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MAML<F> 
     }
 
     /// Compute meta-loss on query set
-    fn compute_meta_loss(&self, adapted_params: &Array2<F>, task: &TaskData<F>) -> Result<F> {
+    fn compute_meta_loss(&self, adaptedparams: &Array2<F>, task: &TaskData<F>) -> Result<F> {
         self.forward(adapted_params, &task.query_x, &task.query_y)
     }
 
     /// Fast adaptation for new task (few-shot learning)
-    pub fn fast_adapt(&self, support_x: &Array2<F>, support_y: &Array2<F>) -> Result<Array2<F>> {
+    pub fn fast_adapt(&self, support_x: &Array2<F>, supporty: &Array2<F>) -> Result<Array2<F>> {
         let task = TaskData {
             support_x: support_x.clone(),
             support_y: support_y.clone(),
@@ -348,7 +348,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> NeuralOD
     }
 
     /// Forward pass through Neural ODE
-    pub fn forward(&self, initial_state: &Array1<F>) -> Result<Array2<F>> {
+    pub fn forward(&self, initialstate: &Array1<F>) -> Result<Array2<F>> {
         let num_times = self.time_steps.len();
         let mut trajectory = Array2::zeros((num_times, self.input_dim));
 
@@ -699,7 +699,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
     }
 
     /// Generate new time series by sampling from latent space
-    pub fn generate(&self, num_samples: usize) -> Result<Vec<Array2<F>>> {
+    pub fn generate(&self, numsamples: usize) -> Result<Vec<Array2<F>>> {
         let mut _samples = Vec::new();
 
         for i in 0..num_samples {
@@ -711,7 +711,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
             }
 
             let generated = self.decode(&latent)?;
-            _samples.push(generated);
+            samples.push(generated);
         }
 
         Ok(_samples)
@@ -1195,7 +1195,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
     }
 
     /// Single transformer layer
-    fn transformer_layer(&self, input: &Array2<F>, layer_idx: usize) -> Result<Array2<F>> {
+    fn transformer_layer(&self, input: &Array2<F>, layeridx: usize) -> Result<Array2<F>> {
         // Multi-head attention
         let attention_output = self.multi_head_attention(input, layer_idx)?;
 
@@ -1214,7 +1214,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
     }
 
     /// Multi-head attention mechanism
-    fn multi_head_attention(&self, input: &Array2<F>, layer_idx: usize) -> Result<Array2<F>> {
+    fn multi_head_attention(&self, input: &Array2<F>, layeridx: usize) -> Result<Array2<F>> {
         let seq_len = input.nrows();
         let head_dim = self.d_model / self.num_heads;
 
@@ -1322,7 +1322,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
     }
 
     /// Feed-forward network
-    fn feed_forward(&self, input: &Array2<F>, layer_idx: usize) -> Result<Array2<F>> {
+    fn feed_forward(&self, input: &Array2<F>, layeridx: usize) -> Result<Array2<F>> {
         let seq_len = input.nrows();
 
         // First linear layer
@@ -1416,7 +1416,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
     }
 
     /// Output projection to prediction horizon
-    fn output_projection(&self, input: &Array2<F>, batch_size: usize) -> Result<Array2<F>> {
+    fn output_projection(&self, input: &Array2<F>, batchsize: usize) -> Result<Array2<F>> {
         let mut output = Array2::zeros((batch_size, self.pred_len));
 
         // Use last token representation for prediction
@@ -1558,7 +1558,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
     }
 
     /// Run hyperparameter optimization
-    pub fn optimize<ModelFn>(&mut self, objective_fn: ModelFn) -> Result<HyperparameterSet<F>>
+    pub fn optimize<ModelFn>(&mut self, objectivefn: ModelFn) -> Result<HyperparameterSet<F>>
     where
         ModelFn: Fn(&HyperparameterSet<F>) -> Result<F>,
     {
@@ -1640,7 +1640,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
     }
 
     /// Grid search implementation (simplified)
-    fn grid_search(&self_trial: usize) -> Result<HyperparameterSet<F>> {
+    fn grid_search(&selftrial: usize) -> Result<HyperparameterSet<F>> {
         // For simplicity, use random search with some structure
         self.random_search()
     }
@@ -1682,7 +1682,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
     }
 
     /// Predict mean performance (simplified Gaussian Process)
-    fn predict_mean(&self_params: &HyperparameterSet<F>) -> Result<F> {
+    fn predict_mean(selfparams: &HyperparameterSet<F>) -> Result<F> {
         // Simplified: return average of historical scores
         if self.history.is_empty() {
             return Ok(F::zero());
@@ -1697,7 +1697,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
     }
 
     /// Predict standard deviation (simplified)
-    fn predict_std(&self_params: &HyperparameterSet<F>) -> Result<F> {
+    fn predict_std(selfparams: &HyperparameterSet<F>) -> Result<F> {
         // Simplified: return fixed exploration term
         Ok(F::one())
     }
@@ -1880,7 +1880,7 @@ pub struct PrototypicalNetworks<F: Float + Debug + ndarray::ScalarOperand> {
 
 impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> PrototypicalNetworks<F> {
     /// Create new Prototypical Networks model
-    pub fn new(_input_dim: usize, feature_dim: usize, hidden_dims: Vec<usize>) -> Self {
+    pub fn new(_input_dim: usize, feature_dim: usize, hiddendims: Vec<usize>) -> Self {
         // Calculate total parameters for feature extractor
         let mut total_params = 0;
         let mut layer_sizes = vec![_input_dim];
@@ -1973,7 +1973,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Prototyp
                 for j in 0..self.feature_dim {
                     let mut sum = F::zero();
                     for _features in &class_features {
-                        sum = sum + _features[j];
+                        sum = sum + features[j];
                     }
                     prototypes[[class_idx, j]] = sum / F::from(class_features.len()).unwrap();
                 }
@@ -2280,7 +2280,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> REPTILE<
     }
 
     /// Fast adaptation for new task (few-shot learning)
-    pub fn fast_adapt(&self, support_x: &Array2<F>, support_y: &Array2<F>) -> Result<Array2<F>> {
+    pub fn fast_adapt(&self, support_x: &Array2<F>, supporty: &Array2<F>) -> Result<Array2<F>> {
         let task = TaskData {
             support_x: support_x.clone(),
             support_y: support_y.clone(),
@@ -2566,7 +2566,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MANN<F> 
     }
 
     /// Write to external memory
-    fn memory_write(&mut self, controller_output: &Array1<F>) -> Result<()> {
+    fn memory_write(&mut self, controlleroutput: &Array1<F>) -> Result<()> {
         // Simplified memory write - update first row with controller _output
         for i in 0..controller_output.len().min(self.memory_width) {
             self.memory[[0, i]] = controller_output[i];
@@ -2687,7 +2687,7 @@ pub struct MetaOptimizer<F: Float + Debug + ndarray::ScalarOperand> {
 
 impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MetaOptimizer<F> {
     /// Create new meta-optimizer
-    pub fn new(_input_dim: usize, hidden_size: usize) -> Self {
+    pub fn new(_input_dim: usize, hiddensize: usize) -> Self {
         // Initialize LSTM parameters
         let param_count = 4 * hidden_size * (_input_dim + hidden_size) + 4 * hidden_size; // 4 gates
         let mut lstm_params = Array2::zeros((1, param_count));
@@ -2791,7 +2791,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MetaOpti
     }
 
     /// Train meta-optimizer on optimization tasks
-    pub fn meta_train(&mut self, optimization_problems: &[OptimizationProblem<F>]) -> Result<F> {
+    pub fn meta_train(&mut self, optimizationproblems: &[OptimizationProblem<F>]) -> Result<F> {
         let mut total_loss = F::zero();
 
         for problem in optimization_problems {

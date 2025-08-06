@@ -42,17 +42,17 @@ use std::fmt::Debug;
 /// assert_eq!(spectrum.len(), signal.len() / 2 + 1);
 /// ```
 #[allow(dead_code)]
-pub fn rfft_simd<T>(_input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>>
+pub fn rfft_simd<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
     // Use the basic rfft implementation which already handles the logic
-    let result = rfft_basic(_input, n)?;
+    let result = rfft_basic(input, n)?;
 
     // Apply normalization if requested
     if let Some(norm_str) = norm {
         let mut result_mut = result;
-        let n = _input.len();
+        let n = input.len();
         match norm_str {
             "backward" => {
                 let scale = 1.0 / (n as f64);
@@ -109,17 +109,17 @@ where
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn irfft_simd<T>(_input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
+pub fn irfft_simd<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
     // Use the basic irfft implementation
-    let result = irfft_basic(_input, n)?;
+    let result = irfft_basic(input, n)?;
 
     // Apply normalization if requested
     if let Some(norm_str) = norm {
         let mut result_mut = result;
-        let n = _input.len();
+        let n = input.len();
         match norm_str {
             "backward" => {
                 let scale = 1.0 / (n as f64);
@@ -171,32 +171,32 @@ where
 
 /// Adaptive IRFFT that automatically chooses the best implementation
 #[allow(dead_code)]
-pub fn irfft_adaptive<T>(_input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
+pub fn irfft_adaptive<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
     let optimizer = AutoOptimizer::new();
     let caps = PlatformCapabilities::detect();
-    let size = n.unwrap_or_else(|| _input.len() * 2 - 2);
+    let size = n.unwrap_or_else(|| input.len() * 2 - 2);
 
     if caps.gpu_available && optimizer.should_use_gpu(size) {
         // Use GPU implementation when available
-        match irfft_gpu(_input, n, norm) {
+        match irfft_gpu(input, n, norm) {
             Ok(result) => Ok(result),
             Err(_) => {
                 // Fall back to SIMD implementation if GPU fails
-                irfft_simd(_input, n, norm)
+                irfft_simd(input, n, norm)
             }
         }
     } else {
-        irfft_simd(_input, n, norm)
+        irfft_simd(input, n, norm)
     }
 }
 
 /// GPU-accelerated RFFT implementation
 #[cfg(feature = "cuda")]
 #[allow(dead_code)]
-fn rfft_gpu<T>(_input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>>
+fn rfft_gpu<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -208,7 +208,7 @@ where
     let device = context.default_device()?;
 
     // Convert _input to f32 for GPU processing
-    let _input_f32: Vec<f32> = _input.iter().filter_map(|&x| NumCast::from(x)).collect();
+    let _input_f32: Vec<f32> = input.iter().filter_map(|&x| NumCast::from(x)).collect();
 
     let size = n.unwrap_or(input_f32.len());
 
@@ -257,7 +257,7 @@ where
 /// GPU-accelerated IRFFT implementation
 #[cfg(feature = "cuda")]
 #[allow(dead_code)]
-fn irfft_gpu<T>(_input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
+fn irfft_gpu<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -268,9 +268,9 @@ where
     let context = GpuContext::new()?;
     let device = context.default_device()?;
 
-    // For complex _input, we need to handle the conversion properly
+    // For complex input, we need to handle the conversion properly
     // This is a simplified implementation - a real one would handle complex types better
-    let size = n.unwrap_or_else(|| _input.len() * 2 - 2);
+    let size = n.unwrap_or_else(|| input.len() * 2 - 2);
 
     // Create kernel parameters for inverse FFT
     let params = KernelParams::new(DataType::Float32)
@@ -319,7 +319,7 @@ where
 /// Fallback implementations when GPU feature is not enabled
 #[cfg(not(feature = "cuda"))]
 #[allow(dead_code)]
-fn rfft_gpu<T>(_input: &[T], _n: Option<usize>, _norm: Option<&str>) -> FFTResult<Vec<Complex64>>
+fn rfft_gpu<T>(_input: &[T], _n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -330,7 +330,7 @@ where
 
 #[cfg(not(feature = "cuda"))]
 #[allow(dead_code)]
-fn irfft_gpu<T>(_input: &[T], _n: Option<usize>, _norm: Option<&str>) -> FFTResult<Vec<f64>>
+fn irfft_gpu<T>(_input: &[T], _n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {

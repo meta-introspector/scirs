@@ -327,7 +327,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Create smooth function data for testing
 #[allow(dead_code)]
-fn create_smooth_function_data(_n_points: usize) -> (Array1<f64>, Array1<f64>) {
+fn create_smooth_function_data(_npoints: usize) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::from_vec(
         (0.._n_points)
             .map(|i| i as f64 * 2.0 * PI / (_n_points - 1) as f64)
@@ -343,7 +343,7 @@ fn create_smooth_function_data(_n_points: usize) -> (Array1<f64>, Array1<f64>) {
 
 /// Create noisy experimental data for testing
 #[allow(dead_code)]
-fn create_noisy_data(_n_points: usize, noise_level: f64) -> (Array1<f64>, Array1<f64>) {
+fn create_noisy_data(_n_points: usize, noiselevel: f64) -> (Array1<f64>, Array1<f64>) {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 
@@ -368,7 +368,7 @@ fn create_noisy_data(_n_points: usize, noise_level: f64) -> (Array1<f64>, Array1
 
 /// Create sparse scattered data for testing
 #[allow(dead_code)]
-fn create_sparse_scattered_data(_n_points: usize) -> (Array1<f64>, Array1<f64>) {
+fn create_sparse_scattered_data(_npoints: usize) -> (Array1<f64>, Array1<f64>) {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 
@@ -388,7 +388,7 @@ fn create_sparse_scattered_data(_n_points: usize) -> (Array1<f64>, Array1<f64>) 
 
 /// Create oscillatory signal data for testing
 #[allow(dead_code)]
-fn create_oscillatory_data(_n_points: usize) -> (Array1<f64>, Array1<f64>) {
+fn create_oscillatory_data(_npoints: usize) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::from_vec(
         (0.._n_points)
             .map(|i| i as f64 * 10.0 / (_n_points - 1) as f64)
@@ -410,7 +410,7 @@ fn create_oscillatory_data(_n_points: usize) -> (Array1<f64>, Array1<f64>) {
 
 /// Create query points for interpolation
 #[allow(dead_code)]
-fn create_query_points(_n_points: usize, start: f64, end: f64) -> Array1<f64> {
+fn create_query_points(_npoints: usize, start: f64, end: f64) -> Array1<f64> {
     Array1::from_vec(
         (0.._n_points)
             .map(|i| start + (end - start) * i as f64 / (_n_points - 1) as f64)
@@ -420,15 +420,15 @@ fn create_query_points(_n_points: usize, start: f64, end: f64) -> Array1<f64> {
 
 /// Estimate interpolation accuracy
 #[allow(dead_code)]
-fn estimate_interpolation_accuracy(_result: &Array1<f64>, x_new: &Array1<f64>) -> f64 {
+fn estimate_interpolation_accuracy(_result: &Array1<f64>, xnew: &Array1<f64>) -> f64 {
     // Mock implementation - in reality, this would compare against analytical solution
     // or use cross-validation
-    let mean_value = _result.iter().sum::<f64>() / _result.len() as f64;
+    let mean_value = result.iter().sum::<f64>() / result.len() as f64;
     let variance = _result
         .iter()
         .map(|&x| (x - mean_value).powi(2))
         .sum::<f64>()
-        / _result.len() as f64;
+        / result.len() as f64;
 
     // Estimate based on smoothness
     1e-6 / (1.0 + variance.sqrt())
@@ -469,15 +469,15 @@ fn estimate_memory_efficiency(
 
 /// Estimate extrapolation quality
 #[allow(dead_code)]
-fn estimate_extrapolation_quality(_result: &Array1<f64>) -> f64 {
+fn estimate_extrapolation_quality(result: &Array1<f64>) -> f64 {
     // Mock implementation - assess boundary behavior
-    let n = _result.len();
+    let n = result.len();
     if n < 10 {
         return 0.5;
     }
 
-    let start_grad = (_result[1] - _result[0]).abs();
-    let end_grad = (_result[n - 1] - _result[n - 2]).abs();
+    let start_grad = (_result[1] - result[0]).abs();
+    let end_grad = (_result[n - 1] - result[n - 2]).abs();
     let max_grad = _result
         .windows(2)
         .map(|w| (w[1] - w[0]).abs())
@@ -489,9 +489,9 @@ fn estimate_extrapolation_quality(_result: &Array1<f64>) -> f64 {
 
 /// Estimate frequency preservation quality
 #[allow(dead_code)]
-fn estimate_frequency_preservation(_result: &Array1<f64>) -> f64 {
+fn estimate_frequency_preservation(result: &Array1<f64>) -> f64 {
     // Mock implementation - this would typically use FFT analysis
-    let n = _result.len();
+    let n = result.len();
     if n < 10 {
         return 0.5;
     }
@@ -499,8 +499,8 @@ fn estimate_frequency_preservation(_result: &Array1<f64>) -> f64 {
     // Simple oscillation detection
     let mut sign_changes = 0;
     for i in 1..n - 1 {
-        let slope1 = _result[i] - _result[i - 1];
-        let slope2 = _result[i + 1] - _result[i];
+        let slope1 = result[i] - result[i - 1];
+        let slope2 = result[i + 1] - result[i];
         if slope1 * slope2 < 0.0 {
             sign_changes += 1;
         }
@@ -716,7 +716,7 @@ fn demonstrate_error_prediction(
 
 /// Create complex data for quantum optimization testing
 #[allow(dead_code)]
-fn create_complex_optimization_data(_n_points: usize) -> (Array1<f64>, Array1<f64>) {
+fn create_complex_optimization_data(_npoints: usize) -> (Array1<f64>, Array1<f64>) {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 

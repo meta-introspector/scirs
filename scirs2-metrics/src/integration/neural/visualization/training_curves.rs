@@ -17,8 +17,10 @@ pub struct TrainingHistoryVisualizer {
     history: Vec<HashMap<String, f64>>,
     /// Validation history data (epoch -> metric -> value)
     val_history: Option<Vec<HashMap<String, f64>>>,
-    /// X label (default: "Epoch"), x_label: String,
-    /// Y label (default: metric name), y_label: Option<String>,
+    /// X label (default: "Epoch")
+    x_label: String,
+    /// Y label (default: metric name)
+    y_label: Option<String>,
 }
 
 impl TrainingHistoryVisualizer {
@@ -39,19 +41,19 @@ impl TrainingHistoryVisualizer {
     }
 
     /// Add validation history
-    pub fn with_validation(mut self, val_history: Vec<HashMap<String, f64>>) -> Self {
+    pub fn with_validation(mut self, valhistory: Vec<HashMap<String, f64>>) -> Self {
         self.val_history = Some(val_history);
         self
     }
 
     /// Set x-axis label
-    pub fn with_x_label(mut self, x_label: impl Into<String>) -> Self {
+    pub fn with_x_label(mut self, xlabel: impl Into<String>) -> Self {
         self.x_label = x_label.into();
         self
     }
 
     /// Set y-axis label
-    pub fn with_y_label(mut self, y_label: impl Into<String>) -> Self {
+    pub fn with_y_label(mut self, ylabel: impl Into<String>) -> Self {
         self.y_label = Some(y_label.into());
         self
     }
@@ -115,7 +117,7 @@ pub fn training_history_visualization(
     let mut visualizer = TrainingHistoryVisualizer::new(
         format!("Training History ({})", metric_names.join(", ")),
         metric_names,
-        _history,
+        history,
     );
 
     if let Some(val_history) = val_history {

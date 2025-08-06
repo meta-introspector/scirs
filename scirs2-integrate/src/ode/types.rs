@@ -130,10 +130,10 @@ impl<F: IntegrateFloat> MassMatrix<F> {
     }
 
     /// Create a new constant mass matrix
-    pub fn constant(_matrix: ndarray::Array2<F>) -> Self {
+    pub fn constant(matrix: ndarray::Array2<F>) -> Self {
         MassMatrix {
             matrix_type: MassMatrixType::Constant,
-            constant_matrix: Some(_matrix),
+            constant_matrix: Some(matrix),
             time_function: None,
             state_function: None,
             is_banded: false,
@@ -143,14 +143,14 @@ impl<F: IntegrateFloat> MassMatrix<F> {
     }
 
     /// Create a new time-dependent mass matrix M(t)
-    pub fn time_dependent<Func>(_func: Func) -> Self
+    pub fn time_dependent<Func>(func: Func) -> Self
     where
         Func: Fn(F) -> ndarray::Array2<F> + Send + Sync + 'static,
     {
         MassMatrix {
             matrix_type: MassMatrixType::TimeDependent,
             constant_matrix: None,
-            time_function: Some(Arc::new(_func)),
+            time_function: Some(Arc::new(func)),
             state_function: None,
             is_banded: false,
             lower_bandwidth: None,
@@ -159,7 +159,7 @@ impl<F: IntegrateFloat> MassMatrix<F> {
     }
 
     /// Create a new state-dependent mass matrix M(t,y)
-    pub fn state_dependent<Func>(_func: Func) -> Self
+    pub fn state_dependent<Func>(func: Func) -> Self
     where
         Func: Fn(F, ndarray::ArrayView1<F>) -> ndarray::Array2<F> + Send + Sync + 'static,
     {
@@ -167,7 +167,7 @@ impl<F: IntegrateFloat> MassMatrix<F> {
             matrix_type: MassMatrixType::StateDependent,
             constant_matrix: None,
             time_function: None,
-            state_function: Some(Arc::new(_func)),
+            state_function: Some(Arc::new(func)),
             is_banded: false,
             lower_bandwidth: None,
             upper_bandwidth: None,

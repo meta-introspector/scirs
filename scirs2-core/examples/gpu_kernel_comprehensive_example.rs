@@ -335,7 +335,7 @@ fn demo_complete_machine_learning_kernels(
     for (kernel_name, pool_name) in pooling_ops {
         if let Ok(kernel) = ctx.get_kernel(kernel_name) {
             // 2x2 pooling with stride 2
-            let pool_size = 2;
+            let poolsize = 2;
             let stride = 2;
             let output_height = height.div_ceil(stride);
             let output_width = width.div_ceil(stride);
@@ -351,8 +351,8 @@ fn demo_complete_machine_learning_kernels(
             kernel.set_u32("input_width", width as u32);
             kernel.set_u32("output_height", output_height as u32);
             kernel.set_u32("output_width", output_width as u32);
-            kernel.set_u32("pool_height", pool_size as u32);
-            kernel.set_u32("pool_width", pool_size as u32);
+            kernel.set_u32("pool_height", poolsize as u32);
+            kernel.set_u32("pool_width", poolsize as u32);
             kernel.set_u32("stride_y", stride as u32);
             kernel.set_u32("stride_x", stride as u32);
 
@@ -706,8 +706,8 @@ fn demo_performance_analysis(ctx: &GpuContext) -> Result<(), Box<dyn std::error:
         let gpu_time = start.elapsed();
 
         let bytes_read = size * std::mem::size_of::<f32>() * 2; // x and y
-        let bytes_written = size * std::mem::size_of::<f32>(); // y
-        let total_bytes = bytes_read + bytes_written;
+        let byteswritten = size * std::mem::size_of::<f32>(); // y
+        let total_bytes = bytes_read + byteswritten;
         let bandwidth_gb_s = total_bytes as f64 / gpu_time.as_secs_f64() / 1e9;
 
         println!(

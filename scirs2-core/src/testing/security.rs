@@ -194,7 +194,7 @@ impl InputValidationTester {
     }
 
     /// Test input validation with malicious patterns
-    pub fn test_malicious_inputs<F>(&self, test_function: F) -> CoreResult<SecurityTestResult>
+    pub fn test_malicious_inputs<F>(&self, testfunction: F) -> CoreResult<SecurityTestResult>
     where
         F: Fn(&[u8]) -> CoreResult<()>,
     {
@@ -263,7 +263,7 @@ impl InputValidationTester {
     }
 
     /// Test bounds checking with edge cases
-    pub fn test_bounds_checking<F>(&self, test_function: F) -> CoreResult<SecurityTestResult>
+    pub fn test_bounds_checking<F>(&self, testfunction: F) -> CoreResult<SecurityTestResult>
     where
         F: Fn(usize, usize) -> CoreResult<()>,
     {
@@ -425,7 +425,7 @@ impl MemorySafetyTester {
     }
 
     /// Test for potential memory leaks
-    pub fn test_memory_leaks<F>(&self, test_function: F) -> CoreResult<SecurityTestResult>
+    pub fn test_memory_leaks<F>(&self, testfunction: F) -> CoreResult<SecurityTestResult>
     where
         F: Fn() -> CoreResult<()>,
     {
@@ -602,7 +602,7 @@ impl VulnerabilityAssessment {
         self.scan_dependencies(&mut report)?;
 
         // Code security analysis
-        self.analyze_code_security(&mut report)?;
+        self.analyzecode_security(&mut report)?;
 
         // Configuration security check
         self.check_configuration_security(&mut report)?;
@@ -646,7 +646,7 @@ impl VulnerabilityAssessment {
     }
 
     /// Analyze code security patterns
-    fn analyze_code_security(&self, report: &mut SecurityAuditReport) -> CoreResult<()> {
+    fn analyzecode_security(&self, report: &mut SecurityAuditReport) -> CoreResult<()> {
         report.total_tests += 1;
 
         // Static analysis for security patterns

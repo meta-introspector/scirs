@@ -63,10 +63,10 @@ pub struct ProgressiveSearch {
     stagnation_counter: usize,
 impl ProgressiveSearch {
     /// Create a new progressive search
-    pub fn new(_config: ProgressiveConfig) -> Result<Self> {
+    pub fn new(config: ProgressiveConfig) -> Result<Self> {
         let initial_space = SearchSpace::new(_config.initial_search_space.clone())?;
         Ok(Self {
-            _config,
+            config,
             current_stage: 0,
             search_spaces: vec![initial_space],
             stage_results: vec![Vec::new()],
@@ -330,7 +330,7 @@ impl ProgressiveSearchBuilder {
     pub fn new() -> Self {
             config: ProgressiveConfig::default(),
     /// Set number of stages
-    pub fn stages(mut self, num_stages: usize) -> Self {
+    pub fn stages(mut self, numstages: usize) -> Self {
         self.config.num_stages = num_stages;
         self
     /// Set architectures per stage

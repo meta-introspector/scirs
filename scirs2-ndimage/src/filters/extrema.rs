@@ -588,7 +588,7 @@ where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone,
     D: Dimension + 'static,
 {
-    let ndim = _input.ndim();
+    let ndim = input.ndim();
 
     // Helper function to convert linear index to n-dimensional coordinates
     fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {
@@ -683,8 +683,8 @@ where
 {
     use scirs2_core::parallel_ops::*;
 
-    let ndim = _input.ndim();
-    let total_elements = _input.len();
+    let ndim = input.ndim();
+    let total_elements = input.len();
 
     // Helper function to convert linear index to n-dimensional coordinates
     fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {

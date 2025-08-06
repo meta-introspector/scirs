@@ -115,13 +115,13 @@ pub enum InterpolateError {
 }
 
 impl From<ndarray::ShapeError> for InterpolateError {
-    fn from(_err: ndarray::ShapeError) -> Self {
+    fn from(err: ndarray::ShapeError) -> Self {
         InterpolateError::ShapeError(_err.to_string())
     }
 }
 
 impl From<scirs2_core::CoreError> for InterpolateError {
-    fn from(_err: scirs2_core::CoreError) -> Self {
+    fn from(err: scirs2_core::CoreError) -> Self {
         InterpolateError::ComputationError(_err.to_string())
     }
 }
@@ -131,9 +131,9 @@ pub type InterpolateResult<T> = Result<T, InterpolateError>;
 
 impl InterpolateError {
     /// Create an InvalidInput error with a descriptive message
-    pub fn invalid_input(_message: impl Into<String>) -> Self {
+    pub fn invalid_input(message: impl Into<String>) -> Self {
         Self::InvalidInput {
-            _message: _message.into(),
+            _message: message.into(),
         }
     }
 
@@ -181,36 +181,36 @@ impl InterpolateError {
     }
 
     /// Create a standard dimension mismatch error
-    pub fn dimension_mismatch(_expected: usize, actual: usize, context: &str) -> Self {
+    pub fn dimension_mismatch(expected: usize, actual: usize, context: &str) -> Self {
         Self::DimensionMismatch(format!(
             "Dimension mismatch in {context}: _expected {_expected}, got {actual}"
         ))
     }
 
     /// Create a standard empty data error
-    pub fn empty_data(_context: &str) -> Self {
+    pub fn empty_data(context: &str) -> Self {
         Self::InsufficientData(format!("Empty input data provided to {_context}"))
     }
 
     /// Create a standard convergence failure error
-    pub fn convergence_failure(_method: &str, iterations: usize) -> Self {
+    pub fn convergence_failure(method: &str, iterations: usize) -> Self {
         Self::ComputationError(format!(
             "{_method} failed to converge after {iterations} iterations"
         ))
     }
 
     /// Create a numerical stability error
-    pub fn numerical_instability(_context: &str, details: &str) -> Self {
+    pub fn numerical_instability(context: &str, details: &str) -> Self {
         Self::NumericalError(format!("Numerical instability in {_context}: {details}"))
     }
 
     /// Create a numerical error
-    pub fn numerical_error(_message: impl Into<String>) -> Self {
+    pub fn numerical_error(message: impl Into<String>) -> Self {
         Self::NumericalError(_message.into())
     }
 
     /// Create an insufficient data points error
-    pub fn insufficient_points(_required: usize, provided: usize, method: &str) -> Self {
+    pub fn insufficient_points(required: usize, provided: usize, method: &str) -> Self {
         Self::InsufficientData(format!(
             "{method} requires at least {_required} points, but only {provided} provided"
         ))
@@ -250,14 +250,14 @@ impl InterpolateError {
     }
 
     /// Create a numerical stability error with actionable advice
-    pub fn numerical_instability_with_advice(_context: &str, details: &str, advice: &str) -> Self {
+    pub fn numerical_instability_with_advice(context: &str, details: &str, advice: &str) -> Self {
         Self::NumericalError(format!(
             "Numerical instability in {_context}: {details} - ADVICE: {advice}"
         ))
     }
 
     /// Create a convergence failure with actionable recommendations
-    pub fn convergence_failure_with_advice(_method: &str, iterations: usize, advice: &str) -> Self {
+    pub fn convergence_failure_with_advice(method: &str, iterations: usize, advice: &str) -> Self {
         Self::ComputationError(format!(
             "{_method} failed to converge after {iterations} iterations - RECOMMENDATION: {advice}"
         ))
@@ -271,11 +271,11 @@ impl InterpolateError {
     ) -> Self {
         let advice = if let Some(reg) = recommended_regularization {
             format!(
-                "Matrix is ill-conditioned (condition _number: {condition_number:.2e}). Try _regularization parameter ≥ {reg:.2e}"
+                "Matrix is ill-conditioned (condition number: {condition_number:.2e}). Try _regularization parameter ≥ {reg:.2e}"
             )
         } else {
             format!(
-                "Matrix is ill-conditioned (condition _number: {condition_number:.2e}). Consider data preprocessing or _regularization"
+                "Matrix is ill-conditioned (condition number: {condition_number:.2e}). Consider data preprocessing or _regularization"
             )
         };
 
@@ -290,7 +290,7 @@ impl InterpolateError {
     }
 
     /// Create a data quality error with preprocessing suggestions
-    pub fn data_quality_error(_issue: &str, context: &str, preprocessing_advice: &str) -> Self {
+    pub fn data_quality_error(_issue: &str, context: &str, preprocessingadvice: &str) -> Self {
         Self::InvalidInput {
             message: format!(
                 "{_issue} detected in {context}: Data may be unsuitable for interpolation - DATA PREPROCESSING: {preprocessing_advice}"

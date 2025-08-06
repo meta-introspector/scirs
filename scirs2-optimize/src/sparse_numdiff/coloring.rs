@@ -10,13 +10,13 @@ use std::collections::{HashMap, HashSet};
 
 /// Get the list of non-zero columns in a specific row of a sparse matrix
 #[allow(dead_code)]
-fn get_nonzero_cols_in_row(_matrix: &CsrArray<f64>, row: usize) -> Vec<usize> {
+fn get_nonzero_cols_in_row(matrix: &CsrArray<f64>, row: usize) -> Vec<usize> {
     // Get row indices
-    let row_start = _matrix.get_indptr()[row];
-    let row_end = _matrix.get_indptr()[row + 1];
+    let row_start = matrix.get_indptr()[row];
+    let row_end = matrix.get_indptr()[row + 1];
 
     // Collect all column indices in this row
-    let indices = _matrix.get_indices();
+    let indices = matrix.get_indices();
     let mut cols = Vec::new();
     for i in row_start..row_end {
         cols.push(indices[i]);

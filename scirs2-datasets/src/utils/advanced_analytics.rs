@@ -268,7 +268,7 @@ impl AdvancedDatasetAnalyzer {
 }
 
 /// Perform quick quality assessment of a dataset
-pub fn quick_quality_assessment(_dataset: &Dataset) -> Result<f64, Box<dyn Error>> {
+pub fn quick_quality_assessment(dataset: &Dataset) -> Result<f64, Box<dyn Error>> {
     let data = &_dataset.data;
 
     // Quick quality assessment based on basic statistics

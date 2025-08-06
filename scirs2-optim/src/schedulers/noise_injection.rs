@@ -97,7 +97,7 @@ where
     /// let lr = scheduler.get_learning_rate();
     /// assert!(lr >= 0.001); // Learning rate should be at least min_lr
     /// ```
-    pub fn new(base_scheduler: S, noise_dist: NoiseDistribution<A>, min_lr: A) -> Self {
+    pub fn new(base_scheduler: S, noise_dist: NoiseDistribution<A>, minlr: A) -> Self {
         Self {
             base_scheduler,
             noise_dist,
@@ -121,7 +121,7 @@ where
                 let std_dev_f64 = std_dev.to_f64().unwrap();
                 // Box-Muller transformation for Gaussian
                 let u1: f64 = self.rng.gen_range(0.0..1.0);
-                let u2: f64 = self.rng.random_range(0.0, 1.0);
+                let u2: f64 = self.rng.gen_range(0.0..1.0);
                 let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                 let sample = mean_f64 + std_dev_f64 * z0;
                 <A as NumCast>::from(sample).unwrap()
@@ -176,7 +176,7 @@ where
                 let std_dev_f64 = std_dev.to_f64().unwrap();
                 // Box-Muller transformation
                 let u1: f64 = rand_rng.gen_range(0.0..1.0);
-                let u2: f64 = rand_rng.random_range(0.0, 1.0);
+                let u2: f64 = rand_rng.gen_range(0.0..1.0);
                 let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                 let sample = mean_f64 + std_dev_f64 * z0;
                 <A as NumCast>::from(sample).unwrap()

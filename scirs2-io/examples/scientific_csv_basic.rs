@@ -121,8 +121,8 @@ struct Stats {
 
 /// Calculate basic statistics on a 1D array
 #[allow(dead_code)]
-fn calculate_stats(_data: &Array1<f64>) -> Stats {
-    let n = _data.len() as f64;
+fn calculate_stats(data: &Array1<f64>) -> Stats {
+    let n = data.len() as f64;
 
     if n == 0.0 {
         return Stats {
@@ -133,12 +133,12 @@ fn calculate_stats(_data: &Array1<f64>) -> Stats {
         };
     }
 
-    let min = _data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let max = _data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-    let sum: f64 = _data.iter().sum();
+    let min = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let max = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    let sum: f64 = data.iter().sum();
     let mean = sum / n;
 
-    let variance = _data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n;
+    let variance = data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n;
     let std_dev = variance.sqrt();
 
     Stats {

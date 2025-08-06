@@ -283,7 +283,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 
 // Helper function to create a 2D sparse signal
 #[allow(dead_code)]
-fn create_2d_sparse_signal(_rows: usize, cols: usize) -> Vec<f64> {
+fn create_2d_sparse_signal(rows: usize, cols: usize) -> Vec<f64> {
     let mut signal = vec![0.0; _rows * cols];
 
     for i in 0.._rows {
@@ -299,7 +299,7 @@ fn create_2d_sparse_signal(_rows: usize, cols: usize) -> Vec<f64> {
 
 // Helper function to compute relative error
 #[allow(dead_code)]
-fn compute_relative_error(_original: &[Complex64], reconstructed: &[Complex64]) -> f64 {
+fn compute_relative_error(original: &[Complex64], reconstructed: &[Complex64]) -> f64 {
     // Make sure we're comparing signals of the same length
     let len = std::cmp::min(_original.len(), reconstructed.len());
 
@@ -308,7 +308,7 @@ fn compute_relative_error(_original: &[Complex64], reconstructed: &[Complex64]) 
     }
 
     // Normalize signals before comparing
-    let orig_energy: f64 = _original.iter().take(len).map(|c| c.norm_sqr()).sum();
+    let orig_energy: f64 = original.iter().take(len).map(|c| c.norm_sqr()).sum();
     let recon_energy: f64 = reconstructed.iter().take(len).map(|c| c.norm_sqr()).sum();
 
     // Compute scaling factors
@@ -326,7 +326,7 @@ fn compute_relative_error(_original: &[Complex64], reconstructed: &[Complex64]) 
     // Compute error between normalized signals
     let mut error_sum = 0.0;
     for i in 0..len {
-        let orig = _original[i] * orig_scale;
+        let orig = original[i] * orig_scale;
         let recon = reconstructed[i] * recon_scale;
         error_sum += (orig - recon).norm_sqr();
     }

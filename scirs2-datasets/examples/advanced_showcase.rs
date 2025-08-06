@@ -71,7 +71,7 @@ fn create_sample_dataset() -> Result<Dataset, Box<dyn std::error::Error>> {
 
 /// Demonstrate advanced analytics capabilities
 #[allow(dead_code)]
-fn demonstrate_advanced_analytics(_dataset: &Dataset) -> Result<(), Box<dyn std::error::Error>> {
+fn demonstrate_advanced_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧠 Advanced Analytics Demonstration");
     println!("==========================================");
 
@@ -199,7 +199,7 @@ fn demonstrate_advanced_gpu_optimization() -> Result<(), Box<dyn std::error::Err
 
 /// Demonstrate adaptive streaming capabilities
 #[allow(dead_code)]
-fn demonstrate_adaptive_streaming(_dataset: &Dataset) -> Result<(), Box<dyn std::error::Error>> {
+fn demonstrate_adaptive_streaming(dataset: &Dataset) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌊 Adaptive Streaming Demonstration");
     println!("===================================");
 

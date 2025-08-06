@@ -1162,57 +1162,57 @@ where
         initialize_or_evolve_consciousness(consciousness_state, (height, width), config)?;
 
     // Stage 1: Consciousness Awakening and Self-Awareness
-    let consciousness_awakening = awaken_consciousness(&image, &mut _state, config)?;
+    let consciousness_awakening = awaken_consciousness(&image, &mut state, config)?;
 
     // Stage 2: Transcendent Pattern Recognition
     let transcendent_patterns = if config.transcendent_patterns {
-        recognize_transcendent_patterns(&image, &consciousness_awakening, &mut _state, config)?
+        recognize_transcendent_patterns(&image, &consciousness_awakening, &mut state, config)?
     } else {
         Vec::new()
     };
 
     // Stage 3: Quantum Intuition Processing
     let intuitive_insights = if config.quantum_intuition {
-        process_quantum_intuition(&image, &transcendent_patterns, &mut _state, config)?
+        process_quantum_intuition(&image, &transcendent_patterns, &mut state, config)?
     } else {
         Vec::new()
     };
 
     // Stage 4: Emergent Intelligence Processing
     let emergent_processing = if config.emergent_intelligence {
-        apply_emergent_intelligence(&image, &intuitive_insights, &mut _state, config)?
+        apply_emergent_intelligence(&image, &intuitive_insights, &mut state, config)?
     } else {
         EmergentProcessingResult::default()
     };
 
     // Stage 5: Meta-Meta-Learning Adaptation
     let meta_meta_adaptations = if config.meta_meta_learning {
-        apply_meta_meta_learning(&emergent_processing, &mut _state, config)?
+        apply_meta_meta_learning(&emergent_processing, &mut state, config)?
     } else {
         Vec::new()
     };
 
     // Stage 6: Quantum Superintelligence Processing
     let superintelligent_processing = if config.quantum_superintelligence {
-        apply_quantum_superintelligence(&image, &meta_meta_adaptations, &mut _state, config)?
+        apply_quantum_superintelligence(&image, &meta_meta_adaptations, &mut state, config)?
     } else {
         SuperintelligentResult::default()
     };
 
     // Stage 7: Consciousness-Driven Optimization
     let optimized_processing =
-        optimize_through_consciousness(&image, &superintelligent_processing, &mut _state, config)?;
+        optimize_through_consciousness(&image, &superintelligent_processing, &mut state, config)?;
 
     // Stage 8: Higher-Dimensional Integration
-    let higher_dim_result = integrate_higher_dimensions(&optimized_processing, &mut _state, config)?;
+    let higher_dim_result = integrate_higher_dimensions(&optimized_processing, &mut state, config)?;
 
     // Stage 9: Consciousness Synchronization
     if config.consciousness_sync {
-        synchronize_consciousness(&mut _state, config)?;
+        synchronize_consciousness(&mut state, config)?;
     }
 
     // Stage 10: Self-Improvement and Evolution
-    evolve_consciousness(&mut _state, &higher_dim_result, config)?;
+    evolve_consciousness(&mut state, &higher_dim_result, config)?;
 
     // Stage 11: Generate Final Output
     let final_output = synthesize_conscious_output(&image, &higher_dim_result, &_state, config)?;
@@ -1225,7 +1225,7 @@ where
         config,
     )?;
 
-    Ok((final_output, _state, insights))
+    Ok((final_output, state, insights))
 }
 
 /// Consciousness Insights
@@ -1548,7 +1548,7 @@ where
     T: Float + FromPrimitive + Copy,
 {
     // Simulate consciousness awakening
-    let (height, width) = _image.dim();
+    let (height, width) = image.dim();
     let consciousness_awakening = Array2::ones((height, width)) * 0.8; // High consciousness level
     Ok(consciousness_awakening)
 }
@@ -1648,7 +1648,7 @@ fn optimize_through_consciousness<T>(
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (height, width) = _image.dim();
+    let (height, width) = image.dim();
     Ok(Array2::ones((height, width)) * 0.9) // Optimized through consciousness
 }
 

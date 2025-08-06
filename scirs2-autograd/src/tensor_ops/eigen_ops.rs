@@ -1,6 +1,6 @@
 use crate::op::{ComputeContext, GradientContext, Op, OpError};
 use crate::tensor::Tensor;
-use crate::tensor__ops::convert_to_tensor;
+use crate::tensor_ops::convert_to_tensor;
 use crate::Float;
 use ndarray::ScalarOperand;
 use ndarray::{Array1, Array2, Ix2};
@@ -232,11 +232,11 @@ impl<F: Float + ScalarOperand + FromPrimitive> Op<F> for EigenvaluesOp {
 
 // Helper functions
 #[allow(dead_code)]
-fn is_symmetric_matrix<F: Float>(_matrix: &ndarray::ArrayView2<F>) -> bool {
-    let n = _matrix.shape()[0];
+fn is_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>) -> bool {
+    let n = matrix.shape()[0];
     for i in 0..n {
         for j in i + 1..n {
-            if (_matrix[[i, j]] - _matrix[[j, i]]).abs() > F::epsilon() {
+            if (_matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() {
                 return false;
             }
         }
@@ -464,11 +464,11 @@ fn compute_general_eigen<F: Float + ScalarOperand + FromPrimitive>(
 
 // Helper function to check if a matrix is nearly symmetric
 #[allow(dead_code)]
-fn is_nearly_symmetric_matrix<F: Float>(_matrix: &ndarray::ArrayView2<F>, tol: F) -> bool {
-    let n = _matrix.shape()[0];
+fn is_nearly_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>, tol: F) -> bool {
+    let n = matrix.shape()[0];
     for i in 0..n {
         for j in i + 1..n {
-            if (_matrix[[i, j]] - _matrix[[j, i]]).abs() > tol {
+            if (_matrix[[i, j]] - matrix[[j, i]]).abs() > tol {
                 return false;
             }
         }

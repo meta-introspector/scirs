@@ -179,7 +179,7 @@ impl NaturalPolicyGradient {
             total_loss: policy_loss + value_loss,
             metrics,
 impl RLAgent for NaturalPolicyGradient {
-    fn act(&self, observation: &ArrayView1<f32>, _training: bool) -> Result<Array1<f32>> {
+    fn act(&self, observation: &ArrayView1<f32>, training: bool) -> Result<Array1<f32>> {
         self.policy.sample_action(observation)
     fn update(&mut self, batch: &ExperienceBatch) -> Result<LossInfo> {
         self.experience_buffer.push(batch.clone());
@@ -254,7 +254,7 @@ pub struct InverseModel {
     /// Network for predicting action
     action_predictor: ValueNetwork,
 impl InverseModel {
-    pub fn new(_feature_dim: usize, action_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
+    pub fn new(_feature_dim: usize, action_dim: usize, hiddensizes: Vec<usize>) -> Result<Self> {
         let action_predictor = ValueNetwork::new(_feature_dim * 2, action_dim, hidden_sizes)?;
         Ok(Self { action_predictor })
     /// Predict action from state features
@@ -417,7 +417,7 @@ impl MAMLAgent {
             meta_value,
             task_buffer: Vec::new(),
     /// Add task experience for meta-learning
-    pub fn add_task_experience(&mut self, task_experience: TaskExperience) {
+    pub fn add_task_experience(&mut self, taskexperience: TaskExperience) {
         self.task_buffer.push(task_experience);
         // Keep only recent tasks
         if self.task_buffer.len() > self.config.tasks_per_update * 2 {
@@ -481,7 +481,7 @@ impl MAMLAgent {
             policy_loss: Some(total_meta_loss),
             total_loss: total_meta_loss,
     /// Fast adaptation to a new task
-    pub fn fast_adapt(&self, support_batch: &ExperienceBatch) -> Result<PolicyNetwork> {
+    pub fn fast_adapt(&self, supportbatch: &ExperienceBatch) -> Result<PolicyNetwork> {
         let (adapted_policy_) = self.inner_loop_adaptation(support_batch)?;
         Ok(adapted_policy)
 impl RLAgent for MAMLAgent {

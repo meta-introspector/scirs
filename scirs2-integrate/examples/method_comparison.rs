@@ -11,7 +11,7 @@ use std::time::Instant;
 
 /// A helper function to time and report the result of an integration method
 #[allow(dead_code)]
-fn time_integration<F, R>(_name: &str, f: F) -> R
+fn time_integration<F, R>(name: &str, f: F) -> R
 where
     F: FnOnce() -> R,
 {

@@ -1063,7 +1063,7 @@ impl AdvancedMultiGpuCoordinator {
         Ok(results)
     }
     
-    fn execute_on_gpu<T>(&self_work: GpuWorkPartition) -> LinalgResult<Array2<T>> {
+    fn execute_on_gpu<T>(&selfwork: GpuWorkPartition) -> LinalgResult<Array2<T>> {
         // Simplified GPU execution
         Ok(Array2::zeros((1, 1)))
     }
@@ -1098,7 +1098,7 @@ impl IntelligentPartitioner {
         }
     }
     
-    fn partition_workload(&self_candidate: &FusionCandidate) -> LinalgResult<Vec<GpuWorkPartition>> {
+    fn partition_workload(selfcandidate: &FusionCandidate) -> LinalgResult<Vec<GpuWorkPartition>> {
         // Simplified partitioning
         Ok(vec![GpuWorkPartition {
             gpu_id: 0,
@@ -1551,7 +1551,7 @@ impl BandwidthPredictor {
     }
     
     /// Get prediction from trained ML model
-    fn get_model_prediction(&self, complexity: f64, data_size: f64) -> LinalgResult<f64> {
+    fn get_model_prediction(&self, complexity: f64, datasize: f64) -> LinalgResult<f64> {
         match self.models.first() {
             Some(BandwidthPredictionModel::LinearRegression) => {
                 // Linear regression model: bandwidth = a * complexity + b * log(data_size) + c
@@ -1594,12 +1594,12 @@ impl BandwidthPredictor {
     }
     
     /// Linear regression prediction helper
-    fn get_linear_prediction(&self, complexity: f64, data_size: f64) -> LinalgResult<f64> {
+    fn get_linear_prediction(&self, complexity: f64, datasize: f64) -> LinalgResult<f64> {
         Ok(2.1 * complexity + 18.4 * data_size.log10() + 42.7)
     }
     
     /// Neural network prediction helper  
-    fn get_neural_prediction(&self, complexity: f64, data_size: f64) -> LinalgResult<f64> {
+    fn get_neural_prediction(&self, complexity: f64, datasize: f64) -> LinalgResult<f64> {
         let normalized_complexity = (complexity / 1e6).tanh();
         let normalized_size = (data_size.log10() / 15.0).tanh();
         let prediction = 150.0 * (0.7 * normalized_complexity + 0.3 * normalized_size + 0.2).tanh() + 80.0;

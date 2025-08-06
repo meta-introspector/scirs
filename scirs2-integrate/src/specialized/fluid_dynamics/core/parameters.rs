@@ -62,14 +62,14 @@ impl NavierStokesParams {
     }
 
     /// Calculate the Reynolds number given characteristic velocity and length
-    pub fn reynolds_number(&self, characteristic_velocity: f64, characteristic_length: f64) -> f64 {
-        characteristic_velocity * characteristic_length / self.nu
+    pub fn reynolds_number(&self, characteristic_velocity: f64, characteristiclength: f64) -> f64 {
+        characteristic_velocity * characteristiclength / self.nu
     }
 
     /// Calculate CFL number for stability analysis
     /// CFL = u * dt / dx + v * dt / dy (+ w * dt / dz for 3D)
-    pub fn cfl_number_2d(&self, u_max: f64, v_max: f64, dx: f64, dy: f64) -> f64 {
-        u_max * self.dt / dx + v_max * self.dt / dy
+    pub fn cfl_number_2d(&self, u_max: f64, vmax: f64, dx: f64, dy: f64) -> f64 {
+        u_max * self.dt / dx + vmax * self.dt / dy
     }
 
     /// Calculate CFL number for 3D case

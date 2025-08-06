@@ -496,11 +496,11 @@ pub struct ResourceMonitor {
 
 impl Experiment {
     /// Create a new experiment
-    pub fn new(_name: &str) -> Self {
+    pub fn new(name: &str) -> Self {
         let now = Utc::now();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
-            _name: _name.to_string(),
+            _name: name.to_string(),
             hypothesis: String::new(),
             description: String::new(),
             status: ExperimentStatus::Planning,
@@ -541,7 +541,7 @@ impl Experiment {
     }
     
     /// Set dataset information
-    pub fn dataset(mut self, dataset_info: DatasetInfo) -> Self {
+    pub fn dataset(mut self, datasetinfo: DatasetInfo) -> Self {
         self.dataset_info = dataset_info;
         self
     }
@@ -553,7 +553,7 @@ impl Experiment {
     }
     
     /// Add a note to the experiment
-    pub fn add_note(&mut self, author: &str, content: &str, note_type: NoteType) {
+    pub fn add_note(&mut self, author: &str, content: &str, notetype: NoteType) {
         let note = ExperimentNote {
             timestamp: Utc::now(),
             author: author.to_string(),
@@ -837,12 +837,12 @@ impl Default for ExperimentMetadata {
 
 impl ResourceMonitor {
     /// Create a new resource monitor
-    pub fn new(_interval_seconds: u64) -> Self {
+    pub fn new(_intervalseconds: u64) -> Self {
         Self {
             cpu_usage: Vec::new(),
             memory_usage: Vec::new(),
             gpu_memory_usage: Vec::new(),
-            _interval_seconds,
+            interval_seconds,
         }
     }
     

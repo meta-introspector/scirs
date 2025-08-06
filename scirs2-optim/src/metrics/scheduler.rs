@@ -55,7 +55,7 @@ impl<F: Float + Debug + Display + ScalarOperand + FromPrimitive> MetricScheduler
     }
 
     /// Update scheduler with a metric value
-    pub fn step_with_metric(&mut self, metric_value: F) -> F {
+    pub fn step_with_metric(&mut self, metricvalue: F) -> F {
         self.scheduler.step_with_metric(metric_value)
     }
 
@@ -142,7 +142,7 @@ impl<F: Float + Debug + Display + ScalarOperand + FromPrimitive> MetricBasedRedu
     }
 
     /// Update scheduler with a metric value
-    pub fn step_with_metric(&mut self, metric_value: F) -> F {
+    pub fn step_with_metric(&mut self, metricvalue: F) -> F {
         self.metric_history.push(metric_value);
         let lr = self.scheduler.step_with_metric(metric_value);
         self.lr_history.push(lr);

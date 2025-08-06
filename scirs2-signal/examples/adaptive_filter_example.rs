@@ -295,8 +295,8 @@ fn main() {
 
 /// Calculate Signal-to-Noise Ratio in dB
 #[allow(dead_code)]
-fn calculate_snr(_signal: &[f64], noise: &[f64]) -> f64 {
-    let _signal_power: f64 = _signal.iter().map(|&x| x * x).sum::<f64>() / _signal.len() as f64;
+fn calculate_snr(signal: &[f64], noise: &[f64]) -> f64 {
+    let _signal_power: f64 = signal.iter().map(|&x| x * x).sum::<f64>() / signal.len() as f64;
     let noise_power: f64 = noise.iter().map(|&x| x * x).sum::<f64>() / noise.len() as f64;
 
     if noise_power > 1e-10 {
@@ -308,7 +308,7 @@ fn calculate_snr(_signal: &[f64], noise: &[f64]) -> f64 {
 
 /// Extract noise from difference between clean estimate and true clean signal
 #[allow(dead_code)]
-fn get_noise_from_clean(_clean_estimate: &[f64], true_clean: &[f64]) -> Vec<f64> {
+fn get_noise_from_clean(_clean_estimate: &[f64], trueclean: &[f64]) -> Vec<f64> {
     _clean_estimate
         .iter()
         .zip(true_clean.iter())
@@ -318,19 +318,19 @@ fn get_noise_from_clean(_clean_estimate: &[f64], true_clean: &[f64]) -> Vec<f64>
 
 /// Find convergence point (sample number where error drops below threshold)
 #[allow(dead_code)]
-fn find_convergence_point(_errors: &[f64], threshold_ratio: f64) -> usize {
-    if _errors.is_empty() {
+fn find_convergence_point(_errors: &[f64], thresholdratio: f64) -> usize {
+    if errors.is_empty() {
         return 0;
     }
 
-    let final_error = _errors[_errors.len() - 1];
-    let threshold = final_error + threshold_ratio * _errors[0];
+    let final_error = errors[_errors.len() - 1];
+    let threshold = final_error + threshold_ratio * errors[0];
 
-    for (i, &error) in _errors.iter().enumerate() {
+    for (i, &error) in errors.iter().enumerate() {
         if error <= threshold {
             return i;
         }
     }
 
-    _errors.len() - 1
+    errors.len() - 1
 }

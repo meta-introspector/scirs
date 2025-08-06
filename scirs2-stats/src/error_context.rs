@@ -21,9 +21,9 @@ pub struct EnhancedError {
 
 impl EnhancedError {
     /// Create a new enhanced error
-    pub fn new(_error: StatsError, context: impl Into<String>) -> Self {
+    pub fn new(error: StatsError, context: impl Into<String>) -> Self {
         Self {
-            error: _error,
+            error: error,
             context: context.into(),
             suggestions: Vec::new(),
             see_also: Vec::new(),
@@ -84,16 +84,16 @@ pub mod enhanced_validation {
         params: &[(F, &str, ParamType)],
         distribution_name: &str,
     ) -> StatsResult<()> {
-        for &(value, _name, param_type) in params {
+        for &(value, name, param_type) in params {
             match param_type {
                 ParamType::Positive => {
                     if value <= F::zero() {
                         return Err(EnhancedError::new(
-                            StatsError::domain(format!("{} must be positive, got {}", _name, value)),
-                            format!("Invalid {} parameter for {} distribution", _name, distribution_name),
+                            StatsError::domain(format!("{} must be positive, got {}", name, value)),
+                            format!("Invalid {} parameter for {} distribution", name, distribution_name),
                         )
                         .with_suggestions(vec![
-                            format!("Ensure {} > 0", _name),
+                            format!("Ensure {} > 0", name),
                             "Check your data preprocessing steps".to_string(),
                             "Consider using a different distribution if negative values are expected".to_string(),
                         ])
@@ -106,15 +106,15 @@ pub mod enhanced_validation {
                         return Err(EnhancedError::new(
                             StatsError::domain(format!(
                                 "{} must be non-negative, got {}",
-                                _name, value
+                                name, value
                             )),
                             format!(
                                 "Invalid {} parameter for {} distribution",
-                                _name, distribution_name
+                                name, distribution_name
                             ),
                         )
                         .with_suggestions(vec![
-                            format!("Ensure {} >= 0", _name),
+                            format!("Ensure {} >= 0", name),
                             "Check for data entry errors".to_string(),
                         ])
                         .into_error());
@@ -125,11 +125,11 @@ pub mod enhanced_validation {
                         return Err(EnhancedError::new(
                             StatsError::domain(format!(
                                 "{} must be in [0, 1], got {}",
-                                _name, value
+                                name, value
                             )),
                             format!(
                                 "Invalid probability parameter '{}' for {} distribution",
-                                _name, distribution_name
+                                name, distribution_name
                             ),
                         )
                         .with_suggestions(vec![
@@ -145,11 +145,11 @@ pub mod enhanced_validation {
                         return Err(EnhancedError::new(
                             StatsError::domain(format!(
                                 "{} must be an integer, got {}",
-                                _name, value
+                                name, value
                             )),
                             format!(
                                 "Invalid {} parameter for {} distribution",
-                                _name, distribution_name
+                                name, distribution_name
                             ),
                         )
                         .with_suggestions(vec![
@@ -164,11 +164,11 @@ pub mod enhanced_validation {
                         return Err(EnhancedError::new(
                             StatsError::domain(format!(
                                 "{} must be a positive integer, got {}",
-                                _name, value
+                                name, value
                             )),
                             format!(
                                 "Invalid {} parameter for {} distribution",
-                                _name, distribution_name
+                                name, distribution_name
                             ),
                         )
                         .with_suggestions(vec![
@@ -199,7 +199,7 @@ pub mod numerical {
     use super::*;
 
     /// Handle numerical overflow with context
-    pub fn handle_overflow(_operation: &str, values: &[impl Display]) -> StatsError {
+    pub fn handle_overflow(operation: &str, values: &[impl Display]) -> StatsError {
         let value_str = values
             .iter()
             .map(|v| v.to_string())
@@ -210,7 +210,7 @@ pub mod numerical {
             StatsError::computation("Numerical overflow"),
             format!(
                 "Overflow occurred during {} with values: [{}]",
-                _operation, value_str
+                operation, value_str
             ),
         )
         .with_suggestions(vec![
@@ -247,10 +247,10 @@ pub mod numerical {
     }
 
     /// Handle singular matrix errors
-    pub fn handle_singular_matrix(_context: &str) -> StatsError {
+    pub fn handle_singular_matrix(context: &str) -> StatsError {
         EnhancedError::new(
             StatsError::computation("Matrix is singular or near-singular"),
-            format!("Singular matrix encountered in {}", _context),
+            format!("Singular matrix encountered in {}", context),
         )
         .with_suggestions(vec![
             "Check for linear dependencies in your data",
@@ -278,7 +278,7 @@ pub mod data_validation {
     where
         T: Float + Display,
     {
-        if _data.is_empty() && !allow_empty {
+        if data.is_empty() && !allow_empty {
             return Err(EnhancedError::new(
                 StatsError::invalid_argument("Empty _data array"),
                 format!("Empty input _data for {}", context),
@@ -292,8 +292,8 @@ pub mod data_validation {
         }
 
         // Check for NaN or infinite values
-        let nan_count = _data.iter().filter(|&&x| x.is_nan()).count();
-        let inf_count = _data.iter().filter(|&&x| x.is_infinite()).count();
+        let nan_count = data.iter().filter(|&&x| x.is_nan()).count();
+        let inf_count = data.iter().filter(|&&x| x.is_infinite()).count();
 
         if nan_count > 0 {
             return Err(EnhancedError::new(

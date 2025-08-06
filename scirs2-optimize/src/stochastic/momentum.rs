@@ -342,7 +342,7 @@ where
 
     println!("Starting Adaptive Momentum optimization:");
     println!("  Parameters: {}", x.len());
-    println!("  Correlation _window: {}", correlation_window);
+    println!("  Correlation window: {}", correlation_window);
 
     #[allow(clippy::explicit_counter_loop)]
     for iteration in 0..options.max_iter {
@@ -443,12 +443,12 @@ mod tests {
     struct QuadraticFunction;
 
     impl StochasticGradientFunction for QuadraticFunction {
-        fn compute_gradient(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> Array1<f64> {
+        fn compute_gradient(&mut self, x: &ArrayView1<f64>, _batchdata: &[f64]) -> Array1<f64> {
             // Gradient of f(x) = sum(x_i^2) is 2*x
             x.mapv(|xi| 2.0 * xi)
         }
 
-        fn compute_value(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> f64 {
+        fn compute_value(&mut self, x: &ArrayView1<f64>, _batchdata: &[f64]) -> f64 {
             // f(x) = sum(x_i^2)
             x.mapv(|xi| xi * xi).sum()
         }

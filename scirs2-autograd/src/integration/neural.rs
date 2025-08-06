@@ -24,9 +24,9 @@ pub struct AutogradLayer<'a, F: Float> {
 
 impl<'a, F: Float> AutogradLayer<'a, F> {
     /// Create a new autograd layer
-    pub fn new(_layer_type: LayerType, config: LayerConfig) -> Self {
+    pub fn new(_layertype: LayerType, config: LayerConfig) -> Self {
         Self {
-            _layer_type,
+            layer_type,
             parameters: HashMap::new(),
             config,
             state: None,
@@ -219,7 +219,7 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
         Ok(())
     }
 
-    fn update_batch_norm_stats(&mut self_input: &Tensor<'_, F>) -> Result<(), IntegrationError> {
+    fn update_batch_norm_stats(&mut self, input: &Tensor<'_, F>) -> Result<(), IntegrationError> {
         // Update running mean and variance (placeholder)
         Ok(())
     }
@@ -461,7 +461,7 @@ impl<'a, F: Float> AutogradNetwork<'a, F> {
     }
 
     /// Create from SciRS2Data format
-    pub fn from_scirs2_data(_data: &SciRS2Data<'a, F>) -> Result<Self, IntegrationError> {
+    pub fn from_scirs2_data(data: &SciRS2Data<'a, F>) -> Result<Self, IntegrationError> {
         // Simplified reconstruction from _data
         // In practice, would parse layer information and rebuild network
         Ok(Self {

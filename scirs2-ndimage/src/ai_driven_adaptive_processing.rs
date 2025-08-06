@@ -586,18 +586,18 @@ where
     let mut _state = initialize_or_update_ai_state(ai_state, (height, width), config)?;
 
     // Stage 1: Image Pattern Recognition and Analysis
-    let image_pattern = recognize_image_pattern(&image, &mut _state, config)?;
+    let image_pattern = recognize_image_pattern(&image, &mut state, config)?;
 
     // Stage 2: Context-Aware Processing Strategy Selection
-    let processing_strategy = select_optimal_strategy(&image_pattern, &mut _state, config)?;
+    let processing_strategy = select_optimal_strategy(&image_pattern, &mut state, config)?;
 
     // Stage 3: Multi-Modal Knowledge Integration
     let enhanced_strategy =
-        integrate_multimodal_knowledge(processing_strategy, &image_pattern, &mut _state, config)?;
+        integrate_multimodal_knowledge(processing_strategy, &image_pattern, &mut state, config)?;
 
     // Stage 4: Predictive Processing (if enabled)
     let predictive_adjustments = if config.prediction_horizon > 0 {
-        apply_predictive_processing(&enhanced_strategy, &mut _state, config)?
+        apply_predictive_processing(&enhanced_strategy, &mut state, config)?
     } else {
         HashMap::new()
     };
@@ -607,7 +607,7 @@ where
         &image,
         &enhanced_strategy,
         &predictive_adjustments,
-        &mut _state,
+        &mut state,
         config,
     )?;
 
@@ -622,12 +622,12 @@ where
 
     // Stage 7: Continual Learning Update
     if config.continual_learning {
-        update_continual_learning(&mut _state, &performance_evaluation, config)?;
+        update_continual_learning(&mut state, &performance_evaluation, config)?;
     }
 
     // Stage 8: Experience Replay Learning
     update_experience_replay(
-        &mut _state,
+        &mut state,
         &image_pattern,
         &enhanced_strategy,
         &performance_evaluation,
@@ -636,11 +636,11 @@ where
 
     // Stage 9: Transfer Learning Update
     if config.transfer_learning {
-        update_transfer_learning(&mut _state, &image_pattern, &enhanced_strategy, config)?;
+        update_transfer_learning(&mut state, &image_pattern, &enhanced_strategy, config)?;
     }
 
     // Stage 10: Few-Shot Learning Adaptation
-    update_few_shot_learning(&mut _state, &image_pattern, &enhanced_strategy, config)?;
+    update_few_shot_learning(&mut state, &image_pattern, &enhanced_strategy, config)?;
 
     // Stage 11: Generate Explanation
     let explanation = if config.explainable_ai {
@@ -655,9 +655,9 @@ where
     };
 
     // Stage 12: Resource Optimization Learning
-    optimize_resource_learning(&mut _state, &execution_metrics, config)?;
+    optimize_resource_learning(&mut state, &execution_metrics, config)?;
 
-    Ok((processed_image, _state, explanation))
+    Ok((processed_image, state, explanation))
 }
 
 /// Processing Explanation
@@ -846,14 +846,14 @@ where
 
 // Helper functions for advanced pattern recognition
 #[allow(dead_code)]
-fn calculate_variance<T>(_image: &ArrayView2<T>, mean: T) -> T
+fn calculate_variance<T>(image: &ArrayView2<T>, mean: T) -> T
 where
     T: Float + FromPrimitive + Copy,
 {
     let mut sum_squared_diff = T::zero();
     let mut count = T::zero();
 
-    for &pixel in _image.iter() {
+    for &pixel in image.iter() {
         let diff = pixel - mean;
         sum_squared_diff = sum_squared_diff + diff * diff;
         count = count + T::one();
@@ -867,26 +867,26 @@ where
 }
 
 #[allow(dead_code)]
-fn analyze_edge_density<T>(_image: &ArrayView2<T>) -> f64
+fn analyze_edge_density<T>(image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (rows, cols) = _image.dim();
+    let (rows, cols) = image.dim();
     let mut edge_count = 0;
     let threshold = T::from_f64(0.1).unwrap_or(T::zero());
 
     // Sobel edge detection
     for i in 1..rows - 1 {
         for j in 1..cols - 1 {
-            let gx = _image[[i - 1, j - 1]] * T::from_f64(-1.0).unwrap_or(T::zero())
-                + _image[[i + 1, j - 1]] * T::from_f64(1.0).unwrap_or(T::zero())
-                + _image[[i - 1, j + 1]] * T::from_f64(-1.0).unwrap_or(T::zero())
-                + _image[[i + 1, j + 1]] * T::from_f64(1.0).unwrap_or(T::zero());
+            let gx = image[[i - 1, j - 1]] * T::from_f64(-1.0).unwrap_or(T::zero())
+                + image[[i + 1, j - 1]] * T::from_f64(1.0).unwrap_or(T::zero())
+                + image[[i - 1, j + 1]] * T::from_f64(-1.0).unwrap_or(T::zero())
+                + image[[i + 1, j + 1]] * T::from_f64(1.0).unwrap_or(T::zero());
 
-            let gy = _image[[i - 1, j - 1]] * T::from_f64(-1.0).unwrap_or(T::zero())
-                + _image[[i - 1, j + 1]] * T::from_f64(1.0).unwrap_or(T::zero())
-                + _image[[i + 1, j - 1]] * T::from_f64(-1.0).unwrap_or(T::zero())
-                + _image[[i + 1, j + 1]] * T::from_f64(1.0).unwrap_or(T::zero());
+            let gy = image[[i - 1, j - 1]] * T::from_f64(-1.0).unwrap_or(T::zero())
+                + image[[i - 1, j + 1]] * T::from_f64(1.0).unwrap_or(T::zero())
+                + image[[i + 1, j - 1]] * T::from_f64(-1.0).unwrap_or(T::zero())
+                + image[[i + 1, j + 1]] * T::from_f64(1.0).unwrap_or(T::zero());
 
             let magnitude = (gx * gx + gy * gy).sqrt();
             if magnitude > threshold {
@@ -899,29 +899,29 @@ where
 }
 
 #[allow(dead_code)]
-fn analyzetexture_energy<T>(_image: &ArrayView2<T>) -> f64
+fn analyzetexture_energy<T>(image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (rows, cols) = _image.dim();
+    let (rows, cols) = image.dim();
     let mut energy = 0.0;
 
     // Local Binary Pattern analysis
     for i in 1..rows - 1 {
         for j in 1..cols - 1 {
-            let center = _image[[i, j]];
+            let center = image[[i, j]];
             let mut pattern = 0u8;
 
             // 8-connected neighbors
             let neighbors = [
-                _image[[i - 1, j - 1]],
-                _image[[i - 1, j]],
-                _image[[i - 1, j + 1]],
-                _image[[i, j + 1]],
-                _image[[i + 1, j + 1]],
-                _image[[i + 1, j]],
-                _image[[i + 1, j - 1]],
-                _image[[i, j - 1]],
+                image[[i - 1, j - 1]],
+                image[[i - 1, j]],
+                image[[i - 1, j + 1]],
+                image[[i, j + 1]],
+                image[[i + 1, j + 1]],
+                image[[i + 1, j]],
+                image[[i + 1, j - 1]],
+                image[[i, j - 1]],
             ];
 
             for (k, &neighbor) in neighbors.iter().enumerate() {
@@ -938,19 +938,19 @@ where
 }
 
 #[allow(dead_code)]
-fn analyze_frequency_content<T>(_image: &ArrayView2<T>) -> f64
+fn analyze_frequency_content<T>(image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (rows, cols) = _image.dim();
+    let (rows, cols) = image.dim();
     let mut high_freq_energy = 0.0;
 
     // Simple high-pass filter approximation
     for i in 1..rows - 1 {
         for j in 1..cols - 1 {
             let laplacian =
-                _image[[i - 1, j]] + _image[[i + 1, j]] + _image[[i, j - 1]] + _image[[i, j + 1]]
-                    - _image[[i, j]] * T::from_f64(4.0).unwrap_or(T::zero());
+                image[[i - 1, j]] + image[[i + 1, j]] + image[[i, j - 1]] + image[[i, j + 1]]
+                    - image[[i, j]] * T::from_f64(4.0).unwrap_or(T::zero());
 
             high_freq_energy += laplacian.to_f64().unwrap_or(0.0).abs();
         }
@@ -960,17 +960,17 @@ where
 }
 
 #[allow(dead_code)]
-fn analyze_gradient_strength<T>(_image: &ArrayView2<T>) -> f64
+fn analyze_gradient_strength<T>(image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (rows, cols) = _image.dim();
+    let (rows, cols) = image.dim();
     let mut total_gradient = 0.0;
 
     for i in 0..rows - 1 {
         for j in 0..cols - 1 {
-            let dx = _image[[i, j + 1]] - _image[[i, j]];
-            let dy = _image[[i + 1, j]] - _image[[i, j]];
+            let dx = image[[i, j + 1]] - image[[i, j]];
+            let dy = image[[i + 1, j]] - image[[i, j]];
             let gradient_mag = (dx * dx + dy * dy).sqrt();
             total_gradient += gradient_mag.to_f64().unwrap_or(0.0);
         }
@@ -980,11 +980,11 @@ where
 }
 
 #[allow(dead_code)]
-fn analyze_homogeneity<T>(_image: &ArrayView2<T>) -> f64
+fn analyze_homogeneity<T>(image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (rows, cols) = _image.dim();
+    let (rows, cols) = image.dim();
     let mut homogeneity = 0.0;
     let window_size = 3;
 
@@ -997,7 +997,7 @@ where
             // Calculate local mean
             for di in 0..window_size {
                 for dj in 0..window_size {
-                    local_mean = local_mean + _image[[i + di, j + dj]];
+                    local_mean = local_mean + image[[i + di, j + dj]];
                     count += 1;
                 }
             }
@@ -1006,7 +1006,7 @@ where
             // Calculate local variance
             for di in 0..window_size {
                 for dj in 0..window_size {
-                    let diff = _image[[i + di, j + dj]] - local_mean;
+                    let diff = image[[i + di, j + dj]] - local_mean;
                     local_variance = local_variance + diff * diff;
                 }
             }
@@ -1022,19 +1022,19 @@ where
 }
 
 #[allow(dead_code)]
-fn analyze_symmetry<T>(_image: &ArrayView2<T>) -> f64
+fn analyze_symmetry<T>(image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (rows, cols) = _image.dim();
+    let (rows, cols) = image.dim();
     let mut horizontal_symmetry = 0.0;
     let mut vertical_symmetry = 0.0;
 
     // Horizontal symmetry
     for i in 0..rows {
         for j in 0..cols / 2 {
-            let left = _image[[i, j]];
-            let right = _image[[i, cols - 1 - j]];
+            let left = image[[i, j]];
+            let right = image[[i, cols - 1 - j]];
             horizontal_symmetry += (left - right).abs().to_f64().unwrap_or(0.0);
         }
     }
@@ -1043,8 +1043,8 @@ where
     // Vertical symmetry
     for i in 0..rows / 2 {
         for j in 0..cols {
-            let top = _image[[i, j]];
-            let bottom = _image[[rows - 1 - i, j]];
+            let top = image[[i, j]];
+            let bottom = image[[rows - 1 - i, j]];
             vertical_symmetry += (top - bottom).abs().to_f64().unwrap_or(0.0);
         }
     }
@@ -1054,19 +1054,19 @@ where
 }
 
 #[allow(dead_code)]
-fn estimate_noise_level<T>(_image: &ArrayView2<T>) -> f64
+fn estimate_noise_level<T>(image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (rows, cols) = _image.dim();
+    let (rows, cols) = image.dim();
     let mut noise_estimate = 0.0;
 
     // Estimate noise using Laplacian of Gaussian
     for i in 1..rows - 1 {
         for j in 1..cols - 1 {
-            let center = _image[[i, j]];
+            let center = image[[i, j]];
             let neighbors_sum =
-                _image[[i - 1, j]] + _image[[i + 1, j]] + _image[[i, j - 1]] + _image[[i, j + 1]];
+                image[[i - 1, j]] + image[[i + 1, j]] + image[[i, j - 1]] + image[[i, j + 1]];
             let laplacian = neighbors_sum - center * T::from_f64(4.0).unwrap_or(T::zero());
             noise_estimate += laplacian.abs().to_f64().unwrap_or(0.0);
         }
@@ -1076,12 +1076,12 @@ where
 }
 
 #[allow(dead_code)]
-fn classify_pattern_type(_features: &Array1<f64>, _neural_network: &NeuralModel) -> PatternType {
+fn classify_pattern_type(_features: &Array1<f64>, _neuralnetwork: &NeuralModel) -> PatternType {
     // AI-based classification using extracted _features
-    let edge_density = _features[1];
-    let texture_energy = _features[2];
-    let high_freq_content = _features[3];
-    let symmetry_score = _features[6];
+    let edge_density = features[1];
+    let texture_energy = features[2];
+    let high_freq_content = features[3];
+    let symmetry_score = features[6];
 
     // Rule-based classification enhanced with AI insights
     if symmetry_score > 0.8 && edge_density > 0.3 {
@@ -1098,11 +1098,11 @@ fn classify_pattern_type(_features: &Array1<f64>, _neural_network: &NeuralModel)
 }
 
 #[allow(dead_code)]
-fn assess_complexity(_features: &Array1<f64>, image_size: usize) -> ComplexityLevel {
-    let variance = _features[0];
-    let edge_density = _features[1];
-    let texture_energy = _features[2];
-    let gradient_strength = _features[4];
+fn assess_complexity(_features: &Array1<f64>, imagesize: usize) -> ComplexityLevel {
+    let variance = features[0];
+    let edge_density = features[1];
+    let texture_energy = features[2];
+    let gradient_strength = features[4];
 
     let complexity_score =
         variance * 0.3 + edge_density * 0.3 + texture_energy * 0.2 + gradient_strength * 0.2;
@@ -1120,7 +1120,7 @@ fn assess_complexity(_features: &Array1<f64>, image_size: usize) -> ComplexityLe
 }
 
 #[allow(dead_code)]
-fn classify_noise_level(_noise_estimate: f64) -> NoiseLevel {
+fn classify_noise_level(_noiseestimate: f64) -> NoiseLevel {
     if _noise_estimate > 0.5 {
         NoiseLevel::High
     } else if noise_estimate > 0.2 {
@@ -1131,26 +1131,26 @@ fn classify_noise_level(_noise_estimate: f64) -> NoiseLevel {
 }
 
 #[allow(dead_code)]
-fn identify_dominant_features(_features: &Array1<f64>) -> Vec<FeatureType> {
+fn identify_dominant_features(features: &Array1<f64>) -> Vec<FeatureType> {
     let mut dominant_features = Vec::new();
 
-    if _features[1] > 0.3 {
+    if features[1] > 0.3 {
         // edge_density
         dominant_features.push(FeatureType::Edges);
     }
-    if _features[2] > 0.4 {
+    if features[2] > 0.4 {
         // texture_energy
         dominant_features.push(FeatureType::Textures);
     }
-    if _features[4] > 0.3 {
+    if features[4] > 0.3 {
         // gradient_strength
         dominant_features.push(FeatureType::Gradients);
     }
-    if _features[5] > 0.7 {
+    if features[5] > 0.7 {
         // homogeneity
         dominant_features.push(FeatureType::Regions);
     }
-    if _features[6] > 0.6 {
+    if features[6] > 0.6 {
         // symmetry_score
         dominant_features.push(FeatureType::Shapes);
     }
@@ -1202,11 +1202,11 @@ fn select_optimal_strategy(
 
 // Helper functions for intelligent strategy selection
 #[allow(dead_code)]
-fn analyze_pattern_for_strategy(_pattern: &ImagePattern) -> HashMap<String, f64> {
+fn analyze_pattern_for_strategy(pattern: &ImagePattern) -> HashMap<String, f64> {
     let mut weights = HashMap::new();
 
     // Pattern type influences algorithm preferences
-    match _pattern.pattern_type {
+    match pattern.pattern_type {
         PatternType::Natural => {
             weights.insert("bilateral_filter".to_string(), 0.8);
             weights.insert("noise_reduction".to_string(), 0.7);
@@ -1235,14 +1235,14 @@ fn analyze_pattern_for_strategy(_pattern: &ImagePattern) -> HashMap<String, f64>
     }
 
     // Complexity level affects processing intensity
-    let complexity_factor = match _pattern.complexity {
+    let complexity_factor = match pattern.complexity {
         ComplexityLevel::Low => 0.7,
         ComplexityLevel::Medium => 1.0,
         ComplexityLevel::High => 1.3,
     };
 
     // Noise level influences denoising algorithms
-    let noise_factor = match _pattern.noise_level {
+    let noise_factor = match pattern.noise_level {
         NoiseLevel::Low => 0.3,
         NoiseLevel::Medium => 0.7,
         NoiseLevel::High => 1.2,
@@ -1356,7 +1356,7 @@ fn calculate_performance_weights(
 }
 
 #[allow(dead_code)]
-fn apply_optimization_target_weights(_target: &OptimizationTarget) -> HashMap<String, f64> {
+fn apply_optimization_target_weights(target: &OptimizationTarget) -> HashMap<String, f64> {
     let mut weights = HashMap::new();
 
     match _target {
@@ -1671,9 +1671,9 @@ fn score_strategies(
                 AlgorithmType::CustomAI => "custom_ai",
             };
 
-            let pattern_score = pattern_weights.get(algorithm_name).unwrap_or(&0.5);
-            let performance_score = performance_weights.get(algorithm_name).unwrap_or(&0.5);
-            let target_score = target_weights.get(algorithm_name).unwrap_or(&0.5);
+            let pattern_score = patternweights.get(algorithm_name).unwrap_or(&0.5);
+            let performance_score = performanceweights.get(algorithm_name).unwrap_or(&0.5);
+            let target_score = targetweights.get(algorithm_name).unwrap_or(&0.5);
 
             // Weighted combination of scores
             let algorithm_score =
@@ -2338,8 +2338,8 @@ where
     Ok(PerformanceRecord {
         timestamp: 0,
         input_characteristics: Array1::zeros(10),
-        _strategy_used: _strategy.clone(),
-        achieved_metrics: _metrics.clone(),
+        _strategy_used: strategy.clone(),
+        achieved_metrics: metrics.clone(),
         context: "evaluation".to_string(),
     })
 }
@@ -2528,7 +2528,7 @@ where
     T: Float + FromPrimitive + Copy + Clone,
 {
     // Placeholder implementation
-    let output = _image.to_owned();
+    let output = image.to_owned();
     Ok((output, 0.7))
 }
 
@@ -2540,7 +2540,7 @@ where
     T: Float + FromPrimitive + Copy + Clone,
 {
     // Placeholder implementation
-    let output = _image.to_owned();
+    let output = image.to_owned();
     Ok((output, 0.7))
 }
 
@@ -2552,7 +2552,7 @@ where
     T: Float + FromPrimitive + Copy + Clone,
 {
     // Placeholder implementation
-    let output = _image.to_owned();
+    let output = image.to_owned();
     Ok((output, 0.7))
 }
 
@@ -2564,7 +2564,7 @@ where
     T: Float + FromPrimitive + Copy + Clone,
 {
     // Placeholder implementation
-    let output = _image.to_owned();
+    let output = image.to_owned();
     Ok((output, 0.7))
 }
 
@@ -2576,6 +2576,6 @@ where
     T: Float + FromPrimitive + Copy + Clone,
 {
     // Placeholder implementation
-    let output = _image.to_owned();
+    let output = image.to_owned();
     Ok((output, 0.7))
 }

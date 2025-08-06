@@ -309,7 +309,7 @@ pub enum OptimizationStrategy {
 
 impl NeuralAdaptiveSparseProcessor {
     /// Create a new neural-adaptive sparse matrix processor
-    pub fn new(_config: NeuralAdaptiveConfig) -> Self {
+    pub fn new(config: NeuralAdaptiveConfig) -> Self {
         let neural_network = NeuralNetwork::new(&_config);
         let pattern_memory = PatternMemory::new(_config.memory_capacity);
 
@@ -326,14 +326,14 @@ impl NeuralAdaptiveSparseProcessor {
         ];
 
         // Initialize RL agent if enabled
-        let rl_agent = if _config.reinforcement_learning {
+        let rl_agent = if config.reinforcement_learning {
             Some(RLAgent::new(&_config))
         } else {
             None
         };
 
         // Initialize transformer if self-attention is enabled
-        let transformer = if _config.self_attention {
+        let transformer = if config.self_attention {
             Some(TransformerModel::new(&_config))
         } else {
             None
@@ -342,7 +342,7 @@ impl NeuralAdaptiveSparseProcessor {
         let experience_buffer = ExperienceBuffer::new(_config.replay_buffer_size);
 
         Self {
-            config: _config.clone(),
+            config: config.clone(),
             neural_network,
             pattern_memory,
             performance_history: VecDeque::new(),
@@ -351,7 +351,7 @@ impl NeuralAdaptiveSparseProcessor {
             rl_agent,
             transformer,
             experience_buffer,
-            current_exploration_rate: _config.exploration_rate,
+            current_exploration_rate: config.exploration_rate,
         }
     }
 
@@ -1258,7 +1258,7 @@ impl NeuralAdaptiveSparseProcessor {
         parallelism_factor * size_factor
     }
 
-    fn estimate_memory_bandwidth(&self, data_size: usize, execution_time: f64) -> f64 {
+    fn estimate_memory_bandwidth(&self, data_size: usize, executiontime: f64) -> f64 {
         if execution_time > 0.0 {
             (data_size as f64 * std::mem::size_of::<f64>() as f64) / execution_time / 1e9
         // GB/s
@@ -1311,7 +1311,7 @@ struct NetworkGradients {
 }
 
 impl NeuralNetwork {
-    fn new(_config: &NeuralAdaptiveConfig) -> Self {
+    fn new(config: &NeuralAdaptiveConfig) -> Self {
         let input_size = 20; // Feature vector size
         let output_size = 9; // Number of optimization strategies
 
@@ -1325,7 +1325,7 @@ impl NeuralNetwork {
         // Input layer
         let input_layer = NeuralLayer {
             weights: Self::initialize_weights(_config.neurons_per_layer, input_size, &mut rng),
-            biases: vec![0.0; _config.neurons_per_layer],
+            biases: vec![0.0; config.neurons_per_layer],
             activation: ActivationFunction::ReLU,
         };
         layers.push(input_layer);
@@ -1335,11 +1335,11 @@ impl NeuralNetwork {
         for _ in 0.._config.hidden_layers {
             let hidden_layer = NeuralLayer {
                 weights: Self::initialize_weights(
-                    _config.neurons_per_layer,
-                    _config.neurons_per_layer,
+                    config.neurons_per_layer,
+                    config.neurons_per_layer,
                     &mut rng,
                 ),
-                biases: vec![0.0; _config.neurons_per_layer],
+                biases: vec![0.0; config.neurons_per_layer],
                 activation: ActivationFunction::ReLU,
             };
             layers.push(hidden_layer);
@@ -1347,21 +1347,21 @@ impl NeuralNetwork {
 
             // Add attention head for this layer
             attention_heads.push(AttentionHead::new(
-                _config.neurons_per_layer / _config.attention_heads,
-                _config.neurons_per_layer,
+                config.neurons_per_layer / config.attention_heads,
+                config.neurons_per_layer,
             ));
         }
 
         // Output layer
         let output_layer = NeuralLayer {
-            weights: Self::initialize_weights(output_size, _config.neurons_per_layer, &mut rng),
+            weights: Self::initialize_weights(output_size, config.neurons_per_layer, &mut rng),
             biases: vec![0.0; output_size],
             activation: ActivationFunction::Sigmoid,
         };
         layers.push(output_layer);
         layer_norms.push(LayerNorm::new(output_size));
 
-        let attention_weights = vec![vec![0.1; _config.attention_heads]; _config.neurons_per_layer];
+        let attention_weights = vec![vec![0.1; config.attention_heads]; config.neurons_per_layer];
 
         Self {
             layers,
@@ -1560,7 +1560,7 @@ impl NeuralNetwork {
     }
 
     /// Update network weights using computed gradients
-    fn update_weights(&mut self, gradients: &NetworkGradients, learning_rate: f64) {
+    fn update_weights(&mut self, gradients: &NetworkGradients, learningrate: f64) {
         for (layer_idx, layer) in self.layers.iter_mut().enumerate() {
             // Update weights
             for (neuron_idx, weights) in layer.weights.iter_mut().enumerate() {
@@ -1578,7 +1578,7 @@ impl NeuralNetwork {
     }
 
     /// Train the network on a single example
-    fn train_single(&mut self, input: &[f64], target: &[f64], learning_rate: f64) -> f64 {
+    fn train_single(&mut self, input: &[f64], target: &[f64], learningrate: f64) -> f64 {
         let (prediction, cache) = self.forward_with_cache(input);
         let gradients = self.backward(target, &prediction, &cache);
         self.update_weights(&gradients, learning_rate);
@@ -1619,7 +1619,7 @@ impl NeuralNetwork {
 }
 
 impl PatternMemory {
-    fn new(_capacity: usize) -> Self {
+    fn new(capacity: usize) -> Self {
         Self {
             matrix_patterns: HashMap::new(),
             access_patterns: VecDeque::new(),
@@ -1629,7 +1629,7 @@ impl PatternMemory {
 }
 
 impl RLAgent {
-    fn new(_config: &NeuralAdaptiveConfig) -> Self {
+    fn new(config: &NeuralAdaptiveConfig) -> Self {
         let q_network = NeuralNetwork::new(_config);
         let target_network = if matches!(_config.rl_algorithm, RLAlgorithm::DQN) {
             Some(NeuralNetwork::new(_config))
@@ -1637,7 +1637,7 @@ impl RLAgent {
             None
         };
 
-        let (policy_network, value_network) = match _config.rl_algorithm {
+        let (policy_network, value_network) = match config.rl_algorithm {
             RLAlgorithm::ActorCritic | RLAlgorithm::PPO | RLAlgorithm::SAC => (
                 Some(NeuralNetwork::new(_config)),
                 Some(NeuralNetwork::new(_config)),
@@ -1650,9 +1650,9 @@ impl RLAgent {
             target_network,
             policy_network,
             value_network,
-            algorithm: _config.rl_algorithm,
-            epsilon: _config.exploration_rate,
-            learning_rate: _config.learning_rate,
+            algorithm: config.rl_algorithm,
+            epsilon: config.exploration_rate,
+            learning_rate: config.learning_rate,
         }
     }
 
@@ -1660,7 +1660,7 @@ impl RLAgent {
         self.q_network.forward(state)
     }
 
-    fn train_dqn(&mut self, batch: &[Experience], discount_factor: f64) {
+    fn train_dqn(&mut self, batch: &[Experience], discountfactor: f64) {
         let mut total_loss = 0.0;
         let batch_size = batch.len();
 
@@ -1769,12 +1769,12 @@ impl RLAgent {
     }
 
     /// Compute discounted returns for policy gradient
-    fn compute_returns(_batch: &[Experience], discount_factor: f64) -> Vec<f64> {
-        let mut returns = vec![0.0; _batch.len()];
+    fn compute_returns(_batch: &[Experience], discountfactor: f64) -> Vec<f64> {
+        let mut returns = vec![0.0; batch.len()];
         let mut running_return = 0.0;
 
         // Compute returns backwards
-        for (i, experience) in _batch.iter().enumerate().rev() {
+        for (i, experience) in batch.iter().enumerate().rev() {
             running_return = experience.reward + discount_factor * running_return;
             returns[i] = running_return;
 
@@ -1786,7 +1786,7 @@ impl RLAgent {
         returns
     }
 
-    fn train_actor_critic(&mut self, batch: &[Experience], discount_factor: f64) {
+    fn train_actor_critic(&mut self, batch: &[Experience], discountfactor: f64) {
         // Pre-compute action indices to avoid borrowing conflicts
         let action_indices: Vec<usize> = batch
             .iter()
@@ -1993,7 +1993,7 @@ impl RLAgent {
         }
     }
 
-    fn train_sac(&mut self, batch: &[Experience], discount_factor: f64) {
+    fn train_sac(&mut self, batch: &[Experience], discountfactor: f64) {
         // Pre-compute action indices to avoid borrowing conflicts
         let action_indices: Vec<usize> = batch
             .iter()
@@ -2098,10 +2098,10 @@ impl RLAgent {
 }
 
 impl ExperienceBuffer {
-    fn new(_capacity: usize) -> Self {
+    fn new(capacity: usize) -> Self {
         Self {
             buffer: VecDeque::with_capacity(_capacity),
-            capacity: _capacity,
+            capacity: capacity,
             priority_weights: Vec::new(),
         }
     }
@@ -2122,7 +2122,7 @@ impl ExperienceBuffer {
         self.buffer.push_back(experience);
     }
 
-    fn sample_batch(&self, batch_size: usize) -> Vec<Experience> {
+    fn sample_batch(&self, batchsize: usize) -> Vec<Experience> {
         let mut batch = Vec::new();
         let buffer_size = self.buffer.len();
 
@@ -2143,7 +2143,7 @@ impl ExperienceBuffer {
 }
 
 impl TransformerModel {
-    fn new(_config: &NeuralAdaptiveConfig) -> Self {
+    fn new(config: &NeuralAdaptiveConfig) -> Self {
         let mut encoder_layers = Vec::new();
 
         for _ in 0.._config.transformer_layers {
@@ -2152,16 +2152,16 @@ impl TransformerModel {
 
         // Initialize positional encoding
         let max_seq_len = 1000;
-        let mut positional_encoding = vec![vec![0.0; _config.model_dim]; max_seq_len];
+        let mut positional_encoding = vec![vec![0.0; config.model_dim]; max_seq_len];
 
         for (pos, encoding_row) in positional_encoding.iter_mut().enumerate().take(max_seq_len) {
             for (i, encoding_value) in encoding_row.iter_mut().enumerate().take(_config.model_dim) {
                 if i % 2 == 0 {
                     *encoding_value =
-                        (pos as f64 / 10000.0_f64.powf(i as f64 / _config.model_dim as f64)).sin();
+                        (pos as f64 / 10000.0_f64.powf(i as f64 / config.model_dim as f64)).sin();
                 } else {
                     *encoding_value = (pos as f64
-                        / 10000.0_f64.powf((i - 1) as f64 / _config.model_dim as f64))
+                        / 10000.0_f64.powf((i - 1) as f64 / config.model_dim as f64))
                     .cos();
                 }
             }
@@ -2170,7 +2170,7 @@ impl TransformerModel {
         Self {
             encoder_layers,
             positional_encoding,
-            embedding_dim: _config.model_dim,
+            embedding_dim: config.model_dim,
         }
     }
 
@@ -2209,7 +2209,7 @@ impl TransformerModel {
 }
 
 impl TransformerEncoderLayer {
-    fn new(_config: &NeuralAdaptiveConfig) -> Self {
+    fn new(config: &NeuralAdaptiveConfig) -> Self {
         let self_attention = MultiHeadAttention::new(_config);
         let feed_forward = FeedForwardNetwork::new(_config);
         let layer_norm1 = LayerNorm::new(_config.model_dim);
@@ -2243,7 +2243,7 @@ impl TransformerEncoderLayer {
         x
     }
 
-    fn add_and_norm(&self, input: &[f64], output: &[f64], layer_norm: &LayerNorm) -> Vec<f64> {
+    fn add_and_norm(&self, input: &[f64], output: &[f64], layernorm: &LayerNorm) -> Vec<f64> {
         let mut result = vec![0.0; input.len().max(output.len())];
 
         // Residual connection
@@ -2257,7 +2257,7 @@ impl TransformerEncoderLayer {
         layer_norm.normalize(&result)
     }
 
-    fn update_weights(&mut self, performance_score: f64, learning_rate: f64) {
+    fn update_weights(&mut self, performance_score: f64, learningrate: f64) {
         self.self_attention
             .update_weights(performance_score, learning_rate);
         self.feed_forward
@@ -2266,16 +2266,16 @@ impl TransformerEncoderLayer {
 }
 
 impl MultiHeadAttention {
-    fn new(_config: &NeuralAdaptiveConfig) -> Self {
-        let num_heads = _config.attention_heads;
-        let head_dim = _config.model_dim / num_heads;
+    fn new(config: &NeuralAdaptiveConfig) -> Self {
+        let num_heads = config.attention_heads;
+        let head_dim = config.model_dim / num_heads;
         let mut heads = Vec::new();
 
         for _ in 0..num_heads {
-            heads.push(AttentionHead::new(head_dim, _config.model_dim));
+            heads.push(AttentionHead::new(head_dim, config.model_dim));
         }
 
-        let output_projection = vec![vec![0.1; _config.model_dim]; _config.model_dim];
+        let output_projection = vec![vec![0.1; config.model_dim]; config.model_dim];
 
         Self {
             heads,
@@ -2318,7 +2318,7 @@ impl MultiHeadAttention {
         output
     }
 
-    fn update_weights(&mut self, performance_score: f64, learning_rate: f64) {
+    fn update_weights(&mut self, performance_score: f64, learningrate: f64) {
         let gradient = performance_score * learning_rate;
 
         // Update attention head weights
@@ -2336,13 +2336,13 @@ impl MultiHeadAttention {
 }
 
 impl AttentionHead {
-    fn new(_head_dim: usize, model_dim: usize) -> Self {
+    fn new(_head_dim: usize, modeldim: usize) -> Self {
         Self {
             query_weights: vec![vec![0.1; model_dim]; _head_dim],
             key_weights: vec![vec![0.1; model_dim]; _head_dim],
             value_weights: vec![vec![0.1; model_dim]; _head_dim],
             output_weights: vec![vec![0.1; _head_dim]; _head_dim],
-            head_dim: _head_dim,
+            head_dim: head_dim,
         }
     }
 
@@ -2438,12 +2438,12 @@ impl AttentionHead {
 }
 
 impl FeedForwardNetwork {
-    fn new(_config: &NeuralAdaptiveConfig) -> Self {
+    fn new(config: &NeuralAdaptiveConfig) -> Self {
         Self {
-            layer1: vec![vec![0.1; _config.model_dim]; _config.ff_dim],
-            layer1_bias: vec![0.0; _config.ff_dim],
-            layer2: vec![vec![0.1; _config.ff_dim]; _config.model_dim],
-            layer2_bias: vec![0.0; _config.model_dim],
+            layer1: vec![vec![0.1; config.model_dim]; config.ff_dim],
+            layer1_bias: vec![0.0; config.ff_dim],
+            layer2: vec![vec![0.1; config.ff_dim]; config.model_dim],
+            layer2_bias: vec![0.0; config.model_dim],
             activation: ActivationFunction::ReLU,
         }
     }
@@ -2486,7 +2486,7 @@ impl FeedForwardNetwork {
         }
     }
 
-    fn update_weights(&mut self, performance_score: f64, learning_rate: f64) {
+    fn update_weights(&mut self, performance_score: f64, learningrate: f64) {
         let gradient = performance_score * learning_rate * 0.01;
 
         // Update layer 1 weights and biases
@@ -2514,7 +2514,7 @@ impl FeedForwardNetwork {
 }
 
 impl LayerNorm {
-    fn new(_dim: usize) -> Self {
+    fn new(dim: usize) -> Self {
         Self {
             gamma: vec![1.0; _dim],
             beta: vec![0.0; _dim],

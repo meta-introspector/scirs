@@ -431,8 +431,8 @@ fn compute_matrix_exp<F: Float + ndarray::ScalarOperand + FromPrimitive>(
 fn compute_matrix_inverse<F: Float>(
     _matrix: &ndarray::ArrayView2<F>,
 ) -> Result<Array2<F>, OpError> {
-    let n = _matrix.shape()[0];
-    let mut a = _matrix.to_owned();
+    let n = matrix.shape()[0];
+    let mut a = matrix.to_owned();
     let mut inv = Array2::<F>::eye(n);
 
     // Gauss-Jordan elimination
@@ -521,11 +521,11 @@ fn compute_matrix_function<F: Float + ndarray::ScalarOperand + FromPrimitive>(
 
 /// Check if matrix is symmetric
 #[allow(dead_code)]
-fn is_symmetric_matrix<F: Float>(_matrix: &ndarray::ArrayView2<F>) -> bool {
-    let n = _matrix.shape()[0];
+fn is_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>) -> bool {
+    let n = matrix.shape()[0];
     for i in 0..n {
         for j in i + 1..n {
-            if (_matrix[[i, j]] - _matrix[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
+            if (_matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
                 return false;
             }
         }

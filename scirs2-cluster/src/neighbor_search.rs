@@ -4,7 +4,7 @@
 //! which are crucial for density-based clustering and other algorithms that
 //! require neighborhood computations.
 
-use ndarray::{Array2, ArrayView1, ArrayView1, ArrayView2};
+use ndarray::{Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::BinaryHeap;
 use std::fmt::Debug;
@@ -112,11 +112,11 @@ struct KDNode {
 
 impl<F: Float + FromPrimitive + Debug> KDTree<F> {
     /// Create a new KD-Tree
-    pub fn new(_leaf_size: usize) -> Self {
+    pub fn new(_leafsize: usize) -> Self {
         Self {
             data: None,
             tree: None,
-            _leaf_size,
+            leaf_size,
         }
     }
 }
@@ -523,11 +523,11 @@ struct BallNode {
 
 impl<F: Float + FromPrimitive + Debug> BallTree<F> {
     /// Create a new Ball Tree
-    pub fn new(_leaf_size: usize) -> Self {
+    pub fn new(_leafsize: usize) -> Self {
         Self {
             data: None,
             tree: None,
-            _leaf_size,
+            leaf_size,
         }
     }
 }

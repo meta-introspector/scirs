@@ -1,6 +1,6 @@
 // Example of LTI system interconnection: series, parallel, and feedback connections
 
-use crate::lti::design::tf;
+use scirs2_signal::lti::design::tf;
 use scirs2_signal::lti::system::*;
 use scirs2_signal::lti::{bode, LtiSystem};
 

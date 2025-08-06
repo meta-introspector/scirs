@@ -52,10 +52,10 @@ pub struct MetaLearningStats {
 
 impl MetaLearningOptimizer {
     /// Create new meta-learning optimizer
-    pub fn new(_config: LearnedOptimizationConfig) -> Self {
-        let hidden_size = _config.hidden_size;
+    pub fn new(config: LearnedOptimizationConfig) -> Self {
+        let hidden_size = config.hidden_size;
         Self {
-            config: _config,
+            config: config,
             meta_state: MetaOptimizerState {
                 meta_params: Array1::zeros(hidden_size),
                 network_weights: Array2::zeros((hidden_size, hidden_size)),
@@ -69,7 +69,7 @@ impl MetaLearningOptimizer {
     }
 
     /// Learn meta-optimization strategy
-    pub fn learn_meta_strategy(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
+    pub fn learn_meta_strategy(&mut self, trainingtasks: &[TrainingTask]) -> OptimizeResult<()> {
         for task in training_tasks {
             // Create task-specific optimizer
             let task_optimizer = self.create_task_optimizer(&task.problem)?;
@@ -207,7 +207,7 @@ impl MetaLearningOptimizer {
     }
 
     /// Compute meta-learned step size
-    fn compute_meta_step_size(&self, task_params: &Array1<f64>) -> OptimizeResult<f64> {
+    fn compute_meta_step_size(&self, taskparams: &Array1<f64>) -> OptimizeResult<f64> {
         // Compute step size based on task parameters and meta-parameters
         let mut step_size = self.config.inner_learning_rate;
 
@@ -426,7 +426,7 @@ impl Default for MetaLearningStats {
 }
 
 impl LearnedOptimizer for MetaLearningOptimizer {
-    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
+    fn meta_train(&mut self, trainingtasks: &[TrainingTask]) -> OptimizeResult<()> {
         self.learn_meta_strategy(training_tasks)?;
         self.update_meta_stats();
         Ok(())

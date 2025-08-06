@@ -3,7 +3,7 @@
 //! This module provides K-means clustering with support for weighted samples,
 //! where each data point can have a different importance weight.
 
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use rand::Rng;
 use std::fmt::Debug;
@@ -166,7 +166,7 @@ where
 
     for _iter in 0..opts.max_iter {
         // Assign samples to nearest centroid
-        let (new_labels, distances) = weighted_assign_labels(data, _centroids.view())?;
+        let (new_labels, distances) = weighted_assign_labels(data, centroids.view())?;
         labels = new_labels;
 
         // Compute new _centroids using weights
@@ -235,7 +235,7 @@ where
     let mut inertia = F::zero();
     for i in 0..n_samples {
         let cluster = labels[i];
-        let dist = euclidean_distance(data.slice(s![i, ..]), _centroids.slice(s![cluster, ..]));
+        let dist = euclidean_distance(data.slice(s![i, ..]), centroids.slice(s![cluster, ..]));
         inertia = inertia + weights[i] * dist * dist;
     }
 

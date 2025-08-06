@@ -23,7 +23,7 @@ fn main() -> Result<()> {
     println!("Targets:\n{:?}", targets);
     // Create a neural network model
     // XOR is not linearly separable, so we need at least one hidden layer
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     let mut model = create_model(&mut rng)?;
     // Create loss function and optimizer
     let loss_fn = MeanSquaredError::new();

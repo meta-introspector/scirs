@@ -439,7 +439,7 @@ where
     f64: From<F>,
 {
     /// Create a new auto tuner
-    pub fn new(_config: TuningConfig) -> Self {
+    pub fn new(config: TuningConfig) -> Self {
         Self {
             _config_phantom: std::marker::PhantomData,
         }
@@ -898,7 +898,7 @@ where
     }
 
     /// Tune GMM hyperparameters
-    pub fn tune_gmm(&self, data: ArrayView2<F>, search_space: SearchSpace) -> Result<TuningResult> {
+    pub fn tune_gmm(&self, data: ArrayView2<F>, searchspace: SearchSpace) -> Result<TuningResult> {
         let start_time = std::time::Instant::now();
 
         let parameter_combinations = self.generate_parameter_combinations(&search_space)?;
@@ -1784,7 +1784,7 @@ where
         let normalized_weights: Vec<f64> = weights.iter().map(|w| w / weight_sum).collect();
 
         // Allocate evaluations based on weights
-        for (strategy, &weight) in strategies.iter().zip(normalized_weights.iter()) {
+        for (strategy, &weight) in strategies.iter().zip(normalizedweights.iter()) {
             let n_evaluations = (total_evaluations as f64 * weight) as usize;
 
             let strategy_combinations = match strategy {
@@ -1893,7 +1893,7 @@ where
 
     /// Evaluate acquisition function at a point
     fn evaluate_acquisition_function(
-        &self_point: &HashMap<String, f64>,
+        self_point: &HashMap<String, f64>,
         _bayesian_state: &BayesianState_acquisition,
         _function: &AcquisitionFunction,
     ) -> f64 {
@@ -1927,7 +1927,7 @@ where
     }
 
     /// Expected Improvement acquisition function
-    fn expected_improvement(&self, mean: f64, std_dev: f64, current_best: f64) -> f64 {
+    fn expected_improvement(&self, mean: f64, std_dev: f64, currentbest: f64) -> f64 {
         if std_dev <= 1e-10 {
             return 0.0;
         }
@@ -1939,7 +1939,7 @@ where
     }
 
     /// Probability of Improvement acquisition function
-    fn probability_of_improvement(&self, mean: f64, std_dev: f64, current_best: f64) -> f64 {
+    fn probability_of_improvement(&self, mean: f64, std_dev: f64, currentbest: f64) -> f64 {
         if std_dev <= 1e-10 {
             return if mean > current_best { 1.0 } else { 0.0 };
         }
@@ -1949,7 +1949,7 @@ where
     }
 
     /// Gaussian Process prediction
-    fn predict_gp(&self, x: &[f64], bayesian_state: &BayesianState) -> (f64, f64) {
+    fn predict_gp(&self, x: &[f64], bayesianstate: &BayesianState) -> (f64, f64) {
         if bayesian_state.observations.is_empty() {
             return (0.0, 1.0); // Prior mean and variance
         }
@@ -2859,7 +2859,7 @@ where
 
     /// Evaluate acquisition function at a point
     fn evaluate_acquisition_function(
-        &self_point: &HashMap<String, f64>,
+        self_point: &HashMap<String, f64>,
         _bayesian_state: &BayesianState_acquisition,
         _function: &AcquisitionFunction,
     ) -> f64 {
@@ -3157,7 +3157,7 @@ where
                     candidate.insert(param_name.clone(), perturbed_value);
                 }
 
-                _candidates.push(candidate);
+                candidates.push(candidate);
             }
         }
 
@@ -3166,7 +3166,7 @@ where
 
     /// Enhanced acquisition function evaluation with proper GP predictions
     fn evaluate_acquisition_function_enhanced(
-        &self_point: &HashMap<String, f64>,
+        self_point: &HashMap<String, f64>,
         _bayesian_state: &BayesianState_acquisition,
         _function: &AcquisitionFunction,
     ) -> f64 {
@@ -3228,7 +3228,7 @@ where
         let n_features = bayesian_state.parameter_names.len();
         let mut x_test = Array2::zeros((1, n_features));
         for (i, param_name) in bayesian_state.parameter_names.iter().enumerate() {
-            x_test[[0, i]] = _point.get(param_name).unwrap_or(&0.0).clone();
+            x_test[[0, i]] = point.get(param_name).unwrap_or(&0.0).clone();
         }
 
         // Extract training data
@@ -3455,7 +3455,7 @@ where
     }
 
     /// Solve triangular system L * x = b
-    fn solve_triangular(&self, l_matrix: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
+    fn solve_triangular(&self, lmatrix: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
         let n = l_matrix.nrows();
         if n != b.len() {
             return Err(ClusteringError::InvalidInput(
@@ -4249,9 +4249,9 @@ pub mod advanced_optimization {
         f64: From<F>,
     {
         /// Create new advanced Bayesian optimizer
-        pub fn new(_config: AdvancedBayesianConfig) -> Self {
+        pub fn new(config: AdvancedBayesianConfig) -> Self {
             Self {
-                _config,
+                config,
                 gp_models: Vec::new(),
                 pareto_front: Vec::new(),
                 source_tasks: Vec::new(),
@@ -4802,7 +4802,7 @@ pub mod advanced_optimization {
 
         /// Entropy Search acquisition function
         pub fn entropy_search(
-            &self_candidate: &HashMap<String, f64>,
+            self_candidate: &HashMap<String, f64>,
             _observations: &[(HashMap<String, f64>, f64)],
         ) -> f64 {
             // Stub implementation - would compute information gain
@@ -4811,7 +4811,7 @@ pub mod advanced_optimization {
 
         /// Knowledge Gradient acquisition function
         pub fn knowledge_gradient(
-            &self_candidate: &HashMap<String, f64>,
+            self_candidate: &HashMap<String, f64>,
             _observations: &[(HashMap<String, f64>, f64)],
         ) -> f64 {
             // Stub implementation - would compute expected value of information
@@ -4891,10 +4891,10 @@ pub mod neural_architecture_search {
 
     impl<F: Float + FromPrimitive + Debug + Send + Sync> NeuralArchitectureSearch<F> {
         /// Create new NAS instance
-        pub fn new(_search_space: SearchSpace<F>) -> Self {
+        pub fn new(_searchspace: SearchSpace<F>) -> Self {
             Self {
                 controller_weights: Vec::new(),
-                _search_space,
+                search_space,
                 training_history: Vec::new(),
                 exploration_rate: 0.1,
                 learning_rate: 0.001,
@@ -4902,7 +4902,7 @@ pub mod neural_architecture_search {
         }
 
         /// Initialize controller network
-        pub fn initialize_controller(&mut self, input_dim: usize, hidden_dim: usize) {
+        pub fn initialize_controller(&mut self, input_dim: usize, hiddendim: usize) {
             let mut rng = rand::rng();
 
             // Simple 2-layer network for hyperparameter generation
@@ -4918,7 +4918,7 @@ pub mod neural_architecture_search {
 
         /// Generate hyperparameter configuration using neural controller
         pub fn generate_config(&self, context: &Array1<F>) -> Result<HashMap<String, F>> {
-            if self.controller_weights.is_empty() {
+            if self.controllerweights.is_empty() {
                 return Err(ClusteringError::InvalidInput(
                     "Controller not initialized".to_string(),
                 ));
@@ -5022,7 +5022,7 @@ pub mod neural_architecture_search {
             let mut all_results = Vec::new();
 
             // Initialize controller if not done
-            if self.controller_weights.is_empty() {
+            if self.controllerweights.is_empty() {
                 self.initialize_controller(10, 50); // Default dimensions
             }
 
@@ -5126,18 +5126,18 @@ pub mod neural_architecture_search {
 
     impl<F: Float + FromPrimitive + Debug + Send + Sync> MultiarmedBanditOptimizer<F> {
         /// Create new multi-armed bandit optimizer
-        pub fn new(_search_space: SearchSpace<F>, algorithm: BanditAlgorithm) -> Self {
+        pub fn new(_searchspace: SearchSpace<F>, algorithm: BanditAlgorithm) -> Self {
             Self {
                 arms: Vec::new(),
                 rewards: Vec::new(),
                 pulls: Vec::new(),
                 algorithm,
-                _search_space,
+                search_space,
             }
         }
 
         /// Initialize arms with random configurations
-        pub fn initialize_arms(&mut self, n_arms: usize) -> Result<()> {
+        pub fn initialize_arms(&mut self, narms: usize) -> Result<()> {
             let mut rng = rand::rng();
 
             for _ in 0..n_arms {
@@ -5188,7 +5188,7 @@ pub mod neural_architecture_search {
                         let mut best_arm = 0;
                         let mut best_avg = F::neg_infinity();
 
-                        for (i..rewards) in self.rewards.iter().enumerate() {
+                        for (i, rewards) in self.rewards.iter().enumerate() {
                             if !rewards.is_empty() {
                                 let avg = rewards.iter().fold(F::zero(), |acc, &x| acc + x)
                                     / F::from(rewards.len()).unwrap();
@@ -5237,7 +5237,7 @@ pub mod neural_architecture_search {
         }
 
         /// Update arm with reward
-        pub fn update_arm(&mut self, arm_index: usize, reward: F) -> Result<()> {
+        pub fn update_arm(&mut self, armindex: usize, reward: F) -> Result<()> {
             if arm_index >= self.arms.len() {
                 return Err(ClusteringError::InvalidInput(
                     "Invalid arm _index".to_string(),
@@ -5685,9 +5685,9 @@ pub struct AlgorithmSelectionResult {
 
 impl<F: Float + FromPrimitive + Send + Sync + Debug> AutoClusteringSelector<F> {
     /// Create new automatic clustering selector
-    pub fn new(_config: TuningConfig) -> Self {
+    pub fn new(config: TuningConfig) -> Self {
         Self {
-            _config,
+            config,
             algorithms: vec![
                 ClusteringAlgorithm::KMeans,
                 ClusteringAlgorithm::DBSCAN,
@@ -5700,9 +5700,9 @@ impl<F: Float + FromPrimitive + Send + Sync + Debug> AutoClusteringSelector<F> {
     }
 
     /// Create selector with all available algorithms
-    pub fn with_all_algorithms(_config: TuningConfig) -> Self {
+    pub fn with_all_algorithms(config: TuningConfig) -> Self {
         Self {
-            _config,
+            config,
             algorithms: vec![
                 ClusteringAlgorithm::KMeans,
                 ClusteringAlgorithm::DBSCAN,
@@ -5722,9 +5722,9 @@ impl<F: Float + FromPrimitive + Send + Sync + Debug> AutoClusteringSelector<F> {
     }
 
     /// Create selector with specific algorithms
-    pub fn with_algorithms(_config: TuningConfig, algorithms: Vec<ClusteringAlgorithm>) -> Self {
+    pub fn with_algorithms(config: TuningConfig, algorithms: Vec<ClusteringAlgorithm>) -> Self {
         Self {
-            _config,
+            config,
             algorithms_phantom: std::marker::PhantomData,
         }
     }

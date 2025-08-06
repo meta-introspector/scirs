@@ -27,9 +27,9 @@ pub struct GradientCheckpointing {
     current_memory_mb: usize,
 impl GradientCheckpointing {
     /// Create a new gradient checkpointing manager
-    pub fn new(_strategy: CheckpointStrategy, memory_threshold_mb: usize) -> Self {
+    pub fn new(_strategy: CheckpointStrategy, memory_thresholdmb: usize) -> Self {
         Self {
-            _strategy,
+            strategy,
             checkpoints: HashMap::new(),
             recompute_cache: HashMap::new(),
             memory_threshold_mb,
@@ -38,7 +38,7 @@ impl GradientCheckpointing {
     }
     
     /// Check if should checkpoint at layer
-    pub fn should_checkpoint(&self, layer_idx: usize, layer_cost: f32) -> bool {
+    pub fn should_checkpoint(&self, layer_idx: usize, layercost: f32) -> bool {
         match self.strategy {
             CheckpointStrategy::None => false,
             CheckpointStrategy::Uniform(interval) => layer_idx % interval == 0,
@@ -68,7 +68,7 @@ impl GradientCheckpointing {
             self.evict_checkpoints()?;
         Ok(())
     /// Get checkpoint for layer
-    pub fn get_checkpoint(&self, layer_idx: usize) -> Option<&Checkpoint> {
+    pub fn get_checkpoint(&self, layeridx: usize) -> Option<&Checkpoint> {
         self.checkpoints.get(&layer_idx)
     /// Recompute forward pass from checkpoint
     pub fn recompute_forward(
@@ -107,7 +107,7 @@ impl GradientCheckpointing {
     pub fn clear_recompute_cache(&mut self) {
         self.recompute_cache.clear();
     /// Find nearest checkpoint before layer
-    fn find_nearest_checkpoint(&self, layer_idx: usize) -> usize {
+    fn find_nearest_checkpoint(&self, layeridx: usize) -> usize {
         self.checkpoints
             .keys()
             .filter(|&&idx| idx <= layer_idx)
@@ -115,11 +115,11 @@ impl GradientCheckpointing {
             .copied()
             .unwrap_or(0)
     /// Check if layer is custom checkpoint
-    fn is_custom_checkpoint(&self, layer_idx: usize) -> bool {
+    fn is_custom_checkpoint(&self, layeridx: usize) -> bool {
         // Custom logic for specific layers
         matches!(layer_idx, 0 | 5 | 10 | 15)
     /// Adaptive checkpointing decision
-    fn should_checkpoint_adaptive(&self, layer_cost: f32) -> bool {
+    fn should_checkpoint_adaptive(&self, layercost: f32) -> bool {
         // Checkpoint if memory usage is low and layer is expensive
         let memory_usage_ratio = self.current_memory_mb as f32 / self.memory_threshold_mb as f32;
         memory_usage_ratio < 0.7 && layer_cost > 500.0
@@ -176,7 +176,7 @@ pub struct LayerInfo {
     pub num_parameters: usize,
 impl LayerInfo {
     /// Create layer info for a dense layer
-    pub fn dense(_input_size: usize, output_size: usize) -> Self {
+    pub fn dense(_input_size: usize, outputsize: usize) -> Self {
             layer_type: "Dense".to_string(),
             compute_cost: (2 * _input_size * output_size) as f32,
             memory_cost: 4 * (_input_size * output_size + output_size),
@@ -198,7 +198,7 @@ impl LayerInfo {
             memory_cost: 4 * (kernel_size * kernel_size * in_channels * out_channels),
             num_parameters: kernel_size * kernel_size * in_channels * out_channels,
     /// Create layer info for an activation layer
-    pub fn activation(_name: &str, size: usize) -> Self {
+    pub fn activation(name: &str, size: usize) -> Self {
             layer_type: format!("{} Activation", name),
             compute_cost: size as f32,
             memory_cost: 0,
@@ -245,7 +245,7 @@ impl CheckpointedModel {
             current = output;
         Ok(current)
     /// Backward pass with recomputation
-    pub fn backward(&self, grad_output: &ArrayView2<f32>) -> Result<Array2<f32>> {
+    pub fn backward(&self, gradoutput: &ArrayView2<f32>) -> Result<Array2<f32>> {
         let mut current_grad = grad_output.to_owned();
         // Clear recompute cache before backward pass
         self.checkpointing.clear_recompute_cache();
@@ -262,7 +262,7 @@ impl CheckpointedModel {
                 current_grad = self.layers[idx].backward(&current_grad.view())?;
         Ok(current_grad)
     /// Get layer information
-    fn get_layer_info(&self, layer_idx: usize) -> LayerInfo {
+    fn get_layer_info(&self, layeridx: usize) -> LayerInfo {
         // Simplified - would extract actual layer info
         LayerInfo {
             layer_type: "Unknown".to_string(),

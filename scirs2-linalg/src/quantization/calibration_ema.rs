@@ -10,20 +10,20 @@ use std::fmt::Debug;
 
 // Utility function to convert f32 to any Float type
 #[allow(dead_code)]
-fn to_f<F>(_val: f32) -> F
+fn to_f<F>(val: f32) -> F
 where
     F: num_traits::Float + num_traits::FromPrimitive,
 {
-    F::from_f32(_val).unwrap()
+    F::from_f32(val).unwrap()
 }
 
 // Helper to convert from generic float to f32
 #[allow(dead_code)]
-fn to_f32<F>(_val: F) -> f32
+fn to_f32<F>(val: F) -> f32
 where
     F: num_traits::Float + num_traits::AsPrimitive<f32>,
 {
-    _val.as_()
+    val.as_()
 }
 
 /// Exponential moving average calibration for matrices
@@ -60,7 +60,7 @@ where
     // Validate parameters
     if !(0.0..=1.0).contains(&ema_factor) {
         return Err(LinalgError::ValueError(
-            "EMA _factor must be between 0.0 and 1.0".to_string(),
+            "EMA factor must be between 0.0 and 1.0".to_string(),
         ));
     }
 
@@ -181,7 +181,7 @@ where
 
         // Debug output for last iteration
         if _iter == max_iterations - 1 {
-            println!("EMA calibration reached max _iterations with MSE: {mse}");
+            println!("EMA calibration reached max iterations with MSE: {mse}");
         }
     }
 
@@ -223,7 +223,7 @@ where
     // Validate parameters
     if !(0.0..=1.0).contains(&ema_factor) {
         return Err(LinalgError::ValueError(
-            "EMA _factor must be between 0.0 and 1.0".to_string(),
+            "EMA factor must be between 0.0 and 1.0".to_string(),
         ));
     }
 
@@ -450,7 +450,7 @@ where
     // Validate parameters
     if !(0.0..=1.0).contains(&ema_factor) {
         return Err(LinalgError::ValueError(
-            "EMA _factor must be between 0.0 and 1.0".to_string(),
+            "EMA factor must be between 0.0 and 1.0".to_string(),
         ));
     }
 

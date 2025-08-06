@@ -155,12 +155,12 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn print_matrix(_matrix: &Array2<f64>) {
+fn print_matrix(matrix: &Array2<f64>) {
     for i in 0.._matrix.shape()[0] {
         print!("[");
         for j in 0.._matrix.shape()[1] {
-            print!("{:.4}", _matrix[[i, j]]);
-            if j < _matrix.shape()[1] - 1 {
+            print!("{:.4}", matrix[[i, j]]);
+            if j < matrix.shape()[1] - 1 {
                 print!(", ");
             }
         }
@@ -169,13 +169,13 @@ fn print_matrix(_matrix: &Array2<f64>) {
 }
 
 #[allow(dead_code)]
-fn compute_mean(_samples: &[Array2<f64>]) -> Array2<f64> {
-    let n_samples = _samples.len();
+fn compute_mean(samples: &[Array2<f64>]) -> Array2<f64> {
+    let n_samples = samples.len();
     if n_samples == 0 {
         return Array2::<f64>::zeros((0, 0));
     }
 
-    let shape = _samples[0].shape();
+    let shape = samples[0].shape();
     let mut mean = Array2::<f64>::zeros((shape[0], shape[1]));
 
     for sample in _samples {

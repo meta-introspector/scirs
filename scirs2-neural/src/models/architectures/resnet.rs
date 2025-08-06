@@ -43,7 +43,7 @@ pub struct ResNetConfig {
     pub dropout_rate: f64,
 impl ResNetConfig {
     /// Create a ResNet-18 configuration
-    pub fn resnet18(_input_channels: usize, num_classes: usize) -> Self {
+    pub fn resnet18(_input_channels: usize, numclasses: usize) -> Self {
         Self {
             block: ResNetBlock::Basic,
             layers: vec![
@@ -61,18 +61,18 @@ impl ResNetConfig {
         }
     }
     /// Create a ResNet-34 configuration
-    pub fn resnet34(_input_channels: usize, num_classes: usize) -> Self {
+    pub fn resnet34(_input_channels: usize, numclasses: usize) -> Self {
                     blocks: 3,
                     blocks: 4,
                     blocks: 6,
     /// Create a ResNet-50 configuration
-    pub fn resnet50(_input_channels: usize, num_classes: usize) -> Self {
+    pub fn resnet50(_input_channels: usize, numclasses: usize) -> Self {
             block: ResNetBlock::Bottleneck,
     /// Create a ResNet-101 configuration
-    pub fn resnet101(_input_channels: usize, num_classes: usize) -> Self {
+    pub fn resnet101(_input_channels: usize, numclasses: usize) -> Self {
                     blocks: 23,
     /// Create a ResNet-152 configuration
-    pub fn resnet152(_input_channels: usize, num_classes: usize) -> Self {
+    pub fn resnet152(_input_channels: usize, numclasses: usize) -> Self {
                     blocks: 8,
                     blocks: 36,
     /// Set dropout rate
@@ -100,7 +100,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> BasicBlock<F> {
         downsample: bool,
     ) -> Result<Self> {
         // First convolutional layer
-        let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+        let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
         let kernel_size = (3, 3);
         let stride_tuple = if stride == 1 {
             (1, 1)
@@ -125,7 +125,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> BasicBlock<F> {
         let bn2 = BatchNorm::new(out_channels, 1e-5, 0.1, &mut rng)?;
         // Downsample if needed
         let downsample = if downsample {
-            let mut ds_rng = rand::rngs::SmallRng::seed_from_u64(42);
+            let mut ds_rng = rand::rngs::SmallRng::from_seed([42; 32]);
             let ds_conv = Conv2D::new(
                 in_channels,
                 out_channels,
@@ -184,7 +184,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for BasicBlock<F> 
         // In a real implementation, we'd compute gradients for all parameters
         // For now, just return the input gradient
         Ok(grad_output.clone())
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         // Update weights in all layers
         self.conv1.update(learning_rate)?;
         self.bn1.update(learning_rate)?;
@@ -247,9 +247,9 @@ pub struct ResNet<F: Float + Debug + ScalarOperand + Send + Sync> {
     config: ResNetConfig,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> ResNet<F> {
     /// Create a new ResNet model
-    pub fn new(_config: ResNetConfig) -> Result<Self> {
+    pub fn new(config: ResNetConfig) -> Result<Self> {
         // Initial convolutional layer
-            _config.input_channels,
+            config.input_channels,
             64,
             (7, 7),
             (2, 2),
@@ -261,7 +261,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> ResNet<F> {
         // Create each layer group
         for layer_config in &_config.layers {
             let mut layer_blocks: Vec<Box<dyn Layer<F> + Send + Sync>> = Vec::new();
-            let out_channels = match _config.block {
+            let out_channels = match config.block {
                 ResNetBlock::Basic => layer_config.channels,
                 ResNetBlock::Bottleneck => layer_config.channels * 4,
             };
@@ -334,20 +334,20 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> ResNet<F> {
             dropout,
             config,
     /// Create a ResNet-18 model
-    pub fn resnet18(_input_channels: usize, num_classes: usize) -> Result<Self> {
+    pub fn resnet18(_input_channels: usize, numclasses: usize) -> Result<Self> {
         let config = ResNetConfig::resnet18(input_channels, num_classes);
         Self::new(config)
     /// Create a ResNet-34 model
-    pub fn resnet34(_input_channels: usize, num_classes: usize) -> Result<Self> {
+    pub fn resnet34(_input_channels: usize, numclasses: usize) -> Result<Self> {
         let config = ResNetConfig::resnet34(input_channels, num_classes);
     /// Create a ResNet-50 model
-    pub fn resnet50(_input_channels: usize, num_classes: usize) -> Result<Self> {
+    pub fn resnet50(_input_channels: usize, numclasses: usize) -> Result<Self> {
         let config = ResNetConfig::resnet50(input_channels, num_classes);
     /// Create a ResNet-101 model
-    pub fn resnet101(_input_channels: usize, num_classes: usize) -> Result<Self> {
+    pub fn resnet101(_input_channels: usize, numclasses: usize) -> Result<Self> {
         let config = ResNetConfig::resnet101(input_channels, num_classes);
     /// Create a ResNet-152 model
-    pub fn resnet152(_input_channels: usize, num_classes: usize) -> Result<Self> {
+    pub fn resnet152(_input_channels: usize, numclasses: usize) -> Result<Self> {
         let config = ResNetConfig::resnet152(input_channels, num_classes);
 impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for ResNet<F> {
         // MaxPool 3x3 with stride 2 (typically used in ResNet)
@@ -363,7 +363,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for ResNet<F> {
         // Final fully connected layer
         x = self.fc.forward(&x)?;
         for layer in &mut self.layers {
-            layer.update(learning_rate)?;
+            layer.update(learningrate)?;
         self.fc.update(learning_rate)?;
 /// Group of ResNet blocks for a single layer
 struct ResNetLayerGroup<F: Float + Debug + ScalarOperand + Send + Sync> {

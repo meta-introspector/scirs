@@ -44,7 +44,7 @@ impl TextFeatureSelector {
     }
 
     /// Set minimum document frequency
-    pub fn set_min_df(mut self, min_df: f64) -> Result<Self> {
+    pub fn set_min_df(mut self, mindf: f64) -> Result<Self> {
         if min_df < 0.0 {
             return Err(TextError::InvalidInput(
                 "min_df must be non-negative".to_string(),
@@ -55,7 +55,7 @@ impl TextFeatureSelector {
     }
 
     /// Set maximum document frequency
-    pub fn set_max_df(mut self, max_df: f64) -> Result<Self> {
+    pub fn set_max_df(mut self, maxdf: f64) -> Result<Self> {
         if !(0.0..=1.0).contains(&max_df) {
             return Err(TextError::InvalidInput(
                 "max_df must be between 0 and 1 for fractions".to_string(),
@@ -66,12 +66,12 @@ impl TextFeatureSelector {
     }
 
     /// Set maximum document frequency (alias for set_max_df)
-    pub fn set_max_features(self, max_features: f64) -> Result<Self> {
+    pub fn set_max_features(self, maxfeatures: f64) -> Result<Self> {
         self.set_max_df(max_features)
     }
 
     /// Set to use absolute counts instead of fractions
-    pub fn use_counts(mut self, use_counts: bool) -> Self {
+    pub fn use_counts(mut self, usecounts: bool) -> Self {
         self.use_counts = use_counts;
         self
     }
@@ -268,7 +268,7 @@ impl TextClassificationMetrics {
     }
 
     /// Calculate accuracy from predictions and true labels
-    pub fn accuracy<T>(&self, predictions: &[T], true_labels: &[T]) -> Result<f64>
+    pub fn accuracy<T>(&self, predictions: &[T], truelabels: &[T]) -> Result<f64>
     where
         T: PartialEq,
     {
@@ -294,7 +294,7 @@ impl TextClassificationMetrics {
     }
 
     /// Calculate precision, recall, and F1 score for binary classification
-    pub fn binary_metrics<T>(&self, predictions: &[T], true_labels: &[T]) -> Result<(f64, f64, f64)>
+    pub fn binary_metrics<T>(&self, predictions: &[T], truelabels: &[T]) -> Result<(f64, f64, f64)>
     where
         T: PartialEq + Copy + Default + PartialEq<usize>,
     {
@@ -501,9 +501,9 @@ impl TextClassificationPipeline {
     }
 
     /// Create a new pipeline with the given vectorizer
-    pub fn new(_vectorizer: TfidfVectorizer) -> Self {
+    pub fn new(vectorizer: TfidfVectorizer) -> Self {
         Self {
-            _vectorizer,
+            vectorizer,
             feature_selector: None,
         }
     }

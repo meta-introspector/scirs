@@ -765,9 +765,9 @@ where
     }
 
     /// Simple matrix inverse for small matrices
-    fn matrix_inverse(_matrix: &Array2<F>) -> Result<Array2<F>> {
-        let n = _matrix.nrows();
-        if n != _matrix.ncols() {
+    fn matrix_inverse(matrix: &Array2<F>) -> Result<Array2<F>> {
+        let n = matrix.nrows();
+        if n != matrix.ncols() {
             return Err(TimeSeriesError::ComputationError(
                 "Matrix must be square for inversion".to_string(),
             ));
@@ -776,18 +776,18 @@ where
         // For small matrices, use simple methods
         if n == 1 {
             let eps = F::from(1e-12).unwrap_or(F::epsilon());
-            if _matrix[[0, 0]].abs() < eps {
+            if matrix[[0, 0]].abs() < eps {
                 return Err(TimeSeriesError::ComputationError(
                     "Matrix is singular or nearly singular".to_string(),
                 ));
             }
             let mut inv = Array2::zeros((1, 1));
-            inv[[0, 0]] = F::one() / _matrix[[0, 0]];
+            inv[[0, 0]] = F::one() / matrix[[0, 0]];
             return Ok(inv);
         }
 
         if n == 2 {
-            let det = _matrix[[0, 0]] * _matrix[[1, 1]] - _matrix[[0, 1]] * _matrix[[1, 0]];
+            let det = matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]];
             let eps = F::from(1e-12).unwrap_or(F::epsilon());
             if det.abs() < eps {
                 return Err(TimeSeriesError::ComputationError(
@@ -795,10 +795,10 @@ where
                 ));
             }
             let mut inv = Array2::zeros((2, 2));
-            inv[[0, 0]] = _matrix[[1, 1]] / det;
+            inv[[0, 0]] = matrix[[1, 1]] / det;
             inv[[0, 1]] = -_matrix[[0, 1]] / det;
             inv[[1, 0]] = -_matrix[[1, 0]] / det;
-            inv[[1, 1]] = _matrix[[0, 0]] / det;
+            inv[[1, 1]] = matrix[[0, 0]] / det;
             return Ok(inv);
         }
 
@@ -808,7 +808,7 @@ where
         // Create augmented _matrix [A | I]
         for i in 0..n {
             for j in 0..n {
-                augmented[[i, j]] = _matrix[[i, j]];
+                augmented[[i, j]] = matrix[[i, j]];
                 augmented[[i, j + n]] = if i == j { F::one() } else { F::zero() };
             }
         }

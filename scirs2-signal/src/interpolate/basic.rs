@@ -33,16 +33,16 @@ use ndarray::Array1;
 /// // Result will be approximately [1.0, 2.0, 3.0, 4.0, 5.0]
 /// ```
 #[allow(dead_code)]
-pub fn linear_interpolate(_signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
-    let n = _signal.len();
+pub fn linear_interpolate(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
+    let n = signal.len();
 
     // Check if input has any missing values
-    let has_missing = _signal.iter().any(|&x| x.is_nan());
+    let has_missing = signal.iter().any(|&x| x.is_nan());
     if !has_missing {
         return Ok(_signal.clone());
     }
 
-    let mut result = _signal.clone();
+    let mut result = signal.clone();
 
     // Find all non-missing points
     let mut valid_indices = Vec::new();
@@ -72,7 +72,7 @@ pub fn linear_interpolate(_signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
 
     // Interpolate missing values
     for i in 0..n {
-        if _signal[i].is_nan() {
+        if signal[i].is_nan() {
             // Find the valid points surrounding the missing value
             let mut left_idx = None;
             let mut right_idx = None;
@@ -145,11 +145,11 @@ pub fn linear_interpolate(_signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
 /// // depending on which valid point is closer
 /// ```
 #[allow(dead_code)]
-pub fn nearest_neighbor_interpolate(_signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
-    let n = _signal.len();
+pub fn nearest_neighbor_interpolate(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
+    let n = signal.len();
 
     // Check if input has any missing values
-    let has_missing = _signal.iter().any(|&x| x.is_nan());
+    let has_missing = signal.iter().any(|&x| x.is_nan());
     if !has_missing {
         return Ok(_signal.clone());
     }
@@ -172,10 +172,10 @@ pub fn nearest_neighbor_interpolate(_signal: &Array1<f64>) -> SignalResult<Array
     }
 
     // Create result by filling missing values with nearest valid value
-    let mut result = _signal.clone();
+    let mut result = signal.clone();
 
     for i in 0..n {
-        if _signal[i].is_nan() {
+        if signal[i].is_nan() {
             let nearest_idx = find_nearest_valid_index(i, &valid_indices);
             result[i] = valid_values[nearest_idx];
         }
@@ -187,6 +187,7 @@ pub fn nearest_neighbor_interpolate(_signal: &Array1<f64>) -> SignalResult<Array
 /// Unit tests for basic interpolation methods
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_linear_interpolate_no_missing() {

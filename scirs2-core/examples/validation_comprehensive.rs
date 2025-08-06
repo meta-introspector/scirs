@@ -247,7 +247,7 @@ fn shape_validation_example() -> Result<(), Box<dyn std::error::Error>> {
         .require_square();
 
     let schema = ValidationSchema::new()
-        .name(correlation_matrix)
+        .name(correlationmatrix)
         .require_field(
             "matrix",
             DataType::Array(Box::new(DataType::Array(Box::new(DataType::Float64)))),
@@ -264,7 +264,7 @@ fn shape_validation_example() -> Result<(), Box<dyn std::error::Error>> {
             .require_square();
 
         let schema_3x3 = ValidationSchema::new()
-            .name(small_matrix)
+            .name(smallmatrix)
             .require_field(
                 "matrix",
                 DataType::Array(Box::new(DataType::Array(Box::new(DataType::Float64)))),
@@ -455,7 +455,7 @@ fn custom_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     struct EmailValidator;
 
     impl ValidationRule for EmailValidator {
-        fn validate_path(_path: &str) -> Result<(), String> {
+        fn validate_path(path: &str) -> Result<(), String> {
             if let Some(email) = value.as_str() {
                 if email.contains('@') && email.contains('.') {
                     Ok(())

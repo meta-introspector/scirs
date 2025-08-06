@@ -122,11 +122,11 @@ struct MemoryBenchmark {
 }
 
 impl MemoryBenchmark {
-    fn new(_seed: u64) -> Self {
+    fn new(seed: u64) -> Self {
         Self { _seed }
     }
 
-    fn generate_points(&self, n_points: usize, dimensions: usize) -> Array2<f64> {
+    fn generate_points(&self, npoints: usize, dimensions: usize) -> Array2<f64> {
         let mut rng = StdRng::seed_from_u64(self.seed);
         Array2::fromshape_fn((n_points, dimensions), |_| rng.gen_range(-10.0..10.0))
     }

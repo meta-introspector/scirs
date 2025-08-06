@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use ag::tensor__ops::*;
+    use ag::tensor_ops::*;
     use approx::assert_relative_eq;
     use scirs2_autograd as ag;
 

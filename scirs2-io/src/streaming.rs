@@ -126,7 +126,7 @@ pub struct ChunkedReader {
 impl ChunkedReader {
     /// Create a new chunked reader for the specified file
     pub fn new<P: AsRef<Path>>(path: P, config: StreamingConfig) -> Result<Self> {
-        let file = File::open(_path.as_ref())
+        let file = File::open(path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?;
 
         let reader = BufReader::with_capacity(config.buffer_size, file);
@@ -235,7 +235,7 @@ pub struct LineChunkedReader {
 impl LineChunkedReader {
     /// Create a new line-based chunked reader
     pub fn new<P: AsRef<Path>>(path: P, config: StreamingConfig) -> Result<Self> {
-        let file = File::open(_path.as_ref())
+        let file = File::open(path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?;
 
         let reader = BufReader::with_capacity(config.buffer_size, file);
@@ -364,7 +364,7 @@ impl StreamingCsvReader {
     }
 
     /// Enable header row processing
-    pub fn with_header(mut self, has_header: bool) -> Self {
+    pub fn with_header(mut self, hasheader: bool) -> Self {
         self.has_header = has_header;
         self
     }
@@ -449,7 +449,7 @@ impl StreamingStats {
     }
 
     /// Update statistics with chunk information
-    pub fn update_chunk(&mut self, bytes: u64, processing_time_ms: f64) {
+    pub fn update_chunk(&mut self, bytes: u64, processing_timems: f64) {
         self.bytes_processed += bytes;
         self.chunks_processed += 1;
         self.processing_time_ms += processing_time_ms;
@@ -540,7 +540,7 @@ where
         match chunk_result {
             Ok(rows) => {
                 let _header = reader.header();
-                result = processor(&rows, chunk_id, _header)?;
+                result = processor(&rows, chunk_id, header)?;
 
                 let chunk_time = chunk_start.elapsed().as_secs_f64() * 1000.0;
                 stats.update_chunk(0, chunk_time); // CSV doesn't track bytes easily

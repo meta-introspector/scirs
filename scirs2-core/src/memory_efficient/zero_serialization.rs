@@ -879,8 +879,8 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn open_zero_copy(file_path: impl AsRef<Path>, mode: AccessMode) -> CoreResult<Self> {
-        Self::load_zero_copy(file_path, mode)
+    pub fn open_zero_copy(filepath: impl AsRef<Path>, mode: AccessMode) -> CoreResult<Self> {
+        Self::load_zero_copy(filepath, mode)
     }
 
     /// Read the metadata from a zero-copy serialized file without loading the entire array.
@@ -916,8 +916,8 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn read_metadata(file_path: impl AsRef<Path>) -> CoreResult<serde_json::Value> {
-        let path = file_path.as_ref();
+    pub fn read_metadata(filepath: impl AsRef<Path>) -> CoreResult<serde_json::Value> {
+        let path = filepath.as_ref();
 
         // Open file
         let mut file = File::open(path)?;

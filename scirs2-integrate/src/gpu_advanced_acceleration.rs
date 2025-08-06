@@ -664,15 +664,15 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         &self,
         _kernel_name: &str,
         _config: &KernelConfiguration,
-        _problem_size: usize,
+        problem_size: usize,
     ) -> IntegrateResult<Duration> {
         // Simplified benchmark - in real implementation would launch actual kernels
         Ok(Duration::from_micros(100))
     }
 
     /// Calculate optimal grid size for given problem size and block size
-    fn calculate_grid_size(_problem_size: usize, block_size: usize) -> (usize, usize, usize) {
-        let grid_size = _problem_size.div_ceil(block_size);
+    fn calculate_grid_size(problem_size: usize, blocksize: usize) -> (usize, usize, usize) {
+        let grid_size = problem_size.div_ceil(blocksize);
         (grid_size, 1, 1)
     }
 
@@ -799,18 +799,18 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
     }
 
     /// Allocate memory for solution vectors with optimization
-    pub fn allocate_solution_vector(&mut self, _size: usize) -> IntegrateResult<MemoryBlock<F>> {
-        self.allocate_block(_size, MemoryBlockType::Solution)
+    pub fn allocate_solution_vector(&mut self, size: usize) -> IntegrateResult<MemoryBlock<F>> {
+        self.allocate_block(size, MemoryBlockType::Solution)
     }
 
     /// Allocate memory for derivative vectors with optimization
-    pub fn allocate_derivative_vector(&mut self, _size: usize) -> IntegrateResult<MemoryBlock<F>> {
-        self.allocate_block(_size, MemoryBlockType::Derivative)
+    pub fn allocate_derivative_vector(&mut self, size: usize) -> IntegrateResult<MemoryBlock<F>> {
+        self.allocate_block(size, MemoryBlockType::Derivative)
     }
 
     /// Allocate memory for temporary vectors
-    pub fn allocate_temporary_vector(&mut self, _size: usize) -> IntegrateResult<MemoryBlock<F>> {
-        self.allocate_block(_size, MemoryBlockType::Temporary)
+    pub fn allocate_temporary_vector(&mut self, size: usize) -> IntegrateResult<MemoryBlock<F>> {
+        self.allocate_block(size, MemoryBlockType::Temporary)
     }
 
     /// Generic block allocation with type-aware optimization
@@ -860,10 +860,10 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
     }
 
     /// Find a suitable available block for reuse
-    fn find_suitable_block(&self, _required_size: usize) -> Option<usize> {
+    fn find_suitable_block(&self, _requiredsize: usize) -> Option<usize> {
         for (index, block) in self.available_blocks.iter().enumerate() {
             // Block should be within 25% of required _size for efficient reuse
-            if block.size >= _required_size && block.size <= _required_size * 5 / 4 {
+            if block.size >= _requiredsize && block.size <= _requiredsize * 5 / 4 {
                 return Some(index);
             }
         }
@@ -871,8 +871,8 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
     }
 
     /// Deallocate a memory block back to the pool
-    pub fn deallocate(&mut self, block_id: usize) -> IntegrateResult<()> {
-        if let Some((size__, _mem_type, _timestamp)) = self.allocated_blocks.remove(&block_id) {
+    pub fn deallocate(&mut self, blockid: usize) -> IntegrateResult<()> {
+        if let Some((size__, mem_type, timestamp)) = self.allocated_blocks.remove(&blockid) {
             self.used_memory -= size__ * std::mem::size_of::<F>();
 
             // Note: In a real implementation, we would properly return the block to available_blocks
@@ -888,7 +888,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
             Ok(())
         } else {
             Err(IntegrateError::ValueError(format!(
-                "Block {block_id} not found"
+                "Block {blockid} not found"
             )))
         }
     }
@@ -987,13 +987,13 @@ impl MultiGpuConfiguration {
     }
 
     /// Calculate initial workload distribution ratios
-    fn calculate_initial_ratios(_devices: &[GpuDeviceInfo]) -> Vec<f64> {
-        let total_compute_power: usize = _devices
+    fn calculate_initial_ratios(devices: &[GpuDeviceInfo]) -> Vec<f64> {
+        let total_compute_power: usize = devices
             .iter()
             .map(|d| d.multiprocessor_count * d.max_threads_per_block)
             .sum();
 
-        _devices
+        devices
             .iter()
             .map(|d| {
                 let device_power = d.multiprocessor_count * d.max_threads_per_block;

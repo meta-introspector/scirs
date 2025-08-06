@@ -30,10 +30,10 @@
 //! use scirs2_core::observability::audit::{AuditLogger, AuditEvent, EventCategory, AuditConfig};
 //!
 //! let config = AuditConfig::default();
-//! let audit_logger = AuditLogger::new(config)?;
+//! let auditlogger = AuditLogger::new(config)?;
 //!
 //! // Log a data access event
-//! audit_logger.log_data_access(
+//! auditlogger.log_data_access(
 //!     "user123",
 //!     "dataset_financial_2024",
 //!     "read",
@@ -41,7 +41,7 @@
 //! )?;
 //!
 //! // Log a security event
-//! audit_logger.log_security_event(
+//! auditlogger.log_security_event(
 //!     EventCategory::Authentication,
 //!     "login_failed",
 //!     "user456",
@@ -49,7 +49,7 @@
 //! )?;
 //!
 //! // Search audit logs for compliance reporting
-//! let events = audit_logger.search_events(
+//! let events = auditlogger.search_events(
 //!     chrono::Utc::now() - chrono::Duration::days(30),
 //!     chrono::Utc::now(),
 //!     Some(EventCategory::DataAccess),
@@ -91,7 +91,7 @@ pub struct AuditConfig {
     /// Real-time alerting configuration
     pub alerting_config: Option<AlertingConfig>,
     /// Buffer size for batch writing
-    pub buffer_size: usize,
+    pub buffersize: usize,
     /// Flush interval for ensuring durability
     pub flush_interval_ms: u64,
     /// Enable structured JSON logging
@@ -115,13 +115,13 @@ pub struct AuditConfig {
 impl Default for AuditConfig {
     fn default() -> Self {
         Self {
-            log_directory: PathBuf::from("./audit_logs"),
+            log_directory: PathBuf::from("./auditlogs"),
             max_file_size: 100 * 1024 * 1024, // 100MB
             max_files: 100,
             enable_encryption: true,
             enable_integrity_verification: true,
             alerting_config: None,
-            buffer_size: 1000,
+            buffersize: 1000,
             flush_interval_ms: 5000, // 5 seconds
             enable_json_format: true,
             compliance_mode: ComplianceMode::Standard,
@@ -333,9 +333,9 @@ pub struct SystemContext {
     /// User agent (if applicable)
     pub user_agent: Option<String>,
     /// Session ID
-    pub session_id: Option<String>,
+    pub sessionid: Option<String>,
     /// Request ID for correlation
-    pub request_id: Option<String>,
+    pub requestid: Option<String>,
 }
 
 impl SystemContext {
@@ -348,22 +348,22 @@ impl SystemContext {
             hostname: get_hostname(),
             ip_address: get_local_ip(),
             user_agent: None,
-            session_id: None,
-            request_id: None,
+            sessionid: None,
+            requestid: None,
         }
     }
 
     /// Set session ID
     #[must_use]
-    pub fn with_session_id(mut self, session_id: String) -> Self {
-        self.session_id = Some(session_id);
+    pub fn with_sessionid(mut self, sessionid: String) -> Self {
+        self.sessionid = Some(sessionid);
         self
     }
 
     /// Set request ID
     #[must_use]
-    pub fn with_request_id(mut self, request_id: String) -> Self {
-        self.request_id = Some(request_id);
+    pub fn with_requestid(mut self, requestid: String) -> Self {
+        self.requestid = Some(requestid);
         self
     }
 }
@@ -383,9 +383,9 @@ pub struct AuditEvent {
     /// Event action/operation
     pub action: String,
     /// User identifier (if applicable)
-    pub user_id: Option<String>,
+    pub userid: Option<String>,
     /// Resource identifier (data, file, endpoint, etc.)
-    pub resource_id: Option<String>,
+    pub resourceid: Option<String>,
     /// Source IP address
     pub source_ip: Option<String>,
     /// Event description
@@ -488,8 +488,8 @@ impl AuditEventBuilder {
                 category,
                 severity: EventSeverity::Info,
                 action: action.to_string(),
-                user_id: None,
-                resource_id: None,
+                userid: None,
+                resourceid: None,
                 source_ip: None,
                 description: String::new(),
                 metadata: HashMap::new(),
@@ -515,15 +515,15 @@ impl AuditEventBuilder {
 
     /// Set user ID
     #[must_use]
-    pub fn user_id(mut self, user_id: &str) -> Self {
-        self.event.user_id = Some(user_id.to_string());
+    pub fn userid(mut self, userid: &str) -> Self {
+        self.event.userid = Some(userid.to_string());
         self
     }
 
     /// Set resource ID
     #[must_use]
-    pub fn resource_id(mut self, resource_id: &str) -> Self {
-        self.event.resource_id = Some(resource_id.to_string());
+    pub fn resourceid(mut self, resourceid: &str) -> Self {
+        self.event.resourceid = Some(resourceid.to_string());
         self
     }
 
@@ -654,7 +654,7 @@ impl LogFileManager {
         if self.current_file.is_none()
             || self.current_file_size + data_size > self.config.max_file_size
         {
-            self.rotate_log_file()?;
+            self.rotatelog_file()?;
         }
 
         if let Some(ref mut file) = self.current_file {
@@ -675,7 +675,7 @@ impl LogFileManager {
     /// # Errors
     ///
     /// Returns an error if the current file cannot be flushed or a new file cannot be created.
-    fn rotate_log_file(&mut self) -> Result<(), CoreError> {
+    fn rotatelog_file(&mut self) -> Result<(), CoreError> {
         // Close current file
         if let Some(mut file) = self.current_file.take() {
             file.flush().map_err(|e| {
@@ -772,7 +772,7 @@ impl LogFileManager {
     ///
     /// Returns an error indicating that the serde feature is required.
     #[cfg(not(feature = "serde"))]
-    fn serialize_json(&self, _event: &AuditEvent) -> Result<String, CoreError> {
+    fn serialize_json(&self, event: &AuditEvent) -> Result<String, CoreError> {
         Err(CoreError::ComputationError(
             crate::error::ErrorContext::new(
                 "JSON serialization requires serde feature".to_string(),
@@ -789,8 +789,8 @@ impl LogFileManager {
             event.category.as_str(),
             event.severity.as_str(),
             event.action,
-            event.user_id.as_deref().unwrap_or("-"),
-            event.resource_id.as_deref().unwrap_or("-"),
+            event.userid.as_deref().unwrap_or("-"),
+            event.resourceid.as_deref().unwrap_or("-"),
             event.outcome.as_str(),
             event.description
         )
@@ -827,12 +827,12 @@ impl LogFileManager {
         hasher.update(event.category.as_str());
         hasher.update(&event.action);
 
-        if let Some(ref user_id) = event.user_id {
-            hasher.update(user_id);
+        if let Some(ref userid) = event.userid {
+            hasher.update(userid);
         }
 
-        if let Some(ref resource_id) = event.resource_id {
-            hasher.update(resource_id);
+        if let Some(ref resourceid) = event.resourceid {
+            hasher.update(resourceid);
         }
 
         hasher.update(&event.description);
@@ -1099,7 +1099,7 @@ impl LogFileManager {
     ///
     /// Returns an error if compression fails.
     #[cfg(feature = "compression")]
-    fn compress_archived_file(&self, file_path: &std::path::Path) -> Result<(), CoreError> {
+    fn compress_archived_file(&self, filepath: &std::path::Path) -> Result<(), CoreError> {
         use std::fs::File;
         use std::io::{BufReader, BufWriter};
 
@@ -1236,7 +1236,7 @@ impl AlertManager {
             return Ok(());
         }
 
-        let alert_key = match event.category {
+        let alertkey = match event.category {
             EventCategory::Authentication if event.outcome == EventOutcome::Failure => {
                 "failed_auth"
             }
@@ -1245,10 +1245,10 @@ impl AlertManager {
             _ => return Ok(()),
         };
 
-        let should_alert = self.update_counter_and_check_threshold(alert_key, event)?;
+        let should_alert = self.update_counter_and_check_threshold(alertkey, event)?;
 
         if should_alert {
-            self.send_alert(alert_key, event)?;
+            self.send_alert(alertkey, event)?;
         }
 
         Ok(())
@@ -1261,7 +1261,7 @@ impl AlertManager {
     /// Returns an error if counter update fails.
     fn update_counter_and_check_threshold(
         &self,
-        alert_key: &str,
+        alertkey: &str,
         _event: &AuditEvent,
     ) -> Result<bool, CoreError> {
         let mut counters = self.alert_counters.write().map_err(|_| {
@@ -1274,7 +1274,7 @@ impl AlertManager {
         let window_start = now - chrono::Duration::minutes(5); // 5-minute window
 
         // Update counter
-        let (count, last_update) = counters.get(alert_key).copied().unwrap_or((0, now));
+        let (count, last_update) = counters.get(alertkey).copied().unwrap_or((0, now));
 
         let new_count = if last_update < window_start {
             1 // Reset counter if outside window
@@ -1282,17 +1282,17 @@ impl AlertManager {
             count + 1
         };
 
-        counters.insert(alert_key.to_string(), (new_count, now));
+        counters.insert(alertkey.to_string(), (new_count, now));
 
         // Check threshold
-        let threshold = match alert_key {
+        let threshold = match alertkey {
             "failed_auth" => self.config.failed_auth_threshold,
             "data_access" => self.config.data_access_rate_threshold,
             "config_change" => self.config.config_change_threshold,
             _ => return Ok(false),
         };
 
-        Ok(new_count >= threshold && self.check_cooldown(alert_key)?)
+        Ok(new_count >= threshold && self.check_cooldown(alertkey)?)
     }
 
     /// Check if alert cooldown period has elapsed.
@@ -1300,7 +1300,7 @@ impl AlertManager {
     /// # Errors
     ///
     /// Returns an error if cooldown check fails.
-    fn check_cooldown(&self, alert_key: &str) -> Result<bool, CoreError> {
+    fn check_cooldown(&self, alertkey: &str) -> Result<bool, CoreError> {
         let last_alert_times = self.last_alert_time.read().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
                 "Failed to acquire last alert time lock".to_string(),
@@ -1310,7 +1310,7 @@ impl AlertManager {
         let now = Utc::now();
         let cooldown_duration = chrono::Duration::seconds(self.config.cooldown_period as i64);
 
-        if let Some(last_alert) = last_alert_times.get(alert_key) {
+        if let Some(last_alert) = last_alert_times.get(alertkey) {
             Ok(now - *last_alert > cooldown_duration)
         } else {
             Ok(true)
@@ -1322,7 +1322,7 @@ impl AlertManager {
     /// # Errors
     ///
     /// Returns an error if alert sending fails.
-    fn send_alert(&self, alert_key: &str, event: &AuditEvent) -> Result<(), CoreError> {
+    fn send_alert(&self, alertkey: &str, event: &AuditEvent) -> Result<(), CoreError> {
         // Update last alert time
         {
             let mut last_alert_times = self.last_alert_time.write().map_err(|_| {
@@ -1330,11 +1330,11 @@ impl AlertManager {
                     "Failed to acquire last alert time lock".to_string(),
                 ))
             })?;
-            last_alert_times.insert(alert_key.to_string(), Utc::now());
+            last_alert_times.insert(alertkey.to_string(), Utc::now());
         }
 
         let alert_message = format!(
-            "SECURITY ALERT: {alert_key} threshold exceeded - {} - {}",
+            "SECURITY ALERT: {alertkey} threshold exceeded - {} - {}",
             event.action, event.description
         );
 
@@ -1360,7 +1360,7 @@ impl AlertManager {
     ///
     /// Returns an error if the webhook request fails.
     #[cfg(feature = "reqwest")]
-    fn send_webhook_alert(&self, webhook_url: &str, message: &str) -> Result<(), CoreError> {
+    fn send_webhook_alert(&self, webhookurl: &str, message: &str) -> Result<(), CoreError> {
         use reqwest::blocking::Client;
         use std::collections::HashMap;
 
@@ -1388,7 +1388,7 @@ impl AlertManager {
     ///
     /// Returns an error indicating that the reqwest feature is required.
     #[cfg(not(feature = "reqwest"))]
-    fn send_webhook_alert(&self, _webhook_url: &str, _message: &str) -> Result<(), CoreError> {
+    fn send_webhook_alert(&self, _webhook_url: &str, message: &str) -> Result<(), CoreError> {
         eprintln!("Webhook alerts require reqwest feature");
         Ok(())
     }
@@ -1452,7 +1452,7 @@ impl AlertManager {
                         return Ok(());
                     }
 
-                    // Simple _delay between commands
+                    // Simple delay between commands
                     std::thread::sleep(Duration::from_millis(100));
                 }
 
@@ -1525,7 +1525,7 @@ impl AuditLogger {
             buffer.push(event);
 
             // Check if we need to flush
-            if buffer.len() >= self.config.buffer_size {
+            if buffer.len() >= self.config.buffersize {
                 self.flush_buffer(&mut buffer)?;
             }
         }
@@ -1543,14 +1543,14 @@ impl AuditLogger {
     /// Returns an error if the event cannot be logged.
     pub fn log_data_access(
         &self,
-        user_id: &str,
-        resource_id: &str,
+        userid: &str,
+        resourceid: &str,
         action: &str,
         description: Option<&str>,
     ) -> Result<(), CoreError> {
         let mut event = AuditEventBuilder::new(EventCategory::DataAccess, action)
-            .user_id(user_id)
-            .resource_id(resource_id)
+            .userid(userid)
+            .resourceid(resourceid)
             .description(description.unwrap_or("Data access operation"))
             .compliance_tag("data_access")
             .build();
@@ -1571,12 +1571,12 @@ impl AuditLogger {
         &self,
         category: EventCategory,
         action: &str,
-        user_id: &str,
+        userid: &str,
         description: &str,
     ) -> Result<(), CoreError> {
         let mut event = AuditEventBuilder::new(category, action)
             .severity(EventSeverity::Warning)
-            .user_id(user_id)
+            .userid(userid)
             .description(description)
             .compliance_tag("security")
             .build();
@@ -1599,13 +1599,13 @@ impl AuditLogger {
     /// Returns an error if the event cannot be logged.
     pub fn log_authentication(
         &self,
-        user_id: &str,
+        userid: &str,
         action: &str,
         outcome: EventOutcome,
         source_ip: Option<&str>,
     ) -> Result<(), CoreError> {
         let mut builder = AuditEventBuilder::new(EventCategory::Authentication, action)
-            .user_id(user_id)
+            .userid(userid)
             .outcome(outcome)
             .compliance_tag("authentication");
 
@@ -1635,23 +1635,23 @@ impl AuditLogger {
     /// Returns an error if the event cannot be logged.
     pub fn log_configuration_change(
         &self,
-        user_id: &str,
+        userid: &str,
         config_item: &str,
         old_value: Option<&str>,
-        new_value: Option<&str>,
+        newvalue: Option<&str>,
     ) -> Result<(), CoreError> {
         let mut metadata = HashMap::new();
         if let Some(old) = old_value {
             metadata.insert("old_value".to_string(), old.to_string());
         }
-        if let Some(new) = new_value {
-            metadata.insert("new_value".to_string(), new.to_string());
+        if let Some(new) = newvalue {
+            metadata.insert("newvalue".to_string(), new.to_string());
         }
 
         let mut event = AuditEventBuilder::new(EventCategory::Configuration, "config_change")
             .severity(EventSeverity::Warning)
-            .user_id(user_id)
-            .resource_id(config_item)
+            .userid(userid)
+            .resourceid(config_item)
             .description("Configuration item changed")
             .compliance_tag("configuration")
             .build();
@@ -1675,7 +1675,7 @@ impl AuditLogger {
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         category: Option<EventCategory>,
-        user_id: Option<&str>,
+        userid: Option<&str>,
     ) -> Result<Vec<AuditEvent>, CoreError> {
         let mut events = Vec::new();
 
@@ -1692,7 +1692,7 @@ impl AuditLogger {
                             start_date,
                             end_date,
                             category,
-                            user_id,
+                            userid,
                             &mut events,
                         )?;
                     }
@@ -1717,7 +1717,7 @@ impl AuditLogger {
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         category: Option<EventCategory>,
-        user_id: Option<&str>,
+        userid: Option<&str>,
         events: &mut Vec<AuditEvent>,
     ) -> Result<(), CoreError> {
         let file = File::open(file_path).map_err(|e| {
@@ -1735,7 +1735,7 @@ impl AuditLogger {
                 )))
             })?;
 
-            if let Ok(event) = self.parse_log_line(&line) {
+            if let Ok(event) = self.parselog_line(&line) {
                 // Filter by date range
                 if event.timestamp < start_date || event.timestamp > end_date {
                     continue;
@@ -1749,8 +1749,8 @@ impl AuditLogger {
                 }
 
                 // Filter by user ID
-                if let Some(uid) = user_id {
-                    if event.user_id.as_deref() != Some(uid) {
+                if let Some(uid) = userid {
+                    if event.userid.as_deref() != Some(uid) {
                         continue;
                     }
                 }
@@ -1768,7 +1768,7 @@ impl AuditLogger {
     ///
     /// Returns an error if the log line cannot be parsed.
     #[cfg(feature = "serde")]
-    fn parse_log_line(&self, line: &str) -> Result<AuditEvent, CoreError> {
+    fn parselog_line(&self, line: &str) -> Result<AuditEvent, CoreError> {
         if self.config.enable_json_format {
             serde_json::from_str(line).map_err(|e| {
                 CoreError::ComputationError(crate::error::ErrorContext::new(format!(
@@ -1776,7 +1776,7 @@ impl AuditLogger {
                 )))
             })
         } else {
-            self.parsetext_log_line(line)
+            self.parsetextlog_line(line)
         }
     }
 
@@ -1786,13 +1786,13 @@ impl AuditLogger {
     ///
     /// Returns an error if the log line cannot be parsed.
     #[cfg(not(feature = "serde"))]
-    fn parse_log_line(&self, line: &str) -> Result<AuditEvent, CoreError> {
+    fn parselog_line(&self, line: &str) -> Result<AuditEvent, CoreError> {
         if self.config.enable_json_format {
             Err(CoreError::ComputationError(
                 crate::error::ErrorContext::new("JSON parsing requires serde feature".to_string()),
             ))
         } else {
-            self.parsetext_log_line(line)
+            self.parsetextlog_line(line)
         }
     }
 
@@ -1801,7 +1801,7 @@ impl AuditLogger {
     /// # Errors
     ///
     /// Returns an error if the log line cannot be parsed.
-    fn parsetext_log_line(&self, line: &str) -> Result<AuditEvent, CoreError> {
+    fn parsetextlog_line(&self, line: &str) -> Result<AuditEvent, CoreError> {
         // Parse text format: [timestamp] category severity action user=X resource=Y outcome=Z description="..."
         let line = line.trim();
 
@@ -1866,8 +1866,8 @@ impl AuditLogger {
         let action = parts[2].to_string();
 
         // Parse key-value pairs
-        let mut user_id = None;
-        let mut resource_id = None;
+        let mut userid = None;
+        let mut resourceid = None;
         let mut outcome = EventOutcome::Unknown;
         let mut description = String::new();
 
@@ -1879,12 +1879,12 @@ impl AuditLogger {
                 match key {
                     "user" => {
                         if value != "-" {
-                            user_id = Some(value.to_string());
+                            userid = Some(value.to_string());
                         }
                     }
                     "resource" => {
                         if value != "-" {
-                            resource_id = Some(value.to_string());
+                            resourceid = Some(value.to_string());
                         }
                     }
                     "outcome" => {
@@ -1933,8 +1933,8 @@ impl AuditLogger {
             category,
             severity,
             action,
-            user_id,
-            resource_id,
+            userid,
+            resourceid,
             source_ip: None,
             description,
             metadata: HashMap::new(),
@@ -2195,12 +2195,12 @@ impl AsyncAuditLogger {
         let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();
 
         // Create background sync logger
-        let sync_logger = AuditLogger::new(config.clone())?;
-        let sync_logger = Arc::new(sync_logger);
+        let synclogger = AuditLogger::new(config.clone())?;
+        let synclogger = Arc::new(synclogger);
 
         // Spawn background task to process events
         let background_task = {
-            let logger = sync_logger.clone();
+            let logger = synclogger.clone();
             tokio::spawn(async move {
                 while let Some(event) = receiver.recv().await {
                     if let Err(e) = logger.log_event(event) {
@@ -2237,14 +2237,14 @@ impl AsyncAuditLogger {
     /// Returns an error if the event cannot be logged.
     pub async fn log_data_access(
         &self,
-        user_id: &str,
-        resource_id: &str,
+        userid: &str,
+        resourceid: &str,
         action: &str,
         description: Option<&str>,
     ) -> Result<(), CoreError> {
         let mut event = AuditEventBuilder::new(EventCategory::DataAccess, action)
-            .user_id(user_id)
-            .resource_id(resource_id)
+            .userid(userid)
+            .resourceid(resourceid)
             .description(description.unwrap_or("Data access operation"))
             .compliance_tag("data_access")
             .build();
@@ -2354,8 +2354,8 @@ mod tests {
     #[test]
     fn test_audit_event_builder() {
         let event = AuditEventBuilder::new(EventCategory::DataAccess, "read")
-            .user_id("user123")
-            .resource_id("dataset1")
+            .userid("user123")
+            .resourceid("dataset1")
             .severity(EventSeverity::Info)
             .description("Read operation")
             .metadata("size", "1000")
@@ -2364,8 +2364,8 @@ mod tests {
 
         assert_eq!(event.category, EventCategory::DataAccess);
         assert_eq!(event.action, "read");
-        assert_eq!(event.user_id, Some("user123".to_string()));
-        assert_eq!(event.resource_id, Some("dataset1".to_string()));
+        assert_eq!(event.userid, Some("user123".to_string()));
+        assert_eq!(event.resourceid, Some("dataset1".to_string()));
         assert_eq!(event.severity, EventSeverity::Info);
         assert_eq!(event.outcome, EventOutcome::Success);
         assert_eq!(event.metadata.get("size"), Some(&"1000".to_string()));
@@ -2373,7 +2373,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "serde")]
-    fn test_audit_logger_creation() {
+    fn test_auditlogger_creation() {
         let temp_dir = tempdir().expect("Failed to create temp dir");
         let config = AuditConfig {
             log_directory: temp_dir.path().to_path_buf(),
@@ -2384,7 +2384,7 @@ mod tests {
 
         // Test logging an event
         let event = AuditEventBuilder::new(EventCategory::Authentication, "login")
-            .user_id("test_user")
+            .userid("test_user")
             .outcome(EventOutcome::Success)
             .build();
 
@@ -2394,7 +2394,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "serde")]
-    fn test_data_access_logging() {
+    fn test_data_accesslogging() {
         let temp_dir = tempdir().expect("Failed to create temp dir");
         let config = AuditConfig {
             log_directory: temp_dir.path().to_path_buf(),
@@ -2425,11 +2425,11 @@ mod tests {
     #[test]
     fn test_system_context() {
         let context = SystemContext::current()
-            .with_session_id("session123".to_string())
-            .with_request_id("req456".to_string());
+            .with_sessionid("session123".to_string())
+            .with_requestid("req456".to_string());
 
-        assert_eq!(context.session_id, Some("session123".to_string()));
-        assert_eq!(context.request_id, Some("req456".to_string()));
+        assert_eq!(context.sessionid, Some("session123".to_string()));
+        assert_eq!(context.requestid, Some("req456".to_string()));
         assert!(context.process_id > 0);
     }
 

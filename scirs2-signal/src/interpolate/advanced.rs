@@ -523,7 +523,7 @@ pub mod variogram_models {
     /// * `range` - The range parameter (distance at which sill is reached)
     /// * `sill` - The sill parameter (maximum semivariance)
     /// * `nugget` - The nugget parameter (semivariance at distance 0)
-    pub fn spherical(_range: f64, sill: f64, nugget: f64) -> impl Fn(f64) -> f64 {
+    pub fn spherical(range: f64, sill: f64, nugget: f64) -> impl Fn(f64) -> f64 {
         move |h: f64| {
             if h <= 0.0 {
                 return 0.0;
@@ -533,7 +533,7 @@ pub mod variogram_models {
                 return sill;
             }
 
-            let h_norm = h / _range;
+            let h_norm = h / range;
             nugget + (sill - nugget) * (1.5 * h_norm - 0.5 * h_norm.powi(3))
         }
     }
@@ -547,13 +547,13 @@ pub mod variogram_models {
     /// * `range` - The range parameter (practical range is 3 times this value)
     /// * `sill` - The sill parameter (maximum semivariance)
     /// * `nugget` - The nugget parameter (semivariance at distance 0)
-    pub fn exponential(_range: f64, sill: f64, nugget: f64) -> impl Fn(f64) -> f64 {
+    pub fn exponential(range: f64, sill: f64, nugget: f64) -> impl Fn(f64) -> f64 {
         move |h: f64| {
             if h <= 0.0 {
                 return 0.0;
             }
 
-            nugget + (sill - nugget) * (1.0 - (-3.0 * h / _range).exp())
+            nugget + (sill - nugget) * (1.0 - (-3.0 * h / range).exp())
         }
     }
 
@@ -566,13 +566,13 @@ pub mod variogram_models {
     /// * `range` - The range parameter (practical range is sqrt(3) times this value)
     /// * `sill` - The sill parameter (maximum semivariance)
     /// * `nugget` - The nugget parameter (semivariance at distance 0)
-    pub fn gaussian(_range: f64, sill: f64, nugget: f64) -> impl Fn(f64) -> f64 {
+    pub fn gaussian(range: f64, sill: f64, nugget: f64) -> impl Fn(f64) -> f64 {
         move |h: f64| {
             if h <= 0.0 {
                 return 0.0;
             }
 
-            nugget + (sill - nugget) * (1.0 - (-9.0 * h * h / (_range * _range)).exp())
+            nugget + (sill - nugget) * (1.0 - (-9.0 * h * h / (_range * range)).exp())
         }
     }
 
@@ -584,7 +584,7 @@ pub mod variogram_models {
     ///
     /// * `slope` - The slope parameter (rate of increase)
     /// * `nugget` - The nugget parameter (semivariance at distance 0)
-    pub fn linear(_slope: f64, nugget: f64) -> impl Fn(f64) -> f64 {
+    pub fn linear(slope: f64, nugget: f64) -> impl Fn(f64) -> f64 {
         move |h: f64| {
             if h <= 0.0 {
                 return 0.0;
@@ -604,7 +604,7 @@ pub mod rbf_functions {
     /// # Arguments
     ///
     /// * `epsilon` - Shape parameter controlling the width of the basis function
-    pub fn gaussian(_epsilon: f64) -> impl Fn(f64) -> f64 {
+    pub fn gaussian(epsilon: f64) -> impl Fn(f64) -> f64 {
         move |r: f64| (-_epsilon * r * r).exp()
     }
 
@@ -615,7 +615,7 @@ pub mod rbf_functions {
     /// # Arguments
     ///
     /// * `epsilon` - Shape parameter
-    pub fn multiquadric(_epsilon: f64) -> impl Fn(f64) -> f64 {
+    pub fn multiquadric(epsilon: f64) -> impl Fn(f64) -> f64 {
         move |r: f64| ((1.0 + _epsilon * r * r) as f64).sqrt()
     }
 
@@ -626,7 +626,7 @@ pub mod rbf_functions {
     /// # Arguments
     ///
     /// * `epsilon` - Shape parameter
-    pub fn inverse_multiquadric(_epsilon: f64) -> impl Fn(f64) -> f64 {
+    pub fn inverse_multiquadric(epsilon: f64) -> impl Fn(f64) -> f64 {
         move |r: f64| 1.0 / ((1.0 + _epsilon * r * r) as f64).sqrt()
     }
 
@@ -648,6 +648,7 @@ pub mod rbf_functions {
 /// Unit tests for advanced interpolation methods
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn test_gaussian_process_interpolate() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);

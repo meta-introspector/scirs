@@ -77,7 +77,7 @@
 // // Create a multi-input, multi-output system
 // let sys = ss(
 //     vec![-1.0, 0.0, 1.0, -2.0], // A matrix (2x2)
-//     vec![1.0, 0.0],             // B matrix (2x1)  
+//     vec![1.0, 0.0],             // B matrix (2x1)
 //     vec![1.0, 0.0],             // C matrix (1x2)
 //     vec![0.0],                  // D matrix (1x1)
 //     None,
@@ -391,5 +391,5 @@ mod tests {
 
 #[allow(dead_code)]
 pub fn tf(num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
-    TransferFunction::new(num, den)
+    TransferFunction::new(num, den, None).unwrap()
 }

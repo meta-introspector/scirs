@@ -87,10 +87,10 @@ fn classification_optimization_example() -> Result<(), Box<dyn std::error::Error
 
     println!(
         "  Scheduler config: LR={}, Factor={}, Patience={}, Mode={}",
-        scheduler_config.initial_lr,
-        scheduler_config.factor,
-        scheduler_config.patience,
-        scheduler_config.mode
+        scheduler_configinitial_lr,
+        scheduler_configfactor,
+        scheduler_configpatience,
+        scheduler_configmode
     );
 
     println!();
@@ -194,11 +194,11 @@ fn multi_metric_tracking_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nScheduler strategies:");
     println!(
         "  Aggressive: LR={}, Factor={}, Patience={}",
-        aggressive_config.initial_lr, aggressive_config.factor, aggressive_config.patience
+        aggressive_configinitial_lr, aggressive_configfactor, aggressive_configpatience
     );
     println!(
         "  Conservative: LR={}, Factor={}, Patience={}",
-        conservative_config.initial_lr, conservative_config.factor, conservative_config.patience
+        conservative_configinitial_lr, conservative_configfactor, conservative_configpatience
     );
 
     println!();
@@ -258,10 +258,10 @@ fn external_scheduler_pattern_example() -> Result<(), Box<dyn std::error::Error>
     let final_config = metric_optimizer.create_scheduler_config(lr, lr_factor, patience, 1e-6);
 
     println!("\nFinal scheduler configuration:");
-    println!("  Current LR: {:.4}", final_config.initial_lr);
-    println!("  Reduction factor: {}", final_config.factor);
-    println!("  Patience: {}", final_config.patience);
-    println!("  Mode: {} (lower loss is better)", final_config.mode);
+    println!("  Current LR: {:.4}", final_configinitial_lr);
+    println!("  Reduction factor: {}", final_configfactor);
+    println!("  Patience: {}", final_configpatience);
+    println!("  Mode: {} (lower loss is better)", final_configmode);
     println!(
         "  Best loss achieved: {:.3}",
         metric_optimizer.best_value().unwrap()
@@ -297,13 +297,13 @@ mod external_integration_example {
     }
 
     impl ExternalReduceOnPlateau {
-        pub fn from_config(_config: &SchedulerConfig<f64>) -> Self {
+        pub fn from_config(config: &SchedulerConfig<f64>) -> Self {
             Self {
-                current_lr: _config.initial_lr,
-                factor: _config.factor,
-                patience: _config.patience,
-                min_lr: _config.min_lr,
-                mode: _config.mode,
+                current_lr: configinitial_lr,
+                factor: configfactor,
+                patience: configpatience,
+                min_lr: configmin_lr,
+                mode: configmode,
                 best_metric: None,
                 patience_counter: 0,
                 threshold: 1e-4,

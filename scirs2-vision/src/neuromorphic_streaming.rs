@@ -20,9 +20,9 @@ use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2, ArrayView2};
 use rand::rng;
 use rand::Rng;
+use statrs::statistics::Statistics;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
-use statrs::statistics::Statistics;
 
 /// Spiking neuron model for neuromorphic processing
 #[derive(Debug, Clone)]
@@ -67,7 +67,7 @@ impl SpikingNeuron {
     }
 
     /// Update neuron state using leaky integrate-and-fire model
-    pub fn update(&mut self, dt: f64, input_current: f64) -> bool {
+    pub fn update(&mut self, dt: f64, inputcurrent: f64) -> bool {
         self.input_current = input_current;
         self.time_since_spike += dt;
 
@@ -116,7 +116,7 @@ impl SpikingNeuron {
     }
 
     /// Calculate spike rate over recent history
-    pub fn spike_rate(&self, time_window: f64) -> f64 {
+    pub fn spike_rate(&self, timewindow: f64) -> f64 {
         let current_time = self.get_current_time();
         let cutoff_time = current_time - time_window;
 
@@ -187,10 +187,10 @@ impl Default for STDPParameters {
 
 impl PlasticSynapse {
     /// Create a new plastic synapse
-    pub fn new(_pre_id: usize, post_id: usize, initial_weight: f64) -> Self {
+    pub fn new(_pre_id: usize, post_id: usize, initialweight: f64) -> Self {
         Self {
             _weight: initial_weight,
-            pre_neuron_id: _pre_id,
+            pre_neuron_id: pre_id,
             post_neuron_id: post_id,
             last_pre_spike: None,
             last_post_spike: None,
@@ -200,7 +200,7 @@ impl PlasticSynapse {
     }
 
     /// Update synaptic weight using STDP
-    pub fn update_weight(&mut self, pre_spike_time: Option<f64>, post_spike_time: Option<f64>) {
+    pub fn update_weight(&mut self, pre_spike_time: Option<f64>, post_spiketime: Option<f64>) {
         // Update spike times
         if let Some(pre_time) = pre_spike_time {
             self.last_pre_spike = Some(pre_time);
@@ -229,7 +229,7 @@ impl PlasticSynapse {
     }
 
     /// Calculate synaptic current
-    pub fn calculate_current(&self, pre_spike: bool) -> f64 {
+    pub fn calculate_current(&self, prespike: bool) -> f64 {
         if pre_spike {
             self.weight * 10.0 // Scale factor for current injection
         } else {
@@ -268,7 +268,7 @@ pub struct SpikeEvent {
 
 impl SpikingNeuralNetwork {
     /// Create a new spiking neural network
-    pub fn new(_num_neurons: usize, connectivity_probability: f64) -> Self {
+    pub fn new(_num_neurons: usize, connectivityprobability: f64) -> Self {
         let mut _neurons = Vec::with_capacity(_num_neurons);
         let mut synapses = Vec::new();
         let mut connectivity = HashMap::new();
@@ -276,7 +276,7 @@ impl SpikingNeuralNetwork {
 
         // Initialize _neurons
         for _ in 0.._num_neurons {
-            _neurons.push(SpikingNeuron::new());
+            neurons.push(SpikingNeuron::new());
         }
 
         // Create random connectivity
@@ -295,7 +295,7 @@ impl SpikingNeuralNetwork {
         }
 
         Self {
-            _neurons,
+            neurons,
             synapses,
             connectivity,
             dt: 0.1, // ms
@@ -474,7 +474,7 @@ impl Default for EdgePreprocessingParams {
 
 impl NeuromorphicEdgeDetector {
     /// Create a new neuromorphic edge detector
-    pub fn new(_input_size: usize) -> Self {
+    pub fn new(_inputsize: usize) -> Self {
         let network_size = _input_size * 2; // Hidden layer for processing
         let snn = SpikingNeuralNetwork::new(network_size, 0.3);
 
@@ -487,7 +487,7 @@ impl NeuromorphicEdgeDetector {
     }
 
     /// Convert image patch to spike train
-    fn image_to_spikes(&self, image_patch: &ArrayView2<f32>) -> Array1<f64> {
+    fn image_to_spikes(&self, imagepatch: &ArrayView2<f32>) -> Array1<f64> {
         let (height, width) = image_patch.dim();
         let mut spike_input = Array1::zeros(height * width);
 
@@ -540,7 +540,7 @@ impl NeuromorphicEdgeDetector {
     }
 
     /// Adapt preprocessing parameters based on performance
-    fn adapt_parameters(&mut self, performance_metric: f64) {
+    fn adapt_parameters(&mut self, performancemetric: f64) {
         self.processing_history.push_back(performance_metric);
 
         if self.processing_history.len() > 10 {
@@ -679,10 +679,10 @@ pub struct EfficiencyMetrics {
 
 impl EventDrivenProcessor {
     /// Create a new event-driven processor
-    pub fn new(_event_threshold: f32) -> Self {
+    pub fn new(_eventthreshold: f32) -> Self {
         Self {
             event_buffer: VecDeque::with_capacity(10000),
-            _event_threshold,
+            event_threshold,
             previous_frame: None,
             spatial_clusters: HashMap::new(),
             temporal_window: Duration::from_millis(50),
@@ -696,7 +696,7 @@ impl EventDrivenProcessor {
     }
 
     /// Generate events from frame differences
-    fn generate_events(&mut self, current_frame: &Array2<f32>) -> Vec<PixelEvent> {
+    fn generate_events(&mut self, currentframe: &Array2<f32>) -> Vec<PixelEvent> {
         let mut events = Vec::new();
         let current_time = Instant::now();
 
@@ -820,7 +820,7 @@ impl EventDrivenProcessor {
     }
 
     /// Update efficiency metrics
-    fn update_efficiency_metrics(&mut self, events: &[PixelEvent], frame_size: usize) {
+    fn update_efficiency_metrics(&mut self, events: &[PixelEvent], framesize: usize) {
         let event_count = events.len();
 
         // Calculate sparsity
@@ -989,7 +989,7 @@ pub struct PerformanceSnapshot {
 
 impl AdaptiveNeuromorphicPipeline {
     /// Create a new adaptive neuromorphic pipeline
-    pub fn new(_input_size: usize) -> Self {
+    pub fn new(_inputsize: usize) -> Self {
         let edge_detector = NeuromorphicEdgeDetector::new(_input_size);
         let event_processor = EventDrivenProcessor::new(0.05);
 

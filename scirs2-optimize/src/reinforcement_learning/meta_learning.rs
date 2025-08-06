@@ -24,7 +24,7 @@ pub struct MetaLearningOptimizer {
 
 impl MetaLearningOptimizer {
     /// Create new meta-learning optimizer
-    pub fn new(_param_size: usize, meta_learning_rate: f64) -> Self {
+    pub fn new(_param_size: usize, meta_learningrate: f64) -> Self {
         Self {
             task_parameters: HashMap::new(),
             meta_parameters: Array1::zeros(_param_size),

@@ -52,7 +52,7 @@ pub trait FewShotOptimizer<T: Float>: Send + Sync {
     ) -> Result<AdaptationResult<T>>;
 
     /// Get task representation
-    fn get_task_representation(&self, task_data: &TaskData<T>) -> Result<Array1<T>>;
+    fn get_task_representation(&self, taskdata: &TaskData<T>) -> Result<Array1<T>>;
 
     /// Compute adaptation loss
     fn compute_adaptation_loss(
@@ -62,7 +62,7 @@ pub trait FewShotOptimizer<T: Float>: Send + Sync {
     ) -> Result<T>;
 
     /// Update meta-parameters
-    fn update_meta_parameters(&mut self, meta_gradients: &MetaGradients<T>) -> Result<()>;
+    fn update_meta_parameters(&mut self, metagradients: &MetaGradients<T>) -> Result<()>;
 
     /// Get current state for transfer
     fn get_transfer_state(&self) -> TransferState<T>;
@@ -807,7 +807,7 @@ pub trait FastAdaptationAlgorithm<T: Float>: Send + Sync {
     ) -> Result<AdaptationResult<T>>;
 
     /// Estimate adaptation time
-    fn estimate_adaptation_time(&self, task_data: &TaskData<T>) -> Duration;
+    fn estimate_adaptation_time(&self, taskdata: &TaskData<T>) -> Duration;
 
     /// Get algorithm name
     fn name(&self) -> &str;
@@ -978,7 +978,8 @@ impl<T: Float + Send + Sync> FewShotLearningSystem<T> {
 
     fn select_adaptation_strategy(
         &self,
-        task_data: &TaskData<T>, _similar_tasks: &[MemoryEpisode<T>],
+        task_data: &TaskData<T>,
+        _similar_tasks: &[MemoryEpisode<T>],
     ) -> Result<AdaptationStrategyType> {
         // Strategy selection based on task characteristics and historical performance
         match task_data.domain_info.difficulty_level {
@@ -1032,25 +1033,27 @@ pub struct PrototypicalNetworkConfig<T: Float> {
 
 // Implementation stubs for major components
 impl<T: Float + Send + Sync> PrototypicalNetwork<T> {
-    fn new(_config: PrototypicalNetworkConfig<T>) -> Result<Self> {
+    fn new(config: PrototypicalNetworkConfig<T>) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "PrototypicalNetwork implementation pending".to_string(),
         ))
     }
 
-    fn encode_task(&self, _task_data: &TaskData<T>) -> Result<Array1<T>> {
+    fn encode_task(&self, _taskdata: &TaskData<T>) -> Result<Array1<T>> {
         Ok(Array1::zeros(128)) // Placeholder
     }
 
     fn update_prototypes(
-        &mut self, _task_data: &TaskData<T>, _result: &AdaptationResult<T>,
+        &mut self,
+        _task_data: &TaskData<T>,
+        _result: &AdaptationResult<T>,
     ) -> Result<()> {
         Ok(()) // Placeholder
     }
 }
 
 impl<T: Float + Send + Sync> SupportSetManager<T> {
-    fn new(_config: SupportSetManagerConfig) -> Result<Self> {
+    fn new(config: SupportSetManagerConfig) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "SupportSetManager implementation pending".to_string(),
         ))
@@ -1058,7 +1061,7 @@ impl<T: Float + Send + Sync> SupportSetManager<T> {
 }
 
 impl<T: Float + Send + Sync> TaskSimilarityCalculator<T> {
-    fn new(_config: SimilarityCalculatorConfig<T>) -> Result<Self> {
+    fn new(config: SimilarityCalculatorConfig<T>) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "TaskSimilarityCalculator implementation pending".to_string(),
         ))
@@ -1066,27 +1069,31 @@ impl<T: Float + Send + Sync> TaskSimilarityCalculator<T> {
 }
 
 impl<T: Float + Send + Sync> EpisodicMemoryBank<T> {
-    fn new(_config: MemoryBankConfig<T>) -> Result<Self> {
+    fn new(config: MemoryBankConfig<T>) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "EpisodicMemoryBank implementation pending".to_string(),
         ))
     }
 
     fn retrieve_similar(
-        &self, _task_data: &TaskData<T>, _k: usize,
+        &self,
+        _task_data: &TaskData<T>,
+        _k: usize,
     ) -> Result<Vec<MemoryEpisode<T>>> {
         Ok(Vec::new()) // Placeholder
     }
 
     fn store_episode(
-        &mut self, _task_data: TaskData<T>, _result: AdaptationResult<T>,
+        &mut self,
+        _task_data: TaskData<T>,
+        _result: AdaptationResult<T>,
     ) -> Result<()> {
         Ok(()) // Placeholder
     }
 }
 
 impl<T: Float + Send + Sync> FastAdaptationEngine<T> {
-    fn new(_config: FastAdaptationConfig) -> Result<Self> {
+    fn new(config: FastAdaptationConfig) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "FastAdaptationEngine implementation pending".to_string(),
         ))
@@ -1134,14 +1141,13 @@ impl<T: Float + Send + Sync> FastAdaptationEngine<T> {
 }
 
 impl<T: Float + Send + Sync> FewShotPerformanceTracker<T> {
-    fn new(_config: TrackingConfig) -> Result<Self> {
+    fn new(config: TrackingConfig) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "FewShotPerformanceTracker implementation pending".to_string(),
         ))
     }
 
-    fn record_performance(&mut self,
-        result: &AdaptationResult<T>) -> Result<()> {
+    fn record_performance(&mut self, result: &AdaptationResult<T>) -> Result<()> {
         Ok(()) // Placeholder
     }
 }

@@ -3,12 +3,12 @@
 // This example demonstrates how to use the spectral utilities to analyze
 // the characteristics of a signal's frequency content.
 
+use crate::utilities::spectral::spectral_centroid;
+use crate::utilities::spectral::spectral_flux;
+use crate::utilities::spectral::spectral_rolloff;
 use scirs2_signal::spectral::periodogram;
 use scirs2_signal::utilities::spectral::*;
 use std::f64::consts::PI;
-use crate::utilities::spectral::spectral_flux;
-use crate::utilities::spectral::spectral_centroid;
-use crate::utilities::spectral::spectral_rolloff;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -102,7 +102,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Compute power spectral density for the second signal
-    let (psd2.._) = periodogram(
+    let (psd2, _) = periodogram(
         &signal2,
         Some(fs),
         Some("hann"),
@@ -131,7 +131,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             noisy_signal.push(value);
         }
 
-        let (noisy_psd.._) = periodogram(
+        let (noisy_psd, _) = periodogram(
             &noisy_signal,
             Some(fs),
             Some("hann"),

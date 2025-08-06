@@ -1238,51 +1238,51 @@ fn run_enhanced_parallel_validation(
 
 /// Generate a comprehensive validation report in human-readable format
 #[allow(dead_code)]
-pub fn generate_comprehensive_report(_results: &ComprehensiveValidationResult) -> String {
+pub fn generate_comprehensive_report(results: &ComprehensiveValidationResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Advanced Validation Report\n\n");
     report.push_str(&format!(
         "**Execution Time**: {:.2} ms\n",
-        _results.total_execution_time_ms
+        results.total_execution_time_ms
     ));
     report.push_str(&format!(
         "**Peak Memory Usage**: {:.2} MB\n\n",
-        _results.peak_memory_usage_mb
+        results.peak_memory_usage_mb
     ));
 
     report.push_str("## Summary\n\n");
     report.push_str(&format!(
         "- **Total Tests**: {}\n",
-        _results.summary.total_tests
+        results.summary.total_tests
     ));
     report.push_str(&format!(
         "- **Passed**: {}\n",
-        _results.summary.passed_tests
+        results.summary.passed_tests
     ));
     report.push_str(&format!(
         "- **Failed**: {}\n",
-        _results.summary.failed_tests
+        results.summary.failed_tests
     ));
     report.push_str(&format!(
         "- **Warnings**: {}\n",
-        _results.summary.warning_tests
+        results.summary.warning_tests
     ));
     report.push_str(&format!(
         "- **Pass Rate**: {:.1}%\n",
-        _results.summary.pass_rate
+        results.summary.pass_rate
     ));
     report.push_str(&format!(
         "- **Quality Score**: {:.1}%\n",
-        _results.summary.quality_score
+        results.summary.quality_score
     ));
     report.push_str(&format!(
         "- **Performance Score**: {:.1}%\n",
-        _results.summary.performance_score
+        results.summary.performance_score
     ));
     report.push_str(&format!(
         "- **Reliability Score**: {:.1}%\n\n",
-        _results.summary.reliability_score
+        results.summary.reliability_score
     ));
 
     if !_results.summary.issues.is_empty() {
@@ -1306,11 +1306,11 @@ pub fn generate_comprehensive_report(_results: &ComprehensiveValidationResult) -
     report.push_str(&format!("### Multitaper Spectral Estimation\n"));
     report.push_str(&format!(
         "- DPSS Accuracy: {:.1}%\n",
-        _results.multitaper_results.dpss_accuracy_score
+        results.multitaper_results.dpss_accuracy_score
     ));
     report.push_str(&format!(
         "- Stability Score: {:.1}%\n",
-        _results.multitaper_results.stability_score
+        results.multitaper_results.stability_score
     ));
     report.push_str(&format!(
         "- Performance Scaling: {:.1}%\n\n",
@@ -1323,15 +1323,15 @@ pub fn generate_comprehensive_report(_results: &ComprehensiveValidationResult) -
     report.push_str(&format!("### Lomb-Scargle Periodogram\n"));
     report.push_str(&format!(
         "- Analytical Accuracy: {:.1}%\n",
-        _results.lombscargle_results.analytical_accuracy
+        results.lombscargle_results.analytical_accuracy
     ));
     report.push_str(&format!(
         "- Peak Detection: {:.1}%\n",
-        _results.lombscargle_results.peak_detection_accuracy
+        results.lombscargle_results.peak_detection_accuracy
     ));
     report.push_str(&format!(
         "- Memory Efficiency: {:.1}%\n\n",
-        _results.lombscargle_results.memory_efficiency
+        results.lombscargle_results.memory_efficiency
     ));
 
     report.push_str(&format!("### Parametric Spectral Estimation\n"));
@@ -1351,35 +1351,35 @@ pub fn generate_comprehensive_report(_results: &ComprehensiveValidationResult) -
     ));
     report.push_str(&format!(
         "- Order Selection: {:.1}%\n\n",
-        _results.parametric_results.order_selection_accuracy
+        results.parametric_results.order_selection_accuracy
     ));
 
     report.push_str(&format!("### 2D Wavelet Transforms\n"));
     report.push_str(&format!(
         "- Reconstruction Accuracy: {:.1}%\n",
-        _results.wavelet2d_results.reconstruction_accuracy
+        results.wavelet2d_results.reconstruction_accuracy
     ));
     report.push_str(&format!(
         "- Boundary Handling: {:.1}%\n",
-        _results.wavelet2d_results.boundary_handling_score
+        results.wavelet2d_results.boundary_handling_score
     ));
     report.push_str(&format!(
         "- Computational Efficiency: {:.1}%\n\n",
-        _results.wavelet2d_results.computational_efficiency
+        results.wavelet2d_results.computational_efficiency
     ));
 
     report.push_str(&format!("### SIMD Operations\n"));
     report.push_str(&format!(
         "- Operation Accuracy: {:.3}%\n",
-        _results.simd_results.operation_accuracy
+        results.simd_results.operation_accuracy
     ));
     report.push_str(&format!(
         "- Speedup Factor: {:.1}x\n",
-        _results.simd_results.speedup_factor
+        results.simd_results.speedup_factor
     ));
     report.push_str(&format!(
         "- Platform Consistency: {:.1}%\n\n",
-        _results.simd_results.platform_consistency
+        results.simd_results.platform_consistency
     ));
 
     if !_results.recommendations.is_empty() {

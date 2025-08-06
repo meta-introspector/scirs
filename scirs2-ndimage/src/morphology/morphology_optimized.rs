@@ -1276,16 +1276,16 @@ fn create_structuring_element(
 
 /// Helper function to normalize an array to [0, 1] range
 #[allow(dead_code)]
-fn normalize_array<T>(_array: &mut Array2<T>) -> NdimageResult<()>
+fn normalize_array<T>(array: &mut Array2<T>) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Debug + 'static,
 {
-    let min_val = _array.iter().fold(T::infinity(), |acc, &x| acc.min(x));
-    let max_val = _array.iter().fold(T::neg_infinity(), |acc, &x| acc.max(x));
+    let min_val = array.iter().fold(T::infinity(), |acc, &x| acc.min(x));
+    let max_val = array.iter().fold(T::neg_infinity(), |acc, &x| acc.max(x));
 
     let range = max_val - min_val;
     if range > T::zero() {
-        for value in _array.iter_mut() {
+        for value in array.iter_mut() {
             *value = (*value - min_val) / range;
         }
     }
@@ -1295,12 +1295,12 @@ where
 
 /// Helper function to compute threshold for area opening
 #[allow(dead_code)]
-fn compute_threshold_for_area<T>(_input: &Array2<T>, _area_threshold: usize) -> NdimageResult<T>
+fn compute_threshold_for_area<T>(_input: &Array2<T>, _areathreshold: usize) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug + 'static,
 {
     // Simplified implementation - use median as _threshold
-    let mut values: Vec<T> = _input.iter().copied().collect();
+    let mut values: Vec<T> = input.iter().copied().collect();
     values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let median_idx = values.len() / 2;

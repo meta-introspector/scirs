@@ -97,7 +97,7 @@ where
 
     // Create the complete compressed array structure
     let compressed_array = CompressedArray {
-        metadata: _metadata,
+        metadata: metadata,
         data: compressed_data,
     };
 
@@ -123,7 +123,7 @@ where
 ///
 /// The decompressed array
 #[allow(dead_code)]
-pub fn decompress_array<P, A, D>(_path: P) -> Result<ArrayBase<OwnedRepr<A>, D>>
+pub fn decompress_array<P, A, D>(path: P) -> Result<ArrayBase<OwnedRepr<A>, D>>
 where
     P: AsRef<Path>,
     A: for<'de> Deserialize<'de> + Clone,
@@ -260,7 +260,7 @@ where
 
     let metadata_size = serialized_metadata.len() as u64;
     file.write_all(&metadata_size.to_le_bytes())
-        .map_err(|e| IoError::FileError(format!("Failed to write metadata _size: {e}")))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write metadata size: {e}")))?;
 
     file.write_all(&serialized_metadata)
         .map_err(|e| IoError::FileError(format!("Failed to write metadata: {e}")))?;
@@ -274,7 +274,7 @@ where
     for chunk in compressed_chunks {
         let chunk_size = chunk.len() as u64;
         file.write_all(&chunk_size.to_le_bytes())
-            .map_err(|e| IoError::FileError(format!("Failed to write chunk _size: {e}")))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write chunk size: {e}")))?;
 
         file.write_all(&chunk)
             .map_err(|e| IoError::FileError(format!("Failed to write chunk data: {e}")))?;

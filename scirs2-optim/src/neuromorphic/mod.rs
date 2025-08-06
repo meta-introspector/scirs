@@ -362,7 +362,7 @@ pub struct SpikeTrain<T: Float> {
 
 impl<T: Float + Send + Sync> SpikeTrain<T> {
     /// Create a new spike train from spike times
-    pub fn new(_neuron_id: usize, spike_times: Vec<T>) -> Self {
+    pub fn new(_neuron_id: usize, spiketimes: Vec<T>) -> Self {
         let spike_count = spike_times.len();
         let duration = if spike_count > 0 {
             spike_times[spike_count - 1] - spike_times[0]

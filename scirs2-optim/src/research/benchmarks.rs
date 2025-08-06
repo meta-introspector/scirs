@@ -549,10 +549,10 @@ pub struct BenchmarkSettings {
 
 impl AcademicBenchmarkSuite {
     /// Create a new benchmark suite
-    pub fn new(_name: &str) -> Self {
+    pub fn new(name: &str) -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
-            _name: _name.to_string(),
+            _name: name.to_string(),
             description: String::new(),
             benchmarks: Vec::new(),
             metrics: Vec::new(),
@@ -761,9 +761,9 @@ impl AcademicBenchmarkSuite {
 
 impl BenchmarkRunner {
     /// Create a new benchmark runner
-    pub fn new(_suite: AcademicBenchmarkSuite, settings: BenchmarkSettings) -> Self {
+    pub fn new(suite: AcademicBenchmarkSuite, settings: BenchmarkSettings) -> Self {
         Self {
-            _suite,
+            suite,
             settings,
             progress_callback: None}
     }
@@ -912,7 +912,7 @@ impl BenchmarkRunner {
         rng.gen_range(1e-5..1e-1) // Generic optimization results
     }
     
-    fn generate_synthetic_trajectory(&self, final_value: f64, iterations: usize) -> Vec<f64> {
+    fn generate_synthetic_trajectory(&self, finalvalue: f64, iterations: usize) -> Vec<f64> {
         let mut trajectory = Vec::with_capacity(iterations);
         let initial_value = final_value * 1000.0; // Start 1000x higher
         
@@ -925,7 +925,7 @@ impl BenchmarkRunner {
         trajectory
     }
     
-    fn calculate_aggregated_metrics(&self, run_results: &[RunResult]) -> HashMap<String, f64> {
+    fn calculate_aggregated_metrics(&self, runresults: &[RunResult]) -> HashMap<String, f64> {
         let mut metrics = HashMap::new();
         
         if !run_results.is_empty() {
@@ -955,7 +955,7 @@ impl BenchmarkRunner {
         metrics
     }
     
-    fn calculate_statistics(&self, run_results: &[RunResult]) -> ResultStatistics {
+    fn calculate_statistics(&self, runresults: &[RunResult]) -> ResultStatistics {
         if run_results.is_empty() {
             return ResultStatistics {
                 successful_runs: 0,
@@ -1011,7 +1011,7 @@ impl BenchmarkRunner {
         }
     }
     
-    fn analyze_convergence(&self, run_results: &[RunResult]) -> ConvergenceAnalysis {
+    fn analyze_convergence(&self, runresults: &[RunResult]) -> ConvergenceAnalysis {
         if run_results.is_empty() {
             return ConvergenceAnalysis {
                 avg_convergence_rate: 0.0,
@@ -1073,12 +1073,12 @@ impl BenchmarkRunner {
         }
     }
     
-    fn calculate_rankings_and_tests(&self, all_results: &mut HashMap<String, BenchmarkResults>) {
+    fn calculate_rankings_and_tests(&self, allresults: &mut HashMap<String, BenchmarkResults>) {
         // Calculate rankings based on overall scores
         let mut optimizer_scores: Vec<(String, f64)> = all_results
             .iter()
-            .filter_map(|(name, _results)| {
-                _results.overall_scores.get("overall_score")
+            .filter_map(|(name, results)| {
+                results.overall_scores.get("overall_score")
                     .map(|&score| (name.clone(), score))
             })
             .collect();
@@ -1087,8 +1087,8 @@ impl BenchmarkRunner {
         
         for (rank, (optimizer_name, score)) in optimizer_scores.iter().enumerate() {
             if let Some(_results) = all_results.get_mut(optimizer_name) {
-                _results.ranking.overall_rank = rank + 1;
-                _results.ranking.ranking_score = *score;
+                results.ranking.overall_rank = rank + 1;
+                results.ranking.ranking_score = *score;
             }
         }
         

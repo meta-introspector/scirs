@@ -66,7 +66,7 @@ where
     /// # Returns
     /// A new empty `LilArray`
     pub fn new(shape: (usize, usize)) -> Self {
-        let (rows_, _cols) = shape;
+        let (rows_, cols) = shape;
         let data = vec![Vec::new(); rows_];
         let indices = vec![Vec::new(); rows_];
 

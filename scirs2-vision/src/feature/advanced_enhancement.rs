@@ -24,7 +24,7 @@
 //! - Parallel processing for batch enhancement
 
 use crate::error::{Result, VisionError};
-use crate::gpu__ops::GpuVisionContext;
+use crate::gpu_ops::GpuVisionContext;
 use ndarray::{s, Array1, Array2, Array3, ArrayView2, Axis};
 
 /// High Dynamic Range (HDR) processor
@@ -55,9 +55,9 @@ pub enum ToneMappingMethod {
 
 impl HDRProcessor {
     /// Create a new HDR processor
-    pub fn new(_exposure_values: Vec<f32>, tone_mapping: ToneMappingMethod) -> Self {
+    pub fn new(_exposure_values: Vec<f32>, tonemapping: ToneMappingMethod) -> Self {
         Self {
-            _exposure_values,
+            exposure_values,
             tone_mapping,
             gpu_context: GpuVisionContext::new().ok(),
         }
@@ -98,7 +98,7 @@ impl HDRProcessor {
     }
 
     /// Compute camera response curve
-    fn compute_response_curve(&self_images: &[ArrayView2<f32>]) -> Result<Array1<f32>> {
+    fn compute_response_curve(selfimages: &[ArrayView2<f32>]) -> Result<Array1<f32>> {
         // Simplified response curve computation
         // In practice, would use Debevec & Malik algorithm
 
@@ -155,7 +155,7 @@ impl HDRProcessor {
     }
 
     /// Compute pixel weight for HDR merging
-    fn compute_pixel_weight(&self, pixel_value: f32) -> f32 {
+    fn compute_pixel_weight(&self, pixelvalue: f32) -> f32 {
         // Hat function: higher weight for mid-tones
         let normalized = pixel_value.clamp(0.0, 1.0);
         if normalized <= 0.5 {
@@ -166,7 +166,7 @@ impl HDRProcessor {
     }
 
     /// Apply tone mapping to radiance map
-    fn apply_tone_mapping(&self, radiance_map: &Array2<f32>) -> Result<Array2<f32>> {
+    fn apply_tone_mapping(&self, radiancemap: &Array2<f32>) -> Result<Array2<f32>> {
         match self.tone_mapping {
             ToneMappingMethod::Reinhard => self.reinhard_tone_mapping(radiance_map),
             ToneMappingMethod::AdaptiveLog => self.adaptive_log_mapping(radiance_map),
@@ -177,7 +177,7 @@ impl HDRProcessor {
     }
 
     /// Reinhard tone mapping operator
-    fn reinhard_tone_mapping(&self, radiance_map: &Array2<f32>) -> Result<Array2<f32>> {
+    fn reinhard_tone_mapping(&self, radiancemap: &Array2<f32>) -> Result<Array2<f32>> {
         let (height, width) = radiance_map.dim();
         let mut result = Array2::zeros((height, width));
 
@@ -200,7 +200,7 @@ impl HDRProcessor {
     }
 
     /// Adaptive logarithmic tone mapping
-    fn adaptive_log_mapping(&self, radiance_map: &Array2<f32>) -> Result<Array2<f32>> {
+    fn adaptive_log_mapping(&self, radiancemap: &Array2<f32>) -> Result<Array2<f32>> {
         let (height, width) = radiance_map.dim();
         let mut result = Array2::zeros((height, width));
 
@@ -231,7 +231,7 @@ impl HDRProcessor {
     }
 
     /// Histogram equalization-based tone mapping
-    fn histogram_equalization_mapping(&self, radiance_map: &Array2<f32>) -> Result<Array2<f32>> {
+    fn histogram_equalization_mapping(&self, radiancemap: &Array2<f32>) -> Result<Array2<f32>> {
         let (height, width) = radiance_map.dim();
         let num_bins = 256;
 
@@ -281,7 +281,7 @@ impl HDRProcessor {
     }
 
     /// Drago tone mapping operator
-    fn drago_tone_mapping(&self, radiance_map: &Array2<f32>) -> Result<Array2<f32>> {
+    fn drago_tone_mapping(&self, radiancemap: &Array2<f32>) -> Result<Array2<f32>> {
         let (height, width) = radiance_map.dim();
         let mut result = Array2::zeros((height, width));
 
@@ -316,7 +316,7 @@ impl HDRProcessor {
     }
 
     /// Mantiuk perception-based tone mapping
-    fn mantiuk_tone_mapping(&self, radiance_map: &Array2<f32>) -> Result<Array2<f32>> {
+    fn mantiuk_tone_mapping(&self, radiancemap: &Array2<f32>) -> Result<Array2<f32>> {
         // Simplified version of Mantiuk operator
         // Full implementation would require complex psychophysical modeling
 
@@ -372,7 +372,7 @@ impl HDRProcessor {
     }
 
     /// Compute log-average luminance
-    fn compute_log_average_luminance(&self, radiance_map: &Array2<f32>) -> f32 {
+    fn compute_log_average_luminance(&self, radiancemap: &Array2<f32>) -> f32 {
         let delta = 1e-6; // Small value to avoid log(0)
         let mut log_sum = 0.0;
         let mut count = 0;
@@ -433,8 +433,8 @@ pub struct SRNetworkWeights {
 
 impl SuperResolutionProcessor {
     /// Create a new super-resolution processor
-    pub fn new(_scale_factor: usize, method: SuperResolutionMethod) -> Result<Self> {
-        if !(2..=8).contains(&_scale_factor) {
+    pub fn new(scalefactor: usize, method: SuperResolutionMethod) -> Result<Self> {
+        if !(2..=8).contains(&scale_factor) {
             return Err(VisionError::InvalidParameter(
                 "Scale _factor must be between 2 and 8".to_string(),
             ));
@@ -752,7 +752,7 @@ impl SuperResolutionProcessor {
     }
 
     /// Create synthetic network weights for demonstration
-    fn create_synthetic_weights(_scale_factor: usize) -> Result<SRNetworkWeights> {
+    fn create_synthetic_weights(scalefactor: usize) -> Result<SRNetworkWeights> {
         // Create simplified network architecture
         let kernel_size = 9;
 
@@ -817,9 +817,9 @@ pub enum DenoisingMethod {
 
 impl AdvancedDenoiser {
     /// Create a new advanced denoiser
-    pub fn new(_method: DenoisingMethod, noise_variance: f32) -> Self {
+    pub fn new(_method: DenoisingMethod, noisevariance: f32) -> Self {
         Self {
-            _method,
+            method,
             noise_variance,
             gpu_context: GpuVisionContext::new().ok(),
         }
@@ -925,10 +925,10 @@ impl AdvancedDenoiser {
 
         for _y in (search_start_y..search_end_y).step_by(2) {
             for _x in (search_start_x..search_end_x).step_by(2) {
-                let candidate_block = image.slice(s![_y.._y + block_h, _x.._x + block_w]);
+                let candidate_block = image.slice(s![_y.._y + block_h, x.._x + block_w]);
                 let similarity = self.compute_block_similarity(ref_block, &candidate_block);
 
-                similarities.push((similarity, _y, _x));
+                similarities.push((similarity, y, x));
             }
         }
 
@@ -940,8 +940,8 @@ impl AdvancedDenoiser {
         let num_blocks = similarities.len();
         let mut similar_blocks = Array3::zeros((block_h, block_w, num_blocks));
 
-        for (i, &(_, _y, _x)) in similarities.iter().enumerate() {
-            let _block = image.slice(s![_y.._y + block_h, _x.._x + block_w]);
+        for (i, &(_, y, x)) in similarities.iter().enumerate() {
+            let _block = image.slice(s![_y.._y + block_h, x.._x + block_w]);
             similar_blocks.slice_mut(s![.., .., i]).assign(&_block);
         }
 

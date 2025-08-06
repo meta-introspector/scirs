@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn create_and_write_matrix(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
+fn create_and_write_matrix(tempdir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📝 Creating and Writing Harwell-Boeing Matrix...");
 
     // Create a simple sparse matrix in CCS format
@@ -82,7 +82,7 @@ fn create_and_write_matrix(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn s
 }
 
 #[allow(dead_code)]
-fn read_and_analyze_matrix(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
+fn read_and_analyze_matrix(tempdir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📖 Reading and Analyzing Harwell-Boeing Matrix...");
 
     let hb_file = temp_dir.path().join("example_matrix.hb");
@@ -269,20 +269,20 @@ fn verify_matrix_structure(
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Basic structural checks
     assert_eq!(
-        _matrix.colptr.len(),
-        _matrix.header.ncol + 1,
+        matrix.colptr.len(),
+        matrix.header.ncol + 1,
         "Column pointer array size mismatch"
     );
     assert_eq!(
-        _matrix.rowind.len(),
-        _matrix.header.nnzero,
+        matrix.rowind.len(),
+        matrix.header.nnzero,
         "Row index array size mismatch"
     );
 
-    if let Some(ref values) = _matrix.values {
+    if let Some(ref values) = matrix.values {
         assert_eq!(
             values.len(),
-            _matrix.header.nnzero,
+            matrix.header.nnzero,
             "Values array size mismatch"
         );
     }
@@ -290,7 +290,7 @@ fn verify_matrix_structure(
     // Check column pointer monotonicity
     for i in 1.._matrix.colptr.len() {
         assert!(
-            _matrix.colptr[i] >= _matrix.colptr[i - 1],
+            matrix.colptr[i] >= matrix.colptr[i - 1],
             "Column pointers are not monotonic at position {}",
             i
         );
@@ -299,17 +299,17 @@ fn verify_matrix_structure(
     // Check row indices are within bounds
     for &row_idx in &_matrix.rowind {
         assert!(
-            row_idx < _matrix.header.nrow,
+            row_idx < matrix.header.nrow,
             "Row index {} out of bounds (nrow={})",
             row_idx,
-            _matrix.header.nrow
+            matrix.header.nrow
         );
     }
 
     // Check first and last column pointers
     assert_eq!(_matrix.colptr[0], 0, "First column pointer should be 0");
     assert_eq!(
-        _matrix.colptr[_matrix.header.ncol], _matrix.header.nnzero,
+        matrix.colptr[_matrix.header.ncol], matrix.header.nnzero,
         "Last column pointer should equal nnzero"
     );
 
@@ -318,10 +318,10 @@ fn verify_matrix_structure(
 }
 
 #[allow(dead_code)]
-fn estimate_storage_size(_matrix: &HBSparseMatrix<f64>) -> usize {
-    let ptr_size = _matrix.colptr.len() * std::mem::size_of::<usize>();
-    let idx_size = _matrix.rowind.len() * std::mem::size_of::<usize>();
-    let val_size = if let Some(ref values) = _matrix.values {
+fn estimate_storage_size(matrix: &HBSparseMatrix<f64>) -> usize {
+    let ptr_size = matrix.colptr.len() * std::mem::size_of::<usize>();
+    let idx_size = matrix.rowind.len() * std::mem::size_of::<usize>();
+    let val_size = if let Some(ref values) = matrix.values {
         values.len() * std::mem::size_of::<f64>()
     } else {
         0

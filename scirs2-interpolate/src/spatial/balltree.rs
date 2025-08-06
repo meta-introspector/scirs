@@ -108,7 +108,7 @@ where
     /// # Returns
     ///
     /// A new Ball Tree for efficient nearest neighbor searches
-    pub fn new(_points: Array2<F>) -> InterpolateResult<Self> {
+    pub fn new(points: Array2<F>) -> InterpolateResult<Self> {
         Self::with_leaf_size(_points, 10)
     }
 
@@ -122,15 +122,15 @@ where
     /// # Returns
     ///
     /// A new Ball Tree for efficient nearest neighbor searches
-    pub fn with_leaf_size(_points: Array2<F>, leaf_size: usize) -> InterpolateResult<Self> {
-        if _points.is_empty() {
+    pub fn with_leaf_size(_points: Array2<F>, leafsize: usize) -> InterpolateResult<Self> {
+        if points.is_empty() {
             return Err(InterpolateError::InvalidValue(
                 "Points array cannot be empty".to_string(),
             ));
         }
 
-        let n_points = _points.shape()[0];
-        let dim = _points.shape()[1];
+        let n_points = points.shape()[0];
+        let dim = points.shape()[1];
 
         // For very small datasets, just use a simple linear search
         if n_points <= leaf_size {
@@ -139,7 +139,7 @@ where
             let radius = compute_radius(&_points, &indices, &center);
 
             let mut tree = Self {
-                _points,
+                points,
                 nodes: Vec::new(),
                 root: None,
                 dim,
@@ -165,7 +165,7 @@ where
         let est_nodes = (2 * n_points / leaf_size).max(16);
 
         let mut tree = Self {
-            _points,
+            points,
             nodes: Vec::with_capacity(est_nodes),
             root: None,
             dim,
@@ -409,8 +409,8 @@ where
                 let _dist = euclidean_distance(query, &point.to_vec());
 
                 if _dist < *best_dist {
-                    *best_dist = _dist;
-                    *best_idx = _idx;
+                    *best_dist = dist;
+                    *best_idx = idx;
                 }
             }
             return;
@@ -475,7 +475,7 @@ where
                 let dist = euclidean_distance(query, &point.to_vec());
 
                 // Add to heap
-                heap.push((OrderedFloat(dist), _idx));
+                heap.push((OrderedFloat(dist), idx));
 
                 // If heap is too large, remove the farthest point
                 if heap.len() > k {
@@ -826,7 +826,7 @@ where
 
                 // Only consider points within search _radius
                 if dist <= *search_radius {
-                    heap.push((OrderedFloat(dist), _idx));
+                    heap.push((OrderedFloat(dist), idx));
 
                     // If heap is too large, remove the farthest point and update search _radius
                     if heap.len() > k {
@@ -1028,7 +1028,7 @@ where
 #[allow(dead_code)]
 fn compute_centroid<F: Float + FromPrimitive>(points: &Array2<F>, indices: &[usize]) -> Vec<F> {
     let n_points = indices.len();
-    let n_dims = _points.shape()[1];
+    let n_dims = points.shape()[1];
 
     if n_points == 0 {
         return vec![F::zero(); n_dims];
@@ -1038,7 +1038,7 @@ fn compute_centroid<F: Float + FromPrimitive>(points: &Array2<F>, indices: &[usi
 
     // Sum all point coordinates
     for &idx in indices {
-        let point = _points.row(idx);
+        let point = points.row(idx);
         for d in 0..n_dims {
             center[d] = center[d] + point[d];
         }
@@ -1066,7 +1066,7 @@ fn compute_radius<F: Float>(points: &Array2<F>, indices: &[usize], center: &[F])
 
     // Find the maximum distance from center to any point
     for &idx in indices {
-        let point = _points.row(idx);
+        let point = points.row(idx);
         let dist = euclidean_distance(&point.to_vec(), center);
 
         if dist > max_dist {
@@ -1081,7 +1081,7 @@ fn compute_radius<F: Float>(points: &Array2<F>, indices: &[usize], center: &[F])
 #[allow(dead_code)]
 fn find_max_spread_dimension<F: Float>(points: &Array2<F>, indices: &[usize]) -> (usize, F) {
     let n_points = indices.len();
-    let n_dims = _points.shape()[1];
+    let n_dims = points.shape()[1];
 
     if n_points <= 1 {
         return (0, F::zero());
@@ -1096,7 +1096,7 @@ fn find_max_spread_dimension<F: Float>(points: &Array2<F>, indices: &[usize]) ->
         let mut max_val = F::neg_infinity();
 
         for &idx in indices {
-            let val = _points[[idx, d]];
+            let val = points[[idx, d]];
 
             if val < min_val {
                 min_val = val;

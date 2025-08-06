@@ -22,9 +22,9 @@ struct SimpleModelBuilder<F: Float + Debug + ScalarOperand + FromPrimitive + Sen
     output_dim: usize, _phantom: std::marker::PhantomData<F>,
 }
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> SimpleModelBuilder<F> {
-    fn new(_input_dim: usize, hidden_dim: usize, output_dim: usize) -> Self {
+    fn new(_input_dim: usize, hidden_dim: usize, outputdim: usize) -> Self {
         Self {
-            _input_dim,
+            input_dim,
             hidden_dim,
             output_dim_phantom: std::marker::PhantomData,
         }
@@ -35,7 +35,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> ModelBuilde
     type Model = Sequential<F>;
     fn build(&self) -> Result<Self::Model> {
         let mut model = Sequential::new();
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
         model.add(Dense::<F>::new(
             self.input_dim,
             self.hidden_dim,
@@ -51,7 +51,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> ModelBuilde
 fn generate_regression_dataset<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync>(
     n_samples: usize,
 ) -> Result<InMemoryDataset<F>> {
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Generate random inputs directly into a single array
     let mut features_data = Vec::with_capacity(n_samples * input_dim);
     for _ in 0..n_samples {
@@ -79,7 +79,7 @@ fn generate_classification_dataset<
     F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync,
 >(
     n_classes: usize,
-    let mut rng = SmallRng::seed_from_u64(43);
+    let mut rng = SmallRng::from_seed(43);
     // Generate targets (one-hot encoded)
     let mut labels_data = vec![F::zero(); n_samples * n_classes];
         let mut class_scores = Vec::with_capacity(n_classes);
@@ -115,7 +115,7 @@ fn main() -> Result<()> {
     let _test_size = n_samples - train_size - val_size;
     let mut indices: Vec<usize> = (0..n_samples).collect();
     use rand::seq::SliceRandom;
-    let mut shuffle_rng = SmallRng::seed_from_u64(44);
+    let mut shuffle_rng = SmallRng::from_seed(44);
     indices.shuffle(&mut shuffle_rng);
     let train_indices = indices[0..train_size].to_vec();
     let val_indices = indices[train_size..train_size + val_size].to_vec();

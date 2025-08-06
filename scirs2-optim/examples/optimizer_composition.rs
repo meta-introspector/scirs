@@ -34,18 +34,18 @@ fn main() {
     println!("\nRunning regression with different optimizer compositions...\n");
 
     // 1. Sequential Optimizer Example
-    sequential_optimizer_example(&x_train, &y_train, true_weights.len());
+    sequential_optimizer_example(&x_train, &y_train, trueweights.len());
 
     // 2. Parallel Optimizer Example
-    parallel_optimizer_example(&x_train, &y_train, true_weights.len());
+    parallel_optimizer_example(&x_train, &y_train, trueweights.len());
 
     // 3. Chained Optimizer Example
-    chained_optimizer_example(&x_train, &y_train, true_weights.len());
+    chained_optimizer_example(&x_train, &y_train, trueweights.len());
 }
 
 /// Example demonstrating a sequential optimizer composition
 #[allow(dead_code)]
-fn sequential_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, n_features: usize) {
+fn sequential_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, nfeatures: usize) {
     println!("Sequential Optimizer Example");
     println!("----------------------------");
     println!(
@@ -101,7 +101,7 @@ fn sequential_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, n
 
 /// Example demonstrating a parallel optimizer composition
 #[allow(dead_code)]
-fn parallel_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, n_features: usize) {
+fn parallel_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, nfeatures: usize) {
     println!("Parallel Optimizer Example");
     println!("---------------------------");
     println!("Using different optimizers for different parameter groups\n");
@@ -200,7 +200,7 @@ fn parallel_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, n_f
 
 /// Example demonstrating a chained optimizer composition
 #[allow(dead_code)]
-fn chained_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, n_features: usize) {
+fn chained_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, nfeatures: usize) {
     println!("Chained Optimizer Example");
     println!("-------------------------");
     println!("Using RMSprop wrapped with Adam\n");

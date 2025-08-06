@@ -18,6 +18,7 @@ num-complex = { workspace = true }
 thiserror = { workspace = true }
 approx = { workspace = true }
 rand = { workspace = true }
+statrs = { workspace = true }
 
 [features]
 default = []

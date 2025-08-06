@@ -85,7 +85,7 @@ pub struct RollingStatsResult<F> {
 }
 
 impl<F: Zero + Clone> RollingStatsResult<F> {
-    fn new(n_windows: usize, statistics: &[RollingStatistic]) -> Self {
+    fn new(nwindows: usize, statistics: &[RollingStatistic]) -> Self {
         let mut result = RollingStatsResult {
             means: None,
             variances: None,
@@ -419,7 +419,7 @@ where
         + std::fmt::Display
         + std::iter::Sum<F>,
 {
-    let (n_rows, _n_cols) = data.dim();
+    let (n_rows, n_cols) = data.dim();
     let mut results = MatrixStatsResult::new_row_wise(n_rows, operations);
 
     // Process rows sequentially (parallel version would need different data structure)
@@ -702,7 +702,7 @@ fn compute_vector_operation<F>(
 }
 
 impl<F: Zero + Clone> MatrixStatsResult<F> {
-    fn new_column_wise(n_cols: usize, operations: &[MatrixOperation]) -> Self {
+    fn new_column_wise(ncols: usize, operations: &[MatrixOperation]) -> Self {
         let mut result = MatrixStatsResult {
             means: None,
             variances: None,
@@ -725,7 +725,7 @@ impl<F: Zero + Clone> MatrixStatsResult<F> {
         result
     }
 
-    fn new_row_wise(n_rows: usize, operations: &[MatrixOperation]) -> Self {
+    fn new_row_wise(nrows: usize, operations: &[MatrixOperation]) -> Self {
         let mut result = MatrixStatsResult {
             means: None,
             variances: None,
@@ -748,7 +748,7 @@ impl<F: Zero + Clone> MatrixStatsResult<F> {
         result
     }
 
-    fn new_global(_operations: &[MatrixOperation]) -> Self {
+    fn new_global(operations: &[MatrixOperation]) -> Self {
         let mut result = MatrixStatsResult {
             means: None,
             variances: None,
@@ -771,19 +771,19 @@ impl<F: Zero + Clone> MatrixStatsResult<F> {
         result
     }
 
-    fn allocate_for_operation(_result: &mut Self, operation: &MatrixOperation, size: usize) {
+    fn allocate_for_operation(result: &mut Self, operation: &MatrixOperation, size: usize) {
         match operation {
-            MatrixOperation::Mean => _result.means = Some(Array1::zeros(size)),
-            MatrixOperation::Variance => _result.variances = Some(Array1::zeros(size)),
-            MatrixOperation::StandardDeviation => _result.std_devs = Some(Array1::zeros(size)),
-            MatrixOperation::Min => _result.mins = Some(Array1::zeros(size)),
-            MatrixOperation::Max => _result.maxs = Some(Array1::zeros(size)),
-            MatrixOperation::Sum => _result.sums = Some(Array1::zeros(size)),
-            MatrixOperation::Product => _result.products = Some(Array1::zeros(size)),
-            MatrixOperation::Median => _result.medians = Some(Array1::zeros(size)),
-            MatrixOperation::Quantile(_) => _result.quantiles = Some(Array1::zeros(size)),
-            MatrixOperation::L1Norm => _result.l1_norms = Some(Array1::zeros(size)),
-            MatrixOperation::L2Norm => _result.l2_norms = Some(Array1::zeros(size)),
+            MatrixOperation::Mean => result.means = Some(Array1::zeros(size)),
+            MatrixOperation::Variance => result.variances = Some(Array1::zeros(size)),
+            MatrixOperation::StandardDeviation => result.std_devs = Some(Array1::zeros(size)),
+            MatrixOperation::Min => result.mins = Some(Array1::zeros(size)),
+            MatrixOperation::Max => result.maxs = Some(Array1::zeros(size)),
+            MatrixOperation::Sum => result.sums = Some(Array1::zeros(size)),
+            MatrixOperation::Product => result.products = Some(Array1::zeros(size)),
+            MatrixOperation::Median => result.medians = Some(Array1::zeros(size)),
+            MatrixOperation::Quantile(_) => result.quantiles = Some(Array1::zeros(size)),
+            MatrixOperation::L1Norm => result.l1_norms = Some(Array1::zeros(size)),
+            MatrixOperation::L2Norm => result.l2_norms = Some(Array1::zeros(size)),
             MatrixOperation::FrobeniusNorm => {} // Will be handled separately
         }
     }
@@ -902,24 +902,24 @@ pub struct BootstrapResult<F> {
 }
 
 #[allow(dead_code)]
-fn generate_bootstrap_sample<F, R>(_data: &ArrayView1<F>, rng: &mut R) -> Array1<F>
+fn generate_bootstrap_sample<F, R>(data: &ArrayView1<F>, rng: &mut R) -> Array1<F>
 where
     F: Copy + Zero,
     R: Rng,
 {
-    let n = _data.len();
+    let n = data.len();
     let mut sample = Array1::zeros(n);
 
     for i in 0..n {
-        let idx = rng.random_range(0..n);
-        sample[i] = _data[idx];
+        let idx = rng.gen_range(0..n);
+        sample[i] = data[idx];
     }
 
     sample
 }
 
 #[allow(dead_code)]
-fn compute_bootstrap_statistic<F>(_data: &ArrayView1<F>, statistic: &BootstrapStatistic) -> F
+fn compute_bootstrap_statistic<F>(data: &ArrayView1<F>, statistic: &BootstrapStatistic) -> F
 where
     F: Float
         + NumCast
@@ -931,7 +931,7 @@ where
         + std::fmt::Display
         + std::iter::Sum<F>,
 {
-    let n = _data.len();
+    let n = data.len();
     let n_f = F::from(n).unwrap();
     let use_simd = n > 16;
 
@@ -940,7 +940,7 @@ where
             if use_simd {
                 F::simd_sum(_data) / n_f
             } else {
-                _data.iter().copied().sum::<F>() / n_f
+                data.iter().copied().sum::<F>() / n_f
             }
         }
         BootstrapStatistic::StandardDeviation => {
@@ -957,8 +957,8 @@ where
                     F::zero()
                 }
             } else {
-                let mean = _data.iter().copied().sum::<F>() / n_f;
-                let sum_sq = _data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>();
+                let mean = data.iter().copied().sum::<F>() / n_f;
+                let sum_sq = data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>();
                 if n > 1 {
                     sum_sq / F::from(n - 1).unwrap()
                 } else {
@@ -981,8 +981,8 @@ where
                     F::zero()
                 }
             } else {
-                let mean = _data.iter().copied().sum::<F>() / n_f;
-                let sum_sq = _data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>();
+                let mean = data.iter().copied().sum::<F>() / n_f;
+                let sum_sq = data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>();
                 if n > 1 {
                     sum_sq / F::from(n - 1).unwrap()
                 } else {
@@ -994,14 +994,14 @@ where
             if use_simd {
                 F::simd_min_element(&_data.view())
             } else {
-                _data.iter().copied().fold(_data[0], F::min)
+                data.iter().copied().fold(_data[0], F::min)
             }
         }
         BootstrapStatistic::Max => {
             if use_simd {
                 F::simd_max_element(&_data.view())
             } else {
-                _data.iter().copied().fold(_data[0], F::max)
+                data.iter().copied().fold(_data[0], F::max)
             }
         }
         BootstrapStatistic::Range => {
@@ -1011,14 +1011,14 @@ where
                     F::simd_max_element(&_data.view()),
                 )
             } else {
-                let min_val = _data.iter().copied().fold(_data[0], F::min);
-                let max_val = _data.iter().copied().fold(_data[0], F::max);
+                let min_val = data.iter().copied().fold(_data[0], F::min);
+                let max_val = data.iter().copied().fold(_data[0], F::max);
                 (min_val, max_val)
             };
             max_val - min_val
         }
         BootstrapStatistic::Median => {
-            let mut sorted_data = _data.to_owned();
+            let mut sorted_data = data.to_owned();
             sorted_data
                 .as_slice_mut()
                 .unwrap()
@@ -1032,7 +1032,7 @@ where
             }
         }
         BootstrapStatistic::Quantile(q) => {
-            let mut sorted_data = _data.to_owned();
+            let mut sorted_data = data.to_owned();
             sorted_data
                 .as_slice_mut()
                 .unwrap()
@@ -1046,7 +1046,7 @@ where
             lower_val + weight * (upper_val - lower_val)
         }
         BootstrapStatistic::InterquartileRange => {
-            let mut sorted_data = _data.to_owned();
+            let mut sorted_data = data.to_owned();
             sorted_data
                 .as_slice_mut()
                 .unwrap()
@@ -1072,7 +1072,7 @@ where
             let sum = if use_simd {
                 F::simd_sum(_data)
             } else {
-                _data.iter().copied().sum::<F>()
+                data.iter().copied().sum::<F>()
             };
             let mean = sum / n_f;
 
@@ -1087,7 +1087,7 @@ where
             } else {
                 let mut variance_sum = F::zero();
                 let mut skew_sum = F::zero();
-                for &x in _data.iter() {
+                for &x in data.iter() {
                     let dev = x - mean;
                     let dev_sq = dev * dev;
                     variance_sum = variance_sum + dev_sq;
@@ -1108,7 +1108,7 @@ where
             let sum = if use_simd {
                 F::simd_sum(_data)
             } else {
-                _data.iter().copied().sum::<F>()
+                data.iter().copied().sum::<F>()
             };
             let mean = sum / n_f;
 
@@ -1123,7 +1123,7 @@ where
             } else {
                 let mut variance_sum = F::zero();
                 let mut kurt_sum = F::zero();
-                for &x in _data.iter() {
+                for &x in data.iter() {
                     let dev = x - mean;
                     let dev_sq = dev * dev;
                     variance_sum = variance_sum + dev_sq;

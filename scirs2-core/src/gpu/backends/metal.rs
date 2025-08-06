@@ -377,7 +377,7 @@ impl MetalKernel {
     }
 
     /// Create a stub kernel for typed compilation
-    fn stub(device: Device, command_queue: CommandQueue, name: String) -> Self {
+    fn stub(device: Device, commandqueue: CommandQueue, name: String) -> Self {
         Self {
             device,
             command_queue,
@@ -424,7 +424,7 @@ impl GpuKernelImpl for MetalKernel {
             .insert(name.to_string(), ScalarValue::F64(value));
     }
 
-    fn dispatch_workgroups(&self, work_groups: [u32; 3]) {
+    fn dispatch_workgroups(&self, workgroups: [u32; 3]) {
         let Some(pipeline) = &self.pipeline else {
             eprintln!("Warning: Attempting to dispatch stub kernel");
             return;

@@ -542,7 +542,7 @@ pub fn compute_conv_indices(
     padding: (usize, usize),
 ) -> LinalgResult<ndarray::Array1<usize>> {
     let (batch_size, in_channels, height, width) = inputshape;
-    let (out_channels_, _in_channels, kernel_h, kernel_w) = kernelshape;
+    let (out_channels_, in_channels, kernel_h, kernel_w) = kernelshape;
     let (stride_h, stride_w) = stride;
     let (padding_h, padding_w) = padding;
 
@@ -819,9 +819,9 @@ pub fn conv2d_backward_input<F>(
 where
     F: Float + NumAssign + Sum + Zero + ScalarOperand,
 {
-    let (batch_size, out_channels, _output_h, _output_w) = grad_output.dim();
+    let (batch_size, out_channels, output_h, output_w) = grad_output.dim();
     let (k_out_channels, in_channels, kernel_h, kernel_w) = kernel.dim();
-    let (i_batch_size, i_in_channels, _height, _width) = inputshape;
+    let (i_batch_size, i_in_channels, height, width) = inputshape;
 
     // Check that shapes match
     if batch_size != i_batch_size {
@@ -858,9 +858,9 @@ where
     }
 
     // Calculate padding for transposed convolution
-    let (_stride_h, _stride_w) = stride;
+    let (_stride_h, stride_w) = stride;
     let (padding_h, padding_w) = padding;
-    let (_dilation_h, _dilation_w) = dilation;
+    let (_dilation_h, dilation_w) = dilation;
 
     // We need to adjust padding for transposed convolution
     let pad_h = kernel_h - 1 - padding_h;
@@ -943,7 +943,7 @@ pub fn conv2d_backward_kernel<F>(
 where
     F: Float + NumAssign + Sum + Zero + ScalarOperand,
 {
-    let (batch_size, in_channels, _height, _width) = input.dim();
+    let (batch_size, in_channels, height, width) = input.dim();
     let (go_batch_size, out_channels_, output_h, output_w) = grad_output.dim();
     let (k_out_channels, k_in_channels, kernel_h, kernel_w) = kernelshape;
 
@@ -1012,11 +1012,11 @@ where
 /// assert_eq!(grad_bias.shape(), &[16]);
 /// ```
 #[allow(dead_code)]
-pub fn conv2d_backward_bias<F>(_grad_output: &ArrayView4<F>) -> LinalgResult<ndarray::Array1<F>>
+pub fn conv2d_backward_bias<F>(grad_output: &ArrayView4<F>) -> LinalgResult<ndarray::Array1<F>>
 where
     F: Float + NumAssign + Sum + Zero,
 {
-    let (batch_size, out_channels_, output_h, output_w) = _grad_output.dim();
+    let (batch_size, out_channels_, output_h, output_w) = grad_output.dim();
 
     // Allocate gradient for bias
     let mut grad_bias = ndarray::Array1::<F>::zeros(out_channels_);
@@ -1026,7 +1026,7 @@ where
         for oc in 0..out_channels_ {
             for h in 0..output_h {
                 for w in 0..output_w {
-                    grad_bias[oc] += _grad_output[[batch_idx, oc, h, w]];
+                    grad_bias[oc] += grad_output[[batch_idx, oc, h, w]];
                 }
             }
         }
@@ -1162,7 +1162,7 @@ where
                                     if out_h < output_h && out_w < output_w {
                                         // The transposed convolution can be thought of as:
                                         // 1. For each input position and each kernel position
-                                        // 2. Calculate the output position based on stride, _padding, and dilation
+                                        // 2. Calculate the output position based on stride, padding, and dilation
                                         // 3. Add the product of input and kernel value to that output position
                                         //
                                         // Note: Technically, for a proper mathematical transposed convolution,

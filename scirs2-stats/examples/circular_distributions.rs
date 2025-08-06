@@ -3,7 +3,6 @@
 //! This example demonstrates the von Mises and wrapped Cauchy distributions
 //! which are specialized for circular data (angles, directions, etc.).
 
-use ndarray::Array1;
 use scirs2_stats::distributions::circular::{VonMises, WrappedCauchy};
 use scirs2_stats::traits::CircularDistribution;
 use std::f64::consts::PI;
@@ -18,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let vm = VonMises::new(PI / 4.0, 2.0)?;
 
     println!("   Parameters: μ = {:.3}, κ = {:.3}", vm.mu, vm.kappa);
-    println!("   Mean direction: {:.3}", vm.mean_direction());
+    println!("   Mean direction: {:.3}", vm.circular_mean());
     println!("   Concentration: {:.3}", vm.concentration());
     println!("   Circular variance: {:.3}", vm.circular_variance());
 
@@ -36,9 +35,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Generate some samples
     println!("   Random samples:");
-    let mut rng = rand::thread_rng();
-    let samples: Vec<f64> = (0..5).map(|_| vm.sample(&mut rng)).collect();
-    for (i, &sample) in samples.iter().enumerate() {
+    for i in 0..5 {
+        let sample = vm.rvs_single().unwrap();
         println!("     Sample {}: {:.3}", i + 1, sample);
     }
 
@@ -49,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let wc = WrappedCauchy::new(0.0, 0.6)?;
 
     println!("   Parameters: μ = {:.3}, γ = {:.3}", wc.mu, wc.gamma);
-    println!("   Mean direction: {:.3}", wc.mean_direction());
+    println!("   Mean direction: {:.3}", wc.circular_mean());
     println!("   Concentration: {:.3}", wc.concentration());
     println!("   Circular variance: {:.3}", wc.circular_variance());
 
@@ -66,8 +64,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Generate some samples
     println!("   Random samples:");
-    let wc_samples: Vec<f64> = (0..5).map(|_| wc.sample(&mut rng)).collect();
-    for (i, &sample) in wc_samples.iter().enumerate() {
+    for i in 0..5 {
+        let sample = wc.rvs_single().unwrap();
         println!("     Sample {}: {:.3}", i + 1, sample);
     }
 

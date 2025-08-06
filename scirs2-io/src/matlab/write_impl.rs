@@ -75,7 +75,7 @@ pub fn write_variable<W: Write + Seek>(
     // Write matrix element header (MI_MATRIX)
     writer
         .write_i32::<LittleEndian>(MI_MATRIX)
-        .map_err(|e| IoError::FileError(format!("Failed to write matrix _type: {e}")))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write matrix type: {e}")))?;
 
     // Placeholder for size - we'll calculate and update this at the end
     let size_pos = writer
@@ -152,7 +152,7 @@ fn write_matrix_header_content<W: Write + Seek>(
     // Write array flags
     writer
         .write_i32::<LittleEndian>(MI_UINT32)
-        .map_err(|e| IoError::FileError(format!("Failed to write flags _type: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write flags type: {}", e)))?;
     writer
         .write_i32::<LittleEndian>(8)
         .map_err(|e| IoError::FileError(format!("Failed to write flags size: {}", e)))?;
@@ -172,7 +172,7 @@ fn write_matrix_header_content<W: Write + Seek>(
     let dims_size = (shape.len() * 4) as i32;
     writer
         .write_i32::<LittleEndian>(MI_INT32)
-        .map_err(|e| IoError::FileError(format!("Failed to write dims _type: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write dims type: {}", e)))?;
     writer
         .write_i32::<LittleEndian>(dims_size)
         .map_err(|e| IoError::FileError(format!("Failed to write dims size: {}", e)))?;
@@ -197,7 +197,7 @@ fn write_matrix_header_content<W: Write + Seek>(
     let name_len = name_bytes.len() as i32;
     writer
         .write_i32::<LittleEndian>(MI_INT8)
-        .map_err(|e| IoError::FileError(format!("Failed to write name _type: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write name type: {}", e)))?;
     writer
         .write_i32::<LittleEndian>(name_len)
         .map_err(|e| IoError::FileError(format!("Failed to write name size: {}", e)))?;

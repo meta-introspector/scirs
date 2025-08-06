@@ -115,10 +115,10 @@ where
         }
     }
     /// Cache attention weights for a layer
-    pub fn cache_attention_weights(&mut self, layer_name: String, attention_weights: ArrayD<F>) {
+    pub fn cache_attention_weights(&mut self, layer_name: String, attentionweights: ArrayD<F>) {
         self.attention_cache.insert(layer_name, attention_weights);
     /// Visualize attention patterns
-    pub fn visualize_attention(&self, layer_name: &str) -> Result<ArrayD<F>> {
+    pub fn visualize_attention(&self, layername: &str) -> Result<ArrayD<F>> {
         let attention_weights = self.attention_cache.get(layer_name).ok_or_else(|| {
             NeuralError::ComputationError(format!(
                 "No attention weights cached for layer: {}",
@@ -127,19 +127,19 @@ where
         })?;
         self.aggregate_attention_heads(attention_weights)
     /// Aggregate attention across multiple heads
-    pub fn aggregate_attention_heads(&self, attention_weights: &ArrayD<F>) -> Result<ArrayD<F>> {
+    pub fn aggregate_attention_heads(&self, attentionweights: &ArrayD<F>) -> Result<ArrayD<F>> {
         match &self.aggregation {
             AttentionAggregation::Average => {
                 // Average across head dimension (assuming shape: [batch, heads, seq, seq])
-                if attention_weights.ndim() >= 4 {
-                    Ok(attention_weights.mean_axis(ndarray::Axis(1)).unwrap())
+                if attentionweights.ndim() >= 4 {
+                    Ok(attentionweights.mean_axis(ndarray::Axis(1)).unwrap())
                 } else {
-                    Ok(attention_weights.clone())
+                    Ok(attentionweights.clone())
                 }
             }
             AttentionAggregation::Maximum => {
                 // Maximum across head dimension
-                    let max_attention = attention_weights.fold_axis(
+                    let max_attention = attentionweights.fold_axis(
                         ndarray::Axis(1),
                         F::neg_infinity(),
                         |&acc, &x| acc.max(x),
@@ -147,7 +147,7 @@ where
                     Ok(max_attention)
             AttentionAggregation::Head(head_idx) => {
                 // Select specific head
-                if attention_weights.ndim() >= 4 && *head_idx < self.num_heads {
+                if attentionweights.ndim() >= 4 && *head_idx < self.num_heads {
                     Ok(attention_weights
                         .index_axis(ndarray::Axis(1), *head_idx)
                         .to_owned())
@@ -162,11 +162,11 @@ where
                         "Number of weights must match number of heads".to_string(),
                     ));
                     let mut weighted_attention =
-                        attention_weights.index_axis(ndarray::Axis(1), 0).to_owned()
+                        attentionweights.index_axis(ndarray::Axis(1), 0).to_owned()
                             * F::from(weights[0]).unwrap();
                     for (i, &weight) in weights.iter().enumerate().skip(1) {
                         let head_attention =
-                            attention_weights.index_axis(ndarray::Axis(1), i).to_owned();
+                            attentionweights.index_axis(ndarray::Axis(1), i).to_owned();
                         weighted_attention =
                             weighted_attention + head_attention * F::from(weight).unwrap();
                     }
@@ -314,9 +314,9 @@ pub fn create_attention_heatmap<F>(
     attention_weights: &ArrayD<F>,
     token_labels: &[String],
 ) -> Result<Vec<Vec<f64>>>
-    if attention_weights.ndim() < 2 {
+    if attentionweights.ndim() < 2 {
             "Attention weights must be at least 2D".to_string(),
-    let shape = attention_weights.shape();
+    let shape = attentionweights.shape();
     let seq_len = shape[shape.len() - 1];
     if token_labels.len() != seq_len {
             "Number of token labels must match sequence length".to_string(),
@@ -325,7 +325,7 @@ pub fn create_attention_heatmap<F>(
         let mut row = Vec::new();
         for j in 0..seq_len {
             // Get attention weight for position (i, j)
-            let weight = if attention_weights.ndim() == 2 {
+            let weight = if attentionweights.ndim() == 2 {
                 attention_weights[[i, j]].to_f64().unwrap_or(0.0)
                 // For higher dimensions, simplified access - just use 0.5 as placeholder
                 // In a real implementation, this would properly handle multi-dimensional attention

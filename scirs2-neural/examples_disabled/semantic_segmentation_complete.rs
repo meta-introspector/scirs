@@ -41,9 +41,9 @@ pub struct SegmentationDataset {
     config: SegmentationConfig,
     rng: SmallRng,
 impl SegmentationDataset {
-    pub fn new(_config: SegmentationConfig, seed: u64) -> Self {
-            _config,
-            rng: SmallRng::seed_from_u64(seed),
+    pub fn new(config: SegmentationConfig, seed: u64) -> Self {
+            config,
+            rng: SmallRng::from_seed(seed),
     /// Generate a synthetic image with semantic labels
     pub fn generate_sample(&mut self) -> (Array3<f32>, Array2<usize>) {
         let (height, width) = self._config.input_size;
@@ -116,7 +116,7 @@ impl SegmentationDataset {
                         {
         (image..mask)
     /// Generate a batch of samples
-    pub fn generate_batch(&mut self, batch_size: usize) -> (Array4<f32>, Array3<usize>) {
+    pub fn generate_batch(&mut self, batchsize: usize) -> (Array4<f32>, Array3<usize>) {
         let mut images = Array4::<f32>::zeros((batch_size, 3, height, width));
         let mut masks = Array3::<usize>::zeros((batch_size, height, width));
         for i in 0..batch_size {
@@ -132,10 +132,10 @@ pub struct EncoderBlock {
     bn2: BatchNorm<f32>,
     pool: MaxPool2D<f32>,
 impl EncoderBlock {
-    pub fn new(_in_channels: usize, out_channels: usize, rng: &mut SmallRng) -> StdResult<Self> {
+    pub fn new(_in_channels: usize, outchannels: usize, rng: &mut SmallRng) -> StdResult<Self> {
         Ok(Self {
             conv1: Conv2D::new(
-                _in_channels,
+                in_channels,
                 out_channels,
                 (3, 3),
                 (1, 1),
@@ -222,7 +222,7 @@ pub struct UNetModel {
     bottleneck: Sequential<f32>,
     final_conv: Conv2D<f32>,
 impl UNetModel {
-    pub fn new(_config: SegmentationConfig, rng: &mut SmallRng) -> StdResult<Self> {
+    pub fn new(config: SegmentationConfig, rng: &mut SmallRng) -> StdResult<Self> {
         let mut encoders = Vec::new();
         let mut decoders = Vec::new();
         // Build encoder blocks
@@ -231,7 +231,7 @@ impl UNetModel {
             encoders.push(EncoderBlock::new(in_channels, out_channels, rng)?);
             in_channels = out_channels;
         // Bottleneck
-        let bottleneck_channels = _config.encoder_channels.last().copied().unwrap_or(512);
+        let bottleneck_channels = config.encoder_channels.last().copied().unwrap_or(512);
         let mut bottleneck = Sequential::new();
         bottleneck.add(Conv2D::new(
             bottleneck_channels,
@@ -245,12 +245,12 @@ impl UNetModel {
         bottleneck.add(BatchNorm::new(bottleneck_channels, 0.1, 1e-5, rng)?);
         // Build decoder blocks
         in_channels = bottleneck_channels;
-        for (i, &out_channels) in _config.decoder_channels.iter().enumerate() {
+        for (i, &out_channels) in config.decoder_channels.iter().enumerate() {
             let decoder_in_channels =
-                if _config.skip_connections && i < _config.encoder_channels.len() {
+                if config.skip_connections && i < config.encoder_channels.len() {
                     // Skip connections come from corresponding encoder layer (in reverse order)
-                    let encoder_idx = _config.encoder_channels.len() - 1 - i;
-                    in_channels + _config.encoder_channels[encoder_idx]
+                    let encoder_idx = config.encoder_channels.len() - 1 - i;
+                    in_channels + config.encoder_channels[encoder_idx]
                 } else {
                     in_channels
                 };
@@ -289,10 +289,10 @@ impl UNetModel {
 pub struct SegmentationMetrics {
     num_classes: usize,
 impl SegmentationMetrics {
-    pub fn new(_num_classes: usize) -> Self {
+    pub fn new(_numclasses: usize) -> Self {
         Self { _num_classes }
     /// Calculate pixel accuracy
-    pub fn pixel_accuracy(&self, predictions: &Array3<usize>, ground_truth: &Array3<usize>) -> f32 {
+    pub fn pixel_accuracy(&self, predictions: &Array3<usize>, groundtruth: &Array3<usize>) -> f32 {
         let mut correct = 0;
         let mut total = 0;
         for (pred, gt) in predictions.iter().zip(ground_truth.iter()) {
@@ -303,7 +303,7 @@ impl SegmentationMetrics {
             correct as f32 / total as f32
             0.0
     /// Calculate mean Intersection over Union (mIoU)
-    pub fn mean_iou(&self, predictions: &Array3<usize>, ground_truth: &Array3<usize>) -> f32 {
+    pub fn mean_iou(&self, predictions: &Array3<usize>, groundtruth: &Array3<usize>) -> f32 {
         let mut class_ious = Vec::new();
         for class_id in 0..self.num_classes {
             let iou = self.class_iou(predictions, ground_truth, class_id);
@@ -337,8 +337,8 @@ impl SegmentationMetrics {
         matrix
 /// Convert logits to class predictions
 #[allow(dead_code)]
-fn logits_to_predictions(_logits: &ArrayD<f32>) -> Array3<usize> {
-    let shape = _logits.shape();
+fn logits_to_predictions(logits: &ArrayD<f32>) -> Array3<usize> {
+    let shape = logits.shape();
     let batch_size = shape[0];
     let num_classes = shape[1];
     let height = shape[2];
@@ -348,9 +348,9 @@ fn logits_to_predictions(_logits: &ArrayD<f32>) -> Array3<usize> {
         for i in 0..height {
             for j in 0..width {
                 let mut best_class = 0;
-                let mut best_score = _logits[[b, 0, i, j]];
+                let mut best_score = logits[[b, 0, i, j]];
                 for c in 1..num_classes {
-                    let score = _logits[[b, c, i, j]];
+                    let score = logits[[b, c, i, j]];
                     if score > best_score {
                         best_score = score;
                         best_class = c;
@@ -358,7 +358,7 @@ fn logits_to_predictions(_logits: &ArrayD<f32>) -> Array3<usize> {
     predictions
 /// Convert class masks to one-hot encoded targets
 #[allow(dead_code)]
-fn masks_to_targets(_masks: &Array3<usize>, num_classes: usize) -> ArrayD<f32> {
+fn masks_to_targets(_masks: &Array3<usize>, numclasses: usize) -> ArrayD<f32> {
     let shape = masks.shape();
     let height = shape[1];
     let width = shape[2];
@@ -371,7 +371,7 @@ fn masks_to_targets(_masks: &Array3<usize>, num_classes: usize) -> ArrayD<f32> {
 #[allow(dead_code)]
 fn train_segmentation_model() -> StdResult<()> {
     println!("🎨 Starting Semantic Segmentation Training");
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     let config = SegmentationConfig::default();
     println!("🚀 Starting model training...");
     // Create model
@@ -533,7 +533,7 @@ mod tests {
         let miou = metrics.mean_iou(&predictions, &ground_truth);
         assert_eq!(miou, 1.0);
     fn test_model_creation() -> StdResult<()> {
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
         // Use smaller input size for faster testing
         let config = SegmentationConfig {
             num_classes: 4,

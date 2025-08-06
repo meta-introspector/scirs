@@ -49,9 +49,9 @@ impl<F: Float + ScalarOperand + Debug> AdamW<F> {
     /// * `beta2` - Exponential decay rate for the second moment estimates (default: 0.999)
     /// * `epsilon` - Small constant for numerical stability (default: 1e-8)
     /// * `weight_decay` - Weight decay factor (default: 0.01)
-    pub fn new(_learning_rate: F, beta1: F, beta2: F, epsilon: F, weight_decay: F) -> Self {
+    pub fn new(_learning_rate: F, beta1: F, beta2: F, epsilon: F, weightdecay: F) -> Self {
         Self {
-            _learning_rate,
+            learning_rate,
             beta1,
             beta2,
             epsilon,
@@ -62,7 +62,7 @@ impl<F: Float + ScalarOperand + Debug> AdamW<F> {
         }
     }
     /// Creates a new AdamW optimizer with default hyperparameters
-    pub fn default_with_lr(_learning_rate: F) -> Result<Self> {
+    pub fn default_with_lr(_learningrate: F) -> Result<Self> {
         let beta1 = F::from(0.9).ok_or_else(|| {
             NeuralError::InvalidArgument(
                 "Failed to convert 0.9 to the appropriate floating point type".to_string(),
@@ -99,7 +99,7 @@ impl<F: Float + ScalarOperand + Debug> AdamW<F> {
     pub fn get_weight_decay(&self) -> F {
         self.weight_decay
     /// Sets the weight decay parameter
-    pub fn set_weight_decay(&mut self, weight_decay: F) -> &mut Self {
+    pub fn set_weight_decay(&mut self, weightdecay: F) -> &mut Self {
         self.weight_decay = weight_decay;
     /// Resets the internal state of the optimizer
     pub fn reset(&mut self) {

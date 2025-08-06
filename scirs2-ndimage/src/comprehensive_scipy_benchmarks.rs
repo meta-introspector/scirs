@@ -186,7 +186,7 @@ pub struct SciPyComparisonResults {
 
 impl SciPyBenchmarkSuite {
     /// Create a new benchmark suite
-    pub fn new(_config: BenchmarkConfig) -> NdimageResult<Self> {
+    pub fn new(config: BenchmarkConfig) -> NdimageResult<Self> {
         // Create temporary directory for Python scripts
         fs::create_dir_all(&_config.temp_dir).map_err(|e| {
             NdimageError::InvalidInput(format!("Failed to create temp directory: {}", e))
@@ -207,7 +207,7 @@ impl SciPyBenchmarkSuite {
 
         Ok(Self {
             profiler,
-            _config,
+            config,
             results: BenchmarkResults {
                 operation_results: HashMap::new(),
                 overall_stats: OverallBenchmarkStats {
@@ -332,7 +332,7 @@ impl SciPyBenchmarkSuite {
         Ok(OperationBenchmarkResult {
             operation: format!("{:?}", operation),
             array_size,
-            data_type: if std::any::type, _name::<T>() == "f32" {
+            data_type: if std::any::type_name::<T>() == "f32" {
                 DataType::F32
             } else {
                 DataType::F64

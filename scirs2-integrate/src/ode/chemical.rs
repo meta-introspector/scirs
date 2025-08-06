@@ -208,9 +208,9 @@ pub struct ChemicalIntegrator {
 
 impl ChemicalIntegrator {
     /// Create a new chemical integrator
-    pub fn new(_config: ChemicalConfig, properties: ChemicalProperties) -> Self {
+    pub fn new(config: ChemicalConfig, properties: ChemicalProperties) -> Self {
         Self {
-            config: _config,
+            config: config,
             properties,
             previous_state: None,
             jacobian_cache: None,
@@ -455,7 +455,7 @@ impl ChemicalIntegrator {
         derivatives: &Array1<f64>,
         dt: f64,
     ) -> IntegrateResult<Array1<f64>> {
-        if let Some(ref _prev_state) = self.previous_state {
+        if let Some(ref prev_state) = self.previous_state {
             // BDF2: (3/2)*y_n+1 - 2*y_n + (1/2)*y_n-1 = dt * f(t_n+1, y_n+1)
             // Simplified as explicit step for now
             let new_concentrations = concentrations + &(derivatives * dt);
@@ -534,12 +534,12 @@ impl ChemicalIntegrator {
     }
 
     /// Calculate conservation error
-    fn calculate_conservation_error(&self, _concentrations: &Array1<f64>) -> f64 {
+    fn calculate_conservation_error(&self, concentrations: &Array1<f64>) -> f64 {
         if let Some(ref conservation_matrix) = self.properties.conservation_matrix {
             // Calculate conservation error as || C * x - C * x0 ||
             let initial_conservation =
                 conservation_matrix.dot(&self.properties.initial_concentrations);
-            let current_conservation = conservation_matrix.dot(_concentrations);
+            let current_conservation = conservation_matrix.dot(concentrations);
             (&current_conservation - &initial_conservation)
                 .iter()
                 .map(|x| x.abs())
@@ -550,22 +550,22 @@ impl ChemicalIntegrator {
     }
 
     /// Calculate constraint violation
-    fn calculate_constraint_violation(_concentrations: &Array1<f64>) -> f64 {
-        // Check for negative _concentrations
-        _concentrations
+    fn calculate_constraint_violation(concentrations: &Array1<f64>) -> f64 {
+        // Check for negative concentrations
+        concentrations
             .iter()
             .map(|&x| if x < 0.0 { -x } else { 0.0 })
             .sum()
     }
 
     /// Estimate stiffness ratio
-    fn estimate_stiffness_ratio(_reaction_rates: &Array1<f64>) -> f64 {
-        if _reaction_rates.len() < 2 {
+    fn estimate_stiffness_ratio(_reactionrates: &Array1<f64>) -> f64 {
+        if _reactionrates.len() < 2 {
             return 1.0;
         }
 
-        let max_rate = _reaction_rates.iter().fold(0.0_f64, |a, &b| a.max(b.abs()));
-        let min_rate = _reaction_rates.iter().fold(f64::INFINITY, |a, &b| {
+        let max_rate = _reactionrates.iter().fold(0.0_f64, |a, &b| a.max(b.abs()));
+        let min_rate = _reactionrates.iter().fold(f64::INFINITY, |a, &b| {
             if b.abs() > 1e-12 {
                 a.min(b.abs())
             } else {

@@ -62,17 +62,17 @@ where
 
 /// Apply FFT along a specific axis
 #[allow(dead_code)]
-fn apply_fft_along_axis<D>(_data: &mut Array<Complex64, D>, axis: usize) -> FFTResult<()>
+fn apply_fft_along_axis<D>(data: &mut Array<Complex64, D>, axis: usize) -> FFTResult<()>
 where
     D: Dimension,
 {
-    let axis_len = _data.shape()[axis];
+    let axis_len = data.shape()[axis];
 
     // Create temporary buffer for FFT
     let mut buffer = vec![Complex64::new(0.0, 0.0); axis_len];
 
     // Process slices along the specified axis
-    for mut lane in _data.lanes_mut(Axis(axis)) {
+    for mut lane in data.lanes_mut(Axis(axis)) {
         // Copy _data to buffer
         buffer
             .iter_mut()
@@ -93,8 +93,8 @@ where
 
 /// Optimize axis order based on memory layout and cache efficiency
 #[allow(dead_code)]
-fn optimize_axis_order(_axes: &[usize], shape: &[usize]) -> Vec<usize> {
-    let mut axis_info: Vec<(usize, usize, usize)> = _axes
+fn optimize_axis_order(axes: &[usize], shape: &[usize]) -> Vec<usize> {
+    let mut axis_info: Vec<(usize, usize, usize)> = axes
         .iter()
         .map(|&axis| {
             let size = shape[axis];
@@ -112,8 +112,8 @@ fn optimize_axis_order(_axes: &[usize], shape: &[usize]) -> Vec<usize> {
 
 /// Validate that axes are within bounds
 #[allow(dead_code)]
-fn validate_axes(_axes: &[usize], ndim: usize) -> FFTResult<()> {
-    for &axis in _axes {
+fn validate_axes(axes: &[usize], ndim: usize) -> FFTResult<()> {
+    for &axis in axes {
         if axis >= ndim {
             return Err(FFTError::ValueError(format!(
                 "Axis {axis} is out of bounds for array with {ndim} dimensions"
@@ -125,25 +125,25 @@ fn validate_axes(_axes: &[usize], ndim: usize) -> FFTResult<()> {
 
 /// Determine whether to use parallel processing
 #[allow(dead_code)]
-fn should_parallelize(_data_size: usize, axis_len: usize) -> bool {
+fn should_parallelize(_data_size: usize, axislen: usize) -> bool {
     // Use parallel processing for large data sizes
     const MIN_PARALLEL_SIZE: usize = 10000;
-    _data_size > MIN_PARALLEL_SIZE && axis_len > 64
+    _data_size > MIN_PARALLEL_SIZE && axislen > 64
 }
 
 /// Apply FFT along axis with optional parallelization
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-fn apply_fft_parallel<D>(_data: &mut Array<Complex64, D>, axis: usize) -> FFTResult<()>
+fn apply_fft_parallel<D>(data: &mut Array<Complex64, D>, axis: usize) -> FFTResult<()>
 where
     D: Dimension,
 {
-    let axis_len = _data.shape()[axis];
-    let total_size: usize = _data.shape().iter().product();
+    let axis_len = data.shape()[axis];
+    let total_size: usize = data.shape().iter().product();
 
     if should_parallelize(total_size, axis_len) {
         // Process lanes in parallel
-        let mut lanes: Vec<_> = _data.lanes_mut(Axis(axis)).into_iter().collect();
+        let mut lanes: Vec<_> = data.lanes_mut(Axis(axis)).into_iter().collect();
 
         lanes.par_iter_mut().try_for_each(|lane| {
             let buffer: Vec<Complex64> = lane.to_vec();
@@ -154,7 +154,7 @@ where
             Ok(())
         })
     } else {
-        apply_fft_along_axis(_data, axis)
+        apply_fft_along_axis(data, axis)
     }
 }
 
@@ -212,11 +212,11 @@ where
 
 /// Apply FFT along axis using chunked processing for large dimensions
 #[allow(dead_code)]
-fn apply_fft_chunked<D>(_data: &mut Array<Complex64, D>, axis: usize) -> FFTResult<()>
+fn apply_fft_chunked<D>(data: &mut Array<Complex64, D>, axis: usize) -> FFTResult<()>
 where
     D: Dimension,
 {
-    let axis_len = _data.shape()[axis];
+    let axis_len = data.shape()[axis];
     const CHUNK_SIZE: usize = 65536; // Process in 64K chunks
 
     // This is a simplified chunking strategy
@@ -232,7 +232,7 @@ where
         // Process chunk
         let mut buffer = vec![Complex64::new(0.0, 0.0); chunk_len];
 
-        for mut lane in _data.lanes_mut(Axis(axis)) {
+        for mut lane in data.lanes_mut(Axis(axis)) {
             // Extract chunk from lane
             buffer
                 .iter_mut()

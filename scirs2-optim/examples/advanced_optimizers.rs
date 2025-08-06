@@ -80,14 +80,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Define the function: f(x, y) = x^2 + 2y^2
 #[allow(dead_code)]
-fn function_value(_params: &Array1<f64>) -> f64 {
-    _params[0].powi(2) + 2.0 * _params[1].powi(2)
+fn function_value(params: &Array1<f64>) -> f64 {
+    params[0].powi(2) + 2.0 * params[1].powi(2)
 }
 
 // Define the gradients: ∇f = [2x, 4y]
 #[allow(dead_code)]
-fn compute_gradients(_params: &Array1<f64>) -> Array1<f64> {
-    Array1::from_vec(vec![2.0 * _params[0], 4.0 * _params[1]])
+fn compute_gradients(params: &Array1<f64>) -> Array1<f64> {
+    Array1::from_vec(vec![2.0 * params[0], 4.0 * params[1]])
 }
 
 // Plot optimization paths

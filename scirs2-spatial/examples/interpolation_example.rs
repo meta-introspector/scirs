@@ -134,14 +134,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Generate test function values for a set of points
 #[allow(dead_code)]
-fn generate_test_function(_points: &Array2<f64>) -> Array1<f64> {
-    let n = _points.nrows();
+fn generate_test_function(points: &Array2<f64>) -> Array1<f64> {
+    let n = points.nrows();
     let mut values = Array1::zeros(n);
 
     // Test function: f(x,y) = sin(pi*x) * cos(pi*y) + (x-0.5)^2 + (y-0.5)^2
     for i in 0..n {
-        let x = _points[[i, 0]];
-        let y = _points[[i, 1]];
+        let x = points[[i, 0]];
+        let y = points[[i, 1]];
 
         values[i] = (std::f64::consts::PI * x).sin() * (std::f64::consts::PI * y).cos()
             + (x - 0.5).powi(2)
@@ -153,11 +153,11 @@ fn generate_test_function(_points: &Array2<f64>) -> Array1<f64> {
 
 /// Create a regular grid of points
 #[allow(dead_code)]
-fn create_grid(_x_min: f64, x_max: f64, y_min: f64, y_max: f64, size: usize) -> Array2<f64> {
+fn create_grid(_x_min: f64, x_max: f64, y_min: f64, ymax: f64, size: usize) -> Array2<f64> {
     let n_points = size * size;
     let mut grid = Array2::zeros((n_points, 2));
 
-    let x_step = (x_max - _x_min) / (size - 1) as f64;
+    let x_step = (x_max - x_min) / (size - 1) as f64;
     let y_step = (y_max - y_min) / (size - 1) as f64;
 
     let mut idx = 0;
@@ -176,7 +176,7 @@ fn create_grid(_x_min: f64, x_max: f64, y_min: f64, y_max: f64, size: usize) -> 
 
 /// Generate random points in a given range
 #[allow(dead_code)]
-fn generate_random_points(n: usize, x_min: f64, x_max: f64, y_min: f64, y_max: f64) -> Array2<f64> {
+fn generate_random_points(n: usize, x_min: f64, x_max: f64, y_min: f64, ymax: f64) -> Array2<f64> {
     let mut rng = rand::rng();
     let mut points = Array2::zeros((n, 2));
 
@@ -190,7 +190,7 @@ fn generate_random_points(n: usize, x_min: f64, x_max: f64, y_min: f64, y_max: f
 
 /// Print interpolation results as a grid
 #[allow(dead_code)]
-fn print_grid(_size: usize, values: &Array1<f64>) {
+fn print_grid(size: usize, values: &Array1<f64>) {
     for i in 0.._size {
         let mut row = String::new();
         for j in 0.._size {
@@ -203,12 +203,12 @@ fn print_grid(_size: usize, values: &Array1<f64>) {
 
 /// Calculate the root mean square error between two arrays
 #[allow(dead_code)]
-fn calculate_rmse(_truth: &Array1<f64>, pred: &Array1<f64>) -> f64 {
-    let n = _truth.len();
+fn calculate_rmse(truth: &Array1<f64>, pred: &Array1<f64>) -> f64 {
+    let n = truth.len();
     let mut sum_sq_err = 0.0;
 
     for i in 0..n {
-        let err = _truth[i] - pred[i];
+        let err = truth[i] - pred[i];
         sum_sq_err += err * err;
     }
 

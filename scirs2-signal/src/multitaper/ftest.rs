@@ -138,7 +138,7 @@ pub fn multitaper_ftest_complex(
     p_value: Option<f64>,
 ) -> SignalResult<(Array1<f64>, Array1<num_complex::Complex64>, Array1<bool>)> {
     let (k, n_freq) = eigenspectra.dim();
-    let (k_taper_n_time) = tapers.dim();
+    let (k_taper, n_time) = tapers.dim();
 
     if k != k_taper {
         return Err(SignalError::ShapeMismatch(
@@ -330,8 +330,8 @@ pub fn harmonic_ftest(
 
             // Only include if within reasonable tolerance
             if min_diff < 0.5 * (frequencies[1] - frequencies[0]) {
-                harmonic_amps[h] = f_stats[closest_idx];
-                combined_f += f_stats[closest_idx];
+                harmonic_amps[h] = f_stats__[closest_idx];
+                combined_f += f_stats__[closest_idx];
                 valid_harmonics += 1;
             }
         }

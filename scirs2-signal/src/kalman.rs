@@ -1,6 +1,6 @@
-use ndarray::s;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2, Array3};
+use ndarray::s;
+use ndarray::{Array1, Array2, Array3};
 use rand::Rng;
 use scirs2_linalg::{cholesky, inv};
 use statrs::statistics::Statistics;
@@ -197,7 +197,7 @@ pub fn kalman_filter(
 
         // Store state
         for j in 0..n_states {
-            x_history[[i, j]] = _x[j];
+            x_history[[i, j]] = x[j];
         }
 
         // Adaptive filtering (if enabled)
@@ -222,11 +222,11 @@ pub fn kalman_filter(
                     let centered = inn - &innovation_mean;
                     let centered_col = centered
                         .clone()
-                        .intoshape_with_order((centered.len(), 1))
+                        .into_shape_with_order((centered.len(), 1))
                         .unwrap();
                     let centered_row = centered
                         .clone()
-                        .intoshape_with_order((1, centered.len()))
+                        .into_shape_with_order((1, centered.len()))
                         .unwrap();
                     r_estimate += &centered_col.dot(&centered_row);
                 }
@@ -242,11 +242,11 @@ pub fn kalman_filter(
                 let pred_err = &_x - &x_pred;
                 let pred_err_col = pred_err
                     .clone()
-                    .intoshape_with_order((pred_err.len(), 1))
+                    .into_shape_with_order((pred_err.len(), 1))
                     .unwrap();
                 let pred_err_row = pred_err
                     .clone()
-                    .intoshape_with_order((1, pred_err.len()))
+                    .into_shape_with_order((1, pred_err.len()))
                     .unwrap();
                 let q_update = pred_err_col.dot(&pred_err_row);
                 adaptive_q = &adaptive_q * (1.0 - config.forgetting_factor)
@@ -367,7 +367,7 @@ where
 
         // Store state
         for j in 0..n_states {
-            x_history[[i, j]] = _x[j];
+            x_history[[i, j]] = x[j];
         }
     }
 
@@ -417,7 +417,7 @@ where
     let mut _x = initial_x;
 
     // Initialize state covariance
-    let mut p = match &_config.initial_p {
+    let mut p = match &config.initial_p {
         Some(p0) => {
             if p0.shape()[0] != n_states || p0.shape()[1] != n_states {
                 return Err(SignalError::DimensionMismatch(
@@ -430,7 +430,7 @@ where
     };
 
     // Process noise covariance
-    let q = match &_config.q {
+    let q = match &config.q {
         Some(q) => {
             if q.shape()[0] != n_states || q.shape()[1] != n_states {
                 return Err(SignalError::DimensionMismatch(
@@ -439,11 +439,11 @@ where
             }
             q.clone()
         }
-        None => Array2::<f64>::eye(n_states) * _config.process_noise_scale,
+        None => Array2::<f64>::eye(n_states) * config.process_noise_scale,
     };
 
     // Measurement noise covariance
-    let r = match &_config.r {
+    let r = match &config.r {
         Some(r) => {
             if r.shape()[0] != n_measurements || r.shape()[1] != n_measurements {
                 return Err(SignalError::DimensionMismatch(
@@ -452,7 +452,7 @@ where
             }
             r.clone()
         }
-        None => Array2::<f64>::eye(n_measurements) * _config.measurement_noise_scale,
+        None => Array2::<f64>::eye(n_measurements) * config.measurement_noise_scale,
     };
 
     // UKF parameters
@@ -493,8 +493,8 @@ where
         let mut p_pred = Array2::<f64>::zeros((n_states, n_states));
         for j in 0..predicted_sigmas.len() {
             let diff = &predicted_sigmas[j] - &x_pred;
-            let diff_col = diff.clone().intoshape_with_order((diff.len(), 1)).unwrap();
-            let diff_row = diff.clone().intoshape_with_order((1, diff.len())).unwrap();
+            let diff_col = diff.clone().into_shape_with_order((diff.len(), 1)).unwrap();
+            let diff_row = diff.clone().into_shape_with_order((1, diff.len())).unwrap();
             p_pred = &p_pred + &(weights_cov[j] * diff_col.dot(&diff_row));
         }
         p_pred = &p_pred + &q;
@@ -515,8 +515,8 @@ where
         let mut s = Array2::<f64>::zeros((n_measurements, n_measurements));
         for j in 0..measurement_sigmas.len() {
             let diff = &measurement_sigmas[j] - &z_pred;
-            let diff_col = diff.clone().intoshape_with_order((diff.len(), 1)).unwrap();
-            let diff_row = diff.clone().intoshape_with_order((1, diff.len())).unwrap();
+            let diff_col = diff.clone().into_shape_with_order((diff.len(), 1)).unwrap();
+            let diff_row = diff.clone().into_shape_with_order((1, diff.len())).unwrap();
             s = &s + &(weights_cov[j] * diff_col.dot(&diff_row));
         }
         s = &s + &r;
@@ -528,11 +528,11 @@ where
             let diff_z = &measurement_sigmas[j] - &z_pred;
             let diff_x_col = diff_x
                 .clone()
-                .intoshape_with_order((diff_x.len(), 1))
+                .into_shape_with_order((diff_x.len(), 1))
                 .unwrap();
             let diff_z_row = diff_z
                 .clone()
-                .intoshape_with_order((1, diff_z.len()))
+                .into_shape_with_order((1, diff_z.len()))
                 .unwrap();
             c = &c + &(weights_cov[j] * diff_x_col.dot(&diff_z_row));
         }
@@ -554,7 +554,7 @@ where
 
         // Store state
         for j in 0..n_states {
-            x_history[[i, j]] = _x[j];
+            x_history[[i, j]] = x[j];
         }
     }
 
@@ -676,7 +676,7 @@ where
         };
 
         let x_perturbed = &initial_x + &sqrt_p.dot(&perturbation);
-        _ensemble.push(x_perturbed);
+        ensemble.push(x_perturbed);
     }
 
     // Measurement noise covariance
@@ -698,7 +698,7 @@ where
     // Run Ensemble Kalman filter
     for i in 0..n_samples {
         // Forecast step
-        for ensemble_item in _ensemble.iter_mut().take(n_ensemble) {
+        for ensemble_item in ensemble.iter_mut().take(n_ensemble) {
             *ensemble_item = f_func(ensemble_item);
         }
 
@@ -732,20 +732,20 @@ where
 
             let x_diff_col = x_diff
                 .clone()
-                .intoshape_with_order((x_diff.len(), 1))
+                .into_shape_with_order((x_diff.len(), 1))
                 .unwrap();
             let z_diff_row = z_diff
                 .clone()
-                .intoshape_with_order((1, z_diff.len()))
+                .into_shape_with_order((1, z_diff.len()))
                 .unwrap();
             pxz = &pxz + &x_diff_col.dot(&z_diff_row);
             let z_diff_col = z_diff
                 .clone()
-                .intoshape_with_order((z_diff.len(), 1))
+                .into_shape_with_order((z_diff.len(), 1))
                 .unwrap();
             let z_diff_row = z_diff
                 .clone()
-                .intoshape_with_order((1, z_diff.len()))
+                .into_shape_with_order((1, z_diff.len()))
                 .unwrap();
             pzz = &pzz + &z_diff_col.dot(&z_diff_row);
         }
@@ -779,7 +779,7 @@ where
 
             // Update _ensemble member
             let innovation = &perturbed_z - &measured_ensemble[j];
-            _ensemble[j] = &_ensemble[j] + &k.dot(&innovation);
+            ensemble[j] = &_ensemble[j] + &k.dot(&innovation);
         }
 
         // Recalculate _ensemble mean as state estimate
@@ -818,7 +818,7 @@ pub fn kalman_denoise_1d(
     let _n = signal.len();
 
     // Define a simple constant-velocity model
-    let f = match Array2::fromshape_vec((2, 2), vec![1.0, 1.0, 0.0, 1.0]) {
+    let f = match Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 0.0, 1.0]) {
         Ok(arr) => arr,
         Err(e) => {
             return Err(SignalError::InvalidArgument(format!(
@@ -827,7 +827,7 @@ pub fn kalman_denoise_1d(
             )))
         }
     };
-    let h = match Array2::fromshape_vec((1, 2), vec![1.0, 0.0]) {
+    let h = match Array2::from_shape_vec((1, 2), vec![1.0, 0.0]) {
         Ok(arr) => arr,
         Err(e) => {
             return Err(SignalError::InvalidArgument(format!(
@@ -916,8 +916,8 @@ pub fn kalman_denoise_color(
     measurement_variance: Option<f64>,
     joint_channels: bool,
 ) -> SignalResult<Array3<f64>> {
-    let (height, width, _channels) = image.dim();
-    let mut output = Array3::<f64>::zeros((height, width, _channels));
+    let (height, width, channels) = image.dim();
+    let mut output = Array3::<f64>::zeros((height, width, channels));
 
     if joint_channels {
         // Process each pixel as a vector measurement
@@ -941,7 +941,7 @@ pub fn kalman_denoise_color(
 
                 // Create a measurement array
                 let n_neighbors = neighbors.len();
-                let mut z = Array2::<f64>::zeros((n_neighbors, _channels));
+                let mut z = Array2::<f64>::zeros((n_neighbors, channels));
                 for (idx, neighbor) in neighbors.iter().enumerate() {
                     z.slice_mut(s![idx, ..]).assign(neighbor);
                 }
@@ -960,7 +960,7 @@ pub fn kalman_denoise_color(
         }
 
         // Process each column to further smooth the result
-        let mut column_output = Array3::<f64>::zeros((height, width, _channels));
+        let mut column_output = Array3::<f64>::zeros((height, width, channels));
         for j in 0..width {
             for i in 0..height {
                 // Create a time series of neighboring pixels vertically
@@ -971,7 +971,7 @@ pub fn kalman_denoise_color(
 
                 // Create a measurement array
                 let n_neighbors = neighbors.len();
-                let mut z = Array2::<f64>::zeros((n_neighbors, _channels));
+                let mut z = Array2::<f64>::zeros((n_neighbors, channels));
                 for (idx, neighbor) in neighbors.iter().enumerate() {
                     z.slice_mut(s![idx, ..]).assign(neighbor);
                 }

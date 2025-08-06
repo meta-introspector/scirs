@@ -22,7 +22,7 @@ struct StiffOscillatorSystem {
 }
 
 impl MultirateSystem<f64> for StiffOscillatorSystem {
-    fn slow_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, y_fast: ArrayView1<f64>) -> Array1<f64> {
+    fn slow_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, yfast: ArrayView1<f64>) -> Array1<f64> {
         let x_slow = y_slow[0];
         let v_slow = y_slow[1];
         let x_fast = y_fast[0];
@@ -34,7 +34,7 @@ impl MultirateSystem<f64> for StiffOscillatorSystem {
         array![dx_dt, dv_dt]
     }
 
-    fn fast_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, y_fast: ArrayView1<f64>) -> Array1<f64> {
+    fn fast_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, yfast: ArrayView1<f64>) -> Array1<f64> {
         let x_slow = y_slow[0];
         let x_fast = y_fast[0];
         let v_fast = y_fast[1];
@@ -63,7 +63,7 @@ struct ChemicalReactionSystem {
 }
 
 impl MultirateSystem<f64> for ChemicalReactionSystem {
-    fn slow_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, y_fast: ArrayView1<f64>) -> Array1<f64> {
+    fn slow_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, yfast: ArrayView1<f64>) -> Array1<f64> {
         let _c = y_slow[0]; // Concentration of C (product)
         let b = y_fast[1]; // Concentration of B (intermediate)
 
@@ -73,7 +73,7 @@ impl MultirateSystem<f64> for ChemicalReactionSystem {
         array![dc_dt]
     }
 
-    fn fast_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, y_fast: ArrayView1<f64>) -> Array1<f64> {
+    fn fast_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, yfast: ArrayView1<f64>) -> Array1<f64> {
         let _c = y_slow[0]; // Product C doesn'_t affect _fast equilibrium
         let a = y_fast[0]; // Concentration of A
         let b = y_fast[1]; // Concentration of B
@@ -102,7 +102,7 @@ struct TwoTimescaleVanDerPol {
 }
 
 impl MultirateSystem<f64> for TwoTimescaleVanDerPol {
-    fn slow_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, y_fast: ArrayView1<f64>) -> Array1<f64> {
+    fn slow_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, yfast: ArrayView1<f64>) -> Array1<f64> {
         let x_slow = y_slow[0];
         let y_slow_var = y_slow[1];
         let x_fast = y_fast[0];
@@ -115,7 +115,7 @@ impl MultirateSystem<f64> for TwoTimescaleVanDerPol {
         array![dx_dt, dy_dt]
     }
 
-    fn fast_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, y_fast: ArrayView1<f64>) -> Array1<f64> {
+    fn fast_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, yfast: ArrayView1<f64>) -> Array1<f64> {
         let x_slow = y_slow[0];
         let x_fast = y_fast[0];
         let y_fast_var = y_fast[1];
@@ -143,7 +143,7 @@ struct ClimateWeatherSystem {
 }
 
 impl MultirateSystem<f64> for ClimateWeatherSystem {
-    fn slow_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, y_fast: ArrayView1<f64>) -> Array1<f64> {
+    fn slow_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, yfast: ArrayView1<f64>) -> Array1<f64> {
         let temp_climate = y_slow[0]; // Long-term temperature trend
         let co2_level = y_slow[1]; // CO2 concentration
         let temp_weather = y_fast[0]; // Short-term weather temperature
@@ -156,7 +156,7 @@ impl MultirateSystem<f64> for ClimateWeatherSystem {
         array![dtemp_climate_dt, dco2_dt]
     }
 
-    fn fast_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, y_fast: ArrayView1<f64>) -> Array1<f64> {
+    fn fast_rhs(&self, _t: f64, y_slow: ArrayView1<f64>, yfast: ArrayView1<f64>) -> Array1<f64> {
         let temp_climate = y_slow[0];
         let temp_weather = y_fast[0];
         let pressure = y_fast[1];

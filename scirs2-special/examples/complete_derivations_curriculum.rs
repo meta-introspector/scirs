@@ -1224,7 +1224,7 @@ impl DerivationCurriculum {
         Ok(())
     }
 
-    fn explore_module(&mut self, module_index: usize) -> Result<(), Box<dyn std::error::Error>> {
+    fn explore_module(&mut self, moduleindex: usize) -> Result<(), Box<dyn std::error::Error>> {
         let module = &self.modules[module_index].clone();
 
         println!("\n📖 MODULE: {}", module.title);
@@ -1902,8 +1902,8 @@ impl ProofValidator {
 
 // Utility function for duration formatting
 #[allow(dead_code)]
-fn format_duration(_duration: Duration) -> String {
-    let total_seconds = _duration.as_secs();
+fn format_duration(duration: Duration) -> String {
+    let total_seconds = duration.as_secs();
     let hours = total_seconds / 3600;
     let minutes = (total_seconds % 3600) / 60;
 

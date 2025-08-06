@@ -18,9 +18,9 @@ pub struct UniformChunkProcessor<T> {
 }
 
 impl<T> UniformChunkProcessor<T> {
-    pub fn new(_size: Vec<usize>, border_mode: BorderMode) -> Self {
+    pub fn new(_size: Vec<usize>, bordermode: BorderMode) -> Self {
         Self {
-            _size,
+            size,
             border_mode_marker: std::marker::PhantomData,
         }
     }
@@ -70,9 +70,9 @@ pub struct MedianChunkProcessor<T> {
 }
 
 impl<T> MedianChunkProcessor<T> {
-    pub fn new(_size: Vec<usize>, border_mode: BorderMode) -> Self {
+    pub fn new(_size: Vec<usize>, bordermode: BorderMode) -> Self {
         Self {
-            _size,
+            size,
             border_mode_marker: std::marker::PhantomData,
         }
     }

@@ -13,10 +13,10 @@ pub struct ValueNetwork {
 }
 impl ValueNetwork {
     /// Create a new value network
-    pub fn new(_input_dim: usize, output_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
+    pub fn new(_input_dim: usize, output_dim: usize, hiddensizes: Vec<usize>) -> Result<Self> {
         let mut layers: Vec<Box<dyn Layer<f32>>> = Vec::new();
         // Build hidden layers
-        let mut current_dim = _input_dim;
+        let mut current_dim = input_dim;
         for hidden_size in hidden_sizes {
             layers.push(Box::new(Dense::new(
                 current_dim,

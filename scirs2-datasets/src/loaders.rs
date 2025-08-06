@@ -97,13 +97,13 @@ impl CsvConfig {
     }
 
     /// Set whether the CSV has headers
-    pub fn with_header(mut self, has_header: bool) -> Self {
+    pub fn with_header(mut self, hasheader: bool) -> Self {
         self.has_header = has_header;
         self
     }
 
     /// Set the target column index
-    pub fn with_target_column(mut self, target_column: Option<usize>) -> Self {
+    pub fn with_target_column(mut self, targetcolumn: Option<usize>) -> Self {
         self.target_column = target_column;
         self
     }
@@ -155,7 +155,7 @@ impl StreamingConfig {
     }
 
     /// Set the chunk size
-    pub fn with_chunk_size(mut self, chunk_size: usize) -> Self {
+    pub fn with_chunk_size(mut self, chunksize: usize) -> Self {
         self.chunk_size = chunk_size;
         self
     }
@@ -167,19 +167,19 @@ impl StreamingConfig {
     }
 
     /// Set the number of threads
-    pub fn with_num_threads(mut self, num_threads: usize) -> Self {
+    pub fn with_num_threads(mut self, numthreads: usize) -> Self {
         self.num_threads = num_threads;
         self
     }
 
     /// Set maximum memory usage
-    pub fn with_max_memory(mut self, max_memory: usize) -> Self {
+    pub fn with_max_memory(mut self, maxmemory: usize) -> Self {
         self.max_memory = max_memory;
         self
     }
 
     /// Enable or disable memory mapping
-    pub fn with_mmap(mut self, use_mmap: bool) -> Self {
+    pub fn with_mmap(mut self, usemmap: bool) -> Self {
         self.use_mmap = use_mmap;
         self
     }
@@ -198,7 +198,7 @@ pub struct DatasetChunkIterator {
 
 impl DatasetChunkIterator {
     /// Create a new chunk iterator
-    pub fn new<P: AsRef<Path>>(path: P, csv_config: CsvConfig, chunk_size: usize) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, csv_config: CsvConfig, chunksize: usize) -> Result<Self> {
         let file = File::open(_path).map_err(DatasetsError::IoError)?;
         let mut reader = ReaderBuilder::new()
             .has_headers(csv_config.has_header)

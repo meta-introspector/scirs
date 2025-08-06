@@ -13,9 +13,9 @@ use std::fmt::Debug;
 // Temporary replacement for par_iter_with_setup
 fn par_iter_with_setup<I, IT, S, F, R, RF, E>(
     items: I,
-    setup: S,
-    map_fn: F_reduce,
-    _fn: RF,
+    _setup: S,
+    map_fn: F,
+    reduce_fn: RF,
 ) -> Result<Vec<R>, E>
 where
     I: IntoIterator<Item = IT>,
@@ -27,8 +27,8 @@ where
 {
     let mut results = Vec::new();
     for item in items {
-        let result = map_fn((), item)?;
-        results.push(result);
+        let result = map_fn((), item);
+        reduce_fn(&mut results, result)?;
     }
     Ok(results)
 }
@@ -100,7 +100,7 @@ fn parallel_convolve_impl(a: &[f64], v: &[f64], mode: &str) -> SignalResult<Vec<
 
 /// Direct parallel convolution for small kernels
 #[allow(dead_code)]
-fn parallel_direct_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
+fn parallel_direct_conv(a: &[f64], v: &[f64], nfull: usize) -> Vec<f64> {
     let na = a.len();
     let nv = v.len();
 
@@ -136,7 +136,7 @@ fn parallel_direct_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
 
 /// Overlap-save parallel convolution for large kernels
 #[allow(dead_code)]
-fn parallel_overlap_save_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
+fn parallel_overlap_save_conv(a: &[f64], v: &[f64], nfull: usize) -> Vec<f64> {
     let na = a.len();
     let nv = v.len();
 
@@ -204,13 +204,13 @@ fn parallel_overlap_save_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
 
 /// Apply convolution mode (full, same, valid)
 #[allow(dead_code)]
-fn apply_conv_mode(_result: Vec<f64>, na: usize, nv: usize, mode: &str) -> SignalResult<Vec<f64>> {
+fn apply_conv_mode(result: Vec<f64>, na: usize, nv: usize, mode: &str) -> SignalResult<Vec<f64>> {
     match mode {
         "full" => Ok(_result),
         "same" => {
             let start = (nv - 1) / 2;
             let end = start + na;
-            if end <= _result.len() {
+            if end <= result.len() {
                 Ok(_result[start..end].to_vec())
             } else {
                 Ok(_result)
@@ -223,8 +223,8 @@ fn apply_conv_mode(_result: Vec<f64>, na: usize, nv: usize, mode: &str) -> Signa
                 ));
             }
             let start = nv - 1;
-            let end = _result.len() - (nv - 1);
-            if start < end && end <= _result.len() {
+            let end = result.len() - (nv - 1);
+            if start < end && end <= result.len() {
                 Ok(_result[start..end].to_vec())
             } else {
                 Ok(vec![])

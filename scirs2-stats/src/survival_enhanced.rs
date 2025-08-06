@@ -72,7 +72,7 @@ where
             .iter()
             .zip(event_observed.iter())
             .enumerate()
-            .map(|(i, (&duration, &_observed))| (duration, _observed, i))
+            .map(|(i, (&duration, &_observed))| (duration, observed, i))
             .collect();
 
         data.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
@@ -199,7 +199,7 @@ where
     }
 
     /// Compute median survival time
-    fn compute_median_survival(_times: &Array1<F>, survival: &Array1<F>) -> Option<F> {
+    fn compute_median_survival(times: &Array1<F>, survival: &Array1<F>) -> Option<F> {
         let median_threshold = F::from(0.5).unwrap();
 
         for i in 0..survival.len() {
@@ -212,8 +212,8 @@ where
     }
 
     /// Compute mean survival time (area under the curve)
-    fn compute_mean_survival(_times: &Array1<F>, survival: &Array1<F>) -> Option<F> {
-        if _times.is_empty() {
+    fn compute_mean_survival(times: &Array1<F>, survival: &Array1<F>) -> Option<F> {
+        if times.is_empty() {
             return None;
         }
 
@@ -222,10 +222,10 @@ where
         let mut prev_survival = F::one();
 
         for i in 0.._times.len() {
-            let time_diff = _times[i] - prev_time;
+            let time_diff = times[i] - prev_time;
             area = area + prev_survival * time_diff;
 
-            prev_time = _times[i];
+            prev_time = times[i];
             prev_survival = survival[i];
         }
 
@@ -319,12 +319,12 @@ where
         + 'static,
 {
     /// Create new Cox model
-    pub fn new(_config: CoxConfig) -> Self {
+    pub fn new(config: CoxConfig) -> Self {
         Self {
             coefficients: None,
             standard_errors: None,
             baseline_hazard: None,
-            config: _config,
+            config: config,
             convergence_info: None,
             _phantom: PhantomData,
         }

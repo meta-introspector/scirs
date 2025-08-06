@@ -153,7 +153,7 @@ impl SystemInfo {
 pub struct GammaBenchmarks;
 
 impl GammaBenchmarks {
-    pub fn run_comprehensive_benchmark(_config: &BenchmarkConfig) -> SpecialResult<BenchmarkSuite> {
+    pub fn run_comprehensive_benchmark(config: &BenchmarkConfig) -> SpecialResult<BenchmarkSuite> {
         let start_time = Instant::now();
         let mut results = Vec::new();
         let system_info = SystemInfo::collect();
@@ -174,16 +174,16 @@ impl GammaBenchmarks {
             let mut _reference_result = None;
 
             // CPU baseline
-            if _config.test_cpu {
-                let result = Self::benchmark_cpu_gamma(&test_data, _config)?;
+            if config.test_cpu {
+                let result = Self::benchmark_cpu_gamma(&test_data, config)?;
                 _reference_result = Some(test_data.mapv(crate::gamma::gamma));
                 results.push(result);
             }
 
             // SIMD implementation
             #[cfg(feature = "simd")]
-            if _config.test_simd {
-                let mut result = Self::benchmark_simd_gamma(&test_data, _config)?;
+            if config.test_simd {
+                let mut result = Self::benchmark_simd_gamma(&test_data, config)?;
                 if let Some(ref reference) = _reference_result {
                     // Compute SIMD result for accuracy comparison
                     let simd_result = crate::simd_ops::gamma_f64_simd(&test_data.view())
@@ -196,8 +196,8 @@ impl GammaBenchmarks {
 
             // Parallel implementation
             #[cfg(feature = "parallel")]
-            if _config.test_parallel {
-                let mut result = Self::benchmark_parallel_gamma(&test_data, _config)?;
+            if config.test_parallel {
+                let mut result = Self::benchmark_parallel_gamma(&test_data, config)?;
                 if let Some(ref reference) = _reference_result {
                     // Compute parallel result for accuracy comparison
                     match Self::compute_parallel_gamma(&test_data) {
@@ -218,8 +218,8 @@ impl GammaBenchmarks {
 
             // GPU implementation
             #[cfg(feature = "gpu")]
-            if _config.test_gpu {
-                let mut result = Self::benchmark_gpu_gamma(&test_data, _config)?;
+            if config.test_gpu {
+                let mut result = Self::benchmark_gpu_gamma(&test_data, config)?;
                 if let Some(ref reference) = _reference_result {
                     // Compute GPU result for accuracy comparison
                     match Self::compute_gpu_gamma(&test_data) {
@@ -294,7 +294,7 @@ impl GammaBenchmarks {
         data: &Array1<f64>,
         config: &BenchmarkConfig,
     ) -> SpecialResult<BenchmarkResult> {
-        use crate::simd__ops::gamma_f64_simd;
+        use crate::simd_ops::gamma_f64_simd;
 
         let mut times = Vec::new();
 
@@ -334,7 +334,7 @@ impl GammaBenchmarks {
         data: &Array1<f64>,
         config: &BenchmarkConfig,
     ) -> SpecialResult<BenchmarkResult> {
-        use crate::simd__ops::gamma_f64_parallel;
+        use crate::simd_ops::gamma_f64_parallel;
 
         let mut times = Vec::new();
 
@@ -439,8 +439,8 @@ impl GammaBenchmarks {
         })
     }
 
-    fn calculate_statistics(_times: &[Duration]) -> TimeStatistics {
-        if _times.is_empty() {
+    fn calculate_statistics(times: &[Duration]) -> TimeStatistics {
+        if times.is_empty() {
             return TimeStatistics {
                 average_time: Duration::ZERO,
                 min_time: Duration::ZERO,
@@ -449,8 +449,8 @@ impl GammaBenchmarks {
             };
         }
 
-        let total: Duration = _times.iter().sum();
-        let average = total / _times.len() as u32;
+        let total: Duration = times.iter().sum();
+        let average = total / times.len() as u32;
         let min_time = *_times.iter().min().unwrap();
         let max_time = *_times.iter().max().unwrap();
 
@@ -462,7 +462,7 @@ impl GammaBenchmarks {
                 diff * diff
             })
             .sum::<f64>()
-            / _times.len() as f64;
+            / times.len() as f64;
 
         let std_dev = Duration::from_secs_f64(variance.sqrt());
 
@@ -474,11 +474,11 @@ impl GammaBenchmarks {
         }
     }
 
-    fn calculate_speedup_factors(_results: &mut [BenchmarkResult]) {
+    fn calculate_speedup_factors(results: &mut [BenchmarkResult]) {
         // Group _results by array size
         let mut size_groups: HashMap<usize, Vec<&mut BenchmarkResult>> = HashMap::new();
 
-        for result in _results.iter_mut() {
+        for result in results.iter_mut() {
             size_groups
                 .entry(result.array_size)
                 .or_default()
@@ -500,13 +500,13 @@ impl GammaBenchmarks {
         }
     }
 
-    pub fn compute_numerical_accuracy(_result: &Array1<f64>, reference: &Array1<f64>) -> f64 {
-        if _result.len() != reference.len() {
+    pub fn compute_numerical_accuracy(result: &Array1<f64>, reference: &Array1<f64>) -> f64 {
+        if result.len() != reference.len() {
             return f64::INFINITY;
         }
 
         let mut max_error: f64 = 0.0;
-        for (r, ref_val) in _result.iter().zip(reference.iter()) {
+        for (r, ref_val) in result.iter().zip(reference.iter()) {
             let error = (r - ref_val).abs() / ref_val.abs().max(1e-16);
             max_error = max_error.max(error);
         }
@@ -515,15 +515,15 @@ impl GammaBenchmarks {
     }
 
     #[cfg(feature = "parallel")]
-    fn compute_parallel_gamma(_data: &Array1<f64>) -> SpecialResult<Array1<f64>> {
+    fn compute_parallel_gamma(data: &Array1<f64>) -> SpecialResult<Array1<f64>> {
         // Use sequential mapping for now - parallel operations through core
         // In a full implementation, would use scirs2_core parallel abstractions
-        let result = _data.mapv(|x| crate::gamma::gamma(x));
+        let result = data.mapv(|x| crate::gamma::gamma(x));
         Ok(result)
     }
 
     #[cfg(feature = "gpu")]
-    fn compute_gpu_gamma(_data: &Array1<f64>) -> SpecialResult<Array1<f64>> {
+    fn compute_gpu_gamma(data: &Array1<f64>) -> SpecialResult<Array1<f64>> {
         // Try to use GPU gamma computation
         let mut result = Array1::zeros(_data.len());
         match crate::gpu_ops::gamma_gpu(&_data.view(), &mut result.view_mut()) {

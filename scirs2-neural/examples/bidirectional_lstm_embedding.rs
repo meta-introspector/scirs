@@ -13,18 +13,18 @@ struct Embedding {
     weight: Array2<f32>,
 }
 impl Embedding {
-    fn new(_vocab_size: usize, embedding_dim: usize) -> Self {
+    fn new(_vocab_size: usize, embeddingdim: usize) -> Self {
         // Xavier/Glorot initialization
         let bound = (3.0 / embedding_dim as f32).sqrt();
         // Create a random number generator
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
         // Initialize with random values
         let mut weight = Array2::<f32>::zeros((_vocab_size, embedding_dim));
         for elem in weight.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         }
         Embedding {
-            vocab_size: _vocab_size,
+            vocab_size: vocab_size,
             embedding_dim,
             weight,
         }
@@ -60,12 +60,12 @@ struct BiLSTM {
     backward_cell: LSTMCell,
 }
 impl BiLSTM {
-    fn new(_input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, batchsize: usize) -> Self {
         // Create forward and backward LSTM cells
         let forward_cell = LSTMCell::new(_input_size, hidden_size, batch_size);
         let backward_cell = LSTMCell::new(_input_size, hidden_size, batch_size);
         BiLSTM {
-            input_size: _input_size,
+            input_size: input_size,
             hidden_size,
             batch_size,
             forward_cell,
@@ -146,51 +146,51 @@ struct LSTMCell {
     c_t: Option<Array2<f32>>, // Current cell state [batch_size, hidden_size]
 }
 impl LSTMCell {
-    fn new(_input_size: usize, hidden_size: usize, _batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, _batchsize: usize) -> Self {
         let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
 
         // Input gate weights
-        let mut w_ii = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_ii = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_hi = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_ii.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         }
         for elem in w_hi.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         }
         let b_i = Array1::zeros(hidden_size);
 
         // Forget gate weights (initialize forget gate bias to 1 to avoid vanishing gradients early in training)
-        let mut w_if = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_if = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_hf = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_if.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         }
         for elem in w_hf.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         }
         let b_f = Array1::ones(hidden_size);
 
         // Cell gate weights
-        let mut w_ig = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_ig = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_hg = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_ig.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         }
         for elem in w_hg.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         }
         let b_g = Array1::zeros(hidden_size);
 
         // Output gate weights
-        let mut w_io = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_io = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_ho = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_io.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         }
         for elem in w_ho.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         }
         let b_o = Array1::zeros(hidden_size);
         LSTMCell {
@@ -286,7 +286,7 @@ impl Dropout {
         }
         // Create binary mask (1 = keep, 0 = drop)
         let mut mask = Array2::<f32>::ones(x.raw_dim());
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
         for val in mask.iter_mut() {
             if rng.random::<f32>() < self.p {
                 *val = 0.0;
@@ -328,12 +328,12 @@ impl BiLSTMClassifier {
         // Output layer
         let output_input_size = hidden_size * 2; // Concatenated forward and backward hidden states
         let output_bound = (6.0 / (output_input_size + output_size) as f32).sqrt();
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
 
         // Initialize output weights with random values
         let mut w_out = Array2::<f32>::zeros((output_size, output_input_size));
         for elem in w_out.iter_mut() {
-            *elem = rng.random_range(-output_bound..output_bound);
+            *elem = rng.gen_range(-output_bound..output_bound);
         }
         let b_out = Array1::zeros(output_size);
 
@@ -343,11 +343,11 @@ impl BiLSTMClassifier {
             // Initialize attention weights with random values
             let mut w_att = Array2::<f32>::zeros((hidden_size * 2, hidden_size * 2));
             for elem in w_att.iter_mut() {
-                *elem = rng.random_range(-attention_bound..attention_bound);
+                *elem = rng.gen_range(-attention_bound..attention_bound);
             }
             let mut v_att = Array1::<f32>::zeros(hidden_size * 2);
             for elem in v_att.iter_mut() {
-                *elem = rng.random_range(-attention_bound..attention_bound);
+                *elem = rng.gen_range(-attention_bound..attention_bound);
             }
             (Some(w_att), Some(v_att))
         } else {
@@ -591,9 +591,9 @@ fn tokenizetexts(
 }
 // Convert labels to one-hot encoded vectors
 #[allow(dead_code)]
-fn one_hot_encode(_labels: &[usize], num_classes: usize) -> Array2<f32> {
+fn one_hot_encode(_labels: &[usize], numclasses: usize) -> Array2<f32> {
     let mut one_hot = Array2::<f32>::zeros((_labels.len(), num_classes));
-    for (i, &label) in _labels.iter().enumerate() {
+    for (i, &label) in labels.iter().enumerate() {
         if label < num_classes {
             one_hot[[i, label]] = 1.0;
         }
@@ -604,18 +604,18 @@ fn one_hot_encode(_labels: &[usize], num_classes: usize) -> Array2<f32> {
 #[allow(dead_code)]
 fn shuffle_dataset<T: Clone, U: Clone>(xs: &[T], ys: &[U]) -> (Vec<T>, Vec<U>) {
     assert_eq!(
-        _xs.len(),
+        xs.len(),
         ys.len(),
         "Data and labels must have the same length"
     );
-    let mut indices: Vec<usize> = (0.._xs.len()).collect();
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut indices: Vec<usize> = (0..xs.len()).collect();
+    let mut rng = SmallRng::from_seed([42; 32]);
     use rand::seq::SliceRandom;
     indices.shuffle(&mut rng);
-    let mut shuffled_xs = Vec::with_capacity(_xs.len());
+    let mut shuffled_xs = Vec::with_capacity(xs.len());
     let mut shuffled_ys = Vec::with_capacity(ys.len());
     for &idx in &indices {
-        shuffled_xs.push(_xs[idx].clone());
+        shuffled_xs.push(xs[idx].clone());
         shuffled_ys.push(ys[idx].clone());
     }
     (shuffled_xs, shuffled_ys)
@@ -703,8 +703,8 @@ fn train_model(
 }
 // Evaluate the model on test data
 #[allow(dead_code)]
-fn evaluate_model(_model: &mut BiLSTMClassifier, x_test: &Array2<usize>, y_test: &[usize]) {
-    let predictions = _model.predict(x_test);
+fn evaluate_model(_model: &mut BiLSTMClassifier, x_test: &Array2<usize>, ytest: &[usize]) {
+    let predictions = model.predict(x_test);
     // Calculate accuracy
     let mut correct = 0;
     for (pred, &true_label) in predictions.iter().zip(y_test.iter()) {
@@ -786,7 +786,7 @@ fn evaluate_model(_model: &mut BiLSTMClassifier, x_test: &Array2<usize>, y_test:
 }
 // Example predictions
 #[allow(dead_code)]
-fn example_predictions(_model: &mut BiLSTMClassifier, word_to_idx: &HashMap<String, usize>) {
+fn example_predictions(_model: &mut BiLSTMClassifier, word_toidx: &HashMap<String, usize>) {
     let examples = [
         "this is a great movie with amazing performances",
         "the movie was okay but nothing really stood out",
@@ -807,7 +807,7 @@ fn example_predictions(_model: &mut BiLSTMClassifier, word_to_idx: &HashMap<Stri
     let max_len = 20;
     let x = tokenizetexts(&tokenized, word_to_idx, max_len);
     // Make predictions
-    let predictions = _model.predict(&x);
+    let predictions = model.predict(&x);
     println!("\nExample Predictions:");
     for (i, example) in examples.iter().enumerate() {
         let sentiment = match predictions[i] {
@@ -827,7 +827,7 @@ fn main() {
     // Create dataset
     let (texts, labels) = create_sentiment_dataset();
     // Create vocabulary
-    let (word_to_idx, _idx_to_word) = create_vocabulary(&texts);
+    let (word_to_idx, idx_to_word) = create_vocabulary(&texts);
     let vocab_size = word_to_idx.len();
     println!("Vocabulary size: {vocab_size}");
     // Split dataset

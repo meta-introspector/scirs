@@ -24,7 +24,8 @@ pub struct NMF {
     init: String,
     /// Solver: 'mu' (multiplicative update), 'cd' (coordinate descent)
     solver: String,
-    /// Beta divergence parameter (0: Euclidean, 1: KL divergence, 2: Frobenius), beta_loss: f64,
+    /// Beta divergence parameter (0: Euclidean, 1: KL divergence, 2: Frobenius)
+    beta_loss: f64,
     /// Maximum number of iterations
     max_iter: usize,
     /// Tolerance for stopping criteria
@@ -33,7 +34,8 @@ pub struct NMF {
     random_state: Option<u64>,
     /// Regularization parameter for components
     alpha: f64,
-    /// L1 ratio for regularization (0: L2, 1: L1), l1_ratio: f64,
+    /// L1 ratio for regularization (0: L2, 1: L1)
+    l1_ratio: f64,
     /// The basis matrix W
     components: Option<Array2<f64>>,
     /// The coefficient matrix H
@@ -49,9 +51,9 @@ impl NMF {
     ///
     /// # Arguments
     /// * `n_components` - Number of components to extract
-    pub fn new(_n_components: usize) -> Self {
+    pub fn new(ncomponents: usize) -> Self {
         NMF {
-            _n_components,
+            n_components,
             init: "random".to_string(),
             solver: "mu".to_string(),
             beta_loss: 2.0, // Frobenius norm
@@ -60,7 +62,7 @@ impl NMF {
             random_state: None,
             alpha: 0.0,
             l1_ratio: 0.0,
-            _components: None,
+            components: None,
             coefficients: None,
             reconstruction_err: None,
             n_iter: None,
@@ -86,7 +88,7 @@ impl NMF {
     }
 
     /// Set maximum iterations
-    pub fn with_max_iter(mut self, max_iter: usize) -> Self {
+    pub fn with_max_iter(mut self, maxiter: usize) -> Self {
         self.max_iter = max_iter;
         self
     }
@@ -104,7 +106,7 @@ impl NMF {
     }
 
     /// Set regularization parameters
-    pub fn with_regularization(mut self, alpha: f64, l1_ratio: f64) -> Self {
+    pub fn with_regularization(mut self, alpha: f64, l1ratio: f64) -> Self {
         self.alpha = alpha;
         self.l1_ratio = l1_ratio;
         self

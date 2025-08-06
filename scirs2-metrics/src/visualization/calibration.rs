@@ -102,7 +102,7 @@ where
             n_bins,
             strategy,
             title: "Calibration Curve".to_string(),
-            show_perfectly_calibrated: _true,
+            show_perfectly_calibrated: true,
             y_true: Some(y_true),
             y_prob: Some(y_prob),
             pos_label,
@@ -132,7 +132,7 @@ where
     /// # Returns
     ///
     /// * Self for method chaining
-    pub fn with_show_perfectly_calibrated(mut self, show_perfectly_calibrated: bool) -> Self {
+    pub fn with_show_perfectly_calibrated(mut self, show_perfectlycalibrated: bool) -> Self {
         self.show_perfectly_calibrated = show_perfectly_calibrated;
         self
     }

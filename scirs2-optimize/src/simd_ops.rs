@@ -58,7 +58,7 @@ impl SimdVectorOps {
     }
 
     /// Create with specific configuration (for testing/compatibility)
-    pub fn with_config(_config: SimdConfig) -> Self {
+    pub fn with_config(config: SimdConfig) -> Self {
         // Ignore the _config - always use auto-optimization from core
         Self::new()
     }

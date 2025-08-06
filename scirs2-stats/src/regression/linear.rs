@@ -80,7 +80,7 @@ where
     // to solve the linear system X beta = y
 
     // Compute the SVD of X
-    let (_u, s, _vt) = match svd(x, false, None) {
+    let (_u, s, vt) = match svd(x, false, None) {
         Ok(svd_result) => svd_result,
         Err(e) => {
             return Err(StatsError::ComputationError(format!(

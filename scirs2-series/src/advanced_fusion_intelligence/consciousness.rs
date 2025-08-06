@@ -376,7 +376,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousAttentionSystem<F> {
     }
 
     /// Focus attention on specific input
-    pub fn focus_attention(&mut self, input: &Array1<F>, focus_target: &[F]) -> Result<Array1<F>> {
+    pub fn focus_attention(&mut self, input: &Array1<F>, focustarget: &[F]) -> Result<Array1<F>> {
         let mut attention_output = input.clone();
         
         // Apply attention mechanisms
@@ -394,7 +394,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousAttentionSystem<F> {
     }
 
     /// Update awareness level based on attention coherence
-    fn update_awareness_level(&mut self, attention_output: &Array1<F>) -> Result<()> {
+    fn update_awareness_level(&mut self, attentionoutput: &Array1<F>) -> Result<()> {
         if attention_output.is_empty() {
             return Ok(());
         }
@@ -429,7 +429,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousAttentionSystem<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> AttentionMechanism<F> {
     /// Create new attention mechanism
-    pub fn new(mechanism_type: AttentionType) -> Self {
+    pub fn new(mechanismtype: AttentionType) -> Self {
         AttentionMechanism {
             mechanism_type,
             salience_map: vec![F::from_f64(1.0).unwrap(); 100], // Default salience map
@@ -438,7 +438,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> AttentionMechanism<F> {
     }
 
     /// Apply attention to input
-    pub fn apply_attention(&mut self, input: &Array1<F>, focus_target: &[F]) -> Result<Array1<F>> {
+    pub fn apply_attention(&mut self, input: &Array1<F>, focustarget: &[F]) -> Result<Array1<F>> {
         let mut output = input.clone();
         
         match self.mechanism_type {
@@ -472,7 +472,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> AttentionMechanism<F> {
     }
 
     /// Apply top-down attention based on goals
-    fn apply_top_down_attention(&mut self, input: &mut Array1<F>, focus_target: &[F]) -> Result<()> {
+    fn apply_top_down_attention(&mut self, input: &mut Array1<F>, focustarget: &[F]) -> Result<()> {
         if focus_target.is_empty() {
             return Ok(());
         }
@@ -502,7 +502,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> AttentionMechanism<F> {
     }
 
     /// Apply orienting attention for spatial focus
-    fn apply_orienting_attention(&mut self, input: &mut Array1<F>, focus_target: &[F]) -> Result<()> {
+    fn apply_orienting_attention(&mut self, input: &mut Array1<F>, focustarget: &[F]) -> Result<()> {
         if focus_target.is_empty() || input.is_empty() {
             return Ok(());
         }
@@ -543,12 +543,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> FocusWindow<F> {
     }
 
     /// Update focus window position
-    pub fn update_position(&mut self, new_center: Vec<F>) {
+    pub fn update_position(&mut self, newcenter: Vec<F>) {
         self.center = new_center;
     }
 
     /// Update focus window radius
-    pub fn update_radius(&mut self, new_radius: F) {
+    pub fn update_radius(&mut self, newradius: F) {
         self.radius = new_radius;
     }
 }
@@ -567,7 +567,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetacognitiveController<F> {
     }
 
     /// Monitor and control cognitive processes
-    pub fn monitor_and_control(&mut self, cognitive_state: &HashMap<String, F>) -> Result<Vec<String>> {
+    pub fn monitor_and_control(&mut self, cognitivestate: &HashMap<String, F>) -> Result<Vec<String>> {
         // Monitor current performance
         let monitoring_results = self.monitoring_system.monitor_performance(cognitive_state)?;
         
@@ -588,7 +588,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetacognitiveController<F> {
     }
 
     /// Update meta-awareness level
-    fn update_meta_awareness(&mut self, monitoring_results: &HashMap<String, F>) -> Result<()> {
+    fn update_meta_awareness(&mut self, monitoringresults: &HashMap<String, F>) -> Result<()> {
         if let Some(&performance_score) = monitoring_results.get("overall_performance") {
             let alpha = F::from_f64(0.1).unwrap();
             self.meta_awareness = (F::from_f64(1.0).unwrap() - alpha) * self.meta_awareness + alpha * performance_score;
@@ -612,7 +612,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MonitoringSystem<F> {
     }
 
     /// Monitor performance across various metrics
-    pub fn monitor_performance(&mut self, cognitive_state: &HashMap<String, F>) -> Result<HashMap<String, F>> {
+    pub fn monitor_performance(&mut self, cognitivestate: &HashMap<String, F>) -> Result<HashMap<String, F>> {
         let mut results = HashMap::new();
         
         // Update and collect performance metrics
@@ -640,7 +640,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MonitoringSystem<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> PerformanceMonitor<F> {
     /// Create new performance monitor
-    pub fn new(metric_type: MetricType) -> Self {
+    pub fn new(metrictype: MetricType) -> Self {
         PerformanceMonitor {
             metric_type,
             current_value: F::from_f64(0.5).unwrap(),
@@ -650,7 +650,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> PerformanceMonitor<F> {
     }
 
     /// Update and assess performance metric
-    pub fn update_and_assess(&mut self, cognitive_state: &HashMap<String, F>) -> Result<F> {
+    pub fn update_and_assess(&mut self, cognitivestate: &HashMap<String, F>) -> Result<F> {
         // Update current value based on cognitive state
         let metric_key = format!("{:?}", self.metric_type).to_lowercase();
         if let Some(&state_value) = cognitive_state.get(&metric_key) {
@@ -682,7 +682,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ErrorDetectionSystem<F> {
     }
 
     /// Detect errors in cognitive state
-    pub fn detect_errors(&mut self, cognitive_state: &HashMap<String, F>) -> Result<HashMap<String, F>> {
+    pub fn detect_errors(&mut self, cognitivestate: &HashMap<String, F>) -> Result<HashMap<String, F>> {
         let mut error_results = HashMap::new();
         
         for detector in &self.error_detectors {
@@ -696,7 +696,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ErrorDetectionSystem<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> ErrorDetector<F> {
     /// Create new error detector
-    pub fn new(detector_type: ErrorType) -> Self {
+    pub fn new(detectortype: ErrorType) -> Self {
         ErrorDetector {
             detector_type,
             sensitivity: F::from_f64(0.8).unwrap(),
@@ -705,7 +705,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ErrorDetector<F> {
     }
 
     /// Detect specific type of error
-    pub fn detect_error(&self, cognitive_state: &HashMap<String, F>) -> Result<F> {
+    pub fn detect_error(&self, cognitivestate: &HashMap<String, F>) -> Result<F> {
         // Simplified error detection based on threshold
         let error_indicator = match self.detector_type {
             ErrorType::ProcessingError => {
@@ -734,7 +734,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ErrorDetector<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> CorrectionMechanism<F> {
     /// Create new correction mechanism
-    pub fn new(mechanism_type: CorrectionType) -> Self {
+    pub fn new(mechanismtype: CorrectionType) -> Self {
         CorrectionMechanism {
             mechanism_type,
             effectiveness: F::from_f64(0.8).unwrap(),
@@ -756,7 +756,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConfidenceAssessment<F> {
     }
 
     /// Assess confidence in cognitive state
-    pub fn assess_confidence(&mut self, cognitive_state: &HashMap<String, F>) -> Result<HashMap<String, F>> {
+    pub fn assess_confidence(&mut self, cognitivestate: &HashMap<String, F>) -> Result<HashMap<String, F>> {
         let mut confidence_results = HashMap::new();
         
         // Update confidence metrics
@@ -775,7 +775,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConfidenceAssessment<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> ConfidenceMetric<F> {
     /// Create new confidence metric
-    pub fn new(metric_name: String) -> Self {
+    pub fn new(metricname: String) -> Self {
         ConfidenceMetric {
             metric_name,
             confidence_value: F::from_f64(0.5).unwrap(),
@@ -784,7 +784,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConfidenceMetric<F> {
     }
 
     /// Update confidence based on cognitive state
-    pub fn update_confidence(&mut self, cognitive_state: &HashMap<String, F>) -> Result<F> {
+    pub fn update_confidence(&mut self, cognitivestate: &HashMap<String, F>) -> Result<F> {
         // Update confidence based on relevant state variables
         if let Some(&state_value) = cognitive_state.get(&self.metric_name) {
             let alpha = F::from_f64(0.1).unwrap();
@@ -807,7 +807,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> UncertaintyEstimation<F> {
     }
 
     /// Estimate uncertainty in cognitive state
-    pub fn estimate_uncertainty(&mut self, _cognitive_state: &HashMap<String, F>) -> Result<HashMap<String, F>> {
+    pub fn estimate_uncertainty(&mut self, _cognitivestate: &HashMap<String, F>) -> Result<HashMap<String, F>> {
         // Update total uncertainty
         self.total_uncertainty = self.epistemic_uncertainty + self.aleatoric_uncertainty;
         
@@ -822,7 +822,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> UncertaintyEstimation<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> ControlStrategy<F> {
     /// Create new control strategy
-    pub fn new(strategy_type: StrategyType) -> Self {
+    pub fn new(strategytype: StrategyType) -> Self {
         ControlStrategy {
             strategy_type,
             parameters: vec![F::from_f64(1.0).unwrap(); 5],
@@ -831,7 +831,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ControlStrategy<F> {
     }
 
     /// Check if strategy should be activated
-    pub fn should_activate(&self, monitoring_results: &HashMap<String, F>) -> Result<bool> {
+    pub fn should_activate(&self, monitoringresults: &HashMap<String, F>) -> Result<bool> {
         let activation_threshold = F::from_f64(0.6).unwrap();
         
         let relevant_metric = match self.strategy_type {
@@ -849,7 +849,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ControlStrategy<F> {
     }
 
     /// Apply control strategy
-    pub fn apply_control(&mut self, _cognitive_state: &HashMap<String, F>) -> Result<String> {
+    pub fn apply_control(&mut self, _cognitivestate: &HashMap<String, F>) -> Result<String> {
         let strategy_description = match self.strategy_type {
             StrategyType::ResourceAllocation => "Reallocated cognitive resources",
             StrategyType::AttentionControl => "Adjusted attention parameters",
@@ -1010,7 +1010,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> SelfAwarenessModule<F> {
     }
 
     /// Update self-awareness
-    pub fn update_awareness(&mut self, _input: &Array1<F>) -> Result<()> {
+    pub fn update_awareness(&mut self, input: &Array1<F>) -> Result<()> {
         // Update self-model
         self.self_model.update_self_representation()?;
         
@@ -1062,7 +1062,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> Goal<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> IntrospectionMechanism<F> {
     /// Create new introspection mechanism
-    pub fn new(mechanism_type: IntrospectionType) -> Self {
+    pub fn new(mechanismtype: IntrospectionType) -> Self {
         IntrospectionMechanism {
             mechanism_type,
             monitoring_targets: vec!["attention".to_string(), "memory".to_string()],

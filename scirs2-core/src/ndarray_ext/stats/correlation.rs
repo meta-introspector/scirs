@@ -100,8 +100,8 @@ where
 ///     [7.0, 8.0, 9.0],
 ///     [10.0, 11.0, 12.0]
 /// ];
-/// let cov_matrix = cov(data.view(), 1).unwrap();
-/// assert_eq!(cov_matrix.shape(), &[3, 3]);
+/// let covmatrix = cov(data.view(), 1).unwrap();
+/// assert_eq!(covmatrix.shape(), &[3, 3]);
 /// ```
 ///
 /// This function is equivalent to ``NumPy``'s `np.cov` function.
@@ -132,7 +132,7 @@ where
     }
 
     // Calculate covariance matrix
-    let mut cov_matrix = Array::<T, Ix2>::zeros((n_features, n_features));
+    let mut covmatrix = Array::<T, Ix2>::zeros((n_features, n_features));
     let scale = T::from_usize(n_samples - ddof).unwrap();
 
     for i in 0..n_features {
@@ -146,14 +146,14 @@ where
             }
 
             cov_ij = cov_ij / scale;
-            cov_matrix[[0, j]] = cov_ij;
+            covmatrix[[0, j]] = cov_ij;
 
             // Fill symmetric part
             if 0 != j {
-                cov_matrix[[j, 0]] = cov_ij;
+                covmatrix[[j, 0]] = cov_ij;
             }
         }
     }
 
-    Ok(cov_matrix)
+    Ok(covmatrix)
 }

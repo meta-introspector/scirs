@@ -94,7 +94,7 @@ fn demonstrate_netcdf4_convenience() -> Result<(), Box<dyn std::error::Error>> {
     let mut datasets = HashMap::new();
 
     // Temperature data (time x location)
-    let temperature = Array2::fromshape_fn((24, 10), |(t, l)| {
+    let temperature = Array2::from_shape_fn((24, 10), |(t, l)| {
         20.0 + 5.0 * (t as f64 * 0.26).sin() + (l as f64 * 0.1).cos()
     });
     datasets.insert(
@@ -107,7 +107,7 @@ fn demonstrate_netcdf4_convenience() -> Result<(), Box<dyn std::error::Error>> {
 
     // Pressure data (time only)
     let pressure =
-        Array2::fromshape_fn((24, 1), |(t_, _)| 1013.25 - 2.0 * (t_ as f64 * 0.26).cos());
+        Array2::from_shape_fn((24, 1), |(t_, _)| 1013.25 - 2.0 * (t_ as f64 * 0.26).cos());
     datasets.insert(
         "pressure".to_string(),
         (
@@ -117,7 +117,7 @@ fn demonstrate_netcdf4_convenience() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // Wind speed data (time x location x altitude)
-    let wind_speed = Array3::fromshape_fn((24, 10, 5), |(t, l, a)| {
+    let wind_speed = Array3::from_shape_fn((24, 10, 5), |(t, l, a)| {
         10.0 + 3.0 * (t as f64 * 0.26).sin() + (l as f64 * 0.2).cos() + (a as f64 * 0.5)
     });
     datasets.insert(
@@ -171,7 +171,7 @@ fn demonstrate_large_dataset_support() -> Result<(), Box<dyn std::error::Error>>
 
     // Create a large 3D dataset (simulating climate model output)
     println!("  🌍 Creating large climate dataset (100 x 200 x 365)...");
-    let climate_data = Array3::fromshape_fn((100, 200, 365), |(lat, lon, day)| {
+    let climate_data = Array3::from_shape_fn((100, 200, 365), |(lat, lon, day)| {
         // Simulate temperature variation
         let lat_factor = (lat as f64 - 50.0) / 50.0; // Latitude effect
         let lon_factor = (lon as f64 * 0.018).sin(); // Longitude effect
@@ -273,7 +273,7 @@ fn demonstrate_netcdf4_advanced_features() -> Result<(), Box<dyn std::error::Err
     let mut advanced_file = NetCDFFile::open("advanced_features.nc", Some(advanced_options))?;
 
     // Create a dataset with complex structure
-    let time_series = Array2::fromshape_fn((1000, 50), |(t, sensor)| {
+    let time_series = Array2::from_shape_fn((1000, 50), |(t, sensor)| {
         // Simulate sensor data with noise
         let signal = (t as f64 * 0.01).sin() * (1.0 + sensor as f64 * 0.1);
         let noise = (t as f64 * sensor as f64 * 0.001).sin() * 0.1;

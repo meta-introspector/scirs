@@ -65,7 +65,7 @@ impl BenchmarkDatasets {
             let center = &cluster_centers[cluster_idx];
 
             for j in 0..dims {
-                _points[[i..j]] = center[j] + rng.gen_range(-5.0..5.0);
+                points[[i..j]] = center[j] + rng.gen_range(-5.0..5.0);
             }
         }
 

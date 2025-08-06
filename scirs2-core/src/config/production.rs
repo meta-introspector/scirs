@@ -55,7 +55,7 @@ pub struct ConfigEntry {
     /// Whether this configuration can be changed at runtime
     pub hot_reloadable: bool,
     /// Default value
-    pub default_value: Option<String>,
+    pub defaultvalue: Option<String>,
     /// Environment variable name (if different from key)
     pub env_var: Option<String>,
 }
@@ -318,7 +318,7 @@ impl ProductionConfig {
                     value: config_value,
                     validator: None,
                     hot_reloadable: false, // Env vars are not hot reloadable
-                    default_value: None,
+                    defaultvalue: None,
                     env_var: Some(key),
                 };
 
@@ -361,7 +361,7 @@ impl ProductionConfig {
     }
 
     /// Parse JSON configuration
-    fn parse_json_config(&self, _content: &str) -> CoreResult<()> {
+    fn parse_json_config(&self, content: &str) -> CoreResult<()> {
         // In a real implementation, use serde_json
         Err(CoreError::ConfigError(ErrorContext::new(
             "JSON parsing not implemented in this example",
@@ -369,7 +369,7 @@ impl ProductionConfig {
     }
 
     /// Parse YAML configuration
-    fn parse_yaml_config(&self, _content: &str) -> CoreResult<()> {
+    fn parse_yaml_config(&self, content: &str) -> CoreResult<()> {
         // In a real implementation, use serde_yaml
         Err(CoreError::ConfigError(ErrorContext::new(
             "YAML parsing not implemented in this example",
@@ -377,7 +377,7 @@ impl ProductionConfig {
     }
 
     /// Parse TOML configuration
-    fn parse_toml_config(&self, _content: &str) -> CoreResult<()> {
+    fn parse_toml_config(&self, content: &str) -> CoreResult<()> {
         // In a real implementation, use toml crate
         Err(CoreError::ConfigError(ErrorContext::new(
             "TOML parsing not implemented in this example",
@@ -424,7 +424,7 @@ impl ProductionConfig {
                 value: config_value,
                 validator: None,
                 hot_reloadable: true,
-                default_value: None,
+                defaultvalue: None,
                 env_var: None,
             };
             entries.insert(key, entry);
@@ -485,7 +485,7 @@ impl ProductionConfig {
     pub fn register(
         &mut self,
         key: String,
-        default_value: Option<String>,
+        defaultvalue: Option<String>,
         validator: Option<String>,
         reloadable: bool,
         description: Option<String>,
@@ -500,7 +500,7 @@ impl ProductionConfig {
         }
 
         let value = ConfigValue {
-            value: default_value.clone().unwrap_or_default(),
+            value: defaultvalue.clone().unwrap_or_default(),
             source: ConfigSource::Default,
             timestamp: SystemTime::now(),
             is_sensitive: self.is_sensitive_key(&key),
@@ -512,7 +512,7 @@ impl ProductionConfig {
             value,
             validator,
             hot_reloadable: reloadable,
-            default_value,
+            defaultvalue,
             env_var: Some(format!("SCIRS_{}", key.to_uppercase())),
         };
 
@@ -883,7 +883,7 @@ mod tests {
         config
             .register(
                 "test_config".to_string(),
-                Some("default_value".to_string()),
+                Some("defaultvalue".to_string()),
                 Some("positive_int".to_string()),
                 true,
                 Some("Test configuration".to_string()),
@@ -891,7 +891,7 @@ mod tests {
             .unwrap();
 
         let entry = config.get_entry("test_config").unwrap().unwrap();
-        assert_eq!(entry.default_value, Some("default_value".to_string()));
+        assert_eq!(entry.defaultvalue, Some("defaultvalue".to_string()));
         assert_eq!(entry.validator, Some("positive_int".to_string()));
         assert!(entry.hot_reloadable);
     }

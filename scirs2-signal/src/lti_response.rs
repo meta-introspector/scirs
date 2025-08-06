@@ -48,7 +48,7 @@ use crate::lti::{LtiSystem, TransferFunction};
 /// ```
 #[allow(dead_code)]
 pub fn impulse_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec<f64>> {
-    _system.impulse_response(t)
+    system.impulse_response(t)
 }
 
 /// Calculate the step response of an LTI system
@@ -90,7 +90,7 @@ pub fn impulse_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec
 /// ```
 #[allow(dead_code)]
 pub fn step_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec<f64>> {
-    _system.step_response(t)
+    system.step_response(t)
 }
 
 /// Simulate the response of an LTI system to an arbitrary input
@@ -143,7 +143,7 @@ pub fn lsim<T: LtiSystem>(system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<
     }
 
     // Convert to state-space for simulation
-    let ss = _system.to_ss()?;
+    let ss = system.to_ss()?;
 
     // Initialize state and output vectors
     let mut x = vec![0.0; ss.n_states];
@@ -154,7 +154,7 @@ pub fn lsim<T: LtiSystem>(system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<
         // Calculate time step (assuming uniform spacing)
         let dt = if t.len() > 1 { t[1] - t[0] } else { 0.001 };
 
-        // Simulate the _system using improved forward Euler integration
+        // Simulate the system using improved forward Euler integration
         // Initialize state to zero
         for k in 0..t.len() {
             // Calculate output: y = Cx + Du
@@ -259,6 +259,7 @@ pub fn lsim<T: LtiSystem>(system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     #[ignore = "Implementation needs more work on numerical integration"]
     fn test_first_order_impulse_response() {

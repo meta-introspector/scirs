@@ -107,9 +107,9 @@ trait Layer {
     /// Forward pass through the layer
     fn forward(&mut self, x: &Array4<f32>) -> Array4<f32>;
     /// Backward pass to compute gradients
-    fn backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32>;
+    fn backward(&mut self, gradoutput: &Array4<f32>) -> Array4<f32>;
     /// Update parameters with gradients
-    fn update_parameters(&mut self, learning_rate: f32);
+    fn update_parameters(&mut self, learningrate: f32);
     /// Get a description of the layer
     fn get_description(&self) -> String;
     /// Get number of trainable parameters
@@ -250,7 +250,7 @@ impl Conv2D {
                         output[[b, f, h_out, w_out]] = val;
         output
     /// Compute gradients for the convolution operation
-    fn convolve_backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
+    fn convolve_backward(&mut self, gradoutput: &Array4<f32>) -> Array4<f32> {
         let input = self
             .input
             .as_ref()
@@ -332,7 +332,7 @@ impl Layer for Conv2D {
         // Apply activation function
         let output = self.activation.apply(&z);
         self.output = Some(output.clone());
-    fn backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
+    fn backward(&mut self, gradoutput: &Array4<f32>) -> Array4<f32> {
         // Derivative of activation function
         let z = self.z.as_ref().expect("Forward pass must be called first");
         let activation_grad = self.activation.derivative(z);
@@ -340,7 +340,7 @@ impl Layer for Conv2D {
         let grad_z = grad_output * &activation_grad;
         // Compute gradients for weights, biases, and inputs
         self.convolve_backward(&grad_z)
-    fn update_parameters(&mut self, learning_rate: f32) {
+    fn update_parameters(&mut self, learningrate: f32) {
         if let (Some(dweights), Some(dbiases)) = (&self.dweights, &self.dbiases) {
             // Update weights
             self.weights = &self.weights - &(dweights * learning_rate);
@@ -370,10 +370,10 @@ struct MaxPool2D {
     max_indices: Option<Array4<(usize, usize)>>, // Indices of max values
 impl MaxPool2D {
     /// Create a new MaxPool2D layer
-    fn new(_pool_size: (usize, usize), stride: Option<(usize, usize)>) -> Self {
+    fn new(_poolsize: (usize, usize), stride: Option<(usize, usize)>) -> Self {
         // Default stride is same as pool size
         let stride = stride.unwrap_or(_pool_size);
-            _pool_size,
+            pool_size,
             max_indices: None,
     /// Calculate output dimensions
         let channels = inputshape[1];
@@ -414,7 +414,7 @@ impl Layer for MaxPool2D {
         // Distribute gradients to max locations
                         let (max_h, max_w) = max_indices[[b, c, h_out, w_out]];
                         dinput[[b, c, max_h, max_w]] += grad_output[[b, c, h_out, w_out]];
-    fn update_parameters(&mut self_learning_rate: f32) {
+    fn update_parameters(&mut self_learningrate: f32) {
         // MaxPool has no parameters to update
             "MaxPool2D: {}x{} pool size, stride {:?}",
             self.pool_size.0, self.pool_size.1, self.stride
@@ -507,9 +507,9 @@ struct Sequential {
     loss_fn: LossFunction,
 impl Sequential {
     /// Create a new sequential model
-    fn new(_loss_fn: LossFunction) -> Self {
+    fn new(_lossfn: LossFunction) -> Self {
             layers: Vec::new(),
-            _loss_fn,
+            loss_fn,
     /// Add a layer to the model
     fn add<L: Layer + 'static>(&mut self, layer: L) -> &mut Self {
         self.layers.push(Box::new(layer));
@@ -527,7 +527,7 @@ impl Sequential {
             .into_shape_with_order((batch_size, output_size))
         self._loss_fn.compute(&predictions_2d, targets)
     /// Backward pass and update parameters
-    fn backward(&mut self, x: &Array4<f32>, y: &Array2<f32>, learning_rate: f32) -> f32 {
+    fn backward(&mut self, x: &Array4<f32>, y: &Array2<f32>, learningrate: f32) -> f32 {
         // Forward pass
         let predictions = self.forward(x);
         // Compute loss
@@ -555,7 +555,7 @@ impl Sequential {
     ) -> Vec<f32> {
         let n_samples = x.shape()[0];
         let mut losses = Vec::with_capacity(epochs);
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
         for epoch in 0..epochs {
             // Shuffle the indices
             let mut indices: Vec<usize> = (0..n_samples).collect();
@@ -654,10 +654,10 @@ fn create_synthetic_dataset(
     (images, labels)
 // Helper function to find index of maximum value in array
 #[allow(dead_code)]
-fn argmax(_arr: ArrayView1<f32>) -> usize {
+fn argmax(arr: ArrayView1<f32>) -> usize {
     let mut max_idx = 0;
-    let mut max_val = _arr[0];
-    for (idx, &val) in _arr.iter().enumerate() {
+    let mut max_val = arr[0];
+    for (idx, &val) in arr.iter().enumerate() {
         if val > max_val {
             max_val = val;
             max_idx = idx;
@@ -666,7 +666,7 @@ fn argmax(_arr: ArrayView1<f32>) -> usize {
 #[allow(dead_code)]
 fn train_cnn_example() -> Result<()> {
     // Set up RNG
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Create a synthetic dataset
     let num_samples = 1000;
     let num_classes = 10;

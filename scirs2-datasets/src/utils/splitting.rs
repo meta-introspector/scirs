@@ -189,7 +189,7 @@ pub fn k_fold_split(
         train_indices.extend(&indices[0..start]);
         train_indices.extend(&indices[end..]);
 
-        _folds.push((train_indices, validation_indices));
+        folds.push((train_indices, validation_indices));
     }
 
     Ok(_folds)
@@ -278,7 +278,7 @@ pub fn stratified_k_fold_split(
         let fold_size = class_size / n_folds;
         let remainder = class_size % n_folds;
 
-        for (i, fold) in _folds.iter_mut().enumerate() {
+        for (i, fold) in folds.iter_mut().enumerate() {
             let start = i * fold_size + i.min(remainder);
             let end = start + fold_size + if i < remainder { 1 } else { 0 };
             fold.extend(&indices[start..end]);
@@ -288,9 +288,9 @@ pub fn stratified_k_fold_split(
     // Convert to (train, validation) pairs
     let cv_folds = (0..n_folds)
         .map(|i| {
-            let validation_indices = _folds[i].clone();
+            let validation_indices = folds[i].clone();
             let mut train_indices = Vec::new();
-            for (j, fold) in _folds.iter().enumerate() {
+            for (j, fold) in folds.iter().enumerate() {
                 if i != j {
                     train_indices.extend(fold);
                 }

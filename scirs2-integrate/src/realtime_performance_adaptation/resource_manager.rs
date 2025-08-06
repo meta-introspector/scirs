@@ -20,7 +20,7 @@ impl DynamicResourceManager {
     }
 
     /// Optimize resource allocation based on current metrics
-    pub fn optimize_resources(&mut self, _metrics: &PerformanceMetrics) -> IntegrateResult<()> {
+    pub fn optimize_resources(&mut self, metrics: &PerformanceMetrics) -> IntegrateResult<()> {
         // Implementation would go here
         Ok(())
     }

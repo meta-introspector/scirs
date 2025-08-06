@@ -96,10 +96,10 @@ pub struct RecognizedPattern {
 
 impl RecognizedPattern {
     /// Create a new recognized pattern.
-    pub fn new(pattern_type: ComplexPattern, confidence: Confidence) -> Self {
+    pub fn new(patterntype: ComplexPattern, confidence: Confidence) -> Self {
         let now = Instant::now();
         Self {
-            pattern_type,
+            pattern_type: patterntype,
             confidence,
             metadata: HashMap::new(),
             first_detected: now,
@@ -130,8 +130,8 @@ impl RecognizedPattern {
     }
 
     /// Check if the pattern is still valid.
-    pub fn is_valid(&self, max_age: std::time::Duration) -> bool {
-        self.last_confirmed.elapsed() <= max_age
+    pub fn is_valid(&self, maxage: std::time::Duration) -> bool {
+        self.last_confirmed.elapsed() <= maxage
     }
 }
 
@@ -238,7 +238,7 @@ impl PatternRecognizer {
         if let Some(dims) = self.dimensions.clone() {
             // Detect matrix traversal patterns
             if dims.len() >= 2 {
-                self.detect_matrix_patterns(&dims);
+                self.detectmatrix_patterns(&dims);
             }
 
             // Detect block patterns
@@ -351,7 +351,7 @@ impl PatternRecognizer {
     }
 
     /// Detect matrix traversal patterns.
-    fn detect_matrix_patterns(&mut self, dimensions: &[usize]) {
+    fn detectmatrix_patterns(&mut self, dimensions: &[usize]) {
         if dimensions.len() < 2 {
             return;
         }
@@ -749,10 +749,10 @@ impl PatternRecognizer {
     }
 
     /// Find an existing pattern by type.
-    fn find_pattern(&mut self, pattern_type: &ComplexPattern) -> Option<&mut RecognizedPattern> {
+    fn find_pattern(&mut self, patterntype: &ComplexPattern) -> Option<&mut RecognizedPattern> {
         self.patterns
             .iter_mut()
-            .find(|p| &p.pattern_type == pattern_type)
+            .find(|p| &p.pattern_type == patterntype)
     }
 
     /// Get all recognized patterns ordered by confidence.

@@ -76,7 +76,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Clone for LayerNo
 
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LayerNorm<F> {
     /// Create a new layer normalization layer
-    pub fn new<R: Rng>(normalizedshape: usize, eps: f64, _rng: &mut R) -> Result<Self> {
+    pub fn new<R: Rng>(normalizedshape: usize, eps: f64, rng: &mut R) -> Result<Self> {
         let gamma = Array::<F, IxDyn>::from_elem(IxDyn(&[normalizedshape]), F::one());
         let beta = Array::<F, IxDyn>::from_elem(IxDyn(&[normalizedshape]), F::zero());
 
@@ -208,7 +208,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Laye
         Ok(grad_output.clone())
     }
 
-    fn update(&mut self, _learning_rate: F) -> Result<()> {
+    fn update(&mut self, _learningrate: F) -> Result<()> {
         // Simple implementation - no-op for now
         Ok(())
     }
@@ -345,7 +345,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Batc
         Ok(grad_output.clone())
     }
 
-    fn update(&mut self, _learning_rate: F) -> Result<()> {
+    fn update(&mut self, _learningrate: F) -> Result<()> {
         Ok(())
     }
 

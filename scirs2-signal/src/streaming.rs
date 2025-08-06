@@ -300,12 +300,12 @@ struct NoiseGateState {
 
 impl StreamingProcessor {
     /// Create a new streaming processor
-    pub fn new(_config: StreamingConfig) -> SignalResult<Self> {
+    pub fn new(config: StreamingConfig) -> SignalResult<Self> {
         // Validate configuration
         check_positive(_config.sample_rate, "sample_rate")?;
         check_positive(_config.buffer_size as f64, "buffer_size")?;
 
-        if _config.num_channels == 0 {
+        if config.num_channels == 0 {
             return Err(SignalError::ValueError(
                 "Number of channels must be greater than 0".to_string(),
             ));
@@ -318,15 +318,15 @@ impl StreamingProcessor {
 
         // Initialize STFT processors
         let stft_config = StreamingStftConfig {
-            frame_length: _config.spectral_config.stft_frame_length,
-            hop_length: _config.spectral_config.stft_hop_length,
-            window: _config.spectral_config.window.clone(),
+            frame_length: config.spectral_config.stft_frame_length,
+            hop_length: config.spectral_config.stft_hop_length,
+            window: config.spectral_config.window.clone(),
             center: true,
             magnitude_only: false,
             ..Default::default()
         };
 
-        let stft_processors = if _config.enable_spectral_analysis {
+        let stft_processors = if config.enable_spectral_analysis {
             (0.._config.num_channels)
                 .map(|_| StreamingStft::new(stft_config.clone()))
                 .collect::<Result<Vec<_>, _>>()?
@@ -341,9 +341,9 @@ impl StreamingProcessor {
 
         // Initialize AGC state
         let attack_coeff =
-            (-1.0 / (_config.adaptive_config.agc_attack_time * _config.sample_rate)).exp();
+            (-1.0 / (_config.adaptive_config.agc_attack_time * config.sample_rate)).exp();
         let release_coeff =
-            (-1.0 / (_config.adaptive_config.agc_release_time * _config.sample_rate)).exp();
+            (-1.0 / (_config.adaptive_config.agc_release_time * config.sample_rate)).exp();
 
         let agc_state = AgcState {
             gain: 1.0,
@@ -361,10 +361,10 @@ impl StreamingProcessor {
         };
 
         // Initialize MEL filter bank if needed
-        let mel_filter_bank = if _config.feature_config.compute_spectral_features {
+        let mel_filter_bank = if config.feature_config.compute_spectral_features {
             Some(create_mel_filter_bank(
-                _config.spectral_config.stft_frame_length / 2 + 1,
-                _config.sample_rate,
+                config.spectral_config.stft_frame_length / 2 + 1,
+                config.sample_rate,
                 13, // Number of MEL coefficients
             )?)
         } else {
@@ -380,7 +380,7 @@ impl StreamingProcessor {
         };
 
         Ok(Self {
-            _config,
+            config,
             input_buffers,
             stft_processors,
             previous_psd: None,
@@ -635,7 +635,7 @@ impl StreamingProcessor {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(idx_)| idx)
+            .map(|(idx, _)| idx)
             .unwrap_or(0);
 
         frequencies[max_idx]
@@ -819,7 +819,7 @@ impl StreamingProcessor {
     }
 
     /// Compute band energy ratios
-    fn compute_band_energy_ratios(&self, band_powers: &[f64]) -> Vec<f64> {
+    fn compute_band_energy_ratios(&self, bandpowers: &[f64]) -> Vec<f64> {
         let total_power: f64 = band_powers.iter().sum();
 
         if total_power > 1e-10 {
@@ -846,7 +846,7 @@ impl StreamingProcessor {
     }
 
     /// Estimate CPU usage
-    fn estimate_cpu_usage(&self, processing_time: std::time::Duration) -> f64 {
+    fn estimate_cpu_usage(&self, processingtime: std::time::Duration) -> f64 {
         let samples_per_second = self.config.sample_rate;
         let frame_time = self.config.buffer_size as f64 / samples_per_second;
         let processing_time_seconds = processing_time.as_secs_f64();
@@ -970,13 +970,13 @@ fn create_mel_filter_bank(
 
 /// Convert Hz to Mel scale
 #[allow(dead_code)]
-fn hz_to_mel(_hz: f64) -> f64 {
+fn hz_to_mel(hz: f64) -> f64 {
     2595.0 * (1.0 + _hz / 700.0).log10()
 }
 
 /// Convert Mel to Hz scale
 #[allow(dead_code)]
-fn mel_to_hz(_mel: f64) -> f64 {
+fn mel_to_hz(mel: f64) -> f64 {
     700.0 * (10.0_f64.powf(_mel / 2595.0) - 1.0)
 }
 

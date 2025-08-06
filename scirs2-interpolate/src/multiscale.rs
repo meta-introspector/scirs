@@ -163,7 +163,7 @@ impl<
         Ok(Self {
             x: x_owned,
             y: y_owned,
-            _levels,
+            levels,
             active_level: 0,
             order,
             extrapolate,
@@ -409,7 +409,7 @@ impl<
     /// # Returns
     ///
     /// A `Result` containing the interpolated values at the given points.
-    pub fn evaluate(&self, x_new: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    pub fn evaluate(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         if self.levels.is_empty() {
             return Err(InterpolateError::InvalidState(
                 "No B-spline models available".to_string(),

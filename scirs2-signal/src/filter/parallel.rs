@@ -4,10 +4,10 @@ use ndarray::s;
 // This module provides parallel implementations of filtering operations
 // for improved performance on multi-core systems.
 
-use crate::dwt::Wavelet;
+// use crate::dwt::Wavelet; // TODO: Re-enable when dwt module is available
 use crate::error::{SignalError, SignalResult};
-use crate::savgol::savgol_coeffs;
-use ndarray::{ Array1, Array2, ArrayView1};
+// use crate::savgol::savgol_coeffs; // TODO: Re-enable when savgol module is available
+use ndarray::{Array1, Array2, ArrayView1};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rustfft::{num_complex::Complex, FftPlanner};
@@ -22,7 +22,7 @@ fn par_iter_with_setup<I, IT, S, F, R, RF, E>(
     items: I,
     _setup: S,
     map_fn: F,
-    _reduce_fn: RF,
+    reduce_fn: RF,
 ) -> Result<Vec<R>, E>
 where
     I: IntoIterator<Item = IT>,
@@ -34,8 +34,8 @@ where
 {
     let mut results = Vec::new();
     for item in items {
-        let result = map_fn((), item)?;
-        results.push(result);
+        let result = map_fn((), item);
+        reduce_fn(&mut results, result)?;
     }
     Ok(results)
 }
@@ -461,15 +461,15 @@ fn pad_image(
     pad_cols: usize,
     boundary: &str,
 ) -> SignalResult<Array2<f64>> {
-    let (_rows_cols) = image.dim();
-    let padded_rows = _rows + 2 * pad_rows;
-    let padded_cols = _cols + 2 * pad_cols;
+    let (rows, cols) = image.dim();
+    let padded_rows = rows + 2 * pad_rows;
+    let padded_cols = cols + 2 * pad_cols;
 
     let mut padded = Array2::zeros((padded_rows, padded_cols));
 
     // Copy original image to center
-    for i in 0.._rows {
-        for j in 0.._cols {
+    for i in 0..rows {
+        for j in 0..cols {
             padded[[i + pad_rows, j + pad_cols]] = image[[i, j]];
         }
     }
@@ -483,18 +483,18 @@ fn pad_image(
             // Reflect padding
             // Top and bottom
             for i in 0..pad_rows {
-                for j in 0.._cols {
+                for j in 0..cols {
                     padded[[i, j + pad_cols]] = image[[pad_rows - i - 1, j]];
-                    padded[[_rows + pad_rows + i, j + pad_cols]] = image[[_rows - i - 1, j]];
+                    padded[[rows + pad_rows + i, j + pad_cols]] = image[[rows - i - 1, j]];
                 }
             }
 
             // Left and right (including corners)
             for i in 0..padded_rows {
                 for j in 0..pad_cols {
-                    let src_i = i.saturating_sub(pad_rows).min(_rows - 1);
+                    let src_i = i.saturating_sub(pad_rows).min(rows - 1);
                     padded[[i, j]] = padded[[i, 2 * pad_cols - j - 1]];
-                    padded[[i, _cols + pad_cols + j]] = padded[[i, _cols + pad_cols - j - 1]];
+                    padded[[i, cols + pad_cols + j]] = padded[[i, cols + pad_cols - j - 1]];
                 }
             }
         }
@@ -502,8 +502,8 @@ fn pad_image(
             // Periodic boundary
             for i in 0..padded_rows {
                 for j in 0..padded_cols {
-                    let src_i = (i + _rows - pad_rows) % _rows;
-                    let src_j = (j + _cols - pad_cols) % _cols;
+                    let src_i = (i + rows - pad_rows) % rows;
+                    let src_j = (j + cols - pad_cols) % cols;
                     padded[[i, j]] = image[[src_i, src_j]];
                 }
             }
@@ -540,25 +540,12 @@ pub fn parallel_savgol_filter(
     deriv: usize,
     delta: f64,
 ) -> SignalResult<Array1<f64>> {
-    // Get filter coefficients
-    let coeffs = savgol_coeffs(
-        window_length,
-        polyorder,
-        Some(deriv),
-        Some(delta),
-        None,
-        None,
-    )?;
-
-    // Apply filter using parallel convolution
-    let filtered = parallel_convolve(
-        data.as_slice().unwrap(),
-        coeffs.as_slice().unwrap(),
-        "same",
-        Some(1024),
-    )?;
-
-    Ok(Array1::from(filtered))
+    // TODO: Implement when savgol module is available
+    // Temporary stub to allow compilation
+    let _ = (window_length, polyorder, deriv, delta);
+    Err(SignalError::NotImplemented(
+        "parallel_savgol_filter requires savgol module".to_string(),
+    ))
 }
 
 /// Parallel batch filtering for multiple signals
@@ -816,18 +803,15 @@ pub fn parallel_adaptive_lms_filter(
 
         // Process each sample in the chunk
         for i in start..end {
-            // Update delay line
-            for j in (1..filter_length).rev() {
-                delay_line[j] = delay_line[j - 1];
-            }
+            // Update delay line efficiently (rotate instead of copying)
+            delay_line.rotate_right(1);
             delay_line[0] = signal[i];
 
-            // Filter output using parallel dot product
-            let delay_array = Array1::from(delay_line.clone());
-            let coeffs_array = Array1::from(coeffs.clone());
-
-            // Use SIMD operations from scirs2-core
-            output[i] = f64::simd_dot(&delay_array.view(), &coeffs_array.view());
+            // Filter output using efficient dot product (avoid array allocation)
+            output[i] = delay_line.iter()
+                .zip(coeffs.iter())
+                .map(|(&d, &c)| d * c)
+                .sum();
 
             // Error calculation
             error[i] = desired[i] - output[i];
@@ -1031,9 +1015,9 @@ pub fn parallel_fft_filter(
     let ir_len = impulse_response.len();
     let useful_size = fft_size - ir_len + 1;
 
-    if useful_size <= 0 {
+    if fft_size < ir_len {
         return Err(SignalError::ValueError(
-            "FFT _size too small for impulse _response length".to_string(),
+            "FFT size too small for impulse response length".to_string(),
         ));
     }
 
@@ -1248,15 +1232,16 @@ pub fn parallel_median_filter(
     let chunk = chunk_size.unwrap_or(1024.min(n / num_cpus::get()));
     let overlap = half_kernel;
 
-    // Process signal in overlapping chunks
-    let n_chunks = (n + chunk - overlap - 1) / (chunk - overlap);
+    // Process signal in overlapping chunks (safe arithmetic to prevent overflow)
+    let effective_chunk = chunk.saturating_sub(overlap).max(1); // Ensure at least size 1
+    let n_chunks = (n + effective_chunk - 1) / effective_chunk;
     let mut results = vec![Vec::<f64>::new(); n_chunks];
 
     par_iter_with_setup(
         0..n_chunks,
         || {},
         |_, i| {
-            let start = i * (chunk - overlap);
+            let start = i * effective_chunk;
             let end = (start + chunk).min(n);
             let chunk_start = start.saturating_sub(overlap);
             let chunk_end = (end + overlap).min(n);
@@ -1328,15 +1313,16 @@ pub fn parallel_morphological_filter(
     let chunk = chunk_size.unwrap_or(1024.min(n / num_cpus::get()));
     let overlap = half_se;
 
-    // Process signal in overlapping chunks
-    let n_chunks = (n + chunk - overlap - 1) / (chunk - overlap);
+    // Process signal in overlapping chunks (safe arithmetic to prevent overflow)
+    let effective_chunk = chunk.saturating_sub(overlap).max(1); // Ensure at least size 1
+    let n_chunks = (n + effective_chunk - 1) / effective_chunk;
     let mut results = vec![Vec::<f64>::new(); n_chunks];
 
     par_iter_with_setup(
         0..n_chunks,
         || {},
         |_, i| {
-            let start = i * (chunk - overlap);
+            let start = i * effective_chunk;
             let end = (start + chunk).min(n);
             let chunk_start = start.saturating_sub(overlap);
             let chunk_end = (end + overlap).min(n);
@@ -1403,14 +1389,14 @@ pub enum MorphologicalOperation {
 
 /// Apply erosion operation at a specific index
 #[allow(dead_code)]
-fn apply_erosion(_signal: &[f64], idx: usize, se: &[f64], se_len: usize) -> f64 {
+fn apply_erosion(_signal: &[f64], idx: usize, se: &[f64], selen: usize) -> f64 {
     let half_se = se_len / 2;
     let mut min_val = f64::INFINITY;
 
     for (k, &se_val) in se.iter().enumerate() {
         if se_val > 0.0 {
             let sig_idx = idx + k;
-            if sig_idx >= half_se && sig_idx - half_se < _signal._len() {
+            if sig_idx >= half_se && sig_idx - half_se < signal.len() {
                 min_val = min_val.min(_signal[sig_idx - half_se]);
             }
         }
@@ -1425,14 +1411,14 @@ fn apply_erosion(_signal: &[f64], idx: usize, se: &[f64], se_len: usize) -> f64 
 
 /// Apply dilation operation at a specific index
 #[allow(dead_code)]
-fn apply_dilation(_signal: &[f64], idx: usize, se: &[f64], se_len: usize) -> f64 {
+fn apply_dilation(_signal: &[f64], idx: usize, se: &[f64], selen: usize) -> f64 {
     let half_se = se_len / 2;
     let mut max_val = f64::NEG_INFINITY;
 
     for (k, &se_val) in se.iter().enumerate() {
         if se_val > 0.0 {
             let sig_idx = idx + k;
-            if sig_idx >= half_se && sig_idx - half_se < _signal._len() {
+            if sig_idx >= half_se && sig_idx - half_se < signal.len() {
                 max_val = max_val.max(_signal[sig_idx - half_se]);
             }
         }
@@ -1478,15 +1464,16 @@ pub fn parallel_rank_order_filter(
     let chunk = chunk_size.unwrap_or(1024.min(n / num_cpus::get()));
     let overlap = half_window;
 
-    // Process signal in overlapping chunks
-    let n_chunks = (n + chunk - overlap - 1) / (chunk - overlap);
+    // Process signal in overlapping chunks (safe arithmetic to prevent overflow)
+    let effective_chunk = chunk.saturating_sub(overlap).max(1); // Ensure at least size 1
+    let n_chunks = (n + effective_chunk - 1) / effective_chunk;
     let mut results = vec![Vec::<f64>::new(); n_chunks];
 
     par_iter_with_setup(
         0..n_chunks,
         || {},
         |_, i| {
-            let start = i * (chunk - overlap);
+            let start = i * effective_chunk;
             let end = (start + chunk).min(n);
             let chunk_start = start.saturating_sub(overlap);
             let chunk_end = (end + overlap).min(n);
@@ -1562,24 +1549,24 @@ pub fn parallel_bilateral_filter(
     let chunk = chunk_size.unwrap_or(512.min(n / num_cpus::get())); // Smaller chunks due to computational _intensity
     let overlap = half_window;
 
-    // Precompute _spatial kernel
-    let _spatial_kernel: Vec<f64> = (0..window_size)
+    // Precompute spatial kernel
+    let spatial_kernel: Vec<f64> = (0..window_size)
         .map(|i| {
             let dist = (i as f64 - half_window as f64).abs();
             (-0.5 * (dist / sigma_spatial).powi(2)).exp()
         })
         .collect();
 
-    // Process signal in overlapping chunks
-    let n_chunks = (n + chunk - overlap - 1) / (chunk - overlap);
-    let mut results = vec![Vec::<f64>::new(); n_chunks];
+    // Process signal in overlapping chunks (safe arithmetic to prevent overflow)
+    let effective_chunk_size = if chunk > overlap { chunk - overlap } else { n }; // Use full signal if overlap too large
+    let n_chunks = if effective_chunk_size >= n { 1 } else { (n + effective_chunk_size - 1) / effective_chunk_size };
 
-    par_iter_with_setup(
+    let results = par_iter_with_setup(
         0..n_chunks,
         || (),
         |_, i| {
-            let start = i * (chunk - overlap);
-            let end = (start + chunk).min(n);
+            let start = i * effective_chunk_size;
+            let end = (start + effective_chunk_size).min(n);
             let chunk_start = start.saturating_sub(overlap);
             let chunk_end = (end + overlap).min(n);
 
@@ -1601,7 +1588,14 @@ pub fn parallel_bilateral_filter(
                 let mut weight_sum = 0.0;
 
                 for (k, &val) in chunk_data[window_start..window_end].iter().enumerate() {
-                    let spatial_idx = k + window_start - local_idx + half_window;
+                    // Safe integer arithmetic to prevent overflow
+                    let k_pos = k + window_start;
+                    let local_pos = local_idx.saturating_sub(half_window);
+                    let spatial_idx = if k_pos >= local_pos {
+                        k_pos - local_pos
+                    } else {
+                        continue; // Skip invalid indices
+                    };
                     if spatial_idx < spatial_kernel.len() {
                         let spatial_weight = spatial_kernel[spatial_idx];
                         let intensity_diff = (val - center_val).abs();
@@ -1802,7 +1796,7 @@ where
                     SignalError::ValueError(format!("Could not convert {:?} to f64", val))
                 })
             })
-            .collect::<Result<Vec<f64>>>()?,
+            .collect::<Result<Vec<f64>, SignalError>>()?,
     );
 
     // Check if all values are finite
@@ -1815,7 +1809,7 @@ where
         }
     }
 
-    let n = x_array.len();
+    let n: usize = x_array.len();
     if n == 0 {
         return Ok(Vec::new());
     }
@@ -2065,7 +2059,7 @@ fn sequential_lfilter(b: &[f64], a: &[f64], x: &[f64]) -> SignalResult<Vec<f64>>
 }
 
 #[allow(dead_code)]
-fn sequential_minimum_phase(b: &[f64], discrete_time: bool) -> SignalResult<Vec<f64>> {
+fn sequential_minimum_phase(b: &[f64], discretetime: bool) -> SignalResult<Vec<f64>> {
     // Simplified minimum phase conversion
     let mut result = b.to_vec();
 
@@ -2212,6 +2206,9 @@ fn compute_matched_filter_chunk(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use std::f64::consts::PI;
+    use num_complex::Complex64;
 
     #[test]
     fn test_parallel_fir_filter_bank() {
@@ -2237,7 +2234,7 @@ mod tests {
         let signal: Vec<f64> = (0..n).map(|i| (2.0 * PI * i as f64 / 10.0).sin()).collect();
         let desired: Vec<f64> = signal.iter().map(|&x| x * 0.5).collect(); // Attenuated version
 
-        let (output, coeffs_error) =
+        let (output, coeffs, error_signal) =
             parallel_adaptive_lms_filter(&signal, &desired, 10, 0.01, None).unwrap();
 
         assert_eq!(output.len(), n);
@@ -2251,8 +2248,8 @@ mod tests {
             .collect();
 
         // Simple Haar wavelet filters
-        let lowpass = vec![0.7071, 0.7071];
-        let highpass = vec![0.7071, -0.7071];
+        let lowpass = vec![std::f64::consts::FRAC_1_SQRT_2, std::f64::consts::FRAC_1_SQRT_2];
+        let highpass = vec![std::f64::consts::FRAC_1_SQRT_2, -std::f64::consts::FRAC_1_SQRT_2];
         let wavelet_filters = (lowpass, highpass);
 
         let results = parallel_wavelet_filter_bank(&signal, &wavelet_filters, 3, None).unwrap();

@@ -52,13 +52,13 @@ pub struct GradientFlowAnalyzer<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientFlowAnalyzer<A, D> {
     /// Create a new gradient flow analyzer
-    pub fn new(_max_history: usize) -> Self {
+    pub fn new(_maxhistory: usize) -> Self {
         Self {
             gradient_magnitudes: VecDeque::with_capacity(_max_history),
             gradient_directions: VecDeque::with_capacity(_max_history),
             parameter_updates: VecDeque::with_capacity(_max_history),
             step_count: 0,
-            max_history: _max_history,
+            max_history: max_history,
             stats_cache: None,
             cache_valid: false,
         }
@@ -470,7 +470,7 @@ impl<A: Float + ScalarOperand + Debug> OptimizerBenchmark<A> {
     }
 
     /// Add a test function to the benchmark suite
-    pub fn add_test_function(&mut self, test_function: TestFunction<A>) {
+    pub fn add_test_function(&mut self, testfunction: TestFunction<A>) {
         self.test_functions.push(test_function);
     }
 
@@ -716,7 +716,7 @@ pub struct BenchmarkReport<A: Float> {
 
 impl<A: Float> BenchmarkReport<A> {
     /// Get success rate for an optimizer
-    pub fn get_success_rate(&self, optimizer_name: &str) -> Option<f64> {
+    pub fn get_success_rate(&self, optimizername: &str) -> Option<f64> {
         self.optimizer_performance.get(optimizer_name).map(|perf| {
             if perf.total_runs > 0 {
                 perf.successful_runs as f64 / perf.total_runs as f64
@@ -787,13 +787,13 @@ pub mod visualization {
 
     impl<A: Float + ScalarOperand + Debug, D: Dimension> OptimizerStateVisualizer<A, D> {
         /// Create a new optimizer state visualizer
-        pub fn new(_max_history: usize) -> Self {
+        pub fn new(_maxhistory: usize) -> Self {
             Self {
                 parameter_history: VecDeque::with_capacity(_max_history),
                 state_history: VecDeque::with_capacity(_max_history),
                 learning_rate_history: VecDeque::with_capacity(_max_history),
                 loss_history: VecDeque::with_capacity(_max_history),
-                max_history: _max_history,
+                max_history: max_history,
                 step_count: 0,
             }
         }
@@ -1301,7 +1301,7 @@ pub mod visualization {
         }
 
         /// Add an optimizer to track
-        pub fn add_optimizer(&mut self, name: String, max_history: usize) {
+        pub fn add_optimizer(&mut self, name: String, maxhistory: usize) {
             self.visualizers
                 .insert(name, OptimizerStateVisualizer::new(max_history));
         }

@@ -49,8 +49,8 @@ impl ArrayValidator {
         if let Some(expectedshape) = &constraints.expectedshape {
             if !self.validate_arrayshape(array, expectedshape)? {
                 errors.push(ValidationError {
-                    error_type: ValidationErrorType::ShapeError,
-                    field_path: constraints.field_name.clone().unwrap_or(array.to_string()),
+                    errortype: ValidationErrorType::ShapeError,
+                    field_path: constraints.fieldname.clone().unwrap_or(array.to_string()),
                     message: format!(
                         "Array shape {:?} does not match expected {:?}",
                         array.shape(),
@@ -203,7 +203,7 @@ impl ArrayValidator {
 
         if nan_count > 0 {
             warnings.push(ValidationError {
-                error_type: ValidationErrorType::InvalidNumeric,
+                errortype: ValidationErrorType::InvalidNumeric,
                 field_path: array.to_string(),
                 message: format!(
                     "Found {} NaN values out of {} total",
@@ -219,7 +219,7 @@ impl ArrayValidator {
 
         if inf_count > 0 {
             warnings.push(ValidationError {
-                error_type: ValidationErrorType::InvalidNumeric,
+                errortype: ValidationErrorType::InvalidNumeric,
                 field_path: array.to_string(),
                 message: format!(
                     "Found {} infinite values out of {} total",
@@ -262,7 +262,7 @@ impl ArrayValidator {
             let min_mean_typed: S::Elem = num_traits::cast(min_mean).unwrap_or(S::Elem::zero());
             if mean < min_mean_typed {
                 errors.push(ValidationError {
-                    error_type: ValidationErrorType::ConstraintViolation,
+                    errortype: ValidationErrorType::ConstraintViolation,
                     field_path: "array.mean".to_string(),
                     message: format!("Mean {:?} is less than minimum {:?}", mean, min_mean),
                     expected: Some(format!("{min_mean}")),
@@ -278,7 +278,7 @@ impl ArrayValidator {
             let max_mean_typed: S::Elem = num_traits::cast(max_mean).unwrap_or(S::Elem::zero());
             if mean > max_mean_typed {
                 errors.push(ValidationError {
-                    error_type: ValidationErrorType::ConstraintViolation,
+                    errortype: ValidationErrorType::ConstraintViolation,
                     field_path: "array.mean".to_string(),
                     message: format!("Mean {:?} is greater than maximum {:?}", mean, max_mean),
                     expected: Some(format!("{max_mean}")),
@@ -295,7 +295,7 @@ impl ArrayValidator {
             let min_std_typed: S::Elem = num_traits::cast(min_std).unwrap_or(S::Elem::zero());
             if std_dev < min_std_typed {
                 warnings.push(ValidationError {
-                    error_type: ValidationErrorType::ConstraintViolation,
+                    errortype: ValidationErrorType::ConstraintViolation,
                     field_path: "array.std".to_string(),
                     message: format!(
                         "Array standard deviation {:?} is below minimum {:?}",
@@ -314,7 +314,7 @@ impl ArrayValidator {
             let max_std_typed: S::Elem = num_traits::cast(max_std).unwrap_or(S::Elem::zero());
             if std_dev > max_std_typed {
                 warnings.push(ValidationError {
-                    error_type: ValidationErrorType::ConstraintViolation,
+                    errortype: ValidationErrorType::ConstraintViolation,
                     field_path: "array.std".to_string(),
                     message: format!(
                         "Array standard deviation {:?} exceeds maximum {:?}",
@@ -351,7 +351,7 @@ impl ArrayValidator {
         const LARGE_ARRAY_THRESHOLD: usize = 100_000_000; // 100M elements
         if element_count > LARGE_ARRAY_THRESHOLD {
             warnings.push(ValidationError {
-                error_type: ValidationErrorType::Performance,
+                errortype: ValidationErrorType::Performance,
                 field_path: "array.size".to_string(),
                 message: format!(
                     "Large array detected: {} elements ({} bytes). Consider chunking for better performance.",
@@ -369,7 +369,7 @@ impl ArrayValidator {
         const LARGE_MEMORY_THRESHOLD: usize = 1_000_000_000; // 1GB
         if total_size > LARGE_MEMORY_THRESHOLD {
             warnings.push(ValidationError {
-                error_type: ValidationErrorType::Performance,
+                errortype: ValidationErrorType::Performance,
                 field_path: "array.memory".to_string(),
                 message: format!(
                     "High memory usage: {} bytes. Consider memory-efficient operations.",
@@ -409,7 +409,7 @@ impl ArrayValidator {
                     if invalid_count <= 10 {
                         // Limit error reports to first 10
                         errors.push(ValidationError {
-                            error_type: ValidationErrorType::CustomRuleFailure,
+                            errortype: ValidationErrorType::CustomRuleFailure,
                             field_path: format!("array[{}]", index),
                             message: format!("Element {:?} failed custom validation", element),
                             expected: Some("valid element".to_string()),
@@ -426,7 +426,7 @@ impl ArrayValidator {
         // Report summary if too many errors
         if invalid_count > 10 {
             errors.push(ValidationError {
-                error_type: ValidationErrorType::CustomRuleFailure,
+                errortype: ValidationErrorType::CustomRuleFailure,
                 field_path: array.to_string(),
                 message: format!(
                     "Total of {} elements failed custom validation (showing first 10)",
@@ -463,7 +463,7 @@ mod tests {
 
         let constraints = ArrayValidationConstraints::new()
             .withshape(vec![5])
-            .with_field_name("test_array")
+            .with_fieldname("test_array")
             .check_numeric_quality();
 
         let result = validator
@@ -493,7 +493,7 @@ mod tests {
         assert!(!result.is_valid());
         assert_eq!(result.errors().len(), 1);
         assert_eq!(
-            result.errors()[0].error_type,
+            result.errors()[0].errortype,
             ValidationErrorType::ShapeError
         );
     }
@@ -514,7 +514,7 @@ mod tests {
         assert!(result.has_warnings());
         assert_eq!(result.warnings().len(), 1);
         assert_eq!(
-            result.warnings()[0].error_type,
+            result.warnings()[0].errortype,
             ValidationErrorType::InvalidNumeric
         );
     }

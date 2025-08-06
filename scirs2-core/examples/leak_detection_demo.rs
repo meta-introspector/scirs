@@ -25,14 +25,14 @@ fn main() -> CoreResult<()> {
     let config = LeakDetectionConfig::default()
         .development_mode()  // Enable detailed tracking
         .with_threshold_mb(10)  // Low threshold for demo
-        .with_sampling_rate(1.0); // Track all allocations
+        .with_samplingrate(1.0); // Track all allocations
 
     println!("📋 Configuration:");
     println!(
         "  - Threshold: {} MB",
         config.growth_threshold_bytes / (1024 * 1024)
     );
-    println!("  - Sampling rate: {:.1}%", config.sampling_rate * 100.0);
+    println!("  - Sampling rate: {:.1}%", config.samplingrate * 100.0);
     println!("  - Call stacks: {}", config.collect_call_stacks);
     println!("  - Production mode: {}\n", config.production_mode);
 
@@ -131,7 +131,7 @@ fn main() -> CoreResult<()> {
     println!("  📦 Production config:");
     println!(
         "    - Sampling: {:.1}%",
-        production_config.sampling_rate * 100.0
+        production_config.samplingrate * 100.0
     );
     println!(
         "    - Call stacks: {}",
@@ -142,7 +142,7 @@ fn main() -> CoreResult<()> {
     println!("  🔧 Development config:");
     println!(
         "    - Sampling: {:.1}%",
-        development_config.sampling_rate * 100.0
+        development_config.samplingrate * 100.0
     );
     println!(
         "    - Call stacks: {}",

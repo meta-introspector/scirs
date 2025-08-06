@@ -36,9 +36,9 @@ impl<F: Float + ScalarOperand + Debug> MomentumOptimizer<F> {
     /// # Arguments
     /// * `learning_rate` - The learning rate for parameter updates
     /// * `momentum` - The momentum factor (typically 0.9)
-    pub fn new(_learning_rate: F, momentum: F) -> Self {
+    pub fn new(_learningrate: F, momentum: F) -> Self {
         Self {
-            _learning_rate,
+            learning_rate,
             momentum,
             weight_decay: F::zero(),
             velocity: Vec::new(),
@@ -46,7 +46,7 @@ impl<F: Float + ScalarOperand + Debug> MomentumOptimizer<F> {
     }
     /// Creates a new momentum optimizer with weight decay
     /// * `weight_decay` - The weight decay factor (L2 regularization)
-    pub fn new_with_weight_decay(_learning_rate: F, momentum: F, weight_decay: F) -> Self {
+    pub fn new_with_weight_decay(_learning_rate: F, momentum: F, weightdecay: F) -> Self {
             weight_decay,
     /// Sets the momentum factor
     /// * `momentum` - The momentum factor
@@ -57,7 +57,7 @@ impl<F: Float + ScalarOperand + Debug> MomentumOptimizer<F> {
     pub fn get_momentum(&self) -> F {
         self.momentum
     /// Sets the weight decay factor
-    pub fn set_weight_decay(&mut self, weight_decay: F) -> &mut Self {
+    pub fn set_weight_decay(&mut self, weightdecay: F) -> &mut Self {
         self.weight_decay = weight_decay;
     /// Gets the current weight decay factor
     pub fn get_weight_decay(&self) -> F {

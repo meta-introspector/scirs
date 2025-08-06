@@ -16,8 +16,8 @@ cargo build --release         # Release build with optimizations
 
 ### Test Commands
 ```bash
-cargo nextest run             # REQUIRED: Use nextest instead of cargo test
-cargo nextest run -p scirs2-{module}  # Test specific module
+cargo test
+cargo test -p scirs2-{module}  # Test specific module
 ```
 
 ### Development Workflow

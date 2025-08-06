@@ -72,4 +72,4 @@ pub use parallel::{
     make_parallel_laplace_interpolator, make_parallel_natural_neighbor_interpolator,
     make_parallel_sibson_interpolator, ParallelNaturalNeighborInterpolator,
 };
-pub use voronoi__cell::{VoronoiCell, VoronoiDiagram};
+pub use voronoi_cell::{VoronoiCell, VoronoiDiagram};

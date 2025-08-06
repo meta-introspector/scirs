@@ -158,7 +158,8 @@ where
         y: &ArrayView1<T>,
         constraints: Vec<Constraint<T>>,
         num_knots: usize,
-        degree: usize, lambda: T,
+        degree: usize,
+        lambda: T,
         extrapolate: ExtrapolateMode,
     ) -> InterpolateResult<Self> {
         Self::fit_internal(

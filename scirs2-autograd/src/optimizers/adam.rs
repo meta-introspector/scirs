@@ -2,7 +2,7 @@
 
 use crate::optimizers::Optimizer;
 use crate::tensor::Tensor;
-use crate::tensor__ops::gradient_descent_ops::adam;
+use crate::tensor_ops::gradient_descent_ops::adam;
 use crate::variable::VariableID;
 use crate::{Context, Float, VariableEnvironment};
 
@@ -153,7 +153,7 @@ impl<F: Float> Optimizer<F> for Adam<F> {
             eprintln!("Created AdamOp with all 5 inputs");
 
             // Add the updated parameter to the result
-            ret.push(adamop);
+            ret.push(adam_op);
         }
         ret
     }

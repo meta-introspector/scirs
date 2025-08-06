@@ -96,7 +96,7 @@ impl DeviceManager {
     }
 
     /// Get the best available device for a given workload size
-    pub fn get_best_device(&self, required_memory: usize) -> Option<(super::Backend, usize)> {
+    pub fn get_best_device(&self, requiredmemory: usize) -> Option<(super::Backend, usize)> {
         let mut best_device = None;
         let mut best_score = 0.0;
 
@@ -179,7 +179,8 @@ impl DeviceManager {
             #[cfg(feature = "opencl")]
             super::Backend::OpenCL => self.opencl_devices.get(device_id),
             #[cfg(all(target_os = "macos", feature = "metal"))]
-            super::Backend::Metal => self.metal_devices.get(device_id, _ => None,
+            super::Backend::Metal => self.metal_devices.get(device_id),
+            _ => None,
         }
     }
 
@@ -350,8 +351,8 @@ fn detect_cuda_devices() -> NdimageResult<Vec<DeviceCapability>> {
 
 #[cfg(feature = "cuda")]
 #[allow(dead_code)]
-fn estimate_gpu_capabilities(_name: &str) -> (Option<(u32, u32)>, Option<usize>, Option<usize>) {
-    let name_lower = _name.to_lowercase();
+fn estimate_gpu_capabilities(name: &str) -> (Option<(u32, u32)>, Option<usize>, Option<usize>) {
+    let name_lower = name.to_lowercase();
 
     // Common GPU architectures and their capabilities
     if name_lower.contains("rtx 40") || name_lower.contains("ada lovelace") {
@@ -377,8 +378,8 @@ fn estimate_gpu_capabilities(_name: &str) -> (Option<(u32, u32)>, Option<usize>,
 
 #[cfg(feature = "cuda")]
 #[allow(dead_code)]
-fn estimate_memory_bandwidth(_name: &str) -> Option<f64> {
-    let name_lower = _name.to_lowercase();
+fn estimate_memory_bandwidth(name: &str) -> Option<f64> {
+    let name_lower = name.to_lowercase();
 
     if name_lower.contains("rtx 4090") {
         Some(1008.0)
@@ -499,8 +500,8 @@ fn detect_opencl_devices() -> NdimageResult<Vec<DeviceCapability>> {
 
 #[cfg(feature = "opencl")]
 #[allow(dead_code)]
-fn estimate_opencl_capabilities(_name: &str) -> (usize, usize, usize) {
-    let name_lower = _name.to_lowercase();
+fn estimate_opencl_capabilities(name: &str) -> (usize, usize, usize) {
+    let name_lower = name.to_lowercase();
 
     if name_lower.contains("intel") {
         // Intel integrated graphics
@@ -536,8 +537,8 @@ fn estimate_opencl_capabilities(_name: &str) -> (usize, usize, usize) {
 
 #[cfg(feature = "opencl")]
 #[allow(dead_code)]
-fn estimate_opencl_bandwidth(_name: &str) -> Option<f64> {
-    let name_lower = _name.to_lowercase();
+fn estimate_opencl_bandwidth(name: &str) -> Option<f64> {
+    let name_lower = name.to_lowercase();
 
     if name_lower.contains("intel iris") || name_lower.contains("intel xe") {
         Some(68.0) // GB/s for modern Intel integrated
@@ -597,7 +598,7 @@ fn detect_macos_integrated_gpu() -> NdimageResult<DeviceCapability> {
         .arg("-xml")
         .output()
         .map_err(|e| {
-            NdimageError::ComputationError(format!("Failed to run system_profiler: {}", e))
+            NdimageError::ComputationError(format!("Failed to run systemprofiler: {}", e))
         })?;
 
     if !output.status.success() {
@@ -656,7 +657,7 @@ fn detect_macos_discrete_gpus() -> NdimageResult<Vec<DeviceCapability>> {
         .arg("-xml")
         .output()
         .map_err(|e| {
-            NdimageError::ComputationError(format!("Failed to run system_profiler: {}", e))
+            NdimageError::ComputationError(format!("Failed to run systemprofiler: {}", e))
         })?;
 
     if !output.status.success() {
@@ -765,7 +766,7 @@ impl MemoryManager {
     }
 
     /// Check if allocation is possible
-    pub fn can_allocate(&self, backend: super::Backend, device_id: usize, size: usize) -> bool {
+    pub fn can_allocate(&self, backend: super::Backend, deviceid: usize, size: usize) -> bool {
         let key = (backend, device_id);
         let current_usage = self.memory_usage.get(&key).unwrap_or(&0);
         let limit = self.memory_limits.get(&key).unwrap_or(&usize::MAX);
@@ -793,7 +794,7 @@ impl MemoryManager {
     }
 
     /// Track memory deallocation
-    pub fn deallocate(&mut self, backend: super::Backend, device_id: usize, size: usize) {
+    pub fn deallocate(&mut self, backend: super::Backend, deviceid: usize, size: usize) {
         let key = (backend, device_id);
 
         if let Some(usage) = self.memory_usage.get_mut(&key) {
@@ -802,12 +803,12 @@ impl MemoryManager {
     }
 
     /// Set memory limit for a device
-    pub fn set_memory_limit(&mut self, backend: super::Backend, device_id: usize, limit: usize) {
+    pub fn set_memory_limit(&mut self, backend: super::Backend, deviceid: usize, limit: usize) {
         self.memory_limits.insert((backend, device_id), limit);
     }
 
     /// Get current memory usage
-    pub fn get_memory_usage(&self, backend: super::Backend, device_id: usize) -> usize {
+    pub fn get_memory_usage(&self, backend: super::Backend, deviceid: usize) -> usize {
         let key = (backend, device_id);
         *self.memory_usage.get(&key).unwrap_or(&0)
     }

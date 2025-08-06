@@ -117,9 +117,9 @@ impl Default for PropertyTestConfig {
 
 impl PropertyBasedValidator {
     /// Create a new property-based validator
-    pub fn new(_config: PropertyTestConfig) -> Self {
+    pub fn new(config: PropertyTestConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             test_results: HashMap::new(),
         }
     }
@@ -317,7 +317,7 @@ impl MathematicalProperty<Array1<f64>> for MeanTranslationInvariance {
         let mut test_cases = Vec::new();
 
         for _ in 0..config.test_cases_per_property {
-            let size = rng.random_range(10..1000);
+            let size = rng.gen_range(10..1000);
             let mut data = Array1::zeros(size);
 
             for val in data.iter_mut() {
@@ -461,7 +461,7 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for CorrelationBounds {
         let mut test_cases = Vec::new();
 
         for _ in 0..config.test_cases_per_property {
-            let size = rng.random_range(10..1000);
+            let size = rng.gen_range(10..1000);
             let mut x = Array1::zeros(size);
             let mut y = Array1::zeros(size);
 
@@ -503,7 +503,7 @@ pub struct ComprehensivePropertyTestSuite {
 
 impl ComprehensivePropertyTestSuite {
     /// Create a new comprehensive test suite
-    pub fn new(_config: PropertyTestConfig) -> Self {
+    pub fn new(config: PropertyTestConfig) -> Self {
         Self {
             validator: PropertyBasedValidator::new(_config),
         }
@@ -525,7 +525,7 @@ impl ComprehensivePropertyTestSuite {
     }
 
     /// Run tests for a specific function
-    pub fn test_function(&mut self, function_name: &str) -> StatsResult<Vec<PropertyTestResult>> {
+    pub fn test_function(&mut self, functionname: &str) -> StatsResult<Vec<PropertyTestResult>> {
         let mut results = Vec::new();
 
         match function_name {

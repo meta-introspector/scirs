@@ -216,7 +216,7 @@ where
 
             if dist_sq < min_dist_sq {
                 min_dist_sq = dist_sq;
-                nearest_value = _values[i];
+                nearest_value = values[i];
             }
         }
 
@@ -259,7 +259,7 @@ where
     // Create RBF interpolator
     let rbf = RBFInterpolator::new(
         points,
-        _values,
+        values,
         RBFKernel::Gaussian,
         F::from_f64(1.0).unwrap_or_else(|| F::one()),
     )?;
@@ -306,18 +306,18 @@ where
 {
     // For simplicity, fall back to nearest neighbor for multidimensional case
     // A full implementation would use multilinear interpolation
-    resample_nearest_neighbor(points, _values, grid_coords, grid_values, fill_value)
+    resample_nearest_neighbor(points, values, grid_coords, grid_values, fill_value)
 }
 
 /// Helper function to increment multi-dimensional indices
 #[allow(dead_code)]
-fn increment_indices(_indices: &mut [usize], shape: &[usize]) -> bool {
+fn increment_indices(indices: &mut [usize], shape: &[usize]) -> bool {
     for i in (0.._indices.len()).rev() {
-        _indices[i] += 1;
-        if _indices[i] < shape[i] {
+        indices[i] += 1;
+        if indices[i] < shape[i] {
             return true;
         }
-        _indices[i] = 0;
+        indices[i] = 0;
     }
     false
 }
@@ -405,12 +405,12 @@ where
 
 /// Convert multi-dimensional indices to linear index
 #[allow(dead_code)]
-fn ravel_multi_index(_indices: &[usize], shape: &[usize]) -> usize {
+fn ravel_multi_index(indices: &[usize], shape: &[usize]) -> usize {
     let mut linear_idx = 0;
     let mut stride = 1;
 
     for i in (0.._indices.len()).rev() {
-        linear_idx += _indices[i] * stride;
+        linear_idx += indices[i] * stride;
         stride *= shape[i];
     }
 
@@ -673,7 +673,8 @@ where
 fn grid_nearest_neighbor<F, D>(
     grid_coords: &[Array1<F>],
     grid_values: &ndarray::ArrayView<F, D>,
-    query_point: &[F], _fill_value: F,
+    query_point: &[F],
+    _fill_value: F,
 ) -> InterpolateResult<F>
 where
     F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero,
@@ -707,11 +708,11 @@ where
 
 /// Efficient grid coordinate range checking
 #[allow(dead_code)]
-fn point_in_grid_bounds<F>(_grid_coords: &[Array1<F>], point: &[F]) -> bool
+fn point_in_grid_bounds<F>(_gridcoords: &[Array1<F>], point: &[F]) -> bool
 where
     F: Float + PartialOrd,
 {
-    for (dim, coord_array) in _grid_coords.iter().enumerate() {
+    for (dim, coord_array) in grid_coords.iter().enumerate() {
         let target = point[dim];
         let min_coord = coord_array[0];
         let max_coord = coord_array[coord_array.len() - 1];
@@ -728,11 +729,11 @@ where
 /// This function creates all combinations of coordinates from the input arrays,
 /// useful for creating meshgrids for evaluation.
 #[allow(dead_code)]
-pub fn create_meshgrid<F>(_coords: &[Array1<F>]) -> InterpolateResult<Array2<F>>
+pub fn create_meshgrid<F>(coords: &[Array1<F>]) -> InterpolateResult<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + Zero,
 {
-    let n_dims = _coords.len();
+    let n_dims = coords.len();
     if n_dims == 0 {
         return Err(InterpolateError::invalid_input(
             "At least one coordinate array required".to_string(),
@@ -746,13 +747,13 @@ where
     }
 
     let mut result = Array2::zeros((total_points, n_dims));
-    let shapes: Vec<usize> = _coords.iter().map(|c| c.len()).collect();
+    let shapes: Vec<usize> = coords.iter().map(|c| c.len()).collect();
     let mut indices = vec![0; n_dims];
 
     for row in 0..total_points {
         // Set coordinates for this grid point
         for (dim, &idx) in indices.iter().enumerate() {
-            result[[row, dim]] = _coords[dim][idx];
+            result[[row, dim]] = coords[dim][idx];
         }
 
         // Increment multi-dimensional indices
@@ -764,7 +765,7 @@ where
 
 /// Calculate grid spacing for each dimension
 #[allow(dead_code)]
-pub fn calculate_grid_spacing<F>(_coords: &[Array1<F>]) -> InterpolateResult<Vec<F>>
+pub fn calculate_grid_spacing<F>(coords: &[Array1<F>]) -> InterpolateResult<Vec<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {

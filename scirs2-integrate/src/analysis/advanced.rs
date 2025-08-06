@@ -237,9 +237,9 @@ pub struct LyapunovCalculator {
 
 impl LyapunovCalculator {
     /// Create new Lyapunov calculator
-    pub fn new(n_exponents: usize, dt: f64) -> Self {
+    pub fn new(nexponents: usize, dt: f64) -> Self {
         Self {
-            n_exponents,
+            n_exponents: nexponents,
             perturbation_magnitude: 1e-8,
             renormalization_interval: 100,
             dt,
@@ -450,11 +450,11 @@ impl LyapunovCalculator {
     /// Estimate Lyapunov exponent from time series using delay embedding
     pub fn estimate_lyapunov_from_timeseries(
         &self,
-        time_series: &Array1<f64>,
+        timeseries: &Array1<f64>,
         embedding_dimension: usize,
         delay: usize,
     ) -> IntegrateResult<f64> {
-        let n = time_series.len();
+        let n = timeseries.len();
         if n < embedding_dimension * delay + 1 {
             return Err(IntegrateError::ValueError(
                 "Time series too short for embedding".to_string(),
@@ -468,7 +468,7 @@ impl LyapunovCalculator {
         for i in 0..n_vectors {
             let mut vector = Array1::zeros(embedding_dimension);
             for j in 0..embedding_dimension {
-                vector[j] = time_series[i + j * delay];
+                vector[j] = timeseries[i + j * delay];
             }
             embedded_vectors.push(vector);
         }
@@ -878,19 +878,19 @@ pub enum DistanceMetric {
 
 impl RecurrenceAnalyzer {
     /// Create new recurrence analyzer
-    pub fn new(threshold: f64, embedding_dimension: usize, time_delay: usize) -> Self {
+    pub fn new(threshold: f64, embedding_dimension: usize, timedelay: usize) -> Self {
         Self {
             threshold,
             embedding_dimension,
-            time_delay,
+            time_delay: timedelay,
             distance_metric: DistanceMetric::Euclidean,
         }
     }
 
     /// Perform recurrence analysis
-    pub fn analyze_recurrence(&self, time_series: &[f64]) -> IntegrateResult<RecurrenceAnalysis> {
+    pub fn analyze_recurrence(&self, timeseries: &[f64]) -> IntegrateResult<RecurrenceAnalysis> {
         // Create delay coordinate embedding
-        let embedded_vectors = self.create_embedding(time_series)?;
+        let embedded_vectors = self.create_embedding(timeseries)?;
 
         // Compute recurrence matrix
         let recurrence_matrix = self.compute_recurrence_matrix(&embedded_vectors)?;
@@ -909,8 +909,8 @@ impl RecurrenceAnalyzer {
     }
 
     /// Create delay coordinate embedding
-    fn create_embedding(&self, time_series: &[f64]) -> IntegrateResult<Vec<Array1<f64>>> {
-        let n = time_series.len();
+    fn create_embedding(&self, timeseries: &[f64]) -> IntegrateResult<Vec<Array1<f64>>> {
+        let n = timeseries.len();
         let embedded_length = n - (self.embedding_dimension - 1) * self.time_delay;
 
         if embedded_length <= 0 {
@@ -924,7 +924,7 @@ impl RecurrenceAnalyzer {
         for i in 0..embedded_length {
             let mut vector = Array1::zeros(self.embedding_dimension);
             for j in 0..self.embedding_dimension {
-                vector[j] = time_series[i + j * self.time_delay];
+                vector[j] = timeseries[i + j * self.time_delay];
             }
             embedded_vectors.push(vector);
         }
@@ -1188,9 +1188,9 @@ pub struct ContinuationAnalyzer {
 
 impl ContinuationAnalyzer {
     /// Create new continuation analyzer
-    pub fn new(param_range: (f64, f64), n_steps: usize) -> Self {
+    pub fn new(paramrange: (f64, f64), n_steps: usize) -> Self {
         Self {
-            param_range,
+            param_range: paramrange,
             n_steps,
             tol: 1e-8,
             max_newton_iter: 50,
@@ -1435,11 +1435,11 @@ pub struct MonodromyAnalyzer {
 
 impl MonodromyAnalyzer {
     /// Create new monodromy analyzer
-    pub fn new(period: f64, n_steps: usize) -> Self {
+    pub fn new(period: f64, nsteps: usize) -> Self {
         Self {
             period,
             tol: 1e-8,
-            n_steps,
+            n_steps: nsteps,
         }
     }
 
@@ -1718,10 +1718,10 @@ mod tests {
     #[test]
     fn test_recurrence_analyzer() {
         // Test with sinusoidal time series
-        let time_series: Vec<f64> = (0..100).map(|i| (i as f64 * 0.1).sin()).collect();
+        let timeseries: Vec<f64> = (0..100).map(|i| (i as f64 * 0.1).sin()).collect();
 
         let analyzer = RecurrenceAnalyzer::new(0.1, 3, 1);
-        let result = analyzer.analyze_recurrence(&time_series).unwrap();
+        let result = analyzer.analyze_recurrence(&timeseries).unwrap();
 
         // Should have reasonable recurrence measures
         assert!(result.rqa_measures.recurrence_rate > 0.0);

@@ -29,29 +29,29 @@ struct LSTMCell {
     c_t: Option<Array2<f32>>, // Current cell state [batch_size, hidden_size]
 }
 impl LSTMCell {
-    fn new(_input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, batchsize: usize) -> Self {
         // Xavier/Glorot initialization
         let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         // Input gate weights
         let uniform = Uniform::new(-bound, bound).unwrap();
         let mut rng = rand::rng();
-        let w_ii = Array::fromshape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
+        let w_ii = Array::fromshape_fn((hidden_size, input_size), |_| uniform.sample(&mut rng));
         let w_hi = Array::fromshape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
         let b_i = Array1::zeros(hidden_size);
         // Forget gate weights (initialize forget gate bias to 1 to avoid vanishing gradients early in training)
-        let w_if = Array::fromshape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
+        let w_if = Array::fromshape_fn((hidden_size, input_size), |_| uniform.sample(&mut rng));
         let w_hf = Array::fromshape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
         let b_f = Array1::ones(hidden_size);
         // Cell gate weights
-        let w_ig = Array::fromshape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
+        let w_ig = Array::fromshape_fn((hidden_size, input_size), |_| uniform.sample(&mut rng));
         let w_hg = Array::fromshape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
         let b_g = Array1::zeros(hidden_size);
         // Output gate weights
-        let w_io = Array::fromshape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
+        let w_io = Array::fromshape_fn((hidden_size, input_size), |_| uniform.sample(&mut rng));
         let w_ho = Array::fromshape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
         let b_o = Array1::zeros(hidden_size);
         LSTMCell {
-            _input_size,
+            input_size,
             hidden_size,
             batch_size,
             w_ii,
@@ -111,11 +111,11 @@ struct TimeSeriesAttention {
     w_value: Array2<f32>,
     v_attention: Array1<f32>,
 impl TimeSeriesAttention {
-    fn new(_hidden_size: usize) -> Self {
-        let bound = (6.0 / (_hidden_size + _hidden_size) as f32).sqrt();
+    fn new(_hiddensize: usize) -> Self {
+        let bound = (6.0 / (_hidden_size + hidden_size) as f32).sqrt();
         let w_query =
-            Array::fromshape_fn((_hidden_size, _hidden_size), |_| uniform.sample(&mut rng));
-        let w_key = Array::fromshape_fn((_hidden_size, _hidden_size), |_| uniform.sample(&mut rng));
+            Array::fromshape_fn((_hidden_size, hidden_size), |_| uniform.sample(&mut rng));
+        let w_key = Array::fromshape_fn((_hidden_size, hidden_size), |_| uniform.sample(&mut rng));
         let w_value =
         let v_attention = Array::fromshape_fn(_hidden_size, |_| uniform.sample(&mut rng));
         TimeSeriesAttention {
@@ -188,7 +188,7 @@ struct LSTMEncoder {
     // LSTM cells for each layer
     lstm_cells: Vec<LSTMCell>,
 impl LSTMEncoder {
-    fn new(_input_size: usize, hidden_size: usize, num_layers: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, num_layers: usize, batchsize: usize) -> Self {
         let mut lstm_cells = Vec::with_capacity(num_layers);
         // Create LSTM cells for each layer
         for layer in 0..num_layers {
@@ -281,7 +281,7 @@ impl TimeSeriesForecaster {
             w_out,
             b_out,
             decoder_cell,
-    fn forward(&mut self, x: &Array3<f32>, prev_y: Option<&Array2<f32>>) -> Array3<f32> {
+    fn forward(&mut self, x: &Array3<f32>, prevy: Option<&Array2<f32>>) -> Array3<f32> {
         // x: [batch_size, seq_len, input_size] - Input time series
         // prev_y: Optional[batch_size, output_size] - Previous output (for autoregressive prediction)
         // Encode input sequence
@@ -329,20 +329,20 @@ struct MinMaxScaler {
     max_vals: Array1<f32>,
 impl MinMaxScaler {
     #[allow(dead_code)]
-    fn new(_min_vals: Array1<f32>, max_vals: Array1<f32>) -> Self {
-        MinMaxScaler { _min_vals, max_vals }
-    fn fit(_data: &Array2<f32>) -> Self {
-        let features = _data.shape()[1];
+    fn new(_min_vals: Array1<f32>, maxvals: Array1<f32>) -> Self {
+        MinMaxScaler { min_vals, max_vals }
+    fn fit(data: &Array2<f32>) -> Self {
+        let features = data.shape()[1];
         let mut min_vals = Array1::<f32>::zeros(features);
         let mut max_vals = Array1::<f32>::zeros(features);
         for f in 0..features {
-            let column = _data.slice(s![.., f]);
+            let column = data.slice(s![.., f]);
             let min_val = column.fold(f32::INFINITY, |a, &b| a.min(b));
             let max_val = column.fold(f32::NEG_INFINITY, |a, &b| a.max(b));
             min_vals[f] = min_val;
             max_vals[f] = max_val;
     fn transform(&self, data: &Array2<f32>) -> Array2<f32> {
-        let (rows, cols) = _data.dim();
+        let (rows, cols) = data.dim();
         let mut result = Array2::<f32>::zeros((rows, cols));
         for r in 0..rows {
             for c in 0..cols {
@@ -377,7 +377,7 @@ fn create_sliding_window_dataset(
     (x, y)
 // Generate synthetic time series data
 #[allow(dead_code)]
-fn generate_synthetic_time_series(_n_samples: usize, n_features: usize) -> Array2<f32> {
+fn generate_synthetic_time_series(_n_samples: usize, nfeatures: usize) -> Array2<f32> {
     let mut data = Array2::<f32>::zeros((_n_samples, n_features));
     // Generate time range
     let time: Vec<f32> = (0.._n_samples).map(|i| i as f32 / 100.0).collect();
@@ -406,7 +406,7 @@ fn generate_synthetic_time_series(_n_samples: usize, n_features: usize) -> Array
     data
 // Mean Absolute Error calculation
 #[allow(dead_code)]
-fn mean_absolute_error(_y_true: &Array3<f32>, y_pred: &Array3<f32>) -> f32 {
+fn mean_absolute_error(_y_true: &Array3<f32>, ypred: &Array3<f32>) -> f32 {
     let batch_size = y_true.shape()[0];
     let forecast_horizon = y_true.shape()[1];
     let output_size = y_true.shape()[2];

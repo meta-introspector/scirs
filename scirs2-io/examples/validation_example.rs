@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn basic_checksum_example(_data: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn basic_checksum_example(data: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Basic Checksum Example ===");
 
     // Generate checksums with different algorithms
@@ -66,7 +66,7 @@ fn basic_checksum_example(_data: &str) -> Result<(), Box<dyn std::error::Error>>
     let sha256_checksum = calculate_checksum(_data.as_bytes(), ChecksumAlgorithm::SHA256);
     let blake3_checksum = calculate_checksum(_data.as_bytes(), ChecksumAlgorithm::BLAKE3);
 
-    println!("Original _data: \"{}\"", _data);
+    println!("Original data: \"{}\"", data);
     println!("CRC32 checksum: {}", crc32_checksum);
     println!("SHA256 checksum: {}", sha256_checksum);
     println!("BLAKE3 checksum: {}", blake3_checksum);
@@ -80,7 +80,7 @@ fn basic_checksum_example(_data: &str) -> Result<(), Box<dyn std::error::Error>>
     println!(
         "SHA256 valid: {}",
         verify_checksum(
-            _data.as_bytes(),
+            data.as_bytes(),
             &sha256_checksum,
             ChecksumAlgorithm::SHA256
         )
@@ -88,14 +88,14 @@ fn basic_checksum_example(_data: &str) -> Result<(), Box<dyn std::error::Error>>
     println!(
         "BLAKE3 valid: {}",
         verify_checksum(
-            _data.as_bytes(),
+            data.as_bytes(),
             &blake3_checksum,
             ChecksumAlgorithm::BLAKE3
         )
     );
 
     // Verify with modified _data
-    let modified_data = format!("{}!", _data);
+    let modified_data = format!("{}!", data);
     println!("\nVerifying checksums with modified _data:");
     println!(
         "CRC32 valid: {}",
@@ -126,7 +126,7 @@ fn basic_checksum_example(_data: &str) -> Result<(), Box<dyn std::error::Error>>
 }
 
 #[allow(dead_code)]
-fn file_checksum_example(file_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn file_checksum_example(filepath: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== File Checksum Example ===");
 
     // Calculate checksums for the file
@@ -286,7 +286,7 @@ fn format_validation_example(
 }
 
 #[allow(dead_code)]
-fn directory_manifest_example(dir_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn directory_manifest_example(dirpath: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Directory Manifest Example ===");
 
     // Create directory manifest
@@ -345,7 +345,7 @@ fn directory_manifest_example(dir_path: &Path) -> Result<(), Box<dyn std::error:
 
     if let Some(_path) = first_file {
         if verification_after.modified_files.contains(&_path) {
-            println!("Successfully detected modification to: {}", _path);
+            println!("Successfully detected modification to: {}", path);
         }
     }
 

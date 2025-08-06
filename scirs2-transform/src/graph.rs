@@ -8,7 +8,7 @@ use rand::prelude::*;
 use rand::Rng;
 
 use crate::error::{Result, TransformError};
-use scirs2__linalg::eigh;
+use scirs2_linalg::eigh;
 use statrs::statistics::Statistics;
 
 /// Node embeddings using spectral decomposition of graph Laplacian
@@ -34,16 +34,16 @@ pub enum LaplacianType {
 
 impl SpectralEmbedding {
     /// Create a new spectral embedding transformer
-    pub fn new(_n_components: usize) -> Self {
+    pub fn new(_ncomponents: usize) -> Self {
         SpectralEmbedding {
-            _n_components,
+            n_components,
             laplacian_type: LaplacianType::NormalizedSymmetric,
             random_state: None,
         }
     }
 
     /// Set the type of Laplacian to use
-    pub fn with_laplacian_type(mut self, laplacian_type: LaplacianType) -> Self {
+    pub fn with_laplacian_type(mut self, laplaciantype: LaplacianType) -> Self {
         self.laplacian_type = laplacian_type;
         self
     }
@@ -164,9 +164,9 @@ pub struct DeepWalk {
 
 impl DeepWalk {
     /// Create a new DeepWalk transformer
-    pub fn new(_embedding_dim: usize) -> Self {
+    pub fn new(_embeddingdim: usize) -> Self {
         DeepWalk {
-            _embedding_dim,
+            embedding_dim,
             n_walks: 10,
             walk_length: 80,
             window_size: 5,
@@ -178,19 +178,19 @@ impl DeepWalk {
     }
 
     /// Set the number of walks per node
-    pub fn with_n_walks(mut self, n_walks: usize) -> Self {
+    pub fn with_n_walks(mut self, nwalks: usize) -> Self {
         self.n_walks = n_walks;
         self
     }
 
     /// Set the walk length
-    pub fn with_walk_length(mut self, walk_length: usize) -> Self {
+    pub fn with_walk_length(mut self, walklength: usize) -> Self {
         self.walk_length = walk_length;
         self
     }
 
     /// Set the window size
-    pub fn with_window_size(mut self, window_size: usize) -> Self {
+    pub fn with_window_size(mut self, windowsize: usize) -> Self {
         self.window_size = window_size;
         self
     }
@@ -246,7 +246,7 @@ impl DeepWalk {
     }
 
     /// Train embeddings using Skip-gram with negative sampling
-    fn train_embeddings(&self, walks: &[Vec<usize>], n_nodes: usize) -> Array2<f64> {
+    fn train_embeddings(&self, walks: &[Vec<usize>], nnodes: usize) -> Array2<f64> {
         let mut rng = rand::rng();
 
         // Initialize embeddings randomly
@@ -355,7 +355,7 @@ pub struct Node2Vec {
 
 impl Node2Vec {
     /// Create a new Node2Vec transformer
-    pub fn new(_embedding_dim: usize, p: f64, q: f64) -> Self {
+    pub fn new(_embeddingdim: usize, p: f64, q: f64) -> Self {
         Node2Vec {
             base_model: DeepWalk::new(_embedding_dim),
             p,
@@ -505,9 +505,9 @@ pub enum ActivationType {
 
 impl GraphAutoencoder {
     /// Create a new graph autoencoder
-    pub fn new(_encoder_dims: Vec<usize>) -> Self {
+    pub fn new(_encoderdims: Vec<usize>) -> Self {
         GraphAutoencoder {
-            _encoder_dims,
+            encoder_dims,
             activation: ActivationType::ReLU,
             learning_rate: 0.01,
             n_epochs: 200,
@@ -527,7 +527,7 @@ impl GraphAutoencoder {
     }
 
     /// Set number of epochs
-    pub fn with_n_epochs(mut self, n_epochs: usize) -> Self {
+    pub fn with_n_epochs(mut self, nepochs: usize) -> Self {
         self.n_epochs = n_epochs;
         self
     }
@@ -598,7 +598,7 @@ impl GraphAutoencoder {
             let mut activations = vec![features.clone()];
             let mut z = features.clone();
 
-            for (i..w) in encoder_weights.iter().enumerate() {
+            for (i, w) in encoder_weights.iter().enumerate() {
                 z = z.dot(w);
                 if i < encoder_weights.len() - 1 {
                     z = self.activate(&z);
@@ -670,7 +670,7 @@ impl GraphAutoencoder {
 
 /// Convert edge list to adjacency matrix
 #[allow(dead_code)]
-pub fn edge_list_to_adjacency(_edges: &[(usize, usize)], n_nodes: Option<usize>) -> Array2<f64> {
+pub fn edge_list_to_adjacency(edges: &[(usize, usize)], n_nodes: Option<usize>) -> Array2<f64> {
     let max_node = _edges
         .iter()
         .flat_map(|(u, v)| vec![*u, *v])
@@ -692,14 +692,14 @@ pub fn edge_list_to_adjacency(_edges: &[(usize, usize)], n_nodes: Option<usize>)
 
 /// Convert adjacency matrix to edge list
 #[allow(dead_code)]
-pub fn adjacency_to_edge_list(_adjacency: &Array2<f64>) -> Vec<(usize, usize)> {
+pub fn adjacency_to_edge_list(adjacency: &Array2<f64>) -> Vec<(usize, usize)> {
     let mut edges = Vec::new();
-    let n = _adjacency.shape()[0];
+    let n = adjacency.shape()[0];
 
     for i in 0..n {
         for j in i + 1..n {
             // Only upper triangle for undirected graphs
-            if _adjacency[[i, j]] > 0.0 {
+            if adjacency[[i, j]] > 0.0 {
                 edges.push((i, j));
             }
         }

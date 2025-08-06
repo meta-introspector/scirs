@@ -732,7 +732,7 @@ fn trust_region_exact_subproblem(
 
 /// Find a step that lies on the trust region boundary
 #[allow(dead_code)]
-fn find_boundary_step(s: &Array1<f64>, p: &Array1<f64>, trust_radius: f64) -> (f64, Array1<f64>) {
+fn find_boundary_step(s: &Array1<f64>, p: &Array1<f64>, trustradius: f64) -> (f64, Array1<f64>) {
     // Solve the quadratic equation ||s + alpha*p||^2 = trust_radius^2
     let s_norm_squared = s.dot(s);
     let p_norm_squared = p.dot(p);
@@ -805,8 +805,8 @@ fn solve_tridiagonal_system(t: &Array2<f64>, b: &Array1<f64>, lambda: f64) -> Ar
 
 /// Compute eigendecomposition of a matrix (simplified version)
 #[allow(dead_code)]
-fn compute_eig_decomposition(_mat: &Array2<f64>) -> (Array1<f64>, Array2<f64>) {
-    let n = _mat.nrows();
+fn compute_eig_decomposition(mat: &Array2<f64>) -> (Array1<f64>, Array2<f64>) {
+    let n = mat.nrows();
 
     // This is a simplistic approach to eigendecomposition
     // For production code, you would use a library like nalgebra or ndarray-linalg
@@ -815,7 +815,7 @@ fn compute_eig_decomposition(_mat: &Array2<f64>) -> (Array1<f64>, Array2<f64>) {
     let mut eigvecs = Array2::zeros((n, n));
 
     // Create a copy of the matrix for deflation
-    let mut mat_copy = _mat.clone();
+    let mut mat_copy = mat.clone();
 
     for k in 0..n {
         // Initialize a simple vector for the power method

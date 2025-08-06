@@ -405,9 +405,9 @@ where
         + std::fmt::Display,
 {
     /// Create new advanced error recovery system
-    pub fn new(_config: AdvancedErrorRecoveryConfig) -> Self {
+    pub fn new(config: AdvancedErrorRecoveryConfig) -> Self {
         Self {
-            _config,
+            config,
             recovery_history: Arc::new(Mutex::new(VecDeque::new())),
             strategy_success_rates: Arc::new(Mutex::new(HashMap::new())),
             error_patterns: Arc::new(Mutex::new(HashMap::new())),

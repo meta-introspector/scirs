@@ -408,7 +408,7 @@ pub struct FusionRule {
     pub strategy: FusionStrategy,
 impl JITCompiler {
     /// Create a new JIT compiler for the target architecture
-    pub fn new(_target_arch: TargetArchitecture) -> Self {
+    pub fn new(_targetarch: TargetArchitecture) -> Self {
         let codegen_settings = CodeGenSettings {
             vectorize: true,
             unroll_loops: true,
@@ -703,10 +703,10 @@ impl JITCompiler {
         code.push_str("  }\n");
         code
     /// Generate SSE matrix multiplication code
-    fn generate_sse_matmul(&self, m: usize, _k: usize, n: usize) -> String {
+    fn generate_sse_matmul(&self, m: usize, k: usize, n: usize) -> String {
         String::from("  // SSE implementation placeholder\n")
     /// Generate NEON matrix multiplication code
-    fn generate_neon_matmul(&self, m: usize, _k: usize, n: usize) -> String {
+    fn generate_neon_matmul(&self, m: usize, k: usize, n: usize) -> String {
         String::from("  // NEON implementation placeholder\n")
     /// Generate vectorized element-wise code
     fn generate_vectorized_elementwise(
@@ -732,7 +732,7 @@ impl JITCompiler {
                 code.push_str("    __m256 result = _mm256_max_ps(input_vec, zero);\n");
                 code.push_str("    // Generic vectorized operation\n");
     /// Generate scalar element-wise code
-    fn generate_scalar_elementwise(&self, op: &ElementWiseOp, total_elements: usize) -> String {
+    fn generate_scalar_elementwise(&self, op: &ElementWiseOp, totalelements: usize) -> String {
             "  // Scalar element-wise operation, {} elements\n",
         code.push_str("  for (int i = 0; i < total_elements; i++) {\n");
             ElementWiseOp::Add => code.push_str("    output[i] = input0[i] + input1[i];\n"),
@@ -993,7 +993,7 @@ impl JITCompiler {
                 *out = if *inp > F::zero() { *inp } else { F::zero() };
             });
     /// Update cache statistics
-    fn update_cache_stats(&self, cache_hit: bool) {
+    fn update_cache_stats(&self, cachehit: bool) {
         if let Ok(mut stats) = self.stats.write() {
             let total_requests = stats.kernels_compiled + if cache_hit { 1 } else { 0 };
             if total_requests > 0 {
@@ -1003,12 +1003,12 @@ impl JITCompiler {
                 };
                 stats.cache_hit_rate = hits / total_requests as f64;
     /// Update compilation statistics
-    fn update_compile_stats(&self, compile_time_ms: f64) {
+    fn update_compile_stats(&self, compile_timems: f64) {
             stats.kernels_compiled += 1;
             stats.total_compile_time_ms += compile_time_ms;
             stats.avg_compile_time_ms = stats.total_compile_time_ms / stats.kernels_compiled as f64;
     /// Update execution statistics
-    fn update_execution_stats(&self, execution_time_ms: f64) {
+    fn update_execution_stats(&self, execution_timems: f64) {
             stats.total_execution_time_ms += execution_time_ms;
     /// Get compilation and execution statistics
     pub fn get_statistics(&self) -> JITStatistics {

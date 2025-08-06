@@ -842,7 +842,8 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> TPUBackend<T> {
     /// Execute a computation on TPU
     pub async fn execute_computation(
         &mut self,
-        computation_id: ComputationId, _inputs: Vec<TPUBuffer<T>>,
+        computation_id: ComputationId,
+        _inputs: Vec<TPUBuffer<T>>,
     ) -> Result<Vec<TPUBuffer<T>>> {
         let start_time = Instant::now();
 
@@ -904,7 +905,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> TPUBackend<T> {
         Ok(Arc::new(program))
     }
 
-    async fn compile_program(&self, _computation_id: ComputationId) -> Result<CompiledProgram> {
+    async fn compile_program(&self, _computationid: ComputationId) -> Result<CompiledProgram> {
         // Simplified compilation - in reality this would invoke XLA compiler
         let binary = vec![0u8; 1024]; // Placeholder binary
 
@@ -1337,7 +1338,9 @@ impl<T: Float + Send + Sync> TPUMemoryManager<T> {
     }
 
     pub fn allocate_for_computation(
-        &self, _program: &CompiledProgram, _devices: &[DeviceId],
+        &self,
+        _program: &CompiledProgram,
+        _devices: &[DeviceId],
     ) -> Result<MemoryAllocation> {
         // Simple implementation
         Ok(MemoryAllocation {
@@ -1375,7 +1378,10 @@ impl<T: Float + Send + Sync> ExecutionEngine<T> {
     }
 
     pub fn execute_task(
-        &self, _task: ComputationTask, _devices: &[DeviceId], _memory_allocation: &MemoryAllocation,
+        &self,
+        _task: ComputationTask,
+        _devices: &[DeviceId],
+        _memory_allocation: &MemoryAllocation,
     ) -> Result<TaskExecutionResult> {
         // Simple implementation
         Ok(TaskExecutionResult {
@@ -1390,7 +1396,10 @@ impl<T: Float + Send + Sync> ExecutionEngine<T> {
 
 impl PerformanceMonitor {
     pub fn record_execution(
-        &mut self, _computation_id: ComputationId, _time: std::time::Duration, _results: &TaskExecutionResult,
+        &mut self,
+        _computation_id: ComputationId,
+        _time: std::time::Duration,
+        _results: &TaskExecutionResult,
     ) {
         // Simple implementation - record metrics
     }
@@ -1411,7 +1420,7 @@ impl DeviceManager {
         Ok(())
     }
 
-    pub fn select_devices(&self, _program: &CompiledProgram) -> Result<Vec<DeviceId>> {
+    pub fn select_devices(&self, program: &CompiledProgram) -> Result<Vec<DeviceId>> {
         // Simple implementation - return first available device
         if self.devices.is_empty() {
             Ok(Vec::new())

@@ -67,11 +67,11 @@ where
     T: std::fmt::Debug + Clone,
 {
     /// Forward pass through the layer
-    fn forward(&mut self, x: &T, is_training: bool) -> T;
+    fn forward(&mut self, x: &T, istraining: bool) -> T;
     /// Backward pass to compute gradients
-    fn backward(&mut self, grad_output: &T) -> T;
+    fn backward(&mut self, gradoutput: &T) -> T;
     /// Update parameters with gradients
-    fn update_parameters(&mut self, learning_rate: f32);
+    fn update_parameters(&mut self, learningrate: f32);
     /// Get a description of the layer
     fn get_description(&self) -> String;
     /// Get number of trainable parameters
@@ -98,9 +98,9 @@ struct BatchNorm2D {
     std_dev: Option<Array1<f32>>,
 impl BatchNorm2D {
     /// Create a new BatchNorm2D layer
-    fn new(_num_features: usize, epsilon: f32, momentum: f32) -> Self {
+    fn new(_numfeatures: usize, epsilon: f32, momentum: f32) -> Self {
         Self {
-            _num_features,
+            num_features,
             epsilon,
             momentum,
             // Initialize gamma to ones and beta to zeros
@@ -119,7 +119,7 @@ impl BatchNorm2D {
             normalized: None,
             std_dev: None,
 impl Layer<Array4<f32>> for BatchNorm2D {
-    fn forward(&mut self, x: &Array4<f32>, is_training: bool) -> Array4<f32> {
+    fn forward(&mut self, x: &Array4<f32>, istraining: bool) -> Array4<f32> {
         let batch_size = x.shape()[0];
         let channels = x.shape()[1];
         let height = x.shape()[2];
@@ -179,7 +179,7 @@ impl Layer<Array4<f32>> for BatchNorm2D {
                                 / (self.running_var[c] + self.epsilon).sqrt();
                             output[[b, c, h, w]] = self.gamma[c] * normalized + self.beta[c];
         output
-    fn backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
+    fn backward(&mut self, gradoutput: &Array4<f32>) -> Array4<f32> {
         let input = self
             .input
             .as_ref()
@@ -236,11 +236,11 @@ impl Layer<Array4<f32>> for BatchNorm2D {
         self.dgamma = Some(dgamma);
         self.dbeta = Some(dbeta);
         dinput
-    fn update_parameters(&mut self, learning_rate: f32) {
+    fn update_parameters(&mut self, learningrate: f32) {
         if let (Some(dgamma), Some(dbeta)) = (&self.dgamma, &self.dbeta) {
             // Update gamma and beta
-            self.gamma = &self.gamma - learning_rate * dgamma;
-            self.beta = &self.beta - learning_rate * dbeta;
+            self.gamma = &self.gamma - learningrate * dgamma;
+            self.beta = &self.beta - learningrate * dbeta;
             // Clear gradients
             self.dgamma = None;
             self.dbeta = None;
@@ -266,7 +266,7 @@ impl LayerNorm {
             normalizedshape,
             mean: None,
 impl Layer<Array2<f32>> for LayerNorm {
-    fn forward(&mut self, x: &Array2<f32>, _is_training: bool) -> Array2<f32> {
+    fn forward(&mut self, x: &Array2<f32>, _istraining: bool) -> Array2<f32> {
         let feature_size = x.shape()[1];
         let mut output = Array2::zeros(x.dim());
         let mut normalized = Array2::zeros(x.dim());
@@ -289,7 +289,7 @@ impl Layer<Array2<f32>> for LayerNorm {
         self.normalized = Some(normalized);
         self.std_dev = Some(std_dev);
         self.mean = Some(mean);
-    fn backward(&mut self, grad_output: &Array2<f32>) -> Array2<f32> {
+    fn backward(&mut self, gradoutput: &Array2<f32>) -> Array2<f32> {
         let mean = self
             .mean
         let feature_size = input.shape()[1];
@@ -328,18 +328,18 @@ struct GroupNorm {
     group_mean: Option<Array2<f32>>,
 impl GroupNorm {
     /// Create a new GroupNorm layer
-    fn new(_num_groups: usize, num_channels: usize, epsilon: f32) -> Self {
+    fn new(_num_groups: usize, numchannels: usize, epsilon: f32) -> Self {
         assert!(
             num_channels % _num_groups == 0,
             "Number of channels must be divisible by number of groups"
-            _num_groups,
+            num_groups,
             num_channels,
             gamma: Array1::ones(num_channels),
             beta: Array1::zeros(num_channels),
             group_std: None,
             group_mean: None,
 impl Layer<Array4<f32>> for GroupNorm {
-    fn forward(&mut self, x: &Array4<f32>, _is_training: bool) -> Array4<f32> {
+    fn forward(&mut self, x: &Array4<f32>, _istraining: bool) -> Array4<f32> {
         assert_eq!(channels, self.num_channels, "Channel dimension mismatch");
         let channels_per_group = channels / self._num_groups;
         let pixels_per_group = height * width * channels_per_group;
@@ -443,8 +443,8 @@ impl Layer<Array2<f32>> for Dense {
         delta.dot(&self.weights.t())
         if let (Some(dweights), Some(dbiases)) = (&self.dweights, &self.dbiases) {
             // Update weights and biases
-            self.weights = &self.weights - learning_rate * dweights;
-            self.biases = &self.biases - learning_rate * dbiases;
+            self.weights = &self.weights - learningrate * dweights;
+            self.biases = &self.biases - learningrate * dbiases;
             self.dweights = None;
             self.dbiases = None;
             "Dense: {} -> {}, Activation: {}",
@@ -494,7 +494,7 @@ impl LossFunction {
 fn example_batchnorm() -> Result<()> {
     println!("Batch Normalization Example\n");
     // Create a simple dataset
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     let batch_size = 32;
     let channels = 3;
     let height = 16;

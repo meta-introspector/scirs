@@ -31,17 +31,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("-------------------------------");
 
     // Create a simple 3D tensor in TT format manually
-    let core1 = Array3::fromshape_fn((1, 3, 2), |(_, i, r)| {
+    let core1 = Array3::from_shape_fn((1, 3, 2), |(_, i, r)| {
         // First core: maps mode 1 to rank-2
         (i + r + 1) as f64 * 0.5
     });
 
-    let core2 = Array3::fromshape_fn((2, 4, 3), |(r1, i, r2)| {
+    let core2 = Array3::from_shape_fn((2, 4, 3), |(r1, i, r2)| {
         // Second core: rank-2 to rank-3
         (r1 + i + r2 + 1) as f64 * 0.3
     });
 
-    let core3 = Array3::fromshape_fn((3, 2, 1), |(r1, i_)| {
+    let core3 = Array3::from_shape_fn((3, 2, 1), |(r1, i_)| {
         // Third core: rank-3 to rank-1 (boundary)
         (r1 + i + 1) as f64 * 0.2
     });
@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         })
         .collect();
 
-    let dense_tensor = Array::fromshape_vec(IxDyn(&shape), tensor_data)?;
+    let dense_tensor = Array::from_shape_vec(IxDyn(&shape), tensor_data)?;
 
     println!("   📊 Dense Tensor Analysis:");
     println!("      - Original shape: {:?}", dense_tensor.shape());
@@ -182,10 +182,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("---------------------------");
 
     // Create two simple TT tensors for arithmetic
-    let core_a = Array3::fromshape_fn((1, 3, 1), |(_, i_)| (i + 1) as f64);
+    let core_a = Array3::from_shape_fn((1, 3, 1), |(_, i_)| (i + 1) as f64);
     let tt_a = TTTensor::new(vec![core_a])?;
 
-    let core_b = Array3::fromshape_fn((1, 3, 1), |(_, i_)| (i + 2) as f64);
+    let core_b = Array3::from_shape_fn((1, 3, 1), |(_, i_)| (i + 2) as f64);
     let tt_b = TTTensor::new(vec![core_b])?;
 
     println!(
@@ -324,7 +324,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             })
             .collect();
 
-        let dense_tensor = Array::fromshape_vec(IxDyn(&shape), tensor_data)?;
+        let dense_tensor = Array::from_shape_vec(IxDyn(&shape), tensor_data)?;
 
         let start_time = Instant::now();
         let tt_tensor = tt_decomposition(&dense_tensor.view(), 1e-10, Some(8))?;

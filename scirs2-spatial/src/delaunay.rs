@@ -134,9 +134,9 @@ impl Delaunay {
     /// let simplices = tri.simplices();
     /// println!("Triangles: {:?}", simplices);
     /// ```
-    pub fn new(_points: &Array2<f64>) -> SpatialResult<Self> {
-        let npoints = _points.nrows();
-        let ndim = _points.ncols();
+    pub fn new(points: &Array2<f64>) -> SpatialResult<Self> {
+        let npoints = points.nrows();
+        let ndim = points.ncols();
 
         // Check if we have enough _points for triangulation
         if npoints <= ndim {
@@ -153,7 +153,7 @@ impl Delaunay {
             let neighbors = vec![vec![-1, -1, -1]]; // No neighbors
 
             return Ok(Delaunay {
-                points: _points.clone(),
+                points: points.clone(),
                 ndim,
                 npoints,
                 simplices,
@@ -164,7 +164,7 @@ impl Delaunay {
         }
 
         // Extract _points as Vec of Vec for Qhull
-        let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| _points.row(i).to_vec()).collect();
+        let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| points.row(i).to_vec()).collect();
 
         // Try with standard approach first
         let qh_result = Qh::new_delaunay(_points_vec.clone());
@@ -181,7 +181,7 @@ impl Delaunay {
                     let neighbors = vec![vec![-1, 1, -1], vec![-1, -1, 0]];
 
                     return Ok(Delaunay {
-                        points: _points.clone(),
+                        points: points.clone(),
                         ndim,
                         npoints,
                         simplices,
@@ -197,7 +197,7 @@ impl Delaunay {
                 let mut rng = rand::rng();
 
                 for i in 0..npoints {
-                    let mut pt = _points.row(i).to_vec();
+                    let mut pt = points.row(i).to_vec();
                     for val in pt.iter_mut().take(ndim) {
                         *val += rng.gen_range(-0.0001..0.0001);
                     }
@@ -223,7 +223,7 @@ impl Delaunay {
         let neighbors = Self::calculate_neighbors(&simplices, ndim + 1);
 
         Ok(Delaunay {
-            points: _points.clone(),
+            points: points.clone(),
             ndim,
             npoints,
             simplices,
@@ -318,7 +318,7 @@ impl Delaunay {
     }
 
     /// Insert a single constraint edge into the triangulation
-    fn insert_constraint_edge(&mut self, _start: usize, end: usize) -> SpatialResult<()> {
+    fn insert_constraint_edge(&mut self, start: usize, end: usize) -> SpatialResult<()> {
         // Check if the edge already exists in the triangulation
         if self.edge_exists(_start, end) {
             return Ok(()); // Edge already exists, nothing to do
@@ -346,7 +346,7 @@ impl Delaunay {
     }
 
     /// Check if an edge exists in the current triangulation
-    fn edge_exists(&self, _start: usize, end: usize) -> bool {
+    fn edge_exists(&self, start: usize, end: usize) -> bool {
         for simplex in &self.simplices {
             let simplex_size = simplex.len();
             // Check all edges of the simplex (triangle in 2D, tetrahedron in 3D)
@@ -354,7 +354,7 @@ impl Delaunay {
                 for j in (i + 1)..simplex_size {
                     let v1 = simplex[i];
                     let v2 = simplex[j];
-                    if (v1 == _start && v2 == end) || (v1 == end && v2 == _start) {
+                    if (v1 == _start && v2 == end) || (v1 == end && v2 == start) {
                         return true;
                     }
                 }
@@ -427,7 +427,7 @@ impl Delaunay {
     }
 
     /// Check if two line segments intersect
-    fn segments_intersect(_p1: [f64; 2], p2: [f64; 2], q1: [f64; 2], q2: [f64; 2]) -> bool {
+    fn segments_intersect(p1: [f64; 2], p2: [f64; 2], q1: [f64; 2], q2: [f64; 2]) -> bool {
         fn orientation(p: [f64; 2], q: [f64; 2], r: [f64; 2]) -> i32 {
             let val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1]);
             if val.abs() < 1e-10 {
@@ -452,7 +452,7 @@ impl Delaunay {
 
         let o1 = orientation(_p1, p2, q1);
         let o2 = orientation(_p1, p2, q2);
-        let o3 = orientation(q1, q2, _p1);
+        let o3 = orientation(q1, q2, p1);
         let o4 = orientation(q1, q2, p2);
 
         // General case
@@ -467,7 +467,7 @@ impl Delaunay {
         if o2 == 0 && on_segment(_p1, q2, p2) {
             return true;
         }
-        if o3 == 0 && on_segment(q1, _p1, q2) {
+        if o3 == 0 && on_segment(q1, p1, q2) {
             return true;
         }
         if o4 == 0 && on_segment(q1, p2, q2) {
@@ -479,16 +479,16 @@ impl Delaunay {
 
     /// Check if two 3D edges interfere enough to require constraint enforcement
     /// This is a simplified approach using distance-based criteria
-    fn edges_interfere_3d(_p1: &[f64], p2: &[f64], q1: &[f64], q2: &[f64]) -> bool {
+    fn edges_interfere_3d(p1: &[f64], p2: &[f64], q1: &[f64], q2: &[f64]) -> bool {
         // Calculate the closest distance between the two line segments in 3D
         let eps = 1e-6; // Distance threshold for interference
 
         // Vector from _p1 to p2
-        let u = [p2[0] - _p1[0], p2[1] - _p1[1], p2[2] - _p1[2]];
+        let u = [p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]];
         // Vector from q1 to q2
         let v = [q2[0] - q1[0], q2[1] - q1[1], q2[2] - q1[2]];
         // Vector from _p1 to q1
-        let w = [q1[0] - _p1[0], q1[1] - _p1[1], q1[2] - _p1[2]];
+        let w = [q1[0] - p1[0], q1[1] - p1[1], q1[2] - p1[2]];
 
         let u_dot_u = u[0] * u[0] + u[1] * u[1] + u[2] * u[2];
         let v_dot_v = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
@@ -523,9 +523,9 @@ impl Delaunay {
 
         // Calculate closest points
         let closest_p = [
-            _p1[0] + s_clamped * u[0],
-            _p1[1] + s_clamped * u[1],
-            _p1[2] + s_clamped * u[2],
+            p1[0] + s_clamped * u[0],
+            p1[1] + s_clamped * u[1],
+            p1[2] + s_clamped * u[2],
         ];
         let closest_q = [
             q1[0] + t_clamped * v[0],
@@ -542,7 +542,7 @@ impl Delaunay {
     }
 
     /// Find all triangles that contain any of the given edges
-    fn find_triangles_with_edges(&self, _edges: &[(usize, usize)]) -> Vec<usize> {
+    fn find_triangles_with_edges(&self, edges: &[(usize, usize)]) -> Vec<usize> {
         let mut triangles = HashSet::new();
 
         for (i, simplex) in self.simplices.iter().enumerate() {
@@ -557,11 +557,11 @@ impl Delaunay {
     }
 
     /// Check if a triangle contains a specific edge
-    fn triangle_contains_edge(&self, _triangle: &[usize], v1: usize, v2: usize) -> bool {
+    fn triangle_contains_edge(&self, triangle: &[usize], v1: usize, v2: usize) -> bool {
         for i in 0..3 {
             let j = (i + 1) % 3;
-            let t1 = _triangle[i];
-            let t2 = _triangle[j];
+            let t1 = triangle[i];
+            let t2 = triangle[j];
             if (t1 == v1 && t2 == v2) || (t1 == v2 && t2 == v1) {
                 return true;
             }
@@ -570,9 +570,9 @@ impl Delaunay {
     }
 
     /// Remove triangles from the triangulation
-    fn remove_triangles(&mut self, _triangle_indices: &[usize]) {
+    fn remove_triangles(&mut self, _triangleindices: &[usize]) {
         // Sort _indices in descending order to avoid index shifting issues
-        let mut sorted_indices = _triangle_indices.to_vec();
+        let mut sorted_indices = triangle_indices.to_vec();
         sorted_indices.sort_by(|a, b| b.cmp(a));
 
         for &idx in &sorted_indices {
@@ -616,7 +616,7 @@ impl Delaunay {
     }
 
     /// Extract all unique vertices from the affected triangles
-    fn extract_cavity_vertices(&self, _affected_triangles: &[usize]) -> Vec<usize> {
+    fn extract_cavity_vertices(&self, _affectedtriangles: &[usize]) -> Vec<usize> {
         let mut vertices = HashSet::new();
 
         for &triangle_idx in _affected_triangles {
@@ -687,7 +687,7 @@ impl Delaunay {
 
             // Check if this _triangle contains the edge v1-v2
             if self.triangle_contains_edge(simplex, v1, v2) {
-                return false; // Edge is shared with a non-affected _triangle, so not on boundary
+                return false; // Edge is shared with a non-affected triangle, so not on boundary
             }
         }
 
@@ -712,7 +712,7 @@ impl Delaunay {
             }
         }
 
-        // If we have interior _vertices, create triangles using fan triangulation
+        // If we have interior vertices, create triangles using fan triangulation
         if !interior_vertices.is_empty() {
             // Create fan triangulation from start vertex
             for i in 0..interior_vertices.len() {
@@ -755,7 +755,7 @@ impl Delaunay {
     }
 
     /// Check if three points form a valid triangle (not collinear)
-    fn points_form_valid_triangle(&self, _v1: usize, v2: usize, v3: usize) -> bool {
+    fn points_form_valid_triangle(&self, v1: usize, v2: usize, v3: usize) -> bool {
         if _v1 >= self.npoints || v2 >= self.npoints || v3 >= self.npoints {
             return false;
         }
@@ -810,9 +810,9 @@ impl Delaunay {
     /// # Returns
     ///
     /// * Vector of simplices, where each simplex is a vector of vertex indices
-    fn extract_simplices(_qh: &Qh, ndim: usize) -> Vec<Vec<usize>> {
+    fn extract_simplices(qh: &Qh, ndim: usize) -> Vec<Vec<usize>> {
         // Get all simplices (facets) that are not upper_delaunay
-        _qh.simplices()
+        qh.simplices()
             .filter(|f| !f.upper_delaunay())
             .filter_map(|f| {
                 let vertices = match f.vertices() {
@@ -842,15 +842,15 @@ impl Delaunay {
     /// # Returns
     ///
     /// * Vector of neighbor indices for each simplex
-    fn calculate_neighbors(_simplices: &[Vec<usize>], n: usize) -> Vec<Vec<i64>> {
-        let nsimplex = _simplices.len();
+    fn calculate_neighbors(simplices: &[Vec<usize>], n: usize) -> Vec<Vec<i64>> {
+        let nsimplex = simplices.len();
         let mut neighbors = vec![vec![-1; n]; nsimplex];
 
         // Build a map from (n-1)-faces to _simplices
         // A face is represented as a sorted vector of vertex indices
         let mut face_to_simplex: HashMap<Vec<usize>, Vec<(usize, usize)>> = HashMap::new();
 
-        for (i, simplex) in _simplices.iter().enumerate() {
+        for (i, simplex) in simplices.iter().enumerate() {
             for j in 0..n {
                 // Create a face by excluding vertex j
                 let mut face: Vec<usize> = simplex
@@ -868,7 +868,7 @@ impl Delaunay {
             }
         }
 
-        // For each face shared by two _simplices, update the neighbor information
+        // For each face shared by two simplices, update the neighbor information
         for (_, simplex_info) in face_to_simplex.iter() {
             if simplex_info.len() == 2 {
                 let (i1, j1) = simplex_info[0];

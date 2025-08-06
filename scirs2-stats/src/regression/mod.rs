@@ -134,7 +134,7 @@ where
     /// assert!((predictions[0] - 9.0f64).abs() < 1e-8f64);  // 1 + 2*4 = 9
     /// assert!((predictions[1] - 11.0f64).abs() < 1e-8f64); // 1 + 2*5 = 11
     /// ```
-    pub fn predict(&self, x_new: &ArrayView2<F>) -> StatsResult<Array1<F>>
+    pub fn predict(&self, xnew: &ArrayView2<F>) -> StatsResult<Array1<F>>
     where
         F: std::ops::Mul<Output = F> + std::iter::Sum<F>,
     {

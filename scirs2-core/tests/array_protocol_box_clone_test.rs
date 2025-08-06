@@ -11,7 +11,7 @@
 //
 
 use ndarray::Array2;
-use scirs2_core::array_protocol::{ArrayProtocol, NdarrayWrapper, NotImplemented};
+use scirs2_core::array_protocol::{ArrayFunction, ArrayProtocol, NdarrayWrapper, NotImplemented};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -35,19 +35,18 @@ impl MockDistributedArray {
 }
 
 impl ArrayProtocol for MockDistributedArray {
-    fn kwargs(
+    fn array_function(
         &self,
-        kwargs: &HashMap<String, Box<dyn Any>>,
+        _func: &ArrayFunction,
+        _types: &[TypeId],
+        _args: &[Box<dyn Any>],
+        _kwargs: &HashMap<String, Box<dyn Any>>,
     ) -> Result<Box<dyn Any>, NotImplemented> {
         Err(NotImplemented)
     }
 
     fn as_any(&self) -> &dyn Any {
         self
-    }
-
-    fn shape(&self) -> &[usize] {
-        &self.shape
     }
 
     fn box_clone(&self) -> Box<dyn ArrayProtocol> {
@@ -67,25 +66,25 @@ impl MockGPUArray {
     fn new(data: Vec<f64>, shape: Vec<usize>, device: String) -> Self {
         Self {
             data,
-            shape_device: device,
+            shape,
+            device,
         }
     }
 }
 
 impl ArrayProtocol for MockGPUArray {
-    fn kwargs(
+    fn array_function(
         &self,
-        kwargs: &HashMap<String, Box<dyn Any>>,
+        _func: &ArrayFunction,
+        _types: &[TypeId],
+        _args: &[Box<dyn Any>],
+        _kwargs: &HashMap<String, Box<dyn Any>>,
     ) -> Result<Box<dyn Any>, NotImplemented> {
         Err(NotImplemented)
     }
 
     fn as_any(&self) -> &dyn Any {
         self
-    }
-
-    fn shape(&self) -> &[usize] {
-        &self.shape
     }
 
     fn box_clone(&self) -> Box<dyn ArrayProtocol> {
@@ -103,7 +102,8 @@ struct JITEnabledArray<T, A: Clone> {
 impl<T, A: Clone> JITEnabledArray<T, A> {
     fn new(inner: A) -> Self {
         Self {
-            inner_phantom: PhantomData,
+            inner,
+            phantom: PhantomData,
         }
     }
 }
@@ -115,7 +115,7 @@ where
 {
     fn array_function(
         &self,
-        func: ArrayFunction,
+        func: &ArrayFunction,
         types: &[TypeId],
         args: &[Box<dyn Any>],
         kwargs: &HashMap<String, Box<dyn Any>>,
@@ -127,15 +127,8 @@ where
         self
     }
 
-    fn shape(&self) -> &[usize] {
-        self.inner.shape()
-    }
-
     fn box_clone(&self) -> Box<dyn ArrayProtocol> {
-        Box::new(JITEnabledArray {
-            inner: self.inner.clone(),
-            phantom: PhantomData::<T>,
-        })
+        Box::new(self.clone())
     }
 }
 
@@ -244,7 +237,7 @@ fn test_jit_array_box_clone() {
     let wrapped = NdarrayWrapper::new(array);
 
     // Create a JIT-enabled array
-    let jit_array = JITEnabledArray::<f64>::new(wrapped);
+    let jit_array = JITEnabledArray::<f64, _>::new(wrapped);
 
     // Box the array as an ArrayProtocol
     let boxed: Box<dyn ArrayProtocol> = Box::new(jit_array);

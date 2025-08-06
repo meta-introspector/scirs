@@ -623,9 +623,9 @@ where
         + ndarray::ScalarOperand,
 {
     /// Create new advanced survival analysis
-    pub fn new(_config: AdvancedSurvivalConfig<F>) -> Self {
+    pub fn new(config: AdvancedSurvivalConfig<F>) -> Self {
         Self {
-            config: _config,
+            config: config,
             models: HashMap::new(),
             performance: ModelPerformance {
                 concordance_indices: HashMap::new(),

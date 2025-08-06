@@ -5,11 +5,11 @@
 
 use crate::classification::{TextClassificationPipeline, TextFeatureSelector};
 use crate::embeddings::Word2Vec;
-use crate::enhanced__vectorize::{EnhancedCountVectorizer, EnhancedTfidfVectorizer};
+use crate::enhanced_vectorize::{EnhancedCountVectorizer, EnhancedTfidfVectorizer};
 use crate::error::{Result, TextError};
 use crate::multilingual::{Language, LanguageDetector};
 use crate::sentiment::LexiconSentimentAnalyzer;
-use crate::topic__modeling::LatentDirichletAllocation;
+use crate::topic_modeling::LatentDirichletAllocation;
 use crate::vectorize::{TfidfVectorizer, Vectorizer};
 use ndarray::{Array1, Array2};
 use std::collections::HashMap;
@@ -62,9 +62,9 @@ pub struct MLTextPreprocessor {
 
 impl MLTextPreprocessor {
     /// Create a new ML text preprocessor
-    pub fn new(_mode: FeatureExtractionMode) -> Self {
+    pub fn new(mode: FeatureExtractionMode) -> Self {
         Self {
-            _mode,
+            mode,
             tfidf_vectorizer: None,
             enhanced_vectorizer: None,
             word_embeddings: None,
@@ -77,9 +77,10 @@ impl MLTextPreprocessor {
 
     /// Configure TF-IDF parameters
     pub fn with_tfidf_params(
-        mut self_min_df: f64,
-        _max_df: f64,
-        _max_features: Option<usize>,
+        mut self,
+        min_df: f64,
+        max_df: f64,
+        max_features: Option<usize>,
     ) -> Self {
         // For now, use standard EnhancedTfidfVectorizer
         let vectorizer = EnhancedTfidfVectorizer::new();
@@ -88,7 +89,7 @@ impl MLTextPreprocessor {
     }
 
     /// Configure topic modeling
-    pub fn with_topic_modeling(mut self, n_topics: usize) -> Self {
+    pub fn with_topic_modeling(mut self, ntopics: usize) -> Self {
         self.topic_model = Some(LatentDirichletAllocation::with_n_topics(n_topics));
         self
     }
@@ -100,7 +101,7 @@ impl MLTextPreprocessor {
     }
 
     /// Configure feature selection
-    pub fn with_feature_selection(mut self, max_features: usize) -> Self {
+    pub fn with_feature_selection(mut self, maxfeatures: usize) -> Self {
         self.feature_selector = TextFeatureSelector::new()
             .set_max_features(max_features as f64)
             .ok();
@@ -359,7 +360,7 @@ impl MLTextPreprocessor {
         Ok(features)
     }
 
-    fn concatenate_features(&self, feature_arrays: &[Array2<f64>]) -> Result<Array2<f64>> {
+    fn concatenate_features(&self, featurearrays: &[Array2<f64>]) -> Result<Array2<f64>> {
         if feature_arrays.is_empty() {
             return Err(TextError::InvalidInput(
                 "No features to concatenate".to_string(),
@@ -404,9 +405,9 @@ impl TextMLPipeline {
     }
 
     /// Create a pipeline with specific feature extraction mode
-    pub fn with_mode(_mode: FeatureExtractionMode) -> Self {
+    pub fn with_mode(mode: FeatureExtractionMode) -> Self {
         Self {
-            preprocessor: MLTextPreprocessor::new(_mode),
+            preprocessor: MLTextPreprocessor::new(mode),
             classification_pipeline: None,
         }
     }
@@ -448,9 +449,9 @@ pub struct BatchTextProcessor {
 
 impl BatchTextProcessor {
     /// Create a new batch processor
-    pub fn new(_batch_size: usize) -> Self {
+    pub fn new(batchsize: usize) -> Self {
         Self {
-            _batch_size,
+            batch_size,
             preprocessor: MLTextPreprocessor::new(FeatureExtractionMode::TfIdf),
         }
     }
@@ -500,12 +501,12 @@ mod tests {
 
         for mode in modes {
             let preprocessor = MLTextPreprocessor::new(mode);
-            assert!(matches!(preprocessor.mode_));
+            assert!(matches!(preprocessor.mode, mode));
         }
     }
 
     #[test]
-    fn testtext_ml_pipeline() {
+    fn test_text_ml_pipeline() {
         let mut pipeline =
             TextMLPipeline::new().configure_preprocessor(|p| p.with_feature_selection(10));
 

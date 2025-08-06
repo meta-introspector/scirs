@@ -95,11 +95,11 @@ impl ApiCompatibilityTester {
     }
 
     /// Create a new compatibility tester with custom configuration
-    pub fn with_config(_config: CompatibilityConfig) -> Self {
+    pub fn with_config(config: CompatibilityConfig) -> Self {
         Self {
             results: Vec::new(),
             overall_score: 0.0,
-            _config,
+            config,
         }
     }
 
@@ -451,7 +451,7 @@ impl ApiCompatibilityTester {
         let input: Array2<f64> = Array2::zeros((10, 10));
 
         // Test zoom with scalar factor
-        let scalar_zoom_test = scipy_compat_layer::scipy, _ndimage::zoom(
+        let scalar_zoom_test = scipy_compat_layer::scipy_ndimage::zoom(
             input.view(),
             vec![2.0f64, 2.0f64],
             None,
@@ -468,7 +468,7 @@ impl ApiCompatibilityTester {
         }
 
         // Test zoom with interpolation order
-        let order_test = scipy_compat_layer::scipy, _ndimage::zoom(
+        let order_test = scipy_compat_layer::scipy_ndimage::zoom(
             input.view(),
             vec![2.0f64, 2.0f64],
             None,

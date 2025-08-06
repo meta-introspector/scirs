@@ -6,15 +6,15 @@
 use super::types::{ColorScheme, PlotStatistics};
 
 /// Generate color map values
-pub fn generate_colormap(_values: &[f64], scheme: ColorScheme) -> Vec<(u8, u8, u8)> {
-    let n = _values.len();
+pub fn generate_colormap(values: &[f64], scheme: ColorScheme) -> Vec<(u8, u8, u8)> {
+    let n = values.len();
     let mut colors = Vec::with_capacity(n);
 
-    let min_val = _values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let max_val = _values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    let min_val = values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let max_val = values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
     let range = max_val - min_val;
 
-    for &val in _values {
+    for &val in values {
         let normalized = if range > 0.0 {
             (val - min_val) / range
         } else {
@@ -64,8 +64,8 @@ fn inferno_color(t: f64) -> (u8, u8, u8) {
 }
 
 /// Calculate optimal grid resolution for vector field plots
-pub fn optimal_grid_resolution(_domain_size: (f64, f64), target_density: f64) -> (usize, usize) {
-    let (width, height) = _domain_size;
+pub fn optimal_grid_resolution(_domainsize: (f64, f64), target_density: f64) -> (usize, usize) {
+    let (width, height) = _domainsize;
     let area = width * height;
     let total_points = (area * target_density) as usize;
 
@@ -77,13 +77,13 @@ pub fn optimal_grid_resolution(_domain_size: (f64, f64), target_density: f64) ->
 }
 
 /// Create summary statistics for plot data
-pub fn plot_statistics(_data: &[f64]) -> PlotStatistics {
-    let n = _data.len() as f64;
-    let mean = _data.iter().sum::<f64>() / n;
-    let variance = _data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / n;
+pub fn plot_statistics(data: &[f64]) -> PlotStatistics {
+    let n = data.len() as f64;
+    let mean = data.iter().sum::<f64>() / n;
+    let variance = data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / n;
     let std_dev = variance.sqrt();
 
-    let mut sorted_data = _data.to_vec();
+    let mut sorted_data = data.to_vec();
     sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let min = sorted_data[0];
@@ -95,7 +95,7 @@ pub fn plot_statistics(_data: &[f64]) -> PlotStatistics {
     };
 
     PlotStatistics {
-        count: _data.len(),
+        count: data.len(),
         mean,
         std_dev,
         min,

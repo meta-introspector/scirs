@@ -51,21 +51,21 @@ impl CountVectorizer {
 
     /// Set maximum number of features
     #[allow(dead_code)]
-    pub fn with_max_features(mut self, max_features: usize) -> Self {
+    pub fn with_max_features(mut self, maxfeatures: usize) -> Self {
         self.max_features = Some(max_features);
         self
     }
 
     /// Set minimum document frequency
     #[allow(dead_code)]
-    pub fn with_min_df(mut self, min_df: f64) -> Self {
+    pub fn with_min_df(mut self, mindf: f64) -> Self {
         self.min_df = min_df;
         self
     }
 
     /// Set maximum document frequency
     #[allow(dead_code)]
-    pub fn with_max_df(mut self, max_df: f64) -> Self {
+    pub fn with_max_df(mut self, maxdf: f64) -> Self {
         self.max_df = max_df;
         self
     }
@@ -87,7 +87,7 @@ impl CountVectorizer {
 
     /// Set stop words
     #[allow(dead_code)]
-    pub fn with_stop_words(mut self, stop_words: Vec<String>) -> Self {
+    pub fn with_stop_words(mut self, stopwords: Vec<String>) -> Self {
         self.stop_words = stop_words.into_iter().collect();
         self
     }
@@ -156,7 +156,7 @@ impl CountVectorizer {
         self.vocabulary.clear();
         self.feature_names.clear();
 
-        for (idx, (term_)) in filtered_terms.into_iter().enumerate() {
+        for (idx, term) in filtered_terms.into_iter().enumerate() {
             self.vocabulary.insert(term.clone(), idx);
             self.feature_names.push(term);
         }
@@ -239,7 +239,7 @@ impl TfidfVectorizer {
 
     /// Set whether to use IDF weighting
     #[allow(dead_code)]
-    pub fn with_use_idf(mut self, use_idf: bool) -> Self {
+    pub fn with_use_idf(mut self, useidf: bool) -> Self {
         self.use_idf = use_idf;
         self
     }
@@ -253,14 +253,14 @@ impl TfidfVectorizer {
 
     /// Set whether to smooth IDF weights
     #[allow(dead_code)]
-    pub fn with_smooth_idf(mut self, smooth_idf: bool) -> Self {
+    pub fn with_smooth_idf(mut self, smoothidf: bool) -> Self {
         self.smooth_idf = smooth_idf;
         self
     }
 
     /// Set whether to use sublinear term frequency
     #[allow(dead_code)]
-    pub fn with_sublinear_tf(mut self, sublinear_tf: bool) -> Self {
+    pub fn with_sublinear_tf(mut self, sublineartf: bool) -> Self {
         self.sublinear_tf = sublinear_tf;
         self
     }
@@ -376,9 +376,9 @@ pub struct HashingVectorizer {
 
 impl HashingVectorizer {
     /// Create a new hashing vectorizer
-    pub fn new(_n_features: usize) -> Self {
+    pub fn new(_nfeatures: usize) -> Self {
         HashingVectorizer {
-            _n_features,
+            n_features,
             lowercase: true,
             token_pattern: Regex::new(r"\b\w+\b").unwrap(),
             binary: false,
@@ -500,7 +500,7 @@ impl StreamingCountVectorizer {
 
     /// Set maximum vocabulary size
     #[allow(dead_code)]
-    pub fn with_max_features(mut self, max_features: usize) -> Self {
+    pub fn with_max_features(mut self, maxfeatures: usize) -> Self {
         self.max_features = Some(max_features);
         self
     }
@@ -535,9 +535,9 @@ impl StreamingCountVectorizer {
                             if let Some((min_token_)) = self
                                 .vocabulary
                                 .iter()
-                                .min_by_key(|(t_)| self.doc_freq.get(*t).unwrap_or(&0))
+                                .min_by_key(|(t,)| self.doc_freq.get(t).unwrap_or(&0))
                             {
-                                let min_token = min_token.clone();
+                                let min_token = min_token_.clone();
                                 let min_freq = self.doc_freq.get(&min_token).unwrap_or(&0);
                                 let new_freq = self.doc_freq.get(&token).unwrap_or(&0);
 

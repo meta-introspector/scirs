@@ -36,6 +36,7 @@
 //! ```
 
 use ndarray::{Array1, Array2};
+use rand::Rng;
 use std::f64;
 use thiserror::Error;
 
@@ -381,13 +382,13 @@ impl<R: rand::Rng> LatinHypercubeSampler<R> {
 
             // Fisher-Yates shuffle
             for i in (1..n).rev() {
-                let j = self.rng.random_range(0, i + 1);
+                let j = self.rng.gen_range(0..i + 1);
                 permutation.swap(i, j);
             }
 
             // Convert to Latin hypercube coordinates
             for (idx, &perm_val) in permutation.iter().enumerate() {
-                let uniform_sample = self.rng.random_range(0.0, 1.0);
+                let uniform_sample = self.rng.gen_range(0.0..1.0);
                 let lh_value = (perm_val as f64 + uniform_sample) / n as f64;
                 points[[idx, dim]] = lh_value;
             }
@@ -453,7 +454,7 @@ pub struct FaureGenerator {
     dimension: usize,
     base: u32,
     current_index: u64,
-    pascal_matrix: Vec<Vec<u32>>,
+    pascalmatrix: Vec<Vec<u32>>,
 }
 
 impl FaureGenerator {
@@ -470,10 +471,10 @@ impl FaureGenerator {
             dimension,
             base,
             current_index: 0,
-            pascal_matrix: Vec::new(),
+            pascalmatrix: Vec::new(),
         };
 
-        generator.initialize_pascal_matrix();
+        generator.initialize_pascalmatrix();
         Ok(generator)
     }
 
@@ -487,25 +488,25 @@ impl FaureGenerator {
     }
 
     /// Initialize the Pascal matrix modulo the base
-    fn initialize_pascal_matrix(&mut self) {
+    fn initialize_pascalmatrix(&mut self) {
         let size = self.base as usize;
-        self.pascal_matrix = vec![vec![0; size]; size];
+        self.pascalmatrix = vec![vec![0; size]; size];
 
         // Initialize Pascal's triangle modulo base
         for i in 0..size {
-            self.pascal_matrix[i][0] = 1;
+            self.pascalmatrix[i][0] = 1;
             for j in 1..=i {
                 let prev_row = if i > 0 {
-                    self.pascal_matrix[i.saturating_sub(1)][j.saturating_sub(1)]
+                    self.pascalmatrix[i.saturating_sub(1)][j.saturating_sub(1)]
                 } else {
                     0
                 };
                 let prev_diag = if i > 0 && j < size {
-                    self.pascal_matrix[i.saturating_sub(1)][j]
+                    self.pascalmatrix[i.saturating_sub(1)][j]
                 } else {
                     0
                 };
-                self.pascal_matrix[i][j] = (prev_row + prev_diag) % self.base;
+                self.pascalmatrix[i][j] = (prev_row + prev_diag) % self.base;
             }
         }
     }
@@ -520,10 +521,10 @@ impl FaureGenerator {
             let digit = index % self.base as u64;
 
             // Apply scrambling based on dimension and Pascal matrix
-            let scrambled_digit = if dimension < self.pascal_matrix.len() {
+            let scrambled_digit = if dimension < self.pascalmatrix.len() {
                 (digit
-                    + self.pascal_matrix[dimension % self.pascal_matrix.len()]
-                        [digit as usize % self.pascal_matrix.len()] as u64)
+                    + self.pascalmatrix[dimension % self.pascalmatrix.len()]
+                        [digit as usize % self.pascalmatrix.len()] as u64)
                     % self.base as u64
             } else {
                 digit
@@ -788,8 +789,8 @@ mod tests {
     }
 
     #[test]
-    fn test_halton_prime_bases() {
-        let halton = HaltonGenerator::with_prime_bases(3).unwrap();
+    fn test_halton_primebases() {
+        let halton = HaltonGenerator::with_primebases(3).unwrap();
         assert_eq!(halton.bases(), &[2, 3, 5]);
     }
 

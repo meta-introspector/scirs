@@ -91,14 +91,14 @@ pub struct Domain {
 
 impl Domain {
     /// Create a new domain with given ranges and number of grid points
-    pub fn new(_ranges: Vec<Range<f64>>, grid_points: Vec<usize>) -> PDEResult<Self> {
-        if _ranges.len() != grid_points.len() {
+    pub fn new(ranges: Vec<Range<f64>>, grid_points: Vec<usize>) -> PDEResult<Self> {
+        if ranges.len() != grid_points.len() {
             return Err(PDEError::DomainError(
-                "Number of _ranges must match number of grid point specifications".to_string(),
+                "Number of ranges must match number of grid point specifications".to_string(),
             ));
         }
 
-        for (i, range) in _ranges.iter().enumerate() {
+        for (i, range) in ranges.iter().enumerate() {
             if range.start >= range.end {
                 return Err(PDEError::DomainError(format!(
                     "Invalid range for dimension {i}: start must be less than end"
@@ -107,13 +107,13 @@ impl Domain {
 
             if grid_points[i] < 3 {
                 return Err(PDEError::DomainError(format!(
-                    "At least 3 grid _points required for dimension {i}"
+                    "At least 3 grid points required for dimension {i}"
                 )));
             }
         }
 
         Ok(Domain {
-            ranges: _ranges,
+            ranges: ranges,
             grid_points,
         })
     }

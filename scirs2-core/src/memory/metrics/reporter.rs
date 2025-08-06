@@ -281,7 +281,7 @@ mod tests {
         let mut component_stats = HashMap::new();
 
         component_stats.insert(
-            Component1.to_string(),
+            "Component1".to_string(),
             ComponentMemoryStats {
                 current_usage: 1024,
                 peak_usage: 2048,
@@ -292,7 +292,7 @@ mod tests {
         );
 
         component_stats.insert(
-            Component2.to_string(),
+            "Component2".to_string(),
             ComponentMemoryStats {
                 current_usage: 512,
                 peak_usage: 1024,
@@ -317,8 +317,8 @@ mod tests {
         assert!(formatted.contains("Total Current Usage: 1.50 KB"));
         assert!(formatted.contains("Total Peak Usage: 3.00 KB"));
         assert!(formatted.contains("Total Allocations: 15"));
-        assert!(formatted.contains(Component1));
-        assert!(formatted.contains(Component2));
+        assert!(formatted.contains("Component1"));
+        assert!(formatted.contains("Component2"));
     }
 
     #[test]
@@ -326,7 +326,7 @@ mod tests {
         let mut component_stats = HashMap::new();
 
         component_stats.insert(
-            Component1.to_string(),
+            "Component1".to_string(),
             ComponentMemoryStats {
                 current_usage: 1024,
                 peak_usage: 2048,

@@ -1,5 +1,5 @@
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
 use rand::rng;
 use rand_distr::{Distribution, Normal};
 use scirs2_signal::{bss, SignalError, SignalResult};
@@ -32,9 +32,9 @@ fn main() -> SignalResult<()> {
 
 /// Generate source signals for testing
 #[allow(dead_code)]
-fn generate_test_signals(_n_samples: usize) -> Array2<f64> {
-    let mut sources = Array2::zeros((4, _n_samples));
-    let t = Array1::linspace(0.0, 10.0, _n_samples);
+fn generate_test_signals(_nsamples: usize) -> Array2<f64> {
+    let mut sources = Array2::zeros((4, n_samples));
+    let t = Array1::linspace(0.0, 10.0, n_samples);
 
     // Source 1: Sine wave
     for i in 0.._n_samples {
@@ -67,8 +67,8 @@ fn generate_test_signals(_n_samples: usize) -> Array2<f64> {
 
 /// Create a random mixing matrix
 #[allow(dead_code)]
-fn generate_mixing_matrix(_n_sources: usize, n_mixtures: usize) -> Array2<f64> {
-    let mut mixing = Array2::zeros((n_mixtures, _n_sources));
+fn generate_mixing_matrix(_n_sources: usize, nmixtures: usize) -> Array2<f64> {
+    let mut mixing = Array2::zeros((n_mixtures, n_sources));
     let mut rng = rng();
     let normal = Normal::new(0.0, 1.0).unwrap();
 
@@ -97,9 +97,9 @@ fn generate_mixing_matrix(_n_sources: usize, n_mixtures: usize) -> Array2<f64> {
 
 /// Add noise to signals
 #[allow(dead_code)]
-fn add_noise(_signals: &Array2<f64>, noise_level: f64) -> Array2<f64> {
-    let (n_signals, n_samples) = _signals.dim();
-    let mut noisy = _signals.clone();
+fn add_noise(_signals: &Array2<f64>, noiselevel: f64) -> Array2<f64> {
+    let (n_signals, n_samples) = signals.dim();
+    let mut noisy = signals.clone();
     let mut rng = rng();
     let normal = Normal::new(0.0, noise_level).unwrap();
 
@@ -114,8 +114,8 @@ fn add_noise(_signals: &Array2<f64>, noise_level: f64) -> Array2<f64> {
 
 /// Calculate correlation between original and recovered sources
 #[allow(dead_code)]
-fn calculate_correlations(_original: &Array2<f64>, recovered: &Array2<f64>) -> Array2<f64> {
-    let (n_orig, n_samples) = _original.dim();
+fn calculate_correlations(original: &Array2<f64>, recovered: &Array2<f64>) -> Array2<f64> {
+    let (n_orig, n_samples) = original.dim();
     let (n_rec_) = recovered.dim();
     let n = n_orig.min(n_rec);
 
@@ -124,7 +124,7 @@ fn calculate_correlations(_original: &Array2<f64>, recovered: &Array2<f64>) -> A
     for i in 0..n {
         for j in 0..n {
             // Calculate correlation coefficient
-            let orig = _original.slice(s![i, ..]);
+            let orig = original.slice(s![i, ..]);
             let rec = recovered.slice(s![j, ..]);
 
             let orig_mean = orig.mean().unwrap();
@@ -154,7 +154,7 @@ fn calculate_correlations(_original: &Array2<f64>, recovered: &Array2<f64>) -> A
 
 /// Find best source matching and calculate overall recovery quality
 #[allow(dead_code)]
-fn calculate_recovery_quality(_original: &Array2<f64>, recovered: &Array2<f64>) -> f64 {
+fn calculate_recovery_quality(original: &Array2<f64>, recovered: &Array2<f64>) -> f64 {
     let correlations = calculate_correlations(_original, recovered);
     let (n_orig, n_rec) = correlations.dim();
 
@@ -185,14 +185,14 @@ fn calculate_recovery_quality(_original: &Array2<f64>, recovered: &Array2<f64>) 
 
 /// Export signals to CSV for visualization
 #[allow(dead_code)]
-fn export_to_csv(_file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
+fn export_to_csv(_filename: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
     let mut file =
         File::create(_file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
 
     // Write header
     let header = signals
         .iter()
-        .map(|(name_)| _name.to_string())
+        .map(|(name_)| name.to_string())
         .collect::<Vec<String>>()
         .join(",");
     writeln!(file, "{}", header).map_err(|e| SignalError::ComputationError(e.to_string()))?;
@@ -327,9 +327,9 @@ fn ica_example() -> SignalResult<()> {
 
 /// Generate non-negative source signals for NMF testing
 #[allow(dead_code)]
-fn generate_non_negative_signals(_n_samples: usize) -> Array2<f64> {
-    let mut sources = Array2::zeros((3, _n_samples));
-    let t = Array1::linspace(0.0, 10.0, _n_samples);
+fn generate_non_negative_signals(_nsamples: usize) -> Array2<f64> {
+    let mut sources = Array2::zeros((3, n_samples));
+    let t = Array1::linspace(0.0, 10.0, n_samples);
 
     // Source 1: Half-rectified sine wave
     for i in 0.._n_samples {
@@ -543,9 +543,9 @@ fn pca_example() -> SignalResult<()> {
 
 /// Generate sparse source signals for SCA testing
 #[allow(dead_code)]
-fn generate_sparse_signals(_n_samples: usize) -> Array2<f64> {
-    let mut sources = Array2::zeros((3, _n_samples));
-    let t = Array1::linspace(0.0, 10.0, _n_samples);
+fn generate_sparse_signals(_nsamples: usize) -> Array2<f64> {
+    let mut sources = Array2::zeros((3, n_samples));
+    let t = Array1::linspace(0.0, 10.0, n_samples);
 
     // Source 1: Sparse spikes
     let _rng = rng();

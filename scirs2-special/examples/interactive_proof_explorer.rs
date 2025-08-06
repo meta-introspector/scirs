@@ -496,7 +496,7 @@ impl ProofExplorer {
         Ok(())
     }
 
-    fn start_proof_exploration(&self, proof_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+    fn start_proof_exploration(&self, proofid: &str) -> Result<(), Box<dyn std::error::Error>> {
         let proof = self.get_proof_by_id(proof_id).unwrap();
 
         println!("\n🎯 Starting Proof: {}", proof.title);
@@ -741,7 +741,7 @@ impl ProofExplorer {
         }
     }
 
-    fn create_visualization(&self, plot_type: &PlotType) -> Result<(), Box<dyn std::error::Error>> {
+    fn create_visualization(&self, plottype: &PlotType) -> Result<(), Box<dyn std::error::Error>> {
         match plot_type {
             PlotType::FunctionGraph { domain, functions } => {
                 println!("📈 Function Graph:");
@@ -1567,8 +1567,8 @@ fn wait_for_user_input() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn get_user_input(_prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
-    print!("{}", _prompt);
+fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
+    print!("{}", prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;

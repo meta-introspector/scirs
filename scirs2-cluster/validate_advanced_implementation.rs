@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn analyze_modules(src_dir: &Path) -> Result<Vec<ModuleAnalysis>, Box<dyn std::error::Error>> {
+fn analyze_modules(srcdir: &Path) -> Result<Vec<ModuleAnalysis>, Box<dyn std::error::Error>> {
     let mut modules = Vec::new();
 
     // Define key modules to analyze
@@ -121,7 +121,7 @@ fn analyze_modules(src_dir: &Path) -> Result<Vec<ModuleAnalysis>, Box<dyn std::e
 }
 
 #[allow(dead_code)]
-fn analyze_single_module(_path: &Path, name: &str) -> Result<ModuleAnalysis, Box<dyn std::error::Error>> {
+fn analyze_single_module(path: &Path, name: &str) -> Result<ModuleAnalysis, Box<dyn std::error::Error>> {
     let content = fs::read_to_string(_path)?;
     let lines: Vec<&str> = content.lines().collect();
     
@@ -154,7 +154,7 @@ fn analyze_single_module(_path: &Path, name: &str) -> Result<ModuleAnalysis, Box
 
     Ok(ModuleAnalysis {
         name: name.to_string(),
-        _path: _path.display().to_string(),
+        _path: path.display().to_string(),
         lines_of_code,
         functions,
         structs,
@@ -168,7 +168,7 @@ fn analyze_single_module(_path: &Path, name: &str) -> Result<ModuleAnalysis, Box
 }
 
 #[allow(dead_code)]
-fn count_pattern(_content: &str, pattern: &str) -> usize {
+fn count_pattern(content: &str, pattern: &str) -> usize {
     regex::Regex::new(pattern)
         .unwrap_or_else(|_| regex::Regex::new(r"").unwrap())
         .find_iter(_content)
@@ -176,7 +176,7 @@ fn count_pattern(_content: &str, pattern: &str) -> usize {
 }
 
 #[allow(dead_code)]
-fn identify_advanced_features(_content: &str) -> Vec<String> {
+fn identify_advanced_features(content: &str) -> Vec<String> {
     let mut features = Vec::new();
     
     let feature_patterns = vec![
@@ -232,9 +232,9 @@ fn assess_completion_status(
 }
 
 #[allow(dead_code)]
-fn generate_validation_report(_modules: Vec<ModuleAnalysis>) -> Result<ValidationReport, Box<dyn std::error::Error>> {
-    let total_modules = _modules.len();
-    let total_lines = _modules.iter().map(|m| m.lines_of_code).sum();
+fn generate_validation_report(modules: Vec<ModuleAnalysis>) -> Result<ValidationReport, Box<dyn std::error::Error>> {
+    let total_modules = modules.len();
+    let total_lines = modules.iter().map(|m| m.lines_of_code).sum();
     
     let mut completion_statistics = HashMap::new();
     for module in &_modules {
@@ -274,26 +274,26 @@ fn generate_validation_report(_modules: Vec<ModuleAnalysis>) -> Result<Validatio
         advanced_features_count,
         critical_issues,
         recommendations,
-        module_analyses: _modules,
+        module_analyses: modules,
     })
 }
 
 #[allow(dead_code)]
-fn display_validation_report(_report: &ValidationReport) {
+fn display_validation_report(report: &ValidationReport) {
     println!();
     println!("📊 VALIDATION RESULTS");
     println!("====================");
     println!();
     
     println!("📈 Overall Statistics:");
-    println!("  • Total modules analyzed: {}", _report.total_modules);
-    println!("  • Total lines of code: {}", _report.total_lines);
-    println!("  • Advanced features identified: {}", _report.advanced_features_count);
+    println!("  • Total modules analyzed: {}", report.total_modules);
+    println!("  • Total lines of code: {}", report.total_lines);
+    println!("  • Advanced features identified: {}", report.advanced_features_count);
     println!();
 
     println!("🎯 Completion Status:");
     for (status, count) in &_report.completion_statistics {
-        let percentage = (*count as f64 / _report.total_modules as f64) * 100.0;
+        let percentage = (*count as f64 / report.total_modules as f64) * 100.0;
         println!("  • {:?}: {} modules ({:.1}%)", status, count, percentage);
     }
     println!();
@@ -307,7 +307,7 @@ fn display_validation_report(_report: &ValidationReport) {
     }
 
     println!("💡 Top Modules by Advanced Features:");
-    let mut sorted_modules = _report.module_analyses.clone();
+    let mut sorted_modules = report.module_analyses.clone();
     sorted_modules.sort_by(|a, b| b.advanced_features.len().cmp(&a.advanced_features.len()));
     
     for (i, module) in sorted_modules.iter().take(5).enumerate() {
@@ -321,30 +321,30 @@ fn display_validation_report(_report: &ValidationReport) {
 
     if !_report.recommendations.is_empty() {
         println!("💡 Recommendations:");
-        for rec in _report.recommendations.iter().take(5) {
+        for rec in report.recommendations.iter().take(5) {
             println!("  • {}", rec);
         }
-        if _report.recommendations.len() > 5 {
-            println!("  • ... and {} more (see detailed _report)", _report.recommendations.len() - 5);
+        if report.recommendations.len() > 5 {
+            println!("  • ... and {} more (see detailed report)", report.recommendations.len() - 5);
         }
     }
 }
 
 #[allow(dead_code)]
-fn save_detailed_report(_report: &ValidationReport) -> Result<(), Box<dyn std::error::Error>> {
+fn save_detailed_report(report: &ValidationReport) -> Result<(), Box<dyn std::error::Error>> {
     let mut content = String::new();
     
     content.push_str("# Advanced Clustering Implementation Validation Report\n\n");
     content.push_str(&format!("Generated: {}\n\n", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC")));
     
     content.push_str("## Executive Summary\n\n");
-    content.push_str(&format!("- **Total Modules**: {}\n", _report.total_modules));
-    content.push_str(&format!("- **Total Lines of Code**: {}\n", _report.total_lines));
-    content.push_str(&format!("- **Advanced Features**: {}\n", _report.advanced_features_count));
+    content.push_str(&format!("- **Total Modules**: {}\n", report.total_modules));
+    content.push_str(&format!("- **Total Lines of Code**: {}\n", report.total_lines));
+    content.push_str(&format!("- **Advanced Features**: {}\n", report.advanced_features_count));
     
-    let complete_modules = _report.completion_statistics.get(&CompletionStatus::Complete).unwrap_or(&0);
-    let nearly_complete = _report.completion_statistics.get(&CompletionStatus::NearlyComplete).unwrap_or(&0);
-    let implementation_rate = ((*complete_modules + *nearly_complete) as f64 / _report.total_modules as f64) * 100.0;
+    let complete_modules = report.completion_statistics.get(&CompletionStatus::Complete).unwrap_or(&0);
+    let nearly_complete = report.completion_statistics.get(&CompletionStatus::NearlyComplete).unwrap_or(&0);
+    let implementation_rate = ((*complete_modules + *nearly_complete) as f64 / report.total_modules as f64) * 100.0;
     content.push_str(&format!("- **Implementation Rate**: {:.1}%\n\n", implementation_rate));
 
     content.push_str("## Module Analysis\n\n");
@@ -380,7 +380,7 @@ fn save_detailed_report(_report: &ValidationReport) -> Result<(), Box<dyn std::e
 
     if !_report.recommendations.is_empty() {
         content.push_str("## Recommendations\n\n");
-        for (i, rec) in _report.recommendations.iter().enumerate() {
+        for (i, rec) in report.recommendations.iter().enumerate() {
             content.push_str(&format!("{}. {}\n", i + 1, rec));
         }
     }
@@ -401,7 +401,7 @@ mod chrono {
     
     pub struct DateTime;
     impl DateTime {
-        pub fn format(&self_: &str) -> String {
+        pub fn format(self_: &str) -> String {
             "2024-01-01 00:00:00".to_string()
         }
     }
@@ -414,8 +414,8 @@ mod regex {
     }
     
     impl Regex {
-        pub fn new(_pattern: &str) -> Result<Self, ()> {
-            Ok(Regex { _pattern: _pattern.to_string() })
+        pub fn new(pattern: &str) -> Result<Self, ()> {
+            Ok(Regex { pattern: pattern.to_string() })
         }
         
         pub fn is_match(&self, text: &str) -> bool {

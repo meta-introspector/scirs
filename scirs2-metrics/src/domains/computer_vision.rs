@@ -107,7 +107,7 @@ impl ObjectDetectionMetrics {
         // Filter predictions by confidence
         let filtered_preds: Vec<_> = predictions
             .iter()
-            .filter(|(____, conf_)| *conf >= self.confidence_threshold)
+            .filter(|(_, _, _, _, conf, _)| *conf >= self.confidence_threshold)
             .collect();
 
         // Calculate IoU for all prediction-ground _truth pairs
@@ -126,7 +126,7 @@ impl ObjectDetectionMetrics {
         });
 
         for (_, pred) in sorted_preds {
-            let (px1, py1, px2, py2_conf, pred_class) = *pred;
+            let (px1, py1, px2, py2, conf, pred_class) = *pred;
             let mut best_iou = 0.0;
             let mut best_gt_idx = None;
 
@@ -161,7 +161,7 @@ impl ObjectDetectionMetrics {
             }
         }
 
-        // Count false negatives (unmatched ground _truth)
+        // Count false negatives (unmatched ground truth)
         for (gt_idx, gt) in ground_truth.iter().enumerate() {
             if !gt_matched[gt_idx] {
                 let (____, gt_class) = *gt;
@@ -293,7 +293,7 @@ impl ImageClassificationMetrics {
     }
 
     /// Set top-k values to calculate
-    pub fn with_top_k(mut self, top_k: Vec<usize>) -> Self {
+    pub fn with_top_k(mut self, topk: Vec<usize>) -> Self {
         self.top_k = top_k;
         self
     }
@@ -392,7 +392,7 @@ impl ImageClassificationMetrics {
                 .row(i)
                 .iter()
                 .enumerate()
-                .map(|(idx, &_prob)| (idx, _prob))
+                .map(|(idx, &_prob)| (idx, prob))
                 .collect();
 
             probs_with_idx
@@ -401,7 +401,7 @@ impl ImageClassificationMetrics {
             let top_k_classes: Vec<usize> = probs_with_idx
                 .into_iter()
                 .take(k)
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .collect();
 
             if top_k_classes.contains(&(true_label as usize)) {
@@ -431,7 +431,7 @@ impl SegmentationMetrics {
     }
 
     /// Set index to ignore in calculations (e.g., background class)
-    pub fn with_ignore_index(mut self, ignore_index: i32) -> Self {
+    pub fn with_ignore_index(mut self, ignoreindex: i32) -> Self {
         self.ignore_index = Some(ignore_index);
         self
     }
@@ -545,9 +545,9 @@ impl SegmentationMetrics {
                 let pred_positive = *pred_pixel == class;
 
                 match (true_positive, pred_positive) {
-                    (_true, _true) => tp += 1,
-                    (false, _true) => fp += 1,
-                    (_true, false) => fn_count += 1,
+                    (true, true) => tp += 1,
+                    (false, true) => fp += 1,
+                    (true, false) => fn_count += 1,
                     (false, false) => {} // TN
                 }
             }

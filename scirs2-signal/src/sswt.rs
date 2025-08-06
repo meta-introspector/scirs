@@ -1,8 +1,8 @@
-use ndarray::s;
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use crate::wavelets;
-use ndarray::{ Array1, Array2};
+use ndarray::s;
+use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use num_traits::Float;
 use std::f64::consts::PI;
@@ -304,7 +304,7 @@ fn perform_synchrosqueezing(
 
 /// Find the index of the closest frequency bin
 #[allow(dead_code)]
-fn find_closest_freq_bin(_freq: f64, frequencies: &Array1<f64>) -> usize {
+fn find_closest_freq_bin(freq: f64, frequencies: &Array1<f64>) -> usize {
     let mut closest_idx = 0;
     let mut min_diff = f64::INFINITY;
 
@@ -342,9 +342,9 @@ fn find_closest_freq_bin(_freq: f64, frequencies: &Array1<f64>) -> usize {
 /// assert!(scales[31] <= 64.0 && scales[31] >= scales[30]);
 /// ```
 #[allow(dead_code)]
-pub fn log_scales(_min_scale: f64, max_scale: f64, n_scales: usize) -> Array1<f64> {
-    if _min_scale <= 0.0 || max_scale <= 0.0 || _min_scale >= max_scale {
-        panic!("Scales must be positive with _min_scale < max_scale");
+pub fn log_scales(min_scale: f64, max_scale: f64, nscales: usize) -> Array1<f64> {
+    if min_scale <= 0.0 || max_scale <= 0.0 || min_scale >= max_scale {
+        panic!("Scales must be positive with min_scale < max_scale");
     }
 
     let min_log = min_scale.ln();
@@ -377,9 +377,9 @@ pub fn log_scales(_min_scale: f64, max_scale: f64, n_scales: usize) -> Array1<f6
 /// assert!(freqs[63] <= 64.0 && freqs[63] >= freqs[62]);
 /// ```
 #[allow(dead_code)]
-pub fn frequency_bins(_min_freq: f64, max_freq: f64, n_freqs: usize) -> Array1<f64> {
-    if _min_freq < 0.0 || max_freq <= 0.0 || _min_freq >= max_freq {
-        panic!("Frequencies must be non-negative with _min_freq < max_freq");
+pub fn frequency_bins(min_freq: f64, max_freq: f64, nfreqs: usize) -> Array1<f64> {
+    if min_freq < 0.0 || max_freq <= 0.0 || min_freq >= max_freq {
+        panic!("Frequencies must be non-negative with min_freq < max_freq");
     }
 
     Array1::linspace(min_freq, max_freq, n_freqs)
@@ -427,7 +427,7 @@ pub fn extract_ridges(
             if let Some((idx, &mag)) = magnitudes
                 .iter()
                 .enumerate()
-                .filter(|(idx_)| !peak_indices.contains(idx))
+                .filter(|(idx, _)| !peak_indices.contains(idx))
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
             {
                 // Only add if magnitude is significant
@@ -442,16 +442,16 @@ pub fn extract_ridges(
 
         // Update ridge structures
         for (i, &freq_idx) in peak_indices.iter().enumerate() {
-            if i >= _ridges.len() {
-                _ridges.push(Vec::new());
+            if i >= ridges.len() {
+                ridges.push(Vec::new());
             }
 
-            _ridges[i].push((t, frequencies[freq_idx]));
+            ridges[i].push((t, frequencies[freq_idx]));
         }
     }
 
     // Sort _ridges by total energy
-    _ridges.sort_by(|a, b| {
+    ridges.sort_by(|a, b| {
         // Calculate total energy for each ridge
         let energy_a: f64 = a
             .iter()
@@ -526,6 +526,7 @@ pub fn reconstruct_from_ridge(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_log_scales() {

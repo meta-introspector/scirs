@@ -6,9 +6,9 @@ use scirs2_core::ndarray_ext::manipulation::{
 };
 
 #[allow(dead_code)]
-fn print_title(_title: &str) {
-    println!("\n{_title}");
-    println!("{}", "=".repeat(_title.len()));
+fn print_title(title: &str) {
+    println!("\n{title}");
+    println!("{}", "=".repeat(title.len()));
 }
 
 #[allow(dead_code)]
@@ -22,7 +22,7 @@ fn main() {
     let c = array![[5, 2, 3], [4, 1, 6]];
 
     // Demonstrate meshgrid
-    print_section(Meshgrid);
+    print_title("Meshgrid");
 
     let x = array![1, 2, 3];
     let y = array![4, 5];
@@ -38,7 +38,7 @@ fn main() {
     println!("{y_grid}");
 
     // Demonstrate unique
-    print_section("Unique Values");
+    print_title("Unique Values");
 
     println!("Input array with duplicates:");
     println!("{b}");
@@ -48,7 +48,7 @@ fn main() {
     println!("{unique_values}");
 
     // Demonstrate argmin and argmax
-    print_section("Finding Min/Max Indices");
+    print_title("Finding Min/Max Indices");
 
     println!("Input array:");
     println!("{c}");
@@ -80,7 +80,7 @@ fn main() {
     println!("{}", max_index[0]);
 
     // Demonstrate gradient
-    print_section("Numerical Gradient");
+    print_title("Numerical Gradient");
 
     println!("Input array:");
     println!("{a}");
@@ -100,7 +100,7 @@ fn main() {
     println!("{grad_x}");
 
     // Demonstrate array manipulations
-    print_section("Array Manipulations");
+    print_title("Array Manipulations");
 
     println!("Original array:");
     println!("{a}");
@@ -126,10 +126,10 @@ fn main() {
     println!("{padded}");
 
     // Complete example - calculating the magnitude of the gradient (like in image processing)
-    print_section("Complete Example: Gradient Magnitude");
+    print_title("Complete Example: Gradient Magnitude");
 
     // Create a sample 2D function (like an image)
-    let img: Array<f64_> = Array::fromshape_fn((5, 5), |(i, j)| {
+    let img: Array<f64, _> = Array::from_shape_fn((5, 5), |(i, j)| {
         if i > 1 && i < 4 && j > 1 && j < 4 {
             10.0 // Higher value in the center
         } else {

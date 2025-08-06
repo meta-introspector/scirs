@@ -68,9 +68,9 @@ impl<F> ParallelBatchProcessor<F>
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum + std::fmt::Display,
 {
-    pub fn new(_config: AdvancedParallelConfig) -> Self {
+    pub fn new(config: AdvancedParallelConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -219,9 +219,9 @@ impl<F> ParallelCrossValidator<F>
 where
     F: Float + NumCast + Send + Sync + std::fmt::Display,
 {
-    pub fn new(_k_folds: usize, config: AdvancedParallelConfig) -> Self {
+    pub fn new(_kfolds: usize, config: AdvancedParallelConfig) -> Self {
         Self {
-            k_folds: _k_folds,
+            k_folds: k_folds,
             config,
             _phantom: std::marker::PhantomData,
         }
@@ -341,9 +341,9 @@ impl<F> ParallelMonteCarlo<F>
 where
     F: Float + NumCast + Send + Sync + std::fmt::Display,
 {
-    pub fn new(_n_simulations: usize, config: AdvancedParallelConfig) -> Self {
+    pub fn new(_nsimulations: usize, config: AdvancedParallelConfig) -> Self {
         Self {
-            n_simulations: _n_simulations,
+            n_simulations: n_simulations,
             config,
             _phantom: std::marker::PhantomData,
         }
@@ -387,7 +387,7 @@ where
 
                 for i in 0..n {
                     use rand::Rng;
-                    let idx = rng.random_range(0..n);
+                    let idx = rng.gen_range(0..n);
                     bootstrap_sample[i] = data_arc[idx];
                 }
 

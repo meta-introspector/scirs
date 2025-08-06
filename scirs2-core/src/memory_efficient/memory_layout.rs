@@ -213,44 +213,44 @@ impl MemoryLayout {
     }
 
     /// Check if strides represent C-order
-    fn is_c_order(shape: &[usize], strides: &[isize], element_size: usize) -> bool {
+    fn is_c_order(shape: &[usize], strides: &[isize], elementsize: usize) -> bool {
         if shape.len() != strides.len() {
             return false;
         }
 
-        let expected_strides = Self::calculate_strides(shape, LayoutOrder::C, element_size);
+        let expected_strides = Self::calculate_strides(shape, LayoutOrder::C, elementsize);
         strides == expected_strides
     }
 
     /// Check if strides represent F-order
-    fn is_f_order(shape: &[usize], strides: &[isize], element_size: usize) -> bool {
+    fn is_f_order(shape: &[usize], strides: &[isize], elementsize: usize) -> bool {
         if shape.len() != strides.len() {
             return false;
         }
 
-        let expected_strides = Self::calculate_strides(shape, LayoutOrder::Fortran, element_size);
+        let expected_strides = Self::calculate_strides(shape, LayoutOrder::Fortran, elementsize);
         strides == expected_strides
     }
 
     /// Check if layout is contiguous
-    fn check_contiguous(shape: &[usize], strides: &[isize], element_size: usize) -> bool {
-        Self::is_c_order(shape, strides, element_size)
-            || Self::is_f_order(shape, strides, element_size)
+    fn check_contiguous(shape: &[usize], strides: &[isize], elementsize: usize) -> bool {
+        Self::is_c_order(shape, strides, elementsize)
+            || Self::is_f_order(shape, strides, elementsize)
     }
 
     /// Convert to different layout order
-    pub fn to_order(&self, new_order: LayoutOrder) -> CoreResult<Self> {
-        if new_order == LayoutOrder::Keep {
+    pub fn to_order(&self, neworder: LayoutOrder) -> CoreResult<Self> {
+        if neworder == LayoutOrder::Keep {
             return Ok(self.clone());
         }
 
-        if new_order == LayoutOrder::Any {
+        if neworder == LayoutOrder::Any {
             return Ok(self.clone());
         }
 
         Ok(Self::new_with_order(
             &self.shape,
-            new_order,
+            neworder,
             self.element_size,
             self.alignment,
         ))
@@ -291,19 +291,19 @@ impl MemoryLayout {
     }
 
     /// Get multi-dimensional indices for linear index
-    pub fn multi_indices(&self, linear_idx: usize) -> CoreResult<Vec<usize>> {
+    pub fn multi_indices(&self, linearidx: usize) -> CoreResult<Vec<usize>> {
         let total_elements = self.shape.iter().product::<usize>();
-        if linear_idx >= total_elements {
+        if linearidx >= total_elements {
             return Err(CoreError::IndexError(
                 ErrorContext::new(format!(
-                    "Linear index {linear_idx} is out of bounds for array with {total_elements} elements"
+                    "Linear index {linearidx} is out of bounds for array with {total_elements} elements"
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
         }
 
         let mut indices = vec![0; self.shape.len()];
-        let mut remaining = linear_idx;
+        let mut remaining = linearidx;
 
         match self.order {
             LayoutOrder::C => {

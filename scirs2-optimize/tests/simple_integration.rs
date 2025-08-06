@@ -12,11 +12,11 @@ use scirs2_optimize::stochastic::{
 struct QuadraticFunction;
 
 impl StochasticGradientFunction for QuadraticFunction {
-    fn compute_gradient(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> Array1<f64> {
+    fn compute_gradient(&mut self, x: &ArrayView1<f64>, _batchdata: &[f64]) -> Array1<f64> {
         x.mapv(|xi| 2.0 * xi)
     }
 
-    fn compute_value(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> f64 {
+    fn compute_value(&mut self, x: &ArrayView1<f64>, _batchdata: &[f64]) -> f64 {
         x.mapv(|xi| xi * xi).sum()
     }
 }

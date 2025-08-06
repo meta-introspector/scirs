@@ -331,16 +331,16 @@ impl CudaBackend {
         Ok(1) // Assume 1 device for testing
     }
 
-    fn create_context(_device_id: i32) -> NdimageResult<CudaContext> {
+    fn create_context(_deviceid: i32) -> NdimageResult<CudaContext> {
         // Placeholder: would initialize CUDA context and stream
         Ok(CudaContext {
             context: 0x1000, // Dummy context handle
-            _device_id,
+            device_id,
             stream: 0x2000, // Dummy stream handle
         })
     }
 
-    fn get_device_properties(_device_id: i32) -> NdimageResult<CudaDeviceProperties> {
+    fn get_device_properties(_deviceid: i32) -> NdimageResult<CudaDeviceProperties> {
         // Placeholder: would query actual device properties
         Ok(CudaDeviceProperties {
             name: "GeForce RTX 4090".to_string(),
@@ -358,7 +358,7 @@ impl CudaBackend {
         Ok(0x10000000 + size) // Dummy device pointer
     }
 
-    fn cuda_free(&self, device_ptr: usize) -> NdimageResult<()> {
+    fn cuda_free(&self, deviceptr: usize) -> NdimageResult<()> {
         // Placeholder: would call cudaFree
         Ok(())
     }
@@ -641,7 +641,7 @@ impl OpenCLBackend {
         })
     }
 
-    fn get_device_properties(_context: &OpenCLContext) -> NdimageResult<OpenCLDeviceProperties> {
+    fn get_device_properties(context: &OpenCLContext) -> NdimageResult<OpenCLDeviceProperties> {
         // Placeholder: would query actual OpenCL device properties
         Ok(OpenCLDeviceProperties {
             name: "AMD Radeon RX 7900 XTX".to_string(),

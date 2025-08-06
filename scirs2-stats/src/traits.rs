@@ -138,7 +138,7 @@ pub trait DiscreteDistribution<F: Float>: Distribution<F> {
     }
 
     /// Percent point function (inverse CDF)
-    fn ppf(&self, _p: F) -> StatsResult<F> {
+    fn ppf(&self, p: F) -> StatsResult<F> {
         Err(crate::error::StatsError::NotImplementedError(
             "PPF not implemented for this discrete distribution".to_string(),
         ))
@@ -273,7 +273,7 @@ pub trait Fittable<F: Float> {
     /// # Returns
     ///
     /// A fitted distribution instance
-    fn fit(_data: &Array1<F>) -> StatsResult<Self>
+    fn fit(data: &Array1<F>) -> StatsResult<Self>
     where
         Self: Sized;
 
@@ -286,7 +286,7 @@ pub trait Fittable<F: Float> {
     /// # Returns
     ///
     /// A tuple of estimated parameters
-    fn mle(_data: &Array1<F>) -> StatsResult<Vec<F>>;
+    fn mle(data: &Array1<F>) -> StatsResult<Vec<F>>;
 }
 
 /// Trait for distributions that can be truncated

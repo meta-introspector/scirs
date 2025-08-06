@@ -25,13 +25,13 @@ pub struct MultiParticleEntanglement {
 
 impl MultiParticleEntanglement {
     /// Create new multi-particle entangled system
-    pub fn new(n_particles: usize, masses: Array1<f64>) -> Self {
-        let hilbert_dim = 2_usize.pow(n_particles as u32); // For spin-1/2 particles
+    pub fn new(nparticles: usize, masses: Array1<f64>) -> Self {
+        let hilbert_dim = 2_usize.pow(nparticles as u32); // For spin-1/2 particles
         let state = Array1::zeros(hilbert_dim);
-        let interactions = Array2::zeros((n_particles, n_particles));
+        let interactions = Array2::zeros((nparticles, nparticles));
 
         Self {
-            n_particles,
+            n_particles: nparticles,
             hilbert_dim,
             state,
             masses,
@@ -40,7 +40,7 @@ impl MultiParticleEntanglement {
     }
 
     /// Create Bell state (two-particle entanglement)
-    pub fn create_bell_state(&mut self, bell_type: BellState) -> Result<()> {
+    pub fn create_bell_state(&mut self, belltype: BellState) -> Result<()> {
         if self.n_particles != 2 {
             return Err(IntegrateError::InvalidInput(
                 "Bell states require exactly 2 particles".to_string(),
@@ -50,7 +50,7 @@ impl MultiParticleEntanglement {
         let inv_sqrt2 = 1.0 / (2.0_f64).sqrt();
         self.state = Array1::zeros(4);
 
-        match bell_type {
+        match belltype {
             BellState::PhiPlus => {
                 // |Φ⁺⟩ = (|00⟩ + |11⟩)/√2
                 self.state[0] = Complex64::new(inv_sqrt2, 0.0); // |00⟩
@@ -115,9 +115,9 @@ impl MultiParticleEntanglement {
     }
 
     /// Calculate entanglement entropy (von Neumann entropy)
-    pub fn calculate_entanglement_entropy(&self, subsystem_qubits: &[usize]) -> Result<f64> {
+    pub fn calculate_entanglement_entropy(&self, subsystemqubits: &[usize]) -> Result<f64> {
         // Calculate reduced density matrix for the subsystem
-        let rho_sub = self.reduced_density_matrix(subsystem_qubits)?;
+        let rho_sub = self.reduced_density_matrix(subsystemqubits)?;
 
         // Calculate eigenvalues of reduced density matrix
         let eigenvalues = self.compute_eigenvalues(&rho_sub)?;
@@ -134,8 +134,8 @@ impl MultiParticleEntanglement {
     }
 
     /// Calculate reduced density matrix for a subsystem
-    fn reduced_density_matrix(&self, subsystem_qubits: &[usize]) -> Result<Array2<Complex64>> {
-        let subsystem_size = subsystem_qubits.len();
+    fn reduced_density_matrix(&self, subsystemqubits: &[usize]) -> Result<Array2<Complex64>> {
+        let subsystem_size = subsystemqubits.len();
         let subsystem_dim = 1 << subsystem_size;
         let mut rho_sub = Array2::zeros((subsystem_dim, subsystem_dim));
 
@@ -149,8 +149,8 @@ impl MultiParticleEntanglement {
                 let env_dim = 1 << env_size;
 
                 for env_config in 0..env_dim {
-                    let full_i = self.combine_subsystem_env(i, env_config, subsystem_qubits);
-                    let full_j = self.combine_subsystem_env(j, env_config, subsystem_qubits);
+                    let full_i = self.combine_subsystem_env(i, env_config, subsystemqubits);
+                    let full_j = self.combine_subsystem_env(j, env_config, subsystemqubits);
 
                     if full_i < self.hilbert_dim && full_j < self.hilbert_dim {
                         sum += self.state[full_i].conj() * self.state[full_j];
@@ -338,14 +338,14 @@ impl MultiParticleEntanglement {
     }
 
     /// Set the quantum state (with normalization)
-    pub fn set_state(&mut self, new_state: Array1<Complex64>) -> Result<()> {
-        if new_state.len() != self.hilbert_dim {
+    pub fn set_state(&mut self, newstate: Array1<Complex64>) -> Result<()> {
+        if newstate.len() != self.hilbert_dim {
             return Err(IntegrateError::InvalidInput(
                 "State dimension mismatch".to_string(),
             ));
         }
 
-        self.state = new_state;
+        self.state = newstate;
         self.normalize();
         Ok(())
     }

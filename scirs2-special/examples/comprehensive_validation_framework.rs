@@ -1061,7 +1061,7 @@ fn stirling_approximation(z: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn compute_bessel_orthogonality_integral(_nu: i32, alpha1: f64, alpha2: f64) -> f64 {
+fn compute_bessel_orthogonality_integral(nu: i32, alpha1: f64, alpha2: f64) -> f64 {
     // Simplified numerical integration
     let n_points = 1000;
     let dx = 1.0 / n_points as f64;
@@ -1071,11 +1071,13 @@ fn compute_bessel_orthogonality_integral(_nu: i32, alpha1: f64, alpha2: f64) -> 
         let x = i as f64 * dx;
         let j1_val = match _nu {
             0 => j0(alpha1 * x),
-            1 => j1(alpha1 * x, _ => jv(_nu as f64, alpha1 * x),
+            1 => j1(alpha1 * x),
+            _ => jv(_nu as f64, alpha1 * x),
         };
         let j2_val = match _nu {
             0 => j0(alpha2 * x),
-            1 => j1(alpha2 * x, _ => jv(_nu as f64, alpha2 * x),
+            1 => j1(alpha2 * x),
+            _ => jv(_nu as f64, alpha2 * x),
         };
         sum += x * j1_val * j2_val * dx;
     }
@@ -1144,16 +1146,16 @@ fn factorial(n: usize) -> usize {
 // Placeholder implementations for missing functions
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-fn gamma_f32_simd(_data: &[f32]) -> Vec<f32> {
+fn gamma_f32_simd(data: &[f32]) -> Vec<f32> {
     // This would use actual SIMD implementation
-    _data.iter().map(|&x| gamma(x as f64) as f32).collect()
+    data.iter().map(|&x| gamma(x as f64) as f32).collect()
 }
 
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-fn gamma_f64_parallel(_data: &[f64]) -> Vec<f64> {
+fn gamma_f64_parallel(data: &[f64]) -> Vec<f64> {
     // This would use actual parallel implementation
-    _data.iter().map(|&x| gamma(x)).collect()
+    data.iter().map(|&x| gamma(x)).collect()
 }
 
 #[allow(dead_code)]

@@ -1,7 +1,7 @@
-use ndarray::s;
 use crate::error::{SignalError, SignalResult};
 use crate::hilbert;
-use ndarray::{ Array1, Array2};
+use ndarray::s;
+use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use std::f64::consts::PI;
 
@@ -79,12 +79,12 @@ impl Default for WvdConfig {
 /// let wvd = wigner_ville(&signal, config).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn wigner_ville(_signal: &Array1<f64>, config: WvdConfig) -> SignalResult<Array2<f64>> {
+pub fn wigner_ville(signal: &Array1<f64>, config: WvdConfig) -> SignalResult<Array2<f64>> {
     // Convert to analytic _signal if needed
     let analytic_signal = if config.analytic {
         Array1::from(hilbert::hilbert(_signal.as_slice().unwrap())?)
     } else {
-        _signal.mapv(|x| Complex64::new(x, 0.0))
+        signal.mapv(|x| Complex64::new(x, 0.0))
     };
 
     // Compute cross Wigner-Ville distribution
@@ -358,8 +358,8 @@ fn compute_cross_wvd(
 ///
 /// An array of frequency values in Hz
 #[allow(dead_code)]
-pub fn frequency_axis(_n_freqs: usize, fs: f64) -> Array1<f64> {
-    Array1::linspace(0.0, fs / 2.0, _n_freqs)
+pub fn frequency_axis(_nfreqs: usize, fs: f64) -> Array1<f64> {
+    Array1::linspace(0.0, fs / 2.0, n_freqs)
 }
 
 /// Generates a time axis for WVD results
@@ -373,9 +373,9 @@ pub fn frequency_axis(_n_freqs: usize, fs: f64) -> Array1<f64> {
 ///
 /// An array of time values in seconds
 #[allow(dead_code)]
-pub fn time_axis(_n_times: usize, fs: f64) -> Array1<f64> {
+pub fn time_axis(_ntimes: usize, fs: f64) -> Array1<f64> {
     let dt = 1.0 / fs;
-    Array1::linspace(0.0, (_n_times as f64 - 1.0) * dt, _n_times)
+    Array1::linspace(0.0, (_n_times as f64 - 1.0) * dt, n_times)
 }
 
 /// Extracts ridges (instantaneous frequencies) from a WVD representation
@@ -439,22 +439,22 @@ pub fn extract_ridges(
 
         // Update ridge structures
         for (i, &freq_idx) in peak_indices.iter().enumerate() {
-            if i >= _ridges.len() {
-                _ridges.push(Vec::new());
+            if i >= ridges.len() {
+                ridges.push(Vec::new());
             }
 
-            _ridges[i].push((t, frequencies[freq_idx]));
+            ridges[i].push((t, frequencies[freq_idx]));
         }
     }
 
     // Sort _ridges by average energy
-    _ridges.sort_by(|a, b| {
+    ridges.sort_by(|a, b| {
         let energy_a: f64 = a
             .iter()
-            .map(|(t_)| {
+            .map(|(t_, _)| {
                 let f_idx = a[0].1.mul_add(0.0, frequencies.len() as f64) as usize;
                 if f_idx < n_freqs {
-                    wvd[[f_idx, *t]]
+                    wvd[[f_idx, *t_]]
                 } else {
                     0.0
                 }
@@ -464,10 +464,10 @@ pub fn extract_ridges(
 
         let energy_b: f64 = b
             .iter()
-            .map(|(t_)| {
+            .map(|(t_, _)| {
                 let f_idx = b[0].1.mul_add(0.0, frequencies.len() as f64) as usize;
                 if f_idx < n_freqs {
-                    wvd[[f_idx, *t]]
+                    wvd[[f_idx, *t_]]
                 } else {
                     0.0
                 }
@@ -485,6 +485,7 @@ pub fn extract_ridges(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     use approx::assert_relative_eq;
     #[test]

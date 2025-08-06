@@ -121,11 +121,11 @@ where
 {
     /// Create a new GPU array from a host array.
     #[must_use]
-    pub fn new(host_data: Array<T, D>, config: GPUConfig) -> Self {
+    pub fn new(hostdata: Array<T, D>, config: GPUConfig) -> Self {
         let uuid = uuid::Uuid::new_v4();
         let id = format!("uuid{uuid}");
         let mut array = Self {
-            host_data,
+            host_data: hostdata,
             config,
             on_gpu: false,
             id,
@@ -259,7 +259,7 @@ where
                 }
 
                 // If the other array is not a GPU array, we could potentially handle
-                // other array _types, but for simplicity, we'll just return NotImplemented
+                // other array types, but for simplicity, we'll just return NotImplemented
                 Err(NotImplemented)
             }
             "scirs2::array_protocol::operations::multiply" => {
@@ -284,7 +284,7 @@ where
                 }
 
                 // If the other array is not a GPU array, we could potentially handle
-                // other array _types, but for simplicity, we'll just return NotImplemented
+                // other array types, but for simplicity, we'll just return NotImplemented
                 Err(NotImplemented)
             }
             "scirs2::array_protocol::operations::matmul" => {
@@ -324,7 +324,7 @@ where
                             Err(_) => return Err(NotImplemented),
                         }
                     }
-                    // For other _types, create a placeholder result for demonstration
+                    // For other types, create a placeholder result for demonstration
                     // In a real implementation, we would support more _types and dimensions
                     let result = Self::new(self.host_data.clone(), self.config.clone());
                     return Ok(Box::new(result));
@@ -468,33 +468,33 @@ impl GPUArrayBuilder {
 
     /// Set whether to use asynchronous operations.
     #[must_use]
-    pub const fn async_ops(mut self, async_ops: bool) -> Self {
-        self.config.async_ops = async_ops;
+    pub const fn async_ops(mut self, asyncops: bool) -> Self {
+        self.config.async_ops = asyncops;
         self
     }
 
     /// Set whether to use mixed precision.
     #[must_use]
-    pub const fn mixed_precision(mut self, mixed_precision: bool) -> Self {
-        self.config.mixed_precision = mixed_precision;
+    pub const fn mixed_precision(mut self, mixedprecision: bool) -> Self {
+        self.config.mixed_precision = mixedprecision;
         self
     }
 
     /// Set the fraction of GPU memory to use.
     #[must_use]
-    pub const fn memory_fraction(mut self, memory_fraction: f32) -> Self {
-        self.config.memory_fraction = memory_fraction;
+    pub const fn memory_fraction(mut self, memoryfraction: f32) -> Self {
+        self.config.memory_fraction = memoryfraction;
         self
     }
 
     /// Build a GPU array from a host array.
     #[must_use]
-    pub fn build<T, D>(self, host_data: Array<T, D>) -> GPUNdarray<T, D>
+    pub fn build<T, D>(self, hostdata: Array<T, D>) -> GPUNdarray<T, D>
     where
         T: Clone + Send + Sync + 'static + num_traits::Zero + std::ops::Div<f64, Output = T>,
         D: Dimension + Clone + Send + Sync + 'static + ndarray::RemoveAxis,
     {
-        GPUNdarray::new(host_data, self.config)
+        GPUNdarray::new(hostdata, self.config)
     }
 }
 

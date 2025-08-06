@@ -28,7 +28,7 @@ impl<F: IntegrateFloat> PerformancePredictor<F> {
     }
 
     /// Update models with new performance data
-    pub fn update_models(&mut self, _metrics: &PerformanceMetrics) -> IntegrateResult<()> {
+    pub fn update_models(&mut self, metrics: &PerformanceMetrics) -> IntegrateResult<()> {
         // Implementation would go here
         Ok(())
     }

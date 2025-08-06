@@ -77,7 +77,7 @@ pub trait InterpolationData<T: InterpolationFloat> {
 /// Standard query interface for interpolators
 pub trait Interpolator<T: InterpolationFloat> {
     /// Evaluate the interpolator at given query points
-    fn evaluate(&self, query_points: &ArrayView2<T>) -> crate::InterpolateResult<Vec<T>>;
+    fn evaluate(&self, querypoints: &ArrayView2<T>) -> crate::InterpolateResult<Vec<T>>;
 
     /// Evaluate the interpolator at a single point
     fn evaluate_single(&self, point: &ArrayView1<T>) -> crate::InterpolateResult<T> {
@@ -154,7 +154,8 @@ pub trait AdaptiveInterpolator<T: InterpolationFloat>: Interpolator<T> {
 
     /// Update the interpolation with new data
     fn update(
-        &mut self_points: &ArrayView2<T>,
+        &mut self,
+        points: &ArrayView2<T>,
         values: &ArrayView1<T>,
     ) -> crate::InterpolateResult<()>;
 }
@@ -307,7 +308,7 @@ pub trait SerializableInterpolator<T: InterpolationFloat> {
     fn serialize(&self) -> crate::InterpolateResult<Vec<u8>>;
 
     /// Deserialize the interpolator from bytes
-    fn deserialize(_data: &[u8]) -> crate::InterpolateResult<Self>
+    fn deserialize(data: &[u8]) -> crate::InterpolateResult<Self>
     where
         Self: Sized;
 
@@ -330,7 +331,7 @@ pub trait ParallelInterpolator<T: InterpolationFloat>: Interpolator<T> + Sync + 
     }
 
     /// Get the recommended number of threads for this interpolator
-    fn recommended_thread_count(&self, query_size: usize) -> usize {
+    fn recommended_thread_count(&self, querysize: usize) -> usize {
         (query_size / 1000).max(1).min(num_cpus::get())
     }
 }
@@ -400,6 +401,6 @@ pub mod validation {
 
     /// Validate interpolator configuration parameters
     pub fn validate_config<C: InterpolationConfig>(config: &C) -> crate::InterpolateResult<()> {
-        _config.validate()
+        config.validate()
     }
 }

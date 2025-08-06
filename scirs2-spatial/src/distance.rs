@@ -62,7 +62,7 @@ pub trait Distance<T: Float>: Clone + Send + Sync {
     /// # Returns
     ///
     /// * The minimum possible distance from the point to any point in the rectangle
-    fn min_distance_point_rectangle(&self, _point: &[T], mins: &[T], maxes: &[T]) -> T;
+    fn min_distance_point_rectangle(&self, point: &[T], mins: &[T], maxes: &[T]) -> T;
 }
 
 /// Euclidean distance metric (L2 norm)
@@ -96,20 +96,20 @@ impl<T: Float + Send + Sync> Distance<T> for EuclideanDistance<T> {
         sum.sqrt()
     }
 
-    fn min_distance_point_rectangle(&self, _point: &[T], mins: &[T], maxes: &[T]) -> T {
+    fn min_distance_point_rectangle(&self, point: &[T], mins: &[T], maxes: &[T]) -> T {
         let mut sum = T::zero();
 
         for i in 0.._point.len() {
-            if _point[i] < mins[i] {
+            if point[i] < mins[i] {
                 // Point is to the left of the rectangle
-                let diff = mins[i] - _point[i];
+                let diff = mins[i] - point[i];
                 sum = sum + diff * diff;
-            } else if _point[i] > maxes[i] {
+            } else if point[i] > maxes[i] {
                 // Point is to the right of the rectangle
-                let diff = _point[i] - maxes[i];
+                let diff = point[i] - maxes[i];
                 sum = sum + diff * diff;
             }
-            // If _point[i] is within bounds on dimension i, contribution is 0
+            // If point[i] is within bounds on dimension i, contribution is 0
         }
 
         sum.sqrt()
@@ -146,18 +146,18 @@ impl<T: Float + Send + Sync> Distance<T> for ManhattanDistance<T> {
         sum
     }
 
-    fn min_distance_point_rectangle(&self, _point: &[T], mins: &[T], maxes: &[T]) -> T {
+    fn min_distance_point_rectangle(&self, point: &[T], mins: &[T], maxes: &[T]) -> T {
         let mut sum = T::zero();
 
         for i in 0.._point.len() {
-            if _point[i] < mins[i] {
+            if point[i] < mins[i] {
                 // Point is to the left of the rectangle
-                sum = sum + (mins[i] - _point[i]);
-            } else if _point[i] > maxes[i] {
+                sum = sum + (mins[i] - point[i]);
+            } else if point[i] > maxes[i] {
                 // Point is to the right of the rectangle
                 sum = sum + (_point[i] - maxes[i]);
             }
-            // If _point[i] is within bounds on dimension i, contribution is 0
+            // If point[i] is within bounds on dimension i, contribution is 0
         }
 
         sum
@@ -197,14 +197,14 @@ impl<T: Float + Send + Sync> Distance<T> for ChebyshevDistance<T> {
         max_diff
     }
 
-    fn min_distance_point_rectangle(&self, _point: &[T], mins: &[T], maxes: &[T]) -> T {
+    fn min_distance_point_rectangle(&self, point: &[T], mins: &[T], maxes: &[T]) -> T {
         let mut max_diff = T::zero();
 
         for i in 0.._point.len() {
-            let diff = if _point[i] < mins[i] {
-                mins[i] - _point[i]
-            } else if _point[i] > maxes[i] {
-                _point[i] - maxes[i]
+            let diff = if point[i] < mins[i] {
+                mins[i] - point[i]
+            } else if point[i] > maxes[i] {
+                point[i] - maxes[i]
             } else {
                 T::zero()
             };
@@ -284,14 +284,14 @@ impl<T: Float + Send + Sync> Distance<T> for MinkowskiDistance<T> {
         }
     }
 
-    fn min_distance_point_rectangle(&self, _point: &[T], mins: &[T], maxes: &[T]) -> T {
+    fn min_distance_point_rectangle(&self, point: &[T], mins: &[T], maxes: &[T]) -> T {
         if self.p == T::one() {
             // Manhattan distance
             let mut sum = T::zero();
             for i in 0.._point.len() {
-                if _point[i] < mins[i] {
-                    sum = sum + (mins[i] - _point[i]);
-                } else if _point[i] > maxes[i] {
+                if point[i] < mins[i] {
+                    sum = sum + (mins[i] - point[i]);
+                } else if point[i] > maxes[i] {
                     sum = sum + (_point[i] - maxes[i]);
                 }
             }
@@ -300,11 +300,11 @@ impl<T: Float + Send + Sync> Distance<T> for MinkowskiDistance<T> {
             // Euclidean distance
             let mut sum = T::zero();
             for i in 0.._point.len() {
-                if _point[i] < mins[i] {
-                    let diff = mins[i] - _point[i];
+                if point[i] < mins[i] {
+                    let diff = mins[i] - point[i];
                     sum = sum + diff * diff;
-                } else if _point[i] > maxes[i] {
-                    let diff = _point[i] - maxes[i];
+                } else if point[i] > maxes[i] {
+                    let diff = point[i] - maxes[i];
                     sum = sum + diff * diff;
                 }
             }
@@ -313,10 +313,10 @@ impl<T: Float + Send + Sync> Distance<T> for MinkowskiDistance<T> {
             // Chebyshev distance
             let mut max_diff = T::zero();
             for i in 0.._point.len() {
-                let diff = if _point[i] < mins[i] {
-                    mins[i] - _point[i]
-                } else if _point[i] > maxes[i] {
-                    _point[i] - maxes[i]
+                let diff = if point[i] < mins[i] {
+                    mins[i] - point[i]
+                } else if point[i] > maxes[i] {
+                    point[i] - maxes[i]
                 } else {
                     T::zero()
                 };
@@ -330,10 +330,10 @@ impl<T: Float + Send + Sync> Distance<T> for MinkowskiDistance<T> {
             // General Minkowski distance
             let mut sum = T::zero();
             for i in 0.._point.len() {
-                let diff = if _point[i] < mins[i] {
-                    mins[i] - _point[i]
-                } else if _point[i] > maxes[i] {
-                    _point[i] - maxes[i]
+                let diff = if point[i] < mins[i] {
+                    mins[i] - point[i]
+                } else if point[i] > maxes[i] {
+                    point[i] - maxes[i]
                 } else {
                     T::zero()
                 };
@@ -934,18 +934,18 @@ where
 /// assert!((dist_matrix[(1, 1)] - 1.0f64).abs() < 1e-6);
 /// ```
 #[allow(dead_code)]
-pub fn cdist<T, F>(_x_a: &Array2<T>, x_b: &Array2<T>, metric: F) -> SpatialResult<Array2<T>>
+pub fn cdist<T, F>(_x_a: &Array2<T>, xb: &Array2<T>, metric: F) -> SpatialResult<Array2<T>>
 where
     T: Float + std::fmt::Debug,
     F: Fn(&[T], &[T]) -> T,
 {
-    let n_a = _x_a.nrows();
+    let n_a = x_a.nrows();
     let n_b = x_b.nrows();
 
-    if _x_a.ncols() != x_b.ncols() {
+    if x_a.ncols() != x_b.ncols() {
         return Err(SpatialError::DimensionError(format!(
             "Dimension mismatch: _x_a has {} columns, x_b has {} columns",
-            _x_a.ncols(),
+            x_a.ncols(),
             x_b.ncols()
         )));
     }
@@ -953,7 +953,7 @@ where
     let mut result = Array2::zeros((n_a, n_b));
 
     for i in 0..n_a {
-        let row_i = _x_a.row(i).to_vec();
+        let row_i = x_a.row(i).to_vec();
 
         for j in 0..n_b {
             let row_j = x_b.row(j).to_vec();

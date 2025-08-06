@@ -109,20 +109,20 @@ where
 ///
 /// Efficiently computes correlation matrices using SIMD operations.
 #[allow(dead_code)]
-pub fn corrcoef_matrix_simd<F, D>(_data: &ArrayBase<D, Ix2>) -> StatsResult<Array2<F>>
+pub fn corrcoef_matrix_simd<F, D>(data: &ArrayBase<D, Ix2>) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + FromPrimitive + Clone,
     D: Data<Elem = F>,
 {
-    let (n_samples_, n_features) = _data.dim();
+    let (n_samples_, n_features) = data.dim();
 
     if n_samples_ < 2 {
         return Err(StatsError::invalid_argument("Need at least 2 samples"));
     }
 
     // Center the _data
-    let means = _data.mean_axis(Axis(0)).unwrap();
-    let mut centered = _data.to_owned();
+    let means = data.mean_axis(Axis(0)).unwrap();
+    let mut centered = data.to_owned();
     for i in 0..n_samples_ {
         for j in 0..n_features {
             centered[[i, j]] = centered[[i, j]] - means[j];
@@ -186,18 +186,18 @@ where
 ///
 /// Computes robust statistics using SIMD acceleration where applicable.
 #[allow(dead_code)]
-pub fn robust_statistics_simd<F, D>(_data: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F)>
+pub fn robust_statistics_simd<F, D>(data: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F)>
 // (median, mad, iqr)
 where
     F: Float + NumCast + SimdUnifiedOps,
     D: Data<Elem = F>,
 {
-    if _data.is_empty() {
+    if data.is_empty() {
         return Err(StatsError::invalid_argument("Data cannot be empty"));
     }
 
-    let n = _data.len();
-    let mut sorted_data = _data.to_vec();
+    let n = data.len();
+    let mut sorted_data = data.to_vec();
     sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     // Compute median
@@ -284,7 +284,7 @@ where
         // Generate _bootstrap sample
         let mut bootstrap_sample = Array1::zeros(n);
         for j in 0..n {
-            let idx = rng.random_range(0..n);
+            let idx = rng.gen_range(0..n);
             bootstrap_sample[j] = data[idx];
         }
 

@@ -8,7 +8,7 @@ use ndarray::s;
 
 use crate::error::{SignalError, SignalResult};
 use crate::hilbert;
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
 use num_traits::{Float, NumCast};
 use rand::Rng;
 use std::cmp::max;
@@ -100,19 +100,19 @@ pub struct EmdResult {
 /// assert_eq!(result.imfs.shape()[1], signal.len());
 /// ```
 #[allow(dead_code)]
-pub fn emd<T>(_signal: &[T], config: &EmdConfig) -> SignalResult<EmdResult>
+pub fn emd<T>(signal: &[T], config: &EmdConfig) -> SignalResult<EmdResult>
 where
     T: Float + NumCast + Debug,
 {
     // Validate input
-    if _signal.is_empty() {
+    if signal.is_empty() {
         return Err(SignalError::ValueError(
             "Input _signal is empty".to_string(),
         ));
     }
 
     // Convert input to f64
-    let _signal_f64: Vec<f64> = _signal
+    let signal_f64: Vec<f64> = _signal
         .iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
@@ -198,9 +198,9 @@ where
 ///
 /// * Tuple of (IMF, number of iterations)
 #[allow(dead_code)]
-fn extract_imf(_signal: &Array1<f64>, config: &EmdConfig) -> SignalResult<(Array1<f64>, usize)> {
-    let n = _signal.len();
-    let mut h = _signal.clone();
+fn extract_imf(signal: &Array1<f64>, config: &EmdConfig) -> SignalResult<(Array1<f64>, usize)> {
+    let n = signal.len();
+    let mut h = signal.clone();
     let mut iteration = 0;
 
     // Sifting process
@@ -274,13 +274,13 @@ fn extract_imf(_signal: &Array1<f64>, config: &EmdConfig) -> SignalResult<(Array
 ///
 /// * Sifting criterion value
 #[allow(dead_code)]
-fn compute_sifting_criterion(_current: &Array1<f64>, previous: &Array1<f64>) -> f64 {
-    let n = _current.len();
+fn compute_sifting_criterion(current: &Array1<f64>, previous: &Array1<f64>) -> f64 {
+    let n = current.len();
     let mut sum_squared_diff = 0.0;
     let mut sum_squared_prev = 0.0;
 
     for i in 0..n {
-        let diff = _current[i] - previous[i];
+        let diff = current[i] - previous[i];
         sum_squared_diff += diff * diff;
         sum_squared_prev += previous[i] * previous[i];
     }
@@ -302,8 +302,8 @@ fn compute_sifting_criterion(_current: &Array1<f64>, previous: &Array1<f64>) -> 
 ///
 /// * Tuple of (indices, values) of local maxima
 #[allow(dead_code)]
-fn find_local_maxima(_signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
-    let n = _signal.len();
+fn find_local_maxima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
+    let n = signal.len();
     let mut indices = Vec::new();
     let mut values = Vec::new();
 
@@ -313,7 +313,7 @@ fn find_local_maxima(_signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(idx_)| idx)
+            .map(|(idx, _)| idx)
             .unwrap_or(0);
 
         indices.push(max_idx);
@@ -322,21 +322,21 @@ fn find_local_maxima(_signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
     }
 
     // First point
-    if _signal[0] > _signal[1] {
+    if signal[0] > signal[1] {
         indices.push(0);
         values.push(_signal[0]);
     }
 
     // Internal points
     for i in 1..n - 1 {
-        if _signal[i] > _signal[i - 1] && _signal[i] > _signal[i + 1] {
+        if signal[i] > signal[i - 1] && signal[i] > signal[i + 1] {
             indices.push(i);
             values.push(_signal[i]);
         }
     }
 
     // Last point
-    if _signal[n - 1] > _signal[n - 2] {
+    if signal[n - 1] > signal[n - 2] {
         indices.push(n - 1);
         values.push(_signal[n - 1]);
     }
@@ -354,8 +354,8 @@ fn find_local_maxima(_signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
 ///
 /// * Tuple of (indices, values) of local minima
 #[allow(dead_code)]
-fn find_local_minima(_signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
-    let n = _signal.len();
+fn find_local_minima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
+    let n = signal.len();
     let mut indices = Vec::new();
     let mut values = Vec::new();
 
@@ -365,7 +365,7 @@ fn find_local_minima(_signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
             .iter()
             .enumerate()
             .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(idx_)| idx)
+            .map(|(idx, _)| idx)
             .unwrap_or(0);
 
         indices.push(min_idx);
@@ -374,21 +374,21 @@ fn find_local_minima(_signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
     }
 
     // First point
-    if _signal[0] < _signal[1] {
+    if signal[0] < signal[1] {
         indices.push(0);
         values.push(_signal[0]);
     }
 
     // Internal points
     for i in 1..n - 1 {
-        if _signal[i] < _signal[i - 1] && _signal[i] < _signal[i + 1] {
+        if signal[i] < signal[i - 1] && signal[i] < signal[i + 1] {
             indices.push(i);
             values.push(_signal[i]);
         }
     }
 
     // Last point
-    if _signal[n - 1] < _signal[n - 2] {
+    if signal[n - 1] < signal[n - 2] {
         indices.push(n - 1);
         values.push(_signal[n - 1]);
     }
@@ -406,9 +406,9 @@ fn find_local_minima(_signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
 ///
 /// * Tuple of (number of maxima, number of minima)
 #[allow(dead_code)]
-fn count_extrema(_signal: &Array1<f64>) -> (usize, usize) {
-    let (maxima_idx_) = find_local_maxima(_signal);
-    let (minima_idx_) = find_local_minima(_signal);
+fn count_extrema(signal: &Array1<f64>) -> (usize, usize) {
+    let (maxima_idx, _) = find_local_maxima(_signal);
+    let (minima_idx, _) = find_local_minima(_signal);
 
     (maxima_idx.len(), minima_idx.len())
 }
@@ -961,6 +961,7 @@ pub fn hilbert_huang_spectrum(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_find_local_extrema() {
@@ -1001,7 +1002,7 @@ mod tests {
         let filtered_maxima_val: Vec<_> = maxima_idx
             .iter()
             .zip(maxima_val.iter())
-            .filter(|&(&idx_)| idx > 0 && idx < n - 1)
+            .filter(|(&idx_, _)| idx_ > 0 && idx_ < n - 1)
             .map(|(_, &val)| val)
             .collect();
 
@@ -1014,7 +1015,7 @@ mod tests {
         let filtered_minima_val: Vec<_> = minima_idx
             .iter()
             .zip(minima_val.iter())
-            .filter(|&(&idx_)| idx > 0 && idx < n - 1)
+            .filter(|(&idx_, _)| idx_ > 0 && idx_ < n - 1)
             .map(|(_, &val)| val)
             .collect();
 

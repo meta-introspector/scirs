@@ -181,7 +181,7 @@ fn main() {
 
 /// Print a concise summary of a dataset
 #[allow(dead_code)]
-fn print_dataset_summary(_dataset: &scirs2_datasets::Dataset, name: &str) {
+fn print_dataset_summary(dataset: &scirs2_datasets::Dataset, name: &str) {
     let n_classes = if let Some(target) = &_dataset.target {
         let unique_labels: std::collections::HashSet<_> =
             target.iter().map(|&x| x as i32).collect();
@@ -199,17 +199,17 @@ fn print_dataset_summary(_dataset: &scirs2_datasets::Dataset, name: &str) {
     println!(
         "   {}: {} samples, {} features{}",
         name,
-        _dataset.n_samples(),
-        _dataset.n_features(),
+        dataset.n_samples(),
+        dataset.n_features(),
         class_info
     );
 
     // Print first few data points for small _datasets
-    if _dataset.n_samples() <= 10 && _dataset.n_features() <= 3 {
+    if dataset.n_samples() <= 10 && dataset.n_features() <= 3 {
         println!("   Sample points:");
         for i in 0.._dataset.n_samples().min(3) {
             let point: Vec<f64> = (0.._dataset.n_features())
-                .map(|j| _dataset.data[[i, j]])
+                .map(|j| dataset.data[[i, j]])
                 .collect();
             println!(
                 "     [{:.3}, {:.3}{}]",

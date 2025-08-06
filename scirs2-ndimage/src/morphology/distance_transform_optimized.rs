@@ -16,7 +16,7 @@ use crate::utils::safe_f64_to_float;
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(_value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
 
@@ -24,7 +24,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 #[allow(dead_code)]
 fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
     T::from_i32(_value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", _value))
+        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
     })
 }
 
@@ -211,7 +211,7 @@ where
     let q_t = safe_usize_to_float(q)?;
     let spacing_sq = spacing * spacing;
 
-    let two = safe_f64, _to_float: <T>(2.0)?;
+    let two = safe_f64to_float::<T>(2.0)?;
     Ok(((q_t * q_t - p_t * p_t) * spacing_sq + f[q] - f[p]) / (two * (q_t - p_t) * spacing_sq))
 }
 
@@ -305,7 +305,7 @@ where
                                     let dist = (dx * dx + dy * dy).sqrt();
 
                                     let tolerance =
-                                        safe_f64, _to_float: <T>(0.1).unwrap_or_else(|_| T::one());
+                                        safe_f64to_float::<T>(0.1).unwrap_or_else(|_| T::one());
                                     if (dist - target_dist).abs() < tolerance {
                                         indices[[0, i, j]] = ni;
                                         indices[[1, i, j]] = nj;
@@ -409,7 +409,7 @@ where
 ///
 /// Uses a similar two-pass algorithm adapted for the L∞ metric.
 #[allow(dead_code)]
-pub fn chessboard_distance_transform<T>(_input: &Array2<bool>) -> NdimageResult<Array2<T>>
+pub fn chessboard_distance_transform<T>(input: &Array2<bool>) -> NdimageResult<Array2<T>>
 where
     T: Float
         + FromPrimitive
@@ -420,7 +420,7 @@ where
         + std::ops::DivAssign
         + 'static,
 {
-    let (height, width) = _input.dim();
+    let (height, width) = input.dim();
     let inf = T::from_f64(1e30).unwrap_or(T::infinity());
 
     // Initialize distance map

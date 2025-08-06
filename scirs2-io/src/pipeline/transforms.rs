@@ -30,9 +30,9 @@ impl<T> NormalizeTransform<T>
 where
     T: Float + FromPrimitive + Send + Sync,
 {
-    pub fn new(_method: NormalizationMethod) -> Self {
+    pub fn new(method: NormalizationMethod) -> Self {
         Self {
-            method: _method,
+            method: method,
             _phantom: PhantomData,
         }
     }
@@ -65,17 +65,17 @@ where
 }
 
 #[allow(dead_code)]
-fn normalize_minmax<T>(mut array: Array2<T>, new_min: T, new_max: T) -> Array2<T>
+fn normalize_minmax<T>(mut array: Array2<T>, new_min: T, newmax: T) -> Array2<T>
 where
     T: Float + FromPrimitive,
 {
     let _min = array.iter().fold(T::infinity(), |a, &b| a.min(b));
     let _max = array.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
-    let range = _max - _min;
+    let range = _max - min;
 
     if range > T::zero() {
         let scale = (new_max - new_min) / range;
-        array.mapv_inplace(|x| (x - _min) * scale + new_min);
+        array.mapv_inplace(|x| (x - min) * scale + new_min);
     }
 
     array
@@ -229,9 +229,9 @@ pub enum AggregationMethod {
 }
 
 impl AggregateTransform {
-    pub fn new(_method: AggregationMethod, axis: Option<Axis>) -> Self {
+    pub fn new(method: AggregationMethod, axis: Option<Axis>) -> Self {
         Self {
-            method: _method,
+            method: method,
             axis,
         }
     }
@@ -277,7 +277,7 @@ pub enum EncodingMethod {
 }
 
 impl EncodingTransform {
-    pub fn new(_method: EncodingMethod) -> Self {
+    pub fn new(method: EncodingMethod) -> Self {
         Self { method: _method }
     }
 }
@@ -360,9 +360,9 @@ pub enum ImputationStrategy {
 }
 
 impl ImputeTransform {
-    pub fn new(_strategy: ImputationStrategy) -> Self {
+    pub fn new(strategy: ImputationStrategy) -> Self {
         Self {
-            strategy: _strategy,
+            strategy: strategy,
         }
     }
 }
@@ -416,9 +416,9 @@ pub enum OutlierMethod {
 }
 
 impl OutlierTransform {
-    pub fn new(_method: OutlierMethod, threshold: f64) -> Self {
+    pub fn new(method: OutlierMethod, threshold: f64) -> Self {
         Self {
-            method: _method,
+            method: method,
             threshold,
         }
     }
@@ -510,9 +510,9 @@ pub struct PCATransform {
 }
 
 impl PCATransform {
-    pub fn new(_n_components: usize) -> Self {
+    pub fn new(_ncomponents: usize) -> Self {
         Self {
-            n_components: _n_components,
+            n_components: n_components,
             components: None,
             mean: None,
         }
@@ -603,9 +603,9 @@ pub enum BinningStrategy {
 }
 
 impl FeatureEngineeringTransform {
-    pub fn new(_operations: Vec<FeatureOperation>) -> Self {
+    pub fn new(operations: Vec<FeatureOperation>) -> Self {
         Self {
-            operations: _operations,
+            operations: operations,
         }
     }
 }
@@ -664,7 +664,7 @@ impl DataTransformer for FeatureEngineeringTransform {
                     }
                     FeatureOperation::Binning {
                         n_bins,
-                        strategy: _strategy,
+                        strategy: strategy,
                     } => {
                         // Simple uniform binning implementation
                         let mut binned_features = Array2::zeros((result.nrows(), result.ncols()));
@@ -713,9 +713,9 @@ pub enum TextOperation {
 }
 
 impl TextProcessingTransform {
-    pub fn new(_operations: Vec<TextOperation>) -> Self {
+    pub fn new(operations: Vec<TextOperation>) -> Self {
         Self {
-            operations: _operations,
+            operations: operations,
         }
     }
 }

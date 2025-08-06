@@ -44,9 +44,9 @@ pub struct GenerativeDataset {
     config: GenerativeConfig,
     rng: SmallRng,
 impl GenerativeDataset {
-    pub fn new(_config: GenerativeConfig, seed: u64) -> Self {
-            _config,
-            rng: SmallRng::seed_from_u64(seed),
+    pub fn new(config: GenerativeConfig, seed: u64) -> Self {
+            config,
+            rng: SmallRng::from_seed(seed),
     /// Generate a synthetic image (simple patterns)
     pub fn generate_sample(&mut self) -> Array3<f32> {
         let (height, width) = self._config.input_size;
@@ -99,7 +99,7 @@ impl GenerativeDataset {
             *elem = elem.max(0.0).min(1.0);
         image
     /// Generate a batch of samples
-    pub fn generate_batch(&mut self..batch_size: usize) -> Array4<f32> {
+    pub fn generate_batch(&mut self..batchsize: usize) -> Array4<f32> {
         let mut images = Array4::<f32>::zeros((batch_size, 1, height, width));
         for i in 0..batch_size {
             let image = self.generate_sample();
@@ -112,8 +112,8 @@ pub struct VAEEncoder {
     logvar_head: Sequential<f32>,
     #[allow(dead_code)]
 impl VAEEncoder {
-    pub fn new(_config: GenerativeConfig, rng: &mut SmallRng) -> StdResult<Self> {
-        let (_height_width) = _config.input_size;
+    pub fn new(config: GenerativeConfig, rng: &mut SmallRng) -> StdResult<Self> {
+        let (_height_width) = config.input_size;
         // Feature extraction layers
         let mut feature_extractor = Sequential::new();
         feature_extractor.add(Conv2D::new(1, 32, (3, 3), (2, 2), PaddingMode::Same, rng)?);
@@ -136,10 +136,10 @@ impl VAEEncoder {
         let mut mean_head = Sequential::new();
         mean_head.add(Dense::new(
             feature_size,
-            _config.hidden_dims[0],
+            config.hidden_dims[0],
             Some("relu"),
         mean_head.add(Dropout::new(0.2, rng)?);
-            _config.latent_dim,
+            config.latent_dim,
             None,
         // Log variance head
         let mut logvar_head = Sequential::new();
@@ -242,7 +242,7 @@ impl VAEModel {
     fn reparameterize(&self, mean: &ArrayD<f32>, logvar: &ArrayD<f32>) -> StdResult<ArrayD<f32>> {
         // Sample epsilon from standard normal
         let mut epsilon = Array::zeros(mean.raw_dim());
-        let mut rng = SmallRng::seed_from_u64(42); // Fixed seed for reproducibility
+        let mut rng = SmallRng::from_seed([42; 32]); // Fixed seed for reproducibility
         for elem in epsilon.iter_mut() {
             *elem = rng.gen_range(-1.0..1.0); // Approximate normal
         // z = mean + std * epsilon..where std = exp(0.5 * logvar)
@@ -257,10 +257,10 @@ impl VAEModel {
             *res = m + std * eps;
         Ok(result)
     /// Generate new samples from random latent codes
-    pub fn generate(&self, batch_size: usize) -> StdResult<ArrayD<f32>> {
+    pub fn generate(&self, batchsize: usize) -> StdResult<ArrayD<f32>> {
         // Sample random latent codes
         let mut latent = Array2::<f32>::zeros((batch_size, self.config.latent_dim));
-        let mut rng = SmallRng::seed_from_u64(123);
+        let mut rng = SmallRng::from_seed(123);
         for elem in latent.iter_mut() {
             *elem = rng.gen_range(-1.0..1.0);
         let latent_dyn = latent.into_dyn();
@@ -289,9 +289,9 @@ pub struct VAELoss {
     reconstruction_loss: MeanSquaredError,
     beta: f32,
 impl VAELoss {
-    pub fn new(_beta: f32) -> Self {
+    pub fn new(beta: f32) -> Self {
             reconstruction_loss: MeanSquaredError::new(),
-            _beta,
+            beta,
     pub fn compute_loss(
         reconstruction: &ArrayD<f32>,
         target: &ArrayD<f32>,
@@ -346,8 +346,8 @@ impl GANDiscriminator {
 /// Generative model evaluation metrics
 pub struct GenerativeMetrics {
 impl GenerativeMetrics {
-    pub fn new(_config: GenerativeConfig) -> Self {
-        Self { _config }
+    pub fn new(config: GenerativeConfig) -> Self {
+        Self { config }
     /// Calculate reconstruction error
     pub fn reconstruction_error(&self, original: &ArrayD<f32>, reconstructed: &ArrayD<f32>) -> f32 {
         let mut mse = 0.0f32;
@@ -383,7 +383,7 @@ impl GenerativeMetrics {
 #[allow(dead_code)]
 fn train_vae_model() -> StdResult<()> {
     println!("🎨 Starting VAE Training");
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     let config = GenerativeConfig::default();
     // Initialize JIT context (currently not implemented)
     // let _jit_context: JitContext<f32> = JitContext::new(JitStrategy::Aggressive);
@@ -581,7 +581,7 @@ mod tests {
         for &val in image.iter() {
             assert!(val >= 0.0 && val <= 1.0);
     fn test_vae_creation() -> StdResult<()> {
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
         let vae = VAEModel::new(config.clone(), &mut rng)?;
         // Test forward pass
         let batch_size = 2;

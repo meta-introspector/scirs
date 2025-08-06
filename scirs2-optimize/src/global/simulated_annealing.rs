@@ -134,7 +134,7 @@ where
     }
 
     /// Calculate acceptance probability
-    fn acceptance_probability(&self, new_value: f64) -> f64 {
+    fn acceptance_probability(&self, newvalue: f64) -> f64 {
         if new_value < self.current_value {
             1.0
         } else {

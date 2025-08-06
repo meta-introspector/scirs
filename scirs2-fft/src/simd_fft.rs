@@ -29,15 +29,15 @@ pub fn simd_support_available() -> bool {
 
 /// Apply SIMD normalization (stub - not used in current implementation)
 #[allow(dead_code)]
-pub fn apply_simd_normalization(_data: &mut [Complex64], scale: f64) {
-    for c in _data.iter_mut() {
+pub fn apply_simd_normalization(data: &mut [Complex64], scale: f64) {
+    for c in data.iter_mut() {
         *c *= scale;
     }
 }
 
 /// SIMD-accelerated 1D FFT
 #[allow(dead_code)]
-pub fn fft_simd<T>(x: &[T], _norm: Option<&str>) -> FFTResult<Vec<Complex64>>
+pub fn fft_simd<T>(x: &[T], norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -46,7 +46,7 @@ where
 
 /// SIMD-accelerated 1D inverse FFT
 #[allow(dead_code)]
-pub fn ifft_simd<T>(x: &[T], _norm: Option<&str>) -> FFTResult<Vec<Complex64>>
+pub fn ifft_simd<T>(x: &[T], norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {

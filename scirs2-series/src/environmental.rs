@@ -122,7 +122,7 @@ impl TemperatureAnalysis {
 
         for (i, &_temp) in self.temperatures.iter().enumerate() {
             let effective_temp = if let Some(max_t) = max_temp {
-                _temp.min(max_t)
+                temp.min(max_t)
             } else {
                 _temp
             };
@@ -169,7 +169,7 @@ impl TemperatureAnalysis {
     }
 
     /// Calculate climate normals (30-year averages)
-    pub fn climate_normals(&self, window_size: usize) -> Result<Array1<f64>> {
+    pub fn climate_normals(&self, windowsize: usize) -> Result<Array1<f64>> {
         if window_size > self.temperatures.len() {
             return Err(TimeSeriesError::InvalidInput(
                 "Window _size larger than data".to_string(),
@@ -197,22 +197,22 @@ pub struct PrecipitationAnalysis {
 
 impl PrecipitationAnalysis {
     /// Create new precipitation analysis
-    pub fn new(_precipitation: Array1<f64>, time_stamps: Array1<i64>) -> Result<Self> {
-        if _precipitation.iter().any(|x| !x.is_finite()) {
+    pub fn new(_precipitation: Array1<f64>, timestamps: Array1<i64>) -> Result<Self> {
+        if precipitation.iter().any(|x| !x.is_finite()) {
             return Err(TimeSeriesError::InvalidInput(
                 "Precipitation contains non-finite values".to_string(),
             ));
         }
 
         // Check for negative _precipitation
-        if _precipitation.iter().any(|&x| x < 0.0) {
+        if precipitation.iter().any(|&x| x < 0.0) {
             return Err(TimeSeriesError::InvalidInput(
                 "Precipitation values cannot be negative".to_string(),
             ));
         }
 
         Ok(Self {
-            _precipitation,
+            precipitation,
             time_stamps,
         })
     }
@@ -247,7 +247,7 @@ impl PrecipitationAnalysis {
     }
 
     /// Calculate Standardized Precipitation Index (SPI)
-    pub fn standardized_precipitation_index(&self, window_size: usize) -> Result<Array1<f64>> {
+    pub fn standardized_precipitation_index(&self, windowsize: usize) -> Result<Array1<f64>> {
         if window_size > self.precipitation.len() {
             return Err(TimeSeriesError::InvalidInput(
                 "Window _size larger than data".to_string(),
@@ -304,7 +304,7 @@ impl PrecipitationAnalysis {
     }
 
     /// Calculate consecutive dry days
-    pub fn consecutive_dry_days(&self, dry_threshold: f64) -> Result<Array1<usize>> {
+    pub fn consecutive_dry_days(&self, drythreshold: f64) -> Result<Array1<usize>> {
         let mut consecutive_days = Array1::zeros(self.precipitation.len());
         let mut current_streak = 0;
 
@@ -408,7 +408,7 @@ impl AtmosphericAnalysis {
     }
 
     /// Calculate wind power density
-    pub fn wind_power_density(&self, air_density: f64) -> Result<Array1<f64>> {
+    pub fn wind_power_density(&self, airdensity: f64) -> Result<Array1<f64>> {
         check_positive(air_density, "air_density")?;
 
         let mut power_density = Array1::zeros(self.wind_speed.len());
@@ -422,7 +422,7 @@ impl AtmosphericAnalysis {
     }
 
     /// Calculate wind rose statistics
-    pub fn wind_rose_statistics(&self, direction_bins: usize) -> Result<Array2<f64>> {
+    pub fn wind_rose_statistics(&self, directionbins: usize) -> Result<Array2<f64>> {
         let wind_dir = self.wind_direction.as_ref().ok_or_else(|| {
             TimeSeriesError::InvalidInput("Wind direction data required".to_string())
         })?;

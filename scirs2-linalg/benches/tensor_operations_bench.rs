@@ -11,16 +11,16 @@ use std::time::Duration;
 
 /// Create a test tensor of given dimensions with deterministic values
 #[allow(dead_code)]
-fn create_test_tensor_3d(_d1: usize, d2: usize, d3: usize) -> Array3<f64> {
-    Array3::fromshape_fn((_d1, d2, d3), |(i, j, k)| {
+fn create_test_tensor_3d(d1: usize, d2: usize, d3: usize) -> Array3<f64> {
+    Array3::from_shape_fn((_d1, d2, d3), |(i, j, k)| {
         ((i + j + k + 1) as f64 * 0.1).sin()
     })
 }
 
 /// Create a test tensor of given dimensions with deterministic values
 #[allow(dead_code)]
-fn create_test_tensor_4d(_d1: usize, d2: usize, d3: usize, d4: usize) -> Array4<f64> {
-    Array4::fromshape_fn((_d1, d2, d3, d4), |(i, j, k, l)| {
+fn create_test_tensor_4d(d1: usize, d2: usize, d3: usize, d4: usize) -> Array4<f64> {
+    Array4::from_shape_fn((_d1, d2, d3, d4), |(i, j, k, l)| {
         ((i + j + k + l + 1) as f64 * 0.1).sin()
     })
 }
@@ -28,13 +28,13 @@ fn create_test_tensor_4d(_d1: usize, d2: usize, d3: usize, d4: usize) -> Array4<
 /// Create a random-like matrix for tensor operations
 #[allow(dead_code)]
 fn create_test_matrix(m: usize, n: usize) -> Array2<f64> {
-    Array2::fromshape_fn((m, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin())
+    Array2::from_shape_fn((m, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin())
 }
 
 /// Create a test vector
 #[allow(dead_code)]
 fn create_test_vector(n: usize) -> Array1<f64> {
-    Array1::fromshape_fn(n, |i| ((i + 1) as f64 * 0.1).sin())
+    Array1::from_shape_fn(n, |i| ((i + 1) as f64 * 0.1).sin())
 }
 
 /// Benchmark basic tensor contraction operations

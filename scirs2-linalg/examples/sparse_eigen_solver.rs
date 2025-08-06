@@ -92,13 +92,13 @@ fn main() {
 
 // Helper function to print a submatrix
 #[allow(dead_code)]
-fn print_submatrix<T: std::fmt::Display>(_matrix: &Array2<T>, size: usize) {
-    let n = std::cmp::min(size, _matrix.shape()[0]);
-    let m = std::cmp::min(size, _matrix.shape()[1]);
+fn print_submatrix<T: std::fmt::Display>(matrix: &Array2<T>, size: usize) {
+    let n = std::cmp::min(size, matrix.shape()[0]);
+    let m = std::cmp::min(size, matrix.shape()[1]);
 
     for i in 0..n {
         for j in 0..m {
-            print!("{:7.3} ", _matrix[[i, j]]);
+            print!("{:7.3} ", matrix[[i, j]]);
         }
         println!();
     }

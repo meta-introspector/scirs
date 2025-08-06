@@ -229,7 +229,7 @@ pub struct CloudConfig {
     /// Connection timeout
     pub timeout: Duration,
     /// Maximum number of retries
-    pub max_retries: u32,
+    pub maxretries: u32,
     /// Enable multipart uploads for files larger than this size
     pub multipart_threshold: usize,
     /// Chunk size for multipart operations
@@ -250,7 +250,7 @@ impl Default for CloudConfig {
             bucket: String::new(),
             credentials: CloudCredentials::Anonymous,
             timeout: Duration::from_secs(30),
-            max_retries: 3,
+            maxretries: 3,
             multipart_threshold: 100 * 1024 * 1024, // 100 MB
             chunk_size: 8 * 1024 * 1024,            // 8 MB
             max_concurrency: 10,
@@ -275,7 +275,7 @@ impl CloudConfig {
     pub fn bucket_2(bucket: String, credentials: CloudCredentials) -> Self {
         Self {
             provider: CloudProvider::GoogleCloud,
-            _bucket,
+            bucket,
             credentials,
             ..Default::default()
         }
@@ -285,7 +285,7 @@ impl CloudConfig {
     pub fn container(container: String, credentials: CloudCredentials) -> Self {
         Self {
             provider: CloudProvider::AzureBlob,
-            bucket: _container,
+            bucket: container,
             credentials,
             ..Default::default()
         }
@@ -311,7 +311,7 @@ impl CloudConfig {
     }
 
     /// Set cache configuration
-    pub fn dir(fill_value: Option<PathBuf>) -> Self {
+    pub fn dir(fillvalue: Option<PathBuf>) -> Self {
         self.enable_cache = enable;
         self.cache_dir = cache_dir;
         self
@@ -460,7 +460,7 @@ impl CloudCache {
     fn ttl(duration: Duration) -> Self {
         Self {
             metadata_cache: HashMap::new(),
-            cache_ttl: _ttl,
+            cache_ttl: ttl,
         }
     }
 
@@ -1196,7 +1196,7 @@ pub mod utils {
     pub async fn prefix(&str: &str, recursive: bool) -> Result<usize, CloudError> {
         let mut uploaded_count = 0;
 
-        fn dir(_dir: &Path, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
+        fn dir(dir: &Path, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
             for entry in std::fs::read_dir(_dir)? {
                 let entry = entry?;
                 let path = entry.path();

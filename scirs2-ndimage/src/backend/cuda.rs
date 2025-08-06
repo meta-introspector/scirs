@@ -27,9 +27,9 @@ use std::sync::{Arc, Mutex};
 #[link(name = "nvrtc")]
 extern "C" {
     // CUDA Runtime API
-    fn cudaMalloc(_devPtr: *mut *mut c_void, size: usize) -> i32;
-    fn cudaFree(_devPtr: *mut c_void) -> i32;
-    fn cudaMemcpy(_dst: *mut c_void, src: *const c_void, count: usize, kind: i32) -> i32;
+    fn cudaMalloc(devPtr: *mut *mut c_void, size: usize) -> i32;
+    fn cudaFree(devPtr: *mut c_void) -> i32;
+    fn cudaMemcpy(dst: *mut c_void, src: *const c_void, count: usize, kind: i32) -> i32;
     fn cudaMemcpyAsync(
         dst: *mut c_void,
         src: *const c_void,
@@ -37,20 +37,20 @@ extern "C" {
         kind: i32,
         stream: *mut c_void,
     ) -> i32;
-    fn cudaGetDeviceCount(_count: *mut i32) -> i32;
-    fn cudaSetDevice(_device: i32) -> i32;
-    fn cudaGetDevice(_device: *mut i32) -> i32;
-    fn cudaMemGetInfo(_free: *mut usize, total: *mut usize) -> i32;
-    fn cudaStreamCreate(_stream: *mut *mut c_void) -> i32;
-    fn cudaStreamDestroy(_stream: *mut c_void) -> i32;
-    fn cudaStreamSynchronize(_stream: *mut c_void) -> i32;
+    fn cudaGetDeviceCount(count: *mut i32) -> i32;
+    fn cudaSetDevice(device: i32) -> i32;
+    fn cudaGetDevice(device: *mut i32) -> i32;
+    fn cudaMemGetInfo(free: *mut usize, total: *mut usize) -> i32;
+    fn cudaStreamCreate(stream: *mut *mut c_void) -> i32;
+    fn cudaStreamDestroy(stream: *mut c_void) -> i32;
+    fn cudaStreamSynchronize(stream: *mut c_void) -> i32;
     fn cudaDeviceSynchronize() -> i32;
     fn cudaGetLastError() -> i32;
-    fn cudaGetErrorString(_error: i32) -> *const c_char;
+    fn cudaGetErrorString(error: i32) -> *const c_char;
 
     // CUDA Driver API for kernel launch
-    fn cuModuleLoadData(_module: *mut *mut c_void, image: *const c_void) -> i32;
-    fn cuModuleGetFunction(_hfunc: *mut *mut c_void, hmod: *mut c_void, name: *const c_char) -> i32;
+    fn cuModuleLoadData(module: *mut *mut c_void, image: *const c_void) -> i32;
+    fn cuModuleGetFunction(hfunc: *mut *mut c_void, hmod: *mut c_void, name: *const c_char) -> i32;
     fn cuLaunchKernel(
         f: *mut c_void,
         grid_dim_x: u32,
@@ -74,16 +74,16 @@ extern "C" {
         headers: *const *const c_char,
         include_names: *const *const c_char,
     ) -> i32;
-    fn nvrtcDestroyProgram(_prog: *mut *mut c_void) -> i32;
+    fn nvrtcDestroyProgram(prog: *mut *mut c_void) -> i32;
     fn nvrtcCompileProgram(
         prog: *mut c_void,
         num_options: i32,
         options: *const *const c_char,
     ) -> i32;
-    fn nvrtcGetPTXSize(_prog: *mut c_void, ptx_size: *mut usize) -> i32;
-    fn nvrtcGetPTX(_prog: *mut c_void, ptx: *mut c_char) -> i32;
-    fn nvrtcGetProgramLogSize(_prog: *mut c_void, log_size: *mut usize) -> i32;
-    fn nvrtcGetProgramLog(_prog: *mut c_void, log: *mut c_char) -> i32;
+    fn nvrtcGetPTXSize(_prog: *mut c_void, ptxsize: *mut usize) -> i32;
+    fn nvrtcGetPTX(prog: *mut c_void, ptx: *mut c_char) -> i32;
+    fn nvrtcGetProgramLogSize(_prog: *mut c_void, logsize: *mut usize) -> i32;
+    fn nvrtcGetProgramLog(prog: *mut c_void, log: *mut c_char) -> i32;
 }
 
 // CUDA memory copy kinds
@@ -97,11 +97,11 @@ const NVRTC_SUCCESS: i32 = 0;
 
 // Helper function to get CUDA error string
 #[allow(dead_code)]
-fn cuda_error_string(_error: i32) -> String {
+fn cuda_error_string(error: i32) -> String {
     unsafe {
         let error_ptr = cudaGetErrorString(_error);
         if error_ptr.is_null() {
-            format!("Unknown CUDA _error: {_error}")
+            format!("Unknown CUDA error: {_error}")
         } else {
             CStr::from_ptr(error_ptr).to_string_lossy().into_owned()
         }
@@ -120,7 +120,7 @@ unsafe impl<T> Send for CudaBuffer<T> {}
 unsafe impl<T> Sync for CudaBuffer<T> {}
 
 impl<T> CudaBuffer<T> {
-    pub fn new(_size: usize) -> NdimageResult<Self> {
+    pub fn new(size: usize) -> NdimageResult<Self> {
         let mut device_ptr: *mut c_void = ptr::null_mut();
         let byte_size = _size * std::mem::size_of::<T>();
 
@@ -135,12 +135,12 @@ impl<T> CudaBuffer<T> {
 
         Ok(Self {
             device_ptr,
-            _size,
+            size,
             phantom: std::marker::PhantomData,
         })
     }
 
-    pub fn from_host_data(_data: &[T]) -> NdimageResult<Self> {
+    pub fn from_host_data(data: &[T]) -> NdimageResult<Self> {
         let buffer = Self::new(_data.len())?;
         buffer.copy_from_host(_data)?;
         Ok(buffer)
@@ -228,8 +228,8 @@ pub struct CudaContext {
 }
 
 impl CudaContext {
-    pub fn new(_device_id: Option<usize>) -> NdimageResult<Self> {
-        let _device_id = _device_id.unwrap_or(0) as i32;
+    pub fn new(_deviceid: Option<usize>) -> NdimageResult<Self> {
+        let _device_id = device_id.unwrap_or(0) as i32;
 
         // Check if device exists
         let mut device_count: i32 = 0;
@@ -269,7 +269,7 @@ impl CudaContext {
     }
 
     /// Get device properties for the specified CUDA device
-    fn get_device_properties(_device_id: i32) -> NdimageResult<((i32, i32), i32, usize)> {
+    fn get_device_properties(_deviceid: i32) -> NdimageResult<((i32, i32), i32, usize)> {
         // For now, return sensible defaults based on common GPU architectures
         // In a full implementation, this would query actual device properties
         let compute_capability = match _device_id {
@@ -334,7 +334,7 @@ impl CudaContext {
         Ok(options)
     }
 
-    pub fn compile_kernel(&self, source: &str, kernel_name: &str) -> NdimageResult<CudaKernel> {
+    pub fn compile_kernel(&self, source: &str, kernelname: &str) -> NdimageResult<CudaKernel> {
         // Check cache first
         {
             let cache = KERNEL_CACHE.lock().map_err(|_| {
@@ -520,7 +520,7 @@ pub struct CudaExecutor {
 }
 
 impl CudaExecutor {
-    pub fn new(_context: Arc<CudaContext>) -> NdimageResult<Self> {
+    pub fn new(context: Arc<CudaContext>) -> NdimageResult<Self> {
         let mut stream: *mut c_void = ptr::null_mut();
         unsafe {
             let result = cudaStreamCreate(&mut stream);
@@ -531,7 +531,7 @@ impl CudaExecutor {
             }
         }
 
-        Ok(Self { _context, stream })
+        Ok(Self { context, stream })
     }
 }
 
@@ -645,7 +645,7 @@ pub struct CudaOperations {
 }
 
 impl CudaOperations {
-    pub fn new(_device_id: Option<usize>) -> NdimageResult<Self> {
+    pub fn new(_deviceid: Option<usize>) -> NdimageResult<Self> {
         let context = Arc::new(CudaContext::new(_device_id)?);
         let executor = CudaExecutor::new(context.clone())?;
 
@@ -703,7 +703,7 @@ impl CudaOperations {
 
 /// Helper function to allocate GPU buffer
 #[allow(dead_code)]
-pub fn allocate_gpu_buffer<T>(_data: &[T]) -> NdimageResult<Box<dyn GpuBuffer<T>>>
+pub fn allocate_gpu_buffer<T>(data: &[T]) -> NdimageResult<Box<dyn GpuBuffer<T>>>
 where
     T: 'static,
 {
@@ -712,7 +712,7 @@ where
 
 /// Helper function to allocate empty GPU buffer
 #[allow(dead_code)]
-pub fn allocate_gpu_buffer_empty<T>(_size: usize) -> NdimageResult<Box<dyn GpuBuffer<T>>>
+pub fn allocate_gpu_buffer_empty<T>(size: usize) -> NdimageResult<Box<dyn GpuBuffer<T>>>
 where
     T: 'static,
 {
@@ -727,11 +727,11 @@ pub struct CudaMemoryManager {
 }
 
 impl CudaMemoryManager {
-    pub fn new(_max_pool_size: usize) -> Self {
+    pub fn new(_max_poolsize: usize) -> Self {
         Self {
             buffer_pools: std::collections::HashMap::new(),
             total_allocated: 0,
-            _max_pool_size,
+            max_pool_size,
         }
     }
 
@@ -837,7 +837,7 @@ struct ExecutionStats {
 }
 
 impl AdvancedCudaExecutor {
-    pub fn new(_context: Arc<CudaContext>) -> NdimageResult<Self> {
+    pub fn new(context: Arc<CudaContext>) -> NdimageResult<Self> {
         let mut stream: *mut c_void = std::ptr::null_mut();
         unsafe {
             let result = cudaStreamCreate(&mut stream);
@@ -849,7 +849,7 @@ impl AdvancedCudaExecutor {
         }
 
         Ok(Self {
-            _context,
+            context,
             stream,
             memory_manager: std::sync::Mutex::new(CudaMemoryManager::new(10)), // Pool up to 10 buffers per size
             execution_stats: std::sync::Mutex::new(ExecutionStats::default()),
@@ -958,8 +958,8 @@ impl<T> CudaManagedBuffer<T> {
 
 /// Convert OpenCL-style kernel to CUDA syntax
 #[allow(dead_code)]
-fn convert_opencl_to_cuda(_source: &str) -> String {
-    let mut cuda_source = _source.to_string();
+fn convert_opencl_to_cuda(source: &str) -> String {
+    let mut cuda_source = source.to_string();
 
     // Handle kernel declaration
     cuda_source = cuda_source.replace("__kernel", "extern \"C\" __global__");
@@ -1140,7 +1140,7 @@ mod tests {
     #[test]
     #[ignore] // Ignore by default as it requires CUDA
     fn test_cuda_buffer_allocation() {
-        let buffer: Result<CudaBuffer<f32>_> = CudaBuffer::new(1024);
+        let buffer: Result<CudaBuffer<f32>> = CudaBuffer::new(1024);
         assert!(buffer.is_ok());
 
         if let Ok(buf) = buffer {

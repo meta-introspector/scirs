@@ -175,22 +175,22 @@ fn main() -> IntegrateResult<()> {
 
 /// Print a summary of the trajectory
 #[allow(dead_code)]
-fn print_trajectory_summary(_result: &ODEResultWithEvents<f64>) {
+fn print_trajectory_summary(result: &ODEResultWithEvents<f64>) {
     println!("  Integration results:");
-    println!("    Number of time steps: {}", _result.base_result.t.len());
-    println!("    Start time: {:?}", _result.base_result.t.first());
-    println!("    End time: {:?}", _result.base_result.t.last());
+    println!("    Number of time steps: {}", result.base_result.t.len());
+    println!("    Start time: {:?}", result.base_result.t.first());
+    println!("    End time: {:?}", result.base_result.t.last());
 
     println!("  First few time points:");
-    let n_show = std::cmp::min(5, _result.base_result.t.len());
+    let n_show = std::cmp::min(5, result.base_result.t.len());
     for i in 0..n_show {
         println!(
             "    t = {:?}, height = {:?}, velocity = {:?}",
-            _result.base_result.t[i], _result.base_result.y[i][0], _result.base_result.y[i][1]
+            result.base_result.t[i], result.base_result.y[i][0], result.base_result.y[i][1]
         );
     }
 
-    if let Some(first_event) = _result.events.get_events("ground_impact").first() {
+    if let Some(first_event) = result.events.get_events("ground_impact").first() {
         println!(
             "  First impact at time = {:?}, velocity = {:?}",
             first_event.time, first_event.state[1]
@@ -219,7 +219,7 @@ fn save_results_to_csv(
         writeln!(
             file,
             "{},{},{},{}",
-            _times[i], heights[i], velocities[i], is_bounce as i32
+            times[i], heights[i], velocities[i], is_bounce as i32
         )
         .map_err(|e| IntegrateError::ComputationError(format!("Failed to write data: {e}")))?;
     }

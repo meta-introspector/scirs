@@ -52,7 +52,7 @@ impl HttpResponse {
     }
 
     /// Set content type header
-    fn content_type(mut self, content_type: &str) -> Self {
+    fn content_type(mut self, contenttype: &str) -> Self {
         self.headers
             .push(("Content-Type".to_string(), content_type.to_string()));
         self
@@ -93,8 +93,8 @@ impl HttpResponse {
 
 /// Parse HTTP request path from raw request
 #[allow(dead_code)]
-fn parse_request_path(_request: &str) -> Option<String> {
-    let lines: Vec<&str> = _request.lines().collect();
+fn parse_request_path(request: &str) -> Option<String> {
+    let lines: Vec<&str> = request.lines().collect();
     if lines.is_empty() {
         return None;
     }
@@ -115,13 +115,13 @@ pub struct DashboardHttpServer {
 
 impl DashboardHttpServer {
     /// Create a new dashboard HTTP server
-    pub fn new(_dashboard: InteractiveDashboard) -> Result<Self> {
+    pub fn new(dashboard: InteractiveDashboard) -> Result<Self> {
         // Create a runtime for the server
         let runtime = Runtime::new()
             .map_err(|e| MetricsError::InvalidInput(format!("Failed to create runtime: {}", e)))?;
 
         Ok(Self {
-            _dashboard,
+            dashboard,
             runtime: Some(runtime),
         })
     }
@@ -169,9 +169,12 @@ impl DashboardHttpServer {
 }
 
 /// Serve the dashboard over HTTP
-async fn serve_dashboard(_addr: SocketAddr, dashboard: InteractiveDashboard) -> std::io::Result<()> {
+async fn serve_dashboard(
+    _addr: SocketAddr,
+    dashboard: InteractiveDashboard,
+) -> std::io::Result<()> {
     let listener = TcpListener::bind(_addr).await?;
-    println!("Dashboard listening on http://{}", _addr);
+    println!("Dashboard listening on http://{}", addr);
 
     let dashboard = Arc::new(dashboard);
 
@@ -273,10 +276,10 @@ struct PerformancePrediction {
 
 /// Generate AI-driven insights from metrics data
 #[allow(dead_code)]
-fn generate_ai_insights(_metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
+fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
     let mut insights = Vec::new();
 
-    if _metrics.is_empty() {
+    if metrics.is_empty() {
         return insights;
     }
 
@@ -350,7 +353,7 @@ fn generate_ai_insights(_metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
     }
 
     // Overall system health insight
-    let avg_values: Vec<f64> = _metrics.iter().map(|m| m.value).collect();
+    let avg_values: Vec<f64> = metrics.iter().map(|m| m.value).collect();
     if !avg_values.is_empty() {
         let overall_avg = avg_values.iter().sum::<f64>() / avg_values.len() as f64;
 
@@ -385,10 +388,10 @@ fn generate_ai_insights(_metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
 
 /// Detect anomalies in metrics data using statistical methods
 #[allow(dead_code)]
-fn detect_anomalies(_metrics: &[MetricDataPoint]) -> Vec<AnomalyAlert> {
+fn detect_anomalies(metrics: &[MetricDataPoint]) -> Vec<AnomalyAlert> {
     let mut alerts = Vec::new();
 
-    if _metrics.is_empty() {
+    if metrics.is_empty() {
         return alerts;
     }
 
@@ -443,10 +446,10 @@ fn detect_anomalies(_metrics: &[MetricDataPoint]) -> Vec<AnomalyAlert> {
 
 /// Predict future performance using simple linear regression
 #[allow(dead_code)]
-fn predict_future_performance(_metrics: &[MetricDataPoint]) -> Vec<PerformancePrediction> {
+fn predict_future_performance(metrics: &[MetricDataPoint]) -> Vec<PerformancePrediction> {
     let mut predictions = Vec::new();
 
-    if _metrics.is_empty() {
+    if metrics.is_empty() {
         return predictions;
     }
 
@@ -529,9 +532,9 @@ fn predict_future_performance(_metrics: &[MetricDataPoint]) -> Vec<PerformancePr
 }
 
 /// Generate enhanced dashboard HTML with advanced Advanced features
-async fn generate_dashboard_html(_dashboard: &Arc<InteractiveDashboard>) -> String {
-    let metrics = _dashboard.get_all_metrics().unwrap_or_default();
-    let metric_names = _dashboard.get_metric_names().unwrap_or_default();
+async fn generate_dashboard_html(dashboard: &Arc<InteractiveDashboard>) -> String {
+    let metrics = dashboard.get_all_metrics().unwrap_or_default();
+    let metric_names = dashboard.get_metric_names().unwrap_or_default();
     let config = &_dashboard.config;
 
     let metrics_json = serde_json::to_string(&metrics).unwrap_or_default();
@@ -816,7 +819,7 @@ async fn generate_dashboard_html(_dashboard: &Arc<InteractiveDashboard>) -> Stri
 
 /// Create and start an HTTP server for the given dashboard
 #[allow(dead_code)]
-pub fn start_http_server(_dashboard: InteractiveDashboard) -> Result<DashboardHttpServer> {
+pub fn start_http_server(dashboard: InteractiveDashboard) -> Result<DashboardHttpServer> {
     let mut server = DashboardHttpServer::new(_dashboard)?;
     server.start()?;
     Ok(server)

@@ -93,7 +93,7 @@ pub struct GpuRandomGenerator {
 
 impl GpuRandomGenerator {
     /// Create a new GPU random number generator with a device and generator type
-    pub fn new(device: Arc<GpuContext>, generator_type: GpuGeneratorType) -> CoreResult<Self> {
+    pub fn new(device: Arc<GpuContext>, generatortype: GpuGeneratorType) -> CoreResult<Self> {
         let work_group_size = 256; // Default work group size
 
         // Initialize seeds using system entropy
@@ -104,7 +104,7 @@ impl GpuRandomGenerator {
         let state = Arc::new(Mutex::new(GpuRngState {
             seeds,
             counters,
-            generator_type: generator_type.clone(),
+            generator_type: generatortype.clone(),
         }));
 
         let mut generator = Self {
@@ -115,13 +115,13 @@ impl GpuRandomGenerator {
         };
 
         // Compile kernels for the generator type
-        generator.compile_kernels(&generator_type)?;
+        generator.compile_kernels(&generatortype)?;
 
         Ok(generator)
     }
 
     /// Create a new GPU random number generator
-    pub fn with_generator_type(generator_type: GpuGeneratorType) -> CoreResult<Self> {
+    pub fn with_generator_type(generatortype: GpuGeneratorType) -> CoreResult<Self> {
         let work_group_size = 256; // Default work group size
 
         // Initialize seeds using system entropy
@@ -132,7 +132,7 @@ impl GpuRandomGenerator {
         let state = Arc::new(Mutex::new(GpuRngState {
             seeds,
             counters,
-            generator_type: generator_type.clone(),
+            generator_type: generatortype.clone(),
         }));
 
         let device = Arc::new(GpuContext::new(crate::gpu::GpuBackend::Cpu)?); // TODO: Proper device initialization
@@ -145,7 +145,7 @@ impl GpuRandomGenerator {
         };
 
         // Compile kernels for the generator _type
-        generator.compile_kernels(&generator_type)?;
+        generator.compile_kernels(&generatortype)?;
 
         Ok(generator)
     }
@@ -175,8 +175,8 @@ impl GpuRandomGenerator {
     }
 
     /// Compile GPU kernels for the generator type
-    fn compile_kernels(&mut self, generator_type: &GpuGeneratorType) -> CoreResult<()> {
-        match generator_type {
+    fn compile_kernels(&mut self, generatortype: &GpuGeneratorType) -> CoreResult<()> {
+        match generatortype {
             GpuGeneratorType::XorShift => {
                 self.compile_xorshift_kernels()?;
             }
@@ -189,7 +189,7 @@ impl GpuRandomGenerator {
             _ => {
                 return Err(CoreError::ComputationError(
                     crate::error::ErrorContext::new(format!(
-                        "Generator type {generator_type:?} not yet implemented"
+                        "Generator type {generatortype:?} not yet implemented"
                     )),
                 ));
             }

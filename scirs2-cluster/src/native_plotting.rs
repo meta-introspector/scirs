@@ -356,12 +356,12 @@ impl Default for NativePlotConfig {
 
 impl AdvancedNativePlotter {
     /// Create a new native plotter
-    pub fn new(_config: NativePlotConfig) -> Self {
+    pub fn new(config: NativePlotConfig) -> Self {
         Self {
-            svg_canvas: SvgCanvas::new(_config.width, _config.height),
+            svg_canvas: SvgCanvas::new(_config.width, config.height),
             animation_engine: AnimationEngine::new(_config.animation_fps),
             interactive_controller: InteractiveController::new(),
-            _config,
+            config,
         }
     }
 
@@ -784,7 +784,7 @@ impl AdvancedNativePlotter {
 
     // Helper methods for calculations and rendering
 
-    fn calculate_point_quantum_enhancement(&self, point_idx: usize, cluster_id: usize, result: &AdvancedClusteringResult) -> f64 {
+    fn calculate_point_quantum_enhancement(&self, point_idx: usize, clusterid: usize, result: &AdvancedClusteringResult) -> f64 {
         // Calculate quantum enhancement based on clustering properties
         let base_quantum = result.quantum_advantage / 10.0;
         let coherence_factor = result.performance.quantum_coherence;
@@ -799,7 +799,7 @@ impl AdvancedNativePlotter {
             .min(1.0)
     }
 
-    fn get_cluster_color(&self, cluster_id: usize) -> String {
+    fn get_cluster_color(&self, clusterid: usize) -> String {
         match self.config.color_scheme {
             PlotColorScheme::Quantum => {
                 let hue = (cluster_id as f64 * 137.5) % 360.0; // Golden angle
@@ -828,7 +828,7 @@ impl AdvancedNativePlotter {
         }
     }
 
-    fn get_cluster_color_rgb(&self, cluster_id: usize) -> [u8; 3] {
+    fn get_cluster_color_rgb(&self, clusterid: usize) -> [u8; 3] {
         match self.config.color_scheme {
             PlotColorScheme::Quantum => {
                 let hue = (cluster_id as f64 * 137.5) % 360.0;
@@ -856,7 +856,7 @@ impl AdvancedNativePlotter {
         }
     }
 
-    fn apply_quantum_color_enhancement(&self, base_color: String, quantum_factor: f64) -> String {
+    fn apply_quantum_color_enhancement(&self, base_color: String, quantumfactor: f64) -> String {
         // Apply quantum shimmer effect to _color
         if base_color.starts_with("hsl") {
             // Extract hue, saturation, lightness
@@ -878,7 +878,7 @@ impl AdvancedNativePlotter {
         base_color // Return original if parsing fails
     }
 
-    fn apply_quantum_color_enhancement_rgb(&self, base_color: [u8; 3], quantum_factor: f64) -> [u8; 3] {
+    fn apply_quantum_color_enhancement_rgb(&self, base_color: [u8; 3], quantumfactor: f64) -> [u8; 3] {
         let enhancement = (quantum_factor * 50.0) as u8;
         [
             (base_color[0] as u16 + enhancement as u16).min(255) as u8,
@@ -923,7 +923,7 @@ impl AdvancedNativePlotter {
         (x_min - x_padding, x_max + x_padding, y_min - y_padding, y_max + y_padding)
     }
 
-    fn apply_native_pca(&self, data: &ArrayView2<f64>, target_dims: usize) -> Result<Array2<f64>> {
+    fn apply_native_pca(&self, data: &ArrayView2<f64>, targetdims: usize) -> Result<Array2<f64>> {
         // Simplified PCA implementation for native plotting
         let n_samples = data.nrows();
         let n_features = data.ncols();
@@ -953,7 +953,7 @@ impl AdvancedNativePlotter {
         Ok(reduced)
     }
 
-    fn add_plot_axes_and_labels(&mut self, x_min: f64, x_max: f64, y_min: f64, y_max: f64, margin: f64) -> Result<()> {
+    fn add_plot_axes_and_labels(&mut self, x_min: f64, x_max: f64, y_min: f64, ymax: f64, margin: f64) -> Result<()> {
         let plot_width = self.config.width as f64 - 2.0 * margin;
         let plot_height = self.config.height as f64 - 2.0 * margin;
 
@@ -1201,9 +1201,9 @@ pub struct ExecutionSummary {
 // would provide the core rendering and interaction capabilities
 
 impl SvgCanvas {
-    pub fn new(_width: usize, height: usize) -> Self {
+    pub fn new(width: usize, height: usize) -> Self {
         Self {
-            _width,
+            width,
             height,
             elements: Vec::new(),
             styles: HashMap::new(),
@@ -1284,11 +1284,11 @@ impl SvgElement {
 }
 
 impl AnimationEngine {
-    pub fn new(_fps: f64) -> Self {
+    pub fn new(fps: f64) -> Self {
         Self {
             frames: Vec::new(),
             current_frame: 0,
-            frame_duration: 1000.0 / _fps,
+            frame_duration: 1000.0 / fps,
             total_duration: 0.0,
         }
     }

@@ -12,7 +12,7 @@
 
 use super::windows::dpss;
 use crate::error::{SignalError, SignalResult};
-use crate::simd_advanced::simd_apply_window;
+use crate::simd_advanced::{simd_apply_window, SimdConfig};
 use ndarray::{Array1, Array2, ArrayView1};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
@@ -116,7 +116,7 @@ impl Default for MultitaperConfig {
 /// use rand::prelude::*;
 /// let mut rng = rand::rng();
 /// let signal: Vec<f64> = t.iter()
-///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(0.0..1.0))
+///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.gen_range(0.0..1.0))
 ///     .collect();
 ///
 /// // Configure multitaper estimation
@@ -448,12 +448,12 @@ fn compute_single_tapered_fft_simd(
 
 /// Validate spectral matrix for numerical stability
 #[allow(dead_code)]
-fn validate_spectral_matrix(_spectra: &Array2<f64>) -> SignalResult<()> {
-    let (k, nfft) = _spectra.dim();
+fn validate_spectral_matrix(spectra: &Array2<f64>) -> SignalResult<()> {
+    let (k, nfft) = spectra.dim();
 
     for i in 0..k {
         for j in 0..nfft {
-            let val = _spectra[[i, j]];
+            let val = spectra[[i, j]];
 
             if !val.is_finite() {
                 return Err(SignalError::ComputationError(format!(
@@ -481,7 +481,7 @@ fn validate_spectral_matrix(_spectra: &Array2<f64>) -> SignalResult<()> {
 
     // Additional validation: check for reasonable energy distribution
     for i in 0..k {
-        let row_sum: f64 = (0..nfft).map(|j| _spectra[[i, j]]).sum();
+        let row_sum: f64 = (0..nfft).map(|j| spectra[[i, j]]).sum();
 
         if row_sum < 1e-100 {
             return Err(SignalError::ComputationError(format!(
@@ -567,7 +567,7 @@ fn try_basic_simd_tapering(
     tapered: &mut [f64],
 ) -> SignalResult<()> {
     let signal_view = ArrayView1::from(signal);
-    let _tapered_view = ArrayView1::fromshape(signal.len(), tapered)
+    let _tapered_view = ArrayView1::from_shape(signal.len(), tapered)
         .map_err(|e| SignalError::ComputationError(format!("Shape error: {}", e)))?;
 
     let result = f64::simd_mul(&signal_view, taper);
@@ -609,31 +609,31 @@ fn try_chunked_simd_tapering(
 
 /// Optimized scalar tapering fallback
 #[allow(dead_code)]
-fn scalar_tapering_optimized(_signal: &[f64], taper: &ArrayView1<f64>, tapered: &mut [f64]) {
+fn scalar_tapering_optimized(signal: &[f64], taper: &ArrayView1<f64>, tapered: &mut [f64]) {
     // Unrolled loop for better performance
     let taper_slice = taper.as_slice().unwrap();
-    let chunks = _signal.len() / 4;
+    let chunks = signal.len() / 4;
 
     // Process 4 elements at a time
     for i in 0..chunks {
         let base_idx = i * 4;
-        tapered[base_idx] = _signal[base_idx] * taper_slice[base_idx];
-        tapered[base_idx + 1] = _signal[base_idx + 1] * taper_slice[base_idx + 1];
-        tapered[base_idx + 2] = _signal[base_idx + 2] * taper_slice[base_idx + 2];
-        tapered[base_idx + 3] = _signal[base_idx + 3] * taper_slice[base_idx + 3];
+        tapered[base_idx] = signal[base_idx] * taper_slice[base_idx];
+        tapered[base_idx + 1] = signal[base_idx + 1] * taper_slice[base_idx + 1];
+        tapered[base_idx + 2] = signal[base_idx + 2] * taper_slice[base_idx + 2];
+        tapered[base_idx + 3] = signal[base_idx + 3] * taper_slice[base_idx + 3];
     }
 
     // Handle remaining elements
     for i in (chunks * 4).._signal.len() {
-        tapered[i] = _signal[i] * taper_slice[i];
+        tapered[i] = signal[i] * taper_slice[i];
     }
 }
 
 /// Validate tapered signal with efficient bulk checking
 #[allow(dead_code)]
-fn validate_tapered_signal(_tapered: &[f64]) -> SignalResult<()> {
+fn validate_tapered_signal(tapered: &[f64]) -> SignalResult<()> {
     // Use SIMD-optimized validation when possible
-    for (i, &val) in _tapered.iter().enumerate() {
+    for (i, &val) in tapered.iter().enumerate() {
         if !val.is_finite() {
             return Err(SignalError::ComputationError(format!(
                 "Non-finite value in _tapered signal at index {}: {}",
@@ -745,12 +745,12 @@ fn enhanced_simd_fft(x: &[f64], nfft: usize) -> SignalResult<Vec<Complex64>> {
 
 /// Compute validated power spectrum with comprehensive error checking
 #[allow(dead_code)]
-fn compute_validated_power_spectrum(_spectrum: &[Complex64]) -> SignalResult<Vec<f64>> {
+fn compute_validated_power_spectrum(spectrum: &[Complex64]) -> SignalResult<Vec<f64>> {
     let mut power_spectrum = Vec::with_capacity(_spectrum.len());
     let mut max_power = 0.0;
     let mut suspicious_values = 0;
 
-    for (i, &val) in _spectrum.iter().enumerate() {
+    for (i, &val) in spectrum.iter().enumerate() {
         let power = val.norm_sqr();
 
         // Enhanced validation for power values
@@ -771,7 +771,7 @@ fn compute_validated_power_spectrum(_spectrum: &[Complex64]) -> SignalResult<Vec
         // Track suspicious values
         if power > 1e50 {
             suspicious_values += 1;
-            if suspicious_values > _spectrum.len() / 10 {
+            if suspicious_values > spectrum.len() / 10 {
                 return Err(SignalError::ComputationError(
                     "Too many extremely large power _spectrum values detected".to_string(),
                 ));
@@ -1189,9 +1189,9 @@ fn compute_confidence_intervals(
 
 /// Compute effective degrees of freedom with enhanced numerical stability
 #[allow(dead_code)]
-fn compute_effective_dof(_eigenvalues: &Array1<f64>) -> f64 {
-    let sum_lambda: f64 = _eigenvalues.sum();
-    let sum_lambda_sq: f64 = _eigenvalues.iter().map(|&x| x * x).sum();
+fn compute_effective_dof(eigenvalues: &Array1<f64>) -> f64 {
+    let sum_lambda: f64 = eigenvalues.sum();
+    let sum_lambda_sq: f64 = eigenvalues.iter().map(|&x| x * x).sum();
 
     // Enhanced numerical stability for edge cases
     if sum_lambda_sq < 1e-15 || sum_lambda < 1e-15 {
@@ -1207,12 +1207,12 @@ fn compute_effective_dof(_eigenvalues: &Array1<f64>) -> f64 {
             dof
         );
         2.0
-    } else if dof > 2.0 * _eigenvalues.len() as f64 {
+    } else if dof > 2.0 * eigenvalues.len() as f64 {
         eprintln!(
             "Warning: Computed DOF ({:.2}) exceeds theoretical maximum",
             dof
         );
-        2.0 * _eigenvalues.len() as f64
+        2.0 * eigenvalues.len() as f64
     } else {
         dof
     }
@@ -1238,9 +1238,9 @@ fn compute_pmtm_chunked(
     let memory_factor = if config.memory_optimized { 0.5 } else { 1.0 };
 
     let base_chunk_size = match (config.k, signal_complexity) {
-        (k_) if k > 30 => 30_000, // Many tapers require smaller chunks
+        (k, _) if k > 30 => 30_000, // Many tapers require smaller chunks
         (k, complexity) if k > 15 && complexity > 2.0 => 40_000, // Complex signals need more care
-        (k_) if k > 10 => 60_000, // Moderate number of tapers
+        (k, _) if k > 10 => 60_000, // Moderate number of tapers
         _ => 100_000,             // Standard case
     };
 
@@ -1432,14 +1432,14 @@ fn interpolate_psd(
 /// - Dynamic range
 /// - High-frequency content
 #[allow(dead_code)]
-fn estimate_signal_complexity(_signal: &[f64]) -> f64 {
-    if _signal.len() < 64 {
+fn estimate_signal_complexity(signal: &[f64]) -> f64 {
+    if signal.len() < 64 {
         return 1.0; // Simple case for short signals
     }
 
     // Calculate basic statistics
-    let mean = _signal.iter().sum::<f64>() / _signal.len() as f64;
-    let variance = _signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _signal.len() as f64;
+    let mean = signal.iter().sum::<f64>() / signal.len() as f64;
+    let variance = signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / signal.len() as f64;
     let std_dev = variance.sqrt();
 
     if std_dev < 1e-12 {
@@ -1447,16 +1447,16 @@ fn estimate_signal_complexity(_signal: &[f64]) -> f64 {
     }
 
     // Estimate dynamic range
-    let max_val = _signal.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    let min_val = _signal.iter().cloned().fold(f64::INFINITY, f64::min);
+    let max_val = signal.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let min_val = signal.iter().cloned().fold(f64::INFINITY, f64::min);
     let dynamic_range = (max_val - min_val) / std_dev;
 
     // Estimate high-frequency content via differences
     let mut high_freq_energy = 0.0;
-    for window in _signal.windows(2) {
+    for window in signal.windows(2) {
         high_freq_energy += (window[1] - window[0]).powi(2);
     }
-    high_freq_energy /= _signal.len() as f64;
+    high_freq_energy /= signal.len() as f64;
     let high_freq_ratio = high_freq_energy / variance.max(1e-12);
 
     // Combine factors for complexity score

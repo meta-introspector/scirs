@@ -801,7 +801,7 @@ where
     T: Float + FromPrimitive + Copy + Zero,
 {
     // Implementation would perform quantum Fourier-based processing
-    let (height, width) = _image.dim();
+    let (height, width) = image.dim();
     Ok(Array2::zeros((height, width)))
 }
 
@@ -813,7 +813,7 @@ where
     T: Float + FromPrimitive + Copy + Zero,
 {
     // Implementation would perform quantum superposition-based processing
-    let (height, width) = _image.dim();
+    let (height, width) = image.dim();
     Ok(Array2::zeros((height, width)))
 }
 
@@ -825,7 +825,7 @@ where
     T: Float + FromPrimitive + Copy + Zero,
 {
     // Implementation would perform quantum entanglement-based processing
-    let (height, width) = _image.dim();
+    let (height, width) = image.dim();
     Ok(Array2::zeros((height, width)))
 }
 
@@ -837,7 +837,7 @@ where
     T: Float + FromPrimitive + Copy + Zero,
 {
     // Implementation would perform quantum ML-based processing
-    let (height, width) = _image.dim();
+    let (height, width) = image.dim();
     Ok(Array2::zeros((height, width)))
 }
 
@@ -849,7 +849,7 @@ where
     T: Float + FromPrimitive + Copy + Zero,
 {
     // Implementation would perform quantum sensing-enhanced processing
-    let (height, width) = _image.dim();
+    let (height, width) = image.dim();
     Ok(Array2::zeros((height, width)))
 }
 
@@ -890,7 +890,7 @@ fn apply_gate_level_error_correction(
 }
 
 #[allow(dead_code)]
-fn validate_quantum_state(_state: &Array1<Complex<f64>>) -> NdimageResult<()> {
+fn validate_quantum_state(state: &Array1<Complex<f64>>) -> NdimageResult<()> {
     // Implementation would validate quantum _state normalization
     Ok(())
 }
@@ -945,7 +945,7 @@ fn classify_quantum_sample_gpu(
 }
 
 #[allow(dead_code)]
-fn analyze_current_workload(_context: &QuantumGPUContext) -> NdimageResult<WorkloadAnalysis> {
+fn analyze_current_workload(context: &QuantumGPUContext) -> NdimageResult<WorkloadAnalysis> {
     Ok(WorkloadAnalysis {
         quantum_task_ratio: 0.3,
         classical_task_ratio: 0.5,

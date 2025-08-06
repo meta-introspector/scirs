@@ -390,9 +390,9 @@ impl Default for NamingConventions {
 
 impl APIConsistencyValidator {
     /// Create new API consistency validator
-    pub fn new(_config: ValidationConfig) -> Self {
+    pub fn new(config: ValidationConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             results: ValidationResults::new(),
             function_registry: FunctionRegistry::new(),
         }
@@ -1069,7 +1069,7 @@ impl APIConsistencyValidator {
     }
 
     /// Register a function for validation
-    pub fn register_function(&mut self, function_sig: FunctionSignature) {
+    pub fn register_function(&mut self, functionsig: FunctionSignature) {
         // Add to module registry
         self.function_registry
             .functions_by_module
@@ -1156,7 +1156,7 @@ impl ParameterUsageAnalysis {
         }
     }
 
-    fn add_usage(&mut self, module: String, function: String, param_type: String) {
+    fn add_usage(&mut self, module: String, function: String, paramtype: String) {
         self.functions.push(format!("{}::{}", module, function));
         self.modules.insert(module);
         self.type_variations.insert(param_type);
@@ -1191,9 +1191,9 @@ pub struct ValidationReport {
 }
 
 impl ValidationReport {
-    pub fn new(_results: &ValidationResults) -> Self {
+    pub fn new(results: &ValidationResults) -> Self {
         Self {
-            results: _results.clone(),
+            results: results.clone(),
         }
     }
 

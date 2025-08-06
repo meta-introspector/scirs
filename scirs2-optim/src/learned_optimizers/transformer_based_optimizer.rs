@@ -2699,12 +2699,12 @@ pub struct TransformerOptimizerState<T: Float> {
 
 impl<T: Float + Send + Sync> TransformerOptimizer<T> {
     /// Create new transformer optimizer
-    pub fn new(_config: TransformerBasedOptimizerConfig<T>) -> Result<Self> {
+    pub fn new(config: TransformerBasedOptimizerConfig<T>) -> Result<Self> {
         let transformer = TransformerArchitecture::new(&_config)?;
         let positional_encoding = PositionalEncoding::new(
             PositionalEncodingType::Sinusoidal,
-            _config.max_seq_length,
-            _config.model_dim,
+            config.max_seq_length,
+            config.model_dim,
         )?;
         
         Ok(Self {
@@ -2715,7 +2715,7 @@ impl<T: Float + Send + Sync> TransformerOptimizer<T> {
             meta_learning: TransformerMetaLearning::new(&_config.meta_config)?,
             sequence_processor: OptimizationSequenceProcessor::new()?,
             memory_manager: TransformerMemoryManager::new(&_config.memory_config)?,
-            _config,
+            config,
             performance_tracker: TransformerPerformanceTracker::new()?,
             state: TransformerOptimizerState::new()?,
         })
@@ -2876,7 +2876,7 @@ impl<T: Float + Send + Sync> TransformerLayer<T> {
 }
 
 impl<T: Float + Send + Sync> FeedForwardNetwork<T> {
-    fn new(_input_dim: usize, hidden_dim: usize, dropout_rate: f64) -> Result<Self> {
+    fn new(_input_dim: usize, hidden_dim: usize, dropoutrate: f64) -> Result<Self> {
         Ok(Self {
             linear1: LinearLayer::new(_input_dim, hidden_dim)?,
             linear2: LinearLayer::new(hidden_dim_input_dim)?,
@@ -2935,7 +2935,7 @@ impl<T: Float + Send + Sync> FeedForwardNetwork<T> {
 }
 
 impl<T: Float + Send + Sync> LinearLayer<T> {
-    fn new(_input_dim: usize, output_dim: usize) -> Result<Self> {
+    fn new(_input_dim: usize, outputdim: usize) -> Result<Self> {
         // Xavier initialization
         let init_scale = T::from((2.0 / (_input_dim + output_dim) as f64).sqrt()).unwrap();
         
@@ -2973,12 +2973,12 @@ impl<T: Float + Send + Sync> LinearLayer<T> {
 }
 
 impl<T: Float + Send + Sync> LayerNormalization<T> {
-    fn new(_dim: usize) -> Result<Self> {
+    fn new(dim: usize) -> Result<Self> {
         Ok(Self {
             weight: Array1::ones(_dim),
             bias: Array1::zeros(_dim),
             eps: T::from(1e-6).unwrap(),
-            _dim,
+            dim,
         })
     }
     
@@ -3014,9 +3014,9 @@ impl<T: Float + Send + Sync> LayerNormalization<T> {
 }
 
 impl<T: Float + Send + Sync> EmbeddingLayer<T> {
-    fn new(_embedding_dim: usize, max_seq_length: usize) -> Result<Self> {
+    fn new(_embedding_dim: usize, max_seqlength: usize) -> Result<Self> {
         let init_scale = T::from(0.02).unwrap();
-        let embedding_weights = Array2::from_shape_fn((max_seq_length, _embedding_dim), |(i, j)| {
+        let embedding_weights = Array2::from_shape_fn((max_seq_length, embedding_dim), |(i, j)| {
             T::from((i as f64 * 0.01 + j as f64 * 0.02 - 0.5)).unwrap() * init_scale
         });
         
@@ -3054,12 +3054,12 @@ impl<T: Float + Send + Sync> EmbeddingLayer<T> {
 }
 
 impl<T: Float + Send + Sync> OutputProjection<T> {
-    fn new(_input_dim: usize, output_dim: usize) -> Result<Self> {
+    fn new(_input_dim: usize, outputdim: usize) -> Result<Self> {
         Ok(Self {
             projection_layer: LinearLayer::new(_input_dim, output_dim)?,
             output_activation: OutputActivation::Linear,
             config: OutputProjectionConfig {
-                _input_dim,
+                input_dim,
                 output_dim,
                 use_bias: true,
                 activation_type: ActivationType::Linear,
@@ -3073,9 +3073,9 @@ impl<T: Float + Send + Sync> OutputProjection<T> {
 }
 
 impl DropoutLayer {
-    fn new(_dropout_rate: f64) -> Self {
+    fn new(_dropoutrate: f64) -> Self {
         Self {
-            _dropout_rate,
+            dropout_rate,
             training: true,
         }
     }
@@ -3154,21 +3154,21 @@ impl<T: Float + Send + Sync> ResidualConnections<T> {
 
 // Implementation stubs for major components
 impl<T: Float + Send + Sync> TransformerArchitecture<T> {
-    fn new(_config: &TransformerBasedOptimizerConfig<T>) -> Result<Self> {
+    fn new(config: &TransformerBasedOptimizerConfig<T>) -> Result<Self> {
         let mut layers = Vec::new();
         
         // Create transformer layers
         for _ in 0.._config.num_layers {
             let layer = TransformerLayer {
                 self_attention: MultiHeadAttention::new_with_config(
-                    _config.model_dim,
-                    _config.num_heads,
-                    _config.dropout_rate,
+                    config.model_dim,
+                    config.num_heads,
+                    config.dropout_rate,
                 )?,
                 feed_forward: FeedForwardNetwork::new(
-                    _config.model_dim,
-                    _config.ff_hidden_dim,
-                    _config.dropout_rate,
+                    config.model_dim,
+                    config.ff_hidden_dim,
+                    config.dropout_rate,
                 )?,
                 pre_norm1: LayerNormalization::new(_config.model_dim)?,
                 pre_norm2: LayerNormalization::new(_config.model_dim)?,
@@ -3180,22 +3180,22 @@ impl<T: Float + Send + Sync> TransformerArchitecture<T> {
         
         Ok(Self {
             layers,
-            input_embedding: EmbeddingLayer::new(_config.model_dim, _config.max_seq_length)?,
-            output_projection: OutputProjection::new(_config.model_dim, _config.model_dim)?,
+            input_embedding: EmbeddingLayer::new(_config.model_dim, config.max_seq_length)?,
+            output_projection: OutputProjection::new(_config.model_dim, config.model_dim)?,
             layer_norm: LayerNormalization::new(_config.model_dim)?,
             dropout: DropoutLayer::new(_config.dropout_rate),
             _config: TransformerArchConfig {
-                model_dim: _config.model_dim,
-                num_layers: _config.num_layers,
-                num_heads: _config.num_heads,
-                ff_hidden_dim: _config.ff_hidden_dim,
-                max_seq_length: _config.max_seq_length,
-                dropout_rate: _config.dropout_rate,
+                model_dim: config.model_dim,
+                num_layers: config.num_layers,
+                num_heads: config.num_heads,
+                ff_hidden_dim: config.ff_hidden_dim,
+                max_seq_length: config.max_seq_length,
+                dropout_rate: config.dropout_rate,
             },
         })
     }
     
-    fn forward(&self, grad_sequence: &Array2<T>, param_sequence: &Array2<T>) -> Result<Array2<T>> {
+    fn forward(&self, grad_sequence: &Array2<T>, paramsequence: &Array2<T>) -> Result<Array2<T>> {
         // Combine input sequences
         let seq_len = grad_sequence.shape()[0].min(param_sequence.shape()[0]);
         let mut combined_input = Array2::zeros((seq_len, self.config.model_dim));
@@ -3234,7 +3234,7 @@ impl<T: Float + Send + Sync> TransformerArchitecture<T> {
 }
 
 impl<T: Float + Send + Sync> PositionalEncoding<T> {
-    fn new(_encoding_type: PositionalEncodingType, max_length: usize, encoding_dim: usize) -> Result<Self> {
+    fn new(_encoding_type: PositionalEncodingType, max_length: usize, encodingdim: usize) -> Result<Self> {
         let mut encoding_matrix = Array2::zeros((max_length, encoding_dim));
         
         match _encoding_type {
@@ -3292,11 +3292,11 @@ impl<T: Float + Send + Sync> PositionalEncoding<T> {
 }
 
 impl<T: Float + Send + Sync> MultiHeadAttention<T> {
-    fn new(_config: &TransformerBasedOptimizerConfig<T>) -> Result<Self> {
-        Self::new_with_config(_config.model_dim, _config.num_heads, _config.dropout_rate)
+    fn new(config: &TransformerBasedOptimizerConfig<T>) -> Result<Self> {
+        Self::new_with_config(_config.model_dim, config.num_heads, config.dropout_rate)
     }
     
-    fn new_with_config(_model_dim: usize, num_heads: usize, dropout_rate: f64) -> Result<Self> {
+    fn new_with_config(_model_dim: usize, num_heads: usize, dropoutrate: f64) -> Result<Self> {
         if _model_dim % num_heads != 0 {
             return Err(OptimError::InvalidConfig(
                 format!("Model dimension {} must be divisible by number of _heads {}", model_dim, num_heads)
@@ -3451,9 +3451,9 @@ impl<T: Float + Send + Sync> MultiHeadAttention<T> {
 }
 
 impl<T: Float + Send + Sync> TransformerMetaLearning<T> {
-    fn new(_config: &TransformerMetaConfig<T>) -> Result<Self> {
+    fn new(config: &TransformerMetaConfig<T>) -> Result<Self> {
         Ok(Self {
-            meta_strategy: _config.strategy,
+            meta_strategy: config.strategy,
             gradient_processor: GradientProcessor::new()?,
             update_rule_generator: UpdateRuleGenerator::new()?,
             context_integrator: ContextIntegrator::new()?,
@@ -3461,15 +3461,15 @@ impl<T: Float + Send + Sync> TransformerMetaLearning<T> {
             performance_tracker: PerformanceTracker::new()?,
             adaptation_mechanism: AdaptationMechanism::new()?,
             inner_loop_config: InnerLoopConfig {
-                num_steps: _config.inner_steps,
+                num_steps: config.inner_steps,
                 learning_rate: T::from(_config.inner_lr).unwrap(),
-                second_order: _config.second_order,
+                second_order: config.second_order,
                 gradient_clip: Some(T::from(1.0).unwrap()),
             },
             outer_loop_config: OuterLoopConfig {
                 meta_learning_rate: T::from(0.001).unwrap(),
                 meta_batch_size: 32,
-                task_sampling: _config.task_sampling,
+                task_sampling: config.task_sampling,
                 meta_gradient_clip: Some(T::from(1.0).unwrap()),
             },
             state: MetaLearningState {
@@ -3624,12 +3624,12 @@ impl<T: Float + Send + Sync> OptimizationSequenceProcessor<T> {
 }
 
 impl<T: Float + Send + Sync> TransformerMemoryManager<T> {
-    fn new(_config: &TransformerMemoryConfig<T>) -> Result<Self> {
+    fn new(config: &TransformerMemoryConfig<T>) -> Result<Self> {
         let mut memory_stores = HashMap::new();
         
         // Initialize memory stores for each type
         for memory_type in &_config.memory_types {
-            let capacity = _config.memory_capacities.get(memory_type).unwrap_or(&1024);
+            let capacity = config.memory_capacities.get(memory_type).unwrap_or(&1024);
             let store = MemoryStore::new(*capacity)?;
             memory_stores.insert(*memory_type, store);
         }
@@ -3639,7 +3639,7 @@ impl<T: Float + Send + Sync> TransformerMemoryManager<T> {
             access_patterns: HashMap::new(),
             compression_manager: CompressionManager::new(_config.compression_ratio)?,
             garbage_collector: MemoryGarbageCollector::new(_config.enable_gc)?,
-            _config: _config.clone(),
+            _config: config.clone(),
             usage_statistics: MemoryUsageStatistics {
                 total_allocations: 0,
                 total_deallocations: 0,
@@ -3650,7 +3650,7 @@ impl<T: Float + Send + Sync> TransformerMemoryManager<T> {
         })
     }
     
-    fn store_memory(&mut self, memory_type: MemoryType, key: String, value: Array1<T>) -> Result<()> {
+    fn store_memory(&mut self, memorytype: MemoryType, key: String, value: Array1<T>) -> Result<()> {
         let store = self.memory_stores.get_mut(&memory_type)
             .ok_or_else(|| OptimError::InvalidConfig("Memory _type not configured".to_string()))?;
         
@@ -3677,7 +3677,7 @@ impl<T: Float + Send + Sync> TransformerMemoryManager<T> {
         Ok(())
     }
     
-    fn retrieve_memory(&mut self, memory_type: MemoryType, key: &str) -> Result<Option<Array1<T>>> {
+    fn retrieve_memory(&mut self, memorytype: MemoryType, key: &str) -> Result<Option<Array1<T>>> {
         let store = self.memory_stores.get_mut(&memory_type)
             .ok_or_else(|| OptimError::InvalidConfig("Memory _type not configured".to_string()))?;
         
@@ -3775,7 +3775,7 @@ impl<T: Float + Send + Sync> TransformerPerformanceTracker<T> {
         &self.current_metrics
     }
     
-    fn predict_future_performance(&self, steps_ahead: usize) -> Result<Vec<PerformanceMetrics<T>>> {
+    fn predict_future_performance(&self, stepsahead: usize) -> Result<Vec<PerformanceMetrics<T>>> {
         if !self.config.enable_prediction {
             return Err(OptimError::InvalidConfig("Performance prediction is disabled".to_string()));
         }
@@ -3851,7 +3851,7 @@ impl<T: Float + Send + Sync> ContextIntegrator<T> {
         })
     }
     
-    fn integrate(&self, gradients: &Array1<T>, _context: &TaskContext<T>) -> Result<Array1<T>> {
+    fn integrate(&self, gradients: &Array1<T>, context: &TaskContext<T>) -> Result<Array1<T>> {
         // Simple integration - just return processed gradients
         Ok(gradients.clone())
     }
@@ -4117,7 +4117,7 @@ impl<T: Float + Send + Sync> MemoryManagement<T> {
 }
 
 impl<T: Float + Send + Sync> CompressionManager<T> {
-    fn new(_compression_ratio: f64) -> Result<Self> {
+    fn new(_compressionratio: f64) -> Result<Self> {
         Ok(Self {
             compression_type: CompressionType::PCA,
             compression_ratio: T::from(_compression_ratio).unwrap(),
@@ -4146,9 +4146,9 @@ impl<T: Float + Send + Sync> CompressionModel<T> {
 }
 
 impl<T: Float + Send + Sync> MemoryGarbageCollector<T> {
-    fn new(_enabled: bool) -> Result<Self> {
+    fn new(enabled: bool) -> Result<Self> {
         Ok(Self {
-            _enabled,
+            enabled,
             gc_strategy: GCStrategy::Generational,
             gc_frequency: Duration::from_secs(300),
             last_gc: Instant::now(),
@@ -4164,10 +4164,10 @@ impl<T: Float + Send + Sync> MemoryGarbageCollector<T> {
 }
 
 impl<T: Float + Send + Sync> MemoryStore<T> {
-    fn new(_capacity: usize) -> Result<Self> {
+    fn new(capacity: usize) -> Result<Self> {
         Ok(Self {
             data: HashMap::new(),
-            _capacity,
+            capacity,
             current_size: 0,
         })
     }

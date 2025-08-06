@@ -333,18 +333,18 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
     }
 
     /// Optimized reduction operations with tree reduction
-    pub fn advanced_reduce_sum(&self, _data: &ArrayView1<F>) -> IntegrateResult<F> {
-        if _data.is_empty() {
+    pub fn advanced_reduce_sum(&self, data: &ArrayView1<F>) -> IntegrateResult<F> {
+        if data.is_empty() {
             return Ok(F::zero());
         }
 
         // Use hierarchical reduction for optimal performance
         if self.simd_capabilities.vector_width >= 512 {
-            self.avx512_tree_reduction_sum(_data)
+            self.avx512_tree_reduction_sum(data)
         } else if F::simd_available() {
-            self.simd_tree_reduction_sum(_data)
+            self.simd_tree_reduction_sum(data)
         } else {
-            Ok(_data.iter().fold(F::zero(), |acc, &x| acc + x))
+            Ok(data.iter().fold(F::zero(), |acc, &x| acc + x))
         }
     }
 
@@ -454,25 +454,25 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
     /// Mixed-precision computation for enhanced performance
     pub fn advanced_mixed_precision_step(
         &self,
-        high_precision_data: &ArrayView1<F>,
+        high_precisiondata: &ArrayView1<F>,
         operation: MixedPrecisionOperation,
     ) -> IntegrateResult<Array1<F>> {
         // Analyze precision requirements
         let precision_requirements = self
             .mixed_precision_engine
-            .analyze_precision_needs(high_precision_data)?;
+            .analyze_precision_needs(high_precisiondata)?;
 
         // Perform computation with optimal precision
         match precision_requirements.recommended_precision {
-            PrecisionLevel::Half => self.half_precision_computation(high_precision_data, operation),
+            PrecisionLevel::Half => self.half_precision_computation(high_precisiondata, operation),
             PrecisionLevel::Single => {
-                self.single_precision_computation(high_precision_data, operation)
+                self.single_precision_computation(high_precisiondata, operation)
             }
             PrecisionLevel::Double => {
-                self.double_precision_computation(high_precision_data, operation)
+                self.double_precision_computation(high_precisiondata, operation)
             }
             PrecisionLevel::Mixed => {
-                self.adaptive_mixed_precision_computation(high_precision_data, operation)
+                self.adaptive_mixed_precision_computation(high_precisiondata, operation)
             }
         }
     }
@@ -612,20 +612,20 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
     }
 
     /// Tree reduction for optimal SIMD utilization
-    fn simd_tree_reduction_sum(&self, _data: &ArrayView1<F>) -> IntegrateResult<F> {
-        let n = _data.len();
+    fn simd_tree_reduction_sum(&self, data: &ArrayView1<F>) -> IntegrateResult<F> {
+        let n = data.len();
         if n == 0 {
             return Ok(F::zero());
         }
 
         let simd_width = 8; // Assume 8-wide SIMD
         if n < simd_width {
-            return Ok(_data.iter().fold(F::zero(), |acc, &x| acc + x));
+            return Ok(data.iter().fold(F::zero(), |acc, &x| acc + x));
         }
 
         // First level: SIMD reduction within vectors
         let mut partial_sums = Vec::new();
-        for chunk in _data.exact_chunks(simd_width) {
+        for chunk in data.exact_chunks(simd_width) {
             let sum = F::simd_sum(&chunk);
             partial_sums.push(sum);
         }
@@ -633,7 +633,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
         // Handle remainder
         let remainder_start = (n / simd_width) * simd_width;
         if remainder_start < n {
-            let remainder_sum = _data
+            let remainder_sum = data
                 .slice(s![remainder_start..])
                 .iter()
                 .fold(F::zero(), |acc, &x| acc + x);
@@ -658,9 +658,9 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
     }
 
     /// AVX-512 tree reduction
-    fn avx512_tree_reduction_sum(&self, _data: &ArrayView1<F>) -> IntegrateResult<F> {
+    fn avx512_tree_reduction_sum(&self, data: &ArrayView1<F>) -> IntegrateResult<F> {
         // Simplified implementation - would use actual AVX-512 intrinsics
-        self.simd_tree_reduction_sum(_data)
+        self.simd_tree_reduction_sum(data)
     }
 
     /// Predicated SIMD conditional operations
@@ -729,7 +729,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
                         use std::arch::x86_64::_MM_HINT_T0;
                         unsafe {
                             let ptr = data.as_ptr().add(prefetch_idx);
-                            _mm_prefetch(ptr as *const i8, _MM_HINT_T0);
+                            _mm_prefetch(ptr as *const i8, MM_HINT_T0);
                         }
                     }
                     #[cfg(not(target_arch = "x86_64"))]
@@ -833,7 +833,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
         operation: MixedPrecisionOperation,
     ) -> IntegrateResult<Array1<F>> {
         // Convert to f16 for computation, then back to F
-        let f16_data: Array1<half::f16> = Array1::from_vec(
+        let f16data: Array1<half::f16> = Array1::from_vec(
             data.iter()
                 .map(|&x| half::f16::from_f64(x.to_f64().unwrap_or(0.0)))
                 .collect(),
@@ -841,17 +841,17 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
 
         // Perform SIMD operations in f16 precision
         let result_f16 = match operation {
-            MixedPrecisionOperation::Addition => self.half_precision_vector_add(&f16_data)?,
-            MixedPrecisionOperation::Multiplication => self.half_precision_vector_mul(&f16_data)?,
+            MixedPrecisionOperation::Addition => self.half_precision_vector_add(&f16data)?,
+            MixedPrecisionOperation::Multiplication => self.half_precision_vector_mul(&f16data)?,
             MixedPrecisionOperation::DotProduct => {
-                Array1::from_vec(vec![self.half_precision_dot_product(&f16_data, &f16_data)?])
+                Array1::from_vec(vec![self.half_precision_dot_product(&f16data, &f16data)?])
             }
             MixedPrecisionOperation::Reduction => {
-                Array1::from_vec(vec![self.half_precision_reduction(&f16_data)?])
+                Array1::from_vec(vec![self.half_precision_reduction(&f16data)?])
             }
             MixedPrecisionOperation::MatrixMultiply => {
                 // For now, fallback to element-wise multiplication
-                self.half_precision_vector_mul(&f16_data)?
+                self.half_precision_vector_mul(&f16data)?
             }
         };
 
@@ -870,7 +870,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
         operation: MixedPrecisionOperation,
     ) -> IntegrateResult<Array1<F>> {
         // Convert to f32 for computation, then back to F
-        let f32_data: Array1<f32> = Array1::from_vec(
+        let f32data: Array1<f32> = Array1::from_vec(
             data.iter()
                 .map(|&x| x.to_f64().unwrap_or(0.0) as f32)
                 .collect(),
@@ -878,19 +878,19 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
 
         // Perform SIMD operations in f32 precision
         let result_f32 = match operation {
-            MixedPrecisionOperation::Addition => self.single_precision_vector_add(&f32_data)?,
+            MixedPrecisionOperation::Addition => self.single_precision_vector_add(&f32data)?,
             MixedPrecisionOperation::Multiplication => {
-                self.single_precision_vector_mul(&f32_data)?
+                self.single_precision_vector_mul(&f32data)?
             }
             MixedPrecisionOperation::DotProduct => Array1::from_vec(vec![
-                self.single_precision_dot_product(&f32_data, &f32_data)?
+                self.single_precision_dot_product(&f32data, &f32data)?
             ]),
             MixedPrecisionOperation::Reduction => {
-                Array1::from_vec(vec![self.single_precision_reduction(&f32_data)?])
+                Array1::from_vec(vec![self.single_precision_reduction(&f32data)?])
             }
             MixedPrecisionOperation::MatrixMultiply => {
                 // For now, fallback to element-wise multiplication
-                self.single_precision_vector_mul(&f32_data)?
+                self.single_precision_vector_mul(&f32data)?
             }
         };
 
@@ -909,24 +909,24 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
         operation: MixedPrecisionOperation,
     ) -> IntegrateResult<Array1<F>> {
         // Use native F64 precision for computation
-        let f64_data: Array1<f64> =
+        let f64data: Array1<f64> =
             Array1::from_vec(data.iter().map(|&x| x.to_f64().unwrap_or(0.0)).collect());
 
         // Perform SIMD operations in f64 precision
         let result_f64 = match operation {
-            MixedPrecisionOperation::Addition => self.double_precision_vector_add(&f64_data)?,
+            MixedPrecisionOperation::Addition => self.double_precision_vector_add(&f64data)?,
             MixedPrecisionOperation::Multiplication => {
-                self.double_precision_vector_mul(&f64_data)?
+                self.double_precision_vector_mul(&f64data)?
             }
             MixedPrecisionOperation::DotProduct => {
-                Array1::from_vec(vec![self.double_precision_reduction(&f64_data)?])
+                Array1::from_vec(vec![self.double_precision_reduction(&f64data)?])
             }
             MixedPrecisionOperation::Reduction => {
-                Array1::from_vec(vec![self.double_precision_reduction(&f64_data)?])
+                Array1::from_vec(vec![self.double_precision_reduction(&f64data)?])
             }
             MixedPrecisionOperation::MatrixMultiply => {
                 // For now, fallback to element-wise multiplication
-                self.double_precision_vector_mul(&f64_data)?
+                self.double_precision_vector_mul(&f64data)?
             }
         };
 
@@ -988,7 +988,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
         operation: MixedPrecisionOperation,
     ) -> IntegrateResult<Array1<F>> {
         // Analyze data characteristics to determine optimal precision
-        let data_range = self.analyze_data_range(data);
+        let data_range = self.analyzedata_range(data);
         let error_sensitivity = self.analyze_error_sensitivity(data, &operation);
 
         // Choose precision based on analysis
@@ -1138,7 +1138,7 @@ pub struct PrecisionRequirements {
 
 // Placeholder implementations for complex supporting types
 impl<F: IntegrateFloat> VectorizationStrategies<F> {
-    fn new(_capabilities: &SimdCapabilities) -> IntegrateResult<Self> {
+    fn new(capabilities: &SimdCapabilities) -> IntegrateResult<Self> {
         Ok(VectorizationStrategies {
             loop_patterns: Vec::new(),
             layout_transforms: Vec::new(),
@@ -1175,7 +1175,7 @@ impl<F: IntegrateFloat> MixedPrecisionEngine<F> {
 
     fn analyze_precision_needs(
         &self,
-        _data: &ArrayView1<F>,
+        data: &ArrayView1<F>,
     ) -> IntegrateResult<PrecisionRequirements> {
         Ok(PrecisionRequirements {
             recommended_precision: PrecisionLevel::Double,
@@ -1462,7 +1462,7 @@ impl<F: IntegrateFloat> BlendOperation<F> {
 
 // Additional SIMD helper methods implementation
 impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
-    fn analyze_data_range(&self, data: &ArrayView1<F>) -> (f64, f64) {
+    fn analyzedata_range(&self, data: &ArrayView1<F>) -> (f64, f64) {
         let mut min_val = F::infinity();
         let mut max_val = -F::infinity();
 
@@ -1482,42 +1482,42 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
         )
     }
 
-    fn single_precision_vector_mul(&self, _data: &Array1<f32>) -> IntegrateResult<Array1<f32>> {
+    fn single_precision_vector_mul(&self, data: &Array1<f32>) -> IntegrateResult<Array1<f32>> {
         // Element-wise multiplication with itself for demo
-        let mut result = Array1::zeros(_data.len());
-        for i in 0.._data.len() {
-            result[i] = _data[i] * _data[i];
+        let mut result = Array1::zeros(data.len());
+        for i in 0..data.len() {
+            result[i] = data[i] * data[i];
         }
         Ok(result)
     }
 
-    fn double_precision_vector_add(&self, _data: &Array1<f64>) -> IntegrateResult<Array1<f64>> {
-        // Add _data with itself for demo
-        let mut result = Array1::zeros(_data.len());
-        for i in 0.._data.len() {
-            result[i] = _data[i] + _data[i];
+    fn double_precision_vector_add(&self, data: &Array1<f64>) -> IntegrateResult<Array1<f64>> {
+        // Add data with itself for demo
+        let mut result = Array1::zeros(data.len());
+        for i in 0..data.len() {
+            result[i] = data[i] + data[i];
         }
         Ok(result)
     }
 
-    fn double_precision_vector_mul(&self, _data: &Array1<f64>) -> IntegrateResult<Array1<f64>> {
+    fn double_precision_vector_mul(&self, data: &Array1<f64>) -> IntegrateResult<Array1<f64>> {
         // Element-wise multiplication with itself for demo
-        let mut result = Array1::zeros(_data.len());
-        for i in 0.._data.len() {
-            result[i] = _data[i] * _data[i];
+        let mut result = Array1::zeros(data.len());
+        for i in 0..data.len() {
+            result[i] = data[i] * data[i];
         }
         Ok(result)
     }
 
-    fn double_precision_reduction(&self, _data: &Array1<f64>) -> IntegrateResult<f64> {
-        Ok(_data.iter().sum())
+    fn double_precision_reduction(&self, data: &Array1<f64>) -> IntegrateResult<f64> {
+        Ok(data.iter().sum())
     }
 
-    fn single_precision_vector_add(&self, _data: &Array1<f32>) -> IntegrateResult<Array1<f32>> {
-        // Add _data with itself for demo
-        let mut result = Array1::zeros(_data.len());
-        for i in 0.._data.len() {
-            result[i] = _data[i] + _data[i];
+    fn single_precision_vector_add(&self, data: &Array1<f32>) -> IntegrateResult<Array1<f32>> {
+        // Add data with itself for demo
+        let mut result = Array1::zeros(data.len());
+        for i in 0..data.len() {
+            result[i] = data[i] + data[i];
         }
         Ok(result)
     }
@@ -1534,8 +1534,8 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
         Ok(sum)
     }
 
-    fn single_precision_reduction(&self, _data: &Array1<f32>) -> IntegrateResult<f32> {
-        Ok(_data.iter().sum())
+    fn single_precision_reduction(&self, data: &Array1<f32>) -> IntegrateResult<f32> {
+        Ok(data.iter().sum())
     }
 
     fn half_precision_vector_add(
@@ -1574,9 +1574,9 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
         Ok(sum)
     }
 
-    fn half_precision_reduction(&self, _data: &Array1<half::f16>) -> IntegrateResult<half::f16> {
+    fn half_precision_reduction(&self, data: &Array1<half::f16>) -> IntegrateResult<half::f16> {
         let mut sum = half::f16::ZERO;
-        for &val in _data.iter() {
+        for &val in data.iter() {
             sum += val;
         }
         Ok(sum)

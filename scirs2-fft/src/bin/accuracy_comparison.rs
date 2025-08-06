@@ -23,7 +23,7 @@ pub struct AccuracyResult {
 
 /// Calculate error metrics between two complex vectors
 #[allow(dead_code)]
-fn calculate_complex_error(_actual: &[Complex64], expected: &[Complex64]) -> (f64, f64, f64, f64) {
+fn calculate_complex_error(actual: &[Complex64], expected: &[Complex64]) -> (f64, f64, f64, f64) {
     assert_eq!(_actual.len(), expected.len());
 
     let mut max_error: f64 = 0.0;
@@ -31,7 +31,7 @@ fn calculate_complex_error(_actual: &[Complex64], expected: &[Complex64]) -> (f6
     let mut sum_squared_error: f64 = 0.0;
     let mut sum_magnitude: f64 = 0.0;
 
-    for (a, e) in _actual.iter().zip(expected.iter()) {
+    for (a, e) in actual.iter().zip(expected.iter()) {
         let error = (a - e).norm();
         max_error = max_error.max(error);
         sum_error += error;
@@ -39,7 +39,7 @@ fn calculate_complex_error(_actual: &[Complex64], expected: &[Complex64]) -> (f6
         sum_magnitude += e.norm();
     }
 
-    let n = _actual.len() as f64;
+    let n = actual.len() as f64;
     let mean_error = sum_error / n;
     let rms_error = (sum_squared_error / n).sqrt();
     let relative_error = if sum_magnitude > 0.0 {
@@ -53,7 +53,7 @@ fn calculate_complex_error(_actual: &[Complex64], expected: &[Complex64]) -> (f6
 
 /// Calculate error metrics between two real vectors
 #[allow(dead_code)]
-fn calculate_real_error(_actual: &[f64], expected: &[f64]) -> (f64, f64, f64, f64) {
+fn calculate_real_error(actual: &[f64], expected: &[f64]) -> (f64, f64, f64, f64) {
     assert_eq!(_actual.len(), expected.len());
 
     let mut max_error: f64 = 0.0;
@@ -61,7 +61,7 @@ fn calculate_real_error(_actual: &[f64], expected: &[f64]) -> (f64, f64, f64, f6
     let mut sum_squared_error: f64 = 0.0;
     let mut sum_magnitude: f64 = 0.0;
 
-    for (a, e) in _actual.iter().zip(expected.iter()) {
+    for (a, e) in actual.iter().zip(expected.iter()) {
         let error = (a - e).abs();
         max_error = max_error.max(error);
         sum_error += error;
@@ -69,7 +69,7 @@ fn calculate_real_error(_actual: &[f64], expected: &[f64]) -> (f64, f64, f64, f6
         sum_magnitude += e.abs();
     }
 
-    let n = _actual.len() as f64;
+    let n = actual.len() as f64;
     let mean_error = sum_error / n;
     let rms_error = (sum_squared_error / n).sqrt();
     let relative_error = if sum_magnitude > 0.0 {
@@ -361,7 +361,7 @@ pub fn test_frft_accuracy() -> Vec<AccuracyResult> {
 
 /// Generate accuracy report
 #[allow(dead_code)]
-pub fn generate_accuracy_report(_results: &[AccuracyResult]) {
+pub fn generate_accuracy_report(results: &[AccuracyResult]) {
     println!("=== Accuracy Comparison Report ===");
     println!("Operation | Size | Max Error | Mean Error | RMS Error | Rel Error | Notes");
     println!("{}", "-".repeat(100));

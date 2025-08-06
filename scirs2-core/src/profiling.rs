@@ -455,7 +455,7 @@ impl Profiler {
     }
 
     /// Register the start of a memory tracker
-    pub fn register_memory_tracker_start(&mut self, _tracker: &MemoryTracker) {
+    pub fn register_memory_tracker_start(&mut self, tracker: &MemoryTracker) {
         if !self.running {
             // Nothing to do at start, just ensure the method exists for symmetry
         }
@@ -685,7 +685,7 @@ pub mod system_monitor;
 pub mod hardware_counters;
 
 /// Continuous performance monitoring for long-running processes
-pub mod continuous_monitoring;
+pub mod continuousmonitoring;
 
 /// Function-level performance hinting system
 pub mod performance_hints;
@@ -808,8 +808,8 @@ pub mod advanced {
         }
 
         /// Start a new function call
-        pub fn start_call(&mut self, function_name: &str) {
-            self.call_stack.push(function_name.to_string());
+        pub fn start_call(&mut self, functionname: &str) {
+            self.call_stack.push(functionname.to_string());
             self.time_stack.push(Instant::now());
         }
 
@@ -1358,7 +1358,7 @@ pub mod advanced {
         }
 
         /// Set the baseline snapshot
-        pub fn set_baseline(&mut self, profiler: &Profiler, label: Option<String>) {
+        pub fn setbaseline(&mut self, profiler: &Profiler, label: Option<String>) {
             self.baseline = Some(ProfileSnapshot {
                 timings: profiler.timings.clone(),
                 memory: profiler.memory.clone(),
@@ -1659,7 +1659,7 @@ pub mod advanced {
             use std::io::BufWriter;
 
             let file = File::create(path)?;
-            let mut _writer = BufWriter::new(file);
+            let mut writer = BufWriter::new(file);
 
             // In a real implementation, you would use serde to serialize the data
             // For now, we'll create a simple JSON structure manually
@@ -1672,7 +1672,7 @@ pub mod advanced {
                 self.metadata, self.profiler.timings, self.profiler.memory
             );
 
-            std::io::Write::write_all(&mut _writer, json_data.as_bytes())?;
+            std::io::Write::write_all(&mut writer, json_data.as_bytes())?;
             Ok(())
         }
 
@@ -1808,7 +1808,7 @@ mod tests {
         timer.stop();
 
         let mut diff_profiler = advanced::DifferentialProfiler::new();
-        diff_profiler.set_baseline(
+        diff_profiler.setbaseline(
             &Profiler::global().lock().unwrap(),
             Some("baseline".to_string()),
         );
@@ -1832,7 +1832,7 @@ mod tests {
     }
 
     #[test]
-    fn test_system_resource_monitor() {
+    fn test_system_resourcemonitor() {
         let monitor = advanced::SystemResourceMonitor::new(Duration::from_millis(10));
         monitor.start();
 
@@ -1879,7 +1879,7 @@ pub mod comprehensive {
         /// Application profiler
         app_profiler: Arc<Mutex<Profiler>>,
         /// System resource monitor
-        system_monitor: SystemMonitor,
+        systemmonitor: SystemMonitor,
         /// System alerter
         system_alerter: SystemAlerter,
         /// Flame graph generator
@@ -1928,7 +1928,7 @@ pub mod comprehensive {
         pub fn new(config: ComprehensiveConfig) -> Self {
             Self {
                 app_profiler: Arc::new(Mutex::new(Profiler::new())),
-                system_monitor: SystemMonitor::new(config.systemconfig.clone()),
+                systemmonitor: SystemMonitor::new(config.systemconfig.clone()),
                 system_alerter: SystemAlerter::new(config.alertconfig.clone()),
                 flame_graph_generator: advanced::FlameGraphGenerator::new(),
                 session_start: Instant::now(),
@@ -1937,14 +1937,12 @@ pub mod comprehensive {
         }
 
         /// Start comprehensive profiling
-        pub fn start(
-            &mut self,
-        ) -> Result<(), crate::profiling::system_monitor::SystemMonitorError> {
+        pub fn start(&mut self) -> Result<(), crate::profiling::system_monitor::SystemMonitorError> {
             // Start application profiler
             self.app_profiler.lock().unwrap().start();
 
-            // Start system _monitor
-            self.system_monitor.start()?;
+            // Start system monitor
+            self.systemmonitor.start()?;
 
             self.session_start = Instant::now();
             Ok(())
@@ -1953,7 +1951,7 @@ pub mod comprehensive {
         /// Stop comprehensive profiling
         pub fn stop(&mut self) {
             self.app_profiler.lock().unwrap().stop();
-            self.system_monitor.stop();
+            self.systemmonitor.stop();
         }
 
         /// Time a function with comprehensive profiling
@@ -1972,7 +1970,7 @@ pub mod comprehensive {
 
             // Check for alerts if enabled
             if self.config.enable_alerts {
-                if let Ok(current_metrics) = self.system_monitor.get_current_metrics() {
+                if let Ok(current_metrics) = self.systemmonitor.get_current_metrics() {
                     let alerts = self.system_alerter.check_alerts(&current_metrics);
                     for alert in alerts {
                         self.handle_alert(&alert);
@@ -1986,7 +1984,7 @@ pub mod comprehensive {
         /// Generate comprehensive profiling report
         pub fn generate_report(&mut self) -> ComprehensiveReport {
             let app_report = self.app_profiler.lock().unwrap().get_report();
-            let system_metrics = self.system_monitor.get_metrics_history();
+            let system_metrics = self.systemmonitor.get_metrics_history();
             let alerts = self.system_alerter.get_alert_history();
 
             let mut bottleneck_reports = Vec::new();
@@ -2015,20 +2013,20 @@ pub mod comprehensive {
         }
 
         /// Export comprehensive report to multiple formats
-        pub fn export_report(&mut self, base_path: &str) -> Result<(), std::io::Error> {
+        pub fn export_report(&mut self, basepath: &str) -> Result<(), std::io::Error> {
             let report = self.generate_report();
 
             // Export text report
-            std::fs::write(format!("{base_path}_report.txt"), report.totext_format())?;
+            std::fs::write(format!("{basepath}_report.txt"), report.totext_format())?;
 
             // Export JSON report
-            std::fs::write(format!("{base_path}_report.json"), report.to_json_format())?;
+            std::fs::write(format!("{basepath}_report.json"), report.to_json_format())?;
 
             // Export flame graph if available
             if let Some(ref flame_graph) = report.flame_graph {
                 let svg_generator = SvgFlameGraphGenerator::new(self.config.svgconfig.clone());
                 svg_generator
-                    .export_to_file(flame_graph, &format!("{base_path}_flamegraph.svg"))?;
+                    .export_to_file(flame_graph, &format!("{basepath}_flamegraph.svg"))?;
 
                 // Export enhanced flame graph with system metrics
                 let enhanced = EnhancedFlameGraph {
@@ -2051,7 +2049,7 @@ pub mod comprehensive {
                         .collect(),
                     total_duration: self.session_start.elapsed(),
                 };
-                enhanced.export_enhanced_svg(&format!("{base_path}_enhanced_flamegraph.svg"))?;
+                enhanced.export_enhanced_svg(&format!("{basepath}_enhanced_flamegraph.svg"))?;
             }
 
             Ok(())
@@ -2075,7 +2073,7 @@ pub mod comprehensive {
             crate::profiling::system_monitor::SystemMetrics,
             crate::profiling::system_monitor::SystemMonitorError,
         > {
-            self.system_monitor.get_current_metrics()
+            self.systemmonitor.get_current_metrics()
         }
 
         /// Get recent alerts

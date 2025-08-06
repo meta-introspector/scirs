@@ -16,7 +16,7 @@ use ndarray::s;
 use crate::dwt::Wavelet;
 use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array2};
+use ndarray::Array2;
 use num_traits::{Float, NumCast, Zero};
 use std::collections::HashMap;
 use std::f64::consts::PI;
@@ -258,7 +258,13 @@ where
         BoundaryMode2D::Symmetric => "symmetric",
         BoundaryMode2D::Periodic => "periodic",
         BoundaryMode2D::Zero => "zero",
-        BoundaryMode2D::Constant => "constant", // Default fallback
+        BoundaryMode2D::Constant => "constant",
+        BoundaryMode2D::SymmetricReflect => "symmetric",
+        BoundaryMode2D::Antisymmetric => "antisymmetric",
+        BoundaryMode2D::Smooth => "smooth",
+        BoundaryMode2D::Adaptive => "adaptive",
+        BoundaryMode2D::MinPhase => "minphase",
+        BoundaryMode2D::Biorthogonal => "biorthogonal",
     };
 
     let decomposition = dwt2d_decompose(&extended_data, wavelet, Some(boundary_mode_str))?;
@@ -296,6 +302,7 @@ pub fn dwt2d_reconstruct_enhanced(
         BoundaryMode2D::Periodic => "periodic",
         BoundaryMode2D::Zero => "zero",
         BoundaryMode2D::Constant => "constant",
+        _ => "default",
     };
 
     let dwt_result = crate::dwt2d::Dwt2dResult {
@@ -435,7 +442,7 @@ fn extend_symmetric_2d<T>(
 where
     T: Float + NumCast + Debug + Zero + Copy,
 {
-    let (_rows_cols) = data.dim();
+    let (_rows, cols) = data.dim();
     let new_rows = _rows + 2 * ext_rows;
     let new_cols = _cols + 2 * ext_cols;
 
@@ -443,7 +450,7 @@ where
 
     // Copy original data to center
     extended
-        .slice_mut(s![ext_rows..ext_rows + _rows, ext_cols..ext_cols + _cols])
+        .slice_mut(s![ext_rows..ext_rows + rows, ext_cols..ext_cols + _cols])
         .assign(data);
 
     // Extend _rows symmetrically
@@ -497,7 +504,7 @@ fn extend_symmetric_reflect_2d<T>(
 where
     T: Float + NumCast + Debug + Zero + Copy,
 {
-    let (_rows_cols) = data.dim();
+    let (_rows, cols) = data.dim();
     let new_rows = _rows + 2 * ext_rows;
     let new_cols = _cols + 2 * ext_cols;
 
@@ -505,19 +512,19 @@ where
 
     // Copy original data to center
     extended
-        .slice_mut(s![ext_rows..ext_rows + _rows, ext_cols..ext_cols + _cols])
+        .slice_mut(s![ext_rows..ext_rows + rows, ext_cols..ext_cols + _cols])
         .assign(data);
 
     // Extend _rows with reflection
     for i in 0..ext_rows {
         // Top extension (reflect around first row)
-        let src_row = i % _rows;
+        let src_row = i % rows;
         for j in ext_cols..ext_cols + _cols {
             extended[[ext_rows - 1 - i, j]] = extended[[ext_rows + src_row, j]];
         }
 
         // Bottom extension (reflect around last row)
-        let src_row = (_rows - 1) - (i % _rows);
+        let src_row = (_rows - 1) - (i % rows);
         for j in ext_cols..ext_cols + _cols {
             extended[[ext_rows + _rows + i, j]] = extended[[ext_rows + src_row, j]];
         }
@@ -526,13 +533,13 @@ where
     // Extend columns with reflection
     for j in 0..ext_cols {
         // Left extension
-        let src_col = j % _cols;
+        let src_col = j % cols;
         for i in 0..new_rows {
             extended[[i, ext_cols - 1 - j]] = extended[[i, ext_cols + src_col]];
         }
 
         // Right extension
-        let src_col = (_cols - 1) - (j % _cols);
+        let src_col = (_cols - 1) - (j % cols);
         for i in 0..new_rows {
             extended[[i, ext_cols + _cols + j]] = extended[[i, ext_cols + src_col]];
         }
@@ -551,7 +558,7 @@ fn extend_periodic_2d<T>(
 where
     T: Float + NumCast + Debug + Zero + Copy,
 {
-    let (_rows_cols) = data.dim();
+    let (_rows, cols) = data.dim();
     let new_rows = _rows + 2 * ext_rows;
     let new_cols = _cols + 2 * ext_cols;
 
@@ -559,19 +566,19 @@ where
 
     // Copy original data to center
     extended
-        .slice_mut(s![ext_rows..ext_rows + _rows, ext_cols..ext_cols + _cols])
+        .slice_mut(s![ext_rows..ext_rows + rows, ext_cols..ext_cols + _cols])
         .assign(data);
 
     // Extend _rows periodically
     for i in 0..ext_rows {
         // Top extension
-        let src_row = (_rows - ext_rows + i) % _rows;
+        let src_row = (_rows - ext_rows + i) % rows;
         for j in ext_cols..ext_cols + _cols {
             extended[[i, j]] = data[[src_row, j - ext_cols]];
         }
 
         // Bottom extension
-        let src_row = i % _rows;
+        let src_row = i % rows;
         for j in ext_cols..ext_cols + _cols {
             extended[[ext_rows + _rows + i, j]] = data[[src_row, j - ext_cols]];
         }
@@ -580,13 +587,13 @@ where
     // Extend columns periodically
     for j in 0..ext_cols {
         // Left extension
-        let src_col = (_cols - ext_cols + j) % _cols;
+        let src_col = (_cols - ext_cols + j) % cols;
         for i in 0..new_rows {
             extended[[i, j]] = extended[[i, ext_cols + src_col]];
         }
 
         // Right extension
-        let src_col = j % _cols;
+        let src_col = j % cols;
         for i in 0..new_rows {
             extended[[i, ext_cols + _cols + j]] = extended[[i, ext_cols + src_col]];
         }
@@ -597,11 +604,11 @@ where
 
 /// Zero padding extension
 #[allow(dead_code)]
-fn extend_zero_2d<T>(_data: &Array2<T>, ext_rows: usize, ext_cols: usize) -> SignalResult<Array2<T>>
+fn extend_zero_2d<T>(_data: &Array2<T>, ext_rows: usize, extcols: usize) -> SignalResult<Array2<T>>
 where
     T: Float + NumCast + Debug + Zero + Copy,
 {
-    let (_rows_cols) = _data.dim();
+    let (_rows, cols) = data.dim();
     let new_rows = _rows + 2 * ext_rows;
     let new_cols = _cols + 2 * ext_cols;
 
@@ -609,7 +616,7 @@ where
 
     // Copy original _data to center (rest remains zero)
     extended
-        .slice_mut(s![ext_rows..ext_rows + _rows, ext_cols..ext_cols + _cols])
+        .slice_mut(s![ext_rows..ext_rows + rows, ext_cols..ext_cols + _cols])
         .assign(_data);
 
     Ok(extended)
@@ -625,7 +632,7 @@ fn extend_constant_2d<T>(
 where
     T: Float + NumCast + Debug + Zero + Copy,
 {
-    let (_rows_cols) = data.dim();
+    let (_rows, cols) = data.dim();
     let new_rows = _rows + 2 * ext_rows;
     let new_cols = _cols + 2 * ext_cols;
 
@@ -633,7 +640,7 @@ where
 
     // Copy original data to center
     extended
-        .slice_mut(s![ext_rows..ext_rows + _rows, ext_cols..ext_cols + _cols])
+        .slice_mut(s![ext_rows..ext_rows + rows, ext_cols..ext_cols + _cols])
         .assign(data);
 
     // Extend _rows with constant values
@@ -687,7 +694,7 @@ fn extend_antisymmetric_2d<T>(
 where
     T: Float + NumCast + Debug + Zero + Copy,
 {
-    let (_rows_cols) = data.dim();
+    let (_rows, cols) = data.dim();
     let new_rows = _rows + 2 * ext_rows;
     let new_cols = _cols + 2 * ext_cols;
 
@@ -695,7 +702,7 @@ where
 
     // Copy original data to center
     extended
-        .slice_mut(s![ext_rows..ext_rows + _rows, ext_cols..ext_cols + _cols])
+        .slice_mut(s![ext_rows..ext_rows + rows, ext_cols..ext_cols + _cols])
         .assign(data);
 
     // Antisymmetric extension for _rows
@@ -749,7 +756,7 @@ fn extend_smooth_2d<T>(
 where
     T: Float + NumCast + Debug + Zero + Copy,
 {
-    let (_rows_cols) = data.dim();
+    let (_rows, cols) = data.dim();
     let new_rows = _rows + 2 * ext_rows;
     let new_cols = _cols + 2 * ext_cols;
 
@@ -757,7 +764,7 @@ where
 
     // Copy original data to center
     extended
-        .slice_mut(s![ext_rows..ext_rows + _rows, ext_cols..ext_cols + _cols])
+        .slice_mut(s![ext_rows..ext_rows + rows, ext_cols..ext_cols + _cols])
         .assign(data);
 
     // For simplicity, use linear extrapolation
@@ -765,7 +772,7 @@ where
 
     // Extend _rows
     for i in 0..ext_rows {
-        // Top extension (linear extrapolation from first two _rows)
+        // Top extension (linear extrapolation from first two rows)
         if _rows >= 2 {
             for j in ext_cols..ext_cols + _cols {
                 let val1 = data[[0, j - ext_cols]];
@@ -779,7 +786,7 @@ where
             }
         }
 
-        // Bottom extension (linear extrapolation from last two _rows)
+        // Bottom extension (linear extrapolation from last two rows)
         if _rows >= 2 {
             for j in ext_cols..ext_cols + _cols {
                 let val1 = data[[_rows - 2, j - ext_cols]];
@@ -850,7 +857,7 @@ where
     // For this implementation, we'll choose extension mode based on local edge content
     // In practice, this could be much more sophisticated
 
-    let (_rows_cols) = data.dim();
+    let (_rows, cols) = data.dim();
 
     // Analyze edge characteristics
     let edge_strength = analyze_edge_strength(data, params)?;
@@ -899,11 +906,11 @@ where
 
 /// Analyze edge strength for adaptive boundary handling
 #[allow(dead_code)]
-fn analyze_edge_strength<T>(_data: &Array2<T>, params: &AdaptiveBoundaryParams) -> SignalResult<f64>
+fn analyze_edge_strength<T>(data: &Array2<T>, params: &AdaptiveBoundaryParams) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug + Zero + Copy,
 {
-    let (rows, cols) = _data.dim();
+    let (rows, cols) = data.dim();
     let window_size = params.analysis_window.min(rows.min(cols) / 2);
 
     let mut total_edge_strength = T::zero();
@@ -922,8 +929,8 @@ where
             for j in c_start..c_end {
                 if i > 0 && i < rows - 1 && j > 0 && j < cols - 1 {
                     // Simple gradient magnitude
-                    let dx = _data[[i, j + 1]] - _data[[i, j - 1]];
-                    let dy = _data[[i + 1, j]] - _data[[i - 1, j]];
+                    let dx = data[[i, j + 1]] - data[[i, j - 1]];
+                    let dy = data[[i + 1, j]] - data[[i - 1, j]];
                     let gradient_mag = (dx * dx + dy * dy).sqrt();
                     total_edge_strength = total_edge_strength + gradient_mag;
                     sample_count += 1;
@@ -968,12 +975,12 @@ where
 
 /// Simple 2D detrending (remove linear trends)
 #[allow(dead_code)]
-fn detrend_2d<T>(_data: &Array2<T>) -> SignalResult<Array2<T>>
+fn detrend_2d<T>(data: &Array2<T>) -> SignalResult<Array2<T>>
 where
     T: Float + NumCast + Debug + Zero + Copy,
 {
     // For simplicity, remove mean (could be enhanced with linear trend removal)
-    let mean = _data.iter().fold(T::zero(), |acc, &x| acc + x) / T::from(_data.len()).unwrap();
+    let mean = data.iter().fold(T::zero(), |acc, &x| acc + x) / T::from(_data.len()).unwrap();
     Ok(_data.mapv(|x| x - mean))
 }
 
@@ -1020,7 +1027,7 @@ where
 
 /// Correct boundary bias (simplified implementation)
 #[allow(dead_code)]
-fn correct_boundary_bias<T>(_data: &Array2<T>) -> SignalResult<Array2<T>>
+fn correct_boundary_bias<T>(data: &Array2<T>) -> SignalResult<Array2<T>>
 where
     T: Float + NumCast + Debug + Zero + Copy,
 {
@@ -1031,7 +1038,7 @@ where
 
 /// Get wavelet filter length for extension calculation
 #[allow(dead_code)]
-fn get_wavelet_filter_length(_wavelet: Wavelet) -> usize {
+fn get_wavelet_filter_length(wavelet: Wavelet) -> usize {
     match _wavelet {
         Wavelet::Haar => 2,
         Wavelet::DB(n) => 2 * n,
@@ -1135,63 +1142,63 @@ where
 
 /// Generate boundary handling report
 #[allow(dead_code)]
-pub fn generate_boundary_report(_decomp: &EnhancedDWT2DDecomposition) -> String {
+pub fn generate_boundary_report(decomp: &EnhancedDWT2DDecomposition) -> String {
     let mut report = String::new();
 
     report.push_str("# Enhanced 2D DWT Boundary Handling Report\n\n");
 
     report.push_str("## Configuration\n");
-    report.push_str(&format!("- Boundary Mode: {:?}\n", _decomp.config.mode));
+    report.push_str(&format!("- Boundary Mode: {:?}\n", decomp.config.mode));
     report.push_str(&format!(
         "- Anisotropic: {:?}\n",
-        _decomp.config.anisotropic
+        decomp.config.anisotropic
     ));
 
     report.push_str("\n## Quality Metrics\n");
     report.push_str(&format!(
         "- Boundary PSNR: {:.2} dB\n",
-        _decomp.quality_metrics.boundary_psnr
+        decomp.quality_metrics.boundary_psnr
     ));
     report.push_str(&format!(
         "- Boundary SSIM: {:.3}\n",
-        _decomp.quality_metrics.boundary_ssim
+        decomp.quality_metrics.boundary_ssim
     ));
     report.push_str(&format!(
         "- Edge Preservation: {:.3}\n",
-        _decomp.quality_metrics.edge_preservation_index
+        decomp.quality_metrics.edge_preservation_index
     ));
     report.push_str(&format!(
         "- Smoothness: {:.3}\n",
-        _decomp.quality_metrics.smoothness_measure
+        decomp.quality_metrics.smoothness_measure
     ));
 
     report.push_str("\n## Artifact Analysis\n");
     report.push_str(&format!(
         "- Edge Preservation: {:.3}\n",
-        _decomp.boundary_info.artifact_measures.edge_preservation
+        decomp.boundary_info.artifact_measures.edge_preservation
     ));
     report.push_str(&format!(
         "- Boundary Smoothness: {:.3}\n",
-        _decomp.boundary_info.artifact_measures.boundary_smoothness
+        decomp.boundary_info.artifact_measures.boundary_smoothness
     ));
     report.push_str(&format!(
         "- Boundary Error: {:.6}\n",
-        _decomp.boundary_info.artifact_measures.boundary_error
+        decomp.boundary_info.artifact_measures.boundary_error
     ));
     report.push_str(&format!(
         "- Ringing Artifacts: {:.6}\n",
-        _decomp.boundary_info.artifact_measures.ringing_artifacts
+        decomp.boundary_info.artifact_measures.ringing_artifacts
     ));
 
     report.push_str("\n## Recommendations\n");
-    if _decomp.quality_metrics.boundary_psnr < 40.0 {
+    if decomp.quality_metrics.boundary_psnr < 40.0 {
         report.push_str("- Consider using Smooth or Adaptive boundary mode for better PSNR\n");
     }
-    if _decomp.quality_metrics.edge_preservation_index < 0.8 {
+    if decomp.quality_metrics.edge_preservation_index < 0.8 {
         report
             .push_str("- Consider using Symmetric or MinPhase mode for better edge preservation\n");
     }
-    if _decomp.boundary_info.artifact_measures.ringing_artifacts > 0.05 {
+    if decomp.boundary_info.artifact_measures.ringing_artifacts > 0.05 {
         report.push_str(
             "- Consider using longer extension or different wavelet for reduced ringing\n",
         );

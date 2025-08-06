@@ -67,11 +67,11 @@ pub struct StreamingProcessor {
 
 impl StreamingProcessor {
     /// Create a new streaming processor
-    pub fn new(_config: MemoryConfig) -> Self {
+    pub fn new(config: MemoryConfig) -> Self {
         Self {
             buffer: VecDeque::with_capacity(_config.chunk_size),
             output_buffer: Vec::with_capacity(_config.chunk_size),
-            _config,
+            config,
             stats: MemoryStats {
                 current_usage: 0,
                 peak_usage: 0,
@@ -216,7 +216,7 @@ pub struct StreamingFFTResult {
 
 /// Compute FFT for a single chunk
 #[allow(dead_code)]
-fn compute_fft_chunk(_data: &[f64], _chunk_size: usize) -> SignalResult<Vec<f64>> {
+fn compute_fft_chunk(_data: &[f64], _chunksize: usize) -> SignalResult<Vec<f64>> {
     // Convert to ndarray and compute FFT
     let signal = Array1::from(_data.to_vec());
 
@@ -604,10 +604,10 @@ where
     V: Clone,
 {
     /// Create a new cache with specified maximum size
-    pub fn new(_max_size: usize) -> Self {
+    pub fn new(_maxsize: usize) -> Self {
         Self {
             cache: std::collections::HashMap::new(),
-            _max_size,
+            max_size,
             hits: 0,
             misses: 0,
         }
@@ -656,6 +656,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_streaming_processor() {

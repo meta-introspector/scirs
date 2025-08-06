@@ -161,7 +161,7 @@ pub fn generate_banded_coloring(n: usize, lower: usize, upper: usize) -> Vec<usi
 /// Update the Jacobian using Broyden's method (rank-1 update)
 /// J_{k+1} = J_k + (df - J_k * dy) * dy^T / (dy^T * dy)
 #[allow(dead_code)]
-pub fn broyden_update<F>(_jac: &mut Array2<F>, delta_y: &Array1<F>, delta_f: &Array1<F>)
+pub fn broyden_update<F>(_jac: &mut Array2<F>, delta_y: &Array1<F>, deltaf: &Array1<F>)
 where
     F: IntegrateFloat,
 {
@@ -176,7 +176,7 @@ where
     }
 
     // Compute correction vector: df - J_k * dy
-    let correction = delta_f - &jac_dy;
+    let correction = deltaf - &jac_dy;
 
     // Compute denominator: dy^T * dy
     let dy_norm_squared = delta_y.iter().map(|&x| x * x).sum::<F>();

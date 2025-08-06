@@ -54,15 +54,15 @@ impl<F: Float + Debug + Display> ROCCurve<F> {
     /// // AUC should be > 0.5 for a model better than random guessing
     /// assert!(roc.auc > 0.5);
     /// ```
-    pub fn new(_y_true: &ArrayView1<usize>, y_score: &ArrayView1<F>) -> Result<Self> {
-        if _y_true.len() != y_score.len() {
+    pub fn new(y_true: &ArrayView1<usize>, yscore: &ArrayView1<F>) -> Result<Self> {
+        if y_true.len() != yscore.len() {
             return Err(NeuralError::ValidationError(
                 "Labels and scores must have the same length".to_string(),
             ));
         }
 
         // Check if y_true contains only binary values (0 or 1)
-        for &label in _y_true.iter() {
+        for &label in y_true.iter() {
             if label != 0 && label != 1 {
                 return Err(NeuralError::ValidationError(
                     "Labels must be binary (0 or 1)".to_string(),
@@ -71,17 +71,17 @@ impl<F: Float + Debug + Display> ROCCurve<F> {
         }
 
         // Sort scores and corresponding labels in descending order
-        let mut score_label_pairs: Vec<(F, usize)> = y_score
+        let mut score_label_pairs: Vec<(F, usize)> = yscore
             .iter()
-            .zip(_y_true.iter())
+            .zip(y_true.iter())
             .map(|(&_score, &label)| (_score, label))
             .collect();
         score_label_pairs
             .sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
         // Count positives and negatives
-        let n_pos = _y_true.iter().filter(|&&label| label == 1).count();
-        let n_neg = _y_true.len() - n_pos;
+        let n_pos = y_true.iter().filter(|&&label| label == 1).count();
+        let n_neg = y_true.len() - n_pos;
         if n_pos == 0 || n_neg == 0 {
             return Err(NeuralError::ValidationError(
                 "Both positive and negative samples are required".to_string(),
@@ -101,7 +101,7 @@ impl<F: Float + Debug + Display> ROCCurve<F> {
         let mut tp = 0;
         let mut fp = 0;
         for i in 0..score_label_pairs.len() {
-            let (_score, label) = score_label_pairs[i];
+            let (score, label) = score_label_pairs[i];
             // Update counts
             if label == 1 {
                 tp += 1;
@@ -110,7 +110,7 @@ impl<F: Float + Debug + Display> ROCCurve<F> {
             }
 
             // Set threshold for this point
-            thresholds[i + 1] = _score;
+            thresholds[i + 1] = score;
             // Compute rates
             tpr[i + 1] = F::from(tp).unwrap() / F::from(n_pos).unwrap();
             fpr[i + 1] = F::from(fp).unwrap() / F::from(n_neg).unwrap();

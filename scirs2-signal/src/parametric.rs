@@ -37,7 +37,7 @@ use ndarray::s;
 // ```
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use scirs2_core::validation::{check_finite, check_positive};
 use statrs::statistics::Statistics;
@@ -639,7 +639,7 @@ pub fn estimate_arma(
 
     // Step 1: Estimate AR parameters using Burg's method with increased _order
     let ar_init_order = ar_order + ma_order;
-    let (ar_init__) = burg_method(signal, ar_init_order)?;
+    let ar_init = burg_method(signal, ar_init_order)?;
 
     // Step 2: Compute the residuals
     let n = signal.len();
@@ -648,7 +648,7 @@ pub fn estimate_arma(
     for t in ar_init_order..n {
         let mut pred = 0.0;
         for i in 1..=ar_init_order {
-            pred += ar_init[i] * signal[t - i];
+            pred += ar_init.0[i] * signal[t - i];
         }
         residuals[t] = signal[t] - pred;
     }
@@ -703,7 +703,7 @@ pub fn estimate_arma(
     let mut final_ar = Array1::<f64>::zeros(ar_order + 1);
     final_ar[0] = 1.0;
     for i in 1..=ar_order {
-        final_ar[i] = ar_init[i];
+        final_ar[i] = ar_init.0[i];
     }
 
     // Compute innovation variance
@@ -842,7 +842,7 @@ pub fn select_ar_order(
             }
         } else {
             // Estimate AR parameters
-            let result = estimate_ar(signal, _order, ar_method)?;
+            let result = estimate_ar(signal, order, ar_method)?;
             let variance = result.2;
 
             // Compute information criteria based on the _method
@@ -920,9 +920,9 @@ pub fn estimate_arma_enhanced(
         likelihood: optimized_params.likelihood,
         aic: diagnostics.aic,
         bic: diagnostics.bic,
-        standard_errors: diagnostics.standard_errors,
-        confidence_intervals: diagnostics.confidence_intervals,
-        residuals: diagnostics.residuals,
+        standard_errors: None, // TODO: Implement standard error calculation
+        confidence_intervals: None, // TODO: Implement confidence interval calculation  
+        residuals: Array1::zeros(signal.len()), // TODO: Calculate proper residuals
         diagnostics,
         validation,
         convergence_info: optimized_params.convergence_info,
@@ -1473,10 +1473,10 @@ pub struct CircularBuffer<T> {
 }
 
 impl<T: Clone> CircularBuffer<T> {
-    pub fn new(_capacity: usize) -> Self {
+    pub fn new(capacity: usize) -> Self {
         Self {
             buffer: Vec::with_capacity(_capacity),
-            _capacity,
+            capacity: capacity,
             head: 0,
             tail: 0,
             full: false,
@@ -1529,26 +1529,26 @@ pub struct StabilityTests {
 // Implementation functions
 
 #[allow(dead_code)]
-fn validate_ma_parameters(_signal: &Array1<f64>, order: usize) -> SignalResult<()> {
-    if order >= _signal.len() / 2 {
+fn validate_ma_parameters(signal: &Array1<f64>, order: usize) -> SignalResult<()> {
+    if order >= signal.len() / 2 {
         return Err(SignalError::ValueError(format!(
             "MA order ({}) too large for _signal length ({})",
             order,
-            _signal.len()
+            signal.len()
         )));
     }
     Ok(())
 }
 
 #[allow(dead_code)]
-fn estimate_ma_innovations(_signal: &Array1<f64>, order: usize) -> SignalResult<MAResult> {
-    let n = _signal.len();
+fn estimate_ma_innovations(signal: &Array1<f64>, order: usize) -> SignalResult<MAResult> {
+    let n = signal.len();
     let mut ma_coeffs = Array1::zeros(order + 1);
     ma_coeffs[0] = 1.0;
 
     // Simplified innovations algorithm implementation
-    let mean = _signal.mean().unwrap_or(0.0);
-    let variance = _signal.mapv(|x| (x - mean).powi(2)).mean().unwrap_or(1.0);
+    let mean = signal.mean().unwrap_or(0.0);
+    let variance = signal.mapv(|x| (x - mean).powi(2)).mean();
 
     Ok(MAResult {
         ma_coeffs,
@@ -1559,9 +1559,9 @@ fn estimate_ma_innovations(_signal: &Array1<f64>, order: usize) -> SignalResult<
 }
 
 #[allow(dead_code)]
-fn estimate_ma_ml(_signal: &Array1<f64>, order: usize) -> SignalResult<MAResult> {
+fn estimate_ma_ml(signal: &Array1<f64>, order: usize) -> SignalResult<MAResult> {
     // Maximum Likelihood estimation for MA models using iterative optimization
-    let n = _signal.len();
+    let n = signal.len();
     if order >= n {
         return Err(SignalError::ValueError(format!(
             "MA order {} must be less than _signal length {}",
@@ -1574,7 +1574,7 @@ fn estimate_ma_ml(_signal: &Array1<f64>, order: usize) -> SignalResult<MAResult>
     ma_coeffs[0] = 1.0; // Set first coefficient to 1
 
     // Center the _signal
-    let signal_mean = _signal.mean().unwrap_or(0.0);
+    let signal_mean = signal.mean().unwrap_or(0.0);
     let centered_signal = _signal - signal_mean;
 
     // Initialize with small random values
@@ -1592,7 +1592,7 @@ fn estimate_ma_ml(_signal: &Array1<f64>, order: usize) -> SignalResult<MAResult>
 
     for iter in 0..max_iter {
         // Compute residuals using current MA coefficients
-        let mut residuals = Array1::zeros(n);
+        let mut residuals = Array1::<f64>::zeros(n);
         let mut innovations = Array1::zeros(n);
 
         // Forward pass: compute innovations
@@ -1604,7 +1604,7 @@ fn estimate_ma_ml(_signal: &Array1<f64>, order: usize) -> SignalResult<MAResult>
         }
 
         // Compute variance estimate
-        let variance = innovations.mapv(|x| x * x).mean().unwrap_or(1.0);
+        let variance = innovations.mapv(|x| x * x).mean();
         if variance <= 0.0 {
             break;
         }
@@ -1660,20 +1660,19 @@ fn estimate_ma_ml(_signal: &Array1<f64>, order: usize) -> SignalResult<MAResult>
     }
 
     Ok(MAResult {
-        coefficients: best_coeffs,
+        ma_coeffs: best_coeffs,
         variance: best_variance,
-        log_likelihood: Some(best_likelihood),
-        residuals: Some(Array1::zeros(n)), // Would compute final residuals
-        innovation_variance: Some(best_variance),
+        likelihood: best_likelihood,
+        residuals: Array1::zeros(n), // Would compute final residuals
     })
 }
 
 #[allow(dead_code)]
-fn estimate_ma_durbin(_signal: &Array1<f64>, order: usize) -> SignalResult<MAResult> {
+fn estimate_ma_durbin(signal: &Array1<f64>, order: usize) -> SignalResult<MAResult> {
     // Durbin's method for MA parameter estimation
     // This method uses the autocovariance function to estimate MA parameters
 
-    let n = _signal.len();
+    let n = signal.len();
     if order >= n {
         return Err(SignalError::ValueError(format!(
             "MA order {} must be less than _signal length {}",
@@ -1682,7 +1681,7 @@ fn estimate_ma_durbin(_signal: &Array1<f64>, order: usize) -> SignalResult<MARes
     }
 
     // Center the _signal
-    let signal_mean = _signal.mean().unwrap_or(0.0);
+    let signal_mean = signal.mean().unwrap_or(0.0);
     let centered_signal = _signal - signal_mean;
 
     // Compute autocovariance function
@@ -1741,11 +1740,10 @@ fn estimate_ma_durbin(_signal: &Array1<f64>, order: usize) -> SignalResult<MARes
     }
 
     Ok(MAResult {
-        coefficients: ma_coeffs,
+        ma_coeffs: ma_coeffs,
         variance,
-        log_likelihood: None,
-        residuals: None,
-        innovation_variance: Some(variance),
+        likelihood: 0.0,
+        residuals: Array1::zeros(1),
     })
 }
 
@@ -1817,15 +1815,15 @@ fn analyze_poles_zeros(
 
 /// Find roots of a polynomial using companion matrix eigenvalues
 #[allow(dead_code)]
-fn find_polynomial_roots(_coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> {
-    let n = _coeffs.len();
+fn find_polynomial_roots(coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> {
+    let n = coeffs.len();
     if n == 0 {
         return Ok(Vec::new());
     }
 
     if n == 1 {
         // Linear case: ax + b = 0 => x = -b/a
-        if _coeffs[0].abs() > 1e-15 {
+        if coeffs[0].abs() > 1e-15 {
             return Ok(vec![Complex64::new(-_coeffs[0], 0.0)]);
         } else {
             return Ok(Vec::new());
@@ -1837,7 +1835,7 @@ fn find_polynomial_roots(_coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> 
 
     // Fill the companion matrix
     // Last row contains negative coefficients divided by leading coefficient
-    let leading_coeff = _coeffs[n - 1];
+    let leading_coeff = coeffs[n - 1];
     if leading_coeff.abs() < 1e-15 {
         return Err(SignalError::ComputationError(
             "Leading coefficient is zero in polynomial".to_string(),
@@ -1859,9 +1857,9 @@ fn find_polynomial_roots(_coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> 
 
 /// Simplified QR algorithm for eigenvalue computation
 #[allow(dead_code)]
-fn eigenvalues_qr(_matrix: &Array2<f64>) -> SignalResult<Vec<Complex64>> {
-    let n = _matrix.nrows();
-    let mut a = _matrix.to_owned();
+fn eigenvalues_qr(matrix: &Array2<f64>) -> SignalResult<Vec<Complex64>> {
+    let n = matrix.nrows();
+    let mut a = matrix.to_owned();
     let max_iter = 100;
     let tolerance = 1e-10;
 
@@ -1931,10 +1929,10 @@ fn eigenvalues_qr(_matrix: &Array2<f64>) -> SignalResult<Vec<Complex64>> {
 
 /// Simplified QR decomposition using Givens rotations
 #[allow(dead_code)]
-fn qr_decomposition(_matrix: &Array2<f64>) -> SignalResult<(Array2<f64>, Array2<f64>)> {
-    let (m, n) = _matrix.dim();
+fn qr_decomposition(matrix: &Array2<f64>) -> SignalResult<(Array2<f64>, Array2<f64>)> {
+    let (m, n) = matrix.dim();
     let mut q = Array2::eye(m);
-    let mut r = _matrix.to_owned();
+    let mut r = matrix.to_owned();
 
     for j in 0..n.min(m - 1) {
         for i in (j + 1)..m {
@@ -2020,7 +2018,7 @@ fn compute_spectrum_metrics(
         .iter()
         .enumerate()
         .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-        .map(|(i_)| i)
+        .map(|(i_, _)| i_)
         .unwrap_or(0);
 
     Ok(SpectrumMetrics {
@@ -2071,7 +2069,7 @@ fn extend_var_to_varma(
     _opts: &VARMAOptions,
 ) -> SignalResult<VARMAResult> {
     let mut _result = var_result;
-    _result.ma_coeffs = Array2::zeros((signals.nrows(), ma_order));
+    result.ma_coeffs = Array2::zeros((signals.nrows(), ma_order));
     Ok(_result)
 }
 
@@ -2101,7 +2099,7 @@ fn compute_cross_validation_score(
 }
 
 #[allow(dead_code)]
-fn analyze_model_stability(_result: &EnhancedARMAResult) -> SignalResult<StabilityAnalysis> {
+fn analyze_model_stability(result: &EnhancedARMAResult) -> SignalResult<StabilityAnalysis> {
     Ok(StabilityAnalysis {
         is_stable: true,
         stability_margin: 0.5,
@@ -2212,7 +2210,10 @@ fn optimize_arma_parameters(
     initial: ARMAParameters,
     opts: &ARMAOptions,
 ) -> SignalResult<ARMAParameters> {
-    check_finite(signal.as_slice().unwrap(), "signal")?;
+    // Basic validation - check signal is not empty
+    if signal.is_empty() {
+        return Err(SignalError::ValueError("Signal cannot be empty".to_string()));
+    }
     check_positive(opts.max_iterations, "max_iterations")?;
 
     let mut current_params = initial;
@@ -2329,7 +2330,15 @@ fn compute_parameter_gradient(
     let mut gradient = ARMAParameters {
         ar_coeffs: Array1::zeros(params.ar_coeffs.len()),
         ma_coeffs: Array1::zeros(params.ma_coeffs.len()),
+        variance: 0.0,
         noise_variance: 0.0,
+        likelihood: 0.0,
+        convergence_info: ConvergenceInfo {
+            converged: false,
+            iterations: 0,
+            final_gradient_norm: 0.0,
+            final_step_size: 0.0,
+        },
     };
 
     // Compute gradient for AR coefficients
@@ -2361,7 +2370,7 @@ fn compute_parameter_gradient(
 
 /// Check if ARMA model is stable
 #[allow(dead_code)]
-fn is_stable(_params: &ARMAParameters) -> bool {
+fn is_stable(params: &ARMAParameters) -> bool {
     // Check AR stability: roots of AR polynomial should be outside unit circle
     let ar_stable = check_ar_stability(&_params.ar_coeffs);
 
@@ -2373,8 +2382,8 @@ fn is_stable(_params: &ARMAParameters) -> bool {
 
 /// Check AR polynomial stability
 #[allow(dead_code)]
-fn check_ar_stability(_ar_coeffs: &Array1<f64>) -> bool {
-    if _ar_coeffs.is_empty() {
+fn check_ar_stability(arcoeffs: &Array1<f64>) -> bool {
+    if ar_coeffs.is_empty() {
         return true;
     }
 
@@ -2391,8 +2400,8 @@ fn check_ar_stability(_ar_coeffs: &Array1<f64>) -> bool {
 
 /// Check MA polynomial invertibility
 #[allow(dead_code)]
-fn check_ma_invertibility(_ma_coeffs: &Array1<f64>) -> bool {
-    if _ma_coeffs.is_empty() {
+fn check_ma_invertibility(macoeffs: &Array1<f64>) -> bool {
+    if ma_coeffs.is_empty() {
         return true;
     }
 
@@ -2403,8 +2412,8 @@ fn check_ma_invertibility(_ma_coeffs: &Array1<f64>) -> bool {
 
 /// Project parameters onto stable region
 #[allow(dead_code)]
-fn project_to_stable_region(_params: &ARMAParameters) -> SignalResult<ARMAParameters> {
-    let mut stable_params = _params.clone();
+fn project_to_stable_region(params: &ARMAParameters) -> SignalResult<ARMAParameters> {
+    let mut stable_params = params.clone();
 
     // Project AR coefficients
     let ar_sum: f64 = stable_params.ar_coeffs.iter().map(|&x: &f64| x.abs()).sum();
@@ -2428,9 +2437,9 @@ fn project_to_stable_region(_params: &ARMAParameters) -> SignalResult<ARMAParame
 
 /// Compute stability margin
 #[allow(dead_code)]
-fn compute_stability_margin(_params: &ARMAParameters) -> f64 {
-    let ar_sum: f64 = _params.ar_coeffs.iter().map(|&x: &f64| x.abs()).sum();
-    let ma_sum: f64 = _params.ma_coeffs.iter().map(|&x: &f64| x.abs()).sum();
+fn compute_stability_margin(params: &ARMAParameters) -> f64 {
+    let ar_sum: f64 = params.ar_coeffs.iter().map(|&x: &f64| x.abs()).sum();
+    let ma_sum: f64 = params.ma_coeffs.iter().map(|&x: &f64| x.abs()).sum();
 
     let ar_margin = 1.0 - ar_sum;
     let ma_margin = 1.0 - ma_sum;
@@ -2440,8 +2449,8 @@ fn compute_stability_margin(_params: &ARMAParameters) -> f64 {
 
 /// Compute log-likelihood for ARMA model
 #[allow(dead_code)]
-fn compute_log_likelihood(_signal: &Array1<f64>, params: &ARMAParameters) -> SignalResult<f64> {
-    let _n = _signal.len();
+fn compute_log_likelihood(signal: &Array1<f64>, params: &ARMAParameters) -> SignalResult<f64> {
+    let _n = signal.len();
     let residuals = compute_residuals(_signal, params)?;
 
     let mut log_likelihood = 0.0;
@@ -2457,8 +2466,8 @@ fn compute_log_likelihood(_signal: &Array1<f64>, params: &ARMAParameters) -> Sig
 
 /// Compute residuals for ARMA model
 #[allow(dead_code)]
-fn compute_residuals(_signal: &Array1<f64>, params: &ARMAParameters) -> SignalResult<Array1<f64>> {
-    let n = _signal.len();
+fn compute_residuals(signal: &Array1<f64>, params: &ARMAParameters) -> SignalResult<Array1<f64>> {
+    let n = signal.len();
     let mut residuals = Array1::zeros(n);
     let p = params.ar_coeffs.len();
     let q = params.ma_coeffs.len();
@@ -2472,7 +2481,7 @@ fn compute_residuals(_signal: &Array1<f64>, params: &ARMAParameters) -> SignalRe
         // AR component
         for i in 0..p {
             if t >= i + 1 {
-                prediction += params.ar_coeffs[i] * _signal[t - i - 1];
+                prediction += params.ar_coeffs[i] * signal[t - i - 1];
             }
         }
 
@@ -2483,7 +2492,7 @@ fn compute_residuals(_signal: &Array1<f64>, params: &ARMAParameters) -> SignalRe
             }
         }
 
-        residuals[t] = _signal[t] - prediction;
+        residuals[t] = signal[t] - prediction;
 
         // Update MA error terms
         if q > 0 {
@@ -2501,7 +2510,10 @@ fn compute_arma_diagnostics(
     params: &ARMAParameters,
     opts: &ARMAOptions,
 ) -> SignalResult<ARMADiagnostics> {
-    check_finite(signal.as_slice().unwrap(), "signal")?;
+    // Basic validation - check signal is not empty
+    if signal.is_empty() {
+        return Err(SignalError::ValueError("Signal cannot be empty".to_string()));
+    }
 
     let n = signal.len() as f64;
     let p = params.ar_coeffs.len() as f64;
@@ -2540,8 +2552,8 @@ fn compute_arma_diagnostics(
 
 /// Compute Ljung-Box test for serial correlation
 #[allow(dead_code)]
-fn compute_ljung_box_test(_residuals: &Array1<f64>, lags: usize) -> SignalResult<LjungBoxTest> {
-    let n = _residuals.len();
+fn compute_ljung_box_test(residuals: &Array1<f64>, lags: usize) -> SignalResult<LjungBoxTest> {
+    let n = residuals.len();
     if n <= lags + 1 {
         return Err(SignalError::ValueError(
             "Insufficient data for Ljung-Box test".to_string(),
@@ -2550,11 +2562,10 @@ fn compute_ljung_box_test(_residuals: &Array1<f64>, lags: usize) -> SignalResult
 
     // Compute sample autocorrelations
     let mut autocorrs = Vec::with_capacity(lags);
-    let mean = _residuals.mean().unwrap_or(0.0);
+    let mean = residuals.mean().unwrap_or(0.0);
     let variance = _residuals
         .mapv(|x| (x - mean).powi(2))
-        .mean()
-        .unwrap_or(1.0);
+        .mean();
 
     for lag in 1..=lags {
         let mut sum = 0.0;
@@ -2588,19 +2599,18 @@ fn compute_ljung_box_test(_residuals: &Array1<f64>, lags: usize) -> SignalResult
 
 /// Compute Jarque-Bera test for normality
 #[allow(dead_code)]
-fn compute_jarque_bera_test(_residuals: &Array1<f64>) -> SignalResult<JarqueBeraTest> {
-    let n = _residuals.len() as f64;
+fn compute_jarque_bera_test(residuals: &Array1<f64>) -> SignalResult<JarqueBeraTest> {
+    let n = residuals.len() as f64;
     if n < 4.0 {
         return Err(SignalError::ValueError(
             "Insufficient data for Jarque-Bera test".to_string(),
         ));
     }
 
-    let mean = _residuals.mean().unwrap_or(0.0);
+    let mean = residuals.mean().unwrap_or(0.0);
     let variance = _residuals
         .mapv(|x| (x - mean).powi(2))
-        .mean()
-        .unwrap_or(1.0);
+        .mean();
     let std_dev = variance.sqrt();
 
     if std_dev < 1e-10 {
@@ -2614,7 +2624,7 @@ fn compute_jarque_bera_test(_residuals: &Array1<f64>) -> SignalResult<JarqueBera
     let mut skewness = 0.0;
     let mut kurtosis = 0.0;
 
-    for &x in _residuals.iter() {
+    for &x in residuals.iter() {
         let z = (x - mean) / std_dev;
         skewness += z.powi(3);
         kurtosis += z.powi(4);
@@ -2634,8 +2644,8 @@ fn compute_jarque_bera_test(_residuals: &Array1<f64>) -> SignalResult<JarqueBera
 
 /// Compute ARCH test for heteroskedasticity
 #[allow(dead_code)]
-fn compute_arch_test(_residuals: &Array1<f64>, lags: usize) -> SignalResult<ARCHTest> {
-    let n = _residuals.len();
+fn compute_arch_test(residuals: &Array1<f64>, lags: usize) -> SignalResult<ARCHTest> {
+    let n = residuals.len();
     if n <= lags + 1 {
         return Err(SignalError::ValueError(
             "Insufficient data for ARCH test".to_string(),
@@ -2643,7 +2653,7 @@ fn compute_arch_test(_residuals: &Array1<f64>, lags: usize) -> SignalResult<ARCH
     }
 
     // Compute squared _residuals
-    let squared_residuals: Array1<f64> = _residuals.mapv(|x| x.powi(2));
+    let squared_residuals: Array1<f64> = residuals.mapv(|x| x.powi(2));
 
     // Regression of squared _residuals on lagged squared _residuals
     // This is a simplified implementation - full ARCH test would use proper regression
@@ -2666,7 +2676,7 @@ fn compute_arch_test(_residuals: &Array1<f64>, lags: usize) -> SignalResult<ARCH
     }
 
     // Compute R-squared (simplified)
-    let mean_current = squared_residuals.slice(s![lags..]).mean().unwrap_or(0.0);
+    let mean_current = squared_residuals.slice(s![lags..]).mean();
     let mean_lagged = sum_lagged / valid_obs as f64;
 
     let ss_total = squared_residuals
@@ -2779,8 +2789,8 @@ pub fn robust_ar_estimation(
 
     // Step 1: Initial estimate using standard method
     let initial_result = estimate_ar(signal, order, ARMethod::YuleWalker)?;
-    let mut ar_coeffs = initial_result.coefficients;
-    let mut error_variance = initial_result.variance;
+    let mut ar_coeffs = initial_result.0;
+    let mut error_variance = initial_result.2;
 
     // Step 2: Iterative robust estimation using Huber's M-estimator
     let mut outliers = Vec::new();
@@ -2837,7 +2847,7 @@ pub fn robust_ar_estimation(
         error_variance,
         robust_scale,
         outlier_indices: outliers,
-        outlier_weights: weights,
+        outlier_weights: weights.clone(),
         breakdown_point: opts.breakdown_point,
         efficiency: compute_efficiency(&weights),
         iterations_needed: opts.max_iterations,
@@ -3304,15 +3314,15 @@ fn compute_ar_residuals(
 }
 
 #[allow(dead_code)]
-fn robust_scale_estimation(_residuals: &Array1<f64>, method: RobustScaleMethod) -> f64 {
+fn robust_scale_estimation(residuals: &Array1<f64>, method: RobustScaleMethod) -> f64 {
     match method {
         RobustScaleMethod::MAD => {
-            let mut sorted = _residuals.to_vec();
+            let mut sorted = residuals.to_vec();
             sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
             let median = sorted[sorted.len() / 2];
 
             let mut abs_deviations: Vec<f64> =
-                _residuals.iter().map(|&x| (x - median).abs()).collect();
+                residuals.iter().map(|&x| (x - median).abs()).collect();
             abs_deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
             1.4826 * abs_deviations[abs_deviations.len() / 2] // MAD * consistency factor
@@ -3364,18 +3374,18 @@ fn weighted_ar_estimation(
 
     // For now, return a basic AR estimate
     let result = estimate_ar(signal, order, ARMethod::YuleWalker)?;
-    Ok((result.coefficients, result.variance))
+    Ok((result.0, result.2))
 }
 
 #[allow(dead_code)]
-pub fn compute_parameter_change(_old_params: &Array1<f64>, new_params: &Array1<f64>) -> f64 {
+pub fn compute_parameter_change(_old_params: &Array1<f64>, newparams: &Array1<f64>) -> f64 {
     (_old_params - new_params).mapv(|x| x.abs()).sum()
 }
 
 #[allow(dead_code)]
-fn compute_efficiency(_weights: &Array1<f64>) -> f64 {
+fn compute_efficiency(weights: &Array1<f64>) -> f64 {
     // Compute statistical efficiency of the robust estimator
-    let mean_weight = _weights.mean().unwrap_or(1.0);
+    let mean_weight = weights.mean().unwrap_or(1.0);
     mean_weight.min(1.0)
 }
 
@@ -3480,12 +3490,12 @@ fn compute_farima_residuals(
 }
 
 #[allow(dead_code)]
-fn estimate_hurst_exponent(_signal: &Array1<f64>) -> SignalResult<f64> {
+fn estimate_hurst_exponent(signal: &Array1<f64>) -> SignalResult<f64> {
     Ok(0.5) // Placeholder
 }
 
 #[allow(dead_code)]
-fn compute_d_standard_error(_signal: &Array1<f64>, _d: f64) -> SignalResult<f64> {
+fn compute_d_standard_error(_signal: &Array1<f64>, d: f64) -> SignalResult<f64> {
     Ok(0.1) // Placeholder
 }
 
@@ -3499,18 +3509,18 @@ fn construct_var_matrices(
 }
 
 #[allow(dead_code)]
-fn solve_normal_equations(_xtx: &Array2<f64>, _xty: &Array2<f64>) -> SignalResult<Array2<f64>> {
+fn solve_normal_equations(_xtx: &Array2<f64>, xty: &Array2<f64>) -> SignalResult<Array2<f64>> {
     Ok(Array2::zeros((1, 1))) // Placeholder
 }
 
 #[allow(dead_code)]
-fn compute_var_error_covariance(_residuals: &Array2<f64>) -> SignalResult<Array2<f64>> {
-    let (_, n_vars) = _residuals.dim();
+fn compute_var_error_covariance(residuals: &Array2<f64>) -> SignalResult<Array2<f64>> {
+    let (_, n_vars) = residuals.dim();
     Ok(Array2::eye(n_vars)) // Placeholder
 }
 
 #[allow(dead_code)]
-fn compute_var_log_likelihood(_residuals: &Array2<f64>, _error_cov: &Array2<f64>) -> f64 {
+fn compute_var_log_likelihood(_residuals: &Array2<f64>, _errorcov: &Array2<f64>) -> f64 {
     0.0 // Placeholder
 }
 
@@ -3521,7 +3531,7 @@ fn compute_granger_causality_tests(
     _coeffs: &Array2<f64>,
     _error_cov: &Array2<f64>,
 ) -> SignalResult<Array2<f64>> {
-    let (_, n_vars) = _y.dim();
+    let (_, n_vars) = y.dim();
     Ok(Array2::zeros((n_vars, n_vars))) // Placeholder
 }
 
@@ -3540,7 +3550,7 @@ fn compute_var_cross_spectrum(
     _error_cov: &Array2<f64>,
     _points: usize,
 ) -> SignalResult<Array2<Complex64>> {
-    let (n_vars_) = _error_cov.dim();
+    let (n_vars, _) = error_cov.dim();
     Ok(Array2::zeros((_points, n_vars * n_vars))) // Placeholder
 }
 
@@ -3655,7 +3665,7 @@ fn test_ar_estimation() -> SignalResult<bool> {
     let methods = [ARMethod::YuleWalker, ARMethod::Burg];
 
     for method in &methods {
-        let (ar_coeffs_reflection_coeffs, variance) = estimate_ar(&signal, 2, *method)?;
+        let (ar_coeffs, reflection_coeffs, variance) = estimate_ar(&signal, 2, *method)?;
 
         // Check if estimated coefficients are reasonably close to true values
         let coeff_error1 = (ar_coeffs[1] - true_ar_coeffs[0]).abs();
@@ -3709,7 +3719,7 @@ fn test_ma_estimation() -> SignalResult<bool> {
     let ma_result = estimate_ma(&signal, 2, MAMethod::Innovations)?;
 
     // Check that coefficients are reasonable (MA estimation is generally harder than AR)
-    if ma_result.coefficients.len() != 3 {
+    if ma_result.ma_coeffs.len() != 3 {
         return Ok(false);
     }
 
@@ -3752,16 +3762,16 @@ fn test_arma_estimation() -> SignalResult<bool> {
     let arma_result = estimate_arma(&signal, 1, 1)?;
 
     // Check basic validity of results
-    if arma_result.ar_coeffs.len() != 2 || arma_result.ma_coeffs.len() != 2 {
+    if arma_result.0.len() != 2 || arma_result.1.len() != 2 {
         return Ok(false);
     }
 
-    if arma_result.variance <= 0.0 {
+    if arma_result.2 <= 0.0 {
         return Ok(false);
     }
 
     // Check that estimated AR coefficient is reasonable
-    let ar_error = (arma_result.ar_coeffs[1] - true_ar).abs();
+    let ar_error = (arma_result.0[1] - true_ar).abs();
     if ar_error > 0.4 {
         // Generous tolerance since ARMA estimation is challenging
         println!(

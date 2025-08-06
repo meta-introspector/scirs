@@ -56,10 +56,10 @@ impl Point2D {
     }
 
     /// Convert from array representation
-    pub fn from_array(_arr: [f64; 2]) -> Self {
+    pub fn from_array(arr: [f64; 2]) -> Self {
         Point2D {
-            x: _arr[0],
-            y: _arr[1],
+            x: arr[0],
+            y: arr[1],
         }
     }
 
@@ -69,9 +69,9 @@ impl Point2D {
     }
 
     /// Calculate Euclidean distance to another point
-    pub fn distance(&self, _other: &Point2D) -> f64 {
-        let dx = self.x - _other.x;
-        let dy = self.y - _other.y;
+    pub fn distance(&self, other: &Point2D) -> f64 {
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
         (dx * dx + dy * dy).sqrt()
     }
 }
@@ -114,24 +114,24 @@ struct Edge {
 
 impl Edge {
     /// Create a new edge between two points
-    fn new(_start: Point2D, end: Point2D) -> Self {
-        let weight = _start.distance(&end);
+    fn new(start: Point2D, end: Point2D) -> Self {
+        let weight = start.distance(&end);
         Edge {
-            start: _start,
+            start: start,
             end,
             weight,
         }
     }
 
     /// Check if this edge intersects with a polygon edge
-    fn intersects_segment(&self, _p1: &Point2D, p2: &Point2D) -> bool {
+    fn intersects_segment(&self, p1: &Point2D, p2: &Point2D) -> bool {
         // Don't consider intersection if the segments share an endpoint
         const EPSILON: f64 = 1e-10;
 
-        let shares_endpoint = (self.start.x - _p1.x).abs() < EPSILON
-            && (self.start.y - _p1.y).abs() < EPSILON
+        let shares_endpoint = (self.start.x - p1.x).abs() < EPSILON
+            && (self.start.y - p1.y).abs() < EPSILON
             || (self.start.x - p2.x).abs() < EPSILON && (self.start.y - p2.y).abs() < EPSILON
-            || (self.end.x - _p1.x).abs() < EPSILON && (self.end.y - _p1.y).abs() < EPSILON
+            || (self.end.x - p1.x).abs() < EPSILON && (self.end.y - p1.y).abs() < EPSILON
             || (self.end.x - p2.x).abs() < EPSILON && (self.end.y - p2.y).abs() < EPSILON;
 
         if shares_endpoint {
@@ -141,7 +141,7 @@ impl Edge {
         // Check for degenerate segments (zero length)
         let seg1_length_sq =
             (self.end.x - self.start.x).powi(2) + (self.end.y - self.start.y).powi(2);
-        let seg2_length_sq = (p2.x - _p1.x).powi(2) + (p2.y - _p1.y).powi(2);
+        let seg2_length_sq = (p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2);
 
         if seg1_length_sq < EPSILON || seg2_length_sq < EPSILON {
             return false;
@@ -150,7 +150,7 @@ impl Edge {
         // Convert to arrays for the polygon module
         let a1 = [self.start.x, self.start.y];
         let a2 = [self.end.x, self.end.y];
-        let b1 = [_p1.x, _p1.y];
+        let b1 = [_p1.x, p1.y];
         let b2 = [p2.x, p2.y];
 
         segments_intersect(&a1, &a2, &b1, &b2)
@@ -176,7 +176,7 @@ impl VisibilityGraph {
     }
 
     /// Add a vertex to the graph
-    pub fn add_vertex(&mut self, _vertex: Point2D) {
+    pub fn add_vertex(&mut self, vertex: Point2D) {
         if !self.vertices.contains(&_vertex) {
             self.vertices.push(_vertex);
             self.adjacency_list.entry(_vertex).or_default();
@@ -184,7 +184,7 @@ impl VisibilityGraph {
     }
 
     /// Add an edge to the graph
-    pub fn add_edge(&mut self, _from: Point2D, to: Point2D, weight: f64) {
+    pub fn add_edge(&mut self, from: Point2D, to: Point2D, weight: f64) {
         // Make sure both vertices exist
         self.add_vertex(_from);
         self.add_vertex(to);
@@ -197,7 +197,7 @@ impl VisibilityGraph {
     }
 
     /// Get all neighbors of a vertex
-    pub fn get_neighbors(&self, _vertex: &Point2D) -> Vec<(Point2D, f64)> {
+    pub fn get_neighbors(&self, vertex: &Point2D) -> Vec<(Point2D, f64)> {
         match self.adjacency_list.get(_vertex) {
             Some(neighbors) => neighbors.clone(),
             None => Vec::new(),
@@ -205,7 +205,7 @@ impl VisibilityGraph {
     }
 
     /// Find the shortest path between two points using A* search
-    pub fn find_path(&self, _start: Point2D, goal: Point2D) -> Option<Path<[f64; 2]>> {
+    pub fn find_path(&self, start: Point2D, goal: Point2D) -> Option<Path<[f64; 2]>> {
         // Make sure _start and goal are in the graph
         if !self.adjacency_list.contains_key(&_start) || !self.adjacency_list.contains_key(&goal) {
             return None;
@@ -263,13 +263,13 @@ impl VisibilityGraph {
     }
 
     /// Check if two points are mutually visible
-    fn are_points_visible(&self, _p1: &Point2D, p2: &Point2D, obstacles: &[Vec<Point2D>]) -> bool {
+    fn are_points_visible(&self, p1: &Point2D, p2: &Point2D, obstacles: &[Vec<Point2D>]) -> bool {
         if _p1 == p2 {
             return true;
         }
 
         // Early exit: if the edge is very short and both points are vertices, they're likely visible
-        let edge_length = _p1.distance(p2);
+        let edge_length = p1.distance(p2);
         if edge_length < 1e-10 {
             return true;
         }
@@ -316,8 +316,8 @@ impl VisibilityGraph {
             // Check multiple points along the segment (excluding endpoints)
             for i in 1..num_samples {
                 let t = i as f64 / num_samples as f64;
-                let sample_x = _p1.x * (1.0 - t) + p2.x * t;
-                let sample_y = _p1.y * (1.0 - t) + p2.y * t;
+                let sample_x = p1.x * (1.0 - t) + p2.x * t;
+                let sample_y = p1.y * (1.0 - t) + p2.y * t;
                 let sample_point = [sample_x, sample_y];
 
                 // Skip if the sample point is very close to any obstacle vertex
@@ -361,9 +361,9 @@ pub struct VisibilityGraphPlanner {
 
 impl VisibilityGraphPlanner {
     /// Create a new visibility graph planner with the given obstacles
-    pub fn new(_obstacles: Vec<Array2<f64>>) -> Self {
+    pub fn new(obstacles: Vec<Array2<f64>>) -> Self {
         VisibilityGraphPlanner {
-            obstacles: _obstacles,
+            obstacles: obstacles,
             visibility_graph: None,
             use_fast_path: true,
         }
@@ -373,7 +373,7 @@ impl VisibilityGraphPlanner {
     ///
     /// When enabled, the planner first checks if there's a direct path
     /// from start to goal before building the full visibility graph.
-    pub fn with_fast_path(mut self, use_fast_path: bool) -> Self {
+    pub fn with_fast_path(mut self, use_fastpath: bool) -> Self {
         self.use_fast_path = use_fast_path;
         self
     }
@@ -625,7 +625,7 @@ impl VisibilityGraphPlanner {
 ///
 /// * `true` if the segments intersect, `false` otherwise
 #[allow(dead_code)]
-fn segments_intersect(_a1: &[f64], a2: &[f64], b1: &[f64], b2: &[f64]) -> bool {
+fn segments_intersect(a1: &[f64], a2: &[f64], b1: &[f64], b2: &[f64]) -> bool {
     const EPSILON: f64 = 1e-10;
 
     // Function to compute orientation of triplet (p, q, r)
@@ -657,7 +657,7 @@ fn segments_intersect(_a1: &[f64], a2: &[f64], b1: &[f64], b2: &[f64]) -> bool {
 
     let o1 = orientation(_a1, a2, b1);
     let o2 = orientation(_a1, a2, b2);
-    let o3 = orientation(b1, b2, _a1);
+    let o3 = orientation(b1, b2, a1);
     let o4 = orientation(b1, b2, a2);
 
     // General case - segments intersect if orientations are different
@@ -674,7 +674,7 @@ fn segments_intersect(_a1: &[f64], a2: &[f64], b1: &[f64], b2: &[f64]) -> bool {
         return true;
     }
 
-    if o3 == 0 && on_segment(b1, _a1, b2) {
+    if o3 == 0 && on_segment(b1, a1, b2) {
         return true;
     }
 

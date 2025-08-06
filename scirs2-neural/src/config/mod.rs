@@ -64,11 +64,11 @@ pub enum ConfigFormat {
 impl ModelConfig {
     /// Load a model configuration from a file
     pub fn from_file<P: AsRef<Path>>(path: P, format: Option<ConfigFormat>) -> Result<Self> {
-        let _path = _path.as_ref();
+        let _path = path.as_ref();
         // Determine format from extension if not specified
         let format = if let Some(fmt) = format {
             fmt
-        } else if let Some(ext) = _path.extension() {
+        } else if let Some(ext) = path.extension() {
             if ext == "json" {
                 ConfigFormat::JSON
             } else if ext == "yaml" || ext == "yml" {
@@ -125,11 +125,11 @@ impl ModelConfig {
         serde_yaml::to_string(self)
             .map_err(|e| Error::SerializationError(format!("Failed to serialize to YAML: {}", e)))
     /// Parse configuration from JSON string
-    pub fn from_json(_json: &str) -> Result<Self> {
+    pub fn from_json(json: &str) -> Result<Self> {
         serde_json::from_str(_json)
             .map_err(|e| Error::DeserializationError(format!("Failed to parse JSON: {}", e)))
     /// Parse configuration from YAML string
-    pub fn from_yaml(_yaml: &str) -> Result<Self> {
+    pub fn from_yaml(yaml: &str) -> Result<Self> {
         serde_yaml::from_str(_yaml)
             .map_err(|e| Error::DeserializationError(format!("Failed to parse YAML: {}", e)))
     /// Validate the configuration against schema and parameter constraints

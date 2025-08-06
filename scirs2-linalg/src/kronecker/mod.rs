@@ -10,8 +10,8 @@ use std::iter::Sum;
 
 // Helper function to convert ndarray::ShapeError to LinalgError
 #[allow(dead_code)]
-fn shape_err_to_linalg(_err: ndarray::ShapeError) -> crate::error::LinalgError {
-    crate::error::LinalgError::ShapeError(_err.to_string())
+fn shape_err_to_linalg(err: ndarray::ShapeError) -> crate::error::LinalgError {
+    crate::error::LinalgError::ShapeError(err.to_string())
 }
 
 use crate::decomposition::cholesky;
@@ -637,16 +637,16 @@ where
     /// # Returns
     ///
     /// * New K-FAC optimizer instance
-    pub fn new(_decay_factor: Option<F>, base_damping: Option<F>) -> Self {
-        let decay = _decay_factor.unwrap_or_else(|| F::from(0.95).unwrap());
-        let _damping = base_damping.unwrap_or_else(|| F::from(1e-4).unwrap());
+    pub fn new(decay_factor: Option<F>, basedamping: Option<F>) -> Self {
+        let decay = decay_factor.unwrap_or_else(|| F::from(0.95).unwrap());
+        let damping = basedamping.unwrap_or_else(|| F::from(1e-4).unwrap());
 
         Self {
             decay_factor: decay,
-            base_damping: _damping,
-            adaptive_damping: _damping,
-            min_damping: _damping / F::from(10.0).unwrap(),
-            max_damping: _damping * F::from(100.0).unwrap(),
+            base_damping: damping,
+            adaptive_damping: damping,
+            min_damping: damping / F::from(10.0).unwrap(),
+            max_damping: damping * F::from(100.0).unwrap(),
             step_count: 0,
             input_cov_avg: None,
             output_cov_avg: None,
@@ -758,10 +758,10 @@ where
     /// * `loss_improved` - Whether the loss improved in the last step
     /// * `improvement_ratio` - Ratio of actual vs predicted improvement
     ///
-    pub fn adjust_damping(&mut self, loss_improved: bool, improvement_ratio: Option<F>) {
+    pub fn adjust_damping(&mut self, loss_improved: bool, improvementratio: Option<F>) {
         if loss_improved {
             // Loss _improved: decrease damping
-            if let Some(_ratio) = improvement_ratio {
+            if let Some(_ratio) = improvementratio {
                 if _ratio > F::from(0.75).unwrap() {
                     // Very good step: aggressive damping reduction
                     self.adaptive_damping =
@@ -830,11 +830,11 @@ where
     /// # Returns
     ///
     /// * New block-diagonal Fisher structure
-    pub fn new(_layer_dims: Vec<(usize, usize)>, damping: F) -> Self {
+    pub fn new(layer_dims: Vec<(usize, usize)>, damping: F) -> Self {
         Self {
             layer_factors: Vec::new(),
             inverse_factors: Vec::new(),
-            layer_dims: _layer_dims,
+            layer_dims,
             damping,
         }
     }
@@ -1104,7 +1104,8 @@ pub fn advanced_kfac_step<F>(
     kfac_optimizer: &mut KFACOptimizer<F>,
     input_acts: &ArrayView2<F>,
     output_grads: &ArrayView2<F>,
-    learning_rate: F, _momentum: Option<F>,
+    learning_rate: F,
+    _momentum: Option<F>,
     gradient_clip: Option<F>,
 ) -> LinalgResult<Array2<F>>
 where
@@ -1132,7 +1133,7 @@ where
         }
     }
 
-    // Apply _momentum if specified (would need _momentum state in _optimizer)
+    // Apply _momentum if specified (would need _momentum state in optimizer)
     // For now, just use the natural gradient directly
 
     // Update weights: w = w - lr * natural_grad
@@ -1148,14 +1149,14 @@ where
 
 /// Compute stable matrix inverse with enhanced regularization
 #[allow(dead_code)]
-fn stable_matrix_inverse<F>(_matrix: &ArrayView2<F>, damping: F) -> LinalgResult<Array2<F>>
+fn stable_matrix_inverse<F>(matrix: &ArrayView2<F>, damping: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + ScalarOperand + Send + Sync,
 {
-    let n = _matrix.nrows();
+    let n = matrix.nrows();
 
     // Add damping to ensure positive definiteness
-    let mut regularized = _matrix.to_owned();
+    let mut regularized = matrix.to_owned();
     for i in 0..n {
         regularized[[i, i]] += damping;
     }
@@ -1201,7 +1202,7 @@ where
             // Fallback: use diagonal approximation with heavy regularization
             let mut inv = Array2::zeros((n, n));
             for i in 0..n {
-                let diag_val = _matrix[[i, i]] + damping * F::from(100.0).unwrap();
+                let diag_val = matrix[[i, i]] + damping * F::from(100.0).unwrap();
                 inv[[i, i]] = F::one() / diag_val;
             }
             Ok(inv)
@@ -1389,7 +1390,7 @@ mod tests {
         let output_grads = array![[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]];
 
         // First update should initialize averages
-        let (input_cov1, _output_cov1) = optimizer
+        let (input_cov1, output_cov1) = optimizer
             .update_covariances(&input_acts.view(), &output_grads.view())
             .unwrap();
 
@@ -1398,7 +1399,7 @@ mod tests {
         assert!(optimizer.output_cov_avg.is_some());
 
         // Second update should use moving averages
-        let (input_cov2, _output_cov2) = optimizer
+        let (input_cov2, output_cov2) = optimizer
             .update_covariances(&input_acts.view(), &output_grads.view())
             .unwrap();
 
@@ -1442,12 +1443,12 @@ mod tests {
 
         // Create sample activations and gradients for 2 layers
         // Layer 1: 10 inputs -> 20 outputs, so acts should be Nx10, grads should be Nx20
-        let layer1_acts = Array2::fromshape_fn((5, 10), |(i, j)| (i + j) as f64 * 0.1);
-        let layer1_grads = Array2::fromshape_fn((5, 20), |(i, j)| (i + j) as f64 * 0.01);
+        let layer1_acts = Array2::from_shape_fn((5, 10), |(i, j)| (i + j) as f64 * 0.1);
+        let layer1_grads = Array2::from_shape_fn((5, 20), |(i, j)| (i + j) as f64 * 0.01);
 
         // Layer 2: 20 inputs -> 10 outputs, so acts should be Nx20, grads should be Nx10
-        let layer2_acts = Array2::fromshape_fn((5, 20), |(i, j)| (i + j) as f64 * 0.05);
-        let layer2_grads = Array2::fromshape_fn((5, 10), |(i, j)| (i + j) as f64 * 0.02);
+        let layer2_acts = Array2::from_shape_fn((5, 20), |(i, j)| (i + j) as f64 * 0.05);
+        let layer2_grads = Array2::from_shape_fn((5, 10), |(i, j)| (i + j) as f64 * 0.02);
 
         let activations = vec![layer1_acts.view(), layer2_acts.view()];
         let gradients = vec![layer1_grads.view(), layer2_grads.view()];

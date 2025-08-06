@@ -51,9 +51,9 @@ where
     /// # Returns
     ///
     /// * A new ConfusionMatrixVisualizer
-    pub fn new(_matrix: Array2<f64>, labels: Option<Vec<String>>) -> Self {
+    pub fn new(matrix: Array2<f64>, labels: Option<Vec<String>>) -> Self {
         ConfusionMatrixVisualizer {
-            _matrix,
+            matrix,
             labels,
             title: "Confusion Matrix".to_string(),
             normalize: false,
@@ -88,7 +88,7 @@ where
             title: "Confusion Matrix".to_string(),
             normalize: false,
             color_map: ColorMap::BlueRed,
-            includetext: _true,
+            includetext: true,
             y_true: Some(y_true),
             y_pred: Some(y_pred),
         })
@@ -131,7 +131,7 @@ where
     /// # Returns
     ///
     /// * Self for method chaining
-    pub fn with_color_map(mut self, color_map: ColorMap) -> Self {
+    pub fn with_color_map(mut self, colormap: ColorMap) -> Self {
         self.color_map = color_map;
         self
     }
@@ -164,7 +164,7 @@ where
             let y_pred = self.y_pred.unwrap();
 
             // Calculate confusion matrix
-            let (cm_) = confusion_matrix(y_true, y_pred, None)?;
+            let cm = confusion_matrix(y_true, y_pred, None)?;
 
             // Normalize if requested
             if self.normalize {

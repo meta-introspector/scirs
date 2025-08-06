@@ -323,7 +323,7 @@ impl RLParameterOptimizer {
     }
 
     /// Bucket continuous value into discrete categories
-    fn bucket_value(_value: f64, min_val: f64, max_val: f64, num_buckets: usize) -> usize {
+    fn bucket_value(_value: f64, min_val: f64, max_val: f64, numbuckets: usize) -> usize {
         let normalized = (_value - min_val) / (max_val - min_val);
         let bucket = (normalized * num_buckets as f64).floor() as usize;
         bucket.min(num_buckets - 1)
@@ -347,7 +347,7 @@ impl RLParameterOptimizer {
     }
 
     /// Perform experience replay learning
-    pub fn experience_replay(&mut self, batch_size: usize) {
+    pub fn experience_replay(&mut self, batchsize: usize) {
         if self.experience_buffer.len() < batch_size {
             return;
         }
@@ -382,7 +382,8 @@ impl RLParameterOptimizer {
 impl Default for StateDiscrete {
     fn default() -> Self {
         Self {
-            latency_bucket: 2..cpu, _bucket: 2,
+            latency_bucket: 2..cpu,
+            _bucket: 2,
             memory_bucket: 2,
             quality_bucket: 2,
             complexity_bucket: 2,
@@ -506,29 +507,19 @@ pub struct NeuralNetworkPredictor {
 
 impl NeuralNetworkPredictor {
     /// Create a new neural network predictor
-    pub fn new(_input_size: usize, hidden_size: usize, output_size: usize) -> Self {
+    pub fn new(_input_size: usize, hidden_size: usize, outputsize: usize) -> Self {
         let mut rng = rng();
 
         // Initialize weights randomly
         let input_weights = (0..hidden_size)
-            .map(|_| {
-                (0.._input_size)
-                    .map(|_| rng.gen_range(-0.5..0.5))
-                    .collect()
-            })
+            .map(|_| (0.._input_size).map(|_| rng.gen_range(-0.5..0.5)).collect())
             .collect();
 
         let hidden_weights = (0..output_size)
-            .map(|_| {
-                (0..hidden_size)
-                    .map(|_| rng.gen_range(-0.5..0.5))
-                    .collect()
-            })
+            .map(|_| (0..hidden_size).map(|_| rng.gen_range(-0.5..0.5)).collect())
             .collect();
 
-        let output_weights = (0..output_size)
-            .map(|_| rng.gen_range(-0.5..0.5))
-            .collect();
+        let output_weights = (0..output_size).map(|_| rng.gen_range(-0.5..0.5)).collect();
         let biases = (0..hidden_size + output_size)
             .map(|_| rng.gen_range(-0.1..0.1))
             .collect();
@@ -546,7 +537,7 @@ impl NeuralNetworkPredictor {
     pub fn predict(&self, input: &[f64]) -> Vec<f64> {
         // Forward pass through hidden layer
         let mut hidden_activations = Vec::new();
-        for (i, weights) in self.input_weights.iter().enumerate() {
+        for (i, weights) in self.inputweights.iter().enumerate() {
             let mut activation = self.biases[i];
             for (j, weight) in weights.iter().enumerate() {
                 if j < input.len() {
@@ -558,8 +549,8 @@ impl NeuralNetworkPredictor {
 
         // Forward pass through output layer
         let mut output = Vec::new();
-        for (i, weights) in self.hidden_weights.iter().enumerate() {
-            let mut activation = self.biases[self.input_weights.len() + i];
+        for (i, weights) in self.hiddenweights.iter().enumerate() {
+            let mut activation = self.biases[self.inputweights.len() + i];
             for (j, weight) in weights.iter().enumerate() {
                 if j < hidden_activations.len() {
                     activation += weight * hidden_activations[j];
@@ -572,7 +563,7 @@ impl NeuralNetworkPredictor {
     }
 
     /// Train one step using gradient descent
-    pub fn train_step(&mut self_input: &[f64], target: f64, predicted: f64) {
+    pub fn train_step(&mut selfinput: &[f64], target: f64, predicted: f64) {
         let error = target - predicted;
 
         // Simplified gradient descent - would use proper backpropagation in production
@@ -663,7 +654,7 @@ pub struct GenerationStats {
 
 impl GeneticPipelineOptimizer {
     /// Create a new advanced genetic optimizer with multi-objective capabilities
-    pub fn new(_parameter_ranges: HashMap<String, (f64, f64)>) -> Self {
+    pub fn new(_parameterranges: HashMap<String, (f64, f64)>) -> Self {
         let ga_params = GAParameters::default();
         let population = Self::initialize_population(&_parameter_ranges, ga_params.population_size);
 
@@ -678,7 +669,7 @@ impl GeneticPipelineOptimizer {
             MutationStrategy::LevyFlight,
             MutationStrategy::SelfAdaptive,
         ] {
-            strategy_weights.insert(strategy.clone(), 1.0 / 6.0);
+            strategyweights.insert(strategy.clone(), 1.0 / 6.0);
             strategy_success_rates.insert(strategy, 0.0);
         }
 
@@ -1013,8 +1004,7 @@ impl GeneticPipelineOptimizer {
                     }
                     MutationStrategy::Cauchy => {
                         // Cauchy mutation with heavy tails
-                        let cauchy_sample =
-                            (rng.gen_range(0.0..1.0) - 0.5) * std::f64::consts::PI;
+                        let cauchy_sample = (rng.gen_range(0.0..1.0) - 0.5) * std::f64::consts::PI;
                         let delta = cauchy_sample.tan() * 0.1;
                         *value += delta;
                     }
@@ -1043,7 +1033,7 @@ impl GeneticPipelineOptimizer {
         let mut cumulative_weight = 0.0;
         let random_value = rng.gen_range(0.0..1.0);
 
-        for (strategy..weight) in &self.adaptive_strategies.strategy_weights {
+        for (strategy, weight) in &self.adaptive_strategies.strategy_weights {
             cumulative_weight += weight;
             if random_value <= cumulative_weight {
                 return strategy.clone();
@@ -1176,7 +1166,7 @@ impl GeneticPipelineOptimizer {
             .sum();
 
         if total_success > 0.0 {
-            for (strategy, weight) in self.adaptive_strategies.strategy_weights.iter_mut() {
+            for (strategy, weight) in self.adaptive_strategies.strategyweights.iter_mut() {
                 let success_rate = self.adaptive_strategies.strategy_success_rates[strategy];
                 *weight = success_rate / total_success;
             }
@@ -1184,7 +1174,7 @@ impl GeneticPipelineOptimizer {
     }
 
     /// Evaluate fitness of entire population
-    pub fn evaluate_population(&mut self, fitness_fn: impl Fn(&PipelineGenome) -> f64) {
+    pub fn evaluate_population(&mut self, fitnessfn: impl Fn(&PipelineGenome) -> f64) {
         for genome in &mut self.population {
             genome.fitness = fitness_fn(genome);
         }
@@ -1579,9 +1569,9 @@ pub enum AcquisitionFunction {
 
 impl NeuralArchitectureSearch {
     /// Create a new NAS instance
-    pub fn new(_search_space: ArchitectureSearchSpace, strategy: SearchStrategy) -> Self {
+    pub fn new(_searchspace: ArchitectureSearchSpace, strategy: SearchStrategy) -> Self {
         Self {
-            _search_space,
+            search_space,
             candidate_architectures: Vec::new(),
             performance_db: HashMap::new(),
             search_strategy: strategy,
@@ -1590,7 +1580,7 @@ impl NeuralArchitectureSearch {
     }
 
     /// Generate candidate architectures
-    pub fn generate_candidates(&mut self, num_candidates: usize) -> Vec<ProcessingArchitecture> {
+    pub fn generate_candidates(&mut self, numcandidates: usize) -> Vec<ProcessingArchitecture> {
         let _candidates = match &self.search_strategy {
             SearchStrategy::Random => self.random_search(num_candidates),
             SearchStrategy::Evolutionary { population_size } => {
@@ -1600,12 +1590,12 @@ impl NeuralArchitectureSearch {
             SearchStrategy::BayesianOptimization { .. } => self.bayesian_search(num_candidates),
         };
 
-        self.candidate_architectures = _candidates.clone();
+        self.candidate_architectures = candidates.clone();
         _candidates
     }
 
     /// Random architecture search
-    fn random_search(&self, num_candidates: usize) -> Vec<ProcessingArchitecture> {
+    fn random_search(&self, numcandidates: usize) -> Vec<ProcessingArchitecture> {
         let mut _candidates = Vec::new();
         let mut rng = rng();
 
@@ -1644,14 +1634,14 @@ impl NeuralArchitectureSearch {
                 parameter_count,
             };
 
-            _candidates.push(architecture);
+            candidates.push(architecture);
         }
 
         _candidates
     }
 
     /// Evolutionary architecture search
-    fn evolutionary_search(&self, population_size: usize) -> Vec<ProcessingArchitecture> {
+    fn evolutionary_search(&self, populationsize: usize) -> Vec<ProcessingArchitecture> {
         // Initialize with random population if first iteration
         if self.current_iteration == 0 {
             return self.random_search(population_size);
@@ -1708,13 +1698,13 @@ impl NeuralArchitectureSearch {
     }
 
     /// RL-based architecture search
-    fn rl_search(&self, num_candidates: usize) -> Vec<ProcessingArchitecture> {
+    fn rl_search(&self, numcandidates: usize) -> Vec<ProcessingArchitecture> {
         // Simplified RL search - would use a controller network in practice
         self.random_search(num_candidates)
     }
 
     /// Bayesian optimization search
-    fn bayesian_search(&self, num_candidates: usize) -> Vec<ProcessingArchitecture> {
+    fn bayesian_search(&self, numcandidates: usize) -> Vec<ProcessingArchitecture> {
         // Simplified Bayesian search - would use Gaussian processes in practice
         self.random_search(num_candidates)
     }
@@ -1780,7 +1770,7 @@ impl NeuralArchitectureSearch {
         let complexity = self.calculate_complexity(&new_layers);
         let parameter_count = self.estimate_parameters(&new_layers);
         ProcessingArchitecture {
-            id: format!("crossover_{}"..self.current_iteration),
+            id: format!("crossover_{}", self.current_iteration),
             layers: new_layers,
             connections: new_connections,
             complexity,
@@ -1969,13 +1959,13 @@ pub struct ScalingState {
 
 impl PredictiveScaler {
     /// Create a new predictive scaler
-    pub fn new(_prediction_window: f64) -> Self {
+    pub fn new(_predictionwindow: f64) -> Self {
         Self {
             workload_history: VecDeque::with_capacity(10000),
             model_params: PredictionModel {
                 model_type: ModelType::LinearRegression,
                 parameters: vec![0.0, 1.0], // Simple linear model
-                _prediction_window,
+                prediction_window,
                 accuracy: 0.7,
             },
             scaling_predictions: VecDeque::with_capacity(100),
@@ -2114,7 +2104,7 @@ impl PredictiveScaler {
     }
 
     /// Convert load prediction to resource requirements
-    fn load_to_resources(&self, predicted_load: f64) -> ResourceRequirement {
+    fn load_to_resources(&self, predictedload: f64) -> ResourceRequirement {
         ResourceRequirement {
             cpu_cores: (predicted_load * 8.0).ceil(), // Scale up to 8 cores max
             memory_mb: 512.0 + predicted_load * 1536.0, // 512MB to 2GB

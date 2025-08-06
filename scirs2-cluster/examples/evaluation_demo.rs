@@ -47,7 +47,7 @@ fn generate_dataset() -> (Array2<f64>, Array1<i32>) {
 }
 
 #[allow(dead_code)]
-fn evaluate_clustering(_data: &Array2<f64>, labels: &Array1<usize>) {
+fn evaluate_clustering(data: &Array2<f64>, labels: &Array1<usize>) {
     // Convert usize labels to i32 for metric functions
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
 

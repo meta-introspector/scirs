@@ -34,8 +34,8 @@ use ndarray::Array2;
 /// let sparse = dense_to_csr(&dense).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn dense_to_csr(_dense: &Array2<f64>) -> SparseResult<CsrMatrix<f64>> {
-    let shape = _dense.dim();
+pub fn dense_to_csr(dense: &Array2<f64>) -> SparseResult<CsrMatrix<f64>> {
+    let shape = dense.dim();
     let (rows, cols) = (shape.0, shape.1);
 
     let mut data = Vec::new();
@@ -44,7 +44,7 @@ pub fn dense_to_csr(_dense: &Array2<f64>) -> SparseResult<CsrMatrix<f64>> {
 
     for i in 0..rows {
         for j in 0..cols {
-            let val = _dense[[i, j]];
+            let val = dense[[i, j]];
             if val != 0.0 {
                 data.push(val);
                 row_indices.push(i);
@@ -66,8 +66,8 @@ pub fn dense_to_csr(_dense: &Array2<f64>) -> SparseResult<CsrMatrix<f64>> {
 ///
 /// * Sparse matrix in CSC format
 #[allow(dead_code)]
-pub fn dense_to_csc(_dense: &Array2<f64>) -> SparseResult<CscMatrix<f64>> {
-    let shape = _dense.dim();
+pub fn dense_to_csc(dense: &Array2<f64>) -> SparseResult<CscMatrix<f64>> {
+    let shape = dense.dim();
     let (rows, cols) = (shape.0, shape.1);
 
     let mut data = Vec::new();
@@ -76,7 +76,7 @@ pub fn dense_to_csc(_dense: &Array2<f64>) -> SparseResult<CscMatrix<f64>> {
 
     for i in 0..rows {
         for j in 0..cols {
-            let val = _dense[[i, j]];
+            let val = dense[[i, j]];
             if val != 0.0 {
                 data.push(val);
                 row_indices.push(i);
@@ -98,8 +98,8 @@ pub fn dense_to_csc(_dense: &Array2<f64>) -> SparseResult<CscMatrix<f64>> {
 ///
 /// * Sparse matrix in COO format
 #[allow(dead_code)]
-pub fn dense_to_coo(_dense: &Array2<f64>) -> SparseResult<CooMatrix<f64>> {
-    let shape = _dense.dim();
+pub fn dense_to_coo(dense: &Array2<f64>) -> SparseResult<CooMatrix<f64>> {
+    let shape = dense.dim();
     let (rows, cols) = (shape.0, shape.1);
 
     let mut data = Vec::new();
@@ -108,7 +108,7 @@ pub fn dense_to_coo(_dense: &Array2<f64>) -> SparseResult<CooMatrix<f64>> {
 
     for i in 0..rows {
         for j in 0..cols {
-            let val = _dense[[i, j]];
+            let val = dense[[i, j]];
             if val != 0.0 {
                 data.push(val);
                 row_indices.push(i);
@@ -130,11 +130,11 @@ pub fn dense_to_coo(_dense: &Array2<f64>) -> SparseResult<CooMatrix<f64>> {
 ///
 /// * Dense matrix as 2D array
 #[allow(dead_code)]
-pub fn csr_to_dense(_sparse: &CsrMatrix<f64>) -> Array2<f64> {
-    let (rows, cols) = _sparse.shape();
+pub fn csr_to_dense(sparse: &CsrMatrix<f64>) -> Array2<f64> {
+    let (rows, cols) = sparse.shape();
     let mut dense = Array2::zeros((rows, cols));
 
-    let dense_vec = _sparse.to_dense();
+    let dense_vec = sparse.to_dense();
     for i in 0..rows {
         for j in 0..cols {
             dense[[i, j]] = dense_vec[i][j];
@@ -154,11 +154,11 @@ pub fn csr_to_dense(_sparse: &CsrMatrix<f64>) -> Array2<f64> {
 ///
 /// * Dense matrix as 2D array
 #[allow(dead_code)]
-pub fn csc_to_dense(_sparse: &CscMatrix<f64>) -> Array2<f64> {
-    let (rows, cols) = _sparse.shape();
+pub fn csc_to_dense(sparse: &CscMatrix<f64>) -> Array2<f64> {
+    let (rows, cols) = sparse.shape();
     let mut dense = Array2::zeros((rows, cols));
 
-    let dense_vec = _sparse.to_dense();
+    let dense_vec = sparse.to_dense();
     for i in 0..rows {
         for j in 0..cols {
             dense[[i, j]] = dense_vec[i][j];
@@ -178,11 +178,11 @@ pub fn csc_to_dense(_sparse: &CscMatrix<f64>) -> Array2<f64> {
 ///
 /// * Dense matrix as 2D array
 #[allow(dead_code)]
-pub fn coo_to_dense(_sparse: &CooMatrix<f64>) -> Array2<f64> {
-    let (rows, cols) = _sparse.shape();
+pub fn coo_to_dense(sparse: &CooMatrix<f64>) -> Array2<f64> {
+    let (rows, cols) = sparse.shape();
     let mut dense = Array2::zeros((rows, cols));
 
-    let dense_vec = _sparse.to_dense();
+    let dense_vec = sparse.to_dense();
     for i in 0..rows {
         for j in 0..cols {
             dense[[i, j]] = dense_vec[i][j];
@@ -202,9 +202,9 @@ pub fn coo_to_dense(_sparse: &CooMatrix<f64>) -> Array2<f64> {
 ///
 /// * Sparse matrix in COO format
 #[allow(dead_code)]
-pub fn csr_to_coo(_csr: &CsrMatrix<f64>) -> CooMatrix<f64> {
-    let (rows, cols) = _csr.shape();
-    let dense = _csr.to_dense();
+pub fn csr_to_coo(csr: &CsrMatrix<f64>) -> CooMatrix<f64> {
+    let (rows, cols) = csr.shape();
+    let dense = csr.to_dense();
 
     let mut data = Vec::new();
     let mut row_indices = Vec::new();
@@ -233,9 +233,9 @@ pub fn csr_to_coo(_csr: &CsrMatrix<f64>) -> CooMatrix<f64> {
 ///
 /// * Sparse matrix in COO format
 #[allow(dead_code)]
-pub fn csc_to_coo(_csc: &CscMatrix<f64>) -> CooMatrix<f64> {
-    let (rows, cols) = _csc.shape();
-    let dense = _csc.to_dense();
+pub fn csc_to_coo(csc: &CscMatrix<f64>) -> CooMatrix<f64> {
+    let (rows, cols) = csc.shape();
+    let dense = csc.to_dense();
 
     let mut data = Vec::new();
     let mut row_indices = Vec::new();
@@ -264,9 +264,9 @@ pub fn csc_to_coo(_csc: &CscMatrix<f64>) -> CooMatrix<f64> {
 ///
 /// * Sparse matrix in CSR format
 #[allow(dead_code)]
-pub fn coo_to_csr(_coo: &CooMatrix<f64>) -> CsrMatrix<f64> {
-    let (rows, cols) = _coo.shape();
-    let dense = _coo.to_dense();
+pub fn coo_to_csr(coo: &CooMatrix<f64>) -> CsrMatrix<f64> {
+    let (rows, cols) = coo.shape();
+    let dense = coo.to_dense();
 
     let mut data = Vec::new();
     let mut row_indices = Vec::new();
@@ -295,9 +295,9 @@ pub fn coo_to_csr(_coo: &CooMatrix<f64>) -> CsrMatrix<f64> {
 ///
 /// * Sparse matrix in CSC format
 #[allow(dead_code)]
-pub fn coo_to_csc(_coo: &CooMatrix<f64>) -> CscMatrix<f64> {
-    let (rows, cols) = _coo.shape();
-    let dense = _coo.to_dense();
+pub fn coo_to_csc(coo: &CooMatrix<f64>) -> CscMatrix<f64> {
+    let (rows, cols) = coo.shape();
+    let dense = coo.to_dense();
 
     let mut data = Vec::new();
     let mut row_indices = Vec::new();
@@ -326,22 +326,22 @@ pub fn coo_to_csc(_coo: &CooMatrix<f64>) -> CscMatrix<f64> {
 ///
 /// * Sparse matrix in CSC format
 #[allow(dead_code)]
-pub fn csr_to_csc<F>(_csr: &CsrMatrix<F>) -> SparseResult<CscMatrix<F>>
+pub fn csr_to_csc<F>(csr: &CsrMatrix<F>) -> SparseResult<CscMatrix<F>>
 where
     F: Clone + Copy + std::fmt::Debug + PartialEq + num_traits::Zero,
 {
     // Start with CSR in triplet format
-    let (rows, cols) = _csr.shape();
+    let (rows, cols) = csr.shape();
     let mut row_indices = Vec::new();
     let mut col_indices = Vec::new();
     let mut values = Vec::new();
 
     // Extract all non-zero entries from CSR into COO format triplets
     for i in 0..rows {
-        for j in _csr.indptr[i].._csr.indptr[i + 1] {
-            if j < _csr.indices.len() {
-                let col = _csr.indices[j];
-                let val = _csr.data[j];
+        for j in csr.indptr[i].._csr.indptr[i + 1] {
+            if j < csr.indices.len() {
+                let col = csr.indices[j];
+                let val = csr.data[j];
 
                 row_indices.push(i);
                 col_indices.push(col);

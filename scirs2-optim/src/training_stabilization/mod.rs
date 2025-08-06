@@ -46,7 +46,7 @@ pub struct WeightAverager<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> WeightAverager<A, D> {
     /// Create a new weight averager
-    pub fn new(method: AveragingMethod, max_history: usize) -> Self {
+    pub fn new(method: AveragingMethod, maxhistory: usize) -> Self {
         let ema_decay = match method {
             AveragingMethod::ExponentialMovingAverage { decay } => {
                 A::from(decay).unwrap_or_else(|| A::from(0.999).unwrap())
@@ -255,7 +255,7 @@ pub struct PolyakAverager<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> PolyakAverager<A, D> {
     /// Create a new Polyak averager
-    pub fn new(initial_decay: A, final_decay: A, decay_steps: usize) -> Self {
+    pub fn new(initial_decay: A, final_decay: A, decaysteps: usize) -> Self {
         let method = AveragingMethod::ExponentialMovingAverage {
             decay: initial_decay.to_f64().unwrap_or(0.9),
         };

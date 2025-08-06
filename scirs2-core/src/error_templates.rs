@@ -19,8 +19,8 @@ pub fn shape_mismatch(operation: &str, shape1: &[usize], shape2: &[usize]) -> St
 
 /// Generate an error message for invalid parameter values
 #[allow(dead_code)]
-pub fn value(param_name: &str, constraint: &str, actual_value: impl Display) -> String {
-    format!("Parameter '{param_name}': {constraint} (got: {actual_value})")
+pub fn value(param_name: &str, constraint: &str, actualvalue: impl Display) -> String {
+    format!("Parameter '{param_name}': {constraint} (got: {actualvalue})")
 }
 
 /// Generate an error message for out of bounds access
@@ -37,7 +37,7 @@ pub fn empty_input(operation: &str) -> String {
 
 /// Generate an error message for numerical computation errors
 #[allow(dead_code)]
-pub fn numerical_error(operation: &str, issue: &str) -> String {
+pub fn numericalerror(operation: &str, issue: &str) -> String {
     format!("{operation}: {issue} - check input values for numerical issues")
 }
 
@@ -57,44 +57,44 @@ pub fn feature(feature: &str) -> String {
 
 /// Generate an error message for invalid array dimensions
 #[allow(dead_code)]
-pub fn dims(operation: &str, requirement: &str, actual_dims: &[usize]) -> String {
-    format!("{operation}: {requirement} (got: {actual_dims:?})")
+pub fn dims(operation: &str, requirement: &str, actualdims: &[usize]) -> String {
+    format!("{operation}: {requirement} (got: {actualdims:?})")
 }
 
 /// Generate an error message for domain errors
 #[allow(dead_code)]
-pub fn desc(value_desc: &str, constraint: &str, value: impl Display) -> String {
-    format!("{value_desc} must be {constraint} (got: {value})")
+pub fn desc(valuedesc: &str, constraint: &str, value: impl Display) -> String {
+    format!("{valuedesc} must be {constraint} (got: {value})")
 }
 
 /// Generate an error message for allocation failures
 #[allow(dead_code)]
-pub fn allocation_error(size: usize, element_type: &str) -> String {
-    format!("Failed to allocate memory for {size} elements of type {element_type}")
+pub fn allocationerror(size: usize, elementtype: &str) -> String {
+    format!("Failed to allocate memory for {size} elements of type {elementtype}")
 }
 
 /// Generate an error message for file I/O errors
 #[allow(dead_code)]
-pub fn io_error(operation: &str, path: &str, details: &str) -> String {
+pub fn ioerror(operation: &str, path: &str, details: &str) -> String {
     format!("{operation} failed for '{path}': {details}")
 }
 
 /// Generate an error message for parse errors
 #[allow(dead_code)]
-pub fn parse_error(type_name: &str, input: &str, reason: &str) -> String {
-    format!("Failed to parse '{input}' as {type_name}: {reason}")
+pub fn parseerror(typename: &str, input: &str, reason: &str) -> String {
+    format!("Failed to parse '{input}' as {typename}: {reason}")
 }
 
 /// Generate an error message for invalid state
 #[allow(dead_code)]
-pub fn state(object: &str, expected_state: &str, actual_state: &str) -> String {
-    format!("{object} is in invalid state: expected {expected_state}, but was {actual_state}")
+pub fn state(object: &str, expected_state: &str, actualstate: &str) -> String {
+    format!("{object} is in invalid state: expected {expected_state}, but was {actualstate}")
 }
 
 /// Generate an error message with recovery suggestion
 #[allow(dead_code)]
-pub fn msg(error_msg: &str, suggestion: &str) -> String {
-    format!("{error_msg}\nSuggestion: {suggestion}")
+pub fn msg(errormsg: &str, suggestion: &str) -> String {
+    format!("{errormsg}\nSuggestion: {suggestion}")
 }
 
 /// Common parameter constraints
@@ -125,7 +125,7 @@ pub mod constraints {
     }
 
     /// Generate constraint message for square matrix
-    pub fn square_matrix() -> &'static str {
+    pub fn squarematrix() -> &'static str {
         "must be a square matrix"
     }
 
@@ -165,7 +165,7 @@ mod tests {
 
     // #[test]
     // fn test_with_suggestion() {
-    //     let error = domain_error("input", constraints::positive(), -1.0);
+    //     let error = domainerror("input", constraints::positive(), -1.0);
     //     let msg = with_suggestion(&error, "use absolute value or check input data");
     //     assert!(msg.contains("input must be must be positive (> 0) (got: -1)"));
     //     assert!(msg.contains("Suggestion: use absolute value or check input data"));

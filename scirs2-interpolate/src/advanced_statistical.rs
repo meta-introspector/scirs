@@ -76,9 +76,9 @@ pub struct FunctionalDataInterpolator<T: Float + ScalarOperand> {
 
 impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpolator<T> {
     /// Create a new functional data interpolator
-    pub fn new(_config: FDAConfig) -> Self {
+    pub fn new(config: FDAConfig) -> Self {
         Self {
-            _config,
+            config,
             basis_coefficients: None,
             domain: (T::zero(), T::one()),
             basis_functions: Vec::new(),
@@ -142,7 +142,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
     }
 
     /// Predict using the fitted functional model
-    pub fn predict(&self, x_new: &ArrayView1<T>) -> InterpolateResult<Array2<T>> {
+    pub fn predict(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array2<T>> {
         if !self.fitted {
             return Err(InterpolateError::ComputationError(
                 "Model not fitted".to_string(),
@@ -386,9 +386,9 @@ pub struct MultiOutputInterpolator<T: Float + ScalarOperand> {
 
 impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutputInterpolator<T> {
     /// Create a new multi-output interpolator
-    pub fn new(_input_dim: usize, output_dim: usize, _n_basis_per_dim: usize) -> Self {
+    pub fn new(_input_dim: usize, output_dim: usize, _n_basis_perdim: usize) -> Self {
         Self {
-            _input_dim,
+            input_dim,
             output_dim,
             parameters: None,
             basis_functions: (0.._input_dim).map(|_| Vec::new()).collect(),
@@ -449,7 +449,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
     }
 
     /// Predict using the fitted multi-output model
-    pub fn predict(&self, x_new: &ArrayView2<T>) -> InterpolateResult<Array2<T>> {
+    pub fn predict(&self, xnew: &ArrayView2<T>) -> InterpolateResult<Array2<T>> {
         if !self.fitted {
             return Err(InterpolateError::ComputationError(
                 "Model not fitted".to_string(),
@@ -716,9 +716,9 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
     PiecewisePolynomialInterpolator<T>
 {
     /// Create a new piecewise polynomial interpolator
-    pub fn new(_max_degree: usize, min_points_per_segment: usize, breakpoint_penalty: T) -> Self {
+    pub fn new(_max_degree: usize, min_points_per_segment: usize, breakpointpenalty: T) -> Self {
         Self {
-            _max_degree,
+            max_degree,
             min_points_per_segment,
             breakpoint_penalty,
             breakpoints: None,
@@ -769,7 +769,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
     }
 
     /// Predict using the fitted piecewise polynomial
-    pub fn predict(&self, x_new: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    pub fn predict(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         if !self.fitted {
             return Err(InterpolateError::ComputationError(
                 "Model not fitted".to_string(),
@@ -990,7 +990,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
     }
 
     /// Find which segment a value belongs to
-    fn find_segment(&self, x_val: T, breakpoints: &Array1<T>) -> usize {
+    fn find_segment(&self, xval: T, breakpoints: &Array1<T>) -> usize {
         for (i, &bp) in breakpoints.iter().enumerate() {
             if x_val <= bp {
                 return i;

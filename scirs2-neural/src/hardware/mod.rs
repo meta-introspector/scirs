@@ -119,23 +119,23 @@ pub struct HardwareContext {
     config: HardwareConfig,
 impl HardwareContext {
     /// Create a new hardware context
-    pub fn new(_config: HardwareConfig) -> Result<Self> {
+    pub fn new(config: HardwareConfig) -> Result<Self> {
         let device_manager = DeviceManager::new()?;
-        let active_device = device_manager.get_device(_config.device_type, _config.device_id)?;
-        let memory_mapper = MemoryMapper::new(active_device.clone(), _config.memory_strategy)?;
+        let active_device = device_manager.get_device(_config.device_type, config.device_id)?;
+        let memory_mapper = MemoryMapper::new(active_device.clone(), config.memory_strategy)?;
         let kernel_compiler = KernelCompiler::new(_config.optimization_level);
         Ok(Self {
             device_manager,
             active_device,
             memory_mapper,
             kernel_compiler,
-            _config,
+            config,
         })
     /// List available devices
     pub fn list_devices(&self) -> Vec<DeviceInfo> {
         self.device_manager.list_devices()
     /// Switch to a different device
-    pub fn switch_device(&mut self, device_type: AcceleratorType, device_id: usize) -> Result<()> {
+    pub fn switch_device(&mut self, device_type: AcceleratorType, deviceid: usize) -> Result<()> {
         self.active_device = self.device_manager.get_device(device_type, device_id)?;
         self.memory_mapper =
             MemoryMapper::new(self.active_device.clone(), self.config.memory_strategy)?;
@@ -203,8 +203,8 @@ pub struct KernelFusion {
     max_fusion_depth: usize,
 impl KernelFusion {
     /// Create a new kernel fusion optimizer
-    pub fn new(_enabled: bool) -> Self {
-            _enabled,
+    pub fn new(enabled: bool) -> Self {
+            enabled,
             fusion_threshold: 2,
             max_fusion_depth: 5,
     /// Analyze and fuse eligible kernels

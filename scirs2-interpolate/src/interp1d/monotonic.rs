@@ -154,7 +154,7 @@ impl<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>
     ///
     /// Returns an error if `x_new` is outside the interpolation range and
     /// extrapolation is disabled.
-    pub fn evaluate(&self, x_new: F) -> InterpolateResult<F> {
+    pub fn evaluate(&self, xnew: F) -> InterpolateResult<F> {
         // Check if we're extrapolating
         let is_extrapolating = x_new < self.x[0] || x_new > self.x[self.x.len() - 1];
         if is_extrapolating && !self.extrapolate {
@@ -228,7 +228,7 @@ impl<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>
     ///
     /// Returns an error if any point in `x_new` is outside the interpolation range
     /// and extrapolation is disabled.
-    pub fn evaluate_array(&self, x_new: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
+    pub fn evaluate_array(&self, xnew: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
         let mut result = Array1::zeros(x_new.len());
         for (i, &x) in x_new.iter().enumerate() {
             result[i] = self.evaluate(x)?;

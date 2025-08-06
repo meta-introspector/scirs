@@ -160,7 +160,7 @@ where
 
     for iteration in 0..opts.max_iter {
         // Assign samples to nearest centroid using SIMD
-        let (new_labels_distances) = vq_simd(data, _centroids.view(), Some(simd_config))?;
+        let (new_labels_distances) = vq_simd(data, centroids.view(), Some(simd_config))?;
         labels = new_labels;
 
         // Compute new _centroids using SIMD
@@ -174,7 +174,7 @@ where
 
         // Calculate inertia using SIMD
         let inertia =
-            calculate_distortion_simd(data, _centroids.view(), &labels, Some(simd_config))?;
+            calculate_distortion_simd(data, centroids.view(), &labels, Some(simd_config))?;
 
         // Check for convergence
         if centroid_shift <= opts.tol {
@@ -193,7 +193,7 @@ where
 
     // Final inertia calculation
     let final_inertia =
-        calculate_distortion_simd(data, _centroids.view(), &labels, Some(simd_config))?;
+        calculate_distortion_simd(data, centroids.view(), &labels, Some(simd_config))?;
 
     Ok((_centroids, labels, final_inertia))
 }

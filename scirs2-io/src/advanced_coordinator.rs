@@ -649,13 +649,13 @@ impl AdvancedCoordinator {
     }
 
     /// Calculate efficiency score
-    fn calculate_efficiency_score(&self, data_size: usize, processing_time: Duration) -> f32 {
+    fn calculate_efficiency_score(&self, data_size: usize, processingtime: Duration) -> f32 {
         let throughput = (data_size as f64) / (processing_time.as_secs_f64() * 1024.0 * 1024.0);
         (throughput / 100.0).min(1.0) as f32 // Normalize to [0, 1]
     }
 
     /// Assess quality metrics
-    fn assess_quality_metrics(&self, original: &[u8], _processed: &[u8]) -> Result<QualityMetrics> {
+    fn assess_quality_metrics(&self, original: &[u8], processed: &[u8]) -> Result<QualityMetrics> {
         Ok(QualityMetrics {
             data_integrity: 0.98,
             compression_efficiency: 0.85,
@@ -1209,7 +1209,7 @@ struct StrategyResult {
 
 impl StrategyResult {
     /// Create a new emergent strategy result
-    fn new_emergent(processed_data: Vec<u8>, processing_time: Duration) -> Self {
+    fn new_emergent(processed_data: Vec<u8>, processingtime: Duration) -> Self {
         Self {
             strategy_type: StrategyType::EmergentOptimization,
             processed_data,
@@ -1581,7 +1581,7 @@ pub struct AdvancedProcessingResult {
 }
 
 impl AdvancedProcessingResult {
-    fn new(results: Vec<StrategyResult>, efficiency_score: f32, processing_time: Duration) -> Self {
+    fn new(results: Vec<StrategyResult>, efficiency_score: f32, processingtime: Duration) -> Self {
         Self {
             results,
             efficiency_score,
@@ -1616,7 +1616,7 @@ pub struct DomainLearningResult {
 }
 
 impl DomainLearningResult {
-    fn new(pattern_count: usize, optimization_count: usize) -> Self {
+    fn new(pattern_count: usize, optimizationcount: usize) -> Self {
         Self {
             pattern_count,
             optimization_count,
@@ -1642,7 +1642,7 @@ pub struct KnowledgeTransferResult {
 }
 
 impl KnowledgeTransferResult {
-    fn new(improvement_percentage: f64, confidence: f32) -> Self {
+    fn new(improvementpercentage: f64, confidence: f32) -> Self {
         Self {
             improvement_percentage,
             confidence,
@@ -1713,9 +1713,9 @@ pub struct AppliedOptimization {
 }
 
 impl AppliedOptimization {
-    fn new(_name: &str, description: &str) -> Self {
+    fn new(name: &str, description: &str) -> Self {
         Self {
-            name: _name.to_string(),
+            name: name.to_string(),
             description: description.to_string(),
         }
     }

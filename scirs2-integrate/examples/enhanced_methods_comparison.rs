@@ -16,12 +16,12 @@ enum TestProblem {
 type OdeFunction = Box<dyn Fn(f64, ArrayView1<f64>) -> Array1<f64>>;
 
 #[allow(dead_code)]
-fn create_test_problem(_problem: TestProblem) -> OdeFunction {
+fn create_test_problem(problem: TestProblem) -> OdeFunction {
     match _problem {
-        TestProblem::VanDerPol(mu) => Box::new(move |_t: f64, y: ArrayView1<f64>| {
+        TestProblem::VanDerPol(mu) => Box::new(move |t: f64, y: ArrayView1<f64>| {
             array![y[1], mu * (1.0 - y[0].powi(2)) * y[1] - y[0]]
         }),
-        TestProblem::Robertson => Box::new(|_t: f64, y: ArrayView1<f64>| {
+        TestProblem::Robertson => Box::new(|t: f64, y: ArrayView1<f64>| {
             array![
                 -0.04 * y[0] + 1.0e4 * y[1] * y[2],
                 0.04 * y[0] - 1.0e4 * y[1] * y[2] - 3.0e7 * y[1].powi(2),
@@ -29,7 +29,7 @@ fn create_test_problem(_problem: TestProblem) -> OdeFunction {
             ]
         }),
         TestProblem::Oregonator => {
-            Box::new(|_t: f64, y: ArrayView1<f64>| {
+            Box::new(|t: f64, y: ArrayView1<f64>| {
                 // Parameter values for the Oregonator model
                 let s = 77.27;
                 let q = 8.375e-6;
@@ -43,7 +43,7 @@ fn create_test_problem(_problem: TestProblem) -> OdeFunction {
             })
         }
         TestProblem::Brusselator => {
-            Box::new(|_t: f64, y: ArrayView1<f64>| {
+            Box::new(|t: f64, y: ArrayView1<f64>| {
                 // Parameters for the Brusselator model
                 let a = 1.0;
                 let b = 3.0;
@@ -59,7 +59,7 @@ fn create_test_problem(_problem: TestProblem) -> OdeFunction {
 
 // Get time span and initial conditions for a test problem
 #[allow(dead_code)]
-fn problem_settings(_problem: &TestProblem) -> ([f64; 2], Array1<f64>) {
+fn problem_settings(problem: &TestProblem) -> ([f64; 2], Array1<f64>) {
     match _problem {
         TestProblem::VanDerPol(mu) => {
             // Adjust time span based on stiffness parameter
@@ -74,7 +74,7 @@ fn problem_settings(_problem: &TestProblem) -> ([f64; 2], Array1<f64>) {
 
 // Get problem description for printing
 #[allow(dead_code)]
-fn problem_description(_problem: &TestProblem) -> String {
+fn problem_description(problem: &TestProblem) -> String {
     match _problem {
         TestProblem::VanDerPol(mu) => {
             format!("Van der Pol oscillator (mu={mu})")
@@ -170,7 +170,7 @@ fn run_solver(
 
 // Compare different solvers on a test problem
 #[allow(dead_code)]
-fn compare_methods(_problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResult<()> {
+fn compare_methods(problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResult<()> {
     println!("\n=== {} ===", problem_description(&_problem));
 
     // Define methods to compare

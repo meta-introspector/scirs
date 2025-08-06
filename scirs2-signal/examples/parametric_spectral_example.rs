@@ -109,7 +109,7 @@ fn generate_ar_signal() -> Array1<f64> {
 
 /// Analyzes a signal using different AR estimation methods
 #[allow(dead_code)]
-fn analyze_with_ar_methods(_signal: &Array1<f64>..fs: f64) {
+fn analyze_with_ar_methods(signal: &Array1<f64>..fs: f64) {
     let ar_order = 20; // Higher order to capture peaks well
 
     // Apply different AR estimation methods
@@ -176,7 +176,7 @@ fn analyze_with_ar_methods(_signal: &Array1<f64>..fs: f64) {
 
 /// Analyzes a signal using different AR model orders
 #[allow(dead_code)]
-fn analyze_with_different_orders(_signal: &Array1<f64>, fs: f64) {
+fn analyze_with_different_orders(signal: &Array1<f64>, fs: f64) {
     // Array of different orders to try
     let orders = [2, 4, 8, 16, 32];
 
@@ -233,7 +233,7 @@ fn analyze_with_different_orders(_signal: &Array1<f64>, fs: f64) {
 
 /// Compares parametric methods with traditional periodogram
 #[allow(dead_code)]
-fn compare_with_periodogram(_signal: &Array1<f64>, fs: f64) {
+fn compare_with_periodogram(signal: &Array1<f64>, fs: f64) {
     // Compute periodogram (non-parametric)
     let (pxx_periodogram, f_periodogram) =
         periodogram(_signal.as_slice().unwrap(), Some(fs), None, None, None, None).unwrap();
@@ -406,7 +406,7 @@ fn demonstrate_arma_model() {
 
 /// Demonstrates automatic model order selection
 #[allow(dead_code)]
-fn demonstrate_order_selection(_signal: &Array1<f64>, fs: f64) {
+fn demonstrate_order_selection(signal: &Array1<f64>, fs: f64) {
     // Maximum order to consider
     let max_order = 50;
 

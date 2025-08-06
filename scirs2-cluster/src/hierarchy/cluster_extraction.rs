@@ -4,7 +4,7 @@
 //! hierarchical clustering results, including automatic cluster count estimation
 //! and distance-based cluster pruning.
 
-use ndarray::{Array1, ArrayView1, ArrayView1, ArrayView2};
+use ndarray::{Array1, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
@@ -398,14 +398,14 @@ fn calculate_wcss_approximation<F: Float + FromPrimitive + Debug + PartialOrd>(
 /// Find elbow point in a series of values
 #[allow(dead_code)]
 fn find_elbow_point<F: Float + FromPrimitive + Debug + PartialOrd>(values: &[F]) -> usize {
-    if _values.len() < 3 {
+    if values.len() < 3 {
         return 0;
     }
 
     // Calculate second derivatives
     let mut second_derivatives = Vec::new();
     for i in 1..(_values.len() - 1) {
-        let second_deriv = _values[i + 1] - F::from_f64(2.0).unwrap() * _values[i] + _values[i - 1];
+        let second_deriv = values[i + 1] - F::from_f64(2.0).unwrap() * values[i] + values[i - 1];
         second_derivatives.push(second_deriv.abs());
     }
 
@@ -503,7 +503,7 @@ fn calculate_silhouette_score<F: Float + FromPrimitive + Debug + PartialOrd>(
 #[allow(dead_code)]
 fn euclidean_distance<F: Float + FromPrimitive>(point1: ArrayView1<F>, point2: ArrayView1<F>) -> F {
     let mut sum = F::zero();
-    for (a, b) in _point1.iter().zip(point2.iter()) {
+    for (a, b) in point1.iter().zip(point2.iter()) {
         let diff = *a - *b;
         sum = sum + diff * diff;
     }
@@ -589,7 +589,7 @@ pub fn prune_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
                         let _distance =
                             euclidean_distance(data.row(small_point), data.row(large_point));
                         if _distance < min_distance {
-                            min_distance = _distance;
+                            min_distance = distance;
                             nearest_large_cluster = Some(large_cluster_id);
                         }
                     }

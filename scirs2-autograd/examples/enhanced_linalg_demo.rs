@@ -1,5 +1,5 @@
-use ag::tensor__ops::linear_algebra::*;
-use ag::tensor__ops::*;
+use ag::tensor_ops::linear_algebra::*;
+use ag::tensor_ops::*;
 use ndarray::array;
 use scirs2_autograd as ag;
 

@@ -10,9 +10,9 @@ use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;
 use std::fs;
+use std::path::PathBuf;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::path::PathBuf;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct MemoryLeakReport {
@@ -192,7 +192,8 @@ fn main() -> Result<()> {
     let output_content = match format.as_str() {
         "json" => generate_json_report(&report)?,
         "markdown" => generate_markdown_report(&report)?,
-        "github-actions" => generate_github_actions_report(&report)?_ => {
+        "github-actions" => generate_github_actions_report(&report)?,
+        _ => {
             return Err(OptimError::InvalidConfig(format!(
                 "Unknown format: {}",
                 format
@@ -361,7 +362,7 @@ fn collect_memory_analysis_results(
 }
 
 #[allow(dead_code)]
-fn parse_valgrind_results(_path: &Path) -> Result<ValgrindResults> {
+fn parse_valgrind_results(path: &Path) -> Result<ValgrindResults> {
     // Simplified Valgrind XML parsing
     let content = fs::read_to_string(_path)?;
 
@@ -404,7 +405,7 @@ fn parse_valgrind_results(_path: &Path) -> Result<ValgrindResults> {
 }
 
 #[allow(dead_code)]
-fn parse_massif_results(_path: &Path) -> Result<MassifResults> {
+fn parse_massif_results(path: &Path) -> Result<MassifResults> {
     // Simplified Massif parsing
     let _content = fs::read_to_string(_path)?;
 
@@ -436,7 +437,7 @@ fn parse_massif_results(_path: &Path) -> Result<MassifResults> {
 }
 
 #[allow(dead_code)]
-fn parse_heaptrack_results(_path: &Path) -> Result<HeaptrackResults> {
+fn parse_heaptrack_results(path: &Path) -> Result<HeaptrackResults> {
     // Simplified HeapTrack parsing
     let _content = fs::read_to_string(_path)?;
 
@@ -456,10 +457,10 @@ fn parse_heaptrack_results(_path: &Path) -> Result<HeaptrackResults> {
 }
 
 #[allow(dead_code)]
-fn parse_custom_profiler_results(_path: &Path) -> Result<CustomProfilerResults> {
+fn parse_custom_profiler_results(path: &Path) -> Result<CustomProfilerResults> {
     // Parse JSON from custom profiler
     let content = fs::read_to_string(_path)?;
-    let _json_data: serde_json:: Value =
+    let _json_data: serde_json::Value =
         serde_json::from_str(&content).map_err(|e| OptimError::OptimizationError(e.to_string()))?;
 
     Ok(CustomProfilerResults {
@@ -479,7 +480,7 @@ fn parse_custom_profiler_results(_path: &Path) -> Result<CustomProfilerResults> 
 }
 
 #[allow(dead_code)]
-fn parse_macos_leaks_results(_path: &Path) -> Result<MacosLeaksResults> {
+fn parse_macos_leaks_results(path: &Path) -> Result<MacosLeaksResults> {
     let content = fs::read_to_string(_path)?;
 
     // Simple parsing of macOS leaks output
@@ -625,7 +626,7 @@ fn detect_memory_leaks(
 }
 
 #[allow(dead_code)]
-fn calculate_severity(_leaked_bytes: usize) -> f64 {
+fn calculate_severity(_leakedbytes: usize) -> f64 {
     match _leaked_bytes {
         0..=1024 => 0.2,         // Low severity for small leaks
         1025..=10240 => 0.4,     // Medium-low for < 10KB
@@ -636,13 +637,13 @@ fn calculate_severity(_leaked_bytes: usize) -> f64 {
 }
 
 #[allow(dead_code)]
-fn calculate_memory_growth_rate(_timeline: &[(u64, usize)]) -> f64 {
-    if _timeline.len() < 2 {
+fn calculate_memory_growth_rate(timeline: &[(u64, usize)]) -> f64 {
+    if timeline.len() < 2 {
         return 0.0;
     }
 
-    let first = _timeline.first().unwrap();
-    let last = _timeline.last().unwrap();
+    let first = timeline.first().unwrap();
+    let last = timeline.last().unwrap();
 
     let time_diff = (last.0 - first.0) as f64 / 1000.0; // Convert to seconds
     let memory_diff = last.1 as f64 - first.1 as f64;
@@ -655,7 +656,7 @@ fn calculate_memory_growth_rate(_timeline: &[(u64, usize)]) -> f64 {
 }
 
 #[allow(dead_code)]
-fn generate_fix_suggestions(_call_stack: &[String]) -> Vec<String> {
+fn generate_fix_suggestions(_callstack: &[String]) -> Vec<String> {
     let mut suggestions = Vec::new();
 
     // Analyze call _stack for common patterns
@@ -682,21 +683,21 @@ fn generate_fix_suggestions(_call_stack: &[String]) -> Vec<String> {
 }
 
 #[allow(dead_code)]
-fn perform_memory_analysis(_results: &MemoryAnalysisResults) -> Result<MemoryAnalysis> {
+fn perform_memory_analysis(results: &MemoryAnalysisResults) -> Result<MemoryAnalysis> {
     let mut peak_memory = 0;
     let mut memory_timeline = Vec::new();
 
     // Aggregate data from different sources
-    if let Some(ref massif) = _results.massif_results {
+    if let Some(ref massif) = results.massif_results {
         peak_memory = peak_memory.max(massif.peak_memory);
         memory_timeline.extend(massif.memory_timeline.iter().cloned());
     }
 
-    if let Some(ref heaptrack) = _results.heaptrack_results {
+    if let Some(ref heaptrack) = results.heaptrack_results {
         peak_memory = peak_memory.max(heaptrack.peak_memory);
     }
 
-    if let Some(ref custom) = _results.custom_profiler_results {
+    if let Some(ref custom) = results.custom_profiler_results {
         memory_timeline.extend(custom.memory_timeline.iter().cloned());
     }
 
@@ -710,7 +711,7 @@ fn perform_memory_analysis(_results: &MemoryAnalysisResults) -> Result<MemoryAna
     let growth_rate = calculate_memory_growth_rate(&memory_timeline);
 
     // Calculate fragmentation ratio (simplified)
-    let fragmentation_ratio = if let Some(ref custom) = _results.custom_profiler_results {
+    let fragmentation_ratio = if let Some(ref custom) = results.custom_profiler_results {
         custom
             .fragmentation_data
             .last()
@@ -720,7 +721,7 @@ fn perform_memory_analysis(_results: &MemoryAnalysisResults) -> Result<MemoryAna
         0.1 // Default estimate
     };
 
-    let total_allocations = if let Some(ref heaptrack) = _results.heaptrack_results {
+    let total_allocations = if let Some(ref heaptrack) = results.heaptrack_results {
         heaptrack.total_allocations
     } else {
         10000 // Estimate
@@ -911,16 +912,16 @@ fn create_memory_leak_report(
 }
 
 #[allow(dead_code)]
-fn generate_json_report(_report: &MemoryLeakReport) -> Result<String> {
+fn generate_json_report(report: &MemoryLeakReport) -> Result<String> {
     serde_json::to_string_pretty(_report).map_err(|e| OptimError::OptimizationError(e.to_string()))
 }
 
 #[allow(dead_code)]
-fn generate_markdown_report(_report: &MemoryLeakReport) -> Result<String> {
+fn generate_markdown_report(report: &MemoryLeakReport) -> Result<String> {
     let mut md = String::new();
 
     md.push_str("# Memory Leak Analysis Report\n\n");
-    md.push_str(&format!("**Generated**: <t:{}:F>\n", _report.timestamp));
+    md.push_str(&format!("**Generated**: <t:{}:F>\n", report.timestamp));
     md.push_str(&format!(
         "**Environment**: {} on {}\n\n",
         _report
@@ -937,29 +938,29 @@ fn generate_markdown_report(_report: &MemoryLeakReport) -> Result<String> {
     md.push_str("## Summary\n\n");
     md.push_str(&format!(
         "- **Total Leaks**: {}\n",
-        _report.summary.total_leaks
+        report.summary.total_leaks
     ));
     md.push_str(&format!(
         "- **Critical Leaks**: {}\n",
-        _report.summary.critical_leaks
+        report.summary.critical_leaks
     ));
     md.push_str(&format!(
         "- **Total Leaked Memory**: {} bytes\n",
-        _report.summary.total_leaked_bytes
+        report.summary.total_leaked_bytes
     ));
     md.push_str(&format!(
         "- **Confidence Score**: {:.2}\n",
-        _report.summary.confidence_score
+        report.summary.confidence_score
     ));
     md.push_str(&format!(
         "- **Overall Severity**: {}\n\n",
-        _report.summary.overall_severity
+        report.summary.overall_severity
     ));
 
     // Detailed leak information
     if !_report.leaks_detected.is_empty() {
         md.push_str("## Detected Leaks\n\n");
-        for (i, leak) in _report.leaks_detected.iter().enumerate() {
+        for (i, leak) in report.leaks_detected.iter().enumerate() {
             md.push_str(&format!("### Leak {} ({})\n\n", i + 1, leak.leak_id));
             md.push_str(&format!("- **Severity**: {:.2}\n", leak.severity));
             md.push_str(&format!("- **Confidence**: {:.2}\n", leak.confidence));
@@ -987,29 +988,29 @@ fn generate_markdown_report(_report: &MemoryLeakReport) -> Result<String> {
     md.push_str("## Memory Analysis\n\n");
     md.push_str(&format!(
         "- **Peak Memory Usage**: {} bytes\n",
-        _report.memory_analysis.peak_memory_usage
+        report.memory_analysis.peak_memory_usage
     ));
     md.push_str(&format!(
         "- **Average Memory Usage**: {} bytes\n",
-        _report.memory_analysis.average_memory_usage
+        report.memory_analysis.average_memory_usage
     ));
     md.push_str(&format!(
         "- **Memory Growth Rate**: {:.2} bytes/second\n",
-        _report.memory_analysis.memory_growth_rate
+        report.memory_analysis.memory_growth_rate
     ));
     md.push_str(&format!(
         "- **Fragmentation Ratio**: {:.2}\n",
-        _report.memory_analysis.fragmentation_ratio
+        report.memory_analysis.fragmentation_ratio
     ));
     md.push_str(&format!(
         "- **Memory Efficiency Score**: {:.2}\n\n",
-        _report.memory_analysis.memory_efficiency_score
+        report.memory_analysis.memory_efficiency_score
     ));
 
     // Recommendations
     if !_report.recommendations.is_empty() {
         md.push_str("## Optimization Recommendations\n\n");
-        for (_i, rec) in _report.recommendations.iter().enumerate() {
+        for (_i, rec) in report.recommendations.iter().enumerate() {
             md.push_str(&format!(
                 "### {} (Priority: {})\n\n",
                 rec.recommendation_type, rec.priority
@@ -1030,22 +1031,22 @@ fn generate_markdown_report(_report: &MemoryLeakReport) -> Result<String> {
 }
 
 #[allow(dead_code)]
-fn generate_github_actions_report(_report: &MemoryLeakReport) -> Result<String> {
+fn generate_github_actions_report(report: &MemoryLeakReport) -> Result<String> {
     let json_report = generate_json_report(_report)?;
     let mut output = String::new();
 
     // Add GitHub Actions workflow commands
-    if _report.summary.critical_leaks > 0 {
+    if report.summary.critical_leaks > 0 {
         output.push_str(&format!(
             "::error::Critical memory leaks detected! {} critical leak(s) found.\n",
-            _report.summary.critical_leaks
+            report.summary.critical_leaks
         ));
     }
 
-    if _report.summary.total_leaks > 0 {
+    if report.summary.total_leaks > 0 {
         output.push_str(&format!(
             "::warning::{} memory leak(s) detected, {} bytes total.\n",
-            _report.summary.total_leaks, _report.summary.total_leaked_bytes
+            report.summary.total_leaks, report.summary.total_leaked_bytes
         ));
 
         for leak in &_report.leaks_detected {
@@ -1066,10 +1067,10 @@ fn generate_github_actions_report(_report: &MemoryLeakReport) -> Result<String> 
     }
 
     // Add efficiency warning if needed
-    if _report.memory_analysis.memory_efficiency_score < 0.6 {
+    if report.memory_analysis.memory_efficiency_score < 0.6 {
         output.push_str(&format!(
             "::warning::Low memory efficiency score: {:.2}\n",
-            _report.memory_analysis.memory_efficiency_score
+            report.memory_analysis.memory_efficiency_score
         ));
     }
 

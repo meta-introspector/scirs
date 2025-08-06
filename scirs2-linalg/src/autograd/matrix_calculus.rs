@@ -144,7 +144,8 @@ pub mod matrix_derivatives {
     /// # Returns
     /// * Directional derivative X * dY
     pub fn matmul_derivative_right<F>(
-        x: &ArrayView2<F>, _y: &ArrayView2<F>,
+        x: &ArrayView2<F>,
+        _y: &ArrayView2<F>,
         dy: &ArrayView2<F>,
     ) -> LinalgResult<Array2<F>>
     where
@@ -344,20 +345,20 @@ pub mod differential_operators {
     ///
     /// # Returns
     /// * Scalar field containing the divergence
-    pub fn matrix_divergence<F>(_field: &Array3<F>, spacing: F) -> LinalgResult<Array2<F>>
+    pub fn matrix_divergence<F>(field: &Array3<F>, spacing: F) -> LinalgResult<Array2<F>>
     where
         F: Float + Copy,
     {
-        let (nx, ny_) = _field.dim();
+        let (nx, ny_) = field.dim();
         let mut result = Array2::zeros((nx, ny));
 
         // Compute divergence using finite differences
         for i in 1..(nx - 1) {
             for j in 1..(ny - 1) {
                 // ∂F_xx/∂x + ∂F_yy/∂y (diagonal terms)
-                let df_xx_dx = (_field[[i + 1, j, 0]] - _field[[i - 1, j, 0]])
+                let df_xx_dx = (_field[[i + 1, j, 0]] - field[[i - 1, j, 0]])
                     / (F::from(2.0).unwrap() * spacing);
-                let df_yy_dy = (_field[[i, j + 1, 3]] - _field[[i, j - 1, 3]])
+                let df_yy_dy = (_field[[i, j + 1, 3]] - field[[i, j - 1, 3]])
                     / (F::from(2.0).unwrap() * spacing);
 
                 result[[i, j]] = df_xx_dx + df_yy_dy;
@@ -379,11 +380,11 @@ pub mod differential_operators {
     ///
     /// # Returns
     /// * Matrix field containing the curl
-    pub fn matrix_curl<F>(_field: &Array3<F>, spacing: F) -> LinalgResult<Array3<F>>
+    pub fn matrix_curl<F>(field: &Array3<F>, spacing: F) -> LinalgResult<Array3<F>>
     where
         F: Float + Copy,
     {
-        let (nx, ny, ncomp) = _field.dim();
+        let (nx, ny, ncomp) = field.dim();
 
         if ncomp != 4 {
             return Err(LinalgError::DimensionError(
@@ -397,30 +398,30 @@ pub mod differential_operators {
         for i in 1..(nx - 1) {
             for j in 1..(ny - 1) {
                 // Component (0,0): ∂F12/∂x - ∂F11/∂y
-                let df12_dx = (_field[[i + 1, j, 1]] - _field[[i - 1, j, 1]])
+                let df12_dx = (_field[[i + 1, j, 1]] - field[[i - 1, j, 1]])
                     / (F::from(2.0).unwrap() * spacing);
-                let df11_dy = (_field[[i, j + 1, 0]] - _field[[i, j - 1, 0]])
+                let df11_dy = (_field[[i, j + 1, 0]] - field[[i, j - 1, 0]])
                     / (F::from(2.0).unwrap() * spacing);
                 result[[i, j, 0]] = df12_dx - df11_dy;
 
                 // Component (0,1): ∂F22/∂x - ∂F21/∂y
-                let df22_dx = (_field[[i + 1, j, 3]] - _field[[i - 1, j, 3]])
+                let df22_dx = (_field[[i + 1, j, 3]] - field[[i - 1, j, 3]])
                     / (F::from(2.0).unwrap() * spacing);
-                let df21_dy = (_field[[i, j + 1, 2]] - _field[[i, j - 1, 2]])
+                let df21_dy = (_field[[i, j + 1, 2]] - field[[i, j - 1, 2]])
                     / (F::from(2.0).unwrap() * spacing);
                 result[[i, j, 1]] = df22_dx - df21_dy;
 
                 // Component (1,0): ∂F11/∂x - ∂F12/∂y
-                let df11_dx = (_field[[i + 1, j, 0]] - _field[[i - 1, j, 0]])
+                let df11_dx = (_field[[i + 1, j, 0]] - field[[i - 1, j, 0]])
                     / (F::from(2.0).unwrap() * spacing);
-                let df12_dy = (_field[[i, j + 1, 1]] - _field[[i, j - 1, 1]])
+                let df12_dy = (_field[[i, j + 1, 1]] - field[[i, j - 1, 1]])
                     / (F::from(2.0).unwrap() * spacing);
                 result[[i, j, 2]] = df11_dx - df12_dy;
 
                 // Component (1,1): ∂F21/∂x - ∂F22/∂y
-                let df21_dx = (_field[[i + 1, j, 2]] - _field[[i - 1, j, 2]])
+                let df21_dx = (_field[[i + 1, j, 2]] - field[[i - 1, j, 2]])
                     / (F::from(2.0).unwrap() * spacing);
-                let df22_dy = (_field[[i, j + 1, 3]] - _field[[i, j - 1, 3]])
+                let df22_dy = (_field[[i, j + 1, 3]] - field[[i, j - 1, 3]])
                     / (F::from(2.0).unwrap() * spacing);
                 result[[i, j, 3]] = df21_dx - df22_dy;
             }
@@ -440,11 +441,11 @@ pub mod differential_operators {
     ///
     /// # Returns
     /// * Matrix field containing the Laplacian
-    pub fn matrix_laplacian<F>(_field: &Array3<F>, spacing: F) -> LinalgResult<Array3<F>>
+    pub fn matrix_laplacian<F>(field: &Array3<F>, spacing: F) -> LinalgResult<Array3<F>>
     where
         F: Float + Copy,
     {
-        let (nx, ny, ncomp) = _field.dim();
+        let (nx, ny, ncomp) = field.dim();
         let mut result = Array3::zeros((nx, ny, ncomp));
 
         let spacing_sq = spacing * spacing;
@@ -455,12 +456,12 @@ pub mod differential_operators {
                 for j in 1..(ny - 1) {
                     // ∂²F/∂x² + ∂²F/∂y² using finite differences
                     let d2f_dx2 = (_field[[i + 1, j, comp]]
-                        - F::from(2.0).unwrap() * _field[[i, j, comp]]
-                        + _field[[i - 1, j, comp]])
+                        - F::from(2.0).unwrap() * field[[i, j, comp]]
+                        + field[[i - 1, j, comp]])
                         / spacing_sq;
                     let d2f_dy2 = (_field[[i, j + 1, comp]]
-                        - F::from(2.0).unwrap() * _field[[i, j, comp]]
-                        + _field[[i, j - 1, comp]])
+                        - F::from(2.0).unwrap() * field[[i, j, comp]]
+                        + field[[i, j - 1, comp]])
                         / spacing_sq;
 
                     result[[i, j, comp]] = d2f_dx2 + d2f_dy2;
@@ -482,11 +483,11 @@ pub mod differential_operators {
     ///
     /// # Returns
     /// * 4D array containing the gradient (gradient[x][y][component][direction])
-    pub fn matrix_gradient<F>(_field: &Array3<F>, spacing: F) -> LinalgResult<ndarray::Array4<F>>
+    pub fn matrix_gradient<F>(field: &Array3<F>, spacing: F) -> LinalgResult<ndarray::Array4<F>>
     where
         F: Float + Copy,
     {
-        let (nx, ny, ncomp) = _field.dim();
+        let (nx, ny, ncomp) = field.dim();
         let mut result = ndarray::Array4::zeros((nx, ny, ncomp, 2)); // 2 for x and y directions
 
         // Compute gradient using finite differences
@@ -494,12 +495,12 @@ pub mod differential_operators {
             for i in 1..(nx - 1) {
                 for j in 1..(ny - 1) {
                     // ∂F/∂x
-                    let df_dx = (_field[[i + 1, j, comp]] - _field[[i - 1, j, comp]])
+                    let df_dx = (_field[[i + 1, j, comp]] - field[[i - 1, j, comp]])
                         / (F::from(2.0).unwrap() * spacing);
                     result[[i, j, comp, 0]] = df_dx;
 
                     // ∂F/∂y
-                    let df_dy = (_field[[i, j + 1, comp]] - _field[[i, j - 1, comp]])
+                    let df_dy = (_field[[i, j + 1, comp]] - field[[i, j - 1, comp]])
                         / (F::from(2.0).unwrap() * spacing);
                     result[[i, j, comp, 1]] = df_dy;
                 }
@@ -528,7 +529,7 @@ pub mod matrix_functions {
         ) -> LinalgResult<Array2<F>>;
 
         /// Compute the gradient (if the function is scalar-valued)
-        fn gradient(&self_x: &ArrayView2<F>) -> LinalgResult<Array2<F>> {
+        fn gradient(selfx: &ArrayView2<F>) -> LinalgResult<Array2<F>> {
             Err(LinalgError::NotImplementedError(
                 "Gradient not implemented for this matrix function".to_string(),
             ))

@@ -166,7 +166,7 @@ impl CacheStats {
     }
 
     /// Update memory usage statistics
-    pub fn update_memory_usage(&mut self, current_bytes: usize) {
+    pub fn update_memory_usage(&mut self, currentbytes: usize) {
         self.memory_usage_bytes = current_bytes;
         if current_bytes > self.peak_memory_bytes {
             self.peak_memory_bytes = current_bytes;
@@ -174,14 +174,14 @@ impl CacheStats {
     }
 
     /// Update access frequency for adaptive sizing
-    pub fn update_access_frequency(&mut self, new_access_count: usize) {
+    pub fn update_access_frequency(&mut self, new_accesscount: usize) {
         let alpha = 0.1; // Exponential smoothing factor
         let new_freq = new_access_count as f64;
         self.avg_access_frequency = alpha * new_freq + (1.0 - alpha) * self.avg_access_frequency;
     }
 
     /// Check if cleanup is needed based on time threshold
-    pub fn needs_cleanup(&self, threshold_secs: u64) -> bool {
+    pub fn needs_cleanup(&self, thresholdsecs: u64) -> bool {
         self.last_cleanup_time.elapsed().as_secs() >= threshold_secs
     }
 
@@ -207,8 +207,8 @@ struct FloatKey<F: Float> {
 
 impl<F: Float> FloatKey<F> {
     #[allow(dead_code)]
-    fn new(_value: F, tolerance: F) -> Self {
-        Self { _value, tolerance }
+    fn new(value: F, tolerance: F) -> Self {
+        Self { value, tolerance }
     }
 }
 
@@ -280,10 +280,10 @@ struct CacheEntry<T> {
 #[allow(dead_code)]
 impl<T> CacheEntry<T> {
     /// Create a new cache entry
-    fn new(_value: T, insertion_time: usize) -> Self {
+    fn new(_value: T, insertiontime: usize) -> Self {
         let memory_size = std::mem::size_of::<T>() + std::mem::size_of::<Self>();
         Self {
-            _value,
+            value,
             last_access: insertion_time,
             access_count: 1,
             insertion_time,
@@ -292,13 +292,13 @@ impl<T> CacheEntry<T> {
     }
 
     /// Update access statistics
-    fn update_access(&mut self, current_time: usize) {
+    fn update_access(&mut self, currenttime: usize) {
         self.last_access = current_time;
         self.access_count += 1;
     }
 
     /// Calculate priority for eviction (lower means more likely to be evicted)
-    fn eviction_priority(&self, policy: EvictionPolicy, current_time: usize) -> f64 {
+    fn eviction_priority(&self, policy: EvictionPolicy, currenttime: usize) -> f64 {
         match policy {
             EvictionPolicy::LRU => -(self.last_access as f64),
             EvictionPolicy::LFU => -(self.access_count as f64),
@@ -330,11 +330,11 @@ impl<F: crate::traits::InterpolationFloat> Default for BSplineCache<F> {
 #[allow(dead_code)]
 impl<F: crate::traits::InterpolationFloat> BSplineCache<F> {
     /// Create a new B-spline cache with the given configuration
-    pub fn new(_config: CacheConfig) -> Self {
+    pub fn new(config: CacheConfig) -> Self {
         Self {
             basis_cache: HashMap::new(),
             span_cache: HashMap::new(),
-            _config,
+            config,
             stats: CacheStats::default(),
             access_counter: 0,
         }
@@ -345,7 +345,8 @@ impl<F: crate::traits::InterpolationFloat> BSplineCache<F> {
         &mut self,
         x: F,
         i: usize,
-        k: usize, knots: &[T],
+        k: usize,
+        knots: &[T],
         computer: impl FnOnce() -> T,
     ) -> T
     where
@@ -1005,10 +1006,10 @@ pub struct DistanceMatrixCache<F: Float> {
 
 impl<F: crate::traits::InterpolationFloat> DistanceMatrixCache<F> {
     /// Create a new distance matrix cache
-    pub fn new(_config: CacheConfig) -> Self {
+    pub fn new(config: CacheConfig) -> Self {
         Self {
             matrix_cache: HashMap::new(),
-            _config,
+            config,
             stats: CacheStats::default(),
         }
     }

@@ -187,9 +187,9 @@ impl<F> MovingWindowSIMD<F>
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
 {
-    pub fn new(_window_size: usize) -> Self {
+    pub fn new(_windowsize: usize) -> Self {
         Self {
-            window_size: _window_size,
+            window_size: window_size,
             _phantom: std::marker::PhantomData,
         }
     }

@@ -210,7 +210,7 @@ pub mod ml_framework;
 /// use ndarray::Array2;
 ///
 /// // Create a large array file
-/// let data = Array2::fromshape_fn((1000, 1000), |(i, j)| (i + j) as f64);
+/// let data = Array2::from_shape_fn((1000, 1000), |(i, j)| (i + j) as f64);
 /// let file_path = "large_array.bin";
 ///
 /// // Write array to file

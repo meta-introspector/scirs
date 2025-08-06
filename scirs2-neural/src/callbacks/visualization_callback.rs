@@ -27,9 +27,9 @@ impl<F: Float + Debug + ScalarOperand> VisualizationCallback<F> {
     ///
     /// # Arguments
     /// * `frequency` - How often to visualize metrics (in epochs)
-    pub fn new(_frequency: usize) -> Self {
+    pub fn new(frequency: usize) -> Self {
         Self {
-            _frequency,
+            frequency,
             show_plots: true,
             save_path: None,
             tracked_metrics: vec!["train_loss".to_string(), "val_loss".to_string()],
@@ -42,7 +42,7 @@ impl<F: Float + Debug + ScalarOperand> VisualizationCallback<F> {
         self.save_path = Some(path.into());
         self
     /// Set whether to show plots during training
-    pub fn with_show_plots(mut self, show_plots: bool) -> Self {
+    pub fn with_show_plots(mut self, showplots: bool) -> Self {
         self.show_plots = show_plots;
     /// Set tracked metrics
     pub fn with_tracked_metrics(mut self, metrics: Vec<String>) -> Self {

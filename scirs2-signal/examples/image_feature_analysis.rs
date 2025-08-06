@@ -34,7 +34,7 @@ fn main() {
 
 // Generate a synthetic dataset of images for different classes
 #[allow(dead_code)]
-fn generate_synthetic_dataset(_count: usize, size: usize) -> (Vec<Array2<f64>>, Vec<usize>) {
+fn generate_synthetic_dataset(count: usize, size: usize) -> (Vec<Array2<f64>>, Vec<usize>) {
     let mut images = Vec::with_capacity(_count);
     let mut labels = Vec::with_capacity(_count);
 
@@ -151,15 +151,15 @@ fn extract_features_from_dataset(
 
 // Analyze which features are most important for classification
 #[allow(dead_code)]
-fn analyze_feature_importance(_features: &[HashMap<String, f64>], labels: &[usize]) {
-    if _features.is_empty() || labels.is_empty() || _features.len() != labels.len() {
+fn analyze_feature_importance(features: &[HashMap<String, f64>], labels: &[usize]) {
+    if features.is_empty() || labels.is_empty() || features.len() != labels.len() {
         println!("Invalid data for feature importance analysis");
         return;
     }
 
     // Get list of all _features
     let all_feature_keys: Vec<String> = if !_features[0].is_empty() {
-        _features[0].keys().cloned().collect()
+        features[0].keys().cloned().collect()
     } else {
         println!("No _features found for analysis");
         return;
@@ -176,7 +176,7 @@ fn analyze_feature_importance(_features: &[HashMap<String, f64>], labels: &[usiz
 
         // Collect all values per class
         for (idx, label) in labels.iter().enumerate() {
-            if let Some(value) = _features[idx].get(&feature_name) {
+            if let Some(value) = features[idx].get(&feature_name) {
                 if value.is_finite() {
                     class_values[*label].push(*value);
                 }

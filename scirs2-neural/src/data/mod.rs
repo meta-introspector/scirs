@@ -54,8 +54,8 @@ pub struct InMemoryDataset<F: Float + Debug + ScalarOperand + FromPrimitive + Se
     pub labels: Array<F, IxDyn>,
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> InMemoryDataset<F> {
     /// Create a new in-memory dataset
-    pub fn new(_features: Array<F, IxDyn>, labels: Array<F, IxDyn>) -> Result<Self> {
-        if _features.shape()[0] != labels.shape()[0] {
+    pub fn new(features: Array<F, IxDyn>, labels: Array<F, IxDyn>) -> Result<Self> {
+        if features.shape()[0] != labels.shape()[0] {
             return Err(NeuralError::InferenceError(format!(
                 "Features and labels have different number of samples: {} vs {}",
                 features.shape()[0],
@@ -64,7 +64,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> InMemoryDat
         }
         Ok(Self { features, labels })
     /// Split the dataset into training and validation sets
-    pub fn train_test_split(&self, test_size: f64) -> Result<(Self, Self)> {
+    pub fn train_test_split(&self, testsize: f64) -> Result<(Self, Self)> {
         if test_size <= 0.0 || test_size >= 1.0 {
             return Err(NeuralError::InferenceError(
                 "test_size must be between 0 and 1".to_string(),

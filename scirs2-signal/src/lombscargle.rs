@@ -45,7 +45,7 @@ use std::fmt::Debug;
 /// let mut t = Array1::linspace(0.0, 10.0, n);
 /// // Add some random noise to make sampling uneven
 /// for i in 0..n {
-///     t[i] += 0.1 * rng.random_range(0.0..1.0);
+///     t[i] += 0.1 * rng.gen_range(0.0..1.0);
 /// }
 /// let y: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * 1.0 * ti).sin()).collect();
 ///
@@ -216,7 +216,7 @@ where
         "psd" => NormalizationMethod::Psd,
         _ => {
             return Err(SignalError::ValueError(format!(
-                "Invalid normalization _method. Valid options are 'standard', 'model', 'log', or 'psd', got {}",
+                "Invalid normalization method. Valid options are 'standard', 'model', 'log', or 'psd', got {}",
                 normalization.unwrap_or("standard")
             )));
         }
@@ -525,9 +525,9 @@ fn _lombscargle_impl(
     let n_freqs = frequency.len();
 
     // Center the _data if requested
-    let (y_centered_y_mean) = if center_data {
+    let (y_centered, y_mean) = if center_data {
         let _mean = y.sum() / n_samples as f64;
-        (y - _mean, _mean)
+        (y - mean, mean)
     } else {
         (y.clone(), 0.0)
     };
@@ -850,6 +850,7 @@ pub fn find_peaks(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_lombscargle_sine_wave() {

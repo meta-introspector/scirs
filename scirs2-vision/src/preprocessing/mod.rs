@@ -35,8 +35,8 @@ pub use retinex::{
 ///
 /// * Grayscale image
 #[allow(dead_code)]
-pub fn to_grayscale(_img: &DynamicImage) -> GrayImage {
-    _img.to_luma8()
+pub fn to_grayscale(img: &DynamicImage) -> GrayImage {
+    img.to_luma8()
 }
 
 /// Normalize image brightness and contrast
@@ -113,9 +113,9 @@ pub fn normalize_brightness(
 ///
 /// * Result containing the contrast-enhanced image
 #[allow(dead_code)]
-pub fn equalize_histogram(_img: &DynamicImage) -> Result<DynamicImage> {
+pub fn equalize_histogram(img: &DynamicImage) -> Result<DynamicImage> {
     // Convert to grayscale
-    let gray = _img.to_luma8();
+    let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
     let total_pixels = width * height;
 
@@ -162,7 +162,7 @@ pub fn equalize_histogram(_img: &DynamicImage) -> Result<DynamicImage> {
 ///
 /// * Result containing the blurred image
 #[allow(dead_code)]
-pub fn gaussian_blur(_img: &DynamicImage, sigma: f32) -> Result<DynamicImage> {
+pub fn gaussian_blur(img: &DynamicImage, sigma: f32) -> Result<DynamicImage> {
     if sigma <= 0.0 {
         return Err(VisionError::InvalidParameter(
             "Sigma must be positive".to_string(),
@@ -256,7 +256,7 @@ pub fn gaussian_blur(_img: &DynamicImage, sigma: f32) -> Result<DynamicImage> {
 ///
 /// Returns an error if `amount` is negative
 #[allow(dead_code)]
-pub fn unsharp_mask(_img: &DynamicImage, sigma: f32, amount: f32) -> Result<DynamicImage> {
+pub fn unsharp_mask(img: &DynamicImage, sigma: f32, amount: f32) -> Result<DynamicImage> {
     if amount < 0.0 {
         return Err(VisionError::InvalidParameter(
             "Amount must be non-negative".to_string(),
@@ -267,7 +267,7 @@ pub fn unsharp_mask(_img: &DynamicImage, sigma: f32, amount: f32) -> Result<Dyna
     let blurred = gaussian_blur(_img, sigma)?;
 
     // Get original as grayscale
-    let original = _img.to_luma8();
+    let original = img.to_luma8();
     let (width, height) = original.dimensions();
 
     // Create sharpened image: original + amount * (original - blurred)
@@ -605,7 +605,7 @@ fn bilateral_filter_color(
 /// let filtered = median_filter(&img, 3).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn median_filter(_img: &DynamicImage, kernel_size: u32) -> Result<DynamicImage> {
+pub fn median_filter(_img: &DynamicImage, kernelsize: u32) -> Result<DynamicImage> {
     // Parameter validation
     if kernel_size % 2 == 0 || kernel_size == 0 {
         return Err(VisionError::InvalidParameter(
@@ -614,7 +614,7 @@ pub fn median_filter(_img: &DynamicImage, kernel_size: u32) -> Result<DynamicIma
     }
 
     // Convert to grayscale
-    let gray = _img.to_luma8();
+    let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
 
     // Calculate the radius
@@ -701,7 +701,7 @@ pub fn median_filter(_img: &DynamicImage, kernel_size: u32) -> Result<DynamicIma
 /// * Zuiderveld, K. (1994). Contrast limited adaptive histogram equalization.
 ///   In Graphics gems IV (pp. 474-485). Academic Press Professional, Inc.
 #[allow(dead_code)]
-pub fn clahe(_img: &DynamicImage, tile_size: u32, clip_limit: f32) -> Result<DynamicImage> {
+pub fn clahe(_img: &DynamicImage, tile_size: u32, cliplimit: f32) -> Result<DynamicImage> {
     // Parameter validation
     if tile_size == 0 {
         return Err(VisionError::InvalidParameter(
@@ -716,7 +716,7 @@ pub fn clahe(_img: &DynamicImage, tile_size: u32, clip_limit: f32) -> Result<Dyn
     }
 
     // Convert to grayscale
-    let gray = _img.to_luma8();
+    let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
 
     // Special case for the test image (64x64 with low contrast on left side)

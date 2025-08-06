@@ -169,9 +169,9 @@ pub enum LeakType {
 
 impl ReferenceCountingDetector {
     /// Create a new reference counting detector
-    pub fn new(_config: ReferenceCountingConfig) -> Self {
+    pub fn new(config: ReferenceCountingConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             reference_tracker: Arc::new(RwLock::new(ReferenceTracker::new())),
             cycle_detector: CycleDetector::new(),
         }
@@ -532,7 +532,7 @@ impl ReferenceCountingDetector {
     }
 
     /// Generate recommendations based on detected issues
-    fn generate_recommendations(&self, suspected_leaks: &[SuspectedLeak]) -> Vec<String> {
+    fn generate_recommendations(&self, suspectedleaks: &[SuspectedLeak]) -> Vec<String> {
         let mut recommendations = Vec::new();
 
         let circular_ref_count = suspected_leaks
@@ -828,9 +828,9 @@ pub struct AlertSystem {
 
 impl RealTimeMemoryMonitor {
     /// Create a new real-time memory monitor
-    pub fn new(_config: RealTimeMonitorConfig) -> Self {
+    pub fn new(config: RealTimeMonitorConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             state: Arc::new(Mutex::new(MonitorState::new())),
             alert_system: AlertSystem::new(),
             is_active: Arc::new(Mutex::new(false)),
@@ -899,11 +899,11 @@ impl RealTimeMemoryMonitor {
     }
 
     /// Take a memory sample
-    fn take_memory_sample(_timestamp: Instant) -> MemorySample {
+    fn take_memory_sample(timestamp: Instant) -> MemorySample {
         // In a real implementation, this would use system APIs to get actual memory usage
         // For now, we'll simulate memory sampling
         MemorySample {
-            timestamp: _timestamp,
+            timestamp: timestamp,
             memory_usage: Self::get_current_memory_usage(),
             allocation_rate: 0.0,   // Would be calculated from real data
             deallocation_rate: 0.0, // Would be calculated from real data

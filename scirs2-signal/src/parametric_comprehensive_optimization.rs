@@ -12,7 +12,7 @@ use ndarray::s;
 
 use crate::error::{SignalError, SignalResult};
 use crate::parametric::ARMethod;
-use ndarray::{ Array1};
+use ndarray::Array1;
 use num_traits::Float;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_finite, check_positive};
@@ -405,8 +405,8 @@ fn quick_cross_validation(
 }
 
 #[allow(dead_code)]
-fn evaluate_prediction_error(_ar_coeffs: &Array1<f64>, test_data: &[f64]) -> f64 {
-    let order = _ar_coeffs.len() - 1;
+fn evaluate_prediction_error(ar_coeffs: &Array1<f64>, testdata: &[f64]) -> f64 {
+    let order = ar_coeffs.len() - 1;
     if test_data.len() <= order {
         return 1e6; // High error for insufficient _data
     }
@@ -449,14 +449,14 @@ fn select_optimal_order(
 
     // Normalize _scores to [0, 1] range
     let normalize = |_scores: &[f64]| -> Vec<f64> {
-        let min_score = _scores.iter().cloned().fold(f64::INFINITY, f64::min);
-        let max_score = _scores.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+        let min_score = scores.iter().cloned().fold(f64::INFINITY, f64::min);
+        let max_score = scores.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
         let range = max_score - min_score;
 
         if range < 1e-10 {
-            vec![0.5; _scores.len()]
+            vec![0.5; scores.len()]
         } else {
-            _scores.iter().map(|&s| (s - min_score) / range).collect()
+            scores.iter().map(|&s| (s - min_score) / range).collect()
         }
     };
 
@@ -535,7 +535,7 @@ fn evaluate_model_type(
         }
         ModelOrder::ARMA(ar_order_ma_order) => {
             // Placeholder - ARMA model evaluation would be more complex
-            quick_cross_validation(signal, *ar_order, config).map(|score| score * 0.9)
+            quick_cross_validation(signal, ar_order_ma_order.0, config).map(|score| score * 0.9)
         }
     }
 }
@@ -772,7 +772,7 @@ fn comprehensive_stability_analysis(
 }
 
 #[allow(dead_code)]
-fn check_ar_stability(_ar_coeffs: &Array1<f64>) -> bool {
+fn check_ar_stability(_arcoeffs: &Array1<f64>) -> bool {
     // All roots of characteristic polynomial must be inside unit circle
     // This is a simplified check - could be improved with actual root finding
     let sum_abs_coeffs: f64 = _ar_coeffs
@@ -784,7 +784,7 @@ fn check_ar_stability(_ar_coeffs: &Array1<f64>) -> bool {
 }
 
 #[allow(dead_code)]
-fn calculate_condition_number(_ar_coeffs: &Array1<f64>) -> f64 {
+fn calculate_condition_number(_arcoeffs: &Array1<f64>) -> f64 {
     // Simplified condition number calculation
     let max_coeff = _ar_coeffs
         .iter()

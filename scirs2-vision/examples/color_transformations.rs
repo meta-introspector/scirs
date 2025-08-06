@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn process_image(_img: &image::DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
+fn process_image(img: &image::DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
     // 1. RGB to Grayscale conversion
     println!("Converting to grayscale...");
     let grayscale = rgb_to_grayscale(_img, None)?;
@@ -97,8 +97,8 @@ fn process_image(_img: &image::DynamicImage) -> Result<(), Box<dyn std::error::E
     println!("Color transformation results:");
     println!(
         "- Original image dimensions: {}x{}",
-        _img.width(),
-        _img.height()
+        img.width(),
+        img.height()
     );
     println!(
         "- Grayscale image dimensions: {}x{}",

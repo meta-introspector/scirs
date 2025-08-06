@@ -3,7 +3,7 @@
 //! This example shows how to use the convenient short aliases for common
 //! linear algebra operations that are now implemented with autodiff support.
 
-use ag::tensor__ops::*;
+use ag::tensor_ops::*;
 use ndarray::array;
 use scirs2_autograd as ag;
 

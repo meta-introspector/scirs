@@ -605,7 +605,7 @@ where
         + std::iter::Sum<F>,
 {
     /// Create new quantum-inspired statistical analyzer
-    pub fn new(_config: QuantumConfig<F>) -> Self {
+    pub fn new(config: QuantumConfig<F>) -> Self {
         let cache = QuantumCache {
             quantum_states: HashMap::new(),
             compiled_circuits: HashMap::new(),
@@ -626,7 +626,7 @@ where
         };
 
         Self {
-            config: _config,
+            config: config,
             cache,
             performance: QuantumPerformanceMetrics {
                 circuit_times: HashMap::new(),
@@ -1238,7 +1238,7 @@ where
                 // Quantum-inspired quasi-random sequence
                 let t = F::from(i as f64 / num_samples as f64).unwrap();
                 let quasi_random = self.quantum_quasi_random(t, j);
-                _samples[[i, j]] = *lower + (*upper - *lower) * quasi_random;
+                samples[[i, j]] = *lower + (*upper - *lower) * quasi_random;
             }
         }
 
@@ -1296,7 +1296,7 @@ where
     }
 
     /// Estimate quantum speedup factor
-    fn estimate_quantum_speedup(&self, dimension: usize, num_samples: usize) -> F {
+    fn estimate_quantum_speedup(&self, dimension: usize, numsamples: usize) -> F {
         // Theoretical quantum speedup for Monte Carlo is quadratic
         let classical_error = F::from(1.0 / (num_samples as f64).sqrt()).unwrap();
         let quantum_error = F::from(1.0 / num_samples as f64).unwrap();
@@ -1979,7 +1979,7 @@ impl<F: Float + NumCast + std::fmt::Display> AdvancedQuantumAnalyzer<F> {
         // Simulate quantum noise from environmental decoherence
 
         let mut rng = rand::rng();
-        let noise: f64 = rng.random_range(-0.01..0.01);
+        let noise: f64 = rng.gen_range(-0.01..0.01);
         F::from(noise).unwrap()
     }
 

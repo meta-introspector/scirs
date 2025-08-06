@@ -19,9 +19,9 @@ pub struct TrackedGpuBuffer<T: GpuDataType> {
 
 impl<T: GpuDataType> TrackedGpuBuffer<T> {
     /// Create a new tracked GPU buffer from an existing buffer
-    pub fn new(buffer: GpuBuffer<T>, component_name: impl Into<String>) -> Self {
+    pub fn new(buffer: GpuBuffer<T>, componentname: impl Into<String>) -> Self {
         let size_bytes = buffer.len() * std::mem::size_of::<T>();
-        let component_name = component_name.into();
+        let component_name = componentname.into();
 
         // Track the initial allocation
         track_allocation(&component_name, size_bytes, &buffer as *const _ as usize);
@@ -124,10 +124,10 @@ pub struct TrackedGpuContext {
 
 impl TrackedGpuContext {
     /// Create a new tracked GPU context
-    pub fn new(context: GpuContext, component_name: impl Into<String>) -> Self {
+    pub fn new(context: GpuContext, componentname: impl Into<String>) -> Self {
         Self {
             inner: context,
-            component_name: component_name.into(),
+            component_name: componentname.into(),
         }
     }
 
@@ -230,9 +230,9 @@ mod tests {
         let tracked_ctx = TrackedGpuContext::new(context, "GpuTests");
 
         // Create a buffer
-        let buffer_size = 1000;
+        let buffersize = 1000;
         let element_size = std::mem::size_of::<f32>();
-        let buffer = tracked_ctx.create_buffer::<f32>(buffer_size);
+        let buffer = tracked_ctx.create_buffer::<f32>(buffersize);
 
         // Check that allocation was tracked
         let report = generate_memory_report();
@@ -248,7 +248,7 @@ mod tests {
 
         // Verify buffer size
         let component_stats = &report.component_stats[buffer_component];
-        assert_eq!(component_stats.current_usage, buffer_size * element_size);
+        assert_eq!(component_stats.current_usage, buffersize * element_size);
 
         // Drop the buffer
         drop(buffer);

@@ -22,11 +22,11 @@ use std::vec::Vec;
 ///
 /// * `Result<S::Ok, S::Error>` - Serialization result
 #[allow(dead_code)]
-pub fn serialize_array2<S>(_array: &Array2<f64>, serializer: S) -> Result<S::Ok, S::Error>
+pub fn serialize_array2<S>(array: &Array2<f64>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    let shape = _array.shape();
+    let shape = array.shape();
     let mut vec = Vec::with_capacity(shape[0] * shape[1] + 2);
 
     // Store shape at the beginning
@@ -53,7 +53,7 @@ where
 ///
 /// * `Result<Array2<f64>, D::Error>` - Deserialized 2D array
 #[allow(dead_code)]
-pub fn deserialize_array2<'de, D>(_deserializer: D) -> Result<Array2<f64>, D::Error>
+pub fn deserialize_array2<'de, D>(deserializer: D) -> Result<Array2<f64>, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -102,11 +102,11 @@ where
 ///
 /// * `Result<S::Ok, S::Error>` - Serialization result
 #[allow(dead_code)]
-pub fn serialize_array1<S>(_array: &Array1<f64>, serializer: S) -> Result<S::Ok, S::Error>
+pub fn serialize_array1<S>(array: &Array1<f64>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    let vec = _array.to_vec();
+    let vec = array.to_vec();
     vec.serialize(serializer)
 }
 
@@ -122,7 +122,7 @@ where
 ///
 /// * `Result<Array1<f64>, D::Error>` - Deserialized 1D array
 #[allow(dead_code)]
-pub fn deserialize_array1<'de, D>(_deserializer: D) -> Result<Array1<f64>, D::Error>
+pub fn deserialize_array1<'de, D>(deserializer: D) -> Result<Array1<f64>, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -157,7 +157,7 @@ pub mod optional_array1 {
     /// # Returns
     ///
     /// * `Result<S::Ok, S::Error>` - Serialization result
-    pub fn serialize<S>(_array_opt: &Option<Array1<f64>>, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(_arrayopt: &Option<Array1<f64>>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -199,7 +199,7 @@ pub mod optional_array1 {
     /// # Returns
     ///
     /// * `Result<Option<Array1<f64>>, D::Error>` - Deserialized optional array
-    pub fn deserialize<'de, D>(_deserializer: D) -> Result<Option<Array1<f64>>, D::Error>
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Array1<f64>>, D::Error>
     where
         D: Deserializer<'de>,
     {

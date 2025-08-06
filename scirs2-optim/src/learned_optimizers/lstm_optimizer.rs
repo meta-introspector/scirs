@@ -172,9 +172,9 @@ pub struct AttentionMechanism<T: Float> {
 
 impl<T: Float + Default + Clone> AttentionMechanism<T> {
     /// Create a new attention mechanism
-    pub fn new(_config: &LearnedOptimizerConfig) -> Result<Self> {
-        let hidden_size = _config.hidden_size;
-        let num_heads = _config.attention_heads;
+    pub fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
+        let hidden_size = config.hidden_size;
+        let num_heads = config.attention_heads;
         let head_size = hidden_size / num_heads;
 
         Ok(Self {
@@ -210,7 +210,7 @@ pub struct LayerNormalization<T: Float> {
 
 impl<T: Float + Default + Clone> LayerNormalization<T> {
     /// Create a new layer normalization
-    pub fn new(_features: usize) -> Result<Self> {
+    pub fn new(features: usize) -> Result<Self> {
         Ok(Self {
             gamma: Array1::ones(_features),
             beta: Array1::zeros(_features),
@@ -908,7 +908,7 @@ impl<
     > LSTMOptimizer<T>
 {
     /// Create a new LSTM optimizer
-    pub fn new(_config: LearnedOptimizerConfig) -> Result<Self> {
+    pub fn new(config: LearnedOptimizerConfig) -> Result<Self> {
         // Validate configuration
         Self::validate_config(&_config)?;
 
@@ -934,7 +934,7 @@ impl<
         let rng = scirs2_core::random::rng();
 
         Ok(Self {
-            config: _config,
+            config: config,
             lstm_network,
             history_buffer,
             meta_learner,
@@ -1114,7 +1114,7 @@ impl<
     }
 
     /// Update performance metrics
-    fn update_metrics(&mut self, gradients: &Array1<T>, updates: &Array1<T>, _lr: T) {
+    fn update_metrics(&mut self, gradients: &Array1<T>, updates: &Array1<T>, lr: T) {
         // Compute gradient statistics
         let grad_norm = gradients.iter().map(|&g| g * g).sum::<T>().sqrt();
         let update_norm = updates.iter().map(|&u| u * u).sum::<T>().sqrt();
@@ -1177,14 +1177,14 @@ impl<
     }
 
     /// Compute attention statistics
-    fn compute_attention_stats(&self, attention_weights: &Array2<T>) -> AttentionStats {
-        let _weights: Vec<f64> = attention_weights
+    fn compute_attention_stats(&self, attentionweights: &Array2<T>) -> AttentionStats {
+        let weights: Vec<f64> = attention_weights
             .iter()
             .map(|&w| w.to_f64().unwrap_or(0.0))
             .collect();
 
         // Compute entropy
-        let entropy = _weights
+        let entropy = weights
             .iter()
             .filter(|&&w| w > 0.0)
             .map(|&w| -w * w.ln())
@@ -1194,7 +1194,7 @@ impl<
         let concentration = 1.0 / (1.0 + entropy);
 
         // Simplified diversity measure
-        let head_diversity = _weights.iter().map(|&w| w.abs()).sum::<f64>() / _weights.len() as f64;
+        let head_diversity = weights.iter().map(|&w| w.abs()).sum::<f64>() / weights.len() as f64;
 
         AttentionStats {
             attention_entropy: entropy,
@@ -1232,26 +1232,26 @@ impl<
     }
 
     /// Validate configuration
-    fn validate_config(_config: &LearnedOptimizerConfig) -> Result<()> {
-        if _config.hidden_size == 0 {
+    fn validate_config(config: &LearnedOptimizerConfig) -> Result<()> {
+        if config.hidden_size == 0 {
             return Err(OptimError::InvalidConfig(
                 "Hidden size must be positive".to_string(),
             ));
         }
 
-        if _config.num_layers == 0 {
+        if config.num_layers == 0 {
             return Err(OptimError::InvalidConfig(
                 "Number of layers must be positive".to_string(),
             ));
         }
 
-        if _config.input_features == 0 {
+        if config.input_features == 0 {
             return Err(OptimError::InvalidConfig(
                 "Input features must be positive".to_string(),
             ));
         }
 
-        if _config.meta_learning_rate <= 0.0 {
+        if config.meta_learning_rate <= 0.0 {
             return Err(OptimError::InvalidConfig(
                 "Meta learning rate must be positive".to_string(),
             ));
@@ -1282,29 +1282,29 @@ impl<
 
 impl<T: Float + Default + Clone + 'static> LSTMNetwork<T> {
     /// Create new LSTM network
-    fn new(_config: &LearnedOptimizerConfig) -> Result<Self> {
+    fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
         let mut layers = Vec::new();
 
         // Create LSTM layers
         for i in 0.._config.num_layers {
             let input_size = if i == 0 {
-                _config.input_features
+                config.input_features
             } else {
-                _config.hidden_size
+                config.hidden_size
             };
-            let layer = LSTMLayer::new(input_size, _config.hidden_size)?;
+            let layer = LSTMLayer::new(input_size, config.hidden_size)?;
             layers.push(layer);
         }
 
         // Create output projection
         let output_projection = OutputProjection::new(
-            _config.hidden_size,
-            _config.output_features,
+            config.hidden_size,
+            config.output_features,
             OutputTransform::ScaledTanh { scale: 0.1 },
         )?;
 
         // Create attention mechanism if enabled
-        let attention = if _config.use_attention {
+        let attention = if config.use_attention {
             Some(AttentionMechanism::new(_config)?)
         } else {
             None
@@ -1320,7 +1320,7 @@ impl<T: Float + Default + Clone + 'static> LSTMNetwork<T> {
             output_projection,
             attention,
             layer_norms,
-            dropout_rate: _config.dropout_rate,
+            dropout_rate: config.dropout_rate,
         })
     }
 
@@ -1369,12 +1369,12 @@ impl<T: Float + Default + Clone + 'static> LSTMNetwork<T> {
 
 impl<T: Float + Default + Clone + 'static> LSTMLayer<T> {
     /// Create new LSTM layer
-    fn new(_input_size: usize, hidden_size: usize) -> Result<Self> {
+    fn new(_input_size: usize, hiddensize: usize) -> Result<Self> {
         // Xavier initialization
         let scale = (2.0 / (_input_size + hidden_size) as f64).sqrt();
 
         Ok(Self {
-            weight_ih: Self::xavier_init(4 * hidden_size, _input_size, scale),
+            weight_ih: Self::xavier_init(4 * hidden_size, input_size, scale),
             weight_hh: Self::xavier_init(4 * hidden_size, hidden_size, scale),
             bias_ih: Array1::zeros(4 * hidden_size),
             bias_hh: Array1::zeros(4 * hidden_size),
@@ -1419,7 +1419,7 @@ impl<T: Float + Default + Clone + 'static> LSTMLayer<T> {
     }
 
     /// Xavier initialization
-    fn xavier_init(_rows: usize, cols: usize, scale: f64) -> Array2<T> {
+    fn xavier_init(rows: usize, cols: usize, scale: f64) -> Array2<T> {
         Array2::from_shape_fn((_rows, cols), |_| {
             let val = (scirs2_core::random::rng().gen_range(0.0..1.0) - 0.5) * 2.0 * scale;
             T::from(val).unwrap()
@@ -1439,13 +1439,14 @@ impl<T: Float + Default + Clone + 'static> LSTMLayer<T> {
 
 impl<T: Float + Default + Clone> HistoryBuffer<T> {
     /// Create new history buffer
-    fn new(_max_length: usize) -> Self {
+    fn new(_maxlength: usize) -> Self {
         Self {
-            gradients: VecDeque::with_capacity(_max_length), parameters: VecDeque::with_capacity(_max_length),
+            gradients: VecDeque::with_capacity(_max_length),
+            parameters: VecDeque::with_capacity(_max_length),
             losses: VecDeque::with_capacity(_max_length),
             learning_rates: VecDeque::with_capacity(_max_length),
             update_magnitudes: VecDeque::with_capacity(_max_length),
-            max_length: _max_length,
+            max_length: max_length,
             feature_cache: None,
         }
     }
@@ -1579,7 +1580,7 @@ impl Default for StateStatistics {
 // These would be fully implemented in a production system
 
 impl<T: Float + Default + Clone> MetaLearner<T> {
-    fn new(_config: &LearnedOptimizerConfig) -> Result<Self> {
+    fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
         // Placeholder implementation
         Ok(Self {
             strategy: MetaOptimizationStrategy::MAML,
@@ -1617,8 +1618,7 @@ impl<T: Float + Default + Clone> MetaLearner<T> {
         })
     }
 
-    fn step(&mut self,
-        tasks: &[MetaTask<T>], _network: &mut LSTMNetwork<T>) -> Result<T> {
+    fn step(&mut self, tasks: &[MetaTask<T>], network: &mut LSTMNetwork<T>) -> Result<T> {
         // Placeholder meta-learning step
         Ok(T::zero())
     }
@@ -1626,7 +1626,9 @@ impl<T: Float + Default + Clone> MetaLearner<T> {
 
 impl<T: Float + Default + Clone> TransferLearner<T> {
     fn transfer_to_domain(
-        &mut self, _target_tasks: &[MetaTask<T>], _network: &mut LSTMNetwork<T>,
+        &mut self,
+        _target_tasks: &[MetaTask<T>],
+        _network: &mut LSTMNetwork<T>,
     ) -> Result<TransferResults<T>> {
         // Placeholder transfer learning
         Ok(TransferResults {
@@ -1639,7 +1641,7 @@ impl<T: Float + Default + Clone> TransferLearner<T> {
 }
 
 impl<T: Float + Default + Clone> AdaptiveLearningRateController<T> {
-    fn new(_config: &LearnedOptimizerConfig) -> Result<Self> {
+    fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
         // Placeholder implementation
         Ok(Self {
             base_lr: T::from(0.001).unwrap(),
@@ -1666,7 +1668,9 @@ impl<T: Float + Default + Clone> AdaptiveLearningRateController<T> {
 
     fn compute_lr(
         &mut self,
-        gradients: &Array1<T>, _loss: Option<T>, _history: &HistoryBuffer<T>,
+        gradients: &Array1<T>,
+        _loss: Option<T>,
+        _history: &HistoryBuffer<T>,
     ) -> Result<T> {
         // Placeholder adaptive LR computation
         Ok(self.current_lr)
@@ -1731,8 +1735,7 @@ impl<T: Float + Default + Clone> OptimizationStateTracker<T> {
         }
     }
 
-    fn update(&mut self,
-        gradients: &Array1<T>, _updates: &Array1<T>, _loss: Option<T>) {
+    fn update(&mut self, gradients: &Array1<T>, _updates: &Array1<T>, loss: Option<T>) {
         // Placeholder state update
     }
 }

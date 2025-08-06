@@ -608,34 +608,34 @@ fn sort3(a: f32, b: f32, c: f32) -> (f32, f32, f32) {
 /// Sort 5 elements in-place using a sorting network
 #[inline]
 #[allow(dead_code)]
-fn sort5(_arr: &mut [f32; 5]) {
+fn sort5(arr: &mut [f32; 5]) {
     // Sorting network for 5 elements
     // Optimal sorting network from http://pages.ripco.net/~jgamble/nw.html
-    if _arr[0] > _arr[1] {
+    if arr[0] > arr[1] {
         swap(_arr, 0, 1);
     }
-    if _arr[3] > _arr[4] {
+    if arr[3] > arr[4] {
         swap(_arr, 3, 4);
     }
-    if _arr[2] > _arr[4] {
+    if arr[2] > arr[4] {
         swap(_arr, 2, 4);
     }
-    if _arr[2] > _arr[3] {
+    if arr[2] > arr[3] {
         swap(_arr, 2, 3);
     }
-    if _arr[0] > _arr[3] {
+    if arr[0] > arr[3] {
         swap(_arr, 0, 3);
     }
-    if _arr[0] > _arr[2] {
+    if arr[0] > arr[2] {
         swap(_arr, 0, 2);
     }
-    if _arr[1] > _arr[4] {
+    if arr[1] > arr[4] {
         swap(_arr, 1, 4);
     }
-    if _arr[1] > _arr[3] {
+    if arr[1] > arr[3] {
         swap(_arr, 1, 3);
     }
-    if _arr[1] > _arr[2] {
+    if arr[1] > arr[2] {
         swap(_arr, 1, 2);
     }
 }
@@ -644,8 +644,8 @@ fn sort5(_arr: &mut [f32; 5]) {
 #[inline]
 #[allow(dead_code)]
 fn swap<T: PartialOrd>(arr: &mut [T], i: usize, j: usize) {
-    if _arr[i] > _arr[j] {
-        _arr.swap(i, j);
+    if arr[i] > arr[j] {
+        arr.swap(i, j);
     }
 }
 
@@ -702,7 +702,8 @@ where
         let val = match rank {
             0 => min,
             1 => mid,
-            2 => max_ => unreachable!(), // Window size 3 can only have ranks 0, 1, 2
+            2 => max,
+            _ => unreachable!(), // Window size 3 can only have ranks 0, 1, 2
         };
 
         results.push((i, val));

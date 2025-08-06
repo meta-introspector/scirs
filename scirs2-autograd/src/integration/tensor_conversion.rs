@@ -58,9 +58,9 @@ impl TensorConverter {
     }
 
     /// Create tensor converter with custom configuration
-    pub fn with_config(_config: IntegrationConfig) -> Self {
+    pub fn with_config(config: IntegrationConfig) -> Self {
         let mut converter = Self::new();
-        converter._config = _config;
+        converter.config = config;
         converter
     }
 
@@ -84,18 +84,18 @@ impl TensorConverter {
         if let Some(converter) = self.converters.get(target_format) {
             converter.convert(&data, &metadata)
         } else {
-            Err(IntegrationError::TensorConversion(_format!(
-                "No converter found for _format: {target_format}"
+            Err(IntegrationError::TensorConversion(format!(
+                "No converter found for format: {target_format}"
             )))
         }
     }
 
     /// Convert from a specific format to autograd tensor
-    pub fn convert_from<F: Float>(
-        _data: &[u8],
-        _metadata: &TensorMetadata,
-        _source_format: &str,
-    ) -> Result<Tensor<F>, IntegrationError> {
+    pub fn convert_from<'a, F: Float>(
+        _data: &'a [u8],
+        _metadata: &'a TensorMetadata,
+        _source_format: &'a str,
+    ) -> Result<Tensor<'a, F>, IntegrationError> {
         // For now, implement basic conversion
         // In practice, this would use the registered converters
         // Direct tensor creation not supported without graph context
@@ -183,7 +183,7 @@ impl TensorConverter {
         // Register ndarray converter
         self.converters.insert(
             "ndarray".to_string(),
-            Box::new(|data: &[u8], _metadata: &TensorMetadata| {
+            Box::new(|data: &[u8], metadata: &TensorMetadata| {
                 // Convert to ndarray format
                 Ok(data.to_vec())
             }),
@@ -192,7 +192,7 @@ impl TensorConverter {
         // Register numpy-compatible converter
         self.converters.insert(
             "numpy".to_string(),
-            Box::new(|data: &[u8], _metadata: &TensorMetadata| {
+            Box::new(|data: &[u8], metadata: &TensorMetadata| {
                 // Convert to numpy-compatible format
                 Ok(data.to_vec())
             }),
@@ -387,7 +387,7 @@ pub fn convert_tensor_from<F: Float>(
     _source_format: &str,
 ) -> Result<(), IntegrationError> {
     let _converter = init_tensor_converter();
-    let _converter_guard = _converter.lock().map_err(|_| {
+    let _converter_guard = converter.lock().map_err(|_| {
         IntegrationError::TensorConversion("Failed to acquire converter lock".to_string())
     })?;
     // Simplified implementation - direct tensor creation requires graph context
@@ -400,7 +400,7 @@ pub fn convert_tensor_precision<F1: Float, F2: Float>(
     _tensor: &Tensor<F1>,
 ) -> Result<(), IntegrationError> {
     let _converter = init_tensor_converter();
-    let _converter_guard = _converter.lock().map_err(|_| {
+    let _converter_guard = converter.lock().map_err(|_| {
         IntegrationError::TensorConversion("Failed to acquire converter lock".to_string())
     })?;
     Err(IntegrationError::TensorConversion(
@@ -412,7 +412,7 @@ pub fn convert_tensor_precision<F1: Float, F2: Float>(
 #[allow(dead_code)]
 pub fn from_ndarray<F: Float>(array: ArrayD<F>) -> Result<(), IntegrationError> {
     let _converter = init_tensor_converter();
-    let _converter_guard = _converter.lock().map_err(|_| {
+    let _converter_guard = converter.lock().map_err(|_| {
         IntegrationError::TensorConversion("Failed to acquire converter lock".to_string())
     })?;
     Err(IntegrationError::TensorConversion(
@@ -427,14 +427,14 @@ pub fn to_ndarray<F: Float>(tensor: &Tensor<F>) -> Result<ArrayD<F>, Integration
     let converter_guard = converter.lock().map_err(|_| {
         IntegrationError::TensorConversion("Failed to acquire converter lock".to_string())
     })?;
-    converter_guard.to_ndarray(_tensor)
+    converter_guard.to_ndarray(tensor)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::tensor::Tensor;
-    use crate::tensor__ops::convert_to_tensor;
+    use crate::tensor_ops::convert_to_tensor;
 
     #[test]
     fn test_tensor_converter_creation() {

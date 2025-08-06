@@ -113,7 +113,7 @@ fn generate_test_signal(n: usize) -> Vec<f64> {
 
 /// Benchmark standard RFFT implementation
 #[allow(dead_code)]
-fn benchmark_standard_rfft(_signal: &[f64]) -> (Vec<Complex64>, Duration) {
+fn benchmark_standard_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
     let start = Instant::now();
     let spectrum = rfft(_signal, None).unwrap();
     let duration = start.elapsed();
@@ -123,7 +123,7 @@ fn benchmark_standard_rfft(_signal: &[f64]) -> (Vec<Complex64>, Duration) {
 
 /// Benchmark SIMD-accelerated RFFT implementation
 #[allow(dead_code)]
-fn benchmark_simd_rfft(_signal: &[f64]) -> (Vec<Complex64>, Duration) {
+fn benchmark_simd_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
     let start = Instant::now();
     let spectrum = rfft_adaptive(_signal, None, None).unwrap();
     let duration = start.elapsed();
@@ -133,7 +133,7 @@ fn benchmark_simd_rfft(_signal: &[f64]) -> (Vec<Complex64>, Duration) {
 
 /// Analyze and print information about the signal's frequencies
 #[allow(dead_code)]
-fn analyze_frequencies(_spectrum: &[Complex64], n: usize) {
+fn analyze_frequencies(spectrum: &[Complex64], n: usize) {
     println!("\nFrequency Analysis:");
 
     // Calculate magnitudes
@@ -168,7 +168,7 @@ fn analyze_frequencies(_spectrum: &[Complex64], n: usize) {
     // Print top 5 peaks
     println!("Top frequency components:");
     for (i, (bin, magnitude)) in peaks.iter().take(5).enumerate() {
-        let freq = *bin as f64 * n as f64 / _spectrum.len() as f64 / n as f64;
+        let freq = *bin as f64 * n as f64 / spectrum.len() as f64 / n as f64;
         println!(
             "  Peak {}: bin {}, frequency {:.2} Hz, magnitude {:.2}",
             i + 1,

@@ -21,7 +21,7 @@
 //!
 //! // Create a distributed reader for a large CSV file
 //! let reader = DistributedReader::new("large_dataset.csv")
-//!     .partition_strategy(PartitionStrategy::RowBased { chunk_size: 1_000_000 })
+//!     .partition_strategy(PartitionStrategy::RowBased { chunksize: 1_000_000 })
 //!     .num_workers(4);
 //!
 //! // Process chunks in parallel
@@ -123,7 +123,7 @@ impl DistributedReader {
     /// Create a new distributed reader
     pub fn new<P: AsRef<Path>>(path: P) -> Self {
         Self {
-            file_path: _path.as_ref().to_path_buf(),
+            file_path: path.as_ref().to_path_buf(),
             partition_strategy: PartitionStrategy::SizeBased {
                 chunk_size_bytes: 64 * 1024 * 1024,
             }, // 64MB default
@@ -140,7 +140,7 @@ impl DistributedReader {
     }
 
     /// Set number of workers
-    pub fn num_workers(mut self, num_workers: usize) -> Self {
+    pub fn num_workers(mut self, numworkers: usize) -> Self {
         self.num_workers = num_workers;
         self
     }
@@ -397,7 +397,7 @@ impl std::fmt::Debug for MergeStrategy {
 
 impl DistributedWriter {
     /// Create a new distributed writer
-    pub fn new<P: AsRef<Path>>(output_dir: P, _dir: P) -> Self {
+    pub fn new<P: AsRef<Path>>(output_dir: P, dir: P) -> Self {
         Self {
             output_dir: output_dir.as_ref().to_path_buf(),
             num_partitions: num_cpus::get(),
@@ -569,7 +569,7 @@ impl DistributedArray {
     }
 
     /// Add a partition
-    pub fn add_partition(&mut self, data: Array2<f64>, offset: Vec<usize>, node_id: usize) {
+    pub fn add_partition(&mut self, data: Array2<f64>, offset: Vec<usize>, nodeid: usize) {
         self.partitions.push(ArrayPartition {
             data,
             global_offset: offset,
@@ -583,7 +583,7 @@ impl DistributedArray {
     }
 
     /// Get local partition for a node
-    pub fn get_local_partition(&self, node_id: usize) -> Option<&Array2<f64>> {
+    pub fn get_local_partition(&self, nodeid: usize) -> Option<&Array2<f64>> {
         self.partitions
             .iter()
             .find(|p| p.node_id == node_id)
@@ -752,7 +752,7 @@ mod tests {
 
     #[test]
     fn test_distributed_array() {
-        let array = Array2::fromshape_fn((100, 50), |(i, j)| (i * 50 + j) as f64);
+        let array = Array2::from_shape_fn((100, 50), |(i, j)| (i * 50 + j) as f64);
 
         let distributed = DistributedArray::scatter(
             &array,

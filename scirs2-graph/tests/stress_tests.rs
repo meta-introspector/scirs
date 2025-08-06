@@ -371,7 +371,7 @@ fn test_parallel_algorithms_on_large_graphs() -> CoreResult<()> {
 // Helper functions
 
 #[allow(dead_code)]
-fn estimate_diameter(_graph: &Graph<usize, f64>, samples: usize) -> CoreResult<usize> {
+fn estimate_diameter(graph: &Graph<usize, f64>, samples: usize) -> CoreResult<usize> {
     use rand::prelude::*;
     let mut rng = rand::rng();
     let mut max_distance = 0;
@@ -474,7 +474,7 @@ fn test_extreme_scale_graph() -> CoreResult<()> {
 }
 
 #[allow(dead_code)]
-fn estimate_memory_usage(_nodes: usize, edges: usize) -> f64 {
+fn estimate_memory_usage(nodes: usize, edges: usize) -> f64 {
     // Rough estimate based on adjacency list representation
     let node_overhead = _nodes * 24; // Vec pointer + capacity + length
     let edge_storage = edges * 16; // Two usize values per edge

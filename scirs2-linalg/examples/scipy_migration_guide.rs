@@ -393,7 +393,7 @@ fn advanced_features_differences() -> LinalgResult<()> {
     println!("🚀 Advanced Features and Key Differences");
     println!("{}", "=".repeat(50));
 
-    let a = Array2::fromshape_fn((100, 100), |(i, j)| ((i + 1) * (j + 1)) as f64);
+    let a = Array2::from_shape_fn((100, 100), |(i, j)| ((i + 1) * (j + 1)) as f64);
 
     // Parallel processing (unique to scirs2-linalg)
     println!("🔹 Parallel Processing (Rust-specific)");

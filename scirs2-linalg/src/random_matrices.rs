@@ -202,13 +202,13 @@ where
 
 /// Generate a random orthogonal matrix using QR decomposition
 #[allow(dead_code)]
-fn random_orthogonal<F, R>(_size: usize, rng: &mut R) -> LinalgResult<Array2<F>>
+fn random_orthogonal<F, R>(size: usize, rng: &mut R) -> LinalgResult<Array2<F>>
 where
     F: Float + Debug + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
     R: Rng + ?Sized,
 {
     // Generate random matrix with normal distribution
-    let a = random_general(_size, _size, Distribution1D::StandardNormal, rng)?;
+    let a = random_general(size, size, Distribution1D::StandardNormal, rng)?;
 
     // Perform QR decomposition
     let qr_result = qr(&a.view(), None)?;
@@ -220,18 +220,18 @@ where
 
 /// Generate a random correlation matrix
 #[allow(dead_code)]
-fn random_correlation<F, R>(_size: usize, rng: &mut R) -> LinalgResult<Array2<F>>
+fn random_correlation<F, R>(size: usize, rng: &mut R) -> LinalgResult<Array2<F>>
 where
     F: Float + Debug + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
     R: Rng + ?Sized,
 {
     // Start with a positive definite matrix
-    let mut matrix = random_positive_definite(_size, 0.1, 10.0, rng)?;
+    let mut matrix = random_positive_definite(size, 0.1, 10.0, rng)?;
 
     // Normalize to get correlations
     let diag = matrix.diag().to_owned();
-    for i in 0.._size {
-        for j in 0.._size {
+    for i in 0..size {
+        for j in 0..size {
             let prod: F = diag[i] * diag[j];
             let denom = prod.sqrt();
             matrix[[i, j]] /= denom;
@@ -239,7 +239,7 @@ where
     }
 
     // Ensure diagonal is exactly 1
-    for i in 0.._size {
+    for i in 0..size {
         matrix[[i, i]] = F::one();
     }
 
@@ -433,7 +433,7 @@ mod tests {
     #[test]
     fn test_symmetric_matrix() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let matrix = random_matrix::<f64>(
+        let matrix = random_matrix::<f64, ChaCha8Rng>(
             5,
             5,
             MatrixType::Symmetric(Distribution1D::StandardNormal),
@@ -452,7 +452,7 @@ mod tests {
     #[test]
     fn test_orthogonal_matrix() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let q = random_matrix::<f64>(4, 4, MatrixType::Orthogonal, &mut rng).unwrap();
+        let q = random_matrix::<f64, ChaCha8Rng>(4, 4, MatrixType::Orthogonal, &mut rng).unwrap();
 
         // Check Q^T * Q = I
         let qt = q.t();
@@ -469,7 +469,7 @@ mod tests {
     #[test]
     fn test_positive_definite() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let matrix = random_matrix::<f64>(
+        let matrix = random_matrix::<f64, ChaCha8Rng>(
             3,
             3,
             MatrixType::PositiveDefinite {
@@ -496,7 +496,7 @@ mod tests {
     #[test]
     fn test_correlation_matrix() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let matrix = random_matrix::<f64>(4, 4, MatrixType::Correlation, &mut rng).unwrap();
+        let matrix = random_matrix::<f64, ChaCha8Rng>(4, 4, MatrixType::Correlation, &mut rng).unwrap();
 
         // Check diagonal elements are 1
         for i in 0..4 {

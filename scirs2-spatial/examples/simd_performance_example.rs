@@ -396,7 +396,7 @@ fn memory_allocation_analysis() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Generate random points for testing
 #[allow(dead_code)]
-fn generate_random_points(_n_points: usize, dim: usize) -> Array2<f64> {
+fn generate_random_points(_npoints: usize, dim: usize) -> Array2<f64> {
     let mut rng = rand::rng();
     Array2::fromshape_fn((_n_points, dim), |_| rng.gen_range(-10.0..10.0))
 }

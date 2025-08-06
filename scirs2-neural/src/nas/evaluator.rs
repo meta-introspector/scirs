@@ -51,20 +51,20 @@ impl Default for MetricsConfig {
     }
 impl ArchitectureEvaluator {
     /// Create a new evaluator
-    pub fn new(_config: crate::nas::controller::ControllerConfig) -> Result<Self> {
+    pub fn new(config: crate::nas::controller::ControllerConfig) -> Result<Self> {
         Ok(Self {
             batch_size: 32,
-            device: _config.device,
+            device: config.device,
             mixed_precision: false,
             metrics_config: MetricsConfig::default(),
         })
     /// Set batch size
-    pub fn with_batch_size(mut self, batch_size: usize) -> Self {
+    pub fn with_batch_size(mut self, batchsize: usize) -> Self {
         self.batch_size = batch_size;
         self
     /// Set metrics configuration
     pub fn with_metrics_config(mut self, config: MetricsConfig) -> Self {
-        self.metrics_config = _config;
+        self.metrics_config = config;
     /// Evaluate a model on given data
     pub fn evaluate(
         &self,
@@ -152,7 +152,7 @@ impl ArchitectureEvaluator {
             metrics.insert("memory_usage_mb".to_string(), param_memory);
         Ok(metrics)
     /// Predict batch (simplified implementation)
-    fn predict_batch(&self, batch_data: &ArrayView2<f32>) -> Result<Vec<Vec<f64>>> {
+    fn predict_batch(&self, batchdata: &ArrayView2<f32>) -> Result<Vec<Vec<f64>>> {
         let batch_size = batch_data.shape()[0];
         let num_classes = 10; // Simplified assumption
         // Generate dummy predictions for now
@@ -161,7 +161,7 @@ impl ArchitectureEvaluator {
             let mut probs = vec![0.1; num_classes];
             // Make one class more likely
             use rand::Rng;
-            let idx = rng().random_range(0..num_classes);
+            let idx = rng().gen_range(0..num_classes);
             probs[idx] = 0.9;
             // Normalize
             let sum: f64 = probs.iter().sum();
@@ -256,7 +256,7 @@ pub struct HardwareConfig {
     pub target_latency: Option<f64>,
 impl HardwareAwareEvaluator {
     /// Create a new hardware-aware evaluator
-    pub fn new(_base_evaluator: ArchitectureEvaluator, hardware_config: HardwareConfig) -> Self {
+    pub fn new(_base_evaluator: ArchitectureEvaluator, hardwareconfig: HardwareConfig) -> Self {
             base_evaluator,
             hardware_config,
     /// Evaluate with hardware constraints

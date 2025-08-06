@@ -621,9 +621,9 @@ pub struct AnomalyConfig {
 
 impl AdvancedMemoryLeakDetector {
     /// Create a new advanced memory leak detector
-    pub fn new(_config: MemoryLeakConfig) -> Result<Self> {
+    pub fn new(config: MemoryLeakConfig) -> Result<Self> {
         let memory_history = Arc::new(RwLock::new(VecDeque::with_capacity(
-            _config.max_history_size,
+            config.max_history_size,
         )));
         let active_sessions = Arc::new(Mutex::new(HashMap::new()));
 
@@ -632,7 +632,7 @@ impl AdvancedMemoryLeakDetector {
         let statistics = MemoryStatistics::default();
 
         Ok(Self {
-            config: _config,
+            config: config,
             memory_history,
             active_sessions,
             leak_analyzer,
@@ -678,7 +678,7 @@ impl AdvancedMemoryLeakDetector {
     }
 
     /// Stop monitoring a session
-    pub fn stop_monitoring(&self, session_id: &str) -> Result<LeakAnalysisResult> {
+    pub fn stop_monitoring(&self, sessionid: &str) -> Result<LeakAnalysisResult> {
         let mut sessions = self.active_sessions.lock().map_err(|_| {
             OptimError::MonitoringError("Failed to acquire sessions lock".to_string())
         })?;
@@ -805,7 +805,7 @@ impl AdvancedMemoryLeakDetector {
     }
 
     /// Generate comprehensive memory leak report
-    pub fn generate_leak_report(&self, session_id: &str) -> Result<MemoryLeakReport> {
+    pub fn generate_leak_report(&self, sessionid: &str) -> Result<MemoryLeakReport> {
         let sessions = self.active_sessions.lock().map_err(|_| {
             OptimError::MonitoringError("Failed to acquire sessions lock".to_string())
         })?;
@@ -841,7 +841,7 @@ impl AdvancedMemoryLeakDetector {
 
     // Private implementation methods
 
-    fn start_monitoring_thread(&self, session_id: String) -> Result<()> {
+    fn start_monitoring_thread(&self, sessionid: String) -> Result<()> {
         let memory_history = Arc::clone(&self.memory_history);
         let active_sessions = Arc::clone(&self.active_sessions);
         let sampling_interval = self.config.sampling_interval;
@@ -990,7 +990,8 @@ impl AdvancedMemoryLeakDetector {
 
     fn generate_recommendations(
         &self,
-        growth_analysis: &GrowthAnalysis, _analysis: &PatternAnalysisResult,
+        growth_analysis: &GrowthAnalysis,
+        _analysis: &PatternAnalysisResult,
         leak_characteristics: &LeakCharacteristics,
     ) -> Vec<String> {
         let mut recommendations = Vec::new();
@@ -1051,7 +1052,8 @@ impl AdvancedMemoryLeakDetector {
 
     fn update_statistics(
         &self,
-        session: &MonitoringSession, _result: &LeakAnalysisResult,
+        session: &MonitoringSession,
+        _result: &LeakAnalysisResult,
     ) -> Result<()> {
         // Implementation would update global statistics
         Ok(())
@@ -1082,16 +1084,16 @@ pub struct MemoryLeakReport {
 // Implementation stubs for the analysis engines
 
 impl LeakAnalysisEngine {
-    fn new(_config: AnalysisConfig) -> Self {
+    fn new(config: AnalysisConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             statistical_analyzer: StatisticalAnalyzer::new(StatisticalConfig::default()),
             pattern_detector: PatternDetector::new(PatternConfig::default()),
             anomaly_detector: AnomalyDetector::new(AnomalyConfig::default()),
         }
     }
 
-    fn analyze_growth(&self, memory_values: &[f64]) -> Result<GrowthAnalysis> {
+    fn analyze_growth(&self, memoryvalues: &[f64]) -> Result<GrowthAnalysis> {
         // Simplified implementation - would use proper statistical analysis
         let linear_rate = if memory_values.len() > 1 {
             (memory_values.last().unwrap() - memory_values.first().unwrap())
@@ -1113,7 +1115,7 @@ impl LeakAnalysisEngine {
         })
     }
 
-    fn analyze_patterns(&self, _memory_values: &[f64]) -> Result<PatternAnalysisResult> {
+    fn analyze_patterns(&self, _memoryvalues: &[f64]) -> Result<PatternAnalysisResult> {
         // Simplified implementation
         Ok(PatternAnalysisResult {
             patterns: Vec::new(),
@@ -1122,7 +1124,7 @@ impl LeakAnalysisEngine {
         })
     }
 
-    fn detect_anomalies(&self, _memory_values: &[f64]) -> Result<AnomalyAnalysisResult> {
+    fn detect_anomalies(&self, _memoryvalues: &[f64]) -> Result<AnomalyAnalysisResult> {
         // Simplified implementation
         Ok(AnomalyAnalysisResult {
             anomalies: Vec::new(),
@@ -1133,27 +1135,27 @@ impl LeakAnalysisEngine {
 }
 
 impl StatisticalAnalyzer {
-    fn new(_config: StatisticalConfig) -> Self {
+    fn new(config: StatisticalConfig) -> Self {
         Self { config: _config }
     }
 }
 
 impl PatternDetector {
-    fn new(_config: PatternConfig) -> Self {
+    fn new(config: PatternConfig) -> Self {
         Self { config: _config }
     }
 }
 
 impl AnomalyDetector {
-    fn new(_config: AnomalyConfig) -> Self {
+    fn new(config: AnomalyConfig) -> Self {
         Self { config: _config }
     }
 }
 
 impl MemoryAlertSystem {
-    fn new(_config: AlertConfig) -> Self {
+    fn new(config: AlertConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             alert_history: VecDeque::new(),
             alert_handlers: Vec::new(),
         }

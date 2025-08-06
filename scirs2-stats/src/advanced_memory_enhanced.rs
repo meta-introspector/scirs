@@ -120,7 +120,7 @@ pub struct AdvancedMemoryManager {
 
 impl AdvancedMemoryManager {
     /// Create new advanced memory manager
-    pub fn new(_config: AdvancedMemoryConfig) -> Self {
+    pub fn new(config: AdvancedMemoryConfig) -> Self {
         let numa_topology = detect_numa_topology();
         let cache_hierarchy = detect_cache_hierarchy();
 
@@ -136,7 +136,7 @@ impl AdvancedMemoryManager {
             memory_mapper: Arc::new(RwLock::new(MemoryMapper::new(&_config))),
             allocation_tracker: Arc::new(RwLock::new(AllocationTracker::new())),
             performance_monitor: Arc::new(RwLock::new(MemoryPerformanceMonitor::new())),
-            _config,
+            config,
         }
     }
 
@@ -483,7 +483,7 @@ impl AdvancedMemoryManager {
         }
     }
 
-    fn estimate_cache_efficiency(&self, size_bytes: usize) -> f64 {
+    fn estimate_cache_efficiency(&self, sizebytes: usize) -> f64 {
         // Simple cache efficiency estimation based on cache hierarchy
         let l1_cache = 32 * 1024; // 32KB
         let l2_cache = 256 * 1024; // 256KB
@@ -500,7 +500,7 @@ impl AdvancedMemoryManager {
         }
     }
 
-    fn estimate_numa_distribution(&self, size_bytes: usize) -> f64 {
+    fn estimate_numa_distribution(&self, sizebytes: usize) -> f64 {
         // Estimate how well data can be distributed across NUMA nodes
         let numa_node_capacity = 64 * 1024 * 1024 * 1024; // 64GB per node
 
@@ -511,7 +511,7 @@ impl AdvancedMemoryManager {
         }
     }
 
-    fn estimate_cache_blocking_potential(&self, size_bytes: usize) -> f64 {
+    fn estimate_cache_blocking_potential(&self, sizebytes: usize) -> f64 {
         // Estimate benefit of cache blocking for matrix operations
         let l2_cache = 256 * 1024;
 
@@ -522,7 +522,7 @@ impl AdvancedMemoryManager {
         }
     }
 
-    fn estimate_numa_partitioning_potential(&self, size_bytes: usize) -> f64 {
+    fn estimate_numa_partitioning_potential(&self, sizebytes: usize) -> f64 {
         // Estimate benefit of NUMA partitioning
         let numa_threshold = 1024 * 1024 * 1024; // 1GB
 
@@ -792,7 +792,7 @@ impl AdvancedMemoryManager {
         + std::fmt::Display,
     {
         Ok(StreamingMemoryConfig {
-            buffer_size: _window_size,
+            buffer_size: window_size,
             double_buffering: true,
             prefetch_size: _window_size / 4,
             memory_pool_size: _window_size * 2,
@@ -1229,9 +1229,9 @@ pub struct AdvancedMemoryProfiler {
 }
 
 impl AdvancedMemoryProfiler {
-    pub fn new(_config: &AdvancedMemoryConfig) -> Self {
+    pub fn new(config: &AdvancedMemoryConfig) -> Self {
         Self {
-            profiling_enabled: _config.enable_memory_profiling,
+            profiling_enabled: config.enable_memory_profiling,
             allocation_history: VecDeque::new(),
             performance_metrics: MemoryPerformanceMetrics::default(),
         }
@@ -1289,11 +1289,11 @@ pub struct IntelligentMemoryPools {
 }
 
 impl IntelligentMemoryPools {
-    pub fn new(_config: &AdvancedMemoryConfig_numa, topology: &NumaTopology) -> Self {
+    pub fn new(config: &AdvancedMemoryConfig_numa, topology: &NumaTopology) -> Self {
         Self {
             pools: HashMap::new(),
-            numa_topology: _numa_topology.clone(),
-            allocation_strategy: _config.pool_strategy,
+            numa_topology: numa_topology.clone(),
+            allocation_strategy: config.pool_strategy,
         }
     }
 }
@@ -1314,10 +1314,10 @@ pub struct CacheOptimizer {
 }
 
 impl CacheOptimizer {
-    pub fn new(_config: &AdvancedMemoryConfig, cache_hierarchy: CacheHierarchy) -> Self {
+    pub fn new(_config: &AdvancedMemoryConfig, cachehierarchy: CacheHierarchy) -> Self {
         Self {
             cache_hierarchy,
-            optimization_strategy: _config.cache_strategy,
+            optimization_strategy: config.cache_strategy,
             performance_history: VecDeque::new(),
         }
     }
@@ -1351,10 +1351,10 @@ pub struct NumaMemoryManager {
 }
 
 impl NumaMemoryManager {
-    pub fn new(_config: &AdvancedMemoryConfig, numa_topology: NumaTopology) -> Self {
+    pub fn new(_config: &AdvancedMemoryConfig, numatopology: NumaTopology) -> Self {
         Self {
             numa_topology,
-            memory_policy: _config.numa_policy,
+            memory_policy: config.numa_policy,
             node_utilization: HashMap::new(),
         }
     }
@@ -1390,11 +1390,11 @@ pub struct CompressionEngine {
 }
 
 impl CompressionEngine {
-    pub fn new(_config: &AdvancedMemoryConfig) -> Self {
+    pub fn new(config: &AdvancedMemoryConfig) -> Self {
         Self {
-            compression_enabled: _config.enable_memory_compression,
+            compression_enabled: config.enable_memory_compression,
             compression_algorithms: vec![CompressionAlgorithm::LZ4, CompressionAlgorithm::Snappy],
-            compression_threshold: _config.compression_threshold,
+            compression_threshold: config.compression_threshold,
         }
     }
 }
@@ -1414,10 +1414,10 @@ pub struct MemoryMapper {
 }
 
 impl MemoryMapper {
-    pub fn new(_config: &AdvancedMemoryConfig) -> Self {
+    pub fn new(config: &AdvancedMemoryConfig) -> Self {
         Self {
-            mapping_enabled: _config.enable_memory_mapping,
-            mapping_threshold: _config.memory_mapping_threshold,
+            mapping_enabled: config.enable_memory_mapping,
+            mapping_threshold: config.memory_mapping_threshold,
             active_mappings: HashMap::new(),
         }
     }
@@ -1612,10 +1612,10 @@ where
     D: ndarray::RawData<Elem = F> + Data<Elem = F> + Sync
         + std::fmt::Display,
 {
-    pub fn new(_max_size: usize) -> Self {
+    pub fn new(_maxsize: usize) -> Self {
         Self {
             data: VecDeque::with_capacity(_max_size),
-            _max_size,
+            max_size,
             current_memory_usage: 0, _phantom: std::marker::PhantomData,
         }
     }

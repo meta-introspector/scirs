@@ -57,26 +57,26 @@ where
     /// # Returns
     ///
     /// A new `HankelMatrix` instance
-    pub fn new(_first_col: ArrayView1<A>, last_row: ArrayView1<A>) -> LinalgResult<Self> {
+    pub fn new(_first_col: ArrayView1<A>, lastrow: ArrayView1<A>) -> LinalgResult<Self> {
         // Check that the first elements match
-        if _first_col.is_empty() || last_row.is_empty() {
+        if _first_col.is_empty() || lastrow.is_empty() {
             return Err(LinalgError::InvalidInputError(
-                "Column and _row must not be empty".to_string(),
+                "Column and row must not be empty".to_string(),
             ));
         }
 
-        if (_first_col[_first_col.len() - 1] - last_row[0]).abs() > A::epsilon() {
+        if (_first_col[_first_col.len() - 1] - lastrow[0]).abs() > A::epsilon() {
             return Err(LinalgError::InvalidInputError(
-                "Last element of first column must be the same as first element of last _row"
+                "Last element of first column must be the same as first element of last row"
                     .to_string(),
             ));
         }
 
         Ok(HankelMatrix {
             first_col: _first_col.to_owned(),
-            last_row: last_row.to_owned(),
+            last_row: lastrow.to_owned(),
             nrows: _first_col.len(),
-            ncols: last_row.len(),
+            ncols: lastrow.len(),
         })
     }
 

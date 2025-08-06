@@ -17,16 +17,16 @@ pub struct WordMoversDistance {
 
 impl WordMoversDistance {
     /// Create a new WMD calculator from pre-computed embeddings
-    pub fn from_embeddings(_embeddings: HashMap<String, Array1<f64>>) -> Self {
+    pub fn from_embeddings(embeddings: HashMap<String, Array1<f64>>) -> Self {
         Self { _embeddings }
     }
 
     /// Create from a trained Word2Vec model
-    pub fn from_word2vec(_model: &Word2Vec, vocabulary: &[String]) -> Result<Self> {
+    pub fn from_word2vec(model: &Word2Vec, vocabulary: &[String]) -> Result<Self> {
         let mut embeddings = HashMap::new();
 
         for word in vocabulary {
-            if let Ok(vector) = _model.get_word_vector(word) {
+            if let Ok(vector) = model.get_word_vector(word) {
                 embeddings.insert(word.clone(), vector);
             }
         }
@@ -90,13 +90,13 @@ impl WordMoversDistance {
     }
 
     /// Calculate word frequencies (normalized)
-    fn calculate_frequencies(_tokens: &[&str]) -> HashMap<String, f64> {
+    fn calculate_frequencies(tokens: &[&str]) -> HashMap<String, f64> {
         let mut counts: HashMap<String, usize> = HashMap::new();
         for &token in _tokens {
             *counts.entry(token.to_string()).or_insert(0) += 1;
         }
 
-        let total = _tokens.len() as f64;
+        let total = tokens.len() as f64;
         counts
             .into_iter()
             .map(|(word, count)| (word, count as f64 / total))
@@ -104,8 +104,8 @@ impl WordMoversDistance {
     }
 
     /// Calculate Euclidean distance between two vectors
-    fn euclidean_distance(_v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
-        _v1.iter()
+    fn euclidean_distance(v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
+        v1.iter()
             .zip(v2.iter())
             .map(|(a, b)| (a - b).powi(2))
             .sum::<f64>()
@@ -159,19 +159,19 @@ pub struct SoftCosineSimilarity {
 
 impl SoftCosineSimilarity {
     /// Create from pre-computed word similarities
-    pub fn new(_similarity_matrix: HashMap<(String, String), f64>) -> Self {
+    pub fn new(_similaritymatrix: HashMap<(String, String), f64>) -> Self {
         Self { _similarity_matrix }
     }
 
     /// Create from word embeddings by computing cosine similarities
-    pub fn from_embeddings(_embeddings: &HashMap<String, Array1<f64>>) -> Self {
+    pub fn from_embeddings(embeddings: &HashMap<String, Array1<f64>>) -> Self {
         let mut similarity_matrix = HashMap::new();
 
-        let words: Vec<&String> = _embeddings.keys().collect();
+        let words: Vec<&String> = embeddings.keys().collect();
         for (i, word1) in words.iter().enumerate() {
             for word2 in words.iter().skip(i) {
                 let sim =
-                    Self::cosine_similarity(_embeddings[*word1].view(), _embeddings[*word2].view());
+                    Self::cosine_similarity(_embeddings[*word1].view(), embeddings[*word2].view());
                 similarity_matrix.insert(((*word1).clone(), (*word2).clone()), sim);
                 if word1 != word2 {
                     similarity_matrix.insert(((*word2).clone(), (*word1).clone()), sim);
@@ -251,7 +251,7 @@ impl SoftCosineSimilarity {
     }
 
     /// Calculate term frequencies
-    fn calculate_tf(_tokens: &[String]) -> HashMap<String, f64> {
+    fn calculate_tf(tokens: &[String]) -> HashMap<String, f64> {
         let mut counts: HashMap<String, usize> = HashMap::new();
         for token in _tokens {
             *counts.entry(token.clone()).or_insert(0) += 1;
@@ -265,9 +265,9 @@ impl SoftCosineSimilarity {
     }
 
     /// Calculate cosine similarity between vectors
-    fn cosine_similarity(_v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
-        let dot: f64 = _v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
-        let norm1 = _v1.iter().map(|x| x * x).sum::<f64>().sqrt();
+    fn cosine_similarity(v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
+        let dot: f64 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
+        let norm1 = v1.iter().map(|x| x * x).sum::<f64>().sqrt();
         let norm2 = v2.iter().map(|x| x * x).sum::<f64>().sqrt();
 
         if norm1 > 0.0 && norm2 > 0.0 {
@@ -298,8 +298,8 @@ impl WeightedJaccard {
     }
 
     /// Create with custom term weights (e.g., IDF weights)
-    pub fn with_weights(_weights: HashMap<String, f64>) -> Self {
-        Self { _weights }
+    pub fn with_weights(weights: HashMap<String, f64>) -> Self {
+        Self { weights }
     }
 
     /// Calculate weighted Jaccard similarity
@@ -352,14 +352,14 @@ impl LcsSimilarity {
     }
 
     /// Calculate length of longest common subsequence
-    fn lcs_length(_seq1: &[String], seq2: &[String]) -> usize {
-        let m = _seq1.len();
+    fn lcs_length(seq1: &[String], seq2: &[String]) -> usize {
+        let m = seq1.len();
         let n = seq2.len();
         let mut dp = vec![vec![0; n + 1]; m + 1];
 
         for i in 1..=m {
             for j in 1..=n {
-                if _seq1[i - 1] == seq2[j - 1] {
+                if seq1[i - 1] == seq2[j - 1] {
                     dp[i][j] = dp[i - 1][j - 1] + 1;
                 } else {
                     dp[i][j] = cmp::max(dp[i - 1][j], dp[i][j - 1]);
@@ -379,9 +379,9 @@ pub struct SemanticEditDistance {
 
 impl SemanticEditDistance {
     /// Create new semantic edit distance calculator
-    pub fn new(_embeddings: HashMap<String, Array1<f64>>, synonym_threshold: f64) -> Self {
+    pub fn new(_embeddings: HashMap<String, Array1<f64>>, synonymthreshold: f64) -> Self {
         Self {
-            _embeddings,
+            embeddings,
             synonym_threshold,
         }
     }
@@ -438,9 +438,9 @@ impl SemanticEditDistance {
     }
 
     /// Calculate cosine similarity between vectors
-    fn cosine_similarity(_v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
-        let dot: f64 = _v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
-        let norm1 = _v1.iter().map(|x| x * x).sum::<f64>().sqrt();
+    fn cosine_similarity(v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
+        let dot: f64 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
+        let norm1 = v1.iter().map(|x| x * x).sum::<f64>().sqrt();
         let norm2 = v2.iter().map(|x| x * x).sum::<f64>().sqrt();
 
         if norm1 > 0.0 && norm2 > 0.0 {
@@ -559,9 +559,9 @@ impl SentenceEmbeddingSimilarity {
     }
 
     /// Calculate cosine similarity between vectors
-    fn cosine_similarity(_v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
-        let dot: f64 = _v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
-        let norm1 = _v1.iter().map(|x| x * x).sum::<f64>().sqrt();
+    fn cosine_similarity(v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
+        let dot: f64 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
+        let norm1 = v1.iter().map(|x| x * x).sum::<f64>().sqrt();
         let norm2 = v2.iter().map(|x| x * x).sum::<f64>().sqrt();
 
         if norm1 > 0.0 && norm2 > 0.0 {
@@ -577,12 +577,12 @@ pub struct NGramSemanticSimilarity {
     n: usize,
     skip_distance: usize,
     embeddings: HashMap<String, Array1<f64>>,
-    ngram_weights: HashMap<usize, f64>,
+    ngramweights: HashMap<usize, f64>,
 }
 
 impl NGramSemanticSimilarity {
     /// Create new N-gram semantic similarity calculator
-    pub fn new(n: usize, skip_distance: usize, embeddings: HashMap<String, Array1<f64>>) -> Self {
+    pub fn new(n: usize, skipdistance: usize, embeddings: HashMap<String, Array1<f64>>) -> Self {
         let mut ngram_weights = HashMap::new();
         // Higher order n-grams get higher weights
         for i in 1..=n {
@@ -611,7 +611,7 @@ impl NGramSemanticSimilarity {
             let ngrams2 = self.extract_ngrams(&tokens2, ngram_size);
 
             let similarity = self.calculate_ngram_similarity(&ngrams1, &ngrams2);
-            let weight = self.ngram_weights.get(&ngram_size).copied().unwrap_or(1.0);
+            let weight = self.ngramweights.get(&ngram_size).copied().unwrap_or(1.0);
 
             total_similarity += similarity * weight;
             total_weight += weight;
@@ -698,9 +698,9 @@ impl NGramSemanticSimilarity {
     }
 
     /// Calculate cosine similarity between vectors
-    fn cosine_similarity(_v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
-        let dot: f64 = _v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
-        let norm1 = _v1.iter().map(|x| x * x).sum::<f64>().sqrt();
+    fn cosine_similarity(v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> f64 {
+        let dot: f64 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
+        let norm1 = v1.iter().map(|x| x * x).sum::<f64>().sqrt();
         let norm2 = v2.iter().map(|x| x * x).sum::<f64>().sqrt();
 
         if norm1 > 0.0 && norm2 > 0.0 {
@@ -758,19 +758,19 @@ impl SemanticSimilarityEnsemble {
     }
 
     /// Set Soft Cosine Similarity component
-    pub fn with_soft_cosine(mut self, soft_cosine: SoftCosineSimilarity) -> Self {
+    pub fn with_soft_cosine(mut self, softcosine: SoftCosineSimilarity) -> Self {
         self.soft_cosine = Some(soft_cosine);
         self
     }
 
     /// Set Weighted Jaccard component
-    pub fn with_weighted_jaccard(mut self, weighted_jaccard: WeightedJaccard) -> Self {
+    pub fn with_weighted_jaccard(mut self, weightedjaccard: WeightedJaccard) -> Self {
         self.weighted_jaccard = Some(weighted_jaccard);
         self
     }
 
     /// Set Semantic Edit Distance component
-    pub fn with_semantic_edit(mut self, semantic_edit: SemanticEditDistance) -> Self {
+    pub fn with_semantic_edit(mut self, semanticedit: SemanticEditDistance) -> Self {
         self.semantic_edit = Some(semantic_edit);
         self
     }
@@ -785,7 +785,7 @@ impl SemanticSimilarityEnsemble {
     }
 
     /// Set N-gram Semantic Similarity component
-    pub fn with_ngram_semantic(mut self, ngram_semantic: NGramSemanticSimilarity) -> Self {
+    pub fn with_ngram_semantic(mut self, ngramsemantic: NGramSemanticSimilarity) -> Self {
         self.ngram_semantic = Some(ngram_semantic);
         self
     }
@@ -901,10 +901,10 @@ pub struct ConceptNode {
 
 impl ConceptualSimilarity {
     /// Create new conceptual similarity calculator
-    pub fn new(_max_depth: usize) -> Self {
+    pub fn new(_maxdepth: usize) -> Self {
         Self {
             concept_hierarchy: HashMap::new(),
-            _max_depth,
+            max_depth,
         }
     }
 
@@ -915,7 +915,7 @@ impl ConceptualSimilarity {
     }
 
     /// Build a simple concept hierarchy from word relationships
-    pub fn build_simple_hierarchy(_word_relations: Vec<(String, String)>) -> Self {
+    pub fn build_simple_hierarchy(_wordrelations: Vec<(String, String)>) -> Self {
         let mut similarity = Self::new(10);
         let mut concept_map = HashMap::new();
 
@@ -1146,7 +1146,7 @@ impl DistributionalSimilarity {
     }
 
     /// Update co-occurrence counts
-    fn update_counts(&mut self, tokens: &[String], window_size: usize) {
+    fn update_counts(&mut self, tokens: &[String], windowsize: usize) {
         for (i, target) in tokens.iter().enumerate() {
             // Update word frequency
             *self.word_frequencies.entry(target.clone()).or_insert(0.0) += 1.0;
@@ -1238,7 +1238,7 @@ impl DistributionalSimilarity {
     }
 
     /// Get the most similar words to a given word
-    pub fn most_similar(&self, word: &str, top_k: usize) -> Vec<(String, f64)> {
+    pub fn most_similar(&self, word: &str, topk: usize) -> Vec<(String, f64)> {
         let mut similarities: Vec<(String, f64)> = self
             .cooccurrence_matrix
             .iter()
@@ -1284,20 +1284,20 @@ pub enum TopicSimilarityMetric {
 
 impl TopicBasedSimilarity {
     /// Create new topic-based similarity calculator
-    pub fn new(_similarity_metric: TopicSimilarityMetric) -> Self {
+    pub fn new(_similaritymetric: TopicSimilarityMetric) -> Self {
         Self {
             topic_distributions: HashMap::new(),
-            _similarity_metric,
+            similarity_metric,
         }
     }
 
     /// Add topic distribution for a document
-    pub fn add_document_topics(&mut self, doc_id: String, topic_distribution: Array1<f64>) {
+    pub fn add_document_topics(&mut self, doc_id: String, topicdistribution: Array1<f64>) {
         self.topic_distributions.insert(doc_id, topic_distribution);
     }
 
     /// Calculate topic-based similarity between two documents
-    pub fn similarity(&self, doc_id1: &str, doc_id2: &str) -> Result<f64> {
+    pub fn similarity(&self, doc_id1: &str, docid2: &str) -> Result<f64> {
         let topics1 = self
             .topic_distributions
             .get(doc_id1)
@@ -1364,7 +1364,7 @@ impl TopicBasedSimilarity {
     }
 
     /// Find most similar documents to a given document
-    pub fn most_similar_documents(&self, doc_id: &str, top_k: usize) -> Result<Vec<(String, f64)>> {
+    pub fn most_similar_documents(&self, doc_id: &str, topk: usize) -> Result<Vec<(String, f64)>> {
         if !self.topic_distributions.contains_key(doc_id) {
             return Err(TextError::InvalidInput(format!(
                 "Document {doc_id} not found"
@@ -1376,7 +1376,7 @@ impl TopicBasedSimilarity {
             .keys()
             .filter(|&_id| _id != doc_id)
             .filter_map(|_id| {
-                self.similarity(doc_id_id)
+                self.similarity(doc_id)
                     .ok()
                     .map(|sim| (_id.clone(), sim))
             })
@@ -1442,7 +1442,7 @@ mod tests {
         assert!(sim > 0.9);
     }
 
-    fn arr1(_data: &[f64]) -> Array1<f64> {
+    fn arr1(data: &[f64]) -> Array1<f64> {
         Array1::from_vec(_data.to_vec())
     }
 

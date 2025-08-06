@@ -20,10 +20,10 @@ use crate::error::InterpolateResult;
 use crate::streaming::StreamingInterpolator;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
+use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use std::time::{Duration, Instant};
-use statrs::statistics::Statistics;
 
 /// Comprehensive benchmark suite for interpolation methods
 pub struct InterpolationBenchmarkSuite<T: Float> {
@@ -209,9 +209,9 @@ pub struct SystemInfo {
 
 impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBenchmarkSuite<T> {
     /// Create a new benchmark suite
-    pub fn new(_config: BenchmarkConfig) -> Self {
+    pub fn new(config: BenchmarkConfig) -> Self {
         Self {
-            _config,
+            config,
             results: Vec::new(),
             baselines: HashMap::new(),
             system_info: Self::collect_system_info(),
@@ -866,9 +866,9 @@ pub struct EnhancedBenchmarkSuite<T: Float> {
 }
 
 impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmarkSuite<T> {
-    pub fn new(_config: BenchmarkConfig) -> Self {
+    pub fn new(config: BenchmarkConfig) -> Self {
         Self {
-            _config,
+            config,
             scipy_reference_data: HashMap::new(),
             accuracy_tolerances: Self::default_accuracy_tolerances(),
             memory_tracker: MemoryTracker::new(),
@@ -1295,9 +1295,9 @@ impl<
             + std::panic::RefUnwindSafe,
     > StressTester<T>
 {
-    pub fn new(_config: StressTestConfig) -> Self {
+    pub fn new(config: StressTestConfig) -> Self {
         Self {
-            _config,
+            config,
             results: Vec::new(),
         }
     }
@@ -1375,7 +1375,8 @@ impl<
                 None
             },
             execution_time: Duration::from_millis(1),
-            memory_usage_mb: 0.0, _phantom: std::marker::PhantomData,
+            memory_usage_mb: 0.0,
+            _phantom: std::marker::PhantomData,
         });
 
         Ok(())
@@ -1405,7 +1406,8 @@ impl<
                 None
             },
             execution_time: Duration::from_millis(1),
-            memory_usage_mb: 0.0, _phantom: std::marker::PhantomData,
+            memory_usage_mb: 0.0,
+            _phantom: std::marker::PhantomData,
         });
 
         // Test with duplicate points
@@ -1425,7 +1427,8 @@ impl<
                 None
             },
             execution_time: Duration::from_millis(1),
-            memory_usage_mb: 0.0, _phantom: std::marker::PhantomData,
+            memory_usage_mb: 0.0,
+            _phantom: std::marker::PhantomData,
         });
 
         Ok(())
@@ -1458,7 +1461,8 @@ impl<
                     None
                 },
                 execution_time: start_time.elapsed(),
-                memory_usage_mb: (size * std::mem::size_of::<T>() * 3) as f64 / (1024.0 * 1024.0), _phantom: std::marker::PhantomData,
+                memory_usage_mb: (size * std::mem::size_of::<T>() * 3) as f64 / (1024.0 * 1024.0),
+                _phantom: std::marker::PhantomData,
             });
         }
 
@@ -1512,7 +1516,8 @@ impl<
                 None
             },
             execution_time: Duration::from_millis(100), // Would measure actual time
-            memory_usage_mb: 0.0, _phantom: std::marker::PhantomData,
+            memory_usage_mb: 0.0,
+            _phantom: std::marker::PhantomData,
         });
 
         Ok(())
@@ -1543,7 +1548,8 @@ impl<
                 None
             },
             execution_time: Duration::from_millis(10),
-            memory_usage_mb: 0.0, _phantom: std::marker::PhantomData,
+            memory_usage_mb: 0.0,
+            _phantom: std::marker::PhantomData,
         });
 
         Ok(())

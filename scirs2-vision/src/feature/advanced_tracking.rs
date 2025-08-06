@@ -49,7 +49,7 @@ pub struct BoundingBox {
 
 impl BoundingBox {
     /// Create a new bounding box
-    pub fn new(x: f32, y: f32, width: f32, height: f32, confidence: f32, class_id: i32) -> Self {
+    pub fn new(x: f32, y: f32, width: f32, height: f32, confidence: f32, classid: i32) -> Self {
         Self {
             x,
             y,
@@ -115,16 +115,16 @@ pub struct KalmanFilter {
 
 impl KalmanFilter {
     /// Create a new Kalman filter for bounding box tracking
-    pub fn new_bbox_tracker(_initial_bbox: &BoundingBox) -> Self {
+    pub fn new_bbox_tracker(_initialbbox: &BoundingBox) -> Self {
         let state_dim = 8; // [x, y, vx, vy, w, h, vw, vh]
         let obs_dim = 4; // [x, y, w, h]
 
         // Initialize state with bounding box and zero velocities
         let mut state = Array1::zeros(state_dim);
-        state[0] = _initial_bbox.x + _initial_bbox.width / 2.0; // center x
-        state[1] = _initial_bbox.y + _initial_bbox.height / 2.0; // center y
-        state[4] = _initial_bbox.width;
-        state[5] = _initial_bbox.height;
+        state[0] = initial_bbox.x + initial_bbox.width / 2.0; // center x
+        state[1] = initial_bbox.y + initial_bbox.height / 2.0; // center y
+        state[4] = initial_bbox.width;
+        state[5] = initial_bbox.height;
 
         // State transition matrix (constant velocity model)
         let dt = 1.0; // time step
@@ -237,7 +237,7 @@ impl KalmanFilter {
     }
 
     /// Compute Kalman gain (simplified matrix inversion)
-    fn compute_kalman_gain(&self, innovation_cov: &Array2<f32>) -> Result<Array2<f32>> {
+    fn compute_kalman_gain(&self, innovationcov: &Array2<f32>) -> Result<Array2<f32>> {
         // Simplified computation for 4x4 matrix inversion
         // In practice, would use proper numerical linear algebra
         let det = self.compute_determinant_4x4(innovation_cov);
@@ -269,7 +269,7 @@ impl KalmanFilter {
     }
 
     /// Invert 4x4 matrix (simplified)
-    fn invert_4x4_matrix(&self, matrix: &Array2<f32>, _det: f32) -> Result<Array2<f32>> {
+    fn invert_4x4_matrix(&self, matrix: &Array2<f32>, det: f32) -> Result<Array2<f32>> {
         // Simplified matrix inversion for demonstration
         // In practice, would use scirs2-linalg or other proper library
         let mut inv = Array2::eye(matrix.shape()[0]);
@@ -326,7 +326,7 @@ pub enum TrackState {
 
 impl Track {
     /// Create a new track
-    pub fn new(_id: u32, initial_detection: &Detection) -> Self {
+    pub fn new(_id: u32, initialdetection: &Detection) -> Self {
         let kalman_filter = KalmanFilter::new_bbox_tracker(&initial_detection.bbox);
         let mut features = VecDeque::new();
 
@@ -335,7 +335,7 @@ impl Track {
         }
 
         Self {
-            id: _id,
+            id: id,
             kalman_filter,
             features,
             max_features: 10,
@@ -467,18 +467,18 @@ pub struct Detection {
 
 impl Detection {
     /// Create a new detection
-    pub fn new(_bbox: BoundingBox) -> Self {
+    pub fn new(bbox: BoundingBox) -> Self {
         Self {
-            bbox: _bbox,
+            bbox: bbox,
             feature: None,
             timestamp: Instant::now(),
         }
     }
 
     /// Create detection with appearance feature
-    pub fn with_feature(_bbox: BoundingBox, feature: Array1<f32>) -> Self {
+    pub fn with_feature(bbox: BoundingBox, feature: Array1<f32>) -> Self {
         Self {
-            bbox: _bbox,
+            bbox: bbox,
             feature: Some(feature),
             timestamp: Instant::now(),
         }
@@ -721,9 +721,9 @@ pub struct AppearanceExtractor {
 
 impl AppearanceExtractor {
     /// Create a new appearance extractor
-    pub fn new(_feature_dim: usize) -> Self {
+    pub fn new(_featuredim: usize) -> Self {
         Self {
-            _feature_dim,
+            feature_dim,
             gpu_context: GpuVisionContext::new().ok(),
         }
     }
@@ -834,7 +834,8 @@ impl AppearanceExtractor {
 
     /// GPU downsampling
     fn downsample_gpu(
-        &self, _gpu_ctx: &GpuVisionContext,
+        &self,
+        _gpu_ctx: &GpuVisionContext,
         image: &ArrayView2<f32>,
     ) -> Result<Array2<f32>> {
         // Simplified downsampling for demonstration
@@ -910,7 +911,7 @@ impl HungarianAssociation {
     }
 
     /// Solve assignment problem using simplified Hungarian algorithm
-    pub fn solve(&self, cost_matrix: &Array2<f32>) -> Result<Vec<(usize, usize)>> {
+    pub fn solve(&self, costmatrix: &Array2<f32>) -> Result<Vec<(usize, usize)>> {
         let (num_rows, num_cols) = cost_matrix.dim();
 
         if num_rows == 0 || num_cols == 0 {
@@ -989,7 +990,7 @@ impl TrackingMetrics {
 
     /// Update metrics with frame results
     #[allow(dead_code)]
-    pub fn update(&mut self, ground_truth: &[BoundingBox], predictions: &[Track]) {
+    pub fn update(&mut self, groundtruth: &[BoundingBox], predictions: &[Track]) {
         // Simplified metrics computation
         // In practice, would implement full MOT evaluation
 

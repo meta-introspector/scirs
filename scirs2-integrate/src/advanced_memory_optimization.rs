@@ -493,9 +493,9 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     }
 
     /// Apply cache optimizations based on plan
-    fn apply_cache_optimizations(&self, _plan: &OptimizationPlan<F>) -> IntegrateResult<()> {
+    fn apply_cache_optimizations(&self, plan: &OptimizationPlan<F>) -> IntegrateResult<()> {
         let cache_optimizer = self.cache_optimizer.lock().unwrap();
-        CacheOptimizer::apply_optimizations(_plan)
+        CacheOptimizer::apply_optimizations(plan)
     }
 
     /// Allocate L1 cache-optimized memory
@@ -706,12 +706,12 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     }
 
     /// Select optimal GPU memory type based on size and usage
-    fn select_optimal_gpu_memory_type(_size: usize) -> IntegrateResult<GpuMemoryType> {
+    fn select_optimal_gpu_memory_type(size: usize) -> IntegrateResult<GpuMemoryType> {
         // Simple heuristic - would be more sophisticated in practice
-        if _size < 48 * 1024 {
+        if size < 48 * 1024 {
             // < 48KB
             Ok(GpuMemoryType::Shared)
-        } else if _size < 64 * 1024 {
+        } else if size < 64 * 1024 {
             // < 64KB
             Ok(GpuMemoryType::Constant)
         } else {
@@ -720,8 +720,8 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     }
 
     /// Infer access pattern from method type
-    fn infer_access_pattern(&self, _method_type: &str) -> IntegrateResult<AccessPattern> {
-        match _method_type.to_lowercase().as_str() {
+    fn infer_access_pattern(&self, methodtype: &str) -> IntegrateResult<AccessPattern> {
+        match methodtype.to_lowercase().as_str() {
             "rk4" | "rk45" | "rk23" => Ok(AccessPattern::Sequential),
             "bdf" | "lsoda" => Ok(AccessPattern::Random), // Due to Jacobian operations
             "symplectic" => Ok(AccessPattern::Blocked { block_size: 1024 }),
@@ -730,8 +730,8 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     }
 
     /// Estimate computational intensity
-    fn estimate_computational_intensity(&self, _method_type: &str) -> IntegrateResult<f64> {
-        match _method_type.to_lowercase().as_str() {
+    fn estimate_computational_intensity(&self, methodtype: &str) -> IntegrateResult<f64> {
+        match methodtype.to_lowercase().as_str() {
             "rk4" => Ok(4.0),   // 4 function evaluations per step
             "rk45" => Ok(6.0),  // 6 function evaluations per step
             "bdf" => Ok(2.0),   // Implicit method, fewer evaluations but more linear algebra
@@ -741,11 +741,11 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     }
 
     /// Analyze data locality characteristics
-    fn analyze_data_locality(&self, problem_size: usize) -> IntegrateResult<f64> {
+    fn analyze_data_locality(&self, problemsize: usize) -> IntegrateResult<f64> {
         // Simple heuristic based on problem size
-        if problem_size < 1000 {
+        if problemsize < 1000 {
             Ok(0.9) // High locality for small problems
-        } else if problem_size < 100000 {
+        } else if problemsize < 100000 {
             Ok(0.6) // Medium locality
         } else {
             Ok(0.3) // Lower locality for large problems
@@ -753,8 +753,8 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     }
 
     /// Assess parallelism potential
-    fn assess_parallelism(&self, _method_type: &str) -> IntegrateResult<f64> {
-        match _method_type.to_lowercase().as_str() {
+    fn assess_parallelism(&self, methodtype: &str) -> IntegrateResult<f64> {
+        match methodtype.to_lowercase().as_str() {
             "rk4" | "rk45" | "rk23" => Ok(0.8), // High parallelism in explicit methods
             "bdf" => Ok(0.4),                   // Limited by linear solves
             "lsoda" => Ok(0.6),                 // Mixed
@@ -971,7 +971,7 @@ impl<F: IntegrateFloat> CacheOptimizer<F> {
         })
     }
 
-    fn apply_optimizations(_plan: &OptimizationPlan<F>) -> IntegrateResult<()> {
+    fn apply_optimizations(plan: &OptimizationPlan<F>) -> IntegrateResult<()> {
         // Implementation would apply various cache optimizations
         Ok(())
     }
@@ -998,7 +998,7 @@ impl NumaTopologyManager {
         })
     }
 
-    fn select_optimal_node(_size: usize) -> IntegrateResult<usize> {
+    fn select_optimal_node(size: usize) -> IntegrateResult<usize> {
         // Simplified - return first node
         Ok(0)
     }

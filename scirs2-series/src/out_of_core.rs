@@ -106,7 +106,7 @@ impl ProcessingConfig {
     }
 
     /// Set number of worker threads
-    pub fn with_threads(mut self, num_threads: usize) -> Self {
+    pub fn with_threads(mut self, numthreads: usize) -> Self {
         self.num_threads = num_threads;
         self
     }
@@ -305,7 +305,7 @@ impl MmapTimeSeriesReader {
     }
 
     /// Read a chunk of data starting at the given index
-    pub fn read_chunk(&self, start_idx: usize, chunk_size: usize) -> Result<Array1<f64>> {
+    pub fn read_chunk(&self, start_idx: usize, chunksize: usize) -> Result<Array1<f64>> {
         if start_idx >= self.num_points {
             return Err(TimeSeriesError::InvalidInput(
                 "Start index out of bounds".to_string(),
@@ -335,7 +335,7 @@ impl MmapTimeSeriesReader {
     }
 
     /// Read a range of data with optional overlap
-    pub fn read_range(&self, start_idx: usize, end_idx: usize) -> Result<Array1<f64>> {
+    pub fn read_range(&self, start_idx: usize, endidx: usize) -> Result<Array1<f64>> {
         let end_idx = end_idx.min(self.num_points);
 
         if start_idx >= end_idx {
@@ -360,8 +360,8 @@ pub struct CsvTimeSeriesReader {
 
 impl CsvTimeSeriesReader {
     /// Create new CSV reader
-    pub fn new<P: AsRef<Path>>(path: P, column_index: usize, has_header: bool) -> Result<Self> {
-        let file_path = _path.as_ref().to_path_buf();
+    pub fn new<P: AsRef<Path>>(path: P, column_index: usize, hasheader: bool) -> Result<Self> {
+        let file_path = path.as_ref().to_path_buf();
 
         if !file_path.exists() {
             return Err(TimeSeriesError::IOError("File does not exist".to_string()));
@@ -402,7 +402,7 @@ impl CsvTimeSeriesReader {
     }
 
     /// Read a chunk of data starting at the given line
-    pub fn read_chunk(&self, start_line: usize, chunk_size: usize) -> Result<Array1<f64>> {
+    pub fn read_chunk(&self, start_line: usize, chunksize: usize) -> Result<Array1<f64>> {
         let file = File::open(&self.file_path)
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to open file: {e}")))?;
 
@@ -413,7 +413,7 @@ impl CsvTimeSeriesReader {
 
         for _line in reader.lines() {
             let _line =
-                _line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read _line: {e}")))?;
+                line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {e}")))?;
 
             // Skip header
             if current_line == 0 && self.has_header {
@@ -423,7 +423,7 @@ impl CsvTimeSeriesReader {
 
             // Check if we've reached the start of our chunk
             if data_line >= start_line {
-                let fields: Vec<&str> = _line.split(',').collect();
+                let fields: Vec<&str> = line.split(',').collect();
 
                 if self.column_index >= fields.len() {
                     return Err(TimeSeriesError::InvalidInput(format!(
@@ -467,9 +467,9 @@ pub struct ChunkedProcessor {
 
 impl ChunkedProcessor {
     /// Create new chunked processor
-    pub fn new(_config: ProcessingConfig) -> Self {
+    pub fn new(config: ProcessingConfig) -> Self {
         Self {
-            _config,
+            config,
             stats: StreamingStats::new(),
             progress: ProgressInfo {
                 chunk_number: 0,
@@ -511,7 +511,7 @@ impl ChunkedProcessor {
     }
 
     /// Process data using a generic reader function
-    fn process_with_reader<F>(&mut self, reader: F, total_points: usize) -> Result<StreamingStats>
+    fn process_with_reader<F>(&mut self, reader: F, totalpoints: usize) -> Result<StreamingStats>
     where
         F: Fn(usize, usize) -> Result<Array1<f64>> + Send + Sync + 'static,
     {
@@ -564,7 +564,7 @@ impl ChunkedProcessor {
     }
 
     /// Process chunks in parallel
-    fn process_parallel<F>(&mut self, reader: Arc<F>, total_points: usize) -> Result<StreamingStats>
+    fn process_parallel<F>(&mut self, reader: Arc<F>, totalpoints: usize) -> Result<StreamingStats>
     where
         F: Fn(usize, usize) -> Result<Array1<f64>> + Send + Sync + 'static,
     {
@@ -707,11 +707,11 @@ pub struct OutOfCoreMovingAverage {
 
 impl OutOfCoreMovingAverage {
     /// Create new moving average calculator
-    pub fn new(_window_size: usize) -> Result<Self> {
+    pub fn new(_windowsize: usize) -> Result<Self> {
         check_positive(_window_size, "_window_size")?;
 
         Ok(Self {
-            _window_size,
+            window_size,
             buffer: VecDeque::with_capacity(_window_size),
             current_sum: 0.0,
         })
@@ -771,7 +771,7 @@ pub struct OutOfCoreQuantileEstimator {
 
 impl OutOfCoreQuantileEstimator {
     /// Create new quantile estimator
-    pub fn new(_quantile: f64) -> Result<Self> {
+    pub fn new(quantile: f64) -> Result<Self> {
         if !(0.0..=1.0).contains(&_quantile) {
             return Err(TimeSeriesError::InvalidInput(
                 "Quantile must be between 0 and 1".to_string(),
@@ -779,12 +779,12 @@ impl OutOfCoreQuantileEstimator {
         }
 
         Ok(Self {
-            _quantile,
+            quantile,
             positions: [
                 1.0,
-                1.0 + 2.0 * _quantile,
-                1.0 + 4.0 * _quantile,
-                3.0 + 2.0 * _quantile,
+                1.0 + 2.0 * quantile,
+                1.0 + 4.0 * quantile,
+                3.0 + 2.0 * quantile,
                 5.0,
             ],
             heights: [0.0; 5],
@@ -916,7 +916,7 @@ pub mod utils {
         let max_chunk_points =
             (available_memory_bytes as f64 * safety_factor) as usize / element_size;
 
-        // Ensure chunk size is reasonable (between 1K and 10M _points)
+        // Ensure chunk size is reasonable (between 1K and 10M points)
         max_chunk_points.clamp(1_000, 10_000_000).min(total_points)
     }
 

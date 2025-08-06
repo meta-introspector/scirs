@@ -164,7 +164,7 @@ struct StockPrice {
 /// println!("Stock data shape: ({}, {})", stock_data.n_samples(), stock_data.n_features());
 /// ```
 #[allow(dead_code)]
-pub fn stock_market(_returns: bool) -> Result<Dataset> {
+pub fn stock_market(returns: bool) -> Result<Dataset> {
     // Fetch the stock market data file
     let stock_file = match fetch_data("stock_market.csv", REGISTRY.get("stock_market.csv")) {
         Ok(path) => path,
@@ -302,7 +302,7 @@ struct WeatherObservation {
 /// println!("All weather data shape: ({}, {})", all_weather.n_samples(), all_weather.n_features());
 /// ```
 #[allow(dead_code)]
-pub fn weather(_feature: Option<&str>) -> Result<Dataset> {
+pub fn weather(feature: Option<&str>) -> Result<Dataset> {
     // Validate _feature parameter
     let valid_features = vec![
         "temperature",

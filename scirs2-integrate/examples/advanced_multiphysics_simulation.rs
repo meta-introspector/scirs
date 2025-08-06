@@ -161,7 +161,7 @@ impl MultiPhysicsSimulation {
     }
 
     /// Run the complete multi-physics simulation
-    pub fn run_simulation(&self, simulation_time: f64) -> Result<SimulationResults> {
+    pub fn run_simulation(&self, simulationtime: f64) -> Result<SimulationResults> {
         println!("Starting multi-physics simulation...");
 
         // 1. Quantum mechanics simulation
@@ -200,7 +200,7 @@ impl MultiPhysicsSimulation {
     }
 
     /// Solve the quantum mechanical system
-    fn solve_quantum_system(&self, simulation_time: f64) -> Result<QuantumResults> {
+    fn solve_quantum_system(&self, simulationtime: f64) -> Result<QuantumResults> {
         // Create quantum potential (harmonic oscillator with coupling effects)
         let potential = Box::new(HarmonicOscillator {
             k: self.quantum_params.potential_strength,
@@ -255,7 +255,7 @@ impl MultiPhysicsSimulation {
     }
 
     /// Solve the fluid dynamics system
-    fn solve_fluid_system(&self, simulation_time: f64) -> Result<FluidResults> {
+    fn solve_fluid_system(&self, simulationtime: f64) -> Result<FluidResults> {
         // Create Navier-Stokes parameters
         let ns_params = NavierStokesParams {
             nu: self.fluid_params.viscosity,

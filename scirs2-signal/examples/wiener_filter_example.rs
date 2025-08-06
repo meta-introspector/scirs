@@ -4,10 +4,10 @@ use std::io::Write;
 
 use scirs2_signal::waveforms;
 use scirs2_signal::wiener::{
-use std::f64::consts::PI;
     iterative_wiener_filter, kalman_wiener_filter, psd_wiener_filter, spectral_subtraction,
     wiener_filter, wiener_filter_2d, wiener_filter_freq, wiener_filter_time, WienerConfig,
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {
@@ -299,8 +299,8 @@ fn generate_test_image() -> (Array2<f64>, Array2<f64>) {
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB
 #[allow(dead_code)]
-fn calculate_snr(_clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
-    if _clean.len() != noisy.len() {
+fn calculate_snr(clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
+    if clean.len() != noisy.len() {
         return f64::NEG_INFINITY;
     }
 
@@ -308,7 +308,7 @@ fn calculate_snr(_clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
     let mut noise_power = 0.0;
 
     for i in 0.._clean.len() {
-        signal_power += _clean[i].powi(2);
+        signal_power += clean[i].powi(2);
         noise_power += (_clean[i] - noisy[i]).powi(2);
     }
 
@@ -321,8 +321,8 @@ fn calculate_snr(_clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
 
 /// Calculates the SNR for images
 #[allow(dead_code)]
-fn calculate_image_snr(_clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
-    if _clean.dim() != noisy.dim() {
+fn calculate_image_snr(clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
+    if clean.dim() != noisy.dim() {
         return f64::NEG_INFINITY;
     }
 
@@ -331,7 +331,7 @@ fn calculate_image_snr(_clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
 
     for i in 0.._clean.dim().0 {
         for j in 0.._clean.dim().1 {
-            signal_power += _clean[[i, j]].powi(2);
+            signal_power += clean[[i, j]].powi(2);
             noise_power += (_clean[[i, j]] - noisy[[i, j]]).powi(2);
         }
     }
@@ -376,7 +376,7 @@ fn save_signals_to_csv(
 
 /// Saves an image to CSV for visualization
 #[allow(dead_code)]
-fn save_image_to_csv(_filename: &str, image: &Array2<f64>) {
+fn save_image_to_csv(filename: &str, image: &Array2<f64>) {
     let mut file = File::create(_filename).expect("Failed to create file");
 
     // Write header

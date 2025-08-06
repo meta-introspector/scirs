@@ -558,7 +558,7 @@ impl PeerReviewSystem {
     }
     
     /// Calculate reviewer workload
-    pub fn calculate_reviewer_workload(&self, reviewer_id: &str) -> u32 {
+    pub fn calculate_reviewer_workload(&self, reviewerid: &str) -> u32 {
         self.assignments.iter()
             .filter(|a| a.reviewer_id == reviewer_id && 
                 matches!(a.status, AssignmentStatus::Pending | AssignmentStatus::Accepted))
@@ -566,12 +566,12 @@ impl PeerReviewSystem {
     }
     
     /// Get available reviewers for expertise area
-    pub fn get_available_reviewers(&self, expertise_area: &str) -> Vec<&Reviewer> {
+    pub fn get_available_reviewers(&self, expertisearea: &str) -> Vec<&Reviewer> {
         self.reviewers.values()
             .filter(|r| {
                 r.availability.available &&
                 r.expertise_areas.iter().any(|_area| 
-                    _area.to_lowercase().contains(&expertise_area.to_lowercase())) &&
+                    area.to_lowercase().contains(&expertise_area.to_lowercase())) &&
                 r.availability.current_load < r.availability.max_reviews_per_month
             })
             .collect()
@@ -607,7 +607,7 @@ impl PeerReviewSystem {
         quality_score / total_weight
     }
     
-    fn calculate_expertise_match(&self, reviewer_id: &str, session_id: &str) -> f64 {
+    fn calculate_expertise_match(&self, reviewer_id: &str, sessionid: &str) -> f64 {
         // Simplified expertise matching
         // In practice, you'd use more sophisticated matching algorithms
         if let Some(reviewer) = self.reviewers.get(reviewer_id) {
@@ -621,7 +621,7 @@ impl PeerReviewSystem {
         }
     }
     
-    fn create_meta_review(&self, session: &ReviewSession, meta_reviewer_id: &str) -> MetaReview {
+    fn create_meta_review(&self, session: &ReviewSession, meta_reviewerid: &str) -> MetaReview {
         let review_summary = format!("Meta-review of {} reviews", session.reviews.len());
         
         // Calculate consensus

@@ -12,8 +12,8 @@ use ndarray::{Array1, Array2, ArrayView2, Axis};
 
 /// Check if all values in an array are finite
 #[allow(dead_code)]
-fn check_array_finite(_array: &ArrayView2<'_, f64>, name: &str) -> SpatialResult<()> {
-    for value in _array.iter() {
+fn check_array_finite(array: &ArrayView2<'_, f64>, name: &str) -> SpatialResult<()> {
+    for value in array.iter() {
         if !value.is_finite() {
             return Err(SpatialError::ValueError(format!(
                 "Array '{name}' contains non-finite values"

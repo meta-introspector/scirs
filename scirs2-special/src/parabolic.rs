@@ -998,7 +998,7 @@ fn pbvv_asymptotic(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
 ///         d_values[0], d_values[1], d_values[2], d_values[3]);
 /// ```
 #[allow(dead_code)]
-pub fn pbdv_seq(_vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
+pub fn pbdv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
     if x.is_nan() {
         return Err(SpecialError::DomainError(
             "NaN input to pbdv_seq".to_string(),
@@ -1058,7 +1058,7 @@ pub fn pbdv_seq(_vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
 ///         v_values[0], v_values[1], v_values[2], v_values[3]);
 /// ```
 #[allow(dead_code)]
-pub fn pbvv_seq(_vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
+pub fn pbvv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
     if x.is_nan() {
         return Err(SpecialError::DomainError(
             "NaN input to pbvv_seq".to_string(),

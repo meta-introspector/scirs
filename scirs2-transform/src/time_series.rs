@@ -4,9 +4,9 @@
 //! including Fourier features, wavelet features, and lag features.
 
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
-use num__complex::Complex;
+use num_complex::Complex;
 use num_traits::{Float, NumCast};
-use scirs2__fft::fft;
+use scirs2_fft::fft;
 
 use crate::error::{Result, TransformError};
 
@@ -31,9 +31,9 @@ impl FourierFeatures {
     ///
     /// # Arguments
     /// * `n_components` - Number of frequency components to extract
-    pub fn new(_n_components: usize) -> Self {
+    pub fn new(ncomponents: usize) -> Self {
         FourierFeatures {
-            _n_components,
+            n_components,
             include_phase: false,
             normalize: true,
             sampling_freq: None,
@@ -151,15 +151,15 @@ impl LagFeatures {
     ///
     /// # Arguments
     /// * `lags` - List of lag values (e.g., vec![1, 2, 3] for lags 1, 2, and 3)
-    pub fn new(_lags: Vec<usize>) -> Self {
+    pub fn new(lags: Vec<usize>) -> Self {
         LagFeatures {
-            _lags,
+            lags,
             drop_na: true,
         }
     }
 
     /// Create with a range of lags
-    pub fn with_range(_start: usize, end: usize) -> Self {
+    pub fn with_range(start: usize, end: usize) -> Self {
         let lags = (_start..=end).collect();
         LagFeatures {
             lags,
@@ -168,7 +168,7 @@ impl LagFeatures {
     }
 
     /// Set whether to drop NaN values
-    pub fn with_drop_na(mut self, drop_na: bool) -> Self {
+    pub fn with_drop_na(mut self, dropna: bool) -> Self {
         self.drop_na = drop_na;
         self
     }
@@ -260,9 +260,9 @@ impl WaveletFeatures {
     /// # Arguments
     /// * `wavelet` - Wavelet type (e.g., "db1" for Haar wavelet)
     /// * `level` - Decomposition level
-    pub fn new(_wavelet: &str, level: usize) -> Self {
+    pub fn new(wavelet: &str, level: usize) -> Self {
         WaveletFeatures {
-            _wavelet: _wavelet.to_string(),
+            wavelet: wavelet.to_string(),
             level,
             include_approx: true,
         }
@@ -557,7 +557,7 @@ impl TimeSeriesFeatures {
     }
 
     /// Configure Fourier features
-    pub fn with_fourier(mut self, n_components: usize, include_phase: bool) -> Self {
+    pub fn with_fourier(mut self, n_components: usize, includephase: bool) -> Self {
         self.use_fourier = true;
         let mut fourier = FourierFeatures::new(n_components);
         if include_phase {

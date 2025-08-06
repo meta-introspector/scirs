@@ -918,12 +918,12 @@ where
 
 /// Calculate simple periodogram using FFT
 #[allow(dead_code)]
-pub fn calculate_simple_periodogram<F>(_ts: &Array1<F>) -> Result<Vec<F>>
+pub fn calculate_simple_periodogram<F>(ts: &Array1<F>) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
     for<'a> F: std::iter::Sum<&'a F>,
 {
-    let n = _ts.len();
+    let n = ts.len();
     if n < 2 {
         return Ok(vec![F::zero()]);
     }
@@ -933,7 +933,7 @@ where
     let mut periodogram = vec![F::zero(); n / 2];
 
     // Calculate power spectrum (simplified)
-    let mean = _ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(n).unwrap();
+    let mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(n).unwrap();
     let variance = _ts
         .iter()
         .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
@@ -973,7 +973,7 @@ where
 
 /// Create a window function
 #[allow(dead_code)]
-pub fn create_window<F>(_window_type: &str, length: usize) -> Result<Vec<F>>
+pub fn create_window<F>(_windowtype: &str, length: usize) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive,
 {
@@ -1025,11 +1025,11 @@ where
 
 /// Calculate spectral centroid
 #[allow(dead_code)]
-pub fn calculate_spectral_centroid<F>(_spectrum: &[F], frequencies: &[F]) -> F
+pub fn calculate_spectral_centroid<F>(spectrum: &[F], frequencies: &[F]) -> F
 where
     F: Float + FromPrimitive,
 {
-    let total_power = _spectrum.iter().fold(F::zero(), |acc, &x| acc + x);
+    let total_power = spectrum.iter().fold(F::zero(), |acc, &x| acc + x);
     if total_power == F::zero() {
         return F::zero();
     }
@@ -1044,11 +1044,11 @@ where
 
 /// Calculate spectral spread
 #[allow(dead_code)]
-pub fn calculate_spectral_spread<F>(_spectrum: &[F], frequencies: &[F], centroid: F) -> F
+pub fn calculate_spectral_spread<F>(spectrum: &[F], frequencies: &[F], centroid: F) -> F
 where
     F: Float + FromPrimitive,
 {
-    let total_power = _spectrum.iter().fold(F::zero(), |acc, &x| acc + x);
+    let total_power = spectrum.iter().fold(F::zero(), |acc, &x| acc + x);
     if total_power == F::zero() {
         return F::zero();
     }
@@ -1132,17 +1132,17 @@ where
 
 /// Calculate spectral entropy
 #[allow(dead_code)]
-pub fn calculate_spectral_entropy<F>(_spectrum: &[F]) -> F
+pub fn calculate_spectral_entropy<F>(spectrum: &[F]) -> F
 where
     F: Float + FromPrimitive,
 {
-    let total_power = _spectrum.iter().fold(F::zero(), |acc, &x| acc + x);
+    let total_power = spectrum.iter().fold(F::zero(), |acc, &x| acc + x);
     if total_power == F::zero() {
         return F::zero();
     }
 
     let mut entropy = F::zero();
-    for &power in _spectrum.iter() {
+    for &power in spectrum.iter() {
         if power > F::zero() {
             let prob = power / total_power;
             entropy = entropy - prob * prob.ln();
@@ -1154,15 +1154,15 @@ where
 
 /// Calculate spectral rolloff
 #[allow(dead_code)]
-pub fn calculate_spectral_rolloff<F>(_spectrum: &[F], frequencies: &[F], threshold: F) -> F
+pub fn calculate_spectral_rolloff<F>(spectrum: &[F], frequencies: &[F], threshold: F) -> F
 where
     F: Float + FromPrimitive,
 {
-    let total_power = _spectrum.iter().fold(F::zero(), |acc, &x| acc + x);
+    let total_power = spectrum.iter().fold(F::zero(), |acc, &x| acc + x);
     let target_power = total_power * threshold;
 
     let mut cumulative_power = F::zero();
-    for (i, &power) in _spectrum.iter().enumerate() {
+    for (i, &power) in spectrum.iter().enumerate() {
         cumulative_power = cumulative_power + power;
         if cumulative_power >= target_power {
             return frequencies[i];
@@ -1174,7 +1174,7 @@ where
 
 /// Find dominant frequency
 #[allow(dead_code)]
-pub fn find_dominant_frequency<F>(_spectrum: &[F], frequencies: &[F]) -> F
+pub fn find_dominant_frequency<F>(spectrum: &[F], frequencies: &[F]) -> F
 where
     F: Float + FromPrimitive,
 {
@@ -1190,20 +1190,20 @@ where
 
 /// Find spectral peaks
 #[allow(dead_code)]
-pub fn find_spectral_peaks<F>(_spectrum: &[F], frequencies: &[F]) -> Result<(Vec<F>, Vec<F>)>
+pub fn find_spectral_peaks<F>(spectrum: &[F], frequencies: &[F]) -> Result<(Vec<F>, Vec<F>)>
 where
     F: Float + FromPrimitive,
 {
     let mut peak_frequencies = Vec::new();
     let mut peak_magnitudes = Vec::new();
 
-    if _spectrum.len() < 3 {
+    if spectrum.len() < 3 {
         return Ok((peak_frequencies, peak_magnitudes));
     }
 
     // Simple peak detection: find local maxima
     for i in 1..(_spectrum.len() - 1) {
-        if _spectrum[i] > _spectrum[i - 1] && _spectrum[i] > _spectrum[i + 1] {
+        if spectrum[i] > spectrum[i - 1] && spectrum[i] > spectrum[i + 1] {
             peak_frequencies.push(frequencies[i]);
             peak_magnitudes.push(_spectrum[i]);
         }
@@ -1214,7 +1214,7 @@ where
 
 /// Calculate frequency bands
 #[allow(dead_code)]
-pub fn calculate_frequency_bands<F>(_spectrum: &[F], frequencies: &[F]) -> Vec<F>
+pub fn calculate_frequency_bands<F>(spectrum: &[F], frequencies: &[F]) -> Vec<F>
 where
     F: Float + FromPrimitive,
 {
@@ -1232,8 +1232,8 @@ where
     for (low, high) in band_boundaries.iter() {
         let mut band_power = F::zero();
         for (i, &freq) in frequencies.iter().enumerate() {
-            if freq >= *low && freq < *high && i < _spectrum.len() {
-                band_power = band_power + _spectrum[i];
+            if freq >= *low && freq < *high && i < spectrum.len() {
+                band_power = band_power + spectrum[i];
             }
         }
         bands.push(band_power);
@@ -1293,11 +1293,11 @@ where
 
 /// Calculate spectral flatness
 #[allow(dead_code)]
-pub fn calculate_spectral_flatness<F>(_spectrum: &[F]) -> F
+pub fn calculate_spectral_flatness<F>(spectrum: &[F]) -> F
 where
     F: Float + FromPrimitive,
 {
-    if _spectrum.is_empty() {
+    if spectrum.is_empty() {
         return F::zero();
     }
 
@@ -1306,7 +1306,7 @@ where
     let mut arithmetic_mean = F::zero();
     let mut count = 0;
 
-    for &power in _spectrum.iter() {
+    for &power in spectrum.iter() {
         if power > F::zero() {
             geometric_mean = geometric_mean * power;
             arithmetic_mean = arithmetic_mean + power;
@@ -1348,7 +1348,7 @@ where
 
 /// Calculate window effectiveness metrics
 #[allow(dead_code)]
-pub fn calculate_window_effectiveness<F>(_window_info: &WindowTypeInfo<F>) -> F
+pub fn calculate_window_effectiveness<F>(_windowinfo: &WindowTypeInfo<F>) -> F
 where
     F: Float + FromPrimitive,
 {
@@ -1357,7 +1357,7 @@ where
 
 /// Calculate spectral leakage measures
 #[allow(dead_code)]
-pub fn calculate_spectral_leakage<F>(_window_info: &WindowTypeInfo<F>) -> F
+pub fn calculate_spectral_leakage<F>(_windowinfo: &WindowTypeInfo<F>) -> F
 where
     F: Float + FromPrimitive,
 {
@@ -1444,7 +1444,7 @@ where
 
 /// Calculate zero padding effectiveness
 #[allow(dead_code)]
-pub fn calculate_zero_padding_effectiveness<F>(_padded: &[F], _original: &[F]) -> F
+pub fn calculate_zero_padding_effectiveness<F>(_padded: &[F], original: &[F]) -> F
 where
     F: Float + FromPrimitive,
 {
@@ -1453,7 +1453,7 @@ where
 
 /// Calculate interpolation effectiveness
 #[allow(dead_code)]
-pub fn calculate_interpolation_effectiveness<F>(_interpolated: &[F], _original: &[F]) -> F
+pub fn calculate_interpolation_effectiveness<F>(_interpolated: &[F], original: &[F]) -> F
 where
     F: Float + FromPrimitive,
 {
@@ -1462,16 +1462,16 @@ where
 
 /// Calculate signal-to-noise ratio from periodogram
 #[allow(dead_code)]
-pub fn calculate_snr_from_periodogram<F>(_periodogram: &[F]) -> Result<F>
+pub fn calculate_snr_from_periodogram<F>(periodogram: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
-    if _periodogram.is_empty() {
+    if periodogram.is_empty() {
         return Ok(F::zero());
     }
 
-    let max_power = _periodogram.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
-    let avg_power = _periodogram.iter().fold(F::zero(), |acc, &x| acc + x)
+    let max_power = periodogram.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
+    let avg_power = periodogram.iter().fold(F::zero(), |acc, &x| acc + x)
         / F::from_usize(_periodogram.len()).unwrap();
 
     if avg_power == F::zero() {
@@ -1483,16 +1483,16 @@ where
 
 /// Calculate dynamic range of periodogram
 #[allow(dead_code)]
-pub fn calculate_dynamic_range<F>(_periodogram: &[F]) -> F
+pub fn calculate_dynamic_range<F>(periodogram: &[F]) -> F
 where
     F: Float + FromPrimitive,
 {
-    if _periodogram.is_empty() {
+    if periodogram.is_empty() {
         return F::zero();
     }
 
-    let max_power = _periodogram.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
-    let min_power = _periodogram.iter().fold(F::infinity(), |a, &b| a.min(b));
+    let max_power = periodogram.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
+    let min_power = periodogram.iter().fold(F::infinity(), |a, &b| a.min(b));
 
     if min_power == F::zero() || max_power == F::zero() {
         F::zero()
@@ -1503,16 +1503,16 @@ where
 
 /// Calculate spectral purity measure
 #[allow(dead_code)]
-pub fn calculate_spectral_purity<F>(_periodogram: &[F]) -> F
+pub fn calculate_spectral_purity<F>(periodogram: &[F]) -> F
 where
     F: Float + FromPrimitive,
 {
-    if _periodogram.len() < 2 {
+    if periodogram.len() < 2 {
         return F::zero();
     }
 
-    let max_power = _periodogram.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
-    let total_power = _periodogram.iter().fold(F::zero(), |acc, &x| acc + x);
+    let max_power = periodogram.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
+    let total_power = periodogram.iter().fold(F::zero(), |acc, &x| acc + x);
 
     if total_power == F::zero() {
         F::zero()

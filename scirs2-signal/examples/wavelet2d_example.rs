@@ -147,12 +147,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to print a 2D array in a nicely formatted way
 #[allow(dead_code)]
-fn print_image(_image: ArrayView2<f64>) {
-    let (rows, cols) = _image.dim();
+fn print_image(image: ArrayView2<f64>) {
+    let (rows, cols) = image.dim();
 
     for i in 0..rows {
         for j in 0..cols {
-            print!("{:6.1} ", _image[[i, j]]);
+            print!("{:6.1} ", image[[i, j]]);
         }
         println!();
     }
@@ -160,21 +160,21 @@ fn print_image(_image: ArrayView2<f64>) {
 
 // Apply a threshold to the detail coefficients of a decomposition
 #[allow(dead_code)]
-fn threshold_coefficients(_decomp: &mut Dwt2dResult, threshold: f64) {
+fn threshold_coefficients(decomp: &mut Dwt2dResult, threshold: f64) {
     // Apply threshold to all detail coefficients
-    for h in _decomp.detail_h.iter_mut() {
+    for h in decomp.detail_h.iter_mut() {
         if h.abs() < threshold {
             *h = 0.0;
         }
     }
 
-    for v in _decomp.detail_v.iter_mut() {
+    for v in decomp.detail_v.iter_mut() {
         if v.abs() < threshold {
             *v = 0.0;
         }
     }
 
-    for d in _decomp.detail_d.iter_mut() {
+    for d in decomp.detail_d.iter_mut() {
         if d.abs() < threshold {
             *d = 0.0;
         }
@@ -183,12 +183,12 @@ fn threshold_coefficients(_decomp: &mut Dwt2dResult, threshold: f64) {
 
 // Count non-zero coefficients in a decomposition
 #[allow(dead_code)]
-fn count_nonzero_coefficients(_coeffs: &[Dwt2dResult]) -> usize {
+fn count_nonzero_coefficients(coeffs: &[Dwt2dResult]) -> usize {
     let mut count = 0;
 
     for decomp in _coeffs {
         // Count non-zero values in approximation coefficients (only for the first level)
-        if decomp == _coeffs.first().unwrap_or(decomp) {
+        if decomp == coeffs.first().unwrap_or(decomp) {
             for &val in decomp.approx.iter() {
                 if val != 0.0 {
                     count += 1;

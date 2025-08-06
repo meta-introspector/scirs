@@ -30,6 +30,7 @@ rand = { workspace = true }
 num_cpus = { workspace = true }
 regex = { workspace = true }
 ahash = { workspace = true }
+statrs = { workspace = true }
 
 # Optional dependencies for new features
 tokio = { workspace = true, optional = true, features = ["full"] }

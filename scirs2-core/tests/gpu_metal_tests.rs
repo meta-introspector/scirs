@@ -292,7 +292,7 @@ fn test_metal_unified_memory() {
 
 #[test]
 #[allow(dead_code)]
-fn test_metal_error_handling() {
+fn test_metalerror_handling() {
     let context = match GpuContext::new(GpuBackend::Metal) {
         Ok(c) => c,
         Err(_) => return, // Skip test if Metal not available

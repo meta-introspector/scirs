@@ -89,7 +89,7 @@ impl DynamicValue {
     }
 
     /// Create a new dynamic value with custom type information
-    pub fn with_type_info<T: Any + Send + Sync>(value: T, type_info: TypeInfo) -> Self {
+    pub fn with_type_info<T: Any + Send + Sync>(value: T, typeinfo: TypeInfo) -> Self {
         Self {
             value: Box::new(value),
             type_info,
@@ -645,7 +645,7 @@ pub mod utils {
     use super::*;
 
     /// Create a heterogeneous collection from a list of values
-    pub fn collect_heterogeneous<I>(_values: I) -> HeterogeneousCollection
+    pub fn collect_heterogeneous<I>(values: I) -> HeterogeneousCollection
     where
         I: IntoIterator<Item = DynamicValue>,
     {

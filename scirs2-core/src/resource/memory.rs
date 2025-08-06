@@ -107,7 +107,7 @@ impl MemoryInfo {
 
         let page_size = Self::get_page_size();
         let numa_nodes = Self::detect_numa_nodes();
-        let bandwidth_gbps = Self::estimate_memory_bandwidth();
+        let bandwidth_gbps = Self::estimate_memorybandwidth();
         let latency_ns = Self::estimate_memory_latency();
         let pressure = Self::detect_memory_pressure();
 
@@ -168,7 +168,7 @@ impl MemoryInfo {
 
     /// Estimate memory bandwidth
     #[allow(dead_code)]
-    fn estimate_memory_bandwidth() -> f64 {
+    fn estimate_memorybandwidth() -> f64 {
         // This is a simplified estimation
         // In a real implementation, we might:
         // 1. Read from hardware databases
@@ -342,10 +342,10 @@ mod tests {
 
     #[test]
     fn test_memory_detection() {
-        let memory_info = MemoryInfo::detect();
-        assert!(memory_info.is_ok());
+        let memoryinfo = MemoryInfo::detect();
+        assert!(memoryinfo.is_ok());
 
-        let memory = memory_info.unwrap();
+        let memory = memoryinfo.unwrap();
         assert!(memory.total_memory > 0);
         assert!(memory.available_memory > 0);
         assert!(memory.available_memory <= memory.total_memory);

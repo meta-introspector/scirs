@@ -1,7 +1,7 @@
 use crate::tensor::{Tensor, TensorInternal};
 
 use crate::error::OpError;
-use crate::ndarray__ext::{NdArrayView, RawNdArrayView};
+use crate::ndarray_ext::{NdArrayView, RawNdArrayView};
 use crate::op;
 use crate::variable::{VariableID, VariableNamespace};
 use crate::{tensor_ops as T, Evaluator};
@@ -59,7 +59,7 @@ impl<'graph, F: Float> Graph<F> {
             // Mark as visited to avoid cycles
             visited.insert(node_id);
 
-            // Get the node's dependencies (incoming _nodes)
+            // Get the node's dependencies (incoming nodes)
             let incoming = graph.access_inner(node_id).incoming_nodes.clone();
 
             // Process dependencies first (depth-first)
@@ -347,7 +347,7 @@ impl<'graph, 'env, F: Float> Context<'env, F> {
     ///
     /// Use `namespace_mut` for mutable operations such as variables registrations.
     #[inline]
-    pub fn namespace(&'env self, namespace_id: &'static str) -> VariableNamespace<'env, F> {
+    pub fn namespace(&'env self, namespaceid: &'static str) -> VariableNamespace<'env, F> {
         self.var_env_ref.namespace(namespace_id)
     }
 

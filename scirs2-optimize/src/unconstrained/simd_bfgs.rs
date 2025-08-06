@@ -57,8 +57,8 @@ struct SimdBfgsState {
 }
 
 impl SimdBfgsState {
-    fn new(_x0: &Array1<f64>, simd_config: Option<SimdConfig>) -> Self {
-        let n = _x0.len();
+    fn new(_x0: &Array1<f64>, simdconfig: Option<SimdConfig>) -> Self {
+        let n = x0.len();
         let simd_ops = if let Some(_config) = simd_config {
             SimdVectorOps::with_config(_config)
         } else {
@@ -70,8 +70,8 @@ impl SimdBfgsState {
             simd_ops,
             gradient: Array1::zeros(n),
             prev_gradient: Array1::zeros(n),
-            position: _x0.clone(),
-            prev_position: _x0.clone(),
+            position: x0.clone(),
+            prev_position: x0.clone(),
             function_value: 0.0,
             nfev: 0,
             njev: 0,
@@ -329,7 +329,7 @@ where
 
 /// Compute gradient using finite differences
 #[allow(dead_code)]
-fn compute_gradient_finite_diff<F>(_fun: &mut F, x: &Array1<f64>, nfev: &mut usize) -> Array1<f64>
+fn compute_gradient_finite_diff<F>(fun: &mut F, x: &Array1<f64>, nfev: &mut usize) -> Array1<f64>
 where
     F: FnMut(&ArrayView1<f64>) -> f64,
 {

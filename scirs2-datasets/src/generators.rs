@@ -242,7 +242,7 @@ pub fn make_regression(
     dataset = dataset
         .with_feature_names(feature_names)
         .with_description(format!(
-            "Synthetic regression dataset with {n_features} _features ({n_informative} _informative)"
+            "Synthetic regression dataset with {n_features} _features ({n_informative} informative)"
         ))
         .with_metadata("noise", &noise.to_string())
         .with_metadata("coefficients", &format!("{coef:?}"));
@@ -540,7 +540,7 @@ pub fn make_spirals(
 
 /// Generate a moons dataset for non-linear classification
 #[allow(dead_code)]
-pub fn make_moons(_n_samples: usize, noise: f64, random_seed: Option<u64>) -> Result<Dataset> {
+pub fn make_moons(_n_samples: usize, noise: f64, randomseed: Option<u64>) -> Result<Dataset> {
     // Validate input parameters
     if _n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
@@ -724,7 +724,7 @@ pub fn make_circles(
 
 /// Generate a Swiss roll dataset for dimensionality reduction
 #[allow(dead_code)]
-pub fn make_swiss_roll(_n_samples: usize, noise: f64, random_seed: Option<u64>) -> Result<Dataset> {
+pub fn make_swiss_roll(_n_samples: usize, noise: f64, randomseed: Option<u64>) -> Result<Dataset> {
     // Validate input parameters
     if _n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
@@ -875,7 +875,7 @@ pub fn make_anisotropic_blobs(
             // Generate point with anisotropic distribution (elongated along first axis)
             let mut point = vec![0.0; n_features];
 
-            // First axis has normal _std..second axis has reduced _std (anisotropy)
+            // First axis has normal std..second axis has reduced _std (anisotropy)
             point[0] = normal.sample(&mut rng);
             point[1] = normal.sample(&mut rng) / anisotropy_factor;
 
@@ -1043,7 +1043,7 @@ pub fn make_hierarchical_clusters(
     dataset = dataset
         .with_feature_names(feature_names)
         .with_description(format!(
-            "Hierarchical clustering dataset with {n_main_clusters} main _clusters, {n_sub_clusters} sub-_clusters each"
+            "Hierarchical clustering dataset with {n_main_clusters} main clusters, {n_sub_clusters} sub-_clusters each"
         ))
         .with_metadata("n_main_clusters", &n_main_clusters.to_string())
         .with_metadata("n_sub_clusters", &n_sub_clusters.to_string())
@@ -1508,25 +1508,25 @@ impl GpuConfig {
     }
 
     /// Set whether to use GPU
-    pub fn with_gpu(mut self, use_gpu: bool) -> Self {
+    pub fn with_gpu(mut self, usegpu: bool) -> Self {
         self.use_gpu = use_gpu;
         self
     }
 
     /// Set GPU device ID
-    pub fn with_device(mut self, device_id: usize) -> Self {
+    pub fn with_device(mut self, deviceid: usize) -> Self {
         self.device_id = device_id;
         self
     }
 
     /// Set precision mode
-    pub fn with_single_precision(mut self, single_precision: bool) -> Self {
+    pub fn with_single_precision(mut self, singleprecision: bool) -> Self {
         self.use_single_precision = single_precision;
         self
     }
 
     /// Set chunk size
-    pub fn with_chunk_size(mut self, chunk_size: usize) -> Self {
+    pub fn with_chunk_size(mut self, chunksize: usize) -> Self {
         self.chunk_size = chunk_size;
         self
     }
@@ -2120,7 +2120,7 @@ fn make_blobs_gpu_impl(
 
     for i in 0..n_centers {
         for j in 0..n_features {
-            _centers[[i, j]] = center_dist.sample(&mut rng);
+            centers[[i, j]] = center_dist.sample(&mut rng);
         }
     }
 
@@ -2166,7 +2166,7 @@ fn make_blobs_gpu_impl(
             // CPU fallback: generate sequentially
             for _ in 0..n_samples_center {
                 for j in 0..n_features {
-                    data[[sample_idx, j]] = _centers[[center_idx, j]] + noise_dist.sample(&mut rng);
+                    data[[sample_idx, j]] = centers[[center_idx, j]] + noise_dist.sample(&mut rng);
                 }
                 target[sample_idx] = center_idx as f64;
                 sample_idx += 1;
@@ -2395,7 +2395,7 @@ pub fn benchmark_gpu_vs_cpu(
 
 /// Generate a dataset with an S-curve manifold embedded in 3D space
 #[allow(dead_code)]
-pub fn make_s_curve(_n_samples: usize, noise: f64, random_seed: Option<u64>) -> Result<Dataset> {
+pub fn make_s_curve(_n_samples: usize, noise: f64, randomseed: Option<u64>) -> Result<Dataset> {
     if _n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
             "_n_samples must be > 0".to_string(),
@@ -2578,7 +2578,7 @@ pub fn make_severed_sphere(
 
 /// Generate a dataset from a twin peaks manifold (two connected peaks)
 #[allow(dead_code)]
-pub fn make_twin_peaks(_n_samples: usize, noise: f64, random_seed: Option<u64>) -> Result<Dataset> {
+pub fn make_twin_peaks(_n_samples: usize, noise: f64, randomseed: Option<u64>) -> Result<Dataset> {
     if _n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
             "_n_samples must be > 0".to_string(),
@@ -2901,15 +2901,15 @@ impl Default for ManifoldConfig {
 
 impl ManifoldConfig {
     /// Create a new manifold configuration
-    pub fn new(_manifold_type: ManifoldType) -> Self {
+    pub fn new(_manifoldtype: ManifoldType) -> Self {
         Self {
-            _manifold_type,
+            manifold_type,
             ..Default::default()
         }
     }
 
     /// Set number of samples
-    pub fn with_samples(mut self, n_samples: usize) -> Self {
+    pub fn with_samples(mut self, nsamples: usize) -> Self {
         self.n_samples = n_samples;
         self
     }
@@ -2935,36 +2935,36 @@ impl ManifoldConfig {
 
 /// Generate a manifold dataset based on configuration
 #[allow(dead_code)]
-pub fn make_manifold(_config: ManifoldConfig) -> Result<Dataset> {
-    match _config.manifold_type {
-        ManifoldType::SCurve => make_s_curve(_config.n_samples, _config.noise, _config.random_seed),
+pub fn make_manifold(config: ManifoldConfig) -> Result<Dataset> {
+    match config.manifold_type {
+        ManifoldType::SCurve => make_s_curve(_config.n_samples, config.noise, config.random_seed),
         ManifoldType::SwissRoll { hole } => {
-            make_swiss_roll_advanced(_config.n_samples, _config.noise, hole, _config.random_seed)
+            make_swiss_roll_advanced(_config.n_samples, config.noise, hole, config.random_seed)
         }
         ManifoldType::SeveredSphere => {
-            make_severed_sphere(_config.n_samples, _config.noise, _config.random_seed)
+            make_severed_sphere(_config.n_samples, config.noise, config.random_seed)
         }
         ManifoldType::TwinPeaks => {
-            make_twin_peaks(_config.n_samples, _config.noise, _config.random_seed)
+            make_twin_peaks(_config.n_samples, config.noise, config.random_seed)
         }
         ManifoldType::Helix { n_turns } => make_helix(
-            _config.n_samples,
+            config.n_samples,
             n_turns,
-            _config.noise,
-            _config.random_seed,
+            config.noise,
+            config.random_seed,
         ),
         ManifoldType::IntersectingManifolds => {
-            make_intersecting_manifolds(_config.n_samples, _config.noise, _config.random_seed)
+            make_intersecting_manifolds(_config.n_samples, config.noise, config.random_seed)
         }
         ManifoldType::Torus {
             major_radius,
             minor_radius,
         } => make_torus(
-            _config.n_samples,
+            config.n_samples,
             major_radius,
             minor_radius,
-            _config.noise,
-            _config.random_seed,
+            config.noise,
+            config.random_seed,
         ),
     }
 }

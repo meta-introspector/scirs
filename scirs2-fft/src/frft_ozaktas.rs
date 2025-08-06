@@ -119,15 +119,15 @@ fn compute_stable_chirp(n: usize, param: f64) -> Vec<Complex64> {
 
 /// Apply Tukey window to reduce edge effects
 #[allow(dead_code)]
-fn apply_tukey_window(x: &mut [Complex64], original_len: usize) {
+fn apply_tukey_window(x: &mut [Complex64], originallen: usize) {
     let alpha = 0.1; // Tukey parameter
-    let taper_len = (alpha * original_len as f64) as usize;
+    let taper_len = (alpha * originallen as f64) as usize;
 
     for i in 0..taper_len {
         let ratio = i as f64 / taper_len as f64;
         let window = 0.5 * (1.0 - (PI * ratio).cos());
         x[i] *= window;
-        x[original_len - 1 - i] *= window;
+        x[originallen - 1 - i] *= window;
     }
 }
 
@@ -191,11 +191,11 @@ fn handle_near_special_angles(x: &[Complex64], phi: f64) -> FFTResult<Vec<Comple
 
 /// Post-processing to improve numerical accuracy
 #[allow(dead_code)]
-fn post_process_result(_result: &mut [Complex64], alpha: f64) {
+fn post_process_result(result: &mut [Complex64], alpha: f64) {
     // Apply phase correction for improved accuracy
     let phase = alpha * PI / 4.0;
     let phase_correction = Complex64::from_polar(1.0, phase);
-    for val in _result.iter_mut() {
+    for val in result.iter_mut() {
         *val *= phase_correction;
     }
 

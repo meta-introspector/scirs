@@ -14,8 +14,8 @@ pub struct SourceGenerator<'a> {
 }
 impl<'a> SourceGenerator<'a> {
     /// Create a new source generator
-    pub fn new(_config: &'a BindingConfig, output_dir: &'a PathBuf) -> Self {
-        Self { _config, output_dir }
+    pub fn new(_config: &'a BindingConfig, outputdir: &'a PathBuf) -> Self {
+        Self { config, output_dir }
     }
     /// Generate all source files
     pub fn generate(&self) -> Result<Vec<PathBuf>> {

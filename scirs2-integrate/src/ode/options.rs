@@ -56,9 +56,9 @@ impl Default for ODEOptions {
 
 impl ODEOptions {
     /// Create a new set of options with the given method.
-    pub fn new(_method: ODEMethod) -> Self {
+    pub fn new(method: ODEMethod) -> Self {
         Self {
-            _method,
+            method,
             ..Default::default()
         }
     }
@@ -76,25 +76,25 @@ impl ODEOptions {
     }
 
     /// Set the initial step size.
-    pub fn with_first_step(mut first_step: f64) -> Self {
+    pub fn with_first_step(mut firststep: f64) -> Self {
         self.first_step = Some(first_step);
         self
     }
 
     /// Set the maximum step size.
-    pub fn with_max_step(mut max_step: f64) -> Self {
+    pub fn with_max_step(mut maxstep: f64) -> Self {
         self.max_step = Some(max_step);
         self
     }
 
     /// Set the maximum number of steps.
-    pub fn with_max_steps(mut max_steps: usize) -> Self {
+    pub fn with_max_steps(mut maxsteps: usize) -> Self {
         self.max_steps = max_steps;
         self
     }
 
     /// Enable or disable dense output.
-    pub fn with_dense_output(mut dense_output: bool) -> Self {
+    pub fn with_dense_output(mut denseoutput: bool) -> Self {
         self.dense_output = dense_output;
         self
     }

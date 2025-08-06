@@ -150,7 +150,7 @@ where
 
     for _iter in 0..opts.max_iter {
         // Parallel assignment step
-        let (new_labels, distances) = parallel_assign_labels(data, _centroids.view())?;
+        let (new_labels, distances) = parallel_assign_labels(data, centroids.view())?;
         labels = new_labels;
 
         // Parallel centroid update
@@ -190,7 +190,7 @@ where
     }
 
     // Final inertia calculation
-    let final_inertia = parallel_compute_inertia(data, &labels, _centroids.view())?;
+    let final_inertia = parallel_compute_inertia(data, &labels, centroids.view())?;
 
     Ok((_centroids, labels, final_inertia))
 }
@@ -293,9 +293,9 @@ where
 
 /// Count number of points in each cluster
 #[allow(dead_code)]
-fn count_clusters(_labels: &Array1<usize>, k: usize) -> Vec<usize> {
+fn count_clusters(labels: &Array1<usize>, k: usize) -> Vec<usize> {
     let mut counts = vec![0; k];
-    for &label in _labels.iter() {
+    for &label in labels.iter() {
         counts[label] += 1;
     }
     counts

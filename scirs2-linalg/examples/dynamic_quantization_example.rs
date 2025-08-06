@@ -10,7 +10,6 @@ use scirs2_linalg::quantization::calibration::{
     calibrate_matrix, CalibrationConfig, CalibrationMethod,
 };
 use scirs2_linalg::quantization::{dequantize_matrix, quantize_matrix};
-use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() {
@@ -36,7 +35,7 @@ fn main() {
 
 /// Create a sequence of data matrices with drifting distribution
 #[allow(dead_code)]
-fn create_drifting_data_sequence(_num_matrices: usize, drift_factor: f32) -> Vec<Array2<f32>> {
+fn create_drifting_data_sequence(_num_matrices: usize, driftfactor: f32) -> Vec<Array2<f32>> {
     let mut rng = rand::rng();
     let mut result = Vec::with_capacity(_num_matrices);
 
@@ -57,8 +56,8 @@ fn create_drifting_data_sequence(_num_matrices: usize, drift_factor: f32) -> Vec
 
         // Add some outliers occasionally
         if i % 3 == 0 {
-            let r = rng.random_range(0..10);
-            let c = rng.random_range(0..10);
+            let r = rng.gen_range(0..10);
+            let c = rng.gen_range(0..10);
             matrix[[r..c]] = if rng.random_bool(0.5) {
                 mean + std_dev * 5.0
             } else {
@@ -69,8 +68,8 @@ fn create_drifting_data_sequence(_num_matrices: usize, drift_factor: f32) -> Vec
         result.push(matrix);
 
         // Drift the distribution parameters
-        mean += drift_factor * rng.random_range(-1.0..1.0);
-        std_dev = (std_dev + drift_factor * rng.random_range(-0.1..0.3)).clamp(0.5..3.0);
+        mean += drift_factor * rng.gen_range(-1.0..1.0);
+        std_dev = (std_dev + drift_factor * rng.gen_range(-0.1..0.3)).clamp(0.5..3.0);
     }
 
     result
@@ -78,7 +77,7 @@ fn create_drifting_data_sequence(_num_matrices: usize, drift_factor: f32) -> Vec
 
 /// Compare static (one-time) vs dynamic (EMA) calibration
 #[allow(dead_code)]
-fn compare_static_vs_dynamic_calibration(_data_sequence: &[Array2<f32>], bits: u8) {
+fn compare_static_vs_dynamic_calibration(datasequence: &[Array2<f32>], bits: u8) {
     println!(
         "{:^10} | {:^15} | {:^15} | {:^15}",
         "Batch", "Static MSE", "Dynamic MSE", "Improvement (%)"
@@ -109,8 +108,8 @@ fn compare_static_vs_dynamic_calibration(_data_sequence: &[Array2<f32>], bits: u
     // Process each data batch
     for (i, data) in data_sequence.iter().enumerate() {
         // Static calibration always uses the same parameters
-        let (static_quantized_) = quantize_matrix(&data.view(), bits, static_params.method);
-        let static_dequantized = dequantize_matrix(&static_quantized, &static_params);
+        let (static_quantized_, _) = quantize_matrix(&data.view(), bits, static_params.method);
+        let static_dequantized = dequantize_matrix(&static_quantized_, &static_params);
         let static_mse = (data - &static_dequantized).mapv(|x| x * x).sum() / data.len() as f32;
 
         // Update dynamic calibration for each batch
@@ -119,8 +118,8 @@ fn compare_static_vs_dynamic_calibration(_data_sequence: &[Array2<f32>], bits: u
             dynamic_params = calibrate_matrix(&data.view(), bits, &dynamic_config).unwrap();
         }
 
-        let (dynamic_quantized_) = quantize_matrix(&data.view(), bits, dynamic_params.method);
-        let dynamic_dequantized = dequantize_matrix(&dynamic_quantized, &dynamic_params);
+        let (dynamic_quantized_, _) = quantize_matrix(&data.view(), bits, dynamic_params.method);
+        let dynamic_dequantized = dequantize_matrix(&dynamic_quantized_, &dynamic_params);
         let dynamic_mse = (data - &dynamic_dequantized).mapv(|x| x * x).sum() / data.len() as f32;
 
         // Calculate improvement
@@ -152,7 +151,7 @@ fn compare_static_vs_dynamic_calibration(_data_sequence: &[Array2<f32>], bits: u
 
 /// Compare different EMA factors for dynamic calibration
 #[allow(dead_code)]
-fn compare_ema_factors(_data_sequence: &[Array2<f32>], bits: u8) {
+fn compare_ema_factors(datasequence: &[Array2<f32>], bits: u8) {
     let ema_factors = [0.05, 0.1, 0.3, 0.5, 0.9];
 
     println!(
@@ -253,18 +252,18 @@ fn simulate_streaming_data() {
     // Simulate streaming data over time
     for t in 0..10 {
         // Update data distribution parameters (simulating real-world drift)
-        drift += rng.random_range(-0.2..0.2);
+        drift += rng.gen_range(-0.2..0.2);
 
         // Every few time steps..introduce a significant change
         if t % 3 == 0 {
-            amplitude *= rng.random_range(0.8..1.3);
+            amplitude *= rng.gen_range(0.8..1.3);
         }
 
         // Generate new data batch
         let data = generate_sensor_batch(50, drift, amplitude, &mut rng);
 
         // Use current parameters to quantize
-        let quantized = quantize_matrix(&data.view(), bits, params.method);
+        let (quantized, _) = quantize_matrix(&data.view(), bits, params.method);
         let dequantized = dequantize_matrix(&quantized, &params);
 
         // Calculate quantization error
@@ -312,9 +311,9 @@ fn generate_sensor_batch(
     // Add occasional outliers (sensor glitches)
     let num_outliers = (size as f32 * 0.05) as usize; // 5% outliers
     for _ in 0..num_outliers {
-        let idx = rng.random_range(0..size);
-        let outlier_factor = rng.random_range(3.0..5.0);
-        data[[idx..0]] = if rng.random_bool(0.5) {
+        let idx = rng.gen_range(0..size);
+        let outlier_factor = rng.gen_range(3.0..5.0);
+        data[[idx, 0]] = if rng.random_bool(0.5) {
             drift + amplitude * outlier_factor
         } else {
             drift - amplitude * outlier_factor

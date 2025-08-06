@@ -243,8 +243,8 @@ pub enum QuantizedData1D {
 ///
 /// Returns None if the matrix does not use Int8 storage
 #[allow(dead_code)]
-pub fn get_quantized_matrix_2d_i8(_matrix: &QuantizedMatrix) -> Option<&Array2<i8>> {
-    match &_matrix.data {
+pub fn get_quantized_matrix_2d_i8(matrix: &QuantizedMatrix) -> Option<&Array2<i8>> {
+    match &matrix.data {
         QuantizedData2D::Int8(data) => Some(data),
         _ => None,
     }
@@ -254,8 +254,8 @@ pub fn get_quantized_matrix_2d_i8(_matrix: &QuantizedMatrix) -> Option<&Array2<i
 ///
 /// Returns None if the vector does not use Int8 storage
 #[allow(dead_code)]
-pub fn get_quantized_vector_1d_i8(_vector: &QuantizedVector) -> Option<&Array1<i8>> {
-    match &_vector.data {
+pub fn get_quantized_vector_1d_i8(vector: &QuantizedVector) -> Option<&Array1<i8>> {
+    match &vector.data {
         QuantizedData1D::Int8(data) => Some(data),
         _ => None,
     }
@@ -279,36 +279,36 @@ impl QuantizedData1D {
 
 impl QuantizedMatrix {
     /// Creates a new quantized matrix with int8 storage
-    pub fn new_i8(_data: Array2<i8>, shape: (usize, usize), data_type: QuantizedDataType) -> Self {
+    pub fn new_i8(data: Array2<i8>, shape: (usize, usize), data_type: QuantizedDataType) -> Self {
         Self {
-            data: QuantizedData2D::Int8(_data),
+            data: QuantizedData2D::Int8(data),
             shape,
             data_type,
         }
     }
 
     /// Creates a new f16 quantized matrix
-    pub fn new_f16(_data: Array2<f16>, shape: (usize, usize)) -> Self {
+    pub fn new_f16(data: Array2<f16>, shape: (usize, usize)) -> Self {
         Self {
-            data: QuantizedData2D::Float16(_data),
+            data: QuantizedData2D::Float16(data),
             shape,
             data_type: QuantizedDataType::Float16,
         }
     }
 
     /// Creates a new bf16 quantized matrix
-    pub fn new_bf16(_data: Array2<bf16>, shape: (usize, usize)) -> Self {
+    pub fn new_bf16(data: Array2<bf16>, shape: (usize, usize)) -> Self {
         Self {
-            data: QuantizedData2D::BFloat16(_data),
+            data: QuantizedData2D::BFloat16(data),
             shape,
             data_type: QuantizedDataType::BFloat16,
         }
     }
 
     /// Creates a standard Int8 quantized matrix (for backward compatibility)
-    pub fn from_i8(_data: Array2<i8>, shape: (usize, usize)) -> Self {
+    pub fn from_i8(data: Array2<i8>, shape: (usize, usize)) -> Self {
         Self {
-            data: QuantizedData2D::Int8(_data),
+            data: QuantizedData2D::Int8(data),
             shape,
             data_type: QuantizedDataType::Int8,
         }
@@ -398,36 +398,36 @@ impl QuantizedMatrix {
 
 impl QuantizedVector {
     /// Creates a new quantized vector with int8 storage
-    pub fn new_i8(_data: Array1<i8>, length: usize, data_type: QuantizedDataType) -> Self {
+    pub fn new_i8(data: Array1<i8>, length: usize, datatype: QuantizedDataType) -> Self {
         Self {
-            data: QuantizedData1D::Int8(_data),
+            data: QuantizedData1D::Int8(data),
             length,
-            data_type,
+            data_type: datatype,
         }
     }
 
     /// Creates a new f16 quantized vector
-    pub fn new_f16(_data: Array1<f16>, length: usize) -> Self {
+    pub fn new_f16(data: Array1<f16>, length: usize) -> Self {
         Self {
-            data: QuantizedData1D::Float16(_data),
+            data: QuantizedData1D::Float16(data),
             length,
             data_type: QuantizedDataType::Float16,
         }
     }
 
     /// Creates a new bf16 quantized vector
-    pub fn new_bf16(_data: Array1<bf16>, length: usize) -> Self {
+    pub fn new_bf16(data: Array1<bf16>, length: usize) -> Self {
         Self {
-            data: QuantizedData1D::BFloat16(_data),
+            data: QuantizedData1D::BFloat16(data),
             length,
             data_type: QuantizedDataType::BFloat16,
         }
     }
 
     /// Creates a standard Int8 quantized vector (for backward compatibility)
-    pub fn from_i8(_data: Array1<i8>, length: usize) -> Self {
+    pub fn from_i8(data: Array1<i8>, length: usize) -> Self {
         Self {
-            data: QuantizedData1D::Int8(_data),
+            data: QuantizedData1D::Int8(data),
             length,
             data_type: QuantizedDataType::Int8,
         }
@@ -949,12 +949,12 @@ where
 ///
 /// The dequantized matrix
 #[allow(dead_code)]
-pub fn dequantize_matrix(_quantized: &QuantizedMatrix, params: &QuantizationParams) -> Array2<f32> {
-    let shape = _quantized.shape();
+pub fn dequantize_matrix(quantized: &QuantizedMatrix, params: &QuantizationParams) -> Array2<f32> {
+    let shape = quantized.shape();
     let mut dequantized = Array2::zeros(shape);
 
     // Handle different quantization data types
-    match &_quantized.data {
+    match &quantized.data {
         // Direct floating-point formats
         QuantizedData2D::Float16(data) => {
             // For Float16, just convert directly to f32
@@ -970,7 +970,7 @@ pub fn dequantize_matrix(_quantized: &QuantizedMatrix, params: &QuantizationPara
         }
         // Integer-based quantization
         QuantizedData2D::Int8(data) => {
-            match _quantized.data_type {
+            match quantized.data_type {
                 // Special handling for 4-bit quantization types
                 QuantizedDataType::Int4 | QuantizedDataType::UInt4 => {
                     let num_elements = shape.0 * shape.1;
@@ -980,7 +980,7 @@ pub fn dequantize_matrix(_quantized: &QuantizedMatrix, params: &QuantizationPara
                         let col = i % shape.1;
 
                         // Get the 4-bit value using the get method
-                        let q_val = _quantized.get_i8(row, col);
+                        let q_val = quantized.get_i8(row, col);
 
                         // Dequantize based on the method
                         let val = match params.method {
@@ -1345,12 +1345,12 @@ where
 ///
 /// The dequantized vector
 #[allow(dead_code)]
-pub fn dequantize_vector(_quantized: &QuantizedVector, params: &QuantizationParams) -> Array1<f32> {
-    let length = _quantized.len();
+pub fn dequantize_vector(quantized: &QuantizedVector, params: &QuantizationParams) -> Array1<f32> {
+    let length = quantized.len();
     let mut dequantized = Array1::zeros(length);
 
     // Handle different quantization data types
-    match &_quantized.data {
+    match &quantized.data {
         // Direct floating-point formats
         QuantizedData1D::Float16(data) => {
             // For Float16, just convert directly to f32
@@ -1366,12 +1366,12 @@ pub fn dequantize_vector(_quantized: &QuantizedVector, params: &QuantizationPara
         }
         // Integer-based quantization
         QuantizedData1D::Int8(data) => {
-            match _quantized.data_type {
+            match quantized.data_type {
                 // Special handling for 4-bit quantization types
                 QuantizedDataType::Int4 | QuantizedDataType::UInt4 => {
                     for i in 0..length {
                         // Get the 4-bit value using the get method
-                        let q_val = _quantized.get_i8(i);
+                        let q_val = quantized.get_i8(i);
 
                         // Dequantize based on the method
                         let val = match params.method {
@@ -1777,17 +1777,17 @@ pub fn quantized_dot(
 ///
 /// The matrix after applying fake quantization
 #[allow(dead_code)]
-pub fn fake_quantize<F>(_matrix: &ArrayView2<F>, bits: u8, method: QuantizationMethod) -> Array2<F>
+pub fn fake_quantize<F>(matrix: &ArrayView2<F>, bits: u8, method: QuantizationMethod) -> Array2<F>
 where
     F: Float + Debug + AsPrimitive<f32> + FromPrimitive,
     f32: AsPrimitive<F>,
 {
     // For Int4 and UInt4, we don't need the bits parameter
-    let (quantized, params) = quantize_matrix(_matrix, bits, method);
+    let (quantized, params) = quantize_matrix(matrix, bits, method);
     let dequantized = dequantize_matrix(&quantized, &params);
 
     // Convert back to original type
-    let mut result = Array2::zeros(_matrix.dim());
+    let mut result = Array2::zeros(matrix.dim());
     for (i, &val) in dequantized.iter().enumerate() {
         result.as_slice_mut().unwrap()[i] = F::from_f32(val).unwrap();
     }
@@ -2144,7 +2144,7 @@ mod tests {
             data.push((i % 15) as f32 - 7.0); // Values between -7 and 7
         }
 
-        let matrix = Array2::fromshape_vec((rows, cols), data).unwrap();
+        let matrix = Array2::from_shape_vec((rows, cols), data).unwrap();
 
         // Quantize with 8-bit
         let (quantized8, _) = quantize_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric);
@@ -2213,7 +2213,7 @@ mod tests {
             data.push((i % 1000) as f32 / 100.0); // Various values
         }
 
-        let matrix = Array2::fromshape_vec((rows, cols), data).unwrap();
+        let matrix = Array2::from_shape_vec((rows, cols), data).unwrap();
 
         // Test different quantization methods
         let (int8_matrix, _) = quantize_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric);

@@ -11,7 +11,7 @@ use std::hash::Hash;
 /// The diameter is the maximum shortest path distance between any two nodes in the graph.
 /// Returns None if the graph is disconnected.
 #[allow(dead_code)]
-pub fn diameter<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Option<f64>
+pub fn diameter<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Option<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight
@@ -25,7 +25,7 @@ where
         + Default,
     Ix: IndexType,
 {
-    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
 
     if n == 0 {
@@ -59,7 +59,7 @@ where
 /// is the maximum distance from that node to any other node.
 /// Returns None if the graph is disconnected.
 #[allow(dead_code)]
-pub fn radius<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Option<f64>
+pub fn radius<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Option<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight
@@ -73,7 +73,7 @@ where
         + Default,
     Ix: IndexType,
 {
-    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
 
     if n == 0 {
@@ -114,7 +114,7 @@ where
 /// Center nodes are those with minimum eccentricity (equal to the radius).
 /// Returns empty vector if the graph is disconnected.
 #[allow(dead_code)]
-pub fn center_nodes<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Vec<N>
+pub fn center_nodes<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<N>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight
@@ -128,7 +128,7 @@ where
         + Default,
     Ix: IndexType,
 {
-    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
 
     if n == 0 {

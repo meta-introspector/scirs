@@ -282,7 +282,7 @@ where
 
 /// Compute log of regularized incomplete gamma in log space to avoid overflow
 #[allow(dead_code)]
-fn compute_log_gammainc<T>(a: T, x: T, log_gamma_a: T) -> SpecialResult<T>
+fn compute_log_gammainc<T>(a: T, x: T, log_gammaa: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + AddAssign + MulAssign,
 {

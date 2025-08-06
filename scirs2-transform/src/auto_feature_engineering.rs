@@ -11,9 +11,9 @@ use std::collections::HashMap;
 #[cfg(feature = "auto-feature-engineering")]
 use std::collections::VecDeque;
 
+use statrs::statistics::Statistics;
 #[cfg(feature = "auto-feature-engineering")]
 use tch::{nn, Device, Tensor};
-use statrs::statistics::Statistics;
 
 /// Meta-features extracted from datasets for transformation selection
 #[derive(Debug, Clone)]
@@ -214,7 +214,7 @@ impl MetaLearningModel {
         Ok((input_tensor, target_tensor))
     }
 
-    fn meta_features_to_tensor(&self, meta_features: &DatasetMetaFeatures) -> Result<Tensor> {
+    fn meta_features_to_tensor(&self, metafeatures: &DatasetMetaFeatures) -> Result<Tensor> {
         // Apply same normalization as in training data preparation
         let _features = vec![
             (meta_features.n_samples as f64).ln().max(0.0),
@@ -230,7 +230,7 @@ impl MetaLearningModel {
         ];
 
         // Validate all _features are finite
-        if _features.iter().any(|&f| !f.is_finite()) {
+        if features.iter().any(|&f| !f.is_finite()) {
             return Err(TransformError::ComputationError(
                 "Non-finite values detected in meta-_features".to_string(),
             ));
@@ -305,7 +305,7 @@ impl MetaLearningModel {
         Ok(transformations)
     }
 
-    fn transformation_type_to_index(&self, t_type: &TransformationType) -> usize {
+    fn transformation_type_to_index(&self, ttype: &TransformationType) -> usize {
         match t_type {
             TransformationType::StandardScaler => 0,
             TransformationType::MinMaxScaler => 1,
@@ -335,7 +335,7 @@ impl MetaLearningModel {
         }
     }
 
-    fn get_default_parameters_for_type(&self, t_type: &TransformationType) -> HashMap<String, f64> {
+    fn get_default_parameters_for_type(&self, ttype: &TransformationType) -> HashMap<String, f64> {
         let mut params = HashMap::new();
         match t_type {
             TransformationType::PCA => {
@@ -1274,7 +1274,7 @@ impl AdvancedMetaLearningSystem {
 
             // Find nearest neighbor distance for data point
             let mut min_dist_w = f64::INFINITY;
-            for (i..row) in x.rows().enumerate() {
+            for (i, row) in x.rows().enumerate() {
                 if i != random_idx {
                     let dist = self.euclidean_distance_vec(&data_point, &row.to_vec());
                     min_dist_w = min_dist_w.min(dist);
@@ -1446,7 +1446,7 @@ impl AdvancedMetaLearningSystem {
             .sqrt()
     }
 
-    fn create_bins(&self, data: &ndarray::ArrayView1<f64>, n_bins: usize) -> Vec<f64> {
+    fn create_bins(&self, data: &ndarray::ArrayView1<f64>, nbins: usize) -> Vec<f64> {
         let mut sorted: Vec<f64> = data.iter().filter(|&&x| x.is_finite()).copied().collect();
         sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
@@ -1457,7 +1457,7 @@ impl AdvancedMetaLearningSystem {
         let mut _bins = Vec::new();
         for i in 0..=n_bins {
             let idx = (i * (sorted.len() - 1)) / n_bins;
-            _bins.push(sorted[idx]);
+            bins.push(sorted[idx]);
         }
         _bins
     }
@@ -2203,7 +2203,7 @@ impl AdvancedMetaLearningSystem {
     }
 
     /// Estimate interpretability score for a transformation
-    fn estimate_interpretability_score(&self, t_type: &TransformationType) -> f64 {
+    fn estimate_interpretability_score(&self, ttype: &TransformationType) -> f64 {
         match t_type {
             TransformationType::StandardScaler | TransformationType::MinMaxScaler => 0.9,
             TransformationType::RobustScaler => 0.85,

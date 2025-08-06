@@ -52,7 +52,7 @@ impl<A: Float + ScalarOperand + Debug> RMSprop<A> {
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(learningrate: A) -> Self {
         Self {
             learning_rate,
             rho: A::from(0.9).unwrap(),
@@ -70,9 +70,9 @@ impl<A: Float + ScalarOperand + Debug> RMSprop<A> {
     /// * `rho` - Decay rate for the moving average of squared gradients (default: 0.9)
     /// * `epsilon` - Small constant for numerical stability (default: 1e-8)
     /// * `weight_decay` - Weight decay factor for L2 regularization (default: 0.0)
-    pub fn new_with_config(_learning_rate: A, rho: A, epsilon: A, weight_decay: A) -> Self {
+    pub fn new_with_config(_learning_rate: A, rho: A, epsilon: A, weightdecay: A) -> Self {
         Self {
-            learning_rate: _learning_rate,
+            learning_rate: learning_rate,
             rho,
             epsilon,
             weight_decay,
@@ -103,7 +103,7 @@ impl<A: Float + ScalarOperand + Debug> RMSprop<A> {
     }
 
     /// Sets the weight decay parameter
-    pub fn set_weight_decay(&mut self, weight_decay: A) -> &mut Self {
+    pub fn set_weight_decay(&mut self, weightdecay: A) -> &mut Self {
         self.weight_decay = weight_decay;
         self
     }
@@ -172,7 +172,7 @@ where
         self.learning_rate
     }
 
-    fn set_learning_rate(&mut self, learning_rate: A) {
+    fn set_learning_rate(&mut self, learningrate: A) {
         self.learning_rate = learning_rate;
     }
 }

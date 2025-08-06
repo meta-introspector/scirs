@@ -77,7 +77,7 @@ fn main() -> Result<()> {
 
 /// Demonstrate progressive intelligence with increasing data complexity
 #[allow(dead_code)]
-fn demonstrate_progressive_intelligence(_coordinator: &mut AdvancedCoordinator) -> Result<()> {
+fn demonstrate_progressive_intelligence(coordinator: &mut AdvancedCoordinator) -> Result<()> {
     println!("🧠 Progressive Intelligence Testing");
     println!("==================================");
 
@@ -96,7 +96,7 @@ fn demonstrate_progressive_intelligence(_coordinator: &mut AdvancedCoordinator) 
         println!("   Data Size: {} bytes", data.len());
 
         let start_time = Instant::now();
-        let result = _coordinator.process_advanced_intelligent(&data)?;
+        let result = coordinator.process_advanced_intelligent(&data)?;
         let processing_time = start_time.elapsed();
 
         println!("   Strategy Used: {:?}", result.strategy_used);
@@ -122,7 +122,7 @@ fn demonstrate_progressive_intelligence(_coordinator: &mut AdvancedCoordinator) 
 
 /// Demonstrate multi-modal processing with strategy comparison
 #[allow(dead_code)]
-fn demonstrate_multi_modal_processing(_coordinator: &mut AdvancedCoordinator) -> Result<()> {
+fn demonstrate_multi_modal_processing(coordinator: &mut AdvancedCoordinator) -> Result<()> {
     println!("⚡ Multi-Modal Processing Comparison");
     println!("===================================");
 
@@ -139,7 +139,7 @@ fn demonstrate_multi_modal_processing(_coordinator: &mut AdvancedCoordinator) ->
         println!("🔄 Iteration {}/5", iteration);
 
         let start = Instant::now();
-        let result = _coordinator.process_advanced_intelligent(&test_data)?;
+        let result = coordinator.process_advanced_intelligent(&test_data)?;
         let total_time = start.elapsed();
 
         println!("   Strategy: {:?}", result.strategy_used);
@@ -177,7 +177,7 @@ fn demonstrate_multi_modal_processing(_coordinator: &mut AdvancedCoordinator) ->
 
 /// Demonstrate adaptive learning evolution over time
 #[allow(dead_code)]
-fn demonstrate_adaptive_learning_evolution(_coordinator: &mut AdvancedCoordinator) -> Result<()> {
+fn demonstrate_adaptive_learning_evolution(coordinator: &mut AdvancedCoordinator) -> Result<()> {
     println!("📚 Adaptive Learning Evolution");
     println!("=============================");
 
@@ -197,7 +197,7 @@ fn demonstrate_adaptive_learning_evolution(_coordinator: &mut AdvancedCoordinato
         println!("🎯 Workload: {}", workload_name);
 
         let start = Instant::now();
-        let result = _coordinator.process_advanced_intelligent(&data)?;
+        let result = coordinator.process_advanced_intelligent(&data)?;
         let processing_time = start.elapsed();
 
         let efficiency = result.efficiency_score;
@@ -249,7 +249,7 @@ fn demonstrate_adaptive_learning_evolution(_coordinator: &mut AdvancedCoordinato
 
 /// Demonstrate cross-domain intelligence transfer
 #[allow(dead_code)]
-fn demonstrate_cross_domain_intelligence(_coordinator: &mut AdvancedCoordinator) -> Result<()> {
+fn demonstrate_cross_domain_intelligence(coordinator: &mut AdvancedCoordinator) -> Result<()> {
     println!("🌐 Cross-Domain Intelligence Transfer");
     println!("====================================");
 
@@ -269,7 +269,7 @@ fn demonstrate_cross_domain_intelligence(_coordinator: &mut AdvancedCoordinator)
         println!("🔬 Domain: {}", domain_name);
 
         let start = Instant::now();
-        let result = _coordinator.process_advanced_intelligent(&data)?;
+        let result = coordinator.process_advanced_intelligent(&data)?;
         let processing_time = start.elapsed();
 
         domain_performances.push((domain_name, result.efficiency_score, result.strategy_used));
@@ -322,7 +322,7 @@ fn demonstrate_cross_domain_intelligence(_coordinator: &mut AdvancedCoordinator)
 
 /// Demonstrate emergent behavior detection
 #[allow(dead_code)]
-fn demonstrate_emergent_behavior_detection(_coordinator: &mut AdvancedCoordinator) -> Result<()> {
+fn demonstrate_emergent_behavior_detection(coordinator: &mut AdvancedCoordinator) -> Result<()> {
     println!("🚀 Emergent Behavior Detection");
     println!("==============================");
 
@@ -344,7 +344,7 @@ fn demonstrate_emergent_behavior_detection(_coordinator: &mut AdvancedCoordinato
         println!("🧪 Challenge: {}", challenge_name);
 
         let start = Instant::now();
-        let result = _coordinator.process_advanced_intelligent(&data)?;
+        let result = coordinator.process_advanced_intelligent(&data)?;
         let processing_time = start.elapsed();
 
         println!("   Processing Time: {:.2} ms", processing_time.as_millis());
@@ -398,7 +398,7 @@ fn demonstrate_emergent_behavior_detection(_coordinator: &mut AdvancedCoordinato
 
 /// Demonstrate real-world performance analysis
 #[allow(dead_code)]
-fn demonstrate_real_world_performance(_coordinator: &mut AdvancedCoordinator) -> Result<()> {
+fn demonstrate_real_world_performance(coordinator: &mut AdvancedCoordinator) -> Result<()> {
     println!("🏭 Real-World Performance Analysis");
     println!("==================================");
 
@@ -442,7 +442,7 @@ fn demonstrate_real_world_performance(_coordinator: &mut AdvancedCoordinator) ->
         println!("   Data Size: {:.2} KB", data.len() as f32 / 1024.0);
 
         let start = Instant::now();
-        let result = _coordinator.process_advanced_intelligent(&data)?;
+        let result = coordinator.process_advanced_intelligent(&data)?;
         let processing_time = start.elapsed();
 
         total_data_processed += data.len();
@@ -513,11 +513,11 @@ fn demonstrate_real_world_performance(_coordinator: &mut AdvancedCoordinator) ->
 
 /// Display final comprehensive statistics
 #[allow(dead_code)]
-fn display_final_statistics(_coordinator: &AdvancedCoordinator) -> Result<()> {
+fn display_final_statistics(coordinator: &AdvancedCoordinator) -> Result<()> {
     println!("📈 Final advanced Statistics");
     println!("==============================");
 
-    let stats = _coordinator.get_comprehensive_statistics()?;
+    let stats = coordinator.get_comprehensive_statistics()?;
 
     println!("🧠 Neural Adaptation System:");
     println!(
@@ -608,12 +608,12 @@ fn display_final_statistics(_coordinator: &AdvancedCoordinator) -> Result<()> {
 // Data generation functions for various scenarios
 
 #[allow(dead_code)]
-fn generate_simple_pattern(_size: usize) -> Vec<u8> {
+fn generate_simple_pattern(size: usize) -> Vec<u8> {
     (0.._size).map(|i| (i % 16) as u8).collect()
 }
 
 #[allow(dead_code)]
-fn generate_complex_structure(_size: usize) -> Vec<u8> {
+fn generate_complex_structure(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let base = (i as f32 * 0.1).sin() * 127.0 + 128.0;
@@ -624,12 +624,12 @@ fn generate_complex_structure(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_random_entropy(_size: usize) -> Vec<u8> {
+fn generate_random_entropy(size: usize) -> Vec<u8> {
     (0.._size).map(|i| ((i * 157 + 73) % 256) as u8).collect()
 }
 
 #[allow(dead_code)]
-fn generate_hybrid_dataset(_size: usize) -> Vec<u8> {
+fn generate_hybrid_dataset(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             if i % 3 == 0 {
@@ -644,7 +644,7 @@ fn generate_hybrid_dataset(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_advanced_complex_data(_size: usize) -> Vec<u8> {
+fn generate_advanced_complex_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let fractal =
@@ -657,14 +657,14 @@ fn generate_advanced_complex_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_benchmark_dataset(_size: usize) -> Vec<u8> {
+fn generate_benchmark_dataset(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| ((i * 31 + i * i + 17) % 256) as u8)
         .collect()
 }
 
 #[allow(dead_code)]
-fn generate_cpu_intensive_data(_size: usize) -> Vec<u8> {
+fn generate_cpu_intensive_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let complex_calc =
@@ -675,18 +675,18 @@ fn generate_cpu_intensive_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_memory_heavy_data(_size: usize) -> Vec<u8> {
+fn generate_memory_heavy_data(size: usize) -> Vec<u8> {
     let pattern = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     (0.._size).map(|i| pattern[i % pattern.len()]).collect()
 }
 
 #[allow(dead_code)]
-fn generate_io_bound_data(_size: usize) -> Vec<u8> {
+fn generate_io_bound_data(size: usize) -> Vec<u8> {
     (0.._size).map(|i| ((i / 100) % 256) as u8).collect()
 }
 
 #[allow(dead_code)]
-fn generate_balanced_workload(_size: usize) -> Vec<u8> {
+fn generate_balanced_workload(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let balanced = (i % 128) as f32 + (i as f32 * 0.01).sin() * 50.0;
@@ -696,7 +696,7 @@ fn generate_balanced_workload(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_gpu_optimal_data(_size: usize) -> Vec<u8> {
+fn generate_gpu_optimal_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let parallel = (i as f32 * 0.1).sin() * (i as f32 * 0.2).cos() * 127.0 + 128.0;
@@ -706,7 +706,7 @@ fn generate_gpu_optimal_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_scientific_domain_data(_size: usize) -> Vec<u8> {
+fn generate_scientific_domain_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let measurement = (i as f32 * 0.01).exp().ln() * 50.0 + 100.0;
@@ -716,7 +716,7 @@ fn generate_scientific_domain_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_financial_domain_data(_size: usize) -> Vec<u8> {
+fn generate_financial_domain_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let price = 100.0 + (i as f32 * 0.1).sin() * 20.0 + ((i * 7) % 10) as f32;
@@ -726,7 +726,7 @@ fn generate_financial_domain_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_image_domain_data(_size: usize) -> Vec<u8> {
+fn generate_image_domain_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let pixel = ((i % 256) as f32 * 0.8) + ((i / 256) % 256) as f32 * 0.2;
@@ -736,7 +736,7 @@ fn generate_image_domain_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generatetext_domain_data(_size: usize) -> Vec<u8> {
+fn generatetext_domain_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let char_code = (i % 94) + 32; // Printable ASCII
@@ -746,7 +746,7 @@ fn generatetext_domain_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_sensor_domain_data(_size: usize) -> Vec<u8> {
+fn generate_sensor_domain_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let sensor_reading = (i as f32 * 0.1).sin() * 100.0 + 128.0 + ((i * 3) % 20) as f32;
@@ -756,7 +756,7 @@ fn generate_sensor_domain_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_fractal_pattern_data(_size: usize) -> Vec<u8> {
+fn generate_fractal_pattern_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let x = (i as f32) / (_size as f32) * 4.0 - 2.0;
@@ -767,7 +767,7 @@ fn generate_fractal_pattern_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_chaotic_series_data(_size: usize) -> Vec<u8> {
+fn generate_chaotic_series_data(size: usize) -> Vec<u8> {
     let mut chaos = 0.5;
     (0.._size)
         .map(|_| {
@@ -778,7 +778,7 @@ fn generate_chaotic_series_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_quantum_like_data(_size: usize) -> Vec<u8> {
+fn generate_quantum_like_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let wave1 = (i as f32 * 0.1).sin();
@@ -790,7 +790,7 @@ fn generate_quantum_like_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_adaptive_pattern_data(_size: usize) -> Vec<u8> {
+fn generate_adaptive_pattern_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let adaptation = (i as f32 / 1000.0).tanh() * (i as f32 * 0.05).sin() * 127.0 + 128.0;
@@ -800,7 +800,7 @@ fn generate_adaptive_pattern_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_evolution_trigger_data(_size: usize) -> Vec<u8> {
+fn generate_evolution_trigger_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let evolution = if i % 1000 < 100 {
@@ -814,7 +814,7 @@ fn generate_evolution_trigger_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_database_export_data(_size: usize) -> Vec<u8> {
+fn generate_database_export_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             if i % 50 < 10 {
@@ -829,7 +829,7 @@ fn generate_database_export_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_log_analysis_data(_size: usize) -> Vec<u8> {
+fn generate_log_analysis_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             if i % 100 < 20 {
@@ -844,7 +844,7 @@ fn generate_log_analysis_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_backup_process_data(_size: usize) -> Vec<u8> {
+fn generate_backup_process_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let backup_chunk = ((i / 1024) % 256) as u8;
@@ -855,7 +855,7 @@ fn generate_backup_process_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_ml_dataset_data(_size: usize) -> Vec<u8> {
+fn generate_ml_dataset_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let feature = (i as f32 / 100.0).sin() * (i as f32 / 200.0).cos() * 127.0 + 128.0;
@@ -866,7 +866,7 @@ fn generate_ml_dataset_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_realtime_stream_data(_size: usize) -> Vec<u8> {
+fn generate_realtime_stream_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let timestamp_factor = (i as f32 / 1000.0).sin() * 50.0;

@@ -97,7 +97,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 /// Simulate training a simple neural network model for the XOR problem
 #[allow(dead_code)]
 fn simulate_model_training(
-    _x: &Array2<f64>, _y: &Array1<f64>,
+    _x: &Array2<f64>,
+    _y: &Array1<f64>,
     learning_rate: f64,
     hidden_size: usize,
     num_epochs: usize,

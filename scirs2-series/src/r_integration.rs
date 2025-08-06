@@ -197,7 +197,7 @@ pub unsafe extern "C" fn scirs_create_timeseries(
 /// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_free_timeseries(_ts: *mut RTimeSeries) {
+pub unsafe extern "C" fn scirs_free_timeseries(ts: *mut RTimeSeries) {
     if !_ts.is_null() {
         unsafe {
             let ts_box = Box::from_raw(_ts);
@@ -299,8 +299,8 @@ pub unsafe extern "C" fn scirs_calculate_statistics(
 /// - The structure remains valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_is_stationary(_ts: *const RTimeSeries) -> c_int {
-    if _ts.is_null() {
+pub unsafe extern "C" fn scirs_is_stationary(ts: *const RTimeSeries) -> c_int {
+    if ts.is_null() {
         return R_ERROR_INVALID_PARAMS;
     }
 
@@ -400,9 +400,9 @@ pub extern "C" fn scirs_create_arima(
         Ok(model) => {
             let r_model = Box::new(RARIMAModel {
                 handle: Box::into_raw(Box::new(model)) as *mut c_void,
-                _p,
-                _d,
-                _q,
+                p,
+                d,
+                q,
                 seasonal_p,
                 seasonal_d,
                 seasonal_q,
@@ -423,8 +423,8 @@ pub extern "C" fn scirs_create_arima(
 /// - Both structures remain valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_fit_arima(_model: *mut RARIMAModel, ts: *const RTimeSeries) -> c_int {
-    if _model.is_null() || ts.is_null() {
+pub unsafe extern "C" fn scirs_fit_arima(model: *mut RARIMAModel, ts: *const RTimeSeries) -> c_int {
+    if model.is_null() || ts.is_null() {
         return R_ERROR_INVALID_PARAMS;
     }
 
@@ -555,7 +555,7 @@ pub unsafe extern "C" fn scirs_get_arima_params(
 /// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_free_arima(_model: *mut RARIMAModel) {
+pub unsafe extern "C" fn scirs_free_arima(model: *mut RARIMAModel) {
     if !_model.is_null() {
         unsafe {
             let model_box = Box::from_raw(_model);
@@ -631,7 +631,7 @@ pub unsafe extern "C" fn scirs_detect_anomalies_iqr(
                 let anomaly_count = std::cmp::min(_anomalies.len(), max_anomalies as usize);
                 let indices_slice = slice::from_raw_parts_mut(anomaly_indices, anomaly_count);
 
-                for (i, &idx) in _anomalies.iter().take(anomaly_count).enumerate() {
+                for (i, &idx) in anomalies.iter().take(anomaly_count).enumerate() {
                     indices_slice[i] = idx as c_int;
                 }
 
@@ -692,7 +692,7 @@ pub unsafe extern "C" fn scirs_detect_anomalies_zscore(
                 let anomaly_count = std::cmp::min(_anomalies.len(), max_anomalies as usize);
                 let indices_slice = slice::from_raw_parts_mut(anomaly_indices, anomaly_count);
 
-                for (i, &idx) in _anomalies.iter().take(anomaly_count).enumerate() {
+                for (i, &idx) in anomalies.iter().take(anomaly_count).enumerate() {
                     indices_slice[i] = idx as c_int;
                 }
 
@@ -712,7 +712,7 @@ pub unsafe extern "C" fn scirs_detect_anomalies_zscore(
 /// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_free_anomaly_detector(_detector: *mut RAnomalyDetector) {
+pub unsafe extern "C" fn scirs_free_anomaly_detector(detector: *mut RAnomalyDetector) {
     if !_detector.is_null() {
         unsafe {
             let _detector_box = Box::from_raw(_detector);
@@ -729,7 +729,7 @@ pub unsafe extern "C" fn scirs_free_anomaly_detector(_detector: *mut RAnomalyDet
 /// Create STL decomposition
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_create_stl_decomposition(_period: c_int) -> *mut RSTLDecomposition {
+pub extern "C" fn scirs_create_stl_decomposition(period: c_int) -> *mut RSTLDecomposition {
     if _period <= 0 {
         return std::ptr::null_mut();
     }
@@ -739,7 +739,7 @@ pub extern "C" fn scirs_create_stl_decomposition(_period: c_int) -> *mut RSTLDec
     let stl_options = STLOptions::default();
     let r_decomposition = Box::new(RSTLDecomposition {
         handle: Box::into_raw(Box::new(stl_options)) as *mut c_void,
-        _period,
+        period,
     });
     Box::into_raw(r_decomposition)
 }
@@ -815,7 +815,7 @@ pub unsafe extern "C" fn scirs_decompose_stl(
 /// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_free_stl_decomposition(_decomposition: *mut RSTLDecomposition) {
+pub unsafe extern "C" fn scirs_free_stl_decomposition(decomposition: *mut RSTLDecomposition) {
     if !_decomposition.is_null() {
         unsafe {
             let decomp_box = Box::from_raw(_decomposition);
@@ -836,7 +836,7 @@ pub unsafe extern "C" fn scirs_free_stl_decomposition(_decomposition: *mut RSTLD
 /// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_free_decomposition_result(_result: *mut RDecompositionResult) {
+pub unsafe extern "C" fn scirs_free_decomposition_result(result: *mut RDecompositionResult) {
     if !_result.is_null() {
         unsafe {
             let result_ref = &*_result;
@@ -1084,7 +1084,7 @@ pub unsafe extern "C" fn scirs_forecast_neural(
 /// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_free_neural_forecaster(_forecaster: *mut RNeuralForecaster) {
+pub unsafe extern "C" fn scirs_free_neural_forecaster(forecaster: *mut RNeuralForecaster) {
     if !_forecaster.is_null() {
         unsafe {
             let forecaster_box = Box::from_raw(_forecaster);

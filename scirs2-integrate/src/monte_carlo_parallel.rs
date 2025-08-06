@@ -58,12 +58,12 @@ impl<F: IntegrateFloat> Default for ParallelMonteCarloOptions<F> {
 
 /// Convert regular MonteCarloOptions to ParallelMonteCarloOptions
 impl<F: IntegrateFloat> From<MonteCarloOptions<F>> for ParallelMonteCarloOptions<F> {
-    fn from(_opts: MonteCarloOptions<F>) -> Self {
+    fn from(opts: MonteCarloOptions<F>) -> Self {
         Self {
-            n_samples: _opts.n_samples,
-            seed: _opts.seed,
-            error_method: _opts.error_method,
-            use_antithetic: _opts.use_antithetic,
+            n_samples: opts.n_samples,
+            seed: opts.seed,
+            error_method: opts.error_method,
+            use_antithetic: opts.use_antithetic,
             n_threads: None,
             batch_size: 1000,
             use_chunking: true,

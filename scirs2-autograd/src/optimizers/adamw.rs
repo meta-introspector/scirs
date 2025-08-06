@@ -2,7 +2,7 @@
 
 use crate::optimizers::Optimizer;
 use crate::tensor::Tensor;
-use crate::tensor__ops::gradient_descent_ops::adamw;
+use crate::tensor_ops::gradient_descent_ops::adamw;
 use crate::variable::VariableID;
 use crate::{Context, Float, VariableEnvironment};
 
@@ -18,7 +18,7 @@ use crate::{Context, Float, VariableEnvironment};
 /// use ag::prelude::*;
 /// use ag::optimizers::AdamW;
 /// use ag::variable::NamespaceTrait;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// // Define parameters to optimize.
 /// let mut env = ag::VariableEnvironment::new();
@@ -227,7 +227,7 @@ impl<F: Float> Optimizer<F> for AdamW<F> {
             eprintln!("Created AdamWOp with all 5 inputs");
 
             // Add the updated parameter to the result
-            ret.push(adamwop);
+            ret.push(adamw_op);
         }
         ret
     }

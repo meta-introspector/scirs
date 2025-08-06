@@ -700,7 +700,7 @@ println!("Analysis complete: {} regions found", regions.len());
         Ok(())
     }
 
-    pub fn generate_html_documentation(&self, output_dir: &str) -> Result<()> {
+    pub fn generate_html_documentation(&self, outputdir: &str) -> Result<()> {
         let output_path = Path::new(output_dir);
         fs::create_dir_all(output_path)?;
 
@@ -725,7 +725,7 @@ println!("Analysis complete: {} regions found", regions.len());
         Ok(())
     }
 
-    fn generate_index_page(&self, output_path: &Path) -> Result<()> {
+    fn generate_index_page(&self, outputpath: &Path) -> Result<()> {
         let index_html = format!(
             r#"
 <!DOCTYPE html>
@@ -870,7 +870,7 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
             .join("")
     }
 
-    fn generate_api_documentation(&self, output_path: &Path) -> Result<()> {
+    fn generate_api_documentation(&self, outputpath: &Path) -> Result<()> {
         let api_dir = output_path.join("api");
         fs::create_dir_all(&api_dir)?;
 
@@ -1122,7 +1122,7 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
             .join("")
     }
 
-    fn generate_tutorials(&self, output_path: &Path) -> Result<()> {
+    fn generate_tutorials(&self, outputpath: &Path) -> Result<()> {
         let tutorials_dir = output_path.join("tutorials");
         fs::create_dir_all(&tutorials_dir)?;
 
@@ -1316,7 +1316,7 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
         result
     }
 
-    fn generate_examples(&self, output_path: &Path) -> Result<()> {
+    fn generate_examples(&self, outputpath: &Path) -> Result<()> {
         let examples_dir = output_path.join("examples");
         fs::create_dir_all(&examples_dir)?;
 
@@ -1505,7 +1505,7 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
         )
     }
 
-    fn generate_search_index(&self, output_path: &Path) -> Result<()> {
+    fn generate_search_index(&self, outputpath: &Path) -> Result<()> {
         // Generate search index JSON
         let mut search_index = HashMap::new();
 
@@ -1625,7 +1625,7 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
         )
     }
 
-    fn generate_static_files(&self, output_path: &Path) -> Result<()> {
+    fn generate_static_files(&self, outputpath: &Path) -> Result<()> {
         let static_dir = output_path.join("static");
         fs::create_dir_all(&static_dir)?;
 
@@ -1704,7 +1704,7 @@ document.addEventListener('DOMContentLoaded', function() {
         Ok(())
     }
 
-    pub fn generate_readme(&self, output_path: &Path) -> Result<()> {
+    pub fn generate_readme(&self, outputpath: &Path) -> Result<()> {
         let readme_content = format!(
             r#"# {} - Documentation Website
 
@@ -2453,7 +2453,7 @@ pub fn export_documentation_to_formats() -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn export_to_markdown(_doc_site: &DocumentationSite) -> Result<()> {
+fn export_to_markdown(_docsite: &DocumentationSite) -> Result<()> {
     let mut markdown = String::new();
 
     markdown.push_str(&format!("# {}\n\n", doc_site.title));
@@ -2477,7 +2477,7 @@ fn export_to_markdown(_doc_site: &DocumentationSite) -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn export_to_json(_doc_site: &DocumentationSite) -> Result<()> {
+fn export_to_json(_docsite: &DocumentationSite) -> Result<()> {
     let json_data = serde_json::to_string_pretty(_doc_site)?;
     let mut file = fs::File::create("docs/documentation.json")?;
     file.write_all(json_data.as_bytes())?;

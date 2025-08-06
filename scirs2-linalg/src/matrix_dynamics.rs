@@ -196,7 +196,7 @@ pub fn matrix_exp_action<F>(
 where
     F: Float + NumAssign + Sum + Send + Sync + 'static + ndarray::ScalarOperand,
 {
-    let (n, _k) = b.dim();
+    let (n, k) = b.dim();
     if a.nrows() != n || a.ncols() != n {
         return Err(LinalgError::DimensionError(
             "Matrix A must be square and compatible with B".to_string(),
@@ -456,7 +456,8 @@ where
 #[allow(dead_code)]
 fn lyapunov_direct<F>(
     a: &ArrayView2<F>,
-    c: &ArrayView2<F>, _config: &DynamicsConfig,
+    c: &ArrayView2<F>,
+    _config: &DynamicsConfig,
 ) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + 'static + ndarray::ScalarOperand,
@@ -604,7 +605,8 @@ fn riccati_hamiltonian<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
     q: &ArrayView2<F>,
-    r: &ArrayView2<F>, _config: &DynamicsConfig,
+    r: &ArrayView2<F>,
+    _config: &DynamicsConfig,
 ) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + 'static + ndarray::ScalarOperand,
@@ -1067,13 +1069,13 @@ mod tests {
     fn test_stability_analysis() {
         // Test stable system
         let a_stable = array![[-1.0, 1.0], [0.0, -2.0]]; // Upper triangular, stable
-        let (stable, _eigenvalues, margin) = stability_analysis(&a_stable.view()).unwrap();
+        let (stable, eigenvalues, margin) = stability_analysis(&a_stable.view()).unwrap();
         assert!(stable);
         assert!(margin < 0.0);
 
         // Test unstable system
         let a_unstable = array![[1.0, 0.0], [0.0, -1.0]]; // One positive eigenvalue
-        let (stable, _eigenvalues, margin) = stability_analysis(&a_unstable.view()).unwrap();
+        let (stable, eigenvalues, margin) = stability_analysis(&a_unstable.view()).unwrap();
         assert!(!stable);
         assert!(margin > 0.0);
     }

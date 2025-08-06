@@ -98,7 +98,7 @@ pub fn lu<F: Float + Debug + Send + Sync + 'static>(
         // We'll implement a simplified version that only computes gradients for U
         let backward_u = if requires_grad {
             Some(
-                Box::new(move |grad_u: ndarray::Array<F, ndarray::IxDyn>| -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> {
+                Box::new(move |gradu: ndarray::Array<F, ndarray::IxDyn>| -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> {
                     // Simplified gradient approximation for small matrices
                     // For a proper implementation, see https://people.maths.ox.ac.uk/gilesm/files/NA-08-01.pdf
 
@@ -207,7 +207,7 @@ pub fn qr<F: Float + Debug + Send + Sync + 'static>(
         // This is a simplified implementation
         let backward_r = if requires_grad {
             Some(
-                Box::new(move |grad_r: ndarray::Array<F, ndarray::IxDyn>| -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> {
+                Box::new(move |gradr: ndarray::Array<F, ndarray::IxDyn>| -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> {
                     // Simplified gradient approximation
                     // dA = dQ * R^T + Q * dR^T
                     // Here we're assuming dQ = 0 for simplicity
@@ -335,7 +335,7 @@ pub fn cholesky<F: Float + Debug + Send + Sync + 'static>(
         // Backward function for gradient computation
         let backward = if requires_grad {
             Some(
-                Box::new(move |grad_l: ndarray::Array<F, ndarray::IxDyn>| -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> {
+                Box::new(move |gradl: ndarray::Array<F, ndarray::IxDyn>| -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> {
                     // Gradient of Cholesky decomposition
                     // See "Matrix Differential Calculus with Applications in Statistics and Econometrics"
 

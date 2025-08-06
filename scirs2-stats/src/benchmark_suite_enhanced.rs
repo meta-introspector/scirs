@@ -883,7 +883,7 @@ struct PerformanceMLModel {
 
 impl PerformanceMLModel {
     #[allow(dead_code)]
-    fn new(model_type: MLModelType) -> Self {
+    fn new(modeltype: MLModelType) -> Self {
         Self {
             model_type,
             trained: false,

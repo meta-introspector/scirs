@@ -114,12 +114,12 @@ impl Default for EdgeDetectionConfig {
 /// let edge_magnitudes = edge_detector(&image, custom_config).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn edge_detector(_image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Array<f32, Ix2> {
+pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Array<f32, Ix2> {
     match config.algorithm {
         EdgeDetectionAlgorithm::Canny => {
             // Already returns f32 values, so we just return it as is
             canny_impl(
-                _image,
+                image,
                 config.sigma,
                 config.low_threshold,
                 config.high_threshold,
@@ -129,7 +129,7 @@ pub fn edge_detector(_image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> A
         }
         EdgeDetectionAlgorithm::LoG => {
             let edges = laplacian_edges_impl(
-                _image,
+                image,
                 config.sigma,
                 config.low_threshold,
                 config.border_mode,
@@ -146,7 +146,7 @@ pub fn edge_detector(_image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> A
         }
         EdgeDetectionAlgorithm::Gradient => {
             let edges = gradient_edges_impl(
-                _image,
+                image,
                 config.gradient_method,
                 config.sigma,
                 config.border_mode,
@@ -452,7 +452,7 @@ fn get_gradient_neighbors(
 
 /// Helper function to check if a pixel is connected to a strong edge
 #[allow(dead_code)]
-fn is_connected_to_strong_edge(_row: usize, col: usize, edges: &Array<f32, Ix2>) -> bool {
+fn is_connected_to_strong_edge(row: usize, col: usize, edges: &Array<f32, Ix2>) -> bool {
     let shape = edges.dim();
 
     for i in (_row.saturating_sub(1))..=(_row + 1).min(shape.0 - 1) {
@@ -688,7 +688,7 @@ fn gradient_edges_impl(
 ///
 /// * Result containing the magnitude of edges
 #[allow(dead_code)]
-pub fn sobel_edges(_image: &ArrayD<f32>) -> NdimageResult<ArrayD<f32>> {
+pub fn sobel_edges(image: &ArrayD<f32>) -> NdimageResult<ArrayD<f32>> {
     edge_detector_simple(_image, Some(GradientMethod::Sobel), None)
 }
 

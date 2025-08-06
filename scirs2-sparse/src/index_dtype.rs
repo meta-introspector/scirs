@@ -108,7 +108,7 @@ pub fn get_index_dtype(shape: (usize, usize), idx_arrays: &[ArrayView1<usize>]) 
 /// assert!(result.is_err());
 /// ```
 #[allow(dead_code)]
-pub fn safely_cast_index_arrays<T>(_arrays: &[ArrayView1<usize>]) -> SparseResult<Vec<Array1<T>>>
+pub fn safely_cast_index_arrays<T>(arrays: &[ArrayView1<usize>]) -> SparseResult<Vec<Array1<T>>>
 where
     T: PrimInt + 'static + TryFrom<usize>,
     <T as TryFrom<usize>>::Error: std::fmt::Debug,
@@ -159,12 +159,12 @@ where
 /// `true` if all values in the array can be represented in the target type,
 /// `false` otherwise.
 #[allow(dead_code)]
-pub fn can_cast_safely<T>(_array: ArrayView1<usize>) -> bool
+pub fn can_cast_safely<T>(array: ArrayView1<usize>) -> bool
 where
     T: PrimInt + 'static + TryFrom<usize>,
     <T as TryFrom<usize>>::Error: std::fmt::Debug,
 {
-    for &val in _array.iter() {
+    for &val in array.iter() {
         if T::try_from(val).is_err() {
             return false;
         }

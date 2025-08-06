@@ -1,6 +1,6 @@
 //! Comprehensive tests for linear algebra operations with autodiff support
 
-use ag::tensor__ops::*;
+use ag::tensor_ops::*;
 use approx::assert_relative_eq;
 use ndarray::array;
 use scirs2_autograd as ag;

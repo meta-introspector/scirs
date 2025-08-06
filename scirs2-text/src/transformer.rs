@@ -243,7 +243,7 @@ pub struct PositionalEncoding {
 
 impl PositionalEncoding {
     /// Create new positional encoding
-    pub fn new(_max_len: usize, d_model: usize) -> Self {
+    pub fn new(_max_len: usize, dmodel: usize) -> Self {
         let mut encodings = Array2::<f64>::zeros((_max_len, d_model));
 
         for pos in 0.._max_len {
@@ -264,7 +264,7 @@ impl PositionalEncoding {
     }
 
     /// Get position encoding for given sequence length
-    pub fn get_encoding(&self, seq_len: usize) -> Result<ArrayView2<f64>> {
+    pub fn get_encoding(&self, seqlen: usize) -> Result<ArrayView2<f64>> {
         if seq_len > self.max_len {
             return Err(TextError::InvalidInput(format!(
                 "Sequence length {} exceeds maximum {}",
@@ -288,7 +288,7 @@ pub struct MultiHeadAttention {
 
 impl MultiHeadAttention {
     /// Create new multi-head attention layer
-    pub fn new(d_model: usize, n_heads: usize) -> Result<Self> {
+    pub fn new(d_model: usize, nheads: usize) -> Result<Self> {
         if d_model % n_heads != 0 {
             return Err(TextError::InvalidInput(
                 "d_model must be divisible by n_heads".to_string(),
@@ -301,13 +301,13 @@ impl MultiHeadAttention {
         let scale = (2.0 / d_model as f64).sqrt();
 
         let w_q =
-            Array2::fromshape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
+            Array2::from_shape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
         let w_k =
-            Array2::fromshape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
+            Array2::from_shape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
         let w_v =
-            Array2::fromshape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
+            Array2::from_shape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
         let w_o =
-            Array2::fromshape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
+            Array2::from_shape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
 
         Ok(Self {
             d_model,
@@ -347,7 +347,7 @@ impl MultiHeadAttention {
         let attention_weights = self.softmax_2d(&masked_scores)?;
 
         // Apply attention to values
-        Ok(attention_weights.dot(&v))
+        Ok(attentionweights.dot(&v))
     }
 
     /// Apply softmax to 2D array along last axis
@@ -406,7 +406,7 @@ impl MultiHeadAttention {
 
     /// Reshape tensor for multi-head attention
     fn reshape_for_heads(&self, x: &Array2<f64>) -> Result<Array3<f64>> {
-        let (seq_len, _d_model) = x.dim();
+        let (seq_len, d_model) = x.dim();
         let reshaped = x
             .clone()
             .intoshape_with_order((seq_len, self.n_heads, self.d_k))
@@ -478,11 +478,11 @@ pub struct FeedForward {
 
 impl FeedForward {
     /// Create new feed-forward layer
-    pub fn new(_d_model: usize, d_ff: usize) -> Self {
+    pub fn new(_d_model: usize, dff: usize) -> Self {
         let scale = (2.0 / _d_model as f64).sqrt();
 
-        let w1 = Array2::fromshape_fn((_d_model, d_ff), |_| rand::rng().gen_range(-scale..scale));
-        let w2 = Array2::fromshape_fn((d_ff, _d_model), |_| rand::rng().gen_range(-scale..scale));
+        let w1 = Array2::from_shape_fn((_d_model, d_ff), |_| rand::rng().gen_range(-scale..scale));
+        let w2 = Array2::from_shape_fn((d_ff, d_model), |_| rand::rng().gen_range(-scale..scale));
         let b1 = Array1::zeros(d_ff);
         let b2 = Array1::zeros(_d_model);
 
@@ -545,7 +545,7 @@ pub struct LayerNorm {
 
 impl LayerNorm {
     /// Create new layer normalization
-    pub fn new(_d_model: usize, eps: f64) -> Self {
+    pub fn new(_dmodel: usize, eps: f64) -> Self {
         Self {
             gamma: Array1::ones(_d_model),
             beta: Array1::zeros(_d_model),
@@ -607,13 +607,13 @@ pub struct TransformerEncoderLayer {
 
 impl TransformerEncoderLayer {
     /// Create new transformer encoder layer
-    pub fn new(_config: &TransformerConfig) -> Result<Self> {
+    pub fn new(config: &TransformerConfig) -> Result<Self> {
         Ok(Self {
-            self_attention: MultiHeadAttention::new(_config.d_model, _config.n_heads)?,
-            feed_forward: FeedForward::new(_config.d_model, _config.d_ff),
+            self_attention: MultiHeadAttention::new(_config.d_model, config.n_heads)?,
+            feed_forward: FeedForward::new(_config.d_model, config.d_ff),
             norm1: LayerNorm::new(_config.d_model, 1e-6),
             norm2: LayerNorm::new(_config.d_model, 1e-6),
-            dropout: _config.dropout,
+            dropout: config.dropout,
         })
     }
 
@@ -671,18 +671,18 @@ pub struct TransformerEncoder {
 
 impl TransformerEncoder {
     /// Create new transformer encoder
-    pub fn new(_config: TransformerConfig) -> Result<Self> {
+    pub fn new(config: TransformerConfig) -> Result<Self> {
         let mut layers = Vec::new();
         for _ in 0.._config.n_encoder_layers {
             layers.push(TransformerEncoderLayer::new(&_config)?);
         }
 
-        let position_encoding = PositionalEncoding::new(_config.max_seq_len, _config.d_model);
+        let position_encoding = PositionalEncoding::new(_config.max_seq_len, config.d_model);
 
         Ok(Self {
             layers,
             position_encoding,
-            _config,
+            config,
         })
     }
 
@@ -736,15 +736,15 @@ pub struct TransformerDecoderLayer {
 
 impl TransformerDecoderLayer {
     /// Create new decoder layer
-    pub fn new(_config: &TransformerConfig) -> Result<Self> {
+    pub fn new(config: &TransformerConfig) -> Result<Self> {
         Ok(Self {
-            self_attention: MultiHeadAttention::new(_config.d_model, _config.n_heads)?,
-            cross_attention: MultiHeadAttention::new(_config.d_model, _config.n_heads)?,
-            feed_forward: FeedForward::new(_config.d_model, _config.d_ff),
+            self_attention: MultiHeadAttention::new(_config.d_model, config.n_heads)?,
+            cross_attention: MultiHeadAttention::new(_config.d_model, config.n_heads)?,
+            feed_forward: FeedForward::new(_config.d_model, config.d_ff),
             norm1: LayerNorm::new(_config.d_model, 1e-6),
             norm2: LayerNorm::new(_config.d_model, 1e-6),
             norm3: LayerNorm::new(_config.d_model, 1e-6),
-            dropout: _config.dropout,
+            dropout: config.dropout,
         })
     }
 
@@ -786,18 +786,18 @@ pub struct TransformerDecoder {
 
 impl TransformerDecoder {
     /// Create new decoder
-    pub fn new(_config: TransformerConfig) -> Result<Self> {
+    pub fn new(config: TransformerConfig) -> Result<Self> {
         let mut layers = Vec::new();
         for _ in 0.._config.n_decoder_layers {
             layers.push(TransformerDecoderLayer::new(&_config)?);
         }
 
-        let position_encoding = PositionalEncoding::new(_config.max_seq_len, _config.d_model);
+        let position_encoding = PositionalEncoding::new(_config.max_seq_len, config.d_model);
 
         Ok(Self {
             layers,
             position_encoding,
-            _config,
+            config,
         })
     }
 
@@ -838,21 +838,21 @@ pub struct TokenEmbedding {
 
 impl TokenEmbedding {
     /// Create new token embedding layer
-    pub fn new(_vocab_size: usize, d_model: usize) -> Self {
+    pub fn new(_vocab_size: usize, dmodel: usize) -> Self {
         let scale = (1.0 / d_model as f64).sqrt();
-        let embeddings = Array2::fromshape_fn((_vocab_size, d_model), |_| {
+        let embeddings = Array2::from_shape_fn((_vocab_size, d_model), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
         Self {
             embeddings,
-            vocab_size: _vocab_size,
+            vocab_size: vocab_size,
             d_model,
         }
     }
 
     /// Get embeddings for token IDs
-    pub fn forward(&self, token_ids: &[usize]) -> Result<Array2<f64>> {
+    pub fn forward(&self, tokenids: &[usize]) -> Result<Array2<f64>> {
         let mut result = Array2::zeros((token_ids.len(), self.d_model));
 
         for (i, &token_id) in token_ids.iter().enumerate() {
@@ -904,12 +904,12 @@ pub struct TransformerModel {
 
 impl TransformerModel {
     /// Create new transformer model
-    pub fn new(_config: TransformerConfig, vocabulary: Vec<String>) -> Result<Self> {
+    pub fn new(config: TransformerConfig, vocabulary: Vec<String>) -> Result<Self> {
         let vocab_size = vocabulary.len();
-        if vocab_size != _config.vocab_size {
+        if vocab_size != config.vocab_size {
             return Err(TextError::InvalidInput(format!(
                 "Vocabulary size {} doesn't match _config {}",
-                vocab_size, _config.vocab_size
+                vocab_size, config.vocab_size
             )));
         }
 
@@ -922,8 +922,8 @@ impl TransformerModel {
         }
 
         Ok(Self {
-            _config: _config.clone(),
-            token_embedding: TokenEmbedding::new(_config.vocab_size, _config.d_model),
+            config: config.clone(),
+            token_embedding: TokenEmbedding::new(_config.vocab_size, config.d_model),
             encoder: TransformerEncoder::new(_config)?,
             decoder: None, // Encoder-only model
             vocab_to_id,
@@ -954,14 +954,14 @@ impl TransformerModel {
 
     /// Create new encoder-decoder transformer model
     pub fn new_encoder_decoder(
-        _config: TransformerConfig,
+        config: TransformerConfig,
         vocabulary: Vec<String>,
     ) -> Result<Self> {
         let vocab_size = vocabulary.len();
-        if vocab_size != _config.vocab_size {
+        if vocab_size != config.vocab_size {
             return Err(TextError::InvalidInput(format!(
                 "Vocabulary size {} doesn't match _config {}",
-                vocab_size, _config.vocab_size
+                vocab_size, config.vocab_size
             )));
         }
 
@@ -974,8 +974,8 @@ impl TransformerModel {
         }
 
         Ok(Self {
-            _config: _config.clone(),
-            token_embedding: TokenEmbedding::new(_config.vocab_size, _config.d_model),
+            config: config.clone(),
+            token_embedding: TokenEmbedding::new(_config.vocab_size, config.d_model),
             encoder: TransformerEncoder::new(_config.clone())?,
             decoder: Some(TransformerDecoder::new(_config)?),
             vocab_to_id,
@@ -1055,7 +1055,7 @@ impl TransformerModel {
                     self.vocab_to_id
                         .get(_token)
                         .copied()
-                        .ok_or_else(|| TextError::InvalidInput(format!("Unknown _token: {_token}")))
+                        .ok_or_else(|| TextError::InvalidInput(format!("Unknown token: {_token}")))
                 })
                 .collect();
             let current_ids = current_ids?;

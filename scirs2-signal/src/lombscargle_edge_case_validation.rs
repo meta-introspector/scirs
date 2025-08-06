@@ -243,7 +243,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingValidation> {
 
     // Generate random sparse sampling times
     for _ in 0..n_sparse {
-        times.push(rng.random_range(0.0..time_span));
+        times.push(rng.gen_range(0.0..time_span));
     }
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -251,7 +251,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingValidation> {
     let true_freq = 0.1; // Low frequency to be detectable with sparse sampling
     let signal: Vec<f64> = times
         .iter()
-        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.1 * rng.random_range(-1.0..1.0))
+        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.1 * rng.gen_range(-1.0..1.0))
         .collect();
 
     // Compute Lomb-Scargle periodogram
@@ -367,7 +367,7 @@ fn validate_extreme_snr() -> SignalResult<ExtremeSNRValidation> {
         .iter()
         .map(|&t| {
             signal_amplitude * (2.0 * PI * signal_freq * t).sin()
-                + noise_amplitude_low * rng.random_range(-1.0..1.0)
+                + noise_amplitude_low * rng.gen_range(-1.0..1.0)
         })
         .collect();
 
@@ -391,7 +391,7 @@ fn validate_extreme_snr() -> SignalResult<ExtremeSNRValidation> {
         .iter()
         .map(|&t| {
             signal_amplitude * (2.0 * PI * signal_freq * t).sin()
-                + noise_amplitude_high * rng.random_range(-1.0..1.0)
+                + noise_amplitude_high * rng.gen_range(-1.0..1.0)
         })
         .collect();
 
@@ -461,7 +461,7 @@ fn validate_pathological_signals() -> SignalResult<PathologicalSignalValidation>
     let mut random_walk = vec![0.0; n];
     let mut rng = rand::rng();
     for i in 1..n {
-        random_walk[i] = random_walk[i - 1] + rng.random_range(-1.0..1.0);
+        random_walk[i] = random_walk[i - 1] + rng.gen_range(-1.0..1.0);
     }
     let random_walk_handling = test_pathological_signal(&times, &random_walk)?;
 
@@ -477,9 +477,9 @@ fn validate_pathological_signals() -> SignalResult<PathologicalSignalValidation>
 
 /// Test pathological signal and return a score
 #[allow(dead_code)]
-fn test_pathological_signal(_times: &[f64], signal: &[f64]) -> SignalResult<f64> {
+fn test_pathological_signal(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     match lombscargle(
-        _times,
+        times,
         signal,
         None,
         Some("standard"),
@@ -544,9 +544,9 @@ fn validate_numerical_precision() -> SignalResult<NumericalPrecisionValidation> 
 
 /// Test numerical edge case
 #[allow(dead_code)]
-fn test_numerical_edge_case(_times: &[f64], signal: &[f64]) -> SignalResult<f64> {
+fn test_numerical_edge_case(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     match lombscargle(
-        _times,
+        times,
         signal,
         None,
         Some("standard"),
@@ -573,10 +573,10 @@ fn test_numerical_edge_case(_times: &[f64], signal: &[f64]) -> SignalResult<f64>
 
 /// Assess precision loss in computation
 #[allow(dead_code)]
-fn assess_precision_loss(_times: &[f64], signal: &[f64]) -> SignalResult<f64> {
+fn assess_precision_loss(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     // Compare single vs double precision results (simplified)
     match lombscargle(
-        _times,
+        times,
         signal,
         None,
         Some("standard"),
@@ -600,12 +600,12 @@ fn assess_precision_loss(_times: &[f64], signal: &[f64]) -> SignalResult<f64> {
 
 /// Test overflow resistance
 #[allow(dead_code)]
-fn test_overflow_resistance(_times: &[f64]) -> SignalResult<bool> {
+fn test_overflow_resistance(times: &[f64]) -> SignalResult<bool> {
     // Test with values near floating-point limits
-    let extreme_signal = vec![f64::MAX / 1e6; _times.len()];
+    let extreme_signal = vec![f64::MAX / 1e6; times.len()];
 
     match lombscargle(
-        _times,
+        times,
         &extreme_signal,
         None,
         Some("standard"),
@@ -621,9 +621,9 @@ fn test_overflow_resistance(_times: &[f64]) -> SignalResult<bool> {
 
 /// Assess condition number stability
 #[allow(dead_code)]
-fn assess_condition_number_stability(_times: &[f64]) -> SignalResult<f64> {
+fn assess_condition_number_stability(times: &[f64]) -> SignalResult<f64> {
     // Simplified condition number assessment based on time distribution
-    let time_diffs: Vec<f64> = _times.windows(2).map(|w| w[1] - w[0]).collect();
+    let time_diffs: Vec<f64> = times.windows(2).map(|w| w[1] - w[0]).collect();
     let min_diff = time_diffs.iter().fold(f64::INFINITY, |acc, &x| acc.min(x));
     let max_diff = time_diffs.iter().fold(0.0, |acc, &x| acc.max(x));
 
@@ -673,7 +673,7 @@ fn validate_complex_frequency_content() -> SignalResult<ComplexFrequencyValidati
     let mut rng = rand::rng();
     let broadband_signal: Vec<f64> = times
         .iter()
-        .map(|&t| (2.0 * PI * 15.0 * t).sin() + 0.5 * rng.random_range(-1.0..1.0))
+        .map(|&t| (2.0 * PI * 15.0 * t).sin() + 0.5 * rng.gen_range(-1.0..1.0))
         .collect();
 
     let broadband_plus_tones = assess_tone_in_noise_detection(&times, &broadband_signal, 15.0)?;
@@ -731,7 +731,7 @@ fn validate_missing_data_handling() -> SignalResult<MissingDataValidation> {
     // Random gaps (remove 30% of data randomly)
     let mut rng = rand::rng();
     let keep_indices: Vec<usize> = (0..n_complete)
-        .filter(|_| rng.random_range(0.0..1.0) > 0.3)
+        .filter(|_| rng.gen_range(0.0..1.0) > 0.3)
         .collect();
 
     let times_random_gaps: Vec<f64> = keep_indices.iter().map(|&i| times_complete[i]).collect();
@@ -922,7 +922,7 @@ fn measure_edge_performance() -> SignalResult<EdgePerformanceMetrics> {
 // Helper functions for assessments (simplified implementations)
 
 #[allow(dead_code)]
-fn estimate_frequency_resolution(_freqs: &[f64], pgram: &[f64], peak_idx: usize) -> f64 {
+fn estimate_frequency_resolution(_freqs: &[f64], pgram: &[f64], peakidx: usize) -> f64 {
     if peak_idx == 0 || peak_idx >= pgram.len() - 1 {
         return 0.0;
     }
@@ -942,17 +942,17 @@ fn estimate_frequency_resolution(_freqs: &[f64], pgram: &[f64], peak_idx: usize)
     }
 
     if right_idx > left_idx {
-        _freqs[right_idx] - _freqs[left_idx]
+        freqs[right_idx] - freqs[left_idx]
     } else {
         0.0
     }
 }
 
 #[allow(dead_code)]
-fn assess_aliasing_resistance(_times: &[f64], signal: &[f64]) -> SignalResult<f64> {
+fn assess_aliasing_resistance(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     // Simplified aliasing assessment
     match lombscargle(
-        _times,
+        times,
         signal,
         None,
         Some("standard"),
@@ -970,8 +970,8 @@ fn assess_aliasing_resistance(_times: &[f64], signal: &[f64]) -> SignalResult<f6
 }
 
 #[allow(dead_code)]
-fn count_false_peaks(_pgram: &[f64], true_peak_idx: usize) -> usize {
-    let peak_threshold = _pgram[true_peak_idx] * 0.5;
+fn count_false_peaks(_pgram: &[f64], true_peakidx: usize) -> usize {
+    let peak_threshold = pgram[true_peak_idx] * 0.5;
     _pgram
         .iter()
         .enumerate()
@@ -980,7 +980,7 @@ fn count_false_peaks(_pgram: &[f64], true_peak_idx: usize) -> usize {
 }
 
 #[allow(dead_code)]
-fn assess_multi_peak_detection(_freqs: &[f64], pgram: &[f64], expected_freqs: &[f64]) -> f64 {
+fn assess_multi_peak_detection(_freqs: &[f64], pgram: &[f64], expectedfreqs: &[f64]) -> f64 {
     let mut detected_count = 0;
 
     for &expected_freq in expected_freqs {
@@ -994,7 +994,7 @@ fn assess_multi_peak_detection(_freqs: &[f64], pgram: &[f64], expected_freqs: &[
                     .partial_cmp(&(b - expected_freq).abs())
                     .unwrap()
             })
-            .map(|(i_)| i)
+            .map(|(i, _)| i)
             .unwrap_or(0);
 
         // Check if it's a significant peak
@@ -1011,17 +1011,17 @@ fn assess_multi_peak_detection(_freqs: &[f64], pgram: &[f64], expected_freqs: &[
 }
 
 #[allow(dead_code)]
-fn assess_memory_efficiency(_n_points: usize, computation_time: f64) -> f64 {
+fn assess_memory_efficiency(_n_points: usize, computationtime: f64) -> f64 {
     // Simplified memory efficiency metric
     let efficiency = (_n_points as f64).log10() / computation_time;
     efficiency.min(1.0).max(0.0)
 }
 
 #[allow(dead_code)]
-fn assess_numerical_stability(_pgram: &[f64]) -> f64 {
-    let all_finite = _pgram.iter().all(|&x: &f64| x.is_finite());
-    let all_non_negative = _pgram.iter().all(|&x| x >= 0.0);
-    let reasonable_range = _pgram.iter().all(|&x| x < 1e100);
+fn assess_numerical_stability(pgram: &[f64]) -> f64 {
+    let all_finite = pgram.iter().all(|&x: &f64| x.is_finite());
+    let all_non_negative = pgram.iter().all(|&x| x >= 0.0);
+    let reasonable_range = pgram.iter().all(|&x| x < 1e100);
 
     match (all_finite, all_non_negative, reasonable_range) {
         (true, true, true) => 1.0,
@@ -1032,21 +1032,21 @@ fn assess_numerical_stability(_pgram: &[f64]) -> f64 {
 }
 
 #[allow(dead_code)]
-fn estimate_resolution_improvement(_freqs: &[f64]) -> f64 {
-    if _freqs.len() < 2 {
+fn estimate_resolution_improvement(freqs: &[f64]) -> f64 {
+    if freqs.len() < 2 {
         return 0.0;
     }
 
-    let freq_resolution = _freqs[1] - _freqs[0];
+    let freq_resolution = freqs[1] - freqs[0];
     // Higher resolution (smaller spacing) is better
     (1.0 / freq_resolution).min(1.0)
 }
 
 #[allow(dead_code)]
-fn assess_spectral_leakage(_pgram: &[f64]) -> f64 {
+fn assess_spectral_leakage(pgram: &[f64]) -> f64 {
     // Simplified spectral leakage assessment
-    let max_power = _pgram.iter().fold(0.0, |acc, &x| acc.max(x));
-    let mean_power = _pgram.iter().sum::<f64>() / _pgram.len() as f64;
+    let max_power = pgram.iter().fold(0.0, |acc, &x| acc.max(x));
+    let mean_power = pgram.iter().sum::<f64>() / pgram.len() as f64;
 
     if max_power > 0.0 {
         let dynamic_range = max_power / mean_power;
@@ -1057,7 +1057,7 @@ fn assess_spectral_leakage(_pgram: &[f64]) -> f64 {
 }
 
 #[allow(dead_code)]
-fn assess_peak_detection_performance(_freqs: &[f64], pgram: &[f64], expected_freq: f64) -> f64 {
+fn assess_peak_detection_performance(_freqs: &[f64], pgram: &[f64], expectedfreq: f64) -> f64 {
     let closest_idx = _freqs
         .iter()
         .enumerate()
@@ -1067,7 +1067,7 @@ fn assess_peak_detection_performance(_freqs: &[f64], pgram: &[f64], expected_fre
                 .partial_cmp(&(b - expected_freq).abs())
                 .unwrap()
         })
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap_or(0);
 
     if closest_idx > 0 && closest_idx < pgram.len() - 1 {
@@ -1086,10 +1086,10 @@ fn assess_peak_detection_performance(_freqs: &[f64], pgram: &[f64], expected_fre
 }
 
 #[allow(dead_code)]
-fn estimate_noise_floor_accuracy(_pgram_low_snr: &[f64], pgram_high_snr: &[f64]) -> f64 {
+fn estimate_noise_floor_accuracy(_pgram_low_snr: &[f64], pgram_highsnr: &[f64]) -> f64 {
     // Compare noise floors between low and high SNR cases
     let low_snr_median = {
-        let mut sorted = _pgram_low_snr.to_vec();
+        let mut sorted = pgram_low_snr.to_vec();
         sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
         sorted[sorted.len() / 2]
     };
@@ -1114,12 +1114,12 @@ fn estimate_noise_floor_accuracy(_pgram_low_snr: &[f64], pgram_high_snr: &[f64])
 }
 
 #[allow(dead_code)]
-fn assess_saturation_handling(_pgram: &[f64]) -> f64 {
+fn assess_saturation_handling(pgram: &[f64]) -> f64 {
     // Check for signs of saturation (constant max values, numerical issues)
-    let max_power = _pgram.iter().fold(0.0, |acc, &x| acc.max(x));
-    let max_count = _pgram.iter().filter(|&&x| x == max_power).count();
+    let max_power = pgram.iter().fold(0.0, |acc, &x| acc.max(x));
+    let max_count = pgram.iter().filter(|&&x| x == max_power).count();
 
-    if max_count > _pgram.len() / 10 {
+    if max_count > pgram.len() / 10 {
         0.5 // Possible saturation
     } else if max_power.is_finite() {
         1.0 // Good handling
@@ -1129,9 +1129,9 @@ fn assess_saturation_handling(_pgram: &[f64]) -> f64 {
 }
 
 #[allow(dead_code)]
-fn compute_dynamic_range(_pgram: &[f64]) -> f64 {
-    let max_power = _pgram.iter().fold(0.0, |acc, &x| acc.max(x));
-    let min_power = _pgram.iter().fold(
+fn compute_dynamic_range(pgram: &[f64]) -> f64 {
+    let max_power = pgram.iter().fold(0.0, |acc, &x| acc.max(x));
+    let min_power = pgram.iter().fold(
         f64::INFINITY,
         |acc, &x| if x > 0.0 { acc.min(x) } else { acc },
     );
@@ -1152,7 +1152,7 @@ fn assess_harmonic_detection(
     fundamental: f64,
 ) -> SignalResult<f64> {
     let (freqs, pgram) = lombscargle(
-        _times,
+        times,
         signal,
         None,
         Some("standard"),
@@ -1210,10 +1210,10 @@ fn assess_tone_in_noise_detection(
 }
 
 #[allow(dead_code)]
-fn assess_chirp_detection(_times: &[f64], signal: &[f64]) -> SignalResult<f64> {
+fn assess_chirp_detection(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     // For chirp, check if we detect significant power across the swept range
     let (_, pgram) = lombscargle(
-        _times,
+        times,
         signal,
         None,
         Some("standard"),
@@ -1260,9 +1260,9 @@ fn assess_modulated_signal_detection(
 }
 
 #[allow(dead_code)]
-fn assess_gap_handling(_times: &[f64], signal: &[f64], expected_freq: f64) -> SignalResult<f64> {
+fn assess_gap_handling(_times: &[f64], signal: &[f64], expectedfreq: f64) -> SignalResult<f64> {
     let (freqs, pgram) = lombscargle(
-        _times,
+        times,
         signal,
         None,
         Some("standard"),
@@ -1352,7 +1352,7 @@ fn assess_frequency_tracking(
 ) -> SignalResult<f64> {
     // For frequency tracking, check if we see power distributed across the swept range
     let (freqs, pgram) = lombscargle(
-        _times,
+        times,
         signal,
         None,
         Some("standard"),
@@ -1410,10 +1410,10 @@ fn assess_amplitude_modulation(
 }
 
 #[allow(dead_code)]
-fn assess_transient_detection(_times: &[f64], signal: &[f64]) -> SignalResult<f64> {
+fn assess_transient_detection(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     // For transients, check if we get reasonable spectral content
     match lombscargle(
-        _times,
+        times,
         signal,
         None,
         Some("standard"),
@@ -1428,10 +1428,10 @@ fn assess_transient_detection(_times: &[f64], signal: &[f64]) -> SignalResult<f6
 }
 
 #[allow(dead_code)]
-fn assess_frequency_switching(_times: &[f64], signal: &[f64]) -> SignalResult<f64> {
+fn assess_frequency_switching(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     // For frequency switching, expect to see both frequencies
     let (freqs, pgram) = lombscargle(
-        _times,
+        times,
         signal,
         None,
         Some("standard"),
@@ -1445,7 +1445,7 @@ fn assess_frequency_switching(_times: &[f64], signal: &[f64]) -> SignalResult<f6
 }
 
 #[allow(dead_code)]
-fn assess_chirp_parameters(_times: &[f64], signal: &[f64], f0: f64, f1: f64) -> SignalResult<f64> {
+fn assess_chirp_parameters(times: &[f64], signal: &[f64], f0: f64, f1: f64) -> SignalResult<f64> {
     // Simplified chirp parameter assessment
     assess_frequency_tracking(_times, signal, f0, f1)
 }
@@ -1506,69 +1506,69 @@ fn compute_overall_edge_score(
 
 /// Generate edge case validation report
 #[allow(dead_code)]
-pub fn generate_edge_case_report(_result: &EdgeCaseValidationResult) -> String {
+pub fn generate_edge_case_report(result: &EdgeCaseValidationResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Lomb-Scargle Edge Case Validation Report\n\n");
     report.push_str(&format!(
         "*Overall Edge Case Score:** {:.1}%\n\n",
-        _result.overall_edge_score
+        result.overall_edge_score
     ));
 
     report.push_str("## Sparse Sampling Performance\n");
     report.push_str(&format!(
         "- Advanced-sparse accuracy: {:.1}%\n",
-        _result.sparse_sampling.advanced_sparse_accuracy * 100.0
+        result.sparse_sampling.advanced_sparse_accuracy * 100.0
     ));
     report.push_str(&format!(
         "- False peak rate: {:.3}\n",
-        _result.sparse_sampling.false_peak_rate
+        result.sparse_sampling.false_peak_rate
     ));
     report.push_str(&format!(
         "- Aliasing resistance: {:.1}%\n\n",
-        _result.sparse_sampling.aliasing_resistance * 100.0
+        result.sparse_sampling.aliasing_resistance * 100.0
     ));
 
     report.push_str("## Dense Sampling Performance\n");
     report.push_str(&format!(
         "- Advanced-dense accuracy: {:.1}%\n",
-        _result.dense_sampling.advanced_dense_accuracy * 100.0
+        result.dense_sampling.advanced_dense_accuracy * 100.0
     ));
     report.push_str(&format!(
         "- Memory efficiency: {:.1}%\n",
-        _result.dense_sampling.memory_efficiency * 100.0
+        result.dense_sampling.memory_efficiency * 100.0
     ));
     report.push_str(&format!(
         "- Computational stability: {:.1}%\n\n",
-        _result.dense_sampling.computational_stability * 100.0
+        result.dense_sampling.computational_stability * 100.0
     ));
 
     report.push_str("## Extreme SNR Handling\n");
     report.push_str(&format!(
         "- Very low SNR (-30 dB): {:.1}%\n",
-        _result.extreme_snr.very_low_snr_performance * 100.0
+        result.extreme_snr.very_low_snr_performance * 100.0
     ));
     report.push_str(&format!(
         "- Very high SNR (+60 dB): {:.1}%\n",
-        _result.extreme_snr.very_high_snr_performance * 100.0
+        result.extreme_snr.very_high_snr_performance * 100.0
     ));
     report.push_str(&format!(
         "- Noise floor accuracy: {:.1}%\n\n",
-        _result.extreme_snr.noise_floor_accuracy * 100.0
+        result.extreme_snr.noise_floor_accuracy * 100.0
     ));
 
     report.push_str("## Numerical Precision\n");
     report.push_str(&format!(
         "- Near-zero handling: {:.1}%\n",
-        _result.numerical_precision.near_zero_handling * 100.0
+        result.numerical_precision.near_zero_handling * 100.0
     ));
     report.push_str(&format!(
         "- Large value handling: {:.1}%\n",
-        _result.numerical_precision.large_value_handling * 100.0
+        result.numerical_precision.large_value_handling * 100.0
     ));
     report.push_str(&format!(
         "- Overflow resistance: {}\n\n",
-        if _result.numerical_precision.overflow_resistance {
+        if result.numerical_precision.overflow_resistance {
             "✓ Pass"
         } else {
             "✗ Fail"
@@ -1578,15 +1578,15 @@ pub fn generate_edge_case_report(_result: &EdgeCaseValidationResult) -> String {
     report.push_str("## Complex Frequency Content\n");
     report.push_str(&format!(
         "- Multi-harmonic accuracy: {:.1}%\n",
-        _result.complex_frequency.multi_harmonic_accuracy * 100.0
+        result.complex_frequency.multi_harmonic_accuracy * 100.0
     ));
     report.push_str(&format!(
         "- Close frequency resolution: {:.1}%\n",
-        _result.complex_frequency.close_frequency_resolution * 100.0
+        result.complex_frequency.close_frequency_resolution * 100.0
     ));
     report.push_str(&format!(
         "- Chirp accuracy: {:.1}%\n\n",
-        _result.complex_frequency.chirp_accuracy * 100.0
+        result.complex_frequency.chirp_accuracy * 100.0
     ));
 
     report.push_str("## Performance Summary\n");
@@ -1595,7 +1595,7 @@ pub fn generate_edge_case_report(_result: &EdgeCaseValidationResult) -> String {
     }
     report.push_str(&format!(
         "- Numerical stability: {:.1}%\n",
-        _result.edge_performance.numerical_stability_score * 100.0
+        result.edge_performance.numerical_stability_score * 100.0
     ));
 
     report.push_str(&format!(

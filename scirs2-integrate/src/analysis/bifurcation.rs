@@ -27,10 +27,10 @@ pub struct BifurcationAnalyzer {
 
 impl BifurcationAnalyzer {
     /// Create a new bifurcation analyzer
-    pub fn new(dimension: usize, parameter_range: (f64, f64), parameter_samples: usize) -> Self {
+    pub fn new(dimension: usize, parameterrange: (f64, f64), parameter_samples: usize) -> Self {
         Self {
             dimension,
-            parameter_range,
+            parameter_range: parameterrange,
             parameter_samples,
             fixed_point_tolerance: 1e-8,
             max_iterations: 1000,
@@ -1558,8 +1558,8 @@ impl BifurcationAnalyzer {
     }
 
     /// Classify bifurcation type based on stability transition
-    fn classify_bifurcation_type(&self, from_stability: f64, to_stability: f64) -> BifurcationType {
-        match (from_stability, to_stability) {
+    fn classify_bifurcation_type(&self, from_stability: f64, tostability: f64) -> BifurcationType {
+        match (from_stability, tostability) {
             // Transition from stable to unstable (or vice versa)
             (f, t) if (f - 1.0).abs() < 0.1 && (t - 2.0).abs() < 0.1 => BifurcationType::Fold,
             (f, t) if (f - 2.0).abs() < 0.1 && (t - 1.0).abs() < 0.1 => BifurcationType::Fold,

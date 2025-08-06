@@ -160,19 +160,19 @@ impl ValidationResults {
 
 /// Run comprehensive validation against SciPy
 #[allow(dead_code)]
-pub fn validate_all(_config: &ValidationConfig) -> SignalResult<ValidationResults> {
+pub fn validate_all(config: &ValidationConfig) -> SignalResult<ValidationResults> {
     let start_time = std::time::Instant::now();
     let mut test_results = HashMap::new();
 
     // Validate different categories of functions
-    validate_filtering(&mut test_results, _config)?;
-    validate_spectral_analysis(&mut test_results, _config)?;
-    validate_wavelets(&mut test_results, _config)?;
-    validate_windows(&mut test_results, _config)?;
-    validate_signal_generation(&mut test_results, _config)?;
-    validate_convolution_correlation(&mut test_results, _config)?;
-    validate_resampling(&mut test_results, _config)?;
-    validate_peak_detection(&mut test_results, _config)?;
+    validate_filtering(&mut test_results, config)?;
+    validate_spectral_analysis(&mut test_results, config)?;
+    validate_wavelets(&mut test_results, config)?;
+    validate_windows(&mut test_results, config)?;
+    validate_signal_generation(&mut test_results, config)?;
+    validate_convolution_correlation(&mut test_results, config)?;
+    validate_resampling(&mut test_results, config)?;
+    validate_peak_detection(&mut test_results, config)?;
 
     let total_time = start_time.elapsed().as_secs_f64() * 1000.0;
 
@@ -506,14 +506,14 @@ fn reference_cheby2_filter(
 
 /// Calculate absolute error, relative error, and RMSE between two signals
 #[allow(dead_code)]
-fn calculate_errors(_signal1: &[f64], signal2: &[f64]) -> SignalResult<(f64, f64, f64)> {
-    if _signal1.len() != signal2.len() {
+fn calculate_errors(signal1: &[f64], signal2: &[f64]) -> SignalResult<(f64, f64, f64)> {
+    if signal1.len() != signal2.len() {
         return Err(SignalError::ValueError(
             "Signals must have the same length for error calculation".to_string(),
         ));
     }
 
-    let n = _signal1.len();
+    let n = signal1.len();
     let mut max_abs_error: f64 = 0.0;
     let mut max_rel_error: f64 = 0.0;
     let mut mse = 0.0;
@@ -1352,7 +1352,7 @@ fn test_single_lombscargle(
     let duration = n as f64 / fs;
     for i in 0..n {
         let base_time = i as f64 * duration / n as f64;
-        let jitter = rng.random_range(-0.1..0.1) * duration / n as f64;
+        let jitter = rng.gen_range(-0.1..0.1) * duration / n as f64;
         let time = (base_time + jitter).max(0.0).min(duration);
         t.push(time);
 
@@ -1524,7 +1524,7 @@ fn test_single_ar_estimation(
     let signal_array = Array1::from_vec(test_signal);
 
     // Our implementation
-    let (ar_coeffs_reflection_coeffs_variance) = estimate_ar(&signal_array, order, method)?;
+    let (ar_coeffs, reflection_coeffs, variance) = estimate_ar(&signal_array, order, method)?;
 
     // Compute AR spectrum
     let freqs: Vec<f64> = (0..=n / 2).map(|i| i as f64 * fs / n as f64).collect();
@@ -1544,14 +1544,14 @@ fn test_single_ar_estimation(
 /// In a production implementation, this would load reference data that was
 /// computed offline using SciPy and stored in files or embedded in the binary.
 #[allow(dead_code)]
-pub fn load_reference_data(_test_name: &str, _parameters: &str) -> SignalResult<Vec<f64>> {
+pub fn load_reference_data(test_name: &str, parameters: &str) -> SignalResult<Vec<f64>> {
     // This is a placeholder implementation
     // In practice, you would:
     // 1. Load from embedded data files
     // 2. Use a lookup table based on test _parameters
     // 3. Call Python/SciPy via subprocess or FFI
 
-    match _test_name {
+    match test_name {
         "butterworth_lowpass_order2_fs100_fc20" => {
             // Return pre-computed reference data
             Ok(vec![1.0, 0.8, 0.6, 0.4, 0.2]) // Placeholder
@@ -1885,7 +1885,7 @@ fn reference_signal_generation(
 
 /// Generate detailed validation report
 #[allow(dead_code)]
-pub fn generate_validation_report(_results: &ValidationResults) -> String {
+pub fn generate_validation_report(results: &ValidationResults) -> String {
     let mut report = String::new();
 
     report.push_str("=== SciPy Numerical Validation Report ===\n\n");
@@ -1897,7 +1897,7 @@ pub fn generate_validation_report(_results: &ValidationResults) -> String {
     // Detailed _results
     report.push_str("=== Detailed Test Results ===\n\n");
 
-    let mut test_names: Vec<_> = _results.test_results.keys().collect();
+    let mut test_names: Vec<_> = results.test_results.keys().collect();
     test_names.sort();
 
     for test_name in test_names {
@@ -1935,7 +1935,7 @@ pub fn generate_validation_report(_results: &ValidationResults) -> String {
         report.push_str("=== Recommendations ===\n\n");
         report.push_str("The following tests failed and require attention:\n\n");
 
-        for failure in _results.failures() {
+        for failure in results.failures() {
             report.push_str(&format!(
                 "- {}: {}\n",
                 failure.test_name,

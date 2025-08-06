@@ -15,7 +15,7 @@ use std::io::Write;
 /// dθ/dt = ω
 /// dω/dt = -(g/L)·sin(θ)
 #[allow(dead_code)]
-fn pendulum(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
+fn pendulum(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = θ (angle from vertical, radians)
     // y[1] = ω (angular velocity)
@@ -37,7 +37,7 @@ fn pendulum(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 ///
 /// Where r = sqrt(x² + y²) is the distance from the origin
 #[allow(dead_code)]
-fn two_body(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
+fn two_body(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = x (position x)
     // y[1] = y (position y)
@@ -77,7 +77,7 @@ fn two_body(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 /// dx/dt = y
 /// dy/dt = μ·(1 - x²)·y - x
 #[allow(dead_code)]
-fn van_der_pol(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
+fn van_der_pol(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = x (position)
     // y[1] = y (velocity)

@@ -1457,17 +1457,17 @@ fn apply_dirichlet_conditions_to_initial_3d(
 
 /// Convert a MOL3DResult to a PDESolution
 impl From<MOL3DResult> for PDESolution<f64> {
-    fn from(_result: MOL3DResult) -> Self {
+    fn from(result: MOL3DResult) -> Self {
         let mut grids = Vec::new();
 
         // Add time grid
-        grids.push(_result.t.clone());
+        grids.push(result.t.clone());
 
         // Extract spatial grids from solution shape
-        let nt = _result.t.len();
-        let nz = _result.u.shape()[1];
-        let ny = _result.u.shape()[2];
-        let nx = _result.u.shape()[3];
+        let nt = result.t.len();
+        let nz = result.u.shape()[1];
+        let ny = result.u.shape()[2];
+        let nx = result.u.shape()[3];
 
         // Create spatial grids (we don't have the actual grid values, so use linspace)
         let z_grid = Array1::linspace(0.0, 1.0, nz);
@@ -1483,7 +1483,7 @@ impl From<MOL3DResult> for PDESolution<f64> {
         let total_spatial_points = nx * ny * nz;
 
         // Reshape the 4D array (time, z, y, x) to 2D (time, spatial_points)
-        let u_reshaped = _result
+        let u_reshaped = result
             .u
             .into_shape_with_order((nt, total_spatial_points))
             .unwrap();
@@ -1494,7 +1494,7 @@ impl From<MOL3DResult> for PDESolution<f64> {
         // Create solver info
         let info = PDESolverInfo {
             num_iterations: 0, // This information is not available directly
-            computation_time: _result.computation_time,
+            computation_time: result.computation_time,
             residual_norm: None,
             convergence_history: None,
             method: "Method of Lines (3D)".to_string(),

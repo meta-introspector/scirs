@@ -54,7 +54,7 @@ pub enum DCTType {
 /// Returns an error if the input values cannot be converted to `f64`, or if other
 /// computation errors occur (e.g., invalid array dimensions).
 #[allow(dead_code)]
-pub fn dct<T>(x: &[T], dct_type: Option<DCTType>, norm: Option<&str>) -> FFTResult<Vec<f64>>
+pub fn dct<T>(x: &[T], dcttype: Option<DCTType>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug,
 {
@@ -68,7 +68,7 @@ where
         .collect::<FFTResult<Vec<_>>>()?;
 
     let _n = input.len();
-    let type_val = dct_type.unwrap_or(DCTType::Type2);
+    let type_val = dcttype.unwrap_or(DCTType::Type2);
 
     match type_val {
         DCTType::Type1 => dct1(&input, norm),
@@ -114,7 +114,7 @@ where
 /// Returns an error if the input values cannot be converted to `f64`, or if other
 /// computation errors occur (e.g., invalid array dimensions).
 #[allow(dead_code)]
-pub fn idct<T>(x: &[T], dct_type: Option<DCTType>, norm: Option<&str>) -> FFTResult<Vec<f64>>
+pub fn idct<T>(x: &[T], dcttype: Option<DCTType>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug,
 {
@@ -128,7 +128,7 @@ where
         .collect::<FFTResult<Vec<_>>>()?;
 
     let _n = input.len();
-    let type_val = dct_type.unwrap_or(DCTType::Type2);
+    let type_val = dcttype.unwrap_or(DCTType::Type2);
 
     // Inverse DCT is computed by using a different DCT _type
     match type_val {

@@ -63,11 +63,11 @@ pub struct EventDrivenOptimizer {
 
 impl EventDrivenOptimizer {
     /// Create new event-driven optimizer
-    pub fn new(_initial_params: Array1<f64>) -> Self {
+    pub fn new(_initialparams: Array1<f64>) -> Self {
         Self {
             event_queue: BinaryHeap::new(),
             current_time: 0.0,
-            parameters: _initial_params,
+            parameters: initial_params,
         }
     }
 

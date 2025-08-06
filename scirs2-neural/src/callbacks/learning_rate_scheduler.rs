@@ -99,7 +99,7 @@ impl<F: Float + Debug + ScalarOperand> ReduceOnPlateau<F> {
     /// Create a new reduce on plateau scheduler
     /// * `patience` - Number of epochs with no improvement after which learning rate will be reduced
     /// * `threshold` - Threshold for measuring the new optimum
-    pub fn new(_initial_lr: F, factor: F, patience: usize, threshold: F, min_lr: F) -> Self {
+    pub fn new(_initial_lr: F, factor: F, patience: usize, threshold: F, minlr: F) -> Self {
             patience,
             threshold,
             monitor_val_loss: true,

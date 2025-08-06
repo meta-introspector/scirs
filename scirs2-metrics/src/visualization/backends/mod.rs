@@ -119,19 +119,26 @@ pub fn default_backend() -> impl PlottingBackend {
 
         impl PlottingBackend for NoopBackend {
             fn save_to_file(
-                self_data: &VisualizationData, _metadata: &VisualizationMetadata, options: &VisualizationOptions, _path: impl AsRef<Path>,
+                self_data: &VisualizationData,
+                _metadata: &VisualizationMetadata,
+                options: &VisualizationOptions,
+                _path: impl AsRef<Path>,
             ) -> Result<(), Box<dyn Error>> {
                 Err("No visualization backend available. Enable either 'plotly_backend' or 'plotters_backend' feature.".into())
             }
 
             fn render_svg(
-                self_data: &VisualizationData, _metadata: &VisualizationMetadata, options: &VisualizationOptions,
+                self_data: &VisualizationData,
+                _metadata: &VisualizationMetadata,
+                options: &VisualizationOptions,
             ) -> Result<Vec<u8>, Box<dyn Error>> {
                 Err("No visualization backend available. Enable either 'plotly_backend' or 'plotters_backend' feature.".into())
             }
 
             fn render_png(
-                self_data: &VisualizationData, _metadata: &VisualizationMetadata, options: &VisualizationOptions,
+                self_data: &VisualizationData,
+                _metadata: &VisualizationMetadata,
+                options: &VisualizationOptions,
             ) -> Result<Vec<u8>, Box<dyn Error>> {
                 Err("No visualization backend available. Enable either 'plotly_backend' or 'plotters_backend' feature.".into())
             }

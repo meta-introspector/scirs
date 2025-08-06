@@ -22,13 +22,13 @@ use super::super::core::FluidState;
 /// # Returns
 ///
 /// A `FluidState` with the initial conditions for lid-driven cavity flow
-pub fn lid_driven_cavity(nx: usize, ny: usize, lid_velocity: f64) -> FluidState {
+pub fn lid_driven_cavity(nx: usize, ny: usize, lidvelocity: f64) -> FluidState {
     let mut u = Array2::zeros((ny, nx));
     let v = Array2::zeros((ny, nx));
 
     // Set lid velocity at top boundary
     for i in 0..nx {
-        u[[ny - 1, i]] = lid_velocity;
+        u[[ny - 1, i]] = lidvelocity;
     }
 
     let pressure = Array2::zeros((ny, nx));
@@ -103,7 +103,7 @@ pub fn taylor_green_vortex(nx: usize, ny: usize, a: f64, b: f64) -> FluidState {
 /// # Returns
 ///
 /// A `FluidState` with Poiseuille flow initial conditions
-pub fn poiseuille_flow(nx: usize, ny: usize, max_velocity: f64) -> FluidState {
+pub fn poiseuille_flow(nx: usize, ny: usize, maxvelocity: f64) -> FluidState {
     let mut u = Array2::zeros((ny, nx));
     let v = Array2::zeros((ny, nx));
 
@@ -117,7 +117,7 @@ pub fn poiseuille_flow(nx: usize, ny: usize, max_velocity: f64) -> FluidState {
             let y_centered = y_normalized - 0.5; // Center around 0
 
             // Parabolic profile: u = u_max * (1 - 4y²) for y in [-0.5, 0.5]
-            u[[j, i]] = max_velocity * (0.25 - y_centered * y_centered) * 4.0;
+            u[[j, i]] = maxvelocity * (0.25 - y_centered * y_centered) * 4.0;
         }
     }
 
@@ -148,7 +148,7 @@ pub fn poiseuille_flow(nx: usize, ny: usize, max_velocity: f64) -> FluidState {
 /// # Returns
 ///
 /// A `FluidState` with uniform channel flow initial conditions
-pub fn channel_flow(nx: usize, ny: usize, inlet_velocity: f64) -> FluidState {
+pub fn channel_flow(nx: usize, ny: usize, inletvelocity: f64) -> FluidState {
     let mut u = Array2::zeros((ny, nx));
     let v = Array2::zeros((ny, nx));
 
@@ -158,7 +158,7 @@ pub fn channel_flow(nx: usize, ny: usize, inlet_velocity: f64) -> FluidState {
     // Set uniform velocity in the interior (excluding boundary layers)
     for j in 1..ny - 1 {
         for i in 0..nx {
-            u[[j, i]] = inlet_velocity;
+            u[[j, i]] = inletvelocity;
         }
     }
 
@@ -188,7 +188,7 @@ pub fn channel_flow(nx: usize, ny: usize, inlet_velocity: f64) -> FluidState {
 /// # Returns
 ///
 /// A `FluidState` with Couette flow initial conditions
-pub fn couette_flow(nx: usize, ny: usize, wall_velocity: f64) -> FluidState {
+pub fn couette_flow(nx: usize, ny: usize, wallvelocity: f64) -> FluidState {
     let mut u = Array2::zeros((ny, nx));
     let v = Array2::zeros((ny, nx));
 
@@ -199,7 +199,7 @@ pub fn couette_flow(nx: usize, ny: usize, wall_velocity: f64) -> FluidState {
     for j in 0..ny {
         for i in 0..nx {
             let y_normalized = j as f64 / (ny - 1) as f64; // Normalized y from 0 to 1
-            u[[j, i]] = wall_velocity * y_normalized;
+            u[[j, i]] = wallvelocity * y_normalized;
         }
     }
 
@@ -274,7 +274,7 @@ pub fn stagnation_point_flow(nx: usize, ny: usize, strength: f64) -> FluidState 
 /// # Returns
 ///
 /// A `FluidState` with vortex pair initial conditions
-pub fn vortex_pair(nx: usize, ny: usize, vortex_strength: f64, separation: f64) -> FluidState {
+pub fn vortex_pair(nx: usize, ny: usize, vortexstrength: f64, separation: f64) -> FluidState {
     let mut u = Array2::zeros((ny, nx));
     let mut v = Array2::zeros((ny, nx));
 
@@ -307,17 +307,17 @@ pub fn vortex_pair(nx: usize, ny: usize, vortex_strength: f64, separation: f64) 
             // Velocity from first vortex (counter-clockwise)
             if r1 > 1e-10 {
                 u[[j, i]] +=
-                    vortex_strength * (-dy1) / (2.0 * PI * r1_sq) * (1.0 - (-r1_sq * 10.0).exp());
+                    vortexstrength * (-dy1) / (2.0 * PI * r1_sq) * (1.0 - (-r1_sq * 10.0).exp());
                 v[[j, i]] +=
-                    vortex_strength * dx1 / (2.0 * PI * r1_sq) * (1.0 - (-r1_sq * 10.0).exp());
+                    vortexstrength * dx1 / (2.0 * PI * r1_sq) * (1.0 - (-r1_sq * 10.0).exp());
             }
 
             // Velocity from second vortex (clockwise)
             if r2 > 1e-10 {
                 u[[j, i]] +=
-                    -vortex_strength * (-dy2) / (2.0 * PI * r2_sq) * (1.0 - (-r2_sq * 10.0).exp());
+                    -vortexstrength * (-dy2) / (2.0 * PI * r2_sq) * (1.0 - (-r2_sq * 10.0).exp());
                 v[[j, i]] +=
-                    -vortex_strength * dx2 / (2.0 * PI * r2_sq) * (1.0 - (-r2_sq * 10.0).exp());
+                    -vortexstrength * dx2 / (2.0 * PI * r2_sq) * (1.0 - (-r2_sq * 10.0).exp());
             }
         }
     }

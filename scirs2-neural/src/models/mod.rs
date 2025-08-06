@@ -20,7 +20,7 @@ pub trait Model<F: Float + Debug + ScalarOperand> {
         grad_output: &Array<F, ndarray::IxDyn>,
     ) -> Result<Array<F, ndarray::IxDyn>>;
     /// Update the model parameters with the given learning rate
-    fn update(&mut self, learning_rate: F) -> Result<()>;
+    fn update(&mut self, learningrate: F) -> Result<()>;
     /// Train the model on a batch of data
     fn train_batch(
         &mut self,

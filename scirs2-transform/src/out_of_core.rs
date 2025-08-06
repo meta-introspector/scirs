@@ -66,7 +66,7 @@ pub struct ChunkedArrayReader {
 impl ChunkedArrayReader {
     /// Create a new chunked array reader
     pub fn new<P: AsRef<Path>>(path: P, shape: (usize, usize), chunk_size: usize) -> Result<Self> {
-        let file = File::open(_path).map_err(|e| {
+        let file = File::open(&path).map_err(|e| {
             TransformError::TransformationError(format!("Failed to open file: {e}"))
         })?;
 
@@ -163,8 +163,8 @@ pub struct ChunkedArrayWriter {
 impl ChunkedArrayWriter {
     /// Create a new chunked array writer
     pub fn new<P: AsRef<Path>>(path: P, shape: (usize, usize)) -> Result<Self> {
-        let path_str = _path.as_ref().to_string_lossy().to_string();
-        let file = File::create(&_path).map_err(|e| {
+        let path_str = path.as_ref().to_string_lossy().to_string();
+        let file = File::create(&path).map_err(|e| {
             TransformError::TransformationError(format!("Failed to create file: {e}"))
         })?;
 
@@ -176,7 +176,7 @@ impl ChunkedArrayWriter {
             file: BufWriter::new(file),
             shape,
             rows_written: 0,
-            _path: path_str,
+            path: path_str,
             write_buffer: Vec::with_capacity(buffer_capacity),
         })
     }
@@ -259,15 +259,15 @@ struct NormalizationStats {
 
 impl OutOfCoreNormalizer {
     /// Create a new out-of-core normalizer
-    pub fn new(_method: NormalizationMethod) -> Self {
+    pub fn new(method: NormalizationMethod) -> Self {
         OutOfCoreNormalizer {
-            _method,
+            method: method,
             stats: None,
         }
     }
 
     /// Compute statistics in a single pass for simple methods
-    fn compute_simple_stats<I>(&mut self, chunks: I, n_features: usize) -> Result<()>
+    fn compute_simple_stats<I>(&mut self, chunks: I, nfeatures: usize) -> Result<()>
     where
         I: Iterator<Item = Result<Array2<f64>>>,
     {
@@ -312,7 +312,7 @@ impl OutOfCoreNormalizer {
     }
 
     /// Compute robust statistics using approximate quantile estimation
-    fn compute_robust_stats<I>(&mut self, chunks: I, n_features: usize) -> Result<()>
+    fn compute_robust_stats<I>(&mut self, chunks: I, nfeatures: usize) -> Result<()>
     where
         I: Iterator<Item = Result<Array2<f64>>>,
     {
@@ -417,7 +417,7 @@ impl OutOfCoreTransformer for OutOfCoreNormalizer {
 
         match self.method {
             NormalizationMethod::MinMax
-            | NormalizationMethod::MinMaxCustom(__)
+            | NormalizationMethod::MinMaxCustom(_, _)
             | NormalizationMethod::ZScore
             | NormalizationMethod::MaxAbs => {
                 self.compute_simple_stats(chunks_iter, n_features)?;
@@ -558,12 +558,12 @@ struct CsvChunkIterator {
 }
 
 impl CsvChunkIterator {
-    fn new(_reader: BufReader<File>, chunk_size: usize, skip_header: bool) -> Self {
+    fn new(_reader: BufReader<File>, chunk_size: usize, skipheader: bool) -> Self {
         CsvChunkIterator {
-            _reader,
+            reader: reader,
             chunk_size,
             skip_header,
-            _header_skipped: false,
+            header_skipped: false,
         }
     }
 }

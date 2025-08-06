@@ -276,7 +276,7 @@ where
     }
 
     /// Set the coordinate reference system
-    pub fn with_coordinate_system(mut self, coord_sys: CoordinateSystem) -> Self {
+    pub fn with_coordinate_system(mut self, coordsys: CoordinateSystem) -> Self {
         self.config.coordinate_system = coord_sys;
         self
     }
@@ -288,7 +288,7 @@ where
     }
 
     /// Enable or disable spherical distance calculations
-    pub fn with_spherical_distance(mut self, use_spherical: bool) -> Self {
+    pub fn with_spherical_distance(mut self, usespherical: bool) -> Self {
         self.config.use_spherical_distance = use_spherical;
         self
     }
@@ -300,7 +300,7 @@ where
     }
 
     /// Set maximum number of neighbors
-    pub fn with_max_neighbors(mut self, max_neighbors: usize) -> Self {
+    pub fn with_max_neighbors(mut self, maxneighbors: usize) -> Self {
         self.config.max_neighbors = Some(max_neighbors);
         self
     }
@@ -491,7 +491,10 @@ where
 
     /// Compute spatial statistics from the data
     fn compute_spatial_statistics(
-        &mut self, _x_coords: &Array1<T>, _y_coords: &Array1<T>, _values: &ArrayView1<T>,
+        &mut self,
+        _x_coords: &Array1<T>,
+        _y_coords: &Array1<T>,
+        _values: &ArrayView1<T>,
     ) -> InterpolateResult<()> {
         // For now, compute basic statistics
         // In a full implementation, this would include:
@@ -500,9 +503,9 @@ where
         // - Range estimation
         // - Spatial clustering metrics
 
-        let n = _values.len();
+        let n = values.len();
         if n > 1 {
-            let mean_val = _values.sum() / T::from_usize(n).unwrap();
+            let mean_val = values.sum() / T::from_usize(n).unwrap();
             let variance = _values
                 .iter()
                 .map(|&x| (x - mean_val) * (x - mean_val))

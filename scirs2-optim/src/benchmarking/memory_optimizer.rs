@@ -627,7 +627,7 @@ pub trait OptimizationStrategy: Debug {
     fn name(&self) -> &str;
 
     /// Get strategy applicability score
-    fn applicability(&self, usage_pattern: &MemoryUsage) -> f64;
+    fn applicability(&self, usagepattern: &MemoryUsage) -> f64;
 }
 
 /// Cost-benefit analyzer for optimizations
@@ -799,9 +799,9 @@ pub enum ModelType {
 
 impl MemoryOptimizer {
     /// Create a new memory optimizer
-    pub fn new(_config: MemoryOptimizerConfig) -> Self {
+    pub fn new(config: MemoryOptimizerConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             memory_tracker: AdvancedMemoryTracker::new(),
             leak_detector: MemoryLeakDetector::new(),
             optimization_engine: OptimizationEngine::new(),
@@ -969,8 +969,7 @@ impl MemoryOptimizer {
         })
     }
 
-    fn calculate_fragmentation(&self,
-        usage: &MemoryUsage) -> Result<FragmentationMetrics> {
+    fn calculate_fragmentation(&self, usage: &MemoryUsage) -> Result<FragmentationMetrics> {
         Ok(FragmentationMetrics {
             external_fragmentation: 0.15,        // 15%
             internal_fragmentation: 0.08,        // 8%
@@ -1259,8 +1258,7 @@ impl MemoryLeakDetector {
         Ok(())
     }
 
-    fn check_for_leaks(&mut self,
-        snapshots: &VecDeque<MemorySnapshot>) -> Result<()> {
+    fn check_for_leaks(&mut self, snapshots: &VecDeque<MemorySnapshot>) -> Result<()> {
         // Run leak detection algorithms
         Ok(())
     }
@@ -1398,8 +1396,7 @@ impl MemoryPatternAnalyzer {
         Ok(())
     }
 
-    fn analyze_snapshot(&mut self,
-        snapshot: &MemorySnapshot) -> Result<()> {
+    fn analyze_snapshot(&mut self, snapshot: &MemorySnapshot) -> Result<()> {
         // Analyze memory patterns in _snapshot
         Ok(())
     }

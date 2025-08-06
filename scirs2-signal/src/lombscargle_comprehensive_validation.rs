@@ -665,10 +665,10 @@ fn generate_lombscargle_test_signal(
     for i in 0..config.n {
         let regular_time = (i as f64 / (config.n - 1) as f64) * config.time_span;
         let noise =
-            rng.random_range(-1.0..1.0) * config.irregularity * config.time_span / config.n as f64;
+            rng.gen_range(-1.0..1.0) * config.irregularity * config.time_span / config.n as f64;
         times.push(regular_time + noise);
     }
-    times.sort_by(|a..b| a.partial_cmp(b).unwrap());
+    times.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     // Generate signal values
     let signal = match config.signal_type {
@@ -737,7 +737,7 @@ fn generate_single_sinusoid(
 
     times
         .iter()
-        .map(|&t| amp * (2.0 * PI * freq * t).sin() + noise_level * rng.random_range(-1.0..1.0))
+        .map(|&t| amp * (2.0 * PI * freq * t).sin() + noise_level * rng.gen_range(-1.0..1.0))
         .collect()
 }
 
@@ -759,39 +759,39 @@ fn generate_multiple_sinusoids(
                 let amp = amplitudes.get(i).copied().unwrap_or(1.0);
                 signal += amp * (2.0 * PI * freq * t).sin();
             }
-            signal + noise_level * rng.random_range(-1.0..1.0)
+            signal + noise_level * rng.gen_range(-1.0..1.0)
         })
         .collect()
 }
 
 /// Generate pure noise signal
 #[allow(dead_code)]
-fn generate_pure_noise(_times: &[f64], noise_level: f64) -> Vec<f64> {
+fn generate_pure_noise(_times: &[f64], noiselevel: f64) -> Vec<f64> {
     let mut rng = rand::rng();
     _times
         .iter()
-        .map(|_| noise_level * rng.random_range(-1.0..1.0))
+        .map(|_| noise_level * rng.gen_range(-1.0..1.0))
         .collect()
 }
 
 /// Analyze single frequency detection accuracy
 #[allow(dead_code)]
-fn analyze_single_frequency_detection(_freqs: &[f64], power: &[f64], true_freq: &f64) -> f64 {
+fn analyze_single_frequency_detection(_freqs: &[f64], power: &[f64], truefreq: &f64) -> f64 {
     // Find peak in periodogram
     let max_idx = power
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap_or(0);
 
-    let detected_freq = _freqs[max_idx];
+    let detected_freq = freqs[max_idx];
     (detected_freq - true_freq).abs() / true_freq
 }
 
 /// Analyze multiple frequency detection accuracy
 #[allow(dead_code)]
-fn analyze_multiple_frequency_detection(_freqs: &[f64], power: &[f64], true_freqs: &[f64]) -> f64 {
+fn analyze_multiple_frequency_detection(_freqs: &[f64], power: &[f64], truefreqs: &[f64]) -> f64 {
     // Simple implementation - find peaks and match to true frequencies
     let mut total_error = 0.0;
     let mut peaks = find_peaks(power, 0.1); // Simple peak detection
@@ -801,7 +801,7 @@ fn analyze_multiple_frequency_detection(_freqs: &[f64], power: &[f64], true_freq
 
     for (i, &true_freq) in true_freqs.iter().enumerate() {
         if let Some(&peak_idx) = peaks.get(i) {
-            let detected_freq = _freqs[peak_idx];
+            let detected_freq = freqs[peak_idx];
             total_error += (detected_freq - true_freq).abs() / true_freq;
         } else {
             total_error += 1.0; // Penalty for missing frequency
@@ -813,13 +813,13 @@ fn analyze_multiple_frequency_detection(_freqs: &[f64], power: &[f64], true_freq
 
 /// Simple peak detection
 #[allow(dead_code)]
-fn find_peaks(_data: &[f64], threshold: f64) -> Vec<usize> {
+fn find_peaks(data: &[f64], threshold: f64) -> Vec<usize> {
     let mut peaks = Vec::new();
-    let max_val = _data.iter().cloned().fold(0.0, f64::max);
+    let max_val = data.iter().cloned().fold(0.0, f64::max);
     let threshold_val = threshold * max_val;
 
     for i in 1.._data.len() - 1 {
-        if _data[i] > _data[i - 1] && _data[i] > _data[i + 1] && _data[i] > threshold_val {
+        if data[i] > data[i - 1] && data[i] > data[i + 1] && data[i] > threshold_val {
             peaks.push(i);
         }
     }
@@ -829,7 +829,7 @@ fn find_peaks(_data: &[f64], threshold: f64) -> Vec<usize> {
 
 /// Analyze noise floor characteristics
 #[allow(dead_code)]
-fn analyze_noise_floor(_freqs: &[f64], power: &[f64]) -> f64 {
+fn analyze_noise_floor(freqs: &[f64], power: &[f64]) -> f64 {
     // For pure noise, expect relatively flat spectrum
     let mean_power = power.iter().sum::<f64>() / power.len() as f64;
     let variance =
@@ -852,7 +852,7 @@ fn analyze_detection_rates(
     let mut false_negatives = true_freqs.len();
 
     for &peak_idx in &peaks {
-        let peak_freq = _freqs[peak_idx];
+        let peak_freq = freqs[peak_idx];
         let is_true_peak = true_freqs
             .iter()
             .any(|&tf| (peak_freq - tf).abs() / tf < 0.1);
@@ -874,22 +874,22 @@ fn analyze_detection_rates(
 // Additional helper functions (stubs for complex implementations)
 
 #[allow(dead_code)]
-fn estimate_lombscargle_frequency_resolution(_config: &TestSignalConfig) -> SignalResult<f64> {
+fn estimate_lombscargle_frequency_resolution(config: &TestSignalConfig) -> SignalResult<f64> {
     Ok(0.01) // Placeholder implementation
 }
 
 #[allow(dead_code)]
-fn generate_highly_irregular_data(n: usize, time_span: f64) -> SignalResult<(Vec<f64>, Vec<f64>)> {
+fn generate_highly_irregular_data(n: usize, timespan: f64) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     let mut rng = rand::rng();
     let mut times = Vec::new();
     let mut signal = Vec::new();
 
     for _ in 0..n {
-        times.push(rng.random_range(0.0..time_span));
-        signal.push(rng.random_range(-1.0..1.0));
+        times.push(rng.gen_range(0.0..time_span));
+        signal.push(rng.gen_range(-1.0..1.0));
     }
 
-    times.sort_by(|a..b| a.partial_cmp(b).unwrap());
+    times.sort_by(|a, b| a.partial_cmp(b).unwrap());
     Ok((times, signal))
 }
 
@@ -900,7 +900,7 @@ fn test_lombscargle_precision() -> SignalResult<bool> {
 }
 
 #[allow(dead_code)]
-fn estimate_lombscargle_memory_efficiency(_sizes: &[usize]) -> f64 {
+fn estimate_lombscargle_memory_efficiency(sizes: &[usize]) -> f64 {
     0.8 // Placeholder
 }
 
@@ -910,37 +910,37 @@ fn test_frequency_grid_optimization() -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn test_false_alarm_probability(_significance_level: f64, _n_trials: usize) -> SignalResult<f64> {
+fn test_false_alarm_probability(_significance_level: f64, _ntrials: usize) -> SignalResult<f64> {
     Ok(0.05) // Placeholder
 }
 
 #[allow(dead_code)]
-fn test_statistical_power(_config: &TestSignalConfig, _n_trials: usize) -> SignalResult<f64> {
+fn test_statistical_power(_config: &TestSignalConfig, _ntrials: usize) -> SignalResult<f64> {
     Ok(0.85) // Placeholder
 }
 
 #[allow(dead_code)]
-fn test_bootstrap_validation(_config: &LombScargleValidationConfig) -> SignalResult<f64> {
+fn test_bootstrap_validation(config: &LombScargleValidationConfig) -> SignalResult<f64> {
     Ok(0.9) // Placeholder
 }
 
 #[allow(dead_code)]
-fn test_chi_squared_compatibility(_config: &LombScargleValidationConfig) -> SignalResult<f64> {
+fn test_chi_squared_compatibility(config: &LombScargleValidationConfig) -> SignalResult<f64> {
     Ok(0.95) // Placeholder
 }
 
 #[allow(dead_code)]
-fn test_analytical_agreement(_times: &[f64], _signal: &[f64]) -> SignalResult<f64> {
+fn test_analytical_agreement(_times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     Ok(0.98) // Placeholder
 }
 
 #[allow(dead_code)]
-fn test_normalization_methods(_times: &[f64], _signal: &[f64]) -> SignalResult<f64> {
+fn test_normalization_methods(_times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     Ok(0.95) // Placeholder
 }
 
 #[allow(dead_code)]
-fn test_autofreq_methods(_times: &[f64], _signal: &[f64]) -> SignalResult<f64> {
+fn test_autofreq_methods(_times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     Ok(0.9) // Placeholder
 }
 
@@ -1033,7 +1033,7 @@ fn enhance_with_advanced_sampling_tests(
                 .iter()
                 .enumerate()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                .map(|(i_)| i)
+                .map(|(i, _)| i)
                 .unwrap_or(0);
 
             // Check if peak is reasonable
@@ -1343,7 +1343,7 @@ fn enhance_with_real_world_signal_validation(
                 // Variable star with 2.3-day period plus noise
                 let period = 2.3;
                 let magnitude = 12.0 - 0.5 * (2.0 * PI * time / period).sin()
-                    + 0.1 * rng.random_range(-1.0..1.0);
+                    + 0.1 * rng.gen_range(-1.0..1.0);
                 star_magnitudes.push(magnitude);
             }
         }
@@ -1351,7 +1351,8 @@ fn enhance_with_real_world_signal_validation(
     }
 
     match lombscargle(
-        &star_times, &star_magnitudes,
+        &star_times,
+        &star_magnitudes,
         None,
         Some("standard"),
         Some(true),
@@ -1389,7 +1390,7 @@ fn enhance_with_real_world_signal_validation(
 
     // Test 2: Simulated heart rate variability
     let hrv_times: Vec<f64> = (0..300)
-        .map(|i| i as f64 * 1.0 + 0.1 * rng.random_range(-0.5..0.5))
+        .map(|i| i as f64 * 1.0 + 0.1 * rng.gen_range(-0.5..0.5))
         .collect();
     let hrv_signal: Vec<f64> = hrv_times
         .iter()
@@ -1397,12 +1398,13 @@ fn enhance_with_real_world_signal_validation(
             // Respiratory sinus arrhythmia (~0.25 Hz) + LF component (~0.1 Hz)
             60.0 + 5.0 * (2.0 * PI * 0.25 * t).sin()
                 + 3.0 * (2.0 * PI * 0.1 * t).sin()
-                + 1.0 * rng.random_range(-1.0..1.0)
+                + 1.0 * rng.gen_range(-1.0..1.0)
         })
         .collect();
 
     match lombscargle(
-        &hrv_times, &hrv_signal,
+        &hrv_times,
+        &hrv_signal,
         None,
         Some("standard"),
         Some(true),
@@ -1476,11 +1478,12 @@ fn enhance_with_statistical_robustness_tests(
         // Bootstrap trials
         let signal: Vec<f64> = times
             .iter()
-            .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.3 * rng.random_range(-1.0..1.0))
+            .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.3 * rng.gen_range(-1.0..1.0))
             .collect();
 
         match lombscargle(
-            &times, &signal,
+            &times,
+            &signal,
             None,
             Some("standard"),
             Some(true),
@@ -1493,7 +1496,7 @@ fn enhance_with_statistical_robustness_tests(
                     .iter()
                     .enumerate()
                     .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                    .map(|(i_)| i)
+                    .map(|(i, _)| i)
                     .unwrap_or(0);
                 bootstrap_results.push(freqs[peak_idx]);
             }
@@ -1552,7 +1555,7 @@ fn enhance_with_statistical_robustness_tests(
                 .iter()
                 .enumerate()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                .map(|(i_)| i)
+                .map(|(i, _)| i)
                 .unwrap_or(0);
 
             // Check if correct frequency is still detected despite outliers
@@ -1575,8 +1578,8 @@ fn enhance_with_statistical_robustness_tests(
         .map(|&t| {
             let signal = (2.0 * PI * 0.08 * t).sin();
             // Laplacian noise (exponential distribution - uniform)
-            let u1 = rng.random_range(0.0..1.0);
-            let u2: f64 = rng.random_range(0.0..1.0);
+            let u1 = rng.gen_range(0.0..1.0);
+            let u2: f64 = rng.gen_range(0.0..1.0);
             let laplacian_noise = if u1 < 0.5 {
                 -(-2.0f64 * u2.ln()).sqrt()
             } else {
@@ -1587,7 +1590,8 @@ fn enhance_with_statistical_robustness_tests(
         .collect();
 
     match lombscargle(
-        &times, &laplacian_signal,
+        &times,
+        &laplacian_signal,
         None,
         Some("standard"),
         Some(true),
@@ -1621,16 +1625,16 @@ fn enhance_with_statistical_robustness_tests(
 
 /// Calculate enhanced overall score for Advanced validation
 #[allow(dead_code)]
-fn calculate_enhanced_lombscargle_score(_result: &LombScargleValidationResult) -> f64 {
+fn calculate_enhanced_lombscargle_score(result: &LombScargleValidationResult) -> f64 {
     let mut score = 100.0;
 
     // Enhanced accuracy scoring (40 points)
-    score -= (1.0 - _result.accuracy_metrics.single_freq_accuracy) * 10.0;
-    score -= (1.0 - _result.accuracy_metrics.multi_freq_accuracy) * 10.0;
-    score -= _result.accuracy_metrics.false_positive_rate * 50.0;
-    score -= _result.accuracy_metrics.false_negative_rate * 50.0;
-    score -= (1.0 - _result.accuracy_metrics.noise_floor_accuracy) * 5.0;
-    score -= _result.accuracy_metrics.spectral_leakage_level * 10.0;
+    score -= (1.0 - result.accuracy_metrics.single_freq_accuracy) * 10.0;
+    score -= (1.0 - result.accuracy_metrics.multi_freq_accuracy) * 10.0;
+    score -= result.accuracy_metrics.false_positive_rate * 50.0;
+    score -= result.accuracy_metrics.false_negative_rate * 50.0;
+    score -= (1.0 - result.accuracy_metrics.noise_floor_accuracy) * 5.0;
+    score -= result.accuracy_metrics.spectral_leakage_level * 10.0;
 
     // Enhanced numerical stability (25 points)
     if !_result.numerical_stability.irregular_sampling_stable {
@@ -1647,20 +1651,20 @@ fn calculate_enhanced_lombscargle_score(_result: &LombScargleValidationResult) -
     }
 
     // Enhanced performance scoring (20 points)
-    if _result.performance.scalability_factor > 2.5 {
+    if result.performance.scalability_factor > 2.5 {
         score -= 8.0;
     }
-    if _result.performance.memory_efficiency < 0.6 {
+    if result.performance.memory_efficiency < 0.6 {
         score -= 7.0;
     }
-    if _result.performance.frequency_optimization < 0.7 {
+    if result.performance.frequency_optimization < 0.7 {
         score -= 5.0;
     }
 
     // Enhanced statistical validation (15 points)
-    score -= (1.0 - _result.statistical_validation.false_alarm_accuracy) * 5.0;
-    score -= (1.0 - _result.statistical_validation.statistical_power) * 5.0;
-    score -= (1.0 - _result.statistical_validation.bootstrap_validation) * 5.0;
+    score -= (1.0 - result.statistical_validation.false_alarm_accuracy) * 5.0;
+    score -= (1.0 - result.statistical_validation.statistical_power) * 5.0;
+    score -= (1.0 - result.statistical_validation.bootstrap_validation) * 5.0;
 
     score.max(0.0).min(100.0)
 }

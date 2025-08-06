@@ -96,7 +96,7 @@ where
     F: Fn(&[T], &[T]) -> f64,
 {
     // Check that dimensions match
-    let n_samples = _features.nrows();
+    let n_samples = features.nrows();
     if n_samples != y_true.len() || n_samples != y_pred.len() {
         return Err(MetricsError::InvalidInput(format!(
             "Dimensions mismatch: _features ({} rows), y_true ({}), y_pred ({})",
@@ -112,7 +112,7 @@ where
         ));
     }
 
-    let n_features = _features.ncols();
+    let n_features = features.ncols();
     for &feature_idx in categorical_features {
         if feature_idx >= n_features {
             return Err(MetricsError::InvalidInput(format!(
@@ -135,7 +135,7 @@ where
         // Find unique values for this feature
         let mut unique_values = BTreeSet::new();
         for i in 0..n_samples {
-            let value = _features[[i, feature_idx]].to_f64().unwrap();
+            let value = features[[i, feature_idx]].to_f64().unwrap();
             // Convert to integer by rounding to handle precision issues
             let rounded_value = (value * 1000.0).round() as i64;
             unique_values.insert(rounded_value);
@@ -153,11 +153,11 @@ where
             let mut slice_y_pred = Vec::new();
 
             for i in 0..n_samples {
-                let feature_value = _features[[i, feature_idx]].to_f64().unwrap();
+                let feature_value = features[[i, feature_idx]].to_f64().unwrap();
                 let rounded_value = (feature_value * 1000.0).round() as i64;
 
                 if rounded_value == int_value {
-                    mask[i] = _true;
+                    mask[i] = true;
                     slice_y_true.push(y_true[i].clone());
                     slice_y_pred.push(y_pred[i].clone());
                 }

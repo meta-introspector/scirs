@@ -238,9 +238,9 @@ impl EdgeAISuite {
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: EdgeAIConfig) -> Self {
+    pub fn with_config(config: EdgeAIConfig) -> Self {
         Self {
-            _config,
+            config: config,
             baselines: EdgeBaselines::default(),
         }
     }
@@ -296,7 +296,7 @@ impl EdgeAISuite {
         Ok(EdgePerformanceMetrics {
             avg_latency,
             latency_percentiles,
-            _throughput,
+            throughput,
             avg_power,
             energy_efficiency,
             memory_usage: memory_usage_avg,
@@ -574,7 +574,7 @@ impl EdgeAISuite {
 
     // Helper methods
 
-    fn percentile(&self, sorted_data: &[f64], percentile: f64) -> f64 {
+    fn percentile(&self, sorteddata: &[f64], percentile: f64) -> f64 {
         if sorted_data.is_empty() {
             return 0.0;
         }
@@ -582,7 +582,7 @@ impl EdgeAISuite {
         sorted_data[index.min(sorted_data.len() - 1)]
     }
 
-    fn find_convergence_round(&self, accuracy_per_round: &[f64]) -> Result<usize> {
+    fn find_convergence_round(&self, accuracy_perround: &[f64]) -> Result<usize> {
         let threshold = 0.01; // 1% improvement threshold
 
         for i in 1..accuracy_per_round.len() {
@@ -595,7 +595,7 @@ impl EdgeAISuite {
         Ok(accuracy_per_round.len())
     }
 
-    fn calculate_data_heterogeneity(&self, data_distributions: &[Vec<f64>]) -> Result<f64> {
+    fn calculate_data_heterogeneity(&self, datadistributions: &[Vec<f64>]) -> Result<f64> {
         if data_distributions.is_empty() {
             return Ok(0.0);
         }
@@ -635,7 +635,7 @@ impl EdgeAISuite {
         Ok(kl)
     }
 
-    fn estimate_byzantine_robustness(&self, accuracy_per_round: &[f64]) -> Result<f64> {
+    fn estimate_byzantine_robustness(&self, accuracy_perround: &[f64]) -> Result<f64> {
         // Simple robustness estimate based on accuracy stability
         if accuracy_per_round.len() < 2 {
             return Ok(1.0);

@@ -236,7 +236,7 @@ fn calculate_optimal_dimensions(
 ) -> (Vec<usize>, Vec<usize>) {
     let optimal_workgroup = match backend {
         GpuBackend::Cuda => {
-            // NVIDIA GPUs prefer multiples of 32 (warp _size)
+            // NVIDIA GPUs prefer multiples of 32 (warp size)
             let warp_aligned = workgroup_size[0].div_ceil(32) * 32;
             [warp_aligned.min(1024), 1, 1] // Max 1024 threads per block
         }
@@ -249,7 +249,7 @@ fn calculate_optimal_dimensions(
             ]
         }
         GpuBackend::Metal => {
-            // Apple GPUs prefer multiples of 32 (simdgroup _size)
+            // Apple GPUs prefer multiples of 32 (simdgroup size)
             let simd_aligned = workgroup_size[0].div_ceil(32) * 32;
             [simd_aligned.min(1024), 1, 1]
         }
@@ -258,7 +258,7 @@ fn calculate_optimal_dimensions(
             workgroup_size
         }
         GpuBackend::Rocm => {
-            // AMD GPUs prefer multiples of 64 (wavefront _size)
+            // AMD GPUs prefer multiples of 64 (wavefront size)
             let wave_aligned = workgroup_size[0].div_ceil(64) * 64;
             [wave_aligned.min(1024), 1, 1]
         }
@@ -837,7 +837,7 @@ pub enum MemoryLayout {
 }
 
 impl GpuMemoryManager {
-    pub fn new(_backend: GpuBackend) -> Result<Self, GpuError> {
+    pub fn new(backend: GpuBackend) -> Result<Self, GpuError> {
         let device = GpuDevice::get_default(_backend)?;
 
         let alignment_preference = match _backend {
@@ -1217,12 +1217,12 @@ pub fn optimize_memory_bandwidth(
     access_pattern: AccessPattern,
 ) -> MemoryStrategy {
     match (backend, access_pattern, data_size) {
-        (GpuBackend::Cuda, AccessPattern::Sequential, _size) if _size > 1024 * 1024 => {
+        (GpuBackend::Cuda, AccessPattern::Sequential, size) if _size > 1024 * 1024 => {
             MemoryStrategy::Coalesced
         }
         (GpuBackend::Cuda, AccessPattern::Random, _) => MemoryStrategy::TextureMemory,
         (GpuBackend::OpenCL, AccessPattern::Blocked, _) => MemoryStrategy::SharedMemory,
-        (GpuBackend::Metal, _, _size) if _size > 512 * 1024 => {
+        (GpuBackend::Metal, _, size) if _size > 512 * 1024 => {
             MemoryStrategy::SharedMemory // Unified memory architecture
         }
         _ => MemoryStrategy::Standard,
@@ -1403,9 +1403,9 @@ pub struct GpuPerformanceProfiler {
 }
 
 impl GpuPerformanceProfiler {
-    pub fn new(_backend: GpuBackend) -> Self {
+    pub fn new(backend: GpuBackend) -> Self {
         Self {
-            backend: _backend,
+            backend: backend,
             timing_data: std::collections::HashMap::new(),
         }
     }
@@ -1439,7 +1439,7 @@ impl GpuPerformanceProfiler {
     }
 
     /// Get average execution time for an operation
-    pub fn get_average_time(&self, operation_name: &str) -> Option<f64> {
+    pub fn get_average_time(&self, operationname: &str) -> Option<f64> {
         if let Some(timings) = self.timing_data.get(operation_name) {
             if !timings.is_empty() {
                 Some(timings.iter().sum::<f64>() / timings.len() as f64)
@@ -1546,7 +1546,7 @@ impl GpuPerformanceProfiler {
     }
 
     /// Get detailed performance metrics for a specific operation
-    pub fn get_operation_metrics(&self, operation_name: &str) -> Option<OperationMetrics> {
+    pub fn get_operation_metrics(&self, operationname: &str) -> Option<OperationMetrics> {
         if let Some(timings) = self.timing_data.get(operation_name) {
             if timings.is_empty() {
                 return None;

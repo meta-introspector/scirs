@@ -21,7 +21,7 @@ pub struct IterativeConfig<T: Float> {
     /// Absolute tolerance for convergence
     pub abs_tolerance: T,
     /// Relative tolerance for convergence
-    pub rel_tolerance: T,
+    pub reltolerance: T,
     /// Whether to use adaptive tolerance
     pub adaptive_tolerance: bool,
 }
@@ -31,7 +31,7 @@ impl<T: Float> Default for IterativeConfig<T> {
         Self {
             max_iterations: 1000,
             abs_tolerance: cast::<f64, T>(1e-10).unwrap_or(T::epsilon()),
-            rel_tolerance: cast::<f64, T>(1e-8).unwrap_or(T::epsilon()),
+            reltolerance: cast::<f64, T>(1e-8).unwrap_or(T::epsilon()),
             adaptive_tolerance: true,
         }
     }
@@ -346,7 +346,7 @@ pub fn conjugate_gradient<T: Float + StableComputation>(
         }
 
         let tol = if config.adaptive_tolerance {
-            config.abs_tolerance + config.rel_tolerance * b_norm
+            config.abs_tolerance + config.reltolerance * b_norm
         } else {
             config.abs_tolerance
         };
@@ -438,7 +438,7 @@ pub fn gmres<T: Float + StableComputation>(
 
         // Check convergence
         let tol = if config.adaptive_tolerance {
-            config.abs_tolerance + config.rel_tolerance * b_norm
+            config.abs_tolerance + config.reltolerance * b_norm
         } else {
             config.abs_tolerance
         };
@@ -626,7 +626,7 @@ where
 
 /// Stable numerical integration using adaptive Simpson's rule
 #[allow(dead_code)]
-pub fn adaptive_simpson<T, F>(f: F, a: T, b: T, tolerance: T, max_depth: usize) -> CoreResult<T>
+pub fn adaptive_simpson<T, F>(f: F, a: T, b: T, tolerance: T, maxdepth: usize) -> CoreResult<T>
 where
     T: Float + StableComputation,
     F: Fn(T) -> T,
@@ -700,7 +700,7 @@ where
 
     let whole = simpson_rule(&f, a, b);
     Ok(adaptive_simpson_recursive(
-        &f, a, b, tolerance, whole, 0, max_depth,
+        &f, a, b, tolerance, whole, 0, maxdepth,
     ))
 }
 
@@ -914,7 +914,7 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_exp() {
+    fn testmatrix_exp() {
         // Test with diagonal matrix
         let a = array![[1.0, 0.0], [0.0, 2.0]];
 

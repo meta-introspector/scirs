@@ -233,7 +233,7 @@ fn main() -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn load_analysis_input(_input_dir: &str) -> Result<AnalysisInput> {
+fn load_analysis_input(_inputdir: &str) -> Result<AnalysisInput> {
     let input_path = Path::new(_input_dir);
 
     // Try to find relevant files
@@ -250,12 +250,12 @@ fn load_analysis_input(_input_dir: &str) -> Result<AnalysisInput> {
                 if filename.contains("memory_profile") && filename.ends_with(".json") {
                     // Try to parse as profiling results
                     let content = fs::read_to_string(&path)?;
-                    if let Ok(profiling_data) = serde_json::from, _str::<serde_json::Value>(&content)
+                    if let Ok(profiling_data) = serde_json::from_str::<serde_json::Value>(&content)
                     {
                         // Extract snapshots if available
                         if let Some(snapshot_array) = profiling_data.get("snapshots") {
                             if let Ok(parsed_snapshots) =
-                                serde_json::from, _value::<Vec<MemoryUsageSnapshot>>(
+                                serde_json::from_value::<Vec<MemoryUsageSnapshot>>(
                                     snapshot_array.clone(),
                                 )
                             {
@@ -266,7 +266,7 @@ fn load_analysis_input(_input_dir: &str) -> Result<AnalysisInput> {
                         // Extract metadata if available
                         if let Some(session_data) = profiling_data.get("session") {
                             if let Ok(parsed_metadata) =
-                                serde_json::from, _value::<AnalysisMetadata>(session_data.clone())
+                                serde_json::from_value::<AnalysisMetadata>(session_data.clone())
                             {
                                 metadata = Some(parsed_metadata);
                             }
@@ -277,7 +277,7 @@ fn load_analysis_input(_input_dir: &str) -> Result<AnalysisInput> {
                 if filename.contains("allocation") && filename.ends_with(".json") {
                     // Try to parse allocation events
                     let content = fs::read_to_string(&path)?;
-                    if let Ok(events) = serde_json::from, _str::<Vec<AllocationEvent>>(&content) {
+                    if let Ok(events) = serde_json::from_str::<Vec<AllocationEvent>>(&content) {
                         allocation_events.extend(events);
                     }
                 }
@@ -286,7 +286,7 @@ fn load_analysis_input(_input_dir: &str) -> Result<AnalysisInput> {
     } else {
         // Single file input
         let content = fs::read_to_string(input_path)?;
-        let data: serde, json: Value = serde_json:::from_str(&content)?;
+        let data: serde_json::Value = serde_json::from_str(&content)?;
 
         // Try to extract data from the file
         if let Some(snapshot_array) = data.get("snapshots") {
@@ -319,9 +319,7 @@ fn load_analysis_input(_input_dir: &str) -> Result<AnalysisInput> {
 }
 
 #[allow(dead_code)]
-fn analyze_memory_patterns(
-    input: &AnalysisInput, detailed: bool,
-) -> Result<PatternAnalysisResult> {
+fn analyze_memory_patterns(input: &AnalysisInput, detailed: bool) -> Result<PatternAnalysisResult> {
     println!("  📈 Analyzing allocation statistics...");
     let allocation_statistics =
         analyze_allocation_statistics(&input.allocation_events, &input.metadata);
@@ -412,7 +410,8 @@ fn analyze_allocation_statistics(
             0..=1024 => "0-1KB",
             1025..=10240 => "1-10KB",
             10241..=102400 => "10-100KB",
-            102401..=1048576 => "100KB-1MB"_ => ">1MB",
+            102401..=1048576 => "100KB-1MB",
+            _ => ">1MB",
         };
         *allocation_size_distribution
             .entry(bucket.to_string())
@@ -445,8 +444,8 @@ fn analyze_allocation_statistics(
 }
 
 #[allow(dead_code)]
-fn analyze_memory_trends(_snapshots: &[MemoryUsageSnapshot]) -> MemoryTrends {
-    if _snapshots.is_empty() {
+fn analyze_memory_trends(snapshots: &[MemoryUsageSnapshot]) -> MemoryTrends {
+    if snapshots.is_empty() {
         return MemoryTrends {
             overall_trend: TrendDirection::Stable,
             trend_strength: 0.0,
@@ -458,21 +457,21 @@ fn analyze_memory_trends(_snapshots: &[MemoryUsageSnapshot]) -> MemoryTrends {
         };
     }
 
-    let memory_values: Vec<f64> = _snapshots.iter().map(|s| s.total_memory as f64).collect();
-    let peak_memory_usage = _snapshots.iter().map(|s| s.total_memory).max().unwrap_or(0);
+    let memory_values: Vec<f64> = snapshots.iter().map(|s| s.total_memory as f64).collect();
+    let peak_memory_usage = snapshots.iter().map(|s| s.total_memory).max().unwrap_or(0);
     let average_memory_usage = memory_values.iter().sum::<f64>() / memory_values.len() as f64;
 
     // Calculate trend
     let (trend_direction, trend_strength) = calculate_trend(&memory_values);
 
     // Calculate growth rate
-    let first_timestamp = _snapshots.first().unwrap().timestamp;
-    let last_timestamp = _snapshots.last().unwrap().timestamp;
+    let first_timestamp = snapshots.first().unwrap().timestamp;
+    let last_timestamp = snapshots.last().unwrap().timestamp;
     let duration_seconds = (last_timestamp - first_timestamp) as f64 / 1000.0;
 
     let growth_rate_bytes_per_second = if duration_seconds > 0.0 {
         (_snapshots.last().unwrap().total_memory as f64
-            - _snapshots.first().unwrap().total_memory as f64)
+            - snapshots.first().unwrap().total_memory as f64)
             / duration_seconds
     } else {
         0.0
@@ -501,16 +500,16 @@ fn analyze_memory_trends(_snapshots: &[MemoryUsageSnapshot]) -> MemoryTrends {
 }
 
 #[allow(dead_code)]
-fn calculate_trend(_values: &[f64]) -> (TrendDirection, f64) {
-    if _values.len() < 2 {
+fn calculate_trend(values: &[f64]) -> (TrendDirection, f64) {
+    if values.len() < 2 {
         return (TrendDirection::Stable, 0.0);
     }
 
     // Simple linear regression for trend analysis
-    let n = _values.len() as f64;
+    let n = values.len() as f64;
     let x_sum: f64 = (0.._values.len()).map(|i| i as f64).sum();
-    let y_sum: f64 = _values.iter().sum();
-    let xy_sum: f64 = _values.iter().enumerate().map(|(i, &y)| i as f64 * y).sum();
+    let y_sum: f64 = values.iter().sum();
+    let xy_sum: f64 = values.iter().enumerate().map(|(i, &y)| i as f64 * y).sum();
     let x2_sum: f64 = (0.._values.len()).map(|i| (i as f64).powi(2)).sum();
 
     let slope = (n * xy_sum - x_sum * y_sum) / (n * x2_sum - x_sum.powi(2));
@@ -523,26 +522,27 @@ fn calculate_trend(_values: &[f64]) -> (TrendDirection, f64) {
         TrendDirection::Stable
     };
 
-    let strength = slope.abs() / _values.iter().sum::<f64>() * n;
+    let strength = slope.abs() / values.iter().sum::<f64>() * n;
 
     (direction, strength)
 }
 
 #[allow(dead_code)]
-fn calculate_std_dev(_values: &[f64]) -> f64 {
-    if _values.len() <= 1 {
+fn calculate_std_dev(values: &[f64]) -> f64 {
+    if values.len() <= 1 {
         return 0.0;
     }
 
-    let mean = _values.iter().sum::<f64>() / _values.len() as f64;
+    let mean = values.iter().sum::<f64>() / values.len() as f64;
     let variance =
-        _values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (_values.len() - 1) as f64;
+        values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (_values.len() - 1) as f64;
     variance.sqrt()
 }
 
 #[allow(dead_code)]
 fn detect_memory_patterns(
-    _snapshots: &[MemoryUsageSnapshot], _events: &[AllocationEvent],
+    _snapshots: &[MemoryUsageSnapshot],
+    _events: &[AllocationEvent],
 ) -> Vec<MemoryPattern> {
     // Simplified pattern detection
     vec![MemoryPattern {
@@ -555,7 +555,8 @@ fn detect_memory_patterns(
 
 #[allow(dead_code)]
 fn detect_memory_anomalies(
-    _snapshots: &[MemoryUsageSnapshot], _events: &[AllocationEvent],
+    _snapshots: &[MemoryUsageSnapshot],
+    _events: &[AllocationEvent],
 ) -> Vec<MemoryAnomaly> {
     // Simplified anomaly detection
     Vec::new()
@@ -564,7 +565,9 @@ fn detect_memory_anomalies(
 #[allow(dead_code)]
 fn generate_optimization_suggestions(
     stats: &AllocationStatistics,
-    trends: &MemoryTrends, patterns: &[MemoryPattern], _anomalies: &[MemoryAnomaly],
+    trends: &MemoryTrends,
+    patterns: &[MemoryPattern],
+    _anomalies: &[MemoryAnomaly],
 ) -> Vec<OptimizationSuggestion> {
     let mut suggestions = Vec::new();
 
@@ -630,7 +633,8 @@ fn generate_optimization_suggestions(
 #[allow(dead_code)]
 fn assess_risks(
     stats: &AllocationStatistics,
-    trends: &MemoryTrends, patterns: &[MemoryPattern],
+    trends: &MemoryTrends,
+    patterns: &[MemoryPattern],
     anomalies: &[MemoryAnomaly],
 ) -> RiskAssessment {
     let mut risk_factors = Vec::new();
@@ -710,64 +714,64 @@ fn assess_risks(
 }
 
 #[allow(dead_code)]
-fn display_analysis_summary(_result: &PatternAnalysisResult) {
+fn display_analysis_summary(result: &PatternAnalysisResult) {
     println!("\n📋 Memory Pattern Analysis Summary");
     println!("=================================");
-    println!("Session: {}", _result.session_metadata.session_id);
-    println!("Optimizer: {}", _result.session_metadata.optimizer_type);
+    println!("Session: {}", result.session_metadata.session_id);
+    println!("Optimizer: {}", result.session_metadata.optimizer_type);
     println!(
         "Problem size: {} parameters",
-        _result.session_metadata.problem_size
+        result.session_metadata.problem_size
     );
 
     println!("\n📊 Allocation Statistics:");
     println!(
         "  Total allocations: {}",
-        _result.allocation_statistics.total_allocations
+        result.allocation_statistics.total_allocations
     );
     println!(
         "  Total deallocations: {}",
-        _result.allocation_statistics.total_deallocations
+        result.allocation_statistics.total_deallocations
     );
     println!(
         "  Peak active allocations: {}",
-        _result.allocation_statistics.peak_active_allocations
+        result.allocation_statistics.peak_active_allocations
     );
     println!(
         "  Average allocation size: {:.2} KB",
-        _result.allocation_statistics.average_allocation_size / 1024.0
+        result.allocation_statistics.average_allocation_size / 1024.0
     );
     println!(
         "  Allocation rate: {:.2}/sec",
-        _result.allocation_statistics.allocation_rate_per_second
+        result.allocation_statistics.allocation_rate_per_second
     );
 
     println!("\n📈 Memory Trends:");
-    println!("  Overall trend: {:?}", _result.memory_trends.overall_trend);
+    println!("  Overall trend: {:?}", result.memory_trends.overall_trend);
     println!(
         "  Growth rate: {:.2} KB/s",
-        _result.memory_trends.growth_rate_bytes_per_second / 1024.0
+        result.memory_trends.growth_rate_bytes_per_second / 1024.0
     );
     println!(
         "  Peak memory: {:.2} MB",
-        _result.memory_trends.peak_memory_usage as f64 / (1024.0 * 1024.0)
+        result.memory_trends.peak_memory_usage as f64 / (1024.0 * 1024.0)
     );
     println!(
         "  Memory stability: {:.2}%",
-        _result.memory_trends.memory_usage_stability * 100.0
+        result.memory_trends.memory_usage_stability * 100.0
     );
 
     println!("\n🎯 Risk Assessment:");
-    println!("  Overall risk: {:?}", _result.risk_assessment.overall_risk);
-    println!("  Leak risk: {:?}", _result.risk_assessment.leak_risk);
+    println!("  Overall risk: {:?}", result.risk_assessment.overall_risk);
+    println!("  Leak risk: {:?}", result.risk_assessment.leak_risk);
     println!(
         "  Performance risk: {:?}",
-        _result.risk_assessment.performance_risk
+        result.risk_assessment.performance_risk
     );
 
     if !_result.optimization_suggestions.is_empty() {
         println!("\n💡 Top Optimization Suggestions:");
-        for (i, suggestion) in _result.optimization_suggestions.iter().take(3).enumerate() {
+        for (i, suggestion) in result.optimization_suggestions.iter().take(3).enumerate() {
             println!(
                 "  {}. {:?} - {:?}",
                 i + 1,
@@ -780,7 +784,7 @@ fn display_analysis_summary(_result: &PatternAnalysisResult) {
 }
 
 #[allow(dead_code)]
-fn generate_markdown_report(_result: &PatternAnalysisResult) -> String {
+fn generate_markdown_report(result: &PatternAnalysisResult) -> String {
     format!(
         r#"# Memory Pattern Analysis Report
 
@@ -818,23 +822,23 @@ fn generate_markdown_report(_result: &PatternAnalysisResult) -> String {
 ## Mitigation Strategies
 {}
 "#,
-        _result.session_metadata.session_id,
-        _result.session_metadata.optimizer_type,
-        _result.session_metadata.problem_size,
-        _result.session_metadata.duration_seconds,
-        _result.allocation_statistics.total_allocations,
-        _result.allocation_statistics.total_deallocations,
-        _result.allocation_statistics.peak_active_allocations,
-        _result.allocation_statistics.average_allocation_size / 1024.0,
-        _result.allocation_statistics.allocation_rate_per_second,
-        _result.memory_trends.overall_trend,
-        _result.memory_trends.growth_rate_bytes_per_second / 1024.0,
-        _result.memory_trends.peak_memory_usage as f64 / (1024.0 * 1024.0),
-        _result.memory_trends.memory_usage_stability * 100.0,
-        _result.risk_assessment.overall_risk,
-        _result.risk_assessment.leak_risk,
-        _result.risk_assessment.performance_risk,
-        _result.risk_assessment.stability_risk,
+        result.session_metadata.session_id,
+        result.session_metadata.optimizer_type,
+        result.session_metadata.problem_size,
+        result.session_metadata.duration_seconds,
+        result.allocation_statistics.total_allocations,
+        result.allocation_statistics.total_deallocations,
+        result.allocation_statistics.peak_active_allocations,
+        result.allocation_statistics.average_allocation_size / 1024.0,
+        result.allocation_statistics.allocation_rate_per_second,
+        result.memory_trends.overall_trend,
+        result.memory_trends.growth_rate_bytes_per_second / 1024.0,
+        result.memory_trends.peak_memory_usage as f64 / (1024.0 * 1024.0),
+        result.memory_trends.memory_usage_stability * 100.0,
+        result.risk_assessment.overall_risk,
+        result.risk_assessment.leak_risk,
+        result.risk_assessment.performance_risk,
+        result.risk_assessment.stability_risk,
         _result
             .optimization_suggestions
             .iter()
@@ -869,7 +873,7 @@ fn generate_markdown_report(_result: &PatternAnalysisResult) -> String {
 }
 
 #[allow(dead_code)]
-fn generate_html_report(_result: &PatternAnalysisResult) -> String {
+fn generate_html_report(result: &PatternAnalysisResult) -> String {
     format!(
         r#"<!DOCTYPE html>
 <html>
@@ -924,23 +928,23 @@ fn generate_html_report(_result: &PatternAnalysisResult) -> String {
     </div>
 </body>
 </html>"#,
-        _result.session_metadata.session_id,
-        _result.session_metadata.optimizer_type,
+        result.session_metadata.session_id,
+        result.session_metadata.optimizer_type,
         chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC"),
-        _result.allocation_statistics.total_allocations,
-        _result.allocation_statistics.total_deallocations,
-        _result.allocation_statistics.peak_active_allocations,
-        _result.allocation_statistics.average_allocation_size / 1024.0,
-        _result.memory_trends.overall_trend,
-        _result.memory_trends.growth_rate_bytes_per_second / 1024.0,
-        _result.memory_trends.peak_memory_usage as f64 / (1024.0 * 1024.0),
-        _result.memory_trends.memory_usage_stability * 100.0,
+        result.allocation_statistics.total_allocations,
+        result.allocation_statistics.total_deallocations,
+        result.allocation_statistics.peak_active_allocations,
+        result.allocation_statistics.average_allocation_size / 1024.0,
+        result.memory_trends.overall_trend,
+        result.memory_trends.growth_rate_bytes_per_second / 1024.0,
+        result.memory_trends.peak_memory_usage as f64 / (1024.0 * 1024.0),
+        result.memory_trends.memory_usage_stability * 100.0,
         risk_level_to_css_class(&_result.risk_assessment.overall_risk),
-        _result.risk_assessment.overall_risk,
+        result.risk_assessment.overall_risk,
         risk_level_to_css_class(&_result.risk_assessment.leak_risk),
-        _result.risk_assessment.leak_risk,
+        result.risk_assessment.leak_risk,
         risk_level_to_css_class(&_result.risk_assessment.performance_risk),
-        _result.risk_assessment.performance_risk,
+        result.risk_assessment.performance_risk,
         _result
             .optimization_suggestions
             .iter()
@@ -954,7 +958,7 @@ fn generate_html_report(_result: &PatternAnalysisResult) -> String {
 }
 
 #[allow(dead_code)]
-fn risk_level_to_css_class(_risk: &RiskLevel) -> &'static str {
+fn risk_level_to_css_class(risk: &RiskLevel) -> &'static str {
     match _risk {
         RiskLevel::High | RiskLevel::Critical => "high",
         RiskLevel::Medium => "medium",

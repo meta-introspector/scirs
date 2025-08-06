@@ -232,9 +232,9 @@ impl Default for StabilityConfig {
 
 impl NumericalStabilityAnalyzer {
     /// Create a new numerical stability analyzer
-    pub fn new(_config: StabilityConfig) -> Self {
+    pub fn new(config: StabilityConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             analysis_results: HashMap::new(),
         }
     }

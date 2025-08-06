@@ -321,9 +321,9 @@ pub struct ResourceMonitors {
 
 impl AdvancedBenchmarkSuite {
     /// Create a new benchmark suite
-    pub fn new(_config: BenchmarkConfig) -> Self {
+    pub fn new(config: BenchmarkConfig) -> Self {
         Self {
-            _config,
+            config,
             performance_history: Vec::new(),
             stats_analyzer: StatisticalAnalyzer::new(),
             workload_generators: WorkloadGenerators::new(),
@@ -605,7 +605,7 @@ impl AdvancedBenchmarkSuite {
     }
 
     /// Calculate quality metrics from quality scores
-    fn calculate_quality_metrics(&self, quality_scores: &[f64]) -> QualityMetrics {
+    fn calculate_quality_metrics(&self, qualityscores: &[f64]) -> QualityMetrics {
         QualityMetrics {
             quality_scores: self.calculate_statistical_summary(quality_scores),
             accuracy: AccuracyMetrics::default(),
@@ -615,7 +615,7 @@ impl AdvancedBenchmarkSuite {
     }
 
     /// Calculate scalability metrics
-    fn calculate_scalability_metrics(&self_latencies: &[f64]) -> ScalabilityMetrics {
+    fn calculate_scalability_metrics(selflatencies: &[f64]) -> ScalabilityMetrics {
         ScalabilityMetrics {
             batch_scaling: vec![(1, 1.0), (4, 0.9), (8, 0.85), (16, 0.8)],
             input_size_scaling: vec![(240, 1.0), (480, 0.95), (720, 0.9), (1080, 0.85)],
@@ -756,7 +756,7 @@ impl StatisticalAnalyzer {
             performance_predictor: PerformancePredictor,
         }
     }
-    fn analyze_trends(&mut self_results: &[BenchmarkResult]) {}
+    fn analyze_trends(&mut selfresults: &[BenchmarkResult]) {}
 }
 
 impl WorkloadGenerators {
@@ -809,7 +809,7 @@ impl ResourceMonitors {
 }
 
 impl PerformanceReport {
-    fn new(_results: &[BenchmarkResult], _config: &BenchmarkConfig) -> Self {
+    fn new(_results: &[BenchmarkResult], config: &BenchmarkConfig) -> Self {
         Self
     }
 }

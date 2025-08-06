@@ -116,7 +116,7 @@ impl TextGenerationMetrics {
     }
 
     /// Set maximum n-gram for BLEU calculation
-    pub fn with_max_ngram(mut self, max_ngram: usize) -> Self {
+    pub fn with_max_ngram(mut self, maxngram: usize) -> Self {
         self.max_ngram = max_ngram;
         self
     }
@@ -380,7 +380,7 @@ impl TextClassificationMetrics {
             );
 
             class_f1_scores.push(f1);
-            class_weights.push(support);
+            class_weightspush(support);
         }
 
         // Calculate macro F1 (unweighted average)
@@ -394,11 +394,11 @@ impl TextClassificationMetrics {
         let micro_f1 = accuracy; // For multi-class, micro F1 equals accuracy
 
         // Calculate weighted F1
-        let total_support: usize = class_weights.iter().sum();
+        let total_support: usize = class_weightsiter().sum();
         let weighted_f1 = if total_support > 0 {
             class_f1_scores
                 .iter()
-                .zip(class_weights.iter())
+                .zip(class_weightsiter())
                 .map(|(f1, weight)| f1 * (*weight as f64))
                 .sum::<f64>()
                 / total_support as f64

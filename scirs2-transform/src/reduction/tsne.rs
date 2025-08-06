@@ -71,10 +71,10 @@ struct OctTreeNode {
 
 impl SpatialTree {
     /// Create a new quadtree for 2D embeddings
-    fn new_quadtree(_embedding: &Array2<f64>) -> Result<Self> {
-        let n_samples = _embedding.shape()[0];
+    fn new_quadtree(embedding: &Array2<f64>) -> Result<Self> {
+        let n_samples = embedding.shape()[0];
 
-        if _embedding.shape()[1] != 2 {
+        if embedding.shape()[1] != 2 {
             return Err(TransformError::InvalidInput(
                 "QuadTree requires 2D _embedding".to_string(),
             ));
@@ -87,8 +87,8 @@ impl SpatialTree {
         let mut y_max = f64::NEG_INFINITY;
 
         for i in 0..n_samples {
-            let x = _embedding[[i, 0]];
-            let y = _embedding[[i, 1]];
+            let x = embedding[[i, 0]];
+            let y = embedding[[i, 1]];
             x_min = x_min.min(x);
             x_max = x_max.max(x);
             y_min = y_min.min(y);
@@ -125,10 +125,10 @@ impl SpatialTree {
     }
 
     /// Create a new octree for 3D embeddings
-    fn new_octree(_embedding: &Array2<f64>) -> Result<Self> {
-        let n_samples = _embedding.shape()[0];
+    fn new_octree(embedding: &Array2<f64>) -> Result<Self> {
+        let n_samples = embedding.shape()[0];
 
-        if _embedding.shape()[1] != 3 {
+        if embedding.shape()[1] != 3 {
             return Err(TransformError::InvalidInput(
                 "OctTree requires 3D _embedding".to_string(),
             ));
@@ -143,9 +143,9 @@ impl SpatialTree {
         let mut z_max = f64::NEG_INFINITY;
 
         for i in 0..n_samples {
-            let x = _embedding[[i, 0]];
-            let y = _embedding[[i, 1]];
-            let z = _embedding[[i, 2]];
+            let x = embedding[[i, 0]];
+            let y = embedding[[i, 1]];
+            let z = embedding[[i, 2]];
             x_min = x_min.min(x);
             x_max = x_max.max(x);
             y_min = y_min.min(y);
@@ -678,7 +678,8 @@ impl OctTreeNode {
     #[allow(clippy::too_many_arguments)]
     fn compute_forces_recursive_oct(
         &self,
-        point: &Array1<f64>, _point_idx: usize,
+        point: &Array1<f64>,
+        _point_idx: usize,
         angle: f64,
         degrees_of_freedom: f64,
         force: &mut Array1<f64>,
@@ -717,7 +718,8 @@ impl OctTreeNode {
             } else if let Some(ref children) = self.children {
                 for child in children.iter() {
                     child.compute_forces_recursive_oct(
-                        point_point_idx,
+                        point,
+                        point_idx,
                         angle,
                         degrees_of_freedom,
                         force,
@@ -810,7 +812,7 @@ impl TSNE {
     }
 
     /// Sets the number of components in the embedded space
-    pub fn with_n_components(mut self, n_components: usize) -> Self {
+    pub fn with_n_components(mut self, ncomponents: usize) -> Self {
         self.n_components = n_components;
         self
     }
@@ -822,31 +824,31 @@ impl TSNE {
     }
 
     /// Sets the early exaggeration factor
-    pub fn with_early_exaggeration(mut self, early_exaggeration: f64) -> Self {
+    pub fn with_early_exaggeration(mut self, earlyexaggeration: f64) -> Self {
         self.early_exaggeration = early_exaggeration;
         self
     }
 
     /// Sets the learning rate for gradient descent
-    pub fn with_learning_rate(mut self, learning_rate: f64) -> Self {
+    pub fn with_learning_rate(mut self, learningrate: f64) -> Self {
         self.learning_rate = learning_rate;
         self
     }
 
     /// Sets the maximum number of iterations
-    pub fn with_max_iter(mut self, max_iter: usize) -> Self {
+    pub fn with_max_iter(mut self, maxiter: usize) -> Self {
         self.max_iter = max_iter;
         self
     }
 
     /// Sets the number of iterations without progress before early stopping
-    pub fn with_n_iter_without_progress(mut self, n_iter_without_progress: usize) -> Self {
+    pub fn with_n_iter_without_progress(mut self, n_iter_withoutprogress: usize) -> Self {
         self.n_iter_without_progress = n_iter_without_progress;
         self
     }
 
     /// Sets the minimum gradient norm for convergence
-    pub fn with_min_grad_norm(mut self, min_grad_norm: f64) -> Self {
+    pub fn with_min_grad_norm(mut self, min_gradnorm: f64) -> Self {
         self.min_grad_norm = min_grad_norm;
         self
     }
@@ -885,7 +887,7 @@ impl TSNE {
     /// * n_jobs = -1: Use all available cores
     /// * n_jobs = 1: Use single-core (disable multicore)
     /// * n_jobs > 1: Use specific number of cores
-    pub fn with_n_jobs(mut self, n_jobs: i32) -> Self {
+    pub fn with_n_jobs(mut self, njobs: i32) -> Self {
         self.n_jobs = n_jobs;
         self
     }
@@ -897,7 +899,7 @@ impl TSNE {
     }
 
     /// Sets the random state for reproducibility
-    pub fn with_random_state(mut self, random_state: u64) -> Self {
+    pub fn with_random_state(mut self, randomstate: u64) -> Self {
         self.random_state = Some(random_state);
         self
     }
@@ -1408,7 +1410,7 @@ impl TSNE {
 
             // Perform gradient update with momentum and gains
             self.gradient_update(
-                &mut _embedding,
+                &mut embedding,
                 &mut update,
                 &mut gains,
                 &grad,
@@ -1462,7 +1464,7 @@ impl TSNE {
 
             // Perform gradient update with momentum and gains
             self.gradient_update(
-                &mut _embedding,
+                &mut embedding,
                 &mut update,
                 &mut gains,
                 &grad,
@@ -1904,8 +1906,8 @@ where
         pairs.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // The first element will be i itself (distance 0), so skip it
-        for (j, &(idx_)) in pairs.iter().enumerate().take(n_neighbors) {
-            nn_orig[[i, j]] = idx;
+        for (j, &(idx_, _)) in pairs.iter().enumerate().take(n_neighbors) {
+            nn_orig[[i, j]] = idx_;
         }
     }
 
@@ -1937,7 +1939,7 @@ where
                     row.iter().enumerate().map(|(idx, &d)| (idx, d)).collect();
                 pairs.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-                let rank = pairs.iter().position(|&(idx_)| idx == j).unwrap_or(0) - n_neighbors;
+                let rank = pairs.iter().position(|&(idx_, _)| idx_ == j).unwrap_or(0) - n_neighbors;
 
                 t += rank as f64;
             }
@@ -2161,8 +2163,8 @@ mod tests {
     }
 
     // Helper function to compute average pairwise distance within a group
-    fn average_pairwise_distance(_points: &ArrayBase<ndarray::ViewRepr<&f64>, Ix2>) -> f64 {
-        let n = _points.shape()[0];
+    fn average_pairwise_distance(points: &ArrayBase<ndarray::ViewRepr<&f64>, Ix2>) -> f64 {
+        let n = points.shape()[0];
         let mut total_dist = 0.0;
         let mut count = 0;
 
@@ -2170,7 +2172,7 @@ mod tests {
             for j in i + 1..n {
                 let mut dist_squared = 0.0;
                 for k in 0.._points.shape()[1] {
-                    let diff = _points[[i, k]] - _points[[j, k]];
+                    let diff = points[[i, k]] - points[[j, k]];
                     dist_squared += diff * diff;
                 }
                 total_dist += dist_squared.sqrt();

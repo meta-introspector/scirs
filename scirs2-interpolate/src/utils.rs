@@ -210,7 +210,7 @@ where
 /// assert!(derivative_at_pi_2.abs() < 0.01); // Should be close to 0
 /// ```
 #[allow(dead_code)]
-pub fn differentiate<F, Func>(x: F, h: F, eval_fn: Func) -> InterpolateResult<F>
+pub fn differentiate<F, Func>(x: F, h: F, evalfn: Func) -> InterpolateResult<F>
 where
     F: Float + FromPrimitive + Debug + Display,
     Func: Fn(F) -> InterpolateResult<F>,
@@ -277,7 +277,7 @@ where
 /// assert!((integral_sin - 2.0).abs() < 0.001);
 /// ```
 #[allow(dead_code)]
-pub fn integrate<F, Func>(a: F, b: F, n: usize, eval_fn: Func) -> InterpolateResult<F>
+pub fn integrate<F, Func>(a: F, b: F, n: usize, evalfn: Func) -> InterpolateResult<F>
 where
     F: Float + FromPrimitive + Debug + Display,
     Func: Fn(F) -> InterpolateResult<F>,

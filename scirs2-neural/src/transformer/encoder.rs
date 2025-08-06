@@ -89,7 +89,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     /// * `rng` - Random number generator for weight initialization
     /// # Returns
     /// * A new feed-forward network
-    pub fn new<R: Rng>(_d, model: usize, d_ff: usize, dropout: f64, rng: &mut R) -> Result<Self> {
+    pub fn new<R: Rng>(_d, model: usize, dff: usize, dropout: f64, rng: &mut R) -> Result<Self> {
         // Initialize weights with Xavier/Glorot initialization
         let scale1 = F::from(1.0 / (_d_model as f64).sqrt()).ok_or_else(|| {
             NeuralError::InvalidArchitecture("Failed to convert scale factor".to_string())
@@ -103,7 +103,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
          -> Result<Array<F, IxDyn>> {
             let weights_vec: Vec<F> = (0..(input_size * output_size))
                 .map(|_| {
-                    let val = F::from(rng.random_range(-1.0..1.0)).ok_or_else(|| {
+                    let val = F::from(rng.gen_range(-1.0..1.0)).ok_or_else(|| {
                         NeuralError::InvalidArchitecture(
                             "Failed to convert random value".to_string()..)
                     });
@@ -234,7 +234,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                 NeuralError::InferenceError(format!("Failed to reshape cached hidden: {}", e))
         // Reshape grad_output to 2D
         let grad_output_2d = grad_output
-                NeuralError::InferenceError(format!("Failed to reshape grad_output: {}", e))
+                NeuralError::InferenceError(format!("Failed to reshape gradoutput: {}", e))
         // Backward through second linear layer: grad_output -> grad_hidden
         let mut grad_hidden = Array::<F>::zeros((batch_size, self.d_ff));
             for k in 0..self.d_ff {
@@ -275,9 +275,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         // Reshape grad_input back to original shape
         let grad_input = grad_input_2d
             .into_shape_with_order(inputshape)
-                NeuralError::InferenceError(format!("Failed to reshape grad_input: {}", e))
+                NeuralError::InferenceError(format!("Failed to reshape gradinput: {}", e))
         Ok(grad_input)
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         // Apply a small update
         let small_change = F::from(0.001).unwrap();
         let lr = small_change * learning_rate;
@@ -427,7 +427,7 @@ pub struct TransformerEncoder<F: Float + Debug + Send + Sync + SimdUnifiedOps> {
         // In a complete implementation, this would compute gradients through all layers
         // Update all layers
         for layer in &mut self.layers {
-            layer.update(learning_rate)?;
+            layer.update(learningrate)?;
 #[cfg(test)]
 mod tests {
     use super::*;

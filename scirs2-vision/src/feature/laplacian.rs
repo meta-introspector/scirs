@@ -101,7 +101,7 @@ pub fn laplacian_edges(
 ///
 /// * Result containing an edge image
 #[allow(dead_code)]
-pub fn laplacian_of_gaussian(_img: &DynamicImage, sigma: f32, threshold: f32) -> Result<GrayImage> {
+pub fn laplacian_of_gaussian(img: &DynamicImage, sigma: f32, threshold: f32) -> Result<GrayImage> {
     use crate::preprocessing::gaussian_blur;
 
     // First apply Gaussian blur
@@ -124,7 +124,7 @@ pub fn laplacian_of_gaussian(_img: &DynamicImage, sigma: f32, threshold: f32) ->
 ///
 /// * Result containing an edge image with zero-crossings marked
 #[allow(dead_code)]
-pub fn laplacian_zero_crossing(_img: &DynamicImage, use_diagonal: bool) -> Result<GrayImage> {
+pub fn laplacian_zero_crossing(_img: &DynamicImage, usediagonal: bool) -> Result<GrayImage> {
     let array = image_to_array(_img)?;
     let (height, width) = array.dim();
 

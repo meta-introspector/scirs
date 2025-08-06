@@ -332,9 +332,9 @@ impl<T: InterpolationFloat + std::ops::MulAssign + std::ops::DivAssign + std::op
     SciPyCompatibleBSpline<T>
 {
     /// Create a new SciPy-compatible BSpline
-    pub fn new(_inner: BSpline<T>, extrapolate: bool, axis: i32) -> Self {
+    pub fn new(inner: BSpline<T>, extrapolate: bool, axis: i32) -> Self {
         Self {
-            _inner,
+            inner,
             extrapolate,
             axis,
         }
@@ -693,7 +693,7 @@ where
 
 /// Create a SciPy-compatible BSpline
 #[allow(dead_code)]
-pub fn make_scipy_bspline<T>(_inner: BSpline<T>, extrapolate: bool) -> SciPyCompatibleBSpline<T>
+pub fn make_scipy_bspline<T>(inner: BSpline<T>, extrapolate: bool) -> SciPyCompatibleBSpline<T>
 where
     T: InterpolationFloat + std::ops::MulAssign + std::ops::DivAssign + std::ops::RemAssign,
 {

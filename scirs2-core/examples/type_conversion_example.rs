@@ -12,7 +12,7 @@ fn main() {
         numeric_conversion_example();
 
         println!("\n--- Numeric Conversion with Error Handling ---");
-        numeric_conversion_error_example();
+        numeric_conversionerror_example();
 
         println!("\n--- Clamping and Rounding Example ---");
         clamping_rounding_example();
@@ -54,7 +54,7 @@ fn numeric_conversion_example() {
 
 #[cfg(feature = "types")]
 #[allow(dead_code)]
-fn numeric_conversion_error_example() {
+fn numeric_conversionerror_example() {
     // Try to convert a value that's too large for the target type
     let large_value: f64 = 1e20;
     let result: Result<i32_> = large_value.to_numeric();

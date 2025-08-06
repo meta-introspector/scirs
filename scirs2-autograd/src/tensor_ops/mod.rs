@@ -12,7 +12,7 @@
 use ndarray;
 
 use crate::graph::AsGraph;
-use crate::ndarray__ext::{ArrayRng, NdArray};
+use crate::ndarray_ext::{ArrayRng, NdArray};
 use crate::tensor::{AsTensor, Tensor};
 use crate::Float;
 use rand::Rng;
@@ -111,7 +111,7 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     ///    ```
     /// use ndarray::{self, array};
     /// use scirs2_autograd as ag;
-    /// use ag::tensor__ops::*;
+    /// use ag::tensor_ops::*;
     ///
     /// ag::run(|g| {
     ///    let a = convert_to_tensor(array![[2., 3.], [4., 5.]], g);
@@ -167,15 +167,15 @@ impl<'graph, F: Float> Tensor<'graph, F> {
 /// });
 ///    ```
 #[allow(dead_code)]
-pub fn grad<'graph, F: Float, A, B>(_ys: &[A], xs: &[B]) -> Vec<Tensor<'graph, F>>
+pub fn grad<'graph, F: Float, A, B>(ys: &[A], xs: &[B]) -> Vec<Tensor<'graph, F>>
 where
     A: AsRef<Tensor<'graph, F>>,
     B: AsRef<Tensor<'graph, F>>,
 {
     use crate::gradient::compute_gradients;
 
-    let g = _ys[0].as_ref().graph();
-    let _ys: Vec<_> = _ys.iter().map(|y| sum_all(y)).collect();
+    let g = ys[0].as_ref().graph();
+    let _ys: Vec<_> = ys.iter().map(|y| sum_all(y)).collect();
     let mut grads = compute_gradients(_ys.as_slice(), xs, None, g);
     let mut ret = Vec::with_capacity(xs.len());
     for x in xs {
@@ -221,7 +221,7 @@ where
     let mut _grads = compute_gradients(ys, xs, Some(ys_grads), g);
     let mut ret = Vec::with_capacity(xs.len());
     for x in xs {
-        if let Some(gx) = _grads.extract_grad(x) {
+        if let Some(gx) = grads.extract_grad(x) {
             ret.push(gx);
         } else {
             // not differentiable
@@ -249,7 +249,7 @@ where
 /// # Gradient computation returns scalars instead of proper gradients for matrix operations
 /// use scirs2_autograd as ag;
 /// use ag::prelude::*;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// let mut env = ag::VariableEnvironment::new();
 ///
@@ -340,7 +340,7 @@ where
 ///
 ///    ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|c| {
 ///    let x: ag::Tensor<f32> = zeros(&[2, 3], c);
@@ -369,7 +369,7 @@ where
 ///    ```
 /// use ndarray;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|c| {
 ///    let a: ag::Tensor<f32> = zeros(&[4, 3], c);
@@ -396,7 +396,7 @@ where
 ///    ```
 /// use ndarray;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|c| {
 ///    let x: ag::Tensor<f32> = zeros(&[2, 3, 4], c);
@@ -455,7 +455,7 @@ where
 ///    ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|g| {
 ///    let a = convert_to_tensor(array![4., 1., 5., 2., 3., 6.], g);
@@ -493,7 +493,7 @@ where
 /// NOTE: Negative values in `starts` and `ends` are counted from the back of the axis.
 ///    ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = zeros(&[4, 4], g);
@@ -505,7 +505,7 @@ where
 ///
 ///    ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = zeros(&[4, 4], g);
@@ -558,7 +558,7 @@ where
 ///    ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|g| {
 ///    let param = zeros(&[5, 4, 8, 2], g);
@@ -574,8 +574,8 @@ where
     A: AsRef<Tensor<'graph, F>> + Copy,
     B: AsRef<Tensor<'graph, F>> + Copy,
 {
-    let _param = _param.as_ref();
-    let g = _param.graph();
+    let _param = param.as_ref();
+    let g = param.graph();
     let op = array_ops::Gather {
         axis,
         should_normalize_negative_indices: true,
@@ -597,7 +597,7 @@ where
 ///    ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|g| {
 ///    let param = zeros(&[5, 4, 8, 2], g);
@@ -613,8 +613,8 @@ where
     A: AsRef<Tensor<'graph, F>> + Copy,
     B: AsRef<Tensor<'graph, F>> + Copy,
 {
-    let _param = _param.as_ref();
-    let g = _param.graph();
+    let _param = param.as_ref();
+    let g = param.graph();
     let op = array_ops::Gather {
         axis,
         should_normalize_negative_indices: false,
@@ -629,7 +629,7 @@ where
 ///
 ///    ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = zeros(&[3, 2, 2], g);
@@ -657,7 +657,7 @@ where
 ///
 ///    ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = zeros(&[3, 2, 2], g);
@@ -682,7 +682,7 @@ where
 ///
 ///    ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = zeros(&[3], g);
@@ -708,7 +708,7 @@ where
 ///
 ///    ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = zeros(&[1, 3, 1], g);
@@ -737,7 +737,7 @@ where
 /// `XorShiftRng` is used internally.
 /// If you need to specify a seed value or use any other `Rng`, use `dropout_rng` instead.
 #[allow(dead_code)]
-pub fn dropout<'graph, A, F: Float>(x: A, dropout_ratio: F, train: bool) -> Tensor<'graph, F>
+pub fn dropout<'graph, A, F: Float>(x: A, dropoutratio: F, train: bool) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
@@ -845,7 +845,7 @@ where
 ///    ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|g| {
 ///    let arr = array![2., 3.];
@@ -893,7 +893,7 @@ where
 ///
 ///    ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = scalar(3., g);
@@ -1181,7 +1181,7 @@ where
 ///    ```
 /// use ndarray;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = zeros(&[4, 2], g);
@@ -1204,7 +1204,7 @@ where
 ///    ```
 /// use ndarray;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 ///
 /// ag::run(|g| {
 ///    let a = ones((&[4, 2]), g);
@@ -1235,19 +1235,19 @@ where
 /// the shape information is preserved. Variables represent the inputs to
 /// computational graphs, so proper shape handling is critical.
 #[allow(dead_code)]
-pub fn variable<F: Float, D>(_arr: ndarray::Array<F, D>, graph: &impl AsGraph<F>) -> Tensor<F>
+pub fn variable<F: Float, D>(arr: ndarray::Array<F, D>, graph: &impl AsGraph<F>) -> Tensor<F>
 where
     D: ndarray::Dimension,
 {
     // Save the original shape for debugging
-    let origshape = _arr.shape().to_vec();
+    let origshape = arr.shape().to_vec();
     println!("Creating variable with shape: {origshape:?}");
 
     // Convert the array to dynamic form for tensor creation
-    let arr_dyn = _arr.into_dyn();
+    let arr_dyn = arr.into_dyn();
 
     // Create the tensor directly using ConvertToTensor
-    let tensor = Tensor::builder(graph).build(const_gen_ops::ConvertToTensor { _arr: arr_dyn });
+    let tensor = Tensor::builder(graph).build(const_gen_ops::ConvertToTensor { arr: arr_dyn });
 
     // Debug the created tensor
     if let Some(ctx) = crate::graph::AsGraph::context_ref(graph) {
@@ -1312,27 +1312,27 @@ impl<'g, F: Float> Tensor<'g, F> {
 
     /// Same as [tensor_ops::reduce_sum](reduce_sum)
     #[inline]
-    pub fn reduce_sum<AT: AsTensor<'g, F>>(&self, axes: &AT, keep_dims: bool) -> Tensor<'g, F> {
+    pub fn reduce_sum<AT: AsTensor<'g, F>>(&self, axes: &AT, keepdims: bool) -> Tensor<'g, F> {
         reduce_sum(self, axes, keep_dims)
     }
     /// Same as [tensor_ops::reduce_mean](reduce_mean)
     #[inline]
-    pub fn reduce_mean<AT: AsTensor<'g, F>>(&self, axes: &AT, keep_dims: bool) -> Tensor<'g, F> {
+    pub fn reduce_mean<AT: AsTensor<'g, F>>(&self, axes: &AT, keepdims: bool) -> Tensor<'g, F> {
         reduce_mean(self, axes, keep_dims)
     }
     /// Same as [tensor_ops::reduce_prod](reduce_prod)
     #[inline]
-    pub fn reduce_prod<AT: AsTensor<'g, F>>(&self, axes: &AT, keep_dims: bool) -> Tensor<'g, F> {
+    pub fn reduce_prod<AT: AsTensor<'g, F>>(&self, axes: &AT, keepdims: bool) -> Tensor<'g, F> {
         reduce_prod(self, axes, keep_dims)
     }
     /// Same as [tensor_ops::reduce_min](reduce_min)
     #[inline]
-    pub fn reduce_min<AT: AsTensor<'g, F>>(&self, axes: &AT, keep_dims: bool) -> Tensor<'g, F> {
+    pub fn reduce_min<AT: AsTensor<'g, F>>(&self, axes: &AT, keepdims: bool) -> Tensor<'g, F> {
         reduce_min(self, axes, keep_dims)
     }
     /// Same as [tensor_ops::reduce_max](reduce_max)
     #[inline]
-    pub fn reduce_max<AT: AsTensor<'g, F>>(&self, axes: &AT, keep_dims: bool) -> Tensor<'g, F> {
+    pub fn reduce_max<AT: AsTensor<'g, F>>(&self, axes: &AT, keepdims: bool) -> Tensor<'g, F> {
         reduce_max(self, axes, keep_dims)
     }
     /// Same as [tensor_ops::reduce_variance](reduce_variance)
@@ -1396,7 +1396,7 @@ pub use reduction::{
 };
 
 // Linear algebra operations (backward compatibility)
-pub use linear__algebra::{
+pub use linear_algebra::{
     batch_matmul, batch_matmul_t, concat, conv2d, conv2d_transpose, determinant, diag,
     dilated_conv2d, eigen, eigenvalues, extract_diag, eye, lstsq, matmul, matrix_inverse,
     max_pool2d, qr, scalar_mul, solve, split, svd, tensordot, trace, transpose,
@@ -1410,96 +1410,96 @@ pub use activation::{
 };
 
 // Re-export linear algebra functions
-pub use debug__ops::{debug_identity_with_gradient, debug_scalar_one};
-pub use decomposition__ops::matrix_exp;
-pub use decomposition__ops::{lu, qr as decomp_qr, svd as decomp_svd};
-pub use eigen__ops::{eigen as eigen_decomp, eigenvalues as eigen_vals};
-pub use linalg__ops::{
+pub use debug_ops::{debug_identity_with_gradient, debug_scalar_one};
+pub use decomposition_ops::matrix_exp;
+pub use decomposition_ops::{lu, qr as decomp_qr, svd as decomp_svd};
+pub use eigen_ops::{eigen as eigen_decomp, eigenvalues as eigen_vals};
+pub use linalg_ops::{
     diag as linalg_diag, extract_diag as linalg_extract_diag, eye as linalg_eye,
     trace as linalg_trace,
 };
 // matrix_sqrt not yet implemented
-pub use matrix__ops::{
+pub use matrix_ops::{
     determinant as matrix_det, matrix_inverse as matrix_inv,
     pseudo_inverse as matrix_pseudo_inverse,
 };
-pub use norm__ops::{frobenius_norm as norm_frobenius, nuclear_norm, spectral_norm};
-pub use scalar__ops::scalar_mul as scalar_multiply;
-pub use solver__ops::{lstsq as linalg_lstsq, solve as linalg_solve};
-pub use special__matrices::{band_matrix, cholesky, symmetrize, tril, triu};
+pub use norm_ops::{frobenius_norm as norm_frobenius, nuclear_norm, spectral_norm};
+pub use scalar_ops::scalar_mul as scalar_multiply;
+pub use solver_ops::{lstsq as linalg_lstsq, solve as linalg_solve};
+pub use special_matrices::{band_matrix, cholesky, symmetrize, tril, triu};
 
 // Common aliases for linear algebra operations
 // Note: inv is already taken by arithmetic::inv (reciprocal), so we use matinv
-pub use eigen__ops::eigen as eig;
-pub use matrix__ops::determinant as det;
-pub use matrix__ops::matrix_inverse as matinv;
-pub use matrix__ops::pseudo_inverse as pinv;
+pub use eigen_ops::eigen as eig;
+pub use matrix_ops::determinant as det;
+pub use matrix_ops::matrix_inverse as matinv;
+pub use matrix_ops::pseudo_inverse as pinv;
 
 // Matrix functions (now implemented!)
-pub use matrix__functions::{logm, powm, sqrtm};
-pub use matrix__functions::{matrix_log, matrix_power, matrix_sqrt};
+pub use matrix_functions::{logm, powm, sqrtm};
+pub use matrix_functions::{matrix_log, matrix_power, matrix_sqrt};
 
 // Numerical properties
-pub use numerical__props::{
+pub use numerical_props::{
     cond, cond_1, cond_2, cond_fro, cond_inf, logdet, matrix_rank, slogdet, ConditionType,
 };
 
 // Kronecker product
-pub use kronecker__ops::kron;
+pub use kronecker_ops::kron;
 
 // Matrix norms
-pub use matrix__norms::{norm1, norm2, normfro, norminf};
+pub use matrix_norms::{norm1, norm2, normfro, norminf};
 
 // Matrix solvers
-pub use matrix__solvers::{cholesky_solve, solve_lyapunov, solve_sylvester};
+pub use matrix_solvers::{cholesky_solve, solve_lyapunov, solve_sylvester};
 
 // Symmetric matrix operations
-pub use symmetric__ops::{eigh, eigvalsh};
+pub use symmetric_ops::{eigh, eigvalsh};
 
 // Special decompositions
-pub use special__decompositions::{polar, schur};
+pub use special_decompositions::{polar, schur};
 
 // Advanced tensor operations
-pub use advanced_tensor__ops::{einsum, kron as kron_tensor, tensor_solve};
+pub use advanced_tensor_ops::{einsum, kron as kron_tensor, tensor_solve};
 
 // Matrix exponential algorithms
-pub use matrix__ops::{expm2, expm3};
+pub use matrix_ops::{expm2, expm3};
 
 // Advanced decompositions
-pub use advanced__decompositions::{generalized_eigen, qr_pivot, randomized_svd, svd_jacobi};
+pub use advanced_decompositions::{generalized_eigen, qr_pivot, randomized_svd, svd_jacobi};
 
 // Iterative solvers
-pub use iterative__solvers::{
+pub use iterative_solvers::{
     bicgstab_solve, conjugate_gradient_solve, gmres_solve, pcg_solve, PreconditionerType,
 };
 
 // Matrix trigonometric functions
-pub use matrix_trig__functions::{coshm, cosm, funm, signm, sinhm, sinm};
+pub use matrix_trig_functions::{coshm, cosm, funm, signm, sinhm, sinm};
 
 // Aliases for new functions
-pub use advanced_tensor__ops::kron as kronecker_product;
+pub use advanced_tensor_ops::kron as kronecker_product;
 
 // Memory optimization functions
-pub use checkpoint__ops::{
+pub use checkpoint_ops::{
     adaptive_checkpoint, checkpoint, checkpoint_segment, checkpoint_segment_flex, detach,
     CheckpointGroup, CheckpointProfiler,
 };
 
 // Advanced indexing operations
-pub use advanced__indexing::{
+pub use advanced_indexing::{
     advanced_gather, boolean_mask, get_at_coords, scatter, select_columns, select_rows, take,
     where_op,
 };
 
 // Broadcasting optimizations
-pub use broadcast__ops::{
+pub use broadcast_ops::{
     analyze_broadcast, broadcast_add, broadcast_div, broadcast_maximum, broadcast_minimum,
     broadcast_mul, broadcast_pow, broadcast_sub, clear_broadcast_cache, get_broadcast_cache_stats,
     BroadcastInfo, BroadcastStrategy,
 };
 
 // Memory optimization tools
-pub use memory__optimization::{
+pub use memory_optimization::{
     clear_memory_pool, configure_memory_pool, disable_memory_tracking, efficient_ones,
     efficient_view, efficient_zeros, enable_memory_tracking, get_memory_pool_stats,
     get_memory_tracking_stats, get_pooled_buffer, inplace_abs, inplace_add, inplace_div,
@@ -1509,28 +1509,28 @@ pub use memory__optimization::{
 };
 
 // Efficient tensor operations
-pub use efficient__ops::{
+pub use efficient_ops::{
     clear_reshape_cache, efficient_concat, efficient_reshape, efficient_reshape_withshape,
     efficient_slice, efficient_transpose, get_reshape_cache_stats, EfficientOpsManager,
     EfficientOpsStats, SliceRange,
 };
 
 // Custom activation function framework
-pub use custom__activations::{
+pub use custom_activations::{
     create_custom_activation, custom_activation, is_activation_registered,
     list_activation_functions, parameterized_activation, register_activation, ActivationProperties,
     CustomActivation, CustomActivationBuilder,
 };
 
 // Performance optimization operations
-pub use performance__ops::{
+pub use performance_ops::{
     cache_friendly_matmul, is_parallel_enabled, is_simd_enabled, parallel_sum,
     set_parallel_enabled, set_simd_enabled, simd_add, simd_mul, simd_relu, simd_sigmoid,
     PerformanceConfig, ReductionOperation, SimdBinaryOperation, SimdUnaryOperation,
 };
 
 // Enhanced dynamic computation graph features
-pub use graph__enhancements::{
+pub use graph_enhancements::{
     cached_op, clear_computation_cache, conditional, configure_cache, get_cache_stats,
     get_gc_stats, run_garbage_collection, smart_checkpoint, CacheStats, GcStats, GraphEnhancer,
     GraphStats, PredicateType,

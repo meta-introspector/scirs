@@ -20,11 +20,11 @@ pub struct SCAFFOLD {
 }
 impl SCAFFOLD {
     /// Create new SCAFFOLD aggregator
-    pub fn new(_server_lr: f32, global_lr: f32) -> Self {
+    pub fn new(_server_lr: f32, globallr: f32) -> Self {
         Self {
             server_control: None,
             client_controls: HashMap::new(),
-            _server_lr,
+            server_lr,
             global_lr,
         }
     }
@@ -43,7 +43,7 @@ impl SCAFFOLD {
             let server_control = self.server_control.as_ref().unwrap_or(&vec![]);
             for (idx, ((old_w, new_w), old_c)) in old_weights
                 .iter()
-                .zip(new_weights.iter())
+                .zip(newweights.iter())
                 .zip(old_control.iter())
                 .enumerate()
             {
@@ -57,12 +57,12 @@ impl SCAFFOLD {
             }
         } else {
             // Initialize control variate for new client
-            for (old_w, new_w) in old_weights.iter().zip(new_weights.iter()) {
+            for (old_w, new_w) in oldweights.iter().zip(newweights.iter()) {
                 new_control.push(gradient_term);
         self.client_controls.insert(client_id, new_control);
         Ok(())
     /// Update server control variate
-    fn update_server_control(&mut self, client_updates: &[ClientUpdate]) -> Result<()> {
+    fn update_server_control(&mut self, clientupdates: &[ClientUpdate]) -> Result<()> {
         if client_updates.is_empty() {
             return Ok(());
         let num_tensors = client_updates[0].weight_updates.len();
@@ -115,7 +115,7 @@ pub struct FedAvgM {
     momentum_buffers: Option<Vec<Array2<f32>>>,
 impl FedAvgM {
     /// Create new FedAvgM aggregator
-    pub fn new(_server_lr: f32, momentum: f32) -> Self {
+    pub fn new(_serverlr: f32, momentum: f32) -> Self {
             momentum,
             momentum_buffers: None,
 impl AggregationStrategy for FedAvgM {
@@ -154,8 +154,8 @@ pub struct FedAdam {
     step: usize,
 impl FedAdam {
     /// Create new FedAdam aggregator
-    pub fn new(_lr: f32, beta1: f32, beta2: f32, epsilon: f32) -> Self {
-            _lr,
+    pub fn new(lr: f32, beta1: f32, beta2: f32, epsilon: f32) -> Self {
+            lr,
             beta1,
             beta2,
             epsilon,
@@ -193,7 +193,7 @@ pub struct FedAdagrad {
     acc_grad: Option<Vec<Array2<f32>>>,
 impl FedAdagrad {
     /// Create new FedAdagrad aggregator
-    pub fn new(_lr: f32, epsilon: f32) -> Self {
+    pub fn new(lr: f32, epsilon: f32) -> Self {
             acc_grad: None,
 impl AggregationStrategy for FedAdagrad {
         // Initialize accumulated gradients if needed
@@ -229,23 +229,23 @@ impl FedLAG {
 impl AggregationStrategy for FedLAG {
         // Standard weighted aggregation
         // Initialize weights if needed
-        if self.fast_weights.is_none() {
+        if self.fastweights.is_none() {
             self.fast_weights = Some(aggregated.clone());
             self.slow_weights = Some(aggregated.clone());
         // Update fast weights
         if let Some(ref mut fast_weights) = self.fast_weights {
-            for (fast_w, update) in fast_weights.iter_mut().zip(&aggregated) {
+            for (fast_w, update) in fastweights.iter_mut().zip(&aggregated) {
                 *fast_w = &*fast_w + update;
         self.step_count += 1;
         // Update slow weights every k steps
         if self.step_count % self.k == 0 {
             if let (Some(ref mut slow_weights), Some(ref fast_weights)) =
                 (&mut self.slow_weights, &self.fast_weights)
-                for (slow_w, fast_w) in slow_weights.iter_mut().zip(fast_weights) {
+                for (slow_w, fast_w) in slowweights.iter_mut().zip(fast_weights) {
                     *slow_w = &*slow_w + &(*fast_w - &*slow_w) * self.alpha;
                 // Reset fast weights to slow weights
                 if let Some(ref mut fast_weights) = self.fast_weights {
-                    for (fast_w, slow_w) in fast_weights.iter_mut().zip(slow_weights) {
+                    for (fast_w, slow_w) in fastweights.iter_mut().zip(slow_weights) {
                         *fast_w = slow_w.clone();
         // Return the current fast weights update
         "FedLAG"
@@ -257,7 +257,7 @@ pub struct FedProx {
     global_weights: Option<Vec<Array2<f32>>>,
 impl FedProx {
     /// Create new FedProx aggregator
-    pub fn new(_mu: f32) -> Self {
+    pub fn new(mu: f32) -> Self {
             mu,
             global_weights: None,
     /// Update global weights
@@ -266,7 +266,7 @@ impl FedProx {
 impl AggregationStrategy for FedProx {
             // Apply proximal term if global weights are available
             if let Some(ref global_weights) = self.global_weights {
-                if tensor_idx < global_weights.len() {
+                if tensor_idx < globalweights.len() {
                     // Proximal term: mu * (w - w_global)
                     let proximal_term = &weighted_sum * self.mu;
                     weighted_sum = weighted_sum - proximal_term;
@@ -280,11 +280,11 @@ pub struct FedNova {
     effective_steps: HashMap<usize, f32>,
 impl FedNova {
     /// Create new FedNova aggregator
-    pub fn new(_momentum: f32) -> Self {
+    pub fn new(momentum: f32) -> Self {
             server_momentum: None,
             effective_steps: HashMap::new(),
     /// Update effective steps for a client
-    pub fn update_effective_steps(&mut self, client_id: usize, steps: f32) {
+    pub fn update_effective_steps(&mut self, clientid: usize, steps: f32) {
         self.effective_steps.insert(client_id, steps);
 impl AggregationStrategy for FedNova {
         // Calculate normalization factor based on effective local steps
@@ -314,7 +314,7 @@ pub struct FedOpt {
     /// Beta2 for Adam-like optimizers
 impl FedOpt {
     /// Create new FedOpt aggregator
-    pub fn new(_optimizer_type: String, lr: f32, beta1: f32, beta2: f32, epsilon: f32) -> Self {
+    pub fn new(_optimizertype: String, lr: f32, beta1: f32, beta2: f32, epsilon: f32) -> Self {
             optimizer_type,
 impl AggregationStrategy for FedOpt {
         // First compute weighted average (pseudo-gradient)
@@ -368,7 +368,7 @@ pub struct MIME {
     lambda: f32,
 impl MIME {
     /// Create new MIME aggregator
-    pub fn new(_server_lr: f32, lambda: f32) -> Self {
+    pub fn new(_serverlr: f32, lambda: f32) -> Self {
             prev_weights: None,
             control_variate: None,
             lambda,
@@ -455,7 +455,7 @@ impl AggregatorFactory {
         vec!["scaffold", "fedavgm", "fedadam", "fedadagrad", "fedlag", "fedprox", "fednova", "fedopt", "mime"]
     /// Get detailed aggregator information
     #[allow(dead_code)]
-    pub fn get_aggregator_info(_name: &str) -> Option<AggregatorInfo> {
+    pub fn get_aggregator_info(name: &str) -> Option<AggregatorInfo> {
             "scaffold" => Some(AggregatorInfo {
                 name: "SCAFFOLD".to_string(),
                 description: "Stochastic Controlled Averaging for federated learning".to_string(),
@@ -473,7 +473,7 @@ impl AggregatorFactory {
                 key_features: vec!["Adaptive learning rates".to_string(), "Second-order moments".to_string()],
                 recommended_use: "Tasks requiring adaptive optimization".to_string(, _ => None,
     /// Get default configuration for an aggregator
-    pub fn default_config(_name: &str) -> HashMap<String, f32> {
+    pub fn default_config(name: &str) -> HashMap<String, f32> {
         let mut config = HashMap::new();
                 config.insert("server_lr".to_string(), 1.0);
                 config.insert("global_lr".to_string(), 1.0);

@@ -33,7 +33,7 @@ fn create_sine_dataset(
 }
 // Create a neural network model for regression
 #[allow(dead_code)]
-fn create_regression_model(_input_dim: usize, rng: &mut SmallRng) -> Result<Sequential<f32>> {
+fn create_regression_model(_inputdim: usize, rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let mut model = Sequential::new();
     // Input layer
     let dense1 = Dense::new(_input_dim, 16, Some("relu"), rng)?;
@@ -63,7 +63,7 @@ fn main() -> Result<()> {
     println!("Advanced Learning Rate Scheduling and Early Stopping Example");
     println!("==========================================================\n");
     // Initialize random number generator
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Create synthetic regression dataset
     let n_samples = 100;
     let (x, y) = create_sine_dataset(n_samples, 0.1, &mut rng);

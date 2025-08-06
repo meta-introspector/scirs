@@ -269,7 +269,7 @@ pub fn get_registry() -> DatasetRegistry {
 /// Load a dataset by name from the registry
 #[cfg(feature = "download")]
 #[allow(dead_code)]
-pub fn load_dataset_by_name(_name: &str, force_download: bool) -> Result<crate::utils::Dataset> {
+pub fn load_dataset_by_name(_name: &str, forcedownload: bool) -> Result<crate::utils::Dataset> {
     let registry = get_registry();
 
     if let Some(entry) = registry.get(_name) {
@@ -306,13 +306,13 @@ pub fn load_dataset_by_name(_name: &str, force_download: bool) -> Result<crate::
         } else {
             Err(DatasetsError::Other(format!(
                 "Unsupported URL scheme for dataset '{}': {}",
-                _name, entry.url
+                name, entry.url
             )))
         }
     } else {
         Err(DatasetsError::Other(format!(
             "Unknown dataset: '{}'. Available datasets: {:?}",
-            _name,
+            name,
             registry.list_datasets()
         )))
     }
@@ -365,7 +365,7 @@ fn load_local_dataset(
 #[cfg(not(feature = "download"))]
 /// Load a dataset by name from the registry (stub for when download feature is disabled)
 #[allow(dead_code)]
-pub fn load_dataset_by_name(_name: &str, _force_download: bool) -> Result<crate::utils::Dataset> {
+pub fn load_dataset_by_name(_name: &str, _forcedownload: bool) -> Result<crate::utils::Dataset> {
     Err(DatasetsError::Other(
         "Download feature is not enabled. Recompile with --features _download".to_string(),
     ))

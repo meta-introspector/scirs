@@ -114,7 +114,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Attention<F> {
         bidirectional_encoder: bool,
     ) -> Result<Self> {
         // Create a random number generator for initialization
-        let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+        let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
         // Create projections based on attention type
         let decoder_projection = Dense::<F>::new(decoder_dim, attention_dim, None, &mut rng)?;
         // For additive attention, we need to project encoder outputs
@@ -274,7 +274,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Attention<F> {
         // 4. Return gradients for both decoder_state and encoder_outputs
         let grad_input = Array::<F>::zeros(grad_output.dim());
         Ok(grad_input)
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         // Update all projection layers
         // Update decoder projection
         self.decoder_projection.update(learning_rate)?;
@@ -351,7 +351,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2SeqEncoder<F> {
             // Create the appropriate RNN layer based on cell type
             let rnn: Box<dyn Layer<F> + Send + Sync> = match cell_type {
                 RNNCellType::SimpleRNN => {
-                    let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+                    let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
                     let config = RNNConfig {
                         input_size,
                         hidden_size: hidden_dim,
@@ -383,7 +383,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2SeqEncoder<F> {
         // Create dropout layer if needed
         let dropout = if let Some(rate) = dropout_rate {
             if rate > 0.0 {
-                let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+                let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
                 Some(Dropout::<F>::new(rate, &mut rng)?)
                 None
             embedding,
@@ -394,7 +394,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2SeqEncoder<F> {
             hidden_dim,
             num_layers,
     /// Forward pass through the encoder
-    pub fn forward(&self, input_seq: &Array<F, IxDyn>) -> Result<EncoderOutput<F>> {
+    pub fn forward(&self, inputseq: &Array<F, IxDyn>) -> Result<EncoderOutput<F>> {
         // Apply embedding
         let mut x = self.embedding.forward(input_seq)?;
         // Apply dropout if available
@@ -448,7 +448,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Seq2SeqEncoder
         self.embedding.update(learning_rate)?;
         // Update all RNN layers
         for layer in &mut self.rnn_layers {
-            layer.update(learning_rate)?;
+            layer.update(learningrate)?;
         // Note: Dropout doesn't have learnable parameters to update
         params.extend(self.embedding.params());
             params.extend(layer.params());
@@ -482,7 +482,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2SeqDecoder<F> {
                 encoder_bidirectional,
             )?)
         // Create output projection with activation function
-        let mut rng_clone = rand::rngs::SmallRng::seed_from_u64(42);
+        let mut rng_clone = rand::rngs::SmallRng::from_seed([42; 32]);
         let output_projection = Dense::<F>::new(
             vocab_size,
             None, // No custom activation function
@@ -617,7 +617,7 @@ pub struct Seq2Seq<F: Float + Debug + ScalarOperand + Send + Sync> {
     pub config: Seq2SeqConfig,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2Seq<F> {
     /// Create a new Seq2Seq model
-    pub fn new(_config: Seq2SeqConfig) -> Result<Self> {
+    pub fn new(config: Seq2SeqConfig) -> Result<Self> {
         // Create encoder
         let encoder = Seq2SeqEncoder::<F>::new(
             config.input_vocab_size,
@@ -717,7 +717,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2Seq<F> {
             embedding_dim: hidden_dim,
         Self::new(config)
     /// Create a small and fast Seq2Seq model
-    pub fn create_small_model(src_vocab_size: usize, tgt_vocab_size: usize) -> Result<Self> {
+    pub fn create_small_model(src_vocab_size: usize, tgt_vocabsize: usize) -> Result<Self> {
             embedding_dim: 128,
             hidden_dim: 256,
             num_layers: 1,

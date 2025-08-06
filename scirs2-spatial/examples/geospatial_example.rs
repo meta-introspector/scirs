@@ -568,8 +568,8 @@ fn geospatial_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Helper function to format coordinates in degrees, minutes, seconds
 #[allow(dead_code)]
-fn format_dms(_decimal_degrees: f64, is_latitude: bool) -> String {
-    let abs_degrees = _decimal_degrees.abs();
+fn format_dms(_decimal_degrees: f64, islatitude: bool) -> String {
+    let abs_degrees = decimal_degrees.abs();
     let _degrees = abs_degrees.floor() as i32;
     let minutes = ((abs_degrees - _degrees as f64) * 60.0).floor() as i32;
     let seconds = ((abs_degrees - _degrees as f64) * 60.0 - minutes as f64) * 60.0;
@@ -591,8 +591,8 @@ fn format_dms(_decimal_degrees: f64, is_latitude: bool) -> String {
 
 /// Calculate the centroid of a set of geographic points
 #[allow(dead_code)]
-fn geographic_centroid(_points: &[(f64, f64)]) -> (f64, f64) {
-    if _points.is_empty() {
+fn geographic_centroid(points: &[(f64, f64)]) -> (f64, f64) {
+    if points.is_empty() {
         return (0.0, 0.0);
     }
 
@@ -609,7 +609,7 @@ fn geographic_centroid(_points: &[(f64, f64)]) -> (f64, f64) {
         z_sum += lat_rad.sin();
     }
 
-    let n = _points.len() as f64;
+    let n = points.len() as f64;
     let x_avg = x_sum / n;
     let y_avg = y_sum / n;
     let z_avg = z_sum / n;

@@ -216,7 +216,7 @@ pub struct RiskMetrics<F: Float + Debug + std::iter::Sum + num_traits::FromPrimi
 
 impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> RiskMetrics<F> {
     /// Create new risk metrics calculator
-    pub fn new(_returns: Array1<F>) -> Self {
+    pub fn new(returns: Array1<F>) -> Self {
         let confidence_levels = vec![
             F::from(0.90).unwrap(),
             F::from(0.95).unwrap(),
@@ -224,13 +224,13 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
         ];
 
         Self {
-            _returns,
+            returns,
             confidence_levels,
         }
     }
 
     /// Calculate Value at Risk (VaR) using historical simulation
-    pub fn value_at_risk(&self, confidence_level: F) -> Result<F> {
+    pub fn value_at_risk(&self, confidencelevel: F) -> Result<F> {
         if self.returns.is_empty() {
             return Err(TimeSeriesError::InsufficientData {
                 message: "No returns data available".to_string(),
@@ -252,7 +252,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
     }
 
     /// Calculate Conditional Value at Risk (CVaR/Expected Shortfall)
-    pub fn conditional_value_at_risk(&self, confidence_level: F) -> Result<F> {
+    pub fn conditional_value_at_risk(&self, confidencelevel: F) -> Result<F> {
         if self.returns.is_empty() {
             return Err(TimeSeriesError::InsufficientData {
                 message: "No returns data available".to_string(),
@@ -314,7 +314,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
     }
 
     /// Calculate Sharpe Ratio
-    pub fn sharpe_ratio(&self, risk_free_rate: F) -> Result<F> {
+    pub fn sharpe_ratio(&self, risk_freerate: F) -> Result<F> {
         if self.returns.is_empty() {
             return Err(TimeSeriesError::InsufficientData {
                 message: "No returns data available".to_string(),
@@ -335,7 +335,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
     }
 
     /// Calculate Sortino Ratio
-    pub fn sortino_ratio(&self, risk_free_rate: F) -> Result<F> {
+    pub fn sortino_ratio(&self, risk_freerate: F) -> Result<F> {
         if self.returns.is_empty() {
             return Err(TimeSeriesError::InsufficientData {
                 message: "No returns data available".to_string(),
@@ -389,7 +389,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
     }
 
     /// Calculate Calmar Ratio (annual return / maximum drawdown)
-    pub fn calmar_ratio(&self, periods_per_year: F) -> Result<F> {
+    pub fn calmar_ratio(&self, periods_peryear: F) -> Result<F> {
         let annual_return = self.returns.mean().unwrap() * periods_per_year;
         let max_dd = self.maximum_drawdown()?;
 
@@ -407,9 +407,9 @@ pub struct HFTIndicators;
 impl HFTIndicators {
     /// Volume Weighted Average Price (VWAP)
     pub fn vwap<F: Float + Clone>(prices: &Array1<F>, volumes: &Array1<F>) -> Result<Array1<F>> {
-        if _prices.len() != volumes.len() {
+        if prices.len() != volumes.len() {
             return Err(TimeSeriesError::DimensionMismatch {
-                expected: _prices.len(),
+                expected: prices.len(),
                 actual: volumes.len(),
             });
         }
@@ -419,13 +419,13 @@ impl HFTIndicators {
         let mut cumulative_volume = F::zero();
 
         for i in 0.._prices.len() {
-            cumulative_pv = cumulative_pv + _prices[i] * volumes[i];
+            cumulative_pv = cumulative_pv + prices[i] * volumes[i];
             cumulative_volume = cumulative_volume + volumes[i];
 
             if cumulative_volume > F::zero() {
                 vwap[i] = cumulative_pv / cumulative_volume;
             } else {
-                vwap[i] = if i > 0 { vwap[i - 1] } else { _prices[i] };
+                vwap[i] = if i > 0 { vwap[i - 1] } else { prices[i] };
             }
         }
 
@@ -434,11 +434,11 @@ impl HFTIndicators {
 
     /// Time Weighted Average Price (TWAP)
     pub fn twap<F: Float + Clone>(prices: &Array1<F>, window: usize) -> Result<Array1<F>> {
-        if _prices.len() < window {
+        if prices.len() < window {
             return Err(TimeSeriesError::InsufficientData {
                 message: "Not enough data for TWAP calculation".to_string(),
                 required: window,
-                actual: _prices.len(),
+                actual: prices.len(),
             });
         }
 
@@ -446,7 +446,7 @@ impl HFTIndicators {
         let window_f = F::from(window).unwrap();
 
         for i in 0..twap.len() {
-            let sum = _prices.slice(s![i..i + window]).sum();
+            let sum = prices.slice(s![i..i + window]).sum();
             twap[i] = sum / window_f;
         }
 
@@ -477,7 +477,7 @@ impl HFTIndicators {
     }
 
     /// Order Book Imbalance
-    pub fn order_book_imbalance<F: Float>(_bid, volume: F, ask_volume: F) -> F {
+    pub fn order_book_imbalance<F: Float>(_bid, volume: F, askvolume: F) -> F {
         let total_volume = _bid_volume + ask_volume;
         if total_volume == F::zero() {
             return F::zero();
@@ -530,16 +530,16 @@ pub struct BlackScholes;
 
 impl BlackScholes {
     /// Calculate option price using Black-Scholes formula
-    pub fn price(_contract: &OptionContract, volatility: f64) -> Result<OptionPrice> {
-        let s = _contract.spot;
-        let k = _contract.strike;
-        let t = _contract.maturity;
-        let r = _contract.risk_free_rate;
-        let q = _contract.dividend_yield;
+    pub fn price(contract: &OptionContract, volatility: f64) -> Result<OptionPrice> {
+        let s = contract.spot;
+        let k = contract.strike;
+        let t = contract.maturity;
+        let r = contract.risk_free_rate;
+        let q = contract.dividend_yield;
         let sigma = volatility;
 
         if t <= 0.0 {
-            return match _contract.option_type {
+            return match contract.option_type {
                 OptionType::Call => Ok(OptionPrice {
                     price: (s - k).max(0.0),
                     delta: if s > k { 1.0 } else { 0.0 },
@@ -572,7 +572,7 @@ impl BlackScholes {
         let discount_factor = (-r * t).exp();
         let dividend_factor = (-q * t).exp();
 
-        let (price, delta) = match _contract.option_type {
+        let (price, delta) = match contract.option_type {
             OptionType::Call => {
                 let price = s * dividend_factor * nd1 - k * discount_factor * nd2;
                 let delta = dividend_factor * nd1;
@@ -594,7 +594,7 @@ impl BlackScholes {
         let phi_d1 = Self::standard_normal_pdf(d1);
         let gamma = dividend_factor * phi_d1 / (s * sigma * t.sqrt());
         let vega = s * dividend_factor * phi_d1 * t.sqrt() / 100.0; // Per 1% volatility change
-        let theta = match _contract.option_type {
+        let theta = match contract.option_type {
             OptionType::Call => {
                 (-s * dividend_factor * phi_d1 * sigma / (2.0 * t.sqrt())
                     - r * k * discount_factor * nd2
@@ -610,7 +610,7 @@ impl BlackScholes {
             _ => 0.0,
         };
 
-        let rho = match _contract.option_type {
+        let rho = match contract.option_type {
             OptionType::Call => k * t * discount_factor * nd2 / 100.0, // Per 1% rate change
             OptionType::Put => -k * t * discount_factor * n_minus_d2 / 100.0_ => 0.0,
         };
@@ -777,7 +777,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> RegimeSw
     }
 
     /// Calculate Gaussian likelihood
-    fn gaussian_likelihood(&self, x: F, mean: F, std_dev: F) -> F {
+    fn gaussian_likelihood(&self, x: F, mean: F, stddev: F) -> F {
         let two_pi = F::from(2.0 * std::f64::consts::PI).unwrap();
         let sqrt_two_pi = two_pi.sqrt();
         let variance = std_dev * std_dev;

@@ -120,11 +120,11 @@ pub struct FaultToleranceConfig {
     /// Enable automatic recovery
     pub enable_automatic_recovery: bool,
     /// Recovery timeout in seconds
-    pub recovery_timeout_seconds: u64,
+    pub recoverytimeout_seconds: u64,
     /// Checkpoint frequency in seconds
     pub checkpoint_frequency_seconds: u64,
     /// Maximum retries for failed tasks
-    pub max_retries: u32,
+    pub maxretries: u32,
     /// Fault tolerance level
     pub level: FaultToleranceLevel,
     /// Checkpoint interval
@@ -136,9 +136,9 @@ impl Default for FaultToleranceConfig {
         Self {
             enable_predictive_detection: true,
             enable_automatic_recovery: true,
-            recovery_timeout_seconds: 300,
+            recoverytimeout_seconds: 300,
             checkpoint_frequency_seconds: 60,
-            max_retries: 3,
+            maxretries: 3,
             level: FaultToleranceLevel::default(),
             checkpoint_interval: Duration::from_secs(60),
         }
@@ -158,7 +158,7 @@ pub struct TaskRequirements {
     /// Required node type
     pub required_node_type: Option<NodeType>,
     /// Network bandwidth requirements in Mbps
-    pub min_network_bandwidth_mbps: f64,
+    pub min_networkbandwidth_mbps: f64,
     /// Storage requirements in GB
     pub min_storage_gb: f64,
     /// Geographic constraints
@@ -178,7 +178,7 @@ impl Default for TaskRequirements {
             min_memory_gb: 1.0,
             min_gpu_memory_gb: None,
             required_node_type: None,
-            min_network_bandwidth_mbps: 100.0,
+            min_networkbandwidth_mbps: 100.0,
             min_storage_gb: 10.0,
             geographic_constraints: Vec::new(),
             compute_complexity: 0.5,
@@ -251,19 +251,19 @@ impl Default for ResourceProfile {
 }
 
 impl ResourceProfile {
-    pub fn from_analysis(_analysis: &ResourceAnalysis) -> Self {
+    pub fn from_analysis(analysis: &ResourceAnalysis) -> Self {
         // Determine resource profile based on _analysis
-        if _analysis.gpu_required {
+        if analysis.gpu_required {
             Self::GpuAccelerated
-        } else if _analysis.network_intensive {
+        } else if analysis.network_intensive {
             Self::NetworkIntensive
-        } else if _analysis.storage_intensive {
+        } else if analysis.storage_intensive {
             Self::StorageIntensive
-        } else if _analysis.memory_gb > 16 && _analysis.cpu_cores > 8 {
+        } else if analysis.memory_gb > 16 && analysis.cpu_cores > 8 {
             Self::HighMemoryHighCpu
-        } else if _analysis.memory_gb > 16 {
+        } else if analysis.memory_gb > 16 {
             Self::HighMemoryLowCpu
-        } else if _analysis.cpu_cores > 8 {
+        } else if analysis.cpu_cores > 8 {
             Self::LowMemoryHighCpu
         } else {
             Self::LowMemoryLowCpu
@@ -281,7 +281,7 @@ pub struct ClusterManager {
     discovery_service: NodeDiscoveryService,
     /// Node health monitor
     #[allow(dead_code)]
-    health_monitor: NodeHealthMonitor,
+    healthmonitor: NodeHealthMonitor,
     /// Cluster topology
     #[allow(dead_code)]
     topology: ClusterTopology,
@@ -346,7 +346,7 @@ pub struct NodeCapabilities {
     /// Storage (GB)
     pub storage_gb: f64,
     /// Network bandwidth (Gbps)
-    pub network_bandwidth_gbps: f64,
+    pub networkbandwidth_gbps: f64,
     /// Supported compute types
     pub supported_compute_types: Vec<ComputeType>,
     /// Special hardware features
@@ -364,7 +364,7 @@ impl Default for NodeCapabilities {
             memory_gb: 1.0,
             gpu_devices: Vec::new(),
             storage_gb: 10.0,
-            network_bandwidth_gbps: 1.0,
+            networkbandwidth_gbps: 1.0,
             supported_compute_types: vec![ComputeType::CPU],
             special_features: Vec::new(),
             operating_system: "Linux".to_string(),
@@ -781,7 +781,7 @@ pub struct TopologyMetrics {
     /// Average latency
     pub avg_latency: Duration,
     /// Total bandwidth
-    pub total_bandwidth: f64,
+    pub totalbandwidth: f64,
     /// Connectivity score
     pub connectivity_score: f64,
     /// Fault tolerance score
@@ -815,7 +815,7 @@ pub struct SecurityPolicy {
     /// Authorization levels
     pub authorization_levels: Vec<String>,
     /// Audit logging
-    pub audit_logging: bool,
+    pub auditlogging: bool,
 }
 
 /// Resource limits
@@ -919,7 +919,7 @@ pub struct DistributedTask {
     /// Fault tolerance settings
     pub fault_tolerance: FaultToleranceLevel,
     /// Maximum retries on failure
-    pub max_retries: u32,
+    pub maxretries: u32,
     /// Checkpoint interval
     pub checkpoint_interval: Option<Duration>,
 }
@@ -971,7 +971,7 @@ pub struct ResourceRequirements {
     /// Storage required (GB)
     pub storage_required_gb: f64,
     /// Network bandwidth (Mbps)
-    pub network_bandwidth_mbps: f64,
+    pub networkbandwidth_mbps: f64,
     /// Special requirements
     pub special_requirements: Vec<String>,
 }
@@ -981,7 +981,7 @@ pub struct ResourceRequirements {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ExecutionConstraints {
     /// Maximum execution time
-    pub max_execution_time: Duration,
+    pub maxexecution_time: Duration,
     /// Preferred node types
     pub preferred_node_types: Vec<String>,
     /// Excluded nodes
@@ -1103,7 +1103,7 @@ pub struct TaskPerformanceMetrics {
 #[derive(Debug, Clone)]
 pub struct TaskError {
     /// Error code
-    pub error_code: String,
+    pub errorcode: String,
     /// Error message
     pub message: String,
     /// Error category
@@ -1161,7 +1161,7 @@ pub struct ExecutionRecord {
 #[derive(Debug, Clone)]
 pub struct PerformanceTrends {
     /// Average execution times by task type
-    pub avg_execution_times: HashMap<String, Duration>,
+    pub avgexecution_times: HashMap<String, Duration>,
     /// Success rates by node type
     pub success_rates: HashMap<String, f64>,
     /// Resource efficiency trends
@@ -1265,9 +1265,9 @@ pub enum ModelType {
 #[derive(Debug, Clone)]
 pub struct AccuracyMetrics {
     /// Mean absolute error
-    pub mean_absolute_error: f64,
+    pub mean_absoluteerror: f64,
     /// Root mean square error
-    pub root_mean_square_error: f64,
+    pub root_mean_squareerror: f64,
     /// R-squared
     pub r_squared: f64,
     /// Prediction confidence intervals
@@ -1380,7 +1380,7 @@ pub struct Message {
     /// Destination node
     pub destination: NodeId,
     /// Message type
-    pub message_type: MessageType,
+    pub messagetype: MessageType,
     /// Payload
     pub payload: Vec<u8>,
     /// Priority
@@ -1592,7 +1592,7 @@ pub struct CompressionSettings {
     /// Compression level
     pub level: u8,
     /// Minimum size for compression
-    pub min_size_bytes: usize,
+    pub minsize_bytes: usize,
     /// Enable adaptive compression
     pub adaptive: bool,
 }
@@ -1624,7 +1624,7 @@ pub struct BandwidthOptimization {
 #[derive(Debug, Clone)]
 pub struct LatencyOptimization {
     /// TCP no delay
-    pub tcp_no_delay: bool,
+    pub tcp_nodelay: bool,
     /// Keep alive settings
     pub keep_alive: bool,
     /// Connection pre-warming
@@ -1637,7 +1637,7 @@ pub struct LatencyOptimization {
 #[derive(Debug, Clone)]
 pub struct ConnectionPooling {
     /// Pool size per node
-    pub pool_size_per_node: usize,
+    pub poolsize_per_node: usize,
     /// Connection idle timeout
     pub idle_timeout: Duration,
     /// Connection reuse limit
@@ -1690,7 +1690,7 @@ pub struct PooledResources {
     /// Storage (bytes)
     pub storage_bytes: u64,
     /// Network bandwidth (bytes/sec)
-    pub network_bandwidth: u64,
+    pub networkbandwidth: u64,
 }
 
 /// Pool policies
@@ -1776,11 +1776,11 @@ pub struct ResourceAllocation {
     /// Allocation ID
     pub id: AllocationId,
     /// Requesting task
-    pub task_id: TaskId,
+    pub taskid: TaskId,
     /// Allocated resources
     pub resources: PooledResources,
     /// Target node
-    pub node_id: NodeId,
+    pub nodeid: NodeId,
     /// Allocation time
     pub allocated_at: Instant,
     /// Expected release time
@@ -2236,22 +2236,22 @@ impl AdvancedDistributedComputer {
             )))
         })?;
 
-        let task_id = scheduler.submit_task(task)?;
+        let taskid = scheduler.submit_task(task)?;
 
         // Update statistics
         self.update_submission_stats(start_time.elapsed())?;
 
         // Set up fault tolerance monitoring for the task
-        self.register_task_for_monitoring(&task_id)?;
+        self.register_task_formonitoring(&taskid)?;
 
-        println!("📋 Task {} submitted to distributed cluster", task_id.0);
-        Ok(task_id)
+        println!("📋 Task {} submitted to distributed cluster", taskid.0);
+        Ok(taskid)
     }
 
     /// Batch submit multiple tasks with optimal load distribution
     pub fn submit_batch_tasks(&self, tasks: Vec<DistributedTask>) -> CoreResult<Vec<TaskId>> {
         let start_time = Instant::now();
-        let mut task_ids = Vec::new();
+        let mut taskids = Vec::new();
 
         println!("📦 Submitting batch of {} tasks...", tasks.len());
 
@@ -2269,9 +2269,9 @@ impl AdvancedDistributedComputer {
         for (resource_profile, task_group) in task_groups {
             let _suitable_nodes = self.find_nodes_for_profile(&resource_profile)?;
 
-            for (task, _task_analysis) in task_group {
-                let task_id = self.submit_task(task)?;
-                task_ids.push(task_id);
+            for (task, task_analysis) in task_group {
+                let taskid = self.submit_task(task)?;
+                taskids.push(taskid);
             }
         }
 
@@ -2281,7 +2281,7 @@ impl AdvancedDistributedComputer {
             start_time.elapsed().as_millis()
         );
 
-        Ok(task_ids)
+        Ok(taskids)
     }
 
     /// Submit a task with fault tolerance and automatic retry
@@ -2294,34 +2294,34 @@ impl AdvancedDistributedComputer {
         let fault_tolerant_task = self.wrap_with_fault_tolerance(task, fault_tolerance_config)?;
 
         // Submit with enhanced monitoring
-        let task_id = self.submit_task(fault_tolerant_task)?;
+        let taskid = self.submit_task(fault_tolerant_task)?;
 
         // Set up advanced monitoring and recovery
-        self.register_task_for_monitoring(&task_id)?;
+        self.register_task_formonitoring(&taskid)?;
 
-        Ok(task_id)
+        Ok(taskid)
     }
 
     /// Get task status
-    pub fn get_task_status(&self, task_id: &TaskId) -> CoreResult<Option<TaskStatus>> {
+    pub fn get_task_status(&self, taskid: &TaskId) -> CoreResult<Option<TaskStatus>> {
         let scheduler = self.task_scheduler.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire scheduler lock: {e}"
             )))
         })?;
 
-        Ok(scheduler.get_task_status(task_id))
+        Ok(scheduler.get_task_status(taskid))
     }
 
     /// Cancel a task
-    pub fn cancel_task(&self, task_id: &TaskId) -> CoreResult<()> {
+    pub fn cancel_task(&self, taskid: &TaskId) -> CoreResult<()> {
         let scheduler = self.task_scheduler.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire scheduler lock: {e}"
             )))
         })?;
 
-        scheduler.cancel_task(task_id)
+        scheduler.cancel_task(taskid)
     }
 
     /// Get cluster status
@@ -2336,14 +2336,14 @@ impl AdvancedDistributedComputer {
     }
 
     /// Scale cluster up or down
-    pub fn scale_cluster(&self, target_nodes: usize) -> CoreResult<()> {
+    pub fn scale_cluster(&self, targetnodes: usize) -> CoreResult<()> {
         let cluster_manager = self.cluster_manager.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire cluster manager lock: {e}"
             )))
         })?;
 
-        cluster_manager.scale_to(target_nodes)
+        cluster_manager.scale_to(targetnodes)
     }
 
     /// Start distributed computing operations
@@ -2426,7 +2426,7 @@ impl AdvancedDistributedComputer {
         let compute_complexity = self.estimate_compute_complexity(task)?;
         let memory_intensity = self.estimate_memory_intensity(task)?;
         let io_requirements = self.estimate_io_requirements(task)?;
-        let network_bandwidth = self.estimate_network_bandwidth(task)?;
+        let networkbandwidth = self.estimate_networkbandwidth(task)?;
 
         // Determine optimal node characteristics
         let preferred_node_type = if compute_complexity > 0.8 {
@@ -2451,7 +2451,7 @@ impl AdvancedDistributedComputer {
                 None
             },
             required_node_type: Some(preferred_node_type),
-            min_network_bandwidth_mbps: network_bandwidth * 1000.0,
+            min_networkbandwidth_mbps: networkbandwidth * 1000.0,
             min_storage_gb: io_requirements * 100.0,
             geographic_constraints: Vec::new(),
             compute_complexity,
@@ -2467,15 +2467,15 @@ impl AdvancedDistributedComputer {
             )))
         })?;
 
-        let available_nodes = cluster_manager.get_available_nodes()?;
+        let availablenodes = cluster_manager.get_availablenodes()?;
         let mut suitable_nodes = Vec::new();
 
-        for (node_id, node_info) in available_nodes {
-            let suitability_score = self.calculate_node_suitability(&node_info, requirements)?;
+        for (nodeid, nodeinfo) in availablenodes {
+            let suitability_score = self.calculate_node_suitability(&nodeinfo, requirements)?;
 
             if suitability_score > 0.6 {
                 // Minimum suitability threshold
-                suitable_nodes.push((node_id, suitability_score));
+                suitable_nodes.push((nodeid, suitability_score));
             }
         }
 
@@ -2551,8 +2551,8 @@ impl AdvancedDistributedComputer {
         }
 
         // Network match
-        if node.capabilities.network_bandwidth_gbps * 1000.0
-            >= requirements.min_network_bandwidth_mbps
+        if node.capabilities.networkbandwidth_gbps * 1000.0
+            >= requirements.min_networkbandwidth_mbps
         {
             score += 0.25;
         }
@@ -2617,7 +2617,7 @@ impl AdvancedDistributedComputer {
         Ok((data_size_gb * io_factor / 100.0).min(1.0)) // Normalize
     }
 
-    fn estimate_network_bandwidth(&self, task: &DistributedTask) -> CoreResult<f64> {
+    fn estimate_networkbandwidth(&self, task: &DistributedTask) -> CoreResult<f64> {
         let data_size_gb = task.data.size_bytes as f64 / (1024.0 * 1024.0 * 1024.0);
 
         // Network requirements based on task type (since distribution_strategy doesn't exist)
@@ -2674,7 +2674,7 @@ impl AdvancedDistributedComputer {
             ResourceProfile::HighMemoryLowCpu
         } else if requirements.min_cpu_cores > 8 {
             ResourceProfile::LowMemoryHighCpu
-        } else if requirements.min_network_bandwidth_mbps > 1000.0 {
+        } else if requirements.min_networkbandwidth_mbps > 1000.0 {
             ResourceProfile::NetworkIntensive
         } else if requirements.min_storage_gb > 100.0 {
             ResourceProfile::StorageIntensive
@@ -2683,7 +2683,7 @@ impl AdvancedDistributedComputer {
         }
     }
 
-    fn find_nodes_for_profile(&self, _profile: &ResourceProfile) -> CoreResult<Vec<NodeId>> {
+    fn find_nodes_for_profile(&self, profile: &ResourceProfile) -> CoreResult<Vec<NodeId>> {
         // Simplified implementation - find nodes matching the resource _profile
         Ok(vec![
             NodeId("node1".to_string()),
@@ -2704,7 +2704,7 @@ impl AdvancedDistributedComputer {
         Ok(fault_tolerant_task)
     }
 
-    fn update_submission_stats(&self, _duration: Duration) -> CoreResult<()> {
+    fn update_submission_stats(&self, duration: Duration) -> CoreResult<()> {
         let mut stats = self.statistics.write().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire statistics lock: {e}"
@@ -2719,14 +2719,14 @@ impl AdvancedDistributedComputer {
         Ok(())
     }
 
-    fn register_task_for_monitoring(&self, task_id: &TaskId) -> CoreResult<()> {
+    fn register_task_formonitoring(&self, taskid: &TaskId) -> CoreResult<()> {
         let fault_tolerance = self.fault_tolerance.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire fault tolerance lock: {e}"
             )))
         })?;
 
-        fault_tolerance.register_task_for_advanced_monitoring(task_id)?;
+        fault_tolerance.register_task_for_advancedmonitoring(taskid)?;
         Ok(())
     }
 }
@@ -2734,11 +2734,11 @@ impl AdvancedDistributedComputer {
 // Implementation stubs for complex sub-components
 
 impl ClusterManager {
-    pub fn new(_config: &DistributedComputingConfig) -> CoreResult<Self> {
+    pub fn new(config: &DistributedComputingConfig) -> CoreResult<Self> {
         Ok(Self {
             nodes: HashMap::new(),
             discovery_service: NodeDiscoveryService::new()?,
-            health_monitor: NodeHealthMonitor::new()?,
+            healthmonitor: NodeHealthMonitor::new()?,
             topology: ClusterTopology::new()?,
             metadata: ClusterMetadata::default(),
         })
@@ -2749,25 +2749,25 @@ impl ClusterManager {
         Ok(())
     }
 
-    pub fn scale_nodes(&self, _target_nodes: usize) -> CoreResult<()> {
+    pub fn scale_nodes(&self, _targetnodes: usize) -> CoreResult<()> {
         println!("📈 Scaling cluster...");
         Ok(())
     }
 
     /// Scale cluster to target number of nodes
-    pub fn scale_to(&self, target_nodes: usize) -> CoreResult<()> {
-        self.scale_nodes(target_nodes)
+    pub fn scale_to(&self, targetnodes: usize) -> CoreResult<()> {
+        self.scale_nodes(targetnodes)
     }
 
-    pub fn get_available_nodes(
+    pub fn get_availablenodes(
         &self,
     ) -> CoreResult<HashMap<NodeId, crate::distributed::cluster::NodeInfo>> {
         // Return available nodes from cluster
-        let mut available_nodes = HashMap::new();
-        for (node_id, node) in &self.nodes {
+        let mut availablenodes = HashMap::new();
+        for (nodeid, node) in &self.nodes {
             if node.status == NodeStatus::Available {
                 // Convert ComputeNode to cluster::NodeInfo
-                let node_info = crate::distributed::cluster::NodeInfo {
+                let nodeinfo = crate::distributed::cluster::NodeInfo {
                     id: node.id.0.clone(),
                     address: node.address,
                     node_type: crate::distributed::cluster::NodeType::Compute, // Default type
@@ -2776,7 +2776,7 @@ impl ClusterManager {
                         memory_gb: node.capabilities.memory_gb as usize,
                         gpu_count: node.capabilities.gpu_devices.len(),
                         disk_space_gb: node.capabilities.storage_gb as usize,
-                        network_bandwidth_gbps: node.capabilities.network_bandwidth_gbps,
+                        networkbandwidth_gbps: node.capabilities.networkbandwidth_gbps,
                         specialized_units: Vec::new(),
                     },
                     status: crate::distributed::cluster::NodeStatus::Healthy, // Convert status
@@ -2795,10 +2795,10 @@ impl ClusterManager {
                             .collect(),
                     },
                 };
-                available_nodes.insert(node_id.clone(), node_info);
+                availablenodes.insert(nodeid.clone(), nodeinfo);
             }
         }
-        Ok(available_nodes)
+        Ok(availablenodes)
     }
 }
 
@@ -2851,7 +2851,7 @@ impl ClusterTopology {
             segments: vec![],
             metrics: TopologyMetrics {
                 avg_latency: Duration::from_millis(50),
-                total_bandwidth: 1000.0,
+                totalbandwidth: 1000.0,
                 connectivity_score: 0.95,
                 fault_tolerance_score: 0.85,
             },
@@ -2874,7 +2874,7 @@ impl ClusterMetadata {
                     "write".to_string(),
                     "admin".to_string(),
                 ],
-                audit_logging: true,
+                auditlogging: true,
             },
             resource_limits: ResourceLimits {
                 max_cpu_cores: Some(1024),
@@ -2887,7 +2887,7 @@ impl ClusterMetadata {
 }
 
 impl AdaptiveTaskScheduler {
-    pub fn new(_config: &DistributedComputingConfig) -> CoreResult<Self> {
+    pub fn new(config: &DistributedComputingConfig) -> CoreResult<Self> {
         Ok(Self {
             algorithm: SchedulingAlgorithm::HybridAdaptive,
             task_queue: TaskQueue::new(),
@@ -2909,19 +2909,19 @@ impl AdaptiveTaskScheduler {
     }
 
     pub fn submit_task(&mut self, task: DistributedTask) -> CoreResult<TaskId> {
-        let task_id = task.id.clone();
+        let taskid = task.id.clone();
         self.task_queue.pending_tasks.push(task);
-        Ok(task_id)
+        Ok(taskid)
     }
 
-    pub fn get_task_status(&self, task_id: &TaskId) -> Option<TaskStatus> {
+    pub fn get_task_status(&self, taskid: &TaskId) -> Option<TaskStatus> {
         self.task_queue
             .running_tasks
-            .get(task_id)
+            .get(taskid)
             .map(|running_task| running_task.status.clone())
     }
 
-    pub fn cancel_task(&self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn cancel_task(&self, _taskid: &TaskId) -> CoreResult<()> {
         println!("❌ Cancelling task...");
         Ok(())
     }
@@ -2955,7 +2955,7 @@ impl ExecutionHistory {
         Self {
             records: Vec::new(),
             performance_trends: PerformanceTrends {
-                avg_execution_times: HashMap::new(),
+                avgexecution_times: HashMap::new(),
                 success_rates: HashMap::new(),
                 efficiency_trends: Vec::new(),
             },
@@ -2974,8 +2974,8 @@ impl PerformancePredictor {
             models: HashMap::new(),
             historical_data: Vec::new(),
             accuracy_metrics: AccuracyMetrics {
-                mean_absolute_error: 0.05,
-                root_mean_square_error: 0.07,
+                mean_absoluteerror: 0.05,
+                root_mean_squareerror: 0.07,
                 r_squared: 0.92,
                 confidence_intervals: vec![ConfidenceInterval {
                     lower: 0.8,
@@ -2988,7 +2988,7 @@ impl PerformancePredictor {
 }
 
 impl DistributedCommunication {
-    pub fn new(_config: &DistributedComputingConfig) -> CoreResult<Self> {
+    pub fn new(config: &DistributedComputingConfig) -> CoreResult<Self> {
         Ok(Self {
             protocols: vec![CommunicationProtocol::GRpc, CommunicationProtocol::TCP],
             routing: MessageRouting {
@@ -3025,7 +3025,7 @@ impl DistributedCommunication {
                 compression: CompressionSettings {
                     algorithm: CompressionAlgorithm::Zstd,
                     level: 3,
-                    min_size_bytes: 1024,
+                    minsize_bytes: 1024,
                     adaptive: true,
                 },
                 bandwidth_optimization: BandwidthOptimization {
@@ -3035,13 +3035,13 @@ impl DistributedCommunication {
                     enable_delta_compression: true,
                 },
                 latency_optimization: LatencyOptimization {
-                    tcp_no_delay: true,
+                    tcp_nodelay: true,
                     keep_alive: true,
                     connection_prewarming: true,
                     priority_scheduling: true,
                 },
                 connection_pooling: ConnectionPooling {
-                    pool_size_per_node: 10,
+                    poolsize_per_node: 10,
                     idle_timeout: Duration::from_secs(300),
                     reuse_limit: 1000,
                     enable_health_checking: true,
@@ -3057,7 +3057,7 @@ impl DistributedCommunication {
 }
 
 impl DistributedResourceManager {
-    pub fn new(_config: &DistributedComputingConfig) -> CoreResult<Self> {
+    pub fn new(config: &DistributedComputingConfig) -> CoreResult<Self> {
         Ok(Self {
             resource_pools: HashMap::new(),
             allocation_tracker: AllocationTracker {
@@ -3091,7 +3091,7 @@ impl DistributedResourceManager {
 }
 
 impl IntelligentLoadBalancer {
-    pub fn new(_config: &DistributedComputingConfig) -> CoreResult<Self> {
+    pub fn new(config: &DistributedComputingConfig) -> CoreResult<Self> {
         Ok(Self {
             algorithms: vec![LoadBalancingAlgorithm::AdaptiveHybrid],
             load_distribution: HashMap::new(),
@@ -3112,7 +3112,7 @@ impl IntelligentLoadBalancer {
 }
 
 impl FaultToleranceManager {
-    pub fn new(_config: &DistributedComputingConfig) -> CoreResult<Self> {
+    pub fn new(config: &DistributedComputingConfig) -> CoreResult<Self> {
         Ok(Self {
             failure_detection: FailureDetection {
                 algorithms: vec![
@@ -3143,7 +3143,7 @@ impl FaultToleranceManager {
                 compression: CompressionSettings {
                     algorithm: CompressionAlgorithm::Zstd,
                     level: 5,
-                    min_size_bytes: 1024,
+                    minsize_bytes: 1024,
                     adaptive: true,
                 },
             },
@@ -3151,56 +3151,56 @@ impl FaultToleranceManager {
     }
 
     /// Register a task for advanced monitoring
-    pub fn register_task_for_advanced_monitoring(&self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn register_task_for_advancedmonitoring(&self, _taskid: &TaskId) -> CoreResult<()> {
         // Advanced monitoring registration logic
         println!("📊 Registering task for advanced monitoring");
         Ok(())
     }
 
     /// Set up predictive monitoring for a task
-    pub fn cancel_task(&self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn cancel_task(&self, _taskid: &TaskId) -> CoreResult<()> {
         // Predictive monitoring setup logic
         println!("🔮 Setting up predictive monitoring");
         Ok(())
     }
 
     /// Enable fault prediction for a task
-    pub fn enable_fault_prediction(&self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn enable_fault_prediction(&self, _taskid: &TaskId) -> CoreResult<()> {
         // Fault prediction enablement logic
         println!("🎯 Enabling fault prediction");
         Ok(())
     }
 
     /// Setup anomaly detection for a task
-    pub fn setup_anomaly_detection(&self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn setup_anomaly_detection(&self, _taskid: &TaskId) -> CoreResult<()> {
         // Anomaly detection setup logic
         println!("🚨 Setting up anomaly detection");
         Ok(())
     }
 
     /// Setup cascading failure prevention for a task
-    pub fn setup_cascading_failure_prevention(&self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn setup_cascading_failure_prevention(&self, _taskid: &TaskId) -> CoreResult<()> {
         // Cascading failure prevention setup logic
         println!("🛡️ Setting up cascading failure prevention");
         Ok(())
     }
 
     /// Setup adaptive recovery strategies for a task
-    pub fn setup_adaptive_recovery_strategies(&self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn setup_adaptive_recovery_strategies(&self, _taskid: &TaskId) -> CoreResult<()> {
         // Adaptive recovery strategies setup logic
         println!("♻️ Setting up adaptive recovery strategies");
         Ok(())
     }
 
     /// Enable proactive checkpoint creation for a task
-    pub fn enable_proactive_checkpoint_creation(&self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn enable_proactive_checkpoint_creation(&self, _taskid: &TaskId) -> CoreResult<()> {
         // Proactive checkpoint creation enablement logic
         println!("💾 Enabling proactive checkpoint creation");
         Ok(())
     }
 
     /// Setup intelligent load balancing for a task
-    pub fn setup_intelligent_load_balancing(&self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn setup_intelligent_load_balancing(&self, _taskid: &TaskId) -> CoreResult<()> {
         // Intelligent load balancing setup logic
         println!("⚖️ Setting up intelligent load balancing");
         Ok(())
@@ -3286,7 +3286,7 @@ mod tests {
                 gpu_required: false,
                 min_gpu_memory_gb: None,
                 storage_required_gb: 0.1,
-                network_bandwidth_mbps: 10.0,
+                networkbandwidth_mbps: 10.0,
                 special_requirements: vec![],
             },
             resources: ResourceRequirements {
@@ -3295,12 +3295,12 @@ mod tests {
                 gpu_required: false,
                 min_gpu_memory_gb: None,
                 storage_required_gb: 0.1,
-                network_bandwidth_mbps: 10.0,
+                networkbandwidth_mbps: 10.0,
                 special_requirements: vec![],
             },
             expected_duration: Duration::from_secs(60),
             constraints: ExecutionConstraints {
-                max_execution_time: Duration::from_secs(300),
+                maxexecution_time: Duration::from_secs(300),
                 preferred_node_types: vec![],
                 excluded_nodes: vec![],
                 locality_preferences: vec![],
@@ -3320,7 +3320,7 @@ mod tests {
             streaming_output: false,
             distribution_strategy: DistributionStrategy::DataParallel,
             fault_tolerance: FaultToleranceLevel::None,
-            max_retries: 3,
+            maxretries: 3,
             checkpoint_interval: None,
         };
 
@@ -3328,10 +3328,10 @@ mod tests {
         // Since no cluster nodes are set up, we expect the "No suitable nodes available" error
         assert!(result.is_err());
         if let Err(error) = result {
-            let error_msg = error.to_string();
+            let errormsg = error.to_string();
             assert!(
-                error_msg.contains("No suitable nodes available"),
-                "Expected 'No suitable nodes available' error, got: {error_msg}"
+                errormsg.contains("No suitable nodes available"),
+                "Expected 'No suitable nodes available' error, got: {errormsg}"
             );
         }
     }

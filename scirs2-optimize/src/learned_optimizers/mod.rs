@@ -170,7 +170,7 @@ impl Default for AdaptationStatistics {
 /// Trait for learned optimizers
 pub trait LearnedOptimizer {
     /// Meta-train the optimizer on a distribution of problems
-    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> Result<()>;
+    fn meta_train(&mut self, trainingtasks: &[TrainingTask]) -> Result<()>;
 
     /// Adapt to a new problem with few-shot learning
     fn adapt_to_problem(
@@ -435,7 +435,7 @@ pub struct ProblemEncoder {
 
 impl ProblemEncoder {
     /// Create new problem encoder
-    pub fn new(_embedding_size: usize) -> Self {
+    pub fn new(_embeddingsize: usize) -> Self {
         let dim = 10; // Feature dimensions for different aspects
 
         Self {
@@ -448,7 +448,7 @@ impl ProblemEncoder {
             hessian_encoder: Array2::fromshape_fn((_embedding_size, dim), |_| {
                 rand::rng().gen_range(-0.5..0.5) * 0.1
             }),
-            embedding_size: _embedding_size,
+            embedding_size: embedding_size,
         }
     }
 
@@ -634,7 +634,7 @@ mod tests {
 
         assert_eq!(network.hidden_layers.len(), 2);
         assert_eq!(network.layer_norms.len(), 2);
-        assert!(network.attention_weights.is_some());
+        assert!(network.attentionweights.is_some());
     }
 
     #[test]

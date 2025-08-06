@@ -873,7 +873,7 @@ fn douglas_peucker_recursive<T: Float>(
 
 /// Calculate the perpendicular distance from a point to a line segment
 #[allow(dead_code)]
-fn perpendicular_distance<T: Float>(point: &[T; 2], line_start: &[T; 2], line_end: &[T; 2]) -> T {
+fn perpendicular_distance<T: Float>(point: &[T; 2], line_start: &[T; 2], lineend: &[T; 2]) -> T {
     let dx = line_end[0] - line_start[0];
     let dy = line_end[1] - line_start[1];
 
@@ -946,7 +946,7 @@ pub fn visvalingam_whyatt_simplify<T: Float + std::fmt::Debug>(
     // Calculate initial areas for all vertices
     for i in 0..n {
         let _area = calculate_triangle_area(polygon, i, &active);
-        vertices.push((i, _area));
+        vertices.push((i, area));
     }
 
     // Sort by _area (smallest first)
@@ -955,7 +955,7 @@ pub fn visvalingam_whyatt_simplify<T: Float + std::fmt::Debug>(
     // Remove vertices with areas smaller than threshold
     let removal_candidates: Vec<usize> = vertices
         .iter()
-        .filter(|(_, _area)| *_area < min_area)
+        .filter(|(_, area)| *_area < min_area)
         .map(|(idx_, _)| *idx_)
         .collect();
 
@@ -1026,7 +1026,7 @@ fn triangle_area<T: Float>(p1: &[T; 2], p2: &[T; 2], p3: &[T; 2]) -> T {
 
 /// Find the previous active vertex (wrapping around)
 #[allow(dead_code)]
-fn find_previous_active(_current: usize, active: &[bool], n: usize) -> Option<usize> {
+fn find_previous_active(current: usize, active: &[bool], n: usize) -> Option<usize> {
     for i in 1..n {
         let idx = (_current + n - i) % n;
         if active[idx] && idx != _current {
@@ -1038,7 +1038,7 @@ fn find_previous_active(_current: usize, active: &[bool], n: usize) -> Option<us
 
 /// Find the next active vertex (wrapping around)
 #[allow(dead_code)]
-fn find_next_active(_current: usize, active: &[bool], n: usize) -> Option<usize> {
+fn find_next_active(current: usize, active: &[bool], n: usize) -> Option<usize> {
     for i in 1..n {
         let idx = (_current + i) % n;
         if active[idx] && idx != _current {
@@ -1050,8 +1050,8 @@ fn find_next_active(_current: usize, active: &[bool], n: usize) -> Option<usize>
 
 /// Count the number of active vertices
 #[allow(dead_code)]
-fn count_active(_active: &[bool]) -> usize {
-    _active.iter().filter(|&&x| x).count()
+fn count_active(active: &[bool]) -> usize {
+    active.iter().filter(|&&x| x).count()
 }
 
 /// Update the area for a specific vertex in the vertices list

@@ -1,5 +1,5 @@
 /// Some gemm kernel usages are ported from ndarray
-use crate::ndarray__ext::NdArray;
+use crate::ndarray_ext::NdArray;
 use crate::same_type;
 use crate::tensor::Tensor;
 
@@ -162,12 +162,12 @@ fn batch_mat_mul_impl_slow<F: Float>(
 
 #[inline]
 #[allow(dead_code)]
-fn batch_mat_mul_requires_copy(_stride: &[ndarray::Ixs]) -> bool {
-    let rank = _stride.len();
-    // unwrap is ok since _stride.len() > 2
+fn batch_mat_mul_requires_copy(stride: &[ndarray::Ixs]) -> bool {
+    let rank = stride.len();
+    // unwrap is ok since stride.len() > 2
     let min_str = *_stride[0..rank - 2].iter().min().unwrap();
-    let row_str = _stride[rank - 2];
-    let col_str = _stride[rank - 1];
+    let row_str = stride[rank - 2];
+    let col_str = stride[rank - 1];
     min_str < row_str || min_str < col_str
 }
 

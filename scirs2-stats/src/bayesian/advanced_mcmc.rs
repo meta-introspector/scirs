@@ -46,12 +46,12 @@ pub struct HamiltonianMonteCarlo {
 
 impl HamiltonianMonteCarlo {
     /// Create a new HMC sampler
-    pub fn new(_step_size: f64, n_steps: usize) -> Result<Self> {
+    pub fn new(_step_size: f64, nsteps: usize) -> Result<Self> {
         check_positive(_step_size, "_step_size")?;
         check_positive(n_steps, "n_steps")?;
 
         Ok(Self {
-            step_size: _step_size,
+            step_size: step_size,
             n_steps,
             mass_matrix: None,
             seed: None,
@@ -62,7 +62,7 @@ impl HamiltonianMonteCarlo {
     }
 
     /// Set mass matrix
-    pub fn with_mass_matrix(mut self, mass_matrix: Array2<f64>) -> Result<Self> {
+    pub fn with_mass_matrix(mut self, massmatrix: Array2<f64>) -> Result<Self> {
         checkarray_finite(&mass_matrix, "mass_matrix")?;
         self.mass_matrix = Some(mass_matrix);
         Ok(self)
@@ -193,7 +193,7 @@ impl HamiltonianMonteCarlo {
     }
 
     /// Compute kinetic energy
-    fn kinetic_energy(&self, momentum: &Array1<f64>, mass_matrix_inv: &Array2<f64>) -> Result<f64> {
+    fn kinetic_energy(&self, momentum: &Array1<f64>, mass_matrixinv: &Array2<f64>) -> Result<f64> {
         let kinetic = 0.5 * momentum.dot(&mass_matrix_inv.dot(momentum));
         Ok(kinetic)
     }
@@ -240,11 +240,11 @@ impl HamiltonianMonteCarlo {
 
         let final_log_prob = target.log_density(&_position.view())?;
 
-        Ok((_position, _momentum, final_log_prob))
+        Ok((_position, momentum, final_log_prob))
     }
 
     /// Invert mass matrix (simplified)
-    fn invert_mass_matrix(&self, mass_matrix: &Array2<f64>) -> Result<Array2<f64>> {
+    fn invert_mass_matrix(&self, massmatrix: &Array2<f64>) -> Result<Array2<f64>> {
         // Simplified inversion - in practice use proper _matrix inversion
         if mass_matrix.is_square() {
             // For now, assume diagonal mass _matrix
@@ -339,7 +339,7 @@ impl NoUTurnSampler {
     }
 
     /// Set initial step size
-    pub fn with_step_size(mut self, step_size: f64) -> Self {
+    pub fn with_step_size(mut self, stepsize: f64) -> Self {
         self.initial_step_size = step_size;
         self
     }
@@ -447,7 +447,7 @@ impl NoUTurnSampler {
         let _current_log_prob = target.log_density(&current_pos.view())?;
 
         // Take a few leapfrog steps (simplified)
-        let n_steps = 2_usize.pow(rng.random_range(1..=self.max_tree_depth.min(4)) as u32);
+        let n_steps = 2_usize.pow(rng.gen_range(1..=self.max_tree_depth.min(4)) as u32);
 
         for _ in 0..n_steps {
             // Simplified leapfrog step
@@ -676,7 +676,7 @@ pub struct ParallelTempering {
 
 impl ParallelTempering {
     /// Create a new parallel tempering sampler
-    pub fn new(temperatures: Array1<f64>, step_size: f64) -> Result<Self> {
+    pub fn new(temperatures: Array1<f64>, stepsize: f64) -> Result<Self> {
         checkarray_finite(&temperatures, "temperatures")?;
         check_positive(step_size, "step_size")?;
 

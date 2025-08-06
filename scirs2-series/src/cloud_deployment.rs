@@ -391,7 +391,7 @@ pub struct ResourceRequirements {
 
 impl CloudDeploymentOrchestrator {
     /// Create a new cloud deployment orchestrator
-    pub fn new(_config: DeploymentConfig) -> Self {
+    pub fn new(config: DeploymentConfig) -> Self {
         let deployment_state = DeploymentState {
             status: DeploymentStatus::Initializing,
             active_instances: Vec::new(),
@@ -416,7 +416,7 @@ impl CloudDeploymentOrchestrator {
         };
 
         CloudDeploymentOrchestrator {
-            _config,
+            config,
             deployment_state,
             cost_tracker,
             health_monitor,
@@ -660,7 +660,7 @@ impl CloudDeploymentOrchestrator {
     }
 
     /// Select the best instance for a job based on resource requirements
-    fn select_best_instance(&self_job: &CloudTimeSeriesJob) -> Result<&InstanceInfo> {
+    fn select_best_instance(selfjob: &CloudTimeSeriesJob) -> Result<&InstanceInfo> {
         // Simple selection based on lowest CPU utilization
         self.deployment_state
             .active_instances
@@ -688,7 +688,7 @@ impl CloudDeploymentOrchestrator {
 
     /// Execute forecasting job
     fn execute_forecasting_job(
-        &self_job: &CloudTimeSeriesJob,
+        self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!("🔮 Executing forecasting _job on {}", instance.instance_id);
@@ -699,7 +699,7 @@ impl CloudDeploymentOrchestrator {
 
     /// Execute anomaly detection job
     fn execute_anomaly_detection_job(
-        &self_job: &CloudTimeSeriesJob,
+        self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!(
@@ -712,7 +712,7 @@ impl CloudDeploymentOrchestrator {
 
     /// Execute decomposition job
     fn execute_decomposition_job(
-        &self_job: &CloudTimeSeriesJob,
+        self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!("🔍 Executing decomposition _job on {}", instance.instance_id);
@@ -722,7 +722,7 @@ impl CloudDeploymentOrchestrator {
 
     /// Execute feature extraction job
     fn execute_feature_extraction_job(
-        &self_job: &CloudTimeSeriesJob,
+        self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!(
@@ -735,7 +735,7 @@ impl CloudDeploymentOrchestrator {
 
     /// Execute clustering job
     fn execute_clustering_job(
-        &self_job: &CloudTimeSeriesJob,
+        self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!("🎯 Executing clustering _job on {}", instance.instance_id);
@@ -745,7 +745,7 @@ impl CloudDeploymentOrchestrator {
 
     /// Execute change point detection job
     fn execute_changepoint_job(
-        &self_job: &CloudTimeSeriesJob,
+        self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!(
@@ -758,7 +758,7 @@ impl CloudDeploymentOrchestrator {
 
     /// Execute neural training job
     fn execute_neural_training_job(
-        &self_job: &CloudTimeSeriesJob,
+        self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!(

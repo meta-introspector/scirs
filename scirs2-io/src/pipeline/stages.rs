@@ -27,9 +27,9 @@ pub enum FileFormat {
 }
 
 impl FileReadStage {
-    pub fn new(_path: impl AsRef<Path>, format: FileFormat) -> Self {
+    pub fn new(path: impl AsRef<Path>, format: FileFormat) -> Self {
         Self {
-            path: _path.as_ref().to_path_buf(),
+            path: path.as_ref().to_path_buf(),
             format,
         }
     }
@@ -114,9 +114,9 @@ pub struct FileWriteStage {
 }
 
 impl FileWriteStage {
-    pub fn new(_path: impl AsRef<Path>, format: FileFormat) -> Self {
+    pub fn new(path: impl AsRef<Path>, format: FileFormat) -> Self {
         Self {
-            path: _path.as_ref().to_path_buf(),
+            path: path.as_ref().to_path_buf(),
             format,
         }
     }
@@ -258,9 +258,9 @@ pub trait DataTransformer: Send + Sync {
 }
 
 impl TransformStage {
-    pub fn new(_name: &str, transformer: Box<dyn DataTransformer>) -> Self {
+    pub fn new(name: &str, transformer: Box<dyn DataTransformer>) -> Self {
         Self {
-            name: _name.to_string(),
+            name: name.to_string(),
             transformer,
         }
     }
@@ -291,12 +291,12 @@ pub struct AggregationStage<T> {
 }
 
 impl<T: 'static + Send + Sync> AggregationStage<T> {
-    pub fn new<F>(_name: &str, aggregator: F) -> Self
+    pub fn new<F>(name: &str, aggregator: F) -> Self
     where
         F: Fn(Vec<T>) -> Result<T> + Send + Sync + 'static,
     {
         Self {
-            name: _name.to_string(),
+            name: name.to_string(),
             aggregator: Box::new(aggregator),
         }
     }
@@ -334,12 +334,12 @@ pub struct FilterStage<T> {
 }
 
 impl<T: 'static + Send + Sync + Clone> FilterStage<T> {
-    pub fn new<F>(_name: &str, predicate: F) -> Self
+    pub fn new<F>(name: &str, predicate: F) -> Self
     where
         F: Fn(&T) -> bool + Send + Sync + 'static,
     {
         Self {
-            name: _name.to_string(),
+            name: name.to_string(),
             predicate: Box::new(predicate),
         }
     }
@@ -383,9 +383,9 @@ pub trait DataEnricher: Send + Sync {
 }
 
 impl EnrichmentStage {
-    pub fn new(_name: &str, enricher: Box<dyn DataEnricher>) -> Self {
+    pub fn new(name: &str, enricher: Box<dyn DataEnricher>) -> Self {
         Self {
-            name: _name.to_string(),
+            name: name.to_string(),
             enricher,
         }
     }
@@ -416,9 +416,9 @@ pub struct CacheStage {
 }
 
 impl CacheStage {
-    pub fn new(_cache_key: &str, cache_dir: impl AsRef<Path>) -> Self {
+    pub fn new(_cache_key: &str, cachedir: impl AsRef<Path>) -> Self {
         Self {
-            cache_key: _cache_key.to_string(),
+            cache_key: cache_key.to_string(),
             cache_dir: cache_dir.as_ref().to_path_buf(),
         }
     }
@@ -486,9 +486,9 @@ pub trait Monitor: Send + Sync {
 }
 
 impl MonitoringStage {
-    pub fn new(_name: &str, monitor: Box<dyn Monitor>) -> Self {
+    pub fn new(name: &str, monitor: Box<dyn Monitor>) -> Self {
         Self {
-            name: _name.to_string(),
+            name: name.to_string(),
             monitor,
         }
     }
@@ -527,9 +527,9 @@ pub trait ErrorHandler: Send + Sync {
 }
 
 impl ErrorHandlingStage {
-    pub fn new(_name: &str, handler: Box<dyn ErrorHandler>) -> Self {
+    pub fn new(name: &str, handler: Box<dyn ErrorHandler>) -> Self {
         Self {
-            name: _name.to_string(),
+            name: name.to_string(),
             handler,
         }
     }
@@ -572,9 +572,9 @@ pub struct RetryErrorHandler {
 }
 
 impl RetryErrorHandler {
-    pub fn new(_max_retries: usize) -> Self {
+    pub fn new(_maxretries: usize) -> Self {
         Self {
-            max_retries: _max_retries,
+            max_retries: max_retries,
             retry_delay: Duration::from_secs(1),
         }
     }
@@ -637,9 +637,9 @@ pub struct FallbackErrorHandler<T: Any + Send + Sync + Clone + 'static> {
 }
 
 impl<T: Any + Send + Sync + Clone + 'static> FallbackErrorHandler<T> {
-    pub fn new(_fallback_value: T) -> Self {
+    pub fn new(_fallbackvalue: T) -> Self {
         Self {
-            fallback_value: _fallback_value,
+            fallback_value: fallback_value,
         }
     }
 }

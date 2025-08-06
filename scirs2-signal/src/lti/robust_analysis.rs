@@ -354,10 +354,19 @@ pub fn robust_control_observability_analysis(
     ss: &StateSpace,
     config: &RobustAnalysisConfig,
 ) -> SignalResult<RobustControlObservabilityAnalysis> {
-    check_finite(&ss.a, "A matrix")?;
-    check_finite(&ss.b, "B matrix")?;
-    check_finite(&ss.c, "C matrix")?;
-    check_finite(&ss.d, "D matrix")?;
+    // Check finite values in all matrices
+    for (i, &val) in ss.a.iter().enumerate() {
+        check_finite(val, &format!("A matrix element {}", i))?;
+    }
+    for (i, &val) in ss.b.iter().enumerate() {
+        check_finite(val, &format!("B matrix element {}", i))?;
+    }
+    for (i, &val) in ss.c.iter().enumerate() {
+        check_finite(val, &format!("C matrix element {}", i))?;
+    }
+    for (i, &val) in ss.d.iter().enumerate() {
+        check_finite(val, &format!("D matrix element {}", i))?;
+    }
 
     let n = ss.n_states;
     if n == 0 {
@@ -524,9 +533,9 @@ fn enhanced_observability_analysis(
 
 /// Build controllability matrix with enhanced numerical robustness
 #[allow(dead_code)]
-fn build_controllability_matrix_robust(_ss: &StateSpace) -> SignalResult<Array2<f64>> {
-    let n = _ss.n_states;
-    let m = _ss.n_inputs;
+fn build_controllability_matrix_robust(ss: &StateSpace) -> SignalResult<Array2<f64>> {
+    let n = ss.n_states;
+    let m = ss.n_inputs;
 
     if n == 0 || m == 0 {
         return Err(SignalError::ValueError(
@@ -535,9 +544,9 @@ fn build_controllability_matrix_robust(_ss: &StateSpace) -> SignalResult<Array2<
     }
 
     // Convert to proper matrix format
-    let a_matrix = Array2::fromshape_vec((n, n), _ss.a.clone())
+    let a_matrix = Array2::from_shape_vec((n, n), ss.a.clone())
         .map_err(|_| SignalError::ValueError("Invalid A matrix shape".to_string()))?;
-    let b_matrix = Array2::fromshape_vec((n, m), _ss.b.clone())
+    let b_matrix = Array2::from_shape_vec((n, m), ss.b.clone())
         .map_err(|_| SignalError::ValueError("Invalid B matrix shape".to_string()))?;
 
     // Build controllability matrix: [B AB A²B ... A^(n-1)B]
@@ -570,9 +579,9 @@ fn build_controllability_matrix_robust(_ss: &StateSpace) -> SignalResult<Array2<
 
 /// Build observability matrix with enhanced numerical robustness
 #[allow(dead_code)]
-fn build_observability_matrix_robust(_ss: &StateSpace) -> SignalResult<Array2<f64>> {
-    let n = _ss.n_states;
-    let p = _ss.n_outputs;
+fn build_observability_matrix_robust(ss: &StateSpace) -> SignalResult<Array2<f64>> {
+    let n = ss.n_states;
+    let p = ss.n_outputs;
 
     if n == 0 || p == 0 {
         return Err(SignalError::ValueError(
@@ -581,9 +590,9 @@ fn build_observability_matrix_robust(_ss: &StateSpace) -> SignalResult<Array2<f6
     }
 
     // Convert to proper matrix format
-    let a_matrix = Array2::fromshape_vec((n, n), _ss.a.clone())
+    let a_matrix = Array2::from_shape_vec((n, n), ss.a.clone())
         .map_err(|_| SignalError::ValueError("Invalid A matrix shape".to_string()))?;
-    let c_matrix = Array2::fromshape_vec((p, n), _ss.c.clone())
+    let c_matrix = Array2::from_shape_vec((p, n), ss.c.clone())
         .map_err(|_| SignalError::ValueError("Invalid C matrix shape".to_string()))?;
 
     // Build observability matrix: [C; CA; CA²; ...; CA^(n-1)]
@@ -645,9 +654,9 @@ fn svd_controllability_analysis(
         .collect();
     sv_with_indices.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
-    for (i, &(sv_)) in sv_with_indices.iter().enumerate() {
+    for (i, &(sv_, idx)) in sv_with_indices.iter().enumerate() {
         if i < singular_values.len() {
-            singular_values[i] = sv;
+            singular_values[i] = sv_;
         }
     }
 
@@ -717,9 +726,9 @@ fn svd_observability_analysis(
         .collect();
     sv_with_indices.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
-    for (i, &(sv_)) in sv_with_indices.iter().enumerate() {
+    for (i, &(sv_, idx)) in sv_with_indices.iter().enumerate() {
         if i < singular_values.len() {
-            singular_values[i] = sv;
+            singular_values[i] = sv_;
         }
     }
 
@@ -801,8 +810,8 @@ fn assess_numerical_conditioning(
 
 /// Estimate 2-norm condition number
 #[allow(dead_code)]
-fn estimate_condition_number_2_norm(_matrix: &Array2<f64>) -> f64 {
-    let (m, n) = _matrix.dim();
+fn estimate_condition_number_2_norm(matrix: &Array2<f64>) -> f64 {
+    let (m, n) = matrix.dim();
 
     // Simplified power iteration for largest singular value
     let max_iter = 50;
@@ -815,14 +824,14 @@ fn estimate_condition_number_2_norm(_matrix: &Array2<f64>) -> f64 {
             for j in 0..n {
                 let mut ata_ij = 0.0;
                 for k in 0..m {
-                    ata_ij += _matrix[[k, i]] * _matrix[[k, j]];
+                    ata_ij += matrix[[k, i]] * matrix[[k, j]];
                 }
                 atav[i] += ata_ij * v[j];
             }
         }
 
         // Normalize
-        let norm = atav.iter().map(|x| x.powi(2)).sum::<f64>().sqrt();
+        let norm = atav.iter().map(|x: &f64| x.powi(2)).sum::<f64>().sqrt();
         if norm > 1e-12 {
             v = atav / norm;
         }
@@ -834,7 +843,7 @@ fn estimate_condition_number_2_norm(_matrix: &Array2<f64>) -> f64 {
         for j in 0..n {
             let mut ata_ij = 0.0;
             for k in 0..m {
-                ata_ij += _matrix[[k, i]] * _matrix[[k, j]];
+                ata_ij += matrix[[k, i]] * matrix[[k, j]];
             }
             max_sv_sq += v[i] * ata_ij * v[j];
         }
@@ -853,14 +862,14 @@ fn estimate_condition_number_2_norm(_matrix: &Array2<f64>) -> f64 {
 
 /// Estimate smallest singular value (simplified)
 #[allow(dead_code)]
-fn estimate_smallest_singular_value(_matrix: &Array2<f64>) -> f64 {
-    let (m, n) = _matrix.dim();
+fn estimate_smallest_singular_value(matrix: &Array2<f64>) -> f64 {
+    let (m, n) = matrix.dim();
 
     // Simplified estimate using Frobenius norm
     let mut frobenius_norm_sq = 0.0;
     for i in 0..m {
         for j in 0..n {
-            frobenius_norm_sq += _matrix[[i, j]].powi(2);
+            frobenius_norm_sq += matrix[[i, j]].powi(2);
         }
     }
 
@@ -880,9 +889,9 @@ fn compute_mode_controllability_degrees(
     let mut degrees = Array1::zeros(n);
 
     // Compute A matrix in proper format
-    let a_matrix = Array2::fromshape_vec((n, n), ss.a.clone())
+    let a_matrix = Array2::from_shape_vec((n, n), ss.a.clone())
         .map_err(|_| SignalError::ValueError("Invalid A matrix shape".to_string()))?;
-    let b_matrix = Array2::fromshape_vec((n, ss.n_inputs), ss.b.clone())
+    let b_matrix = Array2::from_shape_vec((n, ss.n_inputs), ss.b.clone())
         .map_err(|_| SignalError::ValueError("Invalid B matrix shape".to_string()))?;
 
     // For each state, compute how well it can be controlled
@@ -928,9 +937,9 @@ fn compute_mode_observability_degrees(
     let mut degrees = Array1::zeros(n);
 
     // Compute A and C matrices in proper format
-    let a_matrix = Array2::fromshape_vec((n, n), ss.a.clone())
+    let a_matrix = Array2::from_shape_vec((n, n), ss.a.clone())
         .map_err(|_| SignalError::ValueError("Invalid A matrix shape".to_string()))?;
-    let c_matrix = Array2::fromshape_vec((ss.n_outputs, n), ss.c.clone())
+    let c_matrix = Array2::from_shape_vec((ss.n_outputs, n), ss.c.clone())
         .map_err(|_| SignalError::ValueError("Invalid C matrix shape".to_string()))?;
 
     // For each state, compute how well it can be observed
@@ -1076,7 +1085,7 @@ fn compute_sensitivity_analysis(
 
 /// Compute simplified controllability measure
 #[allow(dead_code)]
-fn compute_controllability_measure(_ss: &StateSpace) -> SignalResult<f64> {
+fn compute_controllability_measure(ss: &StateSpace) -> SignalResult<f64> {
     let controllability_matrix = build_controllability_matrix_robust(_ss)?;
 
     // Compute Frobenius norm as controllability measure
@@ -1335,6 +1344,9 @@ fn identify_robustness_issues(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::lti::{RobustAnalysisConfig, StateSpace};
+    use ndarray::Array2;
     #[test]
     fn test_robust_controllability_analysis() {
         // Create a simple controllable system
@@ -1372,7 +1384,7 @@ mod tests {
     #[test]
     fn test_svd_controllability_analysis() {
         let controllability_matrix =
-            Array2::fromshape_vec((2, 4), vec![1.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, -2.0]).unwrap();
+            Array2::from_shape_vec((2, 4), vec![1.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, -2.0]).unwrap();
         let config = RobustAnalysisConfig::default();
 
         let analysis = svd_controllability_analysis(&controllability_matrix, &config).unwrap();

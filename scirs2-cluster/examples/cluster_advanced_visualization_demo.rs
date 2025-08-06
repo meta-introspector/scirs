@@ -467,7 +467,7 @@ fn generate_2d_clustering_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
 
 /// Generate 2D clustering test data with specified size
 #[allow(dead_code)]
-fn generate_2d_clustering_data_size(_size: usize) -> (Array2<f64>, Array1<i32>, Array2<f64>) {
+fn generate_2d_clustering_data_size(size: usize) -> (Array2<f64>, Array1<i32>, Array2<f64>) {
     use rand::Rng;
 
     let mut rng = rand::rng();
@@ -560,7 +560,7 @@ fn generate_high_dimensional_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
 
 /// Generate random centroids for animation demo
 #[allow(dead_code)]
-fn generate_random_centroids(k: usize, n_features: usize) -> Array2<f64> {
+fn generate_random_centroids(k: usize, nfeatures: usize) -> Array2<f64> {
     use rand::Rng;
 
     let mut rng = rand::rng();

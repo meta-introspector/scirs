@@ -131,14 +131,14 @@ pub struct NonMonotoneState {
 }
 
 impl NonMonotoneState {
-    fn new(_max_memory: usize) -> Self {
+    fn new(_maxmemory: usize) -> Self {
         Self {
             f_history: VecDeque::new(),
-            max_memory: _max_memory,
+            max_memory: max_memory,
         }
     }
 
-    fn update(&mut self, f_new: f64) {
+    fn update(&mut self, fnew: f64) {
         self.f_history.push_back(f_new);
         while self.f_history.len() > self.max_memory {
             self.f_history.pop_front();
@@ -899,9 +899,9 @@ fn interpolate_cubic(
 }
 
 #[allow(dead_code)]
-fn interpolate_quadratic(_alpha: f64, phi: f64, phi0: f64, dphi: f64, dphi0: f64) -> f64 {
-    let alpha_q = -dphi0 * _alpha * _alpha / (2.0 * (phi - phi0 - dphi0 * _alpha));
-    alpha_q.max(1.1 * _alpha)
+fn interpolate_quadratic(alpha: f64, phi: f64, phi0: f64, dphi: f64, dphi0: f64) -> f64 {
+    let alpha_q = -dphi0 * _alpha * _alpha / (2.0 * (phi - phi0 - dphi0 * alpha));
+    alpha_q.max(1.1 * alpha)
 }
 
 #[allow(dead_code)]
@@ -930,8 +930,8 @@ fn interpolate_cubic_zoom(
 }
 
 #[allow(dead_code)]
-fn interpolate_quadratic_zoom(_alpha_lo: f64, alpha_hi: f64, phi_lo: f64, phi_hi: f64) -> f64 {
-    let d = alpha_hi - _alpha_lo;
+fn interpolate_quadratic_zoom(_alpha_lo: f64, alpha_hi: f64, phi_lo: f64, phihi: f64) -> f64 {
+    let d = alpha_hi - alpha_lo;
     let a = (phi_hi - phi_lo) / (d * d);
 
     if a > 0.0 {
@@ -944,7 +944,7 @@ fn interpolate_quadratic_zoom(_alpha_lo: f64, alpha_hi: f64, phi_lo: f64, phi_hi
 
 /// Create a non-monotone state for algorithms that need it
 #[allow(dead_code)]
-pub fn create_non_monotone_state(_memory_size: usize) -> NonMonotoneState {
+pub fn create_non_monotone_state(_memorysize: usize) -> NonMonotoneState {
     NonMonotoneState::new(_memory_size)
 }
 

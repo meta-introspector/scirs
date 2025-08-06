@@ -59,8 +59,8 @@ impl StringMetric for DamerauLevenshteinMetric {
 
 /// Calculate restricted Damerau-Levenshtein (OSA) distance
 #[allow(dead_code)]
-fn osa_distance(_s1: &str, s2: &str) -> usize {
-    let a: Vec<char> = _s1.chars().collect();
+fn osa_distance(s1: &str, s2: &str) -> usize {
+    let a: Vec<char> = s1.chars().collect();
     let b: Vec<char> = s2.chars().collect();
     let len_a = a.len();
     let len_b = b.len();
@@ -106,8 +106,8 @@ fn osa_distance(_s1: &str, s2: &str) -> usize {
 
 /// Calculate full Damerau-Levenshtein distance
 #[allow(dead_code)]
-fn damerau_levenshtein_distance(_s1: &str, s2: &str) -> usize {
-    let a: Vec<char> = _s1.chars().collect();
+fn damerau_levenshtein_distance(s1: &str, s2: &str) -> usize {
+    let a: Vec<char> = s1.chars().collect();
     let b: Vec<char> = s2.chars().collect();
     let len_a = a.len();
     let len_b = b.len();
@@ -187,7 +187,7 @@ impl Soundex {
     }
 
     /// Create with custom code length
-    pub fn with_length(_length: usize) -> Self {
+    pub fn with_length(length: usize) -> Self {
         Self { _length }
     }
 }
@@ -239,8 +239,8 @@ impl PhoneticAlgorithm for Soundex {
 
 /// Encode a character for Soundex
 #[allow(dead_code)]
-fn encode_char(_ch: char) -> char {
-    match _ch.to_ascii_uppercase() {
+fn encode_char(ch: char) -> char {
+    match ch.to_ascii_uppercase() {
         'B' | 'F' | 'P' | 'V' => '1',
         'C' | 'G' | 'J' | 'K' | 'Q' | 'S' | 'X' | 'Z' => '2',
         'D' | 'T' => '3',
@@ -305,7 +305,7 @@ impl Metaphone {
     }
 
     /// Create with custom maximum length
-    pub fn with_max_length(_max_length: usize) -> Self {
+    pub fn with_max_length(_maxlength: usize) -> Self {
         Self { _max_length }
     }
 }
@@ -469,7 +469,7 @@ impl Nysiis {
     }
 
     /// Create with custom maximum length
-    pub fn with_max_length(_max_length: usize) -> Self {
+    pub fn with_max_length(_maxlength: usize) -> Self {
         Self { _max_length }
     }
 }
@@ -667,9 +667,9 @@ impl NeedlemanWunsch {
     }
 
     /// Create with custom scoring parameters
-    pub fn with_scores(_match_score: i32, mismatch_penalty: i32, gap_penalty: i32) -> Self {
+    pub fn with_scores(_match_score: i32, mismatch_penalty: i32, gappenalty: i32) -> Self {
         Self {
-            _match_score,
+            match_score,
             mismatch_penalty,
             gap_penalty,
         }
@@ -784,9 +784,9 @@ impl SmithWaterman {
     }
 
     /// Create with custom scoring parameters
-    pub fn with_scores(_match_score: i32, mismatch_penalty: i32, gap_penalty: i32) -> Self {
+    pub fn with_scores(_match_score: i32, mismatch_penalty: i32, gappenalty: i32) -> Self {
         Self {
-            _match_score,
+            match_score,
             mismatch_penalty,
             gap_penalty,
         }

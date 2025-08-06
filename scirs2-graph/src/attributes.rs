@@ -35,17 +35,17 @@ impl AttributeValue {
     }
 
     /// Create an integer attribute
-    pub fn integer(_value: i64) -> Self {
+    pub fn integer(value: i64) -> Self {
         AttributeValue::Integer(_value)
     }
 
     /// Create a float attribute
-    pub fn float(_value: f64) -> Self {
+    pub fn float(value: f64) -> Self {
         AttributeValue::Float(_value)
     }
 
     /// Create a boolean attribute
-    pub fn boolean(_value: bool) -> Self {
+    pub fn boolean(value: bool) -> Self {
         AttributeValue::Boolean(_value)
     }
 
@@ -200,7 +200,7 @@ impl<N: Node + std::fmt::Debug + std::fmt::Display, E: EdgeWeight, Ix: IndexType
     }
 
     /// Create an attributed graph from an existing graph
-    pub fn from_graph(_graph: Graph<N, E, Ix>) -> Self {
+    pub fn from_graph(graph: Graph<N, E, Ix>) -> Self {
         AttributedGraph {
             graph,
             node_attributes: HashMap::new(),
@@ -522,7 +522,7 @@ impl<N: Node + std::fmt::Debug + std::fmt::Display, E: EdgeWeight, Ix: IndexType
     }
 
     /// Create an attributed directed graph from an existing directed graph
-    pub fn from_digraph(_graph: DiGraph<N, E, Ix>) -> Self {
+    pub fn from_digraph(graph: DiGraph<N, E, Ix>) -> Self {
         AttributedDiGraph {
             graph,
             node_attributes: HashMap::new(),
@@ -666,7 +666,7 @@ pub struct AttributeSummary {
 
 /// Helper function to compare attribute values with flexible type matching
 #[allow(dead_code)]
-fn matches_attribute_value(_attr_value: &AttributeValue, target_value: &AttributeValue) -> bool {
+fn matches_attribute_value(_attr_value: &AttributeValue, targetvalue: &AttributeValue) -> bool {
     match (_attr_value, target_value) {
         (AttributeValue::String(a), AttributeValue::String(b)) => a == b,
         (AttributeValue::Integer(a), AttributeValue::Integer(b)) => a == b,
@@ -691,8 +691,10 @@ pub struct AttributeView<'a, N: Node> {
 
 impl<'a, N: Node> AttributeView<'a, N> {
     /// Create a new attribute view
-    pub fn new(_attributes: &'a HashMap<N, Attributes>) -> Self {
-        AttributeView { attributes: _attributes }
+    pub fn new(attributes: &'a HashMap<N, Attributes>) -> Self {
+        AttributeView {
+            attributes: attributes,
+        }
     }
 
     /// Find nodes with numeric attributes in a range

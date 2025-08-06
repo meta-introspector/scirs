@@ -167,11 +167,11 @@ where
     let mut rank: HashMap<N, usize> = nodes.iter().map(|n| (n.clone(), 0)).collect();
 
     fn find<N: Node>(parent: &mut HashMap<N, N>, node: &N) -> N {
-        if _parent[node] != *node {
+        if parent[node] != *node {
             let root = find(_parent, &_parent[node].clone());
-            _parent.insert(node.clone(), root.clone());
+            parent.insert(node.clone(), root.clone());
         }
-        _parent[node].clone()
+        parent[node].clone()
     }
 
     fn union<N: Node>(
@@ -223,7 +223,7 @@ where
 /// Returns nodes in topological order if the graph is a DAG,
 /// otherwise returns an error indicating a cycle was found.
 #[allow(dead_code)]
-pub fn topological_sort<N, E, Ix>(_graph: &DiGraph<N, E, Ix>) -> Result<Vec<N>>
+pub fn topological_sort<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
@@ -234,7 +234,7 @@ where
         Ok(indices) => {
             let sorted_nodes = indices
                 .into_iter()
-                .map(|idx| _graph.inner()[idx].clone())
+                .map(|idx| graph.inner()[idx].clone())
                 .collect();
             Ok(sorted_nodes)
         }
@@ -415,7 +415,7 @@ where
 ///
 /// Measures how close a node is to all other nodes in the graph.
 #[allow(dead_code)]
-pub fn closeness_centrality<N, E, Ix>(_graph: &Graph<N, E, Ix>, normalized: bool) -> HashMap<N, f64>
+pub fn closeness_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>, normalized: bool) -> HashMap<N, f64>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight
@@ -429,10 +429,10 @@ where
         + std::default::Default,
     Ix: IndexType,
 {
-    let node_indices: Vec<_> = _graph.inner().node_indices().collect();
+    let node_indices: Vec<_> = graph.inner().node_indices().collect();
     let nodes: Vec<N> = node_indices
         .iter()
-        .map(|&idx| _graph.inner()[idx].clone())
+        .map(|&idx| graph.inner()[idx].clone())
         .collect();
     let n = nodes.len();
     let mut centrality = HashMap::new();

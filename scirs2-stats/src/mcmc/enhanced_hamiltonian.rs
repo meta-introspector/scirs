@@ -613,7 +613,7 @@ where
 
         for i in 0..n_samples_ {
             let sample = self.step(rng)?;
-            _samples.row_mut(i).assign(&sample);
+            samples.row_mut(i).assign(&sample);
         }
 
         Ok(_samples)

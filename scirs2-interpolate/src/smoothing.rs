@@ -204,7 +204,7 @@ where
             for i in 1..=initial_interior {
                 let t = F::from_f64(i as f64 / (initial_interior + 1) as f64).unwrap();
                 let knot_pos = x[0] * (F::one() - t) + x[x.len() - 1] * t;
-                _knots.insert(_knots.len() - 1, knot_pos);
+                knots.insert(_knots.len() - 1, knot_pos);
             }
         }
 
@@ -212,7 +212,7 @@ where
         let mut best_error = F::infinity();
 
         // Iteratively add _knots where error is highest
-        while _knots.len() < max_knots {
+        while knots.len() < max_knots {
             // Create extended knot vector for cubic B-splines
             let extended_knots = Self::create_extended_knots(&_knots, 3)?;
             let knots_array = Array1::from(extended_knots);
@@ -246,14 +246,14 @@ where
                         // Insert knot in sorted order
                         let mut inserted = false;
                         for i in 1.._knots.len() {
-                            if new_knot < _knots[i] {
-                                _knots.insert(i, new_knot);
+                            if new_knot < knots[i] {
+                                knots.insert(i, new_knot);
                                 inserted = true;
                                 break;
                             }
                         }
                         if !inserted {
-                            _knots.insert(_knots.len() - 1, new_knot);
+                            knots.insert(_knots.len() - 1, new_knot);
                         }
                     } else {
                         break; // No improvement possible
@@ -261,10 +261,10 @@ where
                 }
                 Err(_) => {
                     // If fitting fails, try adding a knot at the middle
-                    let mid_idx = _knots.len() / 2;
+                    let mid_idx = knots.len() / 2;
                     let mid_point =
-                        (_knots[mid_idx - 1] + _knots[mid_idx]) / F::from_f64(2.0).unwrap();
-                    _knots.insert(mid_idx, mid_point);
+                        (_knots[mid_idx - 1] + knots[mid_idx]) / F::from_f64(2.0).unwrap();
+                    knots.insert(mid_idx, mid_point);
                 }
             }
         }
@@ -274,7 +274,8 @@ where
         })?;
 
         Ok(VariableKnotSpline {
-            bspline: final_spline, knots: Array1::from(_knots),
+            bspline: final_spline,
+            knots: Array1::from(_knots),
             strategy,
             rms_error: best_error,
         })
@@ -295,16 +296,16 @@ where
         }
 
         // For optimized strategy, num_knots represents the number of interior _knots we want
-        // Including the boundary _knots. We need at least 2 (start and end).
+        // Including the boundary knots. We need at least 2 (start and end).
         // Start with equally spaced _knots
         let mut _knots = Vec::with_capacity(num_knots);
         for i in 0..num_knots {
             let t = F::from_f64(i as f64 / (num_knots - 1) as f64).unwrap();
             let knot_pos = x[0] * (F::one() - t) + x[x.len() - 1] * t;
-            _knots.push(knot_pos);
+            knots.push(knot_pos);
         }
 
-        let mut best_knots = _knots.clone();
+        let mut best_knots = knots.clone();
         let mut best_error = F::infinity();
 
         // Simple iterative optimization
@@ -326,7 +327,7 @@ where
 
                 if current_error < best_error {
                     best_error = current_error;
-                    best_knots = _knots.clone();
+                    best_knots = knots.clone();
                 }
 
                 // Try small perturbations to interior _knots
@@ -337,11 +338,11 @@ where
                     // Try moving knot left and right
                     for direction in [-1.0, 1.0] {
                         let delta = step_size * F::from_f64(direction).unwrap();
-                        let new_pos = _knots[i] + delta;
+                        let new_pos = knots[i] + delta;
 
                         // Ensure knot stays in valid range
-                        if new_pos > _knots[i - 1] && new_pos < _knots[i + 1] {
-                            _knots[i] = new_pos;
+                        if new_pos > knots[i - 1] && new_pos < knots[i + 1] {
+                            knots[i] = new_pos;
 
                             let test_extended = Self::create_extended_knots(&_knots, 3)?;
                             let test_knots_array = Array1::from(test_extended);
@@ -357,13 +358,13 @@ where
                                 let test_error = Self::calculate_rms_error(&test_spline, x, y)?;
                                 if test_error < best_error {
                                     best_error = test_error;
-                                    best_knots = _knots.clone();
+                                    best_knots = knots.clone();
                                     improved = true;
                                 } else {
-                                    _knots[i] -= delta; // Revert
+                                    knots[i] -= delta; // Revert
                                 }
                             } else {
-                                _knots[i] -= delta; // Revert
+                                knots[i] -= delta; // Revert
                             }
                         }
                     }
@@ -389,7 +390,8 @@ where
         )?;
 
         Ok(VariableKnotSpline {
-            bspline: final_spline, knots: Array1::from(best_knots),
+            bspline: final_spline,
+            knots: Array1::from(best_knots),
             strategy,
             rms_error: best_error,
         })
@@ -442,14 +444,14 @@ where
             // Insert in sorted order
             let mut inserted = false;
             for j in 1.._knots.len() {
-                if new_knot < _knots[j] {
-                    _knots.insert(j, new_knot);
+                if new_knot < knots[j] {
+                    knots.insert(j, new_knot);
                     inserted = true;
                     break;
                 }
             }
             if !inserted {
-                _knots.insert(_knots.len() - 1, new_knot);
+                knots.insert(_knots.len() - 1, new_knot);
             }
         }
 
@@ -468,15 +470,16 @@ where
         let rms_error = Self::calculate_rms_error(&final_spline, x, y)?;
 
         Ok(VariableKnotSpline {
-            bspline: final_spline, knots: Array1::from(_knots),
+            bspline: final_spline,
+            knots: Array1::from(_knots),
             strategy,
             rms_error,
         })
     }
 
     /// Create extended knot vector for B-splines
-    fn create_extended_knots(_interior_knots: &[F], degree: usize) -> InterpolateResult<Vec<F>> {
-        if _interior_knots.len() < 2 {
+    fn create_extended_knots(_interiorknots: &[F], degree: usize) -> InterpolateResult<Vec<F>> {
+        if interior_knots.len() < 2 {
             return Err(InterpolateError::invalid_input(
                 "At least 2 interior _knots required".to_string(),
             ));
@@ -484,7 +487,7 @@ where
 
         // Create a clamped knot vector
         // For degree k, we need k+1 repetitions at each end
-        // The interior _knots should only be the unique internal _knots, not the boundary values
+        // The interior _knots should only be the unique internal knots, not the boundary values
         let start_knot = interior_knots[0];
         let end_knot = interior_knots[interior_knots.len() - 1];
 
@@ -503,7 +506,7 @@ where
             extended.push(start_knot);
         }
 
-        // Add only the internal _knots (not the boundary _knots)
+        // Add only the internal _knots (not the boundary knots)
         extended.extend_from_slice(internal_knots);
 
         // Add degree+1 copies of the end knot

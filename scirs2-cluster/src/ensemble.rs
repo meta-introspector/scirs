@@ -4,7 +4,7 @@
 //! clustering algorithms or multiple runs of the same algorithm to achieve
 //! more robust and stable clustering results.
 
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use rand::{Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
@@ -220,7 +220,7 @@ where
     f64: From<F>,
 {
     /// Create a new ensemble clusterer
-    pub fn new(_config: EnsembleConfig) -> Self {
+    pub fn new(config: EnsembleConfig) -> Self {
         Self {
             _config_phantom: std::marker::PhantomData,
         }
@@ -1216,7 +1216,7 @@ where
 
     /// Estimate optimal number of clusters from linkage matrix
     #[allow(dead_code)]
-    fn estimate_optimal_clusters(&self, linkage_matrix: &Array2<f64>) -> usize {
+    fn estimate_optimal_clusters(&self, linkagematrix: &Array2<f64>) -> usize {
         // Simple heuristic: find the largest gap in the linkage heights
         let mut max_gap = 0.0;
         let mut optimal_clusters = 2;
@@ -1248,7 +1248,7 @@ where
 
     /// Calculate consensus stability score for the ensemble
     #[allow(dead_code)]
-    fn calculate_consensus_stability_score(&self, _consensus_stats: &ConsensusStatistics) -> f64 {
+    fn calculate_consensus_stability_score(&self, _consensusstats: &ConsensusStatistics) -> f64 {
         0.5 // Stub implementation
     }
 }
@@ -1256,11 +1256,11 @@ where
 /// Extract samples based on indices
 #[allow(dead_code)]
 fn extract_samples<F: Float>(data: ArrayView2<F>, indices: &[usize]) -> Result<Array2<F>> {
-    let n_features = _data.ncols();
+    let n_features = data.ncols();
     let mut sampled_data = Array2::zeros((indices.len(), n_features));
 
     for (new_idx, &old_idx) in indices.iter().enumerate() {
-        if old_idx < _data.nrows() {
+        if old_idx < data.nrows() {
             sampled_data.row_mut(new_idx).assign(&_data.row(old_idx));
         }
     }
@@ -1270,12 +1270,12 @@ fn extract_samples<F: Float>(data: ArrayView2<F>, indices: &[usize]) -> Result<A
 
 /// Extract features based on indices
 #[allow(dead_code)]
-fn extract_features<F: Float>(data: ArrayView2<F>, feature_indices: &[usize]) -> Result<Array2<F>> {
-    let n_samples = _data.nrows();
+fn extract_features<F: Float>(data: ArrayView2<F>, featureindices: &[usize]) -> Result<Array2<F>> {
+    let n_samples = data.nrows();
     let mut sampled_data = Array2::zeros((n_samples, feature_indices.len()));
 
     for (new_feat_idx, &old_feat_idx) in feature_indices.iter().enumerate() {
-        if old_feat_idx < _data.ncols() {
+        if old_feat_idx < data.ncols() {
             sampled_data
                 .column_mut(new_feat_idx)
                 .assign(&_data.column(old_feat_idx));
@@ -1313,7 +1313,7 @@ pub mod convenience {
     use super::*;
 
     /// Simple ensemble clustering with default parameters
-    pub fn ensemble_clustering<F>(_data: ArrayView2<F>) -> Result<EnsembleResult>
+    pub fn ensemble_clustering<F>(data: ArrayView2<F>) -> Result<EnsembleResult>
     where
         F: Float
             + FromPrimitive
@@ -1796,9 +1796,9 @@ pub mod advanced_ensemble {
         f64: From<F>,
     {
         /// Create new advanced ensemble clusterer
-        pub fn new(_config: AdvancedEnsembleConfig, base_config: EnsembleConfig) -> Self {
+        pub fn new(_config: AdvancedEnsembleConfig, baseconfig: EnsembleConfig) -> Self {
             Self {
-                _config,
+                config,
                 base_ensemble: EnsembleClusterer::new(base_config),
                 meta_learner: None,
                 bayesian_weights: None,
@@ -1915,7 +1915,7 @@ pub mod advanced_ensemble {
                 )?;
 
                 weak_learners.push(weak_result);
-                learner_weights.push(learner_weight);
+                learnerweights.push(learner_weight);
             }
 
             // Combine weak learners
@@ -2171,25 +2171,25 @@ pub mod advanced_ensemble {
             data: ArrayView2<F>,
         ) -> Result<Array1<f64>> {
             // Simplified MCMC update (Metropolis-Hastings)
-            let mut new_weights = current_weights.clone();
+            let mut new_weights = currentweights.clone();
             let mut rng = rand::rng();
 
             // Propose new _weights with small random perturbations
-            for weight in new_weights.iter_mut() {
+            for weight in newweights.iter_mut() {
                 let perturbation = rng.gen_range(-0.05..0.05);
                 *weight = (*weight + perturbation).max(0.01).min(0.99);
             }
 
             // Normalize
-            let sum = new_weights.sum();
-            new_weights.mapv_inplace(|w| w / sum);
+            let sum = newweights.sum();
+            newweights.mapv_inplace(|w| w / sum);
 
             // Accept/reject based on simplified likelihood (in practice..would compute proper likelihood)
             let accept_prob = rng.random::<f64>();
             if accept_prob > 0.5 {
                 Ok(new_weights)
             } else {
-                Ok(current_weights.clone())
+                Ok(currentweights.clone())
             }
         }
 
@@ -2454,7 +2454,7 @@ pub mod advanced_ensemble {
         }
 
         fn combine_boosted_learners(
-            &self_learners: &[ClusteringResult],
+            self_learners: &[ClusteringResult],
             _weights: &[f64],
             n_samples: usize,
         ) -> Result<EnsembleResult> {
@@ -2480,7 +2480,7 @@ pub mod advanced_ensemble {
         }
 
         fn train_base_algorithm(
-            &self_data: &Array2<F>,
+            self_data: &Array2<F>,
             _algorithm: &ClusteringAlgorithm,
         ) -> Result<Array1<i32>> {
             Ok(Array1::zeros(0)) // Stub
@@ -2495,12 +2495,12 @@ pub mod advanced_ensemble {
             Ok(Array1::zeros(0)) // Stub
         }
 
-        fn train_meta_clustering_algorithm(&self_predictions: &Array2<f64>) -> Result<Array1<i32>> {
+        fn train_meta_clustering_algorithm(selfpredictions: &Array2<f64>) -> Result<Array1<i32>> {
             Ok(Array1::zeros(0)) // Stub
         }
 
         fn calculate_stacking_consensus_stats(
-            &self_labels: &Array1<i32>,
+            self_labels: &Array1<i32>,
         ) -> Result<ConsensusStatistics> {
             Ok(ConsensusStatistics {
                 agreement_matrix: Array2::zeros((0, 0)),
@@ -2511,7 +2511,7 @@ pub mod advanced_ensemble {
         }
 
         fn calculate_stacking_diversity_metrics(
-            &self_predictions: &Array2<f64>,
+            self_predictions: &Array2<f64>,
         ) -> Result<DiversityMetrics> {
             Ok(DiversityMetrics {
                 average_diversity: 0.0,
@@ -2539,9 +2539,9 @@ pub mod advanced_ensemble {
     }
 
     impl GeneticOptimizer {
-        pub fn new(_config: GeneticOptimizationConfig) -> Self {
+        pub fn new(config: GeneticOptimizationConfig) -> Self {
             Self {
-                _config,
+                config,
                 population: Vec::new(),
                 fitness_scores: Vec::new(),
             }
@@ -2580,18 +2580,18 @@ pub mod advanced_ensemble {
 
     // Helper functions for advanced meta-features
 
-    fn calculate_intrinsic_dimensionality(_data: &Array2<f64>) -> f64 {
+    fn calculate_intrinsic_dimensionality(data: &Array2<f64>) -> f64 {
         // Simplified intrinsic dimensionality estimation
         // In practice, would use techniques like PCA or manifold learning
-        let n_dims = _data.ncols() as f64;
-        let variance_explained = _data.var_axis(Axis(0), 0.0).sum() / _data.ncols() as f64;
+        let n_dims = data.ncols() as f64;
+        let variance_explained = data.var_axis(Axis(0), 0.0).sum() / data.ncols() as f64;
         variance_explained * n_dims
     }
 
-    fn calculate_clustering_tendency(_data: &Array2<f64>) -> f64 {
+    fn calculate_clustering_tendency(data: &Array2<f64>) -> f64 {
         // Hopkins statistic for clustering tendency
         // Simplified implementation
-        let n_samples = _data.nrows();
+        let n_samples = data.nrows();
         if n_samples < 10 {
             return 0.5; // Neutral clustering tendency
         }
@@ -2614,10 +2614,10 @@ pub mod advanced_ensemble {
         (total_distance / sample_size as f64).tanh()
     }
 
-    fn calculate_advanced_meta_feature(_data: &Array2<f64>, feature_idx: usize) -> f64 {
+    fn calculate_advanced_meta_feature(_data: &Array2<f64>, featureidx: usize) -> f64 {
         match feature_idx {
-            0 => _data.mean().unwrap_or(0.0),          // Overall mean
-            1 => _data.std(0.0),                       // Overall std
+            0 => data.mean().unwrap_or(0.0),          // Overall mean
+            1 => data.std(0.0),                       // Overall std
             2 => calculate_skewness(_data),            // Skewness
             3 => calculate_kurtosis(_data),            // Kurtosis
             4 => calculate_outlier_ratio(_data),       // Outlier ratio
@@ -2626,35 +2626,35 @@ pub mod advanced_ensemble {
         }
     }
 
-    fn calculate_skewness(_data: &Array2<f64>) -> f64 {
+    fn calculate_skewness(data: &Array2<f64>) -> f64 {
         // Simplified skewness calculation
-        let mean = _data.mean().unwrap_or(0.0);
-        let std = _data.std(0.0);
+        let mean = data.mean().unwrap_or(0.0);
+        let std = data.std(0.0);
         if std == 0.0 {
             return 0.0;
         }
 
-        let n = _data.len() as f64;
-        let sum_cubed: f64 = _data.iter().map(|&x| ((x - mean) / std).powi(3)).sum();
+        let n = data.len() as f64;
+        let sum_cubed: f64 = data.iter().map(|&x| ((x - mean) / std).powi(3)).sum();
         sum_cubed / n
     }
 
-    fn calculate_kurtosis(_data: &Array2<f64>) -> f64 {
+    fn calculate_kurtosis(data: &Array2<f64>) -> f64 {
         // Simplified kurtosis calculation
-        let mean = _data.mean().unwrap_or(0.0);
-        let std = _data.std(0.0);
+        let mean = data.mean().unwrap_or(0.0);
+        let std = data.std(0.0);
         if std == 0.0 {
             return 0.0;
         }
 
-        let n = _data.len() as f64;
-        let sum_fourth: f64 = _data.iter().map(|&x| ((x - mean) / std).powi(4)).sum();
+        let n = data.len() as f64;
+        let sum_fourth: f64 = data.iter().map(|&x| ((x - mean) / std).powi(4)).sum();
         (sum_fourth / n) - 3.0 // Excess kurtosis
     }
 
-    fn calculate_outlier_ratio(_data: &Array2<f64>) -> f64 {
+    fn calculate_outlier_ratio(data: &Array2<f64>) -> f64 {
         // Simple outlier detection using IQR method
-        let mut values: Vec<f64> = _data.iter().copied().collect();
+        let mut values: Vec<f64> = data.iter().copied().collect();
         values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         if values.len() < 4 {
@@ -2677,9 +2677,9 @@ pub mod advanced_ensemble {
         outlier_count as f64 / values.len() as f64
     }
 
-    fn calculate_feature_correlation(_data: &Array2<f64>) -> f64 {
+    fn calculate_feature_correlation(data: &Array2<f64>) -> f64 {
         // Average pairwise correlation between features
-        let n_features = _data.ncols();
+        let n_features = data.ncols();
         if n_features < 2 {
             return 0.0;
         }
@@ -2738,13 +2738,13 @@ pub mod advanced_ensemble {
 // Helper functions for advanced ensemble methods
 
 #[allow(dead_code)]
-fn evaluate_ensemble_performance(_results: &[EnsembleResult]) -> f64 {
-    if _results.is_empty() {
+fn evaluate_ensemble_performance(results: &[EnsembleResult]) -> f64 {
+    if results.is_empty() {
         return 0.0;
     }
 
     // Calculate average ensemble quality
-    _results.iter().map(|r| r.ensemble_quality).sum::<f64>() / _results.len() as f64
+    results.iter().map(|r| r.ensemble_quality).sum::<f64>() / results.len() as f64
 }
 
 #[allow(dead_code)]
@@ -2777,8 +2777,8 @@ where
 }
 
 #[allow(dead_code)]
-fn combine_chunk_results(_chunk_results: Vec<EnsembleResult>) -> Result<EnsembleResult> {
-    if _chunk_results.is_empty() {
+fn combine_chunk_results(_chunkresults: Vec<EnsembleResult>) -> Result<EnsembleResult> {
+    if chunk_results.is_empty() {
         return Err(ClusteringError::InvalidInput(
             "No chunk _results to combine".to_string(),
         ));

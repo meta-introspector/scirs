@@ -92,7 +92,7 @@ where
     F: Fn(&ArrayView1<f64>) -> f64 + Clone,
 {
     /// Create new Particle Swarm Optimization solver
-    pub fn new(_func: F, bounds: Bounds, options: ParticleSwarmOptions) -> Self {
+    pub fn new(func: F, bounds: Bounds, options: ParticleSwarmOptions) -> Self {
         let ndim = bounds.len();
         let seed = options.seed.unwrap_or_else(|| rng().random());
         let mut rng = StdRng::seed_from_u64(seed);
@@ -132,7 +132,7 @@ where
         }
 
         Self {
-            _func,
+            func,
             bounds,
             options: options.clone(),
             ndim,

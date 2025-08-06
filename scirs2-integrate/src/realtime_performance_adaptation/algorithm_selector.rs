@@ -19,7 +19,7 @@ impl<F: IntegrateFloat> AdaptiveAlgorithmSelector<F> {
     }
 
     /// Select the best algorithm based on current performance
-    pub fn select_algorithm(&self, _metrics: &PerformanceMetrics) -> IntegrateResult<String> {
+    pub fn select_algorithm(&self, metrics: &PerformanceMetrics) -> IntegrateResult<String> {
         // Stub implementation - would contain algorithm selection logic
         Ok("default".to_string())
     }

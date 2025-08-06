@@ -102,9 +102,9 @@ impl NetworkClient {
     }
 
     /// Create a new network client with custom configuration
-    pub fn with_config(_config: NetworkConfig) -> Self {
+    pub fn with_config(config: NetworkConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             #[cfg(feature = "reqwest")]
             http_client: None,
             cloud_provider: None,
@@ -118,14 +118,14 @@ impl NetworkClient {
     }
 
     /// Set cache directory for downloaded files
-    pub fn with_cache_dir<P: AsRef<Path>>(mut self, cache_dir: P) -> Self {
+    pub fn with_cache_dir<P: AsRef<Path>>(mut self, cachedir: P) -> Self {
         self.config.cache_dir = Some(cache_dir.as_ref().to_string_lossy().to_string());
         self
     }
 
     /// Download a file from URL to local path
     #[cfg(feature = "reqwest")]
-    pub async fn download<P: AsRef<Path>>(&self, url: &str, local_path: P) -> Result<()> {
+    pub async fn download<P: AsRef<Path>>(&self, url: &str, localpath: P) -> Result<()> {
         if let Some(_client) = &self.http_client {
             // Create HttpClient with current config and use it for download
             let mut http_client = http::HttpClient::new(self.config.clone());
@@ -140,7 +140,7 @@ impl NetworkClient {
 
     /// Upload a file from local path to URL
     #[cfg(feature = "reqwest")]
-    pub async fn upload<P: AsRef<Path>>(&self, local_path: P, url: &str) -> Result<()> {
+    pub async fn upload<P: AsRef<Path>>(&self, localpath: P, url: &str) -> Result<()> {
         if let Some(_client) = &self.http_client {
             // Create HttpClient with current config and use it for upload
             let mut http_client = http::HttpClient::new(self.config.clone());
@@ -260,14 +260,14 @@ impl NetworkClient {
 /// Convenience functions for common network operations
 /// Download a file from URL using default client
 #[cfg(feature = "reqwest")]
-pub async fn download_file<P: AsRef<Path>>(url: &str, local_path: P) -> Result<()> {
+pub async fn download_file<P: AsRef<Path>>(url: &str, localpath: P) -> Result<()> {
     let client = NetworkClient::new();
     client.download(url, local_path).await
 }
 
 /// Upload a file to URL using default client
 #[cfg(feature = "reqwest")]
-pub async fn upload_file<P: AsRef<Path>>(local_path: P, url: &str) -> Result<()> {
+pub async fn upload_file<P: AsRef<Path>>(localpath: P, url: &str) -> Result<()> {
     let client = NetworkClient::new();
     client.upload(local_path, url).await
 }
@@ -288,13 +288,13 @@ pub async fn download_with_cache<P: AsRef<Path>>(
 
 /// Create a network client with cloud provider
 #[allow(dead_code)]
-pub fn create_cloud_client(_provider: cloud::CloudProvider) -> NetworkClient {
+pub fn create_cloud_client(provider: cloud::CloudProvider) -> NetworkClient {
     NetworkClient::new().with_cloud_provider(_provider)
 }
 
 /// Batch download multiple files
 #[cfg(feature = "reqwest")]
-pub async fn batch_download(_downloads: Vec<(&str, &str)>) -> Result<Vec<Result<()>>> {
+pub async fn batch_download(downloads: Vec<(&str, &str)>) -> Result<Vec<Result<()>>> {
     let client = NetworkClient::new();
     let mut results = Vec::new();
 

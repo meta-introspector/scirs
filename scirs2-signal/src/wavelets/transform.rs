@@ -62,13 +62,13 @@ use std::fmt::Debug;
 /// assert_eq!(result[0].len(), signal.len());
 /// ```
 #[allow(dead_code)]
-pub fn cwt<T, F, W>(_data: &[T], wavelet: F, scales: &[f64]) -> SignalResult<Vec<Vec<Complex64>>>
+pub fn cwt<T, F, W>(data: &[T], wavelet: F, scales: &[f64]) -> SignalResult<Vec<Vec<Complex64>>>
 where
     T: NumCast + Debug + Copy,
     F: Fn(usize, f64) -> SignalResult<Vec<W>>,
     W: Into<Complex64> + Copy,
 {
-    if _data.is_empty() {
+    if data.is_empty() {
         return Err(SignalError::ValueError("Input array is empty".to_string()));
     }
 
@@ -78,13 +78,13 @@ where
 
     // Try to convert to f64 first for real-valued input
     let mut is_complex = false;
-    let _data_real: Result<Vec<f64>, ()> = _data
+    let data_real: Result<Vec<f64>, ()> = _data
         .iter()
         .map(|&val| num_traits::cast::cast::<T, f64>(val).ok_or(()))
         .collect();
 
     // Process _data based on type
-    let _data_complex: Vec<Complex64> = if let Ok(real_data) = data_real {
+    let data_complex: Vec<Complex64> = if let Ok(real_data) = data_real {
         // Real _data
         real_data.iter().map(|&r| Complex64::new(r, 0.0)).collect()
     } else {
@@ -114,9 +114,9 @@ where
 
     // Compute transform for each scale
     for &scale in scales {
-        // Determine wavelet size - use at least _data.len() points, but limit to reasonable size
+        // Determine wavelet size - use at least data.len() points, but limit to reasonable size
         let n = std::cmp::min(
-            _data.len() * 10,
+            data.len() * 10,
             std::cmp::max(_data.len(), 10 * scale as usize),
         );
 
@@ -137,7 +137,7 @@ where
         let convolved = if is_complex {
             convolve_complex_same_complex(&data_complex, &wavelet_complex)
         } else {
-            // For real _data, we can use the simpler convolution
+            // For real data, we can use the simpler convolution
             convolve_complex_same_real(&data_complex, &wavelet_complex)
         };
 

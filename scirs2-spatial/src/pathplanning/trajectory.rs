@@ -103,8 +103,8 @@ impl TrajectoryPoint {
     }
 
     /// Get the distance to another point
-    pub fn distance_to(&self, _other: &TrajectoryPoint) -> f64 {
-        ((self.x - _other.x).powi(2) + (self.y - _other.y).powi(2)).sqrt()
+    pub fn distance_to(&self, other: &TrajectoryPoint) -> f64 {
+        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()
     }
 }
 
@@ -164,7 +164,7 @@ impl CircularObstacle {
     }
 
     /// Check if a point is inside the obstacle (with safety margin)
-    pub fn contains(&self, x: f64, y: f64, safety_margin: f64) -> bool {
+    pub fn contains(&self, x: f64, y: f64, safetymargin: f64) -> bool {
         let distance = ((x - self.x).powi(2) + (y - self.y).powi(2)).sqrt();
         distance < self.radius + safety_margin
     }
@@ -183,9 +183,9 @@ pub struct Trajectory {
 
 impl Trajectory {
     /// Create a new trajectory
-    fn new(_points: Vec<TrajectoryPoint>, duration: f64, method: OptimizationMethod) -> Self {
+    fn new(points: Vec<TrajectoryPoint>, duration: f64, method: OptimizationMethod) -> Self {
         Self {
-            points: _points,
+            points: points,
             duration,
             method,
         }
@@ -273,14 +273,14 @@ impl Trajectory {
     }
 
     /// Check if the trajectory satisfies velocity constraints
-    pub fn satisfies_velocity_constraints(&self, _max_velocity: f64) -> bool {
+    pub fn satisfies_velocity_constraints(&self, _maxvelocity: f64) -> bool {
         self.points
             .iter()
             .all(|p| p.speed() <= _max_velocity + 1e-6)
     }
 
     /// Check if the trajectory satisfies acceleration constraints
-    pub fn satisfies_acceleration_constraints(&self, _max_acceleration: f64) -> bool {
+    pub fn satisfies_acceleration_constraints(&self, _maxacceleration: f64) -> bool {
         self.points
             .iter()
             .all(|p| p.acceleration_magnitude() <= _max_acceleration + 1e-6)
@@ -303,9 +303,9 @@ impl TrajectoryOptimizer {
     /// # Returns
     ///
     /// * A new TrajectoryOptimizer instance
-    pub fn new(_constraints: TrajectoryConstraints) -> Self {
+    pub fn new(constraints: TrajectoryConstraints) -> Self {
         Self {
-            constraints: _constraints,
+            constraints: constraints,
         }
     }
 
@@ -457,32 +457,32 @@ impl TrajectoryOptimizer {
     }
 
     /// Evaluate quintic polynomial and its derivatives
-    fn evaluate_quintic_polynomial(_coeffs: &Array1<f64>, t: f64) -> (f64, f64, f64) {
+    fn evaluate_quintic_polynomial(coeffs: &Array1<f64>, t: f64) -> (f64, f64, f64) {
         let t2 = t * t;
         let t3 = t2 * t;
         let t4 = t3 * t;
         let t5 = t4 * t;
 
         // Position: p(t) = c0 + c1*t + c2*t^2 + c3*t^3 + c4*t^4 + c5*t^5
-        let position = _coeffs[0]
-            + _coeffs[1] * t
-            + _coeffs[2] * t2
-            + _coeffs[3] * t3
-            + _coeffs[4] * t4
-            + _coeffs[5] * t5;
+        let position = coeffs[0]
+            + coeffs[1] * t
+            + coeffs[2] * t2
+            + coeffs[3] * t3
+            + coeffs[4] * t4
+            + coeffs[5] * t5;
 
         // Velocity: p'(t) = c1 + 2*c2*t + 3*c3*t^2 + 4*c4*t^3 + 5*c5*t^4
-        let velocity = _coeffs[1]
-            + 2.0 * _coeffs[2] * t
-            + 3.0 * _coeffs[3] * t2
-            + 4.0 * _coeffs[4] * t3
-            + 5.0 * _coeffs[5] * t4;
+        let velocity = coeffs[1]
+            + 2.0 * coeffs[2] * t
+            + 3.0 * coeffs[3] * t2
+            + 4.0 * coeffs[4] * t3
+            + 5.0 * coeffs[5] * t4;
 
         // Acceleration: p''(t) = 2*c2 + 6*c3*t + 12*c4*t^2 + 20*c5*t^3
-        let acceleration = 2.0 * _coeffs[2]
-            + 6.0 * _coeffs[3] * t
-            + 12.0 * _coeffs[4] * t2
-            + 20.0 * _coeffs[5] * t3;
+        let acceleration = 2.0 * coeffs[2]
+            + 6.0 * coeffs[3] * t
+            + 12.0 * coeffs[4] * t2
+            + 20.0 * coeffs[5] * t3;
 
         (position, velocity, acceleration)
     }

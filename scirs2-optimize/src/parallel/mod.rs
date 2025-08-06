@@ -181,16 +181,16 @@ where
     F: Fn(&ArrayView1<f64>) -> f64 + Sync + Send,
 {
     /// Create a new parallel multi-start optimizer
-    pub fn new(_objective: F, bounds: Vec<(f64, f64)>, options: ParallelOptions) -> Self {
+    pub fn new(objective: F, bounds: Vec<(f64, f64)>, options: ParallelOptions) -> Self {
         ParallelMultiStart {
-            _objective,
+            objective,
             bounds,
             options,
         }
     }
 
     /// Run optimization from multiple starting points
-    pub fn run<O>(&self, starting_points: Vec<Array1<f64>>, optimizer: O) -> Vec<OptimizationResult>
+    pub fn run<O>(&self, startingpoints: Vec<Array1<f64>>, optimizer: O) -> Vec<OptimizationResult>
     where
         O: Fn(&Array1<f64>, &F) -> OptimizationResult + Sync,
     {
@@ -220,7 +220,7 @@ where
     }
 
     /// Find the best result among all runs
-    pub fn best_result(_results: &[OptimizationResult]) -> Option<&OptimizationResult> {
+    pub fn best_result(results: &[OptimizationResult]) -> Option<&OptimizationResult> {
         _results
             .iter()
             .min_by(|a, b| a.function_value.partial_cmp(&b.function_value).unwrap())
@@ -418,7 +418,7 @@ where
 
 /// Convert linear index to (i, j) coordinates in upper triangle
 #[allow(dead_code)]
-fn index_to_upper_triangle(_idx: usize, _n: usize) -> (usize, usize) {
+fn index_to_upper_triangle(_idx: usize, n: usize) -> (usize, usize) {
     // Find row i such that i*(i+1)/2 <= _idx < (i+1)*(i+2)/2
     let mut i = 0;
     let mut cumsum = 0;

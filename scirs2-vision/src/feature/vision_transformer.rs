@@ -23,7 +23,7 @@
 
 use crate::error::{Result, VisionError};
 use crate::feature::KeyPoint;
-use crate::gpu__ops::GpuVisionContext;
+use crate::gpu_ops::GpuVisionContext;
 use ndarray::{s, Array1, Array2, Array3, Array4, ArrayView2, Axis};
 use statrs::statistics::Statistics;
 
@@ -170,14 +170,14 @@ pub struct ClassificationHead {
 
 impl VisionTransformer {
     /// Create a new Vision Transformer with the given configuration
-    pub fn new(_config: ViTConfig) -> Result<Self> {
-        let num_patches =
-            (_config.image_size.0 / _config.patch_size) * (_config.image_size.1 / _config.patch_size);
+    pub fn new(config: ViTConfig) -> Result<Self> {
+        let num_patches = (_config.image_size.0 / config.patch_size)
+            * (_config.image_size.1 / config.patch_size);
         let seq_length = num_patches + 1; // +1 for class token
 
         // Initialize components
         let patch_embedding = PatchEmbedding::new(&_config)?;
-        let pos_embedding = Self::initialize_positional_embeddings(seq_length, _config.hidden_dim);
+        let pos_embedding = Self::initialize_positional_embeddings(seq_length, config.hidden_dim);
         let cls_token =
             Array1::fromshape_fn(_config.hidden_dim, |_| rand::random::<f32>() * 0.02 - 0.01);
 
@@ -188,14 +188,14 @@ impl VisionTransformer {
 
         let layer_norm = LayerNorm::new(_config.hidden_dim);
 
-        let gpu_context = if _config.use_gpu {
+        let gpu_context = if config.use_gpu {
             GpuVisionContext::new().ok()
         } else {
             None
         };
 
         Ok(Self {
-            _config,
+            config: config,
             patch_embedding,
             pos_embedding,
             cls_token,
@@ -207,7 +207,7 @@ impl VisionTransformer {
     }
 
     /// Add classification head for image classification
-    pub fn with_classification_head(mut self, num_classes: usize) -> Self {
+    pub fn with_classification_head(mut self, numclasses: usize) -> Self {
         let head = ClassificationHead::new(self.config.hidden_dim, num_classes);
         self.classification_head = Some(head);
         self
@@ -306,7 +306,7 @@ impl VisionTransformer {
     }
 
     /// Initialize positional embeddings
-    fn initialize_positional_embeddings(_seq_length: usize, hidden_dim: usize) -> Array2<f32> {
+    fn initialize_positional_embeddings(_seq_length: usize, hiddendim: usize) -> Array2<f32> {
         let mut pos_emb = Array2::zeros((_seq_length, hidden_dim));
 
         for pos in 0.._seq_length {
@@ -334,10 +334,10 @@ impl VisionTransformer {
         let mut _embeddings = Array2::zeros((seq_length, hidden_dim));
 
         // Add class token
-        _embeddings.slice_mut(s![0, ..]).assign(&self.cls_token);
+        embeddings.slice_mut(s![0, ..]).assign(&self.cls_token);
 
         // Add patch _embeddings
-        _embeddings.slice_mut(s![1.., ..]).assign(patch_embeddings);
+        embeddings.slice_mut(s![1.., ..]).assign(patch_embeddings);
 
         // Add positional _embeddings
         _embeddings = &_embeddings + &self.pos_embedding;
@@ -348,10 +348,10 @@ impl VisionTransformer {
 
 impl PatchEmbedding {
     /// Create new patch embedding layer
-    fn new(_config: &ViTConfig) -> Result<Self> {
+    fn new(config: &ViTConfig) -> Result<Self> {
         let in_channels = 1; // Grayscale
-        let out_channels = _config.hidden_dim;
-        let kernel_size = _config.patch_size;
+        let out_channels = config.hidden_dim;
+        let kernel_size = config.patch_size;
 
         // Initialize convolution weights (out_channels, in_channels, kernel_h, kernel_w)
         let conv_weights = Array4::fromshape_fn(
@@ -377,7 +377,8 @@ impl PatchEmbedding {
 
     /// GPU forward pass for patch embedding
     fn gpu_forward(
-        &self, _gpu_ctx: &GpuVisionContext,
+        &self,
+        _gpu_ctx: &GpuVisionContext,
         image: &ArrayView2<f32>,
     ) -> Result<Array2<f32>> {
         // For GPU implementation, we'd use optimized convolution kernels
@@ -388,8 +389,8 @@ impl PatchEmbedding {
     /// CPU forward pass for patch embedding
     fn cpu_forward(&self, image: &ArrayView2<f32>) -> Result<Array2<f32>> {
         let (img_h, img_w) = image.dim();
-        let patch_size = self.conv_weights.shape()[2];
-        let hidden_dim = self.conv_weights.shape()[0];
+        let patch_size = self.convweights.shape()[2];
+        let hidden_dim = self.convweights.shape()[0];
 
         let num_patches_h = img_h / patch_size;
         let num_patches_w = img_w / patch_size;
@@ -415,7 +416,7 @@ impl PatchEmbedding {
                     .iter_mut()
                     .enumerate()
                 {
-                    let filter = self.conv_weights.slice(s![out_ch, 0, .., ..]);
+                    let filter = self.convweights.slice(s![out_ch, 0, .., ..]);
                     let conv_result: f32 =
                         patch.iter().zip(filter.iter()).map(|(a, b)| a * b).sum();
                     *emb = conv_result + self.bias[out_ch];
@@ -445,7 +446,7 @@ impl PatchEmbedding {
 
 impl TransformerLayer {
     /// Create new transformer layer
-    fn new(_config: &ViTConfig) -> Result<Self> {
+    fn new(config: &ViTConfig) -> Result<Self> {
         let attention = MultiHeadAttention::new(_config)?;
         let mlp = MLP::new(_config)?;
         let norm1 = LayerNorm::new(_config.hidden_dim);
@@ -460,7 +461,7 @@ impl TransformerLayer {
     }
 
     /// GPU forward pass
-    fn gpu_forward(&self, _gpu_ctx: &GpuVisionContext, input: &Array2<f32>) -> Result<Array2<f32>> {
+    fn gpu_forward(&self, _gpuctx: &GpuVisionContext, input: &Array2<f32>) -> Result<Array2<f32>> {
         // For GPU implementation, we'd use optimized attention kernels
         // For now, fall back to CPU implementation
         self.cpu_forward(input)
@@ -484,9 +485,9 @@ impl TransformerLayer {
 
 impl MultiHeadAttention {
     /// Create new multi-head attention layer
-    fn new(_config: &ViTConfig) -> Result<Self> {
-        let hidden_dim = _config.hidden_dim;
-        let num_heads = _config.num_heads;
+    fn new(config: &ViTConfig) -> Result<Self> {
+        let hidden_dim = config.hidden_dim;
+        let num_heads = config.num_heads;
         let head_dim = hidden_dim / num_heads;
 
         if hidden_dim % num_heads != 0 {
@@ -557,7 +558,7 @@ impl MultiHeadAttention {
     }
 
     /// Reshape input for multi-head attention
-    fn reshape_for_heads(&self, input: &Array2<f32>, seq_len: usize) -> Result<Array3<f32>> {
+    fn reshape_for_heads(&self, input: &Array2<f32>, seqlen: usize) -> Result<Array3<f32>> {
         let reshaped = input
             .toshape((seq_len, self.num_heads, self.head_dim))?
             .to_owned();
@@ -579,7 +580,7 @@ impl MultiHeadAttention {
         let attention_weights = self.softmax(&scores)?;
 
         // Apply attention to values: attention_weights @ V
-        let output = attention_weights.dot(v);
+        let output = attentionweights.dot(v);
 
         Ok(output)
     }
@@ -601,7 +602,7 @@ impl MultiHeadAttention {
     }
 
     /// Concatenate attention heads
-    fn concatenate_heads(&self, heads: &[Array2<f32>], seq_len: usize) -> Result<Array2<f32>> {
+    fn concatenate_heads(&self, heads: &[Array2<f32>], seqlen: usize) -> Result<Array2<f32>> {
         let mut concatenated = Array2::zeros((seq_len, self.num_heads * self.head_dim));
 
         for (head_idx, head_output) in heads.iter().enumerate() {
@@ -618,9 +619,9 @@ impl MultiHeadAttention {
 
 impl MLP {
     /// Create new MLP layer
-    fn new(_config: &ViTConfig) -> Result<Self> {
-        let hidden_dim = _config.hidden_dim;
-        let mlp_dim = _config.mlp_dim;
+    fn new(config: &ViTConfig) -> Result<Self> {
+        let hidden_dim = config.hidden_dim;
+        let mlp_dim = config.mlp_dim;
 
         let fc1_weights = Array2::fromshape_fn((hidden_dim, mlp_dim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
@@ -689,7 +690,7 @@ impl LayerNorm {
 
 impl ClassificationHead {
     /// Create new classification head
-    fn new(_hidden_dim: usize, num_classes: usize) -> Self {
+    fn new(_hidden_dim: usize, numclasses: usize) -> Self {
         let weights = Array2::fromshape_fn((_hidden_dim, num_classes), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
@@ -781,28 +782,28 @@ pub struct PatchMerging {
 
 impl SwinTransformer {
     /// Create new Swin Transformer
-    pub fn new(_config: SwinConfig) -> Result<Self> {
+    pub fn new(config: SwinConfig) -> Result<Self> {
         let mut stages = Vec::new();
 
         for stage_idx in 0.._config.num_stages {
             let stage = SwinStage::new(
-                _config.hidden_dims[stage_idx],
-                _config.num_layers[stage_idx],
-                _config.num_heads[stage_idx],
-                _config.window_size,
-                stage_idx < _config.num_stages - 1, // Use patch merging except for last stage
+                config.hidden_dims[stage_idx],
+                config.num_layers[stage_idx],
+                config.num_heads[stage_idx],
+                config.window_size,
+                stage_idx < config.num_stages - 1, // Use patch merging except for last stage
             )?;
             stages.push(stage);
         }
 
-        let gpu_context = if _config.use_gpu {
+        let gpu_context = if config.use_gpu {
             GpuVisionContext::new().ok()
         } else {
             None
         };
 
         Ok(Self {
-            _config,
+            config,
             stages,
             gpu_context,
         })
@@ -845,7 +846,7 @@ impl SwinStage {
                 window_size / 2
             };
             let block = SwinTransformerBlock::new(hidden_dim, num_heads, window_size, shift_size)?;
-            _layers.push(block);
+            layers.push(block);
         }
 
         let patch_merging = if use_patch_merging {
@@ -855,7 +856,7 @@ impl SwinStage {
         };
 
         Ok(Self {
-            _layers,
+            layers,
             patch_merging,
         })
     }
@@ -936,7 +937,7 @@ impl SwinTransformerBlock {
 
 impl WindowAttention {
     /// Forward pass with window-based attention
-    fn forward(&self, input: &Array2<f32>, _height: usize, _width: usize) -> Result<Array2<f32>> {
+    fn forward(&self, input: &Array2<f32>, _height: usize, width: usize) -> Result<Array2<f32>> {
         // For simplicity, apply regular attention (window partitioning would be more complex)
         self.attention.forward(input)
     }
@@ -944,8 +945,8 @@ impl WindowAttention {
 
 impl PatchMerging {
     /// Create new patch merging layer
-    fn new(_hidden_dim: usize) -> Result<Self> {
-        let reduction = Array2::fromshape_fn((4 * _hidden_dim, 2 * _hidden_dim), |_| {
+    fn new(_hiddendim: usize) -> Result<Self> {
+        let reduction = Array2::fromshape_fn((4 * hidden_dim, 2 * hidden_dim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
         let norm = LayerNorm::new(4 * hidden_dim);
@@ -1046,13 +1047,13 @@ pub struct CrossAttentionLayer {
 
 impl TransformerFeatureMatcher {
     /// Create new transformer feature matcher
-    pub fn new(_config: MatcherConfig) -> Result<Self> {
+    pub fn new(config: MatcherConfig) -> Result<Self> {
         // Create a vision transformer for feature encoding
         let vit_config = ViTConfig {
-            hidden_dim: _config.feature_dim,
-            num_heads: _config.num_heads,
+            hidden_dim: config.feature_dim,
+            num_heads: config.num_heads,
             num_layers: 6, // Encoder depth
-            use_gpu: _config.use_gpu,
+            use_gpu: config.use_gpu,
             ..ViTConfig::default()
         };
 
@@ -1060,7 +1061,7 @@ impl TransformerFeatureMatcher {
         let cross_attention = CrossAttentionMatcher::new(&_config)?;
 
         Ok(Self {
-            _config,
+            config,
             feature_encoder,
             cross_attention,
         })
@@ -1106,7 +1107,7 @@ impl TransformerFeatureMatcher {
 
 impl CrossAttentionMatcher {
     /// Create new cross-attention matcher
-    fn new(_config: &MatcherConfig) -> Result<Self> {
+    fn new(config: &MatcherConfig) -> Result<Self> {
         let mut layers = Vec::new();
 
         for _ in 0.._config.num_layers {
@@ -1160,10 +1161,10 @@ impl CrossAttentionMatcher {
 
 impl CrossAttentionLayer {
     /// Create new cross-attention layer
-    fn new(_config: &MatcherConfig) -> Result<Self> {
+    fn new(config: &MatcherConfig) -> Result<Self> {
         let vit_config = ViTConfig {
-            hidden_dim: _config.feature_dim,
-            num_heads: _config.num_heads,
+            hidden_dim: config.feature_dim,
+            num_heads: config.num_heads,
             ..ViTConfig::default()
         };
 
@@ -1226,7 +1227,8 @@ impl CrossAttentionLayer {
     fn cross_attention_forward(
         &self,
         q_input: &Array2<f32>,
-        k_input: &Array2<f32>, _v_input: &Array2<f32>,
+        k_input: &Array2<f32>,
+        _v_input: &Array2<f32>,
     ) -> Result<Array2<f32>> {
         // Simplified cross-attention - reuse self-attention but with different inputs
         // In a full implementation, we'd have separate Q, K, V projections

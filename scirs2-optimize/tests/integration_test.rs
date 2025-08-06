@@ -16,11 +16,11 @@ use scirs2_optimize::{
 struct QuadraticFunction;
 
 impl StochasticGradientFunction for QuadraticFunction {
-    fn compute_gradient(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> Array1<f64> {
+    fn compute_gradient(&mut self, x: &ArrayView1<f64>, _batchdata: &[f64]) -> Array1<f64> {
         x.mapv(|xi| 2.0 * xi)
     }
 
-    fn compute_value(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> f64 {
+    fn compute_value(&mut self, x: &ArrayView1<f64>, _batchdata: &[f64]) -> f64 {
         x.mapv(|xi| xi * xi).sum()
     }
 }
@@ -206,13 +206,13 @@ fn test_stochastic_workflow() {
     // Test with a noisy quadratic function (simulating ML scenario)
     struct NoisyQuadratic;
     impl StochasticGradientFunction for NoisyQuadratic {
-        fn compute_gradient(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> Array1<f64> {
+        fn compute_gradient(&mut self, x: &ArrayView1<f64>, _batchdata: &[f64]) -> Array1<f64> {
             // Add small noise to simulate stochastic gradients
             let mut rng = rand::rng();
             x.mapv(|xi| 2.0 * xi + rng.gen_range(-0.01..0.01))
         }
 
-        fn compute_value(&mut self..x: &ArrayView1<f64>, _batch_data: &[f64]) -> f64 {
+        fn compute_value(&mut self, x: &ArrayView1<f64>, _batchdata: &[f64]) -> f64 {
             x.mapv(|xi| xi * xi).sum()
         }
     }
@@ -423,7 +423,7 @@ fn test_machine_learning_workflow() {
             grad / batch_indices.len() as f64
         }
 
-        fn compute_value(&mut self, params: &ArrayView1<f64>, batch_indices: &[f64]) -> f64 {
+        fn compute_value(&mut self, params: &ArrayView1<f64>, batchindices: &[f64]) -> f64 {
             let mut loss = 0.0;
 
             for &idx in batch_indices {
@@ -475,13 +475,13 @@ fn test_large_scale_optimization() {
     }
 
     impl LargeQuadratic {
-        fn new(_dim: usize) -> Self {
+        fn new(dim: usize) -> Self {
             Self { dimension: _dim }
         }
     }
 
     impl StochasticGradientFunction for LargeQuadratic {
-        fn compute_gradient(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> Array1<f64> {
+        fn compute_gradient(&mut self, x: &ArrayView1<f64>, _batchdata: &[f64]) -> Array1<f64> {
             // Scaled quadratic: gradient = 2x with different scales per dimension
             x.iter()
                 .enumerate()
@@ -492,7 +492,7 @@ fn test_large_scale_optimization() {
                 .collect()
         }
 
-        fn compute_value(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> f64 {
+        fn compute_value(&mut self, x: &ArrayView1<f64>, _batchdata: &[f64]) -> f64 {
             x.iter()
                 .enumerate()
                 .map(|(i, &xi)| {

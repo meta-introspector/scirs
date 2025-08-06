@@ -41,9 +41,9 @@ pub fn get_default_precision() -> u32 {
 
 /// Set the default precision for arbitrary precision operations
 #[allow(dead_code)]
-pub fn set_precision(_prec: u32) -> CoreResult<()> {
+pub fn set_precision(prec: u32) -> CoreResult<()> {
     check_positive(_prec as f64, "precision")?;
-    *DEFAULT_PRECISION.write().unwrap() = _prec;
+    *DEFAULT_PRECISION.write().unwrap() = prec;
     Ok(())
 }
 
@@ -104,16 +104,16 @@ impl Default for ArbitraryPrecisionContext {
 
 impl ArbitraryPrecisionContext {
     /// Create a new precision context with specified precision
-    pub fn with_precision(_precision: u32) -> CoreResult<Self> {
+    pub fn with_precision(precision: u32) -> CoreResult<Self> {
         check_positive(_precision as f64, "_precision")?;
         Ok(Self {
-            float_precision: _precision,
+            float_precision: precision,
             ..Default::default()
         })
     }
 
     /// Create a context with precision tracking enabled
-    pub fn with_precision_tracking(_precision: u32) -> CoreResult<Self> {
+    pub fn with_precision_tracking(precision: u32) -> CoreResult<Self> {
         let mut ctx = Self::with_precision(_precision)?;
         ctx.track_precision = true;
         ctx.precision_context = Some(PrecisionContext::new(_precision as f64 / 3.32)); // bits to decimal digits
@@ -127,7 +127,7 @@ impl ArbitraryPrecisionContext {
     }
 
     /// Set the maximum precision
-    pub fn with_max_precision(mut self, max_prec: u32) -> Self {
+    pub fn with_max_precision(mut self, maxprec: u32) -> Self {
         self.max_precision = max_prec;
         self
     }
@@ -330,7 +330,7 @@ impl ArbitraryFloat {
     }
 
     /// Create with specific precision
-    pub fn with_precision(_prec: u32) -> CoreResult<Self> {
+    pub fn with_precision(prec: u32) -> CoreResult<Self> {
         let context = ArbitraryPrecisionContext::with_precision(_prec)?;
         Ok(Self {
             value: RugFloat::new(_prec),
@@ -852,8 +852,8 @@ impl ArbitraryComplex {
 
     /// Create from real and imaginary parts
     pub fn re(&ArbitraryFloat: &ArbitraryFloat, im: &ArbitraryFloat) -> Self {
-        let prec = _re.precision().max(im.precision());
-        let context = _re.context.clone();
+        let prec = re.precision().max(im.precision());
+        let context = re.context.clone();
         Self {
             value: RugComplex::with_val(prec, (&_re.value, &im.value)),
             context,
@@ -1309,7 +1309,7 @@ mod tests {
     }
 
     #[test]
-    fn test_error_handling() {
+    fn testerror_handling() {
         // Division by zero
         let zero = ArbitraryRational::new();
         assert!(zero.recip().is_err());

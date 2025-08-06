@@ -26,7 +26,7 @@ pub enum WavFormat {
 impl TryFrom<u16> for WavFormat {
     type Error = IoError;
 
-    fn try_from(_value: u16) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: u16) -> std::result::Result<Self, Self::Error> {
         match _value {
             1 => Ok(WavFormat::Pcm),
             3 => Ok(WavFormat::Float),
@@ -68,8 +68,8 @@ impl RiffChunk {
     /// Read a RIFF chunk from a reader
     fn read<R: Read>(reader: &mut R) -> std::io::Result<Self> {
         let mut id = [0u8; 4];
-        _reader.read_exact(&mut id)?;
-        let size = _reader.read_u32::<LittleEndian>()?;
+        reader.read_exact(&mut id)?;
+        let size = reader.read_u32::<LittleEndian>()?;
         Ok(RiffChunk { id, size })
     }
 
@@ -327,7 +327,7 @@ pub fn read_wav<P: AsRef<Path>>(path: P) -> Result<(WavHeader, ArrayD<f32>)> {
 /// write_wav(Path::new("sine_wave.wav"), sample_rate, &samples.into_dyn()).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn write_wav<P: AsRef<Path>>(path: P, sample_rate: u32, data: &ArrayD<f32>) -> Result<()> {
+pub fn write_wav<P: AsRef<Path>>(path: P, samplerate: u32, data: &ArrayD<f32>) -> Result<()> {
     let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
@@ -382,11 +382,11 @@ pub fn write_wav<P: AsRef<Path>>(path: P, sample_rate: u32, data: &ArrayD<f32>) 
 
     writer
         .write_u32::<LittleEndian>(sample_rate)
-        .map_err(|e| IoError::FileError(format!("Failed to write sample _rate: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write sample rate: {}", e)))?;
 
     writer
         .write_u32::<LittleEndian>(byte_rate)
-        .map_err(|e| IoError::FileError(format!("Failed to write byte _rate: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write byte rate: {}", e)))?;
 
     writer
         .write_u16::<LittleEndian>(block_align)

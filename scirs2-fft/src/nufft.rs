@@ -327,15 +327,15 @@ pub fn nufft_type2(
 
 /// Helper function for FFT computation used in NUFFT implementations
 #[allow(dead_code)]
-fn fft_backend(_data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
+fn fft_backend(data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
     use rustfft::{num_complex::Complex, FftPlanner};
 
-    let n = _data.len();
+    let n = data.len();
     let mut planner = FftPlanner::new();
     let fft = planner.plan_fft_forward(n);
 
     // Convert to rustfft's Complex type
-    let mut buffer: Vec<Complex<f64>> = _data.iter().map(|&c| Complex::new(c.re, c.im)).collect();
+    let mut buffer: Vec<Complex<f64>> = data.iter().map(|&c| Complex::new(c.re, c.im)).collect();
 
     // Perform the FFT
     fft.process(&mut buffer);
@@ -349,15 +349,15 @@ fn fft_backend(_data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
 
 /// Helper function for IFFT computation used in NUFFT implementations
 #[allow(dead_code)]
-fn ifft_backend(_data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
+fn ifft_backend(data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
     use rustfft::{num_complex::Complex, FftPlanner};
 
-    let n = _data.len();
+    let n = data.len();
     let mut planner = FftPlanner::new();
     let ifft = planner.plan_fft_inverse(n);
 
     // Convert to rustfft's Complex type
-    let mut buffer: Vec<Complex<f64>> = _data.iter().map(|&c| Complex::new(c.re, c.im)).collect();
+    let mut buffer: Vec<Complex<f64>> = data.iter().map(|&c| Complex::new(c.re, c.im)).collect();
 
     // Perform the IFFT
     ifft.process(&mut buffer);

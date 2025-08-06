@@ -198,15 +198,15 @@ pub fn par_range(start: usize, end: usize) -> impl ParallelIterator<Item = usize
 /// Helper function for parallel chunks processing
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-pub fn par_chunks<T: Sync>(slice: &[T], chunk_size: usize) -> rayon::slice::Chunks<'_, T> {
-    slice.par_chunks(chunk_size)
+pub fn par_chunks<T: Sync>(slice: &[T], chunksize: usize) -> rayon::slice::Chunks<'_, T> {
+    slice.par_chunks(chunksize)
 }
 
 /// Sequential fallback for par_chunks
 #[cfg(not(feature = "parallel"))]
 #[allow(dead_code)]
-pub fn par_chunks<T>(_slice: &[T], chunk_size: usize) -> std::slice::Chunks<'_, T> {
-    _slice.chunks(chunk_size)
+pub fn par_chunks<T>(_slice: &[T], chunksize: usize) -> std::slice::Chunks<'_, T> {
+    slice.chunks(chunk_size)
 }
 
 /// Helper function for parallel mutable chunks processing
@@ -222,37 +222,37 @@ pub fn par_chunks_mut<T: Send>(
 /// Sequential fallback for par_chunks_mut
 #[cfg(not(feature = "parallel"))]
 #[allow(dead_code)]
-pub fn par_chunks_mut<T>(_slice: &mut [T], chunk_size: usize) -> std::slice::ChunksMut<'_, T> {
-    _slice.chunks_mut(chunk_size)
+pub fn par_chunks_mut<T>(_slice: &mut [T], chunksize: usize) -> std::slice::ChunksMut<'_, T> {
+    slice.chunks_mut(chunk_size)
 }
 
 /// Simple parallel map function that returns Result type
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-pub fn parallel_map<T, U, F>(_items: &[T], f: F) -> Vec<U>
+pub fn parallel_map<T, U, F>(items: &[T], f: F) -> Vec<U>
 where
     T: Sync,
     U: Send,
     F: Fn(&T) -> U + Sync + Send,
 {
     use rayon::prelude::*;
-    _items.par_iter().map(f).collect()
+    items.par_iter().map(f).collect()
 }
 
 /// Sequential fallback for parallel_map
 #[cfg(not(feature = "parallel"))]
 #[allow(dead_code)]
-pub fn parallel_map<T, U, F>(_items: &[T], f: F) -> Vec<U>
+pub fn parallel_map<T, U, F>(items: &[T], f: F) -> Vec<U>
 where
     F: Fn(&T) -> U,
 {
-    _items.iter().map(f).collect()
+    items.iter().map(f).collect()
 }
 
 /// Parallel map function that handles Results
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-pub fn parallel_map_result<T, U, E, F>(_items: &[T], f: F) -> Result<Vec<U>, E>
+pub fn parallel_map_result<T, U, E, F>(items: &[T], f: F) -> Result<Vec<U>, E>
 where
     T: Sync,
     U: Send,
@@ -260,17 +260,17 @@ where
     F: Fn(&T) -> Result<U, E> + Sync + Send,
 {
     use rayon::prelude::*;
-    _items.par_iter().map(f).collect()
+    items.par_iter().map(f).collect()
 }
 
 /// Sequential fallback for parallel_map_result
 #[cfg(not(feature = "parallel"))]
 #[allow(dead_code)]
-pub fn parallel_map_result<T, U, E, F>(_items: &[T], f: F) -> Result<Vec<U>, E>
+pub fn parallel_map_result<T, U, E, F>(items: &[T], f: F) -> Result<Vec<U>, E>
 where
     F: Fn(&T) -> Result<U, E>,
 {
-    _items.iter().map(f).collect()
+    items.iter().map(f).collect()
 }
 
 /// Check if parallel processing is available
@@ -302,9 +302,9 @@ pub fn get_num_threads() -> usize {
 /// Set the number of threads for parallel operations
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-pub fn set_num_threads(num_threads: usize) {
+pub fn set_num_threads(numthreads: usize) {
     rayon::ThreadPoolBuilder::new()
-        .num_threads(num_threads)
+        .num_threads(numthreads)
         .build_global()
         .expect("Failed to initialize thread pool");
 }
@@ -348,7 +348,7 @@ pub use sequential__fallbacks::join as par_join;
 /// The final reduced result
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-pub fn parallel_map_reduce<D, T, M, Red>(data: D, mapper: M, _reducer: Red) -> T
+pub fn parallel_map_reduce<D, T, M, Red>(data: D, mapper: M, reducer: Red) -> T
 where
     D: Send + Sync,
     T: Send + Clone,
@@ -363,7 +363,7 @@ where
 /// Sequential fallback for parallel_map_reduce
 #[cfg(not(feature = "parallel"))]
 #[allow(dead_code)]
-pub fn parallel_map_reduce<D, T, M, Red>(data: D, chunk_size: usize, mapper: M, reducer: Red) -> T
+pub fn parallel_map_reduce<D, T, M, Red>(data: D, chunksize: usize, mapper: M, reducer: Red) -> T
 where
     T: Clone,
     M: Fn(D) -> T,
@@ -386,7 +386,7 @@ where
 /// Vector of mapped results
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-pub fn parallel_map_collect<I, T, U, M>(_items: I, mapper: M) -> Vec<U>
+pub fn parallel_map_collect<I, T, U, M>(items: I, mapper: M) -> Vec<U>
 where
     I: IntoParallelIterator<Item = T>,
     T: Send,
@@ -394,18 +394,18 @@ where
     M: Fn(T) -> U + Sync + Send,
 {
     use rayon::prelude::*;
-    _items.into_par_iter().map(mapper).collect()
+    items.into_par_iter().map(mapper).collect()
 }
 
 /// Sequential fallback for parallel_map_collect
 #[cfg(not(feature = "parallel"))]
 #[allow(dead_code)]
-pub fn parallel_map_collect<I, T, U, M>(_items: I, mapper: M) -> Vec<U>
+pub fn parallel_map_collect<I, T, U, M>(items: I, mapper: M) -> Vec<U>
 where
     I: IntoIterator<Item = T>,
     M: Fn(T) -> U,
 {
-    _items.into_iter().map(mapper).collect()
+    items.into_iter().map(mapper).collect()
 }
 
 /// Parallel map-reduce operation on indexed chunks

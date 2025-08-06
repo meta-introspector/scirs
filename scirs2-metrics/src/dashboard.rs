@@ -111,7 +111,7 @@ pub struct MetricDataPoint {
 
 impl MetricDataPoint {
     /// Create a new metric data point
-    pub fn new(_name: String, value: f64) -> Self {
+    pub fn new(name: String, value: f64) -> Self {
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or(Duration::from_secs(0))
@@ -119,14 +119,14 @@ impl MetricDataPoint {
 
         Self {
             timestamp,
-            _name,
+            name,
             value,
             metadata: HashMap::new(),
         }
     }
 
     /// Create a new metric data point with metadata
-    pub fn with_metadata(_name: String, value: f64, metadata: HashMap<String, String>) -> Self {
+    pub fn with_metadata(name: String, value: f64, metadata: HashMap<String, String>) -> Self {
         let mut point = Self::new(_name, value);
         point.metadata = metadata;
         point
@@ -144,10 +144,10 @@ pub struct DashboardData {
 
 impl DashboardData {
     /// Create new dashboard data storage
-    pub fn new(_config: DashboardConfig) -> Self {
+    pub fn new(config: DashboardConfig) -> Self {
         Self {
             data_points: Arc::new(Mutex::new(Vec::new())),
-            _config,
+            config: config,
         }
     }
 
@@ -260,8 +260,8 @@ pub struct InteractiveDashboard {
 
 impl InteractiveDashboard {
     /// Create new interactive dashboard
-    pub fn new(_config: DashboardConfig) -> Self {
-        let data = DashboardData::new(_config.clone());
+    pub fn new(config: DashboardConfig) -> Self {
+        let data = DashboardData::new(_configclone());
 
         Self { data, _config }
     }
@@ -651,9 +651,9 @@ pub enum WidgetType {
 
 impl DashboardWidget {
     /// Create new line chart widget
-    pub fn line_chart(_id: String, title: String, metrics: Vec<String>) -> Self {
+    pub fn line_chart(id: String, title: String, metrics: Vec<String>) -> Self {
         Self {
-            _id,
+            id,
             title,
             metrics,
             widget_type: WidgetType::LineChart,
@@ -662,9 +662,9 @@ impl DashboardWidget {
     }
 
     /// Create new gauge widget
-    pub fn gauge(_id: String, title: String, metric: String) -> Self {
+    pub fn gauge(id: String, title: String, metric: String) -> Self {
         Self {
-            _id,
+            id,
             title,
             metrics: vec![metric],
             widget_type: WidgetType::Gauge,
@@ -673,9 +673,9 @@ impl DashboardWidget {
     }
 
     /// Create new table widget
-    pub fn table(_id: String, title: String, metrics: Vec<String>) -> Self {
+    pub fn table(id: String, title: String, metrics: Vec<String>) -> Self {
         Self {
-            _id,
+            id,
             title,
             metrics,
             widget_type: WidgetType::Table,

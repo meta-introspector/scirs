@@ -141,7 +141,7 @@ impl EmbeddedMethods {
         alpha: f64,
         n_features: Option<usize>,
     ) -> Result<FeatureSelectionResult> {
-        let (n_samples, n_feat) = _features.dim();
+        let (n_samples, n_feat) = features.dim();
 
         if n_samples != target.len() {
             return Err(TimeSeriesError::DimensionMismatch {
@@ -217,7 +217,7 @@ impl EmbeddedMethods {
         target: &Array1<f64>,
         n_features: Option<usize>,
     ) -> Result<FeatureSelectionResult> {
-        let (n_samples, n_feat) = _features.dim();
+        let (n_samples, n_feat) = features.dim();
 
         if n_samples != target.len() {
             return Err(TimeSeriesError::DimensionMismatch {
@@ -263,14 +263,14 @@ impl EmbeddedMethods {
 
     // Helper methods
 
-    fn normalize_features(_features: &Array2<f64>) -> (Array2<f64>, Array1<f64>, Array1<f64>) {
-        let (n_samples, n_features) = _features.dim();
+    fn normalize_features(features: &Array2<f64>) -> (Array2<f64>, Array1<f64>, Array1<f64>) {
+        let (n_samples, n_features) = features.dim();
         let mut normalized = Array2::zeros((n_samples, n_features));
         let mut means = Array1::zeros(n_features);
         let mut stds = Array1::zeros(n_features);
 
         for j in 0..n_features {
-            let col = _features.column(j);
+            let col = features.column(j);
             let mean = col.sum() / n_samples as f64;
             let variance = col.mapv(|x| (x - mean).powi(2)).sum() / n_samples as f64;
             let std = variance.sqrt().max(1e-8); // Avoid division by zero

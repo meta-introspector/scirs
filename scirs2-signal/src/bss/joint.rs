@@ -5,7 +5,7 @@ use ndarray::s;
 
 use super::{BssConfig, JadeMultiResult};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array2, Axis};
+use ndarray::{Array2, Axis};
 use scirs2_linalg::{eigh, svd};
 
 #[allow(unused_imports)]
@@ -113,8 +113,8 @@ pub fn joint_bss(
         extracted_sources.push(sources);
 
         // Calculate mixing matrix (pseudoinverse of unmixing)
-        let (u, vt) = match svd(&unmixing.view(), false, None) {
-            Ok((u, vt)) => (u, vt),
+        let (u, s, vt) = match svd(&unmixing.view(), false, None) {
+            Ok((u, s, vt)) => (u, s, vt),
             Err(_) => {
                 return Err(SignalError::ComputationError(
                     "Failed to compute SVD of unmixing matrix".to_string(),
@@ -262,8 +262,8 @@ pub fn joint_diagonalization(
     let sources = w.dot(&centered);
 
     // Calculate mixing matrix (pseudoinverse of w)
-    let (u, vt) = match svd(&w.view(), false, None) {
-        Ok((u, vt)) => (u, vt),
+    let (u, s, vt) = match svd(&w.view(), false, None) {
+        Ok((u, s, vt)) => (u, s, vt),
         Err(_) => {
             return Err(SignalError::ComputationError(
                 "Failed to compute SVD of unmixing matrix".to_string(),

@@ -779,7 +779,7 @@ fn test_irregular_sampling(
     };
 
     // Find peak
-    let (peak_idx_) = power
+    let (peak_idx, _) = power
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -818,7 +818,7 @@ fn test_irregular_sampling(
 
 /// Test with missing data
 #[allow(dead_code)]
-fn test_missing_data(_implementation: &str, tolerance: f64) -> SignalResult<MissingDataResults> {
+fn test_missing_data(implementation: &str, tolerance: f64) -> SignalResult<MissingDataResults> {
     // Create signal with gaps
     let n = 200;
     let mut t = Vec::new();
@@ -974,7 +974,7 @@ fn test_noise_robustness(
             let detected = freqs
                 .iter()
                 .zip(power.iter())
-                .filter(|(&f_)| (f - f_true).abs() < freq_tolerance)
+                .filter(|(&f)| (f - f_true).abs() < freq_tolerance)
                 .any(|(_, &p)| p > threshold);
 
             if detected {
@@ -990,13 +990,13 @@ fn test_noise_robustness(
     let snr_threshold_db = detection_curve
         .iter()
         .find(|(_, prob)| *prob >= 0.9)
-        .map(|(snr_)| *snr)
+        .map(|(snr)| *snr)
         .unwrap_or(f64::INFINITY);
 
     // Estimate false positive/negative rates at target SNR
     let target_detection = detection_curve
         .iter()
-        .find(|(snr_)| *snr >= target_snr_db)
+        .find(|(snr)| *snr >= target_snr_db)
         .map(|(_, prob)| *prob)
         .unwrap_or(0.0);
 
@@ -1013,7 +1013,7 @@ fn test_noise_robustness(
 
 /// Compare with reference implementation
 #[allow(dead_code)]
-fn compare_with_reference(_implementation: &str) -> SignalResult<ReferenceComparisonResults> {
+fn compare_with_reference(implementation: &str) -> SignalResult<ReferenceComparisonResults> {
     // Standard test signal
     let n = 256;
     let t: Vec<f64> = (0..n).map(|i| i as f64 * 0.01).collect();
@@ -1075,7 +1075,7 @@ fn compare_with_reference(_implementation: &str) -> SignalResult<ReferenceCompar
 
     for &(ref_freq, ref_amp) in &reference_peaks {
         // Find closest frequency
-        let (closest_idx_) = freqs
+        let (closest_idx, _) = freqs
             .iter()
             .enumerate()
             .min_by(|(_, &f1), (_, &f2)| {
@@ -1114,7 +1114,7 @@ fn compare_with_reference(_implementation: &str) -> SignalResult<ReferenceCompar
 
 /// Compute spectral distance metric
 #[allow(dead_code)]
-fn compute_spectral_distance(_power: &[f64], reference_peaks: &[(f64, f64)], freqs: &[f64]) -> f64 {
+fn compute_spectral_distance(_power: &[f64], referencepeaks: &[(f64, f64)], freqs: &[f64]) -> f64 {
     // Enhanced spectral distance calculation
     let mut distance = 0.0;
     let mut found_peaks = 0;
@@ -1193,7 +1193,7 @@ fn test_extreme_parameters(
 
         match lombscargle_enhanced(&t, &signal, &config) {
             Ok((freqs, power_)) => {
-                if freqs.is_empty() || power.iter().any(|&p| !p.is_finite()) {
+                if freqs.is_empty() || power_.iter().any(|&p| !p.is_finite()) {
                     results[2] = false;
                 }
             }
@@ -1271,7 +1271,7 @@ fn test_multi_frequency_signals(
     let primary_target = f1;
     let primary_peak = peaks
         .iter()
-        .min_by(|(f1_), (f2_)| {
+        .min_by(|(f1, _), (f2, _)| {
             (f1 - primary_target)
                 .abs()
                 .partial_cmp(&(f2 - primary_target).abs())
@@ -1290,7 +1290,7 @@ fn test_multi_frequency_signals(
     for &target in &secondary_targets {
         let secondary_peak = peaks
             .iter()
-            .min_by(|(f1_), (f2_)| {
+            .min_by(|(f1, _), (f2, _)| {
                 (f1 - target)
                     .abs()
                     .partial_cmp(&(f2 - target).abs())
@@ -1524,26 +1524,26 @@ fn run_lombscargle(
 
 /// Find peaks in power spectrum
 #[allow(dead_code)]
-fn find_peaks(_freqs: &[f64], power: &[f64], max_peaks: usize) -> Vec<(f64, f64)> {
+fn find_peaks(_freqs: &[f64], power: &[f64], maxpeaks: usize) -> Vec<(f64, f64)> {
     let mut _peaks = Vec::new();
 
     // Simple peak finding
     for i in 1..power.len() - 1 {
         if power[i] > power[i - 1] && power[i] > power[i + 1] {
-            _peaks.push((_freqs[i], power[i]));
+            peaks.push((_freqs[i], power[i]));
         }
     }
 
     // Sort by power and take top _peaks
-    _peaks.sort_by(|(_, p1), (_, p2)| p2.partial_cmp(p1).unwrap());
-    _peaks.truncate(max_peaks);
+    peaks.sort_by(|(_, p1), (_, p2)| p2.partial_cmp(p1).unwrap());
+    peaks.truncate(max_peaks);
 
     _peaks
 }
 
 /// Estimate sidelobe suppression
 #[allow(dead_code)]
-fn estimate_sidelobe_suppression(_implementation: &str, times: &[f64]) -> SignalResult<f64> {
+fn estimate_sidelobe_suppression(implementation: &str, times: &[f64]) -> SignalResult<f64> {
     // Single frequency signal
     let f0 = 10.0;
     let signal: Vec<f64> = times.iter().map(|&ti| (2.0 * PI * f0 * ti).sin()).collect();
@@ -1572,7 +1572,7 @@ fn estimate_sidelobe_suppression(_implementation: &str, times: &[f64]) -> Signal
 
 /// Estimate window function effectiveness
 #[allow(dead_code)]
-fn estimate_window_effectiveness(_times: &[f64]) -> SignalResult<f64> {
+fn estimate_window_effectiveness(times: &[f64]) -> SignalResult<f64> {
     // Test different window functions and compare sidelobe suppression
     let window_types = vec!["none", "hann", "hamming", "blackman"];
     let mut suppressions = Vec::new();
@@ -1595,7 +1595,7 @@ fn estimate_window_effectiveness(_times: &[f64]) -> SignalResult<f64> {
 
         match lombscargle_enhanced(_times, &signal, &config) {
             Ok((freqs, power_)) => {
-                let suppression = estimate_sidelobe_suppression_from_power(&freqs, &power, f0);
+                let suppression = estimate_sidelobe_suppression_from_power(&freqs, &power_, f0);
                 suppressions.push(suppression);
             }
             Err(_) => suppressions.push(0.0),
@@ -1611,9 +1611,9 @@ fn estimate_window_effectiveness(_times: &[f64]) -> SignalResult<f64> {
 
 /// Estimate sidelobe suppression from power spectrum
 #[allow(dead_code)]
-fn estimate_sidelobe_suppression_from_power(_freqs: &[f64], power: &[f64], f0: f64) -> f64 {
+fn estimate_sidelobe_suppression_from_power(freqs: &[f64], power: &[f64], f0: f64) -> f64 {
     // Find peak closest to f0
-    let (peak_idx_) = _freqs
+    let (peak_idx, _) = _freqs
         .iter()
         .enumerate()
         .min_by(|(_, f1), (_, f2)| (*f1 - f0).abs().partial_cmp(&(*f2 - f0).abs()).unwrap())
@@ -1636,7 +1636,7 @@ fn estimate_sidelobe_suppression_from_power(_freqs: &[f64], power: &[f64], f0: f
 
 /// Test bootstrap confidence interval coverage
 #[allow(dead_code)]
-fn test_bootstrap_coverage(_times: &[f64], signal: &[f64]) -> SignalResult<f64> {
+fn test_bootstrap_coverage(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     let mut config = LombScargleConfig::default();
     config.bootstrap_iter = Some(100);
     config.confidence = Some(0.95);
@@ -1658,7 +1658,7 @@ fn test_bootstrap_coverage(_times: &[f64], signal: &[f64]) -> SignalResult<f64> 
 
 /// Generate validation report
 #[allow(dead_code)]
-pub fn generate_validation_report(_result: &EnhancedValidationResult) -> String {
+pub fn generate_validation_report(result: &EnhancedValidationResult) -> String {
     let mut report = String::new();
 
     report.push_str("Enhanced Lomb-Scargle Validation Report\n");
@@ -1666,22 +1666,22 @@ pub fn generate_validation_report(_result: &EnhancedValidationResult) -> String 
 
     report.push_str(&format!(
         "Overall Score: {:.1}/100\n\n",
-        _result.overall_score
+        result.overall_score
     ));
 
     // Basic validation
     report.push_str("Basic Validation:\n");
     report.push_str(&format!(
         "  Max Relative Error: {:.2e}\n",
-        _result.basic_validation.max_relative_error
+        result.basic_validation.max_relative_error
     ));
     report.push_str(&format!(
         "  Peak Frequency Error: {:.2e}\n",
-        _result.basic_validation.peak_freq_error
+        result.basic_validation.peak_freq_error
     ));
     report.push_str(&format!(
         "  Stability Score: {:.2}\n",
-        _result.basic_validation.stability_score
+        result.basic_validation.stability_score
     ));
 
     if !_result.basic_validation.issues.is_empty() {
@@ -1696,19 +1696,19 @@ pub fn generate_validation_report(_result: &EnhancedValidationResult) -> String 
     report.push_str("Performance Metrics:\n");
     report.push_str(&format!(
         "  Mean Time: {:.2} ms\n",
-        _result.performance.mean_time_ms
+        result.performance.mean_time_ms
     ));
     report.push_str(&format!(
         "  Throughput: {:.0} samples/sec\n",
-        _result.performance.throughput
+        result.performance.throughput
     ));
     report.push_str(&format!(
         "  Memory Efficiency: {:.2}\n\n",
-        _result.performance.memory_efficiency
+        result.performance.memory_efficiency
     ));
 
     // Irregular sampling
-    if let Some(ref irregular) = _result.irregular_sampling {
+    if let Some(ref irregular) = result.irregular_sampling {
         report.push_str("Irregular Sampling:\n");
         report.push_str(&format!(
             "  Peak Accuracy: {:.2}\n",
@@ -1722,7 +1722,7 @@ pub fn generate_validation_report(_result: &EnhancedValidationResult) -> String 
     }
 
     // Noise robustness
-    if let Some(ref noise) = _result.noise_robustness {
+    if let Some(ref noise) = result.noise_robustness {
         report.push_str("Noise Robustness:\n");
         report.push_str(&format!(
             "  SNR Threshold: {:.1} dB\n",
@@ -1739,7 +1739,7 @@ pub fn generate_validation_report(_result: &EnhancedValidationResult) -> String 
     }
 
     // Frequency domain analysis
-    if let Some(ref freq_analysis) = _result.frequency_domain_analysis {
+    if let Some(ref freq_analysis) = result.frequency_domain_analysis {
         report.push_str("Frequency Domain Analysis:\n");
         report.push_str(&format!(
             "  Spectral Leakage: {:.3}\n",
@@ -1765,7 +1765,7 @@ pub fn generate_validation_report(_result: &EnhancedValidationResult) -> String 
     }
 
     // Cross-validation
-    if let Some(ref cv) = _result.cross_validation {
+    if let Some(ref cv) = result.cross_validation {
         report.push_str("Cross-Validation:\n");
         report.push_str(&format!("  K-Fold Score: {:.3}\n", cv.kfold_score));
         report.push_str(&format!("  Bootstrap Score: {:.3}\n", cv.bootstrap_score));
@@ -1818,7 +1818,7 @@ pub fn generate_validation_report(_result: &EnhancedValidationResult) -> String 
     }
 
     // Memory analysis
-    if let Some(ref mem) = _result.memory_analysis {
+    if let Some(ref mem) = result.memory_analysis {
         report.push_str("Memory Analysis:\n");
         report.push_str(&format!("  Peak Memory: {:.1} MB\n", mem.peak_memory_mb));
         report.push_str(&format!(
@@ -1833,7 +1833,7 @@ pub fn generate_validation_report(_result: &EnhancedValidationResult) -> String 
     }
 
     // Precision robustness
-    if let Some(ref precision) = _result.precision_robustness {
+    if let Some(ref precision) = result.precision_robustness {
         report.push_str("Precision Robustness:\n");
         report.push_str(&format!(
             "  F32/F64 Consistency: {:.3}\n",
@@ -1858,7 +1858,7 @@ pub fn generate_validation_report(_result: &EnhancedValidationResult) -> String 
     }
 
     // SIMD consistency
-    if let Some(ref simd) = _result.simd_consistency {
+    if let Some(ref simd) = result.simd_consistency {
         report.push_str("SIMD vs Scalar Consistency:\n");
         report.push_str(&format!("  Max Deviation: {:.2e}\n", simd.max_deviation));
         report.push_str(&format!(
@@ -1949,9 +1949,9 @@ fn test_enhanced_statistical_significance(
 
 /// Kolmogorov-Smirnov test for p-value uniformity
 #[allow(dead_code)]
-fn kolmogorov_smirnov_uniformity_test(_p_values: &[f64]) -> f64 {
-    let n = _p_values.len();
-    let mut sorted_p = _p_values.to_vec();
+fn kolmogorov_smirnov_uniformity_test(_pvalues: &[f64]) -> f64 {
+    let n = p_values.len();
+    let mut sorted_p = p_values.to_vec();
     sorted_p.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let mut max_deviation = 0.0;
@@ -1970,7 +1970,7 @@ fn kolmogorov_smirnov_uniformity_test(_p_values: &[f64]) -> f64 {
 
 /// Estimate statistical power with signal injection
 #[allow(dead_code)]
-fn estimate_statistical_power(_implementation: &str, times: &[f64]) -> SignalResult<f64> {
+fn estimate_statistical_power(implementation: &str, times: &[f64]) -> SignalResult<f64> {
     let mut detections = 0;
     let n_trials = 50; // Reduced for performance
     let mut rng = rand::rng();
@@ -1997,7 +1997,7 @@ fn estimate_statistical_power(_implementation: &str, times: &[f64]) -> SignalRes
         let detected = freqs
             .iter()
             .zip(power.iter())
-            .filter(|(&f_)| (f - f_signal).abs() < tolerance)
+            .filter(|(&f)| (f - f_signal).abs() < tolerance)
             .any(|(_, &p)| {
                 let mean_power = power.iter().sum::<f64>() / power.len() as f64;
                 let std_power = (power.iter().map(|&p| (p - mean_power).powi(2)).sum::<f64>()
@@ -2016,7 +2016,7 @@ fn estimate_statistical_power(_implementation: &str, times: &[f64]) -> SignalRes
 
 /// Test significance level calibration
 #[allow(dead_code)]
-fn test_significance_calibration(_implementation: &str, times: &[f64]) -> SignalResult<f64> {
+fn test_significance_calibration(implementation: &str, times: &[f64]) -> SignalResult<f64> {
     let significance_levels = vec![0.05, 0.1];
     let mut calibration_errors = Vec::new();
 
@@ -2052,7 +2052,7 @@ fn test_significance_calibration(_implementation: &str, times: &[f64]) -> Signal
 
 /// Enhanced bootstrap confidence interval coverage test
 #[allow(dead_code)]
-fn test_enhanced_bootstrap_coverage(_times: &[f64]) -> SignalResult<f64> {
+fn test_enhanced_bootstrap_coverage(times: &[f64]) -> SignalResult<f64> {
     let n_tests = 20; // Reduced for performance
     let mut coverage_scores = Vec::new();
     let mut rng = rand::rng();
@@ -2074,7 +2074,7 @@ fn test_enhanced_bootstrap_coverage(_times: &[f64]) -> SignalResult<f64> {
         match lombscargle_enhanced(_times..&signal, &config) {
             Ok((freqs, power, Some((lower, upper)))) => {
                 // Find peak closest to true frequency
-                let (peak_idx_) = freqs
+                let (peak_idx, _) = freqs
                     .iter()
                     .enumerate()
                     .min_by(|(_, f1), (_, f2)| {
@@ -2185,14 +2185,14 @@ fn analyze_memory_usage(
 
 /// Analyze memory usage complexity
 #[allow(dead_code)]
-fn analyze_memory_complexity(_measurements: &[(usize, f64)]) -> f64 {
-    if _measurements.len() < 2 {
+fn analyze_memory_complexity(measurements: &[(usize, f64)]) -> f64 {
+    if measurements.len() < 2 {
         return 1.0;
     }
 
     // Calculate growth rate between first and last _measurements
-    let first = _measurements[0];
-    let last = _measurements[_measurements.len() - 1];
+    let first = measurements[0];
+    let last = measurements[_measurements.len() - 1];
 
     if first.0 == last.0 || first.1 <= 0.0 {
         return 1.0;
@@ -2213,13 +2213,13 @@ fn analyze_memory_complexity(_measurements: &[(usize, f64)]) -> f64 {
 
 /// Analyze timing complexity
 #[allow(dead_code)]
-fn analyze_timing_complexity(_measurements: &[(usize, f64)]) -> f64 {
-    if _measurements.len() < 2 {
+fn analyze_timing_complexity(measurements: &[(usize, f64)]) -> f64 {
+    if measurements.len() < 2 {
         return 1.0;
     }
 
-    let first = _measurements[0];
-    let last = _measurements[_measurements.len() - 1];
+    let first = measurements[0];
+    let last = measurements[_measurements.len() - 1];
 
     if first.0 == last.0 || first.1 <= 0.0 {
         return 1.0;
@@ -2238,8 +2238,8 @@ fn analyze_timing_complexity(_measurements: &[(usize, f64)]) -> f64 {
 
 /// Calculate fragmentation score based on memory allocation patterns
 #[allow(dead_code)]
-fn calculate_fragmentation_score(_measurements: &[(usize, f64)]) -> f64 {
-    if _measurements.len() < 3 {
+fn calculate_fragmentation_score(measurements: &[(usize, f64)]) -> f64 {
+    if measurements.len() < 3 {
         return 0.9; // Default good score
     }
 
@@ -2247,9 +2247,9 @@ fn calculate_fragmentation_score(_measurements: &[(usize, f64)]) -> f64 {
     let mut deviations = Vec::new();
 
     for i in 1.._measurements.len() - 1 {
-        let prev = _measurements[i - 1];
-        let curr = _measurements[i];
-        let next = _measurements[i + 1];
+        let prev = measurements[i - 1];
+        let curr = measurements[i];
+        let next = measurements[i + 1];
 
         // Expected memory based on linear interpolation
         let size_progress = (curr.0 - prev.0) as f64 / (next.0 - prev.0) as f64;
@@ -2351,12 +2351,12 @@ fn test_frequency_domain_analysis(
 
 /// Measure spectral leakage around known frequencies
 #[allow(dead_code)]
-fn measure_spectral_leakage(_freqs: &[f64], power: &[f64], target_freqs: &[f64]) -> f64 {
+fn measure_spectral_leakage(freqs: &[f64], power: &[f64], targetfreqs: &[f64]) -> f64 {
     let mut total_leakage = 0.0;
 
     for &target_freq in target_freqs {
         // Find peak closest to target
-        let (peak_idx_) = _freqs
+        let (peak_idx, _) = freqs
             .iter()
             .enumerate()
             .min_by(|(_, f1), (_, f2)| {
@@ -2393,9 +2393,9 @@ fn measure_spectral_leakage(_freqs: &[f64], power: &[f64], target_freqs: &[f64])
 
 /// Estimate noise floor from power spectrum
 #[allow(dead_code)]
-fn estimate_noise_floor(_power: &[f64]) -> f64 {
+fn estimate_noise_floor(power: &[f64]) -> f64 {
     // Use median as robust noise floor estimate
-    let mut sorted_power = _power.to_vec();
+    let mut sorted_power = power.to_vec();
     sorted_power.sort_by(|a, b| a.partial_cmp(b).unwrap());
     let median_idx = sorted_power.len() / 2;
     sorted_power[median_idx]
@@ -2403,7 +2403,7 @@ fn estimate_noise_floor(_power: &[f64]) -> f64 {
 
 /// Assess frequency resolution accuracy
 #[allow(dead_code)]
-fn assess_frequency_resolution(_freqs: &[f64], power: &[f64], target_freqs: &[f64]) -> f64 {
+fn assess_frequency_resolution(_freqs: &[f64], power: &[f64], targetfreqs: &[f64]) -> f64 {
     let mut accuracy_sum = 0.0;
 
     for &target_freq in target_freqs {
@@ -2412,7 +2412,7 @@ fn assess_frequency_resolution(_freqs: &[f64], power: &[f64], target_freqs: &[f6
             .iter()
             .zip(power.iter())
             .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).unwrap())
-            .map(|(&f_)| ((), f))
+            .map(|(&f, _)| ((), f))
             .unwrap_or(((), 0.0));
 
         let freq_error = (peak_freq - target_freq).abs() / target_freq;
@@ -2424,7 +2424,7 @@ fn assess_frequency_resolution(_freqs: &[f64], power: &[f64], target_freqs: &[f6
 
 /// Test alias rejection with high-frequency signal
 #[allow(dead_code)]
-fn test_alias_rejection(_implementation: &str, t: &[f64]) -> SignalResult<f64> {
+fn test_alias_rejection(implementation: &str, t: &[f64]) -> SignalResult<f64> {
     let fs = 1.0 / (t[1] - t[0]); // Sampling frequency
     let nyquist = fs / 2.0;
     let f_alias = nyquist * 1.5; // Frequency above Nyquist
@@ -2455,7 +2455,7 @@ fn test_alias_rejection(_implementation: &str, t: &[f64]) -> SignalResult<f64> {
 
 /// Test phase coherence with quadrature signals
 #[allow(dead_code)]
-fn test_phase_coherence(_implementation: &str, t: &[f64], freq: f64) -> SignalResult<f64> {
+fn test_phase_coherence(implementation: &str, t: &[f64], freq: f64) -> SignalResult<f64> {
     // Create in-phase and quadrature signals
     let signal_i: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * freq * ti).cos()).collect();
     let signal_q: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * freq * ti).sin()).collect();
@@ -2487,7 +2487,7 @@ fn calculate_spurious_free_dynamic_range(
     // Find all legitimate peaks
     let mut legitimate_peaks = Vec::new();
     for &target_freq in target_freqs {
-        let (peak_idx_) = _freqs
+        let (peak_idx, _) = freqs
             .iter()
             .enumerate()
             .min_by(|(_, f1), (_, f2)| {
@@ -2613,7 +2613,7 @@ fn perform_kfold_validation(
                     .iter()
                     .zip(power.iter())
                     .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).unwrap())
-                    .map(|(&f_)| ((), f))
+                    .map(|(&f, _)| ((), f))
                     .unwrap_or(((), 0.0));
 
                 let freq_error = (detected_freq - true_freq).abs() / true_freq;
@@ -2666,7 +2666,7 @@ fn perform_bootstrap_validation(
                     .iter()
                     .zip(power.iter())
                     .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).unwrap())
-                    .map(|(&f_)| ((), f))
+                    .map(|(&f, _)| ((), f))
                     .unwrap_or(((), 0.0));
 
                 let freq_error = (detected_freq - true_freq).abs() / true_freq;
@@ -2712,7 +2712,7 @@ fn perform_loo_validation(
                     .iter()
                     .zip(power.iter())
                     .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).unwrap())
-                    .map(|(&f_)| ((), f))
+                    .map(|(&f, _)| ((), f))
                     .unwrap_or(((), 0.0));
 
                 let freq_error = (detected_freq - true_freq).abs() / true_freq;
@@ -2754,7 +2754,7 @@ fn test_temporal_consistency(
                     .iter()
                     .zip(power.iter())
                     .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).unwrap())
-                    .map(|(&f_)| ((), f))
+                    .map(|(&f, _)| ((), f))
                     .unwrap_or(((), 0.0));
                 detected_freqs.push(detected_freq);
             }
@@ -2804,7 +2804,7 @@ fn test_frequency_stability(
                     .iter()
                     .zip(power.iter())
                     .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).unwrap())
-                    .map(|(&f_)| ((), f))
+                    .map(|(&f, _)| ((), f))
                     .unwrap_or(((), 0.0));
                 freq_estimates.push(detected_freq);
             }
@@ -2839,7 +2839,7 @@ fn test_frequency_stability(
 
 /// Test edge case robustness
 #[allow(dead_code)]
-fn test_edge_case_robustness(_implementation: &str) -> SignalResult<EdgeCaseRobustnessResults> {
+fn test_edge_case_robustness(implementation: &str) -> SignalResult<EdgeCaseRobustnessResults> {
     let mut results = vec![false; 6];
 
     // Test 1: Empty signal
@@ -2881,7 +2881,7 @@ fn test_edge_case_robustness(_implementation: &str) -> SignalResult<EdgeCaseRobu
 
 /// Test empty signal handling
 #[allow(dead_code)]
-fn test_empty_signal(_implementation: &str) -> bool {
+fn test_empty_signal(implementation: &str) -> bool {
     let t: Vec<f64> = vec![];
     let signal: Vec<f64> = vec![];
 
@@ -2893,7 +2893,7 @@ fn test_empty_signal(_implementation: &str) -> bool {
 
 /// Test single point handling
 #[allow(dead_code)]
-fn test_single_point(_implementation: &str) -> bool {
+fn test_single_point(implementation: &str) -> bool {
     let t = vec![1.0];
     let signal = vec![0.5];
 
@@ -2905,7 +2905,7 @@ fn test_single_point(_implementation: &str) -> bool {
 
 /// Test constant signal handling
 #[allow(dead_code)]
-fn test_constant_signal(_implementation: &str) -> bool {
+fn test_constant_signal(implementation: &str) -> bool {
     let t: Vec<f64> = (0..50).map(|i| i as f64 * 0.1).collect();
     let signal = vec![1.0; 50];
 
@@ -2921,7 +2921,7 @@ fn test_constant_signal(_implementation: &str) -> bool {
 
 /// Test invalid value handling
 #[allow(dead_code)]
-fn test_invalid_values(_implementation: &str) -> bool {
+fn test_invalid_values(implementation: &str) -> bool {
     let t: Vec<f64> = (0..10).map(|i| i as f64 * 0.1).collect();
     let signal = vec![
         1.0,
@@ -2944,7 +2944,7 @@ fn test_invalid_values(_implementation: &str) -> bool {
 
 /// Test duplicate time point handling
 #[allow(dead_code)]
-fn test_duplicate_times(_implementation: &str) -> bool {
+fn test_duplicate_times(implementation: &str) -> bool {
     let t = vec![0.0, 0.1, 0.1, 0.2, 0.3, 0.3, 0.4]; // Duplicates
     let signal = vec![1.0, 0.5, -0.5, 2.0, 1.5, -1.0, 0.0];
 
@@ -2956,7 +2956,7 @@ fn test_duplicate_times(_implementation: &str) -> bool {
 
 /// Test non-monotonic time handling
 #[allow(dead_code)]
-fn test_non_monotonic_times(_implementation: &str) -> bool {
+fn test_non_monotonic_times(implementation: &str) -> bool {
     let t = vec![0.0, 0.2, 0.1, 0.4, 0.3, 0.5]; // Non-monotonic
     let signal = vec![1.0, 0.5, -0.5, 2.0, 1.5, -1.0];
 
@@ -3041,7 +3041,7 @@ fn test_precision_robustness(
 
 /// Test F32 vs F64 precision consistency
 #[allow(dead_code)]
-fn test_f32_f64_consistency(_implementation: &str, t: &[f64], signal: &[f64]) -> SignalResult<f64> {
+fn test_f32_f64_consistency(implementation: &str, t: &[f64], signal: &[f64]) -> SignalResult<f64> {
     // Convert to f32 and back to f64
     let t_f32: Vec<f32> = t.iter().map(|&x| x as f32).collect();
     let signal_f32: Vec<f32> = signal.iter().map(|&x| x as f32).collect();
@@ -3053,7 +3053,7 @@ fn test_f32_f64_consistency(_implementation: &str, t: &[f64], signal: &[f64]) ->
 
     // Compute with f32-converted data
     let (_, power_f32_converted) = run_lombscargle(
-        _implementation,
+        implementation,
         &t_f64_from_f32,
         &signal_f64_from_f32,
         None,
@@ -3078,7 +3078,7 @@ fn test_f32_f64_consistency(_implementation: &str, t: &[f64], signal: &[f64]) ->
 
 /// Test condition number robustness with ill-conditioned time series
 #[allow(dead_code)]
-fn test_condition_number_robustness(_implementation: &str, t: &[f64]) -> SignalResult<f64> {
+fn test_condition_number_robustness(implementation: &str, t: &[f64]) -> SignalResult<f64> {
     // Create nearly-duplicated time points (ill-conditioned)
     let mut t_ill = t.to_vec();
     let eps = 1e-12;
@@ -3124,7 +3124,7 @@ fn test_condition_number_robustness(_implementation: &str, t: &[f64]) -> SignalR
 
 /// Test catastrophic cancellation robustness
 #[allow(dead_code)]
-fn test_catastrophic_cancellation(_implementation: &str, t: &[f64]) -> SignalResult<f64> {
+fn test_catastrophic_cancellation(implementation: &str, t: &[f64]) -> SignalResult<f64> {
     // Create signal that could lead to catastrophic cancellation
     let signal_cancel: Vec<f64> = t
         .iter()
@@ -3150,7 +3150,7 @@ fn test_catastrophic_cancellation(_implementation: &str, t: &[f64]) -> SignalRes
                 let peak_found = freqs
                     .iter()
                     .zip(power.iter())
-                    .filter(|(&f_)| (f - target_freq).abs() < 2.0)
+                    .filter(|(&f)| (f - target_freq).abs() < 2.0)
                     .any(|(_, &p)| p > power.iter().sum::<f64>() / power.len() as f64 * 2.0);
 
                 Ok(if peak_found { 0.8 } else { 0.4 })
@@ -3162,7 +3162,7 @@ fn test_catastrophic_cancellation(_implementation: &str, t: &[f64]) -> SignalRes
 
 /// Test denormal number handling
 #[allow(dead_code)]
-fn test_denormal_handling(_implementation: &str) -> SignalResult<f64> {
+fn test_denormal_handling(implementation: &str) -> SignalResult<f64> {
     // Create test with denormal numbers
     let n = 64;
     let t: Vec<f64> = (0..n).map(|i| i as f64 * 1e-320).collect(); // Very small time steps
@@ -3316,7 +3316,7 @@ pub fn validate_against_scipy_reference() -> SignalResult<SciPyValidationResult>
     let y: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * 0.5 * ti).sin()).collect();
 
     let config = LombScargleConfig::default();
-    let (freqs, power_) = lombscargle_enhanced(&t, &y, &config)?;
+    let (freqs, power) = lombscargle_enhanced(&t, &y, &config)?;
 
     // Find peak frequency
     let peak_idx = power
@@ -3338,7 +3338,7 @@ pub fn validate_against_scipy_reference() -> SignalResult<SciPyValidationResult>
         .map(|&ti| (2.0 * PI * 0.3 * ti).sin() + 0.5 * (2.0 * PI * 1.2 * ti).sin())
         .collect();
 
-    let (multi_freqs, multi_power_) = lombscargle_enhanced(&t, &multi_y, &config)?;
+    let (multi_freqs, multi_power) = lombscargle_enhanced(&t, &multi_y, &config)?;
 
     // Find two peaks
     let mut peaks = find_peaks_threshold(&multi_power, 0.1)?;
@@ -3372,7 +3372,7 @@ pub fn validate_against_scipy_reference() -> SignalResult<SciPyValidationResult>
         .map(|&ti| (2.0 * PI * 0.4 * ti).sin())
         .collect();
 
-    let (irr_freqs..irr_power_) = lombscargle_enhanced(&irregular_t, &irregular_y, &config)?;
+    let (irr_freqs, irr_power) = lombscargle_enhanced(&irregular_t, &irregular_y, &config)?;
 
     let irr_peak_idx = irr_power
         .iter()
@@ -3392,7 +3392,7 @@ pub fn validate_against_scipy_reference() -> SignalResult<SciPyValidationResult>
         .map(|&yi| yi + 0.1 * rng.gen_range(-1.0..1.0))
         .collect();
 
-    let (noisy_freqs..noisy_power_) = lombscargle_enhanced(&t, &noisy_y, &config)?;
+    let (noisy_freqs, noisy_power) = lombscargle_enhanced(&t, &noisy_y, &config)?;
 
     let noisy_peak_idx = noisy_power
         .iter()
@@ -3414,12 +3414,12 @@ pub fn validate_against_scipy_reference() -> SignalResult<SciPyValidationResult>
 
 /// Find peaks in power spectrum with threshold
 #[allow(dead_code)]
-fn find_peaks_threshold(_power: &[f64], threshold: f64) -> SignalResult<Vec<usize>> {
+fn find_peaks_threshold(power: &[f64], threshold: f64) -> SignalResult<Vec<usize>> {
     let mut peaks = Vec::new();
-    let n = _power.len();
+    let n = power.len();
 
     for i in 1..n - 1 {
-        if _power[i] > _power[i - 1] && _power[i] > _power[i + 1] && _power[i] > threshold {
+        if power[i] > power[i - 1] && power[i] > power[i + 1] && power[i] > threshold {
             peaks.push(i);
         }
     }
@@ -3481,7 +3481,7 @@ pub fn validate_advanced_numerical_stability() -> SignalResult<AdvancedStability
     let config = LombScargleConfig::default();
     match lombscargle_enhanced(&small_t, &small_y, &config) {
         Ok((_, power_)) => {
-            result.small_time_intervals = power.iter().all(|&p: &f64| p.is_finite() && p >= 0.0);
+            result.small_time_intervals = power_.iter().all(|&p: &f64| p.is_finite() && p >= 0.0);
         }
         Err(_) => {
             result.small_time_intervals = false;
@@ -3497,7 +3497,7 @@ pub fn validate_advanced_numerical_stability() -> SignalResult<AdvancedStability
 
     match lombscargle_enhanced(&large_t, &large_y, &config) {
         Ok((_, power_)) => {
-            result.large_time_intervals = power.iter().all(|&p: &f64| p.is_finite() && p >= 0.0);
+            result.large_time_intervals = power_.iter().all(|&p: &f64| p.is_finite() && p >= 0.0);
         }
         Err(_) => {
             result.large_time_intervals = false;
@@ -3513,7 +3513,7 @@ pub fn validate_advanced_numerical_stability() -> SignalResult<AdvancedStability
 
     match lombscargle_enhanced(&mixed_t, &mixed_y, &config) {
         Ok((_, power_)) => {
-            result.mixed_scale_robustness = power.iter().all(|&p: &f64| p.is_finite() && p >= 0.0);
+            result.mixed_scale_robustness = power_.iter().all(|&p: &f64| p.is_finite() && p >= 0.0);
         }
         Err(_) => {
             result.mixed_scale_robustness = false;
@@ -3527,7 +3527,7 @@ pub fn validate_advanced_numerical_stability() -> SignalResult<AdvancedStability
 
     match lombscargle_enhanced(&near_dup_t, &near_dup_y, &config) {
         Ok((_, power_)) => {
-            result.near_duplicate_times = power.iter().all(|&p: &f64| p.is_finite() && p >= 0.0);
+            result.near_duplicate_times = power_.iter().all(|&p: &f64| p.is_finite() && p >= 0.0);
         }
         Err(_) => {
             result.near_duplicate_times = false;
@@ -3577,6 +3577,7 @@ impl AdvancedStabilityResult {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
 
     #[test]
@@ -3661,14 +3662,14 @@ fn test_frequency_domain_analysis_extended(
         ..Default::default()
     };
 
-    let (freqs, power_) = lombscargle_enhanced(&t, &y, &config)?;
+    let (freqs, power) = lombscargle_enhanced(&t, &y, &config)?;
 
     // Find peak and measure leakage
     let peak_idx = power
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(idx_)| idx)
+        .map(|(idx, _)| idx)
         .unwrap();
 
     let peak_power = power[peak_idx];
@@ -3681,7 +3682,7 @@ fn test_frequency_domain_analysis_extended(
     let noise_floor = power
         .iter()
         .enumerate()
-        .filter(|(i_)| (*i < peak_idx - 20) || (*i > peak_idx + 20))
+        .filter(|(i, _)| (*i < peak_idx - 20) || (*i > peak_idx + 20))
         .map(|(_, &p)| p)
         .fold(f64::INFINITY, f64::min);
 
@@ -3719,14 +3720,14 @@ fn test_frequency_domain_analysis_extended(
         .map(|&ti| (2.0 * PI * f0 * ti + phase_shift).sin())
         .collect();
 
-    let (_, power_shifted_) = lombscargle_enhanced(&t, &y_complex, &config)?;
+    let (_, power_shifted) = lombscargle_enhanced(&t, &y_complex, &config)?;
 
     // Measure phase coherence by comparing peak positions
     let peak_idx_shifted = power_shifted
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(idx_)| idx)
+        .map(|(idx, _)| idx)
         .unwrap();
 
     result.phase_coherence = if peak_idx == peak_idx_shifted {
@@ -3809,13 +3810,13 @@ fn test_cross_validation_extended(
             }
         }
 
-        if let Ok((freqs, power_)) = lombscargle_enhanced(&train_t, &train_y, &config) {
+        if let Ok((freqs, power)) = lombscargle_enhanced(&train_t, &train_y, &config) {
             // Find peak frequency
             let peak_idx = power
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap();
 
             let estimated_freq = freqs[peak_idx];
@@ -3850,12 +3851,12 @@ fn test_cross_validation_extended(
             .map(|&i| y[i])
             .collect();
 
-        if let Ok((freqs, power_)) = lombscargle_enhanced(&bootstrap_t, &bootstrap_y, &config) {
+        if let Ok((freqs, power)) = lombscargle_enhanced(&bootstrap_t, &bootstrap_y, &config) {
             let peak_idx = power
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap();
 
             let estimated_freq = freqs[peak_idx];
@@ -3882,12 +3883,12 @@ fn test_cross_validation_extended(
         loo_t.remove(i.min(loo_t.len() - 1));
         loo_y.remove(i.min(loo_y.len() - 1));
 
-        if let Ok((freqs, power_)) = lombscargle_enhanced(&loo_t, &loo_y, &config) {
+        if let Ok((freqs, power)) = lombscargle_enhanced(&loo_t, &loo_y, &config) {
             let peak_idx = power
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap();
 
             let estimated_freq = freqs[peak_idx];
@@ -3917,12 +3918,12 @@ fn test_cross_validation_extended(
         let window_t = &t[start..end];
         let window_y = &y[start..end];
 
-        if let Ok((freqs, power_)) = lombscargle_enhanced(window_t, window_y, &config) {
+        if let Ok((freqs, power)) = lombscargle_enhanced(window_t, window_y, &config) {
             let peak_idx = power
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap();
 
             let estimated_freq = freqs[peak_idx];
@@ -3951,12 +3952,12 @@ fn test_cross_validation_extended(
             .map(|(&signal, &n)| signal + n)
             .collect();
 
-        if let Ok((freqs, power_)) = lombscargle_enhanced(&t, &realization_y, &config) {
+        if let Ok((freqs, power)) = lombscargle_enhanced(&t, &realization_y, &config) {
             let peak_idx = power
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap();
 
             freq_estimates.push(freqs[peak_idx]);
@@ -4190,7 +4191,7 @@ fn validate_harmonic_distortion_handling(
                     .partial_cmp(&(f2 - expected).abs())
                     .unwrap()
             })
-            .map(|(idx_)| idx);
+            .map(|(idx, _)| idx);
 
         if let Some(idx) = closest_idx {
             let error = (peak_freqs[idx] - expected).abs() / expected;
@@ -4216,7 +4217,7 @@ fn validate_harmonic_distortion_handling(
 
 /// Validate aliasing effects
 #[allow(dead_code)]
-fn validate_aliasing_effects(_config: &EnhancedValidationConfig) -> SignalResult<AliasingResults> {
+fn validate_aliasing_effects(config: &EnhancedValidationConfig) -> SignalResult<AliasingResults> {
     let mut results = AliasingResults::default();
 
     // Create signal with high-frequency components near Nyquist
@@ -4255,7 +4256,7 @@ fn validate_aliasing_effects(_config: &EnhancedValidationConfig) -> SignalResult
     )?;
 
     // Find peak
-    let (peak_idx_) = power
+    let (peak_idx, _) = power
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -4510,22 +4511,22 @@ pub enum RealWorldSignalType {
 // Placeholder helper functions (implementations would depend on specific requirements)
 
 #[allow(dead_code)]
-fn test_sampling_pattern(_pattern: &SamplingPattern, tolerance: f64) -> SignalResult<f64> {
+fn test_sampling_pattern(pattern: &SamplingPattern, tolerance: f64) -> SignalResult<f64> {
     // Implementation would test specific sampling _pattern
     Ok(0.85) // Placeholder
 }
 
 #[allow(dead_code)]
-fn test_temporal_scale(_scale: f64, tolerance: f64) -> SignalResult<f64> {
+fn test_temporal_scale(scale: f64, tolerance: f64) -> SignalResult<f64> {
     // Implementation would test temporal _scale invariance
     Ok(_scale.log10().abs() * 0.1) // Placeholder
 }
 
 #[allow(dead_code)]
-fn find_peak_indices(_power: &[f64], threshold: f64) -> SignalResult<Vec<usize>> {
+fn find_peak_indices(power: &[f64], threshold: f64) -> SignalResult<Vec<usize>> {
     let mut peaks = Vec::new();
     for i in 1.._power.len() - 1 {
-        if _power[i] > _power[i - 1] && _power[i] > _power[i + 1] && _power[i] > threshold {
+        if power[i] > power[i - 1] && power[i] > power[i + 1] && power[i] > threshold {
             peaks.push(i);
         }
     }
@@ -4533,7 +4534,7 @@ fn find_peak_indices(_power: &[f64], threshold: f64) -> SignalResult<Vec<usize>>
 }
 
 #[allow(dead_code)]
-fn test_window_optimization_scenario(_param: f64, name: &str, tolerance: f64) -> SignalResult<f64> {
+fn test_window_optimization_scenario(param: f64, name: &str, tolerance: f64) -> SignalResult<f64> {
     // Implementation would test window optimization for specific scenario
     Ok(0.9) // Placeholder
 }
@@ -4767,7 +4768,7 @@ pub fn validate_parallel_consistency(
             parallel: true,
             ..Default::default()
         };
-        let (freqs_par, power_par_) = lombscargle_enhanced(time, signal, &config_parallel)?;
+        let (freqs_par, power_par) = lombscargle_enhanced(time, signal, &config_parallel)?;
 
         // Compare results
         let freq_consistency = calculate_frequency_agreement(&freqs_seq, &freqs_par, 1e-12);
@@ -4835,8 +4836,8 @@ pub struct ParallelConsistencyResult {
 // Helper functions for validation
 
 #[allow(dead_code)]
-fn calculate_frequency_agreement(_freqs1: &[f64], freqs2: &[f64], tolerance: f64) -> f64 {
-    let min_len = _freqs1.len().min(freqs2.len());
+fn calculate_frequency_agreement(freqs1: &[f64], freqs2: &[f64], tolerance: f64) -> f64 {
+    let min_len = freqs1.len().min(freqs2.len());
     let mut agreements = 0;
 
     for i in 0..min_len {
@@ -4879,7 +4880,7 @@ fn calculate_power_agreement(
 }
 
 #[allow(dead_code)]
-fn interpolate_power(_freq: f64, freqs: &[f64], power: &[f64]) -> Option<f64> {
+fn interpolate_power(freq: f64, freqs: &[f64], power: &[f64]) -> Option<f64> {
     // Simple linear interpolation
     for i in 0..freqs.len() - 1 {
         if freqs[i] <= _freq && _freq <= freqs[i + 1] {
@@ -4891,7 +4892,7 @@ fn interpolate_power(_freq: f64, freqs: &[f64], power: &[f64]) -> Option<f64> {
 }
 
 #[allow(dead_code)]
-fn test_normalization_methods(_time: &[f64], signal: &[f64], tolerance: f64) -> SignalResult<f64> {
+fn test_normalization_methods(time: &[f64], signal: &[f64], tolerance: f64) -> SignalResult<f64> {
     // Test different configurations and compare results
     let config_std = LombScargleConfig::default();
 
@@ -4900,8 +4901,8 @@ fn test_normalization_methods(_time: &[f64], signal: &[f64], tolerance: f64) -> 
         ..Default::default()
     };
 
-    let (_, power_std_) = lombscargle_enhanced(_time, signal, &config_std)?;
-    let (_, power_alt_) = lombscargle_enhanced(_time, signal, &config_alt)?;
+    let (_, power_std) = lombscargle_enhanced(_time, signal, &config_std)?;
+    let (_, power_alt) = lombscargle_enhanced(_time, signal, &config_alt)?;
 
     // Compare relative peak positions (should be consistent)
     let peaks_std = find_peak_indices(&power_std, 0.1)?;
@@ -4923,16 +4924,16 @@ fn test_normalization_methods(_time: &[f64], signal: &[f64], tolerance: f64) -> 
 }
 
 #[allow(dead_code)]
-fn count_threshold_peaks(_power: &[f64], significance_level: f64) -> usize {
+fn count_threshold_peaks(_power: &[f64], significancelevel: f64) -> usize {
     // Use a simple threshold based on the significance _level
-    let threshold = _power.iter().fold(0.0f64, |a, &b| a.max(b)) * significance_level;
-    _power.iter().filter(|&&p| p > threshold).count()
+    let threshold = power.iter().fold(0.0f64, |a, &b| a.max(b)) * significance_level;
+    power.iter().filter(|&&p| p > threshold).count()
 }
 
 #[allow(dead_code)]
-fn test_frequency_resolution_single(_fs: f64, n: usize) -> SignalResult<f64> {
+fn test_frequency_resolution_single(fs: f64, n: usize) -> SignalResult<f64> {
     // Generate two close frequencies and test if they can be resolved
-    let time: Vec<f64> = (0..n).map(|i| i as f64 / _fs).collect();
+    let time: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
     let f1 = _fs / 4.0;
     let f2 = f1 + _fs / (n as f64); // Frequency separation at theoretical limit
 
@@ -4966,7 +4967,7 @@ fn test_frequency_resolution_single(_fs: f64, n: usize) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn calculate_theoretical_resolution(_sampling_rates: &[f64], signal_lengths: &[usize]) -> Vec<f64> {
+fn calculate_theoretical_resolution(_sampling_rates: &[f64], signallengths: &[usize]) -> Vec<f64> {
     let mut resolutions = Vec::new();
     for &fs in _sampling_rates {
         for &n in signal_lengths {
@@ -4977,26 +4978,26 @@ fn calculate_theoretical_resolution(_sampling_rates: &[f64], signal_lengths: &[u
 }
 
 #[allow(dead_code)]
-fn calculate_empirical_resolution(_test_results: &[f64]) -> Vec<f64> {
-    _test_results.to_vec()
+fn calculate_empirical_resolution(_testresults: &[f64]) -> Vec<f64> {
+    test_results.to_vec()
 }
 
 #[allow(dead_code)]
-fn calculate_resolution_agreement(_theoretical: &[f64], empirical: &[f64]) -> f64 {
+fn calculate_resolution_agreement(theoretical: &[f64], empirical: &[f64]) -> f64 {
     let mut agreement_sum = 0.0;
-    for (theo, emp) in _theoretical.iter().zip(empirical.iter()) {
+    for (theo, emp) in theoretical.iter().zip(empirical.iter()) {
         let relative_error = (theo - emp).abs() / theo;
         if relative_error < 0.1 {
             agreement_sum += 1.0;
         }
     }
-    agreement_sum / _theoretical.len() as f64
+    agreement_sum / theoretical.len() as f64
 }
 
 #[allow(dead_code)]
-fn test_spectral_leakage(_fs: f64, n: usize) -> SignalResult<f64> {
+fn test_spectral_leakage(fs: f64, n: usize) -> SignalResult<f64> {
     // Test spectral leakage with a pure tone not at bin center
-    let time: Vec<f64> = (0..n).map(|i| i as f64 / _fs).collect();
+    let time: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
     let f_tone = _fs / 4.0 + _fs / (2.0 * n as f64); // Off-grid frequency
 
     let signal: Vec<f64> = time
@@ -5020,7 +5021,7 @@ fn test_spectral_leakage(_fs: f64, n: usize) -> SignalResult<f64> {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap_or(0);
 
     let peak_power = power[max_idx];
@@ -5030,7 +5031,7 @@ fn test_spectral_leakage(_fs: f64, n: usize) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn benchmark_signal_size(n: usize, num_iterations: usize) -> SignalResult<f64> {
+fn benchmark_signal_size(n: usize, numiterations: usize) -> SignalResult<f64> {
     let mut total_time = 0.0;
 
     for _ in 0..num_iterations {
@@ -5055,9 +5056,9 @@ fn benchmark_signal_size(n: usize, num_iterations: usize) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn estimate_complexity(_timing_results: &[(usize, f64)]) -> f64 {
+fn estimate_complexity(timingresults: &[(usize, f64)]) -> f64 {
     // Fit to N^alpha and return alpha
-    if _timing_results.len() < 2 {
+    if timing_results.len() < 2 {
         return 1.0;
     }
 
@@ -5074,9 +5075,9 @@ fn estimate_complexity(_timing_results: &[(usize, f64)]) -> f64 {
 }
 
 #[allow(dead_code)]
-fn calculate_scaling_efficiency(_timing_results: &[(usize, f64)]) -> f64 {
+fn calculate_scaling_efficiency(timingresults: &[(usize, f64)]) -> f64 {
     // Measure how close to ideal linear scaling
-    if _timing_results.len() < 2 {
+    if timing_results.len() < 2 {
         return 1.0;
     }
 
@@ -5088,23 +5089,23 @@ fn calculate_scaling_efficiency(_timing_results: &[(usize, f64)]) -> f64 {
 }
 
 #[allow(dead_code)]
-fn estimate_memory_scaling(_signal_sizes: &[usize]) -> SignalResult<f64> {
+fn estimate_memory_scaling(_signalsizes: &[usize]) -> SignalResult<f64> {
     // Estimate memory usage scaling (simplified)
     // For Lomb-Scargle, memory usage should be roughly O(N)
-    let min_size = _signal_sizes[0] as f64;
-    let max_size = _signal_sizes.last().unwrap_or(&_signal_sizes[0]) as f64;
+    let min_size = signal_sizes[0] as f64;
+    let max_size = signal_sizes.last().unwrap_or(&_signal_sizes[0]) as f64;
 
     // Assume linear memory scaling for now
     Ok(max_size / min_size)
 }
 
 #[allow(dead_code)]
-fn calculate_std_dev(_values: &[f64], mean: f64) -> f64 {
-    if _values.is_empty() {
+fn calculate_std_dev(values: &[f64], mean: f64) -> f64 {
+    if values.is_empty() {
         return 0.0;
     }
 
-    let variance = _values.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _values.len() as f64;
+    let variance = values.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / values.len() as f64;
 
     variance.sqrt()
 }
@@ -5412,10 +5413,10 @@ pub fn run_advanced_comprehensive_lombscargle_validation(
 
 /// Generate recommendations based on validation results
 #[allow(dead_code)]
-fn generate_lombscargle_recommendations(_component_scores: &[f64]) -> Vec<String> {
+fn generate_lombscargle_recommendations(componentscores: &[f64]) -> Vec<String> {
     let mut recommendations = Vec::new();
 
-    if _component_scores[0] < 80.0 {
+    if component_scores[0] < 80.0 {
         recommendations.push(
             "Base algorithm performance below optimal. Review core implementation.".to_string(),
         );
@@ -5456,7 +5457,7 @@ fn generate_lombscargle_recommendations(_component_scores: &[f64]) -> Vec<String
 
 /// Helper function to count significant peaks in power spectrum
 #[allow(dead_code)]
-fn count_significant_peaks(_freqs: &[f64], power: &[f64], threshold: f64) -> usize {
+fn count_significant_peaks(freqs: &[f64], power: &[f64], threshold: f64) -> usize {
     if power.len() < 3 {
         return 0;
     }

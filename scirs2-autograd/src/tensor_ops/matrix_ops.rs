@@ -335,9 +335,9 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for GeneralDeterminantOp {
 
 // Helper functions
 #[allow(dead_code)]
-fn compute_inverse<F: Float>(_matrix: &ndarray::ArrayView2<F>) -> Result<Array2<F>, OpError> {
-    let n = _matrix.shape()[0];
-    let mut a = _matrix.to_owned();
+fn compute_inverse<F: Float>(matrix: &ndarray::ArrayView2<F>) -> Result<Array2<F>, OpError> {
+    let n = matrix.shape()[0];
+    let mut a = matrix.to_owned();
     let mut inv = Array2::<F>::eye(n);
 
     // Gauss-Jordan elimination
@@ -390,28 +390,28 @@ fn compute_pseudo_inverse<F: Float>(
 ) -> Result<Array2<F>, OpError> {
     // Simplified pseudo-inverse using transpose
     // For a full implementation, use SVD
-    let m = _matrix.shape()[0];
-    let n = _matrix.shape()[1];
+    let m = matrix.shape()[0];
+    let n = matrix.shape()[1];
 
     if m >= n {
         // A^+ = (A^T A)^(-1) A^T
-        let at = _matrix.t();
+        let at = matrix.t();
         let ata = at.dot(_matrix);
         let ata_inv = compute_inverse(&ata.view())?;
         Ok(ata_inv.dot(&at))
     } else {
         // A^+ = A^T (A A^T)^(-1)
-        let at = _matrix.t();
-        let aat = _matrix.dot(&at);
+        let at = matrix.t();
+        let aat = matrix.dot(&at);
         let aat_inv = compute_inverse(&aat.view())?;
         Ok(at.dot(&aat_inv))
     }
 }
 
 #[allow(dead_code)]
-fn compute_determinant_lu<F: Float>(_matrix: &ndarray::ArrayView2<F>) -> Result<F, OpError> {
-    let n = _matrix.shape()[0];
-    let mut a = _matrix.to_owned();
+fn compute_determinant_lu<F: Float>(matrix: &ndarray::ArrayView2<F>) -> Result<F, OpError> {
+    let n = matrix.shape()[0];
+    let mut a = matrix.to_owned();
     let mut det = F::one();
     let mut swaps = 0;
 
@@ -745,11 +745,11 @@ fn solve_matrix_equation<F: Float>(
 
 /// Check if matrix is symmetric
 #[allow(dead_code)]
-fn is_symmetric_matrix<F: Float>(_matrix: &ndarray::ArrayView2<F>) -> bool {
-    let n = _matrix.shape()[0];
+fn is_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>) -> bool {
+    let n = matrix.shape()[0];
     for i in 0..n {
         for j in i + 1..n {
-            if (_matrix[[i, j]] - _matrix[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
+            if (_matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
                 return false;
             }
         }
@@ -824,8 +824,8 @@ fn compute_symmetric_eigen_simple<F: Float + ndarray::ScalarOperand + FromPrimit
 
 // Public API functions
 #[allow(dead_code)]
-pub fn matrix_inverse<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _matrix.graph();
+pub fn matrix_inverse<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = matrix.graph();
 
     // Get the shape tensor from the input
     let matrixshape = crate::tensor_ops::shape(_matrix);
@@ -838,8 +838,8 @@ pub fn matrix_inverse<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
 }
 
 #[allow(dead_code)]
-pub fn pseudo_inverse<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _matrix.graph();
+pub fn pseudo_inverse<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = matrix.graph();
 
     // Get the shape tensor from the input
     let matrixshape = crate::tensor_ops::shape(_matrix);
@@ -854,11 +854,11 @@ pub fn pseudo_inverse<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
 pub fn determinant<'g, F: Float + ndarray::ScalarOperand>(
     _matrix: &Tensor<'g, F>,
 ) -> Tensor<'g, F> {
-    let g = _matrix.graph();
+    let g = matrix.graph();
 
     // For determinant, we're creating a scalar output (0-dimensional tensor)
     // We'll use zeros(0) to create a scalar tensor shape
-    let scalarshape = crate::tensor__ops::zeros(&[0], g);
+    let scalarshape = crate::tensor_ops::zeros(&[0], g);
 
     Tensor::builder(g)
         .append_input(_matrix, false)

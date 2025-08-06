@@ -510,9 +510,9 @@ fn apply_dimensionality_reduction_3d<F: Float + FromPrimitive + Debug>(
 
 /// Apply PCA for 2D visualization
 #[allow(dead_code)]
-fn apply_pca_2d(_data: &Array2<f64>) -> Result<Array2<f64>> {
-    let n_samples = _data.nrows();
-    let n_features = _data.ncols();
+fn apply_pca_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
+    let n_samples = data.nrows();
+    let n_features = data.ncols();
 
     if n_features < 2 {
         return Err(ClusteringError::InvalidInput(
@@ -521,7 +521,7 @@ fn apply_pca_2d(_data: &Array2<f64>) -> Result<Array2<f64>> {
     }
 
     // Center the _data
-    let mean = _data.mean_axis(Axis(0)).unwrap();
+    let mean = data.mean_axis(Axis(0)).unwrap();
     let centered = _data - &mean;
 
     // Compute covariance matrix
@@ -538,9 +538,9 @@ fn apply_pca_2d(_data: &Array2<f64>) -> Result<Array2<f64>> {
 
 /// Apply PCA for 3D visualization
 #[allow(dead_code)]
-fn apply_pca_3d(_data: &Array2<f64>) -> Result<Array2<f64>> {
-    let n_samples = _data.nrows();
-    let n_features = _data.ncols();
+fn apply_pca_3d(data: &Array2<f64>) -> Result<Array2<f64>> {
+    let n_samples = data.nrows();
+    let n_features = data.ncols();
 
     if n_features < 3 {
         return Err(ClusteringError::InvalidInput(
@@ -549,7 +549,7 @@ fn apply_pca_3d(_data: &Array2<f64>) -> Result<Array2<f64>> {
     }
 
     // Center the _data
-    let mean = _data.mean_axis(Axis(0)).unwrap();
+    let mean = data.mean_axis(Axis(0)).unwrap();
     let centered = _data - &mean;
 
     // Compute covariance matrix
@@ -567,19 +567,19 @@ fn apply_pca_3d(_data: &Array2<f64>) -> Result<Array2<f64>> {
 /// Simplified implementation of other dimensionality reduction methods
 /// These would ideally use proper implementations from specialized libraries
 #[allow(dead_code)]
-fn apply_tsne_2d(_data: &Array2<f64>) -> Result<Array2<f64>> {
+fn apply_tsne_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
     // For now, fall back to PCA
     apply_pca_2d(_data)
 }
 
 #[allow(dead_code)]
-fn apply_umap_2d(_data: &Array2<f64>) -> Result<Array2<f64>> {
+fn apply_umap_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
     // For now, fall back to PCA
     apply_pca_2d(_data)
 }
 
 #[allow(dead_code)]
-fn apply_mds_2d(_data: &Array2<f64>) -> Result<Array2<f64>> {
+fn apply_mds_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
     // For now, fall back to PCA
     apply_pca_2d(_data)
 }
@@ -627,7 +627,7 @@ fn compute_top_eigenvectors(
 
 /// Generate cluster colors based on color scheme
 #[allow(dead_code)]
-fn generate_cluster_colors(_labels: &[i32], scheme: ColorScheme) -> HashMap<i32, String> {
+fn generate_cluster_colors(labels: &[i32], scheme: ColorScheme) -> HashMap<i32, String> {
     let mut colors = HashMap::new();
 
     let color_palette = match scheme {
@@ -655,7 +655,7 @@ fn generate_cluster_colors(_labels: &[i32], scheme: ColorScheme) -> HashMap<i32,
         ColorScheme::Custom => vec!["#333333"], // Placeholder
     };
 
-    for (i, &label) in _labels.iter().enumerate() {
+    for (i, &label) in labels.iter().enumerate() {
         if !colors.contains_key(&label) {
             let color_index = i % color_palette.len();
             colors.insert(label, color_palette[color_index].to_string());
@@ -667,17 +667,17 @@ fn generate_cluster_colors(_labels: &[i32], scheme: ColorScheme) -> HashMap<i32,
 
 /// Calculate 2D plot bounds
 #[allow(dead_code)]
-fn calculate_2d_bounds(_data: &Array2<f64>) -> (f64, f64, f64, f64) {
-    if _data.is_empty() {
+fn calculate_2d_bounds(data: &Array2<f64>) -> (f64, f64, f64, f64) {
+    if data.is_empty() {
         return (0.0, 1.0, 0.0, 1.0);
     }
 
-    let x_min = _data.column(0).iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let x_min = data.column(0).iter().fold(f64::INFINITY, |a, &b| a.min(b));
     let x_max = _data
         .column(0)
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-    let y_min = _data.column(1).iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let y_min = data.column(1).iter().fold(f64::INFINITY, |a, &b| a.min(b));
     let y_max = _data
         .column(1)
         .iter()
@@ -698,22 +698,22 @@ fn calculate_2d_bounds(_data: &Array2<f64>) -> (f64, f64, f64, f64) {
 
 /// Calculate 3D plot bounds
 #[allow(dead_code)]
-fn calculate_3d_bounds(_data: &Array2<f64>) -> (f64, f64, f64, f64, f64, f64) {
-    if _data.is_empty() {
+fn calculate_3d_bounds(data: &Array2<f64>) -> (f64, f64, f64, f64, f64, f64) {
+    if data.is_empty() {
         return (0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
     }
 
-    let x_min = _data.column(0).iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let x_min = data.column(0).iter().fold(f64::INFINITY, |a, &b| a.min(b));
     let x_max = _data
         .column(0)
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-    let y_min = _data.column(1).iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let y_min = data.column(1).iter().fold(f64::INFINITY, |a, &b| a.min(b));
     let y_max = _data
         .column(1)
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-    let z_min = _data.column(2).iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let z_min = data.column(2).iter().fold(f64::INFINITY, |a, &b| a.min(b));
     let z_max = _data
         .column(2)
         .iter()

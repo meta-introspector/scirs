@@ -75,8 +75,8 @@ pub fn plot_dendrogram<P: AsRef<Path>>(
     let _path = output_path.as_ref();
 
     match output_config.format {
-        PlotFormat::PNG => plot_dendrogram_png(dendrogram_plot, _path, output_config),
-        PlotFormat::SVG => plot_dendrogram_svg(dendrogram_plot, _path, output_config),
+        PlotFormat::PNG => plot_dendrogram_png(dendrogram_plot, path, output_config),
+        PlotFormat::SVG => plot_dendrogram_svg(dendrogram_plot, path, output_config),
         _ => Err(ClusteringError::ComputationError(
             "Unsupported output format for plotters dendrogram".to_string(),
         )),
@@ -92,7 +92,7 @@ fn plot_dendrogram_png<P: AsRef<Path>>(
 ) -> Result<()> {
     let root = BitMapBackend::new(&output_path, output_config.dimensions).into_drawing_area();
     root.fill(&WHITE).map_err(|e| {
-        ClusteringError::ComputationError(format!("Failed to initialize _plot: {}", e))
+        ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e))
     })?;
 
     let bounds = dendrogram_plot.bounds;
@@ -162,7 +162,7 @@ fn plot_dendrogram_png<P: AsRef<Path>>(
     }
 
     root.present()
-        .map_err(|e| ClusteringError::ComputationError(format!("Failed to save _plot: {}", e)))?;
+        .map_err(|e| ClusteringError::ComputationError(format!("Failed to save plot: {}", e)))?;
 
     Ok(())
 }
@@ -176,7 +176,7 @@ fn plot_dendrogram_svg<P: AsRef<Path>>(
 ) -> Result<()> {
     let root = SVGBackend::new(&output_path, output_config.dimensions).into_drawing_area();
     root.fill(&WHITE).map_err(|e| {
-        ClusteringError::ComputationError(format!("Failed to initialize _plot: {}", e))
+        ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e))
     })?;
 
     let bounds = dendrogram_plot.bounds;
@@ -246,7 +246,7 @@ fn plot_dendrogram_svg<P: AsRef<Path>>(
     }
 
     root.present()
-        .map_err(|e| ClusteringError::ComputationError(format!("Failed to save _plot: {}", e)))?;
+        .map_err(|e| ClusteringError::ComputationError(format!("Failed to save plot: {}", e)))?;
 
     Ok(())
 }
@@ -262,8 +262,8 @@ pub fn plot_scatter_2d<P: AsRef<Path>>(
     let _path = output_path.as_ref();
 
     match output_config.format {
-        PlotFormat::PNG => plot_scatter_2d_png(scatter_plot, _path, output_config),
-        PlotFormat::SVG => plot_scatter_2d_svg(scatter_plot, _path, output_config),
+        PlotFormat::PNG => plot_scatter_2d_png(scatter_plot, path, output_config),
+        PlotFormat::SVG => plot_scatter_2d_svg(scatter_plot, path, output_config),
         _ => Err(ClusteringError::ComputationError(
             "Unsupported output format for plotters backend".to_string(),
         )),
@@ -279,7 +279,7 @@ fn plot_scatter_2d_png<P: AsRef<Path>>(
 ) -> Result<()> {
     let root = BitMapBackend::new(&output_path, output_config.dimensions).into_drawing_area();
     root.fill(&WHITE).map_err(|e| {
-        ClusteringError::ComputationError(format!("Failed to initialize _plot: {}", e))
+        ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e))
     })?;
 
     let (min_x, max_x, min_y, max_y) = scatter_plot.bounds;
@@ -348,7 +348,7 @@ fn plot_scatter_2d_png<P: AsRef<Path>>(
     }
 
     root.present()
-        .map_err(|e| ClusteringError::ComputationError(format!("Failed to save _plot: {}", e)))?;
+        .map_err(|e| ClusteringError::ComputationError(format!("Failed to save plot: {}", e)))?;
 
     Ok(())
 }
@@ -362,7 +362,7 @@ fn plot_scatter_2d_svg<P: AsRef<Path>>(
 ) -> Result<()> {
     let root = SVGBackend::new(&output_path, output_config.dimensions).into_drawing_area();
     root.fill(&WHITE).map_err(|e| {
-        ClusteringError::ComputationError(format!("Failed to initialize _plot: {}", e))
+        ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e))
     })?;
 
     let (min_x, max_x, min_y, max_y) = scatter_plot.bounds;
@@ -431,7 +431,7 @@ fn plot_scatter_2d_svg<P: AsRef<Path>>(
     }
 
     root.present()
-        .map_err(|e| ClusteringError::ComputationError(format!("Failed to save _plot: {}", e)))?;
+        .map_err(|e| ClusteringError::ComputationError(format!("Failed to save plot: {}", e)))?;
 
     Ok(())
 }
@@ -473,7 +473,7 @@ impl Default for InteractiveClusteringApp {
 #[cfg(feature = "egui")]
 impl InteractiveClusteringApp {
     /// Create new interactive app with data
-    pub fn new(_scatter_plot: ScatterPlot2D) -> Self {
+    pub fn new(_scatterplot: ScatterPlot2D) -> Self {
         Self {
             scatter_plot_2d: Some(_scatter_plot),
             ..Default::default()
@@ -481,7 +481,7 @@ impl InteractiveClusteringApp {
     }
 
     /// Update the scatter plot data
-    pub fn set_data(&mut self, scatter_plot: ScatterPlot2D) {
+    pub fn set_data(&mut self, scatterplot: ScatterPlot2D) {
         self.scatter_plot_2d = Some(scatter_plot);
     }
 }
@@ -644,8 +644,8 @@ impl InteractiveClusteringApp {
 
 /// Utility function to parse hex color to RGB
 #[allow(dead_code)]
-fn parse_hex_color(_hex: &str) -> Option<[u8; 3]> {
-    if _hex.len() != 7 || !_hex.starts_with('#') {
+fn parse_hex_color(hex: &str) -> Option<[u8; 3]> {
+    if hex.len() != 7 || !_hex.starts_with('#') {
         return None;
     }
 
@@ -658,7 +658,7 @@ fn parse_hex_color(_hex: &str) -> Option<[u8; 3]> {
 
 #[cfg(feature = "plotters")]
 #[allow(dead_code)]
-fn parse_hex_color_plotters(_hex: &str) -> Option<RGBColor> {
+fn parse_hex_color_plotters(hex: &str) -> Option<RGBColor> {
     let rgb = parse_hex_color(_hex)?;
     Some(RGBColor(rgb[0], rgb[1], rgb[2]))
 }
@@ -704,8 +704,8 @@ pub fn plot_scatter_3d<P: AsRef<Path>>(
     let _path = output_path.as_ref();
 
     match output_config.format {
-        PlotFormat::PNG => plot_scatter_3d_png(scatter_plot, _path, output_config),
-        PlotFormat::SVG => plot_scatter_3d_svg(scatter_plot, _path, output_config),
+        PlotFormat::PNG => plot_scatter_3d_png(scatter_plot, path, output_config),
+        PlotFormat::SVG => plot_scatter_3d_svg(scatter_plot, path, output_config),
         _ => Err(ClusteringError::ComputationError(
             "Unsupported output format for 3D plotters backend".to_string(),
         )),
@@ -724,7 +724,7 @@ fn plot_scatter_3d_png<P: AsRef<Path>>(
 
     let root = BitMapBackend::new(&output_path, output_config.dimensions).into_drawing_area();
     root.fill(&WHITE).map_err(|e| {
-        ClusteringError::ComputationError(format!("Failed to initialize _plot: {}", e))
+        ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e))
     })?;
 
     let (min_x, max_x, min_y, max_y, min_z, max_z) = scatter_plot.bounds;
@@ -803,7 +803,7 @@ fn plot_scatter_3d_png<P: AsRef<Path>>(
     }
 
     root.present().map_err(|e| {
-        ClusteringError::ComputationError(format!("Failed to save 3D _plot: {}", e))
+        ClusteringError::ComputationError(format!("Failed to save 3D plot: {}", e))
     })?;
 
     Ok(())
@@ -821,7 +821,7 @@ fn plot_scatter_3d_svg<P: AsRef<Path>>(
 
     let root = SVGBackend::new(&output_path, output_config.dimensions).into_drawing_area();
     root.fill(&WHITE).map_err(|e| {
-        ClusteringError::ComputationError(format!("Failed to initialize _plot: {}", e))
+        ClusteringError::ComputationError(format!("Failed to initialize plot: {}", e))
     })?;
 
     let (min_x, max_x, min_y, max_y, min_z, max_z) = scatter_plot.bounds;
@@ -900,7 +900,7 @@ fn plot_scatter_3d_svg<P: AsRef<Path>>(
     }
 
     root.present().map_err(|e| {
-        ClusteringError::ComputationError(format!("Failed to save 3D _plot: {}", e))
+        ClusteringError::ComputationError(format!("Failed to save 3D plot: {}", e))
     })?;
 
     Ok(())
@@ -916,7 +916,7 @@ pub fn save_clustering_plot<P: AsRef<Path>>(
     config: Option<&VisualizationConfig>,
     output_config: Option<&PlotOutput>,
 ) -> Result<()> {
-    let vis_config = _config.unwrap_or(&VisualizationConfig::default());
+    let vis_config = config.unwrap_or(&VisualizationConfig::default());
     let out_config = output_config.unwrap_or(&PlotOutput::default());
 
     // Create scatter plot data
@@ -948,7 +948,7 @@ pub fn save_clustering_plot_3d<P: AsRef<Path>>(
     config: Option<&VisualizationConfig>,
     output_config: Option<&PlotOutput>,
 ) -> Result<()> {
-    let vis_config = _config.unwrap_or(&VisualizationConfig::default());
+    let vis_config = config.unwrap_or(&VisualizationConfig::default());
     let out_config = output_config.unwrap_or(&PlotOutput::default());
 
     // Create 3D scatter plot data

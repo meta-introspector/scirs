@@ -100,7 +100,7 @@ impl SystemResources {
     }
 
     /// Get optimal chunk size based on cache size
-    pub fn optimal_chunk_size(&self, element_size: usize) -> usize {
+    pub fn optimal_chunk_size(&self, elementsize: usize) -> usize {
         // Target 50% of L3 cache
         let target_bytes = (self.l3_cache_kb * 1024) / 2;
         (target_bytes / element_size).max(1000) // At least 1000 elements
@@ -131,16 +131,16 @@ pub struct DataCharacteristics {
 
 impl DataCharacteristics {
     /// Analyze data characteristics from array view
-    pub fn analyze(_data: &ndarray::ArrayView2<f64>) -> Result<Self> {
-        let (n_samples, n_features) = _data.dim();
+    pub fn analyze(data: &ndarray::ArrayView2<f64>) -> Result<Self> {
+        let (n_samples, n_features) = data.dim();
 
         if n_samples == 0 || n_features == 0 {
             return Err(TransformError::InvalidInput("Empty _data".to_string()));
         }
 
         // Calculate sparsity
-        let zeros = _data.iter().filter(|&&x| x == 0.0).count();
-        let sparsity = zeros as f64 / _data.len() as f64;
+        let zeros = data.iter().filter(|&&x| x == 0.0).count();
+        let sparsity = zeros as f64 / data.len() as f64;
 
         // Calculate _data range
         let mut min_val = f64::INFINITY;
@@ -148,7 +148,7 @@ impl DataCharacteristics {
         let mut finite_count = 0;
         let mut missing_count = 0;
 
-        for &val in _data.iter() {
+        for &val in data.iter() {
             if val.is_finite() {
                 min_val = min_val.min(val);
                 max_val = max_val.max(val);
@@ -167,7 +167,7 @@ impl DataCharacteristics {
 
         // Estimate outlier ratio using IQR method (simplified)
         let outlier_ratio = if n_samples > 10 {
-            let mut sample_values: Vec<f64> = _data.iter()
+            let mut sample_values: Vec<f64> = data.iter()
                 .filter(|&&x| x.is_finite())
                 .take(1000) // Sample for efficiency
                 .copied()
@@ -260,16 +260,16 @@ pub struct OptimizationConfig {
 
 impl OptimizationConfig {
     /// Create optimization config for standardization
-    pub fn for_standardization(_data_chars: &DataCharacteristics, system: &SystemResources) -> Self {
-        let use_robust = _data_chars.has_outliers();
-        let use_parallel = _data_chars.n_samples > 10_000 && system.cpu_cores > 1;
-        let use_simd = system.has_simd && _data_chars.n_features > 100;
-        let use_gpu = system.has_gpu && _data_chars.memory_footprint_mb > 100.0;
+    pub fn for_standardization(datachars: &DataCharacteristics, system: &SystemResources) -> Self {
+        let use_robust = data_chars.has_outliers();
+        let use_parallel = data_chars.n_samples > 10_000 && system.cpu_cores > 1;
+        let use_simd = system.has_simd && data_chars.n_features > 100;
+        let use_gpu = system.has_gpu && data_chars.memory_footprint_mb > 100.0;
 
-        let processing_strategy = if _data_chars.memory_footprint_mb > system.safe_memory_mb() as f64
+        let processing_strategy = if data_chars.memory_footprint_mb > system.safe_memory_mb() as f64
         {
             ProcessingStrategy::OutOfCore {
-                chunk_size: system.optimal_chunk_size(_data_chars.element_size),
+                chunk_size: system.optimal_chunk_size(data_chars.element_size),
             }
         } else if use_parallel {
             ProcessingStrategy::Parallel
@@ -399,7 +399,7 @@ impl OptimizationConfig {
     }
 
     /// Estimate number of polynomial features
-    fn estimate_polynomial_features(_n_features: usize, degree: usize) -> Result<usize> {
+    fn estimate_polynomial_features(nfeatures: usize, degree: usize) -> Result<usize> {
         if degree == 0 {
             return Err(TransformError::InvalidInput(
                 "Degree must be at least 1".to_string(),
@@ -581,7 +581,7 @@ impl AutoTuner {
     }
 
     /// Generate optimization report
-    pub fn generate_report(&self, data_chars: &DataCharacteristics) -> OptimizationReport {
+    pub fn generate_report(&self, datachars: &DataCharacteristics) -> OptimizationReport {
         let recommendations = vec![
             self.get_recommendation_for_transformation("standardization", data_chars),
             self.get_recommendation_for_transformation("pca", data_chars),
@@ -1029,7 +1029,9 @@ impl ConfigurationPredictor {
     /// Predict optimal configuration using ML model
     pub fn predict_optimal_config(
         &self,
-        state: &str, _transformation_type: &str, _user_params: &HashMap<String, f64>,
+        state: &str,
+        _transformation_type: &str,
+        _user_params: &HashMap<String, f64>,
     ) -> Result<OptimizationConfig> {
         // Extract features from state
         let features = self.extract_features(state)?;
@@ -1099,7 +1101,7 @@ impl ConfigurationPredictor {
     }
 
     /// Update model from performance feedback
-    pub fn update_from_feedback(&mut self_performance: &PerformanceMetric) -> Result<()> {
+    pub fn update_from_feedback(&mut self, performance: &PerformanceMetric) -> Result<()> {
         self.sample_count += 1;
         // In practice, this would update model weights based on _performance
         Ok(())
@@ -1107,7 +1109,8 @@ impl ConfigurationPredictor {
 
     /// Retrain model with historical data
     pub fn retrain_with_history(
-        &mut self_history: &HashMap<String, Vec<PerformanceMetric>>,
+        &mut self,
+        history: &HashMap<String, Vec<PerformanceMetric>>,
     ) -> Result<()> {
         // In practice, this would perform full model retraining
         self.confidence_threshold = (self.confidence_threshold + 0.01).min(0.95);
@@ -1137,12 +1140,13 @@ impl AdaptiveParameterTuner {
     pub fn tune_parameters(
         &mut self,
         mut config: OptimizationConfig,
-        state: &str, _transformation_type: &str,
+        state: &str,
+        _transformation_type: &str,
     ) -> Result<OptimizationConfig> {
         self.current_state = state.to_string();
 
         // Apply epsilon-greedy policy for parameter exploration
-        if rand::rng().random_range(0.0..1.0) < self.exploration_rate {
+        if rand::rng().gen_range(0.0..1.0) < self.exploration_rate {
             // Explore: randomly adjust parameters
             config = self.explore_parameters(config)?;
         } else {
@@ -1158,16 +1162,16 @@ impl AdaptiveParameterTuner {
         let mut rng = rand::rng();
 
         // Randomly adjust memory limit (±20%)
-        let memory_factor = rng.random_range(0.8..1.2);
+        let memory_factor = rng.gen_range(0.8..1.2);
         config.memory_limit_mb = (config.memory_limit_mb as f64 * memory_factor) as usize;
 
         // Randomly toggle parallelism
-        if rng.random_range(0.0..1.0) < 0.3 {
+        if rng.gen_range(0.0..1.0) < 0.3 {
             config.use_parallel = !config.use_parallel;
         }
 
         // Randomly adjust chunk size (±50%)
-        let chunk_factor = rng.random_range(0.5..1.5);
+        let chunk_factor = rng.gen_range(0.5..1.5);
         config.chunk_size = (config.chunk_size as f64 * chunk_factor) as usize;
 
         Ok(config)
@@ -1177,7 +1181,8 @@ impl AdaptiveParameterTuner {
     fn exploit_best_parameters(
         &self,
         config: OptimizationConfig,
-        state: &str,) -> Result<OptimizationConfig> {
+        state: &str,
+    ) -> Result<OptimizationConfig> {
         // Find best action for current state from Q-table
         let _best_action = self.find_best_action(state);
 
@@ -1202,7 +1207,7 @@ impl AdaptiveParameterTuner {
     }
 
     /// Update Q-values based on reward
-    pub fn update_q_values(&mut self_config_hash: u64, reward: f64) -> Result<()> {
+    pub fn update_q_values(&mut self, confighash: u64, reward: f64) -> Result<()> {
         let state_action = (self.current_state.clone(), "current_action".to_string());
 
         // Q-learning update rule
@@ -1235,8 +1240,7 @@ mod tests {
 
     #[test]
     fn test_data_characteristics_analysis() {
-        let data =
-            Array2::fromshape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::fromshape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
         let chars = DataCharacteristics::analyze(&data.view()).unwrap();
 
         assert_eq!(chars.n_samples, 100);

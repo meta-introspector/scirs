@@ -176,11 +176,11 @@ pub fn read_csv<P: AsRef<Path>>(
 
 /// Parse a CSV line into fields
 #[allow(dead_code)]
-fn parse_csv_line(_line: &str, config: &CsvReaderConfig) -> Vec<String> {
+fn parse_csv_line(line: &str, config: &CsvReaderConfig) -> Vec<String> {
     let mut fields = Vec::new();
     let mut field = String::new();
     let mut in_quotes = false;
-    let mut chars = _line.chars().peekable();
+    let mut chars = line.chars().peekable();
 
     while let Some(c) = chars.next() {
         // Handle quotes
@@ -420,8 +420,8 @@ impl std::fmt::Display for DataValue {
 
 /// Automatically detect column types from data
 #[allow(dead_code)]
-pub fn detect_column_types(_data: &Array2<String>) -> Vec<ColumnType> {
-    let (rows, cols) = (_data.shape()[0], _data.shape()[1]);
+pub fn detect_column_types(data: &Array2<String>) -> Vec<ColumnType> {
+    let (rows, cols) = (_data.shape()[0], data.shape()[1]);
 
     // Default to String if we can't determine type
     if rows == 0 {
@@ -441,7 +441,7 @@ pub fn detect_column_types(_data: &Array2<String>) -> Vec<ColumnType> {
         let mut non_empty_rows = 0;
 
         for row in 0..rows {
-            let val = _data[[row, col]].trim();
+            let val = data[[row, col]].trim();
 
             // Skip empty values for type detection
             if val.is_empty() {
@@ -785,10 +785,10 @@ pub fn write_csv<P: AsRef<Path>, T: std::fmt::Display>(
 
 /// Format a row as a CSV line
 #[allow(dead_code)]
-fn format_csv_line(_fields: &[String], config: &CsvWriterConfig) -> String {
+fn format_csv_line(fields: &[String], config: &CsvWriterConfig) -> String {
     let mut result = String::new();
 
-    for (i, field) in _fields.iter().enumerate() {
+    for (i, field) in fields.iter().enumerate() {
         let need_quotes = config.always_quote
             || (config.quote_special
                 && (field.contains(config.delimiter)
@@ -814,7 +814,7 @@ fn format_csv_line(_fields: &[String], config: &CsvWriterConfig) -> String {
         }
 
         // Add delimiter if not the last field
-        if i < _fields.len() - 1 {
+        if i < fields.len() - 1 {
             result.push(config.delimiter);
         }
     }
@@ -877,14 +877,14 @@ pub fn read_csv_typed<P: AsRef<Path>>(
     // Determine column _types if not provided
     let _types = match col_types {
         Some(_types) => {
-            if _types.len() != string_data.shape()[1] {
+            if types.len() != string_data.shape()[1] {
                 return Err(IoError::FormatError(format!(
                     "Number of column _types ({}) does not match data width ({})",
-                    _types.len(),
+                    types.len(),
                     string_data.shape()[1]
                 )));
             }
-            _types.to_vec()
+            types.to_vec()
         }
         None => detect_column_types(&string_data),
     };
@@ -898,7 +898,7 @@ pub fn read_csv_typed<P: AsRef<Path>>(
         let mut row = Vec::with_capacity(string_data.shape()[1]);
 
         for j in 0..string_data.shape()[1] {
-            let value = convert_value(&string_data[[i, j]], _types[j], &missing_opts)?;
+            let value = convert_value(&string_data[[i, j]], types[j], &missing_opts)?;
             row.push(value);
         }
 
@@ -1294,9 +1294,9 @@ pub struct StreamingCsvReader<R: BufRead> {
 
 impl<R: BufRead> StreamingCsvReader<R> {
     /// Create a new streaming CSV reader
-    pub fn new(_reader: R, config: StreamingCsvConfig) -> Result<Self> {
-        let mut _reader = Self {
-            reader: _reader,
+    pub fn new(reader: R, config: StreamingCsvConfig) -> Result<Self> {
+        let mut reader = Self {
+            reader: reader,
             config,
             headers: None,
             current_line: 0,
@@ -1305,8 +1305,8 @@ impl<R: BufRead> StreamingCsvReader<R> {
         };
 
         // Read headers if configured
-        if _reader.config.csv_config.has_header {
-            _reader.read_headers()?;
+        if reader.config.csv_config.has_header {
+            reader.read_headers()?;
         }
 
         Ok(_reader)
@@ -1712,8 +1712,8 @@ pub struct ColumnStats {
 
 impl ColumnStats {
     /// Create column statistics from a vector of values
-    fn from_values(_values: &[f64], non_numeric_count: usize) -> Self {
-        if _values.is_empty() {
+    fn from_values(_values: &[f64], non_numericcount: usize) -> Self {
+        if values.is_empty() {
             return Self {
                 column_index: 0,
                 total_count: non_numeric_count,
@@ -1725,17 +1725,17 @@ impl ColumnStats {
             };
         }
 
-        let min_val = _values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        let max_val = _values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        let mean = _values.iter().sum::<f64>() / _values.len() as f64;
+        let min_val = values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let mean = values.iter().sum::<f64>() / values.len() as f64;
 
         let variance =
-            _values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / _values.len() as f64;
+            values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / values.len() as f64;
         let std_dev = variance.sqrt();
 
         Self {
             column_index: 0,
-            total_count: _values.len() + non_numeric_count,
+            total_count: values.len() + non_numeric_count,
             non_numeric_count,
             min_value: Some(min_val),
             max_value: Some(max_val),

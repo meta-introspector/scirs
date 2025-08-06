@@ -110,14 +110,14 @@ fn main() {
 
 // Generate linearly spaced points
 #[allow(dead_code)]
-fn linspace(_start: f64, end: f64, num: usize) -> Vec<f64> {
-    let step = (end - _start) / (num - 1) as f64;
+fn linspace(start: f64, end: f64, num: usize) -> Vec<f64> {
+    let step = (end - start) / (num - 1) as f64;
     (0..num).map(|i| _start + i as f64 * step).collect()
 }
 
 // Generate a test signal with multiple frequency components
 #[allow(dead_code)]
-fn generate_test_signal(_time: &[f64]) -> Vec<f64> {
+fn generate_test_signal(time: &[f64]) -> Vec<f64> {
     let mut signal = Vec::with_capacity(_time.len());
 
     for &t in _time {
@@ -137,7 +137,7 @@ fn generate_test_signal(_time: &[f64]) -> Vec<f64> {
 
 // Generate a larger signal for performance testing
 #[allow(dead_code)]
-fn generate_large_signal(_size: usize) -> Vec<f64> {
+fn generate_large_signal(size: usize) -> Vec<f64> {
     let mut signal = Vec::with_capacity(_size);
 
     for i in 0.._size {
@@ -161,7 +161,7 @@ fn generate_large_signal(_size: usize) -> Vec<f64> {
 
 // Generate normally distributed random numbers using Box-Muller transform
 #[allow(dead_code)]
-fn rand_normal(_mean: f64, stddev: f64) -> f64 {
+fn rand_normal(mean: f64, stddev: f64) -> f64 {
     let x: f64 = rand::random::<f64>();
     let y: f64 = rand::random::<f64>();
 
@@ -171,9 +171,9 @@ fn rand_normal(_mean: f64, stddev: f64) -> f64 {
 
 // Perform spectral analysis on the signal
 #[allow(dead_code)]
-fn spectral_analysis(_signal: &[f64], sample_rate: f64) -> (Vec<f64>, Vec<f64>) {
+fn spectral_analysis(_signal: &[f64], samplerate: f64) -> (Vec<f64>, Vec<f64>) {
     // Apply a window function to reduce spectral leakage
-    let window_func = window::get_window(window::Window::Hann, _signal.len(), true).unwrap();
+    let window_func = window::get_window(window::Window::Hann, signal.len(), true).unwrap();
 
     let windowed_signal: Vec<f64> = _signal
         .iter()
@@ -191,7 +191,7 @@ fn spectral_analysis(_signal: &[f64], sample_rate: f64) -> (Vec<f64>, Vec<f64>) 
     let mut shifted_freqs = vec![0.0; freqs.len()];
     let mut shifted_spectrum = vec![Complex64::new(0.0, 0.0); spectrum.len()];
 
-    let half_len = _signal.len() / 2;
+    let half_len = signal.len() / 2;
     for i in 0..half_len {
         shifted_freqs[i] = freqs[i + half_len];
         shifted_freqs[i + half_len] = freqs[i];
@@ -201,7 +201,7 @@ fn spectral_analysis(_signal: &[f64], sample_rate: f64) -> (Vec<f64>, Vec<f64>) 
     }
 
     // If odd length, handle the middle element
-    if _signal.len() % 2 == 1 {
+    if signal.len() % 2 == 1 {
         shifted_freqs[half_len] = freqs[0];
         shifted_spectrum[half_len] = spectrum[0];
     }
@@ -209,7 +209,7 @@ fn spectral_analysis(_signal: &[f64], sample_rate: f64) -> (Vec<f64>, Vec<f64>) 
     // Calculate power spectrum (magnitude squared)
     let power_spectrum: Vec<f64> = shifted_spectrum
         .iter()
-        .map(|c| (c.re * c.re + c.im * c.im) / _signal.len() as f64)
+        .map(|c| (c.re * c.re + c.im * c.im) / signal.len() as f64)
         .collect();
 
     (shifted_freqs, power_spectrum)
@@ -217,7 +217,7 @@ fn spectral_analysis(_signal: &[f64], sample_rate: f64) -> (Vec<f64>, Vec<f64>) 
 
 // Find peak frequencies in the power spectrum
 #[allow(dead_code)]
-fn find_peak_frequencies(_freqs: &[f64], power: &[f64], threshold_factor: f64) -> Vec<(f64, f64)> {
+fn find_peak_frequencies(_freqs: &[f64], power: &[f64], thresholdfactor: f64) -> Vec<(f64, f64)> {
     // Find maximum power value for threshold calculation
     let max_power = power.iter().fold(0.0f64, |a, &b| a.max(b));
     let threshold = max_power * threshold_factor;

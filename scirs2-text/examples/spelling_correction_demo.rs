@@ -301,7 +301,7 @@ fn text_correction_demo(
     println!("{TEXT_WITH_MISSPELLINGS}\n");
 
     // Correct the text
-    let correctedtext = _corrector.correcttext(TEXT_WITH_MISSPELLINGS)?;
+    let correctedtext = corrector.correcttext(TEXT_WITH_MISSPELLINGS)?;
 
     println!("Corrected text:");
     println!("{correctedtext}\n");

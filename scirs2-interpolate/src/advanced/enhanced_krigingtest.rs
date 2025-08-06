@@ -126,7 +126,7 @@ fn anisotropic_distance<F: Float + FromPrimitive>(
 }
 
 #[allow(dead_code)]
-fn covariance<F: Float + FromPrimitive>(r: F, anisotropic_cov: &AnisotropicCovariance<F>) -> F {
+fn covariance<F: Float + FromPrimitive>(r: F, anisotropiccov: &AnisotropicCovariance<F>) -> F {
     anisotropic_cov.sigma_sq
 }
 
@@ -193,7 +193,7 @@ where
         self
     }
 
-    pub fn covariance_function(mut self, cov_fn: CovarianceFunction) -> Self {
+    pub fn covariance_function(mut self, covfn: CovarianceFunction) -> Self {
         self.cov_fn = cov_fn;
         self
     }
@@ -210,13 +210,13 @@ where
 
     // FIX BEGINS HERE - These methods were previously outside the impl block
     /// Set the covariance function
-    pub fn with_covariance_function(mut self, cov_fn: CovarianceFunction) -> Self {
+    pub fn with_covariance_function(mut self, covfn: CovarianceFunction) -> Self {
         self.cov_fn = cov_fn;
         self
     }
 
     /// Set anisotropic length scales (one per dimension)
-    pub fn with_length_scales(mut self, length_scales: Array1<F>) -> Self {
+    pub fn with_length_scales(mut self, lengthscales: Array1<F>) -> Self {
         if length_scales.iter().any(|&l| l <= F::zero()) {
             panic!("Length _scales must be positive");
         }
@@ -225,7 +225,7 @@ where
     }
 
     /// Set a single isotropic length scale
-    pub fn with_length_scale(mut self, length_scale: F) -> Self {
+    pub fn with_length_scale(mut self, lengthscale: F) -> Self {
         if length_scale <= F::zero() {
             panic!("Length _scale must be positive");
         }
@@ -235,7 +235,7 @@ where
     }
 
     /// Set the signal variance
-    pub fn with_sigma_sq(mut self, sigma_sq: F) -> Self {
+    pub fn with_sigma_sq(mut self, sigmasq: F) -> Self {
         if sigma_sq <= F::zero() {
             panic!("Signal variance must be positive");
         }
@@ -259,13 +259,13 @@ where
     }
 
     /// Set extra parameters for specific covariance functions
-    pub fn with_extra_params(mut self, extra_params: F) -> Self {
+    pub fn with_extra_params(mut self, extraparams: F) -> Self {
         self.extra_params = extra_params;
         self
     }
 
     /// Set the trend function
-    pub fn with_trend_function(mut self, trend_fn: TrendFunction) -> Self {
+    pub fn with_trend_function(mut self, trendfn: TrendFunction) -> Self {
         self.trend_fn = trend_fn;
         self
     }
@@ -277,19 +277,19 @@ where
     }
 
     /// Set the number of posterior samples to generate
-    pub fn with_posterior_samples(mut self, n_samples: usize) -> Self {
+    pub fn with_posterior_samples(mut self, nsamples: usize) -> Self {
         self.n_samples = n_samples;
         self
     }
 
     /// Set whether to compute full posterior covariance
-    pub fn with_full_covariance(mut self, compute_full_covariance: bool) -> Self {
+    pub fn with_full_covariance(mut self, compute_fullcovariance: bool) -> Self {
         self.compute_full_covariance = compute_full_covariance;
         self
     }
 
     /// Set whether to use exact computation methods (slower but more accurate)
-    pub fn with_exact_computation(mut self, use_exact_computation: bool) -> Self {
+    pub fn with_exact_computation(mut self, use_exactcomputation: bool) -> Self {
         self.use_exact_computation = use_exact_computation;
         self
     }

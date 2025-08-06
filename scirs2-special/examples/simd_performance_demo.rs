@@ -60,7 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn benchmark_gamma_performance(_size: usize) -> Result<(), Box<dyn std::error::Error>> {
+fn benchmark_gamma_performance(size: usize) -> Result<(), Box<dyn std::error::Error>> {
     // Create test data
     let data_f32: Array1<f32> =
         Array1::from_vec((0.._size).map(|i| (i as f32) * 0.01 + 1.0).collect());
@@ -110,7 +110,7 @@ fn benchmark_gamma_performance(_size: usize) -> Result<(), Box<dyn std::error::E
 }
 
 #[allow(dead_code)]
-fn benchmark_j0_performance(_size: usize) -> Result<(), Box<dyn std::error::Error>> {
+fn benchmark_j0_performance(size: usize) -> Result<(), Box<dyn std::error::Error>> {
     // Create test data
     let data_f32: Array1<f32> = Array1::from_vec((0.._size).map(|i| (i as f32) * 0.1).collect());
 

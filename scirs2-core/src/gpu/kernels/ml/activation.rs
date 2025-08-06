@@ -27,7 +27,7 @@ impl ReluKernel {
             workgroup_size: [256, 1, 1],
             local_memory_usage: 0,
             supports_tensor_cores: false,
-            operation_type: OperationType::MemoryIntensive,
+            operationtype: OperationType::MemoryIntensive,
             backend_metadata: HashMap::new(),
         };
 
@@ -128,7 +128,7 @@ impl GpuKernel for ReluKernel {
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
         matches!(
-            params.data_type,
+            params.datatype,
             DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16
         )
     }
@@ -161,7 +161,7 @@ impl SigmoidKernel {
             workgroup_size: [256, 1, 1],
             local_memory_usage: 0,
             supports_tensor_cores: false,
-            operation_type: OperationType::ComputeIntensive,
+            operationtype: OperationType::ComputeIntensive,
             backend_metadata: HashMap::new(),
         };
 
@@ -262,7 +262,7 @@ impl GpuKernel for SigmoidKernel {
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
         matches!(
-            params.data_type,
+            params.datatype,
             DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16
         )
     }
@@ -295,7 +295,7 @@ impl TanhKernel {
             workgroup_size: [256, 1, 1],
             local_memory_usage: 0,
             supports_tensor_cores: false,
-            operation_type: OperationType::ComputeIntensive,
+            operationtype: OperationType::ComputeIntensive,
             backend_metadata: HashMap::new(),
         };
 
@@ -396,7 +396,7 @@ impl GpuKernel for TanhKernel {
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
         matches!(
-            params.data_type,
+            params.datatype,
             DataType::Float32 | DataType::Float64 | DataType::Float16 | DataType::BFloat16
         )
     }

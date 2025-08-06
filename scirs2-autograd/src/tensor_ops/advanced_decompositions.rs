@@ -32,7 +32,7 @@ impl<F: Float> Op<F> for SVDJacobiExtractOp {
         }
     }
 
-    fn compute(&self_ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
+    fn compute(selfctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         // This is a placeholder - the actual extraction happens in the parent op
         Err(OpError::Other(
             "SVD extraction should be handled by parent op".into(),
@@ -103,7 +103,7 @@ impl<F: Float> Op<F> for RandomizedSVDExtractOp {
         }
     }
 
-    fn compute(&self_ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
+    fn compute(selfctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         Err(OpError::Other(
             "Randomized SVD extraction should be handled by parent op".into(),
         ))
@@ -165,7 +165,7 @@ impl<F: Float> Op<F> for GeneralizedEigenExtractOp {
         }
     }
 
-    fn compute(&self_ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
+    fn compute(selfctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         Err(OpError::Other(
             "Generalized eigen extraction should be handled by parent op".into(),
         ))
@@ -238,7 +238,7 @@ impl<F: Float> Op<F> for QRPivotExtractOp {
         }
     }
 
-    fn compute(&self_ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
+    fn compute(selfctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         Err(OpError::Other(
             "QR pivot extraction should be handled by parent op".into(),
         ))
@@ -658,24 +658,24 @@ fn compute_givens_rotation<F: Float>(a: F, b: F, c: F) -> (F, F) {
 }
 
 #[allow(dead_code)]
-fn apply_givens_left<F: Float>(_matrix: &mut Array2<F>, i: usize, j: usize, cos: F, sin: F) {
-    let n = _matrix.shape()[1];
+fn apply_givens_left<F: Float>(matrix: &mut Array2<F>, i: usize, j: usize, cos: F, sin: F) {
+    let n = matrix.shape()[1];
     for k in 0..n {
-        let ai = _matrix[[i, k]];
-        let aj = _matrix[[j, k]];
-        _matrix[[i, k]] = cos * ai - sin * aj;
-        _matrix[[j, k]] = sin * ai + cos * aj;
+        let ai = matrix[[i, k]];
+        let aj = matrix[[j, k]];
+        matrix[[i, k]] = cos * ai - sin * aj;
+        matrix[[j, k]] = sin * ai + cos * aj;
     }
 }
 
 #[allow(dead_code)]
-fn apply_givens_right<F: Float>(_matrix: &mut Array2<F>, i: usize, j: usize, cos: F, sin: F) {
-    let m = _matrix.shape()[0];
+fn apply_givens_right<F: Float>(matrix: &mut Array2<F>, i: usize, j: usize, cos: F, sin: F) {
+    let m = matrix.shape()[0];
     for k in 0..m {
-        let ai = _matrix[[k, i]];
-        let aj = _matrix[[k, j]];
-        _matrix[[k, i]] = cos * ai - sin * aj;
-        _matrix[[k, j]] = sin * ai + cos * aj;
+        let ai = matrix[[k, i]];
+        let aj = matrix[[k, j]];
+        matrix[[k, i]] = cos * ai - sin * aj;
+        matrix[[k, j]] = sin * ai + cos * aj;
     }
 }
 
@@ -713,8 +713,8 @@ fn orthogonalize_qr<F: Float + ndarray::ScalarOperand>(
 fn compute_matrix_inverse<F: Float>(
     _matrix: &ndarray::ArrayView2<F>,
 ) -> Result<Array2<F>, OpError> {
-    let n = _matrix.shape()[0];
-    let mut a = _matrix.to_owned();
+    let n = matrix.shape()[0];
+    let mut a = matrix.to_owned();
     let mut inv = Array2::<F>::eye(n);
 
     // Gauss-Jordan elimination

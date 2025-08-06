@@ -65,7 +65,7 @@ fn main() {
         capture_call_stacks: false,
         max_events: 100,
         real_time_aggregation: true,
-        sampling_rate: 0.75, // Only track 75% of events
+        samplingrate: 0.75, // Only track 75% of events
     };
 
     // Create a collector
@@ -73,7 +73,7 @@ fn main() {
 
     // Track array allocations for matrix operations
     println!("Creating and tracking matrices...");
-    simulate_matrix_operations(&collector);
+    simulatematrix_operations(&collector);
 
     // Get and print the report
     let report = collector.generate_report();
@@ -126,10 +126,10 @@ fn main() {
 // Simulate matrix operations with memory tracking
 #[cfg(feature = "memory_management")]
 #[allow(dead_code)]
-fn simulate_matrix_operations(_collector: &MemoryMetricsCollector) {
+fn simulatematrix_operations(collector: &MemoryMetricsCollector) {
     // Track memory for matrix A
     let matrix_a_size = 8 * 1024 * 1024; // 8MB
-    _collector.record_event(
+    collector.record_event(
         MemoryEvent::new(
             MemoryEventType::Allocation,
             "MatrixOperations",
@@ -144,7 +144,7 @@ fn simulate_matrix_operations(_collector: &MemoryMetricsCollector) {
 
     // Track memory for matrix B
     let matrix_b_size = 4 * 1024 * 1024; // 4MB
-    _collector.record_event(
+    collector.record_event(
         MemoryEvent::new(
             MemoryEventType::Allocation,
             "MatrixOperations",
@@ -162,7 +162,7 @@ fn simulate_matrix_operations(_collector: &MemoryMetricsCollector) {
 
     // Track memory for result matrix C
     let matrix_c_size = 12 * 1024 * 1024; // 12MB
-    _collector.record_event(
+    collector.record_event(
         MemoryEvent::new(
             MemoryEventType::Allocation,
             "MatrixOperations",
@@ -182,7 +182,7 @@ fn simulate_matrix_operations(_collector: &MemoryMetricsCollector) {
     thread::sleep(Duration::from_millis(200));
 
     // Deallocate temporary matrices
-    _collector.record_event(
+    collector.record_event(
         MemoryEvent::new(
             MemoryEventType::Deallocation,
             "MatrixOperations",
@@ -193,7 +193,7 @@ fn simulate_matrix_operations(_collector: &MemoryMetricsCollector) {
         .with_metadata("matrix", "A"),
     );
 
-    _collector.record_event(
+    collector.record_event(
         MemoryEvent::new(
             MemoryEventType::Deallocation,
             "MatrixOperations",

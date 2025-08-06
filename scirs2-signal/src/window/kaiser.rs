@@ -158,6 +158,7 @@ pub fn kaiser_bessel_derived(m: usize, beta: f64, sym: bool) -> SignalResult<Vec
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_kaiser_window() {

@@ -138,11 +138,11 @@ impl Rotation {
     /// let quat = array![std::f64::consts::FRAC_1_SQRT_2, std::f64::consts::FRAC_1_SQRT_2, 0.0, 0.0];
     /// let rot = Rotation::from_quat(&quat.view()).unwrap();
     /// ```
-    pub fn from_quat(_quat: &ArrayView1<f64>) -> SpatialResult<Self> {
-        if _quat.len() != 4 {
+    pub fn from_quat(quat: &ArrayView1<f64>) -> SpatialResult<Self> {
+        if quat.len() != 4 {
             return Err(SpatialError::DimensionError(format!(
                 "Quaternion must have 4 elements, got {}",
-                _quat.len()
+                quat.len()
             )));
         }
 
@@ -155,7 +155,7 @@ impl Rotation {
             ));
         }
 
-        let normalized_quat = _quat.to_owned() / norm;
+        let normalized_quat = quat.to_owned() / norm;
 
         Ok(Rotation {
             quat: normalized_quat,
@@ -186,21 +186,21 @@ impl Rotation {
     /// ];
     /// let rot = Rotation::from_matrix(&matrix.view()).unwrap();
     /// ```
-    pub fn from_matrix(_matrix: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
-        if _matrix.shape() != [3, 3] {
+    pub fn from_matrix(matrix: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
+        if matrix.shape() != [3, 3] {
             return Err(SpatialError::DimensionError(format!(
                 "Matrix must be 3x3, got {:?}",
-                _matrix.shape()
+                matrix.shape()
             )));
         }
 
         // Check if the _matrix is approximately orthogonal
-        let det = _matrix[[0, 0]]
-            * (_matrix[[1, 1]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 1]])
-            - _matrix[[0, 1]]
-                * (_matrix[[1, 0]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 0]])
-            + _matrix[[0, 2]]
-                * (_matrix[[1, 0]] * _matrix[[2, 1]] - _matrix[[1, 1]] * _matrix[[2, 0]]);
+        let det = matrix[[0, 0]]
+            * (_matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
+            - matrix[[0, 1]]
+                * (_matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
+            + matrix[[0, 2]]
+                * (_matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
 
         if (det - 1.0).abs() > 1e-6 {
             return Err(SpatialError::ValueError(format!(
@@ -212,7 +212,7 @@ impl Rotation {
         // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
 
         let mut quat = Array1::zeros(4);
-        let m = _matrix;
+        let m = matrix;
 
         let trace = m[[0, 0]] + m[[1, 1]] + m[[2, 2]];
 
@@ -274,11 +274,11 @@ impl Rotation {
     /// let angles = array![PI/2.0, 0.0, 0.0]; // 90 degrees around X
     /// let rot = Rotation::from_euler(&angles.view(), "xyz").unwrap();
     /// ```
-    pub fn from_euler(_angles: &ArrayView1<f64>, convention: &str) -> SpatialResult<Self> {
-        if _angles.len() != 3 {
+    pub fn from_euler(angles: &ArrayView1<f64>, convention: &str) -> SpatialResult<Self> {
+        if angles.len() != 3 {
             return Err(SpatialError::DimensionError(format!(
                 "Euler _angles must have 3 elements, got {}",
-                _angles.len()
+                angles.len()
             )));
         }
 
@@ -286,10 +286,10 @@ impl Rotation {
         let mut quat = Array1::zeros(4);
 
         // Compute quaternions for individual rotations
-        let _angles = _angles.as_slice().unwrap();
-        let a = _angles[0] / 2.0;
-        let b = _angles[1] / 2.0;
-        let c = _angles[2] / 2.0;
+        let _angles = angles.as_slice().unwrap();
+        let a = angles[0] / 2.0;
+        let b = angles[1] / 2.0;
+        let c = angles[2] / 2.0;
 
         let ca = a.cos();
         let sa = a.sin();
@@ -310,7 +310,7 @@ impl Rotation {
             }
             EulerConvention::Zyx => {
                 // Intrinsic rotation around Z, then Y, then X
-                // For ZYX: _angles[0] = Z, _angles[1] = Y, _angles[2] = X
+                // For ZYX: angles[0] = Z, angles[1] = Y, angles[2] = X
                 // So: ca = cos(Z/2), sa = sin(Z/2)
                 //     cb = cos(Y/2), sb = sin(Y/2)
                 //     cc = cos(X/2), sc = sin(X/2)
@@ -389,17 +389,17 @@ impl Rotation {
     /// let rotvec = array![PI/2.0, 0.0, 0.0];
     /// let rot = Rotation::from_rotvec(&rotvec.view()).unwrap();
     /// ```
-    pub fn from_rotvec(_rotvec: &ArrayView1<f64>) -> SpatialResult<Self> {
-        if _rotvec.len() != 3 {
+    pub fn from_rotvec(rotvec: &ArrayView1<f64>) -> SpatialResult<Self> {
+        if rotvec.len() != 3 {
             return Err(SpatialError::DimensionError(format!(
                 "Rotation vector must have 3 elements, got {}",
-                _rotvec.len()
+                rotvec.len()
             )));
         }
 
         // Compute the angle (magnitude of the rotation vector)
         let angle =
-            (_rotvec[0] * _rotvec[0] + _rotvec[1] * _rotvec[1] + _rotvec[2] * _rotvec[2]).sqrt();
+            (_rotvec[0] * rotvec[0] + rotvec[1] * rotvec[1] + rotvec[2] * rotvec[2]).sqrt();
 
         let mut quat = Array1::zeros(4);
 
@@ -411,9 +411,9 @@ impl Rotation {
             quat[3] = 0.0;
         } else {
             // Extract the normalized axis
-            let x = _rotvec[0] / angle;
-            let y = _rotvec[1] / angle;
-            let z = _rotvec[2] / angle;
+            let x = rotvec[0] / angle;
+            let y = rotvec[1] / angle;
+            let z = rotvec[2] / angle;
 
             // Convert axis-angle to quaternion
             let half_angle = angle / 2.0;
@@ -493,7 +493,7 @@ impl Rotation {
     /// let angles = rot.as_euler("xyz").unwrap();
     /// // Should be approximately [PI/2, 0, 0]
     /// ```
-    pub fn as_euler(&self, _convention: &str) -> SpatialResult<Array1<f64>> {
+    pub fn as_euler(&self, convention: &str) -> SpatialResult<Array1<f64>> {
         let conv = EulerConvention::from_str(_convention)?;
         let matrix = self.as_matrix();
 
@@ -748,8 +748,8 @@ impl Rotation {
     /// let rotated = rot.apply(&vec.view());
     /// // Should be approximately [0, 1, 0]
     /// ```
-    pub fn apply(&self, _vec: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
-        if _vec.len() != 3 {
+    pub fn apply(&self, vec: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
+        if vec.len() != 3 {
             return Err(SpatialError::DimensionError(
                 "Vector must have 3 elements".to_string(),
             ));
@@ -784,8 +784,8 @@ impl Rotation {
     /// // First row should be approximately [0, 1, 0]
     /// // Second row should be approximately [-1, 0, 0]
     /// ```
-    pub fn apply_multiple(&self, _vecs: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
-        if _vecs.ncols() != 3 {
+    pub fn apply_multiple(&self, vecs: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+        if vecs.ncols() != 3 {
             return Err(SpatialError::DimensionError(
                 "Each vector must have 3 elements".to_string(),
             ));
@@ -819,17 +819,17 @@ impl Rotation {
     /// let rot2 = Rotation::from_euler(&angles2.view(), "xyz").unwrap();
     /// let combined = rot1.compose(&rot2);
     /// ```
-    pub fn compose(&self, _other: &Rotation) -> Rotation {
+    pub fn compose(&self, other: &Rotation) -> Rotation {
         // Quaternion multiplication
         let w1 = self.quat[0];
         let x1 = self.quat[1];
         let y1 = self.quat[2];
         let z1 = self.quat[3];
 
-        let w2 = _other.quat[0];
-        let x2 = _other.quat[1];
-        let y2 = _other.quat[2];
-        let z2 = _other.quat[3];
+        let w2 = other.quat[0];
+        let x2 = other.quat[1];
+        let y2 = other.quat[2];
+        let z2 = other.quat[3];
 
         let result_quat = array![
             w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
@@ -929,7 +929,7 @@ impl Rotation {
     /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap();
     /// let interpolated = rot1.slerp(&rot2, 0.5);
     /// ```
-    pub fn slerp(&self, _other: &Rotation, t: f64) -> Rotation {
+    pub fn slerp(&self, other: &Rotation, t: f64) -> Rotation {
         // Ensure t is in [0, 1]
         let t = t.clamp(0.0, 1.0);
 
@@ -937,11 +937,11 @@ impl Rotation {
             return self.clone();
         }
         if t == 1.0 {
-            return _other.clone();
+            return other.clone();
         }
 
         let q1 = &self.quat;
-        let mut q2 = _other.quat.clone();
+        let mut q2 = other.quat.clone();
 
         // Compute dot product
         let mut dot = q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2] + q1[3] * q2[3];
@@ -997,7 +997,7 @@ impl Rotation {
     /// let distance = rot1.angular_distance(&rot2);
     /// assert!((distance - PI/2.0).abs() < 1e-10);
     /// ```
-    pub fn angular_distance(&self, _other: &Rotation) -> f64 {
+    pub fn angular_distance(&self, other: &Rotation) -> f64 {
         let q1 = &self.quat;
         let q2 = &_other.quat;
 

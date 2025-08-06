@@ -396,7 +396,7 @@ impl Default for BenchmarkConfig {
 
 impl GpuOptimizerBenchmark {
     /// Create new benchmark suite
-    pub fn new(_config: BenchmarkConfig) -> Result<Self> {
+    pub fn new(config: BenchmarkConfig) -> Result<Self> {
         let mut contexts = HashMap::new();
 
         // Initialize GPU contexts for each backend
@@ -412,7 +412,7 @@ impl GpuOptimizerBenchmark {
         let data_generators = Self::create_default_data_generators();
 
         Ok(Self {
-            _config,
+            config,
             results: HashMap::new(),
             contexts,
             data_generators,
@@ -615,7 +615,7 @@ impl GpuOptimizerBenchmark {
     }
 
     /// Calculate execution statistics from timing data
-    fn calculate_execution_stats(&self, times: &[Duration], problem_size: usize) -> ExecutionStats {
+    fn calculate_execution_stats(&self, times: &[Duration], problemsize: usize) -> ExecutionStats {
         let mut sorted_times = times.to_vec();
         sorted_times.sort();
 
@@ -789,7 +789,7 @@ impl GpuOptimizerBenchmark {
     }
 
     /// Generate comprehensive benchmark summary
-    fn generate_benchmark_summary(&self, total_time: Duration) -> Result<BenchmarkSummary> {
+    fn generate_benchmark_summary(&self, totaltime: Duration) -> Result<BenchmarkSummary> {
         let mut summary = BenchmarkSummary {
             total_tests: self.results.len(),
             successful_tests: self.results.len(),
@@ -1052,8 +1052,8 @@ pub struct NormalDataGenerator {
 }
 
 impl NormalDataGenerator {
-    pub fn new(_mean: f64, std: f64) -> Self {
-        Self { _mean, std }
+    pub fn new(mean: f64, std: f64) -> Self {
+        Self { mean, std }
     }
 }
 
@@ -1089,8 +1089,8 @@ pub struct UniformDataGenerator {
 }
 
 impl UniformDataGenerator {
-    pub fn new(_min: f64, max: f64) -> Self {
-        Self { _min, max }
+    pub fn new(min: f64, max: f64) -> Self {
+        Self { min, max }
     }
 }
 
@@ -1134,7 +1134,7 @@ pub struct SparseDataGenerator {
 }
 
 impl SparseDataGenerator {
-    pub fn new(_density: f64) -> Self {
+    pub fn new(density: f64) -> Self {
         Self { _density }
     }
 }
@@ -1191,7 +1191,7 @@ pub struct RealisticDataGenerator {
 }
 
 impl RealisticDataGenerator {
-    pub fn new(_scenario: RealisticScenario) -> Self {
+    pub fn new(scenario: RealisticScenario) -> Self {
         Self { _scenario }
     }
 }

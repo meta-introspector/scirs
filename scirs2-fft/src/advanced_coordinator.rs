@@ -1230,7 +1230,7 @@ pub struct PrefetchStatistics {
 
 impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
     /// Create a new advanced FFT coordinator
-    pub fn new(_config: advancedFftConfig) -> FFTResult<Self> {
+    pub fn new(config: advancedFftConfig) -> FFTResult<Self> {
         Ok(Self {
             algorithm_selector: Arc::new(RwLock::new(IntelligentAlgorithmSelector::new()?)),
             optimization_engine: Arc::new(Mutex::new(PerformanceOptimizationEngine::new()?)),
@@ -1241,7 +1241,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
             knowledge_transfer: Arc::new(RwLock::new(CrossDomainKnowledgeSystem::new()?)),
             performance_tracker: Arc::new(RwLock::new(FftPerformanceTracker::default())),
             adaptive_cache: Arc::new(Mutex::new(AdaptiveFftCache::new()?)),
-            _config,
+            config,
         })
     }
 
@@ -1321,7 +1321,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
     }
 
     /// Update advanced configuration
-    pub fn update_config(&mut self, new_config: advancedFftConfig) -> FFTResult<()> {
+    pub fn update_config(&mut self, newconfig: advancedFftConfig) -> FFTResult<()> {
         self._config = new_config;
         // Update subsystem configurations
         self.update_subsystem_configs()?;

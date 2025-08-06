@@ -143,7 +143,7 @@ impl RgbColor {
 
 /// Create a color map for visualization
 #[allow(dead_code)]
-pub fn create_colormap(_colormap: ColorMap, num_colors: usize) -> Vec<RgbColor> {
+pub fn create_colormap(_colormap: ColorMap, numcolors: usize) -> Vec<RgbColor> {
     let mut _colors = Vec::with_capacity(num_colors);
 
     for i in 0..num_colors {
@@ -164,7 +164,7 @@ pub fn create_colormap(_colormap: ColorMap, num_colors: usize) -> Vec<RgbColor> 
             ColorMap::Autumn => autumn_colormap(t),
             ColorMap::Winter => winter_colormap(t),
         };
-        _colors.push(color);
+        colors.push(color);
     }
 
     _colors
@@ -172,17 +172,17 @@ pub fn create_colormap(_colormap: ColorMap, num_colors: usize) -> Vec<RgbColor> 
 
 /// Generate a histogram plot representation
 #[allow(dead_code)]
-pub fn plot_histogram<T>(_data: &ArrayView1<T>, config: &PlotConfig) -> NdimageResult<String>
+pub fn plot_histogram<T>(data: &ArrayView1<T>, config: &PlotConfig) -> NdimageResult<String>
 where
     T: Float + FromPrimitive + ToPrimitive + Debug + Clone,
 {
-    if _data.is_empty() {
+    if data.is_empty() {
         return Err(NdimageError::InvalidInput("Data array is empty".into()));
     }
 
     // Find min and max values
-    let min_val = _data.iter().cloned().fold(T::infinity(), T::min);
-    let max_val = _data.iter().cloned().fold(T::neg_infinity(), T::max);
+    let min_val = data.iter().cloned().fold(T::infinity(), T::min);
+    let max_val = data.iter().cloned().fold(T::neg_infinity(), T::max);
 
     if max_val <= min_val {
         return Err(NdimageError::InvalidInput(
@@ -195,7 +195,7 @@ where
     let range = max_val - min_val;
     let bin_size = range / safe_usize_to_float(config.num_bins)?;
 
-    for &value in _data.iter() {
+    for &value in data.iter() {
         let normalized = (value - min_val) / bin_size;
         let bin_idx = normalized.to_usize().unwrap_or(0).min(config.num_bins - 1);
         histogram[bin_idx] += 1;
@@ -241,7 +241,7 @@ where
             for (i, &count) in histogram.iter().enumerate() {
                 let bar_length = (count as f64 / max_count as f64 * 50.0) as usize;
                 let bin_center =
-                    min_val + (safe_usize_to_float(i)? + safe_f64, _to_float: <T>(0.5)?) * bin_size;
+                    min_val + (safe_usize_to_float(i)? + safe_f64to_float::<T>(0.5)?) * bin_size;
 
                 writeln!(
                     &mut plot,
@@ -264,7 +264,7 @@ where
             for (i, &count) in histogram.iter().enumerate() {
                 let bar_length = (count as f64 / max_count as f64 * 50.0) as usize;
                 let bin_center =
-                    min_val + (safe_usize_to_float(i)? + safe_f64, _to_float: <T>(0.5)?) * bin_size;
+                    min_val + (safe_usize_to_float(i)? + safe_f64to_float::<T>(0.5)?) * bin_size;
 
                 writeln!(
                     &mut plot,
@@ -330,7 +330,7 @@ where
 
                 for (i, (&x, &y)) in x_data.iter().zip(y_data.iter()).enumerate() {
                     let px = ((x - x_min) / x_range * safe_usize_to_float(config.width - 100)?
-                        + safe_f64, _to_float: <T>(50.0)?)
+                        + safe_f64to_float::<T>(50.0)?)
                     .to_f64()
                     .unwrap_or(0.0);
                     let py = (config.height as f64 - 50.0)
@@ -602,14 +602,14 @@ where
     // Quality _metrics
     if config.include_quality_metrics {
         if let Some(_metrics) = quality_metrics {
-            add_quality_metrics(&mut report, _metrics, config.format)?;
+            add_quality_metrics(&mut report, metrics, config.format)?;
         }
     }
 
     // Texture analysis
     if config.includetexture_analysis {
         if let Some(_metrics) = texture_metrics {
-            addtexture_metrics(&mut report, _metrics, config.format)?;
+            addtexture_metrics(&mut report, metrics, config.format)?;
         }
     }
 
@@ -1164,11 +1164,11 @@ fn winter_colormap(t: f64) -> RgbColor {
 
 /// Generate a 3D surface plot representation of a 2D array
 #[allow(dead_code)]
-pub fn plot_surface<T>(_data: &ArrayView2<T>, config: &PlotConfig) -> NdimageResult<String>
+pub fn plot_surface<T>(data: &ArrayView2<T>, config: &PlotConfig) -> NdimageResult<String>
 where
     T: Float + FromPrimitive + ToPrimitive + Debug + Clone,
 {
-    let (height, width) = _data.dim();
+    let (height, width) = data.dim();
     if height == 0 || width == 0 {
         return Err(NdimageError::InvalidInput("Data array is empty".into()));
     }
@@ -1176,8 +1176,8 @@ where
     let mut plot = String::new();
 
     // Find min and max values for scaling
-    let min_val = _data.iter().cloned().fold(T::infinity(), T::min);
-    let max_val = _data.iter().cloned().fold(T::neg_infinity(), T::max);
+    let min_val = data.iter().cloned().fold(T::infinity(), T::min);
+    let max_val = data.iter().cloned().fold(T::neg_infinity(), T::max);
 
     if max_val <= min_val {
         return Err(NdimageError::InvalidInput(
@@ -1197,7 +1197,7 @@ where
 
             for i in (0..height).step_by(step_y) {
                 for j in (0..width).step_by(step_x) {
-                    let value = _data[[i, j]];
+                    let value = data[[i, j]];
                     let normalized = ((value - min_val) / (max_val - min_val))
                         .to_f64()
                         .unwrap_or(0.0);
@@ -1250,7 +1250,7 @@ where
                 for j in 0..ascii_width {
                     let data_i = (i * height) / ascii_height;
                     let data_j = (j * width) / ascii_width;
-                    let value = _data[[data_i, data_j]];
+                    let value = data[[data_i, data_j]];
                     let normalized = ((value - min_val) / (max_val - min_val))
                         .to_f64()
                         .unwrap_or(0.0);
@@ -1318,8 +1318,8 @@ where
     let mut _levels = Vec::new();
     for i in 0..num_levels {
         let t = i as f64 / (num_levels - 1) as f64;
-        let level = min_val + (max_val - min_val) * safe_f64, _to_float: <T>(t)?;
-        _levels.push(level);
+        let level = min_val + (max_val - min_val) * safe_f64to_float::<T>(t)?;
+        levels.push(level);
     }
 
     match config.format {
@@ -1333,7 +1333,7 @@ where
             )?;
 
             // Simple contour approximation by drawing level sets
-            for (level_idx, &level) in _levels.iter().enumerate() {
+            for (level_idx, &level) in levels.iter().enumerate() {
                 let color_intensity = (level_idx as f64 / num_levels as f64 * 255.0) as u8;
                 let color = format!(
                     "rgb({}, {}, {})",
@@ -1346,7 +1346,7 @@ where
                 for i in 0..height - 1 {
                     for j in 0..width - 1 {
                         let val = data[[i, j]];
-                        let threshold = (max_val - min_val) * safe_f64, _to_float: <T>(0.02)?; // 2% tolerance
+                        let threshold = (max_val - min_val) * safe_f64to_float::<T>(0.02)?; // 2% tolerance
 
                         if (val - level).abs() < threshold {
                             let x = (j as f64 / width as f64) * config.width as f64;
@@ -1365,7 +1365,7 @@ where
             writeln!(&mut plot, "</svg>")?;
             writeln!(&mut plot, "<div class='contour-legend'>")?;
             writeln!(&mut plot, "<h4>Contour Levels:</h4>")?;
-            for (i, &level) in _levels.iter().enumerate() {
+            for (i, &level) in levels.iter().enumerate() {
                 writeln!(
                     &mut plot,
                     "<div>Level {}: {:.3}</div>",
@@ -1380,7 +1380,7 @@ where
             writeln!(&mut plot, "## {} (Contour Plot)", config.title)?;
             writeln!(&mut plot)?;
             writeln!(&mut plot, "Contour _levels ({}):", num_levels)?;
-            for (i, &level) in _levels.iter().enumerate() {
+            for (i, &level) in levels.iter().enumerate() {
                 writeln!(
                     &mut plot,
                     "- Level {}: {:.3}",
@@ -1395,7 +1395,7 @@ where
             writeln!(&mut plot, "{}", "=".repeat(config.title.len() + 15))?;
             writeln!(&mut plot)?;
             writeln!(&mut plot, "Contour _levels ({}):", num_levels)?;
-            for (i, &level) in _levels.iter().enumerate() {
+            for (i, &level) in levels.iter().enumerate() {
                 writeln!(
                     &mut plot,
                     "  Level {}: {:.3}",
@@ -1411,11 +1411,11 @@ where
 
 /// Generate a heatmap visualization of a 2D array
 #[allow(dead_code)]
-pub fn plot_heatmap<T>(_data: &ArrayView2<T>, config: &PlotConfig) -> NdimageResult<String>
+pub fn plot_heatmap<T>(data: &ArrayView2<T>, config: &PlotConfig) -> NdimageResult<String>
 where
     T: Float + FromPrimitive + ToPrimitive + Debug + Clone,
 {
-    let (height, width) = _data.dim();
+    let (height, width) = data.dim();
     if height == 0 || width == 0 {
         return Err(NdimageError::InvalidInput("Data array is empty".into()));
     }
@@ -1423,8 +1423,8 @@ where
     let mut plot = String::new();
 
     // Find min and max values for color scaling
-    let min_val = _data.iter().cloned().fold(T::infinity(), T::min);
-    let max_val = _data.iter().cloned().fold(T::neg_infinity(), T::max);
+    let min_val = data.iter().cloned().fold(T::infinity(), T::min);
+    let max_val = data.iter().cloned().fold(T::neg_infinity(), T::max);
 
     if max_val <= min_val {
         return Err(NdimageError::InvalidInput(
@@ -1446,7 +1446,7 @@ where
 
             for i in 0..height {
                 for j in 0..width {
-                    let value = _data[[i, j]];
+                    let value = data[[i, j]];
                     let normalized = ((value - min_val) / (max_val - min_val))
                         .to_f64()
                         .unwrap_or(0.0);
@@ -1500,7 +1500,7 @@ where
                 for j in 0..display_width {
                     let data_i = (i * height) / display_height;
                     let data_j = (j * width) / display_width;
-                    let value = _data[[data_i, data_j]];
+                    let value = data[[data_i, data_j]];
                     let normalized = ((value - min_val) / (max_val - min_val))
                         .to_f64()
                         .unwrap_or(0.0);
@@ -1847,7 +1847,7 @@ pub mod export {
     }
 
     /// Save a generated plot to file
-    pub fn save_plot(_content: &str, config: &ExportConfig) -> NdimageResult<()> {
+    pub fn save_plot(content: &str, config: &ExportConfig) -> NdimageResult<()> {
         let path = Path::new(&config.output_path);
 
         // Create parent directories if they don't exist
@@ -1858,7 +1858,7 @@ pub mod export {
         }
 
         // Add metadata if requested
-        let mut output_content = _content.to_string();
+        let mut output_content = content.to_string();
         if config.include_metadata {
             let timestamp = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -1870,18 +1870,18 @@ pub mod export {
                 timestamp
             );
 
-            if _content.contains("</html>") {
-                output_content = _content.replace("</html>", &format!("{}</html>", metadata));
-            } else if _content.contains("# ") {
+            if content.contains("</html>") {
+                output_content = content.replace("</html>", &format!("{}</html>", metadata));
+            } else if content.contains("# ") {
                 output_content = format!(
                     "{}\n{}",
-                    _content,
+                    content,
                     metadata.replace("<!--", "").replace("-->", "")
                 );
             } else {
                 output_content = format!(
                     "{}\n{}",
-                    _content,
+                    content,
                     metadata.replace("<!--", "").replace("-->", "")
                 );
             }

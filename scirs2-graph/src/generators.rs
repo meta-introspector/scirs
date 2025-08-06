@@ -323,11 +323,11 @@ where
         nodes.iter().map(|n| (n.clone(), 0)).collect();
 
     fn find<N: crate::base::Node>(parent: &mut std::collections::HashMap<N, N>, node: &N) -> N {
-        if _parent[node] != *node {
+        if parent[node] != *node {
             let root = find(_parent, &_parent[node].clone());
-            _parent.insert(node.clone(), root.clone());
+            parent.insert(node.clone(), root.clone());
         }
-        _parent[node].clone()
+        parent[node].clone()
     }
 
     fn union<N: crate::base::Node>(
@@ -394,7 +394,11 @@ where
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A forest containing the specified trees
 #[allow(dead_code)]
-pub fn forest_graph<R: Rng>(_tree_sizes: &[usize], sizes: &[usize], rng: &mut R) -> Result<Graph<usize, f64>> {
+pub fn forest_graph<R: Rng>(
+    _tree_sizes: &[usize],
+    sizes: &[usize],
+    rng: &mut R,
+) -> Result<Graph<usize, f64>> {
     let mut forest = Graph::new();
     let mut node_offset = 0;
 
@@ -465,7 +469,7 @@ pub fn cycle_graph(n: usize) -> Result<Graph<usize, f64>> {
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A grid graph where node ID = row * cols + col
 #[allow(dead_code)]
-pub fn grid_2d_graph(_rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
+pub fn grid_2d_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
     if _rows == 0 || cols == 0 {
         return Err(GraphError::InvalidGraph(
             "Grid dimensions must be positive".to_string(),
@@ -511,7 +515,7 @@ pub fn grid_2d_graph(_rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A 3D grid graph where node ID = z*x_dim*y_dim + y*x_dim + x
 #[allow(dead_code)]
-pub fn grid_3d_graph(_x_dim: usize, y_dim: usize, z_dim: usize) -> Result<Graph<usize, f64>> {
+pub fn grid_3d_graph(_x_dim: usize, y_dim: usize, zdim: usize) -> Result<Graph<usize, f64>> {
     if _x_dim == 0 || y_dim == 0 || z_dim == 0 {
         return Err(GraphError::InvalidGraph(
             "Grid dimensions must be positive".to_string(),
@@ -564,7 +568,7 @@ pub fn grid_3d_graph(_x_dim: usize, y_dim: usize, z_dim: usize) -> Result<Graph<
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A triangular lattice where each node has up to 6 neighbors
 #[allow(dead_code)]
-pub fn triangular_lattice_graph(_rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
+pub fn triangular_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
     if _rows == 0 || cols == 0 {
         return Err(GraphError::InvalidGraph(
             "Lattice dimensions must be positive".to_string(),
@@ -602,7 +606,7 @@ pub fn triangular_lattice_graph(_rows: usize, cols: usize) -> Result<Graph<usize
                 graph.add_edge(node_id, diag_neighbor, 1.0)?;
             }
 
-            // Bottom-left diagonal (for even _rows)
+            // Bottom-left diagonal (for even rows)
             if row + 1 < _rows && col > 0 && row % 2 == 0 {
                 let diag_neighbor = (row + 1) * cols + (col - 1);
                 graph.add_edge(node_id, diag_neighbor, 1.0)?;
@@ -622,7 +626,7 @@ pub fn triangular_lattice_graph(_rows: usize, cols: usize) -> Result<Graph<usize
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A hexagonal lattice where each node has exactly 3 neighbors
 #[allow(dead_code)]
-pub fn hexagonal_lattice_graph(_rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
+pub fn hexagonal_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
     if _rows == 0 || cols == 0 {
         return Err(GraphError::InvalidGraph(
             "Lattice dimensions must be positive".to_string(),

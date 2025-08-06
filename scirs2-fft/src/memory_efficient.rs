@@ -573,7 +573,7 @@ where
     }
 
     // For inverse transforms, we need to normalize by the full length
-    // instead of chunk _size, so adjust the scaling
+    // instead of chunk size, so adjust the scaling
     if mode == FftMode::Inverse {
         let full_scale = 1.0 / (n_val as f64);
         let chunk_scale = 1.0 / (chunk_size_val as f64);

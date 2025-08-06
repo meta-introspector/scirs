@@ -141,9 +141,9 @@ impl Default for NeuromorphicProcessor {
 
 impl NeuromorphicProcessor {
     /// Create a new neuromorphic processor
-    pub fn new(_network_config: NetworkTopology, plasticity_config: SynapticPlasticity) -> Self {
+    pub fn new(_network_config: NetworkTopology, plasticityconfig: SynapticPlasticity) -> Self {
         Self {
-            _network_config,
+            network_config,
             plasticity_config,
             stdp_enabled: true,
             membrane_decay: 0.95,
@@ -501,7 +501,7 @@ impl NeuromorphicProcessor {
         Ok(connectivity)
     }
 
-    fn extract_emergent_features(&self, spike_patterns: &Array3<f64>) -> Result<Array2<f64>> {
+    fn extract_emergent_features(&self, spikepatterns: &Array3<f64>) -> Result<Array2<f64>> {
         let (time_steps, n_neurons, n_samples) = spike_patterns.dim();
         let mut features = Array2::zeros((n_samples, n_neurons));
 
@@ -545,7 +545,7 @@ impl NeuromorphicProcessor {
                 feature_value += 0.3 * synaptic_influence;
             }
 
-            _features[feature_idx] = feature_value.tanh(); // Bounded activation
+            features[feature_idx] = feature_value.tanh(); // Bounded activation
         }
 
         Ok(_features)
@@ -626,7 +626,7 @@ impl NeuromorphicProcessor {
         Ok(spike_response)
     }
 
-    fn apply_stdp_learning(&self, network: &mut [Vec<Synapse>], time_idx: usize) -> Result<f64> {
+    fn apply_stdp_learning(&self, network: &mut [Vec<Synapse>], timeidx: usize) -> Result<f64> {
         let mut total_learning_change = 0.0;
 
         // Spike Timing Dependent Plasticity (STDP)

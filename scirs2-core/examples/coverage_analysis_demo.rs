@@ -66,7 +66,7 @@ fn demo_production_configuration() -> Result<(), Box<dyn std::error::Error>> {
         "   • Integration Threshold: {:.1}%",
         config.integration_threshold
     );
-    println!("   • Sampling Rate: {:.1}%", config.sampling_rate * 100.0);
+    println!("   • Sampling Rate: {:.1}%", config.samplingrate * 100.0);
     println!("   • Types: {:?}", config.coverage_types);
     println!("   • Report Formats: {:?}", config.report_formats);
 
@@ -107,7 +107,7 @@ fn demo_development_coverage() -> Result<(), Box<dyn std::error::Error>> {
     println!("   • Real-time updates: {}", config.real_time_updates);
     println!(
         "   • Differential coverage enabled against: {:?}",
-        config.diff_base
+        config.diffbase
     );
     println!("   • Historical tracking: {}", config.enable_history);
 
@@ -436,12 +436,12 @@ fn run_tests_with_coverage(analyzer: &CoverageAnalyzer) -> Result<(), Box<dyn st
 
         // Simulate good coverage for most lines
         for line in 1..=(line_count as u32 * 85 / 100) {
-            _analyzer.record_line_execution(file_path, line)?;
+            analyzer.record_line_execution(file_path, line)?;
         }
 
         // Simulate branch coverage
         for branch_id in 1..=10 {
-            _analyzer.record_branch_execution(
+            analyzer.record_branch_execution(
                 file_path,
                 branch_id * 10,
                 &format!("branch_{}", branch_id),
@@ -449,7 +449,7 @@ fn run_tests_with_coverage(analyzer: &CoverageAnalyzer) -> Result<(), Box<dyn st
             )?;
             if branch_id <= 7 {
                 // Not all branches covered on false path
-                _analyzer.record_branch_execution(
+                analyzer.record_branch_execution(
                     file_path,
                     branch_id * 10,
                     &format!("branch_{}", branch_id),
@@ -462,7 +462,7 @@ fn run_tests_with_coverage(analyzer: &CoverageAnalyzer) -> Result<(), Box<dyn st
         for func_id in 1..=8 {
             if func_id <= 6 {
                 // Some functions not executed
-                _analyzer.record_function_execution(
+                analyzer.record_function_execution(
                     file_path,
                     &format!("function_{}", func_id),
                     func_id * 12,
@@ -643,7 +643,7 @@ fn create_sample_file_coverage() -> FileCoverage {
 /// Create sample metrics time series
 #[allow(dead_code)]
 fn create_sample_metrics() -> MetricTimeSeries {
-    let mut series = MetricTimeSeries::new(test_execution_time);
+    let mut series = MetricTimeSeries::new(testexecution_time);
 
     // Add some sample data points
     series.add_point(120.5, None);

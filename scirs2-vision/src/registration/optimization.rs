@@ -40,7 +40,7 @@ pub fn gradient_descent_optimize(
         let gradient = gradient_function(&_params)?;
 
         // Update parameters: _params = _params - learning_rate * gradient
-        Zip::from(&mut _params)
+        Zip::from(&mut params)
             .and(&gradient)
             .for_each(|p, &g| *p -= learning_rate * g);
 
@@ -63,9 +63,9 @@ pub fn gradient_descent_optimize(
     }
 
     Ok(OptimizationResult {
-        parameters: _params,
+        parameters: params,
         final_cost: prev_cost,
-        _iterations,
+        iterations,
         converged,
     })
 }
@@ -87,7 +87,7 @@ pub fn powell_optimize(
 
     for iter in 0..max_iterations {
         _iterations = iter + 1;
-        let start_params = _params.clone();
+        let start_params = params.clone();
         let mut biggest_decrease = 0.0;
         let mut biggest_decrease_idx = 0;
 
@@ -137,9 +137,9 @@ pub fn powell_optimize(
     }
 
     Ok(OptimizationResult {
-        parameters: _params,
+        parameters: params,
         final_cost: prev_cost,
-        _iterations,
+        iterations,
         converged,
     })
 }

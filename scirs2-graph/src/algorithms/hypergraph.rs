@@ -64,7 +64,7 @@ where
 
     // Try all possible subsets up to max_size
     for _size in 1..=max_size.min(nodes.len()) {
-        let combinations = generate_combinations(&nodes, _size);
+        let combinations = generate_combinations(&nodes, size);
 
         for candidate in combinations {
             let candidate_set: HashSet<N> = candidate.into_iter().collect();
@@ -120,17 +120,17 @@ fn generate_combinations<T: Clone>(items: &[T], k: usize) -> Vec<Vec<T>> {
     if k == 0 {
         return vec![vec![]];
     }
-    if k > _items.len() {
+    if k > items.len() {
         return vec![];
     }
-    if k == _items.len() {
+    if k == items.len() {
         return vec![_items.to_vec()];
     }
 
     let mut result = Vec::new();
 
     // Include first element
-    let first = _items[0].clone();
+    let first = items[0].clone();
     let rest = &_items[1..];
     for mut combo in generate_combinations(rest, k - 1) {
         combo.insert(0, first.clone());
@@ -310,13 +310,13 @@ where
 /// # Returns
 /// * The diameter, or None if the hypergraph is disconnected
 #[allow(dead_code)]
-pub fn hypergraph_diameter<N, E, Ix>(_hypergraph: &Hypergraph<N, E, Ix>) -> Option<usize>
+pub fn hypergraph_diameter<N, E, Ix>(hypergraph: &Hypergraph<N, E, Ix>) -> Option<usize>
 where
     N: Node + Clone + Ord + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
-    let nodes: Vec<N> = _hypergraph.nodes().cloned().collect();
+    let nodes: Vec<N> = hypergraph.nodes().cloned().collect();
     if nodes.len() < 2 {
         return Some(0);
     }
@@ -462,7 +462,7 @@ where
 /// # Returns
 /// * True if connected, false otherwise
 #[allow(dead_code)]
-pub fn is_hypergraph_connected<N, E, Ix>(_hypergraph: &Hypergraph<N, E, Ix>) -> bool
+pub fn is_hypergraph_connected<N, E, Ix>(hypergraph: &Hypergraph<N, E, Ix>) -> bool
 where
     N: Node + Clone + Ord + std::fmt::Debug,
     E: EdgeWeight,

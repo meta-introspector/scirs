@@ -6,7 +6,7 @@
 
 use crate::advanced__clustering::{AdvancedClusteringResult, AdvancedPerformanceMetrics};
 use crate::error::{ClusteringError, Result};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::HashMap;
 
 #[cfg(feature = "serde")]
@@ -181,9 +181,9 @@ impl Default for AdvancedVisualizationConfig {
 
 impl AdvancedVisualizer {
     /// Create a new Advanced visualizer
-    pub fn new(_config: AdvancedVisualizationConfig) -> Self {
+    pub fn new(config: AdvancedVisualizationConfig) -> Self {
         Self {
-            _config,
+            config,
             quantum_history: Vec::new(),
             adaptation_timeline: Vec::new(),
             ai_insights: AISelectionInsights::default(),
@@ -460,7 +460,7 @@ impl AdvancedVisualizer {
     }
 
     /// Apply quantum-enhanced PCA for dimensionality reduction
-    fn apply_quantum_pca(&self, data: &ArrayView2<f64>, target_dims: usize) -> Result<Array2<f64>> {
+    fn apply_quantum_pca(&self, data: &ArrayView2<f64>, targetdims: usize) -> Result<Array2<f64>> {
         use ndarray::Axis;
 
         let n_samples = data.nrows();
@@ -518,7 +518,7 @@ impl AdvancedVisualizer {
     }
 
     /// Calculate quantum weight for each sample based on its properties
-    fn calculate_quantum_sample_weight(&self, sample_idx: usize, sample: &ArrayView1<f64>) -> f64 {
+    fn calculate_quantum_sample_weight(&self, sampleidx: usize, sample: &ArrayView1<f64>) -> f64 {
         // Quantum weighting based on sample entropy and variance
         let sample_variance = sample.variance();
         let sample_mean = sample.mean().unwrap_or(0.0);
@@ -620,7 +620,7 @@ impl AdvancedVisualizer {
     }
 
     /// Calculate quantum coherence factor for projections
-    fn calculate_projection_coherence(&self, sample_idx: usize, component_idx: usize) -> f64 {
+    fn calculate_projection_coherence(&self, sample_idx: usize, componentidx: usize) -> f64 {
         // Quantum coherence based on sample and component indices
         let phase_sample = 2.0 * std::f64::consts::PI * sample_idx as f64 / 100.0;
         let phase_component = std::f64::consts::PI * component_idx as f64 / 10.0;

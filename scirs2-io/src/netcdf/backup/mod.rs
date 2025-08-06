@@ -53,7 +53,7 @@ pub enum NetCDFDataType {
 }
 
 impl From<NetCDFDataType> for DataType {
-    fn from(_dtype: NetCDFDataType) -> Self {
+    fn from(dtype: NetCDFDataType) -> Self {
         match _dtype {
             NetCDFDataType::Byte => DataType::Byte,
             NetCDFDataType::Char => DataType::Char,
@@ -66,7 +66,7 @@ impl From<NetCDFDataType> for DataType {
 }
 
 impl From<DataType> for NetCDFDataType {
-    fn from(_dtype: DataType) -> Self {
+    fn from(dtype: DataType) -> Self {
         match _dtype {
             DataType::Byte => NetCDFDataType::Byte,
             DataType::Char => NetCDFDataType::Char,
@@ -130,7 +130,7 @@ impl NetCDFFile {
     /// ```
     pub fn open<P: AsRef<Path>>(filename: P, options: Option<NetCDFOptions>) -> Result<Self> {
         let opts = options.unwrap_or_default();
-        let path_str = _filename.as_ref().to_string_lossy().to_string();
+        let path_str = filename.as_ref().to_string_lossy().to_string();
         
         let file = match opts.mode.as_str() {
             "r" => {
@@ -147,7 +147,7 @@ impl NetCDFFile {
                 // Open for appending
                 // If file exists, open for reading and writing
                 // If file doesn't exist, create it
-                if _filename.as_ref().exists() {
+                if filename.as_ref().exists() {
                     NC3File::open(_filename).map_err(|e| IOError::FileOpenError(
                         format!("Failed to open NetCDF file '{}': {}", path_str, e)))?
                 } else {
@@ -303,7 +303,7 @@ impl NetCDFFile {
     /// # Returns
     ///
     /// * `Result<()>` - Success or error
-    pub fn create_variable(&self, name: &str, data_type: NetCDFDataType, dimensions: &[&str]) -> Result<()> {
+    pub fn create_variable(&self, name: &str, datatype: NetCDFDataType, dimensions: &[&str]) -> Result<()> {
         if self.mode == "r" {
             return Err(IOError::PermissionError("File opened in read-only mode".to_string()));
         }
@@ -384,7 +384,7 @@ impl NetCDFFile {
     /// # Returns
     ///
     /// * `Result<()>` - Success or error
-    pub fn add_variable_attribute<T: netcdf3::IntoNetcdf3 + Clone>(&self, var_name: &str, attr_name: &str, value: T) -> Result<()> {
+    pub fn add_variable_attribute<T: netcdf3::IntoNetcdf3 + Clone>(&self, var_name: &str, attrname: &str, value: T) -> Result<()> {
         if self.mode == "r" {
             return Err(IOError::PermissionError("File opened in read-only mode".to_string()));
         }
@@ -466,7 +466,7 @@ mod convert {
     use netcdf3::DataValue;
     
     /// Convert a NetCDF data value to a string representation
-    pub fn data_value_to_string(_value: &DataValue) -> String {
+    pub fn data_value_to_string(value: &DataValue) -> String {
         match _value {
             DataValue::Byte(v) => v.to_string(),
             DataValue::Char(v) => format!("{}", *v as char),

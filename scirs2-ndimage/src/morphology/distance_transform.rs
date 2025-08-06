@@ -103,7 +103,7 @@ where
 
     // Apply 1D distance transform along each dimension
     for dim in 0..ndim {
-        felzenszwalb_1d_edt(&mut dist_sq, _indices.as_mut(), dim, sampling[dim]);
+        felzenszwalb_1d_edt(&mut dist_sq, indices.as_mut(), dim, sampling[dim]);
     }
 
     // Convert squared _distances to actual _distances if requested
@@ -118,7 +118,7 @@ where
         None
     };
 
-    (_distances, _indices)
+    (_distances, indices)
 }
 
 /// Apply 1D Euclidean distance transform along a specific dimension using
@@ -272,7 +272,7 @@ fn felzenszwalb_1d_line(
 
 /// Calculate intersection point between two parabolas
 #[allow(dead_code)]
-fn intersection_point(p: usize, q: usize, f: &[f64], sampling_sq: f64) -> f64 {
+fn intersection_point(p: usize, q: usize, f: &[f64], samplingsq: f64) -> f64 {
     if f[p].is_infinite() && f[q].is_infinite() {
         return 0.0;
     }
@@ -293,7 +293,7 @@ fn intersection_point(p: usize, q: usize, f: &[f64], sampling_sq: f64) -> f64 {
 /// Apply 1D distance transform along a specific dimension
 /// NOTE: Currently unused as we fall back to brute force for correctness
 #[allow(dead_code)]
-fn apply_1d_distance_transform<D>(_distance_squared: &mut Array<f64, D>, dim: usize, sampling: f64)
+fn apply_1d_distance_transform<D>(_distancesquared: &mut Array<f64, D>, dim: usize, sampling: f64)
 where
     D: Dimension,
     for<'a> &'a [usize]: ndarray::NdIndex<D>,
@@ -330,8 +330,8 @@ where
 /// Efficient 1D distance transform using the squared distance transform algorithm
 /// NOTE: Currently unused as we fall back to brute force for correctness
 #[allow(dead_code)]
-fn distance_transform_1d(_input: &[f64], sampling: f64) -> Vec<f64> {
-    let n = _input.len();
+fn distance_transform_1d(input: &[f64], sampling: f64) -> Vec<f64> {
+    let n = input.len();
     if n == 0 {
         return Vec::new();
     }
@@ -341,7 +341,7 @@ fn distance_transform_1d(_input: &[f64], sampling: f64) -> Vec<f64> {
 
     // Find background positions (where _input is 0.0)
     let mut background_pos = Vec::new();
-    for (i, &val) in _input.iter().enumerate() {
+    for (i, &val) in input.iter().enumerate() {
         if val == 0.0 {
             background_pos.push(i);
         }
@@ -354,7 +354,7 @@ fn distance_transform_1d(_input: &[f64], sampling: f64) -> Vec<f64> {
 
     // For each position, find distance to nearest background
     for i in 0..n {
-        if _input[i] == 0.0 {
+        if input[i] == 0.0 {
             output[i] = 0.0;
         } else {
             let mut min_dist_sq = f64::INFINITY;
@@ -372,17 +372,17 @@ fn distance_transform_1d(_input: &[f64], sampling: f64) -> Vec<f64> {
 /// Helper function to increment multi-dimensional indices, skipping the specified dimension
 /// NOTE: Currently unused as we fall back to brute force for correctness
 #[allow(dead_code)]
-fn increment_indices(_indices: &mut [usize], shape: &[usize], skip_dim: usize) -> bool {
+fn increment_indices(_indices: &mut [usize], shape: &[usize], skipdim: usize) -> bool {
     for i in (0.._indices.len()).rev() {
         if i == skip_dim {
             continue;
         }
 
-        _indices[i] += 1;
-        if _indices[i] < shape[i] {
+        indices[i] += 1;
+        if indices[i] < shape[i] {
             return true;
         }
-        _indices[i] = 0;
+        indices[i] = 0;
     }
     false
 }
@@ -475,7 +475,7 @@ where
         }
     }
 
-    (_distances, _indices)
+    (_distances, indices)
 }
 
 /// Calculate the Euclidean distance transform of a binary image.
@@ -620,7 +620,7 @@ where
 
     let metric = match metric {
         "cityblock" => DistanceMetric::CityBlock,
-        "chessboard" => DistanceMetric::Chessboard_ => {
+        "chessboard" => {
             return Err(NdimageError::InvalidInput(format!(
                 "Metric must be one of 'cityblock' or 'chessboard', got '{}'",
                 metric
@@ -720,7 +720,7 @@ where
         }
     }
 
-    Ok((_distances, _indices))
+    Ok((_distances, indices))
 }
 
 /// Calculate the distance transform of a binary image using a brute force algorithm.
@@ -785,7 +785,7 @@ where
     let metric = match metric {
         "euclidean" => DistanceMetric::Euclidean,
         "cityblock" => DistanceMetric::CityBlock,
-        "chessboard" => DistanceMetric::Chessboard_ => {
+        "chessboard" => {
             return Err(NdimageError::InvalidInput(format!(
                 "Metric must be one of 'euclidean', 'cityblock', or 'chessboard', got '{}'",
                 metric
@@ -910,7 +910,7 @@ where
         }
     }
 
-    Ok((_distances, _indices))
+    Ok((_distances, indices))
 }
 
 #[cfg(test)]

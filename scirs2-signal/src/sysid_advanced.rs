@@ -8,7 +8,7 @@ use ndarray::s;
 use crate::error::{SignalError, SignalResult};
 use crate::lti::StateSpace;
 use crate::sysid_enhanced::{NonlinearFunction, ParameterEstimate, SystemModel};
-use ndarray::{ Array1, Array2, Axis};
+use ndarray::{Array1, Array2, Axis};
 use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::checkshape;
@@ -32,7 +32,7 @@ pub fn identify_armax_complete(
     checkshape(input, &[n], "input and output")?;
 
     // Initialize with ARX estimate
-    let (ar_init, b_init_) = estimate_arx_ls(input, output, na, nb, delay)?;
+    let (ar_init, b_init) = estimate_arx_ls(input, output, na, nb, delay)?;
 
     // Initialize MA coefficients
     let mut c_coeffs = Array1::zeros(nc + 1);
@@ -126,7 +126,7 @@ pub fn identify_oe_complete(
     let n = output.len();
 
     // Initialize using ARX model
-    let (ar_init, b_init_) = estimate_arx_ls(input, output, nf, nb, delay)?;
+    let (ar_init, b_init) = estimate_arx_ls(input, output, nf, nb, delay)?;
 
     // Convert AR to F polynomial (denominator)
     let mut f_coeffs = ar_init.clone();
@@ -211,7 +211,7 @@ pub fn identify_bj_complete(
     let n = output.len();
 
     // Stage 1: Estimate B and F using OE model
-    let (oe_model____) = identify_oe_complete(input, output, nb, nf, delay)?;
+    let (oe_model) = identify_oe_complete(input, output, nb, nf, delay)?;
 
     let (b_coeffs, f_coeffs) = match oe_model {
         SystemModel::OE { b, f, .. } => (b, f),
@@ -370,7 +370,7 @@ fn n4sid_algorithm(
     let proj = oblique_projection(&y_hankel, &u_hankel)?;
 
     // SVD of projection
-    let (u_svd, vt) = proj
+    let (u_svd, s, vt) = proj
         .svd(true, true)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
@@ -839,7 +839,7 @@ fn simulate_bj_model(
     // Generate innovations (would be estimated in practice)
     let mut rng = rand::rng();
     for i in 0..n {
-        noise[i] = rng.random_range(-0.1..0.1);
+        noise[i] = rng.gen_range(-0.1..0.1);
     }
 
     // Filter through C/D
@@ -879,7 +879,7 @@ fn update_bj_parameters(
     let y_clean = output - &y_noise;
 
     let (_, new_b, new_f) = {
-        let (oe_model____) = identify_oe_complete(input, &y_clean, b.len(), f.len() - 1, delay)?;
+        let (oe_model) = identify_oe_complete(input, &y_clean, b.len(), f.len() - 1, delay)?;
 
         match oe_model {
             SystemModel::OE { b, f, .. } => ((), b, f),
@@ -1137,9 +1137,9 @@ fn compute_parameter_statistics(
 
 /// Compute autocorrelation
 #[allow(dead_code)]
-fn compute_autocorrelation(_signal: &Array1<f64>, max_lag: usize) -> SignalResult<Vec<f64>> {
-    let n = _signal.len();
-    let mean = _signal.mean().unwrap_or(0.0);
+fn compute_autocorrelation(_signal: &Array1<f64>, maxlag: usize) -> SignalResult<Vec<f64>> {
+    let n = signal.len();
+    let mean = signal.mean().unwrap_or(0.0);
     let centered = _signal - mean;
 
     let mut r = vec![0.0; max_lag];
@@ -1157,8 +1157,8 @@ fn compute_autocorrelation(_signal: &Array1<f64>, max_lag: usize) -> SignalResul
 
 /// Compute pseudoinverse
 #[allow(dead_code)]
-fn compute_pseudoinverse(_matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
-    let (u, vt) = _matrix
+fn compute_pseudoinverse(matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
+    let (u, s, vt) = _matrix
         .svd(true, true)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
@@ -1223,11 +1223,11 @@ mod tests {
         // Generate test data
         let mut rng = rand::rng();
         for i in 2..n {
-            input[i] = rng.random_range(-1.0..1.0);
+            input[i] = rng.gen_range(-1.0..1.0);
             output[i] = 0.7 * output[i - 1] - 0.2 * output[i - 2]
                 + 0.5 * input[i - 1]
                 + 0.3 * input[i - 2]
-                + 0.1 * rng.random_range(-1.0..1.0);
+                + 0.1 * rng.gen_range(-1.0..1.0);
         }
 
         let (model__, converged_) = identify_armax_complete(&input, &output, 2, 2, 1, 1).unwrap();

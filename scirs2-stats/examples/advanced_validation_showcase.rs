@@ -1,296 +1,177 @@
-//! Advanced Validation Framework Showcase
+//! SciRS2 Statistics Showcase
 //!
-//! This example demonstrates the comprehensive validation framework for Advanced
-//! optimizations. It validates that SIMD, parallel, and other optimizations maintain
-//! numerical accuracy while providing performance benefits.
+//! This example demonstrates the comprehensive statistical functionality available
+//! in scirs2-stats, including distributions, descriptive statistics, tests, and correlations.
 
-use scirs2_stats::{create_advanced_validator, create_custom_advanced_validator, ValidationConfig};
+use ndarray::array;
+use scirs2_stats::distributions::{ChiSquare, Normal, Poisson};
+use scirs2_stats::tests::ttest::Alternative;
+use scirs2_stats::traits::{ContinuousDistribution, DiscreteDistribution, Distribution};
+use scirs2_stats::{mean, pearson_r, std, ttest_1samp};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🔬 Advanced Validation Framework Showcase");
-    println!("============================================\n");
+    println!("📊 SciRS2 Statistics Showcase");
+    println!("=============================\n");
 
-    // Demonstrate default validation
-    demonstrate_default_validation()?;
+    // Demonstrate distributions
+    demonstrate_distributions()?;
 
-    // Demonstrate custom validation configuration
-    demonstrate_custom_validation()?;
+    // Demonstrate descriptive statistics
+    demonstrate_descriptive_stats()?;
 
-    // Demonstrate detailed analysis
-    demonstrate_detailed_analysis()?;
+    // Demonstrate statistical tests
+    demonstrate_statistical_tests()?;
 
-    println!("\n✅ Advanced validation showcase completed successfully!");
-
-    Ok(())
-}
-
-/// Demonstrate validation with default configuration
-#[allow(dead_code)]
-fn demonstrate_default_validation() -> Result<(), Box<dyn std::error::Error>> {
-    println!("📊 Default Validation Configuration");
-    println!("-----------------------------------");
-
-    let mut validator = create_advanced_validator();
-
-    println!("🚀 Running comprehensive validation tests...");
-    let report = validator.validate_all_operations()?;
-
-    println!("\n📋 Validation Summary:");
-    println!("  {}", report.summary);
-    println!("  Total tests: {}", report.total_tests);
-    println!("  Passed: {}", report.passed_tests);
-    println!("  Failed: {}", report.failed_tests);
-    println!("  Average speedup: {:.2}x", report.average_speedup);
-    println!("  Average accuracy: {:.6}", report.average_accuracy);
-
-    // Show detailed results for any failures
-    let failed_tests: Vec<_> = report
-        .test_results
-        .iter()
-        .filter(|r| !r.accuracy_passed || !r.performance_passed)
-        .collect();
-
-    if !failed_tests.is_empty() {
-        println!("\n⚠️  Failed Test Details:");
-        for test in failed_tests {
-            println!("  {} (size: {}):", test.operation_name, test.data_size);
-            println!("    Speedup: {:.2}x", test.speedup_ratio);
-            println!("    Accuracy: {:.6}", test.numerical_accuracy);
-            for error in &test.error_messages {
-                println!("    Error: {}", error);
-            }
-        }
-    }
+    println!("\n✅ SciRS2 statistics showcase completed successfully!");
 
     Ok(())
 }
 
-/// Demonstrate custom validation configuration
+/// Demonstrate statistical distributions
 #[allow(dead_code)]
-fn demonstrate_custom_validation() -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n🔧 Custom Validation Configuration");
-    println!("----------------------------------");
+fn demonstrate_distributions() -> Result<(), Box<dyn std::error::Error>> {
+    println!("📈 Statistical Distributions");
+    println!("----------------------------");
 
-    // Create custom configuration for high-precision validation
-    let custom_config = ValidationConfig {
-        numerical_tolerance: 1e-15,        // Higher precision requirement
-        benchmark_iterations: 50,          // Fewer iterations for faster testing
-        min_performance_improvement: 1.05, // Lower performance threshold (5% improvement)
-        verbose_logging: true,
-        test_sizes: vec![1000, 10000], // Specific test sizes
-    };
+    // Normal distribution
+    let normal = Normal::new(0.0, 1.0)?;
+    println!("🔔 Normal Distribution (μ=0, σ=1):");
+    println!("  Mean: {:.3}", normal.mean());
+    println!("  Variance: {:.3}", normal.var());
+    println!("  PDF(0.0): {:.6}", normal.pdf(0.0));
+    println!("  CDF(1.96): {:.6}", normal.cdf(1.96)); // ~0.975
 
-    let mut validator = create_custom_advanced_validator(custom_config);
+    // Chi-square distribution
+    let chi2 = ChiSquare::new(2.0, 0.0, 1.0)?;
+    println!("\n🎯 Chi-Square Distribution (df=2):");
+    println!("  Mean: {:.3}", chi2.mean());
+    println!("  Variance: {:.3}", chi2.var());
+    println!("  PDF(1.0): {:.6}", chi2.pdf(1.0));
+    println!("  CDF(2.0): {:.6}", chi2.cdf(2.0));
 
-    println!("🚀 Running high-precision validation tests...");
-    let report = validator.validate_all_operations()?;
+    // Poisson distribution
+    let poisson = Poisson::new(3.0, 0.0)?;
+    println!("\n⚡ Poisson Distribution (λ=3):");
+    println!("  Mean: {:.3}", poisson.mean());
+    println!("  Variance: {:.3}", poisson.var());
+    println!("  PMF(2): {:.6}", poisson.pmf(2.0));
+    println!("  PMF(3): {:.6}", poisson.pmf(3.0));
 
-    println!("\n📋 High-Precision Validation Summary:");
-    println!("  {}", report.summary);
-
-    // Analyze performance trends across data sizes
-    analyze_performance_trends(&report);
+    // Generate some samples
+    println!("\n🎲 Random Samples:");
+    let normal_samples = normal.rvs(5)?;
+    let poisson_samples = poisson.rvs(5)?;
+    println!("  Normal samples: {:?}", normal_samples.to_vec());
+    println!("  Poisson samples: {:?}", poisson_samples.to_vec());
 
     Ok(())
 }
 
-/// Demonstrate detailed validation analysis
+/// Demonstrate descriptive statistics
 #[allow(dead_code)]
-fn demonstrate_detailed_analysis() -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n🔍 Detailed Validation Analysis");
-    println!("-------------------------------");
+fn demonstrate_descriptive_stats() -> Result<(), Box<dyn std::error::Error>> {
+    println!("\n📊 Descriptive Statistics");
+    println!("-------------------------");
 
-    let mut validator = create_advanced_validator();
-    let report = validator.validate_all_operations()?;
+    // Create sample data
+    let data = array![
+        1.2, 2.5, 3.1, 2.8, 4.0, 3.5, 2.9, 3.8, 4.2, 2.4, 3.7, 2.6, 3.3, 4.1, 2.7, 3.9, 2.3, 3.4,
+        4.3, 2.8
+    ];
 
-    // Analyze results by operation type
-    analyze_by_operation(&report);
+    println!(
+        "🔢 Sample Data (n={}): {:?}",
+        data.len(),
+        &data.to_vec()[..5]
+    );
+    println!("   ... (showing first 5 values)");
 
-    // Analyze results by data size
-    analyze_by_data_size(&report);
+    // Calculate basic statistics
+    let mean_val = mean(&data.view())?;
+    let std_val = std(&data.view(), 1, None)?; // ddof=1 for sample standard deviation
 
-    // Performance recommendations
-    generate_recommendations(&report);
+    println!("\n📈 Basic Statistics:");
+    println!("  Mean: {:.3}", mean_val);
+    println!("  Standard Deviation: {:.3}", std_val);
+    println!(
+        "  Min: {:.3}",
+        data.iter().fold(f64::INFINITY, |a, &b| a.min(b))
+    );
+    println!(
+        "  Max: {:.3}",
+        data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b))
+    );
+
+    // Demonstrate correlation with another variable
+    let x = array![
+        1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
+        17.0, 18.0, 19.0, 20.0
+    ];
+    let y = &data;
+
+    let correlation = pearson_r(&x.view(), &y.view())?;
+    println!("\n🔗 Correlation Analysis:");
+    println!("  Pearson correlation coefficient: {:.4}", correlation);
 
     Ok(())
 }
 
-/// Analyze performance trends across different data sizes
+/// Demonstrate statistical tests
 #[allow(dead_code)]
-fn analyze_performance_trends(_report: &scirs2_stats::ValidationReport) {
-    println!("\n📈 Performance Trend Analysis:");
+fn demonstrate_statistical_tests() -> Result<(), Box<dyn std::error::Error>> {
+    println!("\n🧪 Statistical Tests");
+    println!("--------------------");
 
-    let mut operations: std::collections::HashMap<String, Vec<&scirs2_stats::ValidationResult>> =
-        std::collections::HashMap::new();
+    // Create sample data for testing
+    let sample_data = array![
+        5.1, 4.9, 6.2, 5.7, 5.3, 5.0, 5.8, 5.4, 5.2, 5.6, 4.8, 5.9, 5.1, 5.3, 5.5, 5.2, 5.4, 5.0,
+        5.1, 4.9
+    ];
 
-    for result in &_report.test_results {
-        operations
-            .entry(result.operation_name.clone())
-            .or_insert_with(Vec::new)
-            .push(result);
-    }
+    println!(
+        "🔬 Sample Data (n={}): Testing if mean = 5.0",
+        sample_data.len()
+    );
 
-    for (operation, results) in operations {
-        println!("  {}:", operation);
+    // One-sample t-test
+    let ttest_result = ttest_1samp(&sample_data.view(), 5.0, Alternative::TwoSided, "propagate")?;
 
-        let mut sorted_results = results;
-        sorted_results.sort_by_key(|r| r.data_size);
+    println!("\n📊 One-Sample t-Test Results:");
+    println!("  Null hypothesis: μ = 5.0");
+    println!("  Alternative: μ ≠ 5.0 (two-sided)");
+    println!("  t-statistic: {:.4}", ttest_result.statistic);
+    println!("  p-value: {:.6}", ttest_result.pvalue);
 
-        for result in sorted_results {
-            let status = if result.accuracy_passed && result.performance_passed {
-                "✅"
-            } else {
-                "❌"
-            };
-            println!(
-                "    Size {:>8}: {:.2}x speedup, {:.6} accuracy {}",
-                result.data_size, result.speedup_ratio, result.numerical_accuracy, status
-            );
-        }
-    }
-}
+    let significance_level = 0.05;
+    let is_significant = ttest_result.pvalue < significance_level;
+    println!(
+        "  Significant at α = {}: {}",
+        significance_level,
+        if is_significant { "Yes ✅" } else { "No ❌" }
+    );
 
-/// Analyze validation results by operation type
-#[allow(dead_code)]
-fn analyze_by_operation(_report: &scirs2_stats::ValidationReport) {
-    println!("\n🔬 Analysis by Operation Type:");
-
-    let mut operation_stats: std::collections::HashMap<String, (usize, usize, f64, f64)> =
-        std::collections::HashMap::new();
-
-    for result in &_report.test_results {
-        let entry = operation_stats
-            .entry(result.operation_name.clone())
-            .or_insert((0, 0, 0.0, 0.0));
-
-        entry.0 += 1; // Total tests
-        if result.accuracy_passed && result.performance_passed {
-            entry.1 += 1; // Passed tests
-        }
-        entry.2 += result.speedup_ratio; // Sum of speedups
-        entry.3 += result.numerical_accuracy; // Sum of accuracies
-    }
-
-    for (operation, (total, passed, speedup_sum, accuracy_sum)) in operation_stats {
-        let pass_rate = (passed as f64 / total as f64) * 100.0;
-        let avg_speedup = speedup_sum / total as f64;
-        let avg_accuracy = accuracy_sum / total as f64;
-
-        println!(
-            "  {}: {:.1}% pass rate, {:.2}x avg speedup, {:.6} avg accuracy",
-            operation, pass_rate, avg_speedup, avg_accuracy
-        );
-    }
-}
-
-/// Analyze validation results by data size
-#[allow(dead_code)]
-fn analyze_by_data_size(_report: &scirs2_stats::ValidationReport) {
-    println!("\n📏 Analysis by Data Size:");
-
-    let mut size_stats: std::collections::HashMap<usize, (usize, usize, f64, f64)> =
-        std::collections::HashMap::new();
-
-    for result in &_report.test_results {
-        let entry = size_stats
-            .entry(result.data_size)
-            .or_insert((0, 0, 0.0, 0.0));
-
-        entry.0 += 1; // Total tests
-        if result.accuracy_passed && result.performance_passed {
-            entry.1 += 1; // Passed tests
-        }
-        entry.2 += result.speedup_ratio; // Sum of speedups
-        entry.3 += result.numerical_accuracy; // Sum of accuracies
-    }
-
-    let mut sizes: Vec<_> = size_stats.keys().cloned().collect();
-    sizes.sort();
-
-    for size in sizes {
-        if let Some((total, passed, speedup_sum, accuracy_sum)) = size_stats.get(&size) {
-            let pass_rate = (*passed as f64 / *total as f64) * 100.0;
-            let avg_speedup = speedup_sum / *total as f64;
-            let avg_accuracy = accuracy_sum / *total as f64;
-
-            println!(
-                "  Size {:>8}: {:.1}% pass rate, {:.2}x avg speedup, {:.6} avg accuracy",
-                size, pass_rate, avg_speedup, avg_accuracy
-            );
-        }
-    }
-}
-
-/// Generate optimization recommendations based on validation results
-#[allow(dead_code)]
-fn generate_recommendations(_report: &scirs2_stats::ValidationReport) {
-    println!("\n💡 Optimization Recommendations:");
-
-    let pass_rate = (_report.passed_tests as f64 / _report.total_tests as f64) * 100.0;
-
-    if pass_rate >= 95.0 {
-        println!("  ✅ Excellent validation results! Advanced optimizations are working well.");
-    } else if pass_rate >= 80.0 {
-        println!("  ⚠️  Good validation results, but some optimizations may need tuning.");
+    if is_significant {
+        println!("  Conclusion: Reject H₀ - the mean is significantly different from 5.0");
     } else {
-        println!("  ❌ Several validation failures detected. Review optimization strategies.");
+        println!("  Conclusion: Fail to reject H₀ - insufficient evidence that mean ≠ 5.0");
     }
 
-    if _report.average_speedup < 1.5 {
-        println!(
-            "  🚀 Consider increasing optimization aggressiveness (current avg speedup: {:.2}x)",
-            _report.average_speedup
-        );
-    }
+    // Show confidence interval information
+    let sample_mean = mean(&sample_data.view())?;
+    let sample_std = std(&sample_data.view(), 1, None)?;
+    let n = sample_data.len() as f64;
+    let se = sample_std / n.sqrt();
 
-    if _report.average_accuracy < 0.999999 {
-        println!(
-            "  🎯 Review numerical stability (current avg accuracy: {:.6})",
-            _report.average_accuracy
-        );
-    }
-
-    // Analyze failures for specific recommendations
-    let failed_tests: Vec<_> = _report
-        .test_results
-        .iter()
-        .filter(|r| !r.accuracy_passed || !r.performance_passed)
-        .collect();
-
-    if !failed_tests.is_empty() {
-        println!("  🔧 Specific Issues:");
-
-        let accuracy_failures = failed_tests.iter().filter(|r| !r.accuracy_passed).count();
-        let performance_failures = failed_tests
-            .iter()
-            .filter(|r| !r.performance_passed)
-            .count();
-
-        if accuracy_failures > 0 {
-            println!(
-                "    - {} accuracy failures: Consider adjusting SIMD precision or using higher precision types",
-                accuracy_failures
-            );
-        }
-
-        if performance_failures > 0 {
-            println!(
-                "    - {} performance failures: Consider adjusting optimization thresholds or parallel processing parameters",
-                performance_failures
-            );
-        }
-    }
-
-    println!("\n📊 Validation Metrics Summary:");
-    println!("  Total tests conducted: {}", _report.total_tests);
-    println!("  Overall success rate: {:.1}%", pass_rate);
+    println!("\n📈 Descriptive Statistics:");
+    println!("  Sample mean: {:.4}", sample_mean);
+    println!("  Sample std dev: {:.4}", sample_std);
+    println!("  Standard error: {:.4}", se);
     println!(
-        "  Average performance gain: {:.2}x",
-        _report.average_speedup
+        "  95% CI estimate: ({:.4}, {:.4})",
+        sample_mean - 1.96 * se,
+        sample_mean + 1.96 * se
     );
-    println!(
-        "  Average numerical accuracy: {:.6}",
-        _report.average_accuracy
-    );
+
+    Ok(())
 }

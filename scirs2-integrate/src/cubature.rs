@@ -291,7 +291,7 @@ where
 
     // Choose appropriate quadrature rule based on infinite _bounds
     if has_infinite_bound {
-        // For infinite _bounds, use a transformation and higher number of points
+        // For infinite bounds, use a transformation and higher number of points
         integrate_with_infinite_bounds(
             f,
             mapped_bounds,
@@ -302,7 +302,7 @@ where
             options,
         )
     } else {
-        // For finite _bounds, use standard Gauss-Kronrod quadrature
+        // For finite bounds, use standard Gauss-Kronrod quadrature
         integrate_with_finite_bounds(
             f,
             mapped_bounds,
@@ -429,7 +429,7 @@ where
     F: IntegrateFloat,
     Func: Fn(&Array1<F>) -> F,
 {
-    // For infinite _bounds, use Gauss-Legendre quadrature on the transformed interval
+    // For infinite bounds, use Gauss-Legendre quadrature on the transformed interval
     let (a_bound, b_bound) = &original_bounds[dim];
 
     // Use 20-point Gauss-Legendre quadrature for better accuracy

@@ -315,7 +315,7 @@ pub fn generate_synthetic_samples(
 
         // Generate _synthetic sample by interpolation
         let alpha = rng.gen_range(0.0..1.0);
-        for (j..synthetic_feature) in synthetic_data.row_mut(i).iter_mut().enumerate() {
+        for (j, synthetic_feature) in synthetic_data.row_mut(i).iter_mut().enumerate() {
             *synthetic_feature = "base_sample"[j] + alpha * (neighbor_sample[j] - base_sample[j]);
         }
     }

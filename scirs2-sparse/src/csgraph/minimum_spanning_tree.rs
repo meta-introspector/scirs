@@ -237,7 +237,7 @@ where
             mst_edges.push(edge.clone());
             total_weight = total_weight + edge.weight;
 
-            // Set parent relationship (arbitrary choice for undirected _tree)
+            // Set parent relationship (arbitrary choice for undirected tree)
             if parent[edge.v] == -1 {
                 parent[edge.v] = edge.u as isize;
             } else if parent[edge.u] == -1 {
@@ -355,7 +355,7 @@ where
 
 /// Build a sparse matrix representation of the MST from edges
 #[allow(dead_code)]
-fn build_mst_matrix<T>(_edges: &[Edge<T>], n: usize) -> SparseResult<CsrArray<T>>
+fn build_mst_matrix<T>(edges: &[Edge<T>], n: usize) -> SparseResult<CsrArray<T>>
 where
     T: Float + Debug + Copy + 'static,
 {
@@ -389,7 +389,7 @@ where
 ///
 /// True if the tree is a valid spanning tree, false otherwise
 #[allow(dead_code)]
-pub fn is_spanning_tree<T, S1, S2>(_graph: &S1, tree: &S2, tol: T) -> SparseResult<bool>
+pub fn is_spanning_tree<T, S1, S2>(graph: &S1, tree: &S2, tol: T) -> SparseResult<bool>
 where
     T: Float + Debug + Copy + 'static,
     S1: SparseArray<T>,
@@ -415,7 +415,7 @@ where
     for (i, (&u, &v)) in tree_rows.iter().zip(tree_cols.iter()).enumerate() {
         if u < v {
             // Check each edge only once
-            let graph_weight = _graph.get(u, v);
+            let graph_weight = graph.get(u, v);
             let tree_weight = tree_values[i];
 
             if (graph_weight - tree_weight).abs() > tol {
@@ -440,12 +440,12 @@ where
 ///
 /// Total weight of the spanning tree
 #[allow(dead_code)]
-pub fn spanning_tree_weight<T, S>(_tree: &S) -> SparseResult<T>
+pub fn spanning_tree_weight<T, S>(tree: &S) -> SparseResult<T>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (row_indices, col_indices, values) = _tree.find();
+    let (row_indices, col_indices, values) = tree.find();
     let mut total_weight = T::zero();
 
     // Sum weights, counting each undirected edge only once

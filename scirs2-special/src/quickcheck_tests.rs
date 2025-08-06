@@ -98,7 +98,7 @@ impl Arbitrary for ReasonableComplex {
 
 /// Helper function to run QuickCheck tests with custom configuration
 #[allow(dead_code)]
-pub fn run_quickcheck_test<F, P>(_prop: F, config: &TestConfig) -> bool
+pub fn run_quickcheck_test<F, P>(prop: F, config: &TestConfig) -> bool
 where
     F: Fn(P) -> bool + Send + Sync + 'static + quickcheck::Testable,
     P: Arbitrary + Clone + Send + std::fmt::Debug + 'static,
@@ -112,7 +112,7 @@ where
 
 /// Helper function to run QuickCheck tests that return TestResult
 #[allow(dead_code)]
-pub fn run_quickcheck_test_result<F, P>(_prop: F, config: &TestConfig) -> bool
+pub fn run_quickcheck_test_result<F, P>(prop: F, config: &TestConfig) -> bool
 where
     F: Fn(P) -> TestResult + Send + Sync + 'static + quickcheck::Testable,
     P: Arbitrary + Clone + Send + std::fmt::Debug + 'static,
@@ -439,13 +439,13 @@ mod statistical_function_properties {
     }
 
     #[quickcheck]
-    fn softmax_sum_to_one(_xs: Vec<f64>) -> bool {
-        if _xs.is_empty() || _xs.len() > 100 {
+    fn softmax_sum_to_one(xs: Vec<f64>) -> bool {
+        if xs.is_empty() || xs.len() > 100 {
             return true;
         }
 
         // Clamp values to reasonable range
-        let _xs: Vec<f64> = _xs.iter().map(|&x| x.clamp(-50.0, 50.0)).collect();
+        let _xs: Vec<f64> = xs.iter().map(|&x| x.clamp(-50.0, 50.0)).collect();
 
         let xs_array = ndarray::Array1::from(_xs.clone());
         let softmax_result = crate::statistical::softmax(xs_array.view());
@@ -458,20 +458,20 @@ mod statistical_function_properties {
     }
 
     #[quickcheck]
-    fn logsumexp_accuracy(_xs: Vec<f64>) -> bool {
-        if _xs.is_empty() || _xs.len() > 100 {
+    fn logsumexp_accuracy(xs: Vec<f64>) -> bool {
+        if xs.is_empty() || xs.len() > 100 {
             return true;
         }
 
         // Clamp to reasonable range
-        let _xs: Vec<f64> = _xs.iter().map(|&x| x.clamp(-100.0, 100.0)).collect();
+        let _xs: Vec<f64> = xs.iter().map(|&x| x.clamp(-100.0, 100.0)).collect();
 
         let xs_array = ndarray::Array1::from(_xs.clone());
         let lse_result = crate::statistical::logsumexp(xs_array.view());
         let lse = lse_result.unwrap_or(f64::NAN);
 
         // Direct calculation (may overflow)
-        let direct: f64 = _xs.iter().map(|&x| x.exp()).sum::<f64>().ln();
+        let direct: f64 = xs.iter().map(|&x| x.exp()).sum::<f64>().ln();
 
         if !lse.is_finite() || !direct.is_finite() {
             // If direct overflows but logsumexp doesn't, that's good
@@ -497,8 +497,8 @@ mod integration {
     #[test]
     fn test_quickcheck_infrastructure() {
         // Basic test to ensure QuickCheck is working
-        fn prop_reversing_twice_is_identity(_xs: Vec<i32>) -> bool {
-            let mut rev = _xs.clone();
+        fn prop_reversing_twice_is_identity(xs: Vec<i32>) -> bool {
+            let mut rev = xs.clone();
             rev.reverse();
             rev.reverse();
             _xs == rev

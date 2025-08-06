@@ -124,7 +124,7 @@ impl<C: ConditionalDistribution> GibbsSampler<C> {
 
         for i in 0..n_samples_ {
             let sample = self.step(rng)?;
-            _samples.row_mut(i).assign(&sample);
+            samples.row_mut(i).assign(&sample);
         }
 
         Ok(_samples)
@@ -165,7 +165,7 @@ impl<C: ConditionalDistribution> GibbsSampler<C> {
             for _ in 0..thin {
                 self.step(rng)?;
             }
-            _samples.row_mut(i).assign(&self.current);
+            samples.row_mut(i).assign(&self.current);
         }
 
         Ok(_samples)
@@ -630,7 +630,7 @@ impl<C: ConditionalDistribution> BlockedGibbsSampler<C> {
 
         for i in 0..n_samples_ {
             let sample = self.step(rng)?;
-            _samples.row_mut(i).assign(&sample);
+            samples.row_mut(i).assign(&sample);
         }
 
         Ok(_samples)

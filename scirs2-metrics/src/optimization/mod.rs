@@ -42,9 +42,9 @@
 //! use scirs2__metrics::error::Result;
 //! use ndarray::Array1;
 //!
-//! fn compute_multiple_metrics(_y_true: &Array1<f64>, y_pred: &Array1<f64>) -> Result<Vec<f64>> {
+//! fn compute_multiple_metrics(_y_true: &Array1<f64>, ypred: &Array1<f64>) -> Result<Vec<f64>> {
 //!     let config = ParallelConfig {
-//!         parallel_enabled: _true,
+//!         parallel_enabled: true,
 //!         min_chunk_size: 1000,
 //!         num_threads: None,
 //!     };
@@ -72,7 +72,7 @@
 //!         (0.0, 0)
 //!     }
 //!     
-//!     fn update_state(&self, state: &mut Self::State, batch_true: &[f64], batch_pred: &[f64]) -> Result<()> {
+//!     fn update_state(&self, state: &mut Self::State, batch_true: &[f64], batchpred: &[f64]) -> Result<()> {
 //!         for (y_t, y_p) in batch_true.iter().zip(batch_pred.iter()) {
 //!             state.0 += (y_t - y_p).abs();
 //!             state.1 += 1;

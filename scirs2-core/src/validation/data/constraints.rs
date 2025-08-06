@@ -120,7 +120,7 @@ pub struct ArrayValidationConstraints {
     /// Expected array shape
     pub expectedshape: Option<Vec<usize>>,
     /// Field name for error reporting
-    pub field_name: Option<String>,
+    pub fieldname: Option<String>,
     /// Check for NaN and infinity values
     pub check_numeric_quality: bool,
     /// Statistical constraints
@@ -136,7 +136,7 @@ impl ArrayValidationConstraints {
     pub fn new() -> Self {
         Self {
             expectedshape: None,
-            field_name: None,
+            fieldname: None,
             check_numeric_quality: false,
             statistical_constraints: None,
             check_performance: false,
@@ -151,8 +151,8 @@ impl ArrayValidationConstraints {
     }
 
     /// Set field name
-    pub fn with_field_name(mut self, name: &str) -> Self {
-        self.field_name = Some(name.to_string());
+    pub fn with_fieldname(mut self, name: &str) -> Self {
+        self.fieldname = Some(name.to_string());
         self
     }
 
@@ -688,12 +688,12 @@ mod tests {
     fn test_array_validation_constraints() {
         let constraints = ArrayValidationConstraints::new()
             .withshape(vec![10, 20])
-            .with_field_name(test_array)
+            .with_fieldname(test_array)
             .check_numeric_quality()
             .check_performance();
 
         assert_eq!(constraints.expectedshape, Some(vec![10, 20]));
-        assert_eq!(constraints.field_name, Some(test_array.to_string()));
+        assert_eq!(constraints.fieldname, Some(test_array.to_string()));
         assert!(constraints.check_numeric_quality);
         assert!(constraints.check_performance);
     }

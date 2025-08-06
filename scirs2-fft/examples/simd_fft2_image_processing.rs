@@ -72,7 +72,7 @@ fn main() {
 
 /// Generate a test image with various frequency components
 #[allow(dead_code)]
-fn generate_test_image(_width: usize, height: usize) -> Vec<f64> {
+fn generate_test_image(width: usize, height: usize) -> Vec<f64> {
     let mut image = vec![0.0; _width * height];
 
     for y in 0..height {

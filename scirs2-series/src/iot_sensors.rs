@@ -66,7 +66,7 @@ pub struct EnvironmentalSensorAnalysis {
 
 impl EnvironmentalSensorAnalysis {
     /// Create new environmental sensor analysis
-    pub fn new(_timestamps: Array1<i64>, sampling_interval: f64) -> Result<Self> {
+    pub fn new(_timestamps: Array1<i64>, samplinginterval: f64) -> Result<Self> {
         check_positive(sampling_interval, "sampling_interval")?;
 
         Ok(Self {
@@ -74,7 +74,7 @@ impl EnvironmentalSensorAnalysis {
             humidity: None,
             pressure: None,
             light: None,
-            _timestamps,
+            timestamps,
             sampling_interval,
         })
     }
@@ -275,14 +275,14 @@ pub struct MotionSensorAnalysis {
 
 impl MotionSensorAnalysis {
     /// Create new motion sensor analysis
-    pub fn new(_timestamps: Array1<i64>, fs: f64) -> Result<Self> {
+    pub fn new(timestamps: Array1<i64>, fs: f64) -> Result<Self> {
         check_positive(fs, "sampling_frequency")?;
 
         Ok(Self {
             acceleration: None,
             motion: None,
             gps: None,
-            _timestamps,
+            timestamps,
             fs,
         })
     }
@@ -673,7 +673,7 @@ impl IoTAnalysis {
     }
 
     /// Add data quality assessment for a sensor
-    pub fn add_quality_assessment(&mut self, sensor_name: String, quality: DataQuality) {
+    pub fn add_quality_assessment(&mut self, sensorname: String, quality: DataQuality) {
         self.quality_assessments.insert(sensor_name, quality);
     }
 

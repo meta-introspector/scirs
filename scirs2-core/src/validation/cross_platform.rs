@@ -512,7 +512,7 @@ impl CrossPlatformValidator {
     pub fn validate_numeric_cross_platform<T>(
         &mut self,
         value: T,
-        field_name: &str,
+        fieldname: &str,
     ) -> ValidationResult
     where
         T: PartialOrd + Copy + std::fmt::Debug + std::fmt::Display + 'static,
@@ -528,7 +528,7 @@ impl CrossPlatformValidator {
         if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>()
             || std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>()
         {
-            self.validate_floating_point_value(&value, field_name, &mut result);
+            self.validate_floating_point_value(&value, fieldname, &mut result);
         }
 
         // Check for endianness-sensitive operations
@@ -545,7 +545,7 @@ impl CrossPlatformValidator {
     fn validate_floating_point_value<T>(
         &self,
         value: &T,
-        field_name: &str,
+        fieldname: &str,
         result: &mut ValidationResult,
     ) where
         T: std::fmt::Debug + std::fmt::Display,
@@ -558,8 +558,8 @@ impl CrossPlatformValidator {
             result.is_valid = false;
             result.errors.push(ValidationError {
                 code: "INFINITY_NOT_SUPPORTED".to_string(),
-                message: format!("Infinity values not supported on this platform for {field_name}"),
-                field: Some(field_name.to_string()),
+                message: format!("Infinity values not supported on this platform for {fieldname}"),
+                field: Some(fieldname.to_string()),
                 suggestion: Some("Use finite values only".to_string()),
                 severity: ValidationSeverity::Error,
             });
@@ -567,7 +567,7 @@ impl CrossPlatformValidator {
 
         if value_str.contains("nan") && !self.platform_info.fp_behavior.nan_propagation {
             result.warnings.push(format!(
-                "NaN value in {field_name} - platform may not handle NaN propagation correctly"
+                "NaN value in {fieldname} - platform may not handle NaN propagation correctly"
             ));
         }
     }

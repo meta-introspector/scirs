@@ -496,7 +496,8 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> MultiGraph<N, E, I
             adjacency: HashMap::new(),
             nodes: std::collections::HashSet::new(),
             edge_id_counter: 0,
-            edges: HashMap::new(), _phantom: std::marker::PhantomData,
+            edges: HashMap::new(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -568,7 +569,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> MultiGraph<N, E, I
     }
 
     /// Remove an edge by its ID
-    pub fn remove_edge(&mut self, edge_id: usize) -> Result<Edge<N, E>>
+    pub fn remove_edge(&mut self, edgeid: usize) -> Result<Edge<N, E>>
     where
         N: Clone,
         E: Clone,
@@ -576,12 +577,12 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> MultiGraph<N, E, I
         if let Some(edge) = self.edges.remove(&edge_id) {
             // Remove from adjacency lists
             if let Some(neighbors) = self.adjacency.get_mut(&edge.source) {
-                neighbors.retain(|(__, _id)| *_id != edge_id);
+                neighbors.retain(|(__, id)| *_id != edge_id);
             }
 
             if edge.source != edge.target {
                 if let Some(neighbors) = self.adjacency.get_mut(&edge.target) {
-                    neighbors.retain(|(__, _id)| *_id != edge_id);
+                    neighbors.retain(|(__, id)| *_id != edge_id);
                 }
             }
 
@@ -652,7 +653,8 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> MultiDiGraph<N, E,
             in_adjacency: HashMap::new(),
             nodes: std::collections::HashSet::new(),
             edge_id_counter: 0,
-            edges: HashMap::new(), _phantom: std::marker::PhantomData,
+            edges: HashMap::new(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -721,7 +723,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> MultiDiGraph<N, E,
     }
 
     /// Remove an edge by its ID
-    pub fn remove_edge(&mut self, edge_id: usize) -> Result<Edge<N, E>>
+    pub fn remove_edge(&mut self, edgeid: usize) -> Result<Edge<N, E>>
     where
         N: Clone,
         E: Clone,
@@ -729,12 +731,12 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> MultiDiGraph<N, E,
         if let Some(edge) = self.edges.remove(&edge_id) {
             // Remove from outgoing adjacency list
             if let Some(neighbors) = self.out_adjacency.get_mut(&edge.source) {
-                neighbors.retain(|(__, _id)| *_id != edge_id);
+                neighbors.retain(|(__, id)| *_id != edge_id);
             }
 
             // Remove from incoming adjacency list
             if let Some(neighbors) = self.in_adjacency.get_mut(&edge.target) {
-                neighbors.retain(|(__, _id)| *_id != edge_id);
+                neighbors.retain(|(__, id)| *_id != edge_id);
             }
 
             Ok(edge)
@@ -853,7 +855,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> BipartiteGraph<N, 
     ///
     /// # Returns
     /// * `Result<BipartiteGraph<N, E, Ix>>` - The bipartite graph if conversion is successful
-    pub fn from_graph(_graph: Graph<N, E, Ix>) -> Result<Self>
+    pub fn from_graph(graph: Graph<N, E, Ix>) -> Result<Self>
     where
         N: Clone,
         E: Clone,
@@ -880,7 +882,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> BipartiteGraph<N, 
         }
 
         Ok(BipartiteGraph {
-            _graph,
+            graph,
             set_a,
             set_b,
         })
@@ -1069,7 +1071,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> BipartiteGraph<N, 
     /// Returns a matrix where rows correspond to set A and columns to set B
     pub fn biadjacency_matrix(&self) -> Array2<E>
     where
-        E: num_traits:: Zero + Copy,
+        E: num_traits::Zero + Copy,
         N: Clone,
     {
         let a_size = self.set_a.len();
@@ -1171,7 +1173,8 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
             nodes: std::collections::HashSet::new(),
             hyperedges: HashMap::new(),
             node_to_hyperedges: HashMap::new(),
-            hyperedge_id_counter: 0, _phantom: std::marker::PhantomData,
+            hyperedge_id_counter: 0,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -1233,7 +1236,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
     }
 
     /// Remove a hyperedge by its ID
-    pub fn remove_hyperedge(&mut self, hyperedge_id: usize) -> Result<Hyperedge<N, E>>
+    pub fn remove_hyperedge(&mut self, hyperedgeid: usize) -> Result<Hyperedge<N, E>>
     where
         N: Clone,
         E: Clone,
@@ -1278,7 +1281,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
     }
 
     /// Get a specific hyperedge by its ID
-    pub fn get_hyperedge(&self, hyperedge_id: usize) -> Option<Hyperedge<N, E>>
+    pub fn get_hyperedge(&self, hyperedgeid: usize) -> Option<Hyperedge<N, E>>
     where
         N: Clone,
         E: Clone,
@@ -1351,7 +1354,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
     }
 
     /// Check if the hypergraph contains a specific hyperedge
-    pub fn has_hyperedge(&self, hyperedge_id: usize) -> bool {
+    pub fn has_hyperedge(&self, hyperedgeid: usize) -> bool {
         self.hyperedges.contains_key(&hyperedge_id)
     }
 
@@ -1363,7 +1366,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
     }
 
     /// Get the size of a hyperedge (number of nodes it connects)
-    pub fn hyperedge_size(&self, hyperedge_id: usize) -> Option<usize> {
+    pub fn hyperedge_size(&self, hyperedgeid: usize) -> Option<usize> {
         self.hyperedges
             .get(&hyperedge_id)
             .map(|(nodes_)| nodes.len())
@@ -1577,7 +1580,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
     }
 
     /// Create a hypergraph from a regular graph where each edge becomes a 2-uniform hyperedge
-    pub fn from_graph(_graph: &Graph<N, E, Ix>) -> Self
+    pub fn from_graph(graph: &Graph<N, E, Ix>) -> Self
     where
         N: Clone,
         E: Clone,
@@ -1585,12 +1588,12 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, I
         let mut hypergraph = Hypergraph::new();
 
         // Add all nodes
-        for node in _graph.nodes() {
+        for node in graph.nodes() {
             hypergraph.add_node(node.clone());
         }
 
         // Convert each edge to a 2-uniform hyperedge
-        for edge in _graph.edges() {
+        for edge in graph.edges() {
             let mut nodes = std::collections::HashSet::new();
             nodes.insert(edge.source);
             nodes.insert(edge.target);

@@ -97,7 +97,7 @@ fn run_custom_benchmark(
 
 #[allow(dead_code)]
 fn save_benchmark_results(
-    suite: &scirs2_special::performance, _benchmarks::BenchmarkSuite,
+    suite: &scirs2_special::performance_benchmarks::BenchmarkSuite,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Save text report
     let report = suite.generate_report();
@@ -112,7 +112,7 @@ fn save_benchmark_results(
 
 #[allow(dead_code)]
 fn generate_performance_recommendations(
-    suite: &scirs2_special::performance, _benchmarks::BenchmarkSuite,
+    suite: &scirs2_special::performance_benchmarks::BenchmarkSuite,
 ) {
     println!("\n{}", "=".repeat(60));
     println!("PERFORMANCE RECOMMENDATIONS");

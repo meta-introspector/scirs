@@ -78,7 +78,7 @@ pub struct AdaptivePDESolver {
 
 impl AdaptivePDESolver {
     /// Create new adaptive PDE solver
-    pub fn new(_initial_resolution: usize, domain_size: f64) -> IntegrateResult<Self> {
+    pub fn new(_initial_resolution: usize, domainsize: f64) -> IntegrateResult<Self> {
         let mut profiler = PerformanceProfiler::new();
         profiler.start_phase("solver_initialization");
 
@@ -126,7 +126,7 @@ impl AdaptivePDESolver {
     }
 
     /// Create initial uniform mesh
-    fn create_initial_mesh(_resolution: usize, domain_size: f64) -> AdaptiveMeshLevel<f64> {
+    fn create_initial_mesh(_resolution: usize, domainsize: f64) -> AdaptiveMeshLevel<f64> {
         let mut cells = HashMap::new();
         let cell_size = domain_size / _resolution as f64;
         let mut boundary_cells = HashSet::new();
@@ -365,7 +365,7 @@ pub struct SolverStatistics {
 
 /// Initial concentration for species u
 #[allow(dead_code)]
-fn initial_concentration_u(x: f64, y: f64, domain_size: f64) -> f64 {
+fn initial_concentration_u(x: f64, y: f64, domainsize: f64) -> f64 {
     let center_x = domain_size * 0.5;
     let center_y = domain_size * 0.5;
     let radius = domain_size * 0.1;
@@ -381,7 +381,7 @@ fn initial_concentration_u(x: f64, y: f64, domain_size: f64) -> f64 {
 
 /// Initial concentration for species v
 #[allow(dead_code)]
-fn initial_concentration_v(x: f64, y: f64, domain_size: f64) -> f64 {
+fn initial_concentration_v(x: f64, y: f64, domainsize: f64) -> f64 {
     let center_x = domain_size * 0.5;
     let center_y = domain_size * 0.5;
     let radius = domain_size * 0.15;

@@ -129,13 +129,13 @@ pub mod quantum_enhanced_generators;
 pub mod quantum_neuromorphic_fusion;
 
 // Re-export commonly used functionality
-pub use adaptive_streaming__engine::{
+pub use adaptive_streaming_engine::{
     create_adaptive_engine, create_adaptive_engine_with_config, AdaptiveStreamConfig,
     AdaptiveStreamingEngine, AlertSeverity, AlertType, ChunkMetadata, DataCharacteristics,
     MemoryStrategy, PatternType, PerformanceMetrics, QualityAlert, QualityMetrics,
     StatisticalMoments, StreamChunk, TrendDirection, TrendIndicators,
 };
-pub use advanced__generators::{
+pub use advanced_generators::{
     make_adversarial_examples, make_anomaly_dataset, make_continual_learning_dataset,
     make_domain_adaptation_dataset, make_few_shot_dataset, make_multitask_dataset,
     AdversarialConfig, AnomalyConfig, AnomalyType, AttackMethod, ContinualLearningDataset,
@@ -149,7 +149,7 @@ pub use cloud::{
     CloudClient, CloudConfig, CloudCredentials, CloudProvider,
 };
 pub use distributed::{DistributedConfig, DistributedProcessor, ScalingMethod, ScalingParameters};
-pub use domain__specific::{
+pub use domain_specific::{
     astronomy::StellarDatasets,
     climate::ClimateDatasets,
     convenience::{
@@ -171,7 +171,7 @@ pub use external::{
     repositories::{GitHubRepository, KaggleRepository, UCIRepository},
     ExternalClient, ExternalConfig, ProgressCallback,
 };
-pub use ml__integration::{
+pub use ml_integration::{
     convenience::{create_experiment, cv_split, prepare_for_ml, train_test_split},
     CrossValidationResults, DataSplit, MLExperiment, MLPipeline, MLPipelineConfig,
     ScalingMethod as MLScalingMethod,
@@ -197,7 +197,7 @@ pub use gpu::{
     make_blobs_auto_gpu, make_classification_auto_gpu, make_regression_auto_gpu, GpuBackend,
     GpuBenchmark, GpuBenchmarkResults, GpuConfig, GpuContext, GpuDeviceInfo, GpuMemoryConfig,
 };
-pub use gpu__optimization::{
+pub use gpu_optimization::{
     benchmark_advanced_performance, generate_advanced_matrix, AdvancedGpuOptimizer,
     AdvancedKernelConfig, BenchmarkResult as AdvancedBenchmarkResult, DataLayout,
     LoadBalancingMethod, MemoryAccessPattern, PerformanceBenchmarkResults, SpecializationLevel,
@@ -207,19 +207,19 @@ pub use loaders::{
     load_csv, load_csv_legacy, load_csv_parallel, load_csv_streaming, load_json, load_raw,
     save_json, CsvConfig, DatasetChunkIterator, StreamingConfig,
 };
-pub use neuromorphic_data__processor::{
+pub use neuromorphic_data_processor::{
     create_neuromorphic_processor, create_neuromorphic_processor_with_topology, NetworkTopology,
     NeuromorphicProcessor, NeuromorphicTransform, SynapticPlasticity,
 };
-pub use quantum_enhanced__generators::{
+pub use quantum_enhanced_generators::{
     make_quantum_blobs, make_quantum_classification, make_quantum_regression,
     QuantumDatasetGenerator,
 };
-pub use quantum_neuromorphic__fusion::{
+pub use quantum_neuromorphic_fusion::{
     create_fusion_with_params, create_quantum_neuromorphic_fusion, QuantumBioFusionResult,
     QuantumInterference, QuantumNeuromorphicFusion,
 };
-pub use real__world::{
+pub use real_world::{
     list_real_world_datasets, load_adult, load_california_housing, load_heart_disease,
     load_red_wine_quality, load_titanic, RealWorldConfig, RealWorldDatasets,
 };

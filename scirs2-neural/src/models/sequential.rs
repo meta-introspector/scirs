@@ -51,9 +51,9 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Seque
     }
 
     /// Create a new sequential model from existing layers
-    pub fn from_layers(_layers: Vec<Box<dyn Layer<F> + Send + Sync>>) -> Self {
+    pub fn from_layers(layers: Vec<Box<dyn Layer<F> + Send + Sync>>) -> Self {
         Self {
-            _layers,
+            layers,
             layer_outputs: Vec::new(),
             input: None,
             history: History::default(),
@@ -195,9 +195,9 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Model
             };
             grad_input = layer.backward(layer_input, &grad_input)?;
         Ok(grad_input)
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         for layer in &mut self.layers {
-            layer.update(learning_rate)?;
+            layer.update(learningrate)?;
     fn train_batch(
         targets: &Array<F, ndarray::IxDyn>,
     ) -> Result<F> {

@@ -751,8 +751,8 @@ pub fn cat<F: Float + Debug + Send + Sync + 'static>(
                 backward_fns.push(Some(Box::new(
                     move |grad: Array<F, IxDyn>| -> Result<Array<F, IxDyn>> {
                         // Extract the appropriate slice of the gradient for this tensor
-                        let tensorshape = _tensorshape.clone();
-                        let dim = _dim_clone;
+                        let tensorshape = tensorshape.clone();
+                        let dim = dim_clone;
                         let offset = offset; // Capture from outer scope
                         
                         // Get the size of this tensor along the concatenation dimension

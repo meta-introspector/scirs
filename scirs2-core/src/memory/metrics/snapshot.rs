@@ -142,7 +142,7 @@ impl MemorySnapshot {
 
     /// Save the snapshot to a file - stub when memory_metrics is disabled
     #[cfg(not(feature = "memory_metrics"))]
-    pub fn save_to_file(&self, _path: impl AsRef<Path>) -> io::Result<()> {
+    pub fn save_to_file(&self, path: impl AsRef<Path>) -> io::Result<()> {
         Ok(())
     }
 
@@ -158,7 +158,7 @@ impl MemorySnapshot {
 
     /// Load a snapshot from a file - stub when memory_metrics is disabled
     #[cfg(not(feature = "memory_metrics"))]
-    pub fn load_from_file(_path: impl AsRef<Path>) -> io::Result<Self> {
+    pub fn load_from_file(path: impl AsRef<Path>) -> io::Result<Self> {
         Ok(Self::new("stub_id", "stub_description"))
     }
 
@@ -602,9 +602,9 @@ impl SnapshotManager {
     }
 
     /// Compare two snapshots
-    pub fn compare_snapshots(&self, first_id: &str, second_id: &str) -> Option<SnapshotDiff> {
+    pub fn compare_snapshots(&self, first_id: &str, secondid: &str) -> Option<SnapshotDiff> {
         let first = self.get_snapshot(first_id)?;
-        let second = self.get_snapshot(second_id)?;
+        let second = self.get_snapshot(secondid)?;
         Some(first.compare(second))
     }
 
@@ -690,7 +690,7 @@ pub fn take_snapshot(id: impl Into<String>, description: impl Into<String>) -> M
 
 /// Compare two snapshots using the global snapshot manager
 #[allow(dead_code)]
-pub fn compare_snapshots(first_id: &str, second_id: &str) -> Option<SnapshotDiff> {
+pub fn compare_snapshots(first_id: &str, secondid: &str) -> Option<SnapshotDiff> {
     let manager = match global_snapshot_manager().lock() {
         Ok(guard) => guard,
         Err(poisoned) => {
@@ -698,7 +698,7 @@ pub fn compare_snapshots(first_id: &str, second_id: &str) -> Option<SnapshotDiff
             poisoned.into_inner()
         }
     };
-    manager.compare_snapshots(first_id, second_id)
+    manager.compare_snapshots(first_id, secondid)
 }
 
 /// Save all snapshots to a directory using the global snapshot manager
@@ -826,13 +826,13 @@ mod tests {
         reset_memory_metrics();
 
         // Create a new baseline snapshot
-        let snapshot_base = MemorySnapshot::new("base", "Base for deallocation test");
+        let snapshotbase = MemorySnapshot::new("base", "Base for deallocation test");
 
         // Verify that it starts with zero
         assert_eq!(
-            snapshot_base.report.total_current_usage, 0,
+            snapshotbase.report.total_current_usage, 0,
             "Baseline snapshot after reset should have 0 memory usage but had {} bytes",
-            snapshot_base.report.total_current_usage
+            snapshotbase.report.total_current_usage
         );
 
         // Allocate and then deallocate

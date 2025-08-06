@@ -7,7 +7,7 @@ use std::time::Instant;
 
 /// Generate random points in a unit hypercube
 #[allow(dead_code)]
-fn generate_random_points(_n_samples: usize, n_features: usize, seed: u64) -> Array2<f64> {
+fn generate_random_points(_n_samples: usize, nfeatures: usize, seed: u64) -> Array2<f64> {
     let mut rng = ChaCha8Rng::seed_from_u64(seed);
 
     let mut data = Array2::zeros((_n_samples, n_features));
@@ -67,7 +67,7 @@ fn benchmark_nearest_neighbor(
 
 /// Compare different distance metrics
 #[allow(dead_code)]
-fn compare_distance_metrics(_data: &Array2<f64>, query_point: &[f64], k: usize) {
+fn compare_distance_metrics(_data: &Array2<f64>, querypoint: &[f64], k: usize) {
     // Create Ball trees with different distance metrics
     let ball_tree_euclidean = BallTree::with_euclidean_distance(&_data.view(), 20).unwrap();
     let ball_tree_manhattan = BallTree::new(&_data.view(), 20, ManhattanDistance::new()).unwrap();
@@ -107,7 +107,7 @@ fn compare_distance_metrics(_data: &Array2<f64>, query_point: &[f64], k: usize) 
             i + 1,
             idx,
             dist,
-            _data.row(idx)
+            data.row(idx)
         );
     }
 
@@ -122,7 +122,7 @@ fn compare_distance_metrics(_data: &Array2<f64>, query_point: &[f64], k: usize) 
             i + 1,
             idx,
             dist,
-            _data.row(idx)
+            data.row(idx)
         );
     }
 
@@ -137,7 +137,7 @@ fn compare_distance_metrics(_data: &Array2<f64>, query_point: &[f64], k: usize) 
             i + 1,
             idx,
             dist,
-            _data.row(idx)
+            data.row(idx)
         );
     }
 }
@@ -170,7 +170,7 @@ fn demonstrate_radius_search(
 
 /// Demonstrate dual tree search (finding pairs of points within a radius)
 #[allow(dead_code)]
-fn demonstrate_dual_tree_search(_data1: &Array2<f64>, data2: &Array2<f64>, radius: f64) {
+fn demonstrate_dual_tree_search(data1: &Array2<f64>, data2: &Array2<f64>, radius: f64) {
     println!("\nFinding pairs of points from two datasets within radius {radius}:");
 
     let tree1 = BallTree::new(&_data1.view(), 20, ManhattanDistance::new()).unwrap();
@@ -190,7 +190,7 @@ fn demonstrate_dual_tree_search(_data1: &Array2<f64>, data2: &Array2<f64>, radiu
             i + 1,
             idx1,
             idx2,
-            _data1.row(idx1),
+            data1.row(idx1),
             data2.row(idx2)
         );
     }

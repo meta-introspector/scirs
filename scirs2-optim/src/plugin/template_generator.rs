@@ -336,7 +336,7 @@ pub struct MarkdownValidator;
 
 impl AdvancedTemplateGenerator {
     /// Create a new advanced template generator
-    pub fn new(_config: TemplateGeneratorConfig) -> Self {
+    pub fn new(config: TemplateGeneratorConfig) -> Self {
         let mut template_registry = TemplateRegistry::new();
         template_registry.register_builtin_templates();
         
@@ -352,7 +352,7 @@ impl AdvancedTemplateGenerator {
         let validator = TemplateValidator::new();
         
         Self {
-            _config,
+            config,
             template_registry,
             generators,
             validator,
@@ -452,7 +452,7 @@ impl AdvancedTemplateGenerator {
     }
     
     /// Get template details
-    pub fn get_template_details(&self, template_name: &str) -> Option<TemplateDetails> {
+    pub fn get_template_details(&self, templatename: &str) -> Option<TemplateDetails> {
         self.template_registry.get_template_details(template_name)
     }
     
@@ -471,7 +471,7 @@ impl AdvancedTemplateGenerator {
     }
     
     /// Generate template from existing plugin
-    pub fn generate_template_from_plugin(&self, plugin_dir: &Path, template_name: &str) -> Result<PluginTemplate> {
+    pub fn generate_template_from_plugin(&self, plugin_dir: &Path, templatename: &str) -> Result<PluginTemplate> {
         // Analyze existing plugin structure
         let analyzer = PluginAnalyzer::new();
         let analysis = analyzer.analyze_plugin(plugin_dir)?;
@@ -501,7 +501,7 @@ impl AdvancedTemplateGenerator {
     }
     
     /// Validate individual parameter value
-    fn validate_parameter_value(&self, param_def: &TemplateParameter, value: &str) -> Result<()> {
+    fn validate_parameter_value(&self, paramdef: &TemplateParameter, value: &str) -> Result<()> {
         for validation in &param_def.validation {
             match validation {
                 ParameterValidation::MinLength(min_len) => {
@@ -549,7 +549,7 @@ impl AdvancedTemplateGenerator {
     }
     
     /// Check if generator should be used based on configuration
-    fn should_use_generator(&self, generator_type: &GeneratorType) -> bool {
+    fn should_use_generator(&self, generatortype: &GeneratorType) -> bool {
         match generator_type {
             GeneratorType::OptimizerCore => true, // Always include core
             GeneratorType::TestSuite => true, // Always include tests
@@ -615,7 +615,7 @@ impl GenerationStats {
         }
     }
     
-    fn update_for_generator(&mut self, generator_type: &GeneratorType, file_count: usize) {
+    fn update_for_generator(&mut self, generator_type: &GeneratorType, filecount: usize) {
         self.files_by_generator.insert(generator_type.clone(), file_count);
         self.total_files += file_count;
     }
@@ -704,7 +704,7 @@ impl CodeGenerator for OptimizerCoreGenerator {
 }
 
 impl OptimizerCoreGenerator {
-    fn generate_optimizer_code(&self, name: &str, learning_rate: &str, config: &TemplateGeneratorConfig) -> Result<String> {
+    fn generate_optimizer_code(&self, name: &str, learningrate: &str, config: &TemplateGeneratorConfig) -> Result<String> {
         let content = format!(
             r#"//! {} Optimizer Plugin
 //!
@@ -766,7 +766,7 @@ impl<T: Float> Default for {}State<T> {{
 
 impl<T: Float> {}<T> {{
     /// Create a new {} optimizer
-    pub fn new(_config: {}Config<T>) -> Self {{
+    pub fn new(config: {}Config<T>) -> Self {{
         let info = create_plugin_info("{}", env!("CARGO_PKG_VERSION"), "Auto-generated");
         let mut capabilities = create_basic_capabilities();
         capabilities.momentum = true; // Enable if using momentum
@@ -781,7 +781,7 @@ impl<T: Float> {}<T> {{
     }}
     
     /// Update learning _rate
-    pub fn set_learning_rate(&mut self, learning_rate: T) {{
+    pub fn set_learning_rate(&mut self, learningrate: T) {{
         self.config.learning_rate = learning_rate;
     }}
     
@@ -1297,7 +1297,7 @@ impl CodeGenerator for DocumentationGenerator {
 }
 
 impl DocumentationGenerator {
-    fn generate_readme(&self, name: &str, parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<String> {
+    fn generate_readme(&self, name: &str, parameters: &HashMap<String, String>, config: &TemplateGeneratorConfig) -> Result<String> {
         let author = parameters.get("author").unwrap_or(&"Unknown".to_string());
         let description = parameters.get("description").unwrap_or(&format!("{} optimizer plugin", name));
         
@@ -1450,7 +1450,7 @@ The {} optimizer plugin is structured as follows:
 ```
 src/
 ├── lib.rs          # Main library with optimizer implementation
-├── _config.rs       # Configuration structures
+├── config.rs       # Configuration structures
 ├── state.rs        # State management
 └── factory.rs      # Plugin factory implementation
 
@@ -1929,7 +1929,7 @@ impl PluginAnalyzer {
         Self
     }
     
-    fn analyze_plugin(&self, _plugin_dir: &Path) -> Result<PluginAnalysis> {
+    fn analyze_plugin(&self, _plugindir: &Path) -> Result<PluginAnalysis> {
         // Analyze existing plugin to extract structure and patterns
         Ok(PluginAnalysis {
             structure: AnalyzedStructure::default(),
@@ -2088,12 +2088,12 @@ mod tests {
 
     // Helper function to convert TemplateInfo to PluginTemplate for testing
     impl From<TemplateInfo> for PluginTemplate {
-        fn from(_info: TemplateInfo) -> Self {
+        fn from(info: TemplateInfo) -> Self {
             PluginTemplate {
-                name: _info.name,
-                description: _info.description,
-                category: _info.category,
-                complexity: _info.complexity,
+                name: info.name,
+                description: info.description,
+                category: info.category,
+                complexity: info.complexity,
                 structure: EnhancedTemplateStructure {
                     core_files: vec![],
                     test_files: vec![],
@@ -2104,7 +2104,7 @@ mod tests {
                     benchmark_files: vec![],
                     resource_files: vec![],
                 },
-                required_features: _info.required_features,
+                required_features: info.required_features,
                 parameters: HashMap::new(),
             }
         }

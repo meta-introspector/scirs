@@ -28,9 +28,9 @@ impl<F: Float + Debug + ScalarOperand> TensorBoardLogger<F> {
     /// * `log_dir` - Directory to store TensorBoard logs
     /// * `log_histograms` - Whether to log histograms of model parameters
     /// * `update_freq` - Frequency of logging (in batches)
-    pub fn new<P: AsRef<Path>>(_log, dir: P, log_histograms: bool, update_freq: usize) -> Self {
+    pub fn new<P: AsRef<Path>>(_log, dir: P, log_histograms: bool, updatefreq: usize) -> Self {
         Self {
-            log_dir: _log_dir.as_ref().to_path_buf(),
+            log_dir: log_dir.as_ref().to_path_buf(),
             log_histograms,
             update_freq_phantom: std::marker::PhantomData,
         }

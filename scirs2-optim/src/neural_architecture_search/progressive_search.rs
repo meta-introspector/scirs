@@ -124,8 +124,8 @@ pub struct ProgressionRecord<T: Float> {
 
 impl<T: Float + Send + Sync + std::iter::Sum> ProgressiveNAS<T> {
     /// Create new progressive NAS
-    pub fn new(_config: &NASConfig<T>) -> Result<Self> {
-        let progression_strategy = match _config.search_budget {
+    pub fn new(config: &NASConfig<T>) -> Result<Self> {
+        let progression_strategy = match config.search_budget {
             budget if budget < 50 => ProgressionStrategy::TimeBased(Duration::from_secs(300)),
             budget if budget < 200 => ProgressionStrategy::BudgetBased(budget / 4),
             _ => ProgressionStrategy::Adaptive,

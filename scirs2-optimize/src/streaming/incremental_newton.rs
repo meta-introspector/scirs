@@ -78,12 +78,12 @@ struct LBFGSHistory {
 }
 
 impl LBFGSHistory {
-    fn new(_memory_size: usize) -> Self {
+    fn new(_memorysize: usize) -> Self {
         Self {
             s_vectors: Vec::with_capacity(_memory_size),
             y_vectors: Vec::with_capacity(_memory_size),
             rho_values: Vec::with_capacity(_memory_size),
-            memory_size: _memory_size,
+            memory_size: memory_size,
             current_pos: 0,
             stored_count: 0,
         }
@@ -309,7 +309,7 @@ impl<T: StreamingObjective> IncrementalNewton<T> {
 }
 
 impl<T: StreamingObjective + Clone> StreamingOptimizer for IncrementalNewton<T> {
-    fn update(&mut self, data_point: &StreamingDataPoint) -> Result<()> {
+    fn update(&mut self, datapoint: &StreamingDataPoint) -> Result<()> {
         let start_time = std::time::Instant::now();
 
         // Compute current gradient

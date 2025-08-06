@@ -29,11 +29,11 @@ where
 
 /// Wrapper for banded matrix eigenvalues only (SciPy-style)
 #[allow(dead_code)]
-pub fn banded_eigvalsh<F>(_matrix: &ArrayView2<F>, bandwidth: usize) -> LinalgResult<Array1<F>>
+pub fn banded_eigvalsh<F>(matrix: &ArrayView2<F>, bandwidth: usize) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
-    let (eigenvals, _) = banded_eigen(_matrix, bandwidth, false)?;
+    let (eigenvals, _) = banded_eigen(matrix, bandwidth, false)?;
     Ok(eigenvals)
 }
 
@@ -509,7 +509,7 @@ where
     // Initialize with random vector
     let mut rng = rand::rng();
     for i in 0..n {
-        q_matrix[[i, 0]] = F::from(rng.random_range(-1.0..=1.0)).unwrap();
+        q_matrix[[i, 0]] = F::from(rng.gen_range(-1.0..=1.0)).unwrap();
     }
 
     // Normalize

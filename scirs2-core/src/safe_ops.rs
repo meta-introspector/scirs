@@ -11,14 +11,14 @@ use std::fmt::{Debug, Display};
 /// Safely divide two numbers, checking for division by zero and validating the result
 #[inline]
 #[allow(dead_code)]
-pub fn safe_divide<T>(_numerator: T, denominator: T) -> Result<T, CoreError>
+pub fn safe_divide<T>(numerator: T, denominator: T) -> Result<T, CoreError>
 where
     T: Float + Display + Debug,
 {
     // Check for exact zero
     if denominator == T::zero() {
         return Err(CoreError::DomainError(ErrorContext::new(format!(
-            "Division by zero: {_numerator} / 0"
+            "Division by zero: {numerator} / 0"
         ))));
     }
 
@@ -26,16 +26,16 @@ where
     let epsilon = T::epsilon();
     if denominator.abs() < epsilon {
         return Err(CoreError::DomainError(ErrorContext::new(format!(
-            "Division by near-zero value: {_numerator} / {denominator} (threshold: {epsilon})"
+            "Division by near-zero value: {numerator} / {denominator} (threshold: {epsilon})"
         ))));
     }
 
-    let result = _numerator / denominator;
+    let result = numerator / denominator;
 
     // Validate the result
     check_finite(result, "division result").map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(format!(
-            "Division produced non-finite result: {_numerator} / {denominator} = {result:?}"
+            "Division produced non-finite result: {numerator} / {denominator} = {result:?}"
         )))
     })?;
 
@@ -70,7 +70,7 @@ where
 /// Safely compute natural logarithm, checking for non-positive values
 #[inline]
 #[allow(dead_code)]
-pub fn safe_log<T>(value: T) -> Result<T, CoreError>
+pub fn safelog<T>(value: T) -> Result<T, CoreError>
 where
     T: Float + Display + Debug,
 {
@@ -94,7 +94,7 @@ where
 /// Safely compute base-10 logarithm
 #[inline]
 #[allow(dead_code)]
-pub fn safe_log10<T>(value: T) -> Result<T, CoreError>
+pub fn safelog10<T>(value: T) -> Result<T, CoreError>
 where
     T: Float + Display + Debug,
 {
@@ -118,28 +118,28 @@ where
 /// Safely compute power, checking for domain errors and overflow
 #[inline]
 #[allow(dead_code)]
-pub fn safe_pow<T>(_base: T, exponent: T) -> Result<T, CoreError>
+pub fn safe_pow<T>(base: T, exponent: T) -> Result<T, CoreError>
 where
     T: Float + Display + Debug,
 {
     // Special cases that could produce NaN or Inf
-    if _base < T::zero() && exponent.fract() != T::zero() {
+    if base < T::zero() && exponent.fract() != T::zero() {
         return Err(CoreError::DomainError(ErrorContext::new(format!(
-            "Cannot compute fractional power of negative number: {_base}^{exponent}"
+            "Cannot compute fractional power of negative number: {base}^{exponent}"
         ))));
     }
 
-    if _base == T::zero() && exponent < T::zero() {
+    if base == T::zero() && exponent < T::zero() {
         return Err(CoreError::DomainError(ErrorContext::new(format!(
             "Cannot compute negative power of zero: 0^{exponent}"
         ))));
     }
 
-    let result = _base.powf(exponent);
+    let result = base.powf(exponent);
 
     check_finite(result, "power result").map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(format!(
-            "Power operation produced non-finite result: {_base}^{exponent} = {result:?}"
+            "Power operation produced non-finite result: {base}^{exponent} = {result:?}"
         )))
     })?;
 
@@ -272,14 +272,14 @@ mod tests {
     }
 
     #[test]
-    fn test_safe_log() {
+    fn test_safelog() {
         // Normal cases
-        assert!((safe_log(std::f64::consts::E).unwrap() - 1.0).abs() < 1e-10);
-        assert_eq!(safe_log(1.0).unwrap(), 0.0);
+        assert!((safelog(std::f64::consts::E).unwrap() - 1.0).abs() < 1e-10);
+        assert_eq!(safelog(1.0).unwrap(), 0.0);
 
         // Invalid inputs
-        assert!(safe_log(0.0).is_err());
-        assert!(safe_log(-1.0).is_err());
+        assert!(safelog(0.0).is_err());
+        assert!(safelog(-1.0).is_err());
     }
 
     #[test]

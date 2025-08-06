@@ -7,9 +7,9 @@ use std::f32;
 
 // Define a trait for recurrent classification models
 trait RecurrentClassifier {
-    fn forward(&mut self, x: &Array3<f32>, is_training: bool) -> Array2<f32>;
+    fn forward(&mut self, x: &Array3<f32>, istraining: bool) -> Array2<f32>;
     fn backward(&mut self, x: &Array3<f32>, targets: &Array2<f32>) -> f32;
-    fn update_params(&mut self, learning_rate: f32);
+    fn update_params(&mut self, learningrate: f32);
     fn reset_state(&mut self);
     fn predict(&mut self, x: &Array3<f32>) -> Array1<usize>;
 }
@@ -69,13 +69,13 @@ struct LSTMClassifier {
     final_hidden: Option<Array2<f32>>,
     output: Option<Array2<f32>>,
 impl LSTMClassifier {
-    fn new(_input_size: usize, hidden_size: usize, output_size: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, output_size: usize, batchsize: usize) -> Self {
         // Xavier/Glorot initialization for weights
         let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         // Create a random number generator
         let mut rng = rand::rng();
         // Input gate weights
-        let mut w_ii = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_ii = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_hi = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_ii.iter_mut() {
             *elem = rng.gen_range(-bound..bound);
@@ -153,11 +153,11 @@ impl LSTMClassifier {
     // Activation functions and derivatives
     fn sigmoid(x: &Array2<f32>) -> Array2<f32> {
         x.mapv(|v| 1.0 / (1.0 + (-v).exp()))
-    fn sigmoid_derivative(_sigmoid_output: &Array2<f32>) -> Array2<f32> {
-        _sigmoid_output * &(1.0 - _sigmoid_output)
+    fn sigmoid_derivative(_sigmoidoutput: &Array2<f32>) -> Array2<f32> {
+        _sigmoid_output * &(1.0 - sigmoid_output)
     fn tanh(x: &Array2<f32>) -> Array2<f32> {
         x.mapv(|v| v.tanh())
-    fn tanh_derivative(_tanh_output: &Array2<f32>) -> Array2<f32> {
+    fn tanh_derivative(_tanhoutput: &Array2<f32>) -> Array2<f32> {
         1.0 - tanh_output * tanh_output
     fn softmax(x: &Array2<f32>) -> Array2<f32> {
         let max_vals = x.map_axis(Axis(1), |row| row.fold(f32::NEG_INFINITY, |a, &b| a.max(b)));
@@ -260,10 +260,10 @@ impl LSTMClassifier {
             self.output = Some(probabilities.clone());
         (final_hidden, probabilities)
 impl RecurrentClassifier for LSTMClassifier {
-    fn forward(&mut self, x: &Array3<f32>, is_training: bool) -> Array2<f32> {
+    fn forward(&mut self, x: &Array3<f32>, istraining: bool) -> Array2<f32> {
         let (_, probabilities) = self.process_sequence(x, is_training);
         probabilities
-    fn backward(&mut self_x: &Array3<f32>, targets: &Array2<f32>) -> f32 {
+    fn backward(&mut selfx: &Array3<f32>, targets: &Array2<f32>) -> f32 {
         let inputs = self
             .inputs
             .as_ref()
@@ -392,7 +392,7 @@ impl RecurrentClassifier for LSTMClassifier {
         self.dw_out = Some(dw_out);
         self.db_out = Some(db_out);
         avg_loss
-    fn update_params(&mut self, learning_rate: f32) {
+    fn update_params(&mut self, learningrate: f32) {
         // Update input gate parameters
         if let Some(dw_ii) = &self.dw_ii {
             self.w_ii = &self.w_ii - &(dw_ii * learning_rate);

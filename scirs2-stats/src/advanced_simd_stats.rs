@@ -487,13 +487,13 @@ pub enum NumaAllocationPolicy {
 
 impl AdvancedSimdOptimizer {
     /// Create new advanced SIMD optimizer
-    pub fn new(_config: AdvancedSimdConfig) -> Self {
+    pub fn new(config: AdvancedSimdConfig) -> Self {
         let hardware_profile = Self::detect_hardware_profile();
         let algorithm_selector = Self::build_algorithm_selector(&hardware_profile);
         let memory_manager = Self::create_memory_manager(&_config, &hardware_profile);
 
         Self {
-            config: _config,
+            config: config,
             performance_cache: Arc::new(RwLock::new(HashMap::new())),
             hardware_profile,
             algorithm_selector,
@@ -776,7 +776,7 @@ impl AdvancedSimdOptimizer {
     }
 
     /// Build intelligent algorithm selector
-    fn build_algorithm_selector(_hardware: &HardwareProfile) -> AlgorithmSelector {
+    fn build_algorithm_selector(hardware: &HardwareProfile) -> AlgorithmSelector {
         // Build decision tree based on _hardware capabilities
         let nodes = vec![
             DecisionNode {
@@ -923,7 +923,7 @@ impl AdvancedSimdOptimizer {
     }
 
     /// Analyze matrix characteristics
-    fn analyze_matrix_characteristics<F>(a: &Array2<F>, _b: &Array2<F>) -> DataCharacteristics
+    fn analyze_matrix_characteristics<F>(a: &Array2<F>, b: &Array2<F>) -> DataCharacteristics
     where
         F: Float + Copy + std::fmt::Display,
     {
@@ -937,7 +937,7 @@ impl AdvancedSimdOptimizer {
     }
 
     /// Categorize data size for caching
-    fn categorize_size(_size: usize) -> SizeBucket {
+    fn categorize_size(size: usize) -> SizeBucket {
         match _size {
             s if s < 64 => SizeBucket::Tiny,
             s if s < 1024 => SizeBucket::Small,
@@ -948,7 +948,7 @@ impl AdvancedSimdOptimizer {
     }
 
     /// Categorize matrix size
-    fn categorize_matrix_size(_total_elements: usize) -> SizeBucket {
+    fn categorize_matrix_size(_totalelements: usize) -> SizeBucket {
         Self::categorize_size(_total_elements)
     }
 
@@ -1627,7 +1627,7 @@ impl Default for AdvancedSimdConfig {
 pub fn create_advanced_simd_optimizer(
     _config: Option<AdvancedSimdConfig>,
 ) -> AdvancedSimdOptimizer {
-    let _config = _config.unwrap_or_default();
+    let _config = config.unwrap_or_default();
     AdvancedSimdOptimizer::new(_config)
 }
 

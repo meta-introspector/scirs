@@ -227,9 +227,9 @@ struct ComputationCheckpoint<T: Float> {
 
 impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
     /// Create a new automatic differentiation engine
-    pub fn new(_config: AutodiffConfig) -> Self {
+    pub fn new(config: AutodiffConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             graph: Vec::new(),
             variables: HashMap::new(),
             tape: Vec::new(),
@@ -260,7 +260,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
     }
 
     /// Compute gradients using reverse-mode AD
-    pub fn backward(&mut self, output_id: usize) -> Result<Vec<T>> {
+    pub fn backward(&mut self, outputid: usize) -> Result<Vec<T>> {
         if output_id >= self.graph.len() {
             return Err(OptimError::InvalidConfig(
                 "Invalid output node ID".to_string(),
@@ -287,7 +287,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
     }
 
     /// Compute Hessian matrix
-    pub fn compute_hessian(&mut self, output_id: usize) -> Result<Array2<T>> {
+    pub fn compute_hessian(&mut self, outputid: usize) -> Result<Array2<T>> {
         match self.config.hessian_approximation {
             HessianApproximation::Exact => self.compute_exact_hessian(output_id),
             HessianApproximation::BFGS => self.compute_bfgs_hessian(),
@@ -298,7 +298,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
         }
     }
 
-    fn compute_exact_hessian(&mut self, output_id: usize) -> Result<Array2<T>> {
+    fn compute_exact_hessian(&mut self, outputid: usize) -> Result<Array2<T>> {
         let n_vars = self.variables.len();
         let mut hessian = Array2::zeros((n_vars, n_vars));
 
@@ -413,7 +413,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
         }
     }
 
-    fn evaluate_node(&self, node_id: usize) -> Result<T> {
+    fn evaluate_node(&self, nodeid: usize) -> Result<T> {
         if node_id >= self.graph.len() {
             return Err(OptimError::InvalidConfig("Invalid node ID".to_string()));
         }
@@ -460,7 +460,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
         Ok(result)
     }
 
-    fn compute_diagonal_hessian(&mut self, output_id: usize) -> Result<Array2<T>> {
+    fn compute_diagonal_hessian(&mut self, outputid: usize) -> Result<Array2<T>> {
         let n_vars = self.variables.len();
         let mut hessian = Array2::zeros((n_vars, n_vars));
 
@@ -541,7 +541,8 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
 
     /// Compute meta-gradients for meta-learning
     pub fn compute_meta_gradients(
-        &mut self, _inner_steps: usize,
+        &mut self,
+        _inner_steps: usize,
         outer_objective_id: usize,
     ) -> Result<Vec<T>> {
         if !self.config.enable_meta_gradients {
@@ -690,7 +691,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
     }
 
     /// Compute candle-compatible Jacobian-vector product
-    pub fn compute_jvp(&mut self, output_id: usize, tangent: &[T]) -> Result<Vec<T>> {
+    pub fn compute_jvp(&mut self, outputid: usize, tangent: &[T]) -> Result<Vec<T>> {
         if tangent.len() != self.variables.len() {
             return Err(OptimError::InvalidConfig(
                 "Tangent vector size mismatch".to_string(),
@@ -725,7 +726,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
     }
 
     /// Compute candle-compatible vector-Jacobian product
-    pub fn compute_vjp(&mut self, output_id: usize, cotangent: T) -> Result<Vec<T>> {
+    pub fn compute_vjp(&mut self, outputid: usize, cotangent: T) -> Result<Vec<T>> {
         // Reverse-mode AD for computing VJP
         let mut vjp_values = vec![T::zero(); self.graph.len()];
         vjp_values[output_id] = cotangent;

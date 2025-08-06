@@ -320,7 +320,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Simple ASCII visualization of a path with circular obstacles
 #[allow(dead_code)]
-fn print_ascii_visualization_circles(_path: &[Array1<f64>], circles: &[([f64; 2], f64)]) {
+fn print_ascii_visualization_circles(path: &[Array1<f64>], circles: &[([f64; 2], f64)]) {
     const SIZE: usize = 20;
     let mut grid = vec![vec![' '; SIZE]; SIZE];
 
@@ -346,8 +346,8 @@ fn print_ascii_visualization_circles(_path: &[Array1<f64>], circles: &[([f64; 2]
 
     // Draw the _path
     for i in 0.._path.len() - 1 {
-        let (x1, y1) = (_path[i][0], _path[i][1]);
-        let (x2, y2) = (_path[i + 1][0], _path[i + 1][1]);
+        let (x1, y1) = (_path[i][0], path[i][1]);
+        let (x2, y2) = (_path[i + 1][0], path[i + 1][1]);
 
         // Scale to grid coordinates
         let (gx1, gy1) = (
@@ -407,7 +407,7 @@ fn print_ascii_visualization_circles(_path: &[Array1<f64>], circles: &[([f64; 2]
 
 /// Simple ASCII visualization of a path with polygon obstacles
 #[allow(dead_code)]
-fn print_ascii_visualization_polygons(_path: &[Array1<f64>], polygons: &[Vec<[f64; 2]>]) {
+fn print_ascii_visualization_polygons(path: &[Array1<f64>], polygons: &[Vec<[f64; 2]>]) {
     const SIZE: usize = 20;
     let mut grid = vec![vec![' '; SIZE]; SIZE];
 
@@ -429,8 +429,8 @@ fn print_ascii_visualization_polygons(_path: &[Array1<f64>], polygons: &[Vec<[f6
 
     // Draw the _path
     for i in 0.._path.len() - 1 {
-        let (x1, y1) = (_path[i][0], _path[i][1]);
-        let (x2, y2) = (_path[i + 1][0], _path[i + 1][1]);
+        let (x1, y1) = (_path[i][0], path[i][1]);
+        let (x2, y2) = (_path[i + 1][0], path[i + 1][1]);
 
         // Scale to grid coordinates
         let (gx1, gy1) = (
@@ -490,7 +490,7 @@ fn print_ascii_visualization_polygons(_path: &[Array1<f64>], polygons: &[Vec<[f6
 
 /// Visualize a local minimum case with no path
 #[allow(dead_code)]
-fn print_local_minimum_visualization(_start: [f64; 2], goal: [f64; 2], polygons: &[Vec<[f64; 2]>]) {
+fn print_local_minimum_visualization(start: [f64; 2], goal: [f64; 2], polygons: &[Vec<[f64; 2]>]) {
     const SIZE: usize = 20;
     let mut grid = vec![vec![' '; SIZE]; SIZE];
 
@@ -537,8 +537,8 @@ fn print_local_minimum_visualization(_start: [f64; 2], goal: [f64; 2], polygons:
 
 /// Check if a point is inside a polygon using the ray casting algorithm
 #[allow(dead_code)]
-fn point_in_polygon(_point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
-    let (x, y) = (_point[0], _point[1]);
+fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
+    let (x, y) = (_point[0], point[1]);
     let mut inside = false;
 
     // Ray casting algorithm determines if the _point is inside the polygon

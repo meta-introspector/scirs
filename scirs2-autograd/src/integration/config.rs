@@ -103,12 +103,12 @@ impl ConfigManager {
     }
 
     /// Get module-specific configuration
-    pub fn module_config(&self, module_name: &str) -> Option<&ModuleConfig> {
+    pub fn module_config(&self, modulename: &str) -> Option<&ModuleConfig> {
         self.config.modules.get(module_name)
     }
 
     /// Set module-specific configuration
-    pub fn set_module_config(&mut self, module_name: String, config: ModuleConfig) {
+    pub fn set_module_config(&mut self, modulename: String, config: ModuleConfig) {
         self.config.modules.insert(module_name, config);
     }
 
@@ -176,7 +176,7 @@ impl ConfigManager {
     }
 
     // Helper methods
-    fn merge_file_config(&mut self, file_config: FileConfig) -> Result<(), IntegrationError> {
+    fn merge_file_config(&mut self, fileconfig: FileConfig) -> Result<(), IntegrationError> {
         // Merge integration settings
         if let Some(integration) = file_config.integration {
             self._config.integration = self.merge_integration_config(integration)?;
@@ -556,31 +556,31 @@ pub enum ConfigValue {
 }
 
 impl From<bool> for ConfigValue {
-    fn from(_value: bool) -> Self {
+    fn from(value: bool) -> Self {
         ConfigValue::Bool(_value)
     }
 }
 
 impl From<i64> for ConfigValue {
-    fn from(_value: i64) -> Self {
+    fn from(value: i64) -> Self {
         ConfigValue::Int(_value)
     }
 }
 
 impl From<f64> for ConfigValue {
-    fn from(_value: f64) -> Self {
+    fn from(value: f64) -> Self {
         ConfigValue::Float(_value)
     }
 }
 
 impl From<String> for ConfigValue {
-    fn from(_value: String) -> Self {
+    fn from(value: String) -> Self {
         ConfigValue::String(_value)
     }
 }
 
 impl From<&str> for ConfigValue {
-    fn from(_value: &str) -> Self {
+    fn from(value: &str) -> Self {
         ConfigValue::String(_value.to_string())
     }
 }
@@ -652,7 +652,7 @@ pub fn init_config_manager() -> &'static std::sync::Mutex<ConfigManager> {
 
 /// Get global configuration value
 #[allow(dead_code)]
-pub fn get_config_value(_key: &str) -> Result<Option<ConfigValue>, IntegrationError> {
+pub fn get_config_value(key: &str) -> Result<Option<ConfigValue>, IntegrationError> {
     let manager = init_config_manager();
     let manager_guard = manager.lock().map_err(|_| {
         IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
@@ -667,13 +667,13 @@ pub fn set_config_value<T: Into<ConfigValue>>(key: &str, value: T) -> Result<(),
     let mut manager_guard = manager.lock().map_err(|_| {
         IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
     })?;
-    manager_guard.set(_key, value);
+    manager_guard.set(key, value);
     Ok(())
 }
 
 /// Get module configuration
 #[allow(dead_code)]
-pub fn get_module_config(_module_name: &str) -> Result<Option<ModuleConfig>, IntegrationError> {
+pub fn get_module_config(modulename: &str) -> Result<Option<ModuleConfig>, IntegrationError> {
     let manager = init_config_manager();
     let manager_guard = manager.lock().map_err(|_| {
         IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
@@ -683,7 +683,7 @@ pub fn get_module_config(_module_name: &str) -> Result<Option<ModuleConfig>, Int
 
 /// Update global integration configuration
 #[allow(dead_code)]
-pub fn update_integration_config(_config: IntegrationConfig) -> Result<(), IntegrationError> {
+pub fn update_integration_config(config: IntegrationConfig) -> Result<(), IntegrationError> {
     let manager = init_config_manager();
     let mut manager_guard = manager.lock().map_err(|_| {
         IntegrationError::ConfigMismatch("Failed to acquire _config lock".to_string())
@@ -699,7 +699,7 @@ pub fn load_config_from_file<P: AsRef<Path>>(path: P) -> Result<(), IntegrationE
     let mut manager_guard = manager.lock().map_err(|_| {
         IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
     })?;
-    manager_guard.load_from_file(_path)
+    manager_guard.load_from_file(path)
 }
 
 /// Export configuration to file
@@ -709,7 +709,7 @@ pub fn export_config_to_file<P: AsRef<Path>>(path: P) -> Result<(), IntegrationE
     let manager_guard = manager.lock().map_err(|_| {
         IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
     })?;
-    manager_guard.export_to_file(_path)
+    manager_guard.export_to_file(path)
 }
 
 /// Get configuration summary

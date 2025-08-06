@@ -130,7 +130,7 @@ pub struct CompiledModule {
     /// Module name
     pub name: String,
     /// Compiled machine code
-    pub machine_code: Vec<u8>,
+    pub machinecode: Vec<u8>,
     /// Function pointers
     pub function_pointers: HashMap<String, usize>,
     /// Compilation metadata
@@ -179,7 +179,7 @@ impl Default for CompilationMetadata {
 #[derive(Debug, Clone)]
 pub struct ModulePerformance {
     /// Average execution time
-    pub avg_execution_time: Duration,
+    pub avgexecution_time: Duration,
     /// Peak memory usage
     pub peak_memory_usage: usize,
     /// Instruction count
@@ -299,7 +299,7 @@ pub struct CachedKernel {
     /// Kernel identifier
     pub id: String,
     /// Compiled function pointer
-    pub function_ptr: usize,
+    pub functionptr: usize,
     /// Kernel metadata
     pub metadata: KernelMetadata,
     /// Performance metrics
@@ -381,14 +381,14 @@ pub struct CacheStatistics {
     /// Current cache size
     pub current_size_bytes: usize,
     /// Maximum cache size
-    pub max_size_bytes: usize,
+    pub maxsize_bytes: usize,
 }
 
 /// Cache configuration
 #[derive(Debug, Clone)]
 pub struct CacheConfig {
     /// Maximum cache size
-    pub max_size_mb: usize,
+    pub maxsize_mb: usize,
     /// Eviction policy
     pub eviction_policy: EvictionPolicy,
     /// Enable cache warming
@@ -436,7 +436,7 @@ pub struct CompilationProfile {
     /// Code size metrics
     pub code_size_metrics: CodeSizeMetrics,
     /// Compilation errors
-    pub compilation_errors: Vec<CompilationError>,
+    pub compilationerrors: Vec<CompilationError>,
 }
 
 /// Execution profile
@@ -510,7 +510,7 @@ pub struct PerformanceCounters {
     /// Cache misses
     pub cache_misses: u64,
     /// Memory bandwidth utilization
-    pub memory_bandwidth: f64,
+    pub memorybandwidth: f64,
 }
 
 /// Hotspot information
@@ -569,7 +569,7 @@ pub struct ProfilerConfig {
     /// Enable compilation profiling
     pub enable_compilation_profiling: bool,
     /// Sampling rate for profiling
-    pub sampling_rate: f64,
+    pub samplingrate: f64,
     /// Profile data retention time
     pub retention_hours: u32,
     /// Enable hotspot detection
@@ -582,7 +582,7 @@ pub struct ProfilerConfig {
 #[derive(Debug)]
 pub struct ProfilingSession {
     /// Session ID
-    pub session_id: String,
+    pub sessionid: String,
     /// Start time
     pub start_time: Instant,
     /// Collected samples
@@ -689,7 +689,7 @@ pub struct OptimizationState {
     /// Active optimizations
     pub active_optimizations: HashMap<String, String>,
     /// Performance baselines
-    pub performance_baselines: HashMap<String, f64>,
+    pub performancebaselines: HashMap<String, f64>,
     /// Adaptation history
     pub adaptation_history: Vec<AdaptationEvent>,
     /// State timestamp
@@ -749,7 +749,7 @@ pub struct TemplateParameter {
     /// Parameter type
     pub param_type: String,
     /// Default value
-    pub default_value: Option<String>,
+    pub defaultvalue: Option<String>,
     /// Constraints
     pub constraints: Vec<String>,
 }
@@ -762,7 +762,7 @@ pub struct SpecializedCode {
     /// Specialization parameters
     pub specialization_params: HashMap<String, String>,
     /// Generated code
-    pub generated_code: String,
+    pub generatedcode: String,
     /// Compilation status
     pub compilation_status: CompilationStatus,
     /// Performance prediction
@@ -884,28 +884,28 @@ impl AdvancedJitCompiler {
     pub fn compile_kernel(
         &self,
         name: &str,
-        source_code: &str,
+        sourcecode: &str,
         hints: &[String],
     ) -> CoreResult<CompiledKernel> {
         let start_time = Instant::now();
 
         // Check cache first
-        if let Some(cached_kernel) = self.check_cache(name, source_code)? {
+        if let Some(cached_kernel) = self.check_cache(name, sourcecode)? {
             self.update_cache_stats(true);
             return Ok(cached_kernel);
         }
 
-        // Generate optimized _code
-        let optimized_code = self.generate_optimized_code(source_code, hints)?;
+        // Generate optimized code
+        let optimizedcode = self.generate_optimizedcode(sourcecode, hints)?;
 
         // Compile with LLVM
-        let compiled_module = self.compile_with_llvm(name, &optimized_code)?;
+        let compiled_module = self.compile_with_llvm(name, &optimizedcode)?;
 
         // Create kernel representation
         let kernel = CompiledKernel {
             name: name.to_string(),
             compiled_module,
-            metadata: self.create_kernel_metadata(name, source_code)?,
+            metadata: self.create_kernel_metadata(name, sourcecode)?,
             performance: Default::default(),
             created_at: Instant::now(),
         };
@@ -930,13 +930,13 @@ impl AdvancedJitCompiler {
         let start_time = Instant::now();
 
         // Get function pointer
-        let function_ptr = kernel.get_function_pointer()?;
+        let functionptr = kernel.get_function_pointer()?;
 
         // Execute with profiling
         let result = if self.config.enable_profiling {
-            self.execute_with_profiling(function_ptr, input)?
+            self.execute_with_profiling(functionptr, input)?
         } else {
-            self.execute_direct(function_ptr, input)?
+            self.execute_direct(functionptr, input)?
         };
 
         // Record performance
@@ -1018,7 +1018,7 @@ impl AdvancedJitCompiler {
 
     // Private implementation methods
 
-    fn check_cache(&self, name: &str, _code: &str) -> CoreResult<Option<CompiledKernel>> {
+    fn check_cache(&self, name: &str, code: &str) -> CoreResult<Option<CompiledKernel>> {
         let cache = self.kernel_cache.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire cache lock: {e}"
@@ -1026,7 +1026,7 @@ impl AdvancedJitCompiler {
         })?;
 
         if let Some(cached) = cache.get(name) {
-            if cached.is_valid_for_source(_code) {
+            if cached.is_valid_for_source(code) {
                 return Ok(Some(self.reconstruct_from_cache(cached)?));
             }
         }
@@ -1034,14 +1034,14 @@ impl AdvancedJitCompiler {
         Ok(None)
     }
 
-    fn generate_optimized_code(&self, source: &str, hints: &[String]) -> CoreResult<String> {
+    fn generate_optimizedcode(&self, source: &str, hints: &[String]) -> CoreResult<String> {
         let mut generator = self.code_generator.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire generator lock: {e}"
             )))
         })?;
 
-        generator.generate_optimized_code(source, hints)
+        generator.generate_optimizedcode(source, hints)
     }
 
     fn compile_with_llvm(&self, name: &str, code: &str) -> CoreResult<CompiledModule> {
@@ -1085,7 +1085,7 @@ impl AdvancedJitCompiler {
         (*cache).insert(kernel)
     }
 
-    fn update_compilation_stats(&self, _duration: Duration) {
+    fn update_compilation_stats(&self, duration: Duration) {
         if let Ok(mut stats) = self.stats.write() {
             stats.total_compilations += 1;
             stats.successful_compilations += 1;
@@ -1115,15 +1115,15 @@ impl AdvancedJitCompiler {
         (*profiler).start_profiling(&kernel.name)
     }
 
-    fn execute_with_profiling<T, R>(&self, function_ptr: usize, input: T) -> CoreResult<R> {
+    fn execute_with_profiling<T, R>(&self, functionptr: usize, input: T) -> CoreResult<R> {
         // Simplified implementation - in real code, this would call the actual function
         // and collect performance data
-        self.execute_direct(function_ptr, input)
+        self.execute_direct(functionptr, input)
     }
 
-    fn execute_direct<T, R>(&self, function_ptr: usize, _input: T) -> CoreResult<R> {
+    fn execute_direct<T, R>(&self, functionptr: usize, input: T) -> CoreResult<R> {
         // Enhanced implementation with safety checks and execution monitoring
-        if function_ptr == 0 {
+        if functionptr == 0 {
             return Err(CoreError::InvalidArgument(crate::error::ErrorContext::new(
                 "Invalid function pointer".to_string(),
             )));
@@ -1138,7 +1138,7 @@ impl AdvancedJitCompiler {
 
         // For now, simulate successful execution
         // unsafe {
-        //     let func: fn(T) -> R = std::mem::transmute(function_ptr);
+        //     let func: fn(T) -> R = std::mem::transmute(functionptr);
         //     Ok(func(input))
         // }
 
@@ -1151,7 +1151,7 @@ impl AdvancedJitCompiler {
     fn record_kernel_execution(
         &self,
         kernel: &CompiledKernel,
-        _execution_time: Duration,
+        execution_time: Duration,
     ) -> CoreResult<()> {
         let mut profiler = self.profiler.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -1159,13 +1159,13 @@ impl AdvancedJitCompiler {
             )))
         })?;
 
-        profiler.record_execution(&kernel.name, _execution_time)
+        profiler.record_execution(&kernel.name, execution_time)
     }
 
     fn update_runtime_statistics(
         &self,
         _kernel: &CompiledKernel,
-        _execution_time: Duration,
+        execution_time: Duration,
     ) -> CoreResult<()> {
         let optimizer = self.runtime_optimizer.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -1213,7 +1213,7 @@ impl AdvancedJitCompiler {
         })
     }
 
-    fn reconstruct_from_cache(&self, _cached: &CachedKernel) -> CoreResult<CompiledKernel> {
+    fn reconstruct_from_cache(&self, cached: &CachedKernel) -> CoreResult<CompiledKernel> {
         // Simplified implementation
         Err(CoreError::InvalidArgument(crate::error::ErrorContext::new(
             "Cache reconstruction not implemented".to_string(),
@@ -1224,7 +1224,7 @@ impl AdvancedJitCompiler {
     fn record_kernel_performance(
         &self,
         _kernel: &CompiledKernel,
-        _execution_time: std::time::Duration,
+        execution_time: std::time::Duration,
     ) -> CoreResult<()> {
         // Simplified - just log the performance
         Ok(())
@@ -1254,7 +1254,7 @@ impl AdvancedJitCompiler {
     }
 
     /// Create kernel from cached compilation
-    fn create_kernel_from_cached(&self, _cached_data: &[u8]) -> CoreResult<CompiledKernel> {
+    fn create_kernel_from_cached(&self, _cacheddata: &[u8]) -> CoreResult<CompiledKernel> {
         // Simplified implementation
         Err(CoreError::InvalidArgument(crate::error::ErrorContext::new(
             "Cached kernel creation not implemented".to_string(),
@@ -1315,7 +1315,7 @@ pub struct ProfilerAnalytics {
     /// Total profiling sessions
     pub total_sessions: u64,
     /// Average execution time
-    pub avg_execution_time: Duration,
+    pub avgexecution_time: Duration,
     /// Hotspot functions
     pub hotspots: Vec<Hotspot>,
     /// Optimization opportunities
@@ -1369,7 +1369,7 @@ pub struct OptimizationCandidate {
 // Implementation stubs for the complex sub-modules
 
 impl LlvmCompilationEngine {
-    pub fn new(_config: &JitCompilerConfig) -> CoreResult<Self> {
+    pub fn new(config: &JitCompilerConfig) -> CoreResult<Self> {
         Ok(Self {
             llvm_context: LlvmContext {
                 context_id: "advanced-llvm".to_string(),
@@ -1397,11 +1397,11 @@ impl LlvmCompilationEngine {
         })
     }
 
-    pub fn compile(&self, name: &str, _code: &str) -> CoreResult<CompiledModule> {
+    pub fn compile(&self, name: &str, code: &str) -> CoreResult<CompiledModule> {
         // Simplified implementation
         Ok(CompiledModule {
             name: name.to_string(),
-            machine_code: vec![0x90; 1024], // NOP instructions placeholder
+            machinecode: vec![0x90; 1024], // NOP instructions placeholder
             function_pointers: {
                 let mut map = HashMap::new();
                 map.insert("main".to_string(), 0x1000);
@@ -1417,7 +1417,7 @@ impl LlvmCompilationEngine {
                 compiler_version: "LLVM 15.0".to_string(),
             },
             performance: ModulePerformance {
-                avg_execution_time: Duration::from_micros(100),
+                avgexecution_time: Duration::from_micros(100),
                 peak_memory_usage: 1024,
                 instruction_count: 500,
                 cache_miss_rate: 0.05,
@@ -1427,14 +1427,14 @@ impl LlvmCompilationEngine {
     }
 
     /// Compile a module with optimizations
-    pub fn compile_module(&self, _name: &str, _module_source: &str) -> CoreResult<CompiledModule> {
+    pub fn compile_module(&self, _name: &str, modulesource: &str) -> CoreResult<CompiledModule> {
         // Simplified implementation - delegate to existing compile method
-        self.compile(_name, _module_source)
+        self.compile(_name, modulesource)
     }
 }
 
 impl KernelCache {
-    pub fn new(_config: &JitCompilerConfig) -> CoreResult<Self> {
+    pub fn new(config: &JitCompilerConfig) -> CoreResult<Self> {
         Ok(Self {
             kernels: HashMap::new(),
             stats: CacheStatistics {
@@ -1442,10 +1442,10 @@ impl KernelCache {
                 misses: 0,
                 evictions: 0,
                 current_size_bytes: 0,
-                max_size_bytes: 512 * 1024 * 1024, // 512MB
+                maxsize_bytes: 512 * 1024 * 1024, // 512MB
             },
             config: CacheConfig {
-                max_size_mb: 512,
+                maxsize_mb: 512,
                 eviction_policy: EvictionPolicy::LRU,
                 enable_cache_warming: true,
                 enable_persistence: false,
@@ -1459,7 +1459,7 @@ impl KernelCache {
         self.kernels.get(name)
     }
 
-    pub fn insert(&mut self, _kernel: &CompiledKernel) -> CoreResult<()> {
+    pub fn insert(&mut self, kernel: &CompiledKernel) -> CoreResult<()> {
         // Simplified implementation
         Ok(())
     }
@@ -1470,21 +1470,21 @@ impl KernelCache {
 }
 
 impl CachedKernel {
-    pub fn is_valid_for_source(&self, _source: &str) -> bool {
+    pub fn is_valid_for_source(&self, source: &str) -> bool {
         // Simplified implementation
         true
     }
 }
 
 impl JitProfiler {
-    pub fn new(_config: &JitCompilerConfig) -> CoreResult<Self> {
+    pub fn new(config: &JitCompilerConfig) -> CoreResult<Self> {
         Ok(Self {
             compilation_profiles: HashMap::new(),
             execution_profiles: HashMap::new(),
             config: ProfilerConfig {
                 enable_execution_profiling: true,
                 enable_compilation_profiling: true,
-                sampling_rate: 0.1,
+                samplingrate: 0.1,
                 retention_hours: 24,
                 enable_hotspot_detection: true,
                 hotspot_threshold: 0.05,
@@ -1493,7 +1493,7 @@ impl JitProfiler {
         })
     }
 
-    pub fn start_profiling(&mut self, _kernel_name: &str) -> CoreResult<()> {
+    pub fn start_profiling(&mut self, _kernelname: &str) -> CoreResult<()> {
         // Simplified implementation
         Ok(())
     }
@@ -1501,7 +1501,7 @@ impl JitProfiler {
     pub fn record_execution(
         &mut self,
         _kernel_name: &str,
-        _execution_time: Duration,
+        execution_time: Duration,
     ) -> CoreResult<()> {
         // Simplified implementation
         Ok(())
@@ -1510,7 +1510,7 @@ impl JitProfiler {
     pub fn get_analytics(&self) -> ProfilerAnalytics {
         ProfilerAnalytics {
             total_sessions: 0,
-            avg_execution_time: Duration::from_micros(100),
+            avgexecution_time: Duration::from_micros(100),
             hotspots: vec![],
             opportunities: vec![],
         }
@@ -1525,7 +1525,7 @@ impl RuntimeOptimizer {
             adaptation_rules: Vec::new(),
             current_state: OptimizationState {
                 active_optimizations: HashMap::new(),
-                performance_baselines: HashMap::new(),
+                performancebaselines: HashMap::new(),
                 adaptation_history: Vec::new(),
                 timestamp: Instant::now(),
             },
@@ -1535,7 +1535,7 @@ impl RuntimeOptimizer {
     pub fn record_execution(
         &mut self,
         _kernel_name: &str,
-        _execution_time: Duration,
+        execution_time: Duration,
     ) -> CoreResult<()> {
         // Simplified implementation
         Ok(())
@@ -1568,34 +1568,30 @@ impl AdaptiveCodeGenerator {
         })
     }
 
-    pub fn generate_optimized_code(
-        &mut self,
-        source: &str,
-        hints: &[String],
-    ) -> CoreResult<String> {
+    pub fn generate_optimizedcode(&mut self, source: &str, hints: &[String]) -> CoreResult<String> {
         let start_time = Instant::now();
 
         // Enhanced code generation with optimization hints
-        let mut optimized_code = source.to_string();
+        let mut optimizedcode = source.to_string();
 
         // Apply vectorization optimizations
         if hints.contains(&"vectorize".to_string()) {
-            optimized_code = self.apply_vectorization_optimizations(&optimized_code)?;
+            optimizedcode = self.apply_vectorization_optimizations(&optimizedcode)?;
         }
 
         // Apply loop unrolling
         if hints.contains(&"unroll-loops".to_string()) {
-            optimized_code = self.apply_loop_unrolling(&optimized_code)?;
+            optimizedcode = self.apply_loop_unrolling(&optimizedcode)?;
         }
 
         // Apply constant folding
         if hints.contains(&"constant-folding".to_string()) {
-            optimized_code = self.apply_constant_folding(&optimized_code)?;
+            optimizedcode = self.apply_constant_folding(&optimizedcode)?;
         }
 
         // Apply dead code elimination
         if hints.contains(&"eliminate-dead-code".to_string()) {
-            optimized_code = self.apply_dead_code_elimination(&optimized_code)?;
+            optimizedcode = self.apply_deadcode_elimination(&optimizedcode)?;
         }
 
         // Update generation statistics
@@ -1605,7 +1601,7 @@ impl AdaptiveCodeGenerator {
         self.generation_stats.avg_generation_time =
             (self.generation_stats.avg_generation_time + generation_time) / 2;
 
-        Ok(optimized_code)
+        Ok(optimizedcode)
     }
 
     fn apply_vectorization_optimizations(&self, code: &str) -> CoreResult<String> {
@@ -1651,7 +1647,7 @@ impl AdaptiveCodeGenerator {
         Ok(optimized)
     }
 
-    fn apply_dead_code_elimination(&self, code: &str) -> CoreResult<String> {
+    fn apply_deadcode_elimination(&self, code: &str) -> CoreResult<String> {
         // Remove unused variables and unreachable code
         let optimized = code
             .lines()
@@ -1762,8 +1758,8 @@ pub struct NeuromorphicConfig {
     pub refractory_period_ms: f64,
     /// Membrane time constant (milliseconds)
     pub membrane_time_constant_ms: f64,
-    /// Synaptic _delay range (milliseconds)
-    pub synaptic_delay_range_ms: (f64, f64),
+    /// Synaptic delay range (milliseconds)
+    pub synapticdelay_range_ms: (f64, f64),
     /// STDP learning window (milliseconds)
     pub stdp_window_ms: f64,
 }
@@ -1778,7 +1774,7 @@ impl Default for NeuromorphicConfig {
             max_spike_frequency_hz: 1000.0,
             refractory_period_ms: 2.0,
             membrane_time_constant_ms: 10.0,
-            synaptic_delay_range_ms: (0.5, 5.0),
+            synapticdelay_range_ms: (0.5, 5.0),
             stdp_window_ms: 20.0,
         }
     }
@@ -1843,7 +1839,7 @@ pub struct PlasticityRule {
     /// Rule type
     pub rule_type: PlasticityType,
     /// Learning rate
-    pub learning_rate: f64,
+    pub learningrate: f64,
     /// Time constants
     pub time_constants: Vec<f64>,
     /// Weight bounds
@@ -1976,7 +1972,7 @@ pub struct SpikePattern {
     /// Pattern ID
     pub id: String,
     /// Spike times (milliseconds)
-    pub spike_times: Vec<f64>,
+    pub spiketimes: Vec<f64>,
     /// Associated neurons
     pub neuron_ids: Vec<usize>,
     /// Pattern frequency
@@ -2253,22 +2249,22 @@ impl NeuromorphicJitCompiler {
             connections: Vec::new(),
             population_stats: PopulationStatistics::default(),
         };
-        let spike_code = self.snn_compiler.generate_spike_code(&topology)?;
+        let spikecode = self.snn_compiler.generate_spikecode(&topology)?;
 
         // Optimize temporal dynamics
-        let temporal_code = self.temporal_compiler.compile_dynamics(&spike_code)?;
+        let temporalcode = self.temporal_compiler.compile_dynamics(&spikecode)?;
 
         // Apply event-driven optimizations
-        let optimized_code = self
+        let optimizedcode = self
             .event_optimizer
-            .optimize_event_processing(&temporal_code)?;
+            .optimize_event_processing(&temporalcode)?;
 
         // Generate plasticity updates
-        let plasticity_code = self.plasticity_engine.generate_plasticity_code(&topology)?;
+        let plasticitycode = self.plasticity_engine.generate_plasticitycode(&topology)?;
 
         Ok(CompiledSNN {
-            spike_processing_code: optimized_code,
-            plasticity_code,
+            spike_processingcode: optimizedcode,
+            plasticitycode,
             compilation_time: Instant::now(),
             network_stats: PopulationStatistics::default(),
             optimization_level: 3,
@@ -2287,15 +2283,15 @@ impl NeuromorphicJitCompiler {
             let characteristics = self.analyze_spike_characteristics(pattern)?;
 
             // Generate optimized code for pattern
-            let optimized_code = self.generate_optimized_spike_code(pattern, &characteristics)?;
+            let optimizedcode = self.generate_optimized_spikecode(pattern, &characteristics)?;
 
             // Performance prediction
-            let predicted_performance = self.predict_spike_performance(&optimized_code)?;
+            let predicted_performance = self.predict_spike_performance(&optimizedcode)?;
 
             optimization_results.push(PatternOptimization {
                 pattern_id: pattern.id.clone(),
-                original_code: "spike_pattern_code".to_string(), // Simplified
-                optimized_code,
+                originalcode: "spike_patterncode".to_string(), // Simplified
+                optimizedcode,
                 performance_gain: predicted_performance.speedup_factor,
                 memory_reduction: predicted_performance.memory_reduction,
             });
@@ -2321,37 +2317,38 @@ impl NeuromorphicJitCompiler {
         pattern: &SpikePattern,
     ) -> CoreResult<SpikeCharacteristics> {
         Ok(SpikeCharacteristics {
-            inter_spike_intervals: self.calculate_isi(&pattern.spike_times)?,
-            burst_patterns: self.detect_bursts(&pattern.spike_times)?,
-            frequency_spectrum: self.analyze_frequency_spectrum(&pattern.spike_times)?,
-            temporal_correlation: self.calculate_temporal_correlation(&pattern.spike_times)?,
-            complexity_measure: self.calculate_complexity(&pattern.spike_times)?,
+            inter_spike_intervals: self.calculate_isi(&pattern.spiketimes)?,
+            burst_patterns: self.detect_bursts(&pattern.spiketimes)?,
+            frequency_spectrum: self.analyze_frequency_spectrum(&pattern.spiketimes)?,
+            temporal_correlation: self.calculate_temporal_correlation(&pattern.spiketimes)?,
+            complexity_measure: self.calculate_complexity(&pattern.spiketimes)?,
         })
     }
 
     /// Calculate inter-spike intervals
-    fn calculate_isi(&self, spike_times: &[f64]) -> CoreResult<Vec<f64>> {
-        if spike_times.len() < 2 {
+    fn calculate_isi(&self, spiketimes: &[f64]) -> CoreResult<Vec<f64>> {
+        if spiketimes.len() < 2 {
             return Ok(Vec::new());
         }
 
         let mut intervals = Vec::new();
-        for i in 1..spike_times.len() {
-            intervals.push(spike_times[i] - spike_times[i.saturating_sub(1)]);
+        for i in 1_usize..spiketimes.len() {
+            let prev_idx = i.saturating_sub(1);
+            intervals.push(spiketimes[i] - spiketimes[prev_idx]);
         }
 
         Ok(intervals)
     }
 
     /// Detect burst patterns in spike trains
-    fn detect_bursts(&self, spike_times: &[f64]) -> CoreResult<Vec<BurstPattern>> {
+    fn detect_bursts(&self, spiketimes: &[f64]) -> CoreResult<Vec<BurstPattern>> {
         let mut bursts = Vec::new();
         let isi_threshold = 10.0; // milliseconds
 
         let mut burst_start = None;
         let mut current_burst_spikes = Vec::new();
 
-        for &spike_time in spike_times {
+        for &spike_time in spiketimes {
             if let Some(last_spike) = current_burst_spikes.last() {
                 if spike_time - last_spike <= isi_threshold {
                     current_burst_spikes.push(spike_time);
@@ -2380,11 +2377,11 @@ impl NeuromorphicJitCompiler {
     }
 
     /// Analyze frequency spectrum of spike train
-    fn analyze_frequency_spectrum(&self, spike_times: &[f64]) -> CoreResult<FrequencySpectrum> {
+    fn analyze_frequency_spectrum(&self, spiketimes: &[f64]) -> CoreResult<FrequencySpectrum> {
         // Simplified frequency analysis
-        let total_time = spike_times.last().unwrap_or(&0.0) - spike_times.first().unwrap_or(&0.0);
+        let total_time = spiketimes.last().unwrap_or(&0.0) - spiketimes.first().unwrap_or(&0.0);
         let mean_frequency = if total_time > 0.0 {
-            spike_times.len() as f64 / total_time
+            spiketimes.len() as f64 / total_time
         } else {
             0.0
         };
@@ -2398,13 +2395,13 @@ impl NeuromorphicJitCompiler {
     }
 
     /// Calculate temporal correlation
-    fn calculate_temporal_correlation(&self, spike_times: &[f64]) -> CoreResult<f64> {
+    fn calculate_temporal_correlation(&self, spiketimes: &[f64]) -> CoreResult<f64> {
         // Simplified autocorrelation calculation
-        if spike_times.len() < 2 {
+        if spiketimes.len() < 2 {
             return Ok(0.0);
         }
 
-        let intervals = self.calculate_isi(spike_times)?;
+        let intervals = self.calculate_isi(spiketimes)?;
         let mean_isi = intervals.iter().sum::<f64>() / intervals.len() as f64;
         let variance = intervals
             .iter()
@@ -2424,12 +2421,12 @@ impl NeuromorphicJitCompiler {
     }
 
     /// Calculate spike pattern complexity
-    fn calculate_pattern_complexity(&self, spike_times: &[f64]) -> CoreResult<f64> {
-        if spike_times.len() < 2 {
+    fn calculate_pattern_complexity(&self, spiketimes: &[f64]) -> CoreResult<f64> {
+        if spiketimes.len() < 2 {
             return Ok(0.0);
         }
 
-        let intervals = self.calculate_isi(spike_times)?;
+        let intervals = self.calculate_isi(spiketimes)?;
 
         // Use Shannon entropy of ISI distribution as complexity measure
         let mut isi_histogram = HashMap::new();
@@ -2454,12 +2451,12 @@ impl NeuromorphicJitCompiler {
     }
 
     /// Calculate complexity (alias for calculate_pattern_complexity)
-    fn calculate_complexity(&self, spike_times: &[f64]) -> CoreResult<f64> {
-        self.calculate_pattern_complexity(spike_times)
+    fn calculate_complexity(&self, spiketimes: &[f64]) -> CoreResult<f64> {
+        self.calculate_pattern_complexity(spiketimes)
     }
 
     /// Generate optimized code for spike pattern
-    fn generate_optimized_spike_code(
+    fn generate_optimized_spikecode(
         &self,
         pattern: &SpikePattern,
         characteristics: &SpikeCharacteristics,
@@ -2494,8 +2491,8 @@ impl NeuromorphicJitCompiler {
     /// Predict performance for optimized spike code
     fn predict_spike_performance(&self, code: &str) -> CoreResult<SpikePerformancePrediction> {
         // Simplified performance prediction
-        let _code_complexity = code.len() as f64;
-        let _baseline_performance = 1.0;
+        let code_complexity = code.len() as f64;
+        let baseline_performance = 1.0;
 
         // Estimate speedup based on code patterns
         let speedup_factor = if code.contains("regular_spikes") {
@@ -2519,8 +2516,8 @@ impl NeuromorphicJitCompiler {
 
 #[derive(Debug, Clone)]
 pub struct CompiledSNN {
-    pub spike_processing_code: String,
-    pub plasticity_code: String,
+    pub spike_processingcode: String,
+    pub plasticitycode: String,
     pub compilation_time: Instant,
     pub network_stats: PopulationStatistics,
     pub optimization_level: u8,
@@ -2537,8 +2534,8 @@ pub struct SpikeOptimizationResult {
 #[derive(Debug, Clone)]
 pub struct PatternOptimization {
     pub pattern_id: String,
-    pub original_code: String,
-    pub optimized_code: String,
+    pub originalcode: String,
+    pub optimizedcode: String,
     pub performance_gain: f64,
     pub memory_reduction: f64,
 }
@@ -2578,7 +2575,7 @@ pub struct SpikePerformancePrediction {
 
 // Placeholder implementations for compiler components
 impl SpikingNeuralNetworkCompiler {
-    fn new(_config: &NeuromorphicConfig) -> CoreResult<Self> {
+    fn new(config: &NeuromorphicConfig) -> CoreResult<Self> {
         Ok(Self {
             neuron_models: HashMap::new(),
             synapse_models: HashMap::new(),
@@ -2604,13 +2601,13 @@ impl SpikingNeuralNetworkCompiler {
         })
     }
 
-    fn generate_spike_code(&self, _network: &NetworkTopology) -> CoreResult<String> {
+    fn generate_spikecode(&self, network: &NetworkTopology) -> CoreResult<String> {
         Ok("// Generated spike processing code\n".to_string())
     }
 }
 
 impl SynapticPlasticityEngine {
-    fn new(_config: &NeuromorphicConfig) -> CoreResult<Self> {
+    fn new(config: &NeuromorphicConfig) -> CoreResult<Self> {
         Ok(Self {
             active_rules: HashMap::new(),
             learning_history: Vec::new(),
@@ -2624,13 +2621,13 @@ impl SynapticPlasticityEngine {
         })
     }
 
-    fn generate_plasticity_code(&self, _network: &NetworkTopology) -> CoreResult<String> {
+    fn generate_plasticitycode(&self, network: &NetworkTopology) -> CoreResult<String> {
         Ok("// Generated plasticity code\n".to_string())
     }
 }
 
 impl EventDrivenOptimizer {
-    fn new(_config: &NeuromorphicConfig) -> CoreResult<Self> {
+    fn new(config: &NeuromorphicConfig) -> CoreResult<Self> {
         Ok(Self {
             event_queue: EventQueue {
                 events: Vec::new(),
@@ -2653,7 +2650,7 @@ impl EventDrivenOptimizer {
 }
 
 impl TemporalDynamicsCompiler {
-    fn new(_config: &NeuromorphicConfig) -> CoreResult<Self> {
+    fn new(config: &NeuromorphicConfig) -> CoreResult<Self> {
         Ok(Self {
             temporal_patterns: HashMap::new(),
             dynamics_models: HashMap::new(),

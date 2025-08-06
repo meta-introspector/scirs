@@ -139,17 +139,17 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 
 // Helper function to compute error between original and reconstructed signals
 #[allow(dead_code)]
-fn compute_error(_original: &[f64], reconstructed: &[Complex64]) -> f64 {
-    if _original.len() != reconstructed.len() {
+fn compute_error(original: &[f64], reconstructed: &[Complex64]) -> f64 {
+    if original.len() != reconstructed.len() {
         // Handle simple case for high-resolution where lengths don't match
         // by just comparing overlapping parts
-        let min_len = _original.len().min(reconstructed.len());
+        let min_len = original.len().min(reconstructed.len());
         return compute_error(&_original[..min_len], &reconstructed[..min_len]);
     }
 
     // Convert _original signal to complex for comparison
     let _original_complex: Vec<Complex64> =
-        _original.iter().map(|&x| Complex64::new(x, 0.0)).collect();
+        original.iter().map(|&x| Complex64::new(x, 0.0)).collect();
 
     // Normalize signals before comparing
     let orig_energy: f64 = original_complex.iter().map(|&x| x.norm_sqr()).sum();
@@ -169,7 +169,7 @@ fn compute_error(_original: &[f64], reconstructed: &[Complex64]) -> f64 {
 
     // Error ranges from 0 (identical) to 2 (completely different)
     // Scale to 0-1 range
-    (error_sum / (2.0 * _original.len() as f64)).sqrt()
+    (error_sum / (2.0 * original.len() as f64)).sqrt()
 }
 
 // Create visualization plots

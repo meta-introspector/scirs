@@ -93,14 +93,14 @@ pub struct AdvancedUnifiedProcessor {
 
 impl AdvancedUnifiedProcessor {
     /// Create a new unified Advanced processor
-    pub fn new(_config: AdvancedProcessorConfig) -> Self {
+    pub fn new(config: AdvancedProcessorConfig) -> Self {
         Self {
             parallel_processor: create_advanced_parallel_processor(),
             stability_analyzer: create_exhaustive_numerical_stability_tester(),
             capabilities: PlatformCapabilities::detect(),
             simd_processor: None,
             performance_history: Vec::new(),
-            _config,
+            config,
         }
     }
 
@@ -442,7 +442,7 @@ impl AdvancedUnifiedProcessor {
         }
     }
 
-    fn determine_adaptive_strategy(&self, data_size: usize) -> StatsResult<ProcessingStrategy> {
+    fn determine_adaptive_strategy(&self, datasize: usize) -> StatsResult<ProcessingStrategy> {
         // Analyze performance history for similar data sizes
         let similar_operations: Vec<_> = self
             .performance_history
@@ -756,7 +756,7 @@ impl AdvancedUnifiedProcessor {
             variances: Array1::zeros(0),
             mins: Array1::zeros(0),
             maxs: Array1::zeros(0),
-            window_size: _window_size,
+            window_size: window_size,
         })
     }
 
@@ -765,12 +765,12 @@ impl AdvancedUnifiedProcessor {
     ) -> Vec<String> {
         let mut recommendations = Vec::new();
 
-        if _metrics.data_size > 10000 && !_metrics.parallel_enabled {
+        if metrics.data_size > 10000 && !_metrics.parallel_enabled {
             recommendations
                 .push("Consider enabling parallel processing for large datasets".to_string());
         }
 
-        if _metrics.data_size > 1000 && !_metrics.simd_enabled && self.capabilities.has_avx2() {
+        if metrics.data_size > 1000 && !_metrics.simd_enabled && self.capabilities.has_avx2() {
             recommendations.push("SIMD optimizations could improve performance".to_string());
         }
 

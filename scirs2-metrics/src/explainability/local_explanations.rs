@@ -252,7 +252,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> LocalExplainer<F> {
         Ok((samples, distances))
     }
 
-    fn generate_gaussian_noise(&self, sample_idx: usize, feature_idx: usize) -> Result<F> {
+    fn generate_gaussian_noise(&self, sample_idx: usize, featureidx: usize) -> Result<F> {
         // Simplified Gaussian noise generation using Box-Muller transform
         let seed = self.random_seed.unwrap_or(0) + sample_idx as u64 + feature_idx as u64;
         let u1 = F::from((seed % 1000) as f64 / 1000.0).unwrap();
@@ -330,7 +330,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> LocalExplainer<F> {
         Ok(gradients)
     }
 
-    fn sample_coalition(&self, n_features: usize, target_feature: usize) -> Result<Vec<usize>> {
+    fn sample_coalition(&self, n_features: usize, targetfeature: usize) -> Result<Vec<usize>> {
         let mut coalition = Vec::new();
 
         // Simple coalition sampling (in practice, would use proper random sampling)
@@ -402,7 +402,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> LocalExplainer<F> {
         Ok(test_instance)
     }
 
-    fn compute_anchor_coverage(&self_instance: &ArrayView1<F>, _feature_idx: usize) -> Result<F> {
+    fn compute_anchor_coverage(&self, instance: &ArrayView1<F>, featureidx: usize) -> Result<F> {
         // Simplified coverage computation
         Ok(F::from(0.5).unwrap())
     }

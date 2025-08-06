@@ -203,7 +203,7 @@ impl<F: Float + Debug + 'static + Sum + Clone + Copy + FromPrimitive> ModelEvalu
     pub fn set_cross_validation(&mut self, strategy: CrossValidationStrategy) {
         self.cv_strategy = Some(strategy);
     /// Enable bootstrap confidence intervals
-    pub fn enable_bootstrap(&mut self, n_samples: usize) {
+    pub fn enable_bootstrap(&mut self, nsamples: usize) {
         self.bootstrap_samples = Some(n_samples);
     /// Set significance level for statistical tests
     pub fn set_significance_level(&mut self, level: f64) {
@@ -307,14 +307,14 @@ impl<F: Float + Debug + 'static + Sum + Clone + Copy + FromPrimitive> ModelEvalu
                 // For other regression metrics, return a placeholder
                     value: F::from(0.8).unwrap(),
                     std_dev: Some(F::from(0.05).unwrap()),
-    fn mean_squared_error(&self, y_true: &ArrayD<F>, y_pred: &ArrayD<F>) -> F {
+    fn mean_squared_error(&self, y_true: &ArrayD<F>, ypred: &ArrayD<F>) -> F {
         let diff = y_true - y_pred;
         let squared_diff = diff.mapv(|x| x * x);
         squared_diff.mean().unwrap_or(F::zero())
-    fn mean_absolute_error(&self, y_true: &ArrayD<F>, y_pred: &ArrayD<F>) -> F {
+    fn mean_absolute_error(&self, y_true: &ArrayD<F>, ypred: &ArrayD<F>) -> F {
         let abs_diff = diff.mapv(|x| x.abs());
         abs_diff.mean().unwrap_or(F::zero())
-    fn r_squared(&self, y_true: &ArrayD<F>, y_pred: &ArrayD<F>) -> Result<F> {
+    fn r_squared(&self, y_true: &ArrayD<F>, ypred: &ArrayD<F>) -> Result<F> {
         let y_mean = y_true.mean().unwrap_or(F::zero());
         let ss_res = (y_true - y_pred).mapv(|x| x * x).sum();
         let ss_tot = y_true.mapv(|x| (x - y_mean) * (x - y_mean)).sum();
@@ -508,7 +508,7 @@ impl<F: Float + Debug + 'static + Sum + Clone + Copy + FromPrimitive> ModelEvalu
         ));
         report
     /// Get cached evaluation results
-    pub fn get_cached_results(&self, model_name: &str) -> Option<&EvaluationResults<F>> {
+    pub fn get_cached_results(&self, modelname: &str) -> Option<&EvaluationResults<F>> {
         self.results_cache.get(model_name)
     /// Clear results cache
     pub fn clear_cache(&mut self) {
@@ -543,7 +543,7 @@ impl<F: Float + Debug + 'static + Sum + Clone + Copy + FromPrimitive> Evaluation
     /// Enable cross-validation
     pub fn with_cross_validation(mut self, strategy: CrossValidationStrategy) -> Self {
         self.evaluator.set_cross_validation(strategy);
-    pub fn with_bootstrap(mut self, n_samples: usize) -> Self {
+    pub fn with_bootstrap(mut self, nsamples: usize) -> Self {
         self.evaluator.enable_bootstrap(n_samples);
     /// Build the evaluator
     pub fn build(self) -> ModelEvaluator<F> {

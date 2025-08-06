@@ -1,6 +1,6 @@
 use crate::op::{ComputeContext, GradientContext, Op, OpError};
 use crate::tensor::Tensor;
-use crate::tensor__ops::convert_to_tensor;
+use crate::tensor_ops::convert_to_tensor;
 use crate::Float;
 use ndarray::{Array1, Array2, Ix2};
 
@@ -530,8 +530,8 @@ fn improved_deflation<F: Float + ndarray::ScalarOperand>(
 /// # Returns
 /// A tuple of tensors (Q, R) representing the decomposition
 #[allow(dead_code)]
-pub fn qr<'g, F: Float>(_matrix: &Tensor<'g, F>) -> (Tensor<'g, F>, Tensor<'g, F>) {
-    let g = _matrix.graph();
+pub fn qr<'g, F: Float>(matrix: &Tensor<'g, F>) -> (Tensor<'g, F>, Tensor<'g, F>) {
+    let g = matrix.graph();
 
     // Create component ops directly using extraction operators
     let q = Tensor::builder(g)
@@ -745,8 +745,8 @@ fn compute_cholesky_gradient<F: Float>(
 /// # Returns
 /// A tensor L representing the lower triangular decomposition
 #[allow(dead_code)]
-pub fn cholesky<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _matrix.graph();
+pub fn cholesky<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = matrix.graph();
     Tensor::builder(g)
         .append_input(_matrix, false)
         .build(CholeskyOp)
@@ -1204,8 +1204,8 @@ fn compute_matrix_power<F: Float + ndarray::ScalarOperand>(
 /// # Returns
 /// A tensor representing exp(A)
 #[allow(dead_code)]
-pub fn matrix_exp<'g, F: Float + ndarray::ScalarOperand>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _matrix.graph();
+pub fn matrix_exp<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = matrix.graph();
     Tensor::builder(g)
         .append_input(_matrix, false)
         .build(MatrixExpOp)
@@ -1221,8 +1221,8 @@ pub fn matrix_exp<'g, F: Float + ndarray::ScalarOperand>(_matrix: &Tensor<'g, F>
 /// # Returns
 /// A tensor representing log(A)
 #[allow(dead_code)]
-pub fn matrix_log<'g, F: Float + ndarray::ScalarOperand>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _matrix.graph();
+pub fn matrix_log<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = matrix.graph();
     Tensor::builder(g)
         .append_input(_matrix, false)
         .build(MatrixLogOp)

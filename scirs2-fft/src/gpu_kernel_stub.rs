@@ -20,9 +20,9 @@ pub struct GpuFftKernel {
 
 impl GpuFftKernel {
     /// Create a new GPU FFT kernel stub
-    pub fn new(_name: &str) -> Self {
+    pub fn new(name: &str) -> Self {
         Self {
-            name: _name.to_string(),
+            name: name.to_string(),
         }
     }
 

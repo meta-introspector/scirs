@@ -25,17 +25,17 @@ pub struct Variable {
 
 impl Variable {
     /// Create a new variable
-    pub fn new(_name: impl Into<String>) -> Self {
+    pub fn new(name: impl Into<String>) -> Self {
         Variable {
-            name: _name.into(),
+            name: name.into(),
             index: None,
         }
     }
 
     /// Create an indexed variable
-    pub fn indexed(_name: impl Into<String>, index: usize) -> Self {
+    pub fn indexed(name: impl Into<String>, index: usize) -> Self {
         Variable {
-            name: _name.into(),
+            name: name.into(),
             index: Some(index),
         }
     }
@@ -95,84 +95,84 @@ pub enum SymbolicExpression<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> SymbolicExpression<F> {
     /// Create a constant expression
-    pub fn constant(_value: F) -> Self {
-        SymbolicExpression::Constant(_value)
+    pub fn constant(value: F) -> Self {
+        SymbolicExpression::Constant(value)
     }
 
     /// Create a variable expression
-    pub fn var(_name: impl Into<String>) -> Self {
-        SymbolicExpression::Var(Variable::new(_name))
+    pub fn var(name: impl Into<String>) -> Self {
+        SymbolicExpression::Var(Variable::new(name))
     }
 
     /// Create an indexed variable expression
-    pub fn indexed_var(_name: impl Into<String>, index: usize) -> Self {
-        SymbolicExpression::Var(Variable::indexed(_name, index))
+    pub fn indexedvar(name: impl Into<String>, index: usize) -> Self {
+        SymbolicExpression::Var(Variable::indexed(name, index))
     }
 
     /// Create a tangent expression
-    pub fn tan(_expr: SymbolicExpression<F>) -> Self {
-        SymbolicExpression::Tan(Box::new(_expr))
+    pub fn tan(expr: SymbolicExpression<F>) -> Self {
+        SymbolicExpression::Tan(Box::new(expr))
     }
 
     /// Create an arctangent expression
-    pub fn atan(_expr: SymbolicExpression<F>) -> Self {
-        SymbolicExpression::Atan(Box::new(_expr))
+    pub fn atan(expr: SymbolicExpression<F>) -> Self {
+        SymbolicExpression::Atan(Box::new(expr))
     }
 
     /// Create a hyperbolic sine expression
-    pub fn sinh(_expr: SymbolicExpression<F>) -> Self {
-        SymbolicExpression::Sinh(Box::new(_expr))
+    pub fn sinh(expr: SymbolicExpression<F>) -> Self {
+        SymbolicExpression::Sinh(Box::new(expr))
     }
 
     /// Create a hyperbolic cosine expression
-    pub fn cosh(_expr: SymbolicExpression<F>) -> Self {
-        SymbolicExpression::Cosh(Box::new(_expr))
+    pub fn cosh(expr: SymbolicExpression<F>) -> Self {
+        SymbolicExpression::Cosh(Box::new(expr))
     }
 
     /// Create a hyperbolic tangent expression
-    pub fn tanh(_expr: SymbolicExpression<F>) -> Self {
-        SymbolicExpression::Tanh(Box::new(_expr))
+    pub fn tanh(expr: SymbolicExpression<F>) -> Self {
+        SymbolicExpression::Tanh(Box::new(expr))
     }
 
     /// Create an absolute value expression
-    pub fn abs(_expr: SymbolicExpression<F>) -> Self {
-        SymbolicExpression::Abs(Box::new(_expr))
+    pub fn abs(expr: SymbolicExpression<F>) -> Self {
+        SymbolicExpression::Abs(Box::new(expr))
     }
 
     /// Differentiate with respect to a variable
-    pub fn differentiate(&self, _var: &Variable) -> SymbolicExpression<F> {
+    pub fn differentiate(&self, var: &Variable) -> SymbolicExpression<F> {
         use SymbolicExpression::*;
 
         match self {
             Constant(_) => Constant(F::zero()),
             Var(v) => {
-                if v == _var {
+                if v == var {
                     Constant(F::one())
                 } else {
                     Constant(F::zero())
                 }
             }
             Add(a, b) => Add(
-                Box::new(a.differentiate(_var)),
-                Box::new(b.differentiate(_var)),
+                Box::new(a.differentiate(var)),
+                Box::new(b.differentiate(var)),
             ),
             Sub(a, b) => Sub(
-                Box::new(a.differentiate(_var)),
-                Box::new(b.differentiate(_var)),
+                Box::new(a.differentiate(var)),
+                Box::new(b.differentiate(var)),
             ),
             Mul(a, b) => {
                 // Product rule: (a*b)' = a'*b + a*b'
                 Add(
-                    Box::new(Mul(Box::new(a.differentiate(_var)), b.clone())),
-                    Box::new(Mul(a.clone(), Box::new(b.differentiate(_var)))),
+                    Box::new(Mul(Box::new(a.differentiate(var)), b.clone())),
+                    Box::new(Mul(a.clone(), Box::new(b.differentiate(var)))),
                 )
             }
             Div(a, b) => {
                 // Quotient rule: (a/b)' = (a'*b - a*b')/b²
                 Div(
                     Box::new(Sub(
-                        Box::new(Mul(Box::new(a.differentiate(_var)), b.clone())),
-                        Box::new(Mul(a.clone(), Box::new(b.differentiate(_var)))),
+                        Box::new(Mul(Box::new(a.differentiate(var)), b.clone())),
+                        Box::new(Mul(a.clone(), Box::new(b.differentiate(var)))),
                     )),
                     Box::new(Mul(b.clone(), b.clone())),
                 )
@@ -186,38 +186,38 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
                             Box::new(Constant(*n)),
                             Box::new(Pow(a.clone(), Box::new(Constant(*n - F::one())))),
                         )),
-                        Box::new(a.differentiate(_var)),
+                        Box::new(a.differentiate(var)),
                     )
                 } else {
                     // General case: a^b = exp(b*ln(a))
                     let exp_expr = Exp(Box::new(Mul(b.clone(), Box::new(Ln(a.clone())))));
-                    exp_expr.differentiate(_var)
+                    exp_expr.differentiate(var)
                 }
             }
-            Neg(a) => Neg(Box::new(a.differentiate(_var))),
+            Neg(a) => Neg(Box::new(a.differentiate(var))),
             Sin(a) => {
                 // (sin(a))' = cos(a) * a'
-                Mul(Box::new(Cos(a.clone())), Box::new(a.differentiate(_var)))
+                Mul(Box::new(Cos(a.clone())), Box::new(a.differentiate(var)))
             }
             Cos(a) => {
                 // (cos(a))' = -sin(a) * a'
                 Neg(Box::new(Mul(
                     Box::new(Sin(a.clone())),
-                    Box::new(a.differentiate(_var)),
+                    Box::new(a.differentiate(var)),
                 )))
             }
             Exp(a) => {
                 // (e^a)' = e^a * a'
-                Mul(Box::new(Exp(a.clone())), Box::new(a.differentiate(_var)))
+                Mul(Box::new(Exp(a.clone())), Box::new(a.differentiate(var)))
             }
             Ln(a) => {
                 // (ln(a))' = a'/a
-                Div(Box::new(a.differentiate(_var)), a.clone())
+                Div(Box::new(a.differentiate(var)), a.clone())
             }
             Sqrt(a) => {
                 // (sqrt(a))' = a'/(2*sqrt(a))
                 Div(
-                    Box::new(a.differentiate(_var)),
+                    Box::new(a.differentiate(var)),
                     Box::new(Mul(
                         Box::new(Constant(F::from(2.0).unwrap())),
                         Box::new(Sqrt(a.clone())),
@@ -227,7 +227,7 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
             Tan(a) => {
                 // (tan(a))' = sec²(a) * a' = a' / cos²(a)
                 Div(
-                    Box::new(a.differentiate(_var)),
+                    Box::new(a.differentiate(var)),
                     Box::new(Pow(
                         Box::new(Cos(a.clone())),
                         Box::new(Constant(F::from(2.0).unwrap())),
@@ -237,7 +237,7 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
             Atan(a) => {
                 // (atan(a))' = a' / (1 + a²)
                 Div(
-                    Box::new(a.differentiate(_var)),
+                    Box::new(a.differentiate(var)),
                     Box::new(Add(
                         Box::new(Constant(F::one())),
                         Box::new(Pow(a.clone(), Box::new(Constant(F::from(2.0).unwrap())))),
@@ -246,16 +246,16 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
             }
             Sinh(a) => {
                 // (sinh(a))' = cosh(a) * a'
-                Mul(Box::new(Cosh(a.clone())), Box::new(a.differentiate(_var)))
+                Mul(Box::new(Cosh(a.clone())), Box::new(a.differentiate(var)))
             }
             Cosh(a) => {
                 // (cosh(a))' = sinh(a) * a'
-                Mul(Box::new(Sinh(a.clone())), Box::new(a.differentiate(_var)))
+                Mul(Box::new(Sinh(a.clone())), Box::new(a.differentiate(var)))
             }
             Tanh(a) => {
                 // (tanh(a))' = sech²(a) * a' = a' / cosh²(a)
                 Div(
-                    Box::new(a.differentiate(_var)),
+                    Box::new(a.differentiate(var)),
                     Box::new(Pow(
                         Box::new(Cosh(a.clone())),
                         Box::new(Constant(F::from(2.0).unwrap())),
@@ -267,39 +267,39 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
                 // For symbolic differentiation, we'll use a/|a| as sign function
                 Mul(
                     Box::new(Div(a.clone(), Box::new(Abs(a.clone())))),
-                    Box::new(a.differentiate(_var)),
+                    Box::new(a.differentiate(var)),
                 )
             }
         }
     }
 
     /// Evaluate the expression with given variable values
-    pub fn evaluate(&self, _values: &HashMap<Variable, F>) -> IntegrateResult<F> {
+    pub fn evaluate(&self, values: &HashMap<Variable, F>) -> IntegrateResult<F> {
         match self {
             Constant(c) => Ok(*c),
-            Var(v) => _values.get(v).copied().ok_or_else(|| {
-                IntegrateError::ComputationError(format!("Variable {v} not found in _values"))
+            Var(v) => values.get(v).copied().ok_or_else(|| {
+                IntegrateError::ComputationError(format!("Variable {v} not found in values"))
             }),
-            Add(a, b) => Ok(a.evaluate(_values)? + b.evaluate(_values)?),
-            Sub(a, b) => Ok(a.evaluate(_values)? - b.evaluate(_values)?),
-            Mul(a, b) => Ok(a.evaluate(_values)? * b.evaluate(_values)?),
+            Add(a, b) => Ok(a.evaluate(values)? + b.evaluate(values)?),
+            Sub(a, b) => Ok(a.evaluate(values)? - b.evaluate(values)?),
+            Mul(a, b) => Ok(a.evaluate(values)? * b.evaluate(values)?),
             Div(a, b) => {
-                let b_val = b.evaluate(_values)?;
+                let b_val = b.evaluate(values)?;
                 if b_val.abs() < F::epsilon() {
                     Err(IntegrateError::ComputationError(
                         "Division by zero".to_string(),
                     ))
                 } else {
-                    Ok(a.evaluate(_values)? / b_val)
+                    Ok(a.evaluate(values)? / b_val)
                 }
             }
-            Pow(a, b) => Ok(a.evaluate(_values)?.powf(b.evaluate(_values)?)),
-            Neg(a) => Ok(-a.evaluate(_values)?),
-            Sin(a) => Ok(a.evaluate(_values)?.sin()),
-            Cos(a) => Ok(a.evaluate(_values)?.cos()),
-            Exp(a) => Ok(a.evaluate(_values)?.exp()),
+            Pow(a, b) => Ok(a.evaluate(values)?.powf(b.evaluate(values)?)),
+            Neg(a) => Ok(-a.evaluate(values)?),
+            Sin(a) => Ok(a.evaluate(values)?.sin()),
+            Cos(a) => Ok(a.evaluate(values)?.cos()),
+            Exp(a) => Ok(a.evaluate(values)?.exp()),
             Ln(a) => {
-                let a_val = a.evaluate(_values)?;
+                let a_val = a.evaluate(values)?;
                 if a_val <= F::zero() {
                     Err(IntegrateError::ComputationError(
                         "Logarithm of non-positive value".to_string(),
@@ -309,7 +309,7 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
                 }
             }
             Sqrt(a) => {
-                let a_val = a.evaluate(_values)?;
+                let a_val = a.evaluate(values)?;
                 if a_val < F::zero() {
                     Err(IntegrateError::ComputationError(
                         "Square root of negative value".to_string(),
@@ -318,12 +318,12 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
                     Ok(a_val.sqrt())
                 }
             }
-            Tan(a) => Ok(a.evaluate(_values)?.tan()),
-            Atan(a) => Ok(a.evaluate(_values)?.atan()),
-            Sinh(a) => Ok(a.evaluate(_values)?.sinh()),
-            Cosh(a) => Ok(a.evaluate(_values)?.cosh()),
-            Tanh(a) => Ok(a.evaluate(_values)?.tanh()),
-            Abs(a) => Ok(a.evaluate(_values)?.abs()),
+            Tan(a) => Ok(a.evaluate(values)?.tan()),
+            Atan(a) => Ok(a.evaluate(values)?.atan()),
+            Sinh(a) => Ok(a.evaluate(values)?.sinh()),
+            Cosh(a) => Ok(a.evaluate(values)?.cosh()),
+            Tanh(a) => Ok(a.evaluate(values)?.tanh()),
+            Abs(a) => Ok(a.evaluate(values)?.abs()),
         }
     }
 

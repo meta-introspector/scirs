@@ -217,13 +217,13 @@ impl GpuDevice {
     }
 
     /// Select optimal backend based on capabilities
-    fn select_optimal_backend(_caps: &GpuCapabilities) -> GpuBackend {
+    fn select_optimal_backend(caps: &GpuCapabilities) -> GpuBackend {
         // Prefer CUDA for NVIDIA, ROCm for AMD, etc.
-        if _caps.supported_backends.contains(&GpuBackend::Cuda) {
+        if caps.supported_backends.contains(&GpuBackend::Cuda) {
             GpuBackend::Cuda
-        } else if _caps.supported_backends.contains(&GpuBackend::Rocm) {
+        } else if caps.supported_backends.contains(&GpuBackend::Rocm) {
             GpuBackend::Rocm
-        } else if _caps.supported_backends.contains(&GpuBackend::Vulkan) {
+        } else if caps.supported_backends.contains(&GpuBackend::Vulkan) {
             GpuBackend::Vulkan
         } else {
             GpuBackend::CpuFallback
@@ -241,7 +241,7 @@ impl GpuDevice {
     }
 
     /// Get optimal block size for GPU kernels
-    pub fn optimal_block_size(&self, _problem_size: usize) -> usize {
+    pub fn optimal_block_size(&self, _problemsize: usize) -> usize {
         match self.preferred_backend {
             GpuBackend::Cuda => {
                 // Optimize for CUDA warp _size (32) and compute capability
@@ -651,13 +651,13 @@ impl GpuDistanceMatrix {
     }
 
     /// Configure batch size for GPU processing
-    pub fn with_batch_size(mut self, batch_size: usize) -> Self {
+    pub fn with_batch_size(mut self, batchsize: usize) -> Self {
         self.batch_size = batch_size;
         self
     }
 
     /// Configure mixed precision (f32 vs f64)
-    pub fn with_mixed_precision(mut self, use_mixed_precision: bool) -> Self {
+    pub fn with_mixed_precision(mut self, use_mixedprecision: bool) -> Self {
         self.use_mixed_precision = use_mixed_precision;
         self
     }
@@ -683,7 +683,7 @@ impl GpuDistanceMatrix {
     }
 
     /// GPU distance matrix computation using CUDA
-    async fn compute_cuda(&self, _points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+    async fn compute_cuda(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
         // In a real implementation, this would:
         // 1. Allocate GPU memory for input _points and output matrix
         // 2. Transfer _points to GPU memory
@@ -695,13 +695,13 @@ impl GpuDistanceMatrix {
     }
 
     /// GPU distance matrix computation using ROCm
-    async fn compute_rocm(&self, _points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+    async fn compute_rocm(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
         // Similar to CUDA but using ROCm/HIP APIs
         self.compute_cpu_fallback(_points).await
     }
 
     /// GPU distance matrix computation using Vulkan
-    async fn compute_vulkan(&self, _points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+    async fn compute_vulkan(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
         // Use Vulkan compute shaders for cross-platform GPU acceleration
         self.compute_cpu_fallback(_points).await
     }
@@ -756,7 +756,7 @@ impl GpuKMeans {
     }
 
     /// Configure maximum iterations
-    pub fn with_max_iterations(mut self, max_iterations: usize) -> Self {
+    pub fn with_max_iterations(mut self, maxiterations: usize) -> Self {
         self.max_iterations = max_iterations;
         self
     }
@@ -768,7 +768,7 @@ impl GpuKMeans {
     }
 
     /// Configure batch size for GPU processing
-    pub fn with_batch_size(mut self, batch_size: usize) -> Self {
+    pub fn with_batch_size(mut self, batchsize: usize) -> Self {
         self.batch_size = batch_size;
         self
     }
@@ -969,7 +969,7 @@ impl HybridProcessor {
     }
 
     /// Automatically choose optimal processing strategy
-    pub fn choose_strategy(&self, _dataset_size: usize) -> ProcessingStrategy {
+    pub fn choose_strategy(&self, _datasetsize: usize) -> ProcessingStrategy {
         if !self.gpu_device.is_gpu_available() {
             return ProcessingStrategy::CpuOnly;
         }
@@ -984,7 +984,7 @@ impl HybridProcessor {
     }
 
     /// Get optimal batch sizes for hybrid processing
-    pub fn optimal_batch_sizes(&self, _total_size: usize) -> (usize, usize) {
+    pub fn optimal_batch_sizes(&self, _totalsize: usize) -> (usize, usize) {
         let gpu_capability = self.gpu_device.capabilities().total_memory / (8 * 1024); // Estimate based on memory
         let cpu_batch = (_total_size / 4).max(1000); // 25% to CPU
         let gpu_batch = (_total_size * 3 / 4).min(gpu_capability); // 75% to GPU if memory allows

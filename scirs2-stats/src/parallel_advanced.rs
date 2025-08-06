@@ -458,7 +458,7 @@ impl AdvancedParallelConfig {
     }
 
     /// Measure memory bandwidth using sequential read/write operations
-    fn measure_memory_bandwidth(_size: usize) -> Option<f64> {
+    fn measure_memory_bandwidth(size: usize) -> Option<f64> {
         use std::time::Instant;
 
         // Allocate test arrays
@@ -637,24 +637,24 @@ where
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: AdvancedParallelConfig) -> Self {
+    pub fn with_config(config: AdvancedParallelConfig) -> Self {
         let performance_monitor = Arc::new(PerformanceMonitor::new());
         let memory_manager = Arc::new(MemoryManager::new(&_config.memory));
 
-        let thread_pool = if _config.hardware.cpu_cores > 1 {
+        let thread_pool = if config.hardware.cpu_cores > 1 {
             Some(ThreadPool::new(&_config))
         } else {
             None
         };
 
-        let gpu_context = if _config.gpu.enable_gpu {
+        let gpu_context = if config.gpu.enable_gpu {
             GpuContext::new(&_config.gpu).ok()
         } else {
             None
         };
 
         Self {
-            config: _config,
+            config: config,
             thread_pool,
             performance_monitor,
             memory_manager,
@@ -713,7 +713,7 @@ where
         T: Fn(&ArrayView2<F>) -> StatsResult<R> + Send + Sync + Clone + 'static,
         R: Send + Sync + 'static,
     {
-        let (rows, _cols) = data.dim();
+        let (rows, cols) = data.dim();
         let num_threads = self.config.hardware.cpu_cores;
         let chunk_size = (rows + num_threads - 1) / num_threads;
 
@@ -835,7 +835,7 @@ impl PerformanceMonitor {
         }
     }
 
-    fn update_metrics(&self, execution_time: Duration, data_size: usize) {
+    fn update_metrics(&self, execution_time: Duration, datasize: usize) {
         if let Ok(mut metrics) = self.metrics.write() {
             metrics.completed_tasks += 1;
             metrics.average_task_time = execution_time;
@@ -1008,7 +1008,7 @@ mod tests {
 }
 
 impl MemoryManager {
-    fn new(_config: &MemoryConfig) -> Self {
+    fn new(config: &MemoryConfig) -> Self {
         Self {
             allocated_memory: AtomicUsize::new(0),
             peak_memory: AtomicUsize::new(0),
@@ -1029,8 +1029,8 @@ impl MemoryManager {
 }
 
 impl ThreadPool {
-    fn new(_config: &AdvancedParallelConfig) -> Self {
-        let num_workers = _config.hardware.cpu_cores;
+    fn new(config: &AdvancedParallelConfig) -> Self {
+        let num_workers = config.hardware.cpu_cores;
         let work_queue = Arc::new(Mutex::new(VecDeque::new()));
         let shutdown = Arc::new(AtomicBool::new(false));
         let active_workers = Arc::new(AtomicUsize::new(0));
@@ -1055,7 +1055,7 @@ impl Worker {
         _shutdown: Arc<AtomicBool>,
     ) -> Self {
         Self {
-            id: _id,
+            id: id,
             thread: None, // Would spawn actual worker thread
             local_queue: VecDeque::new(),
             numa_node: None,
@@ -1064,13 +1064,13 @@ impl Worker {
 }
 
 impl GpuContext {
-    fn new(_config: &GpuConfig) -> Result<Self, String> {
+    fn new(config: &GpuConfig) -> Result<Self, String> {
         // Simplified GPU initialization
         Ok(Self {
-            device_id: _config.preferred_device.unwrap_or(0),
-            available_memory: _config.gpu_memory_limit.unwrap_or(1024 * 1024 * 1024),
+            device_id: config.preferred_device.unwrap_or(0),
+            available_memory: config.gpu_memory_limit.unwrap_or(1024 * 1024 * 1024),
             stream_handles: Vec::new(),
-            unified_memory_enabled: _config.enable_unified_memory,
+            unified_memory_enabled: config.enable_unified_memory,
         })
     }
 }

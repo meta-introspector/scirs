@@ -29,9 +29,9 @@ pub struct LinalgContext<'a, F: Float> {
 
 impl<'a, F: Float> LinalgContext<'a, F> {
     /// Create new linalg context
-    pub fn new(_operation: LinalgOperation) -> Self {
+    pub fn new(operation: LinalgOperation) -> Self {
         Self {
-            _operation,
+            operation,
             inputs: Vec::new(),
             parameters: HashMap::new(),
             grad_mode: GradientMode::Forward,
@@ -356,7 +356,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         })
     }
 
-    fn execute_custom(&self_name: &str) -> Result<LinalgResult<'a, F>, IntegrationError> {
+    fn execute_custom(&self, name: &str) -> Result<LinalgResult<'a, F>, IntegrationError> {
         // Placeholder for custom operations
         let graph = if !self.inputs.is_empty() {
             self.inputs[0].graph()
@@ -781,7 +781,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         }
     }
 
-    fn estimate_solve_cost(&self, a: &Tensor<F>, _b: &Tensor<F>) -> ComputationalCost {
+    fn estimate_solve_cost(&self, a: &Tensor<F>, b: &Tensor<F>) -> ComputationalCost {
         let shape = a.shape();
         let n = if !shape.is_empty() {
             shape[0] as u64
@@ -791,7 +791,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
 
         ComputationalCost {
             flops: (2 * n * n * n) / 3 + 2 * n * n,
-            memory_accesses: (a.data().len() + _b.data().len()) as u64,
+            memory_accesses: (a.data().len() + b.data().len()) as u64,
         }
     }
 
@@ -811,7 +811,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         }
     }
 
-    fn assess_stability(&self_inputs: &[Tensor<F>]) -> NumericalStability {
+    fn assess_stability(selfinputs: &[Tensor<F>]) -> NumericalStability {
         // Simplified stability assessment
         NumericalStability::Stable
     }
@@ -987,9 +987,9 @@ pub fn create_matmul_context<'a, F: Float>(
 
 /// Create an SVD context
 #[allow(dead_code)]
-pub fn create_svd_context<F: Float>(input: Tensor<F>, full_matrices: bool) -> LinalgContext<F> {
+pub fn create_svd_context<F: Float>(input: Tensor<F>, fullmatrices: bool) -> LinalgContext<F> {
     LinalgContext::new(LinalgOperation::SVD)
-        .add_input(_input)
+        .add_input(input)
         .add_parameter(
             "full_matrices".to_string(),
             LinalgParameter::Bool(full_matrices),

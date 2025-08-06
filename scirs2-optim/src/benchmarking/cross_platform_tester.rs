@@ -472,7 +472,7 @@ pub struct ResourceRequirements {
 /// Cross-platform test trait
 pub trait CrossPlatformTest: Debug {
     /// Run the test on the current platform
-    fn run_test(&self, platform_info: &PlatformInfo) -> TestResult;
+    fn run_test(&self, platforminfo: &PlatformInfo) -> TestResult;
 
     /// Get test name
     fn name(&self) -> &str;
@@ -745,14 +745,14 @@ pub struct PlatformPerformanceProfile {
 
 impl CrossPlatformTester {
     /// Create a new cross-platform tester
-    pub fn new(_config: CrossPlatformConfig) -> Result<Self> {
+    pub fn new(config: CrossPlatformConfig) -> Result<Self> {
         let platform_detector = PlatformDetector::new()?;
         let test_registry = TestRegistry::new();
         let results = TestResults::new();
         let compatibility_matrix = CompatibilityMatrix::new();
 
         Ok(Self {
-            config: _config,
+            config: config,
             platform_detector,
             test_registry,
             results,
@@ -1165,7 +1165,8 @@ impl CrossPlatformTester {
     /// Assess issue severity
     fn assess_severity(
         &self,
-        issue_type: &CompatibilityIssueType, _result: &TestResult,
+        issue_type: &CompatibilityIssueType,
+        _result: &TestResult,
     ) -> IssueSeverity {
         match issue_type {
             CompatibilityIssueType::NumericalPrecision => IssueSeverity::Medium,
@@ -1178,7 +1179,7 @@ impl CrossPlatformTester {
     }
 
     /// Suggest workaround for issue
-    fn suggest_workaround(&self, issue_type: &CompatibilityIssueType) -> Option<String> {
+    fn suggest_workaround(&self, issuetype: &CompatibilityIssueType) -> Option<String> {
         match issue_type {
             CompatibilityIssueType::NumericalPrecision => {
                 Some("Adjust precision tolerances for platform-specific behavior".to_string())
@@ -1293,7 +1294,7 @@ impl PlatformDetector {
         })
     }
 
-    fn detect_capabilities(_platform_info: &PlatformInfo) -> Result<PlatformCapabilities> {
+    fn detect_capabilities(_platforminfo: &PlatformInfo) -> Result<PlatformCapabilities> {
         Ok(PlatformCapabilities {
             simd_support: SIMDSupport {
                 max_vector_width: 256,
@@ -1394,7 +1395,7 @@ impl BasicFunctionalityTest {
 }
 
 impl CrossPlatformTest for BasicFunctionalityTest {
-    fn run_test(&self, _platform_info: &PlatformInfo) -> TestResult {
+    fn run_test(&self, _platforminfo: &PlatformInfo) -> TestResult {
         let start_time = Instant::now();
 
         // Simulate basic functionality test
@@ -1431,11 +1432,11 @@ impl CrossPlatformTest for BasicFunctionalityTest {
         TestCategory::Functionality
     }
 
-    fn is_applicable(&self, _platform: &PlatformTarget) -> bool {
+    fn is_applicable(&self, platform: &PlatformTarget) -> bool {
         true // Basic functionality should work on all platforms
     }
 
-    fn performance_baseline(&self, _platform: &PlatformTarget) -> Option<PerformanceBaseline> {
+    fn performance_baseline(&self, platform: &PlatformTarget) -> Option<PerformanceBaseline> {
         Some(PerformanceBaseline {
             reference_platform: PlatformTarget::LinuxX64,
             expected_throughput: 1000.0,
@@ -1456,7 +1457,7 @@ impl OptimizerConsistencyTest {
 }
 
 impl CrossPlatformTest for OptimizerConsistencyTest {
-    fn run_test(&self, _platform_info: &PlatformInfo) -> TestResult {
+    fn run_test(&self, _platforminfo: &PlatformInfo) -> TestResult {
         // Implementation would test optimizer consistency across platforms
         TestResult {
             test_name: self.name().to_string(),
@@ -1483,11 +1484,11 @@ impl CrossPlatformTest for OptimizerConsistencyTest {
         TestCategory::Functionality
     }
 
-    fn is_applicable(&self, _platform: &PlatformTarget) -> bool {
+    fn is_applicable(&self, platform: &PlatformTarget) -> bool {
         true
     }
 
-    fn performance_baseline(&self, _platform: &PlatformTarget) -> Option<PerformanceBaseline> {
+    fn performance_baseline(&self, platform: &PlatformTarget) -> Option<PerformanceBaseline> {
         None
     }
 }
@@ -1505,7 +1506,7 @@ macro_rules! impl_test {
         }
 
         impl CrossPlatformTest for $name {
-            fn run_test(&self, _platform_info: &PlatformInfo) -> TestResult {
+            fn run_test(&self, _platforminfo: &PlatformInfo) -> TestResult {
                 TestResult {
                     test_name: self.name().to_string(),
                     status: TestStatus::Passed,
@@ -1531,7 +1532,7 @@ macro_rules! impl_test {
                 $category
             }
 
-            fn is_applicable(&self, _platform: &PlatformTarget) -> bool {
+            fn is_applicable(&self, platform: &PlatformTarget) -> bool {
                 true
             }
 

@@ -738,7 +738,7 @@ fn generate_test_signal(
 
     let signal = match signal_type {
         TestSignalType::WhiteNoise => {
-            Array1::from_vec((0..length).map(|_| rng.random_range(-1.0..1.0)).collect())
+            Array1::from_vec((0..length).map(|_| rng.gen_range(-1.0..1.0)).collect())
         }
         TestSignalType::Sinusoidal => {
             let freq = 0.1;
@@ -761,7 +761,7 @@ fn generate_test_signal(
             let segments = 8;
             let segment_size = length / segments;
             for i in 0..segments {
-                let value = rng.random_range(-1.0..1.0);
+                let value = rng.gen_range(-1.0..1.0);
                 let start = i * segment_size;
                 let end = ((i + 1) * segment_size).min(length);
                 for j in start..end {
@@ -860,15 +860,15 @@ fn construct_frame_matrix(
 }
 
 #[allow(dead_code)]
-fn compute_frame_operator(_frame_matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
-    Ok(_frame_matrix.t().dot(_frame_matrix))
+fn compute_frame_operator(framematrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
+    Ok(frame_matrix.t().dot(frame_matrix))
 }
 
 #[allow(dead_code)]
-fn compute_eigenvalues(_matrix: &Array2<f64>) -> SignalResult<Vec<f64>> {
+fn compute_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Vec<f64>> {
     // For small matrices, use iterative power method
-    let n = _matrix.nrows();
-    if n != _matrix.ncols() {
+    let n = matrix.nrows();
+    if n != matrix.ncols() {
         return Err(SignalError::ValueError("Matrix must be square".to_string()));
     }
 
@@ -883,7 +883,7 @@ fn compute_eigenvalues(_matrix: &Array2<f64>) -> SignalResult<Vec<f64>> {
 
     // For larger matrices, estimate dominant eigenvalues using power iteration
     let mut eigenvalues = Vec::new();
-    let mut work_matrix = _matrix.clone();
+    let mut work_matrix = matrix.clone();
     let max_iterations = 100;
     let tolerance = 1e-10;
 
@@ -905,7 +905,7 @@ fn compute_eigenvalues(_matrix: &Array2<f64>) -> SignalResult<Vec<f64>> {
     }
 
     // Add remaining small eigenvalues as estimates
-    let trace = (0..n).map(|i| _matrix[[i, i]]).sum::<f64>();
+    let trace = (0..n).map(|i| matrix[[i, i]]).sum::<f64>();
     let eigenvalue_sum: f64 = eigenvalues.iter().sum();
     let remaining_trace = trace - eigenvalue_sum;
     let remaining_count = n - eigenvalues.len();
@@ -924,16 +924,16 @@ fn compute_eigenvalues(_matrix: &Array2<f64>) -> SignalResult<Vec<f64>> {
 }
 
 #[allow(dead_code)]
-fn analyze_eigenvalue_distribution(_eigenvalues: &[f64]) -> EigenvalueDistribution {
-    let min_eigenvalue = _eigenvalues.iter().cloned().fold(f64::MAX, f64::min);
-    let max_eigenvalue = _eigenvalues.iter().cloned().fold(0.0, f64::max);
-    let mean_eigenvalue = _eigenvalues.iter().sum::<f64>() / _eigenvalues.len() as f64;
+fn analyze_eigenvalue_distribution(eigenvalues: &[f64]) -> EigenvalueDistribution {
+    let min_eigenvalue = eigenvalues.iter().cloned().fold(f64::MAX, f64::min);
+    let max_eigenvalue = eigenvalues.iter().cloned().fold(0.0, f64::max);
+    let mean_eigenvalue = eigenvalues.iter().sum::<f64>() / eigenvalues.len() as f64;
     let eigenvalue_variance = _eigenvalues
         .iter()
         .map(|&e| (e - mean_eigenvalue).powi(2))
         .sum::<f64>()
-        / _eigenvalues.len() as f64;
-    let near_zero_count = _eigenvalues.iter().filter(|&&e| e < 1e-10).count();
+        / eigenvalues.len() as f64;
+    let near_zero_count = eigenvalues.iter().filter(|&&e| e < 1e-10).count();
 
     EigenvalueDistribution {
         min_eigenvalue,
@@ -947,16 +947,16 @@ fn analyze_eigenvalue_distribution(_eigenvalues: &[f64]) -> EigenvalueDistributi
 /// Helper functions for eigenvalue computation
 
 #[allow(dead_code)]
-fn compute_small_matrix_eigenvalues(_matrix: &Array2<f64>) -> SignalResult<Vec<f64>> {
-    let n = _matrix.nrows();
+fn compute_small_matrix_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Vec<f64>> {
+    let n = matrix.nrows();
     match n {
         1 => Ok(vec![_matrix[[0, 0]]]),
         2 => {
             // For 2x2 _matrix: characteristic polynomial x^2 - trace*x + det = 0
-            let a = _matrix[[0, 0]];
-            let b = _matrix[[0, 1]];
-            let c = _matrix[[1, 0]];
-            let d = _matrix[[1, 1]];
+            let a = matrix[[0, 0]];
+            let b = matrix[[0, 1]];
+            let c = matrix[[1, 0]];
+            let d = matrix[[1, 1]];
 
             let trace = a + d;
             let det = a * d - b * c;
@@ -973,7 +973,7 @@ fn compute_small_matrix_eigenvalues(_matrix: &Array2<f64>) -> SignalResult<Vec<f
         _ => {
             // For larger small matrices, use power iteration
             let mut eigenvalues = Vec::new();
-            let mut work_matrix = _matrix.clone();
+            let mut work_matrix = matrix.clone();
 
             for _ in 0..n {
                 if let Ok(eigenvalue) = power_iteration(&work_matrix, 50, 1e-8) {
@@ -1038,10 +1038,10 @@ fn power_iteration(
 }
 
 #[allow(dead_code)]
-fn deflate_matrix(_matrix: &Array2<f64>, eigenvalue: f64) -> SignalResult<Array2<f64>> {
+fn deflate_matrix(matrix: &Array2<f64>, eigenvalue: f64) -> SignalResult<Array2<f64>> {
     // Simple deflation by subtracting eigenvalue * I
-    let n = _matrix.nrows();
-    let mut deflated = _matrix.clone();
+    let n = matrix.nrows();
+    let mut deflated = matrix.clone();
 
     for i in 0..n {
         deflated[[i, i]] -= eigenvalue;
@@ -1065,9 +1065,9 @@ fn extract_packet_coefficients(
 }
 
 #[allow(dead_code)]
-fn compute_frame_coherence(_frame_matrix: &Array2<f64>) -> SignalResult<f64> {
+fn compute_frame_coherence(framematrix: &Array2<f64>) -> SignalResult<f64> {
     // Frame coherence is the maximum absolute inner product between different columns
-    let (rows, cols) = _frame_matrix.dim();
+    let (rows, cols) = frame_matrix.dim();
     if cols <= 1 {
         return Ok(0.0);
     }
@@ -1100,7 +1100,7 @@ fn compute_frame_coherence(_frame_matrix: &Array2<f64>) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn generate_multiscale_test_signal(_length: usize) -> SignalResult<Array1<f64>> {
+fn generate_multiscale_test_signal(length: usize) -> SignalResult<Array1<f64>> {
     // Generate signal with known multi-scale structure
     let mut signal = Array1::zeros(_length);
 
@@ -1117,7 +1117,7 @@ fn generate_multiscale_test_signal(_length: usize) -> SignalResult<Array1<f64>> 
 }
 
 #[allow(dead_code)]
-fn extract_all_coefficients(_tree: &WaveletPacketTree) -> Vec<f64> {
+fn extract_all_coefficients(tree: &WaveletPacketTree) -> Vec<f64> {
     let mut all_coefficients = Vec::new();
 
     // Extract coefficients from all levels and positions in the _tree
@@ -1125,7 +1125,7 @@ fn extract_all_coefficients(_tree: &WaveletPacketTree) -> Vec<f64> {
         let num_packets = 2_usize.pow(level as u32);
 
         for position in 0..num_packets {
-            if let Some(packet) = _tree.get_packet(level, position) {
+            if let Some(packet) = tree.get_packet(level, position) {
                 all_coefficients.extend_from_slice(&packet.data);
             }
         }
@@ -1140,8 +1140,8 @@ fn extract_all_coefficients(_tree: &WaveletPacketTree) -> Vec<f64> {
 }
 
 #[allow(dead_code)]
-fn compute_inter_scale_correlations(_coeffs: &[Vec<f64>]) -> SignalResult<Array2<f64>> {
-    let n = _coeffs.len();
+fn compute_inter_scale_correlations(coeffs: &[Vec<f64>]) -> SignalResult<Array2<f64>> {
+    let n = coeffs.len();
     if n == 0 {
         return Ok(Array2::zeros((0, 0)));
     }
@@ -1208,15 +1208,15 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn compute_scale_consistency(_scale_energies: &[f64]) -> f64 {
+fn compute_scale_consistency(_scaleenergies: &[f64]) -> f64 {
     // Measure how consistently energy is distributed across scales
-    let total_energy: f64 = _scale_energies.iter().sum();
-    let mean_energy = total_energy / _scale_energies.len() as f64;
+    let total_energy: f64 = scale_energies.iter().sum();
+    let mean_energy = total_energy / scale_energies.len() as f64;
     let variance = _scale_energies
         .iter()
         .map(|&e| (e - mean_energy).powi(2))
         .sum::<f64>()
-        / _scale_energies.len() as f64;
+        / scale_energies.len() as f64;
 
     (-variance / (mean_energy * mean_energy + 1e-15)).exp()
 }
@@ -1240,17 +1240,17 @@ fn run_best_basis_algorithm(
 }
 
 #[allow(dead_code)]
-fn compute_basis_selection_repeatability(_selections: &[Vec<usize>]) -> f64 {
+fn compute_basis_selection_repeatability(selections: &[Vec<usize>]) -> f64 {
     0.95 // Placeholder
 }
 
 #[allow(dead_code)]
-fn aggregate_convergence_analyses(_analyses: &[ConvergenceAnalysis]) -> ConvergenceAnalysis {
-    _analyses[0].clone() // Placeholder
+fn aggregate_convergence_analyses(analyses: &[ConvergenceAnalysis]) -> ConvergenceAnalysis {
+    analyses[0].clone() // Placeholder
 }
 
 #[allow(dead_code)]
-fn analyze_optimal_basis(_convergence: &ConvergenceAnalysis) -> SignalResult<OptimalBasisMetrics> {
+fn analyze_optimal_basis(convergence: &ConvergenceAnalysis) -> SignalResult<OptimalBasisMetrics> {
     Ok(OptimalBasisMetrics {
         sparsity_measure: 0.8,
         energy_concentration: 0.9,
@@ -1272,8 +1272,8 @@ fn measure_algorithm_efficiency(
 }
 
 #[allow(dead_code)]
-fn analyze_error_distribution(_errors: &[f64]) -> ErrorDistribution {
-    if _errors.is_empty() {
+fn analyze_error_distribution(errors: &[f64]) -> ErrorDistribution {
+    if errors.is_empty() {
         return ErrorDistribution {
             mean_error: 0.0,
             error_variance: 0.0,
@@ -1283,8 +1283,8 @@ fn analyze_error_distribution(_errors: &[f64]) -> ErrorDistribution {
         };
     }
 
-    let n = _errors.len() as f64;
-    let mean_error = _errors.iter().sum::<f64>() / n;
+    let n = errors.len() as f64;
+    let mean_error = errors.iter().sum::<f64>() / n;
 
     // Compute central moments
     let mut m2 = 0.0; // Second central moment (variance)
@@ -1323,7 +1323,7 @@ fn analyze_error_distribution(_errors: &[f64]) -> ErrorDistribution {
     };
 
     // Compute 99th percentile
-    let mut sorted_errors = _errors.to_vec();
+    let mut sorted_errors = errors.to_vec();
     sorted_errors.sort_by(|a, b| a.partial_cmp(b).unwrap());
     let percentile_index = ((_errors.len() as f64 * 0.99) as usize).min(_errors.len() - 1);
     let max_error_percentile = sorted_errors[percentile_index];
@@ -1513,7 +1513,7 @@ fn run_bootstrap_validation(
 }
 
 #[allow(dead_code)]
-fn test_wavelet_consistency(_config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
+fn test_wavelet_consistency(config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
     let mut consistency_scores = Vec::new();
 
     // Test consistency across different wavelets
@@ -1589,7 +1589,7 @@ fn test_wavelet_consistency(_config: &ComprehensiveWptValidationConfig) -> Signa
 }
 
 #[allow(dead_code)]
-fn test_signal_type_consistency(_config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
+fn test_signal_type_consistency(config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
     let mut signal_scores = Vec::new();
 
     // Test different signal types for consistent behavior
@@ -1616,7 +1616,7 @@ fn test_signal_type_consistency(_config: &ComprehensiveWptValidationConfig) -> S
     // 4. Test with noise signal (stochastic)
     let mut rng = rand::rng();
     let noise_signal: Vec<f64> = (0..signal_length)
-        .map(|_| rng.random_range(-1.0..1.0))
+        .map(|_| rng.gen_range(-1.0..1.0))
         .collect();
 
     let test_signals = vec![
@@ -1775,7 +1775,7 @@ fn test_edge_case_handling(
 }
 
 #[allow(dead_code)]
-fn test_extreme_conditions(_config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
+fn test_extreme_conditions(config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
     let mut condition_scores = Vec::new();
 
     // Test 1: Very small signals

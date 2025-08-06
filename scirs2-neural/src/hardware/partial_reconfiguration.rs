@@ -97,7 +97,7 @@ pub struct DPRManager {
     metrics: Arc<Mutex<DPRMetrics>>,
 impl DPRManager {
     /// Create a new DPR manager
-    pub fn new(_device: FPGADevice) -> Self {
+    pub fn new(device: FPGADevice) -> Self {
         Self {
             _device: Arc::new(Mutex::new(_device)),
             regions: Arc::new(Mutex::new(HashMap::new())),
@@ -120,7 +120,7 @@ impl DPRManager {
         self.validate_bitstream(&bitstream)?;
         bitstreams.insert(bitstream.module_name.clone(), bitstream);
     /// Reconfigure a region with a specific module
-    pub fn reconfigure_region(&self, region_id: usize, module_name: &str) -> Result<()> {
+    pub fn reconfigure_region(&self, region_id: usize, modulename: &str) -> Result<()> {
         let start_time = std::time::Instant::now();
         // Get region and bitstream
         let bitstreams = self.bitstreams.lock().unwrap();
@@ -185,7 +185,7 @@ impl DPRManager {
                 metrics.failed_reconfigurations += 1;
                 Err(e)
     /// Unload a module from a region
-    pub fn unload_region(&self, region_id: usize) -> Result<()> {
+    pub fn unload_region(&self, regionid: usize) -> Result<()> {
         if region.state != ReconfigurationState::Active {
             return Err(crate::error::NeuralError::InvalidState(
                 "Region is not active".to_string(),

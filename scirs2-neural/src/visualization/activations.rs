@@ -143,9 +143,9 @@ impl<
     > ActivationVisualizer<F>
 {
     /// Create a new activation visualizer
-    pub fn new(_model: Sequential<F>, config: VisualizationConfig) -> Self {
+    pub fn new(model: Sequential<F>, config: VisualizationConfig) -> Self {
         Self {
-            _model,
+            model,
             config,
             activation_cache: HashMap::new(),
         }
@@ -166,7 +166,7 @@ impl<
             ActivationVisualizationType::AttentionMaps => self.generate_attention_maps(options),
             ActivationVisualizationType::ActivationFlow => self.generate_activation_flow(options),
     /// Get cached activations for a layer
-    pub fn get_cached_activations(&self, layer_name: &str) -> Option<&ArrayD<F>> {
+    pub fn get_cached_activations(&self, layername: &str) -> Option<&ArrayD<F>> {
         self.activation_cache.get(layer_name)
     /// Clear the activation cache
     pub fn clear_cache(&mut self) {
@@ -181,7 +181,7 @@ impl<
     /// Update the visualization configuration
     pub fn update_config(&mut self, config: VisualizationConfig) {
         self.config = config;
-    fn compute_activations(&mut self, input: &ArrayD<F>, target_layers: &[String]) -> Result<()> {
+    fn compute_activations(&mut self, input: &ArrayD<F>, targetlayers: &[String]) -> Result<()> {
         let mut current_output = input.clone();
         // Store input if requested
         if target_layers.is_empty() || target_layers.contains(&"input".to_string()) {
@@ -638,7 +638,7 @@ impl<
         if denominator > F::zero() {
             Ok((numerator / denominator).to_f64().unwrap_or(0.0))
             Ok(0.0)
-    fn create_flow_diagram_svg(&self, flow_data: &[(String, String, f64)]) -> Result<String> {
+    fn create_flow_diagram_svg(&self, flowdata: &[(String, String, f64)]) -> Result<String> {
             "<text x=\"{}\" y=\"30\" text-anchor=\"middle\" font-family=\"{}\" font-size=\"{}\" fill=\"#333\">Activation Flow Diagram</text>\n",
         let node_width = 120;
         let node_height = 40;

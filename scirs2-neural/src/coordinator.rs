@@ -665,11 +665,11 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
             emergent_behaviors_detected: emergent_stats.total_behaviors_detected,
 impl<F: Float + Debug + ScalarOperand> IntelligentCache<F> {
     /// Create new intelligent cache
-    pub fn new(_size_limit_mb: usize) -> Self {
+    pub fn new(_size_limitmb: usize) -> Self {
             activation_cache: HashMap::new(),
             gradient_cache: HashMap::new(),
             model_cache: HashMap::new(),
-            _size_limit_mb,
+            size_limit_mb,
             current_size_mb: 0,
     /// Conservative cleanup to free memory
     pub fn conservative_cleanup(&mut self) {
@@ -954,7 +954,7 @@ impl<F: Float + Debug + ScalarOperand> MetaLearningSystem<F> {
                 improvement: 0.0,
             self.adaptation_history.push_back(adaptation_event);
     /// Calculate similarity between task features
-    fn calculate_task_similarity(&self, pattern_data: &[F], current_features: &[f64]) -> f64 {
+    fn calculate_task_similarity(&self, pattern_data: &[F], currentfeatures: &[f64]) -> f64 {
         if pattern_data.len() != current_features.len() {
             return 0.0;
         // Calculate cosine similarity
@@ -1123,7 +1123,7 @@ impl QuantumInspiredOptimizer {
             average_improvement: 1.15,
             quantum_coherence_level: 0.87,
             annealing_effectiveness: 0.89,
-    fn create_annealing_schedule(_steps: usize) -> Vec<f64> {
+    fn create_annealing_schedule(steps: usize) -> Vec<f64> {
         (0.._steps)
             .map(|i| 1.0 - (i as f64 / _steps as f64))
             .collect()
@@ -1276,7 +1276,7 @@ pub struct QuantumOptimizationStatistics {
 pub struct SafetyChecker {
     // Safety checking implementation would go here
 impl SafetyChecker {
-    pub fn evaluate_safety(&self_modification: &NetworkModification) -> f64 {
+    pub fn evaluate_safety(selfmodification: &NetworkModification) -> f64 {
         0.95 // High safety score for most modifications
 pub struct AppliedModification {
     pub modification: NetworkModification,

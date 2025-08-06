@@ -464,11 +464,11 @@ fn compute_fast_response(
 
 /// Apply non-maximum suppression to keypoints
 #[allow(dead_code)]
-fn non_maximum_suppression(_keypoints: &[Keypoint], radius: f32) -> Result<Vec<Keypoint>> {
+fn non_maximum_suppression(keypoints: &[Keypoint], radius: f32) -> Result<Vec<Keypoint>> {
     let mut suppressed: Vec<Keypoint> = Vec::new();
     let radius_sq = radius * radius;
 
-    let mut sorted_keypoints = _keypoints.to_vec();
+    let mut sorted_keypoints = keypoints.to_vec();
     sorted_keypoints.sort_by(|a, b| b.response.partial_cmp(&a.response).unwrap());
 
     for keypoint in sorted_keypoints {
@@ -565,7 +565,7 @@ fn compute_orb_descriptors(
 
 /// Generate sampling pattern for BRIEF descriptor
 #[allow(dead_code)]
-fn generate_brief_sampling_pattern(_patch_size: usize) -> Vec<((i32, i32), (i32, i32))> {
+fn generate_brief_sampling_pattern(_patchsize: usize) -> Vec<((i32, i32), (i32, i32))> {
     let mut pattern = Vec::new();
     let half_patch = (_patch_size / 2) as i32;
     let descriptor_bits = 256;
@@ -803,9 +803,9 @@ fn process_descriptor_chunk_simd(
 ///
 /// * Vector of Hamming distances
 #[allow(dead_code)]
-fn compute_hamming_distances_simd(_desc1: &[u8], descriptors2: &[Vec<u8>]) -> Vec<f32> {
+fn compute_hamming_distances_simd(desc1: &[u8], descriptors2: &[Vec<u8>]) -> Vec<f32> {
     let mut distances = Vec::with_capacity(descriptors2.len());
-    let desc_len = _desc1.len();
+    let desc_len = desc1.len();
 
     // Process descriptors in SIMD-friendly chunks
     const SIMD_CHUNK_SIZE: usize = 8; // Process 8 descriptors at once
@@ -859,9 +859,9 @@ fn compute_hamming_distances_simd(_desc1: &[u8], descriptors2: &[Vec<u8>]) -> Ve
 ///
 /// * Vector of Hamming distances for the batch
 #[allow(dead_code)]
-fn compute_hamming_simd_optimized(_desc1: &[u8], descriptors: &[&Vec<u8>]) -> Vec<f32> {
+fn compute_hamming_simd_optimized(desc1: &[u8], descriptors: &[&Vec<u8>]) -> Vec<f32> {
     let mut distances = Vec::with_capacity(descriptors.len());
-    let desc_len = _desc1.len();
+    let desc_len = desc1.len();
 
     // Convert _desc1 to SIMD-friendly format
     let _desc1_u32: Vec<u32> = _desc1
@@ -920,10 +920,10 @@ fn compute_hamming_simd_optimized(_desc1: &[u8], descriptors: &[&Vec<u8>]) -> Ve
 ///
 /// * Tuple of (best_index, best_distance, second_best_distance)
 #[allow(dead_code)]
-fn find_best_matches_simd(_distances: &[f32]) -> (Option<usize>, f32, f32) {
+fn find_best_matches_simd(distances: &[f32]) -> (Option<usize>, f32, f32) {
     use scirs2_core::simd_ops::SimdUnifiedOps;
 
-    if _distances.is_empty() {
+    if distances.is_empty() {
         return (None, f32::INFINITY, f32::INFINITY);
     }
 
@@ -935,7 +935,7 @@ fn find_best_matches_simd(_distances: &[f32]) -> (Option<usize>, f32, f32) {
     let mut best_idx = None;
 
     // Process in SIMD chunks
-    for (chunk_start, chunk) in _distances.chunks(CHUNK_SIZE).enumerate() {
+    for (chunk_start, chunk) in distances.chunks(CHUNK_SIZE).enumerate() {
         if chunk.len() >= 4 {
             // Use SIMD for this chunk
             let chunk_array = Array1::from_vec(chunk.to_vec());
@@ -1019,7 +1019,7 @@ fn apply_cross_check_simd(
 
             // Use SIMD-accelerated distance computation
             let reverse_distances = compute_hamming_distances_simd(desc2, descriptors1);
-            let (best_idx, _best_dist, _second_best_dist) =
+            let (best_idx, best_dist, second_best_dist) =
                 find_best_matches_simd(&reverse_distances);
 
             if best_idx == Some(match_item.query_idx) {
@@ -1035,8 +1035,8 @@ fn apply_cross_check_simd(
 
 /// Compute Hamming distance between two descriptors
 #[allow(dead_code)]
-fn hamming_distance(_desc1: &[u8], desc2: &[u8]) -> f32 {
-    let min_len = _desc1.len().min(desc2.len());
+fn hamming_distance(desc1: &[u8], desc2: &[u8]) -> f32 {
+    let min_len = desc1.len().min(desc2.len());
     let mut distance = 0;
 
     for i in 0..min_len {
@@ -1079,8 +1079,8 @@ fn apply_cross_check(
 
 /// Generate simple descriptors for Harris corners using patch-based approach
 #[allow(dead_code)]
-fn generate_simple_descriptors(_image: &GrayImage, keypoints: &[Keypoint]) -> Result<Vec<Vec<u8>>> {
-    let (width, height) = _image.dimensions();
+fn generate_simple_descriptors(image: &GrayImage, keypoints: &[Keypoint]) -> Result<Vec<Vec<u8>>> {
+    let (width, height) = image.dimensions();
     let patch_size = 8;
     let half_patch = patch_size / 2;
 
@@ -1171,7 +1171,7 @@ pub fn multi_scale_register(
 
 /// Build image pyramid
 #[allow(dead_code)]
-fn build_pyramid(_image: &DynamicImage, levels: usize) -> Vec<DynamicImage> {
+fn build_pyramid(image: &DynamicImage, levels: usize) -> Vec<DynamicImage> {
     let mut pyramid = vec![_image.clone()];
 
     for _ in 1..levels {
@@ -1249,7 +1249,7 @@ pub fn template_register(
 
 /// Compute normalized cross-correlation
 #[allow(dead_code)]
-fn compute_ncc(_reference: &GrayImage, template: &GrayImage, offset_x: u32, offset_y: u32) -> f64 {
+fn compute_ncc(_reference: &GrayImage, template: &GrayImage, offset_x: u32, offsety: u32) -> f64 {
     let (template_width, template_height) = template.dimensions();
 
     let mut ref_sum = 0.0;
@@ -1262,8 +1262,8 @@ fn compute_ncc(_reference: &GrayImage, template: &GrayImage, offset_x: u32, offs
     // Compute statistics
     for _y in 0..template_height {
         for _x in 0..template_width {
-            let ref_val = _reference.get_pixel(offset_x + _x, offset_y + _y)[0] as f64;
-            let template_val = template.get_pixel(_x, _y)[0] as f64;
+            let ref_val = reference.get_pixel(offset_x + x, offset_y + y)[0] as f64;
+            let template_val = template.get_pixel(_x, y)[0] as f64;
 
             ref_sum += ref_val;
             template_sum += template_val;

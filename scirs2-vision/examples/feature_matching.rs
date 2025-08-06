@@ -42,7 +42,7 @@ fn main() -> Result<()> {
 
 /// Test SIFT-like descriptor matching
 #[allow(dead_code)]
-fn test_descriptor_matching(_img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
+fn test_descriptor_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
     println!("\n1. SIFT-like Descriptor Matching");
     println!("=================================");
 
@@ -107,7 +107,7 @@ fn test_descriptor_matching(_img1: &DynamicImage, img2: &DynamicImage) -> Result
 
 /// Test ORB descriptor matching
 #[allow(dead_code)]
-fn test_orb_matching(_img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
+fn test_orb_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
     println!("\n2. ORB Descriptor Matching");
     println!("===========================");
 
@@ -162,7 +162,7 @@ fn test_orb_matching(_img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
         let orb_keypoints2: Vec<_> = orb_desc2.iter().map(|d| d.keypoint.clone()).collect();
 
         let visualization = visualize_binary_matches(
-            _img1,
+            img1,
             img2,
             &orb_keypoints1,
             &orb_keypoints2,
@@ -177,7 +177,7 @@ fn test_orb_matching(_img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
 
 /// Test various matching algorithms
 #[allow(dead_code)]
-fn test_various_matchers(_img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
+fn test_various_matchers(img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
     println!("\n3. Various Matching Algorithms");
     println!("===============================");
 
@@ -239,7 +239,7 @@ fn test_various_matchers(_img1: &DynamicImage, img2: &DynamicImage) -> Result<()
 
 /// Test RANSAC filtering
 #[allow(dead_code)]
-fn test_ransac_filtering(_img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
+fn test_ransac_filtering(img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
     println!("\n4. RANSAC Outlier Rejection");
     println!("============================");
 
@@ -593,8 +593,8 @@ fn visualize_binary_matches(
 
 /// Draw a keypoint marker
 #[allow(dead_code)]
-fn draw_keypoint(_img: &mut RgbImage, x: u32, y: u32, color: Rgb<u8>) {
-    let (width, height) = _img.dimensions();
+fn draw_keypoint(img: &mut RgbImage, x: u32, y: u32, color: Rgb<u8>) {
+    let (width, height) = img.dimensions();
 
     // Draw a small cross
     for dx in -3..=3 {
@@ -603,7 +603,7 @@ fn draw_keypoint(_img: &mut RgbImage, x: u32, y: u32, color: Rgb<u8>) {
             let py = (y as i32 + dy) as u32;
 
             if px < width && py < height && (dx == 0 || dy == 0) {
-                _img.put_pixel(px, py, color);
+                img.put_pixel(px, py, color);
             }
         }
     }
@@ -611,8 +611,8 @@ fn draw_keypoint(_img: &mut RgbImage, x: u32, y: u32, color: Rgb<u8>) {
 
 /// Draw a line between two points
 #[allow(dead_code)]
-fn draw_line(_img: &mut RgbImage, x1: u32, y1: u32, x2: u32, y2: u32, color: Rgb<u8>) {
-    let (width, height) = _img.dimensions();
+fn draw_line(img: &mut RgbImage, x1: u32, y1: u32, x2: u32, y2: u32, color: Rgb<u8>) {
+    let (width, height) = img.dimensions();
 
     // Simple line drawing using linear interpolation
     let dx = x2 as i32 - x1 as i32;
@@ -629,7 +629,7 @@ fn draw_line(_img: &mut RgbImage, x1: u32, y1: u32, x2: u32, y2: u32, color: Rgb
         let y = (y1 as f32 + t * dy as f32) as u32;
 
         if x < width && y < height {
-            _img.put_pixel(x, y, color);
+            img.put_pixel(x, y, color);
         }
     }
 }

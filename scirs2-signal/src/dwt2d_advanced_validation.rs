@@ -760,7 +760,7 @@ fn generate_test_image(
             // Sinusoidal patterns
             let value = (2.0 * PI * 3.0 * x).sin() * (2.0 * PI * 2.0 * y).cos()
                 + 0.5 * (2.0 * PI * 8.0 * x).cos() * (2.0 * PI * 5.0 * y).sin()
-                + 0.1 * rng.random_range(-1.0..1.0); // Add noise
+                + 0.1 * rng.gen_range(-1.0..1.0); // Add noise
 
             image[[i, j]] = value;
         }
@@ -778,18 +778,18 @@ fn simulate_reconstruction_test(
 ) -> SignalResult<f64> {
     // Simulate perfect reconstruction test
     // In real implementation, this would perform actual DWT and IDWT
-    let error = 1e-14 * (1.0 + rand::rng().random_range(0.0..1.0));
+    let error = 1e-14 * (1.0 + rand::rng().gen_range(0.0..1.0));
     Ok(error)
 }
 
 // Scoring functions
 
 #[allow(dead_code)]
-fn calculate_reconstruction_score(_result: &ReconstructionValidationResult) -> f64 {
+fn calculate_reconstruction_score(result: &ReconstructionValidationResult) -> f64 {
     let error_score = (-20.0 * (_result.max_reconstruction_error + 1e-15).log10())
         .min(100.0)
         .max(0.0);
-    let perfect_score = if _result.perfect_reconstruction {
+    let perfect_score = if result.perfect_reconstruction {
         100.0
     } else {
         80.0
@@ -798,89 +798,89 @@ fn calculate_reconstruction_score(_result: &ReconstructionValidationResult) -> f
 }
 
 #[allow(dead_code)]
-fn calculate_orthogonality_score(_result: &OrthogonalityValidationResult) -> f64 {
+fn calculate_orthogonality_score(result: &OrthogonalityValidationResult) -> f64 {
     let error_score = (-20.0 * (_result.max_orthogonality_error + 1e-15).log10())
         .min(100.0)
         .max(0.0);
-    (error_score + _result.filter_orthogonality) / 2.0
+    (error_score + result.filter_orthogonality) / 2.0
 }
 
 #[allow(dead_code)]
-fn calculate_energy_score(_result: &EnergyConservationResult) -> f64 {
-    _result.parseval_validation
+fn calculate_energy_score(result: &EnergyConservationResult) -> f64 {
+    result.parseval_validation
 }
 
 #[allow(dead_code)]
-fn calculate_boundary_score(_result: &BoundaryValidationResult) -> f64 {
-    (_result.artifact_score + _result.edge_preservation) / 2.0
+fn calculate_boundary_score(result: &BoundaryValidationResult) -> f64 {
+    (_result.artifact_score + result.edge_preservation) / 2.0
 }
 
 #[allow(dead_code)]
-fn calculate_multilevel_score(_result: &MultilevelValidationResult) -> f64 {
-    (_result.coefficient_consistency + _result.scaling_consistency + _result.frequency_localization)
+fn calculate_multilevel_score(result: &MultilevelValidationResult) -> f64 {
+    (_result.coefficient_consistency + result.scaling_consistency + result.frequency_localization)
         / 3.0
 }
 
 #[allow(dead_code)]
-fn calculate_denoising_score(_result: &DenoisingValidationResult) -> f64 {
+fn calculate_denoising_score(result: &DenoisingValidationResult) -> f64 {
     (_result.edge_preservation_score
-        + _result.texture_preservation_score
-        + _result.artifact_suppression)
+        + result.texture_preservation_score
+        + result.artifact_suppression)
         / 3.0
 }
 
 #[allow(dead_code)]
-fn calculate_compression_score(_result: &CompressionValidationResult) -> f64 {
-    _result.rate_distortion_performance
+fn calculate_compression_score(result: &CompressionValidationResult) -> f64 {
+    result.rate_distortion_performance
 }
 
 #[allow(dead_code)]
-fn calculate_stability_score(_result: &StabilityValidationResult) -> f64 {
+fn calculate_stability_score(result: &StabilityValidationResult) -> f64 {
     (_result.condition_number_analysis.stability_score
-        + _result.error_propagation
-        + _result.extreme_input_robustness
-        + _result.precision_maintenance
-        + _result.overflow_handling)
+        + result.error_propagation
+        + result.extreme_input_robustness
+        + result.precision_maintenance
+        + result.overflow_handling)
         / 5.0
 }
 
 #[allow(dead_code)]
-fn calculate_performance_score(_result: &PerformanceAnalysisResult) -> f64 {
-    (_result.cache_efficiency + _result.computational_intensity) / 2.0
+fn calculate_performance_score(result: &PerformanceAnalysisResult) -> f64 {
+    (_result.cache_efficiency + result.computational_intensity) / 2.0
 }
 
 #[allow(dead_code)]
-fn calculate_simd_score(_result: &SimdOptimizationResult) -> f64 {
-    (_result.simd_accuracy + _result.vector_utilization + _result.alignment_efficiency) / 3.0
+fn calculate_simd_score(result: &SimdOptimizationResult) -> f64 {
+    (_result.simd_accuracy + result.vector_utilization + result.alignment_efficiency) / 3.0
 }
 
 #[allow(dead_code)]
-fn calculate_memory_score(_result: &MemoryAnalysisResult) -> f64 {
+fn calculate_memory_score(result: &MemoryAnalysisResult) -> f64 {
     (_result.memory_efficiency
-        + _result.access_pattern_efficiency
-        + (1.0 - _result.cache_miss_rate) * 100.0)
+        + result.access_pattern_efficiency
+        + (1.0 - result.cache_miss_rate) * 100.0)
         / 3.0
 }
 
 #[allow(dead_code)]
-fn calculate_consistency_score(_result: &ConsistencyAnalysisResult) -> f64 {
+fn calculate_consistency_score(result: &ConsistencyAnalysisResult) -> f64 {
     (_result.cross_wavelet_consistency
-        + _result.implementation_consistency
-        + _result.platform_consistency
-        + _result.parameter_consistency)
+        + result.implementation_consistency
+        + result.platform_consistency
+        + result.parameter_consistency)
         / 4.0
 }
 
 /// Generate a comprehensive report of 2D wavelet validation results
 #[allow(dead_code)]
-pub fn generate_dwt2d_comprehensive_report(_result: &Dwt2dadvancedResult) -> String {
+pub fn generate_dwt2d_comprehensive_report(result: &Dwt2dadvancedResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Advanced-comprehensive 2D Wavelet Transform Validation Report\n\n");
 
     report.push_str(&format!(
         "## Overall Score: {:.1}%\n\n",
-        _result.overall_score
+        result.overall_score
     ));
 
     report.push_str("## Validation Results Summary\n\n");
@@ -888,65 +888,65 @@ pub fn generate_dwt2d_comprehensive_report(_result: &Dwt2dadvancedResult) -> Str
     report.push_str(&format!("### Perfect Reconstruction\n"));
     report.push_str(&format!(
         "- Maximum Error: {:.2e}\n",
-        _result.reconstruction_validation.max_reconstruction_error
+        result.reconstruction_validation.max_reconstruction_error
     ));
     report.push_str(&format!(
         "- Mean Error: {:.2e}\n",
-        _result.reconstruction_validation.mean_reconstruction_error
+        result.reconstruction_validation.mean_reconstruction_error
     ));
     report.push_str(&format!(
         "- Perfect Reconstruction: {}\n",
-        _result.reconstruction_validation.perfect_reconstruction
+        result.reconstruction_validation.perfect_reconstruction
     ));
     report.push_str(&format!(
         "- SNR Improvement: {:.1} dB\n\n",
-        _result.reconstruction_validation.snr_improvement
+        result.reconstruction_validation.snr_improvement
     ));
 
     report.push_str(&format!("### Orthogonality\n"));
     report.push_str(&format!(
         "- Maximum Orthogonality Error: {:.2e}\n",
-        _result.orthogonality_validation.max_orthogonality_error
+        result.orthogonality_validation.max_orthogonality_error
     ));
     report.push_str(&format!(
         "- Filter Orthogonality: {:.1}%\n",
-        _result.orthogonality_validation.filter_orthogonality
+        result.orthogonality_validation.filter_orthogonality
     ));
     report.push_str(&format!(
         "- Bi-orthogonality Score: {:.1}%\n\n",
-        _result.orthogonality_validation.biorthogonality_score
+        result.orthogonality_validation.biorthogonality_score
     ));
 
     report.push_str(&format!("### Performance Analysis\n"));
     report.push_str(&format!(
         "- Time Complexity: O(N^{:.1})\n",
-        _result.performance_analysis.time_complexity
+        result.performance_analysis.time_complexity
     ));
     report.push_str(&format!(
         "- Memory Complexity: O(N^{:.1})\n",
-        _result.performance_analysis.memory_complexity
+        result.performance_analysis.memory_complexity
     ));
     report.push_str(&format!(
         "- Cache Efficiency: {:.1}%\n",
-        _result.performance_analysis.cache_efficiency
+        result.performance_analysis.cache_efficiency
     ));
     report.push_str(&format!(
         "- Computational Intensity: {:.1}%\n\n",
-        _result.performance_analysis.computational_intensity
+        result.performance_analysis.computational_intensity
     ));
 
     report.push_str(&format!("### SIMD Optimization\n"));
     report.push_str(&format!(
         "- Speedup Factor: {:.1}x\n",
-        _result.simd_validation.speedup_factor
+        result.simd_validation.speedup_factor
     ));
     report.push_str(&format!(
         "- SIMD Accuracy: {:.2}%\n",
-        _result.simd_validation.simd_accuracy
+        result.simd_validation.simd_accuracy
     ));
     report.push_str(&format!(
         "- Vector Utilization: {:.1}%\n\n",
-        _result.simd_validation.vector_utilization
+        result.simd_validation.vector_utilization
     ));
 
     if !_result.issues.is_empty() {

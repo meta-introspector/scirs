@@ -258,7 +258,7 @@ where
     /// let second_deriv = derivatives[2];
     /// # }
     /// ```
-    pub fn derivatives_all(&self, x: T, max_order: usize) -> InterpolateResult<Vec<T>> {
+    pub fn derivatives_all(&self, x: T, maxorder: usize) -> InterpolateResult<Vec<T>> {
         let mut derivatives = Vec::with_capacity(max_order + 1);
 
         // Order 0 is the function value itself
@@ -312,7 +312,7 @@ where
     /// let slope_at_2_5 = derivative_spline.evaluate(2.5).unwrap();
     /// # }
     /// ```
-    pub fn derivative_spline(&self_order: usize) -> InterpolateResult<BSpline<T>> {
+    pub fn derivative_spline(&selforder: usize) -> InterpolateResult<BSpline<T>> {
         Err(crate::error::InterpolateError::NotImplemented(
             "derivative_spline method is not available for constrained splines".to_string(),
         ))
@@ -447,7 +447,7 @@ where
     /// assert!(is_valid, "Monotonicity constraint should be satisfied");
     /// # }
     /// ```
-    pub fn validate_constraints(&self, num_check_points: usize) -> InterpolateResult<bool> {
+    pub fn validate_constraints(&self, num_checkpoints: usize) -> InterpolateResult<bool> {
         // Get the domain bounds from the underlying B-spline
         let knots = self.bspline.knot_vector();
         let domain_start = knots[self.bspline.degree()];

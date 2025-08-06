@@ -120,7 +120,7 @@ pub struct MemoryAllocation {
     /// Memory address (platform-specific)
     pub address: usize,
     /// Data type information
-    pub data_type: TypeId,
+    pub datatype: TypeId,
     /// Creation timestamp
     pub created_at: std::time::Instant,
     /// Last access timestamp
@@ -136,7 +136,7 @@ impl MemoryAllocation {
         device: DeviceType,
         size: usize,
         address: usize,
-        data_type: TypeId,
+        datatype: TypeId,
     ) -> Self {
         let now = std::time::Instant::now();
         Self {
@@ -144,7 +144,7 @@ impl MemoryAllocation {
             device,
             size,
             address,
-            data_type,
+            datatype,
             created_at: now,
             last_accessed: now,
             ref_count: 1,
@@ -320,10 +320,10 @@ pub struct GpuContextWrapper {
 
 impl GpuContextWrapper {
     /// Create a new GPU device wrapper
-    pub fn new(gpu_device: Arc<GpuContext>, device_type: DeviceType) -> Self {
+    pub fn new(gpu_device: Arc<GpuContext>, devicetype: DeviceType) -> Self {
         Self {
             inner: gpu_device,
-            device_type,
+            device_type: devicetype,
         }
     }
 }
@@ -341,17 +341,17 @@ impl Device for GpuContextWrapper {
         Ok(size) // Return the size as a placeholder ID
     }
 
-    fn deallocate(&self, _address: usize) -> CoreResult<()> {
+    fn deallocate(&self, address: usize) -> CoreResult<()> {
         // GPU buffers are automatically freed when dropped
         Ok(())
     }
 
-    unsafe fn copy_from_host(&self, src: *const u8, _dst: usize, _size: usize) -> CoreResult<()> {
+    unsafe fn copy_from_host(&self, src: *const u8, _dst: usize, size: usize) -> CoreResult<()> {
         // Would use GPU-specific memory copy operations
         Ok(())
     }
 
-    unsafe fn copy_to_host(&self, src: usize, _dst: *mut u8, _size: usize) -> CoreResult<()> {
+    unsafe fn copy_to_host(&self, src: usize, _dst: *mut u8, size: usize) -> CoreResult<()> {
         // Would use GPU-specific memory copy operations
         Ok(())
     }
@@ -420,14 +420,14 @@ impl CrossDeviceMemoryManager {
     }
 
     /// Set the default device
-    pub fn set_default_device(&self, device_type: DeviceType) -> CoreResult<()> {
+    pub fn set_default_device(&self, devicetype: DeviceType) -> CoreResult<()> {
         let devices = self.devices.read().unwrap();
-        if !devices.contains_key(&device_type) {
-            return Err(CrossDeviceError::DeviceNotFound(format!("{device_type:?}")).into());
+        if !devices.contains_key(&devicetype) {
+            return Err(CrossDeviceError::DeviceNotFound(format!("{devicetype:?}")).into());
         }
 
         let mut default_device = self.default_device.write().unwrap();
-        *default_device = Some(device_type);
+        *default_device = Some(devicetype);
 
         Ok(())
     }
@@ -598,13 +598,13 @@ impl CrossDeviceMemoryManager {
     }
 
     /// Clean up unused allocations
-    pub fn cleanup_unused_allocations(&self, max_age: std::time::Duration) -> usize {
+    pub fn cleanup_unused_allocations(&self, maxage: std::time::Duration) -> usize {
         let mut allocations = self.allocations.write().unwrap();
         let now = std::time::Instant::now();
         let mut cleaned = 0;
 
         allocations.retain(|_, allocation| {
-            if allocation.ref_count == 0 && now.duration_since(allocation.last_accessed) > max_age {
+            if allocation.ref_count == 0 && now.duration_since(allocation.last_accessed) > maxage {
                 // In a real implementation, we'd call deallocate on the device
                 cleaned += 1;
                 false
@@ -628,19 +628,19 @@ impl CrossDeviceMemoryManager {
     }
 
     /// Internal method to remove allocation (called by CrossDeviceBuffer on drop)
-    pub(crate) fn remove_allocation(&self, allocation_id: &str) {
+    pub(crate) fn remove_allocation(&self, allocationid: &str) {
         let mut allocations = self.allocations.write().unwrap();
-        if let Some(allocation) = allocations.get_mut(allocation_id) {
+        if let Some(allocation) = allocations.get_mut(allocationid) {
             if allocation.remove_ref() == 0 {
-                allocations.remove(allocation_id);
+                allocations.remove(allocationid);
             }
         }
     }
 
     /// Internal method to touch allocation (update last access time)
-    pub(crate) fn touch_allocation(&self, allocation_id: &str) {
+    pub(crate) fn touch_allocation(&self, allocationid: &str) {
         let mut allocations = self.allocations.write().unwrap();
-        if let Some(allocation) = allocations.get_mut(allocation_id) {
+        if let Some(allocation) = allocations.get_mut(allocationid) {
             allocation.touch();
         }
     }
@@ -708,11 +708,11 @@ impl<T> CrossDeviceBuffer<T> {
     }
 
     /// Transfer this buffer to another device
-    pub fn to_device(&self, device_type: &DeviceType) -> CoreResult<CrossDeviceBuffer<T>>
+    pub fn to_device(&self, devicetype: &DeviceType) -> CoreResult<CrossDeviceBuffer<T>>
     where
         T: Copy + 'static,
     {
-        self.manager.transfer(self, device_type)
+        self.manager.transfer(self, devicetype)
     }
 
     /// Copy data from host to this buffer
@@ -853,10 +853,10 @@ pub fn global_manager() -> Arc<CrossDeviceMemoryManager> {
 
 /// Initialize cross-device memory management with GPU devices
 #[allow(dead_code)]
-pub fn initialize_with_gpu_devices(gpu_devices: Vec<Arc<GpuContext>>) -> CoreResult<()> {
+pub fn initialize_with_gpu_devices(gpudevices: Vec<Arc<GpuContext>>) -> CoreResult<()> {
     let manager = global_manager();
 
-    for (i, gpu_device) in gpu_devices.into_iter().enumerate() {
+    for (i, gpu_device) in gpudevices.into_iter().enumerate() {
         let device_type = DeviceType::CudaGpu(i as u32); // Assume CUDA for now
         let wrapper = Arc::new(GpuContextWrapper::new(gpu_device, device_type));
         manager.register_device(wrapper)?;

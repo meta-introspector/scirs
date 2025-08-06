@@ -27,7 +27,7 @@ fn main() -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_nlm_denoising(_img: &DynamicImage) -> Result<()> {
+fn demonstrate_nlm_denoising(img: &DynamicImage) -> Result<()> {
     println!("\n1. Non-Local Means Denoising:");
 
     // Add synthetic noise to the image
@@ -95,7 +95,7 @@ fn demonstrate_nlm_denoising(_img: &DynamicImage) -> Result<()> {
         .expect("Failed to save parallel result");
 
     // Test color denoising if image is color
-    if _img.color() != image::ColorType::L8 {
+    if img.color() != image::ColorType::L8 {
         println!("  - Testing color NLM denoising");
 
         let rgb = noisy_img.to_rgb8();
@@ -133,7 +133,7 @@ fn demonstrate_nlm_denoising(_img: &DynamicImage) -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_gamma_correction(_img: &DynamicImage) -> Result<()> {
+fn demonstrate_gamma_correction(img: &DynamicImage) -> Result<()> {
     println!("\n2. Gamma Correction Examples:");
 
     // Basic gamma correction with different values
@@ -195,7 +195,7 @@ fn demonstrate_gamma_correction(_img: &DynamicImage) -> Result<()> {
 
 /// Add Gaussian noise to an image
 #[allow(dead_code)]
-fn add_gaussian_noise(_img: &DynamicImage, noise_level: f32) -> DynamicImage {
+fn add_gaussian_noise(_img: &DynamicImage, noiselevel: f32) -> DynamicImage {
     use rand__distr::{Distribution, Normal};
 
     let mut rng = rand::rng();
@@ -216,7 +216,7 @@ fn add_gaussian_noise(_img: &DynamicImage, noise_level: f32) -> DynamicImage {
             DynamicImage::ImageLuma8(noisy)
         }
         _ => {
-            let rgb = _img.to_rgb8();
+            let rgb = img.to_rgb8();
             let (width, height) = rgb.dimensions();
             let mut noisy = image::RgbImage::new(width, height);
 

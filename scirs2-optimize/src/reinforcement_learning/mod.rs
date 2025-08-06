@@ -253,10 +253,10 @@ pub struct ExperienceBuffer {
 
 impl ExperienceBuffer {
     /// Create new experience buffer
-    pub fn new(_max_size: usize) -> Self {
+    pub fn new(_maxsize: usize) -> Self {
         Self {
             buffer: Vec::with_capacity(_max_size),
-            _max_size,
+            max_size,
             position: 0,
         }
     }
@@ -272,7 +272,7 @@ impl ExperienceBuffer {
     }
 
     /// Sample batch of experiences
-    pub fn sample_batch(&self, batch_size: usize) -> Vec<Experience> {
+    pub fn sample_batch(&self, batchsize: usize) -> Vec<Experience> {
         let mut batch = Vec::with_capacity(batch_size);
         for _ in 0..batch_size.min(self.buffer.len()) {
             let idx = rand::rng().gen_range(0..self.buffer.len());
@@ -403,10 +403,10 @@ pub mod utils {
     }
 
     /// Check if optimization should terminate
-    pub fn should_terminate(_state: &OptimizationState, max_steps: usize) -> bool {
-        _state.step >= max_steps
-            || _state.convergence_metrics.relative_objective_change < 1e-8
-            || _state.convergence_metrics.steps_since_improvement > 50
+    pub fn should_terminate(_state: &OptimizationState, maxsteps: usize) -> bool {
+        state.step >= max_steps
+            || state.convergence_metrics.relative_objective_change < 1e-8
+            || state.convergence_metrics.steps_since_improvement > 50
     }
 }
 

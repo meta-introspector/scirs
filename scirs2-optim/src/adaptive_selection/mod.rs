@@ -180,10 +180,10 @@ pub struct SelectionNetwork<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> SelectionNetwork<A> {
     /// Create a new selection network
-    pub fn new(_input_size: usize, hidden_size: usize, num_optimizers: usize) -> Self {
+    pub fn new(_input_size: usize, hidden_size: usize, numoptimizers: usize) -> Self {
         let mut rng = scirs2_core::random::rng();
 
-        let input_weights = Array2::from_shape_fn((hidden_size, _input_size), |_| {
+        let input_weights = Array2::from_shape_fn((hidden_size, input_size), |_| {
             A::from(rng.random_f64()).unwrap() * A::from(0.1).unwrap() - A::from(0.05).unwrap()
         });
 
@@ -206,7 +206,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> SelectionNetw
     /// Forward pass to get optimizer probabilities
     pub fn forward(&self, features: &Array1<A>) -> Result<Array1<A>> {
         // Hidden layer
-        let hidden = self.input_weights.dot(features) + &self.input_bias;
+        let hidden = self.input_weights.dot(features) + self.input_bias.clone();
         let hidden_activated = hidden.mapv(|x| {
             // ReLU activation
             if x > A::zero() {
@@ -250,7 +250,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> SelectionNetw
                 output_grad[label] = output_grad[label] - A::one();
 
                 // Update weights (simplified gradient descent)
-                let hidden = self.input_weights.dot(feature) + &self.input_bias;
+                let hidden = self.input_weights.dot(feature) + self.input_bias.clone();
                 let hidden_activated = hidden.mapv(|x| if x > A::zero() { x } else { A::zero() });
 
                 // Update output weights
@@ -273,7 +273,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> SelectionNetw
 
 impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptimizerSelector<A> {
     /// Create a new adaptive optimizer selector
-    pub fn new(_strategy: SelectionStrategy) -> Self {
+    pub fn new(strategy: SelectionStrategy) -> Self {
         let available_optimizers = vec![
             OptimizerType::SGD,
             OptimizerType::SGDMomentum,
@@ -293,7 +293,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
         }
 
         Self {
-            strategy: _strategy,
+            strategy: strategy,
             performance_history: HashMap::new(),
             problem_optimizer_map: Vec::new(),
             current_problem: None,
@@ -409,12 +409,12 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
     fn ensemble_selection(
         &self,
         problem: &ProblemCharacteristics,
-        num_candidates: usize, 
+        num_candidates: usize,
         _evaluation_steps: usize,
     ) -> Result<OptimizerType> {
         // Select top _candidates based on historical performance
         let mut _candidates = self.available_optimizers.clone();
-        _candidates.truncate(num_candidates.min(_candidates.len()));
+        candidates.truncate(num_candidates.min(_candidates.len()));
 
         // For simplicity, return the first candidate
         // In practice, you would evaluate each for evaluation_steps
@@ -560,7 +560,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
     }
 
     /// Train the selection network if using learning-based strategy
-    pub fn train_selection_network(&mut self, learning_rate: A, epochs: usize) -> Result<()> {
+    pub fn train_selection_network(&mut self, learningrate: A, epochs: usize) -> Result<()> {
         if self.problem_optimizer_map.is_empty() {
             return Ok(()); // No data to train on
         }
@@ -569,7 +569,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
         let mut features = Vec::new();
         let mut labels = Vec::new();
 
-        for (problem, optimizer_, _metrics) in &self.problem_optimizer_map {
+        for (problem, optimizer_, metrics) in &self.problem_optimizer_map {
             let feature_vec = self.extract_problem_features(problem);
             features.push(feature_vec);
 

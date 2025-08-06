@@ -279,7 +279,7 @@ impl RiskManagementMetrics {
     }
 
     /// Calculate Conditional Value at Risk (Expected Shortfall)
-    pub fn conditional_var<F>(&self, returns: &Array1<F>, confidence_level: F) -> Result<F>
+    pub fn conditional_var<F>(&self, returns: &Array1<F>, confidencelevel: F) -> Result<F>
     where
         F: Float + num_traits::FromPrimitive + PartialOrd + Clone + std::iter::Sum,
     {
@@ -336,7 +336,7 @@ impl RiskManagementMetrics {
     }
 
     /// Calculate portfolio beta
-    pub fn beta<F>(&self, portfolio_returns: &Array1<F>, market_returns: &Array1<F>) -> Result<F>
+    pub fn beta<F>(&self, portfolio_returns: &Array1<F>, marketreturns: &Array1<F>) -> Result<F>
     where
         F: Float + num_traits::FromPrimitive + std::iter::Sum,
     {
@@ -396,7 +396,7 @@ impl PortfolioMetrics {
     }
 
     /// Calculate Sharpe Ratio
-    pub fn sharpe_ratio<F>(&self, portfolio_returns: &Array1<F>, risk_free_rate: F) -> Result<F>
+    pub fn sharpe_ratio<F>(&self, portfolio_returns: &Array1<F>, risk_freerate: F) -> Result<F>
     where
         F: Float + num_traits::FromPrimitive + std::iter::Sum,
     {
@@ -424,7 +424,7 @@ impl PortfolioMetrics {
     }
 
     /// Calculate Sortino Ratio (downside risk-adjusted return)
-    pub fn sortino_ratio<F>(&self, portfolio_returns: &Array1<F>, target_return: F) -> Result<F>
+    pub fn sortino_ratio<F>(&self, portfolio_returns: &Array1<F>, targetreturn: F) -> Result<F>
     where
         F: Float + num_traits::FromPrimitive + std::iter::Sum,
     {
@@ -484,7 +484,7 @@ impl PortfolioMetrics {
         let mean_active_return =
             active_returns.iter().cloned().sum::<F>() / F::from(active_returns.len()).unwrap();
 
-        // Calculate tracking error (standard deviation of active _returns)
+        // Calculate tracking error (standard deviation of active returns)
         let tracking_error = {
             let variance = active_returns
                 .iter()
@@ -502,7 +502,7 @@ impl PortfolioMetrics {
     }
 
     /// Calculate Calmar Ratio
-    pub fn calmar_ratio<F>(&self, portfolio_returns: &Array1<F>, prices: &Array1<F>) -> Result<F>
+    pub fn calmar_ratio<F>(&self, portfolioreturns: &Array1<F>, prices: &Array1<F>) -> Result<F>
     where
         F: Float + num_traits::FromPrimitive + PartialOrd + std::iter::Sum,
     {
@@ -758,7 +758,7 @@ impl MarketRiskMetrics {
     }
 
     /// Calculate correlation matrix between multiple assets
-    pub fn correlation_matrix<F>(&self, returns_matrix: &Array2<F>) -> Result<Array2<F>>
+    pub fn correlation_matrix<F>(&self, returnsmatrix: &Array2<F>) -> Result<Array2<F>>
     where
         F: Float + num_traits::FromPrimitive + std::iter::Sum,
     {
@@ -850,7 +850,7 @@ impl TradingStrategyMetrics {
     }
 
     /// Calculate hit ratio (percentage of profitable trades)
-    pub fn hit_ratio<F>(&self, trade_returns: &Array1<F>) -> Result<F>
+    pub fn hit_ratio<F>(&self, tradereturns: &Array1<F>) -> Result<F>
     where
         F: Float + num_traits::FromPrimitive + PartialOrd,
     {
@@ -864,7 +864,7 @@ impl TradingStrategyMetrics {
     }
 
     /// Calculate profit factor (gross profit / gross loss)
-    pub fn profit_factor<F>(&self, trade_returns: &Array1<F>) -> Result<F>
+    pub fn profit_factor<F>(&self, tradereturns: &Array1<F>) -> Result<F>
     where
         F: Float + num_traits::FromPrimitive + PartialOrd + std::iter::Sum,
     {
@@ -891,7 +891,7 @@ impl TradingStrategyMetrics {
     }
 
     /// Calculate recovery factor
-    pub fn recovery_factor<F>(&self, trade_returns: &Array1<F>, prices: &Array1<F>) -> Result<F>
+    pub fn recovery_factor<F>(&self, tradereturns: &Array1<F>, prices: &Array1<F>) -> Result<F>
     where
         F: Float + num_traits::FromPrimitive + PartialOrd + std::iter::Sum,
     {
@@ -994,7 +994,7 @@ impl RegulatoryMetrics {
     }
 
     /// Calculate regulatory capital ratio
-    pub fn capital_ratio<F>(&self, tier1_capital: F, risk_weighted_assets: F) -> Result<F>
+    pub fn capital_ratio<F>(&self, tier1_capital: F, risk_weightedassets: F) -> Result<F>
     where
         F: Float,
     {
@@ -1008,7 +1008,7 @@ impl RegulatoryMetrics {
     }
 
     /// Calculate leverage ratio
-    pub fn leverage_ratio<F>(&self, tier1_capital: F, total_exposure: F) -> Result<F>
+    pub fn leverage_ratio<F>(&self, tier1_capital: F, totalexposure: F) -> Result<F>
     where
         F: Float,
     {
@@ -1078,7 +1078,7 @@ impl ESGMetrics {
     }
 
     /// Calculate carbon intensity metric
-    pub fn carbon_intensity<F>(&self, carbon_emissions: F, revenue: F) -> Result<F>
+    pub fn carbon_intensity<F>(&self, carbonemissions: F, revenue: F) -> Result<F>
     where
         F: Float,
     {

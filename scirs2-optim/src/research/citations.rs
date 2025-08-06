@@ -553,7 +553,7 @@ impl CitationManager {
     }
     
     /// Generate bibliography for multiple citations
-    pub fn generate_bibliography(&self, citation_keys: &[String], style: Option<&str>) -> Result<String> {
+    pub fn generate_bibliography(&self, citationkeys: &[String], style: Option<&str>) -> Result<String> {
         let style_name = style.unwrap_or(&self.default_style);
         let citation_style = self.styles.get(style_name)
             .ok_or_else(|| OptimError::InvalidConfig(format!("Style '{}' not found", style_name)))?;
@@ -576,9 +576,9 @@ impl CitationManager {
     }
     
     /// Export citations to BibTeX format
-    pub fn export_bibtex(&self, citation_keys: Option<&[String]>) -> String {
+    pub fn export_bibtex(&self, citationkeys: Option<&[String]>) -> String {
         let citations = if let Some(_keys) = citation_keys {
-            _keys.iter().filter_map(|key| self.citations.get(key)).collect()
+            keys.iter().filter_map(|key| self.citations.get(key)).collect()
         } else {
             self.citations.values().collect()
         };
@@ -593,7 +593,7 @@ impl CitationManager {
     }
     
     /// Import citations from BibTeX
-    pub fn import_bibtex(&mut self, bibtex_content: &str) -> Result<usize> {
+    pub fn import_bibtex(&mut self, bibtexcontent: &str) -> Result<usize> {
         let processor = BibTeXProcessor::new(BibTeXSettings::default());
         let citations = processor.parse_bibtex(bibtex_content)?;
         
@@ -625,7 +625,7 @@ impl CitationManager {
     }
     
     /// Add citation to group
-    pub fn add_to_group(&mut self, group_id: &str, citation_key: &str) -> Result<()> {
+    pub fn add_to_group(&mut self, group_id: &str, citationkey: &str) -> Result<()> {
         let group = self.groups.get_mut(group_id)
             .ok_or_else(|| OptimError::InvalidConfig(format!("Group '{}' not found", group_id)))?;
         
@@ -848,7 +848,7 @@ impl CitationManager {
         bibtex
     }
     
-    fn publication_type_to_bibtex(&self, pub_type: &PublicationType) -> &'static str {
+    fn publication_type_to_bibtex(&self, pubtype: &PublicationType) -> &'static str {
         match pub_type {
             PublicationType::Article => "article",
             PublicationType::InProceedings => "inproceedings",
@@ -986,7 +986,7 @@ impl CitationManager {
 
 impl BibTeXProcessor {
     /// Create a new BibTeX processor
-    pub fn new(_settings: BibTeXSettings) -> Self {
+    pub fn new(settings: BibTeXSettings) -> Self {
         Self { _settings }
     }
     
@@ -1048,7 +1048,7 @@ impl BibTeXProcessor {
         Ok(citations)
     }
     
-    fn bibtex_type_to_publication_type(&self, bibtex_type: &str) -> PublicationType {
+    fn bibtex_type_to_publication_type(&self, bibtextype: &str) -> PublicationType {
         match bibtex_type {
             "article" => PublicationType::Article,
             "inproceedings" | "conference" => PublicationType::InProceedings,
@@ -1062,7 +1062,7 @@ impl BibTeXProcessor {
         }
     }
     
-    fn fields_to_citation(&self, key: String, pub_type: PublicationType, fields: HashMap<String, String>) -> Result<Citation> {
+    fn fields_to_citation(&self, key: String, pubtype: PublicationType, fields: HashMap<String, String>) -> Result<Citation> {
         let title = fields.get("title").cloned().unwrap_or_default();
         
         // Parse authors
@@ -1107,7 +1107,7 @@ impl BibTeXProcessor {
         })
     }
     
-    fn parse_authors(&self, author_str: &str) -> Vec<Author> {
+    fn parse_authors(&self, authorstr: &str) -> Vec<Author> {
         author_str.split(" and ")
             .map(|author_part| {
                 let author_part = author_part.trim();

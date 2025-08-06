@@ -92,13 +92,13 @@ impl InMemoryDataset {
     }
 
     /// Create an in-memory dataset from arrays.
-    pub fn from_arrays<T, D1, D2>(_inputs: Array<T, D1>, targets: Array<T, D2>) -> Self
+    pub fn from_arrays<T, D1, D2>(inputs: Array<T, D1>, targets: Array<T, D2>) -> Self
     where
         T: Clone + Send + Sync + 'static,
         D1: Dimension + Send + Sync,
         D2: Dimension + Send + Sync,
     {
-        let inputshape = _inputs.shape().to_vec();
+        let inputshape = inputs.shape().to_vec();
         let outputshape = targets.shape().to_vec();
 
         // Handle batched _inputs
@@ -112,15 +112,14 @@ impl InMemoryDataset {
         let mut target_samples = Vec::with_capacity(num_samples);
 
         // Create dynamic arrays with the appropriate shape to handle arbitrary dimensions
-        let to_dyn_inputs = _inputs.into_dyn();
+        let to_dyn_inputs = inputs.into_dyn();
         let to_dyn_targets = targets.into_dyn();
 
         for i in 0..num_samples {
             // Use index_axis instead of slice for better compatibility with different dimensions
             let input_view = to_dyn_inputs.index_axis(ndarray::Axis(0), i);
-            let input_array = input_view.to_owned();
-            input_samples
-                .push(Box::new(NdarrayWrapper::new(input_array)) as Box<dyn ArrayProtocol>);
+            let inputarray = input_view.to_owned();
+            input_samples.push(Box::new(NdarrayWrapper::new(inputarray)) as Box<dyn ArrayProtocol>);
 
             let target_view = to_dyn_targets.index_axis(ndarray::Axis(0), i);
             let target_array = target_view.to_owned();
@@ -248,7 +247,7 @@ impl DataLoader {
     }
 
     /// Get the number of batches in the dataset.
-    pub fn num_batches(&self) -> usize {
+    pub fn numbatches(&self) -> usize {
         self.dataset.len().div_ceil(self.batch_size)
     }
 
@@ -614,10 +613,10 @@ pub trait TrainingCallback {
     fn on_epoch_end(&mut self, epoch: usize, numepochs: usize, metrics: &Metrics);
 
     /// Called at the start of each batch.
-    fn on_batch_start(&mut self, batch: usize, num_batches: usize);
+    fn on_batch_start(&mut self, batch: usize, numbatches: usize);
 
     /// Called at the end of each batch.
-    fn on_batch_end(&mut self, batch: usize, num_batches: usize, loss: f64);
+    fn on_batch_end(&mut self, batch: usize, numbatches: usize, loss: f64);
 
     /// Called at the start of training.
     fn on_train_start(&mut self, numepochs: usize);
@@ -658,7 +657,7 @@ impl TrainingCallback for ProgressCallback {
         self.epoch_start = Some(Instant::now());
     }
 
-    fn on_epoch_end(&mut self, _epoch: usize, _numepochs: usize, metrics: &Metrics) {
+    fn on_epoch_end(&mut self, _epoch: usize, numepochs: usize, metrics: &Metrics) {
         if self.verbose {
             if let Some(start) = self.epoch_start {
                 let duration = start.elapsed();
@@ -669,14 +668,14 @@ impl TrainingCallback for ProgressCallback {
         }
     }
 
-    fn on_batch_start(&mut self, _batch: usize, _num_batches: usize) {
+    fn on_batch_start(&mut self, _batch: usize, _numbatches: usize) {
         // No-op for this callback
     }
 
-    fn on_batch_end(&mut self, batch: usize, num_batches: usize, loss: f64) {
-        if self.verbose && (batch + 1) % (num_batches / 10).max(1) == 0 {
-            print!("\rBatch {}/{} - loss: {:.4}", batch + 1, num_batches, loss);
-            if batch + 1 == num_batches {
+    fn on_batch_end(&mut self, batch: usize, numbatches: usize, loss: f64) {
+        if self.verbose && (batch + 1) % (numbatches / 10).max(1) == 0 {
+            print!("\rBatch {}/{} - loss: {:.4}", batch + 1, numbatches, loss);
+            if batch + 1 == numbatches {
                 println!();
             }
         }
@@ -715,7 +714,7 @@ pub struct Trainer {
     optimizer: Box<dyn Optimizer>,
 
     /// The loss function to use.
-    loss_fn: Box<dyn Loss>,
+    lossfn: Box<dyn Loss>,
 
     /// The callbacks to use during training.
     callbacks: Vec<Box<dyn TrainingCallback>>,
@@ -729,11 +728,11 @@ pub struct Trainer {
 
 impl Trainer {
     /// Create a new trainer.
-    pub fn new(model: Sequential, optimizer: Box<dyn Optimizer>, loss_fn: Box<dyn Loss>) -> Self {
+    pub fn new(model: Sequential, optimizer: Box<dyn Optimizer>, lossfn: Box<dyn Loss>) -> Self {
         Self {
             model,
             optimizer,
-            loss_fn,
+            lossfn,
             callbacks: Vec::new(),
             train_metrics: Metrics::new("train"),
             val_metrics: None,
@@ -810,21 +809,21 @@ impl Trainer {
     }
 
     /// Train for one epoch.
-    fn train_epoch(&mut self, data_loader: &mut DataLoader) -> CoreResult<()> {
+    fn train_epoch(&mut self, dataloader: &mut DataLoader) -> CoreResult<()> {
         // Set model to training mode
         self.model.train();
 
         // Reset data loader
-        data_loader.reset();
+        dataloader.reset();
 
-        let num_batches = data_loader.num_batches();
+        let numbatches = dataloader.numbatches();
 
         // Train on batches
-        for batch_idx in 0..num_batches {
-            let (inputs, targets) = data_loader.next_batch().unwrap();
+        for batch_idx in 0..numbatches {
+            let (inputs, targets) = dataloader.next_batch().unwrap();
             // Notify callbacks that batch is starting
             for callback in &mut self.callbacks {
-                callback.on_batch_start(batch_idx, num_batches);
+                callback.on_batch_start(batch_idx, numbatches);
             }
 
             // Forward pass
@@ -835,7 +834,7 @@ impl Trainer {
 
             // Notify callbacks that batch is ending
             for callback in &mut self.callbacks {
-                callback.on_batch_end(batch_idx, num_batches, batch_loss);
+                callback.on_batch_end(batch_idx, numbatches, batch_loss);
             }
         }
 
@@ -859,7 +858,7 @@ impl Trainer {
             let output = self.model.forward(input.as_ref())?;
 
             // Compute loss
-            let loss = self.loss_fn.forward(output.as_ref(), target.as_ref())?;
+            let loss = self.lossfn.forward(output.as_ref(), target.as_ref())?;
 
             // Get loss value
             if let Some(loss_array) = loss
@@ -874,7 +873,7 @@ impl Trainer {
             // For now, implement a simple gradient approximation using finite differences
             // In a full implementation, this would be automatic differentiation
 
-            let learning_rate = 0.001; // Default learning rate
+            let learningrate = 0.001; // Default learning rate
 
             // Simple gradient estimation for demonstration
             // This computes numerical gradients for the model parameters
@@ -882,7 +881,7 @@ impl Trainer {
             // Get current output for gradient computation
             let current_output = self.model.forward(input.as_ref())?;
             let current_loss = self
-                .loss_fn
+                .lossfn
                 .forward(current_output.as_ref(), target.as_ref())?;
             let _current_loss_value = if let Some(loss_array) = current_loss
                 .as_any()
@@ -902,7 +901,7 @@ impl Trainer {
             )?;
 
             // Apply gradients to model parameters
-            self.apply_gradients(&gradients, learning_rate)?;
+            self.apply_gradients(&gradients, learningrate)?;
 
             // Store gradients in optimizer for momentum-based optimizers
             self.optimizer.accumulate_gradients(&gradients)?;
@@ -929,7 +928,7 @@ impl Trainer {
         let mut gradients = GradientDict::new();
 
         // Compute gradient of loss with respect to output
-        let loss_grad = self.loss_fn.backward(output, target)?;
+        let loss_grad = self.lossfn.backward(output, target)?;
 
         // Backpropagate through the model
         let model_gradients = self.model.backward(input, loss_grad.as_ref())?;
@@ -941,18 +940,18 @@ impl Trainer {
     }
 
     /// Apply computed gradients to model parameters
-    fn apply_gradients(&mut self, gradients: &GradientDict, learning_rate: f64) -> CoreResult<()> {
+    fn apply_gradients(&mut self, gradients: &GradientDict, learningrate: f64) -> CoreResult<()> {
         // Apply gradients to each parameter in the model
         for (param_name, gradient) in gradients.iter() {
             self.model
-                .update_parameter(param_name, gradient.as_ref(), learning_rate)?;
+                .update_parameter(param_name, gradient.as_ref(), learningrate)?;
         }
 
         Ok(())
     }
 
     /// Validate the model.
-    fn validate(&mut self, data_loader: &mut DataLoader) -> CoreResult<()> {
+    fn validate(&mut self, dataloader: &mut DataLoader) -> CoreResult<()> {
         // Set model to evaluation mode
         self.model.eval();
 
@@ -964,13 +963,13 @@ impl Trainer {
         }
 
         // Reset data loader
-        data_loader.reset();
+        dataloader.reset();
 
-        let num_batches = data_loader.num_batches();
+        let numbatches = dataloader.numbatches();
 
         // Validate on batches
-        for _ in 0..num_batches {
-            let (inputs, targets) = data_loader.next_batch().unwrap();
+        for _ in 0..numbatches {
+            let (inputs, targets) = dataloader.next_batch().unwrap();
             // Forward pass without gradient tracking
             let mut batch_loss = 0.0;
             let mut batch_correct = 0;
@@ -981,7 +980,7 @@ impl Trainer {
                 let output = self.model.forward(input.as_ref())?;
 
                 // Compute loss
-                let loss = self.loss_fn.forward(output.as_ref(), target.as_ref())?;
+                let loss = self.lossfn.forward(output.as_ref(), target.as_ref())?;
 
                 // Get loss value
                 if let Some(loss_array) = loss
@@ -1098,7 +1097,7 @@ mod tests {
     }
 
     #[test]
-    fn test_data_loader() {
+    fn test_dataloader() {
         // Create input and target arrays
         let inputs = Array2::<f64>::ones((10, 5));
         let targets = Array2::<f64>::zeros((10, 2));
@@ -1108,7 +1107,7 @@ mod tests {
         let mut loader = DataLoader::new(dataset, 4, true, Some(42));
 
         // Check properties
-        assert_eq!(loader.num_batches(), 3);
+        assert_eq!(loader.numbatches(), 3);
 
         // Get batches
         let (batch1_inputs, batch1_targets) = loader.next_batch().unwrap();

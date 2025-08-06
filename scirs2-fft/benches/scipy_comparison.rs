@@ -37,7 +37,7 @@ impl Default for TestConfig {
 
 /// Generate test signals
 #[allow(dead_code)]
-fn generate_1d_signal(_size: usize) -> (Vec<f64>, Vec<Complex64>) {
+fn generate_1d_signal(size: usize) -> (Vec<f64>, Vec<Complex64>) {
     let real_signal: Vec<f64> = (0.._size)
         .map(|i| {
             let t = i as f64 / _size as f64;
@@ -54,8 +54,8 @@ fn generate_1d_signal(_size: usize) -> (Vec<f64>, Vec<Complex64>) {
 }
 
 #[allow(dead_code)]
-fn generate_2d_signal(_size: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_size, _size), |(i, j)| {
+fn generate_2d_signal(size: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_size, size), |(i, j)| {
         let x = i as f64 / _size as f64;
         let y = j as f64 / _size as f64;
         (2.0 * PI * (5.0 * x + 3.0 * y)).sin()

@@ -160,7 +160,8 @@ pub struct GANEvaluationMetrics<F: Float> {
     /// Enable LPIPS computation
     pub enable_lpips: bool,
     /// Random seed for reproducibility
-    pub random_seed: Option<u64>, _phantom: std::marker::PhantomData<F>,
+    pub random_seed: Option<u64>,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Default
@@ -178,7 +179,8 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> GANEva
             n_inception_features: 2048,
             n_kid_samples: 10000,
             enable_lpips: true,
-            random_seed: None, _phantom: std::marker::PhantomData,
+            random_seed: None,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -476,7 +478,8 @@ pub struct ContrastiveLearningMetrics<F: Float> {
     /// Number of negative samples
     pub n_negatives: usize,
     /// Enable hard negative mining
-    pub enable_hard_negatives: bool, _phantom: std::marker::PhantomData<F>,
+    pub enable_hard_negatives: bool,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Default
@@ -495,7 +498,8 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         Self {
             temperature: F::from(0.1).unwrap(),
             n_negatives: 1024,
-            enable_hard_negatives: false, _phantom: std::marker::PhantomData,
+            enable_hard_negatives: false,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -740,7 +744,8 @@ pub struct SelfSupervisedMetrics<F: Float> {
     /// Learning rate for linear probing
     pub probe_learning_rate: F,
     /// Number of clustering attempts
-    pub n_clustering_runs: usize, _phantom: std::marker::PhantomData<F>,
+    pub n_clustering_runs: usize,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Default
@@ -757,7 +762,8 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> SelfSu
         Self {
             n_probe_epochs: 100,
             probe_learning_rate: F::from(0.001).unwrap(),
-            n_clustering_runs: 5, _phantom: std::marker::PhantomData,
+            n_clustering_runs: 5,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -782,30 +788,30 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> SelfSu
         test_representations: &Array2<F>,
         test_labels: &Array1<usize>,
     ) -> Result<LinearProbingResult<F>> {
-        if _representations.nrows() != _labels.len() {
+        if representations.nrows() != labels.len() {
             return Err(MetricsError::InvalidInput(
-                "Mismatched _representations and _labels".to_string(),
+                "Mismatched representations and labels".to_string(),
             ));
         }
 
         if test_representations.nrows() != test_labels.len() {
             return Err(MetricsError::InvalidInput(
-                "Mismatched test _representations and _labels".to_string(),
+                "Mismatched test representations and labels".to_string(),
             ));
         }
 
         // Get number of classes
-        let n_classes = _labels.iter().max().unwrap_or(&0) + 1;
-        let n_features = _representations.ncols();
+        let n_classes = labels.iter().max().unwrap_or(&0) + 1;
+        let n_features = representations.ncols();
 
         // Initialize linear classifier weights (simplified to centroid-based)
         let mut class_centroids = Array2::zeros((n_classes, n_features));
         let mut class_counts = vec![0; n_classes];
 
         // Compute class centroids
-        for (i, &label) in _labels.iter().enumerate() {
+        for (i, &label) in labels.iter().enumerate() {
             for j in 0..n_features {
-                class_centroids[[label, j]] = class_centroids[[label, j]] + _representations[[i, j]];
+                class_centroids[[label, j]] = class_centroids[[label, j]] + representations[[i, j]];
             }
             class_counts[label] += 1;
         }
@@ -1316,7 +1322,8 @@ pub struct FoundationModelMetrics<F: Float> {
     /// Number of shots for few-shot evaluation
     pub n_shots: Vec<usize>,
     /// Number of tasks for evaluation
-    pub n_tasks: usize, _phantom: std::marker::PhantomData<F>,
+    pub n_tasks: usize,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Default
@@ -1334,7 +1341,8 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     pub fn new() -> Self {
         Self {
             n_shots: vec![1, 5, 10],
-            n_tasks: 10, _phantom: std::marker::PhantomData,
+            n_tasks: 10,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -1414,7 +1422,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
                 .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == class)
-                .map(|(i_)| i)
+                .map(|(i, _)| i)
                 .take(n_shot)
                 .collect();
 
@@ -1509,7 +1517,8 @@ pub struct MultimodalMetrics<F: Float> {
     /// Number of retrieval candidates
     pub n_retrieval_candidates: usize,
     /// Top-k values for retrieval evaluation
-    pub retrieval_k_values: Vec<usize>, _phantom: std::marker::PhantomData<F>,
+    pub retrieval_k_values: Vec<usize>,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Default
@@ -1525,12 +1534,13 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Multim
     pub fn new() -> Self {
         Self {
             n_retrieval_candidates: 1000,
-            retrieval_k_values: vec![1, 5, 10], _phantom: std::marker::PhantomData,
+            retrieval_k_values: vec![1, 5, 10],
+            _phantom: std::marker::PhantomData,
         }
     }
 
     /// Set retrieval parameters
-    pub fn with_retrieval(mut self, candidates: usize, k_values: Vec<usize>) -> Self {
+    pub fn with_retrieval(mut self, candidates: usize, kvalues: Vec<usize>) -> Self {
         self.n_retrieval_candidates = candidates;
         self.retrieval_k_values = k_values;
         self

@@ -7,7 +7,7 @@
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
 use rand::Rng;
-use scirs2__linalg::{svd, vector_norm};
+use scirs2_linalg::{svd, vector_norm};
 
 use crate::error::{Result, TransformError};
 
@@ -44,9 +44,9 @@ impl DictionaryLearning {
     /// # Arguments
     /// * `n_components` - Number of dictionary elements to extract
     /// * `alpha` - Sparsity controlling parameter
-    pub fn new(_n_components: usize, alpha: f64) -> Self {
+    pub fn new(ncomponents: usize, alpha: f64) -> Self {
         DictionaryLearning {
-            _n_components,
+            n_components,
             alpha,
             max_iter: 1000,
             tol: 1e-4,
@@ -59,7 +59,7 @@ impl DictionaryLearning {
     }
 
     /// Set maximum iterations
-    pub fn with_max_iter(mut self, max_iter: usize) -> Self {
+    pub fn with_max_iter(mut self, maxiter: usize) -> Self {
         self.max_iter = max_iter;
         self
     }
@@ -103,7 +103,7 @@ impl DictionaryLearning {
             dictionary.row_mut(i).assign(&x.row(idx));
 
             // Normalize atom
-            let norm = vector_norm(&dictionary.row(i).view()..2).unwrap_or(0.0);
+            let norm = vector_norm(&dictionary.row(i).view(), 2).unwrap_or(0.0);
             if norm > 1e-10 {
                 dictionary.row_mut(i).mapv_inplace(|x| x / norm);
             }
@@ -423,7 +423,7 @@ impl DictionaryLearning {
     }
 
     /// Reconstruct data from sparse codes
-    pub fn inverse_transform(&self, sparse_codes: &Array2<f64>) -> Result<Array2<f64>> {
+    pub fn inverse_transform(&self, sparsecodes: &Array2<f64>) -> Result<Array2<f64>> {
         if self.dictionary.is_none() {
             return Err(TransformError::TransformationError(
                 "DictionaryLearning model has not been fitted".to_string(),

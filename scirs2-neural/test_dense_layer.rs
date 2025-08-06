@@ -32,24 +32,24 @@ struct Matrix {
 }
 
 impl Matrix {
-    fn new(_rows: usize, cols: usize) -> Self {
+    fn new(rows: usize, cols: usize) -> Self {
         Self {
             data: vec![0.0; _rows * cols],
-            _rows,
+            rows,
             cols,
         }
     }
 
-    fn from_vec(_data: Vec<f64>, rows: usize, cols: usize) -> Result<Self> {
-        if _data.len() != rows * cols {
+    fn from_vec(data: Vec<f64>, rows: usize, cols: usize) -> Result<Self> {
+        if data.len() != rows * cols {
             return Err(TestError::InvalidArgument(format!(
                 "Data length {} doesn't match dimensions {}x{}",
-                _data.len(),
+                data.len(),
                 rows,
                 cols
             )));
         }
-        Ok(Self { _data, rows, cols })
+        Ok(Self { data, rows, cols })
     }
 
     fn get(&self, i: usize, j: usize) -> f64 {
@@ -74,7 +74,7 @@ struct DenseLayer {
 }
 
 impl DenseLayer {
-    fn new(_input_dim: usize, output_dim: usize) -> Self {
+    fn new(_input_dim: usize, outputdim: usize) -> Self {
         let mut weights = Matrix::new(_input_dim, output_dim);
         let biases = vec![0.0; output_dim];
         
@@ -130,8 +130,8 @@ fn gelu(x: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn apply_gelu(_input: &Matrix) -> Matrix {
-    let mut output = Matrix::new(_input.rows, _input.cols);
+fn apply_gelu(input: &Matrix) -> Matrix {
+    let mut output = Matrix::new(_input.rows, input.cols);
     for i in 0.._input.rows {
         for j in 0.._input.cols {
             output.set(i, j, gelu(_input.get(i, j)));

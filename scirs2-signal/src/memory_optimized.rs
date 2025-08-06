@@ -129,7 +129,7 @@ pub fn memory_optimized_fir_filter(
 
     // Open input _file and determine size
     let input_file_handle = File::open(input_file)
-        .map_err(|e| SignalError::ComputationError(format!("Cannot open input _file: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Cannot open input file: {}", e)))?;
 
     let file_size = input_file_handle
         .metadata()
@@ -141,7 +141,7 @@ pub fn memory_optimized_fir_filter(
 
     // Create output _file
     let output_file_handle = File::create(output_file)
-        .map_err(|e| SignalError::ComputationError(format!("Cannot create output _file: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Cannot create output file: {}", e)))?;
 
     let mut input_reader = BufReader::new(input_file_handle);
     let mut output_writer = BufWriter::new(output_file_handle);
@@ -301,7 +301,7 @@ pub fn memory_optimized_fft(
 
     // Open input _file and validate size
     let input_file_handle = File::open(input_file)
-        .map_err(|e| SignalError::ComputationError(format!("Cannot open input _file: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Cannot open input file: {}", e)))?;
 
     let file_size = input_file_handle
         .metadata()
@@ -318,7 +318,7 @@ pub fn memory_optimized_fft(
         ));
     }
 
-    let log2_n = n.trailing_zeros() as usize;
+    let log2n = n.trailing_zeros() as usize;
 
     // Calculate memory requirements
     let sample_size = complex_size;
@@ -330,7 +330,7 @@ pub fn memory_optimized_fft(
     }
 
     // Use out-of-core FFT algorithm
-    memory_fft_out_of_core(input_file, output_file, n, log2_n, config)
+    memory_fft_out_of_core(input_file, output_file, n, log2n, config)
 }
 
 /// In-core FFT for moderately large signals
@@ -346,7 +346,7 @@ fn memory_fft_in_core(
 
     // Read entire signal into memory
     let input_file_handle = File::open(input_file)
-        .map_err(|e| SignalError::ComputationError(format!("Cannot open input _file: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Cannot open input file: {}", e)))?;
 
     let mut input_reader = BufReader::new(input_file_handle);
     let mut data = vec![Complex::new(0.0, 0.0); n];
@@ -381,7 +381,7 @@ fn memory_fft_in_core(
 
     // Write result
     let output_file_handle = File::create(output_file)
-        .map_err(|e| SignalError::ComputationError(format!("Cannot create output _file: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Cannot create output file: {}", e)))?;
 
     let mut output_writer = BufWriter::new(output_file_handle);
 
@@ -433,7 +433,7 @@ fn memory_fft_out_of_core(
     input_file: &str,
     output_file: &str,
     n: usize,
-    log2_n: usize,
+    log2n: usize,
     config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
     let start_time = Instant::now();
@@ -451,8 +451,8 @@ fn memory_fft_out_of_core(
 
     // Determine how many stages we can do in memory vs. on disk
     let log2_memory_limit = (max_samples_in_memory as f32).log2().floor() as usize;
-    let in_memory_stages = log2_memory_limit.min(log2_n);
-    let disk_stages = log2_n - in_memory_stages;
+    let in_memory_stages = log2_memory_limit.min(log2n);
+    let disk_stages = log2n - in_memory_stages;
 
     // Create temporary files for intermediate results
     let temp_dir = config.temp_dir.as_deref().unwrap_or("/tmp");
@@ -474,7 +474,7 @@ fn memory_fft_out_of_core(
 
         // Process this stage with disk I/O
         let stage_result =
-            process_fft_stage_disk(&current_input, &current_output, _n, stage, config)?;
+            process_fft_stage_disk(&current_input, &current_output, n, stage, config)?;
 
         memory_stats.disk_operations += stage_result.memory_stats.disk_operations;
         total_io_time += stage_result.timing_stats.io_time_ms;
@@ -497,7 +497,7 @@ fn memory_fft_out_of_core(
         let stage_result = process_fft_stages_memory(
             final_input,
             output_file,
-            _n,
+            n,
             disk_stages,
             in_memory_stages,
             config,
@@ -526,7 +526,7 @@ fn memory_fft_out_of_core(
     Ok(MemoryOptimizedResult {
         data: MemoryOptimizedData::OnDisk {
             _file_path: output_file.to_string(),
-            length: _n,
+            length: n,
             chunk_size: config.chunk_size,
         },
         memory_stats,
@@ -685,7 +685,7 @@ fn process_fft_stages_memory(
     input_file: &str,
     output_file: &str,
     n: usize,
-    _start_stage: usize_num,
+    _start_stage: usize,
     _stages: usize,
     config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
@@ -729,7 +729,7 @@ pub fn memory_optimized_spectrogram(
 
     let file_size = input_handle
         .metadata()
-        .map_err(|e| SignalError::ComputationError(format!("Cannot get _file _size: {}", e)))?
+        .map_err(|e| SignalError::ComputationError(format!("Cannot get _file size: {}", e)))?
         .len() as usize;
 
     let n_samples = file_size / std::mem::size_of::<f64>();
@@ -849,6 +849,7 @@ pub fn memory_optimized_spectrogram(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn test_memory_config_defaults() {
         let config = MemoryConfig::default();

@@ -24,9 +24,9 @@ pub struct EvolutionaryStrategy {
 
 impl EvolutionaryStrategy {
     /// Create new evolutionary strategy
-    pub fn new(_population_size: usize, dimensions: usize, sigma: f64) -> Self {
-        let mut population = Vec::with_capacity(_population_size);
-        for _ in 0.._population_size {
+    pub fn new(populationsize: usize, dimensions: usize, sigma: f64) -> Self {
+        let mut population = Vec::with_capacity(population_size);
+        for _ in 0..population_size {
             let individual = Array1::fromshape_fn(dimensions, |_| rand::rng().gen::<f64>() - 0.5);
             population.push(individual);
         }

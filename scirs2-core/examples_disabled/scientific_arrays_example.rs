@@ -41,8 +41,8 @@ fn main() -> Result<(), ArrayError> {
     let masked_b = mask_array(b.clone(), Some(mask_b), Some(0.0))?;
 
     println!("\nOperations with masked arrays:");
-    println!("masked_a: {:?}", masked_a);
-    println!("masked_b: {:?}", masked_b);
+    println!("maskeda: {:?}", masked_a);
+    println!("maskedb: {:?}", masked_b);
 
     // Addition
     let sum = &masked_a + &masked_b;

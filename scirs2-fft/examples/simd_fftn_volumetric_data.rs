@@ -68,7 +68,7 @@ fn main() {
 
 /// Generate a test volume with various frequency components
 #[allow(dead_code)]
-fn generate_test_volume(_width: usize, height: usize, depth: usize) -> Vec<f64> {
+fn generate_test_volume(width: usize, height: usize, depth: usize) -> Vec<f64> {
     let mut volume = vec![0.0; _width * height * depth];
 
     for z in 0..depth {
@@ -108,12 +108,12 @@ fn generate_test_volume(_width: usize, height: usize, depth: usize) -> Vec<f64> 
 
 /// Apply a frequency domain filter to volumetric (3D) data
 #[allow(dead_code)]
-fn frequency_domain_filter_3d(_volume: &[f64], shape: &[usize], filter_type: &str) -> Vec<f64> {
+fn frequency_domain_filter_3d(_volume: &[f64], shape: &[usize], filtertype: &str) -> Vec<f64> {
     // Step 1: Compute the N-dimensional FFT of the _volume
     let spectrum = fftn_adaptive(_volume, Some(shape), None, None).unwrap();
 
     // Step 2: Create a frequency domain filter
-    let mut filter = vec![Complex64::new(0.0, 0.0); _volume.len()];
+    let mut filter = vec![Complex64::new(0.0, 0.0); volume.len()];
 
     // Calculate the center of the frequency domain
     let center_x = shape[0] / 2;
@@ -213,7 +213,7 @@ fn frequency_domain_filter_3d(_volume: &[f64], shape: &[usize], filter_type: &st
     let filtered_volume_complex =
         ifftn_adaptive(&filtered_spectrum, Some(shape), None, None).unwrap();
 
-    // Step 5: Extract real part (the filtered _volume)
+    // Step 5: Extract real part (the filtered volume)
     let filtered_volume: Vec<f64> = filtered_volume_complex.iter().map(|c| c.re).collect();
 
     filtered_volume
@@ -221,7 +221,7 @@ fn frequency_domain_filter_3d(_volume: &[f64], shape: &[usize], filter_type: &st
 
 /// Visualization information (simulation for a real system)
 #[allow(dead_code)]
-fn simulate_visualization(_volume: &[f64], shape: &[usize]) {
+fn simulate_visualization(volume: &[f64], shape: &[usize]) {
     println!("Visualizing volumetric data:");
     println!(
         "- Volume dimensions: {} x {} x {}",
@@ -244,7 +244,7 @@ fn simulate_visualization(_volume: &[f64], shape: &[usize]) {
         for y in [0, shape[1] / 2, shape[1] - 1] {
             for x in [0, shape[0] / 2, shape[0] - 1] {
                 let idx = z * shape[0] * shape[1] + y * shape[0] + x;
-                println!("  ({},{},{}) = {:.6}", x, y, z, _volume[idx]);
+                println!("  ({},{},{}) = {:.6}", x, y, z, volume[idx]);
             }
         }
     }

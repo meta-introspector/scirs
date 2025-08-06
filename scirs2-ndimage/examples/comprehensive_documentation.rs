@@ -86,7 +86,7 @@ fn main() -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn create_test_image_2d(_height: usize, width: usize) -> Array2<f64> {
+fn create_test_image_2d(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -101,7 +101,7 @@ fn create_test_image_2d(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_test_image_3d(_height: usize, width: usize, depth: usize) -> Array3<f64> {
+fn create_test_image_3d(height: usize, width: usize, depth: usize) -> Array3<f64> {
     Array3::fromshape_fn((_height, width, depth), |(i, j, k)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -115,7 +115,7 @@ fn create_test_image_3d(_height: usize, width: usize, depth: usize) -> Array3<f6
 }
 
 #[allow(dead_code)]
-fn add_noise(_image: &Array2<f64>, noise_level: f64) -> Array2<f64> {
+fn add_noise(_image: &Array2<f64>, noiselevel: f64) -> Array2<f64> {
     _image
         + &Array2::fromshape_fn(_image.dim(), |(i, j)| {
             let noise = if (i * 7 + j * 11) % 13 == 0 {
@@ -132,7 +132,7 @@ fn add_noise(_image: &Array2<f64>, noise_level: f64) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_edge_test_image(_height: usize, width: usize) -> Array2<f64> {
+fn create_edge_test_image(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         // Create step edges and lines
         if i > _height / 2 && i < _height / 2 + 5 {
@@ -152,7 +152,7 @@ fn create_edge_test_image(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_filtering(_image: &Array2<f64>, noisy_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_filtering(_image: &Array2<f64>, noisyimage: &Array2<f64>) -> NdimageResult<()> {
     println!("🔍 Filtering Operations");
 
     // 1. Basic filters
@@ -160,8 +160,8 @@ fn demonstrate_filtering(_image: &Array2<f64>, noisy_image: &Array2<f64>) -> Ndi
     let gaussian = gaussian_filter(_image, &[2.0, 2.0], None, None, None)?;
     println!(
         "    Input: {}x{}, Output: {}x{}",
-        _image.nrows(),
-        _image.ncols(),
+        image.nrows(),
+        image.ncols(),
         gaussian.nrows(),
         gaussian.ncols()
     );
@@ -200,7 +200,7 @@ fn demonstrate_filtering(_image: &Array2<f64>, noisy_image: &Array2<f64>) -> Ndi
 }
 
 #[allow(dead_code)]
-fn demonstrate_feature_detection(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_feature_detection(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🎯 Feature Detection");
 
     // 1. Edge detection
@@ -229,11 +229,11 @@ fn demonstrate_feature_detection(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_morphology(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_morphology(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🔬 Morphological Operations");
 
     // Create binary _image for morphology
-    let binary_image = _image.mapv(|x| if x > 0.5 { 1u8 } else { 0u8 });
+    let binary_image = image.mapv(|x| if x > 0.5 { 1u8 } else { 0u8 });
 
     // 1. Basic binary morphology
     println!("  • Basic binary morphology:");
@@ -290,13 +290,13 @@ fn demonstrate_morphology(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_interpolation(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_interpolation(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🔄 Interpolation & Transformations");
 
     // 1. Basic interpolation
     println!("  • Basic interpolation:");
     let zoomed = zoom(
-        _image,
+        image,
         &[2.0, 1.5],
         InterpolationOrder::Linear,
         BoundaryMode::Reflect,
@@ -304,8 +304,8 @@ fn demonstrate_interpolation(_image: &Array2<f64>) -> NdimageResult<()> {
     )?;
     println!(
         "    Zoom: {}x{} -> {}x{}",
-        _image.nrows(),
-        _image.ncols(),
+        image.nrows(),
+        image.ncols(),
         zoomed.nrows(),
         zoomed.ncols()
     );
@@ -358,11 +358,11 @@ fn demonstrate_interpolation(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_measurements(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_measurements(image: &Array2<f64>) -> NdimageResult<()> {
     println!("📊 Measurements & Analysis");
 
     // Create labeled _image for region analysis
-    let binary = _image.mapv(|x| if x > 0.6 { 1u32 } else { 0u32 });
+    let binary = image.mapv(|x| if x > 0.6 { 1u32 } else { 0u32 });
     let labeled = label(&binary.view(), None)?;
 
     // 1. Basic measurements
@@ -395,7 +395,7 @@ fn demonstrate_measurements(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_segmentation(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_segmentation(image: &Array2<f64>) -> NdimageResult<()> {
     println!("✂️ Segmentation");
 
     // 1. Thresholding
@@ -410,7 +410,7 @@ fn demonstrate_segmentation(_image: &Array2<f64>) -> NdimageResult<()> {
     let markers = Array2::fromshape_fn(_image.dim(), |(i, j)| {
         if i < 20 && j < 20 {
             1u32
-        } else if i > _image.nrows() - 20 && j > _image.ncols() - 20 {
+        } else if i > image.nrows() - 20 && j > image.ncols() - 20 {
             2u32
         } else {
             0u32
@@ -430,7 +430,7 @@ fn demonstrate_segmentation(_image: &Array2<f64>) -> NdimageResult<()> {
         println!("    Graph cuts segmentation completed");
 
         // Chan-Vese
-        let initial_contour = create_circle_contour((_image.nrows() / 2, _image.ncols() / 2), 30.0);
+        let initial_contour = create_circle_contour((_image.nrows() / 2, image.ncols() / 2), 30.0);
         let cv_params = ChanVeseParams::default();
         let cv_result = chan_vese(&_image.view(), &initial_contour, cv_params)?;
         println!("    Chan-Vese segmentation completed");
@@ -440,7 +440,7 @@ fn demonstrate_segmentation(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_domain_specific(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_domain_specific(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🏥 Domain-Specific Functions");
 
     // 1. Medical imaging
@@ -471,7 +471,7 @@ fn demonstrate_domain_specific(_image: &Array2<f64>) -> NdimageResult<()> {
 
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-fn demonstrate_advanced_simd(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_advanced_simd(image: &Array2<f64>) -> NdimageResult<()> {
     println!("⚡ Advanced SIMD Extensions");
 
     // 1. Wavelet pyramid
@@ -496,7 +496,7 @@ fn demonstrate_advanced_simd(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_backends(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_backends(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🖥️ Backend & Performance Optimization");
 
     // 1. Backend selection
@@ -510,7 +510,7 @@ fn demonstrate_backends(_image: &Array2<f64>) -> NdimageResult<()> {
 
     // 2. Auto backend selection
     println!("  • Automatic backend selection:");
-    let auto_backend = auto_backend(&[_image.nrows(), _image.ncols()])?;
+    let auto_backend = auto_backend(&[_image.nrows(), image.ncols()])?;
     println!("    Auto-selected backend: {:?}", auto_backend);
 
     #[cfg(feature = "cuda")]
@@ -556,14 +556,14 @@ fn demonstrate_streaming() -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_memory_management(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_memory_management(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🧠 Memory Management");
 
     use crate::memory__management::*;
 
     // 1. Memory estimation
     println!("  • Memory usage estimation:");
-    let memory_needed = estimate_memory_usage(&[_image.nrows(), _image.ncols()], 8)?; // 8 bytes per f64
+    let memory_needed = estimate_memory_usage(&[_image.nrows(), image.ncols()], 8)?; // 8 bytes per f64
     println!(
         "    Estimated memory for processing: {:.2} MB",
         memory_needed as f64 / 1_000_000.0
@@ -591,7 +591,7 @@ fn demonstrate_memory_management(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_visualization(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_visualization(image: &Array2<f64>) -> NdimageResult<()> {
     println!("📊 Visualization");
 
     // 1. Colormaps
@@ -654,7 +654,7 @@ fn demonstrate_best_practices() -> NdimageResult<()> {
 
 #[cfg(not(feature = "simd"))]
 #[allow(dead_code)]
-fn demonstrate_advanced_simd(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_advanced_simd(image: &Array2<f64>) -> NdimageResult<()> {
     println!("⚡ Advanced SIMD Extensions");
     println!("  Note: SIMD features not available (compile with --features simd)");
     Ok(())

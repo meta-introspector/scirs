@@ -419,7 +419,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicInterface<F> {
     }
 
     /// Convert quantum state to neuromorphic spike patterns
-    pub fn quantum_to_neuromorphic(&self, quantum_data: &Array1<Complex<F>>) -> Result<Array1<F>> {
+    pub fn quantum_to_neuromorphic(&self, quantumdata: &Array1<Complex<F>>) -> Result<Array1<F>> {
         // 1. Quantum-spike correlation analysis
         let mut spike_pattern = Array1::zeros(quantum_data.len());
         
@@ -442,7 +442,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicInterface<F> {
     }
 
     /// Convert neuromorphic spikes to quantum states
-    pub fn neuromorphic_to_quantum(&self, spike_data: &Array1<F>) -> Result<Array1<Complex<F>>> {
+    pub fn neuromorphic_to_quantum(&self, spikedata: &Array1<F>) -> Result<Array1<Complex<F>>> {
         let mut quantum_states = Array1::zeros(spike_data.len());
         
         for (i, &spike_value) in spike_data.iter().enumerate() {
@@ -540,7 +540,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedQuantumCoordinator<F> 
 
 impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicCore<F> {
     /// Create new quantum-neuromorphic fusion core
-    pub fn new(core_id: usize, qubits: usize) -> Result<Self> {
+    pub fn new(coreid: usize, qubits: usize) -> Result<Self> {
         Ok(QuantumNeuromorphicCore {
             core_id,
             quantum_unit: QuantumProcessingUnit::new(qubits)?,

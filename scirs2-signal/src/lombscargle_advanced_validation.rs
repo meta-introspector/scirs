@@ -3,7 +3,7 @@
 // This module provides an extensive validation framework for Lomb-Scargle
 // implementations with focus on:
 // - SIMD operation correctness
-// - Performance regression testing  
+// - Performance regression testing
 // - Cross-platform validation
 // - Memory safety verification
 // - Numerical accuracy under extreme conditions
@@ -533,11 +533,11 @@ fn validate_cross_platform_consistency(
 
 /// Determine overall validation status from issues
 #[allow(dead_code)]
-fn determine_validation_status(_issues: &[ValidationIssue]) -> ValidationStatus {
+fn determine_validation_status(issues: &[ValidationIssue]) -> ValidationStatus {
     let has_critical = _issues
         .iter()
         .any(|i| i.severity == IssueSeverity::Critical);
-    let has_warnings = _issues.iter().any(|i| i.severity == IssueSeverity::Warning);
+    let has_warnings = issues.iter().any(|i| i.severity == IssueSeverity::Warning);
 
     if has_critical {
         ValidationStatus::Failed
@@ -658,22 +658,22 @@ fn validate_multicomponent_accuracy(
 }
 
 #[allow(dead_code)]
-fn validate_noise_floor_estimation(_size: usize, tolerance: f64) -> SignalResult<f64> {
+fn validate_noise_floor_estimation(size: usize, tolerance: f64) -> SignalResult<f64> {
     // Simplified implementation
     Ok(0.01) // Placeholder noise floor
 }
 
 #[allow(dead_code)]
-fn validate_dynamic_range_handling(_tolerance: f64) -> SignalResult<f64> {
+fn validate_dynamic_range_handling(tolerance: f64) -> SignalResult<f64> {
     // Simplified implementation
     Ok(0.95) // Good dynamic range handling score
 }
 
 #[allow(dead_code)]
-fn benchmark_signal_size(_size: usize, iterations: usize) -> SignalResult<BenchmarkResult> {
+fn benchmark_signal_size(size: usize, iterations: usize) -> SignalResult<BenchmarkResult> {
     let freq = 10.0;
     let fs = 100.0;
-    let t: Array1<f64> = Array1::linspace(0.0, (_size - 1) as f64 / fs, _size);
+    let t: Array1<f64> = Array1::linspace(0.0, (_size - 1) as f64 / fs, size);
     let signal = t.mapv(|ti| (2.0 * PI * freq * ti).sin());
     let frequencies = Array1::linspace(0.1, 50.0, _size / 4);
 
@@ -715,7 +715,7 @@ fn benchmark_simd_performance(
 }
 
 #[allow(dead_code)]
-fn validate_simd_scalar_accuracy(_config: &AdvancedValidationConfig) -> SignalResult<f64> {
+fn validate_simd_scalar_accuracy(config: &AdvancedValidationConfig) -> SignalResult<f64> {
     // Compare SIMD and scalar results
     // Simplified implementation
     Ok(1e-14) // Very high accuracy
@@ -733,13 +733,13 @@ fn validate_individual_simd_operations(
 }
 
 #[allow(dead_code)]
-fn measure_simd_performance_gain(_config: &AdvancedValidationConfig) -> SignalResult<f64> {
+fn measure_simd_performance_gain(config: &AdvancedValidationConfig) -> SignalResult<f64> {
     // Simplified implementation
     Ok(2.8) // Good SIMD performance gain
 }
 
 #[allow(dead_code)]
-fn measure_memory_usage(_size: usize) -> SignalResult<MemoryResult> {
+fn measure_memory_usage(size: usize) -> SignalResult<MemoryResult> {
     let peak_mb = (_size * 24) as f64 / (1024.0 * 1024.0); // Rough estimate
     Ok(MemoryResult {
         peak_mb,
@@ -753,22 +753,22 @@ fn measure_cache_efficiency() -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn estimate_expected_time(_size: usize) -> f64 {
+fn estimate_expected_time(size: usize) -> f64 {
     // O(n log n) expected performance
     (_size as f64 * (_size as f64).log2()) / 1e6
 }
 
 #[allow(dead_code)]
-fn estimate_expected_memory(_size: usize) -> f64 {
+fn estimate_expected_memory(size: usize) -> f64 {
     // Linear memory usage expected
     (_size * 16) as f64 / (1024.0 * 1024.0)
 }
 
 #[allow(dead_code)]
-fn calculate_scalability_factor(_execution_times: &HashMap<usize, f64>) -> f64 {
+fn calculate_scalability_factor(executiontimes: &HashMap<usize, f64>) -> f64 {
     // Analyze how execution time scales with input size
     // Ideal O(n log n) would give factor of 1.0
-    if _execution_times.len() < 2 {
+    if execution_times.len() < 2 {
         return 1.0;
     }
 
@@ -791,7 +791,7 @@ fn calculate_scalability_factor(_execution_times: &HashMap<usize, f64>) -> f64 {
 }
 
 #[allow(dead_code)]
-fn calculate_throughput(_execution_times: &HashMap<usize, f64>) -> f64 {
+fn calculate_throughput(_executiontimes: &HashMap<usize, f64>) -> f64 {
     // Calculate samples per second throughput
     _execution_times
         .iter()
@@ -801,6 +801,7 @@ fn calculate_throughput(_execution_times: &HashMap<usize, f64>) -> f64 {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_advanced_validation_basic() {

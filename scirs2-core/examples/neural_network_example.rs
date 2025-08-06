@@ -68,7 +68,7 @@ fn main() {
     // Create a convolutional layer
     println!("\nCreating and using a convolutional layer:");
 
-    let filters = Array::<f64>::ones((3, 3, 1, 6));
+    let filters = Array::<f64, ndarray::Ix4>::ones((3, 3, 1, 6));
     println!("Filters shape: {:?}", filters.shape());
 
     let conv = Conv2D::new(
@@ -83,7 +83,7 @@ fn main() {
     println!("Created convolutional layer: {}", conv.name());
 
     // Create a 4D input (batch_size, height, width, channels)
-    let input_4d = Array::<f64>::ones((1, 28, 28, 1));
+    let input_4d = Array::<f64, ndarray::Ix4>::ones((1, 28, 28, 1));
     println!("Input shape: {:?}", input_4d.shape());
 
     // Forward pass through convolutional layer
@@ -151,7 +151,7 @@ fn main() {
     // Add fully connected layers
     let feature_size = 32 * 6 * 6; // 32 channels, 6x6 spatial dimensions
 
-    model.add_layer(Box::new(Linear::withshape(
+    model.add_layer(Box::new(Linear::new_random(
         "fc1",
         feature_size, // Input features
         120,          // Output features
@@ -165,7 +165,7 @@ fn main() {
         Some(42), // Fixed seed for reproducibility
     )));
 
-    model.add_layer(Box::new(Linear::withshape(
+    model.add_layer(Box::new(Linear::new_random(
         "fc2",
         120,  // Input features
         84,   // Output features
@@ -173,7 +173,7 @@ fn main() {
         Some(ActivationFunc::ReLU),
     )));
 
-    model.add_layer(Box::new(Linear::withshape(
+    model.add_layer(Box::new(Linear::new_random(
         "fc3", 84,   // Input features
         10,   // Output features (10 classes)
         true, // With bias

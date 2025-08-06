@@ -39,9 +39,9 @@
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
+use statrs::statistics::Statistics;
 use std::fmt::{Debug, Display};
 use std::ops::{AddAssign, SubAssign};
-use statrs::statistics::Statistics;
 
 /// Condition number and stability assessment report
 #[derive(Debug, Clone)]
@@ -114,7 +114,7 @@ where
             estimated_rank: None,
             is_symmetric: false,
             is_positive_definite: None,
-            machine_epsilon: machine, _epsilon: <F>(),
+            machine_epsilon: machine_epsilon::<F>(),
         }
     }
 }
@@ -139,19 +139,19 @@ pub fn machine_epsilon<F: Float + FromPrimitive>() -> F {
 
 /// Assess the numerical condition of a matrix
 #[allow(dead_code)]
-pub fn assess_matrix_condition<F>(_matrix: &ArrayView2<F>) -> InterpolateResult<ConditionReport<F>>
+pub fn assess_matrix_condition<F>(matrix: &ArrayView2<F>) -> InterpolateResult<ConditionReport<F>>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
 {
-    if _matrix.nrows() != _matrix.ncols() {
+    if matrix.nrows() != matrix.ncols() {
         return Err(InterpolateError::ShapeMismatch {
             expected: "square _matrix".to_string(),
-            actual: format!("{}x{}", _matrix.nrows(), _matrix.ncols()),
+            actual: format!("{}x{}", matrix.nrows(), matrix.ncols()),
             object: "condition assessment".to_string(),
         });
     }
 
-    let n = _matrix.nrows();
+    let n = matrix.nrows();
     if n == 0 {
         return Err(InterpolateError::InvalidInput {
             message: "Cannot assess condition of empty _matrix".to_string(),
@@ -193,18 +193,18 @@ where
 
 /// Check if a matrix is symmetric within numerical tolerance
 #[allow(dead_code)]
-fn check_symmetry<F>(_matrix: &ArrayView2<F>) -> bool
+fn check_symmetry<F>(matrix: &ArrayView2<F>) -> bool
 where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
-    let n = _matrix.nrows();
+    let n = matrix.nrows();
     let tol = F::from_f64(1e-12).unwrap_or_else(|| {
         machine_epsilon::<F>() * F::from(1e6).unwrap_or_else(|| F::from(1000000).unwrap())
     });
 
     for i in 0..n {
         for j in 0..i {
-            let diff = (_matrix[[i, j]] - _matrix[[j, i]]).abs();
+            let diff = (_matrix[[i, j]] - matrix[[j, i]]).abs();
             if diff > tol {
                 return false;
             }
@@ -303,22 +303,22 @@ where
 
 /// Fallback condition number estimation using matrix norms
 #[allow(dead_code)]
-fn estimate_condition_norm_based<F>(_matrix: &ArrayView2<F>) -> InterpolateResult<F>
+fn estimate_condition_norm_based<F>(matrix: &ArrayView2<F>) -> InterpolateResult<F>
 where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     // Estimate condition number using maximum and minimum eigenvalue estimates
-    let n = _matrix.nrows();
+    let n = matrix.nrows();
 
     // Estimate largest and smallest eigenvalues using Gershgorin circles
     let mut min_gershgorin = F::infinity();
     let mut max_gershgorin = F::neg_infinity();
 
     for i in 0..n {
-        let diagonal = _matrix[[i, i]];
+        let diagonal = matrix[[i, i]];
         let off_diagonal_sum = (0..n)
             .filter(|&j| j != i)
-            .map(|j| _matrix[[i, j]].abs())
+            .map(|j| matrix[[i, j]].abs())
             .fold(F::zero(), |a, b| a + b);
 
         let center = diagonal.abs();
@@ -349,7 +349,7 @@ where
 
 /// Classify stability level based on condition number
 #[allow(dead_code)]
-fn classify_stability<F>(_condition_number: F) -> StabilityLevel
+fn classify_stability<F>(_conditionnumber: F) -> StabilityLevel
 where
     F: Float + FromPrimitive,
 {
@@ -376,14 +376,14 @@ where
 
 /// Suggest regularization parameter based on condition number and diagnostics
 #[allow(dead_code)]
-fn suggest_regularization<F>(_condition_number: F, diagnostics: &StabilityDiagnostics<F>) -> F
+fn suggest_regularization<F>(_conditionnumber: F, diagnostics: &StabilityDiagnostics<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     let machine_eps = diagnostics.machine_epsilon;
 
     // Base regularization on condition _number and machine epsilon
-    let base_reg = machine_eps * _condition_number.sqrt();
+    let base_reg = machine_eps * condition_number.sqrt();
 
     // Adjust based on minimum singular value if available
     if let Some(min_sv) = diagnostics.min_singular_value {
@@ -409,7 +409,7 @@ where
 
 /// Check if a division operation is numerically safe
 #[allow(dead_code)]
-pub fn check_safe_division<F>(_numerator: F, denominator: F) -> InterpolateResult<F>
+pub fn check_safe_division<F>(numerator: F, denominator: F) -> InterpolateResult<F>
 where
     F: Float
         + FromPrimitive
@@ -427,7 +427,7 @@ where
     if denominator.abs() < safe_threshold {
         Err(InterpolateError::NumericalError(format!(
             "Division by near-zero value: {} / {} (threshold: {:.2e})",
-            _numerator, denominator, safe_threshold
+            numerator, denominator, safe_threshold
         )))
     } else {
         Ok(_numerator / denominator)
@@ -436,7 +436,7 @@ where
 
 /// Check if reciprocal operation is numerically safe
 #[allow(dead_code)]
-pub fn safe_reciprocal<F>(_value: F) -> InterpolateResult<F>
+pub fn safe_reciprocal<F>(value: F) -> InterpolateResult<F>
 where
     F: Float
         + FromPrimitive
@@ -446,7 +446,7 @@ where
         + std::ops::SubAssign
         + std::fmt::LowerExp,
 {
-    check_safe_division(F::one(), _value)
+    check_safe_division(F::one(), value)
 }
 
 /// Apply Tikhonov regularization to a matrix
@@ -581,16 +581,16 @@ where
 
 /// Check if matrix is diagonally dominant
 #[allow(dead_code)]
-fn check_diagonal_dominance<F>(_matrix: &ArrayView2<F>) -> bool
+fn check_diagonal_dominance<F>(matrix: &ArrayView2<F>) -> bool
 where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
-    let n = _matrix.nrows();
+    let n = matrix.nrows();
     for i in 0..n {
-        let diagonal = _matrix[[i, i]].abs();
+        let diagonal = matrix[[i, i]].abs();
         let off_diagonal_sum: F = (0..n)
             .filter(|&j| j != i)
-            .map(|j| _matrix[[i, j]].abs())
+            .map(|j| matrix[[i, j]].abs())
             .fold(F::zero(), |acc, x| acc + x);
 
         if diagonal <= off_diagonal_sum {
@@ -602,16 +602,16 @@ where
 
 /// Count zero elements on the diagonal
 #[allow(dead_code)]
-fn count_zero_diagonal_elements<F>(_matrix: &ArrayView2<F>) -> usize
+fn count_zero_diagonal_elements<F>(matrix: &ArrayView2<F>) -> usize
 where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
-    let n = _matrix.nrows();
+    let n = matrix.nrows();
     let zero_threshold =
         machine_epsilon::<F>() * F::from_f64(1e6).unwrap_or(F::from(1000000).unwrap());
 
     (0..n)
-        .filter(|&i| _matrix[[i, i]].abs() < zero_threshold)
+        .filter(|&i| matrix[[i, i]].abs() < zero_threshold)
         .count()
 }
 
@@ -651,7 +651,8 @@ where
             is_diagonal_dominant: false,
             zero_diagonal_count: 0,
             sparsity_ratio: 0.0,
-            rhs_has_extreme_values: false, _phantom: std::marker::PhantomData,
+            rhs_has_extreme_values: false,
+            _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -851,7 +852,7 @@ where
 
 /// Internal function to solve linear system
 #[allow(dead_code)]
-fn solve_system<F>(_matrix: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>>
+fn solve_system<F>(matrix: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
 {
@@ -860,7 +861,7 @@ where
         use scirs2__linalg::solve;
 
         // Convert to f64 for solve
-        let matrix_f64 = _matrix.mapv(|x| x.to_f64().unwrap_or(0.0));
+        let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap_or(0.0));
         let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap_or(0.0));
 
         match solve(&matrix_f64.view(), &rhs_f64.view(), None) {
@@ -879,7 +880,7 @@ where
     #[cfg(not(feature = "linalg"))]
     {
         // Fallback: simple Gaussian elimination for small systems
-        if _matrix.nrows() <= 3 {
+        if matrix.nrows() <= 3 {
             gaussian_elimination_small(_matrix, rhs)
         } else {
             Err(InterpolateError::ComputationError(
@@ -964,11 +965,11 @@ where
 
 /// Analyze distances between data points to detect clustering issues
 #[allow(dead_code)]
-fn analyze_point_distances<F>(_points: &ArrayView2<F>) -> InterpolateResult<(F, F, usize)>
+fn analyze_point_distances<F>(points: &ArrayView2<F>) -> InterpolateResult<(F, F, usize)>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
-    let n_points = _points.nrows();
+    let n_points = points.nrows();
     let mut min_dist = F::infinity();
     let mut max_dist = F::zero();
     let mut clustered_count = 0;
@@ -982,7 +983,7 @@ where
             // Compute Euclidean distance
             let mut dist_sq = F::zero();
             for k in 0.._points.ncols() {
-                let diff = _points[[i, k]] - _points[[j, k]];
+                let diff = points[[i, k]] - points[[j, k]];
                 dist_sq += diff * diff;
             }
             let dist = dist_sq.sqrt();
@@ -1005,12 +1006,12 @@ where
 
 /// Check for near-linear dependencies in data points
 #[allow(dead_code)]
-fn check_near_linear_dependencies<F>(_points: &ArrayView2<F>) -> InterpolateResult<bool>
+fn check_near_linear_dependencies<F>(points: &ArrayView2<F>) -> InterpolateResult<bool>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
 {
-    let n_points = _points.nrows();
-    let dim = _points.ncols();
+    let n_points = points.nrows();
+    let dim = points.ncols();
 
     // For fewer _points than dimensions + 1, no dependencies are possible
     if n_points <= dim {
@@ -1018,11 +1019,11 @@ where
     }
 
     // Check rank of the point matrix (after centering)
-    let mut centered_points = _points.to_owned();
+    let mut centered_points = points.to_owned();
 
     // Center the _points
     for j in 0..dim {
-        let mean = _points.column(j).mean().unwrap_or(F::zero());
+        let mean = points.column(j).mean().unwrap_or(F::zero());
         for i in 0..n_points {
             centered_points[[i, j]] -= mean;
         }
@@ -1047,19 +1048,19 @@ where
 
 /// Compute Gram matrix A^T A for rank analysis
 #[allow(dead_code)]
-fn compute_gram_matrix<F>(_points: &ArrayView2<F>) -> Array2<F>
+fn compute_gram_matrix<F>(points: &ArrayView2<F>) -> Array2<F>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
-    let n_points = _points.nrows();
-    let dim = _points.ncols();
+    let n_points = points.nrows();
+    let dim = points.ncols();
     let mut gram = Array2::zeros((dim, dim));
 
     for i in 0..dim {
         for j in 0..dim {
             let mut sum = F::zero();
             for k in 0..n_points {
-                sum += _points[[k, i]] * _points[[k, j]];
+                sum += points[[k, i]] * points[[k, j]];
             }
             gram[[i, j]] = sum;
         }
@@ -1070,7 +1071,7 @@ where
 
 /// Suggest regularization parameter based on data characteristics
 #[allow(dead_code)]
-fn suggest_data_based_regularization<F>(_min_distance: F, distance_ratio: F) -> F
+fn suggest_data_based_regularization<F>(_min_distance: F, distanceratio: F) -> F
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
@@ -1102,12 +1103,12 @@ where
 
 /// Analyze boundary effects for interpolation stability  
 #[allow(dead_code)]
-fn analyze_boundary_effects<F>(_points: &ArrayView2<F>) -> InterpolateResult<BoundaryAnalysis<F>>
+fn analyze_boundary_effects<F>(points: &ArrayView2<F>) -> InterpolateResult<BoundaryAnalysis<F>>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
-    let dim = _points.ncols();
-    let n_points = _points.nrows();
+    let dim = points.ncols();
+    let n_points = points.nrows();
 
     if n_points == 0 {
         return Ok(BoundaryAnalysis {
@@ -1124,7 +1125,7 @@ where
 
     for i in 0..n_points {
         for j in 0..dim {
-            let coord = _points[[i, j]];
+            let coord = points[[i, j]];
             if coord < min_coords[j] {
                 min_coords[j] = coord;
             }
@@ -1138,7 +1139,7 @@ where
     let mut min_boundary_dist = F::infinity();
     for i in 0..n_points {
         for j in 0..dim {
-            let coord = _points[[i, j]];
+            let coord = points[[i, j]];
             let dist_to_min = coord - min_coords[j];
             let dist_to_max = max_coords[j] - coord;
             let boundary_dist = dist_to_min.min(dist_to_max);
@@ -1372,12 +1373,12 @@ where
 
 /// Analyze data points for numerical issues
 #[allow(dead_code)]
-fn analyze_data_points<F>(_points: &ArrayView2<F>) -> InterpolateResult<DataPointsAnalysis<F>>
+fn analyze_data_points<F>(points: &ArrayView2<F>) -> InterpolateResult<DataPointsAnalysis<F>>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
-    let n_points = _points.nrows();
-    let dimension = _points.ncols();
+    let n_points = points.nrows();
+    let dimension = points.ncols();
 
     if n_points == 0 {
         return Err(InterpolateError::empty_data("point analysis"));
@@ -1538,7 +1539,7 @@ where
         });
 
         let total_range = analysis.boundary_gradient_norm;
-        if total_range > F::zero() && boundary_range / total_range >, F::from(0.8).unwrap() {
+        if total_range > F::zero() && boundary_range / total_range > F::from(0.8).unwrap() {
             analysis.boundary_has_issues = true;
         }
     }
@@ -1555,11 +1556,11 @@ where
 
 /// Check if 2D points are collinear
 #[allow(dead_code)]
-fn check_collinearity_2d<F>(_points: &ArrayView2<F>) -> bool
+fn check_collinearity_2d<F>(points: &ArrayView2<F>) -> bool
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
-    let n = _points.nrows();
+    let n = points.nrows();
     if n < 3 {
         return true;
     }
@@ -1568,10 +1569,10 @@ where
 
     // Use cross product to check collinearity
     for i in 2..n {
-        let v1x = _points[[1, 0]] - _points[[0, 0]];
-        let v1y = _points[[1, 1]] - _points[[0, 1]];
-        let v2x = _points[[i, 0]] - _points[[0, 0]];
-        let v2y = _points[[i, 1]] - _points[[0, 1]];
+        let v1x = points[[1, 0]] - points[[0, 0]];
+        let v1y = points[[1, 1]] - points[[0, 1]];
+        let v2x = points[[i, 0]] - points[[0, 0]];
+        let v2y = points[[i, 1]] - points[[0, 1]];
 
         let cross_product = v1x * v2y - v1y * v2x;
         if cross_product.abs() > tolerance {
@@ -1584,11 +1585,11 @@ where
 
 /// Calculate clustering score for point distribution
 #[allow(dead_code)]
-fn calculate_clustering_score<F>(_points: &ArrayView2<F>) -> F
+fn calculate_clustering_score<F>(points: &ArrayView2<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
-    let n = _points.nrows();
+    let n = points.nrows();
     if n < 2 {
         return F::zero();
     }
@@ -1641,11 +1642,11 @@ where
 
 /// Estimate smoothness of function values
 #[allow(dead_code)]
-fn estimate_smoothness<F>(_values: &ArrayView1<F>) -> F
+fn estimate_smoothness<F>(values: &ArrayView1<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
-    let n = _values.len();
+    let n = values.len();
     if n < 3 {
         return F::one();
     }
@@ -1653,7 +1654,7 @@ where
     // Calculate second differences
     let mut second_diffs = Vec::new();
     for i in 1..(n - 1) {
-        let second_diff = _values[i + 1] - F::from(2.0).unwrap() * _values[i] + _values[i - 1];
+        let second_diff = values[i + 1] - F::from(2.0).unwrap() * values[i] + values[i - 1];
         second_diffs.push(second_diff.abs());
     }
 
@@ -1661,8 +1662,8 @@ where
     let avg_second_diff = second_diffs.iter().fold(F::zero(), |acc, &x| acc + x)
         / F::from(second_diffs.len()).unwrap();
 
-    let value_range = _values.iter().fold(F::zero(), |acc, &x| {
-        acc.max(x - _values.iter().fold(F::infinity(), |a, &b| a.min(b)))
+    let value_range = values.iter().fold(F::zero(), |acc, &x| {
+        acc.max(x - values.iter().fold(F::infinity(), |a, &b| a.min(b)))
     });
 
     if value_range <= F::zero() {
@@ -1675,11 +1676,11 @@ where
 
 /// Check if values are monotonic
 #[allow(dead_code)]
-fn check_monotonicity<F>(_values: &ArrayView1<F>) -> bool
+fn check_monotonicity<F>(values: &ArrayView1<F>) -> bool
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
-    let n = _values.len();
+    let n = values.len();
     if n < 2 {
         return true;
     }
@@ -1691,7 +1692,7 @@ where
     let mut decreasing = true;
 
     for i in 1..n {
-        let diff = _values[i] - _values[i - 1];
+        let diff = values[i] - values[i - 1];
         if diff < -tolerance {
             increasing = false;
         }
@@ -1705,11 +1706,11 @@ where
 
 /// Estimate noise level in function values
 #[allow(dead_code)]
-fn estimate_noise_level<F>(_values: &ArrayView1<F>) -> F
+fn estimate_noise_level<F>(values: &ArrayView1<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
-    let n = _values.len();
+    let n = values.len();
     if n < 3 {
         return F::zero();
     }
@@ -1717,7 +1718,7 @@ where
     // Estimate noise using high-frequency components (first differences)
     let mut first_diffs = Vec::new();
     for i in 1..n {
-        first_diffs.push((_values[i] - _values[i - 1]).abs());
+        first_diffs.push((_values[i] - values[i - 1]).abs());
     }
 
     // Use median absolute deviation as robust noise estimate
@@ -1734,33 +1735,33 @@ where
 
 /// Assess overall interpolation stability based on analysis
 #[allow(dead_code)]
-fn assess_overall_interpolation_stability<F>(_analysis: &EdgeCaseAnalysis<F>) -> StabilityLevel
+fn assess_overall_interpolation_stability<F>(analysis: &EdgeCaseAnalysis<F>) -> StabilityLevel
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
     let mut stability_factors = Vec::new();
 
     // Data points stability factors
-    if _analysis.points_analysis.has_duplicates {
+    if analysis.points_analysis.has_duplicates {
         stability_factors.push(StabilityLevel::Poor);
     }
-    if _analysis.points_analysis.are_collinear {
+    if analysis.points_analysis.are_collinear {
         stability_factors.push(StabilityLevel::Marginal);
     }
-    if _analysis.points_analysis.clustering_score > F::from(0.8).unwrap() {
+    if analysis.points_analysis.clustering_score > F::from(0.8).unwrap() {
         stability_factors.push(StabilityLevel::Marginal);
     }
 
     // Function values stability factors
-    if _analysis.values_analysis.has_outliers {
+    if analysis.values_analysis.has_outliers {
         stability_factors.push(StabilityLevel::Marginal);
     }
-    if _analysis.values_analysis.smoothness_score < F::from(0.3).unwrap() {
+    if analysis.values_analysis.smoothness_score < F::from(0.3).unwrap() {
         stability_factors.push(StabilityLevel::Poor);
     }
 
     // Boundary _analysis factors
-    if _analysis.boundary_analysis.boundary_has_issues {
+    if analysis.boundary_analysis.boundary_has_issues {
         stability_factors.push(_analysis.boundary_analysis.extrapolation_stability);
     }
 
@@ -1773,57 +1774,57 @@ where
 
 /// Generate stability improvement recommendations
 #[allow(dead_code)]
-fn generate_stability_recommendations<F>(_analysis: &EdgeCaseAnalysis<F>) -> Vec<String>
+fn generate_stability_recommendations<F>(analysis: &EdgeCaseAnalysis<F>) -> Vec<String>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
     let mut recommendations = Vec::new();
 
     // Data points recommendations
-    if _analysis.points_analysis.has_duplicates {
+    if analysis.points_analysis.has_duplicates {
         recommendations.push("Remove duplicate or nearly duplicate data points".to_string());
     }
 
-    if _analysis.points_analysis.are_collinear {
+    if analysis.points_analysis.are_collinear {
         recommendations.push("Add data points outside the current linear arrangement".to_string());
     }
 
-    if _analysis.points_analysis.clustering_score > F::from(0.7).unwrap() {
+    if analysis.points_analysis.clustering_score > F::from(0.7).unwrap() {
         recommendations.push("Add data points in sparse regions for better coverage".to_string());
     }
 
-    if _analysis.points_analysis.point_count < 5 {
+    if analysis.points_analysis.point_count < 5 {
         recommendations
             .push("Consider adding more data points for robust interpolation".to_string());
     }
 
     // Function values recommendations
-    if _analysis.values_analysis.has_outliers {
+    if analysis.values_analysis.has_outliers {
         recommendations
             .push("Consider robust interpolation methods or outlier removal".to_string());
     }
 
-    if _analysis.values_analysis.smoothness_score < F::from(0.5).unwrap() {
+    if analysis.values_analysis.smoothness_score < F::from(0.5).unwrap() {
         recommendations
             .push("Data appears noisy - consider smoothing or regularization".to_string());
     }
 
-    if _analysis.values_analysis.noise_level
-        > _analysis.values_analysis.value_range * F::from(0.1).unwrap()
+    if analysis.values_analysis.noise_level
+        > analysis.values_analysis.value_range * F::from(0.1).unwrap()
     {
         recommendations
             .push("High noise level detected - consider denoising preprocessing".to_string());
     }
 
     // Boundary recommendations
-    if _analysis.boundary_analysis.boundary_has_issues {
+    if analysis.boundary_analysis.boundary_has_issues {
         recommendations.push("Boundary conditions may cause extrapolation issues".to_string());
     }
 
     // Method-specific recommendations
-    match _analysis.method_name.as_str() {
+    match analysis.method_name.as_str() {
         "rbf" | "enhanced_rbf" => {
-            if _analysis.values_analysis.has_outliers {
+            if analysis.values_analysis.has_outliers {
                 recommendations.push(
                     "For RBF interpolation, consider robust kernels or outlier preprocessing"
                         .to_string(),
@@ -1831,7 +1832,7 @@ where
             }
         }
         "kriging" | "enhanced_kriging" => {
-            if _analysis.points_analysis.clustering_score > F::from(0.8).unwrap() {
+            if analysis.points_analysis.clustering_score > F::from(0.8).unwrap() {
                 recommendations.push(
                     "Kriging works best with well-distributed points - consider spatial design"
                         .to_string(),
@@ -1839,7 +1840,7 @@ where
             }
         }
         "spline" | "bspline" => {
-            if !_analysis.values_analysis.is_monotonic && _analysis.values_analysis.has_outliers {
+            if !_analysis.values_analysis.is_monotonic && analysis.values_analysis.has_outliers {
                 recommendations.push(
                     "Consider constrained splines for monotonic or bounded interpolation"
                         .to_string(),
@@ -1938,11 +1939,11 @@ where
 
 /// Calculate minimum separation between any two points
 #[allow(dead_code)]
-fn calculate_minimum_point_separation<F>(_points: &ArrayView2<F>) -> F
+fn calculate_minimum_point_separation<F>(points: &ArrayView2<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
-    let n = _points.nrows();
+    let n = points.nrows();
     let mut min_sep = F::infinity();
 
     for i in 0..n {
@@ -1966,16 +1967,16 @@ where
 
 /// Calculate range of function values
 #[allow(dead_code)]
-fn calculate_value_range<F>(_values: &ArrayView1<F>) -> F
+fn calculate_value_range<F>(values: &ArrayView1<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
-    if _values.is_empty() {
+    if values.is_empty() {
         return F::zero();
     }
 
-    let min_val = _values.iter().fold(F::infinity(), |a, &b| a.min(b));
-    let max_val = _values.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
+    let min_val = values.iter().fold(F::infinity(), |a, &b| a.min(b));
+    let max_val = values.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
 
     max_val - min_val
 }
@@ -2202,14 +2203,14 @@ where
 
 /// Compute adaptive regularization parameter based on matrix characteristics
 #[allow(dead_code)]
-pub fn compute_adaptive_regularization<F>(_min_value: F, condition_estimate: F) -> F
+pub fn compute_adaptive_regularization<F>(_min_value: F, conditionestimate: F) -> F
 where
     F: Float + FromPrimitive + Debug + Display,
 {
     let eps = machine_epsilon::<F>();
 
     // Base regularization on machine epsilon and minimum _value
-    let base_reg = eps.sqrt() * _min_value.max(eps);
+    let base_reg = eps.sqrt() * min_value.max(eps);
 
     // Scale by condition number _estimate
     let condition_factor = if condition_estimate

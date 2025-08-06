@@ -20,7 +20,7 @@
 //! }
 //!
 //! // Optional Jacobian function that we're not using in this example
-//! fn jac(_x: &[f64]) -> Array2<f64> {
+//! fn jac(x: &[f64]) -> Array2<f64> {
 //!     Array2::zeros((2,2))
 //! }
 //!
@@ -163,7 +163,7 @@ impl Default for Options {
 /// }
 ///
 /// // Optional Jacobian function that we're not using in this example
-/// fn jac(_x: &[f64]) -> Array2<f64> {
+/// fn jac(x: &[f64]) -> Array2<f64> {
 ///     Array2::zeros((2,2))
 /// }
 ///

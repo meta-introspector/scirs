@@ -134,7 +134,7 @@ impl BayesianModelComparison {
     }
 
     /// Set number of samples for integration
-    pub fn with_num_samples(mut self, num_samples: usize) -> Self {
+    pub fn with_num_samples(mut self, numsamples: usize) -> Self {
         self.num_samples = num_samples;
         self
     }
@@ -205,9 +205,9 @@ impl BayesianModelComparison {
             ));
         }
 
-        // Calculate log(_prior * _likelihood) for each sample
+        // Calculate log(_prior * likelihood) for each sample
         let log_posterior: Array1<f64> = if let Some(_prior) = log_prior {
-            if _prior.len() != log_likelihood.len() {
+            if prior.len() != log_likelihood.len() {
                 return Err(MetricsError::InvalidInput(
                     "Prior and _likelihood arrays must have same length".to_string(),
                 ));
@@ -270,7 +270,7 @@ impl BayesianModelComparison {
         // For each temperature, compute the expected log _likelihood
         for &beta in &temperatures {
             let mean_log_like = if beta == 0.0 {
-                // At β=0, posterior equals _prior, so expected log _likelihood is marginal
+                // At β=0, posterior equals prior, so expected log _likelihood is marginal
                 self.compute_marginal_log_likelihood(log_likelihood, log_prior)?
             } else {
                 // Compute importance-weighted expectation at temperature β
@@ -292,7 +292,7 @@ impl BayesianModelComparison {
     }
 
     /// Generate optimal temperature schedule for thermodynamic integration
-    fn generate_temperature_schedule(&self, num_temps: usize) -> Result<Vec<f64>> {
+    fn generate_temperature_schedule(&self, numtemps: usize) -> Result<Vec<f64>> {
         if num_temps < 2 {
             return Err(MetricsError::InvalidInput(
                 "Need at least 2 temperature points".to_string(),
@@ -382,7 +382,8 @@ impl BayesianModelComparison {
     /// Compute marginal log likelihood (for β=0 case)
     fn compute_marginal_log_likelihood(
         &self,
-        log_likelihood: &Array1<f64>, _log_prior: Option<&Array1<f64>>,
+        log_likelihood: &Array1<f64>,
+        _log_prior: Option<&Array1<f64>>,
     ) -> Result<f64> {
         // For β=0, we sample from the _prior
         // The expected log _likelihood is the marginal _likelihood
@@ -589,7 +590,7 @@ impl BayesianModelComparison {
     }
 
     /// Compute prior weights for importance sampling
-    fn compute_prior_weights(&self, log_prior: &Array1<f64>) -> Result<Array1<f64>> {
+    fn compute_prior_weights(&self, logprior: &Array1<f64>) -> Result<Array1<f64>> {
         let max_log_prior = log_prior.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
         let weights = log_prior
@@ -709,7 +710,7 @@ impl BayesianModelComparison {
         let mut den_2 = 0.0;
 
         for &prior_log_like in prior_samples.iter() {
-            // For _prior _samples, we approximate the _prior value
+            // For _prior samples, we approximate the _prior value
             let log_p1 = prior_log_like; // Approximate log unnormalized posterior
             let log_p2 = 0.0; // Approximate log _prior (normalized)
 
@@ -737,7 +738,7 @@ impl BayesianModelComparison {
     }
 
     /// Numerically stable log-sum-exp function
-    fn log_sum_exp(&self, log_values: &[f64]) -> f64 {
+    fn log_sum_exp(&self, logvalues: &[f64]) -> f64 {
         if log_values.is_empty() {
             return f64::NEG_INFINITY;
         }
@@ -794,7 +795,8 @@ impl BayesianModelComparison {
     /// Core nested sampling integration routine
     fn nested_sampling_integration(
         &self,
-        log_likelihood: &Array1<f64>, _log_prior: Option<&Array1<f64>>,
+        log_likelihood: &Array1<f64>,
+        _log_prior: Option<&Array1<f64>>,
         n_live: usize,
     ) -> Result<(f64, f64)> {
         // Sort samples by _likelihood to simulate nested sampling iterations
@@ -807,7 +809,7 @@ impl BayesianModelComparison {
 
         // Initialize _live points (highest _likelihood samples)
         let live_start = indexed_samples.len().saturating_sub(n_live);
-        let mut _live_points: Vec<(usize, f64)> = indexed_samples[live_start..].to_vec();
+        let mut live_points: Vec<(usize, f64)> = indexed_samples[live_start..].to_vec();
 
         // Containers for evidence calculation
         let mut log_weights = Vec::new();
@@ -837,7 +839,7 @@ impl BayesianModelComparison {
             // Weight for this iteration
             let log_width = self.log_sum_exp(&[log_x, new_log_x]) - (2.0_f64).ln(); // Average of current and next
 
-            log_weights.push(log_width);
+            log_weightspush(log_width);
             log_likes.push(min_log_like);
             log_prior_volumes.push(log_x);
 
@@ -855,7 +857,7 @@ impl BayesianModelComparison {
         // Add final contribution from remaining _live points
         let final_log_x = log_x - (n_live as f64).ln();
         for (_, log_like) in &live_points {
-            log_weights.push(final_log_x);
+            log_weightspush(final_log_x);
             log_likes.push(*log_like);
             log_prior_volumes.push(final_log_x);
         }
@@ -868,7 +870,7 @@ impl BayesianModelComparison {
     }
 
     /// Estimate shrinkage factor for prior volume
-    fn estimate_shrinkage_factor(&self, n_live: usize, iteration: usize) -> Result<f64> {
+    fn estimate_shrinkage_factor(&self, nlive: usize, iteration: usize) -> Result<f64> {
         // Expected shrinkage factor at each iteration
         // E[log(X_{i+1}/X_i)] = -1/n for standard nested sampling
 
@@ -889,7 +891,7 @@ impl BayesianModelComparison {
         log_likes: &[f64],
         log_prior_volumes: &[f64],
     ) -> Result<(f64, f64)> {
-        if log_weights.len() != log_likes.len() || log_weights.is_empty() {
+        if log_weightslen() != log_likes.len() || log_weightsis_empty() {
             return Err(MetricsError::InvalidInput(
                 "Mismatched or empty arrays".to_string(),
             ));
@@ -980,9 +982,9 @@ impl BayesianModelComparison {
     }
 
     /// Interpret Bayes factor strength using Jeffreys' scale
-    fn interpret_bayes_factor(_bf: f64) -> String {
+    fn interpret_bayes_factor(bf: f64) -> String {
         if _bf < 1.0 {
-            let inv_bf = 1.0 / _bf;
+            let inv_bf = 1.0 / bf;
             if inv_bf < 3.0 {
                 "Barely worth mentioning (favors B)".to_string()
             } else if inv_bf < 10.0 {
@@ -1039,7 +1041,7 @@ impl BayesianInformationCriteria {
     }
 
     /// Set number of samples for calculations
-    pub fn with_num_samples(mut self, num_samples: usize) -> Self {
+    pub fn with_num_samples(mut self, numsamples: usize) -> Self {
         self.num_samples = num_samples;
         self
     }
@@ -1082,7 +1084,7 @@ impl BayesianInformationCriteria {
     }
 
     /// Calculate Widely Applicable Information Criterion (WAIC)
-    fn calculate_waic(&self, log_likelihood_samples: &Array2<f64>) -> Result<(f64, f64)> {
+    fn calculate_waic(&self, log_likelihoodsamples: &Array2<f64>) -> Result<(f64, f64)> {
         let (n_samples, n_obs) = log_likelihood_samples.dim();
         if n_samples == 0 || n_obs == 0 {
             return Err(MetricsError::InvalidInput(
@@ -1121,7 +1123,7 @@ impl BayesianInformationCriteria {
     }
 
     /// Calculate Leave-One-Out Cross-Validation (LOO-CV)
-    fn calculate_loo_cv(&self, log_likelihood_samples: &Array2<f64>) -> Result<f64> {
+    fn calculate_loo_cv(&self, log_likelihoodsamples: &Array2<f64>) -> Result<f64> {
         let (n_samples, n_obs) = log_likelihood_samples.dim();
         if n_samples == 0 || n_obs == 0 {
             return Err(MetricsError::InvalidInput(
@@ -1155,7 +1157,7 @@ impl BayesianInformationCriteria {
     }
 
     /// Calculate Deviance Information Criterion (DIC)
-    fn calculate_dic(&self, log_likelihood_samples: &Array2<f64>) -> Result<f64> {
+    fn calculate_dic(&self, log_likelihoodsamples: &Array2<f64>) -> Result<f64> {
         let mean_deviance = -2.0 * log_likelihood_samples.mean().unwrap_or(0.0);
 
         // Calculate deviance at posterior mean (simplified)
@@ -1169,20 +1171,20 @@ impl BayesianInformationCriteria {
     }
 
     /// Calculate Pareto Smoothed Importance Sampling weights (simplified)
-    fn calculate_psis_weights(&self, log_weights: &Array1<f64>) -> Result<Array1<f64>> {
-        let n = log_weights.len();
+    fn calculate_psis_weights(&self, logweights: &Array1<f64>) -> Result<Array1<f64>> {
+        let n = log_weightslen();
         if n == 0 {
             return Ok(Array1::zeros(0));
         }
 
         // Subtract maximum for numerical stability
-        let max_weight = log_weights.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        let _weights: Array1<f64> = log_weights.mapv(|x| (x - max_weight).exp());
+        let max_weight = log_weightsiter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let weights: Array1<f64> = log_weightsmapv(|x| (x - max_weight).exp());
 
         // Simple smoothing (in practice, would use Pareto tail fitting)
-        let sum_weights = _weights.sum();
+        let sum_weights = weights.sum();
         if sum_weights > 1e-10 {
-            Ok(_weights / sum_weights)
+            Ok(weights / sum_weights)
         } else {
             Ok(Array1::from_elem(n, 1.0 / n as f64))
         }
@@ -1228,13 +1230,13 @@ impl PosteriorPredictiveCheck {
     }
 
     /// Set test statistic type
-    pub fn with_test_statistic(mut self, test_statistic: TestStatisticType) -> Self {
+    pub fn with_test_statistic(mut self, teststatistic: TestStatisticType) -> Self {
         self.test_statistic = test_statistic;
         self
     }
 
     /// Set number of posterior predictive samples
-    pub fn with_num_samples(mut self, num_samples: usize) -> Self {
+    pub fn with_num_samples(mut self, numsamples: usize) -> Self {
         self.num_samples = num_samples;
         self
     }
@@ -1367,7 +1369,7 @@ impl CredibleIntervalCalculator {
     }
 
     /// Set null hypothesis value for testing
-    pub fn with_null_value(mut self, null_value: f64) -> Self {
+    pub fn with_null_value(mut self, nullvalue: f64) -> Self {
         self.null_value = Some(null_value);
         self
     }
@@ -1427,7 +1429,7 @@ impl CredibleIntervalCalculator {
     }
 
     /// Calculate Highest Posterior Density (HPD) interval
-    fn calculate_hpd_interval(&self, sorted_samples: &[f64]) -> Result<(f64, f64)> {
+    fn calculate_hpd_interval(&self, sortedsamples: &[f64]) -> Result<(f64, f64)> {
         let n = sorted_samples.len();
         let interval_length = (self.credible_level * n as f64).round() as usize;
 
@@ -1557,7 +1559,7 @@ impl BayesianModelAveraging {
     }
 
     /// Calculate model weights based on the chosen method
-    fn calculate_model_weights(&self, model_scores: &Array1<f64>) -> Result<Array1<f64>> {
+    fn calculate_model_weights(&self, modelscores: &Array1<f64>) -> Result<Array1<f64>> {
         match self.weighting_method {
             ModelWeightingMethod::MarginalLikelihood => {
                 self.marginal_likelihood_weights(model_scores)
@@ -1584,7 +1586,7 @@ impl BayesianModelAveraging {
             .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
         let exp_weights: Array1<f64> = log_marginal_likelihoods.mapv(|x| (x - max_log_ml).exp());
-        let sum_weights = exp_weights.sum();
+        let sum_weights = exp_weightssum();
 
         if sum_weights > 1e-10 {
             Ok(exp_weights / sum_weights)
@@ -1606,7 +1608,7 @@ impl BayesianModelAveraging {
 
         let delta_ic: Array1<f64> = information_criteria.mapv(|x| x - min_ic);
         let exp_weights: Array1<f64> = delta_ic.mapv(|x| (-0.5 * x).exp());
-        let sum_weights = exp_weights.sum();
+        let sum_weights = exp_weightssum();
 
         if sum_weights > 1e-10 {
             Ok(exp_weights / sum_weights)
@@ -1617,7 +1619,7 @@ impl BayesianModelAveraging {
     }
 
     /// Calculate weights from cross-validation scores (higher is better)
-    fn cross_validation_weights(&self, cv_scores: &Array1<f64>) -> Result<Array1<f64>> {
+    fn cross_validation_weights(&self, cvscores: &Array1<f64>) -> Result<Array1<f64>> {
         // Normalize CV _scores to get weights
         let min_score = cv_scores.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let shifted_scores: Array1<f64> = cv_scores.mapv(|x| x - min_score + 1e-6);
@@ -1659,7 +1661,7 @@ mod tests {
 
         // Create sample log-likelihood matrix: 5 samples, 10 observations
         let log_likelihood_samples =
-            Array2::fromshape_fn((5, 10), |(i, j)| -1.0 - 0.1 * i as f64 - 0.05 * j as f64);
+            Array2::from_shape_fn((5, 10), |(i, j)| -1.0 - 0.1 * i as f64 - 0.05 * j as f64);
 
         let result = bic_calc
             .evaluate_model(&log_likelihood_samples, 3, 10)
@@ -1679,7 +1681,7 @@ mod tests {
 
         let observed_data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let posterior_samples =
-            Array2::fromshape_fn((100, 5), |(i, j)| 1.0 + j as f64 + 0.1 * (i as f64 - 50.0));
+            Array2::from_shape_fn((100, 5), |(i, j)| 1.0 + j as f64 + 0.1 * (i as f64 - 50.0));
 
         let result = ppc
             .check_model_adequacy(&observed_data, &posterior_samples)
@@ -1732,8 +1734,8 @@ mod tests {
         let result = bma.average_models(&predictions, &model_scores).unwrap();
 
         assert_eq!(result.averaged_prediction.len(), 5);
-        assert_eq!(result.model_weights.len(), 3);
-        assert!((result.model_weights.sum() - 1.0).abs() < 1e-6);
+        assert_eq!(result.model_weightslen(), 3);
+        assert!((result.model_weightssum() - 1.0).abs() < 1e-6);
         assert_eq!(result.model_uncertainty.len(), 5);
     }
 

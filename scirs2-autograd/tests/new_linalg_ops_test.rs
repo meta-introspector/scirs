@@ -1,7 +1,7 @@
 //! Tests for newly implemented linear algebra operations
 
-use ag::tensor__ops::ConditionType;
-use ag::tensor__ops::*;
+use ag::tensor_ops::ConditionType;
+use ag::tensor_ops::*;
 use approx::assert_relative_eq;
 use ndarray::array;
 use scirs2_autograd as ag;

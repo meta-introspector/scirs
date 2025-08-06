@@ -42,9 +42,9 @@ impl SimdStringOps {
     }
 
     /// Count occurrences of a byte in a byte slice using SIMD
-    fn count_bytes(_data: &[u8], target: u8) -> usize {
-        if !Self::is_available() || _data.len() < 64 {
-            return _data.iter().filter(|&&b| b == target).count();
+    fn count_bytes(data: &[u8], target: u8) -> usize {
+        if !Self::is_available() || data.len() < 64 {
+            return data.iter().filter(|&&b| b == target).count();
         }
 
         // Advanced-optimized SIMD processing with larger chunks and prefetching
@@ -52,11 +52,11 @@ impl SimdStringOps {
         let mut count = 0usize;
 
         // Process complete chunks with advanced-vectorized counting
-        let chunks: Vec<_> = _data.chunks(simd_chunk_size).collect();
+        let chunks: Vec<_> = data.chunks(simd_chunk_size).collect();
 
         // Use parallel processing for large datasets
         use scirs2_core::parallel_ops::*;
-        if chunks.len() > 4 && _data.len() > 4096 {
+        if chunks.len() > 4 && data.len() > 4096 {
             let partial_counts: Vec<usize> = chunks
                 .par_iter()
                 .map(|chunk| {
@@ -114,7 +114,7 @@ impl SimdStringOps {
             return text
                 .char_indices()
                 .filter(|(_, c)| c.is_whitespace())
-                .map(|(i_)| i)
+                .map(|(i_, _)| i_)
                 .collect();
         }
 
@@ -139,13 +139,13 @@ impl SimdStringOps {
     }
 
     /// Find positions of a specific byte using SIMD
-    fn find_byte_positions(_data: &[u8], target: u8) -> Vec<usize> {
-        if _data.len() < 64 {
+    fn find_byte_positions(data: &[u8], target: u8) -> Vec<usize> {
+        if data.len() < 64 {
             return _data
                 .iter()
                 .enumerate()
                 .filter(|(_, &b)| b == target)
-                .map(|(i_)| i)
+                .map(|(i_, _)| i_)
                 .collect();
         }
 
@@ -154,7 +154,7 @@ impl SimdStringOps {
 
         // Process in chunks for better performance
         let chunk_size = 64;
-        for (chunk_idx, chunk) in _data.chunks(chunk_size).enumerate() {
+        for (chunk_idx, chunk) in data.chunks(chunk_size).enumerate() {
             let base_idx = chunk_idx * chunk_size;
             for (i, &byte) in chunk.iter().enumerate() {
                 if byte == target {
@@ -189,12 +189,12 @@ impl SimdStringOps {
     }
 
     /// SIMD-accelerated substring search using byte comparison
-    pub fn find_substring(_haystack: &str, needle: &str) -> Option<usize> {
+    pub fn find_substring(haystack: &str, needle: &str) -> Option<usize> {
         if !Self::is_available() || !_haystack.is_ascii() || !needle.is_ascii() {
-            return _haystack.find(needle);
+            return haystack.find(needle);
         }
 
-        let haystack_bytes = _haystack.as_bytes();
+        let haystack_bytes = haystack.as_bytes();
         let needle_bytes = needle.as_bytes();
 
         if needle_bytes.is_empty() {
@@ -207,7 +207,7 @@ impl SimdStringOps {
 
         // For short needles, use standard search
         if needle_bytes.len() < 8 {
-            return _haystack.find(needle);
+            return haystack.find(needle);
         }
 
         // SIMD-accelerated search for first byte matches
@@ -238,12 +238,12 @@ impl SimdStringOps {
     }
 
     /// SIMD-accelerated Hamming distance calculation
-    pub fn hamming_distance(_s1: &str, s2: &str) -> Option<usize> {
-        if _s1.len() != s2.len() {
+    pub fn hamming_distance(s1: &str, s2: &str) -> Option<usize> {
+        if s1.len() != s2.len() {
             return None;
         }
 
-        let bytes1 = _s1.as_bytes();
+        let bytes1 = s1.as_bytes();
         let bytes2 = s2.as_bytes();
 
         // Use optimized byte comparison
@@ -262,8 +262,8 @@ pub struct SimdEditDistance;
 
 impl SimdEditDistance {
     /// Compute Levenshtein distance with SIMD acceleration for the inner loop
-    pub fn levenshtein(_s1: &str, s2: &str) -> usize {
-        let chars1: Vec<char> = _s1.chars().collect();
+    pub fn levenshtein(s1: &str, s2: &str) -> usize {
+        let chars1: Vec<char> = s1.chars().collect();
         let chars2: Vec<char> = s2.chars().collect();
         let len1 = chars1.len();
         let len2 = chars2.len();
@@ -281,7 +281,7 @@ impl SimdEditDistance {
         }
 
         // Use SIMD-accelerated version for larger strings
-        let mut prev_row = Array1::fromshape_fn(len2 + 1, |j| j as f32);
+        let mut prev_row = Array1::from_shape_fn(len2 + 1, |j| j as f32);
         let mut curr_row = Array1::zeros(len2 + 1);
 
         for i in 1..=len1 {
@@ -339,8 +339,8 @@ impl SimdEditDistance {
     }
 
     /// Scalar fallback for Levenshtein distance
-    fn levenshtein_scalar(_chars1: &[char], chars2: &[char]) -> usize {
-        let len1 = _chars1.len();
+    fn levenshtein_scalar(chars1: &[char], chars2: &[char]) -> usize {
+        let len1 = chars1.len();
         let len2 = chars2.len();
 
         let mut prev_row = vec![0; len2 + 1];
@@ -355,7 +355,7 @@ impl SimdEditDistance {
             curr_row[0] = i;
 
             for j in 1..=len2 {
-                let cost = if _chars1[i - 1] == chars2[j - 1] {
+                let cost = if chars1[i - 1] == chars2[j - 1] {
                     0
                 } else {
                     1
@@ -538,13 +538,13 @@ impl VectorizedStringOps {
     }
 
     /// Count target byte in a chunk using vectorized operations
-    fn count_target_in_chunk(_chunk: &[u8], target: u8) -> usize {
+    fn count_target_in_chunk(chunk: &[u8], target: u8) -> usize {
         // This would use actual SIMD intrinsics in a real implementation
         // For now, we use an optimized scalar version that can be vectorized by the compiler
         let mut count = 0;
 
         // Unroll the loop for better vectorization
-        for bytes in _chunk.chunks_exact(4) {
+        for bytes in chunk.chunks_exact(4) {
             count += (bytes[0] == target) as usize;
             count += (bytes[1] == target) as usize;
             count += (bytes[2] == target) as usize;
@@ -552,7 +552,7 @@ impl VectorizedStringOps {
         }
 
         // Handle remaining bytes
-        for &byte in _chunk.chunks_exact(4).remainder() {
+        for &byte in chunk.chunks_exact(4).remainder() {
             count += (byte == target) as usize;
         }
 
@@ -612,7 +612,7 @@ impl VectorizedStringOps {
     }
 
     /// Classify characters in a chunk
-    fn classify_chunk(_chunk: &[u8]) -> (usize, usize, usize, usize) {
+    fn classify_chunk(chunk: &[u8]) -> (usize, usize, usize, usize) {
         let mut letters = 0;
         let mut digits = 0;
         let mut spaces = 0;
@@ -670,29 +670,29 @@ impl VectorizedStringOps {
     }
 
     /// Vectorized longest common prefix
-    pub fn longest_common_prefix_vectorized(_strings: &[&str]) -> String {
-        if _strings.is_empty() {
+    pub fn longest_common_prefix_vectorized(strings: &[&str]) -> String {
+        if strings.is_empty() {
             return String::new();
         }
 
-        if _strings.len() == 1 {
-            return _strings[0].to_string();
+        if strings.len() == 1 {
+            return strings[0].to_string();
         }
 
         // Find minimum length
-        let min_len = _strings.iter().map(|s| s.len()).min().unwrap_or(0);
+        let min_len = strings.iter().map(|s| s.len()).min().unwrap_or(0);
         if min_len == 0 {
             return String::new();
         }
 
         // Check if all _strings are ASCII for SIMD optimization
-        let all_ascii = _strings.iter().all(|s| s.is_ascii());
+        let all_ascii = strings.iter().all(|s| s.is_ascii());
 
         if !SimdStringOps::is_available() || !all_ascii {
             return Self::longest_common_prefix_scalar(_strings);
         }
 
-        let first_bytes = _strings[0].as_bytes();
+        let first_bytes = strings[0].as_bytes();
         let mut prefix_len = 0;
 
         // Process in SIMD-friendly chunks
@@ -725,16 +725,16 @@ impl VectorizedStringOps {
             }
         }
 
-        _strings[0][..prefix_len].to_string()
+        strings[0][..prefix_len].to_string()
     }
 
     /// Scalar fallback for longest common prefix
-    fn longest_common_prefix_scalar(_strings: &[&str]) -> String {
-        let first = _strings[0];
+    fn longest_common_prefix_scalar(strings: &[&str]) -> String {
+        let first = strings[0];
         let mut prefix_len = 0;
 
         for (i, ch) in first.char_indices() {
-            if _strings[1..].iter().all(|s| s.chars().nth(i) == Some(ch)) {
+            if strings[1..].iter().all(|s| s.chars().nth(i) == Some(ch)) {
                 prefix_len = i + ch.len_utf8();
             } else {
                 break;
@@ -773,7 +773,7 @@ impl SimdPatternMatcher {
         }
 
         // Sort by position
-        matches.sort_by_key(|(pos_)| *pos);
+        matches.sort_by_key(|(pos_, _)| *pos_);
         matches
     }
 
@@ -808,18 +808,18 @@ impl SimdPatternMatcher {
     }
 
     /// Vectorized byte comparison
-    fn compare_bytes_vectorized(_slice1: &[u8], slice2: &[u8]) -> bool {
-        if _slice1.len() != slice2.len() {
+    fn compare_bytes_vectorized(slice1: &[u8], slice2: &[u8]) -> bool {
+        if slice1.len() != slice2.len() {
             return false;
         }
 
         // For small slices, use direct comparison
-        if _slice1.len() < 16 {
+        if slice1.len() < 16 {
             return _slice1 == slice2;
         }
 
         // Process in SIMD-friendly chunks
-        for (chunk1, chunk2) in _slice1.chunks(64).zip(slice2.chunks(64)) {
+        for (chunk1, chunk2) in slice1.chunks(64).zip(slice2.chunks(64)) {
             if chunk1 != chunk2 {
                 return false;
             }
@@ -840,7 +840,7 @@ impl SimdPatternMatcher {
             }
         }
 
-        matches.sort_by_key(|(pos_)| *pos);
+        matches.sort_by_key(|(pos_, _)| *pos_);
         matches
     }
 
@@ -884,7 +884,7 @@ impl SimdPatternMatcher {
                     let _distance = Self::edit_distance_simd(window, pattern);
 
                     if _distance <= max_distance && _distance < best_distance {
-                        best_distance = _distance;
+                        best_distance = distance;
                         best_len = len;
                         best_match_found = true;
 
@@ -907,18 +907,18 @@ impl SimdPatternMatcher {
         }
 
         // Sort matches by position for consistency
-        matches.sort_by_key(|&(pos_)| pos);
+        matches.sort_by_key(|&(pos_, _)| pos_);
         matches
     }
 
     /// SIMD-accelerated edit distance for short strings
-    fn edit_distance_simd(_s1: &str, s2: &str) -> usize {
-        if _s1.len() > 64 || s2.len() > 64 {
+    fn edit_distance_simd(s1: &str, s2: &str) -> usize {
+        if s1.len() > 64 || s2.len() > 64 {
             return SimdEditDistance::levenshtein(_s1, s2);
         }
 
         // Use optimized algorithm for short strings
-        let chars1: Vec<char> = _s1.chars().collect();
+        let chars1: Vec<char> = s1.chars().collect();
         let chars2: Vec<char> = s2.chars().collect();
 
         if chars1.is_empty() {
@@ -959,7 +959,7 @@ impl SimdPatternMatcher {
     }
 
     /// Scalar fallback for fuzzy search
-    fn fuzzy_search_scalar(text: &str, pattern: &str, max_distance: usize) -> Vec<(usize, usize)> {
+    fn fuzzy_search_scalar(text: &str, pattern: &str, maxdistance: usize) -> Vec<(usize, usize)> {
         if pattern.is_empty() || text.is_empty() {
             return Vec::new();
         }
@@ -982,7 +982,7 @@ impl SimdPatternMatcher {
                     let _distance = SimdEditDistance::levenshtein(window, pattern);
 
                     if _distance <= max_distance && _distance < best_distance {
-                        best_distance = _distance;
+                        best_distance = distance;
                         best_match_found = true;
 
                         // If we find an exact match, we can break early
@@ -1155,12 +1155,12 @@ impl SimdNgramGenerator {
     }
 
     /// Calculate n-gram frequency distribution using SIMD
-    pub fn ngram_frequency(_ngrams: &[String]) -> std::collections::HashMap<String, usize> {
+    pub fn ngram_frequency(ngrams: &[String]) -> std::collections::HashMap<String, usize> {
         let mut frequency = std::collections::HashMap::new();
 
-        if SimdStringOps::is_available() && _ngrams.len() > 1000 {
+        if SimdStringOps::is_available() && ngrams.len() > 1000 {
             // For large datasets, use chunked processing for better cache performance
-            for chunk in _ngrams.chunks(1024) {
+            for chunk in ngrams.chunks(1024) {
                 for ngram in chunk {
                     *frequency.entry(ngram.clone()).or_insert(0) += 1;
                 }
@@ -1423,7 +1423,7 @@ impl SimdTextNormalizer {
         }
 
         // For non-ASCII text, use Unicode normalization
-        use unicode__normalization::UnicodeNormalization;
+        use unicode_normalization::UnicodeNormalization;
         text.nfd()
             .filter(|c| !unicode_normalization::char::is_combining_mark(*c))
             .collect()
@@ -1691,7 +1691,7 @@ impl AdvancedSIMDTextProcessor {
             }
         }
 
-        matches.sort_by_key(|(pos_)| *pos);
+        matches.sort_by_key(|(pos_, _)| *pos_);
         matches
     }
 }

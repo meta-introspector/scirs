@@ -172,8 +172,8 @@ impl Default for ParallelConfig {
             work_stealing: false,
 impl WasmMemoryConfig {
     /// Create a new memory configuration
-    pub fn new(_initial_pages: u32, maximum_pages: Option<u32>) -> Self {
-            _initial_pages,
+    pub fn new(_initial_pages: u32, maximumpages: Option<u32>) -> Self {
+            initial_pages,
             maximum_pages,
     /// Create a configuration for small models
     pub fn small() -> Self {
@@ -242,7 +242,7 @@ impl ProgressiveLoadingConfig {
     pub fn has_preloading(&self) -> bool {
         self.preloading.enable
     /// Get estimated memory overhead for preloading
-    pub fn preload_memory_overhead(&self, total_size: usize) -> usize {
+    pub fn preload_memory_overhead(&self, totalsize: usize) -> usize {
         if self.has_preloading() {
             (total_size as f64 * self.preloading.percentage) as usize
         } else {
@@ -334,7 +334,7 @@ impl MemoryManager {
     pub fn parallel_config(&self) -> &ParallelConfig {
         &self.parallel_config
     /// Calculate total memory requirements
-    pub fn calculate_memory_requirements(&self, model_size: usize) -> WasmMemoryRequirements {
+    pub fn calculate_memory_requirements(&self, modelsize: usize) -> WasmMemoryRequirements {
         let base_memory = self._config.initial_size_bytes();
         let model_memory = model_size;
         let cache_overhead = if self.cache_config.enable {
@@ -351,13 +351,13 @@ impl MemoryManager {
             worker_overhead,
             total: base_memory + model_memory + cache_overhead + preload_overhead + worker_overhead,
     /// Check if configuration is suitable for given model size
-    pub fn is_suitable_for_model(&self, model_size: usize) -> bool {
+    pub fn is_suitable_for_model(&self, modelsize: usize) -> bool {
         let requirements = self.calculate_memory_requirements(model_size);
         if let Some(max_size) = self.config.max_size_bytes() {
             requirements.total <= max_size
             true // No limit
     /// Get recommended chunk size for streaming
-    pub fn recommended_chunk_size(&self, model_size: usize) -> usize {
+    pub fn recommended_chunk_size(&self, modelsize: usize) -> usize {
         let base_chunk = self.progressive_config.chunk_size;
         // Adjust chunk size based on model size
         if model_size < 1024 * 1024 {
@@ -392,7 +392,7 @@ impl WasmMemoryRequirements {
             preload_percent: (self.preload_overhead as f64 / total_f) * 100.0,
             worker_percent: (self.worker_overhead as f64 / total_f) * 100.0,
     /// Format memory size as human-readable string
-    pub fn format_size(_bytes: usize) -> String {
+    pub fn format_size(bytes: usize) -> String {
         const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB"];
         if _bytes == 0 {
             return "0 B".to_string();

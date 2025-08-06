@@ -251,7 +251,7 @@ pub struct AdvancedCrossPlatformTester {
 
 impl AdvancedCrossPlatformTester {
     /// Create new advanced cross-platform tester
-    pub fn new(_config: AdvancedCrossPlatformConfig) -> Self {
+    pub fn new(config: AdvancedCrossPlatformConfig) -> Self {
         Self {
             platform_detector: Arc::new(RwLock::new(
                 PlatformDetector::new(&_config)
@@ -280,7 +280,7 @@ impl AdvancedCrossPlatformTester {
             result_aggregator: Arc::new(RwLock::new(
                 CrossPlatformResultAggregator::new()
             )),
-            _config,
+            config,
         }
     }
 
@@ -758,7 +758,7 @@ impl AdvancedCrossPlatformTester {
         })
     }
 
-    fn calculate_platform_compatibility_score(&self, _target_platform: &TargetPlatform) -> f64 {
+    fn calculate_platform_compatibility_score(&self, _targetplatform: &TargetPlatform) -> f64 {
         0.95 // Placeholder
     }
 
@@ -780,19 +780,19 @@ impl AdvancedCrossPlatformTester {
         vec![] // Placeholder
     }
 
-    fn identify_compatibility_issues(&self, _target_platform: &TargetPlatform) -> Vec<CompatibilityIssue> {
+    fn identify_compatibility_issues(&self, _targetplatform: &TargetPlatform) -> Vec<CompatibilityIssue> {
         vec![] // Placeholder
     }
 
-    fn identify_optimization_opportunities(&self, _target_platform: &TargetPlatform) -> Vec<OptimizationOpportunity> {
+    fn identify_optimization_opportunities(&self, _targetplatform: &TargetPlatform) -> Vec<OptimizationOpportunity> {
         vec![] // Placeholder
     }
 
-    fn generate_migration_recommendations(&self, _target_platform: &TargetPlatform) -> Vec<MigrationRecommendation> {
+    fn generate_migration_recommendations(&self, _targetplatform: &TargetPlatform) -> Vec<MigrationRecommendation> {
         vec![] // Placeholder
     }
 
-    fn measure_hardware_utilization(&self, optimization_type: &OptimizationType) -> HardwareUtilization {
+    fn measure_hardware_utilization(&self, optimizationtype: &OptimizationType) -> HardwareUtilization {
         match optimization_type {
             OptimizationType::SIMD => HardwareUtilization {
                 resource_type: "SIMD".to_string(),
@@ -1513,7 +1513,7 @@ pub struct PlatformDetector {
 }
 
 impl PlatformDetector {
-    pub fn new(_config: &AdvancedCrossPlatformConfig) -> Self {
+    pub fn new(config: &AdvancedCrossPlatformConfig) -> Self {
         Self {
             detection_capabilities: vec![
                 DetectionCapability::CPUArchitecture,
@@ -1601,9 +1601,9 @@ pub struct ConsistencyTester {
 }
 
 impl ConsistencyTester {
-    pub fn new(_config: &AdvancedCrossPlatformConfig) -> Self {
+    pub fn new(config: &AdvancedCrossPlatformConfig) -> Self {
         Self {
-            tolerance: _config.consistency_tolerance.clone(),
+            tolerance: config.consistency_tolerance.clone(),
         }
     }
 
@@ -1647,9 +1647,9 @@ pub struct PerformanceVarianceAnalyzer {
 }
 
 impl PerformanceVarianceAnalyzer {
-    pub fn new(_config: &AdvancedCrossPlatformConfig) -> Self {
+    pub fn new(config: &AdvancedCrossPlatformConfig) -> Self {
         Self {
-            variance_tolerance: _config.performance_variance_tolerance.clone(),
+            variance_tolerance: config.performance_variance_tolerance.clone(),
         }
     }
 
@@ -1708,9 +1708,9 @@ pub struct NumericalPrecisionValidator {
 }
 
 impl NumericalPrecisionValidator {
-    pub fn new(_config: &AdvancedCrossPlatformConfig) -> Self {
+    pub fn new(config: &AdvancedCrossPlatformConfig) -> Self {
         Self {
-            tolerance: _config.consistency_tolerance.clone(),
+            tolerance: config.consistency_tolerance.clone(),
         }
     }
 
@@ -1733,7 +1733,7 @@ pub struct HardwareOptimizerTester {
 }
 
 impl HardwareOptimizerTester {
-    pub fn new(_config: &AdvancedCrossPlatformConfig) -> Self {
+    pub fn new(config: &AdvancedCrossPlatformConfig) -> Self {
         Self {
             optimization_types: vec![
                 OptimizationType::SIMD,
@@ -1769,7 +1769,7 @@ pub struct PlatformEdgeCaseGenerator {
 }
 
 impl PlatformEdgeCaseGenerator {
-    pub fn new(_config: &AdvancedCrossPlatformConfig) -> Self {
+    pub fn new(config: &AdvancedCrossPlatformConfig) -> Self {
         Self {
             edge_case_types: vec![
                 EdgeCaseType::NumericalLimits,
@@ -1803,7 +1803,7 @@ pub struct CrossPlatformRegressionDetector {
 }
 
 impl CrossPlatformRegressionDetector {
-    pub fn new(_config: &AdvancedCrossPlatformConfig) -> Self {
+    pub fn new(config: &AdvancedCrossPlatformConfig) -> Self {
         Self {
             baseline_results: HashMap::new(),
         }
@@ -1822,7 +1822,7 @@ impl CrossPlatformRegressionDetector {
     ) -> StatsResult<CrossPlatformRegressionResult> {
         // Placeholder implementation
         Ok(CrossPlatformRegressionResult {
-            function_name: _function_name.to_string(),
+            function_name: function_name.to_string(),
             regressions_detected: vec![],
             improvements_detected: vec![],
             overall_assessment: RegressionAssessment::NoRegressions,
@@ -1836,7 +1836,7 @@ pub struct ContinuousMonitoringSystem {
 }
 
 impl ContinuousMonitoringSystem {
-    pub fn new(_config: &AdvancedCrossPlatformConfig) -> Self {
+    pub fn new(config: &AdvancedCrossPlatformConfig) -> Self {
         Self {
             active_sessions: HashMap::new(),
         }

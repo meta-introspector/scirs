@@ -56,7 +56,7 @@ impl<A: Float + Debug> ElasticNet<A> {
     /// * `l1_ratio` - Mixing parameter (0 <= l1_ratio <= 1)
     ///   - l1_ratio = 1: only L1 penalty
     ///   - l1_ratio = 0: only L2 penalty
-    pub fn new(alpha: A, l1_ratio: A) -> Self {
+    pub fn new(alpha: A, l1ratio: A) -> Self {
         // Ensure l1_ratio is between 0 and 1
         let l1_ratio = l1_ratio.max(A::zero()).min(A::one());
 
@@ -88,7 +88,7 @@ impl<A: Float + Debug> ElasticNet<A> {
     ///
     /// * `alpha` - Total regularization strength
     /// * `l1_ratio` - Mixing parameter (0 <= l1_ratio <= 1)
-    pub fn set_params(&mut self, alpha: A, l1_ratio: A) -> &mut Self {
+    pub fn set_params(&mut self, alpha: A, l1ratio: A) -> &mut Self {
         // Ensure l1_ratio is between 0 and 1
         let l1_ratio = l1_ratio.max(A::zero()).min(A::one());
 

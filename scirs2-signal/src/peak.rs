@@ -120,16 +120,16 @@ where
             // Keep track of which indices are excluded
             let mut excluded = vec![false; x_f64.len()];
 
-            for (idx_) in &peaks_with_height {
-                if !excluded[*idx] {
-                    filtered_peaks.push(*idx);
+            for &(idx, _) in &peaks_with_height {
+                if !excluded[idx] {
+                    filtered_peaks.push(idx);
 
                     // Mark off region around peak
-                    let start = if *idx > dist { *idx - dist } else { 0 };
-                    let end = (*idx + dist + 1).min(x_f64.len());
+                    let start = if idx > dist { idx - dist } else { 0 };
+                    let end = (idx + dist + 1).min(x_f64.len());
 
                     for (j, exclude) in excluded.iter_mut().enumerate().take(end).skip(start) {
-                        if j != *idx {
+                        if j != idx {
                             // Don't exclude the peak itself
                             *exclude = true;
                         }
@@ -166,7 +166,7 @@ where
         let w_f64 = num_traits::cast::cast::<T, f64>(w)
             .ok_or_else(|| SignalError::ValueError(format!("Could not convert {:?} to f64", w)))?;
 
-        let (widths__) = peak_widths(&x_f64, &peak_indices, None)?;
+        let widths = peak_widths(&x_f64, &peak_indices, None)?;
 
         let mut filtered_peaks = Vec::new();
         for (i, &idx) in peak_indices.iter().enumerate() {
@@ -444,6 +444,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_find_peaks_basic() {

@@ -40,9 +40,9 @@ pub(crate) fn cut_tree<F: Float + FromPrimitive + PartialOrd>(
 
         // Create a new cluster
         let new_cluster_id = n_samples + i;
-        let mut new_members = _clusters[cluster1].clone();
+        let mut new_members = clusters[cluster1].clone();
         new_members.extend(_clusters[cluster2].clone());
-        _clusters.push(new_members);
+        clusters.push(new_members);
 
         // Update active _clusters
         if let Some(pos) = active_clusters.iter().position(|&x| x == cluster1) {

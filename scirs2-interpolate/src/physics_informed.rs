@@ -278,7 +278,7 @@ where
     }
 
     /// Set maximum optimization iterations
-    pub fn with_max_iterations(mut self, max_iter: usize) -> Self {
+    pub fn with_max_iterations(mut self, maxiter: usize) -> Self {
         self.config.max_iterations = max_iter;
         self
     }
@@ -292,7 +292,7 @@ where
     /// # Returns
     ///
     /// `PhysicsInformedResult` containing interpolated values and constraint metrics
-    pub fn evaluate(&self, x_new: &ArrayView1<T>) -> InterpolateResult<PhysicsInformedResult<T>> {
+    pub fn evaluate(&self, xnew: &ArrayView1<T>) -> InterpolateResult<PhysicsInformedResult<T>> {
         // Start with constrained spline evaluation
         let initial_values = self.constrained_spline.evaluate_array(x_new)?;
 
@@ -400,7 +400,8 @@ where
     /// Convert physical constraints to constrained spline constraints
     fn convert_physical_constraints(
         constraints: &[PhysicalConstraint<T>],
-        x: &ArrayView1<T>, _y: &ArrayView1<T>,
+        x: &ArrayView1<T>,
+        _y: &ArrayView1<T>,
     ) -> InterpolateResult<Vec<Constraint<T>>> {
         let mut spline_constraints = Vec::new();
 
@@ -599,7 +600,8 @@ where
     /// Apply physics corrections for positivity and other constraints
     fn apply_physics_corrections(
         &self,
-        values: &Array1<T>, _x_new: &ArrayView1<T>,
+        values: &Array1<T>,
+        _x_new: &ArrayView1<T>,
     ) -> InterpolateResult<Array1<T>> {
         let mut corrected_values = values.clone();
 

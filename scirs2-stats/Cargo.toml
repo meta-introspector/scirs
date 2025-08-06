@@ -16,7 +16,7 @@ num-traits = { workspace = true }
 num-complex = { workspace = true }
 thiserror = { workspace = true }
 # Linear algebra for PCA and other multivariate methods
-ndarray-linalg = { workspace = true, default-features = false }
+ndarray-linalg = { workspace = true, default-features = false, features = ["openblas-static"] }
 scirs2-core = { workspace = true, features = ["validation", "parallel", "simd", "linalg"] }
 scirs2-linalg = { workspace = true }
 
@@ -48,6 +48,7 @@ approx = { workspace = true }
 default = []
 # BLAS backends - these are mutually exclusive, managed through scirs2-core
 openblas = ["scirs2-core/openblas"]
+accelerate = ["scirs2-core/accelerate"]  # System BLAS (Accelerate on macOS)
 # intel-mkl = ["scirs2-core/intel-mkl"]  # Removed due to conflicts with openblas
 netlib = ["scirs2-core/netlib"]
 # Memory mapping support for large files

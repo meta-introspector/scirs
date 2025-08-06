@@ -26,7 +26,7 @@
 //!         "custom_accuracy"
 //!     }
 //!
-//!     fn compute(&self, y_true: &Array1<i32>, y_pred: &Array1<i32>) -> MetricResult<f64> {
+//!     fn compute(&self, y_true: &Array1<i32>, ypred: &Array1<i32>) -> MetricResult<f64> {
 //!         if y_true.len() != y_pred.len() {
 //!             return Err("Arrays must have the same length".into());
 //!         }
@@ -58,7 +58,7 @@
 //!         "log_cosh_error"
 //!     }
 //!
-//!     fn compute(&self, y_true: &Array1<f64>, y_pred: &Array1<f64>) -> MetricResult<f64> {
+//!     fn compute(&self, y_true: &Array1<f64>, ypred: &Array1<f64>) -> MetricResult<f64> {
 //!         if y_true.len() != y_pred.len() {
 //!             return Err("Arrays must have the same length".into());
 //!         }
@@ -94,7 +94,7 @@ pub trait ClassificationMetric<F: Float> {
     fn name(&self) -> &'static str;
 
     /// Computes the metric value given true and predicted labels
-    fn compute(&self, y_true: &Array1<i32>, y_pred: &Array1<i32>) -> MetricResult<F>;
+    fn compute(&self, y_true: &Array1<i32>, ypred: &Array1<i32>) -> MetricResult<F>;
 
     /// Returns whether higher values indicate better performance
     fn higher_is_better(&self) -> bool;
@@ -116,7 +116,7 @@ pub trait RegressionMetric<F: Float> {
     fn name(&self) -> &'static str;
 
     /// Computes the metric value given true and predicted values
-    fn compute(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> MetricResult<F>;
+    fn compute(&self, y_true: &Array1<F>, ypred: &Array1<F>) -> MetricResult<F>;
 
     /// Returns whether higher values indicate better performance
     fn higher_is_better(&self) -> bool;
@@ -306,15 +306,15 @@ pub struct CustomMetricResult<F: Float> {
 
 impl<F: Float> CustomMetricResults<F> {
     /// Creates a new results container
-    pub fn new(_metric_type: &str) -> Self {
+    pub fn new(_metrictype: &str) -> Self {
         Self {
-            metric_type: _metric_type.to_string(),
+            metric_type: metric_type.to_string(),
             results: Vec::new(),
         }
     }
 
     /// Adds a metric result
-    pub fn add_result(&mut self, name: &str, value: F, higher_is_better: bool) {
+    pub fn add_result(&mut self, name: &str, value: F, higher_isbetter: bool) {
         self.results.push(CustomMetricResult {
             name: name.to_string(),
             value,
@@ -445,7 +445,7 @@ mod tests {
             "test_accuracy"
         }
 
-        fn compute(&self, y_true: &Array1<i32>, y_pred: &Array1<i32>) -> MetricResult<f64> {
+        fn compute(&self, y_true: &Array1<i32>, ypred: &Array1<i32>) -> MetricResult<f64> {
             if y_true.len() != y_pred.len() {
                 return Err("Length mismatch".into());
             }
@@ -471,7 +471,7 @@ mod tests {
             "test_mse"
         }
 
-        fn compute(&self, y_true: &Array1<f64>, y_pred: &Array1<f64>) -> MetricResult<f64> {
+        fn compute(&self, y_true: &Array1<f64>, ypred: &Array1<f64>) -> MetricResult<f64> {
             if y_true.len() != y_pred.len() {
                 return Err("Length mismatch".into());
             }

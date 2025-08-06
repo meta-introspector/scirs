@@ -60,9 +60,9 @@ impl SpectralEmbedding {
     /// # Arguments
     /// * `n_components` - Number of dimensions in the embedding space
     /// * `affinity_method` - Method for constructing the affinity matrix
-    pub fn new(_n_components: usize, affinity_method: AffinityMethod) -> Self {
+    pub fn new(n_components: usize, affinitymethod: AffinityMethod) -> Self {
         SpectralEmbedding {
-            _n_components,
+            n_components,
             affinity_method,
             n_neighbors: 10,
             gamma: None,
@@ -78,7 +78,7 @@ impl SpectralEmbedding {
     }
 
     /// Set the number of neighbors for KNN graph construction
-    pub fn with_n_neighbors(mut self, n_neighbors: usize) -> Self {
+    pub fn with_n_neighbors(mut self, nneighbors: usize) -> Self {
         self.n_neighbors = n_neighbors;
         self
     }
@@ -395,7 +395,7 @@ impl SpectralEmbedding {
     }
 
     /// Check if the input data is the same as training data
-    fn is_same_data(&self, x: &Array2<f64>, training_data: &Array2<f64>) -> bool {
+    fn is_same_data(&self, x: &Array2<f64>, trainingdata: &Array2<f64>) -> bool {
         if x.dim() != training_data.dim() {
             return false;
         }
@@ -412,13 +412,13 @@ impl SpectralEmbedding {
     }
 
     /// Nyström method for out-of-sample extension
-    fn nystrom_extension(&self, x_new: &Array2<f64>) -> Result<Array2<f64>> {
+    fn nystrom_extension(&self, xnew: &Array2<f64>) -> Result<Array2<f64>> {
         let training_data = self.training_data.as_ref().unwrap();
         let training_embedding = self.embedding.as_ref().unwrap();
         let eigenvalues = self.eigenvalues.as_ref().unwrap();
 
         let (n_new, n_features) = x_new.dim();
-        let (n_training_) = training_data.dim();
+        let (n_training_, _) = training_data.dim();
 
         if n_features != training_data.ncols() {
             return Err(TransformError::InvalidInput(format!(
@@ -429,10 +429,10 @@ impl SpectralEmbedding {
         }
 
         // Compute affinity between _new points and training points
-        let mut new_to_training_affinity = Array2::zeros((n_new, n_training));
+        let mut new_to_training_affinity = Array2::zeros((n_new, n_training_));
 
         for i in 0..n_new {
-            for j in 0..n_training {
+            for j in 0..n_training_ {
                 let mut dist_sq = 0.0;
                 for k in 0..n_features {
                     let diff = x_new[[i, k]] - training_data[[j, k]];
@@ -470,7 +470,7 @@ impl SpectralEmbedding {
                 let eigenvalue = eigenvalues[start_idx + j];
                 if eigenvalue.abs() > 1e-10 {
                     let mut coord = 0.0;
-                    for k in 0..n_training {
+                    for k in 0..n_training_ {
                         coord += new_to_training_affinity[[i, k]] * training_embedding[[k, j]];
                     }
                     new_embedding[[i, j]] = coord / eigenvalue.sqrt();

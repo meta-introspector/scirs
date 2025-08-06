@@ -70,12 +70,12 @@ impl<'a, F: Float> OptimizerState<'a, F> {
     }
 
     /// Get parameter state
-    pub fn get_param_state(&self, param_id: &str) -> Option<&ParameterState<'a, F>> {
+    pub fn get_param_state(&self, paramid: &str) -> Option<&ParameterState<'a, F>> {
         self.param_state.get(param_id)
     }
 
     /// Set parameter state
-    pub fn set_param_state(&mut self, param_id: String, state: ParameterState<'a, F>) {
+    pub fn set_param_state(&mut self, paramid: String, state: ParameterState<'a, F>) {
         self.param_state.insert(param_id, state);
     }
 
@@ -180,7 +180,7 @@ pub struct ParameterGroup<F: Float> {
 
 impl<F: Float> ParameterGroup<F> {
     /// Create new parameter group
-    pub fn new(_name: String, learning_rate: f64) -> Self {
+    pub fn new(_name: String, learningrate: f64) -> Self {
         Self {
             parameters: Vec::new(),
             learning_rate,
@@ -191,7 +191,7 @@ impl<F: Float> ParameterGroup<F> {
     }
 
     /// Add parameter to group
-    pub fn add_parameter(mut self, param_id: String) -> Self {
+    pub fn add_parameter(mut self, paramid: String) -> Self {
         self.parameters.push(param_id);
         self
     }
@@ -257,9 +257,9 @@ pub struct SGDOptimizer<'a, F: Float> {
 
 impl<F: Float> SGDOptimizer<'_, F> {
     /// Create new SGD optimizer
-    pub fn new(_learning_rate: f64, momentum: f64) -> Self {
+    pub fn new(_learningrate: f64, momentum: f64) -> Self {
         let config = OptimizerConfig {
-            _learning_rate,
+            learning_rate,
             momentum,
             ..Default::default()
         };
@@ -272,7 +272,7 @@ impl<F: Float> SGDOptimizer<'_, F> {
     }
 
     /// Create with weight decay
-    pub fn with_weight_decay(mut self, weight_decay: f64) -> Self {
+    pub fn with_weight_decay(mut self, weightdecay: f64) -> Self {
         self.config.weight_decay = weight_decay;
         self
     }
@@ -284,7 +284,7 @@ impl<F: Float> AutogradOptimizer<F> for SGDOptimizer<'_, F> {
     }
 
     fn initialize(&mut self, parameters: &[&Tensor<F>]) -> Result<(), IntegrationError> {
-        for (i_param) in parameters.iter().enumerate() {
+        for (i, param) in parameters.iter().enumerate() {
             let param_id = format!("param_{i}");
             let param_state = ParameterState::new();
             // Skip shape-based initialization to avoid lazy evaluation issues
@@ -378,7 +378,7 @@ impl<'a, F: Float> SGDOptimizer<'a, F> {
 
         // Update with momentum if configured
         if config.momentum > 0.0 {
-            if let Some(ref mut _momentum_buffer) = _param_state.momentum {
+            if let Some(ref mut momentum_buffer) = param_state.momentum {
                 let _momentum = F::from(config.momentum).unwrap();
                 // momentum_buffer = momentum * momentum_buffer + lr * _grad
                 // param_data = param_data - momentum_buffer
@@ -404,9 +404,9 @@ pub struct AdamOptimizer<'a, F: Float> {
 
 impl<F: Float> AdamOptimizer<'_, F> {
     /// Create new Adam optimizer
-    pub fn new(_learning_rate: f64, beta1: f64, beta2: f64, eps: f64) -> Self {
+    pub fn new(_learningrate: f64, beta1: f64, beta2: f64, eps: f64) -> Self {
         let config = OptimizerConfig {
-            _learning_rate,
+            learning_rate,
             beta1,
             beta2,
             eps,
@@ -421,7 +421,7 @@ impl<F: Float> AdamOptimizer<'_, F> {
     }
 
     /// Create with default Adam parameters
-    pub fn default_adam(_learning_rate: f64) -> Self {
+    pub fn default_adam(_learningrate: f64) -> Self {
         Self::new(_learning_rate, 0.9, 0.999, 1e-8)
     }
 }
@@ -432,7 +432,7 @@ impl<F: Float> AutogradOptimizer<F> for AdamOptimizer<'_, F> {
     }
 
     fn initialize(&mut self, parameters: &[&Tensor<F>]) -> Result<(), IntegrationError> {
-        for (i_param) in parameters.iter().enumerate() {
+        for (i, param) in parameters.iter().enumerate() {
             let param_id = format!("param_{i}");
             let param_state = ParameterState::new();
             // Skip shape-based initialization to avoid lazy evaluation issues
@@ -544,9 +544,9 @@ pub struct StepLRScheduler {
 
 impl StepLRScheduler {
     /// Create new step scheduler
-    pub fn new(_initial_lr: f64, step_size: usize, gamma: f64) -> Self {
+    pub fn new(_initial_lr: f64, stepsize: usize, gamma: f64) -> Self {
         Self {
-            _initial_lr,
+            initial_lr,
             step_size,
             gamma,
             current_step: 0,
@@ -566,7 +566,7 @@ impl<F: Float> LearningRateScheduler<F> for StepLRScheduler {
         optimizer.set_learning_rate(new_lr);
     }
 
-    fn step_with_metric(&mut self, optimizer: &mut dyn AutogradOptimizer<F>, _metric: f64) {
+    fn step_with_metric(&mut self, optimizer: &mut dyn AutogradOptimizer<F>, metric: f64) {
         self.step(optimizer);
     }
 }
@@ -581,9 +581,9 @@ pub struct CosineAnnealingLRScheduler {
 
 impl CosineAnnealingLRScheduler {
     /// Create new cosine annealing scheduler
-    pub fn new(_initial_lr: f64, t_max: usize, min_lr: f64) -> Self {
+    pub fn new(_initial_lr: f64, t_max: usize, minlr: f64) -> Self {
         Self {
-            _initial_lr,
+            initial_lr,
             min_lr,
             t_max,
             current_step: 0,
@@ -604,7 +604,7 @@ impl<F: Float> LearningRateScheduler<F> for CosineAnnealingLRScheduler {
         optimizer.set_learning_rate(new_lr);
     }
 
-    fn step_with_metric(&mut self, optimizer: &mut dyn AutogradOptimizer<F>, _metric: f64) {
+    fn step_with_metric(&mut self, optimizer: &mut dyn AutogradOptimizer<F>, metric: f64) {
         self.step(optimizer);
     }
 }
@@ -622,7 +622,7 @@ impl OptimizerFactory {
     }
 
     /// Create Adam optimizer
-    pub fn adam<'a, F: Float>(learning_rate: f64) -> Box<dyn AutogradOptimizer<F> + 'a> {
+    pub fn adam<'a, F: Float>(learningrate: f64) -> Box<dyn AutogradOptimizer<F> + 'a> {
         Box::new(AdamOptimizer::default_adam(learning_rate))
     }
 

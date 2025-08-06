@@ -187,12 +187,12 @@ where
     fn bounds(&self) -> (Array1<F>, Array1<F>);
 
     /// Provide importance sampling density (optional)
-    fn importance_density(&self, _x: &ArrayView1<F>) -> Option<F> {
+    fn importance_density(&self, x: &ArrayView1<F>) -> Option<F> {
         None
     }
 
     /// Provide control variate function (optional)
-    fn control_variate(&self, _x: &ArrayView1<F>) -> Option<F> {
+    fn control_variate(&self, x: &ArrayView1<F>) -> Option<F> {
         None
     }
 }
@@ -212,7 +212,7 @@ where
         + std::fmt::Display,
 {
     /// Create new advanced parallel Monte Carlo integrator
-    pub fn new(config: MonteCarloConfig, variance_reduction: VarianceReductionConfig) -> Self {
+    pub fn new(config: MonteCarloConfig, variancereduction: VarianceReductionConfig) -> Self {
         let adaptive_state = Arc::new(Mutex::new(AdaptiveState {
             n_samples_: 0,
             running_mean: F::zero(),
@@ -474,7 +474,7 @@ where
     }
 
     /// Compute integration volume
-    fn compute_integration_volume(&self, lower_bounds: &Array1<F>, upper_bounds: &Array1<F>) -> F {
+    fn compute_integration_volume(&self, lower_bounds: &Array1<F>, upperbounds: &Array1<F>) -> F {
         upper_bounds
             .iter()
             .zip(lower_bounds.iter())
@@ -483,7 +483,7 @@ where
     }
 
     /// Update running estimate
-    fn update_estimate(&self, new_values: Array1<F>, total_samples: usize) -> StatsResult<F> {
+    fn update_estimate(&self, new_values: Array1<F>, totalsamples: usize) -> StatsResult<F> {
         let mut state = self.adaptive_state.lock().unwrap();
 
         let batch_mean = new_values.mean().unwrap();
@@ -525,7 +525,7 @@ where
     }
 
     /// Estimate current error
-    fn estimate_error(&self, n_samples_: usize) -> StatsResult<F> {
+    fn estimate_error(&self, nsamples_: usize) -> StatsResult<F> {
         let state = self.adaptive_state.lock().unwrap();
         if n_samples_ <= 1 {
             return Ok(F::infinity());
@@ -596,7 +596,7 @@ where
     }
 
     /// Get z-score for confidence level
-    fn get_z_score(&self, confidence_level: f64) -> f64 {
+    fn get_z_score(&self, confidencelevel: f64) -> f64 {
         // Simplified z-score lookup
         match confidence_level {
             x if x >= 0.99 => 2.576,
@@ -665,9 +665,9 @@ pub struct TestFunction {
 }
 
 impl TestFunction {
-    pub fn new(_dimension: usize) -> Self {
+    pub fn new(dimension: usize) -> Self {
         Self {
-            dimension: _dimension,
+            dimension: dimension,
             lower_bounds: Array1::zeros(_dimension),
             upper_bounds: Array1::ones(_dimension),
         }
@@ -698,13 +698,13 @@ pub struct GaussianFunction {
 }
 
 impl GaussianFunction {
-    pub fn new(_mean: Array1<f64>, covariance: Array2<f64>) -> Self {
-        let dimension = _mean.len();
+    pub fn new(mean: Array1<f64>, covariance: Array2<f64>) -> Self {
+        let dimension = mean.len();
         let lower_bounds = Array1::from_elem(dimension, -5.0);
         let upper_bounds = Array1::from_elem(dimension, 5.0);
 
         Self {
-            mean: _mean,
+            mean: mean,
             covariance,
             lower_bounds,
             upper_bounds,

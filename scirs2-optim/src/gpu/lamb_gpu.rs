@@ -41,7 +41,7 @@ pub struct LAMBGpu<A: Float + ScalarOperand + Debug> {
 
 impl<A: Float + ScalarOperand + Debug> LAMBGpu<A> {
     /// Create a new GPU-accelerated LAMB optimizer
-    pub fn new(_learning_rate: A) -> Self {
+    pub fn new(_learningrate: A) -> Self {
         Self {
             cpu_optimizer: LAMB::new(_learning_rate),
             gpu_memory: None,
@@ -310,7 +310,7 @@ where
         self.cpu_optimizer.get_learning_rate()
     }
 
-    fn set_learning_rate(&mut self, learning_rate: A) {
+    fn set_learning_rate(&mut self, learningrate: A) {
         self.cpu_optimizer.set_learning_rate(learning_rate);
     }
 }
@@ -329,7 +329,7 @@ pub struct BatchLAMBGpu<A: Float + ScalarOperand + Debug> {
 
 impl<A: Float + ScalarOperand + Debug> BatchLAMBGpu<A> {
     /// Create a new batch LAMB optimizer
-    pub fn new(_learning_rate: A, num_groups: usize) -> Self {
+    pub fn new(_learning_rate: A, numgroups: usize) -> Self {
         let optimizers = (0..num_groups)
             .map(|_| LAMBGpu::new(_learning_rate))
             .collect();
@@ -342,7 +342,7 @@ impl<A: Float + ScalarOperand + Debug> BatchLAMBGpu<A> {
     }
 
     /// Initialize GPU for all parameter groups
-    pub fn initialize_gpu(&mut self, group_sizes: &[usize]) -> Result<(), GpuOptimError> {
+    pub fn initialize_gpu(&mut self, groupsizes: &[usize]) -> Result<(), GpuOptimError> {
         // Create shared GPU context
         let gpu_context = Arc::new(GpuContext::new(self.config.backend)?);
         self.gpu_context = Some(gpu_context.clone());

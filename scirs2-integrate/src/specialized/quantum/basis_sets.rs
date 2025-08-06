@@ -23,13 +23,13 @@ pub struct AdvancedBasisSets {
 
 impl AdvancedBasisSets {
     /// Create new advanced basis set
-    pub fn new(n_basis: usize, basis_type: BasisSetType) -> Self {
+    pub fn new(n_basis: usize, basistype: BasisSetType) -> Self {
         let parameters = vec![BasisParameter::default(); n_basis];
         let overlap_matrix = Array2::eye(n_basis);
 
         Self {
             n_basis,
-            basis_type,
+            basis_type: basistype,
             parameters,
             overlap_matrix,
         }

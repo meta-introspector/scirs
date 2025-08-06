@@ -135,7 +135,7 @@ pub fn detect_and_compute_orb(
 
 /// Create image pyramid for multi-scale detection
 #[allow(dead_code)]
-fn create_pyramid(_image: &Array2<f32>, num_levels: usize, scale_factor: f32) -> Vec<Array2<f32>> {
+fn create_pyramid(_image: &Array2<f32>, num_levels: usize, scalefactor: f32) -> Vec<Array2<f32>> {
     let mut pyramid = vec![_image.clone()];
 
     for _level in 1..num_levels {
@@ -166,8 +166,8 @@ fn create_pyramid(_image: &Array2<f32>, num_levels: usize, scale_factor: f32) ->
 
 /// FAST keypoint detection
 #[allow(dead_code)]
-fn detect_fast_keypoints(_image: &Array2<f32>, threshold: u8) -> Result<Vec<KeyPoint>> {
-    let (height, width) = _image.dim();
+fn detect_fast_keypoints(image: &Array2<f32>, threshold: u8) -> Result<Vec<KeyPoint>> {
+    let (height, width) = image.dim();
     let mut keypoints = Vec::new();
 
     // FAST detector uses a circle of radius 3 pixels
@@ -179,7 +179,7 @@ fn detect_fast_keypoints(_image: &Array2<f32>, threshold: u8) -> Result<Vec<KeyP
 
     for y in fast_radius..(height as isize - fast_radius) {
         for x in fast_radius..(width as isize - fast_radius) {
-            let center_val = _image[[y as usize, x as usize]];
+            let center_val = image[[y as usize, x as usize]];
 
             // Count consecutive pixels that are brighter or darker
             let mut consecutive_brighter = 0;
@@ -192,7 +192,7 @@ fn detect_fast_keypoints(_image: &Array2<f32>, threshold: u8) -> Result<Vec<KeyP
                 let px = x + circle_x[idx];
                 let py = y + circle_y[idx];
 
-                let pixel_val = _image[[py as usize, px as usize]];
+                let pixel_val = image[[py as usize, px as usize]];
                 let diff = pixel_val - center_val;
 
                 if diff > threshold as f32 {
@@ -229,8 +229,8 @@ fn detect_fast_keypoints(_image: &Array2<f32>, threshold: u8) -> Result<Vec<KeyP
 
 /// Refine keypoints using Harris corner measure
 #[allow(dead_code)]
-fn refine_with_harris(_image: &Array2<f32>, keypoints: Vec<KeyPoint>) -> Result<Vec<KeyPoint>> {
-    let (height, width) = _image.dim();
+fn refine_with_harris(image: &Array2<f32>, keypoints: Vec<KeyPoint>) -> Result<Vec<KeyPoint>> {
+    let (height, width) = image.dim();
     let mut refined = Vec::new();
 
     // Compute gradients
@@ -239,8 +239,8 @@ fn refine_with_harris(_image: &Array2<f32>, keypoints: Vec<KeyPoint>) -> Result<
 
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
-            dx[[y, x]] = _image[[y, x + 1]] - _image[[y, x - 1]];
-            dy[[y, x]] = _image[[y + 1, x]] - _image[[y - 1, x]];
+            dx[[y, x]] = image[[y, x + 1]] - image[[y, x - 1]];
+            dy[[y, x]] = image[[y + 1, x]] - image[[y - 1, x]];
         }
     }
 
@@ -287,10 +287,10 @@ fn refine_with_harris(_image: &Array2<f32>, keypoints: Vec<KeyPoint>) -> Result<
 
 /// Compute orientation for a keypoint using intensity centroid
 #[allow(dead_code)]
-fn compute_orientation(_image: &Array2<f32>, keypoint: &KeyPoint) -> Result<f32> {
+fn compute_orientation(image: &Array2<f32>, keypoint: &KeyPoint) -> Result<f32> {
     let x = keypoint.x as usize;
     let y = keypoint.y as usize;
-    let (height, width) = _image.dim();
+    let (height, width) = image.dim();
 
     // Use a circular patch of radius 15
     let radius = 15;
@@ -313,7 +313,7 @@ fn compute_orientation(_image: &Array2<f32>, keypoint: &KeyPoint) -> Result<f32>
             let px = (x as isize + dx) as usize;
             let py = (y as isize + dy) as usize;
 
-            let intensity = _image[[py, px]];
+            let intensity = image[[py, px]];
             m01 += (dy as f32) * intensity;
             m10 += (dx as f32) * intensity;
         }
@@ -453,10 +453,10 @@ pub fn match_orb_descriptors(
 
 /// Calculate Hamming distance between binary descriptors
 #[allow(dead_code)]
-fn hamming_distance(_desc1: &[u32], desc2: &[u32]) -> u32 {
+fn hamming_distance(desc1: &[u32], desc2: &[u32]) -> u32 {
     let mut distance = 0;
 
-    for (&d1, &d2) in _desc1.iter().zip(desc2.iter()) {
+    for (&d1, &d2) in desc1.iter().zip(desc2.iter()) {
         distance += (d1 ^ d2).count_ones();
     }
 

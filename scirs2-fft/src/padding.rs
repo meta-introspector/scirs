@@ -59,22 +59,22 @@ impl Default for AutoPadConfig {
 
 impl AutoPadConfig {
     /// Create a new auto-padding configuration
-    pub fn new(_mode: PaddingMode) -> Self {
+    pub fn new(mode: PaddingMode) -> Self {
         Self {
-            mode: _mode,
+            mode: mode,
             ..Default::default()
         }
     }
 
     /// Set minimum padding
-    pub fn with_min_pad(mut self, min_pad: usize) -> Self {
-        self.min_pad = min_pad;
+    pub fn with_min_pad(mut self, minpad: usize) -> Self {
+        self.min_pad = minpad;
         self
     }
 
     /// Set maximum padding
-    pub fn with_max_pad(mut self, max_pad: usize) -> Self {
-        self.max_pad = Some(max_pad);
+    pub fn with_max_pad(mut self, maxpad: usize) -> Self {
+        self.max_pad = Some(maxpad);
         self
     }
 

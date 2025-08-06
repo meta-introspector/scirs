@@ -159,14 +159,14 @@ where
         }
 
         // Create pairs of (_score, relevance) for sorting
-        let mut _score_relevance: Vec<_> = scores
+        let mut score_relevance: Vec<_> = scores
             .iter()
             .zip(true_relevance.iter())
             .map(|(s, r)| (s.clone(), r.clone()))
             .collect();
 
         // Sort by _score in descending order
-        score_relevance.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        score_relevance.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
         // Find the first relevant item and calculate reciprocal rank
         let zero = T::zero();
@@ -174,7 +174,7 @@ where
         for (rank, (_, relevance)) in score_relevance.iter().enumerate() {
             if *relevance > zero {
                 reciprocal_ranks.push(1.0 / (rank as f64 + 1.0));
-                found_relevant = _true;
+                found_relevant = true;
                 break;
             }
         }
@@ -192,7 +192,7 @@ where
 
 /// Helper function to calculate Discounted Cumulative Gain (DCG) for a single query
 #[allow(dead_code)]
-fn dcg<T>(_relevance_scores: &[T], k: Option<usize>) -> f64
+fn dcg<T>(_relevancescores: &[T], k: Option<usize>) -> f64
 where
     T: Real + Clone,
 {
@@ -203,7 +203,7 @@ where
     // DCG formula: sum(rel_i / log2(i+1)) for i=1..k
     (0..limit)
         .map(|i| {
-            let rel = _relevance_scores[i].to_f64().unwrap_or(0.0);
+            let rel = relevance_scores[i].to_f64().unwrap_or(0.0);
             // If relevance is binary (0 or 1), we use the standard formula
             // For graded relevance, we can use the alternative formula: (2^rel - 1) / log2(i+2)
             rel / (((i + 2) as f64).log2())
@@ -287,14 +287,14 @@ where
         let scores_vec: Vec<_> = scores.iter().cloned().collect();
 
         // Create pairs of (_score, relevance) for sorting by _score
-        let mut _score_relevance: Vec<_> = scores_vec
+        let mut score_relevance: Vec<_> = scores_vec
             .iter()
             .zip(relevance_vec.iter())
             .map(|(s, r)| (s.clone(), r.clone()))
             .collect();
 
         // Sort by _score in descending order
-        score_relevance.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        score_relevance.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
         // Extract relevance values in _score-sorted order
         let sorted_relevance: Vec<_> = score_relevance.iter().map(|(_, r)| r.clone()).collect();
@@ -325,16 +325,16 @@ where
 
 /// Helper function to calculate Average Precision for a single query
 #[allow(dead_code)]
-fn average_precision<T>(_y_true_sorted: &[T], k: Option<usize>) -> f64
+fn average_precision<T>(y_truesorted: &[T], k: Option<usize>) -> f64
 where
     T: Real + Clone,
 {
     let zero = T::zero();
-    let k = k.unwrap_or(_y_true_sorted.len());
-    let limit = k.min(_y_true_sorted.len());
+    let k = k.unwrap_or(y_true_sorted.len());
+    let limit = k.min(y_true_sorted.len());
 
     // Calculate the total number of relevant items
-    let total_relevant = _y_true_sorted.iter().filter(|&&r| r > zero).count();
+    let total_relevant = y_true_sorted.iter().filter(|&&r| r > zero).count();
 
     if total_relevant == 0 {
         return 0.0;
@@ -430,14 +430,14 @@ where
         }
 
         // Create pairs of (_score, relevance) for sorting
-        let mut _score_relevance: Vec<_> = scores
+        let mut score_relevance: Vec<_> = scores
             .iter()
             .zip(true_relevance.iter())
             .map(|(s, r)| (s.clone(), r.clone()))
             .collect();
 
         // Sort by _score in descending order
-        score_relevance.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        score_relevance.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
         // Extract relevance values in _score-sorted order
         let sorted_relevance: Vec<_> = score_relevance.iter().map(|(_, r)| r.clone()).collect();
@@ -532,14 +532,14 @@ where
         }
 
         // Create pairs of (_score, relevance) for sorting
-        let mut _score_relevance: Vec<_> = scores
+        let mut score_relevance: Vec<_> = scores
             .iter()
             .zip(true_relevance.iter())
             .map(|(s, r)| (s.clone(), r.clone()))
             .collect();
 
         // Sort by _score in descending order
-        score_relevance.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        score_relevance.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
         // Get top k results (or all if k > length)
         let limit = k.min(score_relevance.len());
@@ -648,14 +648,14 @@ where
         }
 
         // Create pairs of (_score, relevance) for sorting
-        let mut _score_relevance: Vec<_> = scores
+        let mut score_relevance: Vec<_> = scores
             .iter()
             .zip(true_relevance.iter())
             .map(|(s, r)| (s.clone(), r.clone()))
             .collect();
 
         // Sort by _score in descending order
-        score_relevance.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        score_relevance.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
         // Get top k results (or all if k > length)
         let limit = k.min(score_relevance.len());
@@ -852,7 +852,7 @@ where
         .collect();
 
     // Sort by value
-    value_index.sort_by(|(a_), (b_)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    value_index.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     // Assign ranks (handling ties)
     let mut ranks = vec![0.0; n];
@@ -1028,14 +1028,14 @@ where
         }
 
         // Create pairs of (_score, relevance) for sorting
-        let mut _score_relevance: Vec<_> = scores
+        let mut score_relevance: Vec<_> = scores
             .iter()
             .zip(true_relevance.iter())
             .map(|(s, r)| (s.clone(), r.clone()))
             .collect();
 
         // Sort by _score in descending order
-        score_relevance.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        score_relevance.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
         // Get top k results (or all if k > length)
         let limit = k.min(score_relevance.len());

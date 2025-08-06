@@ -152,7 +152,7 @@ impl FuzzingEngine {
         let rng = if let Some(seed) = config.seed {
             StdRng::seed_from_u64(seed)
         } else {
-            StdRng::from_seed(Default::default())
+            StdRng::seed_from_u64(Default::default())
         };
 
         Self {
@@ -241,8 +241,8 @@ impl FloatFuzzingGenerator {
     pub fn value(val: f64) -> Self {
         Self {
             #[cfg(feature = "random")]
-            rng: StdRng::from_seed(Default::default()),
-            _min_value,
+            rng: StdRng::seed_from_u64(Default::default()),
+            min_value,
             max_value,
         }
     }
@@ -253,7 +253,7 @@ impl FloatFuzzingGenerator {
         Self {
             #[cfg(feature = "random")]
             rng: StdRng::seed_from_u64(seed),
-            _min_value,
+            min_value,
             max_value,
         }
     }
@@ -333,8 +333,8 @@ impl FuzzingGenerator<f64> for FloatFuzzingGenerator {
 pub struct VectorFuzzingGenerator {
     #[cfg(feature = "random")]
     rng: StdRng,
-    min_size: usize,
-    max_size: usize,
+    minsize: usize,
+    maxsize: usize,
     element_generator: FloatFuzzingGenerator,
 }
 
@@ -343,9 +343,9 @@ impl VectorFuzzingGenerator {
     pub fn value(val: f64) -> Self {
         Self {
             #[cfg(feature = "random")]
-            rng: StdRng::from_seed(Default::default()),
-            _min_size,
-            max_size,
+            rng: StdRng::seed_from_u64(Default::default()),
+            minsize,
+            maxsize,
             element_generator: FloatFuzzingGenerator::new(min_value, max_value),
         }
     }
@@ -354,9 +354,9 @@ impl VectorFuzzingGenerator {
 impl FuzzingGenerator<Vec<f64>> for VectorFuzzingGenerator {
     fn generate(&mut self) -> Vec<f64> {
         #[cfg(feature = "random")]
-        let size = self.rng.gen_range(self.min_size..=self.max_size);
+        let size = self.rng.gen_range(self.minsize..=self.maxsize);
         #[cfg(not(feature = "random"))]
-        let size = (self.min_size + self.max_size) / 2;
+        let size = (self.minsize + self.maxsize) / 2;
 
         (0..size)
             .map(|_| self.element_generator.generate())
@@ -396,24 +396,24 @@ impl FuzzingGenerator<Vec<f64>> for VectorFuzzingGenerator {
             match self.rng.gen_range(0..3) {
                 0 => {
                     // Minimum size
-                    let size = self.min_size;
+                    let size = self.minsize;
                     (0..size)
                         .map(|_| self.element_generator.generate_boundary())
                         .collect()
                 }
                 1 => {
                     // Maximum size
-                    let size = self.max_size;
+                    let size = self.maxsize;
                     (0..size)
                         .map(|_| self.element_generator.generate_boundary())
                         .collect()
                 }
                 _ => {
                     // Size near boundaries
-                    let size = if self.min_size > 0 {
-                        self.min_size - 1
+                    let size = if self.minsize > 0 {
+                        self.minsize - 1
                     } else {
-                        self.max_size + 1
+                        self.maxsize + 1
                     };
                     (0..size)
                         .map(|_| self.element_generator.generate_boundary())
@@ -423,7 +423,7 @@ impl FuzzingGenerator<Vec<f64>> for VectorFuzzingGenerator {
         }
         #[cfg(not(feature = "random"))]
         {
-            vec![self.element_generator.generate_boundary(); self.min_size]
+            vec![self.element_generator.generate_boundary(); self.minsize]
         }
     }
 }
@@ -452,8 +452,8 @@ impl FuzzingUtils {
     pub fn fuzz_vector_function<F>(
         function: F,
         config: FuzzingConfig,
-        min_size: usize,
-        max_size: usize,
+        minsize: usize,
+        maxsize: usize,
         min_value: f64,
         max_value: f64,
     ) -> CoreResult<FuzzingResult>
@@ -461,7 +461,7 @@ impl FuzzingUtils {
         F: Fn(&[f64]) -> CoreResult<Vec<f64>>,
     {
         let mut engine = FuzzingEngine::new(config);
-        let generator = VectorFuzzingGenerator::new(min_size, max_size, min_value, max_value);
+        let generator = VectorFuzzingGenerator::new(minsize, maxsize, min_value, max_value);
 
         engine
             .fuzz_function_with_generator(|input: &Vec<f64>| function(input).map(|_| ()), generator)

@@ -536,7 +536,7 @@ impl MomentsAccountant {
     }
 
     /// Compute optimal epsilon from log moments
-    fn compute_optimal_epsilon(&self, log_moments: &HashMap<usize, f64>) -> Result<(f64, usize)> {
+    fn compute_optimal_epsilon(&self, logmoments: &HashMap<usize, f64>) -> Result<(f64, usize)> {
         let mut best_epsilon = f64::INFINITY;
         let mut best_order = 2;
 
@@ -577,7 +577,7 @@ impl MomentsAccountant {
     }
 
     /// Assess how tight the privacy bounds are
-    fn assess_bound_tightness(&self, _log_moments: &HashMap<usize, f64>, epsilon: f64) -> f64 {
+    fn assess_bound_tightness(&self, _logmoments: &HashMap<usize, f64>, epsilon: f64) -> f64 {
         // Compare with basic composition bound
         let steps = 1; // Normalized to single step
         let basic_composition_epsilon =
@@ -725,7 +725,7 @@ impl MomentsAccountant {
 }
 
 impl MomentCoefficients {
-    fn new(_max_order: usize) -> Self {
+    fn new(_maxorder: usize) -> Self {
         let mut binomial_coeffs = HashMap::new();
         let power_cache = HashMap::new();
         let mut log_factorials = Vec::new();

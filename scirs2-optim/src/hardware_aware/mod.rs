@@ -448,7 +448,7 @@ impl<
     > HardwareAwareOptimizer<A, D>
 {
     /// Create a new hardware-aware optimizer
-    pub fn new(_platform: HardwarePlatform, initial_parameters: Array<A, D>) -> Self {
+    pub fn new(_platform: HardwarePlatform, initialparameters: Array<A, D>) -> Self {
         let config = Self::default_config_for_platform(&_platform);
         let profiler = PerformanceProfiler::new();
         let resource_monitor = ResourceMonitor::new();
@@ -463,7 +463,7 @@ impl<
         };
 
         Self {
-            platform: _platform,
+            platform: platform,
             config,
             profiler,
             resource_monitor,
@@ -791,7 +791,7 @@ impl<
     }
 
     /// Profile current performance
-    pub fn profile_performance(&mut self, computation_time: A, memory_used: usize, energy: A) {
+    pub fn profile_performance(&mut self, computation_time: A, memoryused: usize, energy: A) {
         self.profiler.computation_times.push(computation_time);
         self.profiler.memory_usage.push(memory_used);
         self.profiler.energy_consumption.push(energy);
@@ -811,7 +811,7 @@ impl<
     }
 
     /// Update resource monitoring
-    pub fn update_resource_monitor(&mut self, memory: usize, cpu_util: A, power: A, temp: A) {
+    pub fn update_resource_monitor(&mut self, memory: usize, cpuutil: A, power: A, temp: A) {
         self.resource_monitor.current_memory = memory;
         self.resource_monitor.peak_memory = self.resource_monitor.peak_memory.max(memory);
         self.resource_monitor.cpu_utilization = cpu_util;
@@ -820,7 +820,7 @@ impl<
     }
 
     /// Adaptive tuning based on performance feedback
-    pub fn adaptive_tune(&mut self, target_performance: A) -> Result<()> {
+    pub fn adaptive_tune(&mut self, targetperformance: A) -> Result<()> {
         self.adaptive_tuner.performance_target = target_performance;
 
         // Simple adaptive tuning logic
@@ -925,7 +925,7 @@ impl<
     }
 
     /// Create default configuration for platform
-    fn default_config_for_platform(_platform: &HardwarePlatform) -> HardwareOptimizationConfig<A> {
+    fn default_config_for_platform(platform: &HardwarePlatform) -> HardwareOptimizationConfig<A> {
         match _platform {
             HardwarePlatform::CPU { .. } => HardwareOptimizationConfig {
                 batch_size: 64,

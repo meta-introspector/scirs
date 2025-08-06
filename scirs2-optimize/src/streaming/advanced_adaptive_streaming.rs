@@ -470,11 +470,11 @@ enum NotificationChannel {
 
 impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
     /// Create a new advanced-adaptive streaming optimizer
-    pub fn new(_initial_parameters: Array1<f64>, objective: T, config: StreamingConfig) -> Self {
-        let param_size = _initial_parameters.len();
+    pub fn new(_initialparameters: Array1<f64>, objective: T, config: StreamingConfig) -> Self {
+        let param_size = initial_parameters.len();
 
         Self {
-            parameters: _initial_parameters,
+            parameters: initial_parameters,
             objective,
             config,
             stats: StreamingStats::default(),
@@ -489,7 +489,7 @@ impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
     }
 
     /// Advanced-advanced parameter update using multiple adaptation mechanisms
-    fn advanced_adaptive_update(&mut self, data_point: &StreamingDataPoint) -> Result<()> {
+    fn advanced_adaptive_update(&mut self, datapoint: &StreamingDataPoint) -> Result<()> {
         let start_time = Instant::now();
 
         // 1. Multi-scale temporal analysis
@@ -635,7 +635,7 @@ impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
     }
 
     /// Compute adaptive learning rate
-    fn compute_adaptive_learning_rate(&self, data_point: &StreamingDataPoint) -> Result<f64> {
+    fn compute_adaptive_learning_rate(&self, datapoint: &StreamingDataPoint) -> Result<f64> {
         let base_lr = self.config.learning_rate;
 
         // Gradient-based adaptation
@@ -781,7 +781,7 @@ impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
 }
 
 impl<T: StreamingObjective + Clone> StreamingOptimizer for AdvancedAdaptiveStreamingOptimizer<T> {
-    fn update(&mut self, data_point: &StreamingDataPoint) -> Result<()> {
+    fn update(&mut self, datapoint: &StreamingDataPoint) -> Result<()> {
         let start_time = Instant::now();
         let old_parameters = self.parameters.clone();
 
@@ -832,7 +832,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for AdvancedAdaptiveStrea
 // (In a real implementation, these would be fully developed)
 
 impl MultiScaleTemporalMemory {
-    fn new(_param_size: usize) -> Self {
+    fn new(_paramsize: usize) -> Self {
         Self {
             short_term: VecDeque::with_capacity(100),
             medium_term: VecDeque::with_capacity(50),
@@ -882,12 +882,12 @@ impl MultiScaleTemporalMemory {
 }
 
 impl NeuromorphicLearningSystem {
-    fn new(_param_size: usize) -> Self {
+    fn new(paramsize: usize) -> Self {
         Self {
-            spike_trains: vec![VecDeque::with_capacity(100); _param_size],
-            synaptic_weights: Array2::eye(_param_size),
-            membrane_potentials: Array1::zeros(_param_size),
-            adaptation_thresholds: Array1::ones(_param_size),
+            spike_trains: vec![VecDeque::with_capacity(100); param_size],
+            synaptic_weights: Array2::eye(param_size),
+            membrane_potentials: Array1::zeros(param_size),
+            adaptation_thresholds: Array1::ones(param_size),
             stdp_rates: STDPRates {
                 ltp_rate: 0.01,
                 ltd_rate: 0.005,
@@ -910,7 +910,7 @@ impl NeuromorphicLearningSystem {
 }
 
 impl QuantumInspiredVariational {
-    fn new(_param_size: usize) -> Self {
+    fn new(_paramsize: usize) -> Self {
         Self {
             quantum_state: Array1::ones(_param_size) / (_param_size as f64).sqrt(),
             variational_params: Array1::zeros(_param_size),
@@ -968,7 +968,7 @@ impl MetaLearningSelector {
 }
 
 impl FederatedLearningCoordinator {
-    fn new(_param_size: usize) -> Self {
+    fn new(_paramsize: usize) -> Self {
         Self {
             local_model: Array1::zeros(_param_size),
             global_model: Array1::zeros(_param_size),
@@ -1005,7 +1005,7 @@ impl SelfOrganizingMemoryHierarchy {
         }
     }
 
-    fn consolidate_updates(&mut self, update: &Array1<f64>, _context: &Array1<f64>) -> Result<()> {
+    fn consolidate_updates(&mut self, update: &Array1<f64>, context: &Array1<f64>) -> Result<()> {
         // Placeholder for memory consolidation
         Ok(())
     }
@@ -1066,7 +1066,7 @@ impl AdvancedPerformanceTracker {
     fn update_metrics(
         &mut self,
         parameters: &Array1<f64>,
-        _data_point: &StreamingDataPoint_processing,
+        _data_point: &StreamingDataPoint,
         _time: Duration,
     ) -> Result<()> {
         // Placeholder for metrics update

@@ -61,7 +61,7 @@ fn test_scheduler<S: LearningRateScheduler<f64>>(
     }
 
     println!("\nFinal loss: {:.8}", quadratic_loss(&_params));
-    println!("Final parameters: {:?}", _params);
+    println!("Final parameters: {:?}", params);
 
     Ok(_params)
 }

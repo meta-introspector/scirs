@@ -67,7 +67,7 @@ use std::f64::consts::PI;
 /// println!("E_{}^{}({}) = {:?}", n, p, s, result);
 /// ```
 #[allow(dead_code)]
-pub fn ellip_harm(_h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult<f64> {
+pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult<f64> {
     // Validate input parameters
     if _h2 < 0.0 || k2 < 0.0 {
         return Err(SpecialError::ValueError(
@@ -194,7 +194,7 @@ pub fn ellip_harm(_h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResul
 /// println!("F_{}^{}({}) = {:?}", n, p, s, result);
 /// ```
 #[allow(dead_code)]
-pub fn ellip_harm_2(_h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult<f64> {
+pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult<f64> {
     // Validate input parameters
     if _h2 < 0.0 || k2 < 0.0 {
         return Err(SpecialError::ValueError(
@@ -309,7 +309,7 @@ pub fn ellip_harm_2(_h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialRes
 /// println!("N_{}^{}({}, {}) = {:?}", n, p, h2, k2, norm);
 /// ```
 #[allow(dead_code)]
-pub fn ellip_normal(_h2: f64, k2: f64, n: usize, p: usize) -> SpecialResult<f64> {
+pub fn ellip_normal(h2: f64, k2: f64, n: usize, p: usize) -> SpecialResult<f64> {
     // Validate input parameters
     if _h2 < 0.0 || k2 < 0.0 {
         return Err(SpecialError::ValueError(

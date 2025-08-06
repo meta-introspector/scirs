@@ -564,7 +564,7 @@ where
     O: Optimizer<A, D> + Send + Sync,
 {
     /// Create a new adaptive streaming optimizer
-    pub fn new(base_optimizer: O, config: StreamingConfig) -> Result<Self> {
+    pub fn new(baseoptimizer: O, config: StreamingConfig) -> Result<Self> {
         let lr_controller = AdaptiveLearningRateController::new(&config)?;
         let drift_detector = EnhancedDriftDetector::new(&config)?;
         let performance_tracker = PerformanceTracker::new(&config)?;
@@ -1069,7 +1069,7 @@ pub struct AdaptiveStreamingStats {
 // (In a real implementation, these would be much more sophisticated)
 
 impl<A: Float + Default + Clone> AdaptiveLearningRateController<A> {
-    fn new(_config: &StreamingConfig) -> Result<Self> {
+    fn new(config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             current_lr: A::from(0.01).unwrap(),
             base_lr: A::from(0.01).unwrap(),
@@ -1085,7 +1085,8 @@ impl<A: Float + Default + Clone> AdaptiveLearningRateController<A> {
 
     fn compute_adaptation(
         &mut self,
-        batch: &[StreamingDataPoint<A>], _performance: &PerformanceSnapshot<A>,
+        batch: &[StreamingDataPoint<A>],
+        _performance: &PerformanceSnapshot<A>,
     ) -> Result<Option<Adaptation<A>>> {
         // Simplified adaptation logic
         Ok(None)
@@ -1093,7 +1094,7 @@ impl<A: Float + Default + Clone> AdaptiveLearningRateController<A> {
 }
 
 impl<A: Float + Default + Clone> EnhancedDriftDetector<A> {
-    fn new(_config: &StreamingConfig) -> Result<Self> {
+    fn new(config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             detection_methods: Vec::new(),
             ensemble_weights: Vec::new(),
@@ -1104,8 +1105,7 @@ impl<A: Float + Default + Clone> EnhancedDriftDetector<A> {
         })
     }
 
-    fn detect_drift(&mut self,
-        batch: &[StreamingDataPoint<A>]) -> Result<bool> {
+    fn detect_drift(&mut self, batch: &[StreamingDataPoint<A>]) -> Result<bool> {
         // Simplified drift detection
         Ok(false)
     }
@@ -1171,7 +1171,7 @@ impl<A: Float> FalsePositiveTracker<A> {
 macro_rules! impl_placeholder_struct {
     ($struct_name:ident, $A:ident) => {
         impl<$A: Float + Default + Clone> $struct_name<$A> {
-            fn new(_config: &StreamingConfig) -> Result<Self> {
+            fn new(config: &StreamingConfig) -> Result<Self> {
                 // Placeholder implementation
                 Err(OptimError::InvalidConfig("Not implemented".to_string()))
             }
@@ -1182,7 +1182,7 @@ macro_rules! impl_placeholder_struct {
 // Actual implementations for streaming optimization components
 
 impl<A: Float + Default + Clone + std::iter::Sum> PerformanceTracker<A> {
-    fn new(_config: &StreamingConfig) -> Result<Self> {
+    fn new(config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             recent_metrics: VecDeque::with_capacity(1000),
             trend_analyzer: TrendAnalyzer::new(),
@@ -1393,7 +1393,7 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
         Ok(())
     }
 
-    fn predict_performance(&mut self, steps_ahead: usize) -> Result<PerformanceMetric<A>> {
+    fn predict_performance(&mut self, stepsahead: usize) -> Result<PerformanceMetric<A>> {
         if self.training_data.len() < 10 {
             return Ok(PerformanceMetric::Loss(A::zero()));
         }
@@ -1413,7 +1413,7 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
         Ok(PerformanceMetric::Loss(combined_pred))
     }
 
-    fn linear_prediction(&self, steps_ahead: usize) -> Result<A> {
+    fn linear_prediction(&self, stepsahead: usize) -> Result<A> {
         let values: Vec<A> = self
             .training_data
             .iter()
@@ -1437,7 +1437,7 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
         Ok(prediction)
     }
 
-    fn exponential_prediction(&self, steps_ahead: usize) -> Result<A> {
+    fn exponential_prediction(&self, stepsahead: usize) -> Result<A> {
         let values: Vec<A> = self
             .training_data
             .iter()
@@ -1472,7 +1472,7 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
         Ok(smoothed + trend * A::from(steps_ahead).unwrap())
     }
 
-    fn trend_based_prediction(&self, steps_ahead: usize) -> Result<A> {
+    fn trend_based_prediction(&self, stepsahead: usize) -> Result<A> {
         let values: Vec<A> = self
             .training_data
             .iter()
@@ -1625,8 +1625,7 @@ impl<A: Float + Default + Clone + Sum> AnomalyDetector<A> {
         Ok(z_score > self.anomaly_threshold)
     }
 
-    fn isolation_based_detection(&self,
-        snapshot: &PerformanceSnapshot<A>) -> Result<bool> {
+    fn isolation_based_detection(&self, snapshot: &PerformanceSnapshot<A>) -> Result<bool> {
         // Simplified isolation forest approach
         // In practice, this would implement proper isolation forest algorithm
         Ok(false)
@@ -1781,7 +1780,7 @@ impl<A: Float + Default + Clone> MetricAggregator<A> {
         Ok(())
     }
 
-    fn get_aggregated_summary(&self, metric_name: &str) -> Option<MetricSummary<A>> {
+    fn get_aggregated_summary(&self, metricname: &str) -> Option<MetricSummary<A>> {
         self.accumulated_metrics.get(metric_name).map(|acc| {
             let mean = acc.sum / A::from(acc.count).unwrap();
             let variance = (acc.sum_squares / A::from(acc.count).unwrap()) - mean * mean;
@@ -1800,7 +1799,7 @@ impl<A: Float + Default + Clone> MetricAggregator<A> {
 }
 
 impl<A: Float + Default + Clone + Sum> MetaLearner<A> {
-    fn new(_config: &StreamingConfig) -> Result<Self> {
+    fn new(config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             lr_meta_model: MetaModel::new(MetaModelType::LinearRegression),
             buffer_meta_model: MetaModel::new(MetaModelType::LinearRegression),
@@ -1864,7 +1863,7 @@ impl<A: Float + Default + Clone + Sum> MetaLearner<A> {
                 // Performance degrading, reduce learning rate
                 let current_lr = recent_experiences[0].action.lr_adjustment;
                 let new_lr = current_lr * A::from(0.8).unwrap();
-                return Ok(Some(Adaptation::LearningRate { new_rate: new_lr }));
+                return Ok(Some(Adaptation::LearningRate { newrate: new_lr }));
             }
         }
 
@@ -1873,7 +1872,8 @@ impl<A: Float + Default + Clone + Sum> MetaLearner<A> {
 
     fn suggest_buffer_adaptation(
         &mut self,
-        batch: &[StreamingDataPoint<A>], _performance: &PerformanceSnapshot<A>,
+        batch: &[StreamingDataPoint<A>],
+        _performance: &PerformanceSnapshot<A>,
     ) -> Result<Option<Adaptation<A>>> {
         // Suggest buffer size based on data characteristics and processing time
         let data_diversity = self.compute_data_diversity(batch)?;
@@ -1982,7 +1982,7 @@ impl<A: Float + Default + Clone + Sum> MetaLearner<A> {
 }
 
 impl<A: Float + Default + Clone> MetaModel<A> {
-    fn new(model_type: MetaModelType) -> Self {
+    fn new(modeltype: MetaModelType) -> Self {
         Self {
             parameters: Array1::zeros(10), // Default parameter size
             model_type,
@@ -2179,7 +2179,7 @@ impl TradeoffAnalyzer {
     }
 
     /// Analyze trade-offs for a given decision
-    pub fn analyze_tradeoff(&mut self, performance_gain: f64, resource_cost: f64) -> f64 {
+    pub fn analyze_tradeoff(&mut self, performance_gain: f64, resourcecost: f64) -> f64 {
         let weighted_score =
             performance_gain * self.performance_weight - resource_cost * self.resource_weight;
 
@@ -2209,7 +2209,7 @@ impl ResourcePredictor {
     }
 
     /// Predict future resource usage
-    pub fn predict_usage(&mut self, horizon_steps: usize) -> ResourceUsage {
+    pub fn predict_usage(&mut self, horizonsteps: usize) -> ResourceUsage {
         if self.usage_history.len() < self.window_size {
             // Not enough data, return current average
             return self.get_average_usage();
@@ -2301,7 +2301,7 @@ impl ResourcePredictor {
 }
 
 impl ResourceManager {
-    fn new(_config: &StreamingConfig) -> Result<Self> {
+    fn new(config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             available_resources: ResourceBudget {
                 max_cpu_percent: 80.0,
@@ -2337,12 +2337,12 @@ impl ResourceManager {
 }
 
 impl<A: Float + Default + Clone> AdaptiveBuffer<A> {
-    fn new(_config: &StreamingConfig) -> Result<Self> {
+    fn new(config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             buffer: VecDeque::with_capacity(_config.buffer_size * 2),
-            current_size: _config.buffer_size,
-            min_size: _config.buffer_size / 2,
-            max_size: _config.buffer_size * 2,
+            current_size: config.buffer_size,
+            min_size: config.buffer_size / 2,
+            max_size: config.buffer_size * 2,
             adaptation_strategy: BufferSizeStrategy::PerformanceAdaptive,
             quality_metrics: BufferQualityMetrics {
                 diversity_score: A::zero(),
@@ -2353,7 +2353,7 @@ impl<A: Float + Default + Clone> AdaptiveBuffer<A> {
         })
     }
 
-    fn add_data_point(&mut self, data_point: StreamingDataPoint<A>) -> Result<()> {
+    fn add_data_point(&mut self, datapoint: StreamingDataPoint<A>) -> Result<()> {
         self.buffer.push_back(data_point);
         if self.buffer.len() > self.max_size {
             self.buffer.pop_front();
@@ -2373,12 +2373,13 @@ impl<A: Float + Default + Clone> AdaptiveBuffer<A> {
 
     fn compute_size_adaptation(
         &mut self,
-        batch: &[StreamingDataPoint<A>], _drift_detected: bool,
+        batch: &[StreamingDataPoint<A>],
+        _drift_detected: bool,
     ) -> Result<Option<Adaptation<A>>> {
         Ok(None)
     }
 
-    fn resize(&mut self, new_size: usize) -> Result<()> {
+    fn resize(&mut self, newsize: usize) -> Result<()> {
         self.current_size = new_size.max(self.min_size).min(self.max_size);
         Ok(())
     }

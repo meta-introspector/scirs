@@ -583,7 +583,7 @@ where
                 // When consolidating, prioritize discontinuities over other types
                 let should_replace = match (last.singularity_type, singularity.singularity_type) {
                     // Keep discontinuity over any other type
-                    (SingularityType:: Discontinuity) => false,
+                    (SingularityType::Discontinuity) => false,
                     // Replace any type with discontinuity
                     (_, SingularityType::Discontinuity) => true,
                     // Otherwise, use severity

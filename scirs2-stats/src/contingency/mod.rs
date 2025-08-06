@@ -188,7 +188,7 @@ where
 /// assert!(p_value >= 0.0f64 && p_value <= 1.0f64);
 /// ```
 #[allow(dead_code)]
-pub fn fisher_exact<F>(_table: &ArrayView2<F>, alternative: &str) -> StatsResult<(F, F)>
+pub fn fisher_exact<F>(table: &ArrayView2<F>, alternative: &str) -> StatsResult<(F, F)>
 where
     F: Float
         + std::iter::Sum<F>
@@ -200,11 +200,11 @@ where
         + std::fmt::Display,
 {
     // Check input dimensions
-    if _table.nrows() != 2 || _table.ncols() != 2 {
+    if table.nrows() != 2 || table.ncols() != 2 {
         return Err(StatsError::InvalidArgument(format!(
             "_table must be a 2x2 array, got {}x{}",
-            _table.nrows(),
-            _table.ncols()
+            table.nrows(),
+            table.ncols()
         )));
     }
 
@@ -217,10 +217,10 @@ where
     }
 
     // Extract values from the _table
-    let a = _table[[0, 0]];
-    let b = _table[[0, 1]];
-    let c = _table[[1, 0]];
-    let d = _table[[1, 1]];
+    let a = table[[0, 0]];
+    let b = table[[0, 1]];
+    let c = table[[1, 0]];
+    let d = table[[1, 1]];
 
     // Check that all values are non-negative
     if a < F::zero() || b < F::zero() || c < F::zero() || d < F::zero() {
@@ -345,7 +345,7 @@ where
 /// assert!(cramer_v >= 0.0f64 && cramer_v <= 1.0f64);
 /// ```
 #[allow(dead_code)]
-pub fn association<F>(_table: &ArrayView2<F>, measure: &str) -> StatsResult<F>
+pub fn association<F>(table: &ArrayView2<F>, measure: &str) -> StatsResult<F>
 where
     F: Float
         + std::iter::Sum<F>
@@ -357,15 +357,15 @@ where
         + std::fmt::Display,
 {
     // Check input dimensions
-    if _table.ndim() != 2 {
+    if table.ndim() != 2 {
         return Err(StatsError::InvalidArgument(format!(
             "_table must be a 2D array, got {}D",
-            _table.ndim()
+            table.ndim()
         )));
     }
 
-    let nrows = _table.nrows();
-    let ncols = _table.ncols();
+    let nrows = table.nrows();
+    let ncols = table.ncols();
 
     if nrows < 2 || ncols < 2 {
         return Err(StatsError::InvalidArgument(format!(
@@ -385,7 +385,7 @@ where
             let (chi2, _, _, _) = chi2_contingency(_table, false, None)?;
 
             // Calculate total sample size
-            let total: F = _table.iter().copied().sum();
+            let total: F = table.iter().copied().sum();
 
             if total <= F::zero() {
                 return Err(StatsError::InvalidArgument(
@@ -440,7 +440,7 @@ where
 /// assert!((rr - 2.0f64).abs() < 0.1f64);
 /// ```
 #[allow(dead_code)]
-pub fn relative_risk<F>(_table: &ArrayView2<F>) -> StatsResult<F>
+pub fn relative_risk<F>(table: &ArrayView2<F>) -> StatsResult<F>
 where
     F: Float
         + std::iter::Sum<F>
@@ -452,19 +452,19 @@ where
         + std::fmt::Display,
 {
     // Check input dimensions
-    if _table.nrows() != 2 || _table.ncols() != 2 {
+    if table.nrows() != 2 || table.ncols() != 2 {
         return Err(StatsError::InvalidArgument(format!(
             "_table must be a 2x2 array, got {}x{}",
-            _table.nrows(),
-            _table.ncols()
+            table.nrows(),
+            table.ncols()
         )));
     }
 
     // Extract values from the _table
-    let a = _table[[0, 0]]; // Exposed and disease
-    let b = _table[[0, 1]]; // Exposed and no disease
-    let c = _table[[1, 0]]; // Unexposed and disease
-    let d = _table[[1, 1]]; // Unexposed and no disease
+    let a = table[[0, 0]]; // Exposed and disease
+    let b = table[[0, 1]]; // Exposed and no disease
+    let c = table[[1, 0]]; // Unexposed and disease
+    let d = table[[1, 1]]; // Unexposed and no disease
 
     // Check that all values are non-negative
     if a < F::zero() || b < F::zero() || c < F::zero() || d < F::zero() {
@@ -557,7 +557,7 @@ where
 /// assert!((or - 4.33f64).abs() < 0.1f64);
 /// ```
 #[allow(dead_code)]
-pub fn odds_ratio<F>(_table: &ArrayView2<F>) -> StatsResult<F>
+pub fn odds_ratio<F>(table: &ArrayView2<F>) -> StatsResult<F>
 where
     F: Float
         + std::iter::Sum<F>
@@ -569,19 +569,19 @@ where
         + std::fmt::Display,
 {
     // Check input dimensions
-    if _table.nrows() != 2 || _table.ncols() != 2 {
+    if table.nrows() != 2 || table.ncols() != 2 {
         return Err(StatsError::InvalidArgument(format!(
             "_table must be a 2x2 array, got {}x{}",
-            _table.nrows(),
-            _table.ncols()
+            table.nrows(),
+            table.ncols()
         )));
     }
 
     // Extract values from the _table
-    let a = _table[[0, 0]]; // Exposed and disease
-    let b = _table[[0, 1]]; // Exposed and no disease
-    let c = _table[[1, 0]]; // Unexposed and disease
-    let d = _table[[1, 1]]; // Unexposed and no disease
+    let a = table[[0, 0]]; // Exposed and disease
+    let b = table[[0, 1]]; // Exposed and no disease
+    let c = table[[1, 0]]; // Unexposed and disease
+    let d = table[[1, 1]]; // Unexposed and no disease
 
     // Check that all values are non-negative
     if a < F::zero() || b < F::zero() || c < F::zero() || d < F::zero() {

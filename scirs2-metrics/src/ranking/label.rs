@@ -103,11 +103,11 @@ where
         .collect();
 
     // Sort by _score in descending order
-    score_relevance_idx.sort_by(|(a__), (b__)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+    score_relevance_idx.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
     // Find position of last relevant item
     let mut relevant_found = 0;
-    for (i, (_, rel_)) in score_relevance_idx.iter().enumerate() {
+    for (i, (_, rel)) in score_relevance_idx.iter().enumerate() {
         if *rel > zero {
             relevant_found += 1;
             if relevant_found == n_true {
@@ -205,14 +205,14 @@ where
         }
 
         // Create pairs of (_score, relevance) for sorting
-        let mut _score_relevance: Vec<_> = sample_score
+        let mut score_relevance: Vec<_> = sample_score
             .iter()
             .zip(sample_true.iter())
             .map(|(s, r)| (s.clone(), r.clone()))
             .collect();
 
         // Sort by _score in descending order
-        score_relevance.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        score_relevance.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
         // Find position of last relevant item
         let mut last_relevant_pos = 0;
@@ -453,14 +453,13 @@ where
             .collect();
 
         // Sort by _score in descending order
-        score_relevance_idx
-            .sort_by(|(a__), (b__)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        score_relevance_idx.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
         // Calculate precision at each relevant position
         let mut precision_sum = 0.0;
         let mut n_relevant_retrieved = 0;
 
-        for (rank, (_, rel_)) in score_relevance_idx.iter().enumerate() {
+        for (rank, (_, rel)) in score_relevance_idx.iter().enumerate() {
             if *rel > zero {
                 n_relevant_retrieved += 1;
                 precision_sum += n_relevant_retrieved as f64 / (rank + 1) as f64;

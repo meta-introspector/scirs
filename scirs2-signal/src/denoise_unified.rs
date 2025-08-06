@@ -396,31 +396,31 @@ pub fn auto_select_denoising_method(
 
 /// Preprocess signal before denoising
 #[allow(dead_code)]
-fn preprocess_signal(_signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
+fn preprocess_signal(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Basic preprocessing: remove DC offset
-    let mean = _signal.mean().unwrap_or(0.0);
+    let mean = signal.mean().unwrap_or(0.0);
     Ok(_signal.mapv(|x| x - mean))
 }
 
 /// Postprocess signal after denoising
 #[allow(dead_code)]
-fn postprocess_signal(_signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
+fn postprocess_signal(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Basic postprocessing: ensure no NaN or infinite values
-    let cleaned = _signal.mapv(|x| if x.is_finite() { x } else { 0.0 });
+    let cleaned = signal.mapv(|x| if x.is_finite() { x } else { 0.0 });
     Ok(cleaned)
 }
 
 /// Estimate noise level from signal
 #[allow(dead_code)]
-fn estimate_noise_level(_signal: &Array1<f64>) -> f64 {
-    if _signal.len() < 2 {
+fn estimate_noise_level(signal: &Array1<f64>) -> f64 {
+    if signal.len() < 2 {
         return 0.0;
     }
 
     // Use differences between adjacent samples as noise estimate
     let mut diffs = Vec::with_capacity(_signal.len() - 1);
     for i in 0.._signal.len() - 1 {
-        diffs.push((_signal[i + 1] - _signal[i]).abs());
+        diffs.push((_signal[i + 1] - signal[i]).abs());
     }
 
     // Use median of differences as robust noise estimate
@@ -430,19 +430,19 @@ fn estimate_noise_level(_signal: &Array1<f64>) -> f64 {
 
 /// Analyze signal complexity
 #[allow(dead_code)]
-fn analyze_signal_complexity(_signal: &Array1<f64>) -> f64 {
-    if _signal.len() < 4 {
+fn analyze_signal_complexity(signal: &Array1<f64>) -> f64 {
+    if signal.len() < 4 {
         return 0.0;
     }
 
     // Calculate second derivative as complexity measure
     let mut complexity_sum = 0.0;
     for i in 1.._signal.len() - 1 {
-        let second_deriv = _signal[i + 1] - 2.0 * _signal[i] + _signal[i - 1];
+        let second_deriv = signal[i + 1] - 2.0 * signal[i] + signal[i - 1];
         complexity_sum += second_deriv.abs();
     }
 
-    let signal_range = _signal.mapv(|x| x.abs()).into_iter().fold(0.0, f64::max);
+    let signal_range = signal.mapv(|x| x.abs()).into_iter().fold(0.0, f64::max);
     if signal_range > 0.0 {
         (complexity_sum / ((_signal.len() - 2) as f64)) / signal_range
     } else {
@@ -516,8 +516,8 @@ fn calculate_quality_metrics(
 
 /// Calculate high-frequency energy (simple approximation)
 #[allow(dead_code)]
-fn calculate_high_frequency_energy(_signal: &Array1<f64>) -> f64 {
-    if _signal.len() < 2 {
+fn calculate_high_frequency_energy(signal: &Array1<f64>) -> f64 {
+    if signal.len() < 2 {
         return 0.0;
     }
 
@@ -530,8 +530,8 @@ fn calculate_high_frequency_energy(_signal: &Array1<f64>) -> f64 {
 
 /// Calculate SNR improvement
 #[allow(dead_code)]
-fn calculate_snr_improvement(_original: &Array1<f64>, denoised: &Array1<f64>) -> Option<f64> {
-    if _original.len() != denoised.len() {
+fn calculate_snr_improvement(original: &Array1<f64>, denoised: &Array1<f64>) -> Option<f64> {
+    if original.len() != denoised.len() {
         return None;
     }
 
@@ -696,12 +696,12 @@ fn calculate_adaptive_quality_score(
 
 /// Detect artifacts in denoised signal
 #[allow(dead_code)]
-fn detect_artifacts(_original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
-    if _original.len() != denoised.len() {
+fn detect_artifacts(original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
+    if original.len() != denoised.len() {
         return 1.0; // Maximum penalty for length mismatch
     }
 
-    let n = _original.len();
+    let n = original.len();
     if n < 3 {
         return 0.0; // Cannot detect artifacts in very short signals
     }
@@ -714,7 +714,7 @@ fn detect_artifacts(_original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
     let mut denoised_hf_energy = 0.0;
 
     for i in 1..n {
-        let orig_diff = (_original[i] - _original[i - 1]).abs();
+        let orig_diff = (_original[i] - original[i - 1]).abs();
         let denoised_diff = (denoised[i] - denoised[i - 1]).abs();
 
         orig_hf_energy += orig_diff;
@@ -734,13 +734,13 @@ fn detect_artifacts(_original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
     let mut ringing_score = 0.0;
     for i in 2..n - 2 {
         // Look for significant changes in _original signal
-        let orig_change = (_original[i + 1] - _original[i - 1]).abs();
+        let orig_change = (_original[i + 1] - original[i - 1]).abs();
         if orig_change > 0.1 {
             // Check for oscillations in denoised signal around this point
             let denoised_oscillation =
                 ((denoised[i - 2] - denoised[i]) + (denoised[i + 2] - denoised[i])).abs();
             let orig_smoothness =
-                ((_original[i - 2] - _original[i]) + (_original[i + 2] - _original[i])).abs();
+                ((_original[i - 2] - original[i]) + (_original[i + 2] - original[i])).abs();
 
             if orig_smoothness > 1e-10 && denoised_oscillation > orig_smoothness * 2.0 {
                 ringing_score += 1.0;
@@ -755,8 +755,8 @@ fn detect_artifacts(_original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
     }
 
     // Check for unrealistic values
-    let orig_max = _original.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    let orig_min = _original.iter().cloned().fold(f64::INFINITY, f64::min);
+    let orig_max = original.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let orig_min = original.iter().cloned().fold(f64::INFINITY, f64::min);
     let denoised_max = denoised.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
     let denoised_min = denoised.iter().cloned().fold(f64::INFINITY, f64::min);
 
@@ -852,8 +852,8 @@ pub fn denoise_non_local_means(
 
 /// Calculate distance between patches centered at positions i and j
 #[allow(dead_code)]
-fn calculate_patch_distance(_signal: &Array1<f64>, i: usize, j: usize, patch_size: usize) -> f64 {
-    let n = _signal.len();
+fn calculate_patch_distance(_signal: &Array1<f64>, i: usize, j: usize, patchsize: usize) -> f64 {
+    let n = signal.len();
     let half_patch = patch_size / 2;
 
     let i_start = if i >= half_patch { i - half_patch } else { 0 };
@@ -870,7 +870,7 @@ fn calculate_patch_distance(_signal: &Array1<f64>, i: usize, j: usize, patch_siz
 
     for k in start_offset..min_len {
         if i_start + k < n && j_start + k < n {
-            let diff = _signal[i_start + k] - _signal[j_start + k];
+            let diff = signal[i_start + k] - signal[j_start + k];
             distance += diff * diff;
             count += 1;
         }
@@ -885,13 +885,14 @@ fn calculate_patch_distance(_signal: &Array1<f64>, i: usize, j: usize, patch_siz
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn test_unified_denoising_basic() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
         // Create a simple test signal
         let n = 64;
-        let signal: Array1<f64> = Array1::fromshape_fn(n, |i| {
+        let signal: Array1<f64> = Array1::from_shape_fn(n, |i| {
             (2.0 * PI * i as f64 / n as f64 * 4.0).sin() + 0.1 * (i as f64 * 0.1).sin()
         });
 

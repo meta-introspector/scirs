@@ -754,7 +754,7 @@ pub fn global_monitor() -> &'static ErrorMonitor {
 
 /// Convenience function to record an error globally
 #[allow(dead_code)]
-pub fn record_global_error(_code: ErrorCode, operation: impl Into<String>) {
+pub fn record_global_error(code: ErrorCode, operation: impl Into<String>) {
     global_monitor().record_error(_code, operation);
 }
 

@@ -165,7 +165,7 @@ where
             .write_all(&scale.to_le_bytes())
             .map_err(|e| LinalgError::ComputationError(format!("Failed to write scale: {e}")))?;
         writer.write_all(&zero_point.to_le_bytes()).map_err(|e| {
-            LinalgError::ComputationError(format!("Failed to write zero_point: {e}"))
+            LinalgError::ComputationError(format!("Failed to write zeropoint: {e}"))
         })?;
 
         // Then write the quantized matrix data in chunks
@@ -198,7 +198,8 @@ where
             params,
             file_path: file_path.to_string(),
             symmetric,
-            positive_definite: false, _phantom: std::marker::PhantomData,
+            positive_definite: false,
+            _phantom: std::marker::PhantomData,
         })
     }
 
@@ -578,9 +579,9 @@ where
     /// # Returns
     ///
     /// A new `ChunkedQuantizedMatrix` instance
-    pub fn from_file(file_path: &str) -> LinalgResult<Self> {
+    pub fn from_file(filepath: &str) -> LinalgResult<Self> {
         // Open the file for reading
-        let file = File::open(file_path)
+        let file = File::open(filepath)
             .map_err(|e| LinalgError::ComputationError(format!("Failed to open file: {e}")))?;
 
         let mut reader = BufReader::new(file);
@@ -601,7 +602,7 @@ where
             .read_exact(&mut scale_bytes)
             .map_err(|e| LinalgError::ComputationError(format!("Failed to read scale: {e}")))?;
         reader.read_exact(&mut zero_point_bytes).map_err(|e| {
-            LinalgError::ComputationError(format!("Failed to read zero_point: {e}"))
+            LinalgError::ComputationError(format!("Failed to read zeropoint: {e}"))
         })?;
 
         let rows = u64::from_le_bytes(rows_bytes) as usize;
@@ -640,9 +641,10 @@ where
         Ok(ChunkedQuantizedMatrix {
             shape: (rows, cols),
             params,
-            file_path: file_path.to_string(),
+            file_path: filepath.to_string(),
             symmetric: false,
-            positive_definite: false, _phantom: std::marker::PhantomData,
+            positive_definite: false,
+            _phantom: std::marker::PhantomData,
         })
     }
 }
@@ -687,18 +689,18 @@ where
 
 /// Check if a matrix is symmetric
 #[allow(dead_code)]
-fn is_matrix_symmetric<F>(_matrix: &ArrayView2<F>) -> bool
+fn is_matrix_symmetric<F>(matrix: &ArrayView2<F>) -> bool
 where
     F: Float + PartialEq,
 {
-    let (rows, cols) = _matrix.dim();
+    let (rows, cols) = matrix.dim();
     if rows != cols {
         return false;
     }
 
     for i in 0..rows {
         for j in i + 1..cols {
-            if _matrix[[i, j]] != _matrix[[j, i]] {
+            if matrix[[i, j]] != matrix[[j, i]] {
                 return false;
             }
         }
@@ -709,17 +711,17 @@ where
 
 /// Quantize a chunk of a matrix
 #[allow(dead_code)]
-fn quantize_chunk<F>(_chunk: &ArrayView2<F>, params: &QuantizationParams) -> LinalgResult<Vec<i8>>
+fn quantize_chunk<F>(chunk: &ArrayView2<F>, params: &QuantizationParams) -> LinalgResult<Vec<i8>>
 where
     F: Float + AsPrimitive<f32>,
 {
-    let rows = _chunk.dim().0;
-    let cols = _chunk.dim().1;
+    let rows = chunk.dim().0;
+    let cols = chunk.dim().1;
     let mut quantized = vec![0i8; rows * cols];
 
     for i in 0..rows {
         for j in 0..cols {
-            let val = _chunk[[i, j]].as_();
+            let val = chunk[[i, j]].as_();
             let q_val = if params.method == QuantizationMethod::Symmetric {
                 // For symmetric quantization, clamp to [-127, 127] for 8-bit
                 // or appropriate range for other bit widths
@@ -748,9 +750,9 @@ mod tests {
     use std::path::PathBuf;
 
     // Helper to get a temporary file path
-    fn get_temp_file_path(_name: &str) -> PathBuf {
+    fn get_temp_file_path(name: &str) -> PathBuf {
         let mut path = temp_dir();
-        path.push(format!("quantized_matrix_{}.bin", _name));
+        path.push(format!("quantized_matrix_{}.bin", name));
         path
     }
 

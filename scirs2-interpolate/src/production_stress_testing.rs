@@ -232,12 +232,13 @@ pub struct BaselinePerformance {
 
 impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T> {
     /// Create a new production stress tester
-    pub fn new(_config: StressTestConfig) -> Self {
+    pub fn new(config: StressTestConfig) -> Self {
         Self {
-            _config,
+            config,
             results: Vec::new(),
             baseline_performance: None,
-            error_patterns: HashMap::new(), _phantom: std::marker::PhantomData,
+            error_patterns: HashMap::new(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -393,7 +394,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                 "nan_inf_data" => self.create_nan_inf_data(1000),
                 "sparse_data" => self.create_sparse_data(1000),
                 "highly_oscillatory" => self.create_oscillatory_data(1000),
-                "monotonic_extreme" => self.create_monotonic_extreme_data(1000, _ => unreachable!(),
+                "monotonic_extreme" => self.create_monotonic_extreme_data(1000),
             };
 
             let test_result = match data_result {
@@ -583,7 +584,8 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                                 &y.view(),
                                 &query_x.view(),
                                 false, // extrapolate
-                            , _ => continue,
+                            ),
+                            _ => continue,
                         };
 
                         match result {
@@ -1186,8 +1188,9 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                 recommendations.push("Consider implementing production monitoring".to_string());
             }
             ProductionReadiness::NeedsWork => {
-                recommendations
-                    .push("⚠️  Address identified _issues before production deployment".to_string());
+                recommendations.push(
+                    "⚠️  Address identified _issues before production deployment".to_string(),
+                );
                 if !critical_issues.is_empty() {
                     recommendations.push(format!(
                         "Fix {} critical _issues immediately",
@@ -1198,8 +1201,9 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
             ProductionReadiness::NotReady => {
                 recommendations
                     .push("❌ DO NOT deploy to production - critical _issues found".to_string());
-                recommendations
-                    .push("Focus on resolving critical and high-severity _issues first".to_string());
+                recommendations.push(
+                    "Focus on resolving critical and high-severity _issues first".to_string(),
+                );
             }
         }
 
@@ -1250,7 +1254,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
     }
 
     /// Helper methods
-    fn estimate_memory_usage(&self, data_size: usize) -> u64 {
+    fn estimate_memory_usage(&self, datasize: usize) -> u64 {
         // Rough estimate: each T takes ~8 bytes, plus overhead
         (data_size * std::mem::size_of::<f64>() * 3) as u64
     }

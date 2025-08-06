@@ -85,11 +85,11 @@ fn evaluate_accuracy(
 
 /// Run sparse FFT with multiple algorithms and compare results
 #[allow(dead_code)]
-fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
+fn run_algorithm_comparison(n: usize, sparsity: usize, noiselevel: f64) {
     println!("\nRunning algorithm comparison:");
     println!("  Signal size: {n}");
     println!("  Expected sparsity: {sparsity}");
-    println!("  Noise _level: {noise_level:.3}");
+    println!("  Noise level: {noise_level:.3}");
 
     // Create a sparse signal with known frequencies
     let frequencies = vec![

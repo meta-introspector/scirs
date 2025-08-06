@@ -7,6 +7,6 @@ mod compatibility;
 
 pub use api_freeze_impl::{generate_frozen_api_report, initialize_api_freeze, is_api_frozen};
 pub use compatibility::{
-    check_apis_available, current_library_version, is_api_available, is_version_compatible,
+    check_apis_available, current_libraryversion, is_api_available, is_version_compatible,
     ApiCompatibilityChecker,
 };

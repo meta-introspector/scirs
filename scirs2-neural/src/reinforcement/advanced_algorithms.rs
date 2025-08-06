@@ -407,7 +407,7 @@ impl RainbowDQN {
     fn update_target_network(&mut self) -> Result<()> {
         // In a complete implementation, would copy weights from main to target network
 impl RLAgent for RainbowDQN {
-    fn act(&self, observation: &ArrayView1<f32>, _training: bool) -> Result<Array1<f32>> {
+    fn act(&self, observation: &ArrayView1<f32>, training: bool) -> Result<Array1<f32>> {
         let action_idx = self.select_action(observation)?;
         // Convert discrete action to one-hot encoding
         let mut action = Array1::zeros(self.q_network.base_network.action_dim);
@@ -658,8 +658,8 @@ impl Default for ExplorationConfig {
             noise_std: 0.1,
             curiosity_beta: 0.1,
 impl ExplorationStrategy {
-    pub fn new(_strategy_type: ExplorationStrategyType, config: ExplorationConfig) -> Self {
-            _strategy_type,
+    pub fn new(_strategytype: ExplorationStrategyType, config: ExplorationConfig) -> Self {
+            strategy_type,
     /// Select action with exploration
     pub fn select_action(
         q_values: &Array1<f32>,
@@ -677,7 +677,7 @@ use rand::rng;
 use ndarray::ArrayView1;
 use statrs::statistics::Statistics;
                     let mut rng = rng();
-                    Ok(rng.random_range(0..q_values.len()))
+                    Ok(rng.gen_range(0..q_values.len()))
                 } else {
                     // Greedy action
                     Ok(q_values.iter()

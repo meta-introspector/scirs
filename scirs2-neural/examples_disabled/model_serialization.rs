@@ -171,7 +171,7 @@ impl NeuralNetwork {
             layer_sizes.len() - 1,
             activations.len(),
             "Number of activations must match number of layers - 1"
-        let mut rng = SmallRng::seed_from_u64(seed);
+        let mut rng = SmallRng::from_seed(seed);
         let mut layers = Vec::with_capacity(layer_sizes.len() - 1);
         // Create layers
         for i in 0..layer_sizes.len() - 1 {
@@ -191,7 +191,7 @@ impl NeuralNetwork {
     fn loss(&self, predictions: &Array2<f32>, targets: &Array2<f32>) -> f32 {
         self.loss_fn.compute(predictions, targets)
     /// Backward pass and update parameters
-    fn backward(&mut self, x: &Array2<f32>, y: &Array2<f32>, learning_rate: f32) {
+    fn backward(&mut self, x: &Array2<f32>, y: &Array2<f32>, learningrate: f32) {
         // Forward pass
         let predictions = self.forward(x);
         // Compute loss derivative

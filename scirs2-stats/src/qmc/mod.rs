@@ -102,7 +102,7 @@ pub fn latin_hypercube(n: usize, d: usize, seed: Option<u64>) -> StatsResult<Arr
 
         // Shuffle intervals
         for i in (1..n).rev() {
-            let j = rng.random_range(0..i);
+            let j = rng.gen_range(0..i);
             intervals.swap(i, j);
         }
 
@@ -128,7 +128,7 @@ pub struct SobolSequence {
 
 impl SobolSequence {
     /// Create a new Sobol sequence generator
-    pub fn new(_dimension: usize, scramble: bool, seed: Option<u64>) -> StatsResult<Self> {
+    pub fn new(dimension: usize, scramble: bool, seed: Option<u64>) -> StatsResult<Self> {
         if _dimension == 0 || _dimension > 32 {
             return Err(StatsError::InvalidArgument(
                 "Dimension must be between 1 and 32".to_string(),
@@ -144,7 +144,7 @@ impl SobolSequence {
         };
 
         Ok(Self {
-            dimension: _dimension,
+            dimension: dimension,
             direction_numbers,
             current_index: 0,
             scramble,
@@ -193,7 +193,7 @@ impl SobolSequence {
     }
 
     /// Initialize direction numbers for Sobol sequence
-    fn initialize_direction_numbers(_dimension: usize) -> StatsResult<Vec<Vec<u32>>> {
+    fn initialize_direction_numbers(dimension: usize) -> StatsResult<Vec<Vec<u32>>> {
         let mut direction_numbers = vec![vec![0u32; 32]; _dimension];
 
         // First _dimension uses powers of 2
@@ -265,7 +265,7 @@ impl SobolSequence {
 
             // Generate random permutation matrix for each bit level
             for i in 0..32 {
-                let j = rng.random_range(0..32);
+                let j = rng.gen_range(0..32);
                 matrix[[i, j]] = 1;
             }
 
@@ -276,7 +276,7 @@ impl SobolSequence {
     }
 
     /// Apply Owen scrambling to a value
-    fn apply_scrambling(_value: u32, matrix: &Array2<u32>) -> u32 {
+    fn apply_scrambling(value: u32, matrix: &Array2<u32>) -> u32 {
         let mut result = 0u32;
 
         for i in 0..32 {
@@ -304,7 +304,7 @@ pub struct HaltonSequence {
 
 impl HaltonSequence {
     /// Create a new Halton sequence generator
-    pub fn new(_dimension: usize, scramble: bool, seed: Option<u64>) -> StatsResult<Self> {
+    pub fn new(dimension: usize, scramble: bool, seed: Option<u64>) -> StatsResult<Self> {
         if _dimension == 0 {
             return Err(StatsError::InvalidArgument(
                 "Dimension must be at least 1".to_string(),
@@ -320,7 +320,7 @@ impl HaltonSequence {
         };
 
         Ok(Self {
-            dimension: _dimension,
+            dimension: dimension,
             bases,
             current_index: 0,
             scramble,
@@ -366,10 +366,10 @@ impl HaltonSequence {
     }
 
     /// Compute radical inverse in given base
-    fn radical_inverse(_index: usize, base: u32) -> StatsResult<f64> {
+    fn radical_inverse(index: usize, base: u32) -> StatsResult<f64> {
         let mut result = 0.0;
         let mut fraction = 1.0 / base as f64;
-        let mut i = _index;
+        let mut i = index;
 
         while i > 0 {
             result += (i % base as usize) as f64 * fraction;
@@ -388,7 +388,7 @@ impl HaltonSequence {
     ) -> StatsResult<f64> {
         let mut result = 0.0;
         let mut fraction = 1.0 / base as f64;
-        let mut i = _index;
+        let mut i = index;
 
         while i > 0 {
             let digit = i % base as usize;
@@ -443,7 +443,7 @@ impl HaltonSequence {
     }
 
     /// Generate random permutations for scrambling
-    fn generate_permutations(_bases: &[u32], seed: Option<u64>) -> StatsResult<Vec<Vec<u32>>> {
+    fn generate_permutations(bases: &[u32], seed: Option<u64>) -> StatsResult<Vec<Vec<u32>>> {
         let mut rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
             None => {
@@ -463,7 +463,7 @@ impl HaltonSequence {
 
             // Fisher-Yates shuffle
             for i in (1..base).rev() {
-                let j = rng.random_range(0..i);
+                let j = rng.gen_range(0..i);
                 perm.swap(i as usize, j as usize);
             }
 
@@ -476,15 +476,15 @@ impl HaltonSequence {
 
 /// Discrepancy measures for QMC sequences
 #[allow(dead_code)]
-pub fn star_discrepancy(_samples: &ArrayView1<Array1<f64>>) -> StatsResult<f64> {
-    if _samples.is_empty() {
+pub fn star_discrepancy(samples: &ArrayView1<Array1<f64>>) -> StatsResult<f64> {
+    if samples.is_empty() {
         return Err(StatsError::InvalidArgument(
             "_samples array cannot be empty".to_string(),
         ));
     }
 
-    let n = _samples.len();
-    let d = _samples[0].len();
+    let n = samples.len();
+    let d = samples[0].len();
 
     // Simplified star discrepancy calculation
     // In practice, this would use more sophisticated algorithms
@@ -500,7 +500,7 @@ pub fn star_discrepancy(_samples: &ArrayView1<Array1<f64>>) -> StatsResult<f64> 
 
         // Count points in box [0, test_point]
         let mut count = 0;
-        for sample in _samples.iter() {
+        for sample in samples.iter() {
             let mut in_box = true;
             for j in 0..d {
                 if sample[j] > test_point[j] {

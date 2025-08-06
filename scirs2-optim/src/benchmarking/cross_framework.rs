@@ -289,7 +289,7 @@ struct PythonScriptTemplates {
 
 impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
     /// Create a new cross-framework benchmark suite
-    pub fn new(_config: CrossFrameworkConfig) -> Result<Self> {
+    pub fn new(config: CrossFrameworkConfig) -> Result<Self> {
         let python_scripts = PythonScriptTemplates::new();
 
         // Create temporary directory
@@ -298,7 +298,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         })?;
 
         Ok(Self {
-            config: _config,
+            config: config,
             test_functions: Vec::new(),
             python_scripts,
             results: Vec::new(),
@@ -306,7 +306,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
     }
 
     /// Add a test function to the benchmark suite
-    pub fn add_test_function(&mut self, test_function: TestFunction<A>) {
+    pub fn add_test_function(&mut self, testfunction: TestFunction<A>) {
         self.test_functions.push(test_function);
     }
 
@@ -477,7 +477,8 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
     fn benchmark_scirs2_optimizer(
         &self,
         test_function: &TestFunction<A>,
-        problem_dim: usize, _batch_size: usize,
+        problem_dim: usize,
+        _batch_size: usize,
         optimizer: &dyn Fn(&Array1<A>, &Array1<A>) -> Array1<A>,
     ) -> Result<OptimizerBenchmarkSummary<A>> {
         let mut convergence_times = Vec::new();
@@ -878,7 +879,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         let cpu_usage = results
             .iter()
-            .map(|(id_, _summary)| {
+            .map(|(id_, summary)| {
                 (
                     id_.clone(),
                     CpuStats {

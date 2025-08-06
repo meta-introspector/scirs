@@ -184,7 +184,7 @@ impl Default for MemoryProfilerConfig {
 
 impl AdvancedMemoryProfiler {
     /// Create a new memory profiler
-    pub fn new(_config: MemoryProfilerConfig) -> Self {
+    pub fn new(config: MemoryProfilerConfig) -> Self {
         let now = SystemTime::now();
         Self {
             profile: MemoryProfile {
@@ -203,7 +203,7 @@ impl AdvancedMemoryProfiler {
                     recommendations: Vec::new(),
                 },
             },
-            _config,
+            config,
             active_allocations: HashMap::new(),
             start_time: now,
             last_gc_time: now,
@@ -459,13 +459,13 @@ impl AdvancedMemoryProfiler {
     }
 
     /// Estimate workspace memory for an algorithm
-    fn estimate_workspace_memory(&self, algorithm_name: &str) -> usize {
+    fn estimate_workspace_memory(&self, algorithmname: &str) -> usize {
         match algorithm_name {
-            _name if _name.contains("pagerank") => 1024 * 1024, // 1MB for PageRank workspace
-            _name if _name.contains("community") => 2048 * 1024, // 2MB for community detection
-            _name if _name.contains("centrality") => 512 * 1024, // 512KB for centrality
-            _name if _name.contains("shortest") => 1536 * 1024, // 1.5MB for shortest paths
-            _ => 256 * 1024,                                  // 256KB default
+            _name if name.contains("pagerank") => 1024 * 1024, // 1MB for PageRank workspace
+            _name if name.contains("community") => 2048 * 1024, // 2MB for community detection
+            _name if name.contains("centrality") => 512 * 1024, // 512KB for centrality
+            _name if name.contains("shortest") => 1536 * 1024, // 1.5MB for shortest paths
+            _ => 256 * 1024,                                    // 256KB default
         }
     }
 
@@ -477,7 +477,7 @@ impl AdvancedMemoryProfiler {
     }
 
     /// Calculate execution efficiency
-    fn calculate_execution_efficiency(&self, initial_memory: usize, final_memory: usize) -> f64 {
+    fn calculate_execution_efficiency(&self, initial_memory: usize, finalmemory: usize) -> f64 {
         if initial_memory == 0 {
             return 1.0;
         }
@@ -1119,7 +1119,7 @@ pub fn generate_profiled_large_graph(
 
         if batch_start % (NODE_BATCH_SIZE * 10) == 0 {
             println!(
-                "   📊 Added {} _nodes, current memory usage estimate: {:.1} MB",
+                "   📊 Added {} nodes, current memory usage estimate: {:.1} MB",
                 batch_end,
                 (batch_end * 16) as f64 / 1_000_000.0
             );
@@ -1157,7 +1157,7 @@ pub fn generate_profiled_large_graph(
 
     let generation_time = generation_start.elapsed();
     println!(
-        "✅ Graph generation completed in {:?}: {} _nodes, {} edges",
+        "✅ Graph generation completed in {:?}: {} nodes, {} edges",
         generation_time,
         graph.node_count(),
         graph.edge_count()

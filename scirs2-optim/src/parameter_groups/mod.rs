@@ -245,14 +245,14 @@ impl<A: Float> ParameterGroupConfig<A> {
     }
 
     /// Add L2 norm constraint
-    pub fn with_l2_norm_constraint(mut self, max_norm: A) -> Self {
+    pub fn with_l2_norm_constraint(mut self, maxnorm: A) -> Self {
         self.constraints
             .push(ParameterConstraint::L2NormConstraint { max_norm });
         self
     }
 
     /// Add L1 norm constraint
-    pub fn with_l1_norm_constraint(mut self, max_norm: A) -> Self {
+    pub fn with_l1_norm_constraint(mut self, maxnorm: A) -> Self {
         self.constraints
             .push(ParameterConstraint::L1NormConstraint { max_norm });
         self
@@ -284,21 +284,21 @@ impl<A: Float> ParameterGroupConfig<A> {
     }
 
     /// Add positive definite constraint for symmetric matrices
-    pub fn with_positive_definite(mut self, min_eigenvalue: A) -> Self {
+    pub fn with_positive_definite(mut self, mineigenvalue: A) -> Self {
         self.constraints
             .push(ParameterConstraint::PositiveDefinite { min_eigenvalue });
         self
     }
 
     /// Add spectral norm constraint
-    pub fn with_spectral_norm(mut self, max_norm: A) -> Self {
+    pub fn with_spectral_norm(mut self, maxnorm: A) -> Self {
         self.constraints
             .push(ParameterConstraint::SpectralNorm { max_norm });
         self
     }
 
     /// Add nuclear norm constraint
-    pub fn with_nuclear_norm(mut self, max_norm: A) -> Self {
+    pub fn with_nuclear_norm(mut self, maxnorm: A) -> Self {
         self.constraints
             .push(ParameterConstraint::NuclearNorm { max_norm });
         self
@@ -326,9 +326,9 @@ pub struct ParameterGroup<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterGroup<A, D> {
     /// Create a new parameter group
-    pub fn new(_id: usize, params: Vec<Array<A, D>>, config: ParameterGroupConfig<A>) -> Self {
+    pub fn new(id: usize, params: Vec<Array<A, D>>, config: ParameterGroupConfig<A>) -> Self {
         Self {
-            id: _id,
+            id: id,
             params,
             config,
             state: HashMap::new(),
@@ -406,10 +406,10 @@ pub trait GroupedOptimizer<A: Float + ScalarOperand + Debug, D: Dimension>:
     ) -> Result<usize>;
 
     /// Get parameter group by ID
-    fn get_group(&self, group_id: usize) -> Result<&ParameterGroup<A, D>>;
+    fn get_group(&self, groupid: usize) -> Result<&ParameterGroup<A, D>>;
 
     /// Get mutable parameter group by ID
-    fn get_group_mut(&mut self, group_id: usize) -> Result<&mut ParameterGroup<A, D>>;
+    fn get_group_mut(&mut self, groupid: usize) -> Result<&mut ParameterGroup<A, D>>;
 
     /// Get all parameter groups
     fn groups(&self) -> &[ParameterGroup<A, D>];
@@ -425,10 +425,10 @@ pub trait GroupedOptimizer<A: Float + ScalarOperand + Debug, D: Dimension>:
     ) -> Result<Vec<Array<A, D>>>;
 
     /// Set learning rate for a specific group
-    fn set_group_learning_rate(&mut self, group_id: usize, lr: A) -> Result<()>;
+    fn set_group_learning_rate(&mut self, groupid: usize, lr: A) -> Result<()>;
 
     /// Set weight decay for a specific group
-    fn set_group_weight_decay(&mut self, group_id: usize, wd: A) -> Result<()>;
+    fn set_group_weight_decay(&mut self, groupid: usize, wd: A) -> Result<()>;
 }
 
 /// Helper struct for managing parameter groups
@@ -540,7 +540,7 @@ pub mod checkpointing {
 
     impl CheckpointMetadata {
         /// Create new metadata with current timestamp
-        pub fn new(optimizer_version: String) -> Self {
+        pub fn new(optimizerversion: String) -> Self {
             use std::time::{SystemTime, UNIX_EPOCH};
 
             let timestamp = SystemTime::now()
@@ -1130,10 +1130,10 @@ pub mod checkpointing {
         }
 
         /// Create a new checkpoint manager with maximum number of checkpoints
-        pub fn with_max_checkpoints(_max_checkpoints: usize) -> Self {
+        pub fn with_max_checkpoints(_maxcheckpoints: usize) -> Self {
             Self {
                 checkpoints: HashMap::new(),
-                max_checkpoints: _max_checkpoints,
+                max_checkpoints: max_checkpoints,
                 checkpoint_keys: Vec::new(),
             }
         }

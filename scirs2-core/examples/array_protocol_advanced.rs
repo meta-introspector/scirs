@@ -84,7 +84,7 @@ fn main() {
     // Configure mixed precision
     let mixed_precision_config = MixedPrecisionConfig {
         storage_precision: Precision::Single,
-        compute_precision: Precision::Double,
+        computeprecision: Precision::Double,
         auto_precision: true,
         downcast_threshold: 1000,
         double_precision_accumulation: true,

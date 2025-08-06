@@ -232,7 +232,7 @@ where
 
 /// Helper function for chunked SIMD sum
 #[allow(dead_code)]
-fn chunked_simd_sum<F, D>(x: &ArrayBase<D, Ix1>, _config: &SimdConfig) -> StatsResult<F>
+fn chunked_simd_sum<F, D>(x: &ArrayBase<D, Ix1>, config: &SimdConfig) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
     D: Data<Elem = F>,

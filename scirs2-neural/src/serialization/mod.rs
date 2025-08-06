@@ -265,7 +265,7 @@ fn deserialize_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
             bound_layers.push(Box::new(conv.clone()));
         } else if let Some(bn) = layer_ref.as_any().downcast_ref::<BatchNorm<F>>() {
             // Create a new instance rather than cloning to avoid RefCell issues
-            let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+            let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
             let new_bn = BatchNorm::new(
                 bn.num_features(),
                 bn.momentum().to_f64().unwrap(),
@@ -295,7 +295,7 @@ fn create_dense_layer<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
     config: &DenseConfig,
     params: &[Vec<f64>],
 ) -> Result<Dense<F>> {
-    let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+    let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
     let mut layer = Dense::new(
         config.input_dim,
         config.output_dim,
@@ -431,7 +431,7 @@ pub enum ActivationFunction {
     Mish,
 impl ActivationFunction {
     /// Convert activation function name to ActivationFunction enum
-    pub fn from_name(_name: &str) -> Option<Self> {
+    pub fn from_name(name: &str) -> Option<Self> {
         match _name {
             "relu" | "ReLU" => Some(ActivationFunction::ReLU),
             "sigmoid" | "Sigmoid" => Some(ActivationFunction::Sigmoid),
@@ -440,9 +440,9 @@ impl ActivationFunction {
             "gelu" | "GELU" => Some(ActivationFunction::GELU),
             "swish" | "Swish" => Some(ActivationFunction::Swish),
             "mish" | "Mish" => Some(ActivationFunction::Mish, _ => {
-                if _name.starts_with("leaky_relu") || _name.starts_with("LeakyReLU") {
+                if name.starts_with("leaky_relu") || name.starts_with("LeakyReLU") {
                     // Extract alpha value
-                    let parts: Vec<&str> = _name.split('(').collect();
+                    let parts: Vec<&str> = name.split('(').collect();
                     if parts.len() == 2 {
                         let alpha_str = parts[1].trim_end_matches(')');
                         if let Ok(alpha) = alpha_str.parse::<f64>() {

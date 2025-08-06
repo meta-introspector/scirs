@@ -4,7 +4,6 @@
 // including Hamming, Hann, Blackman, and others. These windows are useful for
 // reducing spectral leakage in Fourier transforms and filter design.
 
-use super::{analyze_window, compare_windows};
 use crate::error::{SignalError, SignalResult};
 use std::f64::consts::PI;
 
@@ -38,7 +37,7 @@ pub use kaiser::{kaiser, kaiser_bessel_derived};
 /// assert!(window[window.len() / 2] > 0.9);
 /// ```
 #[allow(dead_code)]
-pub fn get_window(_window_type: &str, length: usize, periodic: bool) -> SignalResult<Vec<f64>> {
+pub fn get_window(windowtype: &str, length: usize, periodic: bool) -> SignalResult<Vec<f64>> {
     if length == 0 {
         return Err(SignalError::ValueError(
             "Window length must be positive".to_string(),
@@ -79,7 +78,7 @@ pub fn get_window(_window_type: &str, length: usize, periodic: bool) -> SignalRe
             lanczos(length, 2, !periodic)
         }
         _ => Err(SignalError::ValueError(format!(
-            "Unknown window _type: {}",
+            "Unknown window type: {}",
             window_type
         ))),
     }
@@ -842,7 +841,7 @@ pub fn dpss_windows(
             *w /= norm;
         }
 
-        _windows.push(_truncate(window, needs_trunc));
+        windows.push(_truncate(window, needs_trunc));
     }
 
     Ok(_windows)
@@ -893,7 +892,7 @@ fn solve_tridiagonal_eigenproblem(
     off_diag: &[f64],
     num_eigenvals: usize,
 ) -> SignalResult<(Vec<f64>, Vec<Vec<f64>>)> {
-    let n = _diag.len();
+    let n = diag.len();
     if off_diag.len() != n - 1 {
         return Err(SignalError::ValueError(
             "Inconsistent matrix dimensions".to_string(),
@@ -942,7 +941,7 @@ fn solve_tridiagonal_eigenproblem(
 
             // Matrix-vector multiplication for tridiagonal matrix
             for i in 0..n {
-                new_v[i] += _diag[i] * v[i];
+                new_v[i] += diag[i] * v[i];
                 if i > 0 {
                     new_v[i] += off_diag[i - 1] * v[i - 1];
                 }
@@ -987,7 +986,7 @@ fn solve_tridiagonal_eigenproblem(
             v = new_v;
         }
 
-        _eigenvals.push(eigenval);
+        eigenvals.push(eigenval);
         eigenvecs.push(v);
     }
 
@@ -996,6 +995,7 @@ fn solve_tridiagonal_eigenproblem(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_hamming_window() {
@@ -1205,7 +1205,7 @@ mod tests {
 /// assert_eq!(window.len(), 10);
 /// ```
 #[allow(dead_code)]
-pub fn lanczos(_length: usize, a: i32, sym: bool) -> SignalResult<Vec<f64>> {
+pub fn lanczos(length: usize, a: i32, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(_length) {
         return Ok(vec![1.0; _length]);
     }
@@ -1256,6 +1256,8 @@ pub fn lanczos(_length: usize, a: i32, sym: bool) -> SignalResult<Vec<f64>> {
 
 #[cfg(test)]
 mod lanczos_tests {
+    use super::*;
+    use approx::assert_relative_eq;
 
     #[test]
     fn test_lanczos_basic() {
@@ -1376,25 +1378,25 @@ pub mod analysis {
         _window: &[f64],
         fft_size: Option<usize>,
     ) -> SignalResult<WindowAnalysis> {
-        if _window.is_empty() {
+        if window.is_empty() {
             return Err(SignalError::ValueError(
                 "Window cannot be empty".to_string(),
             ));
         }
 
-        let n = _window.len();
+        let n = window.len();
         let fft_len = fft_size.unwrap_or(n * 8).max(n);
 
         // Calculate basic gains
-        let coherent_gain = _window.iter().sum::<f64>();
-        let power_gain = _window.iter().map(|&x| x * x).sum::<f64>();
+        let coherent_gain = window.iter().sum::<f64>();
+        let power_gain = window.iter().map(|&x| x * x).sum::<f64>();
 
         // Normalized Effective Noise Bandwidth
         let nenbw = n as f64 * power_gain / (coherent_gain * coherent_gain);
 
         // Zero-pad _window for FFT analysis
         let mut padded_window = vec![0.0; fft_len];
-        for (i, &val) in _window.iter().enumerate() {
+        for (i, &val) in window.iter().enumerate() {
             padded_window[i] = val;
         }
 
@@ -1510,8 +1512,8 @@ pub mod analysis {
 
     // Helper functions
 
-    fn compute_window_fft_magnitude(_window: &[f64]) -> SignalResult<Vec<f64>> {
-        let n = _window.len();
+    fn compute_window_fft_magnitude(window: &[f64]) -> SignalResult<Vec<f64>> {
+        let n = window.len();
         let mut magnitude = vec![0.0; n / 2 + 1];
 
         // Simple DFT computation for magnitude spectrum
@@ -1519,7 +1521,7 @@ pub mod analysis {
             let mut real = 0.0;
             let mut imag = 0.0;
 
-            for (i, &w) in _window.iter().enumerate() {
+            for (i, &w) in window.iter().enumerate() {
                 let angle = -2.0 * PI * k as f64 * i as f64 / n as f64;
                 real += w * angle.cos();
                 imag += w * angle.sin();
@@ -1541,14 +1543,14 @@ pub mod analysis {
 
         // Look for first null or significant drop
         #[allow(clippy::needless_range_loop)]
-        for i in 1..freq_response._len().min(fft_len / window_len * 4) {
+        for i in 1..freq_response.len().min(fft_len / window_len * 4) {
             if freq_response[i] < threshold {
                 return Ok(i);
             }
         }
 
         // Default to 4 bins if no clear null found
-        Ok(4.min(freq_response._len() - 1))
+        Ok(4.min(freq_response.len() - 1))
     }
 
     fn find_bandwidth(
@@ -1563,7 +1565,7 @@ pub mod analysis {
 
         // Search to the right of peak
         #[allow(clippy::needless_range_loop)]
-        for i in 1..freq_response._len() {
+        for i in 1..freq_response.len() {
             if freq_response[i] < threshold {
                 right_point = i as f64;
                 break;
@@ -1578,6 +1580,9 @@ pub mod analysis {
 
     #[cfg(test)]
     mod analysis_tests {
+        use super::*;
+        use approx::assert_relative_eq;
+
         #[test]
         fn test_window_analysis() {
             let window = hann(64, true).unwrap();
@@ -1605,10 +1610,14 @@ pub mod analysis {
             assert_eq!(comparison.len(), 2);
 
             // Hamming should have lower sidelobes than Hann
-            let hann_analysis = &comparison.iter().find(|(name_)| name == "hann").unwrap().1;
+            let hann_analysis = &comparison
+                .iter()
+                .find(|(name_, _)| name_ == "hann")
+                .unwrap()
+                .1;
             let hamming_analysis = &comparison
                 .iter()
-                .find(|(name_)| name == "hamming")
+                .find(|(name_, _)| name_ == "hamming")
                 .unwrap()
                 .1;
             assert!(hamming_analysis.max_sidelobe_db < hann_analysis.max_sidelobe_db);
@@ -1919,7 +1928,7 @@ pub mod analysis {
         }
 
         // Validate control _points
-        for &(pos_val) in control_points {
+        for &(pos, val) in control_points {
             if !(0.0..=1.0).contains(&pos) {
                 return Err(SignalError::ValueError(
                     "Control point positions must be between 0.0 and 1.0".to_string(),
@@ -1948,7 +1957,7 @@ pub mod analysis {
 
     // Helper functions
 
-    fn find_cutoff_frequency(_freq_response: &[f64], threshold: f64, freq_bin_width: f64) -> f64 {
+    fn find_cutoff_frequency(_freq_response: &[f64], threshold: f64, freq_binwidth: f64) -> f64 {
         for (i, &val) in _freq_response
             .iter()
             .enumerate()
@@ -1961,10 +1970,10 @@ pub mod analysis {
         0.5 // Nyquist frequency as fallback
     }
 
-    fn interpolate_control_points(_control_points: &[(f64, f64)], x: f64) -> f64 {
+    fn interpolate_control_points(controlpoints: &[(f64, f64)], x: f64) -> f64 {
         // Simple linear interpolation between control _points
-        if x <= _control_points[0].0 {
-            return _control_points[0].1;
+        if x <= control_points[0].0 {
+            return control_points[0].1;
         }
 
         for i in 1..control_points.len() {

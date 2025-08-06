@@ -197,8 +197,8 @@ pub fn j0_advancedfast(x: f64) -> SpecialResult<f64> {
 
 /// Optimized array processing with adaptive optimization
 #[allow(dead_code)]
-pub fn gamma_array_advancedfast(_input: &ArrayView1<f64>, config: &PerformanceConfig) -> SpecialResult<Array1<f64>> {
-    let len = _input.len();
+pub fn gamma_array_advancedfast(input: &ArrayView1<f64>, config: &PerformanceConfig) -> SpecialResult<Array1<f64>> {
+    let len = input.len();
     let mut output = Array1::zeros(len);
     
     // Adaptive processing based on array size
@@ -208,7 +208,7 @@ pub fn gamma_array_advancedfast(_input: &ArrayView1<f64>, config: &PerformanceCo
         {
             use scirs2_core::parallel_ops::*;
             
-            _input.as_slice().unwrap()
+            input.as_slice().unwrap()
                 .par_chunks(config.chunk_size)
                 .zip(output.as_slice_mut().unwrap().par_chunks_mut(config.chunk_size))
                 .try_for_each(|(input_chunk, output_chunk)| -> SpecialResult<()> {
@@ -245,7 +245,7 @@ pub fn gamma_array_advancedfast(_input: &ArrayView1<f64>, config: &PerformanceCo
     }
     
     // Fallback to scalar processing
-    for (i, &x) in _input.iter().enumerate() {
+    for (i, &x) in input.iter().enumerate() {
         output[i] = gamma_advancedfast(x)?;
     }
     

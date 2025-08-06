@@ -60,16 +60,16 @@ where
     F: ChunkableFunction<T> + Send + Sync,
 {
     /// Create a new chunked processor
-    pub fn new(_config: ChunkedConfig, function: F) -> Self {
+    pub fn new(config: ChunkedConfig, function: F) -> Self {
         Self {
-            config: _config,
+            config: config,
             function,
             _phantom: PhantomData,
         }
     }
 
     /// Calculate optimal chunk size based on element size and config
-    fn calculate_chunk_size(&self, total_elements: usize) -> usize {
+    fn calculate_chunk_size(&self, totalelements: usize) -> usize {
         let element_size = std::mem::size_of::<T>();
         let max_elements = self.config.max_chunk_bytes / element_size;
 

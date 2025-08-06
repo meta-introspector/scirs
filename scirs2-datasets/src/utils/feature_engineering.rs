@@ -173,9 +173,9 @@ fn generate_polynomial_combinations(
 /// // Result includes 9 statistical measures for each of the 2 original features
 /// ```
 #[allow(dead_code)]
-pub fn statistical_features(_data: &Array2<f64>) -> Result<Array2<f64>> {
-    let n_samples = _data.nrows();
-    let n_features = _data.ncols();
+pub fn statistical_features(data: &Array2<f64>) -> Result<Array2<f64>> {
+    let n_samples = data.nrows();
+    let n_features = data.ncols();
 
     if n_samples == 0 || n_features == 0 {
         return Err(DatasetsError::InvalidFormat(
@@ -189,7 +189,7 @@ pub fn statistical_features(_data: &Array2<f64>) -> Result<Array2<f64>> {
 
     for sample_idx in 0..n_samples {
         for feature_idx in 0..n_features {
-            let feature_values = _data.column(feature_idx);
+            let feature_values = data.column(feature_idx);
 
             // Calculate basic statistics
             let mean = feature_values.mean().unwrap_or(0.0);
@@ -230,8 +230,8 @@ pub fn statistical_features(_data: &Array2<f64>) -> Result<Array2<f64>> {
 
 /// Calculates a specific quantile from sorted data
 #[allow(dead_code)]
-fn calculate_quantile(_sorted_data: &[f64], quantile: f64) -> f64 {
-    if _sorted_data.is_empty() {
+fn calculate_quantile(_sorteddata: &[f64], quantile: f64) -> f64 {
+    if sorted_data.is_empty() {
         return 0.0;
     }
 
@@ -250,26 +250,26 @@ fn calculate_quantile(_sorted_data: &[f64], quantile: f64) -> f64 {
 
 /// Calculates skewness (third moment)
 #[allow(dead_code)]
-fn calculate_skewness(_data: &ndarray::ArrayView1<f64>, mean: f64, std: f64) -> f64 {
+fn calculate_skewness(data: &ndarray::ArrayView1<f64>, mean: f64, std: f64) -> f64 {
     if std <= 1e-10 {
         return 0.0;
     }
 
-    let n = _data.len() as f64;
-    let sum_cubed_deviations: f64 = _data.iter().map(|&x| ((x - mean) / std).powi(3)).sum();
+    let n = data.len() as f64;
+    let sum_cubed_deviations: f64 = data.iter().map(|&x| ((x - mean) / std).powi(3)).sum();
 
     sum_cubed_deviations / n
 }
 
 /// Calculates kurtosis (fourth moment)
 #[allow(dead_code)]
-fn calculate_kurtosis(_data: &ndarray::ArrayView1<f64>, mean: f64, std: f64) -> f64 {
+fn calculate_kurtosis(data: &ndarray::ArrayView1<f64>, mean: f64, std: f64) -> f64 {
     if std <= 1e-10 {
         return 0.0;
     }
 
-    let n = _data.len() as f64;
-    let sum_fourth_deviations: f64 = _data.iter().map(|&x| ((x - mean) / std).powi(4)).sum();
+    let n = data.len() as f64;
+    let sum_fourth_deviations: f64 = data.iter().map(|&x| ((x - mean) / std).powi(4)).sum();
 
     (sum_fourth_deviations / n) - 3.0 // Excess kurtosis (subtract 3 for normal distribution)
 }
@@ -377,7 +377,7 @@ fn calculate_bin_edges(
 
 /// Find the bin index for a given value
 #[allow(dead_code)]
-fn find_bin_index(_value: f64, bin_edges: &[f64]) -> usize {
+fn find_bin_index(_value: f64, binedges: &[f64]) -> usize {
     for (i, &edge) in bin_edges.iter().enumerate().skip(1) {
         if _value <= edge {
             return i - 1;

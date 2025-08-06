@@ -84,9 +84,9 @@ impl Dataset {
     /// let target = Some(Array1::zeros(100));
     /// let dataset = Dataset::new(data, target);
     /// ```
-    pub fn new(_data: Array2<f64>, target: Option<Array1<f64>>) -> Self {
+    pub fn new(data: Array2<f64>, target: Option<Array1<f64>>) -> Self {
         Dataset {
-            _data,
+            data,
             target,
             target_names: None,
             feature_names: None,
@@ -138,7 +138,7 @@ impl Dataset {
     /// # Returns
     ///
     /// Self for method chaining
-    pub fn with_target_names(mut self, target_names: Vec<String>) -> Self {
+    pub fn with_target_names(mut self, targetnames: Vec<String>) -> Self {
         self.target_names = Some(target_names);
         self
     }
@@ -152,7 +152,7 @@ impl Dataset {
     /// # Returns
     ///
     /// Self for method chaining
-    pub fn with_feature_names(mut self, feature_names: Vec<String>) -> Self {
+    pub fn with_feature_names(mut self, featurenames: Vec<String>) -> Self {
         self.feature_names = Some(feature_names);
         self
     }
@@ -166,7 +166,7 @@ impl Dataset {
     /// # Returns
     ///
     /// Self for method chaining
-    pub fn with_feature_descriptions(mut self, feature_descriptions: Vec<String>) -> Self {
+    pub fn with_feature_descriptions(mut self, featuredescriptions: Vec<String>) -> Self {
         self.feature_descriptions = Some(feature_descriptions);
         self
     }

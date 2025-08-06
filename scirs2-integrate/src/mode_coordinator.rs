@@ -111,8 +111,8 @@ impl<
     > AdvancedModeCoordinator<F>
 {
     /// Create a new Advanced mode coordinator
-    pub fn new(_config: AdvancedModeConfig) -> IntegrateResult<Self> {
-        let gpu_accelerator = if _config.enable_gpu {
+    pub fn new(config: AdvancedModeConfig) -> IntegrateResult<Self> {
+        let gpu_accelerator = if config.enable_gpu {
             // Try to create GPU accelerator, fallback to CPU mode if GPU not available
             match AdvancedGPUAccelerator::new() {
                 Ok(accelerator) => Arc::new(Mutex::new(accelerator)),
@@ -130,7 +130,7 @@ impl<
         let simd_accelerator = Arc::new(Mutex::new(AdvancedSimdAccelerator::new()?));
         let adaptive_optimizer = Arc::new(Mutex::new(RealTimeAdaptiveOptimizer::new()));
 
-        let neural_rl_controller = if _config.enable_neural_rl {
+        let neural_rl_controller = if config.enable_neural_rl {
             Arc::new(Mutex::new(NeuralRLStepController::new()?))
         } else {
             // Create a dummy controller for interface consistency
@@ -143,7 +143,7 @@ impl<
             simd_accelerator,
             adaptive_optimizer,
             neural_rl_controller,
-            config: _config,
+            config: config,
         })
     }
 
@@ -250,19 +250,19 @@ impl<
             };
 
             // Get neural RL step size prediction
-            let step_prediction = neural_rl_controller.predict_optimal_step(
+            let step_prediction = neural_rl_controller.predict_optimalstep(
                 h,
                 rtol,
                 &problem_state,
                 &performance_metrics,
             )?;
 
-            let predicted_step = step_prediction.predicted_step;
+            let predicted_step = step_prediction.predictedstep;
 
             // Use the predicted step size for integration
             let solution = if self.config.enable_gpu && y.len() > 500 {
                 let gpu_accelerator = self.gpu_accelerator.lock().unwrap();
-                let (result, _new_h, _accepted) =
+                let (result, new_h, accepted) =
                     gpu_accelerator.advanced_adaptive_step(t, y, predicted_step, rtol, atol, f)?;
                 result
             } else if self.config.enable_simd {
@@ -298,7 +298,7 @@ impl<
                     self.calculate_optimal_batch_size(y.len(), problem_complexity);
 
                 // Use GPU advanced-acceleration for large systems
-                let (result, _new_h, _accepted) =
+                let (result, new_h, accepted) =
                     gpu_accelerator.advanced_adaptive_step(t, y, h, rtol, atol, f)?;
                 if y.len() > 2000 {
                     optimizations_applied
@@ -357,7 +357,7 @@ impl<
         }
 
         // Use GPU acceleration for adaptive stepping if available
-        let (solution, _new_h, _accepted) = if self.config.enable_gpu && y.len() > 500 {
+        let (solution, new_h, accepted) = if self.config.enable_gpu && y.len() > 500 {
             let gpu_accelerator = self.gpu_accelerator.lock().unwrap();
             let result = gpu_accelerator.advanced_adaptive_step(t, y, h, rtol, atol, f)?;
             optimizations_applied.push("GPU adaptive stepping".to_string());
@@ -814,7 +814,7 @@ impl<
     }
 
     /// Estimate overhead cost of switching algorithms
-    fn estimate_switching_overhead(&self, _recommended_config: &OptimalConfiguration) -> Duration {
+    fn estimate_switching_overhead(&self, _recommendedconfig: &OptimalConfiguration) -> Duration {
         // Switching overhead includes initialization time, memory transfers, etc.
         Duration::from_millis(50)
     }
@@ -899,8 +899,8 @@ impl<
     }
 
     /// Estimate memory usage for a given problem size
-    fn estimate_memory_usage(&self, _problem_size: usize) -> usize {
-        let base_memory = _problem_size * std::mem::size_of::<F>() * 5; // 5 arrays typical for RK4
+    fn estimate_memory_usage(&self, _problemsize: usize) -> usize {
+        let base_memory = _problemsize * std::mem::size_of::<F>() * 5; // 5 arrays typical for RK4
         if self.config.enable_gpu {
             base_memory * 2 // GPU memory overhead
         } else {
@@ -1123,11 +1123,11 @@ impl<
     }
 
     /// Calculate optimal batch size based on problem characteristics  
-    fn calculate_optimal_batch_size(&self, system_size: usize, complexity: f64) -> usize {
+    fn calculate_optimal_batch_size(&self, systemsize: usize, complexity: f64) -> usize {
         // Base batch _size on system _size and complexity
-        let base_batch = if system_size > 5000 {
+        let base_batch = if systemsize > 5000 {
             128
-        } else if system_size > 1000 {
+        } else if systemsize > 1000 {
             64
         } else {
             32

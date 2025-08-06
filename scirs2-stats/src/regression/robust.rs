@@ -594,7 +594,7 @@ where
             .map(|(&yi, &xi)| crate::regression::utils::float_abs(yi - (intercept + slope * xi)))
             .collect::<Vec<F>>();
 
-        // Count inliers (data points with residuals below _threshold)
+        // Count inliers (data points with residuals below threshold)
         let mut inlier_mask = vec![false; n];
         let mut inlier_count = 0;
 

@@ -143,12 +143,12 @@ impl IDWInterpolator {
     /// # Errors
     ///
     /// * If the point dimensions don't match the interpolator
-    pub fn interpolate(&self, _point: &ArrayView1<f64>) -> SpatialResult<f64> {
+    pub fn interpolate(&self, point: &ArrayView1<f64>) -> SpatialResult<f64> {
         // Check dimension
-        if _point.len() != self.dim {
+        if point.len() != self.dim {
             return Err(SpatialError::DimensionError(format!(
                 "Query _point has dimension {}, expected {}",
-                _point.len(),
+                point.len(),
                 self.dim
             )));
         }
@@ -156,7 +156,7 @@ impl IDWInterpolator {
         // Handle exact matches first
         for i in 0..self.n_points {
             let data_point = self.points.row(i);
-            if Self::is_same_point(&data_point, _point) {
+            if Self::is_same_point(&data_point, point) {
                 return Ok(self.values[i]);
             }
         }
@@ -174,7 +174,7 @@ impl IDWInterpolator {
 
                 for i in 0..self.n_points {
                     let data_point = self.points.row(i);
-                    let dist_sq = Self::squared_distance(&data_point, _point);
+                    let dist_sq = Self::squared_distance(&data_point, point);
                     indices.push(i);
                     distances.push(dist_sq);
                 }
@@ -190,7 +190,7 @@ impl IDWInterpolator {
         for i in 0..indices.len() {
             let dist_sq = distances[i];
 
-            // Handle zero distance case (coincident _point)
+            // Handle zero distance case (coincident point)
             if dist_sq < 1e-10 {
                 return Ok(self.values[indices[i]]);
             }
@@ -225,22 +225,22 @@ impl IDWInterpolator {
     /// # Errors
     ///
     /// * If the points dimensions don't match the interpolator
-    pub fn interpolate_many(&self, _points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
+    pub fn interpolate_many(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
         // Check dimensions
-        if _points.ncols() != self.dim {
+        if points.ncols() != self.dim {
             return Err(SpatialError::DimensionError(format!(
                 "Query _points have dimension {}, expected {}",
-                _points.ncols(),
+                points.ncols(),
                 self.dim
             )));
         }
 
-        let n_queries = _points.nrows();
+        let n_queries = points.nrows();
         let mut results = Array1::zeros(n_queries);
 
         // Interpolate each point
         for i in 0..n_queries {
-            let point = _points.row(i);
+            let point = points.row(i);
             results[i] = self.interpolate(&point)?;
         }
 
@@ -266,14 +266,14 @@ impl IDWInterpolator {
     /// # Errors
     ///
     /// * If power is negative
-    pub fn set_power(&mut self, _power: f64) -> SpatialResult<()> {
+    pub fn set_power(&mut self, power: f64) -> SpatialResult<()> {
         if _power < 0.0 {
             return Err(SpatialError::ValueError(format!(
                 "Power parameter must be non-negative, got {_power}"
             )));
         }
 
-        self.power = _power;
+        self.power = power;
         Ok(())
     }
 
@@ -286,7 +286,7 @@ impl IDWInterpolator {
     /// # Errors
     ///
     /// * If n_neighbors is 0 or greater than n_points
-    pub fn set_n_neighbors(&mut self, _n_neighbors: Option<usize>) -> SpatialResult<()> {
+    pub fn set_n_neighbors(&mut self, _nneighbors: Option<usize>) -> SpatialResult<()> {
         if let Some(k) = _n_neighbors {
             if k == 0 {
                 return Err(SpatialError::ValueError(
@@ -301,7 +301,7 @@ impl IDWInterpolator {
             }
         }
 
-        self.n_neighbors = _n_neighbors;
+        self.n_neighbors = n_neighbors;
         Ok(())
     }
 
@@ -315,7 +315,7 @@ impl IDWInterpolator {
     /// # Returns
     ///
     /// True if the points are considered the same
-    fn is_same_point(_p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> bool {
+    fn is_same_point(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> bool {
         Self::squared_distance(_p1, p2) < 1e-10
     }
 
@@ -329,10 +329,10 @@ impl IDWInterpolator {
     /// # Returns
     ///
     /// Squared Euclidean distance between the points
-    fn squared_distance(_p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
+    fn squared_distance(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
         let mut sum_sq = 0.0;
         for i in 0.._p1.len().min(p2.len()) {
-            let diff = _p1[i] - p2[i];
+            let diff = p1[i] - p2[i];
             sum_sq += diff * diff;
         }
         sum_sq

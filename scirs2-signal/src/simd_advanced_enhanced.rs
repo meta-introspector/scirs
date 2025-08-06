@@ -8,7 +8,7 @@ use ndarray::s;
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use crate::simd_advanced::SimdConfig;
-use ndarray::{ Array1, Array2, Axis};
+use ndarray::{Array1, Array2, Axis};
 use num_complex::Complex64;
 use num_traits::{Float, Zero};
 use scirs2_core::parallel_ops::*;
@@ -840,7 +840,7 @@ fn simd_resample_interpolation(
 
 /// Create SIMD-optimized Hann window
 #[allow(dead_code)]
-fn create_simd_hann_window(_size: usize) -> SignalResult<Array1<f64>> {
+fn create_simd_hann_window(size: usize) -> SignalResult<Array1<f64>> {
     let mut window = Array1::<f64>::zeros(_size);
 
     // Vectorized Hann window computation
@@ -874,9 +874,9 @@ fn simd_fft_frame(
 
 /// SIMD convolution with valid output
 #[allow(dead_code)]
-fn simd_convolve_valid(_signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResult<Array1<f64>> {
-    let output_len = if _signal.len() >= kernel.len() {
-        _signal.len() - kernel.len() + 1
+fn simd_convolve_valid(signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResult<Array1<f64>> {
+    let output_len = if signal.len() >= kernel.len() {
+        signal.len() - kernel.len() + 1
     } else {
         0
     };
@@ -886,7 +886,7 @@ fn simd_convolve_valid(_signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalRes
     for i in 0..output_len {
         let mut sum = 0.0;
         for j in 0..kernel.len() {
-            sum += _signal[i + j] * kernel[j];
+            sum += signal[i + j] * kernel[j];
         }
         output[i] = sum;
     }
@@ -896,7 +896,7 @@ fn simd_convolve_valid(_signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalRes
 
 /// SIMD convolution with same output size
 #[allow(dead_code)]
-fn simd_convolve_same(_signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResult<Array1<f64>> {
+fn simd_convolve_same(signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Simplified implementation - would use actual SIMD convolution
     let mut output = Array1::<f64>::zeros(_signal.len());
     let half_kernel = kernel.len() / 2;
@@ -905,8 +905,8 @@ fn simd_convolve_same(_signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResu
         let mut sum = 0.0;
         for j in 0..kernel.len() {
             let signal_idx = (i + j).saturating_sub(half_kernel);
-            if signal_idx < _signal.len() {
-                sum += _signal[signal_idx] * kernel[j];
+            if signal_idx < signal.len() {
+                sum += signal[signal_idx] * kernel[j];
             }
         }
         output[i] = sum;
@@ -917,12 +917,12 @@ fn simd_convolve_same(_signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResu
 
 /// SIMD-optimized downsampling
 #[allow(dead_code)]
-fn downsample_simd(_signal: &Array1<f64>, factor: usize) -> SignalResult<Array1<f64>> {
-    let output_len = _signal.len() / factor;
+fn downsample_simd(signal: &Array1<f64>, factor: usize) -> SignalResult<Array1<f64>> {
+    let output_len = signal.len() / factor;
     let mut output = Array1::<f64>::zeros(output_len);
 
     for i in 0..output_len {
-        output[i] = _signal[i * factor];
+        output[i] = signal[i * factor];
     }
 
     Ok(output)
@@ -931,8 +931,8 @@ fn downsample_simd(_signal: &Array1<f64>, factor: usize) -> SignalResult<Array1<
 // Utility functions (simplified implementations)
 
 #[allow(dead_code)]
-fn bit_reverse_simd(_data: &mut Array1<Complex64>) -> SignalResult<()> {
-    let n = _data.len();
+fn bit_reverse_simd(data: &mut Array1<Complex64>) -> SignalResult<()> {
+    let n = data.len();
     let mut j = 0;
 
     for i in 1..n {
@@ -944,7 +944,7 @@ fn bit_reverse_simd(_data: &mut Array1<Complex64>) -> SignalResult<()> {
         j ^= bit;
 
         if i < j {
-            _data.swap(i, j);
+            data.swap(i, j);
         }
     }
 
@@ -974,7 +974,7 @@ fn estimate_scalar_fft_time(n: usize) -> u64 {
 }
 
 #[allow(dead_code)]
-fn estimate_memory_bandwidth(n: usize, time_ns: u64) -> f64 {
+fn estimate_memory_bandwidth(n: usize, timens: u64) -> f64 {
     let bytes_processed = n * 16; // Complex64 = 16 bytes
     bytes_processed as f64 / (time_ns as f64 / 1e9) / 1e9 // GB/s
 }
@@ -1044,14 +1044,14 @@ fn bluestein_fft(
 }
 
 #[allow(dead_code)]
-fn pack_real_to_complex(_input: &Array1<f64>) -> Array1<Complex64> {
-    let n = _input.len();
+fn pack_real_to_complex(input: &Array1<f64>) -> Array1<Complex64> {
+    let n = input.len();
     let complex_len = n / 2;
     Array1::fromshape_fn(complex_len, |i| {
         Complex64::new(
-            _input[2 * i],
+            input[2 * i],
             if 2 * i + 1 < n {
-                _input[2 * i + 1]
+                input[2 * i + 1]
             } else {
                 0.0
             },
@@ -1074,7 +1074,7 @@ fn unpack_complex_to_real_fft(
 }
 
 #[allow(dead_code)]
-fn calculate_overlap_efficiency(_window_size: usize, hop_size: usize) -> f64 {
+fn calculate_overlap_efficiency(_window_size: usize, hopsize: usize) -> f64 {
     let overlap = _window_size - hop_size;
     overlap as f64 / _window_size as f64
 }
@@ -1100,19 +1100,19 @@ fn get_wavelet_filters(
 }
 
 #[allow(dead_code)]
-fn calculate_wavelet_memory_efficiency(_coefficients: &[Array1<f64>]) -> f64 {
-    let total_samples: usize = _coefficients.iter().map(|c| c.len()).sum();
+fn calculate_wavelet_memory_efficiency(coefficients: &[Array1<f64>]) -> f64 {
+    let total_samples: usize = coefficients.iter().map(|c| c.len()).sum();
     1.0 / total_samples as f64 // Simplified efficiency metric
 }
 
 #[allow(dead_code)]
-fn estimate_wavelet_simd_speedup(_signal_len: usize, levels: usize) -> f64 {
+fn estimate_wavelet_simd_speedup(_signallen: usize, levels: usize) -> f64 {
     // Estimate based on signal length and decomposition levels
     2.0 + (_signal_len as f64).log2() * 0.1 * levels as f64
 }
 
 #[allow(dead_code)]
-fn design_lowpass_filter(_order: usize, cutoff: f64) -> SignalResult<Array1<f64>> {
+fn design_lowpass_filter(order: usize, cutoff: f64) -> SignalResult<Array1<f64>> {
     // Simplified low-pass filter design using windowed sinc
     let mut filter = Array1::<f64>::zeros(_order);
     let center = (_order - 1) as f64 / 2.0;

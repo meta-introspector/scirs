@@ -50,7 +50,7 @@ pub struct AdvancedErrorMessages;
 
 impl AdvancedErrorMessages {
     /// Memory exhaustion with intelligent suggestions
-    pub fn memory_exhaustion(required_mb: f64, available_mb: f64, data_size: usize) -> StatsError {
+    pub fn memory_exhaustion(required_mb: f64, available_mb: f64, datasize: usize) -> StatsError {
         let suggestion = if data_size > 10_000_000 {
             "Consider using chunked processing or streaming algorithms for large datasets."
         } else if required_mb > available_mb * 0.8 {
@@ -337,9 +337,9 @@ pub struct AdvancedContextBuilder {
 }
 
 impl AdvancedContextBuilder {
-    pub fn new(_data_size: usize) -> Self {
+    pub fn new(_datasize: usize) -> Self {
         Self {
-            data_size: _data_size,
+            data_size: data_size,
             operation_start: Instant::now(),
             memory_usage_mb: 0.0,
             simd_enabled: false,

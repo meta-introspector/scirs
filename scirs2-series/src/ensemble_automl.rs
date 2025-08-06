@@ -405,7 +405,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     }
 
     /// Create meta-model from specification
-    fn create_meta_model(_meta_learner: MetaLearner) -> Result<Box<dyn MetaModel<F>>> {
+    fn create_meta_model(_metalearner: MetaLearner) -> Result<Box<dyn MetaModel<F>>> {
         match _meta_learner {
             MetaLearner::LinearRegression => Ok(Box::new(LinearRegressionMeta::new())),
             MetaLearner::RidgeRegression { alpha: _alpha } => {
@@ -594,14 +594,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                 self.train_moving_average(model_wrapper, data, *window)?;
             }
             BaseModel::LSTM {
-                hidden_units: _hidden,
-                num_layers: _layers,
+                hidden_units: hidden,
+                num_layers: layers,
             } => {
                 self.train_lstm_model(model_wrapper, data)?;
             }
             BaseModel::Prophet {
-                seasonality_prior_scale: _s,
-                changepoint_prior_scale: _c,
+                seasonality_prior_scale: s,
+                changepoint_prior_scale: c,
             } => {
                 self.train_prophet_model(model_wrapper, data)?;
             }
@@ -687,7 +687,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
 
     /// Compute autocorrelations
     #[allow(dead_code)]
-    fn compute_autocorrelations(&self, data: &[F], max_lag: usize) -> Result<Vec<F>> {
+    fn compute_autocorrelations(&self, data: &[F], maxlag: usize) -> Result<Vec<F>> {
         let n = data.len();
         let mut autocorrs = vec![F::zero(); max_lag + 1];
 
@@ -697,9 +697,9 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             }
 
             let mut sum = F::zero();
-            let count = n - _lag;
+            let count = n - lag;
 
-            for i in _lag..n {
+            for i in lag..n {
                 sum = sum + data[i] * data[i - _lag];
             }
 
@@ -866,7 +866,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
 
     /// Train LSTM model (placeholder)
     #[allow(dead_code)]
-    fn train_lstm_model(&self, model_wrapper: &mut BaseModelWrapper<F>, data: &[F]) -> Result<()> {
+    fn train_lstm_model(&self, modelwrapper: &mut BaseModelWrapper<F>, data: &[F]) -> Result<()> {
         // Placeholder for LSTM training
         // In practice, would use neural network framework
         model_wrapper
@@ -949,11 +949,11 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
         steps: usize,
     ) -> Result<Array1<F>> {
         match &model_wrapper.model_type {
-            BaseModel::ARIMA { p, d: _d, q } => self.predict_arima(model_wrapper, steps, *p, *q),
+            BaseModel::ARIMA { p, d: d, q } => self.predict_arima(model_wrapper, steps, *p, *q),
             BaseModel::ExponentialSmoothing {
-                alpha: _alpha,
+                alpha: alpha,
                 beta,
-                gamma: _gamma,
+                gamma: gamma,
             } => self.predict_exponential_smoothing(model_wrapper, steps, beta.is_some()),
             BaseModel::LinearTrend => self.predict_linear_trend(model_wrapper, steps),
             BaseModel::SeasonalNaive { period: _period } => {
@@ -963,12 +963,12 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                 self.predict_moving_average(model_wrapper, steps)
             }
             BaseModel::LSTM {
-                hidden_units: _hidden,
-                num_layers: _layers,
+                hidden_units: hidden,
+                num_layers: layers,
             } => self.predict_lstm(model_wrapper, steps),
             BaseModel::Prophet {
-                seasonality_prior_scale: _s,
-                changepoint_prior_scale: _c,
+                seasonality_prior_scale: s,
+                changepoint_prior_scale: c,
             } => self.predict_prophet(model_wrapper, steps),
         }
     }
@@ -1117,7 +1117,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     }
 
     /// Predict with LSTM (placeholder)
-    fn predict_lstm(&self, model_wrapper: &BaseModelWrapper<F>, steps: usize) -> Result<Array1<F>> {
+    fn predict_lstm(&self, modelwrapper: &BaseModelWrapper<F>, steps: usize) -> Result<Array1<F>> {
         let mut forecasts = Array1::zeros(steps);
 
         // Placeholder prediction - in practice would use neural network
@@ -1170,7 +1170,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     }
 
     /// Combine predictions using ensemble strategy
-    fn combine_predictions(&self, model_predictions: &Array2<F>) -> Result<Array1<F>> {
+    fn combine_predictions(&self, modelpredictions: &Array2<F>) -> Result<Array1<F>> {
         let (steps, n_models) = model_predictions.dim();
         let mut ensemble_forecast = Array1::zeros(steps);
 
@@ -1191,7 +1191,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                     let mut total_weight = F::zero();
 
                     for model_idx in 0..n_models {
-                        let weight = if model_idx < self.ensemble_weights.len() {
+                        let weight = if model_idx < self.ensembleweights.len() {
                             self.ensemble_weights[model_idx]
                         } else {
                             F::one() / F::from(n_models).unwrap()
@@ -1227,7 +1227,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                 }
             }
             EnsembleStrategy::Stacking {
-                meta_learner: _meta,
+                meta_learner: meta,
             } => {
                 if let Some(ref meta_model) = self.meta_model {
                     ensemble_forecast = meta_model.predict(model_predictions)?;
@@ -1303,13 +1303,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
 
                 // Normalize weights
                 if total_inverse_mse > F::zero() {
-                    for weight in new_weights.iter_mut() {
+                    for weight in newweights.iter_mut() {
                         *weight = *weight / total_inverse_mse;
                     }
                 } else {
                     // Equal weights fallback
                     let equal_weight = F::one() / F::from(n_models).unwrap();
-                    new_weights.fill(equal_weight);
+                    newweights.fill(equal_weight);
                 }
 
                 self.ensemble_weights = new_weights;
@@ -1529,14 +1529,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> AutoML
                 self.generate_random_search_models(*n_iterations)?;
             }
             SearchAlgorithm::BayesianOptimization {
-                n_iterations: _n_iter,
+                n_iterations: n_iter,
             } => {
                 // Simplified - use random search for now
                 self.generate_random_search_models(50)?;
             }
             SearchAlgorithm::GeneticAlgorithm {
                 population_size,
-                generations: _gens,
+                generations: gens,
             } => {
                 // Simplified - use random search for now
                 self.generate_random_search_models(*population_size)?;
@@ -1598,7 +1598,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> AutoML
     }
 
     /// Generate models for random search
-    fn generate_random_search_models(&mut self, n_iterations: usize) -> Result<()> {
+    fn generate_random_search_models(&mut self, niterations: usize) -> Result<()> {
         // Simplified random generation - in practice would use proper random sampling
         let mut seed: u32 = 42;
 
@@ -1797,7 +1797,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> AutoML
     }
 
     /// Select best models for ensemble
-    fn select_best_models(&self, model_scores: &[(BaseModel, F)]) -> Result<Vec<BaseModel>> {
+    fn select_best_models(&self, modelscores: &[(BaseModel, F)]) -> Result<Vec<BaseModel>> {
         let mut selected_models = Vec::new();
         let max_models = 5; // Maximum models in ensemble
 

@@ -317,8 +317,8 @@ fn advanced_simd_erosion_row<T>(
 
 /// Check if a structure element is separable
 #[allow(dead_code)]
-fn is_separable_structure(_structure: &ArrayView2<bool>) -> bool {
-    let (height, width) = _structure.dim();
+fn is_separable_structure(structure: &ArrayView2<bool>) -> bool {
+    let (height, width) = structure.dim();
 
     // Check for horizontal line
     let mut has_horizontal = false;
@@ -475,7 +475,7 @@ fn advanced_simd_template_match_row<T>(
                 let image_centered: Vec<T> = image_vals
                     .iter()
                     .zip(image_means.iter())
-                    .map(|(&img_val, &_mean)| img_val - _mean)
+                    .map(|(&img_val, &_mean)| img_val - mean)
                     .collect();
 
                 let template_vec = vec![template_centered; simd_width];
@@ -570,7 +570,7 @@ where
 
 /// Generate optimized Gaussian kernel for separable convolution
 #[allow(dead_code)]
-fn advanced_simd_generate_gaussian_kernel<T>(_sigma: T) -> NdimageResult<Vec<T>>
+fn advanced_simd_generate_gaussian_kernel<T>(sigma: T) -> NdimageResult<Vec<T>>
 where
     T: Float + FromPrimitive + Debug,
 {
@@ -579,8 +579,8 @@ where
     let half_size = size / 2;
     let mut kernel = vec![T::zero(); size];
 
-    let two_sigma_sq = T::from_f64(2.0).unwrap() * _sigma * _sigma;
-    let normalization_factor = T::from_f64(1.0 / (2.0 * std::f64::consts::PI)).unwrap() * _sigma;
+    let two_sigma_sq = T::from_f64(2.0).unwrap() * _sigma * sigma;
+    let normalization_factor = T::from_f64(1.0 / (2.0 * std::f64::consts::PI)).unwrap() * sigma;
 
     // Generate Gaussian weights
     for i in 0..size {
@@ -600,11 +600,11 @@ where
 
 /// Optimized SIMD downsampling by factor of 2
 #[allow(dead_code)]
-fn advanced_simd_downsample_2x<T>(_input: &ArrayView2<T>) -> NdimageResult<Array<T, Ix2>>
+fn advanced_simd_downsample_2x<T>(input: &ArrayView2<T>) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
 {
-    let (h, w) = _input.dim();
+    let (h, w) = input.dim();
     let out_h = h / 2;
     let out_w = w / 2;
     let mut output = Array::zeros((out_h, out_w));
@@ -638,7 +638,7 @@ where
                         if x < out_w {
                             let input_x = x * 2;
                             // Simple subsampling (could be replaced with anti-aliasing filter)
-                            samples[i] = _input[(input_y, input_x)];
+                            samples[i] = input[(input_y, input_x)];
                         }
                     }
 
@@ -654,7 +654,7 @@ where
                 // Handle remaining elements
                 for x in (num_chunks * simd_width)..out_w {
                     let input_x = x * 2;
-                    row[x] = _input[(input_y, input_x)];
+                    row[x] = input[(input_y, input_x)];
                 }
             }
         });
@@ -664,11 +664,11 @@ where
 
 /// Compute mean of array patch using SIMD when possible
 #[allow(dead_code)]
-fn advanced_simd_compute_mean<T>(_array: &ArrayView2<T>) -> NdimageResult<T>
+fn advanced_simd_compute_mean<T>(array: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug + Clone + SimdUnifiedOps,
 {
-    let total_elements = _array.len();
+    let total_elements = array.len();
     if total_elements == 0 {
         return Ok(T::zero());
     }
@@ -678,7 +678,7 @@ where
     let mut sum = T::zero();
 
     // SIMD accumulation
-    let flat_view = _array.as_slice().unwrap_or(&[]);
+    let flat_view = array.as_slice().unwrap_or(&[]);
     for chunk_idx in 0..num_chunks {
         let start = chunk_idx * simd_width;
         let chunk = &flat_view[start..start + simd_width];
@@ -697,11 +697,11 @@ where
 
 /// Compute norm (standard deviation) of array patch
 #[allow(dead_code)]
-fn advanced_simd_compute_norm<T>(_array: &ArrayView2<T>, mean: T) -> NdimageResult<T>
+fn advanced_simd_compute_norm<T>(array: &ArrayView2<T>, mean: T) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug + Clone + SimdUnifiedOps,
 {
-    let total_elements = _array.len();
+    let total_elements = array.len();
     if total_elements <= 1 {
         return Ok(T::zero());
     }
@@ -711,7 +711,7 @@ where
     let mut variance_sum = T::zero();
 
     // SIMD variance computation
-    let flat_view = _array.as_slice().unwrap_or(&[]);
+    let flat_view = array.as_slice().unwrap_or(&[]);
     for chunk_idx in 0..num_chunks {
         let start = chunk_idx * simd_width;
         let chunk = &flat_view[start..start + simd_width];

@@ -326,13 +326,15 @@ where
             sigma_sq: F::from_f64(1.0).unwrap(),
             angles: None,
             nugget: F::from_f64(1e-10).unwrap(),
-            extra_params: F::from_f64(1.0).unwrap(), _trend_fn: TrendFunction::Constant,
+            extra_params: F::from_f64(1.0).unwrap(),
+            _trend_fn: TrendFunction::Constant,
             anisotropic_cov: None,
             priors: None,
             n_samples: 0,
             compute_full_covariance: false,
             use_exact_computation: true,
-            optimize_parameters: false, _phantom: PhantomData,
+            optimize_parameters: false,
+            _phantom: PhantomData,
         }
     }
 
@@ -349,19 +351,19 @@ where
     }
 
     /// Set covariance function
-    pub fn cov_fn(mut self, cov_fn: CovarianceFunction) -> Self {
+    pub fn cov_fn(mut self, covfn: CovarianceFunction) -> Self {
         self.cov_fn = cov_fn;
         self
     }
 
     /// Set length scales for anisotropy
-    pub fn length_scales(mut self, length_scales: Array1<F>) -> Self {
+    pub fn length_scales(mut self, lengthscales: Array1<F>) -> Self {
         self.length_scales = Some(length_scales);
         self
     }
 
     /// Set signal variance parameter
-    pub fn sigma_sq(mut self, sigma_sq: F) -> Self {
+    pub fn sigma_sq(mut self, sigmasq: F) -> Self {
         self.sigma_sq = sigma_sq;
         self
     }
@@ -379,13 +381,13 @@ where
     }
 
     /// Set extra parameters for specific covariance functions
-    pub fn extra_params(mut self, extra_params: F) -> Self {
+    pub fn extra_params(mut self, extraparams: F) -> Self {
         self.extra_params = extra_params;
         self
     }
 
     /// Set anisotropic covariance specification
-    pub fn anisotropic_cov(mut self, anisotropic_cov: AnisotropicCovariance<F>) -> Self {
+    pub fn anisotropic_cov(mut self, anisotropiccov: AnisotropicCovariance<F>) -> Self {
         self.anisotropic_cov = Some(anisotropic_cov);
         self
     }
@@ -397,25 +399,25 @@ where
     }
 
     /// Set number of posterior samples
-    pub fn n_samples(mut self, n_samples: usize) -> Self {
+    pub fn n_samples(mut self, nsamples: usize) -> Self {
         self.n_samples = n_samples;
         self
     }
 
     /// Enable or disable full posterior covariance computation
-    pub fn compute_full_covariance(mut self, compute_full_covariance: bool) -> Self {
+    pub fn compute_full_covariance(mut self, compute_fullcovariance: bool) -> Self {
         self.compute_full_covariance = compute_full_covariance;
         self
     }
 
     /// Enable or disable exact computation
-    pub fn use_exact_computation(mut self, use_exact_computation: bool) -> Self {
+    pub fn use_exact_computation(mut self, use_exactcomputation: bool) -> Self {
         self.use_exact_computation = use_exact_computation;
         self
     }
 
     /// Enable or disable parameter optimization
-    pub fn optimize_parameters(mut self, optimize_parameters: bool) -> Self {
+    pub fn optimize_parameters(mut self, optimizeparameters: bool) -> Self {
         self.optimize_parameters = optimize_parameters;
         self
     }
@@ -542,7 +544,8 @@ where
             n_samples: self.n_samples,
             basis_functions,
             compute_full_covariance: self.compute_full_covariance,
-            use_exact_computation: self.use_exact_computation, _phantom: PhantomData,
+            use_exact_computation: self.use_exact_computation,
+            _phantom: PhantomData,
         })
     }
 
@@ -555,7 +558,7 @@ where
         let n_dims = points.shape()[1];
 
         let (n_basis, basis_fn): (usize, BasisFunctionClosure<F>) = match trend_fn {
-            TrendFunction::Constant => (1, Box::new(|_x: &ArrayView1<F>| vec![F::one()])),
+            TrendFunction::Constant => (1, Box::new(|x: &ArrayView1<F>| vec![F::one()])),
             TrendFunction::Linear => (
                 1 + n_dims,
                 Box::new(|x: &ArrayView1<F>| {
@@ -601,7 +604,7 @@ where
     }
 
     /// Compute polynomial basis size for given degree
-    fn compute_polynomial_basis_size(_n_dims: usize, degree: usize) -> usize {
+    fn compute_polynomial_basis_size(_ndims: usize, degree: usize) -> usize {
         if degree == 0 {
             return 1;
         }
@@ -702,8 +705,8 @@ where
     }
 
     /// Cholesky decomposition
-    fn cholesky_decomposition(_matrix: &Array2<F>) -> InterpolateResult<Array2<F>> {
-        let n = _matrix.shape()[0];
+    fn cholesky_decomposition(matrix: &Array2<F>) -> InterpolateResult<Array2<F>> {
+        let n = matrix.shape()[0];
         let mut cholesky = Array2::zeros((n, n));
 
         for i in 0..n {
@@ -714,7 +717,7 @@ where
                     for k in 0..j {
                         sum += cholesky[[j, k]] * cholesky[[j, k]];
                     }
-                    let val = _matrix[[j, j]] - sum;
+                    let val = matrix[[j, j]] - sum;
                     if val <= F::zero() {
                         return Err(InterpolateError::numerical_error(
                             "Matrix is not positive definite for Cholesky decomposition"
@@ -737,32 +740,32 @@ where
     }
 
     /// Forward substitution for lower triangular matrix
-    fn forward_substitution(_lower: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>> {
-        let n = _lower.shape()[0];
+    fn forward_substitution(lower: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>> {
+        let n = lower.shape()[0];
         let mut solution = Array1::zeros(n);
 
         for i in 0..n {
             let mut sum = F::zero();
             for j in 0..i {
-                sum += _lower[[i, j]] * solution[j];
+                sum += lower[[i, j]] * solution[j];
             }
-            solution[i] = (rhs[i] - sum) / _lower[[i, i]];
+            solution[i] = (rhs[i] - sum) / lower[[i, i]];
         }
 
         Ok(solution)
     }
 
     /// Backward substitution for upper triangular matrix
-    fn backward_substitution(_lower: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>> {
-        let n = _lower.shape()[0];
+    fn backward_substitution(lower: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>> {
+        let n = lower.shape()[0];
         let mut solution = Array1::zeros(n);
 
         for i in (0..n).rev() {
             let mut sum = F::zero();
             for j in (i + 1)..n {
-                sum += _lower[[j, i]] * solution[j]; // Use transpose of _lower triangular
+                sum += lower[[j, i]] * solution[j]; // Use transpose of _lower triangular
             }
-            solution[i] = (rhs[i] - sum) / _lower[[i, i]];
+            solution[i] = (rhs[i] - sum) / lower[[i, i]];
         }
 
         Ok(solution)
@@ -897,7 +900,8 @@ where
             variance_prior: None,
             nugget_prior: None,
             n_samples: 1000, // Default to 1000 samples
-            optimize_parameters: true, _phantom: PhantomData,
+            optimize_parameters: true,
+            _phantom: PhantomData,
         }
     }
 
@@ -1168,7 +1172,7 @@ where
     /// # Returns
     ///
     /// Prediction results with enhanced Bayesian information
-    pub fn predict(&self, query_points: &ArrayView2<F>) -> InterpolateResult<PredictionResult<F>> {
+    pub fn predict(&self, querypoints: &ArrayView2<F>) -> InterpolateResult<PredictionResult<F>> {
         // Check dimensions
         if query_points.shape()[1] != self._points.shape()[1] {
             return Err(InterpolateError::invalid_input(
@@ -1430,7 +1434,10 @@ where
 #[allow(dead_code)]
 pub fn make_enhanced_kriging<F>(
     points: &ArrayView2<F>,
-    values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_sigma, sq: F,
+    values: &ArrayView1<F>,
+    _cov_fn: CovarianceFunction_length,
+    _scale: F_sigma,
+    sq: F,
 ) -> InterpolateResult<EnhancedKriging<F>>
 where
     F: Float
@@ -1505,7 +1512,11 @@ where
 #[allow(dead_code)]
 pub fn make_universal_kriging<F>(
     points: &ArrayView2<F>,
-    values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_sigma, sq: F_trend, _fn: TrendFunction,
+    values: &ArrayView1<F>,
+    _cov_fn: CovarianceFunction_length,
+    _scale: F_sigma,
+    sq: F_trend,
+    _fn: TrendFunction,
 ) -> InterpolateResult<EnhancedKriging<F>>
 where
     F: Float
@@ -1582,7 +1593,11 @@ where
 /// ```
 #[allow(dead_code)]
 pub fn make_bayesian_kriging<F>(
-    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction, _priors: KrigingPriors<F>, _n_samples: usize,
+    _points: &ArrayView2<F>,
+    _values: &ArrayView1<F>,
+    _cov_fn: CovarianceFunction,
+    _priors: KrigingPriors<F>,
+    _n_samples: usize,
 ) -> InterpolateResult<EnhancedKriging<F>>
 where
     F: Float

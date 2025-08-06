@@ -19,7 +19,7 @@
 
 use crate::error::{Result, VisionError};
 use crate::feature::KeyPoint;
-use crate::gpu__ops::GpuVisionContext;
+use crate::gpu_ops::GpuVisionContext;
 use ndarray::{s, Array1, Array2, Array3, ArrayView2};
 use statrs::statistics::Statistics;
 
@@ -100,15 +100,15 @@ pub struct SuperPointNet {
 
 impl SuperPointNet {
     /// Create a new SuperPoint network with default weights
-    pub fn new(_config: Option<NeuralFeatureConfig>) -> Result<Self> {
-        let _config = _config.unwrap_or_default();
+    pub fn new(config: Option<NeuralFeatureConfig>) -> Result<Self> {
+        let config = config.unwrap_or_default();
 
         // Initialize with synthetic weights for demonstration
         // In a real implementation, these would be loaded from a trained model
-        let detection_weights = Self::create_detection_weights(&_config)?;
-        let descriptor_weights = Self::create_descriptor_weights(&_config)?;
+        let detection_weights = Self::create_detection_weights(&config)?;
+        let descriptor_weights = Self::create_descriptor_weights(&config)?;
 
-        let gpu_context = if _config.use_gpu {
+        let gpu_context = if config.use_gpu {
             GpuVisionContext::new().ok()
         } else {
             None
@@ -118,7 +118,7 @@ impl SuperPointNet {
             detection_weights,
             descriptor_weights,
             gpu_context,
-            _config,
+            config,
         };
 
         Ok(Self { network })
@@ -126,7 +126,7 @@ impl SuperPointNet {
 
     /// Load SuperPoint network from file
     #[allow(dead_code)]
-    pub fn from_file(_model_path: &str, config: Option<NeuralFeatureConfig>) -> Result<Self> {
+    pub fn from_file(_modelpath: &str, config: Option<NeuralFeatureConfig>) -> Result<Self> {
         let config = config.unwrap_or_default();
 
         // In a real implementation, this would load weights from a file
@@ -324,7 +324,7 @@ impl SuperPointNet {
     }
 
     /// Simple Gaussian blur without SIMD
-    fn simple_gaussian_blur(&self, image: &ArrayView2<f32>, _sigma: f32) -> Result<Array2<f32>> {
+    fn simple_gaussian_blur(&self, image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<f32>> {
         // Very simplified blur - just average with neighbors
         let (height, width) = image.dim();
         let mut blurred = Array2::zeros((height, width));
@@ -467,7 +467,7 @@ impl SuperPointNet {
     }
 
     /// Apply non-maximum suppression to feature map
-    fn non_maximum_suppression(&self, feature_map: &Array2<f32>) -> Result<Array2<f32>> {
+    fn non_maximum_suppression(&self, featuremap: &Array2<f32>) -> Result<Array2<f32>> {
         let (height, width) = feature_map.dim();
         let mut nms_result = Array2::zeros((height, width));
         let radius = self.network.config.nms_radius;
@@ -536,7 +536,7 @@ impl SuperPointNet {
     }
 
     /// Create synthetic detection weights for demonstration
-    fn create_detection_weights(_config: &NeuralFeatureConfig) -> Result<ModelWeights> {
+    fn create_detection_weights(config: &NeuralFeatureConfig) -> Result<ModelWeights> {
         // This would normally load pre-trained weights
         // For demonstration, create synthetic weights
 
@@ -588,14 +588,14 @@ impl SuperPointNet {
     }
 
     /// Create synthetic descriptor weights for demonstration
-    fn create_descriptor_weights(_config: &NeuralFeatureConfig) -> Result<ModelWeights> {
+    fn create_descriptor_weights(config: &NeuralFeatureConfig) -> Result<ModelWeights> {
         // Descriptor head weights
         let fc_weights = vec![Array2::fromshape_fn(
-            (_config.descriptor_dim, 128),
+            (config.descriptor_dim, 128),
             |(__)| rand::random::<f32>() * 0.1,
         )];
 
-        let fc_biases = vec![Array1::zeros(_config.descriptor_dim)];
+        let fc_biases = vec![Array1::zeros(config.descriptor_dim)];
 
         Ok(ModelWeights {
             conv_weights: Vec::new(),
@@ -636,7 +636,7 @@ impl NeuralFeatureMatcher {
     }
 
     /// Configure matcher parameters
-    pub fn with_params(mut self, distance_threshold: f32, ratio_threshold: f32) -> Self {
+    pub fn with_params(mut self, distance_threshold: f32, ratiothreshold: f32) -> Self {
         self.distance_threshold = distance_threshold;
         self.ratio_threshold = ratio_threshold;
         self
@@ -738,9 +738,9 @@ pub struct AttentionFeatureMatcher {
 
 impl AttentionFeatureMatcher {
     /// Create a new attention-based feature matcher
-    pub fn new(_attention_dim: usize, num_heads: usize) -> Self {
+    pub fn new(_attention_dim: usize, numheads: usize) -> Self {
         Self {
-            _attention_dim,
+            attention_dim,
             num_heads,
             use_gpu: true,
         }
@@ -900,7 +900,7 @@ impl AttentionFeatureMatcher {
 /// Learned SIFT: Enhanced SIFT descriptors using neural networks
 pub struct LearnedSIFT {
     /// Traditional SIFT parameters
-    sift_config: SIFTConfig,
+    siftconfig: SIFTConfig,
     /// Neural enhancement network
     enhancement_network: Option<NeuralFeatureNetwork>,
 }
@@ -934,15 +934,15 @@ impl Default for SIFTConfig {
 
 impl LearnedSIFT {
     /// Create a new Learned SIFT detector
-    pub fn new(_config: Option<SIFTConfig>) -> Self {
+    pub fn new(config: Option<SIFTConfig>) -> Self {
         Self {
-            sift_config: _config.unwrap_or_default(),
+            siftconfig: config.unwrap_or_default(),
             enhancement_network: None,
         }
     }
 
     /// Simple Gaussian blur without SIMD
-    fn simple_gaussian_blur(&self, image: &ArrayView2<f32>, _sigma: f32) -> Result<Array2<f32>> {
+    fn simple_gaussian_blur(&self, image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<f32>> {
         // Very simplified blur - just average with neighbors
         let (height, width) = image.dim();
         let mut blurred = Array2::zeros((height, width));
@@ -1024,12 +1024,12 @@ impl LearnedSIFT {
         let mut scale_space = Vec::new();
         let mut current_image = image.to_owned();
 
-        for octave in 0..self.sift_config.num_octaves {
+        for octave in 0..self.siftconfig.num_octaves {
             let mut octave_images = Vec::new();
 
-            for scale in 0..self.sift_config.num_scales + 3 {
-                let sigma = self.sift_config.sigma
-                    * 2.0_f32.powf(scale as f32 / self.sift_config.num_scales as f32);
+            for scale in 0..self.siftconfig.num_scales + 3 {
+                let sigma = self.siftconfig.sigma
+                    * 2.0_f32.powf(scale as f32 / self.siftconfig.num_scales as f32);
                 let blurred = self.simple_gaussian_blur(&current_image.view(), sigma)?;
                 octave_images.push(blurred);
             }
@@ -1037,7 +1037,7 @@ impl LearnedSIFT {
             scale_space.push(octave_images);
 
             // Downsample for next octave
-            if octave < self.sift_config.num_octaves - 1 {
+            if octave < self.siftconfig.num_octaves - 1 {
                 current_image = self.downsample(&current_image)?;
             }
         }
@@ -1046,7 +1046,7 @@ impl LearnedSIFT {
     }
 
     /// Compute Difference of Gaussians
-    fn compute_dog_space(&self, scale_space: &[Vec<Array2<f32>>]) -> Result<Vec<Vec<Array2<f32>>>> {
+    fn compute_dog_space(&self, scalespace: &[Vec<Array2<f32>>]) -> Result<Vec<Vec<Array2<f32>>>> {
         let mut dog_space = Vec::new();
 
         for octave_images in scale_space {
@@ -1064,7 +1064,7 @@ impl LearnedSIFT {
     }
 
     /// Detect extrema in DoG space
-    fn detect_extrema(&self, dog_space: &[Vec<Array2<f32>>]) -> Result<Vec<KeyPoint>> {
+    fn detect_extrema(&self, dogspace: &[Vec<Array2<f32>>]) -> Result<Vec<KeyPoint>> {
         let mut extrema = Vec::new();
 
         for (octave, dog_octave) in dog_space.iter().enumerate() {
@@ -1080,7 +1080,7 @@ impl LearnedSIFT {
                     for x in 1..width - 1 {
                         let center_val = dog_image[[y, x]];
 
-                        if center_val.abs() < self.sift_config.peak_threshold {
+                        if center_val.abs() < self.siftconfig.peak_threshold {
                             continue;
                         }
 
@@ -1143,7 +1143,8 @@ impl LearnedSIFT {
     /// Refine keypoint locations with subpixel accuracy
     fn refine_keypoints(
         &self,
-        keypoints: &[KeyPoint], _dog_space: &[Vec<Array2<f32>>],
+        keypoints: &[KeyPoint],
+        _dog_space: &[Vec<Array2<f32>>],
     ) -> Result<Vec<KeyPoint>> {
         // Simplified subpixel refinement
         // In practice, this would use Taylor expansion and Hessian matrix
@@ -1153,13 +1154,14 @@ impl LearnedSIFT {
     /// Filter out edge responses and low contrast points
     fn filter_keypoints(
         &self,
-        keypoints: &[KeyPoint], _dog_space: &[Vec<Array2<f32>>],
+        keypoints: &[KeyPoint],
+        _dog_space: &[Vec<Array2<f32>>],
     ) -> Result<Vec<KeyPoint>> {
         let mut filtered = Vec::new();
 
         for kp in keypoints {
             // Simple contrast threshold (already applied during detection)
-            if kp.response > self.sift_config.peak_threshold {
+            if kp.response > self.siftconfig.peak_threshold {
                 filtered.push(kp.clone());
             }
         }
@@ -1213,7 +1215,8 @@ impl LearnedSIFT {
     /// Enhance descriptors using neural network
     fn enhance_descriptors_neural(
         &self,
-        descriptors: &mut Array2<f32>, _network: &NeuralFeatureNetwork,
+        descriptors: &mut Array2<f32>,
+        _network: &NeuralFeatureNetwork,
     ) -> Result<()> {
         // Placeholder for neural enhancement
         // In practice, this would apply a small neural _network to enhance SIFT descriptors

@@ -72,7 +72,7 @@ use crate::lti::{LtiSystem, TransferFunction};
 use crate::parametric::{estimate_ar, estimate_arma, ARMethod, OrderSelection};
 use crate::spectral::welch;
 use crate::window::get_window;
-use ndarray::{ Array1, Array2, Axis};
+use ndarray::{Array1, Array2, Axis};
 use num_complex::Complex64;
 use statrs::statistics::Statistics;
 use std::f64::consts::PI;
@@ -1127,15 +1127,15 @@ impl RecursiveLeastSquares {
     ///
     /// # Returns
     /// * New RLS estimator
-    pub fn new(_dimension: usize, forgetting_factor: f64, initial_covariance: f64) -> Self {
+    pub fn new(_dimension: usize, forgetting_factor: f64, initialcovariance: f64) -> Self {
         let parameters = Array1::<f64>::zeros(_dimension);
         let _covariance = Array2::<f64>::eye(_dimension) * initial_covariance;
 
         Self {
             parameters,
-            _covariance,
+            covariance,
             forgetting_factor,
-            _dimension,
+            dimension,
         }
     }
 
@@ -1147,7 +1147,7 @@ impl RecursiveLeastSquares {
     ///
     /// # Returns
     /// * Prediction error
-    pub fn update(&mut self, regression_vector: &Array1<f64>, output: f64) -> SignalResult<f64> {
+    pub fn update(&mut self, regressionvector: &Array1<f64>, output: f64) -> SignalResult<f64> {
         if regression_vector.len() != self.dimension {
             return Err(SignalError::ValueError(
                 "Regression _vector dimension mismatch".to_string(),
@@ -1199,9 +1199,9 @@ impl RecursiveLeastSquares {
 
 /// Helper function to calculate model fit percentage
 #[allow(dead_code)]
-fn calculate_fit_percentage(_actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
-    let mean_actual = _actual.mean().unwrap_or(0.0);
-    let ss_tot = _actual.mapv(|y| (y - mean_actual).powi(2)).sum();
+fn calculate_fit_percentage(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
+    let mean_actual = actual.mean().unwrap_or(0.0);
+    let ss_tot = actual.mapv(|y| (y - mean_actual).powi(2)).sum();
 
     if ss_tot < 1e-12 {
         return 0.0;
@@ -1215,14 +1215,14 @@ fn calculate_fit_percentage(_actual: &Array1<f64>, predicted: &Array1<f64>) -> f
 
 /// Simple Ljung-Box test for residual whiteness
 #[allow(dead_code)]
-fn ljung_box_test(_residuals: &Array1<f64>, max_lag: usize) -> f64 {
-    let n = _residuals.len();
+fn ljung_box_test(_residuals: &Array1<f64>, maxlag: usize) -> f64 {
+    let n = residuals.len();
     if n <= max_lag {
         return 1.0; // Cannot perform test
     }
 
     // Calculate autocorrelations
-    let mean_residual = _residuals.mean().unwrap_or(0.0);
+    let mean_residual = residuals.mean().unwrap_or(0.0);
     let var_residual = _residuals
         .mapv(|x| (x - mean_residual).powi(2))
         .mean()
@@ -1232,12 +1232,12 @@ fn ljung_box_test(_residuals: &Array1<f64>, max_lag: usize) -> f64 {
 
     for _lag in 1..=max_lag {
         let mut autocorr = 0.0;
-        for t in _lag..n {
+        for t in lag..n {
             autocorr += (_residuals[t] - mean_residual) * (_residuals[t - _lag] - mean_residual);
         }
-        autocorr /= (n - _lag) as f64 * var_residual;
+        autocorr /= (n - lag) as f64 * var_residual;
 
-        lb_stat += autocorr * autocorr / (n - _lag) as f64;
+        lb_stat += autocorr * autocorr / (n - lag) as f64;
     }
 
     lb_stat *= n as f64 * (n + 2) as f64;
@@ -1299,8 +1299,8 @@ fn solve_complex_least_squares(
 
 /// Compute FFT (simplified implementation)
 #[allow(dead_code)]
-fn compute_fft(_signal: &Array1<f64>) -> Array1<Complex64> {
-    let n = _signal.len();
+fn compute_fft(signal: &Array1<f64>) -> Array1<Complex64> {
+    let n = signal.len();
 
     // This is a placeholder - in practice would use a proper FFT implementation
     // For now, use DFT
@@ -1310,7 +1310,7 @@ fn compute_fft(_signal: &Array1<f64>) -> Array1<Complex64> {
         let mut sum = Complex64::new(0.0, 0.0);
         for t in 0..n {
             let angle = -2.0 * PI * (k * t) as f64 / n as f64;
-            sum += _signal[t] * Complex64::new(angle.cos(), angle.sin());
+            sum += signal[t] * Complex64::new(angle.cos(), angle.sin());
         }
         result[k] = sum;
     }
@@ -1613,7 +1613,7 @@ fn solve_least_squares(
     target: &Array1<f64>,
 ) -> SignalResult<Array1<f64>> {
     // Simple normal equations solution (A^T A)^-1 A^T b
-    let at = _regressor.t();
+    let at = regressor.t();
     let ata = at.dot(_regressor);
     let atb = at.dot(target);
 
@@ -1691,7 +1691,7 @@ pub fn estimate_robust_scale(
 }
 
 #[allow(dead_code)]
-pub fn detect_outliers(_residuals: &Array1<f64>, scale: f64, threshold: f64) -> Vec<usize> {
+pub fn detect_outliers(residuals: &Array1<f64>, scale: f64, threshold: f64) -> Vec<usize> {
     _residuals
         .iter()
         .enumerate()
@@ -1727,8 +1727,8 @@ fn calculate_robust_fit(
 }
 
 #[allow(dead_code)]
-fn calculate_median(_data: &Array1<f64>) -> f64 {
-    let mut sorted: Vec<f64> = _data.to_vec();
+fn calculate_median(data: &Array1<f64>) -> f64 {
+    let mut sorted: Vec<f64> = data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let n = sorted.len();
@@ -1741,6 +1741,7 @@ fn calculate_median(_data: &Array1<f64>) -> f64 {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::lti::design::tf;
     use approx::assert_relative_eq;
     #[test]

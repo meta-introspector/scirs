@@ -18,14 +18,14 @@ use std::time::Duration;
 
 /// Generate test data of various sizes for benchmarking
 #[allow(dead_code)]
-fn generate_test_data(_size: usize, seed: u64) -> Array1<f64> {
+fn generate_test_data(size: usize, seed: u64) -> Array1<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
     Array1::from_iter((0.._size).map(|_| rng.random::<f64>() * 100.0 - 50.0))
 }
 
 /// Generate matrix test data for multivariate benchmarks
 #[allow(dead_code)]
-fn generate_matrix_data(_rows: usize, cols: usize, seed: u64) -> Array2<f64> {
+fn generate_matrix_data(rows: usize, cols: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
     Array2::from_shape_fn((_rows, cols), |_| rng.random::<f64>() * 100.0 - 50.0)
 }

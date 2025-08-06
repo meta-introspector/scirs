@@ -285,7 +285,7 @@ where
     O: Optimizer<A, ndarray::Ix1> + Send + Sync + 'static,
 {
     /// Create a new low-latency optimizer
-    pub fn new(_base_optimizer: O, config: LowLatencyConfig) -> Result<Self> {
+    pub fn new(_baseoptimizer: O, config: LowLatencyConfig) -> Result<Self> {
         let base_optimizer = Arc::new(Mutex::new(_base_optimizer));
 
         let precomputation_engine = if config.enable_precomputation {
@@ -429,7 +429,7 @@ where
     }
 
     /// Estimate accuracy of approximate update
-    fn estimate_accuracy(&self, approximate: &Array1<A>, exact_gradient: &Array1<A>) -> A {
+    fn estimate_accuracy(&self, approximate: &Array1<A>, exactgradient: &Array1<A>) -> A {
         if approximate.len() != exact_gradient.len() {
             return A::zero();
         }
@@ -497,12 +497,12 @@ where
 
 // Implementation of helper structs
 impl<A: Float> PrecomputationEngine<A> {
-    fn new(_buffer_size: usize) -> Self {
+    fn new(_buffersize: usize) -> Self {
         Self {
             precomputed_updates: VecDeque::with_capacity(_buffer_size),
             computation_thread: None,
             gradient_predictor: GradientPredictor::new(10), // 10-step history
-            max_buffer_size: _buffer_size,
+            max_buffer_size: buffer_size,
         }
     }
 
@@ -520,8 +520,7 @@ impl<A: Float> PrecomputationEngine<A> {
         self.precomputed_updates.pop_front()
     }
 
-    fn start_precomputation(&mut self,
-        gradient: &Array1<A>) {
+    fn start_precomputation(&mut self, gradient: &Array1<A>) {
         // In a real implementation, would start background computation
         // For now, just placeholder
     }
@@ -544,7 +543,7 @@ impl<A: Float> LockFreeBuffer<A> {
 }
 
 impl FastMemoryPool {
-    fn new(_total_size: usize, block_size: usize) -> Result<Self> {
+    fn new(_total_size: usize, blocksize: usize) -> Result<Self> {
         let total_blocks = _total_size / block_size;
         let mut blocks = Vec::with_capacity(total_blocks);
 
@@ -622,7 +621,7 @@ impl<A: Float> GradientQuantizer<A> {
 }
 
 impl LatencyMonitor {
-    fn new(max_samples: usize) -> Self {
+    fn new(maxsamples: usize) -> Self {
         Self {
             latency_samples: VecDeque::with_capacity(max_samples),
             max_samples,
@@ -669,7 +668,7 @@ impl LatencyMonitor {
 }
 
 impl<A: Float> ApproximationController<A> {
-    fn new(target_latency: Duration) -> Self {
+    fn new(targetlatency: Duration) -> Self {
         Self {
             approximation_level: A::zero(),
             performance_history: VecDeque::with_capacity(100),
@@ -682,7 +681,7 @@ impl<A: Float> ApproximationController<A> {
         self.approximation_level
     }
 
-    fn record_performance(&mut self, latency: Duration, approximation_level: A, accuracy: A) {
+    fn record_performance(&mut self, latency: Duration, approximationlevel: A, accuracy: A) {
         let point = PerformancePoint {
             latency,
             approximation_level,
@@ -719,7 +718,7 @@ impl<A: Float> ApproximationController<A> {
 }
 
 impl<A: Float> GradientPredictor<A> {
-    fn new(window_size: usize) -> Self {
+    fn new(windowsize: usize) -> Self {
         Self {
             gradient_history: VecDeque::with_capacity(window_size),
             trend_weights: None,

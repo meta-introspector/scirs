@@ -57,7 +57,7 @@ pub trait GpuBackend: std::fmt::Debug {
     fn execute_kernel(&self, kernel: &ComputeKernel, params: &KernelParams) -> Result<()>;
 
     /// Create compute kernel from source
-    fn create_kernel(&self, source: &str, entry_point: &str) -> Result<ComputeKernel>;
+    fn create_kernel(&self, source: &str, entrypoint: &str) -> Result<ComputeKernel>;
 
     /// Synchronize execution
     fn synchronize(&self) -> Result<()>;
@@ -667,11 +667,11 @@ impl EnhancedGpuEngine {
     }
 
     /// Select the best available backend
-    fn select_best_backend(_backends: &[Box<dyn GpuBackend + Send + Sync>]) -> usize {
+    fn select_best_backend(backends: &[Box<dyn GpuBackend + Send + Sync>]) -> usize {
         let mut best_index = 0;
         let mut best_score = 0.0;
 
-        for (i, backend) in _backends.iter().enumerate() {
+        for (i, backend) in backends.iter().enumerate() {
             let info = backend.get_info();
             // Score based on compute units and memory
             let score = info.compute_units as f64 + (info.global_memory as f64 / 1_000_000_000.0);
@@ -1173,7 +1173,7 @@ fn compute_correlation(@builtin(local_invocation_id) local_id: vec3<u32>,
     }
 
     /// Compute hash for kernel caching
-    fn compute_kernel_hash(&self, kernel_name: &str, size: usize) -> u64 {
+    fn compute_kernel_hash(&self, kernelname: &str, size: usize) -> u64 {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 
@@ -1280,7 +1280,8 @@ fn compute_correlation(@builtin(local_invocation_id) local_id: vec3<u32>,
     /// Benchmark correlation kernel with specific parameters
     fn benchmark_correlation_kernel(
         &mut self,
-        size: usize, params: &KernelOptimizationParams,
+        size: usize,
+        params: &KernelOptimizationParams,
     ) -> Result<f64> {
         // Generate test data
         let x: Vec<f32> = (0..size).map(|i| (i as f32) * 0.001).collect();
@@ -1395,7 +1396,7 @@ impl GpuProfiler {
         }
     }
 
-    fn record_kernel_execution(&mut self, kernel_name: &str, duration: Duration) {
+    fn record_kernel_execution(&mut self, kernelname: &str, duration: Duration) {
         if self.enabled {
             self.execution_times
                 .entry(kernel_name.to_string())
@@ -1458,7 +1459,7 @@ impl KernelOptimizer {
         }
     }
 
-    fn get_optimal_vector_width(&self, kernel_name: &str, _size: usize) -> usize {
+    fn get_optimal_vector_width(&self, kernel_name: &str, size: usize) -> usize {
         if let Some(history) = self.optimization_history.get(kernel_name) {
             if let Some(latest) = history.last() {
                 return latest.parameters.vector_width;
@@ -1467,7 +1468,7 @@ impl KernelOptimizer {
         4 // Default
     }
 
-    fn get_optimal_block_size(&self, kernel_name: &str, _size: usize) -> usize {
+    fn get_optimal_block_size(&self, kernel_name: &str, size: usize) -> usize {
         if let Some(history) = self.optimization_history.get(kernel_name) {
             if let Some(latest) = history.last() {
                 return latest.parameters.work_group_size[0];
@@ -1476,7 +1477,7 @@ impl KernelOptimizer {
         256 // Default
     }
 
-    fn get_optimal_unroll_factor(&self, kernel_name: &str, _size: usize) -> usize {
+    fn get_optimal_unroll_factor(&self, kernel_name: &str, size: usize) -> usize {
         if let Some(history) = self.optimization_history.get(kernel_name) {
             if let Some(latest) = history.last() {
                 return latest.parameters.unroll_factor;
@@ -1485,7 +1486,7 @@ impl KernelOptimizer {
         4 // Default
     }
 
-    fn get_optimal_work_group_size(&self, kernel_name: &str, _size: usize) -> usize {
+    fn get_optimal_work_group_size(&self, kernel_name: &str, size: usize) -> usize {
         if let Some(history) = self.optimization_history.get(kernel_name) {
             if let Some(latest) = history.last() {
                 return latest.parameters.work_group_size[0];
@@ -1590,25 +1591,25 @@ impl GpuBackend for CudaBackend {
         })
     }
 
-    fn copy_to_gpu(self_handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
+    fn copy_to_gpu(self_handle: &GpuMemoryHandle, data: &[f32]) -> Result<()> {
         // Simulate memory copy
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn copy_from_gpu(self_handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
+    fn copy_from_gpu(self_handle: &GpuMemoryHandle, data: &mut [f32]) -> Result<()> {
         // Simulate memory copy
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn execute_kernel(self_kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
+    fn execute_kernel(self_kernel: &ComputeKernel, params: &KernelParams) -> Result<()> {
         // Simulate _kernel execution
         std::thread::sleep(Duration::from_micros(10));
         Ok(())
     }
 
-    fn create_kernel(&self, source: &str, entry_point: &str) -> Result<ComputeKernel> {
+    fn create_kernel(&self, source: &str, entrypoint: &str) -> Result<ComputeKernel> {
         // Simulate kernel compilation
         Ok(ComputeKernel {
             id: rand::random(),
@@ -1692,22 +1693,22 @@ impl GpuBackend for OpenClBackend {
         })
     }
 
-    fn copy_to_gpu(self_handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
+    fn copy_to_gpu(self_handle: &GpuMemoryHandle, data: &[f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn copy_from_gpu(self_handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
+    fn copy_from_gpu(self_handle: &GpuMemoryHandle, data: &mut [f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn execute_kernel(self_kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
+    fn execute_kernel(self_kernel: &ComputeKernel, params: &KernelParams) -> Result<()> {
         std::thread::sleep(Duration::from_micros(10));
         Ok(())
     }
 
-    fn create_kernel(&self, source: &str, entry_point: &str) -> Result<ComputeKernel> {
+    fn create_kernel(&self, source: &str, entrypoint: &str) -> Result<ComputeKernel> {
         Ok(ComputeKernel {
             id: rand::random(),
             name: entry_point.to_string(),
@@ -1786,22 +1787,22 @@ impl GpuBackend for WebGpuBackend {
         })
     }
 
-    fn copy_to_gpu(self_handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
+    fn copy_to_gpu(self_handle: &GpuMemoryHandle, data: &[f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(2));
         Ok(())
     }
 
-    fn copy_from_gpu(self_handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
+    fn copy_from_gpu(self_handle: &GpuMemoryHandle, data: &mut [f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(2));
         Ok(())
     }
 
-    fn execute_kernel(self_kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
+    fn execute_kernel(self_kernel: &ComputeKernel, params: &KernelParams) -> Result<()> {
         std::thread::sleep(Duration::from_micros(15));
         Ok(())
     }
 
-    fn create_kernel(&self, source: &str, entry_point: &str) -> Result<ComputeKernel> {
+    fn create_kernel(&self, source: &str, entrypoint: &str) -> Result<ComputeKernel> {
         Ok(ComputeKernel {
             id: rand::random(),
             name: entry_point.to_string(),

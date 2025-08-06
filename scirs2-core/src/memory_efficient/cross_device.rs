@@ -145,20 +145,20 @@ impl TransferOptionsBuilder {
     }
 
     /// Set whether to use pinned memory
-    pub const fn memory(mut self, use_pinned_memory: bool) -> Self {
-        self.options.use_pinned_memory = use_pinned_memory;
+    pub const fn memory(mut self, use_pinnedmemory: bool) -> Self {
+        self.options.use_pinned_memory = use_pinnedmemory;
         self
     }
 
     /// Set whether to enable streaming transfers
-    pub const fn streaming(mut self, enable_streaming: bool) -> Self {
-        self.options.enable_streaming = enable_streaming;
+    pub const fn streaming(mut self, enablestreaming: bool) -> Self {
+        self.options.enable_streaming = enablestreaming;
         self
     }
 
     /// Set the stream ID for asynchronous transfers
-    pub const fn with_stream_id(mut self, stream_id: Option<usize>) -> Self {
-        self.options.stream_id = stream_id;
+    pub const fn with_stream_id(mut self, streamid: Option<usize>) -> Self {
+        self.options.stream_id = streamid;
         self
     }
 
@@ -212,9 +212,9 @@ pub struct TransferEvent {
 impl TransferEvent {
     /// Create a new transfer event
     #[allow(dead_code)]
-    fn device(device_type: DeviceType, handle: Box<dyn std::any::Any + Send + Sync>) -> Self {
+    fn device(devicetype: DeviceType, handle: Box<dyn std::any::Any + Send + Sync>) -> Self {
         Self {
-            device: device_type,
+            device: devicetype,
             handle: Arc::new(Mutex::new(handle)),
             completed: Arc::new(std::sync::atomic::AtomicBool::new(false)),
         }
@@ -280,7 +280,7 @@ impl std::fmt::Debug for DeviceMemoryManager {
 
 impl DeviceMemoryManager {
     /// Create a new device memory manager
-    pub fn new(max_cache_size: usize) -> Result<Self, CoreError> {
+    pub fn new(max_cachesize: usize) -> Result<Self, CoreError> {
         // Try to create a GPU context if a GPU is available
         let gpu_context = match GpuBackend::preferred() {
             backend if backend.is_available() => GpuContext::new(backend).ok(),
@@ -290,7 +290,7 @@ impl DeviceMemoryManager {
         Ok(Self {
             gpu_context,
             cache: Mutex::new(HashMap::new()),
-            max_cache_size,
+            max_cache_size: max_cachesize,
             current_cache_size: std::sync::atomic::AtomicUsize::new(0),
             enable_caching: true,
         })
@@ -402,9 +402,9 @@ impl DeviceMemoryManager {
                             dirty: false,
                         };
 
-                        let buffer_size = std::mem::size_of_val(flat_data);
+                        let buffersize = std::mem::size_of_val(flat_data);
                         self.current_cache_size
-                            .fetch_add(buffer_size, std::sync::atomic::Ordering::SeqCst);
+                            .fetch_add(buffersize, std::sync::atomic::Ordering::SeqCst);
 
                         // If we're over the cache size limit, evict old entries
                         self.evict_cache_entries_if_needed();
@@ -509,7 +509,7 @@ impl DeviceMemoryManager {
             return Ok(DeviceArray::new_cpu(hostarray));
         }
 
-        // For transfers from CPU to another _device, use transfer_to_device
+        // For transfers from CPU to another device, use transfer_to_device
         if devicearray.device == DeviceType::Cpu {
             if let Some(cpuarray) = devicearray.buffer.get_cpuarray() {
                 // Reshape the CPU array to match the expected dimension type
@@ -850,9 +850,9 @@ pub struct DeviceMemoryPool {
     /// List of free buffers by size
     freebuffers: Mutex<HashMap<usize, Vec<Box<dyn std::any::Any + Send + Sync>>>>,
     /// Maximum pool size in bytes
-    max_pool_size: usize,
+    max_poolsize: usize,
     /// Current pool size in bytes
-    current_pool_size: std::sync::atomic::AtomicUsize,
+    current_poolsize: std::sync::atomic::AtomicUsize,
 }
 
 impl std::fmt::Debug for DeviceMemoryPool {
@@ -860,11 +860,11 @@ impl std::fmt::Debug for DeviceMemoryPool {
         f.debug_struct("DeviceMemoryPool")
             .field("device", &self.device)
             .field("freebuffers", &"<freebuffers>")
-            .field("max_pool_size", &self.max_pool_size)
+            .field("max_poolsize", &self.max_poolsize)
             .field(
-                "current_pool_size",
+                "current_poolsize",
                 &self
-                    .current_pool_size
+                    .current_poolsize
                     .load(std::sync::atomic::Ordering::Relaxed),
             )
             .finish()
@@ -873,12 +873,12 @@ impl std::fmt::Debug for DeviceMemoryPool {
 
 impl DeviceMemoryPool {
     /// Create a new device memory pool
-    pub fn new(device: DeviceType, max_pool_size: usize) -> Self {
+    pub fn new(device: DeviceType, max_poolsize: usize) -> Self {
         Self {
             device,
             freebuffers: Mutex::new(HashMap::new()),
-            max_pool_size,
-            current_pool_size: std::sync::atomic::AtomicUsize::new(0),
+            max_poolsize,
+            current_poolsize: std::sync::atomic::AtomicUsize::new(0),
         }
     }
 
@@ -925,13 +925,13 @@ impl DeviceMemoryPool {
     /// Free a buffer (return it to the pool)
     pub fn free<T: GpuDataType>(&self, buffer: DeviceBuffer<T>) {
         let size = buffer.size();
-        let buffer_size = size * std::mem::size_of::<T>();
+        let buffersize = size * std::mem::size_of::<T>();
 
         // Check if adding this buffer would exceed the pool size
         let current_size = self
-            .current_pool_size
+            .current_poolsize
             .load(std::sync::atomic::Ordering::SeqCst);
-        if current_size + buffer_size > self.max_pool_size {
+        if current_size + buffersize > self.max_poolsize {
             // Pool is full, just let the buffer be dropped
             return;
         }
@@ -941,15 +941,15 @@ impl DeviceMemoryPool {
         freebuffers.entry(size).or_default().push(Box::new(buffer));
 
         // Update the pool size
-        self.current_pool_size
-            .fetch_add(buffer_size, std::sync::atomic::Ordering::SeqCst);
+        self.current_poolsize
+            .fetch_add(buffersize, std::sync::atomic::Ordering::SeqCst);
     }
 
     /// Clear the pool
     pub fn clear(&self) {
         let mut freebuffers = self.freebuffers.lock().unwrap();
         freebuffers.clear();
-        self.current_pool_size
+        self.current_poolsize
             .store(0, std::sync::atomic::Ordering::SeqCst);
     }
 }
@@ -1039,27 +1039,27 @@ pub struct CrossDeviceManager {
 
 impl CrossDeviceManager {
     /// Create a new cross-device manager
-    pub fn new(max_cache_size: usize) -> CoreResult<Self> {
+    pub fn new(max_cachesize: usize) -> CoreResult<Self> {
         let mut memory_managers = HashMap::new();
         let mut memory_pools = HashMap::new();
 
         // Create CPU memory manager and pool
-        let cpu_manager = DeviceMemoryManager::new(max_cache_size)?;
+        let cpu_manager = DeviceMemoryManager::new(max_cachesize)?;
         memory_managers.insert(DeviceType::Cpu, cpu_manager);
         memory_pools.insert(
             DeviceType::Cpu,
-            DeviceMemoryPool::new(DeviceType::Cpu, max_cache_size),
+            DeviceMemoryPool::new(DeviceType::Cpu, max_cachesize),
         );
 
         // Try to create GPU memory manager and pool
         let gpu_backend = GpuBackend::preferred();
         if gpu_backend.is_available() {
             let gpu_device = DeviceType::Gpu(gpu_backend);
-            let gpu_manager = DeviceMemoryManager::new(max_cache_size)?;
+            let gpu_manager = DeviceMemoryManager::new(max_cachesize)?;
             memory_managers.insert(gpu_device, gpu_manager);
             memory_pools.insert(
                 gpu_device,
-                DeviceMemoryPool::new(gpu_device, max_cache_size),
+                DeviceMemoryPool::new(gpu_device, max_cachesize),
             );
         }
 
@@ -1068,7 +1068,7 @@ impl CrossDeviceManager {
             memory_pools,
             active_transfers: Mutex::new(Vec::new()),
             enable_caching: true,
-            max_cache_size,
+            max_cache_size: max_cachesize,
         })
     }
 

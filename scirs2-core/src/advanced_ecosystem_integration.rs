@@ -35,7 +35,7 @@ pub struct AdvancedEcosystemCoordinator {
     /// Registered advanced modules
     modules: Arc<RwLock<HashMap<String, Box<dyn AdvancedModule + Send + Sync>>>>,
     /// Performance monitor
-    performance_monitor: Arc<Mutex<EcosystemPerformanceMonitor>>,
+    performancemonitor: Arc<Mutex<EcosystemPerformanceMonitor>>,
     /// Resource manager
     resource_manager: Arc<Mutex<EcosystemResourceManager>>,
     /// Communication hub
@@ -197,7 +197,7 @@ pub struct AdvancedOutput {
 #[derive(Debug, Clone)]
 pub struct ProcessingContext {
     /// Operation type
-    pub operation_type: String,
+    pub operationtype: String,
     /// Expected output format
     pub expected_format: String,
     /// Quality requirements
@@ -390,7 +390,7 @@ pub struct PipelineStage {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct OptimizationContext {
-    pub learning_rate: f64,
+    pub learningrate: f64,
     pub accumulated_performance: Vec<f64>,
     pub adaptation_history: HashMap<String, f64>,
     pub total_memory_used: usize,
@@ -410,7 +410,7 @@ impl Default for OptimizationContext {
 impl OptimizationContext {
     pub fn new() -> Self {
         Self {
-            learning_rate: 0.01,
+            learningrate: 0.01,
             accumulated_performance: Vec::new(),
             adaptation_history: HashMap::new(),
             total_memory_used: 0,
@@ -422,7 +422,7 @@ impl OptimizationContext {
         }
     }
 
-    pub fn stage(&mut self, _stage: &PipelineStage) -> CoreResult<()> {
+    pub fn stage(&mut self, stage: &PipelineStage) -> CoreResult<()> {
         // Update optimization context based on _stage results
         self.final_quality_score += 0.1;
         self.confidence_score = (self.confidence_score + 0.9) / 2.0;
@@ -454,7 +454,7 @@ pub struct QualityRequirements {
     /// Minimum accuracy required
     pub min_accuracy: f64,
     /// Maximum acceptable error
-    pub max_error: f64,
+    pub maxerror: f64,
     /// Precision requirements
     pub precision: usize,
 }
@@ -512,7 +512,7 @@ pub struct ModuleResourceUsage {
     /// GPU usage (percentage)
     pub gpu_percentage: Option<f64>,
     /// Network bandwidth (MB/s)
-    pub network_bandwidth: f64,
+    pub networkbandwidth: f64,
 }
 
 /// Context for ecosystem operations
@@ -552,7 +552,7 @@ pub struct InterModuleMessage {
     /// Destination module
     pub to: String,
     /// Message type
-    pub message_type: MessageType,
+    pub messagetype: MessageType,
     /// Message payload
     pub payload: Vec<u8>,
     /// Timestamp
@@ -631,7 +631,7 @@ pub enum AlertLevel {
 #[derive(Debug, Clone)]
 pub struct MonitoringConfig {
     /// Sampling rate (Hz)
-    pub sampling_rate: f64,
+    pub samplingrate: f64,
     /// Alert thresholds
     pub alert_thresholds: AlertThresholds,
     /// History retention (hours)
@@ -665,7 +665,7 @@ pub struct EcosystemResourceManager {
     load_balancer: LoadBalancer,
     /// Resource monitoring
     #[allow(dead_code)]
-    resource_monitor: ResourceMonitor,
+    resourcemonitor: ResourceMonitor,
 }
 
 /// Pool of available resources
@@ -679,7 +679,7 @@ pub struct ResourcePool {
     /// GPU devices available
     pub gpu_devices: usize,
     /// Network bandwidth (MB/s)
-    pub network_bandwidth: f64,
+    pub networkbandwidth: f64,
 }
 
 /// Resource allocation for a module
@@ -814,7 +814,7 @@ pub struct CommunicationStatistics {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct OptimizationOpportunity {
     /// Module name
-    pub module_name: String,
+    pub modulename: String,
     /// Type of optimization
     pub opportunity_type: String,
     /// Description of the opportunity
@@ -837,7 +837,7 @@ impl AdvancedEcosystemCoordinator {
     pub fn with_config(config: AdvancedEcosystemConfig) -> Self {
         Self {
             modules: Arc::new(RwLock::new(HashMap::new())),
-            performance_monitor: Arc::new(Mutex::new(EcosystemPerformanceMonitor::new())),
+            performancemonitor: Arc::new(Mutex::new(EcosystemPerformanceMonitor::new())),
             resource_manager: Arc::new(Mutex::new(EcosystemResourceManager::new())),
             communication_hub: Arc::new(Mutex::new(ModuleCommunicationHub::new())),
             config,
@@ -859,7 +859,7 @@ impl AdvancedEcosystemCoordinator {
 
     /// Register a new advanced module
     pub fn register_module(&self, module: Box<dyn AdvancedModule + Send + Sync>) -> CoreResult<()> {
-        let module_name = module.name().to_string();
+        let modulename = module.name().to_string();
 
         {
             let mut modules = self.modules.write().map_err(|e| {
@@ -867,7 +867,7 @@ impl AdvancedEcosystemCoordinator {
                     "Failed to acquire modules lock: {e}"
                 )))
             })?;
-            modules.insert(module_name.clone(), module);
+            modules.insert(modulename.clone(), module);
         }
 
         // Update status
@@ -888,10 +888,10 @@ impl AdvancedEcosystemCoordinator {
                     "Failed to acquire resource manager lock: {e}"
                 )))
             })?;
-            (*resource_manager).allocate_resources(&module_name)?;
+            (*resource_manager).allocate_resources(&modulename)?;
         }
 
-        println!("✅ Registered advanced module: {module_name}");
+        println!("✅ Registered advanced module: {modulename}");
         Ok(())
     }
 
@@ -1051,13 +1051,13 @@ impl AdvancedEcosystemCoordinator {
 
     /// Get performance report
     pub fn get_performance_report(&self) -> CoreResult<EcosystemPerformanceReport> {
-        let performance_monitor = self.performance_monitor.lock().map_err(|e| {
+        let performancemonitor = self.performancemonitor.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire performance monitor lock: {e}"
             )))
         })?;
 
-        Ok(performance_monitor.generate_report())
+        Ok(performancemonitor.generate_report())
     }
 
     /// Optimize ecosystem performance
@@ -1080,12 +1080,12 @@ impl AdvancedEcosystemCoordinator {
     }
 
     /// Start ecosystem monitoring
-    pub fn start_monitoring(&self) -> CoreResult<()> {
-        let performance_monitor = Arc::clone(&self.performance_monitor);
+    pub fn startmonitoring(&self) -> CoreResult<()> {
+        let performancemonitor = Arc::clone(&self.performancemonitor);
         let monitoring_interval = Duration::from_millis(self.config.monitoring_interval_ms);
 
         thread::spawn(move || loop {
-            if let Ok(mut monitor) = performance_monitor.lock() {
+            if let Ok(mut monitor) = performancemonitor.lock() {
                 let _ = monitor.collect_metrics();
             }
             thread::sleep(monitoring_interval);
@@ -1159,21 +1159,21 @@ impl AdvancedEcosystemCoordinator {
     ) -> CoreResult<String> {
         // Analyze input characteristics
         let data_size = input.data.len();
-        let operation_type = &input.context.operation_type;
+        let operationtype = &input.context.operationtype;
         let priority = &input.priority;
         let quality_requirements = &input.context.quality_requirements;
 
         // Score each available module
         let mut module_scores: Vec<(String, f64)> = Vec::new();
 
-        for (module_name, module) in modules.iter() {
+        for (modulename, module) in modules.iter() {
             let mut score = 0.0;
 
             // Check capabilities
             let capabilities = module.capabilities();
 
             // Score based on operation type compatibility
-            score += self.score_module_capabilities(operation_type, &capabilities);
+            score += self.score_module_capabilities(operationtype, &capabilities);
 
             // Score based on performance metrics
             let performance = module.get_performance_metrics();
@@ -1198,7 +1198,7 @@ impl AdvancedEcosystemCoordinator {
                 };
             score += data_score;
 
-            module_scores.push((module_name.clone(), score));
+            module_scores.push((modulename.clone(), score));
         }
 
         // Sort by score and select the best module
@@ -1217,10 +1217,10 @@ impl AdvancedEcosystemCoordinator {
     #[allow(dead_code)]
     fn calculate_module_suitability_score(
         &self,
-        operation_type: &str,
+        operationtype: &str,
         capabilities: &[String],
     ) -> f64 {
-        match operation_type {
+        match operationtype {
             "matrix_multiply" | "linear_algebra" => {
                 if capabilities.contains(&"gpu_acceleration".to_string()) {
                     5.0
@@ -1365,14 +1365,14 @@ impl AdvancedEcosystemCoordinator {
     }
 
     #[allow(dead_code)]
-    fn record_operation(&mut self, operation_name: &str, _duration: Duration) -> CoreResult<()> {
-        let mut performance_monitor = self.performance_monitor.lock().map_err(|e| {
+    fn record_operation(&mut self, operation_name: &str, duration: Duration) -> CoreResult<()> {
+        let mut performancemonitor = self.performancemonitor.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire performance monitor lock: {e}"
             )))
         })?;
 
-        performance_monitor
+        performancemonitor
             .record_operation_duration(operation_name, std::time::Duration::from_secs(1));
         Ok(())
     }
@@ -1390,8 +1390,8 @@ impl AdvancedEcosystemCoordinator {
         let _ecosystem_context = self.create_ecosystem_context(&modules)?;
 
         // Optimize each module for ecosystem coordination
-        for (module_name, module) in modules.iter() {
-            println!("🔧 Optimizing module: {module_name}");
+        for (modulename, module) in modules.iter() {
+            println!("🔧 Optimizing module: {modulename}");
 
             // Get module's current performance and resource usage
             let _performance = module.get_performance_metrics();
@@ -1428,20 +1428,20 @@ impl AdvancedEcosystemCoordinator {
         let mut total_network = 0.0;
         let mut load_distribution = HashMap::new();
 
-        for (module_name, module) in modules.iter() {
+        for (modulename, module) in modules.iter() {
             let resource_usage = module.get_resource_usage();
             let performance = module.get_performance_metrics();
 
             total_cpu += resource_usage.cpu_percentage;
             total_memory += resource_usage.memory_mb;
-            total_network += resource_usage.network_bandwidth;
+            total_network += resource_usage.networkbandwidth;
 
             if let Some(gpu_usage) = resource_usage.gpu_percentage {
                 total_gpu += gpu_usage;
             }
 
             // Calculate load based on operations per second
-            load_distribution.insert(module_name.clone(), performance.ops_per_second);
+            load_distribution.insert(modulename.clone(), performance.ops_per_second);
         }
 
         // Normalize to 0.saturating_sub(1) range
@@ -1475,7 +1475,7 @@ impl AdvancedEcosystemCoordinator {
         })
     }
 
-    fn select_modules_based_on_resources(
+    fn select_modulesbased_on_resources(
         _resource_usage: &ModuleResourceUsage,
         _context: &EcosystemContext,
     ) -> CoreResult<Vec<OptimizationOpportunity>> {
@@ -1489,7 +1489,7 @@ impl AdvancedEcosystemCoordinator {
         // Check if module is underperforming compared to targets
         if performance.ops_per_second < context.performance_targets.target_throughput {
             opportunities.push(OptimizationOpportunity {
-                module_name: module_name.to_string(),
+                modulename: modulename.to_string(),
                 opportunity_type: throughput_optimization.to_string(),
                 description:
                     "Module throughput below target - consider GPU acceleration or JIT compilation"
@@ -1509,7 +1509,7 @@ impl AdvancedEcosystemCoordinator {
         // Check if module has high resource usage but low performance
         if resource_usage.cpu_percentage > 80.0 && performance.efficiency_score < 0.6 {
             opportunities.push(OptimizationOpportunity {
-                module_name: module_name.to_string(),
+                modulename: modulename.to_string(),
                 opportunity_type: efficiency_optimization.to_string(),
                 description: "High CPU usage with low efficiency - consider algorithm optimization"
                     .to_string(),
@@ -1522,7 +1522,7 @@ impl AdvancedEcosystemCoordinator {
         if let Some(gpu_usage) = resource_usage.gpu_percentage {
             if gpu_usage < 30.0 && context.available_resources.gpu_usage.unwrap_or(0.0) > 0.5 {
                 opportunities.push(OptimizationOpportunity {
-                    module_name: module_name.to_string(),
+                    modulename: modulename.to_string(),
                     opportunity_type: gpu_utilization.to_string(),
                     description: "GPU underutilized - consider moving workload to GPU".to_string(),
                     potential_improvement: 2.0,
@@ -1534,7 +1534,7 @@ impl AdvancedEcosystemCoordinator {
         // Check if module could benefit from distributed computing
         if resource_usage.memory_mb > 1024.0 && performance.avg_processing_time.as_millis() > 1000 {
             opportunities.push(OptimizationOpportunity {
-                module_name: module_name.to_string(),
+                modulename: modulename.to_string(),
                 opportunity_type: distributed_processing.to_string(),
                 description:
                     "Large memory usage and long processing time - consider distributed computing"
@@ -1550,15 +1550,15 @@ impl AdvancedEcosystemCoordinator {
 
     fn send_optimization_opportunities(
         &self,
-        module_name: &str,
+        modulename: &str,
         opportunities: &[OptimizationOpportunity],
     ) -> CoreResult<()> {
         // Send optimization hints to the module
         for opportunity in opportunities {
             let _optimization_message = InterModuleMessage {
                 from: "ecosystem_coordinator".to_string(),
-                to: module_name.to_string(),
-                message_type: MessageType::OptimizationHint,
+                to: modulename.to_string(),
+                messagetype: MessageType::OptimizationHint,
                 #[cfg(feature = "serde")]
                 payload: serde_json::to_vec(&opportunity).unwrap_or_default(),
                 #[cfg(not(feature = "serde"))]
@@ -1630,13 +1630,13 @@ impl AdvancedEcosystemCoordinator {
     fn create_processing_plan(&self, input: &AdvancedInput) -> CoreResult<ProcessingPlan> {
         // Analyze input characteristics to determine optimal processing strategy
         let input_size = input.data.len();
-        let operation_type = &input.context.operation_type;
+        let operationtype = &input.context.operationtype;
         let priority = &input.priority;
 
         let strategy = if input_size > 100_000_000 {
             // Large data requires distributed processing
             ProcessingStrategy::PipelineDistributed
-        } else if operation_type.contains("multi_stage") {
+        } else if operationtype.contains("multi_stage") {
             // Multi-stage operations need sequential processing
             ProcessingStrategy::Sequential
         } else if priority == &Priority::RealTime {
@@ -1649,7 +1649,7 @@ impl AdvancedEcosystemCoordinator {
 
         // Select modules based on operation type and strategy
         let (primary_module, module_chain, parallel_modules) =
-            self.select_modules_for_operation(operation_type, &strategy)?;
+            self.select_modules_for_operation(operationtype, &strategy)?;
 
         Ok(ProcessingPlan {
             strategy,
@@ -1663,7 +1663,7 @@ impl AdvancedEcosystemCoordinator {
 
     fn select_modules_for_operation(
         &self,
-        operation_type: &str,
+        operationtype: &str,
         strategy: &ProcessingStrategy,
     ) -> CoreResult<(String, Vec<String>, Vec<String>)> {
         let modules = self.modules.read().map_err(|e| {
@@ -1672,7 +1672,7 @@ impl AdvancedEcosystemCoordinator {
             )))
         })?;
 
-        let primary_module = self.select_primary_module(operation_type, &modules)?;
+        let primary_module = self.select_primary_module(operationtype, &modules)?;
 
         let module_chain = match strategy {
             ProcessingStrategy::Sequential => {
@@ -1683,7 +1683,7 @@ impl AdvancedEcosystemCoordinator {
 
         let parallel_modules = match strategy {
             ProcessingStrategy::Parallel => {
-                self.select_parallel_modules(operation_type, &modules)?
+                self.select_parallel_modules(operationtype, &modules)?
             }
             _ => vec![],
         };
@@ -1693,16 +1693,16 @@ impl AdvancedEcosystemCoordinator {
 
     fn select_primary_module(
         &self,
-        operation_type: &str,
+        operationtype: &str,
         modules: &HashMap<String, Box<dyn AdvancedModule + Send + Sync>>,
     ) -> CoreResult<String> {
         // Enhanced module selection logic
-        for (module_name, module) in modules.iter() {
+        for (modulename, module) in modules.iter() {
             let capabilities = module.capabilities();
-            let score = self.calculate_module_suitability_score(operation_type, &capabilities);
+            let score = self.calculate_module_suitability_score(operationtype, &capabilities);
 
             if score > 0.8 {
-                return Ok(module_name.clone());
+                return Ok(modulename.clone());
             }
         }
 
@@ -1714,18 +1714,18 @@ impl AdvancedEcosystemCoordinator {
         })
     }
 
-    fn score_module_capabilities(&self, operation_type: &str, capabilities: &[String]) -> f64 {
+    fn score_module_capabilities(&self, operationtype: &str, capabilities: &[String]) -> f64 {
         let mut score: f64 = 0.0;
 
         // Direct capability match
         for capability in capabilities {
-            if operation_type.contains(capability) {
+            if operationtype.contains(capability) {
                 score += 0.5;
             }
         }
 
         // Operation type specific scoring
-        match operation_type {
+        match operationtype {
             "jit_compilation" => {
                 if capabilities.contains(&"jit_compilation".to_string()) {
                     score += 0.9;
@@ -1756,19 +1756,19 @@ impl AdvancedEcosystemCoordinator {
 
     fn create_processing_chain(
         &self,
-        operation_type: &str,
+        operationtype: &str,
         modules: &HashMap<String, Box<dyn AdvancedModule + Send + Sync>>,
     ) -> CoreResult<Vec<String>> {
         // Create an optimal sequential processing chain
         let mut chain = Vec::new();
 
-        if operation_type.contains("data_preprocessing") {
+        if operationtype.contains("data_preprocessing") {
             if let Some(module) = self.find_module_with_capability("data_preprocessing", modules) {
                 chain.push(module);
             }
         }
 
-        if operation_type.contains("computation") {
+        if operationtype.contains("computation") {
             if let Some(module) = self.find_module_with_capability("tensor_cores", modules) {
                 chain.push(module);
             } else if let Some(module) =
@@ -1778,7 +1778,7 @@ impl AdvancedEcosystemCoordinator {
             }
         }
 
-        if operation_type.contains("storage") {
+        if operationtype.contains("storage") {
             if let Some(module) = self.find_module_with_capability("cloud_storage", modules) {
                 chain.push(module);
             }
@@ -1794,14 +1794,14 @@ impl AdvancedEcosystemCoordinator {
 
     fn select_parallel_modules(
         &self,
-        operation_type: &str,
+        operationtype: &str,
         modules: &HashMap<String, Box<dyn AdvancedModule + Send + Sync>>,
     ) -> CoreResult<Vec<String>> {
         // Select modules that can work in parallel
         let mut parallel_modules = Vec::new();
 
         // For tensor operations, use both JIT and tensor cores in parallel
-        if operation_type.contains("tensor") {
+        if operationtype.contains("tensor") {
             if let Some(jit_module) = self.find_module_with_capability("jit_compilation", modules) {
                 parallel_modules.push(jit_module);
             }
@@ -1811,7 +1811,7 @@ impl AdvancedEcosystemCoordinator {
         }
 
         // For distributed operations, use both distributed computing and cloud storage
-        if operation_type.contains("distributed") {
+        if operationtype.contains("distributed") {
             if let Some(dist_module) =
                 self.find_module_with_capability("distributed_computing", modules)
             {
@@ -1871,18 +1871,18 @@ impl AdvancedEcosystemCoordinator {
         Ok(ResourceRequirements {
             cpu_cores: (data_size_gb * 2.0).clamp(1.0, 16.0) as usize,
             memory_gb: (data_size_gb * 3.0).clamp(0.5, 64.0) as usize,
-            gpu_count: if input.context.operation_type.contains("tensor") {
+            gpu_count: if input.context.operationtype.contains("tensor") {
                 1
             } else {
                 0
             },
             disk_space_gb: (data_size_gb * 1.5).clamp(1.0, 100.0) as usize,
-            specialized_requirements: if input.context.operation_type.contains("tensor") {
+            specialized_requirements: if input.context.operationtype.contains("tensor") {
                 vec![SpecializedRequirement {
                     unit_type: SpecializedUnit::TensorCore,
                     count: 1,
                 }]
-            } else if input.context.operation_type.contains("quantum") {
+            } else if input.context.operationtype.contains("quantum") {
                 vec![SpecializedRequirement {
                     unit_type: SpecializedUnit::QuantumProcessor,
                     count: 1,
@@ -1896,7 +1896,7 @@ impl AdvancedEcosystemCoordinator {
     fn process_single_module(
         &self,
         input: &AdvancedInput,
-        module_name: &str,
+        modulename: &str,
     ) -> CoreResult<AdvancedOutput> {
         let mut modules = self.modules.write().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -1904,11 +1904,11 @@ impl AdvancedEcosystemCoordinator {
             )))
         })?;
 
-        if let Some(module) = modules.get_mut(module_name) {
+        if let Some(module) = modules.get_mut(modulename) {
             module.process_advanced(input.clone())
         } else {
             Err(CoreError::InvalidArgument(crate::error::ErrorContext::new(
-                format!("Module {module_name} not found"),
+                format!("Module {modulename} not found"),
             )))
         }
     }
@@ -1920,8 +1920,8 @@ impl AdvancedEcosystemCoordinator {
     ) -> CoreResult<AdvancedOutput> {
         let mut current_input = input.clone();
 
-        for module_name in module_chain {
-            let output = self.process_single_module(&current_input, module_name)?;
+        for modulename in module_chain {
+            let output = self.process_single_module(&current_input, modulename)?;
 
             // Convert output back to input for next stage
             current_input = AdvancedInput {
@@ -1946,8 +1946,8 @@ impl AdvancedEcosystemCoordinator {
         let input_clone = input.clone();
 
         // Process in parallel (simplified - in real implementation would use proper async)
-        for module_name in parallel_modules {
-            let module_name = module_name.clone();
+        for modulename in parallel_modules {
+            let modulename = modulename.clone();
             let input = input_clone.clone();
 
             let handle = thread::spawn(move || {
@@ -1964,24 +1964,24 @@ impl AdvancedEcosystemCoordinator {
                     confidence: 0.85,
                 }
             });
-            handles.push((module_name, handle));
+            handles.push((modulename, handle));
         }
 
         // Collect results and select best one
         let mut best_output = None;
         let mut best_score = 0.0;
 
-        for (module_name, handle) in handles {
+        for (modulename, handle) in handles {
             match handle.join() {
                 Ok(output) => {
                     if output.quality_score > best_score {
                         best_score = output.quality_score;
                         best_output = Some(output);
                     }
-                    println!("  ✅ Module {module_name} completed");
+                    println!("  ✅ Module {modulename} completed");
                 }
                 Err(_) => {
-                    println!("  ❌ Module {module_name} failed");
+                    println!("  ❌ Module {modulename} failed");
                 }
             }
         }
@@ -1993,7 +1993,7 @@ impl AdvancedEcosystemCoordinator {
         })
     }
 
-    fn execute_plan(&self, _plan: &ProcessingPlan) -> CoreResult<AdvancedOutput> {
+    fn execute_plan(&self, plan: &ProcessingPlan) -> CoreResult<AdvancedOutput> {
         // Simplified distributed processing
         println!("🌐 Executing distributed pipeline...");
 
@@ -2040,7 +2040,7 @@ impl AdvancedEcosystemCoordinator {
     }
 
     /// Validate a workflow before execution
-    fn validate_workflow(&self, _workflow: &DistributedWorkflow) -> CoreResult<()> {
+    fn validate_workflow(&self, workflow: &DistributedWorkflow) -> CoreResult<()> {
         Ok(())
     }
 
@@ -2236,7 +2236,7 @@ impl EcosystemPerformanceMonitor {
             },
             alerts: Vec::new(),
             config: MonitoringConfig {
-                sampling_rate: 1.0,
+                samplingrate: 1.0,
                 alert_thresholds: AlertThresholds {
                     latency_threshold: 1000.0,
                     error_rate_threshold: 0.05,
@@ -2253,11 +2253,11 @@ impl EcosystemPerformanceMonitor {
         Ok(())
     }
 
-    pub fn record_operation_duration(&mut self, module_name: &str, _duration: Duration) {
+    pub fn record_operation_duration(&mut self, modulename: &str, duration: Duration) {
         // Record operation for performance tracking
-        if !self.module_performance.contains_key(module_name) {
+        if !self.module_performance.contains_key(modulename) {
             self.module_performance
-                .insert(module_name.to_string(), Vec::new());
+                .insert(modulename.to_string(), Vec::new());
         }
     }
 
@@ -2381,7 +2381,7 @@ impl EcosystemResourceManager {
                 cpu_cores: 8,
                 memory_mb: 16384,
                 gpu_devices: 1,
-                network_bandwidth: 1000.0,
+                networkbandwidth: 1000.0,
             },
             allocations: HashMap::new(),
             load_balancer: LoadBalancer {
@@ -2389,7 +2389,7 @@ impl EcosystemResourceManager {
                 strategy: LoadBalancingStrategy::PerformanceBased,
                 performance_history: Vec::new(),
             },
-            resource_monitor: ResourceMonitor {
+            resourcemonitor: ResourceMonitor {
                 current_usage: ResourceUtilization {
                     cpu_usage: 0.0,
                     memory_usage: 0.0,
@@ -2402,7 +2402,7 @@ impl EcosystemResourceManager {
         }
     }
 
-    pub fn allocate_resources(&mut self, module_name: &str) -> CoreResult<()> {
+    pub fn allocate_resources(&mut self, modulename: &str) -> CoreResult<()> {
         let allocation = ResourceAllocation {
             cpu_cores: 1.0,
             memory_mb: 512,
@@ -2411,7 +2411,7 @@ impl EcosystemResourceManager {
             priority: Priority::Normal,
         };
 
-        self.allocations.insert(module_name.to_string(), allocation);
+        self.allocations.insert(modulename.to_string(), allocation);
         Ok(())
     }
 
@@ -2454,12 +2454,12 @@ impl EcosystemResourceManager {
         println!("    🔮 Applying predictive scaling...");
 
         // Simple predictive scaling - in real implementation would use ML models
-        for (module_name, allocation) in &mut self.allocations {
+        for (modulename, allocation) in &mut self.allocations {
             // Simulate prediction of increased demand
-            if module_name.contains("neural") || module_name.contains("ml") {
+            if modulename.contains("neural") || modulename.contains("ml") {
                 allocation.cpu_cores *= 1.2; // 20% increase for ML workloads
                 allocation.memory_mb = (allocation.memory_mb as f64 * 1.3) as usize; // 30% increase
-                println!("    📈 Predictively scaled up resources for ML module: {module_name}");
+                println!("    📈 Predictively scaled up resources for ML module: {modulename}");
             }
         }
 
@@ -2522,7 +2522,7 @@ impl ModuleCommunicationHub {
             },
             PipelineStage {
                 name: "processing".to_string(),
-                module: input.context.operation_type.clone(),
+                module: input.context.operationtype.clone(),
                 config: HashMap::from([("operation".to_string(), "advanced_process".to_string())]),
                 dependencies: vec!["preprocessing".to_string()],
             },

@@ -61,20 +61,20 @@ fn dirac(x: f64, epsilon: f64) -> f64 {
 
 /// Compute curvature of level set function
 #[allow(dead_code)]
-fn compute_curvature(_phi: &ArrayView2<f64>) -> Array2<f64> {
-    let (height, width) = _phi.dim();
+fn compute_curvature(phi: &ArrayView2<f64>) -> Array2<f64> {
+    let (height, width) = phi.dim();
     let mut curvature = Array2::zeros((height, width));
 
     for i in 1..height - 1 {
         for j in 1..width - 1 {
             // Central differences
-            let phi_x = (_phi[[i, j + 1]] - _phi[[i, j - 1]]) / 2.0;
-            let phi_y = (_phi[[i + 1, j]] - _phi[[i - 1, j]]) / 2.0;
+            let phi_x = (_phi[[i, j + 1]] - phi[[i, j - 1]]) / 2.0;
+            let phi_y = (_phi[[i + 1, j]] - phi[[i - 1, j]]) / 2.0;
 
-            let phi_xx = _phi[[i, j + 1]] - 2.0 * _phi[[i, j]] + _phi[[i, j - 1]];
-            let phi_yy = _phi[[i + 1, j]] - 2.0 * _phi[[i, j]] + _phi[[i - 1, j]];
-            let phi_xy = (_phi[[i + 1, j + 1]] - _phi[[i + 1, j - 1]] - _phi[[i - 1, j + 1]]
-                + _phi[[i - 1, j - 1]])
+            let phi_xx = phi[[i, j + 1]] - 2.0 * phi[[i, j]] + phi[[i, j - 1]];
+            let phi_yy = phi[[i + 1, j]] - 2.0 * phi[[i, j]] + phi[[i - 1, j]];
+            let phi_xy = (_phi[[i + 1, j + 1]] - phi[[i + 1, j - 1]] - phi[[i - 1, j + 1]]
+                + phi[[i - 1, j - 1]])
                 / 4.0;
 
             let denominator = (phi_x * phi_x + phi_y * phi_y).powf(1.5) + 1e-10;
@@ -90,27 +90,27 @@ fn compute_curvature(_phi: &ArrayView2<f64>) -> Array2<f64> {
 
 /// Reinitialize level set function to signed distance function
 #[allow(dead_code)]
-fn reinitialize_level_set(_phi: &mut Array2<f64>, iterations: usize) {
-    let (height, width) = _phi.dim();
+fn reinitialize_level_set(phi: &mut Array2<f64>, iterations: usize) {
+    let (height, width) = phi.dim();
     let dt = 0.5;
 
     for _ in 0..iterations {
-        let mut phi_new = _phi.clone();
+        let mut phi_new = phi.clone();
 
         for i in 1..height - 1 {
             for j in 1..width - 1 {
                 // Upwind scheme for reinitialization
-                let a = _phi[[i, j]] - _phi[[i - 1, j]];
-                let b = _phi[[i + 1, j]] - _phi[[i, j]];
-                let c = _phi[[i, j]] - _phi[[i, j - 1]];
-                let d = _phi[[i, j + 1]] - _phi[[i, j]];
+                let a = phi[[i, j]] - phi[[i - 1, j]];
+                let b = phi[[i + 1, j]] - phi[[i, j]];
+                let c = phi[[i, j]] - phi[[i, j - 1]];
+                let d = phi[[i, j + 1]] - phi[[i, j]];
 
                 let a_plus = a.max(0.0);
                 let b_minus = b.min(0.0);
                 let c_plus = c.max(0.0);
                 let d_minus = d.min(0.0);
 
-                let sign_phi = _phi[[i, j]] / (_phi[[i, j]].abs() + 1e-10);
+                let sign_phi = phi[[i, j]] / (_phi[[i, j]].abs() + 1e-10);
 
                 let grad_plus = ((a_plus * a_plus).max(b_minus * b_minus)
                     + (c_plus * c_plus).max(d_minus * d_minus))
@@ -131,7 +131,7 @@ fn reinitialize_level_set(_phi: &mut Array2<f64>, iterations: usize) {
                     grad_minus
                 };
 
-                phi_new[[i, j]] = _phi[[i, j]] - dt * sign_phi * (grad - 1.0);
+                phi_new[[i, j]] = phi[[i, j]] - dt * sign_phi * (grad - 1.0);
             }
         }
 

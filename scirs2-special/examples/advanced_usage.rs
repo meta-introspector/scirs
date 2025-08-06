@@ -74,7 +74,7 @@ fn statistical_computing_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("========================");
 
     // Beta distribution density function
-    fn beta_pdf(x: f64, alpha: f64, beta_param: f64) -> Result<f64, Box<dyn std::error::Error>> {
+    fn beta_pdf(x: f64, alpha: f64, betaparam: f64) -> Result<f64, Box<dyn std::error::Error>> {
         if !(0.0..=1.0).contains(&x) || alpha <= 0.0 || beta_param <= 0.0 {
             return Ok(0.0);
         }

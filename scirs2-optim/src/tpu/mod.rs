@@ -619,7 +619,7 @@ where
     O: Optimizer<A, ndarray::Ix1> + Send + Sync,
 {
     /// Create a new TPU optimizer
-    pub fn new(base_optimizer: O, config: TPUConfig) -> Result<Self> {
+    pub fn new(baseoptimizer: O, config: TPUConfig) -> Result<Self> {
         let memory_allocator = TPUMemoryAllocator::new(&config)?;
         let pod_coordinator = if config.enable_pod_coordination {
             Some(TPUPodCoordinator::new(&config)?)
@@ -721,7 +721,7 @@ where
         let computation_id = self.compile_step(&[paramshape, gradshape])?;
 
         // Execute on TPU
-        let result = if let Some(ref _pod_coordinator) = self.pod_coordinator {
+        let result = if let Some(ref pod_coordinator) = self.pod_coordinator {
             self.execute_distributed(&computation_id, params, gradients)?
         } else {
             self.execute_single_tpu(&computation_id, params, gradients)?
@@ -742,10 +742,7 @@ where
         Ok(result)
     }
 
-    fn build_optimizer_computation(
-        &self,
-        inputshapes: &[XLAShape],
-    ) -> Result<XLAComputationGraph> {
+    fn build_optimizer_computation(&self, inputshapes: &[XLAShape]) -> Result<XLAComputationGraph> {
         // Simplified computation graph building
         // In a real implementation, this would build the full optimizer computation
         let mut graph = self.xla_graph.as_ref().unwrap().clone();
@@ -771,7 +768,8 @@ where
 
     fn apply_single_pass(
         &self,
-        computation: XLAComputationGraph, pass: &XLAOptimizationPass,
+        computation: XLAComputationGraph,
+        pass: &XLAOptimizationPass,
     ) -> Result<XLAComputationGraph> {
         // Apply specific optimization _pass
         // This is simplified - real implementation would transform the computation graph
@@ -818,7 +816,10 @@ where
     }
 
     fn execute_single_tpu<S, DIM>(
-        &mut self, _computation_id: &str, _params: &ArrayBase<S, DIM>, _gradients: &ArrayBase<S, DIM>,
+        &mut self,
+        _computation_id: &str,
+        _params: &ArrayBase<S, DIM>,
+        _gradients: &ArrayBase<S, DIM>,
     ) -> Result<Array<A, DIM>>
     where
         S: Data<Elem = A>,
@@ -833,7 +834,10 @@ where
     }
 
     fn execute_distributed<S, DIM>(
-        &mut self, _computation_id: &str, _params: &ArrayBase<S, DIM>, _gradients: &ArrayBase<S, DIM>,
+        &mut self,
+        _computation_id: &str,
+        _params: &ArrayBase<S, DIM>,
+        _gradients: &ArrayBase<S, DIM>,
     ) -> Result<Array<A, DIM>>
     where
         S: Data<Elem = A>,
@@ -955,20 +959,20 @@ pub struct TPUTopologyInfo {
 // Implementation details for supporting structures
 
 impl<A: Float> TPUMemoryAllocator<A> {
-    fn new(_config: &TPUConfig) -> Result<Self> {
-        let total_memory = match _config.tpu_version {
-            TPUVersion::V2 => 8 * 1024 * 1024 * 1024 * _config.num_cores,
-            TPUVersion::V3 => 16 * 1024 * 1024 * 1024 * _config.num_cores,
-            TPUVersion::V4 => 32 * 1024 * 1024 * 1024 * _config.num_cores,
-            TPUVersion::V5e => 16 * 1024 * 1024 * 1024 * _config.num_cores,
-            TPUVersion::V5p => 95 * 1024 * 1024 * 1024 * _config.num_cores,
+    fn new(config: &TPUConfig) -> Result<Self> {
+        let total_memory = match config.tpu_version {
+            TPUVersion::V2 => 8 * 1024 * 1024 * 1024 * config.num_cores,
+            TPUVersion::V3 => 16 * 1024 * 1024 * 1024 * config.num_cores,
+            TPUVersion::V4 => 32 * 1024 * 1024 * 1024 * config.num_cores,
+            TPUVersion::V5e => 16 * 1024 * 1024 * 1024 * config.num_cores,
+            TPUVersion::V5p => 95 * 1024 * 1024 * 1024 * config.num_cores,
         };
 
         Ok(Self {
             total_memory,
             allocated_memory: 0,
             memory_pools: HashMap::new(),
-            strategy: _config.memory_optimization,
+            strategy: config.memory_optimization,
             fragmentation_stats: FragmentationStats {
                 external_fragmentation: 0.0,
                 internal_fragmentation: 0.0,
@@ -998,8 +1002,8 @@ impl<A: Float> TPUMemoryAllocator<A> {
 }
 
 impl TPUPodCoordinator {
-    fn new(_config: &TPUConfig) -> Result<Self> {
-        let num_cores = match _config.pod_topology {
+    fn new(config: &TPUConfig) -> Result<Self> {
+        let num_cores = match config.pod_topology {
             PodTopology::Single => 1,
             PodTopology::Pod2x2 => 4,
             PodTopology::Pod4x4 => 16,
@@ -1010,7 +1014,7 @@ impl TPUPodCoordinator {
 
         let mut core_assignments = HashMap::new();
         for i in 0..num_cores {
-            let (x, y) = match _config.pod_topology {
+            let (x, y) = match config.pod_topology {
                 PodTopology::Single => (0, 0),
                 PodTopology::Pod2x2 => (i % 2, i / 2),
                 PodTopology::Pod4x4 => (i % 4, i / 4),
@@ -1032,7 +1036,7 @@ impl TPUPodCoordinator {
         }
 
         Ok(Self {
-            topology: _config.pod_topology,
+            topology: config.pod_topology,
             num_cores,
             core_assignments,
             comm_patterns: vec![
@@ -1070,7 +1074,7 @@ impl TPUProfiler {
 }
 
 impl XLAComputationBuilder {
-    fn new(optimization_level: XLAOptimizationLevel, target_config: TPUConfig) -> Self {
+    fn new(optimization_level: XLAOptimizationLevel, targetconfig: TPUConfig) -> Self {
         Self {
             instruction_count: 0,
             optimization_level,

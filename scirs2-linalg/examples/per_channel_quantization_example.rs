@@ -141,10 +141,10 @@ fn main() {
 
     // Compare standard affine with per-channel affine
     let (std_asym_quantized, std_asym_params) =
-        quantize_matrix(&asymmetric_weights.view(), 8, QuantizationMethod::Affine);
+        quantize_matrix(&asymmetricweights.view(), 8, QuantizationMethod::Affine);
 
     let (perchan_asym_quantized, perchan_asym_params) = quantize_matrix_per_channel(
-        &asymmetric_weights.view(),
+        &asymmetricweights.view(),
         8,
         QuantizationMethod::PerChannelAffine,
     );
@@ -156,7 +156,7 @@ fn main() {
     println!("\nPer-channel affine quantization parameters:");
     if let Some(scales) = &perchan_asym_params.channel_scales {
         if let Some(zero_points) = &perchan_asym_params.channel_zero_points {
-            for i in 0..asymmetric_weights.ncols() {
+            for i in 0..asymmetricweights.ncols() {
                 println!(
                     "  Column {}: scale = {}, zero_point = {}",
                     i, scales[i], zero_points[i]

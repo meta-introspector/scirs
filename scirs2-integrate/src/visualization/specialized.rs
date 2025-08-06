@@ -483,9 +483,9 @@ pub struct BifurcationDiagramGenerator {
 
 impl BifurcationDiagramGenerator {
     /// Create new bifurcation diagram generator
-    pub fn new(parameter_range: (f64, f64), n_parameter_samples: usize) -> Self {
+    pub fn new(parameterrange: (f64, f64), n_parameter_samples: usize) -> Self {
         Self {
-            parameter_range,
+            parameter_range: parameterrange,
             n_parameter_samples,
             transient_steps: 1000,
             sampling_steps: 500,

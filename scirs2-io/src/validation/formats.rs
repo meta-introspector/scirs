@@ -55,8 +55,8 @@ impl DataFormat {
     }
 
     /// Parse format name from a string
-    pub fn from_str(_name: &str) -> Option<Self> {
-        match _name.to_uppercase().as_str() {
+    pub fn from_str(name: &str) -> Option<Self> {
+        match name.to_uppercase().as_str() {
             "CSV" => Some(DataFormat::CSV),
             "TSV" => Some(DataFormat::TSV),
             "JSON" => Some(DataFormat::JSON),
@@ -249,7 +249,7 @@ pub fn get_scientific_format_validators() -> FormatValidatorRegistry {
 /// Validate a file against a specific format
 #[allow(dead_code)]
 pub fn validate_format<P: AsRef<Path>>(path: P, format: DataFormat) -> Result<bool> {
-    let _path = _path.as_ref();
+    let _path = path.as_ref();
 
     // Open file
     let file =
@@ -280,7 +280,7 @@ pub fn validate_format<P: AsRef<Path>>(path: P, format: DataFormat) -> Result<bo
 /// Detect the format of a file
 #[allow(dead_code)]
 pub fn detect_file_format<P: AsRef<Path>>(path: P) -> Result<Option<String>> {
-    let _path = _path.as_ref();
+    let _path = path.as_ref();
 
     // Use registry to validate format
     let registry = get_scientific_format_validators();
@@ -344,7 +344,7 @@ pub fn validate_file_format<P: AsRef<Path>>(
 /// Validate CSV file structure in detail
 #[allow(dead_code)]
 fn validate_csv_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult> {
-    let _path = _path.as_ref();
+    let _path = path.as_ref();
 
     // Open file
     let file =
@@ -360,7 +360,7 @@ fn validate_csv_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
         return Ok(FormatValidationResult {
             valid: false,
             format: "CSV".to_string(),
-            file_path: _path.to_string_lossy().to_string(),
+            file_path: path.to_string_lossy().to_string(),
             details: Some("File is empty".to_string()),
         });
     }
@@ -377,7 +377,7 @@ fn validate_csv_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
             return Ok(FormatValidationResult {
                 valid: false,
                 format: "CSV".to_string(),
-                file_path: _path.to_string_lossy().to_string(),
+                file_path: path.to_string_lossy().to_string(),
                 details: Some("File has no content".to_string()),
             });
         }
@@ -404,7 +404,7 @@ fn validate_csv_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
         Ok(FormatValidationResult {
             valid: true,
             format: "CSV".to_string(),
-            file_path: _path.to_string_lossy().to_string(),
+            file_path: path.to_string_lossy().to_string(),
             details: Some(format!(
                 "CSV file with {} fields per line",
                 first_field_count
@@ -437,7 +437,7 @@ fn validate_csv_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
         Ok(FormatValidationResult {
             valid: false,
             format: "CSV".to_string(),
-            file_path: _path.to_string_lossy().to_string(),
+            file_path: path.to_string_lossy().to_string(),
             details: Some(format!(
                 "Inconsistent field counts. First line has {} fields. {}",
                 first_field_count, inconsistent_report
@@ -448,7 +448,7 @@ fn validate_csv_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
 
 /// Count fields in a CSV line, accounting for quoted fields
 #[allow(dead_code)]
-fn count_csv_fields(_line: &[u8]) -> usize {
+fn count_csv_fields(line: &[u8]) -> usize {
     let mut count = 1; // Start at 1 because field count = comma count + 1
     let mut in_quotes = false;
 
@@ -474,7 +474,7 @@ fn count_csv_fields(_line: &[u8]) -> usize {
 /// Validate JSON file structure in detail
 #[allow(dead_code)]
 fn validate_json_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult> {
-    let _path = _path.as_ref();
+    let _path = path.as_ref();
 
     // Open and attempt to parse as JSON
     let file =
@@ -486,13 +486,13 @@ fn validate_json_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResul
         Ok(_) => Ok(FormatValidationResult {
             valid: true,
             format: "JSON".to_string(),
-            file_path: _path.to_string_lossy().to_string(),
+            file_path: path.to_string_lossy().to_string(),
             details: Some("Valid JSON structure".to_string()),
         }),
         Err(e) => Ok(FormatValidationResult {
             valid: false,
             format: "JSON".to_string(),
-            file_path: _path.to_string_lossy().to_string(),
+            file_path: path.to_string_lossy().to_string(),
             details: Some(format!("Invalid JSON: {}", e)),
         }),
     }
@@ -501,7 +501,7 @@ fn validate_json_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResul
 /// Validate ARFF file structure in detail
 #[allow(dead_code)]
 fn validate_arff_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult> {
-    let _path = _path.as_ref();
+    let _path = path.as_ref();
 
     // Open file
     let file =
@@ -543,7 +543,7 @@ fn validate_arff_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResul
         Ok(FormatValidationResult {
             valid: true,
             format: "ARFF".to_string(),
-            file_path: _path.to_string_lossy().to_string(),
+            file_path: path.to_string_lossy().to_string(),
             details: Some(format!(
                 "Valid ARFF file with {} attributes",
                 attribute_count
@@ -553,7 +553,7 @@ fn validate_arff_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResul
         Ok(FormatValidationResult {
             valid: false,
             format: "ARFF".to_string(),
-            file_path: _path.to_string_lossy().to_string(),
+            file_path: path.to_string_lossy().to_string(),
             details: Some(details.join(", ")),
         })
     }
@@ -562,7 +562,7 @@ fn validate_arff_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResul
 /// Validate WAV file structure in detail
 #[allow(dead_code)]
 fn validate_wav_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult> {
-    let _path = _path.as_ref();
+    let _path = path.as_ref();
 
     // Open file
     let file =
@@ -576,7 +576,7 @@ fn validate_wav_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
         return Ok(FormatValidationResult {
             valid: false,
             format: "WAV".to_string(),
-            file_path: _path.to_string_lossy().to_string(),
+            file_path: path.to_string_lossy().to_string(),
             details: Some(format!("Failed to read WAV header: {}", e)),
         });
     }
@@ -586,7 +586,7 @@ fn validate_wav_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
         return Ok(FormatValidationResult {
             valid: false,
             format: "WAV".to_string(),
-            file_path: _path.to_string_lossy().to_string(),
+            file_path: path.to_string_lossy().to_string(),
             details: Some("Missing RIFF header".to_string()),
         });
     }
@@ -596,7 +596,7 @@ fn validate_wav_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
         return Ok(FormatValidationResult {
             valid: false,
             format: "WAV".to_string(),
-            file_path: _path.to_string_lossy().to_string(),
+            file_path: path.to_string_lossy().to_string(),
             details: Some("Missing WAVE format identifier".to_string()),
         });
     }
@@ -606,7 +606,7 @@ fn validate_wav_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
         return Ok(FormatValidationResult {
             valid: false,
             format: "WAV".to_string(),
-            file_path: _path.to_string_lossy().to_string(),
+            file_path: path.to_string_lossy().to_string(),
             details: Some("Missing fmt chunk".to_string()),
         });
     }
@@ -623,7 +623,7 @@ fn validate_wav_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
     Ok(FormatValidationResult {
         valid: true,
         format: "WAV".to_string(),
-        file_path: _path.to_string_lossy().to_string(),
+        file_path: path.to_string_lossy().to_string(),
         details: Some(format!(
             "Valid WAV file: {} channels, {}Hz, {}-bit, {}",
             channels,

@@ -102,7 +102,7 @@ impl GpuContextPool {
     }
 
     /// Create a new GPU context pool with custom production configuration
-    pub fn with_config(_config: GpuProductionConfig) -> Self {
+    pub fn with_config(config: GpuProductionConfig) -> Self {
         Self {
             contexts: RwLock::new(HashMap::new()),
             device_info: RwLock::new(HashMap::new()),
@@ -116,7 +116,7 @@ impl GpuContextPool {
 
     /// Update production configuration
     pub fn update_config(&self, config: GpuProductionConfig) {
-        *self.production_config.write().unwrap() = _config;
+        *self.production_config.write().unwrap() = config;
     }
 
     /// Get current production configuration
@@ -370,7 +370,7 @@ impl GpuContextPool {
     }
 
     /// Get performance statistics for a backend
-    pub fn get_performance_stats(&self, backend_type: GpuBackend) -> Option<GpuPerformanceStats> {
+    pub fn get_performance_stats(&self, backendtype: GpuBackend) -> Option<GpuPerformanceStats> {
         let stats = self.performance_stats.read().unwrap();
         stats.get(&backend_type).cloned()
     }
@@ -381,7 +381,7 @@ impl GpuContextPool {
     }
 
     /// Check if GPU acceleration should be used for given array size
-    pub fn should_use_gpu(&self, array_size: usize, data_type_size: usize) -> bool {
+    pub fn should_use_gpu(&self, array_size: usize, data_typesize: usize) -> bool {
         // Only use GPU for sufficiently large arrays
         let min_elements = match data_type_size {
             4 => 512,  // f32
@@ -415,7 +415,7 @@ impl GpuContextPool {
     }
 
     /// Query OpenCL device information with detailed properties
-    fn query_opencl_device_info(&self_context: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {
+    fn query_opencl_device_info(selfcontext: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {
         #[cfg(feature = "gpu")]
         log::debug!("Querying OpenCL device properties...");
 
@@ -434,7 +434,7 @@ impl GpuContextPool {
     }
 
     /// Query CUDA device information with detailed properties
-    fn query_cuda_device_info(&self_context: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {
+    fn query_cuda_device_info(selfcontext: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {
         #[cfg(feature = "gpu")]
         log::debug!("Querying CUDA device properties...");
 
@@ -604,7 +604,7 @@ pub fn get_best_gpu_context() -> SpecialResult<Arc<GpuContext>> {
 
 /// Check if GPU should be used for computation
 #[allow(dead_code)]
-pub fn should_use_gpu_computation(_array_size: usize, element_size: usize) -> bool {
+pub fn should_use_gpu_computation(_array_size: usize, elementsize: usize) -> bool {
     get_gpu_pool().should_use_gpu(_array_size, element_size)
 }
 
@@ -698,7 +698,7 @@ pub fn validate_gpu_production_readiness() -> SpecialResult<String> {
 
 /// Enable production monitoring with performance alerts
 #[allow(dead_code)]
-pub fn enable_gpu_monitoring(_enable_alerts: bool) -> SpecialResult<()> {
+pub fn enable_gpu_monitoring(_enablealerts: bool) -> SpecialResult<()> {
     let pool = get_gpu_pool();
     let mut config = pool.get_config();
     config.enable_profiling = true;

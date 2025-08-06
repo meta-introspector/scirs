@@ -51,15 +51,15 @@ impl<F: Float + Debug + Display> FeatureImportance<F> {
     /// // Create feature importance visualization
     /// let feature_importance = FeatureImportance::<f64>::new(feature_names, importance).unwrap();
     /// ```
-    pub fn new(_feature_names: Vec<String>, importance: Array1<F>) -> Result<Self> {
-        if _feature_names.len() != importance.len() {
+    pub fn new(_featurenames: Vec<String>, importance: Array1<F>) -> Result<Self> {
+        if _featurenames.len() != importance.len() {
             return Err(NeuralError::ValidationError(
                 "Number of feature _names must match number of importance scores".to_string(),
             ));
         }
 
         Ok(FeatureImportance {
-            feature_names: _feature_names,
+            feature_names: _featurenames,
             importance,
         })
     }

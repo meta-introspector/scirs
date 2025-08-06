@@ -9,11 +9,11 @@ use std::fmt::Debug;
 #[allow(dead_code)]
 trait Layer: Debug {
     // Forward pass for training mode
-    fn forward(&mut self, input: &Tensor, is_training: bool) -> Tensor;
+    fn forward(&mut self, input: &Tensor, istraining: bool) -> Tensor;
     // Backward pass returning gradients for inputs
-    fn backward(&mut self, grad_output: &Tensor) -> Tensor;
+    fn backward(&mut self, gradoutput: &Tensor) -> Tensor;
     // Update layer parameters (weights, biases, etc.)
-    fn update_parameters(&mut self, learning_rate: f32);
+    fn update_parameters(&mut self, learningrate: f32);
     // Return a descriptive name for the layer
     fn name(&self) -> String;
 }
@@ -33,34 +33,34 @@ struct Tensor {
     dim: TensorDim,
 impl Tensor {
     // Create a 1D tensor
-    fn new_1d(_data: Array1<f32>) -> Self {
-        let shape = _data.shape();
+    fn new_1d(data: Array1<f32>) -> Self {
+        let shape = data.shape();
         let mut tensor_data = Array4::<f32>::zeros((1, 1, 1, shape[0]));
         for i in 0..shape[0] {
-            tensor_data[[0, 0, 0, i]] = _data[i];
+            tensor_data[[0, 0, 0, i]] = data[i];
         }
         Tensor {
             data: tensor_data,
             dim: TensorDim::Dim1(shape[0]),
     }
     // Create a 2D tensor
-    fn new_2d(_data: Array2<f32>) -> Self {
+    fn new_2d(data: Array2<f32>) -> Self {
         let mut tensor_data = Array4::<f32>::zeros((shape[0], 1, 1, shape[1]));
             for j in 0..shape[1] {
-                tensor_data[[i, 0, 0, j]] = _data[[i, j]];
+                tensor_data[[i, 0, 0, j]] = data[[i, j]];
             }
             dim: TensorDim::Dim2(shape[0], shape[1]),
     // Create a 3D tensor
-    fn new_3d(_data: Array3<f32>) -> Self {
+    fn new_3d(data: Array3<f32>) -> Self {
         let mut tensor_data = Array4::<f32>::zeros((shape[0], 1, shape[1], shape[2]));
                 for k in 0..shape[2] {
-                    tensor_data[[i, 0, j, k]] = _data[[i, j, k]];
+                    tensor_data[[i, 0, j, k]] = data[[i, j, k]];
                 }
             dim: TensorDim::Dim3(shape[0], shape[1], shape[2]),
     // Create a 4D tensor
-    fn new_4d(_data: Array4<f32>) -> Self {
-        let shape = _data.shape().to_vec();
-            _data,
+    fn new_4d(data: Array4<f32>) -> Self {
+        let shape = data.shape().to_vec();
+            data,
             dim: TensorDim::Dim4(shape[0], shape[1], shape[2], shape[3]),
     // Get the underlying _data as a view appropriate for the dimension
     fn as_1d(&self) -> Array1<f32> {
@@ -95,7 +95,7 @@ impl Tensor {
             TensorDim::Dim3(d1, d2, d3) => vec![d1, d2, d3],
             TensorDim::Dim4(d1, d2, d3, d4) => vec![d1, d2, d3, d4],
     // Reshape tensor to new dimensions
-    fn reshape(&self, new_dim: TensorDim) -> Self {
+    fn reshape(&self, newdim: TensorDim) -> Self {
         // Check if total size is compatible
         let orig_size: usize = match self.dim {
             TensorDim::Dim1(d1) => d1,
@@ -202,13 +202,13 @@ struct Linear {
     // Cache for backward pass
     input: Option<Tensor>,
 impl Linear {
-    fn new(_in_features: usize, out_features: usize, name: Option<String>) -> Self {
+    fn new(_in_features: usize, outfeatures: usize, name: Option<String>) -> Self {
         // Xavier/Glorot initialization
         let bound = (6.0 / (_in_features + out_features) as f32).sqrt();
         // Create a random number generator
         let mut rng = rand::rng();
         // Initialize weight matrix with random values
-        let mut weight = Array2::<f32>::zeros((out_features, _in_features));
+        let mut weight = Array2::<f32>::zeros((out_features, in_features));
         for elem in weight.iter_mut() {
             *elem = rng.gen_range(-bound..bound);
         let bias = Array::zeros(out_features);
@@ -222,7 +222,7 @@ impl Linear {
             dbias: None,
             input: None,
 impl Layer for Linear {
-    fn forward(&mut self, input: &Tensor, is_training: bool) -> Tensor {
+    fn forward(&mut self, input: &Tensor, istraining: bool) -> Tensor {
         // Input should be 2D tensor [batch_size, in_features]
         let x = input.as_2d();
         if is_training {
@@ -235,7 +235,7 @@ impl Layer for Linear {
             for j in 0..output.shape()[1] {
                 output[[i, j]] += self.bias[j];
         Tensor::new_2d(output)
-    fn backward(&mut self, grad_output: &Tensor) -> Tensor {
+    fn backward(&mut self, gradoutput: &Tensor) -> Tensor {
         // Gradient from next layer
         let dout = grad_output.as_2d();
         let _batch_size = dout.shape()[0];
@@ -254,7 +254,7 @@ impl Layer for Linear {
         // Compute gradient for input
         let dx = dout.dot(&self.weight);
         Tensor::new_2d(dx)
-    fn update_parameters(&mut self, learning_rate: f32) {
+    fn update_parameters(&mut self, learningrate: f32) {
         if let Some(dw) = &self.dweight {
             self.weight = &self.weight - &(dw * learning_rate);
         if let Some(db) = &self.dbias {
@@ -264,9 +264,9 @@ impl Layer for Linear {
 // ReLU Activation Layer
 struct ReLU {
 impl ReLU {
-    fn new(_name: Option<String>) -> Self {
+    fn new(name: Option<String>) -> Self {
         ReLU {
-            name_str: _name.unwrap_or_else(|| "ReLU".to_string()),
+            name_str: name.unwrap_or_else(|| "ReLU".to_string()),
 impl Layer for ReLU {
         // Apply ReLU based on tensor dimension
         match input.dim {
@@ -305,14 +305,14 @@ impl Layer for ReLU {
                                 if x[[i, j, k, l]] <= 0.0 {
                                     dx[[i, j, k, l]] = 0.0;
                 Tensor::new_4d(dx)
-    fn update_parameters(&mut self_learning_rate: f32) {
+    fn update_parameters(&mut self_learningrate: f32) {
         // ReLU has no parameters to update
 // Sigmoid Activation Layer
 struct Sigmoid {
     output: Option<Tensor>,
 impl Sigmoid {
         Sigmoid {
-            name_str: _name.unwrap_or_else(|| "Sigmoid".to_string()),
+            name_str: name.unwrap_or_else(|| "Sigmoid".to_string()),
             output: None,
     fn sigmoid(x: f32) -> f32 {
         1.0 / (1.0 + (-x).exp())
@@ -346,7 +346,7 @@ impl Layer for Sigmoid {
 struct Softmax {
 impl Softmax {
         Softmax {
-            name_str: _name.unwrap_or_else(|| "Softmax".to_string()),
+            name_str: name.unwrap_or_else(|| "Softmax".to_string()),
 impl Layer for Softmax {
         // Input should be 2D tensor [batch_size, features]
         let mut output = Array2::<f32>::zeros(x.raw_dim());
@@ -426,29 +426,29 @@ struct LSTMCell {
     c_t: Option<Array2<f32>>,
     h_t: Option<Array2<f32>>,
 impl LSTMCell {
-    fn new(_input_size: usize, hidden_size: usize, name: Option<String>) -> Self {
+    fn new(_input_size: usize, hiddensize: usize, name: Option<String>) -> Self {
         let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         // Input gate weights
-        let mut w_ii = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_ii = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_hi = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_i = Array1::zeros(hidden_size);
         // Initialize with random values
         for elem in w_ii.iter_mut() {
         for elem in w_hi.iter_mut() {
         // Forget gate weights (initialize forget gate bias to 1 to avoid vanishing gradients early in training)
-        let mut w_if = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_if = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_hf = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_f = Array1::ones(hidden_size);
         for elem in w_if.iter_mut() {
         for elem in w_hf.iter_mut() {
         // Cell gate weights
-        let mut w_ig = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_ig = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_hg = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_g = Array1::zeros(hidden_size);
         for elem in w_ig.iter_mut() {
         for elem in w_hg.iter_mut() {
         // Output gate weights
-        let mut w_io = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_io = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_ho = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_o = Array1::zeros(hidden_size);
         for elem in w_io.iter_mut() {
@@ -599,7 +599,7 @@ impl Loss for CrossEntropyLoss {
             _ => panic!("CrossEntropyLoss backward only supports 2D predictions"),
 // Optimizer trait
 trait Optimizer {
-    fn step(&mut self, model: &mut Sequential, learning_rate: f32);
+    fn step(&mut self, model: &mut Sequential, learningrate: f32);
     fn zero_grad(&mut self);
 // Simple SGD Optimizer
 struct SGD {
@@ -607,7 +607,7 @@ struct SGD {
 impl SGD {
         SGD { model: None }
 impl Optimizer for SGD {
-    fn step(&mut self, model: &mut Sequential, learning_rate: f32) {
+    fn step(&mut self, model: &mut Sequential, learningrate: f32) {
         model.update_parameters(learning_rate);
     fn zero_grad(&mut self) {
         // No additional state to reset in basic SGD
@@ -644,7 +644,7 @@ impl Trainer {
         // Forward pass in evaluation mode
         let predictions = self.model.forward(x, false);
         (loss, predictions)
-    fn train_epoch(&mut self, x_batches: &[Tensor], y_batches: &[Tensor]) -> f32 {
+    fn train_epoch(&mut self, x_batches: &[Tensor], ybatches: &[Tensor]) -> f32 {
         assert_eq!(
             x_batches.len(),
             y_batches.len(),
@@ -682,7 +682,7 @@ fn create_classification_dataset(
     (x_tensor, y_tensor)
 // Create regression dataset with non-linear relationship
 #[allow(dead_code)]
-fn create_regression_dataset(_num_samples: usize, num_features: usize) -> (Tensor, Tensor) {
+fn create_regression_dataset(_num_samples: usize, numfeatures: usize) -> (Tensor, Tensor) {
     // Create target values based on non-linear function
     let mut y_data = Array2::<f32>::zeros((_num_samples, 1));
         let x1 = x_data[[i, 0]];
@@ -696,7 +696,7 @@ fn create_regression_dataset(_num_samples: usize, num_features: usize) -> (Tenso
     let y_tensor = Tensor::new_2d(y_data);
 // Split data into batches
 #[allow(dead_code)]
-fn create_batches(x: &Tensor, y: &Tensor, batch_size: usize) -> (Vec<Tensor>, Vec<Tensor>) {
+fn create_batches(x: &Tensor, y: &Tensor, batchsize: usize) -> (Vec<Tensor>, Vec<Tensor>) {
     match (x.dim.clone(), y.dim.clone()) {
         (TensorDim::Dim2(samples, features)_) => {
             let num_batches = samples.div_ceil(batch_size);
@@ -730,10 +730,10 @@ fn create_batches(x: &Tensor, y: &Tensor, batch_size: usize) -> (Vec<Tensor>, Ve
         _ => panic!("Batching only supported for 2D input tensors"),
 // Calculate accuracy for classification
 #[allow(dead_code)]
-fn calculate_accuracy(_predictions: &Tensor, targets: &Tensor) -> f32 {
+fn calculate_accuracy(predictions: &Tensor, targets: &Tensor) -> f32 {
     match (_predictions.dim.clone(), targets.dim.clone()) {
         (TensorDim::Dim2(batch_size_), TensorDim::Dim1(_)) => {
-            let pred = _predictions.as_2d();
+            let pred = predictions.as_2d();
             let targ = targets.as_1d();
             let mut correct = 0;
             for i in 0..batch_size {

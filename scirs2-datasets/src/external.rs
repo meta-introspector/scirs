@@ -67,7 +67,7 @@ impl ExternalClient {
     }
 
     /// Create a new external client with custom configuration
-    pub fn with_config(_config: ExternalConfig) -> Result<Self> {
+    pub fn with_config(config: ExternalConfig) -> Result<Self> {
         let cache = DatasetCache::new(crate::cache::get_cache_dir()?);
 
         #[cfg(feature = "download")]
@@ -86,7 +86,7 @@ impl ExternalClient {
         };
 
         Ok(Self {
-            _config,
+            config,
             cache,
             #[cfg(feature = "download")]
             client,
@@ -532,10 +532,10 @@ pub mod repositories {
 
     impl KaggleRepository {
         /// Create a new Kaggle repository client
-        pub fn new(_api_key: Option<String>) -> Result<Self> {
+        pub fn new(_apikey: Option<String>) -> Result<Self> {
             let mut config = ExternalConfig::default();
 
-            if let Some(ref _key) = _api_key {
+            if let Some(ref key) = _api_key {
                 config
                     .headers
                     .insert("Authorization".to_string(), format!("Bearer {_key}"));
@@ -614,7 +614,7 @@ pub mod convenience {
 
     /// Load a dataset from a URL with progress tracking
     #[cfg(feature = "download")]
-    pub async fn load_from_url(_url: &str, config: Option<ExternalConfig>) -> Result<Dataset> {
+    pub async fn load_from_url(url: &str, config: Option<ExternalConfig>) -> Result<Dataset> {
         let client = match config {
             Some(cfg) => ExternalClient::with_config(cfg)?,
             None => ExternalClient::new()?,
@@ -622,7 +622,7 @@ pub mod convenience {
 
         client
             .download_dataset(
-                _url,
+                url,
                 Some(Box::new(|downloaded, total| {
                     if total > 0 {
                         let percent = (downloaded * 100) / total;
@@ -636,14 +636,14 @@ pub mod convenience {
     }
 
     /// Load a dataset from a URL synchronously
-    pub fn load_from_url_sync(_url: &str, config: Option<ExternalConfig>) -> Result<Dataset> {
+    pub fn load_from_url_sync(url: &str, config: Option<ExternalConfig>) -> Result<Dataset> {
         let client = match config {
             Some(cfg) => ExternalClient::with_config(cfg)?,
             None => ExternalClient::new()?,
         };
 
         client.download_dataset_sync(
-            _url,
+            url,
             Some(Box::new(|downloaded, total| {
                 if total > 0 {
                     let percent = (downloaded * 100) / total;
@@ -657,28 +657,28 @@ pub mod convenience {
 
     /// Load a UCI dataset by name
     #[cfg(feature = "download")]
-    pub async fn load_uci_dataset(_name: &str) -> Result<Dataset> {
+    pub async fn load_uci_dataset(name: &str) -> Result<Dataset> {
         let repo = UCIRepository::new()?;
         repo.load_dataset(_name).await
     }
 
     /// Load a UCI dataset by name synchronously
     #[cfg(not(feature = "download"))]
-    pub fn load_uci_dataset_sync(_name: &str) -> Result<Dataset> {
+    pub fn load_uci_dataset_sync(name: &str) -> Result<Dataset> {
         let repo = UCIRepository::new()?;
         repo.load_dataset_sync(_name)
     }
 
     /// Load a dataset from GitHub repository
     #[cfg(feature = "download")]
-    pub async fn load_github_dataset(_user: &str, repo: &str, path: &str) -> Result<Dataset> {
+    pub async fn load_github_dataset(user: &str, repo: &str, path: &str) -> Result<Dataset> {
         let github = GitHubRepository::new()?;
         github.load_from_repo(_user, repo, path).await
     }
 
     /// Load a dataset from GitHub repository synchronously
     #[cfg(not(feature = "download"))]
-    pub fn load_github_dataset_sync(_user: &str, repo: &str, path: &str) -> Result<Dataset> {
+    pub fn load_github_dataset_sync(user: &str, repo: &str, path: &str) -> Result<Dataset> {
         let github = GitHubRepository::new()?;
         github.load_from_repo_sync(_user, repo, path)
     }

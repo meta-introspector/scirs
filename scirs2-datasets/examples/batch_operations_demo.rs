@@ -51,7 +51,7 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn setup_sample_cache_data(_batch_ops: &BatchOperations) {
+fn setup_sample_cache_data(_batchops: &BatchOperations) {
     println!("Creating sample cached datasets...");
 
     // Create various types of sample data
@@ -66,7 +66,7 @@ fn setup_sample_cache_data(_batch_ops: &BatchOperations) {
     ];
 
     for (name, data) in sample_datasets {
-        if let Err(e) = _batch_ops.write_cached(name, &data) {
+        if let Err(e) = batch_ops.write_cached(name, &data) {
             println!("  Warning: Failed to cache {name}: {e}");
         } else {
             println!("  ✓ Cached {name} ({} bytes)", data.len());
@@ -75,8 +75,8 @@ fn setup_sample_cache_data(_batch_ops: &BatchOperations) {
 }
 
 #[allow(dead_code)]
-fn demonstrate_cache_statistics(_batch_ops: &BatchOperations) {
-    match _batch_ops.get_cache_statistics() {
+fn demonstrate_cache_statistics(_batchops: &BatchOperations) {
+    match batch_ops.get_cache_statistics() {
         Ok(result) => {
             println!("{}", result.summary());
             println!("Cache analysis:");
@@ -99,11 +99,11 @@ fn demonstrate_cache_statistics(_batch_ops: &BatchOperations) {
 }
 
 #[allow(dead_code)]
-fn demonstrate_batch_processing(_batch_ops: &BatchOperations) {
+fn demonstrate_batch_processing(_batchops: &BatchOperations) {
     println!("Processing multiple cached files in batch...");
 
     // Get list of cached files
-    let cached_files = _batch_ops.list_cached_files().unwrap_or_default();
+    let cached_files = batch_ops.list_cached_files().unwrap_or_default();
 
     if cached_files.is_empty() {
         println!("No cached files found for processing");
@@ -157,11 +157,11 @@ fn demonstrate_batch_processing(_batch_ops: &BatchOperations) {
 }
 
 #[allow(dead_code)]
-fn demonstrate_selective_cleanup(_batch_ops: &BatchOperations) {
+fn demonstrate_selective_cleanup(_batchops: &BatchOperations) {
     println!("Demonstrating selective cache cleanup...");
 
     // Show current cache state
-    let initial_stats = _batch_ops.get_cache_statistics().unwrap();
+    let initial_stats = batch_ops.get_cache_statistics().unwrap();
     println!(
         "Before cleanup: {} files, {}",
         initial_stats.success_count,
@@ -207,10 +207,10 @@ fn demonstrate_selective_cleanup(_batch_ops: &BatchOperations) {
 }
 
 #[allow(dead_code)]
-fn show_final_cache_state(_batch_ops: &BatchOperations) {
+fn show_final_cache_state(_batchops: &BatchOperations) {
     println!("Final cache contents:");
 
-    match _batch_ops.list_cached_files() {
+    match batch_ops.list_cached_files() {
         Ok(files) => {
             if files.is_empty() {
                 println!("  Cache is empty");
@@ -280,7 +280,7 @@ fn create_json_data() -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn create_binary_data(_size: usize) -> Vec<u8> {
+fn create_binary_data(size: usize) -> Vec<u8> {
     (0.._size).map(|i| (i % 256) as u8).collect()
 }
 
@@ -296,12 +296,12 @@ fn createtext_data() -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn detect_content_type(_name: &str, data: &[u8]) -> String {
-    if _name.ends_with(".csv") {
+fn detect_content_type(name: &str, data: &[u8]) -> String {
+    if name.ends_with(".csv") {
         "text/csv".to_string()
-    } else if _name.ends_with(".json") {
+    } else if name.ends_with(".json") {
         "application/json".to_string()
-    } else if _name.ends_with(".txt") {
+    } else if name.ends_with(".txt") {
         "text/plain".to_string()
     } else if data.iter().all(|&b| b.is_ascii()) {
         "text/plain (detected)".to_string()
@@ -311,7 +311,7 @@ fn detect_content_type(_name: &str, data: &[u8]) -> String {
 }
 
 #[allow(dead_code)]
-fn format_bytes(_bytes: u64) -> String {
+fn format_bytes(bytes: u64) -> String {
     let size = _bytes as f64;
     if size < 1024.0 {
         format!("{size} B")

@@ -287,7 +287,7 @@ fn example_5_filter_pipeline() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Helper function to display memory usage
 #[allow(dead_code)]
-fn print_memory_stats(_label: &str, size_bytes: usize) {
+fn print_memory_stats(_label: &str, sizebytes: usize) {
     let size_mb = size_bytes as f64 / (1024.0 * 1024.0);
-    println!("{}: {:.2} MB", _label, size_mb);
+    println!("{}: {:.2} MB", label, size_mb);
 }

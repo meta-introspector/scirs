@@ -12,19 +12,19 @@ use statrs::statistics::Statistics;
 /// A stationary time series has constant mean, variance, and autocovariance over time.
 /// Calculate autocovariance at a given lag
 #[allow(dead_code)]
-pub fn autocovariance<S, F>(_data: &ArrayBase<S, Ix1>, lag: usize) -> Result<F>
+pub fn autocovariance<S, F>(data: &ArrayBase<S, Ix1>, lag: usize) -> Result<F>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive,
 {
-    if lag >= _data.len() {
+    if lag >= data.len() {
         return Err(TimeSeriesError::InvalidInput(
             "Lag exceeds _data length".to_string(),
         ));
     }
 
-    let n = _data.len();
-    let mean = _data.mean().unwrap_or(F::zero());
+    let n = data.len();
+    let mean = data.mean().unwrap_or(F::zero());
 
     // Calculate autocovariance
     let mut cov = F::zero();
@@ -58,11 +58,11 @@ where
 /// println!("ADF Statistic: {}, p-value: {}", adf_stat, p_value);
 /// ```
 #[allow(dead_code)]
-pub fn is_stationary<F>(_ts: &Array1<F>, lags: Option<usize>) -> Result<(F, F)>
+pub fn is_stationary<F>(ts: &Array1<F>, lags: Option<usize>) -> Result<(F, F)>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if _ts.len() < 3 {
+    if ts.len() < 3 {
         return Err(TimeSeriesError::InvalidInput(
             "Time series must have at least 3 points for stationarity test".to_string(),
         ));
@@ -73,7 +73,7 @@ where
         Some(l) => l,
         None => {
             // Common rule: int(12 * (n/100)^(1/4))
-            let n = _ts.len() as f64;
+            let n = ts.len() as f64;
             let max_lags_float = 12.0 * (n / 100.0).powf(0.25);
             max_lags_float.min(n / 3.0).floor() as usize
         }
@@ -82,13 +82,13 @@ where
     // Create differenced series: y(t) - y(t-1)
     let mut diff_ts = Vec::with_capacity(_ts.len() - 1);
     for i in 1.._ts.len() {
-        diff_ts.push(_ts[i] - _ts[i - 1]);
+        diff_ts.push(_ts[i] - ts[i - 1]);
     }
     let diff_ts = Array1::from(diff_ts);
 
     // Create lagged series for regression
     let _y = diff_ts.slice(ndarray::s![max_lags..]);
-    let x_level = _ts.slice(ndarray::s![max_lags..diff_ts.len()]);
+    let x_level = ts.slice(ndarray::s![max_lags..diff_ts.len()]);
 
     // Create lag features for regression
     let mut x_data = Vec::with_capacity(diff_ts.len() - max_lags);
@@ -199,14 +199,14 @@ where
             if _period >= ts.len() {
                 return Err(TimeSeriesError::InvalidInput(format!(
                     "Seasonal _period ({}) must be less than time series length ({})",
-                    _period,
+                    period,
                     ts.len()
                 )));
             }
 
             // Seasonal differencing: x(t) - x(t-s)
-            let mut result = Vec::with_capacity(ts.len() - _period);
-            for i in _period..ts.len() {
+            let mut result = Vec::with_capacity(ts.len() - period);
+            for i in period..ts.len() {
                 result.push(ts[i] - ts[i - _period]);
             }
             Ok(Array1::from(result))
@@ -238,7 +238,7 @@ where
 /// let ma = moving_average(&ts, 3).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn moving_average<F>(_ts: &Array1<F>, window_size: usize) -> Result<Array1<F>>
+pub fn moving_average<F>(_ts: &Array1<F>, windowsize: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -248,11 +248,11 @@ where
         ));
     }
 
-    if window_size > _ts.len() {
+    if window_size > ts.len() {
         return Err(TimeSeriesError::InvalidInput(format!(
             "Window _size ({}) cannot be larger than time series length ({})",
             window_size,
-            _ts.len()
+            ts.len()
         )));
     }
 
@@ -266,14 +266,14 @@ where
     for i in 0.._ts.len() {
         // Calculate appropriate window boundaries
         let start = i.saturating_sub(half_window);
-        let end = if i + half_window >= _ts.len() {
-            _ts.len() - 1
+        let end = if i + half_window >= ts.len() {
+            ts.len() - 1
         } else {
             i + half_window
         };
 
         // Adjust for even-sized windows (need one more point at the end)
-        let end = if is_even && (end + 1 < _ts.len()) {
+        let end = if is_even && (end + 1 < ts.len()) {
             end + 1
         } else {
             end
@@ -284,7 +284,7 @@ where
         let mut count = F::zero();
 
         for j in start..=end {
-            sum = sum + _ts[j];
+            sum = sum + ts[j];
             count = count + F::one();
         }
 
@@ -315,20 +315,20 @@ where
 /// let acf = autocorrelation(&ts, None).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn autocorrelation<F>(_ts: &Array1<F>, max_lag: Option<usize>) -> Result<Array1<F>>
+pub fn autocorrelation<F>(_ts: &Array1<F>, maxlag: Option<usize>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if _ts.len() < 2 {
+    if ts.len() < 2 {
         return Err(TimeSeriesError::InvalidInput(
             "Time series must have at least 2 points for autocorrelation".to_string(),
         ));
     }
 
-    let max_lag = std::cmp::min(max_lag.unwrap_or(_ts.len() - 1), _ts.len() - 1);
+    let max_lag = std::cmp::min(max_lag.unwrap_or(_ts.len() - 1), ts.len() - 1);
 
     // Calculate mean
-    let mean = _ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(_ts.len()).unwrap();
+    let mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(_ts.len()).unwrap();
 
     // Calculate denominator (variance * n)
     let denominator = _ts
@@ -347,7 +347,7 @@ where
     for _lag in 0..=max_lag {
         let mut numerator = F::zero();
 
-        for i in 0..(_ts.len() - _lag) {
+        for i in 0..(_ts.len() - lag) {
             numerator = numerator + (_ts[i] - mean) * (_ts[i + _lag] - mean);
         }
 
@@ -408,7 +408,7 @@ where
         let mut numerator = F::zero();
         let mut count = 0;
 
-        for i in 0..(min_len - _lag) {
+        for i in 0..(min_len - lag) {
             numerator = numerator + (x[i] - x_mean) * (y[i + _lag] - y_mean);
             count += 1;
         }
@@ -442,18 +442,18 @@ where
 /// let pacf = partial_autocorrelation(&ts, None).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn partial_autocorrelation<F>(_ts: &Array1<F>, max_lag: Option<usize>) -> Result<Array1<F>>
+pub fn partial_autocorrelation<F>(_ts: &Array1<F>, maxlag: Option<usize>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if _ts.len() < 2 {
+    if ts.len() < 2 {
         return Err(TimeSeriesError::InvalidInput(
             "Time series must have at least 2 points for partial autocorrelation".to_string(),
         ));
     }
 
     let default_max_lag = std::cmp::min(_ts.len() / 4, 10);
-    let max_lag = std::cmp::min(max_lag.unwrap_or(default_max_lag), _ts.len() - 1);
+    let max_lag = std::cmp::min(max_lag.unwrap_or(default_max_lag), ts.len() - 1);
 
     // Calculate ACF first
     let acf = autocorrelation(_ts, Some(max_lag))?;
@@ -637,18 +637,18 @@ where
 
 /// Compute linear trend for data
 #[allow(dead_code)]
-fn linear_trend<S, F>(_data: &ArrayBase<S, Ix1>, offset: usize) -> Result<Array1<F>>
+fn linear_trend<S, F>(data: &ArrayBase<S, Ix1>, offset: usize) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
     F: Float + NumCast + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    let n = _data.len();
+    let n = data.len();
     let x = Array1::linspace(
         F::from(offset).unwrap(),
         F::from(offset + n - 1).unwrap(),
         n,
     );
-    let y = _data.to_owned();
+    let y = data.to_owned();
 
     // Compute linear regression coefficients
     let x_mean = x
@@ -954,8 +954,8 @@ where
     // For a real implementation, we'd use chrono or time crates
 
     // Create a simple _date parser
-    fn parse_date(_date_str: &str) -> Result<(i32, u32, u32)> {
-        let parts: Vec<&_str> = _date_str.split('-').collect();
+    fn parse_date(_datestr: &str) -> Result<(i32, u32, u32)> {
+        let parts: Vec<&_str> = date_str.split('-').collect();
         if parts.len() != 3 {
             return Err(TimeSeriesError::InvalidInput(format!(
                 "Invalid _date format: {_date_str}, expected YYYY-MM-DD"
@@ -990,14 +990,14 @@ where
     }
 
     // Simple days between calculation (not accounting for leap years properly)
-    fn days_between(_start: (i32, u32, u32), end: (i32, u32, u32)) -> i32 {
+    fn days_between(start: (i32, u32, u32), end: (i32, u32, u32)) -> i32 {
         // Days in month (simplified, not accounting for leap years)
         let days_in_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
         // Convert to days since year 0
-        let start_days = _start.0 * 365
+        let start_days = start.0 * 365
             + (1.._start.1).map(|m| days_in_month[m as usize]).sum::<u32>() as i32
-            + _start.2 as i32;
+            + start.2 as i32;
 
         let end_days = end.0 * 365
             + (1..end.1).map(|m| days_in_month[m as usize]).sum::<u32>() as i32
@@ -1007,14 +1007,14 @@ where
     }
 
     // Generate dates (simple implementation)
-    fn generate_dates(_start: (i32, u32, u32), n_days: usize) -> Vec<String> {
+    fn generate_dates(start: (i32, u32, u32), n_days: usize) -> Vec<String> {
         // Days in month (simplified, not accounting for leap years)
         let days_in_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
         let mut dates = Vec::with_capacity(n_days);
-        let mut year = _start.0;
-        let mut month = _start.1;
-        let mut day = _start.2;
+        let mut year = start.0;
+        let mut month = start.1;
+        let mut day = start.2;
 
         for _ in 0..n_days {
             dates.push(format!("{year:04}-{month:02}-{day:02}"));
@@ -1059,20 +1059,20 @@ where
 }
 
 /// Calculate basic statistics for a time series
-pub fn calculate_basic_stats<F>(_data: &Array1<F>) -> Result<std::collections::HashMap<String, f64>>
+pub fn calculate_basic_stats<F>(data: &Array1<F>) -> Result<std::collections::HashMap<String, f64>>
 where
     F: Float + FromPrimitive + Into<f64>,
 {
     let mut stats = std::collections::HashMap::new();
 
-    if _data.is_empty() {
+    if data.is_empty() {
         return Err(TimeSeriesError::InvalidInput(
             "Data array is empty".to_string(),
         ));
     }
 
-    let n = _data.len() as f64;
-    let mean = _data.mean().unwrap_or(F::zero()).into();
+    let n = data.len() as f64;
+    let mean = data.mean().unwrap_or(F::zero()).into();
     let variance = _data
         .iter()
         .map(|x| {
@@ -1087,13 +1087,13 @@ where
     stats.insert("std".to_string(), variance.sqrt());
     stats.insert(
         "min".to_string(),
-        _data.iter()
+        data.iter()
             .map(|x| (*x).into())
             .fold(f64::INFINITY, f64::min),
     );
     stats.insert(
         "max".to_string(),
-        _data.iter()
+        data.iter()
             .map(|x| (*x).into())
             .fold(f64::NEG_INFINITY, f64::max),
     );
@@ -1103,7 +1103,7 @@ where
 }
 
 /// Apply differencing to a time series
-pub fn difference_series<F>(_data: &Array1<F>, periods: usize) -> Result<Array1<F>>
+pub fn difference_series<F>(data: &Array1<F>, periods: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Clone,
 {
@@ -1113,7 +1113,7 @@ where
         ));
     }
 
-    if _data.len() <= periods {
+    if data.len() <= periods {
         return Err(TimeSeriesError::InvalidInput(
             "Data length must be greater than periods".to_string(),
         ));
@@ -1121,14 +1121,14 @@ where
 
     let mut result = Vec::new();
     for i in periods.._data.len() {
-        result.push(_data[i] - _data[i - periods]);
+        result.push(_data[i] - data[i - periods]);
     }
 
     Ok(Array1::from_vec(result))
 }
 
 /// Apply seasonal differencing to a time series
-pub fn seasonal_difference_series<F>(_data: &Array1<F>, periods: usize) -> Result<Array1<F>>
+pub fn seasonal_difference_series<F>(data: &Array1<F>, periods: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Clone,
 {

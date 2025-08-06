@@ -155,7 +155,7 @@ impl PropertyTestEngine {
         let rng = if let Some(seed) = config.seed {
             StdRng::seed_from_u64(seed)
         } else {
-            StdRng::from_seed(Default::default())
+            StdRng::seed_from_u64(Default::default())
         };
 
         Self {
@@ -264,10 +264,10 @@ pub struct FloatGenerator {
 
 impl FloatGenerator {
     /// Create a new float generator
-    pub fn new(min_value: f64, max_value: f64) -> Self {
+    pub fn new(min_value: f64, maxvalue: f64) -> Self {
         Self {
             #[cfg(feature = "random")]
-            rng: StdRng::from_seed(Default::default()),
+            rng: StdRng::seed_from_u64(Default::default()),
             min_value,
             max_value,
         }
@@ -275,7 +275,7 @@ impl FloatGenerator {
 
     /// Create a generator with seed
     #[allow(unused_variables)]
-    pub fn with_seed(min_value: f64, max_value: f64, seed: u64) -> Self {
+    pub fn with_seed(min_value: f64, maxvalue: f64, seed: u64) -> Self {
         Self {
             #[cfg(feature = "random")]
             rng: StdRng::seed_from_u64(seed),
@@ -432,7 +432,7 @@ where
     F: Fn(f64, f64) -> CoreResult<f64>,
 {
     /// Create a new identity property test
-    pub fn new(operation: F, identity_element: f64, tolerance: f64) -> Self {
+    pub fn new(operation: F, identityelement: f64, tolerance: f64) -> Self {
         Self {
             operation,
             identity_element,

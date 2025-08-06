@@ -131,9 +131,9 @@ impl Layer {
         let scale = (1.0 / input_size as f32).sqrt();
         // Initialize weights and biases
         let weights = Array2::fromshape_fn((input_size, output_size), |_| {
-            rng.random_range(-scale..scale)
+            rng.gen_range(-scale..scale)
         });
-        let biases = Array2::fromshape_fn((1..output_size), |_| rng.random_range(-scale..scale));
+        let biases = Array2::fromshape_fn((1..output_size), |_| rng.gen_range(-scale..scale));
         Self {
             weights,
             biases,
@@ -199,7 +199,7 @@ impl NeuralNetwork {
             activations.len(),
             "Number of activations must match number of layers - 1"
         );
-        let mut rng = SmallRng::seed_from_u64(seed);
+        let mut rng = SmallRng::from_seed(seed);
         let mut layers = Vec::with_capacity(layer_sizes.len() - 1);
         // Create layers
         for i in 0..layer_sizes.len() - 1 {
@@ -223,7 +223,7 @@ impl NeuralNetwork {
         self.loss_fn.compute(predictions, targets)
     }
     /// Backward pass and update parameters
-    fn backward(&mut self, x: &Array2<f32>, y: &Array2<f32>, learning_rate: f32) {
+    fn backward(&mut self, x: &Array2<f32>, y: &Array2<f32>, learningrate: f32) {
         // Get the output from the last forward pass
         let output = self.layers.last().unwrap().a.as_ref().unwrap();
         // Compute loss derivative
@@ -445,9 +445,9 @@ fn train_regression_network() -> Result<()> {
 
 /// Print a simple ASCII loss curve
 #[allow(dead_code)]
-fn print_loss_curve(_losses: &[f32], width: usize) {
+fn print_loss_curve(losses: &[f32], width: usize) {
     // Skip the first few values which might be very high
-    let start_idx = _losses.len().min(10);
+    let start_idx = losses.len().min(10);
     let relevant_losses = &_losses[start_idx..];
     if relevant_losses.is_empty() {
         println!("Not enough data points for loss curve");

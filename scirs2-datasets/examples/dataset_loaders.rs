@@ -65,10 +65,10 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn print_dataset_info(_dataset: &Dataset, name: &str) {
+fn print_dataset_info(dataset: &Dataset, name: &str) {
     println!("=== {name} Dataset ===");
-    println!("Number of samples: {}", _dataset.n_samples());
-    println!("Number of features: {}", _dataset.n_features());
+    println!("Number of samples: {}", dataset.n_samples());
+    println!("Number of features: {}", dataset.n_features());
 
     if let Some(feature_names) = &_dataset.feature_names {
         println!(

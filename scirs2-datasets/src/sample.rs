@@ -18,7 +18,7 @@ const DATASET_BASE_URL: &str = "https://raw.githubusercontent.com/cool-japan/sci
 /// Load the California Housing dataset
 #[cfg(feature = "download")]
 #[allow(dead_code)]
-pub fn load_california_housing(_force_download: bool) -> Result<Dataset> {
+pub fn load_california_housing(_forcedownload: bool) -> Result<Dataset> {
     let url = format!("{DATASET_BASE_URL}/california_housing.csv");
 
     // Download or load from cache
@@ -97,7 +97,7 @@ This dataset is useful for regression tasks."
 ///
 /// * An error indicating that the download feature is not enabled
 #[allow(dead_code)]
-pub fn load_california_housing(_force_download: bool) -> Result<Dataset> {
+pub fn load_california_housing(_forcedownload: bool) -> Result<Dataset> {
     Err(DatasetsError::Other(
         "Download feature is not enabled. Recompile with --features _download".to_string(),
     ))
@@ -106,7 +106,7 @@ pub fn load_california_housing(_force_download: bool) -> Result<Dataset> {
 /// Load the Wine dataset
 #[cfg(feature = "download")]
 #[allow(dead_code)]
-pub fn load_wine(_force_download: bool) -> Result<Dataset> {
+pub fn load_wine(_forcedownload: bool) -> Result<Dataset> {
     let url = format!("{DATASET_BASE_URL}/wine.csv");
 
     // Download or load from cache
@@ -186,7 +186,7 @@ This dataset is useful for classification tasks."
 ///
 /// * An error indicating that the download feature is not enabled
 #[allow(dead_code)]
-pub fn load_wine(_force_download: bool) -> Result<Dataset> {
+pub fn load_wine(_forcedownload: bool) -> Result<Dataset> {
     Err(DatasetsError::Other(
         "Download feature is not enabled. Recompile with --features _download".to_string(),
     ))

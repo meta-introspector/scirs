@@ -154,7 +154,7 @@ impl LateralConnection {
         target_dim: usize,
         let weights = Array2::fromshape_fn((target_dim, source_dim), |_| {
             use rand::Rng;
-            rng().random_range(-0.1..0.1)
+            rng().gen_range(-0.1..0.1)
         });
         let adapter = if source_dim != target_dim {
             Some(Dense::new(
@@ -169,7 +169,7 @@ impl LateralConnection {
             weights,
             adapter,
     /// Apply lateral connection
-    pub fn apply(&self, source_activation: &Array2<f32>) -> Result<Array2<f32>> {
+    pub fn apply(&self, sourceactivation: &Array2<f32>) -> Result<Array2<f32>> {
         if let Some(ref adapter) = self.adapter {
             adapter
                 .forward(&source_activation.clone().into_dyn())?
@@ -180,13 +180,13 @@ impl LateralConnection {
             Ok(source_activation.dot(&self.weights.t()))
 impl ProgressiveNeuralNetwork {
     /// Create a new Progressive Neural Network
-    pub fn new(_input_dim: usize, config: ProgressiveConfig) -> Self {
+    pub fn new(_inputdim: usize, config: ProgressiveConfig) -> Self {
             columns: Vec::new(),
             lateral_connections: Vec::new(),
             current_task: 0,
             config,
     /// Add a new task column
-    pub fn add_task(&mut self, output_dim: usize) -> Result<()> {
+    pub fn add_task(&mut self, outputdim: usize) -> Result<()> {
         let _input_dim = if self.columns.is_empty() {
             // For the first task, use the original input dimension
             64 // Placeholder - should be passed as parameter
@@ -194,7 +194,7 @@ impl ProgressiveNeuralNetwork {
             64 + self.config.lateral_connections_per_layer * self.columns.len()
         let new_column = TaskColumn::new(
             self.current_task,
-            _input_dim,
+            input_dim,
             &self.config.base_layers,
         // Freeze previous columns if configured
         if self.config.freeze_previous_columns {
@@ -218,7 +218,7 @@ impl ProgressiveNeuralNetwork {
         self.current_task += 1;
         Ok(())
     /// Forward pass for a specific task
-    pub fn forward_task(&self, input: &ArrayView2<f32>, task_id: usize) -> Result<Array2<f32>> {
+    pub fn forward_task(&self, input: &ArrayView2<f32>, taskid: usize) -> Result<Array2<f32>> {
         if task_id >= self.columns.len() {
             return Err(NeuralError::InvalidArgument(format!(
                 "Task {} not found",
@@ -342,7 +342,7 @@ pub struct TaskMask {
     available_capacity: Vec<f32>,
 impl TaskMask {
     /// Create a new task mask
-    pub fn new(_task_id: usize, layershapes: &[(usize, usize)]) -> Self {
+    pub fn new(_taskid: usize, layershapes: &[(usize, usize)]) -> Self {
         let layer_masks = layershapes
             .iter()
             .map(|(rows, cols)| Array2::from_elem((*rows, *cols), true))
@@ -363,7 +363,7 @@ impl TaskMask {
                 if !mask_val {
                     param[[i, j]] = 0.0;
     /// Update mask based on parameter magnitudes
-    pub fn update_mask(&mut self, parameters: &[Array2<f32>], pruning_ratio: f32) -> Result<()> {
+    pub fn update_mask(&mut self, parameters: &[Array2<f32>], pruningratio: f32) -> Result<()> {
         for (layer_idx, (param, mask)) in parameters.iter().zip(&mut self.layer_masks).enumerate() {
             let available_elements = mask.iter().filter(|&&x| x).count();
             let elements_to_prune = (available_elements as f32 * pruning_ratio) as usize;
@@ -384,7 +384,7 @@ impl TaskMask {
             self.available_capacity[layer_idx] = remaining_elements as f32 / total_elements as f32;
 impl PackNet {
     /// Create a new PackNet
-    pub fn new(_input_dim: usize, backbone_layers: &[usize], config: PackNetConfig) -> Result<Self> {
+    pub fn new(_input_dim: usize, backbonelayers: &[usize], config: PackNetConfig) -> Result<Self> {
         let network = MultiTaskArchitecture::new(input_dim, backbone_layers, &[])?;
             network,
             task_masks: HashMap::new(),
@@ -420,7 +420,7 @@ impl PackNet {
         self.task_masks.insert(self.current_task, task_mask);
         Ok(best_loss)
     /// Merge masks to avoid conflicts
-    fn merge_masks(&self, target_mask: &mut TaskMask, existing_mask: &TaskMask) -> Result<()> {
+    fn merge_masks(&self, target_mask: &mut TaskMask, existingmask: &TaskMask) -> Result<()> {
         for (target_layer, existing_layer) in target_mask
             .layer_masks
             .iter_mut()
@@ -493,7 +493,7 @@ impl Default for LwFConfig {
             distillation_epochs: 50,
 impl LearningWithoutForgetting {
     /// Create a new LwF instance
-    pub fn new(_input_dim: usize, backbone_layers: &[usize], config: LwFConfig) -> Result<Self> {
+    pub fn new(_input_dim: usize, backbonelayers: &[usize], config: LwFConfig) -> Result<Self> {
         let model = MultiTaskArchitecture::new(_input_dim, backbone_layers, &[])?;
             model,
             teacher_models: Vec::new(),

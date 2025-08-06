@@ -37,11 +37,11 @@ pub struct GradientAccumulator<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientAccumulator<A, D> {
     /// Create a new gradient accumulator
-    pub fn new(_target_accumulations: usize, mode: AccumulationMode) -> Self {
+    pub fn new(_targetaccumulations: usize, mode: AccumulationMode) -> Self {
         Self {
             accumulated_gradients: Vec::new(),
             accumulation_count: 0,
-            target_accumulations: _target_accumulations,
+            target_accumulations: target_accumulations,
             mode,
             initialized: false,
         }
@@ -190,7 +190,7 @@ pub struct VariableAccumulator<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> VariableAccumulator<A, D> {
     /// Create a new variable accumulator
-    pub fn new(_initial_target: usize, mode: AccumulationMode) -> Self {
+    pub fn new(_initialtarget: usize, mode: AccumulationMode) -> Self {
         Self {
             accumulator: GradientAccumulator::new(_initial_target, mode),
             adaptive_steps: Vec::new(),
@@ -199,7 +199,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> VariableAccumulator<A, D> {
     }
 
     /// Add a condition-based accumulation rule
-    pub fn add_adaptive_rule<F>(&mut self, condition: F, accumulation_steps: usize)
+    pub fn add_adaptive_rule<F>(&mut self, condition: F, accumulationsteps: usize)
     where
         F: Fn(usize) -> bool + 'static,
     {
@@ -316,7 +316,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> MicroBatchTrainer<A, D> {
     }
 
     /// Set new effective batch size
-    pub fn set_effective_batch_size(&mut self, effective_batch_size: usize) -> Result<()> {
+    pub fn set_effective_batch_size(&mut self, effective_batchsize: usize) -> Result<()> {
         if effective_batch_size < self.micro_batch_size {
             return Err(OptimError::InvalidConfig(
                 "Effective batch _size must be >= micro batch _size".to_string(),
@@ -356,8 +356,11 @@ pub mod utils {
     }
 
     /// Calculate accumulation steps needed
-    pub fn calculate_accumulation_steps(_total_batch_size: usize, micro_batch_size: usize) -> usize {
-        _total_batch_size.div_ceil(micro_batch_size) // Ceiling division
+    pub fn calculate_accumulation_steps(
+        _total_batch_size: usize,
+        micro_batch_size: usize,
+    ) -> usize {
+        total_batch_size.div_ceil(micro_batch_size) // Ceiling division
     }
 
     /// Validate gradient accumulation configuration

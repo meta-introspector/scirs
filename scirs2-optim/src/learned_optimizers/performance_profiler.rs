@@ -401,10 +401,10 @@ pub struct PerformanceTrendAnalyzer<T: Float> {
 /// Trend analyzer interface
 pub trait TrendAnalyzer<T: Float> {
     /// Analyze performance trends
-    fn analyze_trend(&self, metrics_history: &[AdvancedMetrics<T>]) -> Result<TrendAnalysis<T>>;
+    fn analyze_trend(&self, metricshistory: &[AdvancedMetrics<T>]) -> Result<TrendAnalysis<T>>;
 
     /// Predict future trends
-    fn predict_trend(&self, current_trend: &TrendAnalysis<T>) -> Result<TrendPrediction<T>>;
+    fn predict_trend(&self, currenttrend: &TrendAnalysis<T>) -> Result<TrendPrediction<T>>;
 }
 
 /// Trend analysis result
@@ -487,7 +487,7 @@ pub trait AlertChannel {
 
 impl<T: Float + Default + Clone + std::fmt::Debug + 'static> AdvancedPerformanceMonitor<T> {
     /// Create new performance monitor
-    pub fn new(_config: PerformanceMonitorConfig<T>) -> Result<Self> {
+    pub fn new(config: PerformanceMonitorConfig<T>) -> Result<Self> {
         let metrics_collector = RealTimeMetricsCollector::new(&_config)?;
         let performance_predictor = MLPerformancePredictor::new(&_config)?;
         let anomaly_detector = AnomalyDetectionEngine::new(&_config)?;
@@ -503,7 +503,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> AdvancedPerformance
             resource_tracker,
             trend_analyzer,
             alert_manager,
-            _config,
+            config,
             historical_data})
     }
 
@@ -835,7 +835,7 @@ pub enum RecommendationPriority {
 
 // Placeholder implementations for complex components
 impl<T: Float + Default + Clone> RealTimeMetricsCollector<T> {
-    fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
+    fn new(config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self {
             current_metrics: AdvancedMetrics::default(),
             metrics_buffer: VecDeque::new(),
@@ -933,7 +933,7 @@ pub struct MLPerformancePredictor<T: Float> {
     model_performance: ModelPerformanceTracker<T>}
 
 impl<T: Float + Send + Sync> MLPerformancePredictor<T> {
-    fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
+    fn new(config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self::default())
     }
 
@@ -952,7 +952,7 @@ pub struct AnomalyDetectionEngine<T: Float> {
     false_positive_tracker: FalsePositiveTracker<T>}
 
 impl<T: Float + Send + Sync> AnomalyDetectionEngine<T> {
-    fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
+    fn new(config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self::default())
     }
 
@@ -980,7 +980,7 @@ pub struct ResourceUsageTracker<T: Float> {
     efficiency_analyzer: ResourceEfficiencyAnalyzer<T>}
 
 impl<T: Float + Send + Sync> ResourceUsageTracker<T> {
-    fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
+    fn new(config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self::default())
     }
 
@@ -1002,7 +1002,7 @@ pub struct PerformanceTrendAnalyzer<T: Float> {
     trend_predictions: HashMap<String, TrendPrediction<T>>}
 
 impl<T: Float + Send + Sync> PerformanceTrendAnalyzer<T> {
-    fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
+    fn new(config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self::default())
     }
 
@@ -1024,7 +1024,7 @@ pub struct AlertManager<T: Float> {
     alert_channels: Vec<Box<dyn AlertChannel>>}
 
 impl<T: Float + Send + Sync> AlertManager<T> {
-    fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
+    fn new(config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self::default())
     }
 
@@ -1039,7 +1039,7 @@ pub struct PerformanceDataStorage<T: Float> {
     data: Vec<AdvancedMetrics<T>>}
 
 impl<T: Float + Send + Sync> PerformanceDataStorage<T> {
-    fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
+    fn new(config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self::default())
     }
 

@@ -605,14 +605,14 @@ where
 
 /// Find the knot span for a given parameter value
 #[allow(dead_code)]
-fn find_knot_span<F>(_knots: &ArrayView1<F>, n: usize, degree: usize, x: F) -> usize
+fn find_knot_span<F>(knots: &ArrayView1<F>, n: usize, degree: usize, x: F) -> usize
 where
     F: Float + FromPrimitive + PartialOrd,
 {
-    if x >= _knots[n] {
+    if x >= knots[n] {
         return n - 1;
     }
-    if x <= _knots[degree] {
+    if x <= knots[degree] {
         return degree;
     }
 
@@ -621,8 +621,8 @@ where
     let mut high = n;
     let mut mid = (low + high) / 2;
 
-    while x < _knots[mid] || x >= _knots[mid + 1] {
-        if x < _knots[mid] {
+    while x < knots[mid] || x >= knots[mid + 1] {
+        if x < knots[mid] {
             high = mid;
         } else {
             low = mid;

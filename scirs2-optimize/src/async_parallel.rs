@@ -404,7 +404,7 @@ impl AsyncDifferentialEvolution {
                     // Get next evaluation request
                     let request = {
                         let mut _rx = request_rx.lock().await;
-                        _rx.recv().await
+                        rx.recv().await
                     };
 
                     match request {
@@ -497,7 +497,7 @@ impl AsyncDifferentialEvolution {
 
     /// Check if we should proceed with partial results
     async fn should_proceed_with_partial_results(
-        &self_stats: &Arc<RwLock<AsyncOptimizationStats>>,
+        self_stats: &Arc<RwLock<AsyncOptimizationStats>>,
         completed: usize,
     ) -> bool {
         match self.config.slow_evaluation_strategy {
@@ -514,7 +514,7 @@ impl AsyncDifferentialEvolution {
     }
 
     /// Handle incomplete generation by filling missing fitness values
-    fn handle_incomplete_generation(&self, fitness_values: &mut [f64], completed: usize) {
+    fn handle_incomplete_generation(&self, fitnessvalues: &mut [f64], completed: usize) {
         // Fill incomplete evaluations with a penalty value
         let max_completed_fitness = fitness_values[..completed]
             .iter()
@@ -533,7 +533,7 @@ impl AsyncDifferentialEvolution {
     }
 
     /// Check convergence based on fitness variance
-    fn check_convergence(&self, fitness_values: &[f64]) -> bool {
+    fn check_convergence(&self, fitnessvalues: &[f64]) -> bool {
         let finite_fitness: Vec<f64> = fitness_values
             .iter()
             .filter(|&&f| f.is_finite())

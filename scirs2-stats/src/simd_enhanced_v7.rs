@@ -66,20 +66,20 @@ impl Default for AdvancedAdvancedSimdConfig {
 }
 
 impl VectorWidth {
-    fn from_capabilities(_capabilities: &PlatformCapabilities) -> Self {
-        if _capabilities.avx512_available {
+    fn from_capabilities(capabilities: &PlatformCapabilities) -> Self {
+        if capabilities.avx512_available {
             Self {
                 f64_lanes: 8,  // 512-bit / 64-bit = 8 f64 elements
                 f32_lanes: 16, // 512-bit / 32-bit = 16 f32 elements
                 optimal_chunk: 64,
             }
-        } else if _capabilities.avx2_available {
+        } else if capabilities.avx2_available {
             Self {
                 f64_lanes: 4,  // 256-bit / 64-bit = 4 f64 elements
                 f32_lanes: 8,  // 256-bit / 32-bit = 8 f32 elements
                 optimal_chunk: 32,
             }
-        } else if _capabilities.simd_available {
+        } else if capabilities.simd_available {
             Self {
                 f64_lanes: 2,  // 128-bit / 64-bit = 2 f64 elements
                 f32_lanes: 4,  // 128-bit / 32-bit = 4 f32 elements
@@ -164,7 +164,7 @@ where
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: AdvancedAdvancedSimdConfig) -> Self {
+    pub fn with_config(config: AdvancedAdvancedSimdConfig) -> Self {
         Self {
             _config_phantom: PhantomData,
         }
@@ -645,12 +645,12 @@ where
         self.simd_matrix_vector_multiply(&xtx_inv.view(), xty)
     }
 
-    fn simd_compute_standard_errors(&self, xtx_inv: &ArrayView2<F>, mse: F) -> StatsResult<Array1<F>> {
+    fn simd_compute_standard_errors(&self, xtxinv: &ArrayView2<F>, mse: F) -> StatsResult<Array1<F>> {
         let diagonal = xtx_inv.diag();
         Ok(diagonal.mapv(|x| (x * mse).sqrt()))
     }
 
-    fn simd_compute_t_statistics(&self, coefficients: &ArrayView1<F>, standard_errors: &ArrayView1<F>) -> StatsResult<Array1<F>> {
+    fn simd_compute_t_statistics(&self, coefficients: &ArrayView1<F>, standarderrors: &ArrayView1<F>) -> StatsResult<Array1<F>> {
         let mut t_stats = Array1::zeros(coefficients.len());
         for i in 0..coefficients.len() {
             t_stats[i] = coefficients[i] / standard_errors[i];
@@ -658,7 +658,7 @@ where
         Ok(t_stats)
     }
 
-    fn simd_compute_p_values(&self, t_statistics: &ArrayView1<F>, df: usize) -> StatsResult<Array1<F>> {
+    fn simd_compute_p_values(&self, tstatistics: &ArrayView1<F>, df: usize) -> StatsResult<Array1<F>> {
         // Simplified p-value computation - would use proper t-distribution
         Ok(t_statistics.mapv(|t| F::from(2.0).unwrap() * (F::one() - F::from(0.95).unwrap())))
     }
@@ -747,7 +747,7 @@ where
         Ok(centered)
     }
 
-    fn simd_covariance_matrix(&self, centered_data: &ArrayView2<F>, bias_correction: bool) -> StatsResult<Array2<F>> {
+    fn simd_covariance_matrix(&self, centered_data: &ArrayView2<F>, biascorrection: bool) -> StatsResult<Array2<F>> {
         let (n, p) = centered_data.dim();
         let mut cov_matrix = Array2::zeros((p, p));
         
@@ -773,7 +773,7 @@ where
         Ok(cov_matrix)
     }
 
-    fn simd_correlation_from_covariance(&self, cov_matrix: &ArrayView2<F>) -> StatsResult<Array2<F>> {
+    fn simd_correlation_from_covariance(&self, covmatrix: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         let p = cov_matrix.nrows();
         let mut corr_matrix = Array2::zeros((p, p));
         

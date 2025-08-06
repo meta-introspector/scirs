@@ -6,7 +6,7 @@
 
 use crate::error::{Result, TextError};
 use crate::sentiment::SentimentResult;
-use crate::topic__modeling::Topic;
+use crate::topic_modeling::Topic;
 use crate::vectorize::{CountVectorizer, TfidfVectorizer, Vectorizer};
 use ndarray::{Array1, Array2, ArrayView2, Axis};
 use std::collections::HashMap;
@@ -339,18 +339,18 @@ pub struct AttentionVisualizer {
 
 impl AttentionVisualizer {
     /// Create new attention visualizer
-    pub fn new(_config: VisualizationConfig) -> Self {
-        Self { _config }
+    pub fn new(config: VisualizationConfig) -> Self {
+        Self { config }
     }
 
     /// Visualize attention weights as heatmap
     pub fn attention_heatmap(
         &self,
-        attention_weights: ArrayView2<f64>,
+        attentionweights: ArrayView2<f64>,
         source_tokens: &[String],
         target_tokens: &[String],
     ) -> Result<String> {
-        let (n_target, n_source) = attention_weights.dim();
+        let (n_target, n_source) = attentionweights.dim();
 
         if source_tokens.len() != n_source || target_tokens.len() != n_target {
             return Err(TextError::InvalidInput(
@@ -382,7 +382,7 @@ impl AttentionVisualizer {
         // Find min and max attention values for normalization
         let mut min_val = f64::INFINITY;
         let mut max_val = f64::NEG_INFINITY;
-        for &val in attention_weights.iter() {
+        for &val in attentionweights.iter() {
             min_val = min_val.min(val);
             max_val = max_val.max(val);
         }
@@ -449,7 +449,7 @@ impl AttentionVisualizer {
     /// Save attention visualization to file
     pub fn save_attention_heatmap<P: AsRef<Path>>(
         &self,
-        attention_weights: ArrayView2<f64>,
+        attentionweights: ArrayView2<f64>,
         source_tokens: &[String],
         target_tokens: &[String],
         path: P,
@@ -469,8 +469,8 @@ pub struct EmbeddingVisualizer {
 
 impl EmbeddingVisualizer {
     /// Create new embedding visualizer
-    pub fn new(_config: VisualizationConfig) -> Self {
-        Self { _config }
+    pub fn new(config: VisualizationConfig) -> Self {
+        Self { config }
     }
 
     /// Visualize word embeddings using PCA projection to 2D
@@ -677,8 +677,8 @@ pub struct SentimentVisualizer {
 
 impl SentimentVisualizer {
     /// Create new sentiment visualizer
-    pub fn new(_config: VisualizationConfig) -> Self {
-        Self { _config }
+    pub fn new(config: VisualizationConfig) -> Self {
+        Self { config }
     }
 
     /// Create sentiment distribution chart
@@ -887,12 +887,12 @@ pub struct TopicVisualizer {
 
 impl TopicVisualizer {
     /// Create new topic visualizer
-    pub fn new(_config: VisualizationConfig) -> Self {
-        Self { _config }
+    pub fn new(config: VisualizationConfig) -> Self {
+        Self { config }
     }
 
     /// Visualize topic word distributions
-    pub fn topic_words_chart(&self, topics: &[Topic], top_n: usize) -> Result<String> {
+    pub fn topic_words_chart(&self, topics: &[Topic], topn: usize) -> Result<String> {
         if topics.is_empty() {
             return Err(TextError::InvalidInput(
                 "No topics to visualize".to_string(),
@@ -1031,8 +1031,8 @@ pub struct TextAnalyticsDashboard {
 
 impl TextAnalyticsDashboard {
     /// Create new analytics dashboard
-    pub fn new(_config: VisualizationConfig) -> Self {
-        Self { _config }
+    pub fn new(config: VisualizationConfig) -> Self {
+        Self { config }
     }
 
     /// Generate complete text analytics dashboard

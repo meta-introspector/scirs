@@ -142,7 +142,7 @@ pub struct GpuOptimizerMemory<A: Float> {
 
 impl<A: Float> GpuOptimizerMemory<A> {
     /// Create new GPU memory manager
-    pub fn new(_size: usize, config: GpuOptimizerConfig) -> Result<Self, GpuOptimError> {
+    pub fn new(size: usize, config: GpuOptimizerConfig) -> Result<Self, GpuOptimError> {
         let context = Arc::new(GpuContext::new(config.backend)?);
 
         Ok(Self {
@@ -151,7 +151,7 @@ impl<A: Float> GpuOptimizerMemory<A> {
             grads_gpu: None,
             m_gpu: None,
             v_gpu: None,
-            _size,
+            size,
             config,
         })
     }
@@ -275,7 +275,7 @@ impl Default for GpuPerformanceMetrics {
 
 impl GpuPerformanceMetrics {
     /// Record a kernel launch
-    pub fn record_kernel_launch(&mut self, execution_time_us: u64) {
+    pub fn record_kernel_launch(&mut self, execution_timeus: u64) {
         self.kernel_launches += 1;
         self.total_gpu_time_us += execution_time_us;
 
@@ -299,7 +299,7 @@ impl GpuPerformanceMetrics {
     }
 
     /// Record memory transfer time
-    pub fn record_transfer_time(&mut self, cpu_to_gpu: bool, time_us: u64) {
+    pub fn record_transfer_time(&mut self, cpu_to_gpu: bool, timeus: u64) {
         if cpu_to_gpu {
             self.cpu_to_gpu_transfer_time_us += time_us;
         } else {
@@ -407,7 +407,7 @@ pub struct AdvancedGpuOptimizer<A: Float, D: Dimension> {
 
 impl<A: Float, D: Dimension> AdvancedGpuOptimizer<A, D> {
     /// Create new advanced GPU optimizer
-    pub fn new(_config: GpuOptimizerConfig) -> Result<Self, GpuOptimError> {
+    pub fn new(config: GpuOptimizerConfig) -> Result<Self, GpuOptimError> {
         let memory = GpuOptimizerMemory::new(0_config)?;
 
         Ok(Self {
@@ -578,7 +578,7 @@ pub mod utils {
 
     /// Check if GPU acceleration is available for the given backend
     #[allow(dead_code)]
-    pub fn is_gpu_available(_backend: GpuBackend) -> bool {
+    pub fn is_gpu_available(backend: GpuBackend) -> bool {
         match GpuContext::new(_backend) {
             Ok(_) => true,
             Err(_) => false,
@@ -607,7 +607,7 @@ pub mod utils {
 
     /// Calculate optimal block size for GPU kernels
     #[allow(dead_code)]
-    pub fn calculate_block_size(n: usize, max_threads: usize) -> (usize, usize) {
+    pub fn calculate_block_size(n: usize, maxthreads: usize) -> (usize, usize) {
         let block_size = 256.min(max_threads);
         let grid_size = (n + block_size - 1) / block_size;
         (grid_size, block_size)
@@ -718,7 +718,7 @@ pub mod utils {
     }
 
     /// Benchmark GPU operation
-    pub fn benchmark_operation<F>(_operation: F, iterations: usize) -> Result<f64, GpuOptimError>
+    pub fn benchmark_operation<F>(operation: F, iterations: usize) -> Result<f64, GpuOptimError>
     where
         F: Fn() -> Result<(), GpuOptimError>,
     {

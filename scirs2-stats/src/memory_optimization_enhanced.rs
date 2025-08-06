@@ -479,7 +479,7 @@ impl EnhancedMemoryOptimizer {
     }
 
     /// Memory-aware algorithm selection for specific operations
-    pub fn select_algorithm<F>(&self, operation: &str, data_size: usize) -> String
+    pub fn select_algorithm<F>(&self, operation: &str, datasize: usize) -> String
     where
         F: Float + NumCast + std::fmt::Display,
     {
@@ -518,7 +518,7 @@ impl EnhancedMemoryOptimizer {
         Ok(())
     }
 
-    fn calculate_memory_pressure(&self, current_usage: usize) -> MemoryPressure {
+    fn calculate_memory_pressure(&self, currentusage: usize) -> MemoryPressure {
         let usage_ratio = current_usage as f64 / self.config.memory_limit as f64;
         let thresholds = &self.config.pressure_thresholds;
 
@@ -571,7 +571,7 @@ impl EnhancedMemoryOptimizer {
         }
     }
 
-    fn recommend_cache_strategy(&self, data_size: usize, _operation: &str) -> CacheStrategy {
+    fn recommend_cache_strategy(&self, data_size: usize, operation: &str) -> CacheStrategy {
         if data_size < 1024 * 1024 {
             // 1MB
             CacheStrategy::Aggressive
@@ -583,7 +583,7 @@ impl EnhancedMemoryOptimizer {
         }
     }
 
-    fn predict_performance(&self, _size: usize, _operation: &str) -> PerformanceScore {
+    fn predict_performance(&self, _size: usize, operation: &str) -> PerformanceScore {
         // Implement performance prediction based on historical data
         PerformanceScore {
             time_score: 85.0,
@@ -642,7 +642,7 @@ impl EnhancedMemoryOptimizer {
         0.15 // Placeholder
     }
 
-    fn optimal_chunk_size(&self, data_size: usize) -> usize {
+    fn optimal_chunk_size(&self, datasize: usize) -> usize {
         // Calculate optimal chunk _size based on cache characteristics
         (32 * 1024).min(data_size / 4) // 32KB or 1/4 of data _size
     }

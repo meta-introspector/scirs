@@ -613,16 +613,16 @@ where
 
 /// Calculate variance of a segment
 #[allow(dead_code)]
-fn calculate_variance<F>(_segment: &Array1<F>, mean: F) -> F
+fn calculate_variance<F>(segment: &Array1<F>, mean: F) -> F
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
 {
-    if _segment.len() <= 1 {
+    if segment.len() <= 1 {
         return F::zero();
     }
 
     let n = F::from_usize(_segment.len()).unwrap();
-    let sum_sq_deviations: F = _segment.iter().map(|&x| (x - mean) * (x - mean)).sum();
+    let sum_sq_deviations: F = segment.iter().map(|&x| (x - mean) * (x - mean)).sum();
 
     sum_sq_deviations / (n - F::one())
 }

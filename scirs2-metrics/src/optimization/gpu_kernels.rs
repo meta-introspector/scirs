@@ -381,16 +381,16 @@ pub trait GpuRuntime {
     fn initialize(&mut self) -> Result<()>;
 
     /// Compile kernel from source
-    fn compile_kernel(&self, source: &str, kernel_name: &str) -> Result<usize>;
+    fn compile_kernel(&self, source: &str, kernelname: &str) -> Result<usize>;
 
     /// Allocate device memory
     fn allocate_memory(&self, size: usize) -> Result<usize>;
 
     /// Copy data from host to device
-    fn copy_to_device(&self, host_ptr: *const f32, device_ptr: usize, size: usize) -> Result<()>;
+    fn copy_to_device(&self, host_ptr: *const f32, deviceptr: usize, size: usize) -> Result<()>;
 
     /// Copy data from device to host
-    fn copy_to_host(&self, device_ptr: usize, host_ptr: *mut f32, size: usize) -> Result<()>;
+    fn copy_to_host(&self, device_ptr: usize, hostptr: *mut f32, size: usize) -> Result<()>;
 
     /// Launch kernel
     fn launch_kernel(
@@ -417,9 +417,9 @@ pub struct CudaRuntime {
 }
 
 impl CudaRuntime {
-    pub fn new(_device_id: i32) -> Self {
+    pub fn new(_deviceid: i32) -> Self {
         Self {
-            _device_id,
+            device_id,
             context: None,
             compiled_kernels: HashMap::new(),
         }
@@ -433,7 +433,7 @@ impl GpuRuntime for CudaRuntime {
         Ok(())
     }
 
-    fn compile_kernel(&self, source: &str, kernel_name: &str) -> Result<usize> {
+    fn compile_kernel(&self, source: &str, kernelname: &str) -> Result<usize> {
         // In real implementation, would use nvrtc to compile CUDA source
         let kernel_id = source.len() + kernel_name.len(); // Simple hash
         Ok(kernel_id)
@@ -444,20 +444,22 @@ impl GpuRuntime for CudaRuntime {
         Ok(0x10000 + size)
     }
 
-    fn copy_to_device(
-        &self_host_ptr: *const f32_device, ptr: usize, _size: usize,
-    ) -> Result<()> {
+    fn copy_to_device(&self, host_ptr: *const f32, deviceptr: usize, size: usize) -> Result<()> {
         // Would use cudaMemcpy
         Ok(())
     }
 
-    fn copy_to_host(&self_device_ptr: usize, _host_ptr: *mut f32, _size: usize) -> Result<()> {
+    fn copy_to_host(&self, device_ptr: usize, hostptr: *mut f32, size: usize) -> Result<()> {
         // Would use cudaMemcpy
         Ok(())
     }
 
     fn launch_kernel(
-        &self_kernel: usize, _grid_size: (u32, u32, u32), _block_size: (u32, u32, u32), _args: &[usize],
+        &self,
+        kernel: usize,
+        _grid_size: (u32, u32, u32),
+        _block_size: (u32, u32, u32),
+        _args: &[usize],
     ) -> Result<()> {
         // Would use cudaLaunchKernel
         Ok(())
@@ -468,7 +470,7 @@ impl GpuRuntime for CudaRuntime {
         Ok(())
     }
 
-    fn free_memory(&self_ptr: usize) -> Result<()> {
+    fn free_memory(&self, ptr: usize) -> Result<()> {
         // Would use cudaFree
         Ok(())
     }
@@ -485,9 +487,9 @@ pub struct OpenClRuntime {
 }
 
 impl OpenClRuntime {
-    pub fn new(_platform_id: usize, device_id: usize) -> Self {
+    pub fn new(_platform_id: usize, deviceid: usize) -> Self {
         Self {
-            _platform_id,
+            platform_id,
             device_id,
             context: None,
             command_queue: None,
@@ -504,9 +506,9 @@ pub struct MetalRuntime {
 }
 
 impl MetalRuntime {
-    pub fn new(_device_id: usize) -> Self {
+    pub fn new(_deviceid: usize) -> Self {
         Self {
-            _device_id,
+            device_id,
             command_queue: None,
             compiled_pipelines: HashMap::new(),
         }
@@ -520,7 +522,7 @@ impl GpuRuntime for MetalRuntime {
         Ok(())
     }
 
-    fn compile_kernel(&self, source: &str, kernel_name: &str) -> Result<usize> {
+    fn compile_kernel(&self, source: &str, kernelname: &str) -> Result<usize> {
         // Would use Metal shader compiler
         let pipeline_id = source.len() + kernel_name.len() + 2000;
         Ok(pipeline_id)
@@ -531,20 +533,22 @@ impl GpuRuntime for MetalRuntime {
         Ok(0x30000 + size)
     }
 
-    fn copy_to_device(
-        &self_host_ptr: *const f32_device, ptr: usize, _size: usize,
-    ) -> Result<()> {
+    fn copy_to_device(&self, host_ptr: *const f32, deviceptr: usize, size: usize) -> Result<()> {
         // Would use MTLBuffer contents
         Ok(())
     }
 
-    fn copy_to_host(&self_device_ptr: usize, _host_ptr: *mut f32, _size: usize) -> Result<()> {
+    fn copy_to_host(&self, device_ptr: usize, hostptr: *mut f32, size: usize) -> Result<()> {
         // Would use MTLBuffer contents
         Ok(())
     }
 
     fn launch_kernel(
-        &self_kernel: usize, _grid_size: (u32, u32, u32), _block_size: (u32, u32, u32), _args: &[usize],
+        &self,
+        kernel: usize,
+        _grid_size: (u32, u32, u32),
+        _block_size: (u32, u32, u32),
+        _args: &[usize],
     ) -> Result<()> {
         // Would use MTLComputeCommandEncoder
         Ok(())
@@ -555,7 +559,7 @@ impl GpuRuntime for MetalRuntime {
         Ok(())
     }
 
-    fn free_memory(&self_ptr: usize) -> Result<()> {
+    fn free_memory(&self, ptr: usize) -> Result<()> {
         // Metal uses automatic reference counting
         Ok(())
     }
@@ -570,9 +574,9 @@ pub struct VulkanRuntime {
 }
 
 impl VulkanRuntime {
-    pub fn new(_device_id: usize) -> Self {
+    pub fn new(_deviceid: usize) -> Self {
         Self {
-            _device_id,
+            device_id,
             command_pool: None,
             descriptor_pool: None,
             compiled_shaders: HashMap::new(),
@@ -588,7 +592,7 @@ impl GpuRuntime for VulkanRuntime {
         Ok(())
     }
 
-    fn compile_kernel(&self, source: &str, kernel_name: &str) -> Result<usize> {
+    fn compile_kernel(&self, source: &str, kernelname: &str) -> Result<usize> {
         // Would compile SPIR-V shader module
         let shader_id = source.len() + kernel_name.len() + 3000;
         Ok(shader_id)
@@ -599,20 +603,22 @@ impl GpuRuntime for VulkanRuntime {
         Ok(0x40000 + size)
     }
 
-    fn copy_to_device(
-        &self_host_ptr: *const f32_device, ptr: usize, _size: usize,
-    ) -> Result<()> {
+    fn copy_to_device(&self, host_ptr: *const f32, deviceptr: usize, size: usize) -> Result<()> {
         // Would use staging buffer and vkCmdCopyBuffer
         Ok(())
     }
 
-    fn copy_to_host(&self_device_ptr: usize, _host_ptr: *mut f32, _size: usize) -> Result<()> {
+    fn copy_to_host(&self, device_ptr: usize, hostptr: *mut f32, size: usize) -> Result<()> {
         // Would use staging buffer and vkCmdCopyBuffer
         Ok(())
     }
 
     fn launch_kernel(
-        &self_kernel: usize, _grid_size: (u32, u32, u32), _block_size: (u32, u32, u32), _args: &[usize],
+        &self,
+        kernel: usize,
+        _grid_size: (u32, u32, u32),
+        _block_size: (u32, u32, u32),
+        _args: &[usize],
     ) -> Result<()> {
         // Would record compute commands and vkCmdDispatch
         Ok(())
@@ -623,7 +629,7 @@ impl GpuRuntime for VulkanRuntime {
         Ok(())
     }
 
-    fn free_memory(&self_ptr: usize) -> Result<()> {
+    fn free_memory(&self, ptr: usize) -> Result<()> {
         // Would use vkFreeMemory and vkDestroyBuffer
         Ok(())
     }
@@ -637,7 +643,7 @@ impl GpuRuntime for OpenClRuntime {
         Ok(())
     }
 
-    fn compile_kernel(&self, source: &str, kernel_name: &str) -> Result<usize> {
+    fn compile_kernel(&self, source: &str, kernelname: &str) -> Result<usize> {
         // Would use clCreateProgramWithSource and clBuildProgram
         let program_id = source.len() + kernel_name.len() + 1000;
         Ok(program_id)
@@ -648,20 +654,22 @@ impl GpuRuntime for OpenClRuntime {
         Ok(0x20000 + size)
     }
 
-    fn copy_to_device(
-        &self_host_ptr: *const f32_device, ptr: usize, _size: usize,
-    ) -> Result<()> {
+    fn copy_to_device(&self, host_ptr: *const f32, deviceptr: usize, size: usize) -> Result<()> {
         // Would use clEnqueueWriteBuffer
         Ok(())
     }
 
-    fn copy_to_host(&self_device_ptr: usize, _host_ptr: *mut f32, _size: usize) -> Result<()> {
+    fn copy_to_host(&self, device_ptr: usize, hostptr: *mut f32, size: usize) -> Result<()> {
         // Would use clEnqueueReadBuffer
         Ok(())
     }
 
     fn launch_kernel(
-        &self_kernel: usize, _grid_size: (u32, u32, u32), _block_size: (u32, u32, u32), _args: &[usize],
+        &self,
+        kernel: usize,
+        _grid_size: (u32, u32, u32),
+        _block_size: (u32, u32, u32),
+        _args: &[usize],
     ) -> Result<()> {
         // Would use clEnqueueNDRangeKernel
         Ok(())
@@ -672,7 +680,7 @@ impl GpuRuntime for OpenClRuntime {
         Ok(())
     }
 
-    fn free_memory(&self_ptr: usize) -> Result<()> {
+    fn free_memory(&self, ptr: usize) -> Result<()> {
         // Would use clReleaseMemObject
         Ok(())
     }
@@ -1014,7 +1022,7 @@ impl Default for KernelConfig {
 
 impl AdvancedGpuComputer {
     /// Initialize advanced GPU computer with hardware detection
-    pub fn new(_config: GpuComputeConfig) -> Result<Self> {
+    pub fn new(config: GpuComputeConfig) -> Result<Self> {
         let capabilities = PlatformCapabilities::detect();
         let performance_stats = Arc::new(Mutex::new(GpuPerformanceStats::default()));
 
@@ -1023,7 +1031,7 @@ impl AdvancedGpuComputer {
             opencl_context: None,
             capabilities,
             performance_stats,
-            _config,
+            config,
         };
 
         // Initialize GPU contexts based on preference
@@ -1401,7 +1409,7 @@ impl AdvancedGpuComputer {
     }
 
     /// Determine optimal compute strategy
-    fn determine_compute_strategy(&self, data_size: usize) -> Result<ComputeStrategy> {
+    fn determine_compute_strategy(&self, datasize: usize) -> Result<ComputeStrategy> {
         // Check if data _size meets minimum requirements for GPU acceleration
         if data_size < self.config.batch_settings.min_batch_size {
             return Ok(ComputeStrategy::Fallback);
@@ -1662,7 +1670,8 @@ impl AdvancedGpuComputer {
     fn cuda_mse_kernel<F>(
         &self,
         y_true: &ArrayView1<F>,
-        y_pred: &ArrayView1<F>, _config: &KernelConfig,
+        y_pred: &ArrayView1<F>,
+        _config: &KernelConfig,
     ) -> Result<F>
     where
         F: Float + std::iter::Sum,
@@ -1680,7 +1689,8 @@ impl AdvancedGpuComputer {
     fn cuda_mae_kernel<F>(
         &self,
         y_true: &ArrayView1<F>,
-        y_pred: &ArrayView1<F>, _config: &KernelConfig,
+        y_pred: &ArrayView1<F>,
+        _config: &KernelConfig,
     ) -> Result<F>
     where
         F: Float + std::iter::Sum,
@@ -1697,7 +1707,8 @@ impl AdvancedGpuComputer {
     fn cuda_r2_kernel<F>(
         &self,
         y_true: &ArrayView1<F>,
-        y_pred: &ArrayView1<F>, _config: &KernelConfig,
+        y_pred: &ArrayView1<F>,
+        _config: &KernelConfig,
     ) -> Result<F>
     where
         F: Float + std::iter::Sum,
@@ -1725,7 +1736,8 @@ impl AdvancedGpuComputer {
     fn cuda_correlation_kernel<F>(
         &self,
         x: &ArrayView1<F>,
-        y: &ArrayView1<F>, _config: &KernelConfig,
+        y: &ArrayView1<F>,
+        _config: &KernelConfig,
     ) -> Result<F>
     where
         F: Float + std::iter::Sum,
@@ -1755,21 +1767,21 @@ impl AdvancedGpuComputer {
     }
 
     // OpenCL kernel implementations (similar to CUDA but with different performance characteristics)
-    fn opencl_mse_kernel<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    fn opencl_mse_kernel<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
         self.cuda_mse_kernel(y_true, y_pred, &KernelConfig::default())
     }
 
-    fn opencl_mae_kernel<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    fn opencl_mae_kernel<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
         self.cuda_mae_kernel(y_true, y_pred, &KernelConfig::default())
     }
 
-    fn opencl_r2_kernel<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    fn opencl_r2_kernel<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
@@ -1784,7 +1796,7 @@ impl AdvancedGpuComputer {
     }
 
     // SIMD implementations
-    fn simd_mse<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    fn simd_mse<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + SimdUnifiedOps + std::iter::Sum,
     {
@@ -1804,7 +1816,7 @@ impl AdvancedGpuComputer {
         }
     }
 
-    fn simd_mae<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    fn simd_mae<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + SimdUnifiedOps + std::iter::Sum,
     {
@@ -1824,7 +1836,7 @@ impl AdvancedGpuComputer {
         }
     }
 
-    fn simd_r2_score<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
+    fn simd_r2_score<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + SimdUnifiedOps + std::iter::Sum,
     {
@@ -1886,7 +1898,7 @@ impl AdvancedGpuComputer {
     }
 
     /// Estimate FLOPS for performance metrics
-    fn estimate_flops(&self, batch_size: usize, feature_size: usize, num_metrics: usize) -> f64 {
+    fn estimate_flops(&self, batch_size: usize, feature_size: usize, nummetrics: usize) -> f64 {
         // Rough estimate of floating point operations
         let ops_per_sample = feature_size * num_metrics * 4; // 4 ops per metric on average
         (batch_size * ops_per_sample) as f64
@@ -1973,7 +1985,7 @@ impl AdvancedGpuComputer {
     }
 
     /// Execute optimized GPU MSE computation with actual kernel execution
-    pub fn execute_gpu_mse<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
+    pub fn execute_gpu_mse<F>(&self, y_true: &Array1<F>, ypred: &Array1<F>) -> Result<F>
     where
         F: Float + NumCast,
     {
@@ -2161,7 +2173,7 @@ impl AdvancedGpuComputer {
     }
 
     /// Execute GPU MAE computation
-    pub fn execute_gpu_mae<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
+    pub fn execute_gpu_mae<F>(&self, y_true: &Array1<F>, ypred: &Array1<F>) -> Result<F>
     where
         F: Float + NumCast + std::iter::Sum,
     {
@@ -2177,7 +2189,7 @@ impl AdvancedGpuComputer {
     }
 
     /// Execute GPU R² computation
-    pub fn execute_gpu_r2<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
+    pub fn execute_gpu_r2<F>(&self, y_true: &Array1<F>, ypred: &Array1<F>) -> Result<F>
     where
         F: Float + NumCast + std::iter::Sum,
     {

@@ -136,7 +136,7 @@ fn testshape_constraint_jagged_array() {
 #[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
-fn testshape_constraint_square_matrix() {
+fn testshape_constraint_squarematrix() {
     let config = ValidationConfig::default();
     let validator = Validator::new(config).unwrap();
 

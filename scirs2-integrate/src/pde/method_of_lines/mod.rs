@@ -217,7 +217,7 @@ impl MOLParabolicSolver1D {
         let boundary_conditions = self.boundary_conditions.clone();
 
         // Extract options before moving self
-        let _ode_options = ODEOptions {
+        let ode_options = ODEOptions {
             method: self.options.ode_method,
             rtol: self.options.rtol,
             atol: self.options.atol,
@@ -469,7 +469,7 @@ impl MOLParabolicSolver1D {
         };
 
         // Set up ODE solver options
-        let ode_options = _ode_options;
+        let ode_options = ode_options;
 
         // Apply Dirichlet boundary conditions to initial condition
         for bc in &boundary_conditions {
@@ -514,14 +514,14 @@ impl MOLParabolicSolver1D {
 
 /// Convert a MOLResult to a PDESolution
 impl From<MOLResult> for PDESolution<f64> {
-    fn from(_result: MOLResult) -> Self {
+    fn from(result: MOLResult) -> Self {
         let mut grids = Vec::new();
 
         // Add time grid
-        grids.push(_result.t.clone());
+        grids.push(result.t.clone());
 
         // Extract spatial grid from solution
-        let nx = _result.u[0].shape()[1];
+        let nx = result.u[0].shape()[1];
         // Note: For a proper implementation, the spatial grid should be provided
         let spatial_grid = Array1::linspace(0.0, 1.0, nx);
         grids.push(spatial_grid);
@@ -529,7 +529,7 @@ impl From<MOLResult> for PDESolution<f64> {
         // Create solver info
         let info = PDESolverInfo {
             num_iterations: 0, // This information is not available directly
-            computation_time: _result.computation_time,
+            computation_time: result.computation_time,
             residual_norm: None,
             convergence_history: None,
             method: "Method of Lines".to_string(),
@@ -537,7 +537,7 @@ impl From<MOLResult> for PDESolution<f64> {
 
         PDESolution {
             grids,
-            values: _result.u,
+            values: result.u,
             error_estimate: None,
             info,
         }

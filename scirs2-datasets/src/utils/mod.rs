@@ -44,12 +44,12 @@ pub use balancing::{
 pub use scaling::{min_max_scale, normalize, robust_scale, StatsExt};
 
 // Feature engineering
-pub use feature__engineering::{
+pub use feature_engineering::{
     create_binned_features, polynomial_features, statistical_features, BinningStrategy,
 };
 
 // Advanced analytics
-pub use advanced__analytics::{
+pub use advanced_analytics::{
     analyze_dataset_advanced, quick_quality_assessment, AdvancedDatasetAnalyzer,
     AdvancedQualityMetrics, CorrelationInsights, NormalityAssessment,
 };

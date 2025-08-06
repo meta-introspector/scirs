@@ -14,14 +14,14 @@ use std::fmt::Debug;
 /// * `a` - First value
 /// * `b` - Second value
 /// * `abs_tol` - Absolute tolerance
-/// * `rel_tol` - Relative tolerance
+/// * `reltol` - Relative tolerance
 ///
 /// # Returns
 ///
 /// * `true` if the values are approximately equal, `false` otherwise
 #[must_use]
 #[allow(dead_code)]
-pub fn is_close<F: Float>(a: F, b: F, abs_tol: F, rel_tol: F) -> bool {
+pub fn is_close<F: Float>(a: F, b: F, abs_tol: F, reltol: F) -> bool {
     let abs_diff = (a - b).abs();
 
     if abs_diff <= abs_tol {
@@ -31,7 +31,7 @@ pub fn is_close<F: Float>(a: F, b: F, abs_tol: F, rel_tol: F) -> bool {
         let abs_b = b.abs();
         let max_abs = if abs_a > abs_b { abs_a } else { abs_b };
 
-        abs_diff <= max_abs * rel_tol
+        abs_diff <= max_abs * reltol
     }
 }
 
@@ -65,13 +65,13 @@ pub fn is_close<F: Float>(a: F, b: F, abs_tol: F, rel_tol: F) -> bool {
 /// ```
 #[must_use]
 #[allow(dead_code)]
-pub fn points_equal<T>(_point1: &[T], point2: &[T], tol: Option<T>) -> bool
+pub fn points_equal<T>(point1: &[T], point2: &[T], tol: Option<T>) -> bool
 where
     T: PartialOrd + std::ops::Sub<Output = T> + Copy + FromPrimitive + num_traits::Zero,
 {
     // Check for empty arrays first
-    if _point1.is_empty() || point2.is_empty() {
-        return _point1.is_empty() && point2.is_empty();
+    if point1.is_empty() || point2.is_empty() {
+        return point1.is_empty() && point2.is_empty();
     }
 
     // Default tolerance as 1e-8 converted to type T
@@ -89,8 +89,8 @@ where
         },
     };
 
-    _point1.len() == point2.len()
-        && _point1.iter().zip(point2.iter()).all(|(&a, &b)| {
+    point1.len() == point2.len()
+        && point1.iter().zip(point2.iter()).all(|(&a, &b)| {
             let diff = if a > b { a - b } else { b - a };
             diff <= tol
         })
@@ -181,12 +181,12 @@ pub fn fill_diagonal<T: Clone>(mut a: Array2<T>, val: T) -> Array2<T> {
 /// * Product of all elements
 #[must_use]
 #[allow(dead_code)]
-pub fn prod<I, T>(_iter: I) -> T
+pub fn prod<I, T>(iter: I) -> T
 where
     I: IntoIterator<Item = T>,
     T: std::ops::Mul<Output = T> + From<u8>,
 {
-    _iter.into_iter().fold(T::from(1), |a, b| a * b)
+    iter.into_iter().fold(T::from(1), |a, b| a * b)
 }
 
 /// Creates a range of values with a specified step size
@@ -245,12 +245,12 @@ pub fn arange_unchecked<F: Float + std::iter::Sum>(start: F, end: F, step: F) ->
 /// * `true` if all elements satisfy the predicate, `false` otherwise
 #[must_use]
 #[allow(dead_code)]
-pub fn all<I, T, F>(_iter: I, predicate: F) -> bool
+pub fn all<I, T, F>(iter: I, predicate: F) -> bool
 where
     I: IntoIterator<Item = T>,
     F: Fn(T) -> bool,
 {
-    _iter.into_iter().all(predicate)
+    iter.into_iter().all(predicate)
 }
 
 /// Checks if any element in an iterable satisfies a predicate
@@ -265,12 +265,12 @@ where
 /// * `true` if any element satisfies the predicate, `false` otherwise
 #[must_use]
 #[allow(dead_code)]
-pub fn any<I, T, F>(_iter: I, predicate: F) -> bool
+pub fn any<I, T, F>(iter: I, predicate: F) -> bool
 where
     I: IntoIterator<Item = T>,
     F: Fn(T) -> bool,
 {
-    _iter.into_iter().any(predicate)
+    iter.into_iter().any(predicate)
 }
 
 /// Creates a linearly spaced array between start and end (inclusive)
@@ -698,7 +698,7 @@ where
     // For 1D arrays
     if input.ndim() == 1 {
         // Convert to Array1 for easier manipulation
-        let input_array1 = input
+        let inputarray1 = input
             .view()
             .into_dimensionality::<ndarray::Ix1>()
             .map_err(|_| "Failed to convert to 1D array".to_string())?;
@@ -707,12 +707,12 @@ where
             .into_dimensionality::<ndarray::Ix1>()
             .map_err(|_| "Failed to convert output to 1D array".to_string())?;
 
-        let input_len = input_array1.len();
+        let input_len = inputarray1.len();
         let start = pad_width[0].0;
 
         // First copy the input to the center region
         for i in 0..input_len {
-            output_array1[start + i] = input_array1[i];
+            output_array1[start + i] = inputarray1[i];
         }
 
         // Then pad the borders based on the mode
@@ -723,12 +723,12 @@ where
             "edge" => {
                 // Pad left side with first value
                 for i in 0..pad_width[0].0 {
-                    output_array1[i] = input_array1[0];
+                    output_array1[i] = inputarray1[0];
                 }
                 // Pad right side with last value
                 let offset = start + input_len;
                 for i in 0..pad_width[0].1 {
-                    output_array1[offset + i] = input_array1[input_len - 1];
+                    output_array1[offset + i] = inputarray1[input_len - 1];
                 }
             }
             "reflect" => {
@@ -736,7 +736,7 @@ where
                 for i in 0..pad_width[0].0 {
                     let src_idx = pad_width[0].0 - i;
                     if src_idx < input_len {
-                        output_array1[i] = input_array1[src_idx];
+                        output_array1[i] = inputarray1[src_idx];
                     }
                 }
                 // Pad right side
@@ -744,7 +744,7 @@ where
                 for i in 0..pad_width[0].1 {
                     let src_idx = input_len - 2 - i;
                     if src_idx < input_len {
-                        output_array1[offset + i] = input_array1[src_idx];
+                        output_array1[offset + i] = inputarray1[src_idx];
                     }
                 }
             }
@@ -752,20 +752,18 @@ where
                 // Pad left side
                 for i in 0..pad_width[0].0 {
                     let src_idx = (input_len - (pad_width[0].0 - i) % input_len) % input_len;
-                    output_array1[i] = input_array1[src_idx];
+                    output_array1[i] = inputarray1[src_idx];
                 }
                 // Pad right side
                 let offset = start + input_len;
                 for i in 0..pad_width[0].1 {
                     let src_idx = i % input_len;
-                    output_array1[offset + i] = input_array1[src_idx];
+                    output_array1[offset + i] = inputarray1[src_idx];
                 }
             }
             "maximum" => {
                 // Find maximum value
-                let max_val = input_array1
-                    .iter()
-                    .fold(T::neg_infinity(), |a, &b| a.max(b));
+                let max_val = inputarray1.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
 
                 // Pad with maximum value
                 for i in 0..pad_width[0].0 {
@@ -778,7 +776,7 @@ where
             }
             "minimum" => {
                 // Find minimum value
-                let min_val = input_array1.iter().fold(T::infinity(), |a, &b| a.min(b));
+                let min_val = inputarray1.iter().fold(T::infinity(), |a, &b| a.min(b));
 
                 // Pad with minimum value
                 for i in 0..pad_width[0].0 {
@@ -791,7 +789,7 @@ where
             }
             "mean" => {
                 // Calculate mean value
-                let sum = input_array1.iter().fold(T::zero(), |a, &b| a + b);
+                let sum = inputarray1.iter().fold(T::zero(), |a, &b| a + b);
                 let mean_val = sum / T::from_usize(input_len).unwrap();
 
                 // Pad with mean value
@@ -944,14 +942,14 @@ pub fn generate_window(
 ///
 /// Returns an error if the evaluation function fails at either x+h or x-h.
 #[allow(dead_code)]
-pub fn differentiate<F, Func>(x: F, h: F, eval_fn: Func) -> Result<F, String>
+pub fn differentiate<F, Func>(x: F, h: F, evalfn: Func) -> Result<F, String>
 where
     F: Float + FromPrimitive + Debug,
     Func: Fn(F) -> Result<F, String>,
 {
     // Use central difference for better accuracy
-    let f_plus = eval_fn(x + h).map_err(|e| format!("Error evaluating function at x+h: {e}"))?;
-    let f_minus = eval_fn(x - h).map_err(|e| format!("Error evaluating function at x-h: {e}"))?;
+    let f_plus = evalfn(x + h).map_err(|e| format!("Error evaluating function at x+h: {e}"))?;
+    let f_minus = evalfn(x - h).map_err(|e| format!("Error evaluating function at x-h: {e}"))?;
     let derivative = (f_plus - f_minus) / (F::from(2.0).unwrap() * h);
     Ok(derivative)
 }
@@ -986,13 +984,13 @@ where
 ///
 /// Returns an error if the number of intervals is less than 2, not even, or if the evaluation function fails.
 #[allow(dead_code)]
-pub fn integrate<F, Func>(a: F, b: F, n: usize, eval_fn: Func) -> Result<F, String>
+pub fn integrate<F, Func>(a: F, b: F, n: usize, evalfn: Func) -> Result<F, String>
 where
     F: Float + FromPrimitive + Debug,
     Func: Fn(F) -> Result<F, String>,
 {
     if a > b {
-        return integrate(b, a, n, eval_fn).map(|result| -result);
+        return integrate(b, a, n, evalfn).map(|result| -result);
     }
 
     // Use composite Simpson's rule for integration
@@ -1005,8 +1003,8 @@ where
     }
 
     let h = (b - a) / F::from_usize(n).unwrap();
-    let mut sum = eval_fn(a).map_err(|e| format!("Error evaluating function at a: {e}"))?
-        + eval_fn(b).map_err(|e| format!("Error evaluating function at b: {e}"))?;
+    let mut sum = evalfn(a).map_err(|e| format!("Error evaluating function at a: {e}"))?
+        + evalfn(b).map_err(|e| format!("Error evaluating function at b: {e}"))?;
 
     // Even-indexed points (except endpoints)
     for i in 1..n {
@@ -1014,7 +1012,7 @@ where
             let x_i = a + F::from_usize(i).unwrap() * h;
             sum = sum
                 + F::from(2.0).unwrap()
-                    * eval_fn(x_i)
+                    * evalfn(x_i)
                         .map_err(|e| format!("Error evaluating function at x_{i}: {e}"))?;
         }
     }
@@ -1025,7 +1023,7 @@ where
             let x_i = a + F::from_usize(i).unwrap() * h;
             sum = sum
                 + F::from(4.0).unwrap()
-                    * eval_fn(x_i)
+                    * evalfn(x_i)
                         .map_err(|e| format!("Error evaluating function at x_{i}: {e}"))?;
         }
     }
@@ -1114,7 +1112,7 @@ mod tests {
     }
 
     #[test]
-    fn test_logspace() {
+    fn testlogspace() {
         let result = logspace(0.0, 3.0, 4, None);
         let expected = arr1(&[1.0, 10.0, 100.0, 1000.0]);
         assert_eq!(result.len(), 4);

@@ -42,21 +42,21 @@ impl Default for LengthFilter {
 
 impl LengthFilter {
     /// Create a new length filter
-    pub fn new(_min_length: usize, max_length: usize) -> Self {
+    pub fn new(_min_length: usize, maxlength: usize) -> Self {
         Self {
-            _min_length,
+            min_length,
             max_length,
         }
     }
 
     /// Set minimum token length
-    pub fn with_min_length(mut self, min_length: usize) -> Self {
+    pub fn with_min_length(mut self, minlength: usize) -> Self {
         self.min_length = min_length;
         self
     }
 
     /// Set maximum token length
-    pub fn with_max_length(mut self, max_length: usize) -> Self {
+    pub fn with_max_length(mut self, maxlength: usize) -> Self {
         self.max_length = max_length;
         self
     }
@@ -118,14 +118,14 @@ impl FrequencyFilter {
     }
 
     /// Create a new frequency filter from token counts
-    pub fn from_counts(_token_counts: HashMap<String, usize>, min_count: usize) -> Self {
-        let total_count = _token_counts.values().sum();
+    pub fn from_counts(_token_counts: HashMap<String, usize>, mincount: usize) -> Self {
+        let total_count = token_counts.values().sum();
 
         Self {
             min_count,
             max_count: None,
             max_freq: None,
-            _token_counts,
+            token_counts,
             total_count,
         }
     }
@@ -157,13 +157,13 @@ impl FrequencyFilter {
     }
 
     /// Set the maximum count threshold
-    pub fn with_max_count(mut self, max_count: usize) -> Self {
+    pub fn with_max_count(mut self, maxcount: usize) -> Self {
         self.max_count = Some(max_count);
         self
     }
 
     /// Set the maximum frequency threshold (0.0 to 1.0)
-    pub fn with_max_freq(mut self, max_freq: f64) -> Result<Self> {
+    pub fn with_max_freq(mut self, maxfreq: f64) -> Result<Self> {
         if !(0.0..=1.0).contains(&max_freq) {
             return Err(TextError::InvalidInput(
                 "max_freq must be between 0.0 and 1.0".to_string(),
@@ -222,7 +222,7 @@ pub struct RegexFilter {
 
 impl RegexFilter {
     /// Create a new regex filter
-    pub fn new(_pattern: &str, keep_matching: bool) -> Result<Self> {
+    pub fn new(_pattern: &str, keepmatching: bool) -> Result<Self> {
         match Regex::new(_pattern) {
             Ok(regex) => Ok(Self {
                 _pattern: regex,
@@ -259,15 +259,15 @@ pub struct StopwordsFilter {
 
 impl StopwordsFilter {
     /// Create a new stopwords filter
-    pub fn new(_stopwords: Vec<String>, remove_stopwords: bool) -> Self {
+    pub fn new(_stopwords: Vec<String>, removestopwords: bool) -> Self {
         Self {
-            _stopwords: _stopwords.into_iter().collect(),
+            _stopwords: stopwords.into_iter().collect(),
             remove_stopwords,
         }
     }
 
     /// Create a stopwords filter from a file
-    pub fn from_file(_path: &str) -> Result<Self> {
+    pub fn from_file(path: &str) -> Result<Self> {
         use std::fs::File;
         use std::io::{BufRead, BufReader};
 
@@ -406,7 +406,7 @@ where
     F: Fn(&str) -> bool + Send + Sync,
 {
     /// Create a new custom filter with the given predicate
-    pub fn new(_predicate: F) -> Self {
+    pub fn new(predicate: F) -> Self {
         Self { _predicate }
     }
 }

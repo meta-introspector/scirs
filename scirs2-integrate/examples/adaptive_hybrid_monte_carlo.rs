@@ -106,7 +106,7 @@ where
         // Filter out invalid values
         if !value.is_nan() && !value.is_infinite() {
             value_sum += value.abs();
-            _points.push(point);
+            points.push(point);
             values.push(value);
         }
     }
@@ -201,7 +201,7 @@ where
             let peak_fraction = center_value / total_peak_contribution;
 
             // For extreme peaks, use very narrow sampling radius
-            // If we have a known scale _factor, use it to determine optimal radius
+            // If we have a known scale factor, use it to determine optimal radius
             let radius = if let Some(scale) = scale_factor {
                 // For known sharp peaks, set radius based on scale
                 // For a Gaussian peak with scale 's', radius ~ 3/sqrt(s) covers >99% of the mass

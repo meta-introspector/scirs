@@ -12,7 +12,7 @@ pub trait LieAlgebra: Clone {
     fn dim(&self) -> usize;
 
     /// Lie bracket [X, Y] = XY - YX
-    fn bracket(&self, _other: &Self) -> Self;
+    fn bracket(&self, other: &Self) -> Self;
 
     /// Convert from vector representation to algebra element
     fn from_vector(v: &ArrayView1<f64>) -> Self;
@@ -30,13 +30,13 @@ pub trait ExponentialMap: Sized {
     type Algebra: LieAlgebra;
 
     /// Exponential map from Lie algebra to Lie group
-    fn exp(_algebra: &Self::Algebra) -> Self;
+    fn exp(algebra: &Self::Algebra) -> Self;
 
     /// Logarithm map from Lie group to Lie algebra
     fn log(&self) -> Self::Algebra;
 
     /// Group multiplication
-    fn multiply(&self, _other: &Self) -> Self;
+    fn multiply(&self, other: &Self) -> Self;
 
     /// Group inverse
     fn inverse(&self) -> Self;
@@ -72,9 +72,9 @@ pub enum LieGroupMethod {
 
 impl<G: ExponentialMap> LieGroupIntegrator<G> {
     /// Create a new Lie group integrator
-    pub fn new(_dt: f64, method: LieGroupMethod) -> Self {
+    pub fn new(dt: f64, method: LieGroupMethod) -> Self {
         Self {
-            dt: _dt,
+            dt: dt,
             method,
             _phantom: std::marker::PhantomData,
         }
@@ -102,8 +102,8 @@ impl<G: ExponentialMap> LieGroupIntegrator<G> {
         let xi = f(g);
         let mut scaled_xi = xi.to_vector();
         scaled_xi *= self.dt;
-        let scaled_algebra = G::Algebra::from_vector(&scaled_xi.view());
-        Ok(g.multiply(&G::exp(&scaled_algebra)))
+        let scaledalgebra = G::Algebra::from_vector(&scaled_xi.view());
+        Ok(g.multiply(&G::exp(&scaledalgebra)))
     }
 
     /// Lie-Midpoint method
@@ -114,14 +114,14 @@ impl<G: ExponentialMap> LieGroupIntegrator<G> {
         let xi1 = f(g);
         let mut half_xi = xi1.to_vector();
         half_xi *= self.dt / 2.0;
-        let half_algebra = G::Algebra::from_vector(&half_xi.view());
-        let g_mid = g.multiply(&G::exp(&half_algebra));
+        let halfalgebra = G::Algebra::from_vector(&half_xi.view());
+        let g_mid = g.multiply(&G::exp(&halfalgebra));
 
         let xi_mid = f(&g_mid);
         let mut full_xi = xi_mid.to_vector();
         full_xi *= self.dt;
-        let full_algebra = G::Algebra::from_vector(&full_xi.view());
-        Ok(g.multiply(&G::exp(&full_algebra)))
+        let fullalgebra = G::Algebra::from_vector(&full_xi.view());
+        Ok(g.multiply(&G::exp(&fullalgebra)))
     }
 
     /// Lie-Trapezoidal method
@@ -132,14 +132,14 @@ impl<G: ExponentialMap> LieGroupIntegrator<G> {
         let xi1 = f(g);
         let mut full_xi = xi1.to_vector();
         full_xi *= self.dt;
-        let full_algebra = G::Algebra::from_vector(&full_xi.view());
-        let g_euler = g.multiply(&G::exp(&full_algebra));
+        let fullalgebra = G::Algebra::from_vector(&full_xi.view());
+        let g_euler = g.multiply(&G::exp(&fullalgebra));
 
         let xi2 = f(&g_euler);
         let mut avg_xi = (xi1.to_vector() + xi2.to_vector()) / 2.0;
         avg_xi *= self.dt;
-        let avg_algebra = G::Algebra::from_vector(&avg_xi.view());
-        Ok(g.multiply(&G::exp(&avg_algebra)))
+        let avgalgebra = G::Algebra::from_vector(&avg_xi.view());
+        Ok(g.multiply(&G::exp(&avgalgebra)))
     }
 
     /// Runge-Kutta-Munthe-Kaas 4th order method
@@ -177,8 +177,8 @@ impl<G: ExponentialMap> LieGroupIntegrator<G> {
         let comm = k1.bracket(&k2);
         final_xi = final_xi + comm.to_vector() * (self.dt * self.dt / 12.0);
 
-        let final_algebra = G::Algebra::from_vector(&final_xi.view());
-        Ok(g.multiply(&G::exp(&final_algebra)))
+        let finalalgebra = G::Algebra::from_vector(&final_xi.view());
+        Ok(g.multiply(&G::exp(&finalalgebra)))
     }
 
     /// Crouch-Grossman method
@@ -224,12 +224,12 @@ impl LieAlgebra for So3 {
         3
     }
 
-    fn bracket(&self, _other: &Self) -> Self {
+    fn bracket(&self, other: &Self) -> Self {
         // [ω1, ω2] = ω1 × ω2 (cross product)
         let omega = Array1::from_vec(vec![
-            self.omega[1] * _other.omega[2] - self.omega[2] * _other.omega[1],
-            self.omega[2] * _other.omega[0] - self.omega[0] * _other.omega[2],
-            self.omega[0] * _other.omega[1] - self.omega[1] * _other.omega[0],
+            self.omega[1] * other.omega[2] - self.omega[2] * other.omega[1],
+            self.omega[2] * other.omega[0] - self.omega[0] * other.omega[2],
+            self.omega[0] * other.omega[1] - self.omega[1] * other.omega[0],
         ]);
         So3 { omega }
     }
@@ -273,17 +273,17 @@ pub struct SO3 {
 impl ExponentialMap for SO3 {
     type Algebra = So3;
 
-    fn exp(_algebra: &Self::Algebra) -> Self {
-        let theta = _algebra.norm();
+    fn exp(algebra: &Self::Algebra) -> Self {
+        let theta = algebra.norm();
 
         if theta < 1e-10 {
             // Small angle approximation
             SO3 {
-                matrix: Array2::eye(3) + _algebra.to_matrix(),
+                matrix: Array2::eye(3) + algebra.to_matrix(),
             }
         } else {
             // Rodrigues' formula
-            let k = _algebra.to_matrix() / theta;
+            let k = algebra.to_matrix() / theta;
             let k2 = k.dot(&k);
 
             SO3 {
@@ -319,9 +319,9 @@ impl ExponentialMap for SO3 {
         }
     }
 
-    fn multiply(&self, _other: &Self) -> Self {
+    fn multiply(&self, other: &Self) -> Self {
         SO3 {
-            matrix: self.matrix.dot(&_other.matrix),
+            matrix: self.matrix.dot(&other.matrix),
         }
     }
 
@@ -346,9 +346,9 @@ pub struct SO3Integrator {
 
 impl SO3Integrator {
     /// Create a new SO(3) integrator
-    pub fn new(_dt: f64, method: LieGroupMethod) -> Self {
+    pub fn new(dt: f64, method: LieGroupMethod) -> Self {
         Self {
-            base: LieGroupIntegrator::new(_dt, method),
+            base: LieGroupIntegrator::new(dt, method),
         }
     }
 
@@ -365,7 +365,7 @@ impl SO3Integrator {
         let mut current_orientation = orientation.clone();
         let mut current_omega = angular_velocity.clone();
 
-        let inertia_inv = SO3Integrator::invert_inertia(inertia_tensor)?;
+        let inertia_inv = SO3Integrator::invertinertia(inertia_tensor)?;
 
         for _ in 0..n_steps {
             // Compute angular acceleration
@@ -377,12 +377,12 @@ impl SO3Integrator {
             current_omega = &current_omega + &angular_accel * self.base.dt;
 
             // Update orientation
-            let omega_algebra = So3 {
+            let omegaalgebra = So3 {
                 omega: current_omega.clone(),
             };
             current_orientation = self
                 .base
-                .step(&current_orientation, |_| omega_algebra.clone())?;
+                .step(&current_orientation, |_| omegaalgebra.clone())?;
 
             states.push((current_orientation.clone(), current_omega.clone()));
         }
@@ -400,40 +400,40 @@ impl SO3Integrator {
     }
 
     /// Invert 3x3 matrix (for inertia tensor)
-    fn invert_inertia(_inertia: &Array2<f64>) -> IntegrateResult<Array2<f64>> {
+    fn invertinertia(inertia: &Array2<f64>) -> IntegrateResult<Array2<f64>> {
         // Simple 3x3 matrix inversion
-        let det = _inertia[[0, 0]]
-            * (_inertia[[1, 1]] * _inertia[[2, 2]] - _inertia[[1, 2]] * _inertia[[2, 1]])
-            - _inertia[[0, 1]]
-                * (_inertia[[1, 0]] * _inertia[[2, 2]] - _inertia[[1, 2]] * _inertia[[2, 0]])
-            + _inertia[[0, 2]]
-                * (_inertia[[1, 0]] * _inertia[[2, 1]] - _inertia[[1, 1]] * _inertia[[2, 0]]);
+        let det = inertia[[0, 0]]
+            * (inertia[[1, 1]] * inertia[[2, 2]] - inertia[[1, 2]] * inertia[[2, 1]])
+            - inertia[[0, 1]]
+                * (inertia[[1, 0]] * inertia[[2, 2]] - inertia[[1, 2]] * inertia[[2, 0]])
+            + inertia[[0, 2]]
+                * (inertia[[1, 0]] * inertia[[2, 1]] - inertia[[1, 1]] * inertia[[2, 0]]);
 
         if det.abs() < 1e-10 {
             return Err(crate::error::IntegrateError::ValueError(
-                "Singular _inertia tensor".to_string(),
+                "Singular inertia tensor".to_string(),
             ));
         }
 
         let mut inv = Array2::zeros((3, 3));
         inv[[0, 0]] =
-            (_inertia[[1, 1]] * _inertia[[2, 2]] - _inertia[[1, 2]] * _inertia[[2, 1]]) / det;
+            (inertia[[1, 1]] * inertia[[2, 2]] - inertia[[1, 2]] * inertia[[2, 1]]) / det;
         inv[[0, 1]] =
-            (_inertia[[0, 2]] * _inertia[[2, 1]] - _inertia[[0, 1]] * _inertia[[2, 2]]) / det;
+            (inertia[[0, 2]] * inertia[[2, 1]] - inertia[[0, 1]] * inertia[[2, 2]]) / det;
         inv[[0, 2]] =
-            (_inertia[[0, 1]] * _inertia[[1, 2]] - _inertia[[0, 2]] * _inertia[[1, 1]]) / det;
+            (inertia[[0, 1]] * inertia[[1, 2]] - inertia[[0, 2]] * inertia[[1, 1]]) / det;
         inv[[1, 0]] =
-            (_inertia[[1, 2]] * _inertia[[2, 0]] - _inertia[[1, 0]] * _inertia[[2, 2]]) / det;
+            (inertia[[1, 2]] * inertia[[2, 0]] - inertia[[1, 0]] * inertia[[2, 2]]) / det;
         inv[[1, 1]] =
-            (_inertia[[0, 0]] * _inertia[[2, 2]] - _inertia[[0, 2]] * _inertia[[2, 0]]) / det;
+            (inertia[[0, 0]] * inertia[[2, 2]] - inertia[[0, 2]] * inertia[[2, 0]]) / det;
         inv[[1, 2]] =
-            (_inertia[[0, 2]] * _inertia[[1, 0]] - _inertia[[0, 0]] * _inertia[[1, 2]]) / det;
+            (inertia[[0, 2]] * inertia[[1, 0]] - inertia[[0, 0]] * inertia[[1, 2]]) / det;
         inv[[2, 0]] =
-            (_inertia[[1, 0]] * _inertia[[2, 1]] - _inertia[[1, 1]] * _inertia[[2, 0]]) / det;
+            (inertia[[1, 0]] * inertia[[2, 1]] - inertia[[1, 1]] * inertia[[2, 0]]) / det;
         inv[[2, 1]] =
-            (_inertia[[0, 1]] * _inertia[[2, 0]] - _inertia[[0, 0]] * _inertia[[2, 1]]) / det;
+            (inertia[[0, 1]] * inertia[[2, 0]] - inertia[[0, 0]] * inertia[[2, 1]]) / det;
         inv[[2, 2]] =
-            (_inertia[[0, 0]] * _inertia[[1, 1]] - _inertia[[0, 1]] * _inertia[[1, 0]]) / det;
+            (inertia[[0, 0]] * inertia[[1, 1]] - inertia[[0, 1]] * inertia[[1, 0]]) / det;
 
         Ok(inv)
     }
@@ -453,17 +453,17 @@ impl LieAlgebra for Se3 {
         6
     }
 
-    fn bracket(&self, _other: &Self) -> Self {
+    fn bracket(&self, other: &Self) -> Self {
         // [ξ1, ξ2] = ad_ξ1(ξ2)
         let omega_bracket = So3 {
             omega: self.omega.clone(),
         }
         .bracket(&So3 {
-            omega: _other.omega.clone(),
+            omega: other.omega.clone(),
         });
 
         let v_bracket =
-            self.cross_3d(&self.omega, &_other.v) - self.cross_3d(&_other.omega, &self.v);
+            self.cross_3d(&self.omega, &other.v) - self.cross_3d(&other.omega, &self.v);
 
         Se3 {
             v: v_bracket,
@@ -512,18 +512,18 @@ pub struct SE3 {
 impl ExponentialMap for SE3 {
     type Algebra = Se3;
 
-    fn exp(_algebra: &Self::Algebra) -> Self {
-        let omega_norm = _algebra.omega.dot(&_algebra.omega).sqrt();
+    fn exp(algebra: &Self::Algebra) -> Self {
+        let omega_norm = algebra.omega.dot(&algebra.omega).sqrt();
         let rotation = SO3::exp(&So3 {
-            omega: _algebra.omega.clone(),
+            omega: algebra.omega.clone(),
         });
 
         let translation = if omega_norm < 1e-10 {
             // Small angle: V ≈ I
-            _algebra.v.clone()
+            algebra.v.clone()
         } else {
             // General case: compute V matrix
-            let axis = &_algebra.omega / omega_norm;
+            let axis = &algebra.omega / omega_norm;
             let axis_cross = So3 {
                 omega: axis.clone(),
             }
@@ -534,7 +534,7 @@ impl ExponentialMap for SE3 {
                 + axis_cross * ((1.0 - omega_norm.cos()) / omega_norm)
                 + axis_cross2 * ((omega_norm - omega_norm.sin()) / omega_norm);
 
-            v_matrix.dot(&_algebra.v)
+            v_matrix.dot(&algebra.v)
         };
 
         SE3 {
@@ -544,8 +544,8 @@ impl ExponentialMap for SE3 {
     }
 
     fn log(&self) -> Self::Algebra {
-        let omega_algebra = self.rotation.log();
-        let omega = &omega_algebra.omega;
+        let omegaalgebra = self.rotation.log();
+        let omega = &omegaalgebra.omega;
         let omega_norm = omega.dot(omega).sqrt();
 
         let v = if omega_norm < 1e-10 {
@@ -569,14 +569,14 @@ impl ExponentialMap for SE3 {
 
         Se3 {
             v,
-            omega: omega_algebra.omega,
+            omega: omegaalgebra.omega,
         }
     }
 
-    fn multiply(&self, _other: &Self) -> Self {
+    fn multiply(&self, other: &Self) -> Self {
         SE3 {
-            rotation: self.rotation.multiply(&_other.rotation),
-            translation: &self.translation + &self.rotation.matrix.dot(&_other.translation),
+            rotation: self.rotation.multiply(&other.rotation),
+            translation: &self.translation + &self.rotation.matrix.dot(&other.translation),
         }
     }
 
@@ -606,9 +606,9 @@ pub struct SE3Integrator {
 
 impl SE3Integrator {
     /// Create a new SE(3) integrator
-    pub fn new(_dt: f64, method: LieGroupMethod) -> Self {
+    pub fn new(dt: f64, method: LieGroupMethod) -> Self {
         Self {
-            base: LieGroupIntegrator::new(_dt, method),
+            base: LieGroupIntegrator::new(dt, method),
         }
     }
 
@@ -663,7 +663,7 @@ impl SE3Integrator {
             omega[0] * i_omega[1] - omega[1] * i_omega[0],
         ]);
 
-        let inertia_inv = SO3Integrator::invert_inertia(inertia)?;
+        let inertia_inv = SO3Integrator::invertinertia(inertia)?;
 
         Ok(inertia_inv.dot(&(torque - &omega_cross_i_omega)))
     }
@@ -684,10 +684,10 @@ impl LieAlgebra for Sln {
         0 // This should be set dynamically based on n
     }
 
-    fn bracket(&self, _other: &Self) -> Self {
+    fn bracket(&self, other: &Self) -> Self {
         // Matrix commutator [A, B] = AB - BA
-        let ab = self.matrix.dot(&_other.matrix);
-        let ba = _other.matrix.dot(&self.matrix);
+        let ab = self.matrix.dot(&other.matrix);
+        let ba = other.matrix.dot(&self.matrix);
         Sln {
             n: self.n,
             matrix: ab - ba,
@@ -749,12 +749,12 @@ pub struct SLn {
 impl ExponentialMap for SLn {
     type Algebra = Sln;
 
-    fn exp(_algebra: &Self::Algebra) -> Self {
+    fn exp(algebra: &Self::Algebra) -> Self {
         // Matrix exponential for SL(n)
         // Use scaling and squaring method
-        let n = _algebra.n;
-        let a = &_algebra.matrix;
-        let norm = _algebra.norm();
+        let n = algebra.n;
+        let a = &algebra.matrix;
+        let norm = algebra.norm();
 
         // Scaling
         let s = (norm.log2().ceil() as i32).max(0);
@@ -811,10 +811,10 @@ impl ExponentialMap for SLn {
         Sln { n, matrix: log_m }
     }
 
-    fn multiply(&self, _other: &Self) -> Self {
+    fn multiply(&self, other: &Self) -> Self {
         SLn {
             n: self.n,
-            matrix: self.matrix.dot(&_other.matrix),
+            matrix: self.matrix.dot(&other.matrix),
         }
     }
 
@@ -932,9 +932,9 @@ impl LieAlgebra for Sp2n {
         0 // Set dynamically based on n
     }
 
-    fn bracket(&self, _other: &Self) -> Self {
-        let ab = self.matrix.dot(&_other.matrix);
-        let ba = _other.matrix.dot(&self.matrix);
+    fn bracket(&self, other: &Self) -> Self {
+        let ab = self.matrix.dot(&other.matrix);
+        let ba = other.matrix.dot(&self.matrix);
         Sp2n {
             n: self.n,
             matrix: ab - ba,
@@ -1079,12 +1079,12 @@ impl LieAlgebra for HeisenbergAlgebra {
         3
     }
 
-    fn bracket(&self, _other: &Self) -> Self {
+    fn bracket(&self, other: &Self) -> Self {
         // [·,·] gives only central component
         HeisenbergAlgebra {
             p: 0.0,
             q: 0.0,
-            z: self.p * _other.q - self.q * _other.p,
+            z: self.p * other.q - self.q * other.p,
         }
     }
 
@@ -1119,13 +1119,13 @@ pub struct HeisenbergGroup {
 impl ExponentialMap for HeisenbergGroup {
     type Algebra = HeisenbergAlgebra;
 
-    fn exp(_algebra: &Self::Algebra) -> Self {
+    fn exp(algebra: &Self::Algebra) -> Self {
         // Exponential map for Heisenberg group
         // exp(p, q, z) = (p, q, z + pq/2)
         HeisenbergGroup {
-            p: _algebra.p,
-            q: _algebra.q,
-            z: _algebra.z + _algebra.p * _algebra.q / 2.0,
+            p: algebra.p,
+            q: algebra.q,
+            z: algebra.z + algebra.p * algebra.q / 2.0,
         }
     }
 
@@ -1138,12 +1138,12 @@ impl ExponentialMap for HeisenbergGroup {
         }
     }
 
-    fn multiply(&self, _other: &Self) -> Self {
+    fn multiply(&self, other: &Self) -> Self {
         // Group multiplication with Baker-Campbell-Hausdorff formula
         HeisenbergGroup {
-            p: self.p + _other.p,
-            q: self.q + _other.q,
-            z: self.z + _other.z + self.p * _other.q,
+            p: self.p + other.p,
+            q: self.q + other.q,
+            z: self.z + other.z + self.p * other.q,
         }
     }
 
@@ -1176,10 +1176,10 @@ pub struct GLn {
 impl ExponentialMap for GLn {
     type Algebra = Gln;
 
-    fn exp(_algebra: &Self::Algebra) -> Self {
+    fn exp(algebra: &Self::Algebra) -> Self {
         // Matrix exponential
-        let n = _algebra.n;
-        let exp_matrix = matrix_exponential(&_algebra.matrix);
+        let n = algebra.n;
+        let exp_matrix = matrix_exponential(&algebra.matrix);
         GLn {
             n,
             matrix: exp_matrix,
@@ -1195,10 +1195,10 @@ impl ExponentialMap for GLn {
         }
     }
 
-    fn multiply(&self, _other: &Self) -> Self {
+    fn multiply(&self, other: &Self) -> Self {
         GLn {
             n: self.n,
-            matrix: self.matrix.dot(&_other.matrix),
+            matrix: self.matrix.dot(&other.matrix),
         }
     }
 
@@ -1233,9 +1233,9 @@ impl LieAlgebra for Gln {
         0 // Set dynamically
     }
 
-    fn bracket(&self, _other: &Self) -> Self {
-        let ab = self.matrix.dot(&_other.matrix);
-        let ba = _other.matrix.dot(&self.matrix);
+    fn bracket(&self, other: &Self) -> Self {
+        let ab = self.matrix.dot(&other.matrix);
+        let ba = other.matrix.dot(&self.matrix);
         Gln {
             n: self.n,
             matrix: ab - ba,

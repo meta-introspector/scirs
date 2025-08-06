@@ -161,7 +161,7 @@ impl BackendOp<f32, ndarray::Ix2> for CustomBlurOp {
         elements * std::mem::size_of::<f32>() * (2 + self.iterations)
     }
 
-    fn benefits_from_gpu(&self, array_size: usize) -> bool {
+    fn benefits_from_gpu(&self, arraysize: usize) -> bool {
         // Multiple iterations benefit more from GPU
         array_size > 50_000 || (array_size > 10_000 && self.iterations > 3)
     }

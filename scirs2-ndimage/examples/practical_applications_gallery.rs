@@ -816,7 +816,7 @@ struct LatticeInfo {
 // Helper function implementations (simplified for demonstration)
 
 #[allow(dead_code)]
-fn create_medical_scan_simulation(_height: usize, width: usize) -> Array2<f64> {
+fn create_medical_scan_simulation(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -841,14 +841,14 @@ fn create_medical_scan_simulation(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn enhance_medical_contrast(_image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
+fn enhance_medical_contrast(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
     let stats = compute_image_stats(_image);
     let mean = stats.2;
     Ok(_image.mapv(|x| ((x - mean) * 1.5 + mean).clamp(0.0, 1.0)))
 }
 
 #[allow(dead_code)]
-fn create_angiogram_simulation(_height: usize, width: usize) -> Array2<f64> {
+fn create_angiogram_simulation(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -875,14 +875,14 @@ fn create_angiogram_simulation(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn skeletonize_vessels(_vessel_mask: &Array2<u8>) -> NdimageResult<Array2<u8>> {
+fn skeletonize_vessels(_vesselmask: &Array2<u8>) -> NdimageResult<Array2<u8>> {
     // Simplified skeletonization
     Ok(_vessel_mask.clone())
 }
 
 #[allow(dead_code)]
-fn analyze_vessel_network(_skeleton: &Array2<u8>) -> NdimageResult<VesselStats> {
-    let total_length = _skeleton.iter().sum::<u8>() as f64;
+fn analyze_vessel_network(skeleton: &Array2<u8>) -> NdimageResult<VesselStats> {
+    let total_length = skeleton.iter().sum::<u8>() as f64;
     Ok(VesselStats {
         total_length,
         branch_points: 15, // Simplified
@@ -891,7 +891,7 @@ fn analyze_vessel_network(_skeleton: &Array2<u8>) -> NdimageResult<VesselStats> 
 }
 
 #[allow(dead_code)]
-fn create_microscopy_simulation(_height: usize, width: usize) -> Array2<f64> {
+fn create_microscopy_simulation(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -918,13 +918,13 @@ fn create_microscopy_simulation(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn estimate_perimeter(_prop: &crate::measurements::RegionProperties) -> f64 {
+fn estimate_perimeter(prop: &crate::measurements::RegionProperties) -> f64 {
     // Simplified perimeter estimation
     4.0 * (_prop.area / std::f64::consts::PI).sqrt()
 }
 
 #[allow(dead_code)]
-fn create_surface_inspection_simulation(_height: usize, width: usize) -> Array2<f64> {
+fn create_surface_inspection_simulation(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -949,7 +949,7 @@ fn create_surface_inspection_simulation(_height: usize, width: usize) -> Array2<
 }
 
 #[allow(dead_code)]
-fn create_part_measurement_simulation(_height: usize, width: usize) -> Array2<f64> {
+fn create_part_measurement_simulation(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -964,7 +964,7 @@ fn create_part_measurement_simulation(_height: usize, width: usize) -> Array2<f6
 }
 
 #[allow(dead_code)]
-fn create_pcb_simulation(_height: usize, width: usize) -> Array2<f64> {
+fn create_pcb_simulation(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -990,12 +990,12 @@ fn create_pcb_simulation(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn detect_pcb_components(_pcb_image: &Array2<f64>) -> NdimageResult<ComponentStats> {
-    Ok(ComponentStats { num_components: 12 })
+fn detect_pcb_components(_pcbimage: &Array2<f64>) -> NdimageResult<ComponentStats> {
+    Ok(ComponentStats { numcomponents: 12 })
 }
 
 #[allow(dead_code)]
-fn detect_pcb_traces(_pcb_image: &Array2<f64>) -> NdimageResult<TraceStats> {
+fn detect_pcb_traces(_pcbimage: &Array2<f64>) -> NdimageResult<TraceStats> {
     Ok(TraceStats {
         total_length: 850.0,
     })
@@ -1013,7 +1013,7 @@ fn analyze_pcb_defects(
 }
 
 #[allow(dead_code)]
-fn create_satellite_bands_simulation(_height: usize, width: usize) -> (Array2<f64>, Array2<f64>) {
+fn create_satellite_bands_simulation(height: usize, width: usize) -> (Array2<f64>, Array2<f64>) {
     let red_band = Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -1046,7 +1046,7 @@ fn create_satellite_bands_simulation(_height: usize, width: usize) -> (Array2<f6
 }
 
 #[allow(dead_code)]
-fn create_multispectral_simulation(_height: usize, width: usize) -> Array2<f64> {
+fn create_multispectral_simulation(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -1063,7 +1063,7 @@ fn create_multispectral_simulation(_height: usize, width: usize) -> Array2<f64> 
 }
 
 #[allow(dead_code)]
-fn create_cloudy_satellite_simulation(_height: usize, width: usize) -> Array2<f64> {
+fn create_cloudy_satellite_simulation(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -1092,7 +1092,7 @@ fn detect_cloud_shadows(
 }
 
 #[allow(dead_code)]
-fn create_scene_simulation(_height: usize, width: usize) -> Array2<f64> {
+fn create_scene_simulation(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -1113,7 +1113,7 @@ fn create_scene_simulation(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_document_simulation(_height: usize, width: usize) -> Array2<f64> {
+fn create_document_simulation(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -1165,7 +1165,7 @@ fn compute_local_edge_density(
 }
 
 #[allow(dead_code)]
-fn segmenttext_lines(text_mask: &Array2<u8>) -> NdimageResult<Array2<u32>> {
+fn segmenttext_lines(textmask: &Array2<u8>) -> NdimageResult<Array2<u32>> {
     label(&text_mask.view(), None).map(|(labeled_)| labeled)
 }
 
@@ -1183,7 +1183,7 @@ fn analyze_document_layout(
 }
 
 #[allow(dead_code)]
-fn create_portrait_simulation(_height: usize, width: usize) -> Array2<f64> {
+fn create_portrait_simulation(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -1198,7 +1198,7 @@ fn create_portrait_simulation(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn detect_skin_regions(_image: &Array2<f64>) -> NdimageResult<Array2<u8>> {
+fn detect_skin_regions(image: &Array2<f64>) -> NdimageResult<Array2<u8>> {
     Ok(_image.mapv(|x| if x > 0.5 && x < 0.8 { 1u8 } else { 0u8 }))
 }
 
@@ -1207,7 +1207,7 @@ fn detect_face_candidates(
     image: &Array2<f64>,
     skin_mask: &Array2<u8>,
 ) -> NdimageResult<FaceCandidates> {
-    Ok(FaceCandidates { num_candidates: 3 })
+    Ok(FaceCandidates { numcandidates: 3 })
 }
 
 #[allow(dead_code)]
@@ -1223,7 +1223,7 @@ fn validate_face_candidates(
 }
 
 #[allow(dead_code)]
-fn create_particle_simulation(_height: usize, width: usize) -> Array2<f64> {
+fn create_particle_simulation(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -1249,7 +1249,7 @@ fn create_particle_simulation(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_astronomy_simulation(_height: usize, width: usize) -> Array2<f64> {
+fn create_astronomy_simulation(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -1279,7 +1279,7 @@ fn create_astronomy_simulation(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn detect_local_maxima(_image: &Array2<f64>, threshold: f64) -> NdimageResult<Array2<u8>> {
+fn detect_local_maxima(image: &Array2<f64>, threshold: f64) -> NdimageResult<Array2<u8>> {
     Ok(_image.mapv(|x| if x > threshold { 1u8 } else { 0u8 }))
 }
 
@@ -1308,7 +1308,7 @@ fn perform_star_photometry(
 }
 
 #[allow(dead_code)]
-fn create_crystal_simulation(_height: usize, width: usize) -> Array2<f64> {
+fn create_crystal_simulation(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         // Create periodic lattice pattern
         let period = 20.0;
@@ -1326,7 +1326,7 @@ fn create_crystal_simulation(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn detect_crystal_lattice(_image: &Array2<f64>) -> NdimageResult<LatticeInfo> {
+fn detect_crystal_lattice(image: &Array2<f64>) -> NdimageResult<LatticeInfo> {
     Ok(LatticeInfo {
         spacing: 20.0,
         angle: 0.0,
@@ -1353,14 +1353,14 @@ fn detect_crystal_defects(
 }
 
 #[allow(dead_code)]
-fn create_watershed_markers(_distance_map: &Array2<f64>, threshold: f64) -> Array2<u32> {
+fn create_watershed_markers(_distancemap: &Array2<f64>, threshold: f64) -> Array2<u32> {
     let mut markers = Array2::zeros(_distance_map.dim());
     let mut label = 1u32;
 
-    let (height, width) = _distance_map.dim();
+    let (height, width) = distance_map.dim();
     for i in 1..height - 1 {
         for j in 1..width - 1 {
-            if _distance_map[[i, j]] > threshold {
+            if distance_map[[i, j]] > threshold {
                 markers[[i, j]] = label;
                 label += 1;
             }
@@ -1371,9 +1371,9 @@ fn create_watershed_markers(_distance_map: &Array2<f64>, threshold: f64) -> Arra
 }
 
 #[allow(dead_code)]
-fn compute_image_stats(_image: &Array2<f64>) -> (f64, f64, f64) {
-    let min = _image.fold(f64::INFINITY, |acc, &x| acc.min(x));
-    let max = _image.fold(f64::NEG_INFINITY, |acc, &x| acc.max(x));
-    let mean = _image.sum() / _image.len() as f64;
+fn compute_image_stats(image: &Array2<f64>) -> (f64, f64, f64) {
+    let min = image.fold(f64::INFINITY, |acc, &x| acc.min(x));
+    let max = image.fold(f64::NEG_INFINITY, |acc, &x| acc.max(x));
+    let mean = image.sum() / image.len() as f64;
     (min, max, mean)
 }

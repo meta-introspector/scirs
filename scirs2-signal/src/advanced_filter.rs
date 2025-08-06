@@ -6,7 +6,7 @@ use ndarray::s;
 // filter optimization techniques.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use scirs2_linalg::solve;
 use std::f64::consts::PI;
@@ -511,8 +511,8 @@ pub fn minimax_design(
 
 /// Estimate required filter order from specifications
 #[allow(dead_code)]
-fn estimate_filter_order(_spec: &FilterSpec) -> SignalResult<usize> {
-    if _spec.passband_freqs.is_empty() || _spec.stopband_freqs.is_empty() {
+fn estimate_filter_order(spec: &FilterSpec) -> SignalResult<usize> {
+    if spec.passband_freqs.is_empty() || spec.stopband_freqs.is_empty() {
         return Err(SignalError::ValueError(
             "Missing frequency specifications".to_string(),
         ));
@@ -524,19 +524,19 @@ fn estimate_filter_order(_spec: &FilterSpec) -> SignalResult<usize> {
     let delta_s = 10.0_f64.powf(-_spec.stopband_attenuation / 20.0);
     let delta = delta_p.min(delta_s);
 
-    let transition_width = match _spec.filter_type {
+    let transition_width = match spec.filter_type {
         FilterType::Lowpass | FilterType::Highpass => {
-            (_spec.stopband_freqs[0] - _spec.passband_freqs[0]).abs()
+            (_spec.stopband_freqs[0] - spec.passband_freqs[0]).abs()
         }
         FilterType::Bandpass | FilterType::Bandstop => {
-            let width1 = (_spec.passband_freqs[0] - _spec.stopband_freqs[0]).abs();
-            let width2 = (_spec.stopband_freqs[1] - _spec.passband_freqs[1]).abs();
+            let width1 = (_spec.passband_freqs[0] - spec.stopband_freqs[0]).abs();
+            let width2 = (_spec.stopband_freqs[1] - spec.passband_freqs[1]).abs();
             width1.min(width2)
         }
-        _ => _spec.sample_rate * 0.1, // Default 10% of sample rate
+        _ => spec.sample_rate * 0.1, // Default 10% of sample rate
     };
 
-    let normalized_width = transition_width / _spec.sample_rate;
+    let normalized_width = transition_width / spec.sample_rate;
 
     // Kaiser's formula
     let a = -20.0 * delta.log10();
@@ -646,14 +646,14 @@ fn create_design_grid(
 
 /// Initialize extremal frequencies for Parks-McClellan algorithm
 #[allow(dead_code)]
-fn initialize_extremal_frequencies(_freq_grid: &Array1<f64>, num_extremal: usize) -> Array1<f64> {
-    let grid_len = _freq_grid.len();
+fn initialize_extremal_frequencies(_freq_grid: &Array1<f64>, numextremal: usize) -> Array1<f64> {
+    let grid_len = freq_grid.len();
     let mut _extremal = Array1::zeros(num_extremal);
 
     // Evenly space _extremal frequencies across the _grid
     for i in 0..num_extremal {
         let idx = (i * (grid_len - 1)) / (num_extremal - 1);
-        _extremal[i] = _freq_grid[idx];
+        extremal[i] = freq_grid[idx];
     }
 
     _extremal
@@ -852,6 +852,7 @@ fn compute_frequency_response(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_filter_order_estimation() {

@@ -229,8 +229,8 @@ where
 
 /// SR1 update formula for Hessian approximation B
 #[allow(dead_code)]
-fn update_sr1(_b_mat: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>) {
-    if let Some(b) = _b_mat.as_mut() {
+fn update_sr1(_bmat: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>) {
+    if let Some(b) = b_mat.as_mut() {
         let bs = b.dot(s);
         let v = y - &bs;
         let denom = v.dot(s);
@@ -248,8 +248,8 @@ fn update_sr1(_b_mat: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>
 
 /// DFP update formula for inverse Hessian approximation H
 #[allow(dead_code)]
-fn update_dfp(_h_inv: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>) {
-    if let Some(h) = _h_inv.as_mut() {
+fn update_dfp(_hinv: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>) {
+    if let Some(h) = h_inv.as_mut() {
         let s_dot_y = s.dot(y);
 
         if s_dot_y > 1e-10 {
@@ -276,8 +276,8 @@ fn update_dfp(_h_inv: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>
 
 /// BFGS update formula for inverse Hessian approximation H
 #[allow(dead_code)]
-fn update_bfgs(_h_inv: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>, n: usize) {
-    if let Some(h) = _h_inv.as_mut() {
+fn update_bfgs(_hinv: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64>, n: usize) {
+    if let Some(h) = h_inv.as_mut() {
         let s_dot_y = s.dot(y);
 
         if s_dot_y > 1e-10 {
@@ -305,9 +305,9 @@ fn update_bfgs(_h_inv: &mut Option<Array2<f64>>, s: &Array1<f64>, y: &Array1<f64
 
 /// Simple matrix inversion using LU decomposition (for small matrices)
 #[allow(dead_code)]
-fn invert_matrix(_mat: &Array2<f64>) -> Result<Array2<f64>, OptimizeError> {
-    let n = _mat.nrows();
-    if n != _mat.ncols() {
+fn invert_matrix(mat: &Array2<f64>) -> Result<Array2<f64>, OptimizeError> {
+    let n = mat.nrows();
+    if n != mat.ncols() {
         return Err(OptimizeError::ValueError(
             "Matrix must be square".to_string(),
         ));
@@ -320,7 +320,7 @@ fn invert_matrix(_mat: &Array2<f64>) -> Result<Array2<f64>, OptimizeError> {
     // Create augmented matrix [A | I]
     for i in 0..n {
         for j in 0..n {
-            aug[[i, j]] = _mat[[i, j]];
+            aug[[i, j]] = mat[[i, j]];
             if i == j {
                 aug[[i, j + n]] = 1.0;
             }

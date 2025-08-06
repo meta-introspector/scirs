@@ -292,7 +292,7 @@ where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     // K = P * H^T * S^-1
-    let temp = _covariance.dot(&observation_matrix.t());
+    let temp = covariance.dot(&observation_matrix.t());
 
     // Use pseudo-inverse for numerical stability
     let inv_innovation = pseudo_inverse(innovation_covariance)?;
@@ -301,11 +301,11 @@ where
 
 /// Matrix inversion using LU decomposition with partial pivoting
 #[allow(dead_code)]
-fn matrix_inverse<F>(_matrix: &Array2<F>) -> Result<Array2<F>>
+fn matrix_inverse<F>(matrix: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    let (m, n) = _matrix.dim();
+    let (m, n) = matrix.dim();
     if m != n {
         return Err(TimeSeriesError::InvalidInput(
             "Matrix must be square for inversion".to_string(),
@@ -320,7 +320,7 @@ where
     let mut is_diagonal = true;
     for i in 0..m {
         for j in 0..n {
-            if i != j && _matrix[[i, j]].abs() > F::from(1e-12).unwrap() {
+            if i != j && matrix[[i, j]].abs() > F::from(1e-12).unwrap() {
                 is_diagonal = false;
                 break;
             }
@@ -334,7 +334,7 @@ where
         // For diagonal matrices, invert the diagonal elements
         let mut inv = Array2::zeros((m, n));
         for i in 0..m {
-            let diag = _matrix[[i, i]];
+            let diag = matrix[[i, i]];
             if diag.abs() < F::from(1e-12).unwrap() {
                 return Err(TimeSeriesError::NumericalInstability(
                     "Singular _matrix: zero diagonal element".to_string(),
@@ -346,7 +346,7 @@ where
     }
 
     // General case: LU decomposition with partial pivoting
-    let mut lu = _matrix.clone();
+    let mut lu = matrix.clone();
     let mut perm = (0..n).collect::<Vec<_>>();
     let mut identity = Array2::eye(n);
 
@@ -427,11 +427,11 @@ where
 
 /// Pseudo-inverse implementation using the matrix inverse with regularization
 #[allow(dead_code)]
-fn pseudo_inverse<F>(_matrix: &Array2<F>) -> Result<Array2<F>>
+fn pseudo_inverse<F>(matrix: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    let (m, n) = _matrix.dim();
+    let (m, n) = matrix.dim();
 
     if m == n {
         // Square _matrix - try direct inversion
@@ -445,7 +445,7 @@ where
 
     // For non-square or singular matrices, use (A'A + λI)^(-1) A'
     let regularization = F::from(1e-8).unwrap();
-    let at = _matrix.t();
+    let at = matrix.t();
     let ata = at.dot(_matrix);
 
     // Add regularization to diagonal
@@ -475,12 +475,12 @@ where
 
 /// Calculate log determinant of a matrix using LU decomposition
 #[allow(dead_code)]
-fn matrix_log_determinant<F>(_matrix: &Array2<F>) -> F
+fn matrix_log_determinant<F>(matrix: &Array2<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    let n = _matrix.nrows();
-    if n != _matrix.ncols() {
+    let n = matrix.nrows();
+    if n != matrix.ncols() {
         return F::neg_infinity(); // Invalid _matrix
     }
 
@@ -489,7 +489,7 @@ where
     }
 
     // Create working copy for LU decomposition
-    let mut lu = _matrix.clone();
+    let mut lu = matrix.clone();
     let mut sign = F::one();
 
     // LU decomposition with partial pivoting
@@ -516,7 +516,7 @@ where
             sign = -sign; // Row swap changes determinant sign
         }
 
-        // Check for zero pivot (singular _matrix)
+        // Check for zero pivot (singular matrix)
         if lu[[col, col]].abs() < F::from(1e-12).unwrap() {
             return F::neg_infinity(); // log(0) = -infinity
         }
@@ -568,10 +568,10 @@ where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     /// Create a local level model (random walk plus noise)
-    pub fn local_level(_sigma_level: F, sigma_obs: F) -> Result<Self> {
+    pub fn local_level(_sigma_level: F, sigmaobs: F) -> Result<Self> {
         let transition = StateTransition {
             transition_matrix: Array2::eye(1),
-            process_noise: Array2::from_elem((1, 1), _sigma_level * _sigma_level),
+            process_noise: Array2::from_elem((1, 1), _sigma_level * sigma_level),
         };
 
         let observation = ObservationModel {
@@ -588,7 +588,7 @@ where
     }
 
     /// Create a local linear trend model
-    pub fn local_linear_trend(_sigma_level: F, sigma_trend: F, sigma_obs: F) -> Result<Self> {
+    pub fn local_linear_trend(_sigma_level: F, sigma_trend: F, sigmaobs: F) -> Result<Self> {
         // State: [_level_trend]
         let transition_matrix = Array2::fromshape_vec(
             (2, 2),
@@ -959,9 +959,9 @@ where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     /// Create a new dynamic linear model
-    pub fn new(_transition: StateTransition<F>, observation: ObservationModel<F>) -> Self {
+    pub fn new(transition: StateTransition<F>, observation: ObservationModel<F>) -> Self {
         Self {
-            _transition,
+            transition,
             observation,
             control: None,
             control_matrix: None,
@@ -969,7 +969,7 @@ where
     }
 
     /// Add control input
-    pub fn with_control(mut self, control: Array2<F>, control_matrix: Array2<F>) -> Self {
+    pub fn with_control(mut self, control: Array2<F>, controlmatrix: Array2<F>) -> Self {
         self.control = Some(control);
         self.control_matrix = Some(control_matrix);
         self

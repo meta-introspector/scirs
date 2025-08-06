@@ -499,12 +499,12 @@ where
 
 // Helper function for 2D array validation
 #[allow(dead_code)]
-fn checkarray_finite_2d<F, D>(_arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
+fn checkarray_finite_2d<F, D>(arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
 where
     F: Float,
     D: Data<Elem = F>,
 {
-    for &val in _arr.iter() {
+    for &val in arr.iter() {
         if !val.is_finite() {
             return Err(StatsError::InvalidArgument(format!(
                 "{} contains non-finite values",

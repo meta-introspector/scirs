@@ -26,7 +26,7 @@ pub struct GPUQuantumSolver {
 
 impl GPUQuantumSolver {
     /// Create new GPU quantum solver
-    pub fn new(device_id: usize, max_qubits: usize) -> Result<Self> {
+    pub fn new(device_id: usize, maxqubits: usize) -> Result<Self> {
         let memory_allocation = 1_000_000_000; // 1GB default
         let parallel_strategy = QuantumParallelStrategy::StateVectorParallel;
         let memory_manager = GPUMemoryManager::new(memory_allocation)?;
@@ -35,7 +35,7 @@ impl GPUQuantumSolver {
             device_id,
             memory_allocation,
             parallel_strategy,
-            max_qubits,
+            max_qubits: maxqubits,
             memory_manager,
         })
     }
@@ -278,15 +278,15 @@ pub struct GPUMultiBodyQuantumSolver {
 
 impl GPUMultiBodyQuantumSolver {
     /// Create new GPU multi-body quantum solver
-    pub fn new(device_id: usize, n_particles: usize) -> Result<Self> {
-        let max_qubits = n_particles * 2; // Assume 2 qubits per particle
+    pub fn new(device_id: usize, nparticles: usize) -> Result<Self> {
+        let max_qubits = nparticles * 2; // Assume 2 qubits per particle
         let base_solver = GPUQuantumSolver::new(device_id, max_qubits)?;
         let interaction_cache = HashMap::new();
-        let tensor_network = TensorNetwork::new(n_particles);
+        let tensor_network = TensorNetwork::new(nparticles);
 
         Ok(Self {
             base_solver,
-            n_particles,
+            n_particles: nparticles,
             interaction_cache,
             tensor_network,
         })
@@ -437,9 +437,9 @@ pub struct GPUMemoryManager {
 
 impl GPUMemoryManager {
     /// Create new GPU memory manager
-    pub fn new(total_memory: usize) -> Result<Self> {
+    pub fn new(totalmemory: usize) -> Result<Self> {
         Ok(Self {
-            total_memory,
+            total_memory: totalmemory,
             allocated_memory: 0,
             allocations: HashMap::new(),
         })
@@ -501,12 +501,12 @@ pub struct TensorNetwork {
 
 impl TensorNetwork {
     /// Create new tensor network
-    pub fn new(n_particles: usize) -> Self {
-        let tensors = vec![Array2::zeros((2, 2)); n_particles];
-        let bond_dimensions = vec![2; n_particles - 1];
+    pub fn new(nparticles: usize) -> Self {
+        let tensors = vec![Array2::zeros((2, 2)); nparticles];
+        let bond_dimensions = vec![2; nparticles - 1];
 
         Self {
-            n_particles,
+            n_particles: nparticles,
             tensors,
             bond_dimensions,
         }

@@ -337,7 +337,7 @@ where
     }
 
     // Count non-zero coefficients before compression
-    let (original_nonzeros_) = count_nonzeros_multilevel(&coeffs, true);
+    let (original_nonzeros, _) = count_nonzeros_multilevel(&coeffs, true);
 
     // Calculate threshold to achieve target compression _ratio
     if compression_ratio > 0.0 {
@@ -374,7 +374,7 @@ where
     }
 
     // Count non-zero coefficients after compression
-    let (compressed_nonzeros_) = count_nonzeros_multilevel(&coeffs, true);
+    let (compressed_nonzeros, _) = count_nonzeros_multilevel(&coeffs, true);
 
     // Calculate actual compression _ratio achieved
     let actual_ratio = if original_nonzeros > 0 {
@@ -391,14 +391,14 @@ where
 
 /// Helper function to calculate statistics of detail coefficients.
 #[allow(dead_code)]
-fn calculate_detail_stats(_decomp: &Dwt2dResult) -> (usize, WaveletEnergy) {
-    let detail_h_count = _decomp.detail_h.iter().filter(|&&x| x != 0.0).count();
-    let detail_v_count = _decomp.detail_v.iter().filter(|&&x| x != 0.0).count();
-    let detail_d_count = _decomp.detail_d.iter().filter(|&&x| x != 0.0).count();
+fn calculate_detail_stats(decomp: &Dwt2dResult) -> (usize, WaveletEnergy) {
+    let detail_h_count = decomp.detail_h.iter().filter(|&&x| x != 0.0).count();
+    let detail_v_count = decomp.detail_v.iter().filter(|&&x| x != 0.0).count();
+    let detail_d_count = decomp.detail_d.iter().filter(|&&x| x != 0.0).count();
 
-    let detail_h_energy = _decomp.detail_h.iter().map(|&x| x * x).sum();
-    let detail_v_energy = _decomp.detail_v.iter().map(|&x| x * x).sum();
-    let detail_d_energy = _decomp.detail_d.iter().map(|&x| x * x).sum();
+    let detail_h_energy = decomp.detail_h.iter().map(|&x| x * x).sum();
+    let detail_v_energy = decomp.detail_v.iter().map(|&x| x * x).sum();
+    let detail_d_energy = decomp.detail_d.iter().map(|&x| x * x).sum();
 
     let total_count = detail_h_count + detail_v_count + detail_d_count;
 
@@ -414,9 +414,9 @@ fn calculate_detail_stats(_decomp: &Dwt2dResult) -> (usize, WaveletEnergy) {
 
 /// Helper function to estimate noise variance from detail coefficients.
 #[allow(dead_code)]
-fn estimate_noise_variance(_coeffs: &Array2<f64>) -> f64 {
+fn estimate_noise_variance(coeffs: &Array2<f64>) -> f64 {
     // Median Absolute Deviation (MAD) estimator
-    let mut abs_coeffs: Vec<f64> = _coeffs.iter().map(|&x: &f64| x.abs()).collect();
+    let mut abs_coeffs: Vec<f64> = coeffs.iter().map(|&x: &f64| x.abs()).collect();
     abs_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     if abs_coeffs.is_empty() {
@@ -474,7 +474,7 @@ fn threshold_coefficients(
         // Optionally threshold approximation coefficients
         // (usually not done for the coarsest level)
         if !keep_approx && i > 0 {
-            for a in level._approx.iter_mut() {
+            for a in level.approx.iter_mut() {
                 *a = apply_threshold(*a, threshold, method);
             }
         }
@@ -502,7 +502,7 @@ fn apply_threshold(x: f64, threshold: f64, method: ThresholdMethod) -> f64 {
 
 /// Count non-zero coefficients in a multi-level wavelet decomposition.
 #[allow(dead_code)]
-fn count_nonzeros_multilevel(_coeffs: &[Dwt2dResult], include_approx: bool) -> (usize, Vec<usize>) {
+fn count_nonzeros_multilevel(_coeffs: &[Dwt2dResult], includeapprox: bool) -> (usize, Vec<usize>) {
     let mut total_nonzeros = 0;
     let mut level_counts = Vec::with_capacity(_coeffs.len());
 
@@ -511,7 +511,7 @@ fn count_nonzeros_multilevel(_coeffs: &[Dwt2dResult], include_approx: bool) -> (
 
         // Count approximation coefficients if requested
         if include_approx {
-            level_count += level._approx.iter().filter(|&&x| x != 0.0).count();
+            level_count += level.approx.iter().filter(|&&x| x != 0.0).count();
         }
 
         // Count detail coefficients
@@ -541,6 +541,7 @@ pub struct WaveletEnergy {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_denoise_image() {

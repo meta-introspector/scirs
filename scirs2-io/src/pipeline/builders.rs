@@ -53,7 +53,7 @@ where
     }
 
     /// Enable caching
-    pub fn with_cache(mut self, cache_dir: impl AsRef<Path>) -> Self {
+    pub fn with_cache(mut self, cachedir: impl AsRef<Path>) -> Self {
         self.config.enable_cache = true;
         self.config.cache_dir = Some(cache_dir.as_ref().to_path_buf());
         self
@@ -183,7 +183,7 @@ where
     I: 'static + Send + Sync,
 {
     /// Create a new branching pipeline builder
-    pub fn new<F>(_selector: F) -> Self
+    pub fn new<F>(selector: F) -> Self
     where
         F: Fn(&I) -> String + Send + Sync + 'static,
     {
@@ -294,7 +294,7 @@ where
     O: 'static + Send + Sync,
 {
     /// Create a new parallel pipeline builder
-    pub fn new<F>(_combiner: F) -> Self
+    pub fn new<F>(combiner: F) -> Self
     where
         F: Fn(Vec<O>) -> Result<O> + Send + Sync + 'static,
     {

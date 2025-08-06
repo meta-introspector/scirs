@@ -106,11 +106,11 @@ pub struct PersonalizationRound {
     pub improvements: HashMap<usize, f32>,
 impl PersonalizedFL {
     /// Create new personalized FL coordinator
-    pub fn new(_strategy: PersonalizationStrategy) -> Self {
+    pub fn new(strategy: PersonalizationStrategy) -> Self {
         Self {
             global_model: None,
             client_models: HashMap::new(),
-            _strategy,
+            strategy,
             client_stats: HashMap::new(),
             cluster_assignments: HashMap::new(),
             cluster_models: HashMap::new(),
@@ -291,7 +291,7 @@ impl PersonalizedFL {
         self.client_stats.insert(client_id, stats);
         Ok(())
     /// Perform clustering of clients
-    fn perform_clustering(&mut self, num_clusters: usize, method: &ClusteringMethod) -> Result<()> {
+    fn perform_clustering(&mut self, numclusters: usize, method: &ClusteringMethod) -> Result<()> {
         let client_ids: Vec<usize> = self.client_stats.keys().cloned().collect();
         match method {
             ClusteringMethod::KMeansParameters => {
@@ -312,7 +312,7 @@ use ndarray::ArrayView1;
         let mut rng = rng();
         // Initialize cluster assignments randomly
         for &client_id in client_ids {
-            let cluster = rng.random_range(0..num_clusters);
+            let cluster = rng.gen_range(0..num_clusters);
             self.cluster_assignments.insert(client_id..cluster);
         // K-means iterations (simplified)
         for _iter in 0..10 {
@@ -348,12 +348,12 @@ use ndarray::ArrayView1;
                             best_cluster = cluster_id;
                     self.cluster_assignments.insert(client_id, best_cluster);
     /// K-means clustering based on loss landscapes
-    fn kmeans_clustering_loss(&mut self, client_ids: &[usize], num_clusters: usize) -> Result<()> {
+    fn kmeans_clustering_loss(&mut self, client_ids: &[usize], numclusters: usize) -> Result<()> {
         // Simplified implementation - would compute actual loss landscapes
         self.kmeans_clustering_parameters(client_ids, num_clusters)
-    fn hierarchical_clustering(&mut self, client_ids: &[usize], num_clusters: usize) -> Result<()> {
+    fn hierarchical_clustering(&mut self, client_ids: &[usize], numclusters: usize) -> Result<()> {
         // Simplified implementation
-    fn spectral_clustering(&mut self, client_ids: &[usize], num_clusters: usize) -> Result<()> {
+    fn spectral_clustering(&mut self, client_ids: &[usize], numclusters: usize) -> Result<()> {
     /// Compute distance between two probability distributions
     fn compute_distribution_distance(&self, dist1: &[f32], dist2: &[f32]) -> f32 {
         // KL divergence (simplified)

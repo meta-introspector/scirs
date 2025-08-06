@@ -23,11 +23,11 @@ const MEMORY_PRESSURE_THRESHOLD: usize = 8 * 1024 * 1024 * 1024; // 8GB threshol
 
 /// Generate a large random graph for stress testing with memory optimization
 #[allow(dead_code)]
-fn generate_large_random_graph(_num_nodes: usize, edge_probability: f64) -> Graph<usize, f64> {
+fn generate_large_random_graph(_num_nodes: usize, edgeprobability: f64) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
 
-    println!("  🏗️  Generating random graph with {} _nodes...", num_nodes);
+    println!("  🏗️  Generating random graph with {} nodes...", num_nodes);
 
     // Add _nodes in batches for memory efficiency
     const NODE_BATCH_SIZE: usize = 50_000;
@@ -37,7 +37,7 @@ fn generate_large_random_graph(_num_nodes: usize, edge_probability: f64) -> Grap
             graph.add_node(i);
         }
         if batch_start % (NODE_BATCH_SIZE * 10) == 0 {
-            println!("    Added {} _nodes...", batch_start);
+            println!("    Added {} nodes...", batch_start);
         }
     }
 
@@ -62,7 +62,7 @@ fn generate_large_random_graph(_num_nodes: usize, edge_probability: f64) -> Grap
     }
 
     println!(
-        "  ✅ Graph generation complete: {} _nodes, {} edges",
+        "  ✅ Graph generation complete: {} nodes, {} edges",
         graph.node_count(),
         graph.edge_count()
     );
@@ -71,7 +71,7 @@ fn generate_large_random_graph(_num_nodes: usize, edge_probability: f64) -> Grap
 
 /// Generate a scale-free graph using preferential attachment
 #[allow(dead_code)]
-fn generate_scale_free_graph(_num_nodes: usize, initial_edges: usize) -> Graph<usize, f64> {
+fn generate_scale_free_graph(_num_nodes: usize, initialedges: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
     let mut degree_sum = 0;
@@ -134,12 +134,12 @@ fn generate_scale_free_graph(_num_nodes: usize, initial_edges: usize) -> Graph<u
 
 /// Memory-efficient large graph generator with progressive construction
 #[allow(dead_code)]
-fn generate_memory_efficient_graph(_num_nodes: usize) -> Graph<usize, f64> {
+fn generate_memory_efficient_graph(_numnodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
 
     println!(
-        "  🧠 Generating memory-efficient graph with {} _nodes...",
+        "  🧠 Generating memory-efficient graph with {} nodes...",
         num_nodes
     );
 
@@ -182,7 +182,7 @@ fn generate_memory_efficient_graph(_num_nodes: usize) -> Graph<usize, f64> {
 
         if batch_start % (BATCH_SIZE * 10) == 0 {
             println!(
-                "    Processed {} _nodes, {} edges so far...",
+                "    Processed {} nodes, {} edges so far...",
                 batch_end,
                 graph.edge_count()
             );
@@ -190,7 +190,7 @@ fn generate_memory_efficient_graph(_num_nodes: usize) -> Graph<usize, f64> {
     }
 
     println!(
-        "  ✅ Memory-efficient graph complete: {} _nodes, {} edges",
+        "  ✅ Memory-efficient graph complete: {} nodes, {} edges",
         graph.node_count(),
         graph.edge_count()
     );
@@ -199,13 +199,13 @@ fn generate_memory_efficient_graph(_num_nodes: usize) -> Graph<usize, f64> {
 
 /// Generate a biological network-like graph (power-law degree distribution)
 #[allow(dead_code)]
-fn generate_biological_network(_num_nodes: usize) -> Graph<usize, f64> {
+fn generate_biological_network(_numnodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
     let mut degrees = vec![0; _num_nodes];
 
     println!(
-        "  🧬 Generating biological network with {} _nodes...",
+        "  🧬 Generating biological network with {} nodes...",
         num_nodes
     );
 
@@ -232,7 +232,7 @@ fn generate_biological_network(_num_nodes: usize) -> Graph<usize, f64> {
     }
 
     println!(
-        "  ✅ Biological network complete: {} _nodes, {} edges",
+        "  ✅ Biological network complete: {} nodes, {} edges",
         graph.node_count(),
         graph.edge_count()
     );
@@ -241,12 +241,12 @@ fn generate_biological_network(_num_nodes: usize) -> Graph<usize, f64> {
 
 /// Generate a social network-like graph (small-world properties)
 #[allow(dead_code)]
-fn generate_social_network(_num_nodes: usize) -> Graph<usize, f64> {
+fn generate_social_network(_numnodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
 
     println!(
-        "  👥 Generating social network with {} _nodes...",
+        "  👥 Generating social network with {} nodes...",
         num_nodes
     );
 
@@ -289,7 +289,7 @@ fn generate_social_network(_num_nodes: usize) -> Graph<usize, f64> {
     }
 
     println!(
-        "  ✅ Social network complete: {} _nodes, {} edges",
+        "  ✅ Social network complete: {} nodes, {} edges",
         graph.node_count(),
         graph.edge_count()
     );
@@ -298,9 +298,9 @@ fn generate_social_network(_num_nodes: usize) -> Graph<usize, f64> {
 
 /// Select a node with power-law probability distribution
 #[allow(dead_code)]
-fn select_powerlaw_node(_rng: &mut impl Rng, num_nodes: usize) -> usize {
+fn select_powerlaw_node(_rng: &mut impl Rng, numnodes: usize) -> usize {
     // Simple approximation of power-law distribution
-    let r = _rng.random::<f64>();
+    let r = rng.random::<f64>();
     let gamma = 2.5; // Power-law exponent
     let scaled = r.powf(-1.0 / (gamma - 1.0));
     ((scaled - 1.0) * num_nodes as f64) as usize % num_nodes

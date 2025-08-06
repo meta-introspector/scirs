@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a temporary directory for our example files
     let dir = tempdir()?;
-    let file_path = dir.path().join("large_matrix.bin");
+    let file_path = dir.path().join("largematrix.bin");
     println!("Creating a test file at: {}", file_path.display());
 
     // Create a large test matrix (100x100)

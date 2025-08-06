@@ -344,14 +344,14 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ShapeError` if the matrix is not square.
-pub fn check_square<S, D, A>(_matrix: &ArrayBase<S, D>, name: A) -> CoreResult<()>
+pub fn check_square<S, D, A>(matrix: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
     D: Dimension,
     A: Into<String> + std::string::ToString,
 {
-    check_2d(_matrix, name.to_string())?;
-    let shape = _matrix.shape();
+    check_2d(matrix, name.to_string())?;
+    let shape = matrix.shape();
     if shape[0] != shape[1] {
         return Err(CoreError::ShapeError(
             ErrorContext::new(format!(
@@ -413,7 +413,7 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ValueError` if any value is not a valid probability.
-pub fn check_probabilities<S, D, A>(_probs: &ArrayBase<S, D>, name: A) -> CoreResult<()>
+pub fn check_probabilities<S, D, A>(probs: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
     D: Dimension,
@@ -421,7 +421,7 @@ where
     A: Into<String>,
 {
     let name = name.into();
-    for (idx, &p) in _probs.indexed_iter() {
+    for (idx, &p) in probs.indexed_iter() {
         if p < S::Elem::zero() || p > S::Elem::one() {
             return Err(CoreError::ValueError(
                 ErrorContext::new(format!(
@@ -538,7 +538,7 @@ where
     if n_samples < min_samples {
         return Err(CoreError::ValueError(
             ErrorContext::new(format!(
-                "{} must have at least {} _samples, got {}",
+                "{} must have at least {} samples, got {}",
                 name.into(),
                 min_samples,
                 n_samples
@@ -715,11 +715,11 @@ pub mod parameters {
     ///
     /// * `Ok(bandwidth)` if bandwidth is valid
     /// * `Err(CoreError::ValueError)` if bandwidth is invalid
-    pub fn check_bandwidth<T>(_bandwidth: T, operation: &str) -> CoreResult<T>
+    pub fn checkbandwidth<T>(bandwidth: T, operation: &str) -> CoreResult<T>
     where
         T: Float + std::fmt::Display + Copy,
     {
-        check_positive(_bandwidth, format!("{operation} _bandwidth"))
+        check_positive(bandwidth, format!("{operation} bandwidth"))
     }
 }
 
@@ -925,11 +925,11 @@ mod tests {
         }
 
         #[test]
-        fn test_check_bandwidth() {
-            assert!(check_bandwidth(1.0, "test").is_ok());
-            assert!(check_bandwidth(0.1, "test").is_ok());
-            assert!(check_bandwidth(0.0, "test").is_err());
-            assert!(check_bandwidth(-1.0, "test").is_err());
+        fn test_checkbandwidth() {
+            assert!(checkbandwidth(1.0, "test").is_ok());
+            assert!(checkbandwidth(0.1, "test").is_ok());
+            assert!(checkbandwidth(0.0, "test").is_err());
+            assert!(checkbandwidth(-1.0, "test").is_err());
         }
     }
 }
@@ -1208,12 +1208,12 @@ pub mod custom {
             self
         }
 
-        pub fn min_size(self, min_size: usize) -> Self {
-            self.with_size(RangeValidator::new().min(min_size))
+        pub fn minsize(self, minsize: usize) -> Self {
+            self.with_size(RangeValidator::new().min(minsize))
         }
 
-        pub fn max_size(self, max_size: usize) -> Self {
-            self.with_size(RangeValidator::new().max(max_size))
+        pub fn maxsize(self, maxsize: usize) -> Self {
+            self.with_size(RangeValidator::new().max(maxsize))
         }
 
         pub fn exact_size(self, size: usize) -> Self {
@@ -1441,7 +1441,7 @@ pub mod custom {
             let element_validator = RangeValidator::in_range(0.0, 1.0);
             let array_validator = ArrayValidator::new()
                 .with_elements(element_validator)
-                .min_size(2);
+                .minsize(2);
 
             let validarray = arr1(&[0.2, 0.8]);
             assert!(array_validator.validate(&validarray, "array").is_ok());

@@ -566,7 +566,7 @@ struct ProgressRecord {
 }
 
 impl TutorialSystem {
-    fn new(_user_name: String) -> Self {
+    fn new(_username: String) -> Self {
         Self {
             user_profile: UserProfile::new(_user_name),
             available_modules: Self::initialize_modules(),
@@ -1109,7 +1109,8 @@ impl TutorialSystem {
             "Intuitive" => LearningStyle::Intuitive,
             "Applied" => LearningStyle::Applied,
             "Historical" => LearningStyle::Historical,
-            "Experimental" => LearningStyle::Experimental_ => LearningStyle::Hybrid(vec![LearningStyle::Visual, LearningStyle::Analytical]),
+            "Experimental" => LearningStyle::Experimental,
+            _ => LearningStyle::Hybrid(vec![LearningStyle::Visual, LearningStyle::Analytical]),
         };
 
         println!(
@@ -1272,7 +1273,8 @@ impl TutorialSystem {
                         println!("🖼️  2D Function Plot (x: {:?}, y: {:?})", domain, range);
                         self.ascii_plot_function_2d(domain.0, domain.1, 50, |x| {
                             match concept.name.as_str() {
-                                "Gamma Function" => gamma(x, _ => x.sin(), // default
+                                "Gamma Function" => gamma(x),
+                                _ => x.sin(), // default
                             }
                         });
                     }
@@ -1688,7 +1690,8 @@ impl TutorialSystem {
                     "j0" => Some(j0(arg)),
                     "j1" => Some(j1(arg)),
                     "erf" => Some(erf(arg)),
-                    "erfc" => Some(erfc(arg), _ => None,
+                    "erfc" => Some(erfc(arg)),
+                    _ => None,
                 };
 
                 if let Some(value) = result {
@@ -1824,7 +1827,8 @@ impl TutorialSystem {
             let (x_min, x_max) = match func_name.as_str() {
                 "gamma" => (0.1, 5.0),
                 "j0" | "j1" => (0.0, 20.0),
-                "erf" | "erfc" => (-3.0, 3.0, _ => {
+                "erf" | "erfc" => (-3.0, 3.0),
+                _ => {
                     println!("❌ Unknown function");
                     continue;
                 }
@@ -1837,7 +1841,8 @@ impl TutorialSystem {
                 "j0" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| j0(x)),
                 "j1" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| j1(x)),
                 "erf" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| erf(x)),
-                "erfc" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| erfc(x), _ => {}
+                "erfc" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| erfc(x)),
+                _ => {}
             }
             println!();
         }
@@ -2197,7 +2202,8 @@ impl TutorialSystem {
             Ok(4) => LearningStyle::Applied,
             Ok(5) => LearningStyle::Historical,
             Ok(6) => LearningStyle::Experimental,
-            Ok(7) => LearningStyle::Hybrid(vec![LearningStyle::Visual, LearningStyle::Analytical], _ => {
+            Ok(7) => LearningStyle::Hybrid(vec![LearningStyle::Visual, LearningStyle::Analytical]),
+            _ => {
                 println!("❌ Invalid choice, keeping current preference.");
                 return Ok(());
             }
@@ -2569,7 +2575,7 @@ impl TutorialSystem {
     }
 
     // Utility methods for ASCII visualization
-    fn ascii_plot_function_2d<F>(&self, x_min: f64, x_max: f64, width: usize, func: F)
+    fn ascii_plot_function_2d<F>(&self, x_min: f64, xmax: f64, width: usize, func: F)
     where
         F: Fn(f64) -> f64,
     {
@@ -2695,9 +2701,9 @@ struct GuidedProblem {
 }
 
 impl UserProfile {
-    fn new(_name: String) -> Self {
+    fn new(name: String) -> Self {
         Self {
-            _name,
+            name,
             learning_style: LearningStyle::Hybrid(vec![
                 LearningStyle::Visual,
                 LearningStyle::Analytical,
@@ -2831,8 +2837,8 @@ impl ConceptualGraph {
 
 // Utility functions
 #[allow(dead_code)]
-fn format_duration(_duration: Duration) -> String {
-    let total_seconds = _duration.as_secs();
+fn format_duration(duration: Duration) -> String {
+    let total_seconds = duration.as_secs();
     let hours = total_seconds / 3600;
     let minutes = (total_seconds % 3600) / 60;
 

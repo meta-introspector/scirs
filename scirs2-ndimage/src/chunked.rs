@@ -286,9 +286,9 @@ impl<T> GaussianChunkProcessor<T>
 where
     T: Float + FromPrimitive,
 {
-    pub fn new(_sigma: Vec<T>, truncate: Option<T>, border_mode: BorderMode) -> Self {
+    pub fn new(_sigma: Vec<T>, truncate: Option<T>, bordermode: BorderMode) -> Self {
         Self {
-            _sigma,
+            sigma,
             truncate,
             border_mode,
         }

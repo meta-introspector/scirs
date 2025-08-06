@@ -72,7 +72,7 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
     /// # Arguments
     ///
     /// * `capacity` - Expected number of elements
-    pub fn with_capacity(_capacity: usize) -> Self {
+    pub fn with_capacity(capacity: usize) -> Self {
         Self {
             parent: HashMap::with_capacity(_capacity),
             rank: HashMap::with_capacity(_capacity),

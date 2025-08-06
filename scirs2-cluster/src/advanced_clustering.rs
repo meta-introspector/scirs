@@ -49,7 +49,7 @@
 use crate::error::{ClusteringError, Result};
 use crate::quantum__clustering::{QAOAConfig, VQEConfig};
 use crate::vq::euclidean_distance;
-use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num__complex::Complex64;
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
@@ -857,7 +857,7 @@ impl QuantumNeuromorphicProcessor {
         Ok((clusters, centroids, metrics))
     }
 
-    fn initialize_quantum_neurons(&mut self, num_neurons: usize, input_dim: usize) {
+    fn initialize_quantum_neurons(&mut self, num_neurons: usize, inputdim: usize) {
         self.quantum_spiking_neurons.clear();
 
         // Create quantum entanglement matrix
@@ -1068,7 +1068,7 @@ impl QuantumNeuromorphicProcessor {
     }
 
     /// Calculate spike history influence on clustering
-    fn calculate_spike_history_influence(&self, cluster_id: usize) -> f64 {
+    fn calculate_spike_history_influence(&self, clusterid: usize) -> f64 {
         if let Some(neuron) = self.quantum_spiking_neurons.get(cluster_id) {
             if neuron.spike_history.is_empty() {
                 return 0.0;
@@ -1086,7 +1086,7 @@ impl QuantumNeuromorphicProcessor {
     }
 
     /// Calculate quantum uncertainty effects
-    fn calculate_quantum_uncertainty(&self, point: &ArrayView1<f64>, cluster_id: usize) -> f64 {
+    fn calculate_quantum_uncertainty(&self, point: &ArrayView1<f64>, clusterid: usize) -> f64 {
         if let Some(neuron) = self.quantum_spiking_neurons.get(cluster_id) {
             // Position uncertainty based on quantum coherence
             let coherence = neuron.quantum_state.norm();
@@ -1130,17 +1130,17 @@ impl QuantumNeuromorphicProcessor {
                     } else {
                         1.0
                     };
-                    quantum_weights.push(weight);
+                    quantumweights.push(weight);
                 }
             }
 
             if !cluster_points.is_empty() {
                 // Calculate quantum-weighted centroid
-                let total_weight: f64 = quantum_weights.iter().sum();
+                let total_weight: f64 = quantumweights.iter().sum();
                 if total_weight > 0.0 {
                     let mut weighted_centroid = Array1::zeros(centroids.ncols());
 
-                    for (point, weight) in cluster_points.iter().zip(quantum_weights.iter()) {
+                    for (point, weight) in cluster_points.iter().zip(quantumweights.iter()) {
                         weighted_centroid = weighted_centroid + &(point.to_owned() * *weight);
                     }
 
@@ -1253,7 +1253,7 @@ impl QuantumNeuromorphicProcessor {
             // Calculate weighted input current using synaptic weights
             let mut weighted_input = 0.0;
             for (i, &value) in point.iter().enumerate() {
-                if i < neuron.synaptic_weights.len() {
+                if i < neuron.synapticweights.len() {
                     weighted_input += value * neuron.synaptic_weights[i];
                 }
             }
@@ -1302,7 +1302,7 @@ impl QuantumNeuromorphicProcessor {
 
                 // Advanced synaptic plasticity with quantum entanglement
                 for (i, &input_val) in point.iter().enumerate() {
-                    if i < neuron.synaptic_weights.len() {
+                    if i < neuron.synapticweights.len() {
                         let hebbian_term = neuron.plasticity_trace * input_val * 0.01;
                         let quantum_term = neuron.quantum_state.re * input_val * 0.005; // Real part influence
                         let entanglement_term = neuron.entanglement_strength * input_val * 0.003;
@@ -1350,12 +1350,12 @@ impl QuantumNeuromorphicProcessor {
         self.update_global_quantum_state();
     }
 
-    fn update_quantum_neuromorphic_state(&mut self, cluster_id: usize, point: &ArrayView1<f64>) {
+    fn update_quantum_neuromorphic_state(&mut self, clusterid: usize, point: &ArrayView1<f64>) {
         if let Some(neuron) = self.quantum_spiking_neurons.get_mut(cluster_id) {
             // Calculate weighted input current using synaptic weights
             let mut weighted_input = 0.0;
             for (i, &value) in point.iter().enumerate() {
-                if i < neuron.synaptic_weights.len() {
+                if i < neuron.synapticweights.len() {
                     weighted_input += value * neuron.synaptic_weights[i];
                 }
             }
@@ -1395,7 +1395,7 @@ impl QuantumNeuromorphicProcessor {
 
                 // Apply synaptic plasticity
                 for (i, &input_val) in point.iter().enumerate() {
-                    if i < neuron.synaptic_weights.len() {
+                    if i < neuron.synapticweights.len() {
                         let weight_change = neuron.plasticity_trace * input_val * 0.01;
                         neuron.synaptic_weights[i] = (neuron.synaptic_weights[i] + weight_change)
                             .max(0.0)
@@ -1482,11 +1482,11 @@ impl MetaLearningClusterOptimizer {
         embedding
     }
 
-    fn find_similar_tasks(&self, task_embedding: &Array1<f64>) -> Vec<String> {
+    fn find_similar_tasks(&self, taskembedding: &Array1<f64>) -> Vec<String> {
         // Find similar tasks based on _embedding similarity
         self.task_embeddings
             .iter()
-            .filter_map(|(task_id, _embedding)| {
+            .filter_map(|(task_id, embedding)| {
                 let similarity = self.cosine_similarity(task_embedding_embedding);
                 if similarity > 0.8 {
                     Some(task_id.clone())

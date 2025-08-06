@@ -11,7 +11,7 @@ use crate::error::{NdimageError, NdimageResult};
 #[allow(dead_code)]
 fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
     T::from_i32(_value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", _value))
+        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
     })
 }
 
@@ -508,7 +508,7 @@ where
 
 // Helper function to apply Prewitt filter along y-axis (vertical gradient)
 #[allow(dead_code)]
-fn prewitt_2d_x<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn prewitt_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -530,7 +530,7 @@ where
 
 // Helper function to apply Prewitt filter along x-axis (horizontal gradient)
 #[allow(dead_code)]
-fn prewitt_2d_y<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn prewitt_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -552,7 +552,7 @@ where
 
 // Helper function to apply Sobel filter along y-axis (vertical gradient)
 #[allow(dead_code)]
-fn sobel_2d_x<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn sobel_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -574,7 +574,7 @@ where
 
 // Helper function to apply Sobel filter along x-axis (horizontal gradient)
 #[allow(dead_code)]
-fn sobel_2d_y<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn sobel_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -596,7 +596,7 @@ where
 
 // Helper function to apply Roberts Cross filter for the x-component
 #[allow(dead_code)]
-fn roberts_2d_x<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn roberts_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -613,7 +613,7 @@ where
 
 // Helper function to apply Roberts Cross filter for the y-component
 #[allow(dead_code)]
-fn roberts_2d_y<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn roberts_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -1101,7 +1101,7 @@ where
 
 // Helper function to apply Scharr filter along y-axis (vertical gradient)
 #[allow(dead_code)]
-fn scharr_2d_x<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn scharr_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -1123,7 +1123,7 @@ where
 
 // Helper function to apply Scharr filter along x-axis (horizontal gradient)
 #[allow(dead_code)]
-fn scharr_2d_y<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn scharr_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -1145,7 +1145,7 @@ where
 
 /// N-dimensional Sobel filter implementation
 #[allow(dead_code)]
-fn sobel_nd<T, D>(_input: &Array<T, D>, axis: usize, mode: &BorderMode) -> NdimageResult<Array<T, D>>
+fn sobel_nd<T, D>(input: &Array<T, D>, axis: usize, mode: &BorderMode) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
     D: Dimension,

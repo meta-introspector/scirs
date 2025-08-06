@@ -392,7 +392,7 @@ impl ModelServer {
     }
 
     /// Update server metrics
-    async fn update_metrics(&self, start_time: Instant, success: bool) {
+    async fn update_metrics(&self, starttime: Instant, success: bool) {
         let mut metrics = self.metrics.lock().await;
         metrics.total_requests += 1;
 
@@ -409,7 +409,7 @@ impl ModelServer {
     }
 
     /// Update batch metrics
-    async fn update_batch_metrics(&self, batch_size: usize, start_time: Instant) {
+    async fn update_batch_metrics(&self, batch_size: usize, starttime: Instant) {
         let mut metrics = self.metrics.lock().await;
         metrics.batch_stats.total_batches += 1;
 
@@ -435,7 +435,7 @@ impl ModelServer {
     }
 
     /// Update model
-    pub async fn update_model(&self, new_model: MLModel) -> Result<()> {
+    pub async fn update_model(&self, newmodel: MLModel) -> Result<()> {
         let start_time = Instant::now();
 
         {
@@ -618,7 +618,7 @@ pub mod grpc {
     }
 
     /// Convert gRPC format to MLTensor
-    pub fn grpc_to_tensor(grpc_tensor: &GrpcTensor) -> Result<MLTensor> {
+    pub fn grpc_to_tensor(grpctensor: &GrpcTensor) -> Result<MLTensor> {
         let shape: Vec<usize> = grpc_tensor.shape.iter().map(|&s| s as usize).collect();
 
         // Convert bytes back to f32

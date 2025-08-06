@@ -27,7 +27,7 @@ pub struct SimpleLBFGS<A: Float + ScalarOperand + Debug> {
     prev_grad: Option<Array1<A>>}
 
 impl<A: Float + ScalarOperand + Debug> SimpleLBFGS<A> {
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(learningrate: A) -> Self {
         Self {
             learning_rate,
             history_size: 20,
@@ -135,7 +135,7 @@ where
         self.learning_rate
     }
 
-    fn set_learning_rate(&mut self, learning_rate: A) {
+    fn set_learning_rate(&mut self, learningrate: A) {
         self.learning_rate = learning_rate;
     }
 }

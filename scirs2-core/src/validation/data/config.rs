@@ -25,7 +25,7 @@ pub struct ValidationConfig {
     /// Custom validation rules
     pub custom_rules: HashMap<String, String>,
     /// Enable detailed error reporting
-    pub detailed_errors: bool,
+    pub detailederrors: bool,
     /// Performance mode (reduced checks for speed)
     pub performance_mode: bool,
 }
@@ -39,7 +39,7 @@ impl Default for ValidationConfig {
             cache_size_limit: 1000,
             enable_parallel_validation: false, // Can be expensive
             custom_rules: HashMap::new(),
-            detailed_errors: true,
+            detailederrors: true,
             performance_mode: false,
         }
     }
@@ -131,12 +131,12 @@ mod tests {
         assert!(config.enable_caching);
         assert_eq!(config.cache_size_limit, 1000);
         assert!(!config.enable_parallel_validation);
-        assert!(config.detailed_errors);
+        assert!(config.detailederrors);
         assert!(!config.performance_mode);
     }
 
     #[test]
-    fn test_error_severity_ordering() {
+    fn testerror_severity_ordering() {
         assert!(ErrorSeverity::Warning < ErrorSeverity::Error);
         assert!(ErrorSeverity::Error < ErrorSeverity::Critical);
     }
@@ -148,8 +148,8 @@ mod tests {
     }
 
     #[test]
-    fn test_validation_error_types() {
-        let error_type = ValidationErrorType::TypeMismatch;
-        assert_eq!(error_type, ValidationErrorType::TypeMismatch);
+    fn test_validationerrortypes() {
+        let errortype = ValidationErrorType::TypeMismatch;
+        assert_eq!(errortype, ValidationErrorType::TypeMismatch);
     }
 }

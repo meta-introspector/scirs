@@ -88,7 +88,7 @@ impl BpeVocabulary {
     }
 
     /// Load a vocabulary from a file
-    pub fn load(_path: impl AsRef<Path>) -> Result<Self> {
+    pub fn load(path: impl AsRef<Path>) -> Result<Self> {
         let file = File::open(_path).map_err(|e| TextError::IoError(e.to_string()))?;
         let mut reader = BufReader::new(file);
         let mut content = String::new();
@@ -205,9 +205,9 @@ pub struct BpeTokenizer {
 
 impl BpeTokenizer {
     /// Create a new BPE tokenizer with the given configuration
-    pub fn new(_config: BpeConfig) -> Self {
+    pub fn new(config: BpeConfig) -> Self {
         Self {
-            _config,
+            config,
             vocabulary: Some(BpeVocabulary::new()),
         }
     }

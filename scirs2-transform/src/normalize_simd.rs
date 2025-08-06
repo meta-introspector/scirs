@@ -36,12 +36,12 @@ pub struct AdaptiveBlockSizer {
 
 impl AdaptiveBlockSizer {
     /// Create adaptive block sizer based on data characteristics
-    pub fn new<F>(_datashape: &[usize]) -> Self
+    pub fn new<F>(datashape: &[usize]) -> Self
     where
         F: Float + NumCast,
     {
         let element_size = std::mem::size_of::<F>();
-        let data_size = _datashape.iter().product::<usize>() * element_size;
+        let data_size = datashape.iter().product::<usize>() * element_size;
 
         // Adaptive block sizing based on data size and cache characteristics
         let optimal_block_size = if data_size <= L1_CACHE_SIZE / 4 {
@@ -66,7 +66,7 @@ impl AdaptiveBlockSizer {
     }
 
     /// Get cache-aligned block size
-    pub fn get_aligned_block_size(&self, dimension_size: usize) -> usize {
+    pub fn get_aligned_block_size(&self, dimensionsize: usize) -> usize {
         if self.use_cache_alignment {
             // Align to cache line boundaries
             let cache_aligned =
@@ -80,11 +80,11 @@ impl AdaptiveBlockSizer {
 
 /// SIMD-accelerated min-max normalization for 1D arrays
 #[allow(dead_code)]
-pub fn simd_minmax_normalize_1d<F>(_array: &Array1<F>) -> Result<Array1<F>>
+pub fn simd_minmax_normalize_1d<F>(array: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
 {
-    if _array.is_empty() {
+    if array.is_empty() {
         return Err(TransformError::InvalidInput(
             "Input _array is empty".to_string(),
         ));
@@ -110,11 +110,11 @@ where
 
 /// SIMD-accelerated Z-score normalization for 1D arrays
 #[allow(dead_code)]
-pub fn simd_zscore_normalize_1d<F>(_array: &Array1<F>) -> Result<Array1<F>>
+pub fn simd_zscore_normalize_1d<F>(array: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
 {
-    if _array.is_empty() {
+    if array.is_empty() {
         return Err(TransformError::InvalidInput(
             "Input _array is empty".to_string(),
         ));
@@ -144,11 +144,11 @@ where
 
 /// SIMD-accelerated L2 normalization for 1D arrays
 #[allow(dead_code)]
-pub fn simd_l2_normalize_1d<F>(_array: &Array1<F>) -> Result<Array1<F>>
+pub fn simd_l2_normalize_1d<F>(array: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
 {
-    if _array.is_empty() {
+    if array.is_empty() {
         return Err(TransformError::InvalidInput(
             "Input _array is empty".to_string(),
         ));
@@ -170,11 +170,11 @@ where
 
 /// SIMD-accelerated max absolute scaling for 1D arrays
 #[allow(dead_code)]
-pub fn simd_maxabs_normalize_1d<F>(_array: &Array1<F>) -> Result<Array1<F>>
+pub fn simd_maxabs_normalize_1d<F>(array: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
 {
-    if _array.is_empty() {
+    if array.is_empty() {
         return Err(TransformError::InvalidInput(
             "Input _array is empty".to_string(),
         ));
@@ -233,7 +233,8 @@ where
         NormalizationMethod::MinMax => simd_normalize_block_minmax(array, &mut normalized, axis)?,
         NormalizationMethod::ZScore => simd_normalize_block_zscore(array, &mut normalized, axis)?,
         NormalizationMethod::L2 => simd_normalize_block_l2(array, &mut normalized, axis)?,
-        NormalizationMethod::MaxAbs => simd_normalize_block_maxabs(array, &mut normalized, axis)?_ => {
+        NormalizationMethod::MaxAbs => simd_normalize_block_maxabs(array, &mut normalized, axis)?,
+        _ => {
             // Fall back to non-SIMD implementation for other methods
             return Err(TransformError::InvalidInput(
                 "SIMD implementation not available for this normalization method".to_string(),
@@ -703,7 +704,8 @@ where
                     NormalizationMethod::MinMax => simd_minmax_normalize_1d(&row_array)?,
                     NormalizationMethod::ZScore => simd_zscore_normalize_1d(&row_array)?,
                     NormalizationMethod::L2 => simd_l2_normalize_1d(&row_array)?,
-                    NormalizationMethod::MaxAbs => simd_maxabs_normalize_1d(&row_array)?_ => {
+                    NormalizationMethod::MaxAbs => simd_maxabs_normalize_1d(&row_array)?,
+                    _ => {
                         return Err(TransformError::InvalidInput(
                             "Unsupported normalization method for tall matrix optimization"
                                 .to_string(),
@@ -752,7 +754,8 @@ where
                     NormalizationMethod::MinMax => simd_minmax_normalize_1d(&col_array)?,
                     NormalizationMethod::ZScore => simd_zscore_normalize_1d(&col_array)?,
                     NormalizationMethod::L2 => simd_l2_normalize_1d(&col_array)?,
-                    NormalizationMethod::MaxAbs => simd_maxabs_normalize_1d(&col_array)?_ => {
+                    NormalizationMethod::MaxAbs => simd_maxabs_normalize_1d(&col_array)?,
+                    _ => {
                         return Err(TransformError::InvalidInput(
                             "Unsupported normalization method for wide matrix optimization"
                                 .to_string(),

@@ -122,14 +122,14 @@ where
     }
 
     /// Convert dimensions vector to target dimension type D
-    fn convert_dims_to_target_type(result_dims: &[usize]) -> CoreResult<D> {
-        let source_ndim = result_dims.len();
+    fn convert_dims_to_target_type(resultdims: &[usize]) -> CoreResult<D> {
+        let source_ndim = resultdims.len();
         let target_ndim = D::NDIM;
 
         // Handle dynamic dimensions (IxDyn) - always accept
         if target_ndim.is_none() {
             // For dynamic dimensions, create IxDyn directly
-            let dyn_dim = IxDyn(result_dims);
+            let dyn_dim = IxDyn(resultdims);
             // This is safe because IxDyn can always be converted to itself or any Dimension type
             // We use unsafe transmute as a last resort since we know D is IxDyn in this case
             let converted_dim = unsafe { std::mem::transmute_copy(&dyn_dim) };
@@ -142,33 +142,33 @@ where
         if source_ndim == target_ndim {
             match target_ndim {
                 1 => {
-                    if result_dims.len() == 1 {
-                        let dim1 = ndarray::Ix1(result_dims[0]);
+                    if resultdims.len() == 1 {
+                        let dim1 = ndarray::Ix1(resultdims[0]);
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim1) };
                         return Ok(converted_dim);
                     }
                 }
                 2 => {
-                    if result_dims.len() == 2 {
-                        let dim2 = ndarray::Ix2(result_dims[0], result_dims[1]);
+                    if resultdims.len() == 2 {
+                        let dim2 = ndarray::Ix2(resultdims[0], resultdims[1]);
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim2) };
                         return Ok(converted_dim);
                     }
                 }
                 3 => {
-                    if result_dims.len() == 3 {
-                        let dim3 = ndarray::Ix3(result_dims[0], result_dims[1], result_dims[2]);
+                    if resultdims.len() == 3 {
+                        let dim3 = ndarray::Ix3(resultdims[0], resultdims[1], resultdims[2]);
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim3) };
                         return Ok(converted_dim);
                     }
                 }
                 4 => {
-                    if result_dims.len() == 4 {
+                    if resultdims.len() == 4 {
                         let dim4 = ndarray::Ix4(
-                            result_dims[0],
-                            result_dims[1],
-                            result_dims[2],
-                            result_dims[3],
+                            resultdims[0],
+                            resultdims[1],
+                            resultdims[2],
+                            resultdims[3],
                         );
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim4) };
                         return Ok(converted_dim);
@@ -185,7 +185,7 @@ where
         // Handle dimension mismatches
         if source_ndim < target_ndim {
             // Add singleton dimensions at the end
-            let mut expanded_dims = result_dims.to_vec();
+            let mut expanded_dims = resultdims.to_vec();
             expanded_dims.resize(target_ndim, 1);
 
             match target_ndim {
@@ -249,7 +249,7 @@ where
             let mut removed_count = 0;
             let dims_to_remove = source_ndim - target_ndim;
 
-            for &dim_size in result_dims {
+            for &dim_size in resultdims {
                 if dim_size == 1 && removed_count < dims_to_remove {
                     removed_count += 1;
                 } else {
@@ -263,9 +263,9 @@ where
                      Sliced shape: {:?}, source shape: {:?}, available singleton dimensions: {}",
                     source_ndim,
                     target_ndim,
-                    result_dims,
-                    result_dims,
-                    result_dims.iter().filter(|&&x| x == 1).count()
+                    resultdims,
+                    resultdims,
+                    resultdims.iter().filter(|&&x| x == 1).count()
                 ))));
             }
 
@@ -641,9 +641,9 @@ where
     }
 
     /// Handle negative indices properly  
-    fn handle_negative_index(&self, index: isize, dim_size: isize) -> isize {
+    fn handle_negative_index(&self, index: isize, dimsize: isize) -> isize {
         if index < 0 {
-            dim_size + index
+            dimsize + index
         } else {
             index
         }
@@ -653,7 +653,7 @@ where
 /// Extension trait for adding slicing functionality to MemoryMappedArray.
 pub trait MemoryMappedSlicing<A: Clone + Copy + 'static + Send + Sync> {
     /// Creates a slice of the memory-mapped array using standard slice syntax.
-    fn slice<I, E>(&self, slice_info: I) -> CoreResult<MemoryMappedSlice<A, E>>
+    fn slice<I, E>(&self, sliceinfo: I) -> CoreResult<MemoryMappedSlice<A, E>>
     where
         I: ndarray::SliceArg<E>,
         E: Dimension;
@@ -673,7 +673,7 @@ pub trait MemoryMappedSlicing<A: Clone + Copy + 'static + Send + Sync> {
 }
 
 impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryMappedArray<A> {
-    fn slice<I, E>(&self, slice_info: I) -> CoreResult<MemoryMappedSlice<A, E>>
+    fn slice<I, E>(&self, sliceinfo: I) -> CoreResult<MemoryMappedSlice<A, E>>
     where
         I: ndarray::SliceArg<E>,
         E: Dimension,

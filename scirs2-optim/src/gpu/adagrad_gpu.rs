@@ -29,7 +29,7 @@ pub struct AdagradGpu<A: Float + ScalarOperand + Debug> {
 
 impl<A: Float + ScalarOperand + Debug> AdagradGpu<A> {
     /// Create a new GPU-accelerated Adagrad optimizer
-    pub fn new(_learning_rate: A) -> Self {
+    pub fn new(_learningrate: A) -> Self {
         Self {
             cpu_optimizer: Adagrad::new(_learning_rate),
             gpu_memory: None,
@@ -39,9 +39,14 @@ impl<A: Float + ScalarOperand + Debug> AdagradGpu<A> {
     }
 
     /// Create with full configuration
-    pub fn new_with_config(_learning_rate: A, epsilon: A, weight_decay: A, lr_decay: A) -> Self {
+    pub fn new_with_config(_learning_rate: A, epsilon: A, weight_decay: A, lrdecay: A) -> Self {
         Self {
-            cpu_optimizer: Adagrad::new_with_config(_learning_rate, epsilon, weight_decay, lr_decay),
+            cpu_optimizer: Adagrad::new_with_config(
+                learning_rate,
+                epsilon,
+                weight_decay,
+                lr_decay,
+            ),
             gpu_memory: None,
             kernel_handle: None,
             on_gpu: false,
@@ -212,7 +217,7 @@ where
         self.cpu_optimizer.get_learning_rate()
     }
 
-    fn set_learning_rate(&mut self, learning_rate: A) {
+    fn set_learning_rate(&mut self, learningrate: A) {
         self.cpu_optimizer.set_learning_rate(learning_rate);
     }
 }
@@ -248,7 +253,8 @@ mod tests {
     fn test_gpu_initialization() {
         let mut optimizer = AdagradGpu::<f32>::new(0.01);
         let config = GpuOptimizerConfig {
-            backend: scirs2, core: gpu::GpuBackend::Cpu,
+            backend: scirs2,
+            core: gpu::GpuBackend::Cpu,
             ..Default::default()
         };
 

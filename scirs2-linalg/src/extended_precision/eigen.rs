@@ -697,7 +697,7 @@ where
 
 // QR algorithm for computing eigenvalues of a Hessenberg matrix
 #[allow(dead_code)]
-fn qr_algorithm<I>(mut a: Array2<I>, max_iter: usize, tol: I) -> Array1<num_complex::Complex<I>>
+fn qr_algorithm<I>(mut a: Array2<I>, maxiter: usize, tol: I) -> Array1<num_complex::Complex<I>>
 where
     I: Float + Zero + One + Copy + std::fmt::Debug + std::ops::AddAssign + std::ops::SubAssign,
 {
@@ -710,7 +710,7 @@ where
     let mut m = n;
     let mut iter_count = 0;
 
-    while m > 1 && iter_count < max_iter {
+    while m > 1 && iter_count < maxiter {
         // Check for small off-diagonal element
         let mut l = 0;
         for i in 0..m - 1 {
@@ -777,7 +777,7 @@ where
             iter_count += 1;
 
             // Check if we've done too many iterations
-            if iter_count >= max_iter {
+            if iter_count >= maxiter {
                 // In a full implementation, we would use a different strategy here
                 // For now, just extract approximate eigenvalues
                 for i in 0..m {
@@ -798,7 +798,7 @@ where
 
 // QR algorithm for symmetric tridiagonal matrices
 #[allow(dead_code)]
-fn qr_algorithm_symmetric<I>(a: Array2<I>, max_iter: usize, tol: I) -> Array1<I>
+fn qr_algorithm_symmetric<I>(a: Array2<I>, maxiter: usize, tol: I) -> Array1<I>
 where
     I: Float + Zero + One + Copy + std::fmt::Debug + std::ops::AddAssign + std::ops::SubAssign,
 {
@@ -835,7 +835,7 @@ where
             }
 
             _iter += 1;
-            if _iter > max_iter {
+            if _iter > maxiter {
                 break; // Max iterations reached
             }
 
@@ -1371,12 +1371,12 @@ where
 
 /// Compute optimal Rayleigh quotient shift
 #[allow(dead_code)]
-fn compute_rayleigh_quotient_shift<A>(_d1: A, d2: A, e: A) -> A
+fn compute_rayleigh_quotient_shift<A>(d1: A, d2: A, e: A) -> A
 where
     A: Float + Zero + One + Copy,
 {
-    let trace = _d1 + d2;
-    let det = _d1 * d2 - e * e;
+    let trace = d1 + d2;
+    let det = d1 * d2 - e * e;
     let discriminant = trace * trace * A::from(0.25).unwrap() - det;
 
     if discriminant >= A::zero() {
@@ -1398,7 +1398,9 @@ where
 /// Apply QR step with Wilkinson shift
 #[allow(dead_code)]
 fn apply_qr_step_with_shift<A>(
-    d: &mut Array1<A>, _e: &mut Array1<A>, _q: &mut Array2<A>,
+    d: &mut Array1<A>,
+    _e: &mut Array1<A>,
+    _q: &mut Array2<A>,
     start: usize,
     shift: A,
 ) -> LinalgResult<()>
@@ -1454,12 +1456,12 @@ where
 
 /// Compute characteristic polynomial value at lambda
 #[allow(dead_code)]
-fn compute_characteristic_polynomial_value<A>(_matrix: &Array2<A>, lambda: A) -> LinalgResult<A>
+fn compute_characteristic_polynomial_value<A>(matrix: &Array2<A>, lambda: A) -> LinalgResult<A>
 where
     A: Float + Zero + One + Copy,
 {
-    let n = _matrix.nrows();
-    let mut a_shifted = _matrix.clone();
+    let n = matrix.nrows();
+    let mut a_shifted = matrix.clone();
 
     // Compute A - lambda*I
     for i in 0..n {
@@ -1472,7 +1474,10 @@ where
 
 /// Compute characteristic polynomial derivative at lambda
 #[allow(dead_code)]
-fn compute_characteristic_polynomial_derivative<A>(_matrix: &Array2<A>, lambda: A) -> LinalgResult<A>
+fn compute_characteristic_polynomial_derivative<A>(
+    _matrix: &Array2<A>,
+    lambda: A,
+) -> LinalgResult<A>
 where
     A: Float + Zero + One + Copy,
 {
@@ -1486,19 +1491,19 @@ where
 
 /// Simple determinant computation for small matrices
 #[allow(dead_code)]
-fn compute_determinant_simple<A>(_matrix: &Array2<A>) -> A
+fn compute_determinant_simple<A>(matrix: &Array2<A>) -> A
 where
     A: Float + Zero + One + Copy,
 {
-    let n = _matrix.nrows();
+    let n = matrix.nrows();
 
     if n == 1 {
-        _matrix[[0, 0]]
+        matrix[[0, 0]]
     } else if n == 2 {
-        _matrix[[0, 0]] * _matrix[[1, 1]] - _matrix[[0, 1]] * _matrix[[1, 0]]
+        matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]
     } else {
         // For larger matrices, use cofactor expansion (simplified)
-        _matrix[[0, 0]] // Placeholder - would implement full expansion
+        matrix[[0, 0]] // Placeholder - would implement full expansion
     }
 }
 
@@ -1598,7 +1603,8 @@ where
 #[allow(dead_code)]
 fn inverse_iteration_refinement<A>(
     eigenvectors: &mut Array2<A>,
-    matrix: &Array2<A>, _eigenvalue: A,
+    matrix: &Array2<A>,
+    _eigenvalue: A,
     col_index: usize,
 ) -> LinalgResult<()>
 where
@@ -1615,20 +1621,20 @@ where
 
 /// Estimate matrix condition number for adaptive tolerance selection
 #[allow(dead_code)]
-fn estimate_condition_number<A>(_matrix: &ArrayView2<A>) -> LinalgResult<A>
+fn estimate_condition_number<A>(matrix: &ArrayView2<A>) -> LinalgResult<A>
 where
     A: Float + Zero + One + Copy + std::ops::AddAssign,
 {
     // Simplified condition number estimation using _matrix norm ratio
     // In practice, would use more sophisticated methods like SVD
-    let n = _matrix.nrows();
+    let n = matrix.nrows();
 
     // Estimate largest eigenvalue (_matrix norm)
     let mut max_row_sum = A::zero();
     for i in 0..n {
         let mut row_sum = A::zero();
         for j in 0..n {
-            row_sum += _matrix[[i, j]].abs();
+            row_sum += matrix[[i, j]].abs();
         }
         if row_sum > max_row_sum {
             max_row_sum = row_sum;
@@ -1636,9 +1642,9 @@ where
     }
 
     // Estimate smallest eigenvalue (simplified)
-    let mut min_diagonal = _matrix[[0, 0]].abs();
+    let mut min_diagonal = matrix[[0, 0]].abs();
     for i in 1..n {
-        let diag_val = _matrix[[i, i]].abs();
+        let diag_val = matrix[[i, i]].abs();
         if diag_val < min_diagonal && diag_val > A::epsilon() {
             min_diagonal = diag_val;
         }
@@ -1797,7 +1803,8 @@ mod tests {
 /// Compute eigenvector using inverse iteration in extended precision
 #[allow(dead_code)]
 fn compute_eigenvector_inverse_iteration<I>(
-    shifted_matrix: &Array2<num_complex::Complex<I>>, _lambda: num_complex::Complex<I>,
+    shifted_matrix: &Array2<num_complex::Complex<I>>,
+    _lambda: num_complex::Complex<I>,
     max_iter: usize,
     tol: I,
 ) -> Array1<num_complex::Complex<I>>

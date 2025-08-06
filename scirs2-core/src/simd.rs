@@ -232,17 +232,17 @@ pub fn simd_scalar_mul_f64(a: &ArrayView1<f64>, scalar: f64) -> Array1<f64> {
 ///
 /// * Array of linearly spaced values
 #[allow(dead_code)]
-pub fn linspace_f32(start_val: f32, end: f32, num: usize) -> Array1<f32> {
+pub fn linspace_f32(startval: f32, end: f32, num: usize) -> Array1<f32> {
     if num < 2 {
-        return Array1::from_vec(vec![start_val]);
+        return Array1::from_vec(vec![startval]);
     }
 
     let mut result = Array1::zeros(num);
-    let step = (end - start_val) / (num as f32 - 1.0);
+    let step = (end - startval) / (num as f32 - 1.0);
 
     // Use scalar implementation for now - could be optimized with SIMD
     for (i, elem) in result.iter_mut().enumerate() {
-        *elem = start_val + step * i as f32;
+        *elem = startval + step * i as f32;
     }
 
     // Make sure the last value is exactly end to avoid floating point precision issues
@@ -255,17 +255,17 @@ pub fn linspace_f32(start_val: f32, end: f32, num: usize) -> Array1<f32> {
 
 /// SIMD accelerated linspace function for f64 values
 #[allow(dead_code)]
-pub fn linspace_f64(start_val: f64, end: f64, num: usize) -> Array1<f64> {
+pub fn linspace_f64(startval: f64, end: f64, num: usize) -> Array1<f64> {
     if num < 2 {
-        return Array1::from_vec(vec![start_val]);
+        return Array1::from_vec(vec![startval]);
     }
 
     let mut result = Array1::zeros(num);
-    let step = (end - start_val) / (num as f64 - 1.0);
+    let step = (end - startval) / (num as f64 - 1.0);
 
     // Use scalar implementation for now - could be optimized with SIMD
     for (i, elem) in result.iter_mut().enumerate() {
-        *elem = start_val + step * i as f64;
+        *elem = startval + step * i as f64;
     }
 
     // Make sure the last value is exactly end to avoid floating point precision issues
@@ -479,7 +479,7 @@ mod tests {
 
     #[test]
     fn test_simd_linspace_f32() {
-        let result = simd_linspace_f32(0.0, 1.0, 5);
+        let result = linspace_f32(0.0, 1.0, 5);
         let expected = arr1(&[0.0f32, 0.25, 0.5, 0.75, 1.0]);
 
         assert_eq!(result.len(), 5);
@@ -494,7 +494,7 @@ mod tests {
 
     #[test]
     fn test_simd_linspace_f64() {
-        let result = simd_linspace_f64(0.0, 1.0, 5);
+        let result = linspace_f64(0.0, 1.0, 5);
         let expected = arr1(&[0.0f64, 0.25, 0.5, 0.75, 1.0]);
 
         assert_eq!(result.len(), 5);

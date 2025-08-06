@@ -74,11 +74,11 @@ impl Default for SSAOptions {
 /// println!("Residual: {:?}", result.residual);
 /// ```
 #[allow(dead_code)]
-pub fn ssa_decomposition<F>(_ts: &Array1<F>, options: &SSAOptions) -> Result<DecompositionResult<F>>
+pub fn ssa_decomposition<F>(ts: &Array1<F>, options: &SSAOptions) -> Result<DecompositionResult<F>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand + NumCast,
 {
-    let n = _ts.len();
+    let n = ts.len();
 
     // Check inputs
     if n < 3 {
@@ -113,7 +113,7 @@ where
 
     for i in 0..window_length {
         for j in 0..k {
-            trajectory_matrix[[i, j]] = _ts[i + j];
+            trajectory_matrix[[i, j]] = ts[i + j];
         }
     }
 
@@ -262,11 +262,11 @@ where
     // Calculate residual
     let mut residual = Array1::zeros(n);
     for i in 0..n {
-        residual[i] = _ts[i] - trend[i] - seasonal[i];
+        residual[i] = ts[i] - trend[i] - seasonal[i];
     }
 
     // Create result
-    let original = _ts.clone();
+    let original = ts.clone();
 
     Ok(DecompositionResult {
         trend,

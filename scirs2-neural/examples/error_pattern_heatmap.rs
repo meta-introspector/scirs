@@ -6,7 +6,7 @@ use scirs2_neural::utils::evaluation::ConfusionMatrix;
 #[allow(dead_code)]
 fn main() {
     // Create a reproducible random number generator
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Generate synthetic multiclass classification data with specific error patterns
     let num_classes = 5;
     // Create confusion matrix with controlled error patterns
@@ -14,7 +14,7 @@ fn main() {
     // Set diagonal elements (correct classifications) with high values
     #[allow(clippy::needless_range_loop)]
     for i in 0..num_classes {
-        matrix[i][i] = 70 + rng.random_range(0..15); // 70-85 correct per class
+        matrix[i][i] = 70 + rng.gen_range(0..15); // 70-85 correct per class
     }
     // Create specific error patterns:
     // - Classes 0 and 1 often confused
@@ -32,14 +32,14 @@ fn main() {
     for i in 0..num_classes {
         for j in 0..num_classes {
             if i != j && matrix[i][j] == 0 {
-                matrix[i][j] = rng.random_range(0..5);
+                matrix[i][j] = rng.gen_range(0..5);
             }
         }
     }
     // Convert to ndarray
     let flat_matrix: Vec<f64> = matrix.iter().flatten().map(|&x| x as f64).collect();
     let ndarray_matrix =
-        ndarray::Array::from_shape_vec((num_classes..num_classes), flat_matrix).unwrap();
+        ndarray::Array::from_shape_vec((num_classes, num_classes), flat_matrix).unwrap();
     // Create class labels
     let class_labels = vec![
         "Class A".to_string(),

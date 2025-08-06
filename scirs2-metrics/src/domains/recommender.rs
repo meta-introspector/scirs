@@ -126,13 +126,13 @@ impl RecommenderRankingMetrics {
     }
 
     /// Set k values for evaluation
-    pub fn with_k_values(mut self, k_values: Vec<usize>) -> Self {
+    pub fn with_k_values(mut self, kvalues: Vec<usize>) -> Self {
         self.k_values = k_values;
         self
     }
 
     /// Set total number of items in catalog
-    pub fn with_total_items(mut self, total_items: usize) -> Self {
+    pub fn with_total_items(mut self, totalitems: usize) -> Self {
         self.total_items = total_items;
         self
     }
@@ -184,7 +184,7 @@ impl RecommenderRankingMetrics {
                     .iter()
                     .enumerate()
                     .filter(|(_, &_score)| _score > 0.0)
-                    .map(|(idx_)| idx)
+                    .map(|(idx, _)| idx)
                     .collect();
 
                 let top_k_items: HashSet<usize> =
@@ -249,7 +249,7 @@ impl RecommenderRankingMetrics {
                 .iter()
                 .enumerate()
                 .filter(|(_, &score)| score > 0.0)
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .collect();
 
             let mut rank = None;
@@ -430,7 +430,7 @@ impl DiversityMetrics {
         // Calculate item coverage
         let all_recommended_items: HashSet<usize> = recommended_items
             .iter()
-            .flat_map(|_items| _items.iter())
+            .flat_map(|_items| items.iter())
             .copied()
             .collect();
         let item_coverage = all_recommended_items.len() as f64 / total_catalog_size as f64;
@@ -475,15 +475,15 @@ impl DiversityMetrics {
         let mut count = 0;
 
         for _items in recommended_items {
-            if _items.len() < 2 {
+            if items.len() < 2 {
                 continue;
             }
 
             let mut pairwise_distances = Vec::new();
             for i in 0.._items.len() {
                 for j in i + 1.._items.len() {
-                    let item1_id = _items[i];
-                    let item2_id = _items[j];
+                    let item1_id = items[i];
+                    let item2_id = items[j];
 
                     if item1_id < features.nrows() && item2_id < features.nrows() {
                         let distance = self.cosine_distance(
@@ -523,7 +523,7 @@ impl DiversityMetrics {
     }
 
     /// Calculate Gini coefficient for item distribution
-    fn calculate_gini_coefficient(&self, recommended_items: &[Vec<usize>]) -> Result<f64> {
+    fn calculate_gini_coefficient(&self, recommendeditems: &[Vec<usize>]) -> Result<f64> {
         // Count item frequencies
         let mut item_counts = HashMap::new();
         for _items in recommended_items {
@@ -555,7 +555,7 @@ impl DiversityMetrics {
     }
 
     /// Calculate entropy of item distribution
-    fn calculate_entropy(&self, recommended_items: &[Vec<usize>]) -> Result<f64> {
+    fn calculate_entropy(&self, recommendeditems: &[Vec<usize>]) -> Result<f64> {
         let mut item_counts = HashMap::new();
         let mut total_recommendations = 0;
 
@@ -592,7 +592,7 @@ impl DiversityMetrics {
         let long_tail_items: HashSet<usize> = popularity_scores
             .iter()
             .filter(|(_, &popularity)| popularity < threshold)
-            .map(|(&item_id_)| item_id)
+            .map(|(&item_id, _)| item_id)
             .collect();
 
         if long_tail_items.is_empty() {
@@ -602,7 +602,7 @@ impl DiversityMetrics {
         // Count recommended long-tail _items
         let recommended_long_tail: HashSet<usize> = recommended_items
             .iter()
-            .flat_map(|_items| _items.iter())
+            .flat_map(|_items| items.iter())
             .filter(|&item_id| long_tail_items.contains(item_id))
             .copied()
             .collect();

@@ -129,7 +129,7 @@ where
     /// // Create AMG preconditioner
     /// let amg = AMGPreconditioner::new(&matrix, AMGOptions::default()).unwrap();
     /// ```
-    pub fn new(_matrix: &CsrArray<T>, options: AMGOptions) -> SparseResult<Self> {
+    pub fn new(matrix: &CsrArray<T>, options: AMGOptions) -> SparseResult<Self> {
         let mut amg = AMGPreconditioner {
             operators: vec![_matrix.clone()],
             prolongations: Vec::new(),
@@ -716,11 +716,11 @@ where
 
 /// Helper function for matrix-vector multiplication
 #[allow(dead_code)]
-fn matrix_vector_multiply<T>(_matrix: &CsrArray<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+fn matrix_vector_multiply<T>(matrix: &CsrArray<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
 {
-    let (rows, cols) = _matrix.shape();
+    let (rows, cols) = matrix.shape();
     if x.len() != cols {
         return Err(SparseError::DimensionMismatch {
             expected: cols,
@@ -731,9 +731,9 @@ where
     let mut result = Array1::zeros(rows);
 
     for i in 0..rows {
-        for j in _matrix.get_indptr()[i].._matrix.get_indptr()[i + 1] {
-            let col = _matrix.get_indices()[j];
-            let val = _matrix.get_data()[j];
+        for j in matrix.get_indptr()[i].._matrix.get_indptr()[i + 1] {
+            let col = matrix.get_indices()[j];
+            let val = matrix.get_data()[j];
             result[i] = result[i] + val * x[col];
         }
     }

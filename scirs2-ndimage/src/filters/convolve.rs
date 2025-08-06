@@ -614,13 +614,13 @@ where
 
 /// Helper function to get padded values for n-dimensional arrays
 #[allow(dead_code)]
-fn get_padded_value_nd<T, D>(_input: &Array<T, D>, coords: &[isize], mode: &BorderMode) -> T
+fn get_padded_value_nd<T, D>(input: &Array<T, D>, coords: &[isize], mode: &BorderMode) -> T
 where
     T: Float + Clone + 'static,
     D: Dimension + 'static,
 {
-    let shape = _input.shape();
-    let ndim = _input.ndim();
+    let shape = input.shape();
+    let ndim = input.ndim();
 
     // Check if coordinates are within bounds
     let mut in_bounds = true;
@@ -634,12 +634,12 @@ where
     }
 
     if in_bounds {
-        return _input[ndarray::IxDyn(&clamped_coords)];
+        return input[ndarray::IxDyn(&clamped_coords)];
     }
 
     match mode {
         BorderMode::Constant => T::zero(),
-        BorderMode::Nearest => _input[ndarray::IxDyn(&clamped_coords)],
+        BorderMode::Nearest => input[ndarray::IxDyn(&clamped_coords)],
         BorderMode::Reflect => {
             let mut reflected_coords = vec![0usize; ndim];
             for d in 0..ndim {
@@ -651,7 +651,7 @@ where
                     coords[d] as usize
                 };
             }
-            _input[ndarray::IxDyn(&reflected_coords)]
+            input[ndarray::IxDyn(&reflected_coords)]
         }
         BorderMode::Wrap => {
             let mut wrapped_coords = vec![0usize; ndim];
@@ -659,7 +659,7 @@ where
                 wrapped_coords[d] = ((coords[d] % shape[d] as isize + shape[d] as isize)
                     % shape[d] as isize) as usize;
             }
-            _input[ndarray::IxDyn(&wrapped_coords)]
+            input[ndarray::IxDyn(&wrapped_coords)]
         }
         BorderMode::Mirror => {
             let mut mirrored_coords = vec![0usize; ndim];
@@ -672,7 +672,7 @@ where
                     coords[d] as usize
                 };
             }
-            _input[ndarray::IxDyn(&mirrored_coords)]
+            input[ndarray::IxDyn(&mirrored_coords)]
         }
     }
 }

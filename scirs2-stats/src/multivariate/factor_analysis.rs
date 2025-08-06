@@ -69,16 +69,16 @@ impl Default for FactorAnalysis {
 
 impl FactorAnalysis {
     /// Create a new factor analysis instance
-    pub fn new(_n_factors: usize) -> Result<Self> {
+    pub fn new(_nfactors: usize) -> Result<Self> {
         check_positive(_n_factors, "_n_factors")?;
         Ok(Self {
-            n_factors: _n_factors,
+            n_factors: n_factors,
             ..Default::default()
         })
     }
 
     /// Set maximum iterations
-    pub fn with_max_iter(mut self, max_iter: usize) -> Self {
+    pub fn with_max_iter(mut self, maxiter: usize) -> Self {
         self.max_iter = max_iter;
         self
     }
@@ -614,10 +614,10 @@ pub mod efa {
     }
 
     /// Compute eigenvalues of correlation matrix
-    fn compute_correlation_eigenvalues(_data: ArrayView2<f64>) -> Result<Array1<f64>> {
+    fn compute_correlation_eigenvalues(data: ArrayView2<f64>) -> Result<Array1<f64>> {
         // Center _data
-        let mean = _data.mean_axis(Axis(0)).unwrap();
-        let mut centered = _data.to_owned();
+        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mut centered = data.to_owned();
         for mut row in centered.rows_mut() {
             row -= &mean;
         }
@@ -654,12 +654,12 @@ pub mod efa {
     }
 
     /// Kaiser-Meyer-Olkin (KMO) measure of sampling adequacy
-    pub fn kmo_test(_data: ArrayView2<f64>) -> Result<f64> {
+    pub fn kmo_test(data: ArrayView2<f64>) -> Result<f64> {
         checkarray_finite(&_data, "_data")?;
 
         // Compute correlation matrix
-        let mean = _data.mean_axis(Axis(0)).unwrap();
-        let mut centered = _data.to_owned();
+        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mut centered = data.to_owned();
         for mut row in centered.rows_mut() {
             row -= &mean;
         }
@@ -707,9 +707,9 @@ pub mod efa {
     }
 
     /// Bartlett's test of sphericity
-    pub fn bartlett_test(_data: ArrayView2<f64>) -> Result<(f64, f64)> {
+    pub fn bartlett_test(data: ArrayView2<f64>) -> Result<(f64, f64)> {
         checkarray_finite(&_data, "_data")?;
-        let (n, p) = _data.dim();
+        let (n, p) = data.dim();
 
         if n <= p {
             return Err(StatsError::InvalidArgument(
@@ -718,8 +718,8 @@ pub mod efa {
         }
 
         // Compute correlation matrix
-        let mean = _data.mean_axis(Axis(0)).unwrap();
-        let mut centered = _data.to_owned();
+        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mut centered = data.to_owned();
         for mut row in centered.rows_mut() {
             row -= &mean;
         }

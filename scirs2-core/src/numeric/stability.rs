@@ -506,8 +506,8 @@ pub fn cross_entropy_stable<T: Float>(predictions: &[T], targets: &[T]) -> CoreR
 
 /// Stable matrix norm computation
 #[allow(dead_code)]
-pub fn stable_matrix_norm<T: Float>(_matrix: &ArrayView2<T>, ord: MatrixNorm) -> CoreResult<T> {
-    validate_matrix_not_empty(_matrix)?;
+pub fn stablematrix_norm<T: Float>(matrix: &ArrayView2<T>, ord: MatrixNorm) -> CoreResult<T> {
+    validatematrix_not_empty(matrix)?;
 
     match ord {
         MatrixNorm::Frobenius => {
@@ -515,7 +515,7 @@ pub fn stable_matrix_norm<T: Float>(_matrix: &ArrayView2<T>, ord: MatrixNorm) ->
             let mut sum = T::zero();
             let mut compensation = T::zero();
 
-            for &value in _matrix.iter() {
+            for &value in matrix.iter() {
                 let sq = value * value;
                 let y = sq - compensation;
                 let t = sum + y;
@@ -529,7 +529,7 @@ pub fn stable_matrix_norm<T: Float>(_matrix: &ArrayView2<T>, ord: MatrixNorm) ->
             // Maximum absolute column sum
             let mut max_sum = T::zero();
 
-            for col in _matrix.axis_iter(Axis(1)) {
+            for col in matrix.axis_iter(Axis(1)) {
                 let col_sum = stable_norm_1(&col.to_vec());
                 max_sum = max_sum.max(col_sum);
             }
@@ -540,7 +540,7 @@ pub fn stable_matrix_norm<T: Float>(_matrix: &ArrayView2<T>, ord: MatrixNorm) ->
             // Maximum absolute row sum
             let mut max_sum = T::zero();
 
-            for row in _matrix.axis_iter(Axis(0)) {
+            for row in matrix.axis_iter(Axis(0)) {
                 let row_sum = stable_norm_1(&row.to_vec());
                 max_sum = max_sum.max(row_sum);
             }
@@ -604,21 +604,21 @@ pub fn stable_norm_2<T: Float>(values: &[T]) -> T {
 
 /// Condition number estimation using 1-norm
 #[allow(dead_code)]
-pub fn condition_number_estimate<T: Float>(_matrix: &ArrayView2<T>) -> CoreResult<T> {
-    validate_matrix_not_empty(_matrix)?;
+pub fn condition_number_estimate<T: Float>(matrix: &ArrayView2<T>) -> CoreResult<T> {
+    validatematrix_not_empty(matrix)?;
 
-    if _matrix.nrows() != _matrix.ncols() {
+    if matrix.nrows() != matrix.ncols() {
         return Err(CoreError::ValidationError(ErrorContext::new(
             "Matrix must be square for condition number",
         )));
     }
 
-    // Compute 1-norm of _matrix
-    let norm_a = stable_matrix_norm(_matrix, MatrixNorm::One)?;
+    // Compute 1-norm of matrix
+    let norm_a = stablematrix_norm(matrix, MatrixNorm::One)?;
 
     // Estimate norm of inverse using power method
     // This is a simplified version - a full implementation would use LAPACK's condition estimator
-    let n = _matrix.nrows();
+    let n = matrix.nrows();
     let mut x = Array1::from_elem(n, T::one() / cast::<usize, T>(n).unwrap_or(T::one()));
     let mut y = Array1::zeros(n);
 
@@ -631,7 +631,7 @@ pub fn condition_number_estimate<T: Float>(_matrix: &ArrayView2<T>) -> CoreResul
         for i in 0..n {
             y[i] = T::zero();
             for j in 0..n {
-                y[i] = y[i] + _matrix[[j, i]] * x[j];
+                y[i] = y[i] + matrix[[j, i]] * x[j];
             }
         }
 
@@ -655,8 +655,8 @@ pub fn condition_number_estimate<T: Float>(_matrix: &ArrayView2<T>) -> CoreResul
 
 /// Helper function to validate matrix is not empty
 #[allow(dead_code)]
-fn validate_matrix_not_empty<T>(_matrix: &ArrayView2<T>) -> CoreResult<()> {
-    if _matrix.is_empty() {
+fn validatematrix_not_empty<T>(matrix: &ArrayView2<T>) -> CoreResult<()> {
+    if matrix.is_empty() {
         return Err(CoreError::ValidationError(ErrorContext::new(
             "Matrix cannot be empty",
         )));
@@ -812,7 +812,7 @@ mod tests {
     }
 
     #[test]
-    fn test_log_sum_exp() {
+    fn testlog_sum_exp() {
         let values = vec![1000.0, 1000.0, 1000.0];
         let result = log_sum_exp(&values);
         let expected = 1000.0 + 3.0_f64.ln();

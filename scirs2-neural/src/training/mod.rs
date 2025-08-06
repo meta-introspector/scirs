@@ -106,10 +106,10 @@ pub struct TrainingSession<F: Float + Debug + ScalarOperand> {
 
 impl<F: Float + Debug + ScalarOperand> TrainingSession<F> {
     /// Create a new training session
-    pub fn new(_config: TrainingConfig) -> Self {
+    pub fn new(config: TrainingConfig) -> Self {
         Self {
             history: HashMap::new(),
-            initial_learning_rate: F::from(_config.learning_rate).unwrap(),
+            initial_learning_rate: F::from(config.learning_rate).unwrap(),
             epochs_trained: 0,
             current_epoch: 0,
             best_validation_score: None,
@@ -118,16 +118,16 @@ impl<F: Float + Debug + ScalarOperand> TrainingSession<F> {
     }
 
     /// Add a metric value to the history
-    pub fn add_metric(&mut self, metric_name: &str, value: F) {
+    pub fn add_metric(&mut self, metricname: &str, value: F) {
         self.history
-            .entry(metric_name.to_string())
+            .entry(metricname.to_string())
             .or_default()
             .push(value);
     }
 
     /// Get the history for a specific metric
-    pub fn get_metric_history(&self, metric_name: &str) -> Option<&Vec<F>> {
-        self.history.get(metric_name)
+    pub fn get_metric_history(&self, metricname: &str) -> Option<&Vec<F>> {
+        self.history.get(metricname)
     }
 
     /// Get all metric names

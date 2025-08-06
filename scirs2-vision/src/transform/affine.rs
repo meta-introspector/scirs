@@ -27,25 +27,25 @@ impl AffineTransform {
     }
 
     /// Create translation transformation
-    pub fn translation(_tx: f64, ty: f64) -> Self {
-        Self::new(1.0, 0.0, _tx, 0.0, 1.0, ty)
+    pub fn translation(tx: f64, ty: f64) -> Self {
+        Self::new(1.0, 0.0, tx, 0.0, 1.0, ty)
     }
 
     /// Create scaling transformation
-    pub fn scaling(_sx: f64, sy: f64) -> Self {
+    pub fn scaling(sx: f64, sy: f64) -> Self {
         Self::new(_sx, 0.0, 0.0, 0.0, sy, 0.0)
     }
 
     /// Create rotation transformation
-    pub fn rotation(_angle: f64) -> Self {
-        let cos_angle = _angle.cos();
-        let sin_angle = _angle.sin();
+    pub fn rotation(angle: f64) -> Self {
+        let cos_angle = angle.cos();
+        let sin_angle = angle.sin();
         Self::new(cos_angle, -sin_angle, 0.0, sin_angle, cos_angle, 0.0)
     }
 
     /// Create shearing transformation
-    pub fn shearing(_shx: f64, shy: f64) -> Self {
-        Self::new(1.0, _shx, 0.0, shy, 1.0, 0.0)
+    pub fn shearing(shx: f64, shy: f64) -> Self {
+        Self::new(1.0, shx, 0.0, shy, 1.0, 0.0)
     }
 
     /// Compose with another transformation
@@ -172,7 +172,7 @@ pub enum BorderMode {
 
 /// Sample a pixel from an image using bilinear interpolation
 #[allow(dead_code)]
-fn sample_pixel(src: &DynamicImage, x: f64, y: f64, border_mode: BorderMode) -> Option<Rgba<u8>> {
+fn sample_pixel(src: &DynamicImage, x: f64, y: f64, bordermode: BorderMode) -> Option<Rgba<u8>> {
     let width = src.width() as f64;
     let height = src.height() as f64;
 

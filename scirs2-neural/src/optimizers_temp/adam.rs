@@ -41,10 +41,10 @@ impl<F: Float + Debug> Adam<F> {
     /// * `beta1` - Exponential decay rate for first moment estimates (default: 0.9)
     /// * `beta2` - Exponential decay rate for second moment estimates (default: 0.999)
     /// * `epsilon` - Small constant for numerical stability (default: 1e-8)
-    pub fn new(_learning_rate: F, beta1: F, beta2: F, epsilon: F) -> Self {
+    pub fn new(_learningrate: F, beta1: F, beta2: F, epsilon: F) -> Self {
         Self {
             inner: optim, optimizers: Adam::new_with_config(
-                _learning_rate,
+                learning_rate,
                 beta1,
                 beta2,
                 epsilon,
@@ -54,7 +54,7 @@ impl<F: Float + Debug> Adam<F> {
         }
     }
     /// Create a new Adam optimizer with default hyperparameters
-    pub fn default_with_lr(_learning_rate: F) -> Result<Self> {
+    pub fn default_with_lr(_learningrate: F) -> Result<Self> {
         let beta1 = F::from(0.9).ok_or_else(|| 
             NeuralError::InvalidArchitecture("Failed to convert beta1".to_string()))?;
         let beta2 = F::from(0.999).ok_or_else(|| 
@@ -101,7 +101,7 @@ impl<F: Float + Debug> Adam<F> {
     pub fn get_weight_decay(&self) -> F {
         self.weight_decay
     /// Set weight decay parameter
-    pub fn set_weight_decay(&mut self, weight_decay: F) -> &mut Self {
+    pub fn set_weight_decay(&mut self, weightdecay: F) -> &mut Self {
         self.weight_decay = weight_decay;
         self.inner.set_weight_decay(weight_decay);
     /// Reset the optimizer state

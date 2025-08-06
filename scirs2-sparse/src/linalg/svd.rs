@@ -347,7 +347,7 @@ where
 
 /// Randomized SVD algorithm
 #[allow(dead_code)]
-fn randomized_svd<T, S>(_matrix: &S, k: usize, options: &SVDOptions) -> SparseResult<SVDResult<T>>
+fn randomized_svd<T, S>(matrix: &S, k: usize, options: &SVDOptions) -> SparseResult<SVDResult<T>>
 where
     T: Float
         + Debug
@@ -360,7 +360,7 @@ where
         + std::iter::Sum,
     S: SparseArray<T>,
 {
-    let (m, n) = _matrix.shape();
+    let (m, n) = matrix.shape();
     let l = k + options.n_oversamples;
 
     // Generate random _matrix
@@ -449,7 +449,7 @@ where
 
 /// Power method SVD (simplified implementation)
 #[allow(dead_code)]
-fn power_method_svd<T, S>(_matrix: &S, k: usize, options: &SVDOptions) -> SparseResult<SVDResult<T>>
+fn power_method_svd<T, S>(matrix: &S, k: usize, options: &SVDOptions) -> SparseResult<SVDResult<T>>
 where
     T: Float
         + Debug
@@ -493,7 +493,7 @@ where
 
 /// Matrix-vector product: y = A * x
 #[allow(dead_code)]
-fn matrix_vector_product<T, S>(_matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
+fn matrix_vector_product<T, S>(matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
 where
     T: Float
         + Debug
@@ -506,7 +506,7 @@ where
         + std::iter::Sum,
     S: SparseArray<T>,
 {
-    let (m, n) = _matrix.shape();
+    let (m, n) = matrix.shape();
     if vector.len() != n {
         return Err(SparseError::DimensionMismatch {
             expected: n,
@@ -515,7 +515,7 @@ where
     }
 
     let mut result = Array1::zeros(m);
-    let (row_indices, col_indices, values) = _matrix.find();
+    let (row_indices, col_indices, values) = matrix.find();
 
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         result[i] = result[i] + values[k] * vector[j];
@@ -526,7 +526,7 @@ where
 
 /// Matrix-transpose-vector product: y = A^T * x
 #[allow(dead_code)]
-fn matrix_transpose_vector_product<T, S>(_matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
+fn matrix_transpose_vector_product<T, S>(matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
 where
     T: Float
         + Debug
@@ -539,7 +539,7 @@ where
         + std::iter::Sum,
     S: SparseArray<T>,
 {
-    let (m, n) = _matrix.shape();
+    let (m, n) = matrix.shape();
     if vector.len() != m {
         return Err(SparseError::DimensionMismatch {
             expected: m,
@@ -548,7 +548,7 @@ where
     }
 
     let mut result = Array1::zeros(n);
-    let (row_indices, col_indices, values) = _matrix.find();
+    let (row_indices, col_indices, values) = matrix.find();
 
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         result[j] = result[j] + values[k] * vector[i];
@@ -617,7 +617,7 @@ where
 
 /// QR decomposition returning only Q (simplified implementation)
 #[allow(dead_code)]
-fn qr_decomposition_orthogonal<T>(_matrix: &Array2<T>) -> SparseResult<Array2<T>>
+fn qr_decomposition_orthogonal<T>(matrix: &Array2<T>) -> SparseResult<Array2<T>>
 where
     T: Float
         + Debug
@@ -629,8 +629,8 @@ where
         + 'static
         + std::iter::Sum,
 {
-    let (m, n) = _matrix.dim();
-    let mut q = _matrix.clone();
+    let (m, n) = matrix.dim();
+    let mut q = matrix.clone();
 
     // Simple Gram-Schmidt orthogonalization
     for j in 0..n {
@@ -665,7 +665,7 @@ where
 
 /// Dense SVD (placeholder implementation)
 #[allow(dead_code)]
-fn dense_svd<T>(_matrix: &Array2<T>, k: usize) -> SparseResult<SVDResult<T>>
+fn dense_svd<T>(matrix: &Array2<T>, k: usize) -> SparseResult<SVDResult<T>>
 where
     T: Float
         + Debug
@@ -677,7 +677,7 @@ where
         + 'static
         + std::iter::Sum,
 {
-    let (m, n) = _matrix.dim();
+    let (m, n) = matrix.dim();
     let rank = k.min(m).min(n);
 
     // Simplified implementation - in practice, use LAPACK or similar

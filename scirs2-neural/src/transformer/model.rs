@@ -77,26 +77,26 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     pub fn new<R: Rng>(config: TransformerConfig, rng: &mut R) -> Result<Self> {
         // Create encoder
         let encoder = TransformerEncoder::new(
-            _config.d_model,
-            _config.n_encoder_layers,
-            _config.n_heads,
-            _config.d_ff,
-            _config.dropout,
-            _config.epsilon,
+            config.d_model,
+            config.n_encoder_layers,
+            config.n_heads,
+            config.d_ff,
+            config.dropout,
+            config.epsilon,
             rng,
         )?;
         // Create decoder
         let decoder = TransformerDecoder::new(
-            _config.n_decoder_layers,
+            config.n_decoder_layers,
         // Create positional encoding
         let pos_encoding = PositionalEncodingFactory::create(
-            _config.pos_encoding_type,
-            _config.max_seq_len,
+            config.pos_encoding_type,
+            config.max_seq_len,
         Ok(Self {
             encoder,
             decoder,
             pos_encoding,
-            _config,
+            config,
             encoder_output_cache: Arc::new(RwLock::new(None)),
         })
     /// Forward pass with encoder and decoder
@@ -173,7 +173,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         let grad_input = Array::zeros(input.dim());
         // Return gradient with respect to input
         Ok(grad_input)
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         // Update all components
         self.encoder.update(learning_rate)?;
         self.decoder.update(learning_rate)?;

@@ -76,12 +76,12 @@ where
     let num_features = x.shape()[1];
     if gamma.shape()[0] != num_features || beta.shape()[0] != num_features {
         return Err(NeuralError::ShapeMismatch(
-            format!("Parameter shape mismatch in batch_norm_forward: x shape {:?}, gamma shape {:?}, beta shape {:?}",
+            format!("Parameter shape mismatch in batch_normforward: x shape {:?}, gamma shape {:?}, beta shape {:?}",
                    x.shape(), gamma.shape(), beta.shape())
         ));
     }
     if running_mean.shape()[0] != num_features || running_var.shape()[0] != num_features {
-            format!("Running stats shape mismatch in batch_norm_forward: x shape {:?}, running_mean shape {:?}, running_var shape {:?}",
+            format!("Running stats shape mismatch in batch_normforward: x shape {:?}, running_mean shape {:?}, running_var shape {:?}",
                    x.shape(), running_mean.shape(), running_var.shape())
     let mut out = Array2::<F>::zeros(x.raw_dim());
     if training {
@@ -196,7 +196,7 @@ pub fn batch_norm_backward<F>(
 #[allow(dead_code)]
 pub fn layer_norm<F>(
 ) -> Result<LayerNormForwardReturn<F>>
-            format!("Parameter shape mismatch in layer_norm: x shape {:?}, gamma shape {:?}, beta shape {:?}",
+            format!("Parameter shape mismatch in layernorm: x shape {:?}, gamma shape {:?}, beta shape {:?}",
     let mut x_hat = Array2::<F>::zeros(x.raw_dim());
     let mut mean = Array1::<F>::zeros(batch_size);
     let mut var = Array1::<F>::zeros(batch_size);
@@ -255,7 +255,7 @@ pub fn layer_norm_backward<F>(
 /// let norm = clipped_grad.iter().map(|&v: &f64| v.powi(2)).sum::<f64>().sqrt();
 /// assert!(norm <= 10.0 + 1e-5); // Allow small numerical error
 #[allow(dead_code)]
-pub fn clip_grad_norm<F, D>(_grad: &ArrayView<F, D>, max_norm: F) -> Result<Array<F, D>>
+pub fn clip_grad_norm<F, D>(_grad: &ArrayView<F, D>, maxnorm: F) -> Result<Array<F, D>>
     D: Dimension,
     let mut grad_squared_sum = F::zero();
     // Compute sum of squared gradients

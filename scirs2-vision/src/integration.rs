@@ -18,19 +18,19 @@
 #![allow(missing_docs)]
 #![allow(dead_code)]
 
-use crate::activity__recognition::*;
-use crate::ai__optimization::*;
+use crate::activity_recognition::*;
+use crate::ai_optimization::*;
 use crate::error::Result;
-use crate::neuromorphic__streaming::*;
-use crate::quantum_inspired__streaming::*;
-use crate::scene__understanding::*;
+use crate::neuromorphic_streaming::*;
+use crate::quantum_inspired_streaming::*;
+use crate::scene_understanding::*;
 use crate::streaming::{Frame, FrameMetadata};
-use crate::visual__reasoning::*;
-use crate::visual__slam::*;
+use crate::visual_reasoning::*;
+use crate::visual_slam::*;
 use ndarray::{s, Array1, Array2, Array3};
+use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use statrs::statistics::Statistics;
 
 /// Advanced Neural-Quantum Hybrid Processor
 /// Combines quantum-inspired algorithms with neuromorphic computing
@@ -1214,7 +1214,10 @@ impl GlobalAdvancedOptimizer {
     }
 
     pub async fn fuse_cross_module_results(
-        &mut self_vision: &Option<VisionResult>, _clustering: &Option<ClusteringResult>, _spatial: &Option<SpatialResult>, _neural: &Option<NeuralResult>,
+        &mut self_vision: &Option<VisionResult>,
+        _clustering: &Option<ClusteringResult>,
+        _spatial: &Option<SpatialResult>,
+        _neural: &Option<NeuralResult>,
     ) -> Result<CrossModuleFusedResult> {
         Ok(CrossModuleFusedResult {
             _vision_output: None,
@@ -1257,7 +1260,9 @@ impl CrossModulePerformanceTracker {
     }
 
     pub async fn track_and_analyze(
-        &mut self_result: &CrossModuleFusedResult, _elapsed: Duration, allocation: &ResourceAllocation,
+        &mut self_result: &CrossModuleFusedResult,
+        _elapsed: Duration,
+        allocation: &ResourceAllocation,
     ) -> Result<AdvancedPerformanceMetrics> {
         Ok(AdvancedPerformanceMetrics {
             overall_performance: 0.91,
@@ -1889,7 +1894,7 @@ impl NeuralQuantumHybridProcessor {
     }
 
     /// Apply optimization actions based on AI decisions
-    fn apply_optimization_action(&mut self_action: &ActionDiscrete) -> Result<()> {
+    fn apply_optimization_action(&mut selfaction: &ActionDiscrete) -> Result<()> {
         // Implement specific optimization actions
         // This could adjust quantum weights, neuromorphic parameters, etc.
         Ok(())
@@ -1897,7 +1902,8 @@ impl NeuralQuantumHybridProcessor {
 
     /// Detect emergent behaviors in the processing results
     fn detect_emergent_behaviors(
-        &mut self, _activity_result: &ActivityRecognitionResult,
+        &mut self,
+        _activity_result: &ActivityRecognitionResult,
     ) -> Result<Vec<EmergentBehavior>> {
         // Simplified emergent behavior detection
         let behaviors = vec![EmergentBehavior {
@@ -1916,7 +1922,7 @@ impl NeuralQuantumHybridProcessor {
     }
 
     /// Update meta-learning based on performance
-    fn update_meta_learning(&mut self_metrics: &PerformanceMetric) -> Result<()> {
+    fn update_meta_learning(&mut selfmetrics: &PerformanceMetric) -> Result<()> {
         // Update task adaptation
         self.meta_learner.task_adaptation.adaptation_speed *= 0.99; // Gradual decay
 
@@ -2060,14 +2066,14 @@ pub struct UncertaintyQuantification {
 
 /// High-level Advanced processing function
 #[allow(dead_code)]
-pub fn process_with_advanced_mode(_frame: Frame) -> Result<AdvancedProcessingResult> {
+pub fn process_with_advanced_mode(frame: Frame) -> Result<AdvancedProcessingResult> {
     let mut processor = NeuralQuantumHybridProcessor::new();
     processor.process_advanced(_frame)
 }
 
 /// Batch processing with Advanced capabilities
 #[allow(dead_code)]
-pub fn batch_process_advanced(_frames: Vec<Frame>) -> Result<Vec<AdvancedProcessingResult>> {
+pub fn batch_process_advanced(frames: Vec<Frame>) -> Result<Vec<AdvancedProcessingResult>> {
     let mut processor = NeuralQuantumHybridProcessor::new();
     let mut results = Vec::with_capacity(_frames.len());
 

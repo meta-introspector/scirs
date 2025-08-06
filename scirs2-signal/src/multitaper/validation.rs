@@ -326,7 +326,7 @@ fn validate_spectral_accuracy(
         let noise_std = 1.0 / snr_linear.sqrt();
         let noisy_signal: Vec<f64> = signal
             .iter()
-            .map(|&s| s + noise_std * rng.random_range(-1.0..1.0))
+            .map(|&s| s + noise_std * rng.gen_range(-1.0..1.0))
             .collect();
 
         let result = enhanced_pmtm(&noisy_signal, &config)?;
@@ -527,18 +527,18 @@ fn test_numerical_stability_enhanced() -> SignalResult<NumericalStabilityMetrics
 
 /// Benchmark performance
 #[allow(dead_code)]
-fn benchmark_performance(_test_signals: &TestSignalConfig) -> SignalResult<PerformanceMetrics> {
+fn benchmark_performance(testsignals: &TestSignalConfig) -> SignalResult<PerformanceMetrics> {
     // Generate test signal
-    let signal: Vec<f64> = (0.._test_signals.n).map(|i| (i as f64).sin()).collect();
+    let signal: Vec<f64> = (0..test_signals.n).map(|i| (i as f64).sin()).collect();
 
     // Standard implementation
     let start = Instant::now();
     for _ in 0..10 {
         let _ = pmtm(
             &signal,
-            Some(_test_signals.fs),
-            Some(_test_signals.nw),
-            Some(_test_signals.k),
+            Some(test_signals.fs),
+            Some(test_signals.nw),
+            Some(test_signals.k),
             None,
             Some(true),
             Some(false),
@@ -607,7 +607,7 @@ fn cross_validate_with_reference(
         .collect();
 
     // Standard implementation (as reference)
-    let (_ref_freqs, ref_psd__) = pmtm(
+    let (_ref_freqs, ref_psd) = pmtm(
         &signal,
         Some(test_signals.fs),
         Some(test_signals.nw),
@@ -661,7 +661,7 @@ fn cross_validate_with_reference(
 // Helper functions
 
 #[allow(dead_code)]
-fn estimate_frequency_resolution(_frequencies: &[f64], psd: &[f64], peak_idx: usize) -> f64 {
+fn estimate_frequency_resolution(_frequencies: &[f64], psd: &[f64], peakidx: usize) -> f64 {
     let _peak_power = psd[peak_idx];
     let half_power = _peak_power / 2.0;
 
@@ -676,25 +676,25 @@ fn estimate_frequency_resolution(_frequencies: &[f64], psd: &[f64], peak_idx: us
         right_idx += 1;
     }
 
-    _frequencies[right_idx] - _frequencies[left_idx]
+    frequencies[right_idx] - frequencies[left_idx]
 }
 
 #[allow(dead_code)]
-fn estimate_spectral_leakage(_psd: &[f64], peak_idx: usize) -> f64 {
-    let _peak_power = _psd[peak_idx];
-    let total_power: f64 = _psd.iter().sum();
+fn estimate_spectral_leakage(_psd: &[f64], peakidx: usize) -> f64 {
+    let _peak_power = psd[peak_idx];
+    let total_power: f64 = psd.iter().sum();
 
     // Estimate power in main lobe (±10 bins around peak)
     let lobe_start = peak_idx.saturating_sub(10);
     let lobe_end = (peak_idx + 10).min(_psd.len() - 1);
-    let lobe_power: f64 = _psd[lobe_start..=lobe_end].iter().sum();
+    let lobe_power: f64 = psd[lobe_start..=lobe_end].iter().sum();
 
     (total_power - lobe_power) / total_power
 }
 
 #[allow(dead_code)]
-fn estimate_condition_number(_signal: &[f64]) -> f64 {
-    let max_val = _signal.iter().cloned().fold(0.0, f64::max);
+fn estimate_condition_number(signal: &[f64]) -> f64 {
+    let max_val = signal.iter().cloned().fold(0.0, f64::max);
     let min_val = _signal
         .iter()
         .cloned()
@@ -751,7 +751,7 @@ fn validate_confidence_intervals(
         // Add noise
         let noisy_signal: Vec<f64> = signal
             .iter()
-            .map(|&s| s + 0.1 * rng.random_range(-1.0..1.0))
+            .map(|&s| s + 0.1 * rng.gen_range(-1.0..1.0))
             .collect();
 
         let result = enhanced_pmtm(&noisy_signal, config)?;
@@ -863,7 +863,7 @@ pub fn generate_test_signal(
 
         TestSignalType::WhiteNoise => {
             // White Gaussian _noise
-            (0..n).map(|_| rng.random_range(-1.0..1.0)).collect()
+            (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect()
         }
 
         TestSignalType::ColoredNoise => {
@@ -875,7 +875,7 @@ pub fn generate_test_signal(
             let mut prev2 = 0.0;
 
             for i in 0..n {
-                let innovation = rng.random_range(-1.0..1.0);
+                let innovation = rng.gen_range(-1.0..1.0);
                 signal[i] = a1 * prev1 + a2 * prev2 + innovation;
                 prev2 = prev1;
                 prev1 = signal[i];
@@ -927,7 +927,7 @@ pub fn generate_test_signal(
 
         Ok(signal
             .into_iter()
-            .map(|s| s + noise_std * rng.random_range(-1.0..1.0))
+            .map(|s| s + noise_std * rng.gen_range(-1.0..1.0))
             .collect())
     } else {
         Ok(signal)
@@ -1113,13 +1113,13 @@ fn calculate_noise_metrics(
 
 /// Calculate general metrics for other signal types
 #[allow(dead_code)]
-fn calculate_general_metrics(_psd_estimates: &[Vec<f64>]) -> SignalResult<SpectralAccuracyMetrics> {
-    let n_freqs = _psd_estimates[0].len();
+fn calculate_general_metrics(_psdestimates: &[Vec<f64>]) -> SignalResult<SpectralAccuracyMetrics> {
+    let n_freqs = psd_estimates[0].len();
     let mut total_variance = 0.0;
 
     // Calculate variance across all frequency bins
     for j in 0..n_freqs {
-        let values: Vec<f64> = _psd_estimates.iter().map(|psd| psd[j]).collect();
+        let values: Vec<f64> = psd_estimates.iter().map(|psd| psd[j]).collect();
         let mean = values.iter().sum::<f64>() / values.len() as f64;
         let variance =
             values.iter().map(|&val| (val - mean).powi(2)).sum::<f64>() / (values.len() - 1) as f64;
@@ -1151,7 +1151,7 @@ fn cross_validate_with_multiple_references(
         let signal = generate_test_signal(test_signals, *signal_type, false)?;
 
         // Standard implementation (reference)
-        let (_ref_freqs, ref_psd__) = pmtm(
+        let (_ref_freqs, ref_psd) = pmtm(
             &signal,
             Some(test_signals.fs),
             Some(test_signals.nw),
@@ -1206,12 +1206,12 @@ fn cross_validate_with_multiple_references(
 
 /// Compute relative errors between two PSD estimates
 #[allow(dead_code)]
-fn compute_relative_errors(_ref_psd: &[f64], test_psd: &[f64]) -> Vec<f64> {
-    _ref_psd
+fn compute_relative_errors(_ref_psd__: &[f64], testpsd: &[f64]) -> Vec<f64> {
+    _ref_psd__
         .iter()
         .zip(test_psd.iter())
-        .filter(|(&r_)| r > 1e-10)
-        .map(|(&r, &t)| (r - t).abs() / r)
+        .filter(|(&r_, _)| r_ > 1e-10)
+        .map(|(&r_, &t)| (r_ - t).abs() / r_)
         .collect()
 }
 
@@ -1397,16 +1397,16 @@ pub struct ConvergenceMetrics {
 
 /// Validate extreme parameter cases
 #[allow(dead_code)]
-fn validate_extreme_case(_config: &TestSignalConfig, _tolerance: f64) -> SignalResult<f64> {
+fn validate_extreme_case(_config: &TestSignalConfig, tolerance: f64) -> SignalResult<f64> {
     // Generate a simple test signal
     let signal: Vec<f64> = (0.._config.n)
-        .map(|i| (2.0 * PI * 10.0 * i as f64 / _config.fs).sin())
+        .map(|i| (2.0 * PI * 10.0 * i as f64 / config.fs).sin())
         .collect();
 
     let mt_config = MultitaperConfig {
-        fs: _config.fs,
-        nw: _config.nw,
-        k: _config.k,
+        fs: config.fs,
+        nw: config.nw,
+        k: config.k,
         ..Default::default()
     };
 
@@ -1445,24 +1445,24 @@ fn validate_extreme_case(_config: &TestSignalConfig, _tolerance: f64) -> SignalR
 
 /// Validate numerical consistency across different implementations
 #[allow(dead_code)]
-fn validate_numerical_consistency(_config: &TestSignalConfig, tolerance: f64) -> SignalResult<f64> {
+fn validate_numerical_consistency(config: &TestSignalConfig, tolerance: f64) -> SignalResult<f64> {
     // Generate test signal
     let signal: Vec<f64> = (0.._config.n)
-        .map(|i| (2.0 * PI * 10.0 * i as f64 / _config.fs).sin())
+        .map(|i| (2.0 * PI * 10.0 * i as f64 / config.fs).sin())
         .collect();
 
     let mt_config1 = MultitaperConfig {
-        fs: _config.fs,
-        nw: _config.nw,
-        k: _config.k,
+        fs: config.fs,
+        nw: config.nw,
+        k: config.k,
         parallel: false,
         ..Default::default()
     };
 
     let mt_config2 = MultitaperConfig {
-        fs: _config.fs,
-        nw: _config.nw,
-        k: _config.k,
+        fs: config.fs,
+        nw: config.nw,
+        k: config.k,
         parallel: true,
         ..Default::default()
     };
@@ -1488,7 +1488,7 @@ fn validate_numerical_consistency(_config: &TestSignalConfig, tolerance: f64) ->
 
 /// Validate memory scaling characteristics
 #[allow(dead_code)]
-fn validate_memory_scaling(_config: &TestSignalConfig) -> SignalResult<f64> {
+fn validate_memory_scaling(config: &TestSignalConfig) -> SignalResult<f64> {
     // Test different signal sizes and measure memory efficiency
     let sizes = vec![1024, 4096, 16384];
     let mut efficiency_scores = Vec::new();
@@ -1585,14 +1585,14 @@ fn test_convergence_stability(
 
 /// Test robustness against various noise conditions
 #[allow(dead_code)]
-fn test_noise_robustness(_config: &TestSignalConfig, _tolerance: f64) -> SignalResult<f64> {
+fn test_noise_robustness(_config: &TestSignalConfig, tolerance: f64) -> SignalResult<f64> {
     let noise_levels = vec![0.1, 0.5, 1.0, 2.0]; // Different SNR conditions
     let mut robustness_scores = Vec::new();
 
     for &noise_level in &noise_levels {
         let signal: Vec<f64> = (0.._config.n)
             .map(|i| {
-                let t = i as f64 / _config.fs;
+                let t = i as f64 / config.fs;
                 let clean_signal = (2.0 * PI * 10.0 * t).sin();
                 let noise = (i as f64 * 12345.0).sin() * noise_level; // Simple pseudo-noise
                 clean_signal + noise
@@ -1600,9 +1600,9 @@ fn test_noise_robustness(_config: &TestSignalConfig, _tolerance: f64) -> SignalR
             .collect();
 
         let mt_config = MultitaperConfig {
-            fs: _config.fs,
-            nw: _config.nw,
-            k: _config.k,
+            fs: config.fs,
+            nw: config.nw,
+            k: config.k,
             ..Default::default()
         };
 
@@ -1614,7 +1614,7 @@ fn test_noise_robustness(_config: &TestSignalConfig, _tolerance: f64) -> SignalR
                     .iter()
                     .enumerate()
                     .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                    .map(|(i_)| i)
+                    .map(|(i_, _)| i_)
                     .unwrap_or(0);
 
                 let expected_freq = 10.0;
@@ -1635,13 +1635,13 @@ fn test_noise_robustness(_config: &TestSignalConfig, _tolerance: f64) -> SignalR
 
 /// Validate SIMD operations used in multitaper implementation
 #[allow(dead_code)]
-pub fn validate_simd_operations(_test_signals: &TestSignalConfig) -> SignalResult<f64> {
+pub fn validate_simd_operations(testsignals: &TestSignalConfig) -> SignalResult<f64> {
     let mut simd_score = 100.0;
     let mut validation_errors = Vec::new();
 
     // Test signal generation
-    let signal: Vec<f64> = (0.._test_signals.n)
-        .map(|i| (2.0 * PI * 10.0 * i as f64 / _test_signals.fs).sin())
+    let signal: Vec<f64> = (0..test_signals.n)
+        .map(|i| (2.0 * PI * 10.0 * i as f64 / test_signals.fs).sin())
         .collect();
 
     // Test 1: Basic SIMD multiplication operations
@@ -1649,7 +1649,7 @@ pub fn validate_simd_operations(_test_signals: &TestSignalConfig) -> SignalResul
     let signal_view = ndarray::ArrayView1::from(&signal);
     let window_view = ndarray::ArrayView1::from(&dummy_window);
     let mut result = vec![0.0; signal.len()];
-    let _result_view = ndarray::ArrayView1::fromshape(signal.len(), &mut result)
+    let _result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut result)
         .map_err(|e| SignalError::ComputationError(format!("SIMD shape error: {}", e)))?;
 
     // Test SIMD multiplication
@@ -1675,7 +1675,7 @@ pub fn validate_simd_operations(_test_signals: &TestSignalConfig) -> SignalResul
 
     // Test 2: SIMD addition operations
     let mut add_result = vec![0.0; signal.len()];
-    let _add_result_view = ndarray::ArrayView1::fromshape(signal.len(), &mut add_result)
+    let _add_result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut add_result)
         .map_err(|e| SignalError::ComputationError(format!("SIMD add shape error: {}", e)))?;
 
     let add_simd_result = f64::simd_add(&signal_view, &window_view);
@@ -1699,7 +1699,7 @@ pub fn validate_simd_operations(_test_signals: &TestSignalConfig) -> SignalResul
 
     // Test 3: SIMD subtraction operations
     let mut sub_result = vec![0.0; signal.len()];
-    let _sub_result_view = ndarray::ArrayView1::fromshape(signal.len(), &mut sub_result)
+    let _sub_result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut sub_result)
         .map_err(|e| SignalError::ComputationError(format!("SIMD sub shape error: {}", e)))?;
 
     let sub_simd_result = f64::simd_sub(&signal_view, &window_view);
@@ -1778,7 +1778,7 @@ pub fn validate_simd_operations(_test_signals: &TestSignalConfig) -> SignalResul
                 ));
             }
         }
-        (Err(_)) => {
+        (Err(_), _) => {
             simd_score -= 25.0;
             validation_errors.push("SIMD enhanced multitaper failed".to_string());
         }
@@ -1856,21 +1856,21 @@ pub fn validate_multitaper_with_simd(
 /// Tests edge cases and numerical stability across different parameter ranges
 #[allow(dead_code)]
 pub fn validate_numerical_precision_enhanced(
-    _test_signals: &TestSignalConfig,
+    test_signals: &TestSignalConfig,
 ) -> SignalResult<f64> {
     let mut total_score = 0.0;
     let mut test_count = 0;
 
     // Test with very small signal amplitudes
     for amplitude in [1e-12, 1e-9, 1e-6] {
-        let small_signal: Vec<f64> = (0.._test_signals.n)
-            .map(|i| amplitude * (2.0 * PI * i as f64 / _test_signals.n as f64).sin())
+        let small_signal: Vec<f64> = (0..test_signals.n)
+            .map(|i| amplitude * (2.0 * PI * i as f64 / test_signals.n as f64).sin())
             .collect();
 
         let config = MultitaperConfig {
-            fs: _test_signals.fs,
-            nw: _test_signals.nw,
-            k: _test_signals.k,
+            fs: test_signals.fs,
+            nw: test_signals.nw,
+            k: test_signals.k,
             ..Default::default()
         };
         {
@@ -1946,10 +1946,10 @@ pub fn validate_numerical_precision_enhanced(
 
 /// Validate spectral estimation consistency across different parameter combinations
 #[allow(dead_code)]
-pub fn validate_parameter_consistency(_test_signals: &TestSignalConfig) -> SignalResult<f64> {
-    let test_signal: Vec<f64> = (0.._test_signals.n)
+pub fn validate_parameter_consistency(testsignals: &TestSignalConfig) -> SignalResult<f64> {
+    let test_signal: Vec<f64> = (0..test_signals.n)
         .map(|i| {
-            let t = i as f64 / _test_signals.fs;
+            let t = i as f64 / test_signals.fs;
             (2.0 * PI * 10.0 * t).sin() + 0.5 * (2.0 * PI * 25.0 * t).sin()
         })
         .collect();

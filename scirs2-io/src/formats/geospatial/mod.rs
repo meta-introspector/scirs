@@ -54,7 +54,7 @@ pub struct CRS {
 
 impl CRS {
     /// Create CRS from EPSG code
-    pub fn from_epsg(_code: u32) -> Self {
+    pub fn from_epsg(code: u32) -> Self {
         Self {
             epsg_code: Some(_code),
             wkt: None,
@@ -63,7 +63,7 @@ impl CRS {
     }
 
     /// Create CRS from WKT string
-    pub fn from_wkt(_wkt: String) -> Self {
+    pub fn from_wkt(wkt: String) -> Self {
         Self {
             epsg_code: None,
             wkt: Some(_wkt),
@@ -91,7 +91,7 @@ pub struct GeoTransform {
 
 impl GeoTransform {
     /// Create a simple north-up transform
-    pub fn new(x_origin: f64, y_origin: f64, pixel_width: f64, pixel_height: f64) -> Self {
+    pub fn new(x_origin: f64, y_origin: f64, pixel_width: f64, pixelheight: f64) -> Self {
         Self {
             x_origin,
             y_origin,
@@ -103,14 +103,14 @@ impl GeoTransform {
     }
 
     /// Transform pixel coordinates to geographic coordinates
-    pub fn pixel_to_geo(&self, pixel_x: f64, pixel_y: f64) -> (f64, f64) {
+    pub fn pixel_to_geo(&self, pixel_x: f64, pixely: f64) -> (f64, f64) {
         let geo_x = self.x_origin + pixel_x * self.pixel_width + pixel_y * self.x_rotation;
         let geo_y = self.y_origin + pixel_x * self.y_rotation + pixel_y * self.pixel_height;
         (geo_x, geo_y)
     }
 
     /// Transform geographic coordinates to pixel coordinates
-    pub fn geo_to_pixel(&self, geo_x: f64, geo_y: f64) -> (f64, f64) {
+    pub fn geo_to_pixel(&self, geo_x: f64, geoy: f64) -> (f64, f64) {
         let det = self.pixel_width * self.pixel_height - self.x_rotation * self.y_rotation;
         if det.abs() < 1e-10 {
             return (0.0, 0.0); // Singular transform
@@ -157,7 +157,7 @@ impl GeoTiff {
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         // This is a simplified implementation for basic GeoTIFF files
         // In reality, we would use a proper TIFF/GeoTIFF library like tiff crate
-        let file_path = _path.as_ref().to_string_lossy().to_string();
+        let file_path = path.as_ref().to_string_lossy().to_string();
 
         // Try to read basic file information
         let mut file = std::fs::File::open(&file_path)?;
@@ -331,7 +331,7 @@ impl GeoTiff {
 /// Trait for numeric types supported by GeoTIFF
 pub trait GeoTiffNumeric: Default + Clone {
     fn zero() -> Self;
-    fn from_f32(_val: f32) -> Self;
+    fn from_f32(val: f32) -> Self;
 }
 
 impl GeoTiffNumeric for u8 {
@@ -339,7 +339,7 @@ impl GeoTiffNumeric for u8 {
         0
     }
 
-    fn from_f32(_val: f32) -> Self {
+    fn from_f32(val: f32) -> Self {
         (_val * 255.0).clamp(0.0, 255.0) as u8
     }
 }
@@ -349,7 +349,7 @@ impl GeoTiffNumeric for i8 {
         0
     }
 
-    fn from_f32(_val: f32) -> Self {
+    fn from_f32(val: f32) -> Self {
         (_val * 127.0).clamp(-128.0, 127.0) as i8
     }
 }
@@ -359,7 +359,7 @@ impl GeoTiffNumeric for u16 {
         0
     }
 
-    fn from_f32(_val: f32) -> Self {
+    fn from_f32(val: f32) -> Self {
         (_val * 65535.0).clamp(0.0, 65535.0) as u16
     }
 }
@@ -369,7 +369,7 @@ impl GeoTiffNumeric for i16 {
         0
     }
 
-    fn from_f32(_val: f32) -> Self {
+    fn from_f32(val: f32) -> Self {
         (_val * 32767.0).clamp(-32768.0, 32767.0) as i16
     }
 }
@@ -379,7 +379,7 @@ impl GeoTiffNumeric for u32 {
         0
     }
 
-    fn from_f32(_val: f32) -> Self {
+    fn from_f32(val: f32) -> Self {
         (_val * 4294967295.0).clamp(0.0, 4294967295.0) as u32
     }
 }
@@ -389,7 +389,7 @@ impl GeoTiffNumeric for i32 {
         0
     }
 
-    fn from_f32(_val: f32) -> Self {
+    fn from_f32(val: f32) -> Self {
         (_val * 2147483647.0).clamp(-2147483648.0, 2147483647.0) as i32
     }
 }
@@ -399,7 +399,7 @@ impl GeoTiffNumeric for f32 {
         0.0
     }
 
-    fn from_f32(_val: f32) -> Self {
+    fn from_f32(val: f32) -> Self {
         _val
     }
 }
@@ -409,7 +409,7 @@ impl GeoTiffNumeric for f64 {
         0.0
     }
 
-    fn from_f32(_val: f32) -> Self {
+    fn from_f32(val: f32) -> Self {
         _val as f64
     }
 }
@@ -578,7 +578,7 @@ impl Shapefile {
         // Simplified implementation that validates file existence and structure
         // In reality, would use a proper shapefile library to read .shp, .shx, .dbf files
 
-        let _path = _path.as_ref();
+        let _path = path.as_ref();
         let stem = _path
             .file_stem()
             .ok_or_else(|| IoError::FormatError("Invalid file _path".to_string()))?
@@ -707,9 +707,9 @@ pub struct GeoJsonGeometry {
 impl GeoJson {
     /// Read GeoJSON from file
     pub fn read<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(_path.as_ref())
-            .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
-        let _reader = BufReader::new(file);
+        let file = File::open(path.as_ref())
+            .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+        let reader = BufReader::new(file);
 
         // Simplified - would use serde_json to parse
         Ok(Self {
@@ -729,7 +729,7 @@ impl GeoJson {
     }
 
     /// Convert from Shapefile features
-    pub fn from_features(_features: Vec<Feature>, crs: Option<CRS>) -> Self {
+    pub fn from_features(features: Vec<Feature>, crs: Option<CRS>) -> Self {
         let geojson_features = _features
             .into_iter()
             .map(|f| GeoJsonFeature {
@@ -759,7 +759,7 @@ impl GeoJson {
         }
     }
 
-    fn geometry_to_geojson(_geom: &Geometry) -> GeoJsonGeometry {
+    fn geometry_to_geojson(geom: &Geometry) -> GeoJsonGeometry {
         match _geom {
             Geometry::Point { x, y } => GeoJsonGeometry {
                 r#type: "Point".to_string(),
@@ -818,7 +818,7 @@ pub struct KMLStyle {
 
 impl KMLDocument {
     /// Create a new KML document
-    pub fn new(_name: impl Into<String>) -> Self {
+    pub fn new(name: impl Into<String>) -> Self {
         Self {
             name: Some(_name.into()),
             description: None,
@@ -1017,7 +1017,7 @@ impl KMLDocument {
     /// Read KML from file
     pub fn read_kml<P: AsRef<Path>>(path: P) -> Result<Self> {
         // Simplified KML reading - in a real implementation, would use proper XML parser
-        let _content = std::fs::read_to_string(_path.as_ref())
+        let _content = std::fs::read_to_string(path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to read KML file: {e}")))?;
 
         // For now, return a basic document structure
@@ -1046,12 +1046,12 @@ pub mod geo_utils {
     use super::*;
 
     /// Calculate distance between two points using Haversine formula
-    pub fn haversine_distance(_lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
+    pub fn haversine_distance(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
         const R: f64 = 6371000.0; // Earth's radius in meters
 
-        let lat1_rad = _lat1.to_radians();
+        let lat1_rad = lat1.to_radians();
         let lat2_rad = lat2.to_radians();
-        let delta_lat = (lat2 - _lat1).to_radians();
+        let delta_lat = (lat2 - lat1).to_radians();
         let delta_lon = (lon2 - lon1).to_radians();
 
         let a = (delta_lat / 2.0).sin().powi(2)
@@ -1062,8 +1062,8 @@ pub mod geo_utils {
     }
 
     /// Calculate bearing between two points
-    pub fn bearing(_lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
-        let lat1_rad = _lat1.to_radians();
+    pub fn bearing(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
+        let lat1_rad = lat1.to_radians();
         let lat2_rad = lat2.to_radians();
         let delta_lon = (lon2 - lon1).to_radians();
 
@@ -1108,7 +1108,7 @@ pub mod geo_utils {
     }
 
     /// Check if a point is inside a polygon
-    pub fn point_in_polygon(_point: &(f64, f64), polygon: &[(f64, f64)]) -> bool {
+    pub fn point_in_polygon(point: &(f64, f64), polygon: &[(f64, f64)]) -> bool {
         let (x, y) = *_point;
         let mut inside = false;
         let n = polygon.len();
@@ -1132,8 +1132,8 @@ pub mod geo_utils {
     }
 
     /// Calculate the area of a polygon using the shoelace formula
-    pub fn polygon_area(_polygon: &[(f64, f64)]) -> f64 {
-        let n = _polygon.len();
+    pub fn polygon_area(polygon: &[(f64, f64)]) -> f64 {
+        let n = polygon.len();
         if n < 3 {
             return 0.0;
         }
@@ -1142,8 +1142,8 @@ pub mod geo_utils {
         let mut j = n - 1;
 
         for i in 0..n {
-            let (xi, yi) = _polygon[i];
-            let (xj, yj) = _polygon[j];
+            let (xi, yi) = polygon[i];
+            let (xj, yj) = polygon[j];
             area += (xj + xi) * (yj - yi);
             j = i;
         }
@@ -1152,8 +1152,8 @@ pub mod geo_utils {
     }
 
     /// Calculate the centroid of a polygon
-    pub fn polygon_centroid(_polygon: &[(f64, f64)]) -> Option<(f64, f64)> {
-        let n = _polygon.len();
+    pub fn polygon_centroid(polygon: &[(f64, f64)]) -> Option<(f64, f64)> {
+        let n = polygon.len();
         if n < 3 {
             return None;
         }
@@ -1168,8 +1168,8 @@ pub mod geo_utils {
         let mut j = n - 1;
 
         for i in 0..n {
-            let (xi, yi) = _polygon[i];
-            let (xj, yj) = _polygon[j];
+            let (xi, yi) = polygon[i];
+            let (xj, yj) = polygon[j];
             let factor = xi * yj - xj * yi;
             cx += (xi + xj) * factor;
             cy += (yi + yj) * factor;

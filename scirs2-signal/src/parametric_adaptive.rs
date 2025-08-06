@@ -9,7 +9,7 @@ use ndarray::s;
 // - Online model updating
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
@@ -97,28 +97,28 @@ impl Default for AdaptiveConfig {
 ///
 /// * Initialized adaptive model
 #[allow(dead_code)]
-pub fn initialize_adaptive_ar(_config: &AdaptiveConfig) -> SignalResult<AdaptiveArModel> {
+pub fn initialize_adaptive_ar(config: &AdaptiveConfig) -> SignalResult<AdaptiveArModel> {
     check_positive(_config.initial_order, "initial_order")?;
     check_positive(_config.forgetting_factor, "forgetting_factor")?;
 
-    if _config.forgetting_factor > 1.0 {
+    if config.forgetting_factor > 1.0 {
         return Err(SignalError::ValueError(
             "Forgetting factor must be <= 1.0".to_string(),
         ));
     }
 
-    let order = _config.initial_order;
+    let order = config.initial_order;
     let coefficients = Array1::zeros(order);
 
     // Initialize gain matrix based on method
-    let gain = match _config.method {
+    let gain = match config.method {
         AdaptiveMethod::RLS => {
             // P = delta * I (large initial value)
             Array2::eye(order) * 1000.0
         }
         AdaptiveMethod::Kalman => {
             // Initialize with process noise covariance
-            Array2::eye(order) * _config.process_noise
+            Array2::eye(order) * config.process_noise
         }
         _ => Array2::zeros((order, order)), // Not used for LMS/NLMS
     };
@@ -127,10 +127,10 @@ pub fn initialize_adaptive_ar(_config: &AdaptiveConfig) -> SignalResult<Adaptive
         coefficients,
         order,
         variance: 1.0,
-        forgetting_factor: _config.forgetting_factor,
+        forgetting_factor: config.forgetting_factor,
         gain,
-        state_buffer: vec![0.0; _config.max_order],
-        method: _config.method,
+        state_buffer: vec![0.0; config.max_order],
+        method: config.method,
     })
 }
 
@@ -185,12 +185,12 @@ pub fn update_adaptive_ar(
 
 /// Predict next sample using current model
 #[allow(dead_code)]
-fn predict_next_sample(_model: &AdaptiveArModel) -> SignalResult<f64> {
+fn predict_next_sample(model: &AdaptiveArModel) -> SignalResult<f64> {
     let mut prediction = 0.0;
 
     for i in 0.._model.order {
-        if i < _model.state_buffer.len() {
-            prediction += _model.coefficients[i] * _model.state_buffer[i];
+        if i < model.state_buffer.len() {
+            prediction += model.coefficients[i] * model.state_buffer[i];
         }
     }
 
@@ -199,12 +199,12 @@ fn predict_next_sample(_model: &AdaptiveArModel) -> SignalResult<f64> {
 
 /// Update using Recursive Least Squares
 #[allow(dead_code)]
-fn update_rls(_model: &mut AdaptiveArModel, error: f64, lambda: f64) -> SignalResult<()> {
-    let order = _model.order;
+fn update_rls(model: &mut AdaptiveArModel, error: f64, lambda: f64) -> SignalResult<()> {
+    let order = model.order;
     let x = Array1::from_vec(_model.state_buffer[..order].to_vec());
 
     // Compute gain vector: k = P * x / (lambda + x' * P * x)
-    let px = _model.gain.dot(&x);
+    let px = model.gain.dot(&x);
     let denominator = lambda + x.dot(&px);
 
     if denominator.abs() < 1e-10 {
@@ -214,14 +214,14 @@ fn update_rls(_model: &mut AdaptiveArModel, error: f64, lambda: f64) -> SignalRe
     let k = px / denominator;
 
     // Update coefficients: a = a + k * error
-    _model.coefficients = &_model.coefficients + &k * error;
+    model.coefficients = &_model.coefficients + &k * error;
 
     // Update gain matrix: P = (P - k * x' * P) / lambda
     let outer_product = k
         .view()
         .insert_axis(ndarray::Axis(1))
         .dot(&x.view().insert_axis(ndarray::Axis(0)));
-    _model.gain = (&_model.gain - &outer_product.dot(&_model.gain)) / lambda;
+    model.gain = (&_model.gain - &outer_product.dot(&_model.gain)) / lambda;
 
     Ok(())
 }
@@ -268,20 +268,20 @@ fn update_kalman(
 
 /// Update using Least Mean Squares
 #[allow(dead_code)]
-fn update_lms(_model: &mut AdaptiveArModel, error: f64, step_size: f64) -> SignalResult<()> {
-    let order = _model.order;
+fn update_lms(_model: &mut AdaptiveArModel, error: f64, stepsize: f64) -> SignalResult<()> {
+    let order = model.order;
     let x = Array1::from_vec(_model.state_buffer[..order].to_vec());
 
     // Simple gradient update: a = a + mu * error * x
-    _model.coefficients = &_model.coefficients + step_size * error * &x;
+    model.coefficients = &_model.coefficients + step_size * error * &x;
 
     Ok(())
 }
 
 /// Update using Normalized LMS
 #[allow(dead_code)]
-fn update_nlms(_model: &mut AdaptiveArModel, error: f64, step_size: f64) -> SignalResult<()> {
-    let order = _model.order;
+fn update_nlms(_model: &mut AdaptiveArModel, error: f64, stepsize: f64) -> SignalResult<()> {
+    let order = model.order;
     let x = Array1::from_vec(_model.state_buffer[..order].to_vec());
 
     // Compute normalization factor
@@ -291,21 +291,21 @@ fn update_nlms(_model: &mut AdaptiveArModel, error: f64, step_size: f64) -> Sign
 
     // Normalized update: a = a + (mu / (||x||^2 + epsilon)) * error * x
     let normalized_step = step_size / (norm_sq + epsilon);
-    _model.coefficients = &_model.coefficients + normalized_step * error * &x;
+    model.coefficients = &_model.coefficients + normalized_step * error * &x;
 
     Ok(())
 }
 
 /// Update model order based on prediction performance
 #[allow(dead_code)]
-fn update_model_order(_model: &mut AdaptiveArModel, config: &AdaptiveConfig) -> SignalResult<()> {
+fn update_model_order(model: &mut AdaptiveArModel, config: &AdaptiveConfig) -> SignalResult<()> {
     // Simple criterion: increase order if variance too high, decrease if coefficients small
 
-    if _model.variance > config.order_threshold && _model.order < config.max_order {
+    if model.variance > config.order_threshold && model.order < config.max_order {
         // Increase order
         let new_order = (_model.order + 1).min(config.max_order);
         resize_model(_model, new_order)?;
-    } else if _model.order > config.initial_order {
+    } else if model.order > config.initial_order {
         // Check if higher-order coefficients are significant
         let tail_energy: f64 = _model
             .coefficients
@@ -326,8 +326,8 @@ fn update_model_order(_model: &mut AdaptiveArModel, config: &AdaptiveConfig) -> 
 
 /// Resize model to new order
 #[allow(dead_code)]
-fn resize_model(_model: &mut AdaptiveArModel, new_order: usize) -> SignalResult<()> {
-    if new_order == _model._order {
+fn resize_model(_model: &mut AdaptiveArModel, neworder: usize) -> SignalResult<()> {
+    if new_order == model._order {
         return Ok(());
     }
 
@@ -335,24 +335,24 @@ fn resize_model(_model: &mut AdaptiveArModel, new_order: usize) -> SignalResult<
     let mut new_coeffs = Array1::zeros(new_order);
     let copy_len = new_order.min(_model._order);
     for i in 0..copy_len {
-        new_coeffs[i] = _model.coefficients[i];
+        new_coeffs[i] = model.coefficients[i];
     }
-    _model.coefficients = new_coeffs;
+    model.coefficients = new_coeffs;
 
     // Resize gain matrix
     let mut new_gain = Array2::zeros((new_order, new_order));
     for i in 0..copy_len {
         for j in 0..copy_len {
-            new_gain[[i, j]] = _model.gain[[i, j]];
+            new_gain[[i, j]] = model.gain[[i, j]];
         }
     }
     // Initialize new elements
     for i in copy_len..new_order {
         new_gain[[i, i]] = 1000.0; // Large initial value for RLS
     }
-    _model.gain = new_gain;
+    model.gain = new_gain;
 
-    _model._order = new_order;
+    model._order = new_order;
     Ok(())
 }
 
@@ -412,12 +412,12 @@ pub struct SpectralPeakTracker {
 
 impl SpectralPeakTracker {
     /// Create new peak tracker
-    pub fn new(_max_peaks: usize) -> Self {
+    pub fn new(_maxpeaks: usize) -> Self {
         Self {
             peak_frequencies: Vec::new(),
             peak_amplitudes: Vec::new(),
             history: Vec::new(),
-            _max_peaks,
+            max_peaks,
         }
     }
 
@@ -443,7 +443,7 @@ impl SpectralPeakTracker {
         peaks.truncate(self.max_peaks);
 
         // Update tracked peaks
-        self.peak_frequencies = peaks.iter().map(|(f_)| *f).collect();
+        self.peak_frequencies = peaks.iter().map(|(f_, _)| *f_).collect();
         self.peak_amplitudes = peaks.iter().map(|(_, a)| *a).collect();
 
         // Add to history
@@ -455,6 +455,7 @@ impl SpectralPeakTracker {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_adaptive_ar_initialization() {

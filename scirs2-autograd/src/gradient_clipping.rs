@@ -107,14 +107,14 @@ impl<F: Float> ClipByValue<F> {
     ///
     /// # Panics
     /// Panics if `min_value` >= `max_value`
-    pub fn new(_min_value: F, max_value: F) -> Self {
+    pub fn new(_min_value: F, maxvalue: F) -> Self {
         assert!(
             _min_value < max_value,
             "_min_value must be less than max_value"
         );
 
         Self {
-            _min_value,
+            min_value,
             max_value,
             last_clipped: std::cell::Cell::new(false),
         }
@@ -126,8 +126,8 @@ impl<F: Float> ClipByValue<F> {
     ///
     /// # Arguments
     /// * `max_abs_value` - Maximum absolute value allowed
-    pub fn symmetric(_max_abs_value: F) -> Self {
-        Self::new(-_max_abs_value, _max_abs_value)
+    pub fn symmetric(_max_absvalue: F) -> Self {
+        Self::new(-_max_abs_value, max_abs_value)
     }
 }
 
@@ -195,11 +195,11 @@ impl<F: Float> ClipByNorm<F> {
     ///
     /// # Panics
     /// Panics if `max_norm` is not positive
-    pub fn new(_max_norm: F) -> Self {
+    pub fn new(_maxnorm: F) -> Self {
         assert!(_max_norm > F::zero(), "_max_norm must be positive");
 
         Self {
-            _max_norm,
+            max_norm,
             last_clipped: std::cell::Cell::new(false),
             last_stats: std::cell::RefCell::new(ClippingStats::default()),
         }
@@ -295,11 +295,11 @@ impl<F: Float> ClipByGlobalNorm<F> {
     ///
     /// # Panics
     /// Panics if `max_norm` is not positive
-    pub fn new(_max_norm: F) -> Self {
+    pub fn new(_maxnorm: F) -> Self {
         assert!(_max_norm > F::zero(), "_max_norm must be positive");
 
         Self {
-            _max_norm,
+            max_norm,
             last_clipped: std::cell::Cell::new(false),
             last_stats: std::cell::RefCell::new(ClippingStats::default()),
         }
@@ -378,7 +378,7 @@ impl<F: Float> AdaptiveClipByNorm<F> {
     /// # Arguments
     /// * `initial_max_norm` - Initial maximum norm threshold
     /// * `adaptation_rate` - Rate at which to adapt the threshold (0.0 to 1.0)
-    pub fn new(_initial_max_norm: F, adaptation_rate: F) -> Self {
+    pub fn new(_initial_max_norm: F, adaptationrate: F) -> Self {
         assert!(
             adaptation_rate >= F::zero() && adaptation_rate <= F::one(),
             "adaptation_rate must be between 0.0 and 1.0"
@@ -397,7 +397,7 @@ impl<F: Float> AdaptiveClipByNorm<F> {
     }
 
     /// Manually update the threshold (for external adaptation logic)
-    pub fn set_threshold(&self, new_threshold: F) {
+    pub fn set_threshold(&self, newthreshold: F) {
         assert!(new_threshold > F::zero(), "_threshold must be positive");
         self.current_threshold.set(new_threshold);
     }
@@ -435,7 +435,7 @@ impl<F: Float> Tensor<'_, F> {
     /// # Arguments
     /// * `min_value` - Minimum allowed value
     /// * `max_value` - Maximum allowed value
-    pub fn clip_values(self, min_value: F, max_value: F) -> Self {
+    pub fn clip_values(self, min_value: F, maxvalue: F) -> Self {
         tensor_ops::clip(self, min_value, max_value)
     }
 
@@ -443,11 +443,11 @@ impl<F: Float> Tensor<'_, F> {
     ///
     /// # Arguments
     /// * `max_norm` - Maximum allowed norm
-    pub fn clip_norm(self, max_norm: F) -> Self {
+    pub fn clip_norm(self, maxnorm: F) -> Self {
         let _norm = tensor_ops::frobenius_norm(self);
         let max_norm_tensor = tensor_ops::scalar(max_norm, self.graph());
         let one_tensor = tensor_ops::scalar(F::one(), self.graph());
-        let ratio = max_norm_tensor / _norm;
+        let ratio = max_norm_tensor / norm;
         let clipping_factor = tensor_ops::minimum(one_tensor, ratio);
         self * clipping_factor
     }

@@ -285,12 +285,12 @@ where
         // The design matrix has dimensions n_data × n_basis
         // where n_basis = length(_knots) - degree - 1
         let n_data = x.len();
-        let n_basis = _knots.len() - degree - 1;
+        let n_basis = knots.len() - degree - 1;
         let mut design_matrix = Array2::zeros((n_data, n_basis));
 
         // Create basis elements and evaluate at data points
         for j in 0..n_basis {
-            let basis = BSpline::basis_element(degree, j, _knots, extrapolate)?;
+            let basis = BSpline::basis_element(degree, j, knots, extrapolate)?;
             for i in 0..n_data {
                 design_matrix[[i, j]] = basis.evaluate(x[i])?;
             }
@@ -341,7 +341,8 @@ where
     ///
     /// A square penalty matrix of size n × n
     fn create_penalty_matrix(
-        n: usize, degree: usize,
+        n: usize,
+        degree: usize,
         penalty_type: PenaltyType,
     ) -> InterpolateResult<Array2<T>> {
         let mut penalty = Array2::zeros((n, n));
@@ -442,8 +443,8 @@ where
             // Use direct solver when linalg is available
             // If that fails, use SVD as _a fallback
             // Convert to f64
-            let a_f64 = _a.mapv(|x| x.to_f64().unwrap());
-            let b_f64 = _b.mapv(|x| x.to_f64().unwrap());
+            let a_f64 = a.mapv(|x| x.to_f64().unwrap());
+            let b_f64 = b.mapv(|x| x.to_f64().unwrap());
             use scirs2__linalg::solve;
             solve(&a_f64.view(), &b_f64.view(), None)
                 .map_err(|_| {
@@ -467,7 +468,7 @@ where
                     };
 
                     // u and vt are already extracted from the SVD tuple above
-                    let mut s_inv = Array2::zeros((_a.ncols(), _a.nrows()));
+                    let mut s_inv = Array2::zeros((_a.ncols(), a.nrows()));
 
                     // Threshold for singular values (to handle near-zero values)
                     let threshold = T::from_f64(1e-10).unwrap();
@@ -688,7 +689,8 @@ where
 #[allow(clippy::too_many_arguments)]
 pub fn cross_validate_lambda<T>(
     x: &ArrayView1<T>,
-    y: &ArrayView1<T>, _n_knots: usize,
+    y: &ArrayView1<T>,
+    _n_knots: usize,
     degree: usize,
     lambda_values: &ArrayView1<T>,
     penalty_type: PenaltyType,

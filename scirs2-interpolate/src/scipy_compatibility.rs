@@ -213,9 +213,9 @@ impl Default for CompatibilityConfig {
 
 impl SciPyCompatibilityChecker {
     /// Create a new compatibility checker
-    pub fn new(_config: CompatibilityConfig) -> Self {
+    pub fn new(config: CompatibilityConfig) -> Self {
         Self {
-            _config,
+            config,
             cached_results: None,
         }
     }
@@ -506,16 +506,17 @@ impl SciPyCompatibilityChecker {
 
     // Helper methods
 
-    fn check_function_coverage(&self, function_name: &str) -> FunctionCoverage {
+    fn check_function_coverage(&self, functionname: &str) -> FunctionCoverage {
         match function_name {
             "interp1d" | "CubicSpline" | "BSpline" | "griddata" | "RBFInterpolator" => {
                 FunctionCoverage::Complete
             }
-            "interp2d" | "interpn" | "RegularGridInterpolator" => FunctionCoverage::Partial_ => FunctionCoverage::Missing,
+            "interp2d" | "interpn" | "RegularGridInterpolator" => FunctionCoverage::Partial,
+            _ => FunctionCoverage::Missing,
         }
     }
 
-    fn check_parameter_compatibility(&self, function_name: &str) -> ParameterCompatibilityLevel {
+    fn check_parameter_compatibility(&self, functionname: &str) -> ParameterCompatibilityLevel {
         // Simplified implementation - in practice would check actual signatures
         match function_name {
             "CubicSpline" => ParameterCompatibilityLevel::Compatible(vec![ParameterDifference {
@@ -525,7 +526,8 @@ impl SciPyCompatibilityChecker {
                 scirs2_param: "SplineBoundaryCondition enum".to_string(),
                 severity: DifferenceSeverity::Minor,
             }]),
-            "interp1d" => ParameterCompatibilityLevel::Identical_ => ParameterCompatibilityLevel::Incompatible(Vec::new()),
+            "interp1d" => ParameterCompatibilityLevel::Identical,
+            _ => ParameterCompatibilityLevel::Incompatible(Vec::new()),
         }
     }
 
@@ -542,7 +544,7 @@ impl SciPyCompatibilityChecker {
         ]
     }
 
-    fn run_behavior_test(&self, test_case: &BehaviorTestCase) -> Result<f64, BehaviorTestFailure> {
+    fn run_behavior_test(&self, testcase: &BehaviorTestCase) -> Result<f64, BehaviorTestFailure> {
         // Simplified implementation - would run actual scipy comparison
         let relative_error = 1e-14; // Simulated small error
 
@@ -642,7 +644,8 @@ impl CompatibilityReport {
             s if s >= 0.90 => "Very Good",
             s if s >= 0.80 => "Good",
             s if s >= 0.70 => "Fair",
-            s if s >= 0.60 => "Poor"_ => "Very Poor",
+            s if s >= 0.60 => "Poor",
+            _ => "Very Poor",
         }
     }
 }

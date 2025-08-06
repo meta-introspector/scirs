@@ -81,7 +81,7 @@ impl<F: Float + FromPrimitive + Debug> BarycentricInterpolator<F> {
     }
 
     /// Compute barycentric weights for the given data points
-    fn compute_barycentric_weights(x: &ArrayView1<F>, _order: usize) -> Array1<F> {
+    fn compute_barycentric_weights(x: &ArrayView1<F>, order: usize) -> Array1<F> {
         let n = x.len();
         let mut weights = Array1::ones(n);
 
@@ -115,7 +115,7 @@ impl<F: Float + FromPrimitive + Debug> BarycentricInterpolator<F> {
     /// # Returns
     ///
     /// The interpolated value at `x_new`
-    pub fn evaluate(&self, x_new: F) -> InterpolateResult<F> {
+    pub fn evaluate(&self, xnew: F) -> InterpolateResult<F> {
         // Check if x_new is exactly one of the data points
         let eps = F::from_f64(1e-14).unwrap();
         for i in 0..self.x.len() {
@@ -180,7 +180,7 @@ impl<F: Float + FromPrimitive + Debug> BarycentricInterpolator<F> {
     }
 
     /// Find the nearest `order + 1` indices to the given point
-    fn find_nearest_indices(&self, x_new: F) -> Vec<usize> {
+    fn find_nearest_indices(&self, xnew: F) -> Vec<usize> {
         let n = self.x.len();
         let order_plus_one = self.order + 1;
 
@@ -215,7 +215,7 @@ impl<F: Float + FromPrimitive + Debug> BarycentricInterpolator<F> {
     /// # Returns
     ///
     /// The interpolated values at `x_new`
-    pub fn evaluate_array(&self, x_new: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
+    pub fn evaluate_array(&self, xnew: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
         let mut result = Array1::zeros(x_new.len());
         for (i, &x) in x_new.iter().enumerate() {
             result[i] = self.evaluate(x)?;

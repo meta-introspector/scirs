@@ -17,7 +17,7 @@ pub struct ClientCapabilities {
     /// Preferred version
     pub preferred_version: Option<Version>,
     /// Supported version range
-    pub supported_versions: Vec<Version>,
+    pub supportedversions: Vec<Version>,
     /// Required features
     pub required_features: BTreeSet<String>,
     /// Optional features
@@ -25,19 +25,19 @@ pub struct ClientCapabilities {
     /// Client type identifier
     pub client_type: String,
     /// Client version
-    pub client_version: Version,
+    pub clientversion: Version,
 }
 
 impl ClientCapabilities {
     /// Create new client capabilities
-    pub fn new(client_type: String, client_version: Version) -> Self {
+    pub fn new(client_type: String, clientversion: Version) -> Self {
         Self {
             preferred_version: None,
-            supported_versions: Vec::new(),
+            supportedversions: Vec::new(),
             required_features: BTreeSet::new(),
             optional_features: BTreeSet::new(),
             client_type,
-            client_version,
+            clientversion,
         }
     }
 
@@ -49,7 +49,7 @@ impl ClientCapabilities {
 
     /// Add supported version
     pub fn with_supported_version(mut self, version: Version) -> Self {
-        self.supported_versions.push(version);
+        self.supportedversions.push(version);
         self
     }
 
@@ -103,7 +103,7 @@ pub enum NegotiationStatus {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct NegotiationMetadata {
     /// Versions considered during negotiation
-    pub considered_versions: Vec<Version>,
+    pub consideredversions: Vec<Version>,
     /// Reason for final selection
     pub selection_reason: String,
     /// Warnings generated during negotiation
@@ -132,7 +132,7 @@ pub struct VersionNegotiator {
     /// Default negotiation strategy
     strategy: NegotiationStrategy,
     /// Feature compatibility matrix
-    feature_matrix: FeatureMatrix,
+    featurematrix: FeatureMatrix,
 }
 
 impl VersionNegotiator {
@@ -140,7 +140,7 @@ impl VersionNegotiator {
     pub fn new() -> Self {
         Self {
             strategy: NegotiationStrategy::PreferLatest,
-            feature_matrix: FeatureMatrix::new(),
+            featurematrix: FeatureMatrix::new(),
         }
     }
 
@@ -154,20 +154,20 @@ impl VersionNegotiator {
     pub fn negotiate(
         &self,
         client_capabilities: &ClientCapabilities,
-        server_versions: &[&Version],
+        serverversions: &[&Version],
     ) -> Result<NegotiationResult, CoreError> {
         let mut metadata = NegotiationMetadata {
-            considered_versions: server_versions.iter().map(|v| (*v).clone()).collect(),
+            consideredversions: serverversions.iter().map(|v| (*v).clone()).collect(),
             selection_reason: String::new(),
             warnings: Vec::new(),
             algorithm: format!("{:?}", self.strategy),
         };
 
-        // Find compatible _versions
-        let compatible_versions =
-            self.find_compatible_versions(client_capabilities, server_versions, &mut metadata)?;
+        // Find compatible versions
+        let compatibleversions =
+            self.find_compatibleversions(client_capabilities, serverversions, &mut metadata)?;
 
-        if compatible_versions.is_empty() {
+        if compatibleversions.is_empty() {
             return Ok(NegotiationResult {
                 negotiated_version: Version::new(0, 0, 0),
                 available_features: BTreeSet::new(),
@@ -179,7 +179,7 @@ impl VersionNegotiator {
 
         // Select best version based on strategy
         let selected_version =
-            self.apply_strategy(&compatible_versions, client_capabilities, &mut metadata)?;
+            self.apply_strategy(&compatibleversions, client_capabilities, &mut metadata)?;
 
         // Check feature compatibility
         let (available_features, unsupported_features, status) = self.check_feature_compatibility(
@@ -203,19 +203,19 @@ impl VersionNegotiator {
     }
 
     /// Find versions compatible with client
-    fn find_compatible_versions(
+    fn find_compatibleversions(
         &self,
         client_capabilities: &ClientCapabilities,
-        server_versions: &[&Version],
+        serverversions: &[&Version],
         metadata: &mut NegotiationMetadata,
     ) -> Result<Vec<Version>, CoreError> {
         let mut compatible = Vec::new();
 
-        for server_version in server_versions {
+        for server_version in serverversions {
             // Check if client supports this version
-            if client_capabilities.supported_versions.is_empty()
+            if client_capabilities.supportedversions.is_empty()
                 || client_capabilities
-                    .supported_versions
+                    .supportedversions
                     .contains(server_version)
             {
                 compatible.push((*server_version).clone());
@@ -232,20 +232,20 @@ impl VersionNegotiator {
     /// Select the best version based on strategy
     fn apply_strategy(
         &self,
-        compatible_versions: &[Version],
+        compatibleversions: &[Version],
         client_capabilities: &ClientCapabilities,
         metadata: &mut NegotiationMetadata,
     ) -> Result<Version, CoreError> {
         match self.strategy {
             NegotiationStrategy::PreferLatest => {
-                let mut versions = compatible_versions.to_vec();
+                let mut versions = compatibleversions.to_vec();
                 versions.sort();
                 versions.reverse();
                 Ok(versions.into_iter().next().unwrap())
             }
             NegotiationStrategy::PreferClientPreference => {
                 if let Some(ref preferred) = client_capabilities.preferred_version {
-                    if compatible_versions.contains(preferred) {
+                    if compatibleversions.contains(preferred) {
                         return Ok(preferred.clone());
                     }
                     metadata.warnings.push(
@@ -254,43 +254,43 @@ impl VersionNegotiator {
                     );
                 }
                 // Fall back to latest
-                let mut versions = compatible_versions.to_vec();
+                let mut versions = compatibleversions.to_vec();
                 versions.sort();
                 versions.reverse();
                 Ok(versions.into_iter().next().unwrap())
             }
             NegotiationStrategy::PreferStable => {
-                // Prefer non-pre-release _versions
-                let stable_versions: Vec<_> = compatible_versions
+                // Prefer non-pre-release versions
+                let stableversions: Vec<_> = compatibleversions
                     .iter()
                     .filter(|v| v.is_stable())
                     .cloned()
                     .collect();
 
-                if !stable_versions.is_empty() {
-                    let mut _versions = stable_versions;
-                    _versions.sort();
-                    _versions.reverse();
-                    Ok(_versions.into_iter().next().unwrap())
+                if !stableversions.is_empty() {
+                    let mut versions = stableversions;
+                    versions.sort();
+                    versions.reverse();
+                    Ok(versions.into_iter().next().unwrap())
                 } else {
-                    // No stable _versions, pick latest
-                    let mut _versions = compatible_versions.to_vec();
-                    _versions.sort();
-                    _versions.reverse();
-                    Ok(_versions.into_iter().next().unwrap())
+                    // No stable versions, pick latest
+                    let mut versions = compatibleversions.to_vec();
+                    versions.sort();
+                    versions.reverse();
+                    Ok(versions.into_iter().next().unwrap())
                 }
             }
             NegotiationStrategy::PreferFeatureRich => {
                 // This would require feature information for each version
                 // For now, fall back to latest
-                let mut versions = compatible_versions.to_vec();
+                let mut versions = compatibleversions.to_vec();
                 versions.sort();
                 versions.reverse();
                 Ok(versions.into_iter().next().unwrap())
             }
             NegotiationStrategy::Custom => {
                 // Custom logic would be implemented here
-                let mut versions = compatible_versions.to_vec();
+                let mut versions = compatibleversions.to_vec();
                 versions.sort();
                 versions.reverse();
                 Ok(versions.into_iter().next().unwrap())
@@ -305,7 +305,7 @@ impl VersionNegotiator {
         client_capabilities: &ClientCapabilities,
         _metadata: &mut NegotiationMetadata,
     ) -> Result<(BTreeSet<String>, BTreeSet<String>, NegotiationStatus), CoreError> {
-        let available_features = self.feature_matrix.get_supported_features(selected_version);
+        let available_features = self.featurematrix.get_supported_features(selected_version);
         let unsupported_features: BTreeSet<String> = client_capabilities
             .required_features
             .difference(&available_features)
@@ -361,9 +361,9 @@ pub struct ClientRequirementsBuilder {
 
 impl ClientRequirementsBuilder {
     /// Create a new builder
-    pub fn new(client_type: &str, client_version: Version) -> Self {
+    pub fn new(client_type: &str, clientversion: Version) -> Self {
         Self {
-            capabilities: ClientCapabilities::new(client_type.to_string(), client_version),
+            capabilities: ClientCapabilities::new(client_type.to_string(), clientversion),
         }
     }
 
@@ -374,8 +374,8 @@ impl ClientRequirementsBuilder {
     }
 
     /// Add supported version range
-    pub fn support_versions(mut self, versions: Vec<Version>) -> Self {
-        self.capabilities.supported_versions = versions;
+    pub fn supportversions(mut self, versions: Vec<Version>) -> Self {
+        self.capabilities.supportedversions = versions;
         self
     }
 
@@ -409,7 +409,7 @@ mod tests {
     fn test_client_capabilities_builder() {
         let capabilities = ClientRequirementsBuilder::new("test_client", Version::new(1, 0, 0))
             .preferred_version(Version::new(2, 1, 0))
-            .support_versions(vec![Version::new(2, 0, 0), Version::new(2, 1, 0)])
+            .supportversions(vec![Version::new(2, 0, 0), Version::new(2, 1, 0)])
             .require_feature("feature1")
             .prefer_feature("feature2")
             .build();
@@ -426,7 +426,7 @@ mod tests {
 
         let client_capabilities =
             ClientRequirementsBuilder::new("test_client", Version::new(1, 0, 0))
-                .support_versions(vec![
+                .supportversions(vec![
                     Version::new(1, 0, 0),
                     Version::new(1, 1, 0),
                     Version::new(2, 0, 0),
@@ -436,10 +436,10 @@ mod tests {
         let v1 = Version::new(1, 0, 0);
         let v2 = Version::new(1, 1, 0);
         let v3 = Version::new(2, 0, 0);
-        let server_versions = vec![&v1, &v2, &v3];
+        let serverversions = vec![&v1, &v2, &v3];
 
         let result = negotiator
-            .negotiate(&client_capabilities, &server_versions)
+            .negotiate(&client_capabilities, &serverversions)
             .unwrap();
         assert_eq!(result.negotiated_version, Version::new(2, 0, 0));
         assert_eq!(result.status, NegotiationStatus::Success);
@@ -453,7 +453,7 @@ mod tests {
         let client_capabilities =
             ClientRequirementsBuilder::new("test_client", Version::new(1, 0, 0))
                 .preferred_version(Version::new(1, 1, 0))
-                .support_versions(vec![
+                .supportversions(vec![
                     Version::new(1, 0, 0),
                     Version::new(1, 1, 0),
                     Version::new(2, 0, 0),
@@ -463,10 +463,10 @@ mod tests {
         let v1 = Version::new(1, 0, 0);
         let v2 = Version::new(1, 1, 0);
         let v3 = Version::new(2, 0, 0);
-        let server_versions = vec![&v1, &v2, &v3];
+        let serverversions = vec![&v1, &v2, &v3];
 
         let result = negotiator
-            .negotiate(&client_capabilities, &server_versions)
+            .negotiate(&client_capabilities, &serverversions)
             .unwrap();
         assert_eq!(result.negotiated_version, Version::new(1, 1, 0));
     }
@@ -477,7 +477,7 @@ mod tests {
 
         let client_capabilities =
             ClientRequirementsBuilder::new("test_client", Version::new(1, 0, 0))
-                .support_versions(vec![
+                .supportversions(vec![
                     Version::new(1, 0, 0),
                     Version::parse("2.0.0-alpha").unwrap(),
                     Version::new(1, 1, 0),
@@ -487,10 +487,10 @@ mod tests {
         let v1 = Version::new(1, 0, 0);
         let v2 = Version::parse("2.0.0-alpha").unwrap();
         let v3 = Version::new(1, 1, 0);
-        let server_versions = vec![&v1, &v2, &v3];
+        let serverversions = vec![&v1, &v2, &v3];
 
         let result = negotiator
-            .negotiate(&client_capabilities, &server_versions)
+            .negotiate(&client_capabilities, &serverversions)
             .unwrap();
         // Should prefer stable 1.1.0 over pre-release 2.0.0-alpha
         assert_eq!(result.negotiated_version, Version::new(1, 1, 0));
@@ -502,15 +502,15 @@ mod tests {
 
         let client_capabilities =
             ClientRequirementsBuilder::new("test_client", Version::new(1, 0, 0))
-                .support_versions(vec![Version::new(3, 0, 0)])
+                .supportversions(vec![Version::new(3, 0, 0)])
                 .build();
 
         let v1 = Version::new(1, 0, 0);
         let v2 = Version::new(2, 0, 0);
-        let server_versions = vec![&v1, &v2];
+        let serverversions = vec![&v1, &v2];
 
         let result = negotiator
-            .negotiate(&client_capabilities, &server_versions)
+            .negotiate(&client_capabilities, &serverversions)
             .unwrap();
         assert_eq!(result.status, NegotiationStatus::Failed);
     }
@@ -521,16 +521,16 @@ mod tests {
 
         let client_capabilities =
             ClientRequirementsBuilder::new("test_client", Version::new(1, 0, 0))
-                .support_versions(vec![Version::new(1, 0, 0)])
+                .supportversions(vec![Version::new(1, 0, 0)])
                 .build();
 
         let v1 = Version::new(1, 0, 0);
-        let server_versions = vec![&v1];
+        let serverversions = vec![&v1];
 
         let result = negotiator
-            .negotiate(&client_capabilities, &server_versions)
+            .negotiate(&client_capabilities, &serverversions)
             .unwrap();
         assert!(!result.metadata.selection_reason.is_empty());
-        assert_eq!(result.metadata.considered_versions.len(), 1);
+        assert_eq!(result.metadata.consideredversions.len(), 1);
     }
 }

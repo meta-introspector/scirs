@@ -131,9 +131,9 @@ where
         + ScalarOperand,
 {
     /// Create new enhanced PCA analyzer
-    pub fn new(_algorithm: PCAAlgorithm, config: PCAConfig) -> Self {
+    pub fn new(algorithm: PCAAlgorithm, config: PCAConfig) -> Self {
         Self {
-            algorithm: _algorithm,
+            algorithm: algorithm,
             config,
             results: None,
             _phantom: PhantomData,
@@ -264,7 +264,7 @@ where
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
-        let (n_samples_, _n_features) = data.dim();
+        let (n_samples_, n_features) = data.dim();
 
         // Convert to f64 for numerical stability
         let data_f64 = data.mapv(|x| x.to_f64().unwrap());
@@ -291,7 +291,7 @@ where
         }
 
         // Convert back to F type
-        let components_f = _components.mapv(|x| F::from(x).unwrap());
+        let components_f = components.mapv(|x| F::from(x).unwrap());
         let singular_values_f = singular_values.mapv(|x| F::from(x).unwrap());
         let explained_variance_f = explained_variance_f64.mapv(|x| F::from(x).unwrap());
         let explained_variance_ratio_f = explained_variance_ratio_f64.mapv(|x| F::from(x).unwrap());
@@ -321,7 +321,7 @@ where
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
-        let (n_samples_, _n_features) = data.dim();
+        let (n_samples_, n_features) = data.dim();
 
         // Compute covariance matrix
         let data_f64 = data.mapv(|x| x.to_f64().unwrap());
@@ -369,7 +369,7 @@ where
         }
 
         // Convert to F type
-        let components_f = _components.mapv(|x| F::from(x).unwrap());
+        let components_f = components.mapv(|x| F::from(x).unwrap());
         let singular_values_f = explained_variance_f64.mapv(|x| F::from(x.sqrt()).unwrap());
         let explained_variance_f = explained_variance_f64.mapv(|x| F::from(x).unwrap());
         let explained_variance_ratio_f = explained_variance_ratio_f64.mapv(|x| F::from(x).unwrap());
@@ -502,7 +502,7 @@ where
     }
 
     /// Inverse transform from principal component space
-    pub fn inverse_transform(&self, transformed_data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
+    pub fn inverse_transform(&self, transformeddata: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         let results = self.results.as_ref().ok_or_else(|| {
             StatsError::InvalidArgument("PCA must be fitted before inverse_transform".to_string())
         })?;
@@ -639,11 +639,11 @@ where
         + ScalarOperand,
 {
     /// Create new factor analysis
-    pub fn new(_n_factors: usize, config: FactorAnalysisConfig) -> StatsResult<Self> {
+    pub fn new(_nfactors: usize, config: FactorAnalysisConfig) -> StatsResult<Self> {
         check_positive(_n_factors, "_n_factors")?;
 
         Ok(Self {
-            n_factors: _n_factors,
+            n_factors: n_factors,
             config,
             results: None,
             _phantom: PhantomData,
@@ -757,7 +757,7 @@ where
     }
 
     /// Get initial factor loadings using PCA
-    fn initial_loadings(&self, corr_matrix: &Array2<F>) -> StatsResult<Array2<F>> {
+    fn initial_loadings(&self, corrmatrix: &Array2<F>) -> StatsResult<Array2<F>> {
         // Convert to f64 for numerical computation
         let corr_f64 = corr_matrix.mapv(|x| x.to_f64().unwrap());
 

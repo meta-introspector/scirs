@@ -93,10 +93,10 @@ pub struct OptimizedLinearDiscriminantAnalysis {
 
 impl OptimizedLinearDiscriminantAnalysis {
     /// Create new optimized LDA instance
-    pub fn new(_config: PerformanceConfig) -> Self {
+    pub fn new(config: PerformanceConfig) -> Self {
         Self {
             lda: LinearDiscriminantAnalysis::new(),
-            config: _config,
+            config: config,
             metrics: None,
         }
     }
@@ -176,7 +176,7 @@ impl OptimizedLinearDiscriminantAnalysis {
     }
 
     /// Auto-tune performance thresholds based on data characteristics
-    fn auto_tune_thresholds(&mut self, data_size: usize) {
+    fn auto_tune_thresholds(&mut self, datasize: usize) {
         // Simple heuristic-based auto-tuning
         if data_size > 100_000 {
             self.config.simd_threshold = 32;
@@ -503,10 +503,10 @@ pub struct OptimizedCanonicalCorrelationAnalysis {
 
 impl OptimizedCanonicalCorrelationAnalysis {
     /// Create new optimized CCA instance
-    pub fn new(_config: PerformanceConfig) -> Self {
+    pub fn new(config: PerformanceConfig) -> Self {
         Self {
             cca: CanonicalCorrelationAnalysis::new(),
-            config: _config,
+            config: config,
             metrics: None,
         }
     }
@@ -750,7 +750,7 @@ impl PerformanceBenchmark {
     }
 
     /// Print benchmark results in a formatted table
-    pub fn print_benchmark_results(_results: &[(String, PerformanceMetrics)]) {
+    pub fn print_benchmark_results(results: &[(String, PerformanceMetrics)]) {
         println!("\n=== PERFORMANCE BENCHMARK RESULTS ===");
         println!(
             "{:<20} {:>12} {:>10} {:>15} {:>8} {:>8}",
@@ -781,13 +781,14 @@ mod tests {
 
     #[test]
     fn test_optimized_lda() {
+        // Create non-degenerate data with proper variance in multiple dimensions
         let x = array![
-            [1.0, 2.0],
-            [2.0, 3.0],
-            [3.0, 4.0],
-            [6.0, 7.0],
-            [7.0, 8.0],
-            [8.0, 9.0],
+            [1.0, 2.5],
+            [2.1, 3.2],
+            [2.8, 4.1],
+            [6.2, 7.1],
+            [7.3, 8.5],
+            [8.1, 9.3],
         ];
         let y = array![0, 0, 0, 1, 1, 1];
 
@@ -801,14 +802,15 @@ mod tests {
 
     #[test]
     fn test_optimized_cca() {
-        let x = array![[1.0, 2.0], [2.0, 3.0], [3.0, 4.0], [4.0, 5.0], [5.0, 6.0],];
+        // Create non-degenerate data with independent variance in each dimension
+        let x = array![[1.2, 2.8], [2.1, 3.5], [3.2, 4.1], [4.3, 5.2], [5.1, 6.4],];
 
         let y = array![
-            [2.0, 4.0],
-            [4.0, 6.0],
-            [6.0, 8.0],
-            [8.0, 10.0],
-            [10.0, 12.0],
+            [2.1, 4.3],
+            [4.2, 6.1],
+            [6.3, 8.2],
+            [8.1, 10.4],
+            [10.2, 12.3],
         ];
 
         let config = PerformanceConfig::default();

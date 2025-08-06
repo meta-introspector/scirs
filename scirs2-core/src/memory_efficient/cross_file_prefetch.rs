@@ -224,14 +224,14 @@ impl CrossFilePrefetchConfigBuilder {
     }
 
     /// Set the maximum number of datasets to prefetch.
-    pub const fn with_max_prefetch_datasets(mut self, max_datasets: usize) -> Self {
-        self.config.max_prefetch_datasets = max_datasets;
+    pub const fn with_max_prefetch_datasets(mut self, maxdatasets: usize) -> Self {
+        self.config.max_prefetch_datasets = maxdatasets;
         self
     }
 
     /// Set the maximum elements to prefetch per dataset.
-    pub const fn with_max_prefetch_elements(mut self, max_elements: usize) -> Self {
-        self.config.max_prefetch_elements = max_elements;
+    pub const fn with_max_prefetch_elements(mut self, maxelements: usize) -> Self {
+        self.config.max_prefetch_elements = maxelements;
         self
     }
 
@@ -302,7 +302,7 @@ impl DatasetCorrelation {
     }
 
     /// Update the correlation based on new evidence.
-    fn update_model(&mut self, primary_index: usize, related_indices: &[usize]) {
+    fn update_model(&mut self, primary_index: usize, relatedindices: &[usize]) {
         self.occurrences += 1;
         self.last_observed = Instant::now();
 
@@ -313,7 +313,7 @@ impl DatasetCorrelation {
         // Update index correlations
         let entry = self.index_correlations.entry(primary_index).or_default();
 
-        for &related_index in related_indices {
+        for &related_index in relatedindices {
             if !entry.contains(&related_index) {
                 entry.push(related_index);
             }
@@ -326,36 +326,36 @@ impl DatasetCorrelation {
     }
 
     /// Get related indices for a primary index.
-    fn get_related_indices(&self, primary_index: usize, max_count: usize) -> Vec<usize> {
+    fn get_related_indices(&self, primary_index: usize, maxcount: usize) -> Vec<usize> {
         if let Some(indices) = self.index_correlations.get(&primary_index) {
-            indices.iter().take(max_count).copied().collect()
+            indices.iter().take(maxcount).copied().collect()
         } else {
             // Try to detect patterns from existing correlations
-            if let Some(predicted) = self.predict_from_pattern(primary_index, max_count) {
+            if let Some(predicted) = self.predict_from_pattern(primary_index, maxcount) {
                 predicted
             } else {
                 // If no pattern detected, return nearby indices based on the primary index
-                let mut nearby = Vec::with_capacity(max_count);
+                let mut nearby = Vec::with_capacity(maxcount);
 
                 // Add the exact same index first
                 nearby.push(primary_index);
 
                 // Add some nearby indices
-                for i in 1..=max_count / 2 {
+                for i in 1..=maxcount / 2 {
                     if primary_index >= i {
                         nearby.push(primary_index - i);
                     }
                     nearby.push(primary_index + i);
                 }
 
-                nearby.into_iter().take(max_count).collect()
+                nearby.into_iter().take(maxcount).collect()
             }
         }
     }
 
     /// Predict related indices based on patterns in existing correlations.
     #[allow(unused_variables)]
-    fn predict_from_pattern(&self, primary_index: usize, max_count: usize) -> Option<Vec<usize>> {
+    fn predict_from_pattern(&self, primary_index: usize, maxcount: usize) -> Option<Vec<usize>> {
         // Need at least 2 data points to detect a pattern
         if self.index_correlations.len() < 2 {
             return None;
@@ -949,10 +949,10 @@ pub struct TrackedArray<A: Clone + Copy + 'static + Send + Sync, T> {
 #[allow(dead_code)]
 impl<A: Clone + Copy + 'static + Send + Sync, T> TrackedArray<A, T> {
     /// Create a new tracked array.
-    pub fn new(array: T, dataset_id: DatasetId) -> Self {
+    pub fn new(array: T, datasetid: DatasetId) -> Self {
         Self {
             array,
-            dataset_id,
+            datasetid,
             phantom: std::marker::PhantomData,
         }
     }
@@ -1139,7 +1139,7 @@ mod tests {
     }
 
     impl MockPrefetcher {
-        fn new(dataset_id: DatasetId) -> Self {
+        fn new(datasetid: DatasetId) -> Self {
             Self {
                 dataset_id,
                 prefetched_indices: Arc::new(Mutex::new(Vec::new())),

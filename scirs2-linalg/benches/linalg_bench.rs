@@ -34,14 +34,14 @@ fn create_test_matrix(n: usize) -> Array2<f64> {
 /// Create a symmetric positive definite matrix
 #[allow(dead_code)]
 fn create_spd_matrix(n: usize) -> Array2<f64> {
-    let a = Array2::fromshape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
+    let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
     a.t().dot(&a) + Array2::<f64>::eye(n) * (n as f64)
 }
 
 /// Create a test vector
 #[allow(dead_code)]
 fn create_test_vector(n: usize) -> Array1<f64> {
-    Array1::fromshape_fn(n, |i| ((i + 1) as f64 * 0.1).sin())
+    Array1::from_shape_fn(n, |i| ((i + 1) as f64 * 0.1).sin())
 }
 
 /// Benchmark basic BLAS operations
@@ -261,7 +261,7 @@ fn bench_complex_operations(c: &mut Criterion) {
 
     for &size in &[50, 100, 200] {
         use num__complex::Complex64;
-        let matrix = Array2::fromshape_fn((size, size), |(i, j)| {
+        let matrix = Array2::from_shape_fn((size, size), |(i, j)| {
             Complex64::new(((i + j) as f64 * 0.1).sin(), ((i - j) as f64 * 0.1).cos())
         });
 

@@ -72,9 +72,9 @@ pub struct ContinuousMemoryTester {
 
 impl ContinuousMemoryTester {
     /// Create a new continuous memory tester
-    pub fn new(_config: MemoryTestConfig) -> Self {
+    pub fn new(config: MemoryTestConfig) -> Self {
         Self {
-            _config,
+            config,
             monitor: MemoryMonitor::new("continuous_test"),
             results: None,
         }

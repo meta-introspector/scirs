@@ -133,7 +133,7 @@ struct PlateauState {
 
 impl RobustConvergenceState {
     /// Create new robust convergence state
-    pub fn new(_options: RobustConvergenceOptions, problem_dim: usize) -> Self {
+    pub fn new(_options: RobustConvergenceOptions, problemdim: usize) -> Self {
         let adaptive_state =
             AdaptiveToleranceState::new(_options.adaptive_tolerance.clone(), problem_dim);
 
@@ -161,7 +161,7 @@ impl RobustConvergenceState {
                 plateau_detected: false,
                 plateau_start_iteration: None,
             },
-            options: _options,
+            options: options,
         }
     }
 
@@ -210,7 +210,7 @@ impl RobustConvergenceState {
     }
 
     /// Update early stopping state
-    fn update_early_stopping(&mut self, function_value: f64, _iteration: usize) {
+    fn update_early_stopping(&mut self, function_value: f64, iteration: usize) {
         let improvement = self.early_stop_state.best_value - function_value;
 
         if improvement > self.options.early_stopping_min_delta {
@@ -230,7 +230,7 @@ impl RobustConvergenceState {
     }
 
     /// Update progress tracking
-    fn update_progress(&mut self, function_value: f64, gradient_norm: f64) {
+    fn update_progress(&mut self, function_value: f64, gradientnorm: f64) {
         // Add to recent values
         if self.progress_state.recent_values.len() >= self.options.progress_window {
             self.progress_state.recent_values.pop_front();
@@ -267,7 +267,7 @@ impl RobustConvergenceState {
     }
 
     /// Update noise-robust convergence state
-    fn update_noise_robust(&mut self, function_value: f64, gradient_norm: f64, step_norm: f64) {
+    fn update_noise_robust(&mut self, function_value: f64, gradient_norm: f64, stepnorm: f64) {
         // Add to windows
         if self.noise_state.function_window.len() >= self.options.noise_window {
             self.noise_state.function_window.pop_front();
@@ -286,7 +286,7 @@ impl RobustConvergenceState {
     }
 
     /// Update plateau detection
-    fn update_plateau_detection(&mut self, function_value: f64, iteration: usize) {
+    fn update_plateau_detection(&mut self, functionvalue: f64, iteration: usize) {
         if self.plateau_state.plateau_window.len() >= self.options.plateau_window {
             self.plateau_state.plateau_window.pop_front();
         }

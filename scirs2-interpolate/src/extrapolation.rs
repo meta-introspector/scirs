@@ -388,9 +388,9 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
     AdvancedExtrapolator<T>
 {
     /// Create a new advanced extrapolator
-    pub fn new(_base_extrapolator: Extrapolator<T>) -> Self {
+    pub fn new(_baseextrapolator: Extrapolator<T>) -> Self {
         Self {
-            _base_extrapolator,
+            base_extrapolator,
             confidence_config: None,
             ensemble_config: None,
             adaptive_config: None,
@@ -424,7 +424,7 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
     }
 
     /// Set historical data for advanced methods
-    pub fn with_historical_data(mut self, x_data: Array1<T>, y_data: Array1<T>) -> Self {
+    pub fn with_historical_data(mut self, x_data: Array1<T>, ydata: Array1<T>) -> Self {
         self.historical_data = Some((x_data, y_data));
         self
     }
@@ -666,7 +666,8 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
     fn evaluate_extrapolation_quality(
         &self,
         method: ExtrapolationMethod,
-        x: T, result: T,
+        x: T,
+        result: T,
     ) -> InterpolateResult<T> {
         // Simple scoring based on distance from domain and method stability
         let lower_bound = self.base_extrapolator.get_lower_bound();
@@ -699,7 +700,8 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
 
     /// Fit autoregressive model to historical data
     fn fit_ar_model(
-        &self, _x_data: &Array1<T>,
+        &self,
+        _x_data: &Array1<T>,
         y_data: &Array1<T>,
         order: usize,
     ) -> InterpolateResult<Array1<T>> {
@@ -749,7 +751,8 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
         coeffs: &Array1<T>,
         x_data: &Array1<T>,
         y_data: &Array1<T>,
-        x: T, config: &AutoregressiveExtrapolationConfig<T>,
+        x: T,
+        config: &AutoregressiveExtrapolationConfig<T>,
     ) -> InterpolateResult<T> {
         let order = coeffs.len();
 
@@ -835,7 +838,7 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     /// # Returns
     ///
     /// A reference to the modified extrapolator
-    pub fn with_derivatives(mut self, lower_derivative: T, upper_derivative: T) -> Self {
+    pub fn with_derivatives(mut self, lower_derivative: T, upperderivative: T) -> Self {
         self.lower_derivative = lower_derivative;
         self.upper_derivative = upper_derivative;
         self
@@ -1863,7 +1866,8 @@ pub fn make_exponential_extrapolator<T: Float + std::fmt::Display>(
     upper_value: T,
     lower_derivative: T,
     upper_derivative: T,
-    lower_rate: T_upper, _rate: T,
+    lower_rate: T_upper,
+    _rate: T,
 ) -> Extrapolator<T> {
     let params = ExtrapolationParameters::default().with_exponential_rate(lower_rate.abs());
 
@@ -1952,10 +1956,11 @@ pub fn make_autoregressive_extrapolator<
         regularization: T::from(1e-6).unwrap(),
     };
 
-    let mut _extrapolator = AdvancedExtrapolator::new(base_extrapolator).with_autoregressive(config);
+    let mut _extrapolator =
+        AdvancedExtrapolator::new(base_extrapolator).with_autoregressive(config);
 
     if let Some((x_data, y_data)) = historical_data {
-        _extrapolator = _extrapolator.with_historical_data(x_data, y_data);
+        _extrapolator = extrapolator.with_historical_data(x_data, y_data);
     }
 
     _extrapolator

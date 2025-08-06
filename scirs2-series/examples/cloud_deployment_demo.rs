@@ -229,7 +229,8 @@ fn submit_sample_jobs(
         let priority = match i % 4 {
             0 => JobPriority::Critical,
             1 => JobPriority::High,
-            2 => JobPriority::Normal_ => JobPriority::Low,
+            2 => JobPriority::Normal,
+            _ => JobPriority::Low,
         };
 
         let mut parameters = HashMap::new();
@@ -275,11 +276,11 @@ fn submit_sample_jobs(
 
 /// Print deployment metrics and status
 #[allow(dead_code)]
-fn print_deployment_metrics(_orchestrator: &CloudDeploymentOrchestrator) {
+fn print_deployment_metrics(orchestrator: &CloudDeploymentOrchestrator) {
     println!("\n📊 Deployment Metrics:");
-    println!("   Status: {:?}", _orchestrator.get_status());
+    println!("   Status: {:?}", orchestrator.get_status());
 
-    let metrics = _orchestrator.get_metrics();
+    let metrics = orchestrator.get_metrics();
     for (key, value) in metrics {
         match key.as_str() {
             "active_instances" | "total_jobs_processed" | "error_count" => {

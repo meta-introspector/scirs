@@ -310,7 +310,7 @@ fn test_quick_selection(
 
 /// Create dense cluster data for testing
 #[allow(dead_code)]
-fn create_dense_clusters_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_dense_clusters_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
     use rand__distr::Normal;
 
@@ -349,7 +349,7 @@ fn create_dense_clusters_data(_n_samples: usize, n_features: usize) -> Array2<f6
 
 /// Create sparse data for testing
 #[allow(dead_code)]
-fn create_sparse_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_sparse_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
 
     let mut rng = StdRng::seed_from_u64(67890);
@@ -372,7 +372,7 @@ fn create_sparse_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
 
 /// Create high-dimensional data for testing
 #[allow(dead_code)]
-fn create_high_dimensional_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_high_dimensional_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
 
     let mut rng = StdRng::seed_from_u64(11111);
@@ -400,7 +400,7 @@ fn create_high_dimensional_data(_n_samples: usize, n_features: usize) -> Array2<
 
 /// Create noisy data for testing
 #[allow(dead_code)]
-fn create_noisy_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_noisy_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
     use rand__distr::Normal;
 

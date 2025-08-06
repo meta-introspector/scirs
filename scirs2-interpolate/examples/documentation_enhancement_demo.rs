@@ -161,12 +161,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Analyze the generated content from documentation enhancement
 #[allow(dead_code)]
-fn analyze_generated_content(_report: &scirs2, interpolate: DocumentationReport) {
+fn analyze_generated_content(report: &scirs2, interpolate: DocumentationReport) {
     println!("Generated Content Analysis:");
 
     // User guides analysis
     if !_report.user_guides.is_empty() {
-        println!("  User Guides Generated ({}):", _report.user_guides.len());
+        println!("  User Guides Generated ({}):", report.user_guides.len());
         for guide in &_report.user_guides {
             println!(
                 "    - {} (Target: {:?}, {} sections, ~{} min read)",
@@ -180,7 +180,7 @@ fn analyze_generated_content(_report: &scirs2, interpolate: DocumentationReport)
 
     // Tutorials analysis
     if !_report.tutorials.is_empty() {
-        println!("  Tutorials Created ({}):", _report.tutorials.len());
+        println!("  Tutorials Created ({}):", report.tutorials.len());
         for tutorial in &_report.tutorials {
             println!(
                 "    - {} (Target: {:?}, {} steps, ~{} min)",
@@ -196,7 +196,7 @@ fn analyze_generated_content(_report: &scirs2, interpolate: DocumentationReport)
     if !_report.example_validations.is_empty() {
         println!(
             "  Example Validations ({}):",
-            _report.example_validations.len()
+            report.example_validations.len()
         );
         let valid_count = _report
             .example_validations
@@ -227,7 +227,7 @@ fn analyze_generated_content(_report: &scirs2, interpolate: DocumentationReport)
 
 /// Analyze documentation by target audience
 #[allow(dead_code)]
-fn analyze_by_audience_level(_report: &scirs2, interpolate: DocumentationReport) {
+fn analyze_by_audience_level(report: &scirs2, interpolate: DocumentationReport) {
     use std::collections::HashMap;
 
     let mut audience_content: HashMap<String, (usize, usize)> = HashMap::new();
@@ -265,10 +265,10 @@ fn analyze_by_audience_level(_report: &scirs2, interpolate: DocumentationReport)
 
 /// Analyze example validation results
 #[allow(dead_code)]
-fn analyze_example_validation(_report: &scirs2, interpolate: DocumentationReport) {
+fn analyze_example_validation(report: &scirs2, interpolate: DocumentationReport) {
     println!("Example Validation Results:");
 
-    let total_examples = _report.example_validations.len();
+    let total_examples = report.example_validations.len();
     if total_examples == 0 {
         println!("  No examples validated");
         return;
@@ -335,16 +335,16 @@ fn analyze_example_validation(_report: &scirs2, interpolate: DocumentationReport
 
 /// Assess overall documentation quality
 #[allow(dead_code)]
-fn assess_documentation_quality(_report: &scirs2, interpolate: DocumentationReport) {
+fn assess_documentation_quality(report: &scirs2, interpolate: DocumentationReport) {
     println!("Documentation Quality Assessment:");
 
-    if _report.analysis_results.is_empty() {
+    if report.analysis_results.is_empty() {
         println!("  No analysis results available");
         return;
     }
 
     // Calculate average quality scores
-    let total_items = _report.analysis_results.len() as f32;
+    let total_items = report.analysis_results.len() as f32;
     let avg_overall_score = _report
         .analysis_results
         .iter()
@@ -415,8 +415,8 @@ fn assess_documentation_quality(_report: &scirs2, interpolate: DocumentationRepo
 
 /// Provide actionable documentation improvement plan
 #[allow(dead_code)]
-fn provide_documentation_action_plan(_report: &scirs2, interpolate: DocumentationReport) {
-    match _report.readiness {
+fn provide_documentation_action_plan(report: &scirs2, interpolate: DocumentationReport) {
+    match report.readiness {
         DocumentationReadiness::Ready => {
             println!("✅ DOCUMENTATION READY FOR STABLE RELEASE");
             println!("  The documentation meets quality standards for stable release.");
@@ -436,26 +436,26 @@ fn provide_documentation_action_plan(_report: &scirs2, interpolate: Documentatio
                 println!(
                     "    {}. Fix {} critical documentation issues",
                     action_count,
-                    _report.critical_issues.len()
+                    report.critical_issues.len()
                 );
                 action_count += 1;
 
-                for (i, issue) in _report.critical_issues.iter().enumerate() {
+                for (i, issue) in report.critical_issues.iter().enumerate() {
                     if i < 3 {
                         // Show top 3
                         println!("       - {}: {}", issue.location, issue.description);
                     }
                 }
-                if _report.critical_issues.len() > 3 {
-                    println!("       ... and {} more", _report.critical_issues.len() - 3);
+                if report.critical_issues.len() > 3 {
+                    println!("       ... and {} more", report.critical_issues.len() - 3);
                 }
             }
 
             // Coverage improvements
-            if _report.coverage_percentage < 95.0 {
+            if report.coverage_percentage < 95.0 {
                 println!(
                     "    {}. Improve documentation coverage from {:.1}% to 95%",
-                    action_count, _report.coverage_percentage
+                    action_count, report.coverage_percentage
                 );
                 action_count += 1;
             }
@@ -480,13 +480,13 @@ fn provide_documentation_action_plan(_report: &scirs2, interpolate: Documentatio
 
             println!(
                 "    1. Increase documentation coverage from {:.1}% to 95%",
-                _report.coverage_percentage
+                report.coverage_percentage
             );
 
             if !_report.critical_issues.is_empty() {
                 println!(
                     "    2. Resolve {} critical documentation issues",
-                    _report.critical_issues.len()
+                    report.critical_issues.len()
                 );
             }
 
@@ -523,21 +523,21 @@ fn provide_documentation_action_plan(_report: &scirs2, interpolate: Documentatio
 
     // General recommendations
     println!("  Additional Recommendations:");
-    for (i, recommendation) in _report.recommendations.iter().enumerate() {
+    for (i, recommendation) in report.recommendations.iter().enumerate() {
         if i < 5 {
             // Show top 5 recommendations
             println!("    - {}", recommendation);
         }
     }
-    if _report.recommendations.len() > 5 {
+    if report.recommendations.len() > 5 {
         println!(
             "    ... and {} more recommendations",
-            _report.recommendations.len() - 5
+            report.recommendations.len() - 5
         );
     }
 
     // Timeline estimation
-    let estimated_hours = match _report.readiness {
+    let estimated_hours = match report.readiness {
         DocumentationReadiness::Ready => 2,
         DocumentationReadiness::NeedsMinorWork => 8,
         DocumentationReadiness::NeedsSignificantWork => 40,

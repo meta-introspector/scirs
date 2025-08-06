@@ -4,7 +4,7 @@
 //! and computational efficiency for element-wise operations between tensors of
 //! different shapes.
 
-use crate::ndarray__ext::{NdArray, NdArrayView};
+use crate::ndarray_ext::{NdArray, NdArrayView};
 use crate::op::{ComputeContext, GradientContext, Op, OpError};
 use crate::tensor::Tensor;
 use crate::tensor_ops;
@@ -176,7 +176,7 @@ fn analyze_broadcast_impl(
 }
 
 #[allow(dead_code)]
-fn padshape_left(shape: &[usize], target_len: usize) -> Vec<usize> {
+fn padshape_left(shape: &[usize], targetlen: usize) -> Vec<usize> {
     let mut padded = vec![1; target_len];
     let offset = target_len - shape.len();
     padded[offset..].copy_from_slice(shape);

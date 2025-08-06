@@ -12,7 +12,7 @@ use crate::tensor::{AsTensor, Tensor};
 use crate::Float;
 
 // Import internal operation modules
-use crate::tensor__ops::{array_ops, conv_ops, dot_ops, math_ops, shape};
+use crate::tensor_ops::{array_ops, conv_ops, dot_ops, math_ops, shape};
 
 /// Matrix multiplication.
 ///
@@ -22,7 +22,7 @@ use crate::tensor__ops::{array_ops, conv_ops, dot_ops, math_ops, shape};
 ///
 /// ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::matmul;
+/// use ag::tensor_ops::linear_algebra::matmul;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = ag::tensor_ops::zeros(&[4, 2], g);
@@ -69,7 +69,7 @@ where
 /// ```ignore
 /// # tensordot needs further investigation for axes handling
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::tensordot;
+/// use ag::tensor_ops::linear_algebra::tensordot;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = ag::tensor_ops::zeros(&[3, 4, 5], g);
@@ -127,7 +127,7 @@ where
 ///
 /// ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::batch_matmul_t;
+/// use ag::tensor_ops::linear_algebra::batch_matmul_t;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = ag::tensor_ops::zeros(&[2, 3, 2, 4], g);
@@ -150,15 +150,15 @@ where
     A: AsRef<Tensor<'graph, F>> + Copy,
     B: AsRef<Tensor<'graph, F>> + Copy,
 {
-    let _a = _a.as_ref();
-    let g = _a.graph();
+    let a = a.as_ref();
+    let g = a.graph();
     let op = dot_ops::BatchMatMul {
         transpose_a: trans_a,
         transpose_b: trans_b,
     };
     Tensor::builder(g)
-        .append_input(_a.as_ref(), false)
-        .append_input(_b.as_ref(), false)
+        .append_input(a.as_ref(), false)
+        .append_input(b.as_ref(), false)
         .build(op)
 }
 
@@ -170,7 +170,7 @@ where
 ///
 /// ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::batch_matmul;
+/// use ag::tensor_ops::linear_algebra::batch_matmul;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = ag::tensor_ops::ones((&[2, 3, 4, 2]), g);
@@ -209,7 +209,7 @@ where
 ///
 /// ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::transpose;
+/// use ag::tensor_ops::linear_algebra::transpose;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = ag::tensor_ops::zeros(&[1, 2, 3, 4, 5], g);
@@ -239,7 +239,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::extract_diag;
+/// use ag::tensor_ops::linear_algebra::extract_diag;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -266,7 +266,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::trace;
+/// use ag::tensor_ops::linear_algebra::trace;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -293,7 +293,7 @@ where
 ///
 /// ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::eye;
+/// use ag::tensor_ops::linear_algebra::eye;
 ///
 /// ag::run(|g| {
 ///    let identity: ag::Tensor<'_, f64> = eye(3, g);
@@ -305,7 +305,7 @@ where
 /// ```
 #[allow(dead_code)]
 pub fn eye<F: Float>(size: usize, graph: &impl AsGraph<F>) -> Tensor<'_, F> {
-    Tensor::builder(graph).build(crate::tensor_ops::linalg_ops::EyeOp { _size })
+    Tensor::builder(graph).build(crate::tensor_ops::linalg_ops::EyeOp { size })
 }
 
 /// Creates a diagonal matrix from a vector.
@@ -315,7 +315,7 @@ pub fn eye<F: Float>(size: usize, graph: &impl AsGraph<F>) -> Tensor<'_, F> {
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::diag;
+/// use ag::tensor_ops::linear_algebra::diag;
 ///
 /// ag::run(|g| {
 ///    let v = ag::tensor_ops::convert_to_tensor(array![1., 2., 3.], g);
@@ -346,7 +346,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::qr;
+/// use ag::tensor_ops::linear_algebra::qr;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -372,7 +372,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::svd;
+/// use ag::tensor_ops::linear_algebra::svd;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -401,7 +401,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::eigenvalues;
+/// use ag::tensor_ops::linear_algebra::eigenvalues;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -430,7 +430,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::eigen;
+/// use ag::tensor_ops::linear_algebra::eigen;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -457,7 +457,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::determinant;
+/// use ag::tensor_ops::linear_algebra::determinant;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -484,7 +484,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::matrix_inverse;
+/// use ag::tensor_ops::linear_algebra::matrix_inverse;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -511,7 +511,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::solve;
+/// use ag::tensor_ops::linear_algebra::solve;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -541,7 +541,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::lstsq;
+/// use ag::tensor_ops::linear_algebra::lstsq;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.], [5., 6.]], g);
@@ -661,14 +661,11 @@ where
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
         .append_input(w.as_ref(), false)
-        .build(
-            conv_ops::conv2d,
-            _transpose::Conv2DTranspose {
-                pad,
-                stride,
-                dilation: 1,
-            },
-        )
+        .build(conv_ops::conv2d_transpose::Conv2DTranspose {
+            pad,
+            stride,
+            dilation: 1,
+        })
 }
 
 /// 2D max pooling.
@@ -696,11 +693,11 @@ where
     let x = x.as_ref();
     let g = x.graph();
     Tensor::builder(g).append_input(x.as_ref(), false).build(
-        conv_ops::max,
-        _pool2d::MaxPool2D {
+        conv_ops::max_pool2d::MaxPool2D {
             pad,
-            stride_size: pool_size,
-        },
+            stride: stride,
+            pool_size,
+        }
     )
 }
 
@@ -712,7 +709,7 @@ where
 ///
 /// ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::concat;
+/// use ag::tensor_ops::linear_algebra::concat;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = ag::tensor_ops::zeros(&[3, 2], g);
@@ -728,11 +725,11 @@ pub fn concat<'graph, A, F: Float>(tensors: &[A], axis: isize) -> Tensor<'graph,
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
-    assert_ne!(_tensors.len(), 0);
-    let g = _tensors[0].as_ref().graph();
+    assert_ne!(tensors.len(), 0);
+    let g = tensors[0].as_ref().graph();
     let op = array_ops::Concat { axis };
     let mut b = Tensor::builder(g);
-    for t in _tensors {
+    for t in tensors {
         b = b.append_input(t.as_ref(), false);
     }
     b.build(op)
@@ -749,7 +746,7 @@ where
 ///
 /// ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::split;
+/// use ag::tensor_ops::linear_algebra::split;
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = ag::tensor_ops::zeros(&[3, 7, 5], g);
@@ -814,7 +811,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::linear_algebra::frobenius_norm;
+/// use ag::tensor_ops::linear_algebra::frobenius_norm;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[3., 4.], [0., 0.]], g);
@@ -833,108 +830,108 @@ where
 // Re-export enhanced linear algebra operations
 
 /// Compute the 1-norm of a matrix (maximum column sum)
-pub use crate::tensor__ops::matrix__norms::norm1;
+pub use crate::tensor_ops::matrix_norms::norm1;
 
 /// Compute the 2-norm of a matrix (largest singular value)
-pub use crate::tensor__ops::matrix__norms::norm2;
+pub use crate::tensor_ops::matrix_norms::norm2;
 
 /// Compute the infinity-norm of a matrix (maximum row sum)
-pub use crate::tensor__ops::matrix__norms::norminf;
+pub use crate::tensor_ops::matrix_norms::norminf;
 
 /// Compute the Frobenius norm of a matrix (alias)
-pub use crate::tensor__ops::matrix__norms::normfro;
+pub use crate::tensor_ops::matrix_norms::normfro;
 
 /// Solve Sylvester equation AX + XB = C
-pub use crate::tensor__ops::matrix__solvers::solve_sylvester;
+pub use crate::tensor_ops::matrix_solvers::solve_sylvester;
 
 /// Solve Lyapunov equation AX + XA^T = Q
-pub use crate::tensor__ops::matrix__solvers::solve_lyapunov;
+pub use crate::tensor_ops::matrix_solvers::solve_lyapunov;
 
 /// Solve linear system AX = B using Cholesky decomposition
-pub use crate::tensor__ops::matrix__solvers::cholesky_solve;
+pub use crate::tensor_ops::matrix_solvers::cholesky_solve;
 
 /// Eigendecomposition for symmetric/Hermitian matrices
-pub use crate::tensor__ops::symmetric__ops::eigh;
+pub use crate::tensor_ops::symmetric_ops::eigh;
 
 /// Eigenvalues only for symmetric/Hermitian matrices
-pub use crate::tensor__ops::symmetric__ops::eigvalsh;
+pub use crate::tensor_ops::symmetric_ops::eigvalsh;
 
 /// Polar decomposition A = UP
-pub use crate::tensor__ops::special__decompositions::polar;
+pub use crate::tensor_ops::special_decompositions::polar;
 
 /// Schur decomposition A = QTQ^T
-pub use crate::tensor__ops::special__decompositions::schur;
+pub use crate::tensor_ops::special_decompositions::schur;
 
 /// Matrix exponential using Padé approximation (method 2)
-pub use crate::tensor__ops::matrix__ops::expm2;
+pub use crate::tensor_ops::matrix_ops::expm2;
 
 /// Matrix exponential using eigendecomposition (method 3)
-pub use crate::tensor__ops::matrix__ops::expm3;
+pub use crate::tensor_ops::matrix_ops::expm3;
 
 /// Solve tensor equation
-pub use crate::tensor__ops::advanced_tensor__ops::tensor_solve;
+pub use crate::tensor_ops::advanced_tensor_ops::tensor_solve;
 
 /// Einstein summation convention
-pub use crate::tensor__ops::advanced_tensor__ops::einsum;
+pub use crate::tensor_ops::advanced_tensor_ops::einsum;
 
 /// Kronecker product (tensor product)
-pub use crate::tensor__ops::advanced_tensor__ops::kron as kronecker_product;
+pub use crate::tensor_ops::advanced_tensor_ops::kron as kronecker_product;
 
 // Advanced decompositions
 
 /// SVD using Jacobi algorithm for improved numerical stability
-pub use crate::tensor__ops::advanced__decompositions::svd_jacobi;
+pub use crate::tensor_ops::advanced_decompositions::svd_jacobi;
 
 /// Randomized SVD for large matrices
-pub use crate::tensor__ops::advanced__decompositions::randomized_svd;
+pub use crate::tensor_ops::advanced_decompositions::randomized_svd;
 
 /// Generalized eigenvalue problem Ax = λBx
-pub use crate::tensor__ops::advanced__decompositions::generalized_eigen;
+pub use crate::tensor_ops::advanced_decompositions::generalized_eigen;
 
 /// QR decomposition with column pivoting
-pub use crate::tensor__ops::advanced__decompositions::qr_pivot;
+pub use crate::tensor_ops::advanced_decompositions::qr_pivot;
 
 // Iterative solvers
 
 /// Conjugate gradient solver for symmetric positive definite systems
-pub use crate::tensor__ops::iterative__solvers::conjugate_gradient_solve;
+pub use crate::tensor_ops::iterative_solvers::conjugate_gradient_solve;
 
 /// GMRES solver for general linear systems
-pub use crate::tensor__ops::iterative__solvers::gmres_solve;
+pub use crate::tensor_ops::iterative_solvers::gmres_solve;
 
 /// BiCGSTAB solver for non-symmetric systems
-pub use crate::tensor__ops::iterative__solvers::bicgstab_solve;
+pub use crate::tensor_ops::iterative_solvers::bicgstab_solve;
 
 /// Preconditioned conjugate gradient solver
-pub use crate::tensor__ops::iterative__solvers::pcg_solve;
+pub use crate::tensor_ops::iterative_solvers::pcg_solve;
 
 /// Preconditioner types for iterative solvers
-pub use crate::tensor__ops::iterative__solvers::PreconditionerType;
+pub use crate::tensor_ops::iterative_solvers::PreconditionerType;
 
 // Matrix functions
 
 /// Matrix sine function
-pub use crate::tensor__ops::matrix_trig__functions::sinm;
+pub use crate::tensor_ops::matrix_trig_functions::sinm;
 
 /// Matrix cosine function
-pub use crate::tensor__ops::matrix_trig__functions::cosm;
+pub use crate::tensor_ops::matrix_trig_functions::cosm;
 
 /// Matrix sign function
-pub use crate::tensor__ops::matrix_trig__functions::signm;
+pub use crate::tensor_ops::matrix_trig_functions::signm;
 
 /// Matrix hyperbolic sine function
-pub use crate::tensor__ops::matrix_trig__functions::sinhm;
+pub use crate::tensor_ops::matrix_trig_functions::sinhm;
 
 /// Matrix hyperbolic cosine function
-pub use crate::tensor__ops::matrix_trig__functions::coshm;
+pub use crate::tensor_ops::matrix_trig_functions::coshm;
 
 /// General matrix function
-pub use crate::tensor__ops::matrix_trig__functions::funm;
+pub use crate::tensor_ops::matrix_trig_functions::funm;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tensor__ops::convert_to_tensor;
+    use crate::tensor_ops::convert_to_tensor;
     #[allow(unused_imports)]
     use approx::assert_relative_eq;
     use ndarray::array;

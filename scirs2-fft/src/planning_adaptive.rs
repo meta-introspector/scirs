@@ -116,7 +116,7 @@ use std::collections::HashMap;
 
 impl AdaptivePlanner {
     /// Create a new adaptive planner
-    pub fn new(_size: &[usize], forward: bool, config: Option<AdaptivePlanningConfig>) -> Self {
+    pub fn new(size: &[usize], forward: bool, config: Option<AdaptivePlanningConfig>) -> Self {
         let config = config.unwrap_or_default();
         let mut metrics = HashMap::new();
 
@@ -127,7 +127,7 @@ impl AdaptivePlanner {
         metrics.insert(PlanningStrategy::AutoTuned, StrategyMetrics::new());
 
         Self {
-            size: _size.to_vec(),
+            size: size.to_vec(),
             forward,
             current_strategy: PlanningStrategy::CacheFirst, // Start with a reasonable default
             current_backend: PlannerBackend::default(),
@@ -172,14 +172,14 @@ impl AdaptivePlanner {
     }
 
     /// Record execution time and potentially adapt strategy
-    pub fn record_execution(&mut self, execution_time: Duration) -> FFTResult<()> {
+    pub fn record_execution(&mut self, executiontime: Duration) -> FFTResult<()> {
         if !self.config.enabled {
             return Ok(());
         }
 
         // Record metrics for current strategy
         if let Some(metrics) = self.metrics.get_mut(&self.current_strategy) {
-            metrics.record(execution_time);
+            metrics.record(executiontime);
         }
 
         // Check if we should evaluate strategies
@@ -258,8 +258,8 @@ pub struct AdaptiveExecutor {
 
 impl AdaptiveExecutor {
     /// Create a new adaptive executor
-    pub fn new(_size: &[usize], forward: bool, config: Option<AdaptivePlanningConfig>) -> Self {
-        let planner = AdaptivePlanner::new(_size, forward, config);
+    pub fn new(size: &[usize], forward: bool, config: Option<AdaptivePlanningConfig>) -> Self {
+        let planner = AdaptivePlanner::new(size, forward, config);
 
         Self {
             planner: Arc::new(Mutex::new(planner)),

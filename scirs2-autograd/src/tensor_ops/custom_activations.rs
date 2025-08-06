@@ -95,7 +95,7 @@ impl<F: Float> Op<F> for CustomActivationOp {
         let _input = ctx.input(0);
 
         // Simplified gradient computation - use identity for now
-        let grad_multiplier = crate::tensor__ops::ones(&[1], ctx.graph());
+        let grad_multiplier = crate::tensor_ops::ones(&[1], ctx.graph());
 
         let grad_input = gy * grad_multiplier;
         ctx.append_input_grad(0, Some(grad_input));
@@ -111,9 +111,9 @@ pub struct CustomActivationBuilder<F: Float> {
 }
 
 impl<F: Float> CustomActivationBuilder<F> {
-    pub fn new(_name: &str) -> Self {
+    pub fn new(name: &str) -> Self {
         Self {
-            _name: _name.to_string(),
+            _name: name.to_string(),
             forward_fn: Box::new(|x| x),
             derivative_fn: None,
             properties: ActivationProperties::default(),
@@ -245,7 +245,7 @@ pub fn list_activation_functions() -> Vec<String> {
 
 /// Check if an activation function is registered
 #[allow(dead_code)]
-pub fn is_activation_registered(_name: &str) -> bool {
+pub fn is_activation_registered(name: &str) -> bool {
     let registry = ACTIVATION_REGISTRY.lock().unwrap();
     registry.contains_key(_name)
 }

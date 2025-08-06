@@ -23,7 +23,7 @@ type BandSolveWorkItem<F> = WorkItem<(usize, usize, usize, Array2<F>, Array1<F>)
 
 /// Simple parallel map utility function using rayon
 #[allow(dead_code)]
-fn parallel_map<T, U, F>(_items: &[T], func: F) -> Vec<U>
+fn parallel_map<T, U, F>(items: &[T], func: F) -> Vec<U>
 where
     T: Sync,
     U: Send,
@@ -35,11 +35,11 @@ where
     // Use rayon's parallel iterator if available, otherwise sequential
     #[cfg(feature = "parallel")]
     {
-        _items.par_iter().map(func).collect()
+        items.par_iter().map(func).collect()
     }
     #[cfg(not(feature = "parallel"))]
     {
-        _items.iter().map(func).collect()
+        items.iter().map(func).collect()
     }
 }
 
@@ -59,20 +59,20 @@ where
 
 impl<T: Clone> WorkItem<T> {
     /// Create a new work item
-    pub fn new(_id: usize, payload: T) -> Self {
+    pub fn new(id: usize, payload: T) -> Self {
         Self {
-            id: _id,
+            id: id,
             payload,
             estimated_time: None,
         }
     }
 
     /// Create a work item with estimated execution time
-    pub fn with_estimate(_id: usize, payload: T, estimated_time: Duration) -> Self {
+    pub fn with_estimate(_id: usize, payload: T, estimatedtime: Duration) -> Self {
         Self {
             id: _id,
             payload,
-            estimated_time: Some(estimated_time),
+            estimated_time: Some(estimatedtime),
         }
     }
 }
@@ -128,9 +128,9 @@ impl<T: Clone> WorkQueue<T> {
     }
 
     /// Update timing statistics
-    fn update_timing(&mut self, execution_time: Duration) {
+    fn update_timing(&mut self, executiontime: Duration) {
         self.processed_count += 1;
-        self.total_time += execution_time;
+        self.total_time += executiontime;
         self.avg_time = self.total_time / self.processed_count as u32;
     }
 
@@ -277,9 +277,9 @@ pub struct SchedulerStats {
 
 impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
     /// Create a new work-stealing scheduler
-    pub fn new(_num_workers: usize) -> Self {
+    pub fn new(_numworkers: usize) -> Self {
         Self::with_strategy(
-            _num_workers,
+            _numworkers,
             StealingStrategy::default(),
             LoadBalancingParams::default(),
         )
@@ -530,12 +530,12 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
 
     /// Advanced work stealing with different victim selection strategies
     #[allow(dead_code)]
-    fn steal_work(&self, thief_id: usize) -> Option<WorkItem<T>> {
+    fn steal_work(&self, thiefid: usize) -> Option<WorkItem<T>> {
         let mut attempts = 0;
         let max_attempts = self.load_balancing_params.max_steal_attempts;
 
         while attempts < max_attempts {
-            let victim_id = self.select_victim(thief_id, attempts);
+            let victim_id = self.select_victim(thiefid, attempts);
 
             if let Some(victim_id) = victim_id {
                 if let Ok(mut victim_queue) = self.worker_queues[victim_id].try_lock() {
@@ -569,30 +569,30 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
 
     /// Select victim for work stealing based on strategy
     #[allow(dead_code)]
-    fn select_victim(&self, thief_id: usize, attempt: usize) -> Option<usize> {
+    fn select_victim(&self, thiefid: usize, attempt: usize) -> Option<usize> {
         match self.stealing_strategy {
             StealingStrategy::Random => {
                 use std::collections::hash_map::DefaultHasher;
                 use std::hash::{Hash, Hasher};
 
                 let mut hasher = DefaultHasher::new();
-                (thief_id + attempt).hash(&mut hasher);
+                (thiefid + attempt).hash(&mut hasher);
                 let victim = (hasher.finish() as usize) % self.num_workers;
 
-                if victim != thief_id {
+                if victim != thiefid {
                     Some(victim)
                 } else {
                     Some((victim + 1) % self.num_workers)
                 }
             }
-            StealingStrategy::RoundRobin => Some((thief_id + attempt + 1) % self.num_workers),
+            StealingStrategy::RoundRobin => Some((thiefid + attempt + 1) % self.num_workers),
             StealingStrategy::MostLoaded => {
                 // Target the worker with the most work
                 let loads = self.get_worker_loads();
                 let max_load_worker = loads
                     .iter()
                     .enumerate()
-                    .filter(|(i, _)| *i != thief_id)
+                    .filter(|(i, _)| *i != thiefid)
                     .max_by_key(|(_, &load)| load)
                     .map(|(i, _)| i);
 
@@ -601,16 +601,16 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
             StealingStrategy::LocalityAware => {
                 // Try to steal from nearby workers first
                 let distance = (attempt % (self.num_workers / 2)) + 1;
-                Some((thief_id + distance) % self.num_workers)
+                Some((thiefid + distance) % self.num_workers)
             }
             StealingStrategy::Adaptive => {
                 // Combine strategies based on historical success rates
                 if attempt < 2 {
                     // First try most loaded
-                    self.select_victim_most_loaded(thief_id)
+                    self.select_victim_most_loaded(thiefid)
                 } else {
                     // Then try random
-                    self.select_victim(thief_id, attempt)
+                    self.select_victim(thiefid, attempt)
                 }
             }
         }
@@ -618,24 +618,24 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
 
     /// Helper for most-loaded victim selection
     #[allow(dead_code)]
-    fn select_victim_most_loaded(&self, thief_id: usize) -> Option<usize> {
+    fn select_victim_most_loaded(&self, thiefid: usize) -> Option<usize> {
         let loads = self.get_worker_loads();
         loads
             .iter()
             .enumerate()
-            .filter(|(i_, _)| *i_ != thief_id)
+            .filter(|(i_, _)| *i_ != thiefid)
             .max_by_key(|(_, &load)| load)
             .map(|(i_, _)| i_)
     }
 
     /// Execute all work items using the work-stealing scheduler
-    pub fn execute<F, R>(&self, work_fn: F) -> LinalgResult<Vec<R>>
+    pub fn execute<F, R>(&self, workfn: F) -> LinalgResult<Vec<R>>
     where
         F: Fn(T) -> R + Send + Sync + 'static,
         R: Send + Clone + 'static,
         T: Send + 'static,
     {
-        let work_fn = Arc::new(work_fn);
+        let work_fn = Arc::new(workfn);
         let results = Arc::new(Mutex::new(Vec::new()));
 
         // Start worker threads
@@ -689,8 +689,8 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
         loop {
             let work_item = {
                 // Try to get work from own _queue first
-                if let Ok(mut _queue) = my_queue.lock() {
-                    _queue.pop_front()
+                if let Ok(mut queue) = my_queue.lock() {
+                    queue.pop_front()
                 } else {
                     None
                 }
@@ -721,8 +721,8 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
             let execution_time = start_time.elapsed();
 
             // Update timing statistics
-            if let Ok(mut _queue) = my_queue.lock() {
-                _queue.update_timing(execution_time);
+            if let Ok(mut queue) = my_queue.lock() {
+                queue.update_timing(execution_time);
             }
 
             // Store the result
@@ -783,8 +783,8 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
     }
 
     /// Check if all worker queues are empty
-    fn all_queues_empty(_queues: &[Arc<Mutex<WorkQueue<T>>>]) -> bool {
-        _queues.iter().all(|queue| {
+    fn all_queues_empty(queues: &[Arc<Mutex<WorkQueue<T>>>]) -> bool {
+        queues.iter().all(|queue| {
             if let Ok(queue) = queue.lock() {
                 queue.items.is_empty()
             } else {
@@ -889,7 +889,7 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
     }
 
     /// Advanced workload prediction based on execution history
-    pub fn predict_execution_time(&self, work_complexity: WorkComplexity) -> Duration {
+    pub fn predict_execution_time(&self, workcomplexity: WorkComplexity) -> Duration {
         let stats = self.stats.lock().unwrap();
 
         let base_time = if stats.total_items > 0 {
@@ -898,7 +898,7 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
             Duration::from_millis(1)
         };
 
-        match work_complexity {
+        match workcomplexity {
             WorkComplexity::Constant => base_time,
             WorkComplexity::Linear => base_time * 2,
             WorkComplexity::Quadratic => base_time * 4,
@@ -991,7 +991,7 @@ pub mod matrix_ops {
         scheduler.submit_work(work_items)?;
 
         // Execute work and collect results
-        let results = scheduler.execute(|(i, _row, dot_product)| (i, dot_product))?;
+        let results = scheduler.execute(|(i, row, dot_product)| (i, dot_product))?;
 
         // Assemble final result
         for (i, value) in results {
@@ -1250,7 +1250,7 @@ pub mod matrix_ops {
                 }
 
                 scheduler.submit_work(work_items)?;
-                let _results = scheduler.execute(|(_i, _j, _matrix)| {
+                let _results = scheduler.execute(|(_i, j, matrix)| {
                     // Simplified Jacobi rotation computation
                     // In a full implementation, this would compute the rotation angles
                     // and apply them to eliminate off-diagonal elements
@@ -1689,10 +1689,10 @@ pub mod matrix_ops {
 
                 if !work_items.is_empty() {
                     scheduler.submit_work(work_items)?;
-                    let results = scheduler.execute(move |(i, j, start_j, _matrix, x_vec)| {
+                    let results = scheduler.execute(move |(i, j, start_j, matrix, x_vec)| {
                         let mut sum = F::zero();
                         for k in start_j..i {
-                            sum += _matrix[(j, k)] * x_vec[k];
+                            sum += matrix[(j, k)] * x_vec[k];
                         }
                         (j, sum)
                     })?;
@@ -1977,21 +1977,21 @@ pub mod matrix_ops {
 
 /// Sequential SVD fallback for small matrices
 #[allow(dead_code)]
-fn sequential_svd<F>(_matrix: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array1<F>, Array2<F>)>
+fn sequential_svd<F>(matrix: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Use the decomposition module's SVD implementation for small matrices
-    match crate::decomposition::svd(_matrix, false, None) {
+    match crate::decomposition::svd(matrix, false, None) {
         Ok((u, s, vt)) => Ok((u, s, vt)),
         Err(_) => {
             // Fallback implementation using Jacobi method for very small matrices
-            let (m, n) = _matrix.dim();
+            let (m, n) = matrix.dim();
             let min_dim = m.min(n);
 
             if min_dim <= 8 {
                 // Compute A^T * A for eigendecomposition approach
-                let a = _matrix.to_owned();
+                let a = matrix.to_owned();
                 let mut ata = Array2::zeros((n, n));
 
                 // Compute A^T * A
@@ -2057,7 +2057,7 @@ where
                 let vt = Array2::eye(n);
 
                 // Set first column of U as A*v normalized
-                let av = _matrix.dot(&v);
+                let av = matrix.dot(&v);
                 let av_norm = av.iter().map(|x| *x * *x).sum::<F>().sqrt();
                 if av_norm > tolerance {
                     for i in 0..m {
@@ -2214,7 +2214,7 @@ pub enum CacheAwareStrategy {
 
 impl<T: Clone + Send + 'static> CacheAwareWorkStealer<T> {
     /// Create a new cache-aware work stealer
-    pub fn new(_num_workers: usize, _strategy: CacheAwareStrategy) -> LinalgResult<Self> {
+    pub fn new(_num_workers: usize, strategy: CacheAwareStrategy) -> LinalgResult<Self> {
         let base_scheduler = WorkStealingScheduler::new(_num_workers);
         let numa_topology = NumaTopology::detect();
 
@@ -2310,33 +2310,33 @@ impl<T: Clone + Send + 'static> CacheAwareWorkStealer<T> {
     }
 
     /// Estimate memory footprint of work item (simplified)
-    fn estimate_memory_footprint(&self, _payload: &T) -> usize {
+    fn estimate_memory_footprint(&self, payload: &T) -> usize {
         // This is a placeholder - in practice you'd analyze the _payload
         // to estimate its memory access pattern
         64 // Default cache line size
     }
 
     /// Update cache miss rate for a worker
-    pub fn update_cache_miss_rate(&self, worker_id: usize, miss_rate: f64) -> LinalgResult<()> {
+    pub fn update_cache_miss_rate(&self, worker_id: usize, missrate: f64) -> LinalgResult<()> {
         if worker_id >= self.worker_affinity.len() {
             return Err(LinalgError::InvalidInput("Invalid worker ID".to_string()));
         }
 
         let mut rates = self.cache_miss_rates.lock().unwrap();
-        rates[worker_id] = miss_rate;
+        rates[worker_id] = missrate;
         Ok(())
     }
 
     /// Get NUMA-aware worker assignment for a task
-    pub fn get_numa_optimal_worker(&self, memory_node: usize) -> usize {
-        if memory_node >= self.numa_topology.node_count {
+    pub fn get_numa_optimal_worker(&self, memorynode: usize) -> usize {
+        if memorynode >= self.numa_topology.node_count {
             return 0;
         }
 
         // Find a worker on the same NUMA _node
         for (worker_id, &cpu) in self.worker_affinity.iter().enumerate() {
             for _node in 0..self.numa_topology.node_count {
-                if self.numa_topology.cpus_per_node[_node].contains(&cpu) && _node == memory_node {
+                if self.numa_topology.cpus_per_node[_node].contains(&cpu) && _node == memorynode {
                     return worker_id;
                 }
             }
@@ -2875,7 +2875,9 @@ fn apply_givens_rotation<F>(
 /// Parallel Padé approximation
 #[allow(dead_code)]
 fn parallel_pade_approximation<F>(
-    _matrix: &ArrayView2<F>, _order: usize, _workers: usize,
+    _matrix: &ArrayView2<F>,
+    _order: usize,
+    _workers: usize,
 ) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
@@ -2887,7 +2889,7 @@ where
 
 /// Parallel Frobenius norm
 #[allow(dead_code)]
-fn parallel_frobenius_norm<F>(a: &ArrayView2<F>, _workers: usize) -> LinalgResult<F>
+fn parallel_frobenius_norm<F>(a: &ArrayView2<F>, workers: usize) -> LinalgResult<F>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
@@ -2907,7 +2909,7 @@ where
 
 /// Parallel matrix 1-norm
 #[allow(dead_code)]
-fn parallel_matrix_1_norm<F>(a: &ArrayView2<F>, _workers: usize) -> LinalgResult<F>
+fn parallel_matrix_1_norm<F>(a: &ArrayView2<F>, workers: usize) -> LinalgResult<F>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
@@ -2924,21 +2926,21 @@ where
 
 /// Parallel spectral norm
 #[allow(dead_code)]
-fn parallel_spectral_norm<F>(a: &ArrayView2<F>, _workers: usize) -> LinalgResult<F>
+fn parallel_spectral_norm<F>(a: &ArrayView2<F>, workers: usize) -> LinalgResult<F>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Simplified - use Frobenius norm as approximation
-    parallel_frobenius_norm(a, _workers)
+    parallel_frobenius_norm(a, workers)
 }
 
 /// Parallel matrix infinity norm
 #[allow(dead_code)]
-fn parallel_matrix_inf_norm<F>(a: &ArrayView2<F>, _workers: usize) -> LinalgResult<F>
+fn parallel_matrix_inf_norm<F>(a: &ArrayView2<F>, workers: usize) -> LinalgResult<F>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
-    let (m, _n) = a.dim();
+    let (m, n) = a.dim();
     let mut max_row_sum = F::zero();
 
     for i in 0..m {
@@ -2985,11 +2987,11 @@ pub struct ChunkPerformance {
 
 impl AdaptiveChunking {
     /// Create a new adaptive chunking strategy
-    pub fn new(_min_size: usize, max_size: usize) -> Self {
+    pub fn new(_min_size: usize, maxsize: usize) -> Self {
         Self {
             min_chunk_size: _min_size,
-            max_chunk_size: max_size,
-            current_chunk_size: (_min_size + max_size) / 2,
+            max_chunk_size: maxsize,
+            current_chunk_size: (_min_size + maxsize) / 2,
             performance_history: Vec::new(),
             max_history: 50,
         }
@@ -3275,9 +3277,9 @@ impl PerformanceMonitor {
     }
 
     /// Record task execution
-    pub fn record_task(&mut self, execution_time_ns: u64) {
+    pub fn record_task(&mut self, execution_timens: u64) {
         self.total_tasks += 1;
-        self.total_execution_time_ns += execution_time_ns;
+        self.total_execution_time_ns += execution_timens;
     }
 
     /// Record work stealing event
@@ -3475,9 +3477,9 @@ pub struct CacheOptimizationRecommendations {
 
 impl<T: Clone + Send + 'static> OptimizedWorkStealingScheduler<T> {
     /// Create a new optimized work-stealing scheduler
-    pub fn new(_num_workers: usize) -> Self {
+    pub fn new(_numworkers: usize) -> Self {
         Self {
-            base_scheduler: WorkStealingScheduler::new(_num_workers),
+            base_scheduler: WorkStealingScheduler::new(_numworkers),
             adaptive_chunking: Arc::new(Mutex::new(AdaptiveChunking::new(8, 1024))),
             performance_monitor: Arc::new(Mutex::new(PerformanceMonitor::new())),
             cache_optimizer: Arc::new(Mutex::new(CacheLocalityOptimizer::new())),
@@ -3485,7 +3487,7 @@ impl<T: Clone + Send + 'static> OptimizedWorkStealingScheduler<T> {
     }
 
     /// Execute work with adaptive optimization
-    pub fn execute_optimized<F, R>(&self, work_items: Vec<T>, work_fn: F) -> LinalgResult<Vec<R>>
+    pub fn execute_optimized<F, R>(&self, work_items: Vec<T>, workfn: F) -> LinalgResult<Vec<R>>
     where
         F: Fn(T) -> R + Send + Sync + Clone + 'static,
         R: Send + Clone + 'static,
@@ -3502,7 +3504,7 @@ impl<T: Clone + Send + 'static> OptimizedWorkStealingScheduler<T> {
         use scirs2_core::parallel_ops::*;
 
         // Execute work _items in parallel using proper parallel processing
-        let results: Vec<R> = work_items.into_par_iter().map(work_fn).collect();
+        let results: Vec<R> = work_items.into_par_iter().map(workfn).collect();
 
         // Record performance metrics
         let execution_time = start_time.elapsed();

@@ -188,7 +188,7 @@ where
     /// # Returns
     ///
     /// A new LocalPolynomialRegression model
-    pub fn new(_points: Array2<F>, values: Array1<F>, bandwidth: F) -> InterpolateResult<Self> {
+    pub fn new(points: Array2<F>, values: Array1<F>, bandwidth: F) -> InterpolateResult<Self> {
         let config = LocalPolynomialConfig {
             bandwidth,
             ..LocalPolynomialConfig::default()
@@ -354,7 +354,8 @@ where
 
         // Filter out points with zero weight (if using compactly supported weight function)
         let effective_radius = match self.config.weight_fn {
-            WeightFunction::WendlandC2 | WeightFunction::CubicSpline => self.config.bandwidth_ => F::infinity(),
+            WeightFunction::WendlandC2 | WeightFunction::CubicSpline => self.config.bandwidth,
+            _ => F::infinity(),
         };
 
         let mut indices = Vec::new();
@@ -527,7 +528,8 @@ where
     fn fit_weighted_least_squares(
         &self,
         local_points: &Array2<F>,
-        local_values: &Array1<F>, _x: &ArrayView1<F>,
+        local_values: &Array1<F>,
+        _x: &ArrayView1<F>,
         weights: &Array1<F>,
         basis: &Array2<F>,
     ) -> InterpolateResult<RegressionResult<F>> {
@@ -553,14 +555,14 @@ where
         let _xtx = w_basis.t().dot(&w_basis);
         let xty = w_basis.t().dot(&w_values);
 
-        // Compute the hat matrix diagonal (leverage _values)
+        // Compute the hat matrix diagonal (leverage values)
 
         // Solve the system for coefficients
         #[cfg(feature = "linalg")]
         let coefficients = {
             use scirs2__linalg::solve;
-            let xtx_f64 = xtx.mapv(|_x| _x.to_f64().unwrap());
-            let xty_f64 = xty.mapv(|_x| _x.to_f64().unwrap());
+            let xtx_f64 = xtx.mapv(|_x| x.to_f64().unwrap());
+            let xty_f64 = xty.mapv(|_x| x.to_f64().unwrap());
             match solve(&xtx_f64.view(), &xty_f64.view(), None) {
                 Ok(c) => c.mapv(|_x| F::from_f64(_x).unwrap()),
                 Err(_) => {
@@ -621,7 +623,7 @@ where
         #[cfg(feature = "linalg")]
         let xtx_inv = {
             use scirs2__linalg::inv;
-            let xtx_f64 = xtx.mapv(|_x| _x.to_f64().unwrap());
+            let xtx_f64 = xtx.mapv(|_x| x.to_f64().unwrap());
             match inv(&xtx_f64.view(), None) {
                 Ok(inv) => inv.mapv(|_x| F::from_f64(_x).unwrap()),
                 Err(_) => {
@@ -693,7 +695,7 @@ where
                 leverage[i] = h_ii;
             }
 
-            // Compute effective degrees of freedom (sum of leverage _values)
+            // Compute effective degrees of freedom (sum of leverage values)
             let effective_df = leverage.sum();
 
             // Compute standard error of the fitted value

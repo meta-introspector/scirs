@@ -141,13 +141,13 @@ fn basic_streaming_demo() {
 }
 
 #[allow(dead_code)]
-fn generate_streaming_value(_time: f64, pattern: i32) -> f64 {
+fn generate_streaming_value(time: f64, pattern: i32) -> f64 {
     let base = 50.0;
 
     match pattern {
         0 => {
             // Sinusoidal pattern with trend
-            base + 0.1 * _time + 10.0 * (0.2 * _time).sin() + 2.0 * rand_noise()
+            base + 0.1 * _time + 10.0 * (0.2 * time).sin() + 2.0 * rand_noise()
         }
         1 => {
             // Step function with noise
@@ -160,7 +160,7 @@ fn generate_streaming_value(_time: f64, pattern: i32) -> f64 {
         }
         2 => {
             // Random walk
-            base + 0.5 * _time.sin() + 3.0 * ((_time * 0.1).cos() + rand_noise())
+            base + 0.5 * time.sin() + 3.0 * ((_time * 0.1).cos() + rand_noise())
         }
         _ => base + rand_noise(),
     }

@@ -302,7 +302,7 @@ pub fn importance_sample(
     let mut available_indices: Vec<usize> = (0..weights.len()).collect();
 
     for _ in 0..sample_size {
-        let current_sum = available_weights.sum();
+        let current_sum = availableweights.sum();
         if current_sum <= 0.0 {
             break;
         }
@@ -314,7 +314,7 @@ pub fn importance_sample(
         let mut cumulative_weight = 0.0;
         let mut selected_idx = 0;
 
-        for (i, &weight) in available_weights.iter().enumerate() {
+        for (i, &weight) in availableweights.iter().enumerate() {
             cumulative_weight += weight;
             if random_value <= cumulative_weight {
                 selected_idx = i;

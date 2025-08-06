@@ -53,10 +53,10 @@ struct MemoryPool {
 }
 
 impl MemoryPool {
-    fn new(_max_size: usize) -> Self {
+    fn new(_maxsize: usize) -> Self {
         Self {
             array_pool: VecDeque::new(),
-            max_pool_size: _max_size,
+            max_pool_size: max_size,
         }
     }
 
@@ -88,8 +88,8 @@ struct StreamingGradient {
 }
 
 impl StreamingGradient {
-    fn new(_chunk_size: usize, eps: f64) -> Self {
-        Self { _chunk_size, eps }
+    fn new(_chunksize: usize, eps: f64) -> Self {
+        Self { chunk_size, eps }
     }
 
     /// Compute gradient using chunked finite differences
@@ -413,12 +413,12 @@ where
 {
     match memory_pool {
         Some(_pool) => {
-            let mut array = _pool.get_array(size);
+            let mut array = pool.get_array(size);
             if array.len() != size {
                 array = Array1::zeros(size);
             }
             let result = init_fn(size);
-            _pool.return_array(array);
+            pool.return_array(array);
             result
         }
         None => init_fn(size),
@@ -427,16 +427,16 @@ where
 
 /// Return array to memory pool
 #[allow(dead_code)]
-fn return_array_to_pool(_memory_pool: &mut Option<MemoryPool>, array: Array1<f64>) {
+fn return_array_to_pool(_memorypool: &mut Option<MemoryPool>, array: Array1<f64>) {
     if let Some(_pool) = _memory_pool {
-        _pool.return_array(array);
+        pool.return_array(array);
     }
-    // If no _pool, array will be dropped normally
+    // If no pool, array will be dropped normally
 }
 
 /// Compute dot product in chunks to reduce memory usage
 #[allow(dead_code)]
-fn chunked_dot_product(a: &Array1<f64>, b: &Array1<f64>, chunk_size: usize) -> f64 {
+fn chunked_dot_product(a: &Array1<f64>, b: &Array1<f64>, chunksize: usize) -> f64 {
     let n = a.len();
     let mut result = 0.0;
 
@@ -452,13 +452,13 @@ fn chunked_dot_product(a: &Array1<f64>, b: &Array1<f64>, chunk_size: usize) -> f
 
 /// Compute array norm in chunks to reduce memory usage
 #[allow(dead_code)]
-fn array_norm_chunked(_array: &Array1<f64>, chunk_size: usize) -> f64 {
-    let n = _array.len();
+fn array_norm_chunked(_array: &Array1<f64>, chunksize: usize) -> f64 {
+    let n = array.len();
     let mut sum_sq = 0.0;
 
     for chunk_start in (0..n).step_by(chunk_size) {
         let chunk_end = std::cmp::min(chunk_start + chunk_size, n);
-        let chunk = _array.slice(ndarray::s![chunk_start..chunk_end]);
+        let chunk = array.slice(ndarray::s![chunk_start..chunk_end]);
         sum_sq += chunk.mapv(|x| x.powi(2)).sum();
     }
 
@@ -467,7 +467,7 @@ fn array_norm_chunked(_array: &Array1<f64>, chunk_size: usize) -> f64 {
 
 /// Estimate memory usage for given problem size and history
 #[allow(dead_code)]
-fn estimate_memory_usage(n: usize, max_history: usize) -> usize {
+fn estimate_memory_usage(n: usize, maxhistory: usize) -> usize {
     // Size of f64 in bytes
     const F64_SIZE: usize = std::mem::size_of::<f64>();
 

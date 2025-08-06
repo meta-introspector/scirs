@@ -21,7 +21,7 @@ impl MinKernel {
             workgroup_size: [256, 1, 1],
             local_memory_usage: 1024, // 256 * sizeof(float)
             supports_tensor_cores: false,
-            operation_type: OperationType::Balanced,
+            operationtype: OperationType::Balanced,
             backend_metadata: HashMap::new(),
         };
 
@@ -266,7 +266,7 @@ impl GpuKernel for MinKernel {
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
         matches!(
-            params.data_type,
+            params.datatype,
             DataType::Float32 | DataType::Float64 | DataType::Int32 | DataType::UInt32
         )
     }
@@ -292,7 +292,7 @@ impl MaxKernel {
             workgroup_size: [256, 1, 1],
             local_memory_usage: 1024, // 256 * sizeof(float)
             supports_tensor_cores: false,
-            operation_type: OperationType::Balanced,
+            operationtype: OperationType::Balanced,
             backend_metadata: HashMap::new(),
         };
 
@@ -537,7 +537,7 @@ impl GpuKernel for MaxKernel {
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
         matches!(
-            params.data_type,
+            params.datatype,
             DataType::Float32 | DataType::Float64 | DataType::Int32 | DataType::UInt32
         )
     }

@@ -39,7 +39,7 @@ pub struct QuantumState {
     /// Phase information
     pub phases: Vec<f64>,
     /// Entanglement connections between variables
-    pub entanglement_matrix: Vec<Vec<f64>>,
+    pub entanglementmatrix: Vec<Vec<f64>>,
     /// Measurement probabilities
     pub measurement_probs: Vec<f64>,
 }
@@ -51,20 +51,20 @@ impl QuantumState {
         Self {
             amplitudes: vec![amplitude; dimensions],
             phases: vec![0.0; dimensions],
-            entanglement_matrix: vec![vec![0.0; dimensions]; dimensions],
+            entanglementmatrix: vec![vec![0.0; dimensions]; dimensions],
             measurement_probs: vec![1.0 / dimensions as f64; dimensions],
         }
     }
 
-    pub fn new_uniform(n_qubits: usize) -> Self {
-        let size = 1 << n_qubits;
+    pub fn new_uniform(nqubits: usize) -> Self {
+        let size = 1 << nqubits;
         let amplitude = 1.0 / (size as f64).sqrt();
         let amplitudes = vec![amplitude; size];
 
         Self {
             amplitudes,
             phases: vec![0.0; size],
-            entanglement_matrix: vec![vec![0.0; size]; size],
+            entanglementmatrix: vec![vec![0.0; size]; size],
             measurement_probs: vec![1.0 / size as f64; size],
         }
     }
@@ -82,7 +82,7 @@ impl QuantumState {
         Ok(Self {
             amplitudes,
             phases: vec![0.0; dimensions],
-            entanglement_matrix: vec![vec![0.0; dimensions]; dimensions],
+            entanglementmatrix: vec![vec![0.0; dimensions]; dimensions],
             measurement_probs: vec![1.0 / dimensions as f64; dimensions],
         })
     }
@@ -161,9 +161,9 @@ impl QuantumState {
 
     /// Calculate entanglement between two qubits
     pub fn entangle(&mut self, qubit1: usize, qubit2: usize, strength: f64) {
-        if qubit1 < self.entanglement_matrix.len() && qubit2 < self.entanglement_matrix[0].len() {
-            self.entanglement_matrix[qubit1][qubit2] = strength;
-            self.entanglement_matrix[qubit2][qubit1] = strength;
+        if qubit1 < self.entanglementmatrix.len() && qubit2 < self.entanglementmatrix[0].len() {
+            self.entanglementmatrix[qubit1][qubit2] = strength;
+            self.entanglementmatrix[qubit2][qubit1] = strength;
         }
     }
 
@@ -325,10 +325,10 @@ impl QuantumOptimizer {
         F: Fn(&[f64]) -> f64 + Send + Sync,
     {
         let mut current_solution = self.initialize_solution(bounds);
-        let mut current_fitness = objective_fn(&current_solution);
+        let mut currentfitness = objective_fn(&current_solution);
 
-        if current_fitness < self.best_fitness {
-            self.best_fitness = current_fitness;
+        if currentfitness < self.best_fitness {
+            self.best_fitness = currentfitness;
             self.best_solution = current_solution.clone();
         }
 
@@ -349,8 +349,8 @@ impl QuantumOptimizer {
             let new_fitness = objective_fn(&current_solution);
 
             // Acceptance criterion with quantum interference
-            if self.accept_solution(current_fitness, new_fitness, iteration, max_iterations) {
-                current_fitness = new_fitness;
+            if self.accept_solution(currentfitness, new_fitness, iteration, max_iterations) {
+                currentfitness = new_fitness;
 
                 if new_fitness < self.best_fitness {
                     self.best_fitness = new_fitness;
@@ -389,7 +389,7 @@ impl QuantumOptimizer {
         // Initialize quantum population
         let mut population = self.initialize_quantum_population(bounds);
         #[allow(unused_assignments)]
-        let mut fitness_values = vec![0.0; self.population_size];
+        let mut fitnessvalues = vec![0.0; self.population_size];
 
         for iteration in 0..max_iterations {
             self.generation = iteration;
@@ -397,7 +397,7 @@ impl QuantumOptimizer {
             // Evaluate population fitness
             #[cfg(feature = "parallel")]
             {
-                fitness_values = population
+                fitnessvalues = population
                     .par_iter()
                     .map(|individual| objective_fn(individual))
                     .collect();
@@ -406,12 +406,12 @@ impl QuantumOptimizer {
             #[cfg(not(feature = "parallel"))]
             {
                 for individual in population.iter() {
-                    fitness_values[0] = objective_fn(individual);
+                    fitnessvalues[0] = objective_fn(individual);
                 }
             }
 
             // Update best solution
-            if let Some((best_idx, &best_fitness)) = fitness_values
+            if let Some((best_idx, &best_fitness)) = fitnessvalues
                 .iter()
                 .enumerate()
                 .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
@@ -425,7 +425,7 @@ impl QuantumOptimizer {
             self.convergence_history.push(self.best_fitness);
 
             // Quantum selection and reproduction
-            population = self.quantum_reproduction(&population, &fitness_values, bounds);
+            population = self.quantum_reproduction(&population, &fitnessvalues, bounds);
 
             // Apply quantum mutations
             self.apply_quantum_mutations(&mut population, bounds, iteration, max_iterations);
@@ -568,9 +568,9 @@ impl QuantumOptimizer {
 
                     // Selection
                     let trial_fitness = objective_fn(&trial);
-                    let current_fitness = objective_fn(&population[0]);
+                    let currentfitness = objective_fn(&population[0]);
 
-                    if trial_fitness <= current_fitness {
+                    if trial_fitness <= currentfitness {
                         new_population[0] = trial.clone();
 
                         if trial_fitness < self.best_fitness {
@@ -752,13 +752,13 @@ impl QuantumOptimizer {
     }
 
     #[allow(dead_code)]
-    fn accept_move(&mut self, new_fitness: f64, current_fitness: f64) -> bool {
-        if new_fitness <= current_fitness {
+    fn accept_move(&mut self, new_fitness: f64, currentfitness: f64) -> bool {
+        if new_fitness <= currentfitness {
             return true;
         }
 
         // Quantum-enhanced acceptance probability
-        let delta = new_fitness - current_fitness;
+        let delta = new_fitness - currentfitness;
         let quantum_factor = 1.0 + 0.1 * self.state.entropy();
         let probability = (-delta / (self.quantum_params.temperature * quantum_factor)).exp();
 
@@ -792,7 +792,7 @@ impl QuantumOptimizer {
     #[allow(dead_code)]
     fn evolve_population(
         &mut self,
-        fitness_values: &[f64],
+        fitnessvalues: &[f64],
         population: &[Vec<f64>],
         bounds: &[(f64, f64)],
     ) -> Vec<Vec<f64>> {
@@ -800,8 +800,8 @@ impl QuantumOptimizer {
 
         // Quantum selection based on interference
         for _ in 0..self.population_size {
-            let parent1_idx = self.quantum_selection(fitness_values);
-            let parent2_idx = self.quantum_selection(fitness_values);
+            let parent1_idx = self.quantum_selection(fitnessvalues);
+            let parent2_idx = self.quantum_selection(fitnessvalues);
 
             let offspring =
                 self.quantum_crossover(&population[parent1_idx], &population[parent2_idx], bounds);
@@ -811,13 +811,13 @@ impl QuantumOptimizer {
         new_population
     }
 
-    fn quantum_selection(&self, fitness_values: &[f64]) -> usize {
+    fn quantum_selection(&self, fitnessvalues: &[f64]) -> usize {
         // Convert fitness to selection probabilities (lower fitness = higher probability)
-        let max_fitness = fitness_values
+        let max_fitness = fitnessvalues
             .iter()
             .cloned()
             .fold(f64::NEG_INFINITY, f64::max);
-        let adjusted_fitness: Vec<f64> = fitness_values
+        let adjusted_fitness: Vec<f64> = fitnessvalues
             .iter()
             .map(|&f| max_fitness - f + 1.0)
             .collect();
@@ -833,7 +833,7 @@ impl QuantumOptimizer {
             }
         }
 
-        fitness_values.len() - 1
+        fitnessvalues.len() - 1
     }
 
     fn quantum_crossover(
@@ -1001,12 +1001,12 @@ impl QuantumOptimizer {
         }
     }
 
-    fn apply_problem_hamiltonian<F>(&mut self, gamma: f64, objective_fn: &F, bounds: &[(f64, f64)])
+    fn apply_problem_hamiltonian<F>(&mut self, gamma: f64, objectivefn: &F, bounds: &[(f64, f64)])
     where
         F: Fn(&[f64]) -> f64 + Send + Sync,
     {
         let solution = self.extract_solution_from_quantum_state(bounds);
-        let fitness = objective_fn(&solution);
+        let fitness = objectivefn(&solution);
 
         #[allow(clippy::needless_range_loop)]
         for i in 0..self.dimensions.min(self.state.amplitudes.len()) {
@@ -1065,18 +1065,18 @@ impl QuantumOptimizer {
     /// Accept solution based on quantum criteria
     fn accept_solution(
         &self,
-        current_fitness: f64,
+        currentfitness: f64,
         new_fitness: f64,
         iteration: usize,
         max_iterations: usize,
     ) -> bool {
-        if new_fitness < current_fitness {
+        if new_fitness < currentfitness {
             return true;
         }
 
         // Quantum acceptance probability
         let temperature = 1.0 - (iteration as f64 / max_iterations as f64);
-        let delta_fitness = new_fitness - current_fitness;
+        let delta_fitness = new_fitness - currentfitness;
         let quantum_probability = (-delta_fitness / temperature).exp();
 
         use rand::Rng;
@@ -1088,7 +1088,7 @@ impl QuantumOptimizer {
     fn quantum_reproduction(
         &mut self,
         parents: &[Vec<f64>],
-        _fitness_values: &[f64],
+        _fitnessvalues: &[f64],
         _bounds: &[(f64, f64)],
     ) -> Vec<Vec<f64>> {
         if parents.is_empty() {
@@ -1135,7 +1135,7 @@ impl QuantumOptimizer {
     }
 
     /// Calculate quantum crossover probability
-    fn calculate_quantum_crossover_probability(&self, _dimension: usize, iteration: usize) -> f64 {
+    fn calculate_quantum_crossover_probability(&self, dimension: usize, iteration: usize) -> f64 {
         // Base crossover probability with quantum modulation
         let base_probability = 0.8;
         let quantum_modulation = (iteration as f64 * 0.1).sin() * 0.1;
@@ -1345,8 +1345,8 @@ mod tests {
 
         // Test entanglement
         state.entangle(0, 1, 0.5);
-        assert_eq!(state.entanglement_matrix[0][1], 0.5);
-        assert_eq!(state.entanglement_matrix[1][0], 0.5);
+        assert_eq!(state.entanglementmatrix[0][1], 0.5);
+        assert_eq!(state.entanglementmatrix[1][0], 0.5);
 
         // Test entropy calculation
         let entropy = state.entropy();

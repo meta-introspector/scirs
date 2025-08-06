@@ -30,7 +30,7 @@ where
     A: Clone + Into<f64>,
 {
     // Convert the confusion _matrix to f64
-    let cm_f64 = Array2::fromshape_fn(confusion_matrix.dim(), |(i, j)| {
+    let cm_f64 = Array2::from_shape_fn(confusion_matrix.dim(), |(i, j)| {
         confusion_matrix[[i, j]].clone().into()
     });
 
@@ -136,7 +136,8 @@ where
 #[allow(dead_code)]
 pub fn visualize_interactive_roc_from_labels<A, B>(
     y_true: ArrayView1<A>,
-    y_score: ArrayView1<B>, _pos_label: Option<A>,
+    y_score: ArrayView1<B>,
+    _pos_label: Option<A>,
     interactive_options: Option<InteractiveOptions>,
 ) -> Result<Box<dyn crate::visualization::MetricVisualizer>, Box<dyn Error>>
 where
@@ -153,7 +154,7 @@ where
         let n = fpr.len();
         let mut area = 0.0;
         for i in 1..n {
-            area += (fpr[i] - fpr[i - 1]) * (tpr[i] + tpr[i - 1]) / 2.0;
+            area += (fpr[i] - fpr[i - 1]) * (tpr_thresholds[i] + tpr_thresholds[i - 1]) / 2.0;
         }
         area
     };
@@ -162,7 +163,7 @@ where
     let mut visualizer = crate::visualization::interactive::roc_curve::InteractiveROCVisualizer::<
         f64,
         ndarray::OwnedRepr<f64>,
-    >::new(fpr.to_vec(), tpr.to_vec(), None, Some(auc));
+    >::new(fpr.to_vec(), tpr_thresholds.to_vec(), None, Some(auc));
 
     if let Some(_options) = interactive_options {
         visualizer = visualizer.with_interactive_options(_options);
@@ -194,7 +195,7 @@ where
     A: Clone + Into<f64>,
 {
     // Convert the arrays to f64 vectors
-    let precision_vec = _precision
+    let precision_vec = precision
         .iter()
         .map(|x| x.clone().into())
         .collect::<Vec<f64>>();
@@ -206,7 +207,7 @@ where
         thresholds.map(|t| t.iter().map(|x| x.clone().into()).collect::<Vec<f64>>());
 
     Box::new(
-        crate::visualization::_precision_recall::precision_recall_visualization(
+        crate::visualization::precision_recall::precision_recall_visualization(
             precision_vec,
             recall_vec,
             thresholds_vec,
@@ -376,7 +377,7 @@ impl GenericMetricVisualizer {
     }
 
     /// Add series names
-    pub fn with_series_names(mut self, series_names: Vec<String>) -> Self {
+    pub fn with_series_names(mut self, seriesnames: Vec<String>) -> Self {
         self.series_names = Some(series_names);
         self
     }
@@ -589,15 +590,15 @@ where
     A: Clone + Into<f64>,
 {
     // Convert matrix to Vec<Vec<f64>>
-    let z = Array2::fromshape_fn(matrix.dim(), |(i, j)| matrix[[i, j]].clone().into());
+    let z = Array2::from_shape_fn(matrix.dim(), |(i, j)| matrix[[i, j]].clone().into());
 
     let z_vec = (0..z.shape()[0])
-        ._map(|i| (0..z.shape()[1])._map(|j| z[[i, j]]).collect::<Vec<f64>>())
+        .map(|i| (0..z.shape()[1]).map(|j| z[[i, j]]).collect::<Vec<f64>>())
         .collect::<Vec<Vec<f64>>>();
 
     // Create x and y coordinates for the heatmap
-    let x = (0..z.shape()[1])._map(|i| i as f64).collect::<Vec<f64>>();
-    let y = (0..z.shape()[0])._map(|i| i as f64).collect::<Vec<f64>>();
+    let x = (0..z.shape()[1]).map(|i| i as f64).collect::<Vec<f64>>();
+    let y = (0..z.shape()[0]).map(|i| i as f64).collect::<Vec<f64>>();
 
     Box::new(HeatmapVisualizer::new(
         x,
@@ -748,14 +749,14 @@ where
 ///
 /// * `(Vec<f64>, Vec<f64>)` - Bin edges and bin counts
 #[allow(dead_code)]
-fn create_histogram_bins(_values: &[f64], bins: usize) -> (Vec<f64>, Vec<f64>) {
+fn create_histogram_bins(values: &[f64], bins: usize) -> (Vec<f64>, Vec<f64>) {
     // Ensure we have at least one value and valid bins
-    if _values.is_empty() || bins == 0 {
+    if values.is_empty() || bins == 0 {
         return (Vec::new(), Vec::new());
     }
 
     // Find min and max _values
-    let min_val = _values.iter().fold(f64::INFINITY, |min, &val| min.min(val));
+    let min_val = values.iter().fold(f64::INFINITY, |min, &val| min.min(val));
     let max_val = _values
         .iter()
         .fold(f64::NEG_INFINITY, |max, &val| max.max(val));

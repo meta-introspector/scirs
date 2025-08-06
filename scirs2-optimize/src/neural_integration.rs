@@ -79,7 +79,7 @@ impl<F: Float + ScalarOperand> NeuralParameters<F> {
     }
 
     /// Update parameters from flattened vector
-    pub fn update_from_flat(&mut self, flat_params: &Array1<F>) {
+    pub fn update_from_flat(&mut self, flatparams: &Array1<F>) {
         let mut offset = 0;
 
         for param in &mut self.parameters {
@@ -90,7 +90,7 @@ impl<F: Float + ScalarOperand> NeuralParameters<F> {
     }
 
     /// Update gradients from flattened vector
-    pub fn update_gradients_from_flat(&mut self, flat_grads: &Array1<F>) {
+    pub fn update_gradients_from_flat(&mut self, flatgrads: &Array1<F>) {
         let mut offset = 0;
 
         for grad in &mut self.gradients {
@@ -119,9 +119,9 @@ where
     F: 'static + Send + Sync,
 {
     /// Create a new neural optimizer
-    pub fn new(_method: StochasticMethod, options: StochasticOptions) -> Self {
+    pub fn new(method: StochasticMethod, options: StochasticOptions) -> Self {
         Self {
-            _method,
+            method,
             options,
             momentum_buffers: HashMap::new(),
             first_moment: HashMap::new(),
@@ -131,9 +131,9 @@ where
     }
 
     /// Create SGD optimizer for neural networks
-    pub fn sgd(_learning_rate: F, max_iter: usize) -> Self {
+    pub fn sgd(_learning_rate: F, maxiter: usize) -> Self {
         let options = StochasticOptions {
-            learning_rate: _learning_rate.to_f64().unwrap_or(0.01),
+            learning_rate: learning_rate.to_f64().unwrap_or(0.01),
             max_iter,
             batch_size: None,
             tol: 1e-6,
@@ -148,9 +148,9 @@ where
     }
 
     /// Create Adam optimizer for neural networks
-    pub fn adam(_learning_rate: F, max_iter: usize) -> Self {
+    pub fn adam(_learning_rate: F, maxiter: usize) -> Self {
         let options = StochasticOptions {
-            learning_rate: _learning_rate.to_f64().unwrap_or(0.001),
+            learning_rate: learning_rate.to_f64().unwrap_or(0.001),
             max_iter,
             batch_size: None,
             tol: 1e-6,
@@ -165,9 +165,9 @@ where
     }
 
     /// Create AdamW optimizer for neural networks
-    pub fn adamw(_learning_rate: F, max_iter: usize) -> Self {
+    pub fn adamw(_learning_rate: F, maxiter: usize) -> Self {
         let options = StochasticOptions {
-            learning_rate: _learning_rate.to_f64().unwrap_or(0.001),
+            learning_rate: learning_rate.to_f64().unwrap_or(0.001),
             max_iter,
             batch_size: None,
             tol: 1e-6,
@@ -413,9 +413,9 @@ where
     F: 'static + Send + Sync + std::fmt::Display,
 {
     /// Create a new neural trainer
-    pub fn new(_optimizer: NeuralOptimizer<F>) -> Self {
+    pub fn new(optimizer: NeuralOptimizer<F>) -> Self {
         Self {
-            _optimizer,
+            optimizer,
             loss_history: Vec::new(),
             early_stopping_patience: None,
             best_loss: None,
@@ -498,7 +498,7 @@ where
     }
 
     /// Clip gradients to prevent exploding gradients
-    fn clip_gradients(&self, params: &mut NeuralParameters<F>, max_norm: f64) {
+    fn clip_gradients(&self, params: &mut NeuralParameters<F>, maxnorm: f64) {
         let max_norm_f = F::from(max_norm).unwrap();
 
         // Compute total gradient _norm
@@ -522,7 +522,7 @@ pub mod optimizers {
     use super::*;
 
     /// Create SGD optimizer with default settings for neural networks
-    pub fn sgd<F>(_learning_rate: F) -> NeuralOptimizer<F>
+    pub fn sgd<F>(_learningrate: F) -> NeuralOptimizer<F>
     where
         F: Float + ScalarOperand + 'static + Send + Sync,
     {
@@ -530,7 +530,7 @@ pub mod optimizers {
     }
 
     /// Create Adam optimizer with default settings for neural networks
-    pub fn adam<F>(_learning_rate: F) -> NeuralOptimizer<F>
+    pub fn adam<F>(_learningrate: F) -> NeuralOptimizer<F>
     where
         F: Float + ScalarOperand + 'static + Send + Sync,
     {
@@ -538,7 +538,7 @@ pub mod optimizers {
     }
 
     /// Create AdamW optimizer with default settings for neural networks
-    pub fn adamw<F>(_learning_rate: F) -> NeuralOptimizer<F>
+    pub fn adamw<F>(_learningrate: F) -> NeuralOptimizer<F>
     where
         F: Float + ScalarOperand + 'static + Send + Sync,
     {

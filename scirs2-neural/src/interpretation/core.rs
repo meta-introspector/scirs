@@ -78,16 +78,16 @@ impl<
     pub fn add_attribution_method(&mut self, method: AttributionMethod) {
         self.attribution_methods.push(method);
     /// Cache layer activations for later analysis
-    pub fn cache_activations(&mut self, layer_name: String, activations: ArrayD<F>) {
+    pub fn cache_activations(&mut self, layername: String, activations: ArrayD<F>) {
         self.activation_cache.insert(layer_name, activations);
     /// Cache layer gradients for attribution computation
-    pub fn cache_gradients(&mut self, layer_name: String, gradients: ArrayD<F>) {
+    pub fn cache_gradients(&mut self, layername: String, gradients: ArrayD<F>) {
         self.gradient_cache.insert(layer_name, gradients);
     /// Get cached activations for a layer
-    pub fn get_cached_activations(&self, layer_name: &str) -> Option<&ArrayD<F>> {
+    pub fn get_cached_activations(&self, layername: &str) -> Option<&ArrayD<F>> {
         self.activation_cache.get(layer_name)
     /// Get cached gradients for a layer
-    pub fn get_cached_gradients(&self, layer_name: &str) -> Option<&ArrayD<F>> {
+    pub fn get_cached_gradients(&self, layername: &str) -> Option<&ArrayD<F>> {
         self.gradient_cache.get(layer_name)
     /// Clear all caches
     pub fn clear_caches(&mut self) {
@@ -98,7 +98,7 @@ impl<
     pub fn attribution_methods(&self) -> &[AttributionMethod] {
         &self.attribution_methods
     /// Check if a specific layer has cached data
-    pub fn has_layer_data(&self, layer_name: &str) -> bool {
+    pub fn has_layer_data(&self, layername: &str) -> bool {
         self.activation_cache.contains_key(layer_name)
             || self.gradient_cache.contains_key(layer_name)
     /// Get all cached layer names
@@ -135,7 +135,7 @@ impl<
     pub fn layer_statistics(&self) -> &HashMap<String, LayerAnalysisStats<F>> {
         &self.layer_statistics
     /// Cache layer statistics
-    pub fn cache_layer_statistics(&mut self, layer_name: String, stats: LayerAnalysisStats<F>) {
+    pub fn cache_layer_statistics(&mut self, layername: String, stats: LayerAnalysisStats<F>) {
         self.layer_statistics.insert(layer_name, stats);
     /// Compute attribution using specified method
     ///
@@ -194,7 +194,7 @@ impl<
                 *num_steps,
     /// Analyze layer activations
     /// Delegates to the analysis module for detailed layer analysis.
-    pub fn analyze_layer_activations(&mut self, layer_name: &str) -> Result<LayerAnalysisStats<F>> {
+    pub fn analyze_layer_activations(&mut self, layername: &str) -> Result<LayerAnalysisStats<F>> {
         use super::analysis::analyze_layer_activations;
         analyze_layer_activations(self, layer_name)
     /// Generate comprehensive interpretation report

@@ -83,7 +83,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn process_image(_img: &DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
+fn process_image(img: &DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
     // Define structuring elements
     let rect_se = StructuringElement::Rectangle(3, 3);
     let ellipse_se = StructuringElement::Ellipse(5, 5);
@@ -125,8 +125,8 @@ fn process_image(_img: &DynamicImage) -> Result<(), Box<dyn std::error::Error>> 
     println!("Morphological operation results:");
     println!(
         "- Original image dimensions: {}x{}",
-        _img.width(),
-        _img.height()
+        img.width(),
+        img.height()
     );
     println!(
         "- Eroded image dimensions: {}x{}",

@@ -897,12 +897,12 @@ impl LaplaceSolver2D {
 
 /// Convert EllipticResult to PDESolution
 impl From<EllipticResult> for PDESolution<f64> {
-    fn from(_result: EllipticResult) -> Self {
+    fn from(result: EllipticResult) -> Self {
         let mut grids = Vec::new();
 
         // Extract grid dimensions from solution (assuming they're regular)
-        let ny = _result.u.shape()[0];
-        let nx = _result.u.shape()[1];
+        let ny = result.u.shape()[0];
+        let nx = result.u.shape()[1];
 
         // Create grids (since we don't have the actual grid values, use linspace)
         let x_grid = Array1::linspace(0.0, 1.0, nx);
@@ -912,14 +912,14 @@ impl From<EllipticResult> for PDESolution<f64> {
         grids.push(y_grid);
 
         // Create solution values
-        let values = vec![_result.u];
+        let values = vec![result.u];
 
         // Create solver info
         let info = PDESolverInfo {
-            num_iterations: _result.num_iterations,
-            computation_time: _result.computation_time,
-            residual_norm: Some(_result.residual_norm),
-            convergence_history: _result.convergence_history,
+            num_iterations: result.num_iterations,
+            computation_time: result.computation_time,
+            residual_norm: Some(result.residual_norm),
+            convergence_history: result.convergence_history,
             method: "Elliptic PDE Solver".to_string(),
         };
 

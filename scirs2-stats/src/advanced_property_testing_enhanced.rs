@@ -129,7 +129,7 @@ pub struct AdvancedPropertyTester {
 
 impl AdvancedPropertyTester {
     /// Create new advanced property tester
-    pub fn new(_config: AdvancedPropertyConfig) -> Self {
+    pub fn new(config: AdvancedPropertyConfig) -> Self {
         Self {
             mathematical_properties: Arc::new(RwLock::new(MathematicalPropertyRegistry::new(
                 &_config,
@@ -143,7 +143,7 @@ impl AdvancedPropertyTester {
             regression_detector: Arc::new(RwLock::new(RegressionDetector::new(&_config))),
             test_executor: Arc::new(RwLock::new(PropertyTestExecutor::new(&_config))),
             result_analyzer: Arc::new(RwLock::new(PropertyTestAnalyzer::new())),
-            _config,
+            config,
         }
     }
 
@@ -573,7 +573,7 @@ impl AdvancedPropertyTester {
         }
     }
 
-    fn check_commutativity<F>(&self, test_data: &TestData<F>) -> StatsResult<bool>
+    fn check_commutativity<F>(&self, testdata: &TestData<F>) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
         + std::fmt::Display,
@@ -590,7 +590,7 @@ impl AdvancedPropertyTester {
         }
     }
 
-    fn check_associativity<F>(&self, test_data: &TestData<F>) -> StatsResult<bool>
+    fn check_associativity<F>(&self, testdata: &TestData<F>) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
         + std::fmt::Display,
@@ -607,7 +607,7 @@ impl AdvancedPropertyTester {
         }
     }
 
-    fn check_distributivity<F>(&self, _test_data: &TestData<F>) -> StatsResult<bool>
+    fn check_distributivity<F>(&self, _testdata: &TestData<F>) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
         + std::fmt::Display,
@@ -616,7 +616,7 @@ impl AdvancedPropertyTester {
         Ok(true) // Placeholder
     }
 
-    fn check_identity_property<F>(&self, _test_data: &TestData<F>) -> StatsResult<bool>
+    fn check_identity_property<F>(&self, _testdata: &TestData<F>) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
         + std::fmt::Display,
@@ -625,7 +625,7 @@ impl AdvancedPropertyTester {
         Ok(true) // Placeholder
     }
 
-    fn check_inverse_property<F>(&self, _test_data: &TestData<F>) -> StatsResult<bool>
+    fn check_inverse_property<F>(&self, _testdata: &TestData<F>) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
         + std::fmt::Display,
@@ -634,7 +634,7 @@ impl AdvancedPropertyTester {
         Ok(true) // Placeholder
     }
 
-    fn check_monotonicity<F>(&self, _test_data: &TestData<F>) -> StatsResult<bool>
+    fn check_monotonicity<F>(&self, _testdata: &TestData<F>) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
         + std::fmt::Display,
@@ -643,7 +643,7 @@ impl AdvancedPropertyTester {
         Ok(true) // Placeholder
     }
 
-    fn check_linearity<F>(&self, _test_data: &TestData<F>) -> StatsResult<bool>
+    fn check_linearity<F>(&self, _testdata: &TestData<F>) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
         + std::fmt::Display,
@@ -652,7 +652,7 @@ impl AdvancedPropertyTester {
         Ok(true) // Placeholder
     }
 
-    fn check_idempotence<F>(&self, _test_data: &TestData<F>) -> StatsResult<bool>
+    fn check_idempotence<F>(&self, _testdata: &TestData<F>) -> StatsResult<bool>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
         + std::fmt::Display,
@@ -720,7 +720,7 @@ impl AdvancedPropertyTester {
 
     // Analysis and scoring methods
 
-    fn calculate_numerical_stability_score(&self, _results: &[PropertyTestResult]) -> f64 {
+    fn calculate_numerical_stability_score(&self, results: &[PropertyTestResult]) -> f64 {
         0.95 // Placeholder
     }
 
@@ -744,7 +744,7 @@ impl AdvancedPropertyTester {
         }
     }
 
-    fn calculate_overall_stability_score(&self, _results: &[StabilityConditionResult]) -> f64 {
+    fn calculate_overall_stability_score(&self, results: &[StabilityConditionResult]) -> f64 {
         0.85 // Placeholder
     }
 
@@ -754,11 +754,11 @@ impl AdvancedPropertyTester {
         vec![] // Placeholder
     }
 
-    fn identify_critical_failures(&self, _results: &[EdgeCaseResult]) -> Vec<CriticalFailure> {
+    fn identify_critical_failures(&self, results: &[EdgeCaseResult]) -> Vec<CriticalFailure> {
         vec![] // Placeholder
     }
 
-    fn analyze_boundary_behavior(&self, _results: &[EdgeCaseResult]) -> BoundaryBehaviorAnalysis {
+    fn analyze_boundary_behavior(&self, results: &[EdgeCaseResult]) -> BoundaryBehaviorAnalysis {
         BoundaryBehaviorAnalysis {
             boundary_smoothness: 0.90,
             discontinuities_detected: Vec::new(),
@@ -788,7 +788,7 @@ impl AdvancedPropertyTester {
         })
     }
 
-    fn analyze_scalability(&self, _results: &[PerformanceTestResult]) -> ScalabilityAnalysis {
+    fn analyze_scalability(&self, results: &[PerformanceTestResult]) -> ScalabilityAnalysis {
         ScalabilityAnalysis {
             scalability_factor: 0.95,
             complexity_class: ComplexityClass::Linear,
@@ -817,7 +817,7 @@ impl AdvancedPropertyTester {
         }
     }
 
-    fn detect_implementation_outliers(&self, _results: &[ConsistencyResult]) -> OutlierDetection {
+    fn detect_implementation_outliers(&self, results: &[ConsistencyResult]) -> OutlierDetection {
         OutlierDetection {
             outliers_detected: Vec::new(),
             outlier_criteria: OutlierCriteria::StatisticalDeviation,
@@ -1632,10 +1632,10 @@ pub struct MathematicalPropertyRegistry {
 }
 
 impl MathematicalPropertyRegistry {
-    pub fn new(_config: &AdvancedPropertyConfig) -> Self {
+    pub fn new(config: &AdvancedPropertyConfig) -> Self {
         let mut registry = Self {
             properties: HashMap::new(),
-            thoroughness_level: _config.thoroughness_level,
+            thoroughness_level: config.thoroughness_level,
         };
         registry.initialize_standard_properties();
         registry
@@ -1699,10 +1699,10 @@ pub struct StatisticalPropertyRegistry {
 }
 
 impl StatisticalPropertyRegistry {
-    pub fn new(_config: &AdvancedPropertyConfig) -> Self {
+    pub fn new(config: &AdvancedPropertyConfig) -> Self {
         let mut registry = Self {
             properties: HashMap::new(),
-            thoroughness_level: _config.thoroughness_level,
+            thoroughness_level: config.thoroughness_level,
         };
         registry.initialize_statistical_properties();
         registry
@@ -1747,9 +1747,9 @@ pub struct NumericalStabilityAnalyzer {
 }
 
 impl NumericalStabilityAnalyzer {
-    pub fn new(_config: &AdvancedPropertyConfig) -> Self {
+    pub fn new(config: &AdvancedPropertyConfig) -> Self {
         Self {
-            tolerance: _config.numerical_tolerance.clone(),
+            tolerance: config.numerical_tolerance.clone(),
             stability_conditions: Vec::new(),
         }
     }
@@ -1763,7 +1763,7 @@ impl NumericalStabilityAnalyzer {
     {
         // Placeholder implementation
         Ok(StabilityConditionResult {
-            _condition_name: _condition.condition_name.clone(),
+            _condition_name: condition.condition_name.clone(),
             stability_score: 0.95,
             numerical_errors: Vec::new(),
             convergence_issues: Vec::new(),
@@ -1777,9 +1777,9 @@ pub struct IntelligentEdgeCaseGenerator {
 }
 
 impl IntelligentEdgeCaseGenerator {
-    pub fn new(_config: &AdvancedPropertyConfig) -> Self {
+    pub fn new(config: &AdvancedPropertyConfig) -> Self {
         Self {
-            generation_strategy: _config.edge_case_strategy,
+            generation_strategy: config.edge_case_strategy,
             edge_case_database: HashMap::new(),
         }
     }
@@ -1803,7 +1803,7 @@ pub struct AdvancedFuzzingEngine {
 }
 
 impl AdvancedFuzzingEngine {
-    pub fn new(_config: &AdvancedPropertyConfig) -> Self {
+    pub fn new(config: &AdvancedPropertyConfig) -> Self {
         Self {
             fuzzing_strategy: FuzzingStrategy::Guided,
             mutation_operators: Vec::new(),
@@ -1880,7 +1880,7 @@ pub struct RegressionDetector {
 }
 
 impl RegressionDetector {
-    pub fn new(_config: &AdvancedPropertyConfig) -> Self {
+    pub fn new(config: &AdvancedPropertyConfig) -> Self {
         Self {
             baseline_results: HashMap::new(),
             regression_thresholds: RegressionThresholds::default(),
@@ -1896,7 +1896,7 @@ impl RegressionDetector {
     {
         // Placeholder implementation
         Ok(RegressionDetectionResult {
-            function_name: _function_name.to_string(),
+            function_name: function_name.to_string(),
             regressions_detected: Vec::new(),
             improvements_detected: Vec::new(),
             overall_assessment: RegressionAssessment::NoRegressions,
@@ -1933,10 +1933,10 @@ pub struct PropertyTestExecutor {
 }
 
 impl PropertyTestExecutor {
-    pub fn new(_config: &AdvancedPropertyConfig) -> Self {
+    pub fn new(config: &AdvancedPropertyConfig) -> Self {
         Self {
-            timeout: _config.test_timeout,
-            max_iterations: _config.max_iterations,
+            timeout: config.test_timeout,
+            max_iterations: config.max_iterations,
             parallel_execution: true,
         }
     }

@@ -179,7 +179,7 @@ mod tests {
     }
 
     #[allow(dead_code)]
-    fn create_test_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
+    fn create_test_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
         use rand::Rng;
         let mut rng = rand::rng();
         let mut data = Array2::zeros((_n_samples, n_features));

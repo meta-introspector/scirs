@@ -550,9 +550,9 @@ where
         + ndarray::ScalarOperand,
 {
     /// Create new advanced multivariate analysis
-    pub fn new(_config: AdvancedMultivariateConfig<F>) -> Self {
+    pub fn new(config: AdvancedMultivariateConfig<F>) -> Self {
         Self {
-            config: _config,
+            config: config,
             models: HashMap::new(),
             performance: PerformanceMetrics {
                 computation_time: 0.0,
@@ -631,9 +631,9 @@ where
                 ..
             } => self.advanced_pca(data, *algorithm, *n_components),
             DimensionalityReductionMethod::ICA {
-                _algorithm,
+                algorithm,
                 n_components,
-                _max_iter,
+                max_iter,
                 tolerance,
             } => self.independent_component_analysis(
                 data,
@@ -697,7 +697,7 @@ where
         let singular_values = explained_variance.mapv(|x| x.sqrt());
 
         let pca_model = PCAModel {
-            components: _components,
+            components: components,
             explained_variance,
             explained_variance_ratio,
             singular_values,
@@ -776,7 +776,7 @@ where
         };
 
         let ica_model = ICAModel {
-            components: _components,
+            components: components,
             mixing_matrix,
             sources,
             mean,
@@ -845,7 +845,7 @@ where
     }
 
     /// Tensor analysis
-    fn tensor_analysis(&self, _data: &ArrayView2<F>) -> StatsResult<MultivariateModel<F>> {
+    fn tensor_analysis(&self, data: &ArrayView2<F>) -> StatsResult<MultivariateModel<F>> {
         // Simplified tensor analysis
         let tensor_model = TensorModel {
             decomposition_type: "CP".to_string(),
@@ -884,7 +884,7 @@ where
     /// Multi-view analysis
     fn multiview_analysis(&self, views: &[&ArrayView2<F>]) -> StatsResult<MultivariateModel<F>> {
         let n_views = views.len();
-        let (n_samples_, _n_features) = views[0].dim();
+        let (n_samples_, n_features) = views[0].dim();
 
         // Simplified multi-view analysis
         let view_embeddings = vec![Array2::zeros((n_samples_, 2)); n_views];
@@ -910,7 +910,7 @@ where
         let mut scores = HashMap::new();
         let mut trade_offs = HashMap::new();
 
-        for (method_name, _result) in results {
+        for (method_name, result) in results {
             scores.insert(method_name.clone(), F::from(0.8).unwrap());
             trade_offs.insert(
                 method_name.clone(),

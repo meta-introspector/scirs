@@ -313,7 +313,7 @@ impl DivergenceFreeFlow for CircularFlow2D {
         2
     }
 
-    fn evaluate(&self, x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
+    fn evaluate(&self, x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
         Array1::from_vec(vec![-self.omega * x[1], self.omega * x[0]])
     }
 }
@@ -330,7 +330,7 @@ impl DivergenceFreeFlow for ABCFlow {
         3
     }
 
-    fn evaluate(&self, x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
+    fn evaluate(&self, x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
         Array1::from_vec(vec![
             self.a * x[1].sin() + self.c * x[2].cos(),
             self.b * x[2].sin() + self.a * x[0].cos(),
@@ -452,7 +452,7 @@ where
         self.dim
     }
 
-    fn evaluate(&self, x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
+    fn evaluate(&self, x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
         let n = self.dim / 2;
         let h = 1e-8;
         let mut dx = Array1::zeros(self.dim);
@@ -489,10 +489,10 @@ pub struct ModifiedMidpointIntegrator {
 
 impl ModifiedMidpointIntegrator {
     /// Create a new modified midpoint integrator
-    pub fn new(_dt: f64, correction_factor: f64) -> Self {
+    pub fn new(_dt: f64, correctionfactor: f64) -> Self {
         Self {
             base: VolumePreservingIntegrator::new(_dt, VolumePreservingMethod::ImplicitMidpoint),
-            correction_factor,
+            correction_factor: correctionfactor,
         }
     }
 
@@ -535,8 +535,8 @@ pub struct VariationalIntegrator {
 
 impl VariationalIntegrator {
     /// Create a new variational integrator
-    pub fn new(dt: f64, n_quad: usize) -> Self {
-        Self { dt, n_quad }
+    pub fn new(dt: f64, nquad: usize) -> Self {
+        Self { dt, n_quad: nquad }
     }
 
     /// Discrete Lagrangian for volume-preserving flow
@@ -628,19 +628,19 @@ impl DiscreteGradientIntegrator {
         &self,
         x0: &ArrayView1<f64>,
         x1: &ArrayView1<f64>,
-        invariant_idx: usize,
+        invariantidx: usize,
     ) -> Array1<f64> {
-        let h = &self.invariants[invariant_idx];
+        let h = &self.invariants[invariantidx];
         let h0 = h(x0);
         let h1 = h(x1);
 
         if (x1 - x0).mapv(|x| x.abs()).sum() < 1e-14 {
             // If x0 ≈ x1, use standard gradient
-            self.gradient(x0, invariant_idx)
+            self.gradient(x0, invariantidx)
         } else {
             // Average vector field
-            let g0 = self.gradient(x0, invariant_idx);
-            let g1 = self.gradient(x1, invariant_idx);
+            let g0 = self.gradient(x0, invariantidx);
+            let g1 = self.gradient(x1, invariantidx);
             let g_avg = (&g0 + &g1) / 2.0;
 
             // Correction term
@@ -652,8 +652,8 @@ impl DiscreteGradientIntegrator {
     }
 
     /// Standard gradient computation
-    fn gradient(&self, x: &ArrayView1<f64>, invariant_idx: usize) -> Array1<f64> {
-        let h = &self.invariants[invariant_idx];
+    fn gradient(&self, x: &ArrayView1<f64>, invariantidx: usize) -> Array1<f64> {
+        let h = &self.invariants[invariantidx];
         let eps = 1e-8;
         let n = x.len();
         let mut grad = Array1::zeros(n);
@@ -686,42 +686,42 @@ impl VolumeChecker {
     where
         F: DivergenceFreeFlow,
     {
-        let n_points = points.nrows();
+        let npoints = points.nrows();
         let dim = points.ncols();
 
         // Initial volume (using convex hull approximation for simplicity)
         let initial_volume = Self::estimate_volume(points)?;
 
         // Evolve all points
-        let mut evolved_points = Array2::zeros((n_points, dim));
-        for i in 0..n_points {
+        let mut evolvedpoints = Array2::zeros((npoints, dim));
+        for i in 0..npoints {
             let x0 = points.row(i);
             let trajectory = integrator.integrate(&x0, t0, t_final, flow)?;
             let (_, x_final) = trajectory.last().unwrap();
-            evolved_points.row_mut(i).assign(x_final);
+            evolvedpoints.row_mut(i).assign(x_final);
         }
 
         // Final volume
-        let final_volume = Self::estimate_volume(&evolved_points)?;
+        let final_volume = Self::estimate_volume(&evolvedpoints)?;
 
         // Return relative volume change
         Ok((final_volume - initial_volume).abs() / initial_volume)
     }
 
     /// Estimate volume using bounding box (simplified)
-    fn estimate_volume(_points: &Array2<f64>) -> IntegrateResult<f64> {
-        if _points.nrows() == 0 {
+    fn estimate_volume(points: &Array2<f64>) -> IntegrateResult<f64> {
+        if points.nrows() == 0 {
             return Ok(0.0);
         }
 
-        let dim = _points.ncols();
-        let mut min_coords = _points.row(0).to_owned();
-        let mut max_coords = _points.row(0).to_owned();
+        let dim = points.ncols();
+        let mut min_coords = points.row(0).to_owned();
+        let mut max_coords = points.row(0).to_owned();
 
-        for i in 1.._points.nrows() {
+        for i in 1..points.nrows() {
             for j in 0..dim {
-                min_coords[j] = min_coords[j].min(_points[[i, j]]);
-                max_coords[j] = max_coords[j].max(_points[[i, j]]);
+                min_coords[j] = min_coords[j].min(points[[i, j]]);
+                max_coords[j] = max_coords[j].max(points[[i, j]]);
             }
         }
 

@@ -31,8 +31,8 @@ use ndarray::Array2;
 /// assert_eq!(integral.dim(), (10, 10));
 /// ```
 #[allow(dead_code)]
-pub fn compute_integral_image(_img: &DynamicImage) -> Result<Array2<u64>> {
-    let gray = _img.to_luma8();
+pub fn compute_integral_image(img: &DynamicImage) -> Result<Array2<u64>> {
+    let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
 
     let mut integral = Array2::zeros((height as usize, width as usize));
@@ -76,8 +76,8 @@ pub fn compute_integral_image(_img: &DynamicImage) -> Result<Array2<u64>> {
 ///
 /// * Result containing squared integral image as Array2<u64>
 #[allow(dead_code)]
-pub fn compute_squared_integral_image(_img: &DynamicImage) -> Result<Array2<u64>> {
-    let gray = _img.to_luma8();
+pub fn compute_squared_integral_image(img: &DynamicImage) -> Result<Array2<u64>> {
+    let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
 
     let mut integral = Array2::zeros((height as usize, width as usize));
@@ -120,8 +120,8 @@ pub fn compute_squared_integral_image(_img: &DynamicImage) -> Result<Array2<u64>
 ///
 /// * Result containing tilted integral image as Array2<u64>
 #[allow(dead_code)]
-pub fn compute_tilted_integral_image(_img: &DynamicImage) -> Result<Array2<u64>> {
-    let gray = _img.to_luma8();
+pub fn compute_tilted_integral_image(img: &DynamicImage) -> Result<Array2<u64>> {
+    let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
 
     let mut integral = Array2::zeros((height as usize, width as usize));
@@ -166,8 +166,14 @@ pub fn compute_tilted_integral_image(_img: &DynamicImage) -> Result<Array2<u64>>
 ///
 /// * Sum of pixel values in the rectangle
 #[allow(dead_code)]
-pub fn compute_rect_sum(_integral: &Array2<u64>, x1: usize, y1: usize, x2: usize, y2: usize) -> u64 {
-    let (height, width) = _integral.dim();
+pub fn compute_rect_sum(
+    _integral: &Array2<u64>,
+    x1: usize,
+    y1: usize,
+    x2: usize,
+    y2: usize,
+) -> u64 {
+    let (height, width) = integral.dim();
 
     // Clamp coordinates
     let x1 = x1.min(width - 1);
@@ -180,18 +186,18 @@ pub fn compute_rect_sum(_integral: &Array2<u64>, x1: usize, y1: usize, x2: usize
         return 0;
     }
 
-    let mut sum = _integral[[y2, x2]];
+    let mut sum = integral[[y2, x2]];
 
     if x1 > 0 {
-        sum -= _integral[[y2, x1 - 1]];
+        sum -= integral[[y2, x1 - 1]];
     }
 
     if y1 > 0 {
-        sum -= _integral[[y1 - 1, x2]];
+        sum -= integral[[y1 - 1, x2]];
     }
 
     if x1 > 0 && y1 > 0 {
-        sum += _integral[[y1 - 1, x1 - 1]];
+        sum += integral[[y1 - 1, x1 - 1]];
     }
 
     sum
@@ -218,7 +224,7 @@ pub fn compute_rect_mean_variance(
     x2: usize,
     y2: usize,
 ) -> (f64, f64) {
-    let sum = compute_rect_sum(_integral, x1, y1, x2, y2) as f64;
+    let sum = compute_rect_sum(integral, x1, y1, x2, y2) as f64;
     let squared_sum = compute_rect_sum(squared_integral, x1, y1, x2, y2) as f64;
 
     let area = ((x2 - x1 + 1) * (y2 - y1 + 1)) as f64;
@@ -291,12 +297,12 @@ pub fn compute_color_integral_image(
 ///
 /// Normalizes integral image values for visualization
 #[allow(dead_code)]
-pub fn integral_to_image(_integral: &Array2<u64>) -> GrayImage {
-    let (height, width) = _integral.dim();
+pub fn integral_to_image(integral: &Array2<u64>) -> GrayImage {
+    let (height, width) = integral.dim();
     let mut img = GrayImage::new(width as u32, height as u32);
 
     // Find max value for normalization
-    let max_val = _integral.iter().max().copied().unwrap_or(1) as f64;
+    let max_val = integral.iter().max().copied().unwrap_or(1) as f64;
 
     for y in 0..height {
         for x in 0..width {

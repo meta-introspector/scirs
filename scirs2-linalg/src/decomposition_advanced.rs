@@ -221,7 +221,7 @@ where
     let u = u_svd.dot(&vt);
 
     // Compute P = V * S * V^T (positive semidefinite part) if requested
-    let _p = if compute_p {
+    let p = if compute_p {
         let v = vt.t();
         let s_diag = Array2::from_diag(&s);
         Some(v.dot(&s_diag).dot(&vt))
@@ -229,7 +229,7 @@ where
         None
     };
 
-    Ok((u, _p))
+    Ok((u, p))
 }
 
 /// Iterative refinement for polar decomposition
@@ -470,7 +470,7 @@ mod tests {
     fn test_qr_with_column_pivoting() {
         // Rank-deficient matrix
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
-        let (q, _r, p, rank) = qr_with_column_pivoting(&a.view(), 1e-10).unwrap();
+        let (q, r, p, rank) = qr_with_column_pivoting(&a.view(), 1e-10).unwrap();
 
         // Matrix should have rank 2
         assert_eq!(rank, 2);

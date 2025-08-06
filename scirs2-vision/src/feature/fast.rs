@@ -221,10 +221,10 @@ fn check_consecutive_pixels(
 
 /// Compute corner score based on the sum of absolute differences
 #[allow(dead_code)]
-fn compute_corner_score(_pixels: &[f32; 16], center: f32, threshold: f32) -> f32 {
+fn compute_corner_score(pixels: &[f32; 16], center: f32, threshold: f32) -> f32 {
     let mut score = 0.0;
 
-    for &pixel in _pixels.iter() {
+    for &pixel in pixels.iter() {
         let diff = (pixel - center).abs();
         if diff > threshold {
             score += diff - threshold;
@@ -236,14 +236,14 @@ fn compute_corner_score(_pixels: &[f32; 16], center: f32, threshold: f32) -> f32
 
 /// Apply non-maximum suppression to corner scores
 #[allow(dead_code)]
-fn apply_non_max_suppression(_corners: &Array2<f32>, window_size: usize) -> Array2<f32> {
-    let (height, width) = _corners.dim();
+fn apply_non_max_suppression(_corners: &Array2<f32>, windowsize: usize) -> Array2<f32> {
+    let (height, width) = corners.dim();
     let mut result = Array2::zeros((height, width));
     let radius = window_size / 2;
 
     for y in radius..(height - radius) {
         for x in radius..(width - radius) {
-            let center_score = _corners[[y, x]];
+            let center_score = corners[[y, x]];
             if center_score == 0.0 {
                 continue;
             }
@@ -259,7 +259,7 @@ fn apply_non_max_suppression(_corners: &Array2<f32>, window_size: usize) -> Arra
                     let ny = (y as i32 + dy) as usize;
                     let nx = (x as i32 + dx) as usize;
 
-                    if _corners[[ny, nx]] > center_score {
+                    if corners[[ny, nx]] > center_score {
                         is_maximum = false;
                         break 'window;
                     }
@@ -288,7 +288,7 @@ fn apply_non_max_suppression(_corners: &Array2<f32>, window_size: usize) -> Arra
 ///
 /// * Result containing corner points
 #[allow(dead_code)]
-pub fn fast_corners_simple(_img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
+pub fn fast_corners_simple(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
     fast_corners(_img, threshold, 9, true)
 }
 

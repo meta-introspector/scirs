@@ -366,12 +366,12 @@ pub struct ReproducibilityStorage {
 
 impl ReproducibilityManager {
     /// Create a new reproducibility manager
-    pub fn new(_config: ReproducibilityConfig) -> Self {
+    pub fn new(config: ReproducibilityConfig) -> Self {
         Self {
             environments: HashMap::new(),
             reports: Vec::new(),
             verifications: Vec::new(),
-            _config,
+            config,
         }
     }
     
@@ -395,7 +395,7 @@ impl ReproducibilityManager {
     }
     
     /// Generate reproducibility report for experiment
-    pub fn generate_report(&mut self, experiment_id: &str, environment_id: &str) -> Result<String> {
+    pub fn generate_report(&mut self, experiment_id: &str, environmentid: &str) -> Result<String> {
         let environment = self.environments.get(environment_id)
             .ok_or_else(|| OptimError::InvalidConfig("Environment snapshot not found".to_string()))?;
         

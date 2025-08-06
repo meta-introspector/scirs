@@ -34,7 +34,7 @@ impl Swish {
     ///
     /// # Arguments
     /// * `beta` - The beta parameter for the swish function
-    pub fn new(_beta: f64) -> Self {
+    pub fn new(beta: f64) -> Self {
         Self { _beta }
     }
 }
@@ -116,7 +116,7 @@ impl<F: Float + Debug + ScalarOperand> Layer<F> for Swish {
         <Self as Activation<F>>::backward(self, grad_output, input)
     }
 
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         Ok(())
     }
 }

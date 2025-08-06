@@ -151,7 +151,7 @@ fn shuffle_indices(mut indices: Vec<usize>) -> Vec<usize> {
     rand::seq::SliceRandom::shuffle(&mut indices, &mut rng);
     indices
 #[allow(dead_code)]
-fn create_batch(_data: &Array2<f64>, indices: &[usize]) -> Array2<f64> {
+fn create_batch(data: &Array2<f64>, indices: &[usize]) -> Array2<f64> {
     let n_samples = indices.len();
     let n_features = data.shape()[1];
     let mut batch = Array2::zeros((n_samples, n_features));

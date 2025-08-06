@@ -45,14 +45,14 @@ pub struct FPGADevice {
     profiler: PerformanceProfiler,
 impl FPGADevice {
     /// Create a new FPGA device
-    pub fn new(_config: FPGAConfig) -> Result<Self> {
-        let dpr_manager = if _config.vendor == FPGAVendor::Xilinx {
+    pub fn new(config: FPGAConfig) -> Result<Self> {
+        let dpr_manager = if config.vendor == FPGAVendor::Xilinx {
             Some(DPRManager::new()?)
         } else {
             None
         };
         Ok(Self {
-            _config,
+            config,
             bitstream_loaded: false,
             allocated_resources: ResourceAllocation::default(),
             kernel_cache: HashMap::new(),
@@ -136,9 +136,9 @@ pub struct FPGAKernel {
     pub precision: PrecisionConfig,
 impl FPGAKernel {
     /// Create a new FPGA kernel
-    pub fn new(_name: String, operation: FPGAOperation) -> Self {
+    pub fn new(name: String, operation: FPGAOperation) -> Self {
         Self {
-            _name,
+            name,
             operation,
             pipeline_depth: 1,
             parallelism: 1,
@@ -240,8 +240,8 @@ pub struct FPGACompiler {
     optimization_level: OptimizationLevel,
 impl FPGACompiler {
     /// Create a new FPGA compiler
-    pub fn new(_target_device: FPGAConfig, optimization_level: OptimizationLevel) -> Self {
-            _target_device,
+    pub fn new(_target_device: FPGAConfig, optimizationlevel: OptimizationLevel) -> Self {
+            target_device,
             optimization_level,
     /// Compile a high-level operation to FPGA kernel
     pub fn compile_operation(
@@ -520,7 +520,7 @@ impl PerformanceProfiler {
         self.execution_history.push(entry);
         self.update_metrics(&kernel_name, execution_time, throughput);
     /// Update performance metrics
-    fn update_metrics(&mut self, kernel_name: &str, time: std::time::Duration, throughput: f32) {
+    fn update_metrics(&mut self, kernelname: &str, time: std::time::Duration, throughput: f32) {
         self.metrics.total_executions += 1;
         self.metrics.total_time += time;
         if throughput > self.metrics.peak_throughput {

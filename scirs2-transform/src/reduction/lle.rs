@@ -41,9 +41,9 @@ impl LLE {
     /// # Arguments
     /// * `n_neighbors` - Number of neighbors to use
     /// * `n_components` - Number of dimensions in the embedding
-    pub fn new(_n_neighbors: usize, n_components: usize) -> Self {
+    pub fn new(n_neighbors: usize, ncomponents: usize) -> Self {
         LLE {
-            _n_neighbors,
+            n_neighbors,
             n_components,
             reg: 1e-3,
             method: "standard".to_string(),
@@ -265,7 +265,7 @@ impl LLE {
         let x_f64 = x.mapv(|v| num_traits::cast::<S::Elem, f64>(v).unwrap_or(0.0));
 
         // Step 1: Find k nearest neighbors
-        let (neighbors_distances) = self.find_neighbors(&x_f64.view());
+        let (neighbors, distances) = self.find_neighbors(&x_f64.view());
 
         // Step 2: Compute reconstruction weights
         let weights = self.compute_weights(&x_f64.view(), &neighbors)?;
@@ -341,7 +341,7 @@ impl LLE {
     }
 
     /// Check if the input data is the same as training data
-    fn is_same_data(&self, x: &Array2<f64>, training_data: &Array2<f64>) -> bool {
+    fn is_same_data(&self, x: &Array2<f64>, trainingdata: &Array2<f64>) -> bool {
         if x.dim() != training_data.dim() {
             return false;
         }
@@ -358,12 +358,12 @@ impl LLE {
     }
 
     /// Transform new data using out-of-sample extension
-    fn transform_new_data(&self, x_new: &Array2<f64>) -> Result<Array2<f64>> {
+    fn transform_new_data(&self, xnew: &Array2<f64>) -> Result<Array2<f64>> {
         let training_data = self.training_data.as_ref().unwrap();
         let training_embedding = self.embedding.as_ref().unwrap();
 
         let (n_new, n_features) = x_new.dim();
-        let (_n_training_) = training_data.dim();
+        let (_n_training_, _) = training_data.dim();
 
         if n_features != training_data.ncols() {
             return Err(TransformError::InvalidInput(format!(
@@ -400,7 +400,7 @@ impl LLE {
         let n_features = training_data.ncols();
 
         // Step 1: Find k nearest neighbors in training _data
-        let mut distances: Vec<(f64, usize)> = Vec::_new();
+        let mut distances: Vec<(f64, usize)> = Vec::new();
         for j in 0..n_training {
             let mut dist_sq = 0.0;
             for k in 0..n_features {

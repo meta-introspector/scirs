@@ -218,8 +218,8 @@ pub struct PoolStatistics {
 
 impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
     /// Create new work-stealing pool with specified number of threads
-    pub fn new(_num_threads: usize) -> Self {
-        let _num_threads = _num_threads.max(1);
+    pub fn new(_numthreads: usize) -> Self {
+        let _num_threads = _numthreads.max(1);
 
         let worker_states = Arc::new(
             (0.._num_threads)
@@ -483,9 +483,9 @@ where
     Func: Fn(F) -> F + Send + Clone + 'static,
 {
     /// Create new adaptive integration task
-    pub fn new(_integrand: Func, interval: (F, F), tolerance: F, max_depth: usize) -> Self {
+    pub fn new(integrand: Func, interval: (F, F), tolerance: F, max_depth: usize) -> Self {
         Self {
-            integrand: _integrand,
+            integrand: integrand,
             interval,
             tolerance,
             depth: 0,

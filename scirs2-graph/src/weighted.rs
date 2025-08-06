@@ -74,9 +74,9 @@ pub struct MultiWeight<E: EdgeWeight> {
 
 impl<E: EdgeWeight> MultiWeight<E> {
     /// Create a new multi-weight with just primary weight
-    pub fn new(_primary: E) -> Self {
+    pub fn new(primary: E) -> Self {
         Self {
-            _primary,
+            primary,
             weights: HashMap::new(),
         }
     }
@@ -98,7 +98,7 @@ pub trait WeightedOps<N: Node, E: EdgeWeight> {
     fn weight_statistics(&self) -> Result<WeightStatistics<E>>;
 
     /// Filter edges by weight threshold
-    fn filter_by_weight(&self, min_weight: Option<E>, max_weight: Option<E>) -> Result<Self>
+    fn filter_by_weight(&self, min_weight: Option<E>, maxweight: Option<E>) -> Result<Self>
     where
         Self: Sized;
 
@@ -106,7 +106,7 @@ pub trait WeightedOps<N: Node, E: EdgeWeight> {
     fn edges_by_weight(&self, ascending: bool) -> Result<Vec<(N, N, E)>>;
 
     /// Extract subgraph with edges in weight range
-    fn subgraph_by_weight_range(&self, min_weight: E, max_weight: E) -> Result<Self>
+    fn subgraph_by_weight_range(&self, min_weight: E, maxweight: E) -> Result<Self>
     where
         Self: Sized;
 
@@ -174,7 +174,7 @@ where
         })
     }
 
-    fn filter_by_weight(&self, min_weight: Option<E>, max_weight: Option<E>) -> Result<Self> {
+    fn filter_by_weight(&self, min_weight: Option<E>, maxweight: Option<E>) -> Result<Self> {
         let mut filtered_graph = Graph::new();
 
         // Add all nodes first
@@ -228,7 +228,7 @@ where
         Ok(edges)
     }
 
-    fn subgraph_by_weight_range(&self, min_weight: E, max_weight: E) -> Result<Self> {
+    fn subgraph_by_weight_range(&self, min_weight: E, maxweight: E) -> Result<Self> {
         self.filter_by_weight(Some(min_weight), Some(max_weight))
     }
 
@@ -283,15 +283,15 @@ where
             }
             NormalizationMethod::Robust => {
                 let mut sorted_weights = weights.clone();
-                sorted_weights.sort_by(|a, b| a.partial_cmp(b).unwrap());
-                let median = if sorted_weights.len() % 2 == 0 {
-                    (sorted_weights[sorted_weights.len() / 2 - 1]
-                        + sorted_weights[sorted_weights.len() / 2])
+                sortedweights.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                let median = if sortedweights.len() % 2 == 0 {
+                    (sorted_weights[sortedweights.len() / 2 - 1]
+                        + sorted_weights[sortedweights.len() / 2])
                         / 2.0
                 } else {
-                    sorted_weights[sorted_weights.len() / 2]
+                    sorted_weights[sortedweights.len() / 2]
                 };
-                let mad: Vec<f64> = sorted_weights.iter().map(|w| (w - median).abs()).collect();
+                let mad: Vec<f64> = sortedweights.iter().map(|w| (w - median).abs()).collect();
                 let mut sorted_mad = mad.clone();
                 sorted_mad.sort_by(|a, b| a.partial_cmp(b).unwrap());
                 let mad_median = if sorted_mad.len() % 2 == 0 {
@@ -315,7 +315,7 @@ where
         }
 
         // Add edges with normalized weights
-        for (edge, &norm_weight) in edges.iter().zip(normalized_weights.iter()) {
+        for (edge, &norm_weight) in edges.iter().zip(normalizedweights.iter()) {
             normalized_graph.add_edge(
                 edge.source.clone(),
                 edge.target.clone(),
@@ -410,7 +410,7 @@ where
             if let Ok(neighbors) = self.neighbors(node) {
                 for neighbor in neighbors {
                     if let Ok(_weight) = self.edge_weight(node, &neighbor) {
-                        weighted_degree += _weight.into();
+                        weighted_degree += weight.into();
                     }
                 }
             }
@@ -481,7 +481,7 @@ where
         })
     }
 
-    fn filter_by_weight(&self, min_weight: Option<E>, max_weight: Option<E>) -> Result<Self> {
+    fn filter_by_weight(&self, min_weight: Option<E>, maxweight: Option<E>) -> Result<Self> {
         let mut filtered_graph = DiGraph::new();
 
         // Add all nodes first
@@ -535,7 +535,7 @@ where
         Ok(edges)
     }
 
-    fn subgraph_by_weight_range(&self, min_weight: E, max_weight: E) -> Result<Self> {
+    fn subgraph_by_weight_range(&self, min_weight: E, maxweight: E) -> Result<Self> {
         self.filter_by_weight(Some(min_weight), Some(max_weight))
     }
 
@@ -590,15 +590,15 @@ where
             }
             NormalizationMethod::Robust => {
                 let mut sorted_weights = weights.clone();
-                sorted_weights.sort_by(|a, b| a.partial_cmp(b).unwrap());
-                let median = if sorted_weights.len() % 2 == 0 {
-                    (sorted_weights[sorted_weights.len() / 2 - 1]
-                        + sorted_weights[sorted_weights.len() / 2])
+                sortedweights.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                let median = if sortedweights.len() % 2 == 0 {
+                    (sorted_weights[sortedweights.len() / 2 - 1]
+                        + sorted_weights[sortedweights.len() / 2])
                         / 2.0
                 } else {
-                    sorted_weights[sorted_weights.len() / 2]
+                    sorted_weights[sortedweights.len() / 2]
                 };
-                let mad: Vec<f64> = sorted_weights.iter().map(|w| (w - median).abs()).collect();
+                let mad: Vec<f64> = sortedweights.iter().map(|w| (w - median).abs()).collect();
                 let mut sorted_mad = mad.clone();
                 sorted_mad.sort_by(|a, b| a.partial_cmp(b).unwrap());
                 let mad_median = if sorted_mad.len() % 2 == 0 {
@@ -622,7 +622,7 @@ where
         }
 
         // Add edges with normalized weights
-        for (edge, &norm_weight) in edges.iter().zip(normalized_weights.iter()) {
+        for (edge, &norm_weight) in edges.iter().zip(normalizedweights.iter()) {
             normalized_graph.add_edge(
                 edge.source.clone(),
                 edge.target.clone(),
@@ -833,12 +833,12 @@ pub mod utils {
     }
 
     /// Calculate weight correlation between two graphs with same structure
-    pub fn weight_correlation<N, E>(_graph1: &Graph<N, E>, graph2: &Graph<N, E>) -> Result<f64>
+    pub fn weight_correlation<N, E>(graph1: &Graph<N, E>, graph2: &Graph<N, E>) -> Result<f64>
     where
         N: Node + Clone + std::fmt::Debug,
         E: EdgeWeight + Clone + std::fmt::Debug + Into<f64>,
     {
-        let edges1 = _graph1.edges();
+        let edges1 = graph1.edges();
         let edges2 = graph2.edges();
 
         if edges1.len() != edges2.len() {

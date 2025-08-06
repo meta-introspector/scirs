@@ -142,9 +142,9 @@ struct HybridMemory {
 
 impl QuantumNeuralHybridProcessor {
     /// Create a new quantum-neural hybrid processor
-    pub fn new(_config: QuantumNeuralConfig) -> Self {
-        let quantum_processor = QuantumSparseProcessor::new(_config.quantum_config.clone());
-        let neural_processor = NeuralAdaptiveSparseProcessor::new(_config.neural_config.clone());
+    pub fn new(config: QuantumNeuralConfig) -> Self {
+        let quantum_processor = QuantumSparseProcessor::new(config.quantum_config.clone());
+        let neural_processor = NeuralAdaptiveSparseProcessor::new(config.neural_config.clone());
 
         let hybrid_state = HybridState {
             quantum_coherence: 1.0,
@@ -172,7 +172,7 @@ impl QuantumNeuralHybridProcessor {
         };
 
         Self {
-            _config,
+            _config: config,
             quantum_processor,
             neural_processor,
             hybrid_state,
@@ -513,7 +513,7 @@ impl QuantumNeuralHybridProcessor {
 
     // Helper methods
 
-    fn calculate_sparsity_regularity(&self, indptr: &[usize], _indices: &[usize]) -> f64 {
+    fn calculate_sparsity_regularity(&self, indptr: &[usize], indices: &[usize]) -> f64 {
         let rows = indptr.len() - 1;
         if rows <= 1 {
             return 1.0;
@@ -535,7 +535,7 @@ impl QuantumNeuralHybridProcessor {
         (1.0 / (1.0 + variance.sqrt())).min(1.0)
     }
 
-    fn calculate_pattern_familiarity(&self, _indptr: &[usize], _indices: &[usize]) -> f64 {
+    fn calculate_pattern_familiarity(&self, _indptr: &[usize], indices: &[usize]) -> f64 {
         // Simplified pattern familiarity based on memory
         let memory_size = self.hybrid_memory.neural_patterns.len();
         let max_memory = self.hybrid_memory.memory_capacity;
@@ -574,7 +574,7 @@ impl QuantumNeuralHybridProcessor {
         }
     }
 
-    fn update_performance_fusion(&mut self, mode: HybridProcessingMode, execution_time: f64) {
+    fn update_performance_fusion(&mut self, mode: HybridProcessingMode, executiontime: f64) {
         let performance = 1.0 / (execution_time + 1e-6);
 
         match mode {
@@ -639,7 +639,7 @@ impl QuantumNeuralHybridProcessor {
         self.performance_fusion.fusion_weights[1] = 1.0 - self.performance_fusion.fusion_weights[0];
     }
 
-    fn update_hybrid_learning(&mut self, mode: HybridProcessingMode, execution_time: f64) {
+    fn update_hybrid_learning(&mut self, mode: HybridProcessingMode, executiontime: f64) {
         let decision = HybridDecision {
             timestamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -723,7 +723,7 @@ mod tests {
 
         assert_eq!(processor.hybrid_state.quantum_coherence, 1.0);
         assert_eq!(processor.hybrid_state.neural_confidence, 1.0);
-        assert_eq!(processor.performance_fusion.fusion_weights.len(), 2);
+        assert_eq!(processor.performance_fusion.fusionweights.len(), 2);
     }
 
     #[test]

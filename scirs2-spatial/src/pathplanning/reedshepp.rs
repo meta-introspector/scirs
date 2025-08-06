@@ -64,9 +64,9 @@ pub struct ReedsSheppSegment {
 
 impl ReedsSheppSegment {
     /// Create a new Reeds-Shepp segment
-    pub fn new(_motion: Motion, turn: Turn, length: f64) -> Self {
+    pub fn new(motion: Motion, turn: Turn, length: f64) -> Self {
         Self {
-            motion: _motion,
+            motion: motion,
             turn,
             length,
         }
@@ -261,9 +261,9 @@ impl ReedsSheppPlanner {
     /// # Returns
     ///
     /// * A new ReedsSheppPlanner instance
-    pub fn new(_turning_radius: f64) -> Self {
+    pub fn new(_turningradius: f64) -> Self {
         Self {
-            turning_radius: _turning_radius,
+            turning_radius: turning_radius,
         }
     }
 
@@ -277,7 +277,7 @@ impl ReedsSheppPlanner {
     /// # Returns
     ///
     /// * The shortest Reeds-Shepp path, or an error if planning fails
-    pub fn plan(&self, _start: &Pose2D, goal: &Pose2D) -> SpatialResult<ReedsSheppPath> {
+    pub fn plan(&self, start: &Pose2D, goal: &Pose2D) -> SpatialResult<ReedsSheppPath> {
         if self.turning_radius <= 0.0 {
             return Err(SpatialError::ValueError(
                 "Turning radius must be positive".to_string(),
@@ -285,17 +285,17 @@ impl ReedsSheppPlanner {
         }
 
         // Normalize _start and goal poses
-        let _start = _start.normalize_angle();
+        let _start = start.normalize_angle();
         let goal = goal.normalize_angle();
 
         // Transform to canonical form (_start at origin with zero orientation)
-        let dx = goal.x - _start.x;
-        let dy = goal.y - _start.y;
-        let dtheta = goal.theta - _start.theta;
+        let dx = goal.x - start.x;
+        let dy = goal.y - start.y;
+        let dtheta = goal.theta - start.theta;
 
         // Rotate to align _start orientation with x-axis
-        let cos_theta = _start.theta.cos();
-        let sin_theta = _start.theta.sin();
+        let cos_theta = start.theta.cos();
+        let sin_theta = start.theta.sin();
         let x = dx * cos_theta + dy * sin_theta;
         let y = -dx * sin_theta + dy * cos_theta;
         let phi = Self::normalize_angle(dtheta);
@@ -324,7 +324,7 @@ impl ReedsSheppPlanner {
                     best_length = path_length;
                     let path_type = ReedsSheppPlanner::determine_path_type(&segments);
                     best_path = Some(ReedsSheppPath::new(
-                        _start,
+                        start,
                         goal,
                         self.turning_radius,
                         path_type,
@@ -342,10 +342,10 @@ impl ReedsSheppPlanner {
     }
 
     /// Determine the path type based on segments
-    fn determine_path_type(_segments: &[ReedsSheppSegment]) -> ReedsSheppPathType {
-        match _segments.len() {
+    fn determine_path_type(segments: &[ReedsSheppSegment]) -> ReedsSheppPathType {
+        match segments.len() {
             3 => {
-                if _segments.iter().all(|s| s.turn != Turn::Straight) {
+                if segments.iter().all(|s| s.turn != Turn::Straight) {
                     ReedsSheppPathType::CCC
                 } else {
                     ReedsSheppPathType::CSC
@@ -904,7 +904,7 @@ impl ReedsSheppPlanner {
     }
 
     /// Normalize angle to [-π, π]
-    fn normalize_angle(_angle: f64) -> f64 {
+    fn normalize_angle(angle: f64) -> f64 {
         let mut normalized = _angle % (2.0 * PI);
         if normalized > PI {
             normalized -= 2.0 * PI;

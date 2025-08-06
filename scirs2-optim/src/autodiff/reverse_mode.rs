@@ -219,7 +219,8 @@ impl<T: Float + Default + Clone> Default for GradientContext<T> {
             requires_grad: HashMap::new(),
             accumulate: true,
             retain_graph: false,
-            create_graph: false, _phantom: std::marker::PhantomData,
+            create_graph: false,
+            _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -260,7 +261,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
     }
 
     /// Create a variable with gradient tracking
-    pub fn create_variable(&mut self, name: &str, value: Array1<T>, requires_grad: bool) -> usize {
+    pub fn create_variable(&mut self, name: &str, value: Array1<T>, requiresgrad: bool) -> usize {
         let var_id = self.tape.len();
 
         if self.recording {
@@ -601,7 +602,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
     }
 
     /// Backward pass - compute gradients
-    pub fn backward(&mut self, output_id: usize, gradient: Option<Array1<T>>) -> Result<()> {
+    pub fn backward(&mut self, outputid: usize, gradient: Option<Array1<T>>) -> Result<()> {
         // Initialize output gradient
         if output_id >= self.gradients.len() {
             self.gradients.resize(output_id + 1, None);
@@ -636,7 +637,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
     }
 
     /// Get gradient for a variable
-    pub fn get_gradient(&self, var_id: usize) -> Option<&Array1<T>> {
+    pub fn get_gradient(&self, varid: usize) -> Option<&Array1<T>> {
         self.gradients.get(var_id)?.as_ref()
     }
 
@@ -718,7 +719,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
         Ok(output_id)
     }
 
-    fn get_value(&self, var_id: usize) -> Result<Array1<T>> {
+    fn get_value(&self, varid: usize) -> Result<Array1<T>> {
         if var_id >= self.tape.len() {
             return Err(OptimError::InvalidConfig("Invalid variable ID".to_string()));
         }

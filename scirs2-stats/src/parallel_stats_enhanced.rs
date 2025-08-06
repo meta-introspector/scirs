@@ -35,7 +35,7 @@ impl AdaptiveThreshold {
     }
 
     /// Calculate the optimal threshold for parallel processing
-    pub fn calculate(&self, element_size: usize, operation_complexity: f64) -> usize {
+    pub fn calculate(&self, element_size: usize, operationcomplexity: f64) -> usize {
         // Adjust threshold based on:
         // 1. Number of CPU cores
         // 2. SIMD availability (SIMD reduces the need for parallelism)
@@ -54,7 +54,7 @@ impl AdaptiveThreshold {
     }
 
     /// Calculate optimal chunk size for cache efficiency
-    pub fn optimal_chunk_size(&self, total_elements: usize, element_size: usize) -> usize {
+    pub fn optimal_chunk_size(&self, total_elements: usize, elementsize: usize) -> usize {
         // L1 cache is typically 32KB per core
         let l1_cache_size = 32 * 1024;
         let elements_per_cache = l1_cache_size / element_size;
@@ -81,11 +81,11 @@ pub struct ParallelHistogram<F: Float> {
 
 impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> {
     /// Create a new parallel histogram
-    pub fn new<D>(_data: &ArrayBase<D, Ix1>, n_bins: usize) -> StatsResult<Self>
+    pub fn new<D>(_data: &ArrayBase<D, Ix1>, nbins: usize) -> StatsResult<Self>
     where
         D: Data<Elem = F> + Sync,
     {
-        if _data.is_empty() {
+        if data.is_empty() {
             return Err(StatsError::InvalidArgument(
                 "Cannot create histogram from empty _data".to_string(),
             ));
@@ -95,7 +95,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> 
         let parallel_threshold = threshold.calculate(std::mem::size_of::<F>(), 1.0);
 
         // Find min/max in parallel if _data is large enough
-        let (min_val, max_val) = if _data.len() >= parallel_threshold {
+        let (min_val, max_val) = if data.len() >= parallel_threshold {
             let chunk_size = threshold.optimal_chunk_size(_data.len(), std::mem::size_of::<F>());
 
             let (min, max) = par_chunks(_data.as_slice().unwrap(), chunk_size)
@@ -124,9 +124,9 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> 
             (min, max)
         } else {
             // Sequential for small _data
-            let mut min = _data[0];
-            let mut max = _data[0];
-            for &val in _data.iter().skip(1) {
+            let mut min = data[0];
+            let mut max = data[0];
+            for &val in data.iter().skip(1) {
                 if val < min {
                     min = val;
                 }
@@ -146,7 +146,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> 
             .collect();
 
         let mut histogram = Self {
-            bins: _bins,
+            bins: bins,
             counts: vec![0; n_bins],
             min_val,
             max_val,
@@ -300,11 +300,11 @@ pub struct ParallelMovingStats<F: Float> {
 
 impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps + std::fmt::Display> ParallelMovingStats<F> {
     /// Create a new moving statistics calculator
-    pub fn new<D>(_data: &ArrayBase<D, Ix1>, window_size: usize) -> StatsResult<Self>
+    pub fn new<D>(_data: &ArrayBase<D, Ix1>, windowsize: usize) -> StatsResult<Self>
     where
         D: Data<Elem = F>,
     {
-        if window_size == 0 || window_size > _data.len() {
+        if window_size == 0 || window_size > data.len() {
             return Err(StatsError::InvalidArgument(
                 "Invalid window _size".to_string(),
             ));
@@ -531,9 +531,9 @@ pub struct ParallelCrossValidation<F: Float> {
 
 impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelCrossValidation<F> {
     /// Create a new cross-validation splitter
-    pub fn new(_n_folds: usize, shuffle: bool, random_state: Option<u64>) -> Self {
+    pub fn new(_n_folds: usize, shuffle: bool, randomstate: Option<u64>) -> Self {
         Self {
-            n_folds: _n_folds,
+            n_folds: n_folds,
             shuffle,
             random_state,
             _phantom: std::marker::PhantomData,
@@ -617,7 +617,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelCrossValidati
 /// Efficiently computes correlation matrix for multiple variables using parallel processing
 /// and SIMD operations where available.
 #[allow(dead_code)]
-pub fn corrcoef_parallel<F, D>(_data: &ArrayBase<D, Ix2>, rowvar: bool) -> StatsResult<Array2<F>>
+pub fn corrcoef_parallel<F, D>(data: &ArrayBase<D, Ix2>, rowvar: bool) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
     D: Data<Elem = F> + Sync,
@@ -625,9 +625,9 @@ where
     use crate::correlation_simd::pearson_r_simd;
 
     let (n_vars, n_obs) = if rowvar {
-        (_data.nrows(), _data.ncols())
+        (_data.nrows(), data.ncols())
     } else {
-        (_data.ncols(), _data.nrows())
+        (_data.ncols(), data.nrows())
     };
 
     if n_obs < 2 {
@@ -658,15 +658,15 @@ where
         // Sequential computation
         for (i, j) in pairs {
             let var_i = if rowvar {
-                _data.slice(s![i, ..])
+                data.slice(s![i, ..])
             } else {
-                _data.slice(s![.., i])
+                data.slice(s![.., i])
             };
 
             let var_j = if rowvar {
-                _data.slice(s![j, ..])
+                data.slice(s![j, ..])
             } else {
-                _data.slice(s![.., j])
+                data.slice(s![.., j])
             };
 
             let corr = pearson_r_simd(&var_i, &var_j)?;
@@ -677,15 +677,15 @@ where
         // Parallel computation
         let correlations: Vec<((usize, usize), F)> = parallel_map(&pairs, |&(i, j)| {
             let var_i = if rowvar {
-                _data.slice(s![i, ..])
+                data.slice(s![i, ..])
             } else {
-                _data.slice(s![.., i])
+                data.slice(s![.., i])
             };
 
             let var_j = if rowvar {
-                _data.slice(s![j, ..])
+                data.slice(s![j, ..])
             } else {
-                _data.slice(s![.., j])
+                data.slice(s![.., j])
             };
 
             let corr = pearson_r_simd(&var_i, &var_j)?;
@@ -878,7 +878,7 @@ where
                     for i in 0..n - _lag {
                         sum = sum + (data[i] - mean) * (data[i + _lag] - mean);
                     }
-                    sum / (F::from(n - _lag).unwrap() * variance)
+                    sum / (F::from(n - lag).unwrap() * variance)
                 }
             })
             .collect()
@@ -893,21 +893,21 @@ where
                     let data_start = data.slice(s![..n - _lag]);
                     let data_lagged = data.slice(s![_lag..]);
 
-                    let mean_array = ndarray::Array1::from_elem(n - _lag, mean);
+                    let mean_array = ndarray::Array1::from_elem(n - lag, mean);
                     let start_centered = F::simd_sub(&data_start, &mean_array.view());
                     let lagged_centered = F::simd_sub(&data_lagged, &mean_array.view());
 
                     let products = F::simd_mul(&start_centered.view(), &lagged_centered.view());
                     let sum = F::simd_sum(&products.view());
 
-                    sum / (F::from(n - _lag).unwrap() * variance)
+                    sum / (F::from(n - lag).unwrap() * variance)
                 } else {
                     // Scalar fallback
                     let mut sum = F::zero();
                     for i in 0..n - _lag {
                         sum = sum + (data[i] - mean) * (data[i + _lag] - mean);
                     }
-                    sum / (F::from(n - _lag).unwrap() * variance)
+                    sum / (F::from(n - lag).unwrap() * variance)
                 }
             }
         })

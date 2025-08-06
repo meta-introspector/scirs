@@ -145,8 +145,8 @@ where
     /// # Returns
     ///
     /// A symmetric CSR matrix
-    pub fn from_csr(_matrix: &CsrMatrix<T>) -> SparseResult<Self> {
-        let (rows, cols) = _matrix.shape();
+    pub fn from_csr(matrix: &CsrMatrix<T>) -> SparseResult<Self> {
+        let (rows, cols) = matrix.shape();
 
         // Ensure _matrix is square
         if rows != cols {
@@ -168,8 +168,8 @@ where
         let mut indptr = vec![0];
 
         for i in 0..rows {
-            for j in _matrix.indptr[i].._matrix.indptr[i + 1] {
-                let col = _matrix.indices[j];
+            for j in matrix.indptr[i].._matrix.indptr[i + 1] {
+                let col = matrix.indices[j];
 
                 // Only include elements in lower triangular part (including diagonal)
                 if col <= i {
@@ -198,8 +198,8 @@ where
     /// # Returns
     ///
     /// `true` if the matrix is symmetric, `false` otherwise
-    pub fn is_symmetric(_matrix: &CsrMatrix<T>) -> bool {
-        let (rows, cols) = _matrix.shape();
+    pub fn is_symmetric(matrix: &CsrMatrix<T>) -> bool {
+        let (rows, cols) = matrix.shape();
 
         // Must be square
         if rows != cols {
@@ -208,12 +208,12 @@ where
 
         // Compare each element (i,j) with (j,i)
         for i in 0..rows {
-            for j_ptr in _matrix.indptr[i].._matrix.indptr[i + 1] {
-                let j = _matrix.indices[j_ptr];
-                let val = _matrix.data[j_ptr];
+            for j_ptr in matrix.indptr[i].._matrix.indptr[i + 1] {
+                let j = matrix.indices[j_ptr];
+                let val = matrix.data[j_ptr];
 
                 // Find the corresponding (j,i) element
-                let i_val = _matrix.get(j, i);
+                let i_val = matrix.get(j, i);
 
                 // Check if a[i,j] == a[j,i] with sufficient tolerance
                 let diff = (val - i_val).abs();
@@ -391,7 +391,7 @@ where
     /// # Returns
     ///
     /// SymCSR array
-    pub fn new(_matrix: SymCsrMatrix<T>) -> Self {
+    pub fn new(matrix: SymCsrMatrix<T>) -> Self {
         Self { inner: _matrix }
     }
 
@@ -404,8 +404,8 @@ where
     /// # Returns
     ///
     /// A symmetric CSR array
-    pub fn from_csr_array(_array: &CsrArray<T>) -> SparseResult<Self> {
-        let shape = _array.shape();
+    pub fn from_csr_array(array: &CsrArray<T>) -> SparseResult<Self> {
+        let shape = array.shape();
         let (rows, cols) = shape;
 
         // Ensure matrix is square
@@ -417,9 +417,9 @@ where
 
         // Create a temporary CSR matrix to check symmetry
         let csr_matrix = CsrMatrix::new(
-            _array.get_data().to_vec(),
-            _array.get_indptr().to_vec(),
-            _array.get_indices().to_vec(),
+            array.get_data().to_vec(),
+            array.get_indptr().to_vec(),
+            array.get_indices().to_vec(),
             shape,
         )?;
 

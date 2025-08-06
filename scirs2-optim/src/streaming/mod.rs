@@ -409,7 +409,7 @@ where
     O: Optimizer<A, D> + Send + Sync,
 {
     /// Create a new streaming optimizer
-    pub fn new(base_optimizer: O, config: StreamingConfig) -> Result<Self> {
+    pub fn new(baseoptimizer: O, config: StreamingConfig) -> Result<Self> {
         let lr_adaptation_state = LearningRateAdaptationState {
             current_lr: A::from(0.01).unwrap(), // Default learning rate
             accumulated_gradients: None,
@@ -546,7 +546,7 @@ where
         }
     }
 
-    fn should_force_update(&self, start_time: Instant) -> bool {
+    fn should_force_update(&self, starttime: Instant) -> bool {
         if let Some(batch_start) = self.timing.batch_start {
             let elapsed = start_time.duration_since(batch_start);
             elapsed.as_millis() as u64 >= self.config.latency_budget_ms / 2
@@ -773,8 +773,7 @@ where
         Ok(())
     }
 
-    fn check_concept_drift(&mut self,
-        update: &Array1<A>) -> Result<()> {
+    fn check_concept_drift(&mut self, update: &Array1<A>) -> Result<()> {
         // Simplified concept drift detection based on loss
         let current_loss = A::from(self.metrics.current_loss).unwrap();
 
@@ -853,8 +852,7 @@ where
         Ok(result.into_dimensionality::<ndarray::Ix1>()?)
     }
 
-    fn async_update(&mut self,
-        params: &Array1<A>, gradient: &Array1<A>) -> Result<Array1<A>> {
+    fn async_update(&mut self, params: &Array1<A>, gradient: &Array1<A>) -> Result<Array1<A>> {
         if let Some(ref mut async_state) = self.async_state {
             // Add to update queue
             let gradient_generic = gradient.clone().into_dimensionality::<D>()?;
@@ -1348,12 +1346,12 @@ pub struct MultiStreamCoordinator<A: Float> {
 }
 
 impl<A: Float> MultiStreamCoordinator<A> {
-    pub fn new(_config: &StreamingConfig) -> Result<Self> {
+    pub fn new(config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             stream_configs: HashMap::new(),
             sync_buffer: HashMap::new(),
             global_clock: Instant::now(),
-            max_sync_window_ms: _config.latency_budget_ms * 2,
+            max_sync_window_ms: config.latency_budget_ms * 2,
             stream_priorities: HashMap::new(),
             load_balancer: LoadBalancingStrategy::RoundRobin,
         })
@@ -1443,7 +1441,7 @@ pub struct PredictiveStreamingEngine<A: Float> {
 }
 
 impl<A: Float> PredictiveStreamingEngine<A> {
-    pub fn new(_config: &StreamingConfig) -> Result<Self> {
+    pub fn new(config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             prediction_model: PredictionModel::new(_config.buffer_size)?,
             historical_buffer: VecDeque::with_capacity(_config.buffer_size * 2),
@@ -1485,7 +1483,7 @@ pub struct PredictionModel<A: Float> {
 }
 
 impl<A: Float> PredictionModel<A> {
-    pub fn new(feature_dim: usize) -> Result<Self> {
+    pub fn new(featuredim: usize) -> Result<Self> {
         Ok(Self {
             weights: Array1::zeros(feature_dim),
             feature_dim,
@@ -1543,7 +1541,7 @@ pub struct StreamFusionOptimizer<A: Float> {
 }
 
 impl<A: Float + std::ops::DivAssign + ndarray::ScalarOperand> StreamFusionOptimizer<A> {
-    pub fn new(_config: &StreamingConfig) -> Result<Self> {
+    pub fn new(config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             fusion_strategy: FusionStrategy::WeightedAverage,
             stream_weights: HashMap::new(),
@@ -1737,7 +1735,7 @@ impl RealTimeOptimizer {
     }
 
     /// Optimize for real-time performance
-    pub fn optimize_realtime(&mut self, _latency_budget: Duration) -> Result<RTOptimizationResult> {
+    pub fn optimize_realtime(&mut self, _latencybudget: Duration) -> Result<RTOptimizationResult> {
         // Implement real-time optimization logic
         Ok(RTOptimizationResult {
             optimization_applied: true,
@@ -1791,14 +1789,14 @@ pub struct AdaptiveResourceManager {
 }
 
 impl AdaptiveResourceManager {
-    pub fn new(_config: &StreamingConfig) -> Result<Self> {
+    pub fn new(config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             allocation_strategy: ResourceAllocationStrategy::Adaptive,
             current_usage: ResourceUsage::default(),
             constraints: ResourceConstraints {
-                max_memory_mb: _config.memory_budget_mb,
+                max_memory_mb: config.memory_budget_mb,
                 max_cpu_cores: 4,
-                max_latency_ms: _config.latency_budget_ms,
+                max_latency_ms: config.latency_budget_ms,
             },
             allocation_history: VecDeque::with_capacity(100),
         })
@@ -1879,7 +1877,7 @@ pub struct PipelineExecutionManager<A: Float> {
 }
 
 impl<A: Float> PipelineExecutionManager<A> {
-    pub fn new(parallelism_degree: usize, processing_priority: StreamPriority) -> Self {
+    pub fn new(parallelism_degree: usize, processingpriority: StreamPriority) -> Self {
         Self {
             pipeline_stages: Vec::new(),
             parallelism_degree,
@@ -1919,7 +1917,7 @@ pub struct StageCoordinator {
 }
 
 impl StageCoordinator {
-    pub fn new(parallelism_degree: usize) -> Self {
+    pub fn new(parallelismdegree: usize) -> Self {
         Self {
             coordination_strategy: CoordinationStrategy::DataParallel,
             synchronization_barriers: Vec::new(),

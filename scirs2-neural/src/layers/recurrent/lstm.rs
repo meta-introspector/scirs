@@ -415,10 +415,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
         Ok(grad_input)
     }
 
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         // Apply a small update to parameters (placeholder)
         let small_change = F::from(0.001).unwrap();
-        let lr = small_change * learning_rate;
+        let lr = small_change * learningrate;
         // Helper function to update a parameter
         let update_param = |param: &mut Array<F, IxDyn>| {
             for w in param.iter_mut() {

@@ -236,12 +236,12 @@ impl MigrationGuide {
     }
 
     /// Get mapping for a SciPy function
-    pub fn get_mapping(&self, scipy_func: &str) -> Option<&FunctionMapping> {
+    pub fn get_mapping(&self, scipyfunc: &str) -> Option<&FunctionMapping> {
         self.mappings.get(scipy_func)
     }
 
     /// Get reverse mapping (SciRS2 to SciPy)
-    pub fn get_reverse_mapping(&self, scirs2_func: &str) -> Option<&String> {
+    pub fn get_reverse_mapping(&self, scirs2func: &str) -> Option<&String> {
         self.reverse_mappings.get(scirs2_func)
     }
 
@@ -251,7 +251,7 @@ impl MigrationGuide {
     }
 
     /// Generate migration report for a list of SciPy functions
-    pub fn generate_migration_report(&self, scipy_functions: &[&str]) -> String {
+    pub fn generate_migration_report(&self, scipyfunctions: &[&str]) -> String {
         let mut report = String::from("SciPy to SciRS2 Migration Report\n");
         report.push_str("================================\n\n");
 
@@ -308,7 +308,7 @@ pub mod compat {
     }
 
     /// SciPy-compatible softmax with axis parameter
-    pub fn softmax_axis(x: &ArrayView1<f64>, _axis: Option<usize>) -> Vec<f64> {
+    pub fn softmax_axis(x: &ArrayView1<f64>, axis: Option<usize>) -> Vec<f64> {
         // Note: This is simplified for 1D arrays
         // Full implementation would handle multi-dimensional arrays
         match statistical::softmax(x.view()) {
@@ -325,7 +325,7 @@ pub mod codegen {
     use regex::Regex;
 
     /// Generate Rust code equivalent to SciPy code
-    pub fn generate_rust_equivalent(_scipy_code: &str) -> Result<String, String> {
+    pub fn generate_rust_equivalent(_scipycode: &str) -> Result<String, String> {
         #[cfg(feature = "python-interop")]
         {
             generate_rust_equivalent_regex(_scipy_code)
@@ -338,7 +338,7 @@ pub mod codegen {
     }
 
     #[cfg(feature = "python-interop")]
-    fn generate_rust_equivalent_regex(_scipy_code: &str) -> Result<String, String> {
+    fn generate_rust_equivalent_regex(_scipycode: &str) -> Result<String, String> {
         let guide = MigrationGuide::new();
         let mut rust_code = String::new();
         let mut imports = std::collections::HashSet::new();
@@ -380,7 +380,7 @@ pub mod codegen {
         }
 
         // Generate _code transformation hints
-        let mut transformed = _scipy_code.to_string();
+        let mut transformed = scipy_code.to_string();
         for (scipy_func, mapping) in &found_functions {
             // Add transformation comments
             code_lines.push(format!("// {} -> {}", scipy_func, mapping.scirs2_name));
@@ -412,7 +412,7 @@ pub mod codegen {
         }
     }
 
-    fn generate_rust_equivalent_simple(_scipy_code: &str) -> Result<String, String> {
+    fn generate_rust_equivalent_simple(_scipycode: &str) -> Result<String, String> {
         let guide = MigrationGuide::new();
         let mut rust_code = String::new();
 
@@ -421,7 +421,7 @@ pub mod codegen {
 
         for func in known_functions {
             let scipy_pattern = format!("scipy.special.{func}");
-            if _scipy_code.contains(&scipy_pattern) {
+            if scipy_code.contains(&scipy_pattern) {
                 let full_name = format!("scipy.special.{func}");
                 if let Some(mapping) = guide.get_mapping(&full_name) {
                     let module_path = &mapping.module_path;
@@ -440,19 +440,19 @@ pub mod codegen {
     }
 
     /// Generate import statements for common migrations
-    pub fn generate_imports(_scipy_imports: &[&str]) -> String {
+    pub fn generate_imports(_scipyimports: &[&str]) -> String {
         let mut _imports = String::from("// SciRS2 _imports\n");
 
         for &import in _scipy_imports {
             match import {
                 "gamma" | "gammaln" | "beta" => {
-                    _imports.push_str("use scirs2_special::gamma::{gamma, gammaln, beta};\n");
+                    imports.push_str("use scirs2_special::gamma::{gamma, gammaln, beta};\n");
                 }
                 "j0" | "j1" | "jv" => {
-                    _imports.push_str("use scirs2_special::bessel::{j0, j1, jv};\n");
+                    imports.push_str("use scirs2_special::bessel::{j0, j1, jv};\n");
                 }
                 "erf" | "erfc" => {
-                    _imports.push_str("use scirs2_special::erf::{erf, erfc};\n");
+                    imports.push_str("use scirs2_special::erf::{erf, erfc};\n");
                 }
                 _ => {}
             }

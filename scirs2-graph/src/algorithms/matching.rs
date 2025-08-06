@@ -284,13 +284,13 @@ where
 }
 
 #[allow(dead_code)]
-fn next_permutation(_perm: &mut [usize]) -> bool {
-    let n = _perm.len();
+fn next_permutation(perm: &mut [usize]) -> bool {
+    let n = perm.len();
 
-    // Find the largest index k such that _perm[k] < _perm[k + 1]
+    // Find the largest index k such that perm[k] < perm[k + 1]
     let mut k = None;
     for i in 0..n - 1 {
-        if _perm[i] < _perm[i + 1] {
+        if perm[i] < perm[i + 1] {
             k = Some(i);
         }
     }
@@ -300,19 +300,19 @@ fn next_permutation(_perm: &mut [usize]) -> bool {
         None => return false, // Last permutation
     };
 
-    // Find the largest index l greater than k such that _perm[k] < _perm[l]
+    // Find the largest index l greater than k such that perm[k] < perm[l]
     let mut l = k + 1;
     for i in k + 1..n {
-        if _perm[k] < _perm[i] {
+        if perm[k] < perm[i] {
             l = i;
         }
     }
 
-    // Swap _perm[k] and _perm[l]
-    _perm.swap(k, l);
+    // Swap perm[k] and perm[l]
+    perm.swap(k, l);
 
-    // Reverse the sequence from _perm[k + 1] to the end
-    _perm[k + 1..].reverse();
+    // Reverse the sequence from perm[k + 1] to the end
+    perm[k + 1..].reverse();
 
     true
 }
@@ -337,13 +337,13 @@ pub struct MaximumMatching<N: Node> {
 /// # Returns
 /// * A maximum cardinality matching
 #[allow(dead_code)]
-pub fn maximum_cardinality_matching<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> MaximumMatching<N>
+pub fn maximum_cardinality_matching<N, E, Ix>(graph: &Graph<N, E, Ix>) -> MaximumMatching<N>
 where
     N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
-    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
 
     if n == 0 {
@@ -369,7 +369,7 @@ where
             continue;
         }
 
-        if let Ok(neighbors) = _graph.neighbors(node) {
+        if let Ok(neighbors) = graph.neighbors(node) {
             for neighbor in neighbors {
                 if let Some(&j) = node_to_idx.get(&neighbor) {
                     if !matched[j] {
@@ -401,7 +401,7 @@ where
 /// # Returns
 /// * A maximal matching
 #[allow(dead_code)]
-pub fn maximal_matching<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> MaximumMatching<N>
+pub fn maximal_matching<N, E, Ix>(graph: &Graph<N, E, Ix>) -> MaximumMatching<N>
 where
     N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight,
@@ -411,7 +411,7 @@ where
     let mut matched_nodes = HashSet::new();
 
     // Get all edges
-    let edges = _graph.edges();
+    let edges = graph.edges();
 
     // Greedily add edges that don't conflict with existing matching
     for edge in edges {

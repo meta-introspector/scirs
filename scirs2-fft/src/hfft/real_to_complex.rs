@@ -110,7 +110,7 @@ where
 
 /// Internal implementation for f64 input
 #[allow(dead_code)]
-fn _ihfft_real(x: &[f64], n: Option<usize>, _norm: Option<&str>) -> FFTResult<Vec<Complex64>> {
+fn _ihfft_real(x: &[f64], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>> {
     let n_input = x.len();
     let n_fft = n.unwrap_or(n_input);
 
@@ -182,7 +182,7 @@ where
         if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
             // Create a view with the correct type
             let ptr = x.as_ptr() as *const f64;
-            let real_view = unsafe { ArrayView2::fromshape_ptr(x.dim(), ptr) };
+            let real_view = unsafe { ArrayView2::from_shape_ptr(x.dim(), ptr) };
 
             return _ihfft2_real(&real_view, shape, axes, norm);
         }
@@ -321,7 +321,7 @@ where
         if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
             // Create a view with the correct type
             let ptr = x.as_ptr() as *const f64;
-            let real_view = unsafe { ArrayView::fromshape_ptr(IxDyn(x.shape()), ptr) };
+            let real_view = unsafe { ArrayView::from_shape_ptr(IxDyn(x.shape()), ptr) };
 
             return _ihfftn_real(&real_view, shape, axes, norm, overwrite_x, workers);
         }

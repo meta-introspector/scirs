@@ -193,7 +193,7 @@ where
 
 /// Helper function to assign ranks to sorted data
 #[allow(dead_code)]
-fn assign_ranks<F: Float>(sorted_data: &[(F, usize)], ranks: &mut [F]) -> StatsResult<()> {
+fn assign_ranks<F: Float>(sorteddata: &[(F, usize)], ranks: &mut [F]) -> StatsResult<()> {
     let n = sorted_data.len();
 
     let mut i = 0;
@@ -956,7 +956,7 @@ where
 /// println!("Correlation matrix:\n{:?}", corr_matrix);
 /// ```
 #[allow(dead_code)]
-pub fn corrcoef<F, D>(_data: &ArrayBase<D, Ix2>, method: &str) -> StatsResult<ndarray::Array2<F>>
+pub fn corrcoef<F, D>(data: &ArrayBase<D, Ix2>, method: &str) -> StatsResult<ndarray::Array2<F>>
 where
     F: Float
         + std::fmt::Debug
@@ -980,7 +980,7 @@ where
     }
 
     // Get dimensions
-    let (n, p) = (_data.shape()[0], _data.shape()[1]);
+    let (n, p) = (_data.shape()[0], data.shape()[1]);
 
     // Check that _data is not empty
     if n == 0 || p == 0 {
@@ -1009,8 +1009,8 @@ where
         pairs
             .par_iter()
             .map(|&(i, j)| {
-                let var_i = _data.slice(s![.., i]);
-                let var_j = _data.slice(s![.., j]);
+                let var_i = data.slice(s![.., i]);
+                let var_j = data.slice(s![.., j]);
 
                 let corr = match method {
                     "pearson" => pearson_r::<F, _>(&var_i, &var_j)?,
@@ -1027,8 +1027,8 @@ where
         pairs
             .iter()
             .map(|&(i, j)| {
-                let var_i = _data.slice(s![.., i]);
-                let var_j = _data.slice(s![.., j]);
+                let var_i = data.slice(s![.., i]);
+                let var_j = data.slice(s![.., j]);
 
                 let corr = match method {
                     "pearson" => pearson_r::<F, _>(&var_i, &var_j)?,

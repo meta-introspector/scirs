@@ -20,7 +20,7 @@ fn quadratic_gradient(x: &Array1<f64>) -> Array1<f64> {
 
 /// Visualize learning rate and momentum over time
 #[allow(dead_code)]
-fn plot_schedule(_initial_lr: f64, max_lr: f64, total_steps: usize, warmup_frac: f64, name: &str) {
+fn plot_schedule(_initial_lr: f64, max_lr: f64, total_steps: usize, warmupfrac: f64, name: &str) {
     println!("\n{} Schedule:", name);
     println!("Step | Learning Rate | Progress");
     println!("-----|---------------|----------");
@@ -31,7 +31,7 @@ fn plot_schedule(_initial_lr: f64, max_lr: f64, total_steps: usize, warmup_frac:
             let _lr = scheduler.get_learning_rate();
             let progress = scheduler.get_percentage_complete();
 
-            println!("{:4} | {:13.6} | {:8.1}%", step, _lr, progress * 100.0);
+            println!("{:4} | {:13.6} | {:8.1}%", step, lr, progress * 100.0);
         }
         if step < total_steps {
             scheduler.step();
@@ -197,5 +197,5 @@ fn run_one_cycle_optimization(
     );
 
     // Show parameter convergence
-    println!("Final parameters: {:?}", _params);
+    println!("Final parameters: {:?}", params);
 }

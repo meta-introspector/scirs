@@ -191,9 +191,9 @@ fn main() {
 
 /// Print the class distribution of targets
 #[allow(dead_code)]
-fn print_class_distribution(_targets: &Array1<f64>) {
+fn print_class_distribution(targets: &Array1<f64>) {
     let mut class_counts = std::collections::HashMap::new();
-    for &target in _targets.iter() {
+    for &target in targets.iter() {
         let class = target.round() as i64;
         *class_counts.entry(class).or_insert(0) += 1;
     }

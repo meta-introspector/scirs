@@ -37,7 +37,7 @@ impl Default for ThreadPoolConfig {
 
 /// Initialize the global thread pool configuration
 #[allow(dead_code)]
-pub fn init_thread_pool(_config: ThreadPoolConfig) -> Result<(), String> {
+pub fn init_thread_pool(config: ThreadPoolConfig) -> Result<(), String> {
     THREAD_POOL_CONFIG
         .set(Arc::new(Mutex::new(_config)))
         .map_err(|_| "Thread pool already initialized".to_string())
@@ -54,7 +54,7 @@ pub fn get_thread_pool_config() -> ThreadPoolConfig {
 
 /// Update thread pool configuration
 #[allow(dead_code)]
-pub fn update_thread_pool_config<F>(_update_fn: F) -> Result<(), String>
+pub fn update_thread_pool_config<F>(_updatefn: F) -> Result<(), String>
 where
     F: FnOnce(&mut ThreadPoolConfig),
 {
@@ -90,7 +90,7 @@ pub fn current_worker_info() -> Option<WorkerInfo> {
 
 /// Set worker information for the current thread
 #[allow(dead_code)]
-pub fn set_worker_info(_info: WorkerInfo) {
+pub fn set_worker_info(info: WorkerInfo) {
     WORKER_INFO.with(|cell| {
         *cell.borrow_mut() = Some(_info);
     });
@@ -100,7 +100,7 @@ pub fn set_worker_info(_info: WorkerInfo) {
 #[allow(dead_code)]
 pub trait ParallelIteratorExt: ParallelIterator {
     /// Configure the number of threads for this operation
-    fn with_threads(self, num_threads: usize) -> Self;
+    fn with_threads(self, numthreads: usize) -> Self;
 
     /// Configure thread-local initialization
     fn with_thread_init<F>(self, init: F) -> Self
@@ -117,7 +117,7 @@ pub trait ThreadPoolArrayExt<T, D> {
         F: Fn(&mut T) + Send + Sync;
 
     /// Apply a function to chunks in parallel
-    fn par_chunks_mut<F>(&mut self, chunk_size: usize, f: F)
+    fn par_chunks_mut<F>(&mut self, chunksize: usize, f: F)
     where
         F: Fn(&mut [T]) + Send + Sync;
 }
@@ -147,7 +147,7 @@ impl ThreadPoolContext {
     }
 
     /// Execute with a specific number of threads
-    pub fn execute_with_threads<F, R>(&self, num_threads: usize, operation: F) -> R
+    pub fn execute_with_threads<F, R>(&self, numthreads: usize, operation: F) -> R
     where
         F: FnOnce() -> R + Send,
         R: Send,
@@ -171,9 +171,9 @@ pub struct AdaptiveThreadPool {
 }
 
 impl AdaptiveThreadPool {
-    pub fn new(_min_threads: usize, max_threads: usize) -> Self {
+    pub fn new(_min_threads: usize, maxthreads: usize) -> Self {
         Self {
-            _min_threads,
+            min_threads,
             max_threads,
             current_threads: Arc::new(Mutex::new(_min_threads)),
             load_threshold: 0.8,
@@ -181,7 +181,7 @@ impl AdaptiveThreadPool {
     }
 
     /// Adjust thread count based on current load
-    pub fn adjust_threads(&self, current_load: f64) {
+    pub fn adjust_threads(&self, currentload: f64) {
         let mut threads = self.current_threads.lock().unwrap();
 
         if current_load > self.load_threshold && *threads < self.max_threads {
@@ -204,7 +204,7 @@ pub struct WorkStealingQueue<T> {
 }
 
 impl<T: Send> WorkStealingQueue<T> {
-    pub fn new(_num_queues: usize) -> Self {
+    pub fn new(_numqueues: usize) -> Self {
         let _queues = (0.._num_queues)
             .map(|_| Arc::new(Mutex::new(Vec::new())))
             .collect();
@@ -213,14 +213,14 @@ impl<T: Send> WorkStealingQueue<T> {
     }
 
     /// Push work to a specific queue
-    pub fn push(&self, queue_id: usize, item: T) {
+    pub fn push(&self, queueid: usize, item: T) {
         if let Some(queue) = self.queues.get(queue_id) {
             queue.lock().unwrap().push(item);
         }
     }
 
     /// Try to pop from a queue, stealing from others if empty
-    pub fn pop(&self, queue_id: usize) -> Option<T> {
+    pub fn pop(&self, queueid: usize) -> Option<T> {
         // Try own queue first
         if let Some(queue) = self.queues.get(queue_id) {
             if let Some(item) = queue.lock().unwrap().pop() {

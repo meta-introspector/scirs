@@ -11,20 +11,20 @@ use std::path::Path;
 
 // Create a simple neural network model for the XOR problem
 #[allow(dead_code)]
-fn create_xor_model(_rng: &mut SmallRng) -> Result<Sequential<f32>> {
+fn create_xor_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let mut model = Sequential::new();
     // XOR problem requires a hidden layer
     let input_dim = 2;
     let hidden_dim = 4;
     let output_dim = 1;
     // Input to hidden layer with ReLU activation
-    let dense1 = Dense::new(input_dim, hidden_dim, Some("relu"), _rng)?;
+    let dense1 = Dense::new(input_dim, hidden_dim, Some("relu"), rng)?;
     model.add_layer(dense1);
     // Optional dropout for regularization (low rate as XOR is small)
-    let dropout = Dropout::new(0.1, _rng)?;
+    let dropout = Dropout::new(0.1, rng)?;
     model.add_layer(dropout);
     // Hidden to output layer with sigmoid activation (binary output)
-    let dense2 = Dense::new(hidden_dim, output_dim, Some("sigmoid"), _rng)?;
+    let dense2 = Dense::new(hidden_dim, output_dim, Some("sigmoid"), rng)?;
     model.add_layer(dense2);
     Ok(model)
 }
@@ -78,8 +78,8 @@ fn train_model(
     Ok(())
 // Evaluate model performance on XOR problem
 #[allow(dead_code)]
-fn evaluate_model(_model: &Sequential<f32>, x: &Array2<f32>, y: &Array2<f32>) -> Result<f32> {
-    let predictions = _model.forward(&x.clone().into_dyn())?;
+fn evaluate_model(model: &Sequential<f32>, x: &Array2<f32>, y: &Array2<f32>) -> Result<f32> {
+    let predictions = model.forward(&x.clone().into_dyn())?;
     let binary_thresh = 0.5;
     println!("\nModel predictions:");
     println!("-----------------");
@@ -133,7 +133,7 @@ fn main() -> Result<()> {
     println!("Improved Model Serialization and Loading Example");
     println!("===============================================\n");
     // Initialize random number generator
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // 1. Create XOR datasets
     let (x_train, y_train) = create_xor_dataset();
     println!("XOR dataset created");

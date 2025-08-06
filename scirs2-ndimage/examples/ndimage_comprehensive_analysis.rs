@@ -190,12 +190,12 @@ fn create_test_image() -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_quality_assessment(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_quality_assessment(image: &Array2<f64>) -> NdimageResult<()> {
     println!("2. Advanced Image Quality Assessment");
     println!("------------------------------------");
 
     // Create a slightly modified version for comparison
-    let noisy_image = _image.mapv(|x| (x + 0.02 * rand::random::<f64>()).clamp(0.0, 1.0));
+    let noisy_image = image.mapv(|x| (x + 0.02 * rand::random::<f64>()).clamp(0.0, 1.0));
 
     // Compute comprehensive quality metrics
     let metrics = image_quality_assessment(&_image.view(), &noisy_image.view())?;
@@ -229,7 +229,7 @@ fn demonstrate_quality_assessment(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstratetexture_analysis(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstratetexture_analysis(image: &Array2<f64>) -> NdimageResult<()> {
     println!("3. Comprehensive Texture Analysis");
     println!("----------------------------------");
 
@@ -269,7 +269,7 @@ fn demonstratetexture_analysis(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_advanced_filtering(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_advanced_filtering(image: &Array2<f64>) -> NdimageResult<()> {
     println!("4. Advanced Filtering Techniques");
     println!("--------------------------------");
 
@@ -370,12 +370,12 @@ fn demonstrate_advanced_filtering(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_wavelet_analysis(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_wavelet_analysis(image: &Array2<f64>) -> NdimageResult<()> {
     println!("5. Wavelet Analysis and Denoising");
     println!("----------------------------------");
 
     // Add noise for denoising demonstration
-    let noisy_image = _image.mapv(|x| (x + 0.05 * rand::random::<f64>()).clamp(0.0, 1.0));
+    let noisy_image = image.mapv(|x| (x + 0.05 * rand::random::<f64>()).clamp(0.0, 1.0));
 
     // Test different wavelet families
     let wavelets = [
@@ -418,7 +418,7 @@ fn demonstrate_wavelet_analysis(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_multiscale_analysis(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_multiscale_analysis(image: &Array2<f64>) -> NdimageResult<()> {
     println!("6. Multi-scale Analysis");
     println!("-----------------------");
 
@@ -435,7 +435,7 @@ fn demonstrate_multiscale_analysis(_image: &Array2<f64>) -> NdimageResult<()> {
         multiscale_results.len()
     );
     for (i, metrics) in multiscale_results.iter().enumerate() {
-        let scale_size = _image.nrows() / (2_usize.pow(i as u32));
+        let scale_size = image.nrows() / (2_usize.pow(i as u32));
         println!(
             "    Scale {}: {}×{} - Entropy: {:.2}, Sharpness: {:.4}",
             i + 1,
@@ -451,12 +451,12 @@ fn demonstrate_multiscale_analysis(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_visualization(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_visualization(image: &Array2<f64>) -> NdimageResult<()> {
     println!("7. Visualization and Reporting");
     println!("------------------------------");
 
     // Create histogram data
-    let flat_data: Array1<f64> = _image.iter().cloned().collect();
+    let flat_data: Array1<f64> = image.iter().cloned().collect();
 
     // Generate histogram plot
     let plot_config = PlotConfig {
@@ -519,7 +519,7 @@ fn demonstrate_visualization(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_performance_comparison(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_performance_comparison(image: &Array2<f64>) -> NdimageResult<()> {
     println!("8. Performance Characteristics");
     println!("------------------------------");
 
@@ -543,8 +543,8 @@ fn demonstrate_performance_comparison(_image: &Array2<f64>) -> NdimageResult<()>
 
     println!(
         "  Processing times for {}×{} _image:",
-        _image.nrows(),
-        _image.ncols()
+        image.nrows(),
+        image.ncols()
     );
     println!("    Gaussian filter: {:?}", gaussian_time);
     println!("    Sobel filter:    {:?}", sobel_time);
@@ -553,7 +553,7 @@ fn demonstrate_performance_comparison(_image: &Array2<f64>) -> NdimageResult<()>
     // Memory usage estimation
     let image_size_mb = (_image.len() * std::mem::size_of::<f64>()) as f64 / (1024.0 * 1024.0);
     println!("\n  Memory characteristics:");
-    println!("    Input _image:     {:.2} MB", image_size_mb);
+    println!("    Input image:     {:.2} MB", image_size_mb);
     println!(
         "    Typical overhead:{:.2} MB (for intermediate arrays)",
         image_size_mb * 2.0

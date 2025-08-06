@@ -43,7 +43,7 @@ impl ENASController {
         })
     }
     /// Sample an architecture from the controller
-    pub fn sample_architecture(&self, batch_size: usize) -> Result<Vec<Architecture>> {
+    pub fn sample_architecture(&self, batchsize: usize) -> Result<Vec<Architecture>> {
         let mut architectures = Vec::with_capacity(batch_size);
         let mut log_probs = Vec::with_capacity(batch_size);
         for _ in 0..batch_size {
@@ -155,7 +155,7 @@ impl ENASController {
                 .cos();
         Ok(embedding)
     /// Train the controller with REINFORCE
-    pub fn train_step(&mut self, rewards: &[f32], log_probs: &[f32], baseline: f32) -> Result<f32> {
+    pub fn train_step(&mut self, rewards: &[f32], logprobs: &[f32], baseline: f32) -> Result<f32> {
         let advantages: Vec<f32> = rewards.iter().map(|&r| r - baseline).collect();
         // Compute policy gradient loss
         let mut loss = 0.0;
@@ -179,12 +179,12 @@ struct LayerConfig {
     weight_key: String,
 impl SuperNetwork {
     /// Create a new super network
-    pub fn new(_search_space: &SearchSpace) -> Result<Self> {
+    pub fn new(_searchspace: &SearchSpace) -> Result<Self> {
         let shared_weights = Arc::new(RwLock::new(HashMap::new()));
-        let max_layers = _search_space.config.max_layers;
+        let max_layers = search_space.config.max_layers;
         let mut layer_configs = vec![Vec::new(); max_layers];
         // Initialize shared weights for all possible layers
-        for (pos, layer_choice) in _search_space.layer_choices.iter().enumerate() {
+        for (pos, layer_choice) in search_space.layer_choices.iter().enumerate() {
             for layer_type in &layer_choice.choices {
                 let config = Self::create_layer_config(layer_type, pos)?;
                 layer_configs[pos].push(config);
@@ -192,7 +192,7 @@ impl SuperNetwork {
             max_layers,
             layer_configs,
     /// Create layer configuration
-    fn create_layer_config(_layer_type: &LayerType, position: usize) -> Result<LayerConfig> {
+    fn create_layer_config(_layertype: &LayerType, position: usize) -> Result<LayerConfig> {
         let (input_dim, output_dim) = match layer_type {
             LayerType::Dense(units) => (512, *units), // Placeholder dimensions
             LayerType::Conv2D { filters, .. } => (64, *filters, _ => (512, 512),
@@ -241,7 +241,7 @@ impl SuperNetwork {
             .find(|c| &c.layer_type == layer_type)
             .ok_or_else(|| NeuralError::InvalidArgument("Layer config not found".to_string()))?;
         // Get shared weights
-        let weights = self.shared_weights.read().unwrap();
+        let weights = self.sharedweights.read().unwrap();
         let weight = weights
             .get(&config.weight_key)
             .ok_or_else(|| NeuralError::InvalidArgument("Shared weights not found".to_string()))?;
@@ -258,7 +258,7 @@ impl SuperNetwork {
             _ => Ok(output),
     /// Update shared weights
     pub fn update_weights(&mut self, gradients: &HashMap<String, Array2<f32>>) -> Result<()> {
-        let mut weights = self.shared_weights.write().unwrap();
+        let mut weights = self.sharedweights.write().unwrap();
         for (key, grad) in gradients {
             if let Some(weight) = weights.get_mut(key) {
                 // Simple SGD update
@@ -272,7 +272,7 @@ struct LSTMCell {
     w_o: Dense<f32>,
     w_g: Dense<f32>,
 impl LSTMCell {
-    fn new(_input_dim: usize, hidden_dim: usize) -> Result<Self> {
+    fn new(_input_dim: usize, hiddendim: usize) -> Result<Self> {
         let combined_dim = _input_dim + hidden_dim;
             hidden_dim,
             w_i: Dense::new(combined_dim, hidden_dim, Some(Activation::Sigmoid))?,
@@ -385,7 +385,7 @@ impl ENASTrainer {
         Ok(architectures[0].clone())
 /// Helper function to apply softmax with temperature
 #[allow(dead_code)]
-fn softmax(_logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
+fn softmax(logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
     let scaled_logits = logits / temperature;
     let max_logit = scaled_logits
         .iter()
@@ -396,7 +396,7 @@ fn softmax(_logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
     exp_logits / sum
 /// Helper function to sample from categorical distribution
 #[allow(dead_code)]
-fn sample_categorical(_probs: &Array1<f32>) -> Result<usize> {
+fn sample_categorical(probs: &Array1<f32>) -> Result<usize> {
     let mut rng = rng();
     let uniform: f32 = rand::Rng::random(&mut rng);
     let mut cumsum = 0.0;

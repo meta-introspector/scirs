@@ -54,8 +54,8 @@ impl<F: Float + Debug> Activation<F> for Sigmoid {
         let one = F::one();
         let mut grad_input = Array::zeros(_output.raw_dim());
         // For sigmoid: derivative = sigmoid(x) * (1 - sigmoid(x))
-        // _output already contains sigmoid(x), so we compute _output * (1 - _output)
-        // grad_input = grad_output * (_output * (1 - _output))
+        // _output already contains sigmoid(x), so we compute _output * (1 - output)
+        // grad_input = grad_output * (_output * (1 - output))
         Zip::from(&mut grad_input)
             .and(grad_output)
             .and(_output)

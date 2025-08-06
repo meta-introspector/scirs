@@ -50,11 +50,11 @@ impl InverseWishart {
     /// let df = 5.0;
     /// let inv_wishart = InverseWishart::new(scale, df).unwrap();
     /// ```
-    pub fn new<D>(_scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<Self>
+    pub fn new<D>(scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<Self>
     where
         D: Data<Elem = f64>,
     {
-        let scale_owned = _scale.to_owned();
+        let scale_owned = scale.to_owned();
         let dim = scale_owned.shape()[0];
 
         // Check if the matrix is square
@@ -140,7 +140,7 @@ impl InverseWishart {
     }
 
     /// Calculate the log PDF with precomputed Cholesky decomposition of x
-    fn logpdf_with_cholesky<D>(&self, x: &ArrayBase<D, Ix2>, x_chol: &Array2<f64>) -> f64
+    fn logpdf_with_cholesky<D>(&self, x: &ArrayBase<D, Ix2>, xchol: &Array2<f64>) -> f64
     where
         D: Data<Elem = f64>,
     {
@@ -386,7 +386,7 @@ impl InverseWishart {
 /// let inv_wishart = multivariate::inverse_wishart(scale, df).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn inverse_wishart<D>(_scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<InverseWishart>
+pub fn inverse_wishart<D>(scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<InverseWishart>
 where
     D: Data<Elem = f64>,
 {

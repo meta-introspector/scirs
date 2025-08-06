@@ -366,7 +366,7 @@ pub struct ResidualAnalysis<F: Float> {
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
 ///
 /// // Create dummy X matrix (features matrix) with 2 predictors
-/// let x = Array2::fromshape_fn((8, 2), |(i, j)| i as f64 + j as f64);
+/// let x = Array2::from_shape_fn((8, 2), |(i, j)| i as f64 + j as f64);
 ///
 /// let analysis = residual_analysis(&y_true, &y_pred, Some(&x), None).unwrap();
 ///

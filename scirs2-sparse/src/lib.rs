@@ -381,7 +381,7 @@ pub struct SparseWarning;
 
 /// Check if an object is a sparse array
 #[allow(dead_code)]
-pub fn is_sparse_array<T>(_obj: &dyn SparseArray<T>) -> bool
+pub fn is_sparse_array<T>(obj: &dyn SparseArray<T>) -> bool
 where
     T: num_traits::Float
         + std::fmt::Debug
@@ -397,7 +397,7 @@ where
 
 /// Check if an object is a symmetric sparse array
 #[allow(dead_code)]
-pub fn is_sym_sparse_array<T>(_obj: &dyn SymSparseArray<T>) -> bool
+pub fn is_sym_sparse_array<T>(obj: &dyn SymSparseArray<T>) -> bool
 where
     T: num_traits::Float
         + std::fmt::Debug
@@ -408,30 +408,30 @@ where
         + std::ops::Div<Output = T>
         + 'static,
 {
-    _obj.is_symmetric()
+    obj.is_symmetric()
 }
 
 /// Check if an object is a sparse matrix (legacy API)
 #[allow(dead_code)]
-pub fn is_sparse_matrix(_obj: &dyn std::any::Any) -> bool {
-    _obj.is::<CsrMatrix<f64>>()
-        || _obj.is::<CscMatrix<f64>>()
-        || _obj.is::<CooMatrix<f64>>()
-        || _obj.is::<DokMatrix<f64>>()
-        || _obj.is::<LilMatrix<f64>>()
-        || _obj.is::<DiaMatrix<f64>>()
-        || _obj.is::<BsrMatrix<f64>>()
-        || _obj.is::<SymCsrMatrix<f64>>()
-        || _obj.is::<SymCooMatrix<f64>>()
-        || _obj.is::<CsrMatrix<f32>>()
-        || _obj.is::<CscMatrix<f32>>()
-        || _obj.is::<CooMatrix<f32>>()
-        || _obj.is::<DokMatrix<f32>>()
-        || _obj.is::<LilMatrix<f32>>()
-        || _obj.is::<DiaMatrix<f32>>()
-        || _obj.is::<BsrMatrix<f32>>()
-        || _obj.is::<SymCsrMatrix<f32>>()
-        || _obj.is::<SymCooMatrix<f32>>()
+pub fn is_sparse_matrix(obj: &dyn std::any::Any) -> bool {
+    obj.is::<CsrMatrix<f64>>()
+        || obj.is::<CscMatrix<f64>>()
+        || obj.is::<CooMatrix<f64>>()
+        || obj.is::<DokMatrix<f64>>()
+        || obj.is::<LilMatrix<f64>>()
+        || obj.is::<DiaMatrix<f64>>()
+        || obj.is::<BsrMatrix<f64>>()
+        || obj.is::<SymCsrMatrix<f64>>()
+        || obj.is::<SymCooMatrix<f64>>()
+        || obj.is::<CsrMatrix<f32>>()
+        || obj.is::<CscMatrix<f32>>()
+        || obj.is::<CooMatrix<f32>>()
+        || obj.is::<DokMatrix<f32>>()
+        || obj.is::<LilMatrix<f32>>()
+        || obj.is::<DiaMatrix<f32>>()
+        || obj.is::<BsrMatrix<f32>>()
+        || obj.is::<SymCsrMatrix<f32>>()
+        || obj.is::<SymCooMatrix<f32>>()
 }
 
 #[cfg(test)]

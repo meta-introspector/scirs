@@ -213,7 +213,7 @@ pub struct VectorizedEnvironment<E: Environment + Clone> {
     num_envs: usize,
 impl<E: Environment + Clone> VectorizedEnvironment<E> {
     /// Create a new vectorized environment
-    pub fn new(_env_fn: impl Fn() -> E, num_envs: usize) -> Self {
+    pub fn new(_envfn: impl Fn() -> E, num_envs: usize) -> Self {
         let envs = (0..num_envs).map(|_| _env_fn()).collect();
         Self { envs, num_envs }
     /// Reset all environments

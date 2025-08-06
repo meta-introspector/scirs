@@ -8,7 +8,7 @@ use scirs2_neural::layers::{BatchNorm, Conv2D, Dense, Dropout, Layer, PaddingMod
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Dropout Example");
     // Initialize random number generator with a fixed seed for reproducibility
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // 1. Example: Simple dropout on a vector
     println!("\nExample 1: Simple dropout on a vector");
     // Create a vector of ones

@@ -85,13 +85,13 @@ pub struct ParallelPlanner {
 
 impl ParallelPlanner {
     /// Create a new parallel planner
-    pub fn new(_config: Option<ParallelPlanningConfig>) -> Self {
-        let _config = _config.unwrap_or_default();
+    pub fn new(config: Option<ParallelPlanningConfig>) -> Self {
+        let config = config.unwrap_or_default();
         let base_planner = Arc::new(Mutex::new(AdvancedFftPlanner::with_config(
-            _config.base_config.clone(),
+            config.base_config.clone(),
         )));
 
-        let worker_pool = match _config.max_threads {
+        let worker_pool = match config.max_threads {
             Some(threads) => {
                 let worker_config = crate::worker_pool::WorkerConfig {
                     num_workers: threads,
@@ -106,7 +106,7 @@ impl ParallelPlanner {
 
         Self {
             base_planner,
-            config: _config,
+            config,
             worker_pool,
         }
     }
@@ -251,7 +251,7 @@ pub struct ParallelExecutor {
 
 impl ParallelExecutor {
     /// Create a new parallel executor
-    pub fn new(_plan: Arc<FftPlan>, config: Option<ParallelPlanningConfig>) -> Self {
+    pub fn new(plan: Arc<FftPlan>, config: Option<ParallelPlanningConfig>) -> Self {
         let config = config.unwrap_or_default();
 
         let worker_pool = match config.max_threads {
@@ -268,7 +268,7 @@ impl ParallelExecutor {
         };
 
         Self {
-            plan: _plan,
+            plan: plan,
             config,
             worker_pool,
         }

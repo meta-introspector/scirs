@@ -77,9 +77,9 @@ impl Halfspace {
     /// // Halfspace x + y ≤ 1
     /// let hs = Halfspace::new(array![1.0, 1.0], 1.0);
     /// ```
-    pub fn new(_normal: Array1<f64>, offset: f64) -> Self {
+    pub fn new(normal: Array1<f64>, offset: f64) -> Self {
         Self {
-            normal: _normal,
+            normal: normal,
             offset,
         }
     }
@@ -108,8 +108,8 @@ impl Halfspace {
     /// # Returns
     ///
     /// * true if point satisfies a·x ≤ b, false otherwise
-    pub fn contains(&self, _point: &ArrayView1<f64>) -> bool {
-        if _point.len() != self.normal.len() {
+    pub fn contains(&self, point: &ArrayView1<f64>) -> bool {
+        if point.len() != self.normal.len() {
             return false;
         }
 
@@ -131,8 +131,8 @@ impl Halfspace {
     /// # Returns
     ///
     /// * Signed distance (negative if inside halfspace, positive if outside)
-    pub fn distance(&self, _point: &ArrayView1<f64>) -> SpatialResult<f64> {
-        if _point.len() != self.normal.len() {
+    pub fn distance(&self, point: &ArrayView1<f64>) -> SpatialResult<f64> {
+        if point.len() != self.normal.len() {
             return Err(SpatialError::ValueError(
                 "Point dimension must match halfspace dimension".to_string(),
             ));
@@ -246,8 +246,8 @@ impl HalfspaceIntersection {
         }
 
         // Validate interior _point if provided
-        if let Some(ref _point) = interior_point {
-            if _point.len() != dim {
+        if let Some(ref point) = interior_point {
+            if point.len() != dim {
                 return Err(SpatialError::ValueError(
                     "Interior _point dimension must match halfspace dimension".to_string(),
                 ));
@@ -282,8 +282,8 @@ impl HalfspaceIntersection {
     }
 
     /// Check if the intersection is likely to be bounded by examining halfspaces
-    fn is_likely_bounded(_halfspaces: &[Halfspace]) -> bool {
-        let dim = _halfspaces[0].dim();
+    fn is_likely_bounded(halfspaces: &[Halfspace]) -> bool {
+        let dim = halfspaces[0].dim();
 
         // Check if we have enough "bounding" _halfspaces in different directions
         let mut positive_count = vec![0; dim];
@@ -407,7 +407,7 @@ impl HalfspaceIntersection {
 
         // Find or use provided interior _point
         let interior = if let Some(_point) = interior_point {
-            _point.clone()
+            point.clone()
         } else {
             Self::find_interior_point(halfspaces)?
         };
@@ -531,8 +531,8 @@ impl HalfspaceIntersection {
     }
 
     /// Find an interior point for the given halfspaces using linear programming
-    fn find_interior_point(_halfspaces: &[Halfspace]) -> SpatialResult<Array1<f64>> {
-        let dim = _halfspaces[0].dim();
+    fn find_interior_point(halfspaces: &[Halfspace]) -> SpatialResult<Array1<f64>> {
+        let dim = halfspaces[0].dim();
 
         // Try simple candidate points first, ensuring they are truly interior
         let candidates = vec![
@@ -565,7 +565,7 @@ impl HalfspaceIntersection {
         // Use Chebyshev center approach: find point that maximizes distance to closest constraint
 
         // For simple cases, try analytical solutions
-        if dim == 2 && _halfspaces.len() >= 3 {
+        if dim == 2 && halfspaces.len() >= 3 {
             // Try intersection of first two constraints, shifted inward
             let hs1 = &_halfspaces[0];
             let hs2 = &_halfspaces[1];
@@ -580,7 +580,7 @@ impl HalfspaceIntersection {
                 let candidate = arr1(&[x, y]);
 
                 // Check if this intersection point is feasible for all constraints
-                if _halfspaces.iter().all(|hs| hs.contains(&candidate.view())) {
+                if halfspaces.iter().all(|hs| hs.contains(&candidate.view())) {
                     return Ok(candidate);
                 }
 
@@ -589,7 +589,7 @@ impl HalfspaceIntersection {
                 let mut min_slack = f64::INFINITY;
                 let mut worst_constraint_idx = 0;
 
-                for (i, hs) in _halfspaces.iter().enumerate() {
+                for (i, hs) in halfspaces.iter().enumerate() {
                     let slack = hs.offset - hs.normal.dot(&candidate);
                     if slack < min_slack {
                         min_slack = slack;
@@ -618,9 +618,9 @@ impl HalfspaceIntersection {
     }
 
     /// Find intersection vertices by solving systems of linear equations
-    fn find_intersection_vertices(_halfspaces: &[Halfspace]) -> SpatialResult<Array2<f64>> {
-        let dim = _halfspaces[0].dim();
-        let n = _halfspaces.len();
+    fn find_intersection_vertices(halfspaces: &[Halfspace]) -> SpatialResult<Array2<f64>> {
+        let dim = halfspaces[0].dim();
+        let n = halfspaces.len();
 
         if n < dim {
             return Err(SpatialError::ComputationError(
@@ -637,7 +637,7 @@ impl HalfspaceIntersection {
         for combo in combinations {
             if let Ok(vertex) = Self::solve_intersection_system(_halfspaces, &combo) {
                 // Check if vertex satisfies all other _halfspaces
-                if _halfspaces.iter().all(|hs| hs.contains(&vertex.view())) {
+                if halfspaces.iter().all(|hs| hs.contains(&vertex.view())) {
                     vertices.push(vertex.to_vec());
                 }
             }
@@ -797,7 +797,7 @@ impl HalfspaceIntersection {
         _vertices: &Array2<f64>,
         _halfspaces: &[Halfspace],
     ) -> SpatialResult<bool> {
-        if _vertices.nrows() == 0 {
+        if vertices.nrows() == 0 {
             return Ok(false);
         }
 
@@ -811,10 +811,10 @@ impl HalfspaceIntersection {
     }
 
     /// Extract face structure from convex hull
-    fn extract_faces_from_hull(_hull: &ConvexHull) -> SpatialResult<Vec<Vec<usize>>> {
+    fn extract_faces_from_hull(hull: &ConvexHull) -> SpatialResult<Vec<Vec<usize>>> {
         // For now, create a simple face structure
         // A complete implementation would extract actual facets from the _hull
-        let vertices = _hull.vertex_indices();
+        let vertices = hull.vertex_indices();
         if vertices.len() < 3 {
             Ok(vec![vertices.to_vec()])
         } else {

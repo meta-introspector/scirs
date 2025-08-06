@@ -120,8 +120,8 @@ impl Default for AutoMeshGenerator {
 
 impl AutoMeshGenerator {
     /// Create a new mesh generator with specified parameters
-    pub fn new(_params: MeshGenerationParams) -> Self {
-        Self { params: _params }
+    pub fn new(params: MeshGenerationParams) -> Self {
+        Self { params }
     }
 
     /// Create a mesh generator with default parameters
@@ -130,7 +130,7 @@ impl AutoMeshGenerator {
     }
 
     /// Generate mesh for a specified domain
-    pub fn generate_mesh(
+    pub fn generatemesh(
         &mut self,
         domain: &Domain,
         boundary_spec: &BoundarySpecification,
@@ -141,38 +141,38 @@ impl AutoMeshGenerator {
                 y_min,
                 x_max,
                 y_max,
-            } => self.generate_rectangle_mesh(*x_min, *y_min, *x_max, *y_max, boundary_spec),
+            } => self.generate_rectanglemesh(*x_min, *y_min, *x_max, *y_max, boundary_spec),
             Domain::Circle {
                 center_x,
                 center_y,
                 radius,
-            } => self.generate_circle_mesh(*center_x, *center_y, *radius, boundary_spec),
+            } => self.generate_circlemesh(*center_x, *center_y, *radius, boundary_spec),
             Domain::Ellipse {
                 center_x,
                 center_y,
                 a,
                 b,
                 rotation,
-            } => self.generate_ellipse_mesh(*center_x, *center_y, *a, *b, *rotation, boundary_spec),
+            } => self.generate_ellipsemesh(*center_x, *center_y, *a, *b, *rotation, boundary_spec),
             Domain::LShape {
                 width,
                 height,
                 notch_width,
                 notch_height,
-            } => self.generate_lshape_mesh(
+            } => self.generate_lshapemesh(
                 *width,
                 *height,
                 *notch_width,
                 *notch_height,
                 boundary_spec,
             ),
-            Domain::Polygon { vertices } => self.generate_polygon_mesh(vertices, boundary_spec),
+            Domain::Polygon { vertices } => self.generate_polygonmesh(vertices, boundary_spec),
             Domain::Annulus {
                 center_x,
                 center_y,
                 inner_radius,
                 outer_radius,
-            } => self.generate_annulus_mesh(
+            } => self.generate_annulusmesh(
                 *center_x,
                 *center_y,
                 *inner_radius,
@@ -183,7 +183,7 @@ impl AutoMeshGenerator {
     }
 
     /// Generate rectangular mesh using structured approach
-    fn generate_rectangle_mesh(
+    fn generate_rectanglemesh(
         &mut self,
         x_min: f64,
         y_min: f64,
@@ -242,13 +242,13 @@ impl AutoMeshGenerator {
                 y_max,
             },
         )?;
-        self.improve_mesh_quality(&mut mesh)?;
+        self.improvemesh_quality(&mut mesh)?;
 
         Ok(mesh)
     }
 
     /// Generate circular mesh using radial structured approach
-    fn generate_circle_mesh(
+    fn generate_circlemesh(
         &mut self,
         center_x: f64,
         center_y: f64,
@@ -272,8 +272,8 @@ impl AutoMeshGenerator {
             for j in 0..n_theta {
                 let theta = 2.0 * PI * j as f64 / n_theta as f64;
                 let _x = center_x + r * theta.cos();
-                let _y = center_y + r * theta.sin();
-                points.push(Point::new(_x, _y));
+                let y = center_y + r * theta.sin();
+                points.push(Point::new(_x, y));
             }
         }
 
@@ -313,13 +313,13 @@ impl AutoMeshGenerator {
                 radius,
             },
         )?;
-        self.improve_mesh_quality(&mut mesh)?;
+        self.improvemesh_quality(&mut mesh)?;
 
         Ok(mesh)
     }
 
     /// Generate ellipse mesh using transformation from circle
-    fn generate_ellipse_mesh(
+    fn generate_ellipsemesh(
         &mut self,
         center_x: f64,
         center_y: f64,
@@ -331,7 +331,7 @@ impl AutoMeshGenerator {
         // Generate circle mesh with radius = max(a, b)
         let max_radius = a.max(b);
         let mut mesh =
-            self.generate_circle_mesh(0.0, 0.0, max_radius, &BoundarySpecification::default())?;
+            self.generate_circlemesh(0.0, 0.0, max_radius, &BoundarySpecification::default())?;
 
         // Transform points to ellipse
         let cos_rot = rotation.cos();
@@ -362,13 +362,13 @@ impl AutoMeshGenerator {
                 rotation,
             },
         )?;
-        self.improve_mesh_quality(&mut mesh)?;
+        self.improvemesh_quality(&mut mesh)?;
 
         Ok(mesh)
     }
 
     /// Generate L-shaped domain mesh
-    fn generate_lshape_mesh(
+    fn generate_lshapemesh(
         &mut self,
         width: f64,
         height: f64,
@@ -377,14 +377,14 @@ impl AutoMeshGenerator {
         boundary_spec: &BoundarySpecification,
     ) -> PDEResult<TriangularMesh> {
         // Create L-shape as combination of two rectangles
-        let mesh1 = self.generate_rectangle_mesh(
+        let mesh1 = self.generate_rectanglemesh(
             0.0,
             0.0,
             width,
             height - notch_height,
             &BoundarySpecification::default(),
         )?;
-        let mesh2 = self.generate_rectangle_mesh(
+        let mesh2 = self.generate_rectanglemesh(
             0.0,
             height - notch_height,
             width - notch_width,
@@ -393,8 +393,8 @@ impl AutoMeshGenerator {
         )?;
 
         // Combine meshes
-        let combined_mesh = AutoMeshGenerator::combine_meshes(&[mesh1, mesh2])?;
-        let mut mesh = combined_mesh;
+        let combinedmesh = AutoMeshGenerator::combinemeshes(&[mesh1, mesh2])?;
+        let mut mesh = combinedmesh;
 
         self.apply_boundary_markers(
             &mut mesh,
@@ -406,13 +406,13 @@ impl AutoMeshGenerator {
                 notch_height,
             },
         )?;
-        self.improve_mesh_quality(&mut mesh)?;
+        self.improvemesh_quality(&mut mesh)?;
 
         Ok(mesh)
     }
 
     /// Generate mesh for arbitrary polygon using Delaunay triangulation
-    fn generate_polygon_mesh(
+    fn generate_polygonmesh(
         &self,
         vertices: &[Point],
         boundary_spec: &BoundarySpecification,
@@ -479,7 +479,7 @@ impl AutoMeshGenerator {
     }
 
     /// Generate annulus (ring) mesh
-    fn generate_annulus_mesh(
+    fn generate_annulusmesh(
         &mut self,
         center_x: f64,
         center_y: f64,
@@ -507,8 +507,8 @@ impl AutoMeshGenerator {
             for j in 0..n_theta {
                 let theta = 2.0 * PI * j as f64 / n_theta as f64;
                 let _x = center_x + r * theta.cos();
-                let _y = center_y + r * theta.sin();
-                points.push(Point::new(_x, _y));
+                let y = center_y + r * theta.sin();
+                points.push(Point::new(_x, y));
             }
         }
 
@@ -541,7 +541,7 @@ impl AutoMeshGenerator {
                 outer_radius,
             },
         )?;
-        self.improve_mesh_quality(&mut mesh)?;
+        self.improvemesh_quality(&mut mesh)?;
 
         Ok(mesh)
     }
@@ -570,11 +570,11 @@ impl AutoMeshGenerator {
     }
 
     /// Find boundary edges in the mesh
-    fn find_boundary_edges(_mesh: &TriangularMesh) -> Vec<(usize, usize)> {
+    fn find_boundary_edges(mesh: &TriangularMesh) -> Vec<(usize, usize)> {
         let mut edge_count = HashMap::new();
 
         // Count how many times each edge appears
-        for element in &_mesh.elements {
+        for element in &mesh.elements {
             let [p1, p2, p3] = element.nodes;
             let edges = [
                 (p1.min(p2), p1.max(p2)),
@@ -596,43 +596,43 @@ impl AutoMeshGenerator {
     }
 
     /// Improve mesh quality through smoothing and refinement
-    fn improve_mesh_quality(&mut self, _mesh: &mut TriangularMesh) -> PDEResult<()> {
+    fn improvemesh_quality(&mut self, mesh: &mut TriangularMesh) -> PDEResult<()> {
         for _ in 0..self.params.quality_iterations {
             // Laplacian smoothing
-            self.laplacian_smoothing(_mesh)?;
+            self.laplacian_smoothing(mesh)?;
 
             // Quality-based refinement
-            self.quality_refinement(_mesh)?;
+            self.quality_refinement(mesh)?;
         }
 
         Ok(())
     }
 
     /// Apply Laplacian smoothing to improve mesh quality
-    fn laplacian_smoothing(&mut self, _mesh: &mut TriangularMesh) -> PDEResult<()> {
-        let n_points = _mesh.points.len();
+    fn laplacian_smoothing(&mut self, mesh: &mut TriangularMesh) -> PDEResult<()> {
+        let n_points = mesh.points.len();
         let mut new_positions = vec![Point::new(0.0, 0.0); n_points];
         let mut neighbor_counts = vec![0; n_points];
 
         // Find neighbors for each point
-        for element in &_mesh.elements {
+        for element in &mesh.elements {
             let [p1, p2, p3] = element.nodes;
 
-            new_positions[p1].x += _mesh.points[p2].x + _mesh.points[p3].x;
-            new_positions[p1].y += _mesh.points[p2].y + _mesh.points[p3].y;
+            new_positions[p1].x += mesh.points[p2].x + mesh.points[p3].x;
+            new_positions[p1].y += mesh.points[p2].y + mesh.points[p3].y;
             neighbor_counts[p1] += 2;
 
-            new_positions[p2].x += _mesh.points[p1].x + _mesh.points[p3].x;
-            new_positions[p2].y += _mesh.points[p1].y + _mesh.points[p3].y;
+            new_positions[p2].x += mesh.points[p1].x + mesh.points[p3].x;
+            new_positions[p2].y += mesh.points[p1].y + mesh.points[p3].y;
             neighbor_counts[p2] += 2;
 
-            new_positions[p3].x += _mesh.points[p1].x + _mesh.points[p2].x;
-            new_positions[p3].y += _mesh.points[p1].y + _mesh.points[p2].y;
+            new_positions[p3].x += mesh.points[p1].x + mesh.points[p2].x;
+            new_positions[p3].y += mesh.points[p1].y + mesh.points[p2].y;
             neighbor_counts[p3] += 2;
         }
 
         // Update positions (keep boundary points fixed)
-        let boundary_edges = AutoMeshGenerator::find_boundary_edges(_mesh);
+        let boundary_edges = AutoMeshGenerator::find_boundary_edges(mesh);
         let boundary_points: HashSet<usize> = boundary_edges
             .iter()
             .flat_map(|(p1, p2)| vec![*p1, *p2])
@@ -640,8 +640,8 @@ impl AutoMeshGenerator {
 
         for i in 0..n_points {
             if !boundary_points.contains(&i) && neighbor_counts[i] > 0 {
-                _mesh.points[i].x = new_positions[i].x / neighbor_counts[i] as f64;
-                _mesh.points[i].y = new_positions[i].y / neighbor_counts[i] as f64;
+                mesh.points[i].x = new_positions[i].x / neighbor_counts[i] as f64;
+                mesh.points[i].y = new_positions[i].y / neighbor_counts[i] as f64;
             }
         }
 
@@ -649,12 +649,12 @@ impl AutoMeshGenerator {
     }
 
     /// Refine elements with poor quality
-    fn quality_refinement(&mut self, _mesh: &mut TriangularMesh) -> PDEResult<()> {
+    fn quality_refinement(&mut self, mesh: &mut TriangularMesh) -> PDEResult<()> {
         let mut elements_to_refine = Vec::new();
 
         // Identify poor quality elements
-        for (i, element) in _mesh.elements.iter().enumerate() {
-            let quality = self.element_quality(_mesh, element);
+        for (i, element) in mesh.elements.iter().enumerate() {
+            let quality = self.element_quality(mesh, element);
             if quality.min_angle < self.params.min_angle
                 || quality.max_angle > self.params.max_angle
             {
@@ -669,11 +669,11 @@ impl AutoMeshGenerator {
     }
 
     /// Calculate quality metrics for a single element
-    fn element_quality(&self, _mesh: &TriangularMesh, element: &Triangle) -> ElementQuality {
+    fn element_quality(&self, mesh: &TriangularMesh, element: &Triangle) -> ElementQuality {
         let [p1, p2, p3] = element.nodes;
-        let a = &_mesh.points[p1];
-        let b = &_mesh.points[p2];
-        let c = &_mesh.points[p3];
+        let a = &mesh.points[p1];
+        let b = &mesh.points[p2];
+        let c = &mesh.points[p3];
 
         // Calculate edge lengths
         let ab = ((b.x - a.x).powi(2) + (b.y - a.y).powi(2)).sqrt();
@@ -708,14 +708,14 @@ impl AutoMeshGenerator {
     }
 
     /// Check if a point is inside a polygon using ray casting
-    fn point_in_polygon(_point: &Point, polygon: &[Point]) -> bool {
+    fn point_in_polygon(point: &Point, polygon: &[Point]) -> bool {
         let mut inside = false;
         let mut j = polygon.len() - 1;
 
         for i in 0..polygon.len() {
-            if ((polygon[i].y > _point.y) != (polygon[j].y > _point.y))
-                && (_point.x
-                    < (polygon[j].x - polygon[i].x) * (_point.y - polygon[i].y)
+            if ((polygon[i].y > point.y) != (polygon[j].y > point.y))
+                && (point.x
+                    < (polygon[j].x - polygon[i].x) * (point.y - polygon[i].y)
                         / (polygon[j].y - polygon[i].y)
                         + polygon[i].x)
             {
@@ -728,8 +728,8 @@ impl AutoMeshGenerator {
     }
 
     /// Combine multiple meshes into one
-    fn combine_meshes(_meshes: &[TriangularMesh]) -> PDEResult<TriangularMesh> {
-        if _meshes.is_empty() {
+    fn combinemeshes(meshes: &[TriangularMesh]) -> PDEResult<TriangularMesh> {
+        if meshes.is_empty() {
             return Err(PDEError::FiniteElementError(
                 "Cannot combine empty mesh list".to_string(),
             ));
@@ -739,7 +739,7 @@ impl AutoMeshGenerator {
         let mut combined_elements = Vec::new();
         let mut point_offset = 0;
 
-        for mesh in _meshes {
+        for mesh in meshes {
             // Add points
             combined_points.extend(mesh.points.iter().cloned());
 
@@ -755,22 +755,22 @@ impl AutoMeshGenerator {
             point_offset += mesh.points.len();
         }
 
-        let mut combined_mesh = TriangularMesh::new();
-        combined_mesh.points = combined_points;
-        combined_mesh.elements = combined_elements;
-        Ok(combined_mesh)
+        let mut combinedmesh = TriangularMesh::new();
+        combinedmesh.points = combined_points;
+        combinedmesh.elements = combined_elements;
+        Ok(combinedmesh)
     }
 
     /// Calculate overall mesh quality metrics
-    pub fn assess_mesh_quality(&self, _mesh: &TriangularMesh) -> MeshQuality {
+    pub fn assessmesh_quality(&self, mesh: &TriangularMesh) -> MeshQuality {
         let mut min_angle = f64::INFINITY;
         let mut max_angle: f64 = 0.0;
         let mut total_area = 0.0;
         let mut min_aspect_ratio = f64::INFINITY;
         let mut poor_quality_count = 0;
 
-        for element in &_mesh.elements {
-            let quality = self.element_quality(_mesh, element);
+        for element in &mesh.elements {
+            let quality = self.element_quality(mesh, element);
 
             min_angle = min_angle.min(quality.min_angle);
             max_angle = max_angle.max(quality.max_angle);
@@ -784,8 +784,8 @@ impl AutoMeshGenerator {
             }
         }
 
-        let avg_element_size = (total_area / _mesh.elements.len() as f64).sqrt();
-        let quality_score = 1.0 - (poor_quality_count as f64 / _mesh.elements.len() as f64);
+        let avg_element_size = (total_area / mesh.elements.len() as f64).sqrt();
+        let quality_score = 1.0 - (poor_quality_count as f64 / mesh.elements.len() as f64);
 
         MeshQuality {
             min_angle,
@@ -812,7 +812,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_rectangle_mesh_generation() {
+    fn test_rectanglemesh_generation() {
         let mut generator = AutoMeshGenerator::default();
         let domain = Domain::Rectangle {
             x_min: 0.0,
@@ -822,7 +822,7 @@ mod tests {
         };
         let boundary_spec = BoundarySpecification::default();
 
-        let mesh = generator.generate_mesh(&domain, &boundary_spec).unwrap();
+        let mesh = generator.generatemesh(&domain, &boundary_spec).unwrap();
 
         assert!(!mesh.points.is_empty());
         assert!(!mesh.elements.is_empty());
@@ -835,7 +835,7 @@ mod tests {
     }
 
     #[test]
-    fn test_circle_mesh_generation() {
+    fn test_circlemesh_generation() {
         let params = MeshGenerationParams {
             element_size: 0.2,
             ..Default::default()
@@ -849,7 +849,7 @@ mod tests {
         };
         let boundary_spec = BoundarySpecification::default();
 
-        let mesh = generator.generate_mesh(&domain, &boundary_spec).unwrap();
+        let mesh = generator.generatemesh(&domain, &boundary_spec).unwrap();
 
         assert!(!mesh.points.is_empty());
         assert!(!mesh.elements.is_empty());
@@ -862,7 +862,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mesh_quality_assessment() {
+    fn testmesh_quality_assessment() {
         let mut generator = AutoMeshGenerator::default();
         let domain = Domain::Rectangle {
             x_min: 0.0,
@@ -872,8 +872,8 @@ mod tests {
         };
         let boundary_spec = BoundarySpecification::default();
 
-        let mesh = generator.generate_mesh(&domain, &boundary_spec).unwrap();
-        let quality = generator.assess_mesh_quality(&mesh);
+        let mesh = generator.generatemesh(&domain, &boundary_spec).unwrap();
+        let quality = generator.assessmesh_quality(&mesh);
 
         assert!(quality.min_angle > 0.0);
         assert!(quality.max_angle < 180.0);
@@ -908,7 +908,7 @@ mod tests {
     }
 
     #[test]
-    fn test_annulus_mesh_generation() {
+    fn test_annulusmesh_generation() {
         let mut generator = AutoMeshGenerator::default();
         let domain = Domain::Annulus {
             center_x: 0.0,
@@ -918,7 +918,7 @@ mod tests {
         };
         let boundary_spec = BoundarySpecification::default();
 
-        let mesh = generator.generate_mesh(&domain, &boundary_spec).unwrap();
+        let mesh = generator.generatemesh(&domain, &boundary_spec).unwrap();
 
         assert!(!mesh.points.is_empty());
         assert!(!mesh.elements.is_empty());
@@ -931,7 +931,7 @@ mod tests {
     }
 
     #[test]
-    fn test_lshape_mesh_generation() {
+    fn test_lshapemesh_generation() {
         let mut generator = AutoMeshGenerator::default();
         let domain = Domain::LShape {
             width: 2.0,
@@ -941,14 +941,14 @@ mod tests {
         };
         let boundary_spec = BoundarySpecification::default();
 
-        let mesh = generator.generate_mesh(&domain, &boundary_spec).unwrap();
+        let mesh = generator.generatemesh(&domain, &boundary_spec).unwrap();
 
         assert!(!mesh.points.is_empty());
         assert!(!mesh.elements.is_empty());
     }
 
     #[test]
-    fn test_custom_mesh_parameters() {
+    fn test_custommesh_parameters() {
         let params = MeshGenerationParams {
             element_size: 0.05,
             min_angle: 25.0,
@@ -967,8 +967,8 @@ mod tests {
         };
         let boundary_spec = BoundarySpecification::default();
 
-        let mesh = generator.generate_mesh(&domain, &boundary_spec).unwrap();
-        let quality = generator.assess_mesh_quality(&mesh);
+        let mesh = generator.generatemesh(&domain, &boundary_spec).unwrap();
+        let quality = generator.assessmesh_quality(&mesh);
 
         // With smaller element size, should have more elements
         assert!(mesh.elements.len() > 10);

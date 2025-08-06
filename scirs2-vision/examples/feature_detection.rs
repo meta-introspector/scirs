@@ -56,7 +56,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn process_image(_img: &DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
+fn process_image(img: &DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
     // 1. Preprocess the image
     println!("Preprocessing image...");
     let normalized = normalize_brightness(_img, 0.0, 1.0)?;

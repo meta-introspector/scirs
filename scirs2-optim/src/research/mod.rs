@@ -475,10 +475,10 @@ pub enum NotificationFrequency {
 
 impl ResearchProject {
     /// Create a new research project
-    pub fn new(_name: &str) -> Self {
+    pub fn new(name: &str) -> Self {
         let now = Utc::now();
         Self {
-            _name: _name.to_string(),
+            _name: name.to_string(),
             description: String::new(),
             research_area: ResearchArea::MachineLearning,
             status: ProjectStatus::Planning,
@@ -653,12 +653,12 @@ impl Default for PublicationSettings {
 
 impl ResearchProjectManager {
     /// Create a new research project manager
-    pub fn new(_storage_dir: PathBuf) -> Result<Self> {
+    pub fn new(_storagedir: PathBuf) -> Result<Self> {
         std::fs::create_dir_all(&_storage_dir)?;
         
         Ok(Self {
             projects: HashMap::new(),
-            _storage_dir,
+            storage_dir,
             settings: ManagerSettings::default(),
         })
     }

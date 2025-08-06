@@ -88,7 +88,7 @@ impl LinearDiscriminantAnalysis {
     }
 
     /// Set number of components to keep
-    pub fn with_n_components(mut self, n_components: usize) -> Self {
+    pub fn with_n_components(mut self, ncomponents: usize) -> Self {
         self.n_components = Some(n_components);
         self
     }
@@ -164,7 +164,7 @@ impl LinearDiscriminantAnalysis {
         }
 
         // Compute class statistics
-        let (class_means, class_priors, _class_counts) =
+        let (class_means, class_priors, class_counts) =
             self.compute_class_statistics(x, y, &unique_classes)?;
 
         // Compute within-class and between-class scatter matrices
@@ -377,12 +377,12 @@ impl LinearDiscriminantAnalysis {
         let m = l_inv.dot(sb).dot(&l_inv.t());
 
         // SVD of M
-        let (u, _s, _vt) = m
+        let (u, s, vt) = m
             .svd(true, false)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
 
         let u = u.unwrap();
-        let s = _s;
+        let s = s;
 
         // Transform back: scalings = L^{-T} * U
         let scalings = l_inv.t().dot(&u);
@@ -642,7 +642,7 @@ impl QuadraticDiscriminantAnalysis {
     }
 
     /// Set regularization parameter
-    pub fn with_reg_param(mut self, reg_param: f64) -> Self {
+    pub fn with_reg_param(mut self, regparam: f64) -> Self {
         self.reg_param = reg_param;
         self
     }
@@ -899,13 +899,14 @@ mod tests {
 
     #[test]
     fn test_lda_basic() {
+        // Create non-degenerate data with proper variance in multiple dimensions
         let x = array![
-            [1.0, 2.0],
-            [2.0, 3.0],
-            [3.0, 4.0],
-            [6.0, 7.0],
-            [7.0, 8.0],
-            [8.0, 9.0],
+            [1.0, 2.5],
+            [2.1, 3.2],
+            [2.8, 4.1],
+            [6.2, 7.1],
+            [7.3, 8.5],
+            [8.1, 9.3],
         ];
         let y = array![0, 0, 0, 1, 1, 1];
 
@@ -923,13 +924,14 @@ mod tests {
 
     #[test]
     fn test_qda_basic() {
+        // Create non-degenerate data with different covariance structures for each class
         let x = array![
-            [1.0, 2.0],
-            [2.0, 3.0],
-            [3.0, 4.0],
-            [6.0, 7.0],
-            [7.0, 8.0],
-            [8.0, 9.0],
+            [1.0, 2.5],
+            [2.1, 3.2],
+            [2.8, 4.1],
+            [6.2, 7.1],
+            [7.3, 8.5],
+            [8.1, 9.3],
         ];
         let y = array![0, 0, 0, 1, 1, 1];
 
@@ -947,13 +949,14 @@ mod tests {
 
     #[test]
     fn test_lda_transform() {
+        // Create non-degenerate 3D data with independent variance in each dimension
         let x = array![
-            [1.0, 2.0, 3.0],
-            [2.0, 3.0, 4.0],
-            [3.0, 4.0, 5.0],
-            [6.0, 7.0, 8.0],
-            [7.0, 8.0, 9.0],
-            [8.0, 9.0, 10.0],
+            [1.2, 2.8, 3.1],
+            [2.1, 3.5, 4.2],
+            [2.9, 4.1, 5.3],
+            [6.1, 7.2, 8.5],
+            [7.2, 8.3, 9.1],
+            [8.3, 9.1, 10.2],
         ];
         let y = array![0, 0, 0, 1, 1, 1];
 

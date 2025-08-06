@@ -116,7 +116,7 @@ fn demonstrate_format_conversion() -> Result<()> {
         // Test row access in CSR
         let start = Instant::now();
         for i in 0..std::cmp::min(100, size) {
-            if let Some((cols, _vals)) = csr.row(i) {
+            if let Some((cols, vals)) = csr.row(i) {
                 let _row_nnz = cols.len();
             }
         }
@@ -134,7 +134,7 @@ fn demonstrate_format_conversion() -> Result<()> {
         // Test column access in CSC
         let start = Instant::now();
         for j in 0..std::cmp::min(100, size) {
-            if let Some((rows, _vals)) = csc.column(j) {
+            if let Some((rows, vals)) = csc.column(j) {
                 let _col_nnz = rows.len();
             }
         }
@@ -360,8 +360,8 @@ fn demonstrate_memory_analysis() -> Result<()> {
 
 /// Create a sample sparse matrix (tridiagonal pattern)
 #[allow(dead_code)]
-fn create_sample_sparse_matrix(_size: usize) -> SparseMatrix<f64> {
-    let mut sparse = SparseMatrix::new(_size, _size);
+fn create_sample_sparse_matrix(size: usize) -> SparseMatrix<f64> {
+    let mut sparse = SparseMatrix::new(_size, size);
 
     // Main diagonal
     for i in 0.._size {
@@ -383,9 +383,9 @@ fn create_sample_sparse_matrix(_size: usize) -> SparseMatrix<f64> {
 
 /// Format bytes in human-readable format
 #[allow(dead_code)]
-fn format_bytes(_bytes: usize) -> String {
+fn format_bytes(bytes: usize) -> String {
     if _bytes < 1024 {
-        format!("{}B", _bytes)
+        format!("{}B", bytes)
     } else if _bytes < 1024 * 1024 {
         format!("{:.1}KB", _bytes as f64 / 1024.0)
     } else {
@@ -412,10 +412,10 @@ fn demonstrate_matrix_market_integration() -> Result<()> {
 mod benchmarks {
     use super::*;
 
-    pub fn benchmark_format_conversions(_size: usize, iterations: usize) -> Result<()> {
+    pub fn benchmark_format_conversions(size: usize, iterations: usize) -> Result<()> {
         println!(
             "Benchmarking format conversions for {}x{} matrix ({} iterations):",
-            _size, _size, iterations
+            size, size, iterations
         );
 
         let mut total_csr_time = std::time::Duration::new(0, 0);

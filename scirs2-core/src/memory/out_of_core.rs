@@ -58,9 +58,9 @@ pub struct ChunkId {
 
 impl ChunkId {
     /// Create a new chunk ID
-    pub fn new(array_id: String, coordinates: Vec<usize>) -> Self {
+    pub fn new(arrayid: String, coordinates: Vec<usize>) -> Self {
         Self {
-            array_id,
+            array_id: arrayid,
             coordinates,
         }
     }
@@ -102,14 +102,14 @@ pub struct ChunkMetadata {
 
 impl ChunkMetadata {
     /// Create new chunk metadata
-    pub fn new(id: ChunkId, shape: Vec<usize>, file_offset: u64) -> Self {
+    pub fn new(id: ChunkId, shape: Vec<usize>, fileoffset: u64) -> Self {
         let size_bytes = shape.iter().product::<usize>() * std::mem::size_of::<f64>(); // Assume f64 for now
 
         Self {
             id,
             size_bytes,
             shape,
-            file_offset,
+            file_offset: file_offset,
             last_accessed: Instant::now(),
             access_count: 0,
             is_dirty: false,
@@ -129,7 +129,7 @@ impl ChunkMetadata {
             id,
             size_bytes,
             shape,
-            file_offset,
+            file_offset: file_offset,
             last_accessed: Instant::now(),
             access_count: 0,
             is_dirty: false,
@@ -179,7 +179,7 @@ pub struct OutOfCoreConfig {
     /// Enable compression for stored chunks
     pub enable_compression: bool,
     /// I/O buffer size
-    pub io_buffer_size: usize,
+    pub io_buffersize: usize,
 }
 
 impl Default for OutOfCoreConfig {
@@ -192,7 +192,7 @@ impl Default for OutOfCoreConfig {
             enable_prefetching: true,
             prefetch_count: 4,
             enable_compression: false,
-            io_buffer_size: 64 * 1024, // 64 KB
+            io_buffersize: 64 * 1024, // 64 KB
         }
     }
 }
@@ -227,11 +227,11 @@ where
     }
 
     /// Get a chunk from cache
-    pub fn get(&self, chunk_id: &ChunkId) -> Option<Array<T, IxDyn>> {
+    pub fn get(&self, chunkid: &ChunkId) -> Option<Array<T, IxDyn>> {
         let chunks = self.chunks.read().unwrap();
-        if let Some(chunk) = chunks.get(chunk_id) {
+        if let Some(chunk) = chunks.get(chunkid) {
             // Update access statistics
-            self.update_access_stats(chunk_id);
+            self.update_access_stats(chunkid);
             Some(chunk.clone())
         } else {
             None
@@ -282,16 +282,16 @@ where
     }
 
     /// Remove a chunk from cache
-    pub fn remove(&self, chunk_id: &ChunkId) -> Option<Array<T, IxDyn>> {
+    pub fn remove(&self, chunkid: &ChunkId) -> Option<Array<T, IxDyn>> {
         let mut chunks = self.chunks.write().unwrap();
         let mut metadata_map = self.metadata.write().unwrap();
         let mut access_order = self.access_order.lock().unwrap();
         let mut current_memory = self.current_memory.lock().unwrap();
 
-        if let Some(chunk) = chunks.remove(chunk_id) {
+        if let Some(chunk) = chunks.remove(chunkid) {
             let chunk_size = chunk.len() * std::mem::size_of::<T>();
-            metadata_map.remove(chunk_id);
-            access_order.retain(|id| id != chunk_id);
+            metadata_map.remove(chunkid);
+            access_order.retain(|id| id != chunkid);
             *current_memory = current_memory.saturating_sub(chunk_size);
 
             track_deallocation("OutOfCoreCache", chunk_size, 0);
@@ -302,16 +302,16 @@ where
     }
 
     /// Update access statistics for a chunk
-    fn update_access_stats(&self, chunk_id: &ChunkId) {
+    fn update_access_stats(&self, chunkid: &ChunkId) {
         let mut metadata_map = self.metadata.write().unwrap();
-        if let Some(metadata) = metadata_map.get_mut(chunk_id) {
+        if let Some(metadata) = metadata_map.get_mut(chunkid) {
             metadata.touch();
         }
 
         // Update access order for LRU
         let mut access_order = self.access_order.lock().unwrap();
-        access_order.retain(|id| id != chunk_id);
-        access_order.push_back(chunk_id.clone());
+        access_order.retain(|id| id != chunkid);
+        access_order.push_back(chunkid.clone());
     }
 
     /// Ensure there's space in cache for a new chunk
@@ -340,8 +340,8 @@ where
 
     /// Ensure there's space in cache for a new chunk
     #[allow(dead_code)]
-    fn ensure_cache_space(&self, new_metadata: &ChunkMetadata) -> CoreResult<()> {
-        self.ensure_cache_space_with_writer(new_metadata, |_| Ok(()))
+    fn ensure_cache_space(&self, newmetadata: &ChunkMetadata) -> CoreResult<()> {
+        self.ensure_cache_space_with_writer(newmetadata, |_| Ok(()))
     }
 
     /// Evict chunks based on cache policy with optional dirty chunk writer
@@ -439,17 +439,17 @@ where
     }
 
     /// Mark a chunk as clean (not dirty)
-    pub fn mark_clean(&self, chunk_id: &ChunkId) {
+    pub fn mark_clean(&self, chunkid: &ChunkId) {
         let mut metadata_map = self.metadata.write().unwrap();
-        if let Some(metadata) = metadata_map.get_mut(chunk_id) {
+        if let Some(metadata) = metadata_map.get_mut(chunkid) {
             metadata.is_dirty = false;
         }
     }
 
     /// Mark a chunk as dirty (modified)
-    pub fn mark_dirty(&self, chunk_id: &ChunkId) {
+    pub fn mark_dirty(&self, chunkid: &ChunkId) {
         let mut metadata_map = self.metadata.write().unwrap();
-        if let Some(metadata) = metadata_map.get_mut(chunk_id) {
+        if let Some(metadata) = metadata_map.get_mut(chunkid) {
             metadata.mark_dirty();
         }
     }
@@ -477,10 +477,10 @@ pub trait StorageBackend: Send + Sync {
     fn write_chunk(&self, metadata: &ChunkMetadata, data: &[u8]) -> CoreResult<()>;
 
     /// Allocate space for a new chunk
-    fn allocate_chunk(&self, chunk_id: &ChunkId, size: usize) -> CoreResult<ChunkMetadata>;
+    fn allocate_chunk(&self, chunkid: &ChunkId, size: usize) -> CoreResult<ChunkMetadata>;
 
     /// Deallocate chunk space
-    fn deallocate_chunk(&self, chunk_id: &ChunkId) -> CoreResult<()>;
+    fn deallocate_chunk(&self, chunkid: &ChunkId) -> CoreResult<()>;
 
     /// Flush any pending writes
     fn flush(&self) -> CoreResult<()>;
@@ -495,9 +495,9 @@ pub struct FileStorageBackend {
 
 impl FileStorageBackend {
     /// Create a new file storage backend
-    pub fn new<P: AsRef<Path>>(_base_path: P, path: P) -> CoreResult<Self> {
-        let base_path = _base_path.as_ref().to_path_buf();
-        std::fs::create_dir_all(&_base_path)?;
+    pub fn new<P: AsRef<Path>>(basepath: P, path: P) -> CoreResult<Self> {
+        let base_path = basepath.as_ref().to_path_buf();
+        std::fs::create_dir_all(&base_path)?;
 
         Ok(Self {
             base_path,
@@ -507,13 +507,13 @@ impl FileStorageBackend {
     }
 
     /// Get file handle for an array
-    fn get_file_handle(&self, array_id: &str) -> CoreResult<Arc<Mutex<File>>> {
+    fn get_file_handle(&self, arrayid: &str) -> CoreResult<Arc<Mutex<File>>> {
         let mut handles = self.file_handles.write().unwrap();
 
-        if let Some(handle) = handles.get(array_id) {
+        if let Some(handle) = handles.get(arrayid) {
             Ok(handle.clone())
         } else {
-            let file_path = self.base_path.join(format!("{array_id}.dat"));
+            let file_path = self.base_path.join(format!("{arrayid}.dat"));
             let file = OpenOptions::new()
                 .create(true)
                 .truncate(true)
@@ -522,7 +522,7 @@ impl FileStorageBackend {
                 .open(file_path)?;
 
             let handle = Arc::new(Mutex::new(file));
-            handles.insert(array_id.to_string(), handle.clone());
+            handles.insert(arrayid.to_string(), handle.clone());
             Ok(handle)
         }
     }
@@ -550,24 +550,24 @@ impl StorageBackend for FileStorageBackend {
         Ok(())
     }
 
-    fn allocate_chunk(&self, chunk_id: &ChunkId, size: usize) -> CoreResult<ChunkMetadata> {
-        let file_handle = self.get_file_handle(&chunk_id.array_id)?;
+    fn allocate_chunk(&self, chunkid: &ChunkId, size: usize) -> CoreResult<ChunkMetadata> {
+        let file_handle = self.get_file_handle(&chunkid.array_id)?;
         let file = file_handle.lock().unwrap();
 
         let file_offset = file.metadata()?.len();
         let shape = vec![size / std::mem::size_of::<f64>()]; // Simplified shape calculation
 
-        let metadata = ChunkMetadata::new(chunk_id.clone(), shape, file_offset);
+        let metadata = ChunkMetadata::new(chunkid.clone(), shape, file_offset);
 
         let mut registry = self.chunk_registry.write().unwrap();
-        registry.insert(chunk_id.clone(), metadata.clone());
+        registry.insert(chunkid.clone(), metadata.clone());
 
         Ok(metadata)
     }
 
-    fn deallocate_chunk(&self, chunk_id: &ChunkId) -> CoreResult<()> {
+    fn deallocate_chunk(&self, chunkid: &ChunkId) -> CoreResult<()> {
         let mut registry = self.chunk_registry.write().unwrap();
-        registry.remove(chunk_id);
+        registry.remove(chunkid);
         Ok(())
     }
 
@@ -611,7 +611,7 @@ where
         let cache = Arc::new(ChunkCache::new(config.clone()));
 
         Self {
-            array_id,
+            array_id: array_id,
             shape,
             cache,
             storage,
@@ -657,11 +657,11 @@ where
     }
 
     /// Get chunk for given chunk coordinates
-    fn get_chunk(&self, chunk_coords: &[usize]) -> CoreResult<Array<T, IxDyn>> {
+    fn get_chunk(&self, chunkcoords: &[usize]) -> CoreResult<Array<T, IxDyn>> {
         // Check if chunk exists and get its ID
         let chunk_id_opt = {
             let chunk_map = self.chunk_map.read().unwrap();
-            chunk_map.get(chunk_coords).cloned()
+            chunk_map.get(chunkcoords).cloned()
         };
 
         if let Some(chunk_id) = chunk_id_opt {
@@ -674,20 +674,20 @@ where
             self.load_chunk_from_storage(&chunk_id)
         } else {
             // Create new chunk
-            self.create_new_chunk(chunk_coords)
+            self.create_new_chunk(chunkcoords)
         }
     }
 
     /// Get mutable chunk for given chunk coordinates
     #[allow(dead_code)]
-    fn get_chunk_mut(&self, chunk_coords: &[usize]) -> CoreResult<Array<T, IxDyn>> {
+    fn get_chunk_mut(&self, chunkcoords: &[usize]) -> CoreResult<Array<T, IxDyn>> {
         // First get the chunk (loading from storage if needed)
-        let chunk = self.get_chunk(chunk_coords)?;
+        let chunk = self.get_chunk(chunkcoords)?;
 
         // Get the chunk ID to mark it as dirty - release lock immediately
         {
             let chunk_map = self.chunk_map.read().unwrap();
-            if let Some(chunk_id) = chunk_map.get(chunk_coords) {
+            if let Some(chunk_id) = chunk_map.get(chunkcoords) {
                 // Mark chunk as dirty since it will be modified
                 self.cache.mark_dirty(chunk_id);
             }
@@ -697,17 +697,17 @@ where
     }
 
     /// Set chunk data for given chunk coordinates
-    fn set_chunk(&self, chunk_coords: &[usize], data: Array<T, IxDyn>) -> CoreResult<()> {
+    fn set_chunk(&self, chunkcoords: &[usize], data: Array<T, IxDyn>) -> CoreResult<()> {
         // Get or create the chunk
-        let _ = self.get_chunk(chunk_coords)?;
+        let _ = self.get_chunk(chunkcoords)?;
 
         // Get the chunk ID - release lock immediately after cloning
         let chunk_id = {
             let chunk_map = self.chunk_map.read().unwrap();
             chunk_map
-                .get(chunk_coords)
+                .get(chunkcoords)
                 .ok_or_else(|| {
-                    OutOfCoreError::ChunkNotFound(format!("Chunk not found: {chunk_coords:?}"))
+                    OutOfCoreError::ChunkNotFound(format!("Chunk not found: {chunkcoords:?}"))
                 })?
                 .clone()
         };
@@ -729,10 +729,10 @@ where
     }
 
     /// Load chunk from storage
-    fn load_chunk_from_storage(&self, chunk_id: &ChunkId) -> CoreResult<Array<T, IxDyn>> {
+    fn load_chunk_from_storage(&self, chunkid: &ChunkId) -> CoreResult<Array<T, IxDyn>> {
         // Get metadata for this chunk
         let metadata = ChunkMetadata::new(
-            chunk_id.clone(),
+            chunkid.clone(),
             self.config.chunkshape.clone(),
             0, // Would be looked up from storage registry
         );
@@ -747,17 +747,17 @@ where
         // Cache the chunk
         let writer = |chunk_id: &ChunkId| self.write_chunk_to_storage(chunk_id);
         self.cache
-            .put_with_writer(chunk_id.clone(), chunk.clone(), metadata, writer)?;
+            .put_with_writer(chunkid.clone(), chunk.clone(), metadata, writer)?;
 
         Ok(chunk)
     }
 
     /// Create a new chunk
-    fn create_new_chunk(&self, chunk_coords: &[usize]) -> CoreResult<Array<T, IxDyn>> {
-        let chunk_id = ChunkId::new(self.array_id.clone(), chunk_coords.to_vec());
+    fn create_new_chunk(&self, chunkcoords: &[usize]) -> CoreResult<Array<T, IxDyn>> {
+        let chunk_id = ChunkId::new(self.array_id.clone(), chunkcoords.to_vec());
 
         // Calculate actual chunk shape (may be smaller at boundaries)
-        let chunkshape = self.calculate_actual_chunkshape(chunk_coords);
+        let chunkshape = self.calculate_actual_chunkshape(chunkcoords);
 
         // Create zero-initialized chunk
         let chunk = Array::<T, IxDyn>::default(IxDyn(&chunkshape));
@@ -768,7 +768,7 @@ where
 
         // Update chunk mapping
         let mut chunk_map = self.chunk_map.write().unwrap();
-        chunk_map.insert(chunk_coords.to_vec(), chunk_id.clone());
+        chunk_map.insert(chunkcoords.to_vec(), chunk_id.clone());
 
         // Cache the chunk
         let writer = |chunk_id: &ChunkId| self.write_chunk_to_storage(chunk_id);
@@ -779,8 +779,8 @@ where
     }
 
     /// Calculate actual chunk shape (handles boundary chunks)
-    fn calculate_actual_chunkshape(&self, chunk_coords: &[usize]) -> Vec<usize> {
-        chunk_coords
+    fn calculate_actual_chunkshape(&self, chunkcoords: &[usize]) -> Vec<usize> {
+        chunkcoords
             .iter()
             .zip(self.config.chunkshape.iter())
             .zip(self.shape.iter())
@@ -901,20 +901,20 @@ where
     }
 
     /// Write a single chunk to storage
-    fn write_chunk_to_storage(&self, chunk_id: &ChunkId) -> CoreResult<()> {
+    fn write_chunk_to_storage(&self, chunkid: &ChunkId) -> CoreResult<()> {
         // Get chunk from cache
-        if let Some(chunk) = self.cache.get(chunk_id) {
+        if let Some(chunk) = self.cache.get(chunkid) {
             // Get metadata from chunk map or create new
             let chunk_map = self.chunk_map.read().unwrap();
             let _chunk_coords = chunk_map
                 .iter()
-                .find(|(_, id)| *id == chunk_id)
+                .find(|(_, id)| *id == chunkid)
                 .map(|(coords, _)| coords.clone())
-                .ok_or_else(|| OutOfCoreError::ChunkNotFound(chunk_id.to_string()))?;
+                .ok_or_else(|| OutOfCoreError::ChunkNotFound(chunkid.to_string()))?;
 
             // Create metadata for storage
             let metadata = ChunkMetadata::new(
-                chunk_id.clone(),
+                chunkid.clone(),
                 chunk.shape().to_vec(),
                 0, // File offset will be managed by storage backend
             );
@@ -926,7 +926,7 @@ where
             self.storage.write_chunk(&metadata, &data)?;
 
             // Mark chunk as clean in cache
-            self.cache.mark_clean(chunk_id);
+            self.cache.mark_clean(chunkid);
         }
 
         Ok(())
@@ -1034,8 +1034,8 @@ where
     }
 
     /// Calculate intersection of a chunk with this region
-    fn calculate_chunk_intersection(&self, chunk_coords: &[usize]) -> Vec<(usize, usize)> {
-        chunk_coords
+    fn calculate_chunk_intersection(&self, chunkcoords: &[usize]) -> Vec<(usize, usize)> {
+        chunkcoords
             .iter()
             .zip(self.array.config.chunkshape.iter())
             .zip(self.ranges.iter())
@@ -1128,21 +1128,21 @@ impl OutOfCoreManager {
     }
 
     /// Get an existing array
-    pub fn get_array<T>(&self, array_id: &str) -> Option<Arc<OutOfCoreArray<T>>>
+    pub fn get_array<T>(&self, arrayid: &str) -> Option<Arc<OutOfCoreArray<T>>>
     where
         T: Clone + Default + 'static + Send + Sync + serde::Serialize + serde::de::DeserializeOwned,
     {
         let arrays = self.arrays.read().unwrap();
         arrays
-            .get(array_id)
+            .get(arrayid)
             .and_then(|boxed| boxed.downcast_ref::<Arc<OutOfCoreArray<T>>>())
             .cloned()
     }
 
     /// Remove an array
-    pub fn remove_array(&self, array_id: &str) -> bool {
+    pub fn remove_array(&self, arrayid: &str) -> bool {
         let mut arrays = self.arrays.write().unwrap();
-        arrays.remove(array_id).is_some()
+        arrays.remove(arrayid).is_some()
     }
 
     /// List all array IDs
@@ -1286,7 +1286,7 @@ pub mod utils {
         sourcearray: &Array<T, IxDyn>,
         targetarray: &OutOfCoreArray<T>,
         chunks_per_dim: &[usize],
-        chunk_coords: &mut Vec<usize>,
+        chunkcoords: &mut Vec<usize>,
         dimension: usize,
     ) -> CoreResult<()>
     where
@@ -1299,7 +1299,7 @@ pub mod utils {
             let chunkshape = &targetarray.config.chunkshape;
             let mut slices = vec![];
 
-            for (i, (&coord, &chunk_size)) in chunk_coords.iter().zip(chunkshape.iter()).enumerate()
+            for (i, (&coord, &chunk_size)) in chunkcoords.iter().zip(chunkshape.iter()).enumerate()
             {
                 let start = coord * chunk_size;
                 let end = ((coord + 1) * chunk_size).min(sourcearray.shape()[i]);
@@ -1310,18 +1310,18 @@ pub mod utils {
             let chunk_data = extract_chunk_data(sourcearray, &slices)?;
 
             // Set the chunk data in the target array
-            targetarray.set_chunk(chunk_coords, chunk_data)?;
+            targetarray.set_chunk(chunkcoords, chunk_data)?;
 
             Ok(())
         } else {
             // Iterate through all chunks in this dimension
             for i in 0..chunks_per_dim[dimension] {
-                chunk_coords[dimension] = i;
+                chunkcoords[dimension] = i;
                 copy_chunks_recursive(
                     sourcearray,
                     targetarray,
                     chunks_per_dim,
-                    chunk_coords,
+                    chunkcoords,
                     dimension + 1,
                 )?;
             }

@@ -1,4 +1,4 @@
-use ndarray::{ Array2};
+use ndarray::Array2;
 use scirs2_signal::dwt::Wavelet;
 use scirs2_signal::dwt2d::{dwt2d_decompose, wavedec2};
 use scirs2_signal::swt2d::swt2d_decompose;
@@ -228,11 +228,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to print a small array
 #[allow(dead_code)]
-fn print_array2(_array: &ndarray::ArrayView2<f64>) {
-    let (rows, cols) = _array.dim();
+fn print_array2(array: &ndarray::ArrayView2<f64>) {
+    let (rows, cols) = array.dim();
     for i in 0..rows {
         for j in 0..cols {
-            print!("{:.2} ", _array[[i, j]]);
+            print!("{:.2} ", array[[i, j]]);
         }
         println!();
     }

@@ -217,7 +217,7 @@ where
 
 /// Compute Mean Squared Error
 #[allow(dead_code)]
-pub fn mean_squared_error<T>(_reference: &ArrayView2<T>, test_image: &ArrayView2<T>) -> T
+pub fn mean_squared_error<T>(_reference: &ArrayView2<T>, testimage: &ArrayView2<T>) -> T
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
@@ -233,7 +233,7 @@ where
 
 /// Compute Mean Absolute Error
 #[allow(dead_code)]
-pub fn mean_absolute_error<T>(_reference: &ArrayView2<T>, test_image: &ArrayView2<T>) -> T
+pub fn mean_absolute_error<T>(_reference: &ArrayView2<T>, testimage: &ArrayView2<T>) -> T
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
@@ -246,11 +246,11 @@ where
 
 /// Compute Signal-to-Noise Ratio
 #[allow(dead_code)]
-pub fn signal_to_noise_ratio<T>(_image: &ArrayView2<T>) -> NdimageResult<T>
+pub fn signal_to_noise_ratio<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
-    let mean_val = _image.mean().unwrap_or(T::zero());
+    let mean_val = image.mean().unwrap_or(T::zero());
     let variance = _image
         .mapv(|x| (x - mean_val) * (x - mean_val))
         .mean()
@@ -270,13 +270,13 @@ where
 
 /// Compute Contrast-to-Noise Ratio
 #[allow(dead_code)]
-pub fn contrast_to_noise_ratio<T>(_image: &ArrayView2<T>) -> NdimageResult<T>
+pub fn contrast_to_noise_ratio<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
-    let mean_val = _image.mean().unwrap_or(T::zero());
-    let max_val = _image.iter().cloned().fold(T::neg_infinity(), T::max);
-    let min_val = _image.iter().cloned().fold(T::infinity(), T::min);
+    let mean_val = image.mean().unwrap_or(T::zero());
+    let max_val = image.iter().cloned().fold(T::neg_infinity(), T::max);
+    let min_val = image.iter().cloned().fold(T::infinity(), T::min);
 
     let contrast = max_val - min_val;
     let noise_std = _image
@@ -294,15 +294,15 @@ where
 
 /// Compute image entropy (information content)
 #[allow(dead_code)]
-pub fn image_entropy<T>(_image: &ArrayView2<T>) -> NdimageResult<T>
+pub fn image_entropy<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     const BINS: usize = 256;
 
     // Find min and max values
-    let min_val = _image.iter().cloned().fold(T::infinity(), T::min);
-    let max_val = _image.iter().cloned().fold(T::neg_infinity(), T::max);
+    let min_val = image.iter().cloned().fold(T::infinity(), T::min);
+    let max_val = image.iter().cloned().fold(T::neg_infinity(), T::max);
 
     if max_val <= min_val {
         return Ok(T::zero()); // Constant _image has zero entropy
@@ -313,7 +313,7 @@ where
     let range = max_val - min_val;
     let bin_size = range / safe_usize_to_float(BINS)?;
 
-    for &pixel in _image.iter() {
+    for &pixel in image.iter() {
         let normalized = (pixel - min_val) / bin_size;
         let bin_idx = safe_float_to_usize(normalized).unwrap_or(0).min(BINS - 1);
         histogram[bin_idx] += 1;
@@ -335,7 +335,7 @@ where
 
 /// Compute image sharpness using Laplacian variance
 #[allow(dead_code)]
-pub fn image_sharpness<T>(_image: &ArrayView2<T>) -> NdimageResult<T>
+pub fn image_sharpness<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float
         + FromPrimitive
@@ -380,11 +380,11 @@ where
 
 /// Compute local variance in a sliding window
 #[allow(dead_code)]
-pub fn compute_local_variance<T>(_image: &ArrayView2<T>, window_size: usize) -> NdimageResult<T>
+pub fn compute_local_variance<T>(_image: &ArrayView2<T>, windowsize: usize) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
-    let (height, width) = _image.dim();
+    let (height, width) = image.dim();
     let half_window = window_size / 2;
     let mut total_variance = T::zero();
     let mut count = 0usize;
@@ -399,7 +399,7 @@ where
                 for dj in 0..window_size {
                     let y = i - half_window + di;
                     let x = j - half_window + dj;
-                    local_sum = local_sum + _image[[y, x]];
+                    local_sum = local_sum + image[[y, x]];
                     local_count += 1;
                 }
             }
@@ -412,7 +412,7 @@ where
                 for dj in 0..window_size {
                     let y = i - half_window + di;
                     let x = j - half_window + dj;
-                    let diff = _image[[y, x]] - local_mean;
+                    let diff = image[[y, x]] - local_mean;
                     variance_sum = variance_sum + diff * diff;
                 }
             }
@@ -524,20 +524,20 @@ where
 
 /// Compute Local Binary Pattern uniformity
 #[allow(dead_code)]
-fn compute_lbp_uniformity<T>(_image: &ArrayView2<T>) -> NdimageResult<T>
+fn compute_lbp_uniformity<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
-    let (height, width) = _image.dim();
+    let (height, width) = image.dim();
     let mut uniform_patterns = 0usize;
     let mut total_patterns = 0usize;
 
     for i in 1..height - 1 {
         for j in 1..width - 1 {
-            let center = _image[[i, j]];
+            let center = image[[i, j]];
             let mut pattern = 0u8;
             let mut transitions = 0u8;
-            let mut prev_bit = if _image[[i - 1, j - 1]] > center { 1 } else { 0 };
+            let mut prev_bit = if image[[i - 1, j - 1]] > center { 1 } else { 0 };
 
             // 8-connected neighborhood
             let neighbors = [
@@ -552,7 +552,7 @@ where
             ];
 
             for (ni, nj) in neighbors {
-                let bit = if _image[[ni, nj]] > center { 1 } else { 0 };
+                let bit = if image[[ni, nj]] > center { 1 } else { 0 };
                 if bit != prev_bit {
                     transitions += 1;
                 }
@@ -573,7 +573,7 @@ where
 
 /// Compute Gabor filter texture features
 #[allow(dead_code)]
-fn compute_gabortexture_features<T>(_image: &ArrayView2<T>) -> NdimageResult<(T, T)>
+fn compute_gabortexture_features<T>(image: &ArrayView2<T>) -> NdimageResult<(T, T)>
 where
     T: Float
         + FromPrimitive
@@ -629,7 +629,7 @@ where
 
 /// Estimate fractal dimension using box-counting method
 #[allow(dead_code)]
-pub fn estimate_fractal_dimension<T>(_image: &ArrayView2<T>) -> NdimageResult<T>
+pub fn estimate_fractal_dimension<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float
         + FromPrimitive
@@ -846,8 +846,8 @@ fn compute_ssim_simd_f32(
 /// High-performance SIMD-optimized statistical moment calculation
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn compute_moments_simd_f32(_image: &ArrayView2<f32>) -> NdimageResult<(f32, f32, f32, f32)> {
-    let (height, width) = _image.dim();
+pub fn compute_moments_simd_f32(image: &ArrayView2<f32>) -> NdimageResult<(f32, f32, f32, f32)> {
+    let (height, width) = image.dim();
     let total_elements = (height * width) as f32;
 
     if total_elements == 0.0 {
@@ -856,7 +856,7 @@ pub fn compute_moments_simd_f32(_image: &ArrayView2<f32>) -> NdimageResult<(f32,
 
     // First pass: compute mean
     let mut sum = 0.0f32;
-    for &val in _image.iter() {
+    for &val in image.iter() {
         sum += val;
     }
     let mean = sum / total_elements;
@@ -866,7 +866,7 @@ pub fn compute_moments_simd_f32(_image: &ArrayView2<f32>) -> NdimageResult<(f32,
     let mut m3_sum = 0.0f32; // Third moment (skewness)
     let mut m4_sum = 0.0f32; // Fourth moment (kurtosis)
 
-    for &val in _image.iter() {
+    for &val in image.iter() {
         let diff = val - mean;
         let diff2 = diff * diff;
         let diff3 = diff2 * diff;
@@ -901,7 +901,7 @@ pub fn compute_moments_simd_f32(_image: &ArrayView2<f32>) -> NdimageResult<(f32,
 /// Parallel implementation of image entropy calculation
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-pub fn image_entropy_parallel<T>(_image: &ArrayView2<T>) -> NdimageResult<T>
+pub fn image_entropy_parallel<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Send + Sync,
 {

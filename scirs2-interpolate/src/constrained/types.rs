@@ -72,10 +72,10 @@ impl<T: Float + FromPrimitive + Debug + Display> Constraint<T> {
     /// # Returns
     ///
     /// A new monotonically increasing constraint
-    pub fn monotone_increasing(_x_min: Option<T>, x_max: Option<T>) -> Self {
+    pub fn monotone_increasing(_x_min: Option<T>, xmax: Option<T>) -> Self {
         Constraint {
             constraint_type: ConstraintType::MonotoneIncreasing,
-            _x_min,
+            x_min,
             x_max,
             parameter: None,
         }
@@ -91,10 +91,10 @@ impl<T: Float + FromPrimitive + Debug + Display> Constraint<T> {
     /// # Returns
     ///
     /// A new monotonically decreasing constraint
-    pub fn monotone_decreasing(_x_min: Option<T>, x_max: Option<T>) -> Self {
+    pub fn monotone_decreasing(_x_min: Option<T>, xmax: Option<T>) -> Self {
         Constraint {
             constraint_type: ConstraintType::MonotoneDecreasing,
-            _x_min,
+            x_min,
             x_max,
             parameter: None,
         }
@@ -110,10 +110,10 @@ impl<T: Float + FromPrimitive + Debug + Display> Constraint<T> {
     /// # Returns
     ///
     /// A new convexity constraint
-    pub fn convex(_x_min: Option<T>, x_max: Option<T>) -> Self {
+    pub fn convex(_x_min: Option<T>, xmax: Option<T>) -> Self {
         Constraint {
             constraint_type: ConstraintType::Convex,
-            _x_min,
+            x_min,
             x_max,
             parameter: None,
         }
@@ -129,10 +129,10 @@ impl<T: Float + FromPrimitive + Debug + Display> Constraint<T> {
     /// # Returns
     ///
     /// A new concavity constraint
-    pub fn concave(_x_min: Option<T>, x_max: Option<T>) -> Self {
+    pub fn concave(_x_min: Option<T>, xmax: Option<T>) -> Self {
         Constraint {
             constraint_type: ConstraintType::Concave,
-            _x_min,
+            x_min,
             x_max,
             parameter: None,
         }
@@ -148,10 +148,10 @@ impl<T: Float + FromPrimitive + Debug + Display> Constraint<T> {
     /// # Returns
     ///
     /// A new positivity constraint
-    pub fn positive(_x_min: Option<T>, x_max: Option<T>) -> Self {
+    pub fn positive(_x_min: Option<T>, xmax: Option<T>) -> Self {
         Constraint {
             constraint_type: ConstraintType::Positive,
-            _x_min,
+            x_min,
             x_max,
             parameter: None,
         }
@@ -168,10 +168,10 @@ impl<T: Float + FromPrimitive + Debug + Display> Constraint<T> {
     /// # Returns
     ///
     /// A new upper bound constraint
-    pub fn upper_bound(_x_min: Option<T>, x_max: Option<T>, upper_bound: T) -> Self {
+    pub fn upper_bound(_x_min: Option<T>, x_max: Option<T>, upperbound: T) -> Self {
         Constraint {
             constraint_type: ConstraintType::UpperBound,
-            _x_min,
+            x_min,
             x_max,
             parameter: Some(upper_bound),
         }
@@ -188,10 +188,10 @@ impl<T: Float + FromPrimitive + Debug + Display> Constraint<T> {
     /// # Returns
     ///
     /// A new lower bound constraint
-    pub fn lower_bound(_x_min: Option<T>, x_max: Option<T>, lower_bound: T) -> Self {
+    pub fn lower_bound(_x_min: Option<T>, x_max: Option<T>, lowerbound: T) -> Self {
         Constraint {
             constraint_type: ConstraintType::LowerBound,
-            _x_min,
+            x_min,
             x_max,
             parameter: Some(lower_bound),
         }

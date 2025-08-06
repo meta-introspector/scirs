@@ -58,8 +58,8 @@ pub enum ImageFormat {
 
 impl ImageFormat {
     /// Get format from file extension
-    pub fn from_extension(_ext: &str) -> Self {
-        match _ext.to_lowercase().as_str() {
+    pub fn from_extension(ext: &str) -> Self {
+        match ext.to_lowercase().as_str() {
             "png" => ImageFormat::PNG,
             "jpg" | "jpeg" => ImageFormat::JPEG,
             "bmp" => ImageFormat::BMP,
@@ -200,7 +200,7 @@ pub struct AnimationData {
 /// ```
 #[allow(dead_code)]
 pub fn load_image<P: AsRef<Path>>(path: P) -> Result<ImageData> {
-    let _path = _path.as_ref();
+    let _path = path.as_ref();
     let img = image::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
 
     let width = img.width();
@@ -326,9 +326,9 @@ pub fn convert_image<P1: AsRef<Path>, P2: AsRef<Path>>(
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn resize_image(_image_data: &ImageData, new_width: u32, new_height: u32) -> Result<ImageData> {
-    let (_height, width_, _) = _image_data.data.dim();
-    let raw_data = _image_data.data.iter().cloned().collect::<Vec<u8>>();
+pub fn resize_image(_image_data: &ImageData, new_width: u32, newheight: u32) -> Result<ImageData> {
+    let (_height, width_, _) = image_data.data.dim();
+    let raw_data = image_data.data.iter().cloned().collect::<Vec<u8>>();
 
     let img_buffer = image::RgbImage::from_raw(width_ as u32, _height as u32, raw_data)
         .ok_or_else(|| IoError::FormatError("Invalid image dimensions".to_string()))?;
@@ -343,7 +343,7 @@ pub fn resize_image(_image_data: &ImageData, new_width: u32, new_height: u32) ->
         Array3::fromshape_vec((new_height as usize, new_width as usize, 3), resized_raw)
             .map_err(|e| IoError::FormatError(e.to_string()))?;
 
-    let mut new_metadata = _image_data.metadata.clone();
+    let mut new_metadata = image_data.metadata.clone();
     new_metadata.width = new_width;
     new_metadata.height = new_height;
 
@@ -371,7 +371,7 @@ pub fn resize_image(_image_data: &ImageData, new_width: u32, new_height: u32) ->
 /// ```
 #[allow(dead_code)]
 pub fn get_image_info<P: AsRef<Path>>(path: P) -> Result<ImageMetadata> {
-    let _path = _path.as_ref();
+    let _path = path.as_ref();
     let reader = image::ImageReader::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
 
     let reader = reader
@@ -420,7 +420,7 @@ pub fn get_image_info<P: AsRef<Path>>(path: P) -> Result<ImageMetadata> {
 /// ```
 #[allow(dead_code)]
 pub fn load_animation<P: AsRef<Path>>(path: P) -> Result<AnimationData> {
-    let _path = _path.as_ref();
+    let _path = path.as_ref();
     let file = std::fs::File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
@@ -495,7 +495,7 @@ pub fn load_animation<P: AsRef<Path>>(path: P) -> Result<AnimationData> {
 /// ```
 #[allow(dead_code)]
 pub fn read_exif_metadata<P: AsRef<Path>>(path: P) -> Result<Option<ExifMetadata>> {
-    let _path = _path.as_ref();
+    let _path = path.as_ref();
 
     // Try to read EXIF data using the `exif` crate
     #[cfg(feature = "exif")]
@@ -801,16 +801,16 @@ pub fn find_images<P: AsRef<Path>>(
     recursive: bool,
 ) -> Result<Vec<std::path::PathBuf>> {
     let search_pattern = if recursive {
-        format!("{}/**/{}", dir_path.as_ref().display(), pattern)
+        format!("{}/**/{}", dirpath.as_ref().display(), pattern)
     } else {
-        format!("{}/{}", dir_path.as_ref().display(), pattern)
+        format!("{}/{}", dirpath.as_ref().display(), pattern)
     };
 
     let paths = glob::glob(&search_pattern)
         .map_err(|e| IoError::FileError(e.to_string()))?
         .filter_map(|entry| entry.ok())
         .filter(|_path| {
-            let ext = _path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
+            let ext = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
             matches!(
                 ext.to_lowercase().as_str(),
                 "jpg" | "jpeg" | "png" | "bmp" | "tiff" | "tif" | "gif" | "webp"
@@ -840,13 +840,13 @@ pub fn find_images<P: AsRef<Path>>(
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn batch_process_images<P1, P2, F>(_input_dir: P1, output_dir: P2, processor: F) -> Result<()>
+pub fn batch_process_images<P1, P2, F>(_input_dir: P1, outputdir: P2, processor: F) -> Result<()>
 where
     P1: AsRef<Path>,
     P2: AsRef<Path>,
     F: Fn(&ImageData) -> Result<ImageData>,
 {
-    let _input_dir = _input_dir.as_ref();
+    let _input_dir = input_dir.as_ref();
     let output_dir = output_dir.as_ref();
 
     // Create output directory if it doesn't exist

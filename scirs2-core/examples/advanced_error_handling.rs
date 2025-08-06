@@ -5,7 +5,7 @@
 
 use scirs2_core::error::prelude::*;
 use scirs2_core::error::{
-    diagnostics::{diagnose_error, ErrorDiagnostics},
+    diagnostics::ErrorDiagnostics,
     recovery::{hints, CircuitBreaker, ErrorAggregator, RecoveryStrategy, RetryExecutor},
 };
 use std::time::Duration;
@@ -20,13 +20,13 @@ fn main() -> CoreResult<()> {
     println!("🚀 SciRS2 Advanced Error Handling Demo\n");
 
     // 1. Basic error handling with context
-    basic_error_handling_demo()?;
+    basicerror_handling_demo()?;
 
     // 2. Recovery strategies with retry mechanisms
     retry_mechanisms_demo()?;
 
     // 3. Circuit breaker pattern for fault tolerance
-    circuit_breaker_demo()?;
+    circuitbreaker_demo()?;
 
     // 4. Error aggregation for batch operations
     error_aggregation_demo()?;
@@ -39,7 +39,7 @@ fn main() -> CoreResult<()> {
     {
         tokio::runtime::Runtime::new()
             .unwrap()
-            .block_on(async { async_error_handling_demo().await })?;
+            .block_on(async { asyncerror_handling_demo().await })?;
     }
 
     println!("✅ All error handling demonstrations completed successfully!");
@@ -48,18 +48,18 @@ fn main() -> CoreResult<()> {
 
 /// Demonstrate basic error handling with rich context
 #[allow(dead_code)]
-fn basic_error_handling_demo() -> CoreResult<()> {
+fn basicerror_handling_demo() -> CoreResult<()> {
     println!("📋 1. Basic Error Handling with Context");
 
     // Create errors with automatic location tracking
-    let domain_error = domain_error!("Input value must be positive");
-    let computation_error = computation_error!("Matrix is singular", "solve_linear_system");
+    let domainerror = domainerror!("Input value must be positive");
+    let computationerror = computationerror!("Matrix is singular", "solve_linear_system");
 
-    println!("   Domain Error: {domain_error}");
-    println!("   Computation Error: {computation_error}");
+    println!("   Domain Error: {domainerror}");
+    println!("   Computation Error: {computationerror}");
 
     // Convert errors to recoverable format
-    let recoverable = RecoverableError::new(domain_error)
+    let recoverable = RecoverableError::error(domainerror)
         .with_metadata("input_value", "-5.0")
         .with_metadata("expected_range", "> 0.0");
 
@@ -78,8 +78,8 @@ fn retry_mechanisms_demo() -> CoreResult<()> {
     // Exponential backoff strategy
     let exponential_strategy = RecoveryStrategy::ExponentialBackoff {
         max_attempts: 3,
-        initial_delay: Duration::from_millis(100),
-        max_delay: Duration::from_secs(2),
+        initialdelay: Duration::from_millis(100),
+        maxdelay: Duration::from_secs(2),
         multiplier: 2.0,
     };
 
@@ -126,10 +126,10 @@ fn retry_mechanisms_demo() -> CoreResult<()> {
 
 /// Demonstrate circuit breaker pattern for fault tolerance
 #[allow(dead_code)]
-fn circuit_breaker_demo() -> CoreResult<()> {
+fn circuitbreaker_demo() -> CoreResult<()> {
     println!("⚡ 3. Circuit Breaker Pattern for Fault Tolerance");
 
-    let circuit_breaker = CircuitBreaker::new(
+    let circuitbreaker = CircuitBreaker::new(
         2,                          // failure threshold
         Duration::from_millis(100), // timeout
         Duration::from_millis(500), // recovery timeout
@@ -137,14 +137,14 @@ fn circuit_breaker_demo() -> CoreResult<()> {
 
     println!(
         "   📊 Initial circuit breaker status: {}",
-        circuit_breaker.status()
+        circuitbreaker.status()
     );
 
     // Simulate failures to trigger circuit breaker
     for i in 1..=4 {
         println!("   🔧 Circuit breaker test attempt {i}");
 
-        let result = circuit_breaker.execute(|| {
+        let result = circuitbreaker.execute(|| {
             if i <= 2 {
                 Err(CoreError::ComputationError(error_context!(
                     "Simulated service failure"
@@ -159,7 +159,7 @@ fn circuit_breaker_demo() -> CoreResult<()> {
             Err(e) => println!("   ❌ Failed: {e}"),
         }
 
-        println!("   📊 Circuit status: {}", circuit_breaker.status());
+        println!("   📊 Circuit status: {}", circuitbreaker.status());
     }
 
     println!("   ✅ Circuit breaker demo completed\n");
@@ -171,7 +171,7 @@ fn circuit_breaker_demo() -> CoreResult<()> {
 fn error_aggregation_demo() -> CoreResult<()> {
     println!("📦 4. Error Aggregation for Batch Operations");
 
-    let mut aggregator = ErrorAggregator::with_max_errors(5);
+    let mut aggregator = ErrorAggregator::errors(5);
 
     // Simulate batch processing with some failures
     let operations = vec![
@@ -194,7 +194,7 @@ fn error_aggregation_demo() -> CoreResult<()> {
                 "{} encountered an error",
                 name
             )));
-            aggregator.add_simple_error(error);
+            aggregator.add_simpleerror(error);
         }
     }
 
@@ -202,11 +202,11 @@ fn error_aggregation_demo() -> CoreResult<()> {
     println!("   Successful operations: {successful_operations:?}");
     println!("   Total errors collected: {}", aggregator.error_count());
 
-    if aggregator.has_errors() {
+    if aggregator.haserrors() {
         println!("\n   📋 Error Summary:");
         println!("{}", aggregator.summary());
 
-        if let Some(most_severe) = aggregator.most_severe_error() {
+        if let Some(most_severe) = aggregator.most_severeerror() {
             println!("\n   🔥 Most severe error recovery suggestions:");
             println!("{}", most_severe.recovery_report());
         }
@@ -239,12 +239,12 @@ fn error_diagnostics_demo() -> CoreResult<()> {
         println!("   🔬 Analyzing Error {} - {}", i + 1, error);
 
         // Get comprehensive diagnostic report
-        let diagnostics = diagnose_error(error);
+        let diagnostics = scirs2_core::error::diagnostics::error(error);
         println!("   📊 Diagnostic Report:");
         println!("{}", diagnostics.generate_report());
 
         // Record error for pattern analysis
-        ErrorDiagnostics::global().record_error(error, format!("demo_context_{}", i + 1));
+        ErrorDiagnostics::global().recorderror(error, format!("demo_context_{}", i + 1));
     }
 
     // Demonstrate recovery hints
@@ -260,7 +260,7 @@ fn error_diagnostics_demo() -> CoreResult<()> {
 
 /// Demonstrate async error handling capabilities
 #[cfg(feature = "async")]
-async fn async_error_handling_demo() -> CoreResult<()> {
+async fn asyncerror_handling_demo() -> CoreResult<()> {
     println!("⏰ 6. Async Error Handling and Recovery");
 
     // Timeout handling
@@ -363,8 +363,8 @@ fn scientific_computing_scenario() -> CoreResult<()> {
     // Setup retry strategy for numerical methods
     let scientific_retry = RecoveryStrategy::ExponentialBackoff {
         max_attempts: 5,
-        initial_delay: Duration::from_millis(200),
-        max_delay: Duration::from_secs(10),
+        initialdelay: Duration::from_millis(200),
+        maxdelay: Duration::from_secs(10),
         multiplier: 1.5,
     };
 
@@ -383,7 +383,7 @@ fn scientific_computing_scenario() -> CoreResult<()> {
             println!("   ❌ Scientific computation failed: {e}");
 
             // Generate comprehensive diagnostic report
-            let diagnostics = diagnose_error(&e);
+            let diagnostics = scirs2_core::error::diagnostics::error(&e);
             println!("\n   📊 Scientific Error Analysis:");
             println!("{}", diagnostics.generate_report());
         }
@@ -394,7 +394,7 @@ fn scientific_computing_scenario() -> CoreResult<()> {
 
 /// Simulate an iterative solver that might fail
 #[allow(dead_code)]
-fn simulate_iterative_solver(iterations: usize) -> CoreResult<String> {
+fn simulate_iterative_solver(matrix_size: usize, max_iterations: usize) -> CoreResult<String> {
     // Simulate different failure modes
     use rand::Rng;
     let mut rng = rand::rng();
@@ -403,10 +403,10 @@ fn simulate_iterative_solver(iterations: usize) -> CoreResult<String> {
     match failure_mode {
         0 => {
             // Memory error for large matrices
-            if _matrix_size > 500 {
+            if matrix_size > 500 {
                 Err(CoreError::MemoryError(error_context!(format!(
-                    "Insufficient memory for {}x{} matrix"..matrix_size,
-                    matrix_size
+                    "Insufficient memory for {}x{} matrix",
+                    matrix_size, matrix_size
                 ))))
             } else {
                 Ok(format!(
@@ -418,12 +418,12 @@ fn simulate_iterative_solver(iterations: usize) -> CoreResult<String> {
             // Convergence error
             if max_iterations < 50 {
                 Err(CoreError::ConvergenceError(error_context!(format!(
-                    "Failed to converge after {} _iterations",
+                    "Failed to converge after {} iterations",
                     max_iterations
                 ))))
             } else {
                 Ok(format!(
-                    "Converged after {} _iterations",
+                    "Converged after {} iterations",
                     max_iterations - 10
                 ))
             }
@@ -437,7 +437,7 @@ fn simulate_iterative_solver(iterations: usize) -> CoreResult<String> {
         _ => {
             // Success case
             Ok(format!(
-                "Successfully solved {}x{} system in {} _iterations",
+                "Successfully solved {}x{} system in {} iterations",
                 matrix_size,
                 matrix_size,
                 max_iterations / 2

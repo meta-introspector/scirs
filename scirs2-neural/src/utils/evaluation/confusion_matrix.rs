@@ -100,8 +100,8 @@ impl<F: Float + Debug + Display> ConfusionMatrix<F> {
     /// # Arguments
     /// * `matrix` - Raw confusion matrix data
     /// * `labels` - Optional class labels
-    pub fn from_matrix(_matrix: Array2<F>, labels: Option<Vec<String>>) -> Result<Self> {
-        let shape = _matrix.shape();
+    pub fn from_matrix(matrix: Array2<F>, labels: Option<Vec<String>>) -> Result<Self> {
+        let shape = matrix.shape();
         if shape[0] != shape[1] {
             return Err(NeuralError::ValidationError(
                 "Confusion _matrix must be square".to_string(),
@@ -122,7 +122,7 @@ impl<F: Float + Debug + Display> ConfusionMatrix<F> {
         }
 
         Ok(ConfusionMatrix {
-            matrix: _matrix,
+            matrix: matrix,
             labels,
             num_classes: n_classes,
         })

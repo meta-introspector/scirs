@@ -192,8 +192,8 @@ pub type LinalgResult<T> = Result<T, LinalgError>;
 
 /// Conversion from CoreError to LinalgError
 impl From<CoreError> for LinalgError {
-    fn from(_error: CoreError) -> Self {
-        match _error {
+    fn from(error: CoreError) -> Self {
+        match error {
             CoreError::ShapeError(msg) => LinalgError::ShapeError(msg.to_string()),
             CoreError::DimensionError(msg) => LinalgError::DimensionError(msg.to_string()),
             CoreError::IndexError(msg) => LinalgError::IndexError(msg.to_string()),
@@ -207,7 +207,7 @@ impl From<CoreError> for LinalgError {
                 LinalgError::ImplementationError(msg.to_string())
             }
             // For other CoreError variants, map to a generic LinalgError
-            _ => LinalgError::ComputationError(format!("Core _error: {_error}")),
+            _ => LinalgError::ComputationError(format!("Core error: {error}")),
         }
     }
 }

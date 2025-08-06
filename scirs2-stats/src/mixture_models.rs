@@ -256,11 +256,11 @@ where
         + ndarray::ScalarOperand,
 {
     /// Create new Gaussian Mixture Model
-    pub fn new(_n_components: usize, config: GMMConfig) -> StatsResult<Self> {
+    pub fn new(_ncomponents: usize, config: GMMConfig) -> StatsResult<Self> {
         check_positive(_n_components, "_n_components")?;
 
         Ok(Self {
-            n_components: _n_components,
+            n_components: n_components,
             config,
             parameters: None,
             convergence_history: Vec::new(),
@@ -381,7 +381,7 @@ where
                 };
 
                 for i in 0..self.n_components {
-                    let idx = rng.random_range(0, n_samples_);
+                    let idx = rng.gen_range(0..n_samples_);
                     means.row_mut(i).assign(&data.row(idx));
                 }
             }
@@ -443,7 +443,7 @@ where
         let mut means = Array2::zeros((self.n_components, n_features));
 
         // Choose first center randomly
-        let first_idx = rng.random_range(0, n_samples_);
+        let first_idx = rng.gen_range(0..n_samples_);
         means.row_mut(0).assign(&data.row(first_idx));
 
         // Choose remaining centers
@@ -862,9 +862,9 @@ where
         + ndarray::ScalarOperand,
 {
     /// Create new KDE
-    pub fn new(_kernel: KernelType, bandwidth: F, config: KDEConfig) -> Self {
+    pub fn new(kernel: KernelType, bandwidth: F, config: KDEConfig) -> Self {
         Self {
-            kernel: _kernel,
+            kernel: kernel,
             bandwidth,
             config,
             training_data: None,
@@ -1177,7 +1177,83 @@ where
 
     /// Fit robust GMM with outlier detection
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<&GMMParameters<F>> {
-        self.gmm.fit(data)
+        // First fit the regular GMM
+        self.gmm.fit(data)?;
+        
+        // Compute outlier scores for robust EM
+        let outlier_scores = self.compute_outlier_scores(data)?;
+        
+        // Update parameters with outlier scores
+        if let Some(ref mut params) = self.gmm.parameters {
+            params.outlier_scores = Some(outlier_scores);
+        }
+        
+        Ok(self.gmm.parameters.as_ref().unwrap())
+    }
+    
+    /// Compute outlier scores based on negative log-likelihood
+    fn compute_outlier_scores(&self, data: &ArrayView2<F>) -> StatsResult<Array1<F>> {
+        let params = self.gmm.parameters.as_ref().ok_or_else(|| {
+            StatsError::InvalidArgument("Model must be fitted first".to_string())
+        })?;
+        
+        let (n_samples, _) = data.dim();
+        let mut outlier_scores = Array1::zeros(n_samples);
+        
+        for (i, sample) in data.rows().into_iter().enumerate() {
+            // Compute log-likelihood for this sample under the fitted model
+            let mut log_likelihood = F::neg_infinity();
+            
+            for j in 0..self.gmm.n_components {
+                let weight = params.weights[j];
+                let mean = params.means.row(j);
+                let cov = &params.covariances[j];
+                
+                // Compute log probability density for this component
+                let log_prob = self.log_multivariate_normal_pdf(&sample, &mean, cov)?;
+                let weighted_log_prob = weight.ln() + log_prob;
+                
+                // Log-sum-exp to combine components
+                if log_likelihood == F::neg_infinity() {
+                    log_likelihood = weighted_log_prob;
+                } else {
+                    log_likelihood = log_likelihood + (weighted_log_prob - log_likelihood).exp().ln_1p();
+                }
+            }
+            
+            // Outlier score is negative log-likelihood (higher = more outlier-like)
+            outlier_scores[i] = -log_likelihood;
+        }
+        
+        Ok(outlier_scores)
+    }
+    
+    /// Compute log probability density function for multivariate normal distribution
+    fn log_multivariate_normal_pdf(
+        &self, 
+        x: &ArrayView1<F>, 
+        mean: &ArrayView1<F>, 
+        cov: &Array2<F>
+    ) -> StatsResult<F> {
+        let diff = x - mean;
+        let k = F::from(x.len()).unwrap();
+        
+        // Simple case: assume diagonal covariance for numerical stability
+        let mut log_prob = F::zero();
+        let pi = F::from(std::f64::consts::PI).unwrap();
+        
+        for i in 0..x.len() {
+            let variance = cov[[i, i]];
+            if variance <= F::zero() {
+                return Err(StatsError::ComputationError("Invalid covariance".to_string()));
+            }
+            
+            let term = diff[i] * diff[i] / variance;
+            log_prob = log_prob - (F::from(0.5).unwrap() * term) - (F::from(0.5).unwrap() * variance.ln()) 
+                      - (F::from(0.5).unwrap() * (F::from(2.0).unwrap() * pi).ln());
+        }
+        
+        Ok(log_prob)
     }
 
     /// Detect outliers in data
@@ -1671,9 +1747,9 @@ where
         + std::iter::Sum<F>,
 {
     /// Create new Variational GMM
-    pub fn new(_max_components: usize, config: VariationalGMMConfig) -> Self {
+    pub fn new(_maxcomponents: usize, config: VariationalGMMConfig) -> Self {
         Self {
-            max_components: _max_components,
+            max_components: max_components,
             config,
             parameters: None,
             lower_bound_history: Vec::new(),
@@ -1804,7 +1880,7 @@ where
         };
 
         for i in 0..self.max_components {
-            let idx = rng.random_range(0, n_samples_);
+            let idx = rng.gen_range(0..n_samples_);
             means.row_mut(i).assign(&data.row(idx));
         }
 
@@ -1942,7 +2018,7 @@ where
     }
 
     /// Compute effective number of components
-    fn compute_effective_components(&self, weight_concentration: &Array1<F>) -> usize {
+    fn compute_effective_components(&self, weightconcentration: &Array1<F>) -> usize {
         let total: F = weight_concentration.sum();
         let mut effective = 0;
 
@@ -1958,7 +2034,7 @@ where
     }
 
     /// Compute component weights
-    fn compute_weights(&self, weight_concentration: &Array1<F>) -> Array1<F> {
+    fn compute_weights(&self, weightconcentration: &Array1<F>) -> Array1<F> {
         let total: F = weight_concentration.sum();
         weight_concentration.mapv(|w| w / total)
     }
@@ -1988,7 +2064,7 @@ where
     }
 
     /// Log-sum-exp for numerical stability
-    fn log_sum_exp(&self, log_values: &Array1<F>) -> F {
+    fn log_sum_exp(&self, logvalues: &Array1<F>) -> F {
         let max_val = log_values.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
         if max_val == F::neg_infinity() {
             return F::neg_infinity();

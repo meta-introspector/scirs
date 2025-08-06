@@ -32,7 +32,7 @@ pub trait ModelEvaluator<X, Y> {
     /// # Returns
     ///
     /// * HashMap mapping metric names to their values
-    fn evaluate(&self, x_test: &X, y_test: &Y, metrics: &[String]) -> Result<HashMap<String, f64>>;
+    fn evaluate(&self, x_test: &X, ytest: &Y, metrics: &[String]) -> Result<HashMap<String, f64>>;
 }
 
 /// EvaluationReport structure for storing and comparing model evaluation results
@@ -151,7 +151,7 @@ impl EvaluationReport {
     /// # Returns
     ///
     /// * HashMap mapping (dataset, metric) pairs to values
-    pub fn get_model_results(&self, model_name: &str) -> HashMap<(String, String), f64> {
+    pub fn get_model_results(&self, modelname: &str) -> HashMap<(String, String), f64> {
         let mut results = HashMap::new();
 
         for dataset_name in &self.dataset_names {
@@ -174,7 +174,7 @@ impl EvaluationReport {
     /// # Returns
     ///
     /// * HashMap mapping (model, metric) pairs to values
-    pub fn get_dataset_results(&self, dataset_name: &str) -> HashMap<(String, String), f64> {
+    pub fn get_dataset_results(&self, datasetname: &str) -> HashMap<(String, String), f64> {
         let mut results = HashMap::new();
 
         for model_name in &self.model_names {
@@ -197,7 +197,7 @@ impl EvaluationReport {
     /// # Returns
     ///
     /// * HashMap mapping (model, dataset) pairs to values
-    pub fn get_metric_results(&self, metric_name: &str) -> HashMap<(String, String), f64> {
+    pub fn get_metric_results(&self, metricname: &str) -> HashMap<(String, String), f64> {
         let mut results = HashMap::new();
 
         for model_name in &self.model_names {
@@ -220,7 +220,7 @@ impl EvaluationReport {
     /// # Returns
     ///
     /// * HashMap mapping model names to their average performance
-    pub fn average_performance(&self, metric_name: &str) -> HashMap<String, f64> {
+    pub fn average_performance(&self, metricname: &str) -> HashMap<String, f64> {
         let mut averages = HashMap::new();
 
         for model_name in &self.model_names {
@@ -252,7 +252,7 @@ impl EvaluationReport {
     /// # Returns
     ///
     /// * Vector of model names sorted by their performance
-    pub fn rank_models(&self, metric_name: &str, higher_is_better: bool) -> Vec<String> {
+    pub fn rank_models(&self, metric_name: &str, higher_isbetter: bool) -> Vec<String> {
         let averages = self.average_performance(metric_name);
 
         let mut models: Vec<(String, f64)> = averages.into_iter().collect();
@@ -265,7 +265,7 @@ impl EvaluationReport {
         }
 
         // Extract model names
-        models.into_iter().map(|(name_)| _name).collect()
+        models.into_iter().map(|(name, _)| name).collect()
     }
 
     /// Generate a formatted report of evaluation results
@@ -345,10 +345,10 @@ impl<X, Y> BatchEvaluator<X, Y> {
     /// # Arguments
     ///
     /// * `metrics` - List of metric names to compute
-    pub fn new(_metrics: Vec<String>) -> Self {
+    pub fn new(metrics: Vec<String>) -> Self {
         BatchEvaluator {
             models: HashMap::new(),
-            _metrics,
+            metrics,
         }
     }
 
@@ -460,9 +460,15 @@ impl<X, Y> BatchEvaluator<X, Y> {
 #[allow(clippy::too_many_arguments)]
 #[allow(dead_code)]
 pub fn learning_curve<X, Y, F>(
-    _model_evaluator: F_x, _train: &X_y, train: &Y_x, _test: &X_y, test: &Y,
-    train_sizes_ratio: &[f64], _metric: &str,
-    n_splits: usize, _random_seed: Option<u64>,
+    _model_evaluator: F,
+    _train: &X,
+    train: &Y,
+    _test: &X,
+    test: &Y,
+    train_sizes_ratio: &[f64],
+    _metric: &str,
+    n_splits: usize,
+    _random_seed: Option<u64>,
 ) -> Result<(Vec<usize>, Vec<f64>, Vec<f64>)>
 where
     F: Fn(&X, &Y, &X, &Y) -> f64,
@@ -502,7 +508,7 @@ where
     };
 
     let n_samples = estimated_max_samples;
-    let _train_sizes: Vec<usize> = train_sizes_ratio
+    let train_sizes: Vec<usize> = train_sizes_ratio
         .iter()
         .map(|&_ratio| (_ratio * n_samples as f64).round() as usize)
         .collect();
@@ -549,13 +555,13 @@ impl<X, Y> PipelineEvaluator<X, Y> {
     /// * `name` - Name of the pipeline
     /// * `preprocessor` - Preprocessing function
     /// * `trainer` - Model training function
-    pub fn new<P, T>(_name: &str, preprocessor: P, trainer: T) -> Self
+    pub fn new<P, T>(name: &str, preprocessor: P, trainer: T) -> Self
     where
         P: Fn(&X) -> Result<X> + 'static,
         T: Fn(&X, &Y) -> Result<Box<dyn ModelEvaluator<X, Y>>> + 'static,
     {
         PipelineEvaluator {
-            _name: _name.to_string(),
+            _name: name.to_string(),
             preprocessor: Box::new(preprocessor),
             trainer: Box::new(trainer),
         }
@@ -615,7 +621,7 @@ mod tests {
     }
 
     impl DummyModel {
-        fn new(_accuracy: f64) -> Self {
+        fn new(accuracy: f64) -> Self {
             DummyModel { _accuracy }
         }
     }
@@ -623,7 +629,9 @@ mod tests {
     // Implement ModelEvaluator for DummyModel with Vec<f64> as X and Y
     impl ModelEvaluator<Vec<f64>, Vec<f64>> for DummyModel {
         fn evaluate(
-            &self, _x_test: &Vec<f64>, _y_test: &Vec<f64>,
+            &self,
+            _x_test: &Vec<f64>,
+            _y_test: &Vec<f64>,
             metrics: &[String],
         ) -> Result<HashMap<String, f64>> {
             let mut results = HashMap::new();

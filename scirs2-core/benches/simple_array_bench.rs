@@ -68,7 +68,7 @@ fn bench_array_operations(c: &mut Criterion) {
 }
 
 #[allow(dead_code)]
-fn bench_matrix_operations(c: &mut Criterion) {
+fn benchmatrix_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group(matrix_operations);
 
     let mat1 = Array2::<f64>::random((100, 100), Uniform::new(0.0, 1.0));
@@ -95,6 +95,6 @@ criterion_group!(
     benches,
     bench_array_creation,
     bench_array_operations,
-    bench_matrix_operations
+    benchmatrix_operations
 );
 criterion_main!(benches);

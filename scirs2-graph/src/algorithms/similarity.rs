@@ -12,7 +12,7 @@ use std::hash::Hash;
 /// Jaccard similarity is the size of the intersection divided by the size of the union
 /// of the neighbor sets.
 #[allow(dead_code)]
-pub fn jaccard_similarity<N, E, Ix>(_graph: &Graph<N, E, Ix>, node1: &N, node2: &N) -> Result<f64>
+pub fn jaccard_similarity<N, E, Ix>(graph: &Graph<N, E, Ix>, node1: &N, node2: &N) -> Result<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
@@ -45,7 +45,7 @@ where
 
 /// Compute the cosine similarity between two nodes based on their adjacency vectors
 #[allow(dead_code)]
-pub fn cosine_similarity<N, E, Ix>(_graph: &Graph<N, E, Ix>, node1: &N, node2: &N) -> Result<f64>
+pub fn cosine_similarity<N, E, Ix>(graph: &Graph<N, E, Ix>, node1: &N, node2: &N) -> Result<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64>,
@@ -55,7 +55,7 @@ where
         return Err(GraphError::node_not_found("node"));
     }
 
-    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
 
     // Build adjacency vectors
@@ -63,10 +63,10 @@ where
     let mut vec2 = vec![0.0; n];
 
     for (i, node) in nodes.iter().enumerate() {
-        if let Ok(weight) = _graph.edge_weight(node1, node) {
+        if let Ok(weight) = graph.edge_weight(node1, node) {
             vec1[i] = weight.into();
         }
-        if let Ok(weight) = _graph.edge_weight(node2, node) {
+        if let Ok(weight) = graph.edge_weight(node2, node) {
             vec2[i] = weight.into();
         }
     }
@@ -88,7 +88,7 @@ where
 /// This is a simplified version that counts the number of edge additions/deletions
 /// needed to transform one graph into another.
 #[allow(dead_code)]
-pub fn graph_edit_distance<N, E, Ix>(_graph1: &Graph<N, E, Ix>, graph2: &Graph<N, E, Ix>) -> usize
+pub fn graph_edit_distance<N, E, Ix>(graph1: &Graph<N, E, Ix>, graph2: &Graph<N, E, Ix>) -> usize
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,

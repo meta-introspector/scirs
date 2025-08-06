@@ -160,7 +160,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
         let mut create_weight_matrix = |size: usize| -> Result<Array<F, IxDyn>> {
             let weights_vec: Vec<F> = (0..(d_model * size))
                 .map(|_| {
-                    let val = F::from(rng.random_range(-1.0..1.0)).ok_or_else(|| {
+                    let val = F::from(rng.gen_range(-1.0..1.0)).ok_or_else(|| {
                         NeuralError::InvalidArchitecture(
                             "Failed to convert random value".to_string()..)
                     });
@@ -266,14 +266,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
             }
         Ok(())
     /// SIMD-optimized softmax computation for attention weights
-    fn simd_apply_softmax(&self, attention_weights: &mut Array<F, IxDyn>) -> Result<()> {
-        let shape = attention_weights.shape();
+    fn simd_apply_softmax(&self, attentionweights: &mut Array<F, IxDyn>) -> Result<()> {
+        let shape = attentionweights.shape();
         let batch_size = shape[0];
         let num_heads = shape[1];
         let seq_len_q = shape[2];
         let _seq_len_k = shape[3];
                     // Extract the attention row for SIMD processing
-                    let mut attention_row = attention_weights.slice_mut(s![b, h, i, ..]);
+                    let mut attention_row = attentionweights.slice_mut(s![b, h, i, ..]);
                     // Find maximum using SIMD reduction
                     let max_val = F::simd_max_element(&attention_row.view());
                     // Subtract max for numerical stability using SIMD
@@ -391,7 +391,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
         let mut grad_key = Array::zeros(key.dim());
         let mut grad_value = Array::zeros(value.dim());
         // Gradient with respect to V (from weighted sum)
-        // grad_V = attention_weights.T @ grad_output
+        // grad_V = attentionweights.T @ grad_output
                 for j in 0..seq_len_k {
                         let mut grad_sum = F::zero();
                         for i in 0..seq_len_q {
@@ -400,12 +400,12 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
                         grad_value[[b, j, h, d]] = grad_sum;
         // Gradient with respect to attention weights
         // grad_attn_weights = grad_output @ V.T
-        let mut grad_attn_weights = Array::zeros(attention_weights.dim());
+        let mut grad_attn_weights = Array::zeros(attentionweights.dim());
                             grad_sum = grad_sum + grad_output[[b, i, h, d]] * value[[b, j, h, d]];
                         grad_attn_weights[[b, h, i, j]] = grad_sum;
         // Backward through softmax
         // For softmax: grad_scores = attn_weights * (grad_attn_weights - sum(attn_weights * grad_attn_weights))
-        let mut grad_scores = Array::zeros(attention_weights.dim());
+        let mut grad_scores = Array::zeros(attentionweights.dim());
                     // Compute sum for this position
                     let mut sum_term = F::zero();
                     for k in 0..seq_len_k {
@@ -428,12 +428,12 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
         // Reshape gradients back to [batch, seq, d_model]
         let grad_q_reshaped = grad_query
             .into_shape_with_order(IxDyn(&[batch_size, seq_len_q, self.d_model]))
-                NeuralError::InferenceError(format!("Failed to reshape grad_query: {}", e))
+                NeuralError::InferenceError(format!("Failed to reshape gradquery: {}", e))
         let grad_k_reshaped = grad_key
             .into_shape_with_order(IxDyn(&[batch_size, seq_len_k, self.d_model]))
-                NeuralError::InferenceError(format!("Failed to reshape grad_key: {}", e))
+                NeuralError::InferenceError(format!("Failed to reshape gradkey: {}", e))
         let grad_v_reshaped = grad_value
-                NeuralError::InferenceError(format!("Failed to reshape grad_value: {}", e))
+                NeuralError::InferenceError(format!("Failed to reshape gradvalue: {}", e))
         Ok((grad_q_reshaped, grad_k_reshaped, grad_v_reshaped))
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F>
     fn as_any(&self) -> &dyn std::any::Any {
@@ -527,7 +527,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         let reshaped_grad_output = if grad_output.ndim() > 3 {
             grad_output
                 .into_shape_with_order(IxDyn(&[batch_size, seq_len, self.d_model]))
-                    NeuralError::InferenceError(format!("Failed to reshape grad_output: {}", e))
+                    NeuralError::InferenceError(format!("Failed to reshape gradoutput: {}", e))
                 })?
             grad_output.clone()
         // 1. Compute gradient with respect to output projection using efficient operations
@@ -543,7 +543,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                 self.config.num_heads,
                 self.config.head_dim,
             ]))
-                NeuralError::InferenceError(format!("Failed to reshape grad_attn_output: {}", e))
+                NeuralError::InferenceError(format!("Failed to reshape grad_attnoutput: {}", e))
         // 3. Backward through scaled dot-product attention
         let (grad_q, grad_k, grad_v) = self.backward_scaled_dot_product_attention(
             &q_proj,
@@ -564,9 +564,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                     grad_input[[b, i, j]] = q_contrib + k_contrib + v_contrib;
         // Reshape grad_input to match input shape if necessary
             grad_input
-                    NeuralError::InferenceError(format!("Failed to reshape grad_input: {}", e))
+                    NeuralError::InferenceError(format!("Failed to reshape gradinput: {}", e))
             Ok(grad_input)
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         // For proper gradient computation, we need to accumulate gradients during backward pass
         // This requires modifying the backward pass to actually compute and store gradients
         // For now, we'll implement a basic gradient descent update using cached values
@@ -603,11 +603,11 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         // Apply gradient descent updates
         for i in 0..self.d_model {
             for j in 0..self.d_model {
-                self.w_query[[i, j]] = self.w_query[[i, j]] - learning_rate * self.dw_query[[i, j]];
-                self.w_key[[i, j]] = self.w_key[[i, j]] - learning_rate * self.dw_key[[i, j]];
-                self.w_value[[i, j]] = self.w_value[[i, j]] - learning_rate * self.dw_value[[i, j]];
+                self.w_query[[i, j]] = self.w_query[[i, j]] - learningrate * self.dw_query[[i, j]];
+                self.w_key[[i, j]] = self.w_key[[i, j]] - learningrate * self.dw_key[[i, j]];
+                self.w_value[[i, j]] = self.w_value[[i, j]] - learningrate * self.dw_value[[i, j]];
                 self.w_output[[i, j]] =
-                    self.w_output[[i, j]] - learning_rate * self.dw_output[[i, j]];
+                    self.w_output[[i, j]] - learningrate * self.dw_output[[i, j]];
         // Apply weight clipping to prevent exploding gradients
         let clip_value = F::from(5.0).unwrap();
         for weight_matrix in [

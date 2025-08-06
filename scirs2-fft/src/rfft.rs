@@ -854,17 +854,17 @@ where
     mark_processed(&mut idx, 0, outshape, xshape, &mut processed);
 
     // Helper function to reflect an index along specified axes
-    fn reflect_index(_idx: &[usize], shape: &[usize], axes: &[usize]) -> Vec<usize> {
-        let mut reflected = _idx.to_vec();
+    fn reflect_index(idx: &[usize], shape: &[usize], axes: &[usize]) -> Vec<usize> {
+        let mut reflected = idx.to_vec();
 
         for &axis in axes {
             // Skip 0 frequency component and Nyquist frequency (if present)
-            if _idx[axis] == 0 || (shape[axis] % 2 == 0 && _idx[axis] == shape[axis] / 2) {
+            if idx[axis] == 0 || (shape[axis] % 2 == 0 && idx[axis] == shape[axis] / 2) {
                 continue;
             }
 
             // Reflect along this axis
-            reflected[axis] = shape[axis] - _idx[axis];
+            reflected[axis] = shape[axis] - idx[axis];
             if reflected[axis] == shape[axis] {
                 reflected[axis] = 0;
             }

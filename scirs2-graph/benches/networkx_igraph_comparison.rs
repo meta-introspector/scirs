@@ -574,7 +574,7 @@ pub fn generate_comparison_report() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn measure_scirs2_algorithm(_algorithm: &str, size: usize, graph_type: &str) -> f64 {
+fn measure_scirs2_algorithm(_algorithm: &str, size: usize, graphtype: &str) -> f64 {
     let mut rng = StdRng::seed_from_u64(42);
 
     let graph = match graph_type {
@@ -629,22 +629,22 @@ where
     let start = Instant::now();
 
     let _ = match algorithm {
-        "bfs" => execute_with_enhanced_advanced(&mut processor, _graph, "bfs", |g| {
+        "bfs" => execute_with_enhanced_advanced(&mut processor, graph, "bfs", |g| {
             Ok(breadth_first_search(g, &0))
         }),
-        "dfs" => execute_with_enhanced_advanced(&mut processor, _graph, "dfs", |g| {
+        "dfs" => execute_with_enhanced_advanced(&mut processor, graph, "dfs", |g| {
             Ok(depth_first_search(g, &0))
         }),
-        "pagerank" => execute_with_enhanced_advanced(&mut processor, _graph, "pagerank", |g| {
+        "pagerank" => execute_with_enhanced_advanced(&mut processor, graph, "pagerank", |g| {
             Ok(pagerank_centrality(g, None, None, None))
         }),
         "betweenness_centrality" => {
-            execute_with_enhanced_advanced(&mut processor, _graph, "betweenness", |g| {
+            execute_with_enhanced_advanced(&mut processor, graph, "betweenness", |g| {
                 Ok(betweenness_centrality(g))
             })
         }
         "shortest_path" => {
-            execute_with_enhanced_advanced(&mut processor, _graph, "shortest_path", |g| {
+            execute_with_enhanced_advanced(&mut processor, graph, "shortest_path", |g| {
                 let target = std::cmp::min(10, g.node_count().saturating_sub(1));
                 if target > 0 {
                     shortest_path(g, &0, &target)
@@ -654,12 +654,12 @@ where
             })
         }
         "connected_components" => {
-            execute_with_enhanced_advanced(&mut processor, _graph, "connected_components", |g| {
+            execute_with_enhanced_advanced(&mut processor, graph, "connected_components", |g| {
                 Ok(connected_components(g))
             })
         }
         "louvain_communities" => {
-            execute_with_enhanced_advanced(&mut processor, _graph, "louvain", |g| {
+            execute_with_enhanced_advanced(&mut processor, graph, "louvain", |g| {
                 louvain_communities_result(g, None, None)
             })
         }
@@ -695,7 +695,7 @@ where
             let _ = betweenness_centrality(_graph);
         }
         "shortest_path" => {
-            let target = std::cmp::min(10, _graph.node_count().saturating_sub(1));
+            let target = std::cmp::min(10, graph.node_count().saturating_sub(1));
             if target > 0 {
                 let _ = shortest_path(_graph, &0, &target);
             }
@@ -713,7 +713,7 @@ where
 }
 
 #[allow(dead_code)]
-fn generate_markdown_report(_results: &[(String, String, usize, ComparisonMetrics)]) -> String {
+fn generate_markdown_report(results: &[(String, String, usize, ComparisonMetrics)]) -> String {
     let mut report = String::new();
 
     report.push_str("# scirs2-graph vs NetworkX/igraph Performance Comparison\n\n");

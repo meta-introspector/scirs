@@ -182,7 +182,7 @@ pub type SpecialResult<T> = Result<T, SpecialError>;
 /// Automatically converts `ParseFloatError` into `SpecialError::ValueError`
 /// for seamless error propagation when parsing numerical input.
 impl From<std::num::ParseFloatError> for SpecialError {
-    fn from(_err: std::num::ParseFloatError) -> Self {
+    fn from(err: std::num::ParseFloatError) -> Self {
         SpecialError::ValueError(format!("Failed to parse float: {_err}"))
     }
 }
@@ -192,7 +192,7 @@ impl From<std::num::ParseFloatError> for SpecialError {
 /// Automatically converts `std::io::Error` into `SpecialError::ComputationError`
 /// for handling file I/O failures during computation or data loading.
 impl From<std::io::Error> for SpecialError {
-    fn from(_err: std::io::Error) -> Self {
+    fn from(err: std::io::Error) -> Self {
         SpecialError::ComputationError(format!("IO error: {_err}"))
     }
 }

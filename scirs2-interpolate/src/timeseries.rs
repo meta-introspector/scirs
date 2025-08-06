@@ -298,7 +298,8 @@ where
             "forward_fill" => MissingDataStrategy::ForwardFill,
             "backward_fill" => MissingDataStrategy::BackwardFill,
             "mean" => MissingDataStrategy::Mean,
-            "seasonal" => MissingDataStrategy::Seasonal_ => MissingDataStrategy::Spline,
+            "seasonal" => MissingDataStrategy::Seasonal,
+            _ => MissingDataStrategy::Spline,
         };
         self
     }
@@ -406,11 +407,8 @@ where
             // Convert 1D timestamps to 2D for RBF interpolator
             let timestamps_2d = Array2::fromshape_vec((timestamps.len(), 1), timestamps.to_vec())
                 .map_err(|e| {
-                    InterpolateError::ComputationError(format!(
-                        "Failed to reshape timestamps: {}",
-                        e
-                    ))
-                })?;
+                InterpolateError::ComputationError(format!("Failed to reshape timestamps: {}", e))
+            })?;
 
             let seasonal_values = seasonal_interp.interpolate(&timestamps_2d.view())?;
             interpolated_values = interpolated_values + seasonal_values;
@@ -560,9 +558,9 @@ where
     }
 
     /// Estimate uncertainty for interpolated values
-    fn estimate_uncertainty(&self_timestamps: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    fn estimate_uncertainty(selftimestamps: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         // Simple uncertainty estimation based on local variance
-        let n = _timestamps.len();
+        let n = timestamps.len();
         let base_uncertainty = self.temporal_stats.noise_level;
 
         // For now, return constant uncertainty
@@ -652,7 +650,7 @@ pub fn forward_fill<T>(
 where
     T: Float + PartialOrd + Copy,
 {
-    if _timestamps.len() != values.len() {
+    if timestamps.len() != values.len() {
         return Err(InterpolateError::DimensionMismatch(
             "_timestamps and values must have same length".to_string(),
         ));
@@ -664,7 +662,7 @@ where
         // Find the last timestamp <= query_time
         let mut last_value = values[0]; // Default to first value
 
-        for (j, &timestamp) in _timestamps.iter().enumerate() {
+        for (j, &timestamp) in timestamps.iter().enumerate() {
             if timestamp <= query_time {
                 last_value = values[j];
             } else {
@@ -688,7 +686,7 @@ pub fn backward_fill<T>(
 where
     T: Float + PartialOrd + Copy,
 {
-    if _timestamps.len() != values.len() {
+    if timestamps.len() != values.len() {
         return Err(InterpolateError::DimensionMismatch(
             "_timestamps and values must have same length".to_string(),
         ));
@@ -700,7 +698,7 @@ where
         // Find the first timestamp >= query_time
         let mut next_value = values[values.len() - 1]; // Default to last value
 
-        for (j, &timestamp) in _timestamps.iter().enumerate().rev() {
+        for (j, &timestamp) in timestamps.iter().enumerate().rev() {
             if timestamp >= query_time {
                 next_value = values[j];
             } else {

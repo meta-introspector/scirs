@@ -19,7 +19,7 @@ pub struct InteractiveParameterExplorer {
     /// Number of samples per dimension
     pub samples_per_dim: usize,
     /// Current parameter values
-    pub current_params: Array1<f64>,
+    pub currentparams: Array1<f64>,
     /// Parameter history
     pub param_history: Vec<Array1<f64>>,
     /// System response cache
@@ -33,7 +33,7 @@ impl InteractiveParameterExplorer {
         param_bounds: Vec<(f64, f64)>,
         samples_per_dim: usize,
     ) -> Self {
-        let current_params = Array1::from_vec(
+        let currentparams = Array1::from_vec(
             param_bounds
                 .iter()
                 .map(|(min, max)| (min + max) / 2.0)
@@ -44,7 +44,7 @@ impl InteractiveParameterExplorer {
             param_dimensions,
             param_bounds,
             samples_per_dim,
-            current_params,
+            currentparams,
             param_history: Vec::new(),
             response_cache: std::collections::HashMap::new(),
         }
@@ -178,7 +178,7 @@ impl InteractiveParameterExplorer {
 
         // Start with a coarse grid
         let coarse_samples = (self.samples_per_dim as f64).sqrt() as usize;
-        let mut current_resolution = coarse_samples;
+        let mut currentresolution = coarse_samples;
 
         // Initial coarse sampling
         let initial_grid = self.generate_coarse_grid(coarse_samples);
@@ -196,12 +196,12 @@ impl InteractiveParameterExplorer {
         }
 
         // Adaptive refinement
-        while current_resolution < self.samples_per_dim {
+        while currentresolution < self.samples_per_dim {
             let refinement_candidates =
                 self.identify_refinement_regions(&exploration_points, &response_values)?;
 
             for region in refinement_candidates {
-                let refined_points = self.refine_region(&region, current_resolution * 2);
+                let refined_points = self.refine_region(&region, currentresolution * 2);
 
                 for params in refined_points {
                     parameter_grid.push(params.clone());
@@ -216,7 +216,7 @@ impl InteractiveParameterExplorer {
                 }
             }
 
-            current_resolution *= 2;
+            currentresolution *= 2;
         }
 
         Ok(ParameterExplorationResult {
@@ -242,11 +242,11 @@ impl InteractiveParameterExplorer {
         let mut parameter_grid = Vec::new();
 
         // Start from current parameters
-        let mut current_params = self.current_params.clone();
-        exploration_points.push(current_params.clone());
-        parameter_grid.push(current_params.clone());
+        let mut currentparams = self.currentparams.clone();
+        exploration_points.push(currentparams.clone());
+        parameter_grid.push(currentparams.clone());
 
-        let initial_response = system_function(&current_params)?;
+        let initial_response = system_function(&currentparams)?;
         response_values.push(initial_response.clone());
 
         let learning_rate = 0.01;
@@ -255,7 +255,7 @@ impl InteractiveParameterExplorer {
 
         for iteration in 0..max_iterations {
             // Compute numerical gradient
-            let gradient = self.compute_numerical_gradient(system_function, &current_params)?;
+            let gradient = self.compute_numerical_gradient(system_function, &currentparams)?;
 
             // Update parameters along gradient
             let gradient_norm = gradient.iter().map(|&g| g * g).sum::<f64>().sqrt();
@@ -266,24 +266,24 @@ impl InteractiveParameterExplorer {
 
             // Gradient ascent step (maximize response)
             for i in 0..self.param_dimensions {
-                current_params[i] += learning_rate * gradient[i] / gradient_norm;
+                currentparams[i] += learning_rate * gradient[i] / gradient_norm;
 
                 // Clamp to bounds
                 let (min, max) = self.param_bounds[i];
-                current_params[i] = current_params[i].max(min).min(max);
+                currentparams[i] = currentparams[i].max(min).min(max);
             }
 
             // Evaluate at new point
-            match system_function(&current_params) {
+            match system_function(&currentparams) {
                 Ok(response) => {
-                    exploration_points.push(current_params.clone());
-                    parameter_grid.push(current_params.clone());
+                    exploration_points.push(currentparams.clone());
+                    parameter_grid.push(currentparams.clone());
                     response_values.push(response);
-                    self.param_history.push(current_params.clone());
+                    self.param_history.push(currentparams.clone());
                 }
                 Err(_) => {
                     // If evaluation fails, take smaller step
-                    current_params = exploration_points.last().unwrap().clone();
+                    currentparams = exploration_points.last().unwrap().clone();
                     break;
                 }
             }
@@ -305,7 +305,7 @@ impl InteractiveParameterExplorer {
             }
         }
 
-        self.current_params = current_params;
+        self.currentparams = currentparams;
 
         Ok(ParameterExplorationResult {
             exploration_points,
@@ -345,27 +345,27 @@ impl InteractiveParameterExplorer {
         indices
     }
 
-    fn indices_to_parameters(&self, _indices: &[usize]) -> Array1<f64> {
+    fn indices_to_parameters(&self, indices: &[usize]) -> Array1<f64> {
         let mut params = Array1::zeros(self.param_dimensions);
 
         for i in 0..self.param_dimensions {
             let (min, max) = self.param_bounds[i];
-            let fraction = _indices[i] as f64 / (self.samples_per_dim - 1) as f64;
+            let fraction = indices[i] as f64 / (self.samples_per_dim - 1) as f64;
             params[i] = min + fraction * (max - min);
         }
 
         params
     }
 
-    fn params_to_cache_key(&self, _params: &Array1<f64>) -> String {
-        _params
+    fn params_to_cache_key(&self, params: &Array1<f64>) -> String {
+        params
             .iter()
             .map(|&p| format!("{p:.6}"))
             .collect::<Vec<_>>()
             .join(",")
     }
 
-    fn generate_coarse_grid(&self, _resolution: usize) -> Vec<Array1<f64>> {
+    fn generate_coarse_grid(&self, resolution: usize) -> Vec<Array1<f64>> {
         let mut grid = Vec::new();
         let mut indices = vec![0; self.param_dimensions];
 
@@ -374,7 +374,7 @@ impl InteractiveParameterExplorer {
 
             for i in 0..self.param_dimensions {
                 let (min, max) = self.param_bounds[i];
-                let fraction = indices[i] as f64 / (_resolution - 1) as f64;
+                let fraction = indices[i] as f64 / (resolution - 1) as f64;
                 params[i] = min + fraction * (max - min);
             }
 
@@ -384,7 +384,7 @@ impl InteractiveParameterExplorer {
             let mut carry = 1;
             for i in (0..self.param_dimensions).rev() {
                 indices[i] += carry;
-                if indices[i] < _resolution {
+                if indices[i] < resolution {
                     carry = 0;
                     break;
                 } else {
@@ -402,7 +402,7 @@ impl InteractiveParameterExplorer {
 
     fn identify_refinement_regions(
         &self,
-        _points: &[Array1<f64>],
+        points: &[Array1<f64>],
         responses: &[Array1<f64>],
     ) -> IntegrateResult<Vec<ParameterRegion>> {
         let mut regions = Vec::new();
@@ -426,7 +426,7 @@ impl InteractiveParameterExplorer {
             .map(|(i, _)| i)
             .unwrap_or(0);
 
-        let center = _points[best_idx].clone();
+        let center = points[best_idx].clone();
         let radius = 0.1; // 10% of parameter range
 
         regions.push(ParameterRegion { center, radius });
@@ -434,17 +434,17 @@ impl InteractiveParameterExplorer {
         Ok(regions)
     }
 
-    fn refine_region(&self, _region: &ParameterRegion, resolution: usize) -> Vec<Array1<f64>> {
+    fn refine_region(&self, region: &ParameterRegion, resolution: usize) -> Vec<Array1<f64>> {
         let mut refined_points = Vec::new();
 
         // Generate points within the _region
         for _ in 0..resolution {
             let mut rng = rand::rng();
-            let mut point = _region.center.clone();
+            let mut point = region.center.clone();
 
             for i in 0..self.param_dimensions {
                 let (min, max) = self.param_bounds[i];
-                let range = (max - min) * _region.radius;
+                let range = (max - min) * region.radius;
                 let offset = (rng.random::<f64>() - 0.5) * 2.0 * range;
                 point[i] = (point[i] + offset).max(min).min(max);
             }
@@ -490,9 +490,9 @@ impl InteractiveParameterExplorer {
 
     fn compute_exploration_metrics(
         &self,
-        _responses: &[Array1<f64>],
+        responses: &[Array1<f64>],
     ) -> IntegrateResult<ExplorationMetrics> {
-        if _responses.is_empty() {
+        if responses.is_empty() {
             return Ok(ExplorationMetrics {
                 max_response_norm: 0.0,
                 min_response_norm: 0.0,
@@ -502,7 +502,7 @@ impl InteractiveParameterExplorer {
             });
         }
 
-        let norms: Vec<f64> = _responses
+        let norms: Vec<f64> = responses
             .iter()
             .map(|r| r.iter().map(|&x| x * x).sum::<f64>().sqrt())
             .collect();
@@ -550,9 +550,9 @@ pub struct BifurcationDiagramGenerator {
 
 impl BifurcationDiagramGenerator {
     /// Create new bifurcation diagram generator
-    pub fn new(_parameter_range: (f64, f64), n_parameter_samples: usize) -> Self {
+    pub fn new(_parameterrange: (f64, f64), n_parameter_samples: usize) -> Self {
         Self {
-            parameter_range: _parameter_range,
+            parameter_range: _parameterrange,
             n_parameter_samples,
             transient_steps: 1000,
             sampling_steps: 500,
@@ -588,14 +588,14 @@ impl BifurcationDiagramGenerator {
             }
 
             // Sample attractor
-            let mut attractor_states = Vec::new();
+            let mut attractorstates = Vec::new();
             for _ in 0..self.sampling_steps {
                 x = map_function(x, param);
-                attractor_states.push(x);
+                attractorstates.push(x);
             }
 
             // Analyze attractor structure
-            let attractor_info = self.analyze_1d_attractor(&attractor_states)?;
+            let attractor_info = self.analyze_1d_attractor(&attractorstates)?;
 
             // Store results
             for &state in &attractor_info.representative_states {
@@ -625,42 +625,42 @@ impl BifurcationDiagramGenerator {
     }
 
     /// Analyze 1D attractor structure
-    fn analyze_1d_attractor(&self, _states: &[f64]) -> IntegrateResult<AttractorInfo> {
+    fn analyze_1d_attractor(&self, states: &[f64]) -> IntegrateResult<AttractorInfo> {
         // Detect fixed points
         let mut representative_states = Vec::new();
-        let mut unique_states = _states.to_vec();
-        unique_states.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        unique_states.dedup_by(|a, b| (*a - *b).abs() < self.fixed_point_tolerance);
+        let mut uniquestates = states.to_vec();
+        uniquestates.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        uniquestates.dedup_by(|a, b| (*a - *b).abs() < self.fixed_point_tolerance);
 
-        if unique_states.len() == 1 {
+        if uniquestates.len() == 1 {
             // Fixed point
-            representative_states.push(unique_states[0]);
+            representative_states.push(uniquestates[0]);
         } else {
             // Periodic orbit or chaos
-            let period = self.detect_period(_states)?;
+            let period = self.detect_period(states)?;
 
             if period > 0 && period <= self.sampling_steps / 10 {
                 // Periodic orbit - sample one period
                 for i in 0..period {
-                    representative_states.push(_states[_states.len() - period + i]);
+                    representative_states.push(states[states.len() - period + i]);
                 }
             } else {
                 // Chaotic - sample representative points
-                let sample_rate = _states.len() / 20;
-                for i in (0.._states.len()).step_by(sample_rate) {
-                    representative_states.push(_states[i]);
+                let sample_rate = states.len() / 20;
+                for i in (0..states.len()).step_by(sample_rate) {
+                    representative_states.push(states[i]);
                 }
             }
         }
 
         // Simple stability analysis
-        let is_stable = unique_states.len() <= 2; // Fixed point or period-2
+        let is_stable = uniquestates.len() <= 2; // Fixed point or period-2
 
         Ok(AttractorInfo {
             representative_states,
             is_stable,
-            period: if unique_states.len() <= 2 {
-                unique_states.len()
+            period: if uniquestates.len() <= 2 {
+                uniquestates.len()
             } else {
                 0
             },
@@ -668,14 +668,14 @@ impl BifurcationDiagramGenerator {
     }
 
     /// Detect period of oscillation
-    fn detect_period(&self, _states: &[f64]) -> IntegrateResult<usize> {
+    fn detect_period(&self, states: &[f64]) -> IntegrateResult<usize> {
         let max_period = (self.sampling_steps / 10).min(50);
 
         for period in 1..=max_period {
             let mut is_periodic = true;
 
-            for i in 0..(_states.len() - period) {
-                if (_states[i] - _states[i + period]).abs() > self.period_tolerance {
+            for i in 0..(states.len() - period) {
+                if (states[i] - states[i + period]).abs() > self.period_tolerance {
                     is_periodic = false;
                     break;
                 }

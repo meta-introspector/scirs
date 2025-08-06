@@ -130,7 +130,7 @@ pub mod builder_pattern {
         }
 
         /// Set maximum iterations
-        pub fn with_max_iterations(mut self, max_iterations: usize) -> Self {
+        pub fn with_max_iterations(mut self, maxiterations: usize) -> Self {
             self.config.max_iterations = max_iterations;
             self
         }
@@ -207,12 +207,12 @@ pub mod error_handling {
     use crate::InterpolateError;
 
     /// Create standard dimension mismatch error using structured error type
-    pub fn dimension_mismatch(_expected: usize, actual: usize, context: &str) -> InterpolateError {
+    pub fn dimension_mismatch(expected: usize, actual: usize, context: &str) -> InterpolateError {
         InterpolateError::dimension_mismatch(_expected, actual, context)
     }
 
     /// Create standard empty data error using structured error type
-    pub fn empty_data(_context: &str) -> InterpolateError {
+    pub fn empty_data(context: &str) -> InterpolateError {
         InterpolateError::empty_data(_context)
     }
 
@@ -227,17 +227,21 @@ pub mod error_handling {
     }
 
     /// Create standard convergence failure error using structured error type
-    pub fn convergence_failure(_method: &str, iterations: usize) -> InterpolateError {
+    pub fn convergence_failure(method: &str, iterations: usize) -> InterpolateError {
         InterpolateError::convergence_failure(_method, iterations)
     }
 
     /// Create standard numerical instability error
-    pub fn numerical_instability(_context: &str, details: &str) -> InterpolateError {
+    pub fn numerical_instability(context: &str, details: &str) -> InterpolateError {
         InterpolateError::numerical_instability(_context, details)
     }
 
     /// Create standard insufficient points error
-    pub fn insufficient_points(_required: usize, provided: usize, method: &str) -> InterpolateError {
+    pub fn insufficient_points(
+        _required: usize,
+        provided: usize,
+        method: &str,
+    ) -> InterpolateError {
         InterpolateError::insufficient_points(_required, provided, method)
     }
 }
@@ -284,7 +288,8 @@ pub mod input_validation {
 
     /// Validate that data has sufficient points for the method
     pub fn validate_sufficient_points<T: InterpolationFloat>(
-        points: &ArrayView2<T>, _values: &ArrayView1<T>,
+        points: &ArrayView2<T>,
+        _values: &ArrayView1<T>,
         minimum_required: usize,
         method_name: &str,
     ) -> InterpolateResult<()> {

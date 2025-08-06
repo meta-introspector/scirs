@@ -15,7 +15,7 @@ use scirs2__metrics::{
 
 /// Generate synthetic classification data for benchmarking
 #[allow(dead_code)]
-fn generate_classification_data(_n_samples: usize) -> (Array1<f64>, Array1<f64>) {
+fn generate_classification_data(_nsamples: usize) -> (Array1<f64>, Array1<f64>) {
     let y_true: Array1<f64> = Array1::from_iter((0.._n_samples).map(|i| (i % 2) as f64));
     let y_pred: Array1<f64> = Array1::from_iter((0.._n_samples).map(|i| ((i + 1) % 2) as f64));
     (y_true, y_pred)
@@ -23,7 +23,7 @@ fn generate_classification_data(_n_samples: usize) -> (Array1<f64>, Array1<f64>)
 
 /// Generate synthetic classification data with integer labels for confusion matrix
 #[allow(dead_code)]
-fn generate_classification_data_int(_n_samples: usize) -> (Array1<i32>, Array1<i32>) {
+fn generate_classification_data_int(_nsamples: usize) -> (Array1<i32>, Array1<i32>) {
     let y_true: Array1<i32> = Array1::from_iter((0.._n_samples).map(|i| (i % 2) as i32));
     let y_pred: Array1<i32> = Array1::from_iter((0.._n_samples).map(|i| ((i + 1) % 2) as i32));
     (y_true, y_pred)
@@ -31,7 +31,7 @@ fn generate_classification_data_int(_n_samples: usize) -> (Array1<i32>, Array1<i
 
 /// Generate synthetic regression data for benchmarking
 #[allow(dead_code)]
-fn generate_regression_data(_n_samples: usize) -> (Array1<f64>, Array1<f64>) {
+fn generate_regression_data(_nsamples: usize) -> (Array1<f64>, Array1<f64>) {
     let y_true: Array1<f64> = Array1::from_iter((0.._n_samples).map(|i| i as f64));
     let y_pred: Array1<f64> = Array1::from_iter((0.._n_samples).map(|i| (i as f64) + 0.1));
     (y_true, y_pred)
@@ -39,7 +39,7 @@ fn generate_regression_data(_n_samples: usize) -> (Array1<f64>, Array1<f64>) {
 
 /// Generate synthetic clustering data for benchmarking
 #[allow(dead_code)]
-fn generate_clustering_data(_n_samples: usize, n_features: usize) -> (Array2<f64>, Array1<usize>) {
+fn generate_clustering_data(_n_samples: usize, nfeatures: usize) -> (Array2<f64>, Array1<usize>) {
     let mut data = Array2::zeros((_n_samples, n_features));
     let mut labels = Array1::zeros(_n_samples);
 
@@ -59,7 +59,7 @@ fn generate_clustering_data(_n_samples: usize, n_features: usize) -> (Array2<f64
 
 /// Generate synthetic probability distributions for benchmarking
 #[allow(dead_code)]
-fn generate_probability_distributions(_n_samples: usize) -> (Array1<f64>, Array1<f64>) {
+fn generate_probability_distributions(_nsamples: usize) -> (Array1<f64>, Array1<f64>) {
     let mut p = Array1::zeros(_n_samples);
     let mut q = Array1::zeros(_n_samples);
 

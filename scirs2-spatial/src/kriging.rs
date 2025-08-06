@@ -82,53 +82,53 @@ impl VariogramModel {
     /// * `range` - Range parameter (distance where correlation becomes negligible)
     /// * `sill` - Sill parameter (maximum variance)
     /// * `nugget` - Nugget parameter (variance at zero distance)
-    pub fn spherical(_range: f64, sill: f64, nugget: f64) -> Self {
+    pub fn spherical(range: f64, sill: f64, nugget: f64) -> Self {
         Self::Spherical {
-            range: _range,
+            range: range,
             sill,
             nugget,
         }
     }
 
     /// Create an exponential variogram model
-    pub fn exponential(_range: f64, sill: f64, nugget: f64) -> Self {
+    pub fn exponential(range: f64, sill: f64, nugget: f64) -> Self {
         Self::Exponential {
-            range: _range,
+            range: range,
             sill,
             nugget,
         }
     }
 
     /// Create a Gaussian variogram model
-    pub fn gaussian(_range: f64, sill: f64, nugget: f64) -> Self {
+    pub fn gaussian(range: f64, sill: f64, nugget: f64) -> Self {
         Self::Gaussian {
-            range: _range,
+            range: range,
             sill,
             nugget,
         }
     }
 
     /// Create a linear variogram model
-    pub fn linear(_slope: f64, nugget: f64) -> Self {
+    pub fn linear(slope: f64, nugget: f64) -> Self {
         Self::Linear {
-            slope: _slope,
+            slope: slope,
             nugget,
         }
     }
 
     /// Create a power variogram model
-    pub fn power(_coefficient: f64, exponent: f64, nugget: f64) -> Self {
+    pub fn power(coefficient: f64, exponent: f64, nugget: f64) -> Self {
         Self::Power {
-            coefficient: _coefficient,
+            coefficient: coefficient,
             exponent,
             nugget,
         }
     }
 
     /// Create a Matérn variogram model
-    pub fn matern(_range: f64, sill: f64, nugget: f64, nu: f64) -> Self {
+    pub fn matern(range: f64, sill: f64, nugget: f64, nu: f64) -> Self {
         Self::Matern {
-            range: _range,
+            range: range,
             sill,
             nugget,
             nu,
@@ -379,8 +379,8 @@ impl OrdinaryKriging {
     /// let prediction = kriging.predict(&[0.5, 0.5]).unwrap();
     /// println!("Predicted: {:.3} ± {:.3}", prediction.value, prediction.variance.sqrt());
     /// ```
-    pub fn predict(&self, _location: &[f64]) -> SpatialResult<KrigingPrediction> {
-        if _location.len() != self.ndim {
+    pub fn predict(&self, location: &[f64]) -> SpatialResult<KrigingPrediction> {
+        if location.len() != self.ndim {
             return Err(SpatialError::ValueError(
                 "Location dimension must match data dimension".to_string(),
             ));
@@ -507,8 +507,8 @@ impl OrdinaryKriging {
     }
 
     /// Compute Euclidean distance between two points
-    fn distance(_p1: &[f64], p2: &[f64]) -> f64 {
-        _p1.iter()
+    fn distance(p1: &[f64], p2: &[f64]) -> f64 {
+        p1.iter()
             .zip(p2.iter())
             .map(|(a, b)| (a - b).powi(2))
             .sum::<f64>()
@@ -516,9 +516,9 @@ impl OrdinaryKriging {
     }
 
     /// Invert a matrix using Gaussian elimination with partial pivoting
-    fn invert_matrix(_matrix: &Array2<f64>) -> SpatialResult<Array2<f64>> {
-        let n = _matrix.nrows();
-        if n != _matrix.ncols() {
+    fn invert_matrix(matrix: &Array2<f64>) -> SpatialResult<Array2<f64>> {
+        let n = matrix.nrows();
+        if n != matrix.ncols() {
             return Err(SpatialError::ComputationError(
                 "Matrix must be square for inversion".to_string(),
             ));
@@ -530,7 +530,7 @@ impl OrdinaryKriging {
         // Fill A part
         for i in 0..n {
             for j in 0..n {
-                aug[[i, j]] = _matrix[[i, j]];
+                aug[[i, j]] = matrix[[i, j]];
             }
         }
 
@@ -717,8 +717,8 @@ impl SimpleKriging {
     ///
     /// # Returns
     /// * KrigingPrediction with value, variance, and weights
-    pub fn predict(&self, _location: &[f64]) -> SpatialResult<KrigingPrediction> {
-        if _location.len() != self.ndim {
+    pub fn predict(&self, location: &[f64]) -> SpatialResult<KrigingPrediction> {
+        if location.len() != self.ndim {
             return Err(SpatialError::ValueError(
                 "Location dimension must match data dimension".to_string(),
             ));
@@ -765,8 +765,8 @@ impl SimpleKriging {
     }
 
     /// Compute Euclidean distance between two points
-    fn distance(_p1: &[f64], p2: &[f64]) -> f64 {
-        _p1.iter()
+    fn distance(p1: &[f64], p2: &[f64]) -> f64 {
+        p1.iter()
             .zip(p2.iter())
             .map(|(a, b)| (a - b).powi(2))
             .sum::<f64>()

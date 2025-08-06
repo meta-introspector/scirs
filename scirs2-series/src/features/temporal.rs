@@ -130,7 +130,7 @@ where
     let shapelets = Vec::new();
 
     Ok(TemporalPatternFeatures {
-        _motifs,
+        motifs,
         discord_scores,
         sax_symbols,
         shapelets,
@@ -252,7 +252,7 @@ where
             F::zero()
         };
 
-        _motifs.push(MotifInfo {
+        motifs.push(MotifInfo {
             _length: motif_length,
             frequency: positions.len(),
             positions,
@@ -454,7 +454,7 @@ where
     // Generate candidate shapelets from class 1
     for ts in ts_class1.iter() {
         for _length in min_length..=max_length.min(ts.len() / 2) {
-            for start in 0..=(ts.len() - _length) {
+            for start in 0..=(ts.len() - length) {
                 let shapelet = ts.slice(s![start..start + _length]).to_owned();
 
                 // Calculate information gain
@@ -464,7 +464,7 @@ where
                 all_candidates.push(ShapeletInfo {
                     pattern: shapelet,
                     position: start,
-                    _length,
+                    length,
                     information_gain: info_gain,
                 });
             }
@@ -570,12 +570,12 @@ where
 
 /// Find minimum distance from a time series to a shapelet
 #[allow(dead_code)]
-fn find_min_distance_toshapelet<F>(_ts: &Array1<F>, shapelet: &Array1<F>) -> F
+fn find_min_distance_toshapelet<F>(ts: &Array1<F>, shapelet: &Array1<F>) -> F
 where
     F: Float + FromPrimitive,
 {
     let shapelet_len = shapelet.len();
-    let ts_len = _ts.len();
+    let ts_len = ts.len();
 
     if ts_len < shapelet_len {
         return F::infinity();
@@ -586,7 +586,7 @@ where
     for start in 0..=(ts_len - shapelet_len) {
         let mut sum = F::zero();
         for i in 0..shapelet_len {
-            let diff = _ts[start + i] - shapelet[i];
+            let diff = ts[start + i] - shapelet[i];
             sum = sum + diff * diff;
         }
         let distance = sum.sqrt();
@@ -601,11 +601,11 @@ where
 
 /// Calculate distance matrix for time series subsequences
 #[allow(dead_code)]
-pub fn calculate_distance_matrix<F>(_ts: &Array1<F>, subsequence_length: usize) -> Result<Array2<F>>
+pub fn calculate_distance_matrix<F>(_ts: &Array1<F>, subsequencelength: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = _ts.len();
+    let n = ts.len();
     if n < subsequence_length {
         return Err(TimeSeriesError::FeatureExtractionError(
             "Time series too short for distance matrix calculation".to_string(),
@@ -628,11 +628,11 @@ where
 
 /// Find nearest neighbors for each subsequence
 #[allow(dead_code)]
-pub fn find_nearest_neighbors<F>(_distance_matrix: &Array2<F>, k: usize) -> Result<Vec<Vec<usize>>>
+pub fn find_nearest_neighbors<F>(_distancematrix: &Array2<F>, k: usize) -> Result<Vec<Vec<usize>>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = _distance_matrix.nrows();
+    let n = distance_matrix.nrows();
     let mut neighbors = Vec::with_capacity(n);
 
     for i in 0..n {

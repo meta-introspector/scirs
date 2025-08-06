@@ -20,9 +20,9 @@ pub struct SharedBackbone {
 }
 impl SharedBackbone {
     /// Create a new shared backbone
-    pub fn new(_input_dim: usize, layer_sizes: &[usize]) -> Result<Self> {
+    pub fn new(_input_dim: usize, layersizes: &[usize]) -> Result<Self> {
         let mut layers: Vec<Box<dyn Layer<f32> + Send + Sync>> = Vec::new();
-        let mut current_dim = _input_dim;
+        let mut current_dim = input_dim;
         for &layer_size in layer_sizes {
             // Create dense layer
             let dense_layer = Dense::<f32>::new(
@@ -225,13 +225,13 @@ impl MultiTaskArchitecture {
                 *output_dim,
                 task_type.clone(),
             task_heads.insert(task_name.clone(), head);
-            task_weights.insert(task_name.clone(), 1.0);
+            taskweights.insert(task_name.clone(), 1.0);
             shared_backbone,
             task_heads,
             task_weights,
             training: true,
     /// Forward pass for a specific task
-    pub fn forward_task(&self, input: &ArrayView2<f32>, task_name: &str) -> Result<Array2<f32>> {
+    pub fn forward_task(&self, input: &ArrayView2<f32>, taskname: &str) -> Result<Array2<f32>> {
         // Extract features using shared backbone
         let features = self.shared_backbone.forward(input)?;
         // Process through task-specific head
@@ -261,7 +261,7 @@ impl MultiTaskArchitecture {
             if let (Some(target), Some(head), Some(&weight)) = (
                 targets.get(task_name),
                 self.task_heads.get(task_name),
-                self.task_weights.get(task_name),
+                self.taskweights.get(task_name),
             ) {
                 let task_loss = head.compute_loss(&pred.view(), &target.view())?;
                 let weighted_loss = weight * task_loss;
@@ -272,7 +272,7 @@ impl MultiTaskArchitecture {
     pub fn set_task_weights(&mut self, weights: HashMap<String, f32>) {
         for (task_name, weight) in weights {
             if self.task_heads.contains_key(&task_name) {
-                self.task_weights.insert(task_name, weight);
+                self.taskweights.insert(task_name, weight);
     /// Get task names
     pub fn task_names(&self) -> Vec<String> {
         self.task_heads.keys().cloned().collect()
@@ -289,18 +289,18 @@ impl MultiTaskArchitecture {
             self.shared_backbone.output_dim(),
             head_layers,
         self.task_heads.insert(task_name.clone(), head);
-        self.task_weights.insert(task_name, 1.0);
+        self.taskweights.insert(task_name, 1.0);
     /// Remove a task head
-    pub fn remove_task(&mut self, task_name: &str) -> Result<()> {
+    pub fn remove_task(&mut self, taskname: &str) -> Result<()> {
         if self.task_heads.remove(task_name).is_none() {
             return Err(NeuralError::InvalidArgument(format!(
             )));
-        self.task_weights.remove(task_name);
+        self.taskweights.remove(task_name);
     /// Get shared backbone parameters
     pub fn backbone_parameters(&self) -> Vec<Array2<f32>> {
         self.shared_backbone.parameters()
     /// Get task head parameters
-    pub fn task_parameters(&self, task_name: &str) -> Result<Vec<Array2<f32>>> {
+    pub fn task_parameters(&self, taskname: &str) -> Result<Vec<Array2<f32>>> {
             Ok(head.parameters())
     /// Get all parameters
     pub fn all_parameters(&self) -> HashMap<String, Vec<Array2<f32>>> {

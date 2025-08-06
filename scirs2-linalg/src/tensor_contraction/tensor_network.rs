@@ -45,13 +45,13 @@ where
     ///
     /// * If the number of indices does not match the number of dimensions in the tensor
     /// * If there are duplicate index names
-    pub fn new(_data: ArrayD<A>, indices: Vec<String>) -> LinalgResult<Self> {
+    pub fn new(data: ArrayD<A>, indices: Vec<String>) -> LinalgResult<Self> {
         // Check that the number of indices matches the number of dimensions
-        if indices.len() != _data.ndim() {
+        if indices.len() != data.ndim() {
             return Err(LinalgError::ShapeError(format!(
                 "Number of indices ({}) does not match number of tensor dimensions ({})",
                 indices.len(),
-                _data.ndim()
+                data.ndim()
             )));
         }
 
@@ -66,7 +66,7 @@ where
             }
         }
 
-        Ok(TensorNode { _data, indices })
+        Ok(TensorNode { data, indices })
     }
 
     /// Gets the shape of the tensor node.
@@ -101,7 +101,7 @@ where
     ///
     /// * If any index name in `new_order` does not exist in the tensor node
     /// * If `new_order` does not contain all the indices of the tensor node
-    pub fn transpose(&self, new_order: &[String]) -> LinalgResult<Self> {
+    pub fn transpose(&self, neworder: &[String]) -> LinalgResult<Self> {
         // Check that the number of indices in new_order matches the number of dimensions
         if new_order.len() != self.ndim() {
             return Err(LinalgError::ShapeError(format!(
@@ -463,7 +463,7 @@ where
     /// # Errors
     ///
     /// * If the index does not exist in the tensor
-    pub fn remove_index(&self, index_name: &str) -> LinalgResult<TensorNode<A>> {
+    pub fn remove_index(&self, indexname: &str) -> LinalgResult<TensorNode<A>> {
         // Find the position of the index
         let position = match self.indices.iter().position(|x| x == index_name) {
             Some(p) => p,
@@ -510,7 +510,7 @@ where
     /// # Returns
     ///
     /// * `TensorNetwork` - A new tensor network
-    pub fn new(_nodes: Vec<TensorNode<A>>) -> Self {
+    pub fn new(nodes: Vec<TensorNode<A>>) -> Self {
         TensorNetwork { _nodes }
     }
 

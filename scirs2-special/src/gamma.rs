@@ -2077,7 +2077,7 @@ fn enhanced_log_sin_pi_x<F: Float + FromPrimitive>(x: F) -> F {
 
 /// Enhanced sign computation for reflection formula with extreme values
 #[allow(dead_code)]
-fn enhanced_reflection_sign<F: Float + FromPrimitive>(x_f64: f64) -> F {
+fn enhanced_reflection_sign<F: Float + FromPrimitive>(xf64: f64) -> F {
     // For the reflection formula Γ(x) = π / (sin(πx) * Γ(1-x))
     // The sign depends on both sin(πx) and the parity
 

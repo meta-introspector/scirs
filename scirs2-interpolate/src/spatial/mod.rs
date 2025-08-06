@@ -66,12 +66,12 @@ pub mod optimized_search;
 pub mod simd_enhancements;
 
 pub use balltree::BallTree;
-pub use enhanced__search::{
+pub use enhanced_search::{
     make_enhanced_searcher, make_high_performance_searcher, EnhancedNearestNeighborSearcher,
     IndexType, SearchConfig,
 };
 pub use kdtree::KdTree;
 #[cfg(feature = "parallel")]
-pub use optimized__search::ParallelQueryProcessor;
-pub use optimized__search::{CacheFriendlyKNN, OptimizedSpatialSearch, SimdDistanceOps};
-pub use simd__enhancements::{AdvancedSimdOps, SimdBenchmark};
+pub use optimized_search::ParallelQueryProcessor;
+pub use optimized_search::{CacheFriendlyKNN, OptimizedSpatialSearch, SimdDistanceOps};
+pub use simd_enhancements::{AdvancedSimdOps, SimdBenchmark};

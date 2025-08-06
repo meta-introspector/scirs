@@ -53,22 +53,22 @@ pub fn compute_registration_metrics(
 
 /// Compute Mean Squared Error
 #[allow(dead_code)]
-pub fn compute_mse_metric(_image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
+pub fn compute_mse_metric(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     use crate::error::VisionError;
 
     // Check that images have the same dimensions
-    if _image1.dimensions() != image2.dimensions() {
+    if image1.dimensions() != image2.dimensions() {
         return Err(VisionError::InvalidInput(
             "Images must have the same dimensions for MSE computation".to_string(),
         ));
     }
 
-    let (width, height) = _image1.dimensions();
+    let (width, height) = image1.dimensions();
     let n_pixels = (width * height) as f64;
 
     // Compute sum of squared differences
     let mut sum_squared_diff = 0.0;
-    for (p1, p2) in _image1.pixels().zip(image2.pixels()) {
+    for (p1, p2) in image1.pixels().zip(image2.pixels()) {
         let diff = p1[0] as f64 - p2[0] as f64;
         sum_squared_diff += diff * diff;
     }
@@ -79,7 +79,7 @@ pub fn compute_mse_metric(_image1: &GrayImage, image2: &GrayImage) -> Result<f64
 
 /// Compute Peak Signal-to-Noise Ratio
 #[allow(dead_code)]
-pub fn compute_psnr_metric(_image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
+pub fn compute_psnr_metric(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     // First compute MSE
     let mse = compute_mse_metric(_image1, image2)?;
 
@@ -101,23 +101,23 @@ pub fn compute_psnr_metric(_image1: &GrayImage, image2: &GrayImage) -> Result<f6
 
 /// Compute Structural Similarity Index (simplified version)
 #[allow(dead_code)]
-pub fn compute_ssim_metric(_image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
+pub fn compute_ssim_metric(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     use crate::error::VisionError;
 
     // Check that images have the same dimensions
-    if _image1.dimensions() != image2.dimensions() {
+    if image1.dimensions() != image2.dimensions() {
         return Err(VisionError::InvalidInput(
             "Images must have the same dimensions for SSIM computation".to_string(),
         ));
     }
 
-    let (width, height) = _image1.dimensions();
+    let (width, height) = image1.dimensions();
     let n_pixels = (width * height) as f64;
 
     // Compute means
     let mut mean1 = 0.0;
     let mut mean2 = 0.0;
-    for (p1, p2) in _image1.pixels().zip(image2.pixels()) {
+    for (p1, p2) in image1.pixels().zip(image2.pixels()) {
         mean1 += p1[0] as f64;
         mean2 += p2[0] as f64;
     }
@@ -128,7 +128,7 @@ pub fn compute_ssim_metric(_image1: &GrayImage, image2: &GrayImage) -> Result<f6
     let mut var1 = 0.0;
     let mut var2 = 0.0;
     let mut covar = 0.0;
-    for (p1, p2) in _image1.pixels().zip(image2.pixels()) {
+    for (p1, p2) in image1.pixels().zip(image2.pixels()) {
         let v1 = p1[0] as f64 - mean1;
         let v2 = p2[0] as f64 - mean2;
         var1 += v1 * v1;
@@ -155,23 +155,23 @@ pub fn compute_ssim_metric(_image1: &GrayImage, image2: &GrayImage) -> Result<f6
 
 /// Compute Normalized Cross-Correlation
 #[allow(dead_code)]
-pub fn compute_ncc_metric(_image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
+pub fn compute_ncc_metric(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     use crate::error::VisionError;
 
     // Check that images have the same dimensions
-    if _image1.dimensions() != image2.dimensions() {
+    if image1.dimensions() != image2.dimensions() {
         return Err(VisionError::InvalidInput(
             "Images must have the same dimensions for NCC computation".to_string(),
         ));
     }
 
-    let (width, height) = _image1.dimensions();
+    let (width, height) = image1.dimensions();
     let n_pixels = (width * height) as f64;
 
     // Compute means
     let mut mean1 = 0.0;
     let mut mean2 = 0.0;
-    for (p1, p2) in _image1.pixels().zip(image2.pixels()) {
+    for (p1, p2) in image1.pixels().zip(image2.pixels()) {
         mean1 += p1[0] as f64;
         mean2 += p2[0] as f64;
     }
@@ -183,7 +183,7 @@ pub fn compute_ncc_metric(_image1: &GrayImage, image2: &GrayImage) -> Result<f64
     let mut sum_sq1 = 0.0;
     let mut sum_sq2 = 0.0;
 
-    for (p1, p2) in _image1.pixels().zip(image2.pixels()) {
+    for (p1, p2) in image1.pixels().zip(image2.pixels()) {
         let v1 = p1[0] as f64 - mean1;
         let v2 = p2[0] as f64 - mean2;
         numerator += v1 * v2;

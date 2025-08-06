@@ -120,7 +120,7 @@ where
     T: Clone + Default,
 {
     match order {
-        Order::C => _array.to_owned(), // ndarray is C order by default
+        Order::C => array.to_owned(), // ndarray is C order by default
         Order::F => {
             // Create a new _array with F order
             // This is a simplified implementation that makes a copy

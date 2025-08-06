@@ -224,7 +224,7 @@ impl<
     }
 
     /// Register a layer with the optimizer
-    pub fn register_layer(&mut self, layer_info: LayerInfo) -> Result<()> {
+    pub fn register_layer(&mut self, layerinfo: LayerInfo) -> Result<()> {
         let input_size = layer_info.input_dim + if layer_info.has_bias { 1 } else { 0 };
         let output_size = layer_info.output_dim;
         let layer_name = layer_info.name.clone();
@@ -345,7 +345,7 @@ impl<
     }
 
     /// Update inverse covariance matrices
-    pub fn update_inverse_matrices(&mut self, layer_name: &str) -> Result<()> {
+    pub fn update_inverse_matrices(&mut self, layername: &str) -> Result<()> {
         let should_update = {
             let state = self.layer_states.get(layer_name).ok_or_else(|| {
                 OptimError::InvalidConfig(format!("Layer {} not found", layer_name))
@@ -718,7 +718,7 @@ impl<
     }
 
     /// Apply K-FAC update to parameter gradients
-    pub fn apply_update(&mut self, layer_name: &str, gradients: &Array2<T>) -> Result<Array2<T>> {
+    pub fn apply_update(&mut self, layername: &str, gradients: &Array2<T>) -> Result<Array2<T>> {
         let state = self
             .layer_states
             .get(layer_name)
@@ -854,7 +854,7 @@ impl<
     }
 
     /// Get layer state information
-    pub fn get_layer_state(&self, layer_name: &str) -> Option<&KFACLayerState<T>> {
+    pub fn get_layer_state(&self, layername: &str) -> Option<&KFACLayerState<T>> {
         self.layer_states.get(layer_name)
     }
 
@@ -1031,7 +1031,9 @@ pub mod kfac_utils {
 
     /// Compute statistics for batch normalization layers
     pub fn batchnorm_statistics<T: Float + num_traits::FromPrimitive>(
-        inputs: &Array2<T>, _gamma: &Array1<T>, _beta: &Array1<T>,
+        inputs: &Array2<T>,
+        _gamma: &Array1<T>,
+        _beta: &Array1<T>,
     ) -> Result<(Array1<T>, Array1<T>)> {
         let mean = inputs.mean_axis(Axis(0)).unwrap();
         let var = inputs.var_axis(Axis(0), T::zero());
@@ -1148,12 +1150,12 @@ pub mod natural_gradients {
     }
 
     /// Simplified condition number estimation for static methods
-    fn estimate_condition_simple<T>(_matrix: &Array2<T>) -> T
+    fn estimate_condition_simple<T>(matrix: &Array2<T>) -> T
     where
         T: Float,
     {
         // Simple condition number estimate using ratio of max/min diagonal elements
-        let diag = _matrix.diag();
+        let diag = matrix.diag();
         let max_diag = diag.iter().fold(T::neg_infinity(), |acc, &x| acc.max(x));
         let min_diag = diag.iter().fold(T::infinity(), |acc, &x| acc.min(x));
 
@@ -1165,20 +1167,20 @@ pub mod natural_gradients {
     }
 
     /// Simplified static matrix inverse using basic inverse
-    pub fn safe_matrix_inverse_static<T>(_matrix: &Array2<T>) -> Result<Array2<T>>
+    pub fn safe_matrix_inverse_static<T>(matrix: &Array2<T>) -> Result<Array2<T>>
     where
         T: Float + 'static,
     {
         // Simplified inverse using pseudo-inverse approach
         // Add small regularization to diagonal for numerical stability
-        let mut regularized = _matrix.clone();
+        let mut regularized = matrix.clone();
         let reg_value = T::from(1e-8).unwrap();
         for i in 0.._matrix.nrows() {
             regularized[[i, i]] = regularized[[i, i]] + reg_value;
         }
 
         // Use simple Gauss-Jordan elimination for small matrices
-        if _matrix.nrows() <= 3 {
+        if matrix.nrows() <= 3 {
             gauss_jordan_inverse(&regularized)
         } else {
             // For larger matrices, use iterative approach
@@ -1187,17 +1189,17 @@ pub mod natural_gradients {
     }
 
     /// Simple Gauss-Jordan inverse for small matrices
-    fn gauss_jordan_inverse<T>(_matrix: &Array2<T>) -> Result<Array2<T>>
+    fn gauss_jordan_inverse<T>(matrix: &Array2<T>) -> Result<Array2<T>>
     where
         T: Float,
     {
-        let n = _matrix.nrows();
+        let n = matrix.nrows();
         let mut augmented = Array2::zeros((n, 2 * n));
 
         // Create augmented _matrix [A | I]
         for i in 0..n {
             for j in 0..n {
-                augmented[[i, j]] = _matrix[[i, j]];
+                augmented[[i, j]] = matrix[[i, j]];
                 augmented[[i, j + n]] = if i == j { T::one() } else { T::zero() };
             }
         }
@@ -1257,18 +1259,18 @@ pub mod natural_gradients {
     }
 
     /// Simple iterative inverse for larger matrices
-    fn iterative_inverse_simple<T>(_matrix: &Array2<T>) -> Result<Array2<T>>
+    fn iterative_inverse_simple<T>(matrix: &Array2<T>) -> Result<Array2<T>>
     where
         T: Float + 'static,
     {
         // Use Richardson iteration with diagonal preconditioning
-        let n = _matrix.nrows();
+        let n = matrix.nrows();
         let mut inverse = Array2::eye(n);
 
         // Extract diagonal for preconditioning
         let mut diag_inv = Array1::zeros(n);
         for i in 0..n {
-            let diag_val = _matrix[[i, i]];
+            let diag_val = matrix[[i, i]];
             if diag_val.abs() < T::from(1e-12).unwrap() {
                 return Err(OptimError::ComputationError(
                     "Matrix has zero diagonal element".to_string(),
@@ -1279,7 +1281,7 @@ pub mod natural_gradients {
 
         // Richardson iteration: X_{k+1} = X_k + D^{-1}(I - AX_k)
         for _iter in 0..10 {
-            let residual = Array2::eye(n) - _matrix.dot(&inverse);
+            let residual = Array2::eye(n) - matrix.dot(&inverse);
             let correction = &diag_inv * &residual;
             inverse = inverse + correction;
         }
@@ -1388,8 +1390,8 @@ pub mod advanced_kfac {
     pub trait CommunicationBackend: Send + Sync + std::fmt::Debug {
         fn all_reduce(&self, data: &mut [f32]) -> Result<()>;
         fn broadcast(&self, data: &mut [f32], root: usize) -> Result<()>;
-        fn gather(&self, send_data: &[f32], recv_data: &mut [f32], root: usize) -> Result<()>;
-        fn scatter(&self, send_data: &[f32], recv_data: &mut [f32], root: usize) -> Result<()>;
+        fn gather(&self, send_data: &[f32], recvdata: &mut [f32], root: usize) -> Result<()>;
+        fn scatter(&self, send_data: &[f32], recvdata: &mut [f32], root: usize) -> Result<()>;
         fn barrier(&self) -> Result<()>;
     }
 
@@ -2424,10 +2426,11 @@ pub mod advanced_kfac {
         }
 
         /// Initialize Fisher information matrix with parameter dimensions
-        pub fn initialize_fisher(&mut self, param_dims: &[usize]) -> Result<()> {
+        pub fn initialize_fisher(&mut self, paramdims: &[usize]) -> Result<()> {
             let total_params: usize = param_dims.iter().sum();
 
-            self.fisher_matrix = if let Some(rank) = Some(100) { // Default max rank
+            self.fisher_matrix = if let Some(rank) = Some(100) {
+                // Default max rank
                 if rank < total_params {
                     FisherInformation::LowRank {
                         u: Array2::zeros((total_params, rank)),
@@ -2467,7 +2470,7 @@ pub mod advanced_kfac {
             Ok(())
         }
 
-        fn update_empirical_fisher(&mut self, gradient_samples: &[Array1<T>]) -> Result<()> {
+        fn update_empirical_fisher(&mut self, gradientsamples: &[Array1<T>]) -> Result<()> {
             if gradient_samples.is_empty() {
                 return Ok(());
             }
@@ -2602,7 +2605,8 @@ pub mod advanced_kfac {
 
             let natural_grad = match &self.fisher_matrix {
                 FisherInformation::Full(fisher) => {
-                    if true { // Default to using conjugate gradient
+                    if true {
+                        // Default to using conjugate gradient
                         self.solve_cg(fisher, gradient)?
                     } else {
                         self.solve_direct(fisher, gradient)?
@@ -2663,7 +2667,8 @@ pub mod advanced_kfac {
             let mut p = r.clone();
             let mut rsold = r.dot(&r);
 
-            for _iter in 0..10 { // Default max CG iterations
+            for _iter in 0..10 {
+                // Default max CG iterations
                 let ap = fisher.dot(&p);
                 let alpha = rsold / p.dot(&ap);
 
@@ -2739,7 +2744,8 @@ pub mod advanced_kfac {
             self.step_count += 1;
 
             // Update adaptive damping
-            if true { // Default to adaptive damping
+            if true {
+                // Default to adaptive damping
                 self.update_adaptive_damping(loss)?;
             }
 
@@ -2749,7 +2755,8 @@ pub mod advanced_kfac {
             // Apply update: θ_{t+1} = θ_t - lr * F^(-1) * g
             let mut new_params = parameters.clone();
             for i in 0..new_params.len() {
-                new_params[i] = new_params[i] - self.config.base_config.policy_lr * natural_gradient[i];
+                new_params[i] =
+                    new_params[i] - self.config.base_config.policy_lr * natural_gradient[i];
             }
 
             Ok(new_params)
@@ -2921,7 +2928,7 @@ pub mod advanced_kfac {
     }
 
     impl LocalCommunicationBackend {
-        pub fn new(num_workers: usize, worker_rank: usize) -> Self {
+        pub fn new(num_workers: usize, workerrank: usize) -> Self {
             Self {
                 num_workers,
                 worker_rank,
@@ -2950,7 +2957,7 @@ pub mod advanced_kfac {
             Ok(())
         }
 
-        fn gather(&self, send_data: &[f32], recv_data: &mut [f32], root: usize) -> Result<()> {
+        fn gather(&self, send_data: &[f32], recvdata: &mut [f32], root: usize) -> Result<()> {
             if self.worker_rank == root {
                 // Copy own _data to beginning of receive buffer
                 let chunk_size = send_data.len();
@@ -2960,7 +2967,7 @@ pub mod advanced_kfac {
             Ok(())
         }
 
-        fn scatter(&self, send_data: &[f32], recv_data: &mut [f32], root: usize) -> Result<()> {
+        fn scatter(&self, send_data: &[f32], recvdata: &mut [f32], root: usize) -> Result<()> {
             if self.worker_rank == root {
                 // Send _data to self (copy chunk for this worker)
                 let chunk_size = recv_data.len();
@@ -2988,7 +2995,10 @@ pub mod advanced_kfac {
                 + num_traits::FromPrimitive,
         > DistributedKFAC<T>
     {
-        pub fn new(_base_config: KFACConfig<T>, dist_config: DistributedKFACConfig) -> Result<Self> {
+        pub fn new(
+            _base_config: KFACConfig<T>,
+            dist_config: DistributedKFACConfig,
+        ) -> Result<Self> {
             let base_kfac = KFAC::new(_base_config);
             let local_backend =
                 LocalCommunicationBackend::new(dist_config.num_workers, dist_config.worker_rank);
@@ -3010,7 +3020,8 @@ pub mod advanced_kfac {
         pub fn step_distributed(
             &mut self,
             layer_name: &str,
-            local_gradients: &Array2<T>, _local_activations: &Array2<T>,
+            local_gradients: &Array2<T>,
+            _local_activations: &Array2<T>,
         ) -> Result<Array2<T>> {
             // 1. Compute local K-FAC updates
             let local_update = self.base_kfac.apply_update(layer_name, local_gradients)?;
@@ -3043,7 +3054,7 @@ pub mod advanced_kfac {
     pub type KFACOptimizer<T> = KFAC<T>;
 
     impl<T: Float + Send + Sync> BlockDecomposition<T> {
-        pub fn new(block_size: usize) -> Self {
+        pub fn new(blocksize: usize) -> Self {
             Self {
                 blocks: HashMap::new(),
                 block_size,
@@ -3053,7 +3064,8 @@ pub mod advanced_kfac {
         }
 
         pub fn apply_block_update(
-            &mut self, _layer_name: &str,
+            &mut self,
+            _layer_name: &str,
             update: &Array2<T>,
         ) -> Result<Array2<T>> {
             // Simple block-wise application (in practice would be more sophisticated)
@@ -3098,7 +3110,7 @@ pub mod advanced_kfac {
             }
         }
 
-        pub fn monitor_layer(&mut self, layer_name: &str, matrix: &Array2<T>) -> Result<()> {
+        pub fn monitor_layer(&mut self, layername: &str, matrix: &Array2<T>) -> Result<()> {
             // Initialize trackers if not present
             if !self.eigenvalue_trackers.contains_key(layer_name) {
                 self.eigenvalue_trackers.insert(
@@ -3124,7 +3136,7 @@ pub mod advanced_kfac {
     }
 
     impl<T: Float + Send + Sync + std::iter::Sum + ndarray::ScalarOperand> EigenvalueTracker<T> {
-        pub fn new(_size: usize) -> Self {
+        pub fn new(size: usize) -> Self {
             Self {
                 eigenvalue_history: VecDeque::with_capacity(100),
                 spectral_radius: VecDeque::with_capacity(100),
@@ -3164,7 +3176,7 @@ pub mod advanced_kfac {
     }
 
     impl<T: Float + Send + Sync + std::iter::Sum + ndarray::ScalarOperand> PowerIterationState<T> {
-        pub fn new(_size: usize) -> Self {
+        pub fn new(size: usize) -> Self {
             Self {
                 vector: Array1::ones(_size),
                 value: T::one(),
@@ -3239,7 +3251,7 @@ pub mod advanced_kfac {
             Ok(())
         }
 
-        fn apply_remediation(&mut self, _condition_number: T) -> Result<()> {
+        fn apply_remediation(&mut self, _conditionnumber: T) -> Result<()> {
             // Simple remediation: log the need for increased damping
             let action = RemediationAction::IncreaseDamping {
                 old_damping: 0.001,

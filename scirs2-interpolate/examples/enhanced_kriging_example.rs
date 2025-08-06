@@ -79,8 +79,8 @@ fn generate_anisotropic_data() -> (Array2<f64>, Array1<f64>) {
 
 /// Generate a grid of points for prediction
 #[allow(dead_code)]
-fn _generate_prediction_grid(_n_grid: usize) -> Array2<f64> {
-    let grid_size = _n_grid * _n_grid;
+fn _generate_prediction_grid(_ngrid: usize) -> Array2<f64> {
+    let grid_size = _n_grid * n_grid;
     let mut grid_points = Array2::zeros((grid_size, 2));
 
     let step = 10.0 / (_n_grid as f64 - 1.0);
@@ -158,8 +158,8 @@ impl _ArrayStats for ArrayView1<'_, f64> {
 
 /// Print quantiles from sample array
 #[allow(dead_code)]
-fn _print_quantiles(_samples: &ArrayView1<f64>) {
-    let mut sorted: Vec<f64> = _samples.iter().cloned().collect();
+fn _print_quantiles(samples: &ArrayView1<f64>) {
+    let mut sorted: Vec<f64> = samples.iter().cloned().collect();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let n = sorted.len();

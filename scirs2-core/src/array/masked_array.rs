@@ -113,11 +113,11 @@ where
     }
 
     /// Get a view of the data with masked values replaced by `fill_value`
-    pub fn value_2(&self, fill_value: Option<A>) -> Array<A, D>
+    pub fn value_2(&self, fillvalue: Option<A>) -> Array<A, D>
     where
         <D as Dimension>::Pattern: ndarray::NdIndex<D>,
     {
-        let fill = fill_value.map_or_else(|| self.fill_value.clone(), |v| v);
+        let fill = fillvalue.map_or_else(|| self.fill_value.clone(), |v| v);
 
         // Create new array with same shape as data
         let mut result = Array::from_elem(self.data.raw_dim(), fill);
@@ -169,8 +169,8 @@ where
     }
 
     /// Set the fill value for the array
-    pub fn value_3(&mut self, fill_value: A) {
-        self.fill_value = fill_value;
+    pub fn value_3(&mut self, fillvalue: A) {
+        self.fill_value = fillvalue;
     }
 
     /// Returns a new array containing only unmasked values
@@ -272,18 +272,18 @@ where
     ///
     /// # Errors
     /// Returns `ArrayError::ShapeMismatch` if the mask shapes don't match.
-    pub fn mask_or(&self, other_mask: &Array<bool, D>) -> Result<Self, ArrayError> {
+    pub fn mask_or(&self, othermask: &Array<bool, D>) -> Result<Self, ArrayError> {
         // Check that shapes match
-        if self.mask.shape() != other_mask.shape() {
+        if self.mask.shape() != othermask.shape() {
             return Err(ArrayError::ShapeMismatch {
                 expected: self.mask.shape().to_vec(),
-                found: other_mask.shape().to_vec(),
+                found: othermask.shape().to_vec(),
                 msg: "Mask shapes must match for mask_or operation".to_string(),
             });
         }
 
         // Combine masks
-        let combined_mask = &self.mask | other_mask;
+        let combined_mask = &self.mask | othermask;
 
         Ok(Self {
             data: self.data.clone(),
@@ -296,18 +296,18 @@ where
     ///
     /// # Errors
     /// Returns `ArrayError::ShapeMismatch` if the mask shapes don't match.
-    pub fn mask_and(&self, other_mask: &Array<bool, D>) -> Result<Self, ArrayError> {
+    pub fn mask_and(&self, othermask: &Array<bool, D>) -> Result<Self, ArrayError> {
         // Check that shapes match
-        if self.mask.shape() != other_mask.shape() {
+        if self.mask.shape() != othermask.shape() {
             return Err(ArrayError::ShapeMismatch {
                 expected: self.mask.shape().to_vec(),
-                found: other_mask.shape().to_vec(),
+                found: othermask.shape().to_vec(),
                 msg: "Mask shapes must match for mask_and operation".to_string(),
             });
         }
 
         // Combine masks
-        let combined_mask = &self.mask & other_mask;
+        let combined_mask = &self.mask & othermask;
 
         Ok(Self {
             data: self.data.clone(),
@@ -580,7 +580,7 @@ where
 }
 
 /// Function to check if a value is masked
-pub const fn is_masked<A>(_value: &A) -> bool
+pub const fn is_masked<A>(value: &A) -> bool
 where
     A: PartialEq,
 {

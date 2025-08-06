@@ -26,7 +26,7 @@ impl ComplexMultiplyKernel {
             workgroup_size: [256, 1, 1],
             local_memory_usage: 0,
             supports_tensor_cores: false,
-            operation_type: OperationType::ComputeIntensive,
+            operationtype: OperationType::ComputeIntensive,
             backend_metadata: HashMap::new(),
         };
 
@@ -205,11 +205,11 @@ impl GpuKernel for ComplexMultiplyKernel {
         self.base.metadata()
     }
 
-    fn can_specialize(&self, _params: &KernelParams) -> bool {
+    fn can_specialize(&self, params: &KernelParams) -> bool {
         false
     }
 
-    fn specialize(&self, _params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
+    fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
         Err(GpuError::SpecializationNotSupported)
     }
 }
@@ -232,7 +232,7 @@ impl ComplexConjugateKernel {
             workgroup_size: [256, 1, 1],
             local_memory_usage: 0,
             supports_tensor_cores: false,
-            operation_type: OperationType::MemoryIntensive,
+            operationtype: OperationType::MemoryIntensive,
             backend_metadata: HashMap::new(),
         };
 
@@ -292,11 +292,11 @@ impl GpuKernel for ComplexConjugateKernel {
         self.base.metadata()
     }
 
-    fn can_specialize(&self, _params: &KernelParams) -> bool {
+    fn can_specialize(&self, params: &KernelParams) -> bool {
         false
     }
 
-    fn specialize(&self, _params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
+    fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
         Err(GpuError::SpecializationNotSupported)
     }
 }
@@ -319,7 +319,7 @@ impl ComplexMatMulKernel {
             workgroup_size: [16, 16, 1],
             local_memory_usage: 2 * 16 * 16 * 8, // 2 tiles of 16x16 complex numbers
             supports_tensor_cores: false,
-            operation_type: OperationType::ComputeIntensive,
+            operationtype: OperationType::ComputeIntensive,
             backend_metadata: HashMap::new(),
         };
 
@@ -443,11 +443,11 @@ impl GpuKernel for ComplexMatMulKernel {
         self.base.metadata()
     }
 
-    fn can_specialize(&self, _params: &KernelParams) -> bool {
+    fn can_specialize(&self, params: &KernelParams) -> bool {
         false
     }
 
-    fn specialize(&self, _params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
+    fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
         // Could specialize for specific matrix sizes (2x2, 4x4, etc.)
         Ok(Box::new(self.clone()))
     }
@@ -488,7 +488,7 @@ mod tests {
         let kernel = ComplexMultiplyKernel::new();
         let metadata = kernel.metadata();
         assert_eq!(metadata.workgroup_size, [256, 1, 1]);
-        assert_eq!(metadata.operation_type, OperationType::ComputeIntensive);
+        assert_eq!(metadata.operationtype, OperationType::ComputeIntensive);
     }
 
     #[test]

@@ -118,7 +118,7 @@ struct GraphMLKey {
 /// - Both directed and undirected graphs
 /// - Hierarchical graph structures (though currently simplified)
 #[allow(dead_code)]
-pub fn read_graphml_format<N, E, P>(_path: P, weighted: bool) -> Result<Graph<N, E>>
+pub fn read_graphml_format<N, E, P>(path: P, weighted: bool) -> Result<Graph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
@@ -194,7 +194,7 @@ where
 /// * `Ok(DiGraph)` - The directed graph read from the file
 /// * `Err(GraphError)` - If there was an error reading or parsing the file
 #[allow(dead_code)]
-pub fn read_graphml_format_digraph<N, E, P>(_path: P, weighted: bool) -> Result<DiGraph<N, E>>
+pub fn read_graphml_format_digraph<N, E, P>(path: P, weighted: bool) -> Result<DiGraph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
@@ -440,7 +440,7 @@ where
 
 /// Parse a GraphML key definition from XML
 #[allow(dead_code)]
-fn parse_key_definition(_line: &str) -> Result<Option<GraphMLKey>> {
+fn parse_key_definition(line: &str) -> Result<Option<GraphMLKey>> {
     // Simple attribute parsing for key elements
     let mut id = None;
     let mut for_target = None;
@@ -448,30 +448,30 @@ fn parse_key_definition(_line: &str) -> Result<Option<GraphMLKey>> {
     let mut attr_type = None;
 
     // Extract attributes using simple string matching
-    if let Some(id_start) = _line.find(r#"id=""#) {
+    if let Some(id_start) = line.find(r#"id=""#) {
         let start = id_start + 4;
-        if let Some(end) = _line[start..].find('"') {
+        if let Some(end) = line[start..].find('"') {
             id = Some(_line[start..start + end].to_string());
         }
     }
 
-    if let Some(for_start) = _line.find(r#"for=""#) {
+    if let Some(for_start) = line.find(r#"for=""#) {
         let start = for_start + 5;
-        if let Some(end) = _line[start..].find('"') {
+        if let Some(end) = line[start..].find('"') {
             for_target = Some(_line[start..start + end].to_string());
         }
     }
 
-    if let Some(name_start) = _line.find(r#"attr.name=""#) {
+    if let Some(name_start) = line.find(r#"attr.name=""#) {
         let start = name_start + 11;
-        if let Some(end) = _line[start..].find('"') {
+        if let Some(end) = line[start..].find('"') {
             attr_name = Some(_line[start..start + end].to_string());
         }
     }
 
-    if let Some(type_start) = _line.find(r#"attr.type=""#) {
+    if let Some(type_start) = line.find(r#"attr.type=""#) {
         let start = type_start + 11;
-        if let Some(end) = _line[start..].find('"') {
+        if let Some(end) = line[start..].find('"') {
             attr_type = Some(_line[start..start + end].to_string());
         }
     }
@@ -493,15 +493,15 @@ fn parse_key_definition(_line: &str) -> Result<Option<GraphMLKey>> {
 
 /// Parse a GraphML node element for undirected graphs
 #[allow(dead_code)]
-fn parse_node_element<N, E>(_line: &str, graph: &mut Graph<N, E>, line_num: usize) -> Result<()>
+fn parse_node_element<N, E>(_line: &str, graph: &mut Graph<N, E>, linenum: usize) -> Result<()>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
 {
     // Extract node id
-    if let Some(id_start) = _line.find(r#"id=""#) {
+    if let Some(id_start) = line.find(r#"id=""#) {
         let start = id_start + 4;
-        if let Some(end) = _line[start..].find('"') {
+        if let Some(end) = line[start..].find('"') {
             let node_id = &_line[start..start + end];
             let _node = N::from_str(node_id).map_err(|_| {
                 GraphError::Other(format!(
@@ -518,7 +518,8 @@ where
 /// Parse a GraphML node element for directed graphs
 #[allow(dead_code)]
 fn parse_digraph_node_element<N, E>(
-    line: &str, graph: &mut DiGraph<N, E>,
+    line: &str,
+    graph: &mut DiGraph<N, E>,
     line_num: usize,
 ) -> Result<()>
 where
@@ -546,7 +547,9 @@ where
 #[allow(dead_code)]
 fn parse_edge_element<N, E>(
     line: &str,
-    graph: &mut Graph<N, E>, _keys: &HashMap<String, GraphMLKey>, _weighted: bool,
+    graph: &mut Graph<N, E>,
+    _keys: &HashMap<String, GraphMLKey>,
+    _weighted: bool,
     line_num: usize,
 ) -> Result<()>
 where
@@ -602,7 +605,9 @@ where
 #[allow(dead_code)]
 fn parse_digraph_edge_element<N, E>(
     line: &str,
-    graph: &mut DiGraph<N, E>, _keys: &HashMap<String, GraphMLKey>, _weighted: bool,
+    graph: &mut DiGraph<N, E>,
+    _keys: &HashMap<String, GraphMLKey>,
+    _weighted: bool,
     line_num: usize,
 ) -> Result<()>
 where

@@ -47,9 +47,9 @@ pub struct StreamingExecutor {
 }
 
 impl StreamingExecutor {
-    pub fn new(_chunk_size: usize) -> Self {
+    pub fn new(_chunksize: usize) -> Self {
         Self {
-            chunk_size: _chunk_size,
+            chunk_size: chunk_size,
         }
     }
 }
@@ -121,13 +121,13 @@ pub struct CachedExecutor {
 }
 
 impl CachedExecutor {
-    pub fn new(_cache_dir: impl AsRef<Path>) -> Self {
+    pub fn new(_cachedir: impl AsRef<Path>) -> Self {
         Self {
-            cache_dir: _cache_dir.as_ref().to_path_buf(),
+            cache_dir: cache_dir.as_ref().to_path_buf(),
         }
     }
 
-    fn cache_key<T>(&self, stage_name: &str, input: &T) -> String
+    fn cache_key<T>(&self, stagename: &str, input: &T) -> String
     where
         T: std::fmt::Debug,
     {
@@ -182,9 +182,9 @@ pub struct DistributedExecutor {
 }
 
 impl DistributedExecutor {
-    pub fn new(_num_workers: usize) -> Self {
+    pub fn new(_numworkers: usize) -> Self {
         Self {
-            num_workers: _num_workers,
+            num_workers: num_workers,
         }
     }
 }
@@ -226,9 +226,9 @@ pub struct CheckpointedExecutor {
 }
 
 impl CheckpointedExecutor {
-    pub fn new(_checkpoint_dir: impl AsRef<Path>, interval: usize) -> Self {
+    pub fn new(_checkpointdir: impl AsRef<Path>, interval: usize) -> Self {
         Self {
-            checkpoint_dir: _checkpoint_dir.as_ref().to_path_buf(),
+            checkpoint_dir: checkpoint_dir.as_ref().to_path_buf(),
             checkpoint_interval: interval,
         }
     }
@@ -271,7 +271,7 @@ impl ExecutorFactory {
     }
 
     /// Create a streaming executor
-    pub fn streaming(_chunk_size: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
+    pub fn streaming(_chunksize: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
         Box::new(StreamingExecutor::new(_chunk_size))
     }
 
@@ -282,12 +282,12 @@ impl ExecutorFactory {
     }
 
     /// Create a cached executor
-    pub fn cached(_cache_dir: impl AsRef<Path>) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
+    pub fn cached(_cachedir: impl AsRef<Path>) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
         Box::new(CachedExecutor::new(_cache_dir))
     }
 
     /// Create a distributed executor
-    pub fn distributed(_num_workers: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
+    pub fn distributed(_numworkers: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
         Box::new(DistributedExecutor::new(_num_workers))
     }
 
@@ -335,9 +335,9 @@ pub struct BackpressureStreamingExecutor {
 }
 
 impl BackpressureStreamingExecutor {
-    pub fn new(_chunk_size: usize, max_pending_chunks: usize) -> Self {
+    pub fn new(_chunk_size: usize, max_pendingchunks: usize) -> Self {
         Self {
-            chunk_size: _chunk_size,
+            chunk_size: chunk_size,
             max_pending_chunks,
             timeout: Duration::from_secs(30),
         }
@@ -425,9 +425,9 @@ pub struct StageMetrics {
 }
 
 impl<E> MonitoringExecutor<E> {
-    pub fn new(_inner: E) -> Self {
+    pub fn new(inner: E) -> Self {
         Self {
-            inner: _inner,
+            inner: inner,
             metrics_collector: Arc::new(Mutex::new(PipelineMetrics::default())),
         }
     }
@@ -483,9 +483,9 @@ pub struct RetryExecutor<E> {
 }
 
 impl<E> RetryExecutor<E> {
-    pub fn new(_inner: E, max_retries: usize) -> Self {
+    pub fn new(_inner: E, maxretries: usize) -> Self {
         Self {
-            inner: _inner,
+            inner: inner,
             max_retries,
             retry_delay: Duration::from_secs(1),
             exponential_backoff: true,
@@ -551,9 +551,9 @@ pub enum Event {
 }
 
 impl EventDrivenExecutor {
-    pub fn new(_event_receiver: Receiver<Event>) -> Self {
+    pub fn new(_eventreceiver: Receiver<Event>) -> Self {
         Self {
-            event_receiver: _event_receiver,
+            event_receiver: event_receiver,
         }
     }
 }
@@ -597,9 +597,9 @@ pub struct ParallelStageExecutor {
 }
 
 impl ParallelStageExecutor {
-    pub fn new(_max_parallelism: usize) -> Self {
+    pub fn new(_maxparallelism: usize) -> Self {
         Self {
-            max_parallelism: _max_parallelism,
+            max_parallelism: max_parallelism,
         }
     }
 }

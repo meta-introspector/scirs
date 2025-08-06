@@ -65,11 +65,11 @@ impl FocalLoss {
 
     /// Create a focal loss with class-specific alpha weights
     /// * `alpha_per_class` - Vector of weighting factors, one per class
-    pub fn with_class_weights(gamma: f64, alpha_per_class: Vec<f64>, epsilon: f64) -> Self {
+    pub fn with_class_weights(gamma: f64, alpha_perclass: Vec<f64>, epsilon: f64) -> Self {
         Self {
             gamma,
             alpha: None,
-            alpha_per_class: Some(alpha_per_class),
+            alpha_per_class: Some(alpha_perclass),
             epsilon,
         }
     }

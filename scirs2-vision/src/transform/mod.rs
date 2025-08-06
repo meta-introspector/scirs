@@ -18,7 +18,7 @@ pub use interpolation::{
     convolve_1d, resize, resize_bicubic, resize_convolution, resize_edge_preserving,
     resize_lanczos, InterpolationMethod,
 };
-pub use non__rigid::{
+pub use non_rigid::{
     generate_grid_points, warp_elastic, warp_non_rigid, warp_thin_plate_spline, ElasticDeformation,
     NonRigidTransform, ThinPlateSpline,
 };

@@ -120,27 +120,27 @@ use crate::utils::safe_usize_to_float;
 /// - For binary images, equivalent to finding the centroid of the foreground region
 /// - Subpixel precision is maintained for accurate localization
 #[allow(dead_code)]
-pub fn center_of_mass<T, D>(_input: &Array<T, D>) -> NdimageResult<Vec<T>>
+pub fn center_of_mass<T, D>(input: &Array<T, D>) -> NdimageResult<Vec<T>>
 where
     T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Validate inputs
-    if _input.ndim() == 0 {
+    if input.ndim() == 0 {
         return Err(NdimageError::InvalidInput(
             "Input array cannot be 0-dimensional".into(),
         ));
     }
 
-    if _input.is_empty() {
+    if input.is_empty() {
         return Err(NdimageError::InvalidInput("Input array is empty".into()));
     }
 
-    let ndim = _input.ndim();
-    let shape = _input.shape();
+    let ndim = input.ndim();
+    let shape = input.shape();
 
     // Calculate total mass (sum of all values)
-    let total_mass = _input.sum();
+    let total_mass = input.sum();
 
     if total_mass == T::zero() {
         // If total mass is zero, return center of array
@@ -159,7 +159,7 @@ where
     let mut center_of_mass = vec![T::zero(); ndim];
 
     // Convert to dynamic array for easier indexing
-    let input_dyn = _input.clone().into_dyn();
+    let input_dyn = input.clone().into_dyn();
 
     // Iterate through all elements in the array
     for (idx, &value) in input_dyn.indexed_iter() {
@@ -190,20 +190,20 @@ where
 ///
 /// * `Result<Array<T, ndarray::Ix2>>` - Moment of inertia tensor
 #[allow(dead_code)]
-pub fn moments_inertia_tensor<T, D>(_input: &Array<T, D>) -> NdimageResult<Array<T, ndarray::Ix2>>
+pub fn moments_inertia_tensor<T, D>(input: &Array<T, D>) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
     T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Validate inputs
-    if _input.ndim() == 0 {
+    if input.ndim() == 0 {
         return Err(NdimageError::InvalidInput(
             "Input array cannot be 0-dimensional".into(),
         ));
     }
 
     // Placeholder implementation
-    let dim = _input.ndim();
+    let dim = input.ndim();
     Ok(Array::<T>::zeros((dim, dim)))
 }
 
@@ -218,13 +218,13 @@ where
 ///
 /// * `Result<Array<T, ndarray::Ix1>>` - Array of moments
 #[allow(dead_code)]
-pub fn moments<T, D>(_input: &Array<T, D>, order: usize) -> NdimageResult<Array<T, ndarray::Ix1>>
+pub fn moments<T, D>(input: &Array<T, D>, order: usize) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
     T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Validate inputs
-    if _input.ndim() == 0 {
+    if input.ndim() == 0 {
         return Err(NdimageError::InvalidInput(
             "Input array cannot be 0-dimensional".into(),
         ));
@@ -233,7 +233,7 @@ where
     // For 2D images, calculate raw moments M_pq where p, q <= order
     // For nD arrays, we generalize to all possible combinations of powers
 
-    let ndim = _input.ndim();
+    let ndim = input.ndim();
 
     // For 2D case (most common), calculate standard 2D moments
     if ndim == 2 {
@@ -251,8 +251,8 @@ where
                 for (row, col) in ndarray::indices(input_2d.dim()) {
                     let value = input_2d[[row, col]];
                     if value != T::zero() {
-                        let x = safe_usize, _to_float: <T>(col)?;
-                        let y = safe_usize, _to_float: <T>(row)?;
+                        let x = safe_usizeto_float::<T>(col)?;
+                        let y = safe_usizeto_float::<T>(row)?;
 
                         // M_pq = sum(x^p * y^q * I(x,y))
                         let x_power = if p == 0 { T::one() } else { x.powi(p as i32) };
@@ -280,7 +280,7 @@ where
 
         // First moments for each dimension
         let center = center_of_mass(_input)?;
-        let total_mass = _input.sum();
+        let total_mass = input.sum();
 
         for dim in 0..ndim {
             // M_10...0, M_01...0, etc. = center * mass
@@ -367,8 +367,8 @@ where
                 for (row, col) in ndarray::indices(input_2d.dim()) {
                     let value = input_2d[[row, col]];
                     if value != T::zero() {
-                        let x = safe_usize, _to_float: <T>(col)?;
-                        let y = safe_usize, _to_float: <T>(row)?;
+                        let x = safe_usizeto_float::<T>(col)?;
+                        let y = safe_usizeto_float::<T>(row)?;
 
                         // μ_pq = sum((x-cx)^p * (y-cy)^q * I(x,y))
                         let dx = x - cx;
@@ -414,8 +414,8 @@ where
 
                     for (idx, &value) in input_dyn.indexed_iter() {
                         if value != T::zero() {
-                            let coord1 = safe_usize, _to_float: <T>(idx.as_array_view()[dim1])?;
-                            let coord2 = safe_usize, _to_float: <T>(idx.as_array_view()[dim2])?;
+                            let coord1 = safe_usizeto_float::<T>(idx.as_array_view()[dim1])?;
+                            let coord2 = safe_usizeto_float::<T>(idx.as_array_view()[dim2])?;
 
                             let dc1 = coord1 - center_coords[dim1];
                             let dc2 = coord2 - center_coords[dim2];

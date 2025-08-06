@@ -94,7 +94,7 @@ impl QualityAnalyzer {
     pub fn generate_quality_report<S, D>(
         &self,
         array: &ArrayBase<S, D>,
-        field_name: &str,
+        fieldname: &str,
     ) -> Result<DataQualityReport, CoreError>
     where
         S: Data,
@@ -116,7 +116,7 @@ impl QualityAnalyzer {
         if completeness < 0.95 {
             issues.push(QualityIssue {
                 issue_type: QualityIssueType::MissingData,
-                location: field_name.to_string(),
+                location: fieldname.to_string(),
                 description: format!("Low data completeness: {:.1}%", completeness * 100.0),
                 severity: if completeness < 0.8 {
                     ErrorSeverity::Error
@@ -144,7 +144,7 @@ impl QualityAnalyzer {
         if validity < 1.0 {
             issues.push(QualityIssue {
                 issue_type: QualityIssueType::InvalidNumeric,
-                location: field_name.to_string(),
+                location: fieldname.to_string(),
                 description: format!(
                     "Invalid numeric values detected: {:.1}% valid",
                     validity * 100.0
@@ -168,7 +168,7 @@ impl QualityAnalyzer {
 
         // Detect outliers if we have statistical summary
         if let Some(ref stats) = statistical_summary {
-            let outlier_issues = self.detect_outliers(array, stats, field_name)?;
+            let outlier_issues = self.detect_outliers(array, stats, fieldname)?;
             issues.extend(outlier_issues);
         }
 
@@ -269,7 +269,7 @@ impl QualityAnalyzer {
     }
 
     /// Count outliers using IQR method
-    fn count_outliers_iqr<T>(&self, sorted_values: &[T]) -> usize
+    fn count_outliers_iqr<T>(&self, sortedvalues: &[T]) -> usize
     where
         T: Float + Copy,
     {
@@ -292,7 +292,7 @@ impl QualityAnalyzer {
     }
 
     /// Basic distribution detection
-    fn detect_distribution<T>(&self, sorted_values: &[T]) -> Option<String>
+    fn detect_distribution<T>(&self, sortedvalues: &[T]) -> Option<String>
     where
         T: Float + Copy + FromPrimitive,
     {
@@ -344,7 +344,7 @@ impl QualityAnalyzer {
         &self,
         array: &ArrayBase<S, D>,
         stats: &StatisticalSummary,
-        field_name: &str,
+        fieldname: &str,
     ) -> Result<Vec<QualityIssue>, CoreError>
     where
         S: Data,
@@ -359,7 +359,7 @@ impl QualityAnalyzer {
             if outlier_percentage > 5.0 {
                 issues.push(QualityIssue {
                     issue_type: QualityIssueType::Outlier,
-                    location: field_name.to_string(),
+                    location: fieldname.to_string(),
                     description: format!(
                         "High number of outliers detected: {} ({:.1}%)",
                         stats.outliers, outlier_percentage
@@ -576,7 +576,7 @@ impl DataQualityReport {
     }
 
     /// Get issues by type
-    pub fn get_issues_by_type(&self, issue_type: QualityIssueType) -> Vec<&QualityIssue> {
+    pub fn get_issues_by_type(&self, issuetype: QualityIssueType) -> Vec<&QualityIssue> {
         self.issues
             .iter()
             .filter(|issue| issue.issue_type == issue_type)

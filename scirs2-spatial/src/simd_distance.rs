@@ -211,9 +211,9 @@ pub fn simd_euclidean_distance_batch(
 /// # Returns
 /// * Condensed distance matrix, shape (n*(n-1)/2,)
 #[allow(dead_code)]
-pub fn parallel_pdist(_points: &ArrayView2<'_, f64>, metric: &str) -> SpatialResult<Array1<f64>> {
+pub fn parallel_pdist(points: &ArrayView2<'_, f64>, metric: &str) -> SpatialResult<Array1<f64>> {
     use scirs2_core::parallel_ops::{ParallelBridge, ParallelIterator};
-    let n_points = _points.nrows();
+    let n_points = points.nrows();
     if n_points < 2 {
         return Err(SpatialError::ValueError(
             "Need at least 2 _points for distance computation".to_string(),
@@ -241,8 +241,8 @@ pub fn parallel_pdist(_points: &ArrayView2<'_, f64>, metric: &str) -> SpatialRes
             // Convert linear index to (i, j) pair
             let (i, j) = linear_to_condensed_indices(idx, n_points);
 
-            let p1 = _points.row(i);
-            let p2 = _points.row(j);
+            let p1 = points.row(i);
+            let p2 = points.row(j);
 
             match metric_enum {
                 SimdMetric::Euclidean => {
@@ -459,10 +459,10 @@ pub fn simd_knn_search(
 
 /// Convert linear index to (i, j) indices for condensed distance matrix
 #[allow(dead_code)]
-fn linear_to_condensed_indices(_linear_idx: usize, n: usize) -> (usize, usize) {
+fn linear_to_condensed_indices(_linearidx: usize, n: usize) -> (usize, usize) {
     // For condensed distance matrix where entry (i,j) with i < j is stored
     // at position (n-1-i)*(n-i)/2 + (j-i-1)
-    let mut k = _linear_idx;
+    let mut k = linear_idx;
     let mut i = 0;
 
     while k >= n - i - 1 {
@@ -503,13 +503,13 @@ pub mod advanced_simd_clustering {
         }
 
         /// Configure mixed precision (f32 for speed where possible)
-        pub fn with_mixed_precision(mut self, use_mixed_precision: bool) -> Self {
+        pub fn with_mixed_precision(mut self, use_mixedprecision: bool) -> Self {
             self.use_mixed_precision = use_mixed_precision;
             self
         }
 
         /// Set block size for cache-optimized processing
-        pub fn with_block_size(mut self, block_size: usize) -> Self {
+        pub fn with_block_size(mut self, blocksize: usize) -> Self {
             self.block_size = block_size;
             self
         }
@@ -742,7 +742,7 @@ pub mod advanced_simd_clustering {
         }
 
         /// Compute maximum centroid movement using SIMD operations
-        fn compute_max_centroid_movement(&self, _centroids: &ndarray::ArrayView2<f64>) -> f64 {
+        fn compute_max_centroid_movement(&self, centroids: &ndarray::ArrayView2<f64>) -> f64 {
             // For simplicity, return a small value indicating convergence
             // In a full implementation, this would compare with previous _centroids
             self.tolerance * 0.5

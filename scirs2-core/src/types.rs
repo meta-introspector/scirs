@@ -705,12 +705,12 @@ pub mod precision {
             };
 
             let new_precision = self.precision.max(type_precision);
-            let new_error_bound = self.error_bound + type_precision;
+            let newerror_bound = self.error_bound + type_precision;
 
             Ok(TrackedValue {
                 value: converted,
                 precision: new_precision,
-                error_bound: new_error_bound,
+                error_bound: newerror_bound,
                 source_type: format!(
                     "{src}→{dst}",
                     src = self.source_type,
@@ -721,7 +721,7 @@ pub mod precision {
         }
 
         /// Apply an operation and update precision tracking
-        pub fn apply_operation<F, U>(&self, op: F, op_name: &str) -> TrackedValue<U>
+        pub fn apply_operation<F, U>(&self, op: F, opname: &str) -> TrackedValue<U>
         where
             F: FnOnce(T) -> U,
             U: Copy + fmt::Display + PartialOrd + NumCast + 'static,
@@ -764,12 +764,12 @@ pub mod precision {
 
             // Combine precision estimates (worst-case propagation)
             let combined_precision = self.precision.max(other.precision);
-            let combined_error = self.error_bound + other.error_bound;
+            let combinederror = self.error_bound + other.error_bound;
 
             TrackedValue {
                 value: result,
                 precision: combined_precision * 1.1, // Add small overhead for combination
-                error_bound: combined_error,
+                error_bound: combinederror,
                 source_type: format!(
                     "{src}⊕{other}",
                     src = self.source_type,
@@ -923,12 +923,12 @@ pub mod units {
         }
 
         /// Convert value from this unit to base units
-        pub fn to_base(&self, value: f64) -> f64 {
+        pub fn tobase(&self, value: f64) -> f64 {
             (value + self.offset) * self.scale_factor
         }
 
         /// Convert value from base units to this unit
-        pub fn from_base(&self, value: f64) -> f64 {
+        pub fn frombase(&self, value: f64) -> f64 {
             value / self.scale_factor - self.offset
         }
     }
@@ -957,7 +957,7 @@ pub mod units {
         }
 
         /// Convert to another unit
-        pub fn convert_to(&self, target_unit: &Unit) -> Result<Quantity, UnitConversionError> {
+        pub fn convert_to(&self, targetunit: &Unit) -> Result<Quantity, UnitConversionError> {
             if !self.unit.dimensions.is_compatible(&target_unit.dimensions) {
                 return Err(UnitConversionError::IncompatibleDimensions {
                     from: self.unit.name.clone(),
@@ -966,8 +966,8 @@ pub mod units {
             }
 
             // Convert to base units, then to target units
-            let base_value = self.unit.to_base(self.value);
-            let target_value = target_unit.from_base(base_value);
+            let base_value = self.unit.tobase(self.value);
+            let target_value = target_unit.frombase(base_value);
 
             Ok(Quantity::new(target_value, target_unit.clone()))
         }
@@ -1284,7 +1284,7 @@ pub mod scientific {
         }
 
         /// Create approximation from float
-        pub fn from_float(value: f64, max_denominator: i64) -> Self {
+        pub fn from_float(value: f64, maxdenominator: i64) -> Self {
             // Simple continued fraction approximation
             let mut a = value.floor() as i64;
             let mut remainder = value - a as f64;

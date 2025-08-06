@@ -9,7 +9,7 @@ use crate::error::{SignalError, SignalResult};
 use crate::parametric::{estimate_ar, ARMethod};
 use crate::parametric_arma::{estimate_arma, ArmaMethod, ArmaModel};
 use crate::parametric_enhanced::ModelType;
-use ndarray::{ Array1};
+use ndarray::Array1;
 use rand::prelude::*;
 use rand::Rng;
 use scirs2_core::validation::check_finite;
@@ -198,7 +198,7 @@ pub fn adaptive_model_selection(
     let mut model_candidates = Vec::new();
 
     // Test AR models of different orders
-    for p in 1..=_config.max_complexity {
+    for p in 1..=config.max_complexity {
         if p >= signal.len() / 4 {
             break; // Don't overfit
         }
@@ -230,9 +230,9 @@ pub fn adaptive_model_selection(
     }
 
     // Test ARMA models if requested
-    if _config.max_complexity > 5 {
-        for p in 1..=(_config.max_complexity / 2) {
-            for q in 1..=(_config.max_complexity / 2) {
+    if config.max_complexity > 5 {
+        for p in 1..=(config.max_complexity / 2) {
+            for q in 1..=(config.max_complexity / 2) {
                 if p + q >= signal.len() / 6 {
                     break;
                 }
@@ -274,8 +274,8 @@ pub fn adaptive_model_selection(
     let selected_model = best_model.model_type;
 
     // Perform cross-validation if requested
-    let cv_results = if _config.use_cross_validation {
-        Some(perform_cross_validation(signal, selected_model, _config)?)
+    let cv_results = if config.use_cross_validation {
+        Some(perform_cross_validation(signal, selected_model, config)?)
     } else {
         None
     };
@@ -284,7 +284,7 @@ pub fn adaptive_model_selection(
     let criteria_values = match selected_model {
         ModelType::AR(p) => {
             let (ar_coeffs_, variance) = estimate_ar(signal, p, ARMethod::Burg)?;
-            let ar_result = (ar_coeffs, None, variance);
+            let ar_result = (ar_coeffs_, None, variance);
             compute_model_criteria(signal, &ar_result, selected_model)?
         }
         ModelType::ARMA(p, q) => {
@@ -354,7 +354,7 @@ fn estimate_ar_robust(
 
         // Re-estimate with weights
         let (new_ar_coeffs_, new_variance) = estimate_ar_weighted(signal, order, method, &weights)?;
-        ar_coeffs = new_ar_coeffs;
+        ar_coeffs = new_ar_coeffs_;
         variance = new_variance;
     }
 
@@ -409,8 +409,8 @@ fn compute_ar_residuals(
 
 /// Compute median absolute deviation
 #[allow(dead_code)]
-fn compute_median_absolute_deviation(_values: &Array1<f64>) -> f64 {
-    let mut sorted_values: Vec<f64> = _values.iter().copied().collect();
+fn compute_median_absolute_deviation(values: &Array1<f64>) -> f64 {
+    let mut sorted_values: Vec<f64> = values.iter().copied().collect();
     sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let median = if sorted_values.len() % 2 == 0 {
@@ -528,10 +528,10 @@ fn compute_model_diagnostics(
     ar_result: &(Array1<f64>, Option<Array1<f64>>, f64),
 ) -> SignalResult<ModelDiagnostics> {
     let (ar_coeffs_, variance) = ar_result;
-    let order = ar_coeffs.len() - 1;
+    let order = ar_coeffs_.len() - 1;
 
     // Compute residuals
-    let residuals = compute_ar_residuals(signal, ar_coeffs, order)?;
+    let residuals = compute_ar_residuals(signal, ar_coeffs_, order)?;
 
     // Residual autocorrelation
     let max_lag = 20.min(residuals.len() / 4);
@@ -542,10 +542,10 @@ fn compute_model_diagnostics(
         ljung_box_test(&residual_acf, residuals.len(), order)?;
 
     // Jarque-Bera test for normality
-    let jarque_bera_statistic = jarque_bera_test(&residuals)?;
+    let jarque_bera_statistic = crate::sysid_enhanced::jarque_bera_test(&residuals);
 
     // Check model stability (AR polynomial roots outside unit circle)
-    let is_stable = check_ar_stability(ar_coeffs)?;
+    let is_stable = check_ar_stability(ar_coeffs_)?;
 
     // Estimate log-likelihood
     let n = signal.len() as f64;
@@ -622,7 +622,7 @@ fn perform_cross_validation(
         match model_type {
             ModelType::AR(p) => {
                 let (ar_coeffs__) = estimate_ar(&train_array, p, ARMethod::Burg)?;
-                let pred_error = compute_prediction_error(&val_array, &ar_coeffs, p)?;
+                let pred_error = compute_prediction_error(&val_array, &ar_coeffs__, p)?;
                 fold_errors.push(pred_error);
             }
             ModelType::ARMA(p, q) => {
@@ -659,35 +659,35 @@ fn perform_cross_validation(
 /// Helper functions for diagnostics
 
 #[allow(dead_code)]
-fn compute_autocorrelation(_data: &Array1<f64>, max_lag: usize) -> SignalResult<Array1<f64>> {
-    let n = _data.len();
+fn compute_autocorrelation(_data: &Array1<f64>, maxlag: usize) -> SignalResult<Array1<f64>> {
+    let n = data.len();
     let mut acf = Array1::zeros(max_lag + 1);
 
     // Compute mean
-    let mean = _data.mean().unwrap();
+    let mean = data.mean().unwrap();
 
     // Compute variance
-    let variance = _data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n as f64;
+    let variance = data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n as f64;
 
     // Compute autocorrelations
     for _lag in 0..=max_lag {
         let mut covariance = 0.0;
-        for i in 0..(n - _lag) {
+        for i in 0..(n - lag) {
             covariance += (_data[i] - mean) * (_data[i + _lag] - mean);
         }
-        acf[_lag] = covariance / ((n - _lag) as f64 * variance);
+        acf[_lag] = covariance / ((n - lag) as f64 * variance);
     }
 
     Ok(acf)
 }
 
 #[allow(dead_code)]
-fn ljung_box_test(_acf: &Array1<f64>, n: usize, fitted_params: usize) -> SignalResult<(f64, f64)> {
-    let h = _acf.len() - 1; // Number of lags to test
+fn ljung_box_test(_acf: &Array1<f64>, n: usize, fittedparams: usize) -> SignalResult<(f64, f64)> {
+    let h = acf.len() - 1; // Number of lags to test
     let mut lb_statistic = 0.0;
 
     for k in 1..=h {
-        lb_statistic += _acf[k].powi(2) / (n - k) as f64;
+        lb_statistic += acf[k].powi(2) / (n - k) as f64;
     }
 
     lb_statistic *= n as f64 * (n + 2) as f64;
@@ -703,7 +703,7 @@ fn ljung_box_test(_acf: &Array1<f64>, n: usize, fitted_params: usize) -> SignalR
 }
 
 #[allow(dead_code)]
-fn check_ar_stability(_ar_coeffs: &Array1<f64>) -> SignalResult<bool> {
+fn check_ar_stability(_arcoeffs: &Array1<f64>) -> SignalResult<bool> {
     // Simplified stability check
     let sum_abs_coeffs: f64 = _ar_coeffs
         .slice(s![1..])
@@ -742,6 +742,7 @@ fn compute_prediction_error(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn test_adaptive_model_selection() {
         // Generate AR(2) signal
@@ -752,7 +753,7 @@ mod tests {
         // AR(2): x[t] = 0.7*x[t-1] - 0.2*x[t-2] + e[t]
         for t in 2..n {
             signal[t] =
-                0.7 * signal[t - 1] - 0.2 * signal[t - 2] + 0.1 * rng.random_range(-1.0..1.0);
+                0.7 * signal[t - 1] - 0.2 * signal[t - 2] + 0.1 * rng.gen_range(-1.0..1.0);
         }
 
         let config = AdvancedModelSelection::default();

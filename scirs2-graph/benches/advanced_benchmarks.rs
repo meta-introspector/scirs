@@ -110,7 +110,7 @@ impl BenchmarkResults {
 
 /// Generate test graphs for benchmarking
 #[allow(dead_code)]
-fn generate_test_graph(_size: usize, density: f64) -> Graph<i32, f64> {
+fn generate_test_graph(size: usize, density: f64) -> Graph<i32, f64> {
     let mut rng = rand::thread_rng();
     let graph = erdos_renyi_graph(_size, density, &mut rng).unwrap();
 

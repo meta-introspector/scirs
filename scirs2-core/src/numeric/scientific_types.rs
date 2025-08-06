@@ -20,7 +20,7 @@ pub trait Unit: Clone + fmt::Debug + 'static {
     fn symbol() -> &'static str;
 
     /// Whether this is a base unit or derived unit
-    fn is_base_unit() -> bool {
+    fn isbase_unit() -> bool {
         false
     }
 }
@@ -140,7 +140,7 @@ impl Unit for Meter {
     fn symbol() -> &'static str {
         "m"
     }
-    fn is_base_unit() -> bool {
+    fn isbase_unit() -> bool {
         true
     }
 }
@@ -154,7 +154,7 @@ impl Unit for Second {
     fn symbol() -> &'static str {
         "s"
     }
-    fn is_base_unit() -> bool {
+    fn isbase_unit() -> bool {
         true
     }
 }
@@ -168,7 +168,7 @@ impl Unit for Kilogram {
     fn symbol() -> &'static str {
         "kg"
     }
-    fn is_base_unit() -> bool {
+    fn isbase_unit() -> bool {
         true
     }
 }
@@ -182,7 +182,7 @@ impl Unit for Kelvin {
     fn symbol() -> &'static str {
         "K"
     }
-    fn is_base_unit() -> bool {
+    fn isbase_unit() -> bool {
         true
     }
 }
@@ -196,7 +196,7 @@ impl Unit for Ampere {
     fn symbol() -> &'static str {
         "A"
     }
-    fn is_base_unit() -> bool {
+    fn isbase_unit() -> bool {
         true
     }
 }
@@ -210,7 +210,7 @@ impl Unit for Mole {
     fn symbol() -> &'static str {
         "mol"
     }
-    fn is_base_unit() -> bool {
+    fn isbase_unit() -> bool {
         true
     }
 }
@@ -224,7 +224,7 @@ impl Unit for Candela {
     fn symbol() -> &'static str {
         "cd"
     }
-    fn is_base_unit() -> bool {
+    fn isbase_unit() -> bool {
         true
     }
 }
@@ -988,11 +988,11 @@ mod tests {
     fn test_unit_display() {
         assert_eq!(Meter::name(), "meter");
         assert_eq!(Meter::symbol(), "m");
-        assert!(Meter::is_base_unit());
+        assert!(Meter::isbase_unit());
 
         assert_eq!(Hertz::name(), "hertz");
         assert_eq!(Hertz::symbol(), "Hz");
-        assert!(!Hertz::is_base_unit());
+        assert!(!Hertz::isbase_unit());
     }
 
     #[test]

@@ -338,7 +338,7 @@ fn self_intersection_example() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Create a regular hexagon with given radius and center
 #[allow(dead_code)]
-fn regular_hexagon(_radius: f64, center_x: f64, center_y: f64) -> Array2<f64> {
+fn regular_hexagon(_radius: f64, center_x: f64, centery: f64) -> Array2<f64> {
     let mut vertices = Vec::with_capacity(12); // 6 vertices * 2 coordinates
 
     for i in 0..6 {
@@ -377,16 +377,16 @@ fn create_star_polygon() -> Array2<f64> {
 
 /// Print polygon vertices (limited to first few vertices for readability)
 #[allow(dead_code)]
-fn print_vertices(_poly: &Array2<f64>) {
+fn print_vertices(poly: &Array2<f64>) {
     let max_vertices = 6; // Limit output for readability
-    let n = _poly.nrows().min(max_vertices);
+    let n = poly.nrows().min(max_vertices);
 
     print!("  Vertices:");
     for i in 0..n {
-        print!(" [{:.2}, {:.2}]", _poly[[i, 0]], _poly[[i, 1]]);
+        print!(" [{:.2}, {:.2}]", poly[[i, 0]], poly[[i, 1]]);
     }
-    if _poly.nrows() > max_vertices {
-        print!(" ... ({} more)", _poly.nrows() - max_vertices);
+    if poly.nrows() > max_vertices {
+        print!(" ... ({} more)", poly.nrows() - max_vertices);
     }
     println!();
 }

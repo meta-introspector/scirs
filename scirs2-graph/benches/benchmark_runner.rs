@@ -153,8 +153,8 @@ pub struct BenchmarkRunner {
 }
 
 impl BenchmarkRunner {
-    pub fn new(_config: BenchmarkConfig) -> Self {
-        Self { _config }
+    pub fn new(config: BenchmarkConfig) -> Self {
+        Self { config }
     }
 
     /// Run all configured benchmark suites
@@ -475,7 +475,7 @@ impl BenchmarkRunner {
     }
 
     fn compare_with_baseline(
-        &self_results: &[BenchmarkSuiteResult],
+        self_results: &[BenchmarkSuiteResult],
     ) -> Result<Option<BenchmarkComparison>, Box<dyn std::error::Error>> {
         // Placeholder for baseline comparison logic
         // This would load baseline _results and compare performance metrics
@@ -652,7 +652,7 @@ trait CommandExt {
 }
 
 impl CommandExt for Command {
-    fn timeout(&mut self_timeout: Duration) -> &mut Self {
+    fn timeout(&mut selftimeout: Duration) -> &mut Self {
         // Simplified implementation - would need platform-specific _timeout logic
         self
     }

@@ -4,7 +4,7 @@
 //! of common tensor operations, particularly focusing on reshape and slice operations
 //! that minimize memory allocations and maximize cache efficiency.
 
-use crate::ndarray__ext::NdArrayView;
+use crate::ndarray_ext::NdArrayView;
 use crate::op::{ComputeContext, GradientContext, Op, OpError};
 use crate::tensor::Tensor;
 use crate::Float;
@@ -37,7 +37,7 @@ impl ReshapeCache {
             .copied()
     }
 
-    fn insert(&mut self, fromshape: &[usize], toshape: &[usize], is_contiguous: bool) {
+    fn insert(&mut self, fromshape: &[usize], toshape: &[usize], iscontiguous: bool) {
         if self.cache.len() >= self.max_size {
             // Simple eviction: clear half the cache
             let keys_to_remove: Vec<_> =
@@ -148,8 +148,8 @@ pub struct SliceRange {
 }
 
 impl SliceRange {
-    pub fn new(_start: Option<isize>, end: Option<isize>, step: Option<isize>) -> Self {
-        Self { _start, end, step }
+    pub fn new(start: Option<isize>, end: Option<isize>, step: Option<isize>) -> Self {
+        Self { start, end, step }
     }
 
     pub fn full() -> Self {
@@ -160,7 +160,7 @@ impl SliceRange {
         }
     }
 
-    pub fn single(_index: isize) -> Self {
+    pub fn single(index: isize) -> Self {
         Self {
             start: Some(_index),
             end: Some(_index + 1),
@@ -346,7 +346,7 @@ impl<F: Float> Op<F> for EfficientConcatOp {
 
             // Create a slice of the gradient for this input
             // For now, use a simplified approach
-            let grad_slice = crate::tensor__ops::zeros(&inputshape, graph);
+            let grad_slice = crate::tensor_ops::zeros(&inputshape, graph);
 
             ctx.append_input_grad(i, Some(grad_slice));
         }
@@ -432,11 +432,11 @@ pub fn efficient_slice<'g, F: Float>(
 /// Efficient concatenation of multiple tensors
 #[allow(dead_code)]
 pub fn efficient_concat<'g, F: Float>(tensors: &[&Tensor<'g, F>], axis: usize) -> Tensor<'g, F> {
-    if _tensors.is_empty() {
+    if tensors.is_empty() {
         panic!("Cannot concatenate empty tensor list");
     }
 
-    let g = _tensors[0].graph();
+    let g = tensors[0].graph();
     let mut builder = Tensor::builder(g);
 
     for tensor in _tensors {
@@ -445,7 +445,7 @@ pub fn efficient_concat<'g, F: Float>(tensors: &[&Tensor<'g, F>], axis: usize) -
 
     builder.build(EfficientConcatOp {
         axis,
-        num_inputs: _tensors.len(),
+        num_inputs: tensors.len(),
     })
 }
 

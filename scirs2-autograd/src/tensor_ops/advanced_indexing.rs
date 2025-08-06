@@ -407,7 +407,7 @@ impl<F: Float> Op<F> for AdvancedGatherOp {
 /// Boolean masking - select elements where mask is true
 #[allow(dead_code)]
 pub fn boolean_mask<'g, F: Float>(data: &Tensor<'g, F>, mask: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _data.graph();
+    let g = data.graph();
     Tensor::builder(g)
         .append_input(_data, false)
         .append_input(mask, false)

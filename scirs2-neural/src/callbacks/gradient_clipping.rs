@@ -31,9 +31,9 @@ pub struct GradientClipping<F: Float + Debug + ScalarOperand + Display> {
     clipping_ratio: Option<F>,
 impl<F: Float + Debug + ScalarOperand + Display> GradientClipping<F> {
     /// Create a new gradient clipping callback using global norm
-    pub fn by_global_norm(_max_norm: F, log_stats: bool) -> Self {
+    pub fn by_global_norm(_max_norm: F, logstats: bool) -> Self {
         Self {
-            _max_norm,
+            max_norm,
             method: GradientClippingMethod::ClipByGlobalNorm,
             log_stats,
             clipping_applied: false,
@@ -41,8 +41,8 @@ impl<F: Float + Debug + ScalarOperand + Display> GradientClipping<F> {
         }
     }
     /// Create a new gradient clipping callback using value clipping
-    pub fn by_value(_max_value: F, log_stats: bool) -> Self {
-            max_norm: _max_value,
+    pub fn by_value(_max_value: F, logstats: bool) -> Self {
+            max_norm: max_value,
             method: GradientClippingMethod::ClipByValue,
     /// Returns whether clipping was applied in the last step
     pub fn was_clipping_applied(&self) -> bool {
@@ -115,11 +115,11 @@ impl<F: Float + Debug + ScalarOperand + Display> Callback<F> for GradientClippin
                     match self.method {
                         GradientClippingMethod::ClipByGlobalNorm => {
                             if let Err(e) = self.clip_by_global_norm(&mut **model) {
-                                eprintln!("Error in clip_by_global_norm: {}", e);
+                                eprintln!("Error in clip_by_globalnorm: {}", e);
                             }
                         GradientClippingMethod::ClipByValue => {
                             if let Err(e) = self.clip_by_value(&mut **model) {
-                                eprintln!("Error in clip_by_value: {}", e);
+                                eprintln!("Error in clip_byvalue: {}", e);
                 } else {
                     // Fallback behavior if model is not available
                     if self.log_stats {

@@ -124,7 +124,7 @@ impl Layer {
         self.a = Some(a.clone());
         a
     /// Compute gradients during backward pass
-    fn compute_gradients(&mut self, input: &Array2<f32>, grad_output: &Array2<f32>) -> Array2<f32> {
+    fn compute_gradients(&mut self, input: &Array2<f32>, gradoutput: &Array2<f32>) -> Array2<f32> {
         let z = self.z.as_ref().expect("Forward pass must be called first");
         // Gradient through activation: dL/dz = dL/da * da/dz
         let dz = grad_output * &self.activation.derivative(z);
@@ -139,7 +139,7 @@ impl Layer {
         self.db = Some(db);
         dx
     /// Update parameters with computed gradients
-    fn update_parameters(&mut self, learning_rate: f32) {
+    fn update_parameters(&mut self, learningrate: f32) {
         if let (Some(dw), Some(db)) = (&self.dw, &self.db) {
             // Update parameters
             self.weights = &self.weights - dw * learning_rate;
@@ -165,7 +165,7 @@ impl NeuralNetwork {
             layer_sizes.len() - 1,
             activations.len(),
             "Number of activations must match number of layers - 1"
-        let mut rng = SmallRng::seed_from_u64(seed);
+        let mut rng = SmallRng::from_seed(seed);
         let mut layers = Vec::with_capacity(layer_sizes.len() - 1);
         // Create layers
         for i in 0..layer_sizes.len() - 1 {
@@ -209,7 +209,7 @@ impl NeuralNetwork {
     ) -> Vec<f32> {
         let n_samples = x.shape()[0];
         let mut indices: Vec<usize> = (0..n_samples).collect();
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
         let mut losses = Vec::with_capacity(epochs);
         for epoch in 0..epochs {
             // Shuffle indices for random batches
@@ -281,17 +281,17 @@ impl NeuralNetwork {
         println!("Total parameters: {}", total_params);
 /// Helper function to create a mini-batch from indices
 #[allow(dead_code)]
-fn create_batch(_data: &Array2<f32>, indices: &[usize]) -> Array2<f32> {
+fn create_batch(data: &Array2<f32>, indices: &[usize]) -> Array2<f32> {
     let batch_size = indices.len();
-    let feature_dim = _data.shape()[1];
+    let feature_dim = data.shape()[1];
     let mut batch = Array2::zeros((batch_size, feature_dim));
     for (batch_idx, &data_idx) in indices.iter().enumerate() {
-        let row = _data.slice(s![data_idx, ..]);
+        let row = data.slice(s![data_idx, ..]);
         batch.slice_mut(s![batch_idx, ..]).assign(&row);
     batch
 /// Simple print function for a loss curve
 #[allow(dead_code)]
-fn print_loss_curve(_losses: &[f32], width: usize) {
+fn print_loss_curve(losses: &[f32], width: usize) {
     // Skip the first few values which might be very high
     let start_idx = losses.len().min(10);
     let relevant_losses = &losses[start_idx..];
@@ -322,8 +322,8 @@ fn print_loss_curve(_losses: &[f32], width: usize) {
         println!("{}", "#".repeat(bar_len));
 /// Generate a synthetic dataset for binary classification
 #[allow(dead_code)]
-fn generate_classification_dataset(_n_samples: usize, seed: u64) -> (Array2<f32>, Array2<f32>) {
-    let mut rng = SmallRng::seed_from_u64(seed);
+fn generate_classification_dataset(_nsamples: usize, seed: u64) -> (Array2<f32>, Array2<f32>) {
+    let mut rng = SmallRng::from_seed(seed);
     // Generate two clusters of points
     let mut features = Array2::zeros((_n_samples, 2));
     let mut labels = Array2::zeros((_n_samples, 1));
@@ -341,7 +341,7 @@ fn generate_classification_dataset(_n_samples: usize, seed: u64) -> (Array2<f32>
     (features, labels)
 /// Generate a sine wave dataset for regression
 #[allow(dead_code)]
-fn generate_regression_dataset(_n_samples: usize) -> (Array2<f32>, Array2<f32>) {
+fn generate_regression_dataset(_nsamples: usize) -> (Array2<f32>, Array2<f32>) {
     // Generate x values between 0 and 2π
     let mut x = Array2::zeros((_n_samples, 1));
     let mut y = Array2::zeros((_n_samples, 1));

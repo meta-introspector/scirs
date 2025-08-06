@@ -108,7 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Simple ASCII visualization of the path and obstacles
 #[allow(dead_code)]
-fn print_ascii_visualization(_path: &[[f64; 2]], planner: &VisibilityGraphPlanner) {
+fn print_ascii_visualization(path: &[[f64; 2]], planner: &VisibilityGraphPlanner) {
     const SIZE: usize = 20;
     let mut grid = vec![vec![' '; SIZE]; SIZE];
 
@@ -151,8 +151,8 @@ fn print_ascii_visualization(_path: &[[f64; 2]], planner: &VisibilityGraphPlanne
 
     // Draw _path
     for i in 0.._path.len() - 1 {
-        let (x1, y1) = (_path[i][0] as usize, _path[i][1] as usize);
-        let (x2, y2) = (_path[i + 1][0] as usize, _path[i + 1][1] as usize);
+        let (x1, y1) = (_path[i][0] as usize, path[i][1] as usize);
+        let (x2, y2) = (_path[i + 1][0] as usize, path[i + 1][1] as usize);
 
         // Draw line segments
         let steps = ((x2 as i32 - x1 as i32)
@@ -176,10 +176,10 @@ fn print_ascii_visualization(_path: &[[f64; 2]], planner: &VisibilityGraphPlanne
     }
 
     // Mark start and goal
-    let (start_x, start_y) = (_path[0][0] as usize, _path[0][1] as usize);
+    let (start_x, start_y) = (_path[0][0] as usize, path[0][1] as usize);
     let (goal_x, goal_y) = (
-        _path.last().unwrap()[0] as usize,
-        _path.last().unwrap()[1] as usize,
+        path.last().unwrap()[0] as usize,
+        path.last().unwrap()[1] as usize,
     );
 
     if start_x < SIZE && start_y < SIZE {

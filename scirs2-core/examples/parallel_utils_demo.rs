@@ -109,8 +109,8 @@ fn main() {
 
     // Test with 2D arrays
     println!("\n6. Testing with 2D arrays");
-    let a_2d = Array2::fromshape_fn((100, 100), |(i, j)| (i + j) as f64);
-    let b_2d = Array2::fromshape_fn((100, 100), |(i, j)| (i * j) as f64);
+    let a_2d = Array2::from_shape_fn((100, 100), |(i, j)| (i + j) as f64);
+    let b_2d = Array2::from_shape_fn((100, 100), |(i, j)| (i * j) as f64);
 
     let start = Instant::now();
     let max_2d = maximum(&a_2d, &b_2d);

@@ -22,10 +22,10 @@ pub struct GaussLegendreQuadrature<F: IntegrateFloat> {
 impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
     /// Safe conversion from f64 to F type
     #[allow(dead_code)]
-    fn safe_from_f64(_value: f64) -> IntegrateResult<F> {
-        F::from_f64(_value).ok_or_else(|| {
+    fn safe_from_f64(value: f64) -> IntegrateResult<F> {
+        F::from_f64(value).ok_or_else(|| {
             IntegrateError::ComputationError(format!(
-                "Failed to convert f64 constant {_value} to target type"
+                "Failed to convert f64 constant {value} to target type"
             ))
         })
     }

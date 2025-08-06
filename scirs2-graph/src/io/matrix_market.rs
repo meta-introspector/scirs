@@ -87,14 +87,14 @@ pub struct MatrixMarketHeader {
 
 impl MatrixMarketHeader {
     /// Parse a Matrix Market header from a string
-    pub fn parse_header_line(_line: &str) -> Result<(String, String, String, String)> {
+    pub fn parse_header_line(line: &str) -> Result<(String, String, String, String)> {
         if !_line.starts_with("%%MatrixMarket") {
             return Err(GraphError::Other(
                 "Invalid Matrix Market header - must start with %%MatrixMarket".to_string(),
             ));
         }
 
-        let parts: Vec<&str> = _line.split_whitespace().collect();
+        let parts: Vec<&str> = line.split_whitespace().collect();
         if parts.len() != 5 {
             return Err(GraphError::Other(
                 "Invalid Matrix Market header - expected 5 parts".to_string(),
@@ -110,8 +110,8 @@ impl MatrixMarketHeader {
     }
 
     /// Parse size line (rows cols nnz)
-    pub fn parse_size_line(_line: &str) -> Result<(usize, usize, usize)> {
-        let parts: Vec<&str> = _line.split_whitespace().collect();
+    pub fn parse_size_line(line: &str) -> Result<(usize, usize, usize)> {
+        let parts: Vec<&str> = line.split_whitespace().collect();
         if parts.len() != 3 {
             return Err(GraphError::Other(
                 "Invalid Matrix Market size _line - expected 3 numbers".to_string(),
@@ -199,7 +199,7 @@ impl MatrixMarketHeader {
 /// For pattern matrices, edges have default weights.
 /// For valued matrices, the third column contains edge weights.
 #[allow(dead_code)]
-pub fn read_matrix_market_format<N, E, P>(_path: P, weighted: bool) -> Result<Graph<N, E>>
+pub fn read_matrix_market_format<N, E, P>(path: P, weighted: bool) -> Result<Graph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
@@ -335,7 +335,7 @@ where
 /// * `Ok(DiGraph)` - The directed graph read from the file
 /// * `Err(GraphError)` - If there was an error reading or parsing the file
 #[allow(dead_code)]
-pub fn read_matrix_market_format_digraph<N, E, P>(_path: P, weighted: bool) -> Result<DiGraph<N, E>>
+pub fn read_matrix_market_format_digraph<N, E, P>(path: P, weighted: bool) -> Result<DiGraph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,

@@ -63,22 +63,22 @@ impl From<CoreError> for OperationError {
 #[macro_export]
 macro_rules! array_function_dispatch {
     // For normal functions
-    (fn $name:ident($($arg:ident: $arg_ty:ty),*) -> Result<$ret:ty, $err:ty> $body:block, $func_name:expr) => {
+    (fn $name:ident($($arg:ident: $arg_ty:ty),*) -> Result<$ret:ty, $err:ty> $body:block, $funcname:expr) => {
         pub fn $name($($arg: $arg_ty),*) -> Result<$ret, $err> $body
     };
 
     // For normal functions with trailing commas
-    (fn $name:ident($($arg:ident: $arg_ty:ty,)*) -> Result<$ret:ty, $err:ty> $body:block, $func_name:expr) => {
+    (fn $name:ident($($arg:ident: $arg_ty:ty,)*) -> Result<$ret:ty, $err:ty> $body:block, $funcname:expr) => {
         pub fn $name($($arg: $arg_ty),*) -> Result<$ret, $err> $body
     };
 
     // For generic functions
-    (fn $name:ident<$($type_param:ident $(: $type_bound:path)?),*>($($arg:ident: $arg_ty:ty),*) -> Result<$ret:ty, $err:ty> $body:block, $func_name:expr) => {
+    (fn $name:ident<$($type_param:ident $(: $type_bound:path)?),*>($($arg:ident: $arg_ty:ty),*) -> Result<$ret:ty, $err:ty> $body:block, $funcname:expr) => {
         pub fn $name <$($type_param $(: $type_bound)?),*>($($arg: $arg_ty),*) -> Result<$ret, $err> $body
     };
 
     // For generic functions with trailing commas
-    (fn $name:ident<$($type_param:ident $(: $type_bound:path)?),*>($($arg:ident: $arg_ty:ty,)*) -> Result<$ret:ty, $err:ty> $body:block, $func_name:expr) => {
+    (fn $name:ident<$($type_param:ident $(: $type_bound:path)?),*>($($arg:ident: $arg_ty:ty,)*) -> Result<$ret:ty, $err:ty> $body:block, $funcname:expr) => {
         pub fn $name <$($type_param $(: $type_bound)?),*>($($arg: $arg_ty),*) -> Result<$ret, $err> $body
     };
 }

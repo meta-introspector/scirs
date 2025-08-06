@@ -12,7 +12,7 @@ pub struct BatchProcessor {
 }
 
 impl BatchProcessor {
-    pub fn new(batch_size: usize) -> Self {
+    pub fn new(batchsize: usize) -> Self {
         Self {
             batch_size,
             prefetch_factor: 2,
@@ -20,7 +20,7 @@ impl BatchProcessor {
     }
 
     /// Process data in batches
-    pub fn process_batches<F>(&self, data: &[MLTensor], process_fn: F) -> Result<Vec<MLTensor>>
+    pub fn process_batches<F>(&self, data: &[MLTensor], processfn: F) -> Result<Vec<MLTensor>>
     where
         F: Fn(&[MLTensor]) -> Result<Vec<MLTensor>> + Send + Sync,
     {

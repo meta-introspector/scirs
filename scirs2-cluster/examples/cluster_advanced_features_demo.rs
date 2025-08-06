@@ -84,7 +84,7 @@ fn generate_sample_data() -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn demo_initialization_methods(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_initialization_methods(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("1. K-means with Different Initialization Methods");
     println!("================================================");
 
@@ -120,7 +120,7 @@ fn demo_initialization_methods(_data: &Array2<f64>) -> Result<(), Box<dyn std::e
 }
 
 #[allow(dead_code)]
-fn demo_weighted_kmeans(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_weighted_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("2. Weighted K-means Clustering");
     println!("==============================");
 
@@ -162,7 +162,7 @@ fn demo_weighted_kmeans(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
 }
 
 #[allow(dead_code)]
-fn demo_parallel_kmeans(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_parallel_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("3. Parallel K-means Clustering");
     println!("==============================");
 
@@ -189,7 +189,7 @@ fn demo_parallel_kmeans(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
 }
 
 #[allow(dead_code)]
-fn demo_minibatch_kmeans(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_minibatch_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("4. Mini-batch K-means Clustering");
     println!("=================================");
 
@@ -216,7 +216,7 @@ fn demo_minibatch_kmeans(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::
 }
 
 #[allow(dead_code)]
-fn demo_simd_distances(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_simd_distances(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("5. SIMD Distance Computations");
     println!("=============================");
 

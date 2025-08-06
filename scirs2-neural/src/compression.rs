@@ -101,7 +101,7 @@ impl<F: Float + Debug + 'static> PostTrainingQuantizer<F> {
         }
     }
     /// Calibrate quantization parameters using sample data
-    pub fn calibrate(&mut self, layer_name: String, activations: &ArrayD<F>) -> Result<()> {
+    pub fn calibrate(&mut self, layername: String, activations: &ArrayD<F>) -> Result<()> {
         let min_val = activations.iter().cloned().fold(F::infinity(), F::min);
         let max_val = activations.iter().cloned().fold(F::neg_infinity(), F::max);
         // Create histogram for distribution analysis
@@ -132,7 +132,7 @@ impl<F: Float + Debug + 'static> PostTrainingQuantizer<F> {
         self.layer_params.insert(layer_name, params);
         Ok(())
     /// Compute quantization parameters for a layer
-    fn compute_quantization_params(&self, layer_name: &str) -> Result<QuantizationParams<F>> {
+    fn compute_quantization_params(&self, layername: &str) -> Result<QuantizationParams<F>> {
         let stats = self.calibration_stats.get(layer_name).ok_or_else(|| {
             NeuralError::ComputationError("Calibration stats not found".to_string())
         })?;
@@ -240,7 +240,7 @@ impl<F: Float + Debug + 'static> PostTrainingQuantizer<F> {
                 end_idx = i;
         Ok((stats.bin_edges[start_idx], stats.bin_edges[end_idx + 1]))
     /// Quantize a tensor using the calibrated parameters
-    pub fn quantize_tensor(&self, layer_name: &str, tensor: &ArrayD<F>) -> Result<ArrayD<i32>> {
+    pub fn quantize_tensor(&self, layername: &str, tensor: &ArrayD<F>) -> Result<ArrayD<i32>> {
         let params = self.layer_params.get(layer_name).ok_or_else(|| {
             NeuralError::ComputationError("Quantization params not found".to_string())
         let quantized = tensor.mapv(|x| {
@@ -331,8 +331,8 @@ pub struct SparsityStatistics {
     pub memory_reduction: f64,
 impl<F: Float + Debug + 'static> ModelPruner<F> {
     /// Create a new model pruner
-    pub fn new(_method: PruningMethod) -> Self {
-            _method,
+    pub fn new(method: PruningMethod) -> Self {
+            method,
             pruning_masks: HashMap::new(),
             sparsity_stats: HashMap::new(),
             current_step: 0, _phantom: std::marker::PhantomData,
@@ -436,7 +436,7 @@ impl<F: Float + Debug + 'static> ModelPruner<F> {
         let sparsity = initial_sparsity + (final_sparsity - initial_sparsity) * progress;
         sparsity.min(final_sparsity).max(initial_sparsity)
     /// Apply pruning mask to weights
-    pub fn apply_pruning_mask(&self, layer_name: &str, weights: &mut ArrayD<F>) -> Result<()> {
+    pub fn apply_pruning_mask(&self, layername: &str, weights: &mut ArrayD<F>) -> Result<()> {
         let mask = self
             .pruning_masks
             .get(layer_name)
@@ -491,9 +491,9 @@ pub struct AccuracyMetrics {
     pub accuracy_loss: f64,
 impl CompressionAnalyzer {
     /// Create a new compression analyzer
-    pub fn new(_original_size: usize) -> Self {
-            _original_size,
-            compressed_size: _original_size,
+    pub fn new(_originalsize: usize) -> Self {
+            original_size,
+            compressed_size: original_size,
             speed_metrics: SpeedMetrics {
                 original_time_ms: 0.0,
                 compressed_time_ms: 0.0,

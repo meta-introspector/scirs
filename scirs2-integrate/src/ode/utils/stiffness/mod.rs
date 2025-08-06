@@ -133,9 +133,9 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Create a new stiffness detector with specific configuration
-    pub fn with_config(_config: StiffnessDetectionConfig<F>) -> Self {
+    pub fn with_config(config: StiffnessDetectionConfig<F>) -> Self {
         StiffnessDetector {
-            config: _config,
+            config: config,
             step_size_history: Vec::with_capacity(20),
             error_history: Vec::with_capacity(20),
             newton_iter_history: Vec::with_capacity(20),
@@ -335,9 +335,9 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Check if the problem is stiff based on collected indicators
-    pub fn is_stiff(&self, _current_method_is_stiff: bool, steps_since_switch: usize) -> bool {
+    pub fn is_stiff(&self, _current_method_is_stiff: bool, steps_sinceswitch: usize) -> bool {
         // Don't _switch methods too frequently
-        if steps_since_switch < self.config.min_steps_before_switch {
+        if steps_sinceswitch < self.config.min_steps_before_switch {
             return _current_method_is_stiff;
         }
 
@@ -378,20 +378,20 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Estimate stiffness ratio using eigenvalues of the Jacobian
-    pub fn estimate_stiffness_from_jacobian(&mut self, _jacobian: &Array2<F>) -> F {
+    pub fn estimate_stiffness_from_jacobian(&mut self, jacobian: &Array2<F>) -> F {
         // Estimate the largest and smallest eigenvalues to compute stiffness ratio
         // For efficiency, we use power iteration methods rather than full eigenvalue decomposition
 
-        let n = _jacobian.nrows();
+        let n = jacobian.nrows();
         if n == 0 {
             return F::one();
         }
 
         // Estimate largest eigenvalue magnitude using power iteration
-        let max_eigenval_magnitude = self.estimate_largest_eigenvalue_magnitude(_jacobian);
+        let max_eigenval_magnitude = self.estimate_largest_eigenvalue_magnitude(jacobian);
 
         // Estimate smallest eigenvalue magnitude using inverse power iteration
-        let min_eigenval_magnitude = self.estimate_smallest_eigenvalue_magnitude(_jacobian);
+        let min_eigenval_magnitude = self.estimate_smallest_eigenvalue_magnitude(jacobian);
 
         // Compute stiffness ratio: ratio of largest to smallest eigenvalue magnitudes
         let stiffness_ratio = if min_eigenval_magnitude > F::from_f64(1e-14).unwrap() {
@@ -414,8 +414,8 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Estimate the largest eigenvalue magnitude using power iteration
-    fn estimate_largest_eigenvalue_magnitude(&self, _jacobian: &Array2<F>) -> F {
-        let n = _jacobian.nrows();
+    fn estimate_largest_eigenvalue_magnitude(&self, jacobian: &Array2<F>) -> F {
+        let n = jacobian.nrows();
         let max_iterations = 20;
         let tolerance = F::from_f64(1e-6).unwrap();
 
@@ -435,7 +435,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
             let mut v_new = Array1::<F>::zeros(n);
             for i in 0..n {
                 for j in 0..n {
-                    v_new[i] += _jacobian[[i, j]] * v[j];
+                    v_new[i] += jacobian[[i, j]] * v[j];
                 }
             }
 
@@ -462,8 +462,8 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Estimate the smallest eigenvalue magnitude using inverse power iteration
-    fn estimate_smallest_eigenvalue_magnitude(&self, _jacobian: &Array2<F>) -> F {
-        let n = _jacobian.nrows();
+    fn estimate_smallest_eigenvalue_magnitude(&self, jacobian: &Array2<F>) -> F {
+        let n = jacobian.nrows();
         let max_iterations = 20;
         let tolerance = F::from_f64(1e-6).unwrap();
 
@@ -472,7 +472,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
         // For simplicity, we use sigma = 0 (pure inverse iteration)
 
         // Create A matrix for LU decomposition (we'll approximate with A itself)
-        let mut a_copy = _jacobian.clone();
+        let mut a_copy = jacobian.clone();
 
         // Add small diagonal regularization to avoid singularity
         let regularization = F::from_f64(1e-12).unwrap();
@@ -515,7 +515,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
             let mut av_new = Array1::<F>::zeros(n);
             for i in 0..n {
                 for j in 0..n {
-                    av_new[i] += _jacobian[[i, j]] * v_new[j];
+                    av_new[i] += jacobian[[i, j]] * v_new[j];
                 }
             }
 

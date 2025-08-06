@@ -45,7 +45,7 @@ use ndarray::s;
 
 use crate::error::{SignalError, SignalResult};
 use crate::window;
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
 use num_complex::{Complex64, ComplexFloat};
 use scirs2_fft;
 
@@ -210,7 +210,7 @@ pub fn bicoherence(
 
     // Compute bispectrum and power spectrum for normalization
     let (bis_complex, f1_axis, f2_axis) = compute_bispectrum(signal, &config)?;
-    let (power_spectrum_f_axis) = compute_power_spectrum(signal, &config)?;
+    let power_spectrum = compute_power_spectrum(signal, &config)?;
 
     // Create the bicoherence
     let mut bicoherence = Array2::zeros(bis_complex.raw_dim());
@@ -438,8 +438,8 @@ fn compute_welch_bispectrum(
 
 /// Apply a window function to a signal
 #[allow(dead_code)]
-fn apply_window(_signal: &Array1<f64>, window_name: &str) -> SignalResult<Array1<f64>> {
-    let n = _signal.len();
+fn apply_window(_signal: &Array1<f64>, windowname: &str) -> SignalResult<Array1<f64>> {
+    let n = signal.len();
 
     // Get the window function
     let win = window::get_window(window_name, n, true)?;
@@ -453,8 +453,8 @@ fn apply_window(_signal: &Array1<f64>, window_name: &str) -> SignalResult<Array1
 
 /// Compute the Fast Fourier Transform of a signal
 #[allow(dead_code)]
-fn compute_fft(_signal: &Array1<f64>, nfft: usize) -> SignalResult<Vec<Complex64>> {
-    let signal_vec = _signal.to_vec();
+fn compute_fft(signal: &Array1<f64>, nfft: usize) -> SignalResult<Vec<Complex64>> {
+    let signal_vec = signal.to_vec();
 
     // Perform FFT
     let fft_result = match scirs2_fft::fft(&signal_vec, Some(nfft)) {
@@ -519,12 +519,12 @@ fn compute_power_spectrum(
 
 /// Compute the triple correlation (third-order cumulant) of a signal
 #[allow(dead_code)]
-fn compute_triple_correlation(_signal: &Array1<f64>, size: usize) -> SignalResult<Array2<f64>> {
-    let n = _signal.len();
+fn compute_triple_correlation(signal: &Array1<f64>, size: usize) -> SignalResult<Array2<f64>> {
+    let n = signal.len();
 
     // Center the _signal
-    let mean = _signal.sum() / n as f64;
-    let centered = _signal.mapv(|x| x - mean);
+    let mean = signal.sum() / n as f64;
+    let centered = signal.mapv(|x| x - mean);
 
     // Define the maximum lag
     let max_lag = size.min(n / 3);
@@ -568,8 +568,8 @@ fn compute_triple_correlation(_signal: &Array1<f64>, size: usize) -> SignalResul
 
 /// Compute 2D FFT of a matrix
 #[allow(dead_code)]
-fn compute_2d_fft(_matrix: &Array2<f64>, nfft: usize) -> SignalResult<Array2<Complex64>> {
-    let (rows, cols) = _matrix.dim();
+fn compute_2d_fft(matrix: &Array2<f64>, nfft: usize) -> SignalResult<Array2<Complex64>> {
+    let (rows, cols) = matrix.dim();
 
     // Convert to complex for FFT
     let mut complex_matrix = Array2::zeros((rows, cols));
@@ -781,7 +781,7 @@ pub fn cumulative_bispectrum(
     fs: f64,
 ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
     // Compute bispectrum
-    let (bis_mag__) = bispectrum(signal, nfft, window, None, fs)?;
+    let (bis_mag) = bispectrum(signal, nfft, window, None, fs)?;
 
     // Number of frequency bins
     let n_bins = bis_mag.dim().0;
@@ -846,10 +846,10 @@ pub fn skewness_spectrum(
     };
 
     // Compute bispectrum for diagonal slice (f1 = f2)
-    let (bis_complex, f1_axis_) = compute_bispectrum(signal, &config)?;
+    let (bis_complex, f1_axis) = compute_bispectrum(signal, &config)?;
 
     // Compute power spectrum for normalization
-    let (power_spectrum_) = compute_power_spectrum(signal, &config)?;
+    let (power_spectrum) = compute_power_spectrum(signal, &config)?;
 
     // Number of frequency bins
     let n_bins = (nfft / 2) + 1;

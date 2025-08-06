@@ -676,7 +676,7 @@ where
     // 3. Elliptic integral calculations
 
     // For production readiness, we'll create a filter that approximates elliptic behavior
-    // by combining aspects of Chebyshev I (passband _ripple) and Chebyshev II (stopband zeros)
+    // by combining aspects of Chebyshev I (passband ripple) and Chebyshev II (stopband zeros)
 
     let mut poles = Vec::with_capacity(order);
     let mut zeros = Vec::with_capacity(order);
@@ -1004,6 +1004,6 @@ fn zpk_to_tf(
 }
 
 #[allow(dead_code)]
-fn tf(_num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
-    TransferFunction::new(_num, den)
+fn tf(num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
+    TransferFunction::new(_num, den, None).unwrap()
 }

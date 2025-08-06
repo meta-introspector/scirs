@@ -46,8 +46,8 @@ impl Point {
     }
 
     /// Calculate the distance to another point
-    pub fn distance(&self, _other: &Point) -> f64 {
-        ((self.x - _other.x).powi(2) + (self.y - _other.y).powi(2)).sqrt()
+    pub fn distance(&self, other: &Point) -> f64 {
+        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()
     }
 }
 
@@ -63,9 +63,9 @@ pub struct Triangle {
 
 impl Triangle {
     /// Create a new triangle
-    pub fn new(_nodes: [usize; 3], marker: Option<i32>) -> Self {
+    pub fn new(nodes: [usize; 3], marker: Option<i32>) -> Self {
         Triangle {
-            nodes: _nodes,
+            nodes: nodes,
             marker,
         }
     }
@@ -234,8 +234,8 @@ impl TriangularMesh {
     }
 
     /// Compute area of a triangle
-    pub fn triangle_area(&self, _element: &Triangle) -> f64 {
-        let [i, j, k] = _element.nodes;
+    pub fn triangle_area(&self, element: &Triangle) -> f64 {
+        let [i, j, k] = element.nodes;
         let pi = &self.points[i];
         let pj = &self.points[j];
         let pk = &self.points[k];
@@ -245,13 +245,13 @@ impl TriangularMesh {
     }
 
     /// Compute shape function gradients for a linear triangular element
-    pub fn shape_function_gradients(&self, _element: &Triangle) -> PDEResult<[Point; 3]> {
-        let [i, j, k] = _element.nodes;
+    pub fn shape_function_gradients(&self, element: &Triangle) -> PDEResult<[Point; 3]> {
+        let [i, j, k] = element.nodes;
         let pi = &self.points[i];
         let pj = &self.points[j];
         let pk = &self.points[k];
 
-        let area = self.triangle_area(_element);
+        let area = self.triangle_area(element);
         if area < 1e-10 {
             return Err(PDEError::FiniteElementError(format!(
                 "Element has nearly zero area: {area}"
@@ -501,18 +501,18 @@ impl FEMPoissonSolver {
     }
 
     /// Compute element stiffness matrix and load vector for linear elements
-    fn element_matrices_linear(&self, _element: &Triangle) -> PDEResult<([[f64; 3]; 3], [f64; 3])> {
+    fn element_matrices_linear(&self, element: &Triangle) -> PDEResult<([[f64; 3]; 3], [f64; 3])> {
         // Get nodes
-        let [i, j, k] = _element.nodes;
+        let [i, j, k] = element.nodes;
         let pi = &self.mesh.points[i];
         let pj = &self.mesh.points[j];
         let pk = &self.mesh.points[k];
 
         // Element area
-        let area = self.mesh.triangle_area(_element);
+        let area = self.mesh.triangle_area(element);
 
         // Shape function gradients
-        let gradients = self.mesh.shape_function_gradients(_element)?;
+        let gradients = self.mesh.shape_function_gradients(element)?;
 
         // Stiffness matrix - For Poisson's equation: Integral of (∇φᵢ · ∇φⱼ) over _element
         let mut a_e = [[0.0; 3]; 3];
@@ -816,15 +816,15 @@ impl FEMPoissonSolver {
 
 /// Convert FEMResult to PDESolution
 impl From<FEMResult> for PDESolution<f64> {
-    fn from(_result: FEMResult) -> Self {
+    fn from(result: FEMResult) -> Self {
         let mut grids = Vec::new();
-        let n = _result.mesh.points.len();
+        let n = result.mesh.points.len();
 
         // Extract x and y coordinates as separate grids
         let mut x_coords = Array1::zeros(n);
         let mut y_coords = Array1::zeros(n);
 
-        for (i, point) in _result.mesh.points.iter().enumerate() {
+        for (i, point) in result.mesh.points.iter().enumerate() {
             x_coords[i] = point.x;
             y_coords[i] = point.y;
         }
@@ -834,15 +834,15 @@ impl From<FEMResult> for PDESolution<f64> {
 
         // Create solution values as a 2D array with one column
         let mut values = Vec::new();
-        let u_reshaped = _result.u.into_shape_with_order((n, 1)).unwrap();
+        let u_reshaped = result.u.into_shape_with_order((n, 1)).unwrap();
         values.push(u_reshaped);
 
         // Create solver info
         let info = PDESolverInfo {
-            num_iterations: _result.num_iterations,
-            computation_time: _result.computation_time,
-            residual_norm: Some(_result.residual_norm),
-            convergence_history: _result.convergence_history,
+            num_iterations: result.num_iterations,
+            computation_time: result.computation_time,
+            residual_norm: Some(result.residual_norm),
+            convergence_history: result.convergence_history,
             method: "Finite Element Method".to_string(),
         };
 
@@ -858,7 +858,7 @@ impl From<FEMResult> for PDESolution<f64> {
 // Add PDE error types
 impl PDEError {
     /// Create a finite element error
-    pub fn finite_element_error(_msg: String) -> Self {
-        PDEError::Other(format!("Finite element error: {_msg}"))
+    pub fn finite_element_error(msg: String) -> Self {
+        PDEError::Other(format!("Finite element error: {msg}"))
     }
 }

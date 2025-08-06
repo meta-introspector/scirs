@@ -185,7 +185,7 @@ where
 /// Generate a 1D Gaussian kernel for f64 filtering
 /// This function uses manual caching to avoid Result Clone issues
 #[allow(dead_code)]
-pub fn gaussian_kernel1d_f64(_sigma: f64, truncate: f64) -> NdimageResult<Array1<f64>> {
+pub fn gaussian_kernel1d_f64(sigma: f64, truncate: f64) -> NdimageResult<Array1<f64>> {
     // Manual caching using lazy_static or thread_local would be ideal here
     // but for simplicity, we'll just implement the function without caching for now
 
@@ -193,7 +193,7 @@ pub fn gaussian_kernel1d_f64(_sigma: f64, truncate: f64) -> NdimageResult<Array1
         return Err(NdimageError::InvalidInput("Sigma must be positive".into()));
     }
 
-    let radius = (truncate * _sigma).ceil();
+    let radius = (truncate * sigma).ceil();
     let radius_int = radius as usize;
 
     let size = 2 * radius_int + 1;
@@ -212,7 +212,7 @@ pub fn gaussian_kernel1d_f64(_sigma: f64, truncate: f64) -> NdimageResult<Array1
     }
 
     // Calculate exp(-x^2/(2*_sigma^2))
-    let two_sigma_squared = 2.0 * _sigma * _sigma;
+    let two_sigma_squared = 2.0 * _sigma * sigma;
 
     // Apply the Gaussian formula: exp(-x^2/(2*_sigma^2))
     for i in 0..size {
@@ -846,7 +846,7 @@ where
 /// Generate a 1D Gaussian kernel for f32 filtering
 /// This function uses manual caching to avoid Result Clone issues
 #[allow(dead_code)]
-pub fn gaussian_kernel1d_f32(_sigma: f32, truncate: f32) -> NdimageResult<Array1<f32>> {
+pub fn gaussian_kernel1d_f32(sigma: f32, truncate: f32) -> NdimageResult<Array1<f32>> {
     // Manual caching using lazy_static or thread_local would be ideal here
     // but for simplicity, we'll just implement the function without caching for now
 
@@ -854,7 +854,7 @@ pub fn gaussian_kernel1d_f32(_sigma: f32, truncate: f32) -> NdimageResult<Array1
         return Err(NdimageError::InvalidInput("Sigma must be positive".into()));
     }
 
-    let radius = (truncate * _sigma).ceil();
+    let radius = (truncate * sigma).ceil();
     let radius_int = radius as usize;
 
     let size = 2 * radius_int + 1;
@@ -873,7 +873,7 @@ pub fn gaussian_kernel1d_f32(_sigma: f32, truncate: f32) -> NdimageResult<Array1
     }
 
     // Calculate exp(-x^2/(2*_sigma^2))
-    let two_sigma_squared = 2.0 * _sigma * _sigma;
+    let two_sigma_squared = 2.0 * _sigma * sigma;
 
     // Apply the Gaussian formula: exp(-x^2/(2*_sigma^2))
     for i in 0..size {

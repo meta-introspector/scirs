@@ -91,14 +91,14 @@ impl ErrorModel {
             p_deletion: p_deletion / total,
             p_insertion: p_insertion / total,
             p_substitution: p_substitution / total,
-            p_transposition: p_transposition / total_char,
+            p_transposition: p_transposition / total,
             _confusion: HashMap::new(),
             max_edit_distance: 2,
         }
     }
 
     /// Set the maximum edit distance to consider
-    pub fn with_max_distance(mut self, max_distance: usize) -> Self {
+    pub fn with_max_distance(mut self, maxdistance: usize) -> Self {
         self.max_edit_distance = max_distance;
         self
     }

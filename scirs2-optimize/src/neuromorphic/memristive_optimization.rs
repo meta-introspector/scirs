@@ -86,19 +86,19 @@ pub struct Memristor {
 
 impl Memristor {
     /// Create new memristor with advanced model
-    pub fn new(_params: MemristorParameters, model: MemristorModel) -> Self {
+    pub fn new(params: MemristorParameters, model: MemristorModel) -> Self {
         let initial_resistance =
-            _params.r_on + (_params.r_off - _params.r_on) * (1.0 - _params.initial_x);
-        let variability_factor = if _params.variability > 0.0 {
-            1.0 + (rand::rng().gen::<f64>() - 0.5) * 2.0 * _params.variability
+            params.r_on + (_params.r_off - params.r_on) * (1.0 - params.initial_x);
+        let variability_factor = if params.variability > 0.0 {
+            1.0 + (rand::rng().gen::<f64>() - 0.5) * 2.0 * params.variability
         } else {
             1.0
         };
 
         Self {
             resistance: initial_resistance * variability_factor,
-            state: _params.initial_x,
-            _params,
+            state: params.initial_x,
+            params,
             model,
             temperature: 300.0, // Room temperature in Kelvin
             variability_factor,
@@ -414,7 +414,7 @@ impl MemristiveCrossbar {
     }
 
     /// Compensate for sneak path currents
-    fn compensate_sneak_paths(&self, output: &mut Array1<f64>, _input: &ArrayView1<f64>) {
+    fn compensate_sneak_paths(&self, output: &mut Array1<f64>, input: &ArrayView1<f64>) {
         // Simplified sneak path compensation
         // In practice, this would involve solving Kirchhoff's laws
         let _avg_conductance = self.calculate_average_conductance();
@@ -506,7 +506,7 @@ impl MemristiveCrossbar {
     }
 
     /// Convert desired conductance change to programming voltage
-    fn conductance_change_to_voltage(&self, delta_g: f64, row: usize, col: usize) -> f64 {
+    fn conductance_change_to_voltage(&self, deltag: f64, row: usize, col: usize) -> f64 {
         // Simplified model: voltage proportional to desired conductance change
         let current_g = self.memristors[row][col].conductance();
         let relative_change = delta_g / (current_g + 1e-12);
@@ -717,7 +717,7 @@ impl MemristiveOptimizer {
     }
 
     /// Decode crossbar output to parameter update
-    fn decode_update(&self, crossbar_output: &Array1<f64>) -> Array1<f64> {
+    fn decode_update(&self, crossbaroutput: &Array1<f64>) -> Array1<f64> {
         let n = self.parameters.len();
         let mut update = Array1::zeros(n);
 
@@ -793,7 +793,7 @@ where
         initial_params.to_owned(),
         learning_rate,
         0.9, // momentum
-        _params,
+        params,
         model,
     );
 

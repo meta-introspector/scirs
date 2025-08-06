@@ -253,7 +253,7 @@ where
 /// let uniform_sampler = |rng: &mut StdRng, dims: usize| {
 ///     let mut point = Array1::zeros(dims);
 ///     for i in 0..dims {
-///         point[i] = rng.random_range(0.0..1.0);
+///         point[i] = rng.gen_range(0.0..1.0);
 ///     }
 ///     point
 /// };
@@ -483,7 +483,7 @@ mod tests {
     use std::marker::PhantomData;
 
     // Helper function to check if result is within expected error margin
-    fn is_close_enough(_result: f64, expected: f64, epsilon: f64) -> bool {
+    fn is_close_enough(result: f64, expected: f64, epsilon: f64) -> bool {
         (_result - expected).abs() < epsilon
     }
 

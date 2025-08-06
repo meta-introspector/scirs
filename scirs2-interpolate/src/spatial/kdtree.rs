@@ -106,7 +106,7 @@ where
     /// # Returns
     ///
     /// A new KD-tree for efficient nearest neighbor searches
-    pub fn new<S>(_points: ArrayBase<S, Ix2>) -> InterpolateResult<Self>
+    pub fn new<S>(points: ArrayBase<S, Ix2>) -> InterpolateResult<Self>
     where
         S: Data<Elem = F>,
     {
@@ -123,25 +123,28 @@ where
     /// # Returns
     ///
     /// A new KD-tree for efficient nearest neighbor searches
-    pub fn with_leaf_size<S>(_points: ArrayBase<S, Ix2>, leaf_size: usize) -> InterpolateResult<Self>
+    pub fn with_leaf_size<S>(
+        _points: ArrayBase<S, Ix2>,
+        leaf_size: usize,
+    ) -> InterpolateResult<Self>
     where
         S: Data<Elem = F>,
     {
         // Convert to owned Array2 if it's not already
-        let _points = _points.to_owned();
-        if _points.is_empty() {
+        let _points = points.to_owned();
+        if points.is_empty() {
             return Err(InterpolateError::InvalidValue(
                 "Points array cannot be empty".to_string(),
             ));
         }
 
-        let n_points = _points.shape()[0];
-        let dim = _points.shape()[1];
+        let n_points = points.shape()[0];
+        let dim = points.shape()[1];
 
         // For very small datasets, just use a simple linear search
         if n_points <= leaf_size {
             let mut tree = Self {
-                _points,
+                points,
                 nodes: Vec::new(),
                 root: None,
                 dim,
@@ -167,7 +170,7 @@ where
         let est_nodes = (2 * n_points / leaf_size).max(16);
 
         let mut tree = Self {
-            _points,
+            points,
             nodes: Vec::with_capacity(est_nodes),
             root: None,
             dim,
@@ -422,7 +425,7 @@ where
 
         // Update best distance if this point is closer
         if _dist < *best_dist {
-            *best_dist = _dist;
+            *best_dist = dist;
             *best_idx = point_idx;
         }
 
@@ -928,38 +931,38 @@ where
 /// QuckSelect algorithm to find the k-th smallest element by a key function
 /// This modifies the slice to partition it
 #[allow(dead_code)]
-fn quickselect_by_key<T, F, K>(_items: &mut [T], k: usize, key_fn: F)
+fn quickselect_by_key<T, F, K>(_items: &mut [T], k: usize, keyfn: F)
 where
     F: Fn(&T) -> K,
     K: PartialOrd,
 {
-    if _items.len() <= 1 {
+    if items.len() <= 1 {
         return;
     }
 
-    let len = _items.len();
+    let len = items.len();
 
     // Choose a pivot (middle element to avoid worst case on sorted data)
     let pivot_idx = len / 2;
-    _items.swap(pivot_idx, len - 1);
+    items.swap(pivot_idx, len - 1);
 
     // Partition around the pivot
     let mut store_idx = 0;
-    for i in 0, len - 1 {
+    for i in 0..len - 1 {
         if key_fn(&_items[i]) <= key_fn(&_items[len - 1]) {
-            _items.swap(i, store_idx);
+            items.swap(i, store_idx);
             store_idx += 1;
         }
     }
 
     // Move pivot to its final place
-    _items.swap(store_idx, len - 1);
+    items.swap(store_idx, len - 1);
 
     // Recursively partition the right part only as needed
     match k.cmp(&store_idx) {
-        Ordering::Less => quickselect_by_key(&mut _items[0..store_idx], k, key_fn),
+        Ordering::Less => quickselect_by_key(&mut items[0..store_idx], k, key_fn),
         Ordering::Greater => {
-            quickselect_by_key(&mut _items[store_idx + 1..], k - store_idx - 1, key_fn)
+            quickselect_by_key(&mut items[store_idx + 1..], k - store_idx - 1, key_fn)
         }
         Ordering::Equal => (), // We found the k-th element
     }

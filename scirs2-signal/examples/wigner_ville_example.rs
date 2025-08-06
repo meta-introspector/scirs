@@ -92,7 +92,7 @@ fn generate_test_signal() -> Array1<f64> {
 
 /// Analyze a signal with the standard Wigner-Ville Distribution
 #[allow(dead_code)]
-fn analyze_with_standard_wvd(_signal: &Array1<f64>) -> (Array2<f64>, Array1<f64>, Array1<f64>) {
+fn analyze_with_standard_wvd(signal: &Array1<f64>) -> (Array2<f64>, Array1<f64>, Array1<f64>) {
     // Configure the transform
     let fs = 1024.0;
     let config = WvdConfig {

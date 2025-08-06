@@ -18,7 +18,7 @@ const SEED: u64 = 42;
 
 /// Generate a random matrix with controlled properties
 #[allow(dead_code)]
-fn generate_matrix(n: usize, condition_number: Option<f64>) -> Array2<f64> {
+fn generate_matrix(n: usize, conditionnumber: Option<f64>) -> Array2<f64> {
     let mut rng = ChaCha8Rng::seed_from_u64(SEED);
 
     match condition_number {

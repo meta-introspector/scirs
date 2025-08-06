@@ -160,12 +160,12 @@ where
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: AdvancedSimdConfig) -> Self {
+    pub fn with_config(config: AdvancedSimdConfig) -> Self {
         let vector_strategy = Self::select_optimal_vector_strategy(&_config);
         let memory_pattern = Self::select_optimal_memory_pattern(&_config);
 
         Self {
-            config: _config,
+            config: config,
             vector_strategy,
             memory_pattern,
             _phantom: PhantomData,
@@ -173,14 +173,14 @@ where
     }
 
     /// Select optimal vector strategy based on platform capabilities
-    fn select_optimal_vector_strategy(_config: &AdvancedSimdConfig) -> VectorStrategy {
-        if _config.platform.avx512_available && _config.enable_pipelining {
+    fn select_optimal_vector_strategy(config: &AdvancedSimdConfig) -> VectorStrategy {
+        if config.platform.avx512_available && config.enable_pipelining {
             VectorStrategy::MultiVector { num_registers: 4 }
-        } else if _config.platform.avx2_available {
+        } else if config.platform.avx2_available {
             VectorStrategy::UnrolledVector { unroll_factor: 4 }
-        } else if _config.enable_cache_blocking {
+        } else if config.enable_cache_blocking {
             VectorStrategy::CacheBlockedVector {
-                block_size: _config.l1_cache_size / 4,
+                block_size: config.l1_cache_size / 4,
             }
         } else {
             VectorStrategy::SingleVector
@@ -188,16 +188,16 @@ where
     }
 
     /// Select optimal memory access pattern
-    fn select_optimal_memory_pattern(_config: &AdvancedSimdConfig) -> MemoryPattern {
-        if _config.enable_cache_blocking {
+    fn select_optimal_memory_pattern(config: &AdvancedSimdConfig) -> MemoryPattern {
+        if config.enable_cache_blocking {
             MemoryPattern::Blocked {
-                block_size: _config.l1_cache_size / std::mem::size_of::<f64>(),
+                block_size: config.l1_cache_size / std::mem::size_of::<f64>(),
             }
-        } else if _config.enable_prefetch {
+        } else if config.enable_prefetch {
             MemoryPattern::SequentialPrefetch
         } else {
             MemoryPattern::Tiled {
-                tile_size: _config.cache_line_size / std::mem::size_of::<f64>(),
+                tile_size: config.cache_line_size / std::mem::size_of::<f64>(),
             }
         }
     }
@@ -834,19 +834,19 @@ struct BlockResult<F> {
 
 impl CacheAwareVectorProcessor {
     /// Create new cache-aware processor
-    pub fn new(_config: &AdvancedSimdConfig) -> Self {
+    pub fn new(config: &AdvancedSimdConfig) -> Self {
         Self {
-            l1_block_size: _config.l1_cache_size / std::mem::size_of::<f64>(),
-            l2_block_size: _config.l2_cache_size / std::mem::size_of::<f64>(),
-            vector_width: _config.vector_width,
-            prefetch_distance: _config.vector_width * 4, // Prefetch 4 vectors ahead
+            l1_block_size: config.l1_cache_size / std::mem::size_of::<f64>(),
+            l2_block_size: config.l2_cache_size / std::mem::size_of::<f64>(),
+            vector_width: config.vector_width,
+            prefetch_distance: config.vector_width * 4, // Prefetch 4 vectors ahead
         }
     }
 }
 
 /// Convenience functions for different precision types
 #[allow(dead_code)]
-pub fn advanced_mean_f64(_data: &ArrayView1<f64>) -> StatsResult<AdvancedStatsResult<f64>> {
+pub fn advanced_mean_f64(data: &ArrayView1<f64>) -> StatsResult<AdvancedStatsResult<f64>> {
     let processor = AdvancedSimdProcessor::<f64>::new();
     processor.compute_advanced_statistics(_data)
 }
@@ -881,7 +881,7 @@ pub fn advanced_mean_f64(_data: &ArrayView1<f64>) -> StatsResult<AdvancedStatsRe
 /// let result = advanced_mean_f32(&data.view()).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn advanced_mean_f32(_data: &ArrayView1<f32>) -> StatsResult<AdvancedStatsResult<f32>> {
+pub fn advanced_mean_f32(data: &ArrayView1<f32>) -> StatsResult<AdvancedStatsResult<f32>> {
     let processor = AdvancedSimdProcessor::<f32>::new();
     processor.compute_advanced_statistics(_data)
 }

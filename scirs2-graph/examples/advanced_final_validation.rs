@@ -423,20 +423,20 @@ fn generate_final_report(
 
 /// Print detailed validation report
 #[allow(dead_code)]
-fn print_validation_report(_report: &AdvancedValidationReport) {
+fn print_validation_report(report: &AdvancedValidationReport) {
     println!("\n{}", "=".repeat(60));
     println!("🎯 Advanced MODE FINAL VALIDATION REPORT");
     println!("{}", "=".repeat(60));
 
     // Overall status
-    let status_emoji = match _report.overall_status {
+    let status_emoji = match report.overall_status {
         ValidationStatus::Pass => "✅",
         ValidationStatus::Warning => "⚠️",
         ValidationStatus::Fail => "❌",
     };
     println!(
         "{} Overall Status: {:?}",
-        status_emoji, _report.overall_status
+        status_emoji, report.overall_status
     );
 
     // Processor Configuration Tests
@@ -459,21 +459,21 @@ fn print_validation_report(_report: &AdvancedValidationReport) {
 
     // Memory Efficiency
     println!("\n💾 Memory Efficiency:");
-    let memory_emoji = if _report.memory_efficiency >= 0.8 {
+    let memory_emoji = if report.memory_efficiency >= 0.8 {
         "✅"
-    } else if _report.memory_efficiency >= 0.6 {
+    } else if report.memory_efficiency >= 0.6 {
         "⚠️"
     } else {
         "❌"
     };
     println!(
         "  {} Efficiency Score: {:.2}",
-        memory_emoji, _report.memory_efficiency
+        memory_emoji, report.memory_efficiency
     );
 
     // Numerical Accuracy
     println!("\n🔢 Numerical Accuracy:");
-    let accuracy_emoji = if _report.numerical_accuracy {
+    let accuracy_emoji = if report.numerical_accuracy {
         "✅"
     } else {
         "❌"
@@ -481,7 +481,7 @@ fn print_validation_report(_report: &AdvancedValidationReport) {
     println!(
         "  {} Validation: {}",
         accuracy_emoji,
-        if _report.numerical_accuracy {
+        if report.numerical_accuracy {
             "PASS"
         } else {
             "FAIL"
@@ -506,23 +506,23 @@ fn print_validation_report(_report: &AdvancedValidationReport) {
 
     // Summary
     println!("\n📊 VALIDATION SUMMARY:");
-    let passed_processors = _report.processor_tests.values().filter(|&&v| v).count();
-    let total_processors = _report.processor_tests.len();
+    let passed_processors = report.processor_tests.values().filter(|&&v| v).count();
+    let total_processors = report.processor_tests.len();
     println!(
         "  • Processor Tests: {}/{} passed",
         passed_processors, total_processors
     );
     println!(
         "  • Algorithm Tests: {} completed",
-        _report.algorithm_tests.len()
+        report.algorithm_tests.len()
     );
     println!(
         "  • Memory Efficiency: {:.1}%",
-        _report.memory_efficiency * 100.0
+        report.memory_efficiency * 100.0
     );
     println!(
         "  • Numerical Accuracy: {}",
-        if _report.numerical_accuracy {
+        if report.numerical_accuracy {
             "VALIDATED"
         } else {
             "FAILED"
@@ -530,8 +530,8 @@ fn print_validation_report(_report: &AdvancedValidationReport) {
     );
 
     let avg_improvement = if !_report.performance_improvements.is_empty() {
-        _report.performance_improvements.values().sum::<f64>()
-            / _report.performance_improvements.len() as f64
+        report.performance_improvements.values().sum::<f64>()
+            / report.performance_improvements.len() as f64
     } else {
         1.0
     };

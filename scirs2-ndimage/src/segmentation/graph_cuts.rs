@@ -27,17 +27,17 @@ struct Node {
 
 impl Graph {
     /// Create a new graph with specified number of nodes
-    fn new(_num_nodes: usize) -> Self {
+    fn new(_numnodes: usize) -> Self {
         let mut _nodes = Vec::with_capacity(_num_nodes + 2);
         for i in 0.._num_nodes + 2 {
-            _nodes.push(Node {
+            nodes.push(Node {
                 id: i,
                 neighbors: Vec::new(),
             });
         }
 
         Self {
-            _nodes,
+            nodes,
             edges: HashMap::new(),
             source: num_nodes,
             sink: num_nodes + 1,
@@ -357,7 +357,7 @@ fn compute_smoothness_weight<T: Float>(val1: T, val2: T, lambda: f64, sigma: f64
 
 /// Get neighbor offsets based on connectivity
 #[allow(dead_code)]
-fn get_neighbors(_connectivity: u8) -> Vec<(i32, i32)> {
+fn get_neighbors(connectivity: u8) -> Vec<(i32, i32)> {
     match _connectivity {
         4 => vec![(0, 1), (1, 0), (0, -1), (-1, 0)],
         8 => vec![
@@ -384,10 +384,10 @@ pub struct InteractiveGraphCuts<T> {
 
 impl<T: Float + FromPrimitive + Debug> InteractiveGraphCuts<T> {
     /// Create new interactive segmentation session
-    pub fn new(_image: Array2<T>, params: Option<GraphCutsParams>) -> Self {
-        let shape = _image.dim();
+    pub fn new(image: Array2<T>, params: Option<GraphCutsParams>) -> Self {
+        let shape = image.dim();
         Self {
-            _image,
+            image,
             foreground_seeds: Array2::default(shape),
             background_seeds: Array2::default(shape),
             current_segmentation: None,

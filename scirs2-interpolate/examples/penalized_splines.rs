@@ -302,18 +302,18 @@ fn generate_uniform_knots(
 
     // First degree+1 _knots are at x_min
     for i in 0..=degree {
-        _knots[i] = x_min;
+        knots[i] = x_min;
     }
 
     // Middle _knots are uniformly spaced
     for i in 1..n_knots - degree {
         let t = i as f64 / (n_knots - degree) as f64;
-        _knots[i + degree] = x_min + t * (x_max - x_min);
+        knots[i + degree] = x_min + t * (x_max - x_min);
     }
 
     // Last degree+1 _knots are at x_max
     for i in 0..=degree {
-        _knots[n_knots + i] = x_max;
+        knots[n_knots + i] = x_max;
     }
 
     Ok(_knots)

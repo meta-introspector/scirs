@@ -247,7 +247,7 @@ where
             let mut min_dist = F::infinity();
             let mut best_label = 0;
 
-            for (label_idx_) in unique_labels.iter().enumerate() {
+            for (label_idx, _) in unique_labels.iter().enumerate() {
                 let mut dist = F::zero();
                 for j in 0..x.ncols() {
                     let diff = perturbed_data[[i, j]] - centroids[[label_idx, j]];
@@ -313,12 +313,12 @@ where
 /// let score = consensus_score(&all_clusterings).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn consensus_score<S, D>(_all_labels: &[&ArrayBase<S, D>]) -> Result<f64>
+pub fn consensus_score<S, D>(alllabels: &[&ArrayBase<S, D>]) -> Result<f64>
 where
     S: Data<Elem = usize>,
     D: Dimension,
 {
-    if _all_labels.is_empty() {
+    if all_labels.is_empty() {
         return Err(MetricsError::InvalidInput(
             "At least one clustering result is required".to_string(),
         ));
@@ -335,7 +335,7 @@ where
 
     // Check that all clusterings have the same number of samples
     for _labels in all_labels.iter().skip(1) {
-        if _labels.len() != n_samples {
+        if labels.len() != n_samples {
             return Err(MetricsError::InvalidInput(
                 "All clusterings must have the same number of samples".to_string(),
             ));
@@ -354,8 +354,8 @@ where
     for _labels in all_labels {
         for i in 0..n_samples {
             for j in i..n_samples {
-                let label_i = _labels.iter().nth(i).unwrap();
-                let label_j = _labels.iter().nth(j).unwrap();
+                let label_i = labels.iter().nth(i).unwrap();
+                let label_j = labels.iter().nth(j).unwrap();
 
                 if label_i == label_j {
                     consensus_values[i][j] += 1.0;

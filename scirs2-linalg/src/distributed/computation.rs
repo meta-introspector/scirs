@@ -31,7 +31,7 @@ pub struct DistributedComputationEngine {
 
 impl DistributedComputationEngine {
     /// Create a new distributed computation engine
-    pub fn new(_config: super::DistributedConfig) -> LinalgResult<Self> {
+    pub fn new(config: super::DistributedConfig) -> LinalgResult<Self> {
         let communicator = Arc::new(DistributedCommunicator::new(&_config)?);
         let coordinator = Arc::new(DistributedCoordinator::new(&_config)?);
         let load_balancer = Arc::new(std::sync::Mutex::new(LoadBalancer::new(&_config)?));
@@ -41,7 +41,7 @@ impl DistributedComputationEngine {
             communicator,
             coordinator,
             load_balancer,
-            config: _config,
+            config: config,
             metrics,
         })
     }
@@ -262,7 +262,7 @@ impl DistributedComputationEngine {
         self.coordinator.barrier()
     }
     
-    fn implement_memory_optimization(&self, total_memory: usize) -> LinalgResult<()> {
+    fn implement_memory_optimization(&self, totalmemory: usize) -> LinalgResult<()> {
         // Implement _memory optimization strategies:
         // 1. Data compression
         // 2. Out-of-core computation
@@ -375,9 +375,9 @@ pub struct ComputationScheduler {
 
 impl ComputationScheduler {
     /// Create a new computation scheduler
-    pub fn new(_strategy: SchedulingStrategy) -> Self {
+    pub fn new(strategy: SchedulingStrategy) -> Self {
         Self {
-            _strategy,
+            strategy,
             operation_queue: std::sync::Mutex::new(std::collections::VecDeque::new()),
             node_capabilities: std::collections::HashMap::new(),
         }
@@ -421,7 +421,7 @@ impl ComputationScheduler {
     }
     
     /// Update node capability
-    pub fn update_capability(&mut self, node_rank: usize, capability: f64) {
+    pub fn update_capability(&mut self, noderank: usize, capability: f64) {
         self.node_capabilities.insert(node_rank, capability);
     }
 }

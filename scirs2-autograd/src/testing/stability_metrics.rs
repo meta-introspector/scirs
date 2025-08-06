@@ -437,7 +437,7 @@ impl<F: Float> StabilityMetrics<F> {
     }
 
     fn compute_eigenvalues(
-        &self_matrix: &Array<F, IxDyn>,
+        self_matrix: &Array<F, IxDyn>,
     ) -> Result<Vec<Complex64>, StabilityError> {
         // Simplified - would compute actual eigenvalues
         Ok(vec![
@@ -492,7 +492,8 @@ impl<F: Float> StabilityMetrics<F> {
     }
 
     fn estimate_local_condition_number<Func>(
-        &self_function: &Func,
+        &self,
+        function: &Func,
         _input: &Tensor<F>,
     ) -> Result<f64, StabilityError>
     where

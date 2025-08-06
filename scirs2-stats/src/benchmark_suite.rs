@@ -279,15 +279,15 @@ impl BenchmarkSuite {
     }
 
     /// Create a new benchmark suite with custom configuration
-    pub fn with_config(_config: BenchmarkConfig) -> Self {
-        let memory_tracker = if _config.track_memory {
+    pub fn with_config(config: BenchmarkConfig) -> Self {
+        let memory_tracker = if config.track_memory {
             Some(Arc::new(Mutex::new(MemoryTracker::new())))
         } else {
             None
         };
 
         Self {
-            config: _config,
+            config: config,
             memory_tracker,
             baseline_cache: HashMap::new(),
         }
@@ -587,7 +587,7 @@ impl BenchmarkSuite {
     }
 
     /// Detect algorithm configuration used
-    fn detect_algorithm_config(&self, function_name: &str, data_size: usize) -> AlgorithmConfig {
+    fn detect_algorithm_config(&self, function_name: &str, datasize: usize) -> AlgorithmConfig {
         let simd_enabled = function_name.contains("simd")
             || (data_size > 64
                 && scirs2_core::simd_ops::PlatformCapabilities::detect().simd_available);

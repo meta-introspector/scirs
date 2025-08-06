@@ -137,7 +137,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Analyze stress test results in detail
 #[allow(dead_code)]
-fn analyze_stress_test_results(_report: &scirs2, interpolate: StressTestReport) {
+fn analyze_stress_test_results(report: &scirs2, interpolate: StressTestReport) {
     println!("Detailed Analysis:");
 
     // Performance analysis
@@ -211,7 +211,7 @@ fn analyze_stress_test_results(_report: &scirs2, interpolate: StressTestReport) 
 
 /// Analyze results by test category
 #[allow(dead_code)]
-fn analyze_by_category(_report: &scirs2, interpolate: StressTestReport) {
+fn analyze_by_category(report: &scirs2, interpolate: StressTestReport) {
     use scirs2__interpolate::StressTestCategory;
     use std::collections::HashMap;
 
@@ -250,8 +250,8 @@ fn analyze_by_category(_report: &scirs2, interpolate: StressTestReport) {
 
 /// Provide production deployment guidance
 #[allow(dead_code)]
-fn provide_deployment_guidance(_report: &scirs2, interpolate: StressTestReport) {
-    match _report.production_readiness {
+fn provide_deployment_guidance(report: &scirs2, interpolate: StressTestReport) {
+    match report.production_readiness {
         ProductionReadiness::Ready => {
             println!("✅ READY FOR PRODUCTION DEPLOYMENT");
             println!(
@@ -271,7 +271,7 @@ fn provide_deployment_guidance(_report: &scirs2, interpolate: StressTestReport) 
 
             if !_report.critical_issues.is_empty() {
                 println!("  Critical Issues to Address:");
-                for (i, issue) in _report.critical_issues.iter().enumerate() {
+                for (i, issue) in report.critical_issues.iter().enumerate() {
                     if i < 5 {
                         // Show top 5 critical issues
                         println!("    {}. {}", i + 1, issue.description);
@@ -280,16 +280,16 @@ fn provide_deployment_guidance(_report: &scirs2, interpolate: StressTestReport) 
                         }
                     }
                 }
-                if _report.critical_issues.len() > 5 {
+                if report.critical_issues.len() > 5 {
                     println!(
                         "    ... and {} more critical issues",
-                        _report.critical_issues.len() - 5
+                        report.critical_issues.len() - 5
                     );
                 }
             }
 
             println!("  Recommended Actions:");
-            for (i, recommendation) in _report.recommendations.iter().enumerate() {
+            for (i, recommendation) in report.recommendations.iter().enumerate() {
                 if i < 3 {
                     // Show top 3 recommendations
                     println!("    {}. {}", i + 1, recommendation);
@@ -300,8 +300,8 @@ fn provide_deployment_guidance(_report: &scirs2, interpolate: StressTestReport) 
             println!("❌ NOT READY FOR PRODUCTION");
             println!("  CRITICAL: Do not deploy to production - serious issues detected");
 
-            let critical_count = _report.critical_issues.len();
-            let failed_count = _report.failed;
+            let critical_count = report.critical_issues.len();
+            let failed_count = report.failed;
 
             println!("  Issues Summary:");
             println!("    - {} critical issues", critical_count);

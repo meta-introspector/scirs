@@ -182,10 +182,10 @@ fn main() {
 
 /// Print a summary of data statistics
 #[allow(dead_code)]
-fn print_data_summary(_data: &Array2<f64>, title: &str) {
-    println!("{}: shape=({}, {})", title, _data.nrows(), _data.ncols());
+fn print_data_summary(data: &Array2<f64>, title: &str) {
+    println!("{}: shape=({}, {})", title, data.nrows(), data.ncols());
     for j in 0.._data.ncols() {
-        let col = _data.column(j);
+        let col = data.column(j);
         let min_val = col.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max_val = col.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         let mean = col.iter().sum::<f64>() / col.len() as f64;
@@ -195,7 +195,7 @@ fn print_data_summary(_data: &Array2<f64>, title: &str) {
 
 /// Print a data matrix with feature names
 #[allow(dead_code)]
-fn print_data_matrix(_data: &Array2<f64>, feature_names: &[&str]) {
+fn print_data_matrix(_data: &Array2<f64>, featurenames: &[&str]) {
     // Print header
     print!("     ");
     for name in feature_names {
@@ -207,7 +207,7 @@ fn print_data_matrix(_data: &Array2<f64>, feature_names: &[&str]) {
     for i in 0.._data.nrows() {
         print!("  {i}: ");
         for j in 0.._data.ncols() {
-            print!("{:8.3}", _data[[i, j]]);
+            print!("{:8.3}", data[[i, j]]);
         }
         println!();
     }
@@ -215,12 +215,12 @@ fn print_data_matrix(_data: &Array2<f64>, feature_names: &[&str]) {
 
 /// Print statistical features with labels
 #[allow(dead_code)]
-fn print_statistical_features(_stats: Array1<f64>) {
+fn print_statistical_features(stats: Array1<f64>) {
     let labels = [
         "mean", "std", "min", "max", "median", "q25", "q75", "skewness", "kurtosis",
     ];
     println!("  Statistical measures:");
-    for (i, &value) in _stats.iter().enumerate() {
+    for (i, &value) in stats.iter().enumerate() {
         if i < labels.len() {
             println!("    {}: {:.3}", labels[i], value);
         }

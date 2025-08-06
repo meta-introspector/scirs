@@ -212,8 +212,8 @@ impl CacheInfo {
             if let Ok(cpuinfo) = std::fs::read_to_string("/proc/cpuinfo") {
                 for line in cpuinfo.lines() {
                     if line.contains("cache size") {
-                        if let Some(size_str) = line.split(':').nth(1) {
-                            if let Ok(size) = size_str.trim().replace(" KB", "").parse::<usize>() {
+                        if let Some(sizestr) = line.split(':').nth(1) {
+                            if let Ok(size) = sizestr.trim().replace(" KB", "").parse::<usize>() {
                                 l2_cache_size = size * 1024;
                             }
                         }
@@ -232,17 +232,17 @@ impl CacheInfo {
     }
 
     /// Calculate optimal chunk size for cache efficiency
-    pub fn optimal_chunk_size(&self, element_size: usize) -> usize {
+    pub fn optimal_chunk_size(&self, elementsize: usize) -> usize {
         // Target L2 cache size with some headroom
         let target_size = self.l2_cache_size / 2;
-        target_size / element_size
+        target_size / elementsize
     }
 
     /// Calculate optimal blocking size for matrix operations
-    pub fn optimal_block_size(&self, element_size: usize) -> usize {
+    pub fn optimal_block_size(&self, elementsize: usize) -> usize {
         // Target square blocks that fit in L1 cache
-        let _elements_per_line = self.cache_line_size / element_size;
-        let target_elements = self.l1_cache_size / (3 * element_size); // A, B, C matrices
+        let _elements_per_line = self.cache_line_size / elementsize;
+        let target_elements = self.l1_cache_size / (3 * elementsize); // A, B, C matrices
         (target_elements as f64).sqrt() as usize
     }
 }
@@ -254,7 +254,7 @@ pub struct PerformanceProfile {
     pub cache_info: CacheInfo,
     pub cpu_cores: usize,
     pub numa_nodes: usize,
-    pub memory_bandwidth_gb_per_sec: f64,
+    pub memorybandwidth_gb_per_sec: f64,
     pub preferred_parallelism: usize,
 }
 
@@ -272,7 +272,7 @@ impl PerformanceProfile {
             cache_info,
             cpu_cores,
             numa_nodes: Self::detect_numa_nodes(),
-            memory_bandwidth_gb_per_sec: Self::estimate_memory_bandwidth(),
+            memorybandwidth_gb_per_sec: Self::estimate_memorybandwidth(),
             preferred_parallelism: cpu_cores.min(16), // Cap at 16 for efficiency
         }
     }
@@ -321,15 +321,15 @@ impl PerformanceProfile {
     }
 
     /// Estimate memory bandwidth based on system characteristics
-    fn estimate_memory_bandwidth() -> f64 {
+    fn estimate_memorybandwidth() -> f64 {
         #[cfg(target_os = "linux")]
         {
             // Try to read memory information from /proc/meminfo
             if let Ok(meminfo) = std::fs::read_to_string("/proc/meminfo") {
                 for line in meminfo.lines() {
                     if line.starts_with("MemTotal:") {
-                        if let Some(size_str) = line.split_whitespace().nth(1) {
-                            if let Ok(memory_kb) = size_str.parse::<usize>() {
+                        if let Some(sizestr) = line.split_whitespace().nth(1) {
+                            if let Ok(memory_kb) = sizestr.parse::<usize>() {
                                 let memory_gb = memory_kb / (1024 * 1024);
 
                                 // Estimate based on memory size and typical DDR speeds
@@ -615,7 +615,7 @@ impl AdvancedPerformanceOptimizer {
             "vector_add" | "vector_addition" => self.benchmark_vector_addition(data_size, settings),
             "dot_product" | "vector_dot" => self.benchmark_dot_product(data_size, settings),
             "matrix_multiply" | "matrix_multiplication" => {
-                self.benchmark_matrix_multiplication(data_size, settings)
+                self.benchmarkmatrix_multiplication(data_size, settings)
             }
             _ => {
                 // Generic benchmark for unknown algorithms
@@ -637,7 +637,7 @@ impl AdvancedPerformanceOptimizer {
         let b = Array1::from_elem(size, 2.0f64);
 
         // Run benchmark
-        let (_, _duration_throughput, _) = measure_performance(|| {
+        let (_, duration_throughput, _) = measure_performance(|| {
             if settings.use_simd {
                 // Use SIMD implementation
                 simd_ops::simd_vector_add(a.view(), b.view(), settings.simd_instruction_set)
@@ -661,7 +661,7 @@ impl AdvancedPerformanceOptimizer {
         let b = Array1::from_elem(size, 2.0f64);
 
         // Run benchmark
-        let (_, _duration_, _) = measure_performance(|| {
+        let (_, duration_, _) = measure_performance(|| {
             if settings.use_simd {
                 simd_ops::simd_dot_product(a.view(), b.view(), settings.simd_instruction_set)
             } else {
@@ -680,7 +680,7 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Benchmark matrix multiplication performance
-    fn benchmark_matrix_multiplication(
+    fn benchmarkmatrix_multiplication(
         &self,
         size: usize,
         settings: &OptimizationSettings,
@@ -698,8 +698,8 @@ impl AdvancedPerformanceOptimizer {
         let b = Array2::from_elem((dim, dim), 2.0f64);
 
         // Run benchmark
-        let (result, _duration_, _) =
-            measure_performance(|| cache_aware_matrix_multiply(&a, &b, settings));
+        let (result, duration_, _) =
+            measure_performance(|| cache_awarematrix_multiply(&a, &b, settings));
 
         if result.is_ok() {
             // Calculate FLOPS (floating point operations per second)
@@ -722,7 +722,7 @@ impl AdvancedPerformanceOptimizer {
         // Simple memory access benchmark
         let data = Array1::from_elem(size, 1.0f64);
 
-        let (_, _duration_, _) = measure_performance(|| {
+        let (_, duration_, _) = measure_performance(|| {
             let mut sum = 0.0f64;
             for value in data.iter() {
                 sum += value;
@@ -780,7 +780,7 @@ impl AdvancedPerformanceOptimizer {
         recommendations
     }
 
-    fn is_simd_supported(&self, _simd_set: SimdInstructionSet) -> bool {
+    fn is_simd_supported(&self, _simdset: SimdInstructionSet) -> bool {
         // Placeholder implementation
         // In a real implementation, this would check CPU capabilities
         true
@@ -815,7 +815,7 @@ pub enum PerformanceRecommendation {
 
 /// Cache-aware matrix multiplication with adaptive blocking
 #[allow(dead_code)]
-pub fn cache_aware_matrix_multiply<T>(
+pub fn cache_awarematrix_multiply<T>(
     a: &Array2<T>,
     b: &Array2<T>,
     settings: &OptimizationSettings,
@@ -1041,20 +1041,20 @@ pub mod prefetch {
     /// dereferenced. The pointer does not need to be aligned, but should point to
     /// allocated memory that will be accessed in the near future.
     #[inline]
-    pub unsafe fn prefetch_read<T>(_addr: *const T, locality: i32) {
+    pub unsafe fn prefetch_read<T>(addr: *const T, locality: i32) {
         #[cfg(target_arch = "x86_64")]
         {
             match locality {
-                0 => _mm_prefetch(_addr as *const i8, _MM_HINT_NTA),
-                1 => _mm_prefetch(_addr as *const i8, _MM_HINT_T2),
-                2 => _mm_prefetch(_addr as *const i8, _MM_HINT_T1),
-                3 | _ => _mm_prefetch(_addr as *const i8, _MM_HINT_T0), // Default to highest locality
+                0 => _mm_prefetch(_addr as *const i8, MM_HINT_NTA),
+                1 => _mm_prefetch(_addr as *const i8, MM_HINT_T2),
+                2 => _mm_prefetch(_addr as *const i8, MM_HINT_T1),
+                3 | _ => _mm_prefetch(_addr as *const i8, MM_HINT_T0), // Default to highest locality
             }
         }
         #[cfg(not(target_arch = "x86_64"))]
         {
             // No-op on non-x86 architectures
-            let _ = (_addr, locality);
+            let _ = (addr, locality);
         }
     }
 
@@ -1066,15 +1066,15 @@ pub mod prefetch {
     /// dereferenced. The pointer does not need to be aligned, but should point to
     /// allocated memory that will be written to in the near future.
     #[inline]
-    pub unsafe fn prefetch_write<T>(_addr: *const T) {
+    pub unsafe fn prefetch_write<T>(addr: *const T) {
         #[cfg(target_arch = "x86_64")]
         {
-            _mm_prefetch(_addr as *const i8, _MM_HINT_T0);
+            _mm_prefetch(_addr as *const i8, MM_HINT_T0);
         }
         #[cfg(not(target_arch = "x86_64"))]
         {
             // No-op on non-x86 architectures
-            let _ = _addr;
+            let _ = addr;
         }
     }
 }
@@ -1084,12 +1084,12 @@ pub mod profiling {
     use super::*;
 
     /// Measure execution time and throughput of an operation
-    pub fn measure_performance<F, R>(_operation: F) -> (R, Duration, f64)
+    pub fn measure_performance<F, R>(operation: F) -> (R, Duration, f64)
     where
         F: FnOnce() -> R,
     {
         let start = Instant::now();
-        let result = _operation();
+        let result = operation();
         let duration = start.elapsed();
         let throughput = 1.0 / duration.as_secs_f64();
 
@@ -1116,9 +1116,9 @@ pub mod profiling {
             }
         }
 
-        pub fn record_cache_miss(&mut self, is_cache_miss: bool) {
+        pub fn record_cache_miss(&mut self, is_cachemiss: bool) {
             self.memory_accesses += 1;
-            if is_cache_miss {
+            if is_cachemiss {
                 self.cache_misses += 1;
             }
         }
@@ -1163,7 +1163,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cache_aware_matrix_multiply() {
+    fn test_cache_awarematrix_multiply() {
         let a = Array2::from_elem((4, 4), 1.0f64);
         let b = Array2::from_elem((4, 4), 2.0f64);
 
@@ -1177,7 +1177,7 @@ mod tests {
             num_threads: 1,
         };
 
-        let result = cache_aware_matrix_multiply(&a, &b, &settings).unwrap();
+        let result = cache_awarematrix_multiply(&a, &b, &settings).unwrap();
         assert_eq!(result.dim(), (4, 4));
 
         // Each element should be 4 * 1.0 * 2.0 = 8.0

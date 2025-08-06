@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 2: Parallel LU decomposition
     println!("\n=== Parallel LU Decomposition ===");
-    let matrix = Array2::fromshape_fn((50, 50), |(i, j)| {
+    let matrix = Array2::from_shape_fn((50, 50), |(i, j)| {
         if i == j {
             10.0
         } else {
@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Example 3: Parallel iterative solvers
     println!("\n=== Parallel Iterative Solvers ===");
     let a = create_spd_matrix(50);
-    let b = Array2::fromshape_fn((50, 1), |(i_)| (i_ as f64).sin())
+    let b = Array2::from_shape_fn((50, 1), |(i_)| (i_ as f64).sin())
         .column(0)
         .to_owned();
 
@@ -64,15 +64,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 4: Parallel matrix operations
     println!("\n=== Parallel Matrix Operations ===");
-    let mat_a = Array2::fromshape_fn((100, 80), |(i, j)| ((i + j) as f64).sin());
-    let mat_b = Array2::fromshape_fn((80, 60), |(i, j)| ((i * j) as f64).cos());
+    let mat_a = Array2::from_shape_fn((100, 80), |(i, j)| ((i + j) as f64).sin());
+    let mat_b = Array2::from_shape_fn((80, 60), |(i, j)| ((i * j) as f64).cos());
 
     // Matrix multiplication
     let c = ParallelOperations::matmul(&mat_a.view(), &mat_b.view(), Some(4))?;
     println!("Matrix multiplication result shape: {:?}", c.shape());
 
     // Matrix-vector multiplication
-    let vec = Array2::fromshape_fn((80, 1), |(i_)| (i_ as f64).sin())
+    let vec = Array2::from_shape_fn((80, 1), |(i_)| (i_ as f64).sin())
         .column(0)
         .to_owned();
     let result = ParallelOperations::matvec(&mat_a.view(), &vec.view(), Some(4))?;
@@ -108,7 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Create a symmetric positive definite matrix
 #[allow(dead_code)]
 fn create_spd_matrix(n: usize) -> Array2<f64> {
-    let a = Array2::fromshape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
+    let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
     // Make it symmetric positive definite
     let sym = &a + &a.t();
     &sym.dot(&sym.t()) + Array2::eye(n) * (n as f64)

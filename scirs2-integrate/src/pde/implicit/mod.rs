@@ -1355,14 +1355,14 @@ fn apply_dirichlet_conditions_to_initial_1d(
 
 /// Convert an ImplicitResult to a PDESolution
 impl From<ImplicitResult> for PDESolution<f64> {
-    fn from(_result: ImplicitResult) -> Self {
+    fn from(result: ImplicitResult) -> Self {
         let mut grids = Vec::new();
 
         // Add time grid
-        grids.push(_result.t.clone());
+        grids.push(result.t.clone());
 
         // Extract spatial grid from solution shape
-        let nx = _result.u[0].shape()[0];
+        let nx = result.u[0].shape()[0];
 
         // Create spatial grid (we don't have the actual grid values, so use linspace)
         let x_grid = Array1::linspace(0.0, 1.0, nx);
@@ -1370,8 +1370,8 @@ impl From<ImplicitResult> for PDESolution<f64> {
 
         // Create solver info
         let info = PDESolverInfo {
-            num_iterations: _result.num_linear_solves,
-            computation_time: _result.computation_time,
+            num_iterations: result.num_linear_solves,
+            computation_time: result.computation_time,
             residual_norm: None,
             convergence_history: None,
             method: "Implicit Method".to_string(),
@@ -1379,7 +1379,7 @@ impl From<ImplicitResult> for PDESolution<f64> {
 
         PDESolution {
             grids,
-            values: _result.u,
+            values: result.u,
             error_estimate: None,
             info,
         }

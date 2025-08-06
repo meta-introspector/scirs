@@ -16,8 +16,8 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use rand__distr::{Distribution, Normal, StandardNormal};
-use std::fmt::{Debug, Display};
 use statrs::statistics::Statistics;
+use std::fmt::{Debug, Display};
 
 /// Configuration for bootstrap confidence intervals
 #[derive(Debug, Clone)]
@@ -67,12 +67,12 @@ pub struct BootstrapInterpolator<T: Float> {
 
 impl<T: Float + FromPrimitive + Debug + Display + std::iter::Sum> BootstrapInterpolator<T> {
     /// Create a new bootstrap interpolator
-    pub fn new<F>(_config: BootstrapConfig, interpolator_factory: F) -> Self
+    pub fn new<F>(_config: BootstrapConfig, interpolatorfactory: F) -> Self
     where
         F: Fn(&ArrayView1<T>, &ArrayView1<T>) -> InterpolateResult<Box<dyn Fn(T) -> T>> + 'static,
     {
         Self {
-            _config,
+            config,
             interpolator_factory: Box::new(interpolator_factory),
         }
     }
@@ -198,7 +198,7 @@ impl<T: Float + FromPrimitive> Default for BayesianConfig<T> {
 
 impl<T: Float + FromPrimitive> BayesianConfig<T> {
     /// Set the RBF kernel length scale parameter
-    pub fn with_length_scale(mut self, length_scale: T) -> Self {
+    pub fn with_length_scale(mut self, lengthscale: T) -> Self {
         self.length_scale = length_scale;
         self
     }
@@ -216,7 +216,7 @@ impl<T: Float + FromPrimitive> BayesianConfig<T> {
     }
 
     /// Set the number of posterior samples
-    pub fn with_n_posterior_samples(mut self, n_samples: usize) -> Self {
+    pub fn with_n_posterior_samples(mut self, nsamples: usize) -> Self {
         self.n_posterior_samples = n_samples;
         self
     }
@@ -264,7 +264,7 @@ impl<
     }
 
     /// Get posterior mean at given points using proper Gaussian process regression
-    pub fn posterior_mean(&self, x_new: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    pub fn posterior_mean(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         let n = self.x_obs.len();
         let m = x_new.len();
 
@@ -336,7 +336,7 @@ impl<
         k_matrix: &ArrayView2<T>,
         y_obs: &ArrayView1<T>,
     ) -> InterpolateResult<Array1<T>> {
-        use crate::structured__matrix::solve_dense_system;
+        use crate::structured_matrix::solve_dense_system;
 
         // Try using the structured _matrix solver
         match solve_dense_system(k_matrix, y_obs) {
@@ -395,9 +395,9 @@ impl<
                 if let Ok(normal) =
                     Normal::_new(mean[j].to_f64().unwrap(), std_dev.to_f64().unwrap())
                 {
-                    _samples[[i, j]] = T::from(normal.sample(&mut rng)).unwrap();
+                    samples[[i, j]] = T::from(normal.sample(&mut rng)).unwrap();
                 } else {
-                    _samples[[i, j]] = mean[j];
+                    samples[[i, j]] = mean[j];
                 }
             }
         }
@@ -418,10 +418,10 @@ pub struct QuantileInterpolator<T: Float> {
 
 impl<T: Float + FromPrimitive + Debug + Display> QuantileInterpolator<T>
 where
-    T: std::iter::Sum<T> + for<'a> + std::iter::Sum<&'a T>,
+    T: std::iter::Sum<T> + for<'a> std::iter::Sum<&'a T>,
 {
     /// Create a new quantile interpolator
-    pub fn new(_quantile: T, bandwidth: T) -> InterpolateResult<Self> {
+    pub fn new(quantile: T, bandwidth: T) -> InterpolateResult<Self> {
         if _quantile <= T::zero() || _quantile >= T::one() {
             return Err(InterpolateError::InvalidValue(
                 "Quantile must be between 0 and 1".to_string(),
@@ -429,7 +429,7 @@ where
         }
 
         Ok(Self {
-            _quantile,
+            quantile,
             bandwidth,
         })
     }
@@ -517,9 +517,9 @@ pub struct RobustInterpolator<T: Float> {
 
 impl<T: Float + FromPrimitive + Debug + Display> RobustInterpolator<T> {
     /// Create a new robust interpolator using M-estimation
-    pub fn new(_tuning_constant: T) -> Self {
+    pub fn new(_tuningconstant: T) -> Self {
         Self {
-            _tuning_constant,
+            tuning_constant,
             max_iterations: 100,
             tolerance: T::from(1e-6).unwrap(),
         }
@@ -613,9 +613,9 @@ pub struct StochasticInterpolator<T: Float> {
 
 impl<T: Float + FromPrimitive + Debug + Display> StochasticInterpolator<T> {
     /// Create a new stochastic interpolator
-    pub fn new(_correlation_length: T, field_variance: T, n_realizations: usize) -> Self {
+    pub fn new(_correlation_length: T, field_variance: T, nrealizations: usize) -> Self {
         Self {
-            _correlation_length,
+            correlation_length,
             field_variance,
             n_realizations,
         }
@@ -731,11 +731,11 @@ pub fn make_bayesian_interpolator<T: crate::traits::InterpolationFloat>(
 
 /// Create a median (0.5 quantile) interpolator
 #[allow(dead_code)]
-pub fn make_median_interpolator<T>(_bandwidth: T) -> InterpolateResult<QuantileInterpolator<T>>
+pub fn make_median_interpolator<T>(bandwidth: T) -> InterpolateResult<QuantileInterpolator<T>>
 where
-    T: Float + FromPrimitive + Debug + Display + std::iter::Sum<T> + for<'a> + std::iter::Sum<&'a T>,
+    T: Float + FromPrimitive + Debug + Display + std::iter::Sum<T> + for<'a> std::iter::Sum<&'a T>,
 {
-    QuantileInterpolator::new(T::from(0.5).unwrap(), _bandwidth)
+    QuantileInterpolator::new(T::from(0.5).unwrap(), bandwidth)
 }
 
 /// Create a robust interpolator with default Huber tuning
@@ -783,7 +783,7 @@ impl<T: crate::traits::InterpolationFloat> EnsembleInterpolator<T> {
             Array1::from_vec(vec![weight])
         } else {
             let mut new_weights = self.weights.to_vec();
-            new_weights.push(weight);
+            newweights.push(weight);
             Array1::from_vec(new_weights)
         };
 
@@ -817,7 +817,7 @@ impl<T: crate::traits::InterpolationFloat> EnsembleInterpolator<T> {
             Array1::from_vec(vec![weight])
         } else {
             let mut new_weights = self.weights.to_vec();
-            new_weights.push(weight);
+            newweights.push(weight);
             Array1::from_vec(new_weights)
         };
 
@@ -969,9 +969,9 @@ pub struct CrossValidationUncertainty {
 
 impl CrossValidationUncertainty {
     /// Create a new cross-validation uncertainty estimator
-    pub fn new(_k_folds: usize) -> Self {
+    pub fn new(_kfolds: usize) -> Self {
         Self {
-            _k_folds,
+            k_folds,
             seed: None,
         }
     }
@@ -991,7 +991,7 @@ impl CrossValidationUncertainty {
         interpolator_factory: F,
     ) -> InterpolateResult<(Array1<T>, Array1<T>)>
     where
-        T: Clone + Copy + num_traits::Float + num, _traits::FromPrimitive + std::iter::Sum,
+        T: Clone + Copy + num_traits::Float + num_traits::FromPrimitive + std::iter::Sum,
         F: Fn(&ArrayView1<T>, &ArrayView1<T>, &ArrayView1<T>) -> InterpolateResult<Array1<T>>,
     {
         let n = x.len();
@@ -1014,7 +1014,7 @@ impl CrossValidationUncertainty {
         interpolator_factory: F,
     ) -> InterpolateResult<(Array1<T>, Array1<T>)>
     where
-        T: Clone + Copy + num_traits::Float + num, _traits::FromPrimitive + std::iter::Sum,
+        T: Clone + Copy + num_traits::Float + num_traits::FromPrimitive + std::iter::Sum,
         F: Fn(&ArrayView1<T>, &ArrayView1<T>, &ArrayView1<T>) -> InterpolateResult<Array1<T>>,
     {
         let n = x.len();
@@ -1071,7 +1071,7 @@ impl CrossValidationUncertainty {
         interpolator_factory: F,
     ) -> InterpolateResult<(Array1<T>, Array1<T>)>
     where
-        T: Clone + Copy + num_traits::Float + num, _traits::FromPrimitive + std::iter::Sum,
+        T: Clone + Copy + num_traits::Float + num_traits::FromPrimitive + std::iter::Sum,
         F: Fn(&ArrayView1<T>, &ArrayView1<T>, &ArrayView1<T>) -> InterpolateResult<Array1<T>>,
     {
         let n = x.len();
@@ -1260,7 +1260,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum> Isotoni
     }
 
     /// Interpolate at new points
-    pub fn interpolate(&self, x_new: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    pub fn interpolate(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         let mut result = Array1::zeros(x_new.len());
 
         for (i, &x) in x_new.iter().enumerate() {
@@ -1389,7 +1389,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy> KDEInterpolator<T> {
     }
 
     /// Interpolate at new points using KDE
-    pub fn interpolate(&self, x_new: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    pub fn interpolate(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         let mut result = Array1::zeros(x_new.len());
 
         for (i, &x) in x_new.iter().enumerate() {
@@ -1510,7 +1510,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum>
     }
 
     /// Interpolate using empirical Bayes shrinkage
-    pub fn interpolate(&self, x_new: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    pub fn interpolate(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         let mut result = Array1::zeros(x_new.len());
 
         for (i, &x) in x_new.iter().enumerate() {

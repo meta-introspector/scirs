@@ -258,7 +258,7 @@ where
 /// # Returns
 /// The Huber loss value
 #[allow(dead_code)]
-pub fn huber<T>(_delta: T, r: T) -> SpecialResult<T>
+pub fn huber<T>(delta: T, r: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display,
 {
@@ -292,7 +292,7 @@ where
 /// # Returns
 /// The pseudo-Huber loss value
 #[allow(dead_code)]
-pub fn pseudo_huber<T>(_delta: T, r: T) -> SpecialResult<T>
+pub fn pseudo_huber<T>(delta: T, r: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display,
 {
@@ -305,8 +305,8 @@ where
         ));
     }
 
-    let r_over_delta = r / _delta;
-    let delta_squared = _delta * _delta;
+    let r_over_delta = r / delta;
+    let delta_squared = _delta * delta;
 
     Ok(delta_squared * ((T::one() + r_over_delta * r_over_delta).sqrt() - T::one()))
 }

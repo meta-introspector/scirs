@@ -81,7 +81,7 @@ where
     D: Dimension,
 {
     /// Creates a new SAM optimizer with the given inner optimizer and default settings
-    pub fn new(inner_optimizer: O) -> Self {
+    pub fn new(inneroptimizer: O) -> Self {
         Self {
             inner_optimizer,
             rho: A::from(0.05).unwrap(),
@@ -94,7 +94,7 @@ where
     }
 
     /// Creates a new SAM optimizer with the given inner optimizer and configuration
-    pub fn with_config(inner_optimizer: O, rho: A, adaptive: bool) -> Self {
+    pub fn with_config(inneroptimizer: O, rho: A, adaptive: bool) -> Self {
         Self {
             inner_optimizer,
             rho,
@@ -223,7 +223,7 @@ where
     ) -> Result<Array<A, D>> {
         // Get original parameters
         let original_params = match &self.original_params {
-            Some(_params) => _params,
+            Some(_params) => params,
             None => {
                 return Err(OptimError::OptimizationError(
                     "Must call first_step before second_step".to_string(),
@@ -302,7 +302,7 @@ where
         self.second_step(params, gradients)
     }
 
-    fn set_learning_rate(&mut self, learning_rate: A) {
+    fn set_learning_rate(&mut self, learningrate: A) {
         self.inner_optimizer.set_learning_rate(learning_rate);
     }
 
@@ -313,12 +313,12 @@ where
 
 /// Calculate the L2 norm of an array
 #[allow(dead_code)]
-fn calculate_norm<A, D>(_array: &Array<A, D>) -> Result<A>
+fn calculate_norm<A, D>(array: &Array<A, D>) -> Result<A>
 where
     A: Float + ScalarOperand + Debug,
     D: Dimension,
 {
-    let squared_sum = _array.iter().fold(A::zero(), |acc, &x| acc + x * x);
+    let squared_sum = array.iter().fold(A::zero(), |acc, &x| acc + x * x);
     let norm = squared_sum.sqrt();
 
     if !norm.is_finite() {

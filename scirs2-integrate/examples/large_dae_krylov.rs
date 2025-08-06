@@ -208,7 +208,7 @@ fn heat_equation_rhs(t: f64, u: ArrayView1<f64>, lambda: ArrayView1<f64>) -> Arr
 
 /// Constraint equation: constrain every 5th point to remain at its initial value
 #[allow(dead_code)]
-fn constraint_equation(_t: f64, u: ArrayView1<f64>, _lambda: ArrayView1<f64>) -> Array1<f64> {
+fn constraint_equation(_t: f64, u: ArrayView1<f64>, lambda: ArrayView1<f64>) -> Array1<f64> {
     let initial_conditions = setup_initial_conditions();
     let n_constraints = N / 5; // Every 5th point is constrained
     let mut constraints = Array1::zeros(n_constraints);

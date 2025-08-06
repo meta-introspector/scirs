@@ -20,7 +20,7 @@ static GLOBAL_SCHEDULER: std::sync::OnceLock<Arc<DistributedScheduler>> =
 pub struct DistributedScheduler {
     task_queue: Arc<Mutex<TaskQueue>>,
     execution_tracker: Arc<RwLock<ExecutionTracker>>,
-    scheduling_policies: Arc<RwLock<SchedulingPolicies>>,
+    schedulingpolicies: Arc<RwLock<SchedulingPolicies>>,
     load_balancer: Arc<RwLock<LoadBalancer>>,
 }
 
@@ -30,7 +30,7 @@ impl DistributedScheduler {
         Ok(Self {
             task_queue: Arc::new(Mutex::new(TaskQueue::new())),
             execution_tracker: Arc::new(RwLock::new(ExecutionTracker::new())),
-            scheduling_policies: Arc::new(RwLock::new(SchedulingPolicies::default())),
+            schedulingpolicies: Arc::new(RwLock::new(SchedulingPolicies::default())),
             load_balancer: Arc::new(RwLock::new(LoadBalancer::new())),
         })
     }
@@ -48,10 +48,10 @@ impl DistributedScheduler {
             CoreError::InvalidState(ErrorContext::new("Failed to acquire task queue lock"))
         })?;
 
-        let task_id = task.task_id.clone();
+        let taskid = task.taskid.clone();
         queue.enqueue(task)?;
 
-        Ok(task_id)
+        Ok(taskid)
     }
 
     /// Get pending task count
@@ -64,12 +64,12 @@ impl DistributedScheduler {
     }
 
     /// Schedule next batch of tasks
-    pub fn schedule_next(&self, available_nodes: &[NodeInfo]) -> CoreResult<Vec<TaskAssignment>> {
+    pub fn schedule_next(&self, availablenodes: &[NodeInfo]) -> CoreResult<Vec<TaskAssignment>> {
         let mut queue = self.task_queue.lock().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new("Failed to acquire task queue lock"))
         })?;
 
-        let policies = self.scheduling_policies.read().map_err(|_| {
+        let policies = self.schedulingpolicies.read().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new("Failed to acquire policies lock"))
         })?;
 
@@ -80,16 +80,16 @@ impl DistributedScheduler {
         // Schedule tasks based on policy
         let assignments = match policies.scheduling_algorithm {
             SchedulingAlgorithm::FirstComeFirstServe => {
-                self.schedule_fcfs(&mut queue, available_nodes, &mut load_balancer)?
+                self.schedule_fcfs(&mut queue, availablenodes, &mut load_balancer)?
             }
             SchedulingAlgorithm::PriorityBased => {
-                self.schedule_priority(&mut queue, available_nodes, &mut load_balancer)?
+                self.schedule_priority(&mut queue, availablenodes, &mut load_balancer)?
             }
             SchedulingAlgorithm::LoadBalanced => {
-                self.schedule_load_balanced(&mut queue, available_nodes, &mut load_balancer)?
+                self.schedule_load_balanced(&mut queue, availablenodes, &mut load_balancer)?
             }
             SchedulingAlgorithm::ResourceAware => {
-                self.schedule_resource_aware(&mut queue, available_nodes, &mut load_balancer)?
+                self.schedule_resource_aware(&mut queue, availablenodes, &mut load_balancer)?
             }
         };
 
@@ -110,16 +110,16 @@ impl DistributedScheduler {
     fn schedule_fcfs(
         &self,
         queue: &mut TaskQueue,
-        available_nodes: &[NodeInfo],
+        availablenodes: &[NodeInfo],
         load_balancer: &mut LoadBalancer,
     ) -> CoreResult<Vec<TaskAssignment>> {
         let mut assignments = Vec::new();
 
         while let Some(task) = queue.dequeue_next() {
-            if let Some(node) = load_balancer.select_node_for_task(&task, available_nodes)? {
+            if let Some(node) = load_balancer.select_node_for_task(&task, availablenodes)? {
                 assignments.push(TaskAssignment {
-                    task_id: task.task_id.clone(),
-                    node_id: node.id.clone(),
+                    taskid: task.taskid.clone(),
+                    nodeid: node.id.clone(),
                     assigned_at: Instant::now(),
                     estimated_duration: self.estimate_task_duration(&task, &node)?,
                 });
@@ -141,7 +141,7 @@ impl DistributedScheduler {
     fn schedule_priority(
         &self,
         queue: &mut TaskQueue,
-        available_nodes: &[NodeInfo],
+        availablenodes: &[NodeInfo],
         load_balancer: &mut LoadBalancer,
     ) -> CoreResult<Vec<TaskAssignment>> {
         let mut assignments = Vec::new();
@@ -149,10 +149,10 @@ impl DistributedScheduler {
 
         // Get tasks ordered by priority
         while let Some(task) = queue.dequeue_highest_priority() {
-            if let Some(node) = load_balancer.select_node_for_task(&task, available_nodes)? {
+            if let Some(node) = load_balancer.select_node_for_task(&task, availablenodes)? {
                 assignments.push(TaskAssignment {
-                    task_id: task.task_id.clone(),
-                    node_id: node.id.clone(),
+                    taskid: task.taskid.clone(),
+                    nodeid: node.id.clone(),
                     assigned_at: Instant::now(),
                     estimated_duration: self.estimate_task_duration(&task, &node)?,
                 });
@@ -178,19 +178,19 @@ impl DistributedScheduler {
     fn schedule_load_balanced(
         &self,
         queue: &mut TaskQueue,
-        available_nodes: &[NodeInfo],
+        availablenodes: &[NodeInfo],
         load_balancer: &mut LoadBalancer,
     ) -> CoreResult<Vec<TaskAssignment>> {
         let mut assignments = Vec::new();
 
         // Update load balancer with current node loads
-        load_balancer.update_node_loads(available_nodes)?;
+        load_balancer.update_nodeloads(availablenodes)?;
 
         while let Some(task) = queue.dequeue_next() {
-            if let Some(node) = load_balancer.select_least_loaded_node(&task, available_nodes)? {
+            if let Some(node) = load_balancer.select_least_loaded_node(&task, availablenodes)? {
                 assignments.push(TaskAssignment {
-                    task_id: task.task_id.clone(),
-                    node_id: node.id.clone(),
+                    taskid: task.taskid.clone(),
+                    nodeid: node.id.clone(),
                     assigned_at: Instant::now(),
                     estimated_duration: self.estimate_task_duration(&task, &node)?,
                 });
@@ -214,16 +214,16 @@ impl DistributedScheduler {
     fn schedule_resource_aware(
         &self,
         queue: &mut TaskQueue,
-        available_nodes: &[NodeInfo],
+        availablenodes: &[NodeInfo],
         load_balancer: &mut LoadBalancer,
     ) -> CoreResult<Vec<TaskAssignment>> {
         let mut assignments = Vec::new();
 
         while let Some(task) = queue.dequeue_next() {
-            if let Some(node) = load_balancer.select_best_fit_node(&task, available_nodes)? {
+            if let Some(node) = load_balancer.select_best_fit_node(&task, availablenodes)? {
                 assignments.push(TaskAssignment {
-                    task_id: task.task_id.clone(),
-                    node_id: node.id.clone(),
+                    taskid: task.taskid.clone(),
+                    nodeid: node.id.clone(),
                     assigned_at: Instant::now(),
                     estimated_duration: self.estimate_task_duration(&task, &node)?,
                 });
@@ -387,19 +387,19 @@ impl ExecutionTracker {
 
     pub fn track_assignment(&mut self, assignment: TaskAssignment) -> CoreResult<()> {
         self.active_assignments
-            .insert(assignment.task_id.clone(), assignment);
+            .insert(assignment.taskid.clone(), assignment);
         Ok(())
     }
 
     pub fn mark_task_complete(
         &mut self,
-        task_id: &TaskId,
+        taskid: &TaskId,
         execution_time: Duration,
     ) -> CoreResult<()> {
-        if let Some(assignment) = self.active_assignments.remove(task_id) {
+        if let Some(assignment) = self.active_assignments.remove(taskid) {
             let completed_task = CompletedTask {
-                task_id: task_id.clone(),
-                node_id: assignment.node_id,
+                taskid: taskid.clone(),
+                nodeid: assignment.nodeid,
                 execution_time,
                 completed_at: Instant::now(),
             };
@@ -415,11 +415,11 @@ impl ExecutionTracker {
         Ok(())
     }
 
-    pub fn mark_task_failed(&mut self, task_id: &TaskId, error: String) -> CoreResult<()> {
-        if let Some(assignment) = self.active_assignments.remove(task_id) {
+    pub fn mark_task_failed(&mut self, taskid: &TaskId, error: String) -> CoreResult<()> {
+        if let Some(assignment) = self.active_assignments.remove(taskid) {
             let failed_task = FailedTask {
-                task_id: task_id.clone(),
-                node_id: assignment.node_id,
+                taskid: taskid.clone(),
+                nodeid: assignment.nodeid,
                 error,
                 failed_at: Instant::now(),
             };
@@ -443,7 +443,7 @@ impl ExecutionTracker {
 /// Load balancing for task distribution
 #[derive(Debug)]
 pub struct LoadBalancer {
-    node_loads: HashMap<String, NodeLoad>,
+    nodeloads: HashMap<String, NodeLoad>,
     balancing_strategy: LoadBalancingStrategy,
 }
 
@@ -456,7 +456,7 @@ impl Default for LoadBalancer {
 impl LoadBalancer {
     pub fn new() -> Self {
         Self {
-            node_loads: HashMap::new(),
+            nodeloads: HashMap::new(),
             balancing_strategy: LoadBalancingStrategy::LeastLoaded,
         }
     }
@@ -469,7 +469,7 @@ impl LoadBalancer {
         match self.balancing_strategy {
             LoadBalancingStrategy::RoundRobin => self.select_round_robin(nodes),
             LoadBalancingStrategy::LeastLoaded => self.select_least_loaded(task, nodes),
-            LoadBalancingStrategy::ResourceBased => self.select_resource_based(task, nodes),
+            LoadBalancingStrategy::ResourceBased => self.select_resourcebased(task, nodes),
         }
     }
 
@@ -486,7 +486,7 @@ impl LoadBalancer {
         task: &DistributedTask,
         nodes: &[NodeInfo],
     ) -> CoreResult<Option<NodeInfo>> {
-        self.select_resource_based(task, nodes)
+        self.select_resourcebased(task, nodes)
     }
 
     fn select_round_robin(&self, nodes: &[NodeInfo]) -> CoreResult<Option<NodeInfo>> {
@@ -495,7 +495,7 @@ impl LoadBalancer {
         }
 
         // Simple round-robin selection
-        let index = self.node_loads.len() % nodes.len();
+        let index = self.nodeloads.len() % nodes.len();
         Ok(Some(nodes[index].clone()))
     }
 
@@ -510,7 +510,7 @@ impl LoadBalancer {
 
         // Select node with lowest current load
         let least_loaded = nodes.iter().min_by_key(|node| {
-            self.node_loads
+            self.nodeloads
                 .get(&node.id)
                 .map(|load| load.current_tasks)
                 .unwrap_or(0)
@@ -519,7 +519,7 @@ impl LoadBalancer {
         Ok(least_loaded.cloned())
     }
 
-    fn select_resource_based(
+    fn select_resourcebased(
         &self,
         task: &DistributedTask,
         nodes: &[NodeInfo],
@@ -569,12 +569,12 @@ impl LoadBalancer {
 
     fn available_capacity(
         &self,
-        node_id: &str,
+        nodeid: &str,
         total_capacity: &super::cluster::NodeCapabilities,
     ) -> ComputeCapacity {
         let used = self
-            .node_loads
-            .get(node_id)
+            .nodeloads
+            .get(nodeid)
             .map(|load| &load.used_capacity)
             .cloned()
             .unwrap_or_default();
@@ -589,13 +589,13 @@ impl LoadBalancer {
         }
     }
 
-    pub fn update_node_loads(&mut self, nodes: &[NodeInfo]) -> CoreResult<()> {
+    pub fn update_nodeloads(&mut self, nodes: &[NodeInfo]) -> CoreResult<()> {
         // Initialize or update node loads
         for node in nodes {
-            self.node_loads
+            self.nodeloads
                 .entry(node.id.clone())
                 .or_insert_with(|| NodeLoad {
-                    node_id: node.id.clone(),
+                    nodeid: node.id.clone(),
                     current_tasks: 0,
                     used_capacity: ComputeCapacity::default(),
                     last_updated: Instant::now(),
@@ -605,8 +605,8 @@ impl LoadBalancer {
         Ok(())
     }
 
-    pub fn record_assignment(&mut self, node_id: &str, task: &DistributedTask) -> CoreResult<()> {
-        if let Some(load) = self.node_loads.get_mut(node_id) {
+    pub fn record_assignment(&mut self, nodeid: &str, task: &DistributedTask) -> CoreResult<()> {
+        if let Some(load) = self.nodeloads.get_mut(nodeid) {
             load.current_tasks += 1;
             load.used_capacity.cpu_cores += task.resource_requirements.cpu_cores;
             load.used_capacity.memory_gb += task.resource_requirements.memory_gb;
@@ -622,7 +622,7 @@ impl LoadBalancer {
 /// Node load tracking
 #[derive(Debug, Clone)]
 pub struct NodeLoad {
-    pub node_id: String,
+    pub nodeid: String,
     pub current_tasks: usize,
     pub used_capacity: ComputeCapacity,
     pub last_updated: Instant,
@@ -668,8 +668,8 @@ pub enum LoadBalancingStrategy {
 /// Task assignment result
 #[derive(Debug, Clone)]
 pub struct TaskAssignment {
-    pub task_id: TaskId,
-    pub node_id: String,
+    pub taskid: TaskId,
+    pub nodeid: String,
     pub assigned_at: Instant,
     pub estimated_duration: Duration,
 }
@@ -677,8 +677,8 @@ pub struct TaskAssignment {
 /// Completed task record
 #[derive(Debug, Clone)]
 pub struct CompletedTask {
-    pub task_id: TaskId,
-    pub node_id: String,
+    pub taskid: TaskId,
+    pub nodeid: String,
     pub execution_time: Duration,
     pub completed_at: Instant,
 }
@@ -686,8 +686,8 @@ pub struct CompletedTask {
 /// Failed task record
 #[derive(Debug, Clone)]
 pub struct FailedTask {
-    pub task_id: TaskId,
-    pub node_id: String,
+    pub taskid: TaskId,
+    pub nodeid: String,
     pub error: String,
     pub failed_at: Instant,
 }
@@ -759,7 +759,7 @@ mod tests {
 
     fn create_test_task(priority: ClusterTaskPriority) -> DistributedTask {
         DistributedTask {
-            task_id: TaskId::generate(),
+            taskid: TaskId::generate(),
             task_type: TaskType::Computation,
             resource_requirements: ResourceRequirements {
                 cpu_cores: 2,
@@ -773,7 +773,7 @@ mod tests {
                 environment_variables: HashMap::new(),
                 command_arguments: Vec::new(),
                 timeout: None,
-                retry_policy: RetryPolicy {
+                retrypolicy: RetryPolicy {
                     max_attempts: 3,
                     backoff_strategy: BackoffStrategy::Fixed(Duration::from_secs(1)),
                 },
@@ -792,7 +792,7 @@ mod tests {
                 memory_gb: 16,
                 gpu_count: 1,
                 disk_space_gb: 100,
-                network_bandwidth_gbps: 1.0,
+                networkbandwidth_gbps: 1.0,
                 specialized_units: Vec::new(),
             },
             status: NodeStatus::Healthy,

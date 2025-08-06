@@ -34,7 +34,7 @@ use scirs2_core::array_protocol::{
 
 // Define a simpler version of the array_function macro for tests
 macro_rules! array_function {
-    (fn $name:ident($($arg:ident: $arg_ty:ty),* $(,)?) -> $ret:ty $body:block, $func_name:expr) => {
+    (fn $name:ident($($arg:ident: $arg_ty:ty),* $(,)?) -> $ret:ty $body:block, $funcname:expr) => {
         // Define the function
         fn $name($($arg: $arg_ty),*) -> $ret $body
     };
@@ -85,8 +85,8 @@ fn test_gpu_array() {
 
     // Check device info
     let info = gpu_array.device_info();
-    assert!(info.contains_key(backend));
-    assert_eq!(info.get(backend).unwrap_or(&"".to_string()), "CUDA");
+    assert!(info.contains_key("backend"));
+    assert_eq!(info.get("backend").unwrap_or(&"".to_string()), "CUDA");
 
     // Convert back to CPU
     match gpu_array.to_cpu() {
@@ -155,21 +155,21 @@ fn test_jit_array() {
     let wrapped = NdarrayWrapper::new(arr);
 
     // Create a JIT-enabled array
-    let jitarray: JITEnabledArray<f64_> = JITEnabledArray::new(wrapped);
+    let jitarray = JITEnabledArray::<f64, _>::new(wrapped);
 
     // Check properties
-    assert!(jit_array.supports_jit());
+    assert!(jitarray.supports_jit());
 
     // Compile a function
     let expression = "x + y";
-    let jit_function = jit_array.compile(expression).unwrap();
+    let jit_function = jitarray.compile(expression).unwrap();
 
     // Check function properties
     assert_eq!(jit_function.source(), expression);
 
     // Get JIT info
-    let info = jit_array.jit_info();
-    assert_eq!(info.get(supports_jit).unwrap(), "true");
+    let info = jitarray.jit_info();
+    assert_eq!(info.get("supports_jit").unwrap(), "true");
 }
 
 #[test]
@@ -205,8 +205,8 @@ fn test_array_function_dispatch() {
 
     // Now, define the test function using the macro
     array_function!(
-        fn array( &Array2<f64>) -> f64 {
-            _array.sum()
+        fn sum_array(arr: &Array2<f64>) -> f64 {
+            arr.sum()
         },
         "test::sum_array"
     );
@@ -365,7 +365,10 @@ fn test_array_operations() {
     // Matrix multiplication
     match array_protocol::matmul(&wrapped_a, &wrapped_b) {
         Ok(result) => {
-            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64_>>() {
+            if let Some(result_array) = result
+                .as_any()
+                .downcast_ref::<NdarrayWrapper<f64, ndarray::Ix2>>()
+            {
                 assert_eq!(result_array.as_array(), &a.dot(&b));
             } else {
                 println!("Skipping matrix multiplication assertion - unexpected result type");
@@ -379,7 +382,10 @@ fn test_array_operations() {
     // Addition
     match array_protocol::add(&wrapped_a, &wrapped_b) {
         Ok(result) => {
-            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64_>>() {
+            if let Some(result_array) = result
+                .as_any()
+                .downcast_ref::<NdarrayWrapper<f64, ndarray::Ix2>>()
+            {
                 assert_eq!(result_array.as_array(), &(a.clone() + b.clone()));
             } else {
                 println!("Skipping addition assertion - unexpected result type");
@@ -393,7 +399,10 @@ fn test_array_operations() {
     // Multiplication
     match array_protocol::multiply(&wrapped_a, &wrapped_b) {
         Ok(result) => {
-            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64_>>() {
+            if let Some(result_array) = result
+                .as_any()
+                .downcast_ref::<NdarrayWrapper<f64, ndarray::Ix2>>()
+            {
                 assert_eq!(result_array.as_array(), &(a.clone() * b.clone()));
             } else {
                 println!("Skipping multiplication assertion - unexpected result type");
@@ -421,7 +430,10 @@ fn test_array_operations() {
     // Transpose
     match array_protocol::transpose(&wrapped_a) {
         Ok(result) => {
-            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64_>>() {
+            if let Some(result_array) = result
+                .as_any()
+                .downcast_ref::<NdarrayWrapper<f64, ndarray::Ix2>>()
+            {
                 assert_eq!(result_array.as_array(), &a.t().to_owned());
             } else {
                 println!("Skipping transpose assertion - unexpected result type");
@@ -656,7 +668,13 @@ impl<T: Clone + 'static> CustomArray<T> {
 
 // Implement ArrayProtocol for the custom array type
 impl<T: Clone + Send + Sync + 'static> ArrayProtocol for CustomArray<T> {
-    fn kwargs(_kwargs: &HashMap<String, Box<dyn Any>>) -> Result<Box<dyn Any>, NotImplemented> {
+    fn array_function(
+        &self,
+        func: &ArrayFunction,
+        _types: &[TypeId],
+        _args: &[Box<dyn Any>],
+        _kwargs: &HashMap<String, Box<dyn Any>>,
+    ) -> Result<Box<dyn Any>, NotImplemented> {
         if func.name == "test::custom_sum" {
             // For testing purposes, just return a fixed value
             Ok(Box::new(42.0f64))
@@ -692,8 +710,8 @@ fn test_custom_array_type() {
 
     // Define a function that works with the custom array type
     array_function!(
-        fn array( &dyn ArrayProtocol) -> Result<f64, NotImplemented> {
-            match _array.array_function(
+        fn custom_sum(arr: &dyn ArrayProtocol) -> Result<f64, NotImplemented> {
+            match arr.array_function(
                 &ArrayFunction::new("test::custom_sum"),
                 &[TypeId::of::<f64>()],
                 &[],

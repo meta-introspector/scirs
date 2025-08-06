@@ -25,14 +25,14 @@ impl<F: Float + Debug + ScalarOperand> ModelCheckpoint<F> {
     /// # Arguments
     /// * `checkpoint_dir` - Directory to save checkpoints
     /// * `max_to_keep` - Maximum number of checkpoints to keep (0 means keep all)
-    pub fn new<P: AsRef<Path>>(_checkpoint, dir: P, max_to_keep: usize) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(_checkpoint, dir: P, max_tokeep: usize) -> Result<Self> {
         // Create directory if it doesn't exist
-        let _dir = _checkpoint_dir.as_ref();
+        let _dir = checkpoint_dir.as_ref();
         if !_dir.exists() {
             std::fs::create_dir_all(_dir)?;
         }
         Ok(Self {
-            checkpoint_dir: _dir.to_path_buf(),
+            checkpoint_dir: dir.to_path_buf(),
             max_to_keep,
             checkpoints: Vec::new(), _phantom: std::marker::PhantomData,
         })

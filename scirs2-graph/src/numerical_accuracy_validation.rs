@@ -297,9 +297,9 @@ impl Default for ValidationConfig {
 
 impl AdvancedNumericalValidator {
     /// Create a new numerical validator
-    pub fn new(_config: ValidationConfig) -> Self {
+    pub fn new(config: ValidationConfig) -> Self {
         Self {
-            _config,
+            config,
             test_cases: Vec::new(),
             tolerances: ValidationTolerances::default(),
             results: Vec::new(),
@@ -307,7 +307,7 @@ impl AdvancedNumericalValidator {
     }
 
     /// Add a test case for validation
-    pub fn add_test_case(&mut self, test_case: ValidationTestCase) {
+    pub fn add_test_case(&mut self, testcase: ValidationTestCase) {
         self.test_cases.push(test_case);
     }
 
@@ -350,7 +350,7 @@ impl AdvancedNumericalValidator {
     }
 
     /// Validate a single test case
-    fn validate_test_case(&mut self, test_case: &ValidationTestCase) -> Result<()> {
+    fn validate_test_case(&mut self, testcase: &ValidationTestCase) -> Result<()> {
         // Generate test graph
         let graph = self.generate_test_graph(&test_case.graph_generator)?;
 
@@ -1120,7 +1120,7 @@ impl AdvancedNumericalValidator {
     }
 
     /// Generate comprehensive validation report
-    fn generate_validation_report(&self, total_time: Duration) -> Result<ValidationReport> {
+    fn generate_validation_report(&self, totaltime: Duration) -> Result<ValidationReport> {
         let summary = self.generate_validation_summary(total_time);
         let performance_analysis = self.generate_performance_analysis();
         let accuracy_analysis = self.generate_accuracy_analysis();
@@ -1137,7 +1137,7 @@ impl AdvancedNumericalValidator {
     }
 
     /// Generate validation summary
-    fn generate_validation_summary(&self, total_time: Duration) -> ValidationSummary {
+    fn generate_validation_summary(&self, totaltime: Duration) -> ValidationSummary {
         let total_tests = self.results.len();
         let tests_passed = self.results.iter().filter(|r| r.passed).count();
         let pass_rate = tests_passed as f64 / total_tests as f64;

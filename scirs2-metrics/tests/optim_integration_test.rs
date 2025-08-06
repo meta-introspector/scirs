@@ -175,8 +175,8 @@ fn test_real_world_workflow() {
 
     // Create scheduler configuration for external use
     let scheduler_config = optimizer.create_scheduler_config(0.01, 0.5, 2, 1e-6);
-    assert_eq!(scheduler_config.patience, 2);
-    assert_eq!(scheduler_config.mode, OptimizationMode::Maximize);
+    assert_eq!(scheduler_configpatience, 2);
+    assert_eq!(scheduler_configmode, OptimizationMode::Maximize);
 }
 
 #[test]
@@ -231,16 +231,16 @@ struct MockScheduler<F> {
 }
 
 impl<F: Clone> MockScheduler<F> {
-    fn new(_lr: F) -> Self {
+    fn new(lr: F) -> Self {
         Self {
-            learning_rate: _lr,
+            learning_rate: lr,
             mode: OptimizationMode::Minimize,
         }
     }
 }
 
 impl MetricSchedulerTrait<f64> for MockScheduler<f64> {
-    fn step_with_metric(&mut self_metric: f64) -> f64 {
+    fn step_with_metric(&mut self, metric: f64) -> f64 {
         // Simple mock: reduce LR by 10% on each step
         self.learning_rate *= 0.9;
         self.learning_rate

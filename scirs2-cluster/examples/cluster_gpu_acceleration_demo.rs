@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Test automatic GPU detection and fallback
 #[allow(dead_code)]
-fn test_automatic_gpu_detection(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn test_automatic_gpu_detection(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Testing Automatic GPU Detection");
     println!("==================================");
 
@@ -61,7 +61,7 @@ fn test_automatic_gpu_detection(_data: &Array2<f64>) -> Result<(), Box<dyn std::
     let start_time = std::time::Instant::now();
 
     let (centroids, labels) = gpu_kmeans(
-        _data.view(),
+        data.view(),
         5, // k=5 clusters
         Some(auto_config.clone()),
     )?;
@@ -76,7 +76,7 @@ fn test_automatic_gpu_detection(_data: &Array2<f64>) -> Result<(), Box<dyn std::
     let start_time = std::time::Instant::now();
 
     let (dbscan_labels, core_samples) = gpu_dbscan(
-        _data.view(),
+        data.view(),
         0.5, // eps
         10,  // min_samples
         Some(auto_config.clone()),
@@ -98,7 +98,7 @@ fn test_automatic_gpu_detection(_data: &Array2<f64>) -> Result<(), Box<dyn std::
     let start_time = std::time::Instant::now();
 
     let (hier_labels, linkage_matrix) = gpu_hierarchical(
-        _data.view(),
+        data.view(),
         4, // n_clusters
         GpuLinkageMethod::Ward,
         Some(auto_config),
@@ -122,7 +122,7 @@ fn test_automatic_gpu_detection(_data: &Array2<f64>) -> Result<(), Box<dyn std::
 
 /// Test specific GPU backends
 #[allow(dead_code)]
-fn test_specific_gpu_backends(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn test_specific_gpu_backends(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Testing Specific GPU Backends");
     println!("================================");
 
@@ -170,7 +170,7 @@ fn test_specific_gpu_backends(_data: &Array2<f64>) -> Result<(), Box<dyn std::er
 
 /// Test different memory strategies
 #[allow(dead_code)]
-fn test_memory_strategies(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn test_memory_strategies(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Testing Memory Management Strategies");
     println!("======================================");
 
@@ -220,7 +220,7 @@ fn test_memory_strategies(_data: &Array2<f64>) -> Result<(), Box<dyn std::error:
 
 /// Compare performance across different algorithms and configurations
 #[allow(dead_code)]
-fn test_multi_algorithm_comparison(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn test_multi_algorithm_comparison(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n4. Multi-Algorithm Performance Comparison");
     println!("=========================================");
 
@@ -236,8 +236,8 @@ fn test_multi_algorithm_comparison(_data: &Array2<f64>) -> Result<(), Box<dyn st
     };
 
     // Test with smaller subset for faster execution
-    let subset_size = std::cmp::min(1000, _data.nrows());
-    let data_subset = _data.slice(ndarray::s![0..subset_size, ..]);
+    let subset_size = std::cmp::min(1000, data.nrows());
+    let data_subset = data.slice(ndarray::s![0..subset_size, ..]);
 
     println!("Testing algorithms on subset of {} samples...", subset_size);
 
@@ -322,7 +322,7 @@ fn test_multi_algorithm_comparison(_data: &Array2<f64>) -> Result<(), Box<dyn st
 
 /// Generate large sample data for performance testing
 #[allow(dead_code)]
-fn create_large_sample_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_large_sample_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
     use rand__distr::Normal;
 

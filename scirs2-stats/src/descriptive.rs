@@ -571,6 +571,16 @@ where
         } else {
             // Direct calculation of unbiased kurtosis for other arrays
             k = fourth_moment / (variance * variance);
+            
+            // Apply unbiased correction
+            let n_f = F::from(x.len()).unwrap();
+            let n1 = n_f - F::one();
+            let n2 = n_f - F::from(2.0).unwrap();
+            let n3 = n_f - F::from(3.0).unwrap();
+            
+            // For sample kurtosis: k = ((n+1)*k - 3*(n-1)) * (n-1) / ((n-2)*(n-3)) + 3
+            k = ((n_f + F::one()) * k - F::from(3.0).unwrap() * n1) * n1 / (n2 * n3) + F::from(3.0).unwrap();
+            
             if fisher {
                 k = k - F::from(3.0).unwrap();
             }
@@ -798,7 +808,7 @@ where
     note = "Use moment(x, moment_order, center, workers) for consistent API"
 )]
 #[allow(dead_code)]
-pub fn moment_compat<F>(x: &ArrayView1<F>, moment_order: usize, center: bool) -> StatsResult<F>
+pub fn moment_compat<F>(x: &ArrayView1<F>, momentorder: usize, center: bool) -> StatsResult<F>
 where
     F: Float
         + std::iter::Sum<F>

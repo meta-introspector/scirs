@@ -33,12 +33,13 @@ pub mod cuda {
     }
 
     fn cuda_get_device_properties(
-        _props: &mut CudaDeviceProperties, device: CudaDevice,
+        _props: &mut CudaDeviceProperties,
+        device: CudaDevice,
     ) -> CudaResult {
         CUDA_SUCCESS
     }
 
-    fn cuda_set_device(_device: CudaDevice) -> CudaResult {
+    fn cuda_set_device(device: CudaDevice) -> CudaResult {
         CUDA_SUCCESS
     }
 
@@ -46,16 +47,19 @@ pub mod cuda {
         CUDA_SUCCESS
     }
 
-    fn cuda_malloc(_ptr: *mut *mut std::ffi::c_void, size: usize) -> CudaResult {
+    fn cuda_malloc(ptr: *mut *mut std::ffi::c_void, size: usize) -> CudaResult {
         CUDA_SUCCESS
     }
 
-    fn cuda_free(_ptr: *mut std::ffi::c_void) -> CudaResult {
+    fn cuda_free(ptr: *mut std::ffi::c_void) -> CudaResult {
         CUDA_SUCCESS
     }
 
     fn cuda_memcpy(
-        _dst: *mut std::ffi::c_void, src: *const std::ffi::c_void, _count: usize, kind: i32,
+        _dst: *mut std::ffi::c_void,
+        src: *const std::ffi::c_void,
+        _count: usize,
+        kind: i32,
     ) -> CudaResult {
         CUDA_SUCCESS
     }
@@ -275,7 +279,7 @@ pub mod cuda {
             Ok(devices)
         }
 
-        fn create_context(&self, device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
+        fn create_context(&self, deviceid: usize) -> LinalgResult<Box<dyn GpuContext>> {
             if !self.initialized {
                 return Err(LinalgError::ComputationError(
                     "CUDA backend not initialized".to_string(),
@@ -326,8 +330,8 @@ pub mod cuda {
     unsafe impl Sync for CudaContext {}
 
     impl CudaContext {
-        fn new(_device_info: CudaDeviceInfo) -> LinalgResult<Self> {
-            let device_id = _device_info.device_id;
+        fn new(_deviceinfo: CudaDeviceInfo) -> LinalgResult<Self> {
+            let device_id = device_info.device_id;
 
             // Initialize cuBLAS (mock)
             let cublas_handle = None; // Would create cuBLAS handle
@@ -348,7 +352,7 @@ pub mod cuda {
             let performance_stats = CudaPerformanceStats::new();
 
             Ok(Self {
-                _device_info,
+                device_info,
                 device_id,
                 cublas_handle,
                 cusolver_handle,
@@ -473,9 +477,9 @@ pub mod cuda {
     }
 
     impl CudaMemoryPool {
-        fn new(_device_id: i32) -> LinalgResult<Self> {
+        fn new(_deviceid: i32) -> LinalgResult<Self> {
             Ok(Self {
-                _device_id,
+                device_id,
                 total_allocated: 0,
                 peak_usage: 0,
                 allocation_count: 0,
@@ -522,7 +526,8 @@ pub mod cuda {
         device_ptr: *mut std::ffi::c_void,
         size: usize,
         device_id: i32,
-        is_pinned: bool, _phantom: std::marker::PhantomData<T>,
+        is_pinned: bool,
+        _phantom: std::marker::PhantomData<T>,
     }
 
     // SAFETY: CUDA device pointers are thread-safe and can be shared across threads
@@ -531,7 +536,7 @@ pub mod cuda {
     unsafe impl<T> Sync for CudaBuffer<T> {}
 
     impl<T: Clone + Send + Sync + Copy> CudaBuffer<T> {
-        fn new(_size: usize, device_id: i32) -> LinalgResult<Self> {
+        fn new(_size: usize, deviceid: i32) -> LinalgResult<Self> {
             let byte_size = _size * std::mem::size_of::<T>();
             let mut device_ptr = ptr::null_mut();
 
@@ -545,9 +550,10 @@ pub mod cuda {
 
             Ok(Self {
                 device_ptr,
-                _size,
+                size,
                 device_id,
-                is_pinned: false, _phantom: std::marker::PhantomData,
+                is_pinned: false,
+                _phantom: std::marker::PhantomData,
             })
         }
 
@@ -692,7 +698,7 @@ pub mod opencl {
     unsafe impl Sync for SafeClPtr {}
 
     impl SafeClPtr {
-        fn new(_ptr: *mut std::ffi::c_void) -> Self {
+        fn new(ptr: *mut std::ffi::c_void) -> Self {
             Self(_ptr)
         }
 
@@ -724,50 +730,59 @@ pub mod opencl {
     }
 
     fn cl_get_device_ids(
-        _platform: ClPlatformId_device, r#type: ClULong,
+        _platform: ClPlatformId_device,
+        r#type: ClULong,
     ) -> (ClInt, Vec<ClDeviceId>) {
         (CL_SUCCESS, vec![])
     }
 
-    fn cl_get_device_info(_device: ClDeviceId_param, name: ClUInt) -> (ClInt, Vec<u8>) {
+    fn cl_get_device_info(device: ClDeviceId_param, name: ClUInt) -> (ClInt, Vec<u8>) {
         (CL_SUCCESS, vec![0; 256])
     }
 
-    fn cl_get_platform_info(_platform: ClPlatformId_param, name: ClUInt) -> (ClInt, String) {
+    fn cl_get_platform_info(platform: ClPlatformId_param, name: ClUInt) -> (ClInt, String) {
         (CL_SUCCESS, "Mock Platform".to_string())
     }
 
-    fn cl_create_context(_devices: &[ClDeviceId]) -> (ClInt, ClContext) {
+    fn cl_create_context(devices: &[ClDeviceId]) -> (ClInt, ClContext) {
         (CL_SUCCESS, SafeClPtr::new(ptr::null_mut()))
     }
 
-    fn cl_create_command_queue(
-        _context: ClContext, device: ClDeviceId,
-    ) -> (ClInt, ClCommandQueue) {
+    fn cl_create_command_queue(context: ClContext, device: ClDeviceId) -> (ClInt, ClCommandQueue) {
         (CL_SUCCESS, SafeClPtr::new(ptr::null_mut()))
     }
 
-    fn cl_create_buffer(_context: ClContext, flags: ClULong, _size: usize) -> (ClInt, ClMem) {
+    fn cl_create_buffer(_context: ClContext, flags: ClULong, size: usize) -> (ClInt, ClMem) {
         (CL_SUCCESS, SafeClPtr::new(ptr::null_mut()))
     }
 
     fn cl_enqueue_write_buffer(
-        _queue: ClCommandQueue, buffer: ClMem, _blocking: ClBool, offset: usize, _size: usize, ptr: *const std::ffi::c_void,
+        _queue: ClCommandQueue,
+        buffer: ClMem,
+        _blocking: ClBool,
+        offset: usize,
+        _size: usize,
+        ptr: *const std::ffi::c_void,
     ) -> ClInt {
         CL_SUCCESS
     }
 
     fn cl_enqueue_read_buffer(
-        _queue: ClCommandQueue, buffer: ClMem, _blocking: ClBool, offset: usize, _size: usize, ptr: *mut std::ffi::c_void,
+        _queue: ClCommandQueue,
+        buffer: ClMem,
+        _blocking: ClBool,
+        offset: usize,
+        _size: usize,
+        ptr: *mut std::ffi::c_void,
     ) -> ClInt {
         CL_SUCCESS
     }
 
-    fn cl_finish(_queue: ClCommandQueue) -> ClInt {
+    fn cl_finish(queue: ClCommandQueue) -> ClInt {
         CL_SUCCESS
     }
 
-    fn cl_release_mem_object(_memobj: ClMem) -> ClInt {
+    fn cl_release_mem_object(memobj: ClMem) -> ClInt {
         CL_SUCCESS
     }
 
@@ -1067,7 +1082,7 @@ pub mod opencl {
             Ok(devices)
         }
 
-        fn create_context(&self, device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
+        fn create_context(&self, deviceid: usize) -> LinalgResult<Box<dyn GpuContext>> {
             if device_id >= self.devices.len() {
                 return Err(LinalgError::ComputationError(format!(
                     "Invalid device ID: {} (available devices: {})",
@@ -1120,12 +1135,12 @@ pub mod opencl {
     }
 
     impl OpenClContext {
-        fn new(_context_data: Arc<OpenClContextData>, device_index: usize) -> Self {
+        fn new(_context_data: Arc<OpenClContextData>, deviceindex: usize) -> Self {
             let memory_pool = OpenClMemoryPool::new(_context_data.context);
             let performance_stats = OpenClPerformanceStats::new();
 
             Self {
-                _context_data,
+                context_data,
                 device_index,
                 memory_pool,
                 performance_stats,
@@ -1145,7 +1160,9 @@ pub mod opencl {
 
         /// Compile and cache a kernel
         pub fn compile_kernel(
-            &mut self, _kernel_name: &str, _source: &str,
+            &mut self,
+            _kernel_name: &str,
+            _source: &str,
         ) -> LinalgResult<ClKernel> {
             // In a real implementation, this would compile OpenCL kernel _source
             // For now, return a null pointer as mock
@@ -1236,9 +1253,9 @@ pub mod opencl {
     }
 
     impl OpenClMemoryPool {
-        fn new(_context: ClContext) -> Self {
+        fn new(context: ClContext) -> Self {
             Self {
-                _context,
+                context,
                 total_allocated: 0,
                 peak_usage: 0,
                 free_buffers: HashMap::new(),
@@ -1282,7 +1299,8 @@ pub mod opencl {
         buffer: ClMem,
         size: usize,
         context: ClContext,
-        command_queue: ClCommandQueue, _phantom: std::marker::PhantomData<T>,
+        command_queue: ClCommandQueue,
+        _phantom: std::marker::PhantomData<T>,
     }
 
     impl<T: Clone + Send + Sync + Copy> OpenClBuffer<T> {
@@ -1467,7 +1485,7 @@ pub mod rocm {
             Ok(vec![])
         }
 
-        fn create_context(&self_device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
+        fn create_context(&self_deviceid: usize) -> LinalgResult<Box<dyn GpuContext>> {
             Err(LinalgError::ComputationError(
                 "ROCm backend not fully implemented".to_string(),
             ))
@@ -1509,7 +1527,7 @@ pub mod metal {
             Ok(vec![])
         }
 
-        fn create_context(&self_device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
+        fn create_context(&self_deviceid: usize) -> LinalgResult<Box<dyn GpuContext>> {
             Err(LinalgError::ComputationError(
                 "Metal backend not fully implemented".to_string(),
             ))
@@ -1568,7 +1586,7 @@ impl GpuBackend for CpuFallbackBackend {
         Ok(vec![self.device_info.clone()])
     }
 
-    fn create_context(&self, device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
+    fn create_context(&self, deviceid: usize) -> LinalgResult<Box<dyn GpuContext>> {
         if device_id != 0 {
             return Err(LinalgError::ComputationError(
                 "CPU fallback only has one device".to_string(),
@@ -1619,7 +1637,7 @@ struct CpuBuffer<T> {
 }
 
 impl<T: Clone + Send + Sync> CpuBuffer<T> {
-    fn new(_size: usize) -> Self {
+    fn new(size: usize) -> Self {
         Self {
             data: Vec::with_capacity(_size),
         }

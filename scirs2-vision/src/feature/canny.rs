@@ -45,8 +45,8 @@ pub enum PreprocessMode {
 
 /// Convert image to array with proper normalization
 #[allow(dead_code)]
-fn image_to_array_normalized(_img: &DynamicImage) -> Result<Array2<f32>> {
-    let gray = _img.to_luma8();
+fn image_to_array_normalized(img: &DynamicImage) -> Result<Array2<f32>> {
+    let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
 
     let mut array = Array2::zeros((height as usize, width as usize));
@@ -62,13 +62,13 @@ fn image_to_array_normalized(_img: &DynamicImage) -> Result<Array2<f32>> {
 
 /// Convert array to image with proper scaling
 #[allow(dead_code)]
-fn array_to_binary_image(_array: &Array2<bool>) -> Result<GrayImage> {
-    let (height, width) = _array.dim();
+fn array_to_binary_image(array: &Array2<bool>) -> Result<GrayImage> {
+    let (height, width) = array.dim();
     let mut img = GrayImage::new(width as u32, height as u32);
 
     for y in 0..height {
         for x in 0..width {
-            let value = if _array[[y, x]] { 255 } else { 0 };
+            let value = if array[[y, x]] { 255 } else { 0 };
             img.put_pixel(x as u32, y as u32, image::Luma([value]));
         }
     }
@@ -78,10 +78,10 @@ fn array_to_binary_image(_array: &Array2<bool>) -> Result<GrayImage> {
 
 /// Simple Gaussian kernel generation
 #[allow(dead_code)]
-fn gaussian_kernel(_sigma: f32, size: usize) -> Vec<f32> {
+fn gaussian_kernel(sigma: f32, size: usize) -> Vec<f32> {
     let mut kernel = vec![0.0; size];
     let center = (size as f32 - 1.0) / 2.0;
-    let s = 2.0 * _sigma * _sigma;
+    let s = 2.0 * _sigma * sigma;
     let mut sum = 0.0;
 
     for (i, val) in kernel.iter_mut().enumerate() {
@@ -100,16 +100,16 @@ fn gaussian_kernel(_sigma: f32, size: usize) -> Vec<f32> {
 
 /// Apply Gaussian filter to an array
 #[allow(dead_code)]
-fn gaussian_filter(_image: &Array2<f32>, sigma: f32) -> Array2<f32> {
+fn gaussian_filter(image: &Array2<f32>, sigma: f32) -> Array2<f32> {
     if sigma <= 0.0 {
-        return _image.clone();
+        return image.clone();
     }
 
     let kernel_size = ((6.0 * sigma + 1.0) as usize) | 1; // Make odd
     let kernel = gaussian_kernel(sigma, kernel_size);
     let radius = kernel_size / 2;
 
-    let (height, width) = _image.dim();
+    let (height, width) = image.dim();
     let mut temp = Array2::zeros((height, width));
     let mut output = Array2::zeros((height, width));
 
@@ -122,7 +122,7 @@ fn gaussian_filter(_image: &Array2<f32>, sigma: f32) -> Array2<f32> {
             for (i, &kernel_val) in kernel.iter().enumerate().take(kernel_size) {
                 let offset = i as isize - radius as isize;
                 let nx = (x as isize + offset).clamp(0, width as isize - 1) as usize;
-                sum += _image[[y, nx]] * kernel_val;
+                sum += image[[y, nx]] * kernel_val;
                 weight_sum += kernel_val;
             }
 
@@ -152,14 +152,14 @@ fn gaussian_filter(_image: &Array2<f32>, sigma: f32) -> Array2<f32> {
 
 /// Connected component labeling using flood fill
 #[allow(dead_code)]
-fn label(_binary: &Array2<bool>) -> Result<(Array2<u32>, usize)> {
-    let (height, width) = _binary.dim();
+fn label(binary: &Array2<bool>) -> Result<(Array2<u32>, usize)> {
+    let (height, width) = binary.dim();
     let mut labels = Array2::zeros((height, width));
     let mut current_label = 0u32;
 
     for y in 0..height {
         for x in 0..width {
-            if _binary[[y, x]] && labels[[y, x]] == 0 {
+            if binary[[y, x]] && labels[[y, x]] == 0 {
                 current_label += 1;
 
                 // Flood fill using BFS
@@ -182,7 +182,7 @@ fn label(_binary: &Array2<bool>) -> Result<(Array2<u32>, usize)> {
                                 let ny = ny as usize;
                                 let nx = nx as usize;
 
-                                if _binary[[ny, nx]] && labels[[ny, nx]] == 0 {
+                                if binary[[ny, nx]] && labels[[ny, nx]] == 0 {
                                     labels[[ny, nx]] = current_label;
                                     queue.push_back((ny, nx));
                                 }
@@ -257,8 +257,8 @@ fn preprocess(
 
 /// Compute Sobel gradients
 #[allow(dead_code)]
-fn compute_gradients(_image: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
-    let (height, width) = _image.dim();
+fn compute_gradients(image: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
+    let (height, width) = image.dim();
     let mut gx = Array2::zeros((height, width));
     let mut gy = Array2::zeros((height, width));
 
@@ -267,19 +267,19 @@ fn compute_gradients(_image: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
         for x in 1..(width - 1) {
             // Horizontal gradient (Sobel-X)
             gx[[y, x]] = -_image[[y - 1, x - 1]]
-                + _image[[y - 1, x + 1]]
-                + -2.0 * _image[[y, x - 1]]
-                + 2.0 * _image[[y, x + 1]]
+                + image[[y - 1, x + 1]]
+                + -2.0 * image[[y, x - 1]]
+                + 2.0 * image[[y, x + 1]]
                 + -_image[[y + 1, x - 1]]
-                + _image[[y + 1, x + 1]];
+                + image[[y + 1, x + 1]];
 
             // Vertical gradient (Sobel-Y)
             gy[[y, x]] = -_image[[y - 1, x - 1]]
-                + -2.0 * _image[[y - 1, x]]
+                + -2.0 * image[[y - 1, x]]
                 + -_image[[y - 1, x + 1]]
-                + _image[[y + 1, x - 1]]
-                + 2.0 * _image[[y + 1, x]]
-                + _image[[y + 1, x + 1]];
+                + image[[y + 1, x - 1]]
+                + 2.0 * image[[y + 1, x]]
+                + image[[y + 1, x + 1]];
         }
     }
 
@@ -474,9 +474,9 @@ pub fn canny(
 ///
 /// * Result containing binary edge map
 #[allow(dead_code)]
-pub fn canny_simple(_image: &DynamicImage, sigma: f32) -> Result<GrayImage> {
+pub fn canny_simple(image: &DynamicImage, sigma: f32) -> Result<GrayImage> {
     canny(
-        _image,
+        image,
         sigma,
         None,
         None,

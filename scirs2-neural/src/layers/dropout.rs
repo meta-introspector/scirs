@@ -46,7 +46,7 @@ impl<F: Float + Debug + Send + Sync> std::fmt::Debug for Dropout<F> {
 // Manual implementation of Clone
 impl<F: Float + Debug + Send + Sync> Clone for Dropout<F> {
     fn clone(&self) -> Self {
-        let rng = rand::rngs::SmallRng::seed_from_u64(42);
+        let rng = rand::rngs::SmallRng::from_seed([42; 32]);
         Self {
             p: self.p,
             rng: Arc::new(RwLock::new(Box::new(rng))),
@@ -201,7 +201,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Drop
         Ok(grad_input)
     }
 
-    fn update(&mut self, _learning_rate: F) -> Result<()> {
+    fn update(&mut self, _learningrate: F) -> Result<()> {
         // Dropout has no parameters to update
         Ok(())
     }

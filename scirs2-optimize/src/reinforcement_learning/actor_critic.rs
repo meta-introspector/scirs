@@ -129,7 +129,7 @@ impl ActorNetwork {
         let xavier_scale = (2.0 / (_input_size + hidden_size) as f64).sqrt();
 
         Self {
-            hidden_weights: Array2::fromshape_fn((hidden_size, _input_size), |_| {
+            hidden_weights: Array2::fromshape_fn((hidden_size, input_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             hidden_bias: Array1::zeros(hidden_size),
@@ -137,7 +137,7 @@ impl ActorNetwork {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             output_bias: Array1::zeros(output_size),
-            _input_size,
+            input_size,
             hidden_size,
             output_size,
             activation,
@@ -231,11 +231,11 @@ impl ActorNetwork {
 
 impl CriticNetwork {
     /// Create new critic network
-    pub fn new(_input_size: usize, hidden_size: usize, activation: ActivationType) -> Self {
+    pub fn new(_input_size: usize, hiddensize: usize, activation: ActivationType) -> Self {
         let xavier_scale = (2.0 / (_input_size + hidden_size) as f64).sqrt();
 
         Self {
-            hidden_weights: Array2::fromshape_fn((hidden_size, _input_size), |_| {
+            hidden_weights: Array2::fromshape_fn((hidden_size, input_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             hidden_bias: Array1::zeros(hidden_size),
@@ -243,7 +243,7 @@ impl CriticNetwork {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             output_bias: 0.0,
-            _input_size,
+            input_size,
             hidden_size,
             activation,
         }

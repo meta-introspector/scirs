@@ -75,7 +75,7 @@ fn generate_test_data() -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn demo_euclidean_distance(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_euclidean_distance(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("1. Euclidean Distance (L2 norm)");
     println!("================================");
 
@@ -110,7 +110,7 @@ fn demo_euclidean_distance(_data: &Array2<f64>) -> Result<(), Box<dyn std::error
 }
 
 #[allow(dead_code)]
-fn demo_manhattan_distance(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_manhattan_distance(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("2. Manhattan Distance (L1 norm)");
     println!("================================");
 
@@ -144,7 +144,7 @@ fn demo_manhattan_distance(_data: &Array2<f64>) -> Result<(), Box<dyn std::error
 }
 
 #[allow(dead_code)]
-fn demo_chebyshev_distance(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_chebyshev_distance(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("3. Chebyshev Distance (L∞ norm)");
     println!("================================");
 
@@ -178,7 +178,7 @@ fn demo_chebyshev_distance(_data: &Array2<f64>) -> Result<(), Box<dyn std::error
 }
 
 #[allow(dead_code)]
-fn demo_cosine_distance(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_cosine_distance(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("4. Cosine Distance");
     println!("==================");
 
@@ -201,7 +201,7 @@ fn demo_cosine_distance(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
         "  Cosine K-means: Silhouette = {:.3}, Time = {:?}",
         silhouette, duration
     );
-    println!("  Best for: Text _data, high-dimensional sparse _data, direction matters more than magnitude");
+    println!("  Best for: Text data, high-dimensional sparse data, direction matters more than magnitude");
 
     let mut cluster_counts = vec![0; 3];
     for &label in labels.iter() {
@@ -212,7 +212,7 @@ fn demo_cosine_distance(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
 }
 
 #[allow(dead_code)]
-fn demo_correlation_distance(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_correlation_distance(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("5. Correlation Distance");
     println!("=======================");
 
@@ -246,7 +246,7 @@ fn demo_correlation_distance(_data: &Array2<f64>) -> Result<(), Box<dyn std::err
 }
 
 #[allow(dead_code)]
-fn demo_mahalanobis_distance(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_mahalanobis_distance(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("6. Mahalanobis Distance");
     println!("=======================");
 

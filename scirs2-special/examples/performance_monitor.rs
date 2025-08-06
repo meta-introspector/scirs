@@ -38,7 +38,7 @@ impl PerformanceMonitor {
         }
     }
 
-    fn benchmark_function<F>(&mut self, name: &str, _input_size: usize, mut f: F)
+    fn benchmark_function<F>(&mut self, name: &str, _inputsize: usize, mut f: F)
     where
         F: FnMut() -> f64,
     {
@@ -98,7 +98,7 @@ impl PerformanceMonitor {
         self.results.insert(name.to_string(), result);
     }
 
-    fn benchmark_array_function<F>(&mut self, name: &str, array_size: usize, mut f: F)
+    fn benchmark_array_function<F>(&mut self, name: &str, arraysize: usize, mut f: F)
     where
         F: FnMut(&Array1<f64>) -> Array1<f64>,
     {
@@ -377,7 +377,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn create_ci_analysis(_monitor: &PerformanceMonitor) -> Result<(), Box<dyn std::error::Error>> {
+fn create_ci_analysis(monitor: &PerformanceMonitor) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📋 Creating CI/CD analysis...");
 
     // Create a structured output for CI consumption
@@ -433,7 +433,7 @@ fn create_ci_analysis(_monitor: &PerformanceMonitor) -> Result<(), Box<dyn std::
     }
 
     // Performance quality metrics
-    let total_functions = _monitor.results.len();
+    let total_functions = monitor.results.len();
     let slow_functions = _monitor
         .results
         .iter()

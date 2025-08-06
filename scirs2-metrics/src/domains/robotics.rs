@@ -775,7 +775,7 @@ impl RoboticsMetrics {
 
     /// Calculate curvature metrics for trajectory
     fn calculate_curvature_metrics<F>(
-        &self_trajectory: &ArrayView2<F>,
+        &self,\n        trajectory: &ArrayView2<F>,
         velocities: &Array2<F>,
         accelerations: &Array2<F>,
     ) -> Result<CurvatureMetrics>
@@ -1098,8 +1098,8 @@ impl RoboticsMetrics {
     where
         F: Float,
     {
-        let n_points = _path.nrows();
-        let n_dims = _path.ncols();
+        let n_points = path.nrows();
+        let n_dims = path.ncols();
 
         if n_points < 2 {
             return Err(MetricsError::InvalidInput(
@@ -1112,7 +1112,7 @@ impl RoboticsMetrics {
         for i in 0..n_points - 1 {
             let mut segment_length = 0.0;
             for j in 0..n_dims {
-                let diff = (_path[[i + 1, j]] - _path[[i, j]]).to_f64().unwrap();
+                let diff = (_path[[i + 1, j]] - path[[i, j]]).to_f64().unwrap();
                 segment_length += diff * diff;
             }
             path_length += segment_length.sqrt();
@@ -1146,7 +1146,7 @@ impl RoboticsMetrics {
             for i in 0..velocities.nrows() {
                 let velocity_magnitude_sq: f64 = velocities.row(i)
                     .iter()
-                    ._map(|&v| v.to_f64().unwrap().powi(2))
+                    .map(|&v| v.to_f64().unwrap().powi(2))
                     .sum();
                 total_energy += 0.5 * _mass * velocity_magnitude_sq;
             }
@@ -1160,7 +1160,7 @@ impl RoboticsMetrics {
                         let acc_magnitude_sq: f64 = velocities.row(i + 1)
                             .iter()
                             .zip(velocities.row(i).iter())
-                            ._map(|(&v_next, &v_curr)| {
+                            .map(|(&v_next, &v_curr)| {
                                 let acc = (v_next - v_curr).to_f64().unwrap() / dt;
                                 acc * acc
                             })
@@ -1271,7 +1271,7 @@ impl RoboticsMetrics {
         let mean = avg_clearance;
         let clearance_variance = clearance_distances
             .iter()
-            ._map(|&x| (x - mean).powi(2))
+            .map(|&x| (x - mean).powi(2))
             .sum::<f64>() / clearance_distances.len() as f64;
 
         // Calculate safety margin ratio (ratio of actual clearance to minimum safe clearance)
@@ -1317,7 +1317,7 @@ impl RoboticsMetrics {
 
         // Calculate joint _limits satisfaction
         let joint_limits_satisfaction = if let Some(_limits) = joint_limits {
-            if _limits.nrows() != n_joints || _limits.ncols() != 2 {
+            if limits.nrows() != n_joints || limits.ncols() != 2 {
                 return Err(MetricsError::InvalidInput(
                     "Joint _limits must have shape [n_joints, 2] for [min, max]".to_string(),
                 ));
@@ -1329,8 +1329,8 @@ impl RoboticsMetrics {
             for t in 0..n_timesteps {
                 for j in 0..n_joints {
                     let pos = joint_positions[[t, j]].to_f64().unwrap();
-                    let min_limit = _limits[[j, 0]];
-                    let max_limit = _limits[[j, 1]];
+                    let min_limit = limits[[j, 0]];
+                    let max_limit = limits[[j, 1]];
 
                     total_checks += 1;
                     if pos < min_limit || pos > max_limit {
@@ -1362,7 +1362,7 @@ impl RoboticsMetrics {
 
             for t in 0.._velocities.nrows() {
                 for j in 0..n_joints {
-                    let vel = _velocities[[t, j]].to_f64().unwrap().abs();
+                    let vel = velocities[[t, j]].to_f64().unwrap().abs();
                     let vel_limit = vel_limits[j];
 
                     total_checks += 1;
@@ -1395,7 +1395,7 @@ impl RoboticsMetrics {
 
             for t in 0.._accelerations.nrows() {
                 for j in 0..n_joints {
-                    let acc = _accelerations[[t, j]].to_f64().unwrap().abs();
+                    let acc = accelerations[[t, j]].to_f64().unwrap().abs();
                     let acc_limit = acc_limits[j];
 
                     total_checks += 1;
@@ -1428,7 +1428,7 @@ impl RoboticsMetrics {
 
             for t in 0.._torques.nrows() {
                 for j in 0..n_joints {
-                    let torque = _torques[[t, j]].to_f64().unwrap().abs();
+                    let torque = torques[[t, j]].to_f64().unwrap().abs();
                     let torque_limit = torque_lims[j];
 
                     total_checks += 1;
@@ -1500,13 +1500,13 @@ impl RoboticsMetrics {
 
         // Calculate stability score based on _slippage data
         let stability_score = if let Some(_slippage) = object_slippage {
-            if _slippage.len() != n_attempts {
+            if slippage.len() != n_attempts {
                 return Err(MetricsError::InvalidInput(
                     "Slippage data must match number of grasp _attempts".to_string(),
                 ));
             }
             
-            let stable_grasps = _slippage.iter()
+            let stable_grasps = slippage.iter()
                 .zip(grasp_attempts.iter())
                 .filter(|&(slip, success)| *success && !slip)
                 .count();
@@ -1552,7 +1552,7 @@ impl RoboticsMetrics {
 
         // Calculate robustness score (based on force consistency)
         let robustness_score = if let Some(_forces) = grasp_forces {
-            if _forces.nrows() != n_attempts {
+            if forces.nrows() != n_attempts {
                 return Err(MetricsError::InvalidInput(
                     "Grasp _forces must match number of grasp _attempts".to_string(),
                 ));
@@ -1563,7 +1563,7 @@ impl RoboticsMetrics {
             for i in 0..n_attempts {
                 if grasp_attempts[i] {
                     // Calculate force magnitude for this grasp
-                    let force_magnitude: f64 = _forces.row(i)
+                    let force_magnitude: f64 = forces.row(i)
                         .iter()
                         .map(|&f| f.to_f64().unwrap().powi(2))
                         .sum::<f64>()
@@ -1599,9 +1599,9 @@ impl RoboticsMetrics {
             let mut valid_trajectories = 0;
 
             for i in 0..n_attempts {
-                if grasp_attempts[i] && i < _trajectories.shape()[0] {
+                if grasp_attempts[i] && i < trajectories.shape()[0] {
                     // Calculate trajectory smoothness (simplified)
-                    let traj = _trajectories.slice(ndarray::s![i, .., ..]);
+                    let traj = trajectories.slice(ndarray::s![i, .., ..]);
                     let n_points = traj.shape()[0];
                     
                     if n_points > 2 {
@@ -1624,7 +1624,7 @@ impl RoboticsMetrics {
                         
                         if point_count > 0 {
                             let avg_jerk = jerk_sum / point_count as f64;
-                            // Convert to smoothness score (lower jerk = higher _quality)
+                            // Convert to smoothness score (lower jerk = higher quality)
                             total_smoothness += 1.0 / (1.0 + avg_jerk);
                             valid_trajectories += 1;
                         }
@@ -1682,7 +1682,7 @@ impl RoboticsMetrics {
         let path_planning = self.evaluate_path_planning_metrics(
             planned_paths,
             goals,
-            _obstacles,
+            obstacles,
             planning_times,
             execution_success,
         )?;
@@ -1690,7 +1690,7 @@ impl RoboticsMetrics {
         // Evaluate obstacle avoidance metrics
         let obstacle_avoidance = self.evaluate_obstacle_avoidance_metrics(
             executed_paths,
-            _obstacles,
+            obstacles,
             dynamic_obstacles,
             execution_success,
         )?;
@@ -2296,7 +2296,7 @@ impl RoboticsMetrics {
 
         // Calculate recovery success rate
         let recovery_success_rate = if let Some(recovery_time_data) = recovery_times {
-            // Count successful recoveries (finite recovery _times)
+            // Count successful recoveries (finite recovery times)
             let successful_recoveries = recovery_time_data.iter()
                 .filter(|&&time| time > 0.0 && time.is_finite())
                 .count();
@@ -3723,7 +3723,7 @@ impl DomainMetrics for RoboticsMetrics {
         descriptions
     }
 
-    fn evaluate(&mut self_data: &HashMap<String, Vec<f64>>) -> Result<Self::Result> {
+    fn evaluate(&mut self, data: &HashMap<String, Vec<f64>>) -> Result<Self::Result> {
         // Implementation would process the provided _data and compute metrics
         Ok(DomainEvaluationResult {
             domain: self.domain_name().to_string(),

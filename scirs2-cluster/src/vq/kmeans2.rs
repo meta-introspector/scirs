@@ -317,12 +317,12 @@ where
 /// Random initialization: generate k centroids from a Gaussian with mean and
 /// variance estimated from the data
 #[allow(dead_code)]
-fn krandinit<F>(_data: ArrayView2<F>, k: usize, random_seed: Option<u64>) -> Result<Array2<F>>
+fn krandinit<F>(_data: ArrayView2<F>, k: usize, randomseed: Option<u64>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
 {
-    let n_samples = _data.shape()[0];
-    let n_features = _data.shape()[1];
+    let n_samples = data.shape()[0];
+    let n_features = data.shape()[1];
 
     // Calculate mean and variance for each feature
     let mut means = Array1::<F>::zeros(n_features);
@@ -331,13 +331,13 @@ where
     for j in 0..n_features {
         let mut sum = F::zero();
         for i in 0..n_samples {
-            sum = sum + _data[[i, j]];
+            sum = sum + data[[i, j]];
         }
         means[j] = sum / F::from(n_samples).unwrap();
 
         let mut var_sum = F::zero();
         for i in 0..n_samples {
-            let diff = _data[[i, j]] - means[j];
+            let diff = data[[i, j]] - means[j];
             var_sum = var_sum + diff * diff;
         }
         vars[j] = var_sum / F::from(n_samples).unwrap();
@@ -347,7 +347,7 @@ where
     let mut centroids = Array2::<F>::zeros((k, n_features));
 
     let mut rng: Box<dyn RngCore> = if let Some(_seed) = random_seed {
-        Box::new(StdRng::from_seed([_seed as u8; 32]))
+        Box::new(StdRng::seed_from_u64([_seed as u8; 32]))
     } else {
         Box::new(rand::rng())
     };
@@ -373,15 +373,15 @@ where
 
 /// Points initialization: choose k observations (rows) at random from data
 #[allow(dead_code)]
-fn kpoints<F>(_data: ArrayView2<F>, k: usize, random_seed: Option<u64>) -> Result<Array2<F>>
+fn kpoints<F>(_data: ArrayView2<F>, k: usize, randomseed: Option<u64>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n_samples = _data.shape()[0];
-    let n_features = _data.shape()[1];
+    let n_samples = data.shape()[0];
+    let n_features = data.shape()[1];
 
     let mut rng: Box<dyn RngCore> = if let Some(_seed) = random_seed {
-        Box::new(StdRng::from_seed([_seed as u8; 32]))
+        Box::new(StdRng::seed_from_u64([_seed as u8; 32]))
     } else {
         Box::new(rand::rng())
     };
@@ -400,7 +400,7 @@ where
     for i in 0..k {
         let idx = indices[i];
         for j in 0..n_features {
-            centroids[[i, j]] = _data[[idx, j]];
+            centroids[[i, j]] = data[[idx, j]];
         }
     }
 
@@ -417,11 +417,11 @@ fn kmeans_plus_plus<F>(
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
 {
-    let n_samples = _data.shape()[0];
-    let n_features = _data.shape()[1];
+    let n_samples = data.shape()[0];
+    let n_features = data.shape()[1];
 
     let mut rng: Box<dyn RngCore> = if let Some(_seed) = random_seed {
-        Box::new(StdRng::from_seed([_seed as u8; 32]))
+        Box::new(StdRng::seed_from_u64([_seed as u8; 32]))
     } else {
         Box::new(rand::rng())
     };
@@ -431,7 +431,7 @@ where
     // Choose first centroid randomly
     let first_idx = rng.gen_range(0..n_samples);
     for j in 0..n_features {
-        centroids[[0..j]] = _data[[first_idx, j]];
+        centroids[[0..j]] = data[[first_idx, j]];
     }
 
     // Choose remaining centroids
@@ -472,7 +472,7 @@ where
 
         // Add chosen centroid
         for j in 0..n_features {
-            centroids[[i, j]] = _data[[next_idx, j]];
+            centroids[[i, j]] = data[[next_idx, j]];
         }
     }
 

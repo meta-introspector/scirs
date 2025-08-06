@@ -71,7 +71,7 @@ pub struct AdvancedAdvancedSTDP {
 
 impl AdvancedAdvancedSTDP {
     /// Create new advanced STDP rule with sophisticated plasticity mechanisms
-    pub fn new(_eta_ltp: f64, eta_ltd: f64, target_firing_rate: f64) -> Self {
+    pub fn new(_eta_ltp: f64, eta_ltd: f64, target_firingrate: f64) -> Self {
         Self {
             // Initialize traces
             pre_trace_fast: 0.0,
@@ -105,7 +105,7 @@ impl AdvancedAdvancedSTDP {
             tau_metaplasticity: 100.0, // 100s metaplasticity
 
             // Learning rates
-            _eta_ltp,
+            eta_ltp,
             eta_ltd,
             eta_triplet: _eta_ltp * 0.1,
             eta_homeostatic: _eta_ltp * 0.01,
@@ -188,7 +188,7 @@ impl AdvancedAdvancedSTDP {
         self.apply_weight_constraints(new_weight)
     }
 
-    fn update_calcium(&mut self, pre_spike: bool, post_spike: bool, dt: f64) {
+    fn update_calcium(&mut self, pre_spike: bool, postspike: bool, dt: f64) {
         // Decay calcium
         self.calcium_concentration *= (-dt / self.tau_calcium).exp();
 
@@ -204,7 +204,7 @@ impl AdvancedAdvancedSTDP {
         self.calcium_concentration = self.calcium_concentration.min(1.0);
     }
 
-    fn update_metaplasticity(&mut self, current_time: f64, objective_improvement: f64) {
+    fn update_metaplasticity(&mut self, current_time: f64, objectiveimprovement: f64) {
         // Store recent activity
         self.recent_activity.push_back(objective_improvement);
         if self.recent_activity.len() > 1000 {
@@ -230,7 +230,7 @@ impl AdvancedAdvancedSTDP {
         }
     }
 
-    fn update_homeostasis(&mut self, pre_spike: bool, post_spike: bool, dt: f64) {
+    fn update_homeostasis(&mut self, pre_spike: bool, postspike: bool, dt: f64) {
         // Update current firing rate estimate
         let spike_rate = if post_spike { 1.0 / dt } else { 0.0 };
         self.current_firing_rate = 0.999 * self.current_firing_rate + 0.001 * spike_rate;
@@ -254,7 +254,7 @@ impl AdvancedAdvancedSTDP {
         self.post_trace_triplet *= (-dt / (self.tau_minus_fast * 2.0)).exp();
     }
 
-    fn compute_pairwise_stdp(&mut self, pre_spike: bool, post_spike: bool) -> f64 {
+    fn compute_pairwise_stdp(&mut self, pre_spike: bool, postspike: bool) -> f64 {
         let mut weight_change = 0.0;
 
         if pre_spike {
@@ -276,7 +276,7 @@ impl AdvancedAdvancedSTDP {
         weight_change
     }
 
-    fn compute_triplet_stdp(&mut self, pre_spike: bool, post_spike: bool) -> f64 {
+    fn compute_triplet_stdp(&mut self, pre_spike: bool, postspike: bool) -> f64 {
         let mut weight_change = 0.0;
 
         if pre_spike {
@@ -294,7 +294,7 @@ impl AdvancedAdvancedSTDP {
         weight_change
     }
 
-    fn compute_calcium_plasticity(&self, current_weight: f64) -> f64 {
+    fn compute_calcium_plasticity(&self, currentweight: f64) -> f64 {
         let ca = self.calcium_concentration;
 
         if ca < self.calcium_threshold_low {
@@ -329,7 +329,7 @@ impl AdvancedAdvancedSTDP {
         pre_activity * post_activity * (post_activity - theta) * self.eta_ltp * 0.1
     }
 
-    fn compute_homeostatic_scaling(&self, current_weight: f64) -> f64 {
+    fn compute_homeostatic_scaling(&self, currentweight: f64) -> f64 {
         // Homeostatic synaptic scaling to maintain target activity
         let rate_error = self.target_firing_rate - self.current_firing_rate;
         self.eta_homeostatic * rate_error * current_weight * 0.01
@@ -386,11 +386,11 @@ pub struct STDPLearningRule {
 
 impl STDPLearningRule {
     /// Create new simple STDP rule
-    pub fn new(_learning_rate: f64) -> Self {
+    pub fn new(_learningrate: f64) -> Self {
         Self {
             pre_trace: 0.0,
             post_trace: 0.0,
-            _learning_rate,
+            learning_rate,
             tau_plus: 0.020,  // 20ms
             tau_minus: 0.020, // 20ms
         }
@@ -488,11 +488,11 @@ impl Default for NetworkStats {
 
 impl AdvancedSTDPNetwork {
     /// Create new advanced STDP network
-    pub fn new(_layer_sizes: Vec<usize>, target_firing_rate: f64, learning_rate: f64) -> Self {
+    pub fn new(_layer_sizes: Vec<usize>, target_firing_rate: f64, learningrate: f64) -> Self {
         let mut layers = Vec::new();
         let mut advanced_stdp_rules = Vec::new();
 
-        for (layer_idx, &size) in _layer_sizes.iter().enumerate() {
+        for (layer_idx, &size) in layer_sizes.iter().enumerate() {
             let layer = STDPLayer {
                 size,
                 potentials: Array1::zeros(size),
@@ -503,7 +503,7 @@ impl AdvancedSTDPNetwork {
 
             // Create STDP rules for connections from previous layer
             if layer_idx > 0 {
-                let prev_size = _layer_sizes[layer_idx - 1];
+                let prev_size = layer_sizes[layer_idx - 1];
                 let mut layer_rules = Vec::new();
 
                 for _i in 0..size {
@@ -519,7 +519,7 @@ impl AdvancedSTDPNetwork {
             }
         }
 
-        let input_size = _layer_sizes[0];
+        let input_size = layer_sizes[0];
 
         Self {
             layers,
@@ -714,7 +714,7 @@ impl AdvancedSTDPNetwork {
         Ok(())
     }
 
-    fn decode_parameters_from_network(&self, current_time: f64) -> Array1<f64> {
+    fn decode_parameters_from_network(&self, currenttime: f64) -> Array1<f64> {
         let mut updates = Array1::zeros(self.current_params.len());
 
         // Use firing rates from first layer as parameter updates
@@ -729,7 +729,7 @@ impl AdvancedSTDPNetwork {
         updates
     }
 
-    fn compute_adaptive_step_size(&self, objective_improvement: f64, iteration: usize) -> f64 {
+    fn compute_adaptive_step_size(&self, objectiveimprovement: f64, iteration: usize) -> f64 {
         let base_step = 0.01;
         let improvement_factor = if objective_improvement > 0.0 {
             1.2
@@ -741,7 +741,7 @@ impl AdvancedSTDPNetwork {
         base_step * improvement_factor * decay_factor
     }
 
-    fn update_network_statistics(&mut self, current_time: f64) {
+    fn update_network_statistics(&mut self, currenttime: f64) {
         // Compute average plasticity
         let mut total_plasticity = 0.0;
         let mut count = 0;
@@ -761,7 +761,7 @@ impl AdvancedSTDPNetwork {
         // Compute network synchrony (simplified)
         let mut synchrony = 0.0;
         for layer in &self.layers {
-            let rate_variance = layer.firing_rates.variance();
+            let rate_variance = layer.firing_rates.clone().variance();
             synchrony += 1.0 / (1.0 + rate_variance);
         }
         self.network_stats.synchrony = synchrony / self.layers.len() as f64;
@@ -807,7 +807,7 @@ where
             let pre_spike = rand::rng().gen::<f64>() < (_params[i].abs() * 0.1).min(0.5);
             let post_spike = improvement > 0.0 && rand::rng().gen::<f64>() < 0.2;
 
-            _params[i] = rule.update_weight(_params[i], pre_spike, post_spike, 0.001);
+            params[i] = rule.update_weight(_params[i], pre_spike, post_spike, 0.001);
         }
 
         prev_obj = current_obj;

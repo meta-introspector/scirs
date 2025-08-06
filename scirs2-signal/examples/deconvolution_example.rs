@@ -1,5 +1,5 @@
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
 // use plotters::prelude::*; // Commented out until plotters is added as dependency
 use rand::rng;
 use rand_distr::{Distribution, Normal};
@@ -615,18 +615,18 @@ fn regularization_parameter_selection() -> SignalResult<()> {
 
 /// Calculate mean squared error between two signals
 #[allow(dead_code)]
-fn calculate_mse(_estimate: &Array1<f64>, true_signal: &Array1<f64>) -> f64 {
+fn calculate_mse(_estimate: &Array1<f64>, truesignal: &Array1<f64>) -> f64 {
     _estimate
         .iter()
         .zip(true_signal.iter())
         .map(|(est, true_val)| (est - true_val).powi(2))
         .sum::<f64>()
-        / _estimate.len() as f64
+        / estimate.len() as f64
 }
 
 /// Export signals to CSV file for external plotting
 #[allow(dead_code)]
-fn export_to_csv(_file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
+fn export_to_csv(_filename: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
     let mut file = File::create(_file_name).map_err(|e| {
         scirs2_signal::error::SignalError::ComputationError(format!("Failed to create file: {}", e))
     })?;
@@ -664,7 +664,7 @@ fn export_to_csv(_file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRe
 
 /// Save 2D image data as CSV
 #[allow(dead_code)]
-fn save_image_as_csv(_file_name: &str, image: &Array2<f64>) -> SignalResult<()> {
+fn save_image_as_csv(_filename: &str, image: &Array2<f64>) -> SignalResult<()> {
     let mut file = File::create(_file_name).map_err(|e| {
         scirs2_signal::error::SignalError::ComputationError(format!("Failed to create file: {}", e))
     })?;

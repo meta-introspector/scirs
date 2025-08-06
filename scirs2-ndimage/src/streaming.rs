@@ -85,7 +85,7 @@ impl<T> StreamProcessor<T>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
 {
-    pub fn new(_config: StreamConfig) -> Self {
+    pub fn new(config: StreamConfig) -> Self {
         Self {
             _config_phantom: std::marker::PhantomData,
         }
@@ -210,7 +210,7 @@ where
     }
 
     /// Iterator over chunk information
-    fn chunk_iterator<'a>(&'a self, shape: &'a [usize], chunk_dims: &'a [usize]) -> ChunkIterator {
+    fn chunk_iterator<'a>(&'a self, shape: &'a [usize], chunkdims: &'a [usize]) -> ChunkIterator {
         ChunkIterator::new(shape, chunk_dims, &self.config.overlap)
     }
 
@@ -344,7 +344,7 @@ struct ChunkIterator {
 }
 
 impl ChunkIterator {
-    fn new(shape: &[usize], chunk_dims: &[usize], overlap: &[usize]) -> Self {
+    fn new(shape: &[usize], chunkdims: &[usize], overlap: &[usize]) -> Self {
         Self {
             shape: shape.to_vec(),
             chunk_dims: chunk_dims.to_vec(),
@@ -417,8 +417,8 @@ pub struct StreamingGaussianFilter<T> {
 }
 
 impl<T: Float + FromPrimitive + Debug + Clone> StreamingGaussianFilter<T> {
-    pub fn new(_sigma: Vec<T>, truncate: Option<T>) -> Self {
-        Self { _sigma, truncate }
+    pub fn new(sigma: Vec<T>, truncate: Option<T>) -> Self {
+        Self { sigma, truncate }
     }
 }
 
@@ -577,9 +577,9 @@ impl<T> AdaptiveStreamProcessor<T>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
 {
-    pub fn new(_base_config: StreamConfig) -> Self {
+    pub fn new(_baseconfig: StreamConfig) -> Self {
         Self {
-            _base_config,
+            base_config,
             performance_monitor: PerformanceMonitor::new(),
             memory_manager: MemoryManager::new(), _phantom: std::marker::PhantomData,
         }
@@ -1009,7 +1009,7 @@ where
     fn estimate_complexity(&self, shape: &[usize]) -> OperationComplexity;
 
     /// Suggest optimal overlap based on operation characteristics
-    fn suggest_overlap(&self, _chunk_dims: &[usize]) -> Vec<usize> {
+    fn suggest_overlap(&self, _chunkdims: &[usize]) -> Vec<usize> {
         self.required_overlap()
     }
 
@@ -1065,13 +1065,13 @@ impl GpuContext {
         self.device_id
     }
 
-    pub fn allocate_memory(&mut self_size: usize) -> NdimageResult<*mut u8> {
+    pub fn allocate_memory(&mut selfsize: usize) -> NdimageResult<*mut u8> {
         // GPU memory allocation
         // This is a placeholder - would use actual GPU allocation APIs
         Ok(std::ptr::null_mut())
     }
 
-    pub fn free_memory(&mut self_ptr: *mut u8) -> NdimageResult<()> {
+    pub fn free_memory(&mut selfptr: *mut u8) -> NdimageResult<()> {
         // GPU memory deallocation
         // This is a placeholder - would use actual GPU deallocation APIs
         Ok(())

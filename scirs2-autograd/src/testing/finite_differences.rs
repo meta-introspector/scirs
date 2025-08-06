@@ -64,7 +64,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: FiniteDifferenceConfig) -> Self {
+    pub fn with_config(config: FiniteDifferenceConfig) -> Self {
         Self {
             _config_phantom: std::marker::PhantomData,
         }
@@ -295,7 +295,8 @@ impl<F: Float> FiniteDifferenceComputer<F> {
 
     #[allow(dead_code)]
     fn estimate_truncation_error<Func>(
-        &self_function: &Func,
+        &self,
+        function: &Func,
         _input: &Tensor<F>,
         _step: F,
     ) -> Result<F, StabilityError>
@@ -475,10 +476,10 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     fn create_double_perturbation<'a>(
         &self,
         input: &Tensor<'a, F>,
-        _i: usize,
-        j: usize_delta,
-        _i: F_delta,
-        j: F,
+        i: usize,
+        j: usize,
+        i_delta: F,
+        j_delta: F,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Create a copy of input with two components perturbed
         let perturbed = *input;
@@ -487,7 +488,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     }
 
     #[allow(dead_code)]
-    fn extract_scalar(&self_tensor: &Tensor<'_, F>) -> Result<F, StabilityError> {
+    fn extract_scalar(selftensor: &Tensor<'_, F>) -> Result<F, StabilityError> {
         // Extract a scalar value from the _tensor (assumes output is scalar)
         // Simplified implementation
         Ok(F::from(1.0).unwrap())
@@ -510,8 +511,8 @@ pub struct PerturbedInputIterator<'a, F: Float> {
 }
 
 impl<'a, F: Float> PerturbedInputIterator<'a, F> {
-    fn new(_input: &Tensor<'a, F>, step: F) -> Self {
-        let max_index = _input.shape().iter().product();
+    fn new(input: &Tensor<'a, F>, step: F) -> Self {
+        let max_index = input.shape().iter().product();
         Self {
             _input: *_input,
             step,
@@ -548,8 +549,8 @@ pub struct CentralPerturbedInputIterator<'a, F: Float> {
 }
 
 impl<'a, F: Float> CentralPerturbedInputIterator<'a, F> {
-    fn new(_input: &Tensor<'a, F>, step: F) -> Self {
-        let max_index = _input.shape().iter().product();
+    fn new(input: &Tensor<'a, F>, step: F) -> Self {
+        let max_index = input.shape().iter().product();
         Self {
             _input: *_input,
             step,

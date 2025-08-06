@@ -62,17 +62,17 @@ where
     // Compute Cholesky factorization of covariance matrix
     let l = cholesky(cov, None)?;
 
-    // Transform _samples: X = μ + Z * L^T
-    let mut _samples = Array2::zeros((n_samples, p));
+    // Transform samples: X = μ + Z * L^T
+    let mut samples = Array2::zeros((n_samples, p));
     for i in 0..n_samples {
         let z_row = z.row(i);
         let transformed = l.t().dot(&z_row);
         for j in 0..p {
-            _samples[[i, j]] = mean[j] + transformed[j];
+            samples[[i, j]] = mean[j] + transformed[j];
         }
     }
 
-    Ok(_samples)
+    Ok(samples)
 }
 
 /// Generate samples from a matrix normal distribution
@@ -106,15 +106,15 @@ where
         + Sync
         + 'static,
 {
-    let mut _samples = Vec::with_capacity(n_samples);
+    let mut samples = Vec::with_capacity(n_samples);
 
     for i in 0..n_samples {
-        let _seed = rng_seed.map(|s| s.wrapping_add(i as u64));
-        let sample = crate::stats::distributions::sample_matrix_normal(params, _seed)?;
-        _samples.push(sample);
+        let seed = rng_seed.map(|s| s.wrapping_add(i as u64));
+        let sample = crate::stats::distributions::sample_matrix_normal(params, seed)?;
+        samples.push(sample);
     }
 
-    Ok(_samples)
+    Ok(samples)
 }
 
 /// Generate samples from a Wishart distribution
@@ -148,15 +148,15 @@ where
         + Sync
         + 'static,
 {
-    let mut _samples = Vec::with_capacity(n_samples);
+    let mut samples = Vec::with_capacity(n_samples);
 
     for i in 0..n_samples {
         let _seed = rng_seed.map(|s| s.wrapping_add(i as u64));
         let sample = crate::stats::distributions::sample_wishart(params, _seed)?;
-        _samples.push(sample);
+        samples.push(sample);
     }
 
-    Ok(_samples)
+    Ok(samples)
 }
 
 /// Generate samples from an inverse Wishart distribution
@@ -204,16 +204,16 @@ where
     let scale_inv = crate::basic::inv(scale, None)?;
     let wishart_params = WishartParams::new(scale_inv, dof)?;
 
-    let mut _samples = Vec::with_capacity(n_samples);
+    let mut samples = Vec::with_capacity(n_samples);
 
     for i in 0..n_samples {
         let _seed = rng_seed.map(|s| s.wrapping_add(i as u64));
         let wishart_sample = crate::stats::distributions::sample_wishart(&wishart_params, _seed)?;
         let inverse_wishart_sample = crate::basic::inv(&wishart_sample.view(), None)?;
-        _samples.push(inverse_wishart_sample);
+        samples.push(inverse_wishart_sample);
     }
 
-    Ok(_samples)
+    Ok(samples)
 }
 
 /// Sample from a matrix-variate t-distribution
@@ -262,7 +262,7 @@ where
         )));
     }
 
-    let mut _samples = Vec::with_capacity(n_samples);
+    let mut samples = Vec::with_capacity(n_samples);
 
     for i in 0..n_samples {
         let _seed = rng_seed.map(|s| s.wrapping_add(i as u64));
@@ -279,10 +279,10 @@ where
 
         // Scale the normal sample
         let t_sample = mean + &((&normal_sample - mean) * scale_factor);
-        _samples.push(t_sample);
+        samples.push(t_sample);
     }
 
-    Ok(_samples)
+    Ok(samples)
 }
 
 /// Generate bootstrap samples from a dataset
@@ -427,7 +427,7 @@ where
 
     let mut current = initial_value;
     let mut current_log_density = log_density(&current.view())?;
-    let mut _samples = Vec::with_capacity(n_samples);
+    let mut samples = Vec::with_capacity(n_samples);
     let mut accepted = 0;
 
     // Cholesky factor for proposal covariance
@@ -461,7 +461,7 @@ where
 
         // Collect sample after burn-_in
         if i >= burn_in {
-            _samples.push(current.clone());
+            samples.push(current.clone());
         }
     }
 
@@ -473,7 +473,7 @@ where
         );
     }
 
-    Ok(_samples)
+    Ok(samples)
 }
 
 #[cfg(test)]

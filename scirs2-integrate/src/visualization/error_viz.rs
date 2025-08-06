@@ -175,9 +175,9 @@ pub struct ConvergenceVisualizer {
 
 impl ConvergenceVisualizer {
     /// Create new convergence visualizer
-    pub fn new(max_iterations: usize, tolerance: f64) -> Self {
+    pub fn new(maxiterations: usize, tolerance: f64) -> Self {
         Self {
-            max_iterations,
+            max_iterations: maxiterations,
             tolerance,
             track_multiple_metrics: true,
         }
@@ -395,7 +395,7 @@ impl ConvergenceVisualizer {
     }
 
     /// Assign color to convergence curve
-    fn assign_curve_color(&self, existing_curves: &[ConvergenceCurve]) -> [f64; 3] {
+    fn assign_curve_color(&self, existingcurves: &[ConvergenceCurve]) -> [f64; 3] {
         let colors = [
             [0.0, 0.4470, 0.7410],    // Blue
             [0.8500, 0.3250, 0.0980], // Orange
@@ -406,7 +406,7 @@ impl ConvergenceVisualizer {
             [0.6350, 0.0780, 0.1840], // Red
         ];
 
-        let index = existing_curves.len() % colors.len();
+        let index = existingcurves.len() % colors.len();
         colors[index]
     }
 
@@ -484,9 +484,9 @@ impl ConvergenceVisualizationEngine {
     }
 
     /// Track metric over time
-    pub fn track_metric(&mut self, metric_name: &str, value: f64, time: f64) {
+    pub fn track_metric(&mut self, metricname: &str, value: f64, time: f64) {
         self.performance_tracker
-            .add_metric_value(metric_name, value, time);
+            .add_metric_value(metricname, value, time);
     }
 
     /// Create comprehensive convergence analysis
@@ -545,19 +545,19 @@ impl PerformanceTracker {
     }
 
     /// Add metric value at specific time
-    pub fn add_metric_value(&mut self, metric_name: &str, value: f64, time: f64) {
+    pub fn add_metric_value(&mut self, metricname: &str, value: f64, time: f64) {
         // This would be implemented to track metrics over time
         // Simplified for now
     }
 
     /// Get metric statistics
-    pub fn get_statistics(metric_name: &str) -> Option<&MetricStatistics> {
+    pub fn get_statistics(metricname: &str) -> Option<&MetricStatistics> {
         // This would return computed statistics for the metric
         None
     }
 
     /// Get all tracked metric names
-    pub fn get_metric_names(&self) -> Vec<String> {
+    pub fn get_metricnames(&self) -> Vec<String> {
         self.metrics.keys().cloned().collect()
     }
 }

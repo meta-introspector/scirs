@@ -154,8 +154,8 @@ pub struct MemoryStats {
 }
 
 impl PerformanceReport {
-    fn from_metrics(_metrics: &[OperationMetrics]) -> Self {
-        let total_time = _metrics.iter().map(|m| m.duration).sum();
+    fn from_metrics(metrics: &[OperationMetrics]) -> Self {
+        let total_time = metrics.iter().map(|m| m.duration).sum();
 
         // Group _metrics by operation name
         let mut op_groups: HashMap<String, Vec<&OperationMetrics>> = HashMap::new();
@@ -211,8 +211,8 @@ impl PerformanceReport {
             .collect();
 
         // Compute memory statistics
-        let total_allocated: usize = _metrics.iter().map(|m| m.memory_allocated).sum();
-        let total_deallocated: usize = _metrics.iter().map(|m| m.memory_deallocated).sum();
+        let total_allocated: usize = metrics.iter().map(|m| m.memory_allocated).sum();
+        let total_deallocated: usize = metrics.iter().map(|m| m.memory_deallocated).sum();
         let peak_usage = _metrics
             .iter()
             .scan(0isize, |acc, m| {
@@ -230,7 +230,7 @@ impl PerformanceReport {
 
         // Generate recommendations
         let recommendations =
-            generate_recommendations(&operation_breakdown, &backend_usage, _metrics);
+            generate_recommendations(&operation_breakdown, &backend_usage, metrics);
 
         Self {
             total_time,
@@ -364,7 +364,7 @@ pub struct ProfilingScope {
 }
 
 impl ProfilingScope {
-    pub fn new(_name: impl Into<String>, shape: &[usize], backend: Backend) -> Self {
+    pub fn new(name: impl Into<String>, shape: &[usize], backend: Backend) -> Self {
         let profiler = PROFILER
             .lock()
             .expect("PROFILER mutex should not be poisoned");
@@ -372,7 +372,7 @@ impl ProfilingScope {
         drop(profiler);
 
         Self {
-            _name: _name.into(),
+            _name: name.into(),
             start: Instant::now(),
             shape: shape.to_vec(),
             backend,
@@ -483,9 +483,9 @@ pub struct BenchmarkResult<T> {
 }
 
 impl<T> Benchmark<T> {
-    pub fn new(_name: impl Into<String>) -> Self {
+    pub fn new(name: impl Into<String>) -> Self {
         Self {
-            _name: _name.into(),
+            _name: name.into(),
             iterations: 100,
             warmup_iterations: 10,
             results: Vec::new(),
@@ -558,7 +558,7 @@ pub struct VariantStats {
 }
 
 impl BenchmarkComparison {
-    fn from_results<T>(_name: &str, results: &[BenchmarkResult<T>]) -> Self {
+    fn from_results<T>(name: &str, results: &[BenchmarkResult<T>]) -> Self {
         let mut variants = Vec::new();
 
         for result in results {
@@ -610,7 +610,7 @@ impl BenchmarkComparison {
         }
 
         Self {
-            _name: _name.to_string(),
+            _name: name.to_string(),
             variants,
             fastest,
             baseline,
@@ -661,9 +661,9 @@ pub struct AutoTuner {
 }
 
 impl AutoTuner {
-    pub fn new(_name: impl Into<String>) -> Self {
+    pub fn new(name: impl Into<String>) -> Self {
         Self {
-            _name: _name.into(),
+            _name: name.into(),
             test_data: Vec::new(),
         }
     }

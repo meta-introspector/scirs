@@ -45,7 +45,7 @@ pub struct HfConfig {
     pub max_position_embeddings: Option<usize>,
     /// Additional configuration parameters
     #[cfg(feature = "serde-support")]
-    pub extra_config: HashMap<String, serde_json::Value>,
+    pub extraconfig: HashMap<String, serde_json::Value>,
 }
 
 impl Default for HfConfig {
@@ -60,7 +60,7 @@ impl Default for HfConfig {
             vocab_size: Some(30522),
             max_position_embeddings: Some(512),
             #[cfg(feature = "serde-support")]
-            extra_config: HashMap::new(),
+            extraconfig: HashMap::new(),
         }
     }
 }
@@ -81,18 +81,18 @@ impl HfConfig {
     }
 
     /// Create from transformer config
-    pub fn from_transformer_config(_config: &TransformerConfig) -> Self {
+    pub fn from_transformer_config(config: &TransformerConfig) -> Self {
         Self {
             architectures: vec!["TransformerModel".to_string()],
             model_type: "transformer".to_string(),
-            num_attention_heads: Some(_config.n_heads),
-            hidden_size: Some(_config.d_model),
-            intermediate_size: Some(_config.d_ff),
-            num_hidden_layers: Some(_config.n_encoder_layers),
-            vocab_size: Some(_config.vocab_size),
-            max_position_embeddings: Some(_config.max_seq_len),
+            num_attention_heads: Some(config.n_heads),
+            hidden_size: Some(config.d_model),
+            intermediate_size: Some(config.d_ff),
+            num_hidden_layers: Some(config.n_encoder_layers),
+            vocab_size: Some(config.vocab_size),
+            max_position_embeddings: Some(config.max_seq_len),
             #[cfg(feature = "serde-support")]
-            extra_config: HashMap::new(),
+            extraconfig: HashMap::new(),
         }
     }
 }
@@ -158,7 +158,7 @@ pub struct HfTokenizer {
 
 impl HfTokenizer {
     /// Create new HF-compatible tokenizer
-    pub fn new(_tokenizer: Box<dyn Tokenizer>, config: HfTokenizerConfig) -> Self {
+    pub fn new(tokenizer: Box<dyn Tokenizer>, config: HfTokenizerConfig) -> Self {
         // Create basic vocabulary (in practice, this would be loaded from files)
         let mut vocab = HashMap::new();
         let mut reverse_vocab = HashMap::new();
@@ -170,7 +170,7 @@ impl HfTokenizer {
         }
 
         Self {
-            _tokenizer,
+            tokenizer,
             config,
             vocab,
             reverse_vocab,
@@ -178,16 +178,16 @@ impl HfTokenizer {
     }
 
     /// Tokenize text with HF-compatible output
-    pub fn encode(&self, text: &str, add_special_tokens: bool) -> Result<HfEncodedInput> {
+    pub fn encode(&self, text: &str, add_specialtokens: bool) -> Result<HfEncodedInput> {
         let mut _tokens = self.tokenizer.tokenize(text)?;
 
         // Add special _tokens if requested
         if add_special_tokens {
             if let Some(bos_token) = &self.config.bos_token {
-                _tokens.insert(0, bos_token.clone());
+                tokens.insert(0, bos_token.clone());
             }
             if let Some(eos_token) = &self.config.eos_token {
-                _tokens.push(eos_token.clone());
+                tokens.push(eos_token.clone());
             }
         }
 
@@ -202,7 +202,7 @@ impl HfTokenizer {
             })
             .collect();
 
-        // Create attention mask (1 for real _tokens, 0 for padding)
+        // Create attention mask (1 for real tokens, 0 for padding)
         let attention_mask = vec![1; input_ids.len()];
 
         // Token type IDs (all 0 for single sentence)
@@ -212,7 +212,7 @@ impl HfTokenizer {
             input_ids,
             attention_mask,
             token_type_ids: Some(token_type_ids),
-            _tokens,
+            tokens,
         })
     }
 
@@ -229,7 +229,7 @@ impl HfTokenizer {
     }
 
     /// Decode token IDs back to text
-    pub fn decode(&self, token_ids: &[usize], skip_special_tokens: bool) -> Result<String> {
+    pub fn decode(&self, token_ids: &[usize], skip_specialtokens: bool) -> Result<String> {
         let _tokens: Vec<String> = token_ids
             .iter()
             .filter_map(|&id| self.reverse_vocab.get(&id))
@@ -277,9 +277,9 @@ pub struct HfModelAdapter {
 
 impl HfModelAdapter {
     /// Create new HF model adapter
-    pub fn new(_config: HfConfig) -> Self {
+    pub fn new(config: HfConfig) -> Self {
         Self {
-            _config,
+            config,
             registry: None,
             metadata: None,
         }
@@ -319,8 +319,8 @@ impl HfModelAdapter {
                 let file = fs::File::open(&config_file)
                     .map_err(|e| TextError::IoError(format!("Failed to open config file: {e}")))?;
                 let reader = BufReader::new(file);
-                let hf_config: HfConfig = serde_json::from_reader(reader).map_err(|e| {
-                    TextError::InvalidInput(format!("Failed to deserialize _config: {e}"))
+                let hfconfig: HfConfig = serde_json::from_reader(reader).map_err(|e| {
+                    TextError::InvalidInput(format!("Failed to deserialize config: {e}"))
                 })?;
                 hf_config.to_transformer_config()?
             }
@@ -345,7 +345,8 @@ impl HfModelAdapter {
 
     /// Save model to HF format directory
     pub fn save_to_hf_directory<P: AsRef<Path>>(
-        &self_model: &TransformerModel,
+        &self,
+        self_model: &TransformerModel,
         output_path: P,
     ) -> Result<()> {
         let output_path = output_path.as_ref();
@@ -372,9 +373,9 @@ impl HfModelAdapter {
         }
 
         // Save _model weights in binary format
-        let model_data = self.serialize_model_weights(_model)?;
+        let model_data = self.serialize_model_weights(self_model)?;
         fs::write(output_path.join("pytorch_model.bin"), model_data)
-            .map_err(|e| TextError::IoError(format!("Failed to write _model: {e}")))?;
+            .map_err(|e| TextError::IoError(format!("Failed to write model: {e}")))?;
 
         // Save tokenizer configuration
         let tokenizer_config = HfTokenizerConfig::default();
@@ -1174,7 +1175,7 @@ impl HfHub {
     }
 
     /// Download model from Hugging Face Hub
-    pub fn download_model(&self, model_id: &str, cache_dir: Option<&Path>) -> Result<PathBuf> {
+    pub fn download_model(&self, model_id: &str, cachedir: Option<&Path>) -> Result<PathBuf> {
         // Use environment variable or default path
         let default_cache = if let Ok(home) = std::env::var("HOME") {
             PathBuf::from(home)
@@ -1193,7 +1194,7 @@ impl HfHub {
 
         if !model_path.exists() {
             std::fs::create_dir_all(&model_path)
-                .map_err(|e| TextError::IoError(format!("Failed to create cache _dir: {e}")))?;
+                .map_err(|e| TextError::IoError(format!("Failed to create cache dir: {e}")))?;
 
             // Download model files
             self.download_model_files(model_id, &model_path)?;
@@ -1203,7 +1204,7 @@ impl HfHub {
     }
 
     /// Download model files
-    fn download_model_files(&self, model_id: &str, cache_path: &Path) -> Result<()> {
+    fn download_model_files(&self, model_id: &str, cachepath: &Path) -> Result<()> {
         // Essential files to download
         let files_to_download = vec![
             "config.json",
@@ -1226,7 +1227,7 @@ impl HfHub {
     }
 
     /// Download a specific file from model repository
-    fn download_file(&self, model_id: &str, filename: &str) -> Result<Vec<u8>> {
+    fn download_file(&self, modelid: &str, filename: &str) -> Result<Vec<u8>> {
         // Construct the URL for the file
         let url = format!("{}/{model_id}/resolve/main/{filename}", self.api_base);
 
@@ -1478,7 +1479,7 @@ impl HfHub {
     }
 
     /// Get detailed model information
-    pub fn model_info(&self, model_id: &str) -> Result<HfModelInfo> {
+    pub fn model_info(&self, modelid: &str) -> Result<HfModelInfo> {
         // In a real implementation, this would fetch from HF API
         let models = self.list_models(None, None)?;
         models
@@ -1509,7 +1510,7 @@ impl HfHub {
     }
 
     /// Get trending models
-    pub fn trending_models(&self_period: &str, limit: Option<usize>) -> Result<Vec<HfModelInfo>> {
+    pub fn trending_models(&self, selfperiod: &str, limit: Option<usize>) -> Result<Vec<HfModelInfo>> {
         let mut models = self.list_models(None, None)?;
 
         // Sort by downloads (as a proxy for trending)
@@ -1556,30 +1557,30 @@ pub struct FormatConverter;
 
 impl FormatConverter {
     /// Convert HF config to SciRS2 transformer config
-    pub fn hf_to_scirs2_config(_hf_config: &HfConfig) -> Result<TransformerConfig> {
-        _hf_config.to_transformer_config()
+    pub fn hf_to_scirs2config(hfconfig: &HfConfig) -> Result<TransformerConfig> {
+        hfconfig.to_transformer_config()
     }
 
     /// Convert SciRS2 transformer config to HF config
-    pub fn scirs2_to_hf_config(_scirs2_config: &TransformerConfig) -> HfConfig {
-        HfConfig::from_transformer_config(_scirs2_config)
+    pub fn scirs2_to_hfconfig(scirs2config: &TransformerConfig) -> HfConfig {
+        HfConfig::from_transformer_config(_scirs2config)
     }
 
     /// Convert HF tokenizer output to SciRS2 format
-    pub fn hf_to_scirs2_tokens(_hf_encoded: &HfEncodedInput) -> Vec<String> {
-        _hf_encoded.tokens.clone()
+    pub fn hf_to_scirs2_tokens(_hfencoded: &HfEncodedInput) -> Vec<String> {
+        hf_encoded.tokens.clone()
     }
 
     /// Convert SciRS2 tokens to HF format
-    pub fn scirs2_to_hf_tokens(_tokens: &[String]) -> HfEncodedInput {
+    pub fn scirs2_to_hf_tokens(tokens: &[String]) -> HfEncodedInput {
         let input_ids: Vec<usize> = (0.._tokens.len()).collect();
-        let attention_mask = vec![1; _tokens.len()];
+        let attention_mask = vec![1; tokens.len()];
 
         HfEncodedInput {
             input_ids,
             attention_mask,
-            token_type_ids: Some(vec![0; _tokens.len()]),
-            _tokens: _tokens.to_vec(),
+            token_type_ids: Some(vec![0; tokens.len()]),
+            _tokens: tokens.to_vec(),
         }
     }
 }
@@ -2028,7 +2029,7 @@ impl TranslationPipeline {
                 .filter(|(source_)| {
                     text.to_lowercase()
                         .split_whitespace()
-                        .any(|w| w.trim_matches(|c: char| !c.is_alphabetic()) == *source)
+                        .any(|w| w.trim_matches(|c: char| !c.is_alphabetic()) == *source_)
                 })
                 .count() as f64
                 / original_word_count as f64
@@ -2404,7 +2405,7 @@ impl HfModelManager {
     }
 
     /// Load model from HF Hub or local cache
-    pub fn load_model(&self, model_id: &str, cache_dir: Option<&Path>) -> Result<TransformerModel> {
+    pub fn load_model(&self, model_id: &str, cachedir: Option<&Path>) -> Result<TransformerModel> {
         // First try to download from HF Hub
         let model_path = self.hub.download_model(model_id, cache_dir)?;
 
@@ -2417,7 +2418,7 @@ impl HfModelManager {
     pub fn save_model<P: AsRef<Path>>(
         &self,
         model: &TransformerModel,
-        output_path: P_model,
+        output_path: P,
         _id: &str,
     ) -> Result<()> {
         let config = HfConfig::from_transformer_config(&model.config);
@@ -2448,7 +2449,7 @@ mod tests {
     use crate::tokenize::WordTokenizer;
 
     #[test]
-    fn test_hf_config_conversion() {
+    fn test_hfconfig_conversion() {
         let hf_config = HfConfig::default();
         let transformer_config = hf_config.to_transformer_config().unwrap();
 

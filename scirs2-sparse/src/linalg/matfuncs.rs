@@ -1066,13 +1066,13 @@ where
     // Initialize with provided _guess or random unit vector
     let mut v = match initial_guess {
         Some(_guess) => {
-            if _guess.len() != n {
+            if guess.len() != n {
                 return Err(crate::error::SparseError::DimensionMismatch {
                     expected: n,
-                    found: _guess.len(),
+                    found: guess.len(),
                 });
             }
-            _guess.to_owned()
+            guess.to_owned()
         }
         None => {
             let mut rng = rand::rng();

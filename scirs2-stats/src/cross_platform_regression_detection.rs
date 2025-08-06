@@ -381,9 +381,9 @@ pub struct CrossPlatformRegressionDetector {
 
 impl CrossPlatformRegressionDetector {
     /// Create a new regression detector
-    pub fn new(_config: CrossPlatformRegressionConfig) -> StatsResult<Self> {
+    pub fn new(config: CrossPlatformRegressionConfig) -> StatsResult<Self> {
         let mut detector = Self {
-            config: _config,
+            config: config,
             baselines: HashMap::new(),
             historical_data: BTreeMap::new(),
         };
@@ -675,7 +675,7 @@ impl CrossPlatformRegressionDetector {
     }
 
     /// Analyze performance trend over time
-    fn analyze_trend(&self, _function_name: &str) -> StatsResult<TrendAnalysis> {
+    fn analyze_trend(&self, _functionname: &str) -> StatsResult<TrendAnalysis> {
         // Get historical measurements for this function
         let measurements: Vec<_> = self
             .historical_data
@@ -928,7 +928,7 @@ impl CrossPlatformRegressionDetector {
     }
 
     /// Get the latest measurement for a function
-    fn get_latest_measurement(&self, _function_name: &str) -> Option<PerformanceMeasurement> {
+    fn get_latest_measurement(&self, _functionname: &str) -> Option<PerformanceMeasurement> {
         // Simplified - would search through historical data
         None
     }

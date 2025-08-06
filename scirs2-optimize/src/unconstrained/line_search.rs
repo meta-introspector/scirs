@@ -93,7 +93,7 @@ where
 
         if phi > phi0 + c1 * alpha * dphi0 || (phi >= phi_lo && alpha_lo > 0.0) {
             return zoom(
-                _fun, grad_fun, x, direction, alpha_lo, alpha, phi_lo, phi, dphi_lo, phi0, dphi0,
+                fun, grad_fun, x, direction, alpha_lo, alpha, phi_lo, phi, dphi_lo, phi0, dphi0,
                 c1, c2,
             );
         }
@@ -107,7 +107,7 @@ where
 
         if dphi >= 0.0 {
             return zoom(
-                _fun, grad_fun, x, direction, alpha, alpha_lo, phi, phi_lo, dphi, phi0, dphi0, c1,
+                fun, grad_fun, x, direction, alpha, alpha_lo, phi, phi_lo, dphi, phi0, dphi0, c1,
                 c2,
             );
         }

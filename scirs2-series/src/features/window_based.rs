@@ -442,11 +442,11 @@ where
 
 /// Calculate features for a specific window size
 #[allow(dead_code)]
-fn calculate_window_features<F>(_ts: &Array1<F>, window_size: usize) -> Result<WindowFeatures<F>>
+fn calculate_window_features<F>(_ts: &Array1<F>, windowsize: usize) -> Result<WindowFeatures<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = _ts.len();
+    let n = ts.len();
     if n < window_size {
         return Ok(WindowFeatures::default());
     }
@@ -465,7 +465,7 @@ where
 
     // Calculate rolling statistics
     for i in 0..num_windows {
-        let window = _ts.slice(s![i..i + window_size]);
+        let window = ts.slice(s![i..i + window_size]);
 
         // Basic statistics
         let mean = window.sum() / F::from(window_size).unwrap();
@@ -631,7 +631,7 @@ where
 
 /// Calculate multi-scale variance features
 #[allow(dead_code)]
-fn calculate_multi_scale_variance<F>(_ts: &Array1<F>, window_sizes: &[usize]) -> Result<Vec<F>>
+fn calculate_multi_scale_variance<F>(_ts: &Array1<F>, windowsizes: &[usize]) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -639,10 +639,10 @@ where
 
     for &window_size in window_sizes {
         let mut scale_variances = Vec::new();
-        let num_windows = _ts.len().saturating_sub(window_size).saturating_add(1);
+        let num_windows = ts.len().saturating_sub(window_size).saturating_add(1);
 
         for i in 0..num_windows {
-            let window = _ts.slice(s![i..i + window_size]);
+            let window = ts.slice(s![i..i + window_size]);
             let mean = window.sum() / F::from(window_size).unwrap();
             let variance =
                 window.mapv(|x| (x - mean) * (x - mean)).sum() / F::from(window_size).unwrap();
@@ -664,7 +664,7 @@ where
 
 /// Calculate multi-scale trend features
 #[allow(dead_code)]
-fn calculate_multi_scale_trends<F>(_ts: &Array1<F>, window_sizes: &[usize]) -> Result<Vec<F>>
+fn calculate_multi_scale_trends<F>(_ts: &Array1<F>, windowsizes: &[usize]) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -672,10 +672,10 @@ where
 
     for &window_size in window_sizes {
         let mut scale_trends = Vec::new();
-        let num_windows = _ts.len().saturating_sub(window_size).saturating_add(1);
+        let num_windows = ts.len().saturating_sub(window_size).saturating_add(1);
 
         for i in 0..num_windows {
-            let window = _ts.slice(s![i..i + window_size]);
+            let window = ts.slice(s![i..i + window_size]);
             let indices: Vec<F> = (0..window_size).map(|j| F::from(j).unwrap()).collect();
             let values: Vec<F> = window.iter().cloned().collect();
             let (slope_) = linear_fit(&indices, &values);
@@ -900,7 +900,7 @@ where
 
 /// Calculate Exponentially Weighted Moving Average
 #[allow(dead_code)]
-fn calculate_ewma<F>(_ts: &Array1<F>, alpha: f64) -> Result<Vec<F>>
+fn calculate_ewma<F>(ts: &Array1<F>, alpha: f64) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Clone,
 {
@@ -908,14 +908,14 @@ where
     let one_minus_alpha = F::one() - alpha_f;
     let mut ewma = Vec::with_capacity(_ts.len());
 
-    if _ts.is_empty() {
+    if ts.is_empty() {
         return Ok(ewma);
     }
 
     ewma.push(_ts[0]);
 
     for i in 1.._ts.len() {
-        let new_val = alpha_f * _ts[i] + one_minus_alpha * ewma[i - 1];
+        let new_val = alpha_f * ts[i] + one_minus_alpha * ewma[i - 1];
         ewma.push(new_val);
     }
 
@@ -924,7 +924,7 @@ where
 
 /// Calculate Exponentially Weighted Moving Variance
 #[allow(dead_code)]
-fn calculate_ewmv<F>(_ts: &Array1<F>, ewma: &[F], alpha: f64) -> Result<Vec<F>>
+fn calculate_ewmv<F>(ts: &Array1<F>, ewma: &[F], alpha: f64) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Clone,
 {
@@ -932,14 +932,14 @@ where
     let one_minus_alpha = F::one() - alpha_f;
     let mut ewmv = Vec::with_capacity(_ts.len());
 
-    if _ts.is_empty() || ewma.is_empty() {
+    if ts.is_empty() || ewma.is_empty() {
         return Ok(ewmv);
     }
 
     ewmv.push(F::zero());
 
     for i in 1.._ts.len() {
-        let diff = _ts[i] - ewma[i];
+        let diff = ts[i] - ewma[i];
         let new_var = alpha_f * diff * diff + one_minus_alpha * ewmv[i - 1];
         ewmv.push(new_var);
     }
@@ -1030,7 +1030,7 @@ where
 
 /// Calculate MACD features
 #[allow(dead_code)]
-fn calculate_macd_features<F>(_ts: &Array1<F>, config: &WindowConfig) -> Result<MACDFeatures<F>>
+fn calculate_macd_features<F>(ts: &Array1<F>, config: &WindowConfig) -> Result<MACDFeatures<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
@@ -1099,11 +1099,11 @@ where
 
 /// Calculate Relative Strength Index (RSI)
 #[allow(dead_code)]
-fn calculate_rsi<F>(_ts: &Array1<F>, period: usize) -> Result<Vec<F>>
+fn calculate_rsi<F>(ts: &Array1<F>, period: usize) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = _ts.len();
+    let n = ts.len();
     if n < period + 1 {
         return Ok(Vec::new());
     }
@@ -1115,7 +1115,7 @@ where
     let mut losses = Vec::new();
 
     for i in 1..n {
-        let change = _ts[i] - _ts[i - 1];
+        let change = ts[i] - ts[i - 1];
         if change > F::zero() {
             gains.push(change);
             losses.push(F::zero());

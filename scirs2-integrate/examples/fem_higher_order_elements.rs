@@ -153,7 +153,7 @@ fn compute_errors(
 
     // For each triangle in the mesh, compute the error
     for _element in &result.mesh.elements {
-        let [i, j, k] = _element.nodes;
+        let [i, j, k] = element.nodes;
         let pi = &result.mesh.points[i];
         let pj = &result.mesh.points[j];
         let pk = &result.mesh.points[k];

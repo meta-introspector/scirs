@@ -107,7 +107,7 @@ pub struct PerformanceImpactAnalysis {
     /// Number of potential performance bottlenecks
     pub performance_bottlenecks: usize,
     /// Memory bandwidth utilization estimate
-    pub memory_bandwidth_utilization: f64,
+    pub memorybandwidth_utilization: f64,
     /// Cache miss estimate
     pub cache_miss_estimate: f64,
 }
@@ -186,8 +186,8 @@ impl MemoryProfiler {
     }
 
     /// Start a new profiling session
-    pub fn start_session(&self, session_id: Option<String>) -> String {
-        let session_id = session_id.unwrap_or_else(|| {
+    pub fn start_session(&self, sessionid: Option<String>) -> String {
+        let sessionid = sessionid.unwrap_or_else(|| {
             let timestamp = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap_or_default()
@@ -202,7 +202,7 @@ impl MemoryProfiler {
             .as_micros() as u64;
 
         let session = ProfilingSession {
-            id: session_id.clone(),
+            id: sessionid.clone(),
             start_time_micros,
             duration_micros: 0,
             event_count: 0,
@@ -220,7 +220,7 @@ impl MemoryProfiler {
         self.collector.reset();
         self.analytics.lock().unwrap().clear();
 
-        session_id
+        sessionid
     }
 
     /// End the current profiling session and generate results
@@ -377,8 +377,8 @@ impl MemoryProfiler {
         // Count performance bottlenecks
         let performance_bottlenecks = pattern_analysis
             .iter()
-            .map(|_analysis| {
-                _analysis.potential_issues
+            .map(|analysis| {
+                analysis.potential_issues
                     .iter()
                     .filter(|issue| matches!(
                         issue,
@@ -396,13 +396,13 @@ impl MemoryProfiler {
         };
 
         // Assume peak memory bandwidth of 100 GB/s (modern systems)
-        let memory_bandwidth_utilization =
+        let memorybandwidth_utilization =
             (bytes_per_second / (100.0 * 1024.0 * 1024.0 * 1024.0)).min(1.0);
 
         // Estimate cache miss rate based on allocation patterns
         let cache_miss_estimate = pattern_analysis
             .iter()
-            .map(|_analysis| _analysis.efficiency.fragmentation_estimate)
+            .map(|analysis| analysis.efficiency.fragmentation_estimate)
             .sum::<f64>()
             / pattern_analysis.len().max(1) as f64;
 
@@ -410,7 +410,7 @@ impl MemoryProfiler {
             total_allocation_time,
             avg_allocation_time,
             performance_bottlenecks,
-            memory_bandwidth_utilization,
+            memorybandwidth_utilization,
             cache_miss_estimate,
         }
     }
@@ -594,8 +594,8 @@ mod tests {
         });
 
         // Start session
-        let session_id = profiler.start_session(Some("test_session".to_string()));
-        assert_eq!(session_id, "test_session");
+        let sessionid = profiler.start_session(Some("test_session".to_string()));
+        assert_eq!(sessionid, "test_session");
         assert!(profiler.get_current_session().is_some());
 
         // Record some events

@@ -59,7 +59,7 @@ lazy_static::lazy_static! {
 ///
 /// * `f64` - Value of the constant
 #[allow(dead_code)]
-pub fn get_constant(_name: &'static str) -> f64 {
+pub fn get_constant(name: &'static str) -> f64 {
     if let Some(value) = SPECIAL_VALUES.lock().unwrap().get(_name) {
         return *value;
     }
@@ -267,7 +267,7 @@ pub mod simd {
     ///
     /// Uses vectorized operations to compute exp(x) for multiple values
     /// simultaneously when SIMD support is available.
-    pub fn exp_simd(_values: &[f64]) -> Vec<f64> {
+    pub fn exp_simd(values: &[f64]) -> Vec<f64> {
         // For now, use standard library functions
         // In a full SIMD implementation, this would use platform-specific intrinsics
         _values
@@ -285,7 +285,7 @@ pub mod simd {
     }
 
     /// SIMD-optimized logarithm function for arrays
-    pub fn ln_simd(_values: &[f64]) -> Vec<f64> {
+    pub fn ln_simd(values: &[f64]) -> Vec<f64> {
         _values
             .iter()
             .map(|&x| {
@@ -301,7 +301,7 @@ pub mod simd {
     }
 
     /// SIMD-optimized sine function for arrays
-    pub fn sin_simd(_values: &[f64]) -> Vec<f64> {
+    pub fn sin_simd(values: &[f64]) -> Vec<f64> {
         _values
             .iter()
             .map(|&x| {
@@ -317,7 +317,7 @@ pub mod simd {
     }
 
     /// SIMD-optimized cosine function for arrays
-    pub fn cos_simd(_values: &[f64]) -> Vec<f64> {
+    pub fn cos_simd(values: &[f64]) -> Vec<f64> {
         _values
             .iter()
             .map(|&x| {
@@ -333,9 +333,9 @@ pub mod simd {
     }
 
     /// SIMD-optimized gamma function for arrays
-    pub fn gamma_simd(_values: &[f64]) -> Vec<f64> {
+    pub fn gamma_simd(values: &[f64]) -> Vec<f64> {
         use crate::gamma::gamma;
-        _values.iter().map(|&x| gamma(x)).collect()
+        values.iter().map(|&x| gamma(x)).collect()
     }
 }
 
@@ -717,14 +717,14 @@ pub mod vectorized {
     use super::*;
 
     /// Vectorized exponential function
-    pub fn exp_vectorized(_input: &[f64], output: &mut [f64]) -> SpecialResult<()> {
-        if _input.len() != output.len() {
+    pub fn exp_vectorized(input: &[f64], output: &mut [f64]) -> SpecialResult<()> {
+        if input.len() != output.len() {
             return Err(SpecialError::DomainError(
                 "Input and output arrays must have the same length".to_string(),
             ));
         }
 
-        for (i, &x) in _input.iter().enumerate() {
+        for (i, &x) in input.iter().enumerate() {
             output[i] = adaptive::exp_adaptive(x);
         }
 
@@ -732,14 +732,14 @@ pub mod vectorized {
     }
 
     /// Vectorized sine function
-    pub fn sin_vectorized(_input: &[f64], output: &mut [f64]) -> SpecialResult<()> {
-        if _input.len() != output.len() {
+    pub fn sin_vectorized(input: &[f64], output: &mut [f64]) -> SpecialResult<()> {
+        if input.len() != output.len() {
             return Err(SpecialError::DomainError(
                 "Input and output arrays must have the same length".to_string(),
             ));
         }
 
-        for (i, &x) in _input.iter().enumerate() {
+        for (i, &x) in input.iter().enumerate() {
             output[i] = adaptive::sin_adaptive(x);
         }
 
@@ -747,14 +747,14 @@ pub mod vectorized {
     }
 
     /// Vectorized gamma function
-    pub fn gamma_vectorized(_input: &[f64], output: &mut [f64]) -> SpecialResult<()> {
-        if _input.len() != output.len() {
+    pub fn gamma_vectorized(input: &[f64], output: &mut [f64]) -> SpecialResult<()> {
+        if input.len() != output.len() {
             return Err(SpecialError::DomainError(
                 "Input and output arrays must have the same length".to_string(),
             ));
         }
 
-        for (i, &x) in _input.iter().enumerate() {
+        for (i, &x) in input.iter().enumerate() {
             output[i] = adaptive::gamma_adaptive(x);
         }
 
@@ -762,11 +762,11 @@ pub mod vectorized {
     }
 
     /// Batch computation with optimal memory access patterns
-    pub fn batch_compute<F>(_input: &[f64], output: &mut [f64], func: F) -> SpecialResult<()>
+    pub fn batch_compute<F>(input: &[f64], output: &mut [f64], func: F) -> SpecialResult<()>
     where
         F: Fn(f64) -> f64,
     {
-        if _input.len() != output.len() {
+        if input.len() != output.len() {
             return Err(SpecialError::DomainError(
                 "Input and output arrays must have the same length".to_string(),
             ));
@@ -775,7 +775,7 @@ pub mod vectorized {
         // Process in chunks to improve cache locality
         const CHUNK_SIZE: usize = 64;
 
-        for chunk in _input.chunks(CHUNK_SIZE).zip(output.chunks_mut(CHUNK_SIZE)) {
+        for chunk in input.chunks(CHUNK_SIZE).zip(output.chunks_mut(CHUNK_SIZE)) {
             let (input_chunk, output_chunk) = chunk;
             for (i, &x) in input_chunk.iter().enumerate() {
                 output_chunk[i] = func(x);

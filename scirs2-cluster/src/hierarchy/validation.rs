@@ -4,7 +4,7 @@
 //! hierarchical clustering data structures to ensure they meet mathematical
 //! requirements and are suitable for downstream analysis.
 
-use ndarray::{ArrayView1, ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -45,7 +45,7 @@ pub fn validate_linkage_matrix<
     // Check dimensions
     if n_merges != n_observations - 1 {
         return Err(ClusteringError::InvalidInput(format!(
-            "Linkage _matrix should have {} rows for {} _observations, got {}",
+            "Linkage _matrix should have {} rows for {} observations, got {}",
             n_observations - 1,
             n_observations,
             n_merges

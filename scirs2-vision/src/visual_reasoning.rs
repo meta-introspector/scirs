@@ -12,7 +12,7 @@
 #![allow(missing_docs)]
 
 use crate::error::Result;
-use crate::scene__understanding::SceneAnalysisResult;
+use crate::scene_understanding::SceneAnalysisResult;
 use ndarray::{Array1, Array2};
 use std::collections::HashMap;
 
@@ -816,7 +816,8 @@ impl VisualReasoningEngine {
 
     fn reason_what_is_happening(
         &self,
-        scene_analysis: &SceneAnalysisResult, _features: &Array1<f32>,
+        scene_analysis: &SceneAnalysisResult,
+        _features: &Array1<f32>,
     ) -> Result<(ReasoningAnswer, Vec<Evidence>, Vec<AlternativeHypothesis>)> {
         // Analyze dominant activities and interactions
         let activities = self.identify_activities(scene_analysis)?;
@@ -835,7 +836,8 @@ impl VisualReasoningEngine {
 
     fn reason_why_is_happening(
         &self,
-        scene_analysis: &SceneAnalysisResult, _features: &Array1<f32>,
+        scene_analysis: &SceneAnalysisResult,
+        _features: &Array1<f32>,
     ) -> Result<(ReasoningAnswer, Vec<Evidence>, Vec<AlternativeHypothesis>)> {
         // Apply causal reasoning
         let causal_explanations = self.generate_causal_explanations(scene_analysis)?;
@@ -850,7 +852,8 @@ impl VisualReasoningEngine {
     fn reason_what_will_happen_next(
         &self,
         scene_analysis: &SceneAnalysisResult,
-        context: Option<&[SceneAnalysisResult]>, _features: &Array1<f32>,
+        context: Option<&[SceneAnalysisResult]>,
+        _features: &Array1<f32>,
     ) -> Result<(ReasoningAnswer, Vec<Evidence>, Vec<AlternativeHypothesis>)> {
         let prediction = if let Some(temporal_context) = context {
             self.predict_future_events(scene_analysis, temporal_context)?
@@ -863,7 +866,8 @@ impl VisualReasoningEngine {
 
     fn reason_object_relationships(
         &self,
-        scene_analysis: &SceneAnalysisResult, _features: &Array1<f32>,
+        scene_analysis: &SceneAnalysisResult,
+        _features: &Array1<f32>,
     ) -> Result<(ReasoningAnswer, Vec<Evidence>, Vec<AlternativeHypothesis>)> {
         let relationships_desc = format!(
             "Found {} spatial relationships between objects",
@@ -879,7 +883,8 @@ impl VisualReasoningEngine {
 
     fn reason_causal_relationships(
         &self,
-        scene_analysis: &SceneAnalysisResult, _features: &Array1<f32>,
+        scene_analysis: &SceneAnalysisResult,
+        _features: &Array1<f32>,
     ) -> Result<(ReasoningAnswer, Vec<Evidence>, Vec<AlternativeHypothesis>)> {
         let causal_analysis = self.analyze_causal_structure(scene_analysis)?;
 
@@ -891,13 +896,15 @@ impl VisualReasoningEngine {
     }
 
     fn estimate_overall_confidence(
-        &self_steps: &[ReasoningStep], _evidence: &[Evidence],
+        self_steps: &[ReasoningStep],
+        _evidence: &[Evidence],
     ) -> Result<f32> {
         Ok(0.75) // Placeholder
     }
 
     fn quantify_uncertainty(
-        &self_answer: &ReasoningAnswer, _evidence: &[Evidence],
+        self_answer: &ReasoningAnswer,
+        _evidence: &[Evidence],
     ) -> Result<UncertaintyQuantification> {
         Ok(UncertaintyQuantification {
             epistemic_uncertainty: 0.2,
@@ -908,7 +915,7 @@ impl VisualReasoningEngine {
     }
 
     fn extract_temporal_patterns(
-        &self_sequence: &[SceneAnalysisResult],
+        self_sequence: &[SceneAnalysisResult],
     ) -> Result<TemporalPatterns> {
         Ok(TemporalPatterns {
             patterns: Vec::new(),
@@ -919,7 +926,7 @@ impl VisualReasoningEngine {
         })
     }
 
-    fn identify_activities(&self, scene_analysis: &SceneAnalysisResult) -> Result<Vec<String>> {
+    fn identify_activities(&self, sceneanalysis: &SceneAnalysisResult) -> Result<Vec<String>> {
         let mut activities = Vec::new();
 
         // Analyze object combinations and spatial relationships
@@ -940,7 +947,8 @@ impl VisualReasoningEngine {
     }
 
     fn generate_causal_explanations(
-        &self, _scene_analysis: &SceneAnalysisResult,
+        &self,
+        _scene_analysis: &SceneAnalysisResult,
     ) -> Result<String> {
         Ok(
             "Scene appears to be in its current state due to normal object placement patterns"
@@ -949,12 +957,13 @@ impl VisualReasoningEngine {
     }
 
     fn predict_future_events(
-        &self_scene: &SceneAnalysisResult, _context: &[SceneAnalysisResult],
+        self_scene: &SceneAnalysisResult,
+        _context: &[SceneAnalysisResult],
     ) -> Result<String> {
         Ok("Based on temporal patterns, the _scene is likely to remain stable".to_string())
     }
 
-    fn analyze_causal_structure(&self, _scene_analysis: &SceneAnalysisResult) -> Result<String> {
+    fn analyze_causal_structure(&self, _sceneanalysis: &SceneAnalysisResult) -> Result<String> {
         Ok("No strong causal relationships detected in current scene".to_string())
     }
 }
@@ -1074,14 +1083,14 @@ impl CausalInferenceModule {
         }
     }
 
-    fn build_causal_graph(&self_patterns: &TemporalPatterns) -> Result<CausalGraph> {
+    fn build_causal_graph(selfpatterns: &TemporalPatterns) -> Result<CausalGraph> {
         Ok(CausalGraph {
             nodes: Vec::new(),
             edges: Vec::new(),
         })
     }
 
-    fn infer_effects(&self_graph: &CausalGraph, _query: &str) -> Result<Vec<CausalEffect>> {
+    fn infer_effects(self_graph: &CausalGraph, query: &str) -> Result<Vec<CausalEffect>> {
         Ok(Vec::new())
     }
 }
@@ -1110,7 +1119,8 @@ impl AnalogicalReasoningEngine {
     }
 
     fn find_analogy(
-        &self_source: &SceneAnalysisResult, _target: &SceneAnalysisResult,
+        self_source: &SceneAnalysisResult,
+        _target: &SceneAnalysisResult,
     ) -> Result<AnalogyResult> {
         Ok(AnalogyResult {
             similarity_score: 0.7,
@@ -1147,7 +1157,7 @@ impl AbstractConceptRecognizer {
         }
     }
 
-    fn recognize_concepts(&self_scene: &SceneAnalysisResult) -> Result<Vec<AbstractConcept>> {
+    fn recognize_concepts(selfscene: &SceneAnalysisResult) -> Result<Vec<AbstractConcept>> {
         Ok(Vec::new())
     }
 }

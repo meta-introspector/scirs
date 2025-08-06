@@ -2041,9 +2041,9 @@ pub enum FeatureExtractor {
 
 impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> AdvancedMemoryOptimizer<T> {
     /// Create a new advanced memory optimizer
-    pub fn new(_config: AdvancedMemoryConfig) -> Self {
+    pub fn new(config: AdvancedMemoryConfig) -> Self {
         Self {
-            _config: _config.clone(),
+            _config: config.clone(),
             #[cfg(feature = "gpu")]
             gpu_context: None,
             memory_tracker: MemoryUsageTracker::default(),
@@ -2053,13 +2053,13 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> AdvancedMemoryOp
             batch_controller: DynamicBatchController::new(),
             pressure_monitor: MemoryPressureMonitor::new(_config.memory_pressure_threshold),
             profiler: MemoryProfiler::default(),
-            zero_redundancy_state: if _config.enable_zero_redundancy {
+            zero_redundancy_state: if config.enable_zero_redundancy {
                 Some(ZeroRedundancyState::new())
             } else {
                 None
             },
             mixed_precision_manager: MixedPrecisionManager::new(_config.enable_mixed_precision),
-            memory_mapped_storage: if _config.enable_memory_mapping {
+            memory_mapped_storage: if config.enable_memory_mapping {
                 Some(MemoryMappedStorage::new())
             } else {
                 None
@@ -2546,11 +2546,11 @@ pub struct MemoryOptimizationStats {
 // Implement stub methods for the contained structs to make this compile
 
 impl<T: Float + Send + Sync> GradientAccumulator<T> {
-    fn new(_microbatch_size: usize) -> Self {
+    fn new(_microbatchsize: usize) -> Self {
         Self {
             accumulated_gradients: HashMap::new(),
             current_step: 0,
-            target_steps: _microbatch_size,
+            target_steps: microbatch_size,
             gradient_scale: T::one(),
             enable_compression: false,
             compression_ratio: 1.0,
@@ -2576,7 +2576,7 @@ impl<T: Float + Send + Sync> GradientAccumulator<T> {
 }
 
 impl<T: Float + Send + Sync> CheckpointManager<T> {
-    fn new(_interval: usize) -> Self {
+    fn new(interval: usize) -> Self {
         Self {
             checkpoints: HashMap::new(),
             strategy: CheckpointStrategy::Uniform(_interval),
@@ -2598,7 +2598,7 @@ impl<T: Float + Send + Sync> CheckpointManager<T> {
 }
 
 impl<T: Float + Send + Sync> ParameterOffloadManager<T> {
-    fn new(_threshold: usize) -> Self {
+    fn new(threshold: usize) -> Self {
         Self {
             offloaded_params: HashMap::new(),
             strategy: OffloadStrategy::SizeBased(_threshold),
@@ -2648,7 +2648,7 @@ impl DynamicBatchController {
         }
     }
     
-    fn update_batch_size(&mut self, new_size: usize, reason: BatchChangeReason) {
+    fn update_batch_size(&mut self, newsize: usize, reason: BatchChangeReason) {
         let event = BatchSizeEvent {
             timestamp: Instant::now(),
             old_size: self.current_batch_size,
@@ -2668,7 +2668,7 @@ impl DynamicBatchController {
 }
 
 impl MemoryPressureMonitor {
-    fn new(_threshold: f32) -> Self {
+    fn new(threshold: f32) -> Self {
         Self {
             current_pressure: 0.0,
             pressure_history: VecDeque::new(),
@@ -2716,9 +2716,9 @@ impl<T: Float + Send + Sync> GradientSynchronizer<T> {
 }
 
 impl<T: Float + Send + Sync> MixedPrecisionManager<T> {
-    fn new(_enabled: bool) -> Self {
+    fn new(enabled: bool) -> Self {
         Self {
-            _enabled,
+            enabled,
             fp16_parameters: HashMap::new(),
             fp32_master_weights: HashMap::new(),
             loss_scaling: LossScaling {
@@ -2774,7 +2774,7 @@ impl<T: Float + Send + Sync> MemoryCoalescingOptimizer<T> {
     }
 
     /// Analyze memory access patterns and optimize coalescing
-    pub fn optimize_memory_coalescing(&mut self, access_data: &[usize]) -> Result<CoalescingOptimizationResult> {
+    pub fn optimize_memory_coalescing(&mut self, accessdata: &[usize]) -> Result<CoalescingOptimizationResult> {
         let mut result = CoalescingOptimizationResult::default();
         
         // Analyze access patterns
@@ -2799,7 +2799,7 @@ impl<T: Float + Send + Sync> MemoryCoalescingOptimizer<T> {
     }
     
     /// Analyze memory access pattern
-    fn analyze_access_pattern(&mut self, access_data: &[usize]) -> Result<MemoryAccessPattern> {
+    fn analyze_access_pattern(&mut self, accessdata: &[usize]) -> Result<MemoryAccessPattern> {
         if access_data.is_empty() {
             return Err(OptimError::InvalidConfig("Empty access _data".to_string()));
         }

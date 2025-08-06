@@ -167,7 +167,7 @@ where
     let mut rng = rand::rng();
     let mut b = Array1::zeros(n);
     for i in 0..n {
-        b[i] = F::from(rng.random_range(-1.0..=1.0)).unwrap_or(F::zero());
+        b[i] = F::from(rng.gen_range(-1.0..=1.0)).unwrap_or(F::zero());
     }
 
     // Normalize the vector
@@ -427,7 +427,8 @@ where
 /// Advanced-precise 2x2 eigenvalue computation with Kahan summation
 #[allow(dead_code)]
 fn advanced_precise_2x2_eig<F>(
-    a: &ArrayView2<F>, _precision_target: F,
+    a: &ArrayView2<F>,
+    _precision_target: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -507,14 +508,14 @@ where
 
 /// Kahan summation algorithm for enhanced numerical precision
 #[allow(dead_code)]
-fn kahan_sum<F>(_values: &[F]) -> F
+fn kahan_sum<F>(values: &[F]) -> F
 where
     F: Float + NumAssign,
 {
     let mut sum = F::zero();
     let mut c = F::zero(); // Compensation for lost low-order bits
 
-    for &value in _values {
+    for &value in values {
         let y = value - c;
         let t = sum + y;
         c = (t - sum) - y;
@@ -788,7 +789,7 @@ where
         // Random initialization
         let mut rng = rand::rng();
         for i in 0..n {
-            v[i] = F::from(rng.random_range(-1.0..=1.0)).unwrap_or(F::zero());
+            v[i] = F::from(rng.gen_range(-1.0..=1.0)).unwrap_or(F::zero());
         }
 
         // Normalize
@@ -830,26 +831,26 @@ where
 
 /// Enhanced Gram-Schmidt orthogonalization with numerical stability
 #[allow(dead_code)]
-fn gram_schmidt_orthogonalization<F>(_matrix: &mut Array2<F>) -> LinalgResult<()>
+fn gram_schmidt_orthogonalization<F>(matrix: &mut Array2<F>) -> LinalgResult<()>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
-    let n = _matrix.nrows();
-    let m = _matrix.ncols();
+    let n = matrix.nrows();
+    let m = matrix.ncols();
 
     for i in 0..m {
         // Normalize current column
-        let mut col_i = _matrix.column(i).to_owned();
+        let mut col_i = matrix.column(i).to_owned();
         let norm_i = vector_norm(&col_i.view(), 2)?;
 
         if norm_i > F::epsilon() {
             col_i.mapv_inplace(|x| x / norm_i);
-            _matrix.column_mut(i).assign(&col_i);
+            matrix.column_mut(i).assign(&col_i);
         }
 
         // Orthogonalize against previous columns
         for j in (i + 1)..m {
-            let mut col_j = _matrix.column(j).to_owned();
+            let mut col_j = matrix.column(j).to_owned();
 
             // Compute projection coefficient with Kahan summation
             let mut dot_product = F::zero();
@@ -866,7 +867,7 @@ where
                 col_j[k] -= dot_product * col_i[k];
             }
 
-            _matrix.column_mut(j).assign(&col_j);
+            matrix.column_mut(j).assign(&col_j);
         }
     }
 
@@ -877,7 +878,8 @@ where
 #[allow(dead_code)]
 fn advanced_precise_iterative_eig<F>(
     a: &ArrayView2<F>,
-    precision_target: F, _workers: Option<usize>,
+    precision_target: F,
+    _workers: Option<usize>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -1579,14 +1581,14 @@ mod tests {
     fn test_2x2_diagonal_matrix() {
         let a = array![[3.0_f64, 0.0], [0.0, 4.0]];
 
-        let (eigenvalues, _eigenvectors) = eig(&a.view(), None).unwrap();
+        let (eigenvalues, eigenvectors) = eig(&a.view(), None).unwrap();
 
         // Eigenvalues could be returned in any order
         assert_relative_eq!(eigenvalues[0].im, 0.0, epsilon = 1e-10);
         assert_relative_eq!(eigenvalues[1].im, 0.0, epsilon = 1e-10);
 
         // Test eigh
-        let (eigenvalues, _eigenvectors) = eigh(&a.view(), None).unwrap();
+        let (eigenvalues, eigenvectors) = eigh(&a.view(), None).unwrap();
         // The eigenvalues might be returned in a different order
         assert!(
             (eigenvalues[0] - 3.0).abs() < 1e-10 && (eigenvalues[1] - 4.0).abs() < 1e-10

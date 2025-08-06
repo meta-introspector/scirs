@@ -269,7 +269,7 @@ struct Node {
     inputs: Vec<GradientTensor>,
 
     /// Whether gradient computation is required for this node.
-    requires_grad: bool,
+    requiresgrad: bool,
 
     /// Whether this node is a leaf node (parameter or input).
     is_leaf: bool,
@@ -277,28 +277,28 @@ struct Node {
 
 impl Node {
     /// Create a new leaf node.
-    fn leaf(requires_grad: bool) -> Self {
+    fn leaf(requiresgrad: bool) -> Self {
         Self {
             value: Rc::new(NdarrayWrapper::new(ndarray::Array0::<f64>::zeros(())))
                 as Rc<dyn ArrayProtocol>,
             grad: None,
             op: None,
             inputs: Vec::new(),
-            requires_grad,
+            requiresgrad,
             is_leaf: true,
         }
     }
 
     /// Create a new operation node.
     fn new_op(value: Rc<dyn ArrayProtocol>, op: String, inputs: Vec<GradientTensor>) -> Self {
-        let requires_grad = inputs.iter().any(|x| x.requires_grad());
+        let requiresgrad = inputs.iter().any(|x| x.requiresgrad());
 
         Self {
             value,
             grad: None,
             op: Some(op),
             inputs,
-            requires_grad,
+            requiresgrad,
             is_leaf: false,
         }
     }
@@ -313,8 +313,8 @@ pub struct GradientTensor {
 
 impl GradientTensor {
     /// Create a new gradient tensor from a value.
-    pub fn new(value: Rc<dyn ArrayProtocol>, requires_grad: bool) -> Self {
-        let mut node_inner = Node::leaf(requires_grad);
+    pub fn new(value: Rc<dyn ArrayProtocol>, requiresgrad: bool) -> Self {
+        let mut node_inner = Node::leaf(requiresgrad);
         node_inner.value = value;
         node_inner.grad = None;
         let node = Rc::new(RefCell::new(node_inner));
@@ -322,13 +322,13 @@ impl GradientTensor {
     }
 
     /// Create a new gradient tensor from an array.
-    pub fn from_array<T, D>(array: Array<T, D>, requires_grad: bool) -> Self
+    pub fn from_array<T, D>(array: Array<T, D>, requiresgrad: bool) -> Self
     where
         T: Clone + Send + Sync + 'static,
         D: Dimension + Send + Sync + 'static,
     {
         let value = Rc::new(NdarrayWrapper::new(array)) as Rc<dyn ArrayProtocol>;
-        Self::new(value, requires_grad)
+        Self::new(value, requiresgrad)
     }
 
     /// Get the value of the tensor.
@@ -342,13 +342,13 @@ impl GradientTensor {
     }
 
     /// Check if gradient computation is required for this tensor.
-    pub fn requires_grad(&self) -> bool {
-        self.node.borrow().requires_grad
+    pub fn requiresgrad(&self) -> bool {
+        self.node.borrow().requiresgrad
     }
 
     /// Set whether gradient computation is required for this tensor.
-    pub fn set_requires_grad(&mut self, requires_grad: bool) {
-        self.node.borrow_mut().requires_grad = requires_grad;
+    pub fn set_requiresgrad(&mut self, requiresgrad: bool) {
+        self.node.borrow_mut().requiresgrad = requiresgrad;
     }
 
     /// Check if this tensor is a leaf node.
@@ -363,9 +363,9 @@ impl GradientTensor {
     }
 
     /// Set the value of the tensor (for updating variables during optimization).
-    pub fn set_value(&mut self, new_value: Rc<dyn ArrayProtocol>) {
+    pub fn set_value(&mut self, newvalue: Rc<dyn ArrayProtocol>) {
         self.node.borrow_mut().grad = None; // Clear gradient when value changes
-        self.node.borrow_mut().value = new_value;
+        self.node.borrow_mut().value = newvalue;
     }
 
     /// Backward pass to compute gradients.
@@ -424,7 +424,7 @@ impl GradientTensor {
         // Perform backward pass in reverse topological order
         for node in topo.iter().rev() {
             // Only compute gradients for nodes that require it
-            if !node.requires_grad() {
+            if !node.requiresgrad() {
                 continue;
             }
 
@@ -452,7 +452,7 @@ impl GradientTensor {
                 "add" => {
                     // For addition, gradient flows directly to both inputs
                     for input in &inputs {
-                        if input.requires_grad() {
+                        if input.requiresgrad() {
                             let mut input_node = input.node.borrow_mut();
                             if let Some(input_grad) = &input_node.grad {
                                 // Accumulate gradients
@@ -471,7 +471,7 @@ impl GradientTensor {
                         let (a, b) = (&inputs[0], &inputs[1]);
 
                         // Compute grad_a = grad_out * b
-                        if a.requires_grad() {
+                        if a.requiresgrad() {
                             let b_value = b.value();
                             if let Ok(grad_a) = multiply(node_grad.as_ref(), b_value.as_ref()) {
                                 let mut a_node = a.node.borrow_mut();
@@ -487,7 +487,7 @@ impl GradientTensor {
                         }
 
                         // Compute grad_b = grad_out * a
-                        if b.requires_grad() {
+                        if b.requiresgrad() {
                             let a_value = a.value();
                             if let Ok(grad_b) = multiply(node_grad.as_ref(), a_value.as_ref()) {
                                 let mut b_node = b.node.borrow_mut();
@@ -511,7 +511,7 @@ impl GradientTensor {
                         let (a, b) = (&inputs[0], &inputs[1]);
 
                         // Compute grad_a = grad_out @ b.T
-                        if a.requires_grad() {
+                        if a.requiresgrad() {
                             if let (Some(b_array), Some(grad_out_array)) = (
                                 b.value()
                                     .as_any()
@@ -582,7 +582,7 @@ impl GradientTensor {
                         }
 
                         // Compute grad_b = a.T @ grad_out
-                        if b.requires_grad() {
+                        if b.requiresgrad() {
                             if let (Some(a_array), Some(grad_out_array)) = (
                                 a.value()
                                     .as_any()
@@ -659,7 +659,7 @@ impl GradientTensor {
                         let (a, b) = (&inputs[0], &inputs[1]);
 
                         // Compute grad_a = grad_out
-                        if a.requires_grad() {
+                        if a.requiresgrad() {
                             let mut a_node = a.node.borrow_mut();
                             if let Some(a_grad) = &a_node.grad {
                                 // Accumulate gradients
@@ -672,7 +672,7 @@ impl GradientTensor {
                         }
 
                         // Compute grad_b = -grad_out
-                        if b.requires_grad() {
+                        if b.requiresgrad() {
                             if let Ok(neg_grad) = multiply_by_scalar(node_grad.as_ref(), -1.0) {
                                 let mut b_node = b.node.borrow_mut();
                                 if let Some(b_grad) = &b_node.grad {
@@ -693,7 +693,7 @@ impl GradientTensor {
                         let (a, b) = (&inputs[0], &inputs[1]);
 
                         // Compute grad_a = grad_out / b
-                        if a.requires_grad() {
+                        if a.requiresgrad() {
                             let b_value = b.value();
                             if let Ok(grad_a) = divide(node_grad.as_ref(), b_value.as_ref()) {
                                 let mut a_node = a.node.borrow_mut();
@@ -709,7 +709,7 @@ impl GradientTensor {
                         }
 
                         // Compute grad_b = -grad_out * a / b^2
-                        if b.requires_grad() {
+                        if b.requiresgrad() {
                             let a_value = a.value();
                             let b_value = b.value();
 
@@ -752,7 +752,7 @@ impl GradientTensor {
                     if inputs.len() == 1 {
                         let input = &inputs[0];
 
-                        if input.requires_grad() {
+                        if input.requiresgrad() {
                             // Get the output value (sigmoid result)
                             let sigmoid_value = node.value();
 
@@ -794,14 +794,14 @@ impl GradientTensor {
                     if inputs.len() == 1 {
                         let input = &inputs[0];
 
-                        if input.requires_grad() {
+                        if input.requiresgrad() {
                             // Get the number of elements
                             let input_value = input.value();
-                            if let Some(input_array) = input_value
+                            if let Some(inputarray) = input_value
                                 .as_any()
                                 .downcast_ref::<NdarrayWrapper<f64, IxDyn>>()
                             {
-                                let n_elements = input_array.as_array().len() as f64;
+                                let n_elements = inputarray.as_array().len() as f64;
 
                                 // Compute grad_input = grad_out / n
                                 if let Ok(grad_input) =
@@ -810,7 +810,7 @@ impl GradientTensor {
                                     // Broadcast the gradient to match input shape
                                     if let Ok(broadcasted_grad) = broadcast_to(
                                         grad_input.as_ref(),
-                                        input_array.as_array().shape(),
+                                        inputarray.as_array().shape(),
                                     ) {
                                         let mut input_node = input.node.borrow_mut();
                                         if let Some(input_grad) = &input_node.grad {
@@ -1071,9 +1071,9 @@ impl Variable {
     }
 
     /// Set the value of the variable (for updating during optimization).
-    pub fn set_value(&mut self, new_value: Box<dyn ArrayProtocol>) {
-        let new_value_rc = self.box_to_rc(new_value);
-        self.tensor.set_value(new_value_rc);
+    pub fn set_value(&mut self, newvalue: Box<dyn ArrayProtocol>) {
+        let newvalue_rc = self.box_to_rc(newvalue);
+        self.tensor.set_value(newvalue_rc);
     }
 
     /// Helper to convert Box<dyn ArrayProtocol> to Rc<dyn ArrayProtocol>
@@ -1137,7 +1137,7 @@ pub struct SGD {
     variables: Vec<Variable>,
 
     /// Learning rate.
-    learning_rate: f64,
+    learningrate: f64,
 
     /// Momentum factor.
     momentum: f64,
@@ -1148,18 +1148,18 @@ pub struct SGD {
 
 impl SGD {
     /// Create a new SGD optimizer.
-    pub fn new(learning_rate: f64, momentum: Option<f64>) -> Self {
+    pub fn new(learningrate: f64, momentum: Option<f64>) -> Self {
         Self {
             variables: Vec::new(),
-            learning_rate,
+            learningrate,
             momentum: momentum.unwrap_or(0.0),
             velocity: Vec::new(),
         }
     }
 
     /// Set the learning rate.
-    pub fn set_learning_rate(&mut self, learning_rate: f64) {
-        self.learning_rate = learning_rate;
+    pub fn set_learningrate(&mut self, learningrate: f64) {
+        self.learningrate = learningrate;
     }
 }
 
@@ -1177,20 +1177,20 @@ impl Optimizer for SGD {
 
                     if let Some(vel) = &self.velocity[i] {
                         // v = momentum * v + lr * grad
-                        let scaled_grad = multiply_by_scalar(grad.as_ref(), self.learning_rate)?;
+                        let scaled_grad = multiply_by_scalar(grad.as_ref(), self.learningrate)?;
                         let scaled_vel = multiply_by_scalar(vel.as_ref(), self.momentum)?;
                         let update = add(scaled_vel.as_ref(), scaled_grad.as_ref())?;
                         self.velocity[i] = Some(update.clone());
                         update
                     } else {
                         // First iteration, just use lr * grad
-                        let update = multiply_by_scalar(grad.as_ref(), self.learning_rate)?;
+                        let update = multiply_by_scalar(grad.as_ref(), self.learningrate)?;
                         self.velocity[i] = Some(update.clone());
                         update
                     }
                 } else {
                     // No momentum, just use lr * grad
-                    multiply_by_scalar(grad.as_ref(), self.learning_rate)?
+                    multiply_by_scalar(grad.as_ref(), self.learningrate)?
                 };
 
                 // Update variable: var = var - update
@@ -1228,7 +1228,7 @@ pub struct Adam {
     variables: Vec<Variable>,
 
     /// Learning rate.
-    learning_rate: f64,
+    learningrate: f64,
 
     /// Beta1 parameter (for first moment).
     beta1: f64,
@@ -1252,14 +1252,14 @@ pub struct Adam {
 impl Adam {
     /// Create a new Adam optimizer.
     pub fn new(
-        learning_rate: f64,
+        learningrate: f64,
         beta1: Option<f64>,
         beta2: Option<f64>,
         epsilon: Option<f64>,
     ) -> Self {
         Self {
             variables: Vec::new(),
-            learning_rate,
+            learningrate,
             beta1: beta1.unwrap_or(0.9),
             beta2: beta2.unwrap_or(0.999),
             epsilon: epsilon.unwrap_or(1e-8),
@@ -1323,7 +1323,7 @@ impl Optimizer for Adam {
                 let v_hat_sqrt = sqrt(v_hat.as_ref())?;
                 let v_hat_sqrt_eps = add_scalar(v_hat_sqrt.as_ref(), self.epsilon)?;
                 let update_dir = divide(m_hat.as_ref(), v_hat_sqrt_eps.as_ref())?;
-                let update = multiply_by_scalar(update_dir.as_ref(), self.learning_rate)?;
+                let update = multiply_by_scalar(update_dir.as_ref(), self.learningrate)?;
 
                 // Update variable: var = var - update
                 let updated_value = subtract_arrays(var_value.as_ref(), update.as_ref())?;
@@ -1361,20 +1361,20 @@ impl Optimizer for Adam {
 #[allow(dead_code)]
 fn multiply_by_scalar(a: &dyn ArrayProtocol, scalar: f64) -> CoreResult<Box<dyn ArrayProtocol>> {
     if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
-        let input_array = a_array.as_array();
-        let result = input_array.mapv(|x| x * scalar);
+        let inputarray = a_array.as_array();
+        let result = inputarray.mapv(|x| x * scalar);
         Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
     } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>() {
-        let input_array = a_array.as_array();
-        let result = input_array.mapv(|x| x * scalar as f32);
+        let inputarray = a_array.as_array();
+        let result = inputarray.mapv(|x| x * scalar as f32);
         Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
     } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<i32, IxDyn>>() {
-        let input_array = a_array.as_array();
-        let result = input_array.mapv(|x| (x as f64 * scalar) as i32);
+        let inputarray = a_array.as_array();
+        let result = inputarray.mapv(|x| (x as f64 * scalar) as i32);
         Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
     } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<i64, IxDyn>>() {
-        let input_array = a_array.as_array();
-        let result = input_array.mapv(|x| (x as f64 * scalar) as i64);
+        let inputarray = a_array.as_array();
+        let result = inputarray.mapv(|x| (x as f64 * scalar) as i64);
         Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
     } else {
         Err(CoreError::NotImplementedError(ErrorContext::new(
@@ -1501,7 +1501,7 @@ mod tests {
         let tensor = GradientTensor::from_array(array, true);
 
         // Check properties
-        assert!(tensor.requires_grad());
+        assert!(tensor.requiresgrad());
         assert!(tensor.is_leaf());
         assert!(tensor.grad_2().is_none());
     }
@@ -1523,7 +1523,7 @@ mod tests {
         let c = match grad_add(&a, &b) {
             Ok(c) => c,
             Err(e) => {
-                println!("Skipping test_gradient_computation_add: {e}");
+                println!("Skipping test_gradient_computationadd: {e}");
                 return;
             }
         };
@@ -1533,7 +1533,7 @@ mod tests {
         let c_array = match c_value.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>() {
             Some(array) => array,
             None => {
-                println!("Skipping test_gradient_computation_add: result is not the expected type");
+                println!("Skipping test_gradient_computationadd: result is not the expected type");
                 return;
             }
         };
@@ -1541,7 +1541,7 @@ mod tests {
 
         // Compute gradients
         if let Err(e) = c.backward() {
-            println!("Skipping test_gradient_computation_add: {e}");
+            println!("Skipping test_gradient_computationadd: {e}");
             return;
         }
 
@@ -1549,7 +1549,7 @@ mod tests {
         let a_grad = match a.grad_2() {
             Some(grad) => grad,
             None => {
-                println!("Skipping test_gradient_computation_add: no gradient for a");
+                println!("Skipping test_gradient_computationadd: no gradient for a");
                 return;
             }
         };
@@ -1557,7 +1557,7 @@ mod tests {
         let a_grad_array = match a_grad.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>() {
             Some(array) => array,
             None => {
-                println!("Skipping test_gradient_computation_add: a_grad is not the expected type");
+                println!("Skipping test_gradient_computationadd: a_grad is not the expected type");
                 return;
             }
         };
@@ -1566,7 +1566,7 @@ mod tests {
         let b_grad = match b.grad_2() {
             Some(grad) => grad,
             None => {
-                println!("Skipping test_gradient_computation_add: no gradient for b");
+                println!("Skipping test_gradient_computationadd: no gradient for b");
                 return;
             }
         };
@@ -1574,7 +1574,7 @@ mod tests {
         let b_grad_array = match b_grad.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>() {
             Some(array) => array,
             None => {
-                println!("Skipping test_gradient_computation_add: b_grad is not the expected type");
+                println!("Skipping test_gradient_computationadd: b_grad is not the expected type");
                 return;
             }
         };
@@ -1598,7 +1598,7 @@ mod tests {
         let c = match grad_multiply(&a, &b) {
             Ok(c) => c,
             Err(e) => {
-                println!("Skipping test_gradient_computation_multiply: {e}");
+                println!("Skipping test_gradient_computationmultiply: {e}");
                 return;
             }
         };
@@ -1618,7 +1618,7 @@ mod tests {
 
         // Compute gradients
         if let Err(e) = c.backward() {
-            println!("Skipping test_gradient_computation_multiply: {e}");
+            println!("Skipping test_gradient_computationmultiply: {e}");
             return;
         }
 
@@ -1626,7 +1626,7 @@ mod tests {
         let a_grad = match a.grad_2() {
             Some(grad) => grad,
             None => {
-                println!("Skipping test_gradient_computation_multiply: no gradient for a");
+                println!("Skipping test_gradient_computationmultiply: no gradient for a");
                 return;
             }
         };
@@ -1645,7 +1645,7 @@ mod tests {
         let b_grad = match b.grad_2() {
             Some(grad) => grad,
             None => {
-                println!("Skipping test_gradient_computation_multiply: no gradient for b");
+                println!("Skipping test_gradient_computationmultiply: no gradient for b");
                 return;
             }
         };

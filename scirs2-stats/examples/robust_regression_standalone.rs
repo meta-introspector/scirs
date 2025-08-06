@@ -115,7 +115,7 @@ fn simple_ols(x: &[f64], y: &[f64]) -> RegressionResult {
 
 /// Simple implementation of RANSAC (Random Sample Consensus) regression
 #[allow(dead_code)]
-fn simple_ransac(x: &[f64], y: &[f64], threshold: f64, n_trials: usize) -> RegressionResult {
+fn simple_ransac(x: &[f64], y: &[f64], threshold: f64, ntrials: usize) -> RegressionResult {
     assert_eq!(x.len(), y.len(), "x and y must have same length");
 
     let n = x.len();
@@ -227,7 +227,7 @@ fn simple_ransac(x: &[f64], y: &[f64], threshold: f64, n_trials: usize) -> Regre
 
 /// A simplified implementation of Huber regression
 #[allow(dead_code)]
-fn simple_huber(x: &[f64], y: &[f64], epsilon: f64, max_iter: usize) -> RegressionResult {
+fn simple_huber(x: &[f64], y: &[f64], epsilon: f64, maxiter: usize) -> RegressionResult {
     assert_eq!(x.len(), y.len(), "x and y must have same length");
 
     // Start with OLS estimate

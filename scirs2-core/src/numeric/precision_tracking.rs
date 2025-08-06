@@ -122,9 +122,9 @@ impl PrecisionContext {
     }
 
     /// Update precision after an operation
-    pub fn update_precision(&mut self, new_precision: f64, operation: &str) {
-        if new_precision < self.precision {
-            let loss = self.precision - new_precision;
+    pub fn update_precision(&mut self, newprecision: f64, operation: &str) {
+        if newprecision < self.precision {
+            let loss = self.precision - newprecision;
             let severity = Self::classify_precision_loss(loss);
 
             self.precision_loss_sources.push(PrecisionLossSource {
@@ -132,15 +132,15 @@ impl PrecisionContext {
                 precision_lost: loss,
                 description: format!(
                     "Precision reduced from {:.2} to {:.2} digits",
-                    self.precision, new_precision
+                    self.precision, newprecision
                 ),
                 severity,
                 location: None,
             });
         }
 
-        self.precision = new_precision;
-        self.significant_digits = new_precision as u32;
+        self.precision = newprecision;
+        self.significant_digits = newprecision as u32;
         self.is_stable = self.precision > 3.0; // Heuristic for stability
         self.last_updated = Instant::now();
     }
@@ -213,8 +213,8 @@ impl PrecisionContext {
     }
 
     /// Check if the computation has acceptable precision
-    pub fn has_acceptable_precision(&self, min_precision: f64) -> bool {
-        self.precision >= min_precision && self.is_stable
+    pub fn has_acceptable_precision(&self, minprecision: f64) -> bool {
+        self.precision >= minprecision && self.is_stable
     }
 
     /// Generate precision warning if necessary
@@ -292,15 +292,15 @@ impl PrecisionContext {
     }
 
     /// Check if precision falls below a minimum threshold and return a warning
-    pub fn check_precision_warning(&self, min_precision: f64) -> Option<PrecisionWarning> {
-        if self.precision < min_precision {
+    pub fn check_precision_warning(&self, minprecision: f64) -> Option<PrecisionWarning> {
+        if self.precision < minprecision {
             Some(PrecisionWarning {
                 current_precision: self.precision,
-                required_precision: min_precision,
+                required_precision: minprecision,
                 severity: PrecisionLossSeverity::Severe,
                 message: format!(
                     "Precision ({:.2} digits) below required minimum ({:.2} digits)",
-                    self.precision, min_precision
+                    self.precision, minprecision
                 ),
                 suggestions: vec![
                     "Use higher precision data types".to_string(),
@@ -350,9 +350,9 @@ pub trait PrecisionTracked {
     fn precision_context_mut(&mut self) -> &mut PrecisionContext;
 
     /// Update precision after an operation
-    fn update_precision(&mut self, result_precision: f64, operation: &str) {
+    fn update_precision(&mut self, resultprecision: f64, operation: &str) {
         self.precision_context_mut()
-            .update_precision(result_precision, operation);
+            .update_precision(resultprecision, operation);
     }
 
     /// Record precision loss
@@ -362,10 +362,10 @@ pub trait PrecisionTracked {
     }
 
     /// Check if precision is acceptable
-    fn check_precision(&self, min_precision: f64) -> CoreResult<()> {
+    fn check_precision(&self, minprecision: f64) -> CoreResult<()> {
         if let Some(warning) = self
             .precision_context()
-            .check_precision_warning(min_precision)
+            .check_precision_warning(minprecision)
         {
             Err(CoreError::ValidationError(ErrorContext::new(
                 warning.message,
@@ -443,8 +443,8 @@ impl TrackedFloat<f64> {
 
         // Estimate precision loss from addition
         let min_precision = self.context.precision.min(other.context.precision);
-        let relative_error = estimate_addition_error(self.value, other.value);
-        let precision_loss = -relative_error.log10().max(0.0);
+        let relativeerror = estimate_additionerror(self.value, other.value);
+        let precision_loss = -relativeerror.log10().max(0.0);
 
         result.context.precision = (min_precision - precision_loss).max(0.0);
         result.record_loss("addition", precision_loss, None);
@@ -482,8 +482,8 @@ impl TrackedFloat<f64> {
         let mut result = Self::new(result_value);
 
         let min_precision = self.context.precision.min(other.context.precision);
-        let relative_error = estimate_multiplication_error(self.value, other.value);
-        let precision_loss = -relative_error.log10().max(0.0);
+        let relativeerror = estimate_multiplicationerror(self.value, other.value);
+        let precision_loss = -relativeerror.log10().max(0.0);
 
         result.context.precision = (min_precision - precision_loss).max(0.0);
         result.record_loss("multiplication", precision_loss, None);
@@ -503,8 +503,8 @@ impl TrackedFloat<f64> {
         let mut result = Self::new(result_value);
 
         let min_precision = self.context.precision.min(other.context.precision);
-        let relative_error = estimate_division_error(self.value, other.value);
-        let precision_loss = -relative_error.log10().max(0.0);
+        let relativeerror = estimate_divisionerror(self.value, other.value);
+        let precision_loss = -relativeerror.log10().max(0.0);
 
         // Additional precision loss for small divisors
         if other.value.abs() < 1e-10 {
@@ -572,7 +572,7 @@ impl TrackedFloat<f64> {
 
 /// Error estimation functions
 #[allow(dead_code)]
-fn estimate_addition_error(a: f64, b: f64) -> f64 {
+fn estimate_additionerror(a: f64, b: f64) -> f64 {
     let result = a + b;
     if result == 0.0 {
         f64::EPSILON
@@ -582,15 +582,15 @@ fn estimate_addition_error(a: f64, b: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn estimate_multiplication_error(_a: f64, _b: f64) -> f64 {
+fn estimate_multiplicationerror(_a: f64, b: f64) -> f64 {
     2.0 * f64::EPSILON // Relative error for multiplication
 }
 
 #[allow(dead_code)]
-fn estimate_division_error(a: f64, b: f64) -> f64 {
-    let rel_error_a = f64::EPSILON;
-    let rel_error_b = f64::EPSILON;
-    (rel_error_a + rel_error_b) * (a / b).abs()
+fn estimate_divisionerror(a: f64, b: f64) -> f64 {
+    let relerror_a = f64::EPSILON;
+    let relerror_b = f64::EPSILON;
+    (relerror_a + relerror_b) * (a / b).abs()
 }
 
 /// Global precision tracking registry

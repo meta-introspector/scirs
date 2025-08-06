@@ -209,7 +209,7 @@ pub enum CrossoverType {
 
 impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
     /// Create new evolution engine
-    pub fn new(population_size: usize, selection_strategy: SelectionStrategy) -> Self {
+    pub fn new(population_size: usize, selectionstrategy: SelectionStrategy) -> Self {
         let mut population = Vec::with_capacity(population_size);
         
         // Initialize random population
@@ -227,7 +227,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
     }
 
     /// Evolve population for one generation
-    pub fn evolve_generation(&mut self, fitness_evaluator: &FitnessEvaluator<F>) -> Result<()> {
+    pub fn evolve_generation(&mut self, fitnessevaluator: &FitnessEvaluator<F>) -> Result<()> {
         // 1. Evaluate fitness for all individuals
         self.evaluate_population(fitness_evaluator)?;
 
@@ -271,7 +271,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
     }
 
     /// Evaluate fitness for entire population
-    fn evaluate_population(&mut self, fitness_evaluator: &FitnessEvaluator<F>) -> Result<()> {
+    fn evaluate_population(&mut self, fitnessevaluator: &FitnessEvaluator<F>) -> Result<()> {
         for individual in &mut self.population {
             individual.fitness_score = fitness_evaluator.evaluate(individual)?;
         }
@@ -530,7 +530,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> Architecture<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> FitnessEvaluator<F> {
     /// Create new fitness evaluator
-    pub fn new(evaluation_function: EvaluationFunction) -> Self {
+    pub fn new(evaluationfunction: EvaluationFunction) -> Self {
         FitnessEvaluator {
             evaluation_function,
             weights: vec![F::from_f64(1.0).unwrap(); 4], // Default weights
@@ -609,7 +609,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FitnessEvaluator<F> {
 
 impl MutationOperator {
     /// Create new mutation operator
-    pub fn new(mutation_type: MutationType, probability: f64, intensity: f64) -> Self {
+    pub fn new(mutationtype: MutationType, probability: f64, intensity: f64) -> Self {
         MutationOperator {
             mutation_type,
             probability,
@@ -646,7 +646,7 @@ impl MutationOperator {
     }
 
     /// Mutate architecture structure
-    fn mutate_structure<F: Float + Debug + Clone>(&self, _architecture: &mut Architecture<F>) -> Result<()> {
+    fn mutate_structure<F: Float + Debug + Clone>(&self, architecture: &mut Architecture<F>) -> Result<()> {
         // Placeholder for structural mutations
         Ok(())
     }
@@ -687,7 +687,7 @@ impl MutationOperator {
 
 impl CrossoverOperator {
     /// Create new crossover operator
-    pub fn new(crossover_type: CrossoverType, probability: f64) -> Self {
+    pub fn new(crossovertype: CrossoverType, probability: f64) -> Self {
         CrossoverOperator {
             crossover_type,
             probability,

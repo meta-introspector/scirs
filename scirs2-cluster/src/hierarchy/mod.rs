@@ -132,8 +132,8 @@ pub enum ClusterCriterion {
 /// Computes distances between observations
 #[allow(dead_code)]
 fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metric) -> Array1<F> {
-    let n_samples = _data.shape()[0];
-    let n_features = _data.shape()[1];
+    let n_samples = data.shape()[0];
+    let n_features = data.shape()[1];
 
     // For n samples, we need n*(n-1)/2 distances (condensed distance matrix)
     let num_distances = n_samples * (n_samples - 1) / 2;
@@ -147,7 +147,7 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
                     // Euclidean distance
                     let mut sum = F::zero();
                     for k in 0..n_features {
-                        let diff = _data[[i, k]] - _data[[j, k]];
+                        let diff = data[[i, k]] - data[[j, k]];
                         sum = sum + diff * diff;
                     }
                     sum.sqrt()
@@ -156,7 +156,7 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
                     // Manhattan distance
                     let mut sum = F::zero();
                     for k in 0..n_features {
-                        let diff = (_data[[i, k]] - _data[[j, k]]).abs();
+                        let diff = (_data[[i, k]] - data[[j, k]]).abs();
                         sum = sum + diff;
                     }
                     sum
@@ -165,7 +165,7 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
                     // Chebyshev distance
                     let mut max_diff = F::zero();
                     for k in 0..n_features {
-                        let diff = (_data[[i, k]] - _data[[j, k]]).abs();
+                        let diff = (_data[[i, k]] - data[[j, k]]).abs();
                         if diff > max_diff {
                             max_diff = diff;
                         }
@@ -181,8 +181,8 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
                     let mut mean_j = F::zero();
 
                     for k in 0..n_features {
-                        mean_i = mean_i + _data[[i, k]];
-                        mean_j = mean_j + _data[[j, k]];
+                        mean_i = mean_i + data[[i, k]];
+                        mean_j = mean_j + data[[j, k]];
                     }
 
                     mean_i = mean_i / F::from_usize(n_features).unwrap();
@@ -194,8 +194,8 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
                     let mut denom_j = F::zero();
 
                     for k in 0..n_features {
-                        let diff_i = _data[[i, k]] - mean_i;
-                        let diff_j = _data[[j, k]] - mean_j;
+                        let diff_i = data[[i, k]] - mean_i;
+                        let diff_j = data[[j, k]] - mean_j;
 
                         numerator = numerator + diff_i * diff_j;
                         denom_i = denom_i + diff_i * diff_i;

@@ -158,7 +158,7 @@ where
     let mut jacobian = Array2::<F>::zeros((n_dim, n_dim));
 
     // Determine sparsity _pattern and coloring
-    let (_pattern, colors) = if let Some(_pattern) = sparsity_pattern {
+    let (pattern, colors) = if let Some(_pattern) = sparsity_pattern {
         // Use provided sparsity _pattern
         (_pattern.clone(), greedy_coloring(_pattern))
     } else {
@@ -214,7 +214,7 @@ where
                     // Extract non-zero elements for this column based on sparsity _pattern
                     let mut col_indices = Vec::new();
                     for i in 0..n_dim {
-                        if _pattern[[i, j]] {
+                        if pattern[[i, j]] {
                             col_indices.push(i);
                         }
                     }
@@ -276,7 +276,7 @@ where
 
                 // Compute values for non-zero elements
                 for i in 0..n_dim {
-                    if _pattern[[i, j]] {
+                    if pattern[[i, j]] {
                         let df = f_perturbed[i] - f_current[i];
                         jacobian[[i, j]] = df / eps;
                     }
@@ -302,8 +302,8 @@ where
 ///
 /// Vector of colors for each column
 #[allow(dead_code)]
-fn greedy_coloring(_sparsity_pattern: &Array2<bool>) -> Vec<usize> {
-    let (n_rows, n_cols) = _sparsity_pattern.dim();
+fn greedy_coloring(_sparsitypattern: &Array2<bool>) -> Vec<usize> {
+    let (n_rows, n_cols) = _sparsitypattern.dim();
 
     // Initialize colors for all columns
     let mut colors = vec![usize::MAX; n_cols];
@@ -313,7 +313,7 @@ fn greedy_coloring(_sparsity_pattern: &Array2<bool>) -> Vec<usize> {
         // Find non-zero entries in this column
         let mut non_zero_rows = Vec::new();
         for i in 0..n_rows {
-            if _sparsity_pattern[[i, j]] {
+            if _sparsitypattern[[i, j]] {
                 non_zero_rows.push(i);
             }
         }
@@ -322,7 +322,7 @@ fn greedy_coloring(_sparsity_pattern: &Array2<bool>) -> Vec<usize> {
         let mut used_colors = Vec::new();
         for &row in &non_zero_rows {
             for k in 0..j {
-                if _sparsity_pattern[[row, k]] && colors[k] != usize::MAX {
+                if _sparsitypattern[[row, k]] && colors[k] != usize::MAX {
                     used_colors.push(colors[k]);
                 }
             }
@@ -356,13 +356,13 @@ fn greedy_coloring(_sparsity_pattern: &Array2<bool>) -> Vec<usize> {
 ///
 /// True if parallel computation is likely beneficial
 #[allow(dead_code)]
-pub fn should_use_parallel_jacobian(_n_dim: usize, is_sparse: bool, num_threads: usize) -> bool {
+pub fn should_use_parallel_jacobian(_n_dim: usize, is_sparse: bool, numthreads: usize) -> bool {
     // Check if parallel_jacobian feature is enabled
     #[cfg(not(feature = "parallel_jacobian"))]
     {
         let _ = _n_dim;
         let _ = is_sparse;
-        let _ = num_threads;
+        let _ = numthreads;
         false // Parallel computation not available without the feature
     }
 
@@ -410,7 +410,7 @@ pub struct ParallelJacobianStrategy {
 
 impl ParallelJacobianStrategy {
     /// Create a new strategy object
-    pub fn new(_n_dim: usize, is_sparse: bool) -> Self {
+    pub fn new(_n_dim: usize, issparse: bool) -> Self {
         // Determine if parallel computation is available and beneficial
         #[cfg(feature = "parallel_jacobian")]
         let (use_parallel, num_threads) = {
@@ -418,7 +418,7 @@ impl ParallelJacobianStrategy {
             let threads = num_threads();
             // Check if parallel computation is worthwhile
             (
-                should_use_parallel_jacobian(_n_dim, is_sparse, threads),
+                should_use_parallel_jacobian(_n_dim, issparse, threads),
                 threads,
             )
         };
@@ -431,7 +431,7 @@ impl ParallelJacobianStrategy {
 
         ParallelJacobianStrategy {
             use_parallel,
-            is_sparse,
+            is_sparse: issparse,
             sparsity_pattern: None,
             jacobian: None,
             num_threads,
@@ -439,8 +439,8 @@ impl ParallelJacobianStrategy {
     }
 
     /// Set the sparsity pattern
-    pub fn set_sparsity_pattern(&mut self, _pattern: Array2<bool>) {
-        self.sparsity_pattern = Some(_pattern);
+    pub fn set_sparsity_pattern(&mut self, pattern: Array2<bool>) {
+        self.sparsity_pattern = Some(pattern);
         self.is_sparse = true;
     }
 
@@ -514,7 +514,7 @@ mod tests {
     use ndarray::{array, Array1, Array2, ArrayView1};
 
     // Test function for Jacobian computation
-    fn test_func(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
+    fn test_func(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
         array![y[0] * y[0] + y[1], y[0] * y[1] + y[2], y[2] * y[2] - y[0]]
     }
 

@@ -25,10 +25,10 @@ pub struct MemoryPool<T> {
 
 impl<T: Clone + Send + Sync + Copy + 'static + std::fmt::Debug> MemoryPool<T> {
     /// Create a new memory pool
-    pub fn new(_max_pool_size: usize) -> Self {
+    pub fn new(_max_poolsize: usize) -> Self {
         Self {
             buffers: Vec::new(),
-            _max_pool_size,
+            max_pool_size,
             total_allocated: 0,
         }
     }
@@ -197,13 +197,13 @@ impl MemoryOptimizer {
     }
 
     /// Record memory usage
-    pub fn record_usage(&mut self, usage_bytes: usize) {
+    pub fn record_usage(&mut self, usagebytes: usize) {
         self.usage_history.push(usage_bytes);
         self.peak_usage = self.peak_usage.max(usage_bytes);
     }
 
     /// Get optimization suggestions based on usage patterns
-    pub fn get_suggestions(&self, device_memory: usize) -> Vec<String> {
+    pub fn get_suggestions(&self, devicememory: usize) -> Vec<String> {
         let mut suggestions = Vec::new();
 
         if self.peak_usage > device_memory / 2 {
@@ -231,7 +231,7 @@ impl MemoryOptimizer {
     }
 
     /// Calculate memory efficiency score (0-100)
-    pub fn efficiency_score(&self, device_memory: usize) -> f64 {
+    pub fn efficiency_score(&self, devicememory: usize) -> f64 {
         if self.usage_history.is_empty() {
             return 100.0;
         }

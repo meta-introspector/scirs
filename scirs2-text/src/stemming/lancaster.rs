@@ -52,7 +52,7 @@
 
 use crate::error::Result;
 use crate::stemming::Stemmer;
-use lazy__static::lazy_static;
+use lazy_static::lazy_static;
 use std::collections::HashMap;
 
 // Define the Lancaster stemming rules
@@ -208,7 +208,7 @@ lazy_static! {
         let mut map: HashMap<char, Vec<usize>> = HashMap::new();
 
         for (i, (suffix___)) in LANCASTER_RULES.iter().enumerate() {
-            if let Some(first_char) = suffix.chars().next() {
+            if let Some(first_char) = suffix___.chars().next() {
                 map.entry(first_char).or_default().push(i);
             }
         }

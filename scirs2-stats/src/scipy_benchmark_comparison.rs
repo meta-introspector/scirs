@@ -587,15 +587,15 @@ pub struct ScipyBenchmarkComparison {
 
 impl ScipyBenchmarkComparison {
     /// Create new SciPy comparison framework
-    pub fn new(_config: ScipyComparisonConfig) -> StatsResult<Self> {
+    pub fn new(config: ScipyComparisonConfig) -> StatsResult<Self> {
         // Create temporary directory
         fs::create_dir_all(&_config.temp_dir).map_err(|e| {
             StatsError::ComputationError(format!("Failed to create temp directory: {}", e))
         })?;
 
         Ok(Self {
-            temp_dir: _config.temp_dir.clone(),
-            config: _config,
+            temp_dir: config.temp_dir.clone(),
+            config: config,
         })
     }
 
@@ -1440,9 +1440,9 @@ pub fn run_scipy_comparison() -> StatsResult<ScipyComparisonReport> {
 
 /// Run comparison for specific functions
 #[allow(dead_code)]
-pub fn run_function_comparison(_functions: Vec<String>) -> StatsResult<ScipyComparisonReport> {
+pub fn run_function_comparison(functions: Vec<String>) -> StatsResult<ScipyComparisonReport> {
     let mut config = ScipyComparisonConfig::default();
-    config.functions_to_test = _functions;
+    config.functions_to_test = functions;
 
     let comparison = ScipyBenchmarkComparison::new(config)?;
     comparison.run_comprehensive_comparison()

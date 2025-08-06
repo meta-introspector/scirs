@@ -26,7 +26,7 @@ fn main() {
 
 /// Benchmark 1D FFT operations
 #[allow(dead_code)]
-fn benchmark_1d_ffts(_sizes: &[usize], iterations: usize) {
+fn benchmark_1d_ffts(sizes: &[usize], iterations: usize) {
     println!("\n1D FFT Memory Usage Benchmarking");
     println!("--------------------------------");
     println!(
@@ -120,7 +120,7 @@ fn benchmark_1d_ffts(_sizes: &[usize], iterations: usize) {
 
 /// Benchmark 2D FFT operations
 #[allow(dead_code)]
-fn benchmark_2d_ffts(_sizes: &[(usize, usize)], iterations: usize) {
+fn benchmark_2d_ffts(sizes: &[(usize, usize)], iterations: usize) {
     println!("\n2D FFT Memory Usage Benchmarking");
     println!("--------------------------------");
     println!(
@@ -233,7 +233,7 @@ fn benchmark_2d_ffts(_sizes: &[(usize, usize)], iterations: usize) {
 
 /// Create a test signal with sine waves for 1D FFT
 #[allow(dead_code)]
-fn create_test_signal(_size: usize) -> Vec<f64> {
+fn create_test_signal(size: usize) -> Vec<f64> {
     let mut signal = Vec::with_capacity(_size);
     for i in 0.._size {
         let x = i as f64 / _size as f64;
@@ -245,7 +245,7 @@ fn create_test_signal(_size: usize) -> Vec<f64> {
 
 /// Create a test array with 2D patterns for 2D FFT
 #[allow(dead_code)]
-fn create_test_array(_rows: usize, cols: usize) -> Array2<Complex64> {
+fn create_test_array(rows: usize, cols: usize) -> Array2<Complex64> {
     let mut array = Array2::zeros((_rows, cols));
     for i in 0.._rows {
         for j in 0..cols {
@@ -260,10 +260,10 @@ fn create_test_array(_rows: usize, cols: usize) -> Array2<Complex64> {
 
 /// Memory-optimized FFT implementation using memory-efficient algorithms
 #[allow(dead_code)]
-fn optimized_fft(_input: &[Complex64]) -> scirs2_fft::error::FFTResult<Vec<Complex64>> {
+fn optimized_fft(input: &[Complex64]) -> scirs2_fft::error::FFTResult<Vec<Complex64>> {
     // Use the in-place implementation with appropriate buffer sizing
-    let mut input_clone = _input.to_vec();
-    let mut output = vec![Complex64::new(0.0, 0.0); _input.len()];
+    let mut input_clone = input.to_vec();
+    let mut output = vec![Complex64::new(0.0, 0.0); input.len()];
     fft_inplace(&mut input_clone, &mut output, FftMode::Forward, true)?;
     Ok(output)
 }
@@ -320,7 +320,7 @@ mod memory_tracking {
 
     /// Record a memory allocation
     #[allow(dead_code)]
-    pub fn record_allocation(_size: usize) {
+    pub fn record_allocation(size: usize) {
         ACTIVE_ALLOCATIONS.fetch_add(1, Ordering::SeqCst);
         TOTAL_ALLOCATED.fetch_add(_size, Ordering::SeqCst);
 
@@ -344,7 +344,7 @@ mod memory_tracking {
 
     /// Record a memory deallocation
     #[allow(dead_code)]
-    pub fn record_deallocation(_size: usize) {
+    pub fn record_deallocation(size: usize) {
         ACTIVE_ALLOCATIONS.fetch_sub(1, Ordering::SeqCst);
         TOTAL_ALLOCATED.fetch_sub(_size, Ordering::SeqCst);
     }
@@ -361,9 +361,9 @@ mod memory_tracking {
     impl MemoryStats {
         /// Format memory size in human-readable form
         #[allow(dead_code)]
-        pub fn format_size(_size: usize) -> String {
+        pub fn format_size(size: usize) -> String {
             if _size < 1024 {
-                format!("{} B", _size)
+                format!("{} B", size)
             } else if _size < 1024 * 1024 {
                 format!("{:.2} KB", _size as f64 / 1024.0)
             } else if _size < 1024 * 1024 * 1024 {

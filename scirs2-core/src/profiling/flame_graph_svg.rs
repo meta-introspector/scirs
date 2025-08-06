@@ -66,7 +66,7 @@ pub enum ColorScheme {
 
 impl ColorScheme {
     /// Get color for a given heat value (0.0 to 1.0)
-    fn get_color(&self, heat: f64, function_name: Option<&str>) -> String {
+    fn get_color(&self, heat: f64, functionname: Option<&str>) -> String {
         let heat = heat.clamp(0.0, 1.0);
 
         match self {
@@ -99,7 +99,7 @@ impl ColorScheme {
             }
             ColorScheme::Java => {
                 // Use function name hash for consistent coloring
-                let hash = if let Some(name) = function_name {
+                let hash = if let Some(name) = functionname {
                     Self::hash_string(name)
                 } else {
                     0
@@ -647,7 +647,7 @@ mod tests {
 
         assert!(svg.contains("<svg"));
         assert!(svg.contains("</svg>"));
-        assert!(svg.contains(main));
+        assert!(svg.contains("main"));
     }
 
     #[test]

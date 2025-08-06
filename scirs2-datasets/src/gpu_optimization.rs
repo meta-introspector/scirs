@@ -556,7 +556,7 @@ impl AdvancedGpuOptimizer {
     }
 
     /// Estimate CUDA kernel execution time based on operation
-    fn estimate_cuda_kernel_time(&self, elements: usize, kernel_name: &str) -> f64 {
+    fn estimate_cuda_kernel_time(&self, elements: usize, kernelname: &str) -> f64 {
         let base_time_per_element = match kernel_name {
             "curand_normal_kernel" => 0.001, // microseconds per element
             "curand_uniform_kernel" => 0.0008,
@@ -783,7 +783,7 @@ impl AdvancedGpuOptimizer {
     }
 
     /// Apply OpenCL-specific memory optimizations
-    fn apply_opencl_memory_optimizations(&self, data: &mut Array2<f64>, work_group_size: usize) {
+    fn apply_opencl_memory_optimizations(&self, data: &mut Array2<f64>, work_groupsize: usize) {
         let (rows, cols) = data.dim();
 
         // Simulate OpenCL local memory optimization
@@ -1090,7 +1090,7 @@ impl AIPerformancePredictor {
     }
 
     /// Add training data point
-    pub fn add_training_data(&mut self, data_point: PerformanceDataPoint) {
+    pub fn add_training_data(&mut self, datapoint: PerformanceDataPoint) {
         self.training_data.push(data_point);
 
         // Retrain model if we have enough data
@@ -1372,10 +1372,10 @@ impl RealTimePerformanceMonitor {
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: MonitoringConfig) -> Self {
+    pub fn with_config(config: MonitoringConfig) -> Self {
         Self {
             performance_history: std::collections::VecDeque::with_capacity(
-                _config.max_history_size,
+                config.max_history_size,
             ),
             current_optimization: AdaptiveOptimizationState {
                 trend: PerformanceTrend::Unknown,
@@ -1383,7 +1383,7 @@ impl RealTimePerformanceMonitor {
                 learning_rate: 0.1,
                 stability_threshold: 0.02,
             },
-            _config,
+            config,
             ai_predictor: AIPerformancePredictor::new(),
         }
     }

@@ -129,14 +129,14 @@ pub fn batch_matmul_backward<F>(
 ) -> Result<(Array3<F>, Array3<F>)>
     if batch_size != b.shape()[0] || batch_size != grad_output.shape()[0] {
         return Err(NeuralError::ShapeMismatch(
-            format!("Batch size mismatch in batch_matmul_backward: a batch_size={}, b batch_size={}, grad_output batch_size={}", 
+            format!("Batch size mismatch in batch_matmulbackward: a batch_size={}, b batch_size={}, grad_output batch_size={}", 
                     batch_size, b.shape()[0], grad_output.shape()[0])
         ));
     let m2 = grad_output.shape()[1];
     let n2 = grad_output.shape()[2];
             "Inner dimensions mismatch in batch_matmul_backward: a has k={}, b has k={}",
     if m != m2 || n != n2 {
-            format!("Output dimensions mismatch in batch_matmul_backward: expected [batch_size, {}, {}], got [batch_size, {}, {}]", 
+            format!("Output dimensions mismatch in batch_matmulbackward: expected [batch_size, {}, {}], got [batch_size, {}, {}]", 
                     m, n, m2, n2)
     // Allocate gradient arrays
     let mut grad_a = Array3::<F>::zeros((batch_size, m, k));

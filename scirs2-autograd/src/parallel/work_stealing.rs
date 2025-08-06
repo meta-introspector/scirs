@@ -195,14 +195,14 @@ struct WorkStealingArray<T> {
 
 impl<T> WorkStealingArray<T> {
     /// Create a new array with the given capacity
-    fn new(_capacity: usize) -> Self {
+    fn new(capacity: usize) -> Self {
         assert!(_capacity.is_power_of_two());
 
         let mut data = Vec::with_capacity(_capacity);
         data.resize_with(_capacity, || std::mem::MaybeUninit::uninit());
 
         Self {
-            _capacity,
+            capacity,
             mask: _capacity - 1,
             data,
         }
@@ -242,14 +242,14 @@ where
     T: Send + 'static,
 {
     /// Create a new work-stealing scheduler
-    pub fn new(_num_threads: usize) -> Self {
+    pub fn new(_numthreads: usize) -> Self {
         let deques = (0.._num_threads)
             .map(|_| Arc::new(WorkStealingDeque::new()))
             .collect();
 
         Self {
             deques,
-            _num_threads,
+            num_threads,
             round_robin: AtomicUsize::new(0),
         }
     }
@@ -261,7 +261,7 @@ where
     }
 
     /// Submit a task to a specific thread
-    pub fn submit_to_thread(&self, task: T, thread_id: usize) {
+    pub fn submit_to_thread(&self, task: T, threadid: usize) {
         if thread_id < self.num_threads {
             self.deques[thread_id].push(task);
         } else {
@@ -271,7 +271,7 @@ where
     }
 
     /// Try to get a task for the given thread (with work stealing)
-    pub fn try_get_task(&self, thread_id: usize) -> Option<T> {
+    pub fn try_get_task(&self, threadid: usize) -> Option<T> {
         if thread_id >= self.num_threads {
             return None;
         }
@@ -359,7 +359,7 @@ impl WorkStealingStats {
             .iter()
             .enumerate()
             .max_by_key(|(_, &size)| size)
-            .map(|(id_)| id)
+            .map(|(id_, _)| id_)
     }
 
     /// Get the least loaded thread
@@ -368,7 +368,7 @@ impl WorkStealingStats {
             .iter()
             .enumerate()
             .min_by_key(|(_, &size)| size)
-            .map(|(id_)| id)
+            .map(|(id_, _)| id_)
     }
 }
 
@@ -384,7 +384,7 @@ where
     T: Send + 'static,
 {
     /// Create a new simple work-stealing pool
-    pub fn new<F>(_num_threads: usize, task_processor: F) -> Self
+    pub fn new<F>(_num_threads: usize, taskprocessor: F) -> Self
     where
         F: Fn(T) + Send + Sync + Clone + 'static,
     {
@@ -587,7 +587,7 @@ mod tests {
         let counter = Arc::new(AtomicUsize::new(0));
         let counter_clone = Arc::clone(&counter);
 
-        let pool = SimpleWorkStealingPool::new(2, move |_task: i32| {
+        let pool = SimpleWorkStealingPool::new(2, move |task: i32| {
             counter_clone.fetch_add(1, Ordering::SeqCst);
         });
 

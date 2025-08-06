@@ -83,7 +83,7 @@ where
         }
         "2" => {
             // 2-norm (largest singular value)
-            let (_u, s, _vt) = svd(a, false, workers)?;
+            let (_u, s, vt) = svd(a, false, workers)?;
             // The 2-norm is the largest singular value
             if s.is_empty() {
                 Ok(F::zero())
@@ -284,7 +284,7 @@ where
     match norm_type {
         "2" | "fro" | "f" | "frobenius" => {
             // Use SVD for 2-norm and Frobenius norm condition number
-            let (_u, s, _vt) = svd(a, false, workers)?;
+            let (_u, s, vt) = svd(a, false, workers)?;
 
             if s.is_empty() {
                 return Ok(F::infinity());
@@ -312,7 +312,7 @@ where
             // For 1-norm and inf-norm, we need matrix inverse
             // This is more complex and would require computing the inverse
             // For now, fall back to SVD-based computation
-            let (_u, s, _vt) = svd(a, false, workers)?;
+            let (_u, s, vt) = svd(a, false, workers)?;
 
             if s.is_empty() {
                 return Ok(F::infinity());
@@ -387,7 +387,7 @@ where
     }
 
     // Compute SVD to get singular values
-    let (_u, s, _vt) = svd(a, false, workers)?;
+    let (_u, s, vt) = svd(a, false, workers)?;
 
     if s.is_empty() {
         return Ok(0);

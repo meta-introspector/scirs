@@ -6,7 +6,7 @@
 //! for regular transformations.
 
 use crate::error::Result;
-use lazy__static::lazy_static;
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
 
@@ -116,7 +116,7 @@ impl RuleLemmatizer {
     }
 
     /// Create a new lemmatizer with custom configuration
-    pub fn with_config(_config: LemmatizerConfig) -> Self {
+    pub fn with_config(config: LemmatizerConfig) -> Self {
         let mut lemmatizer = Self {
             lemma_dict: HashMap::new(),
             verb_rules: Vec::new(),
@@ -124,7 +124,7 @@ impl RuleLemmatizer {
             adj_rules: Vec::new(),
             adv_rules: Vec::new(),
             exceptions: HashMap::new(),
-            _config,
+            config,
         };
 
         lemmatizer.initialize_rules();
@@ -633,7 +633,7 @@ impl RuleLemmatizer {
 
     /// Load lemmatization dictionary from a file
     /// File format: one entry per line, format: "word_form lemma" (tab or space separated)
-    pub fn from_dict_file(_path: &str) -> Result<Self> {
+    pub fn from_dict_file(path: &str) -> Result<Self> {
         use crate::error::TextError;
         use std::fs::File;
         use std::io::{BufRead, BufReader};
@@ -651,7 +651,7 @@ impl RuleLemmatizer {
                 TextError::IoError(format!(
                     "Error reading line {} from '{}': {}",
                     line_num + 1,
-                    _path,
+                    path,
                     e
                 ))
             })?;
@@ -831,7 +831,7 @@ impl RuleLemmatizer {
     }
 
     /// Batch lemmatize a list of words with their POS tags
-    pub fn lemmatize_with_pos(&self, words: &[&str], pos_tags: &[PosTag]) -> Vec<String> {
+    pub fn lemmatize_with_pos(&self, words: &[&str], postags: &[PosTag]) -> Vec<String> {
         assert_eq!(
             words.len(),
             pos_tags.len(),

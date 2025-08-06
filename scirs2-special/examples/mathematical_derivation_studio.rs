@@ -62,8 +62,8 @@ fn display_main_menu() {
 }
 
 #[allow(dead_code)]
-fn get_user_input(_prompt: &str) -> io::Result<String> {
-    print!("{}", _prompt);
+fn get_user_input(prompt: &str) -> io::Result<String> {
+    print!("{}", prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
@@ -301,7 +301,7 @@ fn bessel_orthogonality_proof() -> Result<(), Box<dyn std::error::Error>> {
     pause_for_user()?;
 
     println!("STEP 6: Conclude orthogonality");
-    println!("For α_m ≠ α_n: (α_m² - α_n²)∫₀¹ x J_ν(α_m x) J_ν(α_n x) dx = 0");
+    println!("For α_m ≠ αn: (α_m² - α_n²)∫₀¹ x J_ν(α_m x) J_ν(α_n x) dx = 0");
     println!();
     println!("Since α_m² ≠ α_n², we must have:");
     println!("∫₀¹ x J_ν(α_m x) J_ν(α_n x) dx = 0  (m ≠ n)");
@@ -908,7 +908,7 @@ fn elliptic_e(k: f64) -> Result<f64, Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn wright_phi(_alpha: f64, beta: f64, z: f64) -> Result<f64, Box<dyn std::error::Error>> {
+fn wright_phi(alpha: f64, beta: f64, z: f64) -> Result<f64, Box<dyn std::error::Error>> {
     // Wright function - would use actual implementation
     // Placeholder: sum first few terms
     let mut sum = 0.0;

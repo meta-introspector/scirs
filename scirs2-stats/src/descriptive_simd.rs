@@ -222,8 +222,8 @@ mod tests {
     fn test_variance_simd() {
         let data = array![2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0];
         let result = variance_simd(&data.view(), 1).unwrap();
-        // Expected variance with ddof=1 is 4.0
-        assert_relative_eq!(result, 4.0, epsilon = 1e-10);
+        // Expected sample variance with ddof=1: sum_sq_dev / (n-1) = 32 / 7 = 4.571428571428571
+        assert_relative_eq!(result, 32.0 / 7.0, epsilon = 1e-10);
     }
 
     #[test]

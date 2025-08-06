@@ -210,8 +210,8 @@ fn demo_memory_efficiency() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Memory usage estimation for f64 arrays:");
     for shape in shapes_to_test {
-        let memory_single = memory_efficient::estimate_memory, _usage::<f64>(&shape, 1);
-        let memory_pair = memory_efficient::estimate_memory, _usage::<f64>(&shape, 2);
+        let memory_single = memory_efficient::estimate_memory_usage::<f64>(&shape, 1);
+        let memory_pair = memory_efficient::estimate_memory_usage::<f64>(&shape, 2);
 
         println!(
             "  {:?}: {:.1} MB (single), {:.1} MB (pair)",
@@ -221,7 +221,7 @@ fn demo_memory_efficiency() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         let config = ArrayConfig::default();
-        let fits_in_limit = memory_efficient::check_memory, _limit::<f64>(&shape, 2, &config);
+        let fits_in_limit = memory_efficient::check_memory_limit::<f64>(&shape, 2, &config);
         println!(
             "    Fits in memory limit ({}GB): {}",
             config.memory_limit / 1024 / 1024 / 1024,

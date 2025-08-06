@@ -842,12 +842,12 @@ where
                 rhs
             }
             MassMatrixType::Constant => {
-                // For constant mass _matrix, we can precompute M⁻¹ if it's not singular
+                // For constant mass matrix, we can precompute M⁻¹ if it's not singular
                 // However, for BDF, it's better to keep M in the Newton system
                 rhs // Return original RHS, mass _matrix will be handled in Newton solve
             }
             MassMatrixType::TimeDependent => {
-                // For time-dependent mass _matrix, return original RHS
+                // For time-dependent mass matrix, return original RHS
                 // Mass _matrix handling will be incorporated into the Newton system
                 rhs
             }

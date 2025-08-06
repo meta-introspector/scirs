@@ -1,5 +1,5 @@
 use super::*;
-use crate::tensor__ops::*;
+use crate::tensor_ops::*;
 use ndarray::IxDyn;
 use std::slice;
 
@@ -374,7 +374,7 @@ fn conv2d_extract_params<F: Float>(
         (xshape[0], xshape[1], xshape[2], xshape[3])
     };
     let (ych, kh, kw) = {
-        let wshape = _w.shape();
+        let wshape = w.shape();
         if wshape.len() != 4 {
             return Err(op::OpError::IncompatibleShape(format!(
                 "conv2d: filter must be 4D (got {_wshape:?})"
@@ -427,7 +427,7 @@ fn conv2d_impl<F: Float>(
         kh,
         kw,
     } = conv2d_extract_params(
-        x, _w, pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w,
+        x, w, pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w,
     )?;
 
     let copied_x;
@@ -444,8 +444,8 @@ fn conv2d_impl<F: Float>(
         }
     }
 
-    if let Some(_w) = _w.as_slice() {
-        w_slice = _w;
+    if let Some(_w) = w.as_slice() {
+        w_slice = w;
     } else {
         copied_w = ndarray_ext::deep_copy(_w);
         unsafe {
@@ -490,7 +490,7 @@ fn conv2d_impl<F: Float>(
 #[allow(dead_code)]
 fn conv2d_with_cols_impl<F: Float>(cols: &NdArrayView<F>, w: &NdArrayView<F>) -> NdArray<F> {
     // Extract size params
-    let colsshape = _cols.shape();
+    let colsshape = cols.shape();
     let kshape = w.shape();
     let (ych, xch, kh, kw) = { (kshape[0], kshape[1], kshape[2], kshape[3]) };
     let (yh, yw) = (colsshape[4], colsshape[5]);
@@ -517,7 +517,7 @@ fn conv2d_with_cols_impl<F: Float>(cols: &NdArrayView<F>, w: &NdArrayView<F>) ->
         f = slow_col_x_filter_kernel;
     }
     let y = f(
-        _cols.as_slice().unwrap(),
+        cols.as_slice().unwrap(),
         w_slice,
         xch,
         ych,

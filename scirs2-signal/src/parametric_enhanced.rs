@@ -7,7 +7,7 @@ use ndarray::s;
 use crate::error::{SignalError, SignalResult};
 use crate::parametric::{estimate_ar, ARMethod};
 use crate::parametric_arma::{estimate_arma, ArmaMethod};
-use ndarray::{ Array1, Array2, Axis};
+use ndarray::{Array1, Array2, Axis};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
@@ -368,8 +368,8 @@ fn evaluate_model(
 
 /// Select optimal model from evaluation results
 #[allow(dead_code)]
-fn select_optimal_model(_results: Vec<ModelEvaluation>) -> SignalResult<OptimalModelResult> {
-    if _results.is_empty() {
+fn select_optimal_model(results: Vec<ModelEvaluation>) -> SignalResult<OptimalModelResult> {
+    if results.is_empty() {
         return Err(SignalError::ComputationError(
             "No valid models evaluated".to_string(),
         ));
@@ -476,8 +476,8 @@ fn robust_parametric_estimation(
 
 /// Remove outliers using Median Absolute Deviation
 #[allow(dead_code)]
-fn robust_outlier_removal(_signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
-    let mut sorted_signal = _signal.to_vec();
+fn robust_outlier_removal(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
+    let mut sorted_signal = signal.to_vec();
     sorted_signal.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let n = sorted_signal.len();
@@ -488,7 +488,7 @@ fn robust_outlier_removal(_signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
     };
 
     // Calculate MAD
-    let mut deviations: Vec<f64> = _signal.iter().map(|&x| (x - median).abs()).collect();
+    let mut deviations: Vec<f64> = signal.iter().map(|&x| (x - median).abs()).collect();
     deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let mad = if n % 2 == 0 {
@@ -534,8 +534,8 @@ struct RobustArResult {
 
 /// Robust AR estimation using iteratively reweighted least squares
 #[allow(dead_code)]
-fn robust_ar_estimation(_signal: &Array1<f64>, max_order: usize) -> SignalResult<RobustArResult> {
-    let _n = _signal.len();
+fn robust_ar_estimation(_signal: &Array1<f64>, maxorder: usize) -> SignalResult<RobustArResult> {
+    let _n = signal.len();
     let mut best_result = None;
     let mut best_aic = f64::INFINITY;
 
@@ -554,8 +554,8 @@ fn robust_ar_estimation(_signal: &Array1<f64>, max_order: usize) -> SignalResult
 
 /// Robust AR estimation for specific order using IRLS
 #[allow(dead_code)]
-fn robust_ar_order(_signal: &Array1<f64>, p: usize) -> SignalResult<RobustArResult> {
-    let n = _signal.len();
+fn robust_ar_order(signal: &Array1<f64>, p: usize) -> SignalResult<RobustArResult> {
+    let n = signal.len();
     if n <= p + 1 {
         return Err(SignalError::ValueError(
             "Insufficient data for AR model order".to_string(),
@@ -1066,8 +1066,8 @@ fn windowed_parametric_estimation(
 
 /// Determine adaptive window size based on signal characteristics
 #[allow(dead_code)]
-fn adaptive_window_size(_signal: &Array1<f64>, ar_order: usize) -> SignalResult<usize> {
-    let n = _signal.len();
+fn adaptive_window_size(_signal: &Array1<f64>, arorder: usize) -> SignalResult<usize> {
+    let n = signal.len();
     let min_window = (ar_order * 10).max(50);
     let max_window = (n / 3).min(500);
 
@@ -1084,7 +1084,7 @@ fn adaptive_window_size(_signal: &Array1<f64>, ar_order: usize) -> SignalResult<
         let mut count = 0;
 
         for i in lag..n {
-            correlation += _signal[i] * _signal[i - lag];
+            correlation += signal[i] * signal[i - lag];
             count += 1;
         }
 
@@ -1111,9 +1111,9 @@ pub struct ArResult {
 
 /// Assess the quality of a window-based AR estimate
 #[allow(dead_code)]
-fn assess_window_quality(_ar_result: &ArResult, window_data: &[f64]) -> f64 {
+fn assess_window_quality(ar_result: &ArResult, windowdata: &[f64]) -> f64 {
     let n = window_data.len();
-    let p = _ar_result.coefficients.len();
+    let p = ar_result.coefficients.len();
 
     if n <= p {
         return 0.0;
@@ -1149,14 +1149,14 @@ fn assess_window_quality(_ar_result: &ArResult, window_data: &[f64]) -> f64 {
 
 /// Check AR model stability
 #[allow(dead_code)]
-fn check_ar_stability(_coefficients: &[f64]) -> f64 {
-    let p = _coefficients.len();
+fn check_ar_stability(coefficients: &[f64]) -> f64 {
+    let p = coefficients.len();
     if p == 0 {
         return 1.0;
     }
 
     // For simple case, just check if sum of absolute _coefficients < 1
-    let coeff_sum: f64 = _coefficients.iter().map(|c| c.abs()).sum();
+    let coeff_sum: f64 = coefficients.iter().map(|c| c.abs()).sum();
 
     if coeff_sum < 1.0 {
         1.0 - coeff_sum * 0.5 // Higher score for more stable models
@@ -1167,8 +1167,8 @@ fn check_ar_stability(_coefficients: &[f64]) -> f64 {
 
 /// Weighted average of coefficient vectors
 #[allow(dead_code)]
-fn weighted_average_coefficients(_coeff_vectors: &[Vec<f64>], weights: &[f64]) -> Vec<f64> {
-    if _coeff_vectors.is_empty() || weights.is_empty() {
+fn weighted_average_coefficients(coeffvectors: &[Vec<f64>], weights: &[f64]) -> Vec<f64> {
+    if coeff_vectors.is_empty() || weights.is_empty() {
         return Vec::new();
     }
 
@@ -1193,14 +1193,14 @@ fn weighted_average_coefficients(_coeff_vectors: &[Vec<f64>], weights: &[f64]) -
 
 /// Weighted average of scalar values
 #[allow(dead_code)]
-fn weighted_average(_values: &[f64], weights: &[f64]) -> f64 {
-    if _values.is_empty() || weights.is_empty() {
+fn weighted_average(values: &[f64], weights: &[f64]) -> f64 {
+    if values.is_empty() || weights.is_empty() {
         return 0.0;
     }
 
     let weight_sum: f64 = weights.iter().sum();
     if weight_sum < 1e-12 {
-        return _values.iter().sum::<f64>() / _values.len() as f64;
+        return values.iter().sum::<f64>() / values.len() as f64;
     }
 
     _values
@@ -1213,8 +1213,8 @@ fn weighted_average(_values: &[f64], weights: &[f64]) -> f64 {
 
 /// Average AR coefficients across multiple estimates
 #[allow(dead_code)]
-fn average_coefficients(_all_coeffs: &[Vec<f64>]) -> Vec<f64> {
-    if _all_coeffs.is_empty() {
+fn average_coefficients(allcoeffs: &[Vec<f64>]) -> Vec<f64> {
+    if all_coeffs.is_empty() {
         return Vec::new();
     }
 
@@ -1222,7 +1222,7 @@ fn average_coefficients(_all_coeffs: &[Vec<f64>]) -> Vec<f64> {
     let mut avg_coeffs = vec![0.0; n_coeffs];
 
     for _coeffs in all_coeffs {
-        for (i, &coeff) in _coeffs.iter().enumerate() {
+        for (i, &coeff) in coeffs.iter().enumerate() {
             if i < n_coeffs {
                 avg_coeffs[i] += coeff;
             }
@@ -1302,7 +1302,7 @@ fn compute_parametric_spectrum(
     };
 
     Ok(SpectralDensity {
-        _frequencies,
+        frequencies,
         psd,
         confidence_intervals,
     })
@@ -1397,8 +1397,8 @@ fn compute_model_residuals(
 
 /// Ljung-Box test for serial correlation
 #[allow(dead_code)]
-fn ljung_box_test(_residuals: &[f64], max_lag: usize) -> SignalResult<(f64, f64)> {
-    let n = _residuals.len() as f64;
+fn ljung_box_test(_residuals: &[f64], maxlag: usize) -> SignalResult<(f64, f64)> {
+    let n = residuals.len() as f64;
 
     // Compute autocorrelations
     let autocorrs = compute_autocorrelation(_residuals, max_lag)?;
@@ -1424,8 +1424,8 @@ fn ljung_box_test(_residuals: &[f64], max_lag: usize) -> SignalResult<(f64, f64)
 
 /// Compute autocorrelation function
 #[allow(dead_code)]
-fn compute_autocorrelation(_data: &[f64], max_lag: usize) -> SignalResult<Vec<f64>> {
-    let n = _data.len();
+fn compute_autocorrelation(_data: &[f64], maxlag: usize) -> SignalResult<Vec<f64>> {
+    let n = data.len();
     if max_lag >= n {
         return Err(SignalError::ValueError(
             "Max _lag must be less than _data length".to_string(),
@@ -1433,8 +1433,8 @@ fn compute_autocorrelation(_data: &[f64], max_lag: usize) -> SignalResult<Vec<f6
     }
 
     // Center the _data
-    let mean = _data.iter().sum::<f64>() / n as f64;
-    let centered: Vec<f64> = _data.iter().map(|x| x - mean).collect();
+    let mean = data.iter().sum::<f64>() / n as f64;
+    let centered: Vec<f64> = data.iter().map(|x| x - mean).collect();
 
     // Compute autocorrelations
     let mut autocorrs = Vec::with_capacity(max_lag + 1);
@@ -1442,7 +1442,7 @@ fn compute_autocorrelation(_data: &[f64], max_lag: usize) -> SignalResult<Vec<f6
 
     for _lag in 0..=max_lag {
         let mut covariance = 0.0;
-        let count = n - _lag;
+        let count = n - lag;
 
         for i in 0..count {
             covariance += centered[i] * centered[i + _lag];
@@ -1457,11 +1457,11 @@ fn compute_autocorrelation(_data: &[f64], max_lag: usize) -> SignalResult<Vec<f6
 
 /// Estimate condition number of the model
 #[allow(dead_code)]
-fn estimate_condition_number(_result: &OptimalModelResult) -> SignalResult<f64> {
+fn estimate_condition_number(result: &OptimalModelResult) -> SignalResult<f64> {
     // Simplified condition number based on coefficient magnitudes
-    match _result.model_type {
+    match result.model_type {
         ModelType::AR(_) => {
-            if let Some(ref ar_coeffs) = _result.ar_coeffs {
+            if let Some(ref ar_coeffs) = result.ar_coeffs {
                 let max_coeff = ar_coeffs.iter().map(|c| c.abs()).fold(0.0, f64::max);
                 let min_coeff = ar_coeffs
                     .iter()
@@ -1478,6 +1478,7 @@ fn estimate_condition_number(_result: &OptimalModelResult) -> SignalResult<f64> 
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_enhanced_parametric_estimation() {

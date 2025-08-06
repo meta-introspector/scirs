@@ -61,8 +61,8 @@ fn display_main_menu() {
 }
 
 #[allow(dead_code)]
-fn get_user_input(_prompt: &str) -> io::Result<String> {
-    print!("{}", _prompt);
+fn get_user_input(prompt: &str) -> io::Result<String> {
+    print!("{}", prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
@@ -442,18 +442,18 @@ fn orthogonal_polynomial_tutorial() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn evaluate_polynomial<F>(_name: &str, func: F) -> Result<(), Box<dyn std::error::Error>>
+fn evaluate_polynomial<F>(name: &str, func: F) -> Result<(), Box<dyn std::error::Error>>
 where
     F: Fn(usize, f64) -> f64,
 {
-    let n_input = get_user_input(&format!("Enter degree n for {} polynomial: ", _name))?;
+    let n_input = get_user_input(&format!("Enter degree n for {} polynomial: ", name))?;
     let x_input = get_user_input("Enter x value: ")?;
 
     match (n_input.parse::<usize>(), x_input.parse::<f64>()) {
         (Ok(n), Ok(x)) => {
             if n <= 20 {
                 let result = func(n, x);
-                println!("{}_{}({}) = {:.10}", _name, n, x, result);
+                println!("{}_{}({}) = {:.10}", name, n, x, result);
             } else {
                 println!("❌ Degree too large (max 20)");
             }
@@ -1739,11 +1739,11 @@ fn advanced_features_tutorial() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Simple ASCII plotting function for demonstrations
 #[allow(dead_code)]
-fn plot_function_ascii<F>(_title: &str, x_min: f64, x_max: f64, width: usize, f: F)
+fn plot_function_ascii<F>(_title: &str, x_min: f64, xmax: f64, width: usize, f: F)
 where
     F: Fn(f64) -> f64,
 {
-    println!("📈 {}", _title);
+    println!("📈 {}", title);
 
     let mut values = Vec::new();
     let mut y_min = f64::INFINITY;

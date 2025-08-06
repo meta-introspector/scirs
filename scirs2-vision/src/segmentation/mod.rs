@@ -8,8 +8,8 @@ pub mod region_growing;
 pub mod slic;
 pub mod watershed;
 
-pub use mean__shift::{mean_shift, MeanShiftParams};
-pub use region__growing::{
+pub use mean_shift::{mean_shift, MeanShiftParams};
+pub use region_growing::{
     adaptive_region_growing, region_growing, region_labels_to_color, RegionGrowingParams, SeedPoint,
 };
 pub use slic::{draw_superpixel_boundaries, slic};
@@ -42,7 +42,7 @@ pub enum AdaptiveMethod {
 ///
 /// * Result containing a binary image
 #[allow(dead_code)]
-pub fn threshold_binary(_img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
+pub fn threshold_binary(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
     let array = image_to_array(_img)?;
     let (height, width) = array.dim();
 
@@ -68,8 +68,8 @@ pub fn threshold_binary(_img: &DynamicImage, threshold: f32) -> Result<GrayImage
 ///
 /// * Result containing a binary image and the computed threshold
 #[allow(dead_code)]
-pub fn otsu_threshold(_img: &DynamicImage) -> Result<(GrayImage, f32)> {
-    let gray = _img.to_luma8();
+pub fn otsu_threshold(img: &DynamicImage) -> Result<(GrayImage, f32)> {
+    let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
     let total_pixels = (width * height) as usize;
 
@@ -246,8 +246,8 @@ pub type LabeledImage = ImageBuffer<Luma<u16>, Vec<u16>>;
 ///   - Labeled image where each pixel value is the label of its component
 ///   - Number of labels found (counting from 1)
 #[allow(dead_code)]
-pub fn connected_components(_binary: &GrayImage) -> Result<(LabeledImage, u16)> {
-    let (width, height) = _binary.dimensions();
+pub fn connected_components(binary: &GrayImage) -> Result<(LabeledImage, u16)> {
+    let (width, height) = binary.dimensions();
     let mut labels: ImageBuffer<Luma<u16>, Vec<u16>> = ImageBuffer::new(width, height);
     let mut label_equiv = vec![0u16; 65536]; // Union-find data structure
     let mut next_label = 1u16;
@@ -262,7 +262,7 @@ pub fn connected_components(_binary: &GrayImage) -> Result<(LabeledImage, u16)> 
     for y in 0..height {
         for x in 0..width {
             // Skip background
-            if _binary.get_pixel(x, y)[0] == 0 {
+            if binary.get_pixel(x, y)[0] == 0 {
                 labels.put_pixel(x, y, Luma([0]));
                 continue;
             }
@@ -270,11 +270,11 @@ pub fn connected_components(_binary: &GrayImage) -> Result<(LabeledImage, u16)> 
             // Check connected neighbors (4-connectivity)
             let mut neighbors = Vec::new();
 
-            if x > 0 && _binary.get_pixel(x - 1, y)[0] > 0 {
+            if x > 0 && binary.get_pixel(x - 1, y)[0] > 0 {
                 neighbors.push(labels.get_pixel(x - 1, y)[0]);
             }
 
-            if y > 0 && _binary.get_pixel(x, y - 1)[0] > 0 {
+            if y > 0 && binary.get_pixel(x, y - 1)[0] > 0 {
                 neighbors.push(labels.get_pixel(x, y - 1)[0]);
             }
 
@@ -330,21 +330,21 @@ pub fn connected_components(_binary: &GrayImage) -> Result<(LabeledImage, u16)> 
 
 // Union-find helper functions
 #[allow(dead_code)]
-fn find(_labels: &[u16], x: u16) -> u16 {
+fn find(labels: &[u16], x: u16) -> u16 {
     let mut y = x;
-    while y != _labels[y as usize] {
-        y = _labels[y as usize];
+    while y != labels[y as usize] {
+        y = labels[y as usize];
     }
     y
 }
 
 #[allow(dead_code)]
-fn union(_labels: &mut [u16], x: u16, y: u16) {
+fn union(labels: &mut [u16], x: u16, y: u16) {
     let root_x = find(_labels, x);
     let root_y = find(_labels, y);
     if root_x <= root_y {
-        _labels[root_y as usize] = root_x;
+        labels[root_y as usize] = root_x;
     } else {
-        _labels[root_x as usize] = root_y;
+        labels[root_x as usize] = root_y;
     }
 }

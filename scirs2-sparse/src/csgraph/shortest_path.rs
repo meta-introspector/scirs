@@ -98,7 +98,7 @@ where
         }
         (Some(source), None) => {
             // Single source shortest paths
-            let (distances_, _predecessors) =
+            let (distances_, predecessors) =
                 single_source_shortest_path(graph, source, method, directed, return_predecessors)?;
 
             // Convert to matrix format
@@ -122,7 +122,7 @@ where
         }
         (Some(source), Some(target)) => {
             // Single pair shortest path
-            let (distances_, _predecessors) =
+            let (distances_, predecessors) =
                 single_source_shortest_path(graph, source, method, directed, return_predecessors)?;
 
             let dist_matrix = Array2::from_elem((1, 1), distances_[target]);
@@ -241,7 +241,7 @@ where
                 }
             }
 
-            Ok((distances, _predecessors))
+            Ok((distances, predecessors))
         }
         _ => Err(SparseError::ValueError(
             "Method not supported for all pairs shortest paths".to_string(),
@@ -315,7 +315,7 @@ where
         }
     }
 
-    Ok((distances, _predecessors))
+    Ok((distances, predecessors))
 }
 
 /// Bellman-Ford algorithm for single source shortest paths
@@ -391,7 +391,7 @@ where
         }
     }
 
-    Ok((distances, _predecessors))
+    Ok((distances, predecessors))
 }
 
 /// Floyd-Warshall algorithm for all pairs shortest paths
@@ -461,7 +461,7 @@ where
         }
     }
 
-    Ok((distances, _predecessors))
+    Ok((distances, predecessors))
 }
 
 /// Reconstruct shortest path from predecessor information

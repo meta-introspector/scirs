@@ -40,8 +40,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 /// Example 1: Thin-Plate Spline transformation (smile effect)
 #[allow(dead_code)]
-fn thin_plate_spline_example(_img: &DynamicImage) -> Result<(), Box<dyn Error>> {
-    let (width, height) = _img.dimensions();
+fn thin_plate_spline_example(img: &DynamicImage) -> Result<(), Box<dyn Error>> {
+    let (width, height) = img.dimensions();
 
     // Create control points for smile effect
     let source_points = vec![
@@ -80,7 +80,7 @@ fn thin_plate_spline_example(_img: &DynamicImage) -> Result<(), Box<dyn Error>> 
     // Original image at top-left
     for y in 0..height {
         for x in 0..width {
-            let pixel = _img.get_pixel(x, y);
+            let pixel = img.get_pixel(x, y);
             composite.put_pixel(x, y, Rgba([pixel[0], pixel[1], pixel[2], 255]));
         }
     }
@@ -91,7 +91,7 @@ fn thin_plate_spline_example(_img: &DynamicImage) -> Result<(), Box<dyn Error>> 
 
         // Apply thin-plate spline transformation
         let result = warp_thin_plate_spline(
-            _img,
+            img,
             source_points.clone(),
             target_points.clone(),
             Some(lambda),
@@ -131,8 +131,8 @@ fn thin_plate_spline_example(_img: &DynamicImage) -> Result<(), Box<dyn Error>> 
 
 /// Example 2: Elastic deformation
 #[allow(dead_code)]
-fn elastic_deformation_example(_img: &DynamicImage) -> Result<(), Box<dyn Error>> {
-    let (width, height) = _img.dimensions();
+fn elastic_deformation_example(img: &DynamicImage) -> Result<(), Box<dyn Error>> {
+    let (width, height) = img.dimensions();
 
     // Create a composite image for different parameters
     let mut composite = ImageBuffer::<Rgba<u8>, Vec<u8>>::new(width * 3, height * 2);
@@ -140,7 +140,7 @@ fn elastic_deformation_example(_img: &DynamicImage) -> Result<(), Box<dyn Error>
     // Original image in top-left
     for y in 0..height {
         for x in 0..width {
-            let pixel = _img.get_pixel(x, y);
+            let pixel = img.get_pixel(x, y);
             composite.put_pixel(x, y, Rgba([pixel[0], pixel[1], pixel[2], 255]));
         }
     }
@@ -161,7 +161,7 @@ fn elastic_deformation_example(_img: &DynamicImage) -> Result<(), Box<dyn Error>
 
             // Create elastic deformation with fixed seed for reproducibility
             let result = warp_elastic(
-                _img,
+                img,
                 alpha,
                 sigma,
                 Some(42), // Fixed seed
@@ -278,8 +278,8 @@ fn grid_deformation_example() -> Result<(), Box<dyn Error>> {
 
 /// Example 4: Compare border modes
 #[allow(dead_code)]
-fn compare_border_modes(_img: &DynamicImage) -> Result<(), Box<dyn Error>> {
-    let (width, height) = _img.dimensions();
+fn compare_border_modes(img: &DynamicImage) -> Result<(), Box<dyn Error>> {
+    let (width, height) = img.dimensions();
 
     // Create a composite image for different border modes
     let mut composite = ImageBuffer::<Rgba<u8>, Vec<u8>>::new(width * 3, height * 2);
@@ -370,8 +370,8 @@ fn create_tps_animation(
 
 /// Create an animation showing elastic deformation
 #[allow(dead_code)]
-fn create_elastic_animation(_img: &DynamicImage, frames: usize) -> Result<(), Box<dyn Error>> {
-    let (width, height) = _img.dimensions();
+fn create_elastic_animation(img: &DynamicImage, frames: usize) -> Result<(), Box<dyn Error>> {
+    let (width, height) = img.dimensions();
 
     std::fs::create_dir_all("output/animation")?;
 

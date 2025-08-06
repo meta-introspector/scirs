@@ -136,12 +136,12 @@ fn simd_distance_example() -> Result<()> {
 
 /// Test accuracy of SIMD distance computations
 #[allow(dead_code)]
-fn test_distance_accuracy(_simd_metrics: &SimdDistanceMetrics) -> Result<()> {
+fn test_distance_accuracy(_simdmetrics: &SimdDistanceMetrics) -> Result<()> {
     // Test with small vectors (should use standard implementation)
     let small_a = Array1::from_vec(vec![1.0, 2.0, 3.0]);
     let small_b = Array1::from_vec(vec![4.0, 5.0, 6.0]);
 
-    let small_euclidean = _simd_metrics.euclidean_distance_simd(&small_a, &small_b)?;
+    let small_euclidean = simd_metrics.euclidean_distance_simd(&small_a, &small_b)?;
     let expected_small = ((3.0_f64).powi(2) + (3.0_f64).powi(2) + (3.0_f64).powi(2)).sqrt();
     println!("  Small vector Euclidean: {small_euclidean:.6} (expected: {expected_small:.6})");
 
@@ -218,7 +218,7 @@ fn simd_statistics_example() -> Result<()> {
 
 /// Test statistical computations with different distributions
 #[allow(dead_code)]
-fn test_statistical_distributions(_simd_stats: &SimdStatistics) -> Result<()> {
+fn test_statistical_distributions(_simdstats: &SimdStatistics) -> Result<()> {
     // Normal distribution approximation
     let normal_data = Array1::from_vec(
         (0..5000)
@@ -265,8 +265,8 @@ fn hardware_matrix_example() -> Result<()> {
     println!("Testing hardware-accelerated matrix operations:");
 
     // Test matrix-vector multiplication
-    let matrix = Array2::fromshape_fn((1000, 500), |(i, j)| (i as f64 * 0.01) + (j as f64 * 0.001));
-    let vector = Array1::fromshape_fn(500, |i| (i as f64).sin());
+    let matrix = Array2::from_shape_fn((1000, 500), |(i, j)| (i as f64 * 0.01) + (j as f64 * 0.001));
+    let vector = Array1::from_shape_fn(500, |i| (i as f64).sin());
 
     println!(
         "  Matrix shape: {:?}, Vector length: {}",
@@ -282,7 +282,7 @@ fn hardware_matrix_example() -> Result<()> {
     );
 
     // Test pairwise distance computation
-    let data_points = Array2::fromshape_fn((100, 50), |(i, j)| {
+    let data_points = Array2::from_shape_fn((100, 50), |(i, j)| {
         (i as f64 * 0.1) + (j as f64 * 0.05).cos()
     });
 
@@ -298,7 +298,7 @@ fn hardware_matrix_example() -> Result<()> {
     }
 
     // Test correlation matrix computation
-    let correlation_data = Array2::fromshape_fn((500, 20), |(i, j)| {
+    let correlation_data = Array2::from_shape_fn((500, 20), |(i, j)| {
         (i as f64 * 0.01).sin() + (j as f64 * 0.1).cos() + (i + j) as f64 * 0.001
     });
 
@@ -334,7 +334,7 @@ fn performance_benchmark_example() -> Result<()> {
 
 /// Benchmark distance computation performance
 #[allow(dead_code)]
-fn benchmark_distance_performance(_size: usize) -> Result<()> {
+fn benchmark_distance_performance(size: usize) -> Result<()> {
     let simd_metrics = SimdDistanceMetrics::new();
 
     // Create test data
@@ -368,7 +368,7 @@ fn benchmark_distance_performance(_size: usize) -> Result<()> {
 
 /// Benchmark statistical computation performance
 #[allow(dead_code)]
-fn benchmark_statistics_performance(_size: usize) -> Result<()> {
+fn benchmark_statistics_performance(size: usize) -> Result<()> {
     let simd_stats = SimdStatistics::new();
 
     // Create test data

@@ -141,7 +141,7 @@ where
         }
     }
 
-    Ok((traversal_order_, _predecessors))
+    Ok((traversal_order_, predecessors))
 }
 
 /// Depth-first search traversal
@@ -199,7 +199,7 @@ where
         }
     }
 
-    Ok((traversal_order_, _predecessors))
+    Ok((traversal_order_, predecessors))
 }
 
 /// Recursive depth-first search traversal
@@ -230,10 +230,10 @@ where
         &adj_list,
         &mut visited,
         &mut traversal_order_,
-        &mut _predecessors,
+        &mut predecessors,
     );
 
-    Ok((traversal_order_, _predecessors))
+    Ok((traversal_order_, predecessors))
 }
 
 /// Helper function for recursive DFS
@@ -286,7 +286,7 @@ fn dfs_recursive_helper<T>(
 /// let distances = bfs_distances(&graph, 0, false).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn bfs_distances<T, S>(_graph: &S, start: usize, directed: bool) -> SparseResult<Array1<isize>>
+pub fn bfs_distances<T, S>(graph: &S, start: usize, directed: bool) -> SparseResult<Array1<isize>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
@@ -438,7 +438,7 @@ where
 /// let topo_order = topological_sort(&graph).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn topological_sort<T, S>(_graph: &S) -> SparseResult<Vec<usize>>
+pub fn topological_sort<T, S>(graph: &S) -> SparseResult<Vec<usize>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,

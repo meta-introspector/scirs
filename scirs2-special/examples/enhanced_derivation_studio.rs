@@ -888,7 +888,8 @@ impl DerivationStudio {
                 get_user_input("Continue to next step (enter), repeat (r), or quit (q): ")?;
             match next_action.to_lowercase().as_str() {
                 "q" => break,
-                "r" => continue_ => current_step += 1,
+                "r" => continue,
+                _ => current_step += 1,
             }
 
             if current_step < path.steps.len() {
@@ -2214,8 +2215,8 @@ fn wait_for_user_input() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn get_user_input(_prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
-    print!("{}", _prompt);
+fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
+    print!("{}", prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;

@@ -34,7 +34,7 @@ pub struct MultipleTryMetropolis<T: TargetDistribution, P: ProposalDistribution>
 
 impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P> {
     /// Create a new multiple-try Metropolis sampler
-    pub fn new(target: T, proposal: P, initial: Array1<f64>, n_tries: usize) -> Result<Self> {
+    pub fn new(target: T, proposal: P, initial: Array1<f64>, ntries: usize) -> Result<Self> {
         checkarray_finite(&initial, "initial")?;
         check_positive(n_tries, "n_tries")?;
 
@@ -141,7 +141,7 @@ impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P>
 
         for i in 0..n_samples_ {
             let sample = self.step(rng)?;
-            _samples.row_mut(i).assign(&sample);
+            samples.row_mut(i).assign(&sample);
         }
 
         Ok(_samples)
@@ -329,7 +329,7 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
                 .map(|(idx, _)| idx)
                 .unwrap_or(0);
 
-            _samples.row_mut(i).assign(&self.states[coldest_idx]);
+            samples.row_mut(i).assign(&self.states[coldest_idx]);
         }
 
         Ok(_samples)
@@ -381,7 +381,7 @@ pub struct SliceSampler<T: TargetDistribution> {
 
 impl<T: TargetDistribution> SliceSampler<T> {
     /// Create a new slice sampler
-    pub fn new(target: T, initial: Array1<f64>, step_size: f64) -> Result<Self> {
+    pub fn new(target: T, initial: Array1<f64>, stepsize: f64) -> Result<Self> {
         checkarray_finite(&initial, "initial")?;
         check_positive(step_size, "step_size")?;
 
@@ -499,7 +499,7 @@ impl<T: TargetDistribution> SliceSampler<T> {
 
         for i in 0..n_samples_ {
             let sample = self.step(rng)?;
-            _samples.row_mut(i).assign(&sample);
+            samples.row_mut(i).assign(&sample);
         }
 
         Ok(_samples)
@@ -536,7 +536,7 @@ pub struct EnsembleSampler<T: TargetDistribution + Clone + Send + Sync> {
 
 impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
     /// Create a new ensemble sampler
-    pub fn new(target: T, initial_walkers: Array2<f64>, scale: Option<f64>) -> Result<Self> {
+    pub fn new(target: T, initialwalkers: Array2<f64>, scale: Option<f64>) -> Result<Self> {
         checkarray_finite(&initial_walkers, "initial_walkers")?;
         let (n_walkers, dim) = initial_walkers.dim();
         let scale = scale.unwrap_or(2.0);
@@ -596,7 +596,7 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
         for i in start..end {
             // Select random walker from complementary ensemble
             let comp_size = comp_end - comp_start;
-            let j = comp_start + rng.random_range(0..comp_size);
+            let j = comp_start + rng.gen_range(0..comp_size);
 
             // Generate stretch parameter
             let z = ((self.scale - 1.0) * rng.random::<f64>() + 1.0).powf(2.0) / self.scale;
@@ -642,7 +642,7 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
             // Store all walker positions
             for j in 0..self.n_walkers {
                 let sample_idx = i * self.n_walkers + j;
-                _samples.row_mut(sample_idx).assign(&self.walkers.row(j));
+                samples.row_mut(sample_idx).assign(&self.walkers.row(j));
             }
         }
 

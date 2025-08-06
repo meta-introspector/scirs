@@ -238,7 +238,7 @@ where
         let start = (time * sample_rate.unwrap_or(1.0)) as usize;
 
         // Skip if frame would go beyond _signal bounds
-        if start + window_size > _signal.len() {
+        if start + window_size > signal.len() {
             continue;
         }
 
@@ -291,12 +291,12 @@ where
 
 /// Compute Continuous Wavelet Transform (CWT)
 #[allow(dead_code)]
-fn compute_cwt<T>(_signal: &[T], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult>
+fn compute_cwt<T>(_signal: &[T], config: &TFConfig, samplerate: Option<f64>) -> FFTResult<TFResult>
 where
     T: NumCast + Copy + Debug,
 {
     // Signal length
-    let n = _signal.len().min(config.max_size);
+    let n = signal.len().min(config.max_size);
 
     // Calculate frequencies (scales)
     let min_freq = config.frequency_range.0;
@@ -330,7 +330,7 @@ where
 
     // Convert _signal to complex for FFT
     let mut signal_complex = Vec::with_capacity(n);
-    for &val in _signal.iter().take(n) {
+    for &val in signal.iter().take(n) {
         let val_f64: f64 = NumCast::from(val).ok_or_else(|| {
             FFTError::ValueError("Failed to convert _signal value to f64".to_string())
         })?;
@@ -689,9 +689,9 @@ where
 
 /// Extract ridge (maximum energy path) from a time-frequency representation
 #[allow(dead_code)]
-pub fn extract_ridge(_tf_result: &TFResult) -> Vec<(f64, f64)> {
-    let num_times = _tf_result.times.len();
-    let num_freqs = _tf_result.frequencies.len();
+pub fn extract_ridge(_tfresult: &TFResult) -> Vec<(f64, f64)> {
+    let num_times = tf_result.times.len();
+    let num_freqs = tf_result.frequencies.len();
 
     // Limit processing to avoid timeouts
     let max_times = num_times.min(500);
@@ -704,7 +704,7 @@ pub fn extract_ridge(_tf_result: &TFResult) -> Vec<(f64, f64)> {
         let mut max_freq_idx = 0;
 
         for i in 0..num_freqs {
-            let energy = _tf_result.coefficients[[i, j]].norm_sqr();
+            let energy = tf_result.coefficients[[i, j]].norm_sqr();
             if energy > max_energy {
                 max_energy = energy;
                 max_freq_idx = i;
@@ -712,7 +712,7 @@ pub fn extract_ridge(_tf_result: &TFResult) -> Vec<(f64, f64)> {
         }
 
         // Add (time, frequency) point to ridge
-        ridge.push((_tf_result.times[j], _tf_result.frequencies[max_freq_idx]));
+        ridge.push((_tf_result.times[j], tf_result.frequencies[max_freq_idx]));
     }
 
     ridge

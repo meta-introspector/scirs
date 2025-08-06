@@ -66,13 +66,13 @@ pub struct SelfTuningOptimizer {
 
 impl SelfTuningOptimizer {
     /// Create a new self-tuning optimizer
-    pub fn new(_config: SelfTuningConfig) -> Self {
+    pub fn new(config: SelfTuningConfig) -> Self {
         Self {
             parameter_manager: ParameterManager::new(),
             performance_tracker: PerformanceTracker::new(_config.memory_window),
             adaptation_engine: AdaptationEngine::new(_config.adaptation_strategy),
             tuning_history: TuningHistory::new(),
-            config: _config,
+            config: config,
         }
     }
 
@@ -221,7 +221,7 @@ impl ParameterManager {
         Ok(())
     }
 
-    fn update_parameter(&mut self, name: &str, new_value: ParameterValue) -> ScirsResult<()> {
+    fn update_parameter(&mut self, name: &str, newvalue: ParameterValue) -> ScirsResult<()> {
         if let Some((min_bound, max_bound)) = self.parameter_bounds.get(name) {
             if new_value < *min_bound || new_value > *max_bound {
                 return Err(ScirsError::InvalidInput(
@@ -273,9 +273,9 @@ where
     T: Clone + PartialOrd + std::fmt::Debug + 'static + Send + Sync,
 {
     /// Create a new tunable parameter
-    pub fn new(_current: T, min: T, max: T) -> Self {
+    pub fn new(current: T, min: T, max: T) -> Self {
         Self {
-            current_value: _current,
+            current_value: current,
             min_value: min,
             max_value: max,
             adaptation_rate: 0.1,
@@ -397,7 +397,7 @@ pub enum ParameterValue {
 }
 
 impl ParameterValue {
-    fn from_typed<T>(_value: &T) -> Self
+    fn from_typed<T>(value: &T) -> Self
     where
         T: std::fmt::Debug + 'static,
     {
@@ -442,7 +442,7 @@ impl ParameterValue {
         }
 
         // Fallback - try to parse as float from debug representation
-        let debug_str = format!("{:?}", _value);
+        let debug_str = format!("{:?}", value);
         if let Ok(f_val) = debug_str.parse::<f64>() {
             ParameterValue::Float(f_val)
         } else {
@@ -489,9 +489,9 @@ struct PerformanceTracker {
 }
 
 impl PerformanceTracker {
-    fn new(_memory_window: usize) -> Self {
+    fn new(_memorywindow: usize) -> Self {
         Self {
-            memory_window: _memory_window,
+            memory_window: memory_window,
             function_values: VecDeque::new(),
             gradient_norms: VecDeque::new(),
             improvements: VecDeque::new(),
@@ -638,9 +638,9 @@ struct AdaptationEngine {
 }
 
 impl AdaptationEngine {
-    fn new(_strategy: AdaptationStrategy) -> Self {
+    fn new(strategy: AdaptationStrategy) -> Self {
         let rl_agent = if matches!(
-            _strategy,
+            strategy,
             AdaptationStrategy::ReinforcementLearning | AdaptationStrategy::Hybrid
         ) {
             Some(ReinforcementLearningAgent::new())
@@ -649,7 +649,7 @@ impl AdaptationEngine {
         };
 
         let bayesian_optimizer = if matches!(
-            _strategy,
+            strategy,
             AdaptationStrategy::BayesianOptimization | AdaptationStrategy::Hybrid
         ) {
             Some(BayesianParameterOptimizer::new())
@@ -658,7 +658,7 @@ impl AdaptationEngine {
         };
 
         Self {
-            strategy: _strategy,
+            strategy: strategy,
             rl_agent,
             bayesian_optimizer,
         }
@@ -690,7 +690,7 @@ impl AdaptationEngine {
                 }
             }
             AdaptationStrategy::BayesianOptimization => {
-                if let Some(ref mut _optimizer) = self.bayesian_optimizer {
+                if let Some(ref mut optimizer) = self.bayesian_optimizer {
                     self.bayesian_adaptation(parameter_manager, metrics, config)
                 } else {
                     self.performance_based_adaptation(parameter_manager, metrics, config)
@@ -891,7 +891,7 @@ impl AdaptationEngine {
         match value {
             ParameterValue::Float(f) => {
                 let new_value = f * factor;
-                if let Some((min_bound_)) = bounds {
+                if let Some((min_bound)) = bounds {
                     if let Some(min_f) = min_bound.as_f64() {
                         if new_value >= min_f {
                             Some(ParameterValue::Float(new_value))
@@ -907,7 +907,7 @@ impl AdaptationEngine {
             }
             ParameterValue::Integer(i) => {
                 let new_value = ((i as f64) * factor) as i64;
-                if let Some((min_bound_)) = bounds {
+                if let Some((min_bound)) = bounds {
                     if let Some(min_i) = min_bound.as_i64() {
                         if new_value >= min_i {
                             Some(ParameterValue::Integer(new_value))
@@ -1161,7 +1161,7 @@ impl BayesianParameterOptimizer {
                 .iter()
                 .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-            if let Some((best_params_)) = best_observation {
+            if let Some((best_params)) = best_observation {
                 // Suggest parameter modifications based on best observation
                 for (name, value) in current_params {
                     if let Some(best_value) = best_params.get(name) {

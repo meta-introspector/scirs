@@ -89,11 +89,11 @@ struct GPTEmbeddings<F: Float + Debug + ScalarOperand + Send + Sync> {
     dropout: Dropout<F>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> GPTEmbeddings<F> {
     /// Create GPT embeddings
-    pub fn new(_config: &GPTConfig) -> Result<Self> {
+    pub fn new(config: &GPTConfig) -> Result<Self> {
         // Token embeddings
         let token_embedding_config = EmbeddingConfig {
-            num_embeddings: _config.vocab_size,
-            embedding_dim: _config.hidden_size,
+            num_embeddings: config.vocab_size,
+            embedding_dim: config.hidden_size,
             padding_idx: None,
             max_norm: None,
             norm_type: 2.0,
@@ -107,7 +107,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> GPTEmbeddings<F> {
         let position_embeddings = Embedding::new(position_embedding_config)?;
         // Dropout
         let dropout_prob = config.hidden_dropout_prob;
-        let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+        let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
         let dropout = Dropout::new(dropout_prob, &mut rng)?;
         Ok(Self {
             token_embeddings,
@@ -149,7 +149,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for GPTEmbeddings<
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
         Ok(grad_output.clone())
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         self.token_embeddings.update(learning_rate)?;
         self.position_embeddings.update(learning_rate)?;
         Ok(())
@@ -226,7 +226,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> GPTAttention<F> {
                         x_transposed[[b, h, s, d]] = x_reshaped[[b, s, h, d]];
         Ok(x_transposed)
     /// Create attention mask for autoregressive (left-to-right) attention
-    fn create_causal_mask(&self, seq_len: usize) -> Array<F, IxDyn> {
+    fn create_causal_mask(&self, seqlen: usize) -> Array<F, IxDyn> {
         let mut mask = Array::zeros(IxDyn(&[seq_len, seq_len]));
         for i in 0..seq_len {
             for j in 0..seq_len {
@@ -389,7 +389,7 @@ pub struct GPTModel<F: Float + Debug + ScalarOperand + Send + Sync> {
     config: GPTConfig,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> GPTModel<F> {
     /// Create a new GPT model
-    pub fn new(_config: GPTConfig) -> Result<Self> {
+    pub fn new(config: GPTConfig) -> Result<Self> {
         let embeddings = GPTEmbeddings::new(&config)?;
         // Create transformer blocks
         let mut blocks = Vec::with_capacity(config.num_hidden_layers);

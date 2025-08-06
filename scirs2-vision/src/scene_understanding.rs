@@ -569,74 +569,85 @@ impl SceneUnderstandingEngine {
     }
 
     /// Helper methods (placeholder implementations for compilation)
-    fn segment_at_scale(&self_image: &ArrayView3<f32>, _scale: f32) -> Result<Array2<u32>> {
+    fn segment_at_scale(self_image: &ArrayView3<f32>, scale: f32) -> Result<Array2<u32>> {
         Ok(Array2::zeros((100, 100))) // Placeholder
     }
 
-    fn merge_segmentation_results(
-        &self_base: &mut Array2<u32>, _new: &Array2<u32>,
-    ) -> Result<()> {
+    fn merge_segmentation_results(self_base: &mut Array2<u32>, new: &Array2<u32>) -> Result<()> {
         Ok(()) // Placeholder
     }
 
-    fn enforce_spatial_consistency(&self_segmentation: &mut Array2<u32>) -> Result<()> {
+    fn enforce_spatial_consistency(selfsegmentation: &mut Array2<u32>) -> Result<()> {
         Ok(()) // Placeholder
     }
 
     fn extract_object_features(
-        &self_image: &ArrayView3<f32>, _bbox: &(f32, f32, f32, f32),
+        self_image: &ArrayView3<f32>,
+        _bbox: &(f32, f32, f32, f32),
     ) -> Result<Array2<f32>> {
         Ok(Array2::zeros((1, 256))) // Placeholder
     }
 
     fn compute_object_mask(
-        &self_image: &ArrayView3<f32>, _detection: &DetectionResult,
+        self_image: &ArrayView3<f32>,
+        _detection: &DetectionResult,
     ) -> Result<Array2<bool>> {
         Ok(Array2::from_elem((50, 50), false)) // Placeholder
     }
 
     fn analyze_object_attributes(
-        &self_image: &ArrayView3<f32>, _detection: &DetectionResult, features: &Array2<f32>,
+        self_image: &ArrayView3<f32>,
+        _detection: &DetectionResult,
+        features: &Array2<f32>,
     ) -> Result<HashMap<String, f32>> {
         Ok(HashMap::new()) // Placeholder
     }
 
-    fn extract_global_features(&self_image: &ArrayView3<f32>) -> Result<Array2<f32>> {
+    fn extract_global_features(selfimage: &ArrayView3<f32>) -> Result<Array2<f32>> {
         Ok(Array2::zeros((1, 512))) // Placeholder
     }
 
-    fn analyze_object_composition(&self_objects: &[DetectedObject]) -> Result<Array2<f32>> {
+    fn analyze_object_composition(selfobjects: &[DetectedObject]) -> Result<Array2<f32>> {
         Ok(Array2::zeros((1, 128))) // Placeholder
     }
 
     fn combine_scene_features(
-        &self_global: &Array2<f32>, _composition: &Array2<f32>,
+        self_global: &Array2<f32>,
+        _composition: &Array2<f32>,
     ) -> Result<Array2<f32>> {
         Ok(Array2::zeros((1, 640))) // Placeholder
     }
 
-    fn classify_from_features(&self, _features: &Array2<f32>) -> Result<(String, f32)> {
+    fn classify_from_features(&self, features: &Array2<f32>) -> Result<(String, f32)> {
         Ok(("indoor_scene".to_string(), 0.85)) // Placeholder
     }
 
     fn apply_reasoning_rule(
-        &self, _rule: &ReasoningRule, _objects: &[DetectedObject], _relationships: &[SpatialRelation], _scene: &str, _class: &str,
+        &self,
+        _rule: &ReasoningRule,
+        _objects: &[DetectedObject],
+        _relationships: &[SpatialRelation],
+        _scene: &str,
+        _class: &str,
     ) -> Result<Option<ReasoningResult>> {
         Ok(None) // Placeholder
     }
 
     fn analyze_temporal_changes(
-        &self, _current_frame: &ArrayView3<f32>, _previous_frames: &[ArrayView3<f32>], _frame_idx: usize,
+        &self,
+        _current_frame: &ArrayView3<f32>,
+        _previous_frames: &[ArrayView3<f32>],
+        _frame_idx: usize,
     ) -> Result<TemporalInfo> {
         Ok(TemporalInfo {
-            _frame_index: _frame_idx,
+            _frame_index: frame_idx,
             timestamp: _frame_idx as f64 / 30.0, // Assuming 30 FPS
             motion_vectors: Array3::zeros((100, 100, 2)),
             scene_changes: Vec::new(),
         })
     }
 
-    fn enforce_temporal_consistency(&self_results: &mut [SceneAnalysisResult]) -> Result<()> {
+    fn enforce_temporal_consistency(selfresults: &mut [SceneAnalysisResult]) -> Result<()> {
         Ok(()) // Placeholder
     }
 }
@@ -660,7 +671,7 @@ impl ObjectDetector {
         }
     }
 
-    fn detect_multi_scale(&self_image: &ArrayView3<f32>) -> Result<Vec<DetectionResult>> {
+    fn detect_multi_scale(selfimage: &ArrayView3<f32>) -> Result<Vec<DetectionResult>> {
         Ok(Vec::new()) // Placeholder
     }
 }
@@ -679,7 +690,10 @@ impl SpatialRelationshipAnalyzer {
     }
 
     fn analyze_pair(
-        &self_obj1: &DetectedObject, _obj2: &DetectedObject, id1: usize, _id2: usize,
+        self_obj1: &DetectedObject,
+        _obj2: &DetectedObject,
+        id1: usize,
+        _id2: usize,
     ) -> Result<Vec<SpatialRelation>> {
         Ok(Vec::new()) // Placeholder
     }
@@ -752,7 +766,8 @@ pub fn analyze_scene_with_reasoning(
 /// Apply contextual enhancement based on previous scene understanding
 #[allow(dead_code)]
 fn apply_contextual_enhancement(
-    current: &SceneAnalysisResult, previous: &SceneAnalysisResult,
+    current: &SceneAnalysisResult,
+    previous: &SceneAnalysisResult,
 ) -> Result<SceneAnalysisResult> {
     // Placeholder for contextual enhancement logic
     Ok(current.clone())

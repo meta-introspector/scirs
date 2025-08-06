@@ -61,7 +61,10 @@ impl<F: Float> TestResult<F> {
 ///
 /// * Test result with chi-square statistic and p-value
 #[allow(dead_code)]
-pub fn box_m_test<F>(_groups: &[ArrayView2<F>], significance_level: F) -> LinalgResult<TestResult<F>>
+pub fn box_m_test<F>(
+    _groups: &[ArrayView2<F>],
+    significance_level: F,
+) -> LinalgResult<TestResult<F>>
 where
     F: Float
         + Zero
@@ -477,22 +480,23 @@ where
 // Helper functions for computing distribution functions (simplified implementations)
 
 #[allow(dead_code)]
-fn compute_box_correction_c1<F>(_sample_sizes: &[usize], p: usize) -> LinalgResult<F>
+fn compute_box_correction_c1<F>(_samplesizes: &[usize], p: usize) -> LinalgResult<F>
 where
     F: Float + Zero + One + Copy + num_traits::FromPrimitive,
 {
-    let k = _sample_sizes.len();
+    let k = _samplesizes.len();
     let mut sum_inv = F::zero();
 
-    for &n_i in _sample_sizes {
+    for &n_i in _samplesizes {
         sum_inv = sum_inv + F::one() / F::from(n_i - 1).unwrap();
     }
 
-    let total_dof: usize = _sample_sizes.iter().map(|&n| n - 1).sum();
+    let total_dof: usize = _samplesizes.iter().map(|&n| n - 1).sum();
     let inv_total = F::one() / F::from(total_dof).unwrap();
 
-    let c1 = (F::from(2 * p * p + 3 * p - 1).unwrap() / F::from(6 * (p + 1) * (k - 1)).unwrap())
-        * (sum_inv - inv_total);
+    let numerator = F::from(2 * p * p + 3 * p - 1).unwrap();
+    let denominator = F::from(6).unwrap() * F::from(p + 1).unwrap() * F::from(k - 1).unwrap();
+    let c1 = (numerator / denominator) * (sum_inv - inv_total);
 
     Ok(c1)
 }
@@ -520,7 +524,7 @@ where
 }
 
 #[allow(dead_code)]
-fn f_survival_function<F>(x: F, _df1: usize, _df2: usize) -> LinalgResult<F>
+fn f_survival_function<F>(x: F, _df1: usize, df2: usize) -> LinalgResult<F>
 where
     F: Float + Zero + One + Copy + num_traits::FromPrimitive,
 {

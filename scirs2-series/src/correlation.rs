@@ -303,7 +303,7 @@ impl CorrelationAnalyzer {
     }
 
     /// Create a new analyzer with random seed
-    pub fn with_seed(_seed: u64) -> Self {
+    pub fn with_seed(seed: u64) -> Self {
         Self {
             random_seed: Some(_seed),
         }
@@ -914,7 +914,7 @@ impl CorrelationAnalyzer {
         }
     }
 
-    fn compute_local_cost(&self, x: f64, y: f64, cost_function: DTWCostFunction) -> f64 {
+    fn compute_local_cost(&self, x: f64, y: f64, costfunction: DTWCostFunction) -> f64 {
         match cost_function {
             DTWCostFunction::Euclidean => (x - y).abs(),
             DTWCostFunction::Manhattan => (x - y).abs(),
@@ -1240,7 +1240,7 @@ impl CorrelationAnalyzer {
         Ok(result)
     }
 
-    fn coherence_confidence_threshold(&self, confidence_level: f64, n_segments: usize) -> f64 {
+    fn coherence_confidence_threshold(&self, confidence_level: f64, nsegments: usize) -> f64 {
         // Approximation for coherence confidence threshold
         let alpha = 1.0 - confidence_level;
         let dof = 2 * n_segments;

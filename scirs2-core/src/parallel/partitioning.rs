@@ -136,7 +136,7 @@ where
     }
 
     /// Create a partitioner with default configuration
-    pub fn with_default_config() -> Self {
+    pub fn with_defaultconfig() -> Self {
         Self::new(PartitionerConfig::default())
     }
 
@@ -372,13 +372,13 @@ where
     }
 
     /// Dynamic partitioning with runtime adjustment
-    fn partition_dynamic(&self, data: &[T], initial_sizes: &[usize]) -> CoreResult<Vec<Vec<T>>> {
+    fn partition_dynamic(&self, data: &[T], initialsizes: &[usize]) -> CoreResult<Vec<Vec<T>>> {
         // For now, use initial sizes as-is
         // In a full implementation, this would monitor progress and adjust
-        let mut partitions = Vec::with_capacity(initial_sizes.len());
+        let mut partitions = Vec::with_capacity(initialsizes.len());
         let mut start = 0;
 
-        for &size in initial_sizes {
+        for &size in initialsizes {
             let end = (start + size).min(data.len());
             if start < data.len() {
                 partitions.push(data[start..end].to_vec());
@@ -417,7 +417,7 @@ where
 
     /// Range-based partitioning for sorted data
     #[allow(dead_code)]
-    fn partition_range_based(&self, data: &[T], boundaries: &[f64]) -> CoreResult<Vec<Vec<T>>>
+    fn partition_rangebased(&self, data: &[T], boundaries: &[f64]) -> CoreResult<Vec<Vec<T>>>
     where
         T: PartialOrd + Into<f64> + Copy,
     {
@@ -442,20 +442,20 @@ where
 
     /// Hash-based partitioning
     #[allow(dead_code)]
-    fn partition_hash_based(&self, data: &[T], num_buckets: usize) -> CoreResult<Vec<Vec<T>>>
+    fn partition_hashbased(&self, data: &[T], numbuckets: usize) -> CoreResult<Vec<Vec<T>>>
     where
         T: std::hash::Hash,
     {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::Hasher;
 
-        let mut partitions = vec![Vec::new(); num_buckets];
+        let mut partitions = vec![Vec::new(); numbuckets];
 
         for item in data {
             let mut hasher = DefaultHasher::new();
             item.hash(&mut hasher);
             let hash = hasher.finish();
-            let bucket = (hash % num_buckets as u64) as usize;
+            let bucket = (hash % numbuckets as u64) as usize;
             partitions[bucket].push(item.clone());
         }
 
@@ -582,22 +582,22 @@ pub struct LoadBalancer {
 
 impl LoadBalancer {
     /// Create a new load balancer
-    pub fn new(num_partitions: usize, target_imbalance: f64) -> Self {
+    pub fn new(num_partitions: usize, targetimbalance: f64) -> Self {
         Self {
-            target_imbalance,
+            target_imbalance: targetimbalance,
             execution_times: vec![Vec::new(); num_partitions],
             weights: vec![1.0; num_partitions],
         }
     }
 
     /// Record execution time for a partition
-    pub fn record_execution_time(&mut self, partition_id: usize, duration: Duration) {
-        if partition_id < self.execution_times.len() {
-            self.execution_times[partition_id].push(duration);
+    pub fn recordexecution_time(&mut self, partitionid: usize, duration: Duration) {
+        if partitionid < self.execution_times.len() {
+            self.execution_times[partitionid].push(duration);
 
             // Keep only recent history (last 10 measurements)
-            if self.execution_times[partition_id].len() > 10 {
-                self.execution_times[partition_id].remove(0);
+            if self.execution_times[partitionid].len() > 10 {
+                self.execution_times[partitionid].remove(0);
             }
         }
     }
@@ -666,7 +666,7 @@ mod tests {
 
     #[test]
     fn test_uniform_distribution_detection() {
-        let partitioner = DataPartitioner::<f64>::with_default_config();
+        let partitioner = DataPartitioner::<f64>::with_defaultconfig();
         let data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
 
         let distribution = partitioner.analyze_distribution(&data);
@@ -680,7 +680,7 @@ mod tests {
 
     #[test]
     fn test_skewed_distribution_detection() {
-        let partitioner = DataPartitioner::<f64>::with_default_config();
+        let partitioner = DataPartitioner::<f64>::with_defaultconfig();
         // Create heavily skewed data
         let mut data = vec![1.0; 900];
         data.extend(vec![100.0; 100]);
@@ -732,12 +732,12 @@ mod tests {
 
         // Record some execution times
         use std::time::Duration;
-        balancer.record_execution_time(0, Duration::from_millis(100));
-        balancer.record_execution_time(1, Duration::from_millis(200));
-        balancer.record_execution_time(2, Duration::from_millis(150));
+        balancer.recordexecution_time(0, Duration::from_millis(100));
+        balancer.recordexecution_time(1, Duration::from_millis(200));
+        balancer.recordexecution_time(2, Duration::from_millis(150));
 
         let new_weights = balancer.rebalance();
-        assert_eq!(new_weights.len(), 3);
+        assert_eq!(newweights.len(), 3);
 
         // Partition 1 was slowest, should have reduced weight
         assert!(new_weights[1] < new_weights[0]);

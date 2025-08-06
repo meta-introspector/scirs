@@ -34,7 +34,7 @@ pub fn multivariate_emd(
     // Generate direction vectors on a hypersphere
     let mut _directions = Vec::with_capacity(n_directions);
     let mut rng = if let Some(seed) = config.random_seed {
-        rand::rngs::StdRng::from_seed([seed as u8; 32])
+        rand::rngs::StdRng::seed_from_u64([seed as u8; 32])
     } else {
         {
             // In rand 0.9, from_rng doesn't return Result but directly returns the PRNG
@@ -47,7 +47,7 @@ pub fn multivariate_emd(
 
         // Generate random normal vector
         for _ in 0..n_signals {
-            v.push(rng.random_range(-1.0..1.0));
+            v.push(rng.gen_range(-1.0..1.0));
         }
 
         // Normalize
@@ -58,7 +58,7 @@ pub fn multivariate_emd(
             }
         }
 
-        _directions.push(v);
+        directions.push(v);
     }
 
     // Initialize IMF arrays

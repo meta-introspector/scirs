@@ -19,7 +19,7 @@ impl MLFrameworkConverter for MXNetConverter {
             "version": "1.9.0",
             "symbol": {
                 "nodes": [],
-                "arg_nodes": model.weights.keys().enumerate().map(|(i, _name)| i).collect::<Vec<_>>(),
+                "arg_nodes": model.weights.keys().enumerate().map(|(i, name)| i).collect::<Vec<_>>(),
                 "node_row_ptr": [0, model.weights.len()],
                 "attrs": {
                     "mxnet_version": ["1.9.0", "int"]

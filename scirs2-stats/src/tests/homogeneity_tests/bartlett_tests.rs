@@ -69,7 +69,7 @@ mod tests {
 
         let samples = vec![a.view(), b.view()];
 
-        let (statistic_, _p_value) = bartlett(&samples).unwrap();
+        let (statistic_, p_value) = bartlett(&samples).unwrap();
 
         // Expected result for this specific example:
         // When one variance is zero, the statistic tends to infinity

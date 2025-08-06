@@ -187,12 +187,12 @@ where
 
 /// Get the neighbors of a point in a 2D array
 #[allow(dead_code)]
-fn get_neighbors_2d<T>(_array: &Array<T, Ix2>, row: usize, col: usize) -> Vec<PriorityPoint<T>>
+fn get_neighbors_2d<T>(array: &Array<T, Ix2>, row: usize, col: usize) -> Vec<PriorityPoint<T>>
 where
     T: Float + std::fmt::Debug + Copy + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let mut neighbors = Vec::new();
-    let shape = _array.shape();
+    let shape = array.shape();
     let rows = shape[0];
     let cols = shape[1];
 
@@ -217,7 +217,7 @@ where
             let nr = new_row as usize;
             let nc = new_col as usize;
 
-            let value = _array[[nr, nc]];
+            let value = array[[nr, nc]];
             neighbors.push(PriorityPoint {
                 coords: vec![nr, nc],
                 priority: value,
@@ -230,12 +230,12 @@ where
 
 /// Get the face-connected neighbors of a point in a 2D array (4-connectivity)
 #[allow(dead_code)]
-fn get_face_neighbors_2d<T>(_array: &Array<T, Ix2>, row: usize, col: usize) -> Vec<PriorityPoint<T>>
+fn get_face_neighbors_2d<T>(array: &Array<T, Ix2>, row: usize, col: usize) -> Vec<PriorityPoint<T>>
 where
     T: Float + std::fmt::Debug + Copy + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let mut neighbors = Vec::new();
-    let shape = _array.shape();
+    let shape = array.shape();
     let rows = shape[0];
     let cols = shape[1];
 
@@ -251,7 +251,7 @@ where
             let nr = new_row as usize;
             let nc = new_col as usize;
 
-            let value = _array[[nr, nc]];
+            let value = array[[nr, nc]];
             neighbors.push(PriorityPoint {
                 coords: vec![nr, nc],
                 priority: value,

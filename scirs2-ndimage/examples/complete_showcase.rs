@@ -82,7 +82,7 @@ pub fn complete_advanced_showcase() -> NdimageResult<()> {
 
 /// Demonstrate adaptive learning capabilities
 #[allow(dead_code)]
-fn adaptive_learning_showcase(_validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
+fn adaptive_learning_showcase(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Testing adaptive learning with different configurations...");
 
     let test_image = create_adaptive_test_image(96, 96);
@@ -99,7 +99,7 @@ fn adaptive_learning_showcase(_validator: &mut ComprehensiveValidator) -> Ndimag
         println!("  🔧 Testing {} adaptive learning", name);
 
         let start_time = Instant::now();
-        match validated_advanced_processing(test_image.view(), &config, None, _validator) {
+        match validated_advanced_processing(test_image.view(), &config, None, validator) {
             Ok((output, state, report)) => {
                 let duration = start_time.elapsed();
                 println!("    ✓ Completed in {:?}", duration);
@@ -118,7 +118,7 @@ fn adaptive_learning_showcase(_validator: &mut ComprehensiveValidator) -> Ndimag
 
 /// Demonstrate quantum coherence optimization
 #[allow(dead_code)]
-fn quantum_coherence_showcase(_validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
+fn quantum_coherence_showcase(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Testing quantum coherence optimization at different thresholds...");
 
     let test_image = create_quantum_test_image(80, 80);
@@ -134,7 +134,7 @@ fn quantum_coherence_showcase(_validator: &mut ComprehensiveValidator) -> Ndimag
         config.quantum_coherence_threshold = threshold;
 
         let start_time = Instant::now();
-        match validated_advanced_processing(test_image.view(), &config, None, _validator) {
+        match validated_advanced_processing(test_image.view(), &config, None, validator) {
             Ok((output, state, report)) => {
                 let duration = start_time.elapsed();
                 println!("    ✓ Completed in {:?}", duration);
@@ -156,7 +156,7 @@ fn quantum_coherence_showcase(_validator: &mut ComprehensiveValidator) -> Ndimag
 
 /// Demonstrate neuromorphic plasticity features
 #[allow(dead_code)]
-fn neuromorphic_plasticity_showcase(_validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
+fn neuromorphic_plasticity_showcase(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Testing neuromorphic plasticity at different levels...");
 
     let test_image = create_neuromorphic_test_image(112, 112);
@@ -172,7 +172,7 @@ fn neuromorphic_plasticity_showcase(_validator: &mut ComprehensiveValidator) -> 
         config.neuromorphic_plasticity = plasticity;
 
         let start_time = Instant::now();
-        match validated_advanced_processing(test_image.view(), &config, None, _validator) {
+        match validated_advanced_processing(test_image.view(), &config, None, validator) {
             Ok((output, state, report)) => {
                 let duration = start_time.elapsed();
                 println!("    ✓ Completed in {:?}", duration);
@@ -191,7 +191,7 @@ fn neuromorphic_plasticity_showcase(_validator: &mut ComprehensiveValidator) -> 
 
 /// Demonstrate advanced processing intensity control
 #[allow(dead_code)]
-fn processing_intensity_showcase(_validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
+fn processing_intensity_showcase(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Testing advanced processing intensity at different levels...");
 
     let test_image = create_intensity_test_image(128, 128);
@@ -207,7 +207,7 @@ fn processing_intensity_showcase(_validator: &mut ComprehensiveValidator) -> Ndi
         config.advanced_processing_intensity = intensity;
 
         let start_time = Instant::now();
-        match validated_advanced_processing(test_image.view(), &config, None, _validator) {
+        match validated_advanced_processing(test_image.view(), &config, None, validator) {
             Ok((output, state, report)) => {
                 let duration = start_time.elapsed();
                 println!("    ✓ Completed in {:?}", duration);
@@ -230,7 +230,7 @@ fn processing_intensity_showcase(_validator: &mut ComprehensiveValidator) -> Ndi
 
 /// Comprehensive integration test of all features
 #[allow(dead_code)]
-fn comprehensive_integration_test(_validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
+fn comprehensive_integration_test(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Running comprehensive integration test with all features enabled...");
 
     let test_image = create_comprehensive_test_image(160, 160);
@@ -255,7 +255,7 @@ fn comprehensive_integration_test(_validator: &mut ComprehensiveValidator) -> Nd
     );
 
     let start_time = Instant::now();
-    match validated_advanced_processing(test_image.view(), &config, None, _validator) {
+    match validated_advanced_processing(test_image.view(), &config, None, validator) {
         Ok((output, state, report)) => {
             let total_time = start_time.elapsed();
 
@@ -369,7 +369,7 @@ fn create_optimal_integration_config() -> AdvancedConfig {
 // Test image creation functions
 
 #[allow(dead_code)]
-fn create_adaptive_test_image(_height: usize, width: usize) -> Array2<f64> {
+fn create_adaptive_test_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     for y in 0.._height {
@@ -393,7 +393,7 @@ fn create_adaptive_test_image(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_quantum_test_image(_height: usize, width: usize) -> Array2<f64> {
+fn create_quantum_test_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     for y in 0.._height {
@@ -418,7 +418,7 @@ fn create_quantum_test_image(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_neuromorphic_test_image(_height: usize, width: usize) -> Array2<f64> {
+fn create_neuromorphic_test_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     for y in 0.._height {
@@ -440,7 +440,7 @@ fn create_neuromorphic_test_image(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_intensity_test_image(_height: usize, width: usize) -> Array2<f64> {
+fn create_intensity_test_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     for y in 0.._height {
@@ -468,7 +468,7 @@ fn create_intensity_test_image(_height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_comprehensive_test_image(_height: usize, width: usize) -> Array2<f64> {
+fn create_comprehensive_test_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((_height, width));
 
     for y in 0.._height {
@@ -497,15 +497,15 @@ fn create_comprehensive_test_image(_height: usize, width: usize) -> Array2<f64> 
 // Validation functions
 
 #[allow(dead_code)]
-fn validate_adaptive_output<T>(_output: &Array2<T>, config_name: &str) -> NdimageResult<()>
+fn validate_adaptive_output<T>(_output: &Array2<T>, configname: &str) -> NdimageResult<()>
 where
     T: num_traits::Float + Copy,
 {
     // Check _output properties specific to adaptive learning
-    let total_pixels = _output.len();
+    let total_pixels = output.len();
     let mut finite_count = 0;
 
-    for &pixel in _output.iter() {
+    for &pixel in output.iter() {
         if pixel.is_finite() {
             finite_count += 1;
         }
@@ -523,7 +523,7 @@ where
 }
 
 #[allow(dead_code)]
-fn validate_quantum_output<T>(_output: &Array2<T>, threshold: f64) -> NdimageResult<()>
+fn validate_quantum_output<T>(output: &Array2<T>, threshold: f64) -> NdimageResult<()>
 where
     T: num_traits::Float + Copy,
 {
@@ -544,7 +544,7 @@ where
 }
 
 #[allow(dead_code)]
-fn validate_neuromorphic_output<T>(_output: &Array2<T>, plasticity: f64) -> NdimageResult<()>
+fn validate_neuromorphic_output<T>(output: &Array2<T>, plasticity: f64) -> NdimageResult<()>
 where
     T: num_traits::Float + Copy,
 {
@@ -564,7 +564,7 @@ where
 }
 
 #[allow(dead_code)]
-fn validate_intensity_output<T>(_output: &Array2<T>, intensity: f64) -> NdimageResult<()>
+fn validate_intensity_output<T>(output: &Array2<T>, intensity: f64) -> NdimageResult<()>
 where
     T: num_traits::Float + Copy,
 {
@@ -584,7 +584,7 @@ where
 }
 
 #[allow(dead_code)]
-fn validate_comprehensive_output<T>(_output: &Array2<T>) -> NdimageResult<()>
+fn validate_comprehensive_output<T>(output: &Array2<T>) -> NdimageResult<()>
 where
     T: num_traits::Float + Copy,
 {
@@ -611,7 +611,7 @@ where
 // Utility functions for validation metrics
 
 #[allow(dead_code)]
-fn calculate_variance<T>(_array: &Array2<T>) -> f64
+fn calculate_variance<T>(array: &Array2<T>) -> f64
 where
     T: num_traits::Float + Copy,
 {
@@ -619,31 +619,31 @@ where
         .iter()
         .map(|&x| x.to_f64().unwrap_or(0.0))
         .sum::<f64>()
-        / _array.len() as f64;
+        / array.len() as f64;
     let variance = _array
         .iter()
         .map(|&x| (x.to_f64().unwrap_or(0.0) - mean).powi(2))
         .sum::<f64>()
-        / _array.len() as f64;
+        / array.len() as f64;
     variance
 }
 
 #[allow(dead_code)]
-fn calculate_edge_strength<T>(_array: &Array2<T>) -> f64
+fn calculate_edge_strength<T>(array: &Array2<T>) -> f64
 where
     T: num_traits::Float + Copy,
 {
-    let (height, width) = _array.dim();
+    let (height, width) = array.dim();
     let mut edge_sum = 0.0;
     let mut count = 0;
 
     for y in 1..height - 1 {
         for x in 1..width - 1 {
-            let center = _array[(y, x)].to_f64().unwrap_or(0.0);
-            let left = _array[(y, x - 1)].to_f64().unwrap_or(0.0);
-            let right = _array[(y, x + 1)].to_f64().unwrap_or(0.0);
-            let up = _array[(y - 1, x)].to_f64().unwrap_or(0.0);
-            let down = _array[(y + 1, x)].to_f64().unwrap_or(0.0);
+            let center = array[(y, x)].to_f64().unwrap_or(0.0);
+            let left = array[(y, x - 1)].to_f64().unwrap_or(0.0);
+            let right = array[(y, x + 1)].to_f64().unwrap_or(0.0);
+            let up = array[(y - 1, x)].to_f64().unwrap_or(0.0);
+            let down = array[(y + 1, x)].to_f64().unwrap_or(0.0);
 
             let grad_x = (right - left) / 2.0;
             let grad_y = (down - up) / 2.0;
@@ -662,11 +662,11 @@ where
 }
 
 #[allow(dead_code)]
-fn calculate_detail_preservation<T>(_array: &Array2<T>) -> f64
+fn calculate_detail_preservation<T>(array: &Array2<T>) -> f64
 where
     T: num_traits::Float + Copy,
 {
-    let (height, width) = _array.dim();
+    let (height, width) = array.dim();
     let mut detail_sum = 0.0;
     let mut count = 0;
 
@@ -702,26 +702,26 @@ where
 }
 
 #[allow(dead_code)]
-fn print_comprehensive_analysis(_summary: &scirs2, ndimage: PerformanceSummary) {
+fn print_comprehensive_analysis(summary: &scirs2, ndimage: PerformanceSummary) {
     println!("🔍 Comprehensive Performance Analysis");
     println!("=====================================");
     println!("📈 Overall Statistics:");
-    println!("   - Total operations: {}", _summary.total_operations);
+    println!("   - Total operations: {}", summary.total_operations);
     println!(
         "   - Success rate: {:.1}%",
-        ((_summary.total_operations - _summary.error_count) as f64
-            / _summary.total_operations as f64)
+        ((_summary.total_operations - summary.error_count) as f64
+            / summary.total_operations as f64)
             * 100.0
     );
-    println!("   - Average quality: {:.3}", _summary.average_quality());
+    println!("   - Average quality: {:.3}", summary.average_quality());
     println!(
         "   - Total processing time: {:?}",
-        _summary.total_processing_time()
+        summary.total_processing_time()
     );
 
     if !_summary.benchmarks.is_empty() {
         println!("\n🏆 Feature Performance Rankings:");
-        let mut sorted_benchmarks: Vec<_> = _summary.benchmarks.iter().collect();
+        let mut sorted_benchmarks: Vec<_> = summary.benchmarks.iter().collect();
         sorted_benchmarks
             .sort_by(|a, b| b.1.quality_score.partial_cmp(&a.1.quality_score).unwrap());
 

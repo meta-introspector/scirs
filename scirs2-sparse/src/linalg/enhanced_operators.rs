@@ -51,18 +51,18 @@ pub struct EnhancedDiagonalOperator<F> {
 impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> EnhancedDiagonalOperator<F> {
     /// Create a new enhanced diagonal operator
     #[allow(dead_code)]
-    pub fn new(_diagonal: Vec<F>) -> Self {
+    pub fn new(diagonal: Vec<F>) -> Self {
         Self {
-            diagonal: _diagonal,
+            diagonal: diagonal,
             options: EnhancedOperatorOptions::default(),
         }
     }
 
     /// Create with custom options
     #[allow(dead_code)]
-    pub fn with_options(_diagonal: Vec<F>, options: EnhancedOperatorOptions) -> Self {
+    pub fn with_options(diagonal: Vec<F>, options: EnhancedOperatorOptions) -> Self {
         Self {
-            diagonal: _diagonal,
+            diagonal: diagonal,
             options,
         }
     }
@@ -322,9 +322,9 @@ pub struct EnhancedScaledOperator<F> {
 impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> EnhancedScaledOperator<F> {
     /// Create a new enhanced scaled operator
     #[allow(dead_code)]
-    pub fn new(_alpha: F, operator: Box<dyn LinearOperator<F>>) -> Self {
+    pub fn new(alpha: F, operator: Box<dyn LinearOperator<F>>) -> Self {
         Self {
-            alpha: _alpha,
+            alpha: alpha,
             operator,
             options: EnhancedOperatorOptions::default(),
         }
@@ -418,13 +418,13 @@ pub enum ConvolutionMode {
 impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> ConvolutionOperator<F> {
     /// Create a new convolution operator
     #[allow(dead_code)]
-    pub fn new(_kernel: Vec<F>, input_size: usize, mode: ConvolutionMode) -> Self {
+    pub fn new(_kernel: Vec<F>, inputsize: usize, mode: ConvolutionMode) -> Self {
         let output_size = match mode {
-            ConvolutionMode::Full => input_size + _kernel.len() - 1,
+            ConvolutionMode::Full => input_size + kernel.len() - 1,
             ConvolutionMode::Same => input_size,
             ConvolutionMode::Valid => {
-                if input_size >= _kernel.len() {
-                    input_size - _kernel.len() + 1
+                if input_size >= kernel.len() {
+                    input_size - kernel.len() + 1
                 } else {
                     0
                 }
@@ -432,7 +432,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Convoluti
         };
 
         Self {
-            kernel: _kernel,
+            kernel: kernel,
             input_size,
             output_size,
             mode,
@@ -758,9 +758,9 @@ pub enum BoundaryCondition {
 impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> FiniteDifferenceOperator<F> {
     /// Create a new finite difference operator
     #[allow(dead_code)]
-    pub fn new(_size: usize, order: usize, spacing: F, boundary: BoundaryCondition) -> Self {
+    pub fn new(size: usize, order: usize, spacing: F, boundary: BoundaryCondition) -> Self {
         Self {
-            size: _size,
+            size: size,
             order,
             spacing,
             boundary,
@@ -1057,7 +1057,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
     ElementwiseFunctionOperator<F>
 {
     /// Create a new element-wise function operator
-    pub fn new<Func>(_function: Func, size: usize) -> Self
+    pub fn new<Func>(function: Func, size: usize) -> Self
     where
         Func: Fn(F) -> F + Send + Sync + 'static,
     {
@@ -1135,9 +1135,9 @@ pub struct KroneckerProductOperator<F> {
 impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> KroneckerProductOperator<F> {
     /// Create a new Kronecker product operator (left ⊗ right)
     #[allow(dead_code)]
-    pub fn new(_left: Box<dyn LinearOperator<F>>, right: Box<dyn LinearOperator<F>>) -> Self {
+    pub fn new(left: Box<dyn LinearOperator<F>>, right: Box<dyn LinearOperator<F>>) -> Self {
         Self {
-            left: _left,
+            left: left,
             right,
             options: EnhancedOperatorOptions::default(),
         }

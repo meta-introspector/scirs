@@ -94,9 +94,9 @@ pub use sgd::SGD;
 //     phantom: std::marker::PhantomData<(F, D)>,
 // }
 // impl<F, D, O> OptimOptimizerWrapper<F, D, O>
-//     pub fn new(_optimizer: O) -> Self {
+//     pub fn new(optimizer: O) -> Self {
 //         Self {
-//             _optimizer,
+//             optimizer,
 //             phantom: std::marker::PhantomData,
 //         }
 //     }

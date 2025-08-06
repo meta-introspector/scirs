@@ -50,7 +50,7 @@ impl GpuPCA {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn new(_n_components: usize) -> Result<Self> {
+    pub fn new(_ncomponents: usize) -> Result<Self> {
         check_positive(_n_components, "_n_components")?;
 
         let gpu_context = GpuContext::new(GpuBackend::preferred()).map_err(|e| {
@@ -59,7 +59,8 @@ impl GpuPCA {
 
         Ok(GpuPCA {
             n_components,
-            center: true, components: None,
+            center: true,
+            components: None,
             explained_variance: None,
             mean: None,
             gpu_context: Some(gpu_context),
@@ -196,7 +197,7 @@ impl GpuMatrixOps {
     }
 
     /// GPU-accelerated matrix multiplication (placeholder)
-    pub fn matmul(&self_a: &ArrayView2<f64>, _b: &ArrayView2<f64>) -> Result<Array2<f64>> {
+    pub fn matmul(self_a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> Result<Array2<f64>> {
         Err(TransformError::NotImplemented(
             "GPU matrix multiplication is not yet implemented. Use CPU operations instead."
                 .to_string(),
@@ -204,14 +205,14 @@ impl GpuMatrixOps {
     }
 
     /// GPU-accelerated SVD decomposition (placeholder)
-    pub fn svd(&self_a: &ArrayView2<f64>) -> Result<(Array2<f64>, Array1<f64>, Array2<f64>)> {
+    pub fn svd(selfa: &ArrayView2<f64>) -> Result<(Array2<f64>, Array1<f64>, Array2<f64>)> {
         Err(TransformError::NotImplemented(
             "GPU SVD is not yet implemented. Use CPU operations instead.".to_string(),
         ))
     }
 
     /// GPU-accelerated eigendecomposition (placeholder)
-    pub fn eigh(&self_a: &ArrayView2<f64>) -> Result<(Array1<f64>, Array2<f64>)> {
+    pub fn eigh(selfa: &ArrayView2<f64>) -> Result<(Array1<f64>, Array2<f64>)> {
         Err(TransformError::NotImplemented(
             "GPU eigendecomposition is not yet implemented. Use CPU operations instead."
                 .to_string(),
@@ -238,7 +239,7 @@ pub struct GpuTSNE {
 #[cfg(feature = "gpu")]
 impl GpuTSNE {
     /// Create new GPU t-SNE instance
-    pub fn new(_n_components: usize) -> Result<Self> {
+    pub fn new(_ncomponents: usize) -> Result<Self> {
         check_positive(_n_components, "_n_components")?;
 
         let gpu_context = GpuContext::new(GpuBackend::preferred()).map_err(|e| {
@@ -261,19 +262,19 @@ impl GpuTSNE {
     }
 
     /// Set learning rate
-    pub fn with_learning_rate(mut self, learning_rate: f64) -> Self {
+    pub fn with_learning_rate(mut self, learningrate: f64) -> Self {
         self.learning_rate = learning_rate;
         self
     }
 
     /// Set maximum iterations
-    pub fn with_max_iter(mut self, max_iter: usize) -> Self {
+    pub fn with_max_iter(mut self, maxiter: usize) -> Self {
         self.max_iter = max_iter;
         self
     }
 
     /// Fit and transform data using GPU-accelerated t-SNE (placeholder)
-    pub fn fit_transform(&self_x: &ArrayView2<f64>) -> Result<Array2<f64>> {
+    pub fn fit_transform(selfx: &ArrayView2<f64>) -> Result<Array2<f64>> {
         Err(TransformError::NotImplemented(
             "GPU t-SNE is not yet implemented. Use CPU t-SNE instead.".to_string(),
         ))
@@ -292,7 +293,7 @@ pub struct GpuTSNE;
 
 #[cfg(not(feature = "gpu"))]
 impl GpuPCA {
-    pub fn new(_n_components: usize) -> Result<Self> {
+    pub fn new(_ncomponents: usize) -> Result<Self> {
         Err(TransformError::FeatureNotEnabled(
             "GPU acceleration requires the 'gpu' feature to be enabled".to_string(),
         ))
@@ -310,7 +311,7 @@ impl GpuMatrixOps {
 
 #[cfg(not(feature = "gpu"))]
 impl GpuTSNE {
-    pub fn new(_n_components: usize) -> Result<Self> {
+    pub fn new(_ncomponents: usize) -> Result<Self> {
         Err(TransformError::FeatureNotEnabled(
             "GPU acceleration requires the 'gpu' feature to be enabled".to_string(),
         ))

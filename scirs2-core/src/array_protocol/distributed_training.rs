@@ -58,7 +58,7 @@ pub struct DistributedTrainingConfig {
     pub strategy: DistributedStrategy,
 
     /// Number of workers.
-    pub num_workers: usize,
+    pub numworkers: usize,
 
     /// Rank of the current worker.
     pub rank: usize,
@@ -67,7 +67,7 @@ pub struct DistributedTrainingConfig {
     pub is_master: bool,
 
     /// Synchronization interval (in batches).
-    pub sync_interval: usize,
+    pub syncinterval: usize,
 
     /// Communication backend.
     pub backend: String,
@@ -83,10 +83,10 @@ impl Default for DistributedTrainingConfig {
     fn default() -> Self {
         Self {
             strategy: DistributedStrategy::DataParallel,
-            num_workers: 1,
+            numworkers: 1,
             rank: 0,
             is_master: true,
-            sync_interval: 1,
+            syncinterval: 1,
             backend: "threaded".to_string(),
             mixed_precision: false,
             gradient_accumulation_steps: 1,
@@ -272,7 +272,7 @@ impl Clone for Box<dyn DistributedCommunication> {
 /// A mock implementation of distributed communication for testing.
 pub struct MockDistributedCommunication {
     /// Number of workers.
-    num_workers: usize,
+    numworkers: usize,
 
     /// Rank of the current worker.
     rank: usize,
@@ -280,18 +280,18 @@ pub struct MockDistributedCommunication {
 
 impl MockDistributedCommunication {
     /// Create a new mock distributed communication channel.
-    pub fn new(num_workers: usize, rank: usize) -> Self {
-        Self { num_workers, rank }
+    pub fn new(numworkers: usize, rank: usize) -> Self {
+        Self { numworkers, rank }
     }
 }
 
 impl DistributedCommunication for MockDistributedCommunication {
-    fn send(&self, _tensor: Box<dyn ArrayProtocol>, _destination: usize) -> CoreResult<()> {
+    fn send(&self, _tensor: Box<dyn ArrayProtocol>, destination: usize) -> CoreResult<()> {
         // In a real implementation, this would send the _tensor to the _destination worker
         Ok(())
     }
 
-    fn recv(&self, _source: usize) -> CoreResult<Box<dyn ArrayProtocol>> {
+    fn recv(&self, source: usize) -> CoreResult<Box<dyn ArrayProtocol>> {
         // In a real implementation, this would receive a tensor from the _source worker
         Err(CoreError::NotImplementedError(ErrorContext::new(
             "recv not implemented for MockDistributedCommunication".to_string(),
@@ -362,7 +362,7 @@ impl DistributedCommunication for MockDistributedCommunication {
 
     fn box_clone(&self) -> Box<dyn DistributedCommunication> {
         Box::new(MockDistributedCommunication {
-            num_workers: self.num_workers,
+            numworkers: self.numworkers,
             rank: self.rank,
         })
     }
@@ -375,7 +375,7 @@ pub struct DistributedDataset {
     dataset: Box<dyn Dataset>,
 
     /// Number of workers (kept private to avoid warning).
-    num_workers: usize,
+    numworkers: usize,
 
     /// Rank of the current worker (kept private to avoid warning).
     rank: usize,
@@ -386,10 +386,10 @@ pub struct DistributedDataset {
 
 impl DistributedDataset {
     /// Create a new distributed dataset.
-    pub fn new(dataset: Box<dyn Dataset>, num_workers: usize, rank: usize) -> Self {
+    pub fn new(dataset: Box<dyn Dataset>, numworkers: usize, rank: usize) -> Self {
         let num_samples = dataset.len();
-        let samples_per_worker = num_samples / num_workers;
-        let remainder = num_samples % num_workers;
+        let samples_per_worker = num_samples / numworkers;
+        let remainder = num_samples % numworkers;
 
         let start = if rank < remainder {
             rank * (samples_per_worker + 1)
@@ -407,7 +407,7 @@ impl DistributedDataset {
 
         Self {
             dataset,
-            num_workers,
+            numworkers,
             rank,
             indices,
         }
@@ -525,7 +525,7 @@ impl DistributedTrainer {
     ) -> CoreResult<()> {
         // Create a callback for parameter synchronization
         let _sync_callback = ParameterSyncCallback::new(
-            self.config.sync_interval,
+            self.config.syncinterval,
             self.channel.0.clone().box_clone(),
         );
 
@@ -584,7 +584,7 @@ impl DistributedTrainer {
 /// Callback for synchronizing parameters between workers.
 pub struct ParameterSyncCallback {
     /// Synchronization interval (in batches).
-    sync_interval: usize,
+    syncinterval: usize,
 
     /// Batch counter.
     batch_counter: usize,
@@ -595,9 +595,9 @@ pub struct ParameterSyncCallback {
 
 impl ParameterSyncCallback {
     /// Create a new parameter synchronization callback.
-    pub fn new(sync_interval: usize, channel: Box<dyn DistributedCommunication>) -> Self {
+    pub fn new(syncinterval: usize, channel: Box<dyn DistributedCommunication>) -> Self {
         Self {
-            sync_interval,
+            syncinterval,
             batch_counter: 0,
             channel: CommunicationChannel::new(channel),
         }
@@ -605,12 +605,12 @@ impl ParameterSyncCallback {
 }
 
 impl TrainingCallback for ParameterSyncCallback {
-    fn on_epoch_start(&mut self, _epoch: usize, _num_epochs: usize) {
+    fn on_epoch_start(&mut self, _epoch: usize, _numepochs: usize) {
         // Reset batch counter at the start of each _epoch
         self.batch_counter = 0;
     }
 
-    fn on_epoch_end(&mut self, _epoch: usize, _num_epochs: usize, _metrics: &Metrics) {
+    fn on_epoch_end(&mut self, _epoch: usize, _num_epochs: usize, metrics: &Metrics) {
         // Synchronize parameters at the end of each _epoch
         // This is a simplified implementation for demonstration purposes.
         // In a real implementation, this would call channel.all_reduce() for each parameter.
@@ -621,16 +621,16 @@ impl TrainingCallback for ParameterSyncCallback {
         }
     }
 
-    fn on_batch_start(&mut self, _batch: usize, _num_batches: usize) {
+    fn on_batch_start(&mut self, _batch: usize, _numbatches: usize) {
         // No-op for this callback
     }
 
-    fn on_batch_end(&mut self, _batch: usize, _num_batches: usize, _loss: f64) {
+    fn on_batch_end(&mut self, _batch: usize, _numbatches: usize, loss: f64) {
         // Increment _batch counter
         self.batch_counter += 1;
 
         // Synchronize parameters if needed
-        if self.batch_counter % self.sync_interval == 0 {
+        if self.batch_counter % self.syncinterval == 0 {
             // This is a simplified implementation for demonstration purposes.
             // In a real implementation, this would call channel.all_reduce() for each parameter.
 
@@ -641,7 +641,7 @@ impl TrainingCallback for ParameterSyncCallback {
         }
     }
 
-    fn on_train_start(&mut self, _num_epochs: usize) {
+    fn on_train_start(&mut self, _numepochs: usize) {
         // Synchronize initial parameters
         match self.channel.inner().barrier() {
             Ok(()) => {}
@@ -649,7 +649,7 @@ impl TrainingCallback for ParameterSyncCallback {
         }
     }
 
-    fn on_train_end(&mut self, _metrics: &Metrics) {
+    fn on_train_end(&mut self, metrics: &Metrics) {
         // Final synchronization
         match self.channel.inner().barrier() {
             Ok(()) => {}
@@ -669,7 +669,7 @@ impl DistributedTrainingFactory {
     ) -> Box<dyn Dataset> {
         Box::new(DistributedDataset::new(
             dataset,
-            config.num_workers,
+            config.numworkers,
             config.rank,
         ))
     }
@@ -682,12 +682,12 @@ impl DistributedTrainingFactory {
         // Create communication channel
         let channel: Box<dyn DistributedCommunication> = match config.backend.as_str() {
             "threaded" => Box::new(MockDistributedCommunication::new(
-                config.num_workers,
+                config.numworkers,
                 config.rank,
             )),
             // Other backends would be added here
             _ => Box::new(MockDistributedCommunication::new(
-                config.num_workers,
+                config.numworkers,
                 config.rank,
             )),
         };

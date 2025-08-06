@@ -158,7 +158,7 @@ fn default_directed() -> bool {
 /// - Graph metadata and directedness specification
 /// - Flexible attribute storage for future extensions
 #[allow(dead_code)]
-pub fn read_json_format<N, E, P>(_path: P, weighted: bool) -> Result<Graph<N, E>>
+pub fn read_json_format<N, E, P>(path: P, weighted: bool) -> Result<Graph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
@@ -233,7 +233,7 @@ where
 /// * `Ok(DiGraph)` - The directed graph read from the file
 /// * `Err(GraphError)` - If there was an error reading or parsing the file
 #[allow(dead_code)]
-pub fn read_json_format_digraph<N, E, P>(_path: P, weighted: bool) -> Result<DiGraph<N, E>>
+pub fn read_json_format_digraph<N, E, P>(path: P, weighted: bool) -> Result<DiGraph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,

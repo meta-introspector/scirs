@@ -216,9 +216,9 @@ pub struct VariableNamespaceMut<'env, F: Float> {
 }
 
 impl FullName {
-    fn new(_namespace_id: &'static str, variable_name: String) -> Self {
+    fn new(_namespace_id: &'static str, variablename: String) -> Self {
         FullName {
-            namespace_id: _namespace_id.to_string(),
+            namespace_id: namespace_id.to_string(),
             variable_name,
         }
     }
@@ -635,7 +635,7 @@ impl<'env, F: Float> VariableEnvironment<F> {
     /// See [variable](crate::variable).
     /// Same as [`Context::namespace`](Context::namespace()).
     #[inline]
-    pub fn namespace(&'env self, namespace_id: &'static str) -> VariableNamespace<'env, F> {
+    pub fn namespace(&'env self, namespaceid: &'static str) -> VariableNamespace<'env, F> {
         VariableNamespace {
             namespace_id,
             env: self,

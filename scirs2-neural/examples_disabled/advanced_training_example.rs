@@ -27,7 +27,7 @@ fn create_regression_model<
 ) -> Result<Sequential<F>> {
     let mut model = Sequential::new();
     // Create RNG for initializing layers
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // First dense layer with ReLU activation
     let dense1 = Dense::new(input_dim, hidden_dim, Some("relu"), &mut rng)?;
     model.add(dense1);
@@ -86,8 +86,8 @@ struct CosineAnnealingScheduler<F: Float + Debug + ScalarOperand> {
     initial_lr: F,
     min_lr: F,
 impl<F: Float + Debug + ScalarOperand> CosineAnnealingScheduler<F> {
-    fn new(_initial_lr: F, min_lr: F) -> Self {
-        Self { _initial_lr, min_lr }
+    fn new(_initial_lr: F, minlr: F) -> Self {
+        Self { initial_lr, min_lr }
 impl<F: Float + Debug + ScalarOperand> LearningRateScheduler<F> for CosineAnnealingScheduler<F> {
     fn get_learning_rate(&mut self, progress: f64) -> Result<F> {
         let cosine = (1.0 + (std::f64::consts::PI * progress).cos()) / 2.0;

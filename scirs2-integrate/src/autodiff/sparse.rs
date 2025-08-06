@@ -15,7 +15,7 @@ pub struct SparsePattern {
     /// Non-zero entries as (row, col) pairs
     pub entries: Vec<(usize, usize)>,
     /// Number of rows
-    pub n_rows: usize,
+    pub nrows: usize,
     /// Number of columns
     pub n_cols: usize,
     /// Row-wise non-zero indices
@@ -26,22 +26,22 @@ pub struct SparsePattern {
 
 impl SparsePattern {
     /// Create a new sparse pattern
-    pub fn new(_n_rows: usize, n_cols: usize) -> Self {
+    pub fn new(_nrows: usize, ncols: usize) -> Self {
         SparsePattern {
             entries: Vec::new(),
-            n_rows: _n_rows,
-            n_cols,
-            row_indices: vec![Vec::new(); _n_rows],
-            col_indices: vec![Vec::new(); n_cols],
+            nrows: _nrows,
+            n_cols: ncols,
+            row_indices: vec![Vec::new(); _nrows],
+            col_indices: vec![Vec::new(); ncols],
         }
     }
 
     /// Add a non-zero entry
-    pub fn add_entry(&mut self, _row: usize, col: usize) {
-        if _row < self.n_rows && col < self.n_cols {
-            self.entries.push((_row, col));
-            self.row_indices[_row].push(col);
-            self.col_indices[col].push(_row);
+    pub fn add_entry(&mut self, row: usize, col: usize) {
+        if row < self.nrows && col < self.n_cols {
+            self.entries.push((row, col));
+            self.row_indices[row].push(col);
+            self.col_indices[col].push(row);
         }
     }
 
@@ -52,7 +52,7 @@ impl SparsePattern {
 
     /// Get the sparsity ratio (fraction of zeros)
     pub fn sparsity(&self) -> f64 {
-        let total = (self.n_rows * self.n_cols) as f64;
+        let total = (self.nrows * self.n_cols) as f64;
         if total > 0.0 {
             1.0 - (self.nnz() as f64 / total)
         } else {
@@ -61,8 +61,8 @@ impl SparsePattern {
     }
 
     /// Check if pattern is sparse enough to benefit from sparse methods
-    pub fn is_sparse(&self, _threshold: f64) -> bool {
-        self.sparsity() > _threshold
+    pub fn is_sparse(&self, threshold: f64) -> bool {
+        self.sparsity() > threshold
     }
 
     /// Compute coloring for efficient Jacobian computation
@@ -149,43 +149,43 @@ pub struct SparseJacobian<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> SparseJacobian<F> {
     /// Create a new sparse Jacobian
-    pub fn new(_pattern: SparsePattern) -> Self {
-        let nnz = _pattern.nnz();
+    pub fn new(pattern: SparsePattern) -> Self {
+        let nnz = pattern.nnz();
         let mut index_map = HashMap::new();
 
-        for (i, &(row, col)) in _pattern.entries.iter().enumerate() {
+        for (i, &(row, col)) in pattern.entries.iter().enumerate() {
             index_map.insert((row, col), i);
         }
 
         SparseJacobian {
-            pattern: _pattern,
+            pattern: pattern,
             values: vec![F::zero(); nnz],
             index_map,
         }
     }
 
     /// Set a value in the sparse Jacobian
-    pub fn set(&mut self, _row: usize, col: usize, value: F) -> IntegrateResult<()> {
-        if let Some(&idx) = self.index_map.get(&(_row, col)) {
+    pub fn set(&mut self, row: usize, col: usize, value: F) -> IntegrateResult<()> {
+        if let Some(&idx) = self.index_map.get(&(row, col)) {
             self.values[idx] = value;
             Ok(())
         } else {
             Err(IntegrateError::IndexError(format!(
-                "Entry ({_row}, {col}) not in sparsity pattern"
+                "Entry ({row}, {col}) not in sparsity pattern"
             )))
         }
     }
 
     /// Get a value from the sparse Jacobian
-    pub fn get(&self, _row: usize, col: usize) -> Option<F> {
+    pub fn get(&self, row: usize, col: usize) -> Option<F> {
         self.index_map
-            .get(&(_row, col))
+            .get(&(row, col))
             .map(|&idx| self.values[idx])
     }
 
     /// Convert to dense matrix
     pub fn to_dense(&self) -> Array2<F> {
-        let mut dense = Array2::zeros((self.pattern.n_rows, self.pattern.n_cols));
+        let mut dense = Array2::zeros((self.pattern.nrows, self.pattern.n_cols));
         for (&(row, col), &idx) in &self.index_map {
             dense[[row, col]] = self.values[idx];
         }
@@ -202,7 +202,7 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
             )));
         }
 
-        let mut y = Array1::zeros(self.pattern.n_rows);
+        let mut y = Array1::zeros(self.pattern.nrows);
 
         for (&(row, col), &idx) in &self.index_map {
             y[row] += self.values[idx] * x[col];
@@ -213,10 +213,10 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
 
     /// Transpose multiply by a vector: y = J^T * x
     pub fn matvec_transpose(&self, x: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
-        if x.len() != self.pattern.n_rows {
+        if x.len() != self.pattern.nrows {
             return Err(IntegrateError::DimensionMismatch(format!(
                 "Expected {} rows, got {}",
-                self.pattern.n_rows,
+                self.pattern.nrows,
                 x.len()
             )));
         }
@@ -234,10 +234,10 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
 /// Compressed Sparse Row (CSR) format for efficient operations
 pub struct CSRJacobian<F: IntegrateFloat> {
     /// Number of rows
-    pub n_rows: usize,
+    pub nrows: usize,
     /// Number of columns
     pub n_cols: usize,
-    /// Row pointers (size n_rows + 1)
+    /// Row pointers (size nrows + 1)
     pub row_ptr: Vec<usize>,
     /// Column indices (size nnz)
     pub col_idx: Vec<usize>,
@@ -248,7 +248,7 @@ pub struct CSRJacobian<F: IntegrateFloat> {
 /// Compressed Sparse Column (CSC) format for efficient column operations
 pub struct CSCJacobian<F: IntegrateFloat> {
     /// Number of rows
-    pub n_rows: usize,
+    pub nrows: usize,
     /// Number of columns
     pub n_cols: usize,
     /// Column pointers (size n_cols + 1)
@@ -261,29 +261,29 @@ pub struct CSCJacobian<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> SparseJacobian<F> {
     /// Create a new sparse Jacobian from pattern
-    pub fn from_pattern(_pattern: SparsePattern) -> Self {
+    pub fn from_pattern(pattern: SparsePattern) -> Self {
         let mut index_map = HashMap::new();
-        for (idx, &(row, col)) in _pattern.entries.iter().enumerate() {
+        for (idx, &(row, col)) in pattern.entries.iter().enumerate() {
             index_map.insert((row, col), idx);
         }
 
         SparseJacobian {
-            values: vec![F::zero(); _pattern.entries.len()],
-            pattern: _pattern,
+            values: vec![F::zero(); pattern.entries.len()],
+            pattern: pattern,
             index_map,
         }
     }
 
     /// Set a value without error checking
-    pub fn set_unchecked(&mut self, _row: usize, col: usize, value: F) {
-        if let Some(&idx) = self.index_map.get(&(_row, col)) {
+    pub fn set_unchecked(&mut self, row: usize, col: usize, value: F) {
+        if let Some(&idx) = self.index_map.get(&(row, col)) {
             self.values[idx] = value;
         }
     }
 
     /// Get a value with default zero
-    pub fn get_or_zero(&self, _row: usize, col: usize) -> F {
-        if let Some(&idx) = self.index_map.get(&(_row, col)) {
+    pub fn get_or_zero(&self, row: usize, col: usize) -> F {
+        if let Some(&idx) = self.index_map.get(&(row, col)) {
             self.values[idx]
         } else {
             F::zero()
@@ -292,7 +292,7 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
 
     /// Convert to dense matrix (alternative implementation)
     pub fn to_dense_alt(&self) -> Array2<F> {
-        let mut dense = Array2::zeros((self.pattern.n_rows, self.pattern.n_cols));
+        let mut dense = Array2::zeros((self.pattern.nrows, self.pattern.n_cols));
         for (idx, &(row, col)) in self.pattern.entries.iter().enumerate() {
             dense[[row, col]] = self.values[idx];
         }
@@ -309,7 +309,7 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
             )));
         }
 
-        let mut result = Array1::zeros(self.pattern.n_rows);
+        let mut result = Array1::zeros(self.pattern.nrows);
         for (idx, &(row, col)) in self.pattern.entries.iter().enumerate() {
             result[row] += self.values[idx] * x[col];
         }
@@ -331,23 +331,23 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
         let mut col_idx = Vec::new();
         let mut values = Vec::new();
 
-        let mut current_row = 0;
+        let mut currentrow = 0;
         for (row, col, val) in entries {
-            while current_row < row {
+            while currentrow < row {
                 row_ptr.push(col_idx.len());
-                current_row += 1;
+                currentrow += 1;
             }
             col_idx.push(col);
             values.push(val);
         }
 
         // Fill remaining row pointers
-        while row_ptr.len() <= self.pattern.n_rows {
+        while row_ptr.len() <= self.pattern.nrows {
             row_ptr.push(col_idx.len());
         }
 
         CSRJacobian {
-            n_rows: self.pattern.n_rows,
+            nrows: self.pattern.nrows,
             n_cols: self.pattern.n_cols,
             row_ptr,
             col_idx,
@@ -411,11 +411,11 @@ impl<F: IntegrateFloat + Send + Sync> CSRJacobian<F> {
             )));
         }
 
-        let mut result = Array1::zeros(self.n_rows);
+        let mut result = Array1::zeros(self.nrows);
 
         // Parallel row-wise computation
-        let chunk_size = (self.n_rows / scirs2_core::parallel_ops::num_threads()).max(1);
-        let chunks: Vec<_> = (0..self.n_rows)
+        let chunk_size = (self.nrows / scirs2_core::parallel_ops::num_threads()).max(1);
+        let chunks: Vec<_> = (0..self.nrows)
             .collect::<Vec<_>>()
             .par_chunks(chunk_size)
             .map(|rows| {
@@ -432,9 +432,9 @@ impl<F: IntegrateFloat + Send + Sync> CSRJacobian<F> {
             .collect();
 
         // Combine results
-        for (start_row, chunk) in chunks {
+        for (startrow, chunk) in chunks {
             for (i, val) in chunk.iter().enumerate() {
-                result[start_row + i] = *val;
+                result[startrow + i] = *val;
             }
         }
 
@@ -445,7 +445,7 @@ impl<F: IntegrateFloat + Send + Sync> CSRJacobian<F> {
     pub fn transpose(&self) -> CSCJacobian<F> {
         let mut entries: Vec<(usize, usize, F)> = Vec::new();
 
-        for row in 0..self.n_rows {
+        for row in 0..self.nrows {
             let start = self.row_ptr[row];
             let end = self.row_ptr[row + 1];
             for idx in start..end {
@@ -476,8 +476,8 @@ impl<F: IntegrateFloat + Send + Sync> CSRJacobian<F> {
         }
 
         CSCJacobian {
-            n_rows: self.n_cols,
-            n_cols: self.n_rows,
+            nrows: self.n_cols,
+            n_cols: self.nrows,
             col_ptr,
             row_idx,
             values,
@@ -565,9 +565,9 @@ pub struct SparseJacobianUpdater<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> SparseJacobianUpdater<F> {
     /// Create a new updater
-    pub fn new(_pattern: SparsePattern, threshold: F) -> Self {
+    pub fn new(pattern: SparsePattern, threshold: F) -> Self {
         SparseJacobianUpdater {
-            pattern: _pattern,
+            pattern: pattern,
             threshold,
         }
     }
@@ -636,23 +636,23 @@ where
 pub struct BlockPattern {
     /// Block sizes (rows, cols)
     pub block_sizes: Vec<(usize, usize)>,
-    /// Non-zero blocks as (block_row, block_col) pairs
+    /// Non-zero blocks as (blockrow, block_col) pairs
     pub blocks: Vec<(usize, usize)>,
     /// Total rows and columns
-    pub n_rows: usize,
+    pub nrows: usize,
     pub n_cols: usize,
 }
 
 impl BlockPattern {
     /// Convert block pattern to regular sparsity pattern
     pub fn to_sparse_pattern(&self) -> SparsePattern {
-        let mut pattern = SparsePattern::new(self.n_rows, self.n_cols);
+        let mut pattern = SparsePattern::new(self.nrows, self.n_cols);
 
         let mut row_offset = 0;
         let mut col_offset = 0;
 
-        for &(block_row, block_col) in &self.blocks {
-            let (block_height, block_width) = self.block_sizes[block_row];
+        for &(blockrow, block_col) in &self.blocks {
+            let (block_height, block_width) = self.block_sizes[blockrow];
 
             // Add all entries in this block
             for i in 0..block_height {

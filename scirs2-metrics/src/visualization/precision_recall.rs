@@ -70,7 +70,7 @@ where
         average_precision: Option<f64>,
     ) -> Self {
         PrecisionRecallVisualizer {
-            _precision: Some(_precision),
+            precision: Some(_precision),
             recall: Some(recall),
             thresholds,
             average_precision,
@@ -105,8 +105,8 @@ where
             thresholds: None,
             average_precision: None,
             title: "Precision-Recall Curve".to_string(),
-            show_ap: _true,
-            show_baseline: _true,
+            show_ap: true,
+            show_baseline: true,
             y_true: Some(y_true),
             y_score: Some(y_score),
             pos_label,
@@ -136,7 +136,7 @@ where
     /// # Returns
     ///
     /// * Self for method chaining
-    pub fn with_show_ap(mut self, show_ap: bool) -> Self {
+    pub fn with_show_ap(mut self, showap: bool) -> Self {
         self.show_ap = show_ap;
         self
     }
@@ -150,7 +150,7 @@ where
     /// # Returns
     ///
     /// * Self for method chaining
-    pub fn with_show_baseline(mut self, show_baseline: bool) -> Self {
+    pub fn with_show_baseline(mut self, showbaseline: bool) -> Self {
         self.show_baseline = show_baseline;
         self
     }
@@ -164,7 +164,7 @@ where
     /// # Returns
     ///
     /// * Self for method chaining
-    pub fn with_average_precision(mut self, average_precision: f64) -> Self {
+    pub fn with_average_precision(mut self, averageprecision: f64) -> Self {
         self.average_precision = Some(average_precision);
         self
     }
@@ -224,7 +224,7 @@ where
     f64: From<T>,
 {
     fn prepare_data(&self) -> std::result::Result<VisualizationData, Box<dyn Error>> {
-        let (precision, recall_, ap) = self
+        let (precision, recall_, thresholds, ap) = self
             .compute_pr()
             .map_err(|e| Box::new(e) as Box<dyn Error>)?;
 

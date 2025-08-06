@@ -75,8 +75,8 @@ pub struct BindingGenerator {
     pub config: WebBindingConfig,
 impl BindingGenerator {
     /// Create a new binding generator
-    pub fn new(_output_dir: PathBuf, config: WebBindingConfig) -> Self {
-        Self { _output_dir, config }
+    pub fn new(_outputdir: PathBuf, config: WebBindingConfig) -> Self {
+        Self { output_dir, config }
     }
     /// Generate all required bindings based on configuration
     pub fn generate_bindings(&self) -> Result<Vec<PathBuf>> {

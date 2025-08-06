@@ -51,9 +51,9 @@ where
     T: Float + Debug + Copy + Zero + One,
 {
     /// Create a new banded solver
-    pub fn new(_matrix: BandedArray<T>) -> Self {
+    pub fn new(matrix: BandedArray<T>) -> Self {
         Self {
-            _matrix,
+            matrix,
             factorized: false,
             cholesky_factor: None,
             ldlt_factors: None,
@@ -88,7 +88,7 @@ where
     /// let mut solver = BandedSolver::new(matrix);
     /// let chol_result = solver.cholesky_decomposition(Some(true)).unwrap();
     /// ```
-    pub fn cholesky_decomposition(&mut self, check_symmetry: Option<bool>) -> SparseResult<BandedCholeskyResult<T>> {
+    pub fn cholesky_decomposition(&mut self, checksymmetry: Option<bool>) -> SparseResult<BandedCholeskyResult<T>> {
         let check_sym = check_symmetry.unwrap_or(true);
         
         if check_sym && !self.is_symmetric() {

@@ -4,8 +4,8 @@
 //! stability of automatic differentiation computations across various scenarios,
 //! precision levels, and edge cases.
 
-use super::numerical__analysis::{ConditionNumberAnalysis, ErrorPropagationAnalysis};
-use super::stability__metrics::{
+use super::numerical_analysis::{ConditionNumberAnalysis, ErrorPropagationAnalysis};
+use super::stability_metrics::{
     compute_forward_stability, BackwardStabilityMetrics, ForwardStabilityMetrics, StabilityGrade,
 };
 use super::StabilityError;
@@ -53,9 +53,9 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: TestConfig) -> Self {
+    pub fn with_config(config: TestConfig) -> Self {
         Self {
-            _config,
+            config,
             results: TestResults::<F>::new(),
             scenarios: Vec::new(),
             benchmarks: Vec::new(),
@@ -77,7 +77,8 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
 
     /// Run all stability tests with graph context
     pub fn run_all_tests_with_context(
-        &mut self_graph: &'a mut crate::Context<F>,
+        &mut self,
+        graph: &'a mut crate::Context<F>,
     ) -> Result<TestSummary, StabilityError> {
         let start_time = Instant::now();
 
@@ -425,7 +426,8 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
     /// Run precision sensitivity tests
     #[allow(dead_code)]
     fn run_precision_sensitivity_tests(
-        &mut self_graph: &'a mut crate::Context<F>,
+        &mut self,
+        graph: &'a mut crate::Context<F>,
     ) -> Result<(), StabilityError> {
         // Test would compare f32 vs f64 precision
         // For now, simplified implementation
@@ -503,7 +505,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
         let mut rng = rand::rng();
         let data: Vec<F> = (0..size)
             .map(|_| {
-                let random_val = rng.random_range(-1.0..1.0);
+                let random_val = rng.gen_range(-1.0..1.0);
                 F::from(random_val * magnitude).unwrap()
             })
             .collect();
@@ -546,14 +548,14 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
 
     #[allow(dead_code)]
     fn run_edge_case_test(
-        &self_name: &str,
+        self_name: &str,
         _edge_case: EdgeCaseTest<F>,
     ) -> Result<EdgeCaseTestResult, StabilityError> {
         // Simplified implementation
         Ok(EdgeCaseTestResult {
-            _case_name: _name.to_string(),
+            _case_name: name.to_string(),
             behavior_observed: EdgeCaseBehavior::Stable,
-            behavior_expected: _edge_case.expected_behavior,
+            behavior_expected: edge_case.expected_behavior,
             passed: true,
             warnings: Vec::new(),
         })
@@ -606,7 +608,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
         })
     }
 
-    fn create_test_summary(&self, total_duration: Duration) -> TestSummary {
+    fn create_test_summary(&self, totalduration: Duration) -> TestSummary {
         let total_tests = self.results.test_results.len();
         let passed_tests = self
             .results
@@ -781,8 +783,8 @@ pub struct TestResults<'a, F: Float> {
     pub test_results: Vec<StabilityTestResult>,
     pub conditioning_analyses: Vec<ConditionNumberAnalysis>,
     pub error_propagation_analyses: Vec<ErrorPropagationAnalysis<'a, F>>,
-    pub stability_analyses: Vec<super::numerical, _analysis::StabilityAnalysis>,
-    pub roundoff_analyses: Vec<super::numerical, _analysis::RoundoffErrorAnalysis>,
+    pub stability_analyses: Vec<super::numerical_analysis::StabilityAnalysis>,
+    pub roundoff_analyses: Vec<super::numerical_analysis::RoundoffErrorAnalysis>,
     pub edge_case_results: Vec<EdgeCaseTestResult>,
     pub precision_results: Vec<PrecisionTestResult>,
     pub scenario_results: Vec<ScenarioTestResult>,
@@ -819,7 +821,7 @@ impl<F: Float> TestResults<'_, F> {
         self.scenario_results.clear();
     }
 
-    pub fn add_test_result(&mut self_name: String, result: StabilityTestResult) {
+    pub fn add_test_result(&mut self, name: String, result: StabilityTestResult) {
         self.test_results.push(result);
     }
 }

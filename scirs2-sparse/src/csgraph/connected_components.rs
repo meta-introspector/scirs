@@ -113,13 +113,13 @@ where
                 start,
                 &mut visited,
                 component_count,
-                &mut _labels,
+                &mut labels,
             );
             component_count += 1;
         }
     }
 
-    Ok((component_count, _labels))
+    Ok((component_count, labels))
 }
 
 /// Find weakly connected components in a directed graph
@@ -212,7 +212,7 @@ impl<T> TarjanSCC<T>
 where
     T: Float + Debug + Copy + 'static,
 {
-    fn new(n: usize, return_labels: bool) -> Self {
+    fn new(n: usize, returnlabels: bool) -> Self {
         Self {
             indices: vec![-1; n],
             lowlinks: vec![-1; n],
@@ -229,7 +229,7 @@ where
         }
     }
 
-    fn strongconnect(&mut self, v: usize, adj_list: &[Vec<(usize, T)>]) {
+    fn strongconnect(&mut self, v: usize, adjlist: &[Vec<(usize, T)>]) {
         // Set the depth index for v to the smallest unused index
         self.indices[v] = self.index;
         self.lowlinks[v] = self.index;
@@ -294,7 +294,7 @@ where
 /// assert!(is_connected(&graph, false).unwrap());
 /// ```
 #[allow(dead_code)]
-pub fn is_connected<T, S>(_graph: &S, directed: bool) -> SparseResult<bool>
+pub fn is_connected<T, S>(graph: &S, directed: bool) -> SparseResult<bool>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,

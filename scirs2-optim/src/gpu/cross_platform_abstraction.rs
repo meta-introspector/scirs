@@ -348,10 +348,10 @@ pub struct SyclOptimizations {
 #[derive(Debug, Clone)]
 pub struct CudaKernelConfig {
     /// Block size for 1D kernels
-    pub block_size_1, d: usize,
+    pub block_size_1d: usize,
 
     /// Block size for 2D kernels
-    pub block_size_2, d: (usize, usize),
+    pub block_size_2d: (usize, usize),
 
     /// Shared memory per block
     pub shared_memory_per_block: usize,
@@ -791,9 +791,9 @@ impl Default for AlertThresholds {
 
 impl<T: Float + Send + Sync> CrossPlatformOptimizer<T> {
     /// Create new cross-platform optimizer
-    pub fn new(_config: CrossPlatformConfig) -> Result<Self> {
+    pub fn new(config: CrossPlatformConfig) -> Result<Self> {
         let mut optimizer = Self {
-            _config,
+            config,
             contexts: HashMap::new(),
             active_optimizer: None,
             current_backend: None,
@@ -923,7 +923,8 @@ impl<T: Float + Send + Sync> CrossPlatformOptimizer<T> {
             DeviceSelectionStrategy::Fastest => self.select_fastest_backend(),
             DeviceSelectionStrategy::LargestMemory => self.select_largest_memory_backend(),
             DeviceSelectionStrategy::LowPower => self.select_low_power_backend(),
-            DeviceSelectionStrategy::Manual { device_id: _ } => self.select_manual_backend(, _ => self.select_fastest_backend(),
+            DeviceSelectionStrategy::Manual { device_id: _ } => self.select_manual_backend(),
+            _ => self.select_fastest_backend(),
         };
 
         if let Some(backend) = backend {
@@ -1001,7 +1002,7 @@ impl<T: Float + Send + Sync> CrossPlatformOptimizer<T> {
     }
 
     /// Update performance metrics
-    fn update_metrics(&mut self, execution_time: f64) {
+    fn update_metrics(&mut self, executiontime: f64) {
         if let Ok(mut metrics) = self.metrics.lock() {
             metrics.total_execution_time += execution_time;
             metrics.avg_iteration_time = (metrics.avg_iteration_time + execution_time) / 2.0;
@@ -1039,7 +1040,7 @@ impl<T: Float + Send + Sync> CrossPlatformOptimizer<T> {
     }
 
     /// Check if we should consider backend switching
-    fn should_consider_backend_switch(&self, current_score: f64) -> bool {
+    fn should_consider_backend_switch(&self, currentscore: f64) -> bool {
         // Switch if performance is below threshold and enough time has passed
         current_score < 0.7
             && self
@@ -1051,7 +1052,7 @@ impl<T: Float + Send + Sync> CrossPlatformOptimizer<T> {
     }
 
     /// Find a better backend than current
-    fn find_better_backend(&self, _current_score: f64) -> Option<GpuBackend> {
+    fn find_better_backend(&self, _currentscore: f64) -> Option<GpuBackend> {
         // This would involve benchmarking other backends
         // For now, just return the fastest available backend if it's different
         let fastest = self.select_fastest_backend();
@@ -1269,13 +1270,13 @@ impl Default for AutoOptimizationState {
 
 /// Get human-readable backend name
 #[allow(dead_code)]
-fn backend_name(_backend: GpuBackend) -> &'static str {
+fn backend_name(backend: GpuBackend) -> &'static str {
     match _backend {
         GpuBackend::Cuda => "CUDA",
         GpuBackend::Rocm => "ROCm",
         GpuBackend::Metal => "Metal",
         GpuBackend::Wgpu => "WebGPU",
-        GpuBackend::Cpu => "CPU"_ => "Unknown",
+        GpuBackend::Cpu => "CPU",
     }
 }
 

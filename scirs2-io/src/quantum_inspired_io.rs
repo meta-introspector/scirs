@@ -77,7 +77,7 @@ pub struct QuantumState {
 
 impl QuantumState {
     /// Create a new quantum state with given dimensions
-    pub fn new(_dimensions: usize) -> Self {
+    pub fn new(dimensions: usize) -> Self {
         let mut amplitudes = Array1::zeros(_dimensions);
         amplitudes[0] = 1.0; // Start in |0⟩ state
 
@@ -140,7 +140,7 @@ impl QuantumState {
     }
 
     /// Apply quantum evolution using Hamiltonian
-    pub fn evolve(&mut self, time_step: f32) -> Result<()> {
+    pub fn evolve(&mut self, timestep: f32) -> Result<()> {
         let hamiltonian = self.create_hamiltonian();
 
         // Apply time evolution operator: |ψ(t)⟩ = exp(-iHt)|ψ(0)⟩
@@ -202,7 +202,7 @@ pub struct QuantumAnnealingOptimizer {
 
 impl QuantumAnnealingOptimizer {
     /// Create a new quantum annealing optimizer
-    pub fn new(_problem_size: usize) -> Self {
+    pub fn new(_problemsize: usize) -> Self {
         let problem_hamiltonian = Self::create_problem_hamiltonian(_problem_size);
         let mixing_hamiltonian = Self::create_mixing_hamiltonian(_problem_size);
         let annealing_schedule = Self::create_annealing_schedule(100);
@@ -217,7 +217,7 @@ impl QuantumAnnealingOptimizer {
     }
 
     /// Optimize I/O parameters using quantum annealing
-    pub fn optimize(&mut self, initial_params: &[f32]) -> Result<Vec<f32>> {
+    pub fn optimize(&mut self, initialparams: &[f32]) -> Result<Vec<f32>> {
         let mut current_state = QuantumState::new(initial_params.len());
         current_state.superposition(initial_params)?;
 
@@ -250,8 +250,8 @@ impl QuantumAnnealingOptimizer {
     }
 
     /// Create problem Hamiltonian encoding the optimization problem
-    fn create_problem_hamiltonian(_size: usize) -> Array2<f32> {
-        let mut hamiltonian = Array2::zeros((_size, _size));
+    fn create_problem_hamiltonian(size: usize) -> Array2<f32> {
+        let mut hamiltonian = Array2::zeros((_size, size));
 
         // Encode I/O optimization problem
         // Diagonal terms represent parameter costs
@@ -272,8 +272,8 @@ impl QuantumAnnealingOptimizer {
     }
 
     /// Create mixing Hamiltonian for quantum tunneling
-    fn create_mixing_hamiltonian(_size: usize) -> Array2<f32> {
-        let mut hamiltonian = Array2::zeros((_size, _size));
+    fn create_mixing_hamiltonian(size: usize) -> Array2<f32> {
+        let mut hamiltonian = Array2::zeros((_size, size));
 
         // Create transverse field (quantum tunneling)
         for i in 0.._size {
@@ -289,7 +289,7 @@ impl QuantumAnnealingOptimizer {
     }
 
     /// Create annealing schedule
-    fn create_annealing_schedule(_steps: usize) -> Vec<f32> {
+    fn create_annealing_schedule(steps: usize) -> Vec<f32> {
         (0.._steps)
             .map(|i| 1.0 - (i as f32 / _steps as f32))
             .collect()
@@ -355,11 +355,11 @@ pub struct QuantumParallelProcessor {
 
 impl QuantumParallelProcessor {
     /// Create a new quantum parallel processor
-    pub fn new(_processing_dimensions: usize) -> Self {
+    pub fn new(_processingdimensions: usize) -> Self {
         Self {
             quantum_state: Arc::new(RwLock::new(QuantumState::new(_processing_dimensions))),
             optimizer: Arc::new(RwLock::new(QuantumAnnealingOptimizer::new(
-                _processing_dimensions,
+                processing_dimensions,
             ))),
             params: QuantumIoParams::default(),
             performance_history: Arc::new(RwLock::new(Vec::new())),

@@ -403,6 +403,7 @@ pub fn convolve2d(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_convolve_full() {

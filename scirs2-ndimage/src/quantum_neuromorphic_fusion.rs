@@ -849,7 +849,7 @@ where
     T: Float + FromPrimitive + Copy,
 {
     // Implementation would perform bio-quantum readout with attention
-    let (height, width) = _outputshape;
+    let (height, width) = outputshape;
     Ok(Array2::zeros((height, width)))
 }
 
@@ -2959,7 +2959,7 @@ where
     let mut hybrid_processor = initialize_hybrid_processor(hybrid_config)?;
 
     // Analyze input characteristics
-    let input_analysis = analyze_input_characteristics(&image, _config)?;
+    let input_analysis = analyze_input_characteristics(&image, config)?;
 
     // Select optimal hybrid algorithm
     let selected_algorithm = select_optimal_hybrid_algorithm(
@@ -2973,7 +2973,7 @@ where
         &image,
         &mut hybrid_processor,
         &selected_algorithm,
-        _config,
+        config,
         hybrid_config,
     )?;
 

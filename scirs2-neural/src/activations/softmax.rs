@@ -34,7 +34,7 @@ impl Softmax {
     ///
     /// # Arguments
     /// * `axis` - The axis along which to apply softmax
-    pub fn new(_axis: usize) -> Self {
+    pub fn new(axis: usize) -> Self {
         Self { _axis }
     }
 }
@@ -113,7 +113,7 @@ impl<F: Float + Debug> Activation<F> for Softmax {
         // Softmax backward pass: grad_input = softmax * (grad_output - sum(grad_output * softmax))
         // This implements the full Jacobian-vector product for softmax
         
-        if _output.ndim() == 1 && self.axis == 0 {
+        if output.ndim() == 1 && self.axis == 0 {
             // Compute dot product of grad_output and _output (softmax values)
             let dot_product = grad_output
                 .iter()
@@ -133,10 +133,10 @@ impl<F: Float + Debug> Activation<F> for Softmax {
 
         // Multi-dimensional case
         // Compute sum(grad_output * softmax) along the softmax axis
-        let weighted_sum = (grad_output * _output).sum_axis(Axis(self.axis));
+        let weighted_sum = (grad_output * output).sum_axis(Axis(self.axis));
 
         // Broadcast the weighted sum back to original shape
-        let mut sumshape = _output.shape().to_vec();
+        let mut sumshape = output.shape().to_vec();
         sumshape[self.axis] = 1;
         let weighted_sum_reshaped = weighted_sum.into_shape_with_order(sumshape)?;
         let weighted_sum_broadcast = weighted_sum_reshaped.broadcast(_output.shape()).unwrap();
@@ -166,12 +166,12 @@ impl<F: Float + Debug + ScalarOperand> Layer<F> for Softmax {
         input: &Array<F, IxDyn>,
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
-        // For softmax, we need the _output, not the input for backward pass
+        // For softmax, we need the output, not the input for backward pass
         let _output = self.forward(input)?;
         <Self as Activation<F>>::backward(self, grad_output, &_output)
     }
 
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         Ok(())
     }
 }

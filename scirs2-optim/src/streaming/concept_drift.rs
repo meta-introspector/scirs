@@ -138,7 +138,7 @@ pub struct PageHinkleyDetector<A: Float> {
 
 impl<A: Float> PageHinkleyDetector<A> {
     /// Create a new Page-Hinkley detector
-    pub fn new(threshold: A, warning_threshold: A) -> Self {
+    pub fn new(threshold: A, warningthreshold: A) -> Self {
         Self {
             sum: A::zero(),
             min_sum: A::zero(),
@@ -199,7 +199,7 @@ pub struct AdwinDetector<A: Float> {
 
 impl<A: Float + Sum> AdwinDetector<A> {
     /// Create a new ADWIN detector
-    pub fn new(delta: A, max_window_size: usize) -> Self {
+    pub fn new(delta: A, max_windowsize: usize) -> Self {
         Self {
             window: VecDeque::new(),
             max_window_size,
@@ -312,7 +312,7 @@ impl<A: Float> DdmDetector<A> {
     }
 
     /// Update with prediction result
-    pub fn update(&mut self, is_error: bool) -> DriftStatus {
+    pub fn update(&mut self, iserror: bool) -> DriftStatus {
         self.sample_count += 1;
         if is_error {
             self.error_count += 1;
@@ -401,7 +401,7 @@ impl<A: Float + std::fmt::Debug + Sum> ConceptDriftDetector<A> {
     }
 
     /// Update detector with new loss and prediction error
-    pub fn update(&mut self, loss: A, is_prediction_error: bool) -> Result<DriftStatus> {
+    pub fn update(&mut self, loss: A, is_predictionerror: bool) -> Result<DriftStatus> {
         let ph_status = self.ph_detector.update(loss);
         let adwin_status = self.adwin_detector.update(loss);
         let ddm_status = self.ddm_detector.update(is_prediction_error);
@@ -565,7 +565,7 @@ impl<A: Float + std::iter::Sum> PerformanceDriftTracker<A> {
         }
     }
 
-    fn update(&mut self, performance: A, drift_status: DriftStatus) {
+    fn update(&mut self, performance: A, driftstatus: DriftStatus) {
         self.performance_history
             .push_back((performance, drift_status, Instant::now()));
 
@@ -1217,7 +1217,7 @@ pub mod advanced_drift_analysis {
             }
         }
 
-        fn update_thresholds(&mut self, results: &[DriftStatus], _features: &PatternFeatures<A>) {
+        fn update_thresholds(&mut self, results: &[DriftStatus], features: &PatternFeatures<A>) {
             // Simplified threshold adaptation
             for (i, result) in results.iter().enumerate() {
                 let detector_name = format!("detector_{}", i);
@@ -1284,7 +1284,8 @@ pub mod advanced_drift_analysis {
 
         fn analyze_impact(
             &mut self,
-            features: &PatternFeatures<A>, _pattern: &Option<DriftPattern<A>>,
+            features: &PatternFeatures<A>,
+            _pattern: &Option<DriftPattern<A>>,
         ) -> Result<DriftImpact<A>> {
             let performance_degradation = features.variance; // Simplified
             let urgency_level = if performance_degradation > A::from(1.0).unwrap() {
@@ -1316,7 +1317,9 @@ pub mod advanced_drift_analysis {
 
         fn select_strategy(
             &mut self,
-        features: &PatternFeatures<A>, _impact: &DriftImpact<A>, _pattern: &Option<DriftPattern<A>>,
+            features: &PatternFeatures<A>,
+            _impact: &DriftImpact<A>,
+            _pattern: &Option<DriftPattern<A>>,
         ) -> Result<Option<AdaptationStrategy<A>>> {
             // Simplified strategy selection
             let strategy = AdaptationStrategy {

@@ -67,9 +67,9 @@ where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     /// Create a new L-BFGS optimizer
-    pub fn new(_options: OptimizationOptions<F>) -> Self {
+    pub fn new(options: OptimizationOptions<F>) -> Self {
         Self {
-            _options,
+            options,
             memory_size: 10,
             s_history: Vec::new(),
             y_history: Vec::new(),
@@ -211,9 +211,9 @@ where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     /// Create a new BFGS optimizer
-    pub fn new(_options: OptimizationOptions<F>) -> Self {
+    pub fn new(options: OptimizationOptions<F>) -> Self {
         Self {
-            _options,
+            options,
             h_inv: None,
         }
     }

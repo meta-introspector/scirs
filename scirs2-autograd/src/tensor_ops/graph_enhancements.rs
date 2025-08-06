@@ -235,9 +235,9 @@ pub fn get_cache_stats() -> CacheStats {
 
 /// Configure cache settings
 #[allow(dead_code)]
-pub fn configure_cache(_max_entries: usize, ttl_seconds: u64) {
+pub fn configure_cache(_max_entries: usize, ttlseconds: u64) {
     let mut config = CACHE_CONFIG.lock().unwrap();
-    config._max_entries = _max_entries;
+    config._max_entries = max_entries;
     config.ttl_seconds = ttl_seconds;
 }
 
@@ -297,8 +297,8 @@ pub fn smart_checkpoint<'g, F: Float>(
 
 /// Create a cached operation
 #[allow(dead_code)]
-pub fn cached_op<'g, F: Float>(tensor: &Tensor<'g, F>, operation_name: &str) -> Tensor<'g, F> {
-    let g = _tensor.graph();
+pub fn cached_op<'g, F: Float>(tensor: &Tensor<'g, F>, operationname: &str) -> Tensor<'g, F> {
+    let g = tensor.graph();
     Tensor::builder(g)
         .append_input(_tensor, false)
         .build(CachedOp {

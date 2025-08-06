@@ -99,7 +99,7 @@ pub struct StreamingIterator {
 impl StreamingIterator {
     /// Create a new streaming iterator from a CSV file
     pub fn from_csv<P: AsRef<Path>>(path: P, config: StreamConfig) -> Result<Self> {
-        let _path = _path.as_ref().to_path_buf();
+        let _path = path.as_ref().to_path_buf();
         let chunk_buffer = Arc::new(Mutex::new(VecDeque::new()));
         let buffer_clone = Arc::clone(&chunk_buffer);
         let config_clone = config.clone();
@@ -529,7 +529,7 @@ where
     T: Send + Sync + 'static,
 {
     /// Create a new stream processor
-    pub fn new(_config: StreamConfig) -> Self {
+    pub fn new(config: StreamConfig) -> Self {
         Self {
             _config_phantom: std::marker::PhantomData,
         }
@@ -759,7 +759,7 @@ pub fn stream_classification(
     let generator = move |chunk_size: usize, _features: usize, start_idx: usize| {
         let dataset = make_classification(
             chunk_size,
-            _features,
+            features,
             n_classes,
             2,
             _features / 2,
@@ -783,7 +783,7 @@ pub fn stream_regression(
     let generator = move |chunk_size: usize, _features: usize, start_idx: usize| {
         let dataset = make_regression(
             chunk_size,
-            _features,
+            features,
             _features / 2,
             0.1,
             Some(42 + start_idx as u64),

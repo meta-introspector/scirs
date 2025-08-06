@@ -31,10 +31,10 @@ pub struct HyperParameter<F: Float + fmt::Debug + fmt::Display + FromPrimitive> 
 
 impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
     /// Create a new continuous hyperparameter
-    pub fn new<S: Into<String>>(name: S, value: F, min_value: F, max_value: F) -> Self {
+    pub fn new<S: Into<String>>(name: S, value: F, min_value: F, maxvalue: F) -> Self {
         Self {
-            _name: _name.into(),
-            _value,
+            name: name.into(),
+            value,
             min_value,
             max_value,
             step: None,
@@ -53,7 +53,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
     ) -> Self {
         Self {
             name: name.into(),
-            _value,
+            value,
             min_value,
             max_value,
             step: Some(step),
@@ -77,7 +77,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
         }
 
         Ok(Self {
-            _name: _name.into(),
+            name: name.into(),
             value,
             min_value: F::zero(),
             max_value: F::from(values.len() - 1).unwrap(),
@@ -234,7 +234,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameterSearchR
         best_params: HashMap<String, F>,
     ) -> Self {
         Self {
-            _metric_name: metric_name.into(),
+            metric_name: metric_name.into(),
             mode,
             best_metric,
             best_params,
@@ -323,10 +323,10 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameterTuner<F
         // Check for duplicate parameter names
         let mut names = std::collections::HashSet::new();
         for param in &params {
-            if !names.insert(param._name()) {
+            if !names.insert(param.name()) {
                 return Err(MetricsError::InvalidArgument(format!(
-                    "Duplicate parameter _name: {}",
-                    param._name()
+                    "Duplicate parameter name: {}",
+                    param.name()
                 )));
             }
         }
@@ -342,7 +342,8 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameterTuner<F
             max_evals,
             best_value: None,
             best_params: HashMap::new(),
-            history: Vec::new(), _phantom: PhantomData,
+            history: Vec::new(),
+            _phantom: PhantomData,
         })
     }
 
@@ -365,12 +366,12 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameterTuner<F
     }
 
     /// Update the tuner with an evaluation result
-    pub fn update(&mut self, metric_value: F) -> Result<bool> {
+    pub fn update(&mut self, metricvalue: F) -> Result<bool> {
         let current_params = self.get_current_params();
 
         // Check if this is the best _value so far
         let is_best = match (self.best_value, self.mode) {
-            (None_) => true,
+            (None) => true,
             (Some(best), OptimizationMode::Maximize) => metric_value > best,
             (Some(best), OptimizationMode::Minimize) => metric_value < best,
         };

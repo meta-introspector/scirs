@@ -43,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn generate_test_data(_size: usize) -> Vec<u8> {
+fn generate_test_data(size: usize) -> Vec<u8> {
     // Generate semi-random data that compresses well
     let mut data = Vec::with_capacity(_size);
 
@@ -69,7 +69,7 @@ fn generate_test_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_basic_parallel_compression(_data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
+fn demonstrate_basic_parallel_compression(data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔧 Demonstrating Basic Parallel Compression...");
 
     let algorithm = CompressionAlgorithm::Zstd;
@@ -78,7 +78,7 @@ fn demonstrate_basic_parallel_compression(_data: &[u8]) -> Result<(), Box<dyn st
 
     println!(
         "  📝 Compressing {} bytes with {:?} (level {})...",
-        _data.len(),
+        data.len(),
         algorithm,
         level.unwrap()
     );
@@ -112,7 +112,7 @@ fn demonstrate_basic_parallel_compression(_data: &[u8]) -> Result<(), Box<dyn st
         compression_stats.throughput_bps / 1_000_000.0
     );
 
-    println!("  📖 Decompressing _data...");
+    println!("  📖 Decompressing data...");
     let start_time = Instant::now();
     let (decompressed_data, decompression_stats) =
         decompress_data_parallel(&compressed_data, algorithm, config)?;
@@ -146,7 +146,7 @@ fn demonstrate_basic_parallel_compression(_data: &[u8]) -> Result<(), Box<dyn st
 }
 
 #[allow(dead_code)]
-fn demonstrate_performance_comparison(_data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
+fn demonstrate_performance_comparison(data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚖️  Comparing Sequential vs Parallel Performance...");
 
     let algorithm = CompressionAlgorithm::Zstd;
@@ -172,7 +172,7 @@ fn demonstrate_performance_comparison(_data: &[u8]) -> Result<(), Box<dyn std::e
 
     // Verify both methods produce correct results
     assert_eq!(
-        _data, &decompressed_sequential,
+        data, &decompressed_sequential,
         "Sequential round-trip failed!"
     );
     assert_eq!(_data, &decompressed_parallel, "Parallel round-trip failed!");
@@ -301,7 +301,7 @@ fn demonstrate_parallel_file_operations(
 }
 
 #[allow(dead_code)]
-fn demonstrate_algorithm_benchmarking(_data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
+fn demonstrate_algorithm_benchmarking(data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🏁 Benchmarking Different Algorithms and Configurations...");
 
     // Use a smaller dataset for benchmarking to keep runtime reasonable
@@ -331,7 +331,7 @@ fn demonstrate_algorithm_benchmarking(_data: &[u8]) -> Result<(), Box<dyn std::e
     ];
 
     println!(
-        "  🔬 Running benchmark with {} bytes of _data...",
+        "  🔬 Running benchmark with {} bytes of data...",
         benchmark_data.len()
     );
     println!(

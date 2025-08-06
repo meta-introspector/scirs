@@ -360,7 +360,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
 /// assert!((pdf_at_zero - 0.3183099).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn cauchy<F>(_loc: F, scale: F) -> StatsResult<Cauchy<F>>
+pub fn cauchy<F>(loc: F, scale: F) -> StatsResult<Cauchy<F>>
 where
     F: Float + NumCast + std::fmt::Display,
 {

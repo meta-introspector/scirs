@@ -85,13 +85,15 @@ pub struct ExponentialMechanism<T: Float> {
 /// Truncated noise mechanism for bounded sensitivity
 pub struct TruncatedNoiseMechanism<T: Float> {
     base_mechanism: Box<dyn NoiseMechanism<T> + Send>,
-    truncation_bound: T, _phantom: PhantomData<T>,
+    truncation_bound: T,
+    _phantom: PhantomData<T>,
 }
 
 /// Tree aggregation mechanism for hierarchical noise
 pub struct TreeAggregationMechanism<T: Float> {
     tree_height: usize,
-    base_mechanism: Box<dyn NoiseMechanism<T> + Send>, _phantom: PhantomData<T>,
+    base_mechanism: Box<dyn NoiseMechanism<T> + Send>,
+    _phantom: PhantomData<T>,
 }
 
 /// Sparse Vector Technique mechanism
@@ -100,13 +102,15 @@ pub struct SparseVectorMechanism<T: Float> {
     budget_fraction: T,
     queries_answered: usize,
     max_queries: usize,
-    base_mechanism: Box<dyn NoiseMechanism<T> + Send>, _phantom: PhantomData<T>,
+    base_mechanism: Box<dyn NoiseMechanism<T> + Send>,
+    _phantom: PhantomData<T>,
 }
 
 /// Smooth sensitivity mechanism
 pub struct SmoothSensitivityMechanism<T: Float> {
     beta: T,
-    sensitivity_function: Box<dyn Fn(&[T]) -> T + Send + Sync>, _phantom: PhantomData<T>,
+    sensitivity_function: Box<dyn Fn(&[T]) -> T + Send + Sync>,
+    _phantom: PhantomData<T>,
 }
 
 /// Advanced noise calibration
@@ -125,7 +129,8 @@ pub struct NoiseCalibrator<T: Float> {
 
     /// Adaptive noise scaling
     adaptive_scaling: bool,
-    scaling_factor: T, _phantom: PhantomData<T>,
+    scaling_factor: T,
+    _phantom: PhantomData<T>,
 }
 
 /// Strategy for selecting noise mechanism
@@ -160,7 +165,7 @@ where
     }
 
     /// Compute noise scale for Gaussian mechanism
-    pub fn compute_noise_scale(_sensitivity: T, epsilon: T, delta: T) -> Result<T> {
+    pub fn compute_noise_scale(sensitivity: T, epsilon: T, delta: T) -> Result<T> {
         if epsilon <= T::zero() || delta <= T::zero() || delta >= T::one() {
             return Err(OptimError::InvalidConfig(
                 "Invalid privacy parameters for Gaussian mechanism".to_string(),
@@ -197,7 +202,7 @@ where
             // Use Box-Muller transformation to generate normal random numbers
             // since direct sampling with scirs2_core::Random has trait issues
             let u1: f64 = self.rng.gen_range(0.0..1.0);
-            let u2: f64 = self.rng.random_range(0.0, 1.0);
+            let u2: f64 = self.rng.gen_range(0.0..1.0);
             let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             let noise = T::from(z0 * sigma_f64).unwrap();
             x + noise
@@ -275,7 +280,7 @@ where
     }
 
     /// Compute noise scale for Laplace mechanism
-    pub fn compute_noise_scale(_sensitivity: T, epsilon: T) -> Result<T> {
+    pub fn compute_noise_scale(sensitivity: T, epsilon: T) -> Result<T> {
         if epsilon <= T::zero() {
             return Err(OptimError::InvalidConfig(
                 "Epsilon must be positive for Laplace mechanism".to_string(),
@@ -379,10 +384,10 @@ where
     T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform,
 {
     /// Create a new exponential mechanism
-    pub fn new(_quality_function: Box<dyn Fn(&T) -> T + Send + Sync>) -> Self {
+    pub fn new(_qualityfunction: Box<dyn Fn(&T) -> T + Send + Sync>) -> Self {
         Self {
             rng: scirs2_core::random::Random::seed(44), // Use seeded RNG for thread safety
-            quality_function: _quality_function,
+            quality_function: quality_function,
             _phantom: PhantomData,
         }
     }
@@ -434,9 +439,9 @@ where
     T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform,
 {
     /// Create a new truncated noise mechanism
-    pub fn new(_base_mechanism: Box<dyn NoiseMechanism<T> + Send>, truncation_bound: T) -> Self {
+    pub fn new(_base_mechanism: Box<dyn NoiseMechanism<T> + Send>, truncationbound: T) -> Self {
         Self {
-            base_mechanism: _base_mechanism,
+            base_mechanism: base_mechanism,
             truncation_bound,
             _phantom: PhantomData,
         }
@@ -518,9 +523,9 @@ where
     T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform + std::iter::Sum,
 {
     /// Create a new tree aggregation mechanism
-    pub fn new(_tree_height: usize, base_mechanism: Box<dyn NoiseMechanism<T> + Send>) -> Self {
+    pub fn new(_tree_height: usize, basemechanism: Box<dyn NoiseMechanism<T> + Send>) -> Self {
         Self {
-            tree_height: _tree_height,
+            tree_height: tree_height,
             base_mechanism,
             _phantom: PhantomData,
         }
@@ -654,7 +659,8 @@ where
             linf_sensitivity: l2_sensitivity,
             selection_strategy,
             adaptive_scaling: false,
-            scaling_factor: T::one(), _phantom: PhantomData,
+            scaling_factor: T::one(),
+            _phantom: PhantomData,
         }
     }
 
@@ -704,7 +710,7 @@ where
         // Adaptive scaling based on data characteristics
         if self.adaptive_scaling {
             let data_scale = self.estimate_data_scale(data);
-            self.scaling_factor = data_scale / _sensitivity;
+            self.scaling_factor = data_scale / sensitivity;
         }
 
         let adjusted_sensitivity = _sensitivity * self.scaling_factor;
@@ -822,7 +828,7 @@ where
     for i in 0..rows {
         for j in 0..cols {
             let u1: f64 = rng.gen_range(0.0..1.0);
-            let u2: f64 = rng.random_range(0.0, 1.0);
+            let u2: f64 = rng.gen_range(0.0..1.0);
             let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             let gaussian_sample = z0 * scale_f64;
             noise[[i, j]] = T::from(gaussian_sample).unwrap();

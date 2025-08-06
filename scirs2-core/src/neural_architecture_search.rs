@@ -198,7 +198,7 @@ pub struct GlobalConfig {
     /// Output shape/classes
     pub output_size: usize,
     /// Learning rate
-    pub learning_rate: f64,
+    pub learningrate: f64,
     /// Batch size
     pub batch_size: usize,
     /// Optimizer
@@ -299,7 +299,7 @@ pub struct HardwareConstraints {
     /// Available compute units
     pub compute_units: usize,
     /// Memory bandwidth
-    pub memory_bandwidth: f64,
+    pub memorybandwidth: f64,
 }
 
 /// Target hardware platforms
@@ -593,7 +593,7 @@ impl NeuralArchitectureSearch {
             globalconfig: GlobalConfig {
                 inputshape: vec![224, 224, 3], // Default image size
                 output_size: 1000,             // ImageNet classes
-                learning_rate: 0.001,
+                learningrate: 0.001,
                 batch_size: 32,
                 optimizer: self.search_space.optimizers[optimizer_idx],
                 loss_function: "categorical_crossentropy".to_string(),
@@ -1096,7 +1096,7 @@ impl Default for HardwareConstraints {
             max_parameters: Some(100_000_000), // 100M parameters
             target_platform: HardwarePlatform::GPU,
             compute_units: 16,
-            memory_bandwidth: 1000.0, // GB/s
+            memorybandwidth: 1000.0, // GB/s
         }
     }
 }

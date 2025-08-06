@@ -47,7 +47,7 @@ const DOK_FORMAT: &str = "dok_array";
 /// save_npz(&*array, "identity.npz").unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn save_npz<T, P>(_array: &dyn SparseArray<T>, path: P) -> SparseResult<()>
+pub fn save_npz<T, P>(array: &dyn SparseArray<T>, path: P) -> SparseResult<()>
 where
     T: Float
         + Add<Output = T>
@@ -60,7 +60,7 @@ where
     P: AsRef<Path>,
 {
     // First determine the format and get needed components
-    let (format, data, indices, indptr, shape) = match _array.to_csr() {
+    let (format, data, indices, indptr, shape) = match array.to_csr() {
         Ok(csr) => {
             if let Some(csr_array) = csr.as_any().downcast_ref::<CsrArray<T>>() {
                 (
@@ -78,7 +78,7 @@ where
         }
         Err(_) => {
             // If we couldn't convert to CSR, try converting to COO
-            match _array.to_coo() {
+            match array.to_coo() {
                 Ok(coo) => {
                     if let Some(coo_array) = coo.as_any().downcast_ref::<CooArray<T>>() {
                         // For COO format, we store row indices, column indices, and data
@@ -106,7 +106,7 @@ where
                 }
                 Err(_) => {
                     // Try DOK format
-                    match _array.to_dok() {
+                    match array.to_dok() {
                         Ok(dok) => {
                             if let Some(dok_array) = dok.as_any().downcast_ref::<DokArray<T>>() {
                                 // For DOK format, we convert to COO triplets first
@@ -154,7 +154,7 @@ where
 
     // For COO format, we also need column indices
     if format == COO_FORMAT {
-        if let Ok(coo) = _array.to_coo() {
+        if let Ok(coo) = array.to_coo() {
             if let Some(coo_array) = coo.as_any().downcast_ref::<CooArray<T>>() {
                 write_array(&mut writer, coo_array.get_cols())?;
             }
@@ -187,7 +187,7 @@ where
 /// assert_eq!(array.shape(), (10, 10));
 /// ```
 #[allow(dead_code)]
-pub fn load_npz<T, P>(_path: P) -> SparseResult<Box<dyn SparseArray<T>>>
+pub fn load_npz<T, P>(path: P) -> SparseResult<Box<dyn SparseArray<T>>>
 where
     T: Float
         + Add<Output = T>
@@ -260,52 +260,52 @@ where
 fn write_string<W: Write>(writer: &mut W, s: &str) -> std::io::Result<()> {
     let bytes = s.as_bytes();
     let len = bytes.len() as u64;
-    _writer.write_all(&len.to_le_bytes())?;
-    _writer.write_all(bytes)?;
+    writer.write_all(&len.to_le_bytes())?;
+    writer.write_all(bytes)?;
     Ok(())
 }
 
 #[allow(dead_code)]
 fn read_string<R: Read>(reader: &mut R) -> std::io::Result<String> {
     let mut len_bytes = [0u8; 8];
-    _reader.read_exact(&mut len_bytes)?;
+    reader.read_exact(&mut len_bytes)?;
     let len = u64::from_le_bytes(len_bytes) as usize;
 
     let mut bytes = vec![0u8; len];
-    _reader.read_exact(&mut bytes)?;
+    reader.read_exact(&mut bytes)?;
 
     String::from_utf8(bytes).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
 }
 
 #[allow(dead_code)]
 fn write_usize<W: Write>(writer: &mut W, n: usize) -> std::io::Result<()> {
-    _writer.write_all(&(n as u64).to_le_bytes())
+    writer.write_all(&(n as u64).to_le_bytes())
 }
 
 #[allow(dead_code)]
 fn read_usize<R: Read>(reader: &mut R) -> std::io::Result<usize> {
     let mut bytes = [0u8; 8];
-    _reader.read_exact(&mut bytes)?;
+    reader.read_exact(&mut bytes)?;
     Ok(u64::from_le_bytes(bytes) as usize)
 }
 
 #[allow(dead_code)]
 fn write_array<W: Write, T: Copy>(writer: &mut W, array: &Array1<T>) -> std::io::Result<()> {
     let len = array.len() as u64;
-    _writer.write_all(&len.to_le_bytes())?;
+    writer.write_all(&len.to_le_bytes())?;
 
     let data_size = std::mem::size_of::<T>() * array.len();
     let data_ptr = array.as_ptr() as *const u8;
     let data_slice = unsafe { std::slice::from_raw_parts(data_ptr, data_size) };
 
-    _writer.write_all(data_slice)?;
+    writer.write_all(data_slice)?;
     Ok(())
 }
 
 #[allow(dead_code)]
 fn read_array<R: Read, T: Copy>(reader: &mut R) -> std::io::Result<Array1<T>> {
     let mut len_bytes = [0u8; 8];
-    _reader.read_exact(&mut len_bytes)?;
+    reader.read_exact(&mut len_bytes)?;
     let len = u64::from_le_bytes(len_bytes) as usize;
 
     let mut data = Vec::with_capacity(len);
@@ -316,7 +316,7 @@ fn read_array<R: Read, T: Copy>(reader: &mut R) -> std::io::Result<Array1<T>> {
     let data_ptr = data.as_mut_ptr() as *mut u8;
     let data_slice = unsafe { std::slice::from_raw_parts_mut(data_ptr, data_size) };
 
-    _reader.read_exact(data_slice)?;
+    reader.read_exact(data_slice)?;
 
     Ok(Array1::from_vec(data))
 }
@@ -344,8 +344,8 @@ where
 
 // Implement From<std::io::Error> for SparseError
 impl From<std::io::Error> for SparseError {
-    fn from(_error: std::io::Error) -> Self {
-        SparseError::ComputationError(format!("IO _error: {_error}"))
+    fn from(error: std::io::Error) -> Self {
+        SparseError::ComputationError(format!("IO error: {_error}"))
     }
 }
 

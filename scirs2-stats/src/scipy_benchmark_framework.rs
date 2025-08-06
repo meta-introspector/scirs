@@ -228,9 +228,9 @@ impl Default for TestDataConfig {
 
 impl ScipyBenchmarkFramework {
     /// Create a new benchmark framework
-    pub fn new(_config: BenchmarkConfig) -> Self {
+    pub fn new(config: BenchmarkConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             results_cache: HashMap::new(),
             test_data_generator: TestDataGenerator::new(TestDataConfig::default()),
         }
@@ -453,7 +453,7 @@ impl ScipyBenchmarkFramework {
     }
 
     /// Grade accuracy based on relative error
-    fn grade_accuracy(&self, relative_error: f64) -> AccuracyGrade {
+    fn grade_accuracy(&self, relativeerror: f64) -> AccuracyGrade {
         if relative_error < 1e-12 {
             AccuracyGrade::A
         } else if relative_error < 1e-9 {
@@ -521,7 +521,7 @@ impl ScipyBenchmarkFramework {
 
 impl TestDataGenerator {
     /// Create a new test data generator
-    pub fn new(_config: TestDataConfig) -> Self {
+    pub fn new(config: TestDataConfig) -> Self {
         Self { config: _config }
     }
 
@@ -641,12 +641,12 @@ impl BenchmarkReport {
         }
     }
 
-    fn average_accuracy_grade(&self, _grades: &[AccuracyGrade]) -> AccuracyGrade {
+    fn average_accuracy_grade(&self, grades: &[AccuracyGrade]) -> AccuracyGrade {
         // Simplified: just return most common grade
         AccuracyGrade::C // Placeholder
     }
 
-    fn average_performance_grade(&self, _grades: &[PerformanceGrade]) -> PerformanceGrade {
+    fn average_performance_grade(&self, grades: &[PerformanceGrade]) -> PerformanceGrade {
         // Simplified: just return most common grade
         PerformanceGrade::C // Placeholder
     }

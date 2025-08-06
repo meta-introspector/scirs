@@ -8,7 +8,7 @@
 //! use ndarray;
 //! use scirs2_autograd as ag;
 //! use ag::error::OpError;
-//! use ag::tensor__ops::*;
+//! use ag::tensor_ops::*;
 //!
 //! type NdArray<T: ag::Float> = ndarray::Array<T, ndarray::IxDyn>;
 //!
@@ -51,7 +51,7 @@ use std::any::type_name;
 use std::marker::PhantomData;
 
 pub use crate::error::OpError;
-use crate::ndarray__ext::{NdArrayView, NdArrayViewMut};
+use crate::ndarray_ext::{NdArrayView, NdArrayViewMut};
 use crate::smallvec::SmallVec as RawSmallVec;
 use crate::tensor::Tensor;
 use crate::{Float, NdArray};
@@ -115,9 +115,9 @@ pub struct ComputeContext<F: Float> {
 
 impl<F: Float> ComputeContext<F> {
     /// Creates new ComputeContext.
-    pub fn new(_inputs: &[NdArray<F>], _outputs: &mut [NdArray<F>]) -> Self {
+    pub fn new(_inputs: &[NdArray<F>], outputs: &mut [NdArray<F>]) -> Self {
         // Clone all _inputs to own the data
-        let input_arrays = _inputs.to_vec();
+        let input_arrays = inputs.to_vec();
         Self {
             inputs: input_arrays,
             outputs: Vec::new(),
@@ -125,9 +125,9 @@ impl<F: Float> ComputeContext<F> {
     }
 
     /// Creates a new ComputeContext with prepared inputs.
-    pub fn with_inputs(_input_arrays: Vec<NdArray<F>>) -> Self {
+    pub fn with_inputs(_inputarrays: Vec<NdArray<F>>) -> Self {
         Self {
-            inputs: _input_arrays,
+            inputs: input_arrays,
             outputs: Vec::new(),
         }
     }
@@ -172,7 +172,8 @@ impl<F: Float> ComputeContext<F> {
 
     /// Note: This method is deprecated and will panic.
     /// With the new architecture, inputs are immutable.
-    pub fn input_mut(&mut self_i: usize) -> NdArrayViewMut<F> {
+    pub fn input_mut(&mut self, i: usize) -> NdArrayViewMut<'_, F> {
+        let _ = i; // Suppress unused parameter warning
         panic!("input_mut is not supported in the new ComputeContext implementation");
     }
 
@@ -297,7 +298,7 @@ pub struct OpOutput<F: Float> {
 
 impl<F: Float> OpOutput<F> {
     #[allow(dead_code)]
-    pub(crate) fn new(_output: NdArray<F>) -> Self {
+    pub(crate) fn new(output: NdArray<F>) -> Self {
         Self { _output }
     }
 }

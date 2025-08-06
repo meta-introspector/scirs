@@ -72,7 +72,7 @@ pub struct QuantizationParams {
     pub qmax: i32,
 impl QuantizationParams {
     /// Create new quantization parameters
-    pub fn new(_bits: u8, signed: bool) -> Self {
+    pub fn new(bits: u8, signed: bool) -> Self {
         let (qmin, qmax) = if signed {
             (-(1 << (_bits - 1)), (1 << (_bits - 1)) - 1)
         } else {
@@ -122,17 +122,17 @@ pub struct QuantizedTensor {
     pub shape: Vec<usize>,
 impl QuantizedTensor {
     /// Create new quantized tensor from float tensor
-    pub fn from_float(_tensor: &ArrayD<f32>, config: &QuantizationConfig) -> Result<Self> {
+    pub fn from_float(tensor: &ArrayD<f32>, config: &QuantizationConfig) -> Result<Self> {
         let params = QuantizationParams::from_tensor(&_tensor.view(), config)?;
         let quantized_data = Self::quantize_tensor(_tensor, &params)?;
         Ok(Self {
             data: quantized_data,
             params,
-            shape: _tensor.shape().to_vec(),
+            shape: tensor.shape().to_vec(),
         })
     /// Quantize a float tensor to integers
-    fn quantize_tensor(_tensor: &ArrayD<f32>, params: &QuantizationParams) -> Result<ArrayD<i8>> {
-        let quantized = _tensor.mapv(|x| {
+    fn quantize_tensor(tensor: &ArrayD<f32>, params: &QuantizationParams) -> Result<ArrayD<i8>> {
+        let quantized = tensor.mapv(|x| {
             let q_val = (x / params.scale).round() + params.zero_point as f32;
             let clamped = q_val.max(params.qmin as f32).min(params.qmax as f32);
             clamped as i8
@@ -192,8 +192,8 @@ impl TensorStats {
             self.histogram[bin] += 1;
 impl PostTrainingQuantizer {
     /// Create new post-training quantizer
-    pub fn new(_config: QuantizationConfig) -> Self {
-            _config,
+    pub fn new(config: QuantizationConfig) -> Self {
+            config,
             calibration_stats: HashMap::new(),
     /// Add calibration data for a named tensor
     pub fn add_calibration_data(&mut self, name: &str, tensor: &ArrayD<f32>) {
@@ -288,12 +288,12 @@ impl QuantizationAwareTraining {
     pub fn set_warmup_steps(&mut self, steps: usize) {
         self.warmup_steps = steps;
     /// Initialize quantization parameters for a layer
-    pub fn init_layer_params(&mut self, layer_name: &str, tensor: &ArrayD<f32>) -> Result<()> {
+    pub fn init_layer_params(&mut self, layername: &str, tensor: &ArrayD<f32>) -> Result<()> {
         let params = QuantizationParams::from_tensor(&tensor.view(), &self.config)?;
         self.layer_params.insert(layer_name.to_string(), params);
         Ok(())
     /// Apply fake quantization during training
-    pub fn fake_quantize(&mut self, layer_name: &str, tensor: &ArrayD<f32>) -> Result<ArrayD<f32>> {
+    pub fn fake_quantize(&mut self, layername: &str, tensor: &ArrayD<f32>) -> Result<ArrayD<f32>> {
         self.step_count += 1;
         // Skip quantization during warmup
         if self.step_count < self.warmup_steps {
@@ -317,7 +317,7 @@ impl QuantizationAwareTraining {
     pub fn get_quantization_params(&self) -> &HashMap<String, QuantizationParams> {
         &self.layer_params
     /// Simulate quantization noise for better training
-    pub fn add_quantization_noise(&self, tensor: &ArrayD<f32>, noise_scale: f32) -> ArrayD<f32> {
+    pub fn add_quantization_noise(&self, tensor: &ArrayD<f32>, noisescale: f32) -> ArrayD<f32> {
         let mut rng = rng();
         tensor.mapv(|x| {
             let noise = rng.random::<f32>() - 0.5; // Uniform noise [-0.5, 0.5]
@@ -336,7 +336,7 @@ impl MixedBitWidthQuantizer {
             layer_configs: HashMap::new(),
             sensitivity_scores: HashMap::new(),
     /// Set quantization configuration for a specific layer
-    pub fn set_layer_config(&mut self, layer_name: &str, config: QuantizationConfig) {
+    pub fn set_layer_config(&mut self, layername: &str, config: QuantizationConfig) {
         self.layer_configs.insert(layer_name.to_string(), config);
     /// Perform sensitivity analysis to determine optimal bit allocation
     pub fn analyze_sensitivity(
@@ -409,10 +409,10 @@ impl MixedBitWidthQuantizer {
             config.bits = bits;
             self.layer_configs.insert(layer_name.clone(), config);
     /// Get optimal configuration for a layer
-    pub fn get_layer_config(&self, layer_name: &str) -> Option<&QuantizationConfig> {
+    pub fn get_layer_config(&self, layername: &str) -> Option<&QuantizationConfig> {
         self.layer_configs.get(layer_name)
     /// Get sensitivity score for a layer
-    pub fn get_sensitivity_score(&self, layer_name: &str) -> Option<f32> {
+    pub fn get_sensitivity_score(&self, layername: &str) -> Option<f32> {
         self.sensitivity_scores.get(layer_name).copied()
 /// Dynamic quantization at runtime
 pub struct DynamicQuantizer {
@@ -453,17 +453,17 @@ impl DynamicQuantizer {
 pub mod utils {
     use super::*;
     /// Compare quantized vs original tensor accuracy
-    pub fn compute_quantization_error(_original: &ArrayD<f32>, quantized: &QuantizedTensor) -> f32 {
+    pub fn compute_quantization_error(original: &ArrayD<f32>, quantized: &QuantizedTensor) -> f32 {
         let dequantized = quantized.dequantize();
         let mse = Zip::from(_original)
             .and(&dequantized)
             .fold(0.0, |acc, &orig, &deq| acc + (orig - deq).powi(2));
-        mse / _original.len() as f32
+        mse / original.len() as f32
     /// Estimate model size reduction from quantization
-    pub fn estimate_size_reduction(_bit_width: u8) -> f32 {
+    pub fn estimate_size_reduction(_bitwidth: u8) -> f32 {
         32.0 / bit_width as f32
     /// Simulate quantization performance gains
-    pub fn estimate_performance_gain(_bit_width: u8) -> f32 {
+    pub fn estimate_performance_gain(_bitwidth: u8) -> f32 {
         // Empirical approximation based on common hardware
         match bit_width {
             8 => 2.0,  // ~2x speedup with INT8

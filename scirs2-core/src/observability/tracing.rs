@@ -70,9 +70,9 @@ pub struct TracingConfig {
     /// Environment (production, staging, development)
     pub environment: String,
     /// Sampling rate (0.0 to 1.0)
-    pub sampling_rate: f64,
+    pub samplingrate: f64,
     /// Maximum number of active spans
-    pub max_active_spans: usize,
+    pub max_activespans: usize,
     /// Span timeout duration
     pub span_timeout: Duration,
     /// Enable performance attribution
@@ -95,8 +95,8 @@ impl Default for TracingConfig {
             service_name: "scirs2-core".to_string(),
             service_version: env!("CARGO_PKG_VERSION").to_string(),
             environment: "production".to_string(),
-            sampling_rate: 1.0,
-            max_active_spans: 10000,
+            samplingrate: 1.0,
+            max_activespans: 10000,
             span_timeout: Duration::from_secs(300), // 5 minutes
             enable_performance_attribution: true,
             enable_distributed_context: true,
@@ -145,15 +145,15 @@ pub struct TraceContext {
     /// Unique trace identifier (16 bytes for W3C compatibility)
     pub trace_id: Uuid,
     /// Span identifier within the trace (8 bytes for W3C compatibility)
-    pub span_id: Uuid,
+    pub spanid: Uuid,
     /// Parent span identifier
-    pub parent_span_id: Option<Uuid>,
+    pub parent_spanid: Option<Uuid>,
     /// Trace flags for sampling decisions (8 bits)
     pub trace_flags: u8,
     /// Additional baggage for context propagation
     pub baggage: HashMap<String, String>,
     /// W3C trace state for vendor-specific data
-    pub trace_state: Option<String>,
+    pub tracestate: Option<String>,
     /// Remote flag for distributed traces
     pub is_remote: bool,
 }
@@ -164,11 +164,11 @@ impl TraceContext {
     pub fn new() -> Self {
         Self {
             trace_id: Uuid::new_v4(),
-            span_id: Uuid::new_v4(),
-            parent_span_id: None,
+            spanid: Uuid::new_v4(),
+            parent_spanid: None,
             trace_flags: 1, // Sampled
             baggage: HashMap::new(),
-            trace_state: None,
+            tracestate: None,
             is_remote: false,
         }
     }
@@ -178,11 +178,11 @@ impl TraceContext {
     pub fn child(&self) -> Self {
         Self {
             trace_id: self.trace_id,
-            span_id: Uuid::new_v4(),
-            parent_span_id: Some(self.span_id),
+            spanid: Uuid::new_v4(),
+            parent_spanid: Some(self.spanid),
             trace_flags: self.trace_flags,
             baggage: self.baggage.clone(),
-            trace_state: self.trace_state.clone(),
+            tracestate: self.tracestate.clone(),
             is_remote: false,
         }
     }
@@ -210,8 +210,8 @@ impl TraceContext {
 
     /// Set trace state
     #[must_use]
-    pub fn with_trace_state(mut self, trace_state: String) -> Self {
-        self.trace_state = Some(trace_state);
+    pub fn with_tracestate(mut self, tracestate: String) -> Self {
+        self.tracestate = Some(tracestate);
         self
     }
 
@@ -222,7 +222,7 @@ impl TraceContext {
             "{:02x}-{}-{}-{:02x}",
             TRACE_VERSION,
             self.trace_id.as_simple(),
-            &self.span_id.as_simple().to_string()[16..], // Use last 16 chars for 8-byte span ID
+            &self.spanid.as_simple().to_string()[16..], // Use last 16 chars for 8-byte span ID
             self.trace_flags
         )
     }
@@ -267,7 +267,7 @@ impl TraceContext {
         })?;
 
         // For span ID, we need to pad the 16-char ID to create a valid UUID
-        let span_id_str = if parts[2].len() == 16 {
+        let spanid_str = if parts[2].len() == 16 {
             format!("{:0>32}", parts[2]) // Pad to 32 characters with leading zeros
         } else {
             return Err(CoreError::ComputationError(
@@ -276,13 +276,13 @@ impl TraceContext {
                 ),
             ));
         };
-        let span_id = Uuid::parse_str(&format!(
+        let spanid = Uuid::parse_str(&format!(
             "{}-{}-{}-{}-{}",
-            &span_id_str[0..8],
-            &span_id_str[8..12],
-            &span_id_str[12..16],
-            &span_id_str[16..20],
-            &span_id_str[20..32]
+            &spanid_str[0..8],
+            &spanid_str[8..12],
+            &spanid_str[12..16],
+            &spanid_str[16..20],
+            &spanid_str[20..32]
         ))
         .map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
@@ -298,11 +298,11 @@ impl TraceContext {
 
         Ok(Self {
             trace_id,
-            span_id,
-            parent_span_id: None,
+            spanid,
+            parent_spanid: None,
             trace_flags,
             baggage: HashMap::new(),
-            trace_state: None,
+            tracestate: None,
             is_remote: true,
         })
     }
@@ -421,7 +421,7 @@ pub struct SpanEvent {
 /// Active span handle for managing span lifecycle
 pub struct ActiveSpan {
     span: Arc<Mutex<Span>>,
-    tracing_system: Arc<TracingSystem>,
+    tracingsystem: Arc<TracingSystem>,
     start_instant: Instant,
     #[cfg(feature = "memory_metrics")]
     initial_memory: Option<u64>,
@@ -504,7 +504,7 @@ impl ActiveSpan {
     /// # Errors
     ///
     /// Returns an error if the span lock cannot be acquired.
-    pub fn set_error(&self, error: &str) -> Result<(), CoreError> {
+    pub fn seterror(&self, error: &str) -> Result<(), CoreError> {
         let mut span = self.span.lock().map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
                 "Failed to acquire span lock".to_string(),
@@ -589,7 +589,7 @@ impl Drop for ActiveSpan {
                 }
 
                 // Report span to tracing system
-                if let Err(e) = self.tracing_system.record_span(span.clone()) {
+                if let Err(e) = self.tracingsystem.record_span(span.clone()) {
                     eprintln!("Failed to record span: {e}");
                 }
             }
@@ -652,8 +652,8 @@ impl SpanBuilder {
     /// # Errors
     ///
     /// Returns an error if the span cannot be started.
-    pub fn start(self, tracing_system: &TracingSystem) -> Result<ActiveSpan, CoreError> {
-        tracing_system.start_span_with_builder(self)
+    pub fn start(self, tracingsystem: &TracingSystem) -> Result<ActiveSpan, CoreError> {
+        tracingsystem.start_span_with_builder(self)
     }
 }
 
@@ -667,16 +667,16 @@ thread_local! {
 struct SpanStorage {
     active_spans: RwLock<HashMap<Uuid, Arc<Mutex<Span>>>>,
     completed_spans: Mutex<Vec<Span>>,
-    max_active_spans: usize,
+    max_activespans: usize,
 }
 
 impl SpanStorage {
     #[must_use]
-    fn new(max_active_spans: usize) -> Self {
+    fn new(max_activespans: usize) -> Self {
         Self {
             active_spans: RwLock::new(HashMap::new()),
             completed_spans: Mutex::new(Vec::new()),
-            max_active_spans,
+            max_activespans,
         }
     }
 
@@ -692,29 +692,29 @@ impl SpanStorage {
             ))
         })?;
 
-        if active.len() >= self.max_active_spans {
+        if active.len() >= self.max_activespans {
             return Err(CoreError::ComputationError(
                 crate::error::ErrorContext::new("Maximum active spans exceeded".to_string()),
             ));
         }
 
-        let span_id = {
+        let spanid = {
             let span_guard = span.lock().map_err(|_| {
                 CoreError::ComputationError(crate::error::ErrorContext::new(
                     "Failed to acquire span lock".to_string(),
                 ))
             })?;
-            span_guard.context.span_id
+            span_guard.context.spanid
         };
 
-        active.insert(span_id, span);
+        active.insert(spanid, span);
         Ok(())
     }
 
     #[must_use]
-    fn remove_active_span(&self, span_id: Uuid) -> Option<Arc<Mutex<Span>>> {
+    fn remove_active_span(&self, spanid: Uuid) -> Option<Arc<Mutex<Span>>> {
         if let Ok(mut active) = self.active_spans.write() {
-            active.remove(&span_id)
+            active.remove(&spanid)
         } else {
             None
         }
@@ -760,19 +760,19 @@ impl SpanStorage {
                 ))
             })?;
 
-            for (span_id, span_arc) in active.iter() {
+            for (spanid, span_arc) in active.iter() {
                 if let Ok(span) = span_arc.lock() {
                     if let Ok(elapsed) = now.duration_since(span.start_time) {
                         if elapsed > timeout {
-                            to_remove.push(*span_id);
+                            to_remove.push(*spanid);
                         }
                     }
                 }
             }
         }
 
-        for span_id in to_remove {
-            if let Some(span_arc) = self.remove_active_span(span_id) {
+        for spanid in to_remove {
+            if let Some(span_arc) = self.remove_active_span(spanid) {
                 if let Ok(mut span) = span_arc.lock() {
                     span.status = SpanStatus::Cancelled;
                     span.end_time = Some(now);
@@ -801,8 +801,8 @@ impl TracingSystem {
     ///
     /// Returns an error if the system cannot be initialized.
     pub fn new(config: TracingConfig) -> Result<Self, CoreError> {
-        let storage = SpanStorage::new(config.max_active_spans);
-        let sampler = Box::new(ProbabilitySampler::new(config.sampling_rate));
+        let storage = SpanStorage::new(config.max_activespans);
+        let sampler = Box::new(ProbabilitySampler::new(config.samplingrate));
         let metrics = Arc::new(Mutex::new(TracingMetrics::default()));
 
         Ok(Self {
@@ -877,7 +877,7 @@ impl TracingSystem {
             let span_arc = Arc::new(Mutex::new(span));
             return Ok(ActiveSpan {
                 span: span_arc,
-                tracing_system: Arc::new(self.clone()),
+                tracingsystem: Arc::new(self.clone()),
                 start_instant: Instant::now(),
                 #[cfg(feature = "memory_metrics")]
                 initial_memory: get_current_memory_usage().ok(),
@@ -915,7 +915,7 @@ impl TracingSystem {
 
         Ok(ActiveSpan {
             span: span_arc,
-            tracing_system: Arc::new(self.clone()),
+            tracingsystem: Arc::new(self.clone()),
             start_instant: Instant::now(),
             #[cfg(feature = "memory_metrics")]
             initial_memory: get_current_memory_usage().ok(),
@@ -935,7 +935,7 @@ impl TracingSystem {
     /// Returns an error if the span cannot be recorded or exported.
     pub fn record_span(&self, span: Span) -> Result<(), CoreError> {
         // Remove from active spans
-        let _ = self.storage.remove_active_span(span.context.span_id);
+        let _ = self.storage.remove_active_span(span.context.spanid);
 
         // Update metrics
         if let Ok(mut metrics) = self.metrics.lock() {
@@ -1010,8 +1010,8 @@ impl Clone for TracingSystem {
     fn clone(&self) -> Self {
         Self {
             config: self.config.clone(),
-            storage: SpanStorage::new(self.config.max_active_spans),
-            sampler: Box::new(ProbabilitySampler::new(self.config.sampling_rate)),
+            storage: SpanStorage::new(self.config.max_activespans),
+            sampler: Box::new(ProbabilitySampler::new(self.config.samplingrate)),
             exporter: None, // Cannot clone trait objects easily
             metrics: Arc::new(Mutex::new(TracingMetrics::default())),
         }
@@ -1041,32 +1041,32 @@ pub struct TracingMetrics {
 /// Trait for implementing sampling strategies
 pub trait TracingSampler {
     /// Determine if a trace should be sampled
-    fn should_sample(&self, context: &TraceContext, span_name: &str) -> bool;
+    fn should_sample(&self, context: &TraceContext, spanname: &str) -> bool;
 }
 
 /// Probability-based sampler
 pub struct ProbabilitySampler {
-    sampling_rate: f64,
+    samplingrate: f64,
 }
 
 impl ProbabilitySampler {
-    pub fn new(sampling_rate: f64) -> Self {
+    pub fn new(samplingrate: f64) -> Self {
         Self {
-            sampling_rate: sampling_rate.clamp(0.0, 1.0),
+            samplingrate: samplingrate.clamp(0.0, 1.0),
         }
     }
 }
 
 impl TracingSampler for ProbabilitySampler {
-    fn should_sample(&self, _context: &TraceContext, _span_name: &str) -> bool {
-        if self.sampling_rate >= 1.0 {
+    fn should_sample(&self, _context: &TraceContext, _spanname: &str) -> bool {
+        if self.samplingrate >= 1.0 {
             true
-        } else if self.sampling_rate <= 0.0 {
+        } else if self.samplingrate <= 0.0 {
             false
         } else {
             use rand::Rng;
             let mut rng = rand::rng();
-            rng.random::<f64>() < self.sampling_rate
+            rng.random::<f64>() < self.samplingrate
         }
     }
 }
@@ -1079,12 +1079,12 @@ pub struct AdaptiveSampler {
     sample_count: AtomicU64,
     total_count: AtomicU64,
     adjustment_window: u64,
-    target_rate_per_second: f64,
+    target_rate_persecond: f64,
     last_adjustment: Mutex<Instant>,
 }
 
 impl AdaptiveSampler {
-    pub fn new(base_rate: f64, target_rate_per_second: f64) -> Self {
+    pub fn new(base_rate: f64, target_rate_persecond: f64) -> Self {
         Self {
             base_rate: base_rate.clamp(0.0, 1.0),
             min_rate: 0.001, // Minimum 0.1% sampling
@@ -1092,12 +1092,12 @@ impl AdaptiveSampler {
             sample_count: AtomicU64::new(0),
             total_count: AtomicU64::new(0),
             adjustment_window: 1000, // Adjust every 1000 spans
-            target_rate_per_second,
+            target_rate_persecond,
             last_adjustment: Mutex::new(Instant::now()),
         }
     }
 
-    fn adjust_sampling_rate(&self) -> f64 {
+    fn adjust_samplingrate(&self) -> f64 {
         let total = self.total_count.load(Ordering::Relaxed);
         if total % self.adjustment_window == 0 && total > 0 {
             if let Ok(mut last) = self.last_adjustment.try_lock() {
@@ -1107,7 +1107,7 @@ impl AdaptiveSampler {
 
                 if elapsed > 0.0 {
                     let current_rate = total as f64 / elapsed;
-                    let adjustment_factor = self.target_rate_per_second / current_rate;
+                    let adjustment_factor = self.target_rate_persecond / current_rate;
                     let new_rate =
                         (self.base_rate * adjustment_factor).clamp(self.min_rate, self.max_rate);
                     return new_rate;
@@ -1130,10 +1130,10 @@ impl AdaptiveSampler {
 }
 
 impl TracingSampler for AdaptiveSampler {
-    fn should_sample(&self, _context: &TraceContext, _span_name: &str) -> bool {
+    fn should_sample(&self, _context: &TraceContext, _spanname: &str) -> bool {
         self.total_count.fetch_add(1, Ordering::Relaxed);
 
-        let current_rate = self.adjust_sampling_rate();
+        let current_rate = self.adjust_samplingrate();
 
         if current_rate >= 1.0 {
             self.sample_count.fetch_add(1, Ordering::Relaxed);
@@ -1155,26 +1155,26 @@ impl TracingSampler for AdaptiveSampler {
 
 /// Rate-limiting sampler that ensures maximum number of samples per time window
 pub struct RateLimitingSampler {
-    max_samples_per_second: u64,
+    max_samples_persecond: u64,
     sample_count: AtomicU64,
     window_start: Mutex<Instant>,
-    window_size: Duration,
+    windowsize: Duration,
 }
 
 impl RateLimitingSampler {
-    pub fn new(max_samples_per_second: u64) -> Self {
+    pub fn new(max_samples_persecond: u64) -> Self {
         Self {
-            max_samples_per_second,
+            max_samples_persecond,
             sample_count: AtomicU64::new(0),
             window_start: Mutex::new(Instant::now()),
-            window_size: Duration::from_secs(1),
+            windowsize: Duration::from_secs(1),
         }
     }
 
     fn reset_window_if_needed(&self) -> bool {
         if let Ok(mut start) = self.window_start.try_lock() {
             let now = Instant::now();
-            if now.duration_since(*start) >= self.window_size {
+            if now.duration_since(*start) >= self.windowsize {
                 *start = now;
                 self.sample_count.store(0, Ordering::Relaxed);
                 return true;
@@ -1185,11 +1185,11 @@ impl RateLimitingSampler {
 }
 
 impl TracingSampler for RateLimitingSampler {
-    fn should_sample(&self, _context: &TraceContext, _span_name: &str) -> bool {
+    fn should_sample(&self, _context: &TraceContext, _spanname: &str) -> bool {
         self.reset_window_if_needed();
 
         let current_count = self.sample_count.load(Ordering::Relaxed);
-        if current_count < self.max_samples_per_second {
+        if current_count < self.max_samples_persecond {
             self.sample_count.fetch_add(1, Ordering::Relaxed);
             true
         } else {
@@ -1315,21 +1315,21 @@ impl TraceExporter for BatchExporter {
 
 /// Console exporter for development/debugging
 pub struct ConsoleExporter {
-    pretty_print: bool,
+    prettyprint: bool,
 }
 
 impl ConsoleExporter {
-    pub fn new(pretty_print: bool) -> Self {
-        Self { pretty_print }
+    pub fn new(prettyprint: bool) -> Self {
+        Self { prettyprint }
     }
 }
 
 impl TraceExporter for ConsoleExporter {
     fn export_span(&self, span: &Span) -> Result<(), CoreError> {
-        if self.pretty_print {
+        if self.prettyprint {
             println!("=== Span Export ===");
             println!("Trace ID: {}", span.context.trace_id);
-            println!("Span ID: {}", span.context.span_id);
+            println!("Span ID: {}", span.context.spanid);
             println!("Name: {}", span.name);
             println!("Duration: {:?}", span.metrics.duration);
             println!("Status: {:?}", span.status);
@@ -1554,7 +1554,7 @@ pub struct NegotiationResult {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ResourceAttribution {
     /// CPU time consumed (in nanoseconds)
-    pub cpu_time_ns: Option<u64>,
+    pub cpu_timens: Option<u64>,
     /// Memory allocated (in bytes)
     pub memory_allocated_bytes: Option<u64>,
     /// Memory deallocated (in bytes)
@@ -1566,13 +1566,13 @@ pub struct ResourceAttribution {
     /// Bytes read from I/O
     pub bytes_read: Option<u64>,
     /// Bytes written to I/O
-    pub bytes_written: Option<u64>,
+    pub byteswritten: Option<u64>,
     /// Network requests made
     pub network_requests: Option<u64>,
     /// GPU memory used (in bytes)
     pub gpu_memory_bytes: Option<u64>,
     /// GPU compute time (in nanoseconds)
-    pub gpu_compute_time_ns: Option<u64>,
+    pub gpu_compute_timens: Option<u64>,
 }
 
 impl ResourceAttribution {
@@ -1580,8 +1580,8 @@ impl ResourceAttribution {
         Self::default()
     }
 
-    pub fn with_cpu_time(mut self, cpu_time_ns: u64) -> Self {
-        self.cpu_time_ns = Some(cpu_time_ns);
+    pub fn with_cpu_time(mut self, cpu_timens: u64) -> Self {
+        self.cpu_timens = Some(cpu_timens);
         self
     }
 
@@ -1590,22 +1590,22 @@ impl ResourceAttribution {
         self
     }
 
-    pub fn with_io_stats(mut self, operations: u64, bytes_read: u64, bytes_written: u64) -> Self {
+    pub fn with_io_stats(mut self, operations: u64, bytes_read: u64, byteswritten: u64) -> Self {
         self.io_operations = Some(operations);
         self.bytes_read = Some(bytes_read);
-        self.bytes_written = Some(bytes_written);
+        self.byteswritten = Some(byteswritten);
         self
     }
 
-    pub fn with_gpu_stats(mut self, memory_bytes: u64, compute_time_ns: u64) -> Self {
+    pub fn with_gpu_stats(mut self, memory_bytes: u64, compute_timens: u64) -> Self {
         self.gpu_memory_bytes = Some(memory_bytes);
-        self.gpu_compute_time_ns = Some(compute_time_ns);
+        self.gpu_compute_timens = Some(compute_timens);
         self
     }
 
     pub fn merge(&mut self, other: &ResourceAttribution) {
-        if let Some(cpu) = other.cpu_time_ns {
-            self.cpu_time_ns = Some(self.cpu_time_ns.unwrap_or(0) + cpu);
+        if let Some(cpu) = other.cpu_timens {
+            self.cpu_timens = Some(self.cpu_timens.unwrap_or(0) + cpu);
         }
         if let Some(mem) = other.memory_allocated_bytes {
             self.memory_allocated_bytes = Some(self.memory_allocated_bytes.unwrap_or(0) + mem);
@@ -1622,8 +1622,8 @@ impl ResourceAttribution {
         if let Some(read) = other.bytes_read {
             self.bytes_read = Some(self.bytes_read.unwrap_or(0) + read);
         }
-        if let Some(written) = other.bytes_written {
-            self.bytes_written = Some(self.bytes_written.unwrap_or(0) + written);
+        if let Some(written) = other.byteswritten {
+            self.byteswritten = Some(self.byteswritten.unwrap_or(0) + written);
         }
         if let Some(net) = other.network_requests {
             self.network_requests = Some(self.network_requests.unwrap_or(0) + net);
@@ -1631,8 +1631,8 @@ impl ResourceAttribution {
         if let Some(gpu_mem) = other.gpu_memory_bytes {
             self.gpu_memory_bytes = Some(self.gpu_memory_bytes.unwrap_or(0) + gpu_mem);
         }
-        if let Some(gpu_time) = other.gpu_compute_time_ns {
-            self.gpu_compute_time_ns = Some(self.gpu_compute_time_ns.unwrap_or(0) + gpu_time);
+        if let Some(gpu_time) = other.gpu_compute_timens {
+            self.gpu_compute_timens = Some(self.gpu_compute_timens.unwrap_or(0) + gpu_time);
         }
     }
 }
@@ -1665,7 +1665,7 @@ impl EnhancedSpanMetrics {
         let mut cost = 0.0;
 
         // CPU cost (normalized to milliseconds)
-        if let Some(cpu_ns) = self.resources.cpu_time_ns {
+        if let Some(cpu_ns) = self.resources.cpu_timens {
             cost += cpu_ns as f64 / 1_000_000.0; // ns to ms
         }
 
@@ -1722,11 +1722,11 @@ pub fn integrate_with_metrics_system() -> Result<(), CoreError> {
 
 /// Real-world usage example: Matrix computation with distributed tracing
 #[allow(dead_code)]
-pub fn example_matrix_computation_with_tracing() -> Result<(), CoreError> {
+pub fn examplematrix_computation_with_tracing() -> Result<(), CoreError> {
     // Initialize tracing with adaptive sampling
     let config = TracingConfig {
         service_name: "matrix_computation_service".to_string(),
-        sampling_rate: 1.0, // 100% for demo
+        samplingrate: 1.0, // 100% for demo
         enable_performance_attribution: true,
         enable_distributed_context: true,
         ..TracingConfig::default()
@@ -1790,16 +1790,16 @@ mod tests {
     fn test_trace_context_creation() {
         let context = TraceContext::new();
         assert!(context.is_sampled());
-        assert!(context.parent_span_id.is_none());
+        assert!(context.parent_spanid.is_none());
 
         let child = context.child();
         assert_eq!(child.trace_id, context.trace_id);
-        assert_eq!(child.parent_span_id, Some(context.span_id));
-        assert_ne!(child.span_id, context.span_id);
+        assert_eq!(child.parent_spanid, Some(context.spanid));
+        assert_ne!(child.spanid, context.spanid);
     }
 
     #[test]
-    fn test_tracing_system_creation() {
+    fn test_tracingsystem_creation() {
         let config = TracingConfig::default();
         let tracing = TracingSystem::new(config).expect("Failed to create tracing system");
 
@@ -1899,7 +1899,7 @@ mod tests {
 
         let child_context = child_span.context().expect("Failed to get child context");
         assert_eq!(child_context.trace_id, parent_context.trace_id);
-        assert_eq!(child_context.parent_span_id, Some(parent_context.span_id));
+        assert_eq!(child_context.parent_spanid, Some(parent_context.spanid));
     }
 
     #[test]
@@ -1907,7 +1907,7 @@ mod tests {
         let context = TraceContext::new();
         let traceparent = context.to_traceparent();
 
-        // Traceparent should have format: version-trace_id-span_id-flags
+        // Traceparent should have format: version-trace_id-spanid-flags
         let parts: Vec<&str> = traceparent.split('-').collect();
         assert_eq!(parts.len(), 4);
         assert_eq!(parts[0], "00"); // version
@@ -2005,7 +2005,7 @@ mod tests {
 
         attribution.merge(&other);
 
-        assert_eq!(attribution.cpu_time_ns, Some(1_500_000));
+        assert_eq!(attribution.cpu_timens, Some(1_500_000));
         assert_eq!(attribution.memory_allocated_bytes, Some(1536));
         assert_eq!(attribution.io_operations, Some(5));
     }
@@ -2021,7 +2021,7 @@ mod tests {
         assert_eq!(metrics.performance_counters.get("cache_misses"), Some(&25));
 
         // Test resource cost calculation
-        metrics.resources.cpu_time_ns = Some(1_000_000); // 1ms
+        metrics.resources.cpu_timens = Some(1_000_000); // 1ms
         metrics.resources.memory_allocated_bytes = Some(1_048_576); // 1MB
         metrics.resources.io_operations = Some(5);
 

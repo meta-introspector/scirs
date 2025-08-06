@@ -389,7 +389,7 @@ where
 
 /// Calculate the p-value for the Kolmogorov-Smirnov test
 #[allow(dead_code)]
-fn calculate_ks_p_value<F: Float + NumCast>(_ks_stat: F, n: F) -> F {
+fn calculate_ks_p_value<F: Float + NumCast>(_ksstat: F, n: F) -> F {
     // Use the asymptotic distribution approximation
     // valid for large n (typically n > 35)
 

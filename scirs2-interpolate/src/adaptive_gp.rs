@@ -302,13 +302,13 @@ where
     }
 
     /// Set the maximum number of optimization iterations
-    pub fn with_max_optimization_iterations(mut self, max_iter: usize) -> Self {
+    pub fn with_max_optimization_iterations(mut self, maxiter: usize) -> Self {
         self.config.max_optimization_iterations = max_iter;
         self
     }
 
     /// Enable sparse GP approximations for large datasets
-    pub fn with_sparse_approximation(mut self, enable: bool, num_inducing: usize) -> Self {
+    pub fn with_sparse_approximation(mut self, enable: bool, numinducing: usize) -> Self {
         self.config.enable_sparse_gp = enable;
         self.config.num_inducing_points = num_inducing;
         self
@@ -390,7 +390,7 @@ where
     /// # Returns
     ///
     /// Predicted mean values
-    pub fn predict(&self, x_new: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    pub fn predict(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         if self.selected_model.is_none() {
             return Err(InterpolateError::InvalidState(
                 "Model must be fitted before making predictions".to_string(),
@@ -466,7 +466,7 @@ where
     }
 
     /// Fit a specific kernel type and return the fitted model
-    fn fit_kernel(&mut self, kernel_type: KernelType) -> InterpolateResult<KernelModel<T>> {
+    fn fit_kernel(&mut self, kerneltype: KernelType) -> InterpolateResult<KernelModel<T>> {
         // Initialize hyperparameters based on kernel _type
         let mut hyperparams = self.initialize_hyperparameters(kernel_type)?;
 
@@ -622,9 +622,10 @@ where
         let original_output_var = hyperparams.output_variance;
         for &multiplier in &[1.1, 0.9] {
             hyperparams.output_variance = original_output_var * T::from(multiplier).unwrap();
-            if let Ok(_likelihood) = self.compute_log_marginal_likelihood(kernel_type, hyperparams) {
+            if let Ok(_likelihood) = self.compute_log_marginal_likelihood(kernel_type, hyperparams)
+            {
                 if _likelihood > *current_likelihood {
-                    *current_likelihood = _likelihood;
+                    *current_likelihood = likelihood;
                     improved = true;
                     break;
                 }
@@ -640,7 +641,7 @@ where
                     self.compute_log_marginal_likelihood(kernel_type, hyperparams)
                 {
                     if _likelihood > *current_likelihood {
-                        *current_likelihood = _likelihood;
+                        *current_likelihood = likelihood;
                         improved = true;
                         break;
                     }
@@ -653,9 +654,10 @@ where
         let original_noise_var = hyperparams.noise_variance;
         for &multiplier in &[1.1, 0.9] {
             hyperparams.noise_variance = original_noise_var * T::from(multiplier).unwrap();
-            if let Ok(_likelihood) = self.compute_log_marginal_likelihood(kernel_type, hyperparams) {
+            if let Ok(_likelihood) = self.compute_log_marginal_likelihood(kernel_type, hyperparams)
+            {
                 if _likelihood > *current_likelihood {
-                    *current_likelihood = _likelihood;
+                    *current_likelihood = likelihood;
                     improved = true;
                     break;
                 }
@@ -887,7 +889,7 @@ where
     }
 
     /// Count the number of hyperparameters for a kernel type
-    fn count_hyperparameters(&self, kernel_type: KernelType) -> usize {
+    fn count_hyperparameters(&self, kerneltype: KernelType) -> usize {
         match kernel_type {
             KernelType::RBF
             | KernelType::Matern12

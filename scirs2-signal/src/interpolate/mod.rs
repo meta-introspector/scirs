@@ -123,7 +123,7 @@ pub use spectral::polynomial::{
 /// assert_eq!(result[1], 2.0); // Linear interpolation between 1.0 and 3.0
 /// ```
 #[allow(dead_code)]
-pub fn linear(_signal: &ndarray::Array1<f64>) -> crate::error::SignalResult<ndarray::Array1<f64>> {
+pub fn linear(signal: &ndarray::Array1<f64>) -> crate::error::SignalResult<ndarray::Array1<f64>> {
     linear_interpolate(_signal)
 }
 
@@ -227,7 +227,7 @@ impl InterpolationBuilder {
     }
 
     /// Sets the maximum number of iterations for iterative methods
-    pub fn max_iterations(mut self, max_iterations: usize) -> Self {
+    pub fn max_iterations(mut self, maxiterations: usize) -> Self {
         self.config.max_iterations = max_iterations;
         self
     }
@@ -245,7 +245,7 @@ impl InterpolationBuilder {
     }
 
     /// Sets the window size for local methods
-    pub fn window_size(mut self, window_size: usize) -> Self {
+    pub fn window_size(mut self, windowsize: usize) -> Self {
         self.config.window_size = window_size;
         self
     }
@@ -364,6 +364,7 @@ impl InterpolationMethods {
 /// Unit tests for the unified interpolation API
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn test_convenience_functions() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);

@@ -191,9 +191,9 @@ impl Default for MLPipeline {
 
 impl MLPipeline {
     /// Create a new ML pipeline
-    pub fn new(_config: MLPipelineConfig) -> Self {
+    pub fn new(config: MLPipelineConfig) -> Self {
         Self {
-            _config,
+            config,
             fitted_scalers: None,
         }
     }
@@ -441,7 +441,7 @@ impl MLPipeline {
         })
     }
 
-    fn random_oversample(&self, dataset: &Dataset, random_state: Option<u64>) -> Result<Dataset> {
+    fn random_oversample(&self, dataset: &Dataset, randomstate: Option<u64>) -> Result<Dataset> {
         use rand::prelude::*;
         use rand::{rngs::StdRng, RngCore, SeedableRng};
         use std::collections::HashMap;
@@ -687,8 +687,8 @@ impl MLPipeline {
         Ok(())
     }
 
-    fn percentile(_sorted_values: &[f64], p: f64) -> Option<f64> {
-        if _sorted_values.is_empty() {
+    fn percentile(_sortedvalues: &[f64], p: f64) -> Option<f64> {
+        if sorted_values.is_empty() {
             return None;
         }
 
@@ -704,8 +704,8 @@ impl MLPipeline {
         }
     }
 
-    fn compute_mad(_sorted_values: &[f64], median: f64) -> f64 {
-        let deviations: Vec<f64> = _sorted_values.iter().map(|&x| (x - median).abs()).collect();
+    fn compute_mad(_sortedvalues: &[f64], median: f64) -> f64 {
+        let deviations: Vec<f64> = sorted_values.iter().map(|&x| (x - median).abs()).collect();
 
         let mut sorted_deviations = deviations;
         sorted_deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -829,10 +829,10 @@ pub mod convenience {
     use super::*;
 
     /// Quick train/test split with default configuration
-    pub fn train_test_split(_dataset: &Dataset, test_size: Option<f64>) -> Result<DataSplit> {
+    pub fn train_test_split(_dataset: &Dataset, testsize: Option<f64>) -> Result<DataSplit> {
         let mut config = MLPipelineConfig::default();
         if let Some(_size) = test_size {
-            config.test_size = _size;
+            config.test_size = size;
         }
 
         let pipeline = MLPipeline::new(config);
@@ -840,7 +840,7 @@ pub mod convenience {
     }
 
     /// Prepare dataset for ML with standard preprocessing
-    pub fn prepare_for_ml(_dataset: &Dataset, scale: bool, balance: bool) -> Result<Dataset> {
+    pub fn prepare_for_ml(dataset: &Dataset, scale: bool, balance: bool) -> Result<Dataset> {
         let mut config = MLPipelineConfig::default();
 
         if !scale {
@@ -864,7 +864,7 @@ pub mod convenience {
         let mut config = MLPipelineConfig::default();
 
         if let Some(_folds) = n_folds {
-            config.cv_folds = _folds;
+            config.cv_folds = folds;
         }
 
         if let Some(strat) = stratify {
@@ -876,7 +876,7 @@ pub mod convenience {
     }
 
     /// Create a simple ML experiment
-    pub fn create_experiment(_name: &str, dataset: &Dataset) -> MLExperiment {
+    pub fn create_experiment(name: &str, dataset: &Dataset) -> MLExperiment {
         let pipeline = MLPipeline::default();
         pipeline.create_experiment(_name, dataset)
     }

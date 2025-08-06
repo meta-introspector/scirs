@@ -247,7 +247,7 @@ fn stiff_fixed_point(x: ArrayView1<f64>) -> Array1<f64> {
 type IterationFunction = Box<dyn Fn(ArrayView1<f64>) -> Array1<f64>>;
 
 #[allow(dead_code)]
-fn solve_standard(_problem: &IterationFunction, max_iters: usize, tolerance: f64) -> usize {
+fn solve_standard(_problem: &IterationFunction, maxiters: usize, tolerance: f64) -> usize {
     let mut x = Array1::from_vec(vec![0.0, 0.0]);
 
     for iter in 1..=max_iters {
@@ -265,7 +265,7 @@ fn solve_standard(_problem: &IterationFunction, max_iters: usize, tolerance: f64
 }
 
 #[allow(dead_code)]
-fn solve_anderson(_problem: &IterationFunction, max_iters: usize, tolerance: f64) -> usize {
+fn solve_anderson(_problem: &IterationFunction, maxiters: usize, tolerance: f64) -> usize {
     let mut accelerator = AndersonAccelerator::new(2, AcceleratorOptions::default());
     let mut x = Array1::from_vec(vec![0.0, 0.0]);
     let mut x_prev = x.clone();

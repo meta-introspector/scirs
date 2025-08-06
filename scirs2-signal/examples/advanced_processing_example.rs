@@ -2,11 +2,11 @@ use std::fs::File;
 use std::io::Write;
 
 use scirs2_signal::{
-use std::f64::consts::PI;
     interpolate::polynomial::*,
     stft::{MemoryEfficientStft, MemoryEfficientStftConfig, StftConfig},
     window::{self, analysis::*, hann, kaiser},
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {
@@ -242,24 +242,25 @@ fn demonstrate_polynomial_interpolation() {
 // Helper functions
 
 #[allow(dead_code)]
-fn save_spectrogram_sample(_spectrogram: &ndarray::Array2<f64>, filename: &str) {
+fn save_spectrogram_sample(spectrogram: &ndarray::Array2<f64>, filename: &str) {
     let mut file = File::create(filename).expect("Could not create file");
 
     // Save first 50 frequency bins and every 10th time frame for visualization
     writeln!(file, "freq_bin,time_frame,magnitude").expect("Failed to write header");
 
-    let freq_step = _spectrogram.shape()[0] / 50;
+    let freq_step = spectrogram.shape()[0] / 50;
     let time_step = 10;
 
     for f in (0.._spectrogram.shape()[0]).step_by(freq_step.max(1)) {
         for t in (0.._spectrogram.shape()[1]).step_by(time_step) {
-            writeln!(file, "{},{},{:.6}", f, t, _spectrogram[[f, t]]).expect("Failed to write data");
+            writeln!(file, "{},{},{:.6}", f, t, spectrogram[[f, t]])
+                .expect("Failed to write data");
         }
     }
 }
 
 #[allow(dead_code)]
-fn save_window_comparison(_comparison: &[(String, WindowAnalysis)], filename: &str) {
+fn save_window_comparison(comparison: &[(String, WindowAnalysis)], filename: &str) {
     let mut file = File::create(filename).expect("Could not create file");
 
     writeln!(file, "window,coherent_gain,nenbw,scalloping_loss_db,max_sidelobe_db,bandwidth_3db,processing_gain_db")
@@ -282,7 +283,7 @@ fn save_window_comparison(_comparison: &[(String, WindowAnalysis)], filename: &s
 }
 
 #[allow(dead_code)]
-fn save_interpolation_comparison(x: &[f64], y_true: &[f64], y_interp: &[f64], filename: &str) {
+fn save_interpolation_comparison(x: &[f64], y_true: &[f64], yinterp: &[f64], filename: &str) {
     let mut file = File::create(filename).expect("Could not create file");
 
     writeln!(file, "x,y_true,y_interpolated,error").expect("Failed to write header");
@@ -299,18 +300,18 @@ fn save_interpolation_comparison(x: &[f64], y_true: &[f64], y_interp: &[f64], fi
 }
 
 #[allow(dead_code)]
-fn calculate_rmse(_y_true: &[f64], y_pred: &[f64]) -> f64 {
+fn calculate_rmse(_y_true: &[f64], ypred: &[f64]) -> f64 {
     let mse: f64 = _y_true
         .iter()
         .zip(y_pred.iter())
         .map(|(&true_val, &pred_val)| (true_val - pred_val).powi(2))
         .sum::<f64>()
-        / _y_true.len() as f64;
+        / y_true.len() as f64;
     mse.sqrt()
 }
 
 #[allow(dead_code)]
-fn calculate_max_error(_y_true: &[f64], y_pred: &[f64]) -> f64 {
+fn calculate_max_error(_y_true: &[f64], ypred: &[f64]) -> f64 {
     _y_true
         .iter()
         .zip(y_pred.iter())

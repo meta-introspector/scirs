@@ -1544,7 +1544,10 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     /// Optimize privacy budget allocation
     #[allow(dead_code)]
     pub fn optimize_budget_allocation(
-        &self, _total_budget: &PrivacyBudget, _iterations: usize, _utility_threshold: T,
+        &self,
+        _total_budget: &PrivacyBudget,
+        _iterations: usize,
+        _utility_threshold: T,
     ) -> Result<BudgetAllocation<T>> {
         // Implementation would go here
         todo!("Implementation of _budget allocation optimization")
@@ -1715,7 +1718,9 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     /// Predict utility degradation
     #[allow(dead_code)]
     pub fn predict_utility_degradation(
-        &self, _privacy_parameters: &[T], _historical_data: &[(T, T)],
+        &self,
+        _privacy_parameters: &[T],
+        _historical_data: &[(T, T)],
     ) -> Result<Vec<DegradationPrediction<T>>> {
         // Implementation would go here
         todo!("Implementation of utility degradation prediction")
@@ -1725,7 +1730,8 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     #[allow(dead_code)]
     pub fn assess_privacy_risk<D: Data<Elem = T> + Sync, Dim: Dimension>(
         &self,
-        data: &ArrayBase<D, Dim>, _config: &PrivacyConfiguration<T>,
+        data: &ArrayBase<D, Dim>,
+        _config: &PrivacyConfiguration<T>,
     ) -> Result<PrivacyRiskAssessment<T>> {
         // Implementation would go here
         todo!("Implementation of privacy risk assessment")
@@ -1735,7 +1741,8 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     #[allow(dead_code)]
     pub fn perform_statistical_tests(
         &self,
-        results: &[(T, T)], _baseline: &[(T, T)],
+        results: &[(T, T)],
+        _baseline: &[(T, T)],
     ) -> Result<StatisticalTestResults<T>> {
         // Implementation would go here
         todo!("Implementation of statistical significance testing")

@@ -540,11 +540,13 @@ pub enum ScatteredInterpolatorParams<F: Float + FromPrimitive + Debug + Display>
     None,
     /// Parameters for IDW (Inverse Distance Weighting)
     IDW {
-        /// Power parameter for IDW (default: 2.0), power: F,
+        /// Power parameter for IDW (default: 2.0)
+        power: F,
     },
     /// Parameters for RBF (Radial Basis Function)
     RBF {
-        /// Epsilon parameter for RBF (default: 1.0), epsilon: F,
+        /// Epsilon parameter for RBF (default: 1.0)
+        epsilon: F,
         /// Type of radial basis function
         rbf_type: RBFType,
     },
@@ -787,7 +789,7 @@ impl<
         }
 
         // Calculate weighted average
-        if sum_weights.is_zero() {
+        if sumweights.is_zero() {
             // This should not happen with non-zero distances
             return Err(InterpolateError::ComputationError(
                 "Sum of weights is zero in IDW interpolation".to_string(),
@@ -985,12 +987,12 @@ pub fn map_coordinates<F: crate::traits::InterpolationFloat>(
     let mut shape = vec![1; n_dims];
 
     for (i_grid) in new_grid.iter().enumerate() {
-        let mut idx = vec![F::from_f64(0.0).unwrap(); _grid.len()];
-        for (j, val) in _grid.iter().enumerate() {
+        let mut idx = vec![F::from_f64(0.0).unwrap(); grid.len()];
+        for (j, val) in grid.iter().enumerate() {
             idx[j] = *val;
         }
         indices[i] = idx;
-        shape[i] = _grid.len();
+        shape[i] = grid.len();
     }
 
     // Calculate total number of points
@@ -1037,7 +1039,7 @@ pub fn map_coordinates<F: crate::traits::InterpolationFloat>(
         out_idx_vec.extend_from_slice(&multi_index[..n_dims]);
 
         // Set the value in the output array
-        *out_values.get_mut(out_idx_vec.as_slice()).unwrap() = _values[flat_idx];
+        *out_values.get_mut(out_idx_vec.as_slice()).unwrap() = values[flat_idx];
     }
 
     Ok(out_values)

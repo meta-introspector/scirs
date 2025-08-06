@@ -6,7 +6,7 @@ use ndarray::s;
 // vectorized operations, and memory-efficient data structures.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1, ArrayViewMut2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1, ArrayViewMut2};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
@@ -217,7 +217,7 @@ where
     }
 
     // Convert to _complex
-    let mut _complex_signal: Array1<num_complex::Complex<T>> = signal
+    let mut complex_signal: Array1<num_complex::Complex<T>> = signal
         .iter()
         .map(|&x| num_complex::Complex::new(x, T::zero()))
         .collect();
@@ -563,7 +563,7 @@ where
 
 /// Standard FFT fallback
 #[allow(dead_code)]
-fn standard_fft_inplace<T>(_data: ArrayViewMut1<num_complex::Complex<T>>) -> SignalResult<()>
+fn standard_fft_inplace<T>(data: ArrayViewMut1<num_complex::Complex<T>>) -> SignalResult<()>
 where
     T: Float + NumCast + Send + Sync + std::fmt::Debug,
 {
@@ -643,6 +643,7 @@ pub fn benchmark_simd_memory_operations(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_simd_convolution() {

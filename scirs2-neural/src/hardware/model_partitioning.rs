@@ -126,11 +126,11 @@ pub struct ModelPartitioner {
     constraints: PartitioningConstraints,
 impl ModelPartitioner {
     /// Create a new model partitioner
-    pub fn new(_devices: Vec<Arc<dyn Accelerator>>, strategy: PartitioningStrategy) -> Self {
+    pub fn new(devices: Vec<Arc<dyn Accelerator>>, strategy: PartitioningStrategy) -> Self {
         let device_profiles = Self::build_device_profiles(&_devices);
         let communication_topology = CommunicationTopology::build_from_devices(&_devices);
         Self {
-            _devices,
+            devices,
             device_profiles,
             communication_topology,
             strategy,
@@ -459,7 +459,7 @@ pub struct CommunicationTopology {
     pub latency_matrix: BTreeMap<(usize, usize), f64>,
 impl CommunicationTopology {
     /// Build communication topology from devices
-    fn build_from_devices(_devices: &[Arc<dyn Accelerator>]) -> Self {
+    fn build_from_devices(devices: &[Arc<dyn Accelerator>]) -> Self {
         let mut bandwidth_matrix = BTreeMap::new();
         let mut latency_matrix = BTreeMap::new();
         // Build all-to-all connectivity with estimated values

@@ -295,7 +295,7 @@ fn visualize_path(
 
 // Helper function for point-in-polygon test
 #[allow(dead_code)]
-fn is_point_in_polygon(_point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
+fn is_point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
     if polygon.len() < 3 {
         return false;
     }
@@ -309,7 +309,7 @@ fn is_point_in_polygon(_point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
         let xj = polygon[j][0];
         let yj = polygon[j][1];
 
-        let intersect = ((yi > _point[1]) != (yj > _point[1]))
+        let intersect = ((yi > point[1]) != (yj > point[1]))
             && (_point[0] < (xj - xi) * (_point[1] - yi) / (yj - yi) + xi);
 
         if intersect {

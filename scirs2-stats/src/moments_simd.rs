@@ -192,7 +192,7 @@ where
 ///
 /// * The nth moment of the input data
 #[allow(dead_code)]
-pub fn moment_simd<F, D>(x: &ArrayBase<D, Ix1>, moment_order: usize, center: bool) -> StatsResult<F>
+pub fn moment_simd<F, D>(x: &ArrayBase<D, Ix1>, momentorder: usize, center: bool) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::fmt::Display,
     D: Data<Elem = F>,

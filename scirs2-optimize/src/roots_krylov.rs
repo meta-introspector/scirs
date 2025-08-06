@@ -172,7 +172,7 @@ where
 /// Implements a simplified GMRES (Generalized Minimal Residual) method
 /// for solving linear systems Ax = b with Levenberg-Marquardt regularization
 #[allow(dead_code)]
-fn gmres_solve(a: &Array2<f64>, b: &Array1<f64>, lambda: f64, max_iter: usize) -> Array1<f64> {
+fn gmres_solve(a: &Array2<f64>, b: &Array1<f64>, lambda: f64, maxiter: usize) -> Array1<f64> {
     let (_m, n) = a.dim();
 
     // Regularized system: solve (A^T A + λI) x = A^T b

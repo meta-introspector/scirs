@@ -179,7 +179,7 @@ impl CausalityTester {
     }
 
     /// Create a new causality tester with a random seed
-    pub fn with_seed(_seed: u64) -> Self {
+    pub fn with_seed(seed: u64) -> Self {
         Self {
             random_seed: Some(_seed),
         }
@@ -566,7 +566,7 @@ impl CausalityTester {
         Ok(x)
     }
 
-    fn f_distribution_p_value(&self, f_stat: f64, df1: usize, df2: usize) -> f64 {
+    fn f_distribution_p_value(&self, fstat: f64, df1: usize, df2: usize) -> f64 {
         // Approximation for F-distribution p-value
         // This is a simplified implementation
         if f_stat <= 0.0 {
@@ -983,7 +983,7 @@ impl CausalityTester {
         // Calculate residual standard error
         let fitted = design_matrix.dot(&beta);
         let residuals = &response - &fitted;
-        let mse = residuals.mapv(|_x| _x * _x).sum() / (n - 1 - beta.len()) as f64;
+        let mse = residuals.mapv(|_x| _x * x).sum() / (n - 1 - beta.len()) as f64;
         let std_error = mse.sqrt();
 
         // Predict post-intervention values

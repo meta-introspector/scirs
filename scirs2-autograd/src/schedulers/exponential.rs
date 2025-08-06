@@ -44,10 +44,10 @@ impl<F: Float> ExponentialLR<F> {
     ///
     /// # Panics
     /// Panics if `gamma` is not positive
-    pub fn new(_initial_lr: F, gamma: F) -> Self {
+    pub fn new(_initiallr: F, gamma: F) -> Self {
         assert!(gamma > F::zero(), "gamma must be positive");
 
-        Self { _initial_lr, gamma }
+        Self { initial_lr, gamma }
     }
 
     /// Create an ExponentialLR scheduler with slow decay
@@ -57,7 +57,7 @@ impl<F: Float> ExponentialLR<F> {
     ///
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
-    pub fn slow_decay(_initial_lr: F) -> Self {
+    pub fn slow_decay(_initiallr: F) -> Self {
         Self::new(_initial_lr, F::from(0.99).unwrap())
     }
 
@@ -68,7 +68,7 @@ impl<F: Float> ExponentialLR<F> {
     ///
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
-    pub fn moderate_decay(_initial_lr: F) -> Self {
+    pub fn moderate_decay(_initiallr: F) -> Self {
         Self::new(_initial_lr, F::from(0.95).unwrap())
     }
 
@@ -79,7 +79,7 @@ impl<F: Float> ExponentialLR<F> {
     ///
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
-    pub fn fast_decay(_initial_lr: F) -> Self {
+    pub fn fast_decay(_initiallr: F) -> Self {
         Self::new(_initial_lr, F::from(0.9).unwrap())
     }
 
@@ -94,7 +94,7 @@ impl<F: Float> ExponentialLR<F> {
     ///
     /// # Returns
     /// ExponentialLR scheduler with appropriate gamma
-    pub fn from_half_life(_initial_lr: F, half_life: usize) -> Self {
+    pub fn from_half_life(_initial_lr: F, halflife: usize) -> Self {
         assert!(half_life > 0, "half_life must be greater than 0");
 
         // gamma = 0.5^(1/half_life)
@@ -125,7 +125,7 @@ impl<F: Float> ExponentialLR<F> {
     ///
     /// # Returns
     /// Number of steps needed to reach target learning rate (rounded up)
-    pub fn steps_to_reach(&self, target_lr: F) -> Option<usize> {
+    pub fn steps_to_reach(&self, targetlr: F) -> Option<usize> {
         if target_lr <= F::zero() || target_lr > self.initial_lr {
             return None;
         }

@@ -406,16 +406,16 @@ pub mod filter_functions {
 
     /// Calculate the mean of values
     pub fn mean<T: Float>(values: &[T]) -> T {
-        if _values.is_empty() {
+        if values.is_empty() {
             return T::zero();
         }
-        let sum = _values.iter().fold(T::zero(), |acc, &x| acc + x);
+        let sum = values.iter().fold(T::zero(), |acc, &x| acc + x);
         sum / T::from_usize(_values.len()).unwrap_or(T::one())
     }
 
     /// Calculate the standard deviation of values
     pub fn std_dev<T: Float>(values: &[T]) -> T {
-        if _values.len() <= 1 {
+        if values.len() <= 1 {
             return T::zero();
         }
 
@@ -431,18 +431,18 @@ pub mod filter_functions {
 
     /// Calculate the range (max - min) of values
     pub fn range<T: Float>(values: &[T]) -> T {
-        if _values.is_empty() {
+        if values.is_empty() {
             return T::zero();
         }
 
-        let min_val = _values.iter().fold(T::infinity(), |a, &b| a.min(b));
-        let max_val = _values.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
+        let min_val = values.iter().fold(T::infinity(), |a, &b| a.min(b));
+        let max_val = values.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
         max_val - min_val
     }
 
     /// Calculate the variance of values
     pub fn variance<T: Float>(values: &[T]) -> T {
-        if _values.len() <= 1 {
+        if values.len() <= 1 {
             return T::zero();
         }
 
@@ -456,26 +456,26 @@ pub mod filter_functions {
 
     /// Calculate the maximum value
     pub fn maximum<T: Float>(values: &[T]) -> T {
-        if _values.is_empty() {
+        if values.is_empty() {
             return T::zero();
         }
-        _values.iter().fold(T::neg_infinity(), |a, &b| a.max(b))
+        values.iter().fold(T::neg_infinity(), |a, &b| a.max(b))
     }
 
     /// Calculate the minimum value  
     pub fn minimum<T: Float>(values: &[T]) -> T {
-        if _values.is_empty() {
+        if values.is_empty() {
             return T::zero();
         }
-        _values.iter().fold(T::infinity(), |a, &b| a.min(b))
+        values.iter().fold(T::infinity(), |a, &b| a.min(b))
     }
 
     /// Calculate the median value
     pub fn median<T: Float>(values: &[T]) -> T {
-        if _values.is_empty() {
+        if values.is_empty() {
             return T::zero();
         }
-        let mut sorted_values: Vec<T> = _values.to_vec();
+        let mut sorted_values: Vec<T> = values.to_vec();
         sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let len = sorted_values.len();
@@ -497,17 +497,17 @@ pub mod simd_filter_functions_f32 {
 
     /// SIMD-optimized mean calculation for f32
     #[allow(dead_code)]
-    pub fn mean_simd(_values: &[f32]) -> f32 {
-        if _values.is_empty() {
+    pub fn mean_simd(values: &[f32]) -> f32 {
+        if values.is_empty() {
             return 0.0;
         }
 
         // Use SIMD for larger arrays
-        if _values.len() >= 8 {
+        if values.len() >= 8 {
             let arr = Array1::from(_values.to_vec());
             let view = arr.view();
             let sum = simd_scalar_sum_f32(&view);
-            sum / _values.len() as f32
+            sum / values.len() as f32
         } else {
             // Fallback to regular calculation for small arrays
             super::filter_functions::mean(_values)
@@ -516,9 +516,9 @@ pub mod simd_filter_functions_f32 {
 
     /// Helper function to sum array elements using SIMD
     #[allow(dead_code)]
-    fn simd_scalar_sum_f32(_arr: &ArrayView1<f32>) -> f32 {
+    fn simd_scalar_sum_f32(arr: &ArrayView1<f32>) -> f32 {
         // Simple implementation - could be optimized further
-        _arr.iter().sum()
+        arr.iter().sum()
     }
 }
 
@@ -530,17 +530,17 @@ pub mod simd_filter_functions_f64 {
 
     /// SIMD-optimized mean calculation for f64
     #[allow(dead_code)]
-    pub fn mean_simd(_values: &[f64]) -> f64 {
-        if _values.is_empty() {
+    pub fn mean_simd(values: &[f64]) -> f64 {
+        if values.is_empty() {
             return 0.0;
         }
 
         // Use SIMD for larger arrays
-        if _values.len() >= 4 {
+        if values.len() >= 4 {
             let arr = Array1::from(_values.to_vec());
             let view = arr.view();
             let sum = simd_scalar_sum_f64(&view);
-            sum / _values.len() as f64
+            sum / values.len() as f64
         } else {
             // Fallback to regular calculation for small arrays
             super::filter_functions::mean(_values)
@@ -549,9 +549,9 @@ pub mod simd_filter_functions_f64 {
 
     /// Helper function to sum array elements using SIMD
     #[allow(dead_code)]
-    fn simd_scalar_sum_f64(_arr: &ArrayView1<f64>) -> f64 {
+    fn simd_scalar_sum_f64(arr: &ArrayView1<f64>) -> f64 {
         // Simple implementation - could be optimized further
-        _arr.iter().sum()
+        arr.iter().sum()
     }
 }
 

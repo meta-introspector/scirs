@@ -196,16 +196,16 @@ where
 
 /// Pad a matrix to the specified dimensions
 #[allow(dead_code)]
-fn pad_matrix<F>(a: &ArrayView2<F>, new_rows: usize, new_cols: usize) -> Array2<F>
+fn pad_matrix<F>(a: &ArrayView2<F>, new_rows: usize, newcols: usize) -> Array2<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
-    let (_rows, _cols) = a.dim();
-    let mut result = Array2::zeros((new_rows, new_cols));
+    let (rows, cols) = a.dim();
+    let mut result = Array2::zeros((new_rows, newcols));
 
     // Copy the original matrix
-    for i in 0.._rows {
-        for j in 0.._cols {
+    for i in 0..rows {
+        for j in 0..cols {
             result[[i, j]] = a[[i, j]];
         }
     }

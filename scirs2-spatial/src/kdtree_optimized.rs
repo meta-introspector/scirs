@@ -40,7 +40,7 @@ pub trait KDTreeOptimized<T: Float + Send + Sync + 'static, D> {
     /// # Returns
     ///
     /// * The Hausdorff distance between the two point sets
-    fn hausdorff_distance(&self, _points: &ArrayView2<T>, seed: Option<u64>) -> SpatialResult<T>;
+    fn hausdorff_distance(&self, points: &ArrayView2<T>, seed: Option<u64>) -> SpatialResult<T>;
 
     /// Compute the approximate nearest neighbor for each point in a set
     ///
@@ -71,7 +71,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
 
         // Get dimensions and check compatibility
         let tree_dims = self.ndim();
-        let points_dims = _points.shape()[1];
+        let points_dims = points.shape()[1];
 
         if tree_dims != points_dims {
             return Err(crate::error::SpatialError::DimensionError(format!(
@@ -79,7 +79,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
             )));
         }
 
-        let n_points = _points.shape()[0];
+        let n_points = points.shape()[0];
 
         if n_points == 0 {
             return Err(crate::error::SpatialError::ValueError(
@@ -94,7 +94,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
         let mut max_j = 0; // Index in the query _points
 
         for j in 0..n_points {
-            let query_point = _points.row(j).to_vec();
+            let query_point = points.row(j).to_vec();
 
             // Find the nearest point in the tree
             let (indices, distances) = self.query(&query_point, 1)?;
@@ -116,12 +116,12 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
         Ok((max_dist, max_i, max_j))
     }
 
-    fn hausdorff_distance(&self, _points: &ArrayView2<T>, seed: Option<u64>) -> SpatialResult<T> {
+    fn hausdorff_distance(&self, points: &ArrayView2<T>, seed: Option<u64>) -> SpatialResult<T> {
         // First get the forward directed Hausdorff distance
         let (dist_forward__, _, _) = self.directed_hausdorff_distance(_points, seed)?;
 
         // For the backward direction, we need to create a new KDTree on the _points
-        let points_owned = _points.to_owned();
+        let points_owned = points.to_owned();
         let points_tree = KDTree::new(&points_owned)?;
 
         // Get the backward directed Hausdorff distance using the points_tree
@@ -142,7 +142,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
     ) -> SpatialResult<(Array1<usize>, Array1<T>)> {
         // Check dimensions
         let tree_dims = self.ndim();
-        let points_dims = _points.shape()[1];
+        let points_dims = points.shape()[1];
 
         if tree_dims != points_dims {
             return Err(crate::error::SpatialError::DimensionError(format!(
@@ -150,7 +150,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
             )));
         }
 
-        let n_points = _points.shape()[0];
+        let n_points = points.shape()[0];
         let mut indices = Array1::<usize>::zeros(n_points);
         let mut distances = Array1::<T>::zeros(n_points);
 
@@ -168,7 +168,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
                 let batch_results: Vec<_> = (batch_start..batch_end)
                     .into_par_iter()
                     .map(|i| {
-                        let point = _points.row(i).to_vec();
+                        let point = points.row(i).to_vec();
                         let (idx, dist) = self.query(&point, 1).unwrap();
                         (i, idx[0], dist[0])
                     })
@@ -184,7 +184,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
             #[cfg(not(feature = "parallel"))]
             {
                 for i in batch_start..batch_end {
-                    let point = _points.row(i).to_vec();
+                    let point = points.row(i).to_vec();
                     let (idx, dist) = self.query(&point, 1)?;
                     indices[i] = idx[0];
                     distances[i] = dist[0];

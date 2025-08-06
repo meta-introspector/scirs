@@ -70,9 +70,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 /// Compute entropy of a histogram
 #[allow(dead_code)]
-fn compute_entropy(_hist: &ndarray::Array1<f32>) -> f32 {
+fn compute_entropy(hist: &ndarray::Array1<f32>) -> f32 {
     let mut entropy = 0.0;
-    for &p in _hist.iter() {
+    for &p in hist.iter() {
         if p > 0.0 {
             entropy -= p * p.log2();
         }
@@ -82,8 +82,8 @@ fn compute_entropy(_hist: &ndarray::Array1<f32>) -> f32 {
 
 /// Compare textures in different regions of the image
 #[allow(dead_code)]
-fn compare_regions(_img: &DynamicImage) -> Result<(), Box<dyn Error>> {
-    let (width, height) = _img.dimensions();
+fn compare_regions(img: &DynamicImage) -> Result<(), Box<dyn Error>> {
+    let (width, height) = img.dimensions();
 
     // Define regions (top-left, top-right, bottom-left, bottom-right)
     let regions = vec![
@@ -97,7 +97,7 @@ fn compare_regions(_img: &DynamicImage) -> Result<(), Box<dyn Error>> {
 
     for (name, x, y, w, h) in &regions {
         // Extract region
-        let region = _img.crop_imm(*x, *y, *w, *h);
+        let region = img.crop_imm(*x, *y, *w, *h);
 
         // Compute LBP
         let lbp_img = lbp(
@@ -133,10 +133,10 @@ fn compare_regions(_img: &DynamicImage) -> Result<(), Box<dyn Error>> {
 
 /// Compute chi-square distance between histograms
 #[allow(dead_code)]
-fn chi_square_distance(_hist1: &ndarray::Array1<f32>, hist2: &ndarray::Array1<f32>) -> f32 {
+fn chi_square_distance(hist1: &ndarray::Array1<f32>, hist2: &ndarray::Array1<f32>) -> f32 {
     let mut distance = 0.0;
     for i in 0.._hist1.len() {
-        let sum = _hist1[i] + hist2[i];
+        let sum = hist1[i] + hist2[i];
         if sum > 0.0 {
             distance += (_hist1[i] - hist2[i]).powi(2) / sum;
         }

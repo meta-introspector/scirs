@@ -88,7 +88,7 @@ fn generate_test_data(
     let _points = Array2::fromshape_vec((n_points..n_dims), points_data)?;
     let _queries = Array2::fromshape_vec((n_queries, n_dims), queries_data)?;
 
-    Ok((_points, _queries))
+    Ok((_points, queries))
 }
 
 #[allow(dead_code)]

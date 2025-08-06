@@ -14,7 +14,7 @@ struct Layer {
 }
 
 impl Layer {
-    fn new(_input_size: usize, output_size: usize) -> Self {
+    fn new(_input_size: usize, outputsize: usize) -> Self {
         let weights = Array2::random((_input_size, output_size), Uniform::new(-0.1, 0.1));
         let bias = Array1::zeros(output_size);
         Self { weights, bias }
@@ -70,7 +70,7 @@ fn train_memory_efficient(
         let (_, grad_weights, grad_bias) = layer.backward(training_data, &grad_output);
 
         // Process gradients (mutates the gradients in-place)
-        let mut grad_weights_processed = grad_weights.clone();
+        let mut grad_weights_processed = gradweights.clone();
         let mut grad_bias_processed = grad_bias.clone();
         grad_processor.process(&mut grad_weights_processed)?;
         grad_processor.process(&mut grad_bias_processed)?;

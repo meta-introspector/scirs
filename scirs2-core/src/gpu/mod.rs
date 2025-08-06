@@ -212,11 +212,11 @@ impl GpuDevice {
     }
 
     /// Compile a kernel from source
-    pub fn compile_kernel(&self, _source: &str, entry_point: &str) -> Result<GpuKernel, GpuError> {
+    pub fn compile_kernel(&self, _source: &str, entrypoint: &str) -> Result<GpuKernel, GpuError> {
         // Placeholder implementation
         Ok(GpuKernel {
             backend: self.backend,
-            entry_point: entry_point.to_string(),
+            entry_point: entrypoint.to_string(),
         })
     }
 }
@@ -483,8 +483,8 @@ impl GpuKernelHandle {
     }
 
     /// Dispatch the kernel with the given work group counts
-    pub fn dispatch(&self, work_groups: [u32; 3]) {
-        self.inner.dispatch(work_groups);
+    pub fn dispatch(&self, workgroups: [u32; 3]) {
+        self.inner.dispatch(workgroups);
     }
 }
 
@@ -793,7 +793,7 @@ impl GpuContext {
         // For now, provide a basic implementation that logs the execution
         // In a real implementation, this would compile and execute the kernel
         eprintln!(
-            "GPU kernel execution (source length: {}, buffers: {}, work_groups: {:?})",
+            "GPU kernel execution (source length: {}, buffers: {}, workgroups: {:?})",
             source.len(),
             buffers.len(),
             work_groups
@@ -856,7 +856,7 @@ pub(crate) trait GpuKernelImpl: Send + Sync {
     fn set_f64(&self, name: &str, value: f64);
 
     /// Dispatch the kernel
-    fn dispatch(&self, work_groups: [u32; 3]);
+    fn dispatch(&self, workgroups: [u32; 3]);
 }
 
 /// GPU compiler implementation trait
@@ -947,7 +947,7 @@ impl GpuBufferImpl for CpuBuffer {
 struct CpuCompiler;
 
 impl GpuCompilerImpl for CpuCompiler {
-    fn compile(&self, _source: &str) -> Result<Arc<dyn GpuKernelImpl>, GpuError> {
+    fn compile(&self, source: &str) -> Result<Arc<dyn GpuKernelImpl>, GpuError> {
         // In a real implementation, we would parse and execute the kernel
         // For now, just return a dummy implementation
         Ok(Arc::new(CpuKernel))
@@ -969,27 +969,27 @@ impl GpuCompilerImpl for CpuCompiler {
 struct CpuKernel;
 
 impl GpuKernelImpl for CpuKernel {
-    fn set_buffer(&self, _name: &str, _buffer: &Arc<dyn GpuBufferImpl>) {
+    fn set_buffer(&self, _name: &str, buffer: &Arc<dyn GpuBufferImpl>) {
         // In a real implementation, we would store the buffer
     }
 
-    fn set_u32(&self, _name: &str, _value: u32) {
+    fn set_u32(&self, _name: &str, value: u32) {
         // In a real implementation, we would store the value
     }
 
-    fn set_i32(&self, _name: &str, _value: i32) {
+    fn set_i32(&self, _name: &str, value: i32) {
         // In a real implementation, we would store the value
     }
 
-    fn set_f32(&self, _name: &str, _value: f32) {
+    fn set_f32(&self, _name: &str, value: f32) {
         // In a real implementation, we would store the value
     }
 
-    fn set_f64(&self, _name: &str, _value: f64) {
+    fn set_f64(&self, _name: &str, value: f64) {
         // In a real implementation, we would store the value
     }
 
-    fn dispatch(&self, work_groups: [u32; 3]) {
+    fn dispatch(&self, workgroups: [u32; 3]) {
         // In a real implementation, we would execute the kernel
     }
 }
@@ -1054,51 +1054,51 @@ mod tests {
     }
 
     #[test]
-    fn test_gpu_error_from_conversion() {
-        let gpu_error = GpuError::BackendNotAvailable("CUDA".to_string());
-        let core_error: CoreError = gpu_error.into();
-        match core_error {
+    fn test_gpuerror_from_conversion() {
+        let gpuerror = GpuError::BackendNotAvailable("CUDA".to_string());
+        let coreerror: CoreError = gpuerror.into();
+        match coreerror {
             CoreError::ComputationError(_) => {}
             _ => panic!("Expected ComputationError"),
         }
 
-        let gpu_error = GpuError::OutOfMemory("8GB required".to_string());
-        let core_error: CoreError = gpu_error.into();
-        match core_error {
+        let gpuerror = GpuError::OutOfMemory("8GB required".to_string());
+        let coreerror: CoreError = gpuerror.into();
+        match coreerror {
             CoreError::MemoryError(_) => {}
             _ => panic!("Expected MemoryError"),
         }
 
-        let gpu_error = GpuError::InvalidParameter("batch_size must be > 0".to_string());
-        let core_error: CoreError = gpu_error.into();
-        match core_error {
+        let gpuerror = GpuError::InvalidParameter("batch_size must be > 0".to_string());
+        let coreerror: CoreError = gpuerror.into();
+        match coreerror {
             CoreError::InvalidArgument(_) => {}
             _ => panic!("Expected InvalidArgument"),
         }
 
-        let gpu_error = GpuError::UnsupportedDataType(kernels::DataType::Float16);
-        let core_error: CoreError = gpu_error.into();
-        match core_error {
+        let gpuerror = GpuError::UnsupportedDataType(kernels::DataType::Float16);
+        let coreerror: CoreError = gpuerror.into();
+        match coreerror {
             CoreError::TypeError(_) => {}
             _ => panic!("Expected TypeError"),
         }
     }
 
     #[test]
-    fn test_gpu_data_type_trait() {
+    fn test_gpu_datatype_trait() {
         // Test that various types implement GpuDataType
-        fn assert_gpu_data_type<T: GpuDataType>() {}
+        fn assert_gpu_datatype<T: GpuDataType>() {}
 
-        assert_gpu_data_type::<f32>();
-        assert_gpu_data_type::<f64>();
-        assert_gpu_data_type::<i32>();
-        assert_gpu_data_type::<u32>();
-        assert_gpu_data_type::<u8>();
-        assert_gpu_data_type::<i8>();
-        assert_gpu_data_type::<u16>();
-        assert_gpu_data_type::<i16>();
-        assert_gpu_data_type::<u64>();
-        assert_gpu_data_type::<i64>();
+        assert_gpu_datatype::<f32>();
+        assert_gpu_datatype::<f64>();
+        assert_gpu_datatype::<i32>();
+        assert_gpu_datatype::<u32>();
+        assert_gpu_datatype::<u8>();
+        assert_gpu_datatype::<i8>();
+        assert_gpu_datatype::<u16>();
+        assert_gpu_datatype::<i16>();
+        assert_gpu_datatype::<u64>();
+        assert_gpu_datatype::<i64>();
     }
 
     #[test]
@@ -1273,7 +1273,7 @@ mod tests {
     }
 
     #[test]
-    fn test_gpu_error_display() {
+    fn test_gpuerror_display() {
         let error = GpuError::BackendNotAvailable("CUDA".to_string());
         assert_eq!(error.to_string(), "GPU backend CUDA is not available");
 

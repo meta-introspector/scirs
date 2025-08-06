@@ -194,7 +194,7 @@ impl ExecutionTracer {
     }
 
     /// Stop a recording
-    pub fn stop_recording(&mut self, recording_id: &RecordingId) -> Option<Recording> {
+    pub fn stop_recording(&mut self, recordingid: &RecordingId) -> Option<Recording> {
         if let Some(mut recording) = self.recordings.remove(&recording_id.0) {
             recording.status = RecordingStatus::Completed;
             Some(recording)
@@ -379,11 +379,15 @@ impl ExecutionTracer {
                 *duration >= self.config.min_operation_duration
             }
             EventType::MemoryAllocation { size, .. } => *size >= self.config.min_memory_threshold,
+            EventType::GradientComputation { duration, .. } => {
+                *duration >= self.config.min_operation_duration
+            }
+            EventType::PerformanceBottleneck { .. } => true, // Always record performance bottlenecks
         }
     }
 
     #[allow(dead_code)]
-    fn estimate_memory_usage<F: Float>(&self, inputs: &[&Tensor<F>], _output: &Tensor<F>) -> usize {
+    fn estimate_memory_usage<F: Float>(&self, inputs: &[&Tensor<F>], output: &Tensor<F>) -> usize {
         // Simplified memory estimation - in practice would calculate actual tensor sizes
         let estimated_input_memory = inputs.len() * 1000 * std::mem::size_of::<f64>();
         let estimated_output_memory = 1000 * std::mem::size_of::<f64>();
@@ -772,7 +776,7 @@ pub fn init_tracer() -> Arc<Mutex<ExecutionTracer>> {
 
 /// Configure global tracing
 #[allow(dead_code)]
-pub fn configure_tracing(_config: TracingConfig) -> Result<(), TracingError> {
+pub fn configure_tracing(config: TracingConfig) -> Result<(), TracingError> {
     let tracer = init_tracer();
     let mut tracer_guard = tracer
         .lock()
@@ -783,7 +787,7 @@ pub fn configure_tracing(_config: TracingConfig) -> Result<(), TracingError> {
 
 /// Start a new trace session
 #[allow(dead_code)]
-pub fn start_trace_session(_name: &str) -> Result<TraceSessionId, TracingError> {
+pub fn start_trace_session(name: &str) -> Result<TraceSessionId, TracingError> {
     let tracer = init_tracer();
     let mut tracer_guard = tracer
         .lock()
@@ -829,7 +833,7 @@ pub fn get_performance_analysis() -> Result<PerformanceAnalysis, TracingError> {
 
 /// Export traces to a file
 #[allow(dead_code)]
-pub fn export_traces(_format: ExportFormat) -> Result<String, TracingError> {
+pub fn export_traces(format: ExportFormat) -> Result<String, TracingError> {
     let tracer = init_tracer();
     let tracer_guard = tracer
         .lock()
@@ -839,10 +843,10 @@ pub fn export_traces(_format: ExportFormat) -> Result<String, TracingError> {
 
 /// Enable or disable tracing globally
 #[allow(dead_code)]
-pub fn set_tracing_enabled(_enabled: bool) -> Result<(), TracingError> {
+pub fn set_tracing_enabled(enabled: bool) -> Result<(), TracingError> {
     let config = TracingConfig {
-        trace_operations: _enabled,
-        trace_gradients: _enabled,
+        trace_operations: enabled,
+        trace_gradients: enabled,
         ..Default::default()
     };
     configure_tracing(config)

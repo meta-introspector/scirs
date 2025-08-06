@@ -1698,7 +1698,7 @@ impl PerformanceMonitor {
         self.metrics.get(name)
     }
 
-    pub fn add_threshold(&mut self, metric_name: String, warning: f64, critical: f64) {
+    pub fn add_threshold(&mut self, metricname: String, warning: f64, critical: f64) {
         self.thresholds.insert(
             metric_name.clone(),
             Threshold {
@@ -1765,11 +1765,11 @@ impl HealthChecker {
 
 // Utility functions for creating production configurations
 #[allow(dead_code)]
-pub fn create_cloud_production_config(_cloud_provider: CloudProvider) -> ProductionConfig {
+pub fn create_cloud_production_config(_cloudprovider: CloudProvider) -> ProductionConfig {
     let mut config = ProductionConfig::default();
 
     config.environment.environment_type = EnvironmentType::Cloud {
-        provider: _cloud_provider,
+        provider: cloud_provider,
         instance_type: "m5.large".to_string(),
         region: "us-east-1".to_string(),
     };
@@ -1794,7 +1794,7 @@ pub fn create_container_production_config(
     let mut config = ProductionConfig::default();
 
     config.environment.environment_type = EnvironmentType::Container {
-        runtime: _container_runtime,
+        runtime: container_runtime,
         resources: ContainerResources {
             cpu_cores: 2.0,
             memory_mb: 4096,

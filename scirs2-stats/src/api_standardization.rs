@@ -473,7 +473,7 @@ where
     }
 
     /// Compute percentiles (25th, 50th, 75th)
-    fn compute_percentiles(&self, sorted_data: &[F]) -> StatsResult<[F; 3]> {
+    fn compute_percentiles(&self, sorteddata: &[F]) -> StatsResult<[F; 3]> {
         let n = sorted_data.len();
         if n == 0 {
             return Err(StatsError::InvalidArgument("Empty _data".to_string()));
@@ -504,7 +504,7 @@ where
     }
 
     /// Estimate memory usage
-    fn estimate_memory_usage(&self, sample_size: usize) -> Option<usize> {
+    fn estimate_memory_usage(&self, samplesize: usize) -> Option<usize> {
         if self.config.include_metadata {
             Some(sample_size * std::mem::size_of::<F>() * 2) // Rough estimate
         } else {
@@ -1625,9 +1625,9 @@ impl APIValidationFramework {
 
 impl ValidationReport {
     /// Create new validation report
-    pub fn new(_function_name: String) -> Self {
+    pub fn new(_functionname: String) -> Self {
         Self {
-            function_name: _function_name,
+            function_name: function_name,
             results: HashMap::new(),
             overall_status: ValidationStatus::Passed,
             summary: ValidationSummary {
@@ -1641,7 +1641,7 @@ impl ValidationReport {
     }
 
     /// Add validation result
-    pub fn add_result(&mut self, rule_id: String, result: ValidationResult) {
+    pub fn add_result(&mut self, ruleid: String, result: ValidationResult) {
         self.summary.total_rules += 1;
 
         if result.passed {

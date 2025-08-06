@@ -47,8 +47,7 @@ where
     I: Iterator<Item = T>,
     T: PartialOrd,
 {
-    iter
-        .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+    iter.min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
         .ok_or_else(|| {
             SpatialError::ComputationError(format!(
                 "Failed to find minimum value in {context} (empty iterator or all NaN)"
@@ -63,8 +62,7 @@ where
     I: Iterator<Item = T>,
     T: PartialOrd,
 {
-    iter
-        .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+    iter.max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
         .ok_or_else(|| {
             SpatialError::ComputationError(format!(
                 "Failed to find maximum value in {context} (empty iterator or all NaN)"

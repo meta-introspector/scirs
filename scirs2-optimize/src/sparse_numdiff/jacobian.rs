@@ -13,9 +13,9 @@ use crate::error::OptimizeError;
 
 // Helper function to replace get_index and set_value_by_index which are not available in CsrArray
 #[allow(dead_code)]
-fn update_sparse_value(_matrix: &mut CsrArray<f64>, row: usize, col: usize, value: f64) {
+fn update_sparse_value(matrix: &mut CsrArray<f64>, row: usize, col: usize, value: f64) {
     // Only update if the position is non-zero in the sparsity pattern and set operation succeeds
-    if _matrix.get(row, col) != 0.0 && _matrix.set(row, col, value).is_err() {
+    if matrix.get(row, col) != 0.0 && matrix.set(row, col, value).is_err() {
         // If this fails, just silently continue
     }
 }

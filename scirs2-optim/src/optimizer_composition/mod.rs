@@ -59,8 +59,10 @@ where
     /// # Arguments
     ///
     /// * `optimizers` - List of optimizers to apply in sequence
-    pub fn new(_optimizers: Vec<Box<dyn Optimizer<A, D>>>) -> Self {
-        Self { optimizers: _optimizers }
+    pub fn new(optimizers: Vec<Box<dyn Optimizer<A, D>>>) -> Self {
+        Self {
+            optimizers: optimizers,
+        }
     }
 
     /// Add an optimizer to the sequence
@@ -145,7 +147,7 @@ where
         }
     }
 
-    fn set_learning_rate(&mut self, learning_rate: A) {
+    fn set_learning_rate(&mut self, learningrate: A) {
         // Set the learning _rate for all optimizers
         for optimizer in &mut self.optimizers {
             optimizer.set_learning_rate(learning_rate);
@@ -176,9 +178,9 @@ where
     ///
     /// * `params` - The parameters in this group
     /// * `optimizer_index` - The index of the optimizer to use for this group
-    pub fn new(_params: Array<A, D>, optimizer_index: usize) -> Self {
+    pub fn new(_params: Array<A, D>, optimizerindex: usize) -> Self {
         Self {
-            params: _params,
+            params: params,
             optimizer_index,
         }
     }
@@ -430,7 +432,7 @@ where
     A: Float + ScalarOperand + Debug,
     D: Dimension,
 {
-    fn step(&mut self, _params: &Array<A, D>, _gradients: &Array<A, D>) -> Result<Array<A, D>> {
+    fn step(&mut self, _params: &Array<A, D>, gradients: &Array<A, D>) -> Result<Array<A, D>> {
         // This implementation is a bit tricky since we have multiple parameter groups
         // We'll return an error message directing users to use update_all_parameters instead
         Err(OptimError::InvalidConfig(
@@ -474,7 +476,7 @@ where
         }
     }
 
-    fn set_learning_rate(&mut self, learning_rate: A) {
+    fn set_learning_rate(&mut self, learningrate: A) {
         // Set the learning _rate for all optimizers
         for optimizer in &mut self.optimizers {
             optimizer.set_learning_rate(learning_rate);
@@ -529,8 +531,11 @@ where
     ///
     /// * `inner` - The inner optimizer, applied first
     /// * `outer` - The outer optimizer, applied to the result of the inner optimizer
-    pub fn new(_inner: Box<dyn Optimizer<A, D>>, outer: Box<dyn Optimizer<A, D>>) -> Self {
-        Self { inner: _inner, outer }
+    pub fn new(inner: Box<dyn Optimizer<A, D>>, outer: Box<dyn Optimizer<A, D>>) -> Self {
+        Self {
+            inner: inner,
+            outer,
+        }
     }
 
     /// Get a reference to the inner optimizer
@@ -572,7 +577,7 @@ where
         self.inner.get_learning_rate()
     }
 
-    fn set_learning_rate(&mut self, learning_rate: A) {
+    fn set_learning_rate(&mut self, learningrate: A) {
         // Set the learning _rate for both optimizers
         self.inner.set_learning_rate(learning_rate);
         self.outer.set_learning_rate(learning_rate);

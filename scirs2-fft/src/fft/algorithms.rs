@@ -42,17 +42,17 @@ impl From<&str> for NormMode {
 
 /// Convert a normalization mode string to NormMode enum
 #[allow(dead_code)]
-pub fn parse_norm_mode(_norm: Option<&str>, is_inverse: bool) -> NormMode {
+pub fn parse_norm_mode(_norm: Option<&str>, isinverse: bool) -> NormMode {
     match _norm {
         Some(s) => NormMode::from(s),
-        None if is_inverse => NormMode::Backward, // Default for _inverse transforms
+        None if isinverse => NormMode::Backward, // Default for _inverse transforms
         None => NormMode::None,                   // Default for forward transforms
     }
 }
 
 /// Apply normalization to FFT results based on the specified mode
 #[allow(dead_code)]
-fn apply_normalization(_data: &mut [Complex64], n: usize, mode: NormMode) -> FFTResult<()> {
+fn apply_normalization(data: &mut [Complex64], n: usize, mode: NormMode) -> FFTResult<()> {
     match mode {
         NormMode::None => {} // No normalization
         NormMode::Backward => {
@@ -62,7 +62,7 @@ fn apply_normalization(_data: &mut [Complex64], n: usize, mode: NormMode) -> FFT
                     "Division by zero in backward normalization: FFT size is zero".to_string(),
                 )
             })?;
-            _data.iter_mut().for_each(|c| *c *= scale);
+            data.iter_mut().for_each(|c| *c *= scale);
         }
         NormMode::Ortho => {
             let n_f64 = n as f64;
@@ -74,7 +74,7 @@ fn apply_normalization(_data: &mut [Complex64], n: usize, mode: NormMode) -> FFT
             let scale = safe_divide(1.0, sqrt_n).map_err(|_| {
                 FFTError::ValueError("Division by zero in orthogonal normalization".to_string())
             })?;
-            _data.iter_mut().for_each(|c| *c *= scale);
+            data.iter_mut().for_each(|c| *c *= scale);
         }
         NormMode::Forward => {
             let n_f64 = n as f64;
@@ -83,7 +83,7 @@ fn apply_normalization(_data: &mut [Complex64], n: usize, mode: NormMode) -> FFT
                     "Division by zero in forward normalization: FFT size is zero".to_string(),
                 )
             })?;
-            _data.iter_mut().for_each(|c| *c *= scale);
+            data.iter_mut().for_each(|c| *c *= scale);
         }
     }
     Ok(())
@@ -118,11 +118,11 @@ where
 
 /// Convert input data to complex values
 #[allow(dead_code)]
-fn to_complex<T>(_input: &[T]) -> FFTResult<Vec<Complex64>>
+fn to_complex<T>(input: &[T]) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
-    _input.iter().map(|&val| convert_to_complex(val)).collect()
+    input.iter().map(|&val| convert_to_complex(val)).collect()
 }
 
 /// Compute the 1-dimensional Fast Fourier Transform
@@ -153,21 +153,21 @@ where
 /// assert!(spectrum[0].im.abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn fft<T>(_input: &[T], n: Option<usize>) -> FFTResult<Vec<Complex64>>
+pub fn fft<T>(input: &[T], n: Option<usize>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
     // Input validation
-    if _input.is_empty() {
+    if input.is_empty() {
         return Err(FFTError::ValueError("Input cannot be empty".to_string()));
     }
 
     // Determine the FFT size (n or next power of 2 if n is None)
-    let input_len = _input.len();
+    let input_len = input.len();
     let fft_size = n.unwrap_or_else(|| input_len.next_power_of_two());
 
     // Convert _input to complex numbers
-    let mut data = to_complex(_input)?;
+    let mut data = to_complex(input)?;
 
     // Pad or truncate data to match fft_size
     if fft_size != input_len {
@@ -233,21 +233,21 @@ where
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn ifft<T>(_input: &[T], n: Option<usize>) -> FFTResult<Vec<Complex64>>
+pub fn ifft<T>(input: &[T], n: Option<usize>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
     // Input validation
-    if _input.is_empty() {
+    if input.is_empty() {
         return Err(FFTError::ValueError("Input cannot be empty".to_string()));
     }
 
     // Determine the FFT size
-    let input_len = _input.len();
+    let input_len = input.len();
     let fft_size = n.unwrap_or_else(|| input_len.next_power_of_two());
 
     // Convert _input to complex numbers
-    let mut data = to_complex(_input)?;
+    let mut data = to_complex(input)?;
 
     // Pad or truncate data to match fft_size
     if fft_size != input_len {

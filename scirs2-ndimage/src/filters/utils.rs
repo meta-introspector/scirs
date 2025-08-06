@@ -15,7 +15,7 @@ use crate::utils::safe_f64_to_float;
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(_value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
 
@@ -26,11 +26,11 @@ pub fn calculate_kernel_size<T: Float + FromPrimitive>(
     truncate: Option<T>,
 ) -> NdimageResult<usize> {
     let truncate_val = truncate.unwrap_or_else(|| {
-        safe_f64, _to_float: <T>(4.0)
+        safe_f64_to_float::<T>(4.0)?
             .unwrap_or_else(|_| T::from_f64(4.0).unwrap_or_else(|| T::zero()))
     });
-    let size = safe_usize, _to_float: <T>(1)?
-        + (sigma * truncate_val * safe_f64, _to_float: <T>(2.0)?)
+    let size = safe_usize_to_float::<T>(1)?
+        + (sigma * truncate_val * safe_f64_to_float::<T>(2.0)?)
             .ceil()
             .to_usize()
             .ok_or_else(|| {
@@ -63,9 +63,9 @@ pub fn generate_gaussian_kernel<T: Float + FromPrimitive>(
     let half = kernel_size / 2;
     let mut kernel = Array::zeros(kernel_size);
     let sigma_sq = sigma * sigma;
-    let norm_factor = safe_f64, _to_float: <T>(1.0)?
-        / (sigma * safe_f64, _to_float: <T>(std::f64::consts::TAU.sqrt())?);
-    let exp_factor = safe_f64, _to_float: <T>(-0.5)? / sigma_sq;
+    let norm_factor = safe_f64_to_float::<T>(1.0)?
+        / (sigma * safe_f64_to_float::<T>(std::f64::consts::TAU.sqrt())?);
+    let exp_factor = safe_f64_to_float::<T>(-0.5)? / sigma_sq;
 
     let mut sum = T::zero();
     for (i, k) in kernel.iter_mut().enumerate() {
@@ -134,7 +134,7 @@ where
                         .clamp(0, width as isize - 1) as usize;
                     sum = sum + input[(_y, src_x)] * k_val;
                 }
-                temp[(_y, _x)] = sum;
+                temp[(_y, x)] = sum;
             }
         }
     }
@@ -157,7 +157,7 @@ where
                         let src_y = (_y as isize + k_idx as isize - kernel_half as isize)
                             .clamp(0, height as isize - 1)
                             as usize;
-                        sum = sum + temp[(src_y, _x)] * k_val;
+                        sum = sum + temp[(src_y, x)] * k_val;
                     }
                     col[[_y, 0]] = sum;
                 }
@@ -174,9 +174,9 @@ where
                 for (k_idx, &k_val) in kernel_y.iter().enumerate() {
                     let src_y = (_y as isize + k_idx as isize - kernel_half as isize)
                         .clamp(0, height as isize - 1) as usize;
-                    sum = sum + temp[(src_y, _x)] * k_val;
+                    sum = sum + temp[(src_y, x)] * k_val;
                 }
-                output[(_y, _x)] = sum;
+                output[(_y, x)] = sum;
             }
         }
     }
@@ -894,7 +894,7 @@ where
         start_indices: &[usize],
     ) -> NdimageResult<()> {
         if dim == input.ndim() {
-            // We have full _indices, copy the value
+            // We have full indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
             let in_idx = ndarray::IxDyn(in_indices);
             output[&out_idx] = input[&in_idx].clone();
@@ -961,7 +961,7 @@ where
     let center_starts: Vec<usize> = pad_width.iter().map(|(before_)| *before).collect();
 
     // Helper function to get reflected index
-    fn get_reflect_idx(_idx: isize, len: usize) -> usize {
+    fn get_reflect_idx(idx: isize, len: usize) -> usize {
         if _idx < 0 {
             // Reflect from the start
             (-_idx - 1) as usize % len
@@ -989,7 +989,7 @@ where
         center_starts: &[usize], _pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == input.ndim() {
-            // We have full _indices, copy the value
+            // We have full indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
             let in_idx = ndarray::IxDyn(in_indices);
             output[&out_idx] = input[&in_idx].clone();
@@ -1146,10 +1146,10 @@ where
     let center_starts: Vec<usize> = pad_width.iter().map(|(before_)| *before).collect();
 
     // Helper function to get mirrored index
-    fn get_mirror_idx(_idx: isize, len: usize) -> usize {
+    fn get_mirror_idx(idx: isize, len: usize) -> usize {
         if _idx < 0 {
             // Mirror from the start
-            _idx.unsigned_abs() % len
+            idx.unsigned_abs() % len
         } else if _idx >= len as isize {
             // Mirror from the end
             (len as isize - 1 - (_idx - len as isize) % (len as isize)) as usize
@@ -1174,7 +1174,7 @@ where
         center_starts: &[usize], _pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == input.ndim() {
-            // We have full _indices, copy the value
+            // We have full indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
             let in_idx = ndarray::IxDyn(in_indices);
             output[&out_idx] = input[&in_idx].clone();
@@ -1312,7 +1312,7 @@ where
     let center_starts: Vec<usize> = pad_width.iter().map(|(before_)| *before).collect();
 
     // Helper function to get wrapped index
-    fn get_wrap_idx(_idx: isize, len: usize) -> usize {
+    fn get_wrap_idx(idx: isize, len: usize) -> usize {
         let len_i = len as isize;
         (((_idx % len_i) + len_i) % len_i) as usize
     }
@@ -1332,7 +1332,7 @@ where
         center_starts: &[usize], _pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == input.ndim() {
-            // We have full _indices, copy the value
+            // We have full indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
             let in_idx = ndarray::IxDyn(in_indices);
             output[&out_idx] = input[&in_idx].clone();
@@ -1489,7 +1489,7 @@ where
     let center_starts: Vec<usize> = pad_width.iter().map(|(before_)| *before).collect();
 
     // Helper function to get nearest index
-    fn get_nearest_idx(_idx: isize, len: usize) -> usize {
+    fn get_nearest_idx(idx: isize, len: usize) -> usize {
         if _idx < 0 {
             // Use first element
             0
@@ -1517,7 +1517,7 @@ where
         center_starts: &[usize], _pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == input.ndim() {
-            // We have full _indices, copy the value
+            // We have full indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
             let in_idx = ndarray::IxDyn(in_indices);
             output[&out_idx] = input[&in_idx].clone();

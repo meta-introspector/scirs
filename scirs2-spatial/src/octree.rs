@@ -47,27 +47,27 @@ impl BoundingBox {
     ///
     /// Returns an error if the min or max arrays don't have 3 elements,
     /// or if min > max for any dimension
-    pub fn new(_min: &ArrayView1<f64>, max: &ArrayView1<f64>) -> SpatialResult<Self> {
-        if _min.len() != 3 || max.len() != 3 {
+    pub fn new(min: &ArrayView1<f64>, max: &ArrayView1<f64>) -> SpatialResult<Self> {
+        if min.len() != 3 || max.len() != 3 {
             return Err(SpatialError::DimensionError(format!(
                 "Min and max must have 3 elements, got {} and {}",
-                _min.len(),
+                min.len(),
                 max.len()
             )));
         }
 
         // Check that _min <= max for all dimensions
         for i in 0..3 {
-            if _min[i] > max[i] {
+            if min[i] > max[i] {
                 return Err(SpatialError::ValueError(format!(
-                    "Min must be <= max for all dimensions, got _min[{}]={} > max[{}]={}",
-                    i, _min[i], i, max[i]
+                    "Min must be <= max for all dimensions, got min[{}]={} > max[{}]={}",
+                    i, min[i], i, max[i]
                 )));
             }
         }
 
         Ok(BoundingBox {
-            min: _min.to_owned(),
+            min: min.to_owned(),
             max: max.to_owned(),
         })
     }
@@ -85,17 +85,17 @@ impl BoundingBox {
     /// # Errors
     ///
     /// Returns an error if the points array is empty or if points don't have 3 dimensions
-    pub fn from_points(_points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
-        if _points.is_empty() {
+    pub fn from_points(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
+        if points.is_empty() {
             return Err(SpatialError::ValueError(
                 "Cannot create bounding box from empty point set".into(),
             ));
         }
 
-        if _points.ncols() != 3 {
+        if points.ncols() != 3 {
             return Err(SpatialError::DimensionError(format!(
                 "Points must have 3 columns, got {}",
-                _points.ncols()
+                points.ncols()
             )));
         }
 
@@ -107,7 +107,7 @@ impl BoundingBox {
             f64::NEG_INFINITY,
         ]);
 
-        for row in _points.rows() {
+        for row in points.rows() {
             for d in 0..3 {
                 if row[d] < min[d] {
                     min[d] = row[d];
@@ -134,16 +134,16 @@ impl BoundingBox {
     /// # Errors
     ///
     /// Returns an error if the point doesn't have exactly 3 elements
-    pub fn contains(&self, _point: &ArrayView1<f64>) -> SpatialResult<bool> {
-        if _point.len() != 3 {
+    pub fn contains(&self, point: &ArrayView1<f64>) -> SpatialResult<bool> {
+        if point.len() != 3 {
             return Err(SpatialError::DimensionError(format!(
                 "Point must have 3 elements, got {}",
-                _point.len()
+                point.len()
             )));
         }
 
         for d in 0..3 {
-            if _point[d] < self.min[d] || _point[d] > self.max[d] {
+            if point[d] < self.min[d] || point[d] > self.max[d] {
                 return Ok(false);
             }
         }
@@ -186,9 +186,9 @@ impl BoundingBox {
     /// # Returns
     ///
     /// True if the boxes overlap, false otherwise
-    pub fn overlaps(&self, _other: &BoundingBox) -> bool {
+    pub fn overlaps(&self, other: &BoundingBox) -> bool {
         for d in 0..3 {
-            if self.max[d] < _other.min[d] || self.min[d] > _other.max[d] {
+            if self.max[d] < other.min[d] || self.min[d] > other.max[d] {
                 return false;
             }
         }
@@ -208,18 +208,18 @@ impl BoundingBox {
     /// # Errors
     ///
     /// Returns an error if the point doesn't have exactly 3 elements
-    pub fn squared_distance_to_point(&self, _point: &ArrayView1<f64>) -> SpatialResult<f64> {
-        if _point.len() != 3 {
+    pub fn squared_distance_to_point(&self, point: &ArrayView1<f64>) -> SpatialResult<f64> {
+        if point.len() != 3 {
             return Err(SpatialError::DimensionError(format!(
                 "Point must have 3 elements, got {}",
-                _point.len()
+                point.len()
             )));
         }
 
         let mut squared_dist = 0.0;
 
         for d in 0..3 {
-            let v = _point[d];
+            let v = point[d];
 
             if v < self.min[d] {
                 // Point is below minimum bound
@@ -399,23 +399,23 @@ impl Octree {
     /// # Errors
     ///
     /// Returns an error if the points array is empty or if points don't have 3 dimensions
-    pub fn new(_points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
-        if _points.is_empty() {
+    pub fn new(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
+        if points.is_empty() {
             return Err(SpatialError::ValueError(
                 "Cannot create octree from empty point set".into(),
             ));
         }
 
-        if _points.ncols() != 3 {
+        if points.ncols() != 3 {
             return Err(SpatialError::DimensionError(format!(
                 "Points must have 3 columns, got {}",
-                _points.ncols()
+                points.ncols()
             )));
         }
 
-        let size = _points.nrows();
+        let size = points.nrows();
         let bounds = BoundingBox::from_points(_points)?;
-        let points_owned = _points.to_owned();
+        let points_owned = points.to_owned();
 
         // Create initial indices (0 to size-1)
         let indices: Vec<usize> = (0..size).collect();
@@ -795,7 +795,7 @@ impl Octree {
 
     /// Helper method to compute the maximum depth
     #[allow(clippy::only_used_in_recursion)]
-    fn compute_max_depth(_node: Option<&OctreeNode>) -> usize {
+    fn compute_max_depth(node: Option<&OctreeNode>) -> usize {
         match _node {
             None => 0,
             Some(OctreeNode::Leaf { .. }) => 1,
@@ -822,10 +822,10 @@ impl Octree {
 ///
 /// The squared Euclidean distance
 #[allow(dead_code)]
-fn squared_distance(_p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
+fn squared_distance(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
     let mut sum_sq = 0.0;
     for i in 0.._p1.len().min(p2.len()) {
-        let diff = _p1[i] - p2[i];
+        let diff = p1[i] - p2[i];
         sum_sq += diff * diff;
     }
     sum_sq
@@ -1012,7 +1012,7 @@ mod tests {
 
         // Test with radius covering all points
         let radius = 4.0;
-        let (indices, _distances) = octree.query_radius(&query.view(), radius).unwrap();
+        let (indices, distances) = octree.query_radius(&query.view(), radius).unwrap();
 
         assert_eq!(indices.len(), 6); // Should find all points
     }

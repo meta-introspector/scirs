@@ -39,11 +39,11 @@ use std::fmt::Debug;
 /// // ESD is proportional to PSD but scaled by the sample interval
 /// ```
 #[allow(dead_code)]
-pub fn energy_spectral_density<T>(_psd: &[T], fs: f64) -> SignalResult<Vec<f64>>
+pub fn energy_spectral_density<T>(psd: &[T], fs: f64) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
-    if _psd.is_empty() {
+    if psd.is_empty() {
         return Err(SignalError::ValueError("PSD array is empty".to_string()));
     }
 
@@ -54,7 +54,7 @@ where
     }
 
     // Convert to f64 for internal processing
-    let _psd_f64: Vec<f64> = _psd
+    let psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -97,16 +97,16 @@ where
 /// assert!(((sum - 1.0) as f64).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn normalized_psd<T>(_psd: &[T]) -> SignalResult<Vec<f64>>
+pub fn normalized_psd<T>(psd: &[T]) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
-    if _psd.is_empty() {
+    if psd.is_empty() {
         return Err(SignalError::ValueError("PSD array is empty".to_string()));
     }
 
     // Convert to f64 for internal processing
-    let _psd_f64: Vec<f64> = _psd
+    let psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -160,25 +160,25 @@ where
 /// assert!(centroid.is_finite());
 /// ```
 #[allow(dead_code)]
-pub fn spectral_centroid<T, U>(_psd: &[T], freqs: &[U]) -> SignalResult<f64>
+pub fn spectral_centroid<T, U>(psd: &[T], freqs: &[U]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if _psd.is_empty() || freqs.is_empty() {
+    if psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if _psd.len() != freqs.len() {
+    if psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let _psd_f64: Vec<f64> = _psd
+    let psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -249,25 +249,25 @@ where
 /// assert!(spread >= 0.0);
 /// ```
 #[allow(dead_code)]
-pub fn spectral_spread<T, U>(_psd: &[T], freqs: &[U], centroid: Option<f64>) -> SignalResult<f64>
+pub fn spectral_spread<T, U>(psd: &[T], freqs: &[U], centroid: Option<f64>) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if _psd.is_empty() || freqs.is_empty() {
+    if psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if _psd.len() != freqs.len() {
+    if psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let _psd_f64: Vec<f64> = _psd
+    let psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -570,16 +570,16 @@ where
 /// assert!(flatness >= 0.0 && flatness <= 1.0);
 /// ```
 #[allow(dead_code)]
-pub fn spectral_flatness<T>(_psd: &[T]) -> SignalResult<f64>
+pub fn spectral_flatness<T>(psd: &[T]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
 {
-    if _psd.is_empty() {
+    if psd.is_empty() {
         return Err(SignalError::ValueError("PSD array is empty".to_string()));
     }
 
     // Convert to f64 for internal processing
-    let _psd_f64: Vec<f64> = _psd
+    let psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -650,25 +650,25 @@ where
 /// assert!(flux >= 0.0);
 /// ```
 #[allow(dead_code)]
-pub fn spectral_flux<T, U>(_psd1: &[T], psd2: &[U], norm: &str) -> SignalResult<f64>
+pub fn spectral_flux<T, U>(psd1: &[T], psd2: &[U], norm: &str) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if _psd1.is_empty() || psd2.is_empty() {
+    if psd1.is_empty() || psd2.is_empty() {
         return Err(SignalError::ValueError(
             "PSD arrays must not be empty".to_string(),
         ));
     }
 
-    if _psd1.len() != psd2.len() {
+    if psd1.len() != psd2.len() {
         return Err(SignalError::ValueError(
             "PSD arrays must have the same length".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let _psd1_f64: Vec<f64> = _psd1
+    let psd1_f64: Vec<f64> = _psd1
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -748,18 +748,18 @@ where
 /// assert!(rolloff.is_finite());
 /// ```
 #[allow(dead_code)]
-pub fn spectral_rolloff<T, U>(_psd: &[T], freqs: &[U], percentage: f64) -> SignalResult<f64>
+pub fn spectral_rolloff<T, U>(psd: &[T], freqs: &[U], percentage: f64) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if _psd.is_empty() || freqs.is_empty() {
+    if psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if _psd.len() != freqs.len() {
+    if psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
@@ -772,7 +772,7 @@ where
     }
 
     // Convert to f64 for internal processing
-    let _psd_f64: Vec<f64> = _psd
+    let psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -845,16 +845,16 @@ where
 /// assert!(crest >= 1.0);
 /// ```
 #[allow(dead_code)]
-pub fn spectral_crest<T>(_psd: &[T]) -> SignalResult<f64>
+pub fn spectral_crest<T>(psd: &[T]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
 {
-    if _psd.is_empty() {
+    if psd.is_empty() {
         return Err(SignalError::ValueError("PSD array is empty".to_string()));
     }
 
     // Convert to f64 for internal processing
-    let _psd_f64: Vec<f64> = _psd
+    let psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -908,25 +908,25 @@ where
 /// let decrease = spectral_decrease(&psd, &freqs).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn spectral_decrease<T, U>(_psd: &[T], freqs: &[U]) -> SignalResult<f64>
+pub fn spectral_decrease<T, U>(psd: &[T], freqs: &[U]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if _psd.is_empty() || freqs.is_empty() {
+    if psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if _psd.len() != freqs.len() {
+    if psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let _psd_f64: Vec<f64> = _psd
+    let psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -998,25 +998,25 @@ where
 /// let slope = spectral_slope(&psd, &freqs).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn spectral_slope<T, U>(_psd: &[T], freqs: &[U]) -> SignalResult<f64>
+pub fn spectral_slope<T, U>(psd: &[T], freqs: &[U]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if _psd.is_empty() || freqs.is_empty() {
+    if psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if _psd.len() != freqs.len() {
+    if psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let _psd_f64: Vec<f64> = _psd
+    let psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -1093,18 +1093,18 @@ where
 /// assert_eq!(contrast.len(), 4);
 /// ```
 #[allow(dead_code)]
-pub fn spectral_contrast<T, U>(_psd: &[T], freqs: &[U], n_bands: usize) -> SignalResult<Vec<f64>>
+pub fn spectral_contrast<T, U>(_psd: &[T], freqs: &[U], nbands: usize) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if _psd.is_empty() || freqs.is_empty() {
+    if psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if _psd.len() != freqs.len() {
+    if psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
@@ -1116,14 +1116,14 @@ where
         ));
     }
 
-    if _psd.len() < n_bands * 2 {
+    if psd.len() < n_bands * 2 {
         return Err(SignalError::ValueError(
             "Not enough PSD points for requested number of _bands".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let _psd_f64: Vec<f64> = _psd
+    let psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -1160,7 +1160,7 @@ where
             .iter()
             .enumerate()
             .filter(|(_, &freq)| freq >= band_start && freq < band_end)
-            .map(|(i_)| i)
+            .map(|(i, _)| i)
             .collect();
 
         if band_indices.is_empty() {
@@ -1231,25 +1231,25 @@ where
 /// assert!(bandwidth.is_finite());
 /// ```
 #[allow(dead_code)]
-pub fn spectral_bandwidth<T, U>(_psd: &[T], freqs: &[U], threshold_db: f64) -> SignalResult<f64>
+pub fn spectral_bandwidth<T, U>(_psd: &[T], freqs: &[U], thresholddb: f64) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if _psd.is_empty() || freqs.is_empty() {
+    if psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if _psd.len() != freqs.len() {
+    if psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let _psd_f64: Vec<f64> = _psd
+    let psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -1338,25 +1338,25 @@ where
 /// assert!(magnitude >= 0.0);
 /// ```
 #[allow(dead_code)]
-pub fn dominant_frequency<T, U>(_psd: &[T], freqs: &[U]) -> SignalResult<(f64, f64)>
+pub fn dominant_frequency<T, U>(psd: &[T], freqs: &[U]) -> SignalResult<(f64, f64)>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if _psd.is_empty() || freqs.is_empty() {
+    if psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if _psd.len() != freqs.len() {
+    if psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let _psd_f64: Vec<f64> = _psd
+    let psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -1526,6 +1526,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::utilities::spectral::spectral_centroid;
     use crate::utilities::spectral::spectral_flux;
     use crate::utilities::spectral::spectral_rolloff;

@@ -1,7 +1,7 @@
-use ndarray::s;
 use crate::error::{SignalError, SignalResult};
 use crate::features::options::FeatureOptions;
-use ndarray::{ Array2};
+use ndarray::s;
+use ndarray::Array2;
 use num_traits::{Float, NumCast};
 use std::collections::HashMap;
 use std::fmt::Debug;

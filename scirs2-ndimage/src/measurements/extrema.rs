@@ -8,9 +8,9 @@ use crate::error::{NdimageError, NdimageResult};
 
 /// Helper function to generate n-dimensional neighborhood offsets
 #[allow(dead_code)]
-fn generate_offsets(_offsets: &mut Vec<Vec<isize>>, sizes: &[usize], current: &[isize], dim: usize) {
+fn generate_offsets(offsets: &mut Vec<Vec<isize>>, sizes: &[usize], current: &[isize], dim: usize) {
     if dim == sizes.len() {
-        _offsets.push(current.to_vec());
+        offsets.push(current.to_vec());
         return;
     }
 
@@ -100,29 +100,29 @@ fn generate_offsets(_offsets: &mut Vec<Vec<isize>>, sizes: &[usize], current: &[
 /// - Input array is 0-dimensional
 /// - Input array is empty
 #[allow(dead_code)]
-pub fn extrema<T, D>(_input: &Array<T, D>) -> NdimageResult<(T, T, Vec<usize>, Vec<usize>)>
+pub fn extrema<T, D>(input: &Array<T, D>) -> NdimageResult<(T, T, Vec<usize>, Vec<usize>)>
 where
     T: Float + FromPrimitive + Debug + NumAssign + PartialOrd + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Validate inputs
-    if _input.ndim() == 0 {
+    if input.ndim() == 0 {
         return Err(NdimageError::InvalidInput(
             "Input array cannot be 0-dimensional".into(),
         ));
     }
 
-    if _input.is_empty() {
+    if input.is_empty() {
         return Err(NdimageError::InvalidInput("Input array is empty".into()));
     }
 
     // Convert to dynamic array for easier indexing
-    let input_dyn = _input.clone().into_dyn();
+    let input_dyn = input.clone().into_dyn();
 
     let mut min_val = None;
     let mut max_val = None;
-    let mut min_loc = vec![0; _input.ndim()];
-    let mut max_loc = vec![0; _input.ndim()];
+    let mut min_loc = vec![0; input.ndim()];
+    let mut max_loc = vec![0; input.ndim()];
 
     // Find min and max values and their locations
     for (idx, &value) in input_dyn.indexed_iter() {
@@ -151,9 +151,10 @@ where
     }
 
     match (min_val, max_val) {
-        (Some(min), Some(max)) => Ok((min, max, min_loc, max_loc), _ => {
+        (Some(min), Some(max)) => Ok((min, max, min_loc, max_loc)),
+        _ => {
             // This should not happen since we check for empty array above
-            let origin = vec![0; _input.ndim()];
+            let origin = vec![0; input.ndim()];
             Ok((T::zero(), T::zero(), origin.clone(), origin))
         }
     }

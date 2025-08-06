@@ -7,10 +7,10 @@ use clap::{Arg, ArgMatches, Command};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use std::path::PathBuf;
 use std::path::{Path, PathBuf};
 use std::process;
 use std::time::{Duration, SystemTime};
-use std::path::PathBuf;
 
 /// Main entry point for the security audit scanner
 #[allow(dead_code)]
@@ -109,9 +109,9 @@ fn main() {
 
 /// Run the complete security audit process
 #[allow(dead_code)]
-fn run_security_audit(_matches: &ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
+fn run_security_audit(matches: &ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
     let project_path = Path::new(_matches.get_one::<String>("project-path").unwrap());
-    let verbose = _matches.get_flag("verbose");
+    let verbose = matches.get_flag("verbose");
 
     if verbose {
         println!(
@@ -130,11 +130,11 @@ fn run_security_audit(_matches: &ArgMatches) -> Result<(), Box<dyn std::error::E
     let audit_result = auditor.run_comprehensive_audit(project_path)?;
 
     // Generate and output report
-    let format = _matches.get_one::<String>("format").unwrap();
+    let format = matches.get_one::<String>("format").unwrap();
     let report = generate_audit_report(&audit_result, format)?;
 
     // Output the report
-    if let Some(output_file) = _matches.get_one::<String>("output") {
+    if let Some(output_file) = matches.get_one::<String>("output") {
         fs::write(output_file, &report)?;
         if verbose {
             println!("📝 Audit report written to: {}", output_file);
@@ -144,7 +144,7 @@ fn run_security_audit(_matches: &ArgMatches) -> Result<(), Box<dyn std::error::E
     }
 
     // Exit with appropriate code based on findings
-    let exit_code = determine_exit_code(&audit_result, _matches);
+    let exit_code = determine_exit_code(&audit_result, matches);
     if exit_code != 0 {
         process::exit(exit_code);
     }
@@ -154,10 +154,10 @@ fn run_security_audit(_matches: &ArgMatches) -> Result<(), Box<dyn std::error::E
 
 /// Build audit configuration from command line arguments
 #[allow(dead_code)]
-fn build_audit_config(_matches: &ArgMatches) -> Result<AuditConfig, Box<dyn std::error::Error>> {
-    let all_scans = _matches.get_flag("all");
+fn build_audit_config(matches: &ArgMatches) -> Result<AuditConfig, Box<dyn std::error::Error>> {
+    let all_scans = matches.get_flag("all");
 
-    let excluded_patterns = if let Some(exclude_str) = _matches.get_one::<String>("exclude") {
+    let excluded_patterns = if let Some(exclude_str) = matches.get_one::<String>("exclude") {
         exclude_str
             .split(',')
             .map(|s| s.trim().to_string())
@@ -167,25 +167,26 @@ fn build_audit_config(_matches: &ArgMatches) -> Result<AuditConfig, Box<dyn std:
     };
 
     Ok(AuditConfig {
-        scan_dependencies: all_scans || _matches.get_flag("scan-deps"),
-        scan_secrets: all_scans || _matches.get_flag("scan-secrets"),
-        scan_code: all_scans || _matches.get_flag("scan-code"),
-        check_licenses: all_scans || _matches.get_flag("check-licenses"),
+        scan_dependencies: all_scans || matches.get_flag("scan-deps"),
+        scan_secrets: all_scans || matches.get_flag("scan-secrets"),
+        scan_code: all_scans || matches.get_flag("scan-code"),
+        check_licenses: all_scans || matches.get_flag("check-licenses"),
         min_severity: parse_severity(_matches.get, _one::<String>("severity").unwrap())?,
         excluded_patterns,
-        verbose: _matches.get_flag("verbose"),
+        verbose: matches.get_flag("verbose"),
     })
 }
 
 /// Parse severity level from string
 #[allow(dead_code)]
-fn parse_severity(_severity_str: &str) -> Result<Severity, Box<dyn std::error::Error>> {
-    match _severity_str.to_lowercase().as_str() {
+fn parse_severity(_severitystr: &str) -> Result<Severity, Box<dyn std::error::Error>> {
+    match severity_str.to_lowercase().as_str() {
         "info" => Ok(Severity::Info),
         "low" => Ok(Severity::Low),
         "medium" => Ok(Severity::Medium),
         "high" => Ok(Severity::High),
-        "critical" => Ok(Severity::Critical, _ => Err(format!("Invalid severity level: {_severity_str}").into()),
+        "critical" => Ok(Severity::Critical),
+        _ => Err(format!("Invalid severity level: {_severity_str}").into()),
     }
 }
 
@@ -270,13 +271,13 @@ struct Recommendation {
 
 impl SecurityAuditor {
     /// Create new security auditor
-    fn new(_config: AuditConfig) -> Self {
+    fn new(config: AuditConfig) -> Self {
         Self {
             dependency_scanner: DependencyScanner::new(),
             secret_detector: SecretDetector::new(),
             code_analyzer: CodeAnalyzer::new(),
             license_checker: LicenseChecker::new(),
-            _config,
+            config,
         }
     }
 
@@ -606,7 +607,7 @@ impl DependencyScanner {
                 Severity::Critical => critical_vulnerabilities += 1,
                 Severity::High => high_vulnerabilities += 1,
                 Severity::Medium => medium_vulnerabilities += 1,
-                Severity::Low => low_vulnerabilities += 1_ => {}
+                Severity::Low => low_vulnerabilities += 1,
             }
         }
 
@@ -753,8 +754,7 @@ impl DependencyScanner {
         vulns
     }
 
-    fn version_is_vulnerable(&self,
-        version: &str, _affected_range: &str) -> bool {
+    fn version_is_vulnerable(&self, version: &str, _affectedrange: &str) -> bool {
         // Simplified _version checking - in practice would use semver parsing
         false // Most dependencies are likely not vulnerable
     }
@@ -1177,7 +1177,8 @@ fn generate_audit_report(
         "json" => Ok(serde_json::to_string_pretty(audit_result)?),
         "yaml" => Ok(serde_yaml::to_string(audit_result)?),
         "markdown" => generate_markdown_report(audit_result),
-        "html" => generate_html_report(audit_result, _ => Err(format!("Unsupported format: {format}").into()),
+        "html" => generate_html_report(audit_result),
+        _ => Err(format!("Unsupported format: {format}").into()),
     }
 }
 
@@ -1303,7 +1304,7 @@ fn generate_markdown_report(
 
 /// Generate HTML report
 #[allow(dead_code)]
-fn generate_html_report(_audit_result: &AuditResult) -> Result<String, Box<dyn std::error::Error>> {
+fn generate_html_report(_auditresult: &AuditResult) -> Result<String, Box<dyn std::error::Error>> {
     let mut html = String::new();
 
     html.push_str("<!DOCTYPE html>\n<html>\n<head>\n");
@@ -1348,7 +1349,7 @@ fn generate_html_report(_audit_result: &AuditResult) -> Result<String, Box<dyn s
                 Severity::Critical => "critical",
                 Severity::High => "high",
                 Severity::Medium => "medium",
-                Severity::Low => "low"_ => "",
+                Severity::Low => "low",
             };
             html.push_str(&format!(
                 "<li class=\"{}\"><strong>{}:</strong> {}</li>\n",
@@ -1365,14 +1366,14 @@ fn generate_html_report(_audit_result: &AuditResult) -> Result<String, Box<dyn s
 
 /// Determine exit code based on audit results
 #[allow(dead_code)]
-fn determine_exit_code(_audit_result: &AuditResult, matches: &ArgMatches) -> i32 {
+fn determine_exit_code(_auditresult: &AuditResult, matches: &ArgMatches) -> i32 {
     let min_severity =
         parse_severity(matches.get_one::<String>("severity").unwrap()).unwrap_or(Severity::Low);
 
     // Exit with non-zero code if issues at or above the minimum severity are found
     match min_severity {
         Severity::Critical => {
-            if _audit_result.summary.critical_issues > 0 {
+            if audit_result.summary.critical_issues > 0 {
                 1
             } else {
                 0

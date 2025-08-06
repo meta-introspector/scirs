@@ -33,17 +33,17 @@ impl LearningProgress {
         }
     }
 
-    fn complete_module(&mut self, module_name: &str) {
+    fn complete_module(&mut self, modulename: &str) {
         if !self.modules_completed.contains(&module_name.to_string()) {
             self.modules_completed.push(module_name.to_string());
         }
     }
 
-    fn add_quiz_score(&mut self, quiz_name: &str, score: f64) {
+    fn add_quiz_score(&mut self, quizname: &str, score: f64) {
         self.quiz_scores.insert(quiz_name.to_string(), score);
     }
 
-    fn complete_exercise(&mut self, exercise_name: &str) {
+    fn complete_exercise(&mut self, exercisename: &str) {
         if !self
             .exercises_completed
             .contains(&exercise_name.to_string())
@@ -105,7 +105,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn display_main_menu(_progress: &LearningProgress) {
+fn display_main_menu(progress: &LearningProgress) {
     println!("📚 Choose a learning module:");
     println!("1. 🌟 Fundamentals of Special Functions");
     println!("2. 🎲 Gamma Function Deep Dive");
@@ -120,19 +120,19 @@ fn display_main_menu(_progress: &LearningProgress) {
 
     // Show _progress indicators
     if !_progress.modules_completed.is_empty() {
-        println!("✅ Completed: {}", _progress.modules_completed.join(", "));
+        println!("✅ Completed: {}", progress.modules_completed.join(", "));
     }
     if !_progress.quiz_scores.is_empty() {
         let avg_score: f64 =
-            _progress.quiz_scores.values().sum::<f64>() / _progress.quiz_scores.len() as f64;
+            progress.quiz_scores.values().sum::<f64>() / progress.quiz_scores.len() as f64;
         println!("📈 Current average: {:.1}%", avg_score * 100.0);
     }
     println!();
 }
 
 #[allow(dead_code)]
-fn get_user_input(_prompt: &str) -> io::Result<String> {
-    print!("{}", _prompt);
+fn get_user_input(prompt: &str) -> io::Result<String> {
+    print!("{}", prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
@@ -140,7 +140,7 @@ fn get_user_input(_prompt: &str) -> io::Result<String> {
 }
 
 #[allow(dead_code)]
-fn fundamentals_module(_progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn fundamentals_module(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌟 FUNDAMENTALS OF SPECIAL FUNCTIONS");
     println!("====================================\n");
 
@@ -193,7 +193,7 @@ fn fundamentals_module(_progress: &mut LearningProgress) -> Result<(), Box<dyn s
 
     // Quick quiz
     let quiz_score = fundamentals_quiz()?;
-    _progress.add_quiz_score("Fundamentals", quiz_score);
+    progress.add_quiz_score("Fundamentals", quiz_score);
 
     // Lesson 2: Series Representations
     println!("\n📖 Lesson 2: Series Representations");
@@ -215,7 +215,7 @@ fn fundamentals_module(_progress: &mut LearningProgress) -> Result<(), Box<dyn s
     println!("\n💪 Exercise: Series Convergence");
     series_convergence_exercise(_progress)?;
 
-    _progress.complete_module("Fundamentals");
+    progress.complete_module("Fundamentals");
     println!("\n✅ Fundamentals module completed!\n");
 
     Ok(())
@@ -1036,9 +1036,9 @@ fn advanced_topics_quiz() -> Result<f64, Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn beginner_challenge(_progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn beginner_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
     println!("Beginner challenge...");
-    _progress.complete_exercise("Beginner Challenge");
+    progress.complete_exercise("Beginner Challenge");
     pause_for_user();
     Ok(())
 }
@@ -1054,36 +1054,36 @@ fn intermediate_challenge(
 }
 
 #[allow(dead_code)]
-fn advanced_challenge(_progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn advanced_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
     println!("Advanced challenge...");
-    _progress.complete_exercise("Advanced Challenge");
+    progress.complete_exercise("Advanced Challenge");
     pause_for_user();
     Ok(())
 }
 
 #[allow(dead_code)]
-fn random_challenge(_progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn random_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
     println!("Random challenge...");
-    _progress.complete_exercise("Random Challenge");
+    progress.complete_exercise("Random Challenge");
     pause_for_user();
     Ok(())
 }
 
 #[allow(dead_code)]
-fn ultimate_challenge(_progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
+fn ultimate_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
     println!("Ultimate challenge...");
-    _progress.complete_exercise("Ultimate Challenge");
+    progress.complete_exercise("Ultimate Challenge");
     pause_for_user();
     Ok(())
 }
 
 #[allow(dead_code)]
-fn show_challenge_statistics(_progress: &LearningProgress) {
+fn show_challenge_statistics(progress: &LearningProgress) {
     println!("\n📊 Challenge Statistics");
     println!("=======================");
     println!(
         "Exercises completed: {}",
-        _progress.exercises_completed.len()
+        progress.exercises_completed.len()
     );
     for exercise in &_progress.exercises_completed {
         println!("✅ {}", exercise);

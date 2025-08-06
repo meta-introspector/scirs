@@ -180,9 +180,9 @@ pub struct FPGAAccelerator {
 }
 
 impl FPGAAccelerator {
-    pub fn new(_device_id: &str) -> Self {
+    pub fn new(_deviceid: &str) -> Self {
         let mut info = AcceleratorInfo {
-            id: _device_id.to_string(),
+            id: _deviceid.to_string(),
             accelerator_type: AcceleratorType::FPGA,
             name: "Generic FPGA Device".to_string(),
             vendor: "Xilinx/Intel/Lattice".to_string(),
@@ -385,9 +385,9 @@ pub struct ASICAccelerator {
 }
 
 impl ASICAccelerator {
-    pub fn new(_device_id: &str) -> Self {
+    pub fn new(_deviceid: &str) -> Self {
         let mut info = AcceleratorInfo {
-            id: _device_id.to_string(),
+            id: _deviceid.to_string(),
             accelerator_type: AcceleratorType::ASIC,
             name: "Sparse FFT ASIC v3".to_string(),
             vendor: "CustomChip Solutions".to_string(),
@@ -534,10 +534,10 @@ pub struct SpecializedHardwareManager {
 
 impl SpecializedHardwareManager {
     /// Create a new specialized hardware manager
-    pub fn new(_config: SparseFFTConfig) -> Self {
+    pub fn new(config: SparseFFTConfig) -> Self {
         Self {
             accelerators: HashMap::new(),
-            config: _config,
+            config: config,
         }
     }
 
@@ -668,7 +668,7 @@ impl SpecializedHardwareManager {
     }
 
     /// Select the best accelerator for a given signal size
-    fn select_best_accelerator(&self, signal_size: usize) -> FFTResult<String> {
+    fn select_best_accelerator(&self, signalsize: usize) -> FFTResult<String> {
         let mut best_accelerator = None;
         let mut best_score = 0.0;
 
@@ -683,7 +683,7 @@ impl SpecializedHardwareManager {
             let mut score = 0.0;
 
             // Can handle the signal _size?
-            if info.capabilities.max_signal_size >= signal_size {
+            if info.capabilities.max_signal_size >= signalsize {
                 score += 10.0;
             } else {
                 continue; // Cannot handle

@@ -27,7 +27,7 @@ fn main() {
     example_stencil_detection();
 
     // Example 6: Real-world matrix multiplication
-    example_matrix_multiplication();
+    examplematrix_multiplication();
 }
 
 #[allow(dead_code)]
@@ -211,7 +211,7 @@ fn example_stencil_detection() {
 }
 
 #[allow(dead_code)]
-fn example_matrix_multiplication() {
+fn examplematrix_multiplication() {
     println!("6. Real-World Example: Matrix Multiplication");
     println!("--------------------------------------------");
 

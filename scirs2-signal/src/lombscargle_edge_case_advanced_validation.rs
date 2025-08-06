@@ -184,15 +184,15 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingResult> {
     for &n_samples in &sample_densities {
         // Generate sparse, randomly distributed time points
         let mut times: Vec<f64> = (0..n_samples)
-            .map(|_| rng.random_range(0.0..total_duration))
+            .map(|_| rng.gen_range(0.0..total_duration))
             .collect();
-        times.sort_by(|a..b| a.partial_cmp(b).unwrap());
+        times.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         // Generate signal with true frequency
         let signal: Vec<f64> = times
             .iter()
             .map(|&t| {
-                amplitude * (2.0 * PI * true_freq * t).sin() + 0.1 * rng.random_range(-1.0..1.0)
+                amplitude * (2.0 * PI * true_freq * t).sin() + 0.1 * rng.gen_range(-1.0..1.0)
             })
             .collect();
 
@@ -216,7 +216,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingResult> {
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                    .map(|(i_)| i)
+                    .map(|(i, _)| i)
                     .unwrap();
 
                 let detected_freq = frequencies[peak_idx];
@@ -264,10 +264,10 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
     // Add clusters of points
     for cluster_center in [10.0, 30.0, 60.0, 90.0] {
         for _ in 0..25 {
-            times.push(cluster_center + rng.random_range(-2.0..2.0));
+            times.push(cluster_center + rng.gen_range(-2.0..2.0));
         }
     }
-    times.sort_by(|a..b| a.partial_cmp(b).unwrap());
+    times.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let signal: Vec<f64> = times
         .iter()
@@ -293,7 +293,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap();
 
     let detected_freq = frequencies[peak_idx];
@@ -334,7 +334,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap();
 
     let detected_freq_gapped = frequencies[peak_idx_gapped];
@@ -346,10 +346,10 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
             let regular_time = i as f64;
             // Add random jitter with increasing magnitude
             let jitter_magnitude = (i as f64 / 50.0).min(2.0);
-            regular_time + rng.random_range(-jitter_magnitude..jitter_magnitude)
+            regular_time + rng.gen_range(-jitter_magnitude..jitter_magnitude)
         })
         .collect();
-    irregular_times.sort_by(|a..b| a.partial_cmp(b).unwrap());
+    irregular_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let irregular_signal: Vec<f64> = irregular_times
         .iter()
@@ -373,7 +373,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap();
 
     let detected_freq_irregular = frequencies[peak_idx_irregular];
@@ -410,18 +410,24 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
     for &noise_level in &noise_levels {
         // Test different noise types
         let noise_types: Vec<(&str, Box<dyn Fn() -> f64>)> = vec![
-            ("white", Box::new(|| rng.random_range(-1.0..1.0))),
-            ("impulsive", Box::new(|| {
-                if rng.random::<f64>() < 0.1 {
-                    rng.random_range(-10.0..10.0)
-                } else {
-                    rng.random_range(-0.1..0.1)
-                }
-            })),
-            ("colored", Box::new(|| {
-                // Simple colored noise approximation
-                rng.random_range(-1.0..1.0) / (1.0 + rng.random_range(0.0..1.0))
-            })),
+            ("white", Box::new(|| rng.gen_range(-1.0..1.0))),
+            (
+                "impulsive",
+                Box::new(|| {
+                    if rng.random::<f64>() < 0.1 {
+                        rng.gen_range(-10.0..10.0)
+                    } else {
+                        rng.gen_range(-0.1..0.1)
+                    }
+                }),
+            ),
+            (
+                "colored",
+                Box::new(|| {
+                    // Simple colored noise approximation
+                    rng.gen_range(-1.0..1.0) / (1.0 + rng.gen_range(0.0..1.0))
+                }),
+            ),
         ];
 
         for (noise_type, noise_gen) in noise_types {
@@ -448,7 +454,7 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
                         .iter()
                         .enumerate()
                         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                        .map(|(i_)| i)
+                        .map(|(i, _)| i)
                         .unwrap();
 
                     let detected_freq = frequencies[peak_idx];
@@ -473,7 +479,7 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
     let max_snr_threshold = detection_success_rates
         .iter()
         .filter(|(_, success)| *success > 0.0)
-        .map(|(noise_)| *noise)
+        .map(|(noise, _)| *noise)
         .fold(0.0, f64::max);
 
     // Test false positive rate with pure noise
@@ -482,7 +488,7 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
 
     for _ in 0..n_false_positive_tests {
         let pure_noise: Vec<f64> = (0..n_samples)
-            .map(|_| rng.random_range(-1.0..1.0))
+            .map(|_| rng.gen_range(-1.0..1.0))
             .collect();
 
         let frequencies = Array1::linspace(0.05, 0.5, 100);
@@ -571,7 +577,7 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
                 .partial_cmp(&(b - nyquist_freq).abs())
                 .unwrap()
         })
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap();
 
     let (_freqs, power_vals) = power_nyquist;
@@ -611,7 +617,7 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
                 .partial_cmp(&(b - expected_alias_freq).abs())
                 .unwrap()
         })
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap();
 
     let (_freqs, power_vals) = power_aliased;
@@ -647,7 +653,7 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(i_)| i)
+                .map(|(i, _)| i)
                 .unwrap();
 
             let detected_freq = frequencies[peak_idx];
@@ -718,7 +724,7 @@ fn validate_numerical_precision() -> SignalResult<NumericalPrecisionResult> {
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                    .map(|(i_)| i)
+                    .map(|(i, _)| i)
                     .unwrap();
 
                 let detected_freq = frequencies[peak_idx];
@@ -806,7 +812,7 @@ fn validate_numerical_precision() -> SignalResult<NumericalPrecisionResult> {
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                    .map(|(i_)| i)
+                    .map(|(i, _)| i)
                     .unwrap();
 
                 let detected_freq = frequencies[peak_idx];
@@ -994,7 +1000,7 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
                 .partial_cmp(&(b - narrow_freq).abs())
                 .unwrap()
         })
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap();
 
     let broad_start_idx = frequencies
@@ -1006,7 +1012,7 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
                 .partial_cmp(&(b - (broad_center - broad_width)).abs())
                 .unwrap()
         })
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap();
 
     let broad_end_idx = frequencies
@@ -1018,7 +1024,7 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
                 .partial_cmp(&(b - (broad_center + broad_width)).abs())
                 .unwrap()
         })
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap();
 
     let (_freqs, power_vals) = power_bandwidth;
@@ -1275,13 +1281,13 @@ fn identify_robustness_issues(
 
 /// Generate comprehensive validation report
 #[allow(dead_code)]
-pub fn generate_advanced_edge_case_report(_result: &AdvancedEdgeCaseValidationResult) -> String {
+pub fn generate_advanced_edge_case_report(result: &AdvancedEdgeCaseValidationResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Advanced Edge Case Validation Report - Lomb-Scargle Periodogram\n\n");
     report.push_str(&format!(
         "Overall Robustness Score: {:.1}/100\n\n",
-        _result.robustness_score
+        result.robustness_score
     ));
 
     report.push_str("## Test Results Summary\n\n");
@@ -1290,7 +1296,7 @@ pub fn generate_advanced_edge_case_report(_result: &AdvancedEdgeCaseValidationRe
     report.push_str("### 📊 Sparse Sampling Validation\n");
     report.push_str(&format!(
         "- Status: {}\n",
-        if _result.sparse_sampling.passed {
+        if result.sparse_sampling.passed {
             "✅ PASS"
         } else {
             "❌ FAIL"
@@ -1298,18 +1304,18 @@ pub fn generate_advanced_edge_case_report(_result: &AdvancedEdgeCaseValidationRe
     ));
     report.push_str(&format!(
         "- Minimum samples for success: {}\n",
-        _result.sparse_sampling.min_samples_successful
+        result.sparse_sampling.min_samples_successful
     ));
     report.push_str(&format!(
         "- Extrapolation quality: {:.2}\n\n",
-        _result.sparse_sampling.extrapolation_quality
+        result.sparse_sampling.extrapolation_quality
     ));
 
     // Non-uniform grid results
     report.push_str("### 🌊 Non-Uniform Grid Validation\n");
     report.push_str(&format!(
         "- Status: {}\n",
-        if _result.non_uniform_grid.passed {
+        if result.non_uniform_grid.passed {
             "✅ PASS"
         } else {
             "❌ FAIL"
@@ -1317,22 +1323,22 @@ pub fn generate_advanced_edge_case_report(_result: &AdvancedEdgeCaseValidationRe
     ));
     report.push_str(&format!(
         "- Clustering tolerance: {:.3}\n",
-        _result.non_uniform_grid.clustering_tolerance
+        result.non_uniform_grid.clustering_tolerance
     ));
     report.push_str(&format!(
         "- Gap handling quality: {:.3}\n",
-        _result.non_uniform_grid.gap_handling_quality
+        result.non_uniform_grid.gap_handling_quality
     ));
     report.push_str(&format!(
         "- Irregular spacing accuracy: {:.3}\n\n",
-        _result.non_uniform_grid.irregular_spacing_accuracy
+        result.non_uniform_grid.irregular_spacing_accuracy
     ));
 
     // Noise tolerance results
     report.push_str("### 🔊 Noise Tolerance Validation\n");
     report.push_str(&format!(
         "- Status: {}\n",
-        if _result.noise_tolerance.passed {
+        if result.noise_tolerance.passed {
             "✅ PASS"
         } else {
             "❌ FAIL"
@@ -1340,19 +1346,19 @@ pub fn generate_advanced_edge_case_report(_result: &AdvancedEdgeCaseValidationRe
     ));
     report.push_str(&format!(
         "- Max SNR threshold: {:.2}\n",
-        _result.noise_tolerance.max_snr_threshold
+        result.noise_tolerance.max_snr_threshold
     ));
     report.push_str(&format!(
         "- False positive rate: {:.3}\n",
-        _result.noise_tolerance.false_positive_rate
+        result.noise_tolerance.false_positive_rate
     ));
     report.push_str(&format!(
         "- Detection sensitivity: {:.3}\n",
-        _result.noise_tolerance.detection_sensitivity
+        result.noise_tolerance.detection_sensitivity
     ));
     report.push_str(&format!(
         "- Noise types passed: {:?}\n\n",
-        _result.noise_tolerance.noise_types_passed
+        result.noise_tolerance.noise_types_passed
     ));
 
     // Add other sections...

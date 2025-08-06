@@ -616,7 +616,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
     }
 
     /// Check for convergence
-    fn check_convergence(&self, new_centroids: &Array2<F>, new_inertia: f64) -> Result<bool> {
+    fn check_convergence(&self, new_centroids: &Array2<F>, newinertia: f64) -> Result<bool> {
         if let Some(ref old_centroids) = self.centroids {
             // Calculate centroid movement
             let mut max_movement = F::zero();
@@ -641,7 +641,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
     }
 
     /// Update convergence history
-    fn update_convergence_history(&mut self, iteration_time_ms: u64) -> Result<()> {
+    fn update_convergence_history(&mut self, iteration_timems: u64) -> Result<()> {
         let centroid_movement = if let Some(ref centroids) = self.centroids {
             if self.convergence_history.is_empty() {
                 0.0

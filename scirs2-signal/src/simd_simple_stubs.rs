@@ -48,7 +48,7 @@ fn avx2_apply_window_v2(signal: &[f64], window: &[f64], result: &mut [f64]) -> S
 // Peak detection
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-unsafe fn avx2_peak_detection(signal: &[f64], min_height: f64, peaks: &mut Vec<usize>) -> SignalResult<()> {
+unsafe fn avx2_peak_detection(signal: &[f64], minheight: f64, peaks: &mut Vec<usize>) -> SignalResult<()> {
     peaks.clear();
     for i in 1..signal.len()-1 {
         if signal[i] > signal[i-1] && signal[i] > signal[i+1] && signal[i] >= min_height {
@@ -59,7 +59,7 @@ unsafe fn avx2_peak_detection(signal: &[f64], min_height: f64, peaks: &mut Vec<u
 }
 
 #[cfg(not(target_arch = "x86_64"))]
-fn avx2_peak_detection(signal: &[f64], min_height: f64, peaks: &mut Vec<usize>) -> SignalResult<()> {
+fn avx2_peak_detection(signal: &[f64], minheight: f64, peaks: &mut Vec<usize>) -> SignalResult<()> {
     peaks.clear();
     for i in 1..signal.len()-1 {
         if signal[i] > signal[i-1] && signal[i] > signal[i+1] && signal[i] >= min_height {

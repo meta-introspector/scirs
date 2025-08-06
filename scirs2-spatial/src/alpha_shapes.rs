@@ -244,8 +244,8 @@ impl AlphaShape {
     }
 
     /// Compute circumradii for all simplices in the Delaunay triangulation
-    fn compute_circumradii(_delaunay: &Delaunay, points: &Array2<f64>) -> SpatialResult<Vec<f64>> {
-        let simplices = _delaunay.simplices();
+    fn compute_circumradii(delaunay: &Delaunay, points: &Array2<f64>) -> SpatialResult<Vec<f64>> {
+        let simplices = delaunay.simplices();
         let ndim = points.ncols();
         let mut circumradii = Vec::with_capacity(simplices.len());
 
@@ -363,9 +363,9 @@ impl AlphaShape {
 
     /// Compute the Cayley-Menger determinant for 3D circumradius calculation
     #[allow(clippy::too_many_arguments)]
-    fn cayley_menger_determinant_3d(_ab: f64, ac: f64, ad: f64, bc: f64, bd: f64, cd: f64) -> f64 {
+    fn cayley_menger_determinant_3d(ab: f64, ac: f64, ad: f64, bc: f64, bd: f64, cd: f64) -> f64 {
         // Cayley-Menger matrix for 4 points (tetrahedron)
-        let ab2 = _ab * _ab;
+        let ab2 = _ab * ab;
         let ac2 = ac * ac;
         let ad2 = ad * ad;
         let bc2 = bc * bc;
@@ -490,7 +490,7 @@ impl AlphaShape {
     }
 
     /// Get all (d-1)-faces of a d-simplex
-    fn get_faces(_simplex: &[usize], _ndim: usize) -> Vec<Vec<usize>> {
+    fn get_faces(_simplex: &[usize], ndim: usize) -> Vec<Vec<usize>> {
         let mut faces = Vec::new();
 
         // For each vertex, create a face by excluding that vertex
@@ -687,14 +687,14 @@ impl AlphaShape {
     }
 
     /// Calculate determinant of a square matrix using LU decomposition
-    fn matrix_determinant(_matrix: &[Vec<f64>]) -> f64 {
-        let n = _matrix.len();
+    fn matrix_determinant(matrix: &[Vec<f64>]) -> f64 {
+        let n = matrix.len();
         if n == 0 {
             return 0.0;
         }
 
         // Create mutable copy for LU decomposition
-        let mut a = _matrix.to_vec();
+        let mut a = matrix.to_vec();
         let mut det = 1.0;
 
         // Gaussian elimination with partial pivoting
@@ -805,7 +805,7 @@ impl AlphaShape {
         // Evaluate each alpha value
         let mut shapes = Self::multi_alpha(points, &alpha_candidates)?;
 
-        let (best_idx, _best_score) = match criterion {
+        let (best_idx, best_score) = match criterion {
             "area" | "volume" => {
                 // Find alpha that maximizes area/volume while maintaining reasonable boundary
                 let mut best_idx = 0;

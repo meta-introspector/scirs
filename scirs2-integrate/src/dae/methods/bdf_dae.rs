@@ -1015,28 +1015,28 @@ where
 
 /// Predict the next state for fully implicit DAE
 #[allow(dead_code)]
-fn predict_fully_implicit<F>(_y_history: &[Array1<F>], order: usize, _h: F) -> Array1<F>
+fn predict_fully_implicit<F>(y_history: &[Array1<F>], order: usize, h: F) -> Array1<F>
 where
     F: IntegrateFloat,
 {
-    let n = _y_history[0].len();
-    let history_len = _y_history.len();
+    let n = y_history[0].len();
+    let history_len = y_history.len();
 
     if history_len < 2 || order == 1 {
         // For first step or first-order method, just use constant extrapolation
-        return _y_history[history_len - 1].clone();
+        return y_history[history_len - 1].clone();
     }
 
     // For higher-order extrapolation, we'll use a simple polynomial predictor
     // For simplicity, we'll just use linear extrapolation here
     // In a full implementation, higher-order predictors would be used
 
-    let mut y_pred = _y_history[history_len - 1].clone();
+    let mut y_pred = y_history[history_len - 1].clone();
 
     // Simple linear extrapolation
     for i in 0..n {
-        y_pred[i] = _y_history[history_len - 1][i]
-            + (_y_history[history_len - 1][i] - _y_history[history_len - 2][i]);
+        y_pred[i] = y_history[history_len - 1][i]
+            + (y_history[history_len - 1][i] - y_history[history_len - 2][i]);
     }
 
     y_pred

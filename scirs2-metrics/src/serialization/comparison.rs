@@ -308,13 +308,13 @@ pub fn combine_collections(
 ///
 /// * A new collection with filtered metrics
 #[allow(dead_code)]
-pub fn filter_metrics<F>(_collection: &MetricCollection, filter_fn: F) -> MetricCollection
+pub fn filter_metrics<F>(_collection: &MetricCollection, filterfn: F) -> MetricCollection
 where
     F: Fn(&MetricResult) -> bool,
 {
     let mut filtered = MetricCollection::new(
-        &format!("{} (filtered)", _collection.name),
-        _collection.description.as_deref(),
+        &format!("{} (filtered)", collection.name),
+        collection.description.as_deref(),
     );
 
     for metric in &_collection.metrics {
@@ -337,7 +337,7 @@ where
 ///
 /// * A new collection with filtered metrics
 #[allow(dead_code)]
-pub fn filter_by_name(_collection: &MetricCollection, pattern: &str) -> MetricCollection {
+pub fn filter_by_name(collection: &MetricCollection, pattern: &str) -> MetricCollection {
     filter_metrics(_collection, |metric| metric.name.contains(pattern))
 }
 

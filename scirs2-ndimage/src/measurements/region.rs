@@ -547,12 +547,12 @@ where
 /// - [`count_labels`]: Count pixels in each object
 /// - Label connectivity functions for segmentation preprocessing
 #[allow(dead_code)]
-pub fn find_objects<D>(_input: &Array<usize, D>) -> NdimageResult<Vec<Vec<usize>>>
+pub fn find_objects<D>(input: &Array<usize, D>) -> NdimageResult<Vec<Vec<usize>>>
 where
     D: Dimension,
 {
     // Validate inputs
-    if _input.ndim() == 0 {
+    if input.ndim() == 0 {
         return Err(NdimageError::InvalidInput(
             "Input array cannot be 0-dimensional".into(),
         ));
@@ -560,7 +560,7 @@ where
 
     // Find all unique labels (excluding background label 0)
     let mut unique_labels = std::collections::HashSet::new();
-    for &label in _input.iter() {
+    for &label in input.iter() {
         if label > 0 {
             unique_labels.insert(label);
         }
@@ -574,12 +574,12 @@ where
 
     // Calculate bounding box for each object
     for &label in unique_labels.iter() {
-        let mut min_coords = vec![usize::MAX; _input.ndim()];
-        let mut max_coords = vec![0; _input.ndim()];
+        let mut min_coords = vec![usize::MAX; input.ndim()];
+        let mut max_coords = vec![0; input.ndim()];
         let mut found_object = false;
 
         // Scan through all pixels to find object bounds
-        for (coords, &pixel_label) in _input.indexed_iter() {
+        for (coords, &pixel_label) in input.indexed_iter() {
             if pixel_label == label {
                 found_object = true;
 

@@ -258,7 +258,7 @@ where
             let m2 = mass_matrix.evaluate(t2, k2.view());
             let m3 = mass_matrix.evaluate(t3, k3.view());
 
-            // For identity mass _matrix, we can simplify
+            // For identity mass matrix, we can simplify
             if mass_matrix.matrix_type == MassMatrixType::Identity {
                 // Simplified residual for identity mass _matrix
                 let r1 = (k1.clone() - y.clone()) / h
@@ -537,7 +537,7 @@ where
                             }
                         }
                         None => {
-                            // For identity mass _matrix, use standard Newton system: (I - h*a_ii*J) * dk = r
+                            // For identity mass matrix, use standard Newton system: (I - h*a_ii*J) * dk = r
                             let mut newton_matrix = Array2::<F>::eye(n_dim);
                             for i in 0..n_dim {
                                 for j in 0..n_dim {

@@ -105,11 +105,11 @@ impl Dirichlet {
     /// let alpha = array![1.0, 1.0, 1.0];
     /// let dirichlet = Dirichlet::new(alpha).unwrap();
     /// ```
-    pub fn new<D>(_alpha: ArrayBase<D, Ix1>) -> StatsResult<Self>
+    pub fn new<D>(alpha: ArrayBase<D, Ix1>) -> StatsResult<Self>
     where
         D: Data<Elem = f64>,
     {
-        let alpha_owned = _alpha.to_owned();
+        let alpha_owned = alpha.to_owned();
         let dim = alpha_owned.len();
 
         // Check that all _alpha values are positive
@@ -352,7 +352,7 @@ impl Dirichlet {
 /// let pdf_at_point = dirichlet.pdf(&point);
 /// ```
 #[allow(dead_code)]
-pub fn dirichlet<D>(_alpha: &ArrayBase<D, Ix1>) -> StatsResult<Dirichlet>
+pub fn dirichlet<D>(alpha: &ArrayBase<D, Ix1>) -> StatsResult<Dirichlet>
 where
     D: Data<Elem = f64>,
 {

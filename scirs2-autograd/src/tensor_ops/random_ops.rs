@@ -1,4 +1,4 @@
-use crate::ndarray__ext::{self, ArrayRng};
+use crate::ndarray_ext::{self, ArrayRng};
 use crate::op;
 use crate::Float;
 
@@ -7,7 +7,7 @@ pub struct StandardNormal<T: Float> {
 }
 
 impl<T: Float> StandardNormal<T> {
-    pub fn new(_arr_rng: ArrayRng<T>) -> Self {
+    pub fn new(_arrrng: ArrayRng<T>) -> Self {
         Self { _arr_rng }
     }
 }
@@ -17,7 +17,7 @@ pub struct StandardUniform<T: Float> {
 }
 
 impl<T: Float> StandardUniform<T> {
-    pub fn new(_arr_rng: ArrayRng<T>) -> Self {
+    pub fn new(_arrrng: ArrayRng<T>) -> Self {
         Self { _arr_rng }
     }
 }
@@ -29,8 +29,8 @@ pub struct RandomUniform<T: Float> {
 }
 
 impl<T: Float> RandomUniform<T> {
-    pub fn new(_arr_rng: ArrayRng<T>, min: f64, max: f64) -> Self {
-        Self { _arr_rng, max, min }
+    pub fn new(_arrrng: ArrayRng<T>, min: f64, max: f64) -> Self {
+        Self { arr_rng, max, min }
     }
 }
 
@@ -41,9 +41,9 @@ pub struct RandomNormal<T: Float> {
 }
 
 impl<T: Float> RandomNormal<T> {
-    pub fn new(_arr_rng: ArrayRng<T>, mean: f64, stddev: f64) -> Self {
+    pub fn new(_arrrng: ArrayRng<T>, mean: f64, stddev: f64) -> Self {
         Self {
-            _arr_rng,
+            arr_rng,
             mean,
             stddev,
         }
@@ -56,8 +56,8 @@ pub struct Bernoulli<T: Float> {
 }
 
 impl<T: Float> Bernoulli<T> {
-    pub fn new(_arr_rng: ArrayRng<T>, p: f64) -> Self {
-        Self { _arr_rng, p }
+    pub fn new(_arrrng: ArrayRng<T>, p: f64) -> Self {
+        Self { arr_rng, p }
     }
 }
 
@@ -67,8 +67,8 @@ pub struct Exponential<T: Float> {
 }
 
 impl<T: Float> Exponential<T> {
-    pub fn new(_arr_rng: ArrayRng<T>, lambda: f64) -> Self {
-        Self { _arr_rng, lambda }
+    pub fn new(_arrrng: ArrayRng<T>, lambda: f64) -> Self {
+        Self { arr_rng, lambda }
     }
 }
 
@@ -79,9 +79,9 @@ pub struct LogNormal<T: Float> {
 }
 
 impl<T: Float> LogNormal<T> {
-    pub fn new(_arr_rng: ArrayRng<T>, mean: f64, stddev: f64) -> Self {
+    pub fn new(_arrrng: ArrayRng<T>, mean: f64, stddev: f64) -> Self {
         Self {
-            _arr_rng,
+            arr_rng,
             mean,
             stddev,
         }
@@ -95,9 +95,9 @@ pub struct Gamma<T: Float> {
 }
 
 impl<T: Float> Gamma<T> {
-    pub fn new(_arr_rng: ArrayRng<T>, shape_param: f64, scale: f64) -> Self {
+    pub fn new(_arr_rng: ArrayRng<T>, shapeparam: f64, scale: f64) -> Self {
         Self {
-            _arr_rng,
+            arr_rng,
             shape_param,
             scale,
         }
@@ -216,7 +216,7 @@ impl<T: Float> op::Op<T> for Gamma<T> {
     }
 }
 
-use crate::tensor__ops::*;
+use crate::tensor_ops::*;
 
 pub struct Dropout<F: Float> {
     pub arr_rng: ArrayRng<F>,

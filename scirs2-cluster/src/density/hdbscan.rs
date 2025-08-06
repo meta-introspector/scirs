@@ -484,7 +484,7 @@ where
         }
     };
 
-    // Convert cut_distance to lambda (reciprocal of _distance)
+    // Convert cut_distance to lambda (reciprocal of distance)
     let cut_lambda = if cut_distance > F::zero() {
         F::one() / cut_distance
     } else {
@@ -587,7 +587,7 @@ where
 
 /// Get all leaf nodes (original points) in a subtree
 #[allow(dead_code)]
-fn get_leaves(_node: i32, tree: &SingleLinkageTree<impl Float>, n_samples: i32) -> Vec<i32> {
+fn get_leaves(_node: i32, tree: &SingleLinkageTree<impl Float>, nsamples: i32) -> Vec<i32> {
     let mut leaves = Vec::new();
 
     // If _node is a leaf, return it
@@ -629,8 +629,8 @@ fn get_leaves(_node: i32, tree: &SingleLinkageTree<impl Float>, n_samples: i32) 
 ///
 /// The mutual reachability distance
 #[allow(dead_code)]
-fn mutual_reachability_distance<F: Float>(distance: F, core_dist1: F, core_dist2: F) -> F {
-    _distance.max(core_dist1).max(core_dist2)
+fn mutual_reachability_distance<F: Float>(distance: F, core_dist1: F, coredist2: F) -> F {
+    distance.max(core_dist1).max(core_dist2)
 }
 
 /// Compute core distances for each point in the dataset
@@ -782,11 +782,11 @@ where
 ///
 /// * `Result<Vec<(usize, usize, F)>>` - MST edges as (source, target, distance) tuples
 #[allow(dead_code)]
-fn build_mst<F>(_distances: &Array2<F>) -> Result<Vec<(usize, usize, F)>>
+fn build_mst<F>(distances: &Array2<F>) -> Result<Vec<(usize, usize, F)>>
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
-    let n_samples = _distances.shape()[0];
+    let n_samples = distances.shape()[0];
     let mut mst_edges = Vec::with_capacity(n_samples - 1);
 
     // Use Prim's algorithm to build the MST
@@ -813,7 +813,7 @@ where
         for j in 0..n_samples {
             // Skip nodes already in MST
             if !in_mst[j] {
-                let distance = _distances[[current_node, j]];
+                let distance = distances[[current_node, j]];
 
                 // If this provides a better path to j
                 if distance < min_distances[j] {
@@ -942,7 +942,7 @@ where
 
     // Union-find data structure to track clusters
     // Need to allocate space for all nodes including internal nodes
-    // For n _samples, we'll have n-1 internal nodes in the hierarchy
+    // For n samples, we'll have n-1 internal nodes in the hierarchy
     let total_nodes = n_samples + (n_samples - 1);
     let mut union_find = UnionFind::new(total_nodes);
 

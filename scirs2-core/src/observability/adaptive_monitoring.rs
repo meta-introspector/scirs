@@ -22,7 +22,7 @@ static GLOBAL_MONITORING: std::sync::OnceLock<Arc<AdaptiveMonitoringSystem>> =
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct AdaptiveMonitoringSystem {
-    performance_monitor: Arc<RwLock<PerformanceMonitor>>,
+    performancemonitor: Arc<RwLock<PerformanceMonitor>>,
     optimization_engine: Arc<RwLock<OptimizationEngine>>,
     prediction_engine: Arc<RwLock<PredictionEngine>>,
     alerting_system: Arc<Mutex<AlertingSystem>>,
@@ -34,7 +34,7 @@ impl AdaptiveMonitoringSystem {
     /// Create new adaptive monitoring system
     pub fn new() -> CoreResult<Self> {
         Ok(Self {
-            performance_monitor: Arc::new(RwLock::new(PerformanceMonitor::new()?)),
+            performancemonitor: Arc::new(RwLock::new(PerformanceMonitor::new()?)),
             optimization_engine: Arc::new(RwLock::new(OptimizationEngine::new()?)),
             prediction_engine: Arc::new(RwLock::new(PredictionEngine::new()?)),
             alerting_system: Arc::new(Mutex::new(AlertingSystem::new()?)),
@@ -53,7 +53,7 @@ impl AdaptiveMonitoringSystem {
     /// Start adaptive monitoring and optimization
     pub fn start(&self) -> CoreResult<()> {
         // Start performance monitoring thread
-        let monitor = self.performance_monitor.clone();
+        let monitor = self.performancemonitor.clone();
         let config = self.configuration.clone();
         let metrics_collector = self.metrics_collector.clone();
 
@@ -66,7 +66,7 @@ impl AdaptiveMonitoringSystem {
 
         // Start optimization engine thread
         let optimization = self.optimization_engine.clone();
-        let monitor_clone = self.performance_monitor.clone();
+        let monitor_clone = self.performancemonitor.clone();
         let prediction = self.prediction_engine.clone();
 
         thread::spawn(move || loop {
@@ -78,7 +78,7 @@ impl AdaptiveMonitoringSystem {
 
         // Start prediction engine thread
         let prediction_clone = self.prediction_engine.clone();
-        let monitor_clone2 = self.performance_monitor.clone();
+        let monitor_clone2 = self.performancemonitor.clone();
 
         thread::spawn(move || loop {
             if let Err(e) = Self::prediction_loop(&prediction_clone, &monitor_clone2) {
@@ -89,7 +89,7 @@ impl AdaptiveMonitoringSystem {
 
         // Start alerting system thread
         let alerting = self.alerting_system.clone();
-        let monitor_clone3 = self.performance_monitor.clone();
+        let monitor_clone3 = self.performancemonitor.clone();
 
         thread::spawn(move || loop {
             if let Err(e) = Self::alerting_loop(&alerting, &monitor_clone3) {
@@ -216,7 +216,7 @@ impl AdaptiveMonitoringSystem {
 
     /// Get current system performance metrics
     pub fn get_performance_metrics(&self) -> CoreResult<ComprehensivePerformanceMetrics> {
-        let monitor = self.performance_monitor.read().map_err(|_| {
+        let monitor = self.performancemonitor.read().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire monitor lock".to_string(),
             ))
@@ -245,7 +245,7 @@ impl AdaptiveMonitoringSystem {
     }
 
     /// Update monitoring configuration
-    pub fn update_config(&self, new_config: MonitoringConfiguration) -> CoreResult<()> {
+    pub fn update_config(&self, newconfig: MonitoringConfiguration) -> CoreResult<()> {
         let mut config = self.configuration.write().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire config lock".to_string(),
@@ -336,7 +336,7 @@ impl PerformanceMonitor {
         self.update_performance_trends(&metrics)?;
 
         // Update baseline if needed
-        if self.baseline_performance.is_none() || self.should_update_baseline(&metrics)? {
+        if self.baseline_performance.is_none() || self.should_updatebaseline(&metrics)? {
             self.baseline_performance = Some(PerformanceBaseline::from_metrics(&metrics));
         }
 
@@ -418,7 +418,7 @@ impl PerformanceMonitor {
         Ok(())
     }
 
-    fn should_update_baseline(
+    fn should_updatebaseline(
         &self,
         metrics: &ComprehensivePerformanceMetrics,
     ) -> CoreResult<bool> {
@@ -788,11 +788,11 @@ impl OptimizationEngine {
     }
 
     /// Adapt the optimization strategy based on performance score
-    pub fn adapt_strategy(&mut self, performance_score: f64) -> CoreResult<()> {
+    pub fn adapt_strategy(&mut self, performancescore: f64) -> CoreResult<()> {
         // Simple strategy adaptation logic
-        if performance_score < 0.3 {
+        if performancescore < 0.3 {
             self.current_strategy = OptimizationStrategy::Aggressive;
-        } else if performance_score < 0.7 {
+        } else if performancescore < 0.7 {
             self.current_strategy = OptimizationStrategy::Balanced;
         } else {
             self.current_strategy = OptimizationStrategy::Conservative;
@@ -1183,7 +1183,7 @@ impl AlertingSystem {
         Ok(())
     }
 
-    fn send_alert(&self, alert_name: &str, severity: AlertSeverity) -> CoreResult<()> {
+    fn send_alert(&self, alertname: &str, severity: AlertSeverity) -> CoreResult<()> {
         for channel in &self.notification_channels {
             channel.send_notification(alert_name, severity)?;
         }
@@ -1194,7 +1194,7 @@ impl AlertingSystem {
         Ok(self.active_alerts.clone())
     }
 
-    pub fn acknowledge_alert(&mut self, alert_id: &str) -> CoreResult<()> {
+    pub fn acknowledge_alert(&mut self, alertid: &str) -> CoreResult<()> {
         if let Some(alert) = self.active_alerts.iter_mut().find(|a| a.id == alert_id) {
             alert.acknowledged = true;
         }
@@ -1668,8 +1668,8 @@ impl MetricsCollector {
                 for line in cpuinfo.lines() {
                     if line.starts_with("cache size") {
                         if let Some(size_part) = line.split(':').nth(1) {
-                            let size_str = size_part.trim().replace(" KB", "");
-                            cache_size_kb = size_str.parse().unwrap_or(0);
+                            let sizestr = size_part.trim().replace(" KB", "");
+                            cache_size_kb = sizestr.parse().unwrap_or(0);
                             break;
                         }
                     }
@@ -2765,7 +2765,7 @@ impl AnomalyDetector {
         // CPU anomaly detection
         if metrics.cpu_utilization > 0.95 {
             anomalies.push(PerformanceAnomaly {
-                metric_name: "cpu_utilization".to_string(),
+                metricname: "cpu_utilization".to_string(),
                 current_value: metrics.cpu_utilization,
                 expected_range: (0.0, 0.8),
                 severity: AnomalySeverity::Critical,
@@ -2777,7 +2777,7 @@ impl AnomalyDetector {
         // Memory anomaly detection
         if metrics.memory_utilization > 0.95 {
             anomalies.push(PerformanceAnomaly {
-                metric_name: "memory_utilization".to_string(),
+                metricname: "memory_utilization".to_string(),
                 current_value: metrics.memory_utilization,
                 expected_range: (0.0, 0.8),
                 severity: AnomalySeverity::Critical,
@@ -2789,7 +2789,7 @@ impl AnomalyDetector {
         // Latency anomaly detection
         if metrics.average_latency_ms > 5000.0 {
             anomalies.push(PerformanceAnomaly {
-                metric_name: "average_latency_ms".to_string(),
+                metricname: "average_latency_ms".to_string(),
                 current_value: metrics.average_latency_ms,
                 expected_range: (0.0, 1000.0),
                 severity: AnomalySeverity::Warning,
@@ -2809,7 +2809,7 @@ impl AnomalyDetector {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct PerformanceAnomaly {
-    pub metric_name: String,
+    pub metricname: String,
     pub current_value: f64,
     pub expected_range: (f64, f64),
     pub severity: AnomalySeverity,
@@ -3013,7 +3013,7 @@ impl TimeSeriesModel {
         }
     }
 
-    pub fn add_data(&mut self, new_data: Vec<f64>) -> CoreResult<()> {
+    pub fn add_data(&mut self, newdata: Vec<f64>) -> CoreResult<()> {
         for value in new_data {
             self.data.push_back(value);
         }
@@ -3325,7 +3325,7 @@ pub struct NotificationChannel {
 }
 
 impl NotificationChannel {
-    pub fn send_notification(&self, alert_name: &str, severity: AlertSeverity) -> CoreResult<()> {
+    pub fn send_notification(&self, alertname: &str, severity: AlertSeverity) -> CoreResult<()> {
         if !self.enabled {
             return Ok(());
         }
@@ -3359,7 +3359,7 @@ pub enum NotificationChannelType {
 
 /// Initialize adaptive monitoring system
 #[allow(dead_code)]
-pub fn initialize_adaptive_monitoring() -> CoreResult<()> {
+pub fn initialize_adaptivemonitoring() -> CoreResult<()> {
     let monitoring_system = AdaptiveMonitoringSystem::global()?;
     monitoring_system.start()?;
     Ok(())
@@ -3367,7 +3367,7 @@ pub fn initialize_adaptive_monitoring() -> CoreResult<()> {
 
 /// Get current monitoring dashboard
 #[allow(dead_code)]
-pub fn get_monitoring_dashboard() -> CoreResult<MonitoringDashboard> {
+pub fn getmonitoring_dashboard() -> CoreResult<MonitoringDashboard> {
     let monitoring_system = AdaptiveMonitoringSystem::global()?;
     monitoring_system.get_dashboard_data()
 }
@@ -3377,7 +3377,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_monitoring_system_creation() {
+    fn testmonitoring_system_creation() {
         let system = AdaptiveMonitoringSystem::new().unwrap();
         // Basic functionality test
     }

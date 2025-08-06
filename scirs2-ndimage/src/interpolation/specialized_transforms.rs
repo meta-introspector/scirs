@@ -478,11 +478,11 @@ where
 
 /// Upsample an array to a target shape using bilinear interpolation
 #[allow(dead_code)]
-fn upsample_array<T>(_input: &Array2<T>, targetshape: (usize, usize)) -> NdimageResult<Array2<T>>
+fn upsample_array<T>(input: &Array2<T>, targetshape: (usize, usize)) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
-    let (src_h, src_w) = _input.dim();
+    let (src_h, src_w) = input.dim();
     let (dst_h, dst_w) = targetshape;
 
     let mut output = Array2::zeros((dst_h, dst_w));
@@ -509,10 +509,10 @@ where
             let x0_idx = x0.to_usize().unwrap_or(0).min(src_w - 1);
             let x1_idx = x1.to_usize().unwrap_or(0).min(src_w - 1);
 
-            let v00 = _input[[y0_idx, x0_idx]];
-            let v01 = _input[[y0_idx, x1_idx]];
-            let v10 = _input[[y1_idx, x0_idx]];
-            let v11 = _input[[y1_idx, x1_idx]];
+            let v00 = input[[y0_idx, x0_idx]];
+            let v01 = input[[y0_idx, x1_idx]];
+            let v10 = input[[y1_idx, x0_idx]];
+            let v11 = input[[y1_idx, x1_idx]];
 
             let v0 = v00 * (T::one() - dx) + v01 * dx;
             let v1 = v10 * (T::one() - dx) + v11 * dx;

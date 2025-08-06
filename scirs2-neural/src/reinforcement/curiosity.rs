@@ -94,9 +94,9 @@ impl ICM {
 struct FeatureEncoder {
     layers: Vec<Box<dyn Layer<f32>>>,
 impl FeatureEncoder {
-    fn new(_input_dim: usize, output_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
+    fn new(_input_dim: usize, output_dim: usize, hiddensizes: Vec<usize>) -> Result<Self> {
         let mut layers: Vec<Box<dyn Layer<f32>>> = Vec::new();
-        let mut current_dim = _input_dim;
+        let mut current_dim = input_dim;
         for hidden_size in hidden_sizes {
             layers.push(Box::new(Dense::new(
                 current_dim,
@@ -171,10 +171,10 @@ impl RND {
 /// Fixed random network for RND
 struct RandomNetwork {
 impl RandomNetwork {
-    fn new(_input_dim: usize, output_dim: usize) -> Result<Self> {
+    fn new(_input_dim: usize, outputdim: usize) -> Result<Self> {
         // Simple 2-layer network with fixed random weights
         layers.push(Box::new(Dense::new(
-            _input_dim,
+            input_dim,
             256,
             Some(Activation::ReLU),
         )?));
@@ -193,7 +193,7 @@ pub struct NoveltyExploration {
     novelty_scale: f32,
 impl NoveltyExploration {
     /// Create a new novelty exploration module
-    pub fn new(_buffer_size: usize, k_nearest: usize, novelty_scale: f32) -> Self {
+    pub fn new(_buffer_size: usize, k_nearest: usize, noveltyscale: f32) -> Self {
         Self {
             state_buffer: VecDeque::with_capacity(buffer_size),
             buffer_size,
@@ -230,14 +230,14 @@ pub struct EpisodicCuriosity {
     similarity_threshold: f32,
 impl EpisodicCuriosity {
     /// Create a new episodic curiosity module
-    pub fn new(_embedding_dim: usize, bonus_scale: f32, similarity_threshold: f32) -> Self {
+    pub fn new(_embedding_dim: usize, bonus_scale: f32, similaritythreshold: f32) -> Self {
             episodic_memory: Vec::new(),
             visit_counts: Vec::new(),
             embedding_dim,
             bonus_scale,
             similarity_threshold,
     /// Compute episodic bonus
-    pub fn compute_bonus(&mut self, state_embedding: &ArrayView1<f32>) -> f32 {
+    pub fn compute_bonus(&mut self, stateembedding: &ArrayView1<f32>) -> f32 {
         // Find similar states in memory
         let mut min_distance = f32::MAX;
         let mut closest_idx = None;

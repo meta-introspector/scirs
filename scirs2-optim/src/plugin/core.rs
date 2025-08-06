@@ -425,16 +425,16 @@ pub trait PluginLifecycle {
 /// Plugin event system
 pub trait PluginEventHandler {
     /// Handle optimization step event
-    fn on_step(&mut self, _step: usize, _params: &Array1<f64>, _gradients: &Array1<f64>) {}
+    fn on_step(&mut self, _step: usize, _params: &Array1<f64>, gradients: &Array1<f64>) {}
 
     /// Handle convergence event
-    fn on_convergence(&mut self, _final_params: &Array1<f64>) {}
+    fn on_convergence(&mut self, _finalparams: &Array1<f64>) {}
 
     /// Handle error event
-    fn on_error(&mut self, _error: &OptimError) {}
+    fn on_error(&mut self, error: &OptimError) {}
 
     /// Handle custom event
-    fn on_custom_event(&mut self, _event_name: &str, _data: &dyn Any) {}
+    fn on_custom_event(&mut self, _event_name: &str, data: &dyn Any) {}
 }
 
 /// Plugin metadata provider
@@ -552,9 +552,9 @@ impl Default for OptimizerState {
 /// Utility functions for plugin development
 /// Create a basic plugin info structure
 #[allow(dead_code)]
-pub fn create_plugin_info(_name: &str, version: &str, author: &str) -> PluginInfo {
+pub fn create_plugin_info(name: &str, version: &str, author: &str) -> PluginInfo {
     PluginInfo {
-        name: _name.to_string(),
+        name: name.to_string(),
         version: version.to_string(),
         author: author.to_string(),
         ..Default::default()
@@ -629,7 +629,7 @@ pub fn validate_config_against_schema(
 
 /// Validate individual field value against schema
 #[allow(dead_code)]
-fn validate_field_value(_value: &ConfigValue, schema: &FieldSchema) -> Result<()> {
+fn validate_field_value(value: &ConfigValue, schema: &FieldSchema) -> Result<()> {
     for constraint in &schema.constraints {
         match (_value, constraint) {
             (ConfigValue::Float(v), ValidationConstraint::Min(min)) => {

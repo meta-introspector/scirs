@@ -62,12 +62,12 @@ fn demo_optimization_configurations() -> CoreResult<()> {
     // Production configuration
     let production_config = OptimizationConfig::production()
         .with_goal(OptimizationGoal::Performance)
-        .with_learning_rate(0.005)
+        .with_learningrate(0.005)
         .with_confidence_threshold(0.99);
 
     println!("🏭 Production Configuration:");
     println!("  - Goal: {:?}", production_config.goal);
-    println!("  - Learning Rate: {:.3}", production_config.learning_rate);
+    println!("  - Learning Rate: {:.3}", production_config.learningrate);
     println!(
         "  - Confidence Threshold: {:.2}",
         production_config.confidence_threshold
@@ -87,12 +87,12 @@ fn demo_optimization_configurations() -> CoreResult<()> {
 
     // Development configuration
     let dev_config = OptimizationConfig::development()
-        .with_learning_rate(0.02)
+        .with_learningrate(0.02)
         .with_adaptation_interval(Duration::from_secs(30));
 
     println!("\n🔧 Development Configuration:");
     println!("  - Goal: {:?}", dev_config.goal);
-    println!("  - Learning Rate: {:.3}", dev_config.learning_rate);
+    println!("  - Learning Rate: {:.3}", dev_config.learningrate);
     println!(
         "  - Adaptation Interval: {}s",
         dev_config.adaptation_interval.as_secs()
@@ -355,15 +355,15 @@ fn demo_basic_adaptive_optimization() -> CoreResult<()> {
         println!("\n🔄 Iteration {}", iteration + 1);
 
         for (workload, metrics) in &scenarios {
-            for (metric_name, base_value) in metrics {
+            for (metricname, base_value) in metrics {
                 // Add some variation and potential degradation
                 let variation = (iteration as f64 * 0.1) + (rand::random::<f64>() - 0.5) * 0.2;
                 let value = base_value * (1.0 + variation);
 
-                optimizer.record_metric(workload, metric_name, value)?;
+                optimizer.record_metric(workload, metricname, value)?;
 
                 if iteration % 2 == 0 {
-                    println!("  📈 {}: {} = {:.2}", workload, metric_name, value);
+                    println!("  📈 {}: {} = {:.2}", workload, metricname, value);
                 }
             }
         }
@@ -425,7 +425,7 @@ fn demo_multi_objective_optimization() -> CoreResult<()> {
     // Create optimizer focused on balanced optimization
     let config = OptimizationConfig::default()
         .with_goal(OptimizationGoal::Balanced)
-        .with_learning_rate(0.01)
+        .with_learningrate(0.01)
         .with_adaptation_interval(Duration::from_secs(3));
 
     let mut optimizer = AdaptiveOptimizer::new(config)?;
@@ -772,8 +772,8 @@ fn demo_enterprise_features() -> CoreResult<()> {
         println!("\n🎯 Enterprise Scenario: {}", scenario);
 
         for (workload, metrics) in workload_metrics {
-            for (metric_name, value) in metrics {
-                optimizer.record_metric(workload, metric_name, value)?;
+            for (metricname, value) in metrics {
+                optimizer.record_metric(workload, metricname, value)?;
             }
             println!("  📈 Updated metrics for {}", workload);
         }

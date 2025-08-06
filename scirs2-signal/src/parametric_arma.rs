@@ -8,7 +8,7 @@ use ndarray::s;
 // - Spectral analysis for ARMA models
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use num_traits::Float;
 use scirs2_core::validation::check_finite;
@@ -99,23 +99,23 @@ pub fn estimate_arma(
 ///
 /// This is a computationally efficient method that provides good initial estimates
 #[allow(dead_code)]
-fn hannan_rissanen(_signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<ArmaModel> {
-    let n = _signal.len();
+fn hannan_rissanen(signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<ArmaModel> {
+    let n = signal.len();
 
     // Stage 1: Fit a high-order AR model to estimate innovations
     let ar_order = ((n as f64).sqrt() as usize).max(p + q);
 
     // Use Yule-Walker for AR estimation
-    let (ar_coeffs_high__var) = yule_walker_ar(_signal, ar_order)?;
+    let (ar_coeffs_high, var) = yule_walker_ar(_signal, ar_order)?;
 
     // Compute residuals (innovations)
     let mut innovations = Array1::zeros(n);
     for t in ar_order..n {
         let mut pred = 0.0;
         for i in 1..=ar_order {
-            pred += ar_coeffs_high[i] * _signal[t - i];
+            pred += ar_coeffs_high[i] * signal[t - i];
         }
-        innovations[t] = _signal[t] - pred;
+        innovations[t] = signal[t] - pred;
     }
 
     // Stage 2: Regression to estimate ARMA parameters
@@ -128,11 +128,11 @@ fn hannan_rissanen(_signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<Ar
 
     for i in 0..n_obs {
         let t = i + start;
-        y[i] = _signal[t];
+        y[i] = signal[t];
 
         // AR terms
         for j in 0..p {
-            x[[i, j]] = _signal[t - j - 1];
+            x[[i, j]] = signal[t - j - 1];
         }
 
         // MA terms (using estimated innovations)
@@ -176,8 +176,8 @@ fn hannan_rissanen(_signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<Ar
 ///
 /// Uses recursive prediction error minimization
 #[allow(dead_code)]
-fn innovation_algorithm(_signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<ArmaModel> {
-    let n = _signal.len();
+fn innovation_algorithm(signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<ArmaModel> {
+    let n = signal.len();
 
     // Initialize parameters
     let mut ar_coeffs = Array1::zeros(p + 1);
@@ -187,8 +187,8 @@ fn innovation_algorithm(_signal: &Array1<f64>, p: usize, q: usize) -> SignalResu
     ma_coeffs[0] = 1.0;
 
     // Center the _signal
-    let mean = _signal.mean().unwrap_or(0.0);
-    let centered = _signal.mapv(|x| x - mean);
+    let mean = signal.mean().unwrap_or(0.0);
+    let centered = signal.mapv(|x| x - mean);
 
     // Innovation algorithm iterations
     let max_iter = 20;
@@ -294,7 +294,7 @@ fn conditional_sum_of_squares(
     p: usize,
     q: usize,
 ) -> SignalResult<ArmaModel> {
-    let n = _signal.len();
+    let n = signal.len();
 
     // Initialize with Hannan-Rissanen estimates
     let initial = hannan_rissanen(_signal, p, q)?;
@@ -327,7 +327,7 @@ fn conditional_sum_of_squares(
             for t in p.max(q)..n {
                 let mut deriv = 0.0;
                 for j in 0..i {
-                    deriv += ar_coeffs[j] * _signal[t - j];
+                    deriv += ar_coeffs[j] * signal[t - j];
                 }
                 grad += 2.0 * residuals[t] * deriv;
             }
@@ -362,13 +362,13 @@ fn conditional_sum_of_squares(
 
 /// Maximum likelihood estimation for ARMA models
 #[allow(dead_code)]
-fn maximum_likelihood(_signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<ArmaModel> {
+fn maximum_likelihood(signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<ArmaModel> {
     // Start with CSS estimates
     let initial = conditional_sum_of_squares(_signal, p, q)?;
     let mut model = initial;
 
     // Compute log-likelihood
-    let n = _signal.len();
+    let n = signal.len();
     let residuals = compute_arma_residuals(_signal, &model.ar_coeffs, &model.ma_coeffs)?;
 
     // Gaussian log-likelihood
@@ -712,8 +712,8 @@ fn inverse_normal_cdf(p: f64) -> f64 {
 /// compared to the autocorrelation method. It minimizes forward and backward prediction
 /// errors simultaneously.
 #[allow(dead_code)]
-fn burg_method(_signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
-    let n = _signal.len();
+fn burg_method(signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
+    let n = signal.len();
 
     if p >= n {
         return Err(SignalError::ValueError(format!(
@@ -724,9 +724,9 @@ fn burg_method(_signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
 
     // Initialize reflection coefficients and prediction errors
     let mut k = vec![0.0; p];
-    let mut forward_error = _signal.to_vec();
-    let mut backward_error = _signal.to_vec();
-    let mut total_error = _signal.mapv(|x| x * x).sum();
+    let mut forward_error = signal.to_vec();
+    let mut backward_error = signal.to_vec();
+    let mut total_error = signal.mapv(|x| x * x).sum();
 
     let mut ar_coeffs = vec![0.0; p + 1];
     ar_coeffs[0] = 1.0;
@@ -813,8 +813,8 @@ fn burg_method(_signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
 /// This method minimizes the forward and backward prediction errors over a modified
 /// covariance matrix, providing improved estimates for short data sequences.
 #[allow(dead_code)]
-fn modified_covariance_method(_signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
-    let n = _signal.len();
+fn modified_covariance_method(signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
+    let n = signal.len();
 
     if p >= n {
         return Err(SignalError::ValueError(format!(
@@ -831,7 +831,7 @@ fn modified_covariance_method(_signal: &Array1<f64>, p: usize) -> SignalResult<A
     // Forward prediction equations
     for i in 0..(n - p) {
         for j in 0..p {
-            data_matrix[[i, j]] = _signal[i + j];
+            data_matrix[[i, j]] = signal[i + j];
         }
         target_vector[i] = -_signal[i + p];
     }
@@ -839,7 +839,7 @@ fn modified_covariance_method(_signal: &Array1<f64>, p: usize) -> SignalResult<A
     // Backward prediction equations
     for i in 0..(n - p) {
         for j in 0..p {
-            data_matrix[[n - p + i, j]] = _signal[n - 1 - i - j];
+            data_matrix[[n - p + i, j]] = signal[n - 1 - i - j];
         }
         target_vector[n - p + i] = -_signal[n - 1 - i - p];
     }
@@ -877,8 +877,8 @@ fn modified_covariance_method(_signal: &Array1<f64>, p: usize) -> SignalResult<A
 /// Combines forward and backward linear prediction for improved AR parameter estimation,
 /// particularly effective for signals with non-stationary characteristics.
 #[allow(dead_code)]
-fn forward_backward_method(_signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
-    let n = _signal.len();
+fn forward_backward_method(signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
+    let n = signal.len();
 
     if p >= n {
         return Err(SignalError::ValueError(format!(
@@ -924,8 +924,8 @@ fn forward_backward_method(_signal: &Array1<f64>, p: usize) -> SignalResult<Arma
 /// Uses Kalman filtering approach for robust estimation of ARMA parameters,
 /// particularly suitable for non-stationary or noisy data.
 #[allow(dead_code)]
-fn kalman_filter_estimation(_signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<ArmaModel> {
-    let n = _signal.len();
+fn kalman_filter_estimation(signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<ArmaModel> {
+    let n = signal.len();
 
     if p + q >= n {
         return Err(SignalError::ValueError(format!(
@@ -966,7 +966,7 @@ fn kalman_filter_estimation(_signal: &Array1<f64>, p: usize, q: usize) -> Signal
 
             // AR terms
             for i in 0..p {
-                observation_vector[i] = _signal[t - i - 1];
+                observation_vector[i] = signal[t - i - 1];
             }
 
             // MA terms (using current residuals)
@@ -984,7 +984,7 @@ fn kalman_filter_estimation(_signal: &Array1<f64>, p: usize, q: usize) -> Signal
             let predicted_covariance = &state_covariance + &process_noise;
 
             // Kalman filter update step
-            let innovation = _signal[t] - observation_vector.dot(&predicted_state);
+            let innovation = signal[t] - observation_vector.dot(&predicted_state);
             let innovation_covariance = observation_vector
                 .dot(&predicted_covariance.dot(&observation_vector))
                 + observation_noise;
@@ -1042,16 +1042,16 @@ fn kalman_filter_estimation(_signal: &Array1<f64>, p: usize, q: usize) -> Signal
 
 /// Solve forward prediction problem for AR estimation
 #[allow(dead_code)]
-fn solve_forward_prediction(_signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
-    let n = _signal.len();
+fn solve_forward_prediction(signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
+    let n = signal.len();
     let mut data_matrix = Array2::zeros((n - p, p));
     let mut target_vector = Array1::zeros(n - p);
 
     for i in 0..(n - p) {
         for j in 0..p {
-            data_matrix[[i, j]] = _signal[i + j];
+            data_matrix[[i, j]] = signal[i + j];
         }
-        target_vector[i] = _signal[i + p];
+        target_vector[i] = signal[i + p];
     }
 
     let xtx = data_matrix.t().dot(&data_matrix);
@@ -1078,16 +1078,16 @@ fn solve_forward_prediction(_signal: &Array1<f64>, p: usize) -> SignalResult<Arm
 
 /// Solve backward prediction problem for AR estimation
 #[allow(dead_code)]
-fn solve_backward_prediction(_signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
-    let n = _signal.len();
+fn solve_backward_prediction(signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
+    let n = signal.len();
     let mut data_matrix = Array2::zeros((n - p, p));
     let mut target_vector = Array1::zeros(n - p);
 
     for i in 0..(n - p) {
         for j in 0..p {
-            data_matrix[[i, j]] = _signal[n - 1 - i - j];
+            data_matrix[[i, j]] = signal[n - 1 - i - j];
         }
-        target_vector[i] = _signal[n - 1 - i - p];
+        target_vector[i] = signal[n - 1 - i - p];
     }
 
     let xtx = data_matrix.t().dot(&data_matrix);

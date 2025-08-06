@@ -25,7 +25,7 @@ pub struct GraphColoring<N: Node> {
 /// # Returns
 /// * A graph coloring
 #[allow(dead_code)]
-pub fn greedy_coloring<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> GraphColoring<N>
+pub fn greedy_coloring<N, E, Ix>(graph: &Graph<N, E, Ix>) -> GraphColoring<N>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
@@ -35,11 +35,11 @@ where
     let mut max_color = 0;
 
     // Color nodes in the order they appear
-    for node_idx in _graph.inner().node_indices() {
+    for node_idx in graph.inner().node_indices() {
         // Find colors used by neighbors
         let mut used_colors = HashSet::new();
-        for neighbor_idx in _graph.inner().neighbors(node_idx) {
-            if let Some(neighbor_node) = _graph.inner().node_weight(neighbor_idx) {
+        for neighbor_idx in graph.inner().neighbors(node_idx) {
+            if let Some(neighbor_node) = graph.inner().node_weight(neighbor_idx) {
                 if let Some(&color) = coloring.get(neighbor_node) {
                     used_colors.insert(color);
                 }
@@ -52,7 +52,7 @@ where
             color += 1;
         }
 
-        let node = _graph.inner()[node_idx].clone();
+        let node = graph.inner()[node_idx].clone();
         coloring.insert(node, color);
         max_color = max_color.max(color);
     }
@@ -75,13 +75,13 @@ where
 /// # Returns
 /// * The chromatic number if found within max_colors, None otherwise
 #[allow(dead_code)]
-pub fn chromatic_number<N, E, Ix>(_graph: &Graph<N, E, Ix>, max_colors: usize) -> Option<usize>
+pub fn chromatic_number<N, E, Ix>(_graph: &Graph<N, E, Ix>, maxcolors: usize) -> Option<usize>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    if _graph.inner().node_count() == 0 {
+    if graph.inner().node_count() == 0 {
         return Some(0);
     }
 
@@ -91,18 +91,18 @@ where
 
 /// Helper function to check if a graph can be colored with k colors
 #[allow(dead_code)]
-fn can_color_with_k_colors<N, E, Ix>(_graph: &Graph<N, E, Ix>, k: usize) -> bool
+fn can_color_with_k_colors<N, E, Ix>(graph: &Graph<N, E, Ix>, k: usize) -> bool
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    let nodes: Vec<_> = _graph.inner().node_indices().collect();
+    let nodes: Vec<_> = graph.inner().node_indices().collect();
     let mut coloring = vec![0; nodes.len()];
 
     fn backtrack<N, E, Ix>(
         _graph: &Graph<N, E, Ix>,
-        nodes: &[petgraph::_graph::NodeIndex<Ix>],
+        nodes: &[petgraph::graph::NodeIndex<Ix>],
         coloring: &mut [usize],
         node_idx: usize,
         k: usize,
@@ -110,7 +110,7 @@ where
     where
         N: Node + std::fmt::Debug,
         E: EdgeWeight,
-        Ix: petgraph::_graph::IndexType,
+        Ix: petgraph::graph::IndexType,
     {
         if node_idx == nodes.len() {
             return true;
@@ -123,7 +123,7 @@ where
             let mut valid = true;
             for (i, &other_node) in nodes.iter().enumerate().take(node_idx) {
                 if (_graph.inner().contains_edge(node, other_node)
-                    || _graph.inner().contains_edge(other_node, node))
+                    || graph.inner().contains_edge(other_node, node))
                     && coloring[i] == color
                 {
                     valid = false;

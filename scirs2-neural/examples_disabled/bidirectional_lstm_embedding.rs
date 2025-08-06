@@ -13,7 +13,7 @@ struct Embedding {
     weight: Array2<f32>,
 }
 impl Embedding {
-    fn new(_vocab_size: usize, embedding_dim: usize) -> Self {
+    fn new(_vocab_size: usize, embeddingdim: usize) -> Self {
         // Xavier/Glorot initialization
         let bound = (3.0 / embedding_dim as f32).sqrt();
         // Create a random number generator
@@ -53,12 +53,12 @@ struct BiLSTM {
     // Backward LSTM cell
     backward_cell: LSTMCell,
 impl BiLSTM {
-    fn new(_input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, batchsize: usize) -> Self {
         // Create forward and backward LSTM cells
         let forward_cell = LSTMCell::new(_input_size, hidden_size, batch_size);
         let backward_cell = LSTMCell::new(_input_size, hidden_size, batch_size);
         BiLSTM {
-            _input_size,
+            input_size,
             hidden_size,
             batch_size,
             forward_cell,
@@ -111,25 +111,25 @@ struct LSTMCell {
 impl LSTMCell {
         let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         // Input gate weights
-        let mut w_ii = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_ii = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_hi = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_ii.iter_mut() {
         for elem in w_hi.iter_mut() {
         let b_i = Array1::zeros(hidden_size);
         // Forget gate weights (initialize forget gate bias to 1 to avoid vanishing gradients early in training)
-        let mut w_if = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_if = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_hf = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_if.iter_mut() {
         for elem in w_hf.iter_mut() {
         let b_f = Array1::ones(hidden_size);
         // Cell gate weights
-        let mut w_ig = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_ig = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_hg = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_ig.iter_mut() {
         for elem in w_hg.iter_mut() {
         let b_g = Array1::zeros(hidden_size);
         // Output gate weights
-        let mut w_io = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_io = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_ho = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_io.iter_mut() {
         for elem in w_ho.iter_mut() {
@@ -430,7 +430,7 @@ fn tokenizetexts(
     tokens
 // Convert labels to one-hot encoded vectors
 #[allow(dead_code)]
-fn one_hot_encode(_labels: &[usize], num_classes: usize) -> Array2<f32> {
+fn one_hot_encode(_labels: &[usize], numclasses: usize) -> Array2<f32> {
     let mut one_hot = Array2::<f32>::zeros((labels.len(), num_classes));
     for (i, &label) in labels.iter().enumerate() {
         if label < num_classes {
@@ -520,8 +520,8 @@ fn train_model(
         // as implementing backpropagation for this complex model would require significant code
 // Evaluate the model on test data
 #[allow(dead_code)]
-fn evaluate_model(_model: &mut BiLSTMClassifier, x_test: &Array2<usize>, y_test: &[usize]) {
-    let predictions = _model.predict(x_test);
+fn evaluate_model(_model: &mut BiLSTMClassifier, x_test: &Array2<usize>, ytest: &[usize]) {
+    let predictions = model.predict(x_test);
     // Calculate accuracy
     let mut correct = 0;
     for (pred, &true_label) in predictions.iter().zip(y_test.iter()) {
@@ -579,7 +579,7 @@ fn evaluate_model(_model: &mut BiLSTMClassifier, x_test: &Array2<usize>, y_test:
             class_name, precision, recall, f1
 // Example predictions
 #[allow(dead_code)]
-fn example_predictions(_model: &mut BiLSTMClassifier, word_to_idx: &HashMap<String, usize>) {
+fn example_predictions(_model: &mut BiLSTMClassifier, word_toidx: &HashMap<String, usize>) {
     let examples = [
         "this is a great movie with amazing performances",
         "the movie was okay but nothing really stood out",

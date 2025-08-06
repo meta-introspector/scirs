@@ -78,9 +78,9 @@ impl MemoryMappedCorpus {
     }
 
     /// Build an index of line offsets for fast access
-    fn build_line_index(_mmap: &Mmap) -> Vec<usize> {
+    fn build_line_index(mmap: &Mmap) -> Vec<usize> {
         let mut offsets = vec![0];
-        let data = _mmap.as_ref();
+        let data = mmap.as_ref();
 
         for (i, &byte) in data.iter().enumerate() {
             if byte == b'\n' {
@@ -125,7 +125,7 @@ impl MemoryMappedCorpus {
     }
 
     /// Process documents in parallel chunks
-    pub fn parallel_process<F, R>(&self, chunk_size: usize, processor: F) -> Result<Vec<R>>
+    pub fn parallel_process<F, R>(&self, chunksize: usize, processor: F) -> Result<Vec<R>>
     where
         F: Fn(&[&str]) -> Result<R> + Send + Sync,
         R: Send,
@@ -180,9 +180,9 @@ pub struct StreamingTextProcessor<T: Tokenizer> {
 
 impl<T: Tokenizer> StreamingTextProcessor<T> {
     /// Create a new streaming processor
-    pub fn new(_tokenizer: T) -> Self {
+    pub fn new(tokenizer: T) -> Self {
         Self {
-            _tokenizer,
+            tokenizer,
             buffer_size: 1024 * 1024, // 1MB default buffer
         }
     }
@@ -273,9 +273,9 @@ pub struct StreamingVectorizer {
 
 impl StreamingVectorizer {
     /// Create a new streaming vectorizer
-    pub fn new(_vocabulary: Vocabulary) -> Self {
+    pub fn new(vocabulary: Vocabulary) -> Self {
         Self {
-            _vocabulary,
+            vocabulary,
             chunk_size: 1000, // Process 1000 documents at a time
         }
     }
@@ -339,7 +339,7 @@ pub struct ChunkedCorpusReader {
 
 impl ChunkedCorpusReader {
     /// Create a new chunked reader
-    pub fn new<P: AsRef<Path>>(path: P, chunk_size: usize) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, chunksize: usize) -> Result<Self> {
         let file = File::open(_path)
             .map_err(|e| TextError::IoError(format!("Failed to open file: {e}")))?;
 
@@ -448,7 +448,7 @@ impl MultiFileCorpus {
     }
 
     /// Get document by global index
-    pub fn get_document(&self, global_index: usize) -> Result<&str> {
+    pub fn get_document(&self, globalindex: usize) -> Result<&str> {
         if global_index >= self.total_documents {
             return Err(TextError::InvalidInput(format!(
                 "Document _index {global_index} out of range"
@@ -489,7 +489,7 @@ impl MultiFileCorpus {
     }
 
     /// Get random sample of documents
-    pub fn random_sample(&self, sample_size: usize, seed: u64) -> Result<Vec<&str>> {
+    pub fn random_sample(&self, samplesize: usize, seed: u64) -> Result<Vec<&str>> {
         use std::collections::HashSet;
 
         if sample_size > self.total_documents {
@@ -546,9 +546,9 @@ pub struct CachedCorpus {
 
 impl CachedCorpus {
     /// Create cached corpus with specified cache size
-    pub fn new(_corpus: MemoryMappedCorpus, cache_size: usize) -> Self {
+    pub fn new(_corpus: MemoryMappedCorpus, cachesize: usize) -> Self {
         Self {
-            _corpus,
+            corpus,
             cache: std::collections::HashMap::new(),
             access_order: std::collections::VecDeque::new(),
             cache_size,
@@ -609,7 +609,7 @@ impl CorpusIndex {
         let mut doc_to_words = Vec::new();
 
         for doc_idx in 0.._corpus.num_documents() {
-            let doc = _corpus.get_document(doc_idx)?;
+            let doc = corpus.get_document(doc_idx)?;
             let tokens = tokenizer.tokenize(doc)?;
             let unique_tokens: std::collections::HashSet<String> = tokens.into_iter().collect();
 
@@ -747,9 +747,9 @@ pub struct AdvancedStreamingProcessor<T: Tokenizer> {
 
 impl<T: Tokenizer + Send + Sync> AdvancedStreamingProcessor<T> {
     /// Create new advanced streaming processor
-    pub fn new(_tokenizer: T) -> Self {
+    pub fn new(tokenizer: T) -> Self {
         Self {
-            _tokenizer,
+            tokenizer,
             buffer_size: 1024 * 1024, // 1MB
             parallel_chunks: num,
             _cpus: get(),
@@ -758,7 +758,7 @@ impl<T: Tokenizer + Send + Sync> AdvancedStreamingProcessor<T> {
     }
 
     /// Set parallel processing parameters
-    pub fn with_parallelism(mut self, chunks: usize, buffer_size: usize) -> Self {
+    pub fn with_parallelism(mut self, chunks: usize, buffersize: usize) -> Self {
         self.parallel_chunks = chunks;
         self.buffer_size = buffer_size;
         self
@@ -881,7 +881,7 @@ impl CorpusStatistics {
     }
 
     /// Add document statistics
-    pub fn add_document(&mut self, doc_stats: DocumentStats) {
+    pub fn add_document(&mut self, docstats: DocumentStats) {
         self.total_documents += 1;
         self.total_words += doc_stats.word_count;
         self.total_chars += doc_stats.char_count;
@@ -926,9 +926,9 @@ pub struct ProgressTracker {
 
 impl ProgressTracker {
     /// Create a new progress tracker
-    pub fn new(_total: usize) -> Self {
+    pub fn new(total: usize) -> Self {
         Self {
-            _total,
+            total,
             current: 0,
             report_interval: _total / 100, // Report every 1%
         }

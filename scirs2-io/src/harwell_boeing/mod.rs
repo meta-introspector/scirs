@@ -152,7 +152,7 @@ impl HBHeader {
         // Read header lines
         for _ in 0..5 {
             let mut line = String::new();
-            _reader
+            reader
                 .read_line(&mut line)
                 .map_err(|e| IoError::FileError(e.to_string()))?;
             lines.push(line.trim_end().to_string());
@@ -502,13 +502,13 @@ pub fn write_harwell_boeing<P: AsRef<Path>>(path: P, matrix: &HBSparseMatrix<f64
 ///
 /// * `(Array1<usize>, Array1<usize>, Array1<f64>)` - Column pointers, row indices, and values
 #[allow(dead_code)]
-pub fn hb_to_ccs(_matrix: &HBSparseMatrix<f64>) -> (Array1<usize>, Array1<usize>, Array1<f64>) {
+pub fn hb_to_ccs(matrix: &HBSparseMatrix<f64>) -> (Array1<usize>, Array1<usize>, Array1<f64>) {
     let colptr = Array1::from(_matrix.colptr.clone());
     let rowind = Array1::from(_matrix.rowind.clone());
-    let values = if let Some(ref vals) = _matrix.values {
+    let values = if let Some(ref vals) = matrix.values {
         Array1::from(vals.clone())
     } else {
-        Array1::from(vec![1.0; _matrix.rowind.len()]) // Pattern _matrix
+        Array1::from(vec![1.0; matrix.rowind.len()]) // Pattern _matrix
     };
 
     (colptr, rowind, values)
@@ -657,13 +657,13 @@ fn read_integer_data<R: BufRead>(
 /// Read real data from file
 #[allow(dead_code)]
 fn read_real_data<R: BufRead>(
-    _reader: &mut R,
+    reader: &mut R,
     num_lines: usize,
     data: &mut Vec<f64>,
 ) -> Result<()> {
     for _ in 0..num_lines {
         let mut line = String::new();
-        _reader
+        reader
             .read_line(&mut line)
             .map_err(|e| IoError::FileError(e.to_string()))?;
 
@@ -679,7 +679,7 @@ fn read_real_data<R: BufRead>(
 
 /// Write integer data to file
 #[allow(dead_code)]
-fn write_integer_data<W: Write>(writer: &mut W, data: &[usize], field_width: usize) -> Result<()> {
+fn write_integer_data<W: Write>(writer: &mut W, data: &[usize], fieldwidth: usize) -> Result<()> {
     const INTS_PER_LINE: usize = 8;
 
     for chunk in data.chunks(INTS_PER_LINE) {
@@ -697,7 +697,7 @@ fn write_integer_data<W: Write>(writer: &mut W, data: &[usize], field_width: usi
 
 /// Write real data to file
 #[allow(dead_code)]
-fn write_real_data<W: Write>(writer: &mut W, data: &[f64], field_width: usize) -> Result<()> {
+fn write_real_data<W: Write>(writer: &mut W, data: &[f64], fieldwidth: usize) -> Result<()> {
     const REALS_PER_LINE: usize = 4;
 
     for chunk in data.chunks(REALS_PER_LINE) {

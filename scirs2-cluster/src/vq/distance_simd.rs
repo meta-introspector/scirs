@@ -38,13 +38,13 @@ impl Default for SimdConfig {
 /// This function uses cache-friendly blocking to compute distances efficiently
 /// for datasets that don't fit in cache.
 #[allow(dead_code)]
-pub fn pairwise_euclidean_blocked<F>(_data: ArrayView2<F>, config: Option<SimdConfig>) -> Array1<F>
+pub fn pairwise_euclidean_blocked<F>(data: ArrayView2<F>, config: Option<SimdConfig>) -> Array1<F>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
 {
     let config = config.unwrap_or_default();
-    let n_samples = _data.shape()[0];
-    let _n_features = _data.shape()[1];
+    let n_samples = data.shape()[0];
+    let _n_features = data.shape()[1];
     let n_distances = n_samples * (n_samples - 1) / 2;
     let mut distances = Array1::zeros(n_distances);
 
@@ -222,12 +222,12 @@ where
 ///
 /// * Condensed distance matrix as a 1D array
 #[allow(dead_code)]
-pub fn pairwise_euclidean_simd<F>(_data: ArrayView2<F>) -> Array1<F>
+pub fn pairwise_euclidean_simd<F>(data: ArrayView2<F>) -> Array1<F>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
 {
-    let n_samples = _data.shape()[0];
-    let n_features = _data.shape()[1];
+    let n_samples = data.shape()[0];
+    let n_features = data.shape()[1];
     let n_distances = n_samples * (n_samples - 1) / 2;
     let mut distances = Array1::zeros(n_distances);
 
@@ -245,19 +245,19 @@ where
 
 /// Standard pairwise Euclidean distance computation
 #[allow(dead_code)]
-fn pairwise_euclidean_standard<F>(_data: ArrayView2<F>, distances: &mut Array1<F>)
+fn pairwise_euclidean_standard<F>(data: ArrayView2<F>, distances: &mut Array1<F>)
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n_samples = _data.shape()[0];
-    let n_features = _data.shape()[1];
+    let n_samples = data.shape()[0];
+    let n_features = data.shape()[1];
 
     let mut idx = 0;
     for i in 0..n_samples {
         for j in (i + 1)..n_samples {
             let mut sum_sq = F::zero();
             for k in 0..n_features {
-                let diff = _data[[i, k]] - _data[[j, k]];
+                let diff = data[[i, k]] - data[[j, k]];
                 sum_sq = sum_sq + diff * diff;
             }
             distances[idx] = sum_sq.sqrt();
@@ -268,17 +268,17 @@ where
 
 /// SIMD-optimized pairwise Euclidean distance computation using unified operations
 #[allow(dead_code)]
-fn pairwise_euclidean_simd_optimized<F>(_data: ArrayView2<F>, distances: &mut Array1<F>)
+fn pairwise_euclidean_simd_optimized<F>(data: ArrayView2<F>, distances: &mut Array1<F>)
 where
     F: Float + FromPrimitive + Debug + SimdUnifiedOps,
 {
-    let n_samples = _data.shape()[0];
+    let n_samples = data.shape()[0];
 
     let mut idx = 0;
     for i in 0..n_samples {
         for j in (i + 1)..n_samples {
-            let row_i = _data.row(i);
-            let row_j = _data.row(j);
+            let row_i = data.row(i);
+            let row_j = data.row(j);
 
             // Use SIMD operations for vector subtraction and norm calculation
             let diff = F::simd_sub(&row_i, &row_j);
@@ -398,11 +398,11 @@ fn distance_to_centroids_simd_optimized<F>(
 ///
 /// * Condensed distance matrix
 #[allow(dead_code)]
-pub fn pairwise_euclidean_parallel<F>(_data: ArrayView2<F>) -> Array1<F>
+pub fn pairwise_euclidean_parallel<F>(data: ArrayView2<F>) -> Array1<F>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
 {
-    let n_samples = _data.shape()[0];
+    let n_samples = data.shape()[0];
     let n_distances = n_samples * (n_samples - 1) / 2;
 
     // Create index pairs
@@ -419,8 +419,8 @@ where
         let distances: Vec<F> = pairs
             .into_par_iter()
             .map(|(i, j)| {
-                let row_i = _data.row(i);
-                let row_j = _data.row(j);
+                let row_i = data.row(i);
+                let row_j = data.row(j);
 
                 // Use SIMD operations for distance calculation
                 let diff = F::simd_sub(&row_i, &row_j);

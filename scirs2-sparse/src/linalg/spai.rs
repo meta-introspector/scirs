@@ -39,12 +39,12 @@ impl Default for SpaiOptions {
 
 impl<F: Float + NumAssign + Sum + Debug + 'static> SpaiPreconditioner<F> {
     /// Create a new SPAI preconditioner from a sparse matrix
-    pub fn new(_matrix: &CsrMatrix<F>, options: SpaiOptions) -> SparseResult<Self> {
-        let n = _matrix.rows();
-        if n != _matrix.cols() {
+    pub fn new(matrix: &CsrMatrix<F>, options: SpaiOptions) -> SparseResult<Self> {
+        let n = matrix.rows();
+        if n != matrix.cols() {
             return Err(SparseError::DimensionMismatch {
                 expected: n,
-                found: _matrix.cols(),
+                found: matrix.cols(),
             });
         }
 
@@ -80,7 +80,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> SpaiPreconditioner<F> {
 
             for (col_idx, &col) in pattern.iter().enumerate() {
                 for (row, a_k_row) in a_k.iter_mut().enumerate().take(n) {
-                    let val = _matrix.get(row, col);
+                    let val = matrix.get(row, col);
                     a_k_row[col_idx] = val;
                 }
             }

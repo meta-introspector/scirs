@@ -33,9 +33,9 @@ pub struct GpuMemoryPool {
 
 impl GpuMemoryPool {
     /// Create a new GPU memory pool
-    pub fn new(_context: Arc<GpuContext>, memory_limit: Option<usize>) -> ScirsResult<Self> {
+    pub fn new(_context: Arc<GpuContext>, memorylimit: Option<usize>) -> ScirsResult<Self> {
         Ok(Self {
-            _context,
+            context,
             pools: Arc::new(Mutex::new(HashMap::new())),
             allocated_blocks: Arc::new(Mutex::new(Vec::new())),
             memory_limit,
@@ -448,9 +448,9 @@ pub mod optimization {
 
     impl MemoryOptimizer {
         /// Create a new memory optimizer
-        pub fn new(_config: MemoryOptimizationConfig, pool: Arc<GpuMemoryPool>) -> Self {
+        pub fn new(config: MemoryOptimizationConfig, pool: Arc<GpuMemoryPool>) -> Self {
             Self {
-                config: _config,
+                config: config,
                 pool,
                 optimization_stats: OptimizationStats::new(),
             }
@@ -551,7 +551,7 @@ pub mod utils {
     }
 
     /// Estimate memory usage for a given problem
-    pub fn estimate_memory_usage(_problem_size: usize, batch_size: usize) -> usize {
+    pub fn estimate_memory_usage(_problem_size: usize, batchsize: usize) -> usize {
         // Rough estimation: input data + output data + temporary buffers
         let input_size = batch_size * _problem_size * 8; // f64
         let output_size = batch_size * 8; // f64

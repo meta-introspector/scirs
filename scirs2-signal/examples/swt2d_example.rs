@@ -158,11 +158,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to print a 2D array
 #[allow(dead_code)]
-fn print_array2(_array: &Array2<f64>) {
-    let (rows, cols) = _array.dim();
+fn print_array2(array: &Array2<f64>) {
+    let (rows, cols) = array.dim();
     for i in 0..rows {
         for j in 0..cols {
-            print!("{:8.2} ", _array[[i, j]]);
+            print!("{:8.2} ", array[[i, j]]);
         }
         println!();
     }
@@ -170,8 +170,8 @@ fn print_array2(_array: &Array2<f64>) {
 
 // Helper function to print a 2D array in compact form
 #[allow(dead_code)]
-fn print_compact_array2(_array: &Array2<f64>) {
-    let (rows, cols) = _array.dim();
+fn print_compact_array2(array: &Array2<f64>) {
+    let (rows, cols) = array.dim();
     // Only print the first few rows and columns
     let max_show = 4;
     let r_show = std::cmp::min(rows, max_show);
@@ -179,7 +179,7 @@ fn print_compact_array2(_array: &Array2<f64>) {
 
     for i in 0..r_show {
         for j in 0..c_show {
-            print!("{:8.2} ", _array[[i, j]]);
+            print!("{:8.2} ", array[[i, j]]);
         }
         if cols > max_show {
             print!("...");
@@ -194,8 +194,8 @@ fn print_compact_array2(_array: &Array2<f64>) {
 
 // Helper function to apply hard thresholding to array elements
 #[allow(dead_code)]
-fn threshold_array(_array: &mut Array2<f64>, threshold: f64) {
-    for value in _array.iter_mut() {
+fn threshold_array(array: &mut Array2<f64>, threshold: f64) {
+    for value in array.iter_mut() {
         if value.abs() < threshold {
             *value = 0.0;
         }

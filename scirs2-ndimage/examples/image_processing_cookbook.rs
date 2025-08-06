@@ -192,9 +192,9 @@ fn image_cleanup_recipes() -> NdimageResult<()> {
 
     println!("```rust");
     println!("// Simple contrast stretching");
-    println!("fn enhance_contrast(_image: &Array2<f64>, factor: f64) -> Array2<f64> {{");
-    println!("    let mean = _image.sum() / _image.len() as f64;");
-    println!("    _image.mapv(|x| ((x - mean) * factor + mean).clamp(0.0, 1.0))");
+    println!("fn enhance_contrast(image: &Array2<f64>, factor: f64) -> Array2<f64> {{");
+    println!("    let mean = image.sum() / image.len() as f64;");
+    println!("    image.mapv(|x| ((x - mean) * factor + mean).clamp(0.0, 1.0))");
     println!("}}");
     println!();
     println!("let enhanced = enhance_contrast(&dull_image, 1.5);  // 50% more contrast");
@@ -268,7 +268,7 @@ fn object_detection_recipes() -> NdimageResult<()> {
     println!();
     println!("// Filter by size");
     println!("let props = region_properties(&labeled.view(), Some(&image.view()))?;");
-    println!("let valid_objects: Vec<_> = props.iter()");
+    println!("let validobjects: Vec<_> = props.iter()");
     println!("    .filter(|prop| prop.area >= min_size && prop.area <= max_size)");
     println!("    .collect();");
     println!();
@@ -418,7 +418,7 @@ fn measurement_recipes() -> NdimageResult<()> {
     println!("}}");
     println!();
     println!("// Statistics");
-    println!("let total_area: f64 = props.iter().map(|p| p.area).sum();");
+    println!("let totalarea: f64 = props.iter().map(|p| p.area).sum();");
     println!("let mean_area = total_area / props.len() as f64;");
     println!("let largest_area = props.iter().map(|p| p.area).fold(0.0, f64::max);");
     println!("```");
@@ -441,10 +441,10 @@ fn measurement_recipes() -> NdimageResult<()> {
     println!();
     println!("// Distance between two specific objects");
     println!(
-        "fn distance_between_objects(_obj1: &RegionProperties, obj2: &RegionProperties) -> f64 {{"
+        "fn distance_between_objects(obj1: &RegionProperties, obj2: &RegionProperties) -> f64 {{"
     );
-    println!("    let dx = _obj1.centroid[0] - obj2.centroid[0];");
-    println!("    let dy = _obj1.centroid[1] - obj2.centroid[1];");
+    println!("    let dx = obj1.centroid[0] - obj2.centroid[0];");
+    println!("    let dy = obj1.centroid[1] - obj2.centroid[1];");
     println!("    (dx * dx + dy * dy).sqrt()");
     println!("}}");
     println!();
@@ -581,28 +581,28 @@ fn measurement_recipes() -> NdimageResult<()> {
 
     println!("```rust");
     println!("// Statistical comparison");
-    println!("fn compare_images(_img1: &Array2<f64>, img2: &Array2<f64>) -> ImageComparison {{");
+    println!("fn compare_images(img1: &Array2<f64>, img2: &Array2<f64>) -> ImageComparison {{");
     println!("    assert_eq!(_img1.dim(), img2.dim(), \"Images must have same dimensions\");");
     println!("    ");
     println!("    // Mean Squared Error");
-    println!("    let mse = _img1.iter().zip(img2.iter())");
+    println!("    let mse = img1.iter().zip(img2.iter())");
     println!("        .map(|(&a, &b)| (a - b).powi(2))");
-    println!("        .sum::<f64>() / _img1.len() as f64;");
+    println!("        .sum::<f64>() / img1.len() as f64;");
     println!("    ");
     println!("    // Mean Absolute Error");
-    println!("    let mae = _img1.iter().zip(img2.iter())");
+    println!("    let mae = img1.iter().zip(img2.iter())");
     println!("        .map(|(&a, &b)| (a - b).abs())");
-    println!("        .sum::<f64>() / _img1.len() as f64;");
+    println!("        .sum::<f64>() / img1.len() as f64;");
     println!("    ");
     println!("    // Correlation coefficient");
-    println!("    let mean1 = _img1.sum() / _img1.len() as f64;");
+    println!("    let mean1 = img1.sum() / img1.len() as f64;");
     println!("    let mean2 = img2.sum() / img2.len() as f64;");
     println!("    ");
-    println!("    let numerator: f64 = _img1.iter().zip(img2.iter())");
+    println!("    let numerator: f64 = img1.iter().zip(img2.iter())");
     println!("        .map(|(&a, &b)| (a - mean1) * (b - mean2))");
     println!("        .sum();");
     println!("    ");
-    println!("    let var1: f64 = _img1.iter().map(|&x| (x - mean1).powi(2)).sum();");
+    println!("    let var1: f64 = img1.iter().map(|&x| (x - mean1).powi(2)).sum();");
     println!("    let var2: f64 = img2.iter().map(|&x| (x - mean2).powi(2)).sum();");
     println!("    ");
     println!("    let correlation = numerator / (var1 * var2).sqrt();");
@@ -771,7 +771,7 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!("```rust");
     println!("// Method 1: Translation-only registration");
     println!(
-        "fn find_translation(_reference: &Array2<f64>, moving: &Array2<f64>) -> (f64, f64) {{"
+        "fn find_translation(reference: &Array2<f64>, moving: &Array2<f64>) -> (f64, f64) {{"
     );
     println!("    let mut best_correlation = -1.0;");
     println!("    let mut best_shift = (0.0, 0.0);");
@@ -819,9 +819,9 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!("```rust");
     println!("use scirs2__ndimage::filters::gaussian_filter;");
     println!();
-    println!("fn create_pyramid(_image: &Array2<f64>, levels: usize) -> NdimageResult<Vec<Array2<f64>>> {{");
+    println!("fn create_pyramid(image: &Array2<f64>, levels: usize) -> NdimageResult<Vec<Array2<f64>>> {{");
     println!("    let mut pyramid = vec![_image.clone()];");
-    println!("    let mut current = _image.clone();");
+    println!("    let mut current = image.clone();");
     println!("    ");
     println!("    for level in 1..levels {{");
     println!("        // Smooth before downsampling to avoid aliasing");
@@ -878,7 +878,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("use scirs2__ndimage::filters::{{gaussian_filter, laplace}};");
     println!();
     println!("// Method 1: Unsharp masking");
-    println!("fn unsharp_mask(_image: &Array2<f64>, sigma: f64, strength: f64) -> NdimageResult<Array2<f64>> {{");
+    println!("fn unsharp_mask(image: &Array2<f64>, sigma: f64, strength: f64) -> NdimageResult<Array2<f64>> {{");
     println!("    // Create blurred version");
     println!("    let blurred = gaussian_filter(_image, &[sigma, sigma], None, None, None)?;");
     println!("    ");
@@ -918,7 +918,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
 
     println!("```rust");
     println!("// Method 1: Rolling ball background subtraction");
-    println!("fn remove_background(_image: &Array2<f64>, background_size: f64) -> NdimageResult<Array2<f64>> {{");
+    println!("fn remove_background(_image: &Array2<f64>, backgroundsize: f64) -> NdimageResult<Array2<f64>> {{");
     println!("    // Estimate background with heavy smoothing");
     println!("    let background = gaussian_filter(_image, &[background_size, background_size], None, None, None)?;");
     println!("    ");
@@ -926,7 +926,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("    let corrected = _image - &background;");
     println!("    ");
     println!("    // Add back mean intensity to maintain brightness");
-    println!("    let mean_intensity = _image.sum() / _image.len() as f64;");
+    println!("    let mean_intensity = image.sum() / image.len() as f64;");
     println!("    Ok(corrected.mapv(|x| (x + mean_intensity).clamp(0.0, 1.0)))");
     println!("}}");
     println!();
@@ -957,13 +957,13 @@ fn enhancement_recipes() -> NdimageResult<()> {
 
     println!("```rust");
     println!("// Create false color image from grayscale");
-    println!("fn apply_colormap(_image: &Array2<f64>, colormap: &str) -> Array3<f64> {{");
-    println!("    let (height, width) = _image.dim();");
+    println!("fn apply_colormap(image: &Array2<f64>, colormap: &str) -> Array3<f64> {{");
+    println!("    let (height, width) = image.dim();");
     println!("    let mut colored = Array3::zeros((height, width, 3));");
     println!("    ");
     println!("    for i in 0..height {{");
     println!("        for j in 0..width {{");
-    println!("            let intensity = _image[[i, j]];");
+    println!("            let intensity = image[[i, j]];");
     println!("            let (r, g, b) = match colormap {{");
     println!("                \"jet\" => jet_colormap(intensity),");
     println!("                \"hot\" => hot_colormap(intensity),");
@@ -980,8 +980,8 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("}}");
     println!();
     println!("// Colormap functions");
-    println!("fn jet_colormap(_value: f64) -> (f64, f64, f64) {{");
-    println!("    let v = _value.clamp(0.0, 1.0);");
+    println!("fn jet_colormap(value: f64) -> (f64, f64, f64) {{");
+    println!("    let v = value.clamp(0.0, 1.0);");
     println!("    if v < 0.25 {{");
     println!("        (0.0, 4.0 * v, 1.0)");
     println!("    }} else if v < 0.5 {{");
@@ -1011,15 +1011,15 @@ fn enhancement_recipes() -> NdimageResult<()> {
 
     println!("```rust");
     println!("// Simplified adaptive contrast enhancement");
-    println!("fn adaptive_contrast_enhancement(_image: &Array2<f64>, window_size: usize) -> NdimageResult<Array2<f64>> {{");
-    println!("    let (height, width) = _image.dim();");
-    println!("    let mut enhanced = _image.clone();");
+    println!("fn adaptive_contrast_enhancement(_image: &Array2<f64>, windowsize: usize) -> NdimageResult<Array2<f64>> {{");
+    println!("    let (height, width) = image.dim();");
+    println!("    let mut enhanced = image.clone();");
     println!("    let half_window = window_size / 2;");
     println!("    ");
     println!("    for i in half_window..height-half_window {{");
     println!("        for j in half_window..width-half_window {{");
     println!("            // Extract local window");
-    println!("            let window = _image.slice(s![");
+    println!("            let window = image.slice(s![");
     println!("                i-half_window..i+half_window+1,");
     println!("                j-half_window..j+half_window+1");
     println!("            ]);");
@@ -1032,7 +1032,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("            }};");
     println!("            ");
     println!("            // Enhance based on local contrast");
-    println!("            let current_value = _image[[i, j]];");
+    println!("            let current_value = image[[i, j]];");
     println!("            let enhancement_factor = if local_std < 0.1 {{ 2.0 }} else {{ 1.0 }};");
     println!("            let enhanced_value = local_mean + (current_value - local_mean) * enhancement_factor;");
     println!("            ");
@@ -1061,10 +1061,10 @@ fn enhancement_recipes() -> NdimageResult<()> {
 
     println!("```rust");
     println!("// Effect 1: Oil painting effect");
-    println!("fn oil_painting_effect(_image: &Array2<f64>) -> NdimageResult<Array2<f64>> {{");
+    println!("fn oil_painting_effect(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {{");
     println!("    // Quantize intensities");
     println!("    let levels = 8;");
-    println!("    let quantized = _image.mapv(|x| ((x * levels as f64).round() / levels as f64));");
+    println!("    let quantized = image.mapv(|x| ((x * levels as f64).round() / levels as f64));");
     println!("    ");
     println!("    // Apply median filter for smoothing");
     println!("    let smoothed = median_filter(&quantized.view(), Some(&[3, 3]), None, None)?;");
@@ -1073,7 +1073,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("}}");
     println!();
     println!("// Effect 2: Edge enhancement (cartoon-like)");
-    println!("fn cartoon_effect(_image: &Array2<f64>) -> NdimageResult<Array2<f64>> {{");
+    println!("fn cartoon_effect(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {{");
     println!("    // Strong bilateral filter for flat regions");
     println!("    let smooth = bilateral_filter(_image.view(), 5.0, 0.05, Some(9))?;");
     println!("    ");
@@ -1086,15 +1086,15 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("}}");
     println!();
     println!("// Effect 3: Pencil sketch");
-    println!("fn pencil_sketch(_image: &Array2<f64>) -> NdimageResult<Array2<f64>> {{");
+    println!("fn pencil_sketch(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {{");
     println!("    // Create inverted _image");
-    println!("    let inverted = _image.mapv(|x| 1.0 - x);");
+    println!("    let inverted = image.mapv(|x| 1.0 - x);");
     println!("    ");
     println!("    // Blur inverted _image");
     println!("    let blurred = gaussian_filter(&inverted, &[5.0, 5.0], None, None, None)?;");
     println!("    ");
     println!("    // Color dodge blend mode");
-    println!("    let sketch = _image.iter().zip(blurred.iter())");
+    println!("    let sketch = image.iter().zip(blurred.iter())");
     println!("        .map(|(&orig, &blur)| {{");
     println!("            if blur >= 1.0 {{ 1.0 }} else {{ (orig / (1.0 - blur)).min(1.0) }}");
     println!("        }})");
@@ -1137,24 +1137,24 @@ fn interpolate_missing_pixels(
 }
 
 #[allow(dead_code)]
-fn estimate_perimeter(_prop: &crate::measurements::RegionProperties) -> f64 {
+fn estimate_perimeter(prop: &crate::measurements::RegionProperties) -> f64 {
     // Simplified perimeter estimation
     4.0 * (_prop.area / std::f64::consts::PI).sqrt()
 }
 
 #[allow(dead_code)]
-fn find_local_maxima(_image: &Array2<f64>, threshold: f64) -> Array2<u32> {
+fn find_local_maxima(image: &Array2<f64>, threshold: f64) -> Array2<u32> {
     let mut markers = Array2::zeros(_image.dim());
     let mut label = 1u32;
 
-    let (height, width) = _image.dim();
+    let (height, width) = image.dim();
     for i in 1..height - 1 {
         for j in 1..width - 1 {
-            if _image[[i, j]] > threshold
-                && _image[[i, j]] > _image[[i - 1, j]]
-                && _image[[i, j]] > _image[[i + 1, j]]
-                && _image[[i, j]] > _image[[i, j - 1]]
-                && _image[[i, j]] > _image[[i, j + 1]]
+            if image[[i, j]] > threshold
+                && image[[i, j]] > image[[i - 1, j]]
+                && image[[i, j]] > image[[i + 1, j]]
+                && image[[i, j]] > image[[i, j - 1]]
+                && image[[i, j]] > image[[i, j + 1]]
             {
                 markers[[i, j]] = label;
                 label += 1;
@@ -1176,8 +1176,8 @@ fn apply_perspective_correction(
 }
 
 #[allow(dead_code)]
-fn calculate_correlation(_img1: &Array2<f64>, img2: &Array2<f64>) -> f64 {
-    let mean1 = _img1.sum() / _img1.len() as f64;
+fn calculate_correlation(img1: &Array2<f64>, img2: &Array2<f64>) -> f64 {
+    let mean1 = img1.sum() / img1.len() as f64;
     let mean2 = img2.sum() / img2.len() as f64;
 
     let numerator: f64 = _img1
@@ -1186,15 +1186,15 @@ fn calculate_correlation(_img1: &Array2<f64>, img2: &Array2<f64>) -> f64 {
         .map(|(&a, &b)| (a - mean1) * (b - mean2))
         .sum();
 
-    let var1: f64 = _img1.iter().map(|&x| (x - mean1).powi(2)).sum();
+    let var1: f64 = img1.iter().map(|&x| (x - mean1).powi(2)).sum();
     let var2: f64 = img2.iter().map(|&x| (x - mean2).powi(2)).sum();
 
     numerator / (var1 * var2).sqrt()
 }
 
 #[allow(dead_code)]
-fn hot_colormap(_value: f64) -> (f64, f64, f64) {
-    let v = _value.clamp(0.0, 1.0);
+fn hot_colormap(value: f64) -> (f64, f64, f64) {
+    let v = value.clamp(0.0, 1.0);
     if v < 1.0 / 3.0 {
         (3.0 * v, 0.0, 0.0)
     } else if v < 2.0 / 3.0 {
@@ -1205,8 +1205,8 @@ fn hot_colormap(_value: f64) -> (f64, f64, f64) {
 }
 
 #[allow(dead_code)]
-fn viridis_colormap(_value: f64) -> (f64, f64, f64) {
-    let v = _value.clamp(0.0, 1.0);
+fn viridis_colormap(value: f64) -> (f64, f64, f64) {
+    let v = value.clamp(0.0, 1.0);
     // Simplified viridis approximation
     let r = (0.267 + v * (0.975 - 0.267)).max(0.0).min(1.0);
     let g = (0.005 + v * (0.906 - 0.005)).max(0.0).min(1.0);

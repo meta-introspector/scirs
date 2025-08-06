@@ -274,22 +274,22 @@ pub fn sphere_box_impulse(
 ///
 /// Collision information if a collision occurs, None otherwise
 #[allow(dead_code)]
-pub fn find_sphere_box_collision(_sphere: &Sphere, box3d: &Box3D) -> Option<CollisionInfo> {
+pub fn find_sphere_box_collision(sphere: &Sphere, box3d: &Box3D) -> Option<CollisionInfo> {
     // Find the closest point on the box to the _sphere center
-    let closest_x = _sphere.center[0].max(box3d.min[0]).min(box3d.max[0]);
-    let closest_y = _sphere.center[1].max(box3d.min[1]).min(box3d.max[1]);
-    let closest_z = _sphere.center[2].max(box3d.min[2]).min(box3d.max[2]);
+    let closest_x = sphere.center[0].max(box3d.min[0]).min(box3d.max[0]);
+    let closest_y = sphere.center[1].max(box3d.min[1]).min(box3d.max[1]);
+    let closest_z = sphere.center[2].max(box3d.min[2]).min(box3d.max[2]);
 
     let closest_point = [closest_x, closest_y, closest_z];
 
     // Calculate distance from the closest point to the _sphere center
-    let dx = _sphere.center[0] - closest_point[0];
-    let dy = _sphere.center[1] - closest_point[1];
-    let dz = _sphere.center[2] - closest_point[2];
+    let dx = sphere.center[0] - closest_point[0];
+    let dy = sphere.center[1] - closest_point[1];
+    let dz = sphere.center[2] - closest_point[2];
     let distance_squared = dx * dx + dy * dy + dz * dz;
 
     // Check if collision occurs
-    if distance_squared > _sphere.radius * _sphere.radius {
+    if distance_squared > sphere.radius * sphere.radius {
         return None;
     }
 
@@ -324,7 +324,7 @@ pub fn find_sphere_box_collision(_sphere: &Sphere, box3d: &Box3D) -> Option<Coll
         [dx / distance, dy / distance, dz / distance]
     };
 
-    let penetration = _sphere.radius - distance;
+    let penetration = sphere.radius - distance;
 
     Some(CollisionInfo {
         contact_point: closest_point,

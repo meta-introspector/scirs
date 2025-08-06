@@ -45,7 +45,7 @@ impl TimeSeriesMethods {
         max_lag: usize,
         n_features: Option<usize>,
     ) -> Result<FeatureSelectionResult> {
-        let (n_samples, n_feat) = _features.dim();
+        let (n_samples, n_feat) = features.dim();
 
         if n_samples != target.len() {
             return Err(TimeSeriesError::DimensionMismatch {
@@ -65,7 +65,7 @@ impl TimeSeriesMethods {
         let mut feature_scores = Array1::zeros(n_feat);
 
         for i in 0..n_feat {
-            let feature_col = _features.column(i).to_owned();
+            let feature_col = features.column(i).to_owned();
             let mut max_correlation = 0.0f64;
 
             // Test correlations at different lags
@@ -129,7 +129,7 @@ impl TimeSeriesMethods {
         seasonal_period: usize,
         n_features: Option<usize>,
     ) -> Result<FeatureSelectionResult> {
-        let (n_samples, n_feat) = _features.dim();
+        let (n_samples, n_feat) = features.dim();
 
         if n_samples < seasonal_period * 2 {
             return Err(TimeSeriesError::InsufficientData {
@@ -142,7 +142,7 @@ impl TimeSeriesMethods {
         let mut feature_scores = Array1::zeros(n_feat);
 
         for i in 0..n_feat {
-            let feature_col = _features.column(i).to_owned();
+            let feature_col = features.column(i).to_owned();
             let seasonal_strength =
                 Self::calculate_seasonal_strength(&feature_col, seasonal_period)?;
             feature_scores[i] = seasonal_strength;
@@ -347,8 +347,8 @@ impl TimeSeriesMethods {
         }
     }
 
-    fn calculate_seasonal_strength(_ts: &Array1<f64>, period: usize) -> Result<f64> {
-        let n = _ts.len();
+    fn calculate_seasonal_strength(ts: &Array1<f64>, period: usize) -> Result<f64> {
+        let n = ts.len();
 
         if n < period * 2 {
             return Ok(0.0);
@@ -357,7 +357,7 @@ impl TimeSeriesMethods {
         // Calculate seasonal differences
         let mut seasonal_diff = Vec::new();
         for i in period..n {
-            seasonal_diff.push(_ts[i] - _ts[i - period]);
+            seasonal_diff.push(_ts[i] - ts[i - period]);
         }
 
         if seasonal_diff.is_empty() {
@@ -365,8 +365,8 @@ impl TimeSeriesMethods {
         }
 
         // Calculate variance of original series
-        let mean = _ts.sum() / n as f64;
-        let var_original = _ts.mapv(|x| (x - mean).powi(2)).sum() / n as f64;
+        let mean = ts.sum() / n as f64;
+        let var_original = ts.mapv(|x| (x - mean).powi(2)).sum() / n as f64;
 
         // Calculate variance of seasonal differences
         let diff_mean = seasonal_diff.iter().sum::<f64>() / seasonal_diff.len() as f64;
@@ -447,7 +447,7 @@ impl TimeSeriesMethods {
         Ok((f_stat.max(0.0), p_value))
     }
 
-    fn fit_autoregressive_model(_features: &Array2<f64>, target: &Array1<f64>) -> Result<f64> {
+    fn fit_autoregressive_model(features: &Array2<f64>, target: &Array1<f64>) -> Result<f64> {
         let predictions = WrapperMethods::fit_predict_linear(_features, target)?;
 
         let rss = target

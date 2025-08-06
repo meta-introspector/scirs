@@ -159,9 +159,9 @@ fn create_demo_image() -> DynamicImage {
 
 /// Count the number of edge pixels in an image
 #[allow(dead_code)]
-fn count_edge_pixels(_img: &GrayImage) -> usize {
+fn count_edge_pixels(img: &GrayImage) -> usize {
     let mut count = 0;
-    for pixel in _img.pixels() {
+    for pixel in img.pixels() {
         if pixel[0] > 0 {
             count += 1;
         }

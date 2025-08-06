@@ -273,10 +273,10 @@ pub struct VerificationRule<T: Float> {
 
 impl<T: Float + Send + Sync + ndarray::ScalarOperand> ByzantineTolerantAggregator<T> {
     /// Create new Byzantine tolerant aggregator
-    pub fn new(_config: ByzantineConfig) -> Self {
-        let anomaly_threshold = _config.anomaly_threshold;
+    pub fn new(config: ByzantineConfig) -> Self {
+        let anomaly_threshold = config.anomaly_threshold;
         Self {
-            config: _config,
+            config: config,
             reputation_scores: HashMap::new(),
             behavior_history: HashMap::new(),
             anomaly_detector: AnomalyDetector::new(anomaly_threshold),
@@ -818,7 +818,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> ByzantineTolerantAggregato
     }
 
     /// Calculate confidence score for aggregation
-    fn calculate_confidence_score(&self, honest_participants: &HashMap<String, Array1<T>>) -> f64 {
+    fn calculate_confidence_score(&self, honestparticipants: &HashMap<String, Array1<T>>) -> f64 {
         let honest_count = honest_participants.len() as f64;
         let total_expected = (self.config.min_participants + self.config.max_byzantine) as f64;
 
@@ -1134,9 +1134,9 @@ impl ReputationScore {
 
 impl<T: Float + Send + Sync + ndarray::ScalarOperand> AnomalyDetector<T> {
     /// Create new anomaly detector
-    pub fn new(_threshold: f64) -> Self {
+    pub fn new(threshold: f64) -> Self {
         Self {
-            threshold: _threshold,
+            threshold: threshold,
             gradient_stats: GradientStatistics::new(),
             pattern_model: PatternModel::new(),
         }
@@ -1303,9 +1303,9 @@ impl<T: Float + Send + Sync> PatternModel<T> {
 
 impl<T: Float + Send + Sync> StatisticalAnalysis<T> {
     /// Create new statistical analysis engine
-    pub fn new(_window_size: usize) -> Self {
+    pub fn new(_windowsize: usize) -> Self {
         Self {
-            window_size: _window_size,
+            window_size: window_size,
             measures: StatisticalMeasures::new(),
         }
     }

@@ -83,7 +83,7 @@ fn predictions_to_classes(
     classes
 // Helper to convert class indices to one-hot encoded vectors
 #[allow(dead_code)]
-fn one_hot_encode(y: &Array1<usize>, n_classes: usize) -> Array2<f32> {
+fn one_hot_encode(y: &Array1<usize>, nclasses: usize) -> Array2<f32> {
     let n_samples = y.len();
     let mut one_hot = Array2::zeros((n_samples, n_classes));
         let class_idx = y[i];
@@ -95,7 +95,7 @@ fn main() -> Result<()> {
     println!("Neural Network Confusion Matrix Visualization");
     println!("==============================================\n");
     // Initialize RNG with a fixed seed for reproducibility
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Generate spiral dataset for 3-class classification
     let n_classes = 3;
     let n_samples_per_class = 100;

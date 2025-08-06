@@ -19,23 +19,23 @@ pub struct TextRank {
     /// Convergence threshold
     threshold: f64,
     /// Tokenizer for sentence splitting
-    sentence_tokenizer: Box<dyn Tokenizer + Send + Sync>,
+    sentencetokenizer: Box<dyn Tokenizer + Send + Sync>,
 }
 
 impl TextRank {
     /// Create a new TextRank summarizer
-    pub fn new(_num_sentences: usize) -> Self {
+    pub fn new(_numsentences: usize) -> Self {
         Self {
-            _num_sentences,
+            num_sentences,
             damping_factor: 0.85,
             max_iterations: 100,
             threshold: 0.0001,
-            sentence_tokenizer: Box::new(crate::tokenize::SentenceTokenizer::new()),
+            sentencetokenizer: Box::new(crate::tokenize::SentenceTokenizer::new()),
         }
     }
 
     /// Set the damping factor
-    pub fn with_damping_factor(mut self, damping_factor: f64) -> Result<Self> {
+    pub fn with_damping_factor(mut self, dampingfactor: f64) -> Result<Self> {
         if !(0.0..=1.0).contains(&damping_factor) {
             return Err(TextError::InvalidInput(
                 "Damping _factor must be between 0 and 1".to_string(),
@@ -182,17 +182,17 @@ pub struct CentroidSummarizer {
     /// Redundancy threshold
     redundancy_threshold: f64,
     /// Sentence tokenizer
-    sentence_tokenizer: Box<dyn Tokenizer + Send + Sync>,
+    sentencetokenizer: Box<dyn Tokenizer + Send + Sync>,
 }
 
 impl CentroidSummarizer {
     /// Create a new centroid summarizer
-    pub fn new(_num_sentences: usize) -> Self {
+    pub fn new(_numsentences: usize) -> Self {
         Self {
-            _num_sentences,
+            num_sentences,
             topic_threshold: 0.1,
             redundancy_threshold: 0.95,
-            sentence_tokenizer: Box::new(crate::tokenize::SentenceTokenizer::new()),
+            sentencetokenizer: Box::new(crate::tokenize::SentenceTokenizer::new()),
         }
     }
 
@@ -322,9 +322,9 @@ pub struct KeywordExtractor {
 
 impl KeywordExtractor {
     /// Create a new keyword extractor
-    pub fn new(_num_keywords: usize) -> Self {
+    pub fn new(_numkeywords: usize) -> Self {
         Self {
-            _num_keywords,
+            num_keywords,
             min_df: 0.01, // Unused but kept for API compatibility
             max_df: 0.95, // Unused but kept for API compatibility
             ngram_range: (1, 3),
@@ -332,7 +332,7 @@ impl KeywordExtractor {
     }
 
     /// Configure n-gram range
-    pub fn with_ngram_range(mut self, min_n: usize, max_n: usize) -> Result<Self> {
+    pub fn with_ngram_range(mut self, min_n: usize, maxn: usize) -> Result<Self> {
         if min_n > max_n || min_n == 0 {
             return Err(TextError::InvalidInput("Invalid _n-gram range".to_string()));
         }

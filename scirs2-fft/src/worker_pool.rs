@@ -111,7 +111,7 @@ impl WorkerPool {
 
     /// Execute a function with a specific number of workers
     /// Simplified to use core parallel abstractions
-    pub fn execute_with_workers<F, R>(&self, num_workers: usize, f: F) -> R
+    pub fn execute_with_workers<F, R>(&self, numworkers: usize, f: F) -> R
     where
         F: FnOnce() -> R + Send,
         R: Send,
@@ -169,9 +169,9 @@ pub fn get_global_pool() -> &'static WorkerPool {
 
 /// Initialize the global worker pool with custom configuration
 #[allow(dead_code)]
-pub fn init_global_pool(_config: WorkerConfig) -> Result<(), &'static str> {
+pub fn init_global_pool(config: WorkerConfig) -> Result<(), &'static str> {
     GLOBAL_WORKER_POOL
-        .set(WorkerPool::with_config(_config).map_err(|_| "Failed to create worker pool")?)
+        .set(WorkerPool::with_config(config).map_err(|_| "Failed to create worker pool")?)
         .map_err(|_| "Global worker pool already initialized")
 }
 
@@ -185,7 +185,7 @@ pub struct WorkerContext {
 
 impl WorkerContext {
     /// Create a new worker context with specified number of workers
-    pub fn new(_num_workers: usize) -> Self {
+    pub fn new(_numworkers: usize) -> Self {
         let pool = get_global_pool();
         let previous_workers = pool.get_workers();
 
@@ -208,7 +208,7 @@ impl Drop for WorkerContext {
 
 /// Set the number of workers globally
 #[allow(dead_code)]
-pub fn set_workers(_n: usize) -> Result<(), &'static str> {
+pub fn set_workers(n: usize) -> Result<(), &'static str> {
     let _pool = get_global_pool();
     // Note: This is a limitation of the current design - we can't modify a static reference
     // In practice, you'd want a different approach or accept this limitation
@@ -223,12 +223,12 @@ pub fn get_workers() -> usize {
 
 /// Execute a function with a specific number of workers temporarily
 #[allow(dead_code)]
-pub fn with_workers<F, R>(_num_workers: usize, f: F) -> R
+pub fn with_workers<F, R>(num_workers: usize, f: F) -> R
 where
     F: FnOnce() -> R + Send,
     R: Send,
 {
-    get_global_pool().execute_with_workers(_num_workers, f)
+    get_global_pool().execute_with_workers(num_workers, f)
 }
 
 #[cfg(test)]

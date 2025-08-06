@@ -40,8 +40,8 @@ impl MemoryAccessPatternAnalyzer {
     }
 
     /// Analyze access pattern and recommend prefetch strategy
-    pub fn analyze_and_recommend_prefetch(&self, matrix_dims: (usize, usize)) -> PrefetchStrategy {
-        let (m, n) = matrix_dims;
+    pub fn analyze_and_recommend_prefetch(&self, matrixdims: (usize, usize)) -> PrefetchStrategy {
+        let (m, n) = matrixdims;
         let total_elements = m * n;
 
         // For large matrices, use aggressive prefetching
@@ -64,8 +64,8 @@ impl MemoryAccessPatternAnalyzer {
     }
 
     /// Update access pattern statistics
-    pub fn record_access_pattern(&mut self, access_type: AccessType) {
-        match access_type {
+    pub fn record_access_pattern(&mut self, accesstype: AccessType) {
+        match accesstype {
             AccessType::Sequential => {
                 self.sequential_access_count.fetch_add(1, Ordering::Relaxed);
             }
@@ -149,17 +149,17 @@ impl CacheAwareMatrixOperations {
     }
 
     /// Calculate optimal block sizes for current cache hierarchy
-    pub fn calculate_optimal_block_sizes(&self, element_size: usize) -> CacheBlockSizes {
+    pub fn calculate_optimal_block_sizes(&self, elementsize: usize) -> CacheBlockSizes {
         // L1 cache blocking: aim to keep working set in L1
-        let l1_elements = (self.l1_cache_size / 3) / element_size; // Divide by 3 for A, B, C blocks
+        let l1_elements = (self.l1_cache_size / 3) / elementsize; // Divide by 3 for A, B, C blocks
         let l1_block_size = (l1_elements as f64).sqrt() as usize;
 
         // L2 cache blocking: intermediate level
-        let l2_elements = (self.l2_cache_size / 3) / element_size;
+        let l2_elements = (self.l2_cache_size / 3) / elementsize;
         let l2_block_size = (l2_elements as f64).sqrt() as usize;
 
         // L3 cache blocking: largest blocks
-        let l3_elements = (self.l3_cache_size / 3) / element_size;
+        let l3_elements = (self.l3_cache_size / 3) / elementsize;
         let l3_block_size = (l3_elements as f64).sqrt() as usize;
 
         CacheBlockSizes {
@@ -312,7 +312,7 @@ impl CacheAwareMatrixOperations {
         k: usize,
         strategy: &PrefetchStrategy,
     ) {
-        let (_prefetch_distance, _hint) = match strategy {
+        let (_prefetch_distance, hint) = match strategy {
             PrefetchStrategy::Conservative {
                 prefetch_distance,
                 prefetch_hint,
@@ -439,10 +439,10 @@ impl RuntimePerformanceProfiler {
     }
 
     /// Start profiling session
-    pub fn start_session(&mut self, operation_name: &str) {
+    pub fn start_session(&mut self, operationname: &str) {
         self.session_start = Some(Instant::now());
         self.timing_history
-            .push((operation_name.to_string(), Duration::ZERO));
+            .push((operationname.to_string(), Duration::ZERO));
     }
 
     /// End profiling session and record performance
@@ -547,26 +547,26 @@ impl BranchOptimizer {
     /// Optimize conditional execution in matrix operations
     #[allow(dead_code)]
     #[inline(always)]
-    pub fn likely_branch<T>(_condition: bool, if_true: T, if_false: T) -> T {
+    pub fn likely_branch<T>(_condition: bool, if_true: T, iffalse: T) -> T {
         // Note: std::intrinsics::likely requires unstable features
         // Using standard conditional logic for stable compatibility
         if _condition {
             if_true
         } else {
-            if_false
+            iffalse
         }
     }
 
     /// Optimize unlikely branches (e.g., error conditions)
     #[allow(dead_code)]
     #[inline(always)]
-    pub fn unlikely_branch<T>(_condition: bool, if_true: T, if_false: T) -> T {
+    pub fn unlikely_branch<T>(_condition: bool, if_true: T, iffalse: T) -> T {
         // Note: std::intrinsics::unlikely requires unstable features
         // Using standard conditional logic for stable compatibility
         if _condition {
             if_true
         } else {
-            if_false
+            iffalse
         }
     }
 
@@ -675,8 +675,8 @@ impl AdaptiveVectorizationEngine {
     }
 
     /// Select optimal vectorization strategy based on matrix size and CPU features
-    pub fn select_optimal_strategy(&self, matrix_size: (usize, usize)) -> VectorizationStrategy {
-        let (rows, cols) = matrix_size;
+    pub fn select_optimal_strategy(&self, matrixsize: (usize, usize)) -> VectorizationStrategy {
+        let (rows, cols) = matrixsize;
         let total_elements = rows * cols;
 
         // For very large matrices, prefer the most advanced vectorization available

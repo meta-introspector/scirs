@@ -370,7 +370,7 @@ fn demonstrate_performance_analysis() -> Result<(), Box<dyn std::error::Error>> 
     let mut _dense_result = vec![0.0; 100];
     for i in 0..100 {
         for j in 0..50 {
-            _dense_result[i] += dense[[i, j]] * vector[j];
+            dense_result[i] += dense[[i, j]] * vector[j];
         }
     }
     let dense_mv_time = dense_mv_start.elapsed();

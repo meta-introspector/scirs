@@ -384,7 +384,7 @@ where
 
 /// Direct series computation for hyp0f1 as fallback
 #[allow(dead_code)]
-fn hyp0f1_series<F>(v: F, z: F, max_terms: usize) -> SpecialResult<F>
+fn hyp0f1_series<F>(v: F, z: F, maxterms: usize) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign,
 {

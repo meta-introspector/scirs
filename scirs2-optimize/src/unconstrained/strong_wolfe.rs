@@ -114,7 +114,7 @@ where
 
     // Phase 1: Find an interval containing acceptable points
     let (interval_result, fev1, gev1) = find_interval(
-        _fun, grad_fun, x, f0, derphi0, direction, alpha, options, bounds,
+        fun, grad_fun, x, f0, derphi0, direction, alpha, options, bounds,
     )?;
 
     nfev += fev1;
@@ -133,7 +133,7 @@ where
         IntervalResult::Bracket(alpha_lo, alpha_hi, f_lo, f_hi, g_lo) => {
             // Phase 2: Zoom to find exact step
             let (zoom_result, fev2, gev2) = zoom_search(
-                _fun, grad_fun, x, f0, derphi0, direction, alpha_lo, alpha_hi, f_lo, f_hi, g_lo,
+                fun, grad_fun, x, f0, derphi0, direction, alpha_lo, alpha_hi, f_lo, f_hi, g_lo,
                 options, bounds,
             )?;
 
@@ -401,8 +401,8 @@ fn safeguarded_interpolation(
 
 /// Create Strong Wolfe options optimized for specific optimization methods
 #[allow(dead_code)]
-pub fn create_strong_wolfe_options_for_method(_method: &str) -> StrongWolfeOptions {
-    match _method.to_lowercase().as_str() {
+pub fn create_strong_wolfe_options_for_method(method: &str) -> StrongWolfeOptions {
+    match method.to_lowercase().as_str() {
         "bfgs" | "lbfgs" | "sr1" | "dfp" => StrongWolfeOptions {
             c1: 1e-4,
             c2: 0.9,

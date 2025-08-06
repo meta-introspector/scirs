@@ -373,11 +373,11 @@ impl Default for ErrorRecoveryConfig {
 
 impl ErrorRecoverySystem {
     /// Create new error recovery system
-    pub fn new(_config: ErrorRecoveryConfig) -> Self {
+    pub fn new(config: ErrorRecoveryConfig) -> Self {
         Self {
             error_history: Vec::new(),
             recovery_success_rates: HashMap::new(),
-            config: _config,
+            config: config,
         }
     }
 
@@ -499,7 +499,7 @@ impl ErrorRecoverySystem {
     }
 
     /// Infer computation state
-    fn infer_computation_state(&self, error: &StatsError, function_name: &str) -> ComputationState {
+    fn infer_computation_state(&self, error: &StatsError, functionname: &str) -> ComputationState {
         ComputationState {
             algorithm: function_name.to_string(),
             iteration: None,
@@ -778,7 +778,7 @@ impl ErrorRecoverySystem {
     }
 
     /// Generate comprehensive error report
-    pub fn generate_error_report(&self, enhanced_error: &EnhancedStatsError) -> String {
+    pub fn generate_error_report(&self, enhancederror: &EnhancedStatsError) -> String {
         let mut report = String::new();
 
         report.push_str(&format!("# Error Report\n\n"));
@@ -847,7 +847,7 @@ static mut ERROR_RECOVERY_INITIALIZED: bool = false;
 
 /// Initialize global error recovery system
 #[allow(dead_code)]
-pub fn initialize_error_recovery(_config: Option<ErrorRecoveryConfig>) {
+pub fn initialize_error_recovery(config: Option<ErrorRecoveryConfig>) {
     unsafe {
         if !ERROR_RECOVERY_INITIALIZED {
             GLOBAL_ERROR_RECOVERY = Some(ErrorRecoverySystem::new(_config.unwrap_or_default()));

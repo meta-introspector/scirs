@@ -350,10 +350,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for GRU<
         Ok(grad_input)
     }
 
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         // Apply a small update to parameters (placeholder)
         let small_change = F::from(0.001).unwrap();
-        let lr = small_change * learning_rate;
+        let lr = small_change * learningrate;
         // Helper function to update a parameter
         let update_param = |param: &mut Array<F, IxDyn>| {
             for w in param.iter_mut() {
@@ -464,7 +464,7 @@ mod tests {
     #[test]
     fn test_grushape() {
         // Create a GRU layer
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
         let gru = GRU::<f64>::new(
             10, // input_size
             20, // hidden_size

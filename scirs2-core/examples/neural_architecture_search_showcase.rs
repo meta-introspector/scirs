@@ -94,7 +94,7 @@ fn demonstrate_evolutionary_nas() -> CoreResult<()> {
         max_parameters: Some(10_000_000), // 10M parameters
         target_platform: HardwarePlatform::GPU,
         compute_units: 8,
-        memory_bandwidth: 400.0, // GB/s
+        memorybandwidth: 400.0, // GB/s
     };
 
     // Create search configuration
@@ -142,8 +142,8 @@ fn demonstrate_evolutionary_nas() -> CoreResult<()> {
     }
 
     // Analyze architecture composition
-    if let Some((best_arch_)) = &search_results.best_architecture {
-        let layer_counts = count_layer_types(best_arch);
+    if let Some((best_arch_, _)) = &search_results.best_architecture {
+        let layer_counts = count_layer_types(best_arch_);
         println!("\n🏗️  Architecture Composition:");
         for (layer_type, count) in layer_counts {
             println!("   - {layer_type:?}: {count}");
@@ -399,8 +399,8 @@ fn demonstrate_multi_objective_optimization() -> CoreResult<()> {
         }
 
         // Analyze optimization focus
-        if let Some((best_arch_)) = &search_results.best_architecture {
-            let layer_counts = count_layer_types(best_arch);
+        if let Some((best_arch_, _)) = &search_results.best_architecture {
+            let layer_counts = count_layer_types(best_arch_);
             let has_attention = layer_counts.contains_key(&LayerType::Attention);
             let has_conv = layer_counts.contains_key(&LayerType::Convolution2D);
 
@@ -411,7 +411,7 @@ fn demonstrate_multi_objective_optimization() -> CoreResult<()> {
             if has_conv {
                 println!("     * Uses convolutions (efficiency-focused)");
             }
-            if best_arch.layers.len() < 8 {
+            if best_arch_.layers.len() < 8 {
                 println!("     * Compact architecture (resource-efficient)");
             }
         }
@@ -437,7 +437,7 @@ fn demonstrate_hardware_aware_search() -> CoreResult<()> {
                 max_parameters: Some(100_000_000), // 100M parameters
                 target_platform: HardwarePlatform::GPU,
                 compute_units: 80,
-                memory_bandwidth: 900.0,
+                memorybandwidth: 900.0,
             },
         ),
         (
@@ -449,7 +449,7 @@ fn demonstrate_hardware_aware_search() -> CoreResult<()> {
                 max_parameters: Some(1_000_000), // 1M parameters
                 target_platform: HardwarePlatform::Mobile,
                 compute_units: 4,
-                memory_bandwidth: 50.0,
+                memorybandwidth: 50.0,
             },
         ),
         (
@@ -461,7 +461,7 @@ fn demonstrate_hardware_aware_search() -> CoreResult<()> {
                 max_parameters: Some(500_000), // 500K parameters
                 target_platform: HardwarePlatform::Edge,
                 compute_units: 2,
-                memory_bandwidth: 25.0,
+                memorybandwidth: 25.0,
             },
         ),
     ];
@@ -469,8 +469,8 @@ fn demonstrate_hardware_aware_search() -> CoreResult<()> {
     let search_space = SearchSpace::default();
     let objectives = OptimizationObjectives::default();
 
-    for (platform_name, constraints) in hardware_scenarios {
-        println!("\n🔧 Optimizing for: {platform_name}");
+    for (platformname, constraints) in hardware_scenarios {
+        println!("\n🔧 Optimizing for: {platformname}");
         println!("   - Platform: {:?}", constraints.target_platform);
         println!(
             "   - Max memory: {} MB",
@@ -519,8 +519,8 @@ fn demonstrate_hardware_aware_search() -> CoreResult<()> {
         }
 
         // Analyze hardware-specific optimizations
-        if let Some((best_arch_)) = &search_results.best_architecture {
-            let layer_counts = count_layer_types(best_arch);
+        if let Some((best_arch_, _)) = &search_results.best_architecture {
+            let layer_counts = count_layer_types(best_arch_);
             println!("     * Layer distribution:");
             for (layer_type, count) in layer_counts {
                 println!("       - {layer_type:?}: {count}");
@@ -614,8 +614,8 @@ fn demonstrate_meta_learning() -> CoreResult<()> {
         }
 
         // Analyze domain patterns
-        if let Some((best_arch_)) = &search_results.best_architecture {
-            let layer_counts = count_layer_types(best_arch);
+        if let Some((best_arch_, _)) = &search_results.best_architecture {
+            let layer_counts = count_layer_types(best_arch_);
             println!("   - Dominant patterns discovered:");
             for (layer_type, count) in layer_counts.iter().take(3) {
                 println!("     * {layer_type:?}: {count} instances");
@@ -649,13 +649,13 @@ fn demonstrate_meta_learning() -> CoreResult<()> {
 
 /// Analyze and display comprehensive search results
 #[allow(dead_code)]
-fn analyze_search_results(_results: &SearchResults) -> CoreResult<()> {
+fn analyze_search_results(results: &SearchResults) -> CoreResult<()> {
     println!("\n📊 Comprehensive Search Analysis:");
     println!("================================");
 
     // Performance statistics
     println!("🏆 Performance Metrics:");
-    if let Some((_, perf)) = &_results.best_architecture {
+    if let Some((_, perf)) = &results.best_architecture {
         println!("   - Best accuracy: {:.4}", perf.accuracy);
         println!("   - Inference latency: {:?}", perf.latency);
         println!(
@@ -670,57 +670,54 @@ fn analyze_search_results(_results: &SearchResults) -> CoreResult<()> {
     println!("\n📈 Search Statistics:");
     println!(
         "   - Total architectures evaluated: {}",
-        _results.statistics.total_evaluations
+        results.statistics.total_evaluations
     );
     println!(
         "   - Successful architectures: {}",
-        _results.statistics.successful_evaluations
+        results.statistics.successful_evaluations
     );
-    if let Some(convergence_gen) = _results.statistics.convergence_generation {
+    if let Some(convergence_gen) = results.statistics.convergence_generation {
         println!("   - Convergence generation: {convergence_gen}");
     }
 
     // Resource usage
     println!("\n💰 Resource Usage:");
-    println!(
-        "   - Total CPU time: {:?}",
-        _results.resource_usage.cpu_time
-    );
+    println!("   - Total CPU time: {:?}", results.resource_usage.cpu_time);
     println!(
         "   - Peak memory: {} MB",
-        _results.resource_usage.memory_peak / (1024 * 1024)
+        results.resource_usage.memory_peak / (1024 * 1024)
     );
     println!(
         "   - Total evaluations: {}",
-        _results.resource_usage.evaluations_count
+        results.resource_usage.evaluations_count
     );
 
     // Convergence analysis
-    if !_results.progress_history.is_empty() {
-        let initial_fitness = _results.progress_history[0].best_fitness;
-        let final_fitness = _results.progress_history.last().unwrap().best_fitness;
+    if !results.progress_history.is_empty() {
+        let initial_fitness = results.progress_history[0].best_fitness;
+        let final_fitness = results.progress_history.last().unwrap().best_fitness;
         let improvement = (final_fitness - initial_fitness) / initial_fitness * 100.0;
 
         println!("\n📉 Convergence Analysis:");
         println!("   - Initial best fitness: {initial_fitness:.4}");
         println!("   - Final best fitness: {final_fitness:.4}");
         println!("   - Total improvement: {improvement:.1}%");
-        println!("   - Progress points: {}", _results.progress_history.len());
+        println!("   - Progress points: {}", results.progress_history.len());
 
         // Show fitness evolution
-        let initial_avg = _results.progress_history[0].avg_fitness;
-        let final_avg = _results.progress_history.last().unwrap().avg_fitness;
+        let initial_avg = results.progress_history[0].avg_fitness;
+        let final_avg = results.progress_history.last().unwrap().avg_fitness;
         println!("   - Average fitness: {initial_avg:.3} → {final_avg:.3}");
     }
 
     // Meta-knowledge insights
-    if !_results.meta_knowledge.best_practices.is_empty() {
+    if !results.meta_knowledge.best_practices.is_empty() {
         println!("\n🧠 Meta-Knowledge Learned:");
         println!(
             "   - Best practices discovered: {}",
-            _results.meta_knowledge.best_practices.len()
+            results.meta_knowledge.best_practices.len()
         );
-        for (i, practice) in _results
+        for (i, practice) in results
             .meta_knowledge
             .best_practices
             .iter()
@@ -741,10 +738,10 @@ fn analyze_search_results(_results: &SearchResults) -> CoreResult<()> {
 
 /// Count layer types in an architecture
 #[allow(dead_code)]
-fn count_layer_types(_architecture: &Architecture) -> std::collections::HashMap<LayerType, usize> {
+fn count_layer_types(architecture: &Architecture) -> std::collections::HashMap<LayerType, usize> {
     let mut counts = std::collections::HashMap::new();
 
-    for layer in &_architecture.layers {
+    for layer in &architecture.layers {
         *counts.entry(layer.layer_type).or_insert(0) += 1;
     }
 
@@ -804,7 +801,7 @@ mod tests {
             max_parameters: Some(1_000_000),
             target_platform: HardwarePlatform::Mobile,
             compute_units: 4,
-            memory_bandwidth: 50.0,
+            memorybandwidth: 50.0,
         };
 
         assert_eq!(mobile_constraints.target_platform, HardwarePlatform::Mobile);
@@ -869,7 +866,7 @@ mod tests {
             globalconfig: GlobalConfig {
                 inputshape: vec![784],
                 output_size: 10,
-                learning_rate: 0.001,
+                learningrate: 0.001,
                 batch_size: 32,
                 optimizer: OptimizerType::Adam,
                 loss_function: "categorical_crossentropy".to_string(),

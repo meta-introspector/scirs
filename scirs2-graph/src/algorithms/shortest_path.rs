@@ -430,13 +430,13 @@ where
 /// after completion. It works correctly with negative edge weights but not with
 /// negative cycles.
 #[allow(dead_code)]
-pub fn floyd_warshall<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<ndarray::Array2<f64>>
+pub fn floyd_warshall<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<ndarray::Array2<f64>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
     Ix: petgraph::graph::IndexType,
 {
-    let n = _graph.node_count();
+    let n = graph.node_count();
 
     if n == 0 {
         return Ok(ndarray::Array2::zeros((0, 0)));
@@ -451,7 +451,7 @@ where
     }
 
     // Initialize with direct edge weights
-    for edge in _graph.inner().edge_references() {
+    for edge in graph.inner().edge_references() {
         let i = edge.source().index();
         let j = edge.target().index();
         let weight: f64 = (*edge.weight()).into();
@@ -478,13 +478,13 @@ where
 
 /// Computes all-pairs shortest paths for a directed graph using Floyd-Warshall
 #[allow(dead_code)]
-pub fn floyd_warshall_digraph<N, E, Ix>(_graph: &DiGraph<N, E, Ix>) -> Result<ndarray::Array2<f64>>
+pub fn floyd_warshall_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<ndarray::Array2<f64>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
     Ix: petgraph::graph::IndexType,
 {
-    let n = _graph.node_count();
+    let n = graph.node_count();
 
     if n == 0 {
         return Ok(ndarray::Array2::zeros((0, 0)));
@@ -499,7 +499,7 @@ where
     }
 
     // Initialize with direct edge weights
-    for edge in _graph.inner().edge_references() {
+    for edge in graph.inner().edge_references() {
         let i = edge.source().index();
         let j = edge.target().index();
         let weight: f64 = (*edge.weight()).into();
@@ -881,7 +881,8 @@ where
     Err(GraphError::NoPath {
         src_node: format!("{source:?}"),
         target: format!("{target:?}"),
-        _nodes: 0, edges: 0,
+        _nodes: 0,
+        edges: 0,
     })
 }
 

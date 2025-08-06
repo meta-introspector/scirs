@@ -53,9 +53,9 @@ pub struct OperationMetrics {
 }
 
 impl AdaptiveMemoryManager {
-    pub fn new(_constraints: MemoryConstraints) -> Self {
+    pub fn new(constraints: MemoryConstraints) -> Self {
         Self {
-            constraints: _constraints,
+            constraints: constraints,
             current_usage: Arc::new(Mutex::new(0)),
             peak_usage: Arc::new(Mutex::new(0)),
             operation_history: Arc::new(Mutex::new(VecDeque::with_capacity(100))),
@@ -63,7 +63,7 @@ impl AdaptiveMemoryManager {
     }
 
     /// Get optimal chunk size based on current memory usage and data size
-    pub fn get_optimal_chunk_size(&self, data_size: usize, element_size: usize) -> usize {
+    pub fn get_optimal_chunk_size(&self, data_size: usize, elementsize: usize) -> usize {
         let current_usage = *self.current_usage.lock().unwrap();
         let available_memory = self
             .constraints
@@ -494,7 +494,7 @@ where
     });
 
     Ok(PCAResult {
-        components: _components,
+        components: components,
         explained_variance,
         transformed_data: Array2::zeros((0, 0)), // Would project data in second pass
         mean: running_mean,
@@ -535,7 +535,7 @@ where
                 let j = {
                     use rand::Rng;
                     let mut rng = rand::rng();
-                    rng.random_range(0..total_count)
+                    rng.gen_range(0..total_count)
                 };
                 if j < values.len() {
                     values[j] = value;
@@ -657,32 +657,32 @@ impl<F> P2Estimator<F>
 where
     F: Float + NumCast + Copy + PartialOrd + std::fmt::Display,
 {
-    fn new(_quantile: f64) -> Self {
+    fn new(quantile: f64) -> Self {
         let mut estimator = Self {
-            quantile: _quantile,
+            quantile: quantile,
             markers: [F::zero(); 5],
             positions: [1.0, 2.0, 3.0, 4.0, 5.0],
             desired_positions: [
                 1.0,
-                1.0 + 2.0 * _quantile,
-                1.0 + 4.0 * _quantile,
-                3.0 + 2.0 * _quantile,
+                1.0 + 2.0 * quantile,
+                1.0 + 4.0 * quantile,
+                3.0 + 2.0 * quantile,
                 5.0,
             ],
             increment: [
                 0.0,
                 _quantile / 2.0,
-                _quantile,
-                (1.0 + _quantile) / 2.0,
+                quantile,
+                (1.0 + quantile) / 2.0,
                 1.0,
             ],
             count: 0,
         };
 
         // Initialize desired positions
-        estimator.desired_positions[1] = 1.0 + 2.0 * _quantile;
-        estimator.desired_positions[2] = 1.0 + 4.0 * _quantile;
-        estimator.desired_positions[3] = 3.0 + 2.0 * _quantile;
+        estimator.desired_positions[1] = 1.0 + 2.0 * quantile;
+        estimator.desired_positions[2] = 1.0 + 4.0 * quantile;
+        estimator.desired_positions[3] = 3.0 + 2.0 * quantile;
 
         estimator
     }
@@ -1044,11 +1044,11 @@ where
 }
 
 #[allow(dead_code)]
-fn compute_covariance_from_centered<F>(_data: &ArrayView2<F>) -> StatsResult<Array2<F>>
+fn compute_covariance_from_centered<F>(data: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + Zero + Copy + std::fmt::Display,
 {
-    let (n_obs, n_vars) = _data.dim();
+    let (n_obs, n_vars) = data.dim();
     let mut cov_matrix = Array2::<F>::zeros((n_vars, n_vars));
     let n_f = F::from(n_obs - 1).unwrap(); // Sample covariance
 
@@ -1056,7 +1056,7 @@ where
         for j in i..n_vars {
             let mut cov = F::zero();
             for k in 0..n_obs {
-                cov = cov + _data[[k, i]] * _data[[k, j]];
+                cov = cov + data[[k, i]] * data[[k, j]];
             }
             cov = cov / n_f;
             cov_matrix[[i, j]] = cov;
@@ -1209,7 +1209,7 @@ where
     // Initialize _components with random orthogonal matrix
     let mut _components = Array2::<F>::zeros((n_vars, n_components));
     for i in 0..n_components {
-        _components[[i % n_vars, i]] = F::one();
+        components[[i % n_vars, i]] = F::one();
     }
 
     let mut explained_variance = Array1::<F>::zeros(n_components);
@@ -1230,7 +1230,7 @@ where
 
         // Update _components using simplified incremental update
         for k in 0..n_components {
-            let component = _components.column(k).to_owned();
+            let component = components.column(k).to_owned();
 
             // Project batch onto current component
             let mut projections = Array1::<F>::zeros(batch.nrows());
@@ -1261,7 +1261,7 @@ where
 
             if norm > F::epsilon() {
                 for j in 0..n_vars {
-                    _components[[j, k]] = new_component[j] / norm;
+                    components[[j, k]] = new_component[j] / norm;
                 }
 
                 // Update explained variance
@@ -1283,14 +1283,14 @@ where
             let mut projection = F::zero();
             for j in 0..n_vars {
                 let centered_val = data[[i, j]] - means[j];
-                projection = projection + centered_val * _components[[j, k]];
+                projection = projection + centered_val * components[[j, k]];
             }
             transformed_data[[i, k]] = projection;
         }
     }
 
     Ok(PCAResult {
-        components: _components,
+        components: components,
         explained_variance,
         transformed_data,
         mean: means.clone(),
@@ -1298,12 +1298,12 @@ where
 }
 
 #[allow(dead_code)]
-fn checkarray_finite_2d<F, D>(_arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
+fn checkarray_finite_2d<F, D>(arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
 where
     F: Float,
     D: Data<Elem = F>,
 {
-    for &val in _arr.iter() {
+    for &val in arr.iter() {
         if !val.is_finite() {
             return Err(StatsError::InvalidArgument(format!(
                 "{} contains non-finite values",

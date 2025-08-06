@@ -28,7 +28,7 @@
 //! - **Scalability**: Performance scaling with increasing data sizes
 
 use crate::error::{InterpolateError, InterpolateResult};
-use crate::simd__optimized::{get_simd_config, simd_distance_matrix, simd_rbf_evaluate, RBFKernel};
+use crate::simd_optimized::{get_simd_config, simd_distance_matrix, simd_rbf_evaluate, RBFKernel};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, Zero};
 use scirs2_core::simd_ops::PlatformCapabilities;
@@ -37,7 +37,7 @@ use std::fmt::{Debug, Display};
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "simd")]
-use crate::spatial::simd__enhancements::AdvancedSimdOps;
+use crate::spatial::simd_enhancements::AdvancedSimdOps;
 
 /// Comprehensive SIMD performance validation framework
 pub struct SimdPerformanceValidator<T: InterpolationFloat> {
@@ -287,7 +287,7 @@ impl InterpolationFloat for f64 {
 
 impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerformanceValidator<T> {
     /// Create a new SIMD performance validator
-    pub fn new(_config: SimdValidationConfig) -> Self {
+    pub fn new(config: SimdValidationConfig) -> Self {
         let platform_caps = PlatformCapabilities::detect();
         let session_info = ValidationSession {
             start_time: Instant::now(),
@@ -297,7 +297,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
         };
 
         Self {
-            _config,
+            config,
             results: Vec::new(),
             baselines: HashMap::new(),
             platform_caps,
@@ -647,7 +647,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
     }
 
     /// Generate test coefficients
-    fn generate_test_coefficients(&self, n_coefficients: usize) -> InterpolateResult<Vec<T>> {
+    fn generate_test_coefficients(&self, ncoefficients: usize) -> InterpolateResult<Vec<T>> {
         Ok((0..n_coefficients)
             .map(|i| T::from_f64(1.0 + (i as f64) / (n_coefficients as f64)).unwrap())
             .collect())
@@ -879,7 +879,9 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
     /// Validate k-NN search correctness (relaxed criteria)
     #[allow(dead_code)]
     fn validate_knn_correctness(
-        &self, _scalar_result: &[(usize, T)]_simd_result: &[(usize, T)],
+        &self,
+        _scalar_result: &[(usize, T)],
+        _simd_result: &[(usize, T)],
     ) -> InterpolateResult<CorrectnessResult<T>> {
         // For k-NN, we use relaxed validation since exact ordering may differ
         // due to floating-point precision differences
@@ -889,7 +891,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
             max_relative_error: T::zero(),
             mean_absolute_error: T::zero(),
             error_std_dev: T::zero(),
-            num_values_compared: _scalar_result.len(),
+            num_values_compared: scalar_result.len(),
         })
     }
 
@@ -934,7 +936,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
     }
 
     /// Estimate memory usage for an operation
-    fn estimate_memory_usage(&self, data_size: usize, dimensions: usize) -> MemoryUsageResult {
+    fn estimate_memory_usage(&self, datasize: usize, dimensions: usize) -> MemoryUsageResult {
         let element_size = std::mem::size_of::<T>();
         let estimated_peak = data_size * dimensions * element_size * 2; // Input + output
 
@@ -958,7 +960,8 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
             brand: "Unknown CPU".to_string(),
             architecture: std::env::consts::ARCH.to_string(),
             logical_cores: num_cpus::get(),
-            physical_cores: num, _cpus: get_physical(),
+            physical_cores: num,
+            _cpus: get_physical(),
             cache_sizes: vec![32_768, 262_144, 8_388_608], // Typical L1, L2, L3 sizes
             base_frequency: None,
         }

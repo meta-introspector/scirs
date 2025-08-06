@@ -122,9 +122,9 @@ pub struct GarchModel<F: Float + Debug> {
 
 impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
     /// Create a new GARCH model
-    pub fn new(_config: GarchConfig) -> Self {
+    pub fn new(config: GarchConfig) -> Self {
         Self {
-            _config,
+            config,
             fitted: false,
             parameters: None,
             conditional_variance: None,
@@ -825,18 +825,18 @@ pub mod technical_indicators {
             ));
         }
 
-        if _data.len() < window {
+        if data.len() < window {
             return Err(TimeSeriesError::InsufficientData {
                 message: "Not enough _data for SMA calculation".to_string(),
                 required: window,
-                actual: _data.len(),
+                actual: data.len(),
             });
         }
 
         let mut result = Array1::zeros(_data.len() - window + 1);
 
         for i in 0..result.len() {
-            let sum = _data.slice(s![i..i + window]).sum();
+            let sum = data.slice(s![i..i + window]).sum();
             let window_f = F::from(window).unwrap();
             result[i] = sum / window_f;
         }
@@ -846,7 +846,7 @@ pub mod technical_indicators {
 
     /// Exponential Moving Average
     pub fn ema<F: Float + Clone>(data: &Array1<F>, alpha: F) -> Result<Array1<F>> {
-        if _data.is_empty() {
+        if data.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Data cannot be empty".to_string(),
             ));
@@ -863,12 +863,12 @@ pub mod technical_indicators {
         }
 
         let mut result = Array1::zeros(_data.len());
-        result[0] = _data[0];
+        result[0] = data[0];
 
         let one_minus_alpha = one - alpha;
 
         for i in 1.._data.len() {
-            result[i] = alpha * _data[i] + one_minus_alpha * result[i - 1];
+            result[i] = alpha * data[i] + one_minus_alpha * result[i - 1];
         }
 
         Ok(result)
@@ -914,18 +914,18 @@ pub mod technical_indicators {
             ));
         }
 
-        if _data.len() < period + 1 {
+        if data.len() < period + 1 {
             return Err(TimeSeriesError::InsufficientData {
                 message: "Not enough _data for RSI calculation".to_string(),
                 required: period + 1,
-                actual: _data.len(),
+                actual: data.len(),
             });
         }
 
         // Calculate price changes
         let mut changes = Array1::zeros(_data.len() - 1);
         for i in 0..changes.len() {
-            changes[i] = _data[i + 1] - _data[i];
+            changes[i] = data[i + 1] - data[i];
         }
 
         // Separate gains and losses
@@ -1174,18 +1174,18 @@ pub mod technical_indicators {
 
     /// On-Balance Volume (OBV)
     pub fn obv<F: Float + Clone>(close: &Array1<F>, volume: &Array1<F>) -> Result<Array1<F>> {
-        if _close.len() != volume.len() {
+        if close.len() != volume.len() {
             return Err(TimeSeriesError::DimensionMismatch {
-                expected: _close.len(),
+                expected: close.len(),
                 actual: volume.len(),
             });
         }
 
-        if _close.len() < 2 {
+        if close.len() < 2 {
             return Err(TimeSeriesError::InsufficientData {
                 message: "Need at least 2 data points for OBV".to_string(),
                 required: 2,
-                actual: _close.len(),
+                actual: close.len(),
             });
         }
 
@@ -1193,9 +1193,9 @@ pub mod technical_indicators {
         obv[0] = volume[0];
 
         for i in 1.._close.len() {
-            if _close[i] > _close[i - 1] {
+            if close[i] > close[i - 1] {
                 obv[i] = obv[i - 1] + volume[i];
-            } else if _close[i] < _close[i - 1] {
+            } else if close[i] < close[i - 1] {
                 obv[i] = obv[i - 1] - volume[i];
             } else {
                 obv[i] = obv[i - 1];
@@ -1466,7 +1466,7 @@ pub mod volatility {
 
     /// Calculate realized volatility from high-frequency returns
     pub fn realized_volatility<F: Float>(returns: &Array1<F>) -> F {
-        _returns.mapv(|x| x * x).sum()
+        returns.mapv(|x| x * x).sum()
     }
 
     /// Garman-Klass volatility estimator
@@ -1633,7 +1633,7 @@ pub mod volatility {
 
     /// Exponentially Weighted Moving Average (EWMA) volatility
     pub fn ewma_volatility<F: Float + Clone>(returns: &Array1<F>, lambda: F) -> Result<Array1<F>> {
-        if _returns.is_empty() {
+        if returns.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Returns cannot be empty".to_string(),
             ));
@@ -1649,12 +1649,12 @@ pub mod volatility {
         let mut ewma_var = Array1::zeros(_returns.len());
 
         // Initialize with first squared return
-        ewma_var[0] = _returns[0].powi(2);
+        ewma_var[0] = returns[0].powi(2);
 
         let one_minus_lambda = F::one() - lambda;
 
         for i in 1.._returns.len() {
-            ewma_var[i] = lambda * ewma_var[i - 1] + one_minus_lambda * _returns[i].powi(2);
+            ewma_var[i] = lambda * ewma_var[i - 1] + one_minus_lambda * returns[i].powi(2);
         }
 
         Ok(ewma_var.mapv(|x| x.sqrt()))
@@ -1736,7 +1736,7 @@ pub mod risk {
 
     /// Calculate Value at Risk (VaR) using historical simulation
     pub fn var_historical<F: Float + Clone>(returns: &Array1<F>, confidence: f64) -> Result<F> {
-        if _returns.is_empty() {
+        if returns.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Returns cannot be empty".to_string(),
             ));
@@ -1749,7 +1749,7 @@ pub mod risk {
             });
         }
 
-        let mut sorted_returns = _returns.to_vec();
+        let mut sorted_returns = returns.to_vec();
         sorted_returns.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         let index = ((1.0 - confidence) * sorted_returns.len() as f64) as usize;
@@ -1777,16 +1777,16 @@ pub mod risk {
 
     /// Calculate maximum drawdown
     pub fn max_drawdown<F: Float + Clone>(prices: &Array1<F>) -> Result<F> {
-        if _prices.is_empty() {
+        if prices.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Prices cannot be empty".to_string(),
             ));
         }
 
-        let mut max_price = _prices[0];
+        let mut max_price = prices[0];
         let mut max_dd = F::zero();
 
-        for &price in _prices.iter() {
+        for &price in prices.iter() {
             if price > max_price {
                 max_price = price;
             }
@@ -1939,7 +1939,7 @@ pub mod risk {
         // Calculate mean active return
         let mean_active = active_returns.sum() / F::from(active_returns.len()).unwrap();
 
-        // Calculate tracking error (standard deviation of active _returns)
+        // Calculate tracking error (standard deviation of active returns)
         let variance = active_returns.mapv(|r| (r - mean_active).powi(2)).sum()
             / F::from(active_returns.len() - 1).unwrap();
 
@@ -2017,7 +2017,7 @@ pub mod risk {
 
         // Calculate annualized excess return
         let annualized_rf = risk_free_rate / F::from(periods_per_year).unwrap();
-        let mean_return = _returns.sum() / F::from(_returns.len()).unwrap();
+        let mean_return = returns.sum() / F::from(_returns.len()).unwrap();
         let excess_return = mean_return - annualized_rf;
         let annualized_excess = excess_return * F::from(periods_per_year).unwrap();
 
@@ -2036,7 +2036,7 @@ pub mod risk {
 
         // Calculate mean _returns
         let annualized_rf = risk_free_rate / F::from(periods_per_year).unwrap();
-        let mean_portfolio = _returns.sum() / F::from(_returns.len()).unwrap();
+        let mean_portfolio = returns.sum() / F::from(_returns.len()).unwrap();
         let mean_market = market_returns.sum() / F::from(market_returns.len()).unwrap();
 
         // Calculate alpha using CAPM formula
@@ -2050,7 +2050,7 @@ pub mod risk {
 
     /// Omega ratio (probability-weighted gains over losses)
     pub fn omega_ratio<F: Float + Clone>(returns: &Array1<F>, threshold: F) -> Result<F> {
-        if _returns.is_empty() {
+        if returns.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Returns cannot be empty".to_string(),
             ));
@@ -2059,7 +2059,7 @@ pub mod risk {
         let mut gains = F::zero();
         let mut losses = F::zero();
 
-        for &ret in _returns.iter() {
+        for &ret in returns.iter() {
             let excess = ret - threshold;
             if excess > F::zero() {
                 gains = gains + excess;
@@ -2174,15 +2174,15 @@ pub mod portfolio {
 
     impl<F: Float + Clone> Portfolio<F> {
         /// Create a new portfolio
-        pub fn new(_weights: Array1<F>, asset_names: Vec<String>) -> Result<Self> {
-            if _weights.len() != asset_names.len() {
+        pub fn new(_weights: Array1<F>, assetnames: Vec<String>) -> Result<Self> {
+            if weights.len() != asset_names.len() {
                 return Err(TimeSeriesError::DimensionMismatch {
-                    expected: _weights.len(),
+                    expected: weights.len(),
                     actual: asset_names.len(),
                 });
             }
 
-            let weight_sum = _weights.sum();
+            let weight_sum = weights.sum();
             let tolerance = F::from(0.01).unwrap();
             if (weight_sum - F::one()).abs() > tolerance {
                 return Err(TimeSeriesError::InvalidInput(
@@ -2191,14 +2191,14 @@ pub mod portfolio {
             }
 
             Ok(Self {
-                _weights,
+                weights,
                 asset_names,
                 rebalance_frequency: None,
             })
         }
 
         /// Create equally weighted portfolio
-        pub fn equal_weight(_n_assets: usize, asset_names: Vec<String>) -> Result<Self> {
+        pub fn equal_weight(_n_assets: usize, assetnames: Vec<String>) -> Result<Self> {
             if _n_assets == 0 {
                 return Err(TimeSeriesError::InvalidInput(
                     "Number of _assets must be positive".to_string(),
@@ -2212,7 +2212,7 @@ pub mod portfolio {
         }
 
         /// Get portfolio weight for specific asset
-        pub fn get_weight(&self, asset_name: &str) -> Option<F> {
+        pub fn get_weight(&self, assetname: &str) -> Option<F> {
             self.asset_names
                 .iter()
                 .position(|_name| _name == asset_name)
@@ -3252,9 +3252,9 @@ pub struct EgarchParameters<F: Float> {
 
 impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
     /// Create a new EGARCH model
-    pub fn new(_config: EgarchConfig) -> Self {
+    pub fn new(config: EgarchConfig) -> Self {
         Self {
-            _config,
+            config,
             fitted: false,
             parameters: None,
             conditional_variance: None,
@@ -4293,18 +4293,18 @@ pub mod advanced_technical_indicators {
 
     /// On-Balance Volume (OBV)
     pub fn obv<F: Float + Clone>(close: &Array1<F>, volume: &Array1<F>) -> Result<Array1<F>> {
-        if _close.len() != volume.len() {
+        if close.len() != volume.len() {
             return Err(TimeSeriesError::DimensionMismatch {
-                expected: _close.len(),
+                expected: close.len(),
                 actual: volume.len(),
             });
         }
 
-        if _close.len() < 2 {
+        if close.len() < 2 {
             return Err(TimeSeriesError::InsufficientData {
                 message: "Need at least 2 data points for OBV".to_string(),
                 required: 2,
-                actual: _close.len(),
+                actual: close.len(),
             });
         }
 
@@ -4312,9 +4312,9 @@ pub mod advanced_technical_indicators {
         obv[0] = volume[0];
 
         for i in 1.._close.len() {
-            if _close[i] > _close[i - 1] {
+            if close[i] > close[i - 1] {
                 obv[i] = obv[i - 1] + volume[i];
-            } else if _close[i] < _close[i - 1] {
+            } else if close[i] < close[i - 1] {
                 obv[i] = obv[i - 1] - volume[i];
             } else {
                 obv[i] = obv[i - 1];
@@ -4651,7 +4651,7 @@ pub mod advanced_technical_indicators {
 
             // Calculate smoothing constant
             let _sc = efficiency_ratio * (fast_alpha - slow_alpha) + slow_alpha;
-            let sc_squared = _sc * _sc;
+            let sc_squared = _sc * sc;
 
             // Update KAMA
             kama[i] = kama[i - 1] + sc_squared * (data[i] - kama[i - 1]);
@@ -4875,15 +4875,15 @@ pub mod risk_metrics {
     }
 
     /// Calculate Value at Risk using parametric method
-    pub fn parametric_var<F: Float + Clone>(returns: &Array1<F>, confidence_level: F) -> Result<F> {
-        if _returns.is_empty() {
+    pub fn parametric_var<F: Float + Clone>(returns: &Array1<F>, confidencelevel: F) -> Result<F> {
+        if returns.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Returns array cannot be empty".to_string(),
             ));
         }
 
-        let n = _returns.len();
-        let mean = _returns.sum() / F::from(n).unwrap();
+        let n = returns.len();
+        let mean = returns.sum() / F::from(n).unwrap();
         let variance = _returns
             .iter()
             .map(|&r| (r - mean).powi(2))
@@ -4982,9 +4982,9 @@ pub mod risk_metrics {
     /// Calculate maximum drawdown from cumulative returns
     fn calculate_max_drawdown<F: Float + Clone>(_cumulative, returns: &Array1<F>) -> F {
         let mut max_drawdown = F::zero();
-        let mut peak = _cumulative_returns[0];
+        let mut peak = cumulative_returns[0];
 
-        for &value in _cumulative_returns.iter() {
+        for &value in cumulative_returns.iter() {
             if value > peak {
                 peak = value;
             }
@@ -5002,7 +5002,7 @@ pub mod risk_metrics {
         let mut max_consecutive = 0;
         let mut current_consecutive = 0;
 
-        for &ret in _returns.iter() {
+        for &ret in returns.iter() {
             if ret < F::zero() {
                 current_consecutive += 1;
                 max_consecutive = max_consecutive.max(current_consecutive);
@@ -5016,11 +5016,11 @@ pub mod risk_metrics {
 
     /// Calculate Pain Index (average drawdown)
     fn calculate_pain_index<F: Float + Clone>(_cumulative, returns: &Array1<F>) -> F {
-        let mut peak = _cumulative_returns[0];
+        let mut peak = cumulative_returns[0];
         let mut total_drawdown = F::zero();
-        let n = _cumulative_returns.len();
+        let n = cumulative_returns.len();
 
-        for &value in _cumulative_returns.iter() {
+        for &value in cumulative_returns.iter() {
             if value > peak {
                 peak = value;
             }
@@ -5033,11 +5033,11 @@ pub mod risk_metrics {
 
     /// Calculate Ulcer Index (RMS of drawdowns)
     fn calculate_ulcer_index<F: Float + Clone>(_cumulative, returns: &Array1<F>) -> F {
-        let mut peak = _cumulative_returns[0];
+        let mut peak = cumulative_returns[0];
         let mut sum_squared_drawdowns = F::zero();
-        let n = _cumulative_returns.len();
+        let n = cumulative_returns.len();
 
-        for &value in _cumulative_returns.iter() {
+        for &value in cumulative_returns.iter() {
             if value > peak {
                 peak = value;
             }
@@ -5053,27 +5053,27 @@ pub mod risk_metrics {
         returns: &Array1<F>,
         benchmark_returns: &Array1<F>,
     ) -> Result<F> {
-        if _returns.len() != benchmark_returns.len() {
+        if returns.len() != benchmark_returns.len() {
             return Err(TimeSeriesError::DimensionMismatch {
-                expected: _returns.len(),
+                expected: returns.len(),
                 actual: benchmark_returns.len(),
             });
         }
 
-        if _returns.is_empty() {
+        if returns.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Returns arrays cannot be empty".to_string(),
             ));
         }
 
         let n = F::from(_returns.len()).unwrap();
-        let mean_asset = _returns.sum() / n;
+        let mean_asset = returns.sum() / n;
         let mean_benchmark = benchmark_returns.sum() / n;
 
         let mut covariance = F::zero();
         let mut benchmark_variance = F::zero();
 
-        for (&asset_ret, &bench_ret) in _returns.iter().zip(benchmark_returns.iter()) {
+        for (&asset_ret, &bench_ret) in returns.iter().zip(benchmark_returns.iter()) {
             let asset_dev = asset_ret - mean_asset;
             let bench_dev = bench_ret - mean_benchmark;
             covariance = covariance + asset_dev * bench_dev;
@@ -5104,7 +5104,7 @@ pub mod risk_metrics {
         }
 
         let n = F::from(_returns.len()).unwrap();
-        let mean_return = _returns.sum() / n;
+        let mean_return = returns.sum() / n;
         let annualized_return = mean_return * F::from(trading_days_per_year).unwrap();
         let excess_return = annualized_return - risk_free_rate;
 
@@ -5121,7 +5121,7 @@ pub mod risk_metrics {
         let beta = calculate_beta(_returns, benchmark_returns)?;
 
         let n = F::from(_returns.len()).unwrap();
-        let mean_asset_return = _returns.sum() / n;
+        let mean_asset_return = returns.sum() / n;
         let mean_benchmark_return = benchmark_returns.sum() / n;
 
         let annualized_asset = mean_asset_return * F::from(trading_days_per_year).unwrap();

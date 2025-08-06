@@ -64,7 +64,7 @@ use std::fmt::Debug;
 /// assert!(mean.abs() < 1e-12);
 /// ```
 #[allow(dead_code)]
-pub fn detrend<T>(x: &[T], detrend_type: Option<&str>) -> SignalResult<Vec<f64>>
+pub fn detrend<T>(x: &[T], detrendtype: Option<&str>) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
@@ -446,6 +446,7 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Vec<f64
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_detrend_constant() {

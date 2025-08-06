@@ -147,13 +147,13 @@ pub fn shi_tomasi_corners(
     for y in radius..(height - radius) {
         for x in radius..(width - radius) {
             if response[[y, x]] > threshold {
-                _corners.push((x, y, response[[y, x]]));
+                corners.push((x, y, response[[y, x]]));
             }
         }
     }
 
     // Sort by response strength
-    _corners.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
+    corners.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
 
     // Filter by minimum _distance
     let mut selected_corners = Vec::new();
@@ -162,7 +162,7 @@ pub fn shi_tomasi_corners(
         let mut too_close = false;
 
         for &(sx, sy_) in &selected_corners {
-            let dist_sq = ((x as i32 - sx as i32).pow(2) + (y as i32 - sy as i32).pow(2)) as usize;
+            let dist_sq = ((x as i32 - sx as i32).pow(2) + (y as i32 - sy_ as i32).pow(2)) as usize;
             if dist_sq < min_distance * min_distance {
                 too_close = true;
                 break;
@@ -181,7 +181,7 @@ pub fn shi_tomasi_corners(
     // Create output image
     let mut output = Array2::zeros((height, width));
     for (x, y_) in selected_corners {
-        output[[y, x]] = 1.0;
+        output[[y_, x]] = 1.0;
     }
 
     crate::feature::array_to_image(&output)
@@ -200,7 +200,7 @@ pub fn shi_tomasi_corners(
 ///
 /// * Result containing corner points
 #[allow(dead_code)]
-pub fn shi_tomasi_corners_simple(_img: &DynamicImage, max_corners: usize) -> Result<GrayImage> {
+pub fn shi_tomasi_corners_simple(_img: &DynamicImage, maxcorners: usize) -> Result<GrayImage> {
     shi_tomasi_corners(_img, 3, 0.01, max_corners, 10)
 }
 
@@ -338,14 +338,14 @@ pub fn good_features_to_track(
                         sub_y -= dy / dyy;
                     }
 
-                    _corners.push((sub_x, sub_y, r));
+                    corners.push((sub_x, sub_y, r));
                 }
             }
         }
     }
 
     // Sort by response strength
-    _corners.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
+    corners.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
 
     // Filter by minimum _distance
     let mut selected_corners = Vec::new();
@@ -355,7 +355,7 @@ pub fn good_features_to_track(
 
         for &(sx, sy_) in &selected_corners {
             let x_diff: f32 = x - sx;
-            let y_diff: f32 = y - sy;
+            let y_diff: f32 = y - sy_;
             let dist_sq: f32 = x_diff.powi(2) + y_diff.powi(2);
             if dist_sq < (min_distance as f32 * min_distance as f32) {
                 too_close = true;

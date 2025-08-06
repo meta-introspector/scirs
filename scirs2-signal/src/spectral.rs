@@ -30,8 +30,8 @@ pub type SpectrogramResult = SignalResult<(Vec<f64>, Vec<f64>, Vec<Vec<f64>>)>;
 ///
 /// * Window function as a vector of length `nperseg`
 #[allow(dead_code)]
-fn get_window(_window_type: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
-    match _window_type.to_lowercase().as_str() {
+fn get_window(_windowtype: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
+    match window_type.to_lowercase().as_str() {
         "hann" => {
             let mut window = Vec::with_capacity(nperseg);
             for i in 0..nperseg {
@@ -76,7 +76,7 @@ fn get_window(_window_type: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
 ///
 /// * Detrended signal
 #[allow(dead_code)]
-fn apply_detrend(x: &[f64], detrend_type: &str) -> SignalResult<Vec<f64>> {
+fn apply_detrend(x: &[f64], detrendtype: &str) -> SignalResult<Vec<f64>> {
     match detrend_type {
         "constant" => {
             // Remove mean
@@ -742,7 +742,9 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
+    use rand::Rng;
     #[test]
     fn test_periodogram_sine_wave() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -787,7 +789,7 @@ mod tests {
         // Add noise
         let mut rng = rand::rng();
         x.iter_mut().for_each(|val| {
-            *val += rng.random_range(-0.1..0.1);
+            *val += rng.gen_range(-0.1..0.1);
         });
 
         // Compute Welch's periodogram
@@ -881,7 +883,7 @@ mod tests {
         let x: Vec<f64> = t.iter().map(|&t| (2.0 * PI * 10.0 * t).sin()).collect();
 
         // Compute spectrograms with different modes
-        let (__, psd_values) = spectrogram(
+        let (_, _, psd_values) = spectrogram(
             &x,
             Some(fs),
             None,
@@ -893,7 +895,7 @@ mod tests {
             Some("psd"),
         )
         .unwrap();
-        let (__, mag_values) = spectrogram(
+        let (_, _, mag_values) = spectrogram(
             &x,
             Some(fs),
             None,
@@ -905,7 +907,7 @@ mod tests {
             Some("magnitude"),
         )
         .unwrap();
-        let (__, phase_values) = spectrogram(
+        let (_, _, phase_values) = spectrogram(
             &x,
             Some(fs),
             None,

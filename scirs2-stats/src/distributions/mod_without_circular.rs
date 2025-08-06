@@ -80,7 +80,7 @@ pub use weibull::Weibull;
 /// assert!((pdf_at_zero - 0.3989423).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn norm<F>(_loc: F, scale: F) -> StatsResult<Normal<F>>
+pub fn norm<F>(loc: F, scale: F) -> StatsResult<Normal<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
@@ -111,7 +111,7 @@ where
 /// assert!((pdf_at_half - 1.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn uniform<F>(_low: F, high: F) -> StatsResult<Uniform<F>>
+pub fn uniform<F>(low: F, high: F) -> StatsResult<Uniform<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
@@ -143,7 +143,7 @@ where
 /// assert!((pdf_at_zero - 0.3796).abs() < 1e-4);
 /// ```
 #[allow(dead_code)]
-pub fn t<F>(_df: F, loc: F, scale: F) -> StatsResult<StudentT<F>>
+pub fn t<F>(df: F, loc: F, scale: F) -> StatsResult<StudentT<F>>
 where
     F: num_traits::Float
         + num_traits::NumCast
@@ -180,7 +180,7 @@ where
 /// assert!((pdf_at_one - 0.303).abs() < 1e-3);
 /// ```
 #[allow(dead_code)]
-pub fn chi2<F>(_df: F, loc: F, scale: F) -> StatsResult<ChiSquare<F>>
+pub fn chi2<F>(df: F, loc: F, scale: F) -> StatsResult<ChiSquare<F>>
 where
     F: num_traits::Float
         + num_traits::NumCast
@@ -218,7 +218,7 @@ where
 /// assert!((pdf_at_one - 0.335).abs() < 1e-3);
 /// ```
 #[allow(dead_code)]
-pub fn f<T>(_dfn: T, dfd: T, loc: T, scale: T) -> StatsResult<F<T>>
+pub fn f<T>(dfn: T, dfd: T, loc: T, scale: T) -> StatsResult<F<T>>
 where
     T: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
@@ -249,7 +249,7 @@ where
 /// assert!((pmf_at_two - 0.224).abs() < 1e-3);
 /// ```
 #[allow(dead_code)]
-pub fn poisson<F>(_mu: F, loc: F) -> StatsResult<Poisson<F>>
+pub fn poisson<F>(mu: F, loc: F) -> StatsResult<Poisson<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
@@ -321,7 +321,7 @@ where
 /// assert!((beta.pdf(0.5) - 1.875).abs() < 1e-3);
 /// ```
 #[allow(dead_code)]
-pub fn beta<F>(_alpha: F, beta: F, loc: F, scale: F) -> StatsResult<Beta<F>>
+pub fn beta<F>(alpha: F, beta: F, loc: F, scale: F) -> StatsResult<Beta<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Debug + std::fmt::Display,
 {
@@ -352,7 +352,7 @@ where
 /// assert!((pdf_at_one - 0.36787944).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn expon<F>(_rate: F, loc: F) -> StatsResult<Exponential<F>>
+pub fn expon<F>(rate: F, loc: F) -> StatsResult<Exponential<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Debug + std::fmt::Display,
 {
@@ -385,7 +385,7 @@ where
 /// assert!((pdf_at_one - 0.3989423).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn lognorm<F>(_mu: F, sigma: F, loc: F) -> StatsResult<Lognormal<F>>
+pub fn lognorm<F>(mu: F, sigma: F, loc: F) -> StatsResult<Lognormal<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
@@ -480,7 +480,7 @@ where
 /// assert!((pdf_at_zero - 0.3183099).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn cauchy<F>(_loc: F, scale: F) -> StatsResult<Cauchy<F>>
+pub fn cauchy<F>(loc: F, scale: F) -> StatsResult<Cauchy<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
@@ -511,7 +511,7 @@ where
 /// assert!((pdf_at_zero - 0.5).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn laplace<F>(_loc: F, scale: F) -> StatsResult<Laplace<F>>
+pub fn laplace<F>(loc: F, scale: F) -> StatsResult<Laplace<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
@@ -542,7 +542,7 @@ where
 /// assert!((pdf_at_zero - 0.25).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn logistic<F>(_loc: F, scale: F) -> StatsResult<Logistic<F>>
+pub fn logistic<F>(loc: F, scale: F) -> StatsResult<Logistic<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {

@@ -24,12 +24,12 @@ struct MockModel {
 }
 
 impl MockModel {
-    fn new(_hyperparams: &HashMap<String, f64>) -> Self {
+    fn new(hyperparams: &HashMap<String, f64>) -> Self {
         Self {
-            learning_rate: _hyperparams.get("learning_rate").copied().unwrap_or(0.001),
-            weight_decay: _hyperparams.get("weight_decay").copied().unwrap_or(0.0),
-            batch_size: _hyperparams.get("batch_size").copied().unwrap_or(32.0) as usize,
-            momentum: _hyperparams.get("momentum").copied().unwrap_or(0.9),
+            learning_rate: hyperparams.get("learning_rate").copied().unwrap_or(0.001),
+            weight_decay: hyperparams.get("weight_decay").copied().unwrap_or(0.0),
+            batch_size: hyperparams.get("batch_size").copied().unwrap_or(32.0) as usize,
+            momentum: hyperparams.get("momentum").copied().unwrap_or(0.9),
             performance: 0.0,
         }
     }
@@ -349,7 +349,10 @@ fn population_based_training_example() -> Result<()> {
                 "batch_size".to_string(),
                 32.0 + rand::rng().random_f64() * 96.0,
             ),
-            ("momentum".to_string(), 0.9 + rand::rng().random_f64() * 0.09),
+            (
+                "momentum".to_string(),
+                0.9 + rand::rng().random_f64() * 0.09,
+            ),
         ]);
 
         let mut model = MockModel::new(&hyperparams);
@@ -382,7 +385,8 @@ fn population_based_training_example() -> Result<()> {
                     "learning_rate" => *value = value.clamp(1e-5, 1e-1),
                     "weight_decay" => *value = value.clamp(0.0, 0.1),
                     "batch_size" => *value = value.clamp(16.0, 256.0),
-                    "momentum" => *value = value.clamp(0.0, 0.999, _ => {}
+                    "momentum" => *value = value.clamp(0.0, 0.999),
+                    _ => {}
                 }
             }
 
@@ -511,7 +515,10 @@ fn neural_predictor_example() -> Result<()> {
                 "batch_size".to_string(),
                 16.0 + rand::rng().random_f64() * 112.0,
             ),
-            ("momentum".to_string(), 0.9 + rand::rng().random_f64() * 0.09),
+            (
+                "momentum".to_string(),
+                0.9 + rand::rng().random_f64() * 0.09,
+            ),
         ]);
 
         let mut random_model = MockModel::new(&random_hyperparams);

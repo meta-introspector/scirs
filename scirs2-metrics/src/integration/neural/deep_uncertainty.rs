@@ -15,9 +15,9 @@ use crate::error::{MetricsError, Result};
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
 use num_traits::Float;
 use scirs2_core::simd_ops::SimdUnifiedOps;
+use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::iter::Sum;
-use statrs::statistics::Statistics;
 
 /// Deep learning uncertainty quantifier
 pub struct DeepUncertaintyQuantifier<F: Float> {
@@ -65,20 +65,20 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     }
 
     /// Set Monte Carlo dropout parameters
-    pub fn with_mc_dropout(mut self, n_samples: usize, dropout_rate: F) -> Self {
+    pub fn with_mc_dropout(mut self, n_samples: usize, dropoutrate: F) -> Self {
         self.n_mc_dropout_samples = n_samples;
         self.dropout_rate = dropout_rate;
         self
     }
 
     /// Set ensemble parameters
-    pub fn with_ensemble(mut self, n_members: usize) -> Self {
+    pub fn with_ensemble(mut self, nmembers: usize) -> Self {
         self.n_ensemble_members = n_members;
         self
     }
 
     /// Set test-time augmentation parameters
-    pub fn with_tta(mut self, n_samples: usize) -> Self {
+    pub fn with_tta(mut self, nsamples: usize) -> Self {
         self.n_tta_samples = n_samples;
         self
     }
@@ -90,7 +90,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     }
 
     /// Set SWAG parameters
-    pub fn with_swag(mut self, enable: bool, n_samples: usize) -> Self {
+    pub fn with_swag(mut self, enable: bool, nsamples: usize) -> Self {
         self.enable_swag = enable;
         self.n_swag_samples = n_samples;
         self
@@ -493,7 +493,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
             // Sample from SWAG posterior: θ ~ N(θ_SWA, Σ_SWAG)
             // where Σ_SWAG = diag(σ²) + (1/(K-1)) * D * D^T
 
-            let mut weight_sample = swa_statistics.mean_weights.clone();
+            let mut weight_sample = swa_statistics.meanweights.clone();
 
             // Sample from diagonal component with proper variance scaling
             for (i, &var) in swa_statistics.diagonal_variance.iter().enumerate() {
@@ -550,7 +550,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
                 *weight = *weight - update; // Gradient descent step
             }
 
-            weight_trajectory.push(current_weights.clone());
+            weight_trajectory.push(currentweights.clone());
         }
 
         // Compute SWA statistics from trajectory
@@ -570,8 +570,8 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     }
 
     /// Build deviation matrix from weight trajectory
-    fn build_deviation_matrix(&self, swa_stats: &SWAStatistics<F>) -> Result<Array2<F>> {
-        let n_weights = swa_stats.mean_weights.len();
+    fn build_deviation_matrix(&self, swastats: &SWAStatistics<F>) -> Result<Array2<F>> {
+        let n_weights = swa_stats.meanweights.len();
         let n_deviations = swa_stats.weight_deviations.len();
         let max_rank = 20.min(n_deviations); // Limit rank for computational efficiency
 
@@ -635,7 +635,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
 
         // Project back to weight space: component = D * V * z
         // Simplified projection (in practice, use proper matrix multiplication)
-        for i in 0..n_weights.min(rank) {
+        for i in 0..nweights.min(rank) {
             for j in 0..rank {
                 low_rank_component[i] = low_rank_component[i]
                     + eigenvectors[[j, j]] * latent_samples[j]
@@ -702,7 +702,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     }
 
     /// Enhance sample diversity through post-processing
-    fn enhance_sample_diversity(&self, weight_samples: &mut [SWAGWeightSample<F>]) -> Result<()> {
+    fn enhance_sample_diversity(&self, weightsamples: &mut [SWAGWeightSample<F>]) -> Result<()> {
         let n_samples = weight_samples.len();
 
         // Compute pairwise distances between _samples
@@ -748,7 +748,8 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     fn model_with_weights<M>(
         &self,
         model: &M,
-        x: &ArrayView2<F>, _weights: &SWAGWeightSample<F>,
+        x: &ArrayView2<F>,
+        _weights: &SWAGWeightSample<F>,
     ) -> Result<Array1<F>>
     where
         M: Fn(&ArrayView2<F>, bool) -> Array1<F>,
@@ -1321,7 +1322,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     // Additional helper methods for enhanced SWAG implementation
 
     /// Initialize realistic weights with proper scaling
-    fn initialize_realistic_weights(&self, n_weights: usize) -> Result<Vec<F>> {
+    fn initialize_realistic_weights(&self, nweights: usize) -> Result<Vec<F>> {
         let mut _weights = Vec::with_capacity(n_weights);
 
         // Xavier initialization: _weights ~ N(0, 2/(n_in + n_out))
@@ -1331,14 +1332,14 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
 
         for i in 0..n_weights {
             let weight = self.sample_gaussian_with_seed(i) * std;
-            _weights.push(weight);
+            weights.push(weight);
         }
 
         Ok(_weights)
     }
 
     /// Compute SWA mean from weight trajectory
-    fn compute_swa_mean(&self, weight_trajectory: &[Vec<F>]) -> Result<Vec<F>> {
+    fn compute_swa_mean(&self, weighttrajectory: &[Vec<F>]) -> Result<Vec<F>> {
         if weight_trajectory.is_empty() {
             return Err(MetricsError::InvalidInput(
                 "Empty weight _trajectory".to_string(),
@@ -1368,12 +1369,12 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         weight_trajectory: &[Vec<F>],
         mean_weights: &[F],
     ) -> Result<Vec<F>> {
-        let n_weights = mean_weights.len();
+        let n_weights = meanweights.len();
         let n_epochs = weight_trajectory.len();
         let mut diagonal_variance = vec![F::zero(); n_weights];
 
         for _weights in weight_trajectory {
-            for (i, &weight) in _weights.iter().enumerate() {
+            for (i, &weight) in weights.iter().enumerate() {
                 let deviation = weight - mean_weights[i];
                 diagonal_variance[i] = diagonal_variance[i] + deviation * deviation;
             }
@@ -1396,7 +1397,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
 
         for _weights in weight_trajectory {
             let mut deviation = Vec::new();
-            for (i, &weight) in _weights.iter().enumerate() {
+            for (i, &weight) in weights.iter().enumerate() {
                 deviation.push(weight - mean_weights[i]);
             }
             deviations.push(deviation);
@@ -1421,7 +1422,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     }
 
     /// Compute eigenvalue contribution for a sample
-    fn compute_eigen_contribution(&self, eigenvalues: &[F], sample_idx: usize) -> Result<F> {
+    fn compute_eigen_contribution(&self, eigenvalues: &[F], sampleidx: usize) -> Result<F> {
         if eigenvalues.is_empty() {
             return Ok(F::zero());
         }
@@ -1438,15 +1439,15 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     }
 
     /// Compute deviation penalty for log posterior
-    fn compute_deviation_penalty(&self, weights: &[F], mean_weights: &[F]) -> Result<F> {
+    fn compute_deviation_penalty(&self, weights: &[F], meanweights: &[F]) -> Result<F> {
         let mut penalty = F::zero();
 
-        for (&weight, &mean_weight) in _weights.iter().zip(mean_weights.iter()) {
+        for (&weight, &mean_weight) in weights.iter().zip(meanweights.iter()) {
             let deviation = weight - mean_weight;
             penalty = penalty + deviation * deviation;
         }
 
-        Ok(penalty / F::from(_weights.len()).unwrap())
+        Ok(penalty / F::from(weights.len()).unwrap())
     }
 
     /// Compute weight distance between two weight vectors
@@ -1467,7 +1468,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     }
 
     /// Compute rank contribution for a weight sample
-    fn compute_rank_contribution(&self, weights: &[F], swa_stats: &SWAStatistics<F>) -> Result<F> {
+    fn compute_rank_contribution(&self, weights: &[F], swastats: &SWAStatistics<F>) -> Result<F> {
         // Simplified rank contribution based on weight alignment with principal directions
         let weight_norm = weights.iter().map(|&w| w * w).sum::<F>().sqrt();
         let mean_norm = swa_stats
@@ -1706,7 +1707,7 @@ mod tests {
     use ndarray::array;
 
     // Mock neural network model for testing
-    fn mock_neural_model(x: &ArrayView2<f64>, _dropout: bool) -> Array1<f64> {
+    fn mock_neural_model(x: &ArrayView2<f64>, dropout: bool) -> Array1<f64> {
         x.map_axis(Axis(1), |row| row.sum())
     }
 

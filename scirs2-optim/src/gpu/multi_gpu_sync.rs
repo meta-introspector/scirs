@@ -29,7 +29,7 @@ struct CudaContext;
 
 #[cfg(not(all(feature = "gpu", feature = "cuda")))]
 impl CudaStream {
-    pub fn new(_context: &CudaContext) -> Result<Self> {
+    pub fn new(context: &CudaContext) -> Result<Self> {
         Ok(Self)
     }
 }
@@ -462,7 +462,7 @@ pub struct DeviceCapabilities {
     pub peak_flops: f64,
 
     /// Supports peer-to-peer access
-    pub p2, p_support: bool,
+    pub p2p_support: bool,
 
     /// NCCL support
     pub nccl_support: bool,
@@ -500,7 +500,7 @@ pub struct DeviceCapabilities {
 
 impl MultiGpuCommunicator {
     /// Create new multi-GPU communicator
-    pub fn new(_config: SyncConfiguration) -> Result<Self> {
+    pub fn new(config: SyncConfiguration) -> Result<Self> {
         let devices = Self::initialize_devices(&_config)?;
         let backend = Self::detect_communication_backend(&devices)?;
         let topology = Self::detect_topology(&devices)?;
@@ -509,7 +509,7 @@ impl MultiGpuCommunicator {
         Ok(Self {
             devices,
             backend,
-            _config,
+            config,
             comm_streams,
             metrics: Mutex::new(CommunicationMetrics::default()),
             param_buffers: HashMap::new(),
@@ -520,7 +520,7 @@ impl MultiGpuCommunicator {
     }
 
     /// Initialize GPU devices for multi-GPU communication
-    fn initialize_devices(_config: &SyncConfiguration) -> Result<Vec<DeviceContext>> {
+    fn initialize_devices(config: &SyncConfiguration) -> Result<Vec<DeviceContext>> {
         let mut devices = Vec::new();
 
         for device_id in 0.._config.world_size {
@@ -560,16 +560,16 @@ impl MultiGpuCommunicator {
     }
 
     /// Detect optimal communication backend
-    fn detect_communication_backend(_devices: &[DeviceContext]) -> Result<CommunicationBackend> {
+    fn detect_communication_backend(devices: &[DeviceContext]) -> Result<CommunicationBackend> {
         #[cfg(feature = "gpu")]
         {
             // Check for NCCL support
-            if _devices.iter().all(|d| d.capabilities.nccl_support) {
+            if devices.iter().all(|d| d.capabilities.nccl_support) {
                 return Ok(CommunicationBackend::NCCL);
             }
 
             // Check for P2P support
-            if _devices.iter().all(|d| d.capabilities.p2p_support) {
+            if devices.iter().all(|d| d.capabilities.p2p_support) {
                 return Ok(CommunicationBackend::P2P);
             }
         }
@@ -579,8 +579,8 @@ impl MultiGpuCommunicator {
     }
 
     /// Detect communication topology
-    fn detect_topology(_devices: &[DeviceContext]) -> Result<CommunicationTopology> {
-        let num_devices = _devices.len();
+    fn detect_topology(devices: &[DeviceContext]) -> Result<CommunicationTopology> {
+        let num_devices = devices.len();
         let mut connectivity_matrix = vec![vec![false; num_devices]; num_devices];
         let mut bandwidth_matrix = vec![vec![0.0; num_devices]; num_devices];
         let mut latency_matrix = vec![vec![0.0; num_devices]; num_devices];
@@ -589,8 +589,10 @@ impl MultiGpuCommunicator {
         for i in 0..num_devices {
             for j in 0..num_devices {
                 if i != j {
-                    let (connected, bandwidth, latency) =
-                        Self::probe_device_connection(_devices[i].device_id, _devices[j].device_id)?;
+                    let (connected, bandwidth, latency) = Self::probe_device_connection(
+                        devices[i].device_id,
+                        devices[j].device_id,
+                    )?;
 
                     connectivity_matrix[i][j] = connected;
                     bandwidth_matrix[i][j] = bandwidth;
@@ -722,7 +724,7 @@ impl MultiGpuCommunicator {
     }
 
     /// Perform all-reduce operation on gradients
-    pub fn all_reduce_gradients(&mut self, gradient_names: &[&str]) -> Result<()> {
+    pub fn all_reduce_gradients(&mut self, gradientnames: &[&str]) -> Result<()> {
         let start_time = Instant::now();
 
         match self.backend {
@@ -745,7 +747,7 @@ impl MultiGpuCommunicator {
     }
 
     /// Broadcast parameters from master to all devices
-    pub fn broadcast_parameters(&mut self, param_names: &[&str], master_rank: i32) -> Result<()> {
+    pub fn broadcast_parameters(&mut self, param_names: &[&str], masterrank: i32) -> Result<()> {
         let start_time = Instant::now();
 
         match self.backend {
@@ -768,7 +770,7 @@ impl MultiGpuCommunicator {
     }
 
     /// Perform asynchronous all-reduce with computation overlap
-    pub fn async_all_reduce_gradients(&mut self, gradient_names: &[&str]) -> Result<()> {
+    pub fn async_all_reduce_gradients(&mut self, gradientnames: &[&str]) -> Result<()> {
         if !self.config.enable_overlap {
             return self.all_reduce_gradients(gradient_names);
         }
@@ -796,7 +798,8 @@ impl MultiGpuCommunicator {
         // Launch asynchronous operation
         match self.backend {
             CommunicationBackend::NCCL => self.async_all_reduce_nccl(gradient_names, stream_idx)?,
-            CommunicationBackend::P2P => self.async_all_reduce_p2p(gradient_names, stream_idx)?_ => {
+            CommunicationBackend::P2P => self.async_all_reduce_p2p(gradient_names, stream_idx)?,
+            _ => {
                 // Fallback to synchronous operation
                 self.all_reduce_gradients(gradient_names)?;
             }
@@ -857,7 +860,7 @@ impl MultiGpuCommunicator {
         }
     }
 
-    fn allocate_device_buffer(&self, device_id: i32, size: usize) -> Result<*mut c_void> {
+    fn allocate_device_buffer(&self, deviceid: i32, size: usize) -> Result<*mut c_void> {
         #[cfg(feature = "gpu")]
         {
             // In a real implementation, would use CUDA malloc
@@ -870,22 +873,22 @@ impl MultiGpuCommunicator {
         }
     }
 
-    fn query_device_capabilities(_device_id: i32) -> Result<DeviceCapabilities> {
+    fn query_device_capabilities(_deviceid: i32) -> Result<DeviceCapabilities> {
         // In a real implementation, would query actual device capabilities
         Ok(DeviceCapabilities::default())
     }
 
-    fn query_memory_stats(_device_id: i32) -> Result<DeviceMemoryStats> {
+    fn query_memory_stats(_deviceid: i32) -> Result<DeviceMemoryStats> {
         // In a real implementation, would query actual memory statistics
         Ok(DeviceMemoryStats::default())
     }
 
-    fn probe_device_connection(_device_a: i32, device_b: i32) -> Result<(bool, f64, f64)> {
+    fn probe_device_connection(_device_a: i32, deviceb: i32) -> Result<(bool, f64, f64)> {
         // In _a real implementation, would probe actual device connectivity
         Ok((true, 1e9, 1.0)) // 1 GB/s bandwidth, 1 μs latency
     }
 
-    fn is_fully_connected(_matrix: &[Vec<bool>]) -> bool {
+    fn is_fully_connected(matrix: &[Vec<bool>]) -> bool {
         for i in 0.._matrix.len() {
             for j in 0.._matrix.len() {
                 if i != j && !_matrix[i][j] {
@@ -896,8 +899,8 @@ impl MultiGpuCommunicator {
         true
     }
 
-    fn is_ring_topology(_matrix: &[Vec<bool>]) -> bool {
-        let n = _matrix.len();
+    fn is_ring_topology(matrix: &[Vec<bool>]) -> bool {
+        let n = matrix.len();
         if n < 3 {
             return false;
         }
@@ -905,7 +908,7 @@ impl MultiGpuCommunicator {
         for i in 0..n {
             let mut connections = 0;
             for j in 0..n {
-                if i != j && _matrix[i][j] {
+                if i != j && matrix[i][j] {
                     connections += 1;
                 }
             }
@@ -934,11 +937,12 @@ impl MultiGpuCommunicator {
             .unwrap_or(0)
     }
 
-    fn estimate_operation_duration(&self, op_type: CommOpType, num_tensors: usize) -> Duration {
+    fn estimate_operation_duration(&self, op_type: CommOpType, numtensors: usize) -> Duration {
         // Estimate based on historical data and operation complexity
         let base_latency = match op_type {
             CommOpType::AllReduce => Duration::from_micros(100),
-            CommOpType::Broadcast => Duration::from_micros(50, _ => Duration::from_micros(75),
+            CommOpType::Broadcast => Duration::from_micros(50),
+            _ => Duration::from_micros(75),
         };
 
         base_latency * num_tensors as u32
@@ -967,7 +971,7 @@ impl MultiGpuCommunicator {
                 / metrics.total_operations as f64;
 
         if let Some(_ratio) = compression_ratio {
-            metrics.compression_ratio = (metrics.compression_ratio + _ratio) / 2.0;
+            metrics.compression_ratio = (metrics.compression_ratio + ratio) / 2.0;
         }
 
         // Record operation result
@@ -989,7 +993,7 @@ impl MultiGpuCommunicator {
 
     // Backend-specific implementations
 
-    fn all_reduce_nccl(&mut self, gradient_names: &[&str]) -> Result<()> {
+    fn all_reduce_nccl(&mut self, gradientnames: &[&str]) -> Result<()> {
         #[cfg(feature = "gpu")]
         {
             // NCCL all-reduce implementation
@@ -1005,7 +1009,7 @@ impl MultiGpuCommunicator {
         }
     }
 
-    fn all_reduce_p2p(&mut self, gradient_names: &[&str]) -> Result<()> {
+    fn all_reduce_p2p(&mut self, gradientnames: &[&str]) -> Result<()> {
         // P2P all-reduce implementation using ring algorithm
         for gradient_name in gradient_names {
             if let Some(buffer) = self.gradient_buffers.get_mut(gradient_name) {
@@ -1020,7 +1024,7 @@ impl MultiGpuCommunicator {
         Ok(())
     }
 
-    fn all_reduce_cpu(&mut self, gradient_names: &[&str]) -> Result<()> {
+    fn all_reduce_cpu(&mut self, gradientnames: &[&str]) -> Result<()> {
         // CPU-based all-reduce (copy to host, reduce, copy back)
         for gradient_name in gradient_names {
             if let Some(buffer) = self.gradient_buffers.get_mut(gradient_name) {
@@ -1035,7 +1039,7 @@ impl MultiGpuCommunicator {
         Ok(())
     }
 
-    fn all_reduce_rccl(&mut self, gradient_names: &[&str]) -> Result<()> {
+    fn all_reduce_rccl(&mut self, gradientnames: &[&str]) -> Result<()> {
         #[cfg(feature = "rocm")]
         {
             // Enhanced RCCL all-reduce implementation for AMD GPUs
@@ -1064,7 +1068,7 @@ impl MultiGpuCommunicator {
         }
     }
 
-    fn broadcast_nccl(&mut self, param_names: &[&str], master_rank: i32) -> Result<()> {
+    fn broadcast_nccl(&mut self, param_names: &[&str], masterrank: i32) -> Result<()> {
         #[cfg(feature = "gpu")]
         {
             // NCCL broadcast implementation
@@ -1079,7 +1083,7 @@ impl MultiGpuCommunicator {
         }
     }
 
-    fn broadcast_p2p(&mut self, param_names: &[&str], master_rank: i32) -> Result<()> {
+    fn broadcast_p2p(&mut self, param_names: &[&str], masterrank: i32) -> Result<()> {
         // P2P broadcast implementation
         for param_name in param_names {
             if let Some(buffer) = self.param_buffers.get_mut(param_name) {
@@ -1095,7 +1099,7 @@ impl MultiGpuCommunicator {
         Ok(())
     }
 
-    fn broadcast_cpu(&mut self, param_names: &[&str], master_rank: i32) -> Result<()> {
+    fn broadcast_cpu(&mut self, param_names: &[&str], masterrank: i32) -> Result<()> {
         // CPU-based broadcast
         for param_name in param_names {
             if let Some(buffer) = self.param_buffers.get_mut(param_name) {
@@ -1111,17 +1115,17 @@ impl MultiGpuCommunicator {
         Ok(())
     }
 
-    fn broadcast_rccl(&mut self, param_names: &[&str], master_rank: i32) -> Result<()> {
+    fn broadcast_rccl(&mut self, param_names: &[&str], masterrank: i32) -> Result<()> {
         // RCCL broadcast implementation
         Ok(())
     }
 
-    fn async_all_reduce_nccl(&mut self, gradient_names: &[&str], stream_idx: usize) -> Result<()> {
+    fn async_all_reduce_nccl(&mut self, gradient_names: &[&str], streamidx: usize) -> Result<()> {
         // Asynchronous NCCL all-reduce
         Ok(())
     }
 
-    fn async_all_reduce_p2p(&mut self, gradient_names: &[&str], stream_idx: usize) -> Result<()> {
+    fn async_all_reduce_p2p(&mut self, gradient_names: &[&str], streamidx: usize) -> Result<()> {
         // Asynchronous P2P all-reduce
         Ok(())
     }
@@ -1168,7 +1172,7 @@ impl MultiGpuCommunicator {
         Ok(())
     }
 
-    fn p2p_broadcast(&self, buffer: &ParameterBuffer, master_rank: i32) -> Result<()> {
+    fn p2p_broadcast(&self, buffer: &ParameterBuffer, masterrank: i32) -> Result<()> {
         // P2P broadcast implementation
         // Copy parameters from master device to all other devices
         for device in &self.devices {
@@ -1179,7 +1183,7 @@ impl MultiGpuCommunicator {
         Ok(())
     }
 
-    fn cpu_broadcast(&self, buffer: &ParameterBuffer, master_rank: i32) -> Result<()> {
+    fn cpu_broadcast(&self, buffer: &ParameterBuffer, masterrank: i32) -> Result<()> {
         // CPU-based broadcast implementation
         // 1. Copy parameters from master to host
         // 2. Copy from host to all other devices
@@ -1278,7 +1282,7 @@ impl MultiGpuCommunicator {
     }
 
     /// Top-K sparsification
-    fn compress_top_k(&self, gradients: &mut [f32], k_ratio: f32) -> Result<f64> {
+    fn compress_top_k(&self, gradients: &mut [f32], kratio: f32) -> Result<f64> {
         let k = (gradients.len() as f32 * k_ratio) as usize;
 
         // Find top-k elements by magnitude
@@ -1361,7 +1365,7 @@ impl MultiGpuCommunicator {
     }
 
     /// Sketched SGD compression
-    fn compress_sketched_sgd(&self, gradients: &mut [f32], sketch_size: usize) -> Result<f64> {
+    fn compress_sketched_sgd(&self, gradients: &mut [f32], sketchsize: usize) -> Result<f64> {
         let n = gradients.len();
         let effective_sketch_size = sketch_size.min(n / 2);
 
@@ -1421,7 +1425,7 @@ impl MultiGpuCommunicator {
         match self.topology.topology_type {
             TopologyType::FullyConnected if self.devices.len() <= 8 => SyncStrategy::AllReduceTree,
             TopologyType::Ring | TopologyType::Custom => SyncStrategy::AllReduceRing,
-            TopologyType::Hierarchical => SyncStrategy::Hierarchical_ => {
+            TopologyType::Hierarchical => {
                 if self.config.enable_overlap {
                     SyncStrategy::AsyncBounded { max_staleness: 2 }
                 } else {
@@ -1438,7 +1442,8 @@ impl Default for DeviceCapabilities {
             compute_capability: (7, 5),
             memory_bandwidth: 900e9, // 900 GB/s
             peak_flops: 31e12,       // 31 TFLOPS
-            p2, p_support: true,
+            p2,
+            p_support: true,
             nccl_support: true,
             nvlink_support: true,
             tensor_core_support: true,

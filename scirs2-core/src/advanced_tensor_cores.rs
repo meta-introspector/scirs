@@ -207,7 +207,7 @@ mod gpu_implementation {
     #[derive(Debug, Clone)]
     pub struct TrainingParameters {
         /// Learning rate
-        pub learning_rate: f64,
+        pub learningrate: f64,
         /// Batch size
         pub batch_size: usize,
         /// Number of epochs
@@ -542,7 +542,7 @@ mod gpu_implementation {
         pub boost_clock_mhz: u32,
         /// Memory specifications
         pub memory_size_gb: f64,
-        pub memory_bandwidth_gbps: f64,
+        pub memorybandwidth_gbps: f64,
         /// Cache sizes
         pub l1_cache_kb: usize,
         pub l2_cache_kb: usize,
@@ -571,7 +571,7 @@ mod gpu_implementation {
         /// Peak compute throughput
         pub peak_compute_tflops: f64,
         /// Memory bandwidth utilization
-        pub memory_bandwidth_efficiency: f64,
+        pub memorybandwidth_efficiency: f64,
         /// Cache hit rates
         pub typical_cache_hit_rates: HashMap<String, f64>,
         /// Thermal throttling thresholds
@@ -635,11 +635,11 @@ mod gpu_implementation {
         /// System load monitor
         system_load: SystemLoadMonitor,
         /// Temperature monitor
-        temperature_monitor: TemperatureMonitor,
+        temperaturemonitor: TemperatureMonitor,
         /// Power monitor
-        power_monitor: PowerMonitor,
+        powermonitor: PowerMonitor,
         /// Network monitor
-        network_monitor: NetworkMonitor,
+        networkmonitor: NetworkMonitor,
     }
 
     /// System load monitoring
@@ -1017,7 +1017,7 @@ mod gpu_implementation {
     #[derive(Debug, Clone)]
     pub struct AllocationDecision {
         /// Request ID
-        pub request_id: String,
+        pub requestid: String,
         /// Allocated device
         pub device: GpuBackend,
         /// Allocated resources
@@ -1165,7 +1165,7 @@ mod gpu_implementation {
     #[derive(Debug, Clone)]
     pub struct PriorityAdjustment {
         /// Task ID
-        pub task_id: String,
+        pub taskid: String,
         /// Old priority
         pub old_priority: u8,
         /// New priority
@@ -1195,7 +1195,7 @@ mod gpu_implementation {
     #[derive(Debug, Clone)]
     pub struct SchedulingDecision {
         /// Task ID
-        pub task_id: String,
+        pub taskid: String,
         /// Scheduled device
         pub device: GpuBackend,
         /// Scheduling time
@@ -1759,7 +1759,7 @@ mod gpu_implementation {
         /// Storage backends
         storage_backends: Vec<StorageBackend>,
         /// Retention policies
-        retention_policies: HashMap<String, RetentionPolicy>,
+        retentionpolicies: HashMap<String, RetentionPolicy>,
         /// Compression settings
         compression: CompressionSettings,
         /// Indexing strategy
@@ -1894,9 +1894,9 @@ mod gpu_implementation {
     #[derive(Debug)]
     pub struct TensorCoreMonitoring {
         /// Performance monitors
-        performance_monitors: HashMap<GpuBackend, PerformanceMonitor>,
+        performancemonitors: HashMap<GpuBackend, PerformanceMonitor>,
         /// Health monitors
-        health_monitors: HashMap<GpuBackend, HealthMonitor>,
+        healthmonitors: HashMap<GpuBackend, HealthMonitor>,
         /// Utilization trackers
         utilization_trackers: HashMap<GpuBackend, UtilizationTracker>,
         /// Monitoring configuration
@@ -2264,7 +2264,7 @@ mod gpu_implementation {
         /// Monitoring interval
         pub interval: Duration,
         /// Enable detailed monitoring
-        pub detailed_monitoring: bool,
+        pub detailedmonitoring: bool,
         /// Metrics to collect
         pub metrics_to_collect: Vec<String>,
         /// Alert thresholds
@@ -2276,7 +2276,7 @@ mod gpu_implementation {
     #[derive(Debug, Clone)]
     pub struct MonitoringStatistics {
         /// Total monitoring time
-        pub total_monitoring_time: Duration,
+        pub totalmonitoring_time: Duration,
         /// Data points collected
         pub data_points_collected: usize,
         /// Alerts generated
@@ -2348,7 +2348,7 @@ mod gpu_implementation {
                 .insert(backend, auto_tuner);
 
             // Initialize monitoring for this backend
-            self.initialize_monitoring(backend)?;
+            self.initializemonitoring(backend)?;
 
             println!("🚀 Initialized advanced tensor cores for backend: {backend:?}");
             Ok(())
@@ -2437,7 +2437,7 @@ mod gpu_implementation {
                 best_performance: PerformanceMetrics {
                     execution_time: Duration::from_micros(100),
                     throughput: 1000.0,
-                    memory_bandwidth_util: 0.75,
+                    memorybandwidth_util: 0.75,
                     compute_utilization: 0.8,
                     energy_efficiency: None,
                     cache_metrics: crate::gpu::auto_tuning::CacheMetrics {
@@ -2594,7 +2594,7 @@ mod gpu_implementation {
             &self,
             backend: GpuBackend,
             kernel_name: &str,
-            problem_size: &[usize],
+            problemsize: &[usize],
         ) -> CoreResult<TuningSpace> {
             // Simplified implementation - in practice would use ML to generate optimal space
             let base_space = match kernel_name {
@@ -2614,24 +2614,24 @@ mod gpu_implementation {
             };
 
             // Adapt based on problem _size and backend characteristics
-            self.adapt_tuning_space(backend, base_space, problem_size)
+            self.adapt_tuning_space(backend, base_space, problemsize)
         }
 
         fn adapt_tuning_space(
             &self,
             _backend: GpuBackend,
             mut base_space: TuningSpace,
-            problem_size: &[usize],
+            problemsize: &[usize],
         ) -> CoreResult<TuningSpace> {
             // Adapt work group sizes based on problem size
-            let total_problem_size = problem_size.iter().product::<usize>();
+            let total_problemsize = problemsize.iter().product::<usize>();
 
-            if total_problem_size < 1024 {
+            if total_problemsize < 1024 {
                 // Small problems - use smaller work groups
                 base_space
                     .work_group_sizes
                     .retain(|&wgs| wgs[0] * wgs[1] * wgs[2] <= 64);
-            } else if total_problem_size > 1024 * 1024 {
+            } else if total_problemsize > 1024 * 1024 {
                 // Large problems - prefer larger work groups
                 base_space
                     .work_group_sizes
@@ -2707,14 +2707,14 @@ mod gpu_implementation {
             }
 
             // Adjust based on problem size
-            let total_problem_size: usize = tensor_size.iter().product();
+            let total_problemsize: usize = tensor_size.iter().product();
 
-            if total_problem_size < 1024 {
+            if total_problemsize < 1024 {
                 // Small problems - prefer smaller work groups
                 base_space
                     .work_group_sizes
                     .retain(|&wgs| wgs[0] * wgs[1] * wgs[2] <= 64);
-            } else if total_problem_size > 1024 * 1024 {
+            } else if total_problemsize > 1024 * 1024 {
                 // Large problems - prefer larger work groups
                 base_space
                     .work_group_sizes
@@ -2759,14 +2759,14 @@ mod gpu_implementation {
             self.update_scheduling_policy(backend, kernel_name, result)
         }
 
-        fn initialize_monitoring(&self, backend: GpuBackend) -> CoreResult<()> {
+        fn initializemonitoring(&self, backend: GpuBackend) -> CoreResult<()> {
             let mut monitoring = self.monitoring.write().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                     "Failed to acquire monitoring lock: {e}"
                 )))
             })?;
 
-            monitoring.initialize_backend_monitoring(backend)
+            monitoring.initialize_backendmonitoring(backend)
         }
 
         fn optimize_for_energy_efficiency(
@@ -2817,7 +2817,7 @@ mod gpu_implementation {
     #[derive(Debug, Clone)]
     pub struct PerformancePrediction {
         /// Predicted execution time
-        pub predicted_execution_time: Duration,
+        pub predictedexecution_time: Duration,
         /// Predicted throughput
         pub predicted_throughput: f64,
         /// Predicted memory usage
@@ -2853,7 +2853,7 @@ mod gpu_implementation {
     #[derive(Debug, Clone)]
     pub struct PerformanceStatistics {
         /// Average execution time
-        pub avg_execution_time: Duration,
+        pub avgexecution_time: Duration,
         /// Throughput statistics
         pub throughput_stats: ThroughputStatistics,
         /// Memory utilization
@@ -3042,7 +3042,7 @@ mod gpu_implementation {
             Ok(Self {
                 layers: vec![],
                 training_params: TrainingParameters {
-                    learning_rate: 0.001,
+                    learningrate: 0.001,
                     batch_size: 32,
                     epochs: 100,
                     regularization: 0.01,
@@ -3090,7 +3090,7 @@ mod gpu_implementation {
             };
 
             // Dynamic data type selection based on precision requirements
-            let data_type = if mixed_precision {
+            let datatype = if mixed_precision {
                 TensorDataType::Float16
             } else if compute_intensity > 0.9 {
                 TensorDataType::BFloat16 // Better for high-intensity compute
@@ -3099,7 +3099,7 @@ mod gpu_implementation {
             };
 
             Ok(TensorCoreConfig {
-                data_type,
+                datatype,
                 use_mixed_precision: mixed_precision,
                 auto_convert: auto_casting,
                 tile_size: if batch_size > 32 { (32, 32) } else { (16, 16) },
@@ -3145,8 +3145,8 @@ mod gpu_implementation {
             };
 
             // Estimate memory bandwidth utilization
-            let memory_bandwidth = model_dim * batch_size * 4.0; // Approximate bytes per operation
-            let bandwidth_utilization = (memory_bandwidth / 1_000_000.0).min(1.0); // Normalize to 0.saturating_sub(1)
+            let memorybandwidth = model_dim * batch_size * 4.0; // Approximate bytes per operation
+            let bandwidth_utilization = (memorybandwidth / 1_000_000.0).min(1.0); // Normalize to 0.saturating_sub(1)
 
             #[cfg(feature = "gpu")]
             let cache_metrics = crate::gpu::auto_tuning::CacheMetrics {
@@ -3164,7 +3164,7 @@ mod gpu_implementation {
             Ok(PerformanceMetrics {
                 execution_time: Duration::from_millis(predicted_time_ms as u64),
                 throughput: predicted_throughput,
-                memory_bandwidth_util: bandwidth_utilization,
+                memorybandwidth_util: bandwidth_utilization,
                 compute_utilization: compute_intensity.min(1.0),
                 energy_efficiency: Some(power_efficiency * 1000.0), // Convert to GFLOPs/W equivalent
                 cache_metrics,
@@ -3223,7 +3223,7 @@ mod gpu_implementation {
 
             // 3. Hardware-specific features
             features.push(self.tensor_core_suitability_score(m, n, k)?); // Feature 8: Tensor core fit
-            features.push(self.memory_bandwidth_requirement(operation)?); // Feature 9: Bandwidth need
+            features.push(self.memorybandwidth_requirement(operation)?); // Feature 9: Bandwidth need
             features.push(self.compute_intensity_ratio(operation)?); // Feature 10: Compute intensity
 
             // 4. Performance prediction features
@@ -3319,7 +3319,7 @@ mod gpu_implementation {
             Ok(score.min(1.0))
         }
 
-        fn memory_bandwidth_requirement(&self, operation: &TensorOperation) -> CoreResult<f64> {
+        fn memorybandwidth_requirement(&self, operation: &TensorOperation) -> CoreResult<f64> {
             let (m, n, k) = operation.dimensions;
             let element_size = match operation.input_type {
                 TensorDataType::Float32 => 4,
@@ -3509,7 +3509,7 @@ mod gpu_implementation {
         pub fn new() -> CoreResult<Self> {
             Ok(Self {
                 models: HashMap::new(),
-                extractors: vec!["tensor_size".to_string(), "operation_type".to_string()],
+                extractors: vec!["tensor_size".to_string(), "operationtype".to_string()],
                 classification_history: vec![],
             })
         }
@@ -3535,20 +3535,20 @@ mod gpu_implementation {
                     gpu_utilization: HashMap::new(),
                     io_wait: 0.1,
                 },
-                temperature_monitor: TemperatureMonitor {
+                temperaturemonitor: TemperatureMonitor {
                     gpu_temperatures: HashMap::new(),
                     cpu_temperature: 65.0,
                     ambient_temperature: 25.0,
                     thermal_events: vec![],
                 },
-                power_monitor: PowerMonitor {
+                powermonitor: PowerMonitor {
                     current_power_watts: 150.0,
                     power_budget_watts: 300.0,
                     energy_consumed_joules: 0.0,
                     power_efficiency: 0.8,
                     power_events: vec![],
                 },
-                network_monitor: NetworkMonitor {
+                networkmonitor: NetworkMonitor {
                     bandwidth_mbps: 1000.0,
                     latency_ms: 5.0,
                     packet_loss_rate: 0.001,
@@ -3597,7 +3597,7 @@ mod gpu_implementation {
             kernel_params: &KernelParameters,
         ) -> CoreResult<PerformancePrediction> {
             Ok(PerformancePrediction {
-                predicted_execution_time: Duration::from_millis(50),
+                predictedexecution_time: Duration::from_millis(50),
                 predicted_throughput: 2000.0,
                 predicted_memory_usage: 1024.0,
                 predicted_power_consumption: 200.0,
@@ -3777,7 +3777,7 @@ mod gpu_implementation {
         pub fn get_comprehensive_analytics(&self) -> CoreResult<TensorCoreAnalytics> {
             Ok(TensorCoreAnalytics {
                 performance_stats: PerformanceStatistics {
-                    avg_execution_time: Duration::from_millis(100),
+                    avgexecution_time: Duration::from_millis(100),
                     throughput_stats: ThroughputStatistics {
                         mean: 1000.0,
                         std_dev: 100.0,
@@ -3855,7 +3855,7 @@ mod gpu_implementation {
         pub fn new() -> CoreResult<Self> {
             Ok(Self {
                 storage_backends: vec![StorageBackend::InMemory],
-                retention_policies: HashMap::new(),
+                retentionpolicies: HashMap::new(),
                 compression: CompressionSettings {
                     algorithm: CompressionAlgorithm::LZ4,
                     level: 6,
@@ -3873,12 +3873,12 @@ mod gpu_implementation {
     impl TensorCoreMonitoring {
         pub fn new() -> CoreResult<Self> {
             Ok(Self {
-                performance_monitors: HashMap::new(),
-                health_monitors: HashMap::new(),
+                performancemonitors: HashMap::new(),
+                healthmonitors: HashMap::new(),
                 utilization_trackers: HashMap::new(),
                 monitoringconfig: MonitoringConfig {
                     interval: Duration::from_secs(30),
-                    detailed_monitoring: true,
+                    detailedmonitoring: true,
                     metrics_to_collect: vec![
                         "throughput".to_string(),
                         "latency".to_string(),
@@ -3887,7 +3887,7 @@ mod gpu_implementation {
                     alert_thresholds: HashMap::new(),
                 },
                 monitoring_stats: MonitoringStatistics {
-                    total_monitoring_time: Duration::default(),
+                    totalmonitoring_time: Duration::default(),
                     data_points_collected: 0,
                     alerts_generated: 0,
                     anomalies_detected: 0,
@@ -3895,17 +3895,17 @@ mod gpu_implementation {
             })
         }
 
-        pub fn initialize_backend_monitoring(&mut self, backend: GpuBackend) -> CoreResult<()> {
+        pub fn initialize_backendmonitoring(&mut self, backend: GpuBackend) -> CoreResult<()> {
             // Initialize monitoring components for the backend
-            self.performance_monitors
+            self.performancemonitors
                 .insert(backend, PerformanceMonitor::new()?);
-            self.health_monitors.insert(backend, HealthMonitor::new()?);
+            self.healthmonitors.insert(backend, HealthMonitor::new()?);
             self.utilization_trackers
                 .insert(backend, UtilizationTracker::new()?);
             Ok(())
         }
 
-        pub fn get_power_information(&self, _backend: GpuBackend) -> CoreResult<PowerInformation> {
+        pub fn get_power_information(&self, backend: GpuBackend) -> CoreResult<PowerInformation> {
             Ok(PowerInformation {
                 current_power_watts: 150.0,
                 peak_power_watts: 300.0,
@@ -3922,7 +3922,7 @@ mod gpu_implementation {
                 current_metrics: PerformanceMetrics {
                     execution_time: Duration::from_millis(100),
                     throughput: 1000.0,
-                    memory_bandwidth_util: 0.8,
+                    memorybandwidth_util: 0.8,
                     compute_utilization: 0.9,
                     energy_efficiency: Some(500.0),
                     #[cfg(feature = "gpu")]
@@ -4099,17 +4099,17 @@ mod gpu_implementation {
 
     impl QuantumInspiredOptimizer {
         /// Create a new quantum-inspired optimizer
-        pub fn new(num_params: usize) -> CoreResult<Self> {
+        pub fn new(numparams: usize) -> CoreResult<Self> {
             let quantum_state = QuantumStateApproximation {
-                amplitudes: vec![1.0 / (num_params as f64).sqrt(); num_params],
-                phases: vec![0.0; num_params],
+                amplitudes: vec![1.0 / (numparams as f64).sqrt(); numparams],
+                phases: vec![0.0; numparams],
                 coherence_time: Duration::from_millis(100),
                 decoherence_rate: 0.001,
             };
 
             Ok(Self {
                 quantum_state,
-                variational_params: vec![0.0; num_params],
+                variational_params: vec![0.0; numparams],
                 optimization_history: Vec::new(),
                 entanglement_patterns: Vec::new(),
             })
@@ -4119,7 +4119,7 @@ mod gpu_implementation {
         pub fn optimize_step(
             &mut self,
             objective_function: &dyn Fn(&[f64]) -> f64,
-            learning_rate: f64,
+            learningrate: f64,
         ) -> CoreResult<OptimizationStep> {
             // Quantum-inspired parameter update using variational principles
             let mut new_params = self.variational_params.clone();
@@ -4145,7 +4145,7 @@ mod gpu_implementation {
                 let momentum = self.calculate_quantum_momentum(i)?;
                 let entanglement_factor = self.calculate_entanglement_factor(i)?;
 
-                new_params[i] -= learning_rate * gradient[i] * momentum * entanglement_factor;
+                new_params[i] -= learningrate * gradient[i] * momentum * entanglement_factor;
             }
 
             // Update quantum state evolution
@@ -4174,24 +4174,24 @@ mod gpu_implementation {
         }
 
         /// Calculate quantum-inspired momentum
-        fn calculate_quantum_momentum(&self, param_index: usize) -> CoreResult<f64> {
+        fn calculate_quantum_momentum(&self, paramindex: usize) -> CoreResult<f64> {
             let amplitude = self
                 .quantum_state
                 .amplitudes
-                .get(param_index)
+                .get(paramindex)
                 .unwrap_or(&1.0);
-            let phase = self.quantum_state.phases.get(param_index).unwrap_or(&0.0);
+            let phase = self.quantum_state.phases.get(paramindex).unwrap_or(&0.0);
 
             // Quantum momentum based on amplitude and phase relationships
             Ok(amplitude.abs() * (1.0 + 0.1 * phase.cos()))
         }
 
         /// Calculate entanglement factor for parameter
-        fn calculate_entanglement_factor(&self, param_index: usize) -> CoreResult<f64> {
+        fn calculate_entanglement_factor(&self, paramindex: usize) -> CoreResult<f64> {
             let mut factor = 1.0;
 
             for pattern in &self.entanglement_patterns {
-                if pattern.connected_params.contains(&param_index) {
+                if pattern.connected_params.contains(&paramindex) {
                     match pattern.pattern_type {
                         EntanglementType::Bipartite => factor *= 1.0 + 0.05 * pattern.strength,
                         EntanglementType::Multipartite => factor *= 1.0 + 0.1 * pattern.strength,
@@ -4403,13 +4403,11 @@ mod gpu_implementation {
             let mut optimizer = QuantumInspiredOptimizer::new(5).unwrap();
 
             // Add bipartite entanglement
-            let result =
-                optimizer.add_entanglement(vec![0, 1], 0.5, EntanglementType::Bipartite);
+            let result = optimizer.add_entanglement(vec![0, 1], 0.5, EntanglementType::Bipartite);
             assert!(result.is_ok());
 
             // Add GHZ entanglement
-            let result =
-                optimizer.add_entanglement(vec![2, 3, 4], 0.8, EntanglementType::GHZ);
+            let result = optimizer.add_entanglement(vec![2, 3, 4], 0.8, EntanglementType::GHZ);
             assert!(result.is_ok());
 
             assert_eq!(optimizer.entanglement_patterns.len(), 2);

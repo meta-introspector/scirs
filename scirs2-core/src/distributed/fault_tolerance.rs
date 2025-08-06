@@ -52,7 +52,7 @@ pub enum RecoveryStrategy {
     /// Migrate tasks to healthy nodes
     Migrate,
     /// Replace with standby node
-    Replace { standby_address: SocketAddr },
+    Replace { standbyaddress: SocketAddr },
     /// Manual intervention required
     Manual,
 }
@@ -75,7 +75,7 @@ pub enum FaultToleranceError {
 /// Node information for fault tolerance
 #[derive(Debug, Clone)]
 pub struct NodeInfo {
-    pub node_id: String,
+    pub nodeid: String,
     pub address: SocketAddr,
     pub health: NodeHealth,
     pub last_seen: Instant,
@@ -85,9 +85,9 @@ pub struct NodeInfo {
 
 impl NodeInfo {
     /// Create new node info
-    pub fn new(node_id: String, address: SocketAddr) -> Self {
+    pub fn new(nodeid: String, address: SocketAddr) -> Self {
         Self {
-            node_id,
+            nodeid,
             address,
             health: NodeHealth::Healthy,
             last_seen: Instant::now(),
@@ -122,51 +122,51 @@ pub struct FaultToleranceManager {
     nodes: Arc<Mutex<HashMap<String, NodeInfo>>>,
     detection_strategy: FaultDetectionStrategy,
     #[allow(dead_code)]
-    max_failures: usize,
+    maxfailures: usize,
     #[allow(dead_code)]
     failure_threshold: Duration,
 }
 
 impl FaultToleranceManager {
     /// Create a new fault tolerance manager
-    pub fn failures(detection_strategy: FaultDetectionStrategy, max_failures: usize) -> Self {
+    pub fn failures(detection_strategy: FaultDetectionStrategy, maxfailures: usize) -> Self {
         Self {
             nodes: Arc::new(Mutex::new(HashMap::new())),
             detection_strategy,
-            max_failures,
+            maxfailures,
             failure_threshold: Duration::from_secs(300), // 5 minutes
         }
     }
 
     /// Create a new fault tolerance manager (alias for failures)
-    pub fn new(detection_strategy: FaultDetectionStrategy, max_failures: usize) -> Self {
-        Self::failures(detection_strategy, max_failures)
+    pub fn new(detection_strategy: FaultDetectionStrategy, maxfailures: usize) -> Self {
+        Self::failures(detection_strategy, maxfailures)
     }
 
     /// Register a node for monitoring
-    pub fn info(&mut self, node_info: NodeInfo) -> CoreResult<()> {
+    pub fn info(&mut self, nodeinfo: NodeInfo) -> CoreResult<()> {
         let mut nodes = self.nodes.lock().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire nodes lock".to_string(),
             ))
         })?;
-        nodes.insert(node_info.node_id.clone(), node_info);
+        nodes.insert(nodeinfo.nodeid.clone(), nodeinfo);
         Ok(())
     }
 
     /// Update node health status
-    pub fn update_node_health(&mut self, node_id: &str, health: NodeHealth) -> CoreResult<()> {
+    pub fn update_node_health(&mut self, nodeid: &str, health: NodeHealth) -> CoreResult<()> {
         let mut nodes = self.nodes.lock().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire nodes lock".to_string(),
             ))
         })?;
 
-        if let Some(node) = nodes.get_mut(node_id) {
+        if let Some(node) = nodes.get_mut(nodeid) {
             node.update_health(health);
         } else {
             return Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                "Unknown node: {node_id}",
+                "Unknown node: {nodeid}",
             ))));
         }
         Ok(())
@@ -213,7 +213,7 @@ impl FaultToleranceManager {
         let now = Instant::now();
         let mut failed_nodes = Vec::new();
 
-        for (node_id, node) in nodes.iter() {
+        for (nodeid, node) in nodes.iter() {
             let timeout = match &self.detection_strategy {
                 FaultDetectionStrategy::Heartbeat { timeout, .. } => *timeout,
                 FaultDetectionStrategy::Ping { timeout, .. } => *timeout,
@@ -221,7 +221,7 @@ impl FaultToleranceManager {
             };
 
             if now.duration_since(node.last_seen) > timeout && node.is_healthy() {
-                failed_nodes.push(node_id.clone());
+                failed_nodes.push(nodeid.clone());
             }
         }
 
@@ -229,26 +229,26 @@ impl FaultToleranceManager {
     }
 
     /// Initiate recovery for failed nodes
-    pub fn id_2(&self, node_id: &str) -> CoreResult<()> {
+    pub fn id_2(&self, nodeid: &str) -> CoreResult<()> {
         let nodes = self.nodes.lock().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire nodes lock".to_string(),
             ))
         })?;
 
-        if let Some(node) = nodes.get(node_id) {
+        if let Some(node) = nodes.get(nodeid) {
             match &node.recovery_strategy {
                 RecoveryStrategy::Restart => {
-                    self.restart_node(node_id)?;
+                    self.restart_node(nodeid)?;
                 }
                 RecoveryStrategy::Migrate => {
-                    self.migrate_tasks(node_id)?;
+                    self.migrate_tasks(nodeid)?;
                 }
-                RecoveryStrategy::Replace { standby_address } => {
-                    self.replace_node(node_id, *standby_address)?;
+                RecoveryStrategy::Replace { standbyaddress } => {
+                    self.replace_node(nodeid, *standbyaddress)?;
                 }
                 RecoveryStrategy::Manual => {
-                    println!("Manual intervention required for node: {node_id}");
+                    println!("Manual intervention required for node: {nodeid}");
                 }
             }
         }
@@ -256,21 +256,21 @@ impl FaultToleranceManager {
         Ok(())
     }
 
-    fn restart_node(&self, node_id: &str) -> CoreResult<()> {
+    fn restart_node(&self, nodeid: &str) -> CoreResult<()> {
         // In a real implementation, this would trigger node restart
-        println!("Restarting node: {node_id}");
+        println!("Restarting node: {nodeid}");
         Ok(())
     }
 
-    fn migrate_tasks(&self, node_id: &str) -> CoreResult<()> {
+    fn migrate_tasks(&self, nodeid: &str) -> CoreResult<()> {
         // In a real implementation, this would migrate tasks to healthy nodes
-        println!("Migrating tasks from failed node: {node_id}");
+        println!("Migrating tasks from failed node: {nodeid}");
         Ok(())
     }
 
-    fn replace_node(&self, node_id: &str, standby_address: SocketAddr) -> CoreResult<()> {
+    fn replace_node(&self, nodeid: &str, standbyaddress: SocketAddr) -> CoreResult<()> {
         // In a real implementation, this would activate standby node
-        println!("Replacing node {node_id} with standby at {standby_address}");
+        println!("Replacing node {nodeid} with standby at {standbyaddress}");
         Ok(())
     }
 
@@ -319,7 +319,7 @@ impl FaultToleranceManager {
             FaultToleranceError::LockError("Failed to acquire nodes lock".to_string())
         })?;
 
-        nodes.insert(node.node_id.clone(), node);
+        nodes.insert(node.nodeid.clone(), node);
 
         Ok(())
     }
@@ -370,11 +370,11 @@ mod tests {
     use std::net::{IpAddr, Ipv4Addr};
 
     #[test]
-    fn test_node_info_creation() {
+    fn test_nodeinfo_creation() {
         let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
         let node = NodeInfo::new("node1".to_string(), address);
 
-        assert_eq!(node.node_id, "node1");
+        assert_eq!(node.nodeid, "node1");
         assert_eq!(node.address, address);
         assert_eq!(node.health, NodeHealth::Healthy);
         assert!(node.is_healthy());
@@ -410,7 +410,7 @@ mod tests {
 
         let failed_nodes = manager.get_failed_nodes().unwrap();
         assert_eq!(failed_nodes.len(), 1);
-        assert_eq!(failed_nodes[0].node_id, "node1");
+        assert_eq!(failed_nodes[0].nodeid, "node1");
     }
 
     #[test]

@@ -21,7 +21,7 @@ impl StdDevKernel {
             workgroup_size: [256, 1, 1],
             local_memory_usage: 1024, // 256 * sizeof(float)
             supports_tensor_cores: false,
-            operation_type: OperationType::ComputeIntensive,
+            operationtype: OperationType::ComputeIntensive,
             backend_metadata: HashMap::new(),
         };
 
@@ -481,7 +481,7 @@ impl GpuKernel for StdDevKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        matches!(params.data_type, DataType::Float32 | DataType::Float64)
+        matches!(params.datatype, DataType::Float32 | DataType::Float64)
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {

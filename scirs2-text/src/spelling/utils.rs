@@ -12,7 +12,7 @@ use std::path::Path;
 /// Normalizes a string based on case sensitivity settings
 #[inline]
 #[allow(dead_code)]
-pub fn normalize_string(text: &str, case_sensitive: bool) -> String {
+pub fn normalize_string(text: &str, casesensitive: bool) -> String {
     if !case_sensitive {
         text.to_lowercase()
     } else {
@@ -44,9 +44,9 @@ pub fn split_sentences(text: &str) -> Vec<&str> {
 /// Check if two words are within the edit distance threshold based on length
 #[inline]
 #[allow(dead_code)]
-pub fn is_within_length_threshold(_word1: &str, word2: &str, max_edit_distance: usize) -> bool {
-    _word1.len() <= word2.len() + max_edit_distance
-        && _word1.len() + max_edit_distance >= word2.len()
+pub fn is_within_length_threshold(_word1: &str, word2: &str, max_editdistance: usize) -> bool {
+    word1.len() <= word2.len() + max_edit_distance
+        && word1.len() + max_edit_distance >= word2.len()
 }
 
 /// Check if a word exists in a dictionary with optional case sensitivity
@@ -69,7 +69,7 @@ pub fn dictionary_contains(
 
 /// Load data from a file line by line with a custom processor
 #[allow(dead_code)]
-pub fn load_from_file<P, F, T>(_path: P, mut line_processor: F) -> Result<T>
+pub fn load_from_file<P, F, T>(_path: P, mut lineprocessor: F) -> Result<T>
 where
     P: AsRef<Path>,
     F: FnMut(&str) -> Result<T>,

@@ -26,16 +26,16 @@ pub struct DataChunker {
 
 impl DataChunker {
     /// Create a new data chunker with memory constraints
-    pub fn new(_max_memory_mb: usize) -> Self {
+    pub fn new(_max_memorymb: usize) -> Self {
         DataChunker {
-            _max_memory_mb,
+            max_memory_mb,
             preferred_chunk_size: 10000,
             min_chunk_size: 100,
         }
     }
 
     /// Calculate optimal chunk size for given data dimensions
-    pub fn calculate_chunk_size(&self, n_samples: usize, n_features: usize) -> usize {
+    pub fn calculate_chunk_size(&self, n_samples: usize, nfeatures: usize) -> usize {
         // Estimate memory per sample (8 bytes per f64 element + overhead)
         let bytes_per_sample = n_features * std::mem::size_of::<f64>() + 64; // 64 bytes overhead
         let max_samples_in_memory = (self.max_memory_mb * 1024 * 1024) / bytes_per_sample;
@@ -47,7 +47,7 @@ impl DataChunker {
     }
 
     /// Iterator over data chunks
-    pub fn chunk_indices(&self, n_samples: usize, n_features: usize) -> ChunkIterator {
+    pub fn chunk_indices(&self, n_samples: usize, nfeatures: usize) -> ChunkIterator {
         let chunk_size = self.calculate_chunk_size(n_samples, n_features);
         ChunkIterator {
             current: 0,
@@ -86,30 +86,32 @@ pub struct TypeConverter;
 
 impl TypeConverter {
     /// Convert array to f64 with optimized SIMD operations where possible
-    pub fn to_f64<T, S>(_array: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    pub fn to_f64<T, S>(array: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
     where
         T: Float + NumCast + Send + Sync,
         S: Data<Elem = T>,
     {
         check_not_empty(_array, "_array")?;
 
-        let result = if _array.is_standard_layout() {
+        let result = if array.is_standard_layout() {
             // Use parallel processing for large arrays
-            if _array.len() > 10000 {
+            if array.len() > 10000 {
                 let mut result = Array2::zeros(_array.raw_dim());
-                Zip::from(&mut result).and(_array).par_for_each(|out, &inp| {
-                    *out = num_traits::cast::<T, f64>(inp).unwrap_or(0.0);
-                });
+                Zip::from(&mut result)
+                    .and(_array)
+                    .par_for_each(|out, &inp| {
+                        *out = num_traits::cast::<T, f64>(inp).unwrap_or(0.0);
+                    });
                 result
             } else {
-                _array.mapv(|x| num_traits::cast::<T, f64>(x).unwrap_or(0.0))
+                array.mapv(|x| num_traits::cast::<T, f64>(x).unwrap_or(0.0))
             }
         } else {
             // Handle non-standard layout
-            let shape = _array.shape();
+            let shape = array.shape();
             let mut result = Array2::zeros((shape[0], shape[1]));
 
-            par_azip!((out in result.view_mut(), &inp in _array) {
+            par_azip!((out in result.view_mut(), &inp in array) {
                 *out = num_traits::cast::<T, f64>(inp).unwrap_or(0.0);
             });
 
@@ -128,17 +130,19 @@ impl TypeConverter {
     }
 
     /// Convert f32 array to f64 with SIMD optimization
-    pub fn f32_to_f64_simd(_array: &ArrayView2<f32>) -> Result<Array2<f64>> {
+    pub fn f32_to_f64_simd(array: &ArrayView2<f32>) -> Result<Array2<f64>> {
         check_not_empty(_array, "_array")?;
 
-        let result = if _array.len() > 10000 {
+        let result = if array.len() > 10000 {
             let mut result = Array2::zeros(_array.raw_dim());
-            Zip::from(&mut result).and(_array).par_for_each(|out, &inp| {
-                *out = inp as f64;
-            });
+            Zip::from(&mut result)
+                .and(_array)
+                .par_for_each(|out, &inp| {
+                    *out = inp as f64;
+                });
             result
         } else {
-            _array.mapv(|x| x as f64)
+            array.mapv(|x| x as f64)
         };
 
         for &val in result.iter() {
@@ -152,11 +156,11 @@ impl TypeConverter {
     }
 
     /// Convert f64 array to f32 with overflow checking
-    pub fn f64_to_f32_safe(_array: &ArrayView2<f64>) -> Result<Array2<f32>> {
+    pub fn f64_to_f32_safe(array: &ArrayView2<f64>) -> Result<Array2<f32>> {
         check_not_empty(_array, "_array")?;
 
         // Check finite values
-        for &val in _array.iter() {
+        for &val in array.iter() {
             if !val.is_finite() {
                 return Err(crate::error::TransformError::DataValidationError(
                     "Array contains non-finite values".to_string(),
@@ -183,11 +187,11 @@ pub struct StatUtils;
 
 impl StatUtils {
     /// Calculate robust statistics (median, MAD) efficiently
-    pub fn robust_stats(_data: &ArrayView1<f64>) -> Result<(f64, f64)> {
+    pub fn robust_stats(data: &ArrayView1<f64>) -> Result<(f64, f64)> {
         check_not_empty(_data, "_data")?;
 
         // Check finite values
-        for &val in _data.iter() {
+        for &val in data.iter() {
             if !val.is_finite() {
                 return Err(crate::error::TransformError::DataValidationError(
                     "Data contains non-finite values".to_string(),
@@ -195,7 +199,7 @@ impl StatUtils {
             }
         }
 
-        let mut sorted_data = _data.to_vec();
+        let mut sorted_data = data.to_vec();
         sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let n = sorted_data.len();
@@ -219,11 +223,11 @@ impl StatUtils {
     }
 
     /// Calculate column-wise robust statistics in parallel
-    pub fn robust_stats_columns(_data: &ArrayView2<f64>) -> Result<(Array1<f64>, Array1<f64>)> {
+    pub fn robust_stats_columns(data: &ArrayView2<f64>) -> Result<(Array1<f64>, Array1<f64>)> {
         check_not_empty(_data, "_data")?;
 
         // Check finite values
-        for &val in _data.iter() {
+        for &val in data.iter() {
             if !val.is_finite() {
                 return Err(crate::error::TransformError::DataValidationError(
                     "Data contains non-finite values".to_string(),
@@ -231,7 +235,7 @@ impl StatUtils {
             }
         }
 
-        let n_features = _data.ncols();
+        let n_features = data.ncols();
         let mut medians = Array1::zeros(n_features);
         let mut mads = Array1::zeros(n_features);
 
@@ -239,7 +243,7 @@ impl StatUtils {
         let stats: Result<Vec<_>> = (0..n_features)
             .into_par_iter()
             .map(|j| {
-                let col = _data.column(j);
+                let col = data.column(j);
                 Self::robust_stats(&col)
             })
             .collect();
@@ -255,11 +259,11 @@ impl StatUtils {
     }
 
     /// Detect outliers using IQR method
-    pub fn detect_outliers_iqr(_data: &ArrayView1<f64>, factor: f64) -> Result<Vec<bool>> {
+    pub fn detect_outliers_iqr(data: &ArrayView1<f64>, factor: f64) -> Result<Vec<bool>> {
         check_not_empty(_data, "_data")?;
 
         // Check finite values
-        for &val in _data.iter() {
+        for &val in data.iter() {
             if !val.is_finite() {
                 return Err(crate::error::TransformError::DataValidationError(
                     "Data contains non-finite values".to_string(),
@@ -273,7 +277,7 @@ impl StatUtils {
             ));
         }
 
-        let mut sorted_data = _data.to_vec();
+        let mut sorted_data = data.to_vec();
         sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let n = sorted_data.len();
@@ -296,21 +300,21 @@ impl StatUtils {
     }
 
     /// Calculate data quality score
-    pub fn data_quality_score(_data: &ArrayView2<f64>) -> Result<f64> {
+    pub fn data_quality_score(data: &ArrayView2<f64>) -> Result<f64> {
         check_not_empty(_data, "_data")?;
 
-        let total_elements = _data.len() as f64;
+        let total_elements = data.len() as f64;
 
         // Count finite values
-        let finite_count = _data.iter().filter(|&&x| x.is_finite()).count() as f64;
+        let finite_count = data.iter().filter(|&&x| x.is_finite()).count() as f64;
         let finite_ratio = finite_count / total_elements;
 
         // Count unique values per column (diversity score)
-        let n_features = _data.ncols();
+        let n_features = data.ncols();
         let mut diversity_scores = Vec::with_capacity(n_features);
 
         for j in 0..n_features {
-            let col = _data.column(j);
+            let col = data.column(j);
             let mut unique_values = std::collections::HashSet::new();
             for &val in col.iter() {
                 if val.is_finite() {
@@ -355,7 +359,7 @@ pub struct ArrayMemoryPool<T> {
 
 impl<T: Clone + Default> ArrayMemoryPool<T> {
     /// Create a new array memory pool
-    pub fn new(_memory_limit_mb: usize, max_per_size: usize) -> Self {
+    pub fn new(_memory_limit_mb: usize, max_persize: usize) -> Self {
         ArrayMemoryPool {
             available_arrays: HashMap::new(),
             max_per_size,

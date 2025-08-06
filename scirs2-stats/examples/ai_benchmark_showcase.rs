@@ -325,9 +325,9 @@ fn display_usage_examples() {
 
     println!("   🔧 Custom Configuration:");
     println!("      let config = EnhancedBenchmarkConfig {{");
-    println!("          enable_ai_analysis: true,");
-    println!("          enable_cross_platform: true,");
-    println!("          ml_model_config: MLModelConfig::default(),");
+    println!("          enable_aianalysis: true,");
+    println!("          enable_crossplatform: true,");
+    println!("          ml_modelconfig: MLModelConfig::default(),");
     println!("          ..Default::default()");
     println!("      }};");
     println!("      let suite = create_configured_enhanced_benchmark_suite(config);");

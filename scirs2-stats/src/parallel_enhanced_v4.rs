@@ -6,6 +6,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
+use rand::Rng;
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::sync::Arc;
 
@@ -66,9 +67,9 @@ where
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: EnhancedParallelConfig) -> Self {
+    pub fn with_config(config: EnhancedParallelConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -241,7 +242,7 @@ where
             let n = data_arc.len();
             let mut bootstrap_sample = Array1::zeros(n);
             for j in 0..n {
-                let idx = rng.random_range(0, n);
+                let idx = rng.gen_range(0..n);
                 bootstrap_sample[j] = data_arc[idx];
             }
 
@@ -359,7 +360,7 @@ where
     }
 
     /// Helper: Calculate optimal chunk size
-    fn calculate_optimal_chunk_size(&self, data_len: usize) -> usize {
+    fn calculate_optimal_chunk_size(&self, datalen: usize) -> usize {
         let num_threads = self.config.num_threads.unwrap_or_else(num_cpus::get);
         let ideal_chunks = num_threads * 2; // Allow for load balancing
         let chunk_size = (data_len / ideal_chunks).max(self.config.min_chunk_size);
@@ -432,7 +433,7 @@ pub struct MatrixParallelResult<F> {
 
 /// High-level convenience functions
 #[allow(dead_code)]
-pub fn mean_parallel_advanced<F>(_data: &ArrayView1<F>) -> StatsResult<F>
+pub fn mean_parallel_advanced<F>(data: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float
         + NumCast
@@ -452,7 +453,7 @@ where
 }
 
 #[allow(dead_code)]
-pub fn variance_parallel_advanced<F>(_data: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
+pub fn variance_parallel_advanced<F>(data: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
     F: Float
         + NumCast
@@ -472,7 +473,7 @@ where
 }
 
 #[allow(dead_code)]
-pub fn correlation_matrix_parallel_advanced<F>(_matrix: &ArrayView2<F>) -> StatsResult<Array2<F>>
+pub fn correlation_matrix_parallel_advanced<F>(matrix: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
     F: Float
         + NumCast

@@ -232,17 +232,17 @@ where
     let mut unprotected_group_positive = 0;
     let mut unprotected_group_total = 0;
 
-    for (_pred_group) in y_pred.iter().zip(protected_group.iter()) {
-        if _group > &zero {
-            // Protected _group
+    for (pred, group) in y_pred.iter().zip(protected_group.iter()) {
+        if group > &zero {
+            // Protected group
             protected_group_total += 1;
-            if _pred > &zero {
+            if pred > &zero {
                 protected_group_positive += 1;
             }
         } else {
-            // Unprotected _group
+            // Unprotected group
             unprotected_group_total += 1;
-            if _pred > &zero {
+            if pred > &zero {
                 unprotected_group_positive += 1;
             }
         }
@@ -329,17 +329,17 @@ where
     let mut unprotected_group_positive = 0;
     let mut unprotected_group_total = 0;
 
-    for (_pred_group) in y_pred.iter().zip(protected_group.iter()) {
-        if _group > &zero {
-            // Protected _group
+    for (pred, group) in y_pred.iter().zip(protected_group.iter()) {
+        if group > &zero {
+            // Protected group
             protected_group_total += 1;
-            if _pred > &zero {
+            if pred > &zero {
                 protected_group_positive += 1;
             }
         } else {
-            // Unprotected _group
+            // Unprotected group
             unprotected_group_total += 1;
-            if _pred > &zero {
+            if pred > &zero {
                 unprotected_group_positive += 1;
             }
         }
@@ -444,7 +444,7 @@ where
     let mut unprotected_false_negatives = 0;
 
     // Calculate confusion matrix values for each _group
-    for ((truth, _pred), _group) in y_true.iter().zip(y_pred.iter()).zip(protected_group.iter()) {
+    for ((truth, pred), group) in y_true.iter().zip(y_pred.iter()).zip(protected_group.iter()) {
         if _group > &zero {
             // Protected _group
             if truth > &zero {
@@ -590,7 +590,7 @@ where
     let mut unprotected_false_negatives = 0;
 
     // Count _true positives and false negatives for each _group
-    for ((truth, _pred), _group) in y_true.iter().zip(y_pred.iter()).zip(protected_group.iter()) {
+    for ((truth, pred), group) in y_true.iter().zip(y_pred.iter()).zip(protected_group.iter()) {
         if truth > &zero {
             // Only consider cases where _true label is positive
             if _group > &zero {
@@ -733,10 +733,10 @@ where
     let mut consistency_sum = 0.0;
     for i in 0..n_samples {
         // Get distances from instance i to all other instances
-        let mut neighbors: Vec<_> = distances.iter().filter(|(idx__)| *idx == i).collect();
+        let mut neighbors: Vec<_> = distances.iter().filter(|(idx, _)| *idx == i).collect();
 
         // Sort by distance
-        neighbors.sort_by(|(__, dist_a), (__, dist_b)| {
+        neighbors.sort_by(|(_, dist_a), (_, dist_b)| {
             dist_a.partial_cmp(dist_b).unwrap_or(Ordering::Equal)
         });
 
@@ -744,7 +744,7 @@ where
         let nearest_k = neighbors
             .iter()
             .take(k)
-            .map(|(_, j_)| *j)
+            .map(|(_, j)| *j)
             .collect::<Vec<_>>();
 
         // Calculate mean absolute difference between prediction and neighbors' predictions

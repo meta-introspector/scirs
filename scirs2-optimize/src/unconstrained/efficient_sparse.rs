@@ -103,7 +103,7 @@ struct SparseQuasiNewton {
 }
 
 impl SparseQuasiNewton {
-    fn new(_n: usize, max_history: usize) -> Self {
+    fn new(_n: usize, maxhistory: usize) -> Self {
         Self {
             h_inv_sparse: None,
             sparse_grad_history: Vec::new(),
@@ -542,9 +542,9 @@ fn solve_sparse_newton_system(
 // Helper functions for sparse operations
 
 #[allow(dead_code)]
-fn should_use_sparse(_vector: &Array1<f64>, threshold: f64) -> bool {
-    let nnz = _vector.iter().filter(|&&x| x.abs() > 1e-12).count();
-    let sparsity = nnz as f64 / _vector.len() as f64;
+fn should_use_sparse(vector: &Array1<f64>, threshold: f64) -> bool {
+    let nnz = vector.iter().filter(|&&x| x.abs() > 1e-12).count();
+    let sparsity = nnz as f64 / vector.len() as f64;
     sparsity < threshold
 }
 
@@ -571,20 +571,20 @@ fn dense_to_sparse_vector(
 }
 
 #[allow(dead_code)]
-fn sparse_to_dense(_sparse: &CsrArray<f64>) -> Array1<f64> {
-    let n = _sparse.ncols();
+fn sparse_to_dense(sparse: &CsrArray<f64>) -> Array1<f64> {
+    let n = sparse.ncols();
     let mut dense = Array1::zeros(n);
 
     // Extract non-zero values - this is a simplified implementation
     for col in 0..n {
-        dense[col] = _sparse.get(0, col);
+        dense[col] = sparse.get(0, col);
     }
 
     dense
 }
 
 #[allow(dead_code)]
-fn sparse_vector_norm(_sparse: &CsrArray<f64>) -> f64 {
+fn sparse_vector_norm(sparse: &CsrArray<f64>) -> f64 {
     _sparse
         .get_data()
         .iter()
@@ -636,7 +636,7 @@ fn apply_bounds_projection(p: &Array1<f64>, x: &Array1<f64>, options: &Options) 
 
 #[allow(dead_code)]
 fn refine_sparsity_pattern(
-    _sparsity_info: &mut SparsityInfo_current,
+    _sparsity_info: &mut SparsityInfo,
     _gradient: &CsrArray<f64>,
     _options: &EfficientSparseOptions,
 ) -> Result<(), OptimizeError> {
@@ -671,13 +671,13 @@ fn create_sparse_identity(
 }
 
 #[allow(dead_code)]
-fn sparse_to_dense_matrix(_sparse: &CsrArray<f64>) -> Array2<f64> {
-    let (m, n) = (_sparse.nrows(), _sparse.ncols());
+fn sparse_to_dense_matrix(sparse: &CsrArray<f64>) -> Array2<f64> {
+    let (m, n) = (_sparse.nrows(), sparse.ncols());
     let mut dense = Array2::zeros((m, n));
 
     for i in 0..m {
         for j in 0..n {
-            dense[[i, j]] = _sparse.get(i, j);
+            dense[[i, j]] = sparse.get(i, j);
         }
     }
 

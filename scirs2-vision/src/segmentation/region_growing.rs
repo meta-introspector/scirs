@@ -135,7 +135,7 @@ fn grow_region(
 
     let neighbors = get_neighbors(params.connectivity);
 
-    while let Some((_x, _y)) = queue.pop_front() {
+    while let Some((_x, y)) = queue.pop_front() {
         for &(dx, dy) in &neighbors {
             let nx = (_x as i32 + dx) as usize;
             let ny = (_y as i32 + dy) as usize;
@@ -182,7 +182,7 @@ fn auto_seeded_region_growing(
 
 /// Get neighbor offsets based on connectivity
 #[allow(dead_code)]
-fn get_neighbors(_connectivity: u8) -> Vec<(i32, i32)> {
+fn get_neighbors(connectivity: u8) -> Vec<(i32, i32)> {
     match _connectivity {
         4 => vec![(-1, 0), (1, 0), (0, -1), (0, 1)],
         8 => vec![
@@ -201,12 +201,12 @@ fn get_neighbors(_connectivity: u8) -> Vec<(i32, i32)> {
 
 /// Remove regions smaller than minimum size
 #[allow(dead_code)]
-fn remove_small_regions(_labels: &mut Array2<u32>, min_size: usize) {
-    let (height, width) = _labels.dim();
+fn remove_small_regions(_labels: &mut Array2<u32>, minsize: usize) {
+    let (height, width) = labels.dim();
 
     // Count region sizes
     let mut region_sizes = std::collections::HashMap::new();
-    for &label in _labels.iter() {
+    for &label in labels.iter() {
         if label > 0 {
             *region_sizes.entry(label).or_insert(0) += 1;
         }
@@ -223,7 +223,7 @@ fn remove_small_regions(_labels: &mut Array2<u32>, min_size: usize) {
     for y in 0..height {
         for x in 0..width {
             if small_regions.contains(&_labels[[y, x]]) {
-                _labels[[y, x]] = 0;
+                labels[[y, x]] = 0;
             }
         }
     }
@@ -287,7 +287,8 @@ fn grow_region_adaptive(
     seed_x: usize,
     seed_y: usize,
     label: u32,
-    base_threshold: f32, _local_mean: &Array2<f32>,
+    base_threshold: f32,
+    _local_mean: &Array2<f32>,
     local_std: &Array2<f32>,
 ) {
     let (width, height) = img.dimensions();
@@ -300,7 +301,7 @@ fn grow_region_adaptive(
     let mut region_sum = img.get_pixel(seed_x as u32, seed_y as u32)[0] as f32;
     let mut region_count = 1;
 
-    while let Some((_x, _y)) = queue.pop_front() {
+    while let Some((_x, y)) = queue.pop_front() {
         let region_mean = region_sum / region_count as f32;
 
         for &(dx, dy) in &[(-1, 0), (1, 0), (0, -1), (0, 1)] {
@@ -329,8 +330,8 @@ fn grow_region_adaptive(
 
 /// Compute local mean and standard deviation
 #[allow(dead_code)]
-fn compute_local_stats(_img: &GrayImage, window_size: usize) -> Result<(Array2<f32>, Array2<f32>)> {
-    let (width, height) = _img.dimensions();
+fn compute_local_stats(_img: &GrayImage, windowsize: usize) -> Result<(Array2<f32>, Array2<f32>)> {
+    let (width, height) = img.dimensions();
     let mut local_mean = Array2::zeros((height as usize, width as usize));
     let mut local_std = Array2::zeros((height as usize, width as usize));
 
@@ -345,7 +346,7 @@ fn compute_local_stats(_img: &GrayImage, window_size: usize) -> Result<(Array2<f
             for wy in y.saturating_sub(half_window)..=(y + half_window).min(height as usize - 1) {
                 for wx in x.saturating_sub(half_window)..=(x + half_window).min(width as usize - 1)
                 {
-                    let val = _img.get_pixel(wx as u32, wy as u32)[0] as f32;
+                    let val = img.get_pixel(wx as u32, wy as u32)[0] as f32;
                     sum += val;
                     sum_sq += val * val;
                     count += 1;
@@ -365,13 +366,13 @@ fn compute_local_stats(_img: &GrayImage, window_size: usize) -> Result<(Array2<f
 
 /// Convert labels to color image for visualization
 #[allow(dead_code)]
-pub fn region_labels_to_color(_labels: &Array2<u32>) -> RgbImage {
-    let (height, width) = _labels.dim();
+pub fn region_labels_to_color(labels: &Array2<u32>) -> RgbImage {
+    let (height, width) = labels.dim();
     let mut result = RgbImage::new(width as u32, height as u32);
 
     // Find unique _labels
     let mut unique_labels = HashSet::new();
-    for &label in _labels.iter() {
+    for &label in labels.iter() {
         if label > 0 {
             unique_labels.insert(label);
         }
@@ -396,7 +397,7 @@ pub fn region_labels_to_color(_labels: &Array2<u32>) -> RgbImage {
     // Apply colors
     for y in 0..height {
         for x in 0..width {
-            let label = _labels[[y, x]];
+            let label = labels[[y, x]];
             let color = if label == 0 {
                 [0, 0, 0]
             } else {

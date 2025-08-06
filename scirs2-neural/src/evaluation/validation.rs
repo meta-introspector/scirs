@@ -92,15 +92,15 @@ impl<F: Float + Debug + ScalarOperand + Display + FromPrimitive + Send + Sync>
     ValidationHandler<F>
 {
     /// Create a new validation handler
-    pub fn new(_config: ValidationConfig) -> Result<Self> {
+    pub fn new(config: ValidationConfig) -> Result<Self> {
         // Create evaluator
         let eval_config = EvaluationConfig {
-            batch_size: _config.batch_size,
-            shuffle: _config.shuffle,
-            num_workers: _config.num_workers,
-            metrics: _config.metrics.clone(),
-            steps: _config.steps,
-            verbose: _config.verbose,
+            batch_size: config.batch_size,
+            shuffle: config.shuffle,
+            num_workers: config.num_workers,
+            metrics: config.metrics.clone(),
+            steps: config.steps,
+            verbose: config.verbose,
         };
         let evaluator = Evaluator::new(eval_config)?;
         // Create early stopping state if needed
@@ -185,7 +185,7 @@ impl<F: Float + Debug + ScalarOperand + Display + FromPrimitive + Send + Sync>
                         if let Some(ref best_weights) = es_state.best_weights {
                             // Replace model parameters with best weights
                             let mut params = model.params();
-                            for (i, best_param) in best_weights.iter().enumerate() {
+                            for (i, best_param) in bestweights.iter().enumerate() {
                                 if i < params.len() {
                                     params[i].assign(best_param);
                                 }

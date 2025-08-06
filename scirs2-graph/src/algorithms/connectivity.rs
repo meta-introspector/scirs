@@ -18,7 +18,7 @@ pub type Component<N> = HashSet<N>;
 /// # Returns
 /// * A vector of connected components, where each component is a set of nodes
 #[allow(dead_code)]
-pub fn connected_components<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Vec<Component<N>>
+pub fn connected_components<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Component<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
@@ -28,7 +28,7 @@ where
     let mut visited = HashSet::new();
 
     // For each node in the _graph
-    for node_idx in _graph.inner().node_indices() {
+    for node_idx in graph.inner().node_indices() {
         // Skip if already visited
         if visited.contains(&node_idx) {
             continue;
@@ -44,7 +44,7 @@ where
             component.insert(_graph.inner()[current].clone());
 
             // Visit all unvisited neighbors
-            for neighbor in _graph.inner().neighbors(current) {
+            for neighbor in graph.inner().neighbors(current) {
                 if !visited.contains(&neighbor) {
                     visited.insert(neighbor);
                     queue.push_back(neighbor);
@@ -66,29 +66,29 @@ where
 /// # Returns
 /// * A vector of strongly connected components
 #[allow(dead_code)]
-pub fn strongly_connected_components<N, E, Ix>(_graph: &DiGraph<N, E, Ix>) -> Vec<Component<N>>
+pub fn strongly_connected_components<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Vec<Component<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    struct TarjanState<Ix: petgraph::_graph::IndexType> {
+    struct TarjanState<Ix: petgraph::graph::IndexType> {
         index: usize,
-        stack: Vec<petgraph::_graph::NodeIndex<Ix>>,
-        indices: HashMap<petgraph::_graph::NodeIndex<Ix>, usize>,
-        lowlinks: HashMap<petgraph::_graph::NodeIndex<Ix>, usize>,
-        on_stack: HashSet<petgraph::_graph::NodeIndex<Ix>>,
+        stack: Vec<petgraph::graph::NodeIndex<Ix>>,
+        indices: HashMap<petgraph::graph::NodeIndex<Ix>, usize>,
+        lowlinks: HashMap<petgraph::graph::NodeIndex<Ix>, usize>,
+        on_stack: HashSet<petgraph::graph::NodeIndex<Ix>>,
     }
 
     fn strongconnect<N, E, Ix>(
-        v: petgraph::_graph::NodeIndex<Ix>,
+        v: petgraph::graph::NodeIndex<Ix>,
         _graph: &DiGraph<N, E, Ix>,
         state: &mut TarjanState<Ix>,
         components: &mut Vec<Component<N>>,
     ) where
         N: Node + std::fmt::Debug,
         E: EdgeWeight,
-        Ix: petgraph::_graph::IndexType,
+        Ix: petgraph::graph::IndexType,
     {
         state.indices.insert(v, state.index);
         state.lowlinks.insert(v, state.index);
@@ -97,10 +97,10 @@ where
         state.on_stack.insert(v);
 
         // Consider successors of v
-        for w in _graph.inner().neighbors_directed(v, Direction::Outgoing) {
+        for w in graph.inner().neighbors_directed(v, Direction::Outgoing) {
             if !state.indices.contains_key(&w) {
                 // Successor w has not yet been visited; recurse on it
-                strongconnect(w, _graph, state, components);
+                strongconnect(w, graph, state, components);
                 let w_lowlink = *state.lowlinks.get(&w).unwrap();
                 let v_lowlink = *state.lowlinks.get(&v).unwrap();
                 state.lowlinks.insert(v, v_lowlink.min(w_lowlink));
@@ -138,9 +138,9 @@ where
     };
     let mut components = Vec::new();
 
-    for v in _graph.inner().node_indices() {
+    for v in graph.inner().node_indices() {
         if !state.indices.contains_key(&v) {
-            strongconnect(v, _graph, &mut state, &mut components);
+            strongconnect(v, graph, &mut state, &mut components);
         }
     }
 
@@ -159,7 +159,7 @@ where
 /// # Returns
 /// * A vector of weakly connected components
 #[allow(dead_code)]
-pub fn weakly_connected_components<N, E, Ix>(_graph: &DiGraph<N, E, Ix>) -> Vec<Component<N>>
+pub fn weakly_connected_components<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Vec<Component<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
@@ -169,7 +169,7 @@ where
     let mut visited = HashSet::new();
 
     // For each node in the _graph
-    for node_idx in _graph.inner().node_indices() {
+    for node_idx in graph.inner().node_indices() {
         // Skip if already visited
         if visited.contains(&node_idx) {
             continue;
@@ -185,7 +185,7 @@ where
             component.insert(_graph.inner()[current].clone());
 
             // Visit all unvisited neighbors (both incoming and outgoing)
-            for neighbor in _graph.inner().neighbors_undirected(current) {
+            for neighbor in graph.inner().neighbors_undirected(current) {
                 if !visited.contains(&neighbor) {
                     visited.insert(neighbor);
                     queue.push_back(neighbor);
@@ -209,29 +209,29 @@ where
 /// # Returns
 /// * A set of articulation points
 #[allow(dead_code)]
-pub fn articulation_points<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> HashSet<N>
+pub fn articulation_points<N, E, Ix>(graph: &Graph<N, E, Ix>) -> HashSet<N>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    struct DfsState<Ix: petgraph::_graph::IndexType> {
+    struct DfsState<Ix: petgraph::graph::IndexType> {
         time: usize,
-        disc: HashMap<petgraph::_graph::NodeIndex<Ix>, usize>,
-        low: HashMap<petgraph::_graph::NodeIndex<Ix>, usize>,
-        parent: HashMap<petgraph::_graph::NodeIndex<Ix>, Option<petgraph::_graph::NodeIndex<Ix>>>,
-        visited: HashSet<petgraph::_graph::NodeIndex<Ix>>,
+        disc: HashMap<petgraph::graph::NodeIndex<Ix>, usize>,
+        low: HashMap<petgraph::graph::NodeIndex<Ix>, usize>,
+        parent: HashMap<petgraph::graph::NodeIndex<Ix>, Option<petgraph::graph::NodeIndex<Ix>>>,
+        visited: HashSet<petgraph::graph::NodeIndex<Ix>>,
     }
 
     fn dfs<N, E, Ix>(
-        u: petgraph::_graph::NodeIndex<Ix>,
+        u: petgraph::graph::NodeIndex<Ix>,
         _graph: &Graph<N, E, Ix>,
         state: &mut DfsState<Ix>,
         articulation_points: &mut HashSet<N>,
     ) where
         N: Node + std::fmt::Debug,
         E: EdgeWeight,
-        Ix: petgraph::_graph::IndexType,
+        Ix: petgraph::graph::IndexType,
     {
         state.visited.insert(u);
         state.disc.insert(u, state.time);
@@ -240,11 +240,11 @@ where
 
         let mut children = 0;
 
-        for v in _graph.inner().neighbors(u) {
+        for v in graph.inner().neighbors(u) {
             if !state.visited.contains(&v) {
                 children += 1;
                 state.parent.insert(v, Some(u));
-                dfs(v, _graph, state, articulation_points);
+                dfs(v, graph, state, articulation_points);
 
                 // Check if the subtree rooted at v has a back edge to an ancestor of u
                 let v_low = *state.low.get(&v).unwrap();
@@ -278,10 +278,10 @@ where
         visited: HashSet::new(),
     };
 
-    for node in _graph.inner().node_indices() {
+    for node in graph.inner().node_indices() {
         if !state.visited.contains(&node) {
             state.parent.insert(node, None);
-            dfs(node, _graph, &mut state, &mut articulation_points);
+            dfs(node, graph, &mut state, &mut articulation_points);
         }
     }
 
@@ -308,17 +308,17 @@ pub struct BipartiteResult<N: Node> {
 /// # Returns
 /// * A BipartiteResult indicating if the graph is bipartite and the coloring
 #[allow(dead_code)]
-pub fn is_bipartite<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> BipartiteResult<N>
+pub fn is_bipartite<N, E, Ix>(graph: &Graph<N, E, Ix>) -> BipartiteResult<N>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    let mut coloring: HashMap<petgraph::_graph::NodeIndex<Ix>, u8> = HashMap::new();
+    let mut coloring: HashMap<petgraph::graph::NodeIndex<Ix>, u8> = HashMap::new();
     let mut queue = VecDeque::new();
 
     // Check each connected component
-    for start_idx in _graph.inner().node_indices() {
+    for start_idx in graph.inner().node_indices() {
         if coloring.contains_key(&start_idx) {
             continue;
         }
@@ -331,7 +331,7 @@ where
             let node_color = *coloring.get(&node_idx).unwrap();
             let next_color = 1 - node_color;
 
-            for neighbor in _graph.inner().neighbors(node_idx) {
+            for neighbor in graph.inner().neighbors(node_idx) {
                 if let Some(&neighbor_color) = coloring.get(&neighbor) {
                     // If neighbor has same color, not bipartite
                     if neighbor_color == node_color {
@@ -371,39 +371,39 @@ where
 /// # Returns
 /// * A vector of bridges, where each bridge is represented as a tuple of nodes
 #[allow(dead_code)]
-pub fn bridges<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Vec<(N, N)>
+pub fn bridges<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<(N, N)>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    struct DfsState<Ix: petgraph::_graph::IndexType> {
+    struct DfsState<Ix: petgraph::graph::IndexType> {
         time: usize,
-        disc: HashMap<petgraph::_graph::NodeIndex<Ix>, usize>,
-        low: HashMap<petgraph::_graph::NodeIndex<Ix>, usize>,
-        parent: HashMap<petgraph::_graph::NodeIndex<Ix>, Option<petgraph::_graph::NodeIndex<Ix>>>,
-        visited: HashSet<petgraph::_graph::NodeIndex<Ix>>,
+        disc: HashMap<petgraph::graph::NodeIndex<Ix>, usize>,
+        low: HashMap<petgraph::graph::NodeIndex<Ix>, usize>,
+        parent: HashMap<petgraph::graph::NodeIndex<Ix>, Option<petgraph::graph::NodeIndex<Ix>>>,
+        visited: HashSet<petgraph::graph::NodeIndex<Ix>>,
     }
 
     fn dfs<N, E, Ix>(
-        u: petgraph::_graph::NodeIndex<Ix>,
+        u: petgraph::graph::NodeIndex<Ix>,
         _graph: &Graph<N, E, Ix>,
         state: &mut DfsState<Ix>,
         bridges: &mut Vec<(N, N)>,
     ) where
         N: Node + std::fmt::Debug,
         E: EdgeWeight,
-        Ix: petgraph::_graph::IndexType,
+        Ix: petgraph::graph::IndexType,
     {
         state.visited.insert(u);
         state.disc.insert(u, state.time);
         state.low.insert(u, state.time);
         state.time += 1;
 
-        for v in _graph.inner().neighbors(u) {
+        for v in graph.inner().neighbors(u) {
             if !state.visited.contains(&v) {
                 state.parent.insert(v, Some(u));
-                dfs(v, _graph, state, bridges);
+                dfs(v, graph, state, bridges);
 
                 // Check if the subtree rooted at v has a back edge to an ancestor of u
                 let v_low = *state.low.get(&v).unwrap();
@@ -413,7 +413,7 @@ where
                 // If low[v] > disc[u], then (u, v) is a bridge
                 let u_disc = *state.disc.get(&u).unwrap();
                 if v_low > u_disc {
-                    bridges.push((_graph.inner()[u].clone(), _graph.inner()[v].clone()));
+                    bridges.push((_graph.inner()[u].clone(), graph.inner()[v].clone()));
                 }
             } else if state.parent.get(&u).unwrap() != &Some(v) {
                 // Update low[u] for back edge
@@ -433,10 +433,10 @@ where
         visited: HashSet::new(),
     };
 
-    for node in _graph.inner().node_indices() {
+    for node in graph.inner().node_indices() {
         if !state.visited.contains(&node) {
             state.parent.insert(node, None);
-            dfs(node, _graph, &mut state, &mut bridges);
+            dfs(node, graph, &mut state, &mut bridges);
         }
     }
 

@@ -469,7 +469,7 @@ fn main() -> Result<()> {
 // Data generation functions for different scenarios
 
 #[allow(dead_code)]
-fn generate_scientific_data(_size: usize) -> Vec<u8> {
+fn generate_scientific_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             // Simulate scientific data with patterns
@@ -481,7 +481,7 @@ fn generate_scientific_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_time_series_data(_size: usize) -> Vec<u8> {
+fn generate_time_series_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             // Simulate time series with trends and seasonality
@@ -494,7 +494,7 @@ fn generate_time_series_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_genomic_data(_size: usize) -> Vec<u8> {
+fn generate_genomic_data(size: usize) -> Vec<u8> {
     // Simulate genomic sequences (A, T, G, C)
     (0.._size)
         .map(|i| match (i * 31 + 13) % 4 {
@@ -507,7 +507,7 @@ fn generate_genomic_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_streaming_data(_size: usize, chunk_id: usize) -> Vec<u8> {
+fn generate_streaming_data(_size: usize, chunkid: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             // Simulate streaming data with chunk correlation
@@ -519,7 +519,7 @@ fn generate_streaming_data(_size: usize, chunk_id: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_database_backup_data(_size: usize) -> Vec<u8> {
+fn generate_database_backup_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             // Simulate structured database data
@@ -535,7 +535,7 @@ fn generate_database_backup_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_log_data(_size: usize) -> Vec<u8> {
+fn generate_log_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             // Simulate log file patterns
@@ -551,7 +551,7 @@ fn generate_log_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_document_data(_size: usize) -> Vec<u8> {
+fn generate_document_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             // Simulate document text
@@ -561,7 +561,7 @@ fn generate_document_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_financial_data(_size: usize) -> Vec<u8> {
+fn generate_financial_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             // Simulate financial transaction data
@@ -577,7 +577,7 @@ fn generate_financial_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_analytics_data(_size: usize) -> Vec<u8> {
+fn generate_analytics_data(size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             // Simulate analytics data with correlations

@@ -10,7 +10,7 @@ use crate::error::Result;
 use image::{DynamicImage, ImageBuffer, Rgb};
 // Note: Array2 might be needed in future implementations
 
-pub use octree__quantization::{adaptive_octree_quantize, extract_palette, octree_quantize};
+pub use octree_quantization::{adaptive_octree_quantize, extract_palette, octree_quantize};
 pub use quantization::{kmeans_quantize, median_cut_quantize, InitMethod, KMeansParams};
 
 /// Represents a color space
@@ -36,9 +36,9 @@ pub enum ColorSpace {
 ///
 /// * Result containing an HSV image
 #[allow(dead_code)]
-pub fn rgb_to_hsv(_img: &DynamicImage) -> Result<DynamicImage> {
+pub fn rgb_to_hsv(img: &DynamicImage) -> Result<DynamicImage> {
     // Ensure input is RGB
-    let rgb_img = _img.to_rgb8();
+    let rgb_img = img.to_rgb8();
     let (width, height) = rgb_img.dimensions();
 
     // Create output buffer
@@ -104,8 +104,8 @@ pub fn rgb_to_hsv(_img: &DynamicImage) -> Result<DynamicImage> {
 ///
 /// * Result containing an RGB image
 #[allow(dead_code)]
-pub fn hsv_to_rgb(_hsv_img: &DynamicImage) -> Result<DynamicImage> {
-    let hsv = _hsv_img.to_rgb8();
+pub fn hsv_to_rgb(_hsvimg: &DynamicImage) -> Result<DynamicImage> {
+    let hsv = hsv_img.to_rgb8();
     let (width, height) = hsv.dimensions();
 
     let mut rgb_img = ImageBuffer::new(width, height);
@@ -161,12 +161,12 @@ pub fn hsv_to_rgb(_hsv_img: &DynamicImage) -> Result<DynamicImage> {
 ///
 /// * Result containing a grayscale image
 #[allow(dead_code)]
-pub fn rgb_to_grayscale(_img: &DynamicImage, weights: Option<[f32; 3]>) -> Result<DynamicImage> {
+pub fn rgb_to_grayscale(img: &DynamicImage, weights: Option<[f32; 3]>) -> Result<DynamicImage> {
     // Default weights based on human perception of color
     let weights = weights.unwrap_or([0.2989, 0.5870, 0.1140]);
 
     // Get RGB image
-    let rgb_img = _img.to_rgb8();
+    let rgb_img = img.to_rgb8();
     let (width, height) = rgb_img.dimensions();
 
     // Create grayscale image
@@ -199,8 +199,8 @@ pub fn rgb_to_grayscale(_img: &DynamicImage, weights: Option<[f32; 3]>) -> Resul
 ///
 /// * Result containing a LAB image (represented as RGB buffer where channels are L, a, b)
 #[allow(dead_code)]
-pub fn rgb_to_lab(_img: &DynamicImage) -> Result<DynamicImage> {
-    let rgb_img = _img.to_rgb8();
+pub fn rgb_to_lab(img: &DynamicImage) -> Result<DynamicImage> {
+    let rgb_img = img.to_rgb8();
     let (width, height) = rgb_img.dimensions();
 
     let mut lab_img = ImageBuffer::new(width, height);
@@ -290,8 +290,8 @@ pub fn rgb_to_lab(_img: &DynamicImage) -> Result<DynamicImage> {
 ///
 /// * Result containing an RGB image
 #[allow(dead_code)]
-pub fn lab_to_rgb(_lab_img: &DynamicImage) -> Result<DynamicImage> {
-    let lab = _lab_img.to_rgb8();
+pub fn lab_to_rgb(_labimg: &DynamicImage) -> Result<DynamicImage> {
+    let lab = lab_img.to_rgb8();
     let (width, height) = lab.dimensions();
 
     let mut rgb_img = ImageBuffer::new(width, height);
@@ -375,8 +375,8 @@ pub fn lab_to_rgb(_lab_img: &DynamicImage) -> Result<DynamicImage> {
 ///
 /// * Result containing a tuple of grayscale images (r, g, b)
 #[allow(dead_code)]
-pub fn split_channels(_img: &DynamicImage) -> Result<(DynamicImage, DynamicImage, DynamicImage)> {
-    let rgb_img = _img.to_rgb8();
+pub fn split_channels(img: &DynamicImage) -> Result<(DynamicImage, DynamicImage, DynamicImage)> {
+    let rgb_img = img.to_rgb8();
     let (width, height) = rgb_img.dimensions();
 
     let mut r_channel = ImageBuffer::new(width, height);

@@ -159,7 +159,7 @@ where
     };
 
     let tol = 3.0 * SQRT_EPS;
-    let (mut a, mut b) = if a < c { (a, c) } else { (c, a) };
+    let (mut a, mut b) = if a_b < c { (a_b, c) } else { (c, a_b) };
 
     // Initialize
     let mut v = a + GOLDEN * (b - a);
@@ -446,7 +446,7 @@ where
         bracket_minimum(&fun, x0, x1)?
     };
 
-    let (mut a, mut b) = if a < c { (a, c) } else { (c, a) };
+    let (mut a, mut b) = if a_b < c { (a_b, c) } else { (c, a_b) };
 
     // Initialize points
     let mut x1 = a + (1.0 - GOLDEN) * (b - a);
@@ -499,7 +499,7 @@ where
 
 /// Bracket a minimum given two initial points
 #[allow(dead_code)]
-fn bracket_minimum<F>(_fun: &F, xa: f64, xb: f64) -> Result<(f64, f64, f64), OptimizeError>
+fn bracket_minimum<F>(fun: &F, xa: f64, xb: f64) -> Result<(f64, f64, f64), OptimizeError>
 where
     F: Fn(f64) -> f64,
 {

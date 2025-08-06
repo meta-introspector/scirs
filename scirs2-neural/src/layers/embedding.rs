@@ -57,16 +57,16 @@ pub struct Embedding<F: Float + Debug + ScalarOperand + Send + Sync> {
     freq_counter: Option<Vec<usize>>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> Embedding<F> {
     /// Create a new Embedding layer with the given configuration
-    pub fn new(_config: EmbeddingConfig) -> Result<Self> {
-        if _config.num_embeddings == 0 {
+    pub fn new(config: EmbeddingConfig) -> Result<Self> {
+        if config.num_embeddings == 0 {
             return Err(Error::InvalidArchitecture(
                 "num_embeddings must be greater than 0".to_string(),
             ));
-        if _config.embedding_dim == 0 {
+        if config.embedding_dim == 0 {
                 "embedding_dim must be greater than 0".to_string(),
         // Validate padding_idx
-        if let Some(idx) = _config.padding_idx {
-            if idx >= _config.num_embeddings {
+        if let Some(idx) = config.padding_idx {
+            if idx >= config.num_embeddings {
                 return Err(Error::InvalidArchitecture(format!(
                     "padding_idx ({}) must be less than num_embeddings ({})",
                     idx, config.num_embeddings
@@ -148,10 +148,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Embedding<F> {
         if let Some(max_norm) = self.config.max_norm {
             let norm_type = self.config.norm_type;
             let p = F::from(norm_type).ok_or_else(|| {
-                Error::InvalidArchitecture(format!("Invalid norm_type: {}", norm_type))
+                Error::InvalidArchitecture(format!("Invalid normtype: {}", norm_type))
             })?;
             let max_norm = F::from(max_norm).ok_or_else(|| {
-                Error::InvalidArchitecture(format!("Invalid max_norm: {}", max_norm))
+                Error::InvalidArchitecture(format!("Invalid maxnorm: {}", max_norm))
             // Calculate norms for each embedding vector
             for i in 0..self.config.num_embeddings {
                 let mut norm = F::zero();
@@ -248,7 +248,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Embedding<F> {
         // Return zeros of the same shape as the input (indices)
         let inputshape = &input.shape();
         Ok(Array::zeros(IxDyn(inputshape)))
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         // Update weights using accumulated gradients
         let lr = learning_rate;
         // Handle frequency-based scaling
@@ -281,7 +281,7 @@ pub struct PositionalEmbedding<F: Float + Debug + ScalarOperand + Send + Sync> {
     weight_grad: Option<Array<F, IxDyn>>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> PositionalEmbedding<F> {
     /// Create a new PositionalEmbedding layer
-    pub fn new(_max_seq_length: usize, embedding_dim: usize, learned: bool) -> Result<Self> {
+    pub fn new(_max_seq_length: usize, embeddingdim: usize, learned: bool) -> Result<Self> {
         if _max_seq_length == 0 {
                 "_max_seq_length must be greater than 0".to_string(),
         if embedding_dim == 0 {
@@ -291,7 +291,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> PositionalEmbedding<F> {
             let weight = Some(initializers::xavier_uniform::<F>(weightshape.clone())?);
             let weight_grad = Some(Array::zeros(weightshape));
             Ok(Self {
-                _max_seq_length,
+                max_seq_length,
                 embedding_dim,
                 learned,
                 weight,
@@ -301,7 +301,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> PositionalEmbedding<F> {
                 weight: None,
                 weight_grad: None,
     /// Generate sinusoidal positional embeddings
-    fn generate_sinusoidal_embeddings(&self, seq_length: usize) -> Result<Array<F, IxDyn>> {
+    fn generate_sinusoidal_embeddings(&self, seqlength: usize) -> Result<Array<F, IxDyn>> {
         if seq_length > self.max_seq_length {
             return Err(Error::InvalidArchitecture(format!(
                 "Sequence length {} exceeds maximum supported length {}",

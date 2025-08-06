@@ -144,7 +144,8 @@ pub fn warp_image_gpu(
     #[cfg(debug_assertions)]
     {
         eprintln!(
-            "GPU warping attempted but falling back to CPU: operation_len={}"_operation.len()
+            "GPU warping attempted but falling back to CPU: operation_len={}",
+            operation.len()
         );
     }
 
@@ -761,7 +762,7 @@ fn cubic_kernel(t: f32) -> f32 {
 
 /// Create a mesh grid for transformation mapping
 #[allow(dead_code)]
-pub fn create_mesh_grid(_width: u32, height: u32) -> (Array2<f64>, Array2<f64>) {
+pub fn create_mesh_grid(width: u32, height: u32) -> (Array2<f64>, Array2<f64>) {
     let mut x_grid = Array2::zeros((height as usize, _width as usize));
     let mut y_grid = Array2::zeros((height as usize, _width as usize));
 
@@ -921,7 +922,7 @@ pub fn rectify_stereo_pair(
 /// For left epipole: F * e_left = 0
 /// For right epipole: F^T * e_right = 0
 #[allow(dead_code)]
-fn compute_epipoles(_fundamental_matrix: &TransformMatrix) -> Result<(Point2D, Point2D)> {
+fn compute_epipoles(_fundamentalmatrix: &TransformMatrix) -> Result<(Point2D, Point2D)> {
     // Find left epipole (null space of F^T)
     let left_epipole = find_null_space(&transpose_matrix(_fundamental_matrix))?;
 
@@ -933,11 +934,11 @@ fn compute_epipoles(_fundamental_matrix: &TransformMatrix) -> Result<(Point2D, P
 
 /// Transpose a 3x3 matrix
 #[allow(dead_code)]
-fn transpose_matrix(_matrix: &TransformMatrix) -> TransformMatrix {
+fn transpose_matrix(matrix: &TransformMatrix) -> TransformMatrix {
     let mut transposed = Array2::zeros((3, 3));
     for i in 0..3 {
         for j in 0..3 {
-            transposed[[i, j]] = _matrix[[j, i]];
+            transposed[[i, j]] = matrix[[j, i]];
         }
     }
     transposed
@@ -945,7 +946,7 @@ fn transpose_matrix(_matrix: &TransformMatrix) -> TransformMatrix {
 
 /// Find the null space of a 3x3 matrix (the eigenvector corresponding to the smallest eigenvalue)
 #[allow(dead_code)]
-fn find_null_space(_matrix: &TransformMatrix) -> Result<Point2D> {
+fn find_null_space(matrix: &TransformMatrix) -> Result<Point2D> {
     // Use power iteration to find the smallest eigenvalue and corresponding eigenvector
     // We solve (A^T * A) * v = lambda * v where lambda is the smallest eigenvalue
 
@@ -955,7 +956,7 @@ fn find_null_space(_matrix: &TransformMatrix) -> Result<Point2D> {
     for i in 0..3 {
         for j in 0..3 {
             for k in 0..3 {
-                ata[[i, j]] += _matrix[[k, i]] * _matrix[[k, j]];
+                ata[[i, j]] += matrix[[k, i]] * matrix[[k, j]];
             }
         }
     }
@@ -1126,7 +1127,8 @@ fn compute_right_rectification_transform(
 /// Compute vertical adjustment to align epipolar lines between left and right images
 #[allow(dead_code)]
 fn compute_vertical_alignment(
-    left_transform: &TransformMatrix_right, _transform: &TransformMatrix,
+    left_transform: &TransformMatrix_right,
+    _transform: &TransformMatrix,
     fundamental_matrix: &TransformMatrix,
     image_size: (u32, u32),
 ) -> Result<f64> {
@@ -1168,9 +1170,9 @@ fn compute_vertical_alignment(
 
 /// Compute epipolar line in the right image corresponding to a point in the left image
 #[allow(dead_code)]
-fn compute_epipolar_line(_point: Point2D, fundamental_matrix: &TransformMatrix) -> (f64, f64, f64) {
+fn compute_epipolar_line(_point: Point2D, fundamentalmatrix: &TransformMatrix) -> (f64, f64, f64) {
     // Epipolar line l = F * p where p is in homogeneous coordinates
-    let p = [_point.x, _point.y, 1.0];
+    let p = [_point.x, point.y, 1.0];
     let mut line = [0.0; 3];
 
     for i in 0..3 {
@@ -1184,13 +1186,13 @@ fn compute_epipolar_line(_point: Point2D, fundamental_matrix: &TransformMatrix) 
 
 /// Compute y-intercept of an epipolar line at a given x coordinate
 #[allow(dead_code)]
-fn compute_epipolar_line_y_intercept(_line: &(f64, f64, f64), x: f64) -> f64 {
+fn compute_epipolar_line_y_intercept(line: &(f64, f64, f64), x: f64) -> f64 {
     let (a, b, c) = *_line;
 
     if b.abs() > 1e-10 {
         -(a * x + c) / b
     } else {
-        0.0 // Vertical _line, return y=0
+        0.0 // Vertical line, return y=0
     }
 }
 
@@ -1370,8 +1372,8 @@ impl TileConfig {
     /// # Returns
     ///
     /// * Optimal tile configuration
-    pub fn for_output_size(_output_size: (u32, u32)) -> Self {
-        let (width, height) = _output_size;
+    pub fn for_output_size(_outputsize: (u32, u32)) -> Self {
+        let (width, height) = output_size;
 
         // Target tile _size based on memory constraints (aim for ~64MB per tile)
         let target_tile_pixels = 16_777_216; // 16 megapixels
@@ -1513,7 +1515,7 @@ impl StreamingPanoramaProcessor {
     /// # Returns
     ///
     /// * Tile bounds as (x, y, width, height)
-    fn calculate_tile_bounds(&self, tile_x: u32, tile_y: u32) -> (u32, u32, u32, u32) {
+    fn calculate_tile_bounds(&self, tile_x: u32, tiley: u32) -> (u32, u32, u32, u32) {
         let (tile_width, tile_height) = self.tile_config.tile_size;
         let overlap = self.tile_config.overlap;
 
@@ -1596,7 +1598,7 @@ impl StreamingPanoramaProcessor {
     /// # Returns
     ///
     /// * Result indicating success or failure
-    fn blend_tile(&mut self, tile_x: u32, tile_y: u32, warped_tile: &RgbImage) -> Result<()> {
+    fn blend_tile(&mut self, tile_x: u32, tile_y: u32, warpedtile: &RgbImage) -> Result<()> {
         match self.blending_mode {
             BlendingMode::Linear => self.blend_tile_linear(tile_x, tile_y, warped_tile),
             BlendingMode::MultiBandBlending => {
@@ -1718,8 +1720,8 @@ impl StreamingPanoramaProcessor {
 
         for _y in 0..tile_height {
             for _x in 0..tile_width {
-                let output_x = start_x + _x;
-                let output_y = start_y + _y;
+                let output_x = start_x + x;
+                let output_y = start_y + y;
 
                 if output_x < self.output_size.0 && output_y < self.output_size.1 {
                     let pixel = tile.get_pixel(_x_y);
@@ -1756,10 +1758,10 @@ impl TileCache {
     /// # Returns
     ///
     /// * Result containing the cache
-    fn new(_config: &TileConfig) -> Result<Self> {
+    fn new(config: &TileConfig) -> Result<Self> {
         Ok(Self {
             tiles: std::collections::HashMap::new(),
-            _config: _config.clone(),
+            _config: config.clone(),
             memory_usage: 0,
         })
     }
@@ -1774,7 +1776,7 @@ impl TileCache {
     ///
     /// * Result containing mutable reference to the tile
     #[allow(clippy::map_entry)]
-    fn get_or_create_tile(&mut self, tile_id: TileId) -> Result<&mut RgbImage> {
+    fn get_or_create_tile(&mut self, tileid: TileId) -> Result<&mut RgbImage> {
         if !self.tiles.contains_key(&tile_id) {
             // Check memory budget and evict if necessary
             self.ensure_memory_budget()?;
@@ -1801,7 +1803,7 @@ impl TileCache {
     /// # Returns
     ///
     /// * Result containing reference to the tile
-    fn get_tile(&self, tile_id: TileId) -> Result<&RgbImage> {
+    fn get_tile(&self, tileid: TileId) -> Result<&RgbImage> {
         self.tiles
             .get(&tile_id)
             .ok_or_else(|| VisionError::OperationError(format!("Tile {tile_id:?} not found")))
@@ -1835,17 +1837,18 @@ impl TileCache {
 /// Simple 3x3 matrix inversion for TransformMatrix
 /// Optimized implementation for 3x3 homogeneous transformation matrices
 #[allow(dead_code)]
-fn invert_3x3_matrix(_matrix: &TransformMatrix) -> Result<TransformMatrix> {
-    if _matrix.shape() != [3, 3] {
+fn invert_3x3_matrix(matrix: &TransformMatrix) -> Result<TransformMatrix> {
+    if matrix.shape() != [3, 3] {
         return Err(VisionError::InvalidParameter(
             "Matrix must be 3x3".to_string(),
         ));
     }
 
     // Compute determinant
-    let det = _matrix[[0, 0]] * (_matrix[[1, 1]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 1]])
-        - _matrix[[0, 1]] * (_matrix[[1, 0]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 0]])
-        + _matrix[[0, 2]] * (_matrix[[1, 0]] * _matrix[[2, 1]] - _matrix[[1, 1]] * _matrix[[2, 0]]);
+    let det = matrix[[0, 0]]
+        * (_matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
+        - matrix[[0, 1]] * (_matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
+        + matrix[[0, 2]] * (_matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
 
     if det.abs() < 1e-10 {
         return Err(VisionError::OperationError(
@@ -1856,15 +1859,15 @@ fn invert_3x3_matrix(_matrix: &TransformMatrix) -> Result<TransformMatrix> {
     let mut inv = Array2::zeros((3, 3));
 
     // Compute adjugate _matrix
-    inv[[0, 0]] = (_matrix[[1, 1]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 1]]) / det;
-    inv[[0, 1]] = (_matrix[[0, 2]] * _matrix[[2, 1]] - _matrix[[0, 1]] * _matrix[[2, 2]]) / det;
-    inv[[0, 2]] = (_matrix[[0, 1]] * _matrix[[1, 2]] - _matrix[[0, 2]] * _matrix[[1, 1]]) / det;
-    inv[[1, 0]] = (_matrix[[1, 2]] * _matrix[[2, 0]] - _matrix[[1, 0]] * _matrix[[2, 2]]) / det;
-    inv[[1, 1]] = (_matrix[[0, 0]] * _matrix[[2, 2]] - _matrix[[0, 2]] * _matrix[[2, 0]]) / det;
-    inv[[1, 2]] = (_matrix[[0, 2]] * _matrix[[1, 0]] - _matrix[[0, 0]] * _matrix[[1, 2]]) / det;
-    inv[[2, 0]] = (_matrix[[1, 0]] * _matrix[[2, 1]] - _matrix[[1, 1]] * _matrix[[2, 0]]) / det;
-    inv[[2, 1]] = (_matrix[[0, 1]] * _matrix[[2, 0]] - _matrix[[0, 0]] * _matrix[[2, 1]]) / det;
-    inv[[2, 2]] = (_matrix[[0, 0]] * _matrix[[1, 1]] - _matrix[[0, 1]] * _matrix[[1, 0]]) / det;
+    inv[[0, 0]] = (_matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]]) / det;
+    inv[[0, 1]] = (_matrix[[0, 2]] * matrix[[2, 1]] - matrix[[0, 1]] * matrix[[2, 2]]) / det;
+    inv[[0, 2]] = (_matrix[[0, 1]] * matrix[[1, 2]] - matrix[[0, 2]] * matrix[[1, 1]]) / det;
+    inv[[1, 0]] = (_matrix[[1, 2]] * matrix[[2, 0]] - matrix[[1, 0]] * matrix[[2, 2]]) / det;
+    inv[[1, 1]] = (_matrix[[0, 0]] * matrix[[2, 2]] - matrix[[0, 2]] * matrix[[2, 0]]) / det;
+    inv[[1, 2]] = (_matrix[[0, 2]] * matrix[[1, 0]] - matrix[[0, 0]] * matrix[[1, 2]]) / det;
+    inv[[2, 0]] = (_matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]) / det;
+    inv[[2, 1]] = (_matrix[[0, 1]] * matrix[[2, 0]] - matrix[[0, 0]] * matrix[[2, 1]]) / det;
+    inv[[2, 2]] = (_matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]) / det;
 
     Ok(inv)
 }
@@ -2107,10 +2110,10 @@ pub fn compute_depth_map(
 
 /// Convert GrayImage to Array2<f32>
 #[allow(dead_code)]
-fn image_to_array2(_image: &GrayImage) -> Array2<f32> {
-    let (width, height) = _image.dimensions();
+fn image_to_array2(image: &GrayImage) -> Array2<f32> {
+    let (width, height) = image.dimensions();
     Array2::fromshape_fn((height as usize, width as usize), |(y, x)| {
-        _image.get_pixel(x as u32, y as u32)[0] as f32 / 255.0
+        image.get_pixel(x as u32, y as u32)[0] as f32 / 255.0
     })
 }
 
@@ -2430,9 +2433,9 @@ fn compute_census_cost_simd(
 
 /// Compute Census transform for a block
 #[allow(dead_code)]
-fn compute_census_transform(_image: &Array2<f32>, x: usize, y: usize, block_size: usize) -> u32 {
+fn compute_census_transform(_image: &Array2<f32>, x: usize, y: usize, blocksize: usize) -> u32 {
     let half_block = block_size / 2;
-    let center_value = _image[[y, x]];
+    let center_value = image[[y, x]];
     let mut census = 0u32;
     let mut bit_index = 0;
 
@@ -2445,7 +2448,7 @@ fn compute_census_transform(_image: &Array2<f32>, x: usize, y: usize, block_size
             let py = (y as i32 + dy) as usize;
             let px = (x as i32 + dx) as usize;
 
-            if _image[[py, px]] < center_value {
+            if image[[py, px]] < center_value {
                 census |= 1 << bit_index;
             }
             bit_index += 1;
@@ -2504,8 +2507,8 @@ fn compute_hybrid_cost_simd(
 ///
 /// * Result containing aggregated cost volume
 #[allow(dead_code)]
-fn aggregate_costs_sgm(_cost_volume: &Array3<f32>, sgm_params: &SgmParams) -> Result<Array3<f32>> {
-    let (height, width, num_disparities) = _cost_volume.dim();
+fn aggregate_costs_sgm(_cost_volume: &Array3<f32>, sgmparams: &SgmParams) -> Result<Array3<f32>> {
+    let (height, width, num_disparities) = cost_volume.dim();
     let mut aggregated_costs = Array3::zeros((height, width, num_disparities));
 
     // Define aggregation directions
@@ -2651,7 +2654,7 @@ fn aggregate_pixel_costs(
     let num_disparities = direction_costs.dim().2;
 
     for d in 0..num_disparities {
-        let raw_cost = direction_costs[[_y, _x, d]];
+        let raw_cost = direction_costs[[_y, x, d]];
 
         // Find minimum cost from previous pixel with smoothness penalties
         let mut min_aggregated_cost = f32::INFINITY;
@@ -2673,7 +2676,7 @@ fn aggregate_pixel_costs(
             }
         }
 
-        direction_costs[[_y, _x, d]] = raw_cost + min_aggregated_cost;
+        direction_costs[[_y, x, d]] = raw_cost + min_aggregated_cost;
     }
 }
 
@@ -2863,9 +2866,9 @@ fn fill_holes_and_filter(
 
 /// Apply median filter to disparity map
 #[allow(dead_code)]
-fn apply_median_filter(_disparity_map: &Array2<f32>, window_size: usize) -> Result<Array2<f32>> {
-    let (height, width) = _disparity_map.dim();
-    let mut filtered = _disparity_map.clone();
+fn apply_median_filter(_disparity_map: &Array2<f32>, windowsize: usize) -> Result<Array2<f32>> {
+    let (height, width) = disparity_map.dim();
+    let mut filtered = disparity_map.clone();
     let half_window = window_size / 2;
 
     for y in half_window..height - half_window {
@@ -2874,7 +2877,7 @@ fn apply_median_filter(_disparity_map: &Array2<f32>, window_size: usize) -> Resu
 
             for dy in -(half_window as i32)..=(half_window as i32) {
                 for dx in -(half_window as i32)..=(half_window as i32) {
-                    let val = _disparity_map[[(y as i32 + dy) as usize, (x as i32 + dx) as usize]];
+                    let val = disparity_map[[(y as i32 + dy) as usize, (x as i32 + dx) as usize]];
                     if !val.is_nan() {
                         values.push(val);
                     }
@@ -2944,13 +2947,13 @@ fn flood_fill_region_size(
     let mut stack = vec![(start_x, start_y)];
     let mut region_size = 0;
 
-    while let Some((_x, _y)) = stack.pop() {
+    while let Some((_x, y)) = stack.pop() {
         if _x >= width || _y >= height || visited[[_y_x]] {
             continue;
         }
 
         let _disparity = disparity_map[[_y_x]];
-        if _disparity.is_nan() || (_disparity - target_disparity).abs() > range {
+        if disparity.is_nan() || (_disparity - target_disparity).abs() > range {
             continue;
         }
 
@@ -2959,10 +2962,10 @@ fn flood_fill_region_size(
 
         // Add neighbors
         if _x > 0 {
-            stack.push((_x - 1, _y));
+            stack.push((_x - 1, y));
         }
         if _x < width - 1 {
-            stack.push((_x + 1, _y));
+            stack.push((_x + 1, y));
         }
         if _y > 0 {
             stack.push((_x, _y - 1));
@@ -2987,13 +2990,13 @@ fn flood_fill_mark_invalid(
     let (height, width) = disparity_map.dim();
     let mut stack = vec![(start_x, start_y)];
 
-    while let Some((_x, _y)) = stack.pop() {
+    while let Some((_x, y)) = stack.pop() {
         if _x >= width || _y >= height {
             continue;
         }
 
         let _disparity = disparity_map[[_y_x]];
-        if _disparity.is_nan() || (_disparity - target_disparity).abs() > range {
+        if disparity.is_nan() || (_disparity - target_disparity).abs() > range {
             continue;
         }
 
@@ -3001,10 +3004,10 @@ fn flood_fill_mark_invalid(
 
         // Add neighbors
         if _x > 0 {
-            stack.push((_x - 1, _y));
+            stack.push((_x - 1, y));
         }
         if _x < width - 1 {
-            stack.push((_x + 1, _y));
+            stack.push((_x + 1, y));
         }
         if _y > 0 {
             stack.push((_x, _y - 1));
@@ -3020,7 +3023,8 @@ fn flood_fill_mark_invalid(
 fn compute_depth_map_stats(
     disparity_map: &Array2<f32>,
     confidence_map: &Array2<f32>,
-    processing_times: ProcessingTimes, _params: &StereoMatchingParams,
+    processing_times: ProcessingTimes,
+    _params: &StereoMatchingParams,
 ) -> DepthMapStats {
     let total_pixels = disparity_map.len();
     let valid_pixels = disparity_map.iter().filter(|&&d| !d.is_nan()).count();

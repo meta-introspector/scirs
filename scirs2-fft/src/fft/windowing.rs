@@ -63,7 +63,7 @@ pub enum WindowType {
 /// assert!(window[5] > 0.9); // Near one in the middle
 /// ```
 #[allow(dead_code)]
-pub fn create_window(window_type: WindowType, length: usize) -> FFTResult<Vec<f64>> {
+pub fn create_window(windowtype: WindowType, length: usize) -> FFTResult<Vec<f64>> {
     if length == 0 {
         return Err(FFTError::ValueError("Window length cannot be zero".into()));
     }
@@ -71,7 +71,7 @@ pub fn create_window(window_type: WindowType, length: usize) -> FFTResult<Vec<f6
     let mut window = vec![0.0; length];
     let n = length as f64;
 
-    match window_type {
+    match windowtype {
         WindowType::Rectangular => {
             // Rectangular window (all ones)
             window.iter_mut().for_each(|w| *w = 1.0);
@@ -223,16 +223,16 @@ pub fn create_window(window_type: WindowType, length: usize) -> FFTResult<Vec<f6
 /// assert!(windowed_signal[3] <= signal[3]); // Middle is preserved or slightly attenuated
 /// ```
 #[allow(dead_code)]
-pub fn apply_window(_signal: &[f64], window: &[f64]) -> FFTResult<Vec<f64>> {
-    if _signal.len() != window.len() {
+pub fn apply_window(signal: &[f64], window: &[f64]) -> FFTResult<Vec<f64>> {
+    if signal.len() != window.len() {
         return Err(FFTError::ValueError(
             "Signal and window lengths must match".into(),
         ));
     }
 
-    let mut windowed_signal = vec![0.0; _signal.len()];
+    let mut windowed_signal = vec![0.0; signal.len()];
     for (i, w) in windowed_signal.iter_mut().enumerate() {
-        *w = _signal[i] * window[i];
+        *w = signal[i] * window[i];
     }
 
     Ok(windowed_signal)
@@ -248,13 +248,13 @@ pub fn apply_window(_signal: &[f64], window: &[f64]) -> FFTResult<Vec<f64>> {
 ///
 /// A struct containing window properties
 #[allow(dead_code)]
-pub fn window_properties(_window: &[f64]) -> WindowProperties {
-    let n = _window.len();
+pub fn window_properties(window: &[f64]) -> WindowProperties {
+    let n = window.len();
     let mut sum = 0.0;
     let mut sum_squared = 0.0;
     let mut coherent_gain = 0.0;
 
-    for &w in _window {
+    for &w in window {
         sum += w;
         sum_squared += w * w;
         coherent_gain += w;

@@ -77,14 +77,14 @@ pub struct KFold {
     random_state: Option<u64>,
 impl KFold {
     /// Create a new K-fold cross-validation generator
-    pub fn new(_n_splits: usize, shuffle: bool, random_state: Option<u64>) -> Self {
+    pub fn new(_n_splits: usize, shuffle: bool, randomstate: Option<u64>) -> Self {
         Self {
-            _n_splits,
+            n_splits,
             shuffle,
             random_state,
         }
     /// Generate train/test indices for each fold
-    pub fn split(&self, n_samples: usize) -> Result<Vec<(Vec<usize>, Vec<usize>)>> {
+    pub fn split(&self, nsamples: usize) -> Result<Vec<(Vec<usize>, Vec<usize>)>> {
         if self.n_splits < 2 {
             return Err(crate::error::NeuralError::InvalidArgument(
                 "n_splits must be >= 2".to_string(),

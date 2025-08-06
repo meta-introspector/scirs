@@ -381,7 +381,7 @@ impl<
             compression_ratio,
             techniques,
             improvements,
-    fn estimate_model_size(&self_model: &Sequential<F>) -> Result<usize> {
+    fn estimate_model_size(selfmodel: &Sequential<F>) -> Result<usize> {
         // Estimate model size in bytes
         // This would calculate the total size of all parameters
         Ok(1024 * 1024) // Stub: 1MB
@@ -508,10 +508,10 @@ val output = model.predict(input)"#
                     "Missing model file".to_string(),
                     "Incorrect file path".to_string(),
     // Platform-specific implementation methods (stubs)
-    fn save_core_ml_model(&self_model: &Sequential<F>, path: &Path) -> Result<()> {
+    fn save_core_ml_model(selfmodel: &Sequential<F>, path: &Path) -> Result<()> {
         // Core ML model conversion and saving
         fs::write(path, b"Core ML Model Data")?;
-    fn save_tflite_model(&self_model: &Sequential<F>, path: &Path) -> Result<()> {
+    fn save_tflite_model(selfmodel: &Sequential<F>, path: &Path) -> Result<()> {
         // TensorFlow Lite model conversion and saving
         fs::write(path, b"TFLite Model Data")?;
     /// Generate iOS framework for deployment
@@ -524,7 +524,7 @@ val output = model.predict(input)"#
     pub fn generate_swift_wrapper(&self, path: &Path) -> Result<()> {
         fs::write(path, super::templates::SWIFT_WRAPPER)?;
     /// Generate Objective-C wrapper for the model
-    pub fn generate_objc_wrapper(&self, header_path: &Path, impl_path: &Path) -> Result<()> {
+    pub fn generate_objc_wrapper(&self, header_path: &Path, implpath: &Path) -> Result<()> {
         fs::write(header_path, super::templates::OBJC_HEADER)?;
         fs::write(impl_path, super::templates::OBJC_IMPL)?;
     /// Generate Android AAR package
@@ -538,11 +538,11 @@ val output = model.predict(input)"#
     pub fn generate_kotlin_wrapper(&self, path: &Path) -> Result<()> {
         fs::write(path, super::templates::KOTLIN_WRAPPER)?;
     /// Generate JNI wrapper for native integration
-    pub fn generate_jni_wrapper(&self, header_path: &Path, impl_path: &Path) -> Result<()> {
+    pub fn generate_jni_wrapper(&self, header_path: &Path, implpath: &Path) -> Result<()> {
         fs::write(header_path, super::templates::JNI_HEADER)?;
         fs::write(impl_path, super::templates::JNI_IMPL)?;
     /// Benchmark model performance on mobile platform
-    pub fn benchmark_performance(&self_model: &Sequential<F>) -> Result<PerformanceMetrics> {
+    pub fn benchmark_performance(selfmodel: &Sequential<F>) -> Result<PerformanceMetrics> {
         // Performance benchmarking implementation
         // This would run actual inference tests and measure performance
         Ok(PerformanceMetrics {

@@ -146,7 +146,7 @@ pub struct AdvancedNumericalStabilityTester {
 
 impl AdvancedNumericalStabilityTester {
     /// Create new numerical stability tester
-    pub fn new(_config: AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(config: AdvancedNumericalStabilityConfig) -> Self {
         Self {
             edge_case_generator: Arc::new(RwLock::new(EdgeCaseGenerator::new(&_config))),
             precision_analyzer: Arc::new(RwLock::new(PrecisionAnalyzer::new(&_config))),
@@ -158,7 +158,7 @@ impl AdvancedNumericalStabilityTester {
             monte_carlo_tester: Arc::new(RwLock::new(MonteCarloStabilityTester::new(&_config))),
             regression_tester: Arc::new(RwLock::new(RegressionTester::new(&_config))),
             stability_history: Arc::new(RwLock::new(VecDeque::with_capacity(1000))),
-            config: _config,
+            config: config,
         }
     }
 
@@ -688,9 +688,9 @@ pub struct EdgeCaseGenerator {
 }
 
 impl EdgeCaseGenerator {
-    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: _config.clone(),
+            config: config.clone(),
         }
     }
 
@@ -885,9 +885,9 @@ pub struct PrecisionAnalyzer {
 }
 
 impl PrecisionAnalyzer {
-    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: _config.clone(),
+            config: config.clone(),
         }
     }
 
@@ -920,9 +920,9 @@ pub struct InvariantValidator {
 }
 
 impl InvariantValidator {
-    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: _config.clone(),
+            config: config.clone(),
         }
     }
 
@@ -1015,9 +1015,9 @@ pub struct CancellationDetector {
 }
 
 impl CancellationDetector {
-    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: _config.clone(),
+            config: config.clone(),
         }
     }
 
@@ -1081,7 +1081,7 @@ impl CancellationDetector {
         Ok(cases)
     }
 
-    fn assess_cancellation_risk<R>(&self, computed_value: R, test_case: &Array1<R>) -> f64
+    fn assess_cancellation_risk<R>(&self, computed_value: R, testcase: &Array1<R>) -> f64
     where
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
@@ -1106,9 +1106,9 @@ pub struct OverflowMonitor {
 }
 
 impl OverflowMonitor {
-    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: _config.clone(),
+            config: config.clone(),
         }
     }
 
@@ -1198,9 +1198,9 @@ pub struct ConditionAnalyzer {
 }
 
 impl ConditionAnalyzer {
-    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: _config.clone(),
+            config: config.clone(),
         }
     }
 
@@ -1282,9 +1282,9 @@ pub struct ConvergenceTester {
 }
 
 impl ConvergenceTester {
-    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: _config.clone(),
+            config: config.clone(),
         }
     }
 
@@ -1349,9 +1349,9 @@ pub struct MonteCarloStabilityTester {
 }
 
 impl MonteCarloStabilityTester {
-    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: _config.clone(),
+            config: config.clone(),
         }
     }
 
@@ -1409,7 +1409,7 @@ impl MonteCarloStabilityTester {
         Ok(result)
     }
 
-    fn add_small_perturbation<D, R>(&self, test_data: &ArrayBase<D, Ix1>) -> StatsResult<Array1<R>>
+    fn add_small_perturbation<D, R>(&self, testdata: &ArrayBase<D, Ix1>) -> StatsResult<Array1<R>>
     where
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
@@ -1434,9 +1434,9 @@ pub struct RegressionTester {
 }
 
 impl RegressionTester {
-    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: _config.clone(),
+            config: config.clone(),
             historical_results: Arc::new(RwLock::new(HashMap::new())),
         }
     }
@@ -1522,9 +1522,9 @@ pub struct ComprehensiveStabilityResult {
 }
 
 impl ComprehensiveStabilityResult {
-    pub fn new(_function_name: String) -> Self {
+    pub fn new(_functionname: String) -> Self {
         Self {
-            function_name: _function_name,
+            function_name: function_name,
             test_duration: Duration::from_secs(0),
             overall_stability_score: 0.0,
             stability_assessment: StabilityAssessment::Unknown,
@@ -1630,7 +1630,7 @@ impl EdgeCaseStabilityResult {
         }
     }
 
-    pub fn add_test_result<R>(&mut self, edge_case: EdgeCase<R>, result: EdgeCaseTestResult) {
+    pub fn add_test_result<R>(&mut self, edgecase: EdgeCase<R>, result: EdgeCaseTestResult) {
         self.total_cases += 1;
         match result.result_status {
             EdgeCaseResultStatus::Success => self.passed_cases += 1,
@@ -1723,7 +1723,7 @@ impl PrecisionStabilityResult {
         }
     }
 
-    pub fn add_precision_test<R>(&mut self, precision_name: String, result: StatsResult<R>) {
+    pub fn add_precision_test<R>(&mut self, precisionname: String, result: StatsResult<R>) {
         let test_result = PrecisionTestResult {
             precision_name: precision_name.clone(),
             success: result.is_ok(),
@@ -2001,9 +2001,9 @@ pub struct RegressionTestResult {
 }
 
 impl RegressionTestResult {
-    pub fn new(_function_name: String) -> Self {
+    pub fn new(_functionname: String) -> Self {
         Self {
-            function_name: _function_name,
+            function_name: function_name,
             current_value: 0.0,
             historical_mean: 0.0,
             deviation: 0.0,
@@ -2203,7 +2203,7 @@ where
 
 /// Generate test data for numerical stability testing
 #[allow(dead_code)]
-fn generate_stability_test_data(min_val: f64, max_val: f64, size: usize) -> Array1<f64> {
+fn generate_stability_test_data(min_val: f64, maxval: f64, size: usize) -> Array1<f64> {
     use rand::{rngs::StdRng, Rng, SeedableRng};
 
     let mut rng = StdRng::seed_from_u64(42);
@@ -2212,11 +2212,11 @@ fn generate_stability_test_data(min_val: f64, max_val: f64, size: usize) -> Arra
     for i in 0..size {
         // Mix of different value types for comprehensive testing
         match i % 5 {
-            0 => data[i] = rng.random_range(min_val..max_val), // Random in range
+            0 => data[i] = rng.gen_range(min_val..max_val), // Random in range
             1 => data[i] = min_val,                            // Minimum value
             2 => data[i] = max_val,                            // Maximum value
             3 => data[i] = (min_val + max_val) / 2.0,          // Midpoint
-            4 => data[i] = rng.random_range(min_val..max_val) * 1e-10, // Very small values
+            4 => data[i] = rng.gen_range(min_val..max_val) * 1e-10, // Very small values
             _ => unreachable!(),
         }
     }

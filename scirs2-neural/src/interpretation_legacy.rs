@@ -331,10 +331,10 @@ impl<
     pub fn add_attribution_method(&mut self, method: AttributionMethod) {
         self.attribution_methods.push(method);
     /// Cache layer activations
-    pub fn cache_activations(&mut self, layer_name: String, activations: ArrayD<F>) {
+    pub fn cache_activations(&mut self, layername: String, activations: ArrayD<F>) {
         self.activation_cache.insert(layer_name, activations);
     /// Cache layer gradients
-    pub fn cache_gradients(&mut self, layer_name: String, gradients: ArrayD<F>) {
+    pub fn cache_gradients(&mut self, layername: String, gradients: ArrayD<F>) {
         self.gradient_cache.insert(layer_name, gradients);
     /// Compute attribution using specified method
     pub fn compute_attribution(
@@ -608,7 +608,7 @@ impl<
         self.layer_statistics.insert(layer_name, stats);
         Ok(())
     /// Get statistics for a specific layer
-    pub fn get_layer_statistics(&self, layer_name: &str) -> Option<&LayerAnalysisStats<F>> {
+    pub fn get_layer_statistics(&self, layername: &str) -> Option<&LayerAnalysisStats<F>> {
         self.layer_statistics.get(layer_name)
     /// Generate a comprehensive interpretation report
     pub fn generate_interpretation_report(

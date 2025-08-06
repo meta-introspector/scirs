@@ -37,36 +37,36 @@ pub enum SignalError {
 
 // Conversion from scirs2_core errors
 impl From<scirs2_core::CoreError> for SignalError {
-    fn from(_err: scirs2_core::CoreError) -> Self {
+    fn from(err: scirs2_core::CoreError) -> Self {
         SignalError::ComputationError(format!("Core error: {_err}"))
     }
 }
 
 // Conversion from FFT errors
 impl From<scirs2_fft::FFTError> for SignalError {
-    fn from(_err: scirs2_fft::FFTError) -> Self {
+    fn from(err: scirs2_fft::FFTError) -> Self {
         SignalError::ComputationError(format!("FFT error: {_err}"))
     }
 }
 
 // Conversion from ndarray shape errors
 impl From<ndarray::ShapeError> for SignalError {
-    fn from(_err: ndarray::ShapeError) -> Self {
+    fn from(err: ndarray::ShapeError) -> Self {
         SignalError::ShapeMismatch(format!("Shape error: {_err}"))
     }
 }
 
 // Conversion from std::io::Error
 impl From<std::io::Error> for SignalError {
-    fn from(_err: std::io::Error) -> Self {
+    fn from(err: std::io::Error) -> Self {
         SignalError::ComputationError(format!("IO error: {_err}"))
     }
 }
 
 // Conversion from scirs2_linalg errors
 // impl From<scirs2_linalg::LinalgError> for SignalError {
-//     fn from(_err: scirs2, linalg: LinalgError) -> Self {
-//         SignalError::ComputationError(format!("Linear algebra error: {}", _err))
+//     fn from(err: scirs2, linalg: LinalgError) -> Self {
+//         SignalError::ComputationError(format!("Linear algebra error: {}", err))
 //     }
 // }
 

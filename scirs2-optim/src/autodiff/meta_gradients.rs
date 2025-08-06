@@ -828,7 +828,8 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     /// Advanced second-order meta-gradients using higher-order engine
     fn compute_advanced_second_order_gradients(
         &mut self,
-        meta_params: &Array1<T>, _adapted_params: &Array1<T>,
+        meta_params: &Array1<T>,
+        _adapted_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
     ) -> Result<Array1<T>> {
@@ -962,7 +963,8 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     /// Fallback finite difference second-order computation
     fn compute_finite_difference_second_order(
         &self,
-        meta_params: &Array1<T>, _adapted_params: &Array1<T>,
+        meta_params: &Array1<T>,
+        _adapted_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
     ) -> Result<Array1<T>> {
@@ -993,7 +995,8 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
 
     /// Compute first-order meta-gradients
     fn compute_first_order_meta_gradients(
-        &self, _meta_params: &Array1<T>,
+        &self,
+        _meta_params: &Array1<T>,
         adapted_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
@@ -1012,7 +1015,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     ) -> Result<Array1<T>> {
         // Simplified IFT computation
         // In practice, this would solve: dψ/dθ = -H^(-1) * d²L/dψdθ
-        // where ψ are optimal _params, θ are meta-_params, H is Hessian
+        // where ψ are optimal params, θ are meta-_params, H is Hessian
 
         let eps = T::from(1e-6).unwrap();
         let mut gradients = Array1::zeros(meta_params.len());
@@ -1089,7 +1092,10 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     /// Check inner loop stop condition
     fn check_stop_condition(
         &self,
-        gradient: &Array1<T>, _params: &Array1<T>, _task: &MetaTask<T>, _objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
+        gradient: &Array1<T>,
+        _params: &Array1<T>,
+        _task: &MetaTask<T>,
+        _objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
     ) -> Result<bool> {
         match &self.inner_loop_config.stop_condition {
             StopCondition::FixedSteps => Ok(false), // Always run fixed number of steps
@@ -1228,8 +1234,10 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
         }
 
         // Create objective functions for each task
-        let objective1 = |_params: &Array1<T>| objective_fn(_params, meta_params, &task1.support_set);
-        let objective2 = |_params: &Array1<T>| objective_fn(_params, meta_params, &task2.support_set);
+        let objective1 =
+            |_params: &Array1<T>| objective_fn(_params, meta_params, &task1.support_set);
+        let objective2 =
+            |_params: &Array1<T>| objective_fn(_params, meta_params, &task2.support_set);
 
         let hessian_config = HessianConfig {
             exact: true,
@@ -1354,7 +1362,8 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     fn compute_per_parameter_learning_rates(
         &self,
         meta_params: &Array1<T>,
-        gradient: &Array1<T>, _task: &MetaTask<T>,
+        gradient: &Array1<T>,
+        _task: &MetaTask<T>,
     ) -> Result<Array1<T>> {
         let mut learning_rates = Array1::zeros(meta_params.len());
         let base_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
@@ -1371,7 +1380,8 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
 
     /// Compute adaptive gradient-based learning rates
     fn compute_adaptive_gradient_rates(
-        &self, _meta_params: &Array1<T>,
+        &self,
+        _meta_params: &Array1<T>,
         gradient: &Array1<T>,
     ) -> Result<Array1<T>> {
         let mut learning_rates = Array1::zeros(gradient.len());
@@ -1406,7 +1416,9 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     /// Compute learned adaptation rule (placeholder)
     fn compute_learned_adaptation_rule(
         &self,
-        meta_params: &Array1<T>, _gradient: &Array1<T>, _task: &MetaTask<T>,
+        meta_params: &Array1<T>,
+        _gradient: &Array1<T>,
+        _task: &MetaTask<T>,
     ) -> Result<Array1<T>> {
         // Placeholder: would use a learned neural network
         let base_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
@@ -1416,7 +1428,9 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     /// Compute meta-learned adaptation rates (placeholder)
     fn compute_meta_learned_rates(
         &self,
-        meta_params: &Array1<T>, _gradient: &Array1<T>, _task: &MetaTask<T>,
+        meta_params: &Array1<T>,
+        _gradient: &Array1<T>,
+        _task: &MetaTask<T>,
     ) -> Result<Array1<T>> {
         // Placeholder: would use meta-learned adaptation
         let base_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
@@ -1427,10 +1441,10 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
 /// Checkpoint manager implementation
 impl<T: Float + Default + Clone> CheckpointManager<T> {
     /// Create a new checkpoint manager
-    pub fn new(_max_checkpoints: usize, memory_threshold: usize) -> Self {
+    pub fn new(_max_checkpoints: usize, memorythreshold: usize) -> Self {
         Self {
             checkpoints: HashMap::new(),
-            max_checkpoints: _max_checkpoints,
+            max_checkpoints: max_checkpoints,
             memory_threshold,
             current_memory: 0,
             policy: CheckpointPolicy::MemoryThreshold,
@@ -1492,7 +1506,7 @@ impl<T: Float + Default + Clone> CheckpointManager<T> {
     }
 
     /// Check if checkpointing is needed
-    pub fn should_checkpoint(&self, current_step: usize) -> bool {
+    pub fn should_checkpoint(&self, currentstep: usize) -> bool {
         match self.policy {
             CheckpointPolicy::FixedInterval { interval } => current_step % interval == 0,
             CheckpointPolicy::MemoryThreshold => self.current_memory > self.memory_threshold,

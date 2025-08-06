@@ -148,27 +148,27 @@ where
 
 /// Enhanced input validation
 #[allow(dead_code)]
-fn validate_inputs<T, U>(_times: &[T], values: &[U]) -> SignalResult<()>
+fn validate_inputs<T, U>(times: &[T], values: &[U]) -> SignalResult<()>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if _times.is_empty() || values.is_empty() {
+    if times.is_empty() || values.is_empty() {
         return Err(SignalError::ValueError(
             "Input arrays cannot be empty".to_string(),
         ));
     }
 
-    if _times.len() != values.len() {
+    if times.len() != values.len() {
         return Err(SignalError::ShapeMismatch(format!(
             "Times and values must have same length: {} != {}",
-            _times.len(),
+            times.len(),
             values.len()
         )));
     }
 
     // Check for NaN or infinite values
-    for (i, &t) in _times.iter().enumerate() {
+    for (i, &t) in times.iter().enumerate() {
         if !t.is_finite() {
             return Err(SignalError::ValueError(format!(
                 "Non-finite time value at index {}: {:?}",
@@ -191,22 +191,22 @@ where
 
 /// Validate time series properties
 #[allow(dead_code)]
-fn validate_time_series(_times: &[f64]) -> SignalResult<()> {
+fn validate_time_series(times: &[f64]) -> SignalResult<()> {
     // Check if _times are sorted
     for i in 1.._times.len() {
-        if _times[i] <= _times[i - 1] {
+        if times[i] <= times[i - 1] {
             return Err(SignalError::ValueError(format!(
-                "Times must be strictly increasing: _times[{}]={} <= _times[{}]={}",
+                "Times must be strictly increasing: times[{}]={} <= times[{}]={}",
                 i,
-                _times[i],
+                times[i],
                 i - 1,
-                _times[i - 1]
+                times[i - 1]
             )));
         }
     }
 
     // Check for reasonable time span
-    let t_span = _times[_times.len() - 1] - _times[0];
+    let t_span = times[_times.len() - 1] - times[0];
     if t_span <= 0.0 {
         return Err(SignalError::ValueError(
             "Time span must be positive".to_string(),
@@ -214,7 +214,7 @@ fn validate_time_series(_times: &[f64]) -> SignalResult<()> {
     }
 
     // Check for duplicate _times
-    let mut sorted_times = _times.to_vec();
+    let mut sorted_times = times.to_vec();
     sorted_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
     for i in 1..sorted_times.len() {
         if (sorted_times[i] - sorted_times[i - 1]).abs() < 1e-15 {
@@ -231,11 +231,11 @@ fn validate_time_series(_times: &[f64]) -> SignalResult<()> {
 
 /// Convert numeric array to f64
 #[allow(dead_code)]
-fn convert_to_f64<T>(_arr: &[T]) -> SignalResult<Vec<f64>>
+fn convert_to_f64<T>(arr: &[T]) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
-    _arr.iter()
+    arr.iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
                 SignalError::ValueError(format!("Could not convert {:?} to f64", val))
@@ -246,8 +246,8 @@ where
 
 /// Apply window function
 #[allow(dead_code)]
-fn apply_window(_values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
-    let n = _values.len();
+fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
+    let n = values.len();
 
     let window = match config.window {
         WindowType::None => vec![1.0; n],
@@ -287,14 +287,14 @@ fn apply_window(_values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec
 
 /// Compute frequency grid
 #[allow(dead_code)]
-fn compute_frequency_grid(_times: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
-    let n = _times.len();
-    let t_span = _times[n - 1] - _times[0];
+fn compute_frequency_grid(times: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
+    let n = times.len();
+    let t_span = times[n - 1] - times[0];
 
     // Enhanced sampling rate estimation
     let mut dts = vec![0.0; n - 1];
     for i in 0..n - 1 {
-        dts[i] = _times[i + 1] - _times[i];
+        dts[i] = times[i + 1] - times[i];
     }
     dts.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -380,14 +380,14 @@ fn compute_simd_fast_lombscargle(
 
 /// Compute tau offset using SIMD
 #[allow(dead_code)]
-fn compute_tau_simd(_times: &[f64], omega: f64) -> f64 {
-    let n = _times.len();
+fn compute_tau_simd(times: &[f64], omega: f64) -> f64 {
+    let n = times.len();
     let mut sin_sum = 0.0;
     let mut cos_sum = 0.0;
 
     // Process in SIMD-friendly chunks
     let chunk_size = 8;
-    let chunks = _times.chunks_exact(chunk_size);
+    let chunks = times.chunks_exact(chunk_size);
     let remainder = chunks.remainder();
 
     for chunk in chunks {
@@ -554,7 +554,7 @@ fn compute_parallel_bootstrap_ci(
     let config_arc = Arc::new(config.clone());
 
     // Parallel _bootstrap iterations
-    let _bootstrap_powers: Vec<Vec<f64>> = (0..n_bootstrap)
+    let bootstrap_powers: Vec<Vec<f64>> = (0..n_bootstrap)
         .into_par_iter()
         .map(|iter| {
             let mut rng = rand::rng();
@@ -568,7 +568,7 @@ fn compute_parallel_bootstrap_ci(
             let mut resampled_values = vec![0.0; n];
 
             for i in 0..n {
-                let idx = rng.random_range(0..n);
+                let idx = rng.gen_range(0..n);
                 resampled_times[i] = times_ref[idx];
                 resampled_values[i] = values_ref[idx];
             }
@@ -612,8 +612,8 @@ fn compute_parallel_bootstrap_ci(
 
 /// Compute false alarm probability
 #[allow(dead_code)]
-fn compute_false_alarm_probability(_power: &[f64], n_data: usize) -> SignalResult<Vec<f64>> {
-    let n_freq = _power.len();
+fn compute_false_alarm_probability(_power: &[f64], ndata: usize) -> SignalResult<Vec<f64>> {
+    let n_freq = power.len();
     let n_eff = n_freq as f64; // Simplified; could use more sophisticated estimate
 
     // Baluev (2008) approximation for FAP
@@ -631,6 +631,7 @@ fn compute_false_alarm_probability(_power: &[f64], n_data: usize) -> SignalResul
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_simd_lombscargle_basic() {

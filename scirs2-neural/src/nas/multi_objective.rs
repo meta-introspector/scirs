@@ -24,9 +24,9 @@ pub struct Objective {
 }
 impl Objective {
     /// Create a new objective
-    pub fn new(_name: &str, minimize: bool, weight: f64) -> Self {
+    pub fn new(name: &str, minimize: bool, weight: f64) -> Self {
         Self {
-            _name: _name.to_string(),
+            _name: name.to_string(),
             minimize,
             weight,
             target: None,
@@ -97,8 +97,8 @@ pub struct MultiObjectiveSolution {
     pub dominated_solutions: Vec<usize>,
 impl MultiObjectiveSolution {
     /// Create a new solution
-    pub fn new(_architecture: Arc<dyn ArchitectureEncoding>, objectives: Vec<f64>) -> Self {
-            _architecture,
+    pub fn new(architecture: Arc<dyn ArchitectureEncoding>, objectives: Vec<f64>) -> Self {
+            architecture,
             objectives,
             constraint_violations: Vec::new(),
             rank: 0,
@@ -131,8 +131,8 @@ pub struct MultiObjectiveOptimizer {
     hypervolume_history: Vec<f64>,
 impl MultiObjectiveOptimizer {
     /// Create a new multi-objective optimizer
-    pub fn new(_config: MultiObjectiveConfig) -> Self {
-            _config,
+    pub fn new(config: MultiObjectiveConfig) -> Self {
+            config,
             population: Vec::new(),
             pareto_front: Vec::new(),
             generation: 0,
@@ -373,9 +373,9 @@ impl MultiObjectiveOptimizer {
 use rand::rng;
         let mut rng = rng();
         let tournament_size = 3;
-        let mut best_idx = rng.random_range(0..self.population.len());
+        let mut best_idx = rng.gen_range(0..self.population.len());
         for _ in 1..tournament_size {
-            let candidate_idx = rng.random_range(0..self.population.len());
+            let candidate_idx = rng.gen_range(0..self.population.len());
             // Compare based on dominance and crowding distance
             if self.is_better(&self.population[candidate_idx], &self.population[best_idx]) {
                 best_idx = candidate_idx;
@@ -478,7 +478,7 @@ use rand::rng;
                 reference[i] = min_val * 0.9;
         reference
     /// Compute 2D hypervolume using the efficient sweep algorithm
-    fn compute_hypervolume_2d(&self, reference_point: &[f64]) -> Result<f64> {
+    fn compute_hypervolume_2d(&self, referencepoint: &[f64]) -> Result<f64> {
         let mut points: Vec<(f64, f64)> = self.pareto_front
             .map(|s| {
                 let x = if self.config.objectives[0].minimize {
@@ -500,7 +500,7 @@ use rand::rng;
                 prev_y = y;
         Ok(volume)
     /// Compute 3D hypervolume using the WFG algorithm
-    fn compute_hypervolume_3d(&self, reference_point: &[f64]) -> Result<f64> {
+    fn compute_hypervolume_3d(&self, referencepoint: &[f64]) -> Result<f64> {
         // Transform points relative to reference point
         let mut points: Vec<Vec<f64>> = self.pareto_front
                 s.objectives
@@ -537,7 +537,7 @@ use rand::rng;
         // This is a simplified implementation; full 3D hypervolume calculation is more complex
         Ok(volume.max(0.0))
     /// Compute hypervolume using Monte Carlo sampling for higher dimensions
-    fn compute_hypervolume_monte_carlo(&self, reference_point: &[f64]) -> Result<f64> {
+    fn compute_hypervolume_monte_carlo(&self, referencepoint: &[f64]) -> Result<f64> {
         let num_samples = 100000;
         let mut dominated_count = 0;
         // Define the bounds for sampling
@@ -553,7 +553,7 @@ use rand::rng;
             let mut sample_point = vec![0.0; self.config.objectives.len()];
             
             for i in 0..sample_point.len() {
-                sample_point[i] = rng.random_range(lower_bounds[i]..=upper_bounds[i]);
+                sample_point[i] = rng.gen_range(lower_bounds[i]..=upper_bounds[i]);
             // Check if sample point is dominated by any solution in Pareto front
             for solution in &self.pareto_front {
                 let mut dominates = true;
@@ -713,7 +713,7 @@ use rand::rng;
         let neighborhood_size = 10.min(self.population.len());
         let start = index.saturating_sub(neighborhood_size / 2);
         let end = (index + neighborhood_size / 2).min(self.population.len() - 1);
-        let neighbor_idx = rng.random_range(start..=end);
+        let neighbor_idx = rng.gen_range(start..=end);
         if neighbor_idx == index && end > start {
             Ok(if neighbor_idx == start { end } else { start })
             Ok(neighbor_idx)

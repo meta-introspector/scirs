@@ -1,11 +1,11 @@
 use crate::ndarray;
-#[cfg(feature = "blas")]
-use crate::ndarray__ext::NdArrayViewMut;
-use crate::ndarray__ext::{NdArray, NdArrayView};
 use crate::ndarray_ext;
+#[cfg(feature = "blas")]
+use crate::ndarray_ext::NdArrayViewMut;
+use crate::ndarray_ext::{NdArray, NdArrayView};
 use crate::op;
 use crate::tensor::Tensor;
-use crate::tensor__ops::*;
+use crate::tensor_ops::*;
 use crate::Float;
 use ndarray::SliceInfoElem;
 use std::iter::FromIterator;
@@ -494,7 +494,7 @@ impl<T: Float> op::Op<T> for GatherGrad {
 #[cfg(feature = "blas")]
 pub(crate) fn inplace_add_impl<F: Float>(mut a: NdArrayViewMut<F>, b: &NdArrayView<F>) {
     use crate::same_type;
-    use crate::tensor__ops::blas_ffi::{vdAdd, vsAdd, MklInt};
+    use crate::tensor_ops::blas_ffi::{vdAdd, vsAdd, MklInt};
     unsafe {
         if same_type::<F, f32>() {
             vsAdd(

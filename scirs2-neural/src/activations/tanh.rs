@@ -92,7 +92,7 @@ impl<F: Float + Debug + ScalarOperand> Layer<F> for Tanh {
         <Self as Activation<F>>::backward(self, grad_output, input)
     }
 
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         Ok(())
     }
 }

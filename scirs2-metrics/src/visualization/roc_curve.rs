@@ -104,8 +104,8 @@ where
             thresholds: None,
             auc: None,
             title: "ROC Curve".to_string(),
-            show_auc: _true,
-            show_baseline: _true,
+            show_auc: true,
+            show_baseline: true,
             y_true: Some(y_true),
             y_score: Some(y_score),
             pos_label,
@@ -135,7 +135,7 @@ where
     /// # Returns
     ///
     /// * Self for method chaining
-    pub fn with_show_auc(mut self, show_auc: bool) -> Self {
+    pub fn with_show_auc(mut self, showauc: bool) -> Self {
         self.show_auc = show_auc;
         self
     }
@@ -149,7 +149,7 @@ where
     /// # Returns
     ///
     /// * Self for method chaining
-    pub fn with_show_baseline(mut self, show_baseline: bool) -> Self {
+    pub fn with_show_baseline(mut self, showbaseline: bool) -> Self {
         self.show_baseline = show_baseline;
         self
     }
@@ -224,7 +224,7 @@ where
     f64: From<T>,
 {
     fn prepare_data(&self) -> std::result::Result<VisualizationData, Box<dyn Error>> {
-        let (fpr, tpr_, auc) = self
+        let (fpr, tpr_, thresholds, auc) = self
             .compute_roc()
             .map_err(|e| Box::new(e) as Box<dyn Error>)?;
 

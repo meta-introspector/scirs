@@ -39,7 +39,7 @@ pub struct AdamOptimizer {
 
 impl AdamOptimizer {
     /// Create a new Adam optimizer
-    pub fn new(_weightshape: (usize, usize), bias_size: usize) -> Self {
+    pub fn new(weightshape: (usize, usize), bias_size: usize) -> Self {
         Self {
             m_weights: Array2::zeros(_weightshape),
             v_weights: Array2::zeros(_weightshape),
@@ -116,21 +116,21 @@ pub struct NeuralIoNetwork {
 
 impl NeuralIoNetwork {
     /// Create a new neural network with specified layer sizes
-    pub fn new(_input_size: usize, hidden_size: usize, output_size: usize) -> Self {
+    pub fn new(_input_size: usize, hidden_size: usize, outputsize: usize) -> Self {
         // Initialize weights with Xavier/Glorot initialization
         let input_scale = (2.0 / _input_size as f32).sqrt();
         let hidden_scale = (2.0 / hidden_size as f32).sqrt();
         let output_scale = (2.0 / hidden_size as f32).sqrt();
 
         Self {
-            input_weights: Self::random_weights((hidden_size, _input_size), input_scale),
+            input_weights: Self::random_weights((hidden_size, input_size), input_scale),
             hidden_weights: Self::random_weights((hidden_size, hidden_size), hidden_scale),
             output_weights: Self::random_weights((output_size, hidden_size), output_scale),
             input_bias: Array1::zeros(hidden_size),
             hidden_bias: Array1::zeros(hidden_size),
             output_bias: Array1::zeros(output_size),
             learning_rate: 0.001,
-            adam_optimizer: AdamOptimizer::new((hidden_size, _input_size), hidden_size),
+            adam_optimizer: AdamOptimizer::new((hidden_size, input_size), hidden_size),
             attention_weights: Array1::from_elem(_input_size, 1.0 / _input_size as f32),
             dropout_rate: 0.1,
         }
@@ -142,14 +142,14 @@ impl NeuralIoNetwork {
         let attended_input = self.apply_attention(input);
 
         // Input to hidden layer with enhanced activation
-        let hidden_input = self.input_weights.dot(&attended_input) + &self.input_bias;
+        let hidden_input = self.inputweights.dot(&attended_input) + &self.input_bias;
         let hidden_output = hidden_input.mapv(Self::gelu); // Using GELU instead of ReLU
 
         // Apply layer normalization
         let hidden_normalized = self.layer_normalize(&hidden_output);
 
         // Hidden to hidden (skip connection with enhanced residual)
-        let hidden_input2 = self.hidden_weights.dot(&hidden_normalized) + &self.hidden_bias;
+        let hidden_input2 = self.hiddenweights.dot(&hidden_normalized) + &self.hidden_bias;
         let hidden_output2 = hidden_input2.mapv(Self::swish); // Using Swish activation
 
         // Enhanced residual connection with gating
@@ -157,7 +157,7 @@ impl NeuralIoNetwork {
         let gated_residual = &gate * &hidden_output2 + &(1.0 - &gate) * &hidden_normalized;
 
         // Hidden to output layer with advanced activation
-        let output = self.output_weights.dot(&gated_residual) + &self.output_bias;
+        let output = self.outputweights.dot(&gated_residual) + &self.output_bias;
         let final_output = output.mapv(Self::tanh); // Using tanh for bounded output
 
         Ok(final_output)
@@ -217,7 +217,7 @@ impl NeuralIoNetwork {
 
     /// Generate random weights using Xavier initialization
     fn random_weights(shape: (usize, usize), scale: f32) -> Array2<f32> {
-        Array2::fromshape_fn(shape, |_| {
+        Array2::from_shape_fn(shape, |_| {
             // Simple pseudo-random number generation
             let mut state = std::ptr::addr_of!(scale) as usize;
             state = state.wrapping_mul(1103515245).wrapping_add(12345);
@@ -240,11 +240,11 @@ impl NeuralIoNetwork {
         let attended_input = self.apply_attention(input);
 
         // Forward pass intermediate values (needed for backprop)
-        let hidden_input = self.input_weights.dot(&attended_input) + &self.input_bias;
+        let hidden_input = self.inputweights.dot(&attended_input) + &self.input_bias;
         let hidden_output = hidden_input.mapv(Self::gelu);
         let hidden_normalized = self.layer_normalize(&hidden_output);
 
-        let hidden_input2 = self.hidden_weights.dot(&hidden_normalized) + &self.hidden_bias;
+        let hidden_input2 = self.hiddenweights.dot(&hidden_normalized) + &self.hidden_bias;
         let hidden_output2 = hidden_input2.mapv(Self::swish);
 
         // Compute gradients using backpropagation
@@ -263,14 +263,14 @@ impl NeuralIoNetwork {
             );
 
         // Hidden layer gradients (simplified for efficiency)
-        let hidden_error = self.output_weights.t().dot(&output_bias_grad);
+        let hidden_error = self.outputweights.t().dot(&output_bias_grad);
         let mut hidden_bias_grad = hidden_error.clone();
         for val in hidden_bias_grad.iter_mut() {
             *val *= Self::gelu_derivative(*val);
         }
 
         // Input layer gradients (simplified)
-        let input_error = self.hidden_weights.t().dot(&hidden_bias_grad);
+        let input_error = self.hiddenweights.t().dot(&hidden_bias_grad);
         let mut input_bias_grad = input_error.clone();
         for val in input_bias_grad.iter_mut() {
             *val *= Self::gelu_derivative(*val);
@@ -339,7 +339,7 @@ impl NeuralIoNetwork {
             0.9 * &self.attention_weights + 0.1 * self.learning_rate * &attention_grad;
 
         // Normalize attention weights
-        let sum = self.attention_weights.sum();
+        let sum = self.attentionweights.sum();
         if sum > 0.0 {
             self.attention_weights /= sum;
         }
@@ -425,13 +425,13 @@ pub struct OptimizationDecisions {
 
 impl OptimizationDecisions {
     /// Convert from neural network output vector
-    pub fn from_output_vector(_output: &Array1<f32>) -> Self {
+    pub fn from_output_vector(output: &Array1<f32>) -> Self {
         Self {
-            thread_count_factor: _output[0].clamp(0.0, 1.0),
-            buffer_size_factor: _output[1].clamp(0.0, 1.0),
-            compression_level: _output[2].clamp(0.0, 1.0),
-            cache_priority: _output[3].clamp(0.0, 1.0),
-            simd_factor: _output[4].clamp(0.0, 1.0),
+            thread_count_factor: output[0].clamp(0.0, 1.0),
+            buffer_size_factor: output[1].clamp(0.0, 1.0),
+            compression_level: output[2].clamp(0.0, 1.0),
+            cache_priority: output[3].clamp(0.0, 1.0),
+            simd_factor: output[4].clamp(0.0, 1.0),
         }
     }
 
@@ -483,7 +483,7 @@ pub struct PerformanceFeedback {
 
 impl PerformanceFeedback {
     /// Convert to target vector for neural network training
-    pub fn to_target_vector(&self, baseline_throughput: f32) -> Array1<f32> {
+    pub fn to_target_vector(&self, baselinethroughput: f32) -> Array1<f32> {
         let throughput_improvement = (self.throughput_mbps / baseline_throughput.max(1.0)).min(2.0);
         let latency_score = (100.0 / (self.latency_ms + 1.0)).min(1.0);
         let efficiency_score = (self.cpu_efficiency + self.memory_efficiency) / 2.0;
@@ -763,7 +763,7 @@ impl AdvancedIoProcessor {
     }
 
     /// Compress data using specified level
-    fn compress_data(&self, data: &[u8], _level: u32) -> Result<Vec<u8>> {
+    fn compress_data(&self, data: &[u8], level: u32) -> Result<Vec<u8>> {
         // Simplified compression - in reality would use actual compression algorithms
         Ok(data.to_vec())
     }
@@ -874,7 +874,7 @@ impl ReinforcementLearningAgent {
     }
 
     /// Update Q-values based on reward
-    pub fn update_q_value(&mut self, state: &str, action: &str, reward: f32, next_state: &str) {
+    pub fn update_q_value(&mut self, state: &str, action: &str, reward: f32, nextstate: &str) {
         // First, get the max next Q value
         let max_next_q = self
             .q_table
@@ -972,7 +972,7 @@ impl EnsembleNeuralNetwork {
         let network_performance = vec![1.0; num_networks];
 
         Self {
-            networks: _networks,
+            networks: networks,
             ensemble_weights,
             network_performance,
         }
@@ -997,7 +997,7 @@ impl EnsembleNeuralNetwork {
     }
 
     /// Update ensemble weights based on individual network performance
-    pub fn update_ensemble_weights(&mut self, individual_errors: &[f32]) {
+    pub fn update_ensemble_weights(&mut self, individualerrors: &[f32]) {
         // Update performance tracking
         for (i, &error) in individual_errors.iter().enumerate() {
             self.network_performance[i] =
@@ -1031,7 +1031,7 @@ impl EnsembleNeuralNetwork {
     pub fn get_ensemble_stats(&self) -> EnsembleStats {
         EnsembleStats {
             num_networks: self.networks.len(),
-            ensemble_weights: self.ensemble_weights.clone(),
+            ensemble_weights: self.ensembleweights.clone(),
             network_performance: self.network_performance.clone(),
             weight_entropy: -self
                 .ensemble_weights

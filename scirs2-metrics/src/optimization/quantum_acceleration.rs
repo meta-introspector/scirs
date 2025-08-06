@@ -268,7 +268,8 @@ pub struct ClassicalFallback<F: Float> {
     /// Performance baseline
     performance_baseline: HashMap<String, Duration>,
     /// Enable automatic fallback
-    auto_fallback: bool, _phantom: std::marker::PhantomData<F>,
+    auto_fallback: bool,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + std::fmt::Debug> std::fmt::Debug for ClassicalFallback<F> {
@@ -286,7 +287,8 @@ impl<F: Float> Clone for ClassicalFallback<F> {
         Self {
             simd_capabilities: PlatformCapabilities::detect(), // Re-detect capabilities
             performance_baseline: self.performance_baseline.clone(),
-            auto_fallback: self.auto_fallback, _phantom: std::marker::PhantomData,
+            auto_fallback: self.auto_fallback,
+            _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -313,8 +315,8 @@ impl Default for QuantumConfig {
 
 impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsComputer<F> {
     /// Create new quantum metrics computer
-    pub fn new(_config: QuantumConfig) -> Result<Self> {
-        let num_qubits = _config.num_qubits;
+    pub fn new(config: QuantumConfig) -> Result<Self> {
+        let num_qubits = confignum_qubits;
 
         // Initialize quantum processor
         let quantum_processor = QuantumProcessor::new(num_qubits)?;
@@ -335,7 +337,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         let classical_fallback = ClassicalFallback::new()?;
 
         Ok(Self {
-            _config,
+            config,
             quantum_processor,
             entanglement_matrix,
             superposition_manager,
@@ -346,7 +348,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
     }
 
     /// Initialize entanglement matrix for quantum correlations
-    fn initialize_entanglement_matrix(_num_qubits: usize) -> Result<Array2<Complex<f64>>> {
+    fn initialize_entanglement_matrix(_numqubits: usize) -> Result<Array2<Complex<f64>>> {
         let size = 2_usize.pow(_num_qubits as u32);
         let mut matrix = Array2::zeros((size, size));
 
@@ -545,14 +547,14 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         let dt = total_time.as_secs_f64() / time_steps as f64;
 
         // Initialize ground state of initial Hamiltonian
-        let mut current_state = self.prepare_ground_state(_hamiltonian)?;
+        let mut current_state = self.prepare_ground_state(hamiltonian)?;
 
         for step in 0..time_steps {
             let s = step as f64 / time_steps as f64; // Adiabatic parameter
 
             // Interpolate Hamiltonians: H(s) = (1-s)H_initial + s*H_final
             let interpolated_hamiltonian =
-                self.interpolate_hamiltonians(_hamiltonian, target_hamiltonian, s)?;
+                self.interpolate_hamiltonians(hamiltonian, target_hamiltonian, s)?;
 
             // Time evolution using Trotter decomposition
             current_state =
@@ -690,7 +692,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         Ok(entangled_state)
     }
 
-    fn measure_quantum_correlation(&self, entangled_state: &[Complex<f64>]) -> Result<F> {
+    fn measure_quantum_correlation(&self, entangledstate: &[Complex<f64>]) -> Result<F> {
         // Use quantum interference to compute correlation
         let mut correlation_sum = 0.0;
         let n = (entangled_state.len() as f64).sqrt() as usize;
@@ -712,7 +714,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         Ok(F::from(normalized_correlation.clamp(-1.0, 1.0)).unwrap())
     }
 
-    fn apply_quantum_error_correction(&self, quantum_result: F, classical_result: F) -> Result<F> {
+    fn apply_quantum_error_correction(&self, quantum_result: F, classicalresult: F) -> Result<F> {
         // Simple error correction using majority voting with quantum redundancy
         let corrected_result = (quantum_result + classical_result) / F::from(2.0).unwrap();
         Ok(corrected_result)
@@ -722,7 +724,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         &mut self,
         matrix: &ArrayView2<F>,
     ) -> Result<Vec<Complex<f64>>> {
-        let (n_) = matrix.dim();
+        let (n, _) = matrix.dim();
         let state_size = 2_usize.pow((n as f64).log2().ceil() as u32);
         let mut quantum_state = vec![Complex::new(0.0, 0.0); state_size];
 
@@ -770,7 +772,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         Ok(eigenvalues)
     }
 
-    fn initialize_vqe_parameters(&self, matrix_size: usize) -> Result<Vec<f64>> {
+    fn initialize_vqe_parameters(&self, matrixsize: usize) -> Result<Vec<f64>> {
         use rand::Rng;
         let mut rng = rand::rng();
         let num_parameters = self.config.vqe_parameters.ansatz_depth * matrix_size;
@@ -812,7 +814,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         state: &[Complex<f64>],
     ) -> Result<F> {
         // Compute <ψ|H|ψ> where H is the matrix and ψ is the quantum state
-        let (n_) = matrix.dim();
+        let (n, _) = matrix.dim();
         let mut expectation = 0.0;
 
         for i in 0..n.min(state.len()) {
@@ -838,7 +840,9 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
 
     fn update_vqe_parameters(
         &mut self,
-        parameters: &mut [f64], _energy: F, matrix: &ArrayView2<F>,
+        parameters: &mut [f64],
+        _energy: F,
+        matrix: &ArrayView2<F>,
     ) -> Result<()> {
         // Simplified parameter update using finite differences
         let learning_rate = 0.01;
@@ -858,8 +862,8 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
             params_plus[i] = original_param + epsilon;
             params_minus[i] = original_param - epsilon;
 
-            let energy_plus = self.evaluate_parameter_energy(&params_plus_matrix)?;
-            let energy_minus = self.evaluate_parameter_energy(&params_minus_matrix)?;
+            let energy_plus = self.evaluate_parameter_energy(&params_plus)?;
+            let energy_minus = self.evaluate_parameter_energy(&params_minus)?;
 
             // Compute gradient
             let gradient = (energy_plus - energy_minus).to_f64().unwrap_or(0.0) / (2.0 * epsilon);
@@ -884,7 +888,8 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
     }
 
     fn orthogonalize_ansatz(
-        &mut self_parameters: &mut [f64], _previous_eigenvalues: &[F],
+        &mut self, parameters: &mut [f64],
+        _previous_eigenvalues: &[F],
     ) -> Result<()> {
         // Implement Gram-Schmidt orthogonalization for finding excited states
         // This is a simplified version - full implementation would be more complex
@@ -948,7 +953,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         Ok(())
     }
 
-    fn evaluate_cost_function_for_state(&self, state_index: usize, num_variables: usize) -> f64 {
+    fn evaluate_cost_function_for_state(&self, state_index: usize, numvariables: usize) -> f64 {
         // Convert state _index to binary representation and evaluate cost
         let mut cost = 0.0;
         for i in 0..num_variables {
@@ -1115,15 +1120,13 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         Ok(gap)
     }
 
-    fn adjust_adiabatic_schedule(
-        &mut self_current_step: usize, _total_steps: usize,
-    ) -> Result<()> {
+    fn adjust_adiabatic_schedule(&mut self, current_step: usize, _totalsteps: usize) -> Result<()> {
         // Implement adaptive adiabatic schedule adjustment
         // This would modify the time evolution parameters based on energy gap
         Ok(())
     }
 
-    fn extract_adiabatic_solution(&self, final_state: &[Complex<f64>]) -> Result<Vec<F>> {
+    fn extract_adiabatic_solution(&self, finalstate: &[Complex<f64>]) -> Result<Vec<F>> {
         // Extract solution from final adiabatic _state
         let mut solution = Vec::new();
 
@@ -1197,7 +1200,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         Ok(kernel_matrix)
     }
 
-    fn quantum_svm_computation(&self, kernel: &Array2<f64>, _metric_type: &str) -> Result<F> {
+    fn quantum_svm_computation(&self, kernel: &Array2<f64>, _metrictype: &str) -> Result<F> {
         // Simplified quantum SVM computation
         let trace = kernel.diag().sum();
         let metric_value = trace / kernel.nrows() as f64;
@@ -1268,13 +1271,13 @@ impl QuantumBenchmarkResults {
 // Implementation of supporting structures and traits
 
 impl<F: Float> QuantumProcessor<F> {
-    fn new(_num_qubits: usize) -> Result<Self> {
+    fn new(_numqubits: usize) -> Result<Self> {
         let state_size = 2_usize.pow(_num_qubits as u32);
         let mut state_vector = vec![Complex::new(0.0, 0.0); state_size];
         state_vector[0] = Complex::new(1.0, 0.0); // |0...0⟩ state
 
         Ok(Self {
-            _num_qubits,
+            num_qubits,
             state_vector,
             gate_set: QuantumGateSet::new(),
             circuit_depth: 0,
@@ -1283,7 +1286,7 @@ impl<F: Float> QuantumProcessor<F> {
         })
     }
 
-    fn apply_qft(&mut self, num_qubits: usize) -> Result<()> {
+    fn apply_qft(&mut self, numqubits: usize) -> Result<()> {
         // Apply Quantum Fourier Transform
         for i in 0..num_qubits {
             self.apply_hadamard(i)?;
@@ -1459,10 +1462,10 @@ impl Default for NoiseModel {
 }
 
 impl<F: Float> SuperpositionManager<F> {
-    fn new(_max_depth: usize) -> Self {
+    fn new(_maxdepth: usize) -> Self {
         Self {
             active_states: HashMap::new(),
-            _max_depth,
+            max_depth,
             coherence_tracker: CoherenceTracker::new(),
         }
     }
@@ -1485,7 +1488,7 @@ impl<F: Float> SuperpositionManager<F> {
         self.active_states
             .iter()
             .min_by_key(|(_, state)| state.creation_time)
-            .map(|(key_)| key.clone())
+            .map(|(key, _)| key.clone())
     }
 }
 
@@ -1498,7 +1501,7 @@ impl CoherenceTracker {
         }
     }
 
-    fn track_state(&mut self, key: &str, creation_time: Instant) {
+    fn track_state(&mut self, key: &str, creationtime: Instant) {
         self.coherence_times
             .insert(key.to_string(), creation_time.elapsed());
 
@@ -1561,7 +1564,8 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> ClassicalFallback
         Ok(Self {
             simd_capabilities: PlatformCapabilities::detect(),
             performance_baseline: HashMap::new(),
-            auto_fallback: true, _phantom: std::marker::PhantomData,
+            auto_fallback: true,
+            _phantom: std::marker::PhantomData,
         })
     }
 

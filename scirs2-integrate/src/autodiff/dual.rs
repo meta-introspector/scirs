@@ -19,22 +19,22 @@ pub struct Dual<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> Dual<F> {
     /// Create a new dual number
-    pub fn new(_val: F, der: F) -> Self {
-        Dual { val: _val, der }
+    pub fn new(val: F, der: F) -> Self {
+        Dual { val: val, der }
     }
 
     /// Create a constant dual number (zero derivative)
-    pub fn constant(_val: F) -> Self {
+    pub fn constant(val: F) -> Self {
         Dual {
-            val: _val,
+            val: val,
             der: F::zero(),
         }
     }
 
     /// Create a variable dual number (unit derivative)
-    pub fn variable(_val: F) -> Self {
+    pub fn variable(val: F) -> Self {
         Dual {
-            val: _val,
+            val: val,
             der: F::one(),
         }
     }
@@ -176,40 +176,40 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute max(self, other)
-    pub fn max(&self, _other: Self) -> Self {
-        if self.val > _other.val {
+    pub fn max(&self, other: Self) -> Self {
+        if self.val > other.val {
             *self
-        } else if self.val < _other.val {
-            _other
+        } else if self.val < other.val {
+            other
         } else {
             // When values are equal, average the derivatives
             Dual {
                 val: self.val,
-                der: (self.der + _other.der) / F::from(2.0).unwrap(),
+                der: (self.der + other.der) / F::from(2.0).unwrap(),
             }
         }
     }
 
     /// Compute min(self, other)
-    pub fn min(&self, _other: Self) -> Self {
-        if self.val < _other.val {
+    pub fn min(&self, other: Self) -> Self {
+        if self.val < other.val {
             *self
-        } else if self.val > _other.val {
-            _other
+        } else if self.val > other.val {
+            other
         } else {
             // When values are equal, average the derivatives
             Dual {
                 val: self.val,
-                der: (self.der + _other.der) / F::from(2.0).unwrap(),
+                der: (self.der + other.der) / F::from(2.0).unwrap(),
             }
         }
     }
 
     /// Compute x^y where both x and y are dual numbers
-    pub fn pow(&self, _other: Self) -> Self {
-        let val = self.val.powf(_other.val);
+    pub fn pow(&self, other: Self) -> Self {
+        let val = self.val.powf(other.val);
         let der = if self.val > F::zero() {
-            val * (_other.der * self.val.ln() + _other.val * self.der / self.val)
+            val * (other.der * self.val.ln() + other.val * self.der / self.val)
         } else {
             F::zero() // Handle edge case
         };
@@ -335,20 +335,20 @@ pub struct DualVector<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> DualVector<F> {
     /// Create a new dual vector
-    pub fn new(_values: Array1<F>, jacobian: Array1<Array1<F>>) -> Self {
+    pub fn new(values: Array1<F>, jacobian: Array1<Array1<F>>) -> Self {
         DualVector {
-            values: _values,
+            values: values,
             jacobian,
         }
     }
 
     /// Create from a regular vector with specified active variable
-    pub fn from_vector(_values: ArrayView1<F>, active_var: usize) -> Self {
+    pub fn from_vector(_values: ArrayView1<F>, activevar: usize) -> Self {
         let n = _values.len();
         let mut jacobian = Array1::from_elem(n, Array1::zeros(n));
 
         // Set the derivative of the active variable to 1
-        jacobian[active_var][active_var] = F::one();
+        jacobian[activevar][activevar] = F::one();
 
         DualVector {
             values: _values.to_owned(),
@@ -357,11 +357,11 @@ impl<F: IntegrateFloat> DualVector<F> {
     }
 
     /// Create a constant dual vector (zero derivatives)
-    pub fn constant(_values: Array1<F>) -> Self {
-        let n = _values.len();
+    pub fn constant(values: Array1<F>) -> Self {
+        let n = values.len();
         let jacobian = Array1::from_elem(n, Array1::zeros(n));
         DualVector {
-            values: _values,
+            values: values,
             jacobian,
         }
     }

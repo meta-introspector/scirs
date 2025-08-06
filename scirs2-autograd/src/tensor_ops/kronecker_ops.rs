@@ -146,7 +146,7 @@ impl<F: Float> Op<F> for KroneckerOp {
 /// # Examples
 /// ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::*;
+/// use ag::tensor_ops::*;
 /// use ndarray::array;
 ///
 /// ag::run(|g| {
@@ -175,7 +175,7 @@ pub fn kron<'g, F: Float>(a: &Tensor<'g, F>, b: &Tensor<'g, F>) -> Tensor<'g, F>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tensor__ops::convert_to_tensor;
+    use crate::tensor_ops::convert_to_tensor;
     use ndarray::array;
 
     #[test]

@@ -59,9 +59,9 @@ where
         + 'static,
 {
     /// Create a new SIMD B-spline evaluator
-    pub fn new(_spline: BSpline<T>) -> Self {
+    pub fn new(spline: BSpline<T>) -> Self {
         let workspace = BSplineWorkspace::new(_spline.degree());
-        Self { _spline, workspace }
+        Self { spline, workspace }
     }
 
     /// Evaluate the B-spline at multiple points simultaneously
@@ -121,15 +121,15 @@ where
     T: Float + FromPrimitive + Debug + Display + Zero + Copy + 'static,
 {
     /// Create a new SIMD cubic B-spline
-    pub fn new(_knots: Array1<T>, coefficients: Array1<T>) -> InterpolateResult<Self> {
-        if _knots.len() != coefficients.len() + 4 {
+    pub fn new(knots: Array1<T>, coefficients: Array1<T>) -> InterpolateResult<Self> {
+        if knots.len() != coefficients.len() + 4 {
             return Err(crate::error::InterpolateError::InvalidInput {
-                message: "For cubic B-spline, _knots.len() must equal coefficients.len() + 4"
+                message: "For cubic B-spline, knots.len() must equal coefficients.len() + 4"
                     .to_string(),
             });
         }
         Ok(Self {
-            _knots,
+            knots,
             coefficients,
         })
     }
@@ -203,7 +203,7 @@ pub struct SimdBSplineOps;
 impl SimdBSplineOps {
     /// Compute squared distances between points using SIMD
     #[cfg(feature = "simd")]
-    pub fn squared_distances<T>(_points: &ArrayView1<T>, centers: &ArrayView1<T>) -> Array1<T>
+    pub fn squared_distances<T>(points: &ArrayView1<T>, centers: &ArrayView1<T>) -> Array1<T>
     where
         T: Float + SimdUnifiedOps,
     {
@@ -215,7 +215,7 @@ impl SimdBSplineOps {
             // Fallback to scalar computation
             let mut result = Array1::zeros(_points.len());
             for i in 0.._points.len() {
-                let diff = _points[i] - centers[i];
+                let diff = points[i] - centers[i];
                 result[i] = diff * diff;
             }
             result
@@ -224,7 +224,7 @@ impl SimdBSplineOps {
 
     /// Compute weighted sums using SIMD
     #[cfg(feature = "simd")]
-    pub fn weighted_sum<T>(_values: &ArrayView1<T>, weights: &ArrayView1<T>) -> T
+    pub fn weighted_sum<T>(values: &ArrayView1<T>, weights: &ArrayView1<T>) -> T
     where
         T: Float + SimdUnifiedOps,
     {

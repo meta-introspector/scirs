@@ -102,11 +102,11 @@ pub struct SearchResult {
     pub flops: Option<usize>,
 impl NeuralArchitectureSearch {
     /// Create a new NAS instance
-    pub fn new(_config: NASConfig) -> Result<Self> {
+    pub fn new(config: NASConfig) -> Result<Self> {
         let controller = NASController::new(_config.search_space.clone())?;
         let evaluator = ArchitectureEvaluator::new(ControllerConfig::default())?;
         Ok(Self {
-            _config,
+            config,
             controller,
             evaluator,
             best_architecture: None,

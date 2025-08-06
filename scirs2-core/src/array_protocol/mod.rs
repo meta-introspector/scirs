@@ -254,10 +254,10 @@ impl ArrayFunctionRegistry {
     #[must_use]
     pub fn get_cached_dispatch(
         &self,
-        func_name: &'static str,
+        funcname: &'static str,
         types: &[TypeId],
     ) -> Option<&DispatchCacheEntry> {
-        let key = (func_name, types.to_vec());
+        let key = (funcname, types.to_vec());
         if let Some(entry) = self.dispatch_cache.get(&key) {
             // Check if cache entry is still valid (TTL check)
             if entry.timestamp.elapsed() < self.cache_ttl {
@@ -270,7 +270,7 @@ impl ArrayFunctionRegistry {
     /// Cache dispatch result for future optimization
     pub fn cache_dispatch(
         &mut self,
-        func_name: &'static str,
+        funcname: &'static str,
         types: Vec<TypeId>,
         impl_type: TypeId,
     ) {
@@ -279,7 +279,7 @@ impl ArrayFunctionRegistry {
             self.cleanup_cache();
         }
 
-        let key = (func_name, types.clone());
+        let key = (funcname, types.clone());
         let entry = DispatchCacheEntry {
             type_signature: types,
             preferred_impl_type: impl_type,
@@ -290,8 +290,8 @@ impl ArrayFunctionRegistry {
     }
 
     /// Update cache hit count for an entry
-    pub fn update_cache_hit(&mut self, func_name: &'static str, types: &[TypeId]) {
-        let key = (func_name, types.to_vec());
+    pub fn update_cache_hit(&mut self, funcname: &'static str, types: &[TypeId]) {
+        let key = (funcname, types.to_vec());
         if let Some(entry) = self.dispatch_cache.get_mut(&key) {
             entry.hit_count += 1;
         }
@@ -564,12 +564,12 @@ pub trait JITFunctionFactory: Send + Sync {
     fn create_jit_function(
         &self,
         expression: &str,
-        array_type_id: TypeId,
+        array_typeid: TypeId,
     ) -> CoreResult<Box<dyn JITFunction>>;
 
     /// Check if this factory supports the given array type.
     #[must_use]
-    fn supports_array_type(&self, array_type_id: TypeId) -> bool;
+    fn supports_array_type(&self, array_typeid: TypeId) -> bool;
 }
 
 /// Registry of JIT function factories.
@@ -609,10 +609,10 @@ impl JITFactoryRegistry {
     #[must_use]
     pub fn get_factory_for_array_type(
         &self,
-        array_type_id: TypeId,
+        array_typeid: TypeId,
     ) -> Option<&dyn JITFunctionFactory> {
         for factory in &self.factories {
-            if factory.supports_array_type(array_type_id) {
+            if factory.supports_array_type(array_typeid) {
                 return Some(&**factory);
             }
         }
@@ -654,8 +654,8 @@ where
     }
 
     /// Update the underlying array with a new one.
-    pub fn array_2(&mut self, new_array: ndarray::Array<T, D>) {
-        self.array = new_array;
+    pub fn array_2(&mut self, newarray: ndarray::Array<T, D>) {
+        self.array = newarray;
     }
 }
 
@@ -935,7 +935,7 @@ impl<T: Clone + Send + Sync + 'static> DistributedArray for MockDistributedArray
         Ok(Box::new(self.clone()) as Box<dyn ArrayProtocol>)
     }
 
-    fn scatter(&self, _num_chunks: usize) -> CoreResult<Box<dyn DistributedArray>> {
+    fn scatter(&self, _numchunks: usize) -> CoreResult<Box<dyn DistributedArray>> {
         // In a real implementation, this would scatter data to multiple nodes
         // For now, we just return self boxed as DistributedArray
         Ok(Box::new(self.clone()) as Box<dyn DistributedArray>)
@@ -1121,7 +1121,7 @@ where
 /// ```
 #[macro_export]
 macro_rules! array_function_def {
-    (fn $name:ident $(<$($gen:ident),*>)? ($($arg:ident : $arg_ty:ty),*) -> $ret:ty $body:block, $func_name:expr) => {
+    (fn $name:ident $(<$($gen:ident),*>)? ($($arg:ident : $arg_ty:ty),*) -> $ret:ty $body:block, $funcname:expr) => {
         {
             // Define the function
             fn $name $(<$($gen),*>)? ($($arg : $arg_ty),*) -> $ret $body
@@ -1215,11 +1215,11 @@ pub mod traits {
         ) -> Vec<Box<dyn DifferentiableArray>>;
 
         /// Set whether to record operations for automatic differentiation.
-        fn set_requires_grad(&mut self, requires_grad: bool);
+        fn set_requiresgrad(&mut self, requiresgrad: bool);
 
         /// Check if this array requires gradient computation.
         #[must_use]
-        fn requires_grad(&self) -> bool;
+        fn requiresgrad(&self) -> bool;
 
         /// Get the gradient of this array.
         #[must_use]
@@ -1461,7 +1461,7 @@ mod examples {
     #[test]
     fn example_array_function() {
         // Create a simple array function (without using macros)
-        let func_name = "scirs2::example::sum";
+        let funcname = "scirs2::example::sum";
 
         // Create an ArrayFunction manually
         let implementation = Arc::new(move |args: &[Box<dyn Any>], kwargs: &HashMap<String, Box<dyn Any>>| {
@@ -1477,7 +1477,7 @@ mod examples {
         });
 
         let func = ArrayFunction {
-            name: func_name,
+            name: funcname,
             implementation,
         };
 
@@ -1491,8 +1491,8 @@ mod examples {
         // Verify the function was registered
         {
             let reg = registry.read().unwrap();
-            let registered_func = reg.get(func_name).unwrap();
-            assert_eq!(registered_func.name, func_name);
+            let registered_func = reg.get(funcname).unwrap();
+            assert_eq!(registered_func.name, funcname);
         }
     }
     */

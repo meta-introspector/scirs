@@ -106,11 +106,11 @@ pub enum RiskLevel {
 
 impl IntelligentErrorRecovery {
     /// Create new intelligent error recovery system
-    pub fn new(_config: RecoveryConfig) -> Self {
+    pub fn new(config: RecoveryConfig) -> Self {
         Self {
             error_patterns: HashMap::new(),
             recovery_success_rates: HashMap::new(),
-            config: _config,
+            config: config,
         }
     }
 
@@ -846,7 +846,7 @@ impl NeuralErrorClassifier {
     }
 
     /// Online learning update
-    pub fn update_from_feedback(&mut self, features: &[f64], correct_class: usize, success: bool) {
+    pub fn update_from_feedback(&mut self, features: &[f64], correctclass: usize, success: bool) {
         self.training_data.push((features.to_vec(), correct_class));
 
         if success {
@@ -864,7 +864,7 @@ impl NeuralErrorClassifier {
     }
 
     /// Reinforce or weaken prediction
-    fn reinforce_prediction(&mut self, features: &[f64], target_class: usize, strength: f64) {
+    fn reinforce_prediction(&mut self, features: &[f64], targetclass: usize, strength: f64) {
         let prediction = self.forward_pass(features);
         let error = strength
             * (if target_class < prediction.len() {
@@ -1103,7 +1103,7 @@ impl RecoveryStrategyEnsemble {
         ensemble
     }
 
-    pub fn add_generator(&mut self, generator: Box<dyn StrategyGenerator>, initial_weight: f64) {
+    pub fn add_generator(&mut self, generator: Box<dyn StrategyGenerator>, initialweight: f64) {
         self.strategy_generators.push(generator);
         self.generator_weights.push(initial_weight);
     }
@@ -1184,7 +1184,7 @@ impl RecoveryStrategyEnsemble {
     }
 
     /// Update generator weights based on performance feedback
-    pub fn update_weights(&mut self, generator_name: &str, success: bool) {
+    pub fn update_weights(&mut self, generatorname: &str, success: bool) {
         self.performance_history
             .entry(generator_name.to_string())
             .or_insert_with(Vec::new)
@@ -1211,12 +1211,12 @@ impl RecoveryStrategyEnsemble {
 
 impl MLEnhancedErrorRecovery {
     /// Create new ML-enhanced error recovery system
-    pub fn new(_config: MLRecoveryConfig) -> Self {
+    pub fn new(config: MLRecoveryConfig) -> Self {
         Self {
             base_recovery: IntelligentErrorRecovery::new(RecoveryConfig::default()),
             neural_classifier: NeuralErrorClassifier::new(),
             strategy_ensemble: RecoveryStrategyEnsemble::new(),
-            ml_config: _config,
+            ml_config: config,
         }
     }
 

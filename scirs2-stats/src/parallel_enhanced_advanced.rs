@@ -467,7 +467,7 @@ where
         }
     }
 
-    fn mean_fixed_chunks<D>(&self, x: &ArrayBase<D, Ix1>, chunk_size: usize) -> StatsResult<F>
+    fn mean_fixed_chunks<D>(&self, x: &ArrayBase<D, Ix1>, chunksize: usize) -> StatsResult<F>
     where
         D: Data<Elem = F> + Sync + Send,
     {
@@ -533,7 +533,7 @@ where
             .collect();
 
         // Combine results using parallel reduction
-        let (_final_mean, final_m2, _final_count) = results.into_iter().fold(
+        let (_final_mean, final_m2, final_count) = results.into_iter().fold(
             (F::zero(), F::zero(), 0),
             |(mean_a, m2_a, count_a), (mean_b, m2_b, count_b)| {
                 if count_b == 0 {
@@ -665,7 +665,7 @@ where
             .collect();
 
         // Combine results
-        let (total_mean, total_m2_, total_m3, total_m4, _total_count) = results.into_iter().fold(
+        let (total_mean, total_m2_, total_m3, total_m4, total_count) = results.into_iter().fold(
             (F::zero(), F::zero(), F::zero(), F::zero(), 0),
             |(mean_acc, m2_acc, m3_acc, m4_acc, count_acc), (mean, m2, m3, m4, count)| {
                 if count == 0 {
@@ -763,7 +763,7 @@ where
                     for _ in 0..samples_per_thread {
                         // Generate bootstrap sample
                         let bootstrap_indices: Vec<usize> =
-                            (0..n_data).map(|_| rng.random_range(0..n_data)).collect();
+                            (0..n_data).map(|_| rng.gen_range(0..n_data)).collect();
 
                         let bootstrap_sample: Vec<F> =
                             bootstrap_indices.into_iter().map(|i| data_arc[i]).collect();
@@ -800,7 +800,7 @@ enum Message {
 }
 
 impl ThreadPool {
-    fn new(_size: usize, _config: AdvancedParallelConfig) -> StatsResult<ThreadPool> {
+    fn new(_size: usize, config: AdvancedParallelConfig) -> StatsResult<ThreadPool> {
         if _size == 0 {
             return Err(ErrorMessages::invalid_probability("thread count", 0.0));
         }

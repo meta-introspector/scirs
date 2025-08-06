@@ -132,8 +132,8 @@ pub fn create_pos_aware_lemmatizer() -> crate::pos_tagging::PosAwareLemmatizer {
 /// Create a POS-aware lemmatizer with custom configurations
 #[allow(dead_code)]
 pub fn create_pos_aware_lemmatizer_with_config(
-    pos_config: crate::pos_tagging::PosTaggerConfig,
-    lemma_config: LemmatizerConfig,
+    posconfig: crate::pos_tagging::PosTaggerConfig,
+    lemmaconfig: LemmatizerConfig,
 ) -> crate::pos_tagging::PosAwareLemmatizer {
     crate::pos_tagging::PosAwareLemmatizer::with_configs(pos_config, lemma_config)
 }
@@ -401,8 +401,8 @@ pub struct SnowballStemmer {
 
 impl SnowballStemmer {
     /// Create a new Snowball stemmer for a specific language
-    pub fn new(_language: &str) -> Result<Self> {
-        match _language.to_lowercase().as_str() {
+    pub fn new(language: &str) -> Result<Self> {
+        match language.to_lowercase().as_str() {
             "english" | "en" => Ok(Self {
                 _language: "english".to_string(),
             }),
@@ -551,7 +551,7 @@ impl SimpleLemmatizer {
     }
 
     /// Load lemmatization dictionary from a file
-    pub fn from_dict_file(_path: &str) -> Result<Self> {
+    pub fn from_dict_file(path: &str) -> Result<Self> {
         // In a real implementation, this would load from a file
         Ok(Self::new())
     }

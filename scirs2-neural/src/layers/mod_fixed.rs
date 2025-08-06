@@ -31,7 +31,7 @@ pub trait Layer<F: Float + Debug + ScalarOperand>: Send + Sync {
     ) -> Result<Array<F, ndarray::IxDyn>>;
 
     /// Update the layer parameters with the given learning rate
-    fn update(&mut self, learning_rate: F) -> Result<()>;
+    fn update(&mut self, learningrate: F) -> Result<()>;
 
     /// Get the layer as a dyn Any for downcasting
     fn as_any(&self) -> &dyn std::any::Any;
@@ -50,12 +50,12 @@ pub trait Layer<F: Float + Debug + ScalarOperand>: Send + Sync {
     }
 
     /// Set the gradients of the layer parameters
-    fn set_gradients(&mut self_gradients: &[Array<F, ndarray::IxDyn>]) -> Result<()> {
+    fn set_gradients(&mut selfgradients: &[Array<F, ndarray::IxDyn>]) -> Result<()> {
         Ok(())
     }
 
     /// Set the parameters of the layer
-    fn set_params(&mut self_params: &[Array<F, ndarray::IxDyn>]) -> Result<()> {
+    fn set_params(&mut selfparams: &[Array<F, ndarray::IxDyn>]) -> Result<()> {
         Ok(())
     }
 
@@ -181,9 +181,9 @@ impl<F: Float + Debug + ScalarOperand> Layer<F> for Sequential<F> {
         Ok(grad_output.clone())
     }
 
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         for layer in &mut self.layers {
-            layer.update(learning_rate)?;
+            layer.update(learningrate)?;
         }
         Ok(())
     }

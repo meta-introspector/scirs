@@ -385,7 +385,7 @@ fn main() {
 
 // Helper function to save solution trajectory to a CSV file
 #[allow(dead_code)]
-fn save_trajectory(_result: &ODEResult<f64>, filename: &str) {
+fn save_trajectory(result: &ODEResult<f64>, filename: &str) {
     let mut file = File::create(filename).unwrap();
     writeln!(
         &mut file,
@@ -398,9 +398,9 @@ fn save_trajectory(_result: &ODEResult<f64>, filename: &str) {
     .unwrap();
 
     for i in 0.._result.t.len() {
-        let t = _result.t[i];
+        let t = result.t[i];
         let y_values = (0.._result.y[i].len())
-            .map(|j| format!("{:.10e}", _result.y[i][j]))
+            .map(|j| format!("{:.10e}", result.y[i][j]))
             .collect::<Vec<_>>()
             .join(",");
 

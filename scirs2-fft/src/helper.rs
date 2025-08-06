@@ -270,15 +270,15 @@ static EFFICIENT_FACTORS: LazyLock<HashSet<usize>> = LazyLock::new(|| {
 /// assert!(n >= 1000);
 /// ```
 #[allow(dead_code)]
-pub fn next_fast_len(_target: usize, real: bool) -> usize {
-    if _target <= 1 {
+pub fn next_fast_len(target: usize, real: bool) -> usize {
+    if target <= 1 {
         return 1;
     }
 
     // Get the maximum prime factor to consider
     let max_factor = if real { 5 } else { 11 };
 
-    let mut n = _target;
+    let mut n = target;
     loop {
         // Try to factor n using only efficient prime factors
         let mut is_smooth = true;
@@ -332,15 +332,15 @@ pub fn next_fast_len(_target: usize, real: bool) -> usize {
 /// assert!(n <= 1000);
 /// ```
 #[allow(dead_code)]
-pub fn prev_fast_len(_target: usize, real: bool) -> usize {
-    if _target <= 1 {
+pub fn prev_fast_len(target: usize, real: bool) -> usize {
+    if target <= 1 {
         return 1;
     }
 
     // Get the maximum prime factor to consider
     let max_factor = if real { 5 } else { 11 };
 
-    let mut n = _target;
+    let mut n = target;
     while n > 1 {
         // Try to factor n using only efficient prime factors
         let mut is_smooth = true;

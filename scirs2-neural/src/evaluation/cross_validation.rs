@@ -74,15 +74,15 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
     CrossValidator<F>
 {
     /// Create a new cross-validator
-    pub fn new(_config: CrossValidationConfig) -> Result<Self> {
+    pub fn new(config: CrossValidationConfig) -> Result<Self> {
         // Create evaluator
         let eval_config = EvaluationConfig {
-            batch_size: _config.batch_size,
+            batch_size: config.batch_size,
             shuffle: false, // We handle shuffling during fold creation
-            num_workers: _config.num_workers,
-            metrics: _config.metrics.clone(),
+            num_workers: config.num_workers,
+            metrics: config.metrics.clone(),
             steps: None,
-            verbose: _config.verbose,
+            verbose: config.verbose,
         };
         let evaluator = Evaluator::new(eval_config)?;
         Ok(Self { config, evaluator })
@@ -225,7 +225,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
                 let rng_with_seed = self
                     .config
                     .random_seed
-                    .map(rand::rngs::StdRng::seed_from_u64);
+                    .map(rand::rngs::StdRng::from_seed);
                 for _ in 0..n_splits {
                     // Shuffle indices
                     let mut shuffled = indices.clone();
@@ -274,10 +274,10 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
                     ndarray::Array<F, ndarray::IxDyn>,
                 )>,
             impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> DatasetSubset<F> {
-                fn new(_dataset: &dyn Dataset<F>, indices: &[usize]) -> Result<Self> {
+                fn new(dataset: &dyn Dataset<F>, indices: &[usize]) -> Result<Self> {
                     let mut data = Vec::with_capacity(indices.len());
                     for &idx in indices {
-                        let (input, target) = _dataset.get(idx)?;
+                        let (input, target) = dataset.get(idx)?;
                         data.push((input, target));
                     Ok(Self { data })
             impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> Dataset<F>

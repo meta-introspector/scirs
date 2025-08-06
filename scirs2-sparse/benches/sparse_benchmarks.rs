@@ -5,7 +5,7 @@ use scirs2__sparse::*;
 use std::hint::black_box;
 
 #[allow(dead_code)]
-fn generate_sparse_matrix(_size: usize, density: f64) -> (Vec<usize>, Vec<usize>, Vec<f64>) {
+fn generate_sparse_matrix(size: usize, density: f64) -> (Vec<usize>, Vec<usize>, Vec<f64>) {
     let mut rng = rand::rng();
     let mut rows = Vec::new();
     let mut cols = Vec::new();

@@ -236,7 +236,7 @@ fn add_rectangle(
 
 /// Create synthetic point matches based on known transformation
 #[allow(dead_code)]
-fn create_synthetic_matches(_num_matches: usize, true_transform: &Array2<f64>) -> Vec<PointMatch> {
+fn create_synthetic_matches(_num_matches: usize, truetransform: &Array2<f64>) -> Vec<PointMatch> {
     let mut _matches = Vec::new();
     let mut rng = rand::rng();
 
@@ -251,7 +251,7 @@ fn create_synthetic_matches(_num_matches: usize, true_transform: &Array2<f64>) -
         let noisy_target =
             Point2D::new(target.x + rng.gen_range(-1.0..1.0)..target.y + rng.gen_range(-1.0..1.0));
 
-        _matches.push(PointMatch {
+        matches.push(PointMatch {
             source,
             target: noisy_target,
             confidence: rng.gen_range(0.8..1.0)..,
@@ -260,7 +260,7 @@ fn create_synthetic_matches(_num_matches: usize, true_transform: &Array2<f64>) -
 
     // Add some outliers
     for _ in (num_matches * 9 / 10)..num_matches {
-        _matches.push(PointMatch {
+        matches.push(PointMatch {
             source: Point2D::new(rng.gen_range(20.0..180.0)..rng.gen_range(20.0..180.0)),
             target: Point2D::new(rng.gen_range(20.0..180.0)..rng.gen_range(20.0..180.0)),
             confidence: rng.gen_range(0.3..0.7)..,

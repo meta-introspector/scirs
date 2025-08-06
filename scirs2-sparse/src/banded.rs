@@ -46,14 +46,14 @@ where
     }
 
     /// Create banded matrix from dense array
-    pub fn from_dense(_dense: &Array2<T>, kl: usize, ku: usize) -> SparseResult<Self> {
-        let (rows, cols) = _dense.dim();
+    pub fn from_dense(dense: &Array2<T>, kl: usize, ku: usize) -> SparseResult<Self> {
+        let (rows, cols) = dense.dim();
         let mut result = Self::zeros((rows, cols), kl, ku);
 
         for i in 0..rows {
             for j in 0..cols {
                 if result.is_in_band(i, j) {
-                    let val = _dense[[i, j]];
+                    let val = dense[[i, j]];
                     if !val.is_zero() {
                         result.set_unchecked(i, j, val);
                     }

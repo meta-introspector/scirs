@@ -34,8 +34,8 @@ impl ThreadPoolManager {
     /// // Specify thread count
     /// let pool = ThreadPoolManager::new(Some(8)).unwrap();
     /// ```
-    pub fn new(_num_threads: Option<usize>) -> Result<Self> {
-        let _num_threads = _num_threads.unwrap_or_else(|| {
+    pub fn new(_numthreads: Option<usize>) -> Result<Self> {
+        let _num_threads = num_threads.unwrap_or_else(|| {
             std::thread::available_parallelism()
                 .map(|n| n.get())
                 .unwrap_or(4)
@@ -218,9 +218,9 @@ impl PerformanceProfiler {
     /// let timer = profiler.start_timer("forward_pass");
     /// // ... perform operation
     /// profiler.end_timer("forward_pass".to_string(), timer);
-    pub fn new(_enabled: bool) -> Self {
+    pub fn new(enabled: bool) -> Self {
         Self {
-            _enabled,
+            enabled,
             timings: HashMap::new(),
             call_counts: HashMap::new(),
             active_timers: HashMap::new(),
@@ -233,7 +233,7 @@ impl PerformanceProfiler {
         } else {
             None
     /// End timing an operation and record the result
-    pub fn end_timer(&mut self, name: String, start_time: Option<Instant>) {
+    pub fn end_timer(&mut self, name: String, starttime: Option<Instant>) {
             if let Some(start) = start_time {
                 let elapsed = start.elapsed();
                 // Update total time
@@ -446,9 +446,9 @@ pub mod distributed {
         process_group: Option<Arc<dyn ProcessGroup>>,
     impl DistributedManager {
         /// Create a new distributed training manager
-        pub fn new(_config: DistributedConfig) -> Result<Self> {
+        pub fn new(config: DistributedConfig) -> Result<Self> {
             Ok(Self {
-                _config,
+                config,
                 stats: Arc::new(Mutex::new(DistributedStats::default())),
                 process_group: None,
             })
@@ -511,9 +511,9 @@ pub mod distributed {
         world_size: usize,
     impl TcpProcessGroup {
         /// Create a new TCP process group
-        pub fn new(_config: &DistributedConfig) -> Result<Self> {
+        pub fn new(config: &DistributedConfig) -> Result<Self> {
                 rank: config.process_info.global_rank,
-                world_size: _config.process_info.world_size,
+                world_size: config.process_info.world_size,
     impl ProcessGroup for TcpProcessGroup {
         fn all_reduce(&self, tensor: &mut ArrayD<f32>) -> Result<()> {
             // Simple implementation: average across all ranks
@@ -522,7 +522,7 @@ pub mod distributed {
                 tensor.mapv_inplace(|x| x / self.world_size as f32);
         fn barrier(&self) -> Result<()> {
             // Implementation would involve actual synchronization
-        fn broadcast(&self_tensor: &mut ArrayD<f32>, _root: usize) -> Result<()> {
+        fn broadcast(self_tensor: &mut ArrayD<f32>, root: usize) -> Result<()> {
             // Implementation would involve actual broadcast
         fn get_rank(&self) -> usize {
             self.rank

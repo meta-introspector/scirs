@@ -164,7 +164,7 @@ impl VisualizationConfigBuilder {
         self.config.style.layout.width = width;
         self.config.style.layout.height = height;
     /// Set performance settings
-    pub fn max_points(mut self, max_points: usize) -> Self {
+    pub fn max_points(mut self, maxpoints: usize) -> Self {
         self.config.performance.max_points_per_plot = max_points;
     /// Enable or disable downsampling
     pub fn downsampling(mut self, strategy: DownsamplingStrategy) -> Self {

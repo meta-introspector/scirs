@@ -64,19 +64,19 @@ pub fn identity(n: usize) -> SparseResult<CsrMatrix<f64>> {
 /// let d = diag(&[1.0, 2.0, 3.0]).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn diag(_diag: &[f64]) -> SparseResult<CsrMatrix<f64>> {
-    if _diag.is_empty() {
+pub fn diag(diag: &[f64]) -> SparseResult<CsrMatrix<f64>> {
+    if diag.is_empty() {
         return Err(SparseError::ValueError(
             "Diagonal vector must not be empty".to_string(),
         ));
     }
 
-    let n = _diag.len();
+    let n = diag.len();
     let mut data = Vec::with_capacity(n);
     let mut row_indices = Vec::with_capacity(n);
     let mut col_indices = Vec::with_capacity(n);
 
-    for (i, &val) in _diag.iter().enumerate() {
+    for (i, &val) in diag.iter().enumerate() {
         if val != 0.0 {
             data.push(val);
             row_indices.push(i);
@@ -117,8 +117,8 @@ pub fn density(shape: (usize, usize), nnz: usize) -> f64 {
 ///
 /// * true if the matrix is symmetric, false otherwise
 #[allow(dead_code)]
-pub fn is_symmetric(_matrix: &CsrMatrix<f64>) -> bool {
-    let (rows, cols) = _matrix.shape();
+pub fn is_symmetric(matrix: &CsrMatrix<f64>) -> bool {
+    let (rows, cols) = matrix.shape();
 
     // Must be square
     if rows != cols {
@@ -126,8 +126,8 @@ pub fn is_symmetric(_matrix: &CsrMatrix<f64>) -> bool {
     }
 
     // Check if A = A^T
-    let transposed = _matrix.transpose();
-    let a_dense = _matrix.to_dense();
+    let transposed = matrix.transpose();
+    let a_dense = matrix.to_dense();
     let at_dense = transposed.to_dense();
 
     for i in 0..rows {
@@ -214,12 +214,12 @@ pub fn random(shape: (usize, usize), density: f64) -> SparseResult<CsrMatrix<f64
 ///
 /// * Vector of vectors representing the sparsity pattern (1 for non-zero, 0 for zero)
 #[allow(dead_code)]
-pub fn sparsity_pattern<T>(_matrix: &CsrMatrix<T>) -> Vec<Vec<usize>>
+pub fn sparsity_pattern<T>(matrix: &CsrMatrix<T>) -> Vec<Vec<usize>>
 where
     T: Clone + Copy + Zero + PartialEq,
 {
-    let (rows, cols) = _matrix.shape();
-    let dense = _matrix.to_dense();
+    let (rows, cols) = matrix.shape();
+    let dense = matrix.to_dense();
 
     let mut pattern = vec![vec![0; cols]; rows];
 

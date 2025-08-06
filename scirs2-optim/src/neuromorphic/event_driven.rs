@@ -285,7 +285,7 @@ struct SystemState<T: Float> {
 /// Event handler trait
 trait EventHandler<T: Float>: Send + Sync {
     fn handle_event(&mut self, event: &NeuromorphicEvent<T>, state: &mut SystemState<T>) -> Result<()>;
-    fn can_handle(&self, event_type: EventType) -> bool;
+    fn can_handle(&self, eventtype: EventType) -> bool;
 }
 
 /// Spike event handler
@@ -319,13 +319,13 @@ impl<T: Float + Send + Sync> EventHandler<T> for SpikeEventHandler<T> {
         Ok(())
     }
     
-    fn can_handle(&self, event_type: EventType) -> bool {
+    fn can_handle(&self, eventtype: EventType) -> bool {
         event_type == EventType::Spike
     }
 }
 
 impl<T: Float + Send + Sync> SpikeEventHandler<T> {
-    fn trigger_stdp_updates(&self, post_neuron: usize, state: &mut SystemState<T>) -> Result<()> {
+    fn trigger_stdp_updates(&self, postneuron: usize, state: &mut SystemState<T>) -> Result<()> {
         // Check all presynaptic connections
         for pre_neuron in 0..state.last_spike_times.len() {
             if pre_neuron != post_neuron {
@@ -367,7 +367,7 @@ impl<T: Float + Send + Sync> EventHandler<T> for WeightUpdateEventHandler<T> {
         let source = event.source_neuron;
         
         if let Some(target) = event.target_neuron {
-            if source < state.synaptic_weights.nrows() && target < state.synaptic_weights.ncols() {
+            if source < state.synapticweights.nrows() && target < state.synapticweights.ncols() {
                 // Apply weight update
                 let current_weight = state.synaptic_weights[[source, target]];
                 let new_weight = (current_weight + event.value)
@@ -381,7 +381,7 @@ impl<T: Float + Send + Sync> EventHandler<T> for WeightUpdateEventHandler<T> {
         Ok(())
     }
     
-    fn can_handle(&self, event_type: EventType) -> bool {
+    fn can_handle(&self, eventtype: EventType) -> bool {
         event_type == EventType::WeightUpdate
     }
 }
@@ -394,15 +394,15 @@ struct TemporalCorrelationTracker<T: Float> {
 }
 
 impl<T: Float + Send + Sync> TemporalCorrelationTracker<T> {
-    fn new(_correlation_window: T) -> Self {
+    fn new(_correlationwindow: T) -> Self {
         Self {
-            _correlation_window,
+            correlation_window,
             event_history: VecDeque::new(),
             correlation_patterns: HashMap::new(),
         }
     }
     
-    fn add_event(&mut self, time: T, event_type: EventType, neuron_id: usize) {
+    fn add_event(&mut self, time: T, event_type: EventType, neuronid: usize) {
         // Add new event
         self.event_history.push_back((time, event_type, neuron_id));
         
@@ -419,7 +419,7 @@ impl<T: Float + Send + Sync> TemporalCorrelationTracker<T> {
         self.update_correlations(time, event_type);
     }
     
-    fn update_correlations(&mut self, current_time: T, current_event: EventType) {
+    fn update_correlations(&mut self, current_time: T, currentevent: EventType) {
         for &(event_time, event_type_) in &self.event_history {
             if current_time - event_time <= self.correlation_window {
                 let correlation_key = (event_type, current_event);
@@ -445,16 +445,16 @@ struct EventRateLimiter<T: Float> {
 }
 
 impl<T: Float + Send + Sync> EventRateLimiter<T> {
-    fn new(_rate_limits: HashMap<EventType, T>) -> Self {
+    fn new(_ratelimits: HashMap<EventType, T>) -> Self {
         Self {
-            _rate_limits,
+            rate_limits,
             event_counts: HashMap::new(),
             last_reset: Instant::now(),
             reset_interval: Duration::from_secs(1),
         }
     }
     
-    fn can_process(&mut self, event_type: EventType) -> bool {
+    fn can_process(&mut self, eventtype: EventType) -> bool {
         // Reset counters if interval elapsed
         if self.last_reset.elapsed() >= self.reset_interval {
             self.event_counts.clear();
@@ -483,9 +483,9 @@ struct EventCompressionEngine<T: Float> {
 }
 
 impl<T: Float + Send + Sync> EventCompressionEngine<T> {
-    fn new(_algorithm: EventCompressionAlgorithm) -> Self {
+    fn new(algorithm: EventCompressionAlgorithm) -> Self {
         Self {
-            _algorithm,
+            algorithm,
             compression_buffer: Vec::new(),
             decompression_buffer: Vec::new(),
         }
@@ -562,7 +562,7 @@ impl<T: Float + Send + Sync> AdaptiveEventHandler<T> {
         }
     }
     
-    fn adapt_processing(&mut self, current_performance: T) {
+    fn adapt_processing(&mut self, currentperformance: T) {
         self.performance_history.push_back(current_performance);
         
         if self.performance_history.len() > 100 {
@@ -607,9 +607,9 @@ struct DistributedEventCoordinator<T: Float> {
 }
 
 impl<T: Float + Send + Sync> DistributedEventCoordinator<T> {
-    fn new(_strategy: LoadBalancingStrategy, num_workers: usize) -> Self {
+    fn new(_strategy: LoadBalancingStrategy, numworkers: usize) -> Self {
         Self {
-            load_balancing: _strategy,
+            load_balancing: strategy,
             worker_loads: HashMap::new(),
             current_worker: 0,
             total_workers: num_workers,
@@ -638,7 +638,7 @@ impl<T: Float + Send + Sync> DistributedEventCoordinator<T> {
         }
     }
     
-    fn update_worker_load(&mut self, worker_id: usize, load: T) {
+    fn update_worker_load(&mut self, workerid: usize, load: T) {
         self.worker_loads.insert(worker_id, load);
     }
 }
@@ -652,7 +652,7 @@ impl<T: Float + Send + Sync> EventDrivenOptimizer<T> {
         num_neurons: usize,
     ) -> Self {
         let mut optimizer = Self {
-            _config: _config.clone(),
+            _config: config.clone(),
             stdp_config: stdp_config.clone(),
             membrane_config: membrane_config.clone(),
             event_queue: BinaryHeap::new(),
@@ -670,7 +670,7 @@ impl<T: Float + Send + Sync> EventDrivenOptimizer<T> {
             correlation_tracker: TemporalCorrelationTracker::new(_config.correlation_window),
             rate_limiter: EventRateLimiter::new(_config.rate_limits.clone()),
             metrics: NeuromorphicMetrics::default(),
-            distributed_coordinator: if _config.distributed_processing {
+            distributed_coordinator: if config.distributed_processing {
                 Some(DistributedEventCoordinator::new(_config.load_balancing, 4))
             } else {
                 None
@@ -763,7 +763,7 @@ impl<T: Float + Send + Sync> EventDrivenOptimizer<T> {
     }
     
     /// Process a batch of events
-    fn process_event_batch(&mut self, batch_size: usize) -> Result<usize> {
+    fn process_event_batch(&mut self, batchsize: usize) -> Result<usize> {
         let mut batch_events = Vec::with_capacity(batch_size);
         
         // Collect batch events
@@ -830,8 +830,8 @@ impl<T: Float + Send + Sync> EventDrivenOptimizer<T> {
     /// Apply pending weight updates
     fn apply_pending_updates(&mut self) -> Result<()> {
         for ((pre, post), weight_change) in self.system_state.pending_updates.drain() {
-            if pre < self.system_state.synaptic_weights.nrows() && 
-               post < self.system_state.synaptic_weights.ncols() {
+            if pre < self.system_state.synapticweights.nrows() && 
+               post < self.system_state.synapticweights.ncols() {
                 let current_weight = self.system_state.synaptic_weights[[pre, post]];
                 let new_weight = (current_weight + weight_change)
                     .max(self.stdp_config.weight_min)
@@ -845,7 +845,7 @@ impl<T: Float + Send + Sync> EventDrivenOptimizer<T> {
     }
     
     /// Update event processing statistics
-    fn update_event_statistics(&mut self, event_type: EventType, processing_time: T) {
+    fn update_event_statistics(&mut self, event_type: EventType, processingtime: T) {
         let stats = self.event_stats.entry(event_type).or_insert_with(|| EventStatistics {
             total_processed: 0,
             avg_processing_time: T::zero(),
@@ -897,7 +897,7 @@ impl<T: Float + Send + Sync> EventDrivenOptimizer<T> {
     }
     
     /// Enable distributed processing
-    pub fn enable_distributed_processing(&mut self, num_workers: usize) {
+    pub fn enable_distributed_processing(&mut self, numworkers: usize) {
         self.distributed_coordinator = Some(DistributedEventCoordinator::new(
             self.config.load_balancing,
             num_workers,

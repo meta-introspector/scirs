@@ -99,20 +99,17 @@ where
 /// assert_eq!(c.shape(), &[4, 2]);
 /// ```
 #[allow(dead_code)]
-pub fn stack_2d<T>(
-    _arrays: &[ArrayView<T, Ix2>],
-    axis: usize,
-) -> Result<Array<T, Ix2>, &'static str>
+pub fn stack_2d<T>(arrays: &[ArrayView<T, Ix2>], axis: usize) -> Result<Array<T, Ix2>, &'static str>
 where
     T: Clone + Default,
 {
-    if _arrays.is_empty() {
+    if arrays.is_empty() {
         return Err("No _arrays provided for stacking");
     }
 
     // Validate that all _arrays have the same shape
-    let firstshape = _arrays[0].shape();
-    for array in _arrays.iter().skip(1) {
+    let firstshape = arrays[0].shape();
+    for array in arrays.iter().skip(1) {
         if array.shape() != firstshape {
             return Err("All _arrays must have the same shape for stacking");
         }
@@ -122,8 +119,8 @@ where
 
     // Calculate the new shape
     let (new_rows, new_cols) = match axis {
-        0 => (rows * _arrays.len(), cols), // Stack vertically
-        1 => (rows, cols * _arrays.len()), // Stack horizontally
+        0 => (rows * arrays.len(), cols), // Stack vertically
+        1 => (rows, cols * arrays.len()), // Stack horizontally
         _ => return Err("Axis must be 0 or 1 for 2D _arrays"),
     };
 
@@ -134,7 +131,7 @@ where
     match axis {
         0 => {
             // Stack vertically (along rows)
-            for (array_idx, array) in _arrays.iter().enumerate() {
+            for (array_idx, array) in arrays.iter().enumerate() {
                 let start_row = array_idx * rows;
                 for r in 0..rows {
                     for c in 0..cols {
@@ -145,7 +142,7 @@ where
         }
         1 => {
             // Stack horizontally (along columns)
-            for (array_idx, array) in _arrays.iter().enumerate() {
+            for (array_idx, array) in arrays.iter().enumerate() {
                 let start_col = array_idx * cols;
                 for r in 0..rows {
                     for c in 0..cols {

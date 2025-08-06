@@ -9,7 +9,7 @@ use scirs2_neural::utils::{sequential_model_dataflow, sequential_model_summary, 
 #[allow(dead_code)]
 fn main() -> Result<()> {
     // Initialize random number generator
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Create a CNN model
     let model = create_cnn_model(&mut rng)?;
     // Display model summary

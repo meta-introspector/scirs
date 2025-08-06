@@ -51,14 +51,14 @@ pub type Result<T> = std::result::Result<T, TextError>;
 
 /// Implement From trait for converting std::io::Error to TextError
 impl From<std::io::Error> for TextError {
-    fn from(_err: std::io::Error) -> Self {
+    fn from(err: std::io::Error) -> Self {
         TextError::IoError(_err.to_string())
     }
 }
 
 /// Implement From trait for converting CoreError to TextError
 impl From<scirs2_core::CoreError> for TextError {
-    fn from(_err: scirs2_core::CoreError) -> Self {
+    fn from(err: scirs2_core::CoreError) -> Self {
         TextError::RuntimeError(_err.to_string())
     }
 }

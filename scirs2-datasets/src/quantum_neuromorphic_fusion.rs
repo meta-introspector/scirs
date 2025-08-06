@@ -6,8 +6,8 @@
 //! networks, synaptic plasticity, and biological learning mechanisms.
 
 use crate::error::{DatasetsError, Result};
-use crate::neuromorphic_data__processor::NeuromorphicProcessor;
-use crate::quantum_enhanced__generators::QuantumDatasetGenerator;
+use crate::neuromorphic_data_processor::NeuromorphicProcessor;
+use crate::quantum_enhanced_generators::QuantumDatasetGenerator;
 use crate::utils::Dataset;
 use ndarray::{s, Array1, Array2, Array3};
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -121,11 +121,11 @@ impl Default for QuantumNeuromorphicFusion {
 
 impl QuantumNeuromorphicFusion {
     /// Create a new quantum-neuromorphic fusion processor
-    pub fn new(_quantum_coupling: f64, coherence_time: Duration, adaptive_learning: bool) -> Self {
+    pub fn new(_quantum_coupling: f64, coherence_time: Duration, adaptivelearning: bool) -> Self {
         Self {
             quantum_engine: QuantumDatasetGenerator::default(),
             neuromorphic_engine: NeuromorphicProcessor::default(),
-            quantum_bio_coupling: _quantum_coupling.clamp(0.0, 1.0),
+            quantum_bio_coupling: quantum_coupling.clamp(0.0, 1.0),
             coherence_plasticity_factor: 0.5,
             quantum_decoherence_time: coherence_time,
             adaptive_learning_rate: if adaptive_learning { 0.001 } else { 0.0 },
@@ -487,7 +487,7 @@ impl QuantumNeuromorphicFusion {
                 .filter(|&i| i != neuron_idx && rng.random::<f64>() < 0.1)
                 .collect();
 
-            _neurons.push(QuantumNeuron {
+            neurons.push(QuantumNeuron {
                 membrane_potential: rng.random::<f64>() - 0.5,
                 quantum_state,
                 phase_evolution: 0.0,

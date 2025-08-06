@@ -109,7 +109,7 @@ pub struct InteriorPointSolver<'a> {
 
 impl<'a> InteriorPointSolver<'a> {
     /// Create new interior point solver
-    pub fn new(n: usize, m_eq: usize, m_ineq: usize, options: &'a InteriorPointOptions) -> Self {
+    pub fn new(n: usize, m_eq: usize, mineq: usize, options: &'a InteriorPointOptions) -> Self {
         Self {
             n,
             m_eq,
@@ -253,7 +253,7 @@ impl<'a> InteriorPointSolver<'a> {
 
         let final_f = fun(&x.view());
         self.nfev += 1;
-        let (final_optimality, _final_feasibility) = self.compute_convergence_measures(
+        let (final_optimality, final_feasibility) = self.compute_convergence_measures(
             &grad(&x.view()),
             &None,
             &None,
@@ -482,6 +482,7 @@ impl<'a> InteriorPointSolver<'a> {
                 s,
                 &Array1::zeros(self.m_eq),
                 lambda_ineq,
+                0.0,
             );
         }
 
@@ -629,7 +630,7 @@ impl<'a> InteriorPointSolver<'a> {
     /// Compute corrector direction combining predictor and centering
     fn compute_corrector_direction(
         &self,
-        &self_g: &Array1<f64>,
+        self_g: &Array1<f64>,
         _c_eq: &Option<Array1<f64>>,
         _c_ineq: &Option<Array1<f64>>,
         j_eq: &Option<Array2<f64>>,
@@ -779,7 +780,7 @@ impl<'a> InteriorPointSolver<'a> {
     }
 
     /// Compute maximum step length for dual variables
-    fn compute_max_step_dual(&self, lambda_ineq: &Array1<f64>, dlambda_ineq: &Array1<f64>) -> f64 {
+    fn compute_max_step_dual(&self, lambda_ineq: &Array1<f64>, dlambdaineq: &Array1<f64>) -> f64 {
         if self.m_ineq == 0 {
             return 1.0;
         }
@@ -922,7 +923,7 @@ where
 
 /// Compute gradient using finite differences
 #[allow(dead_code)]
-fn finite_diff_gradient<F>(_fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
+fn finite_diff_gradient<F>(fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
 where
     F: FnMut(&ArrayView1<f64>) -> f64,
 {

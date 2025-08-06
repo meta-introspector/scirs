@@ -12,13 +12,13 @@
 //! - Real-time performance monitoring
 
 use crate::error::Result;
-use crossbeam__channel::{bounded, Receiver};
+use crossbeam_channel::{bounded, Receiver};
 use image::GenericImageView;
 use ndarray::{Array1, Array2};
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
-use std::path::PathBuf;
 
 /// Frame type for streaming processing
 #[derive(Clone)]
@@ -273,7 +273,7 @@ pub struct BlurStage {
 
 impl BlurStage {
     /// Create a new Gaussian blur processing stage
-    pub fn new(_sigma: f32) -> Self {
+    pub fn new(sigma: f32) -> Self {
         Self { _sigma }
     }
 }
@@ -298,7 +298,7 @@ pub struct EdgeDetectionStage {
 
 impl EdgeDetectionStage {
     /// Create a new edge detection processing stage
-    pub fn new(_threshold: f32) -> Self {
+    pub fn new(threshold: f32) -> Self {
         Self { _threshold }
     }
 }
@@ -324,10 +324,10 @@ pub struct MotionDetectionStage {
 
 impl MotionDetectionStage {
     /// Create a new motion detection processing stage
-    pub fn new(_threshold: f32) -> Self {
+    pub fn new(threshold: f32) -> Self {
         Self {
             previous_frame: None,
-            _threshold,
+            threshold,
         }
     }
 }
@@ -467,7 +467,7 @@ pub struct SimdHistogramEqualizationStage {
 
 impl SimdHistogramEqualizationStage {
     /// Create a new SIMD histogram equalization stage
-    pub fn new(_num_bins: usize) -> Self {
+    pub fn new(_numbins: usize) -> Self {
         Self { _num_bins }
     }
 }
@@ -511,9 +511,9 @@ pub enum FeatureDetectorType {
 
 impl FeatureDetectionStage {
     /// Create a new feature detection stage
-    pub fn new(_detector_type: FeatureDetectorType, max_features: usize) -> Self {
+    pub fn new(_detector_type: FeatureDetectorType, maxfeatures: usize) -> Self {
         Self {
-            _detector_type,
+            detector_type,
             max_features,
         }
     }
@@ -893,10 +893,10 @@ pub enum BufferOperation {
 
 impl FrameBufferStage {
     /// Create a new frame buffer stage
-    pub fn new(_buffer_size: usize, operation: BufferOperation) -> Self {
+    pub fn new(_buffersize: usize, operation: BufferOperation) -> Self {
         Self {
             buffer: std::collections::VecDeque::with_capacity(_buffer_size),
-            _buffer_size,
+            buffer_size,
             operation,
         }
     }
@@ -983,7 +983,7 @@ pub struct VideoStreamReader {
 
 impl VideoStreamReader {
     /// Create a video reader from a source
-    pub fn from_source(_source: VideoSource) -> Result<Self> {
+    pub fn from_source(source: VideoSource) -> Result<Self> {
         match _source {
             VideoSource::ImageSequence(ref path) => {
                 // Read directory and get sorted list of image files
@@ -1017,7 +1017,7 @@ impl VideoStreamReader {
 
                 // Determine dimensions from first image (in real impl, would load and check)
                 Ok(Self {
-                    _source,
+                    source,
                     frame_count: 0,
                     fps: 30.0,  // Default FPS for image sequences
                     width: 640, // Default, would read from actual image
@@ -1025,7 +1025,7 @@ impl VideoStreamReader {
                     image_files: Some(files),
                 })
             }
-            VideoSource::VideoFile(ref _path) => {
+            VideoSource::VideoFile(ref path) => {
                 // Would require video decoder integration (ffmpeg, gstreamer, etc.)
                 Err(crate::error::VisionError::Other(
                     "Video file reading not yet implemented. Use image sequences instead."
@@ -1039,7 +1039,7 @@ impl VideoStreamReader {
                 ))
             }
             VideoSource::Dummy { width, height, fps } => Ok(Self {
-                _source,
+                source,
                 frame_count: 0,
                 fps,
                 width,
@@ -1050,12 +1050,16 @@ impl VideoStreamReader {
     }
 
     /// Create a dummy video reader for testing
-    pub fn dummy(_width: u32, height: u32, fps: f32) -> Self {
+    pub fn dummy(width: u32, height: u32, fps: f32) -> Self {
         Self {
-            source: VideoSource::Dummy { _width, height, fps },
+            source: VideoSource::Dummy {
+                width,
+                height,
+                fps,
+            },
             frame_count: 0,
             fps,
-            _width,
+            width,
             height,
             image_files: None,
         }
@@ -1145,7 +1149,7 @@ pub struct BatchProcessor {
 
 impl BatchProcessor {
     /// Create a new batch processor with specified batch size
-    pub fn new(_batch_size: usize) -> Self {
+    pub fn new(_batchsize: usize) -> Self {
         Self { _batch_size }
     }
 
@@ -1389,10 +1393,10 @@ impl AutoScalingThreadPoolManager {
     /// # Returns
     ///
     /// * New thread pool manager
-    pub fn new(_min_threads: usize, max_threads: usize) -> Self {
+    pub fn new(_min_threads: usize, maxthreads: usize) -> Self {
         Self {
             thread_pools: std::collections::HashMap::new(),
-            _min_threads,
+            min_threads,
             max_threads,
             scale_up_threshold: 75.0,   // Scale up if >75% utilization
             scale_down_threshold: 25.0, // Scale down if <25% utilization
@@ -1409,7 +1413,7 @@ impl AutoScalingThreadPoolManager {
     /// # Returns
     ///
     /// * Result indicating success or failure
-    pub fn register_stage(&mut self, stage_name: &str, initial_threads: usize) -> Result<()> {
+    pub fn register_stage(&mut self, stage_name: &str, initialthreads: usize) -> Result<()> {
         let config = ThreadPoolConfig {
             stage_name: stage_name.to_string(),
             current_threads: initial_threads.clamp(self.min_threads, self.max_threads),
@@ -1510,7 +1514,7 @@ impl AutoScalingThreadPoolManager {
     /// # Returns
     ///
     /// * Option containing thread pool configuration
-    pub fn get_thread_config(&self, stage_name: &str) -> Option<&ThreadPoolConfig> {
+    pub fn get_thread_config(&self, stagename: &str) -> Option<&ThreadPoolConfig> {
         self.thread_pools.get(stage_name)
     }
 
@@ -1537,14 +1541,14 @@ impl AdaptivePerformanceMonitor {
     /// # Returns
     ///
     /// * New adaptive performance monitor
-    pub fn new(_config: AdaptiveConfig) -> Self {
+    pub fn new(config: AdaptiveConfig) -> Self {
         let thread_pool_manager = AutoScalingThreadPoolManager::new(1, 8);
 
         Self {
             stage_metrics: std::collections::HashMap::new(),
             resource_monitor: SystemResourceMonitor::default(),
             thread_pool_manager,
-            _config,
+            config,
             performance_history: std::collections::VecDeque::with_capacity(1000),
             last_adaptation: Instant::now(),
         }
@@ -1560,7 +1564,7 @@ impl AdaptivePerformanceMonitor {
     /// # Returns
     ///
     /// * Result indicating success or failure
-    pub fn register_stage(&mut self, stage_name: &str, initial_threads: usize) -> Result<()> {
+    pub fn register_stage(&mut self, stage_name: &str, initialthreads: usize) -> Result<()> {
         let metrics = StagePerformanceMetrics {
             stage_name: stage_name.to_string(),
             processing_times: std::collections::VecDeque::with_capacity(
@@ -1889,7 +1893,7 @@ impl AdaptivePerformanceMonitor {
     /// # Returns
     ///
     /// * Option containing stage performance metrics
-    pub fn get_stage_metrics(&self, stage_name: &str) -> Option<&StagePerformanceMetrics> {
+    pub fn get_stage_metrics(&self, stagename: &str) -> Option<&StagePerformanceMetrics> {
         self.stage_metrics.get(stage_name)
     }
 
@@ -2283,7 +2287,7 @@ impl AdvancedStreamProcessor {
     }
 
     /// Get batch of frames for efficient processing
-    pub fn next_batch(&self, batch_size: usize) -> Vec<Frame> {
+    pub fn next_batch(&self, batchsize: usize) -> Vec<Frame> {
         let mut batch = Vec::with_capacity(batch_size);
 
         for _ in 0..batch_size {
@@ -2347,16 +2351,16 @@ enum ProcessingMode {
 
 impl AdaptiveQualityStage {
     /// Create a new adaptive quality stage with the specified target FPS
-    pub fn new(_target_fps: f32) -> Self {
+    pub fn new(_targetfps: f32) -> Self {
         Self {
-            _target_fps,
+            target_fps,
             current_quality: 1.0,
             processing_mode: ProcessingMode::Balanced,
             performance_history: Vec::new(),
         }
     }
 
-    fn adjust_quality(&mut self, processing_time: Duration) {
+    fn adjust_quality(&mut self, processingtime: Duration) {
         self.performance_history.push(processing_time);
 
         // Keep only recent history

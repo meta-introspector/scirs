@@ -16,7 +16,8 @@ pub struct GpuOperationDispatcher<T>
 where
     T: Float + NumAssign + Zero + Send + Sync + Debug + 'static,
 {
-    gpu_threshold: usize, _phantom: std::marker::PhantomData<T>,
+    gpu_threshold: usize,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> GpuOperationDispatcher<T>
@@ -26,14 +27,16 @@ where
     /// Create a new GPU operation dispatcher
     pub fn new() -> Self {
         Self {
-            gpu_threshold: DEFAULT_GPU_THRESHOLD, _phantom: std::marker::PhantomData,
+            gpu_threshold: DEFAULT_GPU_THRESHOLD,
+            _phantom: std::marker::PhantomData,
         }
     }
 
     /// Create dispatcher with custom GPU threshold
-    pub fn with_threshold(_threshold: usize) -> Self {
+    pub fn with_threshold(threshold: usize) -> Self {
         Self {
-            gpu_threshold: _threshold, _phantom: std::marker::PhantomData,
+            gpu_threshold: threshold,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -178,7 +181,7 @@ where
     }
 
     fn gpu_dot(
-        &self_ctx: &dyn GpuContext,
+        self_ctx: &dyn GpuContext,
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,
     ) -> LinalgResult<T> {
@@ -194,13 +197,13 @@ where
         Ok(self.cpu_dot(x, y))
     }
 
-    fn gpu_norm(&self_ctx: &dyn GpuContext, x: &ArrayView1<T>) -> LinalgResult<T> {
+    fn gpu_norm(selfctx: &dyn GpuContext, x: &ArrayView1<T>) -> LinalgResult<T> {
         // For now, fall back to CPU implementation
         Ok(self.cpu_norm(x))
     }
 
     fn gpu_elementwise_add(
-        &self_ctx: &dyn GpuContext,
+        self_ctx: &dyn GpuContext,
         a: &ArrayView2<T>,
         b: &ArrayView2<T>,
     ) -> LinalgResult<Array2<T>> {
@@ -217,7 +220,7 @@ where
     }
 
     fn gpu_elementwise_mul(
-        &self_ctx: &dyn GpuContext,
+        self_ctx: &dyn GpuContext,
         a: &ArrayView2<T>,
         b: &ArrayView2<T>,
     ) -> LinalgResult<Array2<T>> {
@@ -373,7 +376,7 @@ where
 
     /// Execute CUDA matrix-vector multiplication kernel
     fn execute_cuda_matvec_kernel(
-        &self_ctx: &dyn GpuContext,
+        self_ctx: &dyn GpuContext,
         a_buffer: &dyn GpuBuffer<T>,
         x_buffer: &dyn GpuBuffer<T>,
         y_buffer: &mut dyn GpuBuffer<T>,
@@ -755,7 +758,7 @@ where
 
     /// Helper function to allocate buffer from a dyn GpuContext
     fn allocate_buffer_from_context<U: Clone + Send + Sync + Copy + std::fmt::Debug + 'static>(
-        &self_ctx: &dyn GpuContext,
+        self_ctx: &dyn GpuContext,
         size: usize,
     ) -> LinalgResult<Box<dyn GpuBuffer<U>>> {
         // Since we can't directly cast to GpuContextAlloc, we'll use a fallback approach
@@ -912,9 +915,9 @@ impl GpuKernelManager {
     }
 
     /// Create manager with device capabilities
-    pub fn with_device_capabilities(_capabilities: DeviceCapabilities) -> Self {
+    pub fn with_device_capabilities(capabilities: DeviceCapabilities) -> Self {
         let mut manager = Self::new();
-        manager.device_capabilities = _capabilities;
+        manager.device_capabilities = capabilities;
         manager
     }
 
@@ -1281,7 +1284,7 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
         Ok(optimized)
     }
 
-    fn analyze_kernel(&self_source: &str) -> LinalgResult<KernelMetadata> {
+    fn analyze_kernel(selfsource: &str) -> LinalgResult<KernelMetadata> {
         // Mock kernel analysis - in practice would parse OpenCL/CUDA _source
         Ok(KernelMetadata {
             name: "analyzed_kernel".to_string(),
@@ -1295,7 +1298,7 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
     }
 
     fn estimate_performance(
-        &self_metadata: &KernelMetadata,
+        self_metadata: &KernelMetadata,
     ) -> LinalgResult<KernelPerformanceData> {
         // Mock performance estimation
         Ok(KernelPerformanceData {
@@ -1309,7 +1312,8 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
 
     // Additional helper methods for auto-tuning and optimization...
     fn validate_template_parameters(
-        &self_template: &KernelTemplate, _parameters: &std::collections::HashMap<String, String>,
+        self_template: &KernelTemplate,
+        _parameters: &std::collections::HashMap<String, String>,
     ) -> LinalgResult<()> {
         // Validation logic
         Ok(())
@@ -1335,17 +1339,14 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
     }
 
     fn simulate_kernel_execution(
-        &self_kernel: &CompiledKernel,
+        self_kernel: &CompiledKernel,
         problem_size: usize,
     ) -> LinalgResult<f64> {
         // Mock execution simulation
         Ok(0.001 * problem_size as f64 / 1000000.0) // Mock runtime in seconds
     }
 
-    fn calculate_gflops(
-        &self_kernel: &CompiledKernel,
-        problem_size: usize, _runtime: f64,
-    ) -> f64 {
+    fn calculate_gflops(self_kernel: &CompiledKernel, problem_size: usize, runtime: f64) -> f64 {
         // Mock GFLOPS calculation
         let operations = problem_size as f64 * problem_size as f64 * 2.0; // Mock operation count
         operations / (0.001 * 1e9) // Mock with fixed _runtime
@@ -1363,14 +1364,14 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
             .collect()
     }
 
-    fn estimate_optimal_local_memory(&self, work_group_size: usize) -> usize {
+    fn estimate_optimal_local_memory(&self, work_groupsize: usize) -> usize {
         std::cmp::min(
             work_group_size * 64,
             self.device_capabilities.local_memory_size,
         )
     }
 
-    fn estimate_optimal_unroll_factor(&self, work_group_size: usize) -> usize {
+    fn estimate_optimal_unroll_factor(&self, work_groupsize: usize) -> usize {
         if work_group_size >= 256 {
             8
         } else if work_group_size >= 64 {
@@ -1380,14 +1381,15 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
         }
     }
 
-    fn estimate_optimal_vectorization(&self_work_group_size: usize) -> usize {
+    fn estimate_optimal_vectorization(&self_work_groupsize: usize) -> usize {
         std::cmp::min(self.device_capabilities.simd_width as usize, 8)
     }
 
     fn evaluate_configuration(
         &self,
         kernel: &CompiledKernel,
-        config: &AutoTuneConfig_problem, size: usize,
+        config: &AutoTuneConfig_problem,
+        size: usize,
     ) -> LinalgResult<f64> {
         // Mock performance evaluation
         let base_performance = kernel.performance_data.theoretical_peak_gflops;
@@ -1426,9 +1428,9 @@ struct BenchmarkMeasurement {
 }
 
 impl BenchmarkResults {
-    fn new(_kernel_name: &str) -> Self {
+    fn new(_kernelname: &str) -> Self {
         Self {
-            kernel_name: _kernel_name.to_string(),
+            kernel_name: kernel_name.to_string(),
             measurements: Vec::new(),
         }
     }
@@ -1540,7 +1542,7 @@ impl GpuPerformanceProfiler {
     }
 
     /// Record a performance measurement
-    pub fn record(&mut self, operation: &str, time_seconds: f64) {
+    pub fn record(&mut self, operation: &str, timeseconds: f64) {
         self.measurements
             .entry(operation.to_string())
             .or_default()
@@ -1615,16 +1617,16 @@ struct BatchPerformanceRecord {
 }
 
 impl BatchSizeOptimizer {
-    pub fn new(_memory_limit: usize) -> Self {
+    pub fn new(_memorylimit: usize) -> Self {
         Self {
             optimal_sizes: std::collections::HashMap::new(),
-            _memory_limit,
+            memory_limit,
             performance_history: Vec::new(),
         }
     }
 
     /// Find optimal batch size for an operation
-    pub fn optimize_batch_size(&mut self, operation: &str, data_size: usize) -> usize {
+    pub fn optimize_batch_size(&mut self, operation: &str, datasize: usize) -> usize {
         // Check if we have historical data
         if let Some(&optimal) = self.optimal_sizes.get(operation) {
             return optimal.min(data_size);
@@ -1806,7 +1808,7 @@ where
     }
 
     /// Adaptive GPU memory management
-    pub fn optimize_memory_usage(&mut self, operation_sequence: &[&str]) -> LinalgResult<()> {
+    pub fn optimize_memory_usage(&mut self, operationsequence: &[&str]) -> LinalgResult<()> {
         // Analyze operation _sequence to optimize memory allocation patterns
         let mut memory_requirements = std::collections::HashMap::new();
 
@@ -1925,7 +1927,9 @@ where
 
     /// Launch CUDA matrix-vector multiplication kernel (f32)
     fn launch_cuda_matvec_f32(
-        &self_a_ptr: *const f32_x, ptr: *const f32, _y_ptr: *mut f32,
+        &self_a_ptr: *const f32_x,
+        ptr: *const f32,
+        _y_ptr: *mut f32,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -1940,7 +1944,9 @@ where
 
     /// Launch CUDA matrix-vector multiplication kernel (f64)
     fn launch_cuda_matvec_f64(
-        &self_a_ptr: *const f64, _x_ptr: *const f64, _y_ptr: *mut f64,
+        &self_a_ptr: *const f64,
+        _x_ptr: *const f64,
+        _y_ptr: *mut f64,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -1951,7 +1957,9 @@ where
 
     /// Launch CUDA matrix multiplication kernel (f32, basic)
     fn launch_cuda_matmul_f32_basic(
-        &self_a_ptr: *const f32, _b_ptr: *const f32, _c_ptr: *mut f32,
+        &self_a_ptr: *const f32,
+        _b_ptr: *const f32,
+        _c_ptr: *mut f32,
         m: usize,
         n: usize,
         k: usize,
@@ -1963,7 +1971,9 @@ where
 
     /// Launch CUDA matrix multiplication kernel (f32, tiled)
     fn launch_cuda_matmul_f32_tiled(
-        &self_a_ptr: *const f32, _b_ptr: *const f32, _c_ptr: *mut f32,
+        &self_a_ptr: *const f32,
+        _b_ptr: *const f32,
+        _c_ptr: *mut f32,
         m: usize,
         n: usize,
         k: usize,
@@ -1975,7 +1985,9 @@ where
 
     /// Launch CUDA matrix multiplication kernel (f32, tensor core)
     fn launch_cuda_matmul_f32_tensor_core(
-        &self_a_ptr: *const f32, _b_ptr: *const f32, _c_ptr: *mut f32,
+        &self_a_ptr: *const f32,
+        _b_ptr: *const f32,
+        _c_ptr: *mut f32,
         m: usize,
         n: usize,
         k: usize,
@@ -1987,7 +1999,9 @@ where
 
     /// Launch CUDA matrix multiplication kernel (f32, warp shuffle)
     fn launch_cuda_matmul_f32_warp_shuffle(
-        &self_a_ptr: *const f32, _b_ptr: *const f32, _c_ptr: *mut f32,
+        &self_a_ptr: *const f32,
+        _b_ptr: *const f32,
+        _c_ptr: *mut f32,
         m: usize,
         n: usize,
         k: usize,
@@ -1999,7 +2013,9 @@ where
 
     /// Launch CUDA matrix multiplication kernel (f64)
     fn launch_cuda_matmul_f64(
-        &self_a_ptr: *const f64, _b_ptr: *const f64, _c_ptr: *mut f64,
+        &self_a_ptr: *const f64,
+        _b_ptr: *const f64,
+        _c_ptr: *mut f64,
         m: usize,
         n: usize,
         k: usize,
@@ -2011,7 +2027,10 @@ where
 
     /// Launch OpenCL matrix-vector multiplication kernel (f32)
     fn launch_opencl_matvec_f32(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_x, ptr: *mut std::ffi::c_void_y, _ptr: *mut std::ffi::c_void,
+        self_ctx: &dyn GpuContext_a,
+        _ptr: *mut std::ffi::c_void_x,
+        ptr: *mut std::ffi::c_void_y,
+        _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -2027,7 +2046,10 @@ where
 
     /// Launch OpenCL matrix-vector multiplication kernel (f64)
     fn launch_opencl_matvec_f64(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_x, ptr: *mut std::ffi::c_void_y, _ptr: *mut std::ffi::c_void,
+        self_ctx: &dyn GpuContext_a,
+        _ptr: *mut std::ffi::c_void_x,
+        ptr: *mut std::ffi::c_void_y,
+        _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -2037,7 +2059,10 @@ where
 
     /// Launch OpenCL matrix multiplication kernel (f32, basic)
     fn launch_opencl_matmul_f32_basic(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b, ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
+        self_ctx: &dyn GpuContext_a,
+        _ptr: *mut std::ffi::c_void_b,
+        ptr: *mut std::ffi::c_void_c,
+        _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2049,7 +2074,10 @@ where
 
     /// Launch OpenCL matrix multiplication kernel (f32, optimized)
     fn launch_opencl_matmul_f32_optimized(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b, ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
+        self_ctx: &dyn GpuContext_a,
+        _ptr: *mut std::ffi::c_void_b,
+        ptr: *mut std::ffi::c_void_c,
+        _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2061,7 +2089,10 @@ where
 
     /// Launch OpenCL matrix multiplication kernel (f32, vectorized)
     fn launch_opencl_matmul_f32_vectorized(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b, ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
+        self_ctx: &dyn GpuContext_a,
+        _ptr: *mut std::ffi::c_void_b,
+        ptr: *mut std::ffi::c_void_c,
+        _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2073,7 +2104,10 @@ where
 
     /// Launch OpenCL matrix multiplication kernel (f64)
     fn launch_opencl_matmul_f64(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b, ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
+        self_ctx: &dyn GpuContext_a,
+        _ptr: *mut std::ffi::c_void_b,
+        ptr: *mut std::ffi::c_void_c,
+        _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2084,7 +2118,10 @@ where
 
     /// Launch ROCm matrix-vector multiplication kernel (f32)
     fn launch_rocm_matvec_f32(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_x, ptr: *mut std::ffi::c_void_y, _ptr: *mut std::ffi::c_void,
+        self_ctx: &dyn GpuContext_a,
+        _ptr: *mut std::ffi::c_void_x,
+        ptr: *mut std::ffi::c_void_y,
+        _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -2095,7 +2132,10 @@ where
 
     /// Launch ROCm matrix multiplication kernel (f32)
     fn launch_rocm_matmul_f32(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b, ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
+        self_ctx: &dyn GpuContext_a,
+        _ptr: *mut std::ffi::c_void_b,
+        ptr: *mut std::ffi::c_void_c,
+        _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2106,7 +2146,10 @@ where
 
     /// Launch Metal matrix-vector multiplication kernel (f32)
     fn launch_metal_matvec_f32(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_x, ptr: *mut std::ffi::c_void_y, _ptr: *mut std::ffi::c_void,
+        self_ctx: &dyn GpuContext_a,
+        _ptr: *mut std::ffi::c_void_x,
+        ptr: *mut std::ffi::c_void_y,
+        _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -2117,7 +2160,10 @@ where
 
     /// Launch Metal matrix multiplication kernel (f32)
     fn launch_metal_matmul_f32(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b, ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
+        self_ctx: &dyn GpuContext_a,
+        _ptr: *mut std::ffi::c_void_b,
+        ptr: *mut std::ffi::c_void_c,
+        _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2144,7 +2190,8 @@ where
     /// Multi-dimensional performance metrics
     performance_metrics: Arc<RwLock<MultiDimensionalMetrics>>,
     /// Hardware capability profiler
-    hardware_profiler: Arc<Mutex<HardwareCapabilityProfiler>>, _phantom: std::marker::PhantomData<T>,
+    hardware_profiler: Arc<Mutex<HardwareCapabilityProfiler>>,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 /// Advanced performance prediction using historical data and workload characteristics
@@ -2321,7 +2368,8 @@ where
             workload_analyzer: Arc::new(Mutex::new(WorkloadAnalyzer::new())),
             threshold_optimizer: Arc::new(Mutex::new(AdaptiveThresholdOptimizer::new())),
             performance_metrics: Arc::new(RwLock::new(MultiDimensionalMetrics::new())),
-            hardware_profiler: Arc::new(Mutex::new(HardwareCapabilityProfiler::new())), _phantom: std::marker::PhantomData,
+            hardware_profiler: Arc::new(Mutex::new(HardwareCapabilityProfiler::new())),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -2530,10 +2578,7 @@ where
         parallel_efficiency.min(1.0)
     }
 
-    fn estimate_cache_efficiency(
-        &selfshape: (usize, usize),
-        pattern: &MemoryAccessPattern,
-    ) -> f64 {
+    fn estimate_cache_efficiency(&selfshape: (usize, usize), pattern: &MemoryAccessPattern) -> f64 {
         let cache_line_size = 64; // bytes
         let elements_per_line = cache_line_size / std::mem::size_of::<T>();
 
@@ -2638,7 +2683,8 @@ impl GpuPerformancePredictor {
     }
 
     pub fn predict_cpu_performance(
-        &self_operation: &str, _workload: &WorkloadAnalysis,
+        self_operation: &str,
+        _workload: &WorkloadAnalysis,
     ) -> LinalgResult<PerformancePrediction> {
         // Simplified prediction - in practice would use sophisticated ML models
         Ok(PerformancePrediction {
@@ -2651,7 +2697,9 @@ impl GpuPerformancePredictor {
     }
 
     pub fn predict_gpu_performance(
-        &self_operation: &str, _workload: &WorkloadAnalysis, device: &GpuDeviceInfo,
+        self_operation: &str,
+        _workload: &WorkloadAnalysis,
+        device: &GpuDeviceInfo,
     ) -> LinalgResult<PerformancePrediction> {
         // Simplified prediction - in practice would use sophisticated ML models
         Ok(PerformancePrediction {
@@ -2711,7 +2759,7 @@ impl AdaptiveThresholdOptimizer {
             let avg_performance =
                 history.iter().map(|(_, p_)| p).sum::<f64>() / history.len() as f64;
             let gpu_usage_rate =
-                history.iter().filter(|(_, _gpu)| *_gpu).count() as f64 / history.len() as f64;
+                history.iter().filter(|(_, gpu)| *_gpu).count() as f64 / history.len() as f64;
 
             // Adjust threshold based on performance and GPU usage
             let threshold_adjustment = if gpu_usage_rate > 0.8 && avg_performance > 0.5 {

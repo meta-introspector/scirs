@@ -30,7 +30,7 @@ impl CheckpointRegistry {
         }
     }
 
-    fn register_checkpoint(&mut self, tensor_id: usize, estimated_size: usize) {
+    fn register_checkpoint(&mut self, tensor_id: usize, estimatedsize: usize) {
         self.checkpoint_ops.insert(tensor_id);
         if self.tracking_enabled {
             self.estimated_memory_saved += estimated_size;
@@ -116,7 +116,7 @@ impl<F: Float> Op<F> for CheckpointOp {
                     // If shapes don't match, we need to reshape or broadcast
                     // For now with our temporary gradient fix, we'll use a simple ones tensor
                     // with the same shape as the input
-                    let shape_tensor = crate::tensor__ops::convert_to_tensor(
+                    let shape_tensor = crate::tensor_ops::convert_to_tensor(
                         ndarray::Array::fromshape_vec(
                             ndarray::IxDyn(&[inputshape.len()]),
                             inputshape
@@ -191,7 +191,7 @@ impl<F: Float> Op<F> for CheckpointOp {
 /// A new tensor with the same value but with gradient checkpointing enabled
 #[allow(dead_code)]
 pub fn checkpoint<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _tensor.graph();
+    let g = tensor.graph();
 
     Tensor::builder(g)
         .append_input(_tensor, false)
@@ -211,7 +211,7 @@ pub fn checkpoint<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 /// A new tensor with the same value but detached from the gradient computation
 #[allow(dead_code)]
 pub fn detach<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _tensor.graph();
+    let g = tensor.graph();
 
     // Use the same checkpoint op but mark it as not differentiable
     Tensor::builder(g)
@@ -314,9 +314,9 @@ impl<'g, F: Float> CheckpointGroup<'g, F> {
     ///
     /// # Returns
     /// A new CheckpointGroup instance
-    pub fn new(_ctx: &'g crate::graph::Context<'g, F>) -> Self {
+    pub fn new(ctx: &'g crate::graph::Context<'g, F>) -> Self {
         Self {
-            _ctx,
+            ctx,
             phantom: PhantomData,
         }
     }
@@ -332,7 +332,7 @@ impl<'g, F: Float> CheckpointGroup<'g, F> {
     ///
     /// # Returns
     /// The checkpointed output tensors
-    pub fn checkpoint_fn<Inputs, Outputs, Func>(&self, inputs: Inputs, segment_fn: Func) -> Outputs
+    pub fn checkpoint_fn<Inputs, Outputs, Func>(&self, inputs: Inputs, segmentfn: Func) -> Outputs
     where
         Inputs: Clone,
         Func: FnOnce(Inputs) -> Outputs,

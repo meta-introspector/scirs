@@ -284,7 +284,7 @@ pub fn optics<F: Float + FromPrimitive + Debug + PartialOrd>(
 
     // Convert max_eps to f64 for use with default extraction
     let default_eps = match max_eps {
-        Some(_eps) => _eps.to_f64().unwrap() / 10.0, // Use smaller epsilon by default
+        Some(_eps) => eps.to_f64().unwrap() / 10.0, // Use smaller epsilon by default
         None => 0.5,                                 // Default _eps if none provided
     };
 

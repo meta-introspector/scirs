@@ -31,7 +31,7 @@ impl PlottersBackend {
 
     /// Map the scirs2-metrics color map to a plotters color map name
     #[allow(dead_code)]
-    fn map_color_scheme(&self, color_map: &ColorMap) -> &'static str {
+    fn map_color_scheme(&self, colormap: &ColorMap) -> &'static str {
         match color_map {
             ColorMap::BlueRed => "BrBG",
             ColorMap::GreenRed => "PRGn",
@@ -198,7 +198,8 @@ impl PlottersBackend {
         &self,
         root: &DrawingArea<DB, plotters::coord::Shift>,
         data: &VisualizationData,
-        metadata: &VisualizationMetadata, options: &VisualizationOptions,
+        metadata: &VisualizationMetadata,
+        options: &VisualizationOptions,
     ) -> Result<(), Box<dyn Error>>
     where
         DB::ErrorType: 'static,
@@ -269,7 +270,8 @@ impl PlottersBackend {
         &self,
         root: &DrawingArea<DB, plotters::coord::Shift>,
         data: &VisualizationData,
-        metadata: &VisualizationMetadata, options: &VisualizationOptions,
+        metadata: &VisualizationMetadata,
+        options: &VisualizationOptions,
     ) -> Result<(), Box<dyn Error>>
     where
         DB::ErrorType: 'static,
@@ -317,7 +319,8 @@ impl PlottersBackend {
         &self,
         root: &DrawingArea<DB, plotters::coord::Shift>,
         data: &VisualizationData,
-        metadata: &VisualizationMetadata, options: &VisualizationOptions,
+        metadata: &VisualizationMetadata,
+        options: &VisualizationOptions,
     ) -> Result<(), Box<dyn Error>>
     where
         DB::ErrorType: 'static,
@@ -355,7 +358,8 @@ impl PlottersBackend {
         &self,
         root: &DrawingArea<DB, plotters::coord::Shift>,
         data: &VisualizationData,
-        metadata: &VisualizationMetadata, options: &VisualizationOptions,
+        metadata: &VisualizationMetadata,
+        options: &VisualizationOptions,
     ) -> Result<(), Box<dyn Error>>
     where
         DB::ErrorType: 'static,
@@ -420,7 +424,8 @@ impl PlottersBackend {
         &self,
         root: &DrawingArea<DB, plotters::coord::Shift>,
         data: &VisualizationData,
-        metadata: &VisualizationMetadata, options: &VisualizationOptions,
+        metadata: &VisualizationMetadata,
+        options: &VisualizationOptions,
     ) -> Result<(), Box<dyn Error>>
     where
         DB::ErrorType: 'static,

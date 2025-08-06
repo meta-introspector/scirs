@@ -53,13 +53,13 @@ struct ModelParameters {
     parameters: Vec<Array2<f32>>,
 impl EWC {
     /// Create a new EWC instance
-    pub fn new(_config: EWCConfig) -> Self {
-            _config,
+    pub fn new(config: EWCConfig) -> Self {
+            config,
             fisher_matrices: Vec::new(),
             optimal_params: Vec::new(),
             current_task: 0,
     /// Compute EWC loss for current parameters
-    pub fn compute_loss(&self, current_params: &[Array2<f32>]) -> Result<f32> {
+    pub fn compute_loss(&self, currentparams: &[Array2<f32>]) -> Result<f32> {
         if self.current_task == 0 {
             return Ok(0.0);
         let mut total_loss = 0.0;
@@ -192,14 +192,14 @@ impl EWC {
                 } else {
                     full[i] = &full[i] + &outer_product;
     /// Normalize Fisher matrix
-    fn normalize_fisher(&self, fisher: &mut FisherMatrix, num_samples: f32) -> Result<()> {
+    fn normalize_fisher(&self, fisher: &mut FisherMatrix, numsamples: f32) -> Result<()> {
                 for diag in diagonal.iter_mut() {
                     *diag /= num_samples;
             if let Some(ref mut full) = fisher.full {
                 for mat in full.iter_mut() {
                     *mat /= num_samples;
     /// Merge Fisher matrices for online EWC
-    fn merge_fisher_matrices(&mut self, new_fisher: &mut FisherMatrix) -> Result<()> {
+    fn merge_fisher_matrices(&mut self, newfisher: &mut FisherMatrix) -> Result<()> {
         if let Some(last_fisher) = self.fisher_matrices.last_mut() {
             if self.config.diagonal_fisher {
                 if let (Some(ref mut last_diag), Some(ref new_diag)) =
@@ -241,7 +241,7 @@ impl EWCRegularizer {
     pub fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
     /// Get regularization loss
-    pub fn get_loss(&self, current_params: &[Array2<f32>]) -> Result<f32> {
+    pub fn get_loss(&self, currentparams: &[Array2<f32>]) -> Result<f32> {
         if self.enabled {
             self.ewc.compute_loss(current_params)
             Ok(0.0)

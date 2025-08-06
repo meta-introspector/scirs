@@ -53,7 +53,7 @@ fn generate_clustered_data(
 
 /// Generate random data for worst-case benchmarks
 #[allow(dead_code)]
-fn generate_random_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn generate_random_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(42);
     let mut data = Array2::zeros((_n_samples, n_features));
 

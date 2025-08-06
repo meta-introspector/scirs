@@ -206,11 +206,11 @@ where
 
 /// Detects seasonal periods automatically using multiple methods
 #[allow(dead_code)]
-fn detect_seasonal_periods<F>(_ts: &Array1<F>, config: &MultiSeasonalConfig) -> Result<Vec<usize>>
+fn detect_seasonal_periods<F>(ts: &Array1<F>, config: &MultiSeasonalConfig) -> Result<Vec<usize>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = _ts.len();
+    let n = ts.len();
     let max_period = if config.max_period == 0 {
         n / 3
     } else {
@@ -272,7 +272,7 @@ where
 
 /// Detects periods using autocorrelation function
 #[allow(dead_code)]
-fn detect_periods_acf<F>(_ts: &Array1<F>, min_period: usize, max_period: usize) -> Result<Vec<usize>>
+fn detect_periods_acf<F>(_ts: &Array1<F>, min_period: usize, maxperiod: usize) -> Result<Vec<usize>>
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -584,15 +584,15 @@ where
 
 /// Calculates robust mean using median
 #[allow(dead_code)]
-fn robust_mean<F>(_values: &[F]) -> F
+fn robust_mean<F>(values: &[F]) -> F
 where
     F: Float + FromPrimitive + Debug,
 {
-    if _values.is_empty() {
+    if values.is_empty() {
         return F::zero();
     }
 
-    let mut sorted = _values.to_vec();
+    let mut sorted = values.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let len = sorted.len();
@@ -606,11 +606,11 @@ where
 }
 
 #[allow(dead_code)]
-fn calculate_l2_norm<F>(_arr: &Array1<F>) -> Result<F>
+fn calculate_l2_norm<F>(arr: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let sum_squares = _arr.iter().fold(F::zero(), |acc, &x| acc + x * x);
+    let sum_squares = arr.iter().fold(F::zero(), |acc, &x| acc + x * x);
     Ok(sum_squares.sqrt())
 }
 

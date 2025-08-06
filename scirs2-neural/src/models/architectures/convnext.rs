@@ -82,10 +82,10 @@ pub struct ConvNeXtBlock<F: Float + Debug + ScalarOperand + Send + Sync> {
     pub skip_scale: F,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXtBlock<F> {
     /// Create a new ConvNeXtBlock
-    pub fn new(_channels: usize, layer_scale_init_value: f64, drop_path_prob: f64) -> Result<Self> {
+    pub fn new(_channels: usize, layer_scale_init_value: f64, drop_pathprob: f64) -> Result<Self> {
         let mut rng = rand::rng();
         let depthwise_conv = Conv2D::<F>::new(
-            _channels,
+            channels,
             (7, 7),
             (1, 1),
             PaddingMode::Custom(3),
@@ -93,7 +93,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXtBlock<F> {
         )?;
         let norm = LayerNorm2D::<F>::new::<SmallRng>(_channels, 1e-6, Some("norm"))?;
         let pointwise_conv1 = Conv2D::<F>::new(
-            _channels,
+            channels,
             _channels * 4,
             (1, 1),
             (1, 1),
@@ -103,7 +103,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXtBlock<F> {
         let gelu = GELU::new();
         let pointwise_conv2 = Conv2D::<F>::new(
             _channels * 4,
-            _channels,
+            channels,
             (1, 1),
             (1, 1),
             PaddingMode::Custom(0),
@@ -198,7 +198,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for ConvNeXtBlock<
         // Combine gradient from main path and skip connection
         let grad_input = grad_after_dwconv + grad_skip;
         Ok(grad_input)
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         // Update all learnable components
         // Update depthwise convolution
         self.depthwise_conv.update(learning_rate)?;
@@ -237,10 +237,10 @@ pub struct ConvNeXtDownsample<F: Float + Debug + ScalarOperand + Send + Sync> {
     pub conv: Conv2D<F>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXtDownsample<F> {
     /// Create a new ConvNeXtDownsample
-    pub fn new(_in_channels: usize, out_channels: usize, stride: usize) -> Result<Self> {
+    pub fn new(_in_channels: usize, outchannels: usize, stride: usize) -> Result<Self> {
         let norm = LayerNorm2D::<F>::new::<SmallRng>(_in_channels, 1e-6, Some("downsample_norm"))?;
         let conv = Conv2D::<F>::new(
-            _in_channels,
+            in_channels,
             out_channels,
             (stride, stride),
         Ok(Self { norm, conv })
@@ -266,13 +266,13 @@ pub struct ConvNeXtStage<F: Float + Debug + ScalarOperand + Send + Sync> {
     pub blocks: Vec<ConvNeXtBlock<F>>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXtStage<F> {
     /// Create a new ConvNeXtStage
-    pub fn new(_config: &ConvNeXtStageConfig) -> Result<Self> {
+    pub fn new(config: &ConvNeXtStageConfig) -> Result<Self> {
         // Create the downsampling layer if needed
-        let downsample = if _config.input_channels != _config.output_channels || _config.stride > 1 {
+        let downsample = if config.input_channels != config.output_channels || config.stride > 1 {
             Some(ConvNeXtDownsample::<F>::new(
-                _config.input_channels,
-                _config.output_channels,
-                _config.stride,
+                config.input_channels,
+                config.output_channels,
+                config.stride,
             )?)
         } else {
             None
@@ -327,12 +327,12 @@ pub struct ConvNeXt<F: Float + Debug + ScalarOperand + Send + Sync> {
     pub config: ConvNeXtConfig,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXt<F> {
     /// Create a new ConvNeXt model
-    pub fn new(_config: ConvNeXtConfig) -> Result<Self> {
+    pub fn new(config: ConvNeXtConfig) -> Result<Self> {
         // Create the stem layer
         let mut stem = Sequential::new();
         stem.add(Conv2D::<F>::new(
-            _config.input_channels,
-            _config.dims[0],
+            config.input_channels,
+            config.dims[0],
             (4, 4),
         )?);
         stem.add(LayerNorm2D::<F>::new::<SmallRng>(
@@ -340,9 +340,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXt<F> {
             Some("stem_norm"),
         // Create the stages
         let mut stages = Vec::with_capacity(_config.depths.len());
-        let mut current_channels = _config.dims[0];
-        for (i, &depth) in _config.depths.iter().enumerate() {
-            let output_channels = _config.dims[i];
+        let mut current_channels = config.dims[0];
+        for (i, &depth) in config.depths.iter().enumerate() {
+            let output_channels = config.dims[i];
             let stride = if i == 0 { 1 } else { 2 };
             let stage_config = ConvNeXtStageConfig {
                 input_channels: current_channels,
@@ -376,7 +376,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXt<F> {
             head,
             config,
     /// Create a ConvNeXt-Tiny model
-    pub fn convnext_tiny(_num_classes: usize, include_top: bool) -> Result<Self> {
+    pub fn convnext_tiny(_num_classes: usize, includetop: bool) -> Result<Self> {
         let config = ConvNeXtConfig {
             variant: ConvNeXtVariant::Tiny,
             input_channels: 3,
@@ -388,19 +388,19 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXt<F> {
             include_top,
         Self::new(config)
     /// Create a ConvNeXt-Small model
-    pub fn convnext_small(_num_classes: usize, include_top: bool) -> Result<Self> {
+    pub fn convnext_small(_num_classes: usize, includetop: bool) -> Result<Self> {
             variant: ConvNeXtVariant::Small,
             depths: vec![3, 3, 27, 3],
     /// Create a ConvNeXt-Base model
-    pub fn convnext_base(_num_classes: usize, include_top: bool) -> Result<Self> {
+    pub fn convnext_base(_num_classes: usize, includetop: bool) -> Result<Self> {
             variant: ConvNeXtVariant::Base,
             dims: vec![128, 256, 512, 1024],
     /// Create a ConvNeXt-Large model
-    pub fn convnext_large(_num_classes: usize, include_top: bool) -> Result<Self> {
+    pub fn convnext_large(_num_classes: usize, includetop: bool) -> Result<Self> {
             variant: ConvNeXtVariant::Large,
             dims: vec![192, 384, 768, 1536],
     /// Create a ConvNeXt-XLarge model
-    pub fn convnext_xlarge(_num_classes: usize, include_top: bool) -> Result<Self> {
+    pub fn convnext_xlarge(_num_classes: usize, includetop: bool) -> Result<Self> {
             variant: ConvNeXtVariant::XLarge,
             dims: vec![256, 512, 1024, 2048],
 impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for ConvNeXt<F> {

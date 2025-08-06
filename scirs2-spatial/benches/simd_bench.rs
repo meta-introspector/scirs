@@ -11,7 +11,7 @@ use std::hint::black_box;
 use std::time::Duration;
 
 #[allow(dead_code)]
-fn generate_test_data(_n_points: usize, dimensions: usize) -> Array2<f64> {
+fn generate_test_data(_npoints: usize, dimensions: usize) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(42);
     Array2::fromshape_fn((_n_points, dimensions), |_| rng.gen_range(-10.0..10.0))
 }

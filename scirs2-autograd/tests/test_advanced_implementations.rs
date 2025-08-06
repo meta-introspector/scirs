@@ -1,7 +1,7 @@
 //! Tests for advanced linear algebra implementations
 
-use ag::tensor__ops::PreconditionerType;
-use ag::tensor__ops::*;
+use ag::tensor_ops::PreconditionerType;
+use ag::tensor_ops::*;
 use ndarray::array;
 use scirs2_autograd as ag;
 

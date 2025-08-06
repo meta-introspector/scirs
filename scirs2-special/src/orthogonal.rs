@@ -507,7 +507,7 @@ pub fn hermite_prob<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
 /// assert!((chebyshev(2, 0.5f64, true) - (-0.5)).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn chebyshev<F: Float + FromPrimitive + Debug>(n: usize, x: F, first_kind: bool) -> F {
+pub fn chebyshev<F: Float + FromPrimitive + Debug>(n: usize, x: F, firstkind: bool) -> F {
     if first_kind {
         // Chebyshev polynomials of the first _kind T_n(x)
 

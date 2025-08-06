@@ -4,7 +4,7 @@
 //! the boundaries of traditional clustering methods. It includes quantum-inspired algorithms
 //! that leverage quantum computing principles and advanced online learning variants.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis, Zip};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis, Zip};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::{Rng, SeedableRng};
 use rand__distr::{Distribution, Uniform};
@@ -79,10 +79,10 @@ struct QuantumState<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
     /// Create a new quantum K-means instance
-    pub fn new(_n_clusters: usize, config: QuantumConfig) -> Self {
+    pub fn new(_nclusters: usize, config: QuantumConfig) -> Self {
         Self {
             config,
-            _n_clusters,
+            n_clusters,
             quantum_centroids: None,
             quantum_amplitudes: None,
             classical_centroids: None,
@@ -503,17 +503,17 @@ struct ConceptDriftDetector {
 
 impl<F: Float + FromPrimitive + Debug> AdaptiveOnlineClustering<F> {
     /// Create a new adaptive online clustering instance
-    pub fn new(_config: AdaptiveOnlineConfig) -> Self {
+    pub fn new(config: AdaptiveOnlineConfig) -> Self {
         Self {
-            _config: _config.clone(),
+            _config: config.clone(),
             clusters: Vec::new(),
-            learning_rate: _config.initial_learning_rate,
+            learning_rate: config.initial_learning_rate,
             samples_processed: 0,
             recent_distances: VecDeque::with_capacity(_config.concept_drift_window),
             drift_detector: ConceptDriftDetector {
                 recent_errors: VecDeque::with_capacity(_config.concept_drift_window),
                 baseline_error: 1.0,
-                window_size: _config.concept_drift_window,
+                window_size: config.concept_drift_window,
             },
         }
     }
@@ -591,7 +591,7 @@ impl<F: Float + FromPrimitive + Debug> AdaptiveOnlineClustering<F> {
     }
 
     /// Update an existing cluster with a new point
-    fn update_cluster(&mut self, cluster_idx: usize, point: ArrayView1<F>) -> Result<()> {
+    fn update_cluster(&mut self, clusteridx: usize, point: ArrayView1<F>) -> Result<()> {
         let cluster = &mut self.clusters[cluster_idx];
 
         // Update weight with forgetting factor
@@ -902,9 +902,9 @@ pub struct RLClustering<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
     /// Create a new reinforcement learning clustering instance
-    pub fn new(_config: RLClusteringConfig) -> Self {
+    pub fn new(config: RLClusteringConfig) -> Self {
         Self {
-            _config,
+            config,
             q_table: HashMap::new(),
             clusters: Vec::new(),
             centroids: None,
@@ -989,7 +989,7 @@ impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
     }
 
     /// Encode the current state for Q-learning
-    fn encode_state(&self, assignments: &[usize], current_point: usize) -> usize {
+    fn encode_state(&self, assignments: &[usize], currentpoint: usize) -> usize {
         // Simple state encoding: hash of recent assignments
         let mut hash = 0;
         let window = 5.min(assignments.len());
@@ -1294,9 +1294,9 @@ pub struct TransferLearningClustering<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
     /// Create a new transfer learning clustering instance
-    pub fn new(_config: TransferLearningConfig) -> Self {
+    pub fn new(config: TransferLearningConfig) -> Self {
         Self {
-            _config,
+            config,
             source_centroids: None,
             target_centroids: None,
             transfer_matrix: None,
@@ -1305,12 +1305,12 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
     }
 
     /// Set source domain knowledge
-    pub fn set_source_knowledge(&mut self, source_centroids: Array2<F>) {
+    pub fn set_source_knowledge(&mut self, sourcecentroids: Array2<F>) {
         self.source_centroids = Some(source_centroids);
     }
 
     /// Fit on target domain with transfer from source
-    pub fn fit(&mut self, target_data: ArrayView2<F>, n_clusters: usize) -> Result<()> {
+    pub fn fit(&mut self, target_data: ArrayView2<F>, nclusters: usize) -> Result<()> {
         let (n_samples, n_features) = target_data.dim();
 
         if n_samples == 0 || n_features == 0 {
@@ -1433,7 +1433,7 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
         // Simplified: return identity matrix
         // In a full implementation, this would compute PCA on both domains
         // and align their principal components
-        let n_features = _target_data.ncols().min(_source_centroids.ncols());
+        let n_features = target_data.ncols().min(_source_centroids.ncols());
         Ok(Array2::eye(n_features))
     }
 
@@ -1445,7 +1445,7 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
     ) -> Result<Array2<F>> {
         // Simplified: return identity matrix
         // In a full implementation, this would align feature correlations
-        let n_features = _target_data.ncols().min(_source_centroids.ncols());
+        let n_features = target_data.ncols().min(_source_centroids.ncols());
         Ok(Array2::eye(n_features))
     }
 
@@ -1679,9 +1679,9 @@ pub struct DeepEmbeddedClustering<F: Float + FromPrimitive> {
 
 impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
     /// Create new DEC instance
-    pub fn new(_config: DeepClusteringConfig) -> Self {
+    pub fn new(config: DeepClusteringConfig) -> Self {
         Self {
-            _config,
+            config,
             encoder_weights: Vec::new(),
             encoder_biases: Vec::new(),
             decoder_weights: Vec::new(),
@@ -1693,20 +1693,20 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
     }
 
     /// Initialize neural network weights
-    pub fn initialize_weights(&mut self, input_dim: usize) -> Result<()> {
+    pub fn initialize_weights(&mut self, inputdim: usize) -> Result<()> {
         let mut rng = rand::rng();
 
         // Initialize encoder
         let mut prev_dim = input_dim;
         for &_dim in &self.config.encoder_dims {
-            let weight = Array2::fromshape_fn((prev_dim, _dim), |_| {
+            let weight = Array2::fromshape_fn((prev_dim, dim), |_| {
                 F::from(rng.gen_range(-0.1..0.1)).unwrap()
             });
             let bias = Array1::zeros(_dim);
 
-            self.encoder_weights.push(weight);
+            self.encoderweights.push(weight);
             self.encoder_biases.push(bias);
-            prev_dim = _dim;
+            prev_dim = dim;
         }
 
         // Add final embedding layer
@@ -1714,7 +1714,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
             F::from(rng.gen_range(-0.1..0.1)).unwrap()
         });
         let embedding_bias = Array1::zeros(self.config.embedding_dim);
-        self.encoder_weights.push(embedding_weight);
+        self.encoderweights.push(embedding_weight);
         self.encoder_biases.push(embedding_bias);
 
         // Initialize decoder (reverse of encoder)
@@ -1725,9 +1725,9 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
             });
             let bias = Array1::zeros(_dim);
 
-            self.decoder_weights.push(weight);
+            self.decoderweights.push(weight);
             self.decoder_biases.push(bias);
-            prev_dim = _dim;
+            prev_dim = dim;
         }
 
         // Add final reconstruction layer
@@ -1735,7 +1735,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
             F::from(rng.gen_range(-0.1..0.1)).unwrap()
         });
         let output_bias = Array1::zeros(input_dim);
-        self.decoder_weights.push(output_weight);
+        self.decoderweights.push(output_weight);
         self.decoder_biases.push(output_bias);
 
         Ok(())
@@ -1755,7 +1755,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
             x = x.dot(weight) + bias;
 
             // Apply ReLU activation (except for last layer)
-            if i < self.encoder_weights.len() - 1 {
+            if i < self.encoderweights.len() - 1 {
                 x.mapv_inplace(|val| val.max(F::zero()));
             }
         }
@@ -1777,7 +1777,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
             x = x.dot(weight) + bias;
 
             // Apply ReLU activation (except for last layer which is sigmoid)
-            if i < self.decoder_weights.len() - 1 {
+            if i < self.decoderweights.len() - 1 {
                 x.mapv_inplace(|val| val.max(F::zero()));
             } else {
                 // Sigmoid activation for reconstruction
@@ -2058,9 +2058,9 @@ pub struct VariationalDeepEmbedding<F: Float + FromPrimitive> {
 
 impl<F: Float + FromPrimitive + Debug + 'static> VariationalDeepEmbedding<F> {
     /// Create new VaDE instance
-    pub fn new(_config: DeepClusteringConfig) -> Self {
+    pub fn new(config: DeepClusteringConfig) -> Self {
         Self {
-            _config,
+            config,
             encoder_mean: Vec::new(),
             encoder_logvar: Vec::new(),
             decoder_weights: Vec::new(),
@@ -2166,7 +2166,7 @@ pub struct QAOAClustering<F: Float + FromPrimitive> {
 
 impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
     /// Create new QAOA clustering instance
-    pub fn new(_n_clusters: usize, config: QAOAConfig) -> Self {
+    pub fn new(_nclusters: usize, config: QAOAConfig) -> Self {
         let mut rng = rand::rng();
 
         // Initialize QAOA parameters randomly
@@ -2219,7 +2219,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
     }
 
     /// Initialize quantum state (uniform superposition)
-    fn initialize_quantum_state(&mut self, n_qubits: usize) -> Result<()> {
+    fn initialize_quantum_state(&mut self, nqubits: usize) -> Result<()> {
         let n_states = 1 << n_qubits; // 2^n_qubits
         let amplitude = F::one() / F::from(n_states as f64).unwrap().sqrt();
         let state = Array1::from_elem(n_states, amplitude);
@@ -2559,7 +2559,7 @@ pub struct VQEClustering<F: Float + FromPrimitive> {
 
 impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
     /// Create new VQE clustering instance
-    pub fn new(_n_clusters: usize, config: VQEConfig) -> Self {
+    pub fn new(_nclusters: usize, config: VQEConfig) -> Self {
         let mut rng = rand::rng();
 
         // Initialize variational parameters
@@ -2569,7 +2569,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
 
         Self {
             config,
-            n_clusters: _n_clusters,
+            n_clusters: n_clusters,
             variational_params: params,
             hamiltonian_matrix: None,
             eigenvalues: None,
@@ -2625,7 +2625,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
     }
 
     /// Prepare variational quantum state using ansatz
-    fn prepare_variational_state(&self, n_qubits: usize) -> Result<Array1<F>> {
+    fn prepare_variational_state(&self, nqubits: usize) -> Result<Array1<F>> {
         let n_states = 1 << n_qubits;
         let mut state = Array1::zeros(n_states);
         state[0] = F::one(); // Start with |0...0>
@@ -2747,7 +2747,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
         let n_samples = data.nrows();
 
         // For demonstration, use spectral clustering approach on the Hamiltonian
-        if let Some(ref _hamiltonian) = &self.hamiltonian_matrix {
+        if let Some(ref hamiltonian) = &self.hamiltonian_matrix {
             // Simplified eigenvalue decomposition (would use proper linear algebra library)
             let mut assignments = Array1::zeros(n_samples);
 

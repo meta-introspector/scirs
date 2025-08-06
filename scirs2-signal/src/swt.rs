@@ -389,8 +389,8 @@ where
 /// assert!(rec_energy / orig_energy > 0.5); // At least 50% energy preserved
 /// ```
 #[allow(dead_code)]
-pub fn iswt(_details: &[Vec<f64>], approx: &[f64], wavelet: Wavelet) -> SignalResult<Vec<f64>> {
-    if _details.is_empty() {
+pub fn iswt(details: &[Vec<f64>], approx: &[f64], wavelet: Wavelet) -> SignalResult<Vec<f64>> {
+    if details.is_empty() {
         return Err(SignalError::ValueError(
             "Detail coefficients array is empty".to_string(),
         ));
@@ -402,7 +402,7 @@ pub fn iswt(_details: &[Vec<f64>], approx: &[f64], wavelet: Wavelet) -> SignalRe
         ));
     }
 
-    let level = _details.len();
+    let level = details.len();
     let n = approx.len();
 
     // Check that all arrays have the same length
@@ -428,8 +428,8 @@ pub fn iswt(_details: &[Vec<f64>], approx: &[f64], wavelet: Wavelet) -> SignalRe
 
 /// Helper function to extend the signal for filtering
 #[allow(dead_code)]
-fn extend_signal(_signal: &[f64], filter_len: usize, mode: &str) -> SignalResult<Vec<f64>> {
-    let n = _signal._len();
+fn extend_signal(_signal: &[f64], filterlen: usize, mode: &str) -> SignalResult<Vec<f64>> {
+    let n = signal.len();
     let pad = filter_len - 1;
 
     let mut extended = Vec::with_capacity(n + 2 * pad);
@@ -476,7 +476,7 @@ fn extend_signal(_signal: &[f64], filter_len: usize, mode: &str) -> SignalResult
             extended.extend_from_slice(_signal);
 
             // End padding
-            for &value in _signal.iter().take(pad) {
+            for &value in signal.iter().take(pad) {
                 extended.push(value);
             }
         }
@@ -508,19 +508,19 @@ fn extend_signal(_signal: &[f64], filter_len: usize, mode: &str) -> SignalResult
 ///
 /// * The upsampled filter
 #[allow(dead_code)]
-fn upsample_filter(_filter: &[f64], level: usize) -> Vec<f64> {
+fn upsample_filter(filter: &[f64], level: usize) -> Vec<f64> {
     if level == 1 {
         // At level 1, return the original _filter
-        return _filter.to_vec();
+        return filter.to_vec();
     }
 
     // For level > 1, insert 2^(level-1) - 1 zeros between each coefficient
     let zeros_to_insert = (1 << (level - 1)) - 1;
-    let new_len = _filter.len() + (_filter.len() - 1) * zeros_to_insert;
+    let new_len = filter.len() + (_filter.len() - 1) * zeros_to_insert;
     let mut upsampled = vec![0.0; new_len];
 
     // Insert _filter coefficients with zeros in between
-    for (i, &coeff) in _filter.iter().enumerate() {
+    for (i, &coeff) in filter.iter().enumerate() {
         upsampled[i * (zeros_to_insert + 1)] = coeff;
     }
 
@@ -529,7 +529,7 @@ fn upsample_filter(_filter: &[f64], level: usize) -> Vec<f64> {
 
 /// Helper function to upsample filter pairs
 #[allow(dead_code)]
-fn upsample_filters(_dec_lo: &[f64], dec_hi: &[f64], level: usize) -> (Vec<f64>, Vec<f64>) {
+fn upsample_filters(_dec_lo: &[f64], dechi: &[f64], level: usize) -> (Vec<f64>, Vec<f64>) {
     (
         upsample_filter(_dec_lo, level),
         upsample_filter(dec_hi, level),
@@ -538,6 +538,7 @@ fn upsample_filters(_dec_lo: &[f64], dec_hi: &[f64], level: usize) -> (Vec<f64>,
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_upsample_filter() {

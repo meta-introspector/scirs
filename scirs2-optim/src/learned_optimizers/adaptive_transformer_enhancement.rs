@@ -1099,14 +1099,14 @@ pub struct EnhancementStatistics<T: Float> {
 
 // Main implementation for AdaptiveTransformerEnhancement
 impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> {
-    pub fn new(_config: AdaptiveConfig<T>) -> Result<Self> {
+    pub fn new(config: AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             sequence_processor: AdaptiveSequenceProcessor::new(&_config)?,
             attention_manager: MemoryEfficientAttentionManager::new(&_config)?,
             architecture_adapter: DynamicArchitectureAdapter::new(&_config)?,
             landscape_analyzer: OptimizationLandscapeAnalyzer::new(&_config)?,
             performance_predictor: TransformerPerformancePredictor::new(&_config)?,
-            adaptive_config: _config,
+            adaptive_config: config,
         })
     }
 
@@ -1192,7 +1192,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> 
     }
 
     /// Calculate adaptive learning rate for each parameter
-    fn calculate_adaptive_learning_rate(&self, param_index: usize, base_scale: T) -> Result<T> {
+    fn calculate_adaptive_learning_rate(&self, param_index: usize, basescale: T) -> Result<T> {
         let base_lr = T::from(0.001).unwrap(); // Base learning rate
 
         // Parameter-specific adaptation
@@ -1206,7 +1206,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> 
     }
 
     /// Calculate convergence metrics
-    fn calculate_convergence_metrics(&self, loss_history: &[T]) -> ConvergenceMetrics<T> {
+    fn calculate_convergence_metrics(&self, losshistory: &[T]) -> ConvergenceMetrics<T> {
         if loss_history.len() < 2 {
             return ConvergenceMetrics {
                 convergence_rate: T::zero(),
@@ -1371,7 +1371,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> 
 
 // Implementation stubs for the complex components
 impl<T: Float + Send + Sync> AdaptiveSequenceProcessor<T> {
-    fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
+    fn new(config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             current_length: 512,
             importance_scores: VecDeque::new(),
@@ -1456,7 +1456,7 @@ impl<T: Float + Send + Sync> AdaptiveSequenceProcessor<T> {
 }
 
 impl<T: Float + Send + Sync> MemoryEfficientAttentionManager<T> {
-    fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
+    fn new(config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             pattern_cache: AttentionPatternCache::new(),
             sparse_mask: Array2::default((0, 0)),
@@ -1573,11 +1573,14 @@ impl<T: Float + Send + Sync> MemoryEfficientAttentionManager<T> {
                 for j in 0..seq_len {
                     // Generate attention weight based on position and analysis
                     let distance = ((i as i32 - j as i32).abs() as f64).sqrt();
-                    let base_attention = (-T::from(distance).unwrap() / (T::from(seq_len).unwrap() * T::from(0.1).unwrap())).exp();
+                    let base_attention = (-T::from(distance).unwrap()
+                        / (T::from(seq_len).unwrap() * T::from(0.1).unwrap()))
+                    .exp();
 
                     // Modulate based on landscape analysis
                     let complexity_factor = analysis.complexity.to_f64().unwrap_or(0.5);
-                    let modulated_attention = base_attention * (T::one() + T::from(complexity_factor).unwrap() * T::from(0.3).unwrap());
+                    let modulated_attention = base_attention
+                        * (T::one() + T::from(complexity_factor).unwrap() * T::from(0.3).unwrap());
 
                     patterns[[head, i, j]] = T::from(modulated_attention).unwrap();
                 }
@@ -1587,7 +1590,7 @@ impl<T: Float + Send + Sync> MemoryEfficientAttentionManager<T> {
         Ok(())
     }
 
-    fn apply_sparsity_mask(&self, patterns: &mut Array3<T>, sparsity_level: T) -> Result<()> {
+    fn apply_sparsity_mask(&self, patterns: &mut Array3<T>, sparsitylevel: T) -> Result<()> {
         let sparsity_threshold = sparsity_level.to_f64().unwrap_or(0.1);
 
         patterns.map_inplace(|x| {
@@ -1601,7 +1604,7 @@ impl<T: Float + Send + Sync> MemoryEfficientAttentionManager<T> {
 }
 
 impl<T: Float + Send + Sync> DynamicArchitectureAdapter<T> {
-    fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
+    fn new(config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             current_config: TransformerOptimizerConfig::default(),
             performance_history: VecDeque::new(),
@@ -1613,7 +1616,9 @@ impl<T: Float + Send + Sync> DynamicArchitectureAdapter<T> {
 
     fn adapt_architecture(
         &mut self,
-        landscape: &LandscapeAnalysis<T>, _sequence: &SequenceAdaptation<T>, _attention: &AttentionOptimization<T>,
+        landscape: &LandscapeAnalysis<T>,
+        _sequence: &SequenceAdaptation<T>,
+        _attention: &AttentionOptimization<T>,
     ) -> Result<ArchitectureAdaptation<T>> {
         // Simplified implementation
         Ok(ArchitectureAdaptation {
@@ -1626,7 +1631,7 @@ impl<T: Float + Send + Sync> DynamicArchitectureAdapter<T> {
 }
 
 impl<T: Float + Send + Sync> OptimizationLandscapeAnalyzer<T> {
-    fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
+    fn new(config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             landscape_features: LandscapeFeatures::default(),
             complexity_estimator: ComplexityEstimator::new(),
@@ -1637,7 +1642,9 @@ impl<T: Float + Send + Sync> OptimizationLandscapeAnalyzer<T> {
     }
 
     fn analyze(
-        &mut self, _gradient_history: &[Array1<T>], _loss_history: &[T],
+        &mut self,
+        _gradient_history: &[Array1<T>],
+        _loss_history: &[T],
     ) -> Result<LandscapeAnalysis<T>> {
         // Simplified implementation
         Ok(LandscapeAnalysis {
@@ -1650,7 +1657,7 @@ impl<T: Float + Send + Sync> OptimizationLandscapeAnalyzer<T> {
 }
 
 impl<T: Float + Send + Sync> TransformerPerformancePredictor<T> {
-    fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
+    fn new(config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             predictor_network: PredictorNetwork::new(vec![64, 128, 64, 1])?,
             feature_extractor: PerformanceFeatureExtractor::new(64)?,
@@ -1661,7 +1668,8 @@ impl<T: Float + Send + Sync> TransformerPerformancePredictor<T> {
 
     fn predict_improvement(
         &mut self,
-        landscape: &LandscapeAnalysis<T>, _adaptation: &ArchitectureAdaptation<T>,
+        landscape: &LandscapeAnalysis<T>,
+        _adaptation: &ArchitectureAdaptation<T>,
     ) -> Result<PerformancePrediction<T>> {
         // Simplified implementation
         Ok(PerformancePrediction {
@@ -1738,13 +1746,13 @@ impl<T: Float + Send + Sync> GlobalStructureDetector<T> {
 }
 
 impl<T: Float + Send + Sync> PredictorNetwork<T> {
-    fn new(_architecture: Vec<usize>) -> Result<Self> {
+    fn new(architecture: Vec<usize>) -> Result<Self> {
         let mut weights = Vec::new();
         let mut biases = Vec::new();
-        let activations = vec![ActivationType::ReLU; _architecture.len() - 1];
+        let activations = vec![ActivationType::ReLU; architecture.len() - 1];
 
         for i in 0.._architecture.len() - 1 {
-            let weight = Array2::zeros((_architecture[i + 1], _architecture[i]));
+            let weight = Array2::zeros((_architecture[i + 1], architecture[i]));
             let bias = Array1::zeros(_architecture[i + 1]);
             weights.push(weight);
             biases.push(bias);
@@ -1754,15 +1762,15 @@ impl<T: Float + Send + Sync> PredictorNetwork<T> {
             weights,
             biases,
             activations,
-            architecture: _architecture,
+            architecture: architecture,
         })
     }
 }
 
 impl<T: Float + Send + Sync> PerformanceFeatureExtractor<T> {
-    fn new(_dims: usize) -> Result<Self> {
+    fn new(dims: usize) -> Result<Self> {
         Ok(Self {
-            feature_dims: _dims,
+            feature_dims: dims,
             feature_cache: HashMap::new(),
             importance_weights: Array1::ones(_dims),
         })
@@ -1770,22 +1778,22 @@ impl<T: Float + Send + Sync> PerformanceFeatureExtractor<T> {
 }
 
 impl<T: Float + Send + Sync> PredictionCache<T> {
-    fn new(_capacity: usize) -> Self {
+    fn new(capacity: usize) -> Self {
         Self {
             predictions: HashMap::new(),
             hit_rate: 0.0,
-            capacity: _capacity,
+            capacity: capacity,
         }
     }
 }
 
 impl<T: Float + Send + Sync> UncertaintyEstimator<T> {
-    fn new(_method: UncertaintyMethod) -> Self {
+    fn new(method: UncertaintyMethod) -> Self {
         Self {
             epistemic_uncertainty: T::from(0.1).unwrap(),
             aleatoric_uncertainty: T::from(0.05).unwrap(),
             total_uncertainty: T::from(0.15).unwrap(),
-            estimation_method: _method,
+            estimation_method: method,
         }
     }
 }

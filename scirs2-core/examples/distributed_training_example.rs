@@ -103,7 +103,7 @@ fn main() {
     let optimizer = Box::new(Adam::new(0.001, Some(0.9), Some(0.999), Some(1e-8)));
 
     // Create loss function
-    let loss_fn = Box::new(CrossEntropyLoss::new(Some(mean)));
+    let lossfn = Box::new(CrossEntropyLoss::new(Some(mean)));
 
     // Create a new model instance for the trainer
     // Note: In production, you would implement proper cloning for Sequential
@@ -114,7 +114,7 @@ fn main() {
     let trainer = Trainer::new(
         new_model,
         Box::new(Adam::new(0.001, Some(0.9), Some(0.999), Some(1e-8))),
-        loss_fn,
+        lossfn,
     );
 
     println!("Created trainer with Adam optimizer and CrossEntropyLoss");
@@ -130,12 +130,12 @@ fn main() {
 
     // Create a temporary directory for saving models
     let temp_dir = tempdir().unwrap();
-    let model_dir = temp_dir.path().join(models);
+    let modeldir = temp_dir.path().join(models);
 
-    println!("Created model directory at: {}", model_dir.display());
+    println!("Created model directory at: {}", modeldir.display());
 
     // Create model serializer
-    let serializer = ModelSerializer::new(&model_dir);
+    let serializer = ModelSerializer::new(&modeldir);
 
     // Save model
     let model_path =
@@ -147,9 +147,9 @@ fn main() {
     }
 
     // Load model
-    let loaded_model = serializer.load_model("example_model", "v1.0");
+    let loadedmodel = serializer.loadmodel("example_model", "v1.0");
 
-    match loaded_model {
+    match loadedmodel {
         Ok((model, optimizer)) => {
             println!("Loaded model with {} layers", model.layers().len());
             println!(
@@ -170,7 +170,7 @@ fn main() {
     metrics.insert("accuracy".to_string(), 0.85);
 
     // Save checkpoint
-    let checkpoint_path = model_dir.join(checkpoint);
+    let checkpoint_path = modeldir.join(checkpoint);
     let result = save_checkpoint(
         &model,
         optimizer.as_ref(),
@@ -205,7 +205,7 @@ fn main() {
     println!("-----------------");
 
     // Export model to ONNX
-    let onnx_path = model_dir.join("model.onnx");
+    let onnx_path = modeldir.join("model.onnx");
     let result = OnnxExporter::export_model(&model, &onnx_path, &[1, 3, 224, 224]);
 
     match result {

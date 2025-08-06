@@ -121,7 +121,7 @@ struct MatrixFlags {
 
 impl MatrixFlags {
     /// Parse matrix flags from a u32
-    fn from_u32(_flags: u32) -> Self {
+    fn from_u32(flags: u32) -> Self {
         let class_type = (_flags & 0xFF) as i32;
         let is_complex = (_flags & 0x800) != 0;
         let _is_global = (_flags & 0x400) != 0;
@@ -131,7 +131,7 @@ impl MatrixFlags {
             class_type,
             is_complex,
             is_logical,
-            _is_global,
+            is_global,
         }
     }
 
@@ -192,7 +192,7 @@ struct _MatrixArray {
 /// use std::path::Path;
 ///
 /// let vars = read_mat(Path::new("data.mat")).unwrap();
-/// for (name_, _value) in vars.iter() {
+/// for (name_, value) in vars.iter() {
 ///     println!("Variable: {}", name_);
 /// }
 /// ```
@@ -275,7 +275,7 @@ pub fn read_mat<P: AsRef<Path>>(path: P) -> Result<HashMap<String, MatType>> {
 
 /// Parse matrix data from byte array
 #[allow(dead_code)]
-fn parse_matrix_data(_data: &[u8]) -> Result<(String, MatType)> {
+fn parse_matrix_data(data: &[u8]) -> Result<(String, MatType)> {
     let mut cursor = 0;
 
     // Read array flags
@@ -400,7 +400,7 @@ fn parse_matrix_data(_data: &[u8]) -> Result<(String, MatType)> {
             if flags.is_logical {
                 // Handle as logical _data
                 let _data_vec: Vec<bool> = real_data.iter().map(|&b| b != 0).collect();
-                let ndarray = Array::fromshape_vec(IxDyn(&convert_dims(&dims)), _data_vec)
+                let ndarray = Array::fromshape_vec(IxDyn(&convert_dims(&dims)), data_vec)
                     .map_err(|e| IoError::FormatError(format!("Failed to create array: {e}")))?;
                 MatType::Logical(ndarray)
             } else {
@@ -468,17 +468,17 @@ fn parse_matrix_data(_data: &[u8]) -> Result<(String, MatType)> {
 
 /// Convert MATLAB dimensions to ndarray dimensions
 #[allow(dead_code)]
-fn convert_dims(_dims: &[i32]) -> Vec<usize> {
+fn convert_dims(dims: &[i32]) -> Vec<usize> {
     // MATLAB stores dimensions in column-major order
     // For compatibility with ndarray (row-major), we reverse the dimensions
-    _dims.iter().rev().map(|&d| d as usize).collect()
+    dims.iter().rev().map(|&d| d as usize).collect()
 }
 
 /// Read an i32 from the reader
 #[allow(dead_code)]
 fn read_i32<R: Read>(reader: &mut R) -> Result<i32> {
     let mut buffer = [0u8; 4];
-    match _reader.read_exact(&mut buffer) {
+    match reader.read_exact(&mut buffer) {
         Ok(_) => Ok(LittleEndian::read_i32(&buffer)),
         Err(_) => Ok(0), // EOF
     }
@@ -486,10 +486,10 @@ fn read_i32<R: Read>(reader: &mut R) -> Result<i32> {
 
 /// Convert bytes to f64 vector
 #[allow(dead_code)]
-fn bytes_to_f64_vec(_bytes: &[u8]) -> Vec<f64> {
+fn bytes_to_f64_vec(bytes: &[u8]) -> Vec<f64> {
     let mut result = Vec::with_capacity(_bytes.len() / 8);
     for i in (0.._bytes.len()).step_by(8) {
-        if i + 8 <= _bytes.len() {
+        if i + 8 <= bytes.len() {
             result.push(LittleEndian::read_f64(&_bytes[i..i + 8]));
         }
     }
@@ -498,10 +498,10 @@ fn bytes_to_f64_vec(_bytes: &[u8]) -> Vec<f64> {
 
 /// Convert bytes to f32 vector
 #[allow(dead_code)]
-fn bytes_to_f32_vec(_bytes: &[u8]) -> Vec<f32> {
+fn bytes_to_f32_vec(bytes: &[u8]) -> Vec<f32> {
     let mut result = Vec::with_capacity(_bytes.len() / 4);
     for i in (0.._bytes.len()).step_by(4) {
-        if i + 4 <= _bytes.len() {
+        if i + 4 <= bytes.len() {
             result.push(LittleEndian::read_f32(&_bytes[i..i + 4]));
         }
     }
@@ -510,10 +510,10 @@ fn bytes_to_f32_vec(_bytes: &[u8]) -> Vec<f32> {
 
 /// Convert bytes to i16 vector
 #[allow(dead_code)]
-fn bytes_to_i16_vec(_bytes: &[u8]) -> Vec<i16> {
+fn bytes_to_i16_vec(bytes: &[u8]) -> Vec<i16> {
     let mut result = Vec::with_capacity(_bytes.len() / 2);
     for i in (0.._bytes.len()).step_by(2) {
-        if i + 2 <= _bytes.len() {
+        if i + 2 <= bytes.len() {
             result.push(LittleEndian::read_i16(&_bytes[i..i + 2]));
         }
     }
@@ -522,10 +522,10 @@ fn bytes_to_i16_vec(_bytes: &[u8]) -> Vec<i16> {
 
 /// Convert bytes to u16 vector
 #[allow(dead_code)]
-fn bytes_to_u16_vec(_bytes: &[u8]) -> Vec<u16> {
+fn bytes_to_u16_vec(bytes: &[u8]) -> Vec<u16> {
     let mut result = Vec::with_capacity(_bytes.len() / 2);
     for i in (0.._bytes.len()).step_by(2) {
-        if i + 2 <= _bytes.len() {
+        if i + 2 <= bytes.len() {
             result.push(LittleEndian::read_u16(&_bytes[i..i + 2]));
         }
     }
@@ -534,10 +534,10 @@ fn bytes_to_u16_vec(_bytes: &[u8]) -> Vec<u16> {
 
 /// Convert bytes to i32 vector
 #[allow(dead_code)]
-fn bytes_to_i32_vec(_bytes: &[u8]) -> Vec<i32> {
+fn bytes_to_i32_vec(bytes: &[u8]) -> Vec<i32> {
     let mut result = Vec::with_capacity(_bytes.len() / 4);
     for i in (0.._bytes.len()).step_by(4) {
-        if i + 4 <= _bytes.len() {
+        if i + 4 <= bytes.len() {
             result.push(LittleEndian::read_i32(&_bytes[i..i + 4]));
         }
     }
@@ -546,10 +546,10 @@ fn bytes_to_i32_vec(_bytes: &[u8]) -> Vec<i32> {
 
 /// Convert bytes to u32 vector
 #[allow(dead_code)]
-fn bytes_to_u32_vec(_bytes: &[u8]) -> Vec<u32> {
+fn bytes_to_u32_vec(bytes: &[u8]) -> Vec<u32> {
     let mut result = Vec::with_capacity(_bytes.len() / 4);
     for i in (0.._bytes.len()).step_by(4) {
-        if i + 4 <= _bytes.len() {
+        if i + 4 <= bytes.len() {
             result.push(LittleEndian::read_u32(&_bytes[i..i + 4]));
         }
     }
@@ -558,10 +558,10 @@ fn bytes_to_u32_vec(_bytes: &[u8]) -> Vec<u32> {
 
 /// Convert bytes to i64 vector
 #[allow(dead_code)]
-fn bytes_to_i64_vec(_bytes: &[u8]) -> Vec<i64> {
+fn bytes_to_i64_vec(bytes: &[u8]) -> Vec<i64> {
     let mut result = Vec::with_capacity(_bytes.len() / 8);
     for i in (0.._bytes.len()).step_by(8) {
-        if i + 8 <= _bytes.len() {
+        if i + 8 <= bytes.len() {
             result.push(LittleEndian::read_i64(&_bytes[i..i + 8]));
         }
     }
@@ -570,10 +570,10 @@ fn bytes_to_i64_vec(_bytes: &[u8]) -> Vec<i64> {
 
 /// Convert bytes to u64 vector
 #[allow(dead_code)]
-fn bytes_to_u64_vec(_bytes: &[u8]) -> Vec<u64> {
+fn bytes_to_u64_vec(bytes: &[u8]) -> Vec<u64> {
     let mut result = Vec::with_capacity(_bytes.len() / 8);
     for i in (0.._bytes.len()).step_by(8) {
-        if i + 8 <= _bytes.len() {
+        if i + 8 <= bytes.len() {
             result.push(LittleEndian::read_u64(&_bytes[i..i + 8]));
         }
     }

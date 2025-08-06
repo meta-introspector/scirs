@@ -302,7 +302,7 @@ impl PrioritizedTask {
 struct PriorityTaskQueue {
     queues: [VecDeque<PrioritizedTask>; 4], // One for each priority level
     total_size: usize,
-    max_size: usize,
+    maxsize: usize,
 }
 
 impl PriorityTaskQueue {
@@ -315,12 +315,12 @@ impl PriorityTaskQueue {
                 VecDeque::new(), // Critical
             ],
             total_size: 0,
-            max_size,
+            maxsize: max_size,
         }
     }
 
     fn push(&mut self, task: PrioritizedTask) -> Result<(), PrioritizedTask> {
-        if self.total_size >= self.max_size {
+        if self.total_size >= self.maxsize {
             return Err(task);
         }
 
@@ -363,7 +363,7 @@ impl PriorityTaskQueue {
 
     #[allow(dead_code)]
     fn is_full(&self) -> bool {
-        self.total_size >= self.max_size
+        self.total_size >= self.maxsize
     }
 }
 

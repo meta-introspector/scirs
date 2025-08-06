@@ -150,7 +150,7 @@ pub struct NeuralProcessingOutputs {
     /// Text embeddings
     pub embeddings: Array2<f64>,
     /// Attention weights
-    pub attention_weights: Array2<f64>,
+    pub attentionweights: Array2<f64>,
     /// Layer outputs
     pub layer_outputs: Vec<Array2<f64>>,
 }
@@ -692,7 +692,7 @@ pub struct MultiModalTextCoordinator {
 
 impl AdvancedTextCoordinator {
     /// Create a new Advanced text coordinator
-    pub fn new(_config: AdvancedTextConfig) -> Result<Self> {
+    pub fn new(config: AdvancedTextConfig) -> Result<Self> {
         let performance_optimizer = Arc::new(Mutex::new(PerformanceOptimizer::new(&_config)?));
         #[allow(clippy::arc_with_non_send_sync)]
         let neural_ensemble = Arc::new(RwLock::new(NeuralProcessingEnsemble::new(&_config)?));
@@ -703,7 +703,7 @@ impl AdvancedTextCoordinator {
         let performance_tracker = Arc::new(RwLock::new(TextPerformanceTracker::new()));
 
         Ok(AdvancedTextCoordinator {
-            _config,
+            config,
             performance_optimizer,
             neural_ensemble,
             memory_optimizer,
@@ -934,7 +934,7 @@ impl AdvancedTextCoordinator {
         let quality_metrics = TextQualityMetrics::default();
         let neural_outputs = NeuralProcessingOutputs {
             embeddings: Array2::zeros((texts.len(), 50)),
-            attention_weights: Array2::zeros((texts.len(), texts.len())),
+            attentionweights: Array2::zeros((texts.len(), texts.len())),
             layer_outputs: vec![Array2::zeros((texts.len(), 50))],
         };
 
@@ -1086,7 +1086,7 @@ impl AdvancedTextCoordinator {
     }
 
     fn calculate_confidence_scores(
-        &self_result: &TextProcessingResult,
+        self_result: &TextProcessingResult,
         _analytics: &AdvancedTextAnalytics,
     ) -> Result<HashMap<String, f64>> {
         let mut scores = HashMap::new();
@@ -1118,14 +1118,14 @@ impl AdvancedTextCoordinator {
     }
 
     fn calculate_classification_confidence(
-        &self_classifications: &[ClassificationResult],
+        self_classifications: &[ClassificationResult],
     ) -> Result<Vec<f64>> {
         // Calculate confidence for each classification
         Ok(vec![0.92, 0.87, 0.91]) // Placeholder
     }
 
     fn calculate_topic_quality_metrics(
-        &self_topics: &EnhancedTopicModelingResult,
+        self_topics: &EnhancedTopicModelingResult,
     ) -> Result<TopicQualityMetrics> {
         Ok(TopicQualityMetrics {
             coherence_score: 0.78,
@@ -1298,7 +1298,7 @@ pub struct SystemUtilization {
 /// Performance bottleneck analysis
 // Implementation stubs for the various components...
 impl PerformanceOptimizer {
-    fn new(_config: &AdvancedTextConfig) -> Result<Self> {
+    fn new(config: &AdvancedTextConfig) -> Result<Self> {
         Ok(PerformanceOptimizer {
             strategy: OptimizationStrategy::Balanced,
             performance_history: Vec::new(),
@@ -1313,7 +1313,7 @@ impl PerformanceOptimizer {
 }
 
 impl NeuralProcessingEnsemble {
-    fn new(_config: &AdvancedTextConfig) -> Result<Self> {
+    fn new(config: &AdvancedTextConfig) -> Result<Self> {
         Ok(NeuralProcessingEnsemble {
             transformers: HashMap::new(),
             neural_architectures: HashMap::new(),
@@ -1365,7 +1365,7 @@ impl NeuralProcessingEnsemble {
             quality_metrics: TextQualityMetrics::default(),
             neural_outputs: NeuralProcessingOutputs {
                 embeddings: Array2::zeros((texts.len(), 50)),
-                attention_weights: Array2::zeros((texts.len(), texts.len())),
+                attentionweights: Array2::zeros((texts.len(), texts.len())),
                 layer_outputs: vec![Array2::zeros((texts.len(), 50))],
             },
         })
@@ -1498,7 +1498,7 @@ impl NeuralProcessingEnsemble {
 }
 
 impl TextMemoryOptimizer {
-    fn new(_config: &AdvancedTextConfig) -> Result<Self> {
+    fn new(config: &AdvancedTextConfig) -> Result<Self> {
         Ok(TextMemoryOptimizer {
             text_memory_pool: TextMemoryPool::new(),
             cache_manager: TextCacheManager::new(),
@@ -1507,7 +1507,7 @@ impl TextMemoryOptimizer {
         })
     }
 
-    fn optimize_for_batch(&self_batch_size: usize) -> Result<()> {
+    fn optimize_for_batch(&self_batchsize: usize) -> Result<()> {
         Ok(()) // Placeholder
     }
 
@@ -1520,7 +1520,7 @@ impl TextMemoryOptimizer {
 }
 
 impl AdaptiveTextEngine {
-    fn new(_config: &AdvancedTextConfig) -> Result<Self> {
+    fn new(config: &AdvancedTextConfig) -> Result<Self> {
         Ok(AdaptiveTextEngine {
             strategy: AdaptationStrategy::Conservative,
             monitors: Vec::new(),
@@ -1529,12 +1529,12 @@ impl AdaptiveTextEngine {
         })
     }
 
-    fn adapt_based_on_performance(&self_elapsed: &Duration) -> Result<()> {
+    fn adapt_based_on_performance(selfelapsed: &Duration) -> Result<()> {
         Ok(()) // Placeholder
     }
 
     fn optimize_topic_modeling_params(
-        &self_documents: &[String],
+        self_documents: &[String],
         _num_topics: usize,
     ) -> Result<TopicModelingParams> {
         Ok(TopicModelingParams) // Placeholder
@@ -1542,7 +1542,7 @@ impl AdaptiveTextEngine {
 }
 
 impl TextAnalyticsEngine {
-    fn new(_config: &AdvancedTextConfig) -> Result<Self> {
+    fn new(config: &AdvancedTextConfig) -> Result<Self> {
         Ok(TextAnalyticsEngine {
             pipelines: HashMap::new(),
             insight_generator: InsightGenerator::new(),
@@ -1568,7 +1568,7 @@ impl TextAnalyticsEngine {
     }
 
     fn analyze_topic_quality(
-        &self_topics: &EnhancedTopicModelingResult,
+        self_topics: &EnhancedTopicModelingResult,
         _documents: &[String],
     ) -> Result<TopicAnalytics> {
         Ok(TopicAnalytics) // Placeholder
@@ -1576,7 +1576,7 @@ impl TextAnalyticsEngine {
 }
 
 impl MultiModalTextCoordinator {
-    fn new(_config: &AdvancedTextConfig) -> Result<Self> {
+    fn new(config: &AdvancedTextConfig) -> Result<Self> {
         Ok(MultiModalTextCoordinator {
             text_image_processor: TextImageProcessor::new(),
             text_audio_processor: TextAudioProcessor::new(),

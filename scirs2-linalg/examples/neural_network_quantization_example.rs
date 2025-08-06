@@ -98,7 +98,7 @@ fn create_example_network() -> Vec<SimpleLayer> {
 
 /// Create test input data
 #[allow(dead_code)]
-fn create_test_input(_batch_size: usize, input_size: usize) -> Array2<f32> {
+fn create_test_input(_batch_size: usize, inputsize: usize) -> Array2<f32> {
     let mut rng = rng();
     let mut input = Array2::zeros((_batch_size, input_size));
 
@@ -119,7 +119,7 @@ fn relu(x: &ArrayView2<f32>) -> Array2<f32> {
 
 /// Run inference with full precision network
 #[allow(dead_code)]
-fn run_network_full_precision(_network: &[SimpleLayer], input: &Array2<f32>) -> Array2<f32> {
+fn run_network_full_precision(network: &[SimpleLayer], input: &Array2<f32>) -> Array2<f32> {
     // First layer
     let layer1 = &_network[0];
     let hidden = input.dot(&layer1.weights.t());
@@ -223,7 +223,7 @@ fn run_network_quantized(
             // Fallback to dequantized computation
             let dq_weights = dequantize_matrix(q_weights, weights_params);
             let dq_input = dequantize_matrix(&q_input, &act_params);
-            dq_input.dot(&dq_weights.t())
+            dq_input.dot(&dqweights.t())
         }
     };
 
@@ -255,7 +255,7 @@ fn run_network_quantized(
             // Fallback to dequantized computation
             let dq_weights = dequantize_matrix(q_weights2, weights_params2);
             let dq_hidden = dequantize_matrix(&q_hidden, &hidden_params);
-            dq_hidden.dot(&dq_weights.t())
+            dq_hidden.dot(&dqweights.t())
         }
     };
 
@@ -268,9 +268,9 @@ fn run_network_quantized(
 
 /// Compare outputs from full precision and quantized networks
 #[allow(dead_code)]
-fn compare_outputs(_full_precision: &Array2<f32>, quantized: &Array2<f32>) {
+fn compare_outputs(_fullprecision: &Array2<f32>, quantized: &Array2<f32>) {
     // Calculate MSE
-    let mse = (_full_precision - quantized).mapv(|x| x * x).sum() / _full_precision.len() as f32;
+    let mse = (_full_precision - quantized).mapv(|x| x * x).sum() / full_precision.len() as f32;
 
     // Calculate max absolute error
     let max_error = (_full_precision - quantized)
@@ -279,7 +279,7 @@ fn compare_outputs(_full_precision: &Array2<f32>, quantized: &Array2<f32>) {
 
     // Calculate relative error
     let rel_error = (_full_precision - quantized).mapv(|x| x.abs()).sum()
-        / _full_precision.mapv(|x| x.abs()).sum()
+        / full_precision.mapv(|x| x.abs()).sum()
         * 100.0;
 
     println!("Mean Squared Error: {:.6}", mse);
@@ -322,7 +322,7 @@ fn compare_outputs(_full_precision: &Array2<f32>, quantized: &Array2<f32>) {
 
 /// Demonstrate mixed precision quantization with different bit widths per layer
 #[allow(dead_code)]
-fn mixed_precision_quantization(_network: &[SimpleLayer], input: &Array2<f32>) {
+fn mixed_precision_quantization(network: &[SimpleLayer], input: &Array2<f32>) {
     // Define quantization bit widths for each layer
     // First layer: weights=8-bit, activations=8-bit
     // Second layer: weights=4-bit, activations=8-bit
@@ -344,7 +344,7 @@ fn mixed_precision_quantization(_network: &[SimpleLayer], input: &Array2<f32>) {
     let mut quantization_params = Vec::new();
 
     // Quantize each layer with its specific bit width
-    for (i, (layer, &(w_bits__))) in _network.iter().zip(layer_configs.iter()).enumerate() {
+    for (i, (layer, &(w_bits__))) in network.iter().zip(layer_configs.iter()).enumerate() {
         let weights_config = CalibrationConfig {
             method: CalibrationMethod::MinMax,
             symmetric: true,
@@ -397,7 +397,7 @@ fn mixed_precision_quantization(_network: &[SimpleLayer], input: &Array2<f32>) {
             // Fallback to dequantized computation
             let dq_weights = dequantize_matrix(q_weights0, weights_params0);
             let dq_input = dequantize_matrix(&q_input, &act_params);
-            dq_input.dot(&dq_weights.t())
+            dq_input.dot(&dqweights.t())
         }
     };
 
@@ -428,7 +428,7 @@ fn mixed_precision_quantization(_network: &[SimpleLayer], input: &Array2<f32>) {
             // Fallback to dequantized computation
             let dq_weights = dequantize_matrix(q_weights1, weights_params1);
             let dq_hidden = dequantize_matrix(&q_hidden, &hidden_params);
-            dq_hidden.dot(&dq_weights.t())
+            dq_hidden.dot(&dqweights.t())
         }
     };
 
@@ -443,8 +443,8 @@ fn mixed_precision_quantization(_network: &[SimpleLayer], input: &Array2<f32>) {
     // Calculate memory footprint reduction
     let fp32_weight_size = (layer0.weights.len()
         + layer0.biases.len()
-        + _network[1].weights.len()
-        + _network[1].biases.len())
+        + network[1].weights.len()
+        + network[1].biases.len())
         * 4; // 4 bytes per f32
 
     let mixed_weight_size = (layer0.weights.len() * layer_configs[0].0 as usize / 8) + // First layer weights

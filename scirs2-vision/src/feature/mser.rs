@@ -59,8 +59,8 @@ struct Component {
 
 /// Detect MSER regions
 #[allow(dead_code)]
-pub fn mser_detect(_img: &DynamicImage, config: MserConfig) -> Result<Vec<MserRegion>> {
-    let gray = _img.to_luma8();
+pub fn mser_detect(img: &DynamicImage, config: MserConfig) -> Result<Vec<MserRegion>> {
+    let gray = img.to_luma8();
     let (width, height) = (gray.width() as usize, gray.height() as usize);
 
     // Sort pixels by gray level
@@ -71,7 +71,7 @@ pub fn mser_detect(_img: &DynamicImage, config: MserConfig) -> Result<Vec<MserRe
             pixel_levels.push((level, x, y));
         }
     }
-    pixel_levels.sort_by_key(|&(level__)| level);
+    pixel_levels.sort_by_key(|&(level__, _, _)| level__);
 
     // Build component tree
     let mut components = Vec::new();
@@ -190,12 +190,12 @@ pub fn mser_detect(_img: &DynamicImage, config: MserConfig) -> Result<Vec<MserRe
 
 /// Convert MSER regions to image
 #[allow(dead_code)]
-pub fn mser_to_image(_regions: &[MserRegion], width: u32, height: u32) -> Result<GrayImage> {
+pub fn mser_to_image(regions: &[MserRegion], width: u32, height: u32) -> Result<GrayImage> {
     let mut img = GrayImage::new(width, height);
 
     // Draw each region with a different intensity
-    for (idx, region) in _regions.iter().enumerate() {
-        let intensity = ((idx * 255) / _regions.len().max(1)) as u8;
+    for (idx, region) in regions.iter().enumerate() {
+        let intensity = ((idx * 255) / regions.len().max(1)) as u8;
 
         for &(x, y) in &region.pixels {
             img.put_pixel(x as u32, y as u32, Luma([intensity]));
@@ -208,51 +208,51 @@ pub fn mser_to_image(_regions: &[MserRegion], width: u32, height: u32) -> Result
 // Helper functions
 
 #[allow(dead_code)]
-fn find_root(_components: &[Component], mut idx: usize) -> usize {
-    while let Some(parent) = _components[idx].parent {
+fn find_root(components: &[Component], mut idx: usize) -> usize {
+    while let Some(parent) = components[idx].parent {
         idx = parent;
     }
     idx
 }
 
 #[allow(dead_code)]
-fn merge_components(_components: &mut [Component], parent: usize, child: usize) {
+fn merge_components(components: &mut [Component], parent: usize, child: usize) {
     // Merge child into parent
-    let child_pixels = _components[child].pixels.clone();
-    _components[parent].pixels.extend(child_pixels);
-    _components[parent].area += _components[child].area;
+    let child_pixels = components[child].pixels.clone();
+    components[parent].pixels.extend(child_pixels);
+    components[parent].area += components[child].area;
 
     // Update parent-child relationships
-    _components[child].parent = Some(parent);
-    _components[parent].children.push(child);
+    components[child].parent = Some(parent);
+    components[parent].children.push(child);
 }
 
 #[allow(dead_code)]
-fn calculate_stability(_components: &mut [Component], delta: u8) {
+fn calculate_stability(components: &mut [Component], delta: u8) {
     for i in 0.._components.len() {
-        let level = _components[i].level;
-        let area = _components[i].area;
+        let level = components[i].level;
+        let area = components[i].area;
 
         // Find parent at level + delta
         let mut parent_idx = i;
         let target_level = level.saturating_add(delta);
-        while let Some(parent) = _components[parent_idx].parent {
-            if _components[parent].level >= target_level {
+        while let Some(parent) = components[parent_idx].parent {
+            if components[parent].level >= target_level {
                 break;
             }
             parent_idx = parent;
         }
 
         if parent_idx != i {
-            let parent_area = _components[parent_idx].area;
+            let parent_area = components[parent_idx].area;
             let stability = (parent_area as f32 - area as f32) / area as f32;
-            _components[i].stability = stability;
+            components[i].stability = stability;
         }
     }
 }
 
 #[allow(dead_code)]
-fn is_maximally_stable(_components: &[Component], idx: usize, min_diversity: f32) -> bool {
+fn is_maximally_stable(_components: &[Component], idx: usize, mindiversity: f32) -> bool {
     let component = &_components[idx];
 
     // Check parent

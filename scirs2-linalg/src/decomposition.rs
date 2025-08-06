@@ -935,7 +935,7 @@ mod tests {
     fn test_qz() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
-        let (q, _a_decomp, b_decomp, z) = qz(&a.view(), &b.view()).unwrap();
+        let (q, a_decomp, b_decomp, z) = qz(&a.view(), &b.view()).unwrap();
 
         // Verify that Q and Z are orthogonal (within numerical tolerance)
         let qt = q.t();

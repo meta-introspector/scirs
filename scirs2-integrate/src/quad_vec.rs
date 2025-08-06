@@ -139,11 +139,11 @@ impl Ord for Subinterval {
 
 /// Compute a norm for error estimation
 #[allow(dead_code)]
-fn compute_norm(_array: &Array1<f64>, norm_type: NormType) -> f64 {
-    match norm_type {
+fn compute_norm(array: &Array1<f64>, normtype: NormType) -> f64 {
+    match normtype {
         NormType::Max => {
             let mut max_abs = 0.0;
-            for &val in _array.iter() {
+            for &val in array.iter() {
                 let abs_val = val.abs();
                 if abs_val > max_abs {
                     max_abs = abs_val;
@@ -152,8 +152,8 @@ fn compute_norm(_array: &Array1<f64>, norm_type: NormType) -> f64 {
             max_abs
         }
         NormType::L2 => {
-            let mut sum_squares = 0.0;
-            for &val in _array.iter() {
+            let mut sum_squares: f64 = 0.0;
+            for &val in array.iter() {
                 sum_squares += val * val;
             }
             sum_squares.sqrt()
@@ -377,14 +377,14 @@ where
 
 /// Compute a property of all intervals combined
 #[allow(dead_code)]
-fn get_total<F, T>(_heap: &BinaryHeap<Subinterval>, extra: &Subinterval, extract: F) -> Array1<T>
+fn get_total<F, T>(heap: &BinaryHeap<Subinterval>, extra: &Subinterval, extract: F) -> Array1<T>
 where
     F: Fn(&Subinterval) -> &Array1<T>,
     T: Clone + num_traits::Zero,
 {
     let mut result = extract(extra).clone();
 
-    for interval in _heap.iter() {
+    for interval in heap.iter() {
         let property = extract(interval);
 
         for (i, val) in property.iter().enumerate() {
@@ -624,7 +624,7 @@ where
     let mut error = Array1::zeros(output_size);
     for i in 0..output_size {
         let diff = (integral_k[i] - integral_g[i]).abs();
-        error[i] = (200.0 * diff).powf(1.5);
+        error[i] = (200.0 * diff).powf(1.5_f64);
     }
 
     Ok((integral_k, error, nfev))

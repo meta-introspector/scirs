@@ -179,11 +179,11 @@ pub enum MethodInfo {
 /// println!("Anomalies detected: {}", result.is_anomaly.iter().filter(|&&x| x).count());
 /// ```
 #[allow(dead_code)]
-pub fn detect_anomalies<F>(_ts: &Array1<F>, options: &AnomalyOptions) -> Result<AnomalyResult>
+pub fn detect_anomalies<F>(ts: &Array1<F>, options: &AnomalyOptions) -> Result<AnomalyResult>
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
 {
-    let n = _ts.len();
+    let n = ts.len();
 
     if n < 3 {
         return Err(TimeSeriesError::InsufficientData {
@@ -198,10 +198,10 @@ where
         if let Some(period) = options.seasonal_period {
             seasonally_adjust(_ts, period)?
         } else {
-            _ts.clone()
+            ts.clone()
         }
     } else {
-        _ts.clone()
+        ts.clone()
     };
 
     // Apply the selected anomaly detection method
@@ -219,11 +219,11 @@ where
 
 /// Statistical Process Control (SPC) anomaly detection
 #[allow(dead_code)]
-fn detect_anomalies_spc<F>(_ts: &Array1<F>, options: &AnomalyOptions) -> Result<AnomalyResult>
+fn detect_anomalies_spc<F>(ts: &Array1<F>, options: &AnomalyOptions) -> Result<AnomalyResult>
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
 {
-    let n = _ts.len();
+    let n = ts.len();
     let mut scores = Array1::zeros(n);
     let mut is_anomaly = Array1::from_elem(n, false);
 
@@ -231,7 +231,7 @@ where
         SPCMethod::Shewhart => {
             // Calculate control limits using the first portion of data
             let training_size = (n as f64 * 0.5).min(100.0) as usize;
-            let training_data = _ts.slice(s![0..training_size]);
+            let training_data = ts.slice(s![0..training_size]);
 
             let mean = training_data
                 .mean()
@@ -247,7 +247,7 @@ where
             let lcl = mean - multiplier * std_dev; // Lower control limit
 
             for i in 0..n {
-                let value = _ts[i].to_f64().unwrap_or(0.0);
+                let value = ts[i].to_f64().unwrap_or(0.0);
                 let distance_from_center = (value - mean).abs();
                 scores[i] = distance_from_center / std_dev;
                 is_anomaly[i] = value > ucl || value < lcl;
@@ -267,7 +267,7 @@ where
         SPCMethod::CUSUM => {
             // CUSUM control chart implementation
             let training_size = (n as f64 * 0.5).min(100.0) as usize;
-            let training_data = _ts.slice(s![0..training_size]);
+            let training_data = ts.slice(s![0..training_size]);
 
             let target = training_data
                 .mean()
@@ -285,7 +285,7 @@ where
             let mut cusum_neg = 0.0;
 
             for i in 0..n {
-                let value = _ts[i].to_f64().unwrap_or(0.0);
+                let value = ts[i].to_f64().unwrap_or(0.0);
                 cusum_pos = f64::max(0.0, cusum_pos + (value - target) - k);
                 cusum_neg = f64::max(0.0, cusum_neg - (value - target) - k);
 
@@ -309,7 +309,7 @@ where
             // EWMA control chart implementation
             let alpha = options.ewma_alpha;
             let training_size = (n as f64 * 0.5).min(100.0) as usize;
-            let training_data = _ts.slice(s![0..training_size]);
+            let training_data = ts.slice(s![0..training_size]);
 
             let target = training_data
                 .mean()
@@ -324,7 +324,7 @@ where
             let l = 3.0; // Control limit multiplier
 
             for i in 0..n {
-                let value = _ts[i].to_f64().unwrap_or(0.0);
+                let value = ts[i].to_f64().unwrap_or(0.0);
                 ewma = alpha * value + (1.0 - alpha) * ewma;
 
                 let ewma_variance = sigma * sigma * alpha / (2.0 - alpha)
@@ -431,12 +431,12 @@ where
 
 /// Z-score based anomaly detection
 #[allow(dead_code)]
-fn detect_anomalies_zscore<F>(_ts: &Array1<F>, options: &AnomalyOptions) -> Result<AnomalyResult>
+fn detect_anomalies_zscore<F>(ts: &Array1<F>, options: &AnomalyOptions) -> Result<AnomalyResult>
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
 {
-    let n = _ts.len();
-    let mean = _ts.mean().unwrap_or(F::zero()).to_f64().unwrap_or(0.0);
+    let n = ts.len();
+    let mean = ts.mean().unwrap_or(F::zero()).to_f64().unwrap_or(0.0);
     let std_dev = calculate_std_dev(_ts).to_f64().unwrap_or(1.0);
 
     let threshold = options.threshold.unwrap_or(3.0);
@@ -445,7 +445,7 @@ where
     let mut is_anomaly = Array1::from_elem(n, false);
 
     for i in 0..n {
-        let value = _ts[i].to_f64().unwrap_or(0.0);
+        let value = ts[i].to_f64().unwrap_or(0.0);
         let zscore = (value - mean).abs() / std_dev;
         scores[i] = zscore;
         is_anomaly[i] = zscore > threshold;
@@ -523,15 +523,15 @@ where
 
 /// Interquartile Range (IQR) anomaly detection
 #[allow(dead_code)]
-fn detect_anomalies_iqr<F>(_ts: &Array1<F>, options: &AnomalyOptions) -> Result<AnomalyResult>
+fn detect_anomalies_iqr<F>(ts: &Array1<F>, options: &AnomalyOptions) -> Result<AnomalyResult>
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
 {
-    let n = _ts.len();
+    let n = ts.len();
     let multiplier = options.threshold.unwrap_or(1.5);
 
     // Calculate quartiles
-    let mut sorted_values: Vec<f64> = _ts.iter().map(|&x| x.to_f64().unwrap_or(0.0)).collect();
+    let mut sorted_values: Vec<f64> = ts.iter().map(|&x| x.to_f64().unwrap_or(0.0)).collect();
     sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let q1_idx = n / 4;
@@ -547,7 +547,7 @@ where
     let mut is_anomaly = Array1::from_elem(n, false);
 
     for i in 0..n {
-        let value = _ts[i].to_f64().unwrap_or(0.0);
+        let value = ts[i].to_f64().unwrap_or(0.0);
         let score = if value < lower_bound {
             (lower_bound - value) / iqr
         } else if value > upper_bound {
@@ -707,16 +707,16 @@ where
 // Helper functions
 
 #[allow(dead_code)]
-fn seasonally_adjust<F>(_ts: &Array1<F>, period: usize) -> Result<Array1<F>>
+fn seasonally_adjust<F>(ts: &Array1<F>, period: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
 {
-    let n = _ts.len();
+    let n = ts.len();
     if n < period * 2 {
         return Ok(_ts.clone());
     }
 
-    let mut adjusted = _ts.clone();
+    let mut adjusted = ts.clone();
 
     // Simple seasonal adjustment using period-wise detrending
     for season in 0..period {
@@ -742,11 +742,11 @@ where
 }
 
 #[allow(dead_code)]
-fn create_sliding_windows<F>(_ts: &Array1<F>, window_size: usize) -> Result<Array2<f64>>
+fn create_sliding_windows<F>(_ts: &Array1<F>, windowsize: usize) -> Result<Array2<f64>>
 where
     F: Float + FromPrimitive + Debug + NumCast,
 {
-    let n = _ts.len();
+    let n = ts.len();
     if n < window_size {
         return Err(TimeSeriesError::InsufficientData {
             message: "Time series too short for windowing".to_string(),
@@ -760,7 +760,7 @@ where
 
     for i in 0..n_windows {
         for j in 0..window_size {
-            windows[[i, j]] = _ts[i + j].to_f64().unwrap_or(0.0);
+            windows[[i, j]] = ts[i + j].to_f64().unwrap_or(0.0);
         }
     }
 
@@ -807,7 +807,7 @@ fn calculate_isolation_path_length(
     }
 
     // Randomly select a feature and split value
-    let feature_idx = rng.random_range(0..data.ncols());
+    let feature_idx = rng.gen_range(0..data.ncols());
     let feature_values: Vec<f64> = data.column(feature_idx).to_vec();
     let min_val = feature_values.iter().copied().fold(f64::INFINITY..f64::min);
     let max_val = feature_values
@@ -844,8 +844,8 @@ fn euclidean_distance(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
 }
 
 #[allow(dead_code)]
-fn determine_threshold(_scores: &Array1<f64>, contamination: f64) -> f64 {
-    let mut sorted_scores: Vec<f64> = _scores.to_vec();
+fn determine_threshold(scores: &Array1<f64>, contamination: f64) -> f64 {
+    let mut sorted_scores: Vec<f64> = scores.to_vec();
     sorted_scores.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let threshold_idx = ((1.0 - contamination) * sorted_scores.len() as f64) as usize;
@@ -853,18 +853,18 @@ fn determine_threshold(_scores: &Array1<f64>, contamination: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn calculate_std_dev<F>(_data: &Array1<F>) -> F
+fn calculate_std_dev<F>(data: &Array1<F>) -> F
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
 {
-    let n = _data.len();
+    let n = data.len();
     if n <= 1 {
         return F::zero();
     }
 
-    let mean = _data.mean().unwrap_or(F::zero());
+    let mean = data.mean().unwrap_or(F::zero());
     let variance =
-        _data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>() / F::from_usize(n - 1).unwrap();
+        data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>() / F::from_usize(n - 1).unwrap();
 
     variance.sqrt()
 }

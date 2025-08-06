@@ -84,7 +84,7 @@ pub fn cophenet<F: Float + FromPrimitive>(z: &Array2<F>, d: &Array1<F>) -> Resul
 
 /// Finds the height of the lowest common ancestor in the dendrogram
 #[allow(dead_code)]
-fn find_lca_height<F: Float>(i: usize, j: usize, z: &Array2<F>, cluster_height: &[F]) -> F {
+fn find_lca_height<F: Float>(i: usize, j: usize, z: &Array2<F>, clusterheight: &[F]) -> F {
     let n_samples = z.shape()[0] + 1;
 
     // These are intentionally prefixed with underscore to indicate they're not used

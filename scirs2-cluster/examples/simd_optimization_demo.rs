@@ -320,7 +320,7 @@ fn generate_synthetic_data(
 
 /// Generate random centroids for testing
 #[allow(dead_code)]
-fn generate_centroids(_n_clusters: usize, n_features: usize) -> Array2<f64> {
+fn generate_centroids(_n_clusters: usize, nfeatures: usize) -> Array2<f64> {
     use rand::Rng;
 
     let mut rng = rand::rng();

@@ -19,14 +19,14 @@ use crate::utils::safe_f64_to_float;
 #[allow(dead_code)]
 fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
     T::from_i32(_value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", _value))
+        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
     })
 }
 
 /// Helper function for safe float to usize conversion
 #[allow(dead_code)]
 fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
-    _value.to_usize().ok_or_else(|| {
+    value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert float to usize".to_string())
     })
 }
@@ -86,7 +86,8 @@ where
     // Dispatch to the appropriate implementation based on dimensionality
     match input.ndim() {
         1 => bilateral_filter_1d(input, sigma_spatial, sigma_color, &border_mode),
-        2 => bilateral_filter_2d(input, sigma_spatial, sigma_color, &border_mode, _ => bilateral_filter_nd(input, sigma_spatial, sigma_color, &border_mode),
+        2 => bilateral_filter_2d(input, sigma_spatial, sigma_color, &border_mode),
+        _ => bilateral_filter_nd(input, sigma_spatial, sigma_color, &border_mode),
     }
 }
 
@@ -109,7 +110,7 @@ where
         .map_err(|_| NdimageError::DimensionError("Failed to convert to 1D array".into()))?;
 
     // Calculate kernel radius based on _spatial sigma
-    let three = safe_f64, _to_float: <T>(3.0)?;
+    let three = safe_f64_to_float::<T>(3.0)?;
     let radius = safe_float_to_usize((sigma_spatial * three).ceil()).unwrap_or(3);
     let kernel_size = 2 * radius + 1;
 
@@ -122,7 +123,7 @@ where
 
     // Precompute _spatial weights
     let mut spatial_weights = Array1::zeros(kernel_size);
-    let two = safe_f64, _to_float: <T>(2.0)?;
+    let two = safe_f64_to_float::<T>(2.0)?;
     let two_sigma_spatial_sq = two * sigma_spatial * sigma_spatial;
 
     for k in 0..kernel_size {
@@ -184,7 +185,7 @@ where
     let (rows, cols) = input_2d.dim();
 
     // Calculate kernel radius based on _spatial sigma
-    let three = safe_f64, _to_float: <T>(3.0)?;
+    let three = safe_f64_to_float::<T>(3.0)?;
     let radius = safe_float_to_usize((sigma_spatial * three).ceil()).unwrap_or(3);
     let kernel_size = 2 * radius + 1;
 
@@ -197,7 +198,7 @@ where
 
     // Precompute _spatial weights
     let mut spatial_weights = Array2::zeros((kernel_size, kernel_size));
-    let two = safe_f64, _to_float: <T>(2.0)?;
+    let two = safe_f64_to_float::<T>(2.0)?;
     let two_sigma_spatial_sq = two * sigma_spatial * sigma_spatial;
 
     for dy in 0..kernel_size {
@@ -263,7 +264,7 @@ where
     D: Dimension,
 {
     // Calculate kernel radius based on _spatial sigma
-    let three = safe_f64, _to_float: <T>(3.0)?;
+    let three = safe_f64_to_float::<T>(3.0)?;
     let radius = safe_float_to_usize((sigma_spatial * three).ceil()).unwrap_or(3);
 
     // Convert to dynamic dimension for easier processing
@@ -274,7 +275,7 @@ where
     let pad_width: Vec<(usize, usize)> = (0..input.ndim()).map(|_| (radius, radius)).collect();
     let padded_input = pad_array(&input_dyn, &pad_width, mode, None)?;
 
-    let two = safe_f64, _to_float: <T>(2.0)?;
+    let two = safe_f64_to_float::<T>(2.0)?;
     let two_sigma_spatial_sq = two * sigma_spatial * sigma_spatial;
     let two_sigma_color_sq = two * sigma_color * sigma_color;
 
@@ -331,7 +332,7 @@ where
 
 /// Helper function to iterate through neighborhood offsets
 #[allow(dead_code)]
-fn iterate_neighborhood<F>(_center_idx: &[usize], radius: usize, ndim: usize, mut callback: F)
+fn iterate_neighborhood<F>(_centeridx: &[usize], radius: usize, ndim: usize, mut callback: F)
 where
     F: FnMut(&[i32]),
 {
@@ -396,7 +397,8 @@ where
 
     match input.ndim() {
         1 => bilateral_filter_1d_simd_f32(input, sigma_spatial, sigma_color, &border_mode),
-        2 => bilateral_filter_2d_simd_f32(input, sigma_spatial, sigma_color, &border_mode, _ => bilateral_filter(input, sigma_spatial, sigma_color, mode), // Fall back to regular implementation
+        2 => bilateral_filter_2d_simd_f32(input, sigma_spatial, sigma_color, &border_mode),
+        _ => bilateral_filter(input, sigma_spatial, sigma_color, mode), // Fall back to regular implementation
     }
 }
 
@@ -430,7 +432,8 @@ where
 
     match input.ndim() {
         1 => bilateral_filter_1d_simd_f64(input, sigma_spatial, sigma_color, &border_mode),
-        2 => bilateral_filter_2d_simd_f64(input, sigma_spatial, sigma_color, &border_mode, _ => bilateral_filter(input, sigma_spatial, sigma_color, mode), // Fall back to regular implementation
+        2 => bilateral_filter_2d_simd_f64(input, sigma_spatial, sigma_color, &border_mode),
+        _ => bilateral_filter(input, sigma_spatial, sigma_color, mode), // Fall back to regular implementation
     }
 }
 
@@ -1004,8 +1007,8 @@ where
 
     // For single level, fall back to regular bilateral filter
     if config.levels == 1 {
-        let spatial_sigma = safe_f64, _to_float: <T>(config.spatial_sigmas[0])?;
-        let color_sigma = safe_f64, _to_float: <T>(config.color_sigmas[0])?;
+        let spatial_sigma = safe_f64_to_float::<T>(config.spatial_sigmas[0])?;
+        let color_sigma = safe_f64_to_float::<T>(config.color_sigmas[0])?;
         return bilateral_filter(input, spatial_sigma, color_sigma, Some(config.mode));
     }
 
@@ -1020,8 +1023,8 @@ where
     // Apply bilateral filter at each level
     let mut filtered_pyramid = Vec::with_capacity(config.levels);
     for (level, image) in pyramid.iter().enumerate() {
-        let spatial_sigma = safe_f64, _to_float: <T>(config.spatial_sigmas[level])?;
-        let color_sigma = safe_f64, _to_float: <T>(config.color_sigmas[level])?;
+        let spatial_sigma = safe_f64_to_float::<T>(config.spatial_sigmas[level])?;
+        let color_sigma = safe_f64_to_float::<T>(config.color_sigmas[level])?;
 
         let filtered = bilateral_filter(image, spatial_sigma, color_sigma, Some(config.mode))?;
         filtered_pyramid.push(filtered);
@@ -1033,7 +1036,7 @@ where
         result = upsample_image(&result, &filtered_pyramid[level])?;
 
         // Blend with original level
-        let alpha = safe_f64, _to_float: <T>(0.7)?; // Blend factor
+        let alpha = safe_f64_to_float::<T>(0.7)?; // Blend factor
         result = blend_arrays(&result, &filtered_pyramid[level], alpha)?;
     }
 
@@ -1086,7 +1089,7 @@ where
     scirs2_core::validation::check_positive(base_color_sigma, "base_color_sigma")
         .map_err(NdimageError::from)?;
 
-    if adaptation_factor < T::zero() || adaptation_factor >, T::one() {
+    if adaptation_factor < T::zero() || adaptation_factor > T::one() {
         return Err(NdimageError::InvalidInput(
             "Adaptation _factor must be between 0.0 and 1.0".into(),
         ));
@@ -1165,11 +1168,11 @@ where
                 T::zero()
             };
 
-            // Higher variance -> larger spatial _sigma, smaller color _sigma
+            // Higher variance -> larger spatial sigma, smaller color _sigma
             let adaptive_spatial =
                 base_spatial_sigma * (T::one() + adaptation_factor * variance_ratio);
             let adaptive_color = base_color_sigma
-                * (T::one() - adaptation_factor * variance_ratio * safe_f64, _to_float: <T>(0.5)?);
+                * (T::one() - adaptation_factor * variance_ratio * safe_f64_to_float::<T>(0.5)?);
 
             // Apply bilateral filtering with adaptive parameters
             let filtered_value = apply_bilateral_window(
@@ -1193,11 +1196,11 @@ where
 
 /// Compute local variance in a 2D array using a sliding window
 #[allow(dead_code)]
-fn compute_local_variance<T>(_input: &Array2<T>, window_size: usize) -> NdimageResult<Array2<T>>
+fn compute_local_variance<T>(_input: &Array2<T>, windowsize: usize) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
 {
-    let (rows, cols) = _input.dim();
+    let (rows, cols) = input.dim();
     let mut variance = Array2::zeros((rows, cols));
     let radius = window_size / 2;
 
@@ -1250,7 +1253,7 @@ where
     T: Float + FromPrimitive + Debug + Clone + 'static,
 {
     let radius = window_size / 2;
-    let two = safe_f64, _to_float: <T>(2.0)?;
+    let two = safe_f64_to_float::<T>(2.0)?;
     let two_sigma_spatial_sq = two * spatial_sigma * spatial_sigma;
     let two_sigma_color_sq = two * color_sigma * color_sigma;
 
@@ -1288,7 +1291,7 @@ where
 
 /// Downsample an image by the given factor
 #[allow(dead_code)]
-fn downsample_image<T, D>(_input: &Array<T, D>, factor: f64) -> NdimageResult<Array<T, D>>
+fn downsample_image<T, D>(input: &Array<T, D>, factor: f64) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
     D: Dimension,
@@ -1301,7 +1304,7 @@ where
 
     // For simplicity, implement basic downsampling
     // In a production implementation, you might want to use proper anti-aliasing
-    let oldshape = _input.shape();
+    let oldshape = input.shape();
     let mut newshape = Vec::with_capacity(oldshape.len());
 
     for &dim_size in oldshape {
@@ -1313,7 +1316,7 @@ where
     let mut output = Array::zeros(newshape.clone());
 
     // For 2D case (most common)
-    if _input.ndim() == 2 && newshape.len() == 2 {
+    if input.ndim() == 2 && newshape.len() == 2 {
         let input_2d = _input
             .to_owned()
             .into_dimensionality::<ndarray::Ix2>()
@@ -1339,12 +1342,12 @@ where
 
 /// Upsample an image to match the target shape
 #[allow(dead_code)]
-fn upsample_image<T, D>(_input: &Array<T, D>, target: &Array<T, D>) -> NdimageResult<Array<T, D>>
+fn upsample_image<T, D>(input: &Array<T, D>, target: &Array<T, D>) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
     D: Dimension,
 {
-    let inputshape = _input.shape();
+    let inputshape = input.shape();
     let targetshape = target.shape();
 
     if inputshape.len() != targetshape.len() {
@@ -1354,7 +1357,7 @@ where
     }
 
     // For 2D case
-    if _input.ndim() == 2 {
+    if input.ndim() == 2 {
         let input_2d = _input
             .to_owned()
             .into_dimensionality::<ndarray::Ix2>()

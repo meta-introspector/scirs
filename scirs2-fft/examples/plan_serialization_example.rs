@@ -30,14 +30,14 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn benchmark_plan_creation(_manager: &PlanSerializationManager) {
+fn benchmark_plan_creation(manager: &PlanSerializationManager) {
     println!("\nBenchmarking FFT plan creation for different sizes:");
     println!("{:>8} | {:>12} | {:>10}", "Size", "Time (us)", "Exists?");
     println!("---------------------------------");
 
     for size in [128, 256, 512, 1024, 2048, 4096, 8192].iter() {
         // Check if plan already exists
-        let exists = _manager.plan_exists(*size, true);
+        let exists = manager.plan_exists(*size, true);
 
         // Time plan creation
         let start = Instant::now();
@@ -45,10 +45,10 @@ fn benchmark_plan_creation(_manager: &PlanSerializationManager) {
         let total_time = start.elapsed();
 
         // Create plan info
-        let plan_info = _manager.create_plan_info(*size, true);
+        let plan_info = manager.create_plan_info(*size, true);
 
         // Record this plan usage
-        if let Err(e) = _manager.record_plan_usage(&plan_info, creation_time_ns) {
+        if let Err(e) = manager.record_plan_usage(&plan_info, creation_time_ns) {
             eprintln!("Error recording plan usage: {e}");
         }
 
@@ -61,13 +61,13 @@ fn benchmark_plan_creation(_manager: &PlanSerializationManager) {
     }
 
     // Save database for future runs
-    if let Err(e) = _manager.save_database() {
+    if let Err(e) = manager.save_database() {
         eprintln!("Error saving plan database: {e}");
     }
 }
 
 #[allow(dead_code)]
-fn compare_performance(_manager: &PlanSerializationManager) {
+fn compare_performance(manager: &PlanSerializationManager) {
     println!("\nComparing FFT performance with cached vs. non-cached plans:");
 
     // Create test data
@@ -81,7 +81,7 @@ fn compare_performance(_manager: &PlanSerializationManager) {
 
     // First run (non-cached plan, but will be cached for second run)
     println!("\nFirst run (plan will be created):");
-    let plan_info = _manager.create_plan_info(size, true);
+    let plan_info = manager.create_plan_info(size, true);
 
     let start = Instant::now();
     let (plan, creation_time) = create_and_time_plan(size, true);
@@ -123,7 +123,7 @@ fn compare_performance(_manager: &PlanSerializationManager) {
     println!("Total execution time: {total_time:?}");
 
     // Save database for future runs
-    if let Err(e) = _manager.save_database() {
+    if let Err(e) = manager.save_database() {
         eprintln!("Error saving plan database: {e}");
     }
 }

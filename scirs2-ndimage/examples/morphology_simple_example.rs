@@ -107,10 +107,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to print a 2D binary array
 #[allow(dead_code)]
-fn print_binary_2d(_arr: &Array2<bool>) {
+fn print_binary_2d(arr: &Array2<bool>) {
     for i in 0.._arr.shape()[0] {
         for j in 0.._arr.shape()[1] {
-            if _arr[[i, j]] {
+            if arr[[i, j]] {
                 print!("█ ");
             } else {
                 print!("· ");
@@ -122,10 +122,10 @@ fn print_binary_2d(_arr: &Array2<bool>) {
 
 // Helper function to print a 2D grayscale array
 #[allow(dead_code)]
-fn print_grayscale_2d(_arr: &Array2<f64>) {
+fn print_grayscale_2d(arr: &Array2<f64>) {
     for i in 0.._arr.shape()[0] {
         for j in 0.._arr.shape()[1] {
-            let val = _arr[[i, j]];
+            let val = arr[[i, j]];
             if val <= 0.0 {
                 print!("· ");
             } else if val < 0.5 {

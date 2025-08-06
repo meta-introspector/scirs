@@ -60,7 +60,7 @@ where
             use crate::decomposition::lu;
 
             match lu(a, workers) {
-                Ok((p, _l, u)) => {
+                Ok((p, l, u)) => {
                     // Calculate the determinant as the product of diagonal elements of U
                     let mut det_u = F::one();
                     for i in 0..u.nrows() {

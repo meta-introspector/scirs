@@ -200,7 +200,7 @@ fn train_with_adam(
     optimizer: &mut Adam<f64>,
 ) -> (f64, f64) {
     let n_samples = x_train.len();
-    let n_features = true_weights.len();
+    let n_features = trueweights.len();
 
     // Initialize _weights to zero
     let mut _weights = Array1::zeros(n_features);
@@ -265,7 +265,7 @@ fn train_with_sparse_adam(
     optimizer: &mut SparseAdam<f64>,
 ) -> (f64, f64) {
     let n_samples = x_train.len();
-    let n_features = true_weights.len();
+    let n_features = trueweights.len();
 
     // Initialize _weights to zero
     let mut _weights = Array1::zeros(n_features);
@@ -344,6 +344,6 @@ fn train_with_sparse_adam(
 
 /// Generate a random value in the given range
 #[allow(dead_code)]
-fn rand_value(_min: f64, max: f64) -> f64 {
-    _min + (max - _min) * rand::random::<f64>()
+fn rand_value(min: f64, max: f64) -> f64 {
+    _min + (max - min) * rand::random::<f64>()
 }

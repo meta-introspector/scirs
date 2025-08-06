@@ -328,18 +328,18 @@ impl AdvancedPerformanceMonitor {
     }
 
     /// Create with custom thresholds
-    pub fn with_thresholds(_thresholds: PerformanceThresholds) -> Self {
+    pub fn with_thresholds(thresholds: PerformanceThresholds) -> Self {
         Self {
             metrics_history: Arc::new(RwLock::new(Vec::new())),
             realtime_aggregator: Arc::new(Mutex::new(RealtimeAggregator::new())),
-            alert_thresholds: _thresholds,
+            alert_thresholds: thresholds,
             resource_monitor: Arc::new(Mutex::new(SystemResourceMonitor::new())),
             optimization_engine: Arc::new(Mutex::new(OptimizationEngine::new())),
         }
     }
 
     /// Start monitoring an operation
-    pub fn start_operation(&self, operation_type: &str) -> Result<OperationMonitor> {
+    pub fn start_operation(&self, operationtype: &str) -> Result<OperationMonitor> {
         let mut aggregator = self.realtime_aggregator.lock().unwrap();
         aggregator.start_operation(operation_type)?;
 
@@ -351,7 +351,7 @@ impl AdvancedPerformanceMonitor {
     }
 
     /// Record a performance data point
-    pub fn record_performance(&self, data_point: PerformanceDataPoint) -> Result<()> {
+    pub fn record_performance(&self, datapoint: PerformanceDataPoint) -> Result<()> {
         // Add to history
         let mut history = self.metrics_history.write().unwrap();
         history.push(data_point.clone());
@@ -410,7 +410,7 @@ impl AdvancedPerformanceMonitor {
     }
 
     /// Apply an optimization
-    pub fn apply_optimization(&self, optimization_id: &str) -> Result<()> {
+    pub fn apply_optimization(&self, optimizationid: &str) -> Result<()> {
         let mut optimizer = self.optimization_engine.lock().unwrap();
         optimizer.apply_optimization(optimization_id)?;
         Ok(())
@@ -439,7 +439,7 @@ impl AdvancedPerformanceMonitor {
     }
 
     // Helper methods
-    fn check_alerts(&self, data_point: &PerformanceDataPoint) -> Result<()> {
+    fn check_alerts(&self, datapoint: &PerformanceDataPoint) -> Result<()> {
         let mut aggregator = self.realtime_aggregator.lock().unwrap();
 
         if data_point.processing_time.as_millis()
@@ -469,17 +469,17 @@ impl AdvancedPerformanceMonitor {
         Ok(())
     }
 
-    fn calculate_avg_processing_time(_data: &[PerformanceDataPoint]) -> Duration {
-        if _data.is_empty() {
+    fn calculate_avg_processing_time(data: &[PerformanceDataPoint]) -> Duration {
+        if data.is_empty() {
             return Duration::from_millis(0);
         }
 
-        let total_ms: u128 = _data.iter().map(|d| d.processing_time.as_millis()).sum();
-        Duration::from_millis((total_ms / _data.len() as u128) as u64)
+        let total_ms: u128 = data.iter().map(|d| d.processing_time.as_millis()).sum();
+        Duration::from_millis((total_ms / data.len() as u128) as u64)
     }
 
-    fn calculate_avg_throughput(_data: &[PerformanceDataPoint]) -> f64 {
-        if _data.is_empty() {
+    fn calculate_avg_throughput(data: &[PerformanceDataPoint]) -> f64 {
+        if data.is_empty() {
             return 0.0;
         }
 
@@ -487,26 +487,26 @@ impl AdvancedPerformanceMonitor {
             .iter()
             .map(|d| d.items_processed as f64 / d.processing_time.as_secs_f64())
             .sum();
-        total_throughput / _data.len() as f64
+        total_throughput / data.len() as f64
     }
 
-    fn calculate_avg_memory_usage(_data: &[PerformanceDataPoint]) -> usize {
-        if _data.is_empty() {
+    fn calculate_avg_memory_usage(data: &[PerformanceDataPoint]) -> usize {
+        if data.is_empty() {
             return 0;
         }
 
-        _data.iter().map(|d| d.memory_usage).sum::<usize>() / _data.len()
+        data.iter().map(|d| d.memory_usage).sum::<usize>() / data.len()
     }
 
-    fn calculate_avg_cache_hit_rate(_data: &[PerformanceDataPoint]) -> f64 {
-        if _data.is_empty() {
+    fn calculate_avg_cache_hit_rate(data: &[PerformanceDataPoint]) -> f64 {
+        if data.is_empty() {
             return 0.0;
         }
 
-        _data.iter().map(|d| d.cache_hit_rate).sum::<f64>() / _data.len() as f64
+        data.iter().map(|d| d.cache_hit_rate).sum::<f64>() / data.len() as f64
     }
 
-    fn analyze_trends(_history: &[PerformanceDataPoint]) -> TrendAnalysis {
+    fn analyze_trends(history: &[PerformanceDataPoint]) -> TrendAnalysis {
         TrendAnalysis {
             processing_time_trend: Self::calculate_trend(
                 &_history
@@ -529,15 +529,15 @@ impl AdvancedPerformanceMonitor {
         }
     }
 
-    fn calculate_trend(_values: &[f64]) -> TrendDirection {
-        if _values.len() < 2 {
+    fn calculate_trend(values: &[f64]) -> TrendDirection {
+        if values.len() < 2 {
             return TrendDirection::Stable;
         }
 
-        let mid_point = _values.len() / 2;
-        let first_half_avg = _values[..mid_point].iter().sum::<f64>() / mid_point as f64;
+        let mid_point = values.len() / 2;
+        let first_half_avg = values[..mid_point].iter().sum::<f64>() / mid_point as f64;
         let second_half_avg =
-            _values[mid_point..].iter().sum::<f64>() / (_values.len() - mid_point) as f64;
+            values[mid_point..].iter().sum::<f64>() / (_values.len() - mid_point) as f64;
 
         let change_rate = (second_half_avg - first_half_avg) / first_half_avg;
 
@@ -550,7 +550,7 @@ impl AdvancedPerformanceMonitor {
         }
     }
 
-    fn identify_bottlenecks(_history: &[PerformanceDataPoint]) -> Vec<BottleneckAnalysis> {
+    fn identify_bottlenecks(history: &[PerformanceDataPoint]) -> Vec<BottleneckAnalysis> {
         let mut bottlenecks = Vec::new();
 
         // Analyze processing time bottlenecks
@@ -608,7 +608,7 @@ pub struct OperationMonitor<'a> {
 
 impl<'a> OperationMonitor<'a> {
     /// Complete the operation and record performance
-    pub fn complete(self, items_processed: usize) -> Result<()> {
+    pub fn complete(self, itemsprocessed: usize) -> Result<()> {
         let processing_time = self.start_time.elapsed();
 
         // Get current resource usage (simplified)
@@ -731,12 +731,12 @@ impl RealtimeAggregator {
         }
     }
 
-    fn start_operation(&mut self, _operation_type: &str) -> Result<()> {
+    fn start_operation(&mut self, _operationtype: &str) -> Result<()> {
         self.current_operation = Some(Instant::now());
         Ok(())
     }
 
-    fn update_statistics(&mut self, data_point: &PerformanceDataPoint) -> Result<()> {
+    fn update_statistics(&mut self, datapoint: &PerformanceDataPoint) -> Result<()> {
         let key = &data_point.operation_type;
         let stats = self
             .running_stats
@@ -746,7 +746,7 @@ impl RealtimeAggregator {
         Ok(())
     }
 
-    fn increment_alert(&mut self, alert_type: &str) {
+    fn increment_alert(&mut self, alerttype: &str) {
         *self.alert_counts.entry(alert_type.to_string()).or_insert(0) += 1;
     }
 
@@ -871,7 +871,7 @@ impl OptimizationEngine {
         }]
     }
 
-    fn update_recommendations(&mut self, data_point: &PerformanceDataPoint) -> Result<()> {
+    fn update_recommendations(&mut self, datapoint: &PerformanceDataPoint) -> Result<()> {
         // Analyze current performance against patterns
         for pattern in &self.pattern_database {
             if self.matches_pattern(data_point, pattern) {
@@ -913,7 +913,7 @@ impl OptimizationEngine {
         })
     }
 
-    fn apply_optimization(&mut self, optimization_id: &str) -> Result<()> {
+    fn apply_optimization(&mut self, optimizationid: &str) -> Result<()> {
         if let Some(optimization) = self
             .current_recommendations
             .iter()

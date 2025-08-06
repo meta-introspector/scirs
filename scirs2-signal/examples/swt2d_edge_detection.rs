@@ -85,7 +85,7 @@ fn detect_edges_swt<T>(
     level: usize,
 ) -> Result<Array2<f64>, Box<dyn std::error::Error>>
 where
-    T: num_traits:: Float + num, _traits::NumCast + std::fmt::Debug,
+    T: num_traits::Float + num_traits::NumCast + std::fmt::Debug,
 {
     // Step 1: Decompose the image using 2D SWT
     let decomp = swt2d_decompose(image, wavelet, level, None)?;
@@ -117,6 +117,6 @@ where
 
 // Helper function to count non-zero (above threshold) elements in an array
 #[allow(dead_code)]
-fn count_nonzero(_array: &Array2<f64>, threshold: f64) -> usize {
-    _array.iter().filter(|&&x| x > threshold).count()
+fn count_nonzero(array: &Array2<f64>, threshold: f64) -> usize {
+    array.iter().filter(|&&x| x > threshold).count()
 }

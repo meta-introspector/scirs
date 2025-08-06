@@ -22,17 +22,17 @@ mod compilation_tests {
         let data = Array1::from_vec(vec![1.0_f64, 2.0, 3.0]);
         
         // Mock the function signatures we fixed
-        fn mock_var(_data: &ndarray::ArrayView1<f64>, ddof: usize, workers: Option<usize>) -> Result<f64, String> {
+        fn mock_var(data: &ndarray::ArrayView1<f64>, ddof: usize, workers: Option<usize>) -> Result<f64, String> {
             let _ = (_data, ddof, workers);
             Ok(1.0)
         }
         
-        fn mock_std(_data: &ndarray::ArrayView1<f64>, ddof: usize, workers: Option<usize>) -> Result<f64, String> {
+        fn mock_std(data: &ndarray::ArrayView1<f64>, ddof: usize, workers: Option<usize>) -> Result<f64, String> {
             let _ = (_data, ddof, workers);
             Ok(1.0)
         }
         
-        fn mock_skew(_data: &ndarray::ArrayView1<f64>, bias: bool, workers: Option<usize>) -> Result<f64, String> {
+        fn mock_skew(data: &ndarray::ArrayView1<f64>, bias: bool, workers: Option<usize>) -> Result<f64, String> {
             let _ = (_data, bias, workers);
             Ok(0.0)
         }

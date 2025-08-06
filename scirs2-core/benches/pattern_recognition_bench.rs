@@ -56,7 +56,7 @@ fn diagonal_pattern(rows: usize, cols: usize) -> Vec<usize> {
 
 /// Simulate block access pattern
 #[allow(dead_code)]
-fn block_pattern(rows: usize, cols: usize, block_size: usize) -> Vec<usize> {
+fn block_pattern(rows: usize, cols: usize, blocksize: usize) -> Vec<usize> {
     let mut pattern = Vec::new();
 
     // Access in blocks
@@ -393,7 +393,7 @@ fn bench_real_world_scenarios(c: &mut Criterion) {
     });
 
     // Sparse matrix access pattern
-    group.bench_function("sparse_matrix", |b| {
+    group.bench_function("sparsematrix", |b| {
         let rows = 1000;
         let cols = 1000;
         let nnz = 5000; // 0.5% density

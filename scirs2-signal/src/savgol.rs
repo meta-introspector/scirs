@@ -5,7 +5,7 @@ use ndarray::s;
 // used for smoothing data and computing derivatives.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2, ArrayBase, Data, Ix1};
+use ndarray::{Array1, Array2, ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
@@ -831,6 +831,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_savgol_coeffs_basic() {

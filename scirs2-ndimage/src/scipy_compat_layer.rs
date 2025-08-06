@@ -300,7 +300,7 @@ pub mod scipy_ndimage {
         T: Float + FromPrimitive + Debug + Clone + Send + Sync,
         D: Dimension,
     {
-        let boundary_mode = match _mode.unwrap_or("reflect") {
+        let boundary_mode = match mode.unwrap_or("reflect") {
             "constant" => BorderMode::Constant,
             "reflect" => BorderMode::Reflect,
             "mirror" => BorderMode::Mirror,
@@ -512,12 +512,12 @@ pub mod migration_utils {
         }
 
         /// Get mapping for a specific parameter
-        pub fn get_mapping(&self, scipy_param: &str) -> Option<&ParameterMapping> {
+        pub fn get_mapping(&self, scipyparam: &str) -> Option<&ParameterMapping> {
             self.mappings.get(scipy_param)
         }
 
         /// Generate migration code suggestions
-        pub fn generate_migration_code(&self, function_name: &str, scipy_call: &str) -> String {
+        pub fn generate_migration_code(&self, function_name: &str, scipycall: &str) -> String {
             format!(
                 "// Original SciPy code:\n// {}\n\n// Migrated scirs2-ndimage code:\n{}",
                 scipy_call,
@@ -525,7 +525,7 @@ pub mod migration_utils {
             )
         }
 
-        fn convert_scipy_call(&self, function_name: &str, _scipy_call: &str) -> String {
+        fn convert_scipy_call(&self, function_name: &str, _scipycall: &str) -> String {
             // Simple pattern matching for common cases
             match function_name {
                 "gaussian_filter" => {
@@ -565,7 +565,7 @@ pub mod migration_utils {
 
     impl CodeConverter {
         /// Convert SciPy import statements
-        pub fn convert_imports(_scipy_imports: &str) -> String {
+        pub fn convert_imports(_scipyimports: &str) -> String {
             _scipy_imports
                 .replace(
                     "from scipy import ndimage",
@@ -576,7 +576,7 @@ pub mod migration_utils {
         }
 
         /// Convert function calls with parameter mapping
-        pub fn convert_function_call(_function_name: &str, parameters: &str) -> String {
+        pub fn convert_function_call(_functionname: &str, parameters: &str) -> String {
             match _function_name {
                 "gaussian_filter" => {
                     format!(
@@ -650,7 +650,7 @@ pub struct ScipyCompatWrapper;
 
 impl ScipyCompatWrapper {
     /// Create a SciPy-compatible wrapper around scirs2-ndimage functions
-    pub fn wrap_function<F, T>(_scipy_func: F) -> F
+    pub fn wrap_function<F, T>(_scipyfunc: F) -> F
     where
         F: Fn(T) -> T,
     {
@@ -659,7 +659,7 @@ impl ScipyCompatWrapper {
     }
 
     /// Auto-detect and convert SciPy-style parameters
-    pub fn convert_parameters(_params: &HashMap<String, String>) -> HashMap<String, String> {
+    pub fn convert_parameters(params: &HashMap<String, String>) -> HashMap<String, String> {
         let mut converted = HashMap::new();
 
         for (key, value) in _params {

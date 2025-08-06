@@ -72,7 +72,7 @@ struct BenchmarkResult {
 }
 
 impl BenchmarkResult {
-    fn new(_operation_name: String, image_size: (usize, usize), durations: &[Duration]) -> Self {
+    fn new(_operation_name: String, imagesize: (usize, usize), durations: &[Duration]) -> Self {
         let mean_duration = Duration::from_nanos(
             (durations.iter().map(|d| d.as_nanos()).sum::<u128>() / durations.len() as u128) as u64,
         );
@@ -204,7 +204,7 @@ fn main() -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn create_benchmark_image(_height: usize, width: usize) -> Array2<f64> {
+fn create_benchmark_image(height: usize, width: usize) -> Array2<f64> {
     Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
@@ -361,15 +361,15 @@ fn benchmark_edge_detection(
 
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-fn benchmark_standard_sobel(_image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
+fn benchmark_standard_sobel(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
     sobel(&_image.view(), None, None, None)
 }
 
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-fn benchmark_standard_canny(_image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
+fn benchmark_standard_canny(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
     canny(
-        _image.view(),
+        image.view(),
         1.0,  // sigma
         0.1,  // low_threshold
         0.3,  // high_threshold
@@ -378,7 +378,7 @@ fn benchmark_standard_canny(_image: &Array2<f64>) -> NdimageResult<Array2<f64>> 
 }
 
 #[allow(dead_code)]
-fn display_benchmark_summary(_results: &[BenchmarkResult]) {
+fn display_benchmark_summary(results: &[BenchmarkResult]) {
     // Group _results by operation type
     use std::collections::HashMap;
     let mut grouped: HashMap<String, Vec<&BenchmarkResult>> = HashMap::new();
@@ -449,7 +449,7 @@ fn display_benchmark_summary(_results: &[BenchmarkResult]) {
 
     // Overall statistics
     println!("--- Overall Statistics ---");
-    let total_operations = _results.len();
+    let total_operations = results.len();
     let avg_throughput: f64 = _results
         .iter()
         .map(|r| r.throughput_mpix_per_sec)

@@ -66,7 +66,7 @@ fn display_main_menu() {
 }
 
 #[allow(dead_code)]
-fn get_user_input(_prompt: &str) -> io::Result<String> {
+fn get_user_input(prompt: &str) -> io::Result<String> {
     print!("{_prompt}");
     io::stdout().flush()?;
     let mut input = String::new();
@@ -1342,7 +1342,7 @@ fn demonstrate_adaptive_stirling() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn continued_fraction_erfc_approximation(x: f64, n_terms: usize) -> f64 {
+fn continued_fraction_erfc_approximation(x: f64, nterms: usize) -> f64 {
     // Simplified continued fraction for erfc(x)
     // Real implementation would be more sophisticated
     let mut cf = 0.0;
@@ -1409,7 +1409,7 @@ fn demonstrate_high_precision_gamma() -> Result<(), Box<dyn std::error::Error>> 
 }
 
 #[allow(dead_code)]
-fn measure_gamma_performance(_data: &[f64]) -> u128 {
+fn measure_gamma_performance(data: &[f64]) -> u128 {
     let start = Instant::now();
     for &x in _data {
         let _ = gamma(x);
@@ -1418,7 +1418,7 @@ fn measure_gamma_performance(_data: &[f64]) -> u128 {
 }
 
 #[allow(dead_code)]
-fn measure_erf_performance(_data: &[f64]) -> u128 {
+fn measure_erf_performance(data: &[f64]) -> u128 {
     let start = Instant::now();
     for &x in _data {
         let _ = erf(x);
@@ -1427,7 +1427,7 @@ fn measure_erf_performance(_data: &[f64]) -> u128 {
 }
 
 #[allow(dead_code)]
-fn measure_j0_performance(_data: &[f64]) -> u128 {
+fn measure_j0_performance(data: &[f64]) -> u128 {
     let start = Instant::now();
     for &x in _data {
         let _ = bessel::j0(x);
@@ -1436,7 +1436,7 @@ fn measure_j0_performance(_data: &[f64]) -> u128 {
 }
 
 #[allow(dead_code)]
-fn stirling_approximation(x: f64, n_terms: usize) -> f64 {
+fn stirling_approximation(x: f64, nterms: usize) -> f64 {
     let mut result = (x - 0.5) * x.ln() - x + 0.5 * (2.0 * PI).ln();
 
     // Add Stirling series _terms

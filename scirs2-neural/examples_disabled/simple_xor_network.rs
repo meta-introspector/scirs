@@ -19,7 +19,7 @@ struct XORNetwork {
 }
 impl XORNetwork {
     fn new() -> Self {
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
         // Initialize weights with small random values
         // First layer: 2 inputs -> 4 hidden
         let w1 = Array2::fromshape_fn((2, 4), |_| rng.gen_range(-0.5..0.5));
@@ -60,12 +60,12 @@ impl XORNetwork {
         self.a2 = Some(a2.clone());
         a2
     /// Mean squared error loss
-    fn mse_loss(&self, y_pred: &Array2<f32>, y_true: &Array2<f32>) -> f32 {
+    fn mse_loss(&self, y_pred: &Array2<f32>, ytrue: &Array2<f32>) -> f32 {
         let diff = y_pred - y_true;
         let squared = diff.mapv(|v| v * v);
         squared.sum() / (y_pred.len() as f32)
     /// Backward pass and parameter update
-    fn backward(&mut self, x: &Array2<f32>, y: &Array2<f32>, learning_rate: f32) {
+    fn backward(&mut self, x: &Array2<f32>, y: &Array2<f32>, learningrate: f32) {
         // Make sure we have the activations from the forward pass
         let a1 = self.a1.as_ref().expect("Forward pass must be called first");
         let a2 = self.a2.as_ref().expect("Forward pass must be called first");
@@ -83,12 +83,12 @@ impl XORNetwork {
         // Gradient for b1: dL/db1 = sum(dz1, axis=0)
         let db1 = dz1.sum_axis(Axis(0)).insert_axis(Axis(0));
         // Update parameters
-        self.w1 = &self.w1 - learning_rate * dw1;
-        self.b1 = &self.b1 - learning_rate * db1;
-        self.w2 = &self.w2 - learning_rate * dw2;
-        self.b2 = &self.b2 - learning_rate * db2;
+        self.w1 = &self.w1 - learningrate * dw1;
+        self.b1 = &self.b1 - learningrate * db1;
+        self.w2 = &self.w2 - learningrate * dw2;
+        self.b2 = &self.b2 - learningrate * db2;
     /// Train the network on the given inputs and targets
-    fn train(&mut self, x: &Array2<f32>, y: &Array2<f32>, learning_rate: f32, epochs: usize) {
+    fn train(&mut self, x: &Array2<f32>, y: &Array2<f32>, learningrate: f32, epochs: usize) {
         for epoch in 0..epochs {
             // Forward pass
             let y_pred = self.forward(x);

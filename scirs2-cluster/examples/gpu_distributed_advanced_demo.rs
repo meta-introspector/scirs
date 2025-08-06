@@ -687,7 +687,7 @@ fn resource_monitoring_demo() -> Result<(), Box<dyn std::error::Error>> {
 // Helper functions to create test datasets
 
 #[allow(dead_code)]
-fn create_large_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_large_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(_n_samples * n_features);
 
     for i in 0.._n_samples {
@@ -706,7 +706,7 @@ fn create_large_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_massive_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_massive_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(_n_samples * n_features);
 
     for i in 0.._n_samples {
@@ -727,7 +727,7 @@ fn create_massive_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_advanced_massive_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_advanced_massive_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(_n_samples * n_features);
 
     for i in 0.._n_samples {
@@ -757,7 +757,7 @@ fn create_advanced_massive_dataset(_n_samples: usize, n_features: usize) -> Arra
 }
 
 #[allow(dead_code)]
-fn create_optimization_test_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_optimization_test_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(_n_samples * n_features);
 
     for i in 0.._n_samples {
@@ -774,7 +774,7 @@ fn create_optimization_test_data(_n_samples: usize, n_features: usize) -> Array2
 }
 
 #[allow(dead_code)]
-fn create_unbalanced_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_unbalanced_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(_n_samples * n_features);
 
     // Create unbalanced clusters with different densities
@@ -807,7 +807,7 @@ fn create_unbalanced_dataset(_n_samples: usize, n_features: usize) -> Array2<f64
 }
 
 #[allow(dead_code)]
-fn create_scaling_test_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_scaling_test_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(_n_samples * n_features);
 
     for i in 0.._n_samples {
@@ -831,7 +831,7 @@ fn create_scaling_test_data(_n_samples: usize, n_features: usize) -> Array2<f64>
 }
 
 #[allow(dead_code)]
-fn create_monitoring_test_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_monitoring_test_data(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(_n_samples * n_features);
 
     for i in 0.._n_samples {

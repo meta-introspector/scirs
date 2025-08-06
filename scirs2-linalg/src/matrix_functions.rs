@@ -968,16 +968,16 @@ where
 /// assert!((sqrt_a[[1, 1]] - 3.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn sqrtm<F>(a: &ArrayView2<F>, max_iter: usize, tol: F) -> LinalgResult<Array2<F>>
+pub fn sqrtm<F>(a: &ArrayView2<F>, maxiter: usize, tol: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
-    sqrtm_impl(a, max_iter, tol)
+    sqrtm_impl(a, maxiter, tol)
 }
 
 /// Internal implementation of matrix square root computation.
 #[allow(dead_code)]
-fn sqrtm_impl<F>(a: &ArrayView2<F>, max_iter: usize, tol: F) -> LinalgResult<Array2<F>>
+fn sqrtm_impl<F>(a: &ArrayView2<F>, maxiter: usize, tol: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
@@ -1028,7 +1028,7 @@ where
     // Iteration
     let mut final_error = None;
 
-    for _iter in 0..max_iter {
+    for _iter in 0..maxiter {
         // Compute Y_next = 0.5 * (Y + Z^-1)
         // and Z_next = 0.5 * (Z + Y^-1)
 
@@ -1088,7 +1088,7 @@ where
     // Failed to converge - return error with suggestions
     Err(LinalgError::convergence_with_suggestions(
         "Matrix square root (Denman-Beavers iteration)",
-        max_iter,
+        maxiter,
         tol.to_f64().unwrap_or(1e-12),
         final_error,
     ))
@@ -1125,7 +1125,7 @@ where
 #[allow(dead_code)]
 pub fn sqrtm_parallel<F>(
     a: &ArrayView2<F>,
-    max_iter: usize,
+    maxiter: usize,
     tol: F,
     workers: Option<usize>,
 ) -> LinalgResult<Array2<F>>
@@ -1142,16 +1142,16 @@ where
 
     if a.nrows() < PARALLEL_THRESHOLD || a.ncols() < PARALLEL_THRESHOLD {
         // For small matrices, use sequential implementation
-        return sqrtm(a, max_iter, tol);
+        return sqrtm(a, maxiter, tol);
     }
 
     // For larger matrices, use parallel implementation
-    sqrtm_impl_parallel(a, max_iter, tol)
+    sqrtm_impl_parallel(a, maxiter, tol)
 }
 
 /// Internal implementation of parallel matrix square root computation using Denman-Beavers iteration.
 #[allow(dead_code)]
-fn sqrtm_impl_parallel<F>(a: &ArrayView2<F>, max_iter: usize, tol: F) -> LinalgResult<Array2<F>>
+fn sqrtm_impl_parallel<F>(a: &ArrayView2<F>, maxiter: usize, tol: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
@@ -1202,7 +1202,7 @@ where
 
     let mut final_error = None;
 
-    for _iter in 0..max_iter {
+    for _iter in 0..maxiter {
         // Compute Z^-1 and Y^-1 using parallel matrix solve
         let z_inv = match solve_multiple(&z.view(), &Array2::eye(n).view(), None) {
             Ok(inv) => inv,
@@ -1278,7 +1278,7 @@ where
     // Failed to converge - return error with suggestions
     Err(LinalgError::convergence_with_suggestions(
         "Matrix square root (Denman-Beavers iteration)",
-        max_iter,
+        maxiter,
         tol.to_f64().unwrap_or(1e-12),
         final_error,
     ))

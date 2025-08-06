@@ -538,13 +538,13 @@ impl ConvexHull {
     }
 
     /// Compute cross product for three 2D points (returns z-component of 3D cross product)
-    fn cross_product_2d(_p1: [f64; 2], p2: [f64; 2], p3: [f64; 2]) -> f64 {
-        (p2[0] - _p1[0]) * (p3[1] - _p1[1]) - (p2[1] - _p1[1]) * (p3[0] - _p1[0])
+    fn cross_product_2d(p1: [f64; 2], p2: [f64; 2], p3: [f64; 2]) -> f64 {
+        (p2[0] - p1[0]) * (p3[1] - p1[1]) - (p2[1] - p1[1]) * (p3[0] - p1[0])
     }
 
     /// Compute squared distance between two 2D points
-    fn distance_squared_2d(_p1: [f64; 2], p2: [f64; 2]) -> f64 {
-        (p2[0] - _p1[0]).powi(2) + (p2[1] - _p1[1]).powi(2)
+    fn distance_squared_2d(p1: [f64; 2], p2: [f64; 2]) -> f64 {
+        (p2[0] - p1[0]).powi(2) + (p2[1] - p1[1]).powi(2)
     }
 
     /// Compute facet equations for a 2D convex hull
@@ -835,8 +835,8 @@ impl ConvexHull {
     /// // Check a point outside the hull
     /// assert!(!hull.contains(&[2.0, 2.0]).unwrap());
     /// ```
-    pub fn contains<T: AsRef<[f64]>>(&self, _point: T) -> SpatialResult<bool> {
-        let point_slice = _point.as_ref();
+    pub fn contains<T: AsRef<[f64]>>(&self, point: T) -> SpatialResult<bool> {
+        let point_slice = point.as_ref();
 
         if point_slice.len() != self.points.ncols() {
             return Err(SpatialError::DimensionError(format!(
@@ -1025,7 +1025,7 @@ impl ConvexHull {
     }
 
     /// Compute the area of a 2D polygon using the shoelace formula
-    fn compute_polygon_area(points: &Array2<f64>, vertex_indices: &[usize]) -> SpatialResult<f64> {
+    fn compute_polygon_area(points: &Array2<f64>, vertexindices: &[usize]) -> SpatialResult<f64> {
         if vertex_indices.len() < 3 {
             return Ok(0.0);
         }
@@ -1170,10 +1170,10 @@ impl ConvexHull {
     }
 
     /// Compute the signed volume of a tetrahedron
-    fn tetrahedron_volume(_p0: [f64; 3], p1: [f64; 3], p2: [f64; 3], p3: [f64; 3]) -> f64 {
-        let v1 = [p1[0] - _p0[0], p1[1] - _p0[1], p1[2] - _p0[2]];
-        let v2 = [p2[0] - _p0[0], p2[1] - _p0[1], p2[2] - _p0[2]];
-        let v3 = [p3[0] - _p0[0], p3[1] - _p0[1], p3[2] - _p0[2]];
+    fn tetrahedron_volume(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3], p3: [f64; 3]) -> f64 {
+        let v1 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+        let v2 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
+        let v3 = [p3[0] - p0[0], p3[1] - p0[1], p3[2] - p0[2]];
 
         // Compute scalar triple product: v1 · (v2 × v3)
         let cross = [
@@ -1186,9 +1186,9 @@ impl ConvexHull {
     }
 
     /// Compute the area of a 3D triangle
-    fn triangle_area_3d(_p0: [f64; 3], p1: [f64; 3], p2: [f64; 3]) -> f64 {
-        let v1 = [p1[0] - _p0[0], p1[1] - _p0[1], p1[2] - _p0[2]];
-        let v2 = [p2[0] - _p0[0], p2[1] - _p0[1], p2[2] - _p0[2]];
+    fn triangle_area_3d(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3]) -> f64 {
+        let v1 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+        let v2 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
 
         // Compute cross product v1 × v2
         let cross = [
@@ -1353,9 +1353,9 @@ impl ConvexHull {
     ///
     /// * Option containing an Array2 of shape (n_facets, ndim+1) with the equations of the hull facets
     ///   or None if equations cannot be extracted
-    fn extract_equations(_qh: &Qh, ndim: usize) -> Option<Array2<f64>> {
+    fn extract_equations(qh: &Qh, ndim: usize) -> Option<Array2<f64>> {
         // Get facets from qhull
-        let facets: Vec<_> = _qh.facets().collect();
+        let facets: Vec<_> = qh.facets().collect();
         let n_facets = facets.len();
 
         // Allocate array for equations
@@ -1395,7 +1395,7 @@ impl ConvexHull {
     /// # Errors
     ///
     /// * Returns error if point dimension doesn't match hull dimension
-    fn is_in_convex_combination(&self, _point: &[f64]) -> SpatialResult<bool> {
+    fn is_in_convex_combination(&self, point: &[f64]) -> SpatialResult<bool> {
         // This is a fallback method and not fully robust for all cases,
         // especially for higher dimensions. A complete implementation would use
         // linear programming to find convex coefficients.
@@ -1416,7 +1416,7 @@ impl ConvexHull {
                 .map(|v| v[0])
                 .fold(f64::NEG_INFINITY, f64::max);
 
-            return Ok(_point[0] >= min_val - 1e-10 && _point[0] <= max_val + 1e-10);
+            return Ok(_point[0] >= min_val - 1e-10 && point[0] <= max_val + 1e-10);
         }
 
         // Use the equations method
@@ -1424,7 +1424,7 @@ impl ConvexHull {
             for i in 0..equations.nrows() {
                 let mut result = equations[[i, equations.ncols() - 1]];
                 for j in 0.._point.len() {
-                    result += equations[[i, j]] * _point[j];
+                    result += equations[[i, j]] * point[j];
                 }
 
                 // If result is positive, _point is outside the hull

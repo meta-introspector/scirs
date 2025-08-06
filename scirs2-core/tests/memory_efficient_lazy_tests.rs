@@ -107,6 +107,6 @@ mod tests {
         let debug = format!("{:?}", lazy);
         assert!(debug.contains(LazyArray));
         assert!(debug.contains(shape));
-        assert!(debug.contains("has_data: true"));
+        assert!(debug.contains("hasdata: true"));
     }
 }

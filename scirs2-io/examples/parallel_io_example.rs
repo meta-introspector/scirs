@@ -181,7 +181,7 @@ fn demonstrate_concurrent_format_conversion(
 
     // Create test data in different formats
     let matrix_data = create_test_sparse_matrix();
-    let array_data = Array2::fromshape_fn((100, 50), |(i, j)| (i * j) as f64);
+    let array_data = Array2::from_shape_fn((100, 50), |(i, j)| (i * j) as f64);
 
     let conversion_results = Arc::new(Mutex::new(Vec::new()));
     let start_time = Instant::now();
@@ -605,7 +605,7 @@ fn demonstrate_pipeline_processing(
 // Helper functions
 
 #[allow(dead_code)]
-fn generate_csv_data(_rows: usize) -> Vec<Vec<String>> {
+fn generate_csv_data(rows: usize) -> Vec<Vec<String>> {
     let mut data = vec![vec![
         "id".to_string(),
         "value".to_string(),

@@ -75,7 +75,7 @@ pub struct TensorCoreCapabilities {
     /// Peak throughput in TOPS (Tera-Operations Per Second)
     pub peak_tops: Option<f64>,
     /// Memory bandwidth in GB/s
-    pub memory_bandwidth_gbps: Option<f64>,
+    pub memorybandwidth_gbps: Option<f64>,
     /// Architecture-specific features
     pub arch_features: Vec<String>,
 }
@@ -84,7 +84,7 @@ pub struct TensorCoreCapabilities {
 #[derive(Debug, Clone)]
 pub struct TensorCoreConfig {
     /// Preferred data type for computations
-    pub data_type: TensorDataType,
+    pub datatype: TensorDataType,
     /// Use mixed precision if available
     pub use_mixed_precision: bool,
     /// Enable automatic type conversion
@@ -100,7 +100,7 @@ pub struct TensorCoreConfig {
 impl Default for TensorCoreConfig {
     fn default() -> Self {
         Self {
-            data_type: TensorDataType::Float16,
+            datatype: TensorDataType::Float16,
             use_mixed_precision: true,
             auto_convert: true,
             tile_size: (16, 16),
@@ -181,12 +181,8 @@ impl TensorCoreManager {
     /// Update tensor core configuration
     pub fn set_config(&mut self, config: TensorCoreConfig) -> Result<(), TensorCoreError> {
         // Validate configuration against capabilities
-        if !self
-            .capabilities
-            .supported_types
-            .contains(&config.data_type)
-        {
-            return Err(TensorCoreError::UnsupportedDataType(config.data_type));
+        if !self.capabilities.supported_types.contains(&config.datatype) {
+            return Err(TensorCoreError::UnsupportedDataType(config.datatype));
         }
 
         self.config = config;
@@ -232,7 +228,7 @@ impl TensorCoreManager {
             ));
         }
 
-        if self.config.use_mixed_precision && self.config.data_type == TensorDataType::Float32 {
+        if self.config.use_mixed_precision && self.config.datatype == TensorDataType::Float32 {
             hints.push(
                 "Consider using Float16 or BFloat16 for better tensor core utilization".to_string(),
             );
@@ -302,7 +298,7 @@ impl TensorCoreManager {
     fn detect_capabilities(backend: GpuBackend) -> Result<TensorCoreCapabilities, TensorCoreError> {
         match backend {
             GpuBackend::Cuda => Ok(Self::nvidia_tensor_capabilities()),
-            GpuBackend::Rocm => Ok(Self::amd_matrix_capabilities()),
+            GpuBackend::Rocm => Ok(Self::amdmatrix_capabilities()),
             GpuBackend::Metal => Ok(Self::apple_neural_capabilities()),
             _ => Ok(TensorCoreCapabilities::default()),
         }
@@ -335,8 +331,8 @@ impl TensorCoreManager {
                 (32, 8, 16),  // Alternative configurations
                 (8, 32, 16),
             ],
-            peak_tops: Some(312.0),              // Example for A100
-            memory_bandwidth_gbps: Some(2039.0), // Example for A100 HBM2e
+            peak_tops: Some(312.0),             // Example for A100
+            memorybandwidth_gbps: Some(2039.0), // Example for A100 HBM2e
             arch_features: vec![
                 "Sparsity 2:4".to_string(),
                 "Multi-precision".to_string(),
@@ -346,7 +342,7 @@ impl TensorCoreManager {
     }
 
     /// AMD Matrix Core capabilities (CDNA, RDNA)
-    fn amd_matrix_capabilities() -> TensorCoreCapabilities {
+    fn amdmatrix_capabilities() -> TensorCoreCapabilities {
         TensorCoreCapabilities {
             available: true,
             supported_types: vec![
@@ -364,8 +360,8 @@ impl TensorCoreManager {
                 (32, 32, 8), // MFMA instruction size
                 (16, 16, 16),
             ],
-            peak_tops: Some(383.0),              // Example for MI250X
-            memory_bandwidth_gbps: Some(3276.0), // Example for MI250X HBM2e
+            peak_tops: Some(383.0),             // Example for MI250X
+            memorybandwidth_gbps: Some(3276.0), // Example for MI250X HBM2e
             arch_features: vec!["MFMA instructions".to_string(), "Matrix cores".to_string()],
         }
     }
@@ -385,15 +381,15 @@ impl TensorCoreManager {
                 TensorCoreOp::Attention,
             ],
             supported_dimensions: vec![(16, 16, 16)],
-            peak_tops: Some(15.8),              // Example for M1 Neural Engine
-            memory_bandwidth_gbps: Some(68.25), // Example for M1 unified memory
+            peak_tops: Some(15.8),             // Example for M1 Neural Engine
+            memorybandwidth_gbps: Some(68.25), // Example for M1 unified memory
             arch_features: vec!["Neural Engine".to_string(), "Unified memory".to_string()],
         }
     }
 
     /// Determine optimal configuration based on capabilities
     fn optimal_config(capabilities: &TensorCoreCapabilities) -> TensorCoreConfig {
-        let data_type = if capabilities
+        let datatype = if capabilities
             .supported_types
             .contains(&TensorDataType::BFloat16)
         {
@@ -410,11 +406,11 @@ impl TensorCoreManager {
         let tile_size = capabilities
             .supported_dimensions
             .first()
-            .map(|(m, n, _k)| (*m, *n))
+            .map(|(m, n, k)| (*m, *n))
             .unwrap_or((16, 16));
 
         TensorCoreConfig {
-            data_type,
+            datatype,
             use_mixed_precision: capabilities
                 .supported_types
                 .iter()
@@ -534,27 +530,27 @@ fn generate_tensor_core_gemm_kernel(
     k: usize,
 ) -> Result<String, TensorCoreError> {
     let tile_size = manager.config().tile_size;
-    let data_type = &manager.config().data_type;
+    let datatype = &manager.config().datatype;
     let use_mixed_precision = manager.config().use_mixed_precision;
 
     match manager.backend {
         GpuBackend::Cuda => generate_cuda_tensor_core_kernel(
-            data_type.clone(),
+            datatype.clone(),
             tile_size.0,
             m,
             n,
             k,
             use_mixed_precision,
         ),
-        GpuBackend::Rocm => generate_rocm_matrix_core_kernel(
-            data_type.clone(),
+        GpuBackend::Rocm => generate_rocmmatrix_core_kernel(
+            datatype.clone(),
             tile_size.0,
             m,
             n,
             k,
             use_mixed_precision,
         ),
-        GpuBackend::Metal => generate_metal_mps_kernel(data_type.clone(), tile_size.0, m, n, k),
+        GpuBackend::Metal => generate_metal_mps_kernel(datatype.clone(), tile_size.0, m, n, k),
         _ => Err(TensorCoreError::UnsupportedOperation(
             TensorCoreOp::MatrixMultiply,
         )),
@@ -563,7 +559,7 @@ fn generate_tensor_core_gemm_kernel(
 
 /// Generate CUDA tensor core kernel (placeholder implementation)
 fn generate_cuda_tensor_core_kernel(
-    data_type: TensorDataType,
+    datatype: TensorDataType,
     _tile_size: usize,
     _m: usize,
     _n: usize,
@@ -575,8 +571,8 @@ fn generate_cuda_tensor_core_kernel(
 }
 
 /// Generate ROCm matrix core kernel (placeholder implementation)
-fn generate_rocm_matrix_core_kernel(
-    data_type: TensorDataType,
+fn generate_rocmmatrix_core_kernel(
+    datatype: TensorDataType,
     _tile_size: usize,
     _m: usize,
     _n: usize,
@@ -589,7 +585,7 @@ fn generate_rocm_matrix_core_kernel(
 
 /// Generate Metal MPS kernel (placeholder implementation)
 fn generate_metal_mps_kernel(
-    data_type: TensorDataType,
+    datatype: TensorDataType,
     _tile_size: usize,
     _m: usize,
     _n: usize,
@@ -602,7 +598,7 @@ fn generate_metal_mps_kernel(
 /// Generate CUDA tensor core kernel
 #[allow(dead_code)]
 fn generate_cuda_kernel(
-    data_type: TensorDataType,
+    datatype: TensorDataType,
     tile_size: (usize, usize),
     _m: usize,
     _n: usize,
@@ -610,12 +606,12 @@ fn generate_cuda_kernel(
     use_mixed_precision: bool,
 ) -> Result<String, TensorCoreError> {
     let (tile_m, tile_n) = tile_size;
-    let dtype_str = match data_type {
+    let dtype_str = match datatype {
         TensorDataType::Float16 => "__half",
         TensorDataType::BFloat16 => "__nv_bfloat16",
         TensorDataType::Float32 => "float",
         TensorDataType::Int8 => "int8_t",
-        _ => return Err(TensorCoreError::UnsupportedDataType(data_type.clone())),
+        _ => return Err(TensorCoreError::UnsupportedDataType(datatype.clone())),
     };
 
     let accumulator_type = if use_mixed_precision {
@@ -664,8 +660,8 @@ __global__ void tensor_core_gemm(
         // Bounds checking for partial tiles
         if (a_col + 16 <= K && b_row + 16 <= K) {{
             // Load matrix fragments
-            wmma::load_matrix_sync(a_frag, A + a_row * K + a_col, K);
-            wmma::load_matrix_sync(b_frag, B + b_row * N + b_col, N);
+            wmma::loadmatrix_sync(a_frag, A + a_row * K + a_col, K);
+            wmma::loadmatrix_sync(b_frag, B + b_row * N + b_col, N);
 
             // Perform matrix multiplication
             wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
@@ -677,7 +673,7 @@ __global__ void tensor_core_gemm(
     int c_col = warp_col * {tile_n};
     
     if (c_row + {tile_m} <= M && c_col + {tile_n} <= N) {{
-        wmma::load_matrix_sync(c_frag, C + c_row * N + c_col, N, wmma::mem_row_major);
+        wmma::loadmatrix_sync(c_frag, C + c_row * N + c_col, N, wmma::mem_row_major);
         
         // Add to accumulator
         for (int i = 0; i < c_frag.num_elements; i++) {{
@@ -685,7 +681,7 @@ __global__ void tensor_core_gemm(
         }}
 
         // Store result
-        wmma::store_matrix_sync(C + c_row * N + c_col, c_frag, N, wmma::mem_row_major);
+        wmma::storematrix_sync(C + c_row * N + c_col, c_frag, N, wmma::mem_row_major);
     }}
 }}
 "#
@@ -695,7 +691,7 @@ __global__ void tensor_core_gemm(
 /// Generate ROCm matrix core kernel
 #[allow(dead_code)]
 fn generate_rocm_kernel(
-    data_type: TensorDataType,
+    datatype: TensorDataType,
     tile_size: (usize, usize),
     _m: usize,
     _n: usize,
@@ -703,12 +699,12 @@ fn generate_rocm_kernel(
     use_mixed_precision: bool,
 ) -> Result<String, TensorCoreError> {
     let (tile_m, tile_n) = tile_size;
-    let dtype_str = match data_type {
+    let dtype_str = match datatype {
         TensorDataType::Float16 => "_Float16",
         TensorDataType::BFloat16 => "__bf16",
         TensorDataType::Float32 => "float",
         TensorDataType::Int8 => "int8_t",
-        _ => return Err(TensorCoreError::UnsupportedDataType(data_type.clone())),
+        _ => return Err(TensorCoreError::UnsupportedDataType(datatype.clone())),
     };
 
     let accumulator_type = if use_mixed_precision {
@@ -801,18 +797,18 @@ __global__ void matrix_core_gemm(
 /// Generate Metal Performance Shaders kernel
 #[allow(dead_code)]
 fn generate_metal_kernel(
-    data_type: TensorDataType,
+    datatype: TensorDataType,
     tile_size: (usize, usize),
     _m: usize,
     _n: usize,
     _k: usize,
 ) -> Result<String, TensorCoreError> {
     let (tile_m, tile_n) = tile_size;
-    let dtype_str = match data_type {
+    let dtype_str = match datatype {
         TensorDataType::Float16 => "half",
         TensorDataType::Float32 => "float",
         TensorDataType::Int8 => "char",
-        _ => return Err(TensorCoreError::UnsupportedDataType(data_type.clone())),
+        _ => return Err(TensorCoreError::UnsupportedDataType(datatype.clone())),
     };
 
     Ok(format!(
@@ -883,7 +879,7 @@ where
     eprintln!("  Grid dimensions: {grid_dim_x}x{grid_dim_y}");
     eprintln!("  Tile size: {tile_size:?}");
     eprintln!("  Backend: {:?}", manager.backend);
-    eprintln!("  Data type: {}", manager.config().data_type);
+    eprintln!("  Data type: {}", manager.config().datatype);
 
     // Placeholder for actual kernel execution
     Ok(())
@@ -894,7 +890,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_tensor_data_type_display() {
+    fn test_tensor_datatype_display() {
         assert_eq!(TensorDataType::Float16.to_string(), "f16");
         assert_eq!(TensorDataType::BFloat16.to_string(), "bf16");
         assert_eq!(TensorDataType::Int8.to_string(), "i8");
@@ -910,7 +906,7 @@ mod tests {
 
     #[test]
     fn test_amd_capabilities() {
-        let caps = TensorCoreManager::amd_matrix_capabilities();
+        let caps = TensorCoreManager::amdmatrix_capabilities();
         assert!(caps.available);
         assert!(caps.supported_types.contains(&TensorDataType::BFloat16));
         assert!(caps.supported_ops.contains(&TensorCoreOp::MatrixMultiply));
@@ -920,7 +916,7 @@ mod tests {
     fn test_optimal_config() {
         let caps = TensorCoreManager::nvidia_tensor_capabilities();
         let config = TensorCoreManager::optimal_config(&caps);
-        assert_eq!(config.data_type, TensorDataType::BFloat16);
+        assert_eq!(config.datatype, TensorDataType::BFloat16);
         assert!(config.use_mixed_precision);
     }
 

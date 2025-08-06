@@ -28,7 +28,7 @@ struct OctreeNode {
 
 impl OctreeNode {
     /// Create a new octree node
-    fn new(_level: u8) -> Self {
+    fn new(level: u8) -> Self {
         Self {
             red_sum: 0,
             green_sum: 0,
@@ -36,7 +36,7 @@ impl OctreeNode {
             pixel_count: 0,
             children: Default::default(),
             is_leaf: _level == 7,
-            _level,
+            level,
         }
     }
 
@@ -142,7 +142,7 @@ impl OctreeNode {
     }
 
     /// Get all nodes at a specific level
-    fn get_nodes_at_level(&mut self, target_level: u8) -> Vec<*mut OctreeNode> {
+    fn get_nodes_at_level(&mut self, targetlevel: u8) -> Vec<*mut OctreeNode> {
         let mut nodes = Vec::new();
 
         if self._level == target_level && !self.is_leaf {
@@ -169,10 +169,10 @@ impl OctreeQuantizer {
     /// # Arguments
     ///
     /// * `max_colors` - Maximum number of colors in the palette
-    pub fn new(_max_colors: usize) -> Self {
+    pub fn new(_maxcolors: usize) -> Self {
         Self {
             root: OctreeNode::new(0),
-            _max_colors,
+            max_colors,
         }
     }
 
@@ -235,7 +235,7 @@ impl OctreeQuantizer {
 
 /// Calculate squared distance between two colors
 #[allow(dead_code)]
-fn color_distance_squared(_r1: u8, g1: u8, b1: u8, r2: u8, g2: u8, b2: u8) -> u32 {
+fn color_distance_squared(r1: u8, g1: u8, b1: u8, r2: u8, g2: u8, b2: u8) -> u32 {
     let dr = _r1 as i32 - r2 as i32;
     let dg = g1 as i32 - g2 as i32;
     let db = b1 as i32 - b2 as i32;
@@ -277,8 +277,8 @@ fn color_distance_squared(_r1: u8, g1: u8, b1: u8, r2: u8, g2: u8, b2: u8) -> u3
 /// assert_eq!(quantized.height(), 4);
 /// ```
 #[allow(dead_code)]
-pub fn octree_quantize(_img: &DynamicImage, max_colors: usize) -> Result<DynamicImage> {
-    let rgb = _img.to_rgb8();
+pub fn octree_quantize(_img: &DynamicImage, maxcolors: usize) -> Result<DynamicImage> {
+    let rgb = img.to_rgb8();
     let (width, height) = rgb.dimensions();
 
     // Build the octree
@@ -324,10 +324,10 @@ pub fn adaptive_octree_quantize(
 
     // Get importance weights
     let weights = if let Some(_map) = importance_map {
-        let gray_map = _map.to_luma8();
+        let gray_map = map.to_luma8();
         gray_map
             .pixels()
-            ._map(|p| p[0] as f32 / 255.0)
+            .map(|p| p[0] as f32 / 255.0)
             .collect::<Vec<_>>()
     } else {
         vec![1.0; (width * height) as usize]
@@ -370,8 +370,8 @@ pub fn adaptive_octree_quantize(
 ///
 /// * Vector of RGB colors
 #[allow(dead_code)]
-pub fn extract_palette(_img: &DynamicImage, palette_size: usize) -> Vec<[u8; 3]> {
-    let rgb = _img.to_rgb8();
+pub fn extract_palette(_img: &DynamicImage, palettesize: usize) -> Vec<[u8; 3]> {
+    let rgb = img.to_rgb8();
 
     let mut quantizer = OctreeQuantizer::new(palette_size);
 

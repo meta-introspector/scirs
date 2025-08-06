@@ -13,7 +13,7 @@ use super::config::{SparseFFTConfig, SparsityEstimationMethod};
 
 /// Estimate sparsity of a signal using various methods
 #[allow(dead_code)]
-pub fn estimate_sparsity<T>(_signal: &[T], config: &SparseFFTConfig) -> FFTResult<usize>
+pub fn estimate_sparsity<T>(signal: &[T], config: &SparseFFTConfig) -> FFTResult<usize>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -21,19 +21,19 @@ where
         SparsityEstimationMethod::Manual => Ok(config.sparsity),
 
         SparsityEstimationMethod::Threshold => {
-            estimate_sparsity_threshold(_signal, config.threshold)
+            estimate_sparsity_threshold(signal, config.threshold)
         }
 
         SparsityEstimationMethod::Adaptive => {
-            estimate_sparsity_adaptive(_signal, config.adaptivity_factor, config.sparsity)
+            estimate_sparsity_adaptive(signal, config.adaptivity_factor, config.sparsity)
         }
 
         SparsityEstimationMethod::FrequencyPruning => {
-            estimate_sparsity_frequency_pruning(_signal, config.pruning_sensitivity)
+            estimate_sparsity_frequency_pruning(signal, config.pruning_sensitivity)
         }
 
         SparsityEstimationMethod::SpectralFlatness => estimate_sparsity_spectral_flatness(
-            _signal,
+            signal,
             config.flatness_threshold,
             config.window_size,
         ),
@@ -42,12 +42,12 @@ where
 
 /// Estimate sparsity using magnitude thresholding
 #[allow(dead_code)]
-pub fn estimate_sparsity_threshold<T>(_signal: &[T], threshold: f64) -> FFTResult<usize>
+pub fn estimate_sparsity_threshold<T>(signal: &[T], threshold: f64) -> FFTResult<usize>
 where
     T: NumCast + Copy + Debug + 'static,
 {
     // Compute regular FFT
-    let spectrum = fft(_signal, None)?;
+    let spectrum = fft(signal, None)?;
 
     // Find magnitudes
     let magnitudes: Vec<f64> = spectrum.iter().map(|c| c.norm()).collect();

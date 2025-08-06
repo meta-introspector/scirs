@@ -33,7 +33,7 @@
 //!
 //! // Create interpolator with dimension reduction
 //! let interpolator = HighDimensionalInterpolator::builder()
-//!     .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 10 })
+//!     .with_dimension_reduction(DimensionReductionMethod::PCA { targetdims: 10 })
 //!     .build(&points.view(), &values.view())
 //!     .unwrap();
 //!
@@ -186,7 +186,8 @@ where
     dimension_reduction: DimensionReductionMethod,
     local_method: LocalMethod,
     sparse_strategy: Option<SparseStrategy>,
-    spatial_index_type: SpatialIndexType, _phantom: PhantomData<F>,
+    spatial_index_type: SpatialIndexType,
+    _phantom: PhantomData<F>,
 }
 
 /// Types of spatial indices available
@@ -224,7 +225,8 @@ where
                 weight_power: 2.0,
             },
             sparse_strategy: None,
-            spatial_index_type: SpatialIndexType::Auto, _phantom: PhantomData,
+            spatial_index_type: SpatialIndexType::Auto,
+            _phantom: PhantomData,
         }
     }
 }
@@ -265,7 +267,7 @@ where
     /// use scirs2__interpolate::high_dimensional::{HighDimensionalInterpolatorBuilder, DimensionReductionMethod};
     ///
     /// let builder = HighDimensionalInterpolatorBuilder::<f64>::new()
-    ///     .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 5 });
+    ///     .with_dimension_reduction(DimensionReductionMethod::PCA { targetdims: 5 });
     /// ```
     pub fn with_dimension_reduction(mut self, method: DimensionReductionMethod) -> Self {
         self.dimension_reduction = method;
@@ -280,7 +282,7 @@ where
     /// use scirs2__interpolate::high_dimensional::{HighDimensionalInterpolatorBuilder, LocalMethod};
     ///
     /// let builder = HighDimensionalInterpolatorBuilder::<f64>::new()
-    ///     .with_local_method(LocalMethod::KNearestNeighbors { k: 8, weight_power: 1.5 });
+    ///     .with_local_method(LocalMethod::KNearestNeighbors { k: 8, weightpower: 1.5 });
     /// ```
     pub fn with_local_method(mut self, method: LocalMethod) -> Self {
         self.local_method = method;
@@ -294,7 +296,7 @@ where
     }
 
     /// Set the spatial index type
-    pub fn with_spatial_index(mut self, index_type: SpatialIndexType) -> Self {
+    pub fn with_spatial_index(mut self, indextype: SpatialIndexType) -> Self {
         self.spatial_index_type = index_type;
         self
     }
@@ -461,7 +463,8 @@ where
     /// Apply Local Linear Embedding (simplified)
     fn apply_lle(
         points: &ArrayView2<F>,
-        target_dims: usize, _n_neighbors: usize,
+        target_dims: usize,
+        _n_neighbors: usize,
     ) -> InterpolateResult<DimensionReduction<F>> {
         // For simplicity, fall back to random projection
         // A full LLE implementation would require eigenvalue decomposition
@@ -601,7 +604,7 @@ where
     /// let values = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0]);
     ///
     /// let interpolator = HighDimensionalInterpolator::builder()
-    ///     .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 3 })
+    ///     .with_dimension_reduction(DimensionReductionMethod::PCA { targetdims: 3 })
     ///     .build(&points.view(), &values.view())
     ///     .unwrap();
     ///
@@ -721,7 +724,7 @@ where
 
     /// Perform local interpolation using neighbors
     fn interpolate_local(
-        &self_query: &Array1<F>,
+        self_query: &Array1<F>,
         neighbors: &[(usize, F)],
     ) -> InterpolateResult<F> {
         if neighbors.is_empty() {
@@ -777,7 +780,8 @@ where
     /// Perform local RBF interpolation
     fn interpolate_local_rbf(
         &self,
-        neighbors: &[(usize, F)], _rbf_type: &LocalRBFType,
+        neighbors: &[(usize, F)],
+        _rbf_type: &LocalRBFType,
     ) -> InterpolateResult<F> {
         // Simplified RBF interpolation
         let mut sum = F::zero();
@@ -1233,7 +1237,7 @@ mod tests {
 
         // Test PCA
         let pca_interp = HighDimensionalInterpolator::<f64>::builder()
-            .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 2 })
+            .with_dimension_reduction(DimensionReductionMethod::PCA { targetdims: 2 })
             .build(&points.view(), &values.view())
             .unwrap();
 
@@ -1241,7 +1245,7 @@ mod tests {
 
         // Test Random Projection
         let rp_interp = HighDimensionalInterpolator::builder()
-            .with_dimension_reduction(DimensionReductionMethod::RandomProjection { target_dims: 2 })
+            .with_dimension_reduction(DimensionReductionMethod::RandomProjection { targetdims: 2 })
             .build(&points.view(), &values.view())
             .unwrap();
 

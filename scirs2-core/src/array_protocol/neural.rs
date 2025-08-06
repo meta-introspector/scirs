@@ -100,7 +100,7 @@ impl Linear {
         name: &str,
         in_features: usize,
         out_features: usize,
-        with_bias: bool,
+        withbias: bool,
         activation: Option<ActivationFunc>,
     ) -> Self {
         // Create random weights using Xavier/Glorot initialization
@@ -111,7 +111,7 @@ impl Linear {
         });
 
         // Create bias if needed
-        let bias = if with_bias {
+        let bias = if withbias {
             let bias_array: Array<f64, Ix1> = Array::zeros(out_features);
             Some(Box::new(NdarrayWrapper::new(bias_array)) as Box<dyn ArrayProtocol>)
         } else {
@@ -271,7 +271,7 @@ impl Conv2D {
         out_channels: usize,
         stride: (usize, usize),
         padding: (usize, usize),
-        with_bias: bool,
+        withbias: bool,
         activation: Option<ActivationFunc>,
     ) -> Self {
         // Create random filters using Kaiming initialization
@@ -284,7 +284,7 @@ impl Conv2D {
         );
 
         // Create bias if needed
-        let bias = if with_bias {
+        let bias = if withbias {
             let bias_array: Array<f64, Ix1> = Array::zeros(out_channels);
             Some(Box::new(NdarrayWrapper::new(bias_array)) as Box<dyn ArrayProtocol>)
         } else {
@@ -401,7 +401,7 @@ pub struct Conv2DBuilder {
     out_channels: usize,
     stride: (usize, usize),
     padding: (usize, usize),
-    with_bias: bool,
+    withbias: bool,
     activation: Option<ActivationFunc>,
 }
 
@@ -416,7 +416,7 @@ impl Conv2DBuilder {
             out_channels: 1,
             stride: (1, 1),
             padding: (0, 0),
-            with_bias: true,
+            withbias: true,
             activation: None,
         }
     }
@@ -448,8 +448,8 @@ impl Conv2DBuilder {
     }
 
     /// Set whether to include bias
-    pub fn with_bias(mut self, with_bias: bool) -> Self {
-        self.with_bias = with_bias;
+    pub fn withbias(mut self, withbias: bool) -> Self {
+        self.withbias = withbias;
         self
     }
 
@@ -469,7 +469,7 @@ impl Conv2DBuilder {
             self.out_channels,
             self.stride,
             self.padding,
-            self.with_bias,
+            self.withbias,
             self.activation,
         )
     }
@@ -809,7 +809,7 @@ pub struct MultiHeadAttention {
     num_heads: usize,
 
     /// Model dimension.
-    d_model: usize,
+    dmodel: usize,
 
     /// Training mode flag.
     training: bool,
@@ -824,7 +824,7 @@ impl MultiHeadAttention {
         wv: Box<dyn ArrayProtocol>,
         wo: Box<dyn ArrayProtocol>,
         num_heads: usize,
-        d_model: usize,
+        dmodel: usize,
     ) -> Self {
         Self {
             name: name.to_string(),
@@ -833,36 +833,36 @@ impl MultiHeadAttention {
             wv,
             wo,
             num_heads,
-            d_model,
+            dmodel,
             training: true,
         }
     }
 
     /// Create a new multi-head attention layer with randomly initialized weights.
-    pub fn with_params(name: &str, num_heads: usize, d_model: usize) -> Self {
-        // Check if d_model is divisible by num_heads
+    pub fn with_params(name: &str, num_heads: usize, dmodel: usize) -> Self {
+        // Check if dmodel is divisible by num_heads
         assert!(
-            d_model % num_heads == 0,
-            "d_model must be divisible by num_heads"
+            dmodel % num_heads == 0,
+            "dmodel must be divisible by num_heads"
         );
 
         // Initialize parameters
-        let scale = (1.0 / d_model as f64).sqrt();
+        let scale = (1.0_f64 / dmodel as f64).sqrt();
         let mut rng = rand::rng();
 
-        let wq = Array::from_shape_fn((d_model, d_model), |_| {
+        let wq = Array::from_shape_fn((dmodel, dmodel), |_| {
             (rng.random::<f64>() * 2.0_f64 - 1.0) * scale
         });
 
-        let wk = Array::from_shape_fn((d_model, d_model), |_| {
+        let wk = Array::from_shape_fn((dmodel, dmodel), |_| {
             (rng.random::<f64>() * 2.0_f64 - 1.0) * scale
         });
 
-        let wv = Array::from_shape_fn((d_model, d_model), |_| {
+        let wv = Array::from_shape_fn((dmodel, dmodel), |_| {
             (rng.random::<f64>() * 2.0_f64 - 1.0) * scale
         });
 
-        let wo = Array::from_shape_fn((d_model, d_model), |_| {
+        let wo = Array::from_shape_fn((dmodel, dmodel), |_| {
             (rng.random::<f64>() * 2.0_f64 - 1.0) * scale
         });
 
@@ -873,7 +873,7 @@ impl MultiHeadAttention {
             wv: Box::new(NdarrayWrapper::new(wv)),
             wo: Box::new(NdarrayWrapper::new(wo)),
             num_heads,
-            d_model,
+            dmodel,
             training: true,
         }
     }
@@ -905,7 +905,7 @@ impl Layer for MultiHeadAttention {
             keys.as_ref(),
             values.as_ref(),
             None,
-            Some((self.d_model / self.num_heads) as f64),
+            Some((self.dmodel / self.num_heads) as f64),
         )?;
 
         // Project back to output space
@@ -1079,7 +1079,7 @@ impl Sequential {
         &mut self,
         param_name: &str,
         gradient: &dyn ArrayProtocol,
-        learning_rate: f64,
+        learningrate: f64,
     ) -> Result<(), crate::error::CoreError> {
         // Parse parameter name: layer_index.parameter_name (e.g., "0.weights", "1.bias")
         let parts: Vec<&str> = param_name.split('.').collect();
@@ -1124,12 +1124,12 @@ impl Sequential {
                 )))
             })?;
 
-        // Perform gradient descent update: param = param - learning_rate * gradient
+        // Perform gradient descent update: param = param - learningrate * gradient
         let current_param = &current_params[param_idx];
 
         // Multiply gradient by learning _rate
         let scaled_gradient =
-            crate::array_protocol::operations::multiply_by_scalar_f64(gradient, learning_rate)
+            crate::array_protocol::operations::multiply_by_scalar_f64(gradient, learningrate)
                 .map_err(|e| {
                     crate::error::CoreError::ComputationError(crate::error::ErrorContext::new(
                         format!("Failed to scale gradient: {e}"),

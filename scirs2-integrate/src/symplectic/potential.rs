@@ -72,14 +72,14 @@ impl<F: IntegrateFloat> SeparableHamiltonian<F> {
     /// # Returns
     ///
     /// A new separable Hamiltonian system
-    pub fn new<K, V>(_kinetic_energy: K, potential_energy: V) -> Self
+    pub fn new<K, V>(_kinetic_energy: K, potentialenergy: V) -> Self
     where
         K: Fn(F, &Array1<F>) -> F + 'static + Send + Sync,
         V: Fn(F, &Array1<F>) -> F + 'static + Send + Sync,
     {
         SeparableHamiltonian {
             kinetic_energy: Box::new(_kinetic_energy),
-            potential_energy: Box::new(potential_energy),
+            potential_energy: Box::new(potentialenergy),
             potential_gradient: None,
             kinetic_gradient: None,
         }
@@ -95,13 +95,13 @@ impl<F: IntegrateFloat> SeparableHamiltonian<F> {
     /// # Returns
     ///
     /// Self with gradients configured
-    pub fn with_gradients<KG, VG>(mut self, kinetic_gradient: KG, potential_gradient: VG) -> Self
+    pub fn with_gradients<KG, VG>(mut self, kinetic_gradient: KG, potentialgradient: VG) -> Self
     where
         KG: Fn(F, &Array1<F>) -> Array1<F> + 'static + Send + Sync,
         VG: Fn(F, &Array1<F>) -> Array1<F> + 'static + Send + Sync,
     {
         self.kinetic_gradient = Some(Box::new(kinetic_gradient));
-        self.potential_gradient = Some(Box::new(potential_gradient));
+        self.potential_gradient = Some(Box::new(potentialgradient));
         self
     }
 
@@ -214,7 +214,7 @@ impl<F: IntegrateFloat> HamiltonianFn<F> for SeparableHamiltonian<F> {
         }
     }
 
-    fn dp_dt(&self, t: F, q: &Array1<F>, _p: &Array1<F>) -> IntegrateResult<Array1<F>> {
+    fn dp_dt(&self, t: F, q: &Array1<F>, p: &Array1<F>) -> IntegrateResult<Array1<F>> {
         // For separable Hamiltonian: dp/dt = -∂H/∂q = -∂V/∂q
         if let Some(grad) = &self.potential_gradient {
             // Negate the gradient since dp/dt = -∇V(q)
@@ -283,14 +283,14 @@ impl<F: IntegrateFloat> HamiltonianSystem<F> {
     /// # Returns
     ///
     /// A new Hamiltonian system
-    pub fn new<DQ, DP>(_dq_dt_fn: DQ, dp_dt_fn: DP) -> Self
+    pub fn new<DQ, DP>(_dq_dt_fn: DQ, dp_dtfn: DP) -> Self
     where
         DQ: Fn(F, &Array1<F>, &Array1<F>) -> Array1<F> + 'static + Send + Sync,
         DP: Fn(F, &Array1<F>, &Array1<F>) -> Array1<F> + 'static + Send + Sync,
     {
         HamiltonianSystem {
             dq_dt_fn: Box::new(_dq_dt_fn),
-            dp_dt_fn: Box::new(dp_dt_fn),
+            dp_dt_fn: Box::new(dp_dtfn),
             hamiltonian_fn: None,
         }
     }
@@ -304,11 +304,11 @@ impl<F: IntegrateFloat> HamiltonianSystem<F> {
     /// # Returns
     ///
     /// Self with Hamiltonian function configured
-    pub fn with_hamiltonian<H>(mut self, hamiltonian_fn: H) -> Self
+    pub fn with_hamiltonian<H>(mut self, hamiltonianfn: H) -> Self
     where
         H: Fn(F, &Array1<F>, &Array1<F>) -> F + 'static + Send + Sync,
     {
-        self.hamiltonian_fn = Some(Box::new(hamiltonian_fn));
+        self.hamiltonian_fn = Some(Box::new(hamiltonianfn));
         self
     }
 }
@@ -428,7 +428,7 @@ mod tests {
         // Create a generic Hamiltonian for a harmonic oscillator
         let system = HamiltonianSystem::new(
             // dq/dt = ∂H/∂p = p
-            |_t, _q, p| p.clone(),
+            |_t, q, p| p.clone(),
             // dp/dt = -∂H/∂q = -q
             |_t, q, _p| -q.clone(),
         )

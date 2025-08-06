@@ -90,7 +90,7 @@ pub trait Communicator: Send + Sync + Debug {
     fn recv(&self, src: usize, tag: usize, size: usize) -> FFTResult<Vec<Complex64>>;
 
     /// All-to-all communication
-    fn all_to_all(&self, send_data: &[Complex64]) -> FFTResult<Vec<Complex64>>;
+    fn all_to_all(&self, senddata: &[Complex64]) -> FFTResult<Vec<Complex64>>;
 
     /// Barrier synchronization
     fn barrier(&self) -> FFTResult<()>;
@@ -104,9 +104,9 @@ pub trait Communicator: Send + Sync + Debug {
 
 impl DistributedFFT {
     /// Create a new distributed FFT manager
-    pub fn new(_config: DistributedConfig, communicator: Arc<dyn Communicator>) -> Self {
+    pub fn new(config: DistributedConfig, communicator: Arc<dyn Communicator>) -> Self {
         Self {
-            _config,
+            config,
             communicator,
         }
     }
@@ -229,7 +229,7 @@ impl DistributedFFT {
     }
 
     /// Exchange _data between nodes to complete the distributed computation
-    fn exchange_data(&self, local_result: &ArrayD<Complex64>) -> FFTResult<ArrayD<Complex64>> {
+    fn exchange_data(&self, localresult: &ArrayD<Complex64>) -> FFTResult<ArrayD<Complex64>> {
         // Simplified implementation
         // In a real implementation, this would use the communicator to exchange _data
         // based on the communication pattern
@@ -337,7 +337,7 @@ impl DistributedFFT {
     {
         let shape = input.shape();
 
-        // For _testing, limit the size
+        // For testing, limit the size
         let max_size = if is_testing {
             self.config.max_local_size
         } else {
@@ -430,7 +430,7 @@ impl DistributedFFT {
     {
         let shape = input.shape();
 
-        // For _testing, limit the size
+        // For testing, limit the size
         let max_size = if is_testing {
             self.config.max_local_size
         } else {
@@ -543,7 +543,7 @@ impl DistributedFFT {
     {
         let shape = input.shape();
 
-        // For _testing, limit the size
+        // For testing, limit the size
         let max_size = if is_testing {
             self.config.max_local_size
         } else {
@@ -706,10 +706,10 @@ impl DistributedFFT {
 
     /// Create a mock instance for testing
     #[cfg(test)]
-    pub fn new_mock(_config: DistributedConfig) -> Self {
-        let communicator = Arc::new(MockCommunicator::new(_config.node_count, _config.rank));
+    pub fn new_mock(config: DistributedConfig) -> Self {
+        let communicator = Arc::new(MockCommunicator::new(_config.node_count, config.rank));
         Self {
-            _config,
+            config,
             communicator,
         }
     }
@@ -726,8 +726,8 @@ pub struct BasicCommunicator {
 
 impl BasicCommunicator {
     /// Create a new basic communicator
-    pub fn new(_size: usize, rank: usize) -> Self {
-        Self { _size, rank }
+    pub fn new(size: usize, rank: usize) -> Self {
+        Self { size, rank }
     }
 }
 
@@ -762,7 +762,7 @@ impl Communicator for BasicCommunicator {
         Ok(vec![Complex64::new(0.0, 0.0); size])
     }
 
-    fn all_to_all(&self, send_data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
+    fn all_to_all(&self, senddata: &[Complex64]) -> FFTResult<Vec<Complex64>> {
         // In a real implementation, this would perform an all-to-all communication
         // For demonstration, we'll just return the same _data
         Ok(send_data.to_vec())
@@ -792,8 +792,8 @@ pub struct MockCommunicator {
 
 impl MockCommunicator {
     /// Create a new mock communicator
-    pub fn new(_size: usize, rank: usize) -> Self {
-        Self { _size, rank }
+    pub fn new(size: usize, rank: usize) -> Self {
+        Self { size, rank }
     }
 }
 
@@ -822,7 +822,7 @@ impl Communicator for MockCommunicator {
         Ok(vec![Complex64::new(0.0, 0.0); size])
     }
 
-    fn all_to_all(&self, send_data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
+    fn all_to_all(&self, senddata: &[Complex64]) -> FFTResult<Vec<Complex64>> {
         // Mock implementation, return a copy
         Ok(send_data.to_vec())
     }

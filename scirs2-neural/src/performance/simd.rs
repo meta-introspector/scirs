@@ -17,8 +17,8 @@ use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps}
 pub struct SIMDOperations;
 impl SIMDOperations {
     /// SIMD-accelerated ReLU activation for f32 arrays
-    pub fn simd_relu_f32_inplace(_input: &mut ArrayViewMut<f32, IxDyn>) {
-        if let Some(slice) = _input.as_slice_mut() {
+    pub fn simd_relu_f32_inplace(input: &mut ArrayViewMut<f32, IxDyn>) {
+        if let Some(slice) = input.as_slice_mut() {
             // Use unified SIMD operations for ReLU
             let caps = PlatformCapabilities::detect();
             if caps.simd_available && f32::simd_available() {
@@ -27,11 +27,11 @@ impl SIMDOperations {
                 Self::simd_relu_f32_slice_fallback(slice);
             }
         } else {
-            _input.mapv_inplace(|x| x.max(0.0));
+            input.mapv_inplace(|x| x.max(0.0));
         }
     }
     /// SIMD-accelerated ReLU for f32 slice using unified operations
-    fn simd_relu_f32_slice_unified(_slice: &mut [f32]) {
+    fn simd_relu_f32_slice_unified(slice: &mut [f32]) {
         // Convert _slice to Array1 for SIMD operations
         let arr = Array1::from_vec(_slice.to_vec());
         let zero_arr = Array1::zeros(arr.len());
@@ -39,23 +39,23 @@ impl SIMDOperations {
         let result = f32::simd_max(&arr.view(), &zero_arr.view());
         // Copy result back to _slice
         for (i, &val) in result.iter().enumerate() {
-            _slice[i] = val;
+            slice[i] = val;
     /// Fallback ReLU implementation
-    fn simd_relu_f32_slice_fallback(_slice: &mut [f32]) {
-        for val in _slice.iter_mut() {
+    fn simd_relu_f32_slice_fallback(slice: &mut [f32]) {
+        for val in slice.iter_mut() {
             *val = val.max(0.0);
     /// Vectorized ReLU activation returning new array
-    pub fn simd_relu_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
+    pub fn simd_relu_f32(input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
         let mut result = input.to_owned();
         Self::simd_relu_f32_inplace(&mut result.view_mut());
         result
     /// SIMD-accelerated sigmoid activation for f32 arrays
-    pub fn simd_sigmoid_f32_inplace(_input: &mut ArrayViewMut<f32, IxDyn>) {
+    pub fn simd_sigmoid_f32_inplace(input: &mut ArrayViewMut<f32, IxDyn>) {
                 Self::simd_sigmoid_f32_slice_unified(_slice);
                 Self::simd_sigmoid_f32_slice_fallback(_slice);
             input.mapv_inplace(|x| 1.0 / (1.0 + (-x).exp()));
     /// SIMD-accelerated sigmoid for f32 _slice using unified operations
-    fn simd_sigmoid_f32_slice_unified(_slice: &mut [f32]) {
+    fn simd_sigmoid_f32_slice_unified(slice: &mut [f32]) {
         // For sigmoid, we need to compute 1 / (1 + exp(-x))
         // Using core SIMD operations
         // Compute -x
@@ -64,28 +64,28 @@ impl SIMDOperations {
         // Apply sigmoid element-wise (no direct SIMD exp available)
         let result: Array1<f32> = neg_x.mapv(|x| 1.0 / (1.0 + x.exp()));
     /// Fallback sigmoid implementation
-    fn simd_sigmoid_f32_slice_fallback(_slice: &mut [f32]) {
+    fn simd_sigmoid_f32_slice_fallback(slice: &mut [f32]) {
             *val = 1.0 / (1.0 + (-*val).exp());
     /// Vectorized sigmoid activation returning new array
-    pub fn simd_sigmoid_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
+    pub fn simd_sigmoid_f32(input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
         Self::simd_sigmoid_f32_inplace(&mut result.view_mut());
     /// SIMD-accelerated tanh activation for f32 arrays
-    pub fn simd_tanh_f32_inplace(_input: &mut ArrayViewMut<f32, IxDyn>) {
+    pub fn simd_tanh_f32_inplace(input: &mut ArrayViewMut<f32, IxDyn>) {
                 Self::simd_tanh_f32_slice_unified(_slice);
                 Self::simd_tanh_f32_slice_fallback(_slice);
             input.mapv_inplace(|x| x.tanh());
     /// SIMD-accelerated tanh for f32 _slice using unified operations
-    fn simd_tanh_f32_slice_unified(_slice: &mut [f32]) {
+    fn simd_tanh_f32_slice_unified(slice: &mut [f32]) {
         // For tanh, we apply element-wise since no direct SIMD tanh
         let result = arr.mapv(|x| x.tanh());
     /// Fallback tanh implementation
-    fn simd_tanh_f32_slice_fallback(_slice: &mut [f32]) {
+    fn simd_tanh_f32_slice_fallback(slice: &mut [f32]) {
             *val = val.tanh();
     /// Vectorized tanh activation returning new array
-    pub fn simd_tanh_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
+    pub fn simd_tanh_f32(input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
         Self::simd_tanh_f32_inplace(&mut result.view_mut());
     /// SIMD-accelerated GELU activation for f32 arrays
-    pub fn simd_gelu_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
+    pub fn simd_gelu_f32(input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
         if let Some(_slice) = result.as_slice_mut() {
                 Self::simd_gelu_f32_slice_unified(_slice);
                 Self::simd_gelu_f32_slice_fallback(_slice);
@@ -93,7 +93,7 @@ impl SIMDOperations {
                 0.5 * x * (1.0 + (x * 0.797_884_6 * (1.0 + 0.044715 * x * x)).tanh())
             });
     /// SIMD-accelerated GELU for f32 slice using unified operations
-    fn simd_gelu_f32_slice_unified(_slice: &mut [f32]) {
+    fn simd_gelu_f32_slice_unified(slice: &mut [f32]) {
         // GELU(x) = 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x^3)))
         // Using core SIMD for parts of the computation
         // Compute x^2 and x^3 using SIMD
@@ -115,25 +115,25 @@ impl SIMDOperations {
         let temp = f32::simd_mul(&half_arr.view(), &arr.view());
         let result = f32::simd_mul(&temp.view(), &factor.view());
     /// Fallback GELU implementation
-    fn simd_gelu_f32_slice_fallback(_slice: &mut [f32]) {
+    fn simd_gelu_f32_slice_fallback(slice: &mut [f32]) {
             let x = *val;
             *val = 0.5 * x * (1.0 + (x * 0.797_884_6 * (1.0 + 0.044715 * x * x)).tanh());
     /// SIMD-accelerated Swish/SiLU activation for f32 arrays
-    pub fn simd_swish_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
+    pub fn simd_swish_f32(input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
                 Self::simd_swish_f32_slice_unified(_slice);
                 Self::simd_swish_f32_slice_fallback(_slice);
             result.mapv_inplace(|x| x / (1.0 + (-x).exp()));
     /// SIMD-accelerated Swish for f32 _slice using unified operations
-    fn simd_swish_f32_slice_unified(_slice: &mut [f32]) {
+    fn simd_swish_f32_slice_unified(slice: &mut [f32]) {
         // Swish(x) = x * sigmoid(x) = x / (1 + exp(-x))
         // Compute sigmoid(x) = 1 / (1 + exp(-x))
         // Since we don't have direct SIMD exp, we apply element-wise
         let result = arr.mapv(|x| x / (1.0 + (-x).exp()));
     /// Fallback Swish implementation
-    fn simd_swish_f32_slice_fallback(_slice: &mut [f32]) {
+    fn simd_swish_f32_slice_fallback(slice: &mut [f32]) {
             *val = x / (1.0 + (-x).exp());
     /// SIMD-accelerated softmax for f32 arrays
-    pub fn simd_softmax_f32(_input: &ArrayD<f32>, axis: Option<usize>) -> Result<ArrayD<f32>> {
+    pub fn simd_softmax_f32(input: &ArrayD<f32>, axis: Option<usize>) -> Result<ArrayD<f32>> {
         let axis = axis.unwrap_or(input.ndim() - 1);
         if axis >= input.ndim() {
             return Err(NeuralError::InvalidArchitecture(
@@ -151,12 +151,12 @@ impl SIMDOperations {
                 }
         Ok(result)
     /// SIMD softmax for f32 slice using unified operations
-    fn simd_softmax_f32_slice(_input: &[f32], result: &mut [f32]) {
-        if _input.is_empty() {
+    fn simd_softmax_f32_slice(input: &[f32], result: &mut [f32]) {
+        if input.is_empty() {
             return;
         // Find maximum for numerical stability
         let input_arr = Array1::from_vec(_input.to_vec());
-        let max_val = _input.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
+        let max_val = input.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
         let max_arr = Array1::from_elem(_input.len(), max_val);
         // Compute x - max using SIMD
         let shifted = f32::simd_sub(&input_arr.view(), &max_arr.view());
@@ -193,7 +193,7 @@ impl SIMDOperations {
                 loss -= target * clamped_pred.ln();
             Ok(loss / predictions.len() as f32)
     /// SIMD cross-entropy for f32 slices using unified operations
-    fn simd_cross_entropy_f32_slices(_predictions: &[f32], targets: &[f32], epsilon: f32) -> f32 {
+    fn simd_cross_entropy_f32_slices(predictions: &[f32], targets: &[f32], epsilon: f32) -> f32 {
         let len = predictions.len().min(targets.len());
         let pred_arr = Array1::from_vec(predictions[..len].to_vec());
         let target_arr = Array1::from_vec(targets[..len].to_vec());
@@ -242,8 +242,8 @@ impl SIMDOperations {
                 result[[i, j]] = sum;
         Ok(result.into_dyn())
     /// Extract column from 2D array for SIMD operations
-    fn extract_column(_matrix: &ArrayView<f32, IxDyn>, col_idx: usize) -> Vec<f32> {
-        let rows = _matrix.shape()[0];
+    fn extract_column(_matrix: &ArrayView<f32, IxDyn>, colidx: usize) -> Vec<f32> {
+        let rows = matrix.shape()[0];
         let mut column = Vec::with_capacity(rows);
         for i in 0..rows {
             column.push(_matrix[[i, col_idx]]);
@@ -365,30 +365,30 @@ impl SIMDOperations {
 /// SIMD operations for neural network computations (fallback implementation)
 #[cfg(not(feature = "simd"))]
     /// Apply ReLU activation in-place using SIMD operations
-    pub fn simd_relu_f32_inplace(_input: &mut ArrayViewMut<f32, IxDyn>) {
+    pub fn simd_relu_f32_inplace(input: &mut ArrayViewMut<f32, IxDyn>) {
         // No-op fallback
     /// Apply ReLU activation using SIMD operations
-    pub fn simd_relu_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
+    pub fn simd_relu_f32(input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
         // Fallback to standard operation
-        _input.mapv(|x| x.max(0.0))
+        input.mapv(|x| x.max(0.0))
     /// Apply sigmoid activation in-place using SIMD operations
-    pub fn simd_sigmoid_f32_inplace(_input: &mut ArrayViewMut<f32, IxDyn>) {
+    pub fn simd_sigmoid_f32_inplace(input: &mut ArrayViewMut<f32, IxDyn>) {
     /// Apply sigmoid activation using SIMD operations
-    pub fn simd_sigmoid_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
-        _input.mapv(|x| 1.0 / (1.0 + (-x).exp()))
+    pub fn simd_sigmoid_f32(input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
+        input.mapv(|x| 1.0 / (1.0 + (-x).exp()))
     /// Apply tanh activation in-place using SIMD operations
-    pub fn simd_tanh_f32_inplace(_input: &mut ArrayViewMut<f32, IxDyn>) {
+    pub fn simd_tanh_f32_inplace(input: &mut ArrayViewMut<f32, IxDyn>) {
     /// Apply tanh activation using SIMD operations
-    pub fn simd_tanh_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
-        _input.mapv(|x| x.tanh())
+    pub fn simd_tanh_f32(input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
+        input.mapv(|x| x.tanh())
     /// Apply GELU activation using SIMD operations
-    pub fn simd_gelu_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
-        _input.mapv(|x| 0.5 * x * (1.0 + (x * 0.797_884_6 * (1.0 + 0.044715 * x * x)).tanh()))
+    pub fn simd_gelu_f32(input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
+        input.mapv(|x| 0.5 * x * (1.0 + (x * 0.797_884_6 * (1.0 + 0.044715 * x * x)).tanh()))
     /// Apply Swish activation using SIMD operations
-    pub fn simd_swish_f32(_input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
-        _input.mapv(|x| x / (1.0 + (-x).exp()))
+    pub fn simd_swish_f32(input: &ArrayView<f32, IxDyn>) -> ArrayD<f32> {
+        input.mapv(|x| x / (1.0 + (-x).exp()))
     /// Apply softmax activation using SIMD operations
-    pub fn simd_softmax_f32(_input: &ArrayD<f32>, _axis: Option<usize>) -> Result<ArrayD<f32>> {
+    pub fn simd_softmax_f32(_input: &ArrayD<f32>, axis: Option<usize>) -> Result<ArrayD<f32>> {
         Err(NeuralError::ComputationError(
             "SIMD softmax requires 'simd' feature".to_string(),
         ))

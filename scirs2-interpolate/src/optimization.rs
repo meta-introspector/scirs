@@ -499,7 +499,7 @@ where
                 let fold_size = n / k;
                 let mut folds = Vec::new();
 
-                for fold_idx in 0, k {
+                for fold_idx in 0..k {
                     let start = fold_idx * fold_size;
                     let end = if fold_idx == k - 1 {
                         n
@@ -547,7 +547,7 @@ where
                         indices.swap(i, j);
                     }
 
-                    let test_indices = indices[0, test_size].to_vec();
+                    let test_indices = indices[0..test_size].to_vec();
                     let train_indices = indices[test_size..].to_vec();
                     folds.push((train_indices, test_indices));
                 }
@@ -725,7 +725,7 @@ where
         + Sync
         + 'static,
 {
-    fn new(_interpolator: RBFInterpolator<T>) -> Self {
+    fn new(interpolator: RBFInterpolator<T>) -> Self {
         Self { _interpolator }
     }
 }
@@ -795,7 +795,7 @@ where
         + RemAssign
         + 'static,
 {
-    fn new(_interpolator: BSpline<T>) -> Self {
+    fn new(interpolator: BSpline<T>) -> Self {
         Self { _interpolator }
     }
 }
@@ -953,7 +953,7 @@ where
 ///
 /// Configured cross-validator
 #[allow(dead_code)]
-pub fn make_cross_validator<T>(_k_folds: usize, metric: ValidationMetric) -> CrossValidator<T>
+pub fn make_cross_validator<T>(_kfolds: usize, metric: ValidationMetric) -> CrossValidator<T>
 where
     T: Float
         + FromPrimitive
@@ -1060,7 +1060,8 @@ mod tests {
             .with_shuffle(false);
 
         match cv.strategy {
-            CrossValidationStrategy::KFold(k) => assert_eq!(k, 10, _ => panic!("Expected KFold strategy"),
+            CrossValidationStrategy::KFold(k) => assert_eq!(k, 10),
+            _ => panic!("Expected KFold strategy"),
         }
         assert_eq!(cv.metric, ValidationMetric::MeanAbsoluteError);
         assert!(!cv.shuffle);
@@ -1180,7 +1181,8 @@ mod tests {
         let cv = make_cross_validator::<f64>(5, ValidationMetric::MeanAbsoluteError);
 
         match cv.strategy {
-            CrossValidationStrategy::KFold(k) => assert_eq!(k, 5, _ => panic!("Expected KFold strategy"),
+            CrossValidationStrategy::KFold(k) => assert_eq!(k, 5),
+            _ => panic!("Expected KFold strategy"),
         }
         assert_eq!(cv.metric, ValidationMetric::MeanAbsoluteError);
     }

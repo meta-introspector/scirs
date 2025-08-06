@@ -374,9 +374,9 @@ where
         + std::fmt::Display,
 {
     /// Create a new advanced streaming processor
-    pub fn new(_config: AdvancedStreamingConfig) -> Self {
+    pub fn new(config: AdvancedStreamingConfig) -> Self {
         let windowing_strategy = WindowingStrategy::Sliding {
-            size: _config.default_window_size,
+            size: config.default_window_size,
         };
         let processing_mode = StreamProcessingMode::Adaptive;
 
@@ -397,7 +397,7 @@ where
         };
 
         Self {
-            config: _config,
+            config: config,
             windowing_strategy,
             processing_mode,
             buffer: Arc::new(RwLock::new(VecDeque::new())),
@@ -635,7 +635,7 @@ where
     }
 
     /// Update incremental ML model
-    fn update_ml_model(&self, _data: F) -> StatsResult<()> {
+    fn update_ml_model(&self, data: F) -> StatsResult<()> {
         // Implementation would depend on the specific ML model type
         // This is a placeholder for the incremental learning logic
         Ok(())

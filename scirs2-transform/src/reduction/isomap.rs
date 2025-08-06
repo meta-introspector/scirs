@@ -43,9 +43,9 @@ impl Isomap {
     /// # Arguments
     /// * `n_neighbors` - Number of neighbors for graph construction
     /// * `n_components` - Number of dimensions in the embedding space
-    pub fn new(_n_neighbors: usize, n_components: usize) -> Self {
+    pub fn new(n_neighbors: usize, ncomponents: usize) -> Self {
         Isomap {
-            _n_neighbors,
+            n_neighbors,
             n_components,
             neighbor_mode: "knn".to_string(),
             epsilon: 0.0,
@@ -332,7 +332,7 @@ impl Isomap {
     }
 
     /// Check if the input data is the same as training data
-    fn is_same_data(&self, x: &Array2<f64>, training_data: &Array2<f64>) -> bool {
+    fn is_same_data(&self, x: &Array2<f64>, trainingdata: &Array2<f64>) -> bool {
         if x.dim() != training_data.dim() {
             return false;
         }
@@ -349,13 +349,13 @@ impl Isomap {
     }
 
     /// Implement Landmark MDS for out-of-sample extension
-    fn landmark_mds(&self, x_new: &Array2<f64>) -> Result<Array2<f64>> {
+    fn landmark_mds(&self, xnew: &Array2<f64>) -> Result<Array2<f64>> {
         let training_data = self.training_data.as_ref().unwrap();
         let training_embedding = self.embedding.as_ref().unwrap();
         let geodesic_distances = self.geodesic_distances.as_ref().unwrap();
 
         let (n_new, n_features) = x_new.dim();
-        let (n_training_) = training_data.dim();
+        let (n_training_, _) = training_data.dim();
 
         if n_features != training_data.ncols() {
             return Err(TransformError::InvalidInput(format!(
@@ -366,9 +366,9 @@ impl Isomap {
         }
 
         // Step 1: Compute distances from _new points to all training points
-        let mut distances_to_training = Array2::zeros((n_new, n_training));
+        let mut distances_to_training = Array2::zeros((n_new, n_training_));
         for i in 0..n_new {
-            for j in 0..n_training {
+            for j in 0..n_training_ {
                 let mut dist_sq = 0.0;
                 for k in 0..n_features {
                     let diff = x_new[[i, k]] - training_data[[j, k]];
@@ -403,7 +403,8 @@ impl Isomap {
     fn solve_landmark_coordinates(
         &self,
         distances_to_landmarks: &ndarray::ArrayView1<f64>,
-        landmark_embedding: &Array2<f64>, _geodesic_distances: &Array2<f64>,
+        landmark_embedding: &Array2<f64>,
+        _geodesic_distances: &Array2<f64>,
     ) -> Result<Array1<f64>> {
         let n_landmarks = landmark_embedding.nrows();
 

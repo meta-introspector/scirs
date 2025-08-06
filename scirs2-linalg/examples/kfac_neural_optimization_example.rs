@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("----------------------------------");
 
     // Initialize weights and create sample data
-    let mut weights = Array2::fromshape_fn((input_dim + 1, output_dim), |(i, j)| {
+    let mut weights = Array2::from_shape_fn((input_dim + 1, output_dim), |(i, j)| {
         // Xavier initialization
         let fan_in = input_dim + 1;
         let fan_out = output_dim;
@@ -70,16 +70,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for epoch in 0..num_epochs {
         // Generate synthetic training batch (without bias - bias added in K-FAC function)
-        let input_acts = Array2::fromshape_fn((batch_size, input_dim), |(i, j)| {
+        let input_acts = Array2::from_shape_fn((batch_size, input_dim), |(i, j)| {
             (i as f64 + j as f64) * 0.1 + (epoch as f64) * 0.01
         });
 
-        let output_grads = Array2::fromshape_fn((batch_size, output_dim), |(i, j)| {
+        let output_grads = Array2::from_shape_fn((batch_size, output_dim), |(i, j)| {
             // Simulate gradients from backpropagation
             0.1 * ((i + j + epoch) as f64).sin() + 0.05
         });
 
-        let gradients = Array2::fromshape_fn((input_dim + 1, output_dim), |(i, j)| {
+        let gradients = Array2::from_shape_fn((input_dim + 1, output_dim), |(i, j)| {
             // Simulate weight gradients including bias
             0.01 * ((i + j + epoch) as f64).cos() + 0.005
         });
@@ -151,11 +151,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         // Simulate one training step for this layer
-        let layer_acts = Array2::fromshape_fn((batch_size, layer_input_dim), |(i, j)| {
+        let layer_acts = Array2::from_shape_fn((batch_size, layer_input_dim), |(i, j)| {
             (i as f64 * 0.1 + j as f64 * 0.05 + layer_id as f64 * 0.01).tanh()
         });
 
-        let layer_grads = Array2::fromshape_fn((batch_size, layer_output_dim), |(i, j)| {
+        let layer_grads = Array2::from_shape_fn((batch_size, layer_output_dim), |(i, j)| {
             0.1 * ((i + j + layer_id) as f64).sin()
         });
 
@@ -182,7 +182,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("---------------------------------------");
 
     // Compare with standard SGD
-    let mut sgd_weights = Array2::fromshape_fn((input_dim + 1, output_dim), |(i, j)| {
+    let mut sgd_weights = Array2::from_shape_fn((input_dim + 1, output_dim), |(i, j)| {
         let fan_in = input_dim + 1;
         let fan_out = output_dim;
         let scale = (2.0 / (fan_in + fan_out) as f64).sqrt();
@@ -192,7 +192,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut sgd_losses = Vec::new();
 
     for epoch in 0..num_epochs {
-        let gradients = Array2::fromshape_fn((input_dim + 1, output_dim), |(i, j)| {
+        let gradients = Array2::from_shape_fn((input_dim + 1, output_dim), |(i, j)| {
             0.01 * ((i + j + epoch) as f64).cos() + 0.005
         });
 
@@ -238,11 +238,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for (name, decay, damping) in configs {
         let mut test_optimizer = KFACOptimizer::<f64>::new(Some(decay), Some(damping));
 
-        let input_acts = Array2::fromshape_fn((batch_size, input_dim), |(i, j)| {
+        let input_acts = Array2::from_shape_fn((batch_size, input_dim), |(i, j)| {
             (i as f64 + j as f64) * 0.1
         });
 
-        let output_grads = Array2::fromshape_fn((batch_size, output_dim), |(i, j)| {
+        let output_grads = Array2::from_shape_fn((batch_size, output_dim), |(i, j)| {
             0.1 * ((i + j) as f64).sin()
         });
 

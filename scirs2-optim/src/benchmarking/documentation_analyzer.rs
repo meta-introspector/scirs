@@ -525,9 +525,9 @@ pub struct UserSatisfactionMetrics {
 
 impl DocumentationAnalyzer {
     /// Create a new documentation analyzer
-    pub fn new(_config: AnalyzerConfig) -> Self {
+    pub fn new(config: AnalyzerConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             analysis_results: AnalysisResults::default(),
             metrics: DocumentationMetrics::default(),
         }
@@ -658,7 +658,8 @@ impl DocumentationAnalyzer {
         let mut file_total_items = 0;
 
         while current_line < lines.len() {
-            if let Some((item, _category, line_num)) = self.parse_public_item(&lines, current_line) {
+            if let Some((item, category, line_num)) = self.parse_public_item(&lines, current_line)
+            {
                 *total_items += 1;
                 file_total_items += 1;
 
@@ -671,7 +672,7 @@ impl DocumentationAnalyzer {
                         name: item,
                         file_path: file_path.to_path_buf(),
                         line_number: line_num + 1,
-                        category: _category.clone(),
+                        category: category.clone(),
                         visibility: VisibilityLevel::Public,
                         suggested_template: self.generate_doc_template(&_category),
                     };
@@ -716,27 +717,27 @@ impl DocumentationAnalyzer {
         let _line = lines[start_line].trim();
 
         // Simple parsing for demonstration - in practice would use syn crate
-        if _line.starts_with("pub fn ") {
+        if line.starts_with("pub fn ") {
             if let Some(name) = self.extract_function_name(_line) {
                 return Some((name, ItemCategory::Function, start_line));
             }
-        } else if _line.starts_with("pub struct ") {
+        } else if line.starts_with("pub struct ") {
             if let Some(name) = self.extract_struct_name(_line) {
                 return Some((name, ItemCategory::Struct, start_line));
             }
-        } else if _line.starts_with("pub enum ") {
+        } else if line.starts_with("pub enum ") {
             if let Some(name) = self.extract_enum_name(_line) {
                 return Some((name, ItemCategory::Enum, start_line));
             }
-        } else if _line.starts_with("pub trait ") {
+        } else if line.starts_with("pub trait ") {
             if let Some(name) = self.extract_trait_name(_line) {
                 return Some((name, ItemCategory::Trait, start_line));
             }
-        } else if _line.starts_with("pub mod ") {
+        } else if line.starts_with("pub mod ") {
             if let Some(name) = self.extract_module_name(_line) {
                 return Some((name, ItemCategory::Module, start_line));
             }
-        } else if _line.starts_with("pub const ") {
+        } else if line.starts_with("pub const ") {
             if let Some(name) = self.extract_const_name(_line) {
                 return Some((name, ItemCategory::Constant, start_line));
             }
@@ -746,11 +747,11 @@ impl DocumentationAnalyzer {
     }
 
     /// Check if an item has documentation
-    fn has_documentation(&self, lines: &[&str], item_line: usize) -> bool {
+    fn has_documentation(&self, lines: &[&str], itemline: usize) -> bool {
         // Look for doc comments before the item
         for i in (0..item_line).rev() {
             let _line = lines[i].trim();
-            if _line.starts_with("///") || _line.starts_with("//!") {
+            if line.starts_with("///") || line.starts_with("//!") {
                 return true;
             } else if !_line.is_empty() && !_line.starts_with("//") {
                 break;
@@ -942,13 +943,13 @@ impl DocumentationAnalyzer {
             complexity_distribution: HashMap::new(), // Would be filled by more sophisticated analysis
         };
 
-        example_coverage.insert(module_name, _coverage);
+        example_coverage.insert(module_name, coverage);
 
         Ok(())
     }
 
     /// Compile an example to check if it's valid
-    fn compile_example(&self, _example_code: &str) -> bool {
+    fn compile_example(&self, _examplecode: &str) -> bool {
         // Simplified compilation check - in practice would use rustc or a similar tool
         // For now, just check basic syntax
         !_example_code.is_empty() && !_example_code.contains("syntax_error")
@@ -956,7 +957,8 @@ impl DocumentationAnalyzer {
 
     /// Calculate example quality metrics
     fn calculate_example_quality_metrics(
-        &self, _example_coverage: &HashMap<String, ExampleCoverage>,
+        &self,
+        _example_coverage: &HashMap<String, ExampleCoverage>,
     ) -> ExampleQualityMetrics {
         // Simplified metrics calculation
         ExampleQualityMetrics {
@@ -1103,8 +1105,7 @@ impl DocumentationAnalyzer {
     }
 
     /// Validate a URL
-    fn validate_url(&self,
-        url: &str) -> bool {
+    fn validate_url(&self, url: &str) -> bool {
         // Simplified validation - in practice would make HTTP requests
         true // Assume all URLs are valid for demonstration
     }
@@ -1973,7 +1974,7 @@ mod tests {
     #[test]
     fn test_function_name_extraction() {
         let analyzer = DocumentationAnalyzer::new(AnalyzerConfig::default());
-        let line = "pub fn my_function(_param: i32) -> Result<(), Error>";
+        let line = "pub fn my_function(param: i32) -> Result<(), Error>";
         let name = analyzer.extract_function_name(line);
         assert_eq!(name, Some("my_function".to_string()));
     }

@@ -16,7 +16,7 @@ pub struct TimeInstant {
 
 impl TimeInstant {
     /// Create a new time instant
-    pub fn new(_time: u64) -> Self {
+    pub fn new(time: u64) -> Self {
         TimeInstant { _time }
     }
 
@@ -37,7 +37,7 @@ pub struct TimeInterval {
 
 impl TimeInterval {
     /// Create a new time interval
-    pub fn new(_start: u64, end: u64) -> Result<Self> {
+    pub fn new(start: u64, end: u64) -> Result<Self> {
         if _start >= end {
             return Err(GraphError::InvalidGraph(
                 "Start time must be before end time".to_string(),
@@ -122,7 +122,8 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> TemporalGraph<N, E
             nodes: HashSet::new(),
             edges: BTreeMap::new(),
             node_intervals: HashMap::new(),
-            edge_counter: 0, _phantom: std::marker::PhantomData,
+            edge_counter: 0,
+            _phantom: std::marker::PhantomData,
         }
     }
 

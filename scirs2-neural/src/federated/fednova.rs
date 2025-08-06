@@ -21,10 +21,10 @@ pub struct FedNova {
 }
 impl FedNova {
     /// Create a new FedNova aggregator
-    pub fn new(_server_lr: f32, momentum: f32, use_momentum: bool) -> Self {
+    pub fn new(_server_lr: f32, momentum: f32, usemomentum: bool) -> Self {
         Self {
-            _momentum,
-            _server_lr,
+            momentum,
+            server_lr,
             _momentum_buffers: None,
             use_momentum,
         }
@@ -46,7 +46,7 @@ impl FedNova {
             normalized_updates.push(normalized_client_updates);
         Ok(normalized_updates)
     /// Compute effective number of steps for each client
-    fn compute_effective_steps(&self, updates: &[ClientUpdate], tau_eff: f32) -> Vec<f32> {
+    fn compute_effective_steps(&self, updates: &[ClientUpdate], taueff: f32) -> Vec<f32> {
         updates
             .iter()
             .map(|update| {
@@ -125,8 +125,8 @@ pub struct FedNovaClient {
     grad_accumulator: Option<Vec<Array2<f32>>>,
 impl FedNovaClient {
     /// Create a new FedNova client
-    pub fn new(_client_id: usize, batch_size: usize, local_lr: f32) -> Self {
-            _client_id,
+    pub fn new(_client_id: usize, batch_size: usize, locallr: f32) -> Self {
+            client_id,
             local_steps: 0,
             batch_size,
             local_lr,
@@ -205,7 +205,7 @@ pub struct FedNovaUpdate {
     pub loss: f32,
     pub accuracy: f32,
 impl From<FedNovaUpdate> for ClientUpdate {
-    fn from(_update: FedNovaUpdate) -> Self {
+    fn from(update: FedNovaUpdate) -> Self {
         ClientUpdate {
             client_id: update.client_id,
             weight_updates: update.weight_updates,
@@ -286,7 +286,7 @@ pub struct TauStatistics {
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn create_test_update(_client_id: usize, num_samples: usize) -> FedNovaUpdate {
+    fn create_test_update(_client_id: usize, numsamples: usize) -> FedNovaUpdate {
         let weight_updates = vec![
             Array2::from_elem((10, 10), 0.1),
             Array2::from_elem((10, 5), 0.2),

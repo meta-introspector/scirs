@@ -701,7 +701,7 @@ where
 ///
 /// The nth derivative of H1v(x) (returns NaN for now as Hankel derivatives need implementation)
 #[allow(dead_code)]
-pub fn h1vp<F>(_v: F, _x: F, n: Option<i32>) -> F
+pub fn h1vp<F>(_v: F, x: F, n: Option<i32>) -> F
 where
     F: Float + FromPrimitive + Debug + std::ops::AddAssign,
 {
@@ -725,7 +725,7 @@ where
 ///
 /// The nth derivative of H2v(x) (returns NaN for now as Hankel derivatives need implementation)
 #[allow(dead_code)]
-pub fn h2vp<F>(_v: F, _x: F, n: Option<i32>) -> F
+pub fn h2vp<F>(_v: F, x: F, n: Option<i32>) -> F
 where
     F: Float + FromPrimitive + Debug + std::ops::AddAssign,
 {

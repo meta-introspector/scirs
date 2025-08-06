@@ -154,7 +154,7 @@ where
 ///
 /// * Result containing the serialized data
 #[allow(dead_code)]
-pub fn serialize<T>(_data: &T, format: SerializationFormat) -> Result<Vec<u8>>
+pub fn serialize<T>(data: &T, format: SerializationFormat) -> Result<Vec<u8>>
 where
     T: Serialize,
 {
@@ -191,7 +191,7 @@ where
 ///
 /// * Result containing the deserialized data
 #[allow(dead_code)]
-pub fn deserialize<T>(_data: &[u8], format: SerializationFormat) -> Result<T>
+pub fn deserialize<T>(data: &[u8], format: SerializationFormat) -> Result<T>
 where
     T: for<'de> Deserialize<'de>,
 {
@@ -226,7 +226,7 @@ where
 ///
 /// * Result indicating success or error
 #[allow(dead_code)]
-pub fn serialize_to_file<T, P>(_data: &T, path: P, format: SerializationFormat) -> Result<()>
+pub fn serialize_to_file<T, P>(data: &T, path: P, format: SerializationFormat) -> Result<()>
 where
     T: Serialize,
     P: AsRef<Path>,
@@ -252,7 +252,7 @@ where
 ///
 /// * Result containing the deserialized data
 #[allow(dead_code)]
-pub fn deserialize_from_file<T, P>(_path: P, format: SerializationFormat) -> Result<T>
+pub fn deserialize_from_file<T, P>(path: P, format: SerializationFormat) -> Result<T>
 where
     T: for<'de> Deserialize<'de>,
     P: AsRef<Path>,

@@ -416,14 +416,14 @@ impl Default for AdaptiveStreamConfig {
 
 impl AdaptiveStreamingEngine {
     /// Create a new adaptive streaming engine
-    pub fn new(_config: AdaptiveStreamConfig) -> Self {
+    pub fn new(config: AdaptiveStreamConfig) -> Self {
         let buffer_manager = AdaptiveBufferManager::new(&_config);
         let pattern_detector = PatternDetector::new();
         let performance_optimizer = StreamPerformanceOptimizer::new();
         let quality_monitor = StreamQualityMonitor::new();
 
         Self {
-            _config,
+            config,
             buffer_manager,
             pattern_detector,
             performance_optimizer,
@@ -703,7 +703,7 @@ impl AdaptiveStreamingEngine {
     }
 
     /// Detect seasonality (simplified)
-    fn detect_seasonality(&self, time_series: &[f64]) -> f64 {
+    fn detect_seasonality(&self, timeseries: &[f64]) -> f64 {
         if time_series.len() < 4 {
             return 0.0;
         }
@@ -785,7 +785,7 @@ impl AdaptiveStreamingEngine {
 
 // Implementation stubs for the complex subsystems
 impl AdaptiveBufferManager {
-    fn new(_config: &AdaptiveStreamConfig) -> Self {
+    fn new(config: &AdaptiveStreamConfig) -> Self {
         Self {
             primary_buffer: Arc::new(Mutex::new(VecDeque::new())),
             secondary_buffer: Arc::new(Mutex::new(VecDeque::new())),
@@ -820,7 +820,7 @@ impl AdaptiveBufferManager {
         }
     }
 
-    fn get_batch(&self, batch_size: usize) -> Result<Vec<StreamChunk>> {
+    fn get_batch(&self, batchsize: usize) -> Result<Vec<StreamChunk>> {
         if let Ok(mut buffer) = self.primary_buffer.lock() {
             let mut batch = Vec::new();
             for _ in 0..batch_size.min(buffer.len()) {
@@ -859,7 +859,7 @@ impl PatternDetector {
         }
     }
 
-    fn detect_patterns(&self_batch: &[StreamChunk]) -> Result<Vec<PatternSignature>> {
+    fn detect_patterns(selfbatch: &[StreamChunk]) -> Result<Vec<PatternSignature>> {
         // Placeholder implementation
         Ok(vec![PatternSignature {
             features: Array1::zeros(10),
@@ -889,7 +889,7 @@ impl StreamPerformanceOptimizer {
         }
     }
 
-    fn optimize_for_patterns(&self_patterns: &[PatternSignature]) -> Result<OptimizationConfig> {
+    fn optimize_for_patterns(selfpatterns: &[PatternSignature]) -> Result<OptimizationConfig> {
         if let Ok(config) = self.current_config.lock() {
             Ok(_config.clone())
         } else {
@@ -927,7 +927,7 @@ impl StreamQualityMonitor {
         }
     }
 
-    fn assess_quality(&self_results: &[Dataset]) -> Result<()> {
+    fn assess_quality(selfresults: &[Dataset]) -> Result<()> {
         // Placeholder implementation
         Ok(())
     }
@@ -1727,7 +1727,7 @@ impl AdaptiveNeuralNetwork {
     }
 
     /// Add new layer to network
-    fn add_layer(&mut self, size: usize, activation: ActivationFunction, layer_type: LayerType) {
+    fn add_layer(&mut self, size: usize, activation: ActivationFunction, layertype: LayerType) {
         if self.layers.len() < 2 {
             return;
         }
@@ -1748,7 +1748,7 @@ impl AdaptiveNeuralNetwork {
     }
 
     /// Modify layer size
-    fn modify_layer_size(&mut self, layer_idx: usize, new_size: usize) {
+    fn modify_layer_size(&mut self, layer_idx: usize, newsize: usize) {
         if layer_idx >= self.layers.len() || layer_idx == 0 || layer_idx == self.layers.len() - 1 {
             return; // Don't modify input or output layers
         }
@@ -1864,7 +1864,7 @@ impl NeuralLayer {
     }
 
     /// Update layer weights
-    fn update_weights(&mut self, learning_rate: f64, _momentum: f64) {
+    fn update_weights(&mut self, learning_rate: f64, momentum: f64) {
         // Simplified weight update (in real implementation, this would use gradients)
         let weight_update = Array2::fromshape_fn(self.weights.dim(), |_| {
             (rand::rng().random::<f64>() - 0.5) * learning_rate * 0.001
@@ -1881,7 +1881,7 @@ impl NeuralLayer {
     }
 
     /// Resize input dimension
-    fn resize_input(&mut self, new_input_size: usize) {
+    fn resize_input(&mut self, new_inputsize: usize) {
         let output_size = self.weights.nrows();
 
         // Create new weights matrix with different input _size
@@ -1924,7 +1924,7 @@ impl PerformancePredictionModel {
     }
 
     /// Predict future performance
-    fn predict(&self_horizon: Duration) -> Result<PerformancePredictionPoint> {
+    fn predict(&selfhorizon: Duration) -> Result<PerformancePredictionPoint> {
         if self.performance_history.is_empty() {
             return Ok(PerformancePredictionPoint {
                 features: Array1::zeros(1),
@@ -1971,7 +1971,7 @@ impl PerformancePredictionModel {
 /// Enhanced Adaptive Streaming Engine with Quantum and Neural Optimization
 impl AdaptiveStreamingEngine {
     /// Create advanced streaming engine with quantum and neural optimization
-    pub fn with_quantum_neural_optimization(_config: AdaptiveStreamConfig) -> Self {
+    pub fn with_quantum_neural_optimization(config: AdaptiveStreamConfig) -> Self {
         // In a full implementation, this would integrate:
         // - QuantumInspiredOptimizer for parameter optimization
         // - NeuralAdaptiveSystem for pattern learning

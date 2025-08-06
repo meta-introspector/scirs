@@ -64,7 +64,7 @@ pub enum FilterTypeParam {
 }
 
 impl From<FilterType> for FilterTypeParam {
-    fn from(_filter_type: FilterType) -> Self {
+    fn from(_filtertype: FilterType) -> Self {
         FilterTypeParam::Type(_filter_type)
     }
 }
@@ -139,8 +139,15 @@ pub enum FilterStability {
 
 /// Common validation functions for filter parameters
 pub mod validation {
+    use crate::error::{SignalError, SignalResult};
+    use crate::filter::{FilterType, FilterTypeParam};
+    use num_complex::Complex64;
+    use num_traits::{Float, NumCast};
+    use std::f64::consts::PI;
+    use std::fmt::Debug;
+
     /// Validate filter order
-    pub fn validate_order(_order: usize) -> SignalResult<()> {
+    pub fn validate_order(order: usize) -> SignalResult<()> {
         if _order == 0 {
             return Err(SignalError::ValueError(
                 "Filter _order must be greater than 0".to_string(),
@@ -150,12 +157,12 @@ pub mod validation {
     }
 
     /// Validate normalized cutoff frequency
-    pub fn validate_cutoff_frequency<T>(_cutoff: T) -> SignalResult<f64>
+    pub fn validate_cutoff_frequency<T>(cutoff: T) -> SignalResult<f64>
     where
         T: Float + NumCast + Debug,
     {
         let wn = num_traits::cast::cast::<T, f64>(_cutoff).ok_or_else(|| {
-            SignalError::ValueError(format!("Could not convert {:?} to f64", _cutoff))
+            SignalError::ValueError(format!("Could not convert {:?} to f64", cutoff))
         })?;
 
         if wn <= 0.0 || wn >= 1.0 {
@@ -168,7 +175,7 @@ pub mod validation {
     }
 
     /// Validate bandpass/bandstop frequency pairs
-    pub fn validate_band_frequencies(_low: f64, high: f64) -> SignalResult<()> {
+    pub fn validate_band_frequencies(low: f64, high: f64) -> SignalResult<()> {
         if _low <= 0.0 || high >= 1.0 || _low >= high {
             return Err(SignalError::ValueError(
                 "Invalid band frequencies: _low must be positive, high must be less than 1, and _low < high".to_string(),
@@ -178,7 +185,7 @@ pub mod validation {
     }
 
     /// Convert filter type parameter to FilterType enum
-    pub fn convert_filter_type(_filter_type_param: FilterTypeParam) -> SignalResult<FilterType> {
+    pub fn convert_filter_type(_filter_typeparam: FilterTypeParam) -> SignalResult<FilterType> {
         match _filter_type_param {
             FilterTypeParam::Type(t) => Ok(t),
             FilterTypeParam::String(s) => s.parse(),
@@ -188,34 +195,37 @@ pub mod validation {
 
 /// Common mathematical operations for filter design
 pub mod math {
+    use crate::filter::FilterType;
+    use num_complex::Complex64;
+    use std::f64::consts::PI;
 
     /// Pre-warp frequency for bilinear transform
     ///
     /// Pre-warps the digital frequency to compensate for the frequency warping
     /// effect of the bilinear transform.
-    pub fn prewarp_frequency(_digital_freq: f64) -> f64 {
+    pub fn prewarp_frequency(_digitalfreq: f64) -> f64 {
         (PI * _digital_freq / 2.0).tan()
     }
 
     /// Apply bilinear transform to convert analog pole to digital
     ///
     /// Transforms analog domain pole using bilinear transform: z = (2 + s) / (2 - s)
-    pub fn bilinear_pole_transform(_analog_pole: Complex64) -> Complex64 {
-        (2.0 + _analog_pole) / (2.0 - _analog_pole)
+    pub fn bilinear_pole_transform(_analogpole: Complex64) -> Complex64 {
+        (2.0 + analog_pole) / (2.0 - analog_pole)
     }
 
     /// Apply bilinear transform to convert analog zero to digital
     ///
     /// Transforms analog domain zero using bilinear transform: z = (2 + s) / (2 - s)
-    pub fn bilinear_zero_transform(_analog_zero: Complex64) -> Complex64 {
-        (2.0 + _analog_zero) / (2.0 - _analog_zero)
+    pub fn bilinear_zero_transform(_analogzero: Complex64) -> Complex64 {
+        (2.0 + analog_zero) / (2.0 - analog_zero)
     }
 
     /// Calculate poles for analog Butterworth prototype
     ///
     /// Generates the poles for an analog Butterworth lowpass prototype filter
     /// of the specified order.
-    pub fn butterworth_poles(_order: usize) -> Vec<Complex64> {
+    pub fn butterworth_poles(order: usize) -> Vec<Complex64> {
         let mut poles = Vec::with_capacity(_order);
         for k in 0.._order {
             let angle = PI * (2.0 * k as f64 + _order as f64 + 1.0) / (2.0 * _order as f64);
@@ -230,7 +240,7 @@ pub mod math {
     ///
     /// Adds appropriate zeros in the digital domain based on the filter type
     /// to complete the bilinear transform process.
-    pub fn add_digital_zeros(_filter_type: FilterType, order: usize) -> Vec<Complex64> {
+    pub fn add_digital_zeros(_filtertype: FilterType, order: usize) -> Vec<Complex64> {
         let mut digital_zeros = Vec::new();
 
         match _filter_type {

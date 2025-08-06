@@ -187,7 +187,7 @@ pub struct ShamirSecretSharing<T: Float> {
 
 impl<T: Float + Send + Sync> ShamirSecretSharing<T> {
     /// Create new secret sharing instance
-    pub fn new(threshold: usize, num_shares: usize) -> Self {
+    pub fn new(threshold: usize, numshares: usize) -> Self {
         // Use a large prime for field arithmetic
         let prime_field = 2u128.pow(127) - 1; // Mersenne prime
 
@@ -407,7 +407,8 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> CryptographicAggregator<T>
             verification_data: self
                 .verification_params
                 .generate_verification_data(aggregate)?,
-            timestamp: std::time::SystemTime::now(), _phantom: std::marker::PhantomData,
+            timestamp: std::time::SystemTime::now(),
+            _phantom: std::marker::PhantomData,
         };
 
         self.aggregation_proofs.push(proof.clone());
@@ -531,7 +532,7 @@ impl<T: Float + Send + Sync> ProofParameters<T> {
         let generators: Vec<T> = (0..16)
             .map(|_| T::from(rng.gen_range(0.0..1.0)).unwrap())
             .collect();
-        let system_params: Vec<u8> = (0..128).map(|_| rng.random_range(0, 255)).collect();
+        let system_params: Vec<u8> = (0..128).map(|_| rng.gen_range(0..255)).collect();
 
         Self {
             generators,
@@ -675,7 +676,8 @@ impl<T: Float + Send + Sync> HomomorphicParameters<T> {
             .collect();
 
         Self {
-            security_level: 128, noise_params,
+            security_level: 128,
+            noise_params,
             modulus: 2u128.pow(64) - 1,
         }
     }
@@ -724,7 +726,8 @@ impl<T: Float + Send + Sync> ZKProofSystem<T> {
             statement: format!("Computed {} on input", computation),
             witness: self.generate_witness(input, output)?,
             proof_data: self.generate_proof_data(input, output)?,
-            verification_key: self.crs.clone(), _phantom: std::marker::PhantomData,
+            verification_key: self.crs.clone(),
+            _phantom: std::marker::PhantomData,
         };
 
         Ok(proof)
@@ -789,7 +792,8 @@ impl<T: Float + Send + Sync> ZKProofParameters<T> {
             .collect();
 
         Self {
-            security_param: 128, proof_type: ZKProofType::SNARK,
+            security_param: 128,
+            proof_type: ZKProofType::SNARK,
             circuit_params,
         }
     }
@@ -1032,7 +1036,8 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> SMPCCoordinator<T> {
 
     /// Secure weighted sum computation
     fn secure_weighted_sum(
-        &self, _shared_inputs: &HashMap<String, Vec<(usize, T)>>,
+        &self,
+        _shared_inputs: &HashMap<String, Vec<(usize, T)>>,
     ) -> Result<Vec<(usize, T)>> {
         // Placeholder for weighted sum implementation
         Err(OptimError::InvalidConfig(
@@ -1042,7 +1047,8 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> SMPCCoordinator<T> {
 
     /// Secure custom computation
     fn secure_custom_computation(
-        &self, _shared_inputs: &HashMap<String, Vec<(usize, T)>>,
+        &self,
+        _shared_inputs: &HashMap<String, Vec<(usize, T)>>,
     ) -> Result<Vec<(usize, T)>> {
         // Placeholder for custom computation implementation
         Err(OptimError::InvalidConfig(

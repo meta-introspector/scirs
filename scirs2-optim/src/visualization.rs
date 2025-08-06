@@ -103,7 +103,7 @@ pub struct OptimizationMetric {
 
 impl OptimizationMetric {
     /// Create new metric tracker
-    pub fn new(name: String, higher_is_better: bool, units: String) -> Self {
+    pub fn new(name: String, higher_isbetter: bool, units: String) -> Self {
         Self {
             name,
             values: VecDeque::new(),
@@ -157,7 +157,7 @@ impl OptimizationMetric {
     }
 
     /// Get recent improvement
-    pub fn get_recent_improvement(&self, window_size: usize) -> Option<f64> {
+    pub fn get_recent_improvement(&self, windowsize: usize) -> Option<f64> {
         if self.values.len() < window_size * 2 {
             return None;
         }
@@ -425,7 +425,7 @@ impl OptimizationVisualizer {
     }
 
     /// Add or update a metric
-    pub fn add_metric(&mut self, name: String, value: f64, higher_is_better: bool, units: String) {
+    pub fn add_metric(&mut self, name: String, value: f64, higher_isbetter: bool, units: String) {
         let metric = self
             .metrics
             .entry(name.clone())
@@ -435,7 +435,7 @@ impl OptimizationVisualizer {
     }
 
     /// Set target value for a metric
-    pub fn set_target(&mut self, metric_name: &str, target: f64) {
+    pub fn set_target(&mut self, metricname: &str, target: f64) {
         if let Some(metric) = self.metrics.get_mut(metric_name) {
             metric.target = Some(target);
         }
@@ -454,7 +454,7 @@ impl OptimizationVisualizer {
     }
 
     /// Create loss curve plot
-    pub fn plot_loss_curve(&self, metric_name: &str) -> Result<String> {
+    pub fn plot_loss_curve(&self, metricname: &str) -> Result<String> {
         let metric = self.metrics.get(metric_name).ok_or_else(|| {
             OptimError::InvalidConfig(format!("Metric '{metric_name}' not found"))
         })?;
@@ -496,7 +496,7 @@ impl OptimizationVisualizer {
     }
 
     /// Create optimizer comparison plot
-    pub fn plot_optimizer_comparison(&self, metric_name: &str) -> Result<String> {
+    pub fn plot_optimizer_comparison(&self, metricname: &str) -> Result<String> {
         if self.comparisons.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "No optimizer comparisons available".to_string(),
@@ -898,7 +898,7 @@ impl OptimizationVisualizer {
     }
 
     /// Save plot to file
-    fn save_plot(&self, plot_data: &str, filename: &str) -> Result<String> {
+    fn save_plot(&self, plotdata: &str, filename: &str) -> Result<String> {
         let extension = if self.config.interactive_html {
             "html"
         } else {

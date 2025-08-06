@@ -11,7 +11,7 @@ use crate::tensor::{AsTensor, Tensor};
 use crate::Float;
 
 // Import internal operation modules
-use crate::tensor__ops::{activation_ops, scalar, shape, xent_ops};
+use crate::tensor_ops::{activation_ops, scalar, shape, xent_ops};
 
 /// Elementwise logistic sigmoid function.
 ///
@@ -20,7 +20,7 @@ use crate::tensor__ops::{activation_ops, scalar, shape, xent_ops};
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::sigmoid;
+/// use ag::tensor_ops::activation::sigmoid;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![0., 1., -1.], g);
@@ -48,7 +48,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::tanh;
+/// use ag::tensor_ops::activation::tanh;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![0., 1., -1.], g);
@@ -78,7 +78,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::relu;
+/// use ag::tensor_ops::activation::relu;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![-1., 0., 1., 2.], g);
@@ -110,7 +110,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::leaky_relu;
+/// use ag::tensor_ops::activation::leaky_relu;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![-1., 0., 1., 2.], g);
@@ -138,7 +138,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::elu;
+/// use ag::tensor_ops::activation::elu;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![-1., 0., 1., 2.], g);
@@ -168,7 +168,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::softplus;
+/// use ag::tensor_ops::activation::softplus;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![0., 1., -1.], g);
@@ -199,7 +199,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::swish;
+/// use ag::tensor_ops::activation::swish;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![0., 1., -1.], g);
@@ -230,7 +230,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::gelu;
+/// use ag::tensor_ops::activation::gelu;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![0., 1., -1.], g);
@@ -261,7 +261,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::mish;
+/// use ag::tensor_ops::activation::mish;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![0., 1., -1.], g);
@@ -292,7 +292,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::softmax;
+/// use ag::tensor_ops::activation::softmax;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2., 3.], [4., 5., 6.]], g);
@@ -323,7 +323,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::log_softmax;
+/// use ag::tensor_ops::activation::log_softmax;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2., 3.], [4., 5., 6.]], g);
@@ -364,7 +364,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::sigmoid_cross_entropy;
+/// use ag::tensor_ops::activation::sigmoid_cross_entropy;
 ///
 /// ag::run(|g| {
 ///    let logits = ag::tensor_ops::convert_to_tensor(array![0.5, -0.5, 1.0], g);
@@ -407,7 +407,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::softmax_cross_entropy;
+/// use ag::tensor_ops::activation::softmax_cross_entropy;
 ///
 /// ag::run(|g| {
 ///    let logits = ag::tensor_ops::convert_to_tensor(array![[1., 2., 3.], [4., 5., 6.]], g);
@@ -449,7 +449,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::sparse_softmax_cross_entropy;
+/// use ag::tensor_ops::activation::sparse_softmax_cross_entropy;
 ///
 /// ag::run(|g| {
 ///    let logits = ag::tensor_ops::convert_to_tensor(array![[1., 2., 3.], [4., 5., 6.]], g);
@@ -483,7 +483,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::mean_squared_error;
+/// use ag::tensor_ops::activation::mean_squared_error;
 ///
 /// ag::run(|g| {
 ///    let predictions = ag::tensor_ops::convert_to_tensor(array![1., 2., 3.], g);
@@ -512,7 +512,7 @@ where
 ///
 /// ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::normalize;
+/// use ag::tensor_ops::activation::normalize;
 ///
 /// ag::run(|g| {
 ///    let x: ag::Tensor<f32> = ag::tensor_ops::standard_normal(&[3, 4], g);
@@ -532,9 +532,9 @@ where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,
 {
-    let _x = _x.as_ref();
-    let g = _x.graph();
-    let _axes = _axes.as_tensor(g);
+    let _x = x.as_ref();
+    let g = x.graph();
+    let _axes = axes.as_tensor(g);
     let mean = crate::tensor_ops::reduction::reduce_mean(_x, &_axes, true);
     let centered = _x - mean;
     let variance = crate::tensor_ops::reduction::reduce_mean(
@@ -556,7 +556,7 @@ where
 ///
 /// ```
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::batch_norm;
+/// use ag::tensor_ops::activation::batch_norm;
 /// use ag::prelude::*;
 ///
 /// let mut env = ag::VariableEnvironment::new();
@@ -589,7 +589,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::hard_sigmoid;
+/// use ag::tensor_ops::activation::hard_sigmoid;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![-2., 0., 2.], g);
@@ -624,7 +624,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::hard_tanh;
+/// use ag::tensor_ops::activation::hard_tanh;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![-2., 0., 2.], g);
@@ -654,7 +654,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor__ops::activation::relu6;
+/// use ag::tensor_ops::activation::relu6;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![-1., 3., 8.], g);
@@ -678,7 +678,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tensor__ops::convert_to_tensor;
+    use crate::tensor_ops::convert_to_tensor;
     use approx::assert_relative_eq;
     use ndarray::array;
 

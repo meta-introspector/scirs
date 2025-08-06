@@ -36,14 +36,14 @@ impl<F: Float + Debug> Adagrad<F> {
     ///
     /// # Arguments
     /// * `learning_rate` - Learning rate
-    pub fn new(_learning_rate: F) -> Self {
+    pub fn new(_learningrate: F) -> Self {
         // Default values: epsilon=1e-10, weight_decay=0.0
         let epsilon = F::from(1e-10).unwrap_or(F::zero());
         let weight_decay = F::zero();
         
         Self {
             inner: optim, optimizers: Adagrad::new_with_config(
-                _learning_rate,
+                learning_rate,
                 epsilon,
                 weight_decay
             ),
@@ -54,7 +54,7 @@ impl<F: Float + Debug> Adagrad<F> {
     /// Create a new Adagrad optimizer with custom parameters
     /// * `epsilon` - Small constant for numerical stability
     /// * `weight_decay` - Weight decay (L2 regularization)
-    pub fn new_with_config(_learning_rate: F, epsilon: F, weight_decay: F) -> Self {
+    pub fn new_with_config(_learning_rate: F, epsilon: F, weightdecay: F) -> Self {
     /// Get epsilon parameter
     pub fn get_epsilon(&self) -> F {
         self.inner.get_epsilon()
@@ -66,7 +66,7 @@ impl<F: Float + Debug> Adagrad<F> {
     pub fn get_weight_decay(&self) -> F {
         self.weight_decay
     /// Set weight decay parameter
-    pub fn set_weight_decay(&mut self, weight_decay: F) -> &mut Self {
+    pub fn set_weight_decay(&mut self, weightdecay: F) -> &mut Self {
         self.weight_decay = weight_decay;
         self.inner.set_weight_decay(weight_decay);
     /// Reset the optimizer state

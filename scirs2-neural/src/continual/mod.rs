@@ -105,10 +105,10 @@ pub struct ContinualLearner {
     current_task: usize,
 impl ContinualLearner {
     /// Create a new continual learner
-    pub fn new(_config: ContinualConfig, base_model: Sequential<f32>) -> Result<Self> {
+    pub fn new(_config: ContinualConfig, basemodel: Sequential<f32>) -> Result<Self> {
         let memory_bank = MemoryBank::new(_config.memory_size);
         Ok(Self {
-            _config,
+            config,
             base_model,
             task_models: Vec::new(),
             memory_bank,
@@ -258,8 +258,8 @@ struct TaskMemory {
     labels: Array1<usize>,
 struct MemorySamples {
 impl MemoryBank {
-    fn new(_capacity: usize) -> Self {
-            _capacity,
+    fn new(capacity: usize) -> Self {
+            capacity,
             task_memories: HashMap::new(),
     fn add_task_data(
         let samples_per_task = self._capacity / (self.task_memories.len() + 1);
@@ -279,7 +279,7 @@ impl MemoryBank {
                 labels: selected_labels,
             },
         );
-    fn sample(&self, num_samples: usize) -> Result<MemorySamples> {
+    fn sample(&self, numsamples: usize) -> Result<MemorySamples> {
         if self.task_memories.is_empty() {
             return Ok(MemorySamples {
                 data: Array2::zeros((0, 1)),
@@ -319,7 +319,7 @@ pub struct MultiTaskLearner {
     task_uncertainties: Option<HashMap<String, f32>>,
 impl MultiTaskLearner {
     /// Create a new multi-task learner
-    pub fn new(_config: MultiTaskConfig, input_dim: usize) -> Result<Self> {
+    pub fn new(_config: MultiTaskConfig, inputdim: usize) -> Result<Self> {
         let shared_backbone = SharedBackbone::new(input_dim, &_config.shared_layers)?;
         let mut task_heads = HashMap::new();
         for task_name in &_config.task_names {
@@ -329,12 +329,12 @@ impl MultiTaskLearner {
                 .cloned()
                 .unwrap_or_else(|| vec![128, 64]);
             let head = TaskSpecificHead::new(
-                _config.shared_layers.last().copied().unwrap_or(256),
+                config.shared_layers.last().copied().unwrap_or(256),
                 &task_layers,
                 10, // Placeholder output dim
             )?;
             task_heads.insert(task_name.clone(), head);
-        let task_uncertainties = if _config.uncertainty_weighting {
+        let task_uncertainties = if config.uncertainty_weighting {
             Some(
                 _config
                     .task_names
@@ -381,14 +381,14 @@ impl MultiTaskLearner {
             task_accuracies,
             task_weights: self.get_current_task_weights(),
     /// Compute weighted loss across tasks
-    fn compute_weighted_loss(&self, task_losses: &HashMap<String, f32>) -> Result<f32> {
+    fn compute_weighted_loss(&self, tasklosses: &HashMap<String, f32>) -> Result<f32> {
         let weights = self.get_current_task_weights();
         for (task_name, &loss) in task_losses {
             let weight = weights.get(task_name).unwrap_or(&1.0);
             total_loss += weight * loss;
         Ok(total_loss)
     /// Update task uncertainties for uncertainty weighting
-    fn update_task_uncertainties(&mut self, task_losses: &HashMap<String, f32>) -> Result<()> {
+    fn update_task_uncertainties(&mut self, tasklosses: &HashMap<String, f32>) -> Result<()> {
         if let Some(ref mut uncertainties) = self.task_uncertainties {
             for (task_name, &loss) in task_losses {
                 // Simple exponential moving average
@@ -503,7 +503,7 @@ impl MetaContinualLearner {
             outer_lr,
             meta_batch: None,
     /// Meta-train on a batch of tasks
-    pub fn meta_train(&mut self, meta_batch: MetaBatch) -> Result<MetaTrainingResult> {
+    pub fn meta_train(&mut self, metabatch: MetaBatch) -> Result<MetaTrainingResult> {
         let mut total_meta_loss = 0.0;
         let mut task_losses = Vec::new();
         // For each task in the meta-batch
@@ -563,7 +563,7 @@ impl MetaContinualLearner {
         query_labels: &Array1<usize>,
         self.compute_task_loss_with_params(adapted_params, query_data, query_labels)
     /// Update meta-parameters (outer loop)
-    fn outer_loop_update(&mut self, meta_loss: f32) -> Result<()> {
+    fn outer_loop_update(&mut self, metaloss: f32) -> Result<()> {
         // Simplified meta-gradient update
         // In practice, would compute gradients w.r.t. meta-parameters
     /// Get current meta-parameters
@@ -680,10 +680,10 @@ pub enum EdgeType {
     Hierarchy,
     Temporal,
 impl AdvancedMemoryManager {
-    pub fn new(_capacity: usize, consolidation_strategy: ConsolidationStrategy) -> Self {
+    pub fn new(_capacity: usize, consolidationstrategy: ConsolidationStrategy) -> Self {
             core_memory: CoreMemoryBuffer {
                 samples: Vec::new(),
-                _capacity,
+                capacity,
                 current_size: 0,
             episodic_memory: EpisodicMemoryBuffer {
                 episodes: Vec::new(),
@@ -834,7 +834,7 @@ impl AdvancedMemoryManager {
         ep1.context.task_id == ep2.context.task_id && 
         (ep1.context.difficulty - ep2.context.difficulty).abs() < 0.2
     /// Sample from memory for replay
-    pub fn sample_for_replay(&self, num_samples: usize) -> Result<(Array2<f32>, Array1<usize>)> {
+    pub fn sample_for_replay(&self, numsamples: usize) -> Result<(Array2<f32>, Array1<usize>)> {
         if self.core_memory.samples.is_empty() {
             return Ok((Array2::zeros((0, 1)), Array1::zeros(0)));
         let actual_samples = num_samples.min(self.core_memory.samples.len());

@@ -30,8 +30,8 @@ struct SyntheticImageDataset {
 }
 impl SyntheticImageDataset {
     /// Create a new synthetic dataset
-    fn new(_num_samples: usize, num_classes: usize, image_size: (usize, usize)) -> Self {
-        let mut rng = SmallRng::seed_from_u64(42);
+    fn new(_num_samples: usize, num_classes: usize, imagesize: (usize, usize)) -> Self {
+        let mut rng = SmallRng::from_seed([42; 32]);
         let channels = 3; // RGB images
         let mut images = Array4::zeros((_num_samples, channels, image_size.0, image_size.1));
         let mut labels = Vec::with_capacity(_num_samples);
@@ -71,7 +71,7 @@ impl SyntheticImageDataset {
             num_classes,
     }
     /// Split dataset into train and validation sets
-    fn train_val_split(&self, val_ratio: f32) -> (Self, Self) {
+    fn train_val_split(&self, valratio: f32) -> (Self, Self) {
         let total_samples = self.len();
         let val_size = (total_samples as f32 * val_ratio) as usize;
         let train_size = total_samples - val_size;
@@ -152,11 +152,11 @@ fn create_training_config() -> TrainingConfig {
         num_workers: 0,
 /// Calculate accuracy from predictions and targets
 #[allow(dead_code)]
-fn calculate_accuracy(_predictions: &ArrayD<f32>, targets: &ArrayD<f32>) -> f32 {
-    let batch_size = _predictions.shape()[0];
+fn calculate_accuracy(predictions: &ArrayD<f32>, targets: &ArrayD<f32>) -> f32 {
+    let batch_size = predictions.shape()[0];
     let mut correct = 0;
     for i in 0..batch_size {
-        let pred_row = _predictions.slice(s![i, ..]);
+        let pred_row = predictions.slice(s![i, ..]);
         let target_row = targets.slice(s![i, ..]);
         // Find argmax for prediction and target
         let pred_class = pred_row
@@ -175,7 +175,7 @@ fn train_image_classifier() -> Result<()> {
     println!("🚀 Starting Image Classification Training Example");
     println!("{}", "=".repeat(60));
     // Set up reproducible random number generator
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Dataset parameters
     let num_samples = 1000;
     let num_classes = 5;
@@ -305,7 +305,7 @@ fn demonstrate_augmentation() -> Result<()> {
 #[allow(dead_code)]
 fn demonstrate_model_persistence() -> Result<()> {
     println!("\n💾 Model Persistence Demo:");
-    let mut rng = SmallRng::seed_from_u64(123);
+    let mut rng = SmallRng::from_seed(123);
     // Create a simple model
     let model = build_cnn_model(3, 5, &mut rng)?;
     // Save model model.params(.iter().map(|p| p.len()).sum::<usize>()

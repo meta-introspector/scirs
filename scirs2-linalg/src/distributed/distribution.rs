@@ -52,7 +52,7 @@ pub struct IndexRange {
 
 impl IndexRange {
     /// Create new index range
-    pub fn new(_row_start: usize, row_end: usize, col_start: usize, col_end: usize) -> Self {
+    pub fn new(_row_start: usize, row_end: usize, col_start: usize, colend: usize) -> Self {
         Self {
             rows: (_row_start, row_end),
             columns: (col_start, col_end),
@@ -296,7 +296,7 @@ impl DataDistribution {
     }
     
     /// Convert global indices to local indices
-    pub fn global_to_local(&self, global_row: usize, global_col: usize) -> Option<(usize, usize)> {
+    pub fn global_to_local(&self, global_row: usize, globalcol: usize) -> Option<(usize, usize)> {
         if !self.owns(global_row, global_col) {
             return None;
         }
@@ -320,7 +320,7 @@ impl DataDistribution {
     }
     
     /// Convert local indices to global indices
-    pub fn local_to_global(&self, local_row: usize, local_col: usize) -> (usize, usize) {
+    pub fn local_to_global(&self, local_row: usize, localcol: usize) -> (usize, usize) {
         match self.strategy {
             DistributionStrategy::RowWise => {
                 (local_row + self.owned_indices.rows.0, local_col)
@@ -348,7 +348,7 @@ pub struct LoadBalancer {
 
 impl LoadBalancer {
     /// Create a new load balancer
-    pub fn new(_config: &super::DistributedConfig) -> LinalgResult<Self> {
+    pub fn new(config: &super::DistributedConfig) -> LinalgResult<Self> {
         let mut node_capabilities = HashMap::new();
         for rank in 0.._config.num_nodes {
             // Assume equal capabilities initially
@@ -363,7 +363,7 @@ impl LoadBalancer {
     }
     
     /// Update node capability based on performance measurement
-    pub fn update_capability(&mut self, node_rank: usize, performance_metric: f64) {
+    pub fn update_capability(&mut self, node_rank: usize, performancemetric: f64) {
         // Add to performance history
         self.performance_history
             .entry(node_rank)
@@ -382,7 +382,7 @@ impl LoadBalancer {
     }
     
     /// Calculate optimal workload distribution
-    pub fn calculate_workload_distribution(&self, total_work: f64) -> HashMap<usize, f64> {
+    pub fn calculate_workload_distribution(&self, totalwork: f64) -> HashMap<usize, f64> {
         let total_capability: f64 = self.node_capabilities.values().sum();
         
         if total_capability == 0.0 {
@@ -438,7 +438,7 @@ impl LoadBalancer {
     }
     
     /// Record current workload for a node
-    pub fn record_workload(&mut self, node_rank: usize, workload: f64) {
+    pub fn record_workload(&mut self, noderank: usize, workload: f64) {
         self.workload_distribution.insert(node_rank, workload);
     }
     
@@ -540,7 +540,7 @@ impl MatrixPartitioner {
     }
     
     /// Get index range for a specific node (helper method)
-    fn get_node_range(_node_rank: usize, distribution: &DataDistribution) -> Option<IndexRange> {
+    fn get_node_range(_noderank: usize, distribution: &DataDistribution) -> Option<IndexRange> {
         // This is a simplified implementation
         // In practice, we'd need to reconstruct the range from the distribution strategy
         Some(distribution.owned_indices.clone())
@@ -611,7 +611,7 @@ mod tests {
     
     #[test]
     fn test_matrix_partitioner() {
-        let matrix = Array2::fromshape_fn((10, 8), |(i, j)| (i * 8 + j) as f64);
+        let matrix = Array2::from_shape_fn((10, 8), |(i, j)| (i * 8 + j) as f64);
         let distribution = DataDistribution::row_wise((10, 8), 2, 0).unwrap();
         
         let partition = MatrixPartitioner::partition(&matrix.view(), &distribution).unwrap();

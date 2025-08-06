@@ -33,23 +33,23 @@ impl NormKernel {
     }
 
     /// Create a new norm kernel with the specified norm type
-    pub fn with_type(norm_type: NormType) -> Self {
+    pub fn with_type(normtype: NormType) -> Self {
         let metadata = KernelMetadata {
             workgroup_size: [256, 1, 1],
             local_memory_usage: 1024, // 256 * sizeof(float)
             supports_tensor_cores: false,
-            operation_type: OperationType::Balanced,
+            operationtype: OperationType::Balanced,
             backend_metadata: HashMap::new(),
         };
 
-        let name = match norm_type {
+        let name = match normtype {
             NormType::L1 => "norm_l1",
             NormType::L2 => "norm_l2",
             NormType::Inf => "norm_inf",
         };
 
         let (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source) =
-            Self::generate_kernels(norm_type);
+            Self::generate_kernels(normtype);
 
         Self {
             base: BaseKernel::new(
@@ -61,13 +61,13 @@ impl NormKernel {
                 &opencl_source,
                 metadata,
             ),
-            norm_type,
+            norm_type: normtype,
         }
     }
 
     /// Get kernel sources for different backends and norm types
-    fn generate_kernels(norm_type: NormType) -> (String, String, String, String, String) {
-        match norm_type {
+    fn generate_kernels(normtype: NormType) -> (String, String, String, String, String) {
+        match normtype {
             NormType::L2 => {
                 // CUDA kernel for L2 norm
                 let cuda_source = r#"
@@ -710,7 +710,7 @@ impl GpuKernel for NormKernel {
     }
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
-        matches!(params.data_type, DataType::Float32 | DataType::Float64)
+        matches!(params.datatype, DataType::Float32 | DataType::Float64)
     }
 
     fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {

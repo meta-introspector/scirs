@@ -146,7 +146,7 @@ impl MLSentimentAnalyzer {
     }
 
     /// Evaluate on test dataset
-    pub fn evaluate(&self, test_dataset: &TextDataset) -> Result<EvaluationMetrics> {
+    pub fn evaluate(&self, testdataset: &TextDataset) -> Result<EvaluationMetrics> {
         let texts: Vec<&str> = test_dataset.texts.iter().map(|s| s.as_str()).collect();
         let features = self.vectorizer.transform_batch(&texts)?;
 
@@ -356,7 +356,7 @@ impl MLSentimentAnalyzer {
         Ok(probabilities)
     }
 
-    fn calculate_accuracy(&self, predictions: &[i32], true_labels: &[i32]) -> f64 {
+    fn calculate_accuracy(&self, predictions: &[i32], truelabels: &[i32]) -> f64 {
         let correct = predictions
             .iter()
             .zip(true_labels.iter())
@@ -366,7 +366,7 @@ impl MLSentimentAnalyzer {
         correct as f64 / predictions.len() as f64
     }
 
-    fn confusion_matrix(&self, predictions: &[i32], true_labels: &[i32]) -> Array2<i32> {
+    fn confusion_matrix(&self, predictions: &[i32], truelabels: &[i32]) -> Array2<i32> {
         let n_classes = self.label_map.len();
         let mut matrix = Array2::zeros((n_classes, n_classes));
 

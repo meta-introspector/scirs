@@ -29,7 +29,7 @@ impl AxpyKernel {
             workgroup_size: [256, 1, 1],
             local_memory_usage: 0,
             supports_tensor_cores: false,
-            operation_type: OperationType::MemoryIntensive,
+            operationtype: OperationType::MemoryIntensive,
             backend_metadata: HashMap::new(),
         };
 
@@ -151,7 +151,7 @@ extern "C" __global__ void axpy(
     }
 
     /// Create a specialized version of the kernel with a hardcoded alpha value
-    pub fn with_alpha(_alpha: f32) -> Box<dyn GpuKernel> {
+    pub fn with_alpha(alpha: f32) -> Box<dyn GpuKernel> {
         // In a full implementation, we'd generate a specialized kernel with
         // the _alpha value hardcoded for better performance
         Box::new(Self::new())
@@ -173,7 +173,7 @@ impl GpuKernel for AxpyKernel {
 
     fn can_specialize(&self, params: &KernelParams) -> bool {
         matches!(
-            params.data_type,
+            params.datatype,
             DataType::Float32 | DataType::Float64 | DataType::Float16
         )
     }

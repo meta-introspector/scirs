@@ -173,22 +173,22 @@ fn display_ecosystem_summary(result: EcosystemTestResult) {
     );
 
     println!("\n🔗 COMPATIBILITY ANALYSIS");
-    if !result.compatibility_matrix.failed_pairs.is_empty() {
+    if !result.compatibilitymatrix.failed_pairs.is_empty() {
         println!(
             "   ❌ Failed Compatibility Pairs: {}",
-            result.compatibility_matrix.failed_pairs.len()
+            result.compatibilitymatrix.failed_pairs.len()
         );
-        for (mod1, mod2, reason) in &result.compatibility_matrix.failed_pairs {
+        for (mod1, mod2, reason) in &result.compatibilitymatrix.failed_pairs {
             println!("      • {} ↔ {}: {}", mod1, mod2, reason);
         }
     } else {
         println!("   ✅ All module pairs compatible");
     }
 
-    if !result.compatibility_matrix.warning_pairs.is_empty() {
+    if !result.compatibilitymatrix.warning_pairs.is_empty() {
         println!(
             "   ⚠️  Warning Compatibility Pairs: {}",
-            result.compatibility_matrix.warning_pairs.len()
+            result.compatibilitymatrix.warning_pairs.len()
         );
     }
 
@@ -244,10 +244,10 @@ fn display_ecosystem_summary(result: EcosystemTestResult) {
         }
     );
 
-    if !result.api_stability.breaking_changes.is_empty() {
+    if !result.api_stability.breakingchanges.is_empty() {
         println!(
             "   ⚠️  Breaking Changes: {}",
-            result.api_stability.breaking_changes.len()
+            result.api_stability.breakingchanges.len()
         );
     }
 

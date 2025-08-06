@@ -4,7 +4,7 @@
 //! to minimize the sum of distances between adjacent leaves, improving
 //! the visual interpretability of hierarchical clustering results.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -30,9 +30,9 @@ struct TreeNode {
 
 impl TreeNode {
     /// Create a new leaf node
-    fn new_leaf(_id: usize) -> Self {
+    fn new_leaf(id: usize) -> Self {
         TreeNode {
-            _id,
+            id,
             left: None,
             right: None,
             height: 0.0,
@@ -41,12 +41,12 @@ impl TreeNode {
     }
 
     /// Create a new internal node
-    fn new_internal(_id: usize, left: TreeNode, right: TreeNode, height: f64) -> Self {
+    fn new_internal(id: usize, left: TreeNode, right: TreeNode, height: f64) -> Self {
         let mut leaves = left.leaves.clone();
         leaves.extend(right.leaves.iter());
 
         TreeNode {
-            _id,
+            id,
             left: Some(Box::new(left)),
             right: Some(Box::new(right)),
             height,

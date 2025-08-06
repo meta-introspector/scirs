@@ -147,7 +147,7 @@ fn demonstrate_backend_comparison() -> Result<(), Box<dyn std::error::Error>> {
     // Test different backends
     let backends = vec![
         ("CPU Fallback", GpuBackend::Cpu),
-        ("CUDA", GpuBackend::Cuda { device_id: 0 }),
+        ("CUDA", GpuBackend::Cuda { deviceid: 0 }),
         (
             "OpenCL",
             GpuBackend::OpenCl {

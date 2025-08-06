@@ -216,11 +216,11 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for NuclearNormOp {
 
 /// Check if matrix is diagonal
 #[allow(dead_code)]
-fn is_diagonal_matrix<F: Float>(_matrix: &ArrayView2<F>) -> bool {
-    let (m, n) = _matrix.dim();
+fn is_diagonal_matrix<F: Float>(matrix: &ArrayView2<F>) -> bool {
+    let (m, n) = matrix.dim();
     for i in 0..m {
         for j in 0..n {
-            if i != j && _matrix[[i, j]] != F::zero() {
+            if i != j && matrix[[i, j]] != F::zero() {
                 return false;
             }
         }
@@ -230,13 +230,13 @@ fn is_diagonal_matrix<F: Float>(_matrix: &ArrayView2<F>) -> bool {
 
 /// Compute nuclear norm for diagonal matrix
 #[allow(dead_code)]
-fn compute_diagonal_nuclear_norm<F: Float>(_matrix: &ArrayView2<F>) -> F {
-    let (m, n) = _matrix.dim();
+fn compute_diagonal_nuclear_norm<F: Float>(matrix: &ArrayView2<F>) -> F {
+    let (m, n) = matrix.dim();
     let mut sum = F::zero();
     let min_dim = m.min(n);
 
     for i in 0..min_dim {
-        sum += _matrix[[i, i]].abs();
+        sum += matrix[[i, i]].abs();
     }
 
     sum
@@ -445,8 +445,8 @@ fn compute_nuclear_norm_gradient<F: Float + ndarray::ScalarOperand>(
 
 /// Improved nuclear norm computation using better SVD approximation
 #[allow(dead_code)]
-fn compute_nuclear_norm_improved<F: Float + ndarray::ScalarOperand>(_matrix: &ArrayView2<F>) -> F {
-    let (m, n) = _matrix.dim();
+fn compute_nuclear_norm_improved<F: Float + ndarray::ScalarOperand>(matrix: &ArrayView2<F>) -> F {
+    let (m, n) = matrix.dim();
     let min_dim = m.min(n);
 
     // For small matrices, use a simple approximation
@@ -454,13 +454,13 @@ fn compute_nuclear_norm_improved<F: Float + ndarray::ScalarOperand>(_matrix: &Ar
         // Sum of absolute values of diagonal elements as approximation
         let mut nuclear_norm = F::zero();
         for i in 0..min_dim {
-            nuclear_norm += _matrix[[i, i]].abs();
+            nuclear_norm += matrix[[i, i]].abs();
         }
         return nuclear_norm;
     }
 
     // For larger matrices, use power iteration to estimate singular values
-    let mut working_matrix = _matrix.to_owned();
+    let mut working_matrix = matrix.to_owned();
     let mut nuclear_norm = F::zero();
     let max_rank = min_dim.min(5); // Limit iterations for performance
 
@@ -560,8 +560,8 @@ fn compute_nuclear_norm_gradient_improved<F: Float + ndarray::ScalarOperand>(
 // Public API functions
 
 #[allow(dead_code)]
-pub fn frobenius_norm<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _matrix.graph();
+pub fn frobenius_norm<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = matrix.graph();
     Tensor::builder(g)
         .append_input(_matrix, false)
         .build(FrobeniusNormOp)

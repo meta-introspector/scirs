@@ -20,12 +20,12 @@ fn sse_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalRe
 
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
-unsafe fn sse_autocorrelation(signal: &[f64], max_lag: usize) -> SignalResult<Vec<f64>> {
+unsafe fn sse_autocorrelation(signal: &[f64], maxlag: usize) -> SignalResult<Vec<f64>> {
     super::scalar_autocorrelation(signal, max_lag)
 }
 
 #[cfg(not(target_arch = "x86_64"))]
-fn sse_autocorrelation(signal: &[f64], max_lag: usize) -> SignalResult<Vec<f64>> {
+fn sse_autocorrelation(signal: &[f64], maxlag: usize) -> SignalResult<Vec<f64>> {
     super::scalar_autocorrelation(signal, max_lag)
 }
 

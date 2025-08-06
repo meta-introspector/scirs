@@ -190,8 +190,8 @@ pub fn chebyshev_transform(u: &ArrayView1<f64>) -> Array1<f64> {
 
 /// Transform from Chebyshev coefficient space to physical space
 #[allow(dead_code)]
-pub fn chebyshev_inverse_transform(_coeffs: &ArrayView1<f64>) -> Array1<f64> {
-    let n = _coeffs.len();
+pub fn chebyshev_inverse_transform(coeffs: &ArrayView1<f64>) -> Array1<f64> {
+    let n = coeffs.len();
     let mut u = Array1::zeros(n);
 
     // Generate Chebyshev points
@@ -201,7 +201,7 @@ pub fn chebyshev_inverse_transform(_coeffs: &ArrayView1<f64>) -> Array1<f64> {
     for j in 0..n {
         let mut sum = 0.0;
         for k in 0..n {
-            sum += _coeffs[k] * (k as f64 * j as f64 * PI / (n - 1) as f64).cos();
+            sum += coeffs[k] * (k as f64 * j as f64 * PI / (n - 1) as f64).cos();
         }
         u[j] = sum;
     }
@@ -378,7 +378,7 @@ pub fn legendre_diff_matrix(n: usize) -> Array2<f64> {
     let mut d = Array2::zeros((n, n));
 
     // Compute Legendre-Gauss-Lobatto points and weights
-    let (x_, _weights) = legendre_points(n);
+    let (x_, weights) = legendre_points(n);
 
     // Compute the differentiation matrix entries
     for i in 0..n {
@@ -450,9 +450,9 @@ pub fn legendre_inverse_transform(
     let n = coeffs.len();
     let mut u = Array1::zeros(n);
 
-    // Use provided _points or generate Legendre-Gauss-Lobatto _points
-    let x = if let Some(_points) = x_points {
-        _points.to_owned()
+    // Use provided points or generate Legendre-Gauss-Lobatto points
+    let x = if let Some(points) = x_points {
+        points.to_owned()
     } else {
         legendre_points(n).0
     };
@@ -1060,7 +1060,7 @@ impl LegendreSpectralSolver1D {
         let n = self.options.num_modes;
 
         // Generate Legendre-Gauss-Lobatto grid in [-1, 1] and weights
-        let (lgb_grid_, _weights) = legendre_points(n);
+        let (lgb_grid_, weights) = legendre_points(n);
 
         // Map Legendre grid to the domain [a, b]
         let mut grid = Array1::zeros(n);
@@ -1295,23 +1295,23 @@ impl LegendreSpectralSolver1D {
 }
 
 impl From<SpectralResult> for PDESolution<f64> {
-    fn from(_result: SpectralResult) -> Self {
-        let grids = vec![_result.grid.clone()];
+    fn from(result: SpectralResult) -> Self {
+        let grids = vec![result.grid.clone()];
 
         // Create solution values as a 2D array with one column
         let mut values = Vec::new();
-        // Clone the _result.u to avoid the move issue
-        let u_clone = _result.u.clone();
+        // Clone the result.u to avoid the move issue
+        let u_clone = result.u.clone();
         let u_len = u_clone.len();
         let u_reshaped = u_clone.into_shape_with_order((u_len, 1)).unwrap();
         values.push(u_reshaped);
 
         // Create solver info
         let info = PDESolverInfo {
-            num_iterations: _result.num_iterations,
-            computation_time: _result.computation_time,
-            residual_norm: Some(_result.residual_norm),
-            convergence_history: _result.convergence_history,
+            num_iterations: result.num_iterations,
+            computation_time: result.computation_time,
+            residual_norm: Some(result.residual_norm),
+            convergence_history: result.convergence_history,
             method: "Spectral Method".to_string(),
         };
 

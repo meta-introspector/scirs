@@ -93,7 +93,7 @@ fn create_complex_test_data() -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn test_enhanced_ai_selection(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn test_enhanced_ai_selection(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     let mut clusterer = AdvancedClusterer::new().with_ai_algorithm_selection(true);
 
     let result = clusterer.cluster(&_data.view())?;
@@ -174,7 +174,7 @@ fn test_quantum_neuromorphic_enhanced(
 }
 
 #[allow(dead_code)]
-fn test_enhanced_meta_learning(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn test_enhanced_meta_learning(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     let mut clusterer = AdvancedClusterer::new()
         .with_meta_learning(true)
         .with_ai_algorithm_selection(true);
@@ -211,7 +211,7 @@ fn test_enhanced_meta_learning(_data: &Array2<f64>) -> Result<(), Box<dyn std::e
 }
 
 #[allow(dead_code)]
-fn test_enhanced_visualization(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn test_enhanced_visualization(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     // First run clustering
     let mut clusterer = AdvancedClusterer::new()
         .with_quantum_neuromorphic_fusion(true)
@@ -277,7 +277,7 @@ fn test_enhanced_visualization(_data: &Array2<f64>) -> Result<(), Box<dyn std::e
 }
 
 #[allow(dead_code)]
-fn test_full_enhanced_advanced(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn test_full_enhanced_advanced(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     let mut clusterer = AdvancedClusterer::new()
         .with_ai_algorithm_selection(true)
         .with_quantum_neuromorphic_fusion(true)
@@ -372,7 +372,7 @@ fn test_full_enhanced_advanced(_data: &Array2<f64>) -> Result<(), Box<dyn std::e
     );
     assert_eq!(
         result.clusters.len(),
-        _data.nrows(),
+        data.nrows(),
         "All points should be assigned"
     );
 

@@ -290,9 +290,9 @@ impl LtiSystem for TransferFunction {
 
                 // For an impulse, the input at t[0] is 1/dt, and 0 otherwise
                 // Inject impulse: u[0] = 1/dt, which approximates a continuous impulse
-                for (j_) in (0..ss.n_inputs).enumerate() {
+                for j_ in 0..ss.n_inputs {
                     for (i, x_i) in x.iter_mut().enumerate().take(ss.n_states) {
-                        *x_i += ss.b[i * ss.n_inputs + j] * (1.0 / dt);
+                        *x_i += ss.b[i * ss.n_inputs + j_] * (1.0 / dt);
                     }
                 }
 
@@ -923,7 +923,9 @@ impl LtiSystem for StateSpace {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::lti::design::tf;
+    use crate::TransferFunction;
     use approx::assert_relative_eq;
     #[test]
     fn test_transfer_function_creation() {
@@ -1051,6 +1053,6 @@ mod tests {
 }
 
 #[allow(dead_code)]
-fn tf(_num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
-    TransferFunction::new(_num, den)
+fn tf(num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
+    TransferFunction::new(_num, den, None).unwrap()
 }

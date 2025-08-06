@@ -5,7 +5,7 @@ use ndarray::s;
 
 use super::{pca, BssConfig};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array2};
+use ndarray::Array2;
 use scirs2_linalg::solve_multiple;
 use std::f64::consts::PI;
 
@@ -111,7 +111,7 @@ pub fn jade_ica(
                 // Calculate rotation angle
                 let gamma = g12 - g11;
                 let theta = if g22.abs() < 1e-10 {
-                    PI / 4.0 * (g21 >= 0.0) as f64
+                    PI / 4.0 * (g21 >= 0.0) as i32 as f64
                 } else {
                     0.5 * (g21 / g22).atan()
                 };

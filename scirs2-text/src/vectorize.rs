@@ -47,18 +47,18 @@ impl Clone for CountVectorizer {
 
 impl CountVectorizer {
     /// Create a new count vectorizer
-    pub fn new(_binary: bool) -> Self {
+    pub fn new(binary: bool) -> Self {
         Self {
             tokenizer: Box::new(WordTokenizer::default()),
             vocabulary: Vocabulary::new(),
-            _binary,
+            binary,
         }
     }
 
     /// Create a count vectorizer with a custom tokenizer
-    pub fn with_tokenizer(_tokenizer: Box<dyn Tokenizer + Send + Sync>, binary: bool) -> Self {
+    pub fn with_tokenizer(tokenizer: Box<dyn Tokenizer + Send + Sync>, binary: bool) -> Self {
         Self {
-            _tokenizer,
+            tokenizer,
             vocabulary: Vocabulary::new(),
             binary,
         }
@@ -197,16 +197,16 @@ impl Vectorizer for CountVectorizer {
 pub struct TfidfVectorizer {
     count_vectorizer: CountVectorizer,
     idf: Option<Array1<f64>>,
-    smooth_idf: bool,
+    smoothidf: bool,
     norm: Option<String>, // None, "l1", "l2"
 }
 
 impl TfidfVectorizer {
     /// Create a new TF-IDF vectorizer
-    pub fn new(_binary: bool, smooth_idf: bool, norm: Option<String>) -> Self {
+    pub fn new(binary: bool, smoothidf: bool, norm: Option<String>) -> Self {
         Self {
             count_vectorizer: CountVectorizer::new(_binary),
-            _idf: None,
+            idf: None,
             smooth_idf,
             norm,
         }
@@ -216,12 +216,12 @@ impl TfidfVectorizer {
     pub fn with_tokenizer(
         tokenizer: Box<dyn Tokenizer + Send + Sync>,
         binary: bool,
-        smooth_idf: bool,
+        smoothidf: bool,
         norm: Option<String>,
     ) -> Self {
         Self {
             count_vectorizer: CountVectorizer::with_tokenizer(tokenizer, binary),
-            _idf: None,
+            idf: None,
             smooth_idf,
             norm,
         }
@@ -257,7 +257,7 @@ impl TfidfVectorizer {
     }
 
     /// Compute IDF values from document frequencies
-    fn compute_idf(&mut self, df: &Array1<f64>, n_documents: f64) -> Result<()> {
+    fn compute_idf(&mut self, df: &Array1<f64>, ndocuments: f64) -> Result<()> {
         let n_features = df.len();
 
         let mut idf = Array1::zeros(n_features);

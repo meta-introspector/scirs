@@ -6,7 +6,7 @@ use scirs2_signal::wpt::{reconstruct_from_nodes, wp_decompose};
 use std::time::Duration;
 
 #[allow(dead_code)]
-fn generate_signal(_size: usize) -> Vec<f64> {
+fn generate_signal(size: usize) -> Vec<f64> {
     // Generate a chirp signal with increasing frequency
     let fs = 1000.0; // Sample rate in Hz
     let t = (0.._size).map(|i| i as f64 / fs).collect::<Vec<f64>>();

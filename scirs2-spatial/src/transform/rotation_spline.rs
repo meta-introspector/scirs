@@ -93,8 +93,8 @@ impl RotationSpline {
     /// let times = vec![0.0, 1.0, 2.0];
     /// let spline = RotationSpline::new(&rotations, &times).unwrap();
     /// ```
-    pub fn new(_rotations: &[Rotation], times: &[f64]) -> SpatialResult<Self> {
-        if _rotations.is_empty() {
+    pub fn new(rotations: &[Rotation], times: &[f64]) -> SpatialResult<Self> {
+        if rotations.is_empty() {
             return Err(SpatialError::ValueError("Rotations cannot be empty".into()));
         }
 
@@ -102,10 +102,10 @@ impl RotationSpline {
             return Err(SpatialError::ValueError("Times cannot be empty".into()));
         }
 
-        if _rotations.len() != times.len() {
+        if rotations.len() != times.len() {
             return Err(SpatialError::ValueError(format!(
                 "Number of _rotations ({}) must match number of times ({})",
-                _rotations.len(),
+                rotations.len(),
                 times.len()
             )));
         }
@@ -124,7 +124,7 @@ impl RotationSpline {
         }
 
         // Make a copy of the _rotations and times
-        let rotations = _rotations.to_vec();
+        let rotations = rotations.to_vec();
         let times = times.to_vec();
 
         Ok(RotationSpline {
@@ -163,8 +163,8 @@ impl RotationSpline {
     /// // Set the interpolation type to cubic (natural cubic spline)
     /// spline.set_interpolation_type("cubic").unwrap();
     /// ```
-    pub fn set_interpolation_type(&mut self, _interp_type: &str) -> SpatialResult<()> {
-        match _interp_type.to_lowercase().as_str() {
+    pub fn set_interpolation_type(&mut self, _interptype: &str) -> SpatialResult<()> {
+        match interp_type.to_lowercase().as_str() {
             "slerp" => {
                 self.interpolation_type = "slerp".to_string();
                 self.velocities = None;
@@ -242,8 +242,8 @@ impl RotationSpline {
 
     /// Compute the second derivatives for natural cubic spline interpolation
     #[allow(dead_code)]
-    fn compute_natural_spline_second_derivatives(&self, _values: &[f64]) -> Vec<f64> {
-        let n = _values.len();
+    fn compute_natural_spline_second_derivatives(&self, values: &[f64]) -> Vec<f64> {
+        let n = values.len();
         if n <= 2 {
             return vec![0.0; n];
         }
@@ -268,8 +268,8 @@ impl RotationSpline {
             b[i] = 2.0 * (h_i + h_ip1);
             c[i] = h_ip1;
 
-            let fd_i = (_values[i + 1] - _values[i]) / h_i;
-            let fd_ip1 = (_values[i + 2] - _values[i + 1]) / h_ip1;
+            let fd_i = (_values[i + 1] - values[i]) / h_i;
+            let fd_ip1 = (_values[i + 2] - values[i + 1]) / h_ip1;
             d[i] = 6.0 * (fd_ip1 - fd_i);
         }
 
@@ -566,7 +566,7 @@ impl RotationSpline {
     ///
     /// let spline = RotationSpline::from_key_rotations(&key_rots, &key_times).unwrap();
     /// ```
-    pub fn from_key_rotations(_key_rots: &[Rotation], key_times: &[f64]) -> SpatialResult<Self> {
+    pub fn from_key_rotations(_key_rots: &[Rotation], keytimes: &[f64]) -> SpatialResult<Self> {
         Self::new(_key_rots, key_times)
     }
 

@@ -412,7 +412,7 @@ fn demonstrate_high_dimensional() -> InterpolateResult<()> {
     }
 
     let hd_interpolator = HighDimensionalInterpolatorBuilder::new()
-        .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 3 })
+        .with_dimension_reduction(DimensionReductionMethod::PCA { targetdims: 3 })
         .build(&hd_points.view(), &hd_values.view())?;
 
     println!("   10D -> 3D dimension reduction successful");

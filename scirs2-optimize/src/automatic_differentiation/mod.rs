@@ -89,7 +89,7 @@ impl<F> FunctionWrapper<F>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
-    pub fn new(_func: F) -> Self {
+    pub fn new(func: F) -> Self {
         Self { func: _func }
     }
 }
@@ -285,7 +285,7 @@ where
 
 /// Optimize AD mode selection based on problem characteristics
 #[allow(dead_code)]
-pub fn optimize_ad_mode(problem_dim: usize, output_dim: usize, expected_sparsity: f64) -> ADMode {
+pub fn optimize_ad_mode(problem_dim: usize, output_dim: usize, expectedsparsity: f64) -> ADMode {
     // Forward mode is efficient when input dimension is small
     // Reverse mode is efficient when output dimension is small (typically 1 for optimization)
 

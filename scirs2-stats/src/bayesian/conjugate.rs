@@ -202,7 +202,7 @@ pub struct NormalKnownVariance {
 
 impl NormalKnownVariance {
     /// Create a new Normal conjugate prior with known data variance
-    pub fn new(prior_mean: f64, prior_variance: f64, data_variance: f64) -> Result<Self> {
+    pub fn new(prior_mean: f64, prior_variance: f64, datavariance: f64) -> Result<Self> {
         check_positive(prior_variance, "prior_variance")?;
         check_positive(data_variance, "data_variance")?;
         Ok(Self {

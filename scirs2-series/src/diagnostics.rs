@@ -183,19 +183,19 @@ where
 
 /// Calculate skewness and kurtosis
 #[allow(dead_code)]
-fn calculate_moments<S, F>(_data: &ArrayBase<S, Ix1>) -> Result<(F, F)>
+fn calculate_moments<S, F>(data: &ArrayBase<S, Ix1>) -> Result<(F, F)>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Display,
 {
     let n = F::from(_data.len()).unwrap();
-    let mean = _data.mean().unwrap_or(F::zero());
+    let mean = data.mean().unwrap_or(F::zero());
 
     let mut m2 = F::zero();
     let mut m3 = F::zero();
     let mut m4 = F::zero();
 
-    for &x in _data.iter() {
+    for &x in data.iter() {
         let diff = x - mean;
         let diff2 = diff * diff;
         m2 = m2 + diff2;
@@ -261,7 +261,7 @@ where
 
 /// Jarque-Bera test for normality
 #[allow(dead_code)]
-pub fn jarque_bera_test<S, F>(_residuals: &ArrayBase<S, Ix1>, alpha: F) -> Result<JarqueBeraTest<F>>
+pub fn jarque_bera_test<S, F>(residuals: &ArrayBase<S, Ix1>, alpha: F) -> Result<JarqueBeraTest<F>>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Display,
@@ -287,14 +287,14 @@ where
 
 /// ARCH test for heteroskedasticity
 #[allow(dead_code)]
-pub fn arch_test<S, F>(_residuals: &ArrayBase<S, Ix1>, lags: usize, alpha: F) -> Result<ArchTest<F>>
+pub fn arch_test<S, F>(residuals: &ArrayBase<S, Ix1>, lags: usize, alpha: F) -> Result<ArchTest<F>>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     scirs2_core::validation::check_array_finite(_residuals, "_residuals")?;
 
-    let n = _residuals.len();
+    let n = residuals.len();
     if lags >= n {
         return Err(TimeSeriesError::InvalidInput(
             "Number of lags exceeds residual length".to_string(),
@@ -302,7 +302,7 @@ where
     }
 
     // Square the _residuals
-    let squared_residuals = _residuals.mapv(|x| x * x);
+    let squared_residuals = residuals.mapv(|x| x * x);
 
     // Regress squared _residuals on their lags
     use ndarray::Array2;
@@ -556,7 +556,7 @@ where
 
 /// Simplified chi-squared p-value calculation
 #[allow(dead_code)]
-fn chi_squared_pvalue<F>(_statistic: F, df: usize) -> Result<F>
+fn chi_squared_pvalue<F>(statistic: F, df: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Display,
 {

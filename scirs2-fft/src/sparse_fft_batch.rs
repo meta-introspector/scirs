@@ -56,7 +56,7 @@ impl Default for BatchConfig {
 /// * `k` - Expected sparsity (number of significant frequency components)
 /// * `algorithm` - Sparse FFT algorithm variant
 /// * `window_function` - Window function to apply before FFT
-/// * `batch_config` - Batch processing configuration
+/// * `batchconfig` - Batch processing configuration
 ///
 /// # Returns
 ///
@@ -68,19 +68,19 @@ pub fn batch_sparse_fft<T>(
     k: usize,
     algorithm: Option<SparseFFTAlgorithm>,
     window_function: Option<WindowFunction>,
-    batch_config: Option<BatchConfig>,
+    batchconfig: Option<BatchConfig>,
 ) -> FFTResult<Vec<SparseFFTResult>>
 where
     T: NumCast + Copy + Debug + Sync + 'static,
 {
-    let _config = batch_config.unwrap_or_default();
+    let config = batchconfig.unwrap_or_default();
     let alg = algorithm.unwrap_or(SparseFFTAlgorithm::Sublinear);
     let window = window_function.unwrap_or(WindowFunction::None);
 
     let start = Instant::now();
 
-    // Create sparse FFT _config
-    let fft_config = SparseFFTConfig {
+    // Create sparse FFT config
+    let fftconfig = SparseFFTConfig {
         estimation_method: SparsityEstimationMethod::Manual,
         sparsity: k,
         algorithm: alg,
@@ -88,12 +88,12 @@ where
         ..SparseFFTConfig::default()
     };
 
-    let results = if _config.use_parallel {
+    let results = if config.use_parallel {
         // Process signals in parallel using Rayon
         signals
             .par_iter()
             .map(|signal| {
-                let mut processor = crate::sparse_fft::SparseFFT::new(fft_config.clone());
+                let mut processor = crate::sparse_fft::SparseFFT::new(fftconfig.clone());
 
                 // Convert signal to complex
                 let signal_complex: FFTResult<Vec<Complex64>> = signal
@@ -113,7 +113,7 @@ where
         // Process signals sequentially
         let mut results = Vec::with_capacity(signals.len());
         for signal in signals {
-            let mut processor = crate::sparse_fft::SparseFFT::new(fft_config.clone());
+            let mut processor = crate::sparse_fft::SparseFFT::new(fftconfig.clone());
 
             // Convert signal to complex
             let signal_complex: FFTResult<Vec<Complex64>> = signal
@@ -157,7 +157,7 @@ where
 /// * `backend` - GPU backend (CUDA, HIP, SYCL)
 /// * `algorithm` - Sparse FFT algorithm variant
 /// * `window_function` - Window function to apply before FFT
-/// * `batch_config` - Batch processing configuration
+/// * `batchconfig` - Batch processing configuration
 ///
 /// # Returns
 ///
@@ -171,22 +171,22 @@ pub fn gpu_batch_sparse_fft<T>(
     backend: GPUBackend,
     algorithm: Option<SparseFFTAlgorithm>,
     window_function: Option<WindowFunction>,
-    batch_config: Option<BatchConfig>,
+    batchconfig: Option<BatchConfig>,
 ) -> FFTResult<Vec<SparseFFTResult>>
 where
     T: NumCast + Copy + Debug + Sync + 'static,
 {
-    let _config = batch_config.unwrap_or_default();
+    let config = batchconfig.unwrap_or_default();
     let alg = algorithm.unwrap_or(SparseFFTAlgorithm::Sublinear);
     let window = window_function.unwrap_or(WindowFunction::None);
 
     // Calculate batch sizes
     let total_signals = signals.len();
-    let batch_size = _config.max_batch_size.min(total_signals);
+    let batch_size = config.max_batch_size.min(total_signals);
     let num_batches = total_signals.div_ceil(batch_size);
 
-    // Create sparse FFT _config
-    let base_fft_config = SparseFFTConfig {
+    // Create sparse FFT config
+    let base_fftconfig = SparseFFTConfig {
         estimation_method: SparsityEstimationMethod::Manual,
         sparsity: k,
         algorithm: alg,
@@ -194,15 +194,15 @@ where
         ..SparseFFTConfig::default()
     };
 
-    // Create GPU _config
-    let _gpu_config = GPUSparseFFTConfig {
-        base_config: base_fft_config,
+    // Create GPU config
+    let _gpuconfig = GPUSparseFFTConfig {
+        base_config: base_fftconfig,
         backend,
         device_id,
         batch_size,
-        max_memory: _config.max_memory_per_batch,
-        use_mixed_precision: _config.use_mixed_precision,
-        use_inplace: _config.use_inplace,
+        max_memory: config.max_memory_per_batch,
+        use_mixed_precision: config.use_mixed_precision,
+        use_inplace: config.use_inplace,
         stream_count: 2, // Use 2 streams for overlap
     };
 
@@ -263,7 +263,7 @@ where
 /// * `window_size` - Size of windows for local flatness analysis
 /// * `window_function` - Window function to apply before FFT
 /// * `device_id` - GPU device ID (-1 for auto-select)
-/// * `batch_config` - Batch processing configuration
+/// * `batchconfig` - Batch processing configuration
 ///
 /// # Returns
 ///
@@ -276,18 +276,18 @@ pub fn spectral_flatness_batch_sparse_fft<T>(
     window_size: usize,
     window_function: Option<WindowFunction>,
     device_id: Option<i32>,
-    batch_config: Option<BatchConfig>,
+    batchconfig: Option<BatchConfig>,
 ) -> FFTResult<Vec<SparseFFTResult>>
 where
     T: NumCast + Copy + Debug + Sync + 'static,
 {
-    let _config = batch_config.unwrap_or_default();
+    let config = batchconfig.unwrap_or_default();
     let window = window_function.unwrap_or(WindowFunction::Hann); // Default to Hann for spectral flatness
     let device = device_id.unwrap_or(0);
 
     // Calculate batch sizes
     let total_signals = signals.len();
-    let batch_size = _config.max_batch_size.min(total_signals);
+    let batch_size = config.max_batch_size.min(total_signals);
     let num_batches = total_signals.div_ceil(batch_size);
 
     // Initialize the memory manager if GPU is used
@@ -296,7 +296,7 @@ where
             GPUBackend::CUDA,
             device,
             crate::AllocationStrategy::CacheBySize,
-            _config.max_memory_per_batch.max(1024 * 1024 * 1024), // At least 1 GB
+            config.max_memory_per_batch.max(1024 * 1024 * 1024), // At least 1 GB
         )?;
     }
 
@@ -313,7 +313,7 @@ where
             let current_batch = &signals[start_idx..end_idx];
 
             // Create a base configuration for this batch
-            let _base_config = SparseFFTConfig {
+            let _baseconfig = SparseFFTConfig {
                 estimation_method: SparsityEstimationMethod::SpectralFlatness,
                 sparsity: 0, // Will be determined automatically
                 algorithm: SparseFFTAlgorithm::SpectralFlatness,
@@ -348,13 +348,13 @@ where
         }
     } else {
         // CPU processing
-        if _config.use_parallel {
+        if config.use_parallel {
             // Process all signals in parallel using Rayon
             let parallel_results: FFTResult<Vec<_>> = signals
                 .par_iter()
                 .map(|signal| {
                     // Create configuration
-                    let fft_config = SparseFFTConfig {
+                    let fftconfig = SparseFFTConfig {
                         estimation_method: SparsityEstimationMethod::SpectralFlatness,
                         sparsity: 0, // Will be determined automatically
                         algorithm: SparseFFTAlgorithm::SpectralFlatness,
@@ -376,7 +376,7 @@ where
                         .collect();
 
                     // Process with CPU
-                    let mut processor = crate::sparse_fft::SparseFFT::new(fft_config);
+                    let mut processor = crate::sparse_fft::SparseFFT::new(fftconfig);
                     processor.sparse_fft(&signal_complex?)
                 })
                 .collect();
@@ -386,7 +386,7 @@ where
             // Process signals sequentially
             for signal in signals {
                 // Create configuration
-                let fft_config = SparseFFTConfig {
+                let fftconfig = SparseFFTConfig {
                     estimation_method: SparsityEstimationMethod::SpectralFlatness,
                     sparsity: 0, // Will be determined automatically
                     algorithm: SparseFFTAlgorithm::SpectralFlatness,
@@ -408,7 +408,7 @@ where
                     .collect();
 
                 // Process with CPU
-                let mut processor = crate::sparse_fft::SparseFFT::new(fft_config);
+                let mut processor = crate::sparse_fft::SparseFFT::new(fftconfig);
                 let result = processor.sparse_fft(&signal_complex?)?;
                 all_results.push(result);
             }
@@ -447,7 +447,7 @@ mod tests {
     }
 
     // Helper to add noise to signals
-    fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
+    fn add_noise(_signal: &[f64], noiselevel: f64) -> Vec<f64> {
         use rand::Rng;
         let mut rng = rand::rng();
         _signal
@@ -516,7 +516,7 @@ mod tests {
         let signals = create_signal_batch(10, n, &frequencies, 0.1);
 
         // Test parallel batch processing
-        let batch_config = BatchConfig {
+        let batchconfig = BatchConfig {
             use_parallel: true,
             ..BatchConfig::default()
         };
@@ -526,7 +526,7 @@ mod tests {
             6, // Look for up to 6 components
             Some(SparseFFTAlgorithm::Sublinear),
             Some(WindowFunction::Hann),
-            Some(batch_config),
+            Some(batchconfig),
         )
         .unwrap();
 

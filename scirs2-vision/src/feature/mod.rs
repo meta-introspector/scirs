@@ -35,11 +35,11 @@ pub mod template_matching;
 pub mod tracker;
 pub mod vision_transformer;
 
-pub use advanced__enhancement::{
+pub use advanced_enhancement::{
     AdvancedDenoiser, DenoisingMethod, HDRProcessor, SuperResolutionMethod,
     SuperResolutionProcessor, ToneMappingMethod,
 };
-pub use advanced__tracking::{
+pub use advanced_tracking::{
     AppearanceExtractor, BoundingBox as TrackingBoundingBox, DeepSORT, Detection, KalmanFilter,
     Track, TrackState, TrackingMetrics,
 };
@@ -52,26 +52,26 @@ pub use gabor::*;
 pub use glcm::*;
 pub use hog::*;
 pub use homography::*;
-pub use hough__circle::*;
-pub use hough__line::*;
-pub use integral__image::*;
+pub use hough_circle::*;
+pub use hough_line::*;
+pub use integral_image::*;
 pub use laplacian::*;
 pub use lbp::*;
-pub use log__blob::*;
+pub use log_blob::*;
 pub use matching::*;
 pub use mser::*;
-pub use neural__features::*;
+pub use neural_features::*;
 pub use nms::*;
-pub use optical__flow::*;
+pub use optical_flow::*;
 pub use orb::*;
 pub use prewitt::*;
 pub use ransac::*;
-pub use shi__tomasi::*;
+pub use shi_tomasi::*;
 pub use sobel::*;
 pub use tamura::*;
-pub use template__matching::*;
+pub use template_matching::*;
 pub use tracker::*;
-pub use vision__transformer::{
+pub use vision_transformer::{
     MatcherConfig, SwinConfig, SwinTransformer, TransformerFeatureMatcher, ViTConfig,
     VisionTransformer,
 };
@@ -90,9 +90,9 @@ use ndarray::Array2;
 ///
 /// * Result containing a 2D array of pixel intensities (grayscale)
 #[allow(dead_code)]
-pub fn image_to_array(_img: &DynamicImage) -> Result<Array2<f32>> {
+pub fn image_to_array(img: &DynamicImage) -> Result<Array2<f32>> {
     // Convert to grayscale
-    let gray = _img.to_luma8();
+    let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
 
     // Create 2D array
@@ -119,9 +119,9 @@ pub fn image_to_array(_img: &DynamicImage) -> Result<Array2<f32>> {
 ///
 /// * Result containing a grayscale image
 #[allow(dead_code)]
-pub fn array_to_image(_array: &Array2<f32>) -> Result<GrayImage> {
-    let height = _array.shape()[0];
-    let width = _array.shape()[1];
+pub fn array_to_image(array: &Array2<f32>) -> Result<GrayImage> {
+    let height = array.shape()[0];
+    let width = array.shape()[1];
 
     let mut img = GrayImage::new(width as u32, height as u32);
 
@@ -146,7 +146,7 @@ pub fn array_to_image(_array: &Array2<f32>) -> Result<GrayImage> {
 ///
 /// * Result containing an edge image
 #[allow(dead_code)]
-pub fn sobel_edges(_img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
+pub fn sobel_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
     let array = image_to_array(_img)?;
     let (height, width) = array.dim();
 
@@ -322,13 +322,13 @@ pub fn harris_corners(
 ///
 /// * Vector of (x, y) coordinates of features
 #[allow(dead_code)]
-pub fn extract_feature_coordinates(_img: &GrayImage) -> Vec<(u32, u32)> {
+pub fn extract_feature_coordinates(img: &GrayImage) -> Vec<(u32, u32)> {
     let mut coords = Vec::new();
-    let (width, height) = _img.dimensions();
+    let (width, height) = img.dimensions();
 
     for y in 0..height {
         for x in 0..width {
-            if _img.get_pixel(x, y)[0] > 0 {
+            if img.get_pixel(x, y)[0] > 0 {
                 coords.push((x, y));
             }
         }

@@ -28,11 +28,11 @@ use statrs::statistics::Statistics;
 /// // data is now normalized with zero mean and unit variance for each feature
 /// ```
 #[allow(dead_code)]
-pub fn normalize(_data: &mut Array2<f64>) {
-    let n_features = _data.ncols();
+pub fn normalize(data: &mut Array2<f64>) {
+    let n_features = data.ncols();
 
     for j in 0..n_features {
-        let mut column = _data.column_mut(j);
+        let mut column = data.column_mut(j);
 
         // Calculate mean and std
         let mean = column.mean().unwrap_or(0.0);
@@ -66,12 +66,12 @@ pub fn normalize(_data: &mut Array2<f64>) {
 /// // Features are now scaled to [0, 1] range
 /// ```
 #[allow(dead_code)]
-pub fn min_max_scale(_data: &mut Array2<f64>, feature_range: (f64, f64)) {
+pub fn min_max_scale(_data: &mut Array2<f64>, featurerange: (f64, f64)) {
     let (range_min, range_max) = feature_range;
     let range_size = range_max - range_min;
 
     for j in 0.._data.ncols() {
-        let mut column = _data.column_mut(j);
+        let mut column = data.column_mut(j);
 
         // Find min and max values in the column
         let col_min = column.iter().fold(f64::INFINITY, |a, &b| a.min(b));
@@ -108,9 +108,9 @@ pub fn min_max_scale(_data: &mut Array2<f64>, feature_range: (f64, f64)) {
 /// // Features are now robustly scaled using median and IQR
 /// ```
 #[allow(dead_code)]
-pub fn robust_scale(_data: &mut Array2<f64>) {
+pub fn robust_scale(data: &mut Array2<f64>) {
     for j in 0.._data.ncols() {
-        let mut column_values: Vec<f64> = _data.column(j).to_vec();
+        let mut column_values: Vec<f64> = data.column(j).to_vec();
         column_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         let n = column_values.len();
@@ -133,7 +133,7 @@ pub fn robust_scale(_data: &mut Array2<f64>) {
         let iqr = q3 - q1;
 
         // Scale the column
-        let mut column = _data.column_mut(j);
+        let mut column = data.column_mut(j);
         if iqr > 1e-10 {
             column.mapv_inplace(|x| (x - median) / iqr);
         } else {

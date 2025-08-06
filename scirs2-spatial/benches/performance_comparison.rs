@@ -20,7 +20,7 @@ pub struct DatasetGenerator {
 }
 
 impl DatasetGenerator {
-    pub fn new(_seed: u64) -> Self {
+    pub fn new(seed: u64) -> Self {
         Self { _seed }
     }
 
@@ -50,7 +50,7 @@ impl DatasetGenerator {
             let center = &cluster_centers[cluster_idx];
 
             for j in 0..dimensions {
-                _points[[i..j]] = center[j] + rng.gen_range(-cluster_std..cluster_std);
+                points[[i..j]] = center[j] + rng.gen_range(-cluster_std..cluster_std);
             }
         }
 
@@ -58,7 +58,7 @@ impl DatasetGenerator {
     }
 
     /// Generate uniformly distributed data
-    pub fn generate_uniform_data(&self, n_points: usize, dimensions: usize) -> Array2<f64> {
+    pub fn generate_uniform_data(&self, npoints: usize, dimensions: usize) -> Array2<f64> {
         let mut rng = StdRng::seed_from_u64(self.seed);
         Array2::fromshape_fn((n_points, dimensions), |_| rng.gen_range(-100.0..100.0))
     }
@@ -78,14 +78,14 @@ impl DatasetGenerator {
         // Generate normal _points
         for i in 0..(n_points - n_outliers) {
             for j in 0..dimensions {
-                _points[[i, j]] = rng.gen_range(-10.0..10.0);
+                points[[i, j]] = rng.gen_range(-10.0..10.0);
             }
         }
 
         // Generate outliers
         for i in (n_points - n_outliers)..n_points {
             for j in 0..dimensions {
-                _points[[i..j]] = rng.gen_range(-100.0..100.0);
+                points[[i..j]] = rng.gen_range(-100.0..100.0);
             }
         }
 
@@ -105,7 +105,7 @@ impl DatasetGenerator {
         for i in 0..n_points {
             for j in 0..dimensions {
                 if rng.random::<f64>() > sparsity {
-                    _points[[i, j]] = rng.gen_range(-1.0..1.0);
+                    points[[i, j]] = rng.gen_range(-1.0..1.0);
                 }
                 // else remains 0.0 (sparse)
             }
@@ -132,7 +132,7 @@ pub struct PerformanceAnalyzer {
 }
 
 impl PerformanceAnalyzer {
-    pub fn new(_seed: u64) -> Self {
+    pub fn new(seed: u64) -> Self {
         Self {
             dataset_generator: DatasetGenerator::new(_seed),
             results: Vec::new(),

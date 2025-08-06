@@ -99,7 +99,7 @@ pub fn dpss_enhanced(
         None
     };
 
-    Ok((tapers, _ratios))
+    Ok((tapers, ratios))
 }
 
 /// Build the tridiagonal matrix for the eigenvalue problem
@@ -127,10 +127,10 @@ fn solve_tridiagonal_symmetric(
     diagonal: &[f64],
     off_diagonal: &[f64],
 ) -> SignalResult<(Vec<f64>, Array2<f64>)> {
-    let n = _diagonal.len();
+    let n = diagonal.len();
 
     // Copy arrays for modification
-    let mut diag = _diagonal.to_vec();
+    let mut diag = diagonal.to_vec();
     let mut off_diag = off_diagonal.to_vec();
 
     // Initialize eigenvector matrix as identity
@@ -180,14 +180,14 @@ fn solve_tridiagonal_symmetric(
 
 /// Compute Wilkinson shift for better convergence
 #[allow(dead_code)]
-fn wilkinson_shift(_diag: &[f64], off_diag: &[f64]) -> f64 {
-    if _diag.len() < 2 || off_diag.is_empty() {
+fn wilkinson_shift(_diag: &[f64], offdiag: &[f64]) -> f64 {
+    if diag.len() < 2 || off_diag.is_empty() {
         return 0.0;
     }
 
-    let a = _diag[0];
+    let a = diag[0];
     let b = off_diag[0];
-    let c = _diag[1];
+    let c = diag[1];
 
     let d = (a - c) / 2.0;
     let sign = if d >= 0.0 { 1.0 } else { -1.0 };
@@ -197,8 +197,8 @@ fn wilkinson_shift(_diag: &[f64], off_diag: &[f64]) -> f64 {
 
 /// Perform one QR step on tridiagonal matrix
 #[allow(dead_code)]
-fn qr_step(_diag: &mut [f64], off_diag: &mut [f64], q: &mut Array2<f64>) -> SignalResult<()> {
-    let n = _diag.len();
+fn qr_step(_diag: &mut [f64], offdiag: &mut [f64], q: &mut Array2<f64>) -> SignalResult<()> {
+    let n = diag.len();
     if n <= 1 {
         return Ok(());
     }
@@ -210,19 +210,19 @@ fn qr_step(_diag: &mut [f64], off_diag: &mut [f64], q: &mut Array2<f64>) -> Sign
     for i in 0..n - 1 {
         // Compute Givens rotation to eliminate off_diag[i]
         let (c, s) = givens_rotation(
-            _diag[i] * c_prev + off_diag[i] * s_prev,
-            off_diag[i] * c_prev - _diag[i] * s_prev
+            diag[i] * c_prev + off_diag[i] * s_prev,
+            off_diag[i] * c_prev - diag[i] * s_prev
                 + if i < n - 2 { off_diag[i + 1] } else { 0.0 },
         );
 
         // Apply rotation to tridiagonal matrix
         if i > 0 {
-            off_diag[i - 1] = c_prev * off_diag[i - 1] + s_prev * _diag[i];
+            off_diag[i - 1] = c_prev * off_diag[i - 1] + s_prev * diag[i];
         }
 
-        let temp = c * _diag[i] + s * off_diag[i];
-        _diag[i + 1] = -s * _diag[i] + c * _diag[i + 1];
-        _diag[i] = temp;
+        let temp = c * diag[i] + s * off_diag[i];
+        diag[i + 1] = -s * diag[i] + c * diag[i + 1];
+        diag[i] = temp;
 
         if i < n - 2 {
             let temp = c * off_diag[i + 1];
@@ -263,8 +263,8 @@ fn givens_rotation(a: f64, b: f64) -> (f64, f64) {
 
 /// Normalize eigenvector to unit norm
 #[allow(dead_code)]
-fn normalize_eigenvector(_eigvec: &mut Array1<f64>) {
-    let norm = _eigvec.dot(_eigvec).sqrt();
+fn normalize_eigenvector(eigvec: &mut Array1<f64>) {
+    let norm = eigvec.dot(_eigvec).sqrt();
     if norm > 1e-10 {
         *_eigvec /= norm;
     }
@@ -272,19 +272,19 @@ fn normalize_eigenvector(_eigvec: &mut Array1<f64>) {
 
 /// Apply sign convention to ensure consistency
 #[allow(dead_code)]
-fn apply_sign_convention(_eigvec: &mut Array1<f64>, order: usize) {
-    let n = _eigvec.len();
+fn apply_sign_convention(eigvec: &mut Array1<f64>, order: usize) {
+    let n = eigvec.len();
 
     if order % 2 == 0 {
         // Even order: ensure symmetric taper has positive average
-        let sum: f64 = _eigvec.sum();
+        let sum: f64 = eigvec.sum();
         if sum < 0.0 {
             *_eigvec *= -1.0;
         }
     } else {
         // Odd order: ensure antisymmetric taper starts positive
         let mid = n / 2;
-        if _eigvec[0] < 0.0 || (n % 2 == 1 && _eigvec[mid] < 0.0) {
+        if eigvec[0] < 0.0 || (n % 2 == 1 && eigvec[mid] < 0.0) {
             *_eigvec *= -1.0;
         }
     }
@@ -454,6 +454,7 @@ pub fn generate_reference_values() -> SignalResult<()> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_dpss_basic() {

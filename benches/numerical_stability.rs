@@ -24,7 +24,7 @@ struct StabilityTestResult {
 
 /// Generate matrices with specific condition numbers for stability testing
 #[allow(dead_code)]
-fn generate_conditioned_matrix(size: usize, condition_number: f64) -> Array2<f64> {
+fn generate_conditioned_matrix(size: usize, conditionnumber: f64) -> Array2<f64> {
     let mut rng = ChaCha8Rng::seed_from_u64(SEED);
 
     // Generate random orthogonal matrices U and V via QR decomposition
@@ -57,7 +57,7 @@ fn generate_conditioned_matrix(size: usize, condition_number: f64) -> Array2<f64
 
 /// Generate matrices with specific pathological properties
 #[allow(dead_code)]
-fn generate_pathological_matrix(size: usize, test_type: &str) -> Array2<f64> {
+fn generate_pathological_matrix(size: usize, testtype: &str) -> Array2<f64> {
     match test_type {
         "hilbert" => {
             // Hilbert matrix - notoriously ill-conditioned
@@ -104,7 +104,7 @@ fn generate_pathological_matrix(size: usize, test_type: &str) -> Array2<f64> {
 
 /// Test numerical accuracy of linear solvers
 #[allow(dead_code)]
-fn test_solve_accuracy(_matrix: &ArrayView2<f64>, known_solution: &Array1<f64>) -> (bool, f64) {
+fn test_solve_accuracy(_matrix: &ArrayView2<f64>, knownsolution: &Array1<f64>) -> (bool, f64) {
     let rhs = matrix.dot(known_solution);
 
     match solve(matrix, &rhs.view(), None) {
@@ -122,7 +122,7 @@ fn test_solve_accuracy(_matrix: &ArrayView2<f64>, known_solution: &Array1<f64>) 
 
 /// Test numerical accuracy of matrix inversion
 #[allow(dead_code)]
-fn test_inverse_accuracy(_matrix: &ArrayView2<f64>) -> (bool, f64) {
+fn test_inverse_accuracy(matrix: &ArrayView2<f64>) -> (bool, f64) {
     match inv(matrix, None) {
         Ok(inv_matrix) => {
             let product = matrix.dot(&inv_matrix);
@@ -140,7 +140,7 @@ fn test_inverse_accuracy(_matrix: &ArrayView2<f64>) -> (bool, f64) {
 
 /// Test numerical accuracy of matrix decompositions
 #[allow(dead_code)]
-fn test_decomposition_accuracy(_matrix: &ArrayView2<f64>, decomp_type: &str) -> (bool, f64) {
+fn test_decomposition_accuracy(_matrix: &ArrayView2<f64>, decomptype: &str) -> (bool, f64) {
     match decomp_type {
         "lu" => match lu(matrix, None) {
             Ok((p, l, u)) => {
@@ -416,7 +416,7 @@ fn bench_edge_cases(c: &mut Criterion) {
 
 /// Estimate condition number using singular values
 #[allow(dead_code)]
-fn estimate_condition_number(_matrix: &ArrayView2<f64>) -> f64 {
+fn estimate_condition_number(matrix: &ArrayView2<f64>) -> f64 {
     match svd(matrix, false, None) {
         Ok((_, s_)) => {
             let max_sv = s.iter().cloned().fold(0.0, f64::max);

@@ -209,13 +209,13 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
     AugmentationManager<F>
 {
     /// Create a new augmentation manager
-    pub fn new(_rng_seed: Option<u64>) -> Self {
+    pub fn new(_rngseed: Option<u64>) -> Self {
         Self {
             image_transforms: Vec::new(),
             text_transforms: Vec::new(),
             audio_transforms: Vec::new(),
             mix_strategies: Vec::new(),
-            _rng_seed,
+            rng_seed,
             stats: AugmentationStatistics {
                 samples_processed: 0,
                 avg_intensity: F::zero(),
@@ -331,13 +331,13 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         // In practice, this would involve proper image rotation algorithms
         let result = images.clone();
         for _i in 0..batch_size {
-            let _angle = rng().random_range(min_angle..=max_angle);
+            let _angle = rng().gen_range(min_angle..=max_angle);
             // Apply rotation (simplified - just return original for now)
             // Real implementation would use affine transformations
     fn random_scale(
         _preserve_aspect_ratio: bool..// Simplified scaling implementation
         // In practice, this would involve proper image scaling algorithms
-            let _scale = rng().random_range(min_scale..=max_scale);
+            let _scale = rng().gen_range(min_scale..=max_scale);
             // Apply scaling (simplified - just return original for now)
             // Real implementation would use interpolation
     fn random_crop(
@@ -351,8 +351,8 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         if crop_height > height || crop_width > width {
                 "Crop size cannot be larger than image size".to_string(),
         let mut result = Array::zeros((batch_size, channels, crop_height, crop_width));
-            let start_h = rng().random_range(0..=(height - crop_height));
-            let start_w = rng().random_range(0..=(width - crop_width));
+            let start_h = rng().gen_range(0..=(height - crop_height));
+            let start_w = rng().gen_range(0..=(width - crop_width));
             let crop = images.slice(ndarray::s![
                 i....,
                 start_h..start_h + crop_height,
@@ -365,11 +365,11 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         // Apply brightness adjustment
         if let Some(bright_factor) = brightness {
             let factor =
-                F::from(1.0 + rng().random_range(-bright_factor..=bright_factor)).unwrap();
+                F::from(1.0 + rng().gen_range(-bright_factor..=bright_factor)).unwrap();
             result = result * factor;
         // Apply contrast adjustment
         if let Some(contrast_factor) = contrast {
-                F::from(1.0 + rng().random_range(-contrast_factor..=contrast_factor))
+                F::from(1.0 + rng().gen_range(-contrast_factor..=contrast_factor))
                     .unwrap();
             let mean = result.mean().unwrap_or(F::zero());
             result = (result - mean) * factor + mean;
@@ -378,21 +378,21 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
     fn gaussian_noise(
         if rand::random::<f64>() < probability {
             let noise = images.mapv(|_| {
-                let noise_val = rng().random_range(-3.0 * std..=3.0 * std) + mean;
+                let noise_val = rng().gen_range(-3.0 * std..=3.0 * std) + mean;
                 F::from(noise_val).unwrap_or(F::zero())
             });
             result = result + noise;
     fn random_erasing(
                 "Random erasing requires 4D input (NCHW)".to_string()..let fill_val = F::from(fill_value).unwrap_or(F::zero());
-                let area_ratio = rng().random_range(area_ratio_range.0..=area_ratio_range.1);
+                let area_ratio = rng().gen_range(area_ratio_range.0..=area_ratio_range.1);
                 let aspect_ratio =
-                    rng().random_range(aspect_ratio_range.0..=aspect_ratio_range.1);
+                    rng().gen_range(aspect_ratio_range.0..=aspect_ratio_range.1);
                 let target_area = (height * width) as f64 * area_ratio;
                 let mask_height = ((target_area * aspect_ratio).sqrt() as usize).min(height);
                 let mask_width = ((target_area / aspect_ratio).sqrt() as usize).min(width);
                 if mask_height > 0 && mask_width > 0 {
-                    let start_h = rng().random_range(0..=(height - mask_height));
-                    let start_w = rng().random_range(0..=(width - mask_width));
+                    let start_h = rng().gen_range(0..=(height - mask_height));
+                    let start_w = rng().gen_range(0..=(width - mask_width));
                     result
                         .slice_mut(ndarray::s![
                             i....,
@@ -406,7 +406,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         // In practice, this would involve complex displacement field generation
             // Apply simple noise as a placeholder for elastic deformation
             let noise_factor = F::from(0.01).unwrap();
-                let noise_val = rng().random_range(-0.05..=0.05);
+                let noise_val = rng().gen_range(-0.05..=0.05);
             result = result + noise * noise_factor;
     /// Apply MixUp augmentation to a batch
     pub fn apply_mixup(
@@ -417,7 +417,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         let lambda_f = F::from(lambda).unwrap_or(F::from(0.5).unwrap());
         // Create random permutation of indices
         let mut indices: Vec<usize> = (0..batch_size).collect();
-            let j = rng().random_range(0..batch_size);
+            let j = rng().gen_range(0..batch_size);
             indices.swap(i, j);
         let mut mixed_images = images.clone();
         let mut mixed_labels = labels.clone();
@@ -446,14 +446,14 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
     pub fn apply_cutmix(
                 "CutMix requires 4D input (NCHW)".to_string(),
         let _lambda = self.sample_beta_distribution(alpha)?;
-        let cut_ratio = rng().random_range(cut_ratio_range.0..=cut_ratio_range.1);
+        let cut_ratio = rng().gen_range(cut_ratio_range.0..=cut_ratio_range.1);
         let cut_height = ((height as f64 * cut_ratio).sqrt() as usize).min(height);
         let cut_width = ((width as f64 * cut_ratio).sqrt() as usize).min(width);
         // Create random permutation
             let j = indices[i];
             // Random cut position
-            let start_h = rng().random_range(0..=(height - cut_height));
-            let start_w = rng().random_range(0..=(width - cut_width));
+            let start_h = rng().gen_range(0..=(height - cut_height));
+            let start_w = rng().gen_range(0..=(width - cut_width));
             // Cut and paste
             let patch = images.slice(ndarray::s![
                 j..start_h..start_h + cut_height,
@@ -551,7 +551,7 @@ pub struct AugmentationPipelineBuilder<
         self.manager
             .add_mix_strategy(MixAugmentation::MixUp { alpha });
     /// Add CutMix augmentation
-    pub fn with_cutmix(mut self, alpha: f64, cut_ratio_range: (f64, f64)) -> Self {
+    pub fn with_cutmix(mut self, alpha: f64, cut_ratiorange: (f64, f64)) -> Self {
         self.manager.add_mix_strategy(MixAugmentation::CutMix {
             alpha,
             cut_ratio_range,

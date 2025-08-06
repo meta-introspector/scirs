@@ -9,10 +9,10 @@ pub(crate) struct HookOp<T: Float, H: crate::hooks::Hook<T>> {
 
 impl<T: Float, H: crate::hooks::Hook<T>> HookOp<T, H> {
     #[inline]
-    pub fn new(_hook: H) -> Self {
+    pub fn new(hook: H) -> Self {
         HookOp {
             phantom: PhantomData,
-            _hook,
+            hook,
         }
     }
 }

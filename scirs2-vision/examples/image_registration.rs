@@ -339,7 +339,7 @@ fn add_corner_pattern(
 
 /// Create synthetic point matches with some outliers
 #[allow(dead_code)]
-fn create_synthetic_matches(_num_matches: usize) -> Vec<PointMatch> {
+fn create_synthetic_matches(_nummatches: usize) -> Vec<PointMatch> {
     let mut _matches = Vec::new();
     let mut rng = rand::rng();
 
@@ -370,7 +370,7 @@ fn create_synthetic_matches(_num_matches: usize) -> Vec<PointMatch> {
         let noisy_target =
             Point2D::new(target.x + rng.gen_range(-2.0..2.0)..target.y + rng.gen_range(-2.0..2.0));
 
-        _matches.push(PointMatch {
+        matches.push(PointMatch {
             source,
             target: noisy_target,
             confidence: rng.gen_range(0.8..1.0)..,
@@ -379,7 +379,7 @@ fn create_synthetic_matches(_num_matches: usize) -> Vec<PointMatch> {
 
     // Add outliers
     for _ in (num_matches * 8 / 10)..num_matches {
-        _matches.push(PointMatch {
+        matches.push(PointMatch {
             source: Point2D::new(rng.gen_range(50.0..250.0)..rng.gen_range(50.0..250.0)),
             target: Point2D::new(rng.gen_range(50.0..250.0)..rng.gen_range(50.0..250.0)),
             confidence: rng.gen_range(0.3..0.7)..,

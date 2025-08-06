@@ -50,8 +50,8 @@ impl FFTOperations {
     ///
     /// Performs inverse FFT to transform from frequency domain back to spatial domain.
     #[allow(dead_code)]
-    pub fn fft_2d_backward(field_hat: &Array2<Complex<f64>>) -> FFTResult<Array2<f64>> {
-        let (nx, ny) = field_hat.dim();
+    pub fn fft_2d_backward(fieldhat: &Array2<Complex<f64>>) -> FFTResult<Array2<f64>> {
+        let (nx, ny) = fieldhat.dim();
         let mut result = Array2::zeros((nx, ny));
         let norm = 1.0 / (nx * ny) as f64;
 
@@ -65,7 +65,7 @@ impl FFTOperations {
                             * std::f64::consts::PI
                             * (kx as f64 * x as f64 / nx as f64 + ky as f64 * y as f64 / ny as f64);
                         let exp_factor = Complex::new(phase.cos(), phase.sin());
-                        sum += field_hat[[kx, ky]] * exp_factor;
+                        sum += fieldhat[[kx, ky]] * exp_factor;
                     }
                 }
 
@@ -116,8 +116,8 @@ impl FFTOperations {
     ///
     /// Performs inverse 3D FFT to transform from frequency domain back to spatial domain.
     #[allow(dead_code)]
-    pub fn fft_3d_backward(field_hat: &Array3<Complex<f64>>) -> FFTResult<Array3<f64>> {
-        let (nx, ny, nz) = field_hat.dim();
+    pub fn fft_3d_backward(fieldhat: &Array3<Complex<f64>>) -> FFTResult<Array3<f64>> {
+        let (nx, ny, nz) = fieldhat.dim();
         let mut result = Array3::zeros((nx, ny, nz));
         let norm = 1.0 / (nx * ny * nz) as f64;
 
@@ -135,7 +135,7 @@ impl FFTOperations {
                                         + ky as f64 * y as f64 / ny as f64
                                         + kz as f64 * z as f64 / nz as f64);
                                 let exp_factor = Complex::new(phase.cos(), phase.sin());
-                                sum += field_hat[[kx, ky, kz]] * exp_factor;
+                                sum += fieldhat[[kx, ky, kz]] * exp_factor;
                             }
                         }
                     }

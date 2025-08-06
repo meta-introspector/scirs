@@ -162,9 +162,9 @@ impl PerformanceStats {
 
 impl OptimizedFFT {
     /// Create a new optimized FFT instance
-    pub fn new(_config: OptimizedConfig) -> Self {
+    pub fn new(config: OptimizedConfig) -> Self {
         Self {
-            _config,
+            config,
             stats: PerformanceStats::default(),
             collect_stats: false,
             metrics: Arc::new(Mutex::new(HashMap::new())),
@@ -463,7 +463,7 @@ impl OptimizedFFT {
             let algorithm = self.select_algorithm(_size);
             let metrics = PerformanceMetrics {
                 algorithm,
-                _size,
+                size,
                 duration,
                 mflops,
                 optimization_level: self.config.optimization_level,
@@ -653,7 +653,7 @@ impl OptimizedFFT {
     }
 
     /// Suggest the optimal FFT size near the requested size
-    pub fn suggest_optimal_size(&self, requested_size: usize) -> usize {
+    pub fn suggest_optimal_size(&self, requestedsize: usize) -> usize {
         // Find the next power of two
         let next_pow2 = requested_size.next_power_of_two();
 
@@ -681,7 +681,7 @@ impl OptimizedFFT {
 
             if score < best_score {
                 best_score = score;
-                best_size = _size;
+                best_size = size;
             }
         }
 

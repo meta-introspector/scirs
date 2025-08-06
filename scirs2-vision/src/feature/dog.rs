@@ -50,8 +50,8 @@ pub struct Blob {
 
 /// Detect blobs using Difference of Gaussians
 #[allow(dead_code)]
-pub fn dog_detect(_img: &DynamicImage, config: DogConfig) -> Result<Vec<Blob>> {
-    let gray = _img.to_luma8();
+pub fn dog_detect(img: &DynamicImage, config: DogConfig) -> Result<Vec<Blob>> {
+    let gray = img.to_luma8();
     let (height, width) = (gray.height() as usize, gray.width() as usize);
 
     // Convert to ndarray
@@ -141,7 +141,7 @@ pub fn dog_detect(_img: &DynamicImage, config: DogConfig) -> Result<Vec<Blob>> {
 
 /// Convert blobs to image
 #[allow(dead_code)]
-pub fn blobs_to_image(_blobs: &[Blob], width: u32, height: u32) -> Result<GrayImage> {
+pub fn blobs_to_image(blobs: &[Blob], width: u32, height: u32) -> Result<GrayImage> {
     let mut img = GrayImage::new(width, height);
 
     for blob in _blobs {
@@ -156,7 +156,7 @@ pub fn blobs_to_image(_blobs: &[Blob], width: u32, height: u32) -> Result<GrayIm
 // Helper functions
 
 #[allow(dead_code)]
-fn gaussian_blur(_img: &Array2<f32>, sigma: f32) -> Result<Array2<f32>> {
+fn gaussian_blur(img: &Array2<f32>, sigma: f32) -> Result<Array2<f32>> {
     let kernel_size = ((6.0 * sigma) as usize) | 1; // Make it odd
     let kernel = gaussian_kernel(kernel_size, sigma);
 
@@ -166,7 +166,7 @@ fn gaussian_blur(_img: &Array2<f32>, sigma: f32) -> Result<Array2<f32>> {
 }
 
 #[allow(dead_code)]
-fn gaussian_kernel(_size: usize, sigma: f32) -> Vec<f32> {
+fn gaussian_kernel(size: usize, sigma: f32) -> Vec<f32> {
     let mut kernel = vec![0.0; _size];
     let center = _size / 2;
     let s2 = 2.0 * sigma * sigma;
@@ -188,8 +188,8 @@ fn gaussian_kernel(_size: usize, sigma: f32) -> Vec<f32> {
 }
 
 #[allow(dead_code)]
-fn convolve_1d_horizontal(_img: &Array2<f32>, kernel: &[f32]) -> Result<Array2<f32>> {
-    let (height, width) = _img.dim();
+fn convolve_1d_horizontal(img: &Array2<f32>, kernel: &[f32]) -> Result<Array2<f32>> {
+    let (height, width) = img.dim();
     let mut result = Array2::zeros((height, width));
     let ksize = kernel.len();
     let kcenter = ksize / 2;
@@ -201,7 +201,7 @@ fn convolve_1d_horizontal(_img: &Array2<f32>, kernel: &[f32]) -> Result<Array2<f
             for (k, kernel_val) in kernel.iter().enumerate().take(ksize) {
                 let ix = x as i32 + k as i32 - kcenter as i32;
                 if ix >= 0 && ix < width as i32 {
-                    sum += _img[[y, ix as usize]] * kernel_val;
+                    sum += img[[y, ix as usize]] * kernel_val;
                 }
             }
 
@@ -213,8 +213,8 @@ fn convolve_1d_horizontal(_img: &Array2<f32>, kernel: &[f32]) -> Result<Array2<f
 }
 
 #[allow(dead_code)]
-fn convolve_1d_vertical(_img: &Array2<f32>, kernel: &[f32]) -> Result<Array2<f32>> {
-    let (height, width) = _img.dim();
+fn convolve_1d_vertical(img: &Array2<f32>, kernel: &[f32]) -> Result<Array2<f32>> {
+    let (height, width) = img.dim();
     let mut result = Array2::zeros((height, width));
     let ksize = kernel.len();
     let kcenter = ksize / 2;
@@ -226,7 +226,7 @@ fn convolve_1d_vertical(_img: &Array2<f32>, kernel: &[f32]) -> Result<Array2<f32
             for (k, kernel_val) in kernel.iter().enumerate().take(ksize) {
                 let iy = y as i32 + k as i32 - kcenter as i32;
                 if iy >= 0 && iy < height as i32 {
-                    sum += _img[[iy as usize, x]] * kernel_val;
+                    sum += img[[iy as usize, x]] * kernel_val;
                 }
             }
 
@@ -277,15 +277,15 @@ fn is_local_extremum(
 }
 
 #[allow(dead_code)]
-fn downsample(_img: &Array2<f32>) -> Array2<f32> {
-    let (height, width) = _img.dim();
+fn downsample(img: &Array2<f32>) -> Array2<f32> {
+    let (height, width) = img.dim();
     let new_height = height / 2;
     let new_width = width / 2;
     let mut result = Array2::zeros((new_height, new_width));
 
     for y in 0..new_height {
         for x in 0..new_width {
-            result[[y, x]] = _img[[y * 2, x * 2]];
+            result[[y, x]] = img[[y * 2, x * 2]];
         }
     }
 
@@ -333,8 +333,8 @@ fn non_max_suppression(mut blobs: Vec<Blob>) -> Vec<Blob> {
 }
 
 #[allow(dead_code)]
-fn draw_circle(_img: &mut GrayImage, cx: i32, cy: i32, radius: i32) {
-    let (width, height) = (_img.width() as i32, _img.height() as i32);
+fn draw_circle(img: &mut GrayImage, cx: i32, cy: i32, radius: i32) {
+    let (width, height) = (_img.width() as i32, img.height() as i32);
 
     for angle in 0..360 {
         let rad = (angle as f32).to_radians();
@@ -342,7 +342,7 @@ fn draw_circle(_img: &mut GrayImage, cx: i32, cy: i32, radius: i32) {
         let y = cy + (radius as f32 * rad.sin()) as i32;
 
         if x >= 0 && x < width && y >= 0 && y < height {
-            _img.put_pixel(x as u32, y as u32, Luma([255]));
+            img.put_pixel(x as u32, y as u32, Luma([255]));
         }
     }
 }

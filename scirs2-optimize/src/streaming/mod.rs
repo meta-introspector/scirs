@@ -122,9 +122,9 @@ pub struct StreamingDataPoint {
 
 impl StreamingDataPoint {
     /// Create a new streaming data point
-    pub fn new(_features: Array1<f64>, target: f64) -> Self {
+    pub fn new(features: Array1<f64>, target: f64) -> Self {
         Self {
-            features: _features,
+            features: features,
             target,
             weight: None,
             timestamp: None,
@@ -132,9 +132,9 @@ impl StreamingDataPoint {
     }
 
     /// Create a weighted streaming data point
-    pub fn with_weight(_features: Array1<f64>, target: f64, weight: f64) -> Self {
+    pub fn with_weight(features: Array1<f64>, target: f64, weight: f64) -> Self {
         Self {
-            features: _features,
+            features: features,
             target,
             weight: Some(weight),
             timestamp: None,
@@ -142,9 +142,9 @@ impl StreamingDataPoint {
     }
 
     /// Create a timestamped streaming data point
-    pub fn with_timestamp(_features: Array1<f64>, target: f64, timestamp: f64) -> Self {
+    pub fn with_timestamp(features: Array1<f64>, target: f64, timestamp: f64) -> Self {
         Self {
-            features: _features,
+            features: features,
             target,
             weight: None,
             timestamp: Some(timestamp),
@@ -155,10 +155,10 @@ impl StreamingDataPoint {
 /// Trait for streaming optimization algorithms
 pub trait StreamingOptimizer {
     /// Process a single data point and update parameters
-    fn update(&mut self, data_point: &StreamingDataPoint) -> Result<()>;
+    fn update(&mut self, datapoint: &StreamingDataPoint) -> Result<()>;
 
     /// Process a batch of data points
-    fn update_batch(&mut self, data_points: &[StreamingDataPoint]) -> Result<()> {
+    fn update_batch(&mut self, datapoints: &[StreamingDataPoint]) -> Result<()> {
         for _point in data_points {
             self.update(_point)?;
         }
@@ -183,7 +183,7 @@ pub trait StreamingOptimizer {
 /// Trait for objective functions in streaming optimization
 pub trait StreamingObjective {
     /// Evaluate the objective function for a single data point
-    fn evaluate(&self, parameters: &ArrayView1<f64>, data_point: &StreamingDataPoint) -> f64;
+    fn evaluate(&self, parameters: &ArrayView1<f64>, datapoint: &StreamingDataPoint) -> f64;
 
     /// Compute the gradient for a single data point
     fn gradient(
@@ -194,7 +194,7 @@ pub trait StreamingObjective {
 
     /// Compute the Hessian for a single data point (optional)
     fn hessian(
-        &self_parameters: &ArrayView1<f64>,
+        self_parameters: &ArrayView1<f64>,
         _data_point: &StreamingDataPoint,
     ) -> Option<Array2<f64>> {
         None
@@ -206,7 +206,7 @@ pub trait StreamingObjective {
 pub struct LinearRegressionObjective;
 
 impl StreamingObjective for LinearRegressionObjective {
-    fn evaluate(&self, parameters: &ArrayView1<f64>, data_point: &StreamingDataPoint) -> f64 {
+    fn evaluate(&self, parameters: &ArrayView1<f64>, datapoint: &StreamingDataPoint) -> f64 {
         let prediction = parameters.dot(&data_point.features);
         let residual = prediction - data_point.target;
         let weight = data_point.weight.unwrap_or(1.0);
@@ -225,7 +225,7 @@ impl StreamingObjective for LinearRegressionObjective {
     }
 
     fn hessian(
-        &self_parameters: &ArrayView1<f64>,
+        self_parameters: &ArrayView1<f64>,
         data_point: &StreamingDataPoint,
     ) -> Option<Array2<f64>> {
         let weight = data_point.weight.unwrap_or(1.0);
@@ -248,7 +248,7 @@ impl StreamingObjective for LinearRegressionObjective {
 pub struct LogisticRegressionObjective;
 
 impl StreamingObjective for LogisticRegressionObjective {
-    fn evaluate(&self, parameters: &ArrayView1<f64>, data_point: &StreamingDataPoint) -> f64 {
+    fn evaluate(&self, parameters: &ArrayView1<f64>, datapoint: &StreamingDataPoint) -> f64 {
         let z = parameters.dot(&data_point.features);
         let weight = data_point.weight.unwrap_or(1.0);
 
@@ -275,7 +275,6 @@ impl StreamingObjective for LogisticRegressionObjective {
     }
 
     fn hessian(
-        &self,
         parameters: &ArrayView1<f64>,
         data_point: &StreamingDataPoint,
     ) -> Option<Array2<f64>> {
@@ -302,7 +301,7 @@ pub mod utils {
     use super::*;
 
     /// Compute exponentially weighted moving average
-    pub fn ewma_update(_current: f64, new_value: f64, alpha: f64) -> f64 {
+    pub fn ewma_update(_current: f64, newvalue: f64, alpha: f64) -> f64 {
         alpha * new_value + (1.0 - alpha) * _current
     }
 

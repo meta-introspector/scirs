@@ -79,7 +79,7 @@ where
     }
 
     /// Get confidence intervals for the predictions
-    pub fn confidence_intervals(&self, confidence_level: f64) -> InterpolateResult<Array2<F>> {
+    pub fn confidence_intervals(&self, confidencelevel: f64) -> InterpolateResult<Array2<F>> {
         if confidence_level <= 0.0 || confidence_level >= 1.0 {
             return Err(InterpolateError::InvalidValue(
                 "Confidence _level must be between 0 and 1".to_string(),
@@ -360,9 +360,9 @@ where
     ///
     /// This is used internally by the builder and shouldn't be called directly.
     /// Use `FastKrigingBuilder::build()` instead.
-    pub(crate) fn from_builder(_builder: FastKrigingBuilder<F>) -> InterpolateResult<Self> {
-        let points = _builder.points.ok_or(InterpolateError::MissingPoints)?;
-        let values = _builder.values.ok_or(InterpolateError::MissingValues)?;
+    pub(crate) fn from_builder(builder: FastKrigingBuilder<F>) -> InterpolateResult<Self> {
+        let points = builder.points.ok_or(InterpolateError::MissingPoints)?;
+        let values = builder.values.ok_or(InterpolateError::MissingValues)?;
 
         if points.nrows() != values.len() {
             return Err(InterpolateError::DimensionMismatch(
@@ -372,22 +372,22 @@ where
 
         // Create anisotropic covariance
         let anisotropic_cov = AnisotropicCovariance::new(
-            _builder.cov_fn,
+            builder.cov_fn,
             _builder
                 .length_scales
                 .unwrap_or_else(|| Array1::from_elem(points.ncols(), F::one())),
-            _builder.sigma_sq,
-            _builder.nugget,
+            builder.sigma_sq,
+            builder.nugget,
         );
 
         let mut kriging = Self {
             points,
             values,
             anisotropic_cov,
-            trend_fn: _builder.trend_fn,
-            approx_method: _builder.approx_method,
-            max_neighbors: _builder.max_neighbors,
-            radius_multiplier: _builder.radius_multiplier,
+            trend_fn: builder.trend_fn,
+            approx_method: builder.approx_method,
+            max_neighbors: builder.max_neighbors,
+            radius_multiplier: builder.radius_multiplier,
             low_rank_components: None,
             sparse_components: None,
             weights: Array1::zeros(0),
@@ -547,19 +547,19 @@ where
     }
 
     /// Set the covariance function
-    pub fn covariance_function(mut self, cov_fn: CovarianceFunction) -> Self {
+    pub fn covariance_function(mut self, covfn: CovarianceFunction) -> Self {
         self.cov_fn = cov_fn;
         self
     }
 
     /// Set the length scales
-    pub fn length_scales(mut self, length_scales: Array1<F>) -> Self {
+    pub fn length_scales(mut self, lengthscales: Array1<F>) -> Self {
         self.length_scales = Some(length_scales);
         self
     }
 
     /// Set the signal variance parameter
-    pub fn sigma_sq(mut self, sigma_sq: F) -> Self {
+    pub fn sigma_sq(mut self, sigmasq: F) -> Self {
         self.sigma_sq = sigma_sq;
         self
     }
@@ -571,7 +571,7 @@ where
     }
 
     /// Set the trend function
-    pub fn trend_function(mut self, trend_fn: TrendFunction) -> Self {
+    pub fn trend_function(mut self, trendfn: TrendFunction) -> Self {
         self.trend_fn = trend_fn;
         self
     }
@@ -583,13 +583,13 @@ where
     }
 
     /// Set the maximum number of neighbors for local kriging
-    pub fn max_neighbors(mut self, max_neighbors: usize) -> Self {
+    pub fn max_neighbors(mut self, maxneighbors: usize) -> Self {
         self.max_neighbors = max_neighbors;
         self
     }
 
     /// Set the radius multiplier for local kriging
-    pub fn radius_multiplier(mut self, radius_multiplier: F) -> Self {
+    pub fn radius_multiplier(mut self, radiusmultiplier: F) -> Self {
         self.radius_multiplier = radius_multiplier;
         self
     }
@@ -606,18 +606,18 @@ mod tests {
     use crate::advanced::kriging::CovarianceFunction;
     use ndarray::{Array1, Array2};
 
-    fn create_test_data(_n_points: usize, n_dims: usize) -> (Array2<f64>, Array1<f64>) {
+    fn create_test_data(_n_points: usize, ndims: usize) -> (Array2<f64>, Array1<f64>) {
         let mut _points = Array2::zeros((_n_points, n_dims));
         let mut values = Array1::zeros(_n_points);
 
         // Generate a simple test dataset with a known function
         for i in 0.._n_points {
             for d in 0..n_dims {
-                _points[[i, d]] = (i as f64) / (_n_points as f64) + (d as f64) * 0.1;
+                points[[i, d]] = (i as f64) / (_n_points as f64) + (d as f64) * 0.1;
             }
             // Simple quadratic function
-            let x = _points[[i, 0]];
-            let y = if n_dims > 1 { _points[[i, 1]] } else { 0.0 };
+            let x = points[[i, 0]];
+            let y = if n_dims > 1 { points[[i, 1]] } else { 0.0 };
             values[i] = x * x + y * y + 0.1 * x * y;
         }
 

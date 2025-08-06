@@ -874,21 +874,21 @@ fn run_optimization_validation(
 
 /// Calculate overall validation score
 #[allow(dead_code)]
-fn calculate_overall_score(_results: &EnhancedModernValidationResult) -> f64 {
+fn calculate_overall_score(results: &EnhancedModernValidationResult) -> f64 {
     let mut total_score = 0.0;
     let mut weight_sum = 0.0;
 
     // Core validation (weight: 30%)
-    total_score += _results.core_validation.stability_score * 100.0 * 0.3;
+    total_score += results.core_validation.stability_score * 100.0 * 0.3;
     weight_sum += 0.3;
 
     // Streaming validation (weight: 20%)
-    let streaming_score = 100.0 - _results.streaming_validation.realtime_metrics.jitter * 10.0;
+    let streaming_score = 100.0 - results.streaming_validation.realtime_metrics.jitter * 10.0;
     total_score += streaming_score.max(0.0) * 0.2;
     weight_sum += 0.2;
 
     // Anomaly detection (weight: 15%)
-    let anomaly_score = (1.0 - _results.anomaly_detection.anomaly_score) * 100.0;
+    let anomaly_score = (1.0 - results.anomaly_detection.anomaly_score) * 100.0;
     total_score += anomaly_score * 0.15;
     weight_sum += 0.15;
 
@@ -927,16 +927,16 @@ fn calculate_overall_score(_results: &EnhancedModernValidationResult) -> f64 {
 
 /// Identify critical findings that need attention
 #[allow(dead_code)]
-fn identify_critical_findings(_results: &EnhancedModernValidationResult) -> Vec<String> {
+fn identify_critical_findings(results: &EnhancedModernValidationResult) -> Vec<String> {
     let mut findings = Vec::new();
 
     // Check core validation issues
-    if _results.core_validation.stability_score < 0.95 {
+    if results.core_validation.stability_score < 0.95 {
         findings.push("Low numerical stability detected".to_string());
     }
 
-    if _results.core_validation.energy_ratio < 0.999
-        || _results.core_validation.energy_ratio > 1.001
+    if results.core_validation.energy_ratio < 0.999
+        || results.core_validation.energy_ratio > 1.001
     {
         findings.push("Energy conservation violation detected".to_string());
     }
@@ -951,12 +951,12 @@ fn identify_critical_findings(_results: &EnhancedModernValidationResult) -> Vec<
         findings.push("High processing latency detected".to_string());
     }
 
-    if _results.streaming_validation.realtime_metrics.dropout_rate > 0.01 {
+    if results.streaming_validation.realtime_metrics.dropout_rate > 0.01 {
         findings.push("Significant dropout rate in streaming processing".to_string());
     }
 
     // Check anomaly detection _results
-    if _results.anomaly_detection.anomaly_score > 0.2 {
+    if results.anomaly_detection.anomaly_score > 0.2 {
         findings.push("High anomaly score - unusual patterns detected".to_string());
     }
 
@@ -970,7 +970,7 @@ fn identify_critical_findings(_results: &EnhancedModernValidationResult) -> Vec<
     }
 
     // Check resource issues
-    if _results.resource_validation.memory_leaks.leak_score > 0.1 {
+    if results.resource_validation.memory_leaks.leak_score > 0.1 {
         findings.push("Potential memory leaks detected".to_string());
     }
 

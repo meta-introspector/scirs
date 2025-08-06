@@ -56,21 +56,21 @@ fn main() -> IntegrateResult<()> {
     type EventFunc = Box<dyn Fn(f64, ArrayView1<f64>) -> f64>;
     let event_funcs: Vec<EventFunc> = vec![
         // Event 1: dx/dt = 0 (X maximum or minimum)
-        Box::new(move |_t: f64, state: ArrayView1<f64>| -> f64 {
+        Box::new(move |t: f64, state: ArrayView1<f64>| -> f64 {
             let x = state[0];
             let y = state[1];
             a + x * x * y - b * x - x // dx/dt
         }),
         // Event 2: dy/dt = 0 (Y maximum or minimum)
-        Box::new(move |_t: f64, state: ArrayView1<f64>| -> f64 {
+        Box::new(move |t: f64, state: ArrayView1<f64>| -> f64 {
             let x = state[0];
             let y = state[1];
             b * x - x * x * y // dy/dt
         }),
         // Event 3: X concentration crosses threshold of 2.0
-        Box::new(move |_t: f64, state: ArrayView1<f64>| -> f64 { state[0] - 2.0 }),
+        Box::new(move |t: f64, state: ArrayView1<f64>| -> f64 { state[0] - 2.0 }),
         // Event 4: Time limit reached (t = 50)
-        Box::new(move |t: f64, _state: ArrayView1<f64>| -> f64 { t - 50.0 }),
+        Box::new(move |t: f64, state: ArrayView1<f64>| -> f64 { t - 50.0 }),
     ];
 
     // Event specifications

@@ -57,7 +57,7 @@ use rand::seq::SliceRandom;
 
 /// Helper function to create an RNG with optional seed
 #[allow(dead_code)]
-fn create_rng(_seed: Option<u64>) -> Random {
+fn create&mut rng(seed: Option<u64>) -> Random {
     match _seed {
         Some(s) => Random::with_seed(s),
         None => Random::default(),
@@ -65,7 +65,7 @@ fn create_rng(_seed: Option<u64>) -> Random {
 }
 
 // Helper macro to handle both seeded and unseeded RNG creation
-macro_rules! with_rng {
+macro_rules! with&mut rng {
     ($seed:expr, $body:expr) => {
         match $seed {
             Some(s) => {
@@ -108,7 +108,7 @@ macro_rules! with_rng {
 /// assert_eq!(rand_mat.shape(), &[2, 2]);
 /// ```
 #[allow(dead_code)]
-pub fn uniform<F>(_rows: usize, cols: usize, low: F, high: F, seed: Option<u64>) -> Array2<F>
+pub fn uniform<F>(rows: usize, cols: usize, low: F, high: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + std::fmt::Display + 'static,
 {
@@ -116,7 +116,7 @@ where
     let _ = check_in_bounds(low, F::neg_infinity(), F::infinity(), "low").expect("Invalid low value");
     let _ = check_in_bounds(high, low, F::infinity(), "high").expect("Invalid high value");
     
-    with_rng!(seed, |rng| {
+    with&mut rng!(seed, |rng| {
         // Create a uniform distribution
         let uniform_dist = UniformDist::new(
             f64::from(low).expect("Cannot convert to f64"), 
@@ -168,7 +168,7 @@ where
 /// assert_eq!(rand_mat.shape(), &[2, 2]);
 /// ```
 #[allow(dead_code)]
-pub fn normal<F>(_rows: usize, cols: usize, mean: F, std: F, seed: Option<u64>) -> Array2<F>
+pub fn normal<F>(rows: usize, cols: usize, mean: F, std: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
 {
@@ -176,7 +176,7 @@ where
     let _ = check_in_bounds(mean, F::neg_infinity(), F::infinity(), "mean").expect("Invalid mean value");
     let _ = check_positive(std, "std").expect("Standard deviation must be positive");
     
-    let mut rng = create_rng(seed);
+    let mut rng = create&mut rng(seed);
     
     // Create a normal distribution
     let normal_dist = NormalDist::new(
@@ -458,7 +458,7 @@ where
 /// assert!(result.is_ok());
 /// ```
 #[allow(dead_code)]
-pub fn spd<F>(n: usize, min_eigenval: F, max_eigenval: F, seed: Option<u64>) -> Array2<F>
+pub fn spd<F>(n: usize, min_eigenval: F, maxeigenval: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + Sum + 'static,
 {
@@ -467,10 +467,10 @@ where
     let _ = check_in_bounds(max_eigenval, min_eigenval, F::infinity(), "max_eigenval")
         .expect("Maximum eigenvalue must be greater than minimum eigenvalue");
     
-    let mut rng = create_rng(seed);
+    let mut rng = create&mut rng(seed);
     
     // Generate a random matrix
-    let a = normal(n, n, F::zero(), F::one(), Some(rng.random_range(0..u64::MAX)));
+    let a = normal(n, n, F::zero(), F::one(), Some(rng.gen_range(0..u64::MAX)));
     
     // Compute A^T * A which is guaranteed to be symmetric positive semidefinite
     let at = a.t();
@@ -528,7 +528,7 @@ where
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn hermitian_pd<F>(n: usize, min_eigenval: F, max_eigenval: F, seed: Option<u64>) -> Array2<Complex<F>>
+pub fn hermitian_pd<F>(n: usize, min_eigenval: F, maxeigenval: F, seed: Option<u64>) -> Array2<Complex<F>>
 where
     F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + Sum + 'static,
 {
@@ -537,10 +537,10 @@ where
     let _ = check_in_bounds(max_eigenval, min_eigenval, F::infinity(), "max_eigenval")
         .expect("Maximum eigenvalue must be greater than minimum eigenvalue");
 
-    let mut rng = create_rng(seed);
+    let mut rng = create&mut rng(seed);
     
     // Generate a random complex matrix
-    let a = complex(n, n, F::zero(), F::one(), F::zero(), F::one(), Some(rng.random_range(0..u64::MAX)));
+    let a = complex(n, n, F::zero(), F::one(), F::zero(), F::one(), Some(rng.gen_range(0..u64::MAX)));
     
     // Compute A^H * A which is guaranteed to be Hermitian positive semidefinite
     let mut result = Array2::<Complex<F>>::zeros((n, n));
@@ -609,7 +609,7 @@ where
     let _ = check_in_bounds(low, F::neg_infinity(), F::infinity(), "low").expect("Invalid low value");
     let _ = check_in_bounds(high, low, F::infinity(), "high").expect("Invalid high value");
     
-    let mut rng = create_rng(seed);
+    let mut rng = create&mut rng(seed);
     
     // Create a uniform distribution for the diagonal elements
     let dist = UniformDist::new(
@@ -675,7 +675,7 @@ where
     let _ = check_in_bounds(low, F::neg_infinity(), F::infinity(), "low").expect("Invalid low value");
     let _ = check_in_bounds(high, low, F::infinity(), "high").expect("Invalid high value");
     
-    let mut rng = create_rng(seed);
+    let mut rng = create&mut rng(seed);
     
     // Create a uniform distribution
     let dist = UniformDist::new(
@@ -748,7 +748,7 @@ where
     let _ = check_in_bounds(low, F::neg_infinity(), F::infinity(), "low").expect("Invalid low value");
     let _ = check_in_bounds(high, low, F::infinity(), "high").expect("Invalid high value");
     
-    let mut rng = create_rng(seed);
+    let mut rng = create&mut rng(seed);
     
     // Create distributions for values and density check
     let val_dist = UniformDist::new(
@@ -817,7 +817,7 @@ where
     let _ = check_in_bounds(low, F::neg_infinity(), F::infinity(), "low").expect("Invalid low value");
     let _ = check_in_bounds(high, low, F::infinity(), "high").expect("Invalid high value");
     
-    let mut rng = create_rng(seed);
+    let mut rng = create&mut rng(seed);
     
     // Create a uniform distribution
     let dist = UniformDist::new(
@@ -886,7 +886,7 @@ where
 /// assert_eq!(a.shape(), &[4, 4]);
 /// ```
 #[allow(dead_code)]
-pub fn with_condition_number<F>(n: usize, condition_number: F, seed: Option<u64>) -> Array2<F>
+pub fn with_condition_number<F>(n: usize, conditionnumber: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + Sum + 'static,
 {
@@ -961,11 +961,11 @@ where
 /// // So we just verify the matrix size here
 /// ```
 #[allow(dead_code)]
-pub fn with_eigenvalues<F>(_eigenvalues: &Array1<F>, seed: Option<u64>) -> Array2<F>
+pub fn with_eigenvalues<F>(eigenvalues: &Array1<F>, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + Sum + 'static,
 {
-    let n = _eigenvalues.len();
+    let n = eigenvalues.len();
     
     // Generate random orthogonal matrix Q
     let q = orthogonal::<F>(n, seed);
@@ -973,7 +973,7 @@ where
     // Create diagonal matrix with specified _eigenvalues
     let mut d = Array2::<F>::zeros((n, n));
     for i in 0..n {
-        d[[i, i]] = _eigenvalues[i];
+        d[[i, i]] = eigenvalues[i];
     }
     
     // Form result = Q * D * Q^T for symmetric matrix with given _eigenvalues
@@ -1063,20 +1063,20 @@ where
 /// assert_eq!(v[[1, 2]], 4.0);  // 2^2
 /// ```
 #[allow(dead_code)]
-pub fn vandermonde<F>(_points: &Array1<F>) -> Array2<F>
+pub fn vandermonde<F>(points: &Array1<F>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
 {
-    let n = _points.len();
+    let n = points.len();
     let mut result = Array2::<F>::zeros((n, n));
     
     for i in 0..n {
-        let x = _points[i];
+        let x = points[i];
         
         // First column is always x^0 = 1
         result[[i, 0]] = F::one();
         
-        // Fill remaining columns: V[i,j] = _points[i]^j
+        // Fill remaining columns: V[i,j] = points[i]^j
         for j in 1..n {
             result[[i, j]] = result[[i, j - 1]] * x;
         }
@@ -1193,12 +1193,12 @@ where
 /// // but this can be unstable in different test environments, so we omit it here.
 /// ```
 #[allow(dead_code)]
-pub fn low_rank<F>(_rows: usize, cols: usize, rank: usize, seed: Option<u64>) -> Array2<F>
+pub fn low_rank<F>(rows: usize, cols: usize, rank: usize, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + Sum + 'static,
 {
     // Validate parameters
-    if rank > _rows.min(cols) {
+    if rank > rows.min(cols) {
         panic!("Rank must be less than or equal to min(_rows, cols)");
     }
     
@@ -1262,7 +1262,7 @@ pub fn permutation<F>(n: usize, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
 {
-    let mut rng = create_rng(seed);
+    let mut rng = create&mut rng(seed);
     
     // Initialize result as zeros
     let mut result = Array2::<F>::zeros((n, n));
@@ -1337,7 +1337,7 @@ where
     let _ = check_in_bounds(max_eigenval, min_eigenval, F::infinity(), "max_eigenval")
         .expect("Maximum eigenvalue must be greater than minimum eigenvalue");
     
-    let mut rng = create_rng(seed);
+    let mut rng = create&mut rng(seed);
     
     // First generate a sparse matrix with the given density
     // We'll work with the upper triangular part only to ensure symmetry
@@ -1415,11 +1415,11 @@ where
 /// assert_eq!(companion.shape(), &[3, 3]);
 /// ```
 #[allow(dead_code)]
-pub fn polynomial_matrix<F>(_coeffs: &Array1<F>) -> Array2<F>
+pub fn polynomial_matrix<F>(coeffs: &Array1<F>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
 {
-    let n = _coeffs.len() - 1;
+    let n = coeffs.len() - 1;
     
     // Special case for constant polynomial or linear polynomial
     if n == 0 {
@@ -1427,8 +1427,8 @@ where
     }
     
     // Ensure the leading coefficient is 1
-    let leading_coeff = _coeffs[n];
-    let normalized_coeffs: Vec<F> = _coeffs.iter().map(|&c| c / leading_coeff).collect();
+    let leading_coeff = coeffs[n];
+    let normalized_coeffs: Vec<F> = coeffs.iter().map(|&c| c / leading_coeff).collect();
     
     // Create companion matrix
     let mut companion = Array2::<F>::zeros((n, n));
@@ -1504,7 +1504,7 @@ where
     let _ = check_in_bounds(offdiag_low, F::neg_infinity(), F::infinity(), "offdiag_low").expect("Invalid offdiag_low value");
     let _ = check_in_bounds(offdiag_high, offdiag_low, F::infinity(), "offdiag_high").expect("Invalid offdiag_high value");
     
-    let mut rng = create_rng(seed);
+    let mut rng = create&mut rng(seed);
     
     // Create distributions for diagonal and off-diagonal elements
     let diag_dist = UniformDist::new(
@@ -1605,7 +1605,7 @@ where
     let _ = check_in_bounds(offdiag_low, F::neg_infinity(), F::infinity(), "offdiag_low").expect("Invalid offdiag_low value");
     let _ = check_in_bounds(offdiag_high, offdiag_low, F::infinity(), "offdiag_high").expect("Invalid offdiag_high value");
     
-    let mut rng = create_rng(seed);
+    let mut rng = create&mut rng(seed);
     
     // Create distributions for diagonal and off-diagonal elements
     let diag_dist = UniformDist::new(
@@ -1682,7 +1682,7 @@ pub fn ml_matrix<F>(
 where
     F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + Sum + 'static,
 {
-    let mut rng = create_rng(seed);
+    let mut rng = create&mut rng(seed);
     
     match init_type.to_lowercase().as_str() {
         "xavier" | "glorot" => {

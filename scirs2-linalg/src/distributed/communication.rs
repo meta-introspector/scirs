@@ -155,7 +155,7 @@ pub struct DistributedCommunicator {
 
 impl DistributedCommunicator {
     /// Create a new distributed communicator
-    pub fn new(_config: &super::DistributedConfig) -> LinalgResult<Self> {
+    pub fn new(config: &super::DistributedConfig) -> LinalgResult<Self> {
         // Create node address mapping (simplified - in practice would use discovery service)
         let mut node_addresses = HashMap::new();
         for rank in 0.._config.num_nodes {
@@ -164,9 +164,9 @@ impl DistributedCommunicator {
         }
 
         Ok(Self {
-            rank: _config.node_rank,
-            size: _config.num_nodes,
-            backend: _config.backend,
+            rank: config.node_rank,
+            size: config.num_nodes,
+            backend: config.backend,
             sequence_counter: Arc::new(Mutex::new(0)),
             message_buffer: Arc::new(Mutex::new(HashMap::new())),
             stats: Arc::new(Mutex::new(CommunicationStats::default())),
@@ -266,7 +266,7 @@ impl DistributedCommunicator {
     }
     
     /// Gather matrices from all nodes to root
-    pub fn gather_matrices<T>(&self, local_matrix: &ArrayView2<T>) -> LinalgResult<Option<Vec<Array2<T>>>>
+    pub fn gather_matrices<T>(&self, localmatrix: &ArrayView2<T>) -> LinalgResult<Option<Vec<Array2<T>>>>
     where
         T: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de>,
     {
@@ -292,7 +292,7 @@ impl DistributedCommunicator {
     }
     
     /// All-reduce operation (sum matrices across all nodes)
-    pub fn allreduce_sum<T>(&self, local_matrix: &ArrayView2<T>) -> LinalgResult<Array2<T>>
+    pub fn allreduce_sum<T>(&self, localmatrix: &ArrayView2<T>) -> LinalgResult<Array2<T>>
     where
         T: Clone + Send + Sync + Serialize + for<'de> Deserialize<'de> + num_traits::Zero + std::ops::Add<Output = T>,
     {
@@ -301,7 +301,7 @@ impl DistributedCommunicator {
             // Sum all matrices (only on root)
             let mut result = matrices[0].clone();
             for _matrix in matrices.iter().skip(1) {
-                result = &result + _matrix;
+                result = &result + matrix;
             }
             
             // Broadcast result to all nodes
@@ -582,22 +582,22 @@ impl DistributedCommunicator {
         Ok(Message { metadata, data })
     }
     
-    fn send_mpi(&self_message: Message<Vec<u8>>) -> LinalgResult<()> {
+    fn send_mpi(&selfmessage: Message<Vec<u8>>) -> LinalgResult<()> {
         // MPI implementation would go here
         Err(LinalgError::NotImplemented("MPI backend not implemented".to_string()))
     }
     
-    fn recv_mpi(&self_source: usize, _tag: MessageTag) -> LinalgResult<Message<Vec<u8>>> {
+    fn recv_mpi(&self_source: usize, tag: MessageTag) -> LinalgResult<Message<Vec<u8>>> {
         // MPI implementation would go here
         Err(LinalgError::NotImplemented("MPI backend not implemented".to_string()))
     }
     
-    fn send_rdma(&self_message: Message<Vec<u8>>) -> LinalgResult<()> {
+    fn send_rdma(&selfmessage: Message<Vec<u8>>) -> LinalgResult<()> {
         // RDMA implementation would go here
         Err(LinalgError::NotImplemented("RDMA backend not implemented".to_string()))
     }
     
-    fn recv_rdma(&self_source: usize, _tag: MessageTag) -> LinalgResult<Message<Vec<u8>>> {
+    fn recv_rdma(&self_source: usize, tag: MessageTag) -> LinalgResult<Message<Vec<u8>>> {
         // RDMA implementation would go here
         Err(LinalgError::NotImplemented("RDMA backend not implemented".to_string()))
     }
@@ -643,7 +643,7 @@ impl DistributedCommunicator {
     }
     
     /// Decompress data (mock implementation)
-    fn decompress_data(&self, compressed_data: &[u8]) -> LinalgResult<Vec<u8>> {
+    fn decompress_data(&self, compresseddata: &[u8]) -> LinalgResult<Vec<u8>> {
         // In a real implementation, this would decompress LZ4 _data
         // For now, just return the original _data
         Ok(compressed_data.to_vec())
@@ -738,7 +738,7 @@ mod tests {
         let comm = DistributedCommunicator::new(&config).unwrap();
         
         // Test serialization
-        let matrix = Array2::fromshape_fn((3, 3), |(i, j)| (i + j) as f64);
+        let matrix = Array2::from_shape_fn((3, 3), |(i, j)| (i + j) as f64);
         let serialized = comm.serialize_matrix(&matrix.view()).unwrap();
         let deserialized: Array2<f64> = comm.deserialize_matrix(&serialized).unwrap();
         

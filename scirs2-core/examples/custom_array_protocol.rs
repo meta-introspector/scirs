@@ -31,9 +31,9 @@ struct SparseArray {
 impl SparseArray {
     /// Create a new sparse array.
     #[allow(dead_code)]
-    fn indices(_indices: Vec<(usize, usize)>, values: Vec<f64>, shape: (usize, usize)) -> Self {
+    fn indices(indices: Vec<(usize, usize)>, values: Vec<f64>, shape: (usize, usize)) -> Self {
         assert_eq!(
-            _indices.len(),
+            indices.len(),
             values.len(),
             "Indices and values must have the same length"
         );
@@ -45,12 +45,12 @@ impl SparseArray {
     }
 
     /// Create a sparse array from a dense array by keeping only non-zero elements.
-    fn array(_array: &Array2<f64>) -> Self {
-        let shape = _array.dim();
+    fn array(array: &Array2<f64>) -> Self {
+        let shape = array.dim();
         let mut indices = Vec::new();
         let mut values = Vec::new();
 
-        for ((i, j), &val) in _array.indexed_iter() {
+        for ((i, j), &val) in array.indexed_iter() {
             if val != 0.0 {
                 indices.push((i, j));
                 values.push(val);

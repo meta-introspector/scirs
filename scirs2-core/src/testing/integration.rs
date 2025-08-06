@@ -35,7 +35,7 @@
 //! - scirs2-vision: Computer vision algorithms
 //! - scirs2-series: Time series analysis
 
-use crate::api_versioning::Version;
+use crate::apiversioning::Version;
 use crate::error::{CoreError, CoreResult, ErrorContext};
 use crate::testing::{TestConfig, TestResult, TestRunner, TestSuite};
 use crate::validation::{check_finite, check_positive};
@@ -55,7 +55,7 @@ pub struct IntegrationTestConfig {
     /// Whether to test performance integration
     pub test_performance: bool,
     /// Whether to test error propagation
-    pub test_error_handling: bool,
+    pub testerror_handling: bool,
     /// Whether to validate configuration consistency
     pub test_configuration: bool,
     /// Maximum acceptable performance degradation (as percentage)
@@ -71,7 +71,7 @@ impl Default for IntegrationTestConfig {
             target_modules: Vec::new(),
             test_data_flow: true,
             test_performance: true,
-            test_error_handling: true,
+            testerror_handling: true,
             test_configuration: true,
             max_performance_degradation: 10.0, // 10% degradation allowed
             api_compatibility: ApiCompatibilitySpec::default(),
@@ -181,7 +181,7 @@ pub struct IntegrationTestResult {
 #[derive(Debug, Clone)]
 pub struct ModuleTestResult {
     /// Module name
-    pub module_name: String,
+    pub modulename: String,
     /// Whether all tests passed
     pub passed: bool,
     /// Individual test results
@@ -198,7 +198,7 @@ pub struct ModuleTestResult {
 #[derive(Debug, Clone)]
 pub struct ApiCheckResult {
     /// API name
-    pub api_name: String,
+    pub apiname: String,
     /// Whether the API is available
     pub available: bool,
     /// API version if available
@@ -254,7 +254,7 @@ pub struct ApiCompatibilityResult {
     /// Version compatibility details
     pub version_compatibility: HashMap<String, bool>,
     /// Breaking changes detected
-    pub breaking_changes: Vec<BreakingChange>,
+    pub breakingchanges: Vec<BreakingChange>,
     /// Deprecation warnings
     pub deprecation_warnings: Vec<String>,
 }
@@ -263,7 +263,7 @@ pub struct ApiCompatibilityResult {
 #[derive(Debug, Clone)]
 pub struct BreakingChange {
     /// API that was changed
-    pub api_name: String,
+    pub apiname: String,
     /// Type of change
     pub change_type: BreakingChangeType,
     /// Description of the change
@@ -372,15 +372,15 @@ impl IntegrationTestRunner {
     }
 
     /// Test integration with a specific module
-    fn test_module_integration(&self, module_spec: &ModuleSpec) -> CoreResult<ModuleTestResult> {
+    fn test_module_integration(&self, modulespec: &ModuleSpec) -> CoreResult<ModuleTestResult> {
         let mut test_results = Vec::new();
         let mut api_checks = Vec::new();
         let mut feature_availability = HashMap::new();
         let errors = Vec::new();
 
         // Check API availability
-        for api_name in &module_spec.expected_apis {
-            let api_check = self.check_api_availability(api_name, &module_spec.name)?;
+        for apiname in &module_spec.expected_apis {
+            let api_check = self.check_api_availability(apiname, &module_spec.name)?;
             api_checks.push(api_check);
         }
 
@@ -398,7 +398,7 @@ impl IntegrationTestRunner {
             && feature_availability.values().all(|&available| available);
 
         Ok(ModuleTestResult {
-            module_name: module_spec.name.clone(),
+            modulename: module_spec.name.clone(),
             passed,
             test_results,
             api_checks,
@@ -410,54 +410,51 @@ impl IntegrationTestRunner {
     /// Check if an API is available in a module
     fn check_api_availability(
         &self,
-        api_name: &str,
-        module_name: &str,
+        apiname: &str,
+        modulename: &str,
     ) -> CoreResult<ApiCheckResult> {
         // In a real implementation, this would dynamically check for API availability
         // For now, we'll simulate the check based on known module APIs
 
-        let available = match module_name {
+        let available = match modulename {
             "scirs2-linalg" => {
-                matches!(
-                    api_name,
-                    "matrix_multiply" | "svd" | "eigenvalues" | "solve"
-                )
+                matches!(apiname, "matrix_multiply" | "svd" | "eigenvalues" | "solve")
             }
             "scirs2-stats" => {
                 matches!(
-                    api_name,
+                    apiname,
                     "normal_distribution" | "chi_square_test" | "correlation" | "t_test"
                 )
             }
             "scirs2-optimize" => {
                 matches!(
-                    api_name,
+                    apiname,
                     "minimize" | "least_squares" | "differential_evolution"
                 )
             }
             "scirs2-fft" => {
-                matches!(api_name, "fft" | "ifft" | "rfft" | "fftfreq")
+                matches!(apiname, "fft" | "ifft" | "rfft" | "fftfreq")
             }
             "scirs2-signal" => {
                 matches!(
-                    api_name,
+                    apiname,
                     "filter_design" | "correlate" | "convolve" | "spectrogram"
                 )
             }
             "scirs2-spatial" => {
-                matches!(api_name, "kdtree" | "convex_hull" | "delaunay" | "voronoi")
+                matches!(apiname, "kdtree" | "convex_hull" | "delaunay" | "voronoi")
             }
             "scirs2-cluster" => {
-                matches!(api_name, "kmeans" | "dbscan" | "hierarchical" | "birch")
+                matches!(apiname, "kmeans" | "dbscan" | "hierarchical" | "birch")
             }
             "scirs2-interpolate" => {
-                matches!(api_name, "interp1d" | "interp2d" | "spline" | "griddata")
+                matches!(apiname, "interp1d" | "interp2d" | "spline" | "griddata")
             }
             _ => true, // Assume available for other modules
         };
 
         Ok(ApiCheckResult {
-            api_name: api_name.to_string(),
+            apiname: apiname.to_string(),
             available,
             version: if available {
                 Some(Version::new(0, 1, 0))
@@ -473,9 +470,9 @@ impl IntegrationTestRunner {
     }
 
     /// Check if a feature is available in a module
-    fn check_feature_availability(&self, feature: &str, module_name: &str) -> CoreResult<bool> {
+    fn check_feature_availability(&self, feature: &str, modulename: &str) -> CoreResult<bool> {
         // Simulate feature availability checking
-        let available = match (module_name, feature) {
+        let available = match (modulename, feature) {
             ("scirs2-linalg", "blas") => true,
             ("scirs2-linalg", "lapack") => true,
             ("scirs2-stats", "distributions") => true,
@@ -488,7 +485,7 @@ impl IntegrationTestRunner {
     }
 
     /// Run module-specific integration tests
-    fn run_module_specific_tests(&self, module_spec: &ModuleSpec) -> CoreResult<Vec<TestResult>> {
+    fn run_module_specific_tests(&self, modulespec: &ModuleSpec) -> CoreResult<Vec<TestResult>> {
         let mut results = Vec::new();
         let runner = TestRunner::new(self.config.base.clone());
 
@@ -530,24 +527,24 @@ impl IntegrationTestRunner {
     }
 
     /// Test linalg module integration
-    fn test_linalg_integration(&self, _module_spec: &ModuleSpec) -> CoreResult<()> {
+    fn test_linalg_integration(&self, _modulespec: &ModuleSpec) -> CoreResult<()> {
         // Test that core validation functions work with linalg data structures
-        let test_matrix = vec![1.0f64, 2.0, 3.0, 4.0];
+        let testmatrix = vec![1.0f64, 2.0, 3.0, 4.0];
 
         // Test validation integration - check each element is finite
-        for (i, &value) in test_matrix.iter().enumerate() {
-            check_finite(value, format!("test_matrix[{}]", i))?;
+        for (i, &value) in testmatrix.iter().enumerate() {
+            check_finite(value, format!("testmatrix[{}]", i))?;
         }
-        check_positive(test_matrix.len(), "matrix_size")?;
+        check_positive(testmatrix.len(), "matrix_size")?;
 
         // Test array protocol compatibility
-        self.test_array_protocol_compatibility(&test_matrix)?;
+        self.test_array_protocol_compatibility(&testmatrix)?;
 
         Ok(())
     }
 
     /// Test stats module integration
-    fn test_stats_integration(&self, _module_spec: &ModuleSpec) -> CoreResult<()> {
+    fn test_stats_integration(&self, _modulespec: &ModuleSpec) -> CoreResult<()> {
         // Test statistical validation with core utilities
         let test_data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 
@@ -563,7 +560,7 @@ impl IntegrationTestRunner {
     }
 
     /// Test FFT module integration
-    fn test_fft_integration(&self, _module_spec: &ModuleSpec) -> CoreResult<()> {
+    fn test_fft_integration(&self, _modulespec: &ModuleSpec) -> CoreResult<()> {
         // Test FFT with core complex number support
         let test_signal = vec![1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0];
 
@@ -580,7 +577,7 @@ impl IntegrationTestRunner {
     }
 
     /// Test signal processing module integration
-    fn test_signal_integration(&self, _module_spec: &ModuleSpec) -> CoreResult<()> {
+    fn test_signal_integration(&self, _modulespec: &ModuleSpec) -> CoreResult<()> {
         // Test signal processing with core utilities
         let test_signal = vec![1.0, 2.0, 3.0, 2.0, 1.0];
 
@@ -596,7 +593,7 @@ impl IntegrationTestRunner {
     }
 
     /// Test spatial module integration
-    fn test_spatial_integration(&self, _module_spec: &ModuleSpec) -> CoreResult<()> {
+    fn test_spatial_integration(&self, _modulespec: &ModuleSpec) -> CoreResult<()> {
         // Test spatial algorithms with core validation
         let test_points = vec![(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)];
 
@@ -612,54 +609,54 @@ impl IntegrationTestRunner {
     }
 
     /// Test generic module integration
-    fn test_generic_integration(&self, _module_spec: &ModuleSpec) -> CoreResult<()> {
+    fn test_generic_integration(&self, _modulespec: &ModuleSpec) -> CoreResult<()> {
         // Generic integration tests that apply to all modules
 
         // Test error handling compatibility
-        self.test_error_handling_integration()?;
+        self.testerror_handling_integration()?;
 
         // Test configuration system compatibility
         self.test_configuration_integration()?;
 
         // Test logging integration
-        self.test_logging_integration()?;
+        self.testlogging_integration()?;
 
         Ok(())
     }
 
     /// Test array protocol compatibility
-    fn test_array_protocol_compatibility(&self, _data: &[f64]) -> CoreResult<()> {
+    fn test_array_protocol_compatibility(&self, data: &[f64]) -> CoreResult<()> {
         // Test that core array protocols work with module data structures
         // This would test ArrayLike, IntoArray, and other array protocol traits
         Ok(())
     }
 
     /// Test random number integration
-    fn test_random_integration(&self, _data: &[f64]) -> CoreResult<()> {
+    fn test_random_integration(&self, data: &[f64]) -> CoreResult<()> {
         // Test that core random number utilities work with stats module
         Ok(())
     }
 
     /// Test SIMD integration
-    fn test_simd_integration(&self, _data: &[f64]) -> CoreResult<()> {
+    fn test_simd_integration(&self, data: &[f64]) -> CoreResult<()> {
         // Test that core SIMD operations work with module algorithms
         Ok(())
     }
 
     /// Test memory-efficient integration
-    fn test_memory_efficient_integration(&self, _data: &[f64]) -> CoreResult<()> {
+    fn test_memory_efficient_integration(&self, data: &[f64]) -> CoreResult<()> {
         // Test that core memory-efficient operations work with modules
         Ok(())
     }
 
     /// Test parallel processing integration
-    fn test_parallel_integration<T>(&self, _data: &[T]) -> CoreResult<()> {
+    fn test_parallel_integration<T>(&self, data: &[T]) -> CoreResult<()> {
         // Test that core parallel utilities work with module algorithms
         Ok(())
     }
 
     /// Test error handling integration
-    fn test_error_handling_integration(&self) -> CoreResult<()> {
+    fn testerror_handling_integration(&self) -> CoreResult<()> {
         // Test that core error types can be used across modules
         Ok(())
     }
@@ -671,7 +668,7 @@ impl IntegrationTestRunner {
     }
 
     /// Test logging integration
-    fn test_logging_integration(&self) -> CoreResult<()> {
+    fn testlogging_integration(&self) -> CoreResult<()> {
         // Test that core logging utilities work across modules
         Ok(())
     }
@@ -742,7 +739,7 @@ impl IntegrationTestRunner {
     fn measure_performance_metrics(&self) -> CoreResult<PerformanceMetrics> {
         // Measure baseline performance
         let baseline_start = Instant::now();
-        self.run_baseline_benchmark()?;
+        self.runbaseline_benchmark()?;
         let baseline_time = baseline_start.elapsed();
 
         // Measure integrated performance
@@ -778,7 +775,7 @@ impl IntegrationTestRunner {
     }
 
     /// Run baseline performance benchmark
-    fn run_baseline_benchmark(&self) -> CoreResult<()> {
+    fn runbaseline_benchmark(&self) -> CoreResult<()> {
         // Simulate baseline benchmark
         std::thread::sleep(Duration::from_millis(10));
         Ok(())
@@ -794,7 +791,7 @@ impl IntegrationTestRunner {
     /// Check API compatibility across modules
     fn check_api_compatibility(&self) -> CoreResult<ApiCompatibilityResult> {
         let mut version_compatibility = HashMap::new();
-        let mut breaking_changes = Vec::new();
+        let mut breakingchanges = Vec::new();
         let mut deprecation_warnings = Vec::new();
 
         // Check each target module for compatibility
@@ -803,8 +800,8 @@ impl IntegrationTestRunner {
             version_compatibility.insert(module_spec.name.clone(), compatible);
 
             if !compatible {
-                breaking_changes.push(BreakingChange {
-                    api_name: format!("{}::all_apis", module_spec.name),
+                breakingchanges.push(BreakingChange {
+                    apiname: format!("{}::all_apis", module_spec.name),
                     change_type: BreakingChangeType::BehaviorChange,
                     description: "Module API incompatible with core".to_string(),
                     version: module_spec.version,
@@ -818,18 +815,18 @@ impl IntegrationTestRunner {
             deprecation_warnings.push("Using deprecated API version".to_string());
         }
 
-        let compatible = version_compatibility.values().all(|&v| v) && breaking_changes.is_empty();
+        let compatible = version_compatibility.values().all(|&v| v) && breakingchanges.is_empty();
 
         Ok(ApiCompatibilityResult {
             compatible,
             version_compatibility,
-            breaking_changes,
+            breakingchanges,
             deprecation_warnings,
         })
     }
 
     /// Check API compatibility for a specific module
-    fn check_module_api_compatibility(&self, module_spec: &ModuleSpec) -> CoreResult<bool> {
+    fn check_module_api_compatibility(&self, modulespec: &ModuleSpec) -> CoreResult<bool> {
         // Check version compatibility
         let min_version = &self.config.api_compatibility.min_version;
         let max_version = &self.config.api_compatibility.max_version;
@@ -878,9 +875,9 @@ impl IntegrationTestRunner {
 
         // Module Results
         report.push_str("\n## Module Integration Results\n\n");
-        for (module_name, module_result) in &latest_result.module_results {
+        for (modulename, module_result) in &latest_result.module_results {
             let status = if module_result.passed { "✅" } else { "❌" };
-            report.push_str(&format!("### {} {}\n\n", status, module_name));
+            report.push_str(&format!("### {} {}\n\n", status, modulename));
 
             report.push_str(&format!(
                 "- **API Checks**: {}/{} passed\n",
@@ -944,12 +941,12 @@ impl IntegrationTestRunner {
             }
         ));
 
-        if !api_compat.breaking_changes.is_empty() {
+        if !api_compat.breakingchanges.is_empty() {
             report.push_str("- **Breaking Changes**:\n");
-            for change in &api_compat.breaking_changes {
+            for change in &api_compat.breakingchanges {
                 report.push_str(&format!(
                     "  - {}: {} ({})\n",
-                    change.api_name, change.description, change.version
+                    change.apiname, change.description, change.version
                 ));
             }
         }
@@ -1082,23 +1079,20 @@ impl EcosystemIntegrationTester {
             "scirs2-special",
         ];
 
-        for module_name in all_modules {
-            let compat_result = self.test_module_compatibility(module_name)?;
-            results.insert(module_name.to_string(), compat_result);
+        for modulename in all_modules {
+            let compat_result = self.test_module_compatibility(modulename)?;
+            results.insert(modulename.to_string(), compat_result);
         }
 
         Ok(results)
     }
 
     /// Test compatibility with a specific module
-    fn test_module_compatibility(
-        &self,
-        module_name: &str,
-    ) -> CoreResult<ModuleCompatibilityResult> {
+    fn test_module_compatibility(&self, modulename: &str) -> CoreResult<ModuleCompatibilityResult> {
         let start_time = Instant::now();
 
         let mut result = ModuleCompatibilityResult {
-            module_name: module_name.to_string(),
+            modulename: modulename.to_string(),
             api_compatible: false,
             feature_compatible: false,
             version_compatible: false,
@@ -1108,38 +1102,38 @@ impl EcosystemIntegrationTester {
         };
 
         // Test API compatibility
-        result.api_compatible = self.test_api_compatibility_for_module(module_name)?;
+        result.api_compatible = self.test_api_compatibility_for_module(modulename)?;
         if !result.api_compatible {
             result
                 .issues
-                .push(format!("API incompatibility detected in {}", module_name));
+                .push(format!("API incompatibility detected in {}", modulename));
         }
 
         // Test feature compatibility
-        result.feature_compatible = self.test_feature_compatibility_for_module(module_name)?;
+        result.feature_compatible = self.test_feature_compatibility_for_module(modulename)?;
         if !result.feature_compatible {
             result.issues.push(format!(
                 "Feature incompatibility detected in {}",
-                module_name
+                modulename
             ));
         }
 
         // Test version compatibility
-        result.version_compatible = self.test_version_compatibility_for_module(module_name)?;
+        result.version_compatible = self.test_version_compatibility_for_module(modulename)?;
         if !result.version_compatible {
             result.issues.push(format!(
                 "Version incompatibility detected in {}",
-                module_name
+                modulename
             ));
         }
 
         // Test performance compatibility
         result.performance_compatible =
-            self.test_performance_compatibility_for_module(module_name)?;
+            self.test_performance_compatibility_for_module(modulename)?;
         if !result.performance_compatible {
             result.issues.push(format!(
                 "Performance degradation detected in {}",
-                module_name
+                modulename
             ));
         }
 
@@ -1203,7 +1197,7 @@ impl EcosystemIntegrationTester {
         result.documentation_coverage = self.calculate_documentation_coverage()?;
 
         // Calculate code quality score
-        result.code_quality_score = self.calculate_code_quality_score()?;
+        result.code_quality_score = self.calculatecode_quality_score()?;
 
         // Run performance benchmarks
         result.performance_benchmarks = self.run_performance_benchmarks()?;
@@ -1334,16 +1328,16 @@ impl EcosystemIntegrationTester {
     }
 
     // Implementation stubs for detailed testing methods
-    fn test_api_compatibility_for_module(&self, _module_name: &str) -> CoreResult<bool> {
+    fn test_api_compatibility_for_module(&self, _modulename: &str) -> CoreResult<bool> {
         Ok(true)
     }
-    fn test_feature_compatibility_for_module(&self, _module_name: &str) -> CoreResult<bool> {
+    fn test_feature_compatibility_for_module(&self, _modulename: &str) -> CoreResult<bool> {
         Ok(true)
     }
-    fn test_version_compatibility_for_module(&self, _module_name: &str) -> CoreResult<bool> {
+    fn test_version_compatibility_for_module(&self, _modulename: &str) -> CoreResult<bool> {
         Ok(true)
     }
-    fn test_performance_compatibility_for_module(&self, _module_name: &str) -> CoreResult<bool> {
+    fn test_performance_compatibility_for_module(&self, _modulename: &str) -> CoreResult<bool> {
         Ok(true)
     }
     fn check_dependency_conflicts(&self) -> CoreResult<Vec<String>> {
@@ -1370,7 +1364,7 @@ impl EcosystemIntegrationTester {
     fn calculate_documentation_coverage(&self) -> CoreResult<f64> {
         Ok(92.0)
     }
-    fn calculate_code_quality_score(&self) -> CoreResult<f64> {
+    fn calculatecode_quality_score(&self) -> CoreResult<f64> {
         Ok(88.0)
     }
     fn run_performance_benchmarks(&self) -> CoreResult<Vec<String>> {
@@ -1394,7 +1388,7 @@ pub struct EcosystemTestResult {
 /// Module compatibility test result
 #[derive(Debug, Clone)]
 pub struct ModuleCompatibilityResult {
-    pub module_name: String,
+    pub modulename: String,
     pub api_compatible: bool,
     pub feature_compatible: bool,
     pub version_compatible: bool,
@@ -1640,7 +1634,7 @@ mod tests {
     #[test]
     fn test_api_check_result() {
         let result = ApiCheckResult {
-            api_name: "test_api".to_string(),
+            apiname: "test_api".to_string(),
             available: true,
             version: Some(Version::new(0, 1, 0)),
             error: None,
@@ -1686,7 +1680,7 @@ mod tests {
     #[test]
     fn test_module_compatibility_result() {
         let result = ModuleCompatibilityResult {
-            module_name: "scirs2-linalg".to_string(),
+            modulename: "scirs2-linalg".to_string(),
             api_compatible: true,
             feature_compatible: true,
             version_compatible: true,
@@ -1695,7 +1689,7 @@ mod tests {
             duration: Duration::from_millis(10),
         };
 
-        assert_eq!(result.module_name, "scirs2-linalg");
+        assert_eq!(result.modulename, "scirs2-linalg");
         assert!(result.api_compatible);
         assert!(result.issues.is_empty());
     }

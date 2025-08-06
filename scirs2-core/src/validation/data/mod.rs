@@ -168,7 +168,7 @@ mod tests {
         // Test array validation
         let constraints = ArrayValidationConstraints::new()
             .withshape(vec![6, 2])
-            .with_field_name(test_data)
+            .with_fieldname(test_data)
             .check_numeric_quality();
 
         let config = ValidationConfig::default();
@@ -266,7 +266,7 @@ mod tests {
     }
 
     #[test]
-    fn test_data_types() {
+    fn test_datatypes() {
         // Test data type definitions
         let string_type = DataType::String;
         let integer_type = DataType::Integer;
@@ -303,7 +303,7 @@ mod tests {
     }
 
     #[test]
-    fn test_validation_error_creation() {
+    fn test_validationerror_creation() {
         // Test validation error creation and formatting
         let error = ValidationError::new(
             ValidationErrorType::TypeMismatch,
@@ -315,7 +315,7 @@ mod tests {
         .with_constraint(type_check)
         .with_severity(ErrorSeverity::Error);
 
-        assert_eq!(error.error_type, ValidationErrorType::TypeMismatch);
+        assert_eq!(error.errortype, ValidationErrorType::TypeMismatch);
         assert_eq!(error.field_path, "test_field");
         assert_eq!(error.message, "Type mismatch error");
 

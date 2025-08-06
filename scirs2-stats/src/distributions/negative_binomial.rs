@@ -299,7 +299,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// let quant = nb.ppf(0.5).unwrap();
     /// assert_eq!(quant, 11.0);
     /// ```
-    pub fn ppf(&self, p_val: F) -> StatsResult<F> {
+    pub fn ppf(&self, pval: F) -> StatsResult<F> {
         let zero = F::zero();
         let one = F::one();
 
@@ -376,7 +376,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
                 let mut sum = 0;
                 for _ in 0..r_usize {
                     // Generate geometric random variable (# failures before first success)
-                    let u: f64 = rng.random_range(0.0..1.0);
+                    let u: f64 = rng.gen_range(0.0..1.0);
                     let p_f64 = <f64 as num_traits::NumCast>::from(self.p).unwrap_or(0.5);
                     let geom_sample = (u.ln() / (1.0 - p_f64).ln()).floor() as usize;
                     sum += geom_sample;
@@ -597,8 +597,8 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     }
 
     // Helper method to check if a value is an integer
-    fn is_integer(_value: F) -> bool {
-        _value == _value.floor()
+    fn is_integer(value: F) -> bool {
+        _value == value.floor()
     }
 
     // Helper method to calculate binomial coefficient C(n,k)

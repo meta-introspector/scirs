@@ -251,14 +251,14 @@ impl<T: Float + std::iter::Sum + ScalarOperand, P: PolicyNetwork<T>> TrustRegion
     }
 
     /// Check if step satisfies trust region constraint
-    fn check_trust_region_constraint(&self, direction: &Array1<T>, step_size: T) -> Result<bool> {
+    fn check_trust_region_constraint(&self, direction: &Array1<T>, stepsize: T) -> Result<bool> {
         // Compute expected KL divergence after update
         let expected_kl = self.estimate_kl_divergence(direction, step_size)?;
         Ok(expected_kl <= self.config.max_kl)
     }
 
     /// Estimate KL divergence for proposed update
-    fn estimate_kl_divergence(&self, direction: &Array1<T>, step_size: T) -> Result<T> {
+    fn estimate_kl_divergence(&self, direction: &Array1<T>, stepsize: T) -> Result<T> {
         // Quadratic approximation: KL ≈ 0.5 * d^T * F * d * step_size^2
         let fvp = self.fisher_vector_product(direction)?;
         let kl_estimate = T::from(0.5).unwrap() * self.dot(direction, &fvp) * step_size * step_size;
@@ -278,8 +278,7 @@ impl<T: Float + std::iter::Sum + ScalarOperand, P: PolicyNetwork<T>> TrustRegion
     }
 
     /// Apply parameter update to policy network
-    fn apply_parameter_update(&mut self,
-        update: &Array1<T>) -> Result<()> {
+    fn apply_parameter_update(&mut self, update: &Array1<T>) -> Result<()> {
         // In practice, this would _update the policy network parameters
         // For now, we just store the _update
         Ok(())

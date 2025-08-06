@@ -19,6 +19,7 @@ num-traits = { workspace = true }
 num-complex = { workspace = true }
 thiserror = { workspace = true }
 rand = { workspace = true }
+statrs = { workspace = true }
 approx = { workspace = true }
 
 # Text processing specific dependencies

@@ -52,13 +52,13 @@ impl EnhancedCountVectorizer {
     }
 
     /// Set the maximum number of features
-    pub fn set_max_features(mut self, max_features: Option<usize>) -> Self {
+    pub fn set_max_features(mut self, maxfeatures: Option<usize>) -> Self {
         self.max_features = max_features;
         self
     }
 
     /// Set the minimum document frequency
-    pub fn set_min_df(mut self, min_df: f64) -> Result<Self> {
+    pub fn set_min_df(mut self, mindf: f64) -> Result<Self> {
         if !(0.0..=1.0).contains(&min_df) {
             return Err(TextError::InvalidInput(
                 "min_df must be between 0.0 and 1.0".to_string(),
@@ -69,7 +69,7 @@ impl EnhancedCountVectorizer {
     }
 
     /// Set the maximum document frequency
-    pub fn set_max_df(mut self, max_df: f64) -> Result<Self> {
+    pub fn set_max_df(mut self, maxdf: f64) -> Result<Self> {
         if !(0.0..=1.0).contains(&max_df) {
             return Err(TextError::InvalidInput(
                 "max_df must be between 0.0 and 1.0".to_string(),
@@ -142,8 +142,8 @@ impl EnhancedCountVectorizer {
 
         // Rebuild vocabulary with filtered tokens
         self.vocabulary = Vocabulary::with_max_size(self.max_features.unwrap_or(usize::MAX));
-        for (token_) in filtered_tokens {
-            self.vocabulary.add_token(&token);
+        for token_ in filtered_tokens {
+            self.vocabulary.add_token(&token_);
         }
 
         Ok(())
@@ -240,8 +240,8 @@ impl Default for EnhancedCountVectorizer {
 /// Enhanced TF-IDF vectorizer with IDF smoothing options
 pub struct EnhancedTfidfVectorizer {
     count_vectorizer: EnhancedCountVectorizer,
-    use_idf: bool,
-    smooth_idf: bool,
+    useidf: bool,
+    smoothidf: bool,
     sublinear_tf: bool,
     norm: Option<String>,
     idf_: Option<Array1<f64>>,
@@ -252,8 +252,8 @@ impl EnhancedTfidfVectorizer {
     pub fn new() -> Self {
         Self {
             count_vectorizer: EnhancedCountVectorizer::new(),
-            use_idf: true,
-            smooth_idf: true,
+            useidf: true,
+            smoothidf: true,
             sublinear_tf: false,
             norm: Some("l2".to_string()),
             idf_: None,
@@ -261,19 +261,19 @@ impl EnhancedTfidfVectorizer {
     }
 
     /// Set whether to use IDF weighting
-    pub fn set_use_idf(mut self, use_idf: bool) -> Self {
-        self.use_idf = use_idf;
+    pub fn set_use_idf(mut self, useidf: bool) -> Self {
+        self.use_idf = useidf;
         self
     }
 
     /// Set whether to smooth IDF weights
-    pub fn set_smooth_idf(mut self, smooth_idf: bool) -> Self {
-        self.smooth_idf = smooth_idf;
+    pub fn set_smooth_idf(mut self, smoothidf: bool) -> Self {
+        self.smooth_idf = smoothidf;
         self
     }
 
     /// Set whether to use sublinear TF scaling
-    pub fn set_sublinear_tf(mut self, sublinear_tf: bool) -> Self {
+    pub fn set_sublinear_tf(mut self, sublineartf: bool) -> Self {
         self.sublinear_tf = sublinear_tf;
         self
     }
@@ -298,7 +298,7 @@ impl EnhancedTfidfVectorizer {
     }
 
     /// Set maximum features
-    pub fn set_max_features(mut self, max_features: Option<usize>) -> Self {
+    pub fn set_max_features(mut self, maxfeatures: Option<usize>) -> Self {
         self.count_vectorizer = self.count_vectorizer.set_max_features(max_features);
         self
     }

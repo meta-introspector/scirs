@@ -53,10 +53,10 @@ pub struct ParameterAverager<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
     /// Create a new parameter averager
-    pub fn new(_strategy: AveragingStrategy, num_nodes: usize) -> Self {
+    pub fn new(_strategy: AveragingStrategy, numnodes: usize) -> Self {
         Self {
             averaged_params: Vec::new(),
-            strategy: _strategy,
+            strategy: strategy,
             node_weights: HashMap::new(),
             num_nodes,
             momentum_buffer: None,
@@ -91,7 +91,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
     }
 
     /// Set weight for a specific node
-    pub fn set_node_weight(&mut self, node_id: usize, weight: A) -> Result<()> {
+    pub fn set_node_weight(&mut self, nodeid: usize, weight: A) -> Result<()> {
         if node_id >= self.num_nodes {
             return Err(OptimError::InvalidConfig(format!(
                 "Node ID {} exceeds number of nodes {}",
@@ -158,7 +158,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
     }
 
     /// Simple arithmetic averaging
-    fn arithmetic_average(&mut self, node_parameters: &[(usize, Vec<Array<A, D>>)]) -> Result<()> {
+    fn arithmetic_average(&mut self, nodeparameters: &[(usize, Vec<Array<A, D>>)]) -> Result<()> {
         // Reset averaged _parameters
         for param in &mut self.averaged_params {
             param.fill(A::zero());
@@ -184,7 +184,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
     }
 
     /// Weighted averaging using node weights
-    fn weighted_average(&mut self, node_parameters: &[(usize, Vec<Array<A, D>>)]) -> Result<()> {
+    fn weighted_average(&mut self, nodeparameters: &[(usize, Vec<Array<A, D>>)]) -> Result<()> {
         // Reset averaged _parameters
         for param in &mut self.averaged_params {
             param.fill(A::zero());
@@ -218,7 +218,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
     }
 
     /// Federated averaging (similar to weighted but with special handling)
-    fn federated_average(&mut self, node_parameters: &[(usize, Vec<Array<A, D>>)]) -> Result<()> {
+    fn federated_average(&mut self, nodeparameters: &[(usize, Vec<Array<A, D>>)]) -> Result<()> {
         // For simplicity, use weighted averaging with data-based weights
         // In practice, this would consider local dataset sizes and update frequencies
         self.weighted_average(node_parameters)
@@ -390,7 +390,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterServer<A, D> {
     }
 
     /// Initialize with global parameters
-    pub fn initialize(&mut self, initial_params: &[Array<A, D>]) -> Result<()> {
+    pub fn initialize(&mut self, initialparams: &[Array<A, D>]) -> Result<()> {
         self.averager.initialize(initial_params)?;
         self.global_parameters = initial_params.to_vec();
 
@@ -403,7 +403,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterServer<A, D> {
     }
 
     /// Submit parameter update from a node
-    pub fn submit_update(&mut self, node_id: usize, parameters: Vec<Array<A, D>>) -> Result<bool> {
+    pub fn submit_update(&mut self, nodeid: usize, parameters: Vec<Array<A, D>>) -> Result<bool> {
         if node_id >= self.averager.num_nodes() {
             return Err(OptimError::InvalidConfig(format!(
                 "Node ID {} exceeds number of nodes {}",
@@ -467,7 +467,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterServer<A, D> {
     }
 
     /// Get update count for a node
-    pub fn get_update_count(&self, node_id: usize) -> usize {
+    pub fn get_update_count(&self, nodeid: usize) -> usize {
         self.update_counts.get(&node_id).copied().unwrap_or(0)
     }
 
@@ -477,7 +477,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterServer<A, D> {
     }
 
     /// Set node weight for weighted averaging
-    pub fn set_node_weight(&mut self, node_id: usize, weight: A) -> Result<()> {
+    pub fn set_node_weight(&mut self, nodeid: usize, weight: A) -> Result<()> {
         self.averager.set_node_weight(node_id, weight)
     }
 
@@ -527,7 +527,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> DistributedCoordinator<A, D
     }
 
     /// Initialize coordinator
-    pub fn initialize(&mut self, initial_params: &[Array<A, D>]) -> Result<()> {
+    pub fn initialize(&mut self, initialparams: &[Array<A, D>]) -> Result<()> {
         self.parameter_server.initialize(initial_params)?;
         self.training_stats
             .record_round(0, A::zero(), initial_params);
@@ -604,7 +604,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> DistributedCoordinator<A, D
     }
 
     /// Compute convergence metric (parameter change magnitude)
-    fn compute_convergence_metric(&self, current_params: &[Array<A, D>]) -> A {
+    fn compute_convergence_metric(&self, currentparams: &[Array<A, D>]) -> A {
         if let Some(prev_params) = self.training_stats.get_previous_parameters::<D>() {
             let mut total_change = A::zero();
             let mut total_norm = A::zero();
@@ -789,9 +789,9 @@ pub struct GradientCompressor<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientCompressor<A, D> {
     /// Create a new gradient compressor
-    pub fn new(_strategy: CompressionStrategy) -> Self {
+    pub fn new(strategy: CompressionStrategy) -> Self {
         Self {
-            strategy: _strategy,
+            strategy: strategy,
             error_state: None,
             stats: CompressionStats::new(),
         }
@@ -1404,7 +1404,7 @@ impl CompressionStats {
     }
 
     /// Record a compression operation
-    pub fn record_compression(&mut self, original_bytes: usize, compressed_bytes: usize) {
+    pub fn record_compression(&mut self, original_bytes: usize, compressedbytes: usize) {
         self.compressions_count += 1;
         self.total_original_bytes += original_bytes;
         self.total_compressed_bytes += compressed_bytes;

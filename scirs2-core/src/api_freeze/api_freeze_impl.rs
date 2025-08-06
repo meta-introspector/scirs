@@ -3,7 +3,7 @@
 //! This module contains the frozen API surface for scirs2-core 1.0.
 //! These APIs are guaranteed to remain stable throughout the 1.x version series.
 
-use crate::api_versioning::{global_registry_mut, Version};
+use crate::apiversioning::{global_registry_mut, Version};
 use std::sync::Once;
 
 static INIT: Once = Once::new();
@@ -185,7 +185,7 @@ fn initialize_api_freeze_impl() {
         .register_api("safe_div", "safe_ops", v1_0_0)
         .register_api("safe_pow", "safe_ops", v1_0_0)
         .register_api("safe_sqrt", "safe_ops", v1_0_0)
-        .register_api("safe_log", "safe_ops", v1_0_0)
+        .register_api("safelog", "safe_ops", v1_0_0)
         .register_api("safe_exp", "safe_ops", v1_0_0);
 
     // Random number generation (conditional)
@@ -234,7 +234,7 @@ fn initialize_api_freeze_impl() {
             .register_api("ufunc_sin", "ufuncs", v1_0_0)
             .register_api("ufunc_cos", "ufuncs", v1_0_0)
             .register_api("ufunc_exp", "ufuncs", v1_0_0)
-            .register_api("ufunc_log", "ufuncs", v1_0_0);
+            .register_api("ufunclog", "ufuncs", v1_0_0);
     }
 
     // NDArray extensions

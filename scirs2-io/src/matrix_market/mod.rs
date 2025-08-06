@@ -224,14 +224,14 @@ pub struct IOStats {
 
 impl MMHeader {
     /// Parse Matrix Market header line
-    pub fn parse_header(_line: &str) -> Result<Self> {
+    pub fn parse_header(line: &str) -> Result<Self> {
         if !_line.starts_with("%%MatrixMarket") {
             return Err(IoError::FormatError(
                 "Invalid Matrix Market header".to_string(),
             ));
         }
 
-        let parts: Vec<&str> = _line.split_whitespace().collect();
+        let parts: Vec<&str> = line.split_whitespace().collect();
         if parts.len() != 5 {
             return Err(IoError::FormatError(
                 "Invalid Matrix Market header format".to_string(),
@@ -619,10 +619,10 @@ pub fn write_dense_matrix<P: AsRef<Path>>(path: P, matrix: &MMDenseMatrix<f64>) 
 ///
 /// * `(Array1<usize>, Array1<usize>, Array1<f64>)` - Row indices, column indices, and values
 #[allow(dead_code)]
-pub fn sparse_to_coo(_matrix: &MMSparseMatrix<f64>) -> (Array1<usize>, Array1<usize>, Array1<f64>) {
-    let rows: Vec<usize> = _matrix.entries.iter().map(|e| e.row).collect();
-    let cols: Vec<usize> = _matrix.entries.iter().map(|e| e.col).collect();
-    let values: Vec<f64> = _matrix.entries.iter().map(|e| e.value).collect();
+pub fn sparse_to_coo(matrix: &MMSparseMatrix<f64>) -> (Array1<usize>, Array1<usize>, Array1<f64>) {
+    let rows: Vec<usize> = matrix.entries.iter().map(|e| e.row).collect();
+    let cols: Vec<usize> = matrix.entries.iter().map(|e| e.col).collect();
+    let values: Vec<f64> = matrix.entries.iter().map(|e| e.value).collect();
 
     (Array1::from(rows), Array1::from(cols), Array1::from(values))
 }
@@ -867,8 +867,8 @@ pub fn read_sparse_matrix_parallel<P: AsRef<Path>>(
 
 /// Parse a single matrix entry line
 #[allow(dead_code)]
-fn parse_matrix_entry(_line: &str, header: &MMHeader) -> Result<SparseEntry<f64>> {
-    let parts: Vec<&str> = _line.split_whitespace().collect();
+fn parse_matrix_entry(line: &str, header: &MMHeader) -> Result<SparseEntry<f64>> {
+    let parts: Vec<&str> = line.split_whitespace().collect();
     if parts.len() < 2 {
         return Err(IoError::FormatError("Invalid entry format".to_string()));
     }
@@ -1059,11 +1059,11 @@ fn write_matrix_entry<W: Write>(
 
 /// Format a single matrix entry as a string
 #[allow(dead_code)]
-fn format_matrix_entry(_entry: &SparseEntry<f64>, header: &MMHeader) -> String {
+fn format_matrix_entry(entry: &SparseEntry<f64>, header: &MMHeader) -> String {
     if header.data_type == MMDataType::Pattern {
-        format!("{} {}", _entry.row + 1, _entry.col + 1)
+        format!("{} {}", entry.row + 1, entry.col + 1)
     } else {
-        format!("{} {} {}", _entry.row + 1, _entry.col + 1, _entry.value)
+        format!("{} {} {}", entry.row + 1, entry.col + 1, entry.value)
     }
 }
 

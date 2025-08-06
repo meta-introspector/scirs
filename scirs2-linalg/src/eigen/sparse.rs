@@ -25,7 +25,7 @@
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
 use num_complex::Complex;
 use num_traits::{Float, NumAssign};
-use rand::{prelude::*};
+use rand::prelude::*;
 use std::iter::Sum;
 
 use crate::error::{LinalgError, LinalgResult};
@@ -195,7 +195,7 @@ where
 
 // Helper function to check Lanczos convergence
 #[allow(dead_code)]
-fn check_lanczos_convergence<F: Float>(_alpha: &[F], beta: &[F], k: usize, tol: F) -> bool {
+fn check_lanczos_convergence<F: Float>(alpha: &[F], beta: &[F], k: usize, tol: F) -> bool {
     // Simple convergence check based on beta values
     if beta.len() < k {
         return false;
@@ -576,7 +576,7 @@ where
 
 // Helper function to check Arnoldi convergence
 #[allow(dead_code)]
-fn check_arnoldi_convergence<F: Float>(h_matrix: &Array2<F>, m: usize, k: usize, tol: F) -> bool {
+fn check_arnoldi_convergence<F: Float>(hmatrix: &Array2<F>, m: usize, k: usize, tol: F) -> bool {
     // Simple convergence check based on subdiagonal elements
     if m < k + 1 {
         return false;
@@ -586,8 +586,8 @@ fn check_arnoldi_convergence<F: Float>(h_matrix: &Array2<F>, m: usize, k: usize,
     (0..k).all(|i| {
         let row = m - 1 - i;
         let col = m - 2 - i;
-        if row < h_matrix.nrows() && col < h_matrix.ncols() {
-            h_matrix[[row, col]].abs() < tol * F::from(10.0).unwrap()
+        if row < hmatrix.nrows() && col < hmatrix.ncols() {
+            hmatrix[[row, col]].abs() < tol * F::from(10.0).unwrap()
         } else {
             true
         }
@@ -654,10 +654,10 @@ fn qr_algorithm_complex<F: Float + NumAssign + Sum + 'static>(
 
 // Simplified Householder QR for complex matrices
 #[allow(dead_code)]
-fn householder_qr_complex<F: Float + NumAssign + Sum>(_matrix: &Array2<Complex<F>>) -> QrResult<F> {
-    let (m, n) = _matrix.dim();
+fn householder_qr_complex<F: Float + NumAssign + Sum>(matrix: &Array2<Complex<F>>) -> QrResult<F> {
+    let (m, n) = matrix.dim();
     let mut q = Array2::<Complex<F>>::eye(m);
-    let mut r = _matrix.clone();
+    let mut r = matrix.clone();
 
     let min_dim = m.min(n);
 
@@ -745,7 +745,7 @@ fn apply_householder_right_complex<F: Float + NumAssign>(
     tau: Complex<F>,
     k: usize,
 ) {
-    let (m, _n) = matrix.dim();
+    let (m, n) = matrix.dim();
     let house_len = house_vec.len();
 
     for i in 0..m {
@@ -848,7 +848,13 @@ fn select_closest_complex_eigenvalues<F: Float>(
 /// This function is currently a placeholder and will be implemented in a future version.
 #[allow(dead_code)]
 pub fn eigs_gen<F, M1, M2>(
-    _a: &M1, _b: &M2, _k: usize, _which: &str, _target: F, _max_iter: usize, _tol: F,
+    _a: &M1,
+    _b: &M2,
+    _k: usize,
+    _which: &str,
+    _target: F,
+    _max_iter: usize,
+    _tol: F,
 ) -> SparseEigenResult<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -892,7 +898,11 @@ where
 /// This function is currently a placeholder and will be implemented in a future version.
 #[allow(dead_code)]
 pub fn svds<F, M>(
-    _matrix: &M, _k: usize, _which: &str, _max_iter: usize, _tol: F,
+    _matrix: &M,
+    _k: usize,
+    _which: &str,
+    _max_iter: usize,
+    _tol: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -934,7 +944,8 @@ where
 /// This function is currently a placeholder and will be implemented in a future version.
 #[allow(dead_code)]
 pub fn dense_to_sparse<F>(
-    _dense_matrix: &ArrayView2<F>, _threshold: F,
+    _dense_matrix: &ArrayView2<F>,
+    _threshold: F,
 ) -> LinalgResult<Box<dyn SparseMatrix<F>>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -967,14 +978,17 @@ where
     /// Create a new CSR matrix (placeholder implementation)
     pub fn new(
         nrows: usize,
-        ncols: usize, _data: Vec<F>, _indices: Vec<usize>, _indptr: Vec<usize>,
+        ncols: usize,
+        data: Vec<F>,
+        indices: Vec<usize>,
+        indptr: Vec<usize>,
     ) -> Self {
         Self {
             nrows,
             ncols,
-            data: _data,
-            indices: _indices,
-            indptr: _indptr,
+            data,
+            indices,
+            indptr,
         }
     }
 }
@@ -991,7 +1005,7 @@ where
         self.ncols
     }
 
-    fn matvec(&self, _x: &ArrayView1<F>, _y: &mut Array1<F>) -> LinalgResult<()> {
+    fn matvec(&self, _x: &ArrayView1<F>, y: &mut Array1<F>) -> LinalgResult<()> {
         Err(LinalgError::NotImplementedError(
             "CSR matrix-vector multiplication not yet implemented".to_string(),
         ))

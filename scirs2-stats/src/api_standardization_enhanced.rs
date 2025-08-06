@@ -101,15 +101,15 @@ where
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: FluentStatsConfig) -> Self {
-        let performance_monitor = if _config.enable_performance_monitoring {
+    pub fn with_config(config: FluentStatsConfig) -> Self {
+        let performance_monitor = if config.enable_performance_monitoring {
             Some(PerformanceMonitor::new())
         } else {
             None
         };
 
         Self {
-            config: _config,
+            config: config,
             operation_chain: Vec::new(),
             result_cache: Arc::new(std::sync::RwLock::new(HashMap::new())),
             performance_monitor,
@@ -694,7 +694,7 @@ pub enum OperationType {
 }
 
 impl OperationType {
-    fn from_descriptive(_desc_op: DescriptiveOperation) -> Self {
+    fn from_descriptive(_descop: DescriptiveOperation) -> Self {
         match _desc_op {
             DescriptiveOperation::Mean => OperationType::Mean,
             DescriptiveOperation::Variance(_) => OperationType::Variance,
@@ -835,9 +835,9 @@ struct CachedResult<F> {
 }
 
 impl<F> CachedResult<F> {
-    fn new(_result: OperationResult<F>) -> Self {
+    fn new(result: OperationResult<F>) -> Self {
         Self {
-            result: _result,
+            result: result,
             created_at: Instant::now(),
             ttl: Duration::from_secs(300), // 5 minutes default TTL
         }
@@ -861,7 +861,7 @@ impl PerformanceMonitor {
         }
     }
 
-    fn record_execution(&mut self, duration: Duration, operation_count: usize) {
+    fn record_execution(&mut self, duration: Duration, operationcount: usize) {
         self.executions.push(ExecutionMetrics {
             duration,
             operation_count,
@@ -900,7 +900,7 @@ where
 }
 
 #[allow(dead_code)]
-pub fn stats_with<F>(_config: FluentStatsConfig) -> FluentStats<F>
+pub fn stats_with<F>(config: FluentStatsConfig) -> FluentStats<F>
 where
     F: Float + NumCast + Send + Sync + 'static + std::fmt::Display,
 {

@@ -186,28 +186,28 @@ where
 /// // Add noise to create signal_plus_noise
 /// let mut rng = rand::rng();
 /// let noisy: Vec<f64> = clean.iter()
-///     .map(|&x| x + rng.random_range(-0.1f64..0.1f64))
+///     .map(|&x| x + rng.gen_range(-0.1f64..0.1f64))
 ///     .collect();
 ///
 /// // Calculate SNR
 /// let snr_db = snr(&clean, &noisy).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn snr<T, U>(_signal: &[T], signal_plus_noise: &[U]) -> SignalResult<f64>
+pub fn snr<T, U>(_signal: &[T], signal_plusnoise: &[U]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if _signal.is_empty() || signal_plus_noise.is_empty() {
+    if signal.is_empty() || signal_plus_noise.is_empty() {
         return Err(SignalError::ValueError(
             "Input signals are empty".to_string(),
         ));
     }
 
-    if _signal.len() != signal_plus_noise.len() {
+    if signal.len() != signal_plus_noise.len() {
         return Err(SignalError::DimensionMismatch(format!(
             "Signal lengths do not match: {} vs {}",
-            _signal.len(),
+            signal.len(),
             signal_plus_noise.len()
         )));
     }
@@ -241,7 +241,7 @@ where
     // Calculate power of _signal and _noise
     let signal_power: f64 =
         signal_f64.iter().map(|&x| x * x).sum::<f64>() / signal_f64.len() as f64;
-    let noise_power: f64 = _noise.iter().map(|&x| x * x).sum::<f64>() / _noise.len() as f64;
+    let noise_power: f64 = noise.iter().map(|&x| x * x).sum::<f64>() / noise.len() as f64;
 
     // Avoid division by zero
     if noise_power.abs() < f64::EPSILON {
@@ -294,11 +294,11 @@ where
 /// assert!(((thd_val - 0.112) as f64).abs() < 0.01);
 /// ```
 #[allow(dead_code)]
-pub fn thd<T>(_signal: &[T], fs: f64, f0: f64, n_harmonics: Option<usize>) -> SignalResult<f64>
+pub fn thd<T>(_signal: &[T], fs: f64, f0: f64, nharmonics: Option<usize>) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
 {
-    if _signal.is_empty() {
+    if signal.is_empty() {
         return Err(SignalError::ValueError(
             "Input _signal is empty".to_string(),
         ));
@@ -405,7 +405,10 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
+    use rand::Rng;
+    use std::f64::consts::PI;
     #[test]
     fn test_rms() {
         // DC signal
@@ -466,7 +469,7 @@ mod tests {
         let mut rng = rand::rng();
         let noisy: Vec<f64> = clean
             .iter()
-            .map(|&x| x + noise_amplitude * (2.0 * PI * rng.random_range(0.0..1.0)).sin())
+            .map(|&x| x + noise_amplitude * (2.0 * PI * rng.gen_range(0.0..1.0)).sin())
             .collect();
 
         // Calculate SNR

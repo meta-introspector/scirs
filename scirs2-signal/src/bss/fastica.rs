@@ -5,7 +5,7 @@ use ndarray::s;
 
 use super::{BssConfig, NonlinearityFunction};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
 use rand::SeedableRng;
 use rand_distr::{Distribution, Normal};
 use scirs2_linalg::eigh;
@@ -37,7 +37,7 @@ pub fn fast_ica(
 
     // Initialize random unmixing matrix
     let mut rng = if let Some(seed) = config.random_seed {
-        rand::rngs::StdRng::from_seed([seed as u8; 32])
+        rand::rngs::StdRng::seed_from_u64([seed as u8; 32])
     } else {
         {
             // In rand 0.9, from_rng doesn't return Result but directly returns the PRNG
@@ -184,7 +184,7 @@ pub fn fast_ica(
 
             // Compute gradient
             let gradient = gx.dot(&signals.t()) / (n_samples as f64)
-                - Array2::<f64>::eye(n_components) * w.mapv(|x: f64| g_prime(x)).mean().unwrap();
+                - Array2::<f64>::eye(n_components) * w.mapv(|x: f64| g_prime(x)).mean();
 
             // Update weight matrix
             w = &w + &(&gradient * config.learning_rate);

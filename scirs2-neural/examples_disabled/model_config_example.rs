@@ -12,7 +12,7 @@ impl ModelConfig {
     fn validate(&self) -> Result<()> {
         Ok(())
     }
-    fn to_file(&self_path: &std::path::Path, _format: Option<ConfigFormat>) -> Result<()> {
+    fn to_file(self_path: &std::path::Path, format: Option<ConfigFormat>) -> Result<()> {
 // Local implementation for ConfigFormat
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ConfigFormat {
@@ -21,22 +21,22 @@ enum ConfigFormat {
 // Local implementations for serialization
 struct ConfigSerializer;
 impl ConfigSerializer {
-    fn to_json(_config: &ModelConfig, pretty: bool) -> Result<String> {
+    fn to_json(config: &ModelConfig, pretty: bool) -> Result<String> {
         Ok(String::from("{\"\": \"Mock JSON\"}\n"))
-    fn to_yaml(_config: &ModelConfig) -> Result<String> {
+    fn to_yaml(config: &ModelConfig) -> Result<String> {
         Ok(String::from("mock: YAML\n"))
-    fn from_json(_json: &str) -> Result<ModelConfig> {
+    fn from_json(json: &str) -> Result<ModelConfig> {
         Ok(ModelConfig::ViT(()))
-    fn from_yaml(_yaml: &str) -> Result<ModelConfig> {
+    fn from_yaml(yaml: &str) -> Result<ModelConfig> {
 // Simplified ConfigBuilder
 struct ConfigBuilder;
 impl ConfigBuilder {
-    fn resnet(_layers: usize, _num_classes: usize_input, _channels: usize) -> ModelConfig {
+    fn resnet(_layers: usize, _num_classes: usize_input, channels: usize) -> ModelConfig {
         ModelConfig::ResNet(())
-    fn vit(_image_size: usize, _patch_size: usize_num, _classes: usize) -> ModelConfig {
+    fn vit(_image_size: usize, _patch_size: usize_num, classes: usize) -> ModelConfig {
         ModelConfig::ViT(())
-    fn bert(_vocab_size: usize, _hidden_size: usize_num, _layers: usize) -> ModelConfig {
-    fn gpt(_vocab_size: usize, _hidden_size: usize_num, _layers: usize) -> ModelConfig {
+    fn bert(_vocab_size: usize, _hidden_size: usize_num, layers: usize) -> ModelConfig {
+    fn gpt(_vocab_size: usize, _hidden_size: usize_num, layers: usize) -> ModelConfig {
     fn seq2seq(
         _input_vocab_size: usize, _output_vocab_size: usize_hidden, _dim: usize,
     ) -> ModelConfig {

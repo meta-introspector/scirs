@@ -73,7 +73,7 @@ where
     F: Fn(&ArrayView1<f64>) -> f64 + Clone,
 {
     /// Create new Dual Annealing solver
-    pub fn new(_func: F, x0: Array1<f64>, options: DualAnnealingOptions) -> Self {
+    pub fn new(func: F, x0: Array1<f64>, options: DualAnnealingOptions) -> Self {
         let ndim = x0.len();
         let seed = options
             .seed
@@ -84,7 +84,7 @@ where
         let temperature = options.initial_temp;
 
         Self {
-            func: _func,
+            func: func,
             x0: x0.clone(),
             options,
             ndim,
@@ -134,7 +134,7 @@ where
     }
 
     /// Calculate acceptance probability
-    fn accept_probability(&self, energy_new: f64) -> f64 {
+    fn accept_probability(&self, energynew: f64) -> f64 {
         if energy_new <= self.current_energy {
             1.0
         } else {

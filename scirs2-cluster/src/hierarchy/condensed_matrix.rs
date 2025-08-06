@@ -4,7 +4,7 @@
 //! which store only the upper triangular portion of a symmetric distance matrix
 //! in a flattened 1D array format for memory efficiency.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::fmt::Debug;
 
@@ -306,7 +306,7 @@ pub fn condensed_size(n: usize) -> usize {
 ///
 /// * `Result<usize>` - Number of points, or error if size is invalid
 #[allow(dead_code)]
-pub fn points_from_condensed_size(_condensed_len: usize) -> Result<usize> {
+pub fn points_from_condensed_size(_condensedlen: usize) -> Result<usize> {
     let n_float = (1.0 + (1.0 + 8.0 * _condensed_len as f64).sqrt()) / 2.0;
     let n = n_float as usize;
 

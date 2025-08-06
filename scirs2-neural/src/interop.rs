@@ -371,7 +371,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         self.serialize_onnx_model(&onnx_model, output_path)?;
         Ok(())
     /// Import model from ONNX format
-    pub fn import_from_onnx(&mut self, model_path: &Path) -> Result<ConvertedModel<F>> {
+    pub fn import_from_onnx(&mut self, modelpath: &Path) -> Result<ConvertedModel<F>> {
         // Parse ONNX protobuf file (simplified)
         let onnx_model = self.parse_onnx_file(model_path)?;
         // Convert ONNX representation to scirs2 format
@@ -399,13 +399,13 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 include_optimizer: false,
         })
     /// Convert TensorFlow saved model to scirs2 format
-    pub fn convert_from_tensorflow(&self, saved_model_path: &Path) -> Result<ConvertedModel<F>> {
+    pub fn convert_from_tensorflow(&self, saved_modelpath: &Path) -> Result<ConvertedModel<F>> {
         // Load TensorFlow saved model (simplified)
         let tf_model = self.load_tensorflow_model(saved_model_path)?;
         // Convert to scirs2 format
         let converted_model = self.convert_tensorflow_to_scirs2(tf_model)?;
     /// Export to PyTorch format
-    pub fn export_to_pytorch(&self, model: &ConvertedModel<F>, output_path: &Path) -> Result<()> {
+    pub fn export_to_pytorch(&self, model: &ConvertedModel<F>, outputpath: &Path) -> Result<()> {
         // Convert scirs2 model to PyTorch format
         let pytorch_state_dict = self.convert_to_pytorch_state_dict(&model.weights)?;
         // Save PyTorch state dict (simplified - would use PyTorch's save format)
@@ -444,8 +444,8 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 outputs: metadata.outputs.clone(),
                 initializers: weights.clone(),
             metadata: metadata.clone(),
-    fn serialize_onnx_model(&self, model: &ONNXModel<F>, output_path: &Path) -> Result<()> {
-        use serde__json::json;
+    fn serialize_onnx_model(&self, model: &ONNXModel<F>, outputpath: &Path) -> Result<()> {
+        use serde_json::json;
         // Create ONNX-compatible model representation
         let mut graph_nodes = Vec::new();
         let mut graph_initializers = Vec::new();
@@ -534,7 +534,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
             DataType::Float16 => 10, // ONNX FLOAT16
             DataType::Float64 => 11, // ONNX DOUBLE
     /// Convert ONNX tensor element type to DataType
-    fn onnx_type_to_datatype(&self, onnx_type: i32) -> DataType {
+    fn onnx_type_to_datatype(&self, onnxtype: i32) -> DataType {
         match onnx_type {
             1 => DataType::Float32,  // ONNX FLOAT
             2 => DataType::UInt8,    // ONNX UINT8
@@ -547,7 +547,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
             10 => DataType::Float16, // ONNX FLOAT16
             11 => DataType::Float64, // ONNX DOUBLE
             _ => DataType::Float32,  // Default fallback
-    fn parse_onnx_file(&self, model_path: &Path) -> Result<ONNXModel<F>> {
+    fn parse_onnx_file(&self, modelpath: &Path) -> Result<ONNXModel<F>> {
         let contents = std::fs::read_to_string(model_path).map_err(|e| {
             NeuralError::ComputationError(format!("Failed to read ONNX file: {e}"))
         // Parse JSON-formatted ONNX model
@@ -663,7 +663,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 outputs,
                 initializers,
             metadata,
-    fn convert_onnx_to_scirs2(&self, onnx_model: ONNXModel<F>) -> Result<ConvertedModel<F>> {
+    fn convert_onnx_to_scirs2(&self, onnxmodel: ONNXModel<F>) -> Result<ConvertedModel<F>> {
         // Convert ONNX model to scirs2 format
         let architecture = ModelArchitecture {
             layers: Vec::new(),
@@ -695,7 +695,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 } else {
                     tensor.clone()
                 tensor.clone()
-            converted_weights.insert(converted_key, converted_tensor);
+            convertedweights.insert(converted_key, converted_tensor);
         Ok(converted_weights)
     fn build_architecture_from_metadata(
     ) -> Result<ModelArchitecture<F>> {
@@ -703,7 +703,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         Ok(ModelArchitecture {
             inputs: metadata.inputs.clone(),
             outputs: metadata.outputs.clone(),
-    fn load_tensorflow_model(&self, _model_path: &Path) -> Result<TensorFlowModel<F>> {
+    fn load_tensorflow_model(&self, _modelpath: &Path) -> Result<TensorFlowModel<F>> {
         // Simplified TensorFlow model loading
         Ok(TensorFlowModel {
             graph_def: Vec::new(),

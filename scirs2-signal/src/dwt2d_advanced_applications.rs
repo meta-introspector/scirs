@@ -7,7 +7,7 @@ use ndarray::s;
 use crate::dwt::Wavelet;
 use crate::dwt2d_enhanced::BoundaryMode;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2, Array3};
+use ndarray::{Array1, Array2, Array3};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_positive;
@@ -321,26 +321,26 @@ where
     let mut decomp = enhanced_dwt2d_decompose(&image_f64, wavelet, dwt_config)?;
 
     // Estimate noise variance if not provided
-    let noise_var = _config
+    let noise_var = config
         .noise_variance
         .unwrap_or_else(|| estimate_noise_variance(&decomp.detail_d));
 
     // Apply adaptive thresholding to detail coefficients
-    match _config.adaptation {
+    match config.adaptation {
         AdaptationStrategy::LocalVariance => {
-            apply_local_variance_thresholding(&mut decomp, _config, noise_var)?;
+            apply_local_variance_thresholding(&mut decomp, config, noise_var)?
         }
         AdaptationStrategy::EdgeAdaptive => {
-            apply_edge_adaptive_thresholding(&mut decomp, _config, noise_var)?;
+            apply_edge_adaptive_thresholding(&mut decomp, config, noise_var)?
         }
         AdaptationStrategy::TextureAdaptive => {
-            applytexture_adaptive_thresholding(&mut decomp, _config, noise_var)?;
+            applytexture_adaptive_thresholding(&mut decomp, config, noise_var)?
         }
         AdaptationStrategy::MultiCriteria => {
-            apply_multi_criteria_thresholding(&mut decomp, _config, noise_var)?;
+            apply_multi_criteria_thresholding(&mut decomp, config, noise_var)?
         }
         AdaptationStrategy::None => {
-            apply_global_thresholding(&mut decomp, _config, noise_var)?;
+            apply_global_thresholding(&mut decomp, config, noise_var)?;
         }
     }
 
@@ -398,7 +398,7 @@ where
 
     Ok(CompressionResult {
         encoded_data,
-        quantized_coeffs,
+        quantized_coeffs: quantized_coeffs.clone(),
         importance_map,
         achieved_ratio,
         target_ratio,
@@ -452,12 +452,12 @@ pub struct QuantizationParams {
 // Helper functions
 
 #[allow(dead_code)]
-fn convert_to_f64<T>(_array: &Array2<T>) -> SignalResult<Array2<f64>>
+fn convert_to_f64<T>(array: &Array2<T>) -> SignalResult<Array2<f64>>
 where
     T: Float + NumCast,
 {
     let mut result = Array2::zeros(_array.dim());
-    for ((i, j), &val) in _array.indexed_iter() {
+    for ((i, j), &val) in array.indexed_iter() {
         result[[i, j]] = NumCast::from(val).ok_or_else(|| {
             SignalError::ValueError(format!("Could not convert value at ({}, {}) to f64", i, j))
         })?;
@@ -466,7 +466,7 @@ where
 }
 
 #[allow(dead_code)]
-fn extract_energy_features(_decomp: &EnhancedDwt2dResult) -> SignalResult<SubbandFeatures> {
+fn extract_energy_features(decomp: &EnhancedDwt2dResult) -> SignalResult<SubbandFeatures> {
     let approx = compute_energy(&_decomp.approx);
     let detail_h = compute_energy(&_decomp.detail_h);
     let detail_v = compute_energy(&_decomp.detail_v);
@@ -481,7 +481,7 @@ fn extract_energy_features(_decomp: &EnhancedDwt2dResult) -> SignalResult<Subban
 }
 
 #[allow(dead_code)]
-fn extract_entropy_features(_decomp: &EnhancedDwt2dResult) -> SignalResult<SubbandFeatures> {
+fn extract_entropy_features(decomp: &EnhancedDwt2dResult) -> SignalResult<SubbandFeatures> {
     let approx = compute_entropy(&_decomp.approx);
     let detail_h = compute_entropy(&_decomp.detail_h);
     let detail_v = compute_entropy(&_decomp.detail_v);
@@ -496,7 +496,7 @@ fn extract_entropy_features(_decomp: &EnhancedDwt2dResult) -> SignalResult<Subba
 }
 
 #[allow(dead_code)]
-fn extract_contrast_features(_decomp: &EnhancedDwt2dResult) -> SignalResult<SubbandFeatures> {
+fn extract_contrast_features(decomp: &EnhancedDwt2dResult) -> SignalResult<SubbandFeatures> {
     let approx = compute_contrast(&_decomp.approx);
     let detail_h = compute_contrast(&_decomp.detail_h);
     let detail_v = compute_contrast(&_decomp.detail_v);
@@ -511,7 +511,7 @@ fn extract_contrast_features(_decomp: &EnhancedDwt2dResult) -> SignalResult<Subb
 }
 
 #[allow(dead_code)]
-fn extract_homogeneity_features(_decomp: &EnhancedDwt2dResult) -> SignalResult<SubbandFeatures> {
+fn extract_homogeneity_features(decomp: &EnhancedDwt2dResult) -> SignalResult<SubbandFeatures> {
     let approx = compute_homogeneity(&_decomp.approx);
     let detail_h = compute_homogeneity(&_decomp.detail_h);
     let detail_v = compute_homogeneity(&_decomp.detail_v);
@@ -526,16 +526,16 @@ fn extract_homogeneity_features(_decomp: &EnhancedDwt2dResult) -> SignalResult<S
 }
 
 #[allow(dead_code)]
-fn compute_energy(_array: &Array2<f64>) -> f64 {
-    _array.iter().map(|&x| x * x).sum()
+fn compute_energy(array: &Array2<f64>) -> f64 {
+    array.iter().map(|&x| x * x).sum()
 }
 
 #[allow(dead_code)]
-fn compute_entropy(_array: &Array2<f64>) -> f64 {
+fn compute_entropy(array: &Array2<f64>) -> f64 {
     // Simplified entropy computation
     let mut hist = vec![0; 256];
-    let min_val = _array.iter().cloned().fold(f64::INFINITY, f64::min);
-    let max_val = _array.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let min_val = array.iter().cloned().fold(f64::INFINITY, f64::min);
+    let max_val = array.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
 
     if (max_val - min_val).abs() < 1e-10 {
         return 0.0;
@@ -546,7 +546,7 @@ fn compute_entropy(_array: &Array2<f64>) -> f64 {
         hist[bin.min(255)] += 1;
     }
 
-    let total = _array.len() as f64;
+    let total = array.len() as f64;
     hist.into_iter()
         .filter(|&count| count > 0)
         .map(|count| {
@@ -557,23 +557,23 @@ fn compute_entropy(_array: &Array2<f64>) -> f64 {
 }
 
 #[allow(dead_code)]
-fn compute_contrast(_array: &Array2<f64>) -> f64 {
+fn compute_contrast(array: &Array2<f64>) -> f64 {
     // Simplified contrast measure (standard deviation)
-    let mean = _array.mean().unwrap_or(0.0);
-    let variance = _array.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _array.len() as f64;
+    let mean = array.mean().unwrap_or(0.0);
+    let variance = array.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / array.len() as f64;
     variance.sqrt()
 }
 
 #[allow(dead_code)]
-fn compute_homogeneity(_array: &Array2<f64>) -> f64 {
+fn compute_homogeneity(array: &Array2<f64>) -> f64 {
     // Inverse of contrast
     let contrast = compute_contrast(_array);
     1.0 / (1.0 + contrast)
 }
 
 #[allow(dead_code)]
-fn aggregate_features(_features: &[SubbandFeatures]) -> SubbandFeatures {
-    if _features.is_empty() {
+fn aggregate_features(features: &[SubbandFeatures]) -> SubbandFeatures {
+    if features.is_empty() {
         return SubbandFeatures {
             approx: 0.0,
             detail_h: 0.0,
@@ -582,12 +582,12 @@ fn aggregate_features(_features: &[SubbandFeatures]) -> SubbandFeatures {
         };
     }
 
-    let n = _features.len() as f64;
+    let n = features.len() as f64;
     SubbandFeatures {
-        approx: _features.iter().map(|f| f.approx).sum::<f64>() / n,
-        detail_h: _features.iter().map(|f| f.detail_h).sum::<f64>() / n,
-        detail_v: _features.iter().map(|f| f.detail_v).sum::<f64>() / n,
-        detail_d: _features.iter().map(|f| f.detail_d).sum::<f64>() / n,
+        approx: features.iter().map(|f| f.approx).sum::<f64>() / n,
+        detail_h: features.iter().map(|f| f.detail_h).sum::<f64>() / n,
+        detail_v: features.iter().map(|f| f.detail_v).sum::<f64>() / n,
+        detail_d: features.iter().map(|f| f.detail_d).sum::<f64>() / n,
     }
 }
 
@@ -648,14 +648,14 @@ fn calculate_directionality(
 }
 
 #[allow(dead_code)]
-fn calculate_regularity(_energy: &SubbandFeatures, entropy: &SubbandFeatures) -> f64 {
+fn calculate_regularity(energy: &SubbandFeatures, entropy: &SubbandFeatures) -> f64 {
     // Regularity based on the ratio of approximation to detail _energy
-    let total_energy = _energy.approx + _energy.detail_h + _energy.detail_v + _energy.detail_d;
+    let total_energy = energy.approx + energy.detail_h + energy.detail_v + energy.detail_d;
     if total_energy < 1e-10 {
         return 0.0;
     }
 
-    let approx_ratio = _energy.approx / total_energy;
+    let approx_ratio = energy.approx / total_energy;
     let avg_entropy =
         (entropy.approx + entropy.detail_h + entropy.detail_v + entropy.detail_d) / 4.0;
 
@@ -664,14 +664,14 @@ fn calculate_regularity(_energy: &SubbandFeatures, entropy: &SubbandFeatures) ->
 }
 
 #[allow(dead_code)]
-fn compute_edge_magnitude(_decomp: &EnhancedDwt2dResult) -> SignalResult<Array2<f64>> {
-    let (rows, cols) = _decomp.detail_h.dim();
+fn compute_edge_magnitude(decomp: &EnhancedDwt2dResult) -> SignalResult<Array2<f64>> {
+    let (rows, cols) = decomp.detail_h.dim();
     let mut magnitude = Array2::zeros((rows, cols));
 
     for i in 0..rows {
         for j in 0..cols {
-            let h = _decomp.detail_h[[i, j]];
-            let v = _decomp.detail_v[[i, j]];
+            let h = decomp.detail_h[[i, j]];
+            let v = decomp.detail_v[[i, j]];
             magnitude[[i, j]] = (h * h + v * v).sqrt();
         }
     }
@@ -680,14 +680,14 @@ fn compute_edge_magnitude(_decomp: &EnhancedDwt2dResult) -> SignalResult<Array2<
 }
 
 #[allow(dead_code)]
-fn compute_edge_direction(_decomp: &EnhancedDwt2dResult) -> SignalResult<Array2<f64>> {
-    let (rows, cols) = _decomp.detail_h.dim();
+fn compute_edge_direction(decomp: &EnhancedDwt2dResult) -> SignalResult<Array2<f64>> {
+    let (rows, cols) = decomp.detail_h.dim();
     let mut direction = Array2::zeros((rows, cols));
 
     for i in 0..rows {
         for j in 0..cols {
-            let h = _decomp.detail_h[[i, j]];
-            let v = _decomp.detail_v[[i, j]];
+            let h = decomp.detail_h[[i, j]];
+            let v = decomp.detail_v[[i, j]];
             direction[[i, j]] = v.atan2(h);
         }
     }
@@ -771,13 +771,13 @@ fn upsample_bilinear(
 
 // Simplified implementations for denoising functions
 #[allow(dead_code)]
-fn estimate_noise_variance(_detail_coeffs: &Array2<f64>) -> f64 {
+fn estimate_noise_variance(_detailcoeffs: &Array2<f64>) -> f64 {
     // Robust noise estimation using median absolute deviation
-    let mut _coeffs: Vec<f64> = _detail_coeffs.iter().cloned().collect();
-    _coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let mut _coeffs: Vec<f64> = detail_coeffs.iter().cloned().collect();
+    coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-    let median = _coeffs[_coeffs.len() / 2];
-    let mad: f64 = _coeffs.iter().map(|&x| (x - median).abs()).sum::<f64>() / _coeffs.len() as f64;
+    let median = coeffs[_coeffs.len() / 2];
+    let mad: f64 = coeffs.iter().map(|&x| (x - median).abs()).sum::<f64>() / coeffs.len() as f64;
 
     // Convert MAD to standard deviation estimate
     mad / 0.6745
@@ -814,8 +814,8 @@ fn apply_global_thresholding(
 }
 
 #[allow(dead_code)]
-fn soft_threshold(_coeffs: &mut Array2<f64>, threshold: f64) {
-    _coeffs.mapv_inplace(|x| {
+fn soft_threshold(coeffs: &mut Array2<f64>, threshold: f64) {
+    coeffs.mapv_inplace(|x| {
         if x.abs() > threshold {
             x.signum() * (x.abs() - threshold)
         } else {
@@ -825,8 +825,8 @@ fn soft_threshold(_coeffs: &mut Array2<f64>, threshold: f64) {
 }
 
 #[allow(dead_code)]
-fn hard_threshold(_coeffs: &mut Array2<f64>, threshold: f64) {
-    _coeffs.mapv_inplace(|x| if x.abs() > threshold { x } else { 0.0 });
+fn hard_threshold(coeffs: &mut Array2<f64>, threshold: f64) {
+    coeffs.mapv_inplace(|x| if x.abs() > threshold { x } else { 0.0 });
 }
 
 // Placeholder implementations for other denoising functions
@@ -872,7 +872,7 @@ fn apply_multi_criteria_thresholding(
 
 // Placeholder implementations for compression functions
 #[allow(dead_code)]
-fn compute_content_importance(_decomp: &EnhancedDwt2dResult) -> SignalResult<Array2<f64>> {
+fn compute_content_importance(decomp: &EnhancedDwt2dResult) -> SignalResult<Array2<f64>> {
     // Simplified implementation - would analyze content importance
     Ok(Array2::ones(_decomp.approx.dim()))
 }
@@ -905,7 +905,7 @@ fn adaptive_quantization(
 }
 
 #[allow(dead_code)]
-fn entropy_encode(_coeffs: &QuantizedCoeffs) -> SignalResult<Vec<u8>> {
+fn entropy_encode(coeffs: &QuantizedCoeffs) -> SignalResult<Vec<u8>> {
     // Simplified implementation - would use proper entropy coding
     Ok(vec![0u8; 100]) // Placeholder
 }

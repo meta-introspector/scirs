@@ -158,9 +158,9 @@ where
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: AdvancedComprehensiveSimdConfig) -> Self {
+    pub fn with_config(config: AdvancedComprehensiveSimdConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             _phantom: PhantomData,
         }
     }
@@ -395,7 +395,7 @@ where
     }
 
     /// SIMD-optimized skewness computation
-    fn simd_compute_skewness(&self, sum_cube: F, mean: F, std_dev: F, n: F) -> StatsResult<F> {
+    fn simd_compute_skewness(&self, sum_cube: F, mean: F, stddev: F, n: F) -> StatsResult<F> {
         if std_dev == F::zero() {
             return Ok(F::zero());
         }
@@ -406,7 +406,7 @@ where
     }
 
     /// SIMD-optimized kurtosis computation
-    fn simd_compute_kurtosis(&self, sum_quad: F, mean: F, std_dev: F, n: F) -> StatsResult<F> {
+    fn simd_compute_kurtosis(&self, sum_quad: F, mean: F, stddev: F, n: F) -> StatsResult<F> {
         if std_dev == F::zero() {
             return Ok(F::from(3.0).unwrap());
         }
@@ -427,7 +427,7 @@ where
     }
 
     /// SIMD-optimized quartile computation  
-    fn simd_compute_quartiles(&self, sorted_data: &Array1<F>) -> StatsResult<(F, F, F)> {
+    fn simd_compute_quartiles(&self, sorteddata: &Array1<F>) -> StatsResult<(F, F, F)> {
         let n = sorted_data.len();
         if n == 0 {
             return Err(StatsError::InvalidArgument("Empty _data".to_string()));
@@ -501,7 +501,7 @@ where
     }
 
     /// SIMD-optimized trimmed mean
-    fn simd_trimmed_mean(&self, data: &ArrayView1<F>, trim_fraction: F) -> StatsResult<F> {
+    fn simd_trimmed_mean(&self, data: &ArrayView1<F>, trimfraction: F) -> StatsResult<F> {
         let sorted_data = self.simd_sort_array(data)?;
         let n = sorted_data.len();
         let trim_count = ((F::from(n).unwrap() * trim_fraction).to_usize().unwrap()).min(n / 2);
@@ -517,7 +517,7 @@ where
     }
 
     /// SIMD-optimized winsorized mean
-    fn simd_winsorized_mean(&self, data: &ArrayView1<F>, winsor_fraction: F) -> StatsResult<F> {
+    fn simd_winsorized_mean(&self, data: &ArrayView1<F>, winsorfraction: F) -> StatsResult<F> {
         let sorted_data = self.simd_sort_array(data)?;
         let n = sorted_data.len();
         let winsor_count = ((F::from(n).unwrap() * winsor_fraction).to_usize().unwrap()).min(n / 2);
@@ -679,7 +679,7 @@ where
 
     /// SIMD-optimized row means computation
     fn simd_row_means(&self, data: &ArrayView2<F>) -> StatsResult<Array1<F>> {
-        let (n_rows, _n_cols) = data.dim();
+        let (n_rows, n_cols) = data.dim();
         let mut row_means = Array1::zeros(n_rows);
 
         for i in 0..n_rows {
@@ -704,7 +704,7 @@ where
     }
 
     /// SIMD-optimized row standard deviations
-    fn simd_row_stds(&self, data: &ArrayView2<F>, row_means: &Array1<F>) -> StatsResult<Array1<F>> {
+    fn simd_row_stds(&self, data: &ArrayView2<F>, rowmeans: &Array1<F>) -> StatsResult<Array1<F>> {
         let (n_rows, _) = data.dim();
         let mut row_stds = Array1::zeros(n_rows);
 
@@ -1116,7 +1116,7 @@ mod tests {
         let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let (sum, sum_sq, _sum_cube, _sum_quad, min_val, max_val) =
+        let (sum, sum_sq, sum_cube, sum_quad, min_val, max_val) =
             processor.simd_single_pass_moments(&data.view()).unwrap();
 
         assert!((sum - 15.0).abs() < 1e-10);

@@ -244,7 +244,7 @@ impl ModelValidator {
     }
 
     /// Check framework compatibility
-    fn check_framework_compatibility(&self, _model: &MLModel) -> FrameworkCompatibilityResult {
+    fn check_framework_compatibility(&self, model: &MLModel) -> FrameworkCompatibilityResult {
         let mut warnings = Vec::new();
         let mut recommendations = Vec::new();
 
@@ -419,7 +419,7 @@ impl ModelValidator {
     }
 
     /// Check operations compatibility (simplified implementation)
-    fn check_operations(&self, _model: &MLModel) -> ValidationCheckResult {
+    fn check_operations(&self, model: &MLModel) -> ValidationCheckResult {
         let mut errors = Vec::new();
         let mut warnings = Vec::new();
         let mut recommendations = Vec::new();

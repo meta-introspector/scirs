@@ -32,7 +32,7 @@ pub struct RMSpropGpu<A: Float + ScalarOperand + Debug> {
 
 impl<A: Float + ScalarOperand + Debug> RMSpropGpu<A> {
     /// Create a new GPU-accelerated RMSprop optimizer
-    pub fn new(_learning_rate: A) -> Self {
+    pub fn new(_learningrate: A) -> Self {
         Self {
             cpu_optimizer: RMSprop::new(_learning_rate),
             gpu_memory: None,
@@ -245,7 +245,7 @@ where
         self.cpu_optimizer.get_learning_rate()
     }
 
-    fn set_learning_rate(&mut self, learning_rate: A) {
+    fn set_learning_rate(&mut self, learningrate: A) {
         self.cpu_optimizer.set_learning_rate(learning_rate);
     }
 }
@@ -281,7 +281,8 @@ mod tests {
     fn test_gpu_initialization() {
         let mut optimizer = RMSpropGpu::<f32>::new(0.001);
         let config = GpuOptimizerConfig {
-            backend: scirs2, core: gpu::GpuBackend::Cpu,
+            backend: scirs2,
+            core: gpu::GpuBackend::Cpu,
             ..Default::default()
         };
 

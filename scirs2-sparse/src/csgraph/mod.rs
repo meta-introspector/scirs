@@ -127,12 +127,12 @@ where
 ///
 /// Result indicating if the matrix is a valid graph
 #[allow(dead_code)]
-pub fn validate_graph<T, S>(_matrix: &S, directed: bool) -> SparseResult<()>
+pub fn validate_graph<T, S>(matrix: &S, directed: bool) -> SparseResult<()>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (rows, cols) = _matrix.shape();
+    let (rows, cols) = matrix.shape();
 
     // Graph matrices must be square
     if rows != cols {
@@ -142,7 +142,7 @@ where
     }
 
     // Check for negative weights (not allowed in some algorithms)
-    let (row_indices, col_indices, values) = _matrix.find();
+    let (row_indices, col_indices, values) = matrix.find();
     for &value in values.iter() {
         if value < T::zero() {
             return Err(SparseError::ValueError(
@@ -156,7 +156,7 @@ where
         for (i, (&row, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
             if row != col {
                 let weight = values[i];
-                let reverse_weight = _matrix.get(col, row);
+                let reverse_weight = matrix.get(col, row);
 
                 if (weight - reverse_weight).abs() > T::from(1e-10).unwrap() {
                     return Err(SparseError::ValueError(
@@ -181,15 +181,15 @@ where
 ///
 /// Adjacency list as a vector of vectors of (neighbor, weight) pairs
 #[allow(dead_code)]
-pub fn to_adjacency_list<T, S>(_matrix: &S, directed: bool) -> SparseResult<Vec<Vec<(usize, T)>>>
+pub fn to_adjacency_list<T, S>(matrix: &S, directed: bool) -> SparseResult<Vec<Vec<(usize, T)>>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (n_, _) = _matrix.shape();
+    let (n_, _) = matrix.shape();
     let mut adj_list = vec![Vec::new(); n_];
 
-    let (row_indices, col_indices, values) = _matrix.find();
+    let (row_indices, col_indices, values) = matrix.find();
 
     for (i, (&row, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         let weight = values[i];
@@ -217,28 +217,28 @@ where
 
 /// Get the number of vertices in a graph matrix
 #[allow(dead_code)]
-pub fn num_vertices<T, S>(_matrix: &S) -> usize
+pub fn num_vertices<T, S>(matrix: &S) -> usize
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    _matrix.shape().0
+    matrix.shape().0
 }
 
 /// Get the number of edges in a graph matrix
 #[allow(dead_code)]
-pub fn num_edges<T, S>(_matrix: &S, directed: bool) -> SparseResult<usize>
+pub fn num_edges<T, S>(matrix: &S, directed: bool) -> SparseResult<usize>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let nnz = _matrix.nnz();
+    let nnz = matrix.nnz();
 
     if directed {
         Ok(nnz)
     } else {
         // For undirected graphs, count diagonal elements once and off-diagonal elements half
-        let (row_indices, col_indices_, _) = _matrix.find();
+        let (row_indices, col_indices_, _) = matrix.find();
         let mut diagonal_count = 0;
         let mut off_diagonal_count = 0;
 

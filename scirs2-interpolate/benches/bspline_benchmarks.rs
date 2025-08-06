@@ -14,13 +14,13 @@ fn generate_test_data(n: usize) -> (Array1<f64>, Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn generate_bspline(_degree: usize, n_coeffs: usize) -> BSpline<f64> {
+fn generate_bspline(_degree: usize, ncoeffs: usize) -> BSpline<f64> {
     let knots = Array1::linspace(0.0, 10.0, n_coeffs + _degree + 1);
     let _coeffs = Array1::linspace(-1.0, 1.0, n_coeffs);
     BSpline::new(
         &knots.view(),
         &_coeffs.view(),
-        _degree,
+        degree,
         ExtrapolateMode::Extrapolate,
     )
     .unwrap()

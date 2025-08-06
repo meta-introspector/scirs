@@ -47,8 +47,8 @@ impl ChecksumAlgorithm {
     }
 
     /// Parse algorithm name from a string
-    pub fn from_str(_name: &str) -> Option<Self> {
-        match _name.to_uppercase().as_str() {
+    pub fn from_str(name: &str) -> Option<Self> {
+        match name.to_uppercase().as_str() {
             "CRC32" => Some(ChecksumAlgorithm::CRC32),
             "SHA256" => Some(ChecksumAlgorithm::SHA256),
             "BLAKE3" => Some(ChecksumAlgorithm::BLAKE3),
@@ -83,7 +83,7 @@ pub struct IntegrityMetadata {
 ///
 /// The checksum as a hex encoded string
 #[allow(dead_code)]
-pub fn calculate_checksum(_data: &[u8], algorithm: ChecksumAlgorithm) -> String {
+pub fn calculate_checksum(data: &[u8], algorithm: ChecksumAlgorithm) -> String {
     match algorithm {
         ChecksumAlgorithm::CRC32 => {
             let mut hasher = CrcHasher::new();
@@ -322,7 +322,7 @@ pub fn validate_file_integrity<P: AsRef<Path>>(
     file_path: P,
     metadata: &IntegrityMetadata,
 ) -> Result<bool> {
-    let file_path = file_path.as_ref();
+    let file_path = filepath.as_ref();
 
     // Check if file exists
     if !file_path.exists() {
@@ -369,7 +369,7 @@ pub fn generate_validation_report<P: AsRef<Path>>(
     file_path: P,
     metadata: &IntegrityMetadata,
 ) -> Result<ValidationReport> {
-    let file_path = file_path.as_ref();
+    let file_path = filepath.as_ref();
 
     // Check if file exists
     if !file_path.exists() {
@@ -505,12 +505,12 @@ pub struct FormatValidator {
 
 impl FormatValidator {
     /// Create a new format validator
-    pub fn new<F>(_format_name: &str, validator: F) -> Self
+    pub fn new<F>(_formatname: &str, validator: F) -> Self
     where
         F: Fn(&[u8]) -> bool + Send + Sync + 'static,
     {
         Self {
-            format_name: _format_name.to_string(),
+            format_name: format_name.to_string(),
             validator: Box::new(validator),
         }
     }
@@ -548,7 +548,7 @@ impl FormatValidatorRegistry {
     }
 
     /// Add a validator to the registry
-    pub fn add_validator<F>(&mut self, format_name: &str, validator: F)
+    pub fn add_validator<F>(&mut self, formatname: &str, validator: F)
     where
         F: Fn(&[u8]) -> bool + Send + Sync + 'static,
     {
@@ -654,7 +654,7 @@ pub fn validate_file_exists_with_size<P: AsRef<Path>>(
             .map_err(|e| IoError::FileError(e.to_string()))?
             .len();
 
-        Ok(file_size == _size)
+        Ok(file_size == size)
     } else {
         Ok(true)
     }
@@ -681,19 +681,19 @@ where
     P: AsRef<Path>,
     Q: AsRef<Path>,
 {
-    let data_path = data_path.as_ref();
+    let data_path = datapath.as_ref();
 
     // Calculate checksum
     let checksum = calculate_file_checksum(data_path, algorithm)?;
 
     // Determine output _path
     let output_path = match output_path {
-        Some(_path) => _path.as_ref().to_path_buf(),
+        Some(_path) => path.as_ref().to_path_buf(),
         None => {
             let mut _path = data_path.to_path_buf();
-            _path.set_extension(format!(
+            path.set_extension(format!(
                 "{}.checksum",
-                _path.extension().unwrap_or_default().to_string_lossy()
+                path.extension().unwrap_or_default().to_string_lossy()
             ));
             _path
         }
@@ -727,12 +727,12 @@ where
 ///
 /// Result indicating if the verification passed
 #[allow(dead_code)]
-pub fn verify_checksum_file<P, Q>(_data_path: P, checksum_path: Q) -> Result<bool>
+pub fn verify_checksum_file<P, Q>(_data_path: P, checksumpath: Q) -> Result<bool>
 where
     P: AsRef<Path>,
     Q: AsRef<Path>,
 {
-    let _data_path = _data_path.as_ref();
+    let _data_path = datapath.as_ref();
 
     // Read checksum file
     let mut checksum_file = File::open(checksum_path)
@@ -861,7 +861,7 @@ where
     P: AsRef<Path>,
     Q: AsRef<Path>,
 {
-    let dir_path = dir_path.as_ref();
+    let dir_path = dirpath.as_ref();
 
     // Check if directory exists
     if !dir_path.is_dir() {
@@ -917,7 +917,7 @@ where
 
 /// Helper function to collect files in a directory
 #[allow(dead_code)]
-fn collect_files(_dir: &Path, files: &mut Vec<std::path::PathBuf>, recursive: bool) -> Result<()> {
+fn collect_files(dir: &Path, files: &mut Vec<std::path::PathBuf>, recursive: bool) -> Result<()> {
     for entry in std::fs::read_dir(_dir)
         .map_err(|e| IoError::FileError(format!("Failed to read directory: {e}")))?
     {
@@ -964,7 +964,7 @@ impl DirectoryManifest {
         &self,
         dir_path: P,
     ) -> Result<ManifestVerificationReport> {
-        let dir_path = dir_path.as_ref();
+        let dir_path = dirpath.as_ref();
 
         // Check if directory exists
         if !dir_path.is_dir() {
@@ -1190,9 +1190,9 @@ pub struct SchemaDefinition {
 
 impl SchemaDefinition {
     /// Create a new schema definition
-    pub fn new(_data_type: SchemaDataType) -> Self {
+    pub fn new(_datatype: SchemaDataType) -> Self {
         Self {
-            data_type: _data_type,
+            data_type: data_type,
             constraints: Vec::new(),
             description: None,
             default: None,
@@ -1266,11 +1266,11 @@ pub struct SchemaValidationResult {
 
 impl SchemaValidationResult {
     /// Create a successful validation result
-    pub fn success(_fields_validated: usize, validation_time_ms: f64) -> Self {
+    pub fn success(_fields_validated: usize, validation_timems: f64) -> Self {
         Self {
             valid: true,
             errors: Vec::new(),
-            fields_validated: _fields_validated,
+            fields_validated: fields_validated,
             validation_time_ms,
         }
     }
@@ -1506,7 +1506,7 @@ impl SchemaValidator {
 
     /// Validate data type
     #[allow(clippy::only_used_in_recursion)]
-    fn validate_type(&self, data: &serde_json::Value, schema_type: &SchemaDataType) -> bool {
+    fn validate_type(&self, data: &serde_json::Value, schematype: &SchemaDataType) -> bool {
         match schema_type {
             SchemaDataType::String => data.is_string(),
             SchemaDataType::Integer => data.is_i64() || data.is_u64(),
@@ -1764,17 +1764,17 @@ pub mod schema_helpers {
     }
 
     /// Create an array schema
-    pub fn array(_element_schema: SchemaDefinition) -> SchemaDefinition {
+    pub fn array(_elementschema: SchemaDefinition) -> SchemaDefinition {
         SchemaDefinition::new(SchemaDataType::Array(Box::new(_element_schema)))
     }
 
     /// Create an object schema
-    pub fn object(_properties: HashMap<String, SchemaDefinition>) -> SchemaDefinition {
+    pub fn object(properties: HashMap<String, SchemaDefinition>) -> SchemaDefinition {
         SchemaDefinition::new(SchemaDataType::Object(_properties))
     }
 
     /// Create a union schema
-    pub fn union(_types: Vec<SchemaDataType>) -> SchemaDefinition {
+    pub fn union(types: Vec<SchemaDataType>) -> SchemaDefinition {
         SchemaDefinition::new(SchemaDataType::Union(_types))
     }
 
@@ -1806,7 +1806,7 @@ pub mod schema_helpers {
 
 /// Build schemas from JSON Schema format
 #[allow(dead_code)]
-pub fn schema_from_json_schema(_json_schema: &serde_json::Value) -> Result<SchemaDefinition> {
+pub fn schema_from_json_schema(_jsonschema: &serde_json::Value) -> Result<SchemaDefinition> {
     let object = _json_schema
         .as_object()
         .ok_or_else(|| IoError::ValidationError("Schema must be an object".to_string()))?;
@@ -1855,25 +1855,25 @@ pub fn schema_from_json_schema(_json_schema: &serde_json::Value) -> Result<Schem
 
     // Add constraints from JSON Schema
     if let Some(min) = object.get("minimum").and_then(|v| v.as_f64()) {
-        _schema = _schema.with_constraint(SchemaConstraint::MinValue(min));
+        _schema = schema.with_constraint(SchemaConstraint::MinValue(min));
     }
     if let Some(max) = object.get("maximum").and_then(|v| v.as_f64()) {
-        _schema = _schema.with_constraint(SchemaConstraint::MaxValue(max));
+        _schema = schema.with_constraint(SchemaConstraint::MaxValue(max));
     }
     if let Some(min_len) = object.get("minLength").and_then(|v| v.as_u64()) {
-        _schema = _schema.with_constraint(SchemaConstraint::MinLength(min_len as usize));
+        _schema = schema.with_constraint(SchemaConstraint::MinLength(min_len as usize));
     }
     if let Some(max_len) = object.get("maxLength").and_then(|v| v.as_u64()) {
-        _schema = _schema.with_constraint(SchemaConstraint::MaxLength(max_len as usize));
+        _schema = schema.with_constraint(SchemaConstraint::MaxLength(max_len as usize));
     }
     if let Some(pattern) = object.get("pattern").and_then(|v| v.as_str()) {
-        _schema = _schema.with_constraint(SchemaConstraint::Pattern(pattern.to_string()));
+        _schema = schema.with_constraint(SchemaConstraint::Pattern(pattern.to_string()));
     }
     if let Some(format) = object.get("format").and_then(|v| v.as_str()) {
-        _schema = _schema.with_constraint(SchemaConstraint::Format(format.to_string()));
+        _schema = schema.with_constraint(SchemaConstraint::Format(format.to_string()));
     }
     if let Some(description) = object.get("description").and_then(|v| v.as_str()) {
-        _schema = _schema.with_description(description);
+        _schema = schema.with_description(description);
     }
 
     Ok(_schema)

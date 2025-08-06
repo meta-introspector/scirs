@@ -25,7 +25,7 @@ impl FedAvg {
         }
     }
     /// Create FedAvg with momentum
-    pub fn with_momentum(_momentum: f32) -> Self {
+    pub fn with_momentum(momentum: f32) -> Self {
             momentum: Some(_momentum),
 impl AggregationStrategy for FedAvg {
     fn aggregate(&mut self, updates: &[ClientUpdate], weights: &[f32]) -> Result<Vec<Array2<f32>>> {
@@ -60,7 +60,7 @@ pub struct FedProx {
     mu: f32,
 impl FedProx {
     /// Create new FedProx aggregator
-    pub fn new(_mu: f32) -> Self {
+    pub fn new(mu: f32) -> Self {
         Self { _mu }
 impl AggregationStrategy for FedProx {
         // FedProx aggregation is similar to FedAvg but with proximal term in client optimization
@@ -136,10 +136,10 @@ pub struct TrimmedMean {
     trim_ratio: f32,
 impl TrimmedMean {
     /// Create new trimmed mean aggregator
-    pub fn new(_trim_ratio: f32) -> Self {
+    pub fn new(_trimratio: f32) -> Self {
         Self { _trim_ratio }
 impl AggregationStrategy for TrimmedMean {
-    fn aggregate(&mut self, updates: &[ClientUpdate], _weights: &[f32]) -> Result<Vec<Array2<f32>>> {
+    fn aggregate(&mut self, updates: &[ClientUpdate], weights: &[f32]) -> Result<Vec<Array2<f32>>> {
         let num_clients = updates.len();
         let trim_count = (num_clients as f32 * self.trim_ratio) as usize;
             let mut result = Array2::<f32>::zeros((shape[0], shape[1]));
@@ -166,8 +166,8 @@ pub struct Krum {
     multi_krum: bool,
 impl Krum {
     /// Create new Krum aggregator
-    pub fn new(_num_byzantine: usize) -> Self {
-            _num_byzantine,
+    pub fn new(_numbyzantine: usize) -> Self {
+            num_byzantine,
             multi_krum: false,
     /// Enable Multi-Krum
     pub fn multi_krum(mut self) -> Self {

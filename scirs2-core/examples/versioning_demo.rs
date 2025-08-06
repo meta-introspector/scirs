@@ -21,8 +21,8 @@ fn main() -> CoreResult<()> {
     // Create and register API versions
     let v1_0_0 = ApiVersionBuilder::new(Version::parse("1.0.0")?)
         .stability(StabilityLevel::Stable)
-        .feature(basic_operations)
-        .feature(linear_algebra)
+        .feature("basic_operations")
+        .feature("linear_algebra")
         .new_feature("Initial stable release")
         .new_feature("Basic mathematical operations")
         .new_feature("Linear algebra support")
@@ -30,9 +30,9 @@ fn main() -> CoreResult<()> {
 
     let v1_1_0 = ApiVersionBuilder::new(Version::parse("1.1.0")?)
         .stability(StabilityLevel::Stable)
-        .feature(basic_operations)
-        .feature(linear_algebra)
-        .feature(statistics)
+        .feature("basic_operations")
+        .feature("linear_algebra")
+        .feature("statistics")
         .new_feature("Statistical functions")
         .new_feature("Regression analysis")
         .bug_fix("Fixed numerical stability issues")
@@ -41,39 +41,39 @@ fn main() -> CoreResult<()> {
     let v2_0_0 = ApiVersionBuilder::new(Version::parse("2.0.0")?)
         .stability(StabilityLevel::Beta)
         .support_status(SupportStatus::Active)
-        .feature(basic_operations)
-        .feature(linear_algebra_v2)
-        .feature(statistics)
-        .feature(machine_learning)
+        .feature("basic_operations")
+        .feature("linear_algebra_v2")
+        .feature("statistics")
+        .feature("machine_learning")
         .breaking_change("Linear algebra API redesigned for better performance")
         .breaking_change("Removed deprecated basic_math module")
         .new_feature("Machine learning algorithms")
         .new_feature("Neural network primitives")
-        .deprecated_feature(legacy_array_ops)
-        .min_client_version(Version::parse("1.5.0")?)
+        .deprecated_feature("legacy_array_ops")
+        .min_clientversion(Version::parse("1.5.0")?)
         .build()?;
 
     // Register versions
-    version_manager.register_version(v1_0_0)?;
-    version_manager.register_version(v1_1_0)?;
-    version_manager.register_version(v2_0_0)?;
+    version_manager.registerversion(v1_0_0)?;
+    version_manager.registerversion(v1_1_0)?;
+    version_manager.registerversion(v2_0_0)?;
     println!("✅ Registered 3 API versions");
 
     // Set current version
-    version_manager.set_current_version(Version::parse("2.0.0")?)?;
+    version_manager.set_currentversion(Version::parse("2.0.0")?)?;
     println!("✅ Set current version to 2.0.0");
 
     // Check compatibility between versions
     println!("\n📊 Compatibility Analysis:");
     let from_version = Version::parse("1.0.0")?;
-    let to_version = Version::parse("1.1.0")?;
+    let toversion = Version::parse("1.1.0")?;
 
-    let compatibility = version_manager.check_compatibility(&from_version, &to_version)?;
+    let compatibility = version_manager.check_compatibility(&from_version, &toversion)?;
     println!("  🔄 1.0.0 → 1.1.0: {compatibility:?}");
 
-    let report = version_manager.get_compatibility_report(&from_version, &to_version)?;
+    let report = version_manager.get_compatibility_report(&from_version, &toversion)?;
     println!("    New features: {:?}", report.new_features);
-    println!("    Breaking changes: {}", report.breaking_changes.len());
+    println!("    Breaking changes: {}", report.breakingchanges.len());
 
     // Check major version upgrade
     let major_upgrade =
@@ -84,7 +84,7 @@ fn main() -> CoreResult<()> {
         version_manager.get_compatibility_report(&from_version, &Version::parse("2.0.0")?)?;
     println!(
         "    Breaking changes: {}",
-        major_report.breaking_changes.len()
+        major_report.breakingchanges.len()
     );
     if let Some(effort) = major_report.estimated_migration_effort {
         println!("    Estimated migration effort: {effort} hours");
@@ -117,7 +117,7 @@ fn main() -> CoreResult<()> {
 
     // Register version for deprecation tracking
     let old_version = version_manager
-        .get_version(&Version::parse("1.0.0")?)
+        .getversion(&Version::parse("1.0.0")?)
         .unwrap();
     deprecation_manager.register_version(old_version)?;
 
@@ -141,14 +141,14 @@ fn main() -> CoreResult<()> {
 
     // Version statistics
     println!("\n📈 Version Statistics:");
-    let stats = version_manager.get_version_statistics();
-    println!("  Total versions: {}", stats.total_versions);
-    println!("  Stable versions: {}", stats.stable_versions);
-    println!("  Beta versions: {}", stats.beta_versions);
-    println!("  Active versions: {}", stats.active_versions);
+    let stats = version_manager.getversion_statistics();
+    println!("  Total versions: {}", stats.totalversions);
+    println!("  Stable versions: {}", stats.stableversions);
+    println!("  Beta versions: {}", stats.betaversions);
+    println!("  Active versions: {}", stats.activeversions);
 
     // Get supported versions
-    let supported = version_manager.get_supported_versions();
+    let supported = version_manager.get_supportedversions();
     println!(
         "  Supported versions: {:?}",
         supported
@@ -168,23 +168,23 @@ fn main() -> CoreResult<()> {
 
     let client_capabilities =
         ClientRequirementsBuilder::new("scientific_client", Version::parse("1.0.0")?)
-            .prefer_version(Version::parse("1.1.0")?)
-            .support_versions(vec![
+            .preferred_version(Version::parse("1.1.0")?)
+            .supportversions(vec![
                 Version::parse("1.0.0")?,
                 Version::parse("1.1.0")?,
                 Version::parse("2.0.0")?,
             ])
-            .require_feature(linear_algebra)
-            .prefer_feature(statistics)
+            .require_feature("linear_algebra")
+            .prefer_feature("statistics")
             .build();
 
-    let supported_versions: Vec<&Version> = version_manager
-        .get_supported_versions()
+    let supportedversions: Vec<&Version> = version_manager
+        .get_supportedversions()
         .into_iter()
         .map(|v| &v.version)
         .collect();
 
-    let negotiation_result = version_manager.negotiate_version(&client_capabilities)?;
+    let negotiation_result = version_manager.negotiateversion(&client_capabilities)?;
     println!(
         "  📋 Negotiated version: {}",
         negotiation_result.negotiated_version

@@ -498,7 +498,8 @@ impl OptimizerKernel {
         let optimal_threads = match size {
             0..=128 => 32,
             129..=512 => 64,
-            513..=2048 => 128_ => 256,
+            513..=2048 => 128,
+            _ => 256,
         };
         optimal_threads.min(self.max_threads)
     }
@@ -1673,7 +1674,13 @@ impl OptimizerKernel {
     }
 
     fn launch_standard_matrix_update<T: Float>(
-        &self, _weight_matrices: &[*mut T], _gradient_matrices: &[*const T]_update, _matrices: &[*mut T], _rows: &[usize], _cols: &[usize], _learning_rate: T,
+        &self,
+        _weight_matrices: &[*mut T],
+        _gradient_matrices: &[*const T],
+        _update_matrices: &[*mut T],
+        _rows: &[usize],
+        _cols: &[usize],
+        _learning_rate: T,
     ) -> Result<(), OptimizerKernelError> {
         // Fallback implementation for non-tensor core matrix updates
         #[cfg(not(feature = "cuda"))]
@@ -1818,7 +1825,7 @@ pub struct MemoryEfficientKernelLauncher {
 
 impl MemoryEfficientKernelLauncher {
     /// Create new memory-efficient launcher
-    pub fn new(_max_memory_mb: usize, use_streams: bool) -> Self {
+    pub fn new(_max_memory_mb: usize, usestreams: bool) -> Self {
         let max_chunk_size = (_max_memory_mb * 1024 * 1024) / (4 * 4); // 4 bytes per f32, 4 arrays
         let num_streams = if use_streams { 4 } else { 1 };
 
@@ -1914,7 +1921,7 @@ impl MemoryEfficientKernelLauncher {
 
 impl KernelProfiler {
     /// Create new kernel profiler with enhanced metrics tracking
-    pub fn new(_config: ProfilingConfig) -> Self {
+    pub fn new(config: ProfilingConfig) -> Self {
         Self {
             timing_data: Mutex::new(HashMap::new()),
             metrics: Mutex::new(PerformanceMetrics {
@@ -1924,7 +1931,7 @@ impl KernelProfiler {
                 compute_utilization: 0.0,
                 tensor_core_utilization: 0.0,
             }),
-            _config,
+            config,
         }
     }
 
@@ -1958,7 +1965,7 @@ impl KernelProfiler {
     }
 
     /// Record execution time for a kernel
-    fn record_execution_time(&self, kernel_name: &str, execution_time: Duration) {
+    fn record_execution_time(&self, kernel_name: &str, executiontime: Duration) {
         let mut timing_data = self.timing_data.lock().unwrap();
 
         let kernel_times = timing_data
@@ -1974,7 +1981,7 @@ impl KernelProfiler {
     }
 
     /// Update aggregated performance metrics
-    fn update_performance_metrics(&self, kernel_name: &str, execution_time: Duration) {
+    fn update_performance_metrics(&self, kernel_name: &str, executiontime: Duration) {
         let mut metrics = self.metrics.lock().unwrap();
 
         metrics.total_executions += 1;
@@ -1990,7 +1997,7 @@ impl KernelProfiler {
     }
 
     /// Get detailed performance statistics for a specific kernel
-    pub fn get_kernel_stats(&self, kernel_name: &str) -> Option<KernelStatistics> {
+    pub fn get_kernel_stats(&self, kernelname: &str) -> Option<KernelStatistics> {
         let timing_data = self.timing_data.lock().unwrap();
 
         if let Some(times) = timing_data.get(kernel_name) {
@@ -2079,7 +2086,7 @@ impl KernelProfiler {
     }
 
     /// Start timing for a kernel
-    pub fn start_timing(&self, kernel_name: &str) {
+    pub fn start_timing(&self, kernelname: &str) {
         if !self.config.detailed_profiling {
             return;
         }
@@ -2089,7 +2096,7 @@ impl KernelProfiler {
     }
 
     /// End timing for a kernel
-    pub fn end_timing(&self, kernel_name: &str) {
+    pub fn end_timing(&self, kernelname: &str) {
         if !self.config.detailed_profiling {
             return;
         }
@@ -2107,7 +2114,7 @@ impl KernelProfiler {
 impl TensorCoreSupport {
     /// Detect available tensor core support
     #[cfg(feature = "cuda")]
-    pub fn detect(_context: &CudaContext) -> Result<Self, OptimizerKernelError> {
+    pub fn detect(context: &CudaContext) -> Result<Self, OptimizerKernelError> {
         // In a real implementation, this would query the device
         Ok(Self {
             available_generations: vec![TensorCoreGeneration::V3],
@@ -2122,7 +2129,7 @@ impl TensorCoreSupport {
     }
 
     #[cfg(not(feature = "cuda"))]
-    pub fn detect(_context: &()) -> Result<Self, OptimizerKernelError> {
+    pub fn detect(context: &()) -> Result<Self, OptimizerKernelError> {
         Ok(Self::default())
     }
 }
@@ -2320,7 +2327,8 @@ impl CudaMemoryAllocator {
             (size + self.alignment_requirements - 1) & !(self.alignment_requirements - 1);
 
         match self.allocation_strategy {
-            AllocationStrategy::Buddy => self.deallocate_buddy(ptr, aligned_size, _ => self.deallocate_pool(ptr, aligned_size),
+            AllocationStrategy::Buddy => self.deallocate_buddy(ptr, aligned_size),
+            _ => self.deallocate_pool(ptr, aligned_size),
         }
     }
 
@@ -2491,7 +2499,7 @@ impl PipelineManager {
     }
 
     #[cfg(not(feature = "cuda"))]
-    pub fn new(_context: &(), config: PipelineConfig) -> Result<Self, OptimizerKernelError> {
+    pub fn new(context: &(), config: PipelineConfig) -> Result<Self, OptimizerKernelError> {
         Ok(Self {
             current_stream_index: 0,
             config,
@@ -2582,7 +2590,7 @@ mod tests {
 
 impl KernelProfiler {
     /// Get total time for specific kernel operations
-    pub fn get_total_time(&self, kernel_names: &[&str]) -> f64 {
+    pub fn get_total_time(&self, kernelnames: &[&str]) -> f64 {
         let timing_data = self.timing_data.lock().unwrap();
         let mut total_time = 0.0;
 

@@ -52,7 +52,7 @@ impl GpuIoProcessor {
     }
 
     /// Create a new GPU I/O processor with a specific backend
-    pub fn with_backend(_backend: GpuBackend) -> Result<Self> {
+    pub fn with_backend(backend: GpuBackend) -> Result<Self> {
         if !Self::is_backend_available(_backend) {
             return Err(IoError::Other(format!(
                 "GPU _backend {} is not available",
@@ -94,7 +94,7 @@ impl GpuIoProcessor {
     }
 
     /// Validate that a backend is functional (not just available)
-    pub fn validate_backend(_backend: GpuBackend) -> Result<bool> {
+    pub fn validate_backend(backend: GpuBackend) -> Result<bool> {
         if !_backend.is_available() {
             return Ok(false);
         }
@@ -114,9 +114,9 @@ impl GpuIoProcessor {
     }
 
     /// Validate CUDA backend functionality
-    fn validate_cuda_backend(_device: &GpuDevice) -> Result<bool> {
+    fn validate_cuda_backend(device: &GpuDevice) -> Result<bool> {
         // Check CUDA compute capability and available memory
-        match _device.get_info() {
+        match device.get_info() {
             info => {
                 // Require at least compute capability 3.5 and 1GB memory
                 Ok(info.compute_capability >= 3.5 && info.memory_gb >= 1.0)
@@ -125,9 +125,9 @@ impl GpuIoProcessor {
     }
 
     /// Validate Metal backend functionality  
-    fn validate_metal_backend(_device: &GpuDevice) -> Result<bool> {
+    fn validate_metal_backend(device: &GpuDevice) -> Result<bool> {
         // Check Metal feature set support
-        match _device.get_info() {
+        match device.get_info() {
             info => {
                 // Require Metal 2.0+ support and sufficient memory
                 Ok(info.metal_version >= 2.0 && info.memory_gb >= 1.0)
@@ -136,9 +136,9 @@ impl GpuIoProcessor {
     }
 
     /// Validate OpenCL backend functionality
-    fn validate_opencl_backend(_device: &GpuDevice) -> Result<bool> {
+    fn validate_opencl_backend(device: &GpuDevice) -> Result<bool> {
         // Check OpenCL version and extensions
-        match _device.get_info() {
+        match device.get_info() {
             info => {
                 // Require OpenCL 1.2+ and basic extensions
                 Ok(info.opencl_version >= 1.2 && info.supports_fp64)
@@ -168,8 +168,8 @@ impl GpuIoProcessor {
     }
 
     /// Check if a specific backend is available
-    pub fn is_backend_available(_backend: GpuBackend) -> bool {
-        _backend.is_available()
+    pub fn is_backend_available(backend: GpuBackend) -> bool {
+        backend.is_available()
     }
 
     /// List all available backends on the system
@@ -201,7 +201,7 @@ pub trait GpuArrayOps<T: GpuDataType> {
     fn to_gpu(&self) -> Result<GpuBuffer<T>>;
 
     /// Transfer array from GPU
-    fn from_gpu(_gpu_buffer: &GpuBuffer<T>) -> Result<Self>
+    fn from_gpu(_gpubuffer: &GpuBuffer<T>) -> Result<Self>
     where
         Self: Sized;
 }
@@ -581,7 +581,7 @@ pub mod gpu_compression {
                     return Err(IoError::Other("Invalid compressed data format".to_string()));
                 }
                 chunk_data.push(&data[offset..offset + _size]);
-                offset += _size;
+                offset += size;
             }
 
             let decompressed_chunks: Result<Vec<Vec<u8>>> = chunk_data
@@ -727,7 +727,7 @@ pub mod gpu_compression {
 
             // Sort by index to ensure correct order
             chunk_info.sort_by_key(|(index_)| *index);
-            let chunk_sizes: Vec<usize> = chunk_info.into_iter().map(|(_, _size)| _size).collect();
+            let chunk_sizes: Vec<usize> = chunk_info.into_iter().map(|(_, size)| size).collect();
 
             // Decompress chunks using OpenCL-optimized parallel processing
             self.decompress_chunks_parallel(data, offset, &chunk_sizes, algorithm)
@@ -1157,12 +1157,12 @@ pub mod gpu_memory {
     }
 
     impl PooledBuffer {
-        fn new(_buffer: GpuBuffer<u8>, id: usize, allocation_source: String) -> Self {
+        fn new(_buffer: GpuBuffer<u8>, id: usize, allocationsource: String) -> Self {
             let now = Instant::now();
-            let size = _buffer.size();
+            let size = buffer.size();
 
             Self {
-                _buffer,
+                buffer,
                 metadata: BufferMetadata {
                     id,
                     size,
@@ -1215,15 +1215,15 @@ pub mod gpu_memory {
     }
 
     impl FragmentationManager {
-        fn new(_total_size: usize) -> Self {
+        fn new(_totalsize: usize) -> Self {
             let mut free_space_map = BTreeMap::new();
             free_space_map.insert(_total_size, vec![0]);
 
             Self {
                 free_space_map,
                 allocated_space_map: BTreeMap::new(),
-                _total_size,
-                largest_free_block: _total_size,
+                total_size,
+                largest_free_block: total_size,
             }
         }
 
@@ -1318,11 +1318,11 @@ pub mod gpu_memory {
 
     impl AdvancedGpuMemoryPool {
         /// Create a new advanced GPU memory pool
-        pub fn new(_device: GpuDevice, config: PoolConfig) -> Self {
+        pub fn new(device: GpuDevice, config: PoolConfig) -> Self {
             let fragmentation_manager = FragmentationManager::new(config.max_pool_size);
 
             Self {
-                _device,
+                device,
                 free_buffers: BTreeMap::new(),
                 allocated_buffers: HashMap::new(),
                 allocation_stats: AllocationStats::default(),
@@ -1333,7 +1333,7 @@ pub mod gpu_memory {
         }
 
         /// Create with default configuration
-        pub fn with_defaults(_device: GpuDevice) -> Self {
+        pub fn with_defaults(device: GpuDevice) -> Self {
             Self::new(_device, PoolConfig::default())
         }
 
@@ -1436,7 +1436,7 @@ pub mod gpu_memory {
         }
 
         /// Deallocate a buffer with smart pooling
-        pub fn deallocate_smart(&mut self, buffer: GpuBuffer<u8>, buffer_id: usize) {
+        pub fn deallocate_smart(&mut self, buffer: GpuBuffer<u8>, bufferid: usize) {
             self.allocation_stats.total_deallocations += 1;
 
             let size = buffer.size();
@@ -1674,7 +1674,7 @@ pub mod gpu_memory {
 
     impl GpuMemoryPool {
         /// Create a new GPU memory pool
-        pub fn new(_device: GpuDevice, max_pool_size: usize) -> Self {
+        pub fn new(_device: GpuDevice, max_poolsize: usize) -> Self {
             let config = PoolConfig {
                 max_pool_size,
                 ..PoolConfig::default()
@@ -1733,10 +1733,10 @@ pub mod gpu_streaming {
 
     impl GpuStreamProcessor {
         /// Create a new GPU stream processor
-        pub fn new(_chunk_size: usize, overlap_factor: f32) -> Result<Self> {
+        pub fn new(_chunk_size: usize, overlapfactor: f32) -> Result<Self> {
             Ok(Self {
                 gpu_processor: GpuIoProcessor::new()?,
-                _chunk_size,
+                chunk_size,
                 overlap_factor,
             })
         }
@@ -1853,10 +1853,10 @@ pub mod gpu_matrix_advanced {
 
     impl GpuMatrixProcessor {
         /// Create a new GPU matrix processor
-        pub fn new(_tile_size: usize) -> Result<Self> {
+        pub fn new(_tilesize: usize) -> Result<Self> {
             Ok(Self {
                 gpu_processor: GpuIoProcessor::new()?,
-                _tile_size,
+                tile_size,
             })
         }
 
@@ -2288,13 +2288,13 @@ impl AdvancedMultiGpuProcessor {
         })
     }
 
-    fn get_device_count_for_backend(_backend: GpuBackend) -> Result<usize> {
+    fn get_device_count_for_backend(backend: GpuBackend) -> Result<usize> {
         // This would typically query the GPU driver
         // For now, return a reasonable default
         match _backend {
-            GpuBackend::Cuda => Ok(if _backend.is_available() { 1 } else { 0 }),
-            GpuBackend::Metal => Ok(if _backend.is_available() { 1 } else { 0 }),
-            GpuBackend::OpenCL => Ok(if _backend.is_available() { 1 } else { 0 }),
+            GpuBackend::Cuda => Ok(if backend.is_available() { 1 } else { 0 }),
+            GpuBackend::Metal => Ok(if backend.is_available() { 1 } else { 0 }),
+            GpuBackend::OpenCL => Ok(if backend.is_available() { 1 } else { 0 }),
             _ => Ok(0),
         }
     }
@@ -2426,7 +2426,7 @@ pub struct IntelligentLoadBalancer {
 }
 
 impl IntelligentLoadBalancer {
-    pub fn new(_devices: &[GpuDevice]) -> Result<Self> {
+    pub fn new(devices: &[GpuDevice]) -> Result<Self> {
         let device_capabilities = _devices
             .iter()
             .map(|device| DeviceCapability::from_device(device))
@@ -2671,7 +2671,7 @@ impl GpuMemoryPoolManager {
     }
 
     /// Create a memory pool with specified characteristics
-    pub fn create_pool(&mut self, size: usize, memory_type: MemoryType) -> Result<MemoryPool> {
+    pub fn create_pool(&mut self, size: usize, memorytype: MemoryType) -> Result<MemoryPool> {
         let pool = MemoryPool::new(size, memory_type, self.unified_memory_enabled)?;
         self.pools.insert(memory_type, pool.clone());
         Ok(pool)
@@ -2769,16 +2769,16 @@ pub struct ComputationRequirements {
 }
 
 impl ComputationRequirements {
-    pub fn analyze<T, F>(_data: &Array2<T>, _computation: &F) -> Result<Self>
+    pub fn analyze<T, F>(_data: &Array2<T>, computation: &F) -> Result<Self>
     where
         T: GpuDataType,
         F: Fn(&ArrayView2<T>) -> Result<Array2<T>>,
     {
-        let data_size = _data.len() * std::mem::size_of::<T>();
+        let data_size = data.len() * std::mem::size_of::<T>();
 
         Ok(Self {
             memory_bound_ratio: if data_size > 1024 * 1024 { 0.8 } else { 0.3 },
-            compute_intensity: (_data.nrows() * _data.ncols()) as f64,
+            compute_intensity: (_data.nrows() * data.ncols()) as f64,
             _data_locality: 0.7,
             synchronization_overhead: 0.1,
         })
@@ -2820,8 +2820,8 @@ pub struct DeviceCapability {
 }
 
 impl DeviceCapability {
-    pub fn from_device(_device: &GpuDevice) -> Self {
-        let info = _device.get_info();
+    pub fn from_device(device: &GpuDevice) -> Self {
+        let info = device.get_info();
 
         Self {
             compute_score: info.compute_units as f64 * info.base_clock_mhz,
@@ -2854,7 +2854,7 @@ impl PerformancePredictor {
     }
 
     pub fn predict_execution_time(
-        &self_strategy: &PartitioningStrategy,
+        self_strategy: &PartitioningStrategy,
         requirements: &ComputationRequirements,
     ) -> Result<f64> {
         // Simplified prediction model
@@ -2879,16 +2879,17 @@ pub struct GpuTaskScheduler {
 }
 
 impl GpuTaskScheduler {
-    pub fn new(_device_count: usize) -> Self {
+    pub fn new(_devicecount: usize) -> Self {
         Self {
             task_queue: Vec::new(),
-            _device_count,
+            device_count,
             scheduler_policy: SchedulerPolicy::LoadBalanced,
         }
     }
 
     pub fn schedule_tasks<T, F>(
-        &mut self_partitioning: PartitioningStrategy,
+        &mut self,
+        partitioning: PartitioningStrategy,
         _computation: &F,
     ) -> Result<Vec<GpuTask<T>>>
     where
@@ -2956,8 +2957,8 @@ pub struct GpuPerformanceMonitor {
 }
 
 impl GpuPerformanceMonitor {
-    pub fn new(_devices: &[GpuDevice]) -> Self {
-        let device_metrics = _devices.iter().map(|_| DeviceMetrics::new()).collect();
+    pub fn new(devices: &[GpuDevice]) -> Self {
+        let device_metrics = devices.iter().map(|_| DeviceMetrics::new()).collect();
 
         Self {
             device_metrics,
@@ -3051,7 +3052,7 @@ pub struct DataLayoutAnalyzer {
 }
 
 impl DataLayoutAnalyzer {
-    pub fn new(_devices: &[GpuDevice]) -> Self {
+    pub fn new(devices: &[GpuDevice]) -> Self {
         let device_info = _devices
             .iter()
             .enumerate()
@@ -3074,7 +3075,7 @@ impl DataLayoutAnalyzer {
         }
     }
 
-    pub fn analyze_optimal_layout<T>(&self_data: &Array2<T>) -> Result<DataLayoutPlan<T>>
+    pub fn analyze_optimal_layout<T>(selfdata: &Array2<T>) -> Result<DataLayoutPlan<T>>
     where
         T: GpuDataType,
     {
@@ -3233,7 +3234,7 @@ pub struct KernelTemplate {
 }
 
 impl KernelTemplate {
-    pub fn instantiate(&self, parameter_values: Vec<(String, String)>) -> Result<CompiledKernel> {
+    pub fn instantiate(&self, parametervalues: Vec<(String, String)>) -> Result<CompiledKernel> {
         let mut source = self.source.clone();
 
         for (param, value) in parameter_values {
@@ -3341,10 +3342,10 @@ pub struct MemoryPool {
 }
 
 impl MemoryPool {
-    pub fn new(_size: usize, memory_type: MemoryType_unified, _memory: bool) -> Result<Self> {
+    pub fn new(_size: usize, memory_type: MemoryType_unified, memory: bool) -> Result<Self> {
         Ok(Self {
             memory_type,
-            total_size: _size,
+            total_size: size,
             allocated_size: 0,
             free_blocks: vec![MemoryBlock { offset: 0, _size }],
         })
@@ -3511,7 +3512,7 @@ impl GpuGarbageCollector {
         Ok(())
     }
 
-    fn defragment_pool(&self_pool: &mut MemoryPool) -> Result<()> {
+    fn defragment_pool(selfpool: &mut MemoryPool) -> Result<()> {
         // Simplified defragmentation
         Ok(())
     }
@@ -3616,7 +3617,7 @@ impl NumericalErrorAnalyzer {
         }
     }
 
-    pub fn analyze_numerical_stability<T>(&self_data: &Array2<T>) -> Result<ErrorAnalysis>
+    pub fn analyze_numerical_stability<T>(selfdata: &Array2<T>) -> Result<ErrorAnalysis>
     where
         T: GpuDataType,
     {
@@ -4048,7 +4049,7 @@ pub mod advanced_gpu_optimization {
             }
         }
 
-        fn calculate_optimal_pool_size(&self, data_size: usize) -> usize {
+        fn calculate_optimal_pool_size(&self, datasize: usize) -> usize {
             // Use cached value if available
             if let Some(&cached_size) = self.optimal_size_cache.get(&data_size) {
                 return cached_size;

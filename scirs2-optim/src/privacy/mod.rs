@@ -228,7 +228,7 @@ where
     O: Optimizer<A, D>,
 {
     /// Create a new differentially private optimizer
-    pub fn new(base_optimizer: O, config: DifferentialPrivacyConfig) -> Result<Self> {
+    pub fn new(baseoptimizer: O, config: DifferentialPrivacyConfig) -> Result<Self> {
         let accountant = MomentsAccountant::new(
             config.noise_multiplier,
             config.target_delta,
@@ -257,7 +257,8 @@ where
             adaptive_clip_state,
             gradient_history: VecDeque::with_capacity(1000),
             audit_trail: Vec::new(),
-            step_count: 0, _phantom: std::marker::PhantomData,
+            step_count: 0,
+            _phantom: std::marker::PhantomData,
         })
     }
 
@@ -416,7 +417,7 @@ where
                 gradients.mapv_inplace(|g| {
                     // Use Box-Muller transformation for Gaussian noise
                     let u1: f64 = self.rng.gen_range(0.0..1.0);
-                    let u2: f64 = self.rng.random_range(0.0, 1.0);
+                    let u2: f64 = self.rng.gen_range(0.0..1.0);
                     let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                     let noise = A::from(z0 * sigma_f64).unwrap();
                     g + noise
@@ -426,7 +427,7 @@ where
                 // Implement Laplace distribution using transformation method
                 let scale_f64 = noise_scale.to_f64().unwrap_or(1.0);
                 gradients.mapv_inplace(|g| {
-                    let u: f64 = self.rng.random_range(0.0, 1.0);
+                    let u: f64 = self.rng.gen_range(0.0..1.0);
                     let laplace_sample = if u < 0.5 {
                         scale_f64 * (2.0 * u).ln()
                     } else {
@@ -440,8 +441,8 @@ where
                 // Use Gaussian as fallback
                 let sigma_f64 = noise_scale.to_f64().unwrap_or(1.0);
                 gradients.mapv_inplace(|g| {
-                    let u1: f64 = self.rng.random_range(0.0, 1.0);
-                    let u2: f64 = self.rng.random_range(0.0, 1.0);
+                    let u1: f64 = self.rng.gen_range(0.0..1.0);
+                    let u2: f64 = self.rng.gen_range(0.0..1.0);
                     let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                     let noise = A::from(z0 * sigma_f64).unwrap();
                     g + noise
@@ -452,7 +453,7 @@ where
         Ok(())
     }
 
-    fn update_adaptive_clipping(&mut self, state: &mut AdaptiveClippingState, current_norm: f64) {
+    fn update_adaptive_clipping(&mut self, state: &mut AdaptiveClippingState, currentnorm: f64) {
         // Use exponential moving average to track gradient _norm quantiles
         let alpha = self.config.adaptive_clip_lr;
 
@@ -661,7 +662,7 @@ impl MomentsAccountant {
         Ok((epsilon, delta))
     }
 
-    fn compute_log_moments(&self, sigma: f64, q: f64, t: f64, alpha_max: f64) -> Vec<f64> {
+    fn compute_log_moments(&self, sigma: f64, q: f64, t: f64, alphamax: f64) -> Vec<f64> {
         let mut log_moments = Vec::new();
 
         for alpha_int in 2..=(alpha_max as usize) {
@@ -679,7 +680,7 @@ impl MomentsAccountant {
         log_moments
     }
 
-    fn compute_epsilon_from_moments(&self, log_moments: &[f64], delta: f64) -> f64 {
+    fn compute_epsilon_from_moments(&self, logmoments: &[f64], delta: f64) -> f64 {
         let mut min_epsilon = f64::INFINITY;
 
         for (i, &log_moment) in log_moments.iter().enumerate() {

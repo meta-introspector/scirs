@@ -77,8 +77,8 @@ pub struct OnDeviceOptimizer {
     performance_monitor: PerformanceMonitor,
 impl OnDeviceOptimizer {
     /// Create a new on-device optimizer
-    pub fn new(_config: OnDeviceConfig) -> Self {
-            _config,
+    pub fn new(config: OnDeviceConfig) -> Self {
+            config,
             memory_tracker: MemoryTracker::new(_config.memory_budget_mb),
             performance_monitor: PerformanceMonitor::new(),
     
@@ -186,13 +186,13 @@ struct MemoryTracker {
     current_usage_mb: usize,
     peak_usage_mb: usize,
 impl MemoryTracker {
-    fn new(_budget_mb: usize) -> Self {
-            _budget_mb,
+    fn new(_budgetmb: usize) -> Self {
+            budget_mb,
             current_usage_mb: 0,
             peak_usage_mb: 0,
     fn current_usage(&self) -> usize {
         self.current_usage_mb
-    fn allocate(&mut self, size_mb: usize) -> Result<()> {
+    fn allocate(&mut self, sizemb: usize) -> Result<()> {
         if self.current_usage_mb + size_mb > self._budget_mb {
             return Err(crate::error::NeuralError::ResourceExhausted(
                 format!("Memory budget exceeded: {} + {} > {} MB", 
@@ -200,7 +200,7 @@ impl MemoryTracker {
             ));
         self.current_usage_mb += size_mb;
         self.peak_usage_mb = self.peak_usage_mb.max(self.current_usage_mb);
-    fn deallocate(&mut self, size_mb: usize) {
+    fn deallocate(&mut self, sizemb: usize) {
         self.current_usage_mb = self.current_usage_mb.saturating_sub(size_mb);
 /// Performance monitor for on-device execution
 struct PerformanceMonitor {
@@ -210,7 +210,7 @@ impl PerformanceMonitor {
     fn new() -> Self {
             latency_history: Vec::new(),
             energy_history: Vec::new(),
-    fn record_inference(&mut self, latency_ms: f32, energy_mj: f32) {
+    fn record_inference(&mut self, latency_ms: f32, energymj: f32) {
         self.latency_history.push(latency_ms);
         self.energy_history.push(energy_mj);
     fn average_latency(&self) -> f32 {

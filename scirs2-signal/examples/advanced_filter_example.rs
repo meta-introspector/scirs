@@ -230,14 +230,14 @@ fn main() {
 
 /// Calculate RMS (Root Mean Square) of a signal
 #[allow(dead_code)]
-fn calculate_rms(_signal: &[f64]) -> f64 {
-    let sum_squares: f64 = _signal.iter().map(|&x| x * x).sum();
-    (sum_squares / _signal.len() as f64).sqrt()
+fn calculate_rms(signal: &[f64]) -> f64 {
+    let sum_squares: f64 = signal.iter().map(|&x| x * x).sum();
+    (sum_squares / signal.len() as f64).sqrt()
 }
 
 /// Format coefficients for display
 #[allow(dead_code)]
-fn format_coeffs(_coeffs: &[f64]) -> String {
+fn format_coeffs(coeffs: &[f64]) -> String {
     _coeffs
         .iter()
         .map(|&c| format!("{:.4}", c))

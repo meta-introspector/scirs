@@ -460,7 +460,7 @@ fn calculate_perturbation_norm(
 }
 
 #[allow(dead_code)]
-fn calculate_anomaly_separation(_dataset: &scirs2_datasets::Dataset) -> f64 {
+fn calculate_anomaly_separation(dataset: &scirs2_datasets::Dataset) -> f64 {
     // Simplified separation metric
     if let Some(target) = &_dataset.target {
         let normal_indices: Vec<usize> = target
@@ -487,23 +487,23 @@ fn calculate_anomaly_separation(_dataset: &scirs2_datasets::Dataset) -> f64 {
             .map(|&x| x * x)
             .sum::<f64>()
             .sqrt();
-        distance / _dataset.n_features() as f64
+        distance / dataset.n_features() as f64
     } else {
         0.0
     }
 }
 
 #[allow(dead_code)]
-fn calculate_centroid(_data: &ndarray::Array2<f64>, indices: &[usize]) -> ndarray::Array1<f64> {
+fn calculate_centroid(data: &ndarray::Array2<f64>, indices: &[usize]) -> ndarray::Array1<f64> {
     let mut centroid = ndarray::Array1::zeros(_data.ncols());
     for &idx in indices {
-        centroid = centroid + _data.row(idx);
+        centroid = centroid + data.row(idx);
     }
     centroid / indices.len() as f64
 }
 
 #[allow(dead_code)]
-fn get_recommended_anomaly_algorithms(_anomaly_type: &AnomalyType) -> &'static str {
+fn get_recommended_anomaly_algorithms(_anomalytype: &AnomalyType) -> &'static str {
     match _anomaly_type {
         AnomalyType::Point => "Isolation Forest, Local Outlier Factor, One-Class SVM",
         AnomalyType::Contextual => "LSTM Autoencoders, Hidden Markov Models",
@@ -514,29 +514,29 @@ fn get_recommended_anomaly_algorithms(_anomaly_type: &AnomalyType) -> &'static s
 }
 
 #[allow(dead_code)]
-fn analyze_classification_target(_target: &ndarray::Array1<f64>) -> usize {
+fn analyze_classification_target(target: &ndarray::Array1<f64>) -> usize {
     let mut classes = std::collections::HashSet::new();
-    for &label in _target.iter() {
+    for &label in target.iter() {
         classes.insert(label as i32);
     }
     classes.len()
 }
 
 #[allow(dead_code)]
-fn analyze_regression_target(_target: &ndarray::Array1<f64>) -> (f64, f64) {
-    let mean = _target.mean().unwrap_or(0.0);
-    let std = _target.std(0.0);
+fn analyze_regression_target(target: &ndarray::Array1<f64>) -> (f64, f64) {
+    let mean = target.mean().unwrap_or(0.0);
+    let std = target.std(0.0);
     (mean, std)
 }
 
 #[allow(dead_code)]
-fn analyze_ordinal_target(_target: &ndarray::Array1<f64>) -> usize {
-    let max_level = _target.iter().fold(0.0f64, |a, &b| a.max(b)) as usize;
+fn analyze_ordinal_target(target: &ndarray::Array1<f64>) -> usize {
+    let max_level = target.iter().fold(0.0f64, |a, &b| a.max(b)) as usize;
     max_level + 1
 }
 
 #[allow(dead_code)]
-fn analyze_task_relationships(_multitask_dataset: &scirs2, _datasets: MultiTaskDataset) {
+fn analyze_task_relationships(_multitask_dataset: &scirs2, datasets: MultiTaskDataset) {
     println!("  🔗 Task relationship analysis:");
     println!(
         "    Shared feature ratio: {:.1}%",
@@ -558,24 +558,24 @@ fn analyze_task_relationships(_multitask_dataset: &scirs2, _datasets: MultiTaskD
 }
 
 #[allow(dead_code)]
-fn analyze_class_distribution(_target: &ndarray::Array1<f64>) -> HashMap<i32, usize> {
+fn analyze_class_distribution(target: &ndarray::Array1<f64>) -> HashMap<i32, usize> {
     let mut distribution = HashMap::new();
-    for &label in _target.iter() {
+    for &label in target.iter() {
         *distribution.entry(label as i32).or_insert(0) += 1;
     }
     distribution
 }
 
 #[allow(dead_code)]
-fn calculate_domain_statistics(_data: &ndarray::Array2<f64>) -> (f64, f64) {
-    let mean = _data.mean().unwrap_or(0.0);
-    let std = _data.std(0.0);
+fn calculate_domain_statistics(data: &ndarray::Array2<f64>) -> (f64, f64) {
+    let mean = data.mean().unwrap_or(0.0);
+    let std = data.std(0.0);
     (mean, std)
 }
 
 #[allow(dead_code)]
-fn analyze_domain_shifts(_domain_dataset: &scirs2, _datasets: DomainAdaptationDataset) {
-    if _domain_dataset.domains.len() >= 2 {
+fn analyze_domain_shifts(_domain_dataset: &scirs2, datasets: DomainAdaptationDataset) {
+    if domain_dataset.domains.len() >= 2 {
         let source_stats = calculate_domain_statistics(&_domain_dataset.domains[0].1.data);
         let target_stats =
             calculate_domain_statistics(&_domain_dataset.domains.last().unwrap().1.data);
@@ -595,16 +595,16 @@ fn analyze_domain_shifts(_domain_dataset: &scirs2, _datasets: DomainAdaptationDa
 }
 
 #[allow(dead_code)]
-fn calculate_class_balance(_target: &ndarray::Array1<f64>, n_classes: usize) -> f64 {
+fn calculate_class_balance(_target: &ndarray::Array1<f64>, nclasses: usize) -> f64 {
     let mut class_counts = vec![0; n_classes];
-    for &label in _target.iter() {
+    for &label in target.iter() {
         let class_idx = label as usize;
         if class_idx < n_classes {
             class_counts[class_idx] += 1;
         }
     }
 
-    let total = _target.len() as f64;
+    let total = target.len() as f64;
     let expected_per_class = total / n_classes as f64;
 
     let balance_score = class_counts
@@ -617,7 +617,7 @@ fn calculate_class_balance(_target: &ndarray::Array1<f64>, n_classes: usize) -> 
 }
 
 #[allow(dead_code)]
-fn get_few_shot_use_case(_n_way: usize, k_shot: usize) -> &'static str {
+fn get_few_shot_use_case(_n_way: usize, kshot: usize) -> &'static str {
     match (_n_way, k_shot) {
         (5, 1) => "Image classification with minimal examples",
         (5, 5) => "Balanced few-shot learning benchmark",
@@ -628,7 +628,7 @@ fn get_few_shot_use_case(_n_way: usize, k_shot: usize) -> &'static str {
 }
 
 #[allow(dead_code)]
-fn analyze_concept_drift(_dataset: &scirs2_datasets::ContinualLearningDataset) {
+fn analyze_concept_drift(dataset: &scirs2_datasets::ContinualLearningDataset) {
     println!("    Task progression analysis:");
 
     for i in 1.._dataset.tasks.len() {
@@ -648,7 +648,7 @@ fn analyze_concept_drift(_dataset: &scirs2_datasets::ContinualLearningDataset) {
 }
 
 #[allow(dead_code)]
-fn get_continual_learning_strategies(_drift_strength: f64) -> &'static str {
+fn get_continual_learning_strategies(_driftstrength: f64) -> &'static str {
     if _drift_strength < 0.3 {
         "Fine-tuning, Elastic Weight Consolidation"
     } else if drift_strength < 0.7 {

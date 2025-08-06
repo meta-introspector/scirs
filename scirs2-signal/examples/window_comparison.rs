@@ -43,15 +43,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 #[allow(dead_code)]
-fn print_stats(_window: &[f64]) {
+fn print_stats(window: &[f64]) {
     // Calculate some basic statistics
-    let min = _window.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let max = _window.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-    let sum: f64 = _window.iter().sum();
-    let mean = sum / _window.len() as f64;
+    let min = window.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let max = window.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    let sum: f64 = window.iter().sum();
+    let mean = sum / window.len() as f64;
 
     // Calculate energy (sum of squares)
-    let energy: f64 = _window.iter().map(|&x| x * x).sum();
+    let energy: f64 = window.iter().map(|&x| x * x).sum();
 
     println!("  Min value: {:.6}", min);
     println!("  Max value: {:.6}", max);
@@ -62,15 +62,15 @@ fn print_stats(_window: &[f64]) {
     // Print first and last few values
     println!(
         "  First 5 values: {:.6}, {:.6}, {:.6}, {:.6}, {:.6}",
-        _window[0], _window[1], _window[2], _window[3], _window[4]
+        window[0], window[1], window[2], window[3], window[4]
     );
-    let len = _window.len();
+    let len = window.len();
     println!(
         "  Last 5 values: {:.6}, {:.6}, {:.6}, {:.6}, {:.6}",
-        _window[len - 5],
-        _window[len - 4],
-        _window[len - 3],
-        _window[len - 2],
-        _window[len - 1]
+        window[len - 5],
+        window[len - 4],
+        window[len - 3],
+        window[len - 2],
+        window[len - 1]
     );
 }

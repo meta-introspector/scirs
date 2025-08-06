@@ -29,7 +29,7 @@ pub struct HullWhiteModel {
 }
 
 impl InterestRateModel for HullWhiteModel {
-    fn short_rate(&self, _t: f64, state: &[f64]) -> f64 {
+    fn short_rate(&self, t: f64, state: &[f64]) -> f64 {
         state[0]
     }
 
@@ -37,7 +37,7 @@ impl InterestRateModel for HullWhiteModel {
         vec![self.a * (self.b - state[0])]
     }
 
-    fn diffusion(&self, _t: f64, _state: &[f64]) -> Vec<f64> {
+    fn diffusion(&self, _t: f64, state: &[f64]) -> Vec<f64> {
         vec![self.sigma]
     }
 
@@ -58,15 +58,15 @@ pub struct CIRModel {
 }
 
 impl InterestRateModel for CIRModel {
-    fn short_rate(&self, _t: f64, state: &[f64]) -> f64 {
+    fn short_rate(&self, t: f64, state: &[f64]) -> f64 {
         state[0].max(0.0)
     }
 
-    fn drift(&self, _t: f64, state: &[f64]) -> Vec<f64> {
+    fn drift(&self, t: f64, state: &[f64]) -> Vec<f64> {
         vec![self.kappa * (self.theta - state[0].max(0.0))]
     }
 
-    fn diffusion(&self, _t: f64, state: &[f64]) -> Vec<f64> {
+    fn diffusion(&self, t: f64, state: &[f64]) -> Vec<f64> {
         vec![self.sigma * state[0].max(0.0).sqrt()]
     }
 

@@ -66,13 +66,13 @@ where
 /// Returns a row-stochastic matrix where entry (i,j) is the probability
 /// of transitioning from node i to node j.
 #[allow(dead_code)]
-pub fn transition_matrix<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<(Vec<N>, Array2<f64>)>
+pub fn transition_matrix<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<(Vec<N>, Array2<f64>)>
 where
     N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Into<f64>,
     Ix: IndexType,
 {
-    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
 
     if n == 0 {
@@ -82,7 +82,7 @@ where
     let mut matrix = Array2::<f64>::zeros((n, n));
 
     for (i, node) in nodes.iter().enumerate() {
-        if let Ok(neighbors) = _graph.neighbors(node) {
+        if let Ok(neighbors) = graph.neighbors(node) {
             let neighbor_weights: Vec<(usize, f64)> = neighbors
                 .into_iter()
                 .filter_map(|neighbor| {
@@ -95,7 +95,7 @@ where
                 })
                 .collect();
 
-            let total_weight: f64 = neighbor_weights.iter().map(|(_, w)| w).sum();
+            let total_weight: f64 = neighborweights.iter().map(|(_, w)| w).sum();
 
             if total_weight > 0.0 {
                 for (j, weight) in neighbor_weights {
@@ -216,8 +216,8 @@ struct AliasTable {
 
 impl AliasTable {
     /// Construct alias table for weighted sampling
-    fn new(_weights: &[f64]) -> Self {
-        let n = _weights.len();
+    fn new(weights: &[f64]) -> Self {
+        let n = weights.len();
         let mut prob = vec![0.0; n];
         let mut alias = vec![0; n];
 
@@ -225,13 +225,13 @@ impl AliasTable {
             return AliasTable { prob, alias };
         }
 
-        let sum: f64 = _weights.iter().sum();
+        let sum: f64 = weights.iter().sum();
         if sum == 0.0 {
             return AliasTable { prob, alias };
         }
 
         // Normalize _weights
-        let normalized: Vec<f64> = _weights.iter().map(|w| w * n as f64 / sum).collect();
+        let normalized: Vec<f64> = weights.iter().map(|w| w * n as f64 / sum).collect();
 
         let mut small = Vec::new();
         let mut large = Vec::new();
@@ -279,13 +279,13 @@ impl AliasTable {
 
 impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> BatchRandomWalker<N> {
     /// Create a new batch random walker
-    pub fn new<E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<Self>
+    pub fn new<E, Ix>(graph: &Graph<N, E, Ix>) -> Result<Self>
     where
         E: EdgeWeight + Into<f64>,
         Ix: IndexType,
         N: std::fmt::Debug,
     {
-        let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
+        let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
         let node_to_idx: HashMap<N, usize> = nodes
             .iter()
             .enumerate()
@@ -296,16 +296,16 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> BatchRandomWalker<N> {
         let mut alias_tables = Vec::new();
 
         for node in &nodes {
-            if let Ok(neighbors) = _graph.neighbors(node) {
+            if let Ok(neighbors) = graph.neighbors(node) {
                 let neighbor_weights: Vec<f64> = neighbors
                     .iter()
-                    .filter_map(|neighbor| _graph.edge_weight(node, neighbor).ok())
+                    .filter_map(|neighbor| graph.edge_weight(node, neighbor).ok())
                     .map(|w| w.into())
                     .collect();
 
-                if !neighbor_weights.is_empty() {
-                    let total: f64 = neighbor_weights.iter().sum();
-                    let probs: Vec<f64> = neighbor_weights.iter().map(|w| w / total).collect();
+                if !neighborweights.is_empty() {
+                    let total: f64 = neighborweights.iter().sum();
+                    let probs: Vec<f64> = neighborweights.iter().map(|w| w / total).collect();
 
                     // Build cumulative probabilities for SIMD sampling
                     let mut cumulative = vec![0.0; probs.len()];

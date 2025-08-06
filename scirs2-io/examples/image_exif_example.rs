@@ -172,7 +172,7 @@ fn show_metadata_structure() -> Result<()> {
     println!("    copyright: Option<String>,");
     println!("    artist: Option<String>,");
     println!("    description: Option<String>,");
-    println!("    raw_tags: HashMap<String, String>");
+    println!("    rawtags: HashMap<String, String>");
     println!("  }}");
 
     println!("\nGPS Coordinates Structure:");
@@ -186,15 +186,15 @@ fn show_metadata_structure() -> Result<()> {
     println!("  CameraSettings {{");
     println!("    make: Option<String>,");
     println!("    model: Option<String>,");
-    println!("    lens_model: Option<String>,");
+    println!("    lensmodel: Option<String>,");
     println!("    iso: Option<u32>,");
     println!("    aperture: Option<f64>,      // f-number");
-    println!("    shutter_speed: Option<f64>, // seconds");
-    println!("    focal_length: Option<f64>,  // mm");
+    println!("    shutterspeed: Option<f64>, // seconds");
+    println!("    focallength: Option<f64>,  // mm");
     println!("    flash: Option<bool>,");
-    println!("    white_balance: Option<String>,");
-    println!("    exposure_mode: Option<String>,");
-    println!("    metering_mode: Option<String>");
+    println!("    whitebalance: Option<String>,");
+    println!("    exposuremode: Option<String>,");
+    println!("    meteringmode: Option<String>");
     println!("  }}");
 
     println!("\nNote: EXIF reading is currently limited in this implementation.");

@@ -5,7 +5,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
-use rand::{rng, rngs::StdRng, Rng, SeedableRng};
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
@@ -352,7 +352,9 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
+    use std::f64::consts::PI;
     #[test]
     fn test_chirp_linear() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -623,7 +625,7 @@ pub fn prbs_sequence(
 ///
 /// * Vector containing pink noise samples
 #[allow(dead_code)]
-pub fn pink_noise(_length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
+pub fn pink_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
     if _length == 0 {
         return Err(SignalError::ValueError(
             "Length must be positive".to_string(),
@@ -680,7 +682,7 @@ pub fn pink_noise(_length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
 ///
 /// * Vector containing brown noise samples
 #[allow(dead_code)]
-pub fn brown_noise(_length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
+pub fn brown_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
     if _length == 0 {
         return Err(SignalError::ValueError(
             "Length must be positive".to_string(),
@@ -841,7 +843,7 @@ pub fn synchronized_sweep(
 ///
 /// * Vector containing the mark positions
 #[allow(dead_code)]
-pub fn golomb_ruler(_order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
+pub fn golomb_ruler(order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
     if _order < 2 {
         return Err(SignalError::ValueError(
             "Order must be at least 2".to_string(),
@@ -936,7 +938,7 @@ pub fn golomb_ruler(_order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
 ///
 /// * Vector containing the perfect binary sequence (+1/-1 values)
 #[allow(dead_code)]
-pub fn perfect_binary_sequence(_length: usize) -> SignalResult<Vec<f64>> {
+pub fn perfect_binary_sequence(length: usize) -> SignalResult<Vec<f64>> {
     if _length < 3 {
         return Err(SignalError::ValueError(
             "Length must be at least 3".to_string(),
@@ -971,7 +973,7 @@ pub fn perfect_binary_sequence(_length: usize) -> SignalResult<Vec<f64>> {
 
 // Helper functions for random number generation
 #[allow(dead_code)]
-fn _create_rng_from_seed(_seed: u64) -> StdRng {
+fn _create_rng_from_seed(seed: u64) -> StdRng {
     StdRng::seed_from_u64(_seed)
 }
 
@@ -983,6 +985,8 @@ fn _create_default_rng() -> StdRng {
 
 #[cfg(test)]
 mod special_signal_tests {
+    use super::*;
+    use approx::assert_relative_eq;
 
     #[test]
     fn test_mls_sequence() {

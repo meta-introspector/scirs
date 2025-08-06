@@ -14,9 +14,9 @@ use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::Float;
 use scirs2_core::simd_ops::SimdUnifiedOps;
+use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::iter::Sum;
-use statrs::statistics::Statistics;
 
 /// Feature importance calculator with advanced methods
 pub struct FeatureImportanceCalculator<F: Float> {
@@ -29,7 +29,8 @@ pub struct FeatureImportanceCalculator<F: Float> {
     /// Use proper random number generation
     pub use_proper_rng: bool,
     /// Enable SIMD acceleration
-    pub enable_simd: bool, _phantom: std::marker::PhantomData<F>,
+    pub enable_simd: bool,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> Default
@@ -48,7 +49,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
             random_seed: None,
             n_shap_background: 100,
             use_proper_rng: true,
-            enable_simd: true, _phantom: std::marker::PhantomData,
+            enable_simd: true,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -281,7 +283,9 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
 
     /// Compute gain-based importance (for tree-like models)
     pub fn gain_importance<M>(
-        &self_model: &M_x, _test: &Array2<F>,
+        &self,
+        model: &M,
+        _test: &Array2<F>,
         feature_names: &[String],
         tree_splits: &[TreeSplit<F>],
     ) -> Result<HashMap<String, F>>
@@ -308,7 +312,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         &self,
         model: &M,
         x_instance: &ArrayView1<F>,
-        x_background: &Array2<F>, _score_fn: S,
+        x_background: &Array2<F>,
+        _score_fn: S,
         feature_names: &[String],
         n_samples: usize,
     ) -> Result<HashMap<String, F>>
@@ -329,7 +334,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         let feature_weights = self.fit_linear_approximation(&perturbed_samples, &predictions)?;
 
         for (feature_idx, feature_name) in feature_names.iter().enumerate() {
-            if feature_idx < feature_weights.len() {
+            if feature_idx < feature_weightslen() {
                 lime_scores.insert(feature_name.clone(), feature_weights[feature_idx]);
             }
         }
@@ -372,7 +377,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
 
     // Helper methods
 
-    fn permute_column(&self, data: &mut Array2<F>, column_idx: usize) -> Result<()> {
+    fn permute_column(&self, data: &mut Array2<F>, columnidx: usize) -> Result<()> {
         if column_idx >= data.ncols() {
             return Err(MetricsError::InvalidInput(
                 "Column index out of bounds".to_string(),
@@ -456,7 +461,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
     }
 
     /// Sample a random coalition of features
-    fn sample_coalition(&self, n_features: usize, target_feature: usize) -> Result<Vec<bool>> {
+    fn sample_coalition(&self, n_features: usize, targetfeature: usize) -> Result<Vec<bool>> {
         let mut coalition = vec![false; n_features];
         let seed = self.random_seed.unwrap_or(42);
         let mut rng_state = seed;
@@ -476,7 +481,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         &self,
         model: &M,
         x_test: &Array2<F>,
-        x_background: &Array2<F>, _score_fn: &S,
+        x_background: &Array2<F>,
+        _score_fn: &S,
         coalition: &[bool],
         feature_idx: usize,
     ) -> Result<F>
@@ -552,11 +558,11 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
 
                 if (rng_state % 2) == 0 {
                     // Use original feature value
-                    _samples[[i, j]] = x_instance[j];
+                    samples[[i, j]] = x_instance[j];
                 } else {
                     // Use _background value
                     let bg_mean = x_background.column(j).mean().unwrap_or(F::zero());
-                    _samples[[i, j]] = bg_mean;
+                    samples[[i, j]] = bg_mean;
                 }
             }
         }
@@ -608,7 +614,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
     }
 
     /// Compute numerical gradients
-    fn compute_numerical_gradients<M>(&self, model: &M, x_samples: &Array2<F>) -> Result<Array2<F>>
+    fn compute_numerical_gradients<M>(&self, model: &M, xsamples: &Array2<F>) -> Result<Array2<F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
@@ -686,7 +692,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         }
     }
 
-    fn drop_column(&self, data: &Array2<F>, column_idx: usize) -> Result<Array2<F>> {
+    fn drop_column(&self, data: &Array2<F>, columnidx: usize) -> Result<Array2<F>> {
         if column_idx >= data.ncols() {
             return Err(MetricsError::InvalidInput(
                 "Column index out of bounds".to_string(),
@@ -820,7 +826,7 @@ where
 
     // Gain-based importance (if tree _splits provided)
     let gain_importance = if let Some(_splits) = tree_splits {
-        Some(calculator.gain_importance(model, x_test, feature_names, _splits)?)
+        Some(calculator.gain_importance(model, x_test, feature_names, splits)?)
     } else {
         None
     };
@@ -954,7 +960,7 @@ fn compute_marginal_histogram<F: Float + num_traits::FromPrimitive>(
 ) -> Result<Vec<F>> {
     let mut hist = vec![F::zero(); n_bins];
 
-    for &bin_idx in _bins {
+    for &bin_idx in bins {
         hist[bin_idx] = hist[bin_idx] + F::one();
     }
 

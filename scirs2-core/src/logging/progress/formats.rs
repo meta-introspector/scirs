@@ -258,8 +258,8 @@ impl ColorScheme {
     }
 
     /// Apply color to text
-    pub fn format_with_color(&self, text: &str, color_type: ColorType) -> String {
-        let color = match color_type {
+    pub fn format_with_color(&self, text: &str, colortype: ColorType) -> String {
+        let color = match colortype {
             ColorType::Fill => &self.fill_color,
             ColorType::Empty => &self.empty_color,
             ColorType::Text => &self.text_color,
@@ -267,8 +267,8 @@ impl ColorScheme {
             ColorType::ETA => &self.eta_color,
         };
 
-        if let Some(color_code) = color {
-            format!("{color_code}{text}\x1b[0m")
+        if let Some(colorcode) = color {
+            format!("{colorcode}{text}\x1b[0m")
         } else {
             text.to_string()
         }

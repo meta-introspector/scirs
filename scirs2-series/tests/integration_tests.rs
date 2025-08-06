@@ -6,7 +6,6 @@
 use approx::assert_abs_diff_eq;
 use ndarray::{Array1, Array2, Axis};
 use scirs2__series::{
-use statrs::statistics::Statistics;
     anomaly::AnomalyDetector,
     arima_models::ArimaModel,
     biomedical::ECGAnalysis,
@@ -39,6 +38,7 @@ use statrs::statistics::Statistics;
     var_models::VectorAutoregression,
     visualization::TimeSeriesPlot,
 };
+use statrs::statistics::Statistics;
 
 /// Generate synthetic time series with known properties for testing
 #[allow(dead_code)]
@@ -70,7 +70,7 @@ fn generate_test_series(
 
 /// Generate time series with known change points
 #[allow(dead_code)]
-fn generate_change_point_series(_length: usize, change_points: &[usize]) -> Array1<f64> {
+fn generate_change_point_series(_length: usize, changepoints: &[usize]) -> Array1<f64> {
     let mut series = Array1::zeros(_length);
     let mut current_mean = 10.0;
     let mut next_change_idx = 0;

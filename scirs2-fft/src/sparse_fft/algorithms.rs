@@ -39,12 +39,12 @@ pub struct SparseFFT {
 
 impl SparseFFT {
     /// Create a new sparse FFT processor with the given configuration
-    pub fn new(_config: SparseFFTConfig) -> Self {
-        let seed = _config.seed.unwrap_or_else(rand::random);
+    pub fn new(config: SparseFFTConfig) -> Self {
+        let seed = config.seed.unwrap_or_else(rand::random);
         let rng = rand::rngs::StdRng::seed_from_u64(seed);
 
         Self {
-            config: _config,
+            config: config,
             rng,
         }
     }
@@ -267,13 +267,13 @@ impl SparseFFT {
         let m = (4 * k * (self.config.iterations as f64).log2() as usize).min(n);
 
         // For a simplified implementation, we'll take random time-domain samples
-        let mut _measurements = Vec::with_capacity(m);
-        let mut _sample_indices = Vec::with_capacity(m);
+        let mut measurements = Vec::with_capacity(m);
+        let mut sample_indices = Vec::with_capacity(m);
 
         for _ in 0..m {
-            let idx = self.rng.random_range(0..n);
-            _sample_indices.push(idx);
-            _measurements.push(signal_complex[idx]);
+            let idx = self.rng.gen_range(0..n);
+            sample_indices.push(idx);
+            measurements.push(signal_complex[idx]);
         }
 
         // For this demo..we'll just do a regular FFT and extract the k largest components
@@ -546,7 +546,7 @@ where
 
 /// Adaptive sparse FFT with automatic sparsity estimation
 #[allow(dead_code)]
-pub fn adaptive_sparse_fft<T>(_signal: &[T], threshold: f64) -> FFTResult<SparseFFTResult>
+pub fn adaptive_sparse_fft<T>(signal: &[T], threshold: f64) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -558,7 +558,7 @@ where
     };
 
     let mut processor = SparseFFT::new(config);
-    processor.sparse_fft(_signal)
+    processor.sparse_fft(signal)
 }
 
 /// Frequency pruning sparse FFT

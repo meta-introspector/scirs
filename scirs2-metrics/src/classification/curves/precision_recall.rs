@@ -70,7 +70,7 @@ where
         })
         .collect();
 
-    // Create pairs and sort by decreasing _score
+    // Create pairs and sort by decreasing score
     let mut pairs: Vec<(f64, f64)> = y_true_vec
         .iter()
         .cloned()
@@ -80,9 +80,9 @@ where
     pairs.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
     // Extract sorted values
-    for (i, (label, _score)) in pairs.iter().enumerate() {
+    for (i, (label, score)) in pairs.iter().enumerate() {
         y_true_vec[i] = *label;
-        y_score_vec[i] = *_score;
+        y_score_vec[i] = *score;
     }
 
     // Get unique thresholds

@@ -89,10 +89,10 @@ impl GpuVisionContext {
     }
 
     /// Create a new GPU vision context with a specific backend
-    pub fn with_backend(_backend: GpuBackend) -> Result<Self> {
+    pub fn with_backend(backend: GpuBackend) -> Result<Self> {
         match GpuContext::new(_backend) {
             Ok(context) => {
-                eprintln!("Successfully created GPU context with requested _backend: {_backend:?}");
+                eprintln!("Successfully created GPU context with requested backend: {_backend:?}");
                 Ok(Self { context, _backend })
             }
             Err(error) => {
@@ -607,7 +607,7 @@ pub fn gpu_gaussian_blur(
 
 /// Generate 1D Gaussian kernel
 #[allow(dead_code)]
-fn generate_gaussian_kernel(_size: usize, sigma: f32) -> Vec<f32> {
+fn generate_gaussian_kernel(size: usize, sigma: f32) -> Vec<f32> {
     let half = _size / 2;
     let mut kernel = vec![0.0f32; _size];
     let mut sum = 0.0f32;
@@ -779,7 +779,8 @@ fn separable_conv_1d(@builtin(global_invocation_id) global_id: vec3<u32>) {
     output[idx] = sum;
 }
 "#
-        .to_string(), _ => {
+        .to_string(),
+        _ => {
             // Fall back for unsupported backends
             return Ok(input.to_vec());
         }
@@ -1168,7 +1169,7 @@ impl GpuBenchmark {
     }
 
     /// Benchmark convolution operation
-    pub fn benchmark_convolution(&self, image_size: (usize, usize), kernel_size: usize) -> f64 {
+    pub fn benchmark_convolution(&self, imagesize: (usize, usize), kernel_size: usize) -> f64 {
         use std::time::Instant;
 
         let image = Array2::zeros(image_size);
@@ -1514,7 +1515,7 @@ impl GpuPerformanceProfiler {
     }
 
     /// Start timing an operation
-    pub fn start_timing(&self, _operation: &str) -> std::time::Instant {
+    pub fn start_timing(&self, operation: &str) -> std::time::Instant {
         std::time::Instant::now()
     }
 
@@ -2268,16 +2269,16 @@ fn gpu_relu_layer(
 }
 
 #[allow(dead_code)]
-fn compute_conv_outputshape(_inputshape: (usize, usize), config: &LayerConfig) -> (usize, usize) {
-    let (h, w) = _inputshape;
+fn compute_conv_outputshape(inputshape: (usize, usize), config: &LayerConfig) -> (usize, usize) {
+    let (h, w) = inputshape;
     let out_h = (h + 2 * config.padding - config.kernel_size) / config.stride + 1;
     let out_w = (w + 2 * config.padding - config.kernel_size) / config.stride + 1;
     (out_h, out_w)
 }
 
 #[allow(dead_code)]
-fn compute_pool_outputshape(_inputshape: (usize, usize), config: &LayerConfig) -> (usize, usize) {
-    let (h, w) = _inputshape;
+fn compute_pool_outputshape(inputshape: (usize, usize), config: &LayerConfig) -> (usize, usize) {
+    let (h, w) = inputshape;
     let out_h = h / config.stride;
     let out_w = w / config.stride;
     (out_h, out_w)
@@ -2315,7 +2316,7 @@ fn fallback_multi_head_attention(
 
         // Softmax
         let mut attention_weights = Array2::zeros(scaled_scores.dim());
-        ndarray::Zip::from(attention_weights.rows_mut())
+        ndarray::Zip::from(attentionweights.rows_mut())
             .and(scaled_scores.rows())
             .for_each(|mut row, score_row| {
                 let max_val = score_row.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
@@ -2329,7 +2330,7 @@ fn fallback_multi_head_attention(
 
         // Apply attention to values: attention_weights @ V
         let head_output = crate::simd_ops::simd_matmul_attention_advanced(
-            &attention_weights.view(),
+            &attentionweights.view(),
             &v_head.view(),
         )?;
 

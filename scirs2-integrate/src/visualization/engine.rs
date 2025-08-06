@@ -37,7 +37,7 @@ impl VisualizationEngine {
     }
 
     /// Create phase space plot from ODE result
-    pub fn create_phase_space_plot<F: crate::common::IntegrateFloat>(
+    pub fn create_phase_spaceplot<F: crate::common::IntegrateFloat>(
         &self,
         ode_result: &ODEResult<F>,
         x_index: usize,
@@ -129,7 +129,7 @@ impl VisualizationEngine {
     }
 
     /// Create vector field plot for 2D dynamical systems
-    pub fn create_vector_field_plot<F>(
+    pub fn create_vector_fieldplot<F>(
         &self,
         system: F,
         x_range: (f64, f64),
@@ -184,13 +184,13 @@ impl VisualizationEngine {
     }
 
     /// Create basin of attraction visualization
-    pub fn create_basin_plot(_basin_analysis: &BasinAnalysis) -> IntegrateResult<HeatMapPlot> {
-        let grid_size = _basin_analysis.attractor_indices.nrows();
+    pub fn create_basinplot(_basinanalysis: &BasinAnalysis) -> IntegrateResult<HeatMapPlot> {
+        let grid_size = _basinanalysis.attractor_indices.nrows();
         let x = Array1::linspace(0.0, 1.0, grid_size);
         let y = Array1::linspace(0.0, 1.0, grid_size);
 
         // Convert attractor indices to f64 for plotting
-        let z = _basin_analysis.attractor_indices.mapv(|x| x as f64);
+        let z = _basinanalysis.attractor_indices.mapv(|x| x as f64);
 
         let mut metadata = PlotMetadata::default();
         metadata.title = "Basin of Attraction".to_string();
@@ -201,22 +201,22 @@ impl VisualizationEngine {
     }
 
     /// Generate ASCII art representation of a 2D plot
-    pub fn render_ascii_plot(_data: &[(f64, f64)], width: usize, height: usize) -> String {
-        if _data.is_empty() {
-            return "No _data to plot".to_string();
+    pub fn render_asciiplot(data: &[(f64, f64)], width: usize, height: usize) -> String {
+        if data.is_empty() {
+            return "No data to plot".to_string();
         }
 
-        // Find _data bounds
-        let x_min = _data
+        // Find data bounds
+        let x_min = data
             .iter()
             .map(|(x_, _)| *x_)
             .fold(f64::INFINITY, f64::min);
-        let x_max = _data
+        let x_max = data
             .iter()
             .map(|(x_, _)| *x_)
             .fold(f64::NEG_INFINITY, f64::max);
-        let y_min = _data.iter().map(|(_, y)| *y).fold(f64::INFINITY, f64::min);
-        let y_max = _data
+        let y_min = data.iter().map(|(_, y)| *y).fold(f64::INFINITY, f64::min);
+        let y_max = data
             .iter()
             .map(|(_, y)| *y)
             .fold(f64::NEG_INFINITY, f64::max);
@@ -224,8 +224,8 @@ impl VisualizationEngine {
         // Create character grid
         let mut grid = vec![vec![' '; width]; height];
 
-        // Map _data points to grid
-        for (x, y) in _data {
+        // Map data points to grid
+        for (x, y) in data {
             let i = ((y - y_min) / (y_max - y_min) * (height - 1) as f64) as usize;
             let j = ((x - x_min) / (x_max - x_min) * (width - 1) as f64) as usize;
 
@@ -249,20 +249,20 @@ impl VisualizationEngine {
     }
 
     /// Export plot data to CSV format
-    pub fn export_csv(_plot: &PhaseSpacePlot) -> IntegrateResult<String> {
+    pub fn export_csv(plot: &PhaseSpacePlot) -> IntegrateResult<String> {
         let mut csv = String::new();
 
         // Header
         csv.push_str("x,y");
-        if _plot.colors.is_some() {
+        if plot.colors.is_some() {
             csv.push_str(",color");
         }
         csv.push('\n');
 
         // Data
-        for i in 0.._plot.x.len() {
-            csv.push_str(&format!("{},{}", _plot.x[i], _plot.y[i]));
-            if let Some(ref colors) = _plot.colors {
+        for i in 0..plot.x.len() {
+            csv.push_str(&format!("{},{}", plot.x[i], plot.y[i]));
+            if let Some(ref colors) = plot.colors {
                 csv.push_str(&format!(",{}", colors[i]));
             }
             csv.push('\n');
@@ -295,7 +295,7 @@ impl VisualizationEngine {
     }
 
     /// Create convergence analysis plot
-    pub fn create_convergence_plot(
+    pub fn create_convergenceplot(
         &self,
         step_sizes: &[f64],
         errors: &[f64],
@@ -390,8 +390,8 @@ impl VisualizationEngine {
         let param_step = (parameter_range.1 - parameter_range.0) / (n_params - 1) as f64;
 
         let mut parameter_values = Vec::new();
-        let mut attractor_data = Vec::new();
-        let mut stability_data = Vec::new();
+        let mut attractordata = Vec::new();
+        let mut stabilitydata = Vec::new();
 
         for i in 0..n_params {
             let param = parameter_range.0 + i as f64 * param_step;
@@ -444,8 +444,8 @@ impl VisualizationEngine {
                 param_stability.push(stability);
             }
 
-            attractor_data.push(param_attractors);
-            stability_data.push(param_stability);
+            attractordata.push(param_attractors);
+            stabilitydata.push(param_stability);
         }
 
         let mut metadata = PlotMetadata::default();
@@ -455,8 +455,8 @@ impl VisualizationEngine {
 
         Ok(RealTimeBifurcationPlot {
             parameter_values,
-            attractor_data,
-            stability_data,
+            attractor_data: attractordata,
+            stability_data: stabilitydata,
             parameter_range,
             metadata,
         })

@@ -54,7 +54,7 @@ pub enum SchedulingPolicy {
 #[derive(Debug, Clone)]
 pub struct SchedulerConfig {
     /// Number of worker threads
-    pub num_workers: usize,
+    pub numworkers: usize,
     /// Scheduling policy
     pub policy: SchedulingPolicy,
     /// Maximum task queue size
@@ -76,13 +76,13 @@ pub struct SchedulerConfig {
     /// Task timeout (milliseconds, 0 for no timeout)
     pub task_timeout_ms: u64,
     /// Maximum number of retries for failed tasks
-    pub max_retries: usize,
+    pub maxretries: usize,
 }
 
 impl Default for SchedulerConfig {
     fn default() -> Self {
         Self {
-            num_workers: num_cpus::get(),
+            numworkers: num_cpus::get(),
             policy: SchedulingPolicy::Priority,
             max_queue_size: 10000,
             adaptive: true,
@@ -93,7 +93,7 @@ impl Default for SchedulerConfig {
             min_batch_size: 1,
             max_batch_size: 100,
             task_timeout_ms: 0,
-            max_retries: 3,
+            maxretries: 3,
         }
     }
 }
@@ -111,8 +111,8 @@ impl SchedulerConfigBuilder {
     }
 
     /// Set the number of worker threads
-    pub const fn workers(mut self, num_workers: usize) -> Self {
-        self.config.num_workers = num_workers;
+    pub const fn workers(mut self, numworkers: usize) -> Self {
+        self.config.numworkers = numworkers;
         self
     }
 
@@ -177,8 +177,8 @@ impl SchedulerConfigBuilder {
     }
 
     /// Set the maximum number of retries
-    pub const fn max_retries(mut self, retries: usize) -> Self {
-        self.config.max_retries = retries;
+    pub const fn maxretries(mut self, retries: usize) -> Self {
+        self.config.maxretries = retries;
         self
     }
 
@@ -419,7 +419,7 @@ thread_local! {
 
 /// Set the worker ID for the current thread
 #[allow(dead_code)]
-fn set_worker_id(id: usize) {
+fn set_workerid(id: usize) {
     WORKER_ID.with(|cell| unsafe {
         *cell.get() = Some(id);
     });
@@ -427,7 +427,7 @@ fn set_worker_id(id: usize) {
 
 /// Get the worker ID for the current thread
 #[allow(dead_code)]
-pub fn get_worker_id() -> Option<usize> {
+pub fn get_workerid() -> Option<usize> {
     WORKER_ID.with(|cell| unsafe { *cell.get() })
 }
 
@@ -626,7 +626,7 @@ pub struct SchedulerStats {
     /// Number of task retries
     pub task_retries: usize,
     /// Number of workers
-    pub num_workers: usize,
+    pub numworkers: usize,
     /// Average queue size
     pub avg_queue_size: f64,
     /// Average task latency (milliseconds)
@@ -654,7 +654,7 @@ impl Default for SchedulerStats {
             tasks_cancelled: 0,
             tasks_timed_out: 0,
             task_retries: 0,
-            num_workers: 0,
+            numworkers: 0,
             avg_queue_size: 0.0,
             avg_task_latency_ms: 0.0,
             avg_task_execution_ms: 0.0,
@@ -680,7 +680,7 @@ pub struct WorkStealingScheduler {
     /// Scheduler state
     state: Arc<RwLock<SchedulerState>>,
     /// Next task ID
-    next_task_id: Arc<AtomicUsize>,
+    next_taskid: Arc<AtomicUsize>,
     /// Task completion map
     task_completion: TaskCompletionMap,
     /// Task submission times
@@ -708,19 +708,17 @@ impl WorkStealingScheduler {
         // Create the scheduler
         let injector = Arc::new(Injector::new());
         let state = Arc::new(RwLock::new(SchedulerState::Running));
-        let next_task_id = Arc::new(AtomicUsize::new(1));
+        let next_taskid = Arc::new(AtomicUsize::new(1));
         let task_completion = Arc::new(Mutex::new(HashMap::new()));
         let task_submissions = Arc::new(Mutex::new(HashMap::new()));
         let task_executions = Arc::new(Mutex::new(HashMap::new()));
 
         // Create workers and stealers
-        let mut worker_states = Vec::with_capacity(config.num_workers);
-        let mut workers = Vec::with_capacity(config.num_workers);
+        let mut worker_states = Vec::with_capacity(config.numworkers);
+        let mut workers = Vec::with_capacity(config.numworkers);
 
         // Create worker queues and stealers
-        let worker_queues: Vec<_> = (0..config.num_workers)
-            .map(|_| Worker::new_fifo())
-            .collect();
+        let worker_queues: Vec<_> = (0..config.numworkers).map(|_| Worker::new_fifo()).collect();
 
         let stealers: Vec<_> = worker_queues
             .iter()
@@ -728,7 +726,7 @@ impl WorkStealingScheduler {
             .collect();
 
         // Create worker threads
-        for i in 0..config.num_workers {
+        for i in 0..config.numworkers {
             // Create worker state
             let worker_state = Arc::new(WorkerState::new(i, stealers.clone(), injector.clone()));
 
@@ -742,7 +740,7 @@ impl WorkStealingScheduler {
 
             let worker_thread = thread::spawn(move || {
                 // Set the worker ID in thread-local storage
-                set_worker_id(i);
+                set_workerid(i);
 
                 // Run the worker loop
                 Self::worker_loop(
@@ -763,7 +761,7 @@ impl WorkStealingScheduler {
             workers,
             worker_states,
             state,
-            next_task_id,
+            next_taskid,
             task_completion,
             task_submissions,
             task_executions,
@@ -794,11 +792,11 @@ impl WorkStealingScheduler {
                 let execution_time = start_time.elapsed();
 
                 // Record task execution time
-                let task_id = task.id;
+                let taskid = task.id;
                 task_executions
                     .lock()
                     .unwrap()
-                    .insert(task_id, execution_time);
+                    .insert(taskid, execution_time);
 
                 // Update worker statistics
                 worker_state.tasks_processed.fetch_add(1, Ordering::Relaxed);
@@ -810,7 +808,7 @@ impl WorkStealingScheduler {
                     }
                     Err(_) => {
                         // Task failed, check if we should retry
-                        if task.retry_count < config.max_retries {
+                        if task.retry_count < config.maxretries {
                             // Retry the task
                             task.increment_retry();
 
@@ -851,11 +849,11 @@ impl WorkStealingScheduler {
             let execution_time = start_time.elapsed();
 
             // Record task execution time
-            let task_id = task.id;
+            let taskid = task.id;
             task_executions
                 .lock()
                 .unwrap()
-                .insert(task_id, execution_time);
+                .insert(taskid, execution_time);
 
             // Update worker statistics
             worker_state.tasks_processed.fetch_add(1, Ordering::Relaxed);
@@ -875,10 +873,10 @@ impl WorkStealingScheduler {
         }
 
         // Get a new task ID
-        let task_id = self.next_task_id.fetch_add(1, Ordering::SeqCst);
+        let taskid = self.next_taskid.fetch_add(1, Ordering::SeqCst);
 
         // Wrap the task
-        let wrapper = TaskWrapper::new(task_id, task);
+        let wrapper = TaskWrapper::new(taskid, task);
 
         // Create task handle
         let handle = wrapper.create_handle();
@@ -887,13 +885,13 @@ impl WorkStealingScheduler {
         self.task_completion
             .lock()
             .unwrap()
-            .insert(task_id, wrapper.result_notify.clone());
+            .insert(taskid, wrapper.result_notify.clone());
 
         // Store submission time
         self.task_submissions
             .lock()
             .unwrap()
-            .insert(task_id, Instant::now());
+            .insert(taskid, Instant::now());
 
         // Submit the task based on the scheduling policy
         match self.config.policy {
@@ -905,7 +903,7 @@ impl WorkStealingScheduler {
                 // High priority tasks go to worker queues directly
                 if wrapper.priority >= TaskPriority::High {
                     // Round-robin assignment to worker queues
-                    let queue_idx = task_id % self.worker_states.len();
+                    let queue_idx = taskid % self.worker_states.len();
                     self.worker_states[queue_idx].push_local(wrapper);
                     self.worker_states[queue_idx].unparker.unpark();
                 } else {
@@ -1003,7 +1001,7 @@ impl WorkStealingScheduler {
     /// Wait for all tasks to complete
     pub fn wait_all(&self) {
         // Collect all task IDs
-        let task_ids: Vec<_> = self
+        let taskids: Vec<_> = self
             .task_completion
             .lock()
             .unwrap()
@@ -1012,7 +1010,7 @@ impl WorkStealingScheduler {
             .collect();
 
         // Wait for each task
-        for id in task_ids {
+        for id in taskids {
             if let Some(notify) = self.task_completion.lock().unwrap().get(&id) {
                 let (lock, cvar) = &**notify;
                 let completed = lock.lock().unwrap();
@@ -1029,7 +1027,7 @@ impl WorkStealingScheduler {
         let deadline = Instant::now() + timeout;
 
         // Collect all task IDs
-        let task_ids: Vec<_> = self
+        let taskids: Vec<_> = self
             .task_completion
             .lock()
             .unwrap()
@@ -1038,7 +1036,7 @@ impl WorkStealingScheduler {
             .collect();
 
         // Wait for each task
-        for id in task_ids {
+        for id in taskids {
             let remaining = deadline.saturating_duration_since(Instant::now());
 
             if remaining.as_secs() == 0 && remaining.subsec_nanos() == 0 {
@@ -1071,8 +1069,8 @@ impl WorkStealingScheduler {
     /// Get statistics for the scheduler
     pub fn stats(&self) -> SchedulerStats {
         let mut stats = SchedulerStats {
-            tasks_submitted: self.next_task_id.load(Ordering::Relaxed) - 1,
-            num_workers: self.config.num_workers,
+            tasks_submitted: self.next_taskid.load(Ordering::Relaxed) - 1,
+            numworkers: self.config.numworkers,
             ..SchedulerStats::default()
         };
 
@@ -1167,13 +1165,13 @@ impl WorkStealingScheduler {
     }
 
     /// Get the number of workers
-    pub fn num_workers(&self) -> usize {
+    pub fn numworkers(&self) -> usize {
         self.worker_states.len()
     }
 
     /// Get the current worker ID
-    pub fn current_worker_id(&self) -> Option<usize> {
-        get_worker_id()
+    pub fn current_workerid(&self) -> Option<usize> {
+        get_workerid()
     }
 
     /// Get the number of pending tasks
@@ -1286,8 +1284,8 @@ pub fn create_work_stealing_scheduler() -> WorkStealingScheduler {
 
 /// Create a new work-stealing scheduler with the specified number of workers
 #[allow(dead_code)]
-pub fn create_work_stealing_scheduler_with_workers(num_workers: usize) -> WorkStealingScheduler {
-    let config = SchedulerConfigBuilder::new().workers(num_workers).build();
+pub fn create_work_stealing_scheduler_with_workers(numworkers: usize) -> WorkStealingScheduler {
+    let config = SchedulerConfigBuilder::new().workers(numworkers).build();
 
     WorkStealingScheduler::new(config)
 }
@@ -1308,7 +1306,7 @@ where
     /// Task priority
     priority: TaskPriority,
     /// Whether to continue on errors
-    continue_on_error: bool,
+    continue_onerror: bool,
 }
 
 impl<T, F, R> ParallelTask<T, F, R>
@@ -1324,7 +1322,7 @@ where
             func,
             name: "parallel".to_string(),
             priority: TaskPriority::Normal,
-            continue_on_error: false,
+            continue_onerror: false,
         }
     }
 
@@ -1341,8 +1339,8 @@ where
     }
 
     /// Set whether to continue on errors
-    pub fn continue_on_error(mut self, continue_on_error: bool) -> Self {
-        self.continue_on_error = continue_on_error;
+    pub fn continue_onerror(mut self, continue_onerror: bool) -> Self {
+        self.continue_onerror = continue_onerror;
         self
     }
 
@@ -1383,7 +1381,7 @@ where
         for handle in &handles {
             match handle.wait() {
                 TaskStatus::Completed => {}
-                TaskStatus::Failed(_) if self.continue_on_error => {}
+                TaskStatus::Failed(_) if self.continue_onerror => {}
                 status => {
                     return Err(CoreError::SchedulerError(
                         ErrorContext::new(format!(
@@ -1564,7 +1562,7 @@ where
 /// Extension to CoreError for scheduler errors
 impl CoreError {
     /// Create a new scheduler error
-    pub fn scheduler_error(message: &str) -> Self {
+    pub fn schedulererror(message: &str) -> Self {
         CoreError::SchedulerError(
             ErrorContext::new(message.to_string())
                 .with_location(ErrorLocation::new(file!(), line!())),

@@ -7,8 +7,8 @@ use crate::domains::{DomainEvaluationResult, DomainMetrics};
 use crate::error::{MetricsError, Result};
 use crate::regression::{mean_absolute_error, mean_squared_error, r2_score};
 use ndarray::{s, Array1, Array2};
-use std::collections::HashMap;
 use statrs::statistics::Statistics;
+use std::collections::HashMap;
 
 /// Forecasting evaluation results
 #[derive(Debug, Clone)]
@@ -119,7 +119,7 @@ impl ForecastingMetrics {
     }
 
     /// Set naive forecast for MASE calculation (typically last known value)
-    pub fn with_naive_forecast(mut self, naive_forecast: Array1<f64>) -> Self {
+    pub fn with_naive_forecast(mut self, naiveforecast: Array1<f64>) -> Self {
         self.naive_forecast = Some(naive_forecast);
         self
     }
@@ -149,7 +149,7 @@ impl ForecastingMetrics {
 
         // Calculate MASE
         let mase = if let Some(_train) = y_train {
-            self.calculate_mase(y_true, y_pred, _train)?
+            self.calculate_mase(y_true, y_pred, train)?
         } else if let Some(naive) = &self.naive_forecast {
             self.calculate_mase_with_naive(y_true, y_pred, naive)?
         } else {
@@ -183,7 +183,7 @@ impl ForecastingMetrics {
     }
 
     /// Calculate Mean Absolute Percentage Error
-    fn calculate_mape(&self, y_true: &Array1<f64>, y_pred: &Array1<f64>) -> Result<f64> {
+    fn calculate_mape(&self, y_true: &Array1<f64>, ypred: &Array1<f64>) -> Result<f64> {
         let mut sum = 0.0;
         let mut count = 0;
 
@@ -205,7 +205,7 @@ impl ForecastingMetrics {
     }
 
     /// Calculate Symmetric Mean Absolute Percentage Error
-    fn calculate_smape(&self, y_true: &Array1<f64>, y_pred: &Array1<f64>) -> Result<f64> {
+    fn calculate_smape(&self, y_true: &Array1<f64>, ypred: &Array1<f64>) -> Result<f64> {
         let mut sum = 0.0;
         let mut count = 0;
 
@@ -297,7 +297,7 @@ impl ForecastingMetrics {
 
         let _baseline = if let Some(_train) = y_train {
             if !_train.is_empty() {
-                _train[_train.len() - 1]
+                train[_train.len() - 1]
             } else {
                 y_true[0]
             }
@@ -330,7 +330,7 @@ impl ForecastingMetrics {
         // Calculate MSE of naive forecast (no-change forecast)
         let baseline = if let Some(_train) = y_train {
             if !_train.is_empty() {
-                _train[_train.len() - 1]
+                train[_train.len() - 1]
             } else {
                 y_true[0]
             }
@@ -461,7 +461,7 @@ impl TimeSeriesAnomalyMetrics {
     }
 
     /// Calculate AUC for time series anomaly detection
-    fn calculate_auc(&self, y_true: &Array1<i32>, y_score: &Array1<f64>) -> Result<f64> {
+    fn calculate_auc(&self, y_true: &Array1<i32>, yscore: &Array1<f64>) -> Result<f64> {
         if y_true.len() != y_score.len() {
             return Err(MetricsError::InvalidInput("Length mismatch".to_string()));
         }
@@ -641,7 +641,7 @@ impl TrendAnalysisMetrics {
     }
 
     /// Calculate trend strength using correlation with linear trend
-    fn calculate_trend_strength(&self, time_series: &Array1<f64>) -> Result<f64> {
+    fn calculate_trend_strength(&self, timeseries: &Array1<f64>) -> Result<f64> {
         let n = time_series.len();
         if n < 2 {
             return Ok(0.0);
@@ -704,7 +704,7 @@ impl TrendAnalysisMetrics {
     }
 
     /// Calculate autocorrelation at given lag
-    fn calculate_autocorrelation(&self, time_series: &Array1<f64>, lag: usize) -> Result<f64> {
+    fn calculate_autocorrelation(&self, timeseries: &Array1<f64>, lag: usize) -> Result<f64> {
         if time_series.len() <= lag {
             return Ok(0.0);
         }
@@ -736,7 +736,7 @@ impl TrendAnalysisMetrics {
     }
 
     /// Simple stationarity test based on variance stability
-    fn test_stationarity(&self, time_series: &Array1<f64>) -> Result<bool> {
+    fn test_stationarity(&self, timeseries: &Array1<f64>) -> Result<bool> {
         let n = time_series.len();
         if n < 20 {
             return Ok(true); // Too short to determine
@@ -768,7 +768,7 @@ impl TrendAnalysisMetrics {
     }
 
     /// Ljung-Box test for autocorrelation in residuals
-    fn ljung_box_test(&self, time_series: &Array1<f64>, h: usize) -> Result<f64> {
+    fn ljung_box_test(&self, timeseries: &Array1<f64>, h: usize) -> Result<f64> {
         let n = time_series.len();
         if n <= h + 1 {
             return Ok(1.0); // Cannot perform test, return non-significant p-value
@@ -797,7 +797,7 @@ impl TrendAnalysisMetrics {
     }
 
     /// Augmented Dickey-Fuller test for stationarity
-    fn adf_test(&self, time_series: &Array1<f64>) -> Result<f64> {
+    fn adf_test(&self, timeseries: &Array1<f64>) -> Result<f64> {
         let n = time_series.len();
         if n < 4 {
             return Ok(-1.0); // Cannot perform test

@@ -675,7 +675,7 @@ pub struct MetricTensor<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> MultiTimelineProcessor<F> {
     /// Create new multi-timeline processor
-    pub fn new(num_dimensions: usize) -> Self {
+    pub fn new(numdimensions: usize) -> Self {
         let mut temporal_dimensions = Vec::new();
         
         for i in 0..num_dimensions {
@@ -696,7 +696,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiTimelineProcessor<F> {
     }
 
     /// Process temporal data across multiple timelines
-    pub fn process_temporal_data(&mut self, temporal_data: &[Array1<F>]) -> Result<Array1<F>> {
+    pub fn process_temporal_data(&mut self, temporaldata: &[Array1<F>]) -> Result<Array1<F>> {
         if temporal_data.is_empty() {
             return Ok(Array1::zeros(0));
         }
@@ -1098,7 +1098,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ReasoningEngine<F> {
     }
 
     /// Compute counterfactual adjustment
-    pub fn compute_counterfactual(&self, observed_value: F) -> Result<F> {
+    pub fn compute_counterfactual(&self, observedvalue: F) -> Result<F> {
         match self.reasoning_type {
             ReasoningType::Counterfactual => {
                 // Simple counterfactual adjustment
@@ -1124,7 +1124,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> TemporalParadoxResolver<F> {
     }
 
     /// Resolve temporal paradoxes in data
-    pub fn resolve_paradoxes(&mut self, temporal_data: &Array1<F>) -> Result<Array1<F>> {
+    pub fn resolve_paradoxes(&mut self, temporaldata: &Array1<F>) -> Result<Array1<F>> {
         // Detect paradoxes
         let paradoxes = self.paradox_detection.detect_paradoxes(temporal_data)?;
         

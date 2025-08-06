@@ -61,7 +61,8 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> MetricOptimizer<F> {
             },
             history: Vec::new(),
             best_value: None,
-            additional_metrics: HashMap::new(), _phantom: PhantomData,
+            additional_metrics: HashMap::new(),
+            _phantom: PhantomData,
         }
     }
 
@@ -99,7 +100,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> MetricOptimizer<F> {
     }
 
     /// Add a value for an additional metric to track
-    pub fn add_additional_value(&mut self, metric_name: &str, value: F) {
+    pub fn add_additional_value(&mut self, metricname: &str, value: F) {
         self.additional_metrics
             .entry(metric_name.to_string())
             .or_default()
@@ -107,7 +108,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> MetricOptimizer<F> {
     }
 
     /// Get the history of an additional metric
-    pub fn additional_metric_history(&self, metric_name: &str) -> Option<&[F]> {
+    pub fn additional_metric_history(&self, metricname: &str) -> Option<&[F]> {
         self.additional_metrics
             .get(metric_name)
             .map(|v| v.as_slice())

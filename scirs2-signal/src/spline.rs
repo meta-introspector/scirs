@@ -30,8 +30,8 @@ pub enum SplineOrder {
 
 impl SplineOrder {
     /// Convert from integer to SplineOrder
-    pub fn from_int(_order: usize) -> SignalResult<Self> {
-        match _order {
+    pub fn from_int(order: usize) -> SignalResult<Self> {
+        match order {
             0 => Ok(SplineOrder::Constant),
             1 => Ok(SplineOrder::Linear),
             2 => Ok(SplineOrder::Quadratic),
@@ -39,8 +39,8 @@ impl SplineOrder {
             4 => Ok(SplineOrder::Quartic),
             5 => Ok(SplineOrder::Quintic),
             _ => Err(SignalError::ValueError(format!(
-                "Unsupported spline _order: {}. Valid values are 0 through 5.",
-                _order
+                "Unsupported spline order: {}. Valid values are 0 through 5.",
+                order
             ))),
         }
     }
@@ -488,12 +488,12 @@ fn apply_anticausal_filter(c: &mut [f64], n: SplineOrder) {
 /// assert_eq!(filtered.len(), signal.len());
 /// ```
 #[allow(dead_code)]
-pub fn bspline_filter<T>(_signal: &[T], order: SplineOrder) -> SignalResult<Vec<f64>>
+pub fn bspline_filter<T>(signal: &[T], order: SplineOrder) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
     // Convert to f64
-    let mut _signal_f64: Vec<f64> = _signal
+    let mut signal_f64: Vec<f64> = signal
         .iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
@@ -503,9 +503,7 @@ where
         .collect::<SignalResult<Vec<f64>>>()?;
 
     if signal_f64.is_empty() {
-        return Err(SignalError::ValueError(
-            "Input _signal is empty".to_string(),
-        ));
+        return Err(SignalError::ValueError("Input signal is empty".to_string()));
     }
 
     // Apply causal and anti-causal filters
@@ -541,13 +539,13 @@ where
 /// assert_eq!(coeffs.len(), signal.len());
 /// ```
 #[allow(dead_code)]
-pub fn bspline_coefficients<T>(_signal: &[T], order: SplineOrder) -> SignalResult<Vec<f64>>
+pub fn bspline_coefficients<T>(signal: &[T], order: SplineOrder) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
     // For constant or linear splines, coefficients are the same as the _signal
     if order == SplineOrder::Constant || order == SplineOrder::Linear {
-        return _signal
+        return signal
             .iter()
             .map(|&val| {
                 NumCast::from(val).ok_or_else(|| {
@@ -558,7 +556,7 @@ where
     }
 
     // Convert to f64
-    let _signal_f64: Vec<f64> = _signal
+    let signal_f64: Vec<f64> = signal
         .iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
@@ -568,13 +566,13 @@ where
         .collect::<SignalResult<Vec<f64>>>()?;
 
     if signal_f64.is_empty() {
-        return Err(SignalError::ValueError(
-            "Input _signal is empty".to_string(),
-        ));
+        return Err(SignalError::ValueError("Input signal is empty".to_string()));
     }
 
     // Gain factor for the b-spline filter
     let gain = match order {
+        SplineOrder::Constant => 1.0,
+        SplineOrder::Linear => 2.0,
         SplineOrder::Quadratic => 3.0,
         SplineOrder::Cubic => 6.0,
         SplineOrder::Quartic => 120.0,
@@ -626,13 +624,13 @@ where
 /// assert_eq!(values.len(), x.len());
 /// ```
 #[allow(dead_code)]
-pub fn bspline_evaluate<T, U>(_coeffs: &[T], x: &[U], order: SplineOrder) -> SignalResult<Vec<f64>>
+pub fn bspline_evaluate<T, U>(coeffs: &[T], x: &[U], order: SplineOrder) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
     // Convert coefficients to f64
-    let _coeffs_f64: Vec<f64> = _coeffs
+    let coeffs_f64: Vec<f64> = coeffs
         .iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
@@ -811,7 +809,7 @@ where
 /// assert_eq!(smoothed.len(), signal.len());
 /// ```
 #[allow(dead_code)]
-pub fn bspline_smooth<T>(_signal: &[T], order: SplineOrder, lam: f64) -> SignalResult<Vec<f64>>
+pub fn bspline_smooth<T>(signal: &[T], order: SplineOrder, lam: f64) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
@@ -822,7 +820,7 @@ where
     }
 
     // Convert to f64
-    let _signal_f64: Vec<f64> = _signal
+    let signal_f64: Vec<f64> = signal
         .iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
@@ -832,15 +830,13 @@ where
         .collect::<SignalResult<Vec<f64>>>()?;
 
     if signal_f64.is_empty() {
-        return Err(SignalError::ValueError(
-            "Input _signal is empty".to_string(),
-        ));
+        return Err(SignalError::ValueError("Input signal is empty".to_string()));
     }
 
     let n = signal_f64.len();
 
     if lam == 0.0 {
-        // No smoothing, return the original _signal
+        // No smoothing, return the original signal
         return Ok(signal_f64);
     }
 
@@ -991,6 +987,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_bspline_basis_cubic() {

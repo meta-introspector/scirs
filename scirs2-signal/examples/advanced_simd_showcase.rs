@@ -10,8 +10,8 @@ use scirs2_signal::{
     advanced_simd_dwt, advanced_simd_fft, advanced_simd_resample, advanced_simd_rfft,
     advanced_simd_stft, generate_simd_performance_report, AdvancedSimdConfig,
 };
-use std::time::Instant;
 use std::f64::consts::PI;
+use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -319,7 +319,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("     - AVX512 detected: Use 512-bit vectors for maximum performance")
                 }
                 "AVX2" => println!("     - AVX2 detected: Excellent 256-bit vector performance"),
-                "SSE4.1" => println!("     - SSE4.1 detected: Good baseline performance", _ => println!("     - {} detected", capability),
+                "SSE4.1" => println!("     - SSE4.1 detected: Good baseline performance"),
+                _ => println!("     - {} detected", capability),
             }
         }
     }
@@ -411,7 +412,7 @@ fn create_test_signals() -> TestSignals {
 
 /// Create a test signal with multiple frequency components
 #[allow(dead_code)]
-fn create_test_signal_real(n: usize, frequencies: &[f64], sample_rate: f64) -> Array1<f64> {
+fn create_test_signal_real(n: usize, frequencies: &[f64], samplerate: f64) -> Array1<f64> {
     let mut signal = Array1::<f64>::zeros(n);
     let dt = 1.0 / sample_rate;
 
@@ -435,8 +436,8 @@ fn create_test_signal_real(n: usize, frequencies: &[f64], sample_rate: f64) -> A
 
 /// Convert real signal to complex for FFT testing
 #[allow(dead_code)]
-fn convert_real_to_complex(_real_signal: &Array1<f64>) -> Array1<Complex64> {
-    _real_signal.mapv(|x| Complex64::new(x, 0.0))
+fn convert_real_to_complex(_realsignal: &Array1<f64>) -> Array1<Complex64> {
+    real_signal.mapv(|x| Complex64::new(x, 0.0))
 }
 
 /// Test signals container
@@ -447,6 +448,6 @@ struct TestSignals {
 
 /// Convert real array to complex
 #[allow(dead_code)]
-fn real_to_complex(_real: &Array1<f64>) -> Array1<Complex64> {
-    _real.mapv(|x| Complex64::new(x, 0.0))
+fn real_to_complex(real: &Array1<f64>) -> Array1<Complex64> {
+    real.mapv(|x| Complex64::new(x, 0.0))
 }

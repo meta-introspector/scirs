@@ -7,14 +7,14 @@ use scirs2_neural::utils::evaluation::ConfusionMatrix;
 #[allow(dead_code)]
 fn main() {
     // Create a reproducible random number generator
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Generate synthetic multiclass classification data
     let num_classes = 5;
     let n_samples = 500;
     // Generate true labels (0 to num_classes-1)
     let mut y_true = Vec::with_capacity(n_samples);
     for _ in 0..n_samples {
-        y_true.push(rng.random_range(0..num_classes));
+        y_true.push(rng.gen_range(0..num_classes));
     }
     // Generate predicted labels with controlled accuracy
     let mut y_pred = Vec::with_capacity(n_samples);

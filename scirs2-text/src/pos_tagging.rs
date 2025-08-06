@@ -102,13 +102,13 @@ impl PosTagger {
     }
 
     /// Create a new POS tagger with custom configuration
-    pub fn with_config(_config: PosTaggerConfig) -> Self {
+    pub fn with_config(config: PosTaggerConfig) -> Self {
         let mut tagger = Self {
             lexicon: HashMap::new(),
             transition_probs: HashMap::new(),
             emission_probs: HashMap::new(),
-            use_context: _config.use_context,
-            smoothing_factor: _config.smoothing_factor,
+            use_context: config.use_context,
+            smoothing_factor: config.smoothing_factor,
         };
 
         tagger.initialize_lexicon();
@@ -1116,7 +1116,7 @@ impl PosTagger {
         let mut best_final_prob = 0.0;
         let mut best_final_state = 0;
 
-        for (j_) in pos_tags.iter().enumerate() {
+        for (j, _) in pos_tags.iter().enumerate() {
             if dp[n - 1][j].0 > best_final_prob {
                 best_final_prob = dp[n - 1][j].0;
                 best_final_state = j;
@@ -1557,7 +1557,7 @@ impl ContextualDisambiguator {
     }
 
     /// Apply contextual disambiguation to a sequence
-    pub fn disambiguate(&self_tokens: &[String], tags: &mut [PosTag], confidences: &mut [f64]) {
+    pub fn disambiguate(&self, selftokens: &[String], tags: &mut [PosTag], confidences: &mut [f64]) {
         for i in 0..tags.len() {
             let left = if i > 0 {
                 Some(tags[i - 1].clone())
@@ -1638,12 +1638,12 @@ impl PosAwareLemmatizer {
 
     /// Create with custom POS tagger and lemmatizer configurations
     pub fn with_configs(
-        pos_config: PosTaggerConfig,
-        lemma_config: crate::stemming::LemmatizerConfig,
+        posconfig: PosTaggerConfig,
+        lemmaconfig: crate::stemming::LemmatizerConfig,
     ) -> Self {
         Self {
-            pos_tagger: PosTagger::with_config(pos_config),
-            lemmatizer: crate::stemming::RuleLemmatizer::with_config(lemma_config),
+            pos_tagger: PosTagger::with_config(posconfig),
+            lemmatizer: crate::stemming::RuleLemmatizer::with_config(lemmaconfig),
             use_pos_by_default: true,
         }
     }
@@ -1678,7 +1678,7 @@ impl PosAwareLemmatizer {
     }
 
     /// Lemmatize a batch of words with their POS tags
-    pub fn lemmatize_batch_with_pos(&self, words: &[&str], pos_tags: &[PosTag]) -> Vec<String> {
+    pub fn lemmatize_batch_with_pos(&self, words: &[&str], postags: &[PosTag]) -> Vec<String> {
         self.lemmatizer.lemmatize_with_pos(words, pos_tags)
     }
 
@@ -1693,7 +1693,7 @@ impl PosAwareLemmatizer {
     }
 
     /// Set whether to use POS tagging by default
-    pub fn set_use_pos_by_default(&mut self, use_pos: bool) {
+    pub fn set_use_pos_by_default(&mut self, usepos: bool) {
         self.use_pos_by_default = use_pos;
     }
 

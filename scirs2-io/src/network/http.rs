@@ -67,9 +67,9 @@ pub struct HttpClient {
 
 impl HttpClient {
     /// Create a new HTTP client with the given configuration
-    pub fn new(_config: NetworkConfig) -> Self {
+    pub fn new(config: NetworkConfig) -> Self {
         let client = Self {
-            config: _config,
+            config: config,
             #[cfg(feature = "reqwest")]
             client: None,
         };
@@ -113,9 +113,9 @@ impl HttpClient {
 
     /// Download a file from URL to local path
     #[cfg(all(feature = "reqwest", feature = "async"))]
-    pub async fn download<P: AsRef<Path>>(&self, url: &str, local_path: P) -> Result<()> {
+    pub async fn download<P: AsRef<Path>>(&self, url: &str, localpath: P) -> Result<()> {
         let client = self.get_client()?;
-        let local_path = local_path.as_ref();
+        let local_path = localpath.as_ref();
 
         // Create parent directories if they don't exist
         if let Some(parent) = local_path.parent() {
@@ -204,9 +204,9 @@ impl HttpClient {
 
     /// Upload a file from local path to URL
     #[cfg(all(feature = "reqwest", feature = "async"))]
-    pub async fn upload<P: AsRef<Path>>(&self, local_path: P, url: &str) -> Result<()> {
+    pub async fn upload<P: AsRef<Path>>(&self, localpath: P, url: &str) -> Result<()> {
         let client = self.get_client()?;
-        let local_path = local_path.as_ref();
+        let local_path = localpath.as_ref();
 
         if !local_path.exists() {
             return Err(IoError::FileError(format!(
@@ -357,7 +357,7 @@ impl HttpClient {
     // Fallback implementations when reqwest feature is not enabled
     #[cfg(not(feature = "reqwest"))]
     /// Download a file (fallback implementation when reqwest feature is disabled)
-    pub async fn download<P: AsRef<Path>>(url: &str, _local_path: P) -> Result<()> {
+    pub async fn download<P: AsRef<Path>>(url: &str, _localpath: P) -> Result<()> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
         ))
@@ -365,7 +365,7 @@ impl HttpClient {
 
     #[cfg(not(feature = "reqwest"))]
     /// Upload a file (fallback implementation when reqwest feature is disabled)
-    pub async fn upload<P: AsRef<Path>>(_local_path: P, path: P, _url: &str) -> Result<()> {
+    pub async fn upload<P: AsRef<Path>>(_local_path: P, path: P, url: &str) -> Result<()> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
         ))
@@ -386,7 +386,7 @@ impl HttpClient {
 
     #[cfg(not(feature = "reqwest"))]
     /// Check if URL is reachable (fallback implementation when reqwest feature is disabled)
-    pub async fn check_url(_url: &str) -> Result<bool> {
+    pub async fn check_url(url: &str) -> Result<bool> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
         ))
@@ -394,7 +394,7 @@ impl HttpClient {
 
     #[cfg(not(feature = "reqwest"))]
     /// Get remote file size (fallback implementation when reqwest feature is disabled)
-    pub async fn get_remote_file_size(_url: &str) -> Result<Option<u64>> {
+    pub async fn get_remote_file_size(url: &str) -> Result<Option<u64>> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
         ))
@@ -437,7 +437,7 @@ pub async fn download_concurrent(
 
 /// Calculate download speed
 #[allow(dead_code)]
-pub fn calculate_speed(_bytes: u64, duration: Duration) -> f64 {
+pub fn calculate_speed(bytes: u64, duration: Duration) -> f64 {
     if duration.as_secs_f64() > 0.0 {
         _bytes as f64 / duration.as_secs_f64()
     } else {
@@ -447,7 +447,7 @@ pub fn calculate_speed(_bytes: u64, duration: Duration) -> f64 {
 
 /// Format file size in human-readable format
 #[allow(dead_code)]
-pub fn format_file_size(_bytes: u64) -> String {
+pub fn format_file_size(bytes: u64) -> String {
     const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB"];
     let mut size = _bytes as f64;
     let mut unit_index = 0;
@@ -462,7 +462,7 @@ pub fn format_file_size(_bytes: u64) -> String {
 
 /// Format download speed in human-readable format
 #[allow(dead_code)]
-pub fn format_speed(_bytes_per_second: f64) -> String {
+pub fn format_speed(_bytes_persecond: f64) -> String {
     format!("{}/s", format_file_size(_bytes_per_second as u64))
 }
 

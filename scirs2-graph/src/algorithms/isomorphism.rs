@@ -333,7 +333,8 @@ where
 fn is_partial_mapping_valid<N1, N2, E, Ix>(
     graph1: &Graph<N1, E, Ix>,
     graph2: &Graph<N2, E, Ix>,
-    mapping: &HashMap<N1, N2>, _mapped_count: usize,
+    mapping: &HashMap<N1, N2>,
+    _mapped_count: usize,
 ) -> bool
 where
     N1: Node + Hash + Eq + std::fmt::Debug,
@@ -491,7 +492,8 @@ where
 
     /// Update terminal sets after removing a mapping
     fn update_terminal_sets_after_removal<E, Ix>(
-        &mut self_n1: &N1, _n2: &N2,
+        &mut self_n1: &N1,
+        _n2: &N2,
         graph1: &Graph<N1, E, Ix>,
         graph2: &Graph<N2, E, Ix>,
     ) where

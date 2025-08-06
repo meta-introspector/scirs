@@ -163,7 +163,7 @@ fn train_linear_regression<S: LearningRateScheduler<f64>>(
     let error = predictions - y_train;
     let final_loss = (&error * &error).sum() / (2.0 * error.len() as f64);
 
-    // Compute weight error (L2 distance from true _weights)
+    // Compute weight error (L2 distance from true weights)
     let weight_diff = &_weights - true_weights;
     let weight_error = (&weight_diff * &weight_diff).sum().sqrt();
 

@@ -173,9 +173,9 @@ impl Constraint<fn(&[f64]) -> f64> {
     pub const INEQUALITY: ConstraintKind = ConstraintKind::Inequality;
 
     /// Create a new constraint
-    pub fn new(_fun: fn(&[f64]) -> f64, kind: ConstraintKind) -> Self {
+    pub fn new(fun: fn(&[f64]) -> f64, kind: ConstraintKind) -> Self {
         Constraint {
-            _fun,
+            fun: fun,
             kind,
             lb: None,
             ub: None,
@@ -183,11 +183,11 @@ impl Constraint<fn(&[f64]) -> f64> {
     }
 
     /// Create a new box constraint
-    pub fn new_bounds(_lb: Option<f64>, ub: Option<f64>) -> Self {
+    pub fn new_bounds(lb: Option<f64>, ub: Option<f64>) -> Self {
         Constraint {
             fun: |_| 0.0, // Dummy function for box constraints
             kind: ConstraintKind::Inequality,
-            _lb,
+            lb: lb,
             ub,
         }
     }

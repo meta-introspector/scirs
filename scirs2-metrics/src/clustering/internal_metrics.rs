@@ -289,7 +289,7 @@ where
     let empty_clusters: Vec<_> = clusters
         .iter()
         .filter(|(_, samples)| samples.is_empty())
-        .map(|(&label_)| label)
+        .map(|(&label)| label)
         .collect();
 
     if !empty_clusters.is_empty() {
@@ -413,7 +413,7 @@ where
     // Sort by cluster (ascending), then by silhouette value (descending)
     samples_with_scores.sort_by(|a, b| a.2.cmp(&b.2).then(b.1.partial_cmp(&a.1).unwrap()));
 
-    let sorted_indices = samples_with_scores.iter().map(|&(i__)| i).collect();
+    let sorted_indices = samples_with_scores.iter().map(|&(i, _, _)| i).collect();
 
     Ok(SilhouetteAnalysis {
         sample_values: silhouette_values,

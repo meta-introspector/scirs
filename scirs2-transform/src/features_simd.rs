@@ -14,12 +14,13 @@ use crate::error::{Result, TransformError};
 pub struct SimdPolynomialFeatures<F: Float + NumCast + SimdUnifiedOps> {
     degree: usize,
     include_bias: bool,
-    interaction_only: bool, _phantom: std::marker::PhantomData<F>,
+    interaction_only: bool,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
     /// Creates a new SIMD-accelerated polynomial features generator
-    pub fn new(_degree: usize, include_bias: bool, interaction_only: bool) -> Result<Self> {
+    pub fn new(_degree: usize, include_bias: bool, interactiononly: bool) -> Result<Self> {
         if _degree == 0 {
             return Err(TransformError::InvalidInput(
                 "Degree must be at least 1".to_string(),
@@ -27,7 +28,7 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
         }
 
         Ok(SimdPolynomialFeatures {
-            _degree,
+            degree,
             include_bias,
             interaction_only_phantom: std::marker::PhantomData,
         })
@@ -255,7 +256,7 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
     }
 
     /// Calculate optimal batch size based on memory characteristics
-    fn calculate_optimal_batch_size(&self, n_samples: usize, n_output_features: usize) -> usize {
+    fn calculate_optimal_batch_size(&self, n_samples: usize, n_outputfeatures: usize) -> usize {
         const L1_CACHE_SIZE: usize = 32_768;
         let element_size = std::mem::size_of::<F>();
 
@@ -279,7 +280,7 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
     }
 
     /// Calculates the number of output features
-    fn calculate_n_output_features(&self, n_features: usize) -> Result<usize> {
+    fn calculate_n_output_features(&self, nfeatures: usize) -> Result<usize> {
         let mut count = if self.include_bias { 1 } else { 0 };
         count += n_features; // Original _features
 
@@ -318,12 +319,12 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
     }
 
     /// Calculates the number of polynomial features
-    fn n_polynomial_features(&self, n_features: usize, degree: usize) -> usize {
+    fn n_polynomial_features(&self, nfeatures: usize, degree: usize) -> usize {
         self.n_choose_k(n_features + degree, degree)
     }
 
     /// Generates indices for interaction terms
-    fn generate_interaction_indices(&self, n_features: usize, degree: usize) -> Vec<Vec<usize>> {
+    fn generate_interaction_indices(&self, nfeatures: usize, degree: usize) -> Vec<Vec<usize>> {
         let mut indices = Vec::new();
         let mut current = vec![0; degree];
 
@@ -351,7 +352,7 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
     }
 
     /// Generates indices for polynomial terms of a specific degree
-    fn generate_degree_indices(&self, n_features: usize, degree: usize) -> Vec<Vec<usize>> {
+    fn generate_degree_indices(&self, nfeatures: usize, degree: usize) -> Vec<Vec<usize>> {
         let mut indices = Vec::new();
         let mut current = vec![0; degree];
 
@@ -382,11 +383,11 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
 
 /// SIMD-accelerated power transformation (Box-Cox and Yeo-Johnson)
 #[allow(dead_code)]
-pub fn simd_power_transform<F>(_data: &Array1<F>, lambda: F, method: &str) -> Result<Array1<F>>
+pub fn simd_power_transform<F>(data: &Array1<F>, lambda: F, method: &str) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
 {
-    let n = _data.len();
+    let n = data.len();
     let mut result = Array1::zeros(n);
 
     match method {
@@ -402,7 +403,7 @@ where
             if lambda.abs() < F::from(1e-6).unwrap() {
                 // lambda ≈ 0: log transform
                 for i in 0..n {
-                    result[i] = _data[i].ln();
+                    result[i] = data[i].ln();
                 }
             } else {
                 // General Box-Cox: (x^lambda - 1) / lambda
@@ -416,7 +417,7 @@ where
         "yeo-johnson" => {
             // Yeo-Johnson handles both positive and negative values
             for i in 0..n {
-                let x = _data[i];
+                let x = data[i];
                 if x >= F::zero() {
                     if lambda.abs() < F::from(1e-6).unwrap() {
                         result[i] = x.ln() + F::one();
@@ -446,11 +447,11 @@ where
 
 /// Helper function to compute element-wise power using SIMD where possible
 #[allow(dead_code)]
-fn simd_array_pow<F>(_data: &Array1<F>, exponent: F) -> Result<Array1<F>>
+fn simd_array_pow<F>(data: &Array1<F>, exponent: F) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
 {
-    let n = _data.len();
+    let n = data.len();
 
     if n == 0 {
         return Ok(Array1::zeros(0));
@@ -470,7 +471,7 @@ where
         result = F::simd_mul(&_data.view(), &_data.view());
     } else if (exponent - F::from(0.5).unwrap()).abs() < F::from(1e-10).unwrap() {
         // Square root using SIMD - check for non-negative values first
-        for &val in _data.iter() {
+        for &val in data.iter() {
             if val < F::zero() {
                 return Err(TransformError::ComputationError(
                     "Cannot compute square root of negative values".to_string(),
@@ -484,7 +485,7 @@ where
         result = F::simd_mul(&squared.view(), &_data.view());
     } else if (exponent - F::from(1.0).unwrap()).abs() < F::from(1e-10).unwrap() {
         // Identity: x^1 = x
-        result = _data.clone();
+        result = data.clone();
     } else if (exponent - F::from(0.0).unwrap()).abs() < F::from(1e-10).unwrap() {
         // Constant: x^0 = 1
         result.fill(F::one());
@@ -508,14 +509,14 @@ where
 
 /// SIMD-accelerated binarization with validation
 #[allow(dead_code)]
-pub fn simd_binarize<F>(_data: &Array2<F>, threshold: F) -> Result<Array2<F>>
+pub fn simd_binarize<F>(data: &Array2<F>, threshold: F) -> Result<Array2<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
 {
     check_not_empty(_data, "_data")?;
 
     // Check finite values
-    for &val in _data.iter() {
+    for &val in data.iter() {
         if !val.is_finite() {
             return Err(crate::error::TransformError::DataValidationError(
                 "Data contains non-finite values".to_string(),
@@ -529,14 +530,14 @@ where
         ));
     }
 
-    let shape = _data.shape();
+    let shape = data.shape();
     let mut result = Array2::zeros((shape[0], shape[1]));
 
     // Calculate adaptive chunk size based on _data dimensions
     let chunk_size = calculate_adaptive_chunk_size(shape[0], shape[1]);
 
     for i in 0..shape[0] {
-        let row = _data.row(i);
+        let row = data.row(i);
         let row_array = row.to_owned();
 
         // Process row in chunks using SIMD
@@ -565,7 +566,7 @@ where
 
 /// Calculate adaptive chunk size for optimal SIMD performance
 #[allow(dead_code)]
-fn calculate_adaptive_chunk_size(_n_rows: usize, n_cols: usize) -> usize {
+fn calculate_adaptive_chunk_size(_n_rows: usize, ncols: usize) -> usize {
     const L1_CACHE_SIZE: usize = 32_768;
     const F64_SIZE: usize = 8; // Conservative estimate for element size
 

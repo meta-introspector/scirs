@@ -33,7 +33,7 @@ impl CompatibilityLevel {
             CompatibilityLevel::BackwardCompatible => "backward_compatible",
             CompatibilityLevel::MostlyCompatible => "mostly_compatible",
             CompatibilityLevel::PartiallyCompatible => "partially_compatible",
-            CompatibilityLevel::BreakingChanges => "breaking_changes",
+            CompatibilityLevel::BreakingChanges => "breakingchanges",
             CompatibilityLevel::Incompatible => "incompatible",
         }
     }
@@ -66,13 +66,13 @@ pub struct CompatibilityReport {
     /// Source version
     pub from_version: Version,
     /// Target version
-    pub to_version: Version,
+    pub toversion: Version,
     /// Overall compatibility level
     pub compatibility_level: CompatibilityLevel,
     /// Detailed compatibility issues
     pub issues: Vec<CompatibilityIssue>,
     /// Breaking changes detected
-    pub breaking_changes: Vec<BreakingChange>,
+    pub breakingchanges: Vec<BreakingChange>,
     /// Deprecated features that will be removed
     pub deprecated_features: Vec<String>,
     /// New features added
@@ -181,9 +181,9 @@ impl CompatibilityChecker {
     }
 
     /// Register a version for compatibility checking
-    pub fn register_version(&mut self, api_version: &ApiVersion) -> Result<(), CoreError> {
+    pub fn register_version(&mut self, apiversion: &ApiVersion) -> Result<(), CoreError> {
         self.versions
-            .insert(api_version.version.clone(), api_version.clone());
+            .insert(apiversion.version.clone(), apiversion.clone());
         Ok(())
     }
 
@@ -191,9 +191,9 @@ impl CompatibilityChecker {
     pub fn check_compatibility(
         &self,
         from_version: &Version,
-        to_version: &Version,
+        toversion: &Version,
     ) -> Result<CompatibilityLevel, CoreError> {
-        let report = self.get_compatibility_report(from_version, to_version)?;
+        let report = self.get_compatibility_report(from_version, toversion)?;
         Ok(report.compatibility_level)
     }
 
@@ -201,25 +201,25 @@ impl CompatibilityChecker {
     pub fn get_compatibility_report(
         &self,
         from_version: &Version,
-        to_version: &Version,
+        toversion: &Version,
     ) -> Result<CompatibilityReport, CoreError> {
         let from_api = self.versions.get(from_version).ok_or_else(|| {
             CoreError::ComputationError(crate::error::ErrorContext::new(format!(
                 "Version {from_version} not registered"
             )))
         })?;
-        let to_api = self.versions.get(to_version).ok_or_else(|| {
+        let to_api = self.versions.get(toversion).ok_or_else(|| {
             CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                "Version {to_version} not registered"
+                "Version {toversion} not registered"
             )))
         })?;
 
         let mut report = CompatibilityReport {
             from_version: from_version.clone(),
-            to_version: to_version.clone(),
+            toversion: toversion.clone(),
             compatibility_level: CompatibilityLevel::BackwardCompatible,
             issues: Vec::new(),
-            breaking_changes: Vec::new(),
+            breakingchanges: Vec::new(),
             deprecated_features: to_api.deprecated_features.clone(),
             new_features: to_api.new_features.clone(),
             migration_recommendations: Vec::new(),
@@ -265,7 +265,7 @@ impl CompatibilityChecker {
             .issues
             .iter()
             .any(|i| i.severity == IssueSeverity::Critical);
-        let has_errors = report
+        let haserrors = report
             .issues
             .iter()
             .any(|i| i.severity == IssueSeverity::Error);
@@ -273,12 +273,12 @@ impl CompatibilityChecker {
             .issues
             .iter()
             .any(|i| i.severity == IssueSeverity::Warning);
-        let has_breaking_changes = !report.breaking_changes.is_empty();
+        let has_breakingchanges = !report.breakingchanges.is_empty();
 
         if has_critical {
             CompatibilityLevel::Incompatible
-        } else if has_breaking_changes || has_errors {
-            if report.from_version.major() != report.to_version.major() {
+        } else if has_breakingchanges || haserrors {
+            if report.from_version.major() != report.toversion.major() {
                 CompatibilityLevel::BreakingChanges
             } else {
                 CompatibilityLevel::PartiallyCompatible
@@ -300,7 +300,7 @@ impl CompatibilityChecker {
             }
         }
 
-        for breaking_change in &report.breaking_changes {
+        for breaking_change in &report.breakingchanges {
             if let Some(ref migration_path) = breaking_change.migration_path {
                 report
                     .migration_recommendations
@@ -309,7 +309,7 @@ impl CompatibilityChecker {
         }
 
         // Add version-specific recommendations
-        if report.from_version.major() != report.to_version.major() {
+        if report.from_version.major() != report.toversion.major() {
             report
                 .migration_recommendations
                 .push("Major version upgrade - review all API usage".to_string());
@@ -328,12 +328,12 @@ impl CompatibilityChecker {
 
         // Base effort for version differences
         let major_diff = report
-            .to_version
+            .toversion
             .major()
             .saturating_sub(report.from_version.major());
         let minor_diff = if major_diff == 0 {
             report
-                .to_version
+                .toversion
                 .minor()
                 .saturating_sub(report.from_version.minor())
         } else {
@@ -355,7 +355,7 @@ impl CompatibilityChecker {
         }
 
         // Add effort for breaking changes
-        for breaking_change in &report.breaking_changes {
+        for breaking_change in &report.breakingchanges {
             effort_hours += match breaking_change.change_type {
                 ChangeType::ApiSignatureChange => 16,
                 ChangeType::BehaviorChange => 24,
@@ -440,9 +440,9 @@ impl CompatibilityRule {
         report: &mut CompatibilityReport,
     ) -> Result<(), CoreError> {
         let from_version = &from_api.version;
-        let to_version = &to_api.version;
+        let toversion = &to_api.version;
 
-        if to_version.major() > from_version.major() {
+        if toversion.major() > from_version.major() {
             report.issues.push(CompatibilityIssue {
                 severity: IssueSeverity::Warning,
                 component: "version".to_string(),
@@ -452,7 +452,7 @@ impl CompatibilityRule {
             });
         }
 
-        if to_version < from_version {
+        if toversion < from_version {
             report.issues.push(CompatibilityIssue {
                 severity: IssueSeverity::Error,
                 component: "version".to_string(),
@@ -472,8 +472,8 @@ impl CompatibilityRule {
         to_api: &ApiVersion,
         report: &mut CompatibilityReport,
     ) -> Result<(), CoreError> {
-        for breaking_change in &to_api.breaking_changes {
-            report.breaking_changes.push(BreakingChange {
+        for breaking_change in &to_api.breakingchanges {
+            report.breakingchanges.push(BreakingChange {
                 change_type: ChangeType::BehaviorChange, // Default type
                 component: "api".to_string(),
                 description: breaking_change.clone(),
@@ -503,7 +503,7 @@ impl CompatibilityRule {
         // Check for features that existed in from_api but not in to_api
         for feature in &from_api.features {
             if !to_api.features.contains(feature) {
-                report.breaking_changes.push(BreakingChange {
+                report.breakingchanges.push(BreakingChange {
                     change_type: ChangeType::FeatureRemoval,
                     component: feature.clone(),
                     description: format!("Feature '{feature}' has been removed"),
@@ -586,7 +586,7 @@ mod tests {
     }
 
     #[test]
-    fn test_breaking_changes() {
+    fn test_breakingchanges() {
         let mut checker = CompatibilityChecker::new();
 
         let v1 = ApiVersionBuilder::new(Version::parse("1.0.0").unwrap())
@@ -604,7 +604,7 @@ mod tests {
         let report = checker
             .get_compatibility_report(&v1.version, &v2.version)
             .unwrap();
-        assert!(!report.breaking_changes.is_empty());
+        assert!(!report.breakingchanges.is_empty());
         assert!(report.compatibility_level.requires_migration());
     }
 
@@ -650,10 +650,10 @@ mod tests {
         let report = checker
             .get_compatibility_report(&v1.version, &v2.version)
             .unwrap();
-        assert!(!report.breaking_changes.is_empty());
+        assert!(!report.breakingchanges.is_empty());
 
         let feature_removal = report
-            .breaking_changes
+            .breakingchanges
             .iter()
             .find(|bc| bc.change_type == ChangeType::FeatureRemoval);
         assert!(feature_removal.is_some());

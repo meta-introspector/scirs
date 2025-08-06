@@ -4,7 +4,7 @@
 //! ensuring compatibility between modules, API stability, and proper
 //! integration for production 1.0 deployments.
 
-use crate::api_versioning::Version;
+use crate::apiversioning::Version;
 use crate::error::{CoreError, CoreResult, ErrorContext};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, RwLock};
@@ -17,7 +17,7 @@ static GLOBAL_VALIDATOR: std::sync::OnceLock<Arc<EcosystemValidator>> = std::syn
 #[derive(Debug)]
 pub struct EcosystemValidator {
     registry: Arc<RwLock<ModuleRegistry>>,
-    compatibility_matrix: Arc<RwLock<CompatibilityMatrix>>,
+    compatibilitymatrix: Arc<RwLock<CompatibilityMatrix>>,
     validation_cache: Arc<RwLock<ValidationCache>>,
     policies: Arc<RwLock<ValidationPolicies>>,
 }
@@ -28,7 +28,7 @@ impl EcosystemValidator {
     pub fn new() -> CoreResult<Self> {
         Ok(Self {
             registry: Arc::new(RwLock::new(ModuleRegistry::new())),
-            compatibility_matrix: Arc::new(RwLock::new(CompatibilityMatrix::new())),
+            compatibilitymatrix: Arc::new(RwLock::new(CompatibilityMatrix::new())),
             validation_cache: Arc::new(RwLock::new(ValidationCache::new())),
             policies: Arc::new(RwLock::new(ValidationPolicies::default())),
         })
@@ -141,7 +141,7 @@ impl EcosystemValidator {
     }
 
     /// Validate specific module compatibility with ecosystem
-    pub fn validate_module(&self, module_name: &str) -> CoreResult<ModuleValidationResult> {
+    pub fn validate_module(&self, modulename: &str) -> CoreResult<ModuleValidationResult> {
         let registry = self.registry.read().map_err(|_| {
             CoreError::InvalidState(crate::error::ErrorContext {
                 message: "Failed to acquire registry lock".to_string(),
@@ -157,9 +157,9 @@ impl EcosystemValidator {
             })
         })?;
 
-        let module = registry.get_module(module_name).ok_or_else(|| {
+        let module = registry.get_module(modulename).ok_or_else(|| {
             CoreError::ValidationError(ErrorContext {
-                message: format!("Module '{module_name}' not found in registry"),
+                message: format!("Module '{modulename}' not found in registry"),
                 location: None,
                 cause: None,
             })
@@ -171,13 +171,13 @@ impl EcosystemValidator {
     fn validate_module_internal(
         &self,
         module: &ModuleInfo,
-        _policies: &ValidationPolicies,
+        policies: &ValidationPolicies,
     ) -> CoreResult<ModuleValidationResult> {
         let mut result = ModuleValidationResult::new(module.name.clone());
 
         // Validate version format
         if let Err(e) = Version::parse(&module.version) {
-            result.add_error(ValidationError::new(
+            result.adderror(ValidationError::new(
                 ValidationErrorType::InvalidVersion,
                 format!("Invalid _version format '{}': {}", module.version, e),
             ));
@@ -185,9 +185,9 @@ impl EcosystemValidator {
 
         // Validate dependencies
         for dep in &module.dependencies {
-            let depresult = self.validate_dependency_policies(module, dep, _policies)?;
+            let depresult = self.validate_dependencypolicies(module, dep, policies)?;
             if !depresult.is_valid() {
-                result.add_error(ValidationError::new(
+                result.adderror(ValidationError::new(
                     ValidationErrorType::DependencyError,
                     format!("Dependency validation failed for '{}'", dep.name),
                 ));
@@ -199,10 +199,10 @@ impl EcosystemValidator {
         // For now, create a successful result
         let apiresult = ApiStabilityCheck {
             is_stable: true,
-            breaking_changes: Vec::new(),
+            breakingchanges: Vec::new(),
         };
         if !apiresult.is_valid() {
-            result.add_error(ValidationError::new(
+            result.adderror(ValidationError::new(
                 ValidationErrorType::ApiCompatibility,
                 "API surface validation failed".to_string(),
             ));
@@ -210,7 +210,7 @@ impl EcosystemValidator {
 
         // Validate feature flags
         for feature in &module.features {
-            if !self.is_feature_compatible(feature, _policies)? {
+            if !self.is_feature_compatible(feature, policies)? {
                 result.add_warning(ValidationWarning::new(
                     ValidationWarningType::FeatureCompatibility,
                     format!("Feature '{feature}' may have compatibility issues"),
@@ -219,10 +219,10 @@ impl EcosystemValidator {
         }
 
         // Validate security requirements
-        if _policies.enforce_security_checks {
+        if policies.enforce_security_checks {
             let securityresult = self.validate_module_security(module)?;
             if !securityresult.is_secure() {
-                result.add_error(ValidationError::new(
+                result.adderror(ValidationError::new(
                     ValidationErrorType::SecurityViolation,
                     "Module failed security validation".to_string(),
                 ));
@@ -232,11 +232,11 @@ impl EcosystemValidator {
         Ok(result)
     }
 
-    fn validate_dependency_policies(
+    fn validate_dependencypolicies(
         &self,
         module: &ModuleInfo,
         dep: &DependencyInfo,
-        _policies: &ValidationPolicies,
+        policies: &ValidationPolicies,
     ) -> CoreResult<DependencyValidationResult> {
         let mut result = DependencyValidationResult::new(dep.name.clone());
 
@@ -280,13 +280,13 @@ impl EcosystemValidator {
     fn validate_inter_module_compatibility(
         &self,
         registry: &ModuleRegistry,
-        _policies: &ValidationPolicies,
+        policies: &ValidationPolicies,
     ) -> CoreResult<CompatibilityValidationResult> {
         let mut result = CompatibilityValidationResult::new();
         let modules = registry.all_modules();
 
         // Build compatibility matrix
-        let mut matrix = self.compatibility_matrix.write().map_err(|_| {
+        let mut matrix = self.compatibilitymatrix.write().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire matrix lock".to_string(),
             ))
@@ -296,7 +296,7 @@ impl EcosystemValidator {
             for module_b in &modules {
                 if module_a.name != module_b.name {
                     let compatibility =
-                        self.check_module_compatibility(module_a, module_b, _policies)?;
+                        self.check_module_compatibility(module_a, module_b, policies)?;
                     (*matrix).b(&module_a.name, &module_b.name, compatibility.clone());
 
                     if !compatibility.is_compatible() {
@@ -318,7 +318,7 @@ impl EcosystemValidator {
         &self,
         module_a: &ModuleInfo,
         module_b: &ModuleInfo,
-        _policies: &ValidationPolicies,
+        policies: &ValidationPolicies,
     ) -> CoreResult<ModuleCompatibility> {
         // Check version compatibility
         let version_a = Version::parse(&module_a.version).map_err(|e| {
@@ -336,14 +336,14 @@ impl EcosystemValidator {
             })
         })?;
 
-        if !self.are_versions_compatible(&version_a.to_string(), &version_b.to_string()) {
+        if !self.areversions_compatible(&version_a.to_string(), &version_b.to_string()) {
             return Ok(ModuleCompatibility::incompatible(format!(
                 "Version incompatibility: {version_a} vs {version_b}"
             )));
         }
 
         // Check API compatibility
-        if !self.are_apis_compatible(&module_a.api_surface, &module_b.api_surface) {
+        if !self.are_apis_compatible(&module_a.apisurface, &module_b.apisurface) {
             return Ok(ModuleCompatibility::incompatible(
                 "API incompatibility".to_string(),
             ));
@@ -362,7 +362,7 @@ impl EcosystemValidator {
     fn validate_api_stability(
         &self,
         registry: &ModuleRegistry,
-        _policies: &ValidationPolicies,
+        policies: &ValidationPolicies,
     ) -> CoreResult<ApiStabilityResult> {
         let mut result = ApiStabilityResult::new();
 
@@ -373,13 +373,13 @@ impl EcosystemValidator {
                 if !stability_check.is_stable() {
                     result.add_breaking_change(
                         module.name.clone(),
-                        stability_check.breaking_changes().to_vec(),
+                        stability_check.breakingchanges().to_vec(),
                     );
                 }
             }
 
             // Validate API versioning compliance
-            if !self.is_api_properly_versioned(&module.api_surface) {
+            if !self.is_api_properly_versioned(&module.apisurface) {
                 result.add_versioning_violation(
                     module.name.clone(),
                     "API not properly versioned".to_string(),
@@ -414,9 +414,9 @@ impl EcosystemValidator {
                 .push(version);
         }
 
-        for (module_name, versions) in version_map {
+        for (modulename, versions) in version_map {
             if versions.len() > 1 {
-                result.add_conflict(module_name, versions);
+                result.add_conflict(modulename, versions);
             }
         }
 
@@ -452,24 +452,24 @@ impl EcosystemValidator {
     #[allow(dead_code)]
     fn surface(
         &self,
-        api_surface: &ApiSurface,
-        _policies: &ValidationPolicies,
+        apisurface: &ApiSurface,
+        policies: &ValidationPolicies,
     ) -> CoreResult<ApiValidationResult> {
         let mut result = ApiValidationResult::new();
 
         // Validate public APIs
-        for api in &api_surface.public_apis {
+        for api in &apisurface.public_apis {
             if !self.is_api_properly_documented(api)? {
                 result.add_documentation_issue(api.name.clone());
             }
 
-            if _policies.enforce_semver && !self.is_api_semver_compliant(api)? {
+            if policies.enforce_semver && !self.is_api_semver_compliant(api)? {
                 result.add_semver_violation(api.name.clone());
             }
         }
 
         // Validate deprecated APIs
-        for api in &api_surface.deprecated_apis {
+        for api in &apisurface.deprecated_apis {
             if !api.has_migration_path() {
                 result.add_deprecation_issue(
                     api.name.clone(),
@@ -511,12 +511,12 @@ impl EcosystemValidator {
     #[allow(dead_code)]
     fn check_circular_dependencies(
         &self,
-        module_name: &str,
+        modulename: &str,
         dependencies: &[DependencyInfo],
     ) -> CoreResult<bool> {
         // Simple circular dependency detection
         for dep in dependencies {
-            if dep.name == module_name {
+            if dep.name == modulename {
                 return Ok(true);
             }
         }
@@ -527,9 +527,9 @@ impl EcosystemValidator {
         &self,
         version_a: &Version,
         version_b: &Version,
-        _policies: &ValidationPolicies,
+        policies: &ValidationPolicies,
     ) -> bool {
-        if _policies.strict_version_matching {
+        if policies.strict_version_matching {
             version_a == version_b
         } else {
             // Allow compatible versions (same major version)
@@ -537,10 +537,10 @@ impl EcosystemValidator {
         }
     }
 
-    fn check_api_compatibility(&self, api_a: &ApiSurface, api_b: &ApiSurface) -> CoreResult<bool> {
+    fn check_api_compatibility(&self, api_a: &ApiSurface, apib: &ApiSurface) -> CoreResult<bool> {
         // Simple API compatibility check
         // In _a real implementation, this would do deep API analysis
-        Ok(api_a.public_apis.len() == api_b.public_apis.len())
+        Ok(api_a.public_apis.len() == apib.public_apis.len())
     }
 
     fn check_feature_compatibility(
@@ -554,13 +554,13 @@ impl EcosystemValidator {
         Ok(true)
     }
 
-    fn validate_api_policies(
+    fn validate_apipolicies(
         &self,
         previous: &ApiSurface,
         current: &ApiSurface,
-        _policies: &ValidationPolicies,
+        policies: &ValidationPolicies,
     ) -> CoreResult<ApiStabilityCheck> {
-        let mut breaking_changes = Vec::new();
+        let mut breakingchanges = Vec::new();
 
         // Check for removed APIs
         for prev_api in &previous.public_apis {
@@ -569,7 +569,7 @@ impl EcosystemValidator {
                 .iter()
                 .any(|api| api.name == prev_api.name)
             {
-                breaking_changes.push(format!("API '{}' was removed", prev_api.name));
+                breakingchanges.push(format!("API '{}' was removed", prev_api.name));
             }
         }
 
@@ -581,20 +581,20 @@ impl EcosystemValidator {
                 .find(|api| api.name == current_api.name)
             {
                 if current_api.signature != prev_api.signature {
-                    breaking_changes.push(format!("API '{}' signature changed", current_api.name));
+                    breakingchanges.push(format!("API '{}' signature changed", current_api.name));
                 }
             }
         }
 
         Ok(ApiStabilityCheck::new(
-            breaking_changes.is_empty(),
-            breaking_changes,
+            breakingchanges.is_empty(),
+            breakingchanges,
         ))
     }
 
-    fn is_api_surface_versioned(&self, api_surface: &ApiSurface) -> CoreResult<bool> {
+    fn is_apisurface_versioned(&self, apisurface: &ApiSurface) -> CoreResult<bool> {
         // Check if all APIs have version information
-        for api in &api_surface.public_apis {
+        for api in &apisurface.public_apis {
             if api.since_version.is_none() {
                 return Ok(false);
             }
@@ -605,10 +605,10 @@ impl EcosystemValidator {
     fn is_feature_compatible(
         &self,
         feature: &str,
-        _policies: &ValidationPolicies,
+        policies: &ValidationPolicies,
     ) -> CoreResult<bool> {
         // Check feature compatibility rules
-        Ok(!_policies.incompatible_features.contains(feature))
+        Ok(!policies.incompatible_features.contains(feature))
     }
 
     fn is_api_properly_documented(&self, api: &ApiInfo) -> CoreResult<bool> {
@@ -620,7 +620,7 @@ impl EcosystemValidator {
         Ok(api.since_version.is_some())
     }
 
-    fn req(&self, _module: &ModuleInfo, _version_req: &VersionRequirement) -> CoreResult<bool> {
+    fn req(&self, _module: &ModuleInfo, _versionreq: &VersionRequirement) -> CoreResult<bool> {
         // In a real implementation, this would check against vulnerability databases
         Ok(false)
     }
@@ -631,13 +631,13 @@ impl EcosystemValidator {
     }
 
     /// Update validation policies
-    pub fn update_policies(&self, new_policies: ValidationPolicies) -> CoreResult<()> {
+    pub fn updatepolicies(&self, newpolicies: ValidationPolicies) -> CoreResult<()> {
         let mut policies = self.policies.write().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire policies lock".to_string(),
             ))
         })?;
-        *policies = new_policies;
+        *policies = newpolicies;
 
         // Clear cache since policies changed
         let mut cache = self.validation_cache.write().map_err(|_| {
@@ -656,37 +656,37 @@ impl EcosystemValidator {
         Ok(EcosystemHealth::from_validationresult(&validationresult))
     }
 
-    pub fn has_circular_dependency(&self, _module: &str, _dependency: &str) -> bool {
+    pub fn has_circular_dependency(&self, _module: &str, dependency: &str) -> bool {
         // Placeholder implementation
         false
     }
 
-    pub fn are_versions_compatible(&self, _version_a: &str, _version_b: &str) -> bool {
+    pub fn areversions_compatible(&self, _version_a: &str, _versionb: &str) -> bool {
         // Placeholder implementation
         true
     }
 
-    pub fn are_apis_compatible(&self, _api_a: &ApiSurface, _api_b: &ApiSurface) -> bool {
+    pub fn are_apis_compatible(&self, _api_a: &ApiSurface, _apib: &ApiSurface) -> bool {
         // Placeholder implementation
         true
     }
 
-    pub fn are_features_compatible(&self, _features_a: &[String], _features_b: &[String]) -> bool {
+    pub fn are_features_compatible(&self, _features_a: &[String], _featuresb: &[String]) -> bool {
         // Placeholder implementation
         true
     }
 
-    pub fn check_api_stability(&self, _module: &str) -> ApiStabilityCheck {
+    pub fn check_api_stability(&self, module: &str) -> ApiStabilityCheck {
         // Placeholder implementation
         ApiStabilityCheck::new(true, vec![])
     }
 
-    pub fn is_api_properly_versioned(&self, _api_surface: &ApiSurface) -> bool {
+    pub fn is_api_properly_versioned(&self, _apisurface: &ApiSurface) -> bool {
         // Placeholder implementation
         true
     }
 
-    pub fn has_known_vulnerabilities(&self, _module: &str) -> bool {
+    pub fn has_known_vulnerabilities(&self, module: &str) -> bool {
         // Placeholder implementation
         false
     }
@@ -696,21 +696,21 @@ impl EcosystemValidator {
 #[derive(Debug)]
 pub struct ModuleRegistry {
     modules: HashMap<String, ModuleInfo>,
-    previous_versions: HashMap<String, ModuleInfo>,
+    previousversions: HashMap<String, ModuleInfo>,
 }
 
 impl ModuleRegistry {
     pub fn new() -> Self {
         Self {
             modules: HashMap::new(),
-            previous_versions: HashMap::new(),
+            previousversions: HashMap::new(),
         }
     }
 
     pub fn register(&mut self, module: ModuleInfo) -> CoreResult<()> {
         // Store previous version if updating
         if let Some(existing) = self.modules.get(&module.name) {
-            self.previous_versions
+            self.previousversions
                 .insert(module.name.clone(), existing.clone());
         }
 
@@ -723,7 +723,7 @@ impl ModuleRegistry {
     }
 
     pub fn get_previous_version(&self, name: &str) -> Option<&ModuleInfo> {
-        self.previous_versions.get(name)
+        self.previousversions.get(name)
     }
 
     pub fn all_modules(&self) -> Vec<&ModuleInfo> {
@@ -747,7 +747,7 @@ pub struct ModuleInfo {
     pub name: String,
     pub version: String,
     pub dependencies: Vec<DependencyInfo>,
-    pub api_surface: ApiSurface,
+    pub apisurface: ApiSurface,
     pub features: Vec<String>,
     pub metadata: ModuleMetadata,
 }
@@ -842,14 +842,14 @@ impl CompatibilityMatrix {
         }
     }
 
-    pub fn b(&mut self, module_a: &str, module_b: &str, compatibility: ModuleCompatibility) {
+    pub fn b(&mut self, module_a: &str, moduleb: &str, compatibility: ModuleCompatibility) {
         self.matrix
-            .insert((module_a.to_string(), module_b.to_string()), compatibility);
+            .insert((module_a.to_string(), moduleb.to_string()), compatibility);
     }
 
-    pub fn b_2(&self, module_a: &str, module_b: &str) -> Option<&ModuleCompatibility> {
+    pub fn b_2(&self, module_a: &str, moduleb: &str) -> Option<&ModuleCompatibility> {
         self.matrix
-            .get(&(module_a.to_string(), module_b.to_string()))
+            .get(&(module_a.to_string(), moduleb.to_string()))
     }
 }
 
@@ -941,12 +941,12 @@ pub struct CachedValidationResult {
 }
 
 impl CachedValidationResult {
-    pub fn age(&self, max_age: Duration) -> bool {
-        self.timestamp.elapsed() < max_age
+    pub fn age(&self, maxage: Duration) -> bool {
+        self.timestamp.elapsed() < maxage
     }
 
-    pub fn is_recent(&self, max_age: Duration) -> bool {
-        self.age(max_age)
+    pub fn is_recent(&self, maxage: Duration) -> bool {
+        self.age(maxage)
     }
 }
 
@@ -1007,13 +1007,13 @@ impl EcosystemValidationResult {
         }
     }
 
-    pub fn name(&mut self, module_name: String, result: ModuleValidationResult) {
-        self.moduleresults.insert(module_name, result);
+    pub fn name(&mut self, modulename: String, result: ModuleValidationResult) {
+        self.moduleresults.insert(modulename, result);
         self.update_overall_status();
     }
 
-    pub fn add_moduleresult(&mut self, module_name: String, result: ModuleValidationResult) {
-        self.moduleresults.insert(module_name, result);
+    pub fn add_moduleresult(&mut self, modulename: String, result: ModuleValidationResult) {
+        self.moduleresults.insert(modulename, result);
         self.update_overall_status();
     }
 
@@ -1033,14 +1033,14 @@ impl EcosystemValidationResult {
     }
 
     fn update_overall_status(&mut self) {
-        let has_errors = self.moduleresults.values().any(|r| !r.errors.is_empty())
+        let haserrors = self.moduleresults.values().any(|r| !r.errors.is_empty())
             || !self.compatibilityresult.incompatibilities.is_empty()
-            || !self.api_stabilityresult.breaking_changes.is_empty()
+            || !self.api_stabilityresult.breakingchanges.is_empty()
             || !self.version_consistencyresult.conflicts.is_empty();
 
         let has_warnings = self.moduleresults.values().any(|r| !r.warnings.is_empty());
 
-        self.overall_status = if has_errors {
+        self.overall_status = if haserrors {
             ValidationStatus::Failed
         } else if has_warnings {
             ValidationStatus::Warning
@@ -1062,7 +1062,7 @@ impl EcosystemValidationResult {
             .map(|r| r.errors.len())
             .sum::<usize>()
             + self.compatibilityresult.incompatibilities.len()
-            + self.api_stabilityresult.breaking_changes.len()
+            + self.api_stabilityresult.breakingchanges.len()
             + self.version_consistencyresult.conflicts.len()
     }
 
@@ -1088,23 +1088,23 @@ pub enum ValidationStatus {
 /// Individual module validation result
 #[derive(Debug, Clone)]
 pub struct ModuleValidationResult {
-    pub module_name: String,
+    pub modulename: String,
     pub errors: Vec<ValidationError>,
     pub warnings: Vec<ValidationWarning>,
     pub status: ValidationStatus,
 }
 
 impl ModuleValidationResult {
-    pub fn new(module_name: String) -> Self {
+    pub fn new(modulename: String) -> Self {
         Self {
-            module_name,
+            modulename,
             errors: Vec::new(),
             warnings: Vec::new(),
             status: ValidationStatus::Unknown,
         }
     }
 
-    pub fn add_error(&mut self, error: ValidationError) {
+    pub fn adderror(&mut self, error: ValidationError) {
         self.errors.push(error);
         self.status = ValidationStatus::Failed;
     }
@@ -1123,15 +1123,15 @@ impl ModuleValidationResult {
 
 #[derive(Debug, Clone)]
 pub struct ValidationError {
-    pub error_type: ValidationErrorType,
+    pub errortype: ValidationErrorType,
     pub message: String,
     pub context: Option<String>,
 }
 
 impl ValidationError {
-    pub fn new(error_type: ValidationErrorType, message: String) -> Self {
+    pub fn new(errortype: ValidationErrorType, message: String) -> Self {
         Self {
-            error_type,
+            errortype,
             message,
             context: None,
         }
@@ -1149,14 +1149,14 @@ pub enum ValidationErrorType {
 
 #[derive(Debug, Clone)]
 pub struct ValidationWarning {
-    pub warning_type: ValidationWarningType,
+    pub warningtype: ValidationWarningType,
     pub message: String,
 }
 
 impl ValidationWarning {
-    pub fn new(warning_type: ValidationWarningType, message: String) -> Self {
+    pub fn new(warningtype: ValidationWarningType, message: String) -> Self {
         Self {
-            warning_type,
+            warningtype,
             message,
         }
     }
@@ -1195,20 +1195,20 @@ impl Default for CompatibilityValidationResult {
 
 #[derive(Debug, Clone)]
 pub struct ApiStabilityResult {
-    pub breaking_changes: HashMap<String, Vec<String>>,
+    pub breakingchanges: HashMap<String, Vec<String>>,
     pub versioning_violations: HashMap<String, String>,
 }
 
 impl ApiStabilityResult {
     pub fn new() -> Self {
         Self {
-            breaking_changes: HashMap::new(),
+            breakingchanges: HashMap::new(),
             versioning_violations: HashMap::new(),
         }
     }
 
     pub fn add_breaking_change(&mut self, module: String, changes: Vec<String>) {
-        self.breaking_changes.insert(module, changes);
+        self.breakingchanges.insert(module, changes);
     }
 
     pub fn add_versioning_violation(&mut self, module: String, violation: String) {
@@ -1278,9 +1278,9 @@ pub struct DependencyValidationResult {
 }
 
 impl DependencyValidationResult {
-    pub fn new(module_name: String) -> Self {
+    pub fn new(modulename: String) -> Self {
         Self {
-            dependency_name: module_name,
+            dependency_name: modulename,
             incompatibilities: Vec::new(),
         }
     }
@@ -1310,28 +1310,28 @@ impl ApiValidationResult {
         }
     }
 
-    pub fn name(&mut self, api_name: String) {
-        self.documentation_issues.push(api_name);
+    pub fn name(&mut self, apiname: String) {
+        self.documentation_issues.push(apiname);
     }
 
-    pub fn add_documentation_issue(&mut self, api_name: String) {
-        self.documentation_issues.push(api_name);
+    pub fn add_documentation_issue(&mut self, apiname: String) {
+        self.documentation_issues.push(apiname);
     }
 
-    pub fn name_2(&mut self, api_name: String) {
-        self.semver_violations.push(api_name);
+    pub fn name_2(&mut self, apiname: String) {
+        self.semver_violations.push(apiname);
     }
 
-    pub fn add_semver_violation(&mut self, api_name: String) {
-        self.semver_violations.push(api_name);
+    pub fn add_semver_violation(&mut self, apiname: String) {
+        self.semver_violations.push(apiname);
     }
 
-    pub fn name_3(&mut self, api_name: String, issue: String) {
-        self.deprecation_issues.insert(api_name, issue);
+    pub fn name_3(&mut self, apiname: String, issue: String) {
+        self.deprecation_issues.insert(apiname, issue);
     }
 
-    pub fn add_deprecation_issue(&mut self, api_name: String, issue: String) {
-        self.deprecation_issues.insert(api_name, issue);
+    pub fn add_deprecation_issue(&mut self, apiname: String, issue: String) {
+        self.deprecation_issues.insert(apiname, issue);
     }
 
     pub fn is_valid(&self) -> bool {
@@ -1349,15 +1349,15 @@ impl Default for ApiValidationResult {
 
 #[derive(Debug, Clone)]
 pub struct SecurityValidationResult {
-    pub module_name: String,
+    pub modulename: String,
     pub vulnerabilities: Vec<String>,
     pub security_issues: Vec<String>,
 }
 
 impl SecurityValidationResult {
-    pub fn new(module_name: String) -> Self {
+    pub fn new(modulename: String) -> Self {
         Self {
-            module_name,
+            modulename,
             vulnerabilities: Vec::new(),
             security_issues: Vec::new(),
         }
@@ -1379,14 +1379,14 @@ impl SecurityValidationResult {
 #[derive(Debug, Clone)]
 pub struct ApiStabilityCheck {
     pub is_stable: bool,
-    pub breaking_changes: Vec<String>,
+    pub breakingchanges: Vec<String>,
 }
 
 impl ApiStabilityCheck {
-    pub fn new(is_stable: bool, breaking_changes: Vec<String>) -> Self {
+    pub fn new(is_stable: bool, breakingchanges: Vec<String>) -> Self {
         Self {
             is_stable,
-            breaking_changes,
+            breakingchanges,
         }
     }
 
@@ -1394,12 +1394,12 @@ impl ApiStabilityCheck {
         self.is_stable
     }
 
-    pub fn breaking_changes(&self) -> &[String] {
-        &self.breaking_changes
+    pub fn breakingchanges(&self) -> &[String] {
+        &self.breakingchanges
     }
 
     pub fn is_valid(&self) -> bool {
-        self.is_stable && self.breaking_changes.is_empty()
+        self.is_stable && self.breakingchanges.is_empty()
     }
 }
 
@@ -1468,7 +1468,7 @@ impl EcosystemHealth {
                 .push("Address validation errors before production deployment".to_string());
         }
 
-        if !result.api_stabilityresult.breaking_changes.is_empty() {
+        if !result.api_stabilityresult.breakingchanges.is_empty() {
             recommendations
                 .push("Review API breaking changes and update version numbers".to_string());
         }
@@ -1505,7 +1505,7 @@ fn create_core_module_info() -> ModuleInfo {
         name: "scirs2-core".to_string(),
         version: "1.0.0".to_string(),
         dependencies: Vec::new(),
-        api_surface: ApiSurface {
+        apisurface: ApiSurface {
             public_apis: vec![ApiInfo {
                 name: "validate_ecosystem".to_string(),
                 signature: "fn validate_ecosystem() -> CoreResult<EcosystemValidationResult>"

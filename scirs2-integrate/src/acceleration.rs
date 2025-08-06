@@ -90,9 +90,9 @@ pub struct AndersonAccelerator<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> AndersonAccelerator<F> {
     /// Create a new Anderson accelerator
-    pub fn new(_dimension: usize, options: AcceleratorOptions<F>) -> Self {
+    pub fn new(dimension: usize, options: AcceleratorOptions<F>) -> Self {
         Self {
-            dimension: _dimension,
+            dimension: dimension,
             options,
             x_history: VecDeque::new(),
             g_history: VecDeque::new(),
@@ -103,9 +103,9 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
     }
 
     /// Create accelerator with default options
-    pub fn with_memory_depth(_dimension: usize, memory_depth: usize) -> Self {
+    pub fn with_memory_depth(_dimension: usize, memorydepth: usize) -> Self {
         let options = AcceleratorOptions {
-            memory_depth,
+            memory_depth: memorydepth,
             ..Default::default()
         };
         Self::new(_dimension, options)

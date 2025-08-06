@@ -130,9 +130,9 @@ impl Default for ValidationConfig {
 }
 
 impl ComprehensiveValidator {
-    fn new(_project_path: PathBuf, config: ValidationConfig) -> Self {
+    fn new(_projectpath: PathBuf, config: ValidationConfig) -> Self {
         Self {
-            _project_path,
+            project_path,
             config,
             start_time: Instant::now(),
         }

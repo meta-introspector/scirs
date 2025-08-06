@@ -109,16 +109,16 @@ pub fn init_deprecation_system() {
 
 /// Configure deprecation warning behavior
 #[allow(dead_code)]
-pub fn configure_deprecation(_config: DeprecationConfig) {
+pub fn configure_deprecation(config: DeprecationConfig) {
     init_deprecation_system();
     if let Ok(mut global_config) = DEPRECATION_CONFIG.get().unwrap().lock() {
-        *global_config = _config;
+        *global_config = config;
     }
 }
 
 /// Issue a deprecation warning if enabled
 #[allow(dead_code)]
-pub fn issue_deprecation_warning(_info: &DeprecationInfo) {
+pub fn issue_deprecation_warning(info: &DeprecationInfo) {
     init_deprecation_system();
 
     if let Ok(mut config) = DEPRECATION_CONFIG.get().unwrap().lock() {
@@ -145,17 +145,17 @@ pub fn issue_deprecation_warning(_info: &DeprecationInfo) {
 
 /// Format a deprecation warning message
 #[allow(dead_code)]
-fn format_deprecation_warning(_info: &DeprecationInfo) -> String {
+fn format_deprecation_warning(info: &DeprecationInfo) -> String {
     let mut msg = format!(
         "Function '{}' is deprecated since v{}",
-        _info.name, _info.since
+        info.name, info.since
     );
 
     if let Some(remove_version) = &_info.remove_in {
         msg.push_str(&format!(" and will be removed in v{remove_version}"));
     }
 
-    msg.push_str(&format!(": {}", _info.reason));
+    msg.push_str(&format!(": {}", info.reason));
 
     if let Some(alternative) = &_info.alternative {
         msg.push_str(&format!(" Use '{alternative}' instead."));
@@ -277,25 +277,25 @@ impl FeatureRegistry {
     }
 
     /// Get features planned for removal in specific version
-    pub fn features_removed_in(_version: &str) -> Vec<DeprecationInfo> {
+    pub fn features_removed_in(version: &str) -> Vec<DeprecationInfo> {
         Self::deprecated_features()
             .into_iter()
-            .filter(|f| f.remove_in.as_ref().map(|v| v == _version).unwrap_or(false))
+            .filter(|f| f.remove_in.as_ref().map(|v| v == version).unwrap_or(false))
             .collect()
     }
 
     /// Check if a feature is deprecated
-    pub fn is_feature_deprecated(_feature_name: &str) -> bool {
+    pub fn is_feature_deprecated(_featurename: &str) -> bool {
         Self::deprecated_features()
             .iter()
-            .any(|f| f._name == _feature_name)
+            .any(|f| f._name == feature_name)
     }
 
     /// Get deprecation info for a specific feature
-    pub fn get_deprecation_info(_feature_name: &str) -> Option<DeprecationInfo> {
+    pub fn get_deprecation_info(_featurename: &str) -> Option<DeprecationInfo> {
         Self::deprecated_features()
             .into_iter()
-            .find(|f| f._name == _feature_name)
+            .find(|f| f._name == feature_name)
     }
 }
 
@@ -304,31 +304,31 @@ pub mod convenience {
     use crate::experimental_feature;
 
     /// Mark a GPU feature as experimental
-    pub fn warn_gpu_experimental(_feature_name: &str) {
+    pub fn warn_gpu_experimental(_featurename: &str) {
         experimental_feature!(
-            _feature_name,
+            feature_name,
             "GPU acceleration support is experimental and may change significantly"
         );
     }
 
     /// Mark a neural network feature as experimental  
-    pub fn warn_neural_experimental(_feature_name: &str) {
+    pub fn warn_neural_experimental(_featurename: &str) {
         experimental_feature!(
-            _feature_name,
+            feature_name,
             "Neural network enhanced interpolation is experimental"
         );
     }
 
     /// Mark a physics-informed feature as experimental
-    pub fn warn_physics_experimental(_feature_name: &str) {
+    pub fn warn_physics_experimental(_featurename: &str) {
         experimental_feature!(
-            _feature_name,
+            feature_name,
             "Physics-informed interpolation methods are experimental"
         );
     }
 
     /// Issue a matrix conditioning warning
-    pub fn warn_matrix_conditioning(_condition_number: f64, context: &str) {
+    pub fn warn_matrix_conditioning(_conditionnumber: f64, context: &str) {
         if _condition_number > 1e14 {
             eprintln!(
                 "NUMERICAL WARNING: Poor matrix conditioning (condition , number: {condition_number:.2e}) in {context}. \
@@ -338,7 +338,7 @@ pub mod convenience {
     }
 
     /// Issue a performance warning for large datasets
-    pub fn warn_performance_large_dataset(_operation: &str, size: usize, threshold: usize) {
+    pub fn warn_performance_large_dataset(operation: &str, size: usize, threshold: usize) {
         if size > threshold {
             eprintln!(
                 "PERFORMANCE WARNING: {_operation} with {size} data points may be slow. \

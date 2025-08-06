@@ -382,7 +382,7 @@ where
 {
     // For now, use the iterative method
     // A proper implementation would maximize the likelihood function
-    tls_iterative(x_measured, y_measured, x_variance, y_variance, _options)
+    tls_iterative(x_measured, y_measured, x_variance, y_variance, options)
 }
 
 /// Compute ordinary least squares for initial estimate
@@ -497,11 +497,11 @@ where
 
 /// Simple 2x2 eigendecomposition
 #[allow(dead_code)]
-fn eigen_2x2(_matrix: &Array2<f64>) -> (Array1<f64>, Array2<f64>) {
-    let a = _matrix[[0, 0]];
-    let b = _matrix[[0, 1]];
-    let c = _matrix[[1, 0]];
-    let d = _matrix[[1, 1]];
+fn eigen_2x2(matrix: &Array2<f64>) -> (Array1<f64>, Array2<f64>) {
+    let a = matrix[[0, 0]];
+    let b = matrix[[0, 1]];
+    let c = matrix[[1, 0]];
+    let d = matrix[[1, 1]];
 
     // Characteristic equation: λ² - (a+d)λ + (ad-bc) = 0
     let trace = a + d;

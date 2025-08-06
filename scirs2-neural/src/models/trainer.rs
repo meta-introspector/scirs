@@ -68,9 +68,9 @@ pub struct Trainer<F: Float + Debug + ScalarOperand> {
 
 impl<F: Float + Debug + ScalarOperand> Trainer<F> {
     /// Create a new trainer
-    pub fn new(_config: TrainingConfig) -> Self {
+    pub fn new(config: TrainingConfig) -> Self {
         Self {
-            _config,
+            config,
             history: History::default(),
         }
     }

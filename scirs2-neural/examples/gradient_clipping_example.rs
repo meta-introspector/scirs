@@ -106,7 +106,7 @@ fn create_sample_gradients() -> Vec<Array<f32, IxDyn>> {
 }
 // Compute global norm of gradients
 #[allow(dead_code)]
-fn compute_global_norm<A>(_gradients: &[ArrayBase<OwnedRepr<A>, IxDyn>]) -> f64
+fn compute_global_norm<A>(gradients: &[ArrayBase<OwnedRepr<A>, IxDyn>]) -> f64
 where
     A: Float + ScalarOperand + Debug,
 {

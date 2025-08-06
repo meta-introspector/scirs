@@ -63,7 +63,7 @@ pub fn extract_histogram_features(
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|(idx_)| idx)
+        .map(|(idx, _)| idx)
         .unwrap_or(0);
 
     let mode_value = min_val + (mode_bin as f64 + 0.5) * (max_val - min_val) / bin_count as f64;

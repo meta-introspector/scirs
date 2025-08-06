@@ -306,11 +306,11 @@ pub enum RobustLossType {
 // Helper functions
 
 #[allow(dead_code)]
-fn robust_trend_initial<F>(_ts: &Array1<F>, period: usize) -> Result<Array1<F>>
+fn robust_trend_initial<F>(ts: &Array1<F>, period: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = _ts.len();
+    let n = ts.len();
     let mut trend = Array1::zeros(n);
     let window = period;
 
@@ -322,7 +322,7 @@ where
             n
         };
 
-        let window_data: Vec<F> = _ts.slice(ndarray::s![start..end]).to_vec();
+        let window_data: Vec<F> = ts.slice(ndarray::s![start..end]).to_vec();
         trend[i] = median(&window_data);
     }
 
@@ -381,11 +381,11 @@ where
 }
 
 #[allow(dead_code)]
-fn robust_trend_smoother<F>(_ts: &Array1<F>, window: usize) -> Result<Array1<F>>
+fn robust_trend_smoother<F>(ts: &Array1<F>, window: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = _ts.len();
+    let n = ts.len();
     let mut trend = Array1::zeros(n);
 
     for i in 0..n {
@@ -396,7 +396,7 @@ where
             n
         };
 
-        let window_data: Vec<F> = _ts.slice(ndarray::s![start..end]).to_vec();
+        let window_data: Vec<F> = ts.slice(ndarray::s![start..end]).to_vec();
         trend[i] = median(&window_data);
     }
 
@@ -451,11 +451,11 @@ where
 }
 
 #[allow(dead_code)]
-fn robust_loess_trend<F>(_ts: &Array1<F>, bandwidth: F, weights: &Array1<F>) -> Result<Array1<F>>
+fn robust_loess_trend<F>(ts: &Array1<F>, bandwidth: F, weights: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = _ts.len();
+    let n = ts.len();
     let mut trend = Array1::zeros(n);
     let window_size = ((bandwidth * F::from_usize(n).unwrap())
         .round()
@@ -494,15 +494,15 @@ where
 }
 
 #[allow(dead_code)]
-fn calculate_robust_weights<F>(_residuals: &Array1<F>) -> Result<Array1<F>>
+fn calculate_robust_weights<F>(residuals: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = _residuals.len();
+    let n = residuals.len();
     let mut weights = Array1::ones(n);
 
     // Calculate median absolute deviation (MAD)
-    let residual_vec: Vec<F> = _residuals.to_vec();
+    let residual_vec: Vec<F> = residuals.to_vec();
     let median_residual = median(&residual_vec);
     let abs_deviations: Vec<F> = residual_vec
         .iter()
@@ -630,11 +630,11 @@ where
 }
 
 #[allow(dead_code)]
-fn m_estimator<F>(_values: &[F], loss_type: RobustLossType) -> Result<F>
+fn m_estimator<F>(_values: &[F], losstype: RobustLossType) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if _values.is_empty() {
+    if values.is_empty() {
         return Ok(F::zero());
     }
 
@@ -646,11 +646,11 @@ where
 }
 
 #[allow(dead_code)]
-fn huber_estimator<F>(_values: &[F]) -> Result<F>
+fn huber_estimator<F>(values: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let mut sorted_values = _values.to_vec();
+    let mut sorted_values = values.to_vec();
     sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let median_val = median(&sorted_values);
@@ -706,12 +706,12 @@ where
 }
 
 #[allow(dead_code)]
-fn tukey_estimator<F>(_values: &[F]) -> Result<F>
+fn tukey_estimator<F>(values: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
     let sorted_values = {
-        let mut vals = _values.to_vec();
+        let mut vals = values.to_vec();
         vals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         vals
     };
@@ -769,12 +769,12 @@ where
 }
 
 #[allow(dead_code)]
-fn andrews_estimator<F>(_values: &[F]) -> Result<F>
+fn andrews_estimator<F>(values: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
     let sorted_values = {
-        let mut vals = _values.to_vec();
+        let mut vals = values.to_vec();
         vals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         vals
     };
@@ -832,15 +832,15 @@ where
 }
 
 #[allow(dead_code)]
-fn median<F>(_values: &[F]) -> F
+fn median<F>(values: &[F]) -> F
 where
     F: Float + FromPrimitive + Debug,
 {
-    if _values.is_empty() {
+    if values.is_empty() {
         return F::zero();
     }
 
-    let mut sorted = _values.to_vec();
+    let mut sorted = values.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let len = sorted.len();
@@ -854,10 +854,10 @@ where
 }
 
 #[allow(dead_code)]
-fn calculate_l2_norm<F>(_arr: &Array1<F>) -> Result<F>
+fn calculate_l2_norm<F>(arr: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let sum_squares = _arr.iter().fold(F::zero(), |acc, &x| acc + x * x);
+    let sum_squares = arr.iter().fold(F::zero(), |acc, &x| acc + x * x);
     Ok(sum_squares.sqrt())
 }

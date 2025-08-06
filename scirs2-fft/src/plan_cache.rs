@@ -48,10 +48,10 @@ impl PlanCache {
     }
 
     /// Create a new plan cache with custom settings
-    pub fn with_config(_max_entries: usize, max_age: Duration) -> Self {
+    pub fn with_config(max_entries: usize, max_age: Duration) -> Self {
         Self {
             cache: Arc::new(Mutex::new(HashMap::new())),
-            max_entries: _max_entries,
+            max_entries,
             max_age,
             enabled: Arc::new(Mutex::new(true)),
             hit_count: Arc::new(Mutex::new(0)),
@@ -230,9 +230,9 @@ pub fn get_global_cache() -> &'static PlanCache {
 
 /// Initialize the global plan cache with custom settings
 #[allow(dead_code)]
-pub fn init_global_cache(_max_entries: usize, max_age: Duration) -> Result<(), &'static str> {
+pub fn init_global_cache(max_entries: usize, max_age: Duration) -> Result<(), &'static str> {
     GLOBAL_PLAN_CACHE
-        .set(PlanCache::with_config(_max_entries, max_age))
+        .set(PlanCache::with_config(max_entries, max_age))
         .map_err(|_| "Global plan cache already initialized")
 }
 

@@ -70,7 +70,7 @@ use crate::error::{GraphError, Result};
 /// Lines starting with '#' are treated as comments and ignored.
 /// Empty lines are also ignored.
 #[allow(dead_code)]
-pub fn read_adjacency_list_format<N, E, P>(_path: P, weighted: bool) -> Result<Graph<N, E>>
+pub fn read_adjacency_list_format<N, E, P>(path: P, weighted: bool) -> Result<Graph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
@@ -197,7 +197,10 @@ where
 /// * `Ok(DiGraph)` - The directed graph read from the file
 /// * `Err(GraphError)` - If there was an error reading or parsing the file
 #[allow(dead_code)]
-pub fn read_adjacency_list_format_digraph<N, E, P>(_path: P, weighted: bool) -> Result<DiGraph<N, E>>
+pub fn read_adjacency_list_format_digraph<N, E, P>(
+    _path: P,
+    weighted: bool,
+) -> Result<DiGraph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,

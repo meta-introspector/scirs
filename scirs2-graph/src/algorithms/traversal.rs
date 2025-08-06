@@ -24,7 +24,7 @@ use crate::error::{GraphError, Result};
 /// # Space Complexity
 /// O(V) for the visited set and queue.
 #[allow(dead_code)]
-pub fn breadth_first_search<N, E, Ix>(_graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
+pub fn breadth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
@@ -44,7 +44,7 @@ where
     let start_idx = _graph
         .inner()
         .node_indices()
-        .find(|&idx| _graph.inner()[idx] == *source)
+        .find(|&idx| graph.inner()[idx] == *source)
         .unwrap();
 
     queue.push_back(start_idx);
@@ -54,7 +54,7 @@ where
         result.push(_graph.inner()[current_idx].clone());
 
         // Visit all unvisited neighbors
-        for neighbor_idx in _graph.inner().neighbors(current_idx) {
+        for neighbor_idx in graph.inner().neighbors(current_idx) {
             if !visited.contains(&neighbor_idx) {
                 visited.insert(neighbor_idx);
                 queue.push_back(neighbor_idx);
@@ -145,7 +145,7 @@ where
 /// O(V) for the visited set and stack. In the worst case, the stack
 /// can contain all vertices (e.g., in a linear graph).
 #[allow(dead_code)]
-pub fn depth_first_search<N, E, Ix>(_graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
+pub fn depth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
@@ -165,7 +165,7 @@ where
     let start_idx = _graph
         .inner()
         .node_indices()
-        .find(|&idx| _graph.inner()[idx] == *source)
+        .find(|&idx| graph.inner()[idx] == *source)
         .unwrap();
 
     stack.push(start_idx);
@@ -176,7 +176,7 @@ where
             result.push(_graph.inner()[current_idx].clone());
 
             // Add all unvisited neighbors to the stack (in reverse order for consistent traversal)
-            let mut neighbors: Vec<_> = _graph.inner().neighbors(current_idx).collect();
+            let mut neighbors: Vec<_> = graph.inner().neighbors(current_idx).collect();
             neighbors.reverse();
             for neighbor_idx in neighbors {
                 if !visited.contains(&neighbor_idx) {
@@ -198,7 +198,10 @@ where
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in DFS order
 #[allow(dead_code)]
-pub fn depth_first_search_digraph<N, E, Ix>(_graph: &DiGraph<N, E, Ix>, source: &N) -> Result<Vec<N>>
+pub fn depth_first_search_digraph<N, E, Ix>(
+    _graph: &DiGraph<N, E, Ix>,
+    source: &N,
+) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
@@ -218,7 +221,7 @@ where
     let start_idx = _graph
         .inner()
         .node_indices()
-        .find(|&idx| _graph.inner()[idx] == *source)
+        .find(|&idx| graph.inner()[idx] == *source)
         .unwrap();
 
     stack.push(start_idx);
@@ -228,7 +231,7 @@ where
             visited.insert(current_idx);
             result.push(_graph.inner()[current_idx].clone());
 
-            // Add all unvisited neighbors to the stack (outgoing edges only for directed _graph)
+            // Add all unvisited neighbors to the stack (outgoing edges only for directed graph)
             let mut neighbors: Vec<_> = _graph
                 .inner()
                 .neighbors_directed(current_idx, petgraph::Direction::Outgoing)
@@ -685,7 +688,7 @@ where
     let mut forward_path = Vec::new();
     let mut current = meeting_point;
 
-    // Build forward path (from start to meeting _point)
+    // Build forward path (from start to meeting point)
     while current != start_idx {
         forward_path.push(graph.inner()[current].clone());
         current = forward_parent[&current];
@@ -698,7 +701,7 @@ where
     current = meeting_point;
     while current != goal_idx {
         if let Some(&_parent) = backward_parent.get(&current) {
-            current = _parent;
+            current = parent;
             backward_path.push(graph.inner()[current].clone());
         } else {
             break;
@@ -735,7 +738,7 @@ where
     let mut forward_path = Vec::new();
     let mut current = meeting_point;
 
-    // Build forward path (from start to meeting _point)
+    // Build forward path (from start to meeting point)
     while current != start_idx {
         forward_path.push(graph.inner()[current].clone());
         current = forward_parent[&current];
@@ -748,7 +751,7 @@ where
     current = meeting_point;
     while current != goal_idx {
         if let Some(&_parent) = backward_parent.get(&current) {
-            current = _parent;
+            current = parent;
             backward_path.push(graph.inner()[current].clone());
         } else {
             break;

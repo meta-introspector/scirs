@@ -125,7 +125,7 @@ impl MPC {
             num_simulations,
             action_bounds,
     /// Plan actions using random shooting
-    pub fn plan(&self, initial_state: &ArrayView1<f32>) -> Result<Array1<f32>> {
+    pub fn plan(&self, initialstate: &ArrayView1<f32>) -> Result<Array1<f32>> {
         let mut best_action_sequence = vec![Array1::zeros(self.action_dim); self.horizon];
         let mut best_reward = f32::NEG_INFINITY;
         for _ in 0..self.num_simulations {
@@ -234,12 +234,12 @@ struct ModelBuffer {
     capacity: usize,
     ptr: usize,
 impl ModelBuffer {
-    fn new(_capacity: usize) -> Self {
+    fn new(capacity: usize) -> Self {
             states: Vec::with_capacity(_capacity),
             actions: Vec::with_capacity(_capacity),
             rewards: Vec::with_capacity(_capacity),
             next_states: Vec::with_capacity(_capacity),
-            _capacity,
+            capacity,
             ptr: 0,
     fn add(
         state: Array1<f32>,
@@ -255,7 +255,7 @@ impl ModelBuffer {
             self.rewards[self.ptr] = reward;
             self.next_states[self.ptr] = next_state;
         self.ptr = (self.ptr + 1) % self._capacity;
-    fn sample(&self, batch_size: usize) -> Result<ModelBatch> {
+    fn sample(&self, batchsize: usize) -> Result<ModelBatch> {
         let indices: Vec<usize> = (0..self.len())
             .collect::<Vec<_>>()
             .choose_multiple(&mut rng, batch_size)
@@ -335,7 +335,7 @@ impl WorldModel {
 /// Encoder for world model
 struct Encoder {
 impl Encoder {
-    fn new(_input_dim: usize, latent_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
+    fn new(_input_dim: usize, latent_dim: usize, hiddensizes: Vec<usize>) -> Result<Self> {
         layers.push(Box::new(Dense::new(current_dim, latent_dim, None)?));
         Ok(Self { layers })
     fn encode(&self, state: &ArrayView1<f32>) -> Result<Array1<f32>> {
@@ -345,7 +345,7 @@ impl Encoder {
 /// Latent dynamics model
 struct LatentDynamics {
 impl LatentDynamics {
-    fn new(_latent_dim: usize, action_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
+    fn new(_latent_dim: usize, action_dim: usize, hiddensizes: Vec<usize>) -> Result<Self> {
         let input_dim = latent_dim + action_dim;
     fn predict(
         let input = concatenate![Axis(0), *latent, *action];
@@ -359,7 +359,7 @@ impl LatentDynamics {
 /// Decoder for world model
 struct Decoder {
 impl Decoder {
-    fn new(_latent_dim: usize, output_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
+    fn new(_latent_dim: usize, output_dim: usize, hiddensizes: Vec<usize>) -> Result<Self> {
         let mut current_dim = latent_dim;
     fn decode(&self, latent: &ArrayView1<f32>) -> Result<Array1<f32>> {
         let mut x = latent.to_owned().insert_axis(Axis(0));

@@ -51,7 +51,7 @@ impl LmsFilter {
     /// # Returns
     ///
     /// * A new LMS filter instance
-    pub fn new(num_taps: usize, step_size: f64, initial_weight: f64) -> SignalResult<Self> {
+    pub fn new(num_taps: usize, step_size: f64, initialweight: f64) -> SignalResult<Self> {
         if num_taps == 0 {
             return Err(SignalError::ValueError(
                 "Number of taps must be positive".to_string(),
@@ -155,14 +155,14 @@ impl LmsFilter {
     }
 
     /// Reset the filter to initial state
-    pub fn reset(&mut self, initial_weight: f64) {
+    pub fn reset(&mut self, initialweight: f64) {
         self.weights.fill(initial_weight);
         self.buffer.fill(0.0);
         self.buffer_index = 0;
     }
 
     /// Set step size (learning rate)
-    pub fn set_step_size(&mut self, step_size: f64) -> SignalResult<()> {
+    pub fn set_step_size(&mut self, stepsize: f64) -> SignalResult<()> {
         if step_size <= 0.0 {
             return Err(SignalError::ValueError(
                 "Step size must be positive".to_string(),
@@ -213,7 +213,7 @@ impl RlsFilter {
     /// # Returns
     ///
     /// * A new RLS filter instance
-    pub fn new(num_taps: usize, lambda: f64, delta: f64) -> SignalResult<Self> {
+    pub fn new(numtaps: usize, lambda: f64, delta: f64) -> SignalResult<Self> {
         if num_taps == 0 {
             return Err(SignalError::ValueError(
                 "Number of taps must be positive".to_string(),
@@ -420,7 +420,7 @@ impl NlmsFilter {
     /// # Returns
     ///
     /// * A new NLMS filter instance
-    pub fn new(num_taps: usize, step_size: f64, epsilon: f64) -> SignalResult<Self> {
+    pub fn new(num_taps: usize, stepsize: f64, epsilon: f64) -> SignalResult<Self> {
         if num_taps == 0 {
             return Err(SignalError::ValueError(
                 "Number of _taps must be positive".to_string(),
@@ -537,7 +537,7 @@ impl VsLmsFilter {
     /// # Returns
     ///
     /// * A new VS-LMS filter instance
-    pub fn new(num_taps: usize, initial_step_size: f64, alpha: f64) -> SignalResult<Self> {
+    pub fn new(num_taps: usize, initial_stepsize: f64, alpha: f64) -> SignalResult<Self> {
         if num_taps == 0 {
             return Err(SignalError::ValueError(
                 "Number of _taps must be positive".to_string(),
@@ -820,7 +820,7 @@ impl FdlmsFilter {
     /// # Returns
     ///
     /// * A new FDLMS filter instance
-    pub fn new(filter_length: usize, step_size: f64, leakage: f64) -> SignalResult<Self> {
+    pub fn new(filter_length: usize, stepsize: f64, leakage: f64) -> SignalResult<Self> {
         if filter_length == 0 {
             return Err(SignalError::ValueError(
                 "Filter length must be positive".to_string(),
@@ -905,7 +905,7 @@ impl FdlmsFilter {
         // Frequency domain filtering
         let mut freq_output: Vec<Complex<f64>> = input_vec
             .iter()
-            .zip(self.freq_weights.iter())
+            .zip(self.freqweights.iter())
             .map(|(&x, &w)| x * w)
             .collect();
 
@@ -933,7 +933,7 @@ impl FdlmsFilter {
         Ok((outputs, errors))
     }
 
-    fn update_weights(&mut self, freq_input: &[Complex<f64>], errors: &[f64]) -> SignalResult<()> {
+    fn update_weights(&mut self, freqinput: &[Complex<f64>], errors: &[f64]) -> SignalResult<()> {
         // Create error signal in frequency domain
         let mut error_padded = vec![Complex::new(0.0, 0.0); self.block_size];
         for (i, &err) in errors.iter().enumerate() {
@@ -959,7 +959,7 @@ impl FdlmsFilter {
     /// Get current filter weights (time domain)
     pub fn weights(&self) -> Vec<f64> {
         // Convert frequency domain weights to time domain
-        let mut time_weights = self.freq_weights.clone();
+        let mut time_weights = self.freqweights.clone();
         let mut planner = FftPlanner::new();
         let ifft = planner.plan_fft_inverse(self.block_size);
         ifft.process(&mut time_weights);
@@ -972,7 +972,7 @@ impl FdlmsFilter {
 
     /// Reset the filter
     pub fn reset(&mut self) {
-        self.freq_weights.fill(Complex::new(0.0, 0.0));
+        self.freqweights.fill(Complex::new(0.0, 0.0));
         self.input_buffer.clear();
         self.error_buffer.clear();
     }
@@ -996,7 +996,7 @@ pub struct LmfFilter {
 
 impl LmfFilter {
     /// Create a new LMF filter
-    pub fn new(num_taps: usize, step_size: f64) -> SignalResult<Self> {
+    pub fn new(num_taps: usize, stepsize: f64) -> SignalResult<Self> {
         if num_taps == 0 {
             return Err(SignalError::ValueError(
                 "Number of _taps must be positive".to_string(),
@@ -1091,7 +1091,7 @@ impl SmLmsFilter {
     /// # Returns
     ///
     /// * A new SM-LMS filter instance
-    pub fn new(num_taps: usize, step_size: f64, error_bound: f64) -> SignalResult<Self> {
+    pub fn new(num_taps: usize, step_size: f64, errorbound: f64) -> SignalResult<Self> {
         if num_taps == 0 {
             return Err(SignalError::ValueError(
                 "Number of _taps must be positive".to_string(),
@@ -1205,8 +1205,8 @@ fn dot_product(a: &[f64], b: &[f64]) -> f64 {
 
 /// Multiply matrix by vector
 #[allow(dead_code)]
-fn matrix_vector_multiply(_matrix: &[Vec<f64>], vector: &[f64]) -> Vec<f64> {
-    let mut result = vec![0.0; _matrix.len()];
+fn matrix_vector_multiply(matrix: &[Vec<f64>], vector: &[f64]) -> Vec<f64> {
+    let mut result = vec![0.0; matrix.len()];
     for i in 0.._matrix.len() {
         result[i] = dot_product(&_matrix[i], vector);
     }
@@ -1215,14 +1215,14 @@ fn matrix_vector_multiply(_matrix: &[Vec<f64>], vector: &[f64]) -> Vec<f64> {
 
 /// Get column from matrix
 #[allow(dead_code)]
-fn get_column(_matrix: &[Vec<f64>], col: usize) -> Vec<f64> {
-    _matrix.iter().map(|row| row[col]).collect()
+fn get_column(matrix: &[Vec<f64>], col: usize) -> Vec<f64> {
+    matrix.iter().map(|row| row[col]).collect()
 }
 
 /// Solve small linear system using Gaussian elimination (for APA)
 #[allow(dead_code)]
-fn solve_linear_system_small(_matrix: &[Vec<f64>], rhs: &[f64]) -> SignalResult<Vec<f64>> {
-    let n = _matrix.len();
+fn solve_linear_system_small(matrix: &[Vec<f64>], rhs: &[f64]) -> SignalResult<Vec<f64>> {
+    let n = matrix.len();
     if n != rhs.len() {
         return Err(SignalError::ValueError(
             "Matrix and RHS dimensions must match".to_string(),
@@ -1291,6 +1291,7 @@ fn solve_linear_system_small(_matrix: &[Vec<f64>], rhs: &[f64]) -> SignalResult<
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
     #[test]
     fn test_lms_creation() {

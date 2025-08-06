@@ -218,7 +218,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Draw a quadrilateral on an image
 #[allow(dead_code)]
-fn draw_quadrilateral(_img: &mut RgbaImage, points: &[(f64, f64)], color: [u8; 4]) {
+fn draw_quadrilateral(img: &mut RgbaImage, points: &[(f64, f64)], color: [u8; 4]) {
     if points.len() != 4 {
         return;
     }
@@ -239,8 +239,8 @@ fn draw_quadrilateral(_img: &mut RgbaImage, points: &[(f64, f64)], color: [u8; 4
 
 /// Draw a line on an image
 #[allow(dead_code)]
-fn draw_line(_img: &mut RgbaImage, p1: (f64, f64), p2: (f64, f64), color: image::Rgba<u8>) {
-    let (width, height) = _img.dimensions();
+fn draw_line(img: &mut RgbaImage, p1: (f64, f64), p2: (f64, f64), color: image::Rgba<u8>) {
+    let (width, height) = img.dimensions();
     let (x0, y0) = (p1.0 as i32, p1.1 as i32);
     let (x1, y1) = (p2.0 as i32, p2.1 as i32);
 
@@ -256,7 +256,7 @@ fn draw_line(_img: &mut RgbaImage, p1: (f64, f64), p2: (f64, f64), color: image:
     let mut y = y0;
 
     while x >= 0 && x < width as i32 && y >= 0 && y < height as i32 {
-        _img.put_pixel(x as u32, y as u32, color);
+        img.put_pixel(x as u32, y as u32, color);
 
         if x == x1 && y == y1 {
             break;
@@ -276,8 +276,8 @@ fn draw_line(_img: &mut RgbaImage, p1: (f64, f64), p2: (f64, f64), color: image:
 
 /// Draw a circle on an image
 #[allow(dead_code)]
-fn draw_circle(_img: &mut RgbaImage, cx: u32, cy: u32, radius: u32, color: image::Rgba<u8>) {
-    let (width, height) = _img.dimensions();
+fn draw_circle(img: &mut RgbaImage, cx: u32, cy: u32, radius: u32, color: image::Rgba<u8>) {
+    let (width, height) = img.dimensions();
 
     for y in (cy.saturating_sub(radius))..=(cy + radius).min(height - 1) {
         for x in (cx.saturating_sub(radius))..=(cx + radius).min(width - 1) {
@@ -285,7 +285,7 @@ fn draw_circle(_img: &mut RgbaImage, cx: u32, cy: u32, radius: u32, color: image
             let dy = y as i32 - cy as i32;
 
             if dx * dx + dy * dy <= radius as i32 * radius as i32 {
-                _img.put_pixel(x, y, color);
+                img.put_pixel(x, y, color);
             }
         }
     }

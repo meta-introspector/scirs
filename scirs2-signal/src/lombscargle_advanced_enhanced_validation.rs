@@ -230,7 +230,7 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
         let mut current_time = 0.0;
         for _ in 0..n {
             t.push(current_time);
-            current_time += 0.1 + 0.05 * rng.random_range(-1.0..1.0); // Irregular sampling
+            current_time += 0.1 + 0.05 * rng.gen_range(-1.0..1.0); // Irregular sampling
         }
 
         // Generate signal with known frequency
@@ -259,7 +259,7 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(i_)| i)
+            .map(|(i, _)| i)
             .unwrap();
 
         let detected_freq = freqs[max_idx];
@@ -328,7 +328,7 @@ fn validate_statistical_robustness() -> SignalResult<StatisticalRobustnessMetric
         let n = 200;
         let t: Vec<f64> = (0..n).map(|i| i as f64 * 0.01).collect();
         let mut rng = rand::rng();
-        let y: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
+        let y: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
 
         let freq_grid = Array1::linspace(0.1, 10.0, 100);
         let (freqs, power) = lombscargle(
@@ -508,13 +508,13 @@ fn validate_false_alarm_rates() -> SignalResult<FalseAlarmAnalysisMetrics> {
 // Helper functions for specific tests (simplified implementations)
 
 #[allow(dead_code)]
-fn find_peaks(_data: &[f64], threshold_ratio: f64) -> Vec<usize> {
-    let max_val = _data.iter().cloned().fold(0.0, f64::max);
+fn find_peaks(_data: &[f64], thresholdratio: f64) -> Vec<usize> {
+    let max_val = data.iter().cloned().fold(0.0, f64::max);
     let threshold = max_val * threshold_ratio;
 
     let mut peaks = Vec::new();
     for i in 1..(_data.len() - 1) {
-        if _data[i] > threshold && _data[i] > _data[i - 1] && _data[i] > _data[i + 1] {
+        if data[i] > threshold && data[i] > data[i - 1] && data[i] > data[i + 1] {
             peaks.push(i);
         }
     }
@@ -522,13 +522,13 @@ fn find_peaks(_data: &[f64], threshold_ratio: f64) -> Vec<usize> {
 }
 
 #[allow(dead_code)]
-fn test_chi_squared_goodness_of_fit(_data: &[f64]) -> f64 {
+fn test_chi_squared_goodness_of_fit(data: &[f64]) -> f64 {
     // Simplified chi-squared test
     0.15 // Placeholder p-value
 }
 
 #[allow(dead_code)]
-fn test_kolmogorov_smirnov(_data: &[f64]) -> f64 {
+fn test_kolmogorov_smirnov(data: &[f64]) -> f64 {
     // Simplified KS test
     0.25 // Placeholder p-value
 }
@@ -606,7 +606,7 @@ fn test_accuracy_degradation() -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn analyze_complexity_scaling(_sizes: &[usize], _times: &[f64]) -> f64 {
+fn analyze_complexity_scaling(_sizes: &[usize], times: &[f64]) -> f64 {
     // Analyze computational complexity scaling
     1.2 // Should be close to 1.0 for optimal scaling
 }

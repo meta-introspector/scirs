@@ -70,8 +70,8 @@ pub fn gaussian_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>
     for i in 0..n_features {
         for j in 0..n_components {
             // Generate a standard normal using Box-Muller transform
-            let u1: f64 = rng.random_range(0.0..1.0);
-            let u2: f64 = rng.random_range(0.0..1.0);
+            let u1: f64 = rng.gen_range(0.0..1.0);
+            let u2: f64 = rng.gen_range(0.0..1.0);
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
 
             let value = F::from(z).unwrap() * scale;
@@ -141,7 +141,7 @@ pub fn sparse_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
 
     for i in 0..n_features {
         for j in 0..n_components {
-            let prob = rng.random_range(0.0..1.0);
+            let prob = rng.gen_range(0.0..1.0);
             let value = if prob < prob_neg {
                 -scale
             } else if prob < prob_neg + prob_zero {
@@ -207,7 +207,7 @@ pub fn very_sparse_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOpera
 
     for i in 0..n_features {
         for j in 0..n_components {
-            let prob = rng.random_range(0.0..1.0);
+            let prob = rng.gen_range(0.0..1.0);
             let value = if prob < prob_neg {
                 F::from(-1.0).unwrap() * scale
             } else if prob < prob_nonzero {
@@ -360,7 +360,7 @@ pub fn johnson_lindenstrauss_transform<F: Float + NumAssign + Zero + Sum + Scala
 /// println!("Minimum dimensions needed: {}", min_dim);
 /// ```
 #[allow(dead_code)]
-pub fn johnson_lindenstrauss_min_dim(_n_samples: usize, eps: f64) -> LinalgResult<usize> {
+pub fn johnson_lindenstrauss_min_dim(_nsamples: usize, eps: f64) -> LinalgResult<usize> {
     if eps <= 0.0 || eps >= 1.0 {
         return Err(LinalgError::ValueError(format!(
             "eps must be in (0, 1), got {eps}"
@@ -370,7 +370,7 @@ pub fn johnson_lindenstrauss_min_dim(_n_samples: usize, eps: f64) -> LinalgResul
     // Calculate the minimum number of dimensions required by Johnson-Lindenstrauss lemma
     // The formula is: k >= 4 * ln(n) / (eps^2 / 2 - eps^3 / 3)
     let denominator = eps.powi(2) / 2.0 - eps.powi(3) / 3.0;
-    let min_dim = (4.0 * (_n_samples as f64).ln() / denominator).ceil() as usize;
+    let min_dim = (4.0 * (_nsamples as f64).ln() / denominator).ceil() as usize;
 
     Ok(min_dim)
 }

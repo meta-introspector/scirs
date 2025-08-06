@@ -51,12 +51,19 @@ where
     }
 
     let mut rng: StdRng = match seed {
-        Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
+        Some(seed_value) => {
+            // Convert u64 seed to [u8; 32] for StdRng
+            let mut seed_bytes = [0u8; 32];
+            seed_bytes[..8].copy_from_slice(&seed_value.to_le_bytes());
+            SeedableRng::from_seed(seed_bytes)
+        },
         None => {
-            // Get a seed from the system RNG
-            let mut system_rng = rand::rng();
-            let seed = system_rng.random::<u64>();
-            SeedableRng::seed_from_u64(seed)
+            // Use system entropy
+            {
+                let mut system_rng = rand::rng();
+                let seed: [u8; 32] = system_rng.random();
+                SeedableRng::from_seed(seed)
+            }
         }
     };
 
@@ -96,7 +103,7 @@ where
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn uniform<F>(_low: F, high: F, size: usize, seed: Option<u64>) -> StatsResult<Array1<F>>
+pub fn uniform<F>(low: F, high: F, size: usize, seed: Option<u64>) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Zero + SampleUniform + std::fmt::Display,
 {
@@ -146,7 +153,7 @@ where
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn randint(_low: i64, high: i64, size: usize, seed: Option<u64>) -> StatsResult<Array1<i64>> {
+pub fn randint(low: i64, high: i64, size: usize, seed: Option<u64>) -> StatsResult<Array1<i64>> {
     if size == 0 {
         return Err(StatsError::InvalidArgument(
             "Size must be positive".to_string(),
@@ -193,7 +200,7 @@ pub fn randint(_low: i64, high: i64, size: usize, seed: Option<u64>) -> StatsRes
 /// assert!(mean.abs() < 0.3);
 /// ```
 #[allow(dead_code)]
-pub fn randn(_size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
+pub fn randn(size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
     if _size == 0 {
         return Err(StatsError::InvalidArgument(
             "Size must be positive".to_string(),
@@ -201,12 +208,19 @@ pub fn randn(_size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
     }
 
     let mut rng: StdRng = match seed {
-        Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
+        Some(seed_value) => {
+            // Convert u64 seed to [u8; 32] for StdRng
+            let mut seed_bytes = [0u8; 32];
+            seed_bytes[..8].copy_from_slice(&seed_value.to_le_bytes());
+            SeedableRng::from_seed(seed_bytes)
+        },
         None => {
-            // Get a seed from the system RNG
-            let mut system_rng = rand::rng();
-            let seed = system_rng.random::<u64>();
-            SeedableRng::seed_from_u64(seed)
+            // Use system entropy
+            {
+                let mut system_rng = rand::rng();
+                let seed: [u8; 32] = system_rng.random();
+                SeedableRng::from_seed(seed)
+            }
         }
     };
 
@@ -282,12 +296,19 @@ where
     }
 
     let mut rng: StdRng = match seed {
-        Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
+        Some(seed_value) => {
+            // Convert u64 seed to [u8; 32] for StdRng
+            let mut seed_bytes = [0u8; 32];
+            seed_bytes[..8].copy_from_slice(&seed_value.to_le_bytes());
+            SeedableRng::from_seed(seed_bytes)
+        },
         None => {
-            // Get a seed from the system RNG
-            let mut system_rng = rand::rng();
-            let seed = system_rng.random::<u64>();
-            SeedableRng::seed_from_u64(seed)
+            // Use system entropy
+            {
+                let mut system_rng = rand::rng();
+                let seed: [u8; 32] = system_rng.random();
+                SeedableRng::from_seed(seed)
+            }
         }
     };
 
@@ -403,7 +424,7 @@ where
             let mut indices: Vec<usize> = (0..n).collect();
 
             for i in 0..size {
-                let j = rng.random_range(i..n);
+                let j = rng.gen_range(i..n);
                 indices.swap(i, j);
                 result.push(a[indices[i]]);
             }
@@ -456,12 +477,19 @@ where
     }
 
     let mut rng: StdRng = match seed {
-        Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
+        Some(seed_value) => {
+            // Convert u64 seed to [u8; 32] for StdRng
+            let mut seed_bytes = [0u8; 32];
+            seed_bytes[..8].copy_from_slice(&seed_value.to_le_bytes());
+            SeedableRng::from_seed(seed_bytes)
+        },
         None => {
-            // Get a seed from the system RNG
-            let mut system_rng = rand::rng();
-            let seed = system_rng.random::<u64>();
-            SeedableRng::seed_from_u64(seed)
+            // Use system entropy
+            {
+                let mut system_rng = rand::rng();
+                let seed: [u8; 32] = system_rng.random();
+                SeedableRng::from_seed(seed)
+            }
         }
     };
 
@@ -470,7 +498,7 @@ where
 
     // Fisher-Yates shuffle
     for i in (1..n).rev() {
-        let j = rng.random_range(0..i);
+        let j = rng.gen_range(0..i);
         result.swap(i, j);
     }
 
@@ -513,12 +541,19 @@ pub fn permutation_int(n: usize, seed: Option<u64>) -> StatsResult<Array1<usize>
     }
 
     let mut rng: StdRng = match seed {
-        Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
+        Some(seed_value) => {
+            // Convert u64 seed to [u8; 32] for StdRng
+            let mut seed_bytes = [0u8; 32];
+            seed_bytes[..8].copy_from_slice(&seed_value.to_le_bytes());
+            SeedableRng::from_seed(seed_bytes)
+        },
         None => {
-            // Get a seed from the system RNG
-            let mut system_rng = rand::rng();
-            let seed = system_rng.random::<u64>();
-            SeedableRng::seed_from_u64(seed)
+            // Use system entropy
+            {
+                let mut system_rng = rand::rng();
+                let seed: [u8; 32] = system_rng.random();
+                SeedableRng::from_seed(seed)
+            }
         }
     };
 
@@ -527,7 +562,7 @@ pub fn permutation_int(n: usize, seed: Option<u64>) -> StatsResult<Array1<usize>
 
     // Fisher-Yates shuffle
     for i in (1..n).rev() {
-        let j = rng.random_range(0..i);
+        let j = rng.gen_range(0..i);
         result.swap(i, j);
     }
 
@@ -583,12 +618,19 @@ pub fn random_binary_matrix(
     }
 
     let mut rng: StdRng = match seed {
-        Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
+        Some(seed_value) => {
+            // Convert u64 seed to [u8; 32] for StdRng
+            let mut seed_bytes = [0u8; 32];
+            seed_bytes[..8].copy_from_slice(&seed_value.to_le_bytes());
+            SeedableRng::from_seed(seed_bytes)
+        },
         None => {
-            // Get a seed from the system RNG
-            let mut system_rng = rand::rng();
-            let seed = system_rng.random::<u64>();
-            SeedableRng::seed_from_u64(seed)
+            // Use system entropy
+            {
+                let mut system_rng = rand::rng();
+                let seed: [u8; 32] = system_rng.random();
+                SeedableRng::from_seed(seed)
+            }
         }
     };
 
@@ -656,12 +698,19 @@ where
     }
 
     let mut rng: StdRng = match seed {
-        Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
+        Some(seed_value) => {
+            // Convert u64 seed to [u8; 32] for StdRng
+            let mut seed_bytes = [0u8; 32];
+            seed_bytes[..8].copy_from_slice(&seed_value.to_le_bytes());
+            SeedableRng::from_seed(seed_bytes)
+        },
         None => {
-            // Get a seed from the system RNG
-            let mut system_rng = rand::rng();
-            let seed = system_rng.random::<u64>();
-            SeedableRng::seed_from_u64(seed)
+            // Use system entropy
+            {
+                let mut system_rng = rand::rng();
+                let seed: [u8; 32] = system_rng.random();
+                SeedableRng::from_seed(seed)
+            }
         }
     };
 

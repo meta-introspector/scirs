@@ -157,7 +157,8 @@ fn main() {
         let channel_name = match c {
             0 => "red",
             1 => "green",
-            2 => "blue"_ => "unknown",
+            2 => "blue",
+            _ => "unknown",
         };
 
         save_image_to_csv(
@@ -451,13 +452,13 @@ fn generate_inpainting_image() -> (Array2<f64>, Array2<f64>) {
 
 /// Helper function to extract a channel from a color image
 #[allow(dead_code)]
-fn extract_channel(_image: &Array3<f64>, channel: usize) -> Array2<f64> {
-    let (height, width_) = _image.dim();
+fn extract_channel(image: &Array3<f64>, channel: usize) -> Array2<f64> {
+    let (height, width_) = image.dim();
     let mut result = Array2::zeros((height, width));
 
     for i in 0..height {
         for j in 0..width {
-            result[[i, j]] = _image[[i, j, channel]];
+            result[[i, j]] = image[[i, j, channel]];
         }
     }
 
@@ -466,16 +467,16 @@ fn extract_channel(_image: &Array3<f64>, channel: usize) -> Array2<f64> {
 
 /// Helper function to convert NaN values to a fixed value for CSV export
 #[allow(dead_code)]
-fn corrupted_image_for_csv(_image: &Array2<f64>) -> Array2<f64> {
-    let (height, width) = _image.dim();
+fn corrupted_image_for_csv(image: &Array2<f64>) -> Array2<f64> {
+    let (height, width) = image.dim();
     let mut result = Array2::zeros((height, width));
 
     for i in 0..height {
         for j in 0..width {
-            if _image[[i, j]].is_nan() {
+            if image[[i, j]].is_nan() {
                 result[[i, j]] = -0.1; // Use -0.1 to represent missing values in CSV
             } else {
-                result[[i, j]] = _image[[i, j]];
+                result[[i, j]] = image[[i, j]];
             }
         }
     }
@@ -485,12 +486,12 @@ fn corrupted_image_for_csv(_image: &Array2<f64>) -> Array2<f64> {
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for 1D signals
 #[allow(dead_code)]
-fn calculate_snr(_clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
+fn calculate_snr(clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
     let mut signal_power = 0.0;
     let mut noise_power = 0.0;
 
     for i in 0.._clean.len() {
-        signal_power += _clean[i] * _clean[i];
+        signal_power += clean[i] * clean[i];
         noise_power += (_clean[i] - noisy[i]).powi(2);
     }
 
@@ -503,14 +504,14 @@ fn calculate_snr(_clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for 2D images
 #[allow(dead_code)]
-fn calculate_image_snr(_clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
-    let (height, width) = _clean.dim();
+fn calculate_image_snr(clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
+    let (height, width) = clean.dim();
     let mut signal_power = 0.0;
     let mut noise_power = 0.0;
 
     for i in 0..height {
         for j in 0..width {
-            signal_power += _clean[[i, j]] * _clean[[i, j]];
+            signal_power += clean[[i, j]] * clean[[i, j]];
             noise_power += (_clean[[i, j]] - noisy[[i, j]]).powi(2);
         }
     }
@@ -524,15 +525,15 @@ fn calculate_image_snr(_clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for color images
 #[allow(dead_code)]
-fn calculate_color_snr(_clean: &Array3<f64>, noisy: &Array3<f64>) -> f64 {
-    let (height, width, channels) = _clean.dim();
+fn calculate_color_snr(clean: &Array3<f64>, noisy: &Array3<f64>) -> f64 {
+    let (height, width, channels) = clean.dim();
     let mut signal_power = 0.0;
     let mut noise_power = 0.0;
 
     for i in 0..height {
         for j in 0..width {
             for c in 0..channels {
-                signal_power += _clean[[i, j, c]] * _clean[[i, j, c]];
+                signal_power += clean[[i, j, c]] * clean[[i, j, c]];
                 noise_power += (_clean[[i, j, c]] - noisy[[i, j, c]]).powi(2);
             }
         }
@@ -547,8 +548,8 @@ fn calculate_color_snr(_clean: &Array3<f64>, noisy: &Array3<f64>) -> f64 {
 
 /// Calculates the Peak Signal-to-Noise Ratio (PSNR) in dB for images with missing data
 #[allow(dead_code)]
-fn calculate_inpaint_psnr(_original: &Array2<f64>, inpainted: &Array2<f64>) -> f64 {
-    let (height, width) = _original.dim();
+fn calculate_inpaint_psnr(original: &Array2<f64>, inpainted: &Array2<f64>) -> f64 {
+    let (height, width) = original.dim();
     let mut mse = 0.0;
     let mut count = 0;
 
@@ -604,7 +605,7 @@ fn save_signal_to_csv(
 
 /// Appends a signal column to an existing CSV file
 #[allow(dead_code)]
-fn append_signal_to_csv(_filename: &str, column_name: &str, signal: &Array1<f64>) {
+fn append_signal_to_csv(_filename: &str, columnname: &str, signal: &Array1<f64>) {
     // Read existing file
     let contents = std::fs::read_to_string(_filename).expect("Failed to read file");
     let mut lines: Vec<String> = contents.lines().map(|s| s.to_string()).collect();
@@ -629,7 +630,7 @@ fn append_signal_to_csv(_filename: &str, column_name: &str, signal: &Array1<f64>
 
 /// Saves a 2D image to a CSV file for visualization
 #[allow(dead_code)]
-fn save_image_to_csv(_filename: &str, image: &Array2<f64>) {
+fn save_image_to_csv(filename: &str, image: &Array2<f64>) {
     let mut file = File::create(_filename).expect("Failed to create file");
 
     let (height, width) = image.dim();

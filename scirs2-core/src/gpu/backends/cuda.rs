@@ -653,7 +653,7 @@ impl GpuCompilerImpl for CudaCompiler {
         }))
     }
 
-    fn compile_typed(&self, name: &str, _type_id: std::any::TypeId) -> Arc<dyn GpuKernelImpl> {
+    fn compile_typed(&self, name: &str, _typeid: std::any::TypeId) -> Arc<dyn GpuKernelImpl> {
         Arc::new(CudaKernelHandle {
             kernel_name: name.to_string(),
             compiled_kernels: Arc::clone(&self.compiled_kernels),
@@ -680,7 +680,7 @@ enum KernelParam {
 impl CudaKernelHandle {
     /// Execute real CUDA kernel when CUDA is available
     #[cfg(feature = "cuda")]
-    fn execute_cuda_kernel(&self, work_groups: [u32; 3], params: &HashMap<String, KernelParam>) {
+    fn execute_cuda_kernel(&self, workgroups: [u32; 3], params: &HashMap<String, KernelParam>) {
         // Get compiled kernel from cache
         if let Ok(kernels) = self.compiled_kernels.lock() {
             if let Some(_kernel) = kernels.get(&self.kernel_name) {
@@ -693,20 +693,20 @@ impl CudaKernelHandle {
                             // Convert buffer to device pointer
                             if let Some(cuda_buffer) = buffer.as_any().downcast_ref::<CudaBuffer>()
                             {
-                                _cuda_params.push(cuda_buffer.device_ptr as *mut c_void);
+                                cuda_params.push(cuda_buffer.device_ptr as *mut c_void);
                             }
                         }
                         KernelParam::U32(val) => {
-                            _cuda_params.push(val as *const u32 as *mut c_void);
+                            cuda_params.push(val as *const u32 as *mut c_void);
                         }
                         KernelParam::I32(val) => {
-                            _cuda_params.push(val as *const i32 as *mut c_void);
+                            cuda_params.push(val as *const i32 as *mut c_void);
                         }
                         KernelParam::F32(val) => {
-                            _cuda_params.push(val as *const f32 as *mut c_void);
+                            cuda_params.push(val as *const f32 as *mut c_void);
                         }
                         KernelParam::F64(val) => {
-                            _cuda_params.push(val as *const f64 as *mut c_void);
+                            cuda_params.push(val as *const f64 as *mut c_void);
                         }
                     }
                 }
@@ -753,7 +753,7 @@ impl CudaKernelHandle {
             computation_time * 1000.0
         );
 
-        // Simulate actual computation _delay for realistic testing
+        // Simulate actual computation delay for realistic testing
         std::thread::sleep(std::time::Duration::from_micros(
             (computation_time * 1_000_000.0) as u64,
         ));
@@ -763,7 +763,7 @@ impl CudaKernelHandle {
     }
 
     /// Calculate optimal CUDA launch configuration
-    fn calculate_launch_config(&self, work_groups: [u32; 3]) -> ((u32, u32, u32), (u32, u32, u32)) {
+    fn calculate_launch_config(&self, workgroups: [u32; 3]) -> ((u32, u32, u32), (u32, u32, u32)) {
         // Advanced heuristics for optimal thread block configuration
         let max_threads_per_block = 1024u32; // Common CUDA limit
         let warp_size = 32u32; // CUDA warp size
@@ -875,7 +875,7 @@ impl GpuKernelImpl for CudaKernelHandle {
     }
 
     /// Execute the kernel launch with comprehensive parameter marshaling and execution
-    fn dispatch_workgroups(&self, work_groups: [u32; 3]) {
+    fn dispatch_workgroups(&self, workgroups: [u32; 3]) {
         #[cfg(debug_assertions)]
         {
             eprintln!(
@@ -935,7 +935,7 @@ struct CudaMemoryPool {
 }
 
 impl CudaMemoryPool {
-    fn new(total_size: usize) -> Self {
+    fn new(totalsize: usize) -> Self {
         // In real implementation, would allocate a large chunk with cuMemAlloc
         // For stub: simulate a large memory pool starting at address 0x10000000
         let base_ptr = 0x10000000;

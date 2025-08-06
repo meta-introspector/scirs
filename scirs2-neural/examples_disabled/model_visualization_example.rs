@@ -18,7 +18,7 @@ fn main() -> Result<()> {
     // 1. Confusion Matrix Example
     println!("\n--- Confusion Matrix Visualization ---\n");
     // Create a deterministic RNG for reproducibility
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Generate random predictions and true labels
     let y_true = Array::fromshape_fn(n_samples, |_| rng.gen_range(0..n_classes));
     // Create slightly correlated predictions (not completely random)

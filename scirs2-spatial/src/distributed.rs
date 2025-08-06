@@ -580,13 +580,13 @@ pub struct IndexStatistics {
 
 impl DistributedSpatialCluster {
     /// Create new distributed spatial cluster
-    pub fn new(_config: NodeConfig) -> SpatialResult<Self> {
+    pub fn new(config: NodeConfig) -> SpatialResult<Self> {
         let mut nodes = Vec::new();
         let mut channels = HashMap::new();
 
         // Create node instances
         for node_id in 0.._config.node_count {
-            let (sender, _receiver) = mpsc::channel(1000);
+            let (sender, receiver) = mpsc::channel(1000);
             channels.insert(node_id, sender);
 
             let node = NodeInstance {
@@ -624,7 +624,7 @@ impl DistributedSpatialCluster {
 
         let communication = CommunicationLayer {
             channels,
-            compression_enabled: _config.compression,
+            compression_enabled: config.compression,
             stats: CommunicationStats {
                 messages_sent: 0,
                 messages_received: 0,
@@ -643,12 +643,12 @@ impl DistributedSpatialCluster {
                 avg_query_latency_ms: 0.0,
                 throughput_qps: 0.0,
                 load_balance_score: 1.0,
-                fault_tolerance_level: if _config.fault_tolerance { 0.8 } else { 0.0 },
+                fault_tolerance_level: if config.fault_tolerance { 0.8 } else { 0.0 },
             },
         };
 
         Ok(Self {
-            config: _config,
+            config: config,
             nodes,
             master_node_id: 0,
             partitions: Arc::new(TokioRwLock::new(HashMap::new())),
@@ -671,8 +671,8 @@ impl DistributedSpatialCluster {
     }
 
     /// Distribute data across cluster nodes
-    pub async fn distribute_data(&mut self, _data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
-        let (n_points, n_dims) = _data.dim();
+    pub async fn distribute_data(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
+        let (n_points, n_dims) = data.dim();
 
         // Create spatial partitions
         let partitions = self.create_spatial_partitions(_data).await?;
@@ -1065,7 +1065,7 @@ impl DistributedSpatialCluster {
         &self,
         _distances: &[f64],
     ) -> SpatialResult<Array1<f64>> {
-        let total_distance: f64 = _distances.iter().sum();
+        let total_distance: f64 = distances.iter().sum();
         let target = rand::random::<f64>() * total_distance;
 
         let mut cumulative = 0.0;
@@ -1148,12 +1148,12 @@ impl DistributedSpatialCluster {
         let mut cluster_sums: HashMap<usize, Array1<f64>> = HashMap::new();
         let mut cluster_counts: HashMap<usize, usize> = HashMap::new();
 
-        for (node_id, _assignments) in local_assignments {
+        for (node_id, assignments) in local_assignments {
             let node = self.nodes[*node_id].read().await;
             if let Some(ref local_data) = node.local_data {
                 let (_, n_dims) = local_data.dim();
 
-                for (i, &cluster) in _assignments.iter().enumerate() {
+                for (i, &cluster) in assignments.iter().enumerate() {
                     let point = local_data.row(i);
 
                     let cluster_sum = cluster_sums

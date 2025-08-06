@@ -25,7 +25,7 @@ fn enforce_bounds_with_reflection<R: Rng>(rng: &mut R, val: f64, lb: f64, ub: f6
             lb + excess
         } else {
             // If reflection goes beyond upper bound, use random value in range
-            _rng.gen_range(lb..=ub)
+            rng.gen_range(lb..=ub)
         }
     } else {
         // val > ub..reflect around upper bound
@@ -35,15 +35,15 @@ fn enforce_bounds_with_reflection<R: Rng>(rng: &mut R, val: f64, lb: f64, ub: f6
             ub - excess
         } else {
             // If reflection goes beyond lower bound, use random value in range
-            _rng.gen_range(lb..=ub)
+            rng.gen_range(lb..=ub)
         }
     }
 }
 
 /// Validate bounds to ensure they are properly specified
 #[allow(dead_code)]
-fn validate_bounds(_bounds: &[(f64, f64)]) -> Result<(), OptimizeError> {
-    for (i, &(lb, ub)) in _bounds.iter().enumerate() {
+fn validate_bounds(bounds: &[(f64, f64)]) -> Result<(), OptimizeError> {
+    for (i, &(lb, ub)) in bounds.iter().enumerate() {
         if !lb.is_finite() || !ub.is_finite() {
             return Err(OptimizeError::InvalidInput(format!(
                 "Bounds must be finite values. Variable {}: _bounds = ({}, {})",
@@ -168,7 +168,7 @@ where
         // Default accept _test is Metropolis criterion
         let accept_test = accept_test.unwrap_or_else(|| {
             let temp = options.temperature;
-            Box::new(move |f_new: f64, f_old: f64| {
+            Box::new(move |f_new: f64, fold: f64| {
                 if f_new < f_old {
                     true
                 } else {

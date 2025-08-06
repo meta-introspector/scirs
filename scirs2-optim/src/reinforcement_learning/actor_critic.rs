@@ -341,7 +341,7 @@ pub struct ExperienceReplayBuffer<T: Float> {
 
 impl<T: Float + Send + Sync> ExperienceReplayBuffer<T> {
     /// Create a new experience replay buffer
-    pub fn new(max_size: usize, alpha: T, beta: T) -> Self {
+    pub fn new(maxsize: usize, alpha: T, beta: T) -> Self {
         Self {
             buffer: Vec::with_capacity(max_size),
             max_size,
@@ -366,7 +366,7 @@ impl<T: Float + Send + Sync> ExperienceReplayBuffer<T> {
     }
 
     /// Sample batch from buffer
-    pub fn sample(&self, batch_size: usize) -> Vec<Experience<T>> {
+    pub fn sample(&self, batchsize: usize) -> Vec<Experience<T>> {
         let available_size = if self.is_full {
             self.max_size
         } else {
@@ -439,7 +439,7 @@ impl<
     }
 
     /// Update using experience replay
-    pub fn update_from_replay(&mut self, batch_size: usize) -> Result<ActorCriticMetrics<T>> {
+    pub fn update_from_replay(&mut self, batchsize: usize) -> Result<ActorCriticMetrics<T>> {
         if self.replay_buffer.len() < batch_size {
             return Err(OptimError::InvalidConfig(
                 "Not enough experiences in buffer".to_string(),
@@ -704,7 +704,8 @@ impl<
         let q_values = self.compute_q_values(&self.critics[0], states, &actions)?;
 
         // Actor loss: negative Q-values (since we want to maximize Q)
-        let actor_loss = -q_values.iter().copied().sum::<T>() / T::from(q_values.len()).unwrap_or(T::zero());
+        let actor_loss =
+            -q_values.iter().copied().sum::<T>() / T::from(q_values.len()).unwrap_or(T::zero());
 
         Ok(actor_loss)
     }
@@ -718,7 +719,8 @@ impl<
         let q_values = self.compute_q_values(&self.critics[0], states, &actions)?;
 
         // Actor loss: negative Q-values
-        let actor_loss = -q_values.iter().copied().sum::<T>() / T::from(q_values.len()).unwrap_or(T::zero());
+        let actor_loss =
+            -q_values.iter().copied().sum::<T>() / T::from(q_values.len()).unwrap_or(T::zero());
 
         Ok(actor_loss)
     }
@@ -777,7 +779,8 @@ impl<
         // Update metrics
         self.metrics.actor_loss = actor_loss;
         self.metrics.critic_losses = vec![critic_loss];
-        self.metrics.policy_entropy = policy_eval.entropy.iter().copied().sum::<T>() / T::from(policy_eval.entropy.len()).unwrap_or(T::zero());
+        self.metrics.policy_entropy = policy_eval.entropy.iter().copied().sum::<T>()
+            / T::from(policy_eval.entropy.len()).unwrap_or(T::zero());
 
         self.update_count += 1;
 
@@ -867,21 +870,24 @@ impl<
     fn compute_q_values(
         &self,
         critic: &V,
-        states: &Array2<T>, _actions: &Array2<T>,
+        states: &Array2<T>,
+        _actions: &Array2<T>,
     ) -> Result<Array1<T>> {
         // Simplified Q-value computation
         critic.evaluate_value(states)
     }
 
     fn compute_target_q_sac(
-        &self, _next_states: &Array2<T>,
-        rewards: &Array1<T>, _dones: &Array1<bool>,
+        &self,
+        _next_states: &Array2<T>,
+        rewards: &Array1<T>,
+        _dones: &Array1<bool>,
     ) -> Result<Array1<T>> {
         // Simplified target Q computation for SAC
         Ok(rewards.clone())
     }
 
-    fn compute_critic_loss(&self, q_values: &Array1<T>, target_q: &Array1<T>) -> Result<T> {
+    fn compute_critic_loss(&self, q_values: &Array1<T>, targetq: &Array1<T>) -> Result<T> {
         Ok((q_values - target_q)
             .mapv(|x| x * x)
             .mean()
@@ -917,7 +923,8 @@ impl<
         // SAC actor loss: -E[Q(s,a) - α log π(a|s)]
         let entropy_term = log_probs * self.temperature;
         let actor_objective = q_values - entropy_term;
-        let actor_loss = -actor_objective.iter().copied().sum::<T>() / T::from(actor_objective.len()).unwrap_or(T::zero());
+        let actor_loss = -actor_objective.iter().copied().sum::<T>()
+            / T::from(actor_objective.len()).unwrap_or(T::zero());
 
         Ok(actor_loss)
     }
@@ -931,7 +938,8 @@ impl<
         let action_dist = self.actor.get_action_distribution(states)?;
         let sampled_actions = self.sample_actions_from_distribution(&action_dist)?;
         let log_probs = self.compute_log_probabilities(&action_dist, &sampled_actions)?;
-        let current_entropy = -log_probs.iter().copied().sum::<T>() / T::from(log_probs.len()).unwrap_or(T::zero());
+        let current_entropy =
+            -log_probs.iter().copied().sum::<T>() / T::from(log_probs.len()).unwrap_or(T::zero());
 
         // Target entropy (typically -action_dim for continuous actions)
         let target_entropy = self

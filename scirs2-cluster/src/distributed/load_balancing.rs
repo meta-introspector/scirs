@@ -285,7 +285,7 @@ impl LoadBalancingCoordinator {
     }
 
     /// Determine if rebalancing should be triggered
-    fn should_trigger_rebalance(&self, load_variance: f64) -> bool {
+    fn should_trigger_rebalance(&self, loadvariance: f64) -> bool {
         if !self.config.enable_dynamic_balancing {
             return false;
         }
@@ -307,7 +307,7 @@ impl LoadBalancingCoordinator {
     }
 
     /// Compute optimal work assignments using selected strategy
-    fn compute_optimal_assignments(&self, data_size: usize) -> Result<HashMap<usize, usize>> {
+    fn compute_optimal_assignments(&self, datasize: usize) -> Result<HashMap<usize, usize>> {
         match &self.current_strategy {
             LoadBalancingStrategy::ProportionalCapacity => {
                 self.proportional_capacity_balancing(data_size)
@@ -340,7 +340,7 @@ impl LoadBalancingCoordinator {
     }
 
     /// Proportional capacity-based load balancing
-    fn proportional_capacity_balancing(&self, data_size: usize) -> Result<HashMap<usize, usize>> {
+    fn proportional_capacity_balancing(&self, datasize: usize) -> Result<HashMap<usize, usize>> {
         let worker_efficiency: Vec<(usize, f64)> = self
             .worker_profiles
             .iter()
@@ -587,7 +587,7 @@ impl LoadBalancingCoordinator {
     }
 
     /// Weighted round-robin balancing
-    fn weighted_round_robin_balancing(&self, data_size: usize) -> Result<HashMap<usize, usize>> {
+    fn weighted_round_robin_balancing(&self, datasize: usize) -> Result<HashMap<usize, usize>> {
         let mut assignments = HashMap::new();
         let worker_weights: Vec<(usize, f64)> = self
             .worker_profiles
@@ -624,7 +624,7 @@ impl LoadBalancingCoordinator {
     }
 
     /// Least loaded balancing strategy
-    fn least_loaded_balancing(&self, data_size: usize) -> Result<HashMap<usize, usize>> {
+    fn least_loaded_balancing(&self, datasize: usize) -> Result<HashMap<usize, usize>> {
         let mut assignments = HashMap::new();
         let worker_ids: Vec<usize> = self.worker_profiles.keys().copied().collect();
 
@@ -663,7 +663,7 @@ impl LoadBalancingCoordinator {
     }
 
     /// Compute learned optimal assignment for adaptive strategy
-    fn compute_learned_optimal_assignment(&self, worker_id: usize, total_data: usize) -> usize {
+    fn compute_learned_optimal_assignment(&self, worker_id: usize, totaldata: usize) -> usize {
         // Simplified learning model - in practice would use historical performance data
         if let Some(profile) = self.worker_profiles.get(&worker_id) {
             let capacity_ratio = (profile.cpu_cores as f64 * profile.memory_gb) / 100.0; // Normalize

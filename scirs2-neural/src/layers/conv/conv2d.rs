@@ -88,7 +88,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for Conv
         Ok(grad_output.clone())
     }
 
-    fn update(&mut self, _learning_rate: F) -> Result<()> {
+    fn update(&mut self, _learningrate: F) -> Result<()> {
         // Placeholder implementation
         Ok(())
     }

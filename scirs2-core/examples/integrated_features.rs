@@ -55,7 +55,7 @@ fn run_integrated_example() {
     use rand_distr::Normal;
 
     // Initialize logging
-    scirs2_core::logging::set_min_log_level(LogLevel::Debug);
+    scirs2_core::logging::set_minlog_level(LogLevel::Debug);
     let logger = Logger::new(integrated_example);
     logger.info("Starting integrated example");
 

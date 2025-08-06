@@ -145,8 +145,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Draw a circle on an image
 #[allow(dead_code)]
-fn draw_circle(_img: &mut RgbImage, cx: u32, cy: u32, radius: u32, color: Rgb<u8>) {
-    let (width, height) = _img.dimensions();
+fn draw_circle(img: &mut RgbImage, cx: u32, cy: u32, radius: u32, color: Rgb<u8>) {
+    let (width, height) = img.dimensions();
 
     // Simple circle drawing using midpoint algorithm
     let mut x = radius as i32;
@@ -168,7 +168,7 @@ fn draw_circle(_img: &mut RgbImage, cx: u32, cy: u32, radius: u32, color: Rgb<u8
 
         for (px, py) in &points {
             if *px >= 0 && *px < width as i32 && *py >= 0 && *py < height as i32 {
-                _img.put_pixel(*px as u32, *py as u32, color);
+                img.put_pixel(*px as u32, *py as u32, color);
             }
         }
 
@@ -186,8 +186,8 @@ fn draw_circle(_img: &mut RgbImage, cx: u32, cy: u32, radius: u32, color: Rgb<u8
 
 /// Draw a line on an image
 #[allow(dead_code)]
-fn draw_line(_img: &mut RgbImage, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgb<u8>) {
-    let (width, height) = _img.dimensions();
+fn draw_line(img: &mut RgbImage, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgb<u8>) {
+    let (width, height) = img.dimensions();
 
     // Bresenham's line algorithm
     let dx = (x1 - x0).abs();
@@ -201,7 +201,7 @@ fn draw_line(_img: &mut RgbImage, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgb
 
     loop {
         if x >= 0.0 && x < width as f32 && y >= 0.0 && y < height as f32 {
-            _img.put_pixel(x as u32, y as u32, color);
+            img.put_pixel(x as u32, y as u32, color);
         }
 
         if (x - x1).abs() < 0.5 && (y - y1).abs() < 0.5 {
@@ -222,8 +222,8 @@ fn draw_line(_img: &mut RgbImage, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgb
 
 /// Create a side-by-side image for matching visualization
 #[allow(dead_code)]
-fn create_side_by_side(_img1: &DynamicImage, img2: &DynamicImage) -> RgbImage {
-    let (w1, h1) = _img1.dimensions();
+fn create_side_by_side(img1: &DynamicImage, img2: &DynamicImage) -> RgbImage {
+    let (w1, h1) = img1.dimensions();
     let (w2, h2) = img2.dimensions();
 
     let width = w1 + w2;
@@ -234,7 +234,7 @@ fn create_side_by_side(_img1: &DynamicImage, img2: &DynamicImage) -> RgbImage {
     // Copy first image
     for y in 0..h1 {
         for x in 0..w1 {
-            let pixel = _img1.get_pixel(x, y);
+            let pixel = img1.get_pixel(x, y);
             combined.put_pixel(x, y, pixel.to_rgb());
         }
     }

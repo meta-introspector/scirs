@@ -74,12 +74,12 @@ struct TanhSinhRule {
 impl TanhSinhRule {
     /// Generate a rule at the specified level
     /// This generates ALL points up to and including this level
-    fn new(_level: usize) -> Self {
+    fn new(level: usize) -> Self {
         let mut points = Vec::new();
         let mut weights = Vec::new();
 
-        // Base step size for this _level
-        let h = 1.0 / (1 << _level) as f64;
+        // Base step size for this level
+        let h = 1.0 / (1 << level) as f64;
 
         // Maximum value of j*h before weights become negligible
         let max_t = 3.5;
@@ -158,14 +158,14 @@ impl RuleCache {
     }
 
     /// Get or compute a rule at the specified level
-    fn get_rule(&mut self, _level: usize) -> &TanhSinhRule {
-        // Ensure we have rules up to the requested _level
-        while self.rules.len() <= _level {
+    fn get_rule(&mut self, level: usize) -> &TanhSinhRule {
+        // Ensure we have rules up to the requested level
+        while self.rules.len() <= level {
             let rule = TanhSinhRule::new(self.rules.len());
             self.rules.push(rule);
         }
 
-        &self.rules[_level]
+        &self.rules[level]
     }
 }
 
@@ -515,24 +515,24 @@ fn compute_sum<F>(
 
 /// Estimate the error of the integration
 #[allow(dead_code)]
-fn estimate_error(_state: &mut IntegrationState) {
+fn estimate_error(state: &mut IntegrationState) {
     // Compute error estimates based on successive approximations
-    if _state.prev_estimate.is_finite() {
+    if state.prev_estimate.is_finite() {
         // Simple error based on difference between successive estimates
-        _state.error = (_state.estimate - _state.prev_estimate).abs();
+        state.error = (state.estimate - state.prev_estimate).abs();
 
         // Apply a safety factor
-        if _state.level > 2 {
-            _state.error *= 0.25; // Assume O(h^4) convergence for tanh-sinh quadrature
+        if state.level > 2 {
+            state.error *= 0.25; // Assume O(h^4) convergence for tanh-sinh quadrature
         }
     } else {
         // Can't estimate error yet
-        _state.error = f64::INFINITY;
+        state.error = f64::INFINITY;
     }
 
     // Don't let error be exactly zero (numerical issues)
-    if _state.error == 0.0 {
-        _state.error = f64::EPSILON * _state.estimate.abs().max(1.0);
+    if state.error == 0.0 {
+        state.error = f64::EPSILON * state.estimate.abs().max(1.0);
     }
 }
 

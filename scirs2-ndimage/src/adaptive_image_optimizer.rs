@@ -169,7 +169,7 @@ impl PerformancePredictionModel {
                 let error = prediction - target;
 
                 // Update weights using gradient descent
-                for (i, weight) in self.feature_weights.iter_mut().enumerate() {
+                for (i, weight) in self.featureweights.iter_mut().enumerate() {
                     *weight -= learning_rate * error * features[i];
                 }
                 self.bias -= learning_rate * error;
@@ -225,7 +225,7 @@ impl HardwareProfiler {
     }
 
     /// Estimate optimal parameters based on hardware characteristics
-    pub fn suggest_optimal_parameters(&self, data_size: usize) -> OptimalParameters {
+    pub fn suggest_optimal_parameters(&self, datasize: usize) -> OptimalParameters {
         let cache_friendly_tile_size = (self.cache_sizes[0] / 8).min(1024); // L1 cache friendly
         let parallel_threshold = data_size / self.num_cores;
 
@@ -366,7 +366,7 @@ impl RealTimeMonitor {
     }
 
     /// Start monitoring an operation
-    pub fn start_monitoring(&mut self, operation_name: String) {
+    pub fn start_monitoring(&mut self, operationname: String) {
         self.current_operation = Some(operation_name);
         self.start_time = Some(Instant::now());
         self.active = true;
@@ -392,14 +392,14 @@ impl RealTimeMonitor {
 
 impl AdaptiveAdvancedOptimizer {
     /// Create a new adaptive optimizer
-    pub fn new(_config: AdaptiveOptimizerConfig) -> Self {
+    pub fn new(config: AdaptiveOptimizerConfig) -> Self {
         Self {
             performance_history: Arc::new(RwLock::new(HashMap::new())),
             ml_predictor: Arc::new(Mutex::new(PerformancePredictionModel::new())),
             hardware_profiler: Arc::new(Mutex::new(HardwareProfiler::new())),
             parameter_controller: Arc::new(Mutex::new(ParameterController::new())),
             monitor: Arc::new(Mutex::new(RealTimeMonitor::new())),
-            _config,
+            config,
         }
     }
 

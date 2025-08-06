@@ -93,7 +93,7 @@ impl StreamingClassificationMetrics {
     }
 
     /// Updates metrics with a new prediction (binary classification)
-    pub fn update(&mut self, true_label: i32, pred_label: i32) {
+    pub fn update(&mut self, true_label: i32, predlabel: i32) {
         self.total_samples += 1;
 
         if true_label == pred_label {
@@ -111,7 +111,7 @@ impl StreamingClassificationMetrics {
     }
 
     /// Updates metrics with multiple predictions at once
-    pub fn update_batch(&mut self, true_labels: &[i32], pred_labels: &[i32]) -> Result<()> {
+    pub fn update_batch(&mut self, true_labels: &[i32], predlabels: &[i32]) -> Result<()> {
         if true_labels.len() != pred_labels.len() {
             return Err(MetricsError::InvalidInput(
                 "True and predicted _labels must have the same length".to_string(),
@@ -237,7 +237,7 @@ impl<F: Float> StreamingRegressionMetrics<F> {
     }
 
     /// Updates metrics with a new prediction
-    pub fn update(&mut self, true_value: F, pred_value: F) {
+    pub fn update(&mut self, true_value: F, predvalue: F) {
         self.total_samples += 1;
 
         let error = true_value - pred_value;
@@ -271,7 +271,7 @@ impl<F: Float> StreamingRegressionMetrics<F> {
     }
 
     /// Updates metrics with multiple predictions at once
-    pub fn update_batch(&mut self, true_values: &[F], pred_values: &[F]) -> Result<()> {
+    pub fn update_batch(&mut self, true_values: &[F], predvalues: &[F]) -> Result<()> {
         if true_values.len() != pred_values.len() {
             return Err(MetricsError::InvalidInput(
                 "True and predicted _values must have the same length".to_string(),
@@ -368,16 +368,16 @@ pub struct WindowedClassificationMetrics {
 
 impl WindowedClassificationMetrics {
     /// Creates a new windowed classification metrics calculator
-    pub fn new(_window_size: usize) -> Self {
+    pub fn new(_windowsize: usize) -> Self {
         Self {
-            _window_size,
+            window_size,
             predictions: VecDeque::with_capacity(_window_size),
             metrics: StreamingClassificationMetrics::new(),
         }
     }
 
     /// Updates metrics with a new prediction, maintaining the sliding window
-    pub fn update(&mut self, true_label: i32, pred_label: i32) {
+    pub fn update(&mut self, true_label: i32, predlabel: i32) {
         // If window is full, remove the oldest prediction
         if self.predictions.len() >= self.window_size {
             if let Some((old_true, old_pred)) = self.predictions.pop_front() {
@@ -392,7 +392,7 @@ impl WindowedClassificationMetrics {
     }
 
     /// Removes a prediction from the metrics (for sliding window)
-    fn subtract_prediction(&mut self, true_label: i32, pred_label: i32) {
+    fn subtract_prediction(&mut self, true_label: i32, predlabel: i32) {
         if self.metrics.total_samples > 0 {
             self.metrics.total_samples -= 1;
         }
@@ -473,15 +473,15 @@ pub struct WindowedRegressionMetrics<F: Float> {
 
 impl<F: Float> WindowedRegressionMetrics<F> {
     /// Creates a new windowed regression metrics calculator
-    pub fn new(_window_size: usize) -> Self {
+    pub fn new(_windowsize: usize) -> Self {
         Self {
-            _window_size,
+            window_size,
             predictions: VecDeque::with_capacity(_window_size),
         }
     }
 
     /// Updates metrics with a new prediction, maintaining the sliding window
-    pub fn update(&mut self, true_value: F, pred_value: F) {
+    pub fn update(&mut self, true_value: F, predvalue: F) {
         // If window is full, remove the oldest prediction
         if self.predictions.len() >= self.window_size {
             self.predictions.pop_front();

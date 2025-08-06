@@ -21,7 +21,7 @@ mod transform;
 
 // Re-export public items from submodules
 pub use filters::{Wavelet, WaveletFilters};
-pub use multiscale::{wavedec, waverec};
+pub use multiscale::{wavedec, waverec, wavedec_compat, waverec_compat};
 pub use transform::{dwt_decompose, dwt_reconstruct};
 
 // Export types - DecompositionResult is defined below
@@ -40,8 +40,8 @@ pub struct DecompositionResult {
 
 impl DecompositionResult {
     /// Create from wavedec result
-    pub fn from_wavedec(_coeffs: Vec<Vec<f64>>) -> Self {
-        if _coeffs.len() < 2 {
+    pub fn from_wavedec(coeffs: Vec<Vec<f64>>) -> Self {
+        if coeffs.len() < 2 {
             panic!("wavedec result must have at least 2 arrays");
         }
 

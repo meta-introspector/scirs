@@ -29,18 +29,18 @@ impl Clone for SparseCountVectorizer {
 
 impl SparseCountVectorizer {
     /// Create a new sparse count vectorizer
-    pub fn new(_binary: bool) -> Self {
+    pub fn new(binary: bool) -> Self {
         Self {
             tokenizer: Box::new(WordTokenizer::default()),
             vocabulary: Vocabulary::new(),
-            _binary,
+            binary,
         }
     }
 
     /// Create with a custom tokenizer
-    pub fn with_tokenizer(_tokenizer: Box<dyn Tokenizer + Send + Sync>, binary: bool) -> Self {
+    pub fn with_tokenizer(tokenizer: Box<dyn Tokenizer + Send + Sync>, binary: bool) -> Self {
         Self {
-            _tokenizer,
+            tokenizer,
             vocabulary: Vocabulary::new(),
             binary,
         }
@@ -127,7 +127,7 @@ impl SparseCountVectorizer {
 pub struct SparseTfidfVectorizer {
     count_vectorizer: SparseCountVectorizer,
     idf: Option<Array1<f64>>,
-    use_idf: bool,
+    useidf: bool,
     norm: Option<String>,
 }
 
@@ -137,27 +137,27 @@ impl SparseTfidfVectorizer {
         Self {
             count_vectorizer: SparseCountVectorizer::new(false),
             idf: None,
-            use_idf: true,
+            useidf: true,
             norm: Some("l2".to_string()),
         }
     }
 
     /// Create with custom settings
-    pub fn with_settings(_use_idf: bool, norm: Option<String>) -> Self {
+    pub fn with_settings(useidf: bool, norm: Option<String>) -> Self {
         Self {
             count_vectorizer: SparseCountVectorizer::new(false),
-            _idf: None,
-            _use_idf,
+            idf: None,
+            useidf,
             norm,
         }
     }
 
     /// Create with a custom tokenizer
-    pub fn with_tokenizer(_tokenizer: Box<dyn Tokenizer + Send + Sync>) -> Self {
+    pub fn with_tokenizer(tokenizer: Box<dyn Tokenizer + Send + Sync>) -> Self {
         Self {
-            count_vectorizer: SparseCountVectorizer::with_tokenizer(_tokenizer, false),
+            count_vectorizer: SparseCountVectorizer::with_tokenizer(tokenizer, false),
             idf: None,
-            use_idf: true,
+            useidf: true,
             norm: Some("l2".to_string()),
         }
     }
@@ -280,17 +280,17 @@ impl Default for SparseTfidfVectorizer {
 
 /// Compute cosine similarity between sparse vectors
 #[allow(dead_code)]
-pub fn sparse_cosine_similarity(_v1: &SparseVector, v2: &SparseVector) -> Result<f64> {
-    if _v1.size() != v2.size() {
+pub fn sparse_cosine_similarity(v1: &SparseVector, v2: &SparseVector) -> Result<f64> {
+    if v1.size() != v2.size() {
         return Err(TextError::InvalidInput(format!(
             "Vector dimensions don't match: {} vs {}",
-            _v1.size(),
+            v1.size(),
             v2.size()
         )));
     }
 
-    let dot = _v1.dot_sparse(v2)?;
-    let norm1 = _v1.norm();
+    let dot = v1.dot_sparse(v2)?;
+    let norm1 = v1.norm();
     let norm2 = v2.norm();
 
     if norm1 == 0.0 || norm2 == 0.0 {
@@ -314,12 +314,12 @@ pub struct MemoryStats {
 
 impl MemoryStats {
     /// Calculate memory statistics for a sparse matrix
-    pub fn from_sparse_matrix(_sparse: &CsrMatrix) -> Self {
-        let (n_rows, n_cols) = _sparse.shape();
+    pub fn from_sparse_matrix(sparse: &CsrMatrix) -> Self {
+        let (n_rows, n_cols) = sparse.shape();
         let dense_bytes = n_rows * n_cols * std::mem::size_of::<f64>();
-        let sparse_bytes = _sparse.memory_usage();
+        let sparse_bytes = sparse.memory_usage();
         let total_elements = n_rows * n_cols;
-        let nnz = _sparse.nnz();
+        let nnz = sparse.nnz();
 
         Self {
             sparse_bytes,

@@ -20,16 +20,16 @@ pub struct PatchExtractor {
 
 impl PatchExtractor {
     /// Create a new patch extractor
-    pub fn new(_patch_size: (usize, usize)) -> Self {
+    pub fn new(_patchsize: (usize, usize)) -> Self {
         PatchExtractor {
-            _patch_size,
+            patch_size,
             max_patches: None,
             random_state: None,
         }
     }
 
     /// Set maximum number of patches to extract
-    pub fn with_max_patches(mut self, max_patches: usize) -> Self {
+    pub fn with_max_patches(mut self, maxpatches: usize) -> Self {
         self.max_patches = Some(max_patches);
         self
     }
@@ -159,9 +159,9 @@ pub enum BlockNorm {
 
 impl HOGDescriptor {
     /// Create a new HOG descriptor
-    pub fn new(_cell_size: (usize, usize), block_size: (usize, usize), n_bins: usize) -> Self {
+    pub fn new(_cellsize: (usize, usize), block_size: (usize, usize), n_bins: usize) -> Self {
         HOGDescriptor {
-            _cell_size,
+            cell_size,
             block_size,
             n_bins,
             block_norm: BlockNorm::L2Hys,
@@ -169,7 +169,7 @@ impl HOGDescriptor {
     }
 
     /// Set block normalization method
-    pub fn with_block_norm(mut self, block_norm: BlockNorm) -> Self {
+    pub fn with_block_norm(mut self, blocknorm: BlockNorm) -> Self {
         self.block_norm = block_norm;
         self
     }
@@ -342,9 +342,9 @@ pub enum ImageNormMethod {
 
 impl ImageNormalizer {
     /// Create a new image normalizer
-    pub fn new(_method: ImageNormMethod) -> Self {
+    pub fn new(method: ImageNormMethod) -> Self {
         ImageNormalizer {
-            _method,
+            method,
             channel_stats: None,
         }
     }
@@ -449,8 +449,8 @@ impl ImageNormalizer {
 
 /// Convert RGB images to grayscale
 #[allow(dead_code)]
-pub fn rgb_to_grayscale(_images: &Array4<f64>) -> Result<Array3<f64>> {
-    let shape = _images.shape();
+pub fn rgb_to_grayscale(images: &Array4<f64>) -> Result<Array3<f64>> {
+    let shape = images.shape();
     if shape[3] != 3 {
         return Err(TransformError::InvalidInput(format!(
             "Expected 3 channels for RGB, got {}",
@@ -458,14 +458,14 @@ pub fn rgb_to_grayscale(_images: &Array4<f64>) -> Result<Array3<f64>> {
         )));
     }
 
-    let (n_samples, height, width_) = (shape[0], shape[1], shape[2], shape[3]);
+    let (n_samples, height, width) = (shape[0], shape[1], shape[2]);
     let mut grayscale = Array3::zeros((n_samples, height, width));
 
     // Use standard RGB to grayscale conversion weights
     let weights = [0.2989, 0.5870, 0.1140];
 
     par_azip!((mut gray in grayscale.outer_iter_mut(),
-               rgb in _images.outer_iter()) {
+               rgb in images.outer_iter()) {
         for i in 0..height {
             for j in 0..width {
                 gray[[i, j]] = weights[0] * rgb[[i, j, 0]]
@@ -480,9 +480,9 @@ pub fn rgb_to_grayscale(_images: &Array4<f64>) -> Result<Array3<f64>> {
 
 /// Resize images using bilinear interpolation
 #[allow(dead_code)]
-pub fn resize_images(_images: &Array4<f64>, new_size: (usize, usize)) -> Result<Array4<f64>> {
+pub fn resize_images(_images: &Array4<f64>, newsize: (usize, usize)) -> Result<Array4<f64>> {
     let (n_samples, old_h, old_w, n_channels) = {
-        let shape = _images.shape();
+        let shape = images.shape();
         (shape[0], shape[1], shape[2], shape[3])
     };
     let (new_h, new_w) = new_size;
@@ -493,7 +493,7 @@ pub fn resize_images(_images: &Array4<f64>, new_size: (usize, usize)) -> Result<
     let scale_w = old_w as f64 / new_w as f64;
 
     par_azip!((mut resized_img in resized.outer_iter_mut(),
-               original_img in _images.outer_iter()) {
+               original_img in images.outer_iter()) {
         for i in 0..new_h {
             for j in 0..new_w {
                 // Map to original coordinates

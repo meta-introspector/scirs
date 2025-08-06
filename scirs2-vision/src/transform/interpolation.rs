@@ -414,7 +414,7 @@ fn lanczos_interpolate(src: &DynamicImage, x: f64, y: f64, a: i32) -> Rgba<u8> {
 ///
 /// * Kernel as a 1D array
 #[allow(dead_code)]
-fn create_kernel(_kernel_func: fn(f64) -> f64, kernel_size: usize, scale: f64) -> Array1<f64> {
+fn create_kernel(_kernelfunc: fn(f64) -> f64, kernel_size: usize, scale: f64) -> Array1<f64> {
     let mut kernel = Array1::zeros(kernel_size);
     let radius = (kernel_size as f64 - 1.0) / 2.0;
 

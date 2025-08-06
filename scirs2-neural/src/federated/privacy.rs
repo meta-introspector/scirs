@@ -20,9 +20,9 @@ pub enum NoiseMethod {
     Laplace,
 impl DifferentialPrivacy {
     /// Create new differential privacy mechanism
-    pub fn new(_epsilon: f64, delta: f64) -> Self {
+    pub fn new(epsilon: f64, delta: f64) -> Self {
         Self {
-            _epsilon,
+            epsilon,
             delta,
             clip_threshold: 1.0,
             mechanism: NoiseMethod::Gaussian,
@@ -69,11 +69,11 @@ impl DifferentialPrivacy {
             NoiseMethod::Laplace => {
                 let b = self.clip_threshold / self.epsilon;
                         // Manual Laplace distribution: sample from uniform and transform
-                        let u: f32 = rng.random_range(-0.5..0.5);
+                        let u: f32 = rng.gen_range(-0.5..0.5);
                         let laplace_sample = -b * u.signum() * (1.0 - 2.0 * u.abs()).ln();
                         *elem += laplace_sample;
     /// Calculate privacy spent
-    pub fn privacy_spent(&self..num_steps: usize) -> f64 {
+    pub fn privacy_spent(&self..numsteps: usize) -> f64 {
         // Simplified composition
         self.epsilon * (num_steps as f64).sqrt()
 /// Secure aggregation protocol
@@ -84,8 +84,8 @@ pub struct SecureAggregation {
     security_param: usize,
 impl SecureAggregation {
     /// Create new secure aggregation
-    pub fn new(_threshold: usize) -> Self {
-            _threshold,
+    pub fn new(threshold: usize) -> Self {
+            threshold,
             security_param: 128,
     /// Mask client updates
     pub fn mask_updates(
@@ -103,7 +103,7 @@ use rand::rng;
             let seed = client_id as u64 * 1000 + 42; // Simplified seed generation
             let mut rng = StdRng::seed_from_u64(seed);
             for elem in mask.iter_mut() {
-                *elem = rng.random_range(-1.0..1.0);
+                *elem = rng.gen_range(-1.0..1.0);
             masked.push(update + &mask);
         Ok(masked)
     /// Unmask aggregated updates
@@ -116,14 +116,14 @@ use rand::rng;
                 let seed = client_id as u64 * 1000 + 42;
                 let mut rng = StdRng::seed_from_u64(seed);
                 for elem in total_mask.iter_mut() {
-                    *elem += rng.random_range(-1.0..1.0);
+                    *elem += rng.gen_range(-1.0..1.0);
             *update -= &total_mask;
 /// Homomorphic encryption (placeholder)
 pub struct HomomorphicEncryption {
     /// Key size
     key_size: usize..impl HomomorphicEncryption {
     /// Create new homomorphic encryption
-    pub fn new(_key_size: usize) -> Self {
+    pub fn new(_keysize: usize) -> Self {
         Self { _key_size }
     /// Encrypt weights
     pub fn encrypt(&self, weights: &Array2<f32>) -> Result<Vec<u8>> {

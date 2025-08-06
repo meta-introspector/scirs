@@ -91,7 +91,7 @@ where
 
     // Refine with Newton's method
     let n_i32 = i32::try_from(n)
-        .map_err(|_| SpecialError::ValueError("jn_zeros: n too large".to_string()))?;
+        .map_err(|_| SpecialError::ValueError("jnzeros: n too large".to_string()))?;
     refine_bessel_zero(beta, |x| jn(n_i32, x), |x| jn_prime(n_i32, x))
 }
 
@@ -116,7 +116,7 @@ where
 
     // Refine with Newton's method for derivative
     let n_i32 = i32::try_from(n)
-        .map_err(|_| SpecialError::ValueError("jnp_zeros: n too large".to_string()))?;
+        .map_err(|_| SpecialError::ValueError("jnpzeros: n too large".to_string()))?;
     refine_bessel_zero(beta, |x| jn_prime(n_i32, x), |x| jn_prime_prime(n, x))
 }
 
@@ -185,7 +185,7 @@ where
 
     // Refine with Newton's method
     let n_i32 = i32::try_from(n)
-        .map_err(|_| SpecialError::ValueError("yn_zeros: n too large".to_string()))?;
+        .map_err(|_| SpecialError::ValueError("ynzeros: n too large".to_string()))?;
     refine_bessel_zero(beta, |x| yn(n_i32, x), |x| yn_prime(n, x))
 }
 
@@ -412,13 +412,13 @@ where
 
 /// Refine a Bessel function zero using Newton's method
 #[allow(dead_code)]
-fn refine_bessel_zero<T, F, D>(_initial: T, f: F, df: D) -> SpecialResult<T>
+fn refine_bessel_zero<T, F, D>(initial: T, f: F, df: D) -> SpecialResult<T>
 where
     T: Float + FromPrimitive,
     F: Fn(T) -> T,
     D: Fn(T) -> T,
 {
-    let mut x = _initial;
+    let mut x = initial;
     let tol = T::from_f64(1e-12).unwrap();
     let max_iter = 20;
 

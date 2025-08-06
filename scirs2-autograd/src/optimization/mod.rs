@@ -119,17 +119,17 @@ impl<F: Float> GraphOptimizer<F> {
     }
 
     /// Create a new graph optimizer with custom configuration
-    pub fn with_config(_config: OptimizationConfig) -> Self {
+    pub fn with_config(config: OptimizationConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             _phantom: std::marker::PhantomData,
         }
     }
 
     /// Create a new graph optimizer with specified optimization level
-    pub fn with_level(_level: OptimizationLevel) -> Self {
+    pub fn with_level(level: OptimizationLevel) -> Self {
         Self {
-            config: _level.config(),
+            config: level.config(),
             _phantom: std::marker::PhantomData,
         }
     }
@@ -211,7 +211,7 @@ impl<F: Float> GraphOptimizer<F> {
     }
 
     /// Apply constant folding optimization
-    fn apply_constant_folding(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn apply_constant_folding(&self, graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         // Temporarily disabled - would be implemented with constant_folding module
         Ok(0)
     }
@@ -237,7 +237,7 @@ impl<F: Float> GraphOptimizer<F> {
     }
 
     /// Apply common subexpression elimination
-    fn apply_cse(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn apply_cse(&self, graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         // Simplified implementation - in a real optimizer, this would:
         // 1. Build a hash table of equivalent expressions
         // 2. Replace duplicate expressions with references to the first occurrence
@@ -262,7 +262,7 @@ impl<F: Float> GraphOptimizer<F> {
     }
 
     /// Apply operation fusion
-    fn apply_operation_fusion(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn apply_operation_fusion(&self, graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         // Simplified implementation - in a real optimizer, this would:
         // 1. Identify fusable operation patterns
         // 2. Replace patterns with fused operations
@@ -279,7 +279,7 @@ impl<F: Float> GraphOptimizer<F> {
     }
 
     /// Apply memory optimization
-    fn apply_memory_optimization(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn apply_memory_optimization(&self, graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         // Simplified implementation - in a real optimizer, this would:
         // 1. Analyze memory usage patterns
         // 2. Insert memory reuse opportunities
@@ -410,7 +410,7 @@ impl<F: Float> PatternMatcher<F> {
 
     /// Check if a tensor represents a constant
     #[allow(dead_code)]
-    pub(crate) fn is_constant(&self, _tensor_internal: &TensorInternal<F>) -> bool {
+    pub(crate) fn is_constant(&self, _tensorinternal: &TensorInternal<F>) -> bool {
         // Temporarily disabled - would be implemented with constant analysis
         false
     }
@@ -470,9 +470,9 @@ pub struct OptimizationPass<F: Float> {
 
 impl<F: Float> OptimizationPass<F> {
     /// Create a new optimization pass
-    pub fn new(_name: &str) -> Self {
+    pub fn new(name: &str) -> Self {
         Self {
-            name: _name.to_string(),
+            name: name.to_string(),
             _phantom: std::marker::PhantomData,
         }
     }
@@ -483,7 +483,7 @@ impl<F: Float> OptimizationPass<F> {
     }
 
     /// Run this optimization pass on a graph
-    pub fn run(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    pub fn run(&self, graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         // Each pass would implement its specific optimization logic
         Ok(0)
     }
@@ -605,12 +605,12 @@ impl<F: Float> ConstantFolder<F> {
     }
 
     /// Check if a tensor is constant
-    pub fn is_constant(&self, _tensor_id: TensorID) -> bool {
+    pub fn is_constant(&self, _tensorid: TensorID) -> bool {
         false
     }
 
     /// Get the constant value of a tensor if it's constant
-    pub fn get_constant_value(&self, _tensor_id: TensorID) -> Option<F> {
+    pub fn get_constant_value(&self, _tensorid: TensorID) -> Option<F> {
         None
     }
 

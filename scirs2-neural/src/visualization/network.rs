@@ -190,9 +190,9 @@ impl<
     > NetworkVisualizer<F>
 {
     /// Create a new network visualizer
-    pub fn new(_model: Sequential<F>, config: VisualizationConfig) -> Self {
+    pub fn new(model: Sequential<F>, config: VisualizationConfig) -> Self {
         Self {
-            _model,
+            model,
             config,
             layout_cache: None,
         }
@@ -247,7 +247,7 @@ impl<
                 "Model has no layers".to_string(),
             ));
         Ok(layer_info)
-    fn select_layout_algorithm(&self, _layer_info: &[LayerInfo]) -> LayoutAlgorithm {
+    fn select_layout_algorithm(&self, _layerinfo: &[LayerInfo]) -> LayoutAlgorithm {
         // For now, default to hierarchical layout
         // In a full implementation, this would analyze the network structure
         // and choose the most appropriate layout algorithm

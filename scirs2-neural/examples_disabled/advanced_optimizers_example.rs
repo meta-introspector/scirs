@@ -13,7 +13,7 @@ use rand::seq::SliceRandom;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Advanced Optimizers Example");
     // Initialize random number generator
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Create a synthetic binary classification dataset
     let num_samples = 1000;
     let num_features = 20;
@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a simple neural network model
     let hidden_size = 64;
     let dropout_rate = 0.2;
-    let seed_rng = SmallRng::seed_from_u64(42);
+    let seed_rng = SmallRng::from_seed([42; 32]);
     // Shared function to create identical model architectures for fair comparison
     let create_model = || -> Result<Sequential<f32>, Box<dyn std::error::Error>> {
         let mut model = Sequential::new();

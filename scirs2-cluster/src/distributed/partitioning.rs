@@ -120,7 +120,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
     }
 
     /// Calculate target sizes for each partition
-    fn calculate_partition_sizes(&self, total_size: usize) -> Result<Vec<usize>> {
+    fn calculate_partition_sizes(&self, totalsize: usize) -> Result<Vec<usize>> {
         if self.config.n_workers == 0 {
             return Err(ClusteringError::InvalidInput(
                 "Number of workers must be greater than 0".to_string(),
@@ -283,7 +283,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
     }
 
     /// Identify strata using simple K-means clustering
-    fn identify_strata(&self, data: ArrayView2<F>, n_strata: usize) -> Result<Array1<usize>> {
+    fn identify_strata(&self, data: ArrayView2<F>, nstrata: usize) -> Result<Array1<usize>> {
         let n_samples = data.nrows();
         let n_features = data.ncols();
 
@@ -597,7 +597,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
     }
 
     /// Update partitioning statistics
-    fn update_statistics(&mut self, partitions: &[DataPartition<F>], partitioning_time_ms: u64) {
+    fn update_statistics(&mut self, partitions: &[DataPartition<F>], partitioning_timems: u64) {
         self.partition_stats.partition_sizes = partitions.iter().map(|p| p.data.nrows()).collect();
         self.partition_stats.partitioning_time_ms = partitioning_time_ms;
 

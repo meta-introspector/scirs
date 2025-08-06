@@ -22,11 +22,11 @@ pub struct SimdIoProcessor;
 
 impl SimdIoProcessor {
     /// Convert f64 array to f32 using SIMD operations
-    pub fn convert_f64_to_f32(_input: &ArrayView1<f64>) -> Array1<f32> {
+    pub fn convert_f64_to_f32(input: &ArrayView1<f64>) -> Array1<f32> {
         let mut output = Array1::<f32>::zeros(_input.len());
 
         // Use parallel processing for large arrays
-        if _input.len() > 1000 {
+        if input.len() > 1000 {
             output
                 .iter_mut()
                 .zip(_input.iter())
@@ -44,12 +44,12 @@ impl SimdIoProcessor {
     }
 
     /// Normalize audio data using SIMD operations
-    pub fn normalize_audio_simd(_data: &mut ArrayViewMut1<f32>) {
+    pub fn normalize_audio_simd(data: &mut ArrayViewMut1<f32>) {
         // Find max absolute value using parallel operations
-        let max_val = if _data.len() > 1000 {
-            _data.iter().map(|&x| x.abs()).fold(0.0f32, f32::max)
+        let max_val = if data.len() > 1000 {
+            data.iter().map(|&x| x.abs()).fold(0.0f32, f32::max)
         } else {
-            _data.iter().map(|&x| x.abs()).fold(0.0f32, f32::max)
+            data.iter().map(|&x| x.abs()).fold(0.0f32, f32::max)
         };
 
         if max_val > 0.0 {
@@ -57,31 +57,31 @@ impl SimdIoProcessor {
             let scale = 1.0 / max_val;
 
             // Use parallel processing for large arrays
-            if _data.len() > 1000 {
-                _data.iter_mut().for_each(|x| *x *= scale);
+            if data.len() > 1000 {
+                data.iter_mut().for_each(|x| *x *= scale);
             } else {
-                _data.mapv_inplace(|x| x * scale);
+                data.mapv_inplace(|x| x * scale);
             }
         }
     }
 
     /// Apply gain to audio data using SIMD operations
-    pub fn apply_gain_simd(_data: &mut ArrayViewMut1<f32>, gain: f32) {
+    pub fn apply_gain_simd(data: &mut ArrayViewMut1<f32>, gain: f32) {
         // Use parallel processing for large arrays
-        if _data.len() > 1000 {
-            _data.iter_mut().for_each(|x| *x *= gain);
+        if data.len() > 1000 {
+            data.iter_mut().for_each(|x| *x *= gain);
         } else {
-            _data.mapv_inplace(|x| x * gain);
+            data.mapv_inplace(|x| x * gain);
         }
     }
 
     /// Convert integer samples to float with SIMD optimization
-    pub fn int16_to_float_simd(_input: &[i16]) -> Array1<f32> {
+    pub fn int16_to_float_simd(input: &[i16]) -> Array1<f32> {
         let mut output = Array1::<f32>::zeros(_input.len());
         let scale = 1.0 / 32768.0; // i16 max value
 
         // Use parallel processing for large arrays
-        if _input.len() > 1000 {
+        if input.len() > 1000 {
             output
                 .iter_mut()
                 .zip(_input.iter())
@@ -99,11 +99,11 @@ impl SimdIoProcessor {
     }
 
     /// Convert float samples to integer with SIMD optimization
-    pub fn float_to_int16_simd(_input: &ArrayView1<f32>) -> Vec<i16> {
+    pub fn float_to_int16_simd(input: &ArrayView1<f32>) -> Vec<i16> {
         let scale = 32767.0;
 
         // Use parallel processing for large arrays
-        if _input.len() > 1000 {
+        if input.len() > 1000 {
             _input
                 .iter()
                 .map(|&sample| {
@@ -126,33 +126,33 @@ impl SimdIoProcessor {
     }
 
     /// Byte-swap array for endianness conversion using SIMD
-    pub fn byteswap_f32_simd(_data: &mut [f32]) {
+    pub fn byteswap_f32_simd(data: &mut [f32]) {
         // Process multiple elements at once
         let chunk_size = 8;
-        let full_chunks = _data.len() / chunk_size;
+        let full_chunks = data.len() / chunk_size;
 
         for i in 0..full_chunks {
             let start = i * chunk_size;
             let end = start + chunk_size;
 
-            for item in _data.iter_mut().take(end).skip(start) {
+            for item in data.iter_mut().take(end).skip(start) {
                 *item = f32::from_bits(item.to_bits().swap_bytes());
             }
         }
 
         // Handle remainder
-        for item in _data.iter_mut().skip(full_chunks * chunk_size) {
+        for item in data.iter_mut().skip(full_chunks * chunk_size) {
             *item = f32::from_bits(item.to_bits().swap_bytes());
         }
     }
 
     /// Calculate checksums using SIMD operations
-    pub fn checksum_simd(_data: &[u8]) -> u32 {
+    pub fn checksum_simd(data: &[u8]) -> u32 {
         let mut sum = 0u32;
         let chunk_size = 64; // Process 64 bytes at a time
 
         // Process full chunks
-        let chunks = _data.chunks_exact(chunk_size);
+        let chunks = data.chunks_exact(chunk_size);
         let remainder = chunks.remainder();
 
         for chunk in chunks {
@@ -183,12 +183,12 @@ pub mod csv_simd {
     use super::*;
 
     /// Find delimiters in a byte buffer using SIMD
-    pub fn find_delimiters_simd(_buffer: &[u8], delimiter: u8) -> Vec<usize> {
+    pub fn find_delimiters_simd(buffer: &[u8], delimiter: u8) -> Vec<usize> {
         let mut positions = Vec::new();
         let chunk_size = 64;
 
         // Process in chunks
-        let chunks = _buffer.chunks_exact(chunk_size);
+        let chunks = buffer.chunks_exact(chunk_size);
         let mut offset = 0;
 
         for chunk in chunks {
@@ -202,9 +202,9 @@ pub mod csv_simd {
         }
 
         // Handle remainder
-        let remainder = _buffer.len() % chunk_size;
-        let start = _buffer.len() - remainder;
-        for (i, &byte) in _buffer[start..].iter().enumerate() {
+        let remainder = buffer.len() % chunk_size;
+        let start = buffer.len() - remainder;
+        for (i, &byte) in buffer[start..].iter().enumerate() {
             if byte == delimiter {
                 positions.push(start + i);
             }
@@ -214,7 +214,7 @@ pub mod csv_simd {
     }
 
     /// Parse floating-point numbers from CSV using SIMD
-    pub fn parse_floats_simd(_fields: &[&str]) -> Result<Vec<f64>> {
+    pub fn parse_floats_simd(fields: &[&str]) -> Result<Vec<f64>> {
         let mut results = Vec::with_capacity(_fields.len());
 
         // Process multiple _fields in parallel conceptually
@@ -234,47 +234,47 @@ pub mod compression_simd {
     use super::*;
 
     /// Delta encoding using SIMD operations
-    pub fn delta_encode_simd(_data: &ArrayView1<f64>) -> Array1<f64> {
-        if _data.is_empty() {
+    pub fn delta_encode_simd(data: &ArrayView1<f64>) -> Array1<f64> {
+        if data.is_empty() {
             return Array1::zeros(0);
         }
 
         let mut result = Array1::zeros(_data.len());
-        result[0] = _data[0];
+        result[0] = data[0];
 
         // Process differences
         for i in 1.._data.len() {
-            result[i] = _data[i] - _data[i - 1];
+            result[i] = data[i] - data[i - 1];
         }
 
         result
     }
 
     /// Delta decoding using SIMD operations
-    pub fn delta_decode_simd(_data: &ArrayView1<f64>) -> Array1<f64> {
-        if _data.is_empty() {
+    pub fn delta_decode_simd(data: &ArrayView1<f64>) -> Array1<f64> {
+        if data.is_empty() {
             return Array1::zeros(0);
         }
 
         let mut result = Array1::zeros(_data.len());
-        result[0] = _data[0];
+        result[0] = data[0];
 
         // Cumulative sum
         for i in 1.._data.len() {
-            result[i] = result[i - 1] + _data[i];
+            result[i] = result[i - 1] + data[i];
         }
 
         result
     }
 
     /// Run-length encoding for sparse data
-    pub fn rle_encode_simd(_data: &[u8]) -> Vec<(u8, usize)> {
-        if _data.is_empty() {
+    pub fn rle_encode_simd(data: &[u8]) -> Vec<(u8, usize)> {
+        if data.is_empty() {
             return Vec::new();
         }
 
         let mut runs = Vec::new();
-        let mut current_val = _data[0];
+        let mut current_val = data[0];
         let mut count = 1;
 
         for &val in &_data[1..] {
@@ -384,7 +384,7 @@ pub mod matrix_simd {
 
                 for _i in (start_i..end_i).step_by(half_block) {
                     for _j in (start_j..end_j).step_by(half_block) {
-                        self.transpose_block(input, output, _i, _j, half_block, rows, cols);
+                        self.transpose_block(input, output, i, j, half_block, rows, cols);
                     }
                 }
             }
@@ -414,8 +414,8 @@ pub mod matrix_simd {
                         && _i < output.ncols()
                     {
                         unsafe {
-                            let src_ptr = input.as_ptr().add(_i * cols + _j);
-                            let dst_ptr = output.as_ptr().add(_j * rows + _i) as *mut T;
+                            let src_ptr = input.as_ptr().add(_i * cols + j);
+                            let dst_ptr = output.as_ptr().add(_j * rows + i) as *mut T;
                             *dst_ptr = *src_ptr;
                         }
                     }
@@ -497,7 +497,7 @@ pub mod matrix_simd {
         }
 
         /// Calculate optimal block sizes for GEMM based on cache hierarchy
-        fn calculate_gemm_block_sizes(&self, element_size: usize) -> (usize, usize, usize) {
+        fn calculate_gemm_block_sizes(&self, elementsize: usize) -> (usize, usize, usize) {
             // MC: Panel height should fit in L2 cache
             let mc_elements = self.l2_cache_size / (2 * element_size);
             let mc = (mc_elements as f64).sqrt() as usize;
@@ -555,7 +555,7 @@ pub mod matrix_simd {
         }
 
         /// Calculate optimal block size based on cache parameters
-        fn calculate_optimal_block_size(&self, element_size: usize) -> usize {
+        fn calculate_optimal_block_size(&self, elementsize: usize) -> usize {
             // Target L2 cache with some headroom for working set
             let target_working_set = self.l2_cache_size / 2;
             let elements_per_block = target_working_set / element_size;
@@ -693,24 +693,24 @@ pub mod stats_simd {
     use std::f64;
 
     /// Calculate mean using SIMD operations
-    pub fn mean_simd(_data: &ArrayView1<f64>) -> f64 {
-        if _data.is_empty() {
+    pub fn mean_simd(data: &ArrayView1<f64>) -> f64 {
+        if data.is_empty() {
             return 0.0;
         }
 
-        let sum = _data.as_slice().unwrap().iter().sum::<f64>();
+        let sum = data.as_slice().unwrap().iter().sum::<f64>();
 
-        sum / _data.len() as f64
+        sum / data.len() as f64
     }
 
     /// Calculate variance using SIMD operations
-    pub fn variance_simd(_data: &ArrayView1<f64>) -> f64 {
-        if _data.len() < 2 {
+    pub fn variance_simd(data: &ArrayView1<f64>) -> f64 {
+        if data.len() < 2 {
             return 0.0;
         }
 
         let mean = mean_simd(_data);
-        let slice = _data.as_slice().unwrap();
+        let slice = data.as_slice().unwrap();
 
         // Use parallel processing for variance calculation
         let sum_sq_diff: f64 = slice.iter().map(|&x| (x - mean).powi(2)).sum();
@@ -719,12 +719,12 @@ pub mod stats_simd {
     }
 
     /// Find min/max using SIMD operations
-    pub fn minmax_simd(_data: &ArrayView1<f64>) -> (f64, f64) {
-        if _data.is_empty() {
+    pub fn minmax_simd(data: &ArrayView1<f64>) -> (f64, f64) {
+        if data.is_empty() {
             return (f64::NAN, f64::NAN);
         }
 
-        let slice = _data.as_slice().unwrap();
+        let slice = data.as_slice().unwrap();
 
         let (min, max) = slice
             .iter()
@@ -736,12 +736,12 @@ pub mod stats_simd {
     }
 
     /// Quantile calculation using SIMD-accelerated sorting
-    pub fn quantile_simd(_data: &ArrayView1<f64>, q: f64) -> f64 {
-        if _data.is_empty() || !(0.0..=1.0).contains(&q) {
+    pub fn quantile_simd(data: &ArrayView1<f64>, q: f64) -> f64 {
+        if data.is_empty() || !(0.0..=1.0).contains(&q) {
             return f64::NAN;
         }
 
-        let mut sorted_data = _data.to_vec();
+        let mut sorted_data = data.to_vec();
         sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         let index = q * (sorted_data.len() - 1) as f64;
@@ -780,30 +780,30 @@ pub mod binary_simd {
     }
 
     /// XOR operation for encryption/decryption using SIMD
-    pub fn xor_simd(_data: &mut [u8], key: &[u8]) {
+    pub fn xor_simd(data: &mut [u8], key: &[u8]) {
         let key_len = key.len();
 
         // Process in parallel chunks
-        _data.iter_mut().enumerate().for_each(|(i, byte)| {
+        data.iter_mut().enumerate().for_each(|(i, byte)| {
             *byte ^= key[i % key_len];
         });
     }
 
     /// Count set bits using SIMD operations
-    pub fn popcount_simd(_data: &[u8]) -> usize {
-        _data.iter().map(|&byte| byte.count_ones() as usize).sum()
+    pub fn popcount_simd(data: &[u8]) -> usize {
+        data.iter().map(|&byte| byte.count_ones() as usize).sum()
     }
 
     /// Find pattern in binary data using SIMD
-    pub fn find_pattern_simd(_haystack: &[u8], needle: &[u8]) -> Vec<usize> {
-        if needle.is_empty() || _haystack.len() < needle.len() {
+    pub fn find_pattern_simd(haystack: &[u8], needle: &[u8]) -> Vec<usize> {
+        if needle.is_empty() || haystack.len() < needle.len() {
             return Vec::new();
         }
 
         let mut positions = Vec::new();
         let chunk_size = 1024;
 
-        for (chunk_start, chunk) in _haystack.chunks(chunk_size).enumerate() {
+        for (chunk_start, chunk) in haystack.chunks(chunk_size).enumerate() {
             for i in 0..=(chunk.len().saturating_sub(needle.len())) {
                 if chunk[i..].starts_with(needle) {
                     positions.push(chunk_start * chunk_size + i);
@@ -843,14 +843,14 @@ impl AdvancedSimdProcessor {
     }
 
     /// Detect optimal vector width for the current platform
-    fn detect_optimal_vector_width(_capabilities: &PlatformCapabilities) -> usize {
+    fn detect_optimal_vector_width(capabilities: &PlatformCapabilities) -> usize {
         #[cfg(target_arch = "x86_64")]
         {
-            if _capabilities.avx512_available {
+            if capabilities.avx512_available {
                 64 // AVX-512: 512 bits = 64 bytes
-            } else if _capabilities.avx2_available {
+            } else if capabilities.avx2_available {
                 32 // AVX2: 256 bits = 32 bytes
-            } else if _capabilities.simd_available {
+            } else if capabilities.simd_available {
                 16 // SSE: 128 bits = 16 bytes
             } else {
                 8 // Scalar fallback
@@ -858,7 +858,7 @@ impl AdvancedSimdProcessor {
         }
         #[cfg(target_arch = "aarch64")]
         {
-            if _capabilities.neon_available {
+            if capabilities.neon_available {
                 16 // NEON: 128 bits = 16 bytes
             } else {
                 8 // Scalar fallback
@@ -871,13 +871,13 @@ impl AdvancedSimdProcessor {
     }
 
     /// Calculate optimal chunk size based on vector width and cache hierarchy
-    fn calculate_optimal_chunk_size(_vector_width: usize) -> usize {
+    fn calculate_optimal_chunk_size(_vectorwidth: usize) -> usize {
         // Target L1 cache size (32KB typical) with some headroom
         let target_size = 24 * 1024;
-        let chunk_size = target_size / _vector_width;
+        let chunk_size = target_size / vector_width;
 
         // Ensure alignment to vector boundaries
-        (chunk_size / _vector_width) * _vector_width
+        (chunk_size / vector_width) * _vector_width
     }
 
     /// Optimized SIMD data type conversion with auto-vectorization
@@ -1084,7 +1084,7 @@ impl AdvancedSimdProcessor {
     }
 
     /// Calculate optimal block size for transpose based on data type and cache
-    fn calculate_transpose_block_size(&self, element_size: usize) -> usize {
+    fn calculate_transpose_block_size(&self, elementsize: usize) -> usize {
         // Target L2 cache _size (256KB typical) with some headroom
         let target_cache_size = 128 * 1024;
         let elements_per_cache_line = 64 / element_size; // Assume 64-byte cache lines
@@ -1151,8 +1151,8 @@ impl AdvancedSimdProcessor {
                 }
 
                 // Load, copy, and store 32 bytes
-                let data = _mm256_loadu_si256(src.as_ptr().add(i) as *const __m256i);
-                _mm256_storeu_si256(dst.as_mut_ptr().add(i) as *mut __m256i, data);
+                let data = _mm256_loadu_si256(src.as_ptr().add(i) as *const _m256i);
+                _mm256_storeu_si256(dst.as_mut_ptr().add(i) as *mut _m256i, data);
 
                 i += 32;
             }
@@ -1179,8 +1179,8 @@ impl AdvancedSimdProcessor {
                 }
 
                 // Load, copy, and store 16 bytes
-                let data = _mm_loadu_si128(src.as_ptr().add(i) as *const __m128i);
-                _mm_storeu_si128(dst.as_mut_ptr().add(i) as *mut __m128i, data);
+                let data = _mm_loadu_si128(src.as_ptr().add(i) as *const _m128i);
+                _mm_storeu_si128(dst.as_mut_ptr().add(i) as *mut _m128i, data);
 
                 i += 16;
             }
@@ -1369,7 +1369,7 @@ mod tests {
     #[test]
     fn test_simd_matrix_transpose() {
         let processor = AdvancedSimdProcessor::new();
-        let input = Array2::fromshape_fn((100, 80), |(i, j)| (i * 80 + j) as f64);
+        let input = Array2::from_shape_fn((100, 80), |(i, j)| (i * 80 + j) as f64);
         let result = processor.transpose_matrix_simd(&input.view());
 
         assert_eq!(result.dim(), (80, 100));
@@ -1392,7 +1392,7 @@ mod tests {
         let processor = matrix_simd::CacheOptimizedMatrixProcessor::new();
 
         // Test optimized transpose
-        let input = Array2::fromshape_fn((64, 48), |(i, j)| (i * 48 + j) as f64);
+        let input = Array2::from_shape_fn((64, 48), |(i, j)| (i * 48 + j) as f64);
         let result = processor.transpose_advanced_fast(&input.view());
 
         assert_eq!(result.dim(), (48, 64));
@@ -1404,8 +1404,8 @@ mod tests {
     fn test_blocked_matrix_multiply() {
         let processor = matrix_simd::CacheOptimizedMatrixProcessor::new();
 
-        let a = Array2::fromshape_fn((32, 24), |(i, j)| (i + j) as f64);
-        let b = Array2::fromshape_fn((24, 16), |(i, j)| (i * j + 1) as f64);
+        let a = Array2::from_shape_fn((32, 24), |(i, j)| (i + j) as f64);
+        let b = Array2::from_shape_fn((24, 16), |(i, j)| (i * j + 1) as f64);
 
         let result = processor
             .matrix_multiply_blocked(&a.view(), &b.view())
@@ -1421,8 +1421,8 @@ mod tests {
     fn test_matrix_vector_multiply_simd() {
         let processor = matrix_simd::CacheOptimizedMatrixProcessor::new();
 
-        let matrix = Array2::fromshape_fn((10, 8), |(i, j)| (i + j + 1) as f64);
-        let vector = Array1::fromshape_fn(8, |i| (i + 1) as f64);
+        let matrix = Array2::from_shape_fn((10, 8), |(i, j)| (i + j + 1) as f64);
+        let vector = Array1::from_shape_fn(8, |i| (i + 1) as f64);
 
         let result = processor
             .matrix_vector_multiply_simd(&matrix.view(), &vector.view())

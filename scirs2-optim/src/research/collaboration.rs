@@ -929,7 +929,7 @@ pub struct BackupSettings {
 
 impl CollaborativeWorkspace {
     /// Create a new collaborative workspace
-    pub fn new(_name: &str, owner: UserInfo) -> Self {
+    pub fn new(name: &str, owner: UserInfo) -> Self {
         let now = Utc::now();
         let workspace_id = uuid::Uuid::new_v4().to_string();
         let owner_id = uuid::Uuid::new_v4().to_string();
@@ -952,7 +952,7 @@ impl CollaborativeWorkspace {
         };
         
         Self {
-            id: workspace_id, name: _name.to_string(),
+            id: workspace_id, name: name.to_string(),
             members: vec![owner_member],
             documents: Vec::new(),
             channels: Vec::new(),
@@ -994,7 +994,7 @@ impl CollaborativeWorkspace {
     }
     
     /// Create a shared document
-    pub fn create_document(&mut self, name: &str, document_type: DocumentType, owner_id: &str) -> Result<String> {
+    pub fn create_document(&mut self, name: &str, document_type: DocumentType, ownerid: &str) -> Result<String> {
         if !self.has_permission(owner_id, &Permission::Write) {
             return Err(OptimError::AccessDenied("Insufficient permissions to create document".to_string()));
         }
@@ -1039,7 +1039,7 @@ impl CollaborativeWorkspace {
     }
     
     /// Create a communication channel
-    pub fn create_channel(&mut self, name: &str, channel_type: ChannelType, creator_id: &str) -> Result<String> {
+    pub fn create_channel(&mut self, name: &str, channel_type: ChannelType, creatorid: &str) -> Result<String> {
         let channel_id = uuid::Uuid::new_v4().to_string();
         let channel = CommunicationChannel {
             _id: channel_id.clone(),
@@ -1057,7 +1057,7 @@ impl CollaborativeWorkspace {
     }
     
     /// Create a task
-    pub fn create_task(&mut self, title: &str, task_type: TaskType, creator_id: &str) -> Result<String> {
+    pub fn create_task(&mut self, title: &str, task_type: TaskType, creatorid: &str) -> Result<String> {
         let task_id = uuid::Uuid::new_v4().to_string();
         let task = Task {
             _id: task_id.clone(),
@@ -1092,7 +1092,7 @@ impl CollaborativeWorkspace {
     }
     
     /// Check if a user has a specific permission
-    pub fn has_permission(&self, user_id: &str, permission: &Permission) -> bool {
+    pub fn has_permission(&self, userid: &str, permission: &Permission) -> bool {
         if let Some(member) = self.members.iter().find(|m| m._id == user_id) {
             member.permissions.contains(permission)
         } else {
@@ -1101,7 +1101,7 @@ impl CollaborativeWorkspace {
     }
     
     /// Log an activity
-    pub fn log_activity(&mut self, user_id: &str, activity_type: ActivityType, description: String, resources: Vec<String>) {
+    pub fn log_activity(&mut self, user_id: &str, activitytype: ActivityType, description: String, resources: Vec<String>) {
         let activity = Activity {
             _id: uuid::Uuid::new_v4().to_string(),
             user_id: user_id.to_string(),

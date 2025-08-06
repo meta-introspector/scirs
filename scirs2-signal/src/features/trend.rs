@@ -31,7 +31,7 @@ pub fn extract_trend_features(
 
     // Estimate non-linearity by calculating the ratio of variance
     // explained by quadratic fit vs. linear fit
-    let (__, r_squared_quad) = quadratic_regression(&x, signal);
+    let (_, _, r_squared_quad) = quadratic_regression(&x, signal);
 
     if r_squared < 1.0 {
         // Non-linearity score is how much better the quadratic fit is

@@ -138,8 +138,8 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> P
             fp: 0,
             threshold: F::from(0.5).unwrap(),
     /// Create a new precision metric with a custom threshold
-    pub fn with_threshold(_threshold: F) -> Self {
-            _threshold,
+    pub fn with_threshold(threshold: F) -> Self {
+            threshold,
         // Handle binary classification first
         if predictions.shape()[predictions.ndim() - 1] == 1 || predictions.ndim() == 1 {
             let preds = predictions

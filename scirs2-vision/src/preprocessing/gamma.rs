@@ -28,7 +28,7 @@ use image::{DynamicImage, GrayImage, Luma};
 /// let corrected = gamma_correction(&img, 2.2).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn gamma_correction(_img: &DynamicImage, gamma: f32) -> Result<DynamicImage> {
+pub fn gamma_correction(img: &DynamicImage, gamma: f32) -> Result<DynamicImage> {
     if gamma <= 0.0 {
         return Err(VisionError::InvalidParameter(
             "Gamma must be positive".to_string(),
@@ -54,7 +54,7 @@ pub fn gamma_correction(_img: &DynamicImage, gamma: f32) -> Result<DynamicImage>
         }
         _ => {
             // For color images, apply gamma to each channel
-            let rgb = _img.to_rgb8();
+            let rgb = img.to_rgb8();
             let mut result = image::RgbImage::new(rgb.width(), rgb.height());
 
             for (x, y, pixel) in rgb.enumerate_pixels() {
@@ -87,7 +87,7 @@ pub fn gamma_correction(_img: &DynamicImage, gamma: f32) -> Result<DynamicImage>
 ///
 /// * Result containing the auto gamma-corrected image
 #[allow(dead_code)]
-pub fn auto_gamma_correction(_img: &DynamicImage, target_brightness: f32) -> Result<DynamicImage> {
+pub fn auto_gamma_correction(_img: &DynamicImage, targetbrightness: f32) -> Result<DynamicImage> {
     if target_brightness <= 0.0 || target_brightness >= 1.0 {
         return Err(VisionError::InvalidParameter(
             "Target _brightness must be between 0.0 and 1.0".to_string(),
@@ -95,7 +95,7 @@ pub fn auto_gamma_correction(_img: &DynamicImage, target_brightness: f32) -> Res
     }
 
     // Calculate current mean _brightness
-    let gray = _img.to_luma8();
+    let gray = img.to_luma8();
     let mut sum = 0u64;
     for pixel in gray.pixels() {
         sum += pixel[0] as u64;

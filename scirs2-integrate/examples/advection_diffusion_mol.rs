@@ -77,7 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         bcs,
         Some(options),
     )?
-    .with_advection(move |_x: f64, _t: f64, _u: f64| -> f64 {
+    .with_advection(move |_x: f64, _t: f64, u: f64| -> f64 {
         velocity // Advection velocity (positive = right to left)
     });
 

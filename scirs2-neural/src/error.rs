@@ -94,14 +94,14 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub struct DummyGpuBackend;
 // Implement conversion from std::io::Error to NeuralError
 impl From<std::io::Error> for NeuralError {
-    fn from(_error: std::io::Error) -> Self {
-        NeuralError::IOError(_error.to_string())
+    fn from(error: std::io::Error) -> Self {
+        NeuralError::IOError(error.to_string())
     }
 }
 
 // Implement conversion from ndarray::ShapeError to NeuralError
 impl From<ndarray::ShapeError> for NeuralError {
-    fn from(_error: ndarray::ShapeError) -> Self {
-        NeuralError::ShapeMismatch(format!("Shape _error: {_error}"))
+    fn from(error: ndarray::ShapeError) -> Self {
+        NeuralError::ShapeMismatch(format!("Shape error: {error}"))
     }
 }

@@ -479,7 +479,7 @@ where
 }
 
 #[allow(dead_code)]
-fn is_criterion_better<F>(_new_value: F, old_value: F, criterion: StepwiseCriterion) -> bool
+fn is_criterion_better<F>(_new_value: F, oldvalue: F, criterion: StepwiseCriterion) -> bool
 where
     F: Float + std::fmt::Display,
 {

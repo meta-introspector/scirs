@@ -73,25 +73,25 @@ where
 /// assert_eq!(c.shape(), &[4, 2]);
 /// ```
 #[allow(dead_code)]
-pub fn stack<D, T>(_arrays: &[ArrayView<T, D>], axis: Axis) -> Result<Array<T, D>, &'static str>
+pub fn stack<D, T>(arrays: &[ArrayView<T, D>], axis: Axis) -> Result<Array<T, D>, &'static str>
 where
     D: Dimension,
     T: Clone + Default,
 {
-    if _arrays.is_empty() {
+    if arrays.is_empty() {
         return Err("No _arrays provided for stacking");
     }
 
     // Validate that all _arrays have the same shape
-    let firstshape = _arrays[0].shape();
-    for array in _arrays.iter().skip(1) {
+    let firstshape = arrays[0].shape();
+    for array in arrays.iter().skip(1) {
         if array.shape() != firstshape {
             return Err("All _arrays must have the same shape for stacking");
         }
     }
 
     // Calculate the new shape
-    let mut newshape = _arrays[0].raw_dim();
+    let mut newshape = arrays[0].raw_dim();
     let axis_idx = axis.index();
 
     if axis_idx >= newshape.ndim() {
@@ -99,20 +99,20 @@ where
     }
 
     // Update the size of the specified axis
-    newshape[axis_idx] = newshape[axis_idx] * _arrays.len();
+    newshape[axis_idx] = newshape[axis_idx] * arrays.len();
 
     // Create a new array to hold the stacked result
     let mut result = Array::default(newshape);
 
     // Copy data from the input _arrays to the result
-    let axis_stride = _arrays[0].len_of(axis);
+    let axis_stride = arrays[0].len_of(axis);
 
     // This simplified implementation only supports 2D _arrays
-    if _arrays[0].ndim() != 2 {
+    if arrays[0].ndim() != 2 {
         return Err("This simplified implementation only supports 2D _arrays");
     }
 
-    for (i, array) in _arrays.iter().enumerate() {
+    for (i, array) in arrays.iter().enumerate() {
         let start = 0 * axis_stride;
 
         if axis_idx == 0 {
@@ -165,7 +165,7 @@ where
     D: Dimension,
     T: Clone,
 {
-    if axis1 >= _array.ndim() || axis2 >= _array.ndim() {
+    if axis1 >= array.ndim() || axis2 >= array.ndim() {
         return Err("Axis indices out of bounds");
     }
 
@@ -175,7 +175,7 @@ where
 
     // Apply the permutation using ndarray's permuted method
     // This creates a view with permuted dimensions
-    let transposed_view = _array.permuted_axes(permutation);
+    let transposed_view = array.permuted_axes(permutation);
 
     // Convert to owned _array for consistency with other functions
     Ok(transposed_view.to_owned())

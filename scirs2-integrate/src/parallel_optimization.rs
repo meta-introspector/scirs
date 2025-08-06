@@ -260,9 +260,9 @@ pub struct CachePerformanceMetrics {
 
 impl ParallelOptimizer {
     /// Create new parallel optimizer
-    pub fn new(_num_threads: usize) -> Self {
+    pub fn new(_numthreads: usize) -> Self {
         Self {
-            num_threads: _num_threads,
+            num_threads: _numthreads,
             thread_pool: None,
             numa_info: NumaTopology::detect(),
             load_balancer: LoadBalancingStrategy::Adaptive,
@@ -574,7 +574,7 @@ impl Default for WorkStealingConfig {
 
 impl ThreadPool {
     /// Create new thread pool
-    pub fn new(num_threads: usize, _config: &WorkStealingConfig) -> IntegrateResult<Self> {
+    pub fn new(num_threads: usize, config: &WorkStealingConfig) -> IntegrateResult<Self> {
         let task_queue = Arc::new(Mutex::new(TaskQueue {
             global_tasks: Vec::new(),
             pending_tasks: 0,

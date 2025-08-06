@@ -222,7 +222,7 @@ impl IrregularGrid {
     }
 
     /// Generate ghost point values based on boundary conditions
-    pub fn update_ghost_points(&mut self, _solution: &Array1<f64>) -> PDEResult<()> {
+    pub fn update_ghost_points(&mut self, solution: &Array1<f64>) -> PDEResult<()> {
         for ((i, j), bc) in &self.boundary_conditions {
             let boundary_point = &self.points[[*j, *i]];
 
@@ -240,7 +240,7 @@ impl IrregularGrid {
                             boundary_point,
                             ghost_point,
                             bc,
-                            _solution,
+                            solution,
                             (di, dj),
                         )?;
 
@@ -477,14 +477,14 @@ impl IrregularGrid {
     }
 
     /// Extract solution values for interior and boundary points
-    pub fn extract_domain_solution(&self, _full_solution: &Array1<f64>) -> Array2<f64> {
+    pub fn extract_domain_solution(&self, _fullsolution: &Array1<f64>) -> Array2<f64> {
         let mut domain_solution = Array2::from_elem((self.ny, self.nx), f64::NAN);
 
         for j in 0..self.ny {
             for i in 0..self.nx {
                 let point = &self.points[[j, i]];
                 if point.solution_index >= 0 {
-                    domain_solution[[j, i]] = _full_solution[point.solution_index as usize];
+                    domain_solution[[j, i]] = _fullsolution[point.solution_index as usize];
                 }
             }
         }
@@ -501,14 +501,14 @@ impl IrregularGrid {
     ) -> PDEResult<Array1<f64>> {
         let n_interior = self.count_interior_points();
 
-        // Use initial _guess or zero vector
-        let mut solution = if let Some(_guess) = initial_guess {
-            if _guess.len() != n_interior {
+        // Use initial guess or zero vector
+        let mut solution = if let Some(guess) = initial_guess {
+            if guess.len() != n_interior {
                 return Err(PDEError::ComputationError(
-                    "Initial _guess size doesn't match number of domain points".to_string(),
+                    "Initial guess size doesn't match number of domain points".to_string(),
                 ));
             }
-            _guess.clone()
+            guess.clone()
         } else {
             Array1::zeros(n_interior)
         };
@@ -539,14 +539,14 @@ impl IrregularGrid {
     ) -> PDEResult<Array1<f64>> {
         let n_interior = self.count_interior_points();
 
-        // Use initial _guess or zero vector
-        let mut solution = if let Some(_guess) = initial_guess {
-            if _guess.len() != n_interior {
+        // Use initial guess or zero vector
+        let mut solution = if let Some(guess) = initial_guess {
+            if guess.len() != n_interior {
                 return Err(PDEError::ComputationError(
-                    "Initial _guess size doesn't match number of domain points".to_string(),
+                    "Initial guess size doesn't match number of domain points".to_string(),
                 ));
             }
-            _guess.clone()
+            guess.clone()
         } else {
             Array1::zeros(n_interior)
         };
@@ -619,7 +619,7 @@ impl IrregularStencils {
         match derivative_order {
             1 => {
                 // First derivative: use forward/backward differences based on available neighbors
-                for (neighbor, _distance) in neighbor_points.iter() {
+                for (neighbor, distance) in neighbor_points.iter() {
                     let (nx, ny) = neighbor.coords;
                     let dx = nx - cx;
                     let dy = ny - cy;
@@ -718,7 +718,7 @@ impl IrregularStencils {
         let mut constraint_matrix = Array2::<f64>::zeros((n, n));
         let mut rhs = Array1::<f64>::zeros(n);
 
-        for (i, &(pos, _value)) in neighbors.iter().enumerate() {
+        for (i, &(pos, value)) in neighbors.iter().enumerate() {
             let (x, y) = pos;
             let dx = x - cx;
             let dy = y - cy;
@@ -1010,7 +1010,7 @@ impl ImmersedBoundary {
     }
 
     /// Find the closest point on the boundary curve to a given point
-    fn find_closest_boundary_point(&self, _px: f64, py: f64) -> PDEResult<(f64, f64)> {
+    fn find_closest_boundary_point(&self, px: f64, py: f64) -> PDEResult<(f64, f64)> {
         // Use a simple search along the parameterized boundary curve
         let mut min_distance = f64::INFINITY;
         let mut closest_point = (0.0, 0.0);
@@ -1021,7 +1021,7 @@ impl ImmersedBoundary {
             let t = i as f64 / (num_samples - 1) as f64; // Parameter from 0 to 1
             let (bx, by) = (self.boundary_curve)(t);
 
-            let distance = ((bx - _px).powi(2) + (by - py).powi(2)).sqrt();
+            let distance = ((bx - px).powi(2) + (by - py).powi(2)).sqrt();
             if distance < min_distance {
                 min_distance = distance;
                 closest_point = (bx, by);

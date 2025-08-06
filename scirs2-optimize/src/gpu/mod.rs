@@ -92,12 +92,12 @@ pub struct GpuOptimizationContext {
 
 impl GpuOptimizationContext {
     /// Create a new GPU optimization context
-    pub fn new(_config: GpuOptimizationConfig) -> ScirsResult<Self> {
+    pub fn new(config: GpuOptimizationConfig) -> ScirsResult<Self> {
         let context = Arc::new(_config.context.clone());
         let memory_pool = memory_management::GpuMemoryPool::new_stub();
 
         Ok(Self {
-            config: _config,
+            config: config,
             context,
             memory_pool,
         })
@@ -137,7 +137,7 @@ impl GpuOptimizationContext {
     }
 
     /// Transfer data from GPU to CPU using scirs2-core GPU abstractions
-    pub fn transfer_from_gpu<T>(&self, gpu_data: &OptimGpuArray<T>) -> ScirsResult<Array2<T>>
+    pub fn transfer_from_gpu<T>(&self, gpudata: &OptimGpuArray<T>) -> ScirsResult<Array2<T>>
     where
         T: Clone + Send + Sync + Default + 'static + scirs2_core::GpuDataType,
     {
@@ -163,7 +163,7 @@ impl GpuOptimizationContext {
     }
 
     /// Download array from GPU (alias for transfer_from_gpu)
-    pub fn download_array<T>(&self, gpu_data: &OptimGpuArray<T>) -> ScirsResult<Array2<T>>
+    pub fn download_array<T>(&self, gpudata: &OptimGpuArray<T>) -> ScirsResult<Array2<T>>
     where
         T: Clone + Send + Sync + Default + 'static + scirs2_core::GpuDataType,
     {
@@ -277,13 +277,13 @@ pub mod algorithms {
         }
 
         /// Set mutation scale factor
-        pub fn with_f_scale(mut self, f_scale: f64) -> Self {
+        pub fn with_f_scale(mut self, fscale: f64) -> Self {
             self.f_scale = f_scale;
             self
         }
 
         /// Set crossover rate
-        pub fn with_crossover_rate(mut self, crossover_rate: f64) -> Self {
+        pub fn with_crossover_rate(mut self, crossoverrate: f64) -> Self {
             self.crossover_rate = crossover_rate;
             self
         }
@@ -465,9 +465,9 @@ pub mod algorithms {
 
     impl GpuParticleSwarm {
         /// Create a new GPU-accelerated particle swarm optimizer
-        pub fn new(_context: GpuOptimizationContext, swarm_size: usize, max_nit: usize) -> Self {
+        pub fn new(_context: GpuOptimizationContext, swarm_size: usize, maxnit: usize) -> Self {
             Self {
-                _context,
+                context,
                 swarm_size,
                 max_nit,
                 w: 0.729,
@@ -647,7 +647,7 @@ pub mod utils {
     use super::*;
 
     /// Check if GPU acceleration is available and beneficial
-    pub fn should_use_gpu(_problem_size: usize, batch_size: usize) -> bool {
+    pub fn should_use_gpu(_problem_size: usize, batchsize: usize) -> bool {
         // Heuristic: GPU is beneficial for large problems or large batches
         _problem_size * batch_size > 10000
     }

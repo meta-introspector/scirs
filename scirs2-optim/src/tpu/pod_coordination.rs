@@ -1216,7 +1216,7 @@ impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::it
         }
     }
 
-    fn get_device_memory_usage(&self, device_id: DeviceId) -> f64 {
+    fn get_device_memory_usage(&self, deviceid: DeviceId) -> f64 {
         // Enhanced device memory monitoring with realistic simulation
         if let Some(allocation) = self
             .resource_scheduler
@@ -1241,7 +1241,7 @@ impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::it
         }
     }
 
-    fn get_device_compute_utilization(&self, device_id: DeviceId) -> f64 {
+    fn get_device_compute_utilization(&self, deviceid: DeviceId) -> f64 {
         // Enhanced compute utilization monitoring with workload-aware calculation
         if let Some(allocation) = self
             .resource_scheduler
@@ -1313,7 +1313,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
         (self.step_fn)(partition)
     }
 
-    pub fn new<F>(step_fn: F) -> Self
+    pub fn new<F>(stepfn: F) -> Self
     where
         F: Fn(BatchPartition<T>) -> Result<Vec<Array<T, ndarray::IxDyn>>> + Send + Sync + 'static,
     {
@@ -1622,7 +1622,7 @@ impl<T: Float + Send + Sync> ResourceScheduler<T> {
         })
     }
 
-    pub async fn allocate_resources(&mut self, batch_id: BatchId) -> Result<ResourceAllocation> {
+    pub async fn allocate_resources(&mut self, batchid: BatchId) -> Result<ResourceAllocation> {
         // Find available devices
         let available_devices: Vec<DeviceId> = self
             .device_availability
@@ -1667,7 +1667,7 @@ impl<T: Float + Send + Sync> ResourceScheduler<T> {
         Ok(allocation)
     }
 
-    pub fn release_resources(&mut self, batch_id: BatchId) -> Result<()> {
+    pub fn release_resources(&mut self, batchid: BatchId) -> Result<()> {
         if let Some(allocation) = self.active_allocations.remove(&batch_id) {
             // Release device resources
             for device_id in allocation.devices {
@@ -1831,7 +1831,7 @@ impl LoadBalancer {
                     .map(|(device_id, _)| device_id)
                     .collect();
 
-                // If we have fewer than 4 _devices, ensure we have at least one
+                // If we have fewer than 4 devices, ensure we have at least one
                 if selected_devices.is_empty() && !available_devices.is_empty() {
                     vec![available_devices[0]]
                 } else {
@@ -1960,7 +1960,9 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> CommunicationManager<T
     }
 
     pub async fn broadcast(
-        &self, _data: &[Array<T, ndarray::IxDyn>], _source_device: DeviceId,
+        &self,
+        _data: &[Array<T, ndarray::IxDyn>],
+        _source_device: DeviceId,
     ) -> Result<()> {
         // Simplified broadcast implementation
         // In real implementation, this would coordinate actual _data transfer
@@ -2090,7 +2092,7 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
         })
     }
 
-    pub async fn create_batch(&mut self, batch_data: BatchData<T>) -> Result<BatchId> {
+    pub async fn create_batch(&mut self, batchdata: BatchData<T>) -> Result<BatchId> {
         let batch_id = BatchId(scirs2_core::random::rng().gen_range(0..u64::MAX));
         let batch_execution = BatchExecution {
             id: batch_id,
@@ -2204,7 +2206,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> GradientAggregator<T> 
 
             // Sum _gradients from all devices
             for _gradients in device_gradients.values().skip(1) {
-                if i < _gradients.len() {
+                if i < gradients.len() {
                     sum_gradient = sum_gradient + &_gradients[i];
                     count += 1;
                 }
@@ -2214,9 +2216,13 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> GradientAggregator<T> 
             let aggregated = match self.method {
                 GradientAggregationMethod::Average => sum_gradient / T::from(count).unwrap(),
                 GradientAggregationMethod::Sum => sum_gradient,
-                GradientAggregationMethod::WeightedAverage => sum_gradient / T::from(count).unwrap(), // Simplified
+                GradientAggregationMethod::WeightedAverage => {
+                    sum_gradient / T::from(count).unwrap()
+                } // Simplified
                 GradientAggregationMethod::Median => sum_gradient / T::from(count).unwrap(), // Simplified
-                GradientAggregationMethod::QuantizedAverage => sum_gradient / T::from(count).unwrap(), // Simplified
+                GradientAggregationMethod::QuantizedAverage => {
+                    sum_gradient / T::from(count).unwrap()
+                } // Simplified
                 GradientAggregationMethod::TopK => sum_gradient, // Simplified
                 GradientAggregationMethod::LocalSGD => sum_gradient, // Simplified
                 GradientAggregationMethod::FedAvg => sum_gradient / T::from(count).unwrap(), // Simplified

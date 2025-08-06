@@ -6,8 +6,8 @@
 use crate::error::Result;
 use image::{DynamicImage, GrayImage};
 use ndarray::Array2;
-use std::f32::consts::PI;
 use statrs::statistics::Statistics;
+use std::f32::consts::PI;
 
 /// Tamura texture features
 #[derive(Debug, Clone)]
@@ -73,8 +73,8 @@ pub fn compute_tamura_features(
 ///
 /// Coarseness relates to the size of texture elements
 #[allow(dead_code)]
-fn compute_coarseness(_img: &GrayImage) -> Result<f32> {
-    let (width, height) = _img.dimensions();
+fn compute_coarseness(img: &GrayImage) -> Result<f32> {
+    let (width, height) = img.dimensions();
     let max_k = 5; // Maximum window size = 2^5 = 32
 
     // Compute average images at different scales
@@ -83,7 +83,7 @@ fn compute_coarseness(_img: &GrayImage) -> Result<f32> {
     // Original image
     for y in 0..height {
         for x in 0..width {
-            averages[0][[y as usize, x as usize]] = _img.get_pixel(x, y)[0] as f32;
+            averages[0][[y as usize, x as usize]] = img.get_pixel(x, y)[0] as f32;
         }
     }
 
@@ -138,8 +138,8 @@ fn compute_coarseness(_img: &GrayImage) -> Result<f32> {
 
 /// Compute E value for coarseness
 #[allow(dead_code)]
-fn compute_e(_averages: &[Array2<f32>], x: usize, y: usize, k: usize) -> f32 {
-    let (height, width) = _averages[0].dim();
+fn compute_e(averages: &[Array2<f32>], x: usize, y: usize, k: usize) -> f32 {
+    let (height, width) = averages[0].dim();
     let d = 1 << (k - 1); // 2^(k-1)
 
     let mut e_h = 0.0;
@@ -147,12 +147,12 @@ fn compute_e(_averages: &[Array2<f32>], x: usize, y: usize, k: usize) -> f32 {
 
     // Horizontal difference
     if x >= d && x + d < width {
-        e_h = (_averages[k][[y, x + d]] - _averages[k][[y, x.saturating_sub(d)]]).abs();
+        e_h = (_averages[k][[y, x + d]] - averages[k][[y, x.saturating_sub(d)]]).abs();
     }
 
     // Vertical difference
     if y >= d && y + d < height {
-        e_v = (_averages[k][[y + d, x]] - _averages[k][[y.saturating_sub(d), x]]).abs();
+        e_v = (_averages[k][[y + d, x]] - averages[k][[y.saturating_sub(d), x]]).abs();
     }
 
     e_h.max(e_v)
@@ -162,13 +162,13 @@ fn compute_e(_averages: &[Array2<f32>], x: usize, y: usize, k: usize) -> f32 {
 ///
 /// Contrast measures the intensity variations in the image
 #[allow(dead_code)]
-fn compute_contrast(_img: &GrayImage) -> Result<f32> {
-    let (width, height) = _img.dimensions();
+fn compute_contrast(img: &GrayImage) -> Result<f32> {
+    let (width, height) = img.dimensions();
     let n = (width * height) as f32;
 
     // Compute mean
     let mut mean = 0.0;
-    for pixel in _img.pixels() {
+    for pixel in img.pixels() {
         mean += pixel[0] as f32;
     }
     mean /= n;
@@ -177,7 +177,7 @@ fn compute_contrast(_img: &GrayImage) -> Result<f32> {
     let mut variance = 0.0;
     let mut kurtosis = 0.0;
 
-    for pixel in _img.pixels() {
+    for pixel in img.pixels() {
         let diff = pixel[0] as f32 - mean;
         variance += diff * diff;
         kurtosis += diff.powi(4);
@@ -203,8 +203,8 @@ fn compute_contrast(_img: &GrayImage) -> Result<f32> {
 ///
 /// Directionality measures the presence of oriented patterns
 #[allow(dead_code)]
-fn compute_directionality(_img: &GrayImage) -> Result<f32> {
-    let (width, height) = _img.dimensions();
+fn compute_directionality(img: &GrayImage) -> Result<f32> {
+    let (width, height) = img.dimensions();
 
     // Compute gradients
     let mut hist = vec![0.0; 16]; // 16 bins for directions
@@ -213,8 +213,8 @@ fn compute_directionality(_img: &GrayImage) -> Result<f32> {
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
             // Sobel gradients
-            let gx = _img.get_pixel(x + 1, y)[0] as f32 - _img.get_pixel(x - 1, y)[0] as f32;
-            let gy = _img.get_pixel(x, y + 1)[0] as f32 - _img.get_pixel(x, y - 1)[0] as f32;
+            let gx = img.get_pixel(x + 1, y)[0] as f32 - img.get_pixel(x - 1, y)[0] as f32;
+            let gy = img.get_pixel(x, y + 1)[0] as f32 - img.get_pixel(x, y - 1)[0] as f32;
 
             let magnitude = (gx * gx + gy * gy).sqrt();
 
@@ -262,8 +262,8 @@ fn compute_directionality(_img: &GrayImage) -> Result<f32> {
 ///
 /// Line-likeness measures the presence of line-like structures
 #[allow(dead_code)]
-fn compute_line_likeness(_img: &GrayImage) -> Result<f32> {
-    let (width, height) = _img.dimensions();
+fn compute_line_likeness(img: &GrayImage) -> Result<f32> {
+    let (width, height) = img.dimensions();
 
     // Use co-occurrence matrix in different directions
     let mut line_strength = 0.0;
@@ -279,8 +279,8 @@ fn compute_line_likeness(_img: &GrayImage) -> Result<f32> {
                 let y2 = y + dy;
 
                 if x2 >= 0 && x2 < width as i32 && y2 >= 0 && y2 < height as i32 {
-                    let p1 = _img.get_pixel(x as u32, y as u32)[0] as f32;
-                    let p2 = _img.get_pixel(x2 as u32, y2 as u32)[0] as f32;
+                    let p1 = img.get_pixel(x as u32, y as u32)[0] as f32;
+                    let p2 = img.get_pixel(x2 as u32, y2 as u32)[0] as f32;
 
                     co_occurrence += (p1 - p2).abs();
                     count += 1;
@@ -300,12 +300,12 @@ fn compute_line_likeness(_img: &GrayImage) -> Result<f32> {
 ///
 /// Regularity measures how regular the texture pattern is
 #[allow(dead_code)]
-fn compute_regularity(_img: &GrayImage) -> Result<f32> {
+fn compute_regularity(img: &GrayImage) -> Result<f32> {
     let coarseness = compute_coarseness(_img)?;
     let contrast = compute_contrast(_img)?;
 
     // Simplified regularity based on variance of local features
-    let (width, height) = _img.dimensions();
+    let (width, height) = img.dimensions();
     let window_size = (coarseness as usize).max(4);
 
     let mut local_variances = Vec::new();
@@ -348,8 +348,8 @@ fn compute_regularity(_img: &GrayImage) -> Result<f32> {
 
 /// Quick Tamura features for real-time applications
 #[allow(dead_code)]
-pub fn compute_tamura_features_fast(_img: &DynamicImage) -> Result<TamuraFeatures> {
-    let gray = _img.to_luma8();
+pub fn compute_tamura_features_fast(img: &DynamicImage) -> Result<TamuraFeatures> {
+    let gray = img.to_luma8();
 
     // Simplified coarseness using edge density
     let coarseness = compute_coarseness_fast(&gray)?;
@@ -374,15 +374,15 @@ pub fn compute_tamura_features_fast(_img: &DynamicImage) -> Result<TamuraFeature
 
 /// Fast coarseness computation
 #[allow(dead_code)]
-fn compute_coarseness_fast(_img: &GrayImage) -> Result<f32> {
-    let (width, height) = _img.dimensions();
+fn compute_coarseness_fast(img: &GrayImage) -> Result<f32> {
+    let (width, height) = img.dimensions();
     let mut edge_count = 0;
 
     // Count edges using simple gradient
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
-            let dx = _img.get_pixel(x + 1, y)[0] as i32 - _img.get_pixel(x - 1, y)[0] as i32;
-            let dy = _img.get_pixel(x, y + 1)[0] as i32 - _img.get_pixel(x, y - 1)[0] as i32;
+            let dx = img.get_pixel(x + 1, y)[0] as i32 - img.get_pixel(x - 1, y)[0] as i32;
+            let dy = img.get_pixel(x, y + 1)[0] as i32 - img.get_pixel(x, y - 1)[0] as i32;
 
             if dx.abs() > 30 || dy.abs() > 30 {
                 edge_count += 1;
@@ -397,14 +397,14 @@ fn compute_coarseness_fast(_img: &GrayImage) -> Result<f32> {
 
 /// Fast directionality computation
 #[allow(dead_code)]
-fn compute_directionality_fast(_img: &GrayImage) -> Result<f32> {
-    let (width, height) = _img.dimensions();
+fn compute_directionality_fast(img: &GrayImage) -> Result<f32> {
+    let (width, height) = img.dimensions();
     let mut hist = vec![0.0; 8]; // 8 bins for speed
 
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
-            let gx = _img.get_pixel(x + 1, y)[0] as f32 - _img.get_pixel(x - 1, y)[0] as f32;
-            let gy = _img.get_pixel(x, y + 1)[0] as f32 - _img.get_pixel(x, y - 1)[0] as f32;
+            let gx = img.get_pixel(x + 1, y)[0] as f32 - img.get_pixel(x - 1, y)[0] as f32;
+            let gy = img.get_pixel(x, y + 1)[0] as f32 - img.get_pixel(x, y - 1)[0] as f32;
 
             if gx.abs() > 10.0 || gy.abs() > 10.0 {
                 let angle = gy.atan2(gx);

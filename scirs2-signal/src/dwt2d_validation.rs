@@ -8,7 +8,7 @@ use ndarray::s;
 use crate::dwt::Wavelet;
 use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array2};
+use ndarray::Array2;
 use rand::Rng;
 use statrs::statistics::Statistics;
 use std::f64;
@@ -236,7 +236,7 @@ fn test_perfect_reconstruction(
 
 /// Test energy conservation
 #[allow(dead_code)]
-fn test_energy_conservation(_image: &Array2<f64>, wavelet: Wavelet) -> SignalResult<EnergyMetrics> {
+fn test_energy_conservation(image: &Array2<f64>, wavelet: Wavelet) -> SignalResult<EnergyMetrics> {
     // Input energy
     let input_energy = compute_energy(_image);
 
@@ -379,8 +379,8 @@ fn compare_performance(
 
 /// Compute energy of 2D array
 #[allow(dead_code)]
-fn compute_energy(_array: &Array2<f64>) -> f64 {
-    _array.iter().map(|&x| x * x).sum()
+fn compute_energy(array: &Array2<f64>) -> f64 {
+    array.iter().map(|&x| x * x).sum()
 }
 
 /// Compute structural similarity index (simplified)
@@ -405,8 +405,8 @@ fn compute_ssim(
             let window2 = image2.slice(s![i..i + window_size, j..j + window_size]);
 
             // Compute means
-            let mu1 = window1.mean().unwrap_or(0.0);
-            let mu2 = window2.mean().unwrap_or(0.0);
+            let mu1 = window1.mean();
+            let mu2 = window2.mean();
 
             // Compute variances and covariance
             let var1 = window1.iter().map(|&x| (x - mu1).powi(2)).sum::<f64>()
@@ -436,20 +436,20 @@ fn compute_ssim(
 
 /// Measure edge artifacts
 #[allow(dead_code)]
-fn measure_edge_artifacts(_result: &EnhancedDwt2dResult) -> SignalResult<f64> {
+fn measure_edge_artifacts(result: &EnhancedDwt2dResult) -> SignalResult<f64> {
     // Check for discontinuities at subband edges
     let mut total_artifacts = 0.0;
 
     // Check approximation edges
-    let (rows, cols) = _result.approx.dim();
+    let (rows, cols) = result.approx.dim();
     for i in 0..rows {
-        total_artifacts += (_result.approx[[i, 0]] - _result.approx[[i, 1]]).abs();
-        total_artifacts += (_result.approx[[i, cols - 1]] - _result.approx[[i, cols - 2]]).abs();
+        total_artifacts += (_result.approx[[i, 0]] - result.approx[[i, 1]]).abs();
+        total_artifacts += (_result.approx[[i, cols - 1]] - result.approx[[i, cols - 2]]).abs();
     }
 
     for j in 0..cols {
-        total_artifacts += (_result.approx[[0, j]] - _result.approx[[1, j]]).abs();
-        total_artifacts += (_result.approx[[rows - 1, j]] - _result.approx[[rows - 2, j]]).abs();
+        total_artifacts += (_result.approx[[0, j]] - result.approx[[1, j]]).abs();
+        total_artifacts += (_result.approx[[rows - 1, j]] - result.approx[[rows - 2, j]]).abs();
     }
 
     // Normalize by perimeter
@@ -459,16 +459,16 @@ fn measure_edge_artifacts(_result: &EnhancedDwt2dResult) -> SignalResult<f64> {
 
 /// Measure boundary continuity
 #[allow(dead_code)]
-fn measure_boundary_continuity(_result: &EnhancedDwt2dResult) -> SignalResult<f64> {
+fn measure_boundary_continuity(result: &EnhancedDwt2dResult) -> SignalResult<f64> {
     // Measure smoothness of transitions
     let mut continuity_score = 0.0;
     let mut n_measurements = 0;
 
     // Check horizontal continuity
-    let (rows_) = _result.approx.dim();
+    let (rows, _) = result.approx.dim();
     for i in 1..rows - 1 {
-        let left_diff = (_result.approx[[i, 0]] - _result.approx[[i, 1]]).abs();
-        let right_diff = (_result.approx[[i, 1]] - _result.approx[[i, 2]]).abs();
+        let left_diff = (_result.approx[[i, 0]] - result.approx[[i, 1]]).abs();
+        let right_diff = (_result.approx[[i, 1]] - result.approx[[i, 2]]).abs();
         continuity_score += 1.0 / ((1.0 + (left_diff - right_diff) as f64).abs());
         n_measurements += 1;
     }
@@ -527,8 +527,8 @@ fn check_symmetry_preservation(
 
 /// Check if reconstruction is valid
 #[allow(dead_code)]
-fn is_valid_reconstruction(_reconstructed: &Array2<f64>) -> bool {
-    _reconstructed.iter().all(|&x: &f64| x.is_finite())
+fn is_valid_reconstruction(reconstructed: &Array2<f64>) -> bool {
+    reconstructed.iter().all(|&x: &f64| x.is_finite())
 }
 
 /// Validate multilevel decomposition
@@ -621,7 +621,7 @@ pub fn generate_test_images() -> Vec<(&'static str, Array2<f64>)> {
     let mut rng = rand::rng();
     for i in 0..64 {
         for j in 0..64 {
-            noise[[i, j]] = rng.random_range(0.0..1.0);
+            noise[[i, j]] = rng.gen_range(0.0..1.0);
         }
     }
     test_images.push(("noise", noise));
@@ -631,8 +631,8 @@ pub fn generate_test_images() -> Vec<(&'static str, Array2<f64>)> {
 
 /// Run comprehensive validation suite
 #[allow(dead_code)]
-pub fn run_comprehensive_validation(_wavelet: Wavelet) -> SignalResult<()> {
-    println!("Running comprehensive 2D DWT validation for {:?}", _wavelet);
+pub fn run_comprehensive_validation(wavelet: Wavelet) -> SignalResult<()> {
+    println!("Running comprehensive 2D DWT validation for {:?}", wavelet);
     println!("{}", "=".repeat(60));
 
     let test_images = generate_test_images();
@@ -641,7 +641,7 @@ pub fn run_comprehensive_validation(_wavelet: Wavelet) -> SignalResult<()> {
     for (name, image) in test_images {
         println!("\nTesting with {} image:", name);
 
-        let result = validate_dwt2d(&image, _wavelet, tolerance)?;
+        let result = validate_dwt2d(&image, wavelet, tolerance)?;
 
         println!(
             "  Reconstruction error: {:.2e}",
@@ -664,7 +664,7 @@ pub fn run_comprehensive_validation(_wavelet: Wavelet) -> SignalResult<()> {
         }
 
         // Test multilevel
-        if validate_multilevel_dwt2d(&image, _wavelet, 3, tolerance)? {
+        if validate_multilevel_dwt2d(&image, wavelet, 3, tolerance)? {
             println!("  ✓ Multilevel decomposition valid");
         } else {
             println!("  ✗ Multilevel decomposition failed");
@@ -676,6 +676,7 @@ pub fn run_comprehensive_validation(_wavelet: Wavelet) -> SignalResult<()> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn test_validation_basic() {
         let image = Array2::eye(32);

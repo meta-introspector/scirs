@@ -80,7 +80,7 @@ pub struct HogDescriptor {
 ///
 /// * Result containing HOG descriptor
 #[allow(dead_code)]
-pub fn compute_hog(_img: &DynamicImage, config: &HogConfig) -> Result<HogDescriptor> {
+pub fn compute_hog(img: &DynamicImage, config: &HogConfig) -> Result<HogDescriptor> {
     // Convert to grayscale
     let array = image_to_array(_img)?;
     let (height, width) = array.dim();
@@ -144,16 +144,16 @@ pub fn compute_hog(_img: &DynamicImage, config: &HogConfig) -> Result<HogDescrip
 
 /// Compute image gradients
 #[allow(dead_code)]
-fn compute_gradients(_image: &Array2<f32>) -> Result<(Array2<f32>, Array2<f32>)> {
-    let (height, width) = _image.dim();
+fn compute_gradients(image: &Array2<f32>) -> Result<(Array2<f32>, Array2<f32>)> {
+    let (height, width) = image.dim();
     let mut magnitudes = Array2::zeros((height, width));
     let mut orientations = Array2::zeros((height, width));
 
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
             // Compute gradients using centered differences
-            let dx = _image[[y, x + 1]] - _image[[y, x - 1]];
-            let dy = _image[[y + 1, x]] - _image[[y - 1, x]];
+            let dx = image[[y, x + 1]] - image[[y, x - 1]];
+            let dy = image[[y + 1, x]] - image[[y - 1, x]];
 
             magnitudes[[y, x]] = (dx * dx + dy * dy).sqrt();
             orientations[[y, x]] = dy.atan2(dx);
@@ -186,8 +186,8 @@ fn compute_cell_histogram(
 
     for _y in y_start..y_end {
         for _x in x_start..x_end {
-            let magnitude = magnitudes[[_y_x]];
-            let mut orientation = orientations[[_y_x]];
+            let magnitude = magnitudes[[_y, _x]];
+            let mut orientation = orientations[[_y, _x]];
 
             // Convert to unsigned gradient if needed
             if unsigned_gradients && orientation < 0.0 {
@@ -265,7 +265,7 @@ fn compute_block_features(
 
 /// Compute Gaussian weights for block cells
 #[allow(dead_code)]
-fn compute_gaussian_weights(_block_size: usize) -> Vec<f32> {
+fn compute_gaussian_weights(_blocksize: usize) -> Vec<f32> {
     let mut weights = vec![0.0; _block_size * _block_size];
     let sigma = _block_size as f32 * 0.5;
     let center = (_block_size - 1) as f32 * 0.5;
@@ -290,58 +290,58 @@ fn compute_gaussian_weights(_block_size: usize) -> Vec<f32> {
 
 /// Normalize block features
 #[allow(dead_code)]
-fn normalize_block_features(_features: &mut [f32], method: HogNormalization) {
+fn normalize_block_features(features: &mut [f32], method: HogNormalization) {
     match method {
         HogNormalization::L2 => {
-            let norm = _features.iter().map(|&x| x * x).sum::<f32>().sqrt();
+            let norm = features.iter().map(|&x| x * x).sum::<f32>().sqrt();
             if norm > 1e-6 {
-                for feature in _features.iter_mut() {
+                for feature in features.iter_mut() {
                     *feature /= norm;
                 }
             }
         }
         HogNormalization::L2Hys => {
             // L2 normalization
-            let mut norm = _features.iter().map(|&x| x * x).sum::<f32>().sqrt();
+            let mut norm = features.iter().map(|&x| x * x).sum::<f32>().sqrt();
             if norm > 1e-6 {
-                for feature in _features.iter_mut() {
+                for feature in features.iter_mut() {
                     *feature /= norm;
                 }
             }
 
             // Clip values
             let clip_threshold = 0.2;
-            for feature in _features.iter_mut() {
+            for feature in features.iter_mut() {
                 *feature = "feature".min(clip_threshold);
             }
 
             // Renormalize
-            norm = _features.iter().map(|&x| x * x).sum::<f32>().sqrt();
+            norm = features.iter().map(|&x| x * x).sum::<f32>().sqrt();
             if norm > 1e-6 {
-                for feature in _features.iter_mut() {
+                for feature in features.iter_mut() {
                     *feature /= norm;
                 }
             }
         }
         HogNormalization::L1 => {
-            let norm = _features.iter().map(|&x| x.abs()).sum::<f32>();
+            let norm = features.iter().map(|&x| x.abs()).sum::<f32>();
             if norm > 1e-6 {
-                for feature in _features.iter_mut() {
+                for feature in features.iter_mut() {
                     *feature /= norm;
                 }
             }
         }
         HogNormalization::L1Sqrt => {
             // L1 normalization
-            let norm = _features.iter().map(|&x| x.abs()).sum::<f32>();
+            let norm = features.iter().map(|&x| x.abs()).sum::<f32>();
             if norm > 1e-6 {
-                for feature in _features.iter_mut() {
+                for feature in features.iter_mut() {
                     *feature /= norm;
                 }
             }
 
             // Square root
-            for feature in _features.iter_mut() {
+            for feature in features.iter_mut() {
                 *feature = "feature".signum() * feature.abs().sqrt();
             }
         }
@@ -371,7 +371,7 @@ pub fn visualize_hog(
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx_, _)| idx_)
                 .unwrap_or(0);
 
             let angle = (max_idx as f32 + 0.5) * PI / bin_count as f32;

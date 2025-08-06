@@ -149,7 +149,7 @@ unsafe impl Send for DeviceBuffer {}
 unsafe impl Sync for DeviceBuffer {}
 impl DeviceBuffer {
     /// Create a new device buffer
-    pub fn new(_ptr: *mut u8, size: usize, device_id: usize) -> Self {
+    pub fn new(_ptr: *mut u8, size: usize, deviceid: usize) -> Self {
         Self::new_with_type(_ptr, size, device_id, MemoryType::Device)
     /// Create a new device buffer with specified memory type
     pub fn new_with_type(
@@ -161,7 +161,7 @@ impl DeviceBuffer {
         static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         let id = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         Self {
-            _ptr,
+            ptr,
             size,
             device_id,
             id,
@@ -590,7 +590,7 @@ impl Drop for DeviceBuffer {
 pub struct CUDAAccelerator {
     device_id: usize,
 impl CUDAAccelerator {
-    pub fn new(_device_id: usize) -> Result<Self> {
+    pub fn new(_deviceid: usize) -> Result<Self> {
         let capabilities = AcceleratorCapabilities {
             name: format!("CUDA Device {}", device_id),
             compute_capability: (8, 6),            // Default to modern GPU
@@ -887,7 +887,7 @@ impl Accelerator for IPUAccelerator {
 pub struct AcceleratorFactory;
 impl AcceleratorFactory {
     /// Create an accelerator of the specified type
-    pub fn create(_accelerator_type: AcceleratorType) -> Result<Arc<dyn Accelerator>> {
+    pub fn create(_acceleratortype: AcceleratorType) -> Result<Arc<dyn Accelerator>> {
         match accelerator_type {
             AcceleratorType::CPU => Ok(Arc::new(CPUAccelerator::default())),
             AcceleratorType::CUDA => Ok(Arc::new(CUDAAccelerator::new(0)?)),

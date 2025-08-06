@@ -265,9 +265,9 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
     }
 
     /// Calculate the Euclidean distance between two points
-    fn distance(_p1: &ArrayView1<F>, p2: &ArrayView1<F>) -> F {
+    fn distance(p1: &ArrayView1<F>, p2: &ArrayView1<F>) -> F {
         let mut sum_sq = F::zero();
-        for (&x1, &x2) in _p1.iter().zip(p2.iter()) {
+        for (&x1, &x2) in p1.iter().zip(p2.iter()) {
             let diff = x1 - x2;
             sum_sq = sum_sq + diff * diff;
         }
@@ -275,7 +275,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
     }
 
     /// Evaluate the covariance function
-    fn covariance(r: F, sigma_sq: F, length_scale: F, cov_fn: CovarianceFunction, alpha: F) -> F {
+    fn covariance(r: F, sigma_sq: F, length_scale: F, covfn: CovarianceFunction, alpha: F) -> F {
         let scaled_dist = r / length_scale;
 
         match cov_fn {
@@ -319,7 +319,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
     /// # Returns
     ///
     /// Predicted values and their associated variances
-    pub fn predict(&self, query_points: &ArrayView2<F>) -> InterpolateResult<PredictionResult<F>> {
+    pub fn predict(&self, querypoints: &ArrayView2<F>) -> InterpolateResult<PredictionResult<F>> {
         // Check dimensions
         if query_points.shape()[1] != self._points.shape()[1] {
             return Err(InterpolateError::invalid_input(
@@ -373,8 +373,8 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
             let _avg_dist = avg_dist / F::from_usize(n_points).unwrap();
 
             // Calculate variance based on distances
-            // For _points far from any known _points, variance increases
-            // For _points near known _points, variance decreases
+            // For _points far from any known points, variance increases
+            // For _points near known points, variance decreases
             // This is a simplified model - real kriging variance uses matrix algebra
             let variance = self.sigma_sq * (F::one() - (-min_dist / self.length_scale).exp());
 

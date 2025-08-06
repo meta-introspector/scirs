@@ -308,7 +308,7 @@ where
 ///
 /// Abramowitz and Stegun, Handbook of Mathematical Functions
 #[allow(dead_code)]
-pub fn elliptic_f<F>(_phi: F, m: F) -> F
+pub fn elliptic_f<F>(phi: F, m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -318,10 +318,10 @@ where
     }
 
     if m == F::zero() {
-        return _phi;
+        return phi;
     }
 
-    if m == F::one() && _phi.abs() >= F::from(std::f64::consts::FRAC_PI_2).unwrap() {
+    if m == F::one() && phi.abs() >= F::from(std::f64::consts::FRAC_PI_2).unwrap() {
         return F::infinity();
     }
 
@@ -348,7 +348,7 @@ where
     }
 
     // Use numerical approximation for other cases
-    let phi_f64 = _phi.to_f64().unwrap_or(0.0);
+    let phi_f64 = phi.to_f64().unwrap_or(0.0);
     let m_f64 = m.to_f64().unwrap_or(0.0);
 
     let result = incomplete_elliptic_f_approx(phi_f64, m_f64);
@@ -385,7 +385,7 @@ where
 ///
 /// Abramowitz and Stegun, Handbook of Mathematical Functions
 #[allow(dead_code)]
-pub fn elliptic_e_inc<F>(_phi: F, m: F) -> F
+pub fn elliptic_e_inc<F>(phi: F, m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -395,7 +395,7 @@ where
     }
 
     if m == F::zero() {
-        return _phi;
+        return phi;
     }
 
     if m > F::one() {
@@ -421,7 +421,7 @@ where
     }
 
     // Use numerical approximation for other cases
-    let phi_f64 = _phi.to_f64().unwrap_or(0.0);
+    let phi_f64 = phi.to_f64().unwrap_or(0.0);
     let m_f64 = m.to_f64().unwrap_or(0.0);
 
     let result = incomplete_elliptic_e_approx(phi_f64, m_f64);
@@ -727,7 +727,7 @@ fn complete_elliptic_e_approx(m: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn incomplete_elliptic_f_approx(_phi: f64, m: f64) -> f64 {
+fn incomplete_elliptic_f_approx(phi: f64, m: f64) -> f64 {
     let pi = std::f64::consts::PI;
 
     // Special cases
@@ -736,10 +736,10 @@ fn incomplete_elliptic_f_approx(_phi: f64, m: f64) -> f64 {
     }
 
     if m == 0.0 {
-        return _phi;
+        return phi;
     }
 
-    if m == 1.0 && _phi.abs() >= pi / 2.0 {
+    if m == 1.0 && phi.abs() >= pi / 2.0 {
         return f64::INFINITY;
     }
 
@@ -755,13 +755,13 @@ fn incomplete_elliptic_f_approx(_phi: f64, m: f64) -> f64 {
     }
 
     // Numerical approximation using the Carlson's form
-    let sin_phi = _phi.sin();
-    let cos_phi = _phi.cos();
+    let sin_phi = phi.sin();
+    let cos_phi = phi.cos();
     let sin_phi_sq = sin_phi * sin_phi;
 
     // Return _phi if the angle is small enough
     if sin_phi.abs() < 1e-10 {
-        return _phi;
+        return phi;
     }
 
     let _x = cos_phi * cos_phi;
@@ -771,7 +771,7 @@ fn incomplete_elliptic_f_approx(_phi: f64, m: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn incomplete_elliptic_e_approx(_phi: f64, m: f64) -> f64 {
+fn incomplete_elliptic_e_approx(phi: f64, m: f64) -> f64 {
     let pi = std::f64::consts::PI;
 
     // Special cases
@@ -780,7 +780,7 @@ fn incomplete_elliptic_e_approx(_phi: f64, m: f64) -> f64 {
     }
 
     if m == 0.0 {
-        return _phi;
+        return phi;
     }
 
     // For specific test cases, return exact values
@@ -1008,7 +1008,7 @@ where
 /// assert_relative_eq!(result, 0.8269, epsilon = 1e-3);
 /// ```
 #[allow(dead_code)]
-pub fn ellipkinc<F>(_phi: F, m: F) -> F
+pub fn ellipkinc<F>(phi: F, m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -1040,7 +1040,7 @@ where
 /// assert_relative_eq!(result, 0.7501, epsilon = 1e-3);
 /// ```
 #[allow(dead_code)]
-pub fn ellipeinc<F>(_phi: F, m: F) -> F
+pub fn ellipeinc<F>(phi: F, m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
 {

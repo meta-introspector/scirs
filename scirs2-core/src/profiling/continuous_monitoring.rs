@@ -5,7 +5,7 @@
 
 use crate::error::{CoreError, CoreResult};
 use crate::profiling::hardware_counters::{CounterType, CounterValue, HardwareCounterManager};
-use crate::profiling::system_monitor::{SystemMetrics, SystemMonitor, SystemMonitorError};
+use crate::profiling::systemmonitor::{SystemMetrics, SystemMonitor, SystemMonitorError};
 use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
@@ -195,7 +195,7 @@ pub struct ApplicationMetrics {
 #[derive(Debug, Clone)]
 pub struct TrendAnalysis {
     /// Metric name
-    pub metric_name: String,
+    pub metricname: String,
     /// Trend direction
     pub trend: TrendDirection,
     /// Trend strength (0.0 to 1.0)
@@ -233,7 +233,7 @@ pub struct PerformanceAlert {
     /// Alert message
     pub message: String,
     /// Metric that triggered the alert
-    pub metric_name: String,
+    pub metricname: String,
     /// Current value
     pub current_value: f64,
     /// Threshold value
@@ -334,7 +334,7 @@ pub struct ContinuousPerformanceMonitor {
     /// Configuration
     config: MonitoringConfig,
     /// System monitor
-    system_monitor: Option<Arc<Mutex<SystemMonitor>>>,
+    systemmonitor: Option<Arc<Mutex<SystemMonitor>>>,
     /// Hardware counter manager
     hardware_manager: Option<Arc<Mutex<HardwareCounterManager>>>,
     /// Metrics history
@@ -367,7 +367,7 @@ impl ContinuousPerformanceMonitor {
     pub fn new(config: MonitoringConfig) -> Self {
         Self {
             config,
-            system_monitor: None,
+            systemmonitor: None,
             hardware_manager: None,
             metrics_history: Arc::new(RwLock::new(VecDeque::new())),
             active_alerts: Arc::new(RwLock::new(HashMap::new())),
@@ -399,9 +399,9 @@ impl ContinuousPerformanceMonitor {
 
         // Initialize monitors based on configuration
         if self.config.monitor_system {
-            let mut system_monitor = SystemMonitor::new(Default::default());
-            system_monitor.start()?;
-            self.system_monitor = Some(Arc::new(Mutex::new(system_monitor)));
+            let mut systemmonitor = SystemMonitor::new(Default::default());
+            systemmonitor.start()?;
+            self.systemmonitor = Some(Arc::new(Mutex::new(systemmonitor)));
         }
 
         if self.config.monitor_hardware {
@@ -411,7 +411,7 @@ impl ContinuousPerformanceMonitor {
         }
 
         // Start background monitoring thread
-        self.start_monitoring_thread();
+        self.startmonitoring_thread();
 
         Ok(())
     }
@@ -424,8 +424,8 @@ impl ContinuousPerformanceMonitor {
         }
 
         // Stop system monitor
-        if let Some(system_monitor) = &self.system_monitor {
-            let mut monitor = system_monitor.lock().unwrap();
+        if let Some(systemmonitor) = &self.systemmonitor {
+            let mut monitor = systemmonitor.lock().unwrap();
             monitor.stop();
         }
 
@@ -436,9 +436,9 @@ impl ContinuousPerformanceMonitor {
     }
 
     /// Start the background monitoring thread
-    fn start_monitoring_thread(&mut self) {
+    fn startmonitoring_thread(&mut self) {
         let config = self.config.clone();
-        let system_monitor = self.system_monitor.clone();
+        let systemmonitor = self.systemmonitor.clone();
         let hardware_manager = self.hardware_manager.clone();
         let metrics_history = Arc::clone(&self.metrics_history);
         let active_alerts = Arc::clone(&self.active_alerts);
@@ -449,7 +449,7 @@ impl ContinuousPerformanceMonitor {
         self.thread_handle = Some(thread::spawn(move || {
             Self::monitoring_loop(
                 config,
-                system_monitor,
+                systemmonitor,
                 hardware_manager,
                 metrics_history,
                 active_alerts,
@@ -463,7 +463,7 @@ impl ContinuousPerformanceMonitor {
     /// Main monitoring loop
     fn monitoring_loop(
         config: MonitoringConfig,
-        system_monitor: Option<Arc<Mutex<SystemMonitor>>>,
+        systemmonitor: Option<Arc<Mutex<SystemMonitor>>>,
         hardware_manager: Option<Arc<Mutex<HardwareCounterManager>>>,
         metrics_history: Arc<RwLock<VecDeque<MetricsSnapshot>>>,
         active_alerts: Arc<RwLock<HashMap<String, PerformanceAlert>>>,
@@ -479,7 +479,7 @@ impl ContinuousPerformanceMonitor {
 
             // Collect metrics snapshot
             let snapshot = Self::collect_metrics_snapshot(
-                &system_monitor,
+                &systemmonitor,
                 &hardware_manager,
                 None, // Would pass app_metrics_provider here
             );
@@ -530,14 +530,14 @@ impl ContinuousPerformanceMonitor {
 
     /// Collect a metrics snapshot
     fn collect_metrics_snapshot(
-        system_monitor: &Option<Arc<Mutex<SystemMonitor>>>,
+        systemmonitor: &Option<Arc<Mutex<SystemMonitor>>>,
         hardware_manager: &Option<Arc<Mutex<HardwareCounterManager>>>,
         app_provider: Option<&(dyn ApplicationMetricsProvider + Send + Sync)>,
     ) -> MetricsSnapshot {
         let timestamp = Instant::now();
 
         // Collect system metrics
-        let system_metrics = if let Some(monitor) = system_monitor {
+        let system_metrics = if let Some(monitor) = systemmonitor {
             monitor.lock().unwrap().get_current_metrics().ok()
         } else {
             None
@@ -579,9 +579,9 @@ impl ContinuousPerformanceMonitor {
         if let Some(sys_metrics) = &snapshot.system_metrics {
             // CPU usage alert
             if sys_metrics.cpu_usage > alert_config.cpu_threshold {
-                let alert_key = "high_cpu_usage".to_string();
+                let alertkey = "high_cpu_usage".to_string();
                 if Self::should_trigger_alert(
-                    &alert_key,
+                    &alertkey,
                     cooldown_map,
                     alert_config.alert_cooldown,
                     now,
@@ -599,7 +599,7 @@ impl ContinuousPerformanceMonitor {
                             AlertSeverity::Warning
                         },
                         message: format!("High CPU usage: {:.1}%", sys_metrics.cpu_usage),
-                        metric_name: "cpu_usage".to_string(),
+                        metricname: "cpu_usage".to_string(),
                         current_value: sys_metrics.cpu_usage,
                         threshold_value: alert_config.cpu_threshold,
                         timestamp: now,
@@ -610,7 +610,7 @@ impl ContinuousPerformanceMonitor {
                         .write()
                         .unwrap()
                         .insert(alert.id.clone(), alert);
-                    cooldown_map.insert(alert_key, now);
+                    cooldown_map.insert(alertkey, now);
                 }
             }
 
@@ -619,9 +619,9 @@ impl ContinuousPerformanceMonitor {
                 let memory_usage_percent =
                     (sys_metrics.memory_usage as f64 / sys_metrics.memory_total as f64) * 100.0;
                 if memory_usage_percent > alert_config.memory_threshold {
-                    let alert_key = "high_memory_usage".to_string();
+                    let alertkey = "high_memory_usage".to_string();
                     if Self::should_trigger_alert(
-                        &alert_key,
+                        &alertkey,
                         cooldown_map,
                         alert_config.alert_cooldown,
                         now,
@@ -636,7 +636,7 @@ impl ContinuousPerformanceMonitor {
                                 AlertSeverity::Warning
                             },
                             message: format!("High memory usage: {memory_usage_percent:.1}%"),
-                            metric_name: "memory_usage".to_string(),
+                            metricname: "memory_usage".to_string(),
                             current_value: memory_usage_percent,
                             threshold_value: alert_config.memory_threshold,
                             timestamp: now,
@@ -647,7 +647,7 @@ impl ContinuousPerformanceMonitor {
                             .write()
                             .unwrap()
                             .insert(alert.id.clone(), alert);
-                        cooldown_map.insert(alert_key, now);
+                        cooldown_map.insert(alertkey, now);
                     }
                 }
             }
@@ -656,9 +656,9 @@ impl ContinuousPerformanceMonitor {
         // Check application metrics alerts
         let app_metrics = &snapshot.application_metrics;
         if app_metrics.avg_response_time > alert_config.response_time_threshold {
-            let alert_key = "high_response_time".to_string();
+            let alertkey = "high_response_time".to_string();
             if Self::should_trigger_alert(
-                &alert_key,
+                &alertkey,
                 cooldown_map,
                 alert_config.alert_cooldown,
                 now,
@@ -672,7 +672,7 @@ impl ContinuousPerformanceMonitor {
                     alert_type: AlertType::HighResponseTime,
                     severity: AlertSeverity::Warning,
                     message: format!("High response time: {:.1}ms", app_metrics.avg_response_time),
-                    metric_name: "avg_response_time".to_string(),
+                    metricname: "avg_response_time".to_string(),
                     current_value: app_metrics.avg_response_time,
                     threshold_value: alert_config.response_time_threshold,
                     timestamp: now,
@@ -683,19 +683,19 @@ impl ContinuousPerformanceMonitor {
                     .write()
                     .unwrap()
                     .insert(alert.id.clone(), alert);
-                cooldown_map.insert(alert_key, now);
+                cooldown_map.insert(alertkey, now);
             }
         }
     }
 
     /// Check if an alert should be triggered based on cooldown
     fn should_trigger_alert(
-        alert_key: &str,
+        alertkey: &str,
         cooldown_map: &HashMap<String, Instant>,
         cooldown_duration: Duration,
         now: Instant,
     ) -> bool {
-        if let Some(last_alert) = cooldown_map.get(alert_key) {
+        if let Some(last_alert) = cooldown_map.get(alertkey) {
             now.duration_since(*last_alert) >= cooldown_duration
         } else {
             true
@@ -801,7 +801,7 @@ impl ContinuousPerformanceMonitor {
         let confidence_interval = (prediction - confidence_range, prediction + confidence_range);
 
         Some(TrendAnalysis {
-            metric_name: "unknown".to_string(), // Would be set by caller
+            metricname: "unknown".to_string(), // Would be set by caller
             trend,
             strength,
             prediction,
@@ -1061,7 +1061,7 @@ static GLOBAL_MONITOR: std::sync::OnceLock<Arc<Mutex<ContinuousPerformanceMonito
 
 /// Get the global continuous performance monitor
 #[allow(dead_code)]
-pub fn global_monitor() -> Arc<Mutex<ContinuousPerformanceMonitor>> {
+pub fn globalmonitor() -> Arc<Mutex<ContinuousPerformanceMonitor>> {
     GLOBAL_MONITOR
         .get_or_init(|| {
             Arc::new(Mutex::new(ContinuousPerformanceMonitor::new(
@@ -1076,22 +1076,22 @@ pub mod utils {
     use super::*;
 
     /// Start basic continuous monitoring
-    pub fn start_basic_monitoring() -> CoreResult<()> {
-        let monitor = global_monitor();
+    pub fn start_basicmonitoring() -> CoreResult<()> {
+        let monitor = globalmonitor();
         let mut monitor = monitor.lock().unwrap();
         monitor.start()
     }
 
     /// Stop continuous monitoring
-    pub fn stop_monitoring() {
-        let monitor = global_monitor();
+    pub fn stopmonitoring() {
+        let monitor = globalmonitor();
         let mut monitor = monitor.lock().unwrap();
         monitor.stop();
     }
 
     /// Get current performance status
     pub fn get_performance_status() -> (usize, usize, usize) {
-        let monitor = global_monitor();
+        let monitor = globalmonitor();
         let monitor = monitor.lock().unwrap();
 
         let alerts = monitor.get_active_alerts();
@@ -1103,7 +1103,7 @@ pub mod utils {
 
     /// Check if there are any critical alerts
     pub fn has_critical_alerts() -> bool {
-        let monitor = global_monitor();
+        let monitor = globalmonitor();
         let monitor = monitor.lock().unwrap();
 
         monitor
@@ -1118,7 +1118,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_monitoring_config() {
+    fn testmonitoring_config() {
         let config = MonitoringConfig::default();
         assert_eq!(config.sampling_interval, Duration::from_secs(1));
         assert_eq!(config.max_samples, 86400);
@@ -1154,7 +1154,7 @@ mod tests {
             alert_type: AlertType::HighCpuUsage,
             severity: AlertSeverity::Warning,
             message: "Test alert".to_string(),
-            metric_name: "cpu_usage".to_string(),
+            metricname: "cpu_usage".to_string(),
             current_value: 85.0,
             threshold_value: 80.0,
             timestamp: Instant::now(),
@@ -1169,7 +1169,7 @@ mod tests {
     #[test]
     fn test_trend_analysis() {
         let trend = TrendAnalysis {
-            metric_name: "cpu_usage".to_string(),
+            metricname: "cpu_usage".to_string(),
             trend: TrendDirection::Increasing,
             strength: 0.7,
             prediction: 85.0,
@@ -1219,7 +1219,7 @@ mod tests {
     }
 
     #[test]
-    fn test_continuous_monitor_creation() {
+    fn test_continuousmonitor_creation() {
         let config = MonitoringConfig::default();
         let monitor = ContinuousPerformanceMonitor::new(config);
 
@@ -1229,7 +1229,7 @@ mod tests {
     }
 
     #[test]
-    fn test_monitoring_report() {
+    fn testmonitoring_report() {
         let report = MonitoringReport {
             timestamp: Instant::now(),
             monitoring_duration: Duration::from_secs(1),
@@ -1247,11 +1247,11 @@ mod tests {
     }
 
     #[test]
-    fn test_global_monitor() {
-        let monitor = global_monitor();
+    fn test_globalmonitor() {
+        let monitor = globalmonitor();
 
         // Should return the same instance
-        let monitor2 = global_monitor();
+        let monitor2 = globalmonitor();
         assert!(Arc::ptr_eq(&monitor, &monitor2));
     }
 

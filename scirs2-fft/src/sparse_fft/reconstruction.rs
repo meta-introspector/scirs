@@ -204,7 +204,7 @@ pub fn reconstruct_high_resolution(
             }
         }
 
-        // If even _length, also copy the Nyquist component
+        // If even length, also copy the Nyquist component
         if original_length % 2 == 0 && target_length % 2 == 0 {
             high_res_spectrum[target_nyquist] = spectrum[original_nyquist];
         }

@@ -98,10 +98,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to print a 2D binary array
 #[allow(dead_code)]
-fn print_binary_2d(_arr: &Array2<bool>) {
+fn print_binary_2d(arr: &Array2<bool>) {
     for i in 0.._arr.shape()[0] {
         for j in 0.._arr.shape()[1] {
-            if _arr[[i, j]] {
+            if arr[[i, j]] {
                 print!("█ ");
             } else {
                 print!("· ");
@@ -113,10 +113,10 @@ fn print_binary_2d(_arr: &Array2<bool>) {
 
 // Helper function to print a 2D floating-point distance array
 #[allow(dead_code)]
-fn print_distance_2d(_arr: &Array2<f64>) {
+fn print_distance_2d(arr: &Array2<f64>) {
     for i in 0.._arr.shape()[0] {
         for j in 0.._arr.shape()[1] {
-            let val = _arr[[i, j]];
+            let val = arr[[i, j]];
             if val < 0.01 {
                 print!("0.0 ");
             } else {
@@ -129,10 +129,10 @@ fn print_distance_2d(_arr: &Array2<f64>) {
 
 // Helper function to print a 2D integer distance array
 #[allow(dead_code)]
-fn print_integer_distance_2d(_arr: &Array2<i32>) {
+fn print_integer_distance_2d(arr: &Array2<i32>) {
     for i in 0.._arr.shape()[0] {
         for j in 0.._arr.shape()[1] {
-            let val = _arr[[i, j]];
+            let val = arr[[i, j]];
             print!("{:2} ", val);
         }
         println!();
@@ -141,11 +141,11 @@ fn print_integer_distance_2d(_arr: &Array2<i32>) {
 
 // Helper function to print indices from a distance transform
 #[allow(dead_code)]
-fn print_indices_2d(_indices: &ndarray::ArrayBase<ndarray::OwnedRepr<i32>, IxDyn>, dim: usize) {
+fn print_indices_2d(indices: &ndarray::ArrayBase<ndarray::OwnedRepr<i32>, IxDyn>, dim: usize) {
     // The _indices array has an extra dimension: [dimension, rows, columns]
     for i in 0.._indices.shape()[1] {
         for j in 0.._indices.shape()[2] {
-            print!("{:2} ", _indices[[dim, i, j]]);
+            print!("{:2} ", indices[[dim, i, j]]);
         }
         println!();
     }

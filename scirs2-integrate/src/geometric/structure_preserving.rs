@@ -278,11 +278,11 @@ pub struct ConservationChecker;
 
 impl ConservationChecker {
     /// Check energy conservation
-    pub fn check_energy<H>(_trajectory: &[(Array1<f64>, Array1<f64>)], hamiltonian: H) -> Vec<f64>
+    pub fn check_energy<H>(trajectory: &[(Array1<f64>, Array1<f64>)], hamiltonian: H) -> Vec<f64>
     where
         H: Fn(&ArrayView1<f64>, &ArrayView1<f64>) -> f64,
     {
-        _trajectory
+        trajectory
             .iter()
             .map(|(q, p)| hamiltonian(&q.view(), &p.view()))
             .collect()
@@ -323,13 +323,13 @@ impl ConservationChecker {
     }
 
     /// Compute relative error in conservation
-    pub fn relative_error(_values: &[f64]) -> f64 {
-        if _values.is_empty() {
+    pub fn relative_error(values: &[f64]) -> f64 {
+        if values.is_empty() {
             return 0.0;
         }
 
-        let initial = _values[0];
-        let max_deviation = _values
+        let initial = values[0];
+        let max_deviation = values
             .iter()
             .map(|&v| (v - initial).abs())
             .fold(0.0, f64::max);
@@ -364,7 +364,7 @@ impl SplittingIntegrator {
     }
 
     /// Create with Yoshida 4th order coefficients
-    pub fn yoshida4(_kinetic: KineticFn, potential: PotentialFn, dim: usize) -> Self {
+    pub fn yoshida4(kinetic: KineticFn, potential: PotentialFn, dim: usize) -> Self {
         let x1 = 1.0 / (2.0 - 2.0_f64.powf(1.0 / 3.0));
         let x0 = -2.0_f64.powf(1.0 / 3.0) * x1;
 
@@ -376,7 +376,7 @@ impl SplittingIntegrator {
         ];
 
         Self {
-            kinetic: _kinetic,
+            kinetic: kinetic,
             potential,
             dim,
             coefficients,
@@ -710,7 +710,7 @@ pub mod invariants {
     }
 
     impl GeometricInvariant for EnergyInvariant {
-        fn evaluate(&self, x: &ArrayView1<f64>, v: &ArrayView1<f64>, _t: f64) -> f64 {
+        fn evaluate(&self, x: &ArrayView1<f64>, v: &ArrayView1<f64>, t: f64) -> f64 {
             (self.hamiltonian)(x, v)
         }
 
@@ -732,7 +732,7 @@ pub mod invariants {
     }
 
     impl GeometricInvariant for LinearMomentumInvariant {
-        fn evaluate(&self, x: &ArrayView1<f64>, v: &ArrayView1<f64>, _t: f64) -> f64 {
+        fn evaluate(&self, x: &ArrayView1<f64>, v: &ArrayView1<f64>, t: f64) -> f64 {
             v[self.component] * self.masses[self.component]
         }
 
@@ -753,7 +753,7 @@ pub mod invariants {
     }
 
     impl GeometricInvariant for AngularMomentumInvariant2D {
-        fn evaluate(&self, x: &ArrayView1<f64>, v: &ArrayView1<f64>, _t: f64) -> f64 {
+        fn evaluate(&self, x: &ArrayView1<f64>, v: &ArrayView1<f64>, t: f64) -> f64 {
             // L = m(xv_y - yv_x) for 2D
             let n = x.len() / 2;
             let mut l = 0.0;

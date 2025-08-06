@@ -285,13 +285,13 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
     }
 
     /// Check if update should be skipped due to time constraints
-    fn should_skip_for_timing(&self, start_time: Instant) -> bool {
+    fn should_skip_for_timing(&self, starttime: Instant) -> bool {
         start_time.elapsed() > self.max_processing_time
     }
 }
 
 impl<T: StreamingObjective + Clone> StreamingOptimizer for RealTimeEstimator<T> {
-    fn update(&mut self, data_point: &StreamingDataPoint) -> Result<()> {
+    fn update(&mut self, datapoint: &StreamingDataPoint) -> Result<()> {
         let start_time = Instant::now();
 
         // Skip update if timing constraints are violated
@@ -382,7 +382,7 @@ pub fn recursive_least_squares<T: StreamingObjective>(
         objective,
         config,
         RealTimeMethod::RecursiveLeastSquares,
-        _uncertainty,
+        uncertainty,
     )
 }
 

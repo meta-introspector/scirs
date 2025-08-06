@@ -1079,7 +1079,7 @@ impl<F: Float> InputValidationResult<F> {
 
 impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
     /// Create a new advanced interpolation coordinator
-    pub fn new(_config: AdvancedInterpolationConfig) -> InterpolateResult<Self> {
+    pub fn new(config: AdvancedInterpolationConfig) -> InterpolateResult<Self> {
         Ok(Self {
             method_selector: Arc::new(RwLock::new(IntelligentMethodSelector::new()?)),
             accuracy_optimizer: Arc::new(Mutex::new(AccuracyOptimizationEngine::new()?)),
@@ -1090,7 +1090,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
             memory_manager: Arc::new(Mutex::new(InterpolationMemoryManager::new()?)),
             performance_tracker: Arc::new(RwLock::new(InterpolationPerformanceTracker::default())),
             adaptive_cache: Arc::new(Mutex::new(AdaptiveInterpolationCache::new()?)),
-            _config,
+            config,
         })
     }
 
@@ -2116,7 +2116,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
     }
 
     /// Calculate a quality score for the input data
-    fn calculate_data_quality_score(&self, x_data: &[F], y_data: &[F]) -> f64 {
+    fn calculate_data_quality_score(&self, x_data: &[F], ydata: &[F]) -> f64 {
         let mut score = 1.0; // Perfect score
 
         // Penalize for insufficient _data

@@ -109,12 +109,12 @@ mod tensor_train_example {
     }
 
     // Helper function to compute relative error
-    fn compute_relative_error(_original: &ArrayD<f64>, reconstructed: &ArrayD<f64>) -> f64 {
+    fn compute_relative_error(original: &ArrayD<f64>, reconstructed: &ArrayD<f64>) -> f64 {
         let mut diff_sum = 0.0;
         let mut orig_sum = 0.0;
 
         // Iterate through the _original tensor
-        for (idx, &val) in _original.indexed_iter() {
+        for (idx, &val) in original.indexed_iter() {
             let rec_val = reconstructed[idx.clone()];
             diff_sum += (val - rec_val).powi(2);
             orig_sum += val.powi(2);

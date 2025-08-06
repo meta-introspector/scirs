@@ -137,7 +137,7 @@ fn main() {
 
 // Helper function to print selected features
 #[allow(dead_code)]
-fn print_selected_features(_features: &HashMap<String, f64>, image_type: &str) {
+fn print_selected_features(_features: &HashMap<String, f64>, imagetype: &str) {
     println!("\nSelected _features for {}:", image_type);
     println!("------------------------------");
 
@@ -191,7 +191,7 @@ fn print_selected_features(_features: &HashMap<String, f64>, image_type: &str) {
             "color_homogeneity",
             "hue_entropy",
         ] {
-            if let Some(value) = _features.get(*key) {
+            if let Some(value) = features.get(*key) {
                 println!("{:<25}: {:.6}", key, value);
             }
         }
@@ -217,7 +217,7 @@ fn print_selected_features(_features: &HashMap<String, f64>, image_type: &str) {
             };
 
             for possible_key in possible_keys {
-                if let Some(value) = _features.get(&possible_key) {
+                if let Some(value) = features.get(&possible_key) {
                     if !category_printed {
                         println!("\n{}:", category);
                         println!("{}", "-".repeat(category.len() + 1));
@@ -238,7 +238,7 @@ fn print_selected_features(_features: &HashMap<String, f64>, image_type: &str) {
 
 // Helper function to compare features between two textures
 #[allow(dead_code)]
-fn compare_features(_features1: &HashMap<String, f64>, features2: &HashMap<String, f64>) {
+fn compare_features(features1: &HashMap<String, f64>, features2: &HashMap<String, f64>) {
     // Define the features to compare
     let texture_features = [
         "texture_contrast",

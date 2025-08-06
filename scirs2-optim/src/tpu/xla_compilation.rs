@@ -1916,7 +1916,8 @@ pub struct PredictionModel<T: Float> {
     pub model_type: PredictionModelType,
     pub parameters: Vec<f64>,
     pub training_data: TrainingData<T>,
-    pub validation_metrics: ValidationMetrics, _phantom: PhantomData<T>,
+    pub validation_metrics: ValidationMetrics,
+    _phantom: PhantomData<T>,
 }
 
 /// Prediction model types
@@ -2100,7 +2101,8 @@ pub struct MemoryPlanner<T: Float> {
     allocation_strategies: Vec<AllocationStrategy>,
 
     /// Optimization objectives
-    objectives: Vec<OptimizationObjective>, _phantom: PhantomData<T>,
+    objectives: Vec<OptimizationObjective>,
+    _phantom: PhantomData<T>,
 }
 
 /// Planning algorithms
@@ -2344,7 +2346,8 @@ pub enum CircularResolutionMethod {
 pub struct LoadBalancer<T: Float> {
     pub balancing_strategy: BalancingStrategy,
     pub work_stealing: WorkStealingConfig,
-    pub load_monitor: LoadMonitor, _phantom: PhantomData<T>,
+    pub load_monitor: LoadMonitor,
+    _phantom: PhantomData<T>,
 }
 
 /// Load balancing strategies
@@ -2480,7 +2483,8 @@ pub struct UnificationState<T: Float> {
     substitutions: HashMap<OperandId, OperandId>,
 
     /// Type variables
-    type_variables: HashSet<OperandId>, _phantom: PhantomData<T>,
+    type_variables: HashSet<OperandId>,
+    _phantom: PhantomData<T>,
 }
 
 /// Constraint solver
@@ -2537,7 +2541,8 @@ pub struct ShapeAnalyzer<T: Float> {
     constraints: Vec<ShapeConstraint>,
 
     /// Shape propagation engine
-    propagation_engine: ShapePropagationEngine<T>, _phantom: PhantomData<T>,
+    propagation_engine: ShapePropagationEngine<T>,
+    _phantom: PhantomData<T>,
 }
 
 /// Shape inference rule
@@ -2569,7 +2574,7 @@ pub struct ShapePropagationEngine<T: Float> {
 
     /// Propagation statistics
     statistics: PropagationStatistics,
-    
+
     /// Phantom data for type parameter
     _phantom: std::marker::PhantomData<T>,
 }
@@ -2817,7 +2822,8 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
     /// Cache compilation result
     fn cache_compilation(
         &mut self,
-        computation: &XLAComputation<T>, _generated_code: &GeneratedCode,
+        computation: &XLAComputation<T>,
+        _generated_code: &GeneratedCode,
     ) -> Result<()> {
         // Simplified caching implementation
         Ok(())
@@ -2825,7 +2831,8 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
 
     /// Estimate performance characteristics
     fn estimate_performance(
-        &self, _computation: &XLAComputation<T>,
+        &self,
+        _computation: &XLAComputation<T>,
     ) -> Result<EstimatedPerformance> {
         Ok(EstimatedPerformance {
             execution_time: Duration::from_micros(100),
@@ -2939,7 +2946,8 @@ pub struct TensorCoreOptimizer<T: Float> {
     data_type_preferences: HashMap<ElementType, f64>,
 
     /// Tile size optimizer
-    tile_size_optimizer: TileSizeOptimizer<T>, _phantom: PhantomData<T>,
+    tile_size_optimizer: TileSizeOptimizer<T>,
+    _phantom: PhantomData<T>,
 }
 
 /// Matrix size thresholds for optimal tensor core utilization
@@ -2960,7 +2968,8 @@ pub struct TileSizeOptimizer<T: Float> {
     tile_cache: HashMap<TileKey, TileSize>,
 
     /// Performance model
-    performance_model: TilePerformanceModel<T>, _phantom: PhantomData<T>,
+    performance_model: TilePerformanceModel<T>,
+    _phantom: PhantomData<T>,
 }
 
 /// Tile key for caching
@@ -2990,7 +2999,8 @@ pub struct TilePerformanceModel<T: Float> {
     perf_coefficients: PerformanceCoefficients,
 
     /// Benchmark data
-    benchmark_data: BenchmarkData<T>, _phantom: PhantomData<T>,
+    benchmark_data: BenchmarkData<T>,
+    _phantom: PhantomData<T>,
 }
 
 /// TPU hardware parameters
@@ -3022,7 +3032,8 @@ pub struct BenchmarkData<T: Float> {
     last_update: Instant,
 
     /// Measurement quality
-    measurement_quality: MeasurementQuality, _phantom: PhantomData<T>,
+    measurement_quality: MeasurementQuality,
+    _phantom: PhantomData<T>,
 }
 
 /// Benchmark key
@@ -3297,7 +3308,8 @@ pub struct SensitivityAnalyzer<T: Float> {
     gradient_sensitivity: HashMap<String, f64>,
 
     /// Parameter sensitivity
-    parameter_sensitivity: HashMap<String, f64>, _phantom: std::marker::PhantomData<T>,
+    parameter_sensitivity: HashMap<String, f64>,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 /// Error propagation model
@@ -3611,8 +3623,7 @@ impl<T: Float + Send + Sync> MemoryCoalescingOptimizer<T> {
         }
     }
 
-    pub fn optimize(&mut self,
-        computation: &mut XLAComputation<T>) -> Result<OptimizationResult> {
+    pub fn optimize(&mut self, computation: &mut XLAComputation<T>) -> Result<OptimizationResult> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3630,8 +3641,7 @@ impl<T: Float + Send + Sync> DynamicShapeOptimizer<T> {
         }
     }
 
-    pub fn optimize(&mut self,
-        computation: &mut XLAComputation<T>) -> Result<OptimizationResult> {
+    pub fn optimize(&mut self, computation: &mut XLAComputation<T>) -> Result<OptimizationResult> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3649,8 +3659,7 @@ impl<T: Float + Send + Sync> CrossReplicaOptimizer<T> {
         }
     }
 
-    pub fn optimize(&mut self,
-        computation: &mut XLAComputation<T>) -> Result<OptimizationResult> {
+    pub fn optimize(&mut self, computation: &mut XLAComputation<T>) -> Result<OptimizationResult> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3673,8 +3682,7 @@ impl<T: Float + Send + Sync> TensorCoreOptimizer<T> {
         }
     }
 
-    pub fn optimize(&mut self,
-        computation: &mut XLAComputation<T>) -> Result<OptimizationResult> {
+    pub fn optimize(&mut self, computation: &mut XLAComputation<T>) -> Result<OptimizationResult> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3705,7 +3713,8 @@ impl<T: Float + Send + Sync> TilePerformanceModel<T> {
                 cache_efficiency: 0.9,
                 parallelization_efficiency: 0.85,
             },
-            benchmark_data: BenchmarkData::new(), _phantom: PhantomData,
+            benchmark_data: BenchmarkData::new(),
+            _phantom: PhantomData,
         }
     }
 }
@@ -3744,8 +3753,7 @@ impl<T: Float + Send + Sync> SparsityOptimizer<T> {
         }
     }
 
-    pub fn optimize(&mut self,
-        computation: &mut XLAComputation<T>) -> Result<OptimizationResult> {
+    pub fn optimize(&mut self, computation: &mut XLAComputation<T>) -> Result<OptimizationResult> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3766,8 +3774,7 @@ impl<T: Float + Send + Sync> QuantizationOptimizer<T> {
         }
     }
 
-    pub fn optimize(&mut self,
-        computation: &mut XLAComputation<T>) -> Result<OptimizationResult> {
+    pub fn optimize(&mut self, computation: &mut XLAComputation<T>) -> Result<OptimizationResult> {
         Ok(OptimizationResult::new())
     }
 }
@@ -3792,7 +3799,8 @@ impl<T: Float + Send + Sync> SensitivityAnalyzer<T> {
         Self {
             operation_sensitivity: HashMap::new(),
             gradient_sensitivity: HashMap::new(),
-            parameter_sensitivity: HashMap::new(), _phantom: std::marker::PhantomData,
+            parameter_sensitivity: HashMap::new(),
+            _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -3924,7 +3932,7 @@ impl<T: Float + Default + Clone> ComputationGraphBuilder<T> {
 }
 
 impl<T: Float + Default + Clone> OptimizationPipeline<T> {
-    fn new(_config: &XLACompilerConfig) -> Result<Self> {
+    fn new(config: &XLACompilerConfig) -> Result<Self> {
         Ok(Self {
             passes: Vec::new(),
             pass_manager: PassManager::new(),
@@ -4078,69 +4086,80 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
     }
 
     /// Helper methods (simplified implementations)
-    fn can_fold_operation(&self, _operation: &XLAOperation<T>) -> bool {
+    fn can_fold_operation(&self, operation: &XLAOperation<T>) -> bool {
         // Check if _operation has constant inputs
         false // Simplified
     }
 
-    fn fold_operation(&self, _operation: &XLAOperation<T>) -> Result<Option<T>> {
+    fn fold_operation(&self, operation: &XLAOperation<T>) -> Result<Option<T>> {
         // Perform constant folding
         Ok(None) // Simplified
     }
 
     fn mark_live_operations(
-        &self, _computation: &XLAComputation<T>, _operand_id: OperandId, _ops: &mut HashSet<OperationId>,
+        &self,
+        _computation: &XLAComputation<T>,
+        _operand_id: OperandId,
+        _ops: &mut HashSet<OperationId>,
     ) {
         // Mark operations as live by tracing dependencies
         // Simplified implementation
     }
 
     fn find_fusion_candidates(
-        &self, _computation: &XLAComputation<T>, _op_id: OperationId,
+        &self,
+        _computation: &XLAComputation<T>,
+        _op_id: OperationId,
     ) -> Option<Vec<OperationId>> {
         // Find operations that can be fused together
         None // Simplified
     }
 
     fn apply_fusion(
-        &self, _computation: &mut XLAComputation<T>, _candidates: Vec<OperationId>,
+        &self,
+        _computation: &mut XLAComputation<T>,
+        _candidates: Vec<OperationId>,
     ) -> Result<bool> {
         // Apply fusion transformation
         Ok(false) // Simplified
     }
 
     fn analyze_layouts(
-        &self, _computation: &XLAComputation<T>,
+        &self,
+        _computation: &XLAComputation<T>,
     ) -> Result<HashMap<OperandId, Layout>> {
         // Analyze optimal data layouts
         Ok(HashMap::new()) // Simplified
     }
 
     fn apply_layout(
-        &self, _computation: &mut XLAComputation<T>, _operand_id: OperandId, _layout: Layout,
+        &self,
+        _computation: &mut XLAComputation<T>,
+        _operand_id: OperandId,
+        _layout: Layout,
     ) -> Result<bool> {
         // Apply _layout transformation
         Ok(false) // Simplified
     }
 
-    fn optimize_memory_reuse(&self, _computation: &mut XLAComputation<T>) -> Result<bool> {
+    fn optimize_memory_reuse(&self, computation: &mut XLAComputation<T>) -> Result<bool> {
         // Optimize memory reuse patterns
         Ok(false) // Simplified
     }
 
-    fn optimize_inplace_operations(&self, _computation: &mut XLAComputation<T>) -> Result<bool> {
+    fn optimize_inplace_operations(&self, computation: &mut XLAComputation<T>) -> Result<bool> {
         // Convert operations to in-place where possible
         Ok(false) // Simplified
     }
 
-    fn validate_computation(&self, _computation: &XLAComputation<T>) -> Result<()> {
+    fn validate_computation(&self, computation: &XLAComputation<T>) -> Result<()> {
         // Validate that the _computation is still correct after optimizations
         Ok(())
     }
 }
 
 impl<T: Float + Default + Clone> TPUCodeGenerator<T> {
-    fn new(_config: &XLACompilerConfig) -> Result<Self> {
+    fn new(config: &XLACompilerConfig) -> Result<Self> {
         Ok(Self {
             target_config: TPUConfig::default(),
             strategies: vec![CodeGenerationStrategy::Balanced],
@@ -4215,7 +4234,9 @@ impl<T: Float + Default + Clone> TPUCodeGenerator<T> {
 
     /// Generate TPU machine code
     fn generate_tpu_code(
-        &self, _instructions: &[RegisterAllocatedInstruction], _memory_layout: &MemoryLayout,
+        &self,
+        _instructions: &[RegisterAllocatedInstruction],
+        _memory_layout: &MemoryLayout,
     ) -> Result<Vec<u8>> {
         // Generate actual TPU machine code
         // This is a complex process involving:
@@ -4305,44 +4326,51 @@ impl<T: Float + Default + Clone> TPUCodeGenerator<T> {
 
     // Instruction selection helpers (simplified implementations)
     fn select_add_instruction(
-        &self, _operation: &XLAOperation<T>,
+        &self,
+        _operation: &XLAOperation<T>,
     ) -> Result<Vec<SelectedInstruction>> {
         Ok(vec![SelectedInstruction::VectorAdd])
     }
 
     fn select_multiply_instruction(
-        &self, _operation: &XLAOperation<T>,
+        &self,
+        _operation: &XLAOperation<T>,
     ) -> Result<Vec<SelectedInstruction>> {
         Ok(vec![SelectedInstruction::VectorMultiply])
     }
 
     fn select_matmul_instruction(
-        &self, _operation: &XLAOperation<T>,
+        &self,
+        _operation: &XLAOperation<T>,
     ) -> Result<Vec<SelectedInstruction>> {
         Ok(vec![SelectedInstruction::MatrixMultiply])
     }
 
     fn select_convolution_instruction(
-        &self, _operation: &XLAOperation<T>,
+        &self,
+        _operation: &XLAOperation<T>,
     ) -> Result<Vec<SelectedInstruction>> {
         Ok(vec![SelectedInstruction::Convolution2D])
     }
 
     fn select_optimizer_instruction(
-        &self, _operation: &XLAOperation<T>, _update_type: &OptimizerUpdateType,
+        &self,
+        _operation: &XLAOperation<T>,
+        _update_type: &OptimizerUpdateType,
     ) -> Result<Vec<SelectedInstruction>> {
         Ok(vec![SelectedInstruction::OptimizerUpdate])
     }
 
     fn select_generic_instruction(
-        &self, _operation: &XLAOperation<T>,
+        &self,
+        _operation: &XLAOperation<T>,
     ) -> Result<Vec<SelectedInstruction>> {
         Ok(vec![SelectedInstruction::Generic])
     }
 }
 
 impl CompilationCache {
-    fn new(_config: &XLACompilerConfig) -> Result<Self> {
+    fn new(config: &XLACompilerConfig) -> Result<Self> {
         Ok(Self {
             cached_computations: HashMap::new(),
             cache_metadata: CacheMetadata {
@@ -4363,7 +4391,7 @@ impl CompilationCache {
 }
 
 impl<T: Float + Default + Clone> PerformanceAnalyzer<T> {
-    fn new(_config: &XLACompilerConfig) -> Result<Self> {
+    fn new(config: &XLACompilerConfig) -> Result<Self> {
         Ok(Self {
             models: Vec::new(),
             benchmarking_engine: BenchmarkingEngine::new(),
@@ -4374,18 +4402,19 @@ impl<T: Float + Default + Clone> PerformanceAnalyzer<T> {
 }
 
 impl<T: Float + Default + Clone> MemoryPlanner<T> {
-    fn new(_config: &XLACompilerConfig) -> Result<Self> {
+    fn new(config: &XLACompilerConfig) -> Result<Self> {
         Ok(Self {
             algorithms: vec![PlanningAlgorithm::GreedyPlanning],
             memory_models: Vec::new(),
             allocation_strategies: Vec::new(),
-            objectives: Vec::new(), _phantom: PhantomData,
+            objectives: Vec::new(),
+            _phantom: PhantomData,
         })
     }
 }
 
 impl<T: Float + Default + Clone> ParallelCompilationManager<T> {
-    fn new(_config: &XLACompilerConfig) -> Result<Self> {
+    fn new(config: &XLACompilerConfig) -> Result<Self> {
         Ok(Self {
             thread_pool: ThreadPool {
                 num_threads: num_cpus::get(),
@@ -4433,7 +4462,8 @@ impl<T: Float + Default + Clone> TypeInferenceEngine<T> {
                 constraints: Vec::new(),
                 unification_state: UnificationState {
                     substitutions: HashMap::new(),
-                    type_variables: HashSet::new(), _phantom: PhantomData,
+                    type_variables: HashSet::new(),
+                    _phantom: PhantomData,
                 },
             },
             constraint_solver: ConstraintSolver {
@@ -4527,7 +4557,7 @@ impl<T: Float + Default + Clone> AnalysisManager<T> {
     }
 
     /// Run a specific analysis on the computation
-    fn run_analysis(&mut self, analysis_name: &str, computation: &XLAComputation<T>) -> Result<()> {
+    fn run_analysis(&mut self, analysisname: &str, computation: &XLAComputation<T>) -> Result<()> {
         // Check if analysis is cached and valid
         if let Some(cached_result) = self.analysis_cache.get(analysis_name) {
             if cached_result.validity.is_valid {
@@ -4828,7 +4858,8 @@ impl<T: Float + Default + Clone> InstructionScheduler<T> {
                 },
                 interconnect_bandwidth: 600.0,
             },
-            constraints: Vec::new(), _phantom: PhantomData,
+            constraints: Vec::new(),
+            _phantom: PhantomData,
         }
     }
 
@@ -4928,7 +4959,7 @@ impl<T: Float + Default + Clone> RegisterAllocator<T> {
                     &mut register_map,
                     &mut next_register,
                 )?,
-            _ => self.simple_allocate(&instruction, &mut register_map, &mut next_register)?,
+                _ => self.simple_allocate(&instruction, &mut register_map, &mut next_register)?,
             };
             allocated_instructions.push(allocated);
         }
@@ -5064,7 +5095,8 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
             layout_optimizer: MemoryLayoutOptimizer::<T> {
                 algorithms: vec![LayoutAlgorithm::Tiled],
                 coalescing_rules: Vec::new(),
-                alignment_constraints: Vec::new(), _phantom: PhantomData,
+                alignment_constraints: Vec::new(),
+                _phantom: PhantomData,
             },
             prefetch_inserter: PrefetchInserter::<T> {
                 strategies: vec![PrefetchStrategy::Strided],
@@ -5078,7 +5110,8 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
                 },
                 benefit_analyzer: PrefetchBenefitAnalyzer::<T> {
                     models: Vec::new(),
-                    cost_models: Vec::new(), _phantom: PhantomData,
+                    cost_models: Vec::new(),
+                    _phantom: PhantomData,
                 },
             },
         }

@@ -135,6 +135,10 @@ pub use parallel_advanced_enhanced::{
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use std::f64::consts::PI;
+    use num_complex::Complex64;
+
     #[test]
     fn test_butter_filter_basic() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -264,6 +268,6 @@ mod tests {
 }
 
 #[allow(dead_code)]
-fn tf(_num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
-    TransferFunction::new(_num, den)
+fn tf(num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
+    TransferFunction::new(_num, den, None).unwrap()
 }

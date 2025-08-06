@@ -291,7 +291,7 @@ fn print_ascii_visualization_circle(
 
 /// Simple ASCII visualization of a path with polygon obstacles
 #[allow(dead_code)]
-fn print_ascii_visualization_polygons(_path: &[Array1<f64>], obstacles: &[Vec<[f64; 2]>]) {
+fn print_ascii_visualization_polygons(path: &[Array1<f64>], obstacles: &[Vec<[f64; 2]>]) {
     const SIZE: usize = 20;
     let mut grid = vec![vec![' '; SIZE]; SIZE];
 
@@ -313,8 +313,8 @@ fn print_ascii_visualization_polygons(_path: &[Array1<f64>], obstacles: &[Vec<[f
 
     // Draw the _path
     for i in 0.._path.len() - 1 {
-        let (x1, y1) = (_path[i][0], _path[i][1]);
-        let (x2, y2) = (_path[i + 1][0], _path[i + 1][1]);
+        let (x1, y1) = (_path[i][0], path[i][1]);
+        let (x2, y2) = (_path[i + 1][0], path[i + 1][1]);
 
         // Scale to grid coordinates
         let (gx1, gy1) = (
@@ -374,8 +374,8 @@ fn print_ascii_visualization_polygons(_path: &[Array1<f64>], obstacles: &[Vec<[f
 
 /// Check if a point is inside a polygon using the ray casting algorithm
 #[allow(dead_code)]
-fn point_in_polygon(_point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
-    let (x, y) = (_point[0], _point[1]);
+fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
+    let (x, y) = (_point[0], point[1]);
     let mut inside = false;
 
     // Ray casting algorithm determines if the _point is inside the polygon

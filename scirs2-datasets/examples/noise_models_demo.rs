@@ -341,8 +341,8 @@ fn demonstrate_real_world_applications() {
 
 /// Calculate basic statistics for a 2D array
 #[allow(dead_code)]
-fn calculate_basic_stats(_data: &Array2<f64>) -> (f64, f64, f64, f64) {
-    let valid_values: Vec<f64> = _data.iter().filter(|&&x| !x.is_nan()).cloned().collect();
+fn calculate_basic_stats(data: &Array2<f64>) -> (f64, f64, f64, f64) {
+    let valid_values: Vec<f64> = data.iter().filter(|&&x| !x.is_nan()).cloned().collect();
 
     if valid_values.is_empty() {
         return (0.0, 0.0, 0.0, 0.0);

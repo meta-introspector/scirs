@@ -171,7 +171,7 @@ pub fn validate_seasonal_arima_orders(
 
 /// Validate forecast horizon
 #[allow(dead_code)]
-pub fn validate_forecast_horizon(_steps: usize, max_reasonable: Option<usize>) -> Result<()> {
+pub fn validate_forecast_horizon(_steps: usize, maxreasonable: Option<usize>) -> Result<()> {
     if _steps == 0 {
         return Err(TimeSeriesError::InvalidParameter {
             name: "_steps".to_string(),
@@ -192,7 +192,7 @@ pub fn validate_forecast_horizon(_steps: usize, max_reasonable: Option<usize>) -
 
 /// Validate window size for rolling operations
 #[allow(dead_code)]
-pub fn validate_window_size(_window: usize, data_length: usize) -> Result<()> {
+pub fn validate_window_size(_window: usize, datalength: usize) -> Result<()> {
     if _window == 0 {
         return Err(TimeSeriesError::InvalidParameter {
             name: "_window".to_string(),
@@ -212,7 +212,7 @@ pub fn validate_window_size(_window: usize, data_length: usize) -> Result<()> {
 
 /// Validate lag for time series operations
 #[allow(dead_code)]
-pub fn validate_lag(_lag: usize, data_length: usize) -> Result<()> {
+pub fn validate_lag(_lag: usize, datalength: usize) -> Result<()> {
     if _lag >= data_length {
         return Err(TimeSeriesError::InvalidParameter {
             name: "_lag".to_string(),
@@ -224,12 +224,12 @@ pub fn validate_lag(_lag: usize, data_length: usize) -> Result<()> {
 
 /// Check if array has no missing values
 #[allow(dead_code)]
-pub fn check_no_missing<S, F>(_data: &ArrayBase<S, Ix1>) -> Result<()>
+pub fn check_no_missing<S, F>(data: &ArrayBase<S, Ix1>) -> Result<()>
 where
     S: Data<Elem = F>,
     F: Float,
 {
-    for (i, &x) in _data.iter().enumerate() {
+    for (i, &x) in data.iter().enumerate() {
         if x.is_nan() || x.is_infinite() {
             return Err(TimeSeriesError::InvalidInput(format!(
                 "Non-finite value at index {i}"
@@ -241,7 +241,7 @@ where
 
 /// Check if array is stationary (basic check)
 #[allow(dead_code)]
-pub fn check_stationarity_basic<S, F>(_data: &ArrayBase<S, Ix1>) -> Result<bool>
+pub fn check_stationarity_basic<S, F>(data: &ArrayBase<S, Ix1>) -> Result<bool>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive,
@@ -249,9 +249,9 @@ where
     check_array_length(_data, 10, "stationarity check")?;
 
     // Split _data into two halves
-    let mid = _data.len() / 2;
-    let first_half = _data.slice(ndarray::s![..mid]);
-    let second_half = _data.slice(ndarray::s![mid..]);
+    let mid = data.len() / 2;
+    let first_half = data.slice(ndarray::s![..mid]);
+    let second_half = data.slice(ndarray::s![mid..]);
 
     // Compare means and variances
     let mean1 = first_half.mean().unwrap_or(F::zero());

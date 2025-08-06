@@ -27,25 +27,25 @@ impl<F: Float> ConstantFolder<F> {
     }
 
     /// Apply constant folding to a graph
-    pub fn fold_constants(&mut self_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    pub fn fold_constants(&mut self, graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         let folded_count = 0;
         
         // Implementation would:
         // 1. Identify all constant nodes (variables with fixed values, literal constants)
-        // 2. Propagate constants through the _graph
+        // 2. Propagate constants through the graph
         // 3. Evaluate expressions with all constant inputs
         // 4. Replace the computation subtree with a constant node
         
-        self.mark_constant_nodes(_graph)?;
-        let _propagated = self.propagate_constants(_graph)?;
-        let _evaluated = self.evaluate_constant_expressions(_graph)?;
+        self.mark_constant_nodes(graph)?;
+        let _propagated = self.propagate_constants(graph)?;
+        let _evaluated = self.evaluate_constant_expressions(graph)?;
         
         Ok(folded_count)
     }
 
     /// Mark nodes that represent constants
-    fn mark_constant_nodes(&mut self_graph: &Graph<F>) -> Result<(), OptimizationError> {
-        // Traverse the _graph and identify:
+    fn mark_constant_nodes(&mut self, graph: &Graph<F>) -> Result<(), OptimizationError> {
+        // Traverse the graph and identify:
         // - Literal constant nodes
         // - Variables that are marked as constant
         // - Nodes that only depend on constants
@@ -54,7 +54,7 @@ impl<F: Float> ConstantFolder<F> {
     }
 
     /// Propagate constant information through the graph
-    fn propagate_constants(&mut self_graph: &Graph<F>) -> Result<usize, OptimizationError> {
+    fn propagate_constants(&mut self, graph: &Graph<F>) -> Result<usize, OptimizationError> {
         // For each node:
         // - Check if all inputs are constants
         // - If so, mark this node as a candidate for constant evaluation
@@ -63,22 +63,22 @@ impl<F: Float> ConstantFolder<F> {
     }
 
     /// Evaluate expressions that have all constant inputs
-    fn evaluate_constant_expressions(&mut self_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn evaluate_constant_expressions(&mut self, graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         // For each constant expression:
         // - Evaluate it to get the constant result
         // - Replace the expression with a constant node
-        // - Update references in the _graph
+        // - Update references in the graph
         
         Ok(0)
     }
 
     /// Check if a tensor is constant
-    pub fn is_constant(&self, tensor_id: TensorID) -> bool {
+    pub fn is_constant(&self, tensorid: TensorID) -> bool {
         self.constant_nodes.contains(&tensor_id)
     }
 
     /// Get the constant value of a tensor if it's constant
-    pub fn get_constant_value(&self, tensor_id: TensorID) -> Option<F> {
+    pub fn get_constant_value(&self, tensorid: TensorID) -> Option<F> {
         self.constant_cache.get(&tensor_id).copied()
     }
 
@@ -182,32 +182,32 @@ pub fn extract_constant_value<F: Float>(_tensor, internal: &TensorInternal<F>) -
 /// Create a constant tensor with the given value
 #[allow(dead_code)]
 pub fn create_constant_tensor<F: Float>(
-    _graph: &mut Graph<F>, _value: ConstantValue<F>,
+    graph: &mut Graph<F>, _value: ConstantValue<F>,
 ) -> Result<TensorID, OptimizationError> {
-    // Create a new constant tensor in the _graph
+    // Create a new constant tensor in the graph
     Err(OptimizationError::InvalidOperation("Not implemented".to_string()))
 }
 
 /// Arithmetic operations on constant values
 impl<F: Float> ConstantValue<F> {
     /// Add two constant values
-    pub fn add(&self_other: &Self) -> Result<Self, OptimizationError> {
+    pub fn add(selfother: &Self) -> Result<Self, OptimizationError> {
         // Implement addition for compatible constant types
         Err(OptimizationError::InvalidOperation("Addition not implemented".to_string()))
     }
 
     /// Subtract two constant values
-    pub fn sub(&self_other: &Self) -> Result<Self, OptimizationError> {
+    pub fn sub(selfother: &Self) -> Result<Self, OptimizationError> {
         Err(OptimizationError::InvalidOperation("Subtraction not implemented".to_string()))
     }
 
     /// Multiply two constant values
-    pub fn mul(&self_other: &Self) -> Result<Self, OptimizationError> {
+    pub fn mul(selfother: &Self) -> Result<Self, OptimizationError> {
         Err(OptimizationError::InvalidOperation("Multiplication not implemented".to_string()))
     }
 
     /// Divide two constant values
-    pub fn div(&self_other: &Self) -> Result<Self, OptimizationError> {
+    pub fn div(selfother: &Self) -> Result<Self, OptimizationError> {
         Err(OptimizationError::InvalidOperation("Division not implemented".to_string()))
     }
 

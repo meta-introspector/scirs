@@ -31,7 +31,7 @@ use ndarray::s;
 // ```
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
 
 #[allow(unused_imports)]
 /// Configuration for robust filtering algorithms
@@ -537,6 +537,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_alpha_trimmed_filter() {

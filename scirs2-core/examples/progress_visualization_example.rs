@@ -13,7 +13,7 @@ use std::time::Duration;
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Configure logging
-    scirs2_core::logging::set_min_log_level(LogLevel::Info);
+    scirs2_core::logging::set_minlog_level(LogLevel::Info);
 
     println!("=== Enhanced Progress Visualization Demo ===\n");
 
@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     demo_multi_progress()?;
 
     // Demo 3: Logger integration
-    demo_logger_integration()?;
+    demologger_integration()?;
 
     // Demo 4: Custom themes and templates
     demo_themes_and_templates()?;
@@ -135,7 +135,7 @@ fn demo_multi_progress() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn demo_logger_integration() -> Result<(), Box<dyn std::error::Error>> {
+fn demologger_integration() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nDemo 3: Logger Integration\n");
 
     let logger = Logger::new(data_processor)

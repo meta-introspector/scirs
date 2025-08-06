@@ -205,7 +205,7 @@ impl HybridSpatialOptimizer {
     }
 
     /// Configure quantum-classical balance
-    pub fn with_quantum_classical_coupling(mut self, quantum_weight: f64) -> Self {
+    pub fn with_quantum_classical_coupling(mut self, quantumweight: f64) -> Self {
         self.quantum_weight = quantum_weight.clamp(0.0, 1.0);
         self.classical_weight = 1.0 - self.quantum_weight;
         self
@@ -536,7 +536,7 @@ impl HybridSpatialOptimizer {
     }
 
     /// Calculate quantum variance for convergence assessment
-    fn calculate_quantum_variance(quantum_state: &QuantumState) -> f64 {
+    fn calculate_quantum_variance(quantumstate: &QuantumState) -> f64 {
         let mut variance = 0.0;
         let mean_amplitude = quantum_state
             .amplitudes
@@ -589,7 +589,7 @@ impl HybridSpatialOptimizer {
     ) -> SpatialResult<()> {
         if self.coupling_parameters.classical_bias {
             // Use classical gradients to inform quantum parameter updates
-            if let Some(ref _vqe) = self.vqe {
+            if let Some(ref vqe) = self.vqe {
                 // Encode classical gradient information into quantum parameter updates
                 // This would require modifying the VQE's parameter update strategy
                 // For now, we adjust the coupling parameters
@@ -633,7 +633,7 @@ impl HybridSpatialOptimizer {
     }
 
     /// Check convergence criteria
-    fn check_convergence(&self, _solution: &Array1<f64>, iteration: usize) -> bool {
+    fn check_convergence(&self, solution: &Array1<f64>, iteration: usize) -> bool {
         // Simple convergence check - could be made more sophisticated
         iteration > 10
             && (self
@@ -661,7 +661,7 @@ impl HybridSpatialOptimizer {
     }
 
     /// Evaluate solution quality
-    fn evaluate_solution_quality<F>(_solution: &Array1<f64>, objective_function: &F) -> f64
+    fn evaluate_solution_quality<F>(_solution: &Array1<f64>, objectivefunction: &F) -> f64
     where
         F: Fn(&Array1<f64>) -> f64,
     {
@@ -748,9 +748,9 @@ pub struct HybridClusteringMetrics {
 
 impl HybridClusterer {
     /// Create new hybrid clusterer
-    pub fn new(_num_clusters: usize) -> Self {
+    pub fn new(_numclusters: usize) -> Self {
         Self {
-            num_clusters: _num_clusters,
+            num_clusters: num_clusters,
             quantum_exploration_ratio: 0.7,
             classical_refinement: true,
             adaptive_switching: true,
@@ -847,7 +847,7 @@ impl HybridClusterer {
                 let mut best_cluster = 0;
                 let mut best_distance = f64::INFINITY;
 
-                for (j, centroid) in _centroids.outer_iter().enumerate() {
+                for (j, centroid) in centroids.outer_iter().enumerate() {
                     let distance: f64 = point
                         .iter()
                         .zip(centroid.iter())

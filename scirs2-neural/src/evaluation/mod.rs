@@ -88,7 +88,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
     Evaluator<F>
 {
     /// Create a new evaluator with the given configuration
-    pub fn new(_config: EvaluationConfig) -> Result<Self> {
+    pub fn new(config: EvaluationConfig) -> Result<Self> {
         let mut metrics = HashMap::new();
         // Initialize metrics
         for metric_type in &_config.metrics {

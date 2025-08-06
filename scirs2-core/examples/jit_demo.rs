@@ -87,7 +87,7 @@ impl AdvancedJitDemo {
         self.demonstrate_mathematical_kernels()?;
 
         // Phase 3: Matrix operations
-        self.demonstrate_matrix_operations()?;
+        self.demonstratematrix_operations()?;
 
         // Phase 4: Signal processing
         self.demonstrate_signal_processing()?;
@@ -131,7 +131,7 @@ impl AdvancedJitDemo {
         println!("   - Compilation time: < 1ms");
         println!(
             "   - Machine code size: {} bytes",
-            compiled_scalar.compiled_module.machine_code.len()
+            compiled_scalar.compiled_module.machinecode.len()
         );
         println!("   - Kernel name: {}", compiled_scalar.metadata.name);
 
@@ -279,7 +279,7 @@ impl AdvancedJitDemo {
             ),
         ];
 
-        for (name, description, kernel_code) in math_kernels {
+        for (name, description, kernelcode) in math_kernels {
             println!("\n📝 Compiling {name} kernel...");
             println!("   Description: {description}");
 
@@ -292,7 +292,7 @@ impl AdvancedJitDemo {
             let start_time = Instant::now();
             let compiled_kernel =
                 self.compiler
-                    .compile_kernel(name, kernel_code, &optimization_hints)?;
+                    .compile_kernel(name, kernelcode, &optimization_hints)?;
             let compilation_time = start_time.elapsed();
 
             println!("✅ {name} compiled successfully");
@@ -318,7 +318,7 @@ impl AdvancedJitDemo {
     }
 
     /// Demonstrate matrix operations
-    fn demonstrate_matrix_operations(&self) -> CoreResult<()> {
+    fn demonstratematrix_operations(&self) -> CoreResult<()> {
         println!("\n\n🔢 Phase 3: Matrix Operations");
         println!("=============================");
 
@@ -328,7 +328,7 @@ impl AdvancedJitDemo {
             println!("\n📊 Optimizing {size}x{size} matrix operations...");
 
             // Generate matrix multiplication kernel for specific size
-            let kernel_code = self.generate_matrix_kernel(size);
+            let kernelcode = self.generatematrix_kernel(size);
             let optimization_hints = vec![
                 "matrix_operation".to_string(),
                 "memory_bound".to_string(),
@@ -338,7 +338,7 @@ impl AdvancedJitDemo {
 
             let compiled_kernel = self.compiler.compile_kernel(
                 &format!("matmul_{size}x{size}"),
-                &kernel_code,
+                &kernelcode,
                 &optimization_hints,
             )?;
 
@@ -396,7 +396,7 @@ impl AdvancedJitDemo {
             println!("   Description: {description}");
 
             // Generate signal processing kernel
-            let kernel_code = self.generate_signal_kernel(kernel_name);
+            let kernelcode = AdvancedJitDemo::generate_signal_kernel(kernel_name);
             let optimization_hints = vec![
                 "signal_processing".to_string(),
                 "streaming_data".to_string(),
@@ -406,7 +406,7 @@ impl AdvancedJitDemo {
 
             let compiled_kernel =
                 self.compiler
-                    .compile_kernel(kernel_name, &kernel_code, &optimization_hints)?;
+                    .compile_kernel(kernel_name, &kernelcode, &optimization_hints)?;
 
             println!("✅ {kernel_name} kernel compiled");
             println!("   - Real-time performance: Optimized");
@@ -420,7 +420,7 @@ impl AdvancedJitDemo {
             );
 
             // Estimate throughput
-            let avg_execution_time = if !compiled_kernel.performance.execution_times.is_empty() {
+            let avgexecution_time = if !compiled_kernel.performance.execution_times.is_empty() {
                 compiled_kernel
                     .performance
                     .execution_times
@@ -431,7 +431,7 @@ impl AdvancedJitDemo {
             } else {
                 0.001 // Default 1ms if no data
             };
-            let estimated_throughput = 1.0 / avg_execution_time;
+            let estimated_throughput = 1.0 / avgexecution_time;
             println!("   - Estimated throughput: {estimated_throughput:.0} operations/sec");
         }
 
@@ -649,7 +649,7 @@ impl AdvancedJitDemo {
     // Helper methods for kernel generation
 
     /// Generate a matrix multiplication kernel for given size
-    fn generate_matrix_kernel(&self, size: usize) -> String {
+    fn generatematrix_kernel(&self, size: usize) -> String {
         format!(
             r#"
         define void @matmul_{size}x{size}(double* %a, double* %b, double* %c) {{
@@ -716,8 +716,8 @@ impl AdvancedJitDemo {
     }
 
     /// Generate a signal processing kernel
-    fn generate_signal_kernel(kernel_type: &str) -> String {
-        match kernel_type {
+    fn generate_signal_kernel(kerneltype: &str) -> String {
+        match kerneltype {
             "convolution_1d" => r#"
             define void @convolution_1d(double* %input, double* %kernel, double* %output, i32 %n, i32 %k) {
             entry:
@@ -843,9 +843,9 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_kernel_generation() {
+    fn testmatrix_kernel_generation() {
         let demo = advancedJitDemo::new().unwrap();
-        let kernel = demo.generate_matrix_kernel(64);
+        let kernel = demo.generatematrix_kernel(64);
         assert!(kernel.contains(matmul_64x64));
         assert!(kernel.contains("define void"));
     }

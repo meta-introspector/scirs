@@ -26,10 +26,10 @@ static GLOBAL_CLUSTER_MANAGER: std::sync::OnceLock<Arc<ClusterManager>> =
 pub struct ClusterManager {
     cluster_state: Arc<RwLock<ClusterState>>,
     node_registry: Arc<RwLock<NodeRegistry>>,
-    health_monitor: Arc<Mutex<HealthMonitor>>,
+    healthmonitor: Arc<Mutex<HealthMonitor>>,
     resource_allocator: Arc<RwLock<ResourceAllocator>>,
     configuration: Arc<RwLock<ClusterConfiguration>>,
-    event_log: Arc<Mutex<ClusterEventLog>>,
+    eventlog: Arc<Mutex<ClusterEventLog>>,
 }
 
 #[allow(dead_code)]
@@ -39,10 +39,10 @@ impl ClusterManager {
         Ok(Self {
             cluster_state: Arc::new(RwLock::new(ClusterState::new())),
             node_registry: Arc::new(RwLock::new(NodeRegistry::new())),
-            health_monitor: Arc::new(Mutex::new(HealthMonitor::new()?)),
+            healthmonitor: Arc::new(Mutex::new(HealthMonitor::new()?)),
             resource_allocator: Arc::new(RwLock::new(ResourceAllocator::new())),
             configuration: Arc::new(RwLock::new(config)),
-            event_log: Arc::new(Mutex::new(ClusterEventLog::new())),
+            eventlog: Arc::new(Mutex::new(ClusterEventLog::new())),
         })
     }
 
@@ -59,7 +59,7 @@ impl ClusterManager {
         self.start_node_discovery()?;
 
         // Start health monitoring
-        self.start_health_monitoring()?;
+        self.start_healthmonitoring()?;
 
         // Start resource management
         self.start_resource_management()?;
@@ -73,10 +73,10 @@ impl ClusterManager {
     fn start_node_discovery(&self) -> CoreResult<()> {
         let registry = self.node_registry.clone();
         let config = self.configuration.clone();
-        let event_log = self.event_log.clone();
+        let eventlog = self.eventlog.clone();
 
         thread::spawn(move || loop {
-            if let Err(e) = Self::node_discovery_loop(&registry, &config, &event_log) {
+            if let Err(e) = Self::node_discovery_loop(&registry, &config, &eventlog) {
                 eprintln!("Node discovery error: {e:?}");
             }
             thread::sleep(Duration::from_secs(30));
@@ -85,13 +85,13 @@ impl ClusterManager {
         Ok(())
     }
 
-    fn start_health_monitoring(&self) -> CoreResult<()> {
-        let health_monitor = self.health_monitor.clone();
+    fn start_healthmonitoring(&self) -> CoreResult<()> {
+        let healthmonitor = self.healthmonitor.clone();
         let registry = self.node_registry.clone();
-        let event_log = self.event_log.clone();
+        let eventlog = self.eventlog.clone();
 
         thread::spawn(move || loop {
-            if let Err(e) = Self::health_monitoring_loop(&health_monitor, &registry, &event_log) {
+            if let Err(e) = Self::healthmonitoring_loop(&healthmonitor, &registry, &eventlog) {
                 eprintln!("Health monitoring error: {e:?}");
             }
             thread::sleep(Duration::from_secs(10));
@@ -117,10 +117,10 @@ impl ClusterManager {
     fn start_cluster_coordination(&self) -> CoreResult<()> {
         let cluster_state = self.cluster_state.clone();
         let registry = self.node_registry.clone();
-        let event_log = self.event_log.clone();
+        let eventlog = self.eventlog.clone();
 
         thread::spawn(move || loop {
-            if let Err(e) = Self::cluster_coordination_loop(&cluster_state, &registry, &event_log) {
+            if let Err(e) = Self::cluster_coordination_loop(&cluster_state, &registry, &eventlog) {
                 eprintln!("Cluster coordination error: {e:?}");
             }
             thread::sleep(Duration::from_secs(5));
@@ -132,7 +132,7 @@ impl ClusterManager {
     fn node_discovery_loop(
         registry: &Arc<RwLock<NodeRegistry>>,
         config: &Arc<RwLock<ClusterConfiguration>>,
-        event_log: &Arc<Mutex<ClusterEventLog>>,
+        eventlog: &Arc<Mutex<ClusterEventLog>>,
     ) -> CoreResult<()> {
         let config_read = config.read().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new("Failed to acquire config lock"))
@@ -167,14 +167,12 @@ impl ClusterManager {
                     Self::multicast_discovery(group, *port)?
                 }
                 NodeDiscoveryMethod::DnsService {
-                    service_name: _service_name,
+                    service_name,
                 } => {
                     // Placeholder implementation
                     vec![]
                 }
-                NodeDiscoveryMethod::Consul {
-                    endpoint: _endpoint,
-                } => {
+                NodeDiscoveryMethod::Consul { endpoint } => {
                     // Placeholder implementation
                     vec![]
                 }
@@ -184,17 +182,17 @@ impl ClusterManager {
                 CoreError::InvalidState(ErrorContext::new("Failed to acquire registry lock"))
             })?;
 
-            for node_info in discovered_nodes {
-                if registry_write.register_node(node_info.clone())? {
+            for nodeinfo in discovered_nodes {
+                if registry_write.register_node(nodeinfo.clone())? {
                     // New node discovered
-                    let mut _log = event_log.lock().map_err(|_| {
+                    let mut log = eventlog.lock().map_err(|_| {
                         CoreError::InvalidState(ErrorContext::new(
-                            "Failed to acquire event _log lock",
+                            "Failed to acquire event log lock",
                         ))
                     })?;
-                    _log.log_event(ClusterEvent::NodeDiscovered {
-                        node_id: node_info.id.clone(),
-                        address: node_info.address,
+                    log.log_event(ClusterEvent::NodeDiscovered {
+                        nodeid: nodeinfo.id.clone(),
+                        address: nodeinfo.address,
                         timestamp: Instant::now(),
                     });
                 }
@@ -242,17 +240,17 @@ impl ClusterManager {
         Self::multicast_discovery(group, port)
     }
 
-    fn discover_via_dns_service(&self, _service_name: &str) -> CoreResult<Vec<NodeInfo>> {
+    fn discover_via_dns_service(&self, _servicename: &str) -> CoreResult<Vec<NodeInfo>> {
         // Placeholder implementation
         Ok(vec![])
     }
 
-    fn discover_via_consul(&self, _endpoint: &str) -> CoreResult<Vec<NodeInfo>> {
+    fn discover_via_consul(&self, endpoint: &str) -> CoreResult<Vec<NodeInfo>> {
         // Placeholder implementation
         Ok(vec![])
     }
 
-    fn is_node_reachable(_address: SocketAddr) -> CoreResult<bool> {
+    fn is_node_reachable(address: SocketAddr) -> CoreResult<bool> {
         // Simple reachability check
         // In a real implementation, this would do proper health checking
         Ok(true) // Placeholder
@@ -298,7 +296,7 @@ impl ClusterManager {
                                 // Parse node information from response
                                 let parts: Vec<&str> = response.split(':').collect();
                                 if parts.len() >= 3 {
-                                    let node_id = parts[1usize].to_string();
+                                    let nodeid = parts[1usize].to_string();
                                     let node_type = match parts[2usize] {
                                         "master" => NodeType::Master,
                                         "worker" => NodeType::Worker,
@@ -308,7 +306,7 @@ impl ClusterManager {
                                     };
 
                                     discovered_nodes.push(NodeInfo {
-                                        id: node_id,
+                                        id: nodeid,
                                         address: addr,
                                         node_type,
                                         capabilities: NodeCapabilities::default(),
@@ -333,7 +331,7 @@ impl ClusterManager {
         Ok(discovered_nodes)
     }
 
-    fn dns_discovery(_service_name: &str) -> CoreResult<Vec<NodeInfo>> {
+    fn dns_discovery(_servicename: &str) -> CoreResult<Vec<NodeInfo>> {
         // DNS-SD discovery implementation
         // This would typically use DNS SRV records to discover services
         #[allow(unused_mut)]
@@ -371,10 +369,10 @@ impl ClusterManager {
                                 // Try to parse IP address
                                 if let Ok(ip) = address_str.parse::<IpAddr>() {
                                     let socket_addr = SocketAddr::new(ip, port);
-                                    let node_id = format!("dns_{hostname}_{port}");
+                                    let nodeid = format!("dns_{hostname}_{port}");
 
                                     discovered_nodes.push(NodeInfo {
-                                        id: node_id,
+                                        id: nodeid,
                                         address: socket_addr,
                                         node_type: NodeType::Worker,
                                         capabilities: NodeCapabilities::default(),
@@ -415,7 +413,7 @@ impl ClusterManager {
                                     if parts.len() >= 4 {
                                         if let Ok(port) = parts[2usize].parse::<u16>() {
                                             let hostname = parts[3usize].trim_end_matches('.');
-                                            let node_id = format!("srv_{hostname}_{port}");
+                                            let nodeid = format!("srv_{hostname}_{port}");
 
                                             // Try to resolve hostname to IP
                                             if let Ok(mut addrs) =
@@ -425,7 +423,7 @@ impl ClusterManager {
                                             {
                                                 if let Some(addr) = addrs.next() {
                                                     discovered_nodes.push(NodeInfo {
-                                                        id: node_id,
+                                                        id: nodeid,
                                                         address: addr,
                                                         node_type: NodeType::Worker,
                                                         capabilities: NodeCapabilities::default(),
@@ -478,7 +476,7 @@ impl ClusterManager {
                             let parts: Vec<&str> = line.split_whitespace().collect();
                             if parts.len() >= 2 {
                                 let service_instance = parts[1usize];
-                                let node_id = format!("dnssd_{service_instance}");
+                                let nodeid = format!("dnssd_{service_instance}");
 
                                 // For now, use a default port and localhost
                                 // Real implementation would resolve the service
@@ -488,7 +486,7 @@ impl ClusterManager {
                                 );
 
                                 discovered_nodes.push(NodeInfo {
-                                    id: node_id,
+                                    id: nodeid,
                                     address: socket_addr,
                                     node_type: NodeType::Worker,
                                     capabilities: NodeCapabilities::default(),
@@ -610,12 +608,12 @@ impl ClusterManager {
                                                         port_str.parse::<u16>(),
                                                     ) {
                                                         let socket_addr = SocketAddr::new(ip, port);
-                                                        let node_id = format!(
+                                                        let nodeid = format!(
                                                             "consul_{service_name}_{address_str}"
                                                         );
 
                                                         discovered_nodes.push(NodeInfo {
-                                                            id: node_id,
+                                                            id: nodeid,
                                                             address: socket_addr,
                                                             node_type: NodeType::Worker,
                                                             capabilities: NodeCapabilities::default(),
@@ -660,10 +658,10 @@ impl ClusterManager {
         Ok(discovered_nodes)
     }
 
-    fn health_monitoring_loop(
-        health_monitor: &Arc<Mutex<HealthMonitor>>,
+    fn healthmonitoring_loop(
+        healthmonitor: &Arc<Mutex<HealthMonitor>>,
         registry: &Arc<RwLock<NodeRegistry>>,
-        event_log: &Arc<Mutex<ClusterEventLog>>,
+        eventlog: &Arc<Mutex<ClusterEventLog>>,
     ) -> CoreResult<()> {
         let nodes = {
             let registry_read = registry.read().map_err(|_| {
@@ -672,31 +670,31 @@ impl ClusterManager {
             registry_read.get_all_nodes()
         };
 
-        let mut _monitor = health_monitor.lock().map_err(|_| {
-            CoreError::InvalidState(ErrorContext::new("Failed to acquire health _monitor lock"))
+        let mut monitor = healthmonitor.lock().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new("Failed to acquire health monitor lock"))
         })?;
 
-        for node_info in nodes {
-            let health_status = _monitor.check_node_health(&node_info)?;
+        for nodeinfo in nodes {
+            let health_status = monitor.check_node_health(&nodeinfo)?;
 
             // Update node status
             let mut registry_write = registry.write().map_err(|_| {
                 CoreError::InvalidState(ErrorContext::new("Failed to acquire registry lock"))
             })?;
 
-            let previous_status = registry_write.get_node_status(&node_info.id);
-            registry_write.update_node_status(&node_info.id, health_status.status)?;
+            let previous_status = registry_write.get_node_status(&nodeinfo.id);
+            registry_write.update_node_status(&nodeinfo.id, health_status.status)?;
 
             // Log status changes
             if let Some(prev_status) = previous_status {
                 if prev_status != health_status.status {
-                    let mut _log = event_log.lock().map_err(|_| {
+                    let mut log = eventlog.lock().map_err(|_| {
                         CoreError::InvalidState(ErrorContext::new(
-                            "Failed to acquire event _log lock",
+                            "Failed to acquire event log lock",
                         ))
                     })?;
-                    _log.log_event(ClusterEvent::NodeStatusChanged {
-                        node_id: node_info.id.clone(),
+                    log.log_event(ClusterEvent::NodeStatusChanged {
+                        nodeid: nodeinfo.id.clone(),
                         old_status: prev_status,
                         new_status: health_status.status,
                         timestamp: Instant::now(),
@@ -732,7 +730,7 @@ impl ClusterManager {
     fn cluster_coordination_loop(
         cluster_state: &Arc<RwLock<ClusterState>>,
         registry: &Arc<RwLock<NodeRegistry>>,
-        event_log: &Arc<Mutex<ClusterEventLog>>,
+        eventlog: &Arc<Mutex<ClusterEventLog>>,
     ) -> CoreResult<()> {
         let healthy_nodes = {
             let registry_read = registry.read().map_err(|_| {
@@ -755,11 +753,11 @@ impl ClusterManager {
             if let Some(leader) = new_leader {
                 state_write.set_leader(leader.clone());
 
-                let mut _log = event_log.lock().map_err(|_| {
-                    CoreError::InvalidState(ErrorContext::new("Failed to acquire event _log lock"))
+                let mut log = eventlog.lock().map_err(|_| {
+                    CoreError::InvalidState(ErrorContext::new("Failed to acquire event log lock"))
                 })?;
-                _log.log_event(ClusterEvent::LeaderElected {
-                    node_id: leader,
+                log.log_event(ClusterEvent::LeaderElected {
+                    nodeid: leader,
                     timestamp: Instant::now(),
                 });
             }
@@ -784,7 +782,7 @@ impl ClusterManager {
     }
 
     /// Register a new node in the cluster
-    pub fn register_node(&self, node_info: NodeInfo) -> CoreResult<()> {
+    pub fn register_node(&self, nodeinfo: NodeInfo) -> CoreResult<()> {
         let mut registry = self.node_registry.write().map_err(|_| {
             CoreError::InvalidState(
                 ErrorContext::new("Failed to acquire registry lock")
@@ -792,7 +790,7 @@ impl ClusterManager {
             )
         })?;
 
-        registry.register_node(node_info)?;
+        registry.register_node(nodeinfo)?;
         Ok(())
     }
 
@@ -847,8 +845,8 @@ impl ClusterManager {
         Ok(registry.get_healthy_nodes())
     }
 
-    /// Get available nodes (returns node_id -> node_info mapping)
-    pub fn get_available_nodes(&self) -> CoreResult<HashMap<String, NodeInfo>> {
+    /// Get available nodes (returns nodeid -> nodeinfo mapping)
+    pub fn get_availablenodes(&self) -> CoreResult<HashMap<String, NodeInfo>> {
         let registry = self.node_registry.read().map_err(|_| {
             CoreError::InvalidState(
                 ErrorContext::new("Failed to acquire registry lock")
@@ -895,9 +893,9 @@ impl ClusterManager {
         let allocation = allocator.allocate_resources(&task.resource_requirements)?;
 
         // Create task execution plan
-        let task_id = TaskId::generate();
+        let taskid = TaskId::generate();
         let _execution_plan = ExecutionPlan {
-            task_id: task_id.clone(),
+            taskid: taskid.clone(),
             task,
             node_allocation: allocation,
             created_at: Instant::now(),
@@ -906,7 +904,7 @@ impl ClusterManager {
 
         // Submit to scheduler (placeholder)
         // In a real implementation, this would go to the distributed scheduler
-        Ok(task_id)
+        Ok(taskid)
     }
 
     /// Get cluster statistics
@@ -983,8 +981,8 @@ impl ClusterState {
         // Re-elect every 5 minutes
     }
 
-    pub fn set_leader(&mut self, node_id: String) {
-        self.leader_node = Some(node_id);
+    pub fn set_leader(&mut self, nodeid: String) {
+        self.leader_node = Some(nodeid);
         self.last_updated = Instant::now();
     }
 }
@@ -1010,11 +1008,11 @@ impl NodeRegistry {
         }
     }
 
-    pub fn register_node(&mut self, node_info: NodeInfo) -> CoreResult<bool> {
-        let is_new = !self.nodes.contains_key(&node_info.id);
-        self.nodes.insert(node_info.id.clone(), node_info.clone());
+    pub fn register_node(&mut self, nodeinfo: NodeInfo) -> CoreResult<bool> {
+        let is_new = !self.nodes.contains_key(&nodeinfo.id);
+        self.nodes.insert(nodeinfo.id.clone(), nodeinfo.clone());
         self.node_status
-            .insert(node_info.id.clone(), node_info.status);
+            .insert(nodeinfo.id.clone(), nodeinfo.status);
         Ok(is_new)
     }
 
@@ -1030,14 +1028,14 @@ impl NodeRegistry {
             .collect()
     }
 
-    pub fn get_node_status(&self, node_id: &str) -> Option<NodeStatus> {
-        self.node_status.get(node_id).copied()
+    pub fn get_node_status(&self, nodeid: &str) -> Option<NodeStatus> {
+        self.node_status.get(nodeid).copied()
     }
 
-    pub fn update_node_status(&mut self, node_id: &str, status: NodeStatus) -> CoreResult<()> {
-        if let Some(node) = self.nodes.get_mut(node_id) {
+    pub fn update_node_status(&mut self, nodeid: &str, status: NodeStatus) -> CoreResult<()> {
+        if let Some(node) = self.nodes.get_mut(nodeid) {
             node.status = status;
-            self.node_status.insert(node_id.to_string(), status);
+            self.node_status.insert(nodeid.to_string(), status);
         }
         Ok(())
     }
@@ -1303,17 +1301,17 @@ impl ResourceAllocator {
             let mut medium = Vec::new();
             let mut small = Vec::new();
 
-            for (task_id, allocation) in allocations {
+            for (taskid, allocation) in allocations {
                 let total_resources = allocation.allocated_resources.cpu_cores
                     + allocation.allocated_resources.memory_gb
                     + allocation.allocated_resources.gpu_count * 4;
 
                 if total_resources >= 32 {
-                    large.push((task_id.clone(), allocation.clone()));
+                    large.push((taskid.clone(), allocation.clone()));
                 } else if total_resources >= 8 {
-                    medium.push((task_id.clone(), allocation.clone()));
+                    medium.push((taskid.clone(), allocation.clone()));
                 } else {
-                    small.push((task_id.clone(), allocation.clone()));
+                    small.push((taskid.clone(), allocation.clone()));
                 }
             }
 
@@ -1322,10 +1320,10 @@ impl ResourceAllocator {
 
         // Best-fit strategy for large allocations:
         // Ensure they get dedicated, high-capacity nodes
-        for (task_id, allocation) in large_allocations {
+        for (taskid, allocation) in large_allocations {
             if allocation.assigned_nodes.len() > 1 {
                 // Try to consolidate onto a single high-capacity node
-                if self.attempt_consolidation(&task_id, &allocation)? {
+                if self.attempt_consolidation(&taskid, &allocation)? {
                     optimizations_made += 1;
                 }
             }
@@ -1333,16 +1331,16 @@ impl ResourceAllocator {
 
         // Best-fit strategy for medium allocations:
         // Pair them efficiently to minimize waste
-        for (task_id, allocation) in medium_allocations {
-            if self.attempt_best_fit_pairing(&task_id, &allocation)? {
+        for (taskid, allocation) in medium_allocations {
+            if self.attempt_best_fit_pairing(&taskid, &allocation)? {
                 optimizations_made += 1;
             }
         }
 
         // Best-fit strategy for small allocations:
         // Pack them tightly onto shared nodes
-        for (task_id, allocation) in small_allocations {
-            if self.attempt_small_allocation_packing(&task_id, &allocation)? {
+        for (taskid, allocation) in small_allocations {
+            if self.attempt_small_allocation_packing(&taskid, &allocation)? {
                 optimizations_made += 1;
             }
         }
@@ -1366,21 +1364,21 @@ impl ResourceAllocator {
         // to prevent hot spots and maximize overall cluster throughput
 
         // Calculate current load distribution across nodes
-        let mut node_loads = HashMap::new();
+        let mut nodeloads = HashMap::new();
         let mut total_load = 0.0f64;
 
         // Calculate load for each node based on current allocations
         for allocation in self.allocations.values() {
-            for node_id in &allocation.assigned_nodes {
+            for nodeid in &allocation.assigned_nodes {
                 let load_weight =
                     self.calculate_allocation_load_weight(&allocation.allocated_resources);
-                *node_loads.entry(node_id.clone()).or_insert(0.0) += load_weight;
+                *nodeloads.entry(nodeid.clone()).or_insert(0.0) += load_weight;
                 total_load += load_weight;
             }
         }
 
         // Identify the target load per node (assuming uniform node capabilities)
-        let num_active_nodes = node_loads.len().max(1);
+        let num_active_nodes = nodeloads.len().max(1);
         let target_load_per_node = total_load / num_active_nodes as f64;
         let load_variance_threshold = target_load_per_node * 0.15f64; // 15% variance allowed
 
@@ -1388,12 +1386,12 @@ impl ResourceAllocator {
         let mut overloaded_nodes = Vec::new();
         let mut underloaded_nodes = Vec::new();
 
-        for (node_id, &current_load) in &node_loads {
+        for (nodeid, &current_load) in &nodeloads {
             let load_diff = current_load - target_load_per_node;
             if load_diff > load_variance_threshold {
-                overloaded_nodes.push((node_id.clone(), current_load, load_diff));
+                overloaded_nodes.push((nodeid.clone(), current_load, load_diff));
             } else if load_diff < -load_variance_threshold {
-                underloaded_nodes.push((node_id.clone(), current_load, -load_diff));
+                underloaded_nodes.push((nodeid.clone(), current_load, -load_diff));
             }
         }
 
@@ -1402,38 +1400,38 @@ impl ResourceAllocator {
         underloaded_nodes.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
 
         let mut rebalancing_actions = 0;
-        let initial_variance = self.calculate_load_variance(&node_loads);
+        let initial_variance = self.calculate_load_variance(&nodeloads);
 
         // Rebalancing algorithm: move allocations from overloaded to underloaded nodes
-        for (overloaded_node, _current_load, _overloaded_amount) in overloaded_nodes {
+        for (overloaded_node, current_load, overloaded_amount) in overloaded_nodes {
             // Find allocations on this overloaded node that can be moved
             let moveable_allocations = self.find_moveable_allocations(&overloaded_node);
 
-            for (task_id, allocation) in moveable_allocations {
+            for (taskid, allocation) in moveable_allocations {
                 // Find the best underloaded node for this allocation
                 if let Some((target_node, _)) = self.find_best_target_node(
                     &allocation.allocated_resources,
                     &underloaded_nodes
                         .iter()
-                        .map(|(node_id, load, _)| (node_id.clone(), *load))
+                        .map(|(nodeid, load, _)| (nodeid.clone(), *load))
                         .collect::<Vec<_>>(),
                 )? {
                     // Attempt to move the allocation
-                    if self.attempt_allocation_migration(&task_id, &target_node)? {
+                    if self.attempt_allocation_migration(&taskid, &target_node)? {
                         rebalancing_actions += 1;
 
                         // Update node loads tracking
                         let allocation_weight =
                             self.calculate_allocation_load_weight(&allocation.allocated_resources);
-                        if let Some(old_load) = node_loads.get_mut(&overloaded_node) {
+                        if let Some(old_load) = nodeloads.get_mut(&overloaded_node) {
                             *old_load -= allocation_weight;
                         }
-                        if let Some(new_load) = node_loads.get_mut(&target_node) {
+                        if let Some(new_load) = nodeloads.get_mut(&target_node) {
                             *new_load += allocation_weight;
                         }
 
                         // Check if we've balanced enough
-                        if node_loads.get(&overloaded_node).copied().unwrap_or(0.0)
+                        if nodeloads.get(&overloaded_node).copied().unwrap_or(0.0)
                             <= target_load_per_node + load_variance_threshold
                         {
                             break; // This node is now balanced
@@ -1451,19 +1449,19 @@ impl ResourceAllocator {
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
 
-        for (task_id, allocation) in single_node_allocations {
+        for (taskid, allocation) in single_node_allocations {
             let load_weight =
                 self.calculate_allocation_load_weight(&allocation.allocated_resources);
             if load_weight > target_load_per_node * 0.6 {
                 // Large allocation
-                if self.attempt_allocation_spreading(&task_id, &allocation)? {
+                if self.attempt_allocation_spreading(&taskid, &allocation)? {
                     rebalancing_actions += 1;
                 }
             }
         }
 
         // Calculate improvement in load balance
-        let final_variance = self.calculate_load_variance(&node_loads);
+        let final_variance = self.calculate_load_variance(&nodeloads);
         let _variance_improvement = initial_variance - final_variance;
 
         if rebalancing_actions > 0 {
@@ -1565,7 +1563,7 @@ impl ResourceAllocator {
         Ok(false)
     }
 
-    fn try_pack_small_allocations(&self, _allocation: &ResourceAllocation) -> CoreResult<bool> {
+    fn try_pack_small_allocations(&self, allocation: &ResourceAllocation) -> CoreResult<bool> {
         // Attempt to pack small allocations tightly onto shared nodes
         // For now, return false indicating no packing optimization was made
         Ok(false)
@@ -1582,30 +1580,30 @@ impl ResourceAllocator {
         cpu_weight + memory_weight + gpu_weight + disk_weight
     }
 
-    fn calculate_load_variance(&self, node_loads: &HashMap<String, f64>) -> f64 {
+    fn calculate_load_variance(&self, nodeloads: &HashMap<String, f64>) -> f64 {
         // Calculate variance in load distribution across nodes
-        if node_loads.len() <= 1 {
+        if nodeloads.len() <= 1 {
             return 0.0f64;
         }
 
-        let total_load: f64 = node_loads.values().sum();
-        let mean_load = total_load / node_loads.len() as f64;
+        let total_load: f64 = nodeloads.values().sum();
+        let mean_load = total_load / nodeloads.len() as f64;
 
-        let variance = node_loads
+        let variance = nodeloads
             .values()
             .map(|&load| (load - mean_load).powi(2))
             .sum::<f64>()
-            / node_loads.len() as f64;
+            / nodeloads.len() as f64;
 
         variance.sqrt() // Return standard deviation
     }
 
-    fn find_moveable_allocations(&self, node_id: &str) -> Vec<(TaskId, ResourceAllocation)> {
+    fn find_moveable_allocations(&self, nodeid: &str) -> Vec<(TaskId, ResourceAllocation)> {
         // Find allocations on a specific node that can potentially be moved
         self.allocations
             .iter()
-            .filter(|(_, allocation)| allocation.assigned_nodes.contains(&node_id.to_string()))
-            .map(|(task_id, allocation)| (task_id.clone(), allocation.clone()))
+            .filter(|(_, allocation)| allocation.assigned_nodes.contains(&nodeid.to_string()))
+            .map(|(taskid, allocation)| (taskid.clone(), allocation.clone()))
             .collect()
     }
 
@@ -1618,10 +1616,10 @@ impl ResourceAllocator {
         // For now, just return the most underloaded node
         nodes
             .first()
-            .map(|(node_id, load, _capacity)| (node_id.clone(), *load))
+            .map(|(nodeid, load, capacity)| (nodeid.clone(), *load))
     }
 
-    fn try_migrate_allocation(&self, _task_id: &TaskId, _target_node: &str) -> CoreResult<bool> {
+    fn try_migrate_allocation(&self, _taskid: &TaskId, _targetnode: &str) -> CoreResult<bool> {
         // Attempt to migrate an allocation to a different node
         // For now, return false indicating migration wasn't performed
         // In a real implementation, this would:
@@ -1631,7 +1629,7 @@ impl ResourceAllocator {
         Ok(false)
     }
 
-    fn try_spread_allocation(&self, _allocation: &ResourceAllocation) -> CoreResult<bool> {
+    fn try_spread_allocation(&self, allocation: &ResourceAllocation) -> CoreResult<bool> {
         // Attempt to spread a large allocation across multiple nodes
         // For now, return false indicating spreading wasn't performed
         Ok(false)
@@ -1643,7 +1641,7 @@ impl ResourceAllocator {
 
     pub fn attempt_consolidation(
         &mut self,
-        _task_id: &TaskId,
+        _taskid: &TaskId,
         _allocation: &ResourceAllocation,
     ) -> CoreResult<bool> {
         // Placeholder implementation
@@ -1652,7 +1650,7 @@ impl ResourceAllocator {
 
     pub fn attempt_best_fit_pairing(
         &mut self,
-        _task_id: &TaskId,
+        _taskid: &TaskId,
         _allocation: &ResourceAllocation,
     ) -> CoreResult<bool> {
         // Placeholder implementation
@@ -1661,7 +1659,7 @@ impl ResourceAllocator {
 
     pub fn attempt_small_allocation_packing(
         &mut self,
-        _task_id: &TaskId,
+        _taskid: &TaskId,
         _allocation: &ResourceAllocation,
     ) -> CoreResult<bool> {
         // Placeholder implementation
@@ -1679,7 +1677,7 @@ impl ResourceAllocator {
 
     pub fn attempt_allocation_migration(
         &mut self,
-        _task_id: &TaskId,
+        _taskid: &TaskId,
         _to_node: &str,
     ) -> CoreResult<bool> {
         // Placeholder implementation
@@ -1688,7 +1686,7 @@ impl ResourceAllocator {
 
     pub fn attempt_allocation_spreading(
         &mut self,
-        _task_id: &TaskId,
+        _taskid: &TaskId,
         _allocation: &ResourceAllocation,
     ) -> CoreResult<bool> {
         // Placeholder implementation
@@ -1794,7 +1792,7 @@ pub struct NodeCapabilities {
     pub memory_gb: usize,
     pub gpu_count: usize,
     pub disk_space_gb: usize,
-    pub network_bandwidth_gbps: f64,
+    pub networkbandwidth_gbps: f64,
     pub specialized_units: Vec<SpecializedUnit>,
 }
 
@@ -1805,7 +1803,7 @@ impl Default for NodeCapabilities {
             memory_gb: 8,
             gpu_count: 0,
             disk_space_gb: 100,
-            network_bandwidth_gbps: 1.0f64,
+            networkbandwidth_gbps: 1.0f64,
             specialized_units: Vec::new(),
         }
     }
@@ -2041,7 +2039,7 @@ pub enum AllocationStrategy {
 
 #[derive(Debug, Clone)]
 pub struct DistributedTask {
-    pub task_id: TaskId,
+    pub taskid: TaskId,
     pub task_type: TaskType,
     pub resource_requirements: ResourceRequirements,
     pub data_dependencies: Vec<DataDependency>,
@@ -2092,7 +2090,7 @@ pub struct TaskParameters {
     pub environment_variables: HashMap<String, String>,
     pub command_arguments: Vec<String>,
     pub timeout: Option<Duration>,
-    pub retry_policy: RetryPolicy,
+    pub retrypolicy: RetryPolicy,
 }
 
 #[derive(Debug, Clone)]
@@ -2118,7 +2116,7 @@ pub enum TaskPriority {
 
 #[derive(Debug, Clone)]
 pub struct ExecutionPlan {
-    pub task_id: TaskId,
+    pub taskid: TaskId,
     pub task: DistributedTask,
     pub node_allocation: ResourceAllocation,
     pub created_at: Instant,
@@ -2138,28 +2136,28 @@ pub enum ExecutionStatus {
 #[derive(Debug, Clone)]
 pub enum ClusterEvent {
     NodeDiscovered {
-        node_id: String,
+        nodeid: String,
         address: SocketAddr,
         timestamp: Instant,
     },
     NodeStatusChanged {
-        node_id: String,
+        nodeid: String,
         old_status: NodeStatus,
         new_status: NodeStatus,
         timestamp: Instant,
     },
     LeaderElected {
-        node_id: String,
+        nodeid: String,
         timestamp: Instant,
     },
     TaskScheduled {
-        task_id: TaskId,
-        node_id: String,
+        taskid: TaskId,
+        nodeid: String,
         timestamp: Instant,
     },
     TaskCompleted {
-        task_id: TaskId,
-        node_id: String,
+        taskid: TaskId,
+        nodeid: String,
         execution_time: Duration,
         timestamp: Instant,
     },
@@ -2254,7 +2252,7 @@ mod tests {
     }
 
     #[test]
-    fn test_health_monitor() {
+    fn test_healthmonitor() {
         let mut monitor = HealthMonitor::new().unwrap();
 
         let node = NodeInfo {

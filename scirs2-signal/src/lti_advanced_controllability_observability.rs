@@ -1768,8 +1768,8 @@ fn estimate_analysis_memory_usage(n: usize) -> f64 {
 }
 
 #[allow(dead_code)]
-fn estimate_numerical_accuracy(_config: &AdvancedAnalysisConfig) -> f64 {
-    match _config.optimization_level {
+fn estimate_numerical_accuracy(config: &AdvancedAnalysisConfig) -> f64 {
+    match config.optimization_level {
         OptimizationLevel::MaxAccuracy => 0.999,
         OptimizationLevel::Balanced => 0.995,
         OptimizationLevel::MaxPerformance => 0.99,
@@ -1779,6 +1779,7 @@ fn estimate_numerical_accuracy(_config: &AdvancedAnalysisConfig) -> f64 {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_advanced_controllability_observability_analysis() {

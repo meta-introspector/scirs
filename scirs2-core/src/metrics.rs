@@ -665,15 +665,15 @@ impl Default for HealthMonitor {
 /// Memory usage health check
 pub struct MemoryHealthCheck {
     warning_threshold: f64,
-    critical_threshold: f64,
+    criticalthreshold: f64,
 }
 
 impl MemoryHealthCheck {
     /// Create a new memory health check
-    pub fn new(warning_threshold: f64, critical_threshold: f64) -> Self {
+    pub fn new(warning_threshold: f64, criticalthreshold: f64) -> Self {
         Self {
             warning_threshold,
-            critical_threshold,
+            criticalthreshold,
         }
     }
 }
@@ -692,7 +692,7 @@ impl HealthChecker for MemoryHealthCheck {
         #[cfg(not(feature = "memory_management"))]
         let pressure = 0.0; // Fallback when memory management is not available
 
-        let (status, message) = if pressure >= self.critical_threshold {
+        let (status, message) = if pressure >= self.criticalthreshold {
             (
                 HealthStatus::Unhealthy,
                 format!("Memory usage critical: {:.1}%", pressure * 100.0),
@@ -745,7 +745,7 @@ pub fn global_metrics_registry() -> &'static MetricsRegistry {
 
 /// Get the global health monitor
 #[allow(dead_code)]
-pub fn global_health_monitor() -> &'static HealthMonitor {
+pub fn global_healthmonitor() -> &'static HealthMonitor {
     &GLOBAL_HEALTH_MONITOR
 }
 
@@ -879,7 +879,7 @@ mod tests {
     }
 
     #[test]
-    fn test_health_monitor() {
+    fn test_healthmonitor() {
         let monitor = HealthMonitor::new();
 
         // Register memory health check

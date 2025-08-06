@@ -6,10 +6,10 @@
 use crate::error::Result;
 use image::{DynamicImage, Rgb, RgbImage};
 use rand::prelude::*;
+use rand::seq::SliceRandom;
 use rand::{rng, Rng};
 use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
-use rand::seq::SliceRandom;
 
 /// K-means color quantization parameters
 #[derive(Debug, Copy, Clone)]
@@ -70,8 +70,8 @@ pub enum InitMethod {
 /// # }
 /// ```
 #[allow(dead_code)]
-pub fn kmeans_quantize(_img: &DynamicImage, params: &KMeansParams) -> Result<DynamicImage> {
-    let rgb = _img.to_rgb8();
+pub fn kmeans_quantize(img: &DynamicImage, params: &KMeansParams) -> Result<DynamicImage> {
+    let rgb = img.to_rgb8();
     let (width, height) = rgb.dimensions();
 
     // Extract color samples
@@ -160,43 +160,48 @@ pub fn kmeans_quantize(_img: &DynamicImage, params: &KMeansParams) -> Result<Dyn
 
 /// Initialize cluster centers
 #[allow(dead_code)]
-fn initialize_centers(_colors: &[[f32; 3]], params: &KMeansParams) -> Vec<[f32; 3]> {
+fn initialize_centers(colors: &[[f32; 3]], params: &KMeansParams) -> Vec<[f32; 3]> {
     match params.init_method {
-        InitMethod::Random => initialize_random(_colors, params.k),
-        InitMethod::KMeansPlusPlus => initialize_kmeans_plus_plus(_colors, params.k),
-        InitMethod::Frequency => initialize_frequency(_colors, params.k),
+        InitMethod::Random => initialize_random(colors, params.k),
+        InitMethod::KMeansPlusPlus => initialize_kmeans_plus_plus(colors, params.k),
+        InitMethod::Frequency => initialize_frequency(colors, params.k),
     }
 }
 
 /// Random initialization
 #[allow(dead_code)]
-fn initialize_random(_colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
+fn initialize_random(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
     let mut rng = rand::rng();
     let mut centers = Vec::new();
-    let mut indices: Vec<_> = (0.._colors.len()).collect();
+    let mut indices: Vec<_> = (0..colors.len()).collect();
     indices.shuffle(&mut rng);
 
-    centers.extend(indices.iter().take(k.min(_colors.len())).map(|&i| _colors[i]));
+    centers.extend(
+        indices
+            .iter()
+            .take(k.min(colors.len()))
+            .map(|&i| colors[i]),
+    );
 
     centers
 }
 
 /// K-means++ initialization
 #[allow(dead_code)]
-fn initialize_kmeans_plus_plus(_colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
+fn initialize_kmeans_plus_plus(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
     let mut rng = rand::rng();
     let mut centers = Vec::new();
 
     // Choose first center randomly
-    centers.push(_colors[rng.gen_range(0.._colors.len())]);
+    centers.push(colors[rng.gen_range(0..colors.len())]);
 
     // Choose remaining centers
     for _ in 1..k {
-        let mut distances = vec![0.0f32; _colors.len()];
+        let mut distances = vec![0.0f32; colors.len()];
         let mut sum = 0.0f32;
 
         // Compute distances to nearest center
-        for (i..color) in _colors.iter().enumerate() {
+        for (i, color) in colors.iter().enumerate() {
             let mut min_dist = f32::INFINITY;
             for center in &centers {
                 let dist = color_distance(color, center);
@@ -220,7 +225,7 @@ fn initialize_kmeans_plus_plus(_colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> 
             }
         }
 
-        centers.push(_colors[chosen]);
+        centers.push(colors[chosen]);
     }
 
     centers
@@ -228,11 +233,11 @@ fn initialize_kmeans_plus_plus(_colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> 
 
 /// Frequency-based initialization
 #[allow(dead_code)]
-fn initialize_frequency(_colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
+fn initialize_frequency(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
     // Count color frequencies
     let mut color_counts = HashMap::new();
 
-    for color in _colors {
+    for color in colors {
         let key = (color[0] as u8, color[1] as u8, color[2] as u8);
         *color_counts.entry(key).or_insert(0) += 1;
     }
@@ -241,7 +246,7 @@ fn initialize_frequency(_colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
     let mut sorted: Vec<_> = color_counts.into_iter().collect();
     sorted.sort_by_key(|(_, count)| -count);
 
-    // Take top k _colors
+    // Take top k colors
     let mut centers = Vec::new();
     for (r, g, b) in sorted.iter().take(k.min(sorted.len())) {
         centers.push([*r as f32, *g as f32, *b as f32]);
@@ -250,7 +255,7 @@ fn initialize_frequency(_colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
     // Fill remaining with random if needed
     let mut rng = rand::rng();
     while centers.len() < k {
-        centers.push(_colors[rng.gen_range(0.._colors.len())]);
+        centers.push(colors[rng.gen_range(0..colors.len())]);
     }
 
     centers
@@ -258,12 +263,12 @@ fn initialize_frequency(_colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
 
 /// Update cluster centers
 #[allow(dead_code)]
-fn update_centers(_colors: &[[f32; 3]], assignments: &[usize], k: usize) -> Vec<[f32; 3]> {
+fn update_centers(colors: &[[f32; 3]], assignments: &[usize], k: usize) -> Vec<[f32; 3]> {
     let mut new_centers = vec![[0.0, 0.0, 0.0]; k];
     let mut counts = vec![0; k];
 
-    // Accumulate _colors
-    for (color, &cluster) in _colors.iter().zip(assignments.iter()) {
+    // Accumulate colors
+    for (color, &cluster) in colors.iter().zip(assignments.iter()) {
         new_centers[cluster][0] += color[0];
         new_centers[cluster][1] += color[1];
         new_centers[cluster][2] += color[2];
@@ -299,27 +304,27 @@ fn color_distance(a: &[f32; 3], b: &[f32; 3]) -> f32 {
 /// # Arguments
 ///
 /// * `img` - Input image
-/// * `n_colors` - Number of colors in palette
+/// * `ncolors` - Number of colors in palette
 ///
 /// # Returns
 ///
 /// * Result containing quantized image
 #[allow(dead_code)]
-pub fn median_cut_quantize(_img: &DynamicImage, n_colors: usize) -> Result<DynamicImage> {
-    let rgb = _img.to_rgb8();
+pub fn median_cut_quantize(img: &DynamicImage, ncolors: usize) -> Result<DynamicImage> {
+    let rgb = img.to_rgb8();
     let (width, height) = rgb.dimensions();
 
-    // Extract _colors
-    let mut _colors = Vec::new();
+    // Extract colors
+    let mut colors = Vec::new();
     for pixel in rgb.pixels() {
-        _colors.push([pixel[0], pixel[1], pixel[2]]);
+        colors.push([pixel[0], pixel[1], pixel[2]]);
     }
 
     // Build initial box
-    let mut boxes = vec![ColorBox::new(&_colors)];
+    let mut boxes = vec![ColorBox::new(&colors)];
 
     // Recursively split boxes
-    while boxes.len() < n_colors && boxes.iter().any(|b| b.can_split()) {
+    while boxes.len() < ncolors && boxes.iter().any(|b| b.can_split()) {
         // Find box with largest volume
         let mut max_volume = 0;
         let mut split_idx = 0;
@@ -338,7 +343,7 @@ pub fn median_cut_quantize(_img: &DynamicImage, n_colors: usize) -> Result<Dynam
         boxes.push(box2);
     }
 
-    // Get palette _colors (average of each box)
+    // Get palette colors (average of each box)
     let palette: Vec<[u8; 3]> = boxes.iter().map(|b| b.average()).collect();
 
     // Create quantized image
@@ -371,11 +376,11 @@ struct ColorBox {
 }
 
 impl ColorBox {
-    fn new(_colors: &[[u8; 3]]) -> Self {
+    fn new(colors: &[[u8; 3]]) -> Self {
         let mut min = [255u8; 3];
         let mut max = [0u8; 3];
 
-        for color in _colors {
+        for color in colors {
             for i in 0..3 {
                 min[i] = min[i].min(color[i]);
                 max[i] = max[i].max(color[i]);
@@ -383,7 +388,7 @@ impl ColorBox {
         }
 
         Self {
-            _colors: _colors.to_vec(),
+            colors: colors.to_vec(),
             min,
             max,
         }

@@ -71,7 +71,7 @@ pub struct advancedCloudConfig {
     /// Cache size limit (GB)
     pub cache_size_limit_gb: f64,
     /// Adaptive streaming buffer size (MB)
-    pub streaming_buffer_size_mb: usize,
+    pub streaming_buffersize_mb: usize,
     /// Prefetch threshold
     pub prefetch_threshold: f64,
     /// Compression threshold (KB)
@@ -94,7 +94,7 @@ impl Default for advancedCloudConfig {
             enable_parallel_transfers: true,
             max_concurrent_transfers: 16,
             cache_size_limit_gb: 10.0,
-            streaming_buffer_size_mb: 64,
+            streaming_buffersize_mb: 64,
             prefetch_threshold: 0.7,
             compression_threshold_kb: 1024,
             transfer_retry_attempts: 3,
@@ -231,7 +231,7 @@ pub struct ProviderPerformanceSettings {
     /// Retry backoff strategy
     pub retry_strategy: RetryStrategy,
     /// Connection pool size
-    pub connection_pool_size: usize,
+    pub connection_poolsize: usize,
     /// Enable transfer acceleration
     pub enable_transfer_acceleration: bool,
 }
@@ -241,8 +241,8 @@ pub struct ProviderPerformanceSettings {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum RetryStrategy {
     Exponential {
-        base_delay_ms: u64,
-        max_delay_ms: u64,
+        basedelay_ms: u64,
+        maxdelay_ms: u64,
     },
     Linear {
         delay_ms: u64,
@@ -398,7 +398,7 @@ pub struct CorsSettings {
     /// Allowed headers
     pub allowed_headers: Vec<String>,
     /// Max age (seconds)
-    pub max_age_seconds: u64,
+    pub maxage_seconds: u64,
 }
 
 /// Compression algorithms
@@ -458,7 +458,7 @@ pub struct DownloadOptions {
     /// Enable streaming
     pub enable_streaming: bool,
     /// Buffer size for streaming (MB)
-    pub buffer_size_mb: usize,
+    pub buffersize_mb: usize,
     /// Enable decompression
     pub enable_decompression: bool,
     /// Enable checksums verification
@@ -501,7 +501,7 @@ pub struct StreamRequest {
 #[derive(Debug, Clone)]
 pub struct StreamOptions {
     /// Buffer size (MB)
-    pub buffer_size_mb: usize,
+    pub buffersize_mb: usize,
     /// Prefetch size (MB)
     pub prefetch_size_mb: usize,
     /// Enable adaptive buffering
@@ -721,7 +721,7 @@ pub struct ServiceLimits {
     /// Max request rate (requests/second)
     pub max_request_rate: u32,
     /// Max bandwidth (MB/s)
-    pub max_bandwidth_mbps: f64,
+    pub maxbandwidth_mbps: f64,
     /// Request quotas
     pub request_quotas: HashMap<String, u64>,
 }
@@ -730,7 +730,7 @@ pub struct ServiceLimits {
 #[derive(Debug, Clone)]
 pub struct CostOperation {
     /// Operation type
-    pub operation_type: OperationType,
+    pub operationtype: OperationType,
     /// Data size (bytes)
     pub data_size_bytes: u64,
     /// Number of requests
@@ -922,7 +922,7 @@ pub enum BufferOptimizationAlgorithm {
 #[derive(Debug, Clone)]
 pub struct BufferStrategy {
     /// Buffer size (MB)
-    pub buffer_size_mb: usize,
+    pub buffersize_mb: usize,
     /// Prefetch size (MB)
     pub prefetch_size_mb: usize,
     /// Eviction policy
@@ -959,11 +959,11 @@ pub struct BufferPerformanceMetrics {
 #[derive(Debug, Clone)]
 pub struct AdaptiveBufferParams {
     /// Learning rate
-    pub learning_rate: f64,
+    pub learningrate: f64,
     /// Adaptation threshold
     pub adaptation_threshold: f64,
     /// History window size
-    pub history_window_size: usize,
+    pub history_windowsize: usize,
     /// Update frequency
     pub update_frequency: Duration,
 }
@@ -976,7 +976,7 @@ pub struct PrefetchEngine {
     /// Prediction accuracy
     accuracy_tracker: AccuracyTracker,
     /// Resource monitor
-    resource_monitor: ResourceMonitor,
+    resourcemonitor: ResourceMonitor,
     /// Prefetch queue
     prefetch_queue: Vec<PrefetchRequest>,
 }
@@ -1038,7 +1038,7 @@ pub struct ResourceMonitor {
     /// Current memory usage
     memory_usage: f64,
     /// Current network bandwidth
-    network_bandwidth: f64,
+    networkbandwidth: f64,
     /// Monitoring interval
     monitoring_interval: Duration,
 }
@@ -1864,7 +1864,7 @@ pub struct CompressionParameters {
     /// Compression level
     pub level: u8,
     /// Window size
-    pub window_size: Option<u32>,
+    pub windowsize: Option<u32>,
     /// Block size
     pub block_size: Option<u32>,
     /// Dictionary
@@ -1890,7 +1890,7 @@ pub struct OptimizationStrategy {
     /// Strategy name
     pub name: String,
     /// Target data types
-    pub target_data_types: Vec<String>,
+    pub target_datatypes: Vec<String>,
     /// Optimization techniques
     pub techniques: Vec<OptimizationTechnique>,
     /// Effectiveness score
@@ -2034,9 +2034,9 @@ pub struct CloudSecurityManager {
     /// Key management
     key_management: KeyManagementSystem,
     /// Security policies
-    security_policies: Vec<SecurityPolicy>,
+    securitypolicies: Vec<SecurityPolicy>,
     /// Audit logger
-    audit_logger: AuditLogger,
+    auditlogger: AuditLogger,
 }
 
 /// Encryption engine
@@ -2494,7 +2494,7 @@ pub struct AdaptiveDataStream {
 impl AdaptiveDataStream {
     pub fn stream(Box<dyn DataStream>: Box<dyn DataStream>, config: &advancedCloudConfig) -> CoreResult<Self> {
         Ok(Self {
-            inner_stream: _stream,
+            inner_stream: stream,
             buffer_manager: StreamBufferManager::new(config)?,
             adaptation_engine: StreamAdaptationEngine::new(config)?,
             metrics: StreamMetrics::new(),
@@ -2512,24 +2512,24 @@ impl DataStream for AdaptiveDataStream {
 
         // Adapt stream based on performance
         self.adaptation_engine
-            .adapt_based_on_performance(&self.metrics)?;
+            .adaptbased_on_performance(&self.metrics)?;
 
         Ok(bytes_read)
     }
 
     fn write(&mut self, data: &[u8]) -> CoreResult<usize> {
         let start_time = Instant::now();
-        let bytes_written = self.inner_stream.write(data)?;
+        let byteswritten = self.inner_stream.write(data)?;
 
         // Update metrics
         self.metrics
-            .record_write(bytes_written, start_time.elapsed());
+            .record_write(byteswritten, start_time.elapsed());
 
         // Adapt stream based on performance
         self.adaptation_engine
-            .adapt_based_on_performance(&self.metrics)?;
+            .adaptbased_on_performance(&self.metrics)?;
 
-        Ok(bytes_written)
+        Ok(byteswritten)
     }
 
     fn seek(&mut self, position: u64) -> CoreResult<u64> {
@@ -2554,7 +2554,7 @@ impl DataStream for AdaptiveDataStream {
 #[derive(Debug)]
 pub struct StreamBufferManager {
     /// Buffer size
-    buffer_size: usize,
+    buffersize: usize,
     /// Read-ahead buffer
     read_ahead_buffer: Vec<u8>,
     /// Write buffer
@@ -2566,12 +2566,12 @@ pub struct StreamBufferManager {
 impl StreamBufferManager {
     pub fn new(config: &advancedCloudConfig) -> CoreResult<Self> {
         Ok(Self {
-            buffer_size: config.streaming_buffer_size_mb * 1024 * 1024,
+            buffersize: config.streaming_buffersize_mb * 1024 * 1024,
             read_ahead_buffer: Vec::new(),
             write_buffer: Vec::new(),
             strategy: BufferStrategy {
-                buffer_size_mb: config.streaming_buffer_size_mb,
-                prefetch_size_mb: config.streaming_buffer_size_mb / 2,
+                buffersize_mb: config.streaming_buffersize_mb,
+                prefetch_size_mb: config.streaming_buffersize_mb / 2,
                 eviction_policy: BufferOptimizationAlgorithm::LRU,
                 write_policy: WritePolicy::WriteBack,
             },
@@ -2651,7 +2651,7 @@ pub struct StreamMetrics {
     /// Total bytes read
     total_bytes_read: u64,
     /// Total bytes written
-    total_bytes_written: u64,
+    total_byteswritten: u64,
     /// Read operations
     read_operations: u64,
     /// Write operations
@@ -2674,7 +2674,7 @@ impl StreamMetrics {
     pub fn new() -> Self {
         Self {
             total_bytes_read: 0,
-            total_bytes_written: 0,
+            total_byteswritten: 0,
             read_operations: 0,
             write_operations: 0,
             avg_read_latency: Duration::default(),
@@ -2696,7 +2696,7 @@ impl StreamMetrics {
     }
 
     pub fn record_write(&mut self, bytes: usize, latency: Duration) {
-        self.total_bytes_written += bytes as u64;
+        self.total_byteswritten += bytes as u64;
         self.write_operations += 1;
 
         // Update average latency
@@ -2750,7 +2750,7 @@ impl BufferOptimizer {
         Self {
             algorithms: vec![BufferOptimizationAlgorithm::LRU],
             current_strategy: BufferStrategy {
-                buffer_size_mb: 64,
+                buffersize_mb: 64,
                 prefetch_size_mb: 32,
                 eviction_policy: BufferOptimizationAlgorithm::LRU,
                 write_policy: WritePolicy::WriteBack,
@@ -2763,9 +2763,9 @@ impl BufferOptimizer {
                 latency_improvement: 0.0,
             },
             adaptive_params: AdaptiveBufferParams {
-                learning_rate: 0.01,
+                learningrate: 0.01,
                 adaptation_threshold: 0.1,
-                history_window_size: 1000,
+                history_windowsize: 1000,
                 update_frequency: Duration::from_secs(60),
             },
         }
@@ -2793,10 +2793,10 @@ impl PrefetchEngine {
                 },
                 feedback_enabled: true,
             },
-            resource_monitor: ResourceMonitor {
+            resourcemonitor: ResourceMonitor {
                 cpu_usage: 0.0,
                 memory_usage: 0.0,
-                network_bandwidth: 0.0,
+                networkbandwidth: 0.0,
                 monitoring_interval: Duration::from_secs(5),
             },
             prefetch_queue: Vec::new(),
@@ -2912,7 +2912,7 @@ impl DataOptimizationEngine {
                         algorithm: CompressionAlgorithm::Gzip,
                         parameters: CompressionParameters {
                             level: 6,
-                            window_size: None,
+                            windowsize: None,
                             block_size: None,
                             dictionary: None,
                         },
@@ -2928,7 +2928,7 @@ impl DataOptimizationEngine {
             },
             optimization_strategies: vec![OptimizationStrategy {
                 name: text_compression.to_string(),
-                target_data_types: vec![text.to_string(), json.to_string()],
+                target_datatypes: vec![text.to_string(), json.to_string()],
                 techniques: vec![OptimizationTechnique::Compression],
                 effectiveness_score: 0.8,
             }],
@@ -2991,10 +2991,10 @@ impl DataOptimizationEngine {
         // Analyze data characteristics to select optimal compression
         let entropy = self.calculate_entropy(data);
         let repetition_ratio = self.calculate_repetition_ratio(data);
-        let data_type = self.detect_data_type(data);
+        let datatype = self.detect_datatype(data);
 
         // Select algorithm based on data characteristics
-        let algorithm = match data_type.as_str() {
+        let algorithm = match datatype.as_str() {
             "text" | "json" | xml => {
                 if repetition_ratio > 0.7 {
                     CompressionAlgorithm::Zstd
@@ -3052,7 +3052,7 @@ impl DataOptimizationEngine {
         repeated_bytes as f64 / (data.len() - 1) as f64
     }
 
-    fn detect_data_type(&self, data: &[u8]) -> String {
+    fn detect_datatype(&self, data: &[u8]) -> String {
         // Simple data type detection based on byte patterns
         if data.len() < 4 {
             return unknown.to_string();
@@ -3194,7 +3194,7 @@ impl CloudSecurityManager {
                     iterations: 100000,
                 },
             },
-            security_policies: vec![SecurityPolicy {
+            securitypolicies: vec![SecurityPolicy {
                 name: default_encryption.to_string(),
                 rules: vec![SecurityRule {
                     rule_type: SecurityRuleType::Encryption,
@@ -3203,7 +3203,7 @@ impl CloudSecurityManager {
                 }],
                 enforcement_level: EnforcementLevel::Enforcing,
             }],
-            audit_logger: AuditLogger {
+            auditlogger: AuditLogger {
                 log_entries: Vec::new(),
                 config: AuditLogConfig {
                     log_level: AuditLogLevel::Standard,

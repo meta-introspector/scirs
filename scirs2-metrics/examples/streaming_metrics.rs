@@ -130,7 +130,7 @@ fn large_dataset_example() -> Result<(), Box<dyn std::error::Error + Send + Sync
 
 /// Generates synthetic data for a chunk
 #[allow(dead_code)]
-fn generate_synthetic_chunk(_start_idx: usize, size: usize) -> (Vec<i32>, Vec<i32>) {
+fn generate_synthetic_chunk(_startidx: usize, size: usize) -> (Vec<i32>, Vec<i32>) {
     let mut true_labels = Vec::with_capacity(size);
     let mut pred_labels = Vec::with_capacity(size);
 

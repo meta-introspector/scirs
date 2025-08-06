@@ -135,23 +135,23 @@ where
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn waverec(_coeffs: &[Vec<f64>], wavelet: Wavelet) -> SignalResult<Vec<f64>> {
-    if _coeffs.is_empty() {
+pub fn waverec(coeffs: &[Vec<f64>], wavelet: Wavelet) -> SignalResult<Vec<f64>> {
+    if coeffs.is_empty() {
         return Err(SignalError::ValueError(
             "Coefficients array is empty".to_string(),
         ));
     }
 
     // Case of no transform (just the signal)
-    if _coeffs.len() == 1 {
+    if coeffs.len() == 1 {
         return Ok(_coeffs[0].clone());
     }
 
     // Start with the coarsest approximation
-    let mut approx = _coeffs[0].clone();
+    let mut approx = coeffs[0].clone();
 
     // Number of reconstruction levels
-    let n_levels = _coeffs.len() - 1;
+    let n_levels = coeffs.len() - 1;
 
     // Reconstruct each level
     for i in 0..n_levels {
@@ -190,4 +190,27 @@ pub fn waverec(_coeffs: &[Vec<f64>], wavelet: Wavelet) -> SignalResult<Vec<f64>>
     }
 
     Ok(approx)
+}
+
+// Compatibility wrapper functions for old API style
+
+/// Compatibility wrapper for wavedec with 3 parameters (old API)
+pub fn wavedec_compat<T>(
+    data: &[T],
+    wavelet: Wavelet,
+    level: usize,
+) -> SignalResult<Vec<Vec<f64>>>
+where
+    T: Float + NumCast + Debug,
+{
+    wavedec(data, wavelet, Some(level), None)
+}
+
+/// Compatibility wrapper for waverec with DecompositionResult input
+pub fn waverec_compat(
+    coeffs: &[Vec<f64>],
+    wavelet: Wavelet,
+) -> SignalResult<Vec<f64>>
+{
+    waverec(coeffs, wavelet)
 }

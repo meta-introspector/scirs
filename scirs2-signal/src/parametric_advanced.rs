@@ -10,7 +10,7 @@ use ndarray::s;
 // - Cross-spectral density estimation for multi-channel signals
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2, Axis};
+use ndarray::{Array1, Array2, Axis};
 use num_complex::Complex64;
 use num_traits::Float;
 use scirs2_core::parallel_ops::*;
@@ -217,7 +217,7 @@ fn estimate_var_coefficients(
             let mut xtx = x.dot(&x.t());
 
             // Add regularization
-            for i in 0..n_regressors {
+            for i in 0..n_regressors_ {
                 xtx[[i, i]] += lambda;
             }
 
@@ -250,12 +250,12 @@ fn estimate_lasso_coefficients(
     let (n_vars_) = y.dim();
     let (n_regressors, n_obs) = x.dim();
 
-    let mut coeffs = Array2::zeros((n_vars, n_regressors));
+    let mut coeffs = Array2::zeros((n_vars_, n_regressors));
     let max_iter = 1000;
     let tolerance = 1e-6;
 
     // Coordinate descent for each equation
-    for eq in 0..n_vars {
+    for eq in 0..n_vars_ {
         let y_eq = y.row(eq);
         let mut beta = Array1::zeros(n_regressors);
 
@@ -329,12 +329,12 @@ fn estimate_elastic_net_coefficients(
     let (n_vars_) = y.dim();
     let (n_regressors, n_obs) = x.dim();
 
-    let mut coeffs = Array2::zeros((n_vars, n_regressors));
+    let mut coeffs = Array2::zeros((n_vars_, n_regressors));
     let max_iter = 1000;
     let tolerance = 1e-6;
 
     // Coordinate descent with elastic net penalty
-    for eq in 0..n_vars {
+    for eq in 0..n_vars_ {
         let y_eq = y.row(eq);
         let mut beta = Array1::zeros(n_regressors);
 
@@ -453,8 +453,8 @@ fn compute_var_residuals(
 
 /// Compute covariance matrix
 #[allow(dead_code)]
-fn compute_covariance_matrix(_residuals: &Array2<f64>) -> SignalResult<Array2<f64>> {
-    let (n_vars, n_obs) = _residuals.dim();
+fn compute_covariance_matrix(residuals: &Array2<f64>) -> SignalResult<Array2<f64>> {
+    let (n_vars, n_obs) = residuals.dim();
     let mut cov_matrix = Array2::zeros((n_vars, n_vars));
 
     // Compute sample covariance
@@ -462,7 +462,7 @@ fn compute_covariance_matrix(_residuals: &Array2<f64>) -> SignalResult<Array2<f6
         for j in 0..n_vars {
             let mut cov = 0.0;
             for t in 0..n_obs {
-                cov += _residuals[[i, t]] * _residuals[[j, t]];
+                cov += residuals[[i, t]] * residuals[[j, t]];
             }
             cov_matrix[[i, j]] = cov / (n_obs - 1) as f64;
         }
@@ -612,7 +612,7 @@ fn music_spectrum(
     }
 
     Ok(HighResolutionResult {
-        _frequencies,
+        frequencies,
         powers,
         method: HighResolutionMethod::MUSIC,
         model_order,
@@ -667,7 +667,7 @@ fn esprit_estimation(
     _signal: &Array1<f64>,
     n_signals: usize,
 ) -> SignalResult<HighResolutionResult> {
-    let n = _signal.len();
+    let n = signal.len();
     let model_order = (n / 3).min(50);
 
     // Estimate covariance matrix
@@ -706,7 +706,7 @@ fn esprit_estimation(
     let mut frequencies = Vec::new();
     let mut powers = Vec::new();
 
-    for &eigenval in &phi_eigenvalues {
+    for &eigenval in &phi_eigenvalues_ {
         if eigenval > 0.0 && eigenval < 1.0 {
             let freq = eigenval.acos() / (2.0 * PI);
             frequencies.push(freq);
@@ -794,13 +794,13 @@ pub fn compute_eigendecomposition(
 
 /// Compute matrix determinant (simplified)
 #[allow(dead_code)]
-fn compute_matrix_determinant(_matrix: &Array2<f64>) -> SignalResult<f64> {
-    let n = _matrix.nrows();
+fn compute_matrix_determinant(matrix: &Array2<f64>) -> SignalResult<f64> {
+    let n = matrix.nrows();
 
     if n == 1 {
         Ok(_matrix[[0, 0]])
     } else if n == 2 {
-        Ok(_matrix[[0, 0]] * _matrix[[1, 1]] - _matrix[[0, 1]] * _matrix[[1, 0]])
+        Ok(_matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]])
     } else {
         // Placeholder for larger matrices
         Ok(1.0)
@@ -809,8 +809,8 @@ fn compute_matrix_determinant(_matrix: &Array2<f64>) -> SignalResult<f64> {
 
 /// Compute matrix inverse (simplified)
 #[allow(dead_code)]
-fn compute_matrix_inverse(_matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
-    let n = _matrix.nrows();
+fn compute_matrix_inverse(matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
+    let n = matrix.nrows();
     let mut result = Array2::zeros((n, n));
 
     // Placeholder: simplified for 2x2 case
@@ -822,10 +822,10 @@ fn compute_matrix_inverse(_matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
             ));
         }
 
-        result[[0, 0]] = _matrix[[1, 1]] / det;
+        result[[0, 0]] = matrix[[1, 1]] / det;
         result[[0, 1]] = -_matrix[[0, 1]] / det;
         result[[1, 0]] = -_matrix[[1, 0]] / det;
-        result[[1, 1]] = _matrix[[0, 0]] / det;
+        result[[1, 1]] = matrix[[0, 0]] / det;
     } else {
         // Return identity for larger matrices (placeholder)
         for i in 0..n {

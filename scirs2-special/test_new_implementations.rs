@@ -57,7 +57,7 @@ fn main() {
     println!("\n=== Testing Wright Bessel Function ===");
     match log_wright_bessel(0.5, 1.0, 1.0) {
         Ok(result) => println!("log_wright_bessel(0.5, 1.0, 1.0) = {}", result),
-        Err(e) => println!("Error computing log_wright_bessel: {:?}", e),
+        Err(e) => println!("Error computing log_wrightbessel: {:?}", e),
     }
     
     // Test distribution inverse functions

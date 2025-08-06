@@ -15,14 +15,14 @@ use crate::utils::safe_f64_to_float;
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(_value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
 
 /// Helper function for safe array to slice conversion
 #[allow(dead_code)]
 fn safe_as_slice<'a, T, D: Dimension>(array: &'a ArrayView<T, D>) -> NdimageResult<&'a [T]> {
-    _array.as_slice().ok_or_else(|| {
+    array.as_slice().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert _array to contiguous slice".to_string())
     })
 }
@@ -667,7 +667,7 @@ impl KernelRegistry {
         );
     }
 
-    pub fn register_kernel(&mut self, name: &str, source: &str, entry_point: &str, dims: usize) {
+    pub fn register_kernel(&mut self, name: &str, source: &str, entrypoint: &str, dims: usize) {
         self.kernels.insert(
             name.to_string(),
             KernelInfo {
@@ -716,14 +716,14 @@ where
     T: Clone + Default,
 {
     /// Create a buffer from existing data
-    pub fn from_slice(_data: &[T]) -> NdimageResult<Self> {
+    pub fn from_slice(data: &[T]) -> NdimageResult<Self> {
         Ok(Self {
-            _data: _data.to_vec(),
+            _data: data.to_vec(),
         })
     }
 
     /// Create an empty buffer of given size
-    pub fn empty(_size: usize) -> NdimageResult<Self> {
+    pub fn empty(size: usize) -> NdimageResult<Self> {
         Ok(Self {
             data: vec![T::default(); _size],
         })
@@ -828,8 +828,8 @@ where
     let params = vec![
         sigma[0],
         sigma[1],
-        safe_usize, _to_float: <T>(h)?,
-        safe_usize, _to_float: <T>(w)?,
+        safe_usizeto_float::<T>(h)?,
+        safe_usizeto_float::<T>(w)?,
     ];
 
     // Get kernel from registry
@@ -874,10 +874,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize, _to_float: <T>(ih)?,
-        safe_usize, _to_float: <T>(iw)?,
-        safe_usize, _to_float: <T>(kh)?,
-        safe_usize, _to_float: <T>(kw)?,
+        safe_usizeto_float::<T>(ih)?,
+        safe_usizeto_float::<T>(iw)?,
+        safe_usizeto_float::<T>(kh)?,
+        safe_usizeto_float::<T>(kw)?,
     ];
 
     // Get kernel from registry
@@ -920,10 +920,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize, _to_float: <T>(h)?,
-        safe_usize, _to_float: <T>(w)?,
-        safe_usize, _to_float: <T>(size[0])?,
-        safe_usize, _to_float: <T>(size[1])?,
+        safe_usizeto_float::<T>(h)?,
+        safe_usizeto_float::<T>(w)?,
+        safe_usizeto_float::<T>(size[0])?,
+        safe_usizeto_float::<T>(size[1])?,
     ];
 
     // Get kernel from registry
@@ -974,10 +974,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize, _to_float: <T>(h)?,
-        safe_usize, _to_float: <T>(w)?,
-        safe_usize, _to_float: <T>(sh)?,
-        safe_usize, _to_float: <T>(sw)?,
+        safe_usizeto_float::<T>(h)?,
+        safe_usizeto_float::<T>(w)?,
+        safe_usizeto_float::<T>(sh)?,
+        safe_usizeto_float::<T>(sw)?,
     ];
 
     // Get kernel from registry
@@ -1015,12 +1015,12 @@ where
     let (h, w) = input.dim();
 
     // Calculate Gaussian weights for separable filter
-    let radius_x = (safe_f64, _to_float: <T>(3.0)? * sigma[0])
+    let radius_x = (safe_f64_to_float::<T>(3.0)? * sigma[0])
         .to_usize()
         .ok_or_else(|| {
             NdimageError::ComputationError("Failed to convert radius_x to usize".to_string())
         })?;
-    let radius_y = (safe_f64, _to_float: <T>(3.0)? * sigma[1])
+    let radius_y = (safe_f64_to_float::<T>(3.0)? * sigma[1])
         .to_usize()
         .ok_or_else(|| {
             NdimageError::ComputationError("Failed to convert radius_y to usize".to_string())
@@ -1032,8 +1032,8 @@ where
     // Gaussian weights for horizontal pass
     let weights_x: Result<Vec<T>, NdimageError> = (0..weights_size)
         .map(|i| -> NdimageResult<T> {
-            let offset = safe_usize, _to_float: <T>(i)? - safe_usize, _to_float: <T>(max_radius)?;
-            let exp_arg = -safe_f64, _to_float: <T>(0.5)? * offset * offset / (sigma[0] * sigma[0]);
+            let offset = safe_usize_to_float::<T>(i)? - safe_usize_to_float::<T>(max_radius)?;
+            let exp_arg = -safe_f64_to_float::<T>(0.5)? * offset * offset / (sigma[0] * sigma[0]);
             Ok(exp_arg.exp())
         })
         .collect();
@@ -1042,8 +1042,8 @@ where
     // Gaussian weights for vertical pass
     let weights_y: Result<Vec<T>, NdimageError> = (0..weights_size)
         .map(|i| -> NdimageResult<T> {
-            let offset = safe_usize, _to_float: <T>(i)? - safe_usize, _to_float: <T>(max_radius)?;
-            let exp_arg = -safe_f64, _to_float: <T>(0.5)? * offset * offset / (sigma[1] * sigma[1]);
+            let offset = safe_usize_to_float::<T>(i)? - safe_usize_to_float::<T>(max_radius)?;
+            let exp_arg = -safe_f64_to_float::<T>(0.5)? * offset * offset / (sigma[1] * sigma[1]);
             Ok(exp_arg.exp())
         })
         .collect();
@@ -1063,11 +1063,11 @@ where
 
     // Horizontal pass (direction = 0)
     let params_h = vec![
-        safe_usize, _to_float: <T>(h * w)?,
-        safe_usize, _to_float: <T>(radius_x)?,
+        safe_usizeto_float::<T>(h * w)?,
+        safe_usizeto_float::<T>(radius_x)?,
         T::zero(), // direction = 0 for horizontal
-        safe_usize, _to_float: <T>(w)?,
-        safe_usize, _to_float: <T>(h)?,
+        safe_usizeto_float::<T>(w)?,
+        safe_usizeto_float::<T>(h)?,
     ];
 
     executor.execute_kernel(
@@ -1080,11 +1080,11 @@ where
 
     // Vertical pass (direction = 1)
     let params_v = vec![
-        safe_usize, _to_float: <T>(h * w)?,
-        safe_usize, _to_float: <T>(radius_y)?,
+        safe_usizeto_float::<T>(h * w)?,
+        safe_usizeto_float::<T>(radius_y)?,
         T::one(), // direction = 1 for vertical
-        safe_usize, _to_float: <T>(w)?,
-        safe_usize, _to_float: <T>(h)?,
+        safe_usizeto_float::<T>(w)?,
+        safe_usizeto_float::<T>(h)?,
     ];
 
     executor.execute_kernel(
@@ -1124,9 +1124,9 @@ where
     let params = vec![
         sigma_spatial,
         sigma_intensity,
-        safe_usize, _to_float: <T>(radius)?,
-        safe_usize, _to_float: <T>(w)?,
-        safe_usize, _to_float: <T>(h)?,
+        safe_usizeto_float::<T>(radius)?,
+        safe_usizeto_float::<T>(w)?,
+        safe_usizeto_float::<T>(h)?,
     ];
 
     // Get kernel from registry
@@ -1173,7 +1173,7 @@ where
     let mut magnitude_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
 
     // Prepare kernel parameters
-    let params = vec![safe_usize, _to_float: <T>(w)?, safe_usize, _to_float: <T>(h)?];
+    let params = vec![safe_usizeto_float::<T>(w)?, safe_usizeto_float::<T>(h)?];
 
     // Get kernel from registry
     let registry = KernelRegistry::new();
@@ -1228,9 +1228,9 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize, _to_float: <T>(w)?,
-        safe_usize, _to_float: <T>(h)?,
-        safe_usize, _to_float: <T>(connectivity)?,
+        safe_usizeto_float::<T>(w)?,
+        safe_usizeto_float::<T>(h)?,
+        safe_usizeto_float::<T>(connectivity)?,
     ];
 
     // Get kernel from registry
@@ -1258,7 +1258,7 @@ where
 // GPU buffer allocation functions that delegate to backend-specific implementations
 
 #[allow(dead_code)]
-fn allocate_gpu_buffer<T>(_data: &[T]) -> NdimageResult<Box<dyn GpuBuffer<T>>>
+fn allocate_gpu_buffer<T>(data: &[T]) -> NdimageResult<Box<dyn GpuBuffer<T>>>
 where
     T: Clone + Default + Send + Sync + Copy + 'static,
 {
@@ -1275,7 +1275,7 @@ where
 }
 
 #[allow(dead_code)]
-fn allocate_gpu_buffer_empty<T>(_size: usize) -> NdimageResult<Box<dyn GpuBuffer<T>>>
+fn allocate_gpu_buffer_empty<T>(size: usize) -> NdimageResult<Box<dyn GpuBuffer<T>>>
 where
     T: Clone + Default + Send + Sync + Copy + 'static,
 {

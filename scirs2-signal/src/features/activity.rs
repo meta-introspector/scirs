@@ -90,12 +90,12 @@ where
 
 /// Calculate autocorrelation up to a given lag
 #[allow(dead_code)]
-fn calculate_autocorrelation(_signal: &[f64], max_lag: usize) -> Vec<f64> {
-    let n = _signal.len();
-    let mean = _signal.iter().sum::<f64>() / n as f64;
+fn calculate_autocorrelation(_signal: &[f64], maxlag: usize) -> Vec<f64> {
+    let n = signal.len();
+    let mean = signal.iter().sum::<f64>() / n as f64;
 
     // Subtract mean for unbiased correlation
-    let _signal_centered: Vec<f64> = _signal.iter().map(|&x| x - mean).collect();
+    let signal_centered: Vec<f64> = signal.iter().map(|&x| x - mean).collect();
 
     // Calculate autocorrelation for lags from 0 to max_lag
     let mut autocorr = Vec::with_capacity(max_lag + 1);
@@ -118,7 +118,7 @@ fn calculate_autocorrelation(_signal: &[f64], max_lag: usize) -> Vec<f64> {
 
         // Normalize by variance
         let corr = if variance > 0.0 {
-            sum / (variance * (n - _lag) as f64)
+            sum / (variance * (n - lag) as f64)
         } else {
             0.0
         };
@@ -130,17 +130,17 @@ fn calculate_autocorrelation(_signal: &[f64], max_lag: usize) -> Vec<f64> {
 
 /// Find the first peak in a vector
 #[allow(dead_code)]
-fn find_first_peak(_signal: &[f64]) -> (usize, f64) {
-    if _signal.len() <= 2 {
-        return (0, if _signal.is_empty() { 0.0 } else { _signal[0] });
+fn find_first_peak(signal: &[f64]) -> (usize, f64) {
+    if signal.len() <= 2 {
+        return (0, if signal.is_empty() { 0.0 } else { signal[0] });
     }
 
     // Skip first point as it's always 1.0 for autocorrelation
     for i in 2.._signal.len() - 1 {
-        if _signal[i] > _signal[i - 1] && _signal[i] > _signal[i + 1] && _signal[i] > 0.1 {
-            return (i, _signal[i]);
+        if signal[i] > signal[i - 1] && signal[i] > signal[i + 1] && signal[i] > 0.1 {
+            return (i, signal[i]);
         }
     }
 
-    (0, _signal[0])
+    (0, signal[0])
 }

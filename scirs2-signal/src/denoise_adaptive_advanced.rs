@@ -13,7 +13,7 @@ use crate::dwt::{dwt_decompose, dwt_reconstruct, Wavelet};
 use crate::error::{SignalError, SignalResult};
 use crate::nlm::{nlm_denoise_1d, NlmConfig};
 use crate::wiener::wiener_filter;
-use ndarray::{ Array1};
+use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::prelude::*;
 use rand::Rng;
@@ -264,7 +264,7 @@ where
         denoised_signal: validated_signal,
         estimated_noise_variance: noise_variance,
         snr_improvement_db: snr_improvement,
-        algorithm_weights: denoising_strategy.algorithm_weights.clone(),
+        algorithm_weights: denoising_strategy.algorithmweights.clone(),
         processing_time_ms: processing_time,
         quality_metrics,
         adaptive_parameters: denoising_strategy.adaptive_parameters.clone(),
@@ -373,8 +373,8 @@ fn analyze_signal_characteristics(
 
 /// Estimate noise variance using robust methods
 #[allow(dead_code)]
-fn estimate_noise_variance(_signal: &Array1<f64>, analysis: &SignalAnalysis) -> SignalResult<f64> {
-    let n = _signal.len();
+fn estimate_noise_variance(signal: &Array1<f64>, analysis: &SignalAnalysis) -> SignalResult<f64> {
+    let n = signal.len();
 
     // Method 1: Median Absolute Deviation (MAD) of high-frequency wavelet coefficients
     let wavelet_noise_estimate = if n >= 64 {
@@ -386,7 +386,7 @@ fn estimate_noise_variance(_signal: &Array1<f64>, analysis: &SignalAnalysis) -> 
     // Method 2: Robust scale estimation using differences
     let mut differences = Vec::with_capacity(n - 1);
     for i in 1..n {
-        differences.push((_signal[i] - _signal[i - 1]).abs());
+        differences.push((_signal[i] - signal[i - 1]).abs());
     }
     differences.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -419,8 +419,8 @@ fn estimate_noise_variance(_signal: &Array1<f64>, analysis: &SignalAnalysis) -> 
 
 /// Estimate noise from wavelet coefficients
 #[allow(dead_code)]
-fn estimate_noise_from_wavelets(_signal: &Array1<f64>) -> SignalResult<Option<f64>> {
-    if _signal.len() < 64 {
+fn estimate_noise_from_wavelets(signal: &Array1<f64>) -> SignalResult<Option<f64>> {
+    if signal.len() < 64 {
         return Ok(None);
     }
 
@@ -463,7 +463,7 @@ fn estimate_local_noise_variance(
         let window = signal.slice(s![i..end]);
 
         // Calculate local variance
-        let mean = window.mean().unwrap_or(0.0);
+        let mean = window.mean();
         let var = window.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / window.len() as f64;
 
         // Only include if this appears to be a smooth region (low gradient)
@@ -500,25 +500,25 @@ fn select_denoising_strategy(
     // Determine primary algorithm based on signal characteristics
     let primary_algorithm = if analysis.wavelet_sparsity > 0.7 {
         // High sparsity -> wavelet denoising is ideal
-        algorithm_weights.insert(DenoisingAlgorithm::WaveletAdaptive, 0.6);
-        algorithm_weights.insert(DenoisingAlgorithm::TotalVariation, 0.4);
+        algorithmweights.insert(DenoisingAlgorithm::WaveletAdaptive, 0.6);
+        algorithmweights.insert(DenoisingAlgorithm::TotalVariation, 0.4);
         DenoisingAlgorithm::WaveletAdaptive
     } else if analysis.edge_content > analysis.local_variation * 2.0 {
         // High edge content -> edge-preserving methods
-        algorithm_weights.insert(DenoisingAlgorithm::TotalVariation, 0.5);
-        algorithm_weights.insert(DenoisingAlgorithm::NonLocalMeans, 0.3);
-        algorithm_weights.insert(DenoisingAlgorithm::BilateralFilter, 0.2);
+        algorithmweights.insert(DenoisingAlgorithm::TotalVariation, 0.5);
+        algorithmweights.insert(DenoisingAlgorithm::NonLocalMeans, 0.3);
+        algorithmweights.insert(DenoisingAlgorithm::BilateralFilter, 0.2);
         DenoisingAlgorithm::TotalVariation
     } else if analysis.oscillatory_content > 0.6 {
         // High oscillatory content -> preserve frequency characteristics
-        algorithm_weights.insert(DenoisingAlgorithm::WienerFilter, 0.5);
-        algorithm_weights.insert(DenoisingAlgorithm::NonLocalMeans, 0.5);
+        algorithmweights.insert(DenoisingAlgorithm::WienerFilter, 0.5);
+        algorithmweights.insert(DenoisingAlgorithm::NonLocalMeans, 0.5);
         DenoisingAlgorithm::WienerFilter
     } else {
         // Balanced approach
-        algorithm_weights.insert(DenoisingAlgorithm::NonLocalMeans, 0.4);
-        algorithm_weights.insert(DenoisingAlgorithm::WaveletAdaptive, 0.3);
-        algorithm_weights.insert(DenoisingAlgorithm::WienerFilter, 0.3);
+        algorithmweights.insert(DenoisingAlgorithm::NonLocalMeans, 0.4);
+        algorithmweights.insert(DenoisingAlgorithm::WaveletAdaptive, 0.3);
+        algorithmweights.insert(DenoisingAlgorithm::WienerFilter, 0.3);
         DenoisingAlgorithm::NonLocalMeans
     };
 
@@ -605,7 +605,7 @@ fn calculate_adaptive_wavelet_threshold(
 
 /// Calculate NLM bandwidth
 #[allow(dead_code)]
-fn calculate_nlm_bandwidth(_noise_std: f64, analysis: &SignalAnalysis) -> f64 {
+fn calculate_nlm_bandwidth(_noisestd: f64, analysis: &SignalAnalysis) -> f64 {
     // Bandwidth should be proportional to noise level
     let base_bandwidth = _noise_std * 1.5;
 
@@ -642,7 +642,7 @@ fn apply_fusion_denoising(
     strategy: &DenoisingStrategy,
     config: &AdaptiveDenoisingConfig,
 ) -> SignalResult<Array1<f64>> {
-    let weights = strategy.algorithm_weights.as_ref().unwrap();
+    let weights = strategy.algorithmweights.as_ref().unwrap();
     let mut denoised_results = HashMap::new();
 
     // Apply each algorithm
@@ -787,7 +787,7 @@ fn apply_wiener_denoising(
     signal: &Array1<f64>,
     strategy: &DenoisingStrategy,
 ) -> SignalResult<Array1<f64>> {
-    if let Some((noise_var_signal_var)) = strategy.adaptive_parameters.wiener_params {
+    if let Some((noise_var, signal_var)) = strategy.adaptive_parameters.wiener_params {
         match wiener_filter(signal, Some(noise_var), None) {
             Ok(denoised) => Ok(Array1::from(denoised)),
             Err(_) => apply_simple_smoothing(signal),
@@ -799,14 +799,14 @@ fn apply_wiener_denoising(
 
 /// Simple smoothing fallback
 #[allow(dead_code)]
-fn apply_simple_smoothing(_signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
+fn apply_simple_smoothing(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
     let window_size = 5;
-    let mut smoothed = _signal.clone();
+    let mut smoothed = signal.clone();
 
     for i in window_size / 2.._signal.len() - window_size / 2 {
         let mut sum = 0.0;
         for j in (i - window_size / 2)..=(i + window_size / 2) {
-            sum += _signal[j];
+            sum += signal[j];
         }
         smoothed[i] = sum / window_size as f64;
     }
@@ -939,19 +939,19 @@ fn calculate_correlation(x: &Array1<f64>, y: &Array1<f64>) -> f64 {
 
 /// Calculate variance of a signal
 #[allow(dead_code)]
-fn calculate_variance(_signal: &Array1<f64>) -> f64 {
-    let mean = _signal.mean().unwrap_or(0.0);
-    _signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _signal.len() as f64
+fn calculate_variance(signal: &Array1<f64>) -> f64 {
+    let mean = signal.mean().unwrap_or(0.0);
+    signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / signal.len() as f64
 }
 
 /// Calculate edge preservation metric
 #[allow(dead_code)]
-fn calculate_edge_preservation(_original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
+fn calculate_edge_preservation(original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
     let mut original_edges = 0.0;
     let mut preserved_edges = 0.0;
 
     for i in 1.._original.len() {
-        let orig_gradient = (_original[i] - _original[i - 1]).abs();
+        let orig_gradient = (_original[i] - original[i - 1]).abs();
         let denoised_gradient = (denoised[i] - denoised[i - 1]).abs();
 
         if orig_gradient > 0.1 {
@@ -993,7 +993,7 @@ fn estimate_snr_improvement(
 
 /// Estimate wavelet sparsity
 #[allow(dead_code)]
-fn estimate_wavelet_sparsity(_signal: &Array1<f64>) -> SignalResult<f64> {
+fn estimate_wavelet_sparsity(signal: &Array1<f64>) -> SignalResult<f64> {
     match dwt_decompose(_signal.as_slice().unwrap(), Wavelet::DB(4), None) {
         Ok((_, detail_coeffs)) => {
             let mut all_coeffs = Vec::new();
@@ -1021,7 +1021,7 @@ fn estimate_wavelet_sparsity(_signal: &Array1<f64>) -> SignalResult<f64> {
 
 /// Estimate oscillatory content
 #[allow(dead_code)]
-fn estimate_oscillatory_content(_signal: &Array1<f64>) -> SignalResult<f64> {
+fn estimate_oscillatory_content(signal: &Array1<f64>) -> SignalResult<f64> {
     // Simple measure based on zero-crossings and local extrema
     let mut zero_crossings = 0;
     let mut extrema_count = 0;
@@ -1033,27 +1033,27 @@ fn estimate_oscillatory_content(_signal: &Array1<f64>) -> SignalResult<f64> {
         }
 
         // Local extrema
-        if i > 1 && i < _signal.len() - 1 {
-            if (_signal[i] > _signal[i - 1] && _signal[i] > _signal[i + 1])
-                || (_signal[i] < _signal[i - 1] && _signal[i] < _signal[i + 1])
+        if i > 1 && i < signal.len() - 1 {
+            if (_signal[i] > signal[i - 1] && signal[i] > signal[i + 1])
+                || (_signal[i] < signal[i - 1] && signal[i] < signal[i + 1])
             {
                 extrema_count += 1;
             }
         }
     }
 
-    let oscillatory_score = (zero_crossings + extrema_count) as f64 / _signal.len() as f64;
+    let oscillatory_score = (zero_crossings + extrema_count) as f64 / signal.len() as f64;
     Ok(oscillatory_score.min(1.0))
 }
 
 /// Estimate effective bandwidth
 #[allow(dead_code)]
-fn estimate_effective_bandwidth(_signal: &Array1<f64>) -> SignalResult<f64> {
+fn estimate_effective_bandwidth(signal: &Array1<f64>) -> SignalResult<f64> {
     // Simplified bandwidth estimation based on _signal variation
     let mut high_freq_content = 0.0;
 
     for i in 1.._signal.len() {
-        high_freq_content += (_signal[i] - _signal[i - 1]).abs();
+        high_freq_content += (_signal[i] - signal[i - 1]).abs();
     }
 
     high_freq_content /= (_signal.len() - 1) as f64;
@@ -1065,6 +1065,7 @@ fn estimate_effective_bandwidth(_signal: &Array1<f64>) -> SignalResult<f64> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     use approx::assert_relative_eq;
     #[test]
@@ -1078,7 +1079,7 @@ mod tests {
         let mut rng = rand::rng();
         let noisy_signal: Vec<f64> = clean_signal
             .iter()
-            .map(|&s| s + 0.1 * rng.random_range(-1.0..1.0))
+            .map(|&s| s + 0.1 * rng.gen_range(-1.0..1.0))
             .collect();
 
         let config = AdaptiveDenoisingConfig::default();

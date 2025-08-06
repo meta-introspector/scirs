@@ -196,7 +196,7 @@ pub struct AdvancedGenerator {
 
 impl AdvancedGenerator {
     /// Create a new advanced generator
-    pub fn new(_random_state: Option<u64>) -> Self {
+    pub fn new(_randomstate: Option<u64>) -> Self {
         Self { _random_state }
     }
 
@@ -331,7 +331,7 @@ impl AdvancedGenerator {
             config.shared_features + config.task_specific_features * config.n_tasks;
 
         println!(
-            "Generating multi-task dataset: {} tasks, {} _samples, {} features",
+            "Generating multi-task dataset: {} tasks, {} samples, {} features",
             config.n_tasks, n_samples, total_features
         );
 
@@ -461,7 +461,7 @@ impl AdvancedGenerator {
             let query_set =
                 self.generate_query_set(n_way, n_query, n_features, &support_set, episode_id)?;
 
-            _episodes.push(FewShotEpisode {
+            episodes.push(FewShotEpisode {
                 support_set,
                 query_set,
                 n_way,
@@ -470,7 +470,7 @@ impl AdvancedGenerator {
         }
 
         Ok(FewShotDataset {
-            _episodes,
+            episodes,
             n_way,
             k_shot,
             n_query,
@@ -635,7 +635,7 @@ impl AdvancedGenerator {
                 for i in 0..n_anomalies {
                     for j in 0..n_features {
                         let direction = if rng.random::<f64>() > 0.5 { 1.0 } else { -1.0 };
-                        _anomalies[[i, j]] =
+                        anomalies[[i, j]] =
                             normal_mean[j] + direction * config.severity * normal_std[j];
                     }
                 }
@@ -659,7 +659,7 @@ impl AdvancedGenerator {
                         anomaly[k] = temp;
                     }
 
-                    _anomalies.row_mut(i).assign(&anomaly);
+                    anomalies.row_mut(i).assign(&anomaly);
                 }
                 Ok(_anomalies)
             }
@@ -673,7 +673,7 @@ impl AdvancedGenerator {
                 for i in 0..n_anomalies {
                     for j in 0..n_features {
                         let direction = if rng.random::<f64>() > 0.5 { 1.0 } else { -1.0 };
-                        _anomalies[[i, j]] =
+                        anomalies[[i, j]] =
                             normal_mean[j] + direction * config.severity * normal_std[j];
                     }
                 }
@@ -682,7 +682,7 @@ impl AdvancedGenerator {
         }
     }
 
-    fn generate_shuffle_indices(&self, n_samples: usize) -> Result<Vec<usize>> {
+    fn generate_shuffle_indices(&self, nsamples: usize) -> Result<Vec<usize>> {
         use rand::Rng;
         let mut rng = rand::rng();
         let mut indices: Vec<usize> = (0..n_samples).collect();
@@ -712,7 +712,7 @@ impl AdvancedGenerator {
         shuffled
     }
 
-    fn generate_shared_features(&self, n_samples: usize, n_features: usize) -> Result<Array2<f64>> {
+    fn generate_shared_features(&self, n_samples: usize, nfeatures: usize) -> Result<Array2<f64>> {
         // Generate shared _features using multivariate normal distribution
         let data = Array2::fromshape_fn((n_samples, n_features), |_| {
             rand::rng().random::<f64>() * 2.0 - 1.0 // Standard normal approximation
@@ -734,7 +734,7 @@ impl AdvancedGenerator {
         Ok(data)
     }
 
-    fn combine_features(&self, shared: &Array2<f64>, task_specific: &Array2<f64>) -> Array2<f64> {
+    fn combine_features(&self, shared: &Array2<f64>, taskspecific: &Array2<f64>) -> Array2<f64> {
         let n_samples = shared.nrows();
         let total_features = shared.ncols() + task_specific.ncols();
         let mut combined = Array2::zeros((n_samples, total_features));
@@ -874,7 +874,7 @@ impl AdvancedGenerator {
         )
     }
 
-    fn generate_class_centers(&self, n_classes: usize, n_features: usize) -> Result<Array2<f64>> {
+    fn generate_class_centers(&self, n_classes: usize, nfeatures: usize) -> Result<Array2<f64>> {
         let centers = Array2::fromshape_fn((n_classes, n_features), |_| {
             rand::rng().random::<f64>() * 4.0 - 2.0
         });

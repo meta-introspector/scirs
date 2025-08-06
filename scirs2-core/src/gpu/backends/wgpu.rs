@@ -414,8 +414,8 @@ impl WebGPUContext {
                 if let Some(start) = search_line.find("fn ") {
                     let remaining = &search_line[start + 3..];
                     if let Some(end) = remaining.find('(') {
-                        let func_name = remaining[..end].trim();
-                        return Some(func_name);
+                        let funcname = remaining[..end].trim();
+                        return Some(funcname);
                     }
                 }
             }
@@ -541,7 +541,7 @@ impl GpuCompilerImpl for WebGPUCompiler {
         }))
     }
 
-    fn compile_typed(&self, name: &str, _type_id: std::any::TypeId) -> Arc<dyn GpuKernelImpl> {
+    fn compile_typed(&self, name: &str, _typeid: std::any::TypeId) -> Arc<dyn GpuKernelImpl> {
         Arc::new(WebGPUKernelHandle {
             shader_name: name.to_string(),
             compiled_shaders: Arc::clone(&self.context.compiled_shaders),
@@ -612,7 +612,7 @@ impl GpuKernelImpl for WebGPUKernelHandle {
         params.insert(name.to_string(), KernelParam::F64(value));
     }
 
-    fn dispatch_workgroups(&self, work_groups: [u32; 3]) {
+    fn dispatch_workgroups(&self, workgroups: [u32; 3]) {
         #[cfg(feature = "wgpu_backend")]
         {
             // Real WebGPU compute dispatch
@@ -887,7 +887,7 @@ struct WebGPUMemoryPool {
 }
 
 impl WebGPUMemoryPool {
-    fn new(total_size: usize) -> Self {
+    fn new(totalsize: usize) -> Self {
         Self {
             available_buffers: HashMap::new(),
             total_size,

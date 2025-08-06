@@ -83,11 +83,11 @@ where
             hidden_size
     if w_ih.shape()[0] != 4 * hidden_size || w_ih.shape()[1] != input_size {
         return Err(NeuralError::ShapeMismatch(
-            format!("Input-to-hidden weights shape mismatch in lstm_cell: w_ih shape {:?}, expected [{}, {}]",
+            format!("Input-to-hidden weights shape mismatch in lstmcell: w_ih shape {:?}, expected [{}, {}]",
                    w_ih.shape(), 4 * hidden_size, input_size)
         ));
     if w_hh.shape()[0] != 4 * hidden_size || w_hh.shape()[1] != hidden_size {
-            format!("Hidden-to-hidden weights shape mismatch in lstm_cell: w_hh shape {:?}, expected [{}, {}]",
+            format!("Hidden-to-hidden weights shape mismatch in lstmcell: w_hh shape {:?}, expected [{}, {}]",
                    w_hh.shape(), 4 * hidden_size, hidden_size)
     if b_ih.shape()[0] != 4 * hidden_size {
             "Input-to-hidden bias shape mismatch in lstm_cell: b_ih shape {:?}, expected [{}]",
@@ -313,7 +313,7 @@ pub fn adam_update<F, D>(
     t: usize,
 ) -> Result<AdamUpdateReturn<F, D>>
     if w.shape() != dw.shape() || w.shape() != m.shape() || w.shape() != v.shape() {
-            format!("Shape mismatch in adam_update: w shape {:?}, dw shape {:?}, m shape {:?}, v shape {:?}",
+            format!("Shape mismatch in adamupdate: w shape {:?}, dw shape {:?}, m shape {:?}, v shape {:?}",
                    w.shape(), dw.shape(), m.shape(), v.shape())
     // Validate hyperparameters
     if learning_rate <= F::zero() {
@@ -347,11 +347,11 @@ pub fn adam_update<F, D>(
         let m_hat = *m_val * m_hat_factor;
         let v_hat = *v_val * v_hat_factor;
         // Update rule
-        *w_val = *w_val - learning_rate * m_hat / (v_hat.sqrt() + epsilon);
+        *w_val = *w_val - learningrate * m_hat / (v_hat.sqrt() + epsilon);
     Ok((w_new, m_new, v_new))
 // Helper function to zip three iterators for convenience
 #[allow(dead_code)]
-fn zip3<I1, I2, I3>(_i1: I1, i2: I2, i3: I3) -> impl Iterator<Item = (I1::Item, I2::Item, I3::Item)>, I1: IntoIterator,
+fn zip3<I1, I2, I3>(i1: I1, i2: I2, i3: I3) -> impl Iterator<Item = (I1::Item, I2::Item, I3::Item)>, I1: IntoIterator,
     I2: IntoIterator,
     I3: IntoIterator,
     i1.into_iter()

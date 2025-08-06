@@ -93,8 +93,8 @@ impl CompressionAlgorithm {
     }
 
     /// Try to determine the compression algorithm from a file extension
-    pub fn from_extension(_ext: &str) -> Option<Self> {
-        match _ext.to_lowercase().as_str() {
+    pub fn from_extension(ext: &str) -> Option<Self> {
+        match ext.to_lowercase().as_str() {
             "gz" | "gzip" => Some(CompressionAlgorithm::Gzip),
             "zst" | "zstd" => Some(CompressionAlgorithm::Zstd),
             "lz4" => Some(CompressionAlgorithm::Lz4),
@@ -114,7 +114,7 @@ fn normalize_compression_level(
     _level: Option<u32>,
     algorithm: CompressionAlgorithm,
 ) -> Result<u32> {
-    let _level = _level.unwrap_or(6); // Default compression _level
+    let _level = level.unwrap_or(6); // Default compression _level
 
     if _level > 9 {
         return Err(IoError::CompressionError(format!(
@@ -310,7 +310,7 @@ pub fn compress_file<P: AsRef<Path>>(
 ) -> Result<String> {
     // Read input file
     let mut input_data = Vec::new();
-    File::open(input_path.as_ref())
+    File::open(inputpath.as_ref())
         .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?
         .read_to_end(&mut input_data)
         .map_err(|e| IoError::FileError(format!("Failed to read input file: {e}")))?;
@@ -320,10 +320,10 @@ pub fn compress_file<P: AsRef<Path>>(
 
     // Determine output _path
     let output_path_string = match output_path {
-        Some(_path) => _path.as_ref().to_string_lossy().to_string(),
+        Some(_path) => path.as_ref().to_string_lossy().to_string(),
         None => {
             // Generate output _path by appending algorithm extension
-            let mut path_buf = input_path.as_ref().to_path_buf();
+            let mut path_buf = inputpath.as_ref().to_path_buf();
             let ext = algorithm.extension();
 
             // Get the file name as a string
@@ -388,7 +388,7 @@ pub fn decompress_file<P: AsRef<Path>>(
 
     // Read input file
     let mut input_data = Vec::new();
-    File::open(input_path.as_ref())
+    File::open(inputpath.as_ref())
         .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?
         .read_to_end(&mut input_data)
         .map_err(|e| IoError::FileError(format!("Failed to read input file: {e}")))?;
@@ -398,10 +398,10 @@ pub fn decompress_file<P: AsRef<Path>>(
 
     // Determine output _path
     let output_path_string = match output_path {
-        Some(_path) => _path.as_ref().to_string_lossy().to_string(),
+        Some(_path) => path.as_ref().to_string_lossy().to_string(),
         None => {
             // Generate output _path by removing algorithm extension
-            let path_str = input_path.as_ref().to_string_lossy().to_string();
+            let path_str = inputpath.as_ref().to_string_lossy().to_string();
             let ext = algorithm.extension();
 
             if path_str.ends_with(&format!(".{ext}")) {
@@ -472,7 +472,7 @@ pub struct CompressionInfo {
 
 /// Get information about a specific compression algorithm
 #[allow(dead_code)]
-pub fn algorithm_info(_algorithm: CompressionAlgorithm) -> CompressionInfo {
+pub fn algorithm_info(algorithm: CompressionAlgorithm) -> CompressionInfo {
     match _algorithm {
         CompressionAlgorithm::Gzip => CompressionInfo {
             name: "GZIP".to_string(),
@@ -553,22 +553,22 @@ const DELTA_LZ4_MAGIC: &[u8] = &[0x44, 0x4c, 0x5a, 0x34]; // "DLZ4"
 
 /// Detect compression algorithm from magic bytes
 #[allow(dead_code)]
-pub fn detect_compression_from_bytes(_data: &[u8]) -> Option<CompressionAlgorithm> {
-    if _data.starts_with(GZIP_MAGIC) {
+pub fn detect_compression_from_bytes(data: &[u8]) -> Option<CompressionAlgorithm> {
+    if data.starts_with(GZIP_MAGIC) {
         Some(CompressionAlgorithm::Gzip)
-    } else if _data.starts_with(ZSTD_MAGIC) {
+    } else if data.starts_with(ZSTD_MAGIC) {
         Some(CompressionAlgorithm::Zstd)
-    } else if _data.starts_with(LZ4_MAGIC) {
+    } else if data.starts_with(LZ4_MAGIC) {
         Some(CompressionAlgorithm::Lz4)
-    } else if _data.starts_with(BZIP2_MAGIC) {
+    } else if data.starts_with(BZIP2_MAGIC) {
         Some(CompressionAlgorithm::Bzip2)
-    } else if _data.starts_with(BROTLI_MAGIC) {
+    } else if data.starts_with(BROTLI_MAGIC) {
         Some(CompressionAlgorithm::Brotli)
-    } else if _data.starts_with(SNAPPY_MAGIC) {
+    } else if data.starts_with(SNAPPY_MAGIC) {
         Some(CompressionAlgorithm::Snappy)
-    } else if _data.starts_with(FPZIP_MAGIC) {
+    } else if data.starts_with(FPZIP_MAGIC) {
         Some(CompressionAlgorithm::FpZip)
-    } else if _data.starts_with(DELTA_LZ4_MAGIC) {
+    } else if data.starts_with(DELTA_LZ4_MAGIC) {
         Some(CompressionAlgorithm::DeltaLz4)
     } else {
         None
@@ -786,7 +786,7 @@ static GLOBAL_HANDLER: std::sync::OnceLock<TransparentFileHandler> = std::sync::
 
 /// Initialize the global transparent file handler
 #[allow(dead_code)]
-pub fn init_global_handler(_handler: TransparentFileHandler) {
+pub fn init_global_handler(handler: TransparentFileHandler) {
     let _ = GLOBAL_HANDLER.set(_handler);
 }
 
@@ -829,19 +829,19 @@ pub fn file_info_transparent<P: AsRef<Path>>(path: P) -> Result<FileCompressionI
 
 /// Compress floating-point data using specialized techniques
 #[allow(dead_code)]
-fn compress_fpzip(_data: &[u8], _level: u32) -> Result<Vec<u8>> {
+fn compress_fpzip(_data: &[u8], level: u32) -> Result<Vec<u8>> {
     // Simple implementation: magic header + floating-point optimized compression
-    let mut result = Vec::with_capacity(FPZIP_MAGIC.len() + _data.len());
+    let mut result = Vec::with_capacity(FPZIP_MAGIC.len() + data.len());
 
     // Add magic header
     result.extend_from_slice(FPZIP_MAGIC);
 
     // For now, use a simple approach: if _data length is divisible by 4 or 8,
     // assume it's floating-point _data and apply bit manipulation optimizations
-    if _data.len() % 8 == 0 {
+    if data.len() % 8 == 0 {
         // Assume f64 _data - apply bit manipulation to reduce entropy
         let float_data =
-            unsafe { std::slice::from_raw_parts(_data.as_ptr() as *const f64, _data.len() / 8) };
+            unsafe { std::slice::from_raw_parts(_data.as_ptr() as *const f64, data.len() / 8) };
 
         // XOR consecutive values to reduce entropy (delta-like encoding for floats)
         let mut encoded_data = Vec::with_capacity(_data.len());
@@ -861,10 +861,10 @@ fn compress_fpzip(_data: &[u8], _level: u32) -> Result<Vec<u8>> {
         // Compress the XOR'd _data with LZ4
         let compressed = compress_data(&encoded_data, CompressionAlgorithm::Lz4, Some(6))?;
         result.extend_from_slice(&compressed);
-    } else if _data.len() % 4 == 0 {
+    } else if data.len() % 4 == 0 {
         // Assume f32 _data - apply similar technique
         let float_data =
-            unsafe { std::slice::from_raw_parts(_data.as_ptr() as *const f32, _data.len() / 4) };
+            unsafe { std::slice::from_raw_parts(_data.as_ptr() as *const f32, data.len() / 4) };
 
         let mut encoded_data = Vec::with_capacity(_data.len());
         if !float_data.is_empty() {
@@ -891,7 +891,7 @@ fn compress_fpzip(_data: &[u8], _level: u32) -> Result<Vec<u8>> {
 
 /// Decompress floating-point data
 #[allow(dead_code)]
-fn decompress_fpzip(_data: &[u8]) -> Result<Vec<u8>> {
+fn decompress_fpzip(data: &[u8]) -> Result<Vec<u8>> {
     if !_data.starts_with(FPZIP_MAGIC) {
         return Err(IoError::DecompressionError(
             "Invalid FPZip magic bytes".to_string(),
@@ -946,13 +946,13 @@ fn decompress_fpzip(_data: &[u8]) -> Result<Vec<u8>> {
 
 /// Compress time series data using delta encoding + LZ4
 #[allow(dead_code)]
-fn compress_delta_lz4(_data: &[u8], level: u32) -> Result<Vec<u8>> {
-    let mut result = Vec::with_capacity(DELTA_LZ4_MAGIC.len() + _data.len());
+fn compress_delta_lz4(data: &[u8], level: u32) -> Result<Vec<u8>> {
+    let mut result = Vec::with_capacity(DELTA_LZ4_MAGIC.len() + data.len());
 
     // Add magic header
     result.extend_from_slice(DELTA_LZ4_MAGIC);
 
-    if _data.len() < 8 {
+    if data.len() < 8 {
         // Too small for delta encoding, use regular LZ4
         let compressed = compress_data(_data, CompressionAlgorithm::Lz4, Some(level))?;
         result.extend_from_slice(&compressed);
@@ -962,10 +962,10 @@ fn compress_delta_lz4(_data: &[u8], level: u32) -> Result<Vec<u8>> {
     // Try to detect _data type and apply appropriate delta encoding
     let mut delta_encoded = Vec::with_capacity(_data.len());
 
-    if _data.len() % 8 == 0 {
+    if data.len() % 8 == 0 {
         // Assume i64 or f64 time series
         let values =
-            unsafe { std::slice::from_raw_parts(_data.as_ptr() as *const i64, _data.len() / 8) };
+            unsafe { std::slice::from_raw_parts(_data.as_ptr() as *const i64, data.len() / 8) };
 
         // Store first value
         delta_encoded.extend_from_slice(&values[0].to_le_bytes());
@@ -975,10 +975,10 @@ fn compress_delta_lz4(_data: &[u8], level: u32) -> Result<Vec<u8>> {
             let delta = values[i].wrapping_sub(values[i - 1]);
             delta_encoded.extend_from_slice(&delta.to_le_bytes());
         }
-    } else if _data.len() % 4 == 0 {
+    } else if data.len() % 4 == 0 {
         // Assume i32 or f32 time series
         let values =
-            unsafe { std::slice::from_raw_parts(_data.as_ptr() as *const i32, _data.len() / 4) };
+            unsafe { std::slice::from_raw_parts(_data.as_ptr() as *const i32, data.len() / 4) };
 
         delta_encoded.extend_from_slice(&values[0].to_le_bytes());
 
@@ -990,7 +990,7 @@ fn compress_delta_lz4(_data: &[u8], level: u32) -> Result<Vec<u8>> {
         // Byte-level delta encoding
         delta_encoded.push(_data[0]);
         for i in 1.._data.len() {
-            let delta = _data[i].wrapping_sub(_data[i - 1]);
+            let delta = data[i].wrapping_sub(_data[i - 1]);
             delta_encoded.push(delta);
         }
     }
@@ -1004,7 +1004,7 @@ fn compress_delta_lz4(_data: &[u8], level: u32) -> Result<Vec<u8>> {
 
 /// Decompress delta-encoded time series data
 #[allow(dead_code)]
-fn decompress_delta_lz4(_data: &[u8]) -> Result<Vec<u8>> {
+fn decompress_delta_lz4(data: &[u8]) -> Result<Vec<u8>> {
     if !_data.starts_with(DELTA_LZ4_MAGIC) {
         return Err(IoError::DecompressionError(
             "Invalid Delta-LZ4 magic bytes".to_string(),
@@ -1343,7 +1343,7 @@ pub fn compress_file_parallel<P: AsRef<Path>>(
 ) -> Result<(String, ParallelCompressionStats)> {
     // Read input file
     let mut input_data = Vec::new();
-    File::open(input_path.as_ref())
+    File::open(inputpath.as_ref())
         .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?
         .read_to_end(&mut input_data)
         .map_err(|e| IoError::FileError(format!("Failed to read input file: {e}")))?;
@@ -1353,9 +1353,9 @@ pub fn compress_file_parallel<P: AsRef<Path>>(
 
     // Determine output _path
     let output_path_string = match output_path {
-        Some(_path) => _path.as_ref().to_string_lossy().to_string(),
+        Some(_path) => path.as_ref().to_string_lossy().to_string(),
         None => {
-            let mut path_buf = input_path.as_ref().to_path_buf();
+            let mut path_buf = inputpath.as_ref().to_path_buf();
             let ext = algorithm.extension();
             let file_name = path_buf
                 .file_name()
@@ -1405,7 +1405,7 @@ pub fn decompress_file_parallel<P: AsRef<Path>>(
 
     // Read input file
     let mut input_data = Vec::new();
-    File::open(input_path.as_ref())
+    File::open(inputpath.as_ref())
         .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?
         .read_to_end(&mut input_data)
         .map_err(|e| IoError::FileError(format!("Failed to read input file: {e}")))?;
@@ -1415,9 +1415,9 @@ pub fn decompress_file_parallel<P: AsRef<Path>>(
 
     // Determine output _path
     let output_path_string = match output_path {
-        Some(_path) => _path.as_ref().to_string_lossy().to_string(),
+        Some(_path) => path.as_ref().to_string_lossy().to_string(),
         None => {
-            let path_str = input_path.as_ref().to_string_lossy().to_string();
+            let path_str = inputpath.as_ref().to_string_lossy().to_string();
             let ext = algorithm.extension();
 
             if path_str.ends_with(&format!(".{ext}")) {

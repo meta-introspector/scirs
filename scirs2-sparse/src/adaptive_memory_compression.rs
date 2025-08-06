@@ -160,7 +160,7 @@ impl BlockId {
     }
 
     /// Create BlockId from u64 (for deserialization)
-    pub fn from_u64(_value: u64) -> Self {
+    pub fn from_u64(value: u64) -> Self {
         // This is a simplified reverse operation - in practice you'd want a proper bijection
         let matrix_id = _value / 1000000;
         let remainder = _value % 1000000;
@@ -252,7 +252,7 @@ struct MemoryMappedFile {
 impl MemoryMappedFile {
     /// Create a new memory-mapped file
     #[allow(dead_code)]
-    fn new(file_path: PathBuf, size: usize) -> SparseResult<Self> {
+    fn new(filepath: PathBuf, size: usize) -> SparseResult<Self> {
         let file = OpenOptions::new()
             .create(true)
             .truncate(true)
@@ -353,7 +353,7 @@ impl MemoryMappedFile {
 
 impl AdaptiveMemoryCompressor {
     /// Create a new adaptive memory compressor
-    pub fn new(_config: AdaptiveCompressionConfig) -> SparseResult<Self> {
+    pub fn new(config: AdaptiveCompressionConfig) -> SparseResult<Self> {
         let block_cache = BlockCache::new(_config.cache_size);
         let access_tracker = AccessTracker::default();
 
@@ -363,34 +363,34 @@ impl AdaptiveMemoryCompressor {
                 level: 1,
                 compression_ratio: 2.0,
                 algorithm: CompressionAlgorithm::RLE,
-                block_size: _config.block_size,
+                block_size: config.block_size,
                 access_threshold: 100,
             },
             CompressionLevel {
                 level: 2,
                 compression_ratio: 4.0,
                 algorithm: CompressionAlgorithm::Delta,
-                block_size: _config.block_size / 2,
+                block_size: config.block_size / 2,
                 access_threshold: 50,
             },
             CompressionLevel {
                 level: 3,
                 compression_ratio: 8.0,
                 algorithm: CompressionAlgorithm::LZ77,
-                block_size: _config.block_size / 4,
+                block_size: config.block_size / 4,
                 access_threshold: 10,
             },
         ];
 
         // Initialize out-of-core manager if enabled
-        let out_of_core_manager = if _config.out_of_core {
+        let out_of_core_manager = if config.out_of_core {
             Some(OutOfCoreManager::new(&_config.temp_directory)?)
         } else {
             None
         };
 
         Ok(Self {
-            config: _config,
+            config: config,
             memory_usage: AtomicUsize::new(0),
             compression_stats: Arc::new(Mutex::new(CompressionStats::default())),
             block_cache: Arc::new(Mutex::new(block_cache)),
@@ -707,7 +707,7 @@ impl AdaptiveMemoryCompressor {
         max_bandwidth
     }
 
-    fn get_access_pattern_info(&self, matrix_id: u64) -> AccessPatternInfo {
+    fn get_access_pattern_info(&self, matrixid: u64) -> AccessPatternInfo {
         let access_tracker = self.access_tracker.lock().unwrap();
         let mut info = AccessPatternInfo::default();
 
@@ -2003,22 +2003,22 @@ impl AdaptiveMemoryCompressor {
 // Supporting structures and implementations
 
 impl BlockCache {
-    fn new(_max_size: usize) -> Self {
+    fn new(_maxsize: usize) -> Self {
         Self {
             cache: HashMap::new(),
             access_order: VecDeque::new(),
-            max_size: _max_size,
+            max_size: max_size,
             current_size: 0,
         }
     }
 }
 
 impl OutOfCoreManager {
-    fn new(_temp_dir: &str) -> SparseResult<Self> {
+    fn new(_tempdir: &str) -> SparseResult<Self> {
         std::fs::create_dir_all(_temp_dir).map_err(SparseError::IoError)?;
 
         Ok(Self {
-            temp_dir: _temp_dir.to_string(),
+            temp_dir: temp_dir.to_string(),
             file_counter: AtomicUsize::new(0),
             active_files: HashMap::new(),
             memory_mapped_files: HashMap::new(),
@@ -2064,7 +2064,7 @@ impl OutOfCoreManager {
 
     /// Read compressed block from disk
     #[allow(dead_code)]
-    fn read_block_from_disk(&self, block_id: BlockId) -> SparseResult<CompressedBlock> {
+    fn read_block_from_disk(&self, blockid: BlockId) -> SparseResult<CompressedBlock> {
         let file_name = self.active_files.get(&block_id).ok_or_else(|| {
             SparseError::BlockNotFound(format!("Block {block_id} not found on disk"))
         })?;
@@ -2165,7 +2165,7 @@ impl OutOfCoreManager {
 
     /// Remove block from disk
     #[allow(dead_code)]
-    fn remove_block(&mut self, block_id: BlockId) -> SparseResult<()> {
+    fn remove_block(&mut self, blockid: BlockId) -> SparseResult<()> {
         if let Some(file_name) = self.active_files.remove(&block_id) {
             let file_path = Path::new(&self.temp_dir).join(&file_name);
 
@@ -2249,14 +2249,14 @@ impl BlockHeader {
     }
 
     #[allow(dead_code)]
-    fn deserialize(_data: &[u8]) -> SparseResult<Self> {
-        if _data.len() < std::mem::size_of::<BlockHeaderSerialized>() {
+    fn deserialize(data: &[u8]) -> SparseResult<Self> {
+        if data.len() < std::mem::size_of::<BlockHeaderSerialized>() {
             return Err(SparseError::Io("Invalid header size".to_string()));
         }
 
         // Convert from bytes
         let serialized: BlockHeaderSerialized = unsafe {
-            let ptr = _data.as_ptr() as *const BlockHeaderSerialized;
+            let ptr = data.as_ptr() as *const BlockHeaderSerialized;
             ptr.read()
         };
 

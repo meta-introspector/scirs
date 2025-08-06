@@ -98,219 +98,219 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Add a variable to the tape
-    pub fn variable(&mut self, _idx: usize, value: F) -> usize {
-        let node_idx = self.nodes.len();
+    pub fn variable(&mut self, idx: usize, value: F) -> usize {
+        let nodeidx = self.nodes.len();
         self.nodes
-            .push(Rc::new(TapeNode::new(value, Operation::Variable(_idx))));
-        self.var_map.insert(_idx, node_idx);
-        node_idx
+            .push(Rc::new(TapeNode::new(value, Operation::Variable(idx))));
+        self.var_map.insert(idx, nodeidx);
+        nodeidx
     }
 
     /// Add a constant to the tape
-    pub fn constant(&mut self, _value: F) -> usize {
-        let node_idx = self.nodes.len();
+    pub fn constant(&mut self, value: F) -> usize {
+        let nodeidx = self.nodes.len();
         self.nodes
-            .push(Rc::new(TapeNode::new(_value, Operation::Constant(_value))));
-        node_idx
+            .push(Rc::new(TapeNode::new(value, Operation::Constant(value))));
+        nodeidx
     }
 
     /// Record addition
     pub fn add(&mut self, a: usize, b: usize) -> usize {
         let value = self.nodes[a].value + self.nodes[b].value;
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Add(a, b))));
-        node_idx
+        nodeidx
     }
 
     /// Record subtraction
     pub fn sub(&mut self, a: usize, b: usize) -> usize {
         let value = self.nodes[a].value - self.nodes[b].value;
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Sub(a, b))));
-        node_idx
+        nodeidx
     }
 
     /// Record multiplication
     pub fn mul(&mut self, a: usize, b: usize) -> usize {
         let value = self.nodes[a].value * self.nodes[b].value;
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Mul(a, b))));
-        node_idx
+        nodeidx
     }
 
     /// Record division
     pub fn div(&mut self, a: usize, b: usize) -> usize {
         let value = self.nodes[a].value / self.nodes[b].value;
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Div(a, b))));
-        node_idx
+        nodeidx
     }
 
     /// Record negation
     pub fn neg(&mut self, a: usize) -> usize {
         let value = -self.nodes[a].value;
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Neg(a))));
-        node_idx
+        nodeidx
     }
 
     /// Record power
     pub fn pow(&mut self, a: usize, n: F) -> usize {
         let value = self.nodes[a].value.powf(n);
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Pow(a, n))));
-        node_idx
+        nodeidx
     }
 
     /// Record sin
     pub fn sin(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.sin();
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Sin(a))));
-        node_idx
+        nodeidx
     }
 
     /// Record cos
     pub fn cos(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.cos();
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Cos(a))));
-        node_idx
+        nodeidx
     }
 
     /// Record exp
     pub fn exp(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.exp();
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Exp(a))));
-        node_idx
+        nodeidx
     }
 
     /// Record ln
     pub fn ln(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.ln();
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Ln(a))));
-        node_idx
+        nodeidx
     }
 
     /// Record sqrt
     pub fn sqrt(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.sqrt();
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Sqrt(a))));
-        node_idx
+        nodeidx
     }
 
     /// Record general power where both base and exponent are variables
     pub fn pow_general(&mut self, a: usize, b: usize) -> usize {
         let value = self.nodes[a].value.powf(self.nodes[b].value);
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::PowGeneral(a, b))));
-        node_idx
+        nodeidx
     }
 
     /// Record tan
     pub fn tan(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.tan();
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Tan(a))));
-        node_idx
+        nodeidx
     }
 
     /// Record tanh
     pub fn tanh(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.tanh();
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Tanh(a))));
-        node_idx
+        nodeidx
     }
 
     /// Record sinh
     pub fn sinh(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.sinh();
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Sinh(a))));
-        node_idx
+        nodeidx
     }
 
     /// Record cosh
     pub fn cosh(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.cosh();
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Cosh(a))));
-        node_idx
+        nodeidx
     }
 
     /// Record atan2
     pub fn atan2(&mut self, y: usize, x: usize) -> usize {
         let value = self.nodes[y].value.atan2(self.nodes[x].value);
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Atan2(y, x))));
-        node_idx
+        nodeidx
     }
 
     /// Record abs
     pub fn abs(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.abs();
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Abs(a))));
-        node_idx
+        nodeidx
     }
 
     /// Record max
     pub fn max(&mut self, a: usize, b: usize) -> usize {
         let value = self.nodes[a].value.max(self.nodes[b].value);
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Max(a, b))));
-        node_idx
+        nodeidx
     }
 
     /// Record min
     pub fn min(&mut self, a: usize, b: usize) -> usize {
         let value = self.nodes[a].value.min(self.nodes[b].value);
-        let node_idx = self.nodes.len();
+        let nodeidx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Min(a, b))));
-        node_idx
+        nodeidx
     }
 
     /// Get the value at a node
-    pub fn value(&self, _idx: usize) -> F {
-        self.nodes[_idx].value
+    pub fn value(&self, idx: usize) -> F {
+        self.nodes[idx].value
     }
 
     /// Backward pass to compute gradients
-    pub fn backward(&mut self, output_idx: usize, n_vars: usize) -> Array1<F> {
+    pub fn backward(&mut self, outputidx: usize, nvars: usize) -> Array1<F> {
         // Initialize gradients to zero
         for node in &self.nodes {
             *node.gradient.borrow_mut() = F::zero();
         }
 
         // Set gradient of output to 1
-        *self.nodes[output_idx].gradient.borrow_mut() = F::one();
+        *self.nodes[outputidx].gradient.borrow_mut() = F::one();
 
         // Backward pass
-        for i in (0..=output_idx).rev() {
+        for i in (0..=outputidx).rev() {
             let node = &self.nodes[i];
             let grad = *node.gradient.borrow();
 
@@ -427,10 +427,10 @@ impl<F: IntegrateFloat> Tape<F> {
         }
 
         // Collect gradients for variables
-        let mut gradients = Array1::zeros(n_vars);
-        for (var_idx, &node_idx) in &self.var_map {
-            if *var_idx < n_vars {
-                gradients[*var_idx] = *self.nodes[node_idx].gradient.borrow();
+        let mut gradients = Array1::zeros(nvars);
+        for (varidx, &nodeidx) in &self.var_map {
+            if *varidx < nvars {
+                gradients[*varidx] = *self.nodes[nodeidx].gradient.borrow();
             }
         }
 
@@ -460,7 +460,7 @@ pub enum CheckpointStrategy {
 /// Reverse mode automatic differentiation engine
 pub struct ReverseAD<F: IntegrateFloat> {
     /// Number of independent variables
-    n_vars: usize,
+    nvars: usize,
     /// Checkpointing strategy
     checkpoint_strategy: CheckpointStrategy,
     _phantom: std::marker::PhantomData<F>,
@@ -468,9 +468,9 @@ pub struct ReverseAD<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> ReverseAD<F> {
     /// Create a new reverse AD engine
-    pub fn new(n_vars: usize) -> Self {
+    pub fn new(nvars: usize) -> Self {
         ReverseAD {
-            n_vars,
+            nvars,
             checkpoint_strategy: CheckpointStrategy::None,
             _phantom: std::marker::PhantomData,
         }
@@ -487,10 +487,10 @@ impl<F: IntegrateFloat> ReverseAD<F> {
     where
         Func: Fn(&mut Tape<F>, &[usize]) -> usize,
     {
-        if x.len() != self.n_vars {
+        if x.len() != self.nvars {
             return Err(IntegrateError::DimensionMismatch(format!(
                 "Expected {} variables, got {}",
-                self.n_vars,
+                self.nvars,
                 x.len()
             )));
         }
@@ -505,10 +505,10 @@ impl<F: IntegrateFloat> ReverseAD<F> {
         }
 
         // Compute function
-        let output_idx = f(&mut tape, &var_indices);
+        let outputidx = f(&mut tape, &var_indices);
 
         // Backward pass
-        Ok(tape.backward(output_idx, self.n_vars))
+        Ok(tape.backward(outputidx, self.nvars))
     }
 
     /// Compute Jacobian using reverse mode AD
@@ -516,10 +516,10 @@ impl<F: IntegrateFloat> ReverseAD<F> {
     where
         Func: Fn(&mut Tape<F>, &[usize]) -> Vec<usize>,
     {
-        if x.len() != self.n_vars {
+        if x.len() != self.nvars {
             return Err(IntegrateError::DimensionMismatch(format!(
                 "Expected {} variables, got {}",
-                self.n_vars,
+                self.nvars,
                 x.len()
             )));
         }
@@ -537,11 +537,11 @@ impl<F: IntegrateFloat> ReverseAD<F> {
         let output_indices = f(&mut tape, &var_indices);
         let m = output_indices.len();
 
-        let mut jacobian = Array2::zeros((m, self.n_vars));
+        let mut jacobian = Array2::zeros((m, self.nvars));
 
         // Compute gradients for each output
-        for (i, &output_idx) in output_indices.iter().enumerate() {
-            let grad = tape.backward(output_idx, self.n_vars);
+        for (i, &outputidx) in output_indices.iter().enumerate() {
+            let grad = tape.backward(outputidx, self.nvars);
             jacobian.row_mut(i).assign(&grad);
         }
 
@@ -553,19 +553,19 @@ impl<F: IntegrateFloat> ReverseAD<F> {
     where
         Func: Fn(&mut Tape<F>, &[usize]) -> usize + Clone,
     {
-        if x.len() != self.n_vars {
+        if x.len() != self.nvars {
             return Err(IntegrateError::DimensionMismatch(format!(
                 "Expected {} variables, got {}",
-                self.n_vars,
+                self.nvars,
                 x.len()
             )));
         }
 
-        let mut hessian = Array2::zeros((self.n_vars, self.n_vars));
+        let mut hessian = Array2::zeros((self.nvars, self.nvars));
         let eps = F::from(1e-8).unwrap();
 
         // Compute Hessian using finite differences of gradients
-        for j in 0..self.n_vars {
+        for j in 0..self.nvars {
             // Perturb x[j]
             let mut x_plus = x.to_owned();
             x_plus[j] += eps;
@@ -574,14 +574,14 @@ impl<F: IntegrateFloat> ReverseAD<F> {
             let grad_base = self.gradient(f.clone(), x)?;
 
             // Hessian column j = (grad(x + eps*e_j) - grad(x)) / eps
-            for i in 0..self.n_vars {
+            for i in 0..self.nvars {
                 hessian[[i, j]] = (grad_plus[i] - grad_base[i]) / eps;
             }
         }
 
         // Make Hessian symmetric (average upper and lower triangular parts)
-        for i in 0..self.n_vars {
-            for j in (i + 1)..self.n_vars {
+        for i in 0..self.nvars {
+            for j in (i + 1)..self.nvars {
                 let avg = (hessian[[i, j]] + hessian[[j, i]]) / F::from(2.0).unwrap();
                 hessian[[i, j]] = avg;
                 hessian[[j, i]] = avg;
@@ -619,10 +619,10 @@ impl<F: IntegrateFloat> ReverseAD<F> {
     where
         Func: Fn(&mut Tape<F>, &[usize]) -> Vec<usize>,
     {
-        if x.len() != self.n_vars || v.len() != self.n_vars {
+        if x.len() != self.nvars || v.len() != self.nvars {
             return Err(IntegrateError::DimensionMismatch(format!(
                 "Expected {} variables for both x and v",
-                self.n_vars
+                self.nvars
             )));
         }
 
@@ -671,10 +671,10 @@ impl<F: IntegrateFloat> ReverseAD<F> {
     where
         Func: Fn(&mut Tape<F>, &[usize]) -> Vec<usize>,
     {
-        if x.len() != self.n_vars {
+        if x.len() != self.nvars {
             return Err(IntegrateError::DimensionMismatch(format!(
                 "Expected {} variables",
-                self.n_vars
+                self.nvars
             )));
         }
 
@@ -700,14 +700,14 @@ impl<F: IntegrateFloat> ReverseAD<F> {
 
         // Compute weighted sum of outputs
         let mut weighted_sum = tape.constant(F::zero());
-        for (i, &output_idx) in output_indices.iter().enumerate() {
+        for (i, &outputidx) in output_indices.iter().enumerate() {
             let v_i = tape.constant(v[i]);
-            let term = tape.mul(v_i, output_idx);
+            let term = tape.mul(v_i, outputidx);
             weighted_sum = tape.add(weighted_sum, term);
         }
 
         // Compute gradient of weighted sum
-        Ok(tape.backward(weighted_sum, self.n_vars))
+        Ok(tape.backward(weighted_sum, self.nvars))
     }
 }
 

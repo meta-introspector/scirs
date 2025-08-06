@@ -211,7 +211,7 @@ where
     println!("Adaptive cubature completed in {elapsed:.2?}");
     println!("Total evaluations: {n_evals}");
     println!("Total subregions: {n_subregions}");
-    println!("Maximum _depth: {max_depth_reached}");
+    println!("Maximum depth: {max_depth_reached}");
 
     Ok(AdaptiveCubatureResult {
         value: total_integral,
@@ -258,7 +258,7 @@ where
     }
 
     // Helper to transform quadrature points to the integration region
-    fn transform_point(x: f64, dim_idx: usize, a: &Array1<f64>, b: &Array1<f64>) -> f64 {
+    fn transform_point(x: f64, dimidx: usize, a: &Array1<f64>, b: &Array1<f64>) -> f64 {
         a[dim_idx] + (b[dim_idx] - a[dim_idx]) * (x + 1.0) / 2.0
     }
 

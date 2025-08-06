@@ -75,11 +75,11 @@ pub struct LayerStatistics<F: Float + Debug> {
     pub is_frozen: bool,
 impl<F: Float + Debug + 'static> TransferLearningManager<F> {
     /// Create a new transfer learning manager
-    pub fn new(_strategy: TransferStrategy, base_learning_rate: f64) -> Result<Self> {
+    pub fn new(_strategy: TransferStrategy, base_learningrate: f64) -> Result<Self> {
         Ok(Self {
             layer_states: HashMap::new(),
             layer_order: Vec::new(),
-            _strategy,
+            strategy,
             base_learning_rate: F::from(base_learning_rate).ok_or_else(|| {
                 NeuralError::InvalidArchitecture("Invalid learning _rate".to_string())
             })?,
@@ -88,7 +88,7 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
         })
     }
     /// Initialize layer states based on the transfer strategy
-    pub fn initialize_layer_states(&mut self, layer_names: &[String]) -> Result<()> {
+    pub fn initialize_layer_states(&mut self, layernames: &[String]) -> Result<()> {
         // Store the layer order
         self.layer_order = layer_names.to_vec();
         match &self.strategy {
@@ -140,12 +140,12 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
                 if *state == LayerState::Frozen {
                     *state = LayerState::Trainable;
     /// Freeze specific layers
-    pub fn freeze_layers(&mut self, layer_names: &[String]) -> Result<()> {
+    pub fn freeze_layers(&mut self, layernames: &[String]) -> Result<()> {
         for layer_name in layer_names {
             self.layer_states
                 .insert(layer_name.clone(), LayerState::Frozen);
     /// Get effective learning rate for a layer
-    pub fn get_layer_learning_rate(&self, layer_name: &str) -> F {
+    pub fn get_layer_learning_rate(&self, layername: &str) -> F {
         match self.layer_states.get(layer_name) {
             Some(LayerState::Frozen) => F::zero(),
             Some(LayerState::Trainable) => self.base_learning_rate,
@@ -153,7 +153,7 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
                 self.base_learning_rate * F::from(*ratio).unwrap_or(F::one())
             None => self.base_learning_rate, // Default for unknown layers
     /// Check if a layer is frozen
-    pub fn is_layer_frozen(&self, layer_name: &str) -> bool {
+    pub fn is_layer_frozen(&self, layername: &str) -> bool {
         matches!(self.layer_states.get(layer_name), Some(LayerState::Frozen))
     /// Update layer statistics
     pub fn update_layer_statistics(
@@ -239,7 +239,7 @@ impl PretrainedWeightLoader {
     pub fn load_weights(&mut self, weights: HashMap<String, ArrayD<f32>>) -> Result<()> {
         self.weights = weights;
     /// Add layer mapping for weight transfer
-    pub fn add_layer_mapping(&mut self, source_layer: String, target_layer: String) {
+    pub fn add_layer_mapping(&mut self, source_layer: String, targetlayer: String) {
         self.layer_mapping.insert(source_layer, target_layer);
     /// Set whether to ignore size mismatches
     pub fn set_ignore_mismatches(&mut self, ignore: bool) {
@@ -375,17 +375,17 @@ pub struct WeightStatistics {
     pub l2_norm: f32,
 impl WeightStatistics {
     /// Compute statistics from a weight tensor
-    pub fn from_tensor(_weights: &ArrayD<f32>) -> Self {
-        let shape = _weights.shape().to_vec();
-        let param_count = _weights.len();
-        let min = _weights.iter().cloned().fold(f32::INFINITY, f32::min);
-        let max = _weights.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
-        let sum: f32 = _weights.sum();
+    pub fn from_tensor(weights: &ArrayD<f32>) -> Self {
+        let shape = weights.shape().to_vec();
+        let param_count = weights.len();
+        let min = weights.iter().cloned().fold(f32::INFINITY, f32::min);
+        let max = weights.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+        let sum: f32 = weights.sum();
         let mean = sum / param_count as f32;
         let variance: f32 =
-            _weights.iter().map(|&x| (x - mean).powi(2)).sum::<f32>() / param_count as f32;
+            weights.iter().map(|&x| (x - mean).powi(2)).sum::<f32>() / param_count as f32;
         let std = variance.sqrt();
-        let l2_norm = _weights.iter().map(|&x| x * x).sum::<f32>().sqrt();
+        let l2_norm = weights.iter().map(|&x| x * x).sum::<f32>().sqrt();
             shape,
             mean,
             std,
@@ -472,19 +472,19 @@ impl<F: Float + Debug + 'static> FineTuningUtilities<F> {
         let decay = F::from(weight_decay)
             .ok_or_else(|| NeuralError::InvalidArchitecture("Invalid weight decay".to_string()))?;
         self.weight_decays.insert(layer_pattern, decay);
-    pub fn get_effective_learning_rate(&self, layer_name: &str, base_lr: F) -> F {
+    pub fn get_effective_learning_rate(&self, layer_name: &str, baselr: F) -> F {
         // Check for exact match first, then pattern matches
         for (pattern, &lr) in &self.lr_scheduler {
             if layer_name == pattern || layer_name.contains(pattern) {
                 return lr;
         base_lr
     /// Get gradient clip value for a layer
-    pub fn get_gradient_clip(&self, layer_name: &str) -> Option<F> {
+    pub fn get_gradient_clip(&self, layername: &str) -> Option<F> {
         for (pattern, &clip) in &self.gradient_clips {
                 return Some(clip);
         None
     /// Get weight decay for a layer
-    pub fn get_weight_decay(&self, layer_name: &str) -> Option<F> {
+    pub fn get_weight_decay(&self, layername: &str) -> Option<F> {
         for (pattern, &decay) in &self.weight_decays {
                 return Some(decay);
 impl<F: Float + Debug + 'static> Default for FineTuningUtilities<F> {
@@ -553,7 +553,7 @@ impl ModelSurgery {
     pub fn add_operation(&mut self, operation: SurgeryOperation) {
         self.operations.push(operation);
     /// Apply all surgery operations
-    pub fn apply_surgery(&self, model_config: &mut ModelConfig) -> Result<Vec<String>> {
+    pub fn apply_surgery(&self, modelconfig: &mut ModelConfig) -> Result<Vec<String>> {
         let mut applied_operations = Vec::new();
         for operation in &self.operations {
             match operation {
@@ -585,7 +585,7 @@ impl ModelSurgery {
     fn add_layer_at_position(
         _model_config: &mut ModelConfig, _position: usize_layer, name: &str, _layer_config: &LayerConfig,
         // Implementation would modify the model configuration
-    fn remove_layer(&self, _model_config: &mut ModelConfig_layer, _name: &str) -> Result<()> {
+    fn remove_layer(&self, _model_config: &mut ModelConfig_layer, name: &str) -> Result<()> {
         // Implementation would remove the layer from model configuration
     fn replace_layer(
         _old_layer: &str, _new_layer: &str,
@@ -664,12 +664,12 @@ impl<
             surgery_operations,
             weight_statistics: self.weight_loader.get_weight_statistics(),
     /// Get effective learning rate for a layer considering all factors
-    pub fn get_effective_learning_rate(&self, layer_name: &str) -> F {
+    pub fn get_effective_learning_rate(&self, layername: &str) -> F {
         let base_lr = self.transfer_manager.get_layer_learning_rate(layer_name);
         self.fine_tuning
             .get_effective_learning_rate(layer_name, base_lr)
     /// Apply domain adaptation to features
-    pub fn adapt_features(&self, layer_name: &str, features: &ArrayD<F>) -> Result<ArrayD<F>> {
+    pub fn adapt_features(&self, layername: &str, features: &ArrayD<F>) -> Result<ArrayD<F>> {
         if let Some(adapter) = &self.domain_adaptation {
             adapter.adapt_features(layer_name, features)
             Ok(features.clone())
@@ -731,10 +731,10 @@ pub enum AdaptationMethod {
     CoralAlignment,
     > DomainAdaptation<F>
     /// Create new domain adaptation utility
-    pub fn new(_method: AdaptationMethod) -> Self {
+    pub fn new(method: AdaptationMethod) -> Self {
             source_stats: HashMap::new(),
             target_stats: HashMap::new(),
-            adaptation_method: _method,
+            adaptation_method: method,
     /// Compute domain statistics from data
     pub fn compute_domain_statistics(
         domain_name: String,

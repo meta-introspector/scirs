@@ -3,17 +3,17 @@
 //! This example shows how to check if required APIs are available.
 
 use scirs2_core::api_freeze::{
-    check_apis_available, current_library_version, initialize_api_freeze, is_api_available,
+    check_apis_available, current_libraryversion, initialize_api_freeze, is_api_available,
     ApiCompatibilityChecker,
 };
-use scirs2_core::api_versioning::Version;
+use scirs2_core::apiversioning::Version;
 
 #[allow(dead_code)]
 fn main() {
     // Initialize the API freeze registry
     initialize_api_freeze();
 
-    println!("Current library version: {}", current_library_version());
+    println!("Current library version: {}", current_libraryversion());
     println!();
 
     // Check individual API availability
@@ -44,7 +44,7 @@ fn main() {
         .require_api("CoreError", "error")
         .require_api("check_finite", "validation")
         .require_api("SystemResources", "resource")
-        .require_version(Version::new(1, 0, 0));
+        .minimum_version(Version::new(1, 0, 0));
 
     match checker.check() {
         Ok(()) => println!("✓ All compatibility requirements met"),
@@ -55,7 +55,7 @@ fn main() {
     println!("\n=== Checking with Missing API ===");
     let checker_fail = ApiCompatibilityChecker::new()
         .require_api("NonExistentAPI", "fake_module")
-        .require_version(Version::new(1, 0, 0));
+        .minimum_version(Version::new(1, 0, 0));
 
     match checker_fail.check() {
         Ok(()) => println!("✓ All compatibility requirements met"),

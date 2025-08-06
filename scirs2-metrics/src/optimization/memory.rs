@@ -100,7 +100,7 @@ impl ChunkedMetrics {
     ///         (0.0, 0)
     ///     }
     ///
-    ///     fn update_state(&self, state: &mut Self::State, batch_true: &[f64], batch_pred: &[f64]) -> Result<()> {
+    ///     fn update_state(&self, state: &mut Self::State, batch_true: &[f64], batchpred: &[f64]) -> Result<()> {
     ///         for (y_t, y_p) in batch_true.iter().zip(batch_pred.iter()) {
     ///             state.0 += (y_t - y_p).abs();
     ///             state.1 += 1;
@@ -244,15 +244,17 @@ where
     pub fn new() -> Self {
         IncrementalMetrics {
             state: S::default(),
-            count: 0, marker: PhantomData,
+            count: 0,
+            marker: PhantomData,
         }
     }
 
     /// Create a new IncrementalMetrics with the given state
-    pub fn with_state(_state: S) -> Self {
+    pub fn with_state(state: S) -> Self {
         IncrementalMetrics {
-            _state,
-            count: 0, marker: PhantomData,
+            state,
+            count: 0,
+            marker: PhantomData,
         }
     }
 
@@ -277,7 +279,7 @@ where
     /// # Returns
     ///
     /// * Result indicating success or error
-    pub fn update<F>(&mut self, y_true: T, y_pred: T, update_fn: F) -> Result<()>
+    pub fn update<F>(&mut self, y_true: T, y_pred: T, updatefn: F) -> Result<()>
     where
         F: FnOnce(&mut S, T, T) -> Result<()>,
     {
@@ -297,7 +299,7 @@ where
     /// # Returns
     ///
     /// * Result indicating success or error
-    pub fn update_batch<F>(&mut self, y_true: &[T], y_pred: &[T], update_fn: F) -> Result<()>
+    pub fn update_batch<F>(&mut self, y_true: &[T], y_pred: &[T], updatefn: F) -> Result<()>
     where
         F: Fn(&mut S, &[T], &[T]) -> Result<()>,
     {
@@ -321,7 +323,7 @@ where
     /// # Returns
     ///
     /// * The computed metric
-    pub fn finalize<F, R>(&self, finalize_fn: F) -> Result<R>
+    pub fn finalize<F, R>(&self, finalizefn: F) -> Result<R>
     where
         F: FnOnce(&S, usize) -> Result<R>,
     {
@@ -341,7 +343,7 @@ pub trait MemoryMappedMetric<T> {
     fn init_state(&self) -> Self::State;
 
     /// Process a chunk of data
-    fn process_chunk(&self, state: &mut Self::State, chunk_idx: usize, chunk: &[T]) -> Result<()>;
+    fn process_chunk(&self, state: &mut Self::State, chunkidx: usize, chunk: &[T]) -> Result<()>;
 
     /// Finalize the computation
     fn finalize(&self, state: &Self::State) -> Result<f64>;
@@ -772,7 +774,8 @@ impl ZeroCopyMemoryManager {
     pub fn create_view<'a, T>(&'a self, data: &'a [T]) -> ZeroCopyArrayView<'a, T> {
         ZeroCopyArrayView {
             data: NonNull::new(data.as_ptr() as *mut T).unwrap(),
-            len: data.len(), _lifetime: std::marker::PhantomData,
+            len: data.len(),
+            _lifetime: std::marker::PhantomData,
             memory_manager: self,
         }
     }
@@ -781,7 +784,8 @@ impl ZeroCopyMemoryManager {
     pub fn create_view_mut<'a, T>(&'a self, data: &'a mut [T]) -> ZeroCopyArrayViewMut<'a, T> {
         ZeroCopyArrayViewMut {
             data: NonNull::new(data.as_mut_ptr()).unwrap(),
-            len: data.len(), _lifetime: std::marker::PhantomData,
+            len: data.len(),
+            _lifetime: std::marker::PhantomData,
             memory_manager: self,
         }
     }
@@ -864,9 +868,9 @@ impl ZeroCopyMemoryManager {
 
 impl MemoryPool {
     /// Create a new memory pool
-    pub fn new(_block_size: usize, alignment: usize, initial_capacity: usize) -> Self {
+    pub fn new(_block_size: usize, alignment: usize, initialcapacity: usize) -> Self {
         Self {
-            _block_size,
+            block_size,
             alignment,
             free_blocks: Arc::new(Mutex::new(Vec::with_capacity(initial_capacity))),
             _capacity: AtomicUsize::new(0),
@@ -937,7 +941,7 @@ impl MemoryPool {
         Ok(reclaimed)
     }
 
-    fn update_avg_allocation_time(&self, new_time: usize) {
+    fn update_avg_allocation_time(&self, newtime: usize) {
         // Simple exponential moving average
         let current_avg = self.pool_stats.avg_allocation_time.load(Ordering::Relaxed);
         let new_avg = if current_avg == 0 {
@@ -990,13 +994,13 @@ impl SimdAlignedAllocator {
 
 impl ArenaAllocator {
     /// Create a new arena allocator
-    pub fn new(_default_arena_size: usize) -> Result<Self> {
+    pub fn new(_default_arenasize: usize) -> Result<Self> {
         let initial_arena = Arc::new(Mutex::new(Arena::new(_default_arena_size)?));
 
         Ok(Self {
             current_arena: initial_arena.clone(),
             arenas: vec![initial_arena],
-            _default_arena_size,
+            default_arena_size,
             arena_stats: ArenaStats::new(),
         })
     }
@@ -1039,7 +1043,7 @@ impl ArenaAllocator {
 
 impl Arena {
     /// Create a new arena
-    pub fn new(_size: usize) -> Result<Self> {
+    pub fn new(size: usize) -> Result<Self> {
         let layout = Layout::from_size_align(_size, 64) // 64-byte alignment for cache lines
             .map_err(|_| MetricsError::MemoryError("Invalid arena layout".to_string()))?;
 
@@ -1052,7 +1056,7 @@ impl Arena {
 
         Ok(Self {
             memory: NonNull::new(ptr).unwrap(),
-            _size,
+            size,
             offset: 0,
             alignment: 64,
         })
@@ -1089,7 +1093,7 @@ impl MemoryMappingManager {
     }
 
     /// Map a file into memory
-    pub fn map_file(&self, _file_path: &str, _access_mode: AccessMode) -> Result<&MemoryMapping> {
+    pub fn map_file(&self, _file_path: &str, _accessmode: AccessMode) -> Result<&MemoryMapping> {
         // This is a simplified implementation
         // In practice, you'd use platform-specific APIs (mmap on Unix, MapViewOfFile on Windows)
         Err(MetricsError::MemoryError(
@@ -1190,7 +1194,7 @@ pub struct PoolAllocator {
 }
 
 impl PoolAllocator {
-    pub fn new(_block_size: usize) -> Self {
+    pub fn new(_blocksize: usize) -> Self {
         Self { _block_size }
     }
 }
@@ -1216,7 +1220,7 @@ impl CustomAllocator for PoolAllocator {
         Ok(NonNull::new(ptr).unwrap())
     }
 
-    fn deallocate(&self, ptr: NonNull<u8>, _size: usize, alignment: usize) {
+    fn deallocate(&self, ptr: NonNull<u8>, size: usize, alignment: usize) {
         let layout = Layout::from_size_align(self.block_size, alignment).unwrap();
         unsafe { dealloc(ptr.as_ptr(), layout) };
     }
@@ -1511,7 +1515,7 @@ impl<T> ZeroCopyBuffer<T> {
     }
 
     /// Resize the buffer (zero-copy when shrinking)
-    pub fn resize(&mut self, new_size: usize) -> Result<()> {
+    pub fn resize(&mut self, newsize: usize) -> Result<()> {
         if new_size <= self.capacity {
             self.length = new_size;
             Ok(())

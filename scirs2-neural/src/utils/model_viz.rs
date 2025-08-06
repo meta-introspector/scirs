@@ -546,9 +546,9 @@ pub fn sequential_model_dataflow<
 }
 // Helper function to extract output size from a layer's properties
 #[allow(dead_code)]
-fn extract_output_size(_node: &ModelNode) -> Option<usize> {
-    if _node.layer_type == "Dense" {
-        for (key, value) in &_node.properties {
+fn extract_output_size(node: &ModelNode) -> Option<usize> {
+    if node.layer_type == "Dense" {
+        for (key, value) in &node.properties {
             if key == "output_dim" {
                 return value.parse::<usize>().ok();
             }
@@ -580,17 +580,17 @@ fn extract_layer_properties<F: Float + Debug + ScalarOperand>(
 }
 // Helper function to format parameter counts
 #[allow(dead_code)]
-fn format_params(_params: usize) -> String {
-    if _params >= 1_000_000 {
+fn format_params(params: usize) -> String {
+    if params >= 1_000_000 {
         format!(
             "{:.2}M ({} parameters)",
-            _params as f64 / 1_000_000.0,
-            _params
+            params as f64 / 1_000_000.0,
+            params
         )
-    } else if _params >= 1_000 {
-        let param_kb = _params as f64 / 1_000.0;
-        format!("{param_kb:.2}K ({_params} parameters)")
+    } else if params >= 1_000 {
+        let param_kb = params as f64 / 1_000.0;
+        format!("{param_kb:.2}K ({params} parameters)")
     } else {
-        format!("{_params} parameters")
+        format!("{params} parameters")
     }
 }

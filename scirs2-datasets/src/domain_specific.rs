@@ -114,7 +114,7 @@ pub mod astronomy {
             self.load_synthetic_supernova_data(1000)
         }
 
-        fn load_synthetic_stellar_data(&self, catalog: &str, n_stars: usize) -> Result<Dataset> {
+        fn load_synthetic_stellar_data(&self, catalog: &str, nstars: usize) -> Result<Dataset> {
             use rand__distr::{Distribution, Normal};
 
             let mut rng = rand::rng();
@@ -208,7 +208,7 @@ pub mod astronomy {
             })
         }
 
-        fn load_synthetic_exoplanet_data(&self, n_planets: usize) -> Result<Dataset> {
+        fn load_synthetic_exoplanet_data(&self, nplanets: usize) -> Result<Dataset> {
             use rand__distr::{Distribution, LogNormal, Normal};
 
             let mut rng = rand::rng();
@@ -289,7 +289,7 @@ pub mod astronomy {
             })
         }
 
-        fn load_synthetic_supernova_data(&self, n_supernovae: usize) -> Result<Dataset> {
+        fn load_synthetic_supernova_data(&self, nsupernovae: usize) -> Result<Dataset> {
             use rand__distr::{Distribution, Normal};
 
             let mut rng = rand::rng();
@@ -415,7 +415,7 @@ pub mod genomics {
         }
 
         /// Load synthetic gene expression data
-        pub fn load_gene_expression(&self, n_samples: usize, n_genes: usize) -> Result<Dataset> {
+        pub fn load_gene_expression(&self, n_samples: usize, ngenes: usize) -> Result<Dataset> {
             use rand__distr::{Distribution, LogNormal, Normal};
 
             let mut rng = rand::rng();
@@ -542,7 +542,7 @@ pub mod genomics {
                     sequence.push(nucleotide);
                 }
 
-                _sequences.push(sequence);
+                sequences.push(sequence);
                 sequence_types.push(seq_type as f64);
             }
 
@@ -610,7 +610,7 @@ pub mod genomics {
             kmers
         }
 
-        fn count_kmers(_sequence: &str, k: usize, kmers: &[String]) -> Vec<f64> {
+        fn count_kmers(sequence: &str, k: usize, kmers: &[String]) -> Vec<f64> {
             let mut counts = vec![0.0; kmers.len()];
             let kmer_to_idx: HashMap<&str, usize> = kmers
                 .iter()
@@ -797,7 +797,7 @@ pub mod climate {
         }
 
         /// Load atmospheric chemistry data
-        pub fn load_atmospheric_chemistry(&self, n_measurements: usize) -> Result<Dataset> {
+        pub fn load_atmospheric_chemistry(&self, nmeasurements: usize) -> Result<Dataset> {
             use rand__distr::{Distribution, LogNormal, Normal};
 
             let mut rng = rand::rng();
@@ -901,7 +901,7 @@ pub mod climate {
         }
 
         #[allow(clippy::too_many_arguments)]
-        fn calculate_aqi(_pm25: f64, pm10: f64, no2: f64, so2: f64, o3: f64, co: f64) -> f64 {
+        fn calculate_aqi(pm25: f64, pm10: f64, no2: f64, so2: f64, o3: f64, co: f64) -> f64 {
             // Simplified AQI calculation
             let pm25_aqi = (_pm25 / 35.0 * 100.0).min(300.0);
             let pm10_aqi = (pm10 / 150.0 * 100.0).min(300.0);
@@ -956,7 +956,7 @@ pub mod convenience {
     }
 
     /// Load atmospheric chemistry data
-    pub fn load_atmospheric_chemistry(_n_measurements: Option<usize>) -> Result<Dataset> {
+    pub fn load_atmospheric_chemistry(_nmeasurements: Option<usize>) -> Result<Dataset> {
         let datasets = ClimateDatasets::new()?;
         datasets.load_atmospheric_chemistry(_n_measurements.unwrap_or(1000))
     }

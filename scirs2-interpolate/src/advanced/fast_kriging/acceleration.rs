@@ -377,7 +377,7 @@ pub fn make_hodlr_kriging<
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn select_approximation_method(_n_points: usize) -> FastKrigingMethod {
+pub fn select_approximation_method(_npoints: usize) -> FastKrigingMethod {
     if _n_points < 500 {
         // For small datasets, local kriging is accurate and fast enough
         FastKrigingMethod::Local

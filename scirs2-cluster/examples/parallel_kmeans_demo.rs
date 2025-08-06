@@ -132,7 +132,7 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn generate_clustered_data(_n_samples: usize, n_features: usize, n_clusters: usize) -> Array2<f64> {
+fn generate_clustered_data(_n_samples: usize, n_features: usize, nclusters: usize) -> Array2<f64> {
     let mut data = Vec::with_capacity(_n_samples * n_features);
 
     // Generate data with clear _clusters

@@ -70,7 +70,7 @@ impl BayesianAnalysisWorkflow {
     }
 
     /// Configure MCMC settings
-    pub fn with_mcmc(mut self, n_samples_: usize, burnin: usize) -> Self {
+    pub fn with_mcmc(mut self, nsamples_: usize, burnin: usize) -> Self {
         self.use_mcmc = true;
         self.n_mcmc_samples = n_samples_;
         self.mcmc_burnin = burnin;
@@ -348,7 +348,7 @@ impl DimensionalityAnalysisWorkflow {
     }
 
     /// Set factor analysis configuration
-    pub fn with_factor_analysis(mut self, n_factors: Option<usize>) -> Self {
+    pub fn with_factor_analysis(mut self, nfactors: Option<usize>) -> Self {
         self.n_factors = n_factors;
         self
     }
@@ -362,7 +362,7 @@ impl DimensionalityAnalysisWorkflow {
     /// Perform comprehensive dimensionality analysis
     pub fn analyze(&self, data: ArrayView2<f64>) -> Result<DimensionalityAnalysisResult> {
         checkarray_finite(&data, "data")?;
-        let (n_samples_, _n_features) = data.dim();
+        let (n_samples_, n_features) = data.dim();
 
         if n_samples_ < 3 {
             return Err(StatsError::InvalidArgument(
@@ -593,7 +593,7 @@ impl Default for QMCWorkflow {
 
 impl QMCWorkflow {
     /// Create new QMC workflow
-    pub fn new(dimensions: usize, n_samples_: usize) -> Self {
+    pub fn new(dimensions: usize, nsamples_: usize) -> Self {
         Self {
             dimensions,
             n_samples_,
@@ -602,7 +602,7 @@ impl QMCWorkflow {
     }
 
     /// Set sequence type
-    pub fn with_sequence_type(mut self, sequence_type: QMCSequenceType) -> Self {
+    pub fn with_sequence_type(mut self, sequencetype: QMCSequenceType) -> Self {
         self.sequence_type = sequence_type;
         self
     }
@@ -799,7 +799,7 @@ impl SurvivalAnalysisWorkflow {
     }
 
     /// Configure Cox model fitting
-    pub fn with_cox_model(mut self, max_iter: usize, tolerance: f64) -> Self {
+    pub fn with_cox_model(mut self, maxiter: usize, tolerance: f64) -> Self {
         self.fit_cox_model = true;
         self.cox_max_iter = max_iter;
         self.cox_tolerance = tolerance;

@@ -416,7 +416,7 @@ where
 
 /// Compute gradient using finite differences
 #[allow(dead_code)]
-fn finite_diff_gradient<F>(_fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
+fn finite_diff_gradient<F>(fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
 where
     F: FnMut(&ArrayView1<f64>) -> f64,
 {

@@ -144,7 +144,7 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
     /// # Returns
     ///
     /// The interpolated value at `x_new`
-    pub fn evaluate(&self, x_new: F) -> InterpolateResult<F> {
+    pub fn evaluate(&self, xnew: F) -> InterpolateResult<F> {
         // Check if x_new is within the interpolation range
         if x_new < self.x[0] || x_new > self.x[self.x.len() - 1] {
             return Err(InterpolateError::OutOfBounds(
@@ -186,7 +186,7 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
     /// # Returns
     ///
     /// The interpolated values at `x_new`
-    pub fn evaluate_array(&self, x_new: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
+    pub fn evaluate_array(&self, xnew: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
         let mut result = Array1::zeros(x_new.len());
         for (i, &x) in x_new.iter().enumerate() {
             result[i] = self.evaluate(x)?;
@@ -203,7 +203,7 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
     /// # Returns
     ///
     /// The derivative of the spline at `x_new`
-    pub fn derivative(&self, x_new: F) -> InterpolateResult<F> {
+    pub fn derivative(&self, xnew: F) -> InterpolateResult<F> {
         // Check if x_new is within the interpolation range
         if x_new < self.x[0] || x_new > self.x[self.x.len() - 1] {
             return Err(InterpolateError::OutOfBounds(

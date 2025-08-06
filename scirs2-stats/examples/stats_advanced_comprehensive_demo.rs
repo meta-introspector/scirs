@@ -28,7 +28,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Data validation
     println!("\n✅ Data Validation:");
     println!("   Sample size: {}", data.len());
-    println!("   All finite: {}", data.iter().all(|&x| x.is_finite()));
+    println!(
+        "   All finite: {}",
+        data.iter().all(|&x: &f64| x.is_finite())
+    );
     println!(
         "   Min value: {:.4}",
         data.iter().fold(f64::INFINITY, |a, &b| a.min(b))

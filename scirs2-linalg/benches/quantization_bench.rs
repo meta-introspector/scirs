@@ -11,14 +11,14 @@ use std::hint::black_box;
 
 // Helper functions to generate test data
 #[allow(dead_code)]
-fn create_random_array2_f32(_rows: usize, cols: usize) -> Array2<f32> {
-    Array2::fromshape_fn((_rows, cols), |(i, j)| {
+fn create_random_array2_f32(rows: usize, cols: usize) -> Array2<f32> {
+    Array2::from_shape_fn((_rows, cols), |(i, j)| {
         ((i * cols + j) % 100) as f32 / 100.0
     })
 }
 
 #[allow(dead_code)]
-fn create_random_array1_f32(_size: usize) -> Array1<f32> {
+fn create_random_array1_f32(size: usize) -> Array1<f32> {
     Array1::from_iter((0.._size).map(|i| (i % 100) as f32 / 100.0))
 }
 

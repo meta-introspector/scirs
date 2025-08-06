@@ -131,7 +131,7 @@ fn test_svd_full_matrices() {
 fn test_svd_1x1_matrix() {
     let a = array![[-5.0]];
     let a_view = a.view();
-    let a_1x1 = a_view.view().intoshape_with_order((1, 1)).unwrap();
+    let a_1x1 = a_view.view().into_shape_with_order((1, 1)).unwrap();
     let (u, s, vt) = svd(&a_1x1, false, None).unwrap();
 
     assert_eq!(u.shape(), &[1, 1]);

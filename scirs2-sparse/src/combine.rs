@@ -972,11 +972,11 @@ where
 
 // Helper function to check if a sparse array is an identity matrix
 #[allow(dead_code)]
-fn is_identity_matrix<T>(_array: &dyn SparseArray<T>) -> bool
+fn is_identity_matrix<T>(array: &dyn SparseArray<T>) -> bool
 where
     T: Float + Debug + Copy + 'static,
 {
-    let shape = _array.shape();
+    let shape = array.shape();
 
     // Must be square
     if shape.0 != shape.1 {
@@ -986,12 +986,12 @@ where
     let n = shape.0;
 
     // Check if it has exactly n non-zero elements (one per row/column)
-    if _array.nnz() != n {
+    if array.nnz() != n {
         return false;
     }
 
     // Check if all diagonal elements are 1 and non-diagonal are 0
-    let (rows, cols, data) = _array.find();
+    let (rows, cols, data) = array.find();
 
     if rows.len() != n {
         return false;

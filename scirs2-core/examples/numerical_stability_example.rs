@@ -22,11 +22,11 @@ fn main() -> CoreResult<()> {
 
     // Example 3: Log-sum-exp trick
     println!("\n3. Log-Sum-Exp for Overflow Prevention:");
-    demo_log_sum_exp()?;
+    demolog_sum_exp()?;
 
     // Example 4: Stable matrix operations
     println!("\n4. Stable Matrix Operations:");
-    demo_stable_matrix_ops()?;
+    demo_stablematrix_ops()?;
 
     // Example 5: Iterative methods with stability
     println!("\n5. Stable Iterative Methods:");
@@ -148,7 +148,7 @@ fn demo_stable_variance() -> CoreResult<()> {
 }
 
 #[allow(dead_code)]
-fn demo_log_sum_exp() -> CoreResult<()> {
+fn demolog_sum_exp() -> CoreResult<()> {
     // Case 1: Large values that would overflow
     let large_values: Vec<f64> = vec![700.0, 701.0, 702.0, 703.0, 704.0];
 
@@ -192,7 +192,7 @@ fn demo_log_sum_exp() -> CoreResult<()> {
 }
 
 #[allow(dead_code)]
-fn demo_stable_matrix_ops() -> CoreResult<()> {
+fn demo_stablematrix_ops() -> CoreResult<()> {
     // Ill-conditioned matrix (Hilbert matrix)
     let n = 5;
     let mut hilbert = Array2::zeros((n, n));
@@ -224,7 +224,7 @@ fn demo_stable_matrix_ops() -> CoreResult<()> {
     }
 
     // QR decomposition
-    let (q_r) = qr_decomposition_stable(&hilbert.view())?;
+    let (q, r) = qr_decomposition_stable(&hilbert.view())?;
     println!("\nQR decomposition completed");
     println!("Q orthogonality check (Q^T * Q):");
     let qtq = q.t().dot(&q);
@@ -262,7 +262,7 @@ fn demo_iterative_methods() -> CoreResult<()> {
     let config = IterativeConfig {
         max_iterations: 100,
         abs_tolerance: 1e-10,
-        rel_tolerance: 1e-8,
+        reltolerance: 1e-8,
         adaptive_tolerance: true,
     };
 

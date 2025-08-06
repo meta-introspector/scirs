@@ -241,7 +241,7 @@ where
     }
 
     /// Compute distance between two points with optimized memory access
-    fn compute_distance_optimized(&self, i: usize, j: usize, n_dims: usize) -> F {
+    fn compute_distance_optimized(&self, i: usize, j: usize, ndims: usize) -> F {
         let mut sum_sq = F::zero();
 
         // Process dimensions in chunks for better cache utilization
@@ -260,7 +260,7 @@ where
     }
 
     /// Apply RBF kernel to distance matrix using blocked operations
-    fn apply_kernel_blocked(&self, distance_matrix: &Array2<F>) -> InterpolateResult<Array2<F>> {
+    fn apply_kernel_blocked(&self, distancematrix: &Array2<F>) -> InterpolateResult<Array2<F>> {
         let n_points = distance_matrix.nrows();
         let block_size = self.config.block_size;
         let mut kernel_matrix = Array2::zeros((n_points, n_points));

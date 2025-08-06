@@ -52,7 +52,7 @@ impl<F: Float + ScalarOperand + Debug> RAdam<F> {
     /// * `beta2` - Exponential decay rate for the second moment estimates (default: 0.999)
     /// * `epsilon` - Small constant for numerical stability (default: 1e-8)
     /// * `weight_decay` - Weight decay factor (default: 0.0)
-    pub fn new(_learning_rate: F, beta1: F, beta2: F, epsilon: F, weight_decay: F) -> Result<Self> {
+    pub fn new(_learning_rate: F, beta1: F, beta2: F, epsilon: F, weightdecay: F) -> Result<Self> {
         // Calculate rho_inf (used in the rectification term)
         let two = F::from(2.0).ok_or_else(|| {
             NeuralError::InvalidArgument(
@@ -73,7 +73,7 @@ impl<F: Float + ScalarOperand + Debug> RAdam<F> {
         })
     }
     /// Creates a new RAdam optimizer with default hyperparameters
-    pub fn default_with_lr(_learning_rate: F) -> Result<Self> {
+    pub fn default_with_lr(_learningrate: F) -> Result<Self> {
         let beta1 = F::from(0.9).ok_or_else(|| {
                 "Failed to convert 0.9 to the appropriate floating point type".to_string(),
         let beta2 = F::from(0.999).ok_or_else(|| {
@@ -116,7 +116,7 @@ impl<F: Float + ScalarOperand + Debug> RAdam<F> {
     }
 
     /// Sets the weight decay parameter
-    pub fn set_weight_decay(&mut self, weight_decay: F) -> &mut Self {
+    pub fn set_weight_decay(&mut self, weightdecay: F) -> &mut Self {
         self.weight_decay = weight_decay;
         self
     }

@@ -69,7 +69,7 @@ pub type PDEResult<T> = Result<T, PDEError>;
 
 // Conversion from IntegrateError to PDEError
 impl From<IntegrateError> for PDEError {
-    fn from(_err: IntegrateError) -> Self {
-        PDEError::ODEError(_err)
+    fn from(err: IntegrateError) -> Self {
+        PDEError::ODEError(err)
     }
 }

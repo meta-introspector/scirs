@@ -95,7 +95,7 @@ pub struct ScientificTextProcessor {
 
 impl ScientificTextProcessor {
     /// Create new scientific text processor
-    pub fn new(_config: DomainProcessorConfig) -> Result<Self> {
+    pub fn new(config: DomainProcessorConfig) -> Result<Self> {
         // Scientific citation patterns
         let citation_regex = Regex::new(
             r"\(([A-Za-z]+(?:\s+et\s+al\.?)?\s*,?\s*\d{4}[a-z]?(?:;\s*[A-Za-z]+(?:\s+et\s+al\.?)?\s*,?\s*\d{4}[a-z]?)*)\)"
@@ -332,7 +332,7 @@ pub struct LegalTextProcessor {
 
 impl LegalTextProcessor {
     /// Create new legal text processor
-    pub fn new(_config: DomainProcessorConfig) -> Result<Self> {
+    pub fn new(config: DomainProcessorConfig) -> Result<Self> {
         // Legal case citations
         let case_citation_regex = Regex::new(
             r"\b[A-Z][a-zA-Z\s&,]+v\.?\s+[A-Z][a-zA-Z\s&,]+,?\s*\d+\s+[A-Z][a-z]*\.?\s*\d+(?:\s*\(\d+\))?"
@@ -385,7 +385,7 @@ impl LegalTextProcessor {
         ];
 
         Ok(Self {
-            _config,
+            config,
             case_citation_regex,
             statute_regex,
             legal_terms,
@@ -517,7 +517,7 @@ pub struct MedicalTextProcessor {
 
 impl MedicalTextProcessor {
     /// Create new medical text processor
-    pub fn new(_config: DomainProcessorConfig) -> Result<Self> {
+    pub fn new(config: DomainProcessorConfig) -> Result<Self> {
         // Drug name patterns
         let drug_regex =
             Regex::new(r"\b[A-Z][a-z]+(?:mab|nib|tin|pine|pril|sartan|olol|azole|mycin|cillin)\b")
@@ -569,7 +569,7 @@ impl MedicalTextProcessor {
         abbreviations.insert("CT".to_string(), "computed tomography".to_string());
 
         Ok(Self {
-            _config,
+            config,
             drug_regex,
             dosage_regex,
             symptom_regex,
@@ -709,7 +709,7 @@ pub struct FinancialTextProcessor {
 
 impl FinancialTextProcessor {
     /// Create new financial text processor
-    pub fn new(_config: DomainProcessorConfig) -> Result<Self> {
+    pub fn new(config: DomainProcessorConfig) -> Result<Self> {
         // Currency patterns
         let currency_regex = Regex::new(
             r"\$\d+(?:,\d{3})*(?:\.\d{2})?|€\d+(?:,\d{3})*(?:\.\d{2})?|£\d+(?:,\d{3})*(?:\.\d{2})?|USD\s*\d+|EUR\s*\d+|GBP\s*\d+"
@@ -774,7 +774,7 @@ impl FinancialTextProcessor {
         .collect();
 
         Ok(Self {
-            _config,
+            config,
             currency_regex,
             financial_instrument_regex,
             percentage_regex,
@@ -915,8 +915,8 @@ pub struct PatentTextProcessor {
 
 impl PatentTextProcessor {
     /// Create new patent text processor
-    pub fn new(_config: DomainProcessorConfig) -> Self {
-        Self { _config }
+    pub fn new(config: DomainProcessorConfig) -> Self {
+        Self { config }
     }
 
     /// Process patent text with domain-specific extraction
@@ -1137,8 +1137,8 @@ pub struct NewsTextProcessor {
 
 impl NewsTextProcessor {
     /// Create new news text processor
-    pub fn new(_config: DomainProcessorConfig) -> Self {
-        Self { _config }
+    pub fn new(config: DomainProcessorConfig) -> Self {
+        Self { config }
     }
 
     /// Process news text with domain-specific extraction
@@ -1449,8 +1449,8 @@ pub struct SocialMediaTextProcessor {
 
 impl SocialMediaTextProcessor {
     /// Create new social media text processor
-    pub fn new(_config: DomainProcessorConfig) -> Self {
-        Self { _config }
+    pub fn new(config: DomainProcessorConfig) -> Self {
+        Self { config }
     }
 
     /// Process social media text with domain-specific extraction

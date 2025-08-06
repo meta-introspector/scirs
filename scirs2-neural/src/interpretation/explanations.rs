@@ -145,7 +145,7 @@ impl<F> ConceptActivationVector<F>
             confidence,
             num_examples,
     /// Compute concept activation score for input
-    pub fn compute_activation_score(&self, layer_activations: &ArrayD<F>) -> f64 {
+    pub fn compute_activation_score(&self, layeractivations: &ArrayD<F>) -> f64 {
         // Simplified concept activation computation
         // In practice, would use proper dot product or cosine similarity
         if layer_activations.len() == self.activation_vector.len() {

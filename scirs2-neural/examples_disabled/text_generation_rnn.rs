@@ -61,13 +61,13 @@ struct LSTM {
     outputs: Option<Array3<f32>>,
 }
 impl LSTM {
-    fn new(_input_size: usize, hidden_size: usize, output_size: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, output_size: usize, batchsize: usize) -> Self {
         // Xavier/Glorot initialization for weights
         let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         // Create a random number generator
         let mut rng = rand::rng();
         // Input gate weights - manually initialize with random values
-        let mut w_ii = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_ii = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_hi = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_i = Array1::zeros(hidden_size);
         // Initialize with random values
@@ -144,11 +144,11 @@ impl LSTM {
     // Activation functions and derivatives
     fn sigmoid(x: &Array2<f32>) -> Array2<f32> {
         x.mapv(|v| 1.0 / (1.0 + (-v).exp()))
-    fn sigmoid_derivative(_sigmoid_output: &Array2<f32>) -> Array2<f32> {
-        _sigmoid_output * &(1.0 - _sigmoid_output)
+    fn sigmoid_derivative(_sigmoidoutput: &Array2<f32>) -> Array2<f32> {
+        _sigmoid_output * &(1.0 - sigmoid_output)
     fn tanh(x: &Array2<f32>) -> Array2<f32> {
         x.mapv(|v| v.tanh())
-    fn tanh_derivative(_tanh_output: &Array2<f32>) -> Array2<f32> {
+    fn tanh_derivative(_tanhoutput: &Array2<f32>) -> Array2<f32> {
         1.0 - tanh_output * tanh_output
     fn softmax(x: &Array2<f32>) -> Array2<f32> {
         let max_vals = x.map_axis(Axis(1), |row| row.fold(f32::NEG_INFINITY, |a, &b| a.max(b)));
@@ -168,7 +168,7 @@ impl LSTM {
                 output[[i, j]] = val;
             }
         output
-    fn forward(&mut self, x: &Array3<f32>, is_training: bool) -> Array3<f32> {
+    fn forward(&mut self, x: &Array3<f32>, istraining: bool) -> Array3<f32> {
         let batch_size = x.shape()[0];
         let seq_len = x.shape()[1];
         let output_size = self.w_out.shape()[0];
@@ -376,7 +376,7 @@ impl LSTM {
         self.dw_out = Some(dw_out);
         self.db_out = Some(db_out);
         avg_loss
-    fn update_params(&mut self, learning_rate: f32) {
+    fn update_params(&mut self, learningrate: f32) {
         // Update input gate parameters
         if let Some(dw_ii) = &self.dw_ii {
             self.w_ii = &self.w_ii - &(dw_ii * learning_rate);

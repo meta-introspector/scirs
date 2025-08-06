@@ -360,7 +360,7 @@ impl EnhancedHDF5File {
 
     /// Calculate optimal chunk sizes based on data shape and size
     #[allow(dead_code)]
-    fn calculate_optimal_chunks(&self, shape: &[usize], _total_elements: usize) -> Vec<usize> {
+    fn calculate_optimal_chunks(&self, shape: &[usize], _totalelements: usize) -> Vec<usize> {
         const TARGET_CHUNK_SIZE: usize = 64 * 1024; // 64KB target
         const MIN_CHUNK_SIZE: usize = 1024; // 1KB minimum
         const MAX_CHUNK_SIZE: usize = 1024 * 1024; // 1MB maximum
@@ -387,7 +387,7 @@ impl EnhancedHDF5File {
 
     /// Ensure all groups in the path exist
     #[cfg(feature = "hdf5")]
-    fn ensure_groups_exist(&self, file: &File, group_path: &str) -> Result<()> {
+    fn ensure_groups_exist(&self, file: &File, grouppath: &str) -> Result<()> {
         if group_path.is_empty() {
             return Ok(());
         }
@@ -868,7 +868,7 @@ impl ScientificMetadata {
     }
 
     /// Add scale factor and offset
-    pub fn with_scaling(mut self, scale_factor: f64, add_offset: f64) -> Self {
+    pub fn with_scaling(mut self, scale_factor: f64, addoffset: f64) -> Self {
         self.scale_factor = Some(scale_factor);
         self.add_offset = Some(add_offset);
         self
@@ -935,7 +935,7 @@ impl HDF5PerformanceMonitor {
     }
 
     /// Record an operation timing
-    pub fn record_timing(&mut self, operation: &str, duration_ms: f64) {
+    pub fn record_timing(&mut self, operation: &str, durationms: f64) {
         self.timings
             .entry(operation.to_string())
             .or_default()
@@ -943,7 +943,7 @@ impl HDF5PerformanceMonitor {
     }
 
     /// Record data transfer
-    pub fn record_read(&mut self, bytes: usize, duration_ms: f64) {
+    pub fn record_read(&mut self, bytes: usize, durationms: f64) {
         self.transfer_stats.bytes_read += bytes;
         self.transfer_stats.read_operations += 1;
 
@@ -956,7 +956,7 @@ impl HDF5PerformanceMonitor {
     }
 
     /// Record data write
-    pub fn record_write(&mut self, bytes: usize, duration_ms: f64) {
+    pub fn record_write(&mut self, bytes: usize, durationms: f64) {
         self.transfer_stats.bytes_written += bytes;
         self.transfer_stats.write_operations += 1;
 
@@ -1262,7 +1262,7 @@ impl OptimizedHDF5File {
     }
 
     /// Get scientific metadata for a dataset
-    pub fn get_scientific_metadata(&self, dataset_path: &str) -> Option<ScientificMetadata> {
+    pub fn get_scientific_metadata(&self, datasetpath: &str) -> Option<ScientificMetadata> {
         let cache = self.metadata_cache.read().unwrap();
         cache.get(dataset_path).cloned()
     }
@@ -1292,7 +1292,7 @@ impl OptimizedHDF5File {
     }
 
     /// Benchmark a specific operation
-    pub fn benchmark_operation<F, R>(&self, operation_name: &str, operation: F) -> Result<R>
+    pub fn benchmark_operation<F, R>(&self, operationname: &str, operation: F) -> Result<R>
     where
         F: FnOnce() -> Result<R>,
     {

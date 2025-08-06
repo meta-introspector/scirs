@@ -46,9 +46,9 @@ pub struct GradientAccumulator<F: Float + Debug + ScalarOperand + Send + Sync + 
 
 impl<F: Float + Debug + ScalarOperand + Send + Sync + FromPrimitive> GradientAccumulator<F> {
     /// Create a new gradient accumulator
-    pub fn new(_config: GradientAccumulationConfig) -> Self {
+    pub fn new(config: GradientAccumulationConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             current_step: 0,
             stats: None,
         }

@@ -42,18 +42,18 @@ struct PrivacyAccountant {
     max_epsilon: f64,
 impl FederatedClient {
     /// Create a new federated client
-    pub fn new(_config: ClientConfig) -> Result<Self> {
-        let privacy_accountant = if _config.enable_privacy {
+    pub fn new(config: ClientConfig) -> Result<Self> {
+        let privacy_accountant = if config.enable_privacy {
             Some(PrivacyAccountant {
                 epsilon_spent: 0.0,
                 delta: 1e-5,
-                max_epsilon: _config.privacy_budget.unwrap_or(10.0),
+                max_epsilon: config.privacy_budget.unwrap_or(10.0),
             })
         } else {
             None
         };
         Ok(Self {
-            _config,
+            config,
             local_model: None,
             history: Vec::new(),
             privacy_accountant,
@@ -183,7 +183,7 @@ use rand::seq::SliceRandom;
     ) -> Result<Vec<Array2<f32>>> {
         // Return difference between local and global weights
         let mut updates = Vec::new();
-        for (i, global_w) in global_weights.iter().enumerate() {
+        for (i, global_w) in globalweights.iter().enumerate() {
             // In practice, would get actual local weights
             let local_w = global_w + 0.01; // Simulated update
             updates.push(local_w - global_w);

@@ -47,7 +47,7 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
     /// # Returns
     ///
     /// A new DropConnect instance or error if probability is invalid
-    pub fn new(drop_prob: A) -> Result<Self> {
+    pub fn new(dropprob: A) -> Result<Self> {
         if drop_prob < A::zero() || drop_prob > A::one() {
             return Err(OptimError::InvalidConfig(
                 "Drop probability must be between 0.0 and 1.0".to_string(),
@@ -117,9 +117,8 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
 
         // Create mask with same shape as weights
         let mut rng = scirs2_core::random::rng();
-        let mask = Array::from_shape_fn(weightsshape, |_| {
-            rng.random_bool_with_chance(keep_prob_f64)
-        });
+        let mask =
+            Array::from_shape_fn(weightsshape, |_| rng.random_bool_with_chance(keep_prob_f64));
 
         // Apply mask to gradients
         let mut result = gradients.clone();
@@ -148,7 +147,7 @@ impl<A: Float + Debug + ScalarOperand, D: Dimension> Regularizer<A, D> for DropC
         Ok(A::zero())
     }
 
-    fn penalty(&self, _params: &Array<A, D>) -> Result<A> {
+    fn penalty(&self, params: &Array<A, D>) -> Result<A> {
         // DropConnect doesn't add a penalty term to the loss
         Ok(A::zero())
     }
@@ -180,10 +179,10 @@ mod tests {
         let masked_weights = dc.apply_to_weights(&weights, true);
 
         // Check that some but not all values are zero (statistically)
-        let _zeros = masked_weights.iter().filter(|&&x| x == 0.0).count();
+        let _zeros = maskedweights.iter().filter(|&&x| x == 0.0).count();
 
         // The masked weights should have approximately scaled values
-        for (&original, &masked) in weights.iter().zip(masked_weights.iter()) {
+        for (&original, &masked) in weights.iter().zip(maskedweights.iter()) {
             if masked != 0.0 {
                 // Non-zero values should be scaled by 1/keep_prob = 2.0
                 assert_relative_eq!(masked, original * 2.0, epsilon = 1e-10);

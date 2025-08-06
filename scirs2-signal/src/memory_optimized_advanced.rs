@@ -70,10 +70,10 @@ pub struct MemoryPool {
 }
 
 impl MemoryPool {
-    pub fn new(_max_size: usize) -> Self {
+    pub fn new(_maxsize: usize) -> Self {
         Self {
             pool: Arc::new(Mutex::new(VecDeque::new())),
-            _max_size,
+            max_size,
             current_usage: Arc::new(Mutex::new(0)),
         }
     }
@@ -121,15 +121,15 @@ pub struct StreamingProcessor {
 }
 
 impl StreamingProcessor {
-    pub fn new(_config: MemoryOptimizationConfig) -> Self {
-        let memory_pool = if _config.use_memory_pool {
+    pub fn new(config: MemoryOptimizationConfig) -> Self {
+        let memory_pool = if config.use_memory_pool {
             Some(MemoryPool::new(_config.pool_size))
         } else {
             None
         };
 
         Self {
-            _config,
+            config,
             memory_pool,
             current_memory_usage: 0,
         }
@@ -252,7 +252,7 @@ impl StreamingProcessor {
             padded_chunk[..chunk.len()].copy_from_slice(chunk);
 
             // Convert to _complex and perform FFT
-            let _complex_chunk: Vec<num_complex::Complex<f64>> = padded_chunk
+            let complex_chunk: Vec<num_complex::Complex<f64>> = padded_chunk
                 .iter()
                 .map(|&x| num_complex::Complex::new(x, 0.0))
                 .collect();
@@ -372,12 +372,12 @@ pub struct MemoryStats {
 
 /// Simple DFT implementation for demonstration
 #[allow(dead_code)]
-fn simple_dft(_input: &[num_complex::Complex<f64>]) -> Vec<num_complex::Complex<f64>> {
-    let n = _input.len();
+fn simple_dft(input: &[num_complex::Complex<f64>]) -> Vec<num_complex::Complex<f64>> {
+    let n = input.len();
     let mut output = vec![num_complex::Complex::zero(); n];
 
     for k in 0..n {
-        for (j, &x_j) in _input.iter().enumerate() {
+        for (j, &x_j) in input.iter().enumerate() {
             let angle = -2.0 * std::f64::consts::PI * (k * j) as f64 / n as f64;
             let twiddle = num_complex::Complex::new(angle.cos(), angle.sin());
             output[k] += x_j * twiddle;
@@ -428,8 +428,8 @@ impl CacheOptimizedOps {
     }
 
     /// Cache-efficient array transpose
-    pub fn cache_friendly_transpose(_input: &Array2<f64>, cache_line_size: usize) -> Array2<f64> {
-        let (rows, cols) = _input.dim();
+    pub fn cache_friendly_transpose(_input: &Array2<f64>, cache_linesize: usize) -> Array2<f64> {
+        let (rows, cols) = input.dim();
         let mut output = Array2::zeros((cols, rows));
         let block_size = cache_line_size / 8; // f64 _size
 
@@ -441,7 +441,7 @@ impl CacheOptimizedOps {
 
                 for row in row_block..row_end {
                     for col in col_block..col_end {
-                        output[[col, row]] = _input[[row, col]];
+                        output[[col, row]] = input[[row, col]];
                     }
                 }
             }
@@ -453,6 +453,7 @@ impl CacheOptimizedOps {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn test_memory_pool() {
         let pool = MemoryPool::new(4);

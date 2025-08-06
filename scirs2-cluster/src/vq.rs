@@ -27,7 +27,7 @@
 //! println!("Labels: {:?}", labels);
 //! ```
 
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -111,19 +111,19 @@ where
 /// let whitened = whiten(&data).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn whiten<F>(_obs: &Array2<F>) -> Result<Array2<F>>
+pub fn whiten<F>(obs: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + std::fmt::Debug,
 {
-    let n_samples = _obs.shape()[0];
-    let n_features = _obs.shape()[1];
+    let n_samples = obs.shape()[0];
+    let n_features = obs.shape()[1];
 
     // Calculate mean for each feature
     let mut means = Array1::<F>::zeros(n_features);
     for j in 0..n_features {
         let mut sum = F::zero();
         for i in 0..n_samples {
-            sum = sum + _obs[[i, j]];
+            sum = sum + obs[[i, j]];
         }
         means[j] = sum / F::from(n_samples).unwrap();
     }
@@ -133,7 +133,7 @@ where
     for j in 0..n_features {
         let mut sum = F::zero();
         for i in 0..n_samples {
-            let diff = _obs[[i, j]] - means[j];
+            let diff = obs[[i, j]] - means[j];
             sum = sum + diff * diff;
         }
         stds[j] = (sum / F::from(n_samples - 1).unwrap()).sqrt();
@@ -177,25 +177,25 @@ where
 ///
 /// * Returns an error if the dimensions of data and centroids don't match
 #[allow(dead_code)]
-pub fn vq<F>(_data: ArrayView2<F>, centroids: ArrayView2<F>) -> Result<(Array1<usize>, Array1<F>)>
+pub fn vq<F>(data: ArrayView2<F>, centroids: ArrayView2<F>) -> Result<(Array1<usize>, Array1<F>)>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if _data.shape()[1] != centroids.shape()[1] {
+    if data.shape()[1] != centroids.shape()[1] {
         return Err(ClusteringError::InvalidInput(format!(
             "Observation array and centroid array must have the same number of dimensions. Got {} and {}",
-            _data.shape()[1], centroids.shape()[1]
+            data.shape()[1], centroids.shape()[1]
         )));
     }
 
-    let n_samples = _data.shape()[0];
+    let n_samples = data.shape()[0];
     let n_centroids = centroids.shape()[0];
 
     let mut labels = Array1::zeros(n_samples);
     let mut distances = Array1::zeros(n_samples);
 
     for i in 0..n_samples {
-        let point = _data.slice(s![i, ..]);
+        let point = data.slice(s![i, ..]);
         let mut min_dist = F::infinity();
         let mut closest_centroid = 0;
 

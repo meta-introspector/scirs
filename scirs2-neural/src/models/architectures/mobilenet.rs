@@ -81,11 +81,11 @@ pub struct MobileNetConfig {
     pub num_classes: usize,
 impl MobileNetConfig {
     /// Create MobileNetV1 configuration
-    pub fn mobilenet_v1(_input_channels: usize, num_classes: usize) -> Self {
+    pub fn mobilenet_v1(_input_channels: usize, numclasses: usize) -> Self {
         let mut blocks = Vec::new();
         // First standard convolution
         blocks.push(ConvBlockConfig {
-            _input_channels,
+            input_channels,
             output_channels: 32,
             kernel_size: 3,
             stride: 2,
@@ -122,7 +122,7 @@ impl MobileNetConfig {
             num_classes,
     }
     /// Create MobileNetV2 configuration
-    pub fn mobilenet_v2(_input_channels: usize, num_classes: usize) -> Self {
+    pub fn mobilenet_v2(_input_channels: usize, numclasses: usize) -> Self {
             activation: "relu6".to_string(),
         // Inverted residual blocks
         let t = [1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]; // Expansion factors
@@ -148,7 +148,7 @@ impl MobileNetConfig {
             stride: 1,
             version: MobileNetVersion::V2,
     /// Create MobileNetV3-Small configuration
-    pub fn mobilenet_v3_small(_input_channels: usize, num_classes: usize) -> Self {
+    pub fn mobilenet_v3_small(_input_channels: usize, numclasses: usize) -> Self {
             output_channels: 16,
             activation: "hard_swish".to_string(),
         // Define the network architecture
@@ -184,7 +184,7 @@ impl MobileNetConfig {
             version: MobileNetVersion::V3Small,
             dropout_rate: 0.2,
     /// Create MobileNetV3-Large configuration
-    pub fn mobilenet_v3_large(_input_channels: usize, num_classes: usize) -> Self {
+    pub fn mobilenet_v3_large(_input_channels: usize, numclasses: usize) -> Self {
             (1.0, 16, 3, 1, false, "relu", false),
             (3.0, 40, 5, 2, true, "relu", false),
             (3.0, 40, 5, 1, true, "relu", true),
@@ -205,9 +205,9 @@ struct SqueezeExcitation<F: Float + Debug + ScalarOperand + Send + Sync> {
     fc2: Conv2D<F>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> SqueezeExcitation<F> {
     /// Create a new Squeeze and Excitation block
-    pub fn new(_input_channels: usize, squeeze_channels: usize) -> Result<Self> {
+    pub fn new(_input_channels: usize, squeezechannels: usize) -> Result<Self> {
         // First 1x1 convolution (squeeze)
-        let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+        let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
         let kernel_size = (1, 1);
         let stride = (1, 1);
         let fc1 = Conv2D::new(
@@ -271,7 +271,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for SqueezeExcitat
     ) -> Result<Array<F, IxDyn>> {
         // In a real implementation, we'd compute gradients for all parameters
         Ok(grad_output.clone())
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         self.fc1.update(learning_rate)?;
         self.fc2.update(learning_rate)?;
         Ok(())
@@ -312,21 +312,21 @@ struct InvertedResidualBlock<F: Float + Debug + ScalarOperand + Send + Sync> {
     activation: Box<dyn Fn(F) -> F + Send + Sync>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> InvertedResidualBlock<F> {
     /// Create a new Inverted Residual block
-    pub fn new(_config: ConvBlockConfig, width_multiplier: f64) -> Result<Self> {
+    pub fn new(_config: ConvBlockConfig, widthmultiplier: f64) -> Result<Self> {
         let input_channels = (_config.input_channels as f64 * width_multiplier).round() as usize;
         let output_channels = (_config.output_channels as f64 * width_multiplier).round() as usize;
-        let expand_ratio = _config.expand_ratio;
-        let kernel_size = _config.kernel_size;
-        let stride = _config.stride;
-        let use_se = _config.use_se;
+        let expand_ratio = config.expand_ratio;
+        let kernel_size = config.kernel_size;
+        let stride = config.stride;
+        let use_se = config.use_se;
         // Check if we use skip connection
         let has_skip_connection =
-            input_channels == output_channels && stride == 1 && _config.use_residual;
+            input_channels == output_channels && stride == 1 && config.use_residual;
         // Create expansion convolution if needed
         let (expand_conv, expand_bn) = if expand_ratio != 1 {
             let expanded_channels = input_channels * expand_ratio;
             // Expansion convolution (1x1)
-            let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+            let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
             let kernel_size = (1, 1);
             let stride = (1, 1);
             let conv = Conv2D::new(
@@ -462,10 +462,10 @@ pub struct MobileNet<F: Float + Debug + ScalarOperand + Send + Sync> {
     stem_activation: Box<dyn Fn(F) -> F + Send + Sync>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> MobileNet<F> {
     /// Create a new MobileNet model
-    pub fn new(_config: MobileNetConfig) -> Result<Self> {
-        let input_channels = _config.input_channels;
-        let num_classes = _config.num_classes;
-        let width_multiplier = _config.width_multiplier;
+    pub fn new(config: MobileNetConfig) -> Result<Self> {
+        let input_channels = config.input_channels;
+        let num_classes = config.num_classes;
+        let width_multiplier = config.width_multiplier;
         // Create the stem block (first convolution)
         let first_block = &_config.blocks[0];
         let stem_channels =
@@ -478,7 +478,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> MobileNet<F> {
         let stem_activation = get_activation(&first_block.activation);
         // Create blocks based on the MobileNet version
         let mut blocks: Vec<Box<dyn Layer<F>>> = Vec::new();
-        match _config.version {
+        match config.version {
             MobileNetVersion::V1 => {
                 // Depthwise separable blocks for MobileNetV1
                 for i in 1.._config.blocks.len() {
@@ -489,14 +489,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> MobileNet<F> {
                 // Inverted residual blocks for MobileNetV2/V3
                         InvertedResidualBlock::new(_config.blocks[i].clone(), width_multiplier)?;
         // Get the output channels of the last block
-        let last_channels = if _config.version == MobileNetVersion::V1 {
+        let last_channels = if config.version == MobileNetVersion::V1 {
             // For MobileNetV1, the last block is a depthwise separable conv
             let scaled =
                 (_config.blocks.last().unwrap().output_channels as f64 * width_multiplier).round();
             scaled as usize
             // For MobileNetV2/V3, we use 1280 as the number of output channels
             // except for MobileNetV2 which uses 1001 for compatibility with original paper
-            match _config.version {
+            match config.version {
                 MobileNetVersion::V2 => 1001_ => 1280,
         // Classifier
         let classifier = Dense::new(last_channels, num_classes, None, &mut rng)?;
@@ -508,17 +508,17 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> MobileNet<F> {
             dropout,
             stem_activation,
     /// Create MobileNetV1 model
-    pub fn mobilenet_v1(_input_channels: usize, num_classes: usize) -> Result<Self> {
+    pub fn mobilenet_v1(_input_channels: usize, numclasses: usize) -> Result<Self> {
         let _config = MobileNetConfig::mobilenet_v1(input_channels, num_classes);
         Self::new(_config)
     /// Create MobileNetV2 model
-    pub fn mobilenet_v2(_input_channels: usize, num_classes: usize) -> Result<Self> {
+    pub fn mobilenet_v2(_input_channels: usize, numclasses: usize) -> Result<Self> {
         let _config = MobileNetConfig::mobilenet_v2(input_channels, num_classes);
     /// Create MobileNetV3-Small model
-    pub fn mobilenet_v3_small(_input_channels: usize, num_classes: usize) -> Result<Self> {
+    pub fn mobilenet_v3_small(_input_channels: usize, numclasses: usize) -> Result<Self> {
         let _config = MobileNetConfig::mobilenet_v3_small(input_channels, num_classes);
     /// Create MobileNetV3-Large model
-    pub fn mobilenet_v3_large(_input_channels: usize, num_classes: usize) -> Result<Self> {
+    pub fn mobilenet_v3_large(_input_channels: usize, numclasses: usize) -> Result<Self> {
         let _config = MobileNetConfig::mobilenet_v3_large(input_channels, num_classes);
 impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for MobileNet<F> {
         // Check input shape

@@ -341,9 +341,9 @@ pub struct LruCache<K, V> {
 }
 
 impl<K: Ord + Clone, V> LruCache<K, V> {
-    pub fn new(_capacity: usize) -> Self {
+    pub fn new(capacity: usize) -> Self {
         Self {
-            capacity: _capacity,
+            capacity: capacity,
             data: BTreeMap::new(),
         }
     }
@@ -791,16 +791,16 @@ impl EnhancedMemoryMonitor {
     }
 
     /// Execute one monitoring cycle
-    fn monitoring_cycle(_leak_detector: &Arc<Mutex<MemoryLeakDetector>>) -> Result<()> {
+    fn monitoring_cycle(_leakdetector: &Arc<Mutex<MemoryLeakDetector>>) -> Result<()> {
         let mut _detector = _leak_detector
             .lock()
             .map_err(|_| OptimError::LockError("Failed to acquire _detector lock".to_string()))?;
 
         // Take memory snapshot
-        let _snapshot = _detector.take_snapshot()?;
+        let _snapshot = detector.take_snapshot()?;
 
         // Detect leaks
-        let leak_results = _detector.detect_leaks()?;
+        let leak_results = detector.detect_leaks()?;
 
         // Process results and generate alerts if needed
         for result in leak_results {
@@ -1199,9 +1199,9 @@ pub struct ImpactEstimate {
 // Implementation stubs for supporting types
 
 impl SystemProfiler {
-    fn new(_config: SystemProfilerConfig) -> Result<Self> {
+    fn new(config: SystemProfilerConfig) -> Result<Self> {
         Ok(Self {
-            config: _config,
+            config: config,
             available_tools: Vec::new(),
             active_sessions: HashMap::new(),
         })
@@ -1253,9 +1253,9 @@ impl SystemProfiler {
 }
 
 impl MachineLearningDetector {
-    fn new(_config: MLConfig) -> Result<Self> {
+    fn new(config: MLConfig) -> Result<Self> {
         Ok(Self {
-            config: _config,
+            config: config,
             training_data: VecDeque::new(),
             models: HashMap::new(),
             feature_extractors: Vec::new(),
@@ -1283,9 +1283,9 @@ impl MachineLearningDetector {
 }
 
 impl AdvancedAlertSystem {
-    fn new(_config: AlertConfig) -> Result<Self> {
+    fn new(config: AlertConfig) -> Result<Self> {
         Ok(Self {
-            config: _config.clone(),
+            config: config.clone(),
             alert_history: VecDeque::new(),
             rate_limiter: RateLimiter::new(_config),
             templates: HashMap::new(),
@@ -1308,19 +1308,19 @@ impl AdvancedAlertSystem {
 }
 
 impl RateLimiter {
-    fn new(_config: AlertConfig) -> Self {
+    fn new(config: AlertConfig) -> Self {
         Self {
             alert_counts: VecDeque::new(),
             last_alert_times: HashMap::new(),
-            config: _config,
+            config: config,
         }
     }
 }
 
 impl PerformanceMetricsCollector {
-    fn new(_config: PerformanceConfig) -> Result<Self> {
+    fn new(config: PerformanceConfig) -> Result<Self> {
         Ok(Self {
-            config: _config,
+            config: config,
             metrics: PerformanceMetrics::default(),
             metric_history: VecDeque::new(),
             start_time: Instant::now(),
@@ -1339,9 +1339,9 @@ impl PerformanceMetricsCollector {
 }
 
 impl StatisticalAnalyzer {
-    fn new(_config: StatisticalConfig) -> Result<Self> {
+    fn new(config: StatisticalConfig) -> Result<Self> {
         Ok(Self {
-            config: _config,
+            config: config,
             historical_stats: VecDeque::new(),
             current_stats: StatisticalSnapshot::default(),
         })

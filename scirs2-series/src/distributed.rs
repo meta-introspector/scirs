@@ -271,7 +271,7 @@ impl<
     > DistributedProcessor<F>
 {
     /// Create a new distributed processor
-    pub fn new(_config: ClusterConfig) -> Self {
+    pub fn new(config: ClusterConfig) -> Self {
         let mut nodes = HashMap::new();
 
         // Initialize node information
@@ -293,7 +293,7 @@ impl<
         }
 
         Self {
-            _config,
+            config,
             nodes,
             task_queue: Vec::new(),
             running_tasks: HashMap::new(),
@@ -692,7 +692,7 @@ impl<
     }
 
     /// Aggregate feature extraction results
-    fn aggregate_feature_results(&self, num_features: usize) -> Result<Array2<F>> {
+    fn aggregate_feature_results(&self, numfeatures: usize) -> Result<Array2<F>> {
         let mut all_features = Vec::new();
         let mut window_indices = Vec::new();
 
@@ -726,10 +726,10 @@ impl<
         let feature_size = indexed_features[0].1.len().min(num_features);
         let mut result = Array2::zeros((num_windows, feature_size));
 
-        for (row, (_, _features)) in indexed_features.iter().enumerate() {
+        for (row, (_, features)) in indexed_features.iter().enumerate() {
             for col in 0..feature_size {
-                if col < _features.len() {
-                    result[[row, col]] = _features[col];
+                if col < features.len() {
+                    result[[row, col]] = features[col];
                 }
             }
         }
@@ -777,7 +777,7 @@ impl<
     }
 
     /// Cancel a running task
-    pub fn cancel_task(&mut self, task_id: &str) -> Result<()> {
+    pub fn cancel_task(&mut self, taskid: &str) -> Result<()> {
         if let Some(_task) = self.running_tasks.remove(task_id) {
             // Add cancelled result
             self.completed_tasks.insert(

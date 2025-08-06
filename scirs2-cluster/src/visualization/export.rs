@@ -131,13 +131,13 @@ pub fn export_scatter_2d_to_file<P: AsRef<Path>>(
     let _path = output_path.as_ref();
 
     match config.format {
-        ExportFormat::JSON => export_scatter_2d_to_json(plot, _path, config),
-        ExportFormat::HTML => export_scatter_2d_to_html(plot, _path, config),
-        ExportFormat::CSV => export_scatter_2d_to_csv(plot, _path, config),
-        ExportFormat::PlotlyJSON => export_scatter_2d_to_plotly(plot, _path, config),
-        ExportFormat::D3JS => export_scatter_2d_to_d3(plot, _path, config),
-        ExportFormat::SVG => export_scatter_2d_to_svg(plot, _path, config),
-        ExportFormat::PNG => export_scatter_2d_to_png(plot, _path, config),
+        ExportFormat::JSON => export_scatter_2d_to_json(plot, path, config),
+        ExportFormat::HTML => export_scatter_2d_to_html(plot, path, config),
+        ExportFormat::CSV => export_scatter_2d_to_csv(plot, path, config),
+        ExportFormat::PlotlyJSON => export_scatter_2d_to_plotly(plot, path, config),
+        ExportFormat::D3JS => export_scatter_2d_to_d3(plot, path, config),
+        ExportFormat::SVG => export_scatter_2d_to_svg(plot, path, config),
+        ExportFormat::PNG => export_scatter_2d_to_png(plot, path, config),
         _ => Err(ClusteringError::ComputationError(format!(
             "Unsupported export format {:?} for 2D scatter plot",
             config.format
@@ -165,13 +165,13 @@ pub fn export_scatter_3d_to_file<P: AsRef<Path>>(
     let _path = output_path.as_ref();
 
     match config.format {
-        ExportFormat::JSON => export_scatter_3d_to_json(plot, _path, config),
-        ExportFormat::HTML => export_scatter_3d_to_html(plot, _path, config),
-        ExportFormat::ThreeJS => export_scatter_3d_to_threejs(plot, _path, config),
-        ExportFormat::GLTF => export_scatter_3d_to_gltf(plot, _path, config),
-        ExportFormat::WebGL => export_scatter_3d_to_webgl(plot, _path, config),
-        ExportFormat::Unity3D => export_scatter_3d_to_unity(plot, _path, config),
-        ExportFormat::Blender => export_scatter_3d_to_blender(plot, _path, config),
+        ExportFormat::JSON => export_scatter_3d_to_json(plot, path, config),
+        ExportFormat::HTML => export_scatter_3d_to_html(plot, path, config),
+        ExportFormat::ThreeJS => export_scatter_3d_to_threejs(plot, path, config),
+        ExportFormat::GLTF => export_scatter_3d_to_gltf(plot, path, config),
+        ExportFormat::WebGL => export_scatter_3d_to_webgl(plot, path, config),
+        ExportFormat::Unity3D => export_scatter_3d_to_unity(plot, path, config),
+        ExportFormat::Blender => export_scatter_3d_to_blender(plot, path, config),
         _ => Err(ClusteringError::ComputationError(format!(
             "Unsupported export format {:?} for 3D scatter plot",
             config.format
@@ -199,11 +199,11 @@ pub fn export_animation_to_file<P: AsRef<Path>>(
     let _path = output_path.as_ref();
 
     match config.format {
-        ExportFormat::GIF => export_animation_to_gif(frames, _path, config),
-        ExportFormat::MP4 => export_animation_to_mp4(frames, _path, config),
-        ExportFormat::WebM => export_animation_to_webm(frames, _path, config),
-        ExportFormat::HTML => export_animation_to_html(frames, _path, config),
-        ExportFormat::JSON => export_animation_to_json(frames, _path, config),
+        ExportFormat::GIF => export_animation_to_gif(frames, path, config),
+        ExportFormat::MP4 => export_animation_to_mp4(frames, path, config),
+        ExportFormat::WebM => export_animation_to_webm(frames, path, config),
+        ExportFormat::HTML => export_animation_to_html(frames, path, config),
+        ExportFormat::JSON => export_animation_to_json(frames, path, config),
         _ => Err(ClusteringError::ComputationError(format!(
             "Unsupported export format {:?} for animation",
             config.format
@@ -323,7 +323,7 @@ pub fn save_visualization_to_file<P: AsRef<Path>>(
     let _path = output_path.as_ref();
 
     // Auto-detect format from file extension if not specified
-    if let Some(extension) = _path.extension().and_then(|ext| ext.to_str()) {
+    if let Some(extension) = path.extension().and_then(|ext| ext.to_str()) {
         config.format = match extension.to_lowercase().as_str() {
             "png" => ExportFormat::PNG,
             "svg" => ExportFormat::SVG,
@@ -341,11 +341,11 @@ pub fn save_visualization_to_file<P: AsRef<Path>>(
 
     // Export based on available data
     if let Some(_frames) = animation_frames {
-        export_animation_to_file(_frames, _path, &config)
+        export_animation_to_file(_frames, path, &config)
     } else if let Some(plot_3d) = plot_3d {
-        export_scatter_3d_to_file(plot_3d, _path, &config)
+        export_scatter_3d_to_file(plot_3d, path, &config)
     } else if let Some(plot_2d) = plot_2d {
-        export_scatter_2d_to_file(plot_2d, _path, &config)
+        export_scatter_2d_to_file(plot_2d, path, &config)
     } else {
         Err(ClusteringError::InvalidInput(
             "No visualization data provided for export".to_string(),
@@ -355,7 +355,7 @@ pub fn save_visualization_to_file<P: AsRef<Path>>(
 
 /// Generate HTML content for 2D scatter plot
 #[allow(dead_code)]
-fn generate_scatter_2d_html(_plot: &ScatterPlot2D, config: &ExportConfig) -> Result<String> {
+fn generate_scatter_2d_html(plot: &ScatterPlot2D, config: &ExportConfig) -> Result<String> {
     let plot_data_json = serde_json::to_string(_plot).map_err(|e| {
         ClusteringError::ComputationError(format!("JSON serialization failed: {}", e))
     })?;
@@ -505,7 +505,7 @@ fn generate_scatter_2d_html(_plot: &ScatterPlot2D, config: &ExportConfig) -> Res
 
 /// Generate HTML content for 3D scatter plot with Three.js
 #[allow(dead_code)]
-fn generate_scatter_3d_html(_plot: &ScatterPlot3D, config: &ExportConfig) -> Result<String> {
+fn generate_scatter_3d_html(plot: &ScatterPlot3D, config: &ExportConfig) -> Result<String> {
     let plot_data_json = serde_json::to_string(_plot).map_err(|e| {
         ClusteringError::ComputationError(format!("JSON serialization failed: {}", e))
     })?;

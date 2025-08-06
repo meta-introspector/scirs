@@ -32,9 +32,9 @@ impl MemoryEfficientProcessor {
     /// // Create processor with specific limits
     /// let processor = MemoryEfficientProcessor::new(Some(256), Some(1024));
     /// ```
-    pub fn new(_chunk_size: Option<usize>, max_memory_mb: Option<usize>) -> Self {
+    pub fn new(_chunk_size: Option<usize>, max_memorymb: Option<usize>) -> Self {
         Self {
-            chunk_size: _chunk_size.unwrap_or(1024),
+            chunk_size: chunk_size.unwrap_or(1024),
             max_memory_mb: max_memory_mb.unwrap_or(512),
         }
     }
@@ -118,11 +118,11 @@ impl MemoryEfficientProcessor {
         let optimal_chunk = available_bytes / bytes_per_sample;
         optimal_chunk.max(1).min(self.chunk_size)
     /// Estimate memory usage for a given tensor
-    pub fn estimate_memory_usage(&self, shape: &[usize], element_size: usize) -> usize {
+    pub fn estimate_memory_usage(&self, shape: &[usize], elementsize: usize) -> usize {
         let total_elements: usize = shape.iter().product();
         total_elements * element_size
     /// Check if tensor fits in memory constraints
-    pub fn fits_in_memory(&self, shape: &[usize], element_size: usize) -> bool {
+    pub fn fits_in_memory(&self, shape: &[usize], elementsize: usize) -> bool {
         let memory_usage = self.estimate_memory_usage(shape, element_size);
         let max_bytes = self.max_memory_mb * 1024 * 1024;
         memory_usage <= max_bytes
@@ -140,7 +140,7 @@ impl MemoryEfficientProcessor {
             chunk_size: self.chunk_size,
             max_memory_mb: self.max_memory_mb,
     /// Update memory settings
-    pub fn update_settings(&mut self, chunk_size: Option<usize>, max_memory_mb: Option<usize>) {
+    pub fn update_settings(&mut self, chunk_size: Option<usize>, max_memorymb: Option<usize>) {
         if let Some(size) = chunk_size {
             self.chunk_size = size;
         if let Some(memory) = max_memory_mb {
@@ -162,10 +162,10 @@ where
     T: Clone + Default,
 {
     /// Create a new memory pool
-    pub fn new(_max_pool_size: usize) -> Self {
+    pub fn new(_max_poolsize: usize) -> Self {
             available_tensors: Vec::new(),
             in_use: 0,
-            _max_pool_size,
+            max_pool_size,
     /// Get a tensor from the pool or create a new one
     pub fn get_tensor(&mut self, shape: &[usize]) -> ArrayD<T> {
         // Check if we have a compatible tensor in the pool
@@ -351,7 +351,7 @@ impl std::fmt::Display for MemoryStats {
 #[cfg(not(feature = "memory_efficient"))]
 pub struct MemoryEfficientProcessor;
     /// Create a new memory efficient processor
-    pub fn new(_chunk_size: Option<usize>, _max_memory_mb: Option<usize>) -> Self {
+    pub fn new(_chunk_size: Option<usize>, _max_memorymb: Option<usize>) -> Self {
         Self
     /// Process input data in chunks to reduce memory usage
     pub fn process_in_chunks<F, T>(&mut self,

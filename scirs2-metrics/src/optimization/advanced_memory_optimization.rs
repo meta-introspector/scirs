@@ -286,19 +286,19 @@ impl Default for PrefetchConfig {
 
 impl AdvancedMemoryPool {
     /// Create new advanced memory pool
-    pub fn new(_config: MemoryPoolConfig) -> Self {
+    pub fn new(config: MemoryPoolConfig) -> Self {
         Self {
             free_blocks: Arc::new(Mutex::new(HashMap::new())),
             allocated_blocks: Arc::new(RwLock::new(HashMap::new())),
             stats: Arc::new(Mutex::new(MemoryStats::default())),
             strategy: AllocationStrategy::Adaptive(AdaptiveStrategy::default()),
             prefetcher: MemoryPrefetcher::new(PrefetchConfig::default()),
-            _config,
+            config,
         }
     }
 
     /// Allocate memory block with intelligent sizing
-    pub fn allocate(&self, size: usize, block_type: BlockType) -> Result<MemoryBlock> {
+    pub fn allocate(&self, size: usize, blocktype: BlockType) -> Result<MemoryBlock> {
         let aligned_size = self.align_size(size);
 
         // Check if prefetcher has a suitable block ready
@@ -407,7 +407,7 @@ impl AdvancedMemoryPool {
         ((size + self.config.alignment - 1) / self.config.alignment) * self.config.alignment
     }
 
-    fn allocate_first_fit(&self, size: usize, block_type: BlockType) -> Result<MemoryBlock> {
+    fn allocate_first_fit(&self, size: usize, blocktype: BlockType) -> Result<MemoryBlock> {
         let mut free_blocks = self.free_blocks.lock().unwrap();
 
         // Find first suitable block
@@ -441,13 +441,13 @@ impl AdvancedMemoryPool {
         self.allocate_new_block(size, block_type)
     }
 
-    fn allocate_best_fit(&self, size: usize, block_type: BlockType) -> Result<MemoryBlock> {
+    fn allocate_best_fit(&self, size: usize, blocktype: BlockType) -> Result<MemoryBlock> {
         let mut free_blocks = self.free_blocks.lock().unwrap();
         let mut best_fit: Option<(usize, usize)> = None; // (block_size, index)
         let mut best_waste = usize::MAX;
 
         // Find block with minimum waste
-        for (block_size_blocks) in free_blocks.iter() {
+        for (block_size, blocks) in free_blocks.iter() {
             if *block_size >= size {
                 let waste = *block_size - size;
                 if waste < best_waste {
@@ -457,7 +457,7 @@ impl AdvancedMemoryPool {
             }
         }
 
-        if let Some((block_size_)) = best_fit {
+        if let Some((block_size, _)) = best_fit {
             if let Some(blocks) = free_blocks.get_mut(&block_size) {
                 if let Some(mut block) = blocks.pop_front() {
                     block.block_type = block_type;
@@ -492,12 +492,12 @@ impl AdvancedMemoryPool {
         self.allocate_new_block(size, block_type)
     }
 
-    fn allocate_worst_fit(&self_size: usize, block_type: BlockType) -> Result<MemoryBlock> {
+    fn allocate_worst_fit(&self, size: usize, blocktype: BlockType) -> Result<MemoryBlock> {
         // Simplified implementation - find largest available block
-        self.allocate_new_block(_size, block_type)
+        self.allocate_new_block(size, block_type)
     }
 
-    fn allocate_buddy_system(&self, size: usize, block_type: BlockType) -> Result<MemoryBlock> {
+    fn allocate_buddy_system(&self, size: usize, blocktype: BlockType) -> Result<MemoryBlock> {
         // Find next power of 2 >= size for buddy system
         let buddy_size = size.next_power_of_two();
         self.allocate_new_block(buddy_size, block_type)
@@ -506,7 +506,8 @@ impl AdvancedMemoryPool {
     fn allocate_adaptive(
         &self,
         size: usize,
-        block_type: BlockType, _strategy: &AdaptiveStrategy,
+        block_type: BlockType,
+        _strategy: &AdaptiveStrategy,
     ) -> Result<MemoryBlock> {
         // Analyze current performance metrics
         let stats = self.stats.lock().unwrap();
@@ -532,7 +533,7 @@ impl AdvancedMemoryPool {
         }
     }
 
-    fn allocate_new_block(&self, size: usize, block_type: BlockType) -> Result<MemoryBlock> {
+    fn allocate_new_block(&self, size: usize, blocktype: BlockType) -> Result<MemoryBlock> {
         // Simulate GPU memory allocation
         let device_ptr = self.simulate_gpu_malloc(size)?;
 
@@ -605,7 +606,7 @@ impl AdvancedMemoryPool {
         Ok(())
     }
 
-    fn update_prefetcher(&self_block: &MemoryBlock) {
+    fn update_prefetcher(&self, block: &MemoryBlock) {
         // Update prefetcher with allocation information for pattern learning
         // Implementation would analyze patterns and update predictions
     }
@@ -666,27 +667,30 @@ impl AdvancedMemoryPool {
     }
 
     fn suggest_optimizations(
-        &self_patterns: &[AllocationPattern],
+        &self,
+        patterns: &[AllocationPattern],
     ) -> Result<Vec<OptimizationType>> {
         // Suggest memory layout optimizations based on _patterns
         Ok(vec![]) // Placeholder
     }
 
-    fn apply_optimization(&self_optimization: OptimizationType) -> Result<()> {
-        // Apply specific _optimization
+    fn apply_optimization(&self, optimization: OptimizationType) -> Result<()> {
+        // Apply specific optimization
         Ok(())
     }
 
     fn benchmark_strategy(
-        &self_strategy: &AllocationStrategy, _workload: &[AllocationRequest],
+        &self,
+        strategy: &AllocationStrategy,
+        workload: &[AllocationRequest],
     ) -> Result<StrategyMetrics> {
-        // Benchmark specific allocation _strategy
+        // Benchmark specific allocation strategy
         Ok(StrategyMetrics::default())
     }
 }
 
 impl MemoryPrefetcher {
-    fn new(_config: PrefetchConfig) -> Self {
+    fn new(config: PrefetchConfig) -> Self {
         Self {
             allocation_history: VecDeque::new(),
             predictions: Vec::new(),
@@ -695,12 +699,14 @@ impl MemoryPrefetcher {
                 accuracy: 0.0,
                 training_samples: 0,
             },
-            _config,
+            config,
         }
     }
 
     fn get_predicted_block(
-        &self_size: usize_block, _type: &BlockType,
+        &self,
+        size: usize,
+        block_type: &BlockType,
     ) -> Result<Option<MemoryBlock>> {
         // Check if we have a predicted block ready
         // Implementation would check predictions and return suitable block

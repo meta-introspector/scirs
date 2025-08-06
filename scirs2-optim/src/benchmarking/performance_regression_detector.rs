@@ -529,14 +529,14 @@ pub struct Alert {
 
 impl PerformanceRegressionDetector {
     /// Create a new performance regression detector
-    pub fn new(_config: RegressionConfig) -> Result<Self> {
+    pub fn new(config: RegressionConfig) -> Result<Self> {
         let historical_data = PerformanceDatabase::new(_config.max_history_size)?;
         let statistical_analyzer = StatisticalAnalyzer::new(StatisticalConfig::default());
         let regression_analyzer = RegressionAnalyzer::new(RegressionAnalysisConfig::default());
         let alert_system = AlertSystem::new(AlertConfig::default());
 
         Ok(Self {
-            config: _config,
+            config: config,
             historical_data,
             statistical_analyzer,
             regression_analyzer,
@@ -639,7 +639,7 @@ impl PerformanceRegressionDetector {
     }
 
     /// Calculate regression severity
-    fn calculate_severity(&self, statistical_result: &StatisticalTestResult) -> f64 {
+    fn calculate_severity(&self, statisticalresult: &StatisticalTestResult) -> f64 {
         let base_severity = 1.0 - statistical_result.p_value;
         let effect_multiplier = (statistical_result.effect_size / 2.0).min(1.0);
         (base_severity * effect_multiplier).clamp(0.0, 1.0)
@@ -668,7 +668,7 @@ impl PerformanceRegressionDetector {
     }
 
     /// Classify the type of regression
-    fn classify_regression_type(&self, metric_type: &MetricType, values: &[f64]) -> RegressionType {
+    fn classify_regression_type(&self, metrictype: &MetricType, values: &[f64]) -> RegressionType {
         // Simple heuristic classification
         match metric_type {
             MetricType::MemoryUsage => {
@@ -760,7 +760,7 @@ impl PerformanceRegressionDetector {
     }
 
     /// Get baseline metric value
-    fn get_baseline_for_metric(&self, metric_type: &MetricType) -> Result<Option<MetricValue>> {
+    fn get_baseline_for_metric(&self, metrictype: &MetricType) -> Result<Option<MetricValue>> {
         if let Some(baseline) = &self.baseline_metrics {
             Ok(baseline.metrics.get(metric_type).cloned())
         } else {
@@ -901,7 +901,7 @@ impl PerformanceRegressionDetector {
     }
 
     /// Generate alerts for regressions
-    fn generate_alerts(&mut self, regression_results: &[RegressionResult]) -> Result<()> {
+    fn generate_alerts(&mut self, regressionresults: &[RegressionResult]) -> Result<()> {
         for result in regression_results {
             if result.severity >= 0.7 {
                 // High severity threshold
@@ -949,7 +949,7 @@ impl PerformanceRegressionDetector {
     }
 
     /// Update baseline from recent measurements
-    pub fn update_baseline_from_recent(&mut self, commit_hash: String) -> Result<()> {
+    pub fn update_baseline_from_recent(&mut self, commithash: String) -> Result<()> {
         let recent_measurements = self
             .historical_data
             .get_latest_measurements(self.config.min_samples)?;
@@ -1285,7 +1285,7 @@ impl std::fmt::Display for MetricType {
 // Implementation stubs for supporting types
 
 impl PerformanceDatabase {
-    fn new(_max_size: usize) -> Result<Self> {
+    fn new(_maxsize: usize) -> Result<Self> {
         Ok(Self {
             measurements: VecDeque::with_capacity(_max_size),
             trends: HashMap::new(),
@@ -1335,7 +1335,7 @@ impl PerformanceDatabase {
 }
 
 impl StatisticalAnalyzer {
-    fn new(_config: StatisticalConfig) -> Self {
+    fn new(config: StatisticalConfig) -> Self {
         Self { config: _config }
     }
 
@@ -1363,7 +1363,9 @@ impl StatisticalAnalyzer {
 
     fn calculate_p_value(
         &self,
-        values: &[f64], _baseline: Option<&MetricValue>, _test_type: &StatisticalTest,
+        values: &[f64],
+        _baseline: Option<&MetricValue>,
+        _test_type: &StatisticalTest,
     ) -> f64 {
         // Simplified - would implement actual statistical tests
         0.05
@@ -1399,18 +1401,18 @@ impl StatisticalAnalyzer {
 }
 
 impl RegressionAnalyzer {
-    fn new(_config: RegressionAnalysisConfig) -> Self {
+    fn new(config: RegressionAnalysisConfig) -> Self {
         Self {
             current_results: Vec::new(),
-            config: _config,
+            config: config,
         }
     }
 }
 
 impl AlertSystem {
-    fn new(_config: AlertConfig) -> Self {
+    fn new(config: AlertConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             alert_history: VecDeque::new(),
         }
     }
@@ -1689,13 +1691,13 @@ impl std::hash::Hash for MetricType {
         match self {
             MetricType::Custom(name) => name.hash(state),
             // For other variants, discriminant is sufficient
-            MetricType::ExecutionTime 
-            | MetricType::MemoryUsage 
+            MetricType::ExecutionTime
+            | MetricType::MemoryUsage
             | MetricType::Throughput
             | MetricType::CpuUtilization
             | MetricType::GpuUtilization
             | MetricType::CacheHitRate
-            | MetricType::Flops 
+            | MetricType::Flops
             | MetricType::ConvergenceRate
             | MetricType::ErrorRate => {}
         }

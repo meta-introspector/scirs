@@ -588,7 +588,7 @@ where
         + std::fmt::Display,
 {
     /// Create new topological data analyzer
-    pub fn new(_config: TopologicalConfig<F>) -> Self {
+    pub fn new(config: TopologicalConfig<F>) -> Self {
         let cache = TopologicalCache {
             distance_matrices: HashMap::new(),
             simplicial_complexes: HashMap::new(),
@@ -615,7 +615,7 @@ where
         };
 
         Self {
-            config: _config,
+            config: config,
             cache,
             performance: TopologicalPerformanceMetrics {
                 timing: HashMap::new(),
@@ -645,7 +645,7 @@ where
         points: &ArrayView2<F>,
     ) -> StatsResult<TopologicalResults<F>> {
         checkarray_finite(points, "points")?;
-        let (n_points, _dimension) = points.dim();
+        let (n_points, dimension) = points.dim();
 
         if n_points < 2 {
             return Err(StatsError::InvalidArgument(

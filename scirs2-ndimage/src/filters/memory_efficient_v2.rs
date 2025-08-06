@@ -236,7 +236,7 @@ impl<T: Float + Send + Sync, D: Dimension> crate::chunked_v2::ChunkProcessorV2<T
 #[allow(dead_code)]
 fn can_use_separable<T: Float>(sigma: &[T]) -> bool {
     // Separable filtering is beneficial when all sigmas are reasonably large
-    _sigma.iter().all(|&s| {
+    sigma.iter().all(|&s| {
         let s_f64: f64 = NumCast::from(s).unwrap_or(0.0);
         s_f64 > 0.5
     })
@@ -272,7 +272,7 @@ where
 
 /// Generate 1D Gaussian kernel
 #[allow(dead_code)]
-fn generate_gaussian_kernel_1d<T>(_sigma: T) -> Array<T, Ix1>
+fn generate_gaussian_kernel_1d<T>(sigma: T) -> Array<T, Ix1>
 where
     T: Float + FromPrimitive,
 {

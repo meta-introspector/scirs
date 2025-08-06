@@ -916,7 +916,7 @@ where
 {
     let n = ts.len();
 
-    // Turning point volatility (average local variance around turning _points)
+    // Turning point volatility (average local variance around turning points)
     let mut local_variances = Vec::new();
     let window_size = 5; // Local window around turning _points
 
@@ -1184,11 +1184,11 @@ where
 
 /// Apply simple moving average smoothing
 #[allow(dead_code)]
-fn apply_moving_average<F>(_ts: &Array1<F>, window_size: usize) -> Result<Array1<F>>
+fn apply_moving_average<F>(_ts: &Array1<F>, windowsize: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Clone,
 {
-    let n = _ts.len();
+    let n = ts.len();
     if window_size >= n {
         return Ok(_ts.clone());
     }
@@ -1200,7 +1200,7 @@ where
         let start = i.saturating_sub(half_window);
         let end = (i + half_window + 1).min(n);
 
-        let window_sum = _ts.slice(s![start..end]).sum();
+        let window_sum = ts.slice(s![start..end]).sum();
         let window_len = F::from(end - start).unwrap();
         smoothed[i] = window_sum / window_len;
     }
@@ -1210,19 +1210,19 @@ where
 
 /// Calculate clustering coefficient for intervals
 #[allow(dead_code)]
-fn calculate_clustering_coefficient<F>(_intervals: &[F]) -> Result<F>
+fn calculate_clustering_coefficient<F>(intervals: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
-    if _intervals.len() < 3 {
+    if intervals.len() < 3 {
         return Ok(F::zero());
     }
 
     // Simple clustering measure: variance of interval ratios
     let mut ratios = Vec::new();
     for i in 1.._intervals.len() {
-        if _intervals[i] > F::zero() && _intervals[i - 1] >, F::zero() {
-            ratios.push(_intervals[i] / _intervals[i - 1]);
+        if intervals[i] > F::zero() && intervals[i - 1] >, F::zero() {
+            ratios.push(_intervals[i] / intervals[i - 1]);
         }
     }
 
@@ -1242,11 +1242,11 @@ where
 
 /// Calculate periodicity strength
 #[allow(dead_code)]
-fn calculate_periodicity_strength<F>(_intervals: &[F]) -> Result<F>
+fn calculate_periodicity_strength<F>(intervals: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
-    if _intervals.len() < 4 {
+    if intervals.len() < 4 {
         return Ok(F::zero());
     }
 
@@ -1256,27 +1256,27 @@ where
 
 /// Calculate autocorrelation at specific lag
 #[allow(dead_code)]
-fn calculate_autocorrelation_at_lag<F>(_data: &[F], lag: usize) -> Result<F>
+fn calculate_autocorrelation_at_lag<F>(data: &[F], lag: usize) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
-    if _data.len() <= lag {
+    if data.len() <= lag {
         return Ok(F::zero());
     }
 
-    let n = _data.len() - lag;
+    let n = data.len() - lag;
     if n < 2 {
         return Ok(F::zero());
     }
 
-    let mean = _data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(_data.len()).unwrap();
+    let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(_data.len()).unwrap();
 
     let mut numerator = F::zero();
     let mut denominator = F::zero();
 
     for i in 0..n {
-        let x_centered = _data[i] - mean;
-        let y_centered = _data[i + lag] - mean;
+        let x_centered = data[i] - mean;
+        let y_centered = data[i + lag] - mean;
         numerator = numerator + x_centered * y_centered;
         denominator = denominator + x_centered * x_centered;
     }
@@ -1290,7 +1290,7 @@ where
 
 // Pattern detection functions (simplified implementations)
 #[allow(dead_code)]
-fn detect_double_peaks<F>(_ts: &Array1<F>, local_maxima: &[usize]) -> Result<usize>
+fn detect_double_peaks<F>(_ts: &Array1<F>, localmaxima: &[usize]) -> Result<usize>
 where
     F: Float + FromPrimitive + PartialOrd,
 {
@@ -1312,7 +1312,7 @@ where
 }
 
 #[allow(dead_code)]
-fn detect_double_bottoms<F>(_ts: &Array1<F>, local_minima: &[usize]) -> Result<usize>
+fn detect_double_bottoms<F>(_ts: &Array1<F>, localminima: &[usize]) -> Result<usize>
 where
     F: Float + FromPrimitive + PartialOrd,
 {

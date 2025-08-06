@@ -5,7 +5,7 @@
 
 use crate::error::Result;
 use crate::tokenize::{Tokenizer, WordTokenizer};
-use lazy__static::lazy_static;
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 
@@ -521,7 +521,7 @@ impl RelationExtractor {
     }
 
     /// Add a relation pattern
-    pub fn add_relation(&mut self, relation_type: String, pattern: Regex) {
+    pub fn add_relation(&mut self, relationtype: String, pattern: Regex) {
         self.relation_patterns.push((relation_type, pattern));
     }
 
@@ -951,7 +951,7 @@ pub enum MentionType {
 
 /// Advanced confidence scorer for entities
 pub struct ConfidenceScorer {
-    feature_weights: HashMap<String, f64>,
+    featureweights: HashMap<String, f64>,
 }
 
 impl Default for ConfidenceScorer {
@@ -974,7 +974,7 @@ impl ConfidenceScorer {
     }
 
     /// Calculate confidence score for an entity
-    pub fn score_entity(&self, entity: &Entity, text: &str, context_window: usize) -> f64 {
+    pub fn score_entity(&self, entity: &Entity, text: &str, contextwindow: usize) -> f64 {
         let mut features = HashMap::new();
 
         // Pattern match confidence (based on entity type)
@@ -1006,7 +1006,7 @@ impl ConfidenceScorer {
         let mut total_weight = 0.0;
 
         for (feature, score) in features {
-            if let Some(weight) = self.feature_weights.get(&feature) {
+            if let Some(weight) = self.featureweights.get(&feature) {
                 total_score += score * weight;
                 total_weight += weight;
             }
@@ -1282,7 +1282,7 @@ impl DocumentInformationExtractor {
         relation_types
             .into_iter()
             .max_by_key(|(_, count)| *count)
-            .map(|(rel_type_)| rel_type)
+            .map(|(rel_type_, _)| rel_type_)
             .unwrap_or_else(|| "unknown".to_string())
     }
 

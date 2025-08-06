@@ -94,7 +94,7 @@ pub fn sobel_edges_oriented(
     let edges =
         crate::feature::array_to_image(&magnitude.mapv(|x| if x > threshold { 1.0 } else { 0.0 }))?;
 
-    Ok((edges, _orientation))
+    Ok((edges, orientation))
 }
 
 /// Simple Sobel edge detection (magnitude only)
@@ -108,9 +108,9 @@ pub fn sobel_edges_oriented(
 ///
 /// * Result containing edge image
 #[allow(dead_code)]
-pub fn sobel_edges(_img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
+pub fn sobel_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
     let (edges_) = sobel_edges_oriented(_img, threshold, false)?;
-    Ok(edges)
+    Ok(edges_)
 }
 
 /// SIMD-accelerated Sobel edge detection
@@ -167,7 +167,7 @@ pub fn sobel_edges_simd(
                 &magnitude.mapv(|x| if x > threshold { 1.0 } else { 0.0 }),
             )?;
 
-        Ok((edges, _orientation))
+        Ok((edges, orientation))
     } else {
         // Fall back to regular implementation
         sobel_edges_oriented(img, threshold, compute_orientation)
@@ -186,7 +186,7 @@ pub fn sobel_edges_simd(
 ///
 /// * Result containing tuple of (magnitude_map, orientation_map)
 #[allow(dead_code)]
-pub fn compute_gradients(_img: &DynamicImage) -> Result<(Array2<f32>, Array2<f32>)> {
+pub fn compute_gradients(img: &DynamicImage) -> Result<(Array2<f32>, Array2<f32>)> {
     let array = image_to_array(_img)?;
     let (height, width) = array.dim();
 

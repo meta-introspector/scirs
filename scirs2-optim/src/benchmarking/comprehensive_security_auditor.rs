@@ -486,14 +486,14 @@ pub enum EffortLevel {
 
 impl ComprehensiveSecurityAuditor {
     /// Create a new security auditor
-    pub fn new(_config: SecurityAuditConfig) -> Self {
+    pub fn new(config: SecurityAuditConfig) -> Self {
         let dependency_scanner = DependencyScanner::new(DependencyScanConfig::default());
         let vulnerability_db = VulnerabilityDatabase::new(VulnerabilityDatabaseConfig::default());
         let policy_enforcer = SecurityPolicyEnforcer::new();
         let report_generator = SecurityReportGenerator::new();
 
         Self {
-            config: _config,
+            config: config,
             dependency_scanner,
             vulnerability_db,
             policy_enforcer,
@@ -675,7 +675,7 @@ impl ComprehensiveSecurityAuditor {
     }
 
     /// Parse Cargo.toml dependencies (simplified)
-    fn parse_cargo_dependencies(&self, cargo_content: &str) -> Result<Vec<(String, String)>> {
+    fn parse_cargo_dependencies(&self, cargocontent: &str) -> Result<Vec<(String, String)>> {
         let mut dependencies = Vec::new();
         let mut in_dependencies_section = false;
 
@@ -706,7 +706,7 @@ impl ComprehensiveSecurityAuditor {
     }
 
     /// Check if dependency has known vulnerabilities (simplified check)
-    fn is_vulnerable_dependency(&self, dep_name: &str, _version: &str) -> bool {
+    fn is_vulnerable_dependency(&self, dep_name: &str, version: &str) -> bool {
         // Simulate vulnerability database lookup
         // In real implementation, this would query RustSec Advisory Database
         let known_vulnerable = ["old-time", "chrono", "serde_yaml"];
@@ -714,7 +714,7 @@ impl ComprehensiveSecurityAuditor {
     }
 
     /// Check if dependency is outdated (simplified check)
-    fn is_outdated_dependency(&self, dep_name: &str, version: &str) -> bool {
+    fn is_outdated_dependency(&self, depname: &str, version: &str) -> bool {
         // Simulate version checking against crates.io
         // In real implementation, this would query crates.io API
         version.starts_with("0.") && dep_name.len() > 5
@@ -732,7 +732,7 @@ impl ComprehensiveSecurityAuditor {
     }
 
     /// Run static analysis on project files
-    fn run_static_analysis(&self, project_path: &Path) -> Result<StaticAnalysisResult> {
+    fn run_static_analysis(&self, projectpath: &Path) -> Result<StaticAnalysisResult> {
         let start_time = std::time::Instant::now();
         let mut security_issues = Vec::new();
         let quality_issues = Vec::new();
@@ -771,7 +771,7 @@ impl ComprehensiveSecurityAuditor {
     }
 
     /// Analyze file for security issues
-    fn analyze_file_security(&self, file_path: &Path, content: &str) -> Result<Vec<SecurityIssue>> {
+    fn analyze_file_security(&self, filepath: &Path, content: &str) -> Result<Vec<SecurityIssue>> {
         let mut issues = Vec::new();
 
         for (line_num, line) in content.lines().enumerate() {
@@ -849,7 +849,7 @@ impl ComprehensiveSecurityAuditor {
     }
 
     /// Apply custom security rules to file content
-    fn apply_custom_rules(&self, file_path: &Path, content: &str) -> Result<Vec<SecurityIssue>> {
+    fn apply_custom_rules(&self, filepath: &Path, content: &str) -> Result<Vec<SecurityIssue>> {
         let mut issues = Vec::new();
 
         for rule in &self.config.custom_rules {
@@ -950,23 +950,23 @@ impl ComprehensiveSecurityAuditor {
     }
 
     /// Find all Rust source files in project
-    fn find_rust_files(&self, project_path: &Path) -> Result<Vec<PathBuf>> {
+    fn find_rust_files(&self, projectpath: &Path) -> Result<Vec<PathBuf>> {
         let mut rust_files = Vec::new();
 
-        fn visit_dir(_dir: &Path, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
+        fn visit_dir(dir: &Path, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
             for entry in std::fs::read_dir(_dir)? {
                 let entry = entry?;
                 let _path = entry.path();
 
-                if _path.is_dir() {
+                if path.is_dir() {
                     // Skip common non-source directories
-                    if let Some(dir_name) = _path.file_name().and_then(|n| n.to_str()) {
+                    if let Some(dir_name) = path.file_name().and_then(|n| n.to_str()) {
                         if ["target", ".git", "node_modules"].contains(&dir_name) {
                             continue;
                         }
                     }
                     visit_dir(&_path, files)?;
-                } else if let Some(extension) = _path.extension() {
+                } else if let Some(extension) = path.extension() {
                     if extension == "rs" {
                         files.push(_path);
                     }
@@ -990,7 +990,7 @@ impl ComprehensiveSecurityAuditor {
     }
 
     /// Calculate overall security score based on audit results
-    fn calculate_security_score(&self, audit_result: &SecurityAuditResult) -> f64 {
+    fn calculate_security_score(&self, auditresult: &SecurityAuditResult) -> f64 {
         let mut score = 1.0;
 
         // Dependency vulnerabilities penalty
@@ -1132,7 +1132,7 @@ impl ComprehensiveSecurityAuditor {
     }
 
     /// Assess overall security risk
-    fn assess_risk(&self, audit_result: &SecurityAuditResult) -> Result<RiskAssessment> {
+    fn assess_risk(&self, auditresult: &SecurityAuditResult) -> Result<RiskAssessment> {
         let mut risk_factors = Vec::new();
         let mut total_risk = 0.0;
 
@@ -1268,7 +1268,7 @@ impl ComprehensiveSecurityAuditor {
     }
 
     /// Check if alerts should be generated based on audit results
-    fn check_alerts(&self, audit_result: &SecurityAuditResult) -> Result<()> {
+    fn check_alerts(&self, auditresult: &SecurityAuditResult) -> Result<()> {
         let mut critical_issues = Vec::new();
 
         // Check for critical vulnerabilities
@@ -1334,7 +1334,7 @@ impl ComprehensiveSecurityAuditor {
     }
 
     /// Generate security report
-    pub fn generate_report(&self, audit_result: &SecurityAuditResult) -> Result<String> {
+    pub fn generate_report(&self, auditresult: &SecurityAuditResult) -> Result<String> {
         self.report_generator
             .generate_report(audit_result, &self.config.report_format)
     }
@@ -1369,7 +1369,7 @@ impl ComprehensiveSecurityAuditor {
     }
 
     /// Lightweight audit for frequent scanning
-    fn audit_project_lightweight(&self, project_path: &Path) -> Result<SecurityAuditResult> {
+    fn audit_project_lightweight(&self, projectpath: &Path) -> Result<SecurityAuditResult> {
         let start_time = std::time::Instant::now();
 
         let mut audit_result = SecurityAuditResult {
@@ -1435,19 +1435,19 @@ impl ComprehensiveSecurityAuditor {
     }
 
     // Placeholder implementations for missing methods
-    fn check_license_compliance(&self, _project_path: &Path) -> Result<LicenseComplianceResult> {
+    fn check_license_compliance(&self, _projectpath: &Path) -> Result<LicenseComplianceResult> {
         Ok(LicenseComplianceResult::default())
     }
 
-    fn analyze_supply_chain(&self, _project_path: &Path) -> Result<SupplyChainAnalysisResult> {
+    fn analyze_supply_chain(&self, _projectpath: &Path) -> Result<SupplyChainAnalysisResult> {
         Ok(SupplyChainAnalysisResult::default())
     }
 
-    fn detect_secrets(&self, _project_path: &Path) -> Result<SecretDetectionResult> {
+    fn detect_secrets(&self, _projectpath: &Path) -> Result<SecretDetectionResult> {
         Ok(SecretDetectionResult::default())
     }
 
-    fn check_config_security(&self, _project_path: &Path) -> Result<ConfigSecurityResult> {
+    fn check_config_security(&self, _projectpath: &Path) -> Result<ConfigSecurityResult> {
         Ok(ConfigSecurityResult::default())
     }
 }
@@ -1655,7 +1655,7 @@ impl Default for RiskAssessment {
 
 // Supporting struct implementations
 impl DependencyScanner {
-    fn new(_config: DependencyScanConfig) -> Self {
+    fn new(config: DependencyScanConfig) -> Self {
         Self {
             config: DependencyScanConfig::default(),
             vuln_db_client: VulnerabilityDatabaseClient::new(),
@@ -1664,7 +1664,7 @@ impl DependencyScanner {
         }
     }
 
-    fn scan_dependencies(&mut self, _project_path: &Path) -> Result<DependencyScanResult> {
+    fn scan_dependencies(&mut self, _projectpath: &Path) -> Result<DependencyScanResult> {
         Ok(DependencyScanResult::default())
     }
 }
@@ -1706,7 +1706,7 @@ impl LicenseDatabase {
 struct PackageMetadata;
 
 impl VulnerabilityDatabase {
-    fn new(_config: VulnerabilityDatabaseConfig) -> Self {
+    fn new(config: VulnerabilityDatabaseConfig) -> Self {
         Self {
             config: VulnerabilityDatabaseConfig::default(),
             local_cache: HashMap::new(),
@@ -1749,7 +1749,8 @@ impl SecurityPolicyEnforcer {
     }
 
     fn check_compliance(
-        &mut self, _audit_result: &SecurityAuditResult,
+        &mut self,
+        _audit_result: &SecurityAuditResult,
     ) -> Result<PolicyComplianceResult> {
         Ok(PolicyComplianceResult::default())
     }

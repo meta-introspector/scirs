@@ -1,5 +1,5 @@
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
 // use plotters::prelude::*;  // Plotters dependency not available
 use rand::rng;
 use rand_distr::{Distribution, Normal};
@@ -57,7 +57,7 @@ fn generate_noisy_sine(
         // Add outliers with specified probability
         if let (Some(_prob), Some(_scale)) = (outlier_prob, outlier_scale) {
             if rand::random::<f64>() < _prob {
-                signal[i] += normal.sample(&mut rng) * _scale;
+                signal[i] += normal.sample(&mut rng) * scale;
             }
         }
     }
@@ -67,14 +67,14 @@ fn generate_noisy_sine(
 
 /// Export signal data to CSV for external plotting
 #[allow(dead_code)]
-fn export_to_csv(_file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
+fn export_to_csv(_filename: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
     let mut file =
         File::create(_file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
 
     // Write header
     let header = signals
         .iter()
-        .map(|(name_)| _name.to_string())
+        .map(|(name_)| name.to_string())
         .collect::<Vec<String>>()
         .join(",");
     writeln!(file, "{}", header).map_err(|e| SignalError::ComputationError(e.to_string()))?;

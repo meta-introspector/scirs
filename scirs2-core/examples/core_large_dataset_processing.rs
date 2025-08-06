@@ -8,7 +8,7 @@ use tempfile::tempdir;
 
 /// Simulates loading a chunk of a large dataset
 #[allow(dead_code)]
-fn load_dataset_chunk(chunk_size: usize, n_features: usize) -> Array2<f64> {
+fn load_dataset_chunk(chunk_size: usize, nfeatures: usize) -> Array2<f64> {
     let mut rng = rand::rng();
     Array2::fromshape_fn((chunk_size, n_features), |_| rng.gen_range(0.0..100.0))
 }

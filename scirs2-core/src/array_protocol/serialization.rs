@@ -121,14 +121,14 @@ pub struct LayerConfig {
 /// Model serializer for saving neural network models.
 pub struct ModelSerializer {
     /// Base directory for saving models.
-    base_dir: PathBuf,
+    basedir: PathBuf,
 }
 
 impl ModelSerializer {
     /// Create a new model serializer.
-    pub fn new(base_dir: impl AsRef<Path>) -> Self {
+    pub fn new(basedir: impl AsRef<Path>) -> Self {
         Self {
-            base_dir: base_dir.as_ref().to_path_buf(),
+            basedir: basedir.as_ref().to_path_buf(),
         }
     }
 
@@ -141,8 +141,8 @@ impl ModelSerializer {
         optimizer: Option<&dyn Optimizer>,
     ) -> CoreResult<PathBuf> {
         // Create model directory
-        let model_dir = self.base_dir.join(name).join(version);
-        fs::create_dir_all(&model_dir)?;
+        let modeldir = self.basedir.join(name).join(version);
+        fs::create_dir_all(&modeldir)?;
 
         // Create metadata
         let metadata = ModelMetadata {
@@ -160,13 +160,13 @@ impl ModelSerializer {
 
         // Save parameters
         let mut parameter_files = HashMap::new();
-        self.save_parameters(model, &model_dir, &mut parameter_files)?;
+        self.save_parameters(model, &modeldir, &mut parameter_files)?;
 
         // Save optimizer state if provided
         let optimizer_state = if let Some(optimizer) = optimizer {
-            let optimizer_path = self.save_optimizer(optimizer, &model_dir)?;
+            let optimizerpath = self.save_optimizer(optimizer, &modeldir)?;
             Some(
-                optimizer_path
+                optimizerpath
                     .file_name()
                     .unwrap()
                     .to_string_lossy()
@@ -185,7 +185,7 @@ impl ModelSerializer {
         };
 
         // Serialize model file
-        let model_file_path = model_dir.join("model.json");
+        let model_file_path = modeldir.join("model.json");
         let model_file_json = serde_json::to_string_pretty(&model_file)?;
         let mut file = File::create(&model_file_path)?;
         file.write_all(model_file_json.as_bytes())?;
@@ -194,16 +194,16 @@ impl ModelSerializer {
     }
 
     /// Load a model from disk.
-    pub fn load_model(
+    pub fn loadmodel(
         &self,
         name: &str,
         version: &str,
     ) -> CoreResult<(Sequential, Option<Box<dyn Optimizer>>)> {
         // Get model directory
-        let model_dir = self.base_dir.join(name).join(version);
+        let modeldir = self.basedir.join(name).join(version);
 
         // Load model file
-        let model_file_path = model_dir.join("model.json");
+        let model_file_path = modeldir.join("model.json");
         let mut file = File::open(&model_file_path)?;
         let mut model_file_json = String::new();
         file.read_to_string(&mut model_file_json)?;
@@ -214,12 +214,12 @@ impl ModelSerializer {
         let model = self.create_model_from_architecture(&model_file.architecture)?;
 
         // Load parameters
-        self.load_parameters(&model, &model_dir, &model_file.parameter_files)?;
+        self.load_parameters(&model, &modeldir, &model_file.parameter_files)?;
 
         // Load optimizer if available
         let optimizer = if let Some(optimizer_state) = &model_file.optimizer_state {
-            let optimizer_path = model_dir.join(optimizer_state);
-            Some(self.load_optimizer(&optimizer_path)?)
+            let optimizerpath = modeldir.join(optimizer_state);
+            Some(self.load_optimizer(&optimizerpath)?)
         } else {
             None
         };
@@ -310,11 +310,11 @@ impl ModelSerializer {
     fn save_parameters(
         &self,
         model: &Sequential,
-        model_dir: &Path,
+        modeldir: &Path,
         parameter_files: &mut HashMap<String, String>,
     ) -> CoreResult<()> {
         // Create parameters directory
-        let params_dir = model_dir.join("parameters");
+        let params_dir = modeldir.join("parameters");
         fs::create_dir_all(&params_dir)?;
 
         // Save parameters for each layer
@@ -364,9 +364,9 @@ impl ModelSerializer {
     }
 
     /// Save optimizer state.
-    fn save_optimizer(&self, _optimizer: &dyn Optimizer, model_dir: &Path) -> CoreResult<PathBuf> {
+    fn save_optimizer(&self, _optimizer: &dyn Optimizer, modeldir: &Path) -> CoreResult<PathBuf> {
         // Create optimizer state file
-        let optimizer_path = model_dir.join("optimizer.json");
+        let optimizerpath = modeldir.join("optimizer.json");
 
         // Save basic optimizer metadata
         // Since the Optimizer trait doesn't have methods to extract its type or config,
@@ -374,17 +374,17 @@ impl ModelSerializer {
         let optimizer_data = serde_json::json!({
             "type": "SGD", // Default to SGD for now
             "config": {
-                "learning_rate": 0.01,
+                "learningrate": 0.01,
                 "momentum": null
             },
             "state": {} // Optimizer state would be saved here
         });
 
-        let mut file = File::create(&optimizer_path)?;
+        let mut file = File::create(&optimizerpath)?;
         let json_str = serde_json::to_string_pretty(&optimizer_data)?;
         file.write_all(json_str.as_bytes())?;
 
-        Ok(optimizer_path)
+        Ok(optimizerpath)
     }
 
     /// Create a model from architecture.
@@ -522,7 +522,7 @@ impl ModelSerializer {
     fn load_parameters(
         &self,
         model: &Sequential,
-        model_dir: &Path,
+        modeldir: &Path,
         parameter_files: &HashMap<String, String>,
     ) -> CoreResult<()> {
         // For each layer, load its parameters
@@ -532,7 +532,7 @@ impl ModelSerializer {
                 // Get parameter file
                 let param_name = format!("layer_{i}_param_{j}");
                 if let Some(param_file) = parameter_files.get(&param_name) {
-                    let param_path = model_dir.join(param_file);
+                    let param_path = modeldir.join(param_file);
 
                     // Load parameter data
                     if param_path.exists() {
@@ -569,17 +569,17 @@ impl ModelSerializer {
     }
 
     /// Load optimizer state.
-    fn load_optimizer(&self, optimizer_path: &Path) -> CoreResult<Box<dyn Optimizer>> {
+    fn load_optimizer(&self, optimizerpath: &Path) -> CoreResult<Box<dyn Optimizer>> {
         // Check if optimizer file exists
-        if !optimizer_path.exists() {
+        if !optimizerpath.exists() {
             return Err(CoreError::InvalidArgument(ErrorContext::new(format!(
                 "Optimizer file not found: {path}",
-                path = optimizer_path.display()
+                path = optimizerpath.display()
             ))));
         }
 
         // Load optimizer metadata
-        let mut file = File::open(optimizer_path)?;
+        let mut file = File::open(optimizerpath)?;
         let mut json_str = String::new();
         file.read_to_string(&mut json_str)?;
 
@@ -589,9 +589,9 @@ impl ModelSerializer {
         match optimizer_data["type"].as_str() {
             Some("SGD") => {
                 let config = &optimizer_data["config"];
-                let learning_rate = config["learning_rate"].as_f64().unwrap_or(0.01);
+                let learningrate = config["learningrate"].as_f64().unwrap_or(0.01);
                 let momentum = config["momentum"].as_f64();
-                Ok(Box::new(SGD::new(learning_rate, momentum)))
+                Ok(Box::new(SGD::new(learningrate, momentum)))
             }
             _ => {
                 // Default to SGD for unknown types
@@ -686,7 +686,7 @@ pub fn load_checkpoint(path: impl AsRef<Path>) -> CoreResult<ModelCheckpoint> {
     // Load model and optimizer
     let model_name = "checkpoint";
     let model_version = format!("epoch_{epoch}");
-    let (model, optimizer) = serializer.load_model(model_name, &model_version)?;
+    let (model, optimizer) = serializer.loadmodel(model_name, &model_version)?;
 
     Ok((model, optimizer.unwrap(), epoch, metrics))
 }
@@ -742,10 +742,10 @@ mod tests {
         }
 
         // Load model
-        let (loaded_model, loaded_optimizer) = serializer.load_model("test_model", "v1").unwrap();
+        let (loadedmodel, loaded_optimizer) = serializer.loadmodel("test_model", "v1").unwrap();
 
         // Check model
-        assert_eq!(loaded_model.layers().len(), 2);
+        assert_eq!(loadedmodel.layers().len(), 2);
         assert!(loaded_optimizer.is_some());
     }
 
@@ -798,10 +798,10 @@ mod tests {
             return;
         }
 
-        let (loaded_model, loaded_optimizer, loaded_epoch, loaded_metrics) = result.unwrap();
+        let (loadedmodel, loaded_optimizer, loaded_epoch, loaded_metrics) = result.unwrap();
 
         // Check loaded data
-        assert_eq!(loaded_model.layers().len(), 1);
+        assert_eq!(loadedmodel.layers().len(), 1);
         assert_eq!(loaded_epoch, 10);
         assert_eq!(loaded_metrics.get("loss"), metrics.get("loss"));
         assert_eq!(loaded_metrics.get("accuracy"), metrics.get("accuracy"));

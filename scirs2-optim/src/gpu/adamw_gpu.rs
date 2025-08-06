@@ -32,7 +32,7 @@ pub struct AdamWGpu<A: Float + ScalarOperand + Debug> {
 
 impl<A: Float + ScalarOperand + Debug> AdamWGpu<A> {
     /// Create a new GPU-accelerated AdamW optimizer
-    pub fn new(_learning_rate: A) -> Self {
+    pub fn new(_learningrate: A) -> Self {
         Self {
             cpu_optimizer: AdamW::new(_learning_rate),
             gpu_memory: None,
@@ -240,7 +240,7 @@ where
         self.cpu_optimizer.get_learning_rate()
     }
 
-    fn set_learning_rate(&mut self, learning_rate: A) {
+    fn set_learning_rate(&mut self, learningrate: A) {
         self.cpu_optimizer.set_learning_rate(learning_rate);
     }
 }

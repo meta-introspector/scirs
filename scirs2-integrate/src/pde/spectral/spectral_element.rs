@@ -102,7 +102,7 @@ impl SpectralElementMesh2D {
         let n = order + 1;
 
         // Generate Gauss-Lobatto-Legendre points in 1D (scaled to [0, 1])
-        let (xi_pts_, _weights) = legendre_points(n);
+        let (xi_pts_, weights) = legendre_points(n);
         let xi = (xi_pts_ + 1.0) * 0.5;
 
         // Create elements and nodes
@@ -903,12 +903,12 @@ impl SpectralElementPoisson2D {
 }
 
 impl From<SpectralElementResult> for PDESolution<f64> {
-    fn from(_result: SpectralElementResult) -> Self {
+    fn from(result: SpectralElementResult) -> Self {
         // Extract node coordinates for grids
         let mut x_coords = Vec::new();
         let mut y_coords = Vec::new();
 
-        for &(x, y) in &_result.nodes {
+        for &(x, y) in &result.nodes {
             x_coords.push(x);
             y_coords.push(y);
         }
@@ -924,16 +924,16 @@ impl From<SpectralElementResult> for PDESolution<f64> {
 
         // Create solution values as a 2D array for each grid point
         let mut values = Vec::new();
-        let n_points = _result.u.len();
-        let u_reshaped = _result.u.into_shape_with_order((n_points, 1)).unwrap();
+        let n_points = result.u.len();
+        let u_reshaped = result.u.into_shape_with_order((n_points, 1)).unwrap();
         values.push(u_reshaped);
 
         // Create solver info
         let info = PDESolverInfo {
-            num_iterations: _result.num_iterations,
-            computation_time: _result.computation_time,
-            residual_norm: Some(_result.residual_norm),
-            convergence_history: _result.convergence_history,
+            num_iterations: result.num_iterations,
+            computation_time: result.computation_time,
+            residual_norm: Some(result.residual_norm),
+            convergence_history: result.convergence_history,
             method: "Spectral Element Method".to_string(),
         };
 

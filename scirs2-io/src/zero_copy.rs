@@ -41,18 +41,18 @@ where
     }
 
     /// Create a new zero-copy array view from memory-mapped data
-    pub fn new(_mmap: &'a Mmap, shape: Vec<usize>) -> Result<Self> {
+    pub fn new(mmap: &'a Mmap, shape: Vec<usize>) -> Result<Self> {
         let expected_bytes = shape.iter().product::<usize>() * mem::size_of::<T>();
-        if _mmap.len() < expected_bytes {
+        if mmap.len() < expected_bytes {
             return Err(IoError::FormatError(format!(
                 "Memory map too small: expected {} bytes, got {}",
                 expected_bytes,
-                _mmap.len()
+                mmap.len()
             )));
         }
 
         Ok(Self {
-            mmap: _mmap,
+            mmap: mmap,
             shape,
             _phantom: PhantomData,
         })
@@ -96,18 +96,18 @@ where
     }
 
     /// Create a new mutable zero-copy array view
-    pub fn new(_mmap: &'a mut MmapMut, shape: Vec<usize>) -> Result<Self> {
+    pub fn new(mmap: &'a mut MmapMut, shape: Vec<usize>) -> Result<Self> {
         let expected_bytes = shape.iter().product::<usize>() * mem::size_of::<T>();
-        if _mmap.len() < expected_bytes {
+        if mmap.len() < expected_bytes {
             return Err(IoError::FormatError(format!(
                 "Memory map too small: expected {} bytes, got {}",
                 expected_bytes,
-                _mmap.len()
+                mmap.len()
             )));
         }
 
         Ok(Self {
-            mmap: _mmap,
+            mmap: mmap,
             shape,
             _phantom: PhantomData,
         })
@@ -253,9 +253,9 @@ pub struct ZeroCopyCsvReader<'a> {
 
 impl<'a> ZeroCopyCsvReader<'a> {
     /// Create a new zero-copy CSV reader
-    pub fn new(_data: &'a [u8], delimiter: u8) -> Self {
+    pub fn new(data: &'a [u8], delimiter: u8) -> Self {
         Self {
-            data: _data,
+            data: data,
             delimiter,
         }
     }
@@ -331,9 +331,9 @@ pub struct ZeroCopyBinaryReader<'a> {
 
 impl<'a> ZeroCopyBinaryReader<'a> {
     /// Create a new zero-copy binary reader
-    pub fn new(_data: &'a [u8]) -> Self {
+    pub fn new(data: &'a [u8]) -> Self {
         Self {
-            data: _data,
+            data: data,
             pos: 0,
         }
     }
@@ -409,8 +409,8 @@ pub mod simd_zero_copy {
 
     impl SimdZeroCopyOpsF32 {
         /// Perform element-wise addition on memory-mapped arrays
-        pub fn add_mmap(_a_mmap: &Mmap, b_mmap: &Mmap, shape: &[usize]) -> Result<Array1<f32>> {
-            if _a_mmap.len() != b_mmap.len() {
+        pub fn add_mmap(_a_mmap: &Mmap, bmmap: &Mmap, shape: &[usize]) -> Result<Array1<f32>> {
+            if a_mmap.len() != b_mmap.len() {
                 return Err(IoError::Other(
                     "Memory maps must have same size".to_string(),
                 ));
@@ -419,7 +419,7 @@ pub mod simd_zero_copy {
             let count = shape.iter().product::<usize>();
             let expected_bytes = count * mem::size_of::<f32>();
 
-            if _a_mmap.len() < expected_bytes {
+            if a_mmap.len() < expected_bytes {
                 return Err(IoError::Other("Memory map too small for shape".to_string()));
             }
 
@@ -440,11 +440,11 @@ pub mod simd_zero_copy {
         }
 
         /// Perform scalar multiplication on a memory-mapped array
-        pub fn scalar_mul_mmap(_mmap: &Mmap, scalar: f32, shape: &[usize]) -> Result<Array1<f32>> {
+        pub fn scalar_mul_mmap(mmap: &Mmap, scalar: f32, shape: &[usize]) -> Result<Array1<f32>> {
             let count = shape.iter().product::<usize>();
             let expected_bytes = count * mem::size_of::<f32>();
 
-            if _mmap.len() < expected_bytes {
+            if mmap.len() < expected_bytes {
                 return Err(IoError::Other("Memory map too small for shape".to_string()));
             }
 
@@ -458,10 +458,10 @@ pub mod simd_zero_copy {
         }
 
         /// Compute dot product directly from memory-mapped arrays
-        pub fn dot_mmap(_a_mmap: &Mmap, b_mmap: &Mmap, len: usize) -> Result<f32> {
+        pub fn dot_mmap(_a_mmap: &Mmap, bmmap: &Mmap, len: usize) -> Result<f32> {
             let expected_bytes = len * mem::size_of::<f32>();
 
-            if _a_mmap.len() < expected_bytes || b_mmap.len() < expected_bytes {
+            if a_mmap.len() < expected_bytes || b_mmap.len() < expected_bytes {
                 return Err(IoError::Other("Memory maps too small".to_string()));
             }
 
@@ -482,8 +482,8 @@ pub mod simd_zero_copy {
 
     impl SimdZeroCopyOpsF64 {
         /// Perform element-wise addition on memory-mapped arrays
-        pub fn add_mmap(_a_mmap: &Mmap, b_mmap: &Mmap, shape: &[usize]) -> Result<Array1<f64>> {
-            if _a_mmap.len() != b_mmap.len() {
+        pub fn add_mmap(_a_mmap: &Mmap, bmmap: &Mmap, shape: &[usize]) -> Result<Array1<f64>> {
+            if a_mmap.len() != b_mmap.len() {
                 return Err(IoError::Other(
                     "Memory maps must have same size".to_string(),
                 ));
@@ -492,7 +492,7 @@ pub mod simd_zero_copy {
             let count = shape.iter().product::<usize>();
             let expected_bytes = count * mem::size_of::<f64>();
 
-            if _a_mmap.len() < expected_bytes {
+            if a_mmap.len() < expected_bytes {
                 return Err(IoError::Other("Memory map too small for shape".to_string()));
             }
 
@@ -615,7 +615,7 @@ pub enum MemoryAdvice {
 
 impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
     /// Create a new async zero-copy processor with NUMA awareness
-    pub fn new<P: AsRef<Path>>(path: P, chunk_size: usize, config: AsyncConfig) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, chunksize: usize, config: AsyncConfig) -> Result<Self> {
         let reader = ZeroCopyReader::new(_path)?;
         let numa_node = Self::detect_optimal_numa_node();
 
@@ -747,8 +747,8 @@ impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
                 #[cfg(feature = "async")]
                 let permit = semaphore.clone();
                 let chunk_data = chunk.to_vec();
-                let _num_chunks_local = _num_chunks;
-                let _enable_readahead_local = _enable_readahead;
+                let _num_chunks_local = num_chunks;
+                let _enable_readahead_local = enable_readahead;
 
                 #[cfg(feature = "async")]
                 {
@@ -796,7 +796,7 @@ impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
     }
 
     /// Configure NUMA memory policy
-    fn configure_numa_policy(&self, numa_node: usize) -> Result<()> {
+    fn configure_numa_policy(&self, numanode: usize) -> Result<()> {
         #[cfg(target_os = "linux")]
         {
             match self.memory_policy {
@@ -907,7 +907,7 @@ pub struct ZeroCopyStreamProcessor<T> {
 
 impl<T: Copy + 'static> ZeroCopyStreamProcessor<T> {
     /// Create a new streaming processor
-    pub fn new<P: AsRef<Path>>(path: P, chunk_size: usize) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, chunksize: usize) -> Result<Self> {
         let reader = ZeroCopyReader::new(_path)?;
         Ok(Self {
             reader,
@@ -994,7 +994,7 @@ fn apply_memory_advice_static(
 
 /// Static function for configuring NUMA policy without borrowing self
 #[allow(dead_code)]
-fn configure_numa_policy_static(_numa_node: usize, memory_policy: NumaMemoryPolicy) -> Result<()> {
+fn configure_numa_policy_static(_numa_node: usize, memorypolicy: NumaMemoryPolicy) -> Result<()> {
     #[cfg(target_os = "linux")]
     {
         match memory_policy {

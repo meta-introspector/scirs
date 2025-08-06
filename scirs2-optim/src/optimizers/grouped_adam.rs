@@ -62,7 +62,7 @@ pub struct GroupedAdam<A: Float + Send + Sync, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> GroupedAdam<A, D> {
     /// Create a new grouped Adam optimizer
-    pub fn new(default_lr: A) -> Self {
+    pub fn new(defaultlr: A) -> Self {
         Self {
             default_lr,
             default_beta1: A::from(0.9).unwrap(),
@@ -88,7 +88,7 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> GroupedAdam<A
     }
 
     /// Set default weight decay
-    pub fn with_weight_decay(mut self, weight_decay: A) -> Self {
+    pub fn with_weight_decay(mut self, weightdecay: A) -> Self {
         self.default_weight_decay = weight_decay;
         self
     }
@@ -100,7 +100,7 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> GroupedAdam<A
     }
 
     /// Initialize state for a group
-    fn init_group_state(&mut self, group_id: usize) -> Result<()> {
+    fn init_group_state(&mut self, groupid: usize) -> Result<()> {
         let group = self.group_manager.get_group_mut(group_id)?;
 
         if group.state.is_empty() {
@@ -210,11 +210,11 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> GroupedOptimi
         Ok(self.group_manager.add_group(params, config))
     }
 
-    fn get_group(&self, group_id: usize) -> Result<&ParameterGroup<A, D>> {
+    fn get_group(&self, groupid: usize) -> Result<&ParameterGroup<A, D>> {
         self.group_manager.get_group(group_id)
     }
 
-    fn get_group_mut(&mut self, group_id: usize) -> Result<&mut ParameterGroup<A, D>> {
+    fn get_group_mut(&mut self, groupid: usize) -> Result<&mut ParameterGroup<A, D>> {
         self.group_manager.get_group_mut(group_id)
     }
 
@@ -235,13 +235,13 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> GroupedOptimi
         self.step_group_internal(group_id, gradients)
     }
 
-    fn set_group_learning_rate(&mut self, group_id: usize, lr: A) -> Result<()> {
+    fn set_group_learning_rate(&mut self, groupid: usize, lr: A) -> Result<()> {
         let group = self.group_manager.get_group_mut(group_id)?;
         group.config.learning_rate = Some(lr);
         Ok(())
     }
 
-    fn set_group_weight_decay(&mut self, group_id: usize, wd: A) -> Result<()> {
+    fn set_group_weight_decay(&mut self, groupid: usize, wd: A) -> Result<()> {
         let group = self.group_manager.get_group_mut(group_id)?;
         group.config.weight_decay = Some(wd);
         Ok(())
@@ -268,7 +268,7 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> Optimizer<A, 
         self.default_lr
     }
 
-    fn set_learning_rate(&mut self, learning_rate: A) {
+    fn set_learning_rate(&mut self, learningrate: A) {
         self.default_lr = learning_rate;
     }
 }

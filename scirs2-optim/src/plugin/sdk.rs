@@ -372,12 +372,12 @@ pub struct BenchmarkConfig {
 /// Plugin development helper macros and utilities
 impl PluginSDK {
     /// Create a plugin template with common functionality
-    pub fn create_plugin_template(_name: &str) -> PluginTemplate {
+    pub fn create_plugin_template(name: &str) -> PluginTemplate {
         PluginTemplate::new(_name)
     }
 
     /// Validate plugin configuration schema
-    pub fn validate_config_schema(_schema: &ConfigSchema) -> Result<()> {
+    pub fn validate_config_schema(schema: &ConfigSchema) -> Result<()> {
         for (field_name, field_schema) in &_schema.fields {
             if field_name.is_empty() {
                 return Err(OptimError::InvalidConfig(
@@ -396,7 +396,7 @@ impl PluginSDK {
     }
 
     /// Generate plugin manifest template
-    pub fn generate_plugin_manifest(_info: &PluginInfo) -> String {
+    pub fn generate_plugin_manifest(info: &PluginInfo) -> String {
         format!(
             r#"[plugin]
 name = "{}"
@@ -414,7 +414,7 @@ profile = "release"
 [runtime]
 min_rust_version = "1.70.0"
 "#,
-            _info.name, _info.version, _info.description, _info.author, _info.license
+            info.name, info.version, info.description, info.author, info.license
         )
     }
 
@@ -506,16 +506,16 @@ pub enum TemplateFileType {
 
 impl PluginTemplate {
     /// Create a new plugin template
-    pub fn new(_name: &str) -> Self {
+    pub fn new(name: &str) -> Self {
         let structure = Self::create_default_structure(_name);
         Self {
-            name: _name.to_string(),
+            name: name.to_string(),
             structure,
         }
     }
 
     /// Generate template files to directory
-    pub fn generate_to_directory(&self, output_dir: &std::path::Path) -> Result<()> {
+    pub fn generate_to_directory(&self, outputdir: &std::path::Path) -> Result<()> {
         std::fs::create_dir_all(output_dir)?;
 
         for file in &self.structure.source_files {
@@ -542,7 +542,7 @@ impl PluginTemplate {
         Ok(())
     }
 
-    fn create_default_structure(_name: &str) -> TemplateStructure {
+    fn create_default_structure(name: &str) -> TemplateStructure {
         let lib_rs_content = format!(
             r#"//! {} optimizer plugin
 //!
@@ -559,9 +559,9 @@ pub struct {}Optimizer<A: Float> {{
 }}
 
 impl<A: Float> {}Optimizer<A> {{
-    pub fn new(_learning_rate: A) -> Self {{
+    pub fn new(_learningrate: A) -> Self {{
         Self {{
-            _learning_rate,
+            learning_rate,
         }}
     }}
 }}
@@ -588,7 +588,7 @@ impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPlugin<A> for 
         create_basic_capabilities()
     }}
     
-    fn initialize(&mut self, _paramshape: &[usize]) -> Result<()> {{
+    fn initialize(&mut self, paramshape: &[usize]) -> Result<()> {{
         Ok(())
     }}
     
@@ -600,7 +600,7 @@ impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPlugin<A> for 
         OptimizerConfig::default()
     }}
     
-    fn set_config(&mut self, _config: OptimizerConfig) -> Result<()> {{
+    fn set_config(&mut self, config: OptimizerConfig) -> Result<()> {{
         Ok(())
     }}
     
@@ -608,7 +608,7 @@ impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPlugin<A> for 
         Ok(OptimizerState::default())
     }}
     
-    fn set_state(&mut self, _state: OptimizerState) -> Result<()> {{
+    fn set_state(&mut self, state: OptimizerState) -> Result<()> {{
         Ok(())
     }}
     
@@ -669,7 +669,7 @@ impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPluginFactory<
     }}
 }}
 "#,
-            _name, _name, _name, _name, _name, _name, _name, _name, _name, _name
+            name, name, name, name, name, name, name, name, name, _name
         );
 
         let plugin_toml_content = format!(
@@ -729,10 +729,10 @@ fn test_{}_convergence() {{
     assert!(params.iter().all(|&x| x.abs() < 0.1));
 }}
 "#,
-            _name,
-            _name.to_lowercase(),
-            _name,
-            _name.to_lowercase(),
+            name,
+            name.to_lowercase(),
+            name,
+            name.to_lowercase(),
             _name
         );
 
@@ -761,9 +761,9 @@ fn test_{}_convergence() {{
 
 impl<A: Float + Debug + Send + Sync + 'static> BaseOptimizerPlugin<A> {
     /// Create a new base optimizer plugin
-    pub fn new(_info: PluginInfo, capabilities: PluginCapabilities) -> Self {
+    pub fn new(info: PluginInfo, capabilities: PluginCapabilities) -> Self {
         Self {
-            info: _info,
+            info: info,
             capabilities,
             config: OptimizerConfig::default(),
             state: BaseOptimizerState::new(),
@@ -779,7 +779,7 @@ impl<A: Float + Debug + Send + Sync + 'static> BaseOptimizerPlugin<A> {
     }
 
     /// Update performance metrics
-    pub fn update_metrics(&mut self, step_time: std::time::Duration) {
+    pub fn update_metrics(&mut self, steptime: std::time::Duration) {
         self.metrics.total_steps += 1;
         self.metrics.avg_step_time = (self.metrics.avg_step_time
             * (self.metrics.total_steps - 1) as f64
@@ -835,14 +835,16 @@ macro_rules! create_optimizer_plugin {
         #[derive(Debug)]
         pub struct $name<A: Float> {
             config: OptimizerConfig,
-            state: OptimizerState, phantom: std::marker::PhantomData<A>,
+            state: OptimizerState,
+            phantom: std::marker::PhantomData<A>,
         }
 
         impl<A: Float> $name<A> {
             pub fn new() -> Self {
                 Self {
                     config: OptimizerConfig::default(),
-                    state: OptimizerState::default(), _phantom: std::marker::PhantomData,
+                    state: OptimizerState::default(),
+                    _phantom: std::marker::PhantomData,
                 }
             }
         }
@@ -868,7 +870,7 @@ macro_rules! create_optimizer_plugin {
                 create_basic_capabilities()
             }
 
-            fn initialize(&mut self, _paramshape: &[usize]) -> Result<()> {
+            fn initialize(&mut self, paramshape: &[usize]) -> Result<()> {
                 Ok(())
             }
 

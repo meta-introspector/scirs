@@ -183,10 +183,10 @@ pub struct CompatibilityMatrix;
 
 impl CompatibilityMatrix {
     /// Check if two API versions are compatible
-    pub fn is_compatible(_current: &str, required: &str) -> bool {
+    pub fn is_compatible(current: &str, required: &str) -> bool {
         // Simple semantic version compatibility check
         // In a real implementation, this would use a proper semver library
-        let _current_parts: Vec<&str> = _current.split('.').collect();
+        let _current_parts: Vec<&str> = current.split('.').collect();
         let required_parts: Vec<&str> = required.split('.').collect();
 
         if current_parts.len() < 2 || required_parts.len() < 2 {
@@ -198,7 +198,7 @@ impl CompatibilityMatrix {
     }
 
     /// Get the compatibility level between two versions
-    pub fn compatibility_level(_current: &str, required: &str) -> CompatibilityLevel {
+    pub fn compatibility_level(current: &str, required: &str) -> CompatibilityLevel {
         if Self::is_compatible(_current, required) {
             CompatibilityLevel::Compatible
         } else {
@@ -223,12 +223,12 @@ pub struct StabilityChecker;
 
 impl StabilityChecker {
     /// Check if the current crate version supports a required API version
-    pub fn supports_api_version(_required_version: &str) -> bool {
-        CompatibilityMatrix::is_compatible(ApiVersion::CURRENT, _required_version)
+    pub fn supports_api_version(_requiredversion: &str) -> bool {
+        CompatibilityMatrix::is_compatible(ApiVersion::CURRENT, required_version)
     }
 
     /// Get the stability level of a specific API component
-    pub fn get_stability_level(_api_name: &str) -> StabilityLevel {
+    pub fn get_stability_level(_apiname: &str) -> StabilityLevel {
         match _api_name {
             // Core stable APIs
             "Dataset"
@@ -259,7 +259,7 @@ impl StabilityChecker {
     }
 
     /// Validate that experimental APIs are being used appropriately
-    pub fn validate_experimental_usage(_api_name: &str) -> Result<(), String> {
+    pub fn validate_experimental_usage(_apiname: &str) -> Result<(), String> {
         match Self::get_stability_level(_api_name) {
             StabilityLevel::Experimental => {
                 eprintln!(

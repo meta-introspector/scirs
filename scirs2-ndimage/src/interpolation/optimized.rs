@@ -20,14 +20,14 @@ use crate::error::{NdimageError, NdimageResult};
 #[allow(dead_code)]
 fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
     T::from_i32(_value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", _value))
+        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
     })
 }
 
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
 fn safe_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
-    _value.to_usize().ok_or_else(|| {
+    value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert _value to usize".to_string())
     })
 }
@@ -35,7 +35,7 @@ fn safe_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 /// Helper function for safe isize conversion
 #[allow(dead_code)]
 fn safe_to_isize<T: Float>(value: T) -> NdimageResult<isize> {
-    _value.to_isize().ok_or_else(|| {
+    value.to_isize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert _value to isize".to_string())
     })
 }
@@ -52,7 +52,7 @@ fn safe_to_i32<T: Float>(value: T) -> NdimageResult<i32> {
 #[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(_value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
 
@@ -69,10 +69,10 @@ struct CacheKey {
 }
 
 impl<T: Float + FromPrimitive + Debug + Clone> CoefficientCache<T> {
-    pub fn new(_max_entries: usize) -> Self {
+    pub fn new(_maxentries: usize) -> Self {
         Self {
             cache: Arc::new(RwLock::new(HashMap::new())),
-            _max_entries,
+            max_entries,
         }
     }
 
@@ -151,11 +151,11 @@ where
             let t2 = t * t;
             let t3 = t2 * t;
 
-            let neg_half: T = crate::utils::safe_f64, _to_float: <T>(-0.5)?;
-            let half: T = crate::utils::safe_f64, _to_float: <T>(0.5)?;
-            let one_half: T = crate::utils::safe_f64, _to_float: <T>(1.5)?;
-            let two_half: T = crate::utils::safe_f64, _to_float: <T>(2.5)?;
-            let two: T = crate::utils::safe_f64, _to_float: <T>(2.0)?;
+            let neg_half: T = crate::utils::safe_f64_to_float::<T>(-0.5)?;
+            let half: T = crate::utils::safe_f64_to_float::<T>(0.5)?;
+            let one_half: T = crate::utils::safe_f64_to_float::<T>(1.5)?;
+            let two_half: T = crate::utils::safe_f64_to_float::<T>(2.5)?;
+            let two: T = crate::utils::safe_f64_to_float::<T>(2.0)?;
 
             Ok(vec![
                 neg_half * t3 + t2 - half * t,
@@ -173,7 +173,7 @@ where
 
 /// Compute B-spline coefficients
 #[allow(dead_code)]
-fn compute_bspline_coefficients<T>(_order: usize, offset: T) -> NdimageResult<Vec<T>>
+fn compute_bspline_coefficients<T>(order: usize, offset: T) -> NdimageResult<Vec<T>>
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
@@ -188,15 +188,15 @@ where
         let t5 = t4 * t;
 
         // Pre-computed B-spline basis functions with constants
-        let c120: T = crate::utils::safe_f64, _to_float: <T>(1.0 / 120.0)?;
-        let c24: T = crate::utils::safe_f64, _to_float: <T>(1.0 / 24.0)?;
-        let c12: T = crate::utils::safe_f64, _to_float: <T>(1.0 / 12.0)?;
-        let c2: T = crate::utils::safe_f64, _to_float: <T>(2.0)?;
-        let c3: T = crate::utils::safe_f64, _to_float: <T>(3.0)?;
-        let c4: T = crate::utils::safe_f64, _to_float: <T>(4.0)?;
-        let c5: T = crate::utils::safe_f64, _to_float: <T>(5.0)?;
-        let c6: T = crate::utils::safe_f64, _to_float: <T>(6.0)?;
-        let c10: T = crate::utils::safe_f64, _to_float: <T>(10.0)?;
+        let c120: T = crate::utils::safe_f64_to_float::<T>(1.0 / 120.0)?;
+        let c24: T = crate::utils::safe_f64_to_float::<T>(1.0 / 24.0)?;
+        let c12: T = crate::utils::safe_f64_to_float::<T>(1.0 / 12.0)?;
+        let c2: T = crate::utils::safe_f64_to_float::<T>(2.0)?;
+        let c3: T = crate::utils::safe_f64_to_float::<T>(3.0)?;
+        let c4: T = crate::utils::safe_f64_to_float::<T>(4.0)?;
+        let c5: T = crate::utils::safe_f64_to_float::<T>(5.0)?;
+        let c6: T = crate::utils::safe_f64_to_float::<T>(6.0)?;
+        let c10: T = crate::utils::safe_f64_to_float::<T>(10.0)?;
 
         coeffs[0] = c120 * (-t5 + c5 * t4 - c10 * t3 + c10 * t2 - c5 * t + T::one());
         coeffs[1] = c24 * (t5 - c2 * t4 - c3 * t3 + c6 * t2 + c4 * t + T::one());
@@ -216,10 +216,10 @@ pub struct Interpolator1D<T> {
 }
 
 impl<T: Float + FromPrimitive + Debug + Clone> Interpolator1D<T> {
-    pub fn new(_order: InterpolationOrder) -> Self {
+    pub fn new(order: InterpolationOrder) -> Self {
         Self {
             cache: CoefficientCache::new(1000),
-            _order,
+            order,
         }
     }
 
@@ -257,11 +257,11 @@ impl<T: Float + FromPrimitive + Debug + Clone> Interpolator1D<T> {
 /// Get value with boundary handling for 1D arrays
 #[inline]
 #[allow(dead_code)]
-fn get_boundary_value_1d<T>(_data: &ArrayView1<T>, idx: isize, mode: BoundaryMode, cval: T) -> T
+fn get_boundary_value_1d<T>(data: &ArrayView1<T>, idx: isize, mode: BoundaryMode, cval: T) -> T
 where
     T: Float + FromPrimitive + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
-    let n = _data.len() as isize;
+    let n = data.len() as isize;
 
     let valid_idx = match mode {
         BoundaryMode::Constant => {
@@ -294,7 +294,7 @@ where
         BoundaryMode::Wrap => ((idx % n + n) % n) as usize,
     };
 
-    _data[valid_idx]
+    data[valid_idx]
 }
 
 /// Optimized 2D interpolation with SIMD support
@@ -304,10 +304,10 @@ pub struct Interpolator2D<T> {
 }
 
 impl<T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static> Interpolator2D<T> {
-    pub fn new(_order: InterpolationOrder) -> Self {
+    pub fn new(order: InterpolationOrder) -> Self {
         Self {
             cache: CoefficientCache::new(2000),
-            _order,
+            order,
         }
     }
 

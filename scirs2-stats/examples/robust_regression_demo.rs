@@ -26,8 +26,8 @@ fn generate_data_with_outliers() -> (Array2<f64>, Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn print_regression_summary(_name: &str, results: &RegressionResults<f64>) {
-    println!("\n{} Regression Results:", _name);
+fn print_regression_summary(name: &str, results: &RegressionResults<f64>) {
+    println!("\n{} Regression Results:", name);
     println!("Coefficients: {:?}", results.coefficients);
     println!("R-squared: {:.4}", results.r_squared);
 
@@ -84,7 +84,7 @@ fn main() {
     let y_pred_theilsen = x.dot(&theilsen_coeffs);
     let residuals_theilsen = &y - &y_pred_theilsen;
     let ss_res = residuals_theilsen.mapv(|r| r * r).sum();
-    let y_mean = y.mean().unwrap_or(0.0);
+    let y_mean = y.clone().mean();
     let ss_tot = y.mapv(|yi| (yi - y_mean).powi(2)).sum();
     let r_squared_theilsen = 1.0 - (ss_res / ss_tot);
     let _mse_theilsen = ss_res / y.len() as f64;

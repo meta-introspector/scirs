@@ -118,13 +118,13 @@ where
 
 /// Convert a structured matrix to a matrix-free operator
 #[allow(dead_code)]
-pub fn structured_to_operator<A, M>(_matrix: &M) -> LinearOperator<A>
+pub fn structured_to_operator<A, M>(matrix: &M) -> LinearOperator<A>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug + 'static,
     M: StructuredMatrix<A> + Clone + Send + Sync + 'static,
 {
-    let matrix_clone = _matrix.clone();
-    let (rows, cols) = _matrix.shape();
+    let matrix_clone = matrix.clone();
+    let (rows, cols) = matrix.shape();
 
     LinearOperator::new_rectangular(rows, cols, move |x: &ArrayView1<A>| {
         matrix_clone.matvec(x).unwrap()

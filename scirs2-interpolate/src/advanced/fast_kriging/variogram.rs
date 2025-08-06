@@ -154,7 +154,7 @@ where
 
     // For each bin, set the center _distance
     for i in 0..n_bins {
-        _bins[i]._distance = F::from_usize(i).unwrap() * bin_width + bin_width / F::from(2).unwrap();
+        bins[i]._distance = F::from_usize(i).unwrap() * bin_width + bin_width / F::from(2).unwrap();
     }
 
     // Compute empirical variogram by comparing all pairs of points
@@ -175,8 +175,8 @@ where
             // Find appropriate bin
             let bin_idx = (dist / bin_width).to_usize().unwrap_or(n_bins - 1);
             if bin_idx < n_bins {
-                _bins[bin_idx].semivariance = _bins[bin_idx].semivariance + semivariogram_value;
-                _bins[bin_idx].count += 1;
+                bins[bin_idx].semivariance = bins[bin_idx].semivariance + semivariogram_value;
+                bins[bin_idx].count += 1;
             }
         }
     }
@@ -189,7 +189,7 @@ where
     }
 
     // Filter out empty _bins
-    let valid_bins: Vec<VariogramBin<F>> = _bins.into_iter().filter(|bin| bin.count > 0).collect();
+    let valid_bins: Vec<VariogramBin<F>> = bins.into_iter().filter(|bin| bin.count > 0).collect();
 
     if valid_bins.is_empty() {
         return Err(crate::error::InterpolateError::ComputationError(

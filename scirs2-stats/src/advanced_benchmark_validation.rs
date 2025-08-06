@@ -184,7 +184,7 @@ impl ReferenceImplementation for ReferenceCorrelation {
 
 impl AdvancedBenchmarkValidator {
     /// Create a new benchmark validator
-    pub fn new(_config: ValidationConfig) -> Self {
+    pub fn new(config: ValidationConfig) -> Self {
         let processor_config = AdvancedProcessorConfig::default();
         let processor = AdvancedUnifiedProcessor::new(processor_config);
 
@@ -195,7 +195,7 @@ impl AdvancedBenchmarkValidator {
         reference_implementations.insert("correlation".to_string(), Box::new(ReferenceCorrelation));
 
         Self {
-            _config,
+            config,
             processor,
             reference_implementations,
         }

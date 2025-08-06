@@ -411,19 +411,19 @@ where
 /// let significant = p_value < 0.05;
 /// ```
 #[allow(dead_code)]
-pub fn kruskal_wallis<F>(_samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
+pub fn kruskal_wallis<F>(samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
     // Check if there are at least two groups
-    if _samples.len() < 2 {
+    if samples.len() < 2 {
         return Err(StatsError::InvalidArgument(
             "At least two _samples are required for Kruskal-Wallis test".to_string(),
         ));
     }
 
     // Check if any group is empty
-    for (i, sample) in _samples.iter().enumerate() {
+    for (i, sample) in samples.iter().enumerate() {
         if sample.is_empty() {
             return Err(StatsError::InvalidArgument(format!(
                 "Sample {} is empty",
@@ -436,7 +436,7 @@ where
     let mut all_values = Vec::new();
     let mut group_sizes = Vec::with_capacity(_samples.len());
 
-    for (group_idx, sample) in _samples.iter().enumerate() {
+    for (group_idx, sample) in samples.iter().enumerate() {
         group_sizes.push(sample.len());
         for &value in sample.iter() {
             all_values.push((value, group_idx));
@@ -471,7 +471,7 @@ where
     }
 
     // Calculate rank sums for each group
-    let mut rank_sums = vec![F::zero(); _samples.len()];
+    let mut rank_sums = vec![F::zero(); samples.len()];
     for i in 0..n {
         let group = all_values[i].1;
         rank_sums[group] = rank_sums[group] + ranks[i];
@@ -558,7 +558,7 @@ where
 /// let significant = p_value < 0.05;
 /// ```
 #[allow(dead_code)]
-pub fn friedman<F>(_data: &ndarray::ArrayView2<F>) -> StatsResult<(F, F)>
+pub fn friedman<F>(data: &ndarray::ArrayView2<F>) -> StatsResult<(F, F)>
 where
     F: Float
         + std::iter::Sum<F>
@@ -568,8 +568,8 @@ where
         + std::fmt::Display,
 {
     // Get the number of subjects (n) and treatments (k)
-    let n = _data.nrows();
-    let k = _data.ncols();
+    let n = data.nrows();
+    let k = data.ncols();
 
     // Check if there are at least 2 subjects and 2 treatments
     if n < 2 || k < 2 {
@@ -583,7 +583,7 @@ where
 
     for i in 0..n {
         // Extract the row
-        let row = _data.row(i);
+        let row = data.row(i);
 
         // Create a vector of (value, column_index) pairs
         let mut row_data = Vec::with_capacity(k);

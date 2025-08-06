@@ -199,10 +199,10 @@ pub enum UpdateMode {
 // Implementation for TrainingVisualizer
 impl<F: Float + Debug + 'static + num_traits::FromPrimitive + Send + Sync> TrainingVisualizer<F> {
     /// Create a new training visualizer
-    pub fn new(_config: VisualizationConfig) -> Self {
+    pub fn new(config: VisualizationConfig) -> Self {
         Self {
             metrics_history: Vec::new(),
-            _config,
+            config,
             active_plots: HashMap::new(),
         }
     }

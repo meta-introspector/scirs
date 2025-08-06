@@ -105,7 +105,7 @@ pub struct FFTKernel {
 
 impl FFTKernel {
     /// Create a new FFT kernel
-    pub fn new(input_size: usize, input_address: usize, output_address: usize) -> Self {
+    pub fn new(input_size: usize, input_address: usize, outputaddress: usize) -> Self {
         let mut config = KernelConfig::default();
         // Calculate grid _size based on input _size and block _size
         config.grid_size = input_size.div_ceil(config.block_size);
@@ -114,7 +114,7 @@ impl FFTKernel {
             config,
             input_size,
             input_address,
-            output_address,
+            output_address: outputaddress,
         }
     }
 }
@@ -463,11 +463,11 @@ impl KernelFactory {
     }
 
     /// Check if there's enough memory for the requested operation
-    pub fn check_memory_requirements(&self, total_bytes_needed: usize) -> FFTResult<()> {
-        if total_bytes_needed > self.available_memory {
+    pub fn check_memory_requirements(&self, total_bytesneeded: usize) -> FFTResult<()> {
+        if total_bytesneeded > self.available_memory {
             return Err(FFTError::MemoryError(format!(
                 "Not enough GPU memory: need {} bytes, available {} bytes",
-                total_bytes_needed, self.available_memory
+                total_bytesneeded, self.available_memory
             )));
         }
 
@@ -496,10 +496,10 @@ impl KernelLauncher {
     }
 
     /// Allocate memory for FFT operation
-    pub fn allocate_fft_memory(&mut self, input_size: usize) -> FFTResult<(usize, usize)> {
+    pub fn allocate_fft_memory(&mut self, inputsize: usize) -> FFTResult<(usize, usize)> {
         let element_size = std::mem::size_of::<Complex64>();
-        let input_bytes = input_size * element_size;
-        let output_bytes = input_size * element_size;
+        let input_bytes = inputsize * element_size;
+        let output_bytes = inputsize * element_size;
 
         let total_bytes = input_bytes + output_bytes;
         self.factory.check_memory_requirements(total_bytes)?;

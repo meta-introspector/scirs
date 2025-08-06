@@ -84,7 +84,7 @@ fn main() -> Result<()> {
 
 /// Demonstrates advanced-optimized text processing with full feature coordination
 #[allow(dead_code)]
-fn demo_advancedtext_processing(_coordinator: &AdvancedTextCoordinator) -> Result<()> {
+fn demo_advancedtext_processing(coordinator: &AdvancedTextCoordinator) -> Result<()> {
     println!("📊 Demo 1: Advanced-Optimized Text Processing");
     println!("==========================================");
 
@@ -102,7 +102,7 @@ fn demo_advancedtext_processing(_coordinator: &AdvancedTextCoordinator) -> Resul
     );
 
     let start_time = std::time::Instant::now();
-    let result = _coordinator.advanced_processtext(&sampletexts)?;
+    let result = coordinator.advanced_processtext(&sampletexts)?;
     let processing_time = start_time.elapsed();
 
     println!("\n📈 Results:");
@@ -159,7 +159,7 @@ fn demo_advancedtext_processing(_coordinator: &AdvancedTextCoordinator) -> Resul
 
 /// Demonstrates advanced semantic similarity with multiple metrics
 #[allow(dead_code)]
-fn demo_semantic_similarity(_coordinator: &AdvancedTextCoordinator) -> Result<()> {
+fn demo_semantic_similarity(coordinator: &AdvancedTextCoordinator) -> Result<()> {
     println!("🔍 Demo 2: Advanced Semantic Similarity");
     println!("=======================================");
 
@@ -177,7 +177,7 @@ fn demo_semantic_similarity(_coordinator: &AdvancedTextCoordinator) -> Result<()
         println!("  Text 1: \"{text1}\"");
         println!("  Text 2: \"{text2}\"");
 
-        let result = _coordinator.advanced_semantic_similarity(text1, text2)?;
+        let result = coordinator.advanced_semantic_similarity(text1, text2)?;
 
         println!("\n📊 Similarity Metrics:");
         println!("  • Cosine Similarity: {:.3}", result.cosine_similarity);
@@ -196,7 +196,7 @@ fn demo_semantic_similarity(_coordinator: &AdvancedTextCoordinator) -> Result<()
 
 /// Demonstrates batch text classification with confidence estimation
 #[allow(dead_code)]
-fn demo_batch_classification(_coordinator: &AdvancedTextCoordinator) -> Result<()> {
+fn demo_batch_classification(coordinator: &AdvancedTextCoordinator) -> Result<()> {
     println!("🏷️  Demo 3: Batch Text Classification");
     println!("===================================");
 
@@ -222,7 +222,7 @@ fn demo_batch_classification(_coordinator: &AdvancedTextCoordinator) -> Result<(
     );
     println!("\n📊 Categories: {categories:?}");
 
-    let result = _coordinator.advanced_classify_batch(&texts, &categories)?;
+    let result = coordinator.advanced_classify_batch(&texts, &categories)?;
 
     println!("\n📈 Classification Results:");
     println!(
@@ -250,7 +250,7 @@ fn demo_batch_classification(_coordinator: &AdvancedTextCoordinator) -> Result<(
 
 /// Demonstrates dynamic topic modeling with quality metrics
 #[allow(dead_code)]
-fn demo_topic_modeling(_coordinator: &AdvancedTextCoordinator) -> Result<()> {
+fn demo_topic_modeling(coordinator: &AdvancedTextCoordinator) -> Result<()> {
     println!("📚 Demo 4: Dynamic Topic Modeling");
     println!("================================");
 
@@ -271,7 +271,7 @@ fn demo_topic_modeling(_coordinator: &AdvancedTextCoordinator) -> Result<()> {
         documents.len()
     );
 
-    let result = _coordinator.advanced_topic_modeling(&documents, 3)?; // Extract 3 topics
+    let result = coordinator.advanced_topic_modeling(&documents, 3)?; // Extract 3 topics
 
     println!("\n📊 Topic Modeling Results:");
     println!("  • Processing Time: {:?}", result.processing_time);
@@ -300,11 +300,11 @@ fn demo_topic_modeling(_coordinator: &AdvancedTextCoordinator) -> Result<()> {
 
 /// Demonstrates comprehensive performance reporting
 #[allow(dead_code)]
-fn demo_performance_reporting(_coordinator: &AdvancedTextCoordinator) -> Result<()> {
+fn demo_performance_reporting(coordinator: &AdvancedTextCoordinator) -> Result<()> {
     println!("📊 Demo 5: Performance Reporting");
     println!("===============================");
 
-    let report = _coordinator.get_performance_report()?;
+    let report = coordinator.get_performance_report()?;
 
     println!("\n🔧 Current Performance Metrics:");
     println!(

@@ -526,7 +526,7 @@ mod tests {
     use std::f64::consts::PI;
 
     // Generate a test signal (sine wave)
-    fn generate_sine_wave(_freq: f64, fs: f64, n_samples: usize) -> Vec<f64> {
+    fn generate_sine_wave(_freq: f64, fs: f64, nsamples: usize) -> Vec<f64> {
         (0..n_samples)
             .map(|i| (2.0 * PI * _freq * (i as f64 / fs)).sin())
             .collect()
@@ -572,7 +572,7 @@ mod tests {
 
         // Compute STFT
         let nperseg = 256;
-        let (f_t, zxx) = stft(
+        let (f_freq, f_t, zxx) = stft(
             &signal,
             Window::Hann,
             nperseg,
@@ -586,7 +586,7 @@ mod tests {
         .expect("STFT computation should succeed for frequency test");
 
         // Find the frequency bin closest to our signal frequency
-        let freq_idx = f
+        let freq_idx = f_freq
             .iter()
             .enumerate()
             .min_by(|(_, &a), (_, &b)| {

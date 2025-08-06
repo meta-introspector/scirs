@@ -211,9 +211,9 @@ impl QuantumMLSuite {
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: QuantumMetricsConfig) -> Self {
+    pub fn with_config(config: QuantumMetricsConfig) -> Self {
         Self {
-            _config,
+            config,
             computation_cache: HashMap::new(),
         }
     }
@@ -501,8 +501,8 @@ impl QuantumMLSuite {
 
     // Helper methods
 
-    fn state_norm(_state: &Array1<Complex64>) -> f64 {
-        _state.iter().map(|c| c.norm_sqr()).sum::<f64>().sqrt()
+    fn state_norm(state: &Array1<Complex64>) -> f64 {
+        state.iter().map(|c| c.norm_sqr()).sum::<f64>().sqrt()
     }
 
     fn channel_to_choi(&self, channel: &Array2<Complex64>) -> Result<Array2<Complex64>> {
@@ -670,7 +670,7 @@ impl QuantumMLSuite {
         Ok(total_edges as f64 / max_edges as f64)
     }
 
-    fn estimate_speedup(&self, quantum_results: &[f64], classical_results: &[f64]) -> Result<f64> {
+    fn estimate_speedup(&self, quantum_results: &[f64], classicalresults: &[f64]) -> Result<f64> {
         // Simple performance ratio estimation
         let quantum_avg = quantum_results.iter().sum::<f64>() / quantum_results.len() as f64;
         let classical_avg = classical_results.iter().sum::<f64>() / classical_results.len() as f64;

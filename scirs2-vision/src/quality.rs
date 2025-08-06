@@ -35,8 +35,8 @@ use statrs::statistics::Statistics;
 /// # }
 /// ```
 #[allow(dead_code)]
-pub fn psnr(_img1: &DynamicImage, img2: &DynamicImage, max_value: f32) -> Result<f32> {
-    let gray1 = _img1.to_luma8();
+pub fn psnr(_img1: &DynamicImage, img2: &DynamicImage, maxvalue: f32) -> Result<f32> {
+    let gray1 = img1.to_luma8();
     let gray2 = img2.to_luma8();
 
     if gray1.dimensions() != gray2.dimensions() {
@@ -118,8 +118,8 @@ impl Default for SSIMParams {
 /// # }
 /// ```
 #[allow(dead_code)]
-pub fn ssim(_img1: &DynamicImage, img2: &DynamicImage, params: &SSIMParams) -> Result<f32> {
-    let gray1 = _img1.to_luma8();
+pub fn ssim(img1: &DynamicImage, img2: &DynamicImage, params: &SSIMParams) -> Result<f32> {
+    let gray1 = img1.to_luma8();
     let gray2 = img2.to_luma8();
 
     if gray1.dimensions() != gray2.dimensions() {
@@ -210,9 +210,9 @@ fn ssim_map(
 
 /// Create a Gaussian window
 #[allow(dead_code)]
-fn gaussian_window(_size: usize, sigma: f32) -> Array2<f32> {
+fn gaussian_window(size: usize, sigma: f32) -> Array2<f32> {
     let half_size = _size as i32 / 2;
-    let mut window = Array2::zeros((_size, _size));
+    let mut window = Array2::zeros((_size, size));
     let mut sum = 0.0;
 
     for y in -half_size..=half_size {
@@ -230,10 +230,10 @@ fn gaussian_window(_size: usize, sigma: f32) -> Array2<f32> {
 
 /// Compute weighted mean
 #[allow(dead_code)]
-fn weighted_mean(_data: &ndarray::ArrayView2<f32>, weights: &Array2<f32>, sum_weights: f32) -> f32 {
+fn weighted_mean(_data: &ndarray::ArrayView2<f32>, weights: &Array2<f32>, sumweights: f32) -> f32 {
     let mut sum = 0.0;
-    for ((y, x), &value) in _data.indexed_iter() {
-        sum += value * _weights[[y, x]];
+    for ((y, x), &value) in data.indexed_iter() {
+        sum += value * weights[[y, x]];
     }
     sum / sum_weights
 }
@@ -248,7 +248,7 @@ fn weighted_variance(
 ) -> f32 {
     let mut sum = 0.0;
     for ((y, x), &value) in data.indexed_iter() {
-        sum += _weights[[y, x]] * (value - mean).powi(2);
+        sum += weights[[y, x]] * (value - mean).powi(2);
     }
     sum / sum_weights
 }
@@ -266,20 +266,20 @@ fn weighted_covariance(
     let mut sum = 0.0;
     for ((y, x), &value1) in data1.indexed_iter() {
         let value2 = data2[[y, x]];
-        sum += _weights[[y, x]] * (value1 - mean1) * (value2 - mean2);
+        sum += weights[[y, x]] * (value1 - mean1) * (value2 - mean2);
     }
     sum / sum_weights
 }
 
 /// Convert grayscale image to normalized array
 #[allow(dead_code)]
-fn image_to_array(_img: &GrayImage) -> Result<Array2<f32>> {
-    let (width, height) = _img.dimensions();
+fn image_to_array(img: &GrayImage) -> Result<Array2<f32>> {
+    let (width, height) = img.dimensions();
     let mut array = Array2::zeros((height as usize, width as usize));
 
     for y in 0..height {
         for x in 0..width {
-            array[[y as usize, x as usize]] = _img.get_pixel(x, y)[0] as f32;
+            array[[y as usize, x as usize]] = img.get_pixel(x, y)[0] as f32;
         }
     }
 
@@ -348,8 +348,8 @@ pub fn ms_ssim(
 ///
 /// * VIF value (higher is better)
 #[allow(dead_code)]
-pub fn vif(_img1: &DynamicImage, img2: &DynamicImage) -> Result<f32> {
-    let gray1 = _img1.to_luma8();
+pub fn vif(img1: &DynamicImage, img2: &DynamicImage) -> Result<f32> {
+    let gray1 = img1.to_luma8();
     let gray2 = img2.to_luma8();
 
     if gray1.dimensions() != gray2.dimensions() {
@@ -395,15 +395,15 @@ pub fn vif(_img1: &DynamicImage, img2: &DynamicImage) -> Result<f32> {
 
 /// Compute variance of an array view
 #[allow(dead_code)]
-fn variance(_data: &ndarray::ArrayView2<f32>) -> f32 {
-    let mean = _data.mean().unwrap_or(0.0);
-    _data.mapv(|x| (x - mean).powi(2)).mean().unwrap_or(0.0)
+fn variance(data: &ndarray::ArrayView2<f32>) -> f32 {
+    let mean = data.mean().unwrap_or(0.0);
+    data.mapv(|x| (x - mean).powi(2)).mean().unwrap_or(0.0)
 }
 
 /// Mean Absolute Error (MAE)
 #[allow(dead_code)]
-pub fn mae(_img1: &DynamicImage, img2: &DynamicImage) -> Result<f32> {
-    let gray1 = _img1.to_luma8();
+pub fn mae(img1: &DynamicImage, img2: &DynamicImage) -> Result<f32> {
+    let gray1 = img1.to_luma8();
     let gray2 = img2.to_luma8();
 
     if gray1.dimensions() != gray2.dimensions() {

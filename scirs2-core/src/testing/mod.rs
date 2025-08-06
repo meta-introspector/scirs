@@ -23,7 +23,7 @@ pub mod ecosystem_integration;
 pub mod fuzzing;
 pub mod integration;
 pub mod large_scale;
-pub mod property_based;
+pub mod propertybased;
 pub mod security;
 pub mod stress;
 
@@ -163,7 +163,7 @@ impl TestRunner {
     }
 
     /// Execute a test function with timeout and monitoring
-    pub fn execute<F>(&self, test_name: &str, test_fn: F) -> CoreResult<TestResult>
+    pub fn execute<F>(&self, test_name: &str, testfn: F) -> CoreResult<TestResult>
     where
         F: FnOnce() -> CoreResult<()>,
     {
@@ -192,7 +192,7 @@ impl TestRunner {
                 Ok(TestResult::failure(duration, 1, format!("{e:?}")))
             }
             Err(panic) => {
-                let error_msg = if let Some(s) = panic.downcast_ref::<String>() {
+                let errormsg = if let Some(s) = panic.downcast_ref::<String>() {
                     s.clone()
                 } else if let Some(s) = panic.downcast_ref::<&str>() {
                     s.to_string()
@@ -201,15 +201,15 @@ impl TestRunner {
                 };
 
                 if self.config.verbose {
-                    println!("Test {} panicked: {}", test_name, error_msg);
+                    println!("Test {} panicked: {}", test_name, errormsg);
                 }
-                Ok(TestResult::failure(duration, 1, error_msg))
+                Ok(TestResult::failure(duration, 1, errormsg))
             }
         }
     }
 
     /// Execute multiple test iterations
-    pub fn execute_iterations<F>(&self, test_name: &str, test_fn: F) -> CoreResult<TestResult>
+    pub fn execute_iterations<F>(&self, test_name: &str, testfn: F) -> CoreResult<TestResult>
     where
         F: Fn(usize) -> CoreResult<()>,
     {
@@ -344,7 +344,7 @@ impl TestSuite {
     }
 
     /// Add a test to the suite
-    pub fn add_test<F>(&mut self, test_name: &str, test_fn: F)
+    pub fn add_test<F>(&mut self, test_name: &str, testfn: F)
     where
         F: Fn(&TestRunner) -> CoreResult<TestResult> + Send + Sync + 'static,
     {

@@ -19,7 +19,7 @@ thread_local! {
 
 /// Get a buffer from the thread-local cache or create a new one
 #[allow(dead_code)]
-fn get_or_create_buffer(_size: usize) -> Vec<RustComplex<f64>> {
+fn get_or_create_buffer(size: usize) -> Vec<RustComplex<f64>> {
     BUFFER_CACHE.with(|cache| {
         let mut cache_ref = cache.borrow_mut();
         if let Some(buffer) = cache_ref.take() {
@@ -37,7 +37,7 @@ fn get_or_create_buffer(_size: usize) -> Vec<RustComplex<f64>> {
 
 /// Return a buffer to the thread-local cache for future reuse
 #[allow(dead_code)]
-fn return_buffer_to_cache(_buffer: Vec<RustComplex<f64>>) {
+fn return_buffer_to_cache(buffer: Vec<RustComplex<f64>>) {
     BUFFER_CACHE.with(|cache| {
         *cache.borrow_mut() = Some(_buffer);
     });
@@ -45,7 +45,7 @@ fn return_buffer_to_cache(_buffer: Vec<RustComplex<f64>>) {
 
 /// Convert a value to Complex64 with minimal allocations
 #[allow(dead_code)]
-fn to_complex_value<T>(_val: T) -> FFTResult<Complex64>
+fn to_complex_value<T>(val: T) -> FFTResult<Complex64>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -56,7 +56,7 @@ where
     
     // Handle real value
     let real = num_traits::cast::<T, f64>(_val)
-        .ok_or_else(|| FFTError::ValueError(format!("Could not convert {:?} to f64", _val)))?;
+        .ok_or_else(|| FFTError::ValueError(format!("Could not convert {:?} to f64", val)))?;
     
     Ok(Complex64::new(real, 0.0))
 }

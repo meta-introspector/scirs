@@ -25,10 +25,10 @@ pub struct QuantumAnnealer {
 
 impl QuantumAnnealer {
     /// Create a new quantum annealer
-    pub fn new(n_qubits: usize, annealing_time: f64, n_schedule_points: usize) -> Self {
-        let mut schedule = Vec::with_capacity(n_schedule_points);
-        for i in 0..n_schedule_points {
-            let t = i as f64 / (n_schedule_points - 1) as f64;
+    pub fn new(n_qubits: usize, annealing_time: f64, n_schedulepoints: usize) -> Self {
+        let mut schedule = Vec::with_capacity(n_schedulepoints);
+        for i in 0..n_schedulepoints {
+            let t = i as f64 / (n_schedulepoints - 1) as f64;
             let s = t * annealing_time;
             let annealing_param = t; // Linear schedule from 0 to 1
             schedule.push((s, annealing_param));
@@ -156,10 +156,10 @@ pub struct VariationalQuantumEigensolver {
 
 impl VariationalQuantumEigensolver {
     /// Create a new VQE solver
-    pub fn new(n_qubits: usize, circuit_depth: usize) -> Self {
+    pub fn new(n_qubits: usize, circuitdepth: usize) -> Self {
         Self {
             n_qubits,
-            circuit_depth,
+            circuit_depth: circuitdepth,
             tolerance: 1e-6,
             max_iterations: 1000,
         }
@@ -345,9 +345,9 @@ pub struct QuantumErrorCorrection {
 
 impl QuantumErrorCorrection {
     /// Create new quantum error correction system
-    pub fn new(n_logical_qubits: usize, code: ErrorCorrectionCode) -> Self {
+    pub fn new(n_logicalqubits: usize, code: ErrorCorrectionCode) -> Self {
         Self {
-            n_logical_qubits,
+            n_logical_qubits: n_logicalqubits,
             code,
             noise_parameters: NoiseParameters::default(),
             syndrome_history: Vec::new(),
@@ -355,22 +355,22 @@ impl QuantumErrorCorrection {
     }
 
     /// Encode logical state into physical qubits
-    pub fn encode(&self, logical_state: &Array1<Complex64>) -> Result<Array1<Complex64>> {
+    pub fn encode(&self, logicalstate: &Array1<Complex64>) -> Result<Array1<Complex64>> {
         let n_physical = self.get_physical_qubit_count();
         let mut physical_state = Array1::zeros(1 << n_physical);
 
         match self.code {
             ErrorCorrectionCode::Steane7 => {
                 // Steane code encoding
-                self.encode_steane7(logical_state, &mut physical_state)?;
+                self.encode_steane7(logicalstate, &mut physical_state)?;
             }
             ErrorCorrectionCode::Surface => {
                 // Surface code encoding
-                self.encode_surface(logical_state, &mut physical_state)?;
+                self.encode_surface(logicalstate, &mut physical_state)?;
             }
             ErrorCorrectionCode::Repetition => {
                 // Repetition code encoding
-                self.encode_repetition(logical_state, &mut physical_state)?;
+                self.encode_repetition(logicalstate, &mut physical_state)?;
             }
         }
 
@@ -533,7 +533,7 @@ impl QuantumErrorCorrection {
     }
 
     /// Measure error syndromes
-    fn measure_syndromes(&self, _state: &Array1<Complex64>) -> Result<Array1<i8>> {
+    fn measure_syndromes(&self, state: &Array1<Complex64>) -> Result<Array1<i8>> {
         let n_syndromes = match self.code {
             ErrorCorrectionCode::Steane7 => 6,
             ErrorCorrectionCode::Surface => 8,

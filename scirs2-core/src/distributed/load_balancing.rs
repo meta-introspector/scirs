@@ -27,7 +27,7 @@ pub enum LoadBalancingStrategy {
 /// Node load information
 #[derive(Debug, Clone)]
 pub struct NodeLoad {
-    pub node_id: String,
+    pub nodeid: String,
     pub address: SocketAddr,
     pub cpu_utilization: f64,
     pub memory_utilization: f64,
@@ -39,9 +39,9 @@ pub struct NodeLoad {
 
 impl NodeLoad {
     /// Create new node load info
-    pub fn new(node_id: String, address: SocketAddr) -> Self {
+    pub fn new(nodeid: String, address: SocketAddr) -> Self {
         Self {
-            node_id,
+            nodeid,
             address,
             cpu_utilization: 0.0,
             memory_utilization: 0.0,
@@ -80,8 +80,8 @@ impl NodeLoad {
 /// Task assignment result
 #[derive(Debug, Clone)]
 pub struct TaskAssignment {
-    pub task_id: String,
-    pub node_id: String,
+    pub taskid: String,
+    pub nodeid: String,
     pub node_address: SocketAddr,
     pub assigned_at: Instant,
 }
@@ -107,20 +107,20 @@ impl LoadBalancer {
     }
 
     /// Register a node for load balancing
-    pub fn register_node(&self, node_load: NodeLoad) -> CoreResult<()> {
+    pub fn register_node(&self, nodeload: NodeLoad) -> CoreResult<()> {
         let mut nodes = self.nodes.lock().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire nodes lock".to_string(),
             ))
         })?;
-        nodes.insert(node_load.node_id.clone(), node_load);
+        nodes.insert(nodeload.nodeid.clone(), nodeload);
         Ok(())
     }
 
     /// Update node load metrics
-    pub fn update_node_load(
+    pub fn update_nodeload(
         &self,
-        node_id: &str,
+        nodeid: &str,
         cpu: f64,
         memory: f64,
         connections: usize,
@@ -132,51 +132,51 @@ impl LoadBalancer {
             ))
         })?;
 
-        if let Some(node) = nodes.get_mut(node_id) {
+        if let Some(node) = nodes.get_mut(nodeid) {
             node.update_metrics(cpu, memory, connections, latency);
         } else {
             return Err(CoreError::InvalidArgument(ErrorContext::new(format!(
-                "Unknown node: {node_id}"
+                "Unknown node: {nodeid}"
             ))));
         }
         Ok(())
     }
 
     /// Assign a task to the best available node
-    pub fn assign_task(&self, task_id: String) -> CoreResult<TaskAssignment> {
+    pub fn assign_task(&self, taskid: String) -> CoreResult<TaskAssignment> {
         let nodes = self.nodes.lock().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire nodes lock".to_string(),
             ))
         })?;
 
-        let available_nodes: Vec<_> = nodes
+        let availablenodes: Vec<_> = nodes
             .values()
             .filter(|node| node.is_available())
             .cloned()
             .collect();
 
-        if available_nodes.is_empty() {
+        if availablenodes.is_empty() {
             return Err(CoreError::InvalidState(ErrorContext::new(
                 "No available nodes for task assignment".to_string(),
             )));
         }
 
         let selected_node = match &self.strategy {
-            LoadBalancingStrategy::RoundRobin => self.select_round_robin(&available_nodes)?,
+            LoadBalancingStrategy::RoundRobin => self.select_round_robin(&availablenodes)?,
             LoadBalancingStrategy::LeastConnections => {
-                self.select_least_connections(&available_nodes)
+                self.select_least_connections(&availablenodes)
             }
             LoadBalancingStrategy::WeightedRoundRobin => {
-                self.select_weighted_round_robin(&available_nodes)?
+                self.select_weighted_round_robin(&availablenodes)?
             }
-            LoadBalancingStrategy::ResourceAware => self.select_resource_aware(&available_nodes),
-            LoadBalancingStrategy::LatencyBased => self.select_latency_based(&available_nodes),
+            LoadBalancingStrategy::ResourceAware => self.select_resource_aware(&availablenodes),
+            LoadBalancingStrategy::LatencyBased => self.select_latencybased(&availablenodes),
         };
 
         let assignment = TaskAssignment {
-            task_id,
-            node_id: selected_node.node_id.clone(),
+            taskid,
+            nodeid: selected_node.nodeid.clone(),
             node_address: selected_node.address,
             assigned_at: Instant::now(),
         };
@@ -243,7 +243,7 @@ impl LoadBalancer {
             .clone()
     }
 
-    fn select_latency_based(&self, nodes: &[NodeLoad]) -> NodeLoad {
+    fn select_latencybased(&self, nodes: &[NodeLoad]) -> NodeLoad {
         nodes
             .iter()
             .min_by(|a, b| a.average_latency.partial_cmp(&b.average_latency).unwrap())
@@ -266,14 +266,14 @@ impl LoadBalancer {
         })?;
 
         let total_nodes = nodes.len();
-        let available_nodes = nodes.values().filter(|node| node.is_available()).count();
+        let availablenodes = nodes.values().filter(|node| node.is_available()).count();
         let total_assignments = history.len();
 
         // Calculate assignment distribution
         let mut assignment_counts: HashMap<String, usize> = HashMap::new();
         for assignment in history.iter() {
             *assignment_counts
-                .entry(assignment.node_id.clone())
+                .entry(assignment.nodeid.clone())
                 .or_insert(0) += 1;
         }
 
@@ -285,7 +285,7 @@ impl LoadBalancer {
 
         Ok(LoadBalancingStats {
             total_nodes,
-            available_nodes,
+            availablenodes,
             total_assignments,
             assignment_distribution: assignment_counts,
             average_load,
@@ -308,7 +308,7 @@ impl LoadBalancer {
 #[derive(Debug)]
 pub struct LoadBalancingStats {
     pub total_nodes: usize,
-    pub available_nodes: usize,
+    pub availablenodes: usize,
     pub total_assignments: usize,
     pub assignment_distribution: HashMap<String, usize>,
     pub average_load: f64,
@@ -349,18 +349,18 @@ mod tests {
     use std::net::{IpAddr, Ipv4Addr};
 
     #[test]
-    fn test_node_load_creation() {
+    fn test_nodeload_creation() {
         let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
         let node = NodeLoad::new("node1".to_string(), address);
 
-        assert_eq!(node.node_id, "node1");
+        assert_eq!(node.nodeid, "node1");
         assert_eq!(node.address, address);
         assert!(node.is_available());
         assert_eq!(node.load_score(), 0.0);
     }
 
     #[test]
-    fn test_node_load_update() {
+    fn test_nodeload_update() {
         let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
         let mut node = NodeLoad::new("node1".to_string(), address);
 
@@ -388,14 +388,14 @@ mod tests {
         let assignment2 = balancer.assign_task("task2".to_string()).unwrap();
 
         // Should alternate between nodes
-        assert_ne!(assignment1.node_id, assignment2.node_id);
+        assert_ne!(assignment1.nodeid, assignment2.nodeid);
     }
 
     #[test]
     fn test_load_balancing_stats() {
         let mut stats = LoadBalancingStats {
             total_nodes: 3,
-            available_nodes: 3,
+            availablenodes: 3,
             total_assignments: 100,
             assignment_distribution: HashMap::new(),
             average_load: 0.5,

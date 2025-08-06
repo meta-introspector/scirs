@@ -62,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate BLAS operations (GEMM, AXPY)
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 1: BLAS Operations");
     println!("-----------------------");
 
@@ -78,12 +78,12 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     let b_data: Vec<f32> = (0..k * n).map(|i| (i as f32) * 0.02).collect();
 
     // Create GPU buffers
-    let a_buffer = _context.create_buffer_from_slice(&a_data);
-    let b_buffer = _context.create_buffer_from_slice(&b_data);
-    let c_buffer = _context.create_buffer::<f32>(m * n);
+    let a_buffer = context.create_buffer_from_slice(&a_data);
+    let b_buffer = context.create_buffer_from_slice(&b_data);
+    let c_buffer = context.create_buffer::<f32>(m * n);
 
     // Get GEMM kernel
-    let gemm_kernel = _context.get_kernel(gemm)?;
+    let gemm_kernel = context.get_kernel(gemm)?;
 
     // Set kernel parameters
     gemm_kernel.set_buffer("a", &a_buffer);
@@ -114,11 +114,11 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     let x_data: Vec<f32> = (0..size).map(|i| i as f32).collect();
     let y_data: Vec<f32> = (0..size).map(|i| (i as f32) * 0.5).collect();
 
-    let x_buffer = _context.create_buffer_from_slice(&x_data);
-    let y_buffer = _context.create_buffer_from_slice(&y_data);
+    let x_buffer = context.create_buffer_from_slice(&x_data);
+    let y_buffer = context.create_buffer_from_slice(&y_data);
 
     // Get AXPY kernel
-    let axpy_kernel = _context.get_kernel(axpy)?;
+    let axpy_kernel = context.get_kernel(axpy)?;
 
     // Set kernel parameters
     axpy_kernel.set_buffer("x", &x_buffer);
@@ -142,18 +142,18 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate reduction operations (sum, min, max, mean, std)
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 2: Reduction Operations");
     println!("----------------------------");
 
     let size = 1024;
     let data: Vec<f32> = (0..size).map(|i| ((i as f32) * 0.1).sin()).collect();
-    let input_buffer = _context.create_buffer_from_slice(&data);
+    let input_buffer = context.create_buffer_from_slice(&data);
 
     // Sum reduction
     println!("2.1 Sum Reduction");
-    let sum_kernel = _context.get_kernel(sum_reduce)?;
-    let sum_buffer = _context.create_buffer::<f32>(1);
+    let sum_kernel = context.get_kernel(sum_reduce)?;
+    let sum_buffer = context.create_buffer::<f32>(1);
 
     sum_kernel.set_buffer("input", &input_buffer);
     sum_kernel.set_buffer("output", &sum_buffer);
@@ -167,8 +167,8 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 
     // Min reduction
     println!("\n2.2 Min Reduction");
-    let min_kernel = _context.get_kernel(min_reduce)?;
-    let min_buffer = _context.create_buffer::<f32>(1);
+    let min_kernel = context.get_kernel(min_reduce)?;
+    let min_buffer = context.create_buffer::<f32>(1);
 
     min_kernel.set_buffer("input", &input_buffer);
     min_kernel.set_buffer("output", &min_buffer);
@@ -181,8 +181,8 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 
     // Max reduction
     println!("\n2.3 Max Reduction");
-    let max_kernel = _context.get_kernel(max_reduce)?;
-    let max_buffer = _context.create_buffer::<f32>(1);
+    let max_kernel = context.get_kernel(max_reduce)?;
+    let max_buffer = context.create_buffer::<f32>(1);
 
     max_kernel.set_buffer("input", &input_buffer);
     max_kernel.set_buffer("output", &max_buffer);
@@ -195,8 +195,8 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 
     // Mean reduction
     println!("\n2.4 Mean Reduction");
-    let mean_kernel = _context.get_kernel(mean_reduce)?;
-    let mean_buffer = _context.create_buffer::<f32>(1);
+    let mean_kernel = context.get_kernel(mean_reduce)?;
+    let mean_buffer = context.create_buffer::<f32>(1);
 
     mean_kernel.set_buffer("input", &input_buffer);
     mean_kernel.set_buffer("output", &mean_buffer);
@@ -215,7 +215,7 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate machine learning operations (activations, pooling, softmax)
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 3: Machine Learning Operations");
     println!("----------------------------------");
 
@@ -224,10 +224,10 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 
     // ReLU activation
     println!("3.1 ReLU Activation");
-    let input_buffer = _context.create_buffer_from_slice(&data);
-    let output_buffer = _context.create_buffer::<f32>(size);
+    let input_buffer = context.create_buffer_from_slice(&data);
+    let output_buffer = context.create_buffer::<f32>(size);
 
-    let relu_kernel = _context.get_kernel(relu)?;
+    let relu_kernel = context.get_kernel(relu)?;
     relu_kernel.set_buffer("input", &input_buffer);
     relu_kernel.set_buffer("output", &output_buffer);
     relu_kernel.set_u32("n", size as u32);
@@ -249,7 +249,7 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 
     // Sigmoid activation
     println!("\n3.2 Sigmoid Activation");
-    let sigmoid_kernel = _context.get_kernel(sigmoid)?;
+    let sigmoid_kernel = context.get_kernel(sigmoid)?;
     sigmoid_kernel.set_buffer("input", &input_buffer);
     sigmoid_kernel.set_buffer("output", &output_buffer);
     sigmoid_kernel.set_u32("n", size as u32);
@@ -267,7 +267,7 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 
     // Tanh activation
     println!("\n3.3 Tanh Activation");
-    let tanh_kernel = _context.get_kernel(tanh)?;
+    let tanh_kernel = context.get_kernel(tanh)?;
     tanh_kernel.set_buffer("input", &input_buffer);
     tanh_kernel.set_buffer("output", &output_buffer);
     tanh_kernel.set_u32("n", size as u32);
@@ -288,7 +288,7 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate transform operations (FFT)
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 4: Transform Operations");
     println!("---------------------------");
 
@@ -316,11 +316,11 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
         complex_data.push(imag_data[i]);
     }
 
-    let input_buffer = _context.create_buffer_from_slice(&complex_data);
-    let output_buffer = _context.create_buffer::<f32>(complex_data.len());
+    let input_buffer = context.create_buffer_from_slice(&complex_data);
+    let output_buffer = context.create_buffer::<f32>(complex_data.len());
 
     // Get FFT kernel (note: this is currently a placeholder implementation)
-    let fft_kernel = _context.get_kernel(fft_1d_forward)?;
+    let fft_kernel = context.get_kernel(fft_1d_forward)?;
     fft_kernel.set_buffer("input", &input_buffer);
     fft_kernel.set_buffer("output", &output_buffer);
     fft_kernel.set_u32("n", size as u32);
@@ -342,7 +342,7 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate kernel specialization capabilities
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn context(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 5: Kernel Specialization");
     println!("-----------------------------");
 
@@ -356,7 +356,7 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
         .with_numeric_param("beta", 0.0);
 
     // Get specialized kernel for large matrices
-    match _context.get_specialized_kernel("gemm", &params) {
+    match context.get_specialized_kernel("gemm", &params) {
         Ok(_specialized_kernel) => {
             println!("   Successfully created specialized GEMM kernel for large matrices");
             println!("   Dimensions: 1024x512 * 512x768 = 1024x768");
@@ -377,7 +377,7 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
         .with_string_param("direction", "forward")
         .with_string_param("dimension", "1d");
 
-    match _context.get_specialized_kernel("fft_1d_forward", &fft_params) {
+    match context.get_specialized_kernel("fft_1d_forward", &fft_params) {
         Ok(_specialized_fft) => {
             println!("   Successfully created specialized FFT kernel for 256-point transform");
             println!("   This could use radix-4 or radix-8 algorithms optimized for this size");
@@ -392,7 +392,7 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     let axpy_params =
         KernelParams::new(DataType::Float32).with_numeric_param("alpha", std::f64::consts::PI);
 
-    match _context.get_specialized_kernel("axpy", &axpy_params) {
+    match context.get_specialized_kernel("axpy", &axpy_params) {
         Ok(_specialized_axpy) => {
             println!("   Successfully created specialized AXPY kernel with alpha = PI");
             println!("   This kernel has the alpha value hardcoded for better performance");
@@ -408,12 +408,12 @@ fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 
 /// Helper function to compare CPU and GPU results
 #[allow(dead_code)]
-fn result(_results: &[f32], tolerance: f32) -> bool {
-    if _cpu_result.len() != gpu_result.len() {
+fn result(cpu_result: &[f32], gpuresult: &[f32], tolerance: f32) -> bool {
+    if cpu_result.len() != gpuresult.len() {
         return false;
     }
 
-    for (cpu_val, gpu_val) in cpu_result.iter().zip(gpu_result.iter()) {
+    for (cpu_val, gpu_val) in cpu_result.iter().zip(gpuresult.iter()) {
         if (cpu_val - gpu_val).abs() > tolerance {
             return false;
         }
@@ -424,7 +424,7 @@ fn result(_results: &[f32], tolerance: f32) -> bool {
 
 /// Helper function to print performance comparison
 #[allow(dead_code)]
-fn time(_execution_time: f64) {
+fn time(operation: &str, cpu_time: f64, gpu_time: f64) {
     let speedup = cpu_time / gpu_time;
     println!("   {operation} Performance:");
     println!("     CPU: {:.2} ms", cpu_time * 1000.0);

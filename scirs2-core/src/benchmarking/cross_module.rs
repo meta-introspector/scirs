@@ -393,7 +393,7 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate linear algebra + statistics workflow
-    fn simulate_linalg_stats_workflow(&self, data_size: usize) -> CoreResult<()> {
+    fn simulate_linalg_stats_workflow(&self, datasize: usize) -> CoreResult<()> {
         // Simulate creating matrices and computing statistics
         let matrix_size = (data_size as f64).sqrt() as usize;
         let matrix_elements = matrix_size * matrix_size;
@@ -439,7 +439,7 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate signal processing + FFT workflow
-    fn simulate_signal_fft_workflow(&self, data_size: usize) -> CoreResult<()> {
+    fn simulate_signal_fft_workflow(&self, datasize: usize) -> CoreResult<()> {
         // Simulate signal processing operations
         let signal_length = data_size / std::mem::size_of::<f64>();
 
@@ -483,7 +483,7 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate data I/O + processing workflow
-    fn simulate_io_processing_workflow(&self, data_size: usize) -> CoreResult<()> {
+    fn simulate_io_processing_workflow(&self, datasize: usize) -> CoreResult<()> {
         // Simulate I/O operations (memory allocation and access)
         let buffer = vec![0u8; data_size];
 
@@ -538,7 +538,7 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate machine learning workflow
-    fn simulate_ml_workflow(&self, data_size: usize) -> CoreResult<()> {
+    fn simulate_ml_workflow(&self, datasize: usize) -> CoreResult<()> {
         let feature_count = (data_size / 1000).max(10);
         let sample_count = data_size / feature_count;
 
@@ -595,7 +595,7 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate zero-copy operations
-    fn simulate_zero_copy_workflow(&self, data_size: usize) -> CoreResult<()> {
+    fn simulate_zero_copy_workflow(&self, datasize: usize) -> CoreResult<()> {
         // Create data buffer
         let buffer = vec![1.0f64; data_size / std::mem::size_of::<f64>()];
 
@@ -651,7 +651,7 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate memory-mapped workflow
-    fn simulate_mmap_workflow(&self, data_size: usize) -> CoreResult<()> {
+    fn simulate_mmap_workflow(&self, datasize: usize) -> CoreResult<()> {
         // Simulate memory-mapped array access patterns
         let element_count = data_size / std::mem::size_of::<f64>();
         let chunk_size = element_count / 16; // Process in 16 chunks
@@ -702,7 +702,7 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate out-of-core workflow
-    fn simulate_out_of_core_workflow(&self, data_size: usize) -> CoreResult<()> {
+    fn simulate_out_of_core_workflow(&self, datasize: usize) -> CoreResult<()> {
         // Simulate processing data larger than available memory
         let total_elements = data_size / std::mem::size_of::<f64>();
         let chunk_size = 1024; // Process 1024 elements at a time
@@ -847,7 +847,7 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate scalable operation for data size testing
-    fn simulate_scalable_operation(&self, data_size: usize) -> CoreResult<()> {
+    fn simulate_scalable_operation(&self, datasize: usize) -> CoreResult<()> {
         let elements = data_size / std::mem::size_of::<f64>();
 
         // Linear complexity operation - should scale well
@@ -948,7 +948,7 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate scientific simulation workflow
-    fn simulate_scientific_workflow(&self, data_size: usize) -> CoreResult<()> {
+    fn simulate_scientific_workflow(&self, datasize: usize) -> CoreResult<()> {
         // Simulate a typical scientific simulation: ODE solving + linear algebra
         let grid_size = (data_size as f64).sqrt() as usize;
         let time_steps = 100;
@@ -1015,7 +1015,7 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate data analysis workflow
-    fn simulate_data_analysis_workflow(&self, data_size: usize) -> CoreResult<()> {
+    fn simulate_data_analysis_workflow(&self, datasize: usize) -> CoreResult<()> {
         // Simulate: Data Loading -> Preprocessing -> Statistical Analysis -> Signal Processing
         let sample_count = data_size / std::mem::size_of::<f64>();
 
@@ -1087,17 +1087,17 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate machine learning training workflow
-    fn simulate_ml_training_workflow(&self, data_size: usize) -> CoreResult<()> {
+    fn simulate_ml_training_workflow(&self, datasize: usize) -> CoreResult<()> {
         // Simulate: Data Prep -> Training Loop (Forward + Backward + Optimization)
         let batch_size = 32;
         let feature_dim = 128;
         let hidden_dim = 256;
-        let num_batches = (data_size / (batch_size * feature_dim)).max(1);
+        let numbatches = (data_size / (batch_size * feature_dim)).max(1);
         let epochs = 10;
 
         // Simulate training loop
         for _epoch in 0..epochs {
-            for _batch in 0..num_batches {
+            for _batch in 0..numbatches {
                 // Forward pass simulation (matrix multiplications)
                 for i in 0..batch_size {
                     for j in 0..hidden_dim {

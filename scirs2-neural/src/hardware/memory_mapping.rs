@@ -107,7 +107,7 @@ impl MemoryMapper {
                 "No suitable buffer in pool".to_string(),
             ))
     /// Free an allocation
-    pub fn free(&self, buffer_id: u64) -> Result<()> {
+    pub fn free(&self, bufferid: u64) -> Result<()> {
         if let Some(allocation) = allocations.remove(&buffer_id) {
             let size = allocation.layout.size;
             // Return to pool if using pool strategy
@@ -216,7 +216,7 @@ impl MemoryMapper {
             num_allocations: allocations.len(),
             fragmentation,
     /// Align size to alignment requirement
-    fn align_size(_size: usize, alignment: usize) -> usize {
+    fn align_size(size: usize, alignment: usize) -> usize {
         (size + alignment - 1) & !(alignment - 1)
 /// Memory layout specification
 pub struct MemoryLayout {
@@ -270,7 +270,7 @@ struct MemoryPool {
     current_size: usize,
 impl MemoryPool {
     /// Create a new memory pool
-    fn new(_max_size: usize) -> Self {
+    fn new(_maxsize: usize) -> Self {
         Self {
             free_buffers: HashMap::new(),
             max_size,

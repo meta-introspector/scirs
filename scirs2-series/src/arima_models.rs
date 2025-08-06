@@ -388,7 +388,7 @@ where
     }
 
     /// Calculate gradient for MA coefficient
-    fn ma_gradient(&self_data: &Array1<F>, residuals: &Array1<F>, idx: usize) -> Result<F> {
+    fn ma_gradient(selfdata: &Array1<F>, residuals: &Array1<F>, idx: usize) -> Result<F> {
         let n = residuals.len();
         let mut grad = F::zero();
 
@@ -609,33 +609,33 @@ fn stepwise_search<F>(
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    let mut best_model = ArimaModel::new(0, _d, 0)?;
+    let mut best_model = ArimaModel::new(0, d, 0)?;
     let mut best_ic = F::infinity();
     let mut best_params = SarimaParams {
-        pdq: (0, _d, 0),
+        pdq: (0, d, 0),
         seasonal_pdq: (0, seasonal_d, 0),
         seasonal_period: options.seasonal_period.unwrap_or(1),
     };
 
     // Start with simple models
     let candidates = vec![
-        (0, _d, 0),
-        (1, _d, 0),
-        (0, _d, 1),
-        (1, _d, 1),
-        (2, _d, 0),
-        (0, _d, 2),
+        (0, d, 0),
+        (1, d, 0),
+        (0, d, 1),
+        (1, d, 1),
+        (2, d, 0),
+        (0, d, 2),
     ];
 
     for (p_, q) in candidates {
         if p <= options.max_p && q <= options.max_q {
-            if let Ok(mut model) = ArimaModel::new(p, _d, q) {
+            if let Ok(mut model) = ArimaModel::new(p, d, q) {
                 if model.fit(data).is_ok() {
                     let ic = model.get_ic(options.criterion);
                     if ic < best_ic {
                         best_ic = ic;
                         best_model = model;
-                        best_params.pdq = (p, _d, q);
+                        best_params.pdq = (p, d, q);
                     }
                 }
             }
@@ -653,13 +653,13 @@ where
                 && new_q <= options.max_q
                 && (new_p != best_p || new_q != best_q)
             {
-                if let Ok(mut model) = ArimaModel::new(new_p, _d, new_q) {
+                if let Ok(mut model) = ArimaModel::new(new_p, d, new_q) {
                     if model.fit(data).is_ok() {
                         let ic = model.get_ic(options.criterion);
                         if ic < best_ic {
                             best_ic = ic;
                             best_model = model;
-                            best_params.pdq = (new_p, _d, new_q);
+                            best_params.pdq = (new_p, d, new_q);
                         }
                     }
                 }
@@ -672,7 +672,7 @@ where
 
 /// Determine optimal differencing order
 #[allow(dead_code)]
-fn determine_differencing_order<S, F>(_data: &ArrayBase<S, Ix1>, max_d: usize) -> Result<usize>
+fn determine_differencing_order<S, F>(_data: &ArrayBase<S, Ix1>, maxd: usize) -> Result<usize>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
@@ -714,7 +714,7 @@ where
     let alpha = F::from(0.05).unwrap();
 
     for _d in 0..=max_d {
-        let diff_data = apply_seasonal_differencing(data, period, _d)?;
+        let diff_data = apply_seasonal_differencing(data, period, d)?;
 
         // If the series has too few observations after differencing, stop
         if diff_data.len() < 10 {
@@ -734,12 +734,12 @@ where
 
 /// Apply single differencing
 #[allow(dead_code)]
-fn apply_single_differencing<S, F>(_data: &ArrayBase<S, Ix1>, d: usize) -> Result<Array1<F>>
+fn apply_single_differencing<S, F>(data: &ArrayBase<S, Ix1>, d: usize) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive,
 {
-    let mut result = _data.to_owned();
+    let mut result = data.to_owned();
 
     for _ in 0..d {
         if result.len() <= 1 {

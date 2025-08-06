@@ -383,7 +383,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Draw simple text on an image
 #[allow(dead_code)]
-fn drawtext(_img: &mut image::RgbaImage, text: &str, x: u32, y: u32) {
+fn drawtext(img: &mut image::RgbaImage, text: &str, x: u32, y: u32) {
     let color = image::Rgba([255, 255, 255, 255]);
     let shadow_color = image::Rgba([0, 0, 0, 192]);
 
@@ -404,8 +404,8 @@ fn drawtext(_img: &mut image::RgbaImage, text: &str, x: u32, y: u32) {
 
 /// Draw a single character (simple bitmap font)
 #[allow(dead_code)]
-fn draw_char(_img: &mut image::RgbaImage, c: char, x: u32, y: u32, color: image::Rgba<u8>) {
-    let (width, height) = _img.dimensions();
+fn draw_char(img: &mut image::RgbaImage, c: char, x: u32, y: u32, color: image::Rgba<u8>) {
+    let (width, height) = img.dimensions();
 
     // Simple bitmap patterns for letters and numbers
     let pattern = match c {
@@ -542,7 +542,7 @@ fn draw_char(_img: &mut image::RgbaImage, c: char, x: u32, y: u32, color: image:
                 let px = x + dx;
                 let py = y + dy as u32;
                 if px < width && py < height {
-                    _img.put_pixel(px, py, color);
+                    img.put_pixel(px, py, color);
                 }
             }
         }

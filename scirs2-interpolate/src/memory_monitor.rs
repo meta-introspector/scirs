@@ -290,10 +290,10 @@ pub enum PerformanceGrade {
 
 impl MemoryMonitor {
     /// Create a new memory monitor
-    pub fn new(_name: impl Into<String>) -> Self {
-        let _name = _name.into();
+    pub fn new(name: impl Into<String>) -> Self {
+        let _name = name.into();
         let monitor = Self {
-            _name: _name.clone(),
+            _name: name.clone(),
             allocations: HashMap::new(),
             allocation_history: VecDeque::new(),
             peak_memory_bytes: 0,
@@ -310,7 +310,7 @@ impl MemoryMonitor {
     }
 
     /// Track a memory allocation
-    pub fn track_allocation(&mut self, size_bytes: usize, category: impl Into<String>) {
+    pub fn track_allocation(&mut self, sizebytes: usize, category: impl Into<String>) {
         if !self.active {
             return;
         }
@@ -357,7 +357,7 @@ impl MemoryMonitor {
     }
 
     /// Track a memory deallocation
-    pub fn track_deallocation(&mut self, size_bytes: usize, category: impl Into<String>) {
+    pub fn track_deallocation(&mut self, sizebytes: usize, category: impl Into<String>) {
         if !self.active {
             return;
         }
@@ -496,7 +496,8 @@ impl MemoryMonitor {
             s if s >= 0.9 => PerformanceGrade::Excellent,
             s if s >= 0.7 => PerformanceGrade::Good,
             s if s >= 0.5 => PerformanceGrade::Fair,
-            s if s >= 0.3 => PerformanceGrade::Poor_ => PerformanceGrade::Critical,
+            s if s >= 0.3 => PerformanceGrade::Poor,
+            _ => PerformanceGrade::Critical,
         };
 
         PerformanceSummary {
@@ -673,7 +674,7 @@ pub fn stop_monitoring() {
 
 /// Register a memory monitor with the global system
 #[allow(dead_code)]
-fn register_monitor(_name: &str, monitor: MemoryMonitor) {
+fn register_monitor(name: &str, monitor: MemoryMonitor) {
     if let Some(global_monitor) = GLOBAL_MONITOR.get() {
         if let Ok(mut global) = global_monitor.lock() {
             if global.enabled && global.monitors.len() < global.max_monitors {
@@ -688,11 +689,11 @@ fn register_monitor(_name: &str, monitor: MemoryMonitor) {
 
 /// Update global memory statistics
 #[allow(dead_code)]
-fn update_global_stats(_size_bytes: usize, is_allocation: bool) {
+fn update_global_stats(_size_bytes: usize, isallocation: bool) {
     if let Some(global_monitor) = GLOBAL_MONITOR.get() {
         if let Ok(mut global) = global_monitor.lock() {
             if is_allocation {
-                global.global_stats.total_allocated_bytes += _size_bytes;
+                global.global_stats.total_allocated_bytes += size_bytes;
                 global.global_stats.total_allocations += 1;
 
                 if global.global_stats.total_allocated_bytes > global.global_stats.peak_total_bytes
@@ -722,7 +723,7 @@ pub fn get_global_stats() -> Option<GlobalMemoryStats> {
 
 /// Get report for a specific monitor
 #[allow(dead_code)]
-pub fn get_monitor_report(_name: &str) -> Option<MemoryReport> {
+pub fn get_monitor_report(name: &str) -> Option<MemoryReport> {
     GLOBAL_MONITOR
         .get()
         .and_then(|global_monitor| {
@@ -890,7 +891,7 @@ impl Default for StressProfilingConfig {
 
 impl StressMemoryProfiler {
     /// Create a new stress memory profiler
-    pub fn new(_name: impl Into<String>, config: Option<StressProfilingConfig>) -> Self {
+    pub fn new(name: impl Into<String>, config: Option<StressProfilingConfig>) -> Self {
         Self {
             base_monitor: MemoryMonitor::new(_name),
             stress_metrics: StressMemoryMetrics {
@@ -908,7 +909,7 @@ impl StressMemoryProfiler {
     }
 
     /// Start profiling under specific stress condition
-    pub fn start_stress_profiling(&mut self, stress_condition: &str) {
+    pub fn start_stress_profiling(&mut self, stresscondition: &str) {
         println!("Starting stress memory profiling for: {}", stress_condition);
 
         // Take initial snapshot
@@ -950,7 +951,7 @@ impl StressMemoryProfiler {
     }
 
     /// Track memory deallocation during stress test
-    pub fn track_stress_deallocation(&mut self, size_bytes: usize, category: impl Into<String>) {
+    pub fn track_stress_deallocation(&mut self, sizebytes: usize, category: impl Into<String>) {
         self.base_monitor.track_deallocation(size_bytes, category);
 
         // Update stress metrics
@@ -958,7 +959,7 @@ impl StressMemoryProfiler {
     }
 
     /// Take a memory snapshot for stress analysis
-    fn take_memory_snapshot(&mut self, active_stress_conditions: Vec<String>) {
+    fn take_memory_snapshot(&mut self, active_stressconditions: Vec<String>) {
         let snapshot = MemorySnapshot {
             timestamp: Instant::now(),
             total_memory: self.base_monitor.current_memory_bytes,
@@ -1074,14 +1075,14 @@ impl StressMemoryProfiler {
         self.stress_metrics.concurrent_overhead = overhead as f64 / concurrent_threads as f64;
 
         println!(
-            "Concurrent access overhead: {:.1}KB per thread ({} _threads)",
+            "Concurrent access overhead: {:.1}KB per thread ({} threads)",
             self.stress_metrics.concurrent_overhead / 1024.0,
             concurrent_threads
         );
     }
 
     /// Measure memory recovery time after stress
-    pub fn measure_recovery_time(&mut self, stress_end_time: Instant) {
+    pub fn measure_recovery_time(&mut self, stress_endtime: Instant) {
         let _recovery_start_memory = self.base_monitor.current_memory_bytes;
 
         // Monitor memory for recovery (simplified - would need async monitoring in practice)
@@ -1231,7 +1232,8 @@ impl StressMemoryProfiler {
             s if s >= 0.9 => StressPerformanceGrade::Excellent,
             s if s >= 0.7 => StressPerformanceGrade::Good,
             s if s >= 0.5 => StressPerformanceGrade::Fair,
-            s if s >= 0.3 => StressPerformanceGrade::Poor_ => StressPerformanceGrade::Critical,
+            s if s >= 0.3 => StressPerformanceGrade::Poor,
+            _ => StressPerformanceGrade::Critical,
         }
     }
 
@@ -1360,7 +1362,7 @@ pub enum StressPerformanceGrade {
 
 /// Create a stress memory profiler for testing
 #[allow(dead_code)]
-pub fn create_stress_profiler(_name: impl Into<String>) -> StressMemoryProfiler {
+pub fn create_stress_profiler(name: impl Into<String>) -> StressMemoryProfiler {
     StressMemoryProfiler::new(_name, None)
 }
 

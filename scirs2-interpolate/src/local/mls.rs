@@ -166,7 +166,8 @@ where
             basis,
             bandwidth,
             epsilon: F::from_f64(1e-10).unwrap(),
-            max_points: None, _phantom: PhantomData,
+            max_points: None,
+            _phantom: PhantomData,
         })
     }
 
@@ -182,7 +183,7 @@ where
     /// # Returns
     ///
     /// Self for method chaining
-    pub fn with_max_points(mut self, max_points: usize) -> Self {
+    pub fn with_max_points(mut self, maxpoints: usize) -> Self {
         self.max_points = Some(max_points);
         self
     }
@@ -298,7 +299,8 @@ where
 
         // Filter out points with zero weight (if using compactly supported weight function)
         let effective_radius = match self.weight_fn {
-            WeightFunction::WendlandC2 | WeightFunction::CubicSpline => self.bandwidth_ => F::infinity(),
+            WeightFunction::WendlandC2 | WeightFunction::CubicSpline => self.bandwidth,
+            _ => F::infinity(),
         };
 
         let mut indices = Vec::new();

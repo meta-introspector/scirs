@@ -129,9 +129,9 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
     DistillationTrainer<F>
 {
     /// Create a new distillation trainer
-    pub fn new(_method: DistillationMethod) -> Self {
+    pub fn new(method: DistillationMethod) -> Self {
         Self {
-            _method,
+            method,
             feature_extractors: HashMap::new(),
             adaptation_layers: HashMap::new(),
             training_stats: DistillationStatistics {

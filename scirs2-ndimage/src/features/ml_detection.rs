@@ -68,11 +68,11 @@ pub struct LearnedEdgeDetector {
 
 impl LearnedEdgeDetector {
     /// Create a new learned edge detector with pre-trained weights
-    pub fn new(_weights: Option<FeatureDetectorWeights>, config: Option<MLDetectorConfig>) -> Self {
-        let _weights = _weights.unwrap_or_else(|| Self::default_weights());
+    pub fn new(weights: Option<FeatureDetectorWeights>, config: Option<MLDetectorConfig>) -> Self {
+        let weights = weights.unwrap_or_else(|| Self::default_weights());
         let config = config.unwrap_or_default();
 
-        Self { _weights, config }
+        Self { weights, config }
     }
 
     /// Get default pre-trained weights (simplified example)
@@ -281,7 +281,7 @@ impl LearnedEdgeDetector {
     }
 
     /// Non-maximum suppression for edge thinning
-    fn non_max_suppression(&self, edge_map: &ArrayView2<f64>) -> NdimageResult<Array2<f64>> {
+    fn non_max_suppression(&self, edgemap: &ArrayView2<f64>) -> NdimageResult<Array2<f64>> {
         let (height, width) = edge_map.dim();
         let mut suppressed = Array2::zeros((height, width));
 
@@ -336,10 +336,10 @@ pub struct LearnedKeypointDescriptor {
 
 impl LearnedKeypointDescriptor {
     /// Create a new learned keypoint descriptor
-    pub fn new(_patch_size: usize, descriptor_size: usize) -> Self {
+    pub fn new(_patch_size: usize, descriptorsize: usize) -> Self {
         // Initialize with random projection matrix (simplified)
         let weights =
-            Array2::fromshape_fn((descriptor_size, _patch_size * _patch_size), |(i, j)| {
+            Array2::fromshape_fn((descriptor_size, _patch_size * patch_size), |(i, j)| {
                 // Simple deterministic "random" weights
                 ((i * 7 + j * 13) % 11) as f64 / 11.0 - 0.5
             });
@@ -417,10 +417,10 @@ pub struct SemanticFeatureExtractor {
 
 impl SemanticFeatureExtractor {
     /// Create a new semantic feature extractor
-    pub fn new(_config: Option<MLDetectorConfig>) -> Self {
+    pub fn new(config: Option<MLDetectorConfig>) -> Self {
         Self {
             feature_maps: HashMap::new(),
-            _config: _config.unwrap_or_default(),
+            _config: config.unwrap_or_default(),
         }
     }
 
@@ -630,13 +630,13 @@ pub struct ObjectProposalGenerator {
 
 impl ObjectProposalGenerator {
     /// Create a new object proposal generator
-    pub fn new(_config: Option<MLDetectorConfig>) -> Self {
+    pub fn new(config: Option<MLDetectorConfig>) -> Self {
         Self {
             min_size: 16,
             max_size: 256,
             stride: 8,
             aspect_ratios: vec![0.5, 1.0, 2.0],
-            _config: _config.unwrap_or_default(),
+            _config: config.unwrap_or_default(),
         }
     }
 

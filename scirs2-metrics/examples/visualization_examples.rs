@@ -15,7 +15,7 @@ use scirs2__metrics::{
 
 // Helper function to print what would be rendered
 #[allow(dead_code)]
-fn print_visualization_info(_title: &str, plot_type: &PlotType, filename: &str) {
+fn print_visualization_info(_title: &str, plottype: &PlotType, filename: &str) {
     println!("Would render a {plot_type:?} plot titled '{_title}' to {filename}");
 }
 

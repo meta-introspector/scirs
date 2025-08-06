@@ -309,7 +309,7 @@ where
         if !value.is_nan() && !value.is_infinite() {
             // Keep track of the sum for calculating importance later
             value_sum += value.abs();
-            _points.push(point);
+            points.push(point);
             values.push(value);
         }
     }

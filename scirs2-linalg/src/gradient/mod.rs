@@ -227,7 +227,7 @@ where
     }
 
     // Check that softmax outputs sum to 1 for each example
-    let (batch_size, _num_classes) = softmax_output.dim();
+    let (batch_size, num_classes) = softmax_output.dim();
     for i in 0..batch_size {
         let row_sum = softmax_output.slice(s![i, ..]).sum();
         if (row_sum - F::one()).abs() > F::from(1e-5).unwrap() {

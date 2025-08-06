@@ -1541,15 +1541,15 @@ impl<T: Float> Default for EvaluationBudget {
 
 impl<T: Float + Send + Sync> HyperparameterOptimizationPipeline<T> {
     /// Create new hyperparameter optimization pipeline
-    pub fn new(_config: HPOConfig<T>) -> Result<Self> {
+    pub fn new(config: HPOConfig<T>) -> Result<Self> {
         let strategies = Self::create_strategies(&_config)?;
         let parameter_space = ParameterSpaceManager::new(_config.parameter_space.clone())?;
         let evaluation_scheduler = EvaluationScheduler::new(
             SchedulerConfig::default(),
-            _config.resource_constraints.clone(),
+            config.resource_constraints.clone(),
         )?;
         let result_database = HPOResultDatabase::new();
-        let multi_fidelity_manager = if let Some(mf_config) = _config.multi_fidelity.clone() {
+        let multi_fidelity_manager = if let Some(mf_config) = config.multi_fidelity.clone() {
             Some(MultiFidelityManager::new(mf_config)?)
         } else {
             None
@@ -1558,7 +1558,7 @@ impl<T: Float + Send + Sync> HyperparameterOptimizationPipeline<T> {
         let ensemble_optimizer = EnsembleOptimizer::new(_config.ensemble_settings.clone())?;
         
         Ok(Self {
-            _config,
+            config,
             strategies,
             parameter_space,
             evaluation_scheduler,
@@ -1744,7 +1744,7 @@ impl<T: Float + Send + Sync> HyperparameterOptimizationPipeline<T> {
     }
     
     /// Finalize optimization and return results
-    fn finalize_optimization(&self, total_time: Duration) -> Result<HPOResults<T>> {
+    fn finalize_optimization(&self, totaltime: Duration) -> Result<HPOResults<T>> {
         let best_result = self.result_database.get_best_result("performance");
         let pareto_front = self.result_database.get_pareto_front();
         let statistics = self.collect_optimization_statistics(total_time);
@@ -1759,7 +1759,7 @@ impl<T: Float + Send + Sync> HyperparameterOptimizationPipeline<T> {
     }
     
     // Helper methods would be implemented here...
-    fn create_strategies(_config: &HPOConfig<T>) -> Result<Vec<Box<dyn HPOStrategy<T>>>> {
+    fn create_strategies(config: &HPOConfig<T>) -> Result<Vec<Box<dyn HPOStrategy<T>>>> {
         // Implementation would create strategy instances based on _config
         Ok(vec![])
     }
@@ -1791,7 +1791,7 @@ impl<T: Float + Send + Sync> HyperparameterOptimizationPipeline<T> {
         }
     }
     
-    fn collect_optimization_statistics(&self, total_time: Duration) -> OptimizationStatistics<T> {
+    fn collect_optimization_statistics(&self, totaltime: Duration) -> OptimizationStatistics<T> {
         OptimizationStatistics {
             total_evaluations: self.optimization_state.total_evaluations,
             successful_evaluations: self.result_database.successful_evaluations(),
@@ -1870,9 +1870,9 @@ pub struct OptimizationTracePoint<T: Float> {
 
 // Implementation stubs for complex components - these would be fully implemented in practice
 impl<T: Float + Send + Sync> ParameterSpaceManager<T> {
-    fn new(_space: ParameterSearchSpace) -> Result<Self> {
+    fn new(space: ParameterSearchSpace) -> Result<Self> {
         Ok(Self {
-            _space: _space,
+            _space: space,
             transformations: HashMap::new(),
             validation_rules: Vec::new(),
             sampling_strategies: HashMap::new()})
@@ -1890,7 +1890,7 @@ impl<T: Float + Send + Sync> EvaluationScheduler<T> {
             pending_queue: VecDeque::new(),
             running_evaluations: HashMap::new(),
             completed_evaluations: VecDeque::new(),
-            _config: _config,
+            _config: config,
             resource_monitor: ResourceMonitor::new(_constraints)})
     }
     
@@ -1950,9 +1950,9 @@ impl<T: Float + Send + Sync> HPOResultDatabase<T> {
 }
 
 impl<T: Float + Send + Sync> MultiFidelityManager<T> {
-    fn new(_settings: MultiFidelitySettings<T>) -> Result<Self> {
+    fn new(settings: MultiFidelitySettings<T>) -> Result<Self> {
         Ok(Self {
-            _settings: _settings,
+            _settings: settings,
             fidelity_assignments: HashMap::new(),
             promotion_queue: VecDeque::new(),
             resource_tracker: FidelityResourceTracker::new()})
@@ -1969,9 +1969,9 @@ impl<T: Float + Send + Sync> MultiFidelityManager<T> {
 }
 
 impl<T: Float + Send + Sync> EarlyStoppingController<T> {
-    fn new(_criteria: EarlyStoppingCriteria<T>) -> Self {
+    fn new(criteria: EarlyStoppingCriteria<T>) -> Self {
         Self {
-            _criteria: _criteria,
+            _criteria: criteria,
             performance_history: VecDeque::new(),
             best_performance: None,
             iterations_without_improvement: 0,
@@ -1989,9 +1989,9 @@ impl<T: Float + Send + Sync> EarlyStoppingController<T> {
 }
 
 impl<T: Float + Send + Sync> EnsembleOptimizer<T> {
-    fn new(_settings: EnsembleSettings<T>) -> Result<Self> {
+    fn new(settings: EnsembleSettings<T>) -> Result<Self> {
         Ok(Self {
-            _settings: _settings,
+            _settings: settings,
             strategies: Vec::new(),
             performance_tracker: StrategyPerformanceTracker::new(),
             weight_controller: WeightAdaptationController::new(),
@@ -2003,7 +2003,7 @@ impl<T: Float + Send + Sync> EnsembleOptimizer<T> {
         Ok(())
     }
     
-    fn suggest_batch(&mut self, _batch_size: &usize, _history: &[HPOResult<T>]) -> Result<Vec<ParameterConfiguration<T>>> {
+    fn suggest_batch(&mut self, _batch_size: &usize, history: &[HPOResult<T>]) -> Result<Vec<ParameterConfiguration<T>>> {
         Ok(vec![])
     }
     
@@ -2033,7 +2033,7 @@ impl<T: Float + Send + Sync> OptimizationState<T> {
 }
 
 impl<T: Float + Send + Sync> ResourceMonitor<T> {
-    fn new(_constraints: ResourceConstraints<T>) -> Self {
+    fn new(constraints: ResourceConstraints<T>) -> Self {
         Self {
             current_usage: ResourceUsage {
                 memory_gb: T::zero(),
@@ -2042,7 +2042,7 @@ impl<T: Float + Send + Sync> ResourceMonitor<T> {
                 energy_kwh: T::zero(),
                 cost_usd: T::zero(),
                 network_gb: T::zero()},
-            limits: _constraints,
+            limits: constraints,
             usage_history: VecDeque::new(),
             monitoring_interval: Duration::from_secs(60)}
     }

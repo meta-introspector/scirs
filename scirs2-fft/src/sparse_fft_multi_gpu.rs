@@ -124,9 +124,9 @@ pub struct MultiGPUSparseFFT {
 
 impl MultiGPUSparseFFT {
     /// Create a new multi-GPU sparse FFT processor
-    pub fn new(_config: MultiGPUConfig) -> Self {
+    pub fn new(config: MultiGPUConfig) -> Self {
         Self {
-            _config,
+            _config: config,
             devices: Vec::new(),
             selected_devices: Vec::new(),
             performance_history: Arc::new(Mutex::new(HashMap::new())),
@@ -595,14 +595,14 @@ impl MultiGPUSparseFFT {
     }
 
     /// Split signal into chunks based on calculated sizes
-    fn split_signal<T>(&self, signal: &[T], chunk_sizes: &[usize]) -> FFTResult<Vec<Vec<T>>>
+    fn split_signal<T>(&self, signal: &[T], chunksizes: &[usize]) -> FFTResult<Vec<Vec<T>>>
     where
         T: Copy,
     {
         let mut chunks = Vec::new();
         let mut offset = 0;
 
-        for &chunk_size in chunk_sizes {
+        for &chunk_size in chunksizes {
             if offset + chunk_size > signal.len() {
                 return Err(FFTError::ValueError(
                     "Chunk _sizes exceed signal length".to_string(),

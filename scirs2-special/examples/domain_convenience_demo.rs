@@ -36,7 +36,7 @@ fn main() {
     // Fermi-Dirac distribution
     let energy = Array1::linspace(-2.0, 2.0, 50);
     let fermi = physics::fermi_dirac_distribution(&energy.view(), 0.0, 300.0).unwrap();
-    println!("Fermi-Dirac at E_F: f(0) = {:.3}", fermi[25]);
+    println!("Fermi-Dirac at EF: f(0) = {:.3}", fermi[25]);
 
     // Engineering examples
     println!("\n2. Engineering Functions");

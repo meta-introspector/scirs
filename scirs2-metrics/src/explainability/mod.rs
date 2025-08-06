@@ -7,18 +7,18 @@
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::Float;
-use std::collections::HashMap;
 use statrs::statistics::Statistics;
+use std::collections::HashMap;
 
 pub mod feature_importance;
 pub mod global_explanations;
 pub mod local_explanations;
 pub mod uncertainty_quantification;
 
-pub use feature__importance::*;
-pub use global__explanations::*;
-pub use local__explanations::*;
-pub use uncertainty__quantification::*;
+pub use feature_importance::*;
+pub use global_explanations::*;
+pub use local_explanations::*;
+pub use uncertainty_quantification::*;
 
 /// Explainability metrics suite
 #[derive(Debug, Clone)]
@@ -386,7 +386,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
     // Helper methods
 
-    fn permute_feature(&self, data: &mut Array2<F>, feature_index: usize) -> Result<()> {
+    fn permute_feature(&self, data: &mut Array2<F>, featureindex: usize) -> Result<()> {
         if feature_index >= data.ncols() {
             return Err(MetricsError::InvalidInput(
                 "Feature _index out of bounds".to_string(),
@@ -420,7 +420,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     fn generate_local_explanation<M>(
         &self,
         model: &M,
-        sample: &ArrayView1<F>, _method: &ExplanationMethod,
+        sample: &ArrayView1<F>,
+        _method: &ExplanationMethod,
     ) -> Result<Array1<F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
@@ -513,7 +514,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         }
     }
 
-    fn bootstrap_sample_indices(&self, n_samples: usize) -> Result<Vec<usize>> {
+    fn bootstrap_sample_indices(&self, nsamples: usize) -> Result<Vec<usize>> {
         // Simple bootstrap sampling (in practice, would use proper random sampling)
         let mut indices = Vec::with_capacity(n_samples);
         for i in 0..n_samples {
@@ -563,7 +564,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         Ok(average_variance.sqrt())
     }
 
-    fn compute_aleatoric_uncertainty(&self_predictions: &[Array1<F>]) -> Result<F> {
+    fn compute_aleatoric_uncertainty(&self, predictions: &[Array1<F>]) -> Result<F> {
         // Simplified aleatoric uncertainty computation
         // In practice, this would require model-specific uncertainty estimates
         Ok(F::from(0.1).unwrap())
@@ -953,7 +954,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     }
 
     /// Compute background mean for SHAP baseline
-    fn compute_background_mean(&self, x_data: &Array2<F>) -> Result<Array1<F>> {
+    fn compute_background_mean(&self, xdata: &Array2<F>) -> Result<Array1<F>> {
         if x_data.is_empty() {
             return Err(MetricsError::InvalidInput(
                 "Empty _data for background computation".to_string(),
@@ -1204,17 +1205,17 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             forward_instance[i] = forward_instance[i] + epsilon;
             let forward_input = Array2::fromshape_vec((1, n_features), forward_instance.to_vec())
                 .map_err(|_| {
-                    MetricsError::InvalidInput("Failed to create forward array".to_string())
-                })?;
+                MetricsError::InvalidInput("Failed to create forward array".to_string())
+            })?;
             let forward_pred = model(&forward_input.view())[0];
 
             // Backward step
             let mut backward_instance = instance.to_owned();
             backward_instance[i] = backward_instance[i] - epsilon;
-            let backward_input =
-                Array2::fromshape_vec((1, n_features), backward_instance.to_vec()).map_err(
-                    |_| MetricsError::InvalidInput("Failed to create backward array".to_string()),
-                )?;
+            let backward_input = Array2::fromshape_vec((1, n_features), backward_instance.to_vec())
+                .map_err(|_| {
+                    MetricsError::InvalidInput("Failed to create backward array".to_string())
+                })?;
             let backward_pred = model(&backward_input.view())[0];
 
             // Central difference approximation
@@ -1225,7 +1226,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     }
 
     /// Compute saliency map (simple gradient magnitude)
-    fn compute_saliency_map(&self, gradients: &[F], _instance: &ArrayView1<F>) -> Result<Vec<F>> {
+    fn compute_saliency_map(&self, gradients: &[F], instance: &ArrayView1<F>) -> Result<Vec<F>> {
         // Saliency map is simply the absolute gradient values
         Ok(gradients.iter().map(|&g| g.abs()).collect())
     }

@@ -314,7 +314,7 @@ pub fn create_standardized_error(
         "convergence_failure" => {
             ErrorMessages::convergence_failure(operation, value.parse().unwrap_or(100))
         }
-        _ => StatsError::invalid_argument(format!("Unknown error _type: {}", error_type)),
+        _ => StatsError::invalid_argument(format!("Unknown error type: {}", error_type)),
     }
 }
 

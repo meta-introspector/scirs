@@ -264,17 +264,17 @@ where
     let mut _level = Array1::zeros(ts.len() + 1);
     let mut sq_errors = Array1::zeros(ts.len() - 1);
 
-    _level[0] = ts[0]; // Initialize with first observation
+    level[0] = ts[0]; // Initialize with first observation
 
     // Apply simple exponential smoothing
     for i in 0..ts.len() {
         // Update _level
-        _level[i + 1] =
-            F::from_f64(alpha).unwrap() * ts[i] + F::from_f64(1.0 - alpha).unwrap() * _level[i];
+        level[i + 1] =
+            F::from_f64(alpha).unwrap() * ts[i] + F::from_f64(1.0 - alpha).unwrap() * level[i];
 
         // Calculate forecast error for one-step ahead forecast
         if i > 0 {
-            sq_errors[i - 1] = (ts[i] - _level[i]).powi(2);
+            sq_errors[i - 1] = (ts[i] - level[i]).powi(2);
         }
     }
 
@@ -300,7 +300,7 @@ where
 
     // Compute forecast and confidence intervals
     for i in 0..horizon {
-        forecast[i] = _level[ts.len()]; // All forecasts are the same (last _level)
+        forecast[i] = level[ts.len()]; // All forecasts are the same (last level)
 
         // Increase uncertainty with horizon
         // For SES, theoretical standard error increases with square root of horizon
@@ -467,7 +467,7 @@ where
         )?;
 
         // Extract components
-        _level[n] = decomp.trend[n - 1];
+        level[n] = decomp.trend[n - 1];
         if has_trend {
             // Simplistically, we use the difference between the last two trend values
             if n >= 2 {
@@ -487,7 +487,7 @@ where
         }
     } else if has_trend {
         // Simple Holt's method (linear trend, no seasonality)
-        _level[0] = ts[0];
+        level[0] = ts[0];
         if n > 1 {
             trend[0] = ts[1] - ts[0];
         }
@@ -499,7 +499,7 @@ where
 
         for i in 1..=n {
             // Calculate expected value
-            let expected = _level[i - 1]
+            let expected = level[i - 1]
                 + if params.damped_trend {
                     phi * trend[i - 1]
                 } else {
@@ -508,8 +508,8 @@ where
 
             // Update _level and trend
             if i < n {
-                _level[i] = alpha * ts[i - 1] + (F::one() - alpha) * expected;
-                trend[i] = beta * (_level[i] - _level[i - 1])
+                level[i] = alpha * ts[i - 1] + (F::one() - alpha) * expected;
+                trend[i] = beta * (_level[i] - level[i - 1])
                     + (F::one() - beta)
                         * if params.damped_trend {
                             phi * trend[i - 1]
@@ -560,7 +560,7 @@ where
 
     // Generate forecasts
     for h in 0..horizon {
-        let mut pred = _level[n];
+        let mut pred = level[n];
 
         // Add trend component
         if has_trend {
@@ -938,11 +938,11 @@ where
 /// println!("Optimal ARIMA({},{},{}) model", params.p, params.d, params.q);
 /// ```
 #[allow(dead_code)]
-pub fn auto_arima_with_options<F>(_ts: &Array1<F>, options: &AutoArimaOptions) -> Result<ArimaParams>
+pub fn auto_arima_with_options<F>(ts: &Array1<F>, options: &AutoArimaOptions) -> Result<ArimaParams>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if _ts.len() < 10 {
+    if ts.len() < 10 {
         return Err(TimeSeriesError::ForecastingError(
             "Time series too short for ARIMA parameter selection".to_string(),
         ));
@@ -954,11 +954,11 @@ where
         ));
     }
 
-    if options.seasonal && options.seasonal_period.unwrap() >= _ts.len() / 2 {
+    if options.seasonal && options.seasonal_period.unwrap() >= ts.len() / 2 {
         return Err(TimeSeriesError::InvalidInput(format!(
             "Seasonal period ({}) must be less than half the time series length ({})",
             options.seasonal_period.unwrap(),
-            _ts.len()
+            ts.len()
         )));
     }
 
@@ -972,7 +972,7 @@ where
     // Determine seasonal differencing order if needed
     let best_seasonal_d = if options.seasonal && options.auto_diff {
         determine_seasonal_differencing_order(
-            _ts,
+            ts,
             options.seasonal_period.unwrap(),
             options.max_seasonal_d,
         )?
@@ -984,7 +984,7 @@ where
     // We don't actually use the stationary series in this implementation,
     // but in a complete implementation we would use it to fit the ARMA models
     let _stationary_ts = apply_differencing(
-        _ts,
+        ts,
         best_d,
         options.seasonal,
         options.seasonal_period,
@@ -1148,7 +1148,7 @@ where
 
 /// Determines the optimal differencing order for stationarity
 #[allow(dead_code)]
-fn determine_differencing_order<F>(_ts: &Array1<F>, max_d: usize) -> Result<usize>
+fn determine_differencing_order<F>(_ts: &Array1<F>, maxd: usize) -> Result<usize>
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -1163,7 +1163,7 @@ where
 
     // If not stationary, try differencing
     if !series_is_stationary {
-        let mut ts_diff = _ts.clone();
+        let mut ts_diff = ts.clone();
 
         for _d in 1..=max_d {
             // Apply differencing
@@ -1172,7 +1172,7 @@ where
             // Check stationarity of differenced series
             let (_, p_value) = is_stationary(&diff_ts, None)?;
             if p_value < F::from_f64(0.05).unwrap() {
-                best_d = _d;
+                best_d = d;
                 break;
             }
 
@@ -1213,7 +1213,7 @@ where
 
         // If stationarity improves, increment the differencing order
         if stat_value < initial_stat {
-            best_d = _d;
+            best_d = d;
             ts_diff = diff_ts;
         } else {
             break; // Stop if stationarity doesn't improve
@@ -1340,22 +1340,22 @@ where
 /// println!("Alpha: {}", params.alpha);
 /// ```
 #[allow(dead_code)]
-pub fn auto_ets<F>(_ts: &Array1<F>, seasonal_period: Option<usize>) -> Result<ExpSmoothingParams>
+pub fn auto_ets<F>(_ts: &Array1<F>, seasonalperiod: Option<usize>) -> Result<ExpSmoothingParams>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if _ts.len() < 10 {
+    if ts.len() < 10 {
         return Err(TimeSeriesError::ForecastingError(
             "Time series too short for ETS parameter selection".to_string(),
         ));
     }
 
     if let Some(_period) = seasonal_period {
-        if _period >= _ts.len() / 2 {
+        if _period >= ts.len() / 2 {
             return Err(TimeSeriesError::InvalidInput(format!(
                 "Seasonal _period ({}) must be less than half the time series length ({})",
-                _period,
-                _ts.len()
+                period,
+                ts.len()
             )));
         }
     }
@@ -1369,12 +1369,12 @@ where
     // Simplified approach for this implementation
 
     // Check if data is strictly positive (required for multiplicative models)
-    let all_positive = _ts.iter().all(|&x| x > F::zero());
+    let all_positive = ts.iter().all(|&x| x > F::zero());
 
     // Check for trend
     let has_trend = {
         // Simple linear regression
-        let n = _ts.len();
+        let n = ts.len();
         let mut sum_x = F::zero();
         let mut sum_y = F::zero();
         let mut sum_xy = F::zero();
@@ -1382,7 +1382,7 @@ where
 
         for i in 0..n {
             let x = F::from_usize(i).unwrap();
-            let y = _ts[i];
+            let y = ts[i];
             sum_x = sum_x + x;
             sum_y = sum_y + y;
             sum_xy = sum_xy + x * y;
@@ -1398,14 +1398,14 @@ where
 
     // Check for seasonality
     let has_seasonality = if let Some(_period) = seasonal_period {
-        if _ts.len() >= 2 * _period {
+        if ts.len() >= 2 * _period {
             // Calculate correlation between seasonal lags
             let mut sum_corr = F::zero();
             let mut count = 0;
 
-            for lag in 1..=min(3, _ts.len() / _period) {
-                let lag_p = lag * _period;
-                if _ts.len() > lag_p {
+            for lag in 1..=min(3, ts.len() / period) {
+                let lag_p = lag * period;
+                if ts.len() > lag_p {
                     let mut sum_xy = F::zero();
                     let mut sum_x = F::zero();
                     let mut sum_y = F::zero();
@@ -1414,8 +1414,8 @@ where
                     let mut n = 0;
 
                     for i in 0.._ts.len() - lag_p {
-                        let x = _ts[i];
-                        let y = _ts[i + lag_p];
+                        let x = ts[i];
+                        let y = ts[i + lag_p];
                         sum_x = sum_x + x;
                         sum_y = sum_y + y;
                         sum_xy = sum_xy + x * y;
@@ -1462,10 +1462,10 @@ where
         // if the data pattern suggests exponential growth/decay
         if all_positive {
             // Calculate first and second half averages
-            let half = _ts.len() / 2;
-            let first_half_avg = _ts.iter().take(half).fold(F::zero(), |acc, &x| acc + x)
+            let half = ts.len() / 2;
+            let first_half_avg = ts.iter().take(half).fold(F::zero(), |acc, &x| acc + x)
                 / F::from_usize(half).unwrap();
-            let second_half_avg = _ts.iter().skip(half).fold(F::zero(), |acc, &x| acc + x)
+            let second_half_avg = ts.iter().skip(half).fold(F::zero(), |acc, &x| acc + x)
                 / F::from_usize(_ts.len() - half).unwrap();
 
             if second_half_avg / first_half_avg > F::from_f64(2.0).unwrap() {
@@ -1474,14 +1474,14 @@ where
         }
 
         // Consider damped trend if growth appears to be leveling off
-        if _ts.len() >= 10 {
-            let first_third = _ts.len() / 3;
-            let second_third = 2 * _ts.len() / 3;
+        if ts.len() >= 10 {
+            let first_third = ts.len() / 3;
+            let second_third = 2 * ts.len() / 3;
 
-            let first_slope = (_ts[first_third] - _ts[0]) / F::from_usize(first_third).unwrap();
-            let second_slope = (_ts[second_third] - _ts[first_third])
+            let first_slope = (_ts[first_third] - ts[0]) / F::from_usize(first_third).unwrap();
+            let second_slope = (_ts[second_third] - ts[first_third])
                 / F::from_usize(second_third - first_third).unwrap();
-            let third_slope = (_ts[_ts.len() - 1] - _ts[second_third])
+            let third_slope = (_ts[_ts.len() - 1] - ts[second_third])
                 / F::from_usize(_ts.len() - 1 - second_third).unwrap();
 
             if (first_slope > second_slope && second_slope > third_slope)
@@ -1501,24 +1501,24 @@ where
         // Consider multiplicative seasonality for data with changing seasonal amplitude
         if all_positive {
             let _period = seasonal_period.unwrap();
-            let num_seasons = _ts.len() / _period;
+            let num_seasons = ts.len() / period;
 
             if num_seasons >= 2 {
                 let mut seasonal_ranges = Vec::with_capacity(num_seasons);
 
                 for s in 0..num_seasons {
-                    let start = s * _period;
-                    let end = min((s + 1) * _period, _ts.len());
+                    let start = s * period;
+                    let end = min((s + 1) * period, ts.len());
 
-                    let mut min_val = _ts[start];
-                    let mut max_val = _ts[start];
+                    let mut min_val = ts[start];
+                    let mut max_val = ts[start];
 
                     for i in start + 1..end {
-                        if _ts[i] < min_val {
-                            min_val = _ts[i];
+                        if ts[i] < min_val {
+                            min_val = ts[i];
                         }
-                        if _ts[i] > max_val {
-                            max_val = _ts[i];
+                        if ts[i] > max_val {
+                            max_val = ts[i];
                         }
                     }
 
@@ -2230,14 +2230,14 @@ pub mod ensemble {
 
     /// Calculate Mean Squared Error between forecast and actual values
     fn calculate_mse<F: Float>(forecast: &Array1<F>, actual: &Array1<F>) -> f64 {
-        let min_len = _forecast.len().min(actual.len());
+        let min_len = forecast.len().min(actual.len());
         if min_len == 0 {
             return f64::INFINITY;
         }
 
         let mut sum_sq_error = 0.0;
         for i in 0..min_len {
-            let error = _forecast[i].to_f64().unwrap_or(0.0) - actual[i].to_f64().unwrap_or(0.0);
+            let error = forecast[i].to_f64().unwrap_or(0.0) - actual[i].to_f64().unwrap_or(0.0);
             sum_sq_error += error * error;
         }
 

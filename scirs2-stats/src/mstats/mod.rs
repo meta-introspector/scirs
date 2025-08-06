@@ -106,7 +106,7 @@ impl<T: Copy> MaskedArray2<T> {
 /// assert!((mean - 3.0).abs() < 1e-10); // Mean of [1, 2, 4, 5] = 3.0
 /// ```
 #[allow(dead_code)]
-pub fn masked_mean<T>(masked_array: &MaskedArray<T>, _axis: Option<usize>) -> StatsResult<f64>
+pub fn masked_mean<T>(masked_array: &MaskedArray<T>, axis: Option<usize>) -> StatsResult<f64>
 where
     T: Copy + Into<f64>,
 {
@@ -196,7 +196,7 @@ where
 /// # Returns
 /// * Median of valid values
 #[allow(dead_code)]
-pub fn masked_median<T>(masked_array: &MaskedArray<T>) -> StatsResult<f64>
+pub fn masked_median<T>(maskedarray: &MaskedArray<T>) -> StatsResult<f64>
 where
     T: Copy + Into<f64> + PartialOrd,
 {
@@ -513,7 +513,7 @@ where
 /// # Returns
 /// * Skewness of valid values
 #[allow(dead_code)]
-pub fn masked_skew<T>(masked_array: &MaskedArray<T>, bias: bool) -> StatsResult<f64>
+pub fn masked_skew<T>(maskedarray: &MaskedArray<T>, bias: bool) -> StatsResult<f64>
 where
     T: Copy + Into<f64>,
 {
@@ -633,7 +633,7 @@ where
 /// # Returns
 /// * Trimmed mean of valid values
 #[allow(dead_code)]
-pub fn masked_tmean<T>(masked_array: &MaskedArray<T>, proportiontocut: f64) -> StatsResult<f64>
+pub fn masked_tmean<T>(maskedarray: &MaskedArray<T>, proportiontocut: f64) -> StatsResult<f64>
 where
     T: Copy + Into<f64> + PartialOrd,
 {

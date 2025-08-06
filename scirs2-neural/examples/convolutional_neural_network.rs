@@ -142,9 +142,9 @@ trait Layer {
     /// Forward pass through the layer
     fn forward(&mut self, x: &Array4<f32>) -> Array4<f32>;
     /// Backward pass to compute gradients
-    fn backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32>;
+    fn backward(&mut self, gradoutput: &Array4<f32>) -> Array4<f32>;
     /// Update parameters with gradients
-    fn update_parameters(&mut self, learning_rate: f32);
+    fn update_parameters(&mut self, learningrate: f32);
     /// Get a description of the layer
     fn get_description(&self) -> String;
     /// Get number of trainable parameters
@@ -310,7 +310,7 @@ impl Conv2D {
         output
     }
     /// Compute gradients for the convolution operation
-    fn convolve_backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
+    fn convolve_backward(&mut self, gradoutput: &Array4<f32>) -> Array4<f32> {
         let input = self
             .input
             .as_ref()
@@ -471,7 +471,7 @@ impl Layer for Conv2D {
         self.output = Some(output.clone());
         output
     }
-    fn backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
+    fn backward(&mut self, gradoutput: &Array4<f32>) -> Array4<f32> {
         // Derivative of activation function
         let z = self.z.as_ref().expect("Forward pass must be called first");
         let activation_grad = self.activation.derivative(z);
@@ -480,7 +480,7 @@ impl Layer for Conv2D {
         // Compute gradients for weights, biases, and inputs
         self.convolve_backward(&grad_z)
     }
-    fn update_parameters(&mut self, learning_rate: f32) {
+    fn update_parameters(&mut self, learningrate: f32) {
         if let (Some(dweights), Some(dbiases)) = (&self.dweights, &self.dbiases) {
             // Update weights
             self.weights = &self.weights - &(dweights * learning_rate);
@@ -519,11 +519,11 @@ struct MaxPool2D {
 
 impl MaxPool2D {
     /// Create a new MaxPool2D layer
-    fn new(_pool_size: (usize, usize), stride: Option<(usize, usize)>) -> Self {
+    fn new(_poolsize: (usize, usize), stride: Option<(usize, usize)>) -> Self {
         // Default stride is same as pool _size
         let stride = stride.unwrap_or(_pool_size);
         Self {
-            _pool_size,
+            pool_size,
             stride,
             max_indices: None,
         }
@@ -586,7 +586,7 @@ impl Layer for MaxPool2D {
         self.max_indices = Some(max_indices);
         output
     }
-    fn backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
+    fn backward(&mut self, gradoutput: &Array4<f32>) -> Array4<f32> {
         let max_indices = self
             .max_indices
             .as_ref()
@@ -618,7 +618,7 @@ impl Layer for MaxPool2D {
         }
         dinput
     }
-    fn update_parameters(&mut self_learning_rate: f32) {
+    fn update_parameters(&mut self_learningrate: f32) {
         // MaxPool has no parameters to update
     }
 
@@ -659,7 +659,7 @@ impl Layer for Flatten {
         self.inputshape = Some(inputshape);
         flattened
     }
-    fn backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
+    fn backward(&mut self, gradoutput: &Array4<f32>) -> Array4<f32> {
         let inputshape = self
             .inputshape
             .as_ref()
@@ -672,7 +672,7 @@ impl Layer for Flatten {
         let reshaped_4d: Array4<f32> = reshaped.into_dimensionality().unwrap();
         reshaped_4d
     }
-    fn update_parameters(&mut self_learning_rate: f32) {
+    fn update_parameters(&mut self_learningrate: f32) {
         // Flatten has no parameters to update
     }
 
@@ -757,7 +757,7 @@ impl Layer for Dense {
         self.z = Some(z);
         output
     }
-    fn backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
+    fn backward(&mut self, gradoutput: &Array4<f32>) -> Array4<f32> {
         let input = self
             .input
             .as_ref()
@@ -792,7 +792,7 @@ impl Layer for Dense {
         self.dbiases = Some(dbiases);
         dinput
     }
-    fn update_parameters(&mut self, learning_rate: f32) {
+    fn update_parameters(&mut self, learningrate: f32) {
         if let (Some(dweights), Some(dbiases)) = (&self.dweights, &self.dbiases) {
             // Update weights
             self.weights = &self.weights - &(dweights * learning_rate);
@@ -825,10 +825,10 @@ struct Sequential {
 
 impl Sequential {
     /// Create a new sequential model
-    fn new(_loss_fn: LossFunction) -> Self {
+    fn new(_lossfn: LossFunction) -> Self {
         Self {
             layers: Vec::new(),
-            _loss_fn,
+            loss_fn,
         }
     }
     /// Add a layer to the model
@@ -857,7 +857,7 @@ impl Sequential {
         self.loss_fn.compute(&predictions_2d, targets)
     }
     /// Backward pass and update parameters
-    fn backward(&mut self, x: &Array4<f32>, y: &Array2<f32>, learning_rate: f32) -> f32 {
+    fn backward(&mut self, x: &Array4<f32>, y: &Array2<f32>, learningrate: f32) -> f32 {
         // Forward pass
         let predictions = self.forward(x);
         // Compute loss
@@ -896,7 +896,7 @@ impl Sequential {
     ) -> Vec<f32> {
         let n_samples = x.shape()[0];
         let mut losses = Vec::with_capacity(epochs);
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = SmallRng::from_seed([42; 32]);
         for epoch in 0..epochs {
             // Shuffle the indices
             let mut indices: Vec<usize> = (0..n_samples).collect();
@@ -1007,7 +1007,7 @@ fn create_synthetic_dataset(
     // Generate _samples with noise
     for i in 0..num_samples {
         // Assign a random class
-        let class = rng.random_range(0..num_classes);
+        let class = rng.gen_range(0..num_classes);
         // Add the class pattern with noise
         for h in 0..image_size.0 {
             for w in 0..image_size.1 {
@@ -1023,10 +1023,10 @@ fn create_synthetic_dataset(
 }
 // Helper function to find index of maximum value in array
 #[allow(dead_code)]
-fn argmax(_arr: ArrayView1<f32>) -> usize {
+fn argmax(arr: ArrayView1<f32>) -> usize {
     let mut max_idx = 0;
-    let mut max_val = _arr[0];
-    for (idx, &val) in _arr.iter().enumerate() {
+    let mut max_val = arr[0];
+    for (idx, &val) in arr.iter().enumerate() {
         if val > max_val {
             max_val = val;
             max_idx = idx;
@@ -1038,7 +1038,7 @@ fn argmax(_arr: ArrayView1<f32>) -> usize {
 #[allow(dead_code)]
 fn train_cnn_example() -> Result<()> {
     // Set up RNG
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Create a synthetic dataset
     let num_samples = 1000;
     let num_classes = 10;
@@ -1132,7 +1132,7 @@ fn train_cnn_example() -> Result<()> {
     // Make some example predictions
     println!("\nExample predictions:");
     for i in 0..5 {
-        let idx = rng.random_range(0..test_size);
+        let idx = rng.gen_range(0..test_size);
         let true_class = argmax(test_labels.row(idx));
         let predicted_class = argmax(predictions.row(idx));
         println!(

@@ -105,7 +105,7 @@ where
 }
 
 /// Calculate t-values for regression coefficients
-pub(crate) fn calculate_t_values<F>(_coefficients: &Array1<F>, std_errors: &Array1<F>) -> Array1<F>
+pub(crate) fn calculate_t_values<F>(_coefficients: &Array1<F>, stderrors: &Array1<F>) -> Array1<F>
 where
     F: Float + 'static + std::fmt::Display,
 {
@@ -294,7 +294,7 @@ where
 }
 
 /// Calculate residuals from actual y and predicted y
-pub(crate) fn _calculate_residuals<F>(y: &ArrayView1<F>, y_pred: &Array1<F>) -> Array1<F>
+pub(crate) fn _calculate_residuals<F>(y: &ArrayView1<F>, ypred: &Array1<F>) -> Array1<F>
 where
     F: Float + 'static + std::fmt::Display,
 {

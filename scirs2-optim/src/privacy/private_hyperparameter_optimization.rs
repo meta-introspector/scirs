@@ -237,14 +237,16 @@ pub trait NoisyOptimizer<T: Float>: Send + Sync {
     fn suggest_next(
         &mut self,
         parameter_space: &ParameterSpace<T>,
-        evaluation_history: &[HPOEvaluation<T>], _privacy_budget: &PrivacyBudget,
+        evaluation_history: &[HPOEvaluation<T>],
+        _privacy_budget: &PrivacyBudget,
     ) -> Result<ParameterConfiguration<T>>;
 
     /// Update optimizer with new evaluation result
     fn update(
         &mut self,
         config: &ParameterConfiguration<T>,
-        result: &HPOResult<T>, _privacy_budget: &PrivacyBudget,
+        result: &HPOResult<T>,
+        _privacy_budget: &PrivacyBudget,
     ) -> Result<()>;
 
     /// Get optimizer name
@@ -947,7 +949,7 @@ pub enum EvaluationStatus {
 
 impl<T: Float + 'static + Send + Sync> PrivateHyperparameterOptimizer<T> {
     /// Create new private hyperparameter optimizer
-    pub fn new(config: PrivateHPOConfig<T>, parameter_space: ParameterSpace<T>) -> Result<Self> {
+    pub fn new(config: PrivateHPOConfig<T>, parameterspace: ParameterSpace<T>) -> Result<Self> {
         let budget_manager = HPOBudgetManager::new(
             config.base_privacyconfig.clone(),
             config.budget_allocation,
@@ -1134,7 +1136,8 @@ impl<T: Float + 'static + Send + Sync> PrivateHyperparameterOptimizer<T> {
             average_evaluation_time: 0.0,
             total_optimization_time: 0.0,
             convergence_iteration: None,
-            budget_efficiency: 0.0, _phantom: std::marker::PhantomData,
+            budget_efficiency: 0.0,
+            _phantom: std::marker::PhantomData,
         })
     }
 }
@@ -1249,7 +1252,7 @@ pub struct PrivateRandomSearch<T: Float> {
 impl<T: Float + Send + Sync> PrivateRandomSearch<T> {
     pub fn new(config: PrivateHPOConfig<T>) -> Result<Self> {
         Ok(Self {
-            config: config,
+            config,
             rng: scirs2_core::random::Random::seed(42),
             history: Vec::new(),
         })
@@ -1259,7 +1262,9 @@ impl<T: Float + Send + Sync> PrivateRandomSearch<T> {
 impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
     fn suggest_next(
         &mut self,
-        parameter_space: &ParameterSpace<T>, _evaluation_history: &[HPOEvaluation<T>], _privacy_budget: &PrivacyBudget,
+        parameter_space: &ParameterSpace<T>,
+        _evaluation_history: &[HPOEvaluation<T>],
+        _privacy_budget: &PrivacyBudget,
     ) -> Result<ParameterConfiguration<T>> {
         let mut values = HashMap::new();
 
@@ -1284,7 +1289,7 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
                         .unwrap_or(T::from(100).unwrap())
                         .to_i64()
                         .unwrap_or(100);
-                    ParameterValue::Integer(self.rng.random_range(min, max + 1))
+                    ParameterValue::Integer(self.rng.gen_range(min..max + 1))
                 }
                 ParameterType::Boolean => ParameterValue::Boolean(self.rng.gen_range(0..2) == 1),
                 ParameterType::Categorical(categories) => {
@@ -1308,7 +1313,10 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
     }
 
     fn update(
-        &mut self, config: &ParameterConfiguration<T>, _result: &HPOResult<T>, _privacy_budget: &PrivacyBudget,
+        &mut self,
+        config: &ParameterConfiguration<T>,
+        _result: &HPOResult<T>,
+        _privacy_budget: &PrivacyBudget,
     ) -> Result<()> {
         // Random search doesn't need to update based on results
         Ok(())
@@ -1349,7 +1357,8 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateBayesianOptimization<T
     fn suggest_next(
         &mut self,
         parameter_space: &ParameterSpace<T>,
-        evaluation_history: &[HPOEvaluation<T>], _privacy_budget: &PrivacyBudget,
+        evaluation_history: &[HPOEvaluation<T>],
+        _privacy_budget: &PrivacyBudget,
     ) -> Result<ParameterConfiguration<T>> {
         if evaluation_history.is_empty() {
             // First evaluation - use random sampling
@@ -1389,7 +1398,10 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateBayesianOptimization<T
     }
 
     fn update(
-        &mut self, config: &ParameterConfiguration<T>, _result: &HPOResult<T>, _privacy_budget: &PrivacyBudget,
+        &mut self,
+        config: &ParameterConfiguration<T>,
+        _result: &HPOResult<T>,
+        _privacy_budget: &PrivacyBudget,
     ) -> Result<()> {
         // Update Gaussian process model with new data point
         // This is a simplified implementation
@@ -1529,7 +1541,7 @@ impl HPOBudgetManager {
         })
     }
 
-    pub fn record_evaluation(&mut self, budget_used: &PrivacyBudget, score: f64) -> Result<()> {
+    pub fn record_evaluation(&mut self, budgetused: &PrivacyBudget, score: f64) -> Result<()> {
         self.consumed_budget.epsilon_consumed += budget_used.epsilon_remaining;
         self.consumed_budget.delta_consumed += budget_used.delta_remaining;
         self.consumed_budget.epsilon_remaining -= budget_used.epsilon_remaining;
@@ -1614,7 +1626,7 @@ impl<T: Float + Send + Sync> ObjectiveNoiseMechanism<T> {
         }
     }
 
-    pub fn add_noise(&mut self, value: f64, _privacy_budget: &PrivacyBudget) -> Result<f64> {
+    pub fn add_noise(&mut self, value: f64, _privacybudget: &PrivacyBudget) -> Result<f64> {
         use rand_distr::{Distribution, Normal};
 
         match self.mechanism_type {
@@ -1647,7 +1659,8 @@ impl<T: Float + Send + Sync> SampleBasedSensitivityEstimator<T> {
             num_samples: 1000,
             sampling_strategy: SamplingStrategy::Uniform,
             confidence_level: 0.95,
-            bootstrap_estimator: BootstrapEstimator::new(), _phantom: std::marker::PhantomData,
+            bootstrap_estimator: BootstrapEstimator::new(),
+            _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1657,7 +1670,8 @@ impl<T: Float + Send + Sync> BootstrapEstimator<T> {
         Self {
             num_bootstrap: 1000,
             confidence_interval: (0.025, 0.975),
-            bias_correction: true, _phantom: std::marker::PhantomData,
+            bias_correction: true,
+            _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1693,7 +1707,8 @@ impl<T: Float + Send + Sync> ConfidenceEstimation<T> {
         Self {
             confidence_level: 0.95,
             estimation_method: ConfidenceEstimationMethod::Normal,
-            bootstrap_params: None, _phantom: std::marker::PhantomData,
+            bootstrap_params: None,
+            _phantom: std::marker::PhantomData,
         }
     }
 }

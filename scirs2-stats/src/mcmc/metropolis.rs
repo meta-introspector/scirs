@@ -22,7 +22,7 @@ pub trait ProposalDistribution: Send + Sync {
     fn sample<R: rand::Rng + ?Sized>(&self, current: &Array1<f64>, rng: &mut R) -> Array1<f64>;
 
     /// Compute the log density ratio q(x|y) / q(y|x) for asymmetric proposals
-    fn log_ratio(from: &Array1<f64>, _to: &Array1<f64>) -> f64 {
+    fn log_ratio(from: &Array1<f64>, to: &Array1<f64>) -> f64 {
         0.0 // Default _to symmetric proposal
     }
 }
@@ -36,7 +36,7 @@ pub struct RandomWalkProposal {
 
 impl RandomWalkProposal {
     /// Create a new random walk proposal
-    pub fn new(step_size: f64) -> Result<Self> {
+    pub fn new(stepsize: f64) -> Result<Self> {
         check_positive(step_size, "step_size")?;
         Ok(Self { step_size })
     }
@@ -113,13 +113,13 @@ impl<T: TargetDistribution, P: ProposalDistribution> MetropolisHastings<T, P> {
     }
 
     /// Sample multiple states from the distribution
-    pub fn sample<R: rand::Rng + ?Sized>(&mut self, n_samples_: usize, rng: &mut R) -> Array2<f64> {
+    pub fn sample<R: rand::Rng + ?Sized>(&mut self, nsamples_: usize, rng: &mut R) -> Array2<f64> {
         let dim = self.current.len();
         let mut _samples = Array2::zeros((n_samples_, dim));
 
         for i in 0..n_samples_ {
             let sample = self.step(rng);
-            _samples.row_mut(i).assign(&sample);
+            samples.row_mut(i).assign(&sample);
         }
 
         _samples
@@ -142,7 +142,7 @@ impl<T: TargetDistribution, P: ProposalDistribution> MetropolisHastings<T, P> {
             for _ in 0..thin {
                 self.step(rng);
             }
-            _samples.row_mut(i).assign(&self.current);
+            samples.row_mut(i).assign(&self.current);
         }
 
         Ok(_samples)
@@ -221,7 +221,7 @@ impl<T: TargetDistribution> AdaptiveMetropolisHastings<T> {
     }
 
     /// Run adaptation phase
-    pub fn adapt<R: rand::Rng + ?Sized>(&mut self, n_steps: usize, rng: &mut R) -> Result<()> {
+    pub fn adapt<R: rand::Rng + ?Sized>(&mut self, nsteps: usize, rng: &mut R) -> Result<()> {
         check_positive(n_steps, "n_steps")?;
 
         for _ in 0..n_steps {
@@ -311,7 +311,7 @@ pub struct CustomTarget<F> {
 
 impl<F> CustomTarget<F> {
     /// Create a new custom target distribution
-    pub fn new(dim: usize, log_density_fn: F) -> Result<Self> {
+    pub fn new(dim: usize, log_densityfn: F) -> Result<Self> {
         check_positive(dim, "dim")?;
         Ok(Self {
             log_density_fn,

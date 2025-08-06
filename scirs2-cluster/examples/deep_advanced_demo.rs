@@ -502,7 +502,7 @@ fn create_visualization_data() -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_sample_embeddings(_n_samples: usize) -> Array2<f64> {
+fn create_sample_embeddings(_nsamples: usize) -> Array2<f64> {
     let embed_dim = 128;
     let mut embeddings = Array2::zeros((_n_samples, embed_dim));
 
@@ -517,12 +517,12 @@ fn create_sample_embeddings(_n_samples: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn compute_embedding_variance(_embeddings: &Array2<f64>) -> f64 {
-    let mean = _embeddings.mean().unwrap_or(0.0);
+fn compute_embedding_variance(embeddings: &Array2<f64>) -> f64 {
+    let mean = embeddings.mean().unwrap_or(0.0);
     let mut variance = 0.0;
-    let total_elements = _embeddings.len();
+    let total_elements = embeddings.len();
 
-    for &value in _embeddings.iter() {
+    for &value in embeddings.iter() {
         let diff = value - mean;
         variance += diff * diff;
     }

@@ -102,11 +102,11 @@ impl Metadata {
     }
 
     /// Create metadata with a specific schema version
-    pub fn with_schema(_version: &str) -> Self {
+    pub fn with_schema(version: &str) -> Self {
         Self {
             data: IndexMap::new(),
             extensions: HashMap::new(),
-            schema_version: _version.to_string(),
+            schema_version: version.to_string(),
         }
     }
 
@@ -196,11 +196,11 @@ impl Metadata {
     }
 
     /// Load metadata from a file
-    pub fn from_file(_path: impl AsRef<Path>) -> Result<Self> {
-        let _path = _path.as_ref();
+    pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
+        let _path = path.as_ref();
         let content = std::fs::read_to_string(_path).map_err(IoError::Io)?;
 
-        let extension = _path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
+        let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
 
         match extension {
             "json" => serde_json::from_str(&content)
@@ -288,10 +288,10 @@ pub struct ProcessingHistoryEntry {
 }
 
 impl ProcessingHistoryEntry {
-    pub fn new(_operation: impl Into<String>) -> Self {
+    pub fn new(operation: impl Into<String>) -> Self {
         Self {
             timestamp: Utc::now(),
-            operation: _operation.into(),
+            operation: operation.into(),
             parameters: IndexMap::new(),
             user: std::env::var("USER").ok(),
         }
@@ -362,7 +362,7 @@ impl MetadataSchema {
         self
     }
 
-    pub fn field_type(mut self, field: impl Into<String>, field_type: MetadataFieldType) -> Self {
+    pub fn field_type(mut self, field: impl Into<String>, fieldtype: MetadataFieldType) -> Self {
         self.field_types.insert(field.into(), field_type);
         self
     }
@@ -594,7 +594,7 @@ impl From<bool> for MetadataValue {
 }
 
 impl From<DateTime<Utc>> for MetadataValue {
-    fn from(_dt: DateTime<Utc>) -> Self {
+    fn from(dt: DateTime<Utc>) -> Self {
         MetadataValue::DateTime(_dt)
     }
 }
@@ -785,11 +785,11 @@ pub struct MetadataVersion {
 }
 
 impl MetadataVersionControl {
-    pub fn new(_initial: Metadata) -> Self {
+    pub fn new(initial: Metadata) -> Self {
         let version = MetadataVersion {
             id: uuid::Uuid::new_v4().to_string(),
             timestamp: Utc::now(),
-            metadata: _initial.clone(),
+            metadata: initial.clone(),
             parent_id: None,
             message: "Initial version".to_string(),
             author: std::env::var("USER").ok(),
@@ -834,7 +834,7 @@ impl MetadataVersionControl {
     }
 
     /// Get a specific version
-    pub fn get_version(&self, version_id: &str) -> Option<MetadataVersion> {
+    pub fn get_version(&self, versionid: &str) -> Option<MetadataVersion> {
         self.history
             .read()
             .unwrap()
@@ -858,7 +858,7 @@ impl MetadataVersionControl {
     }
 
     /// Rollback to a specific version
-    pub fn rollback(&self, version_id: &str) -> Result<()> {
+    pub fn rollback(&self, versionid: &str) -> Result<()> {
         let version = self
             .get_version(version_id)
             .ok_or_else(|| IoError::NotFound(format!("Version {version_id} not found")))?;
@@ -870,7 +870,7 @@ impl MetadataVersionControl {
         Ok(())
     }
 
-    fn compute_hash(_metadata: &Metadata) -> String {
+    fn compute_hash(metadata: &Metadata) -> String {
         let json = serde_json::to_string(_metadata).unwrap_or_default();
         let mut hasher = Sha256::new();
         hasher.update(json.as_bytes());
@@ -887,7 +887,7 @@ pub struct MetadataDiff {
 }
 
 impl MetadataDiff {
-    pub fn compute(_old: &Metadata, new: &Metadata) -> Self {
+    pub fn compute(old: &Metadata, new: &Metadata) -> Self {
         let mut added = IndexMap::new();
         let mut removed = IndexMap::new();
         let mut modified = IndexMap::new();
@@ -938,9 +938,9 @@ pub struct MetadataTemplate {
 }
 
 impl MetadataTemplate {
-    pub fn new(_base: Metadata) -> Self {
+    pub fn new(base: Metadata) -> Self {
         Self {
-            base: _base,
+            base: base,
             overridable: HashSet::new(),
             required: HashSet::new(),
             defaults: IndexMap::new(),
@@ -1232,9 +1232,9 @@ pub struct MetadataRepository {
 
 #[cfg(feature = "reqwest")]
 impl MetadataRepository {
-    pub fn new(_url: impl Into<String>) -> Self {
+    pub fn new(url: impl Into<String>) -> Self {
         Self {
-            _url: _url.into(),
+            _url: url.into(),
             cache: Arc::new(RwLock::new(HashMap::new())),
             client: reqwest::blocking::Client::new(),
         }

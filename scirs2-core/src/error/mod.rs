@@ -41,8 +41,8 @@
 //!
 //! let executor = RetryExecutor::new(RecoveryStrategy::ExponentialBackoff {
 //!     max_attempts: 3,
-//!     initial_delay: Duration::from_millis(100),
-//!     max_delay: Duration::from_secs(5),
+//!     initialdelay: Duration::from_millis(100),
+//!     maxdelay: Duration::from_secs(5),
 //!     multiplier: 2.0,
 //! });
 //!
@@ -58,13 +58,13 @@
 //! use scirs2_core::error::recovery::CircuitBreaker;
 //! use std::time::Duration;
 //!
-//! let circuit_breaker = CircuitBreaker::new(
+//! let circuitbreaker = CircuitBreaker::new(
 //!     5, // failure threshold
 //!     Duration::from_secs(30), // timeout
 //!     Duration::from_secs(60), // recovery timeout
 //! );
 //!
-//! let result = circuit_breaker.execute(|| {
+//! let result = circuitbreaker.execute(|| {
 //!     // Your operation here
 //!     Ok(42)
 //! });
@@ -101,14 +101,14 @@
 //! ### Error Diagnostics
 //!
 //! ```rust
-//! use scirs2_core::error::diagnostics::diagnose_error;
+//! use scirs2_core::error::diagnostics::diagnoseerror;
 //! use scirs2_core::error::{CoreError, ErrorContext, ErrorLocation};
 //!
 //! let error = CoreError::ConvergenceError(
 //!     ErrorContext::new("Failed to converge")
 //!         .with_location(ErrorLocation::new(file!(), line!()))
 //! );
-//! let diagnostics = diagnose_error(&error);
+//! let diagnostics = diagnoseerror(&error);
 //!
 //! println!("{}", diagnostics); // Comprehensive diagnostic report
 //! ```
@@ -128,7 +128,7 @@ pub use recovery::{
 pub mod async_handling;
 #[cfg(feature = "async")]
 pub use async__handling::{
-    execute_with_error_aggregation, retry_with_exponential_backoff, with_timeout,
+    execute_witherror_aggregation, retry_with_exponential_backoff, with_timeout,
     AsyncCircuitBreaker, AsyncErrorAggregator, AsyncProgressTracker, AsyncRetryExecutor,
     TimeoutWrapper, TrackedAsyncOperation,
 };
@@ -141,16 +141,16 @@ pub use diagnostics::{
 };
 
 // Circuit breaker and error recovery for production systems
-pub mod circuit_breaker;
-pub use circuit_breaker::{
-    get_circuit_breaker, list_circuit_breakers, CircuitBreaker, CircuitBreakerConfig,
+pub mod circuitbreaker;
+pub use circuitbreaker::{
+    get_circuitbreaker, list_circuitbreakers, CircuitBreaker, CircuitBreakerConfig,
     CircuitBreakerStatus, CircuitState, FallbackStrategy, ResilientExecutor, RetryExecutor,
     RetryPolicy,
 };
 
 // Convenience re-exports for common patterns
 pub use error::{
-    chain_error, check_dimensions, check_domain, check_value, convert_error, validate, CoreError,
+    chainerror, check_dimensions, check_domain, check_value, converterror, validate, CoreError,
     CoreResult, ErrorContext, ErrorLocation,
 };
 
@@ -163,8 +163,8 @@ pub use error::{
 /// This function does not return errors but analyzes the provided error.
 #[must_use]
 #[allow(dead_code)]
-pub fn diagnose_error(error: &CoreError) -> ErrorDiagnosticReport {
-    diagnose_error_advanced(error, None, None)
+pub fn diagnoseerror(error: &CoreError) -> ErrorDiagnosticReport {
+    diagnoseerror_advanced(error, None, None)
 }
 
 /// Advanced error diagnosis function.
@@ -174,17 +174,17 @@ pub fn diagnose_error(error: &CoreError) -> ErrorDiagnosticReport {
 /// This function does not return errors but analyzes the provided error.
 #[must_use]
 #[allow(dead_code)]
-pub fn diagnose_error_advanced(
+pub fn diagnoseerror_advanced(
     error: &CoreError,
     context: Option<&str>,
     domain: Option<&str>,
 ) -> ErrorDiagnosticReport {
     let diagnostics = ErrorDiagnostics::global();
-    let mut report = diagnostics.analyze_error(error);
+    let mut report = diagnostics.analyzeerror(error);
 
     // Add predictive analysis if context is provided
     if let Some(ctx) = context {
-        report.predictions = diagnostics.predict_potential_errors(ctx);
+        report.predictions = diagnostics.predict_potentialerrors(ctx);
     }
 
     // Add domain-specific recovery strategies if domain is provided
@@ -197,9 +197,9 @@ pub fn diagnose_error_advanced(
 
 /// Record an error for pattern analysis
 #[allow(dead_code)]
-pub fn record_error(error: &CoreError, context: String) {
+pub fn recorderror(error: &CoreError, context: String) {
     let diagnostics = ErrorDiagnostics::global();
-    diagnostics.record_error(error, context);
+    diagnostics.recorderror(error, context);
 }
 
 /// Get predictive error analysis for a given context
@@ -207,7 +207,7 @@ pub fn record_error(error: &CoreError, context: String) {
 #[allow(dead_code)]
 pub fn context(context: &str) -> Vec<String> {
     let diagnostics = ErrorDiagnostics::global();
-    diagnostics.predict_potential_errors(context)
+    diagnostics.predict_potentialerrors(context)
 }
 
 /// Get domain-specific recovery strategies for an error
@@ -235,7 +235,7 @@ pub mod prelude {
     };
 
     // Convenience macros
-    pub use crate::{computation_error, dimension_error, domain_error, error_context, value_error};
+    pub use crate::{computationerror, dimensionerror, domainerror, error_context, valueerror};
 }
 
 #[cfg(test)]
@@ -245,7 +245,7 @@ mod tests {
     use std::time::Duration;
 
     #[test]
-    fn test_error_integration() {
+    fn testerror_integration() {
         let error = CoreError::DomainError(error_context!("Test error"));
         let recoverable = RecoverableError::error(error);
 
@@ -257,11 +257,11 @@ mod tests {
     #[test]
     fn test_retry_executor() {
         let policy = RetryPolicy {
-            max_attempts: 2,
-            base_delay: Duration::from_millis(1),
+            max_retries: 2,
+            initial_delay: Duration::from_millis(1),
             ..Default::default()
         };
-        let executor = RetryExecutor::policy(policy);
+        let executor = RetryExecutor::new(policy);
 
         let attempts = std::cell::RefCell::new(0);
         let result = executor.execute(|| {
@@ -281,9 +281,9 @@ mod tests {
     }
 
     #[test]
-    fn test_error_diagnostics() {
+    fn testerror_diagnostics() {
         let error = CoreError::MemoryError(error_context!("Out of memory"));
-        let report = diagnose_error(&error);
+        let report = diagnoseerror(&error);
 
         assert!(matches!(report.error, CoreError::MemoryError(_)));
         assert_eq!(report.performance_impact, PerformanceImpact::High);
@@ -291,20 +291,17 @@ mod tests {
     }
 
     #[test]
-    fn test_circuit_breaker() {
-        use crate::error::circuit_breaker::{CircuitBreakerConfig, CircuitState};
+    fn test_circuitbreaker() {
+        use crate::error::circuitbreaker::{CircuitBreakerConfig, CircuitState};
         use std::time::Duration;
 
         // Configure circuit breaker with low threshold for testing
         let config = CircuitBreakerConfig {
             failure_threshold: 1,
-            failure_window: Duration::from_secs(60),
-            recovery_timeout: Duration::from_secs(30),
             success_threshold: 1,
-            max_half_open_requests: 1,
-            minimum_request_threshold: 1,
+            timeout: Duration::from_secs(30),
         };
-        let breaker = CircuitBreaker::with_config("test_breaker".to_string(), config);
+        let breaker = CircuitBreaker::new(config);
 
         // First failure should work and trigger circuit opening
         let result: std::result::Result<(), CoreError> =
@@ -315,20 +312,20 @@ mod tests {
         let result = breaker.execute(|| Ok(42));
         assert!(result.is_err());
 
-        let status = breaker.status().unwrap();
+        let status = breaker.status();
         assert_eq!(status.failure_count, 1);
         assert_eq!(status.state, CircuitState::Open);
     }
 
     #[test]
-    fn test_error_aggregator() {
+    fn testerror_aggregator() {
         let mut aggregator = ErrorAggregator::new();
 
-        aggregator.add_simple_error(CoreError::ValueError(error_context!("Error 1")));
-        aggregator.add_simple_error(CoreError::DomainError(error_context!("Error 2")));
+        aggregator.add_simpleerror(CoreError::ValueError(error_context!("Error 1")));
+        aggregator.add_simpleerror(CoreError::DomainError(error_context!("Error 2")));
 
         assert_eq!(aggregator.error_count(), 2);
-        assert!(aggregator.has_errors());
+        assert!(aggregator.haserrors());
 
         let summary = aggregator.summary();
         assert!(summary.contains("Collected 2 error(s)"));
@@ -336,7 +333,7 @@ mod tests {
 
     #[cfg(feature = "async")]
     #[tokio::test]
-    async fn test_async_error_handling() {
+    async fn test_asyncerror_handling() {
         use super::async__handling::*;
 
         // Test timeout

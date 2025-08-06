@@ -114,7 +114,7 @@ struct Worker {
 
 impl ThreadPool {
     /// Create a new thread pool with the given configuration
-    pub fn new(_config: ThreadPoolConfig) -> Self {
+    pub fn new(config: ThreadPoolConfig) -> Self {
         let (io_sender, io_receiver) = mpsc::channel();
         let (cpu_sender, cpu_receiver) = mpsc::channel();
 
@@ -164,14 +164,14 @@ impl ThreadPool {
             cpu_workers,
             io_sender,
             cpu_sender,
-            config: _config,
+            config: config,
             stats,
             shutdown,
         }
     }
 
     /// Submit a task to the thread pool
-    pub fn submit<F>(&self, work_type: WorkType, task: F) -> Result<()>
+    pub fn submit<F>(&self, worktype: WorkType, task: F) -> Result<()>
     where
         F: FnOnce() -> Result<()> + Send + 'static,
     {
@@ -205,7 +205,7 @@ impl ThreadPool {
     }
 
     /// Submit a batch of tasks efficiently
-    pub fn submit_batch<F>(&self, work_type: WorkType, tasks: Vec<F>) -> Result<()>
+    pub fn submit_batch<F>(&self, worktype: WorkType, tasks: Vec<F>) -> Result<()>
     where
         F: FnOnce() -> Result<()> + Send + 'static,
     {
@@ -406,7 +406,7 @@ static GLOBAL_THREAD_POOL: std::sync::OnceLock<ThreadPool> = std::sync::OnceLock
 
 /// Initialize the global thread pool
 #[allow(dead_code)]
-pub fn init_global_thread_pool(_config: ThreadPoolConfig) {
+pub fn init_global_thread_pool(config: ThreadPoolConfig) {
     let _ = GLOBAL_THREAD_POOL.set(ThreadPool::new(_config));
 }
 
@@ -418,7 +418,7 @@ pub fn global_thread_pool() -> &'static ThreadPool {
 
 /// Execute a task on the global thread pool
 #[allow(dead_code)]
-pub fn execute<F>(_work_type: WorkType, task: F) -> Result<()>
+pub fn execute<F>(_worktype: WorkType, task: F) -> Result<()>
 where
     F: FnOnce() -> Result<()> + Send + 'static,
 {

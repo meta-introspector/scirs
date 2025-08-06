@@ -19,7 +19,7 @@
 //! - Concurrency contracts (thread-safety)
 //! - Memory contracts (allocation patterns)
 
-use crate::api_versioning::Version;
+use crate::apiversioning::Version;
 use crate::error::{CoreError, CoreResult, ErrorContext};
 use crate::performance_optimization::PerformanceMetrics;
 use std::collections::HashMap;
@@ -81,7 +81,7 @@ impl StabilityLevel {
 #[derive(Debug, Clone)]
 pub struct ApiContract {
     /// API identifier
-    pub api_name: String,
+    pub apiname: String,
     /// Module name
     pub module: String,
     /// Cryptographic hash of the contract for immutability
@@ -114,11 +114,11 @@ pub struct PerformanceContract {
     /// Space complexity
     pub space_complexity: ComplexityBound,
     /// Maximum execution time for typical inputs
-    pub max_execution_time: Option<Duration>,
+    pub maxexecution_time: Option<Duration>,
     /// Minimum throughput guarantee
     pub min_throughput: Option<f64>,
     /// Memory bandwidth utilization
-    pub memory_bandwidth: Option<f64>,
+    pub memorybandwidth: Option<f64>,
 }
 
 /// Numerical contract guarantees
@@ -370,7 +370,7 @@ pub struct MonitoringEvent {
     /// Event timestamp
     pub timestamp: Instant,
     /// API that triggered the event
-    pub api_name: String,
+    pub apiname: String,
     /// Module containing the API
     pub module: String,
     /// Event type
@@ -449,7 +449,7 @@ pub struct RuntimePerformanceMetrics {
 /// Chaos engineering fault types
 #[derive(Debug, Clone)]
 pub enum ChaosFault {
-    /// Artificial _delay injection
+    /// Artificial delay injection
     LatencyInjection(Duration),
     /// Memory pressure simulation
     MemoryPressure(usize),
@@ -475,7 +475,7 @@ pub struct FormalVerificationEngine {
 struct VerificationTask {
     /// API being verified
     #[allow(dead_code)]
-    api_name: String,
+    apiname: String,
     /// Module containing the API
     #[allow(dead_code)]
     module: String,
@@ -579,7 +579,7 @@ struct ChaosEngineeringController {
     /// Whether chaos engineering is enabled
     enabled: bool,
     /// Fault injection probability
-    fault_probability: f64,
+    faultprobability: f64,
     /// Active faults
     active_faults: Vec<ChaosFault>,
     /// Fault history
@@ -604,7 +604,7 @@ struct PerformanceDataPoint {
     #[allow(dead_code)]
     timestamp: Instant,
     /// API name
-    api_name: String,
+    apiname: String,
     /// Input characteristics
     input_characteristics: InputCharacteristics,
     /// Measured performance
@@ -621,7 +621,7 @@ pub struct InputCharacteristics {
     size: usize,
     /// Data type
     #[allow(dead_code)]
-    data_type: String,
+    datatype: String,
     /// Memory layout
     #[allow(dead_code)]
     memory_layout: String,
@@ -724,19 +724,19 @@ pub enum AuditData {
     ContractRegistration(String),
     /// Contract validation
     ContractValidation {
-        api_name: String,
+        apiname: String,
         module: String,
         result: bool,
     },
     /// Performance measurement
     PerformanceMeasurement {
-        api_name: String,
+        apiname: String,
         module: String,
         metrics: String, // Serialized metrics
     },
     /// Violation detection
     ViolationDetection {
-        api_name: String,
+        apiname: String,
         module: String,
         violation: String, // Serialized violation
     },
@@ -747,9 +747,9 @@ pub struct StabilityGuaranteeManager {
     /// Registered API contracts
     contracts: HashMap<String, ApiContract>,
     /// Compatibility matrix between versions
-    compatibility_matrix: HashMap<(Version, Version), bool>,
+    compatibilitymatrix: HashMap<(Version, Version), bool>,
     /// Breaking change log
-    breaking_changes: Vec<BreakingChange>,
+    breakingchanges: Vec<BreakingChange>,
     /// Formal verification engine
     verification_engine: Arc<FormalVerificationEngine>,
     /// Runtime contract validator
@@ -767,7 +767,7 @@ pub struct StabilityGuaranteeManager {
 #[derive(Debug, Clone)]
 pub struct BreakingChange {
     /// API that was changed
-    pub api_name: String,
+    pub apiname: String,
     /// Module containing the API
     pub module: String,
     /// Version where change occurred
@@ -810,8 +810,8 @@ impl StabilityGuaranteeManager {
 
         Self {
             contracts: HashMap::new(),
-            compatibility_matrix: HashMap::new(),
-            breaking_changes: Vec::new(),
+            compatibilitymatrix: HashMap::new(),
+            breakingchanges: Vec::new(),
             verification_engine: Arc::new(FormalVerificationEngine::new()),
             runtime_validator: Arc::new(validator),
             performance_modeler: Arc::new(AdvancedPerformanceModeler::new()),
@@ -823,9 +823,9 @@ impl StabilityGuaranteeManager {
     /// Register an API contract
     pub fn register_contract(&mut self, contract: ApiContract) -> CoreResult<()> {
         let key = format!(
-            "{module}::{api_name}",
+            "{module}::{apiname}",
             module = contract.module,
-            api_name = contract.api_name
+            apiname = contract.apiname
         );
 
         // Check for existing contract
@@ -844,14 +844,14 @@ impl StabilityGuaranteeManager {
     }
 
     /// Get contract for an API
-    pub fn get_contract(&self, api_name: &str, module: &str) -> Option<&ApiContract> {
-        let key = format!("{module}::{api_name}");
+    pub fn get_contract(&self, apiname: &str, module: &str) -> Option<&ApiContract> {
+        let key = format!("{module}::{apiname}");
         self.contracts.get(&key)
     }
 
     /// Check if an API has stability guarantees
-    pub fn has_stability_guarantees(&self, api_name: &str, module: &str) -> bool {
-        self.get_contract(api_name, module)
+    pub fn has_stability_guarantees(&self, apiname: &str, module: &str) -> bool {
+        self.get_contract(apiname, module)
             .map(|c| {
                 matches!(
                     c.stability,
@@ -864,13 +864,13 @@ impl StabilityGuaranteeManager {
     /// Validate API usage against contracts
     pub fn validate_usage(
         &self,
-        api_name: &str,
+        apiname: &str,
         module: &str,
         usage_context: &UsageContext,
     ) -> CoreResult<()> {
-        let contract = self.get_contract(api_name, module).ok_or_else(|| {
+        let contract = self.get_contract(apiname, module).ok_or_else(|| {
             CoreError::ValidationError(ErrorContext::new(format!(
-                "No contract found for {module}::{api_name}"
+                "No contract found for {module}::{apiname}"
             )))
         })?;
 
@@ -886,8 +886,8 @@ impl StabilityGuaranteeManager {
         }
 
         // Check performance requirements
-        if let Some(max_time) = usage_context.max_execution_time {
-            if let Some(contract_time) = contract.performance.max_execution_time {
+        if let Some(max_time) = usage_context.maxexecution_time {
+            if let Some(contract_time) = contract.performance.maxexecution_time {
                 if contract_time > max_time {
                     return Err(CoreError::ValidationError(ErrorContext::new(format!(
                         "Performance requirement not met: max execution time {contract_time:?} > required {max_time:?}"
@@ -901,7 +901,7 @@ impl StabilityGuaranteeManager {
             && contract.concurrency.thread_safety == ThreadSafety::NotThreadSafe
         {
             return Err(CoreError::ValidationError(ErrorContext::new(format!(
-                "Thread safety required but {module}::{api_name} is not thread-safe"
+                "Thread safety required but {module}::{apiname} is not thread-safe"
             ))));
         }
 
@@ -913,7 +913,7 @@ impl StabilityGuaranteeManager {
         // Extract version before moving the change
         let current_version = change.version;
 
-        self.breaking_changes.push(change);
+        self.breakingchanges.push(change);
 
         // Update compatibility matrix
         // Mark versions before and after the change as incompatible
@@ -923,14 +923,14 @@ impl StabilityGuaranteeManager {
             0,
         );
 
-        self.compatibility_matrix
+        self.compatibilitymatrix
             .insert((previous_version, current_version), false);
     }
 
     /// Check version compatibility
-    pub fn are_versions_compatible(&self, from: &Version, to: &Version) -> bool {
+    pub fn areversions_compatible(&self, from: &Version, to: &Version) -> bool {
         // Check explicit compatibility matrix first
-        if let Some(&compatible) = self.compatibility_matrix.get(&(*from, *to)) {
+        if let Some(&compatible) = self.compatibilitymatrix.get(&(*from, *to)) {
             return compatible;
         }
 
@@ -986,14 +986,14 @@ impl StabilityGuaranteeManager {
 
         // Breaking changes
         report.push_str("## Breaking Changes\n\n");
-        if self.breaking_changes.is_empty() {
+        if self.breakingchanges.is_empty() {
             report.push_str("No breaking changes recorded.\n\n");
         } else {
-            for change in &self.breaking_changes {
+            for change in &self.breakingchanges {
                 report.push_str(&format!(
                     "- **{}::{}** (v{}): {:?} - {}\n",
                     change.module,
-                    change.api_name,
+                    change.apiname,
                     change.version,
                     change.change_type,
                     change.description
@@ -1014,7 +1014,7 @@ impl StabilityGuaranteeManager {
             for contract in contracts {
                 report.push_str(&format!(
                     "- **{}** ({:?})\n",
-                    contract.api_name, contract.stability
+                    contract.apiname, contract.stability
                 ));
             }
             report.push('\n');
@@ -1027,9 +1027,9 @@ impl StabilityGuaranteeManager {
     pub fn initialize_core_contracts(&mut self) -> CoreResult<()> {
         // Error handling contracts
         self.register_contract(ApiContract {
-            api_name: "CoreError".to_string(),
+            apiname: "CoreError".to_string(),
             module: "error".to_string(),
-            contract_hash: "core_error_v1_0_0".to_string(),
+            contract_hash: "coreerror_v1_0_0".to_string(),
             created_at: SystemTime::now(),
             verification_status: VerificationStatus::Verified,
             stability: StabilityLevel::Stable,
@@ -1037,9 +1037,9 @@ impl StabilityGuaranteeManager {
             performance: PerformanceContract {
                 time_complexity: ComplexityBound::Constant,
                 space_complexity: ComplexityBound::Constant,
-                max_execution_time: Some(Duration::from_nanos(100)),
+                maxexecution_time: Some(Duration::from_nanos(100)),
                 min_throughput: None,
-                memory_bandwidth: None,
+                memorybandwidth: None,
             },
             numerical: NumericalContract {
                 precision: PrecisionGuarantee::Exact,
@@ -1074,7 +1074,7 @@ impl StabilityGuaranteeManager {
 
         // Validation function contracts
         self.register_contract(ApiContract {
-            api_name: "check_finite".to_string(),
+            apiname: "check_finite".to_string(),
             module: "validation".to_string(),
             contract_hash: "check_finite_v1_0_0".to_string(),
             created_at: SystemTime::now(),
@@ -1084,9 +1084,9 @@ impl StabilityGuaranteeManager {
             performance: PerformanceContract {
                 time_complexity: ComplexityBound::Constant,
                 space_complexity: ComplexityBound::Constant,
-                max_execution_time: Some(Duration::from_nanos(10)),
+                maxexecution_time: Some(Duration::from_nanos(10)),
                 min_throughput: None,
-                memory_bandwidth: None,
+                memorybandwidth: None,
             },
             numerical: NumericalContract {
                 precision: PrecisionGuarantee::Exact,
@@ -1130,7 +1130,7 @@ impl StabilityGuaranteeManager {
 
         let mut hasher = DefaultHasher::new();
 
-        contract.api_name.hash(&mut hasher);
+        contract.apiname.hash(&mut hasher);
         contract.module.hash(&mut hasher);
         format!("{:?}", contract.stability).hash(&mut hasher);
         format!("{:?}", contract.performance.time_complexity).hash(&mut hasher);
@@ -1141,24 +1141,24 @@ impl StabilityGuaranteeManager {
     /// Validate API call at runtime
     pub fn validate_api_call(
         &self,
-        api_name: &str,
+        apiname: &str,
         module: &str,
         call_context: &ApiCallContext,
     ) -> CoreResult<()> {
         self.runtime_validator
-            .validate_api_call(api_name, module, call_context)
+            .validate_api_call(apiname, module, call_context)
     }
 
     /// Enable chaos engineering for resilience testing
-    pub fn enable_chaos_engineering(&mut self, fault_probability: f64) {
+    pub fn enable_chaos_engineering(&mut self, faultprobability: f64) {
         self.runtime_validator
-            .enable_chaos_engineering(fault_probability);
+            .enable_chaos_engineering(faultprobability);
     }
 
     /// Record performance measurement for modeling
     pub fn record_performance(
         &mut self,
-        api_name: &str,
+        apiname: &str,
         module: &str,
         system_state: SystemState,
         input_characteristics: InputCharacteristics,
@@ -1168,7 +1168,7 @@ impl StabilityGuaranteeManager {
         let metrics_for_audit = format!("{performance:?}");
 
         self.performance_modeler.record_measurement(
-            api_name,
+            apiname,
             input_characteristics,
             performance,
             system_state,
@@ -1178,7 +1178,7 @@ impl StabilityGuaranteeManager {
         let _ = self
             .audit_trail
             .add_record(AuditData::PerformanceMeasurement {
-                api_name: api_name.to_string(),
+                apiname: apiname.to_string(),
                 module: module.to_string(),
                 metrics: metrics_for_audit,
             });
@@ -1187,18 +1187,18 @@ impl StabilityGuaranteeManager {
     /// Predict performance for given conditions
     pub fn predict_performance(
         &self,
-        api_name: &str,
+        apiname: &str,
         input_characteristics: InputCharacteristics,
         system_state: &SystemState,
     ) -> Option<RuntimePerformanceMetrics> {
         self.performance_modeler
-            .predict_performance(api_name, input_characteristics, system_state)
+            .predict_performance(apiname, input_characteristics, system_state)
     }
 
     /// Get formal verification status
-    pub fn get_verification_status(&self, api_name: &str, module: &str) -> VerificationStatus {
+    pub fn get_verification_status(&self, apiname: &str, module: &str) -> VerificationStatus {
         self.verification_engine
-            .get_verification_status(api_name, module)
+            .get_verification_status(apiname, module)
     }
 
     /// Get runtime validation statistics
@@ -1222,8 +1222,8 @@ impl StabilityGuaranteeManager {
     }
 
     /// Get performance model accuracy for an API
-    pub fn get_model_accuracy(&self, api_name: &str) -> Option<f64> {
-        self.performance_modeler.get_model_accuracy(api_name)
+    pub fn get_model_accuracy(&self, apiname: &str) -> Option<f64> {
+        self.performance_modeler.get_model_accuracy(apiname)
     }
 
     /// Get chaos engineering status
@@ -1243,7 +1243,7 @@ pub struct UsageContext {
     /// Required stability level
     pub required_stability: StabilityLevel,
     /// Maximum acceptable execution time
-    pub max_execution_time: Option<Duration>,
+    pub maxexecution_time: Option<Duration>,
     /// Whether thread safety is required
     pub requires_thread_safety: bool,
     /// Maximum acceptable memory usage
@@ -1256,7 +1256,7 @@ impl Default for UsageContext {
     fn default() -> Self {
         Self {
             required_stability: StabilityLevel::Stable,
-            max_execution_time: None,
+            maxexecution_time: None,
             requires_thread_safety: false,
             max_memory_usage: None,
             required_precision: None,
@@ -1285,21 +1285,21 @@ pub fn global_stability_manager() -> &'static mut StabilityGuaranteeManager {
 
 /// Check if an API has long-term stability guarantees
 #[allow(dead_code)]
-pub fn has_stability_guarantee(api_name: &str, module: &str) -> bool {
-    global_stability_manager().has_stability_guarantees(api_name, module)
+pub fn has_stability_guarantee(apiname: &str, module: &str) -> bool {
+    global_stability_manager().has_stability_guarantees(apiname, module)
 }
 
 /// Validate API usage against stability contracts
 #[allow(dead_code)]
-pub fn validate_api_usage(api_name: &str, module: &str, _context: &UsageContext) -> CoreResult<()> {
-    global_stability_manager().validate_usage(api_name, module, _context)
+pub fn validate_api_usage(apiname: &str, module: &str, context: &UsageContext) -> CoreResult<()> {
+    global_stability_manager().validate_usage(apiname, module, context)
 }
 
 /// Check if an API has long-term stability
 #[allow(dead_code)]
-pub fn has_long_term_stability(api_name: &str, module: &str) -> bool {
+pub fn has_long_term_stability(apiname: &str, module: &str) -> bool {
     // For now, return true for all APIs
-    let _ = (api_name, module); // Use parameters to avoid warnings
+    let _ = (apiname, module); // Use parameters to avoid warnings
     true // Default to true for all cases
 }
 
@@ -1307,7 +1307,7 @@ pub fn has_long_term_stability(api_name: &str, module: &str) -> bool {
 #[derive(Debug, Clone)]
 pub struct StabilityContract {
     /// API name
-    pub api_name: String,
+    pub apiname: String,
     /// Version when introduced
     pub version_introduced: Version,
     /// Stability level
@@ -1323,7 +1323,7 @@ pub struct StabilityContract {
     /// Thread safety
     pub thread_safety: ThreadSafety,
     /// Breaking changes history
-    pub breaking_changes: Vec<BreakingChange>,
+    pub breakingchanges: Vec<BreakingChange>,
     /// Migration path (if deprecated)
     pub migration_path: Option<String>,
 }
@@ -1331,13 +1331,13 @@ pub struct StabilityContract {
 /// Validate stability requirements
 #[allow(dead_code)]
 pub fn validate_stability_requirements(
-    api_name: &str,
+    apiname: &str,
     _module: &str,
     _context: &UsageContext,
 ) -> Result<StabilityContract, CoreError> {
     // Simple implementation that returns a default contract
     Ok(StabilityContract {
-        api_name: api_name.to_string(),
+        apiname: apiname.to_string(),
         version_introduced: Version::new(0, 1, 0),
         stability_level: StabilityLevel::Stable,
         deprecated_since: None,
@@ -1345,7 +1345,7 @@ pub fn validate_stability_requirements(
         complexity_bound: ComplexityBound::Constant,
         precision_guarantee: PrecisionGuarantee::MachinePrecision,
         thread_safety: ThreadSafety::ThreadSafe,
-        breaking_changes: vec![],
+        breakingchanges: vec![],
         migration_path: None,
     })
 }
@@ -1367,7 +1367,7 @@ mod tests {
         let mut manager = StabilityGuaranteeManager::new();
 
         let contract = ApiContract {
-            api_name: "test_function".to_string(),
+            apiname: "test_function".to_string(),
             module: "test_module".to_string(),
             contract_hash: "test_function_v1_0_0".to_string(),
             created_at: SystemTime::now(),
@@ -1377,9 +1377,9 @@ mod tests {
             performance: PerformanceContract {
                 time_complexity: ComplexityBound::Linear,
                 space_complexity: ComplexityBound::Constant,
-                max_execution_time: Some(Duration::from_millis(100)),
+                maxexecution_time: Some(Duration::from_millis(100)),
                 min_throughput: None,
-                memory_bandwidth: None,
+                memorybandwidth: None,
             },
             numerical: NumericalContract {
                 precision: PrecisionGuarantee::MachinePrecision,
@@ -1428,7 +1428,7 @@ mod tests {
 
         let context = UsageContext {
             required_stability: StabilityLevel::Stable,
-            max_execution_time: Some(Duration::from_millis(1)),
+            maxexecution_time: Some(Duration::from_millis(1)),
             requires_thread_safety: true,
             max_memory_usage: Some(2048),
             required_precision: Some(PrecisionGuarantee::Exact),
@@ -1444,7 +1444,7 @@ mod tests {
         let mut manager = StabilityGuaranteeManager::new();
 
         let change = BreakingChange {
-            api_name: "test_function".to_string(),
+            apiname: "test_function".to_string(),
             module: "test_module".to_string(),
             version: Version::new(2, 0, 0),
             change_type: BreakingChangeType::SignatureChange,
@@ -1454,8 +1454,8 @@ mod tests {
 
         manager.record_breaking_change(change);
 
-        assert_eq!(manager.breaking_changes.len(), 1);
-        assert!(!manager.are_versions_compatible(&Version::new(1, 9, 0), &Version::new(2, 0, 0)));
+        assert_eq!(manager.breakingchanges.len(), 1);
+        assert!(!manager.areversions_compatible(&Version::new(1, 9, 0), &Version::new(2, 0, 0)));
     }
 
     #[test]
@@ -1463,13 +1463,13 @@ mod tests {
         let manager = StabilityGuaranteeManager::new();
 
         // Same major version, newer minor - compatible
-        assert!(manager.are_versions_compatible(&Version::new(1, 0, 0), &Version::new(1, 1, 0)));
+        assert!(manager.areversions_compatible(&Version::new(1, 0, 0), &Version::new(1, 1, 0)));
 
         // Different major version - not compatible
-        assert!(!manager.are_versions_compatible(&Version::new(1, 0, 0), &Version::new(2, 0, 0)));
+        assert!(!manager.areversions_compatible(&Version::new(1, 0, 0), &Version::new(2, 0, 0)));
 
         // Downgrade minor version - not compatible
-        assert!(!manager.are_versions_compatible(&Version::new(1, 1, 0), &Version::new(1, 0, 0)));
+        assert!(!manager.areversions_compatible(&Version::new(1, 1, 0), &Version::new(1, 0, 0)));
     }
 
     #[test]

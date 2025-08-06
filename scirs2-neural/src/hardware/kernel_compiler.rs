@@ -23,9 +23,9 @@ pub struct KernelCompiler {
     cache: HashMap<String, CompiledKernel>,
 impl KernelCompiler {
     /// Create a new kernel compiler
-    pub fn new(_optimization_level: OptimizationLevel) -> Self {
+    pub fn new(_optimizationlevel: OptimizationLevel) -> Self {
         Self {
-            _optimization_level,
+            optimization_level,
             cache: HashMap::new(),
         }
     }
@@ -156,7 +156,7 @@ impl CompilationTarget {
             CompilationTarget::SPIRV => "spirv",
             CompilationTarget::CPU => "cpu",
     /// From accelerator type
-    pub fn from_accelerator(_acc_type: AcceleratorType) -> Self {
+    pub fn from_accelerator(_acctype: AcceleratorType) -> Self {
         match _acc_type {
             AcceleratorType::CUDA => CompilationTarget::CUDA,
             AcceleratorType::ROCm => CompilationTarget::OpenCL,
@@ -198,7 +198,7 @@ impl KernelTemplateGenerator {
             CompilationTarget::CUDA => Self::cuda_matmul_template(m, n, k, tile_size),
             CompilationTarget::OpenCL => Self::opencl_matmul_template(m, n, k, tile_size, _ => String::new(),
     /// CUDA matrix multiplication template
-    fn cuda_matmul_template(m: usize, n: usize, k: usize, tile_size: usize) -> String {
+    fn cuda_matmul_template(m: usize, n: usize, k: usize, tilesize: usize) -> String {
         format!(
             r#"
 __global__ void matmul_kernel(
@@ -241,7 +241,7 @@ __global__ void matmul_kernel(
             tile_size
         )
     /// OpenCL matrix multiplication template
-    fn opencl_matmul_template(m: usize, n: usize, k: usize, tile_size: usize) -> String {
+    fn opencl_matmul_template(m: usize, n: usize, k: usize, tilesize: usize) -> String {
 __kernel void matmul_kernel(
     __global const float* A__global const float* B__global float* C__local float As[TILE_SIZE][TILE_SIZE];
     __local float Bs[TILE_SIZE][TILE_SIZE];

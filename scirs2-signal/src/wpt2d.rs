@@ -119,7 +119,7 @@ pub struct WaveletPacketTree2D {
 
 impl WaveletPacketTree2D {
     /// Creates a new wavelet packet tree.
-    pub fn new(_wavelet: Wavelet, max_level: usize, root_coeffs: Array2<f64>) -> Self {
+    pub fn new(_wavelet: Wavelet, max_level: usize, rootcoeffs: Array2<f64>) -> Self {
         let mut packets = HashMap::new();
         let shape = root_coeffs.dim();
 
@@ -128,7 +128,7 @@ impl WaveletPacketTree2D {
         packets.insert((0, 0, 0), root);
 
         WaveletPacketTree2D {
-            _wavelet,
+            wavelet,
             max_level,
             packets,
             originalshape: shape,
@@ -161,7 +161,7 @@ impl WaveletPacketTree2D {
         self.packets
             .iter()
             .filter_map(
-                |((l__), packet)| {
+                |((l, _, _), packet)| {
                     if *l == level {
                         Some(packet)
                     } else {
@@ -351,18 +351,18 @@ fn decompose_node(
     max_level: usize,
     mode: Option<&str>,
 ) -> SignalResult<()> {
-    // If we've reached the maximum _level, stop recursion
-    if _level >= max_level {
+    // If we've reached the maximum level, stop recursion
+    if level >= max_level {
         return Ok(());
     }
 
     // Get the current node's coefficients
     let parent = tree
-        .get_packet(_level, row, col)
+        .get_packet(level, row, col)
         .ok_or_else(|| {
             SignalError::ValueError(format!(
-                "Missing wavelet packet at _level {}, position ({}, {})",
-                _level, row, col
+                "Missing wavelet packet at level {}, position ({}, {})",
+                level, row, col
             ))
         })?
         .clone();
@@ -373,8 +373,8 @@ fn decompose_node(
     // Decompose the coefficients into 4 subbands
     let (ll, lh, hl, hh) = decompose_2d(&parent.coeffs, &filters, mode)?;
 
-    // Calculate child positions in the next _level
-    let child_level = _level + 1;
+    // Calculate child positions in the next level
+    let child_level = level + 1;
     let child_row_base = row * 2;
     let child_col_base = col * 2;
 
@@ -549,8 +549,8 @@ fn decompose_2d(
 
 /// Apply a filter to a signal and downsample by 2.
 #[allow(dead_code)]
-fn apply_filter(_signal: &[f64], filter: &[f64], mode: Option<&str>) -> Vec<f64> {
-    let n = _signal.len();
+fn apply_filter(signal: &[f64], filter: &[f64], mode: Option<&str>) -> Vec<f64> {
+    let n = signal.len();
     let filter_len = filter.len();
     let extension_mode = mode.unwrap_or("symmetric");
 
@@ -589,7 +589,7 @@ fn apply_filter(_signal: &[f64], filter: &[f64], mode: Option<&str>) -> Vec<f64>
                 _ => return vec![], // Invalid mode
             };
 
-            sum += _signal[signal_idx] * filter_val;
+            sum += signal[signal_idx] * filter_val;
         }
 
         *item = sum;
@@ -699,18 +699,18 @@ fn decompose_node_selective<F>(
 where
     F: Fn(&WaveletPacket2D) -> bool + Copy,
 {
-    // If we've reached the maximum _level, stop recursion
-    if _level >= max_level {
+    // If we've reached the maximum level, stop recursion
+    if level >= max_level {
         return Ok(());
     }
 
     // Get the current node's coefficients
     let parent = tree
-        .get_packet(_level, row, col)
+        .get_packet(level, row, col)
         .ok_or_else(|| {
             SignalError::ValueError(format!(
-                "Missing wavelet packet at _level {}, position ({}, {})",
-                _level, row, col
+                "Missing wavelet packet at level {}, position ({}, {})",
+                level, row, col
             ))
         })?
         .clone();
@@ -727,8 +727,8 @@ where
     // Decompose the coefficients into 4 subbands
     let (ll, lh, hl, hh) = decompose_2d(&parent.coeffs, &filters, mode)?;
 
-    // Calculate child positions in the next _level
-    let child_level = _level + 1;
+    // Calculate child positions in the next level
+    let child_level = level + 1;
     let child_row_base = row * 2;
     let child_col_base = col * 2;
 
@@ -834,12 +834,13 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     // Helper function to create a test image
-    fn create_test_image(_size: usize) -> Array2<f64> {
-        let mut image = Array2::zeros((_size, _size));
-        for i in 0.._size {
-            for j in 0.._size {
+    fn create_test_image(size: usize) -> Array2<f64> {
+        let mut image = Array2::zeros((size, size));
+        for i in 0..size {
+            for j in 0..size {
                 image[[i, j]] = (i * j) as f64;
             }
         }

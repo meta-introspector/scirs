@@ -74,7 +74,7 @@ impl PyKMeans {
             max_iter,
             tol,
             random_state,
-            n_init_init: _init.to_string(),
+            n_init_init: init.to_string(),
             cluster_centers_: None,
             labels_: None,
             inertia_: None,
@@ -288,9 +288,9 @@ impl PyDBSCAN {
     /// Create new DBSCAN clustering instance
     #[new]
     #[pyo3(signature = (eps=0.5, min_samples=5, metric="euclidean"))]
-    fn new(_eps: f64, min_samples: usize, metric: &str) -> Self {
+    fn new(_eps: f64, minsamples: usize, metric: &str) -> Self {
         Self {
-            _eps,
+            eps,
             min_samples,
             metric: metric.to_string(),
             labels_: None,
@@ -368,9 +368,9 @@ impl PyAgglomerativeClustering {
     /// Create new agglomerative clustering instance
     #[new]
     #[pyo3(signature = (n_clusters=2, *, linkage="ward", metric="euclidean"))]
-    fn new(_n_clusters: usize, linkage: &str, metric: &str) -> Self {
+    fn new(_nclusters: usize, linkage: &str, metric: &str) -> Self {
         Self {
-            _n_clusters,
+            n_clusters,
             linkage: linkage.to_string(),
             metric: metric.to_string(),
             labels_: None,
@@ -484,9 +484,9 @@ impl PyBirch {
     /// Create new BIRCH clustering instance
     #[new]
     #[pyo3(signature = (n_clusters=None, *, threshold=0.5, branching_factor=50))]
-    fn new(_n_clusters: Option<usize>, threshold: f64, branching_factor: usize) -> Self {
+    fn new(_n_clusters: Option<usize>, threshold: f64, branchingfactor: usize) -> Self {
         Self {
-            _n_clusters,
+            n_clusters,
             threshold,
             branching_factor,
             labels_: None,
@@ -675,10 +675,10 @@ impl PyMeanShift {
     /// Create new Mean Shift clustering instance
     #[new]
     #[pyo3(signature = (bandwidth=None, *, seeds=None, cluster_all=true))]
-    fn new(_bandwidth: Option<f64>, seeds: Option<&PyArray2<f64>>, cluster_all: bool) -> Self {
+    fn new(_bandwidth: Option<f64>, seeds: Option<&PyArray2<f64>>, clusterall: bool) -> Self {
         let seeds_array = seeds.map(|s| unsafe { s.as_array().to_owned() });
         Self {
-            _bandwidth,
+            bandwidth,
             seeds: seeds_array,
             cluster_all,
             labels_: None,
@@ -922,7 +922,7 @@ impl PyGaussianMixture {
 #[cfg(feature = "pyo3")]
 #[pymodule]
 #[allow(dead_code)]
-fn metrics(_py: Python, m: &PyModule) -> PyResult<()> {
+fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
     /// Calculate silhouette score
     #[pyfn(m)]
     fn silhouette_score_py(
@@ -1063,7 +1063,7 @@ fn metrics(_py: Python, m: &PyModule) -> PyResult<()> {
 #[cfg(feature = "pyo3")]
 #[pymodule]
 #[allow(dead_code)]
-fn scirs2_cluster(_py: Python, m: &PyModule) -> PyResult<()> {
+fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
     // Core clustering algorithms
     m.add_class::<PyKMeans>()?;
     m.add_class::<PyDBSCAN>()?;

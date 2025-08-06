@@ -785,16 +785,16 @@ fn initialize_reservoir(
 }
 
 #[allow(dead_code)]
-fn image_to_currents<T>(_image: &ArrayView2<T>) -> NdimageResult<Array2<f64>>
+fn image_to_currents<T>(image: &ArrayView2<T>) -> NdimageResult<Array2<f64>>
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (height, width) = _image.dim();
+    let (height, width) = image.dim();
     let mut currents = Array2::zeros((height, width));
 
     for y in 0..height {
         for x in 0..width {
-            currents[(y, x)] = _image[(y, x)].to_f64().unwrap_or(0.0);
+            currents[(y, x)] = image[(y, x)].to_f64().unwrap_or(0.0);
         }
     }
 
@@ -833,10 +833,10 @@ fn update_reservoir_dynamics(
 }
 
 #[allow(dead_code)]
-fn capture_reservoir_state(_reservoir: &Array1<SpikingNeuron>) -> NdimageResult<Array1<f64>> {
+fn capture_reservoir_state(reservoir: &Array1<SpikingNeuron>) -> NdimageResult<Array1<f64>> {
     let mut state = Array1::zeros(_reservoir.len());
 
-    for (i, neuron) in _reservoir.iter().enumerate() {
+    for (i, neuron) in reservoir.iter().enumerate() {
         state[i] = neuron.membrane_potential;
     }
 

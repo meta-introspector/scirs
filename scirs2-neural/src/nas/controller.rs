@@ -39,13 +39,13 @@ pub struct NASController {
     search_space: SearchSpaceConfig,
 impl NASController {
     /// Create a new NAS controller
-    pub fn new(_search_space: SearchSpaceConfig) -> Result<Self> {
+    pub fn new(_searchspace: SearchSpaceConfig) -> Result<Self> {
         Ok(Self {
             config: ControllerConfig::default(),
-            _search_space,
+            search_space,
         })
     /// Create with custom configuration
-    pub fn with_config(_search_space: SearchSpaceConfig, config: ControllerConfig) -> Result<Self> {
+    pub fn with_config(_searchspace: SearchSpaceConfig, config: ControllerConfig) -> Result<Self> {
             config,
     /// Build a model from an architecture encoding
     pub fn build_model(&self, encoding: &Arc<dyn ArchitectureEncoding>) -> Result<Sequential<f32>> {
@@ -194,7 +194,7 @@ impl NASController {
                         _input: &ndarray::ArrayD<f32>,
                         grad_output: &ndarray::ArrayD<f32>,
                         Ok(grad_output.clone())
-                    fn update(&mut self, learning_rate: f32) -> Result<()> {
+                    fn update(&mut self, learningrate: f32) -> Result<()> {
                         Ok(())
                     fn as_any(&self) -> &dyn std::any::Any {
                         self
@@ -286,7 +286,7 @@ impl NASController {
                         _input: &ndarray::ArrayD<F>,
                         grad_output: &ndarray::ArrayD<F>,
                     ) -> Result<ndarray::ArrayD<F>> {
-                    fn update(&mut self, learning_rate: F) -> Result<()> {
+                    fn update(&mut self, learningrate: F) -> Result<()> {
                         "Reshape"
                 Ok(Box::new(ReshapeLayer {
                     targetshape: newshape.clone(),

@@ -136,7 +136,7 @@ where
                         attention_weights[[b, h, i, j]] = attention_weights[[b, h, i, j]] / sum;
     // Apply attention weights to values: attention_weights @ V
     let mut attention_output = Array::zeros((batch_size, num_heads, seq_len, head_dim));
-            let attn_slice = attention_weights.slice(s![b, h, .., ..]).into_dimensionality::<ndarray::Ix2>()
+            let attn_slice = attentionweights.slice(s![b, h, .., ..]).into_dimensionality::<ndarray::Ix2>()
                 .map_err(|_| NeuralError::InferenceError("Failed to get attention slice".to_string()))?;
             let v_slice = v_transposed.slice(s![b, h, .., ..]).into_dimensionality::<ndarray::Ix2>()
                 .map_err(|_| NeuralError::InferenceError("Failed to get V slice".to_string()))?;

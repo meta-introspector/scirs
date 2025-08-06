@@ -241,8 +241,8 @@ pub struct DatasetExplorer {
 
 impl DatasetExplorer {
     /// Create a new dataset explorer
-    pub fn new(_config: ExploreConfig) -> Self {
-        Self { _config }
+    pub fn new(config: ExploreConfig) -> Self {
+        Self { config }
     }
 
     /// Create with default configuration
@@ -460,8 +460,8 @@ impl DatasetExplorer {
         })
     }
 
-    fn percentile(_sorted_values: &[f64], p: f64) -> Option<f64> {
-        if _sorted_values.is_empty() {
+    fn percentile(_sortedvalues: &[f64], p: f64) -> Option<f64> {
+        if sorted_values.is_empty() {
             return None;
         }
 
@@ -672,7 +672,7 @@ impl DatasetExplorer {
     }
 
     fn assess_quality(
-        &self_dataset: &Dataset,
+        self_dataset: &Dataset,
         statistics: &FeatureStatistics,
         missing_data: &MissingDataAnalysis,
     ) -> Result<QualityAssessment> {
@@ -875,7 +875,7 @@ impl DatasetExplorer {
         Ok(())
     }
 
-    fn display_missing_data(&self, missing_data: &MissingDataAnalysis) -> Result<()> {
+    fn display_missing_data(&self, missingdata: &MissingDataAnalysis) -> Result<()> {
         println!("❌ Missing Data Analysis");
         println!("========================");
         println!(
@@ -896,7 +896,7 @@ impl DatasetExplorer {
         Ok(())
     }
 
-    fn display_target_analysis(&self, target_analysis: &TargetAnalysis) -> Result<()> {
+    fn display_target_analysis(&self, targetanalysis: &TargetAnalysis) -> Result<()> {
         println!("🎯 Target Analysis");
         println!("==================");
 
@@ -1179,13 +1179,13 @@ pub mod convenience {
     use super::*;
 
     /// Quick dataset summary with default configuration
-    pub fn quick_summary(_dataset: &Dataset) -> Result<DatasetSummary> {
+    pub fn quick_summary(dataset: &Dataset) -> Result<DatasetSummary> {
         let explorer = DatasetExplorer::default_config();
         explorer.summarize(_dataset)
     }
 
     /// Display basic dataset information
-    pub fn info(_dataset: &Dataset) -> Result<()> {
+    pub fn info(dataset: &Dataset) -> Result<()> {
         let explorer = DatasetExplorer::default_config();
         let summary = explorer.summarize(_dataset)?;
         explorer.display_basic_info(&summary.info);
@@ -1193,7 +1193,7 @@ pub mod convenience {
     }
 
     /// Start interactive exploration
-    pub fn explore(_dataset: &Dataset) -> Result<()> {
+    pub fn explore(dataset: &Dataset) -> Result<()> {
         let config = ExploreConfig {
             interactive: true,
             ..Default::default()
@@ -1204,7 +1204,7 @@ pub mod convenience {
     }
 
     /// Export dataset summary to file
-    pub fn export_summary(_dataset: &Dataset, format: OutputFormat, filename: &str) -> Result<()> {
+    pub fn export_summary(dataset: &Dataset, format: OutputFormat, filename: &str) -> Result<()> {
         let config = ExploreConfig {
             output_format: format,
             ..Default::default()

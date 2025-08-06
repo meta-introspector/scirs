@@ -236,7 +236,7 @@ where
 // Helper functions for distributed decompositions
 
 #[allow(dead_code)]
-fn find_pivot_row<T>(_matrix: &DistributedMatrix<T>, k: usize) -> LinalgResult<usize>
+fn find_pivot_row<T>(matrix: &DistributedMatrix<T>, k: usize) -> LinalgResult<usize>
 where
     T: Float + Send + Sync,
 {
@@ -245,7 +245,7 @@ where
 }
 
 #[allow(dead_code)]
-fn swap_rows<T>(_matrix: &mut DistributedMatrix<T>, i: usize, j: usize) -> LinalgResult<()>
+fn swap_rows<T>(matrix: &mut DistributedMatrix<T>, i: usize, j: usize) -> LinalgResult<()>
 where
     T: Float + Send + Sync,
 {
@@ -269,17 +269,17 @@ where
 }
 
 #[allow(dead_code)]
-fn initialize_identity<T>(_matrix: &mut DistributedMatrix<T>) -> LinalgResult<()>
+fn initialize_identity<T>(matrix: &mut DistributedMatrix<T>) -> LinalgResult<()>
 where
     T: Float + Send + Sync,
 {
-    let (rows, cols) = _matrix.localshape();
+    let (rows, cols) = matrix.localshape();
     for i in 0..rows {
         for j in 0..cols {
             if i == j {
-                _matrix.local_data_mut()[[i, j]] = T::one();
+                matrix.local_data_mut()[[i, j]] = T::one();
             } else {
-                _matrix.local_data_mut()[[i, j]] = T::zero();
+                matrix.local_data_mut()[[i, j]] = T::zero();
             }
         }
     }
@@ -315,14 +315,14 @@ where
 }
 
 #[allow(dead_code)]
-fn zero_upper_triangle<T>(_matrix: &mut DistributedMatrix<T>) -> LinalgResult<()>
+fn zero_upper_triangle<T>(matrix: &mut DistributedMatrix<T>) -> LinalgResult<()>
 where
     T: Float + Send + Sync,
 {
-    let (rows, cols) = _matrix.localshape();
+    let (rows, cols) = matrix.localshape();
     for i in 0..rows {
         for j in (i + 1)..cols {
-            _matrix.local_data_mut()[[i, j]] = T::zero();
+            matrix.local_data_mut()[[i, j]] = T::zero();
         }
     }
     Ok(())
@@ -479,7 +479,7 @@ where
 }
 
 #[allow(dead_code)]
-fn check_convergence<T>(_matrix: &DistributedMatrix<T>, tolerance: T) -> LinalgResult<bool>
+fn check_convergence<T>(matrix: &DistributedMatrix<T>, tolerance: T) -> LinalgResult<bool>
 where
     T: Float + Send + Sync,
 {
@@ -489,17 +489,17 @@ where
 }
 
 #[allow(dead_code)]
-fn extract_diagonal<T>(_matrix: &DistributedMatrix<T>) -> LinalgResult<Array1<T>>
+fn extract_diagonal<T>(matrix: &DistributedMatrix<T>) -> LinalgResult<Array1<T>>
 where
     T: Float + Send + Sync,
 {
     // Extract diagonal elements from distributed _matrix
-    let (m, n) = _matrix.localshape();
+    let (m, n) = matrix.localshape();
     let size = m.min(n);
     let mut diagonal = Array1::zeros(size);
     
     for i in 0..size {
-        diagonal[i] = _matrix.local_data()[[i, i]];
+        diagonal[i] = matrix.local_data()[[i, i]];
     }
     
     Ok(diagonal)
@@ -507,7 +507,7 @@ where
 
 /// Distributed matrix rank computation
 #[allow(dead_code)]
-pub fn matrix_rank<T>(_matrix: &DistributedMatrix<T>, tolerance: Option<T>) -> LinalgResult<usize>
+pub fn matrix_rank<T>(matrix: &DistributedMatrix<T>, tolerance: Option<T>) -> LinalgResult<usize>
 where
     T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
@@ -525,7 +525,7 @@ where
 
 /// Distributed matrix condition number
 #[allow(dead_code)]
-pub fn condition_number<T>(_matrix: &DistributedMatrix<T>) -> LinalgResult<T>
+pub fn condition_number<T>(matrix: &DistributedMatrix<T>) -> LinalgResult<T>
 where
     T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {

@@ -377,7 +377,7 @@ impl ConferenceManager {
     }
     
     /// Get upcoming deadlines
-    pub fn get_upcoming_deadlines(&self, days_ahead: u32) -> Vec<(&Conference, DeadlineType, DateTime<Utc>)> {
+    pub fn get_upcoming_deadlines(&self, daysahead: u32) -> Vec<(&Conference, DeadlineType, DateTime<Utc>)> {
         let mut deadlines = Vec::new();
         let now = Utc::now();
         let future_limit = now + chrono::Duration::days(days_ahead as i64);
@@ -414,11 +414,11 @@ impl ConferenceManager {
     }
     
     /// Search conferences by research area
-    pub fn search_conferences(&self, research_area: &str) -> Vec<&Conference> {
+    pub fn search_conferences(&self, researcharea: &str) -> Vec<&Conference> {
         self.conferences.values()
             .filter(|conf| {
                 conf.research_areas.iter()
-                    .any(|_area| _area.to_lowercase().contains(&research_area.to_lowercase()))
+                    .any(|_area| area.to_lowercase().contains(&research_area.to_lowercase()))
             })
             .collect()
     }

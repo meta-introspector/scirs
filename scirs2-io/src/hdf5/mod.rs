@@ -384,7 +384,7 @@ pub struct FileStats {
 impl HDF5File {
     /// Create a new HDF5 file
     pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let path_str = _path.as_ref().to_string_lossy().to_string();
+        let path_str = path.as_ref().to_string_lossy().to_string();
 
         #[cfg(feature = "hdf5")]
         {
@@ -411,7 +411,7 @@ impl HDF5File {
 
     /// Open an existing HDF5 file
     pub fn open<P: AsRef<Path>>(path: P, mode: FileMode) -> Result<Self> {
-        let path_str = _path.as_ref().to_string_lossy().to_string();
+        let path_str = path.as_ref().to_string_lossy().to_string();
 
         #[cfg(feature = "hdf5")]
         {
@@ -468,7 +468,7 @@ impl HDF5File {
 
     /// Load group structure from native HDF5 file
     #[cfg(feature = "hdf5")]
-    fn load_group_structure(_file: &File, group: &mut Group) -> Result<()> {
+    fn load_group_structure(file: &File, group: &mut Group) -> Result<()> {
         use hdf5::types::TypeDescriptor;
 
         // Load all datasets in the current group
@@ -477,7 +477,7 @@ impl HDF5File {
             .map_err(|e| IoError::FormatError(format!("Failed to get dataset names: {e}")))?;
 
         for dataset_name in dataset_names {
-            if let Ok(h5_dataset) = _file.dataset(&dataset_name) {
+            if let Ok(h5_dataset) = file.dataset(&dataset_name) {
                 // Get dataset metadata
                 let shape: Vec<usize> = h5_dataset.shape().to_vec();
                 let dtype = h5_dataset.dtype().map_err(|e| {
@@ -522,7 +522,7 @@ impl HDF5File {
             .map_err(|e| IoError::FormatError(format!("Failed to get group names: {e}")))?;
 
         for group_name in group_names {
-            if let Ok(h5_subgroup) = _file.group(&group_name) {
+            if let Ok(h5_subgroup) = file.group(&group_name) {
                 let mut subgroup = Group::new(group_name.clone());
 
                 // Read group attributes
@@ -548,10 +548,10 @@ impl HDF5File {
 
     /// Convert HDF5 datatype to internal representation
     #[cfg(feature = "hdf5")]
-    fn convert_hdf5_datatype(_dtype: &hdf5::Datatype) -> Result<HDF5DataType> {
+    fn convert_hdf5_datatype(dtype: &hdf5::Datatype) -> Result<HDF5DataType> {
         use hdf5::types::TypeDescriptor;
 
-        match _dtype.to_descriptor() {
+        match dtype.to_descriptor() {
             Ok(TypeDescriptor::Integer(int_type)) => Ok(HDF5DataType::Integer {
                 size: int_type.size(),
                 signed: int_type.is_signed(),
@@ -604,19 +604,19 @@ impl HDF5File {
 
     /// Read dataset data based on HDF5 datatype
     #[cfg(feature = "hdf5")]
-    fn read_dataset_data(_dataset: &hdf5::Dataset, dtype: &hdf5::Datatype) -> Result<DataArray> {
+    fn read_dataset_data(dataset: &hdf5::Dataset, dtype: &hdf5::Datatype) -> Result<DataArray> {
         use hdf5::types::TypeDescriptor;
 
         match dtype.to_descriptor() {
             Ok(TypeDescriptor::Integer(_)) => {
-                let data: Vec<i64> = _dataset.read_raw().map_err(|e| {
-                    IoError::FormatError(format!("Failed to read integer _dataset: {e}"))
+                let data: Vec<i64> = dataset.read_raw().map_err(|e| {
+                    IoError::FormatError(format!("Failed to read integer dataset: {e}"))
                 })?;
                 Ok(DataArray::Integer(data))
             }
             Ok(TypeDescriptor::Float(_)) => {
-                let data: Vec<f64> = _dataset.read_raw().map_err(|e| {
-                    IoError::FormatError(format!("Failed to read float _dataset: {e}"))
+                let data: Vec<f64> = dataset.read_raw().map_err(|e| {
+                    IoError::FormatError(format!("Failed to read float dataset: {e}"))
                 })?;
                 Ok(DataArray::Float(data))
             }
@@ -624,15 +624,15 @@ impl HDF5File {
             | Ok(TypeDescriptor::FixedAscii(_))
             | Ok(TypeDescriptor::VarLenUnicode)
             | Ok(TypeDescriptor::VarLenAscii) => {
-                let data: Vec<String> = _dataset.read_raw().map_err(|e| {
-                    IoError::FormatError(format!("Failed to read string _dataset: {e}"))
+                let data: Vec<String> = dataset.read_raw().map_err(|e| {
+                    IoError::FormatError(format!("Failed to read string dataset: {e}"))
                 })?;
                 Ok(DataArray::String(data))
             }
             _ => {
                 // For unsupported types, read as binary data
-                let data: Vec<u8> = _dataset.read_raw().map_err(|e| {
-                    IoError::FormatError(format!("Failed to read binary _dataset: {e}"))
+                let data: Vec<u8> = dataset.read_raw().map_err(|e| {
+                    IoError::FormatError(format!("Failed to read binary dataset: {e}"))
                 })?;
                 Ok(DataArray::Binary(data))
             }
@@ -641,7 +641,7 @@ impl HDF5File {
 
     /// Read attribute value
     #[cfg(feature = "hdf5")]
-    fn read_attribute_value(_attr: &hdf5::Attribute) -> Result<AttributeValue> {
+    fn read_attribute_value(attr: &hdf5::Attribute) -> Result<AttributeValue> {
         use hdf5::types::TypeDescriptor;
 
         let dtype = _attr
@@ -650,13 +650,13 @@ impl HDF5File {
 
         match dtype.to_descriptor() {
             Ok(TypeDescriptor::Integer(_)) => {
-                if _attr.shape().iter().product::<usize>() == 1 {
-                    let value: i64 = _attr.read_scalar().map_err(|e| {
+                if attr.shape().iter().product::<usize>() == 1 {
+                    let value: i64 = attr.read_scalar().map_err(|e| {
                         IoError::FormatError(format!("Failed to read integer attribute: {e}"))
                     })?;
                     Ok(AttributeValue::Integer(value))
                 } else {
-                    let value: Vec<i64> = _attr.read_raw().map_err(|e| {
+                    let value: Vec<i64> = attr.read_raw().map_err(|e| {
                         IoError::FormatError(format!(
                             "Failed to read integer array attribute: {}",
                             e
@@ -666,13 +666,13 @@ impl HDF5File {
                 }
             }
             Ok(TypeDescriptor::Float(_)) => {
-                if _attr.shape().iter().product::<usize>() == 1 {
-                    let value: f64 = _attr.read_scalar().map_err(|e| {
+                if attr.shape().iter().product::<usize>() == 1 {
+                    let value: f64 = attr.read_scalar().map_err(|e| {
                         IoError::FormatError(format!("Failed to read float attribute: {e}"))
                     })?;
                     Ok(AttributeValue::Float(value))
                 } else {
-                    let value: Vec<f64> = _attr.read_raw().map_err(|e| {
+                    let value: Vec<f64> = attr.read_raw().map_err(|e| {
                         IoError::FormatError(format!("Failed to read float array attribute: {e}"))
                     })?;
                     Ok(AttributeValue::FloatArray(value))
@@ -682,13 +682,13 @@ impl HDF5File {
             | Ok(TypeDescriptor::FixedAscii(_))
             | Ok(TypeDescriptor::VarLenUnicode)
             | Ok(TypeDescriptor::VarLenAscii) => {
-                if _attr.shape().iter().product::<usize>() == 1 {
-                    let value: String = _attr.read_scalar().map_err(|e| {
+                if attr.shape().iter().product::<usize>() == 1 {
+                    let value: String = attr.read_scalar().map_err(|e| {
                         IoError::FormatError(format!("Failed to read string attribute: {e}"))
                     })?;
                     Ok(AttributeValue::String(value))
                 } else {
-                    let value: Vec<String> = _attr.read_raw().map_err(|e| {
+                    let value: Vec<String> = attr.read_raw().map_err(|e| {
                         IoError::FormatError(format!(
                             "Failed to read string array attribute: {}",
                             e
@@ -890,7 +890,7 @@ impl HDF5File {
     pub fn write(&self) -> Result<()> {
         #[cfg(feature = "hdf5")]
         {
-            if let Some(ref _file) = self.native_file {
+            if let Some(ref file) = self.native_file {
                 // For HDF5, writing happens automatically when datasets are created
                 // So we just need to flush any pending operations
                 _file
@@ -1119,7 +1119,7 @@ pub fn write_hdf5<P: AsRef<Path>>(path: P, datasets: HashMap<String, ArrayD<f64>
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn create_hdf5_with_structure<P, F>(_path: P, builder: F) -> Result<()>
+pub fn create_hdf5_with_structure<P, F>(path: P, builder: F) -> Result<()>
 where
     P: AsRef<Path>,
     F: FnOnce(&mut HDF5File) -> Result<()>,

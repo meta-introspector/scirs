@@ -412,7 +412,7 @@ where
 }
 
 #[allow(dead_code)]
-fn calculate_quantum_correlation<T>(_value1: T, value2: T, strength: T) -> NdimageResult<T>
+fn calculate_quantum_correlation<T>(value1: T, value2: T, strength: T) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
 {
@@ -422,7 +422,7 @@ where
 }
 
 #[allow(dead_code)]
-fn normalize_quantum_correlations<T>(_matrix: &mut Array2<T>) -> NdimageResult<()>
+fn normalize_quantum_correlations<T>(matrix: &mut Array2<T>) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
 {
@@ -432,14 +432,14 @@ where
         .fold(T::zero(), |a, b| if a > b { a } else { b });
 
     if max_val > T::zero() {
-        _matrix.mapv_inplace(|x| x / max_val);
+        matrix.mapv_inplace(|x| x / max_val);
     }
 
     Ok(())
 }
 
 #[allow(dead_code)]
-fn calculate_quantum_distance(_pos1: (usize, usize), pos2: (usize, usize)) -> NdimageResult<f64> {
+fn calculate_quantum_distance(pos1: (usize, usize), pos2: (usize, usize)) -> NdimageResult<f64> {
     let dx = (_pos1.0 as f64 - pos2.0 as f64).abs();
     let dy = (_pos1.1 as f64 - pos2.1 as f64).abs();
 
@@ -975,7 +975,7 @@ where
 }
 
 #[allow(dead_code)]
-fn create_quantum_syndrome_generators<T>(_redundancy_factor: usize) -> NdimageResult<Vec<Array1<T>>>
+fn create_quantum_syndrome_generators<T>(_redundancyfactor: usize) -> NdimageResult<Vec<Array1<T>>>
 where
     T: Float + FromPrimitive + Copy,
 {
@@ -1043,18 +1043,18 @@ where
 }
 
 #[allow(dead_code)]
-fn majority_vote<T>(_values: &[T]) -> NdimageResult<T>
+fn majority_vote<T>(values: &[T]) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
 {
-    if _values.is_empty() {
+    if values.is_empty() {
         return Err(NdimageError::InvalidInput(
             "Empty _values for majority vote".to_string(),
         ));
     }
 
     // Simple average for continuous _values
-    let sum = _values.iter().fold(T::zero(), |acc, &x| acc + x);
+    let sum = values.iter().fold(T::zero(), |acc, &x| acc + x);
     let average = sum / T::from_usize(_values.len()).unwrap();
 
     Ok(average)
@@ -1145,7 +1145,7 @@ where
 }
 
 #[allow(dead_code)]
-fn initialize_variational_parameters<T>(_num_layers: usize) -> NdimageResult<Array1<T>>
+fn initialize_variational_parameters<T>(_numlayers: usize) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Copy,
 {
@@ -1197,17 +1197,17 @@ where
 }
 
 #[allow(dead_code)]
-fn calculate_enhancement_cost<T>(_enhanced: &Array2<T>, original: &Array2<T>) -> NdimageResult<T>
+fn calculate_enhancement_cost<T>(enhanced: &Array2<T>, original: &Array2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (height, width) = _enhanced.dim();
+    let (height, width) = enhanced.dim();
     let mut cost = T::zero();
 
     // Calculate image quality cost function
     for y in 0..height {
         for x in 0..width {
-            let diff = _enhanced[(y, x)] - original[(y, x)];
+            let diff = enhanced[(y, x)] - original[(y, x)];
             cost = cost + diff * diff;
         }
     }

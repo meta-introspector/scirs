@@ -58,7 +58,7 @@ pub struct NGramModel {
 
 impl NGramModel {
     /// Create a new n-gram model with the specified order
-    pub fn new(_order: usize) -> Self {
+    pub fn new(order: usize) -> Self {
         if _order > 3 {
             // Warn but limit to 3
             eprintln!("Warning: NGramModel only supports orders up to 3. Using _order=3.");
@@ -69,7 +69,7 @@ impl NGramModel {
             bigrams: HashMap::new(),
             trigrams: HashMap::new(),
             total_words: 0,
-            _order: _order.clamp(1, 3),
+            _order: order.clamp(1, 3),
             start_token: "<s>".to_string(),
             end_token: "</s>".to_string(),
         }
@@ -295,7 +295,7 @@ impl NGramModel {
     }
 
     /// Generate potential single-edit typos for a word
-    pub fn generate_typos(&self, word: &str, num_typos: usize) -> Vec<String> {
+    pub fn generate_typos(&self, word: &str, numtypos: usize) -> Vec<String> {
         let mut _typos = HashSet::new();
         let word = word.to_lowercase();
         let chars: Vec<char> = word.chars().collect();
@@ -308,14 +308,14 @@ impl NGramModel {
                     new_word.push(c);
                 }
             }
-            _typos.insert(new_word);
+            typos.insert(new_word);
         }
 
         // Transposition errors (swapping adjacent characters)
         for i in 0..chars.len() - 1 {
             let mut new_chars = chars.clone();
             new_chars.swap(i, i + 1);
-            _typos.insert(new_chars.iter().collect());
+            typos.insert(new_chars.iter().collect());
         }
 
         // Insertion errors (adding one character)
@@ -323,7 +323,7 @@ impl NGramModel {
             for c in 'a'..='z' {
                 let mut new_chars = chars.clone();
                 new_chars.insert(i, c);
-                _typos.insert(new_chars.iter().collect());
+                typos.insert(new_chars.iter().collect());
             }
         }
 
@@ -333,13 +333,13 @@ impl NGramModel {
                 if chars[i] != c {
                     let mut new_chars = chars.clone();
                     new_chars[i] = c;
-                    _typos.insert(new_chars.iter().collect());
+                    typos.insert(new_chars.iter().collect());
                 }
             }
         }
 
         // Convert to Vec and limit by frequency
-        let mut _typos_vec: Vec<_> = _typos.into_iter().collect();
+        let mut typos_vec: Vec<_> = typos.into_iter().collect();
 
         // Sort by word frequency in our model
         typos_vec.sort_by(|a, b| {

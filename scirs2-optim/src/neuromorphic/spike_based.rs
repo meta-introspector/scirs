@@ -216,7 +216,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
         num_neurons: usize,
     ) -> Self {
         Self {
-            _config,
+            config,
             stdp_config,
             membrane_config,
             current_time: T::zero(),
@@ -262,7 +262,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
     }
     
     /// Rate encoding: firing rate proportional to input value
-    fn rate_encode(&self, neuron_id: usize, value: T) -> Result<SpikeTrain<T>> {
+    fn rate_encode(&self, neuronid: usize, value: T) -> Result<SpikeTrain<T>> {
         let max_rate = T::from(100.0).unwrap(); // 100 Hz max
         let firing_rate = value.abs() * max_rate;
         
@@ -286,7 +286,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
     }
     
     /// Temporal encoding: spike time inversely proportional to input value
-    fn temporal_encode(&self, neuron_id: usize, value: T) -> Result<SpikeTrain<T>> {
+    fn temporal_encode(&self, neuronid: usize, value: T) -> Result<SpikeTrain<T>> {
         let max_delay = T::from(20.0).unwrap(); // 20 ms max delay
         let spike_time = if value > T::zero() {
             max_delay * (T::one() - value.min(T::one()))
@@ -304,13 +304,13 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
     }
     
     /// Population vector encoding
-    fn population_vector_encode(&self, neuron_id: usize, value: T) -> Result<SpikeTrain<T>> {
+    fn population_vector_encode(&self, neuronid: usize, value: T) -> Result<SpikeTrain<T>> {
         // Simplified population vector encoding
         self.rate_encode(neuron_id, value)
     }
     
     /// Sparse encoding: only strong inputs generate spikes
-    fn sparse_encode(&self, neuron_id: usize, value: T) -> Result<SpikeTrain<T>> {
+    fn sparse_encode(&self, neuronid: usize, value: T) -> Result<SpikeTrain<T>> {
         let threshold = T::from(0.5).unwrap();
         
         if value.abs() > threshold {
@@ -321,7 +321,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
     }
     
     /// Decode spike trains to continuous output
-    pub fn decode_output(&self, spike_trains: &[SpikeTrain<T>]) -> Result<Array1<T>> {
+    pub fn decode_output(&self, spiketrains: &[SpikeTrain<T>]) -> Result<Array1<T>> {
         let mut output = Array1::zeros(spike_trains.len());
         
         for (i, spike_train) in spike_trains.iter().enumerate() {
@@ -346,7 +346,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
     }
     
     /// Rate decoding: spike count normalized by time window
-    fn rate_decode(&self, spike_train: &SpikeTrain<T>) -> Result<T> {
+    fn rate_decode(&self, spiketrain: &SpikeTrain<T>) -> Result<T> {
         let window_duration = self.config.temporal_window;
         let spike_count = T::from(spike_train.spike_count).unwrap();
         let rate = spike_count / (window_duration / T::from(1000.0).unwrap());
@@ -354,7 +354,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
     }
     
     /// Temporal decoding: use first spike time
-    fn temporal_decode(&self, spike_train: &SpikeTrain<T>) -> Result<T> {
+    fn temporal_decode(&self, spiketrain: &SpikeTrain<T>) -> Result<T> {
         if spike_train.spike_times.is_empty() {
             Ok(T::zero())
         } else {
@@ -365,7 +365,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
     }
     
     /// Weighted spike count decoding
-    fn weighted_spike_count_decode(&self, spike_train: &SpikeTrain<T>) -> Result<T> {
+    fn weighted_spike_count_decode(&self, spiketrain: &SpikeTrain<T>) -> Result<T> {
         if spike_train.spike_times.is_empty() {
             return Ok(T::zero());
         }
@@ -383,7 +383,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
     }
     
     /// Simulate membrane dynamics for one time step
-    pub fn simulate_step(&mut self, input_spikes: &[Spike<T>]) -> Result<Vec<Spike<T>>> {
+    pub fn simulate_step(&mut self, inputspikes: &[Spike<T>]) -> Result<Vec<Spike<T>>> {
         let mut output_spikes = Vec::new();
         let dt = self.config.time_step;
         
@@ -433,7 +433,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
     }
     
     /// Update membrane potential using leaky integrate-and-fire model
-    fn update_membrane_potential(&mut self, neuron_id: usize, dt: T) -> Result<()> {
+    fn update_membrane_potential(&mut self, neuronid: usize, dt: T) -> Result<()> {
         let v = self.membrane_potentials[neuron_id];
         let v_rest = self.membrane_config.resting_potential;
         let tau = self.membrane_config.tau_membrane;
@@ -448,7 +448,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
     }
     
     /// Generate a spike when threshold is reached
-    fn generate_spike(&mut self, neuron_id: usize) -> Result<Spike<T>> {
+    fn generate_spike(&mut self, neuronid: usize) -> Result<Spike<T>> {
         // Reset membrane potential
         self.membrane_potentials[neuron_id] = self.membrane_config.reset_potential;
         
@@ -485,7 +485,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
     }
     
     /// Update synaptic plasticity
-    fn update_plasticity(&mut self, output_spikes: &[Spike<T>]) -> Result<()> {
+    fn update_plasticity(&mut self, outputspikes: &[Spike<T>]) -> Result<()> {
         match self.plasticity_model {
             PlasticityModel::STDP => {
                 self.update_stdp(output_spikes)?;
@@ -503,7 +503,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
     }
     
     /// Update STDP (Spike Timing Dependent Plasticity)
-    fn update_stdp(&mut self, output_spikes: &[Spike<T>]) -> Result<()> {
+    fn update_stdp(&mut self, outputspikes: &[Spike<T>]) -> Result<()> {
         for spike in output_spikes {
             let post_id = spike.neuron_id;
             let post_time = spike.time;
@@ -544,7 +544,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
     }
     
     /// Update Hebbian plasticity
-    fn update_hebbian(&mut self, output_spikes: &[Spike<T>]) -> Result<()> {
+    fn update_hebbian(&mut self, outputspikes: &[Spike<T>]) -> Result<()> {
         // Simplified Hebbian learning
         for spike in output_spikes {
             let post_id = spike.neuron_id;
@@ -584,7 +584,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
                     self.homeostatic_scales[neuron_id] + scale_change;
                 
                 // Apply scaling to synaptic weights
-                for pre_id in 0..self.synaptic_weights.nrows() {
+                for pre_id in 0..self.synapticweights.nrows() {
                     self.synaptic_weights[[pre_id, neuron_id]] = 
                         self.synaptic_weights[[pre_id, neuron_id]] * 
                         self.homeostatic_scales[neuron_id];
@@ -676,9 +676,9 @@ pub enum TemporalKernelType {
 
 impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikeTrainOptimizer<T> {
     /// Create a new spike train optimizer
-    pub fn new(_config: SpikingConfig<T>) -> Self {
+    pub fn new(config: SpikingConfig<T>) -> Self {
         Self {
-            _config,
+            config,
             pattern_templates: Vec::new(),
             matching_threshold: T::from(0.8).unwrap(),
             pattern_learning_rate: T::from(0.1).unwrap(),
@@ -689,7 +689,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikeTra
     }
     
     /// Learn spike patterns from training data
-    pub fn learn_patterns(&mut self, spike_trains: &[SpikeTrain<T>]) -> Result<()> {
+    pub fn learn_patterns(&mut self, spiketrains: &[SpikeTrain<T>]) -> Result<()> {
         for spike_train in spike_trains {
             self.extract_and_learn_patterns(spike_train)?;
         }
@@ -698,7 +698,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikeTra
     }
     
     /// Extract patterns from a spike train
-    fn extract_and_learn_patterns(&mut self, spike_train: &SpikeTrain<T>) -> Result<()> {
+    fn extract_and_learn_patterns(&mut self, spiketrain: &SpikeTrain<T>) -> Result<()> {
         let window_size = T::from(50.0).unwrap(); // 50 ms windows
         let step_size = T::from(10.0).unwrap();   // 10 ms steps
         
@@ -736,7 +736,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikeTra
     }
     
     /// Find similar existing pattern
-    fn find_similar_pattern(&self, new_pattern: &SpikePattern<T>) -> Option<usize> {
+    fn find_similar_pattern(&self, newpattern: &SpikePattern<T>) -> Option<usize> {
         for (i, existing_pattern) in self.pattern_templates.iter().enumerate() {
             let similarity = self.compute_pattern_similarity(new_pattern, existing_pattern);
             if similarity > self.matching_threshold {
@@ -811,7 +811,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikeTra
     }
     
     /// Update existing pattern with new observation
-    fn update_pattern(&mut self, pattern_id: usize, new_pattern: &SpikePattern<T>) -> Result<()> {
+    fn update_pattern(&mut self, pattern_id: usize, newpattern: &SpikePattern<T>) -> Result<()> {
         if let Some(existing_pattern) = self.pattern_templates.get_mut(pattern_id) {
             // Update _pattern using exponential moving average
             let alpha = self.pattern_learning_rate;
@@ -833,7 +833,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikeTra
     }
     
     /// Recognize patterns in new spike train
-    pub fn recognize_patterns(&self, spike_train: &SpikeTrain<T>) -> Result<Vec> {
+    pub fn recognize_patterns(&self, spiketrain: &SpikeTrain<T>) -> Result<Vec> {
         let mut recognized_patterns = Vec::new();
         let window_size = T::from(50.0).unwrap();
         let step_size = T::from(5.0).unwrap();

@@ -181,8 +181,8 @@ impl<'a, T> MmapChunkIterator<'a, T>
 where
     T: Float + FromPrimitive + NumCast + Send + Sync + 'static,
 {
-    pub fn new(_mmap: &'a MemoryMappedArray<T>, strategy: ChunkingStrategy) -> Self {
-        Self { _mmap, strategy }
+    pub fn new(mmap: &'a MemoryMappedArray<T>, strategy: ChunkingStrategy) -> Self {
+        Self { mmap, strategy }
     }
 
     /// Get an iterator over chunks
@@ -229,7 +229,7 @@ impl Default for MmapConfig {
 ///
 /// A regular ndarray containing the loaded data
 #[allow(dead_code)]
-pub fn load_regular_array<T, D, P>(_path: P, shape: &[usize]) -> NdimageResult<Array<T, D>>
+pub fn load_regular_array<T, D, P>(path: P, shape: &[usize]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Send + Sync + 'static,
     D: Dimension + 'static,

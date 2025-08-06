@@ -32,7 +32,7 @@ pub fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageRes
 /// Helper function for safe float to usize conversion
 #[allow(dead_code)]
 pub fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
-    _value.to_usize().ok_or_else(|| {
+    value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert float to usize".to_string())
     })
 }

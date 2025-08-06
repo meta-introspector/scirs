@@ -139,9 +139,9 @@ impl ResourceManager {
     }
 
     /// Update resource policies
-    pub fn update_policies(&self, new_policies: ResourcePolicies) -> CoreResult<()> {
+    pub fn updatepolicies(&self, newpolicies: ResourcePolicies) -> CoreResult<()> {
         let mut policies = self.policies.write().unwrap();
-        *policies = new_policies;
+        *policies = newpolicies;
         Ok(())
     }
 
@@ -183,9 +183,9 @@ enum AccessPattern {
 }
 
 impl AdaptiveAllocator {
-    pub fn new(performance_profile: PerformanceProfile) -> CoreResult<Self> {
+    pub fn new(performanceprofile: PerformanceProfile) -> CoreResult<Self> {
         let mut allocator = Self {
-            performance_profile,
+            performance_profile: performanceprofile,
             allocation_patterns: HashMap::new(),
             memory_pools: HashMap::new(),
             total_allocated: 0,
@@ -427,7 +427,7 @@ unsafe impl Send for MemoryPool {}
 unsafe impl Sync for MemoryPool {}
 
 impl MemoryPool {
-    fn new(block_size: usize, initial_block_count: usize) -> CoreResult<Self> {
+    fn new(block_size: usize, initial_blockcount: usize) -> CoreResult<Self> {
         let mut pool = Self {
             block_size,
             blocks: VecDeque::new(),
@@ -435,7 +435,7 @@ impl MemoryPool {
         };
 
         // Pre-allocate initial blocks
-        for _ in 0..initial_block_count {
+        for _ in 0..initial_blockcount {
             pool.add_block()?;
         }
 
@@ -497,7 +497,7 @@ pub struct AutoTuner {
     optimization_history: VecDeque<OptimizationEvent>,
     current_settings: OptimizationSettings,
     #[allow(dead_code)]
-    learning_rate: f64,
+    learningrate: f64,
     #[allow(dead_code)]
     stability_threshold: f64,
 }
@@ -517,12 +517,12 @@ struct OptimizationEvent {
 
 #[allow(dead_code)]
 impl AutoTuner {
-    pub fn new(performance_profile: PerformanceProfile) -> CoreResult<Self> {
+    pub fn new(performanceprofile: PerformanceProfile) -> CoreResult<Self> {
         Ok(Self {
-            performance_profile,
+            performance_profile: performanceprofile,
             optimization_history: VecDeque::with_capacity(100usize),
             current_settings: OptimizationSettings::default(),
-            learning_rate: 0.1f64,
+            learningrate: 0.1f64,
             stability_threshold: 0.05f64, // 5% improvement threshold
         })
     }
@@ -560,9 +560,9 @@ impl AutoTuner {
         (cpu_efficiency + memory_efficiency + throughput_score) / 3.0
     }
 
-    fn needs_retuning(&self, performance_score: f64, metrics: &ResourceMetrics) -> bool {
+    fn needs_retuning(&self, performancescore: f64, metrics: &ResourceMetrics) -> bool {
         // Check for performance degradation
-        if performance_score < 0.7 {
+        if performancescore < 0.7 {
             // Below 70% efficiency
             return true;
         }
@@ -622,7 +622,7 @@ impl AutoTuner {
         Ok(())
     }
 
-    pub fn metrics(&mut self, _metrics: &ResourceMetrics) -> CoreResult<()> {
+    pub fn metrics(&mut self, metrics: &ResourceMetrics) -> CoreResult<()> {
         self.current_settings.num_threads =
             ((self.current_settings.num_threads as f64) * 1.2f64) as usize;
         self.current_settings.chunk_size =
@@ -630,7 +630,7 @@ impl AutoTuner {
         self.apply_settings(&self.current_settings)
     }
 
-    pub fn metrics_2(&mut self, _metrics: &ResourceMetrics) -> CoreResult<()> {
+    pub fn metrics_2(&mut self, metrics: &ResourceMetrics) -> CoreResult<()> {
         self.current_settings.num_threads =
             ((self.current_settings.num_threads as f64) * 0.8f64) as usize;
         self.current_settings.chunk_size =
@@ -682,19 +682,19 @@ impl AutoTuner {
         Ok(recommendations)
     }
 
-    pub fn increase_resources(&mut self, _metrics: &ResourceMetrics) -> CoreResult<()> {
+    pub fn increase_resources(&mut self, metrics: &ResourceMetrics) -> CoreResult<()> {
         // Placeholder implementation
         // In a real implementation, this would increase allocated resources
         Ok(())
     }
 
-    pub fn decrease_resources(&mut self, _metrics: &ResourceMetrics) -> CoreResult<()> {
+    pub fn decrease_resources(&mut self, metrics: &ResourceMetrics) -> CoreResult<()> {
         // Placeholder implementation
         // In a real implementation, this would decrease allocated resources
         Ok(())
     }
 
-    fn needs_optimization(&mut self, _metrics: &ResourceMetrics, _performance_score: f64) -> bool {
+    fn needs_optimization(&mut self, _metrics: &ResourceMetrics, _performancescore: f64) -> bool {
         // Placeholder implementation
         // In a real implementation, this would check if optimization is needed
         false
@@ -732,7 +732,7 @@ pub struct ResourceMetrics {
     pub memory_utilization: f64,
     pub cache_miss_rate: f64,
     pub operations_per_second: f64,
-    pub memory_bandwidth_usage: f64,
+    pub memorybandwidth_usage: f64,
     pub thread_contention: f64,
 }
 
@@ -791,7 +791,7 @@ impl ResourceMonitor {
             memory_utilization: self.get_memory_utilization()?,
             cache_miss_rate: self.get_cache_miss_rate()?,
             operations_per_second: self.get_operations_per_second()?,
-            memory_bandwidth_usage: self.get_memory_bandwidth_usage()?,
+            memorybandwidth_usage: self.get_memorybandwidth_usage()?,
             thread_contention: self.get_thread_contention()?,
         };
 
@@ -1058,7 +1058,7 @@ impl ResourceMonitor {
         Ok(base_ops * load_factor)
     }
 
-    fn get_memory_bandwidth_usage(&self) -> CoreResult<f64> {
+    fn get_memorybandwidth_usage(&self) -> CoreResult<f64> {
         // Implement memory bandwidth monitoring using system-specific methods
         #[cfg(target_os = "linux")]
         {
@@ -1327,7 +1327,7 @@ impl ResourceMonitor {
             memory_percent: metrics.memory_utilization * 100.0f64,
             cache_efficiency: (1.0 - metrics.cache_miss_rate) * 100.0f64,
             throughput_ops_per_sec: metrics.operations_per_second,
-            memory_bandwidth_percent: metrics.memory_bandwidth_usage * 100.0f64,
+            memorybandwidth_percent: metrics.memorybandwidth_usage * 100.0f64,
         })
     }
 
@@ -1522,7 +1522,7 @@ pub struct ResourceUtilization {
     pub memory_percent: f64,
     pub cache_efficiency: f64,
     pub throughput_ops_per_sec: f64,
-    pub memory_bandwidth_percent: f64,
+    pub memorybandwidth_percent: f64,
 }
 
 /// Resource management policies
@@ -1659,7 +1659,7 @@ mod tests {
                 memory_utilization: 0.7f64,
                 cache_miss_rate: 0.15f64,
                 operations_per_second: 500.0 - (0 as f64 * 10.0f64), // Decreasing performance
-                memory_bandwidth_usage: 0.5f64,
+                memorybandwidth_usage: 0.5f64,
                 thread_contention: 0.2f64,
             };
             tuner.adaptive_optimization(&metrics).unwrap();
@@ -1674,7 +1674,7 @@ mod tests {
     }
 
     #[test]
-    fn test_resource_monitor() {
+    fn test_resourcemonitor() {
         let mut monitor = ResourceMonitor::new().unwrap();
         let metrics = monitor.collect_metrics().unwrap();
 
@@ -1683,7 +1683,7 @@ mod tests {
     }
 
     #[test]
-    fn test_resource_policies() {
+    fn test_resourcepolicies() {
         let policies = ResourcePolicies::default();
         let metrics = ResourceMetrics {
             timestamp: Instant::now(),
@@ -1691,7 +1691,7 @@ mod tests {
             memory_utilization: 0.5f64,
             cache_miss_rate: 0.05f64,
             operations_per_second: 1000.0f64,
-            memory_bandwidth_usage: 0.3f64,
+            memorybandwidth_usage: 0.3f64,
             thread_contention: 0.1f64,
         };
 

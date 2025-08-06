@@ -773,7 +773,7 @@ where
 }
 
 #[allow(dead_code)]
-fn compute_processing_priority(_metadata: &ChunkMetadata) -> NdimageResult<f64> {
+fn compute_processing_priority(metadata: &ChunkMetadata) -> NdimageResult<f64> {
     // Implementation would compute processing priority
     Ok(0.8)
 }
@@ -1021,7 +1021,7 @@ mod tests {
             adaptation_rate: 0.01,
         };
 
-        assert_eq!(ai.chunk_size_weights.dim(), (10, 10));
+        assert_eq!(ai.chunk_sizeweights.dim(), (10, 10));
         assert_eq!(ai.content_features.len(), 20);
         assert_eq!(ai.prediction_accuracy, 0.0);
     }

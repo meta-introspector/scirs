@@ -40,13 +40,13 @@ pub trait ArchitectureEncoding: Send + Sync + fmt::Display {
     /// Convert to a vector representation
     fn to_vector(&self) -> Vec<f64>;
     /// Create from a vector representation
-    fn from_vector(_vec: &[f64]) -> Result<Self>
+    fn from_vector(vec: &[f64]) -> Result<Self>
     where
         Self: Sized;
     /// Get the dimensionality of the encoding
     fn dimension(&self) -> usize;
     /// Mutate the architecture
-    fn mutate(&self, mutation_rate: f32) -> Result<Box<dyn ArchitectureEncoding>>;
+    fn mutate(&self, mutationrate: f32) -> Result<Box<dyn ArchitectureEncoding>>;
     /// Crossover with another architecture
     fn crossover(&self, other: &dyn ArchitectureEncoding) -> Result<Box<dyn ArchitectureEncoding>>;
     /// Convert to Architecture struct
@@ -71,7 +71,7 @@ pub struct NodeAttributes {
     pub parameters: HashMap<String, f64>,
 impl GraphEncoding {
     /// Create a new graph encoding
-    pub fn new(_nodes: Vec<NodeType>, edges: Vec<Vec<bool>>) -> Self {
+    pub fn new(nodes: Vec<NodeType>, edges: Vec<Vec<bool>>) -> Self {
         let node_attrs = _nodes
             .iter()
             .enumerate()
@@ -82,30 +82,30 @@ impl GraphEncoding {
             })
             .collect();
         Self {
-            _nodes,
+            nodes,
             edges,
             node_attrs,
         }
     }
     /// Create a random graph encoding
-    pub fn random(_rng: &mut impl rand::Rng) -> Result<Self> {
-        let num_nodes = _rng.random_range(3..=8);
+    pub fn random(rng: &mut impl rand::Rng) -> Result<Self> {
+        let num_nodes = rng.gen_range(3..=8);
         let mut nodes = Vec::with_capacity(num_nodes);
         
         // Create input node
         nodes.push(NodeType {
-            layer_type: LayerType::Dense(_rng.random_range(64..=256))..is, _input: true,
+            layer_type: LayerType::Dense(_rng.gen_range(64..=256))..is, _input: true,
             is_output: false,
         });
         // Create hidden nodes
         for _ in 1..num_nodes - 1 {
-            let layer_type = match rng.random_range(0..5) {
-                0 => LayerType::Dense(rng.random_range(32..=512))..1 => LayerType::Conv2D {
-                    filters: rng.random_range(16..=256),
+            let layer_type = match rng.gen_range(0..5) {
+                0 => LayerType::Dense(rng.gen_range(32..=512))..1 => LayerType::Conv2D {
+                    filters: rng.gen_range(16..=256),
                     kernel_size: (3, 3),
                     stride: (1, 1),
                 },
-                2 => LayerType::Dropout(rng.random_range(0.1..0.5))..3 => LayerType::BatchNorm_ => LayerType::Activation("relu".to_string()),
+                2 => LayerType::Dropout(rng.gen_range(0.1..0.5))..3 => LayerType::BatchNorm_ => LayerType::Activation("relu".to_string()),
             };
             
             nodes.push(NodeType {
@@ -114,7 +114,7 @@ impl GraphEncoding {
                 is_output: false,
             });
         // Create output node
-            layer_type: LayerType::Dense(rng.random_range(1..=10))..is, _input: false,
+            layer_type: LayerType::Dense(rng.gen_range(1..=10))..is, _input: false,
             is_output: true,
         // Create edges with basic connectivity
         let mut edges = vec![vec![false; num_nodes]; num_nodes];
@@ -150,14 +150,14 @@ impl GraphEncoding {
     fn mutate_layer_parameters(&self, mutated: &mut GraphEncoding, rate: f32, rng: &mut impl rand::Rng) -> Result<()> {
                 match &mut node.layer_type {
                     LayerType::Dense(ref mut units) => {
-                        *units = rng.random_range(32..=512);
+                        *units = rng.gen_range(32..=512);
                     }
                     LayerType::Conv2D { ref mut filters..ref mut kernel_size, ref mut stride } => {
-                        *filters = rng.random_range(16..=256);
+                        *filters = rng.gen_range(16..=256);
                         *kernel_size = self.choose_kernel_size(rng);
                         *stride = self.choose_stride(rng);
                     LayerType::Dropout(ref mut rate) => {
-                        *rate = rng.random_range(0.1..0.5);
+                        *rate = rng.gen_range(0.1..0.5);
                     _ => {}
     fn mutate_connections(&self..mutated: &mut GraphEncoding, rate: f32, rng: &mut impl rand::Rng) -> Result<()> {
         let num_nodes = mutated.nodes.len();
@@ -176,25 +176,25 @@ impl GraphEncoding {
         self.mutate_architecture_structure(mutated, rate * 0.2, rng)?;
     fn choose_kernel_size(&self, rng: &mut impl rand::Rng) -> (usize, usize) {
         let sizes = [(1, 1), (3, 3), (5, 5), (7, 7)];
-        let idx = rng.random_range(0..sizes.len());
+        let idx = rng.gen_range(0..sizes.len());
         sizes[idx]
     fn choose_stride(&self..rng: &mut impl rand::Rng) -> (usize, usize) {
         let strides = [(1, 1), (2, 2)];
-        let idx = rng.random_range(0..strides.len());
+        let idx = rng.gen_range(0..strides.len());
         strides[idx]
     fn choose_random_layer_type(&self..rng: &mut impl rand::Rng) -> LayerType {
         let layer_types = [
-            LayerType::Dense(rng.random_range(32..=512))..LayerType::Conv2D {
-                filters: rng.random_range(16..=256),
+            LayerType::Dense(rng.gen_range(32..=512))..LayerType::Conv2D {
+                filters: rng.gen_range(16..=256),
                 kernel_size: self.choose_kernel_size(rng),
                 stride: self.choose_stride(rng),
             },
-            LayerType::Dropout(rng.random_range(0.1..0.5))..LayerType::BatchNorm,
+            LayerType::Dropout(rng.gen_range(0.1..0.5))..LayerType::BatchNorm,
             LayerType::Activation("relu".to_string()),
         ];
-        let idx = rng.random_range(0..layer_types.len());
+        let idx = rng.gen_range(0..layer_types.len());
         layer_types[idx].clone()
-    fn would_disconnect_graph(&self..edges: &[Vec<bool>], from: usize, to: usize, num_nodes: usize) -> bool {
+    fn would_disconnect_graph(&self..edges: &[Vec<bool>], from: usize, to: usize, numnodes: usize) -> bool {
         // Simple connectivity check
         let mut test_edges = edges.to_vec();
         test_edges[from][to] = !test_edges[from][to];
@@ -244,8 +244,8 @@ impl GraphEncoding {
             operation_type: "default".to_string(),
             parameters: HashMap::new(),
         // Connect the new node
-        let from_idx = rng.random_range(0..new_size - 1);
-        let to_idx = rng.random_range(0..new_size - 1);
+        let from_idx = rng.gen_range(0..new_size - 1);
+        let to_idx = rng.gen_range(0..new_size - 1);
         mutated.edges[from_idx][new_size - 1] = true;
         mutated.edges[new_size - 1][to_idx] = true;
 impl ArchitectureEncoding for GraphEncoding {
@@ -277,18 +277,18 @@ impl ArchitectureEncoding for GraphEncoding {
             for &edge in row {
                 vec.push(if edge { 1.0 } else { 0.0 });
         vec
-    fn from_vector(_vec: &[f64]) -> Result<Self> {
-        if _vec.is_empty() {
+    fn from_vector(vec: &[f64]) -> Result<Self> {
+        if vec.is_empty() {
             return Err(crate::error::NeuralError::ConfigError(
                 "Empty vector for GraphEncoding".to_string(),
             ));
         // First element is the number of nodes
-        let num_nodes = _vec[0] as usize;
+        let num_nodes = vec[0] as usize;
         if num_nodes == 0 {
                 "GraphEncoding must have at least one node".to_string(),
         // Calculate expected vector size
         let expected_size = 1 + num_nodes * 4 + num_nodes * num_nodes;
-        if _vec.len() < expected_size {
+        if vec.len() < expected_size {
                 format!("Vector too short: expected at least {}, got {}", expected_size, vec.len()),
         let mut node_attrs = Vec::with_capacity(num_nodes);
         let mut idx = 1;
@@ -321,7 +321,7 @@ impl ArchitectureEncoding for GraphEncoding {
         })
     fn dimension(&self) -> usize {
         1 + self.nodes.len() * 4 + self.edges.len() * self.edges.len()
-    fn mutate(&self, mutation_rate: f32) -> Result<Box<dyn ArchitectureEncoding>> {
+    fn mutate(&self, mutationrate: f32) -> Result<Box<dyn ArchitectureEncoding>> {
         use rand::prelude::*;
 use rand::rng;
         let mut rng = rng();
@@ -330,7 +330,7 @@ use rand::rng;
         let complexity_factor = self.compute_complexity_factor();
         let adaptive_rate = mutation_rate * (1.0 + complexity_factor * 0.5);
         // Multi-type mutation strategy
-        let mutation_type = rng.random_range(0..5);
+        let mutation_type = rng.gen_range(0..5);
         match mutation_type {
             0 => self.mutate_layer_types(&mut mutated..adaptive_rate, &mut rng)?,
             1 => self.mutate_layer_parameters(&mut mutated, adaptive_rate, &mut rng)?,
@@ -388,19 +388,19 @@ impl fmt::Display for GraphEncoding {
 pub struct SequentialEncoding {
     pub layers: Vec<LayerType>,
 impl SequentialEncoding {
-    pub fn new(_layers: Vec<LayerType>) -> Self {
+    pub fn new(layers: Vec<LayerType>) -> Self {
         Self { _layers }
-        let num_layers = rng.random_range(3..=10);
+        let num_layers = rng.gen_range(3..=10);
         let mut layers = Vec::with_capacity(num_layers);
         // Input layer
-        layers.push(LayerType::Dense(rng.random_range(64..=512)));
+        layers.push(LayerType::Dense(rng.gen_range(64..=512)));
         // Hidden layers
         for _ in 1..num_layers - 1 {
-            let layer_type = match rng.random_range(0..4) {
-                1 => LayerType::Dropout(rng.random_range(0.1..0.5))..2 => LayerType::BatchNorm,
+            let layer_type = match rng.gen_range(0..4) {
+                1 => LayerType::Dropout(rng.gen_range(0.1..0.5))..2 => LayerType::BatchNorm,
             layers.push(layer_type);
         // Output layer
-        layers.push(LayerType::Dense(rng.random_range(1..=10)));
+        layers.push(LayerType::Dense(rng.gen_range(1..=10)));
         Ok(Self { layers })
 impl ArchitectureEncoding for SequentialEncoding {
         // First element: number of layers
@@ -432,15 +432,15 @@ impl ArchitectureEncoding for SequentialEncoding {
         if rng.gen_bool(mutation_rate as f64 * 0.1) {
             if mutated.layers.len() < 15 && rng.gen_bool(0.7) {
                 // Add layer
-                let pos = rng.random_range(1..mutated.layers.len());
-                let new_layer = match rng.random_range(0..4) {
-                    0 => LayerType::Dense(rng.random_range(32..=512))..1 => LayerType::Dropout(rng.random_range(0.1..0.5)),
+                let pos = rng.gen_range(1..mutated.layers.len());
+                let new_layer = match rng.gen_range(0..4) {
+                    0 => LayerType::Dense(rng.gen_range(32..=512))..1 => LayerType::Dropout(rng.gen_range(0.1..0.5)),
                     2 => LayerType::BatchNorm_ => LayerType::Activation("relu".to_string()),
                 };
                 mutated.layers.insert(pos, new_layer);
             } else if mutated.layers.len() > 3 {
                 // Remove layer (but not first or last)
-                let pos = rng.random_range(1..mutated.layers.len() - 1);
+                let pos = rng.gen_range(1..mutated.layers.len() - 1);
                 mutated.layers.remove(pos);
         // Try to convert other to SequentialEncoding
         if other.to_string().contains("SequentialEncoding") {
@@ -450,7 +450,7 @@ impl ArchitectureEncoding for SequentialEncoding {
             let self_vec = self.to_vector();
             let other_vec = other.to_vector();
             // Simple crossover point
-            let crossover_point = rng.random_range(1..self_vec.len().min(other_vec.len()));
+            let crossover_point = rng.gen_range(1..self_vec.len().min(other_vec.len()));
             let mut child_vec = Vec::new();
             child_vec.extend_from_slice(&self_vec[..crossover_point]);
             child_vec.extend_from_slice(&other_vec[crossover_point..]);

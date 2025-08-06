@@ -872,9 +872,9 @@ pub mod utils {
     
     /// Check if Hessian is positive definite
     pub fn is_positive_definite<T: Float>(hessian: &HessianMatrix<T>) -> bool {
-        if let Some(ref eigenvalues) = _hessian.eigenvalues {
+        if let Some(ref eigenvalues) = hessian.eigenvalues {
             eigenvalues.iter().all(|&val| val > T::zero())
-        } else if let Some(ref matrix) = _hessian.full_matrix {
+        } else if let Some(ref matrix) = hessian.full_matrix {
             // Simplified check using diagonal elements
             matrix.diag().iter().all(|&val| val > T::zero())
         } else {
@@ -884,12 +884,12 @@ pub mod utils {
     
     /// Compute condition number from eigenvalues
     pub fn condition_number<T: Float>(eigenvalues: &Array1<T>) -> Option<T> {
-        if _eigenvalues.is_empty() {
+        if eigenvalues.is_empty() {
             return None;
         }
         
-        let max_eigenval = _eigenvalues.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
-        let min_eigenval = _eigenvalues.iter().fold(T::infinity(), |a, &b| a.min(b));
+        let max_eigenval = eigenvalues.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
+        let min_eigenval = eigenvalues.iter().fold(T::infinity(), |a, &b| a.min(b));
         
         if min_eigenval > T::zero() {
             Some(max_eigenval / min_eigenval)
@@ -899,9 +899,9 @@ pub mod utils {
     }
     
     /// Estimate sparsity ratio of a matrix
-    pub fn sparsity_ratio<T: Float>(_matrix: &Array2<T>, tolerance: T) -> f64 {
-        let total_elements = _matrix.len();
-        let nonzero_elements = _matrix.iter()
+    pub fn sparsity_ratio<T: Float>(matrix: &Array2<T>, tolerance: T) -> f64 {
+        let total_elements = matrix.len();
+        let nonzero_elements = matrix.iter()
             .filter(|&&val| val.abs() > tolerance)
             .count();
         

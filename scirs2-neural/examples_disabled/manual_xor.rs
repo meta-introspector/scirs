@@ -18,7 +18,7 @@ fn main() -> Result<()> {
     println!("Inputs:\n{:?}", inputs);
     println!("Targets:\n{:?}", targets);
     // Create neural network layers
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     let mut hidden_layer = Dense::new(2, 4, Some("relu"), &mut rng)?;
     let mut output_layer = Dense::new(4, 1, None, &mut rng)?;
     // Create loss function
@@ -41,8 +41,8 @@ fn main() -> Result<()> {
         let hidden_grad = output_layer.backward(&hidden_output, &output_grad)?;
         let _input_grad = hidden_layer.backward(&inputs, &hidden_grad)?;
         // Update parameters
-        hidden_layer.update(learning_rate)?;
-        output_layer.update(learning_rate)?;
+        hidden_layer.update(learningrate)?;
+        output_layer.update(learningrate)?;
     }
     // Evaluate the model
     println!("\nEvaluation:");

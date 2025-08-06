@@ -80,7 +80,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Create a test dataset with the specified number of points
 #[allow(dead_code)]
-fn create_dataset(_n_points: usize) -> Array2<f64> {
+fn create_dataset(_npoints: usize) -> Array2<f64> {
     let mut data = Array2::zeros((_n_points, 2));
 
     // Create clusters for testing

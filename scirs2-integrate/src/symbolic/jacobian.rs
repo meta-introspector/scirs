@@ -18,7 +18,7 @@ fn var<F: IntegrateFloat>(name: &str) -> SymbolicExpression<F> {
 
 #[allow(dead_code)]
 fn indexed_var<F: IntegrateFloat>(name: &str, index: usize) -> SymbolicExpression<F> {
-    SymbolicExpression::indexed_var(name, index)
+    SymbolicExpression::indexedvar(name, index)
 }
 
 #[allow(dead_code)]
@@ -233,9 +233,9 @@ pub fn example_stiff_chemical<F: IntegrateFloat>() -> IntegrateResult<SymbolicJa
     // dy2/dt = 0.04*y1 - 1e4*y2*y3 - 3e7*y2^2
     // dy3/dt = 3e7*y2^2
 
-    let y1 = SymbolicExpression::indexed_var("y", 0);
-    let y2 = SymbolicExpression::indexed_var("y", 1);
-    let y3 = SymbolicExpression::indexed_var("y", 2);
+    let y1 = SymbolicExpression::indexedvar("y", 0);
+    let y2 = SymbolicExpression::indexedvar("y", 1);
+    let y3 = SymbolicExpression::indexedvar("y", 2);
 
     let k1 = SymbolicExpression::constant(F::from(0.04).unwrap());
     let k2 = SymbolicExpression::constant(F::from(1e4).unwrap());

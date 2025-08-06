@@ -87,7 +87,7 @@ impl<T: Clone> RTree<T> {
                                 break;
                             }
                         } else {
-                            // No _predicate, just delete the first matching entry
+                            // No predicate, just delete the first matching entry
                             found_index = Some(i);
                             break;
                         }

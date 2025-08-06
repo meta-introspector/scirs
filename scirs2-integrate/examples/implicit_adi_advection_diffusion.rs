@@ -250,13 +250,13 @@ fn analyze_solution(
 
 /// Find the maximum value in a 3D array
 #[allow(dead_code)]
-fn find_max_value(_array: &ndarray::Array3<f64>) -> f64 {
-    _array.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b))
+fn find_max_value(array: &ndarray::Array3<f64>) -> f64 {
+    array.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b))
 }
 
 /// Compute the total mass (integral of solution)
 #[allow(dead_code)]
-fn compute_total_mass(_array: &ndarray::Array3<f64>, cell_area: f64) -> f64 {
-    let sum = _array.iter().sum::<f64>();
+fn compute_total_mass(_array: &ndarray::Array3<f64>, cellarea: f64) -> f64 {
+    let sum = array.iter().sum::<f64>();
     sum * cell_area
 }

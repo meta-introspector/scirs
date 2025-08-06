@@ -12,7 +12,7 @@ pub struct DistributedArray<T> {
     total_size: usize,
     chunk_start: usize,
     chunk_end: usize,
-    node_id: String,
+    nodeid: String,
 }
 
 impl<T> DistributedArray<T>
@@ -20,19 +20,14 @@ where
     T: Clone + Send + Sync,
 {
     /// Create a new distributed array chunk
-    pub fn new(
-        local_chunk: Vec<T>,
-        total_size: usize,
-        chunk_start: usize,
-        node_id: String,
-    ) -> Self {
+    pub fn new(local_chunk: Vec<T>, total_size: usize, chunk_start: usize, nodeid: String) -> Self {
         let chunk_end = chunk_start + local_chunk.len();
         Self {
             local_chunk,
             total_size,
             chunk_start,
             chunk_end,
-            node_id,
+            nodeid,
         }
     }
 
@@ -62,24 +57,24 @@ where
     }
 
     /// Get the node ID hosting this chunk
-    pub fn node_id(&self) -> &str {
-        &self.node_id
+    pub fn nodeid(&self) -> &str {
+        &self.nodeid
     }
 }
 
 /// Manager for distributed array operations
 #[derive(Debug)]
 pub struct DistributedArrayManager {
-    node_id: String,
-    cluster_size: usize,
+    nodeid: String,
+    clustersize: usize,
 }
 
 impl DistributedArrayManager {
     /// Create a new distributed array manager
-    pub fn new(node_id: String, cluster_size: usize) -> Self {
+    pub fn new(nodeid: String, clustersize: usize) -> Self {
         Self {
-            node_id,
-            cluster_size,
+            nodeid,
+            clustersize,
         }
     }
 
@@ -89,7 +84,7 @@ impl DistributedArrayManager {
         T: Clone + Send + Sync,
     {
         let total_size = data.len();
-        let _chunk_size = total_size.div_ceil(self.cluster_size);
+        let _chunk_size = total_size.div_ceil(self.clustersize);
 
         // For this simple implementation, just create a local chunk
         // In a real implementation, this would distribute across actual nodes
@@ -100,17 +95,17 @@ impl DistributedArrayManager {
             local_chunk,
             total_size,
             chunk_start,
-            self.node_id.clone(),
+            self.nodeid.clone(),
         ))
     }
 
     /// Gather results from distributed computation
-    pub fn gather_results<T>(&self, local_result: Vec<T>) -> CoreResult<Vec<T>>
+    pub fn gather_results<T>(&self, localresult: Vec<T>) -> CoreResult<Vec<T>>
     where
         T: Clone + Send + Sync,
     {
         // In a real implementation, this would gather from all nodes
-        Ok(local_result)
+        Ok(localresult)
     }
 }
 
@@ -121,15 +116,15 @@ mod tests {
     #[test]
     fn test_distributed_array_creation() {
         let data = vec![1, 2, 3, 4, 5];
-        let node_id = "node1".to_string();
-        let array = DistributedArray::new(data.clone(), 10, 0, node_id.clone());
+        let nodeid = "node1".to_string();
+        let array = DistributedArray::new(data.clone(), 10, 0, nodeid.clone());
 
         assert_eq!(array.local_data(), &data);
         assert_eq!(array.local_size(), 5);
         assert_eq!(array.total_size(), 10);
         assert_eq!(array.chunk_start(), 0);
         assert_eq!(array.chunk_end(), 5);
-        assert_eq!(array.node_id(), "node1");
+        assert_eq!(array.nodeid(), "node1");
     }
 
     #[test]

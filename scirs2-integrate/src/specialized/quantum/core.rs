@@ -637,7 +637,7 @@ mod tests {
         let potential = Box::new(HarmonicOscillator { k: 1.0, x0: 0.0 });
         let solver = SchrodingerSolver::new(100, 0.01, potential, SchrodingerMethod::SplitOperator);
 
-        let (energies, _wavefunctions) = solver.solve_time_independent(-5.0, 5.0, 3).unwrap();
+        let (energies, wavefunctions) = solver.solve_time_independent(-5.0, 5.0, 3).unwrap();
 
         // Ground state energy should be ℏω/2 = 0.5 (with ℏ=1, ω=1)
         assert_relative_eq!(energies[0], 0.5, epsilon = 0.01);

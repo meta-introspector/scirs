@@ -339,16 +339,16 @@ impl AdvancedSimdOps {
 
     /// Scalar k-nearest neighbor search for comparison and fallback
     #[allow(dead_code)]
-    fn scalar_knn<F>(_points: &ArrayView2<F>, query: &ArrayView1<F>, k: usize) -> Vec<(usize, F)>
+    fn scalar_knn<F>(points: &ArrayView2<F>, query: &ArrayView1<F>, k: usize) -> Vec<(usize, F)>
     where
         F: Float + Zero + PartialOrd,
     {
-        let n_points = _points.nrows();
+        let n_points = points.nrows();
         let k = k.min(n_points);
 
         let mut distances: Vec<(usize, F)> = (0..n_points)
             .map(|idx| {
-                let point = _points.row(idx);
+                let point = points.row(idx);
                 let distance = Self::scalar_distance(query, &point);
                 (idx, distance)
             })

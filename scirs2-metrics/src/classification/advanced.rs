@@ -696,7 +696,7 @@ where
         let mut sample_loss = 0.0;
 
         for j in 0..n_classes {
-            let _true_val: f64 = if let Some(val) = NumCast::from(
+            let true_val: f64 = if let Some(val) = NumCast::from(
                 y_true
                     .get((i, j))
                     .ok_or_else(|| {
@@ -725,7 +725,7 @@ where
                     .max(eps)
                     .min(1.0 - eps);
 
-                sample_loss -= true_val * _prob.ln();
+                sample_loss -= true_val * prob.ln();
             }
         }
 
@@ -793,10 +793,10 @@ where
 
         if true_val_num == 1 {
             // For class 1, use the probability as-is
-            loss -= _prob.ln();
+            loss -= prob.ln();
         } else if true_val_num == 0 {
             // For class 0, use 1 - probability
-            loss -= (1.0 - _prob).ln();
+            loss -= (1.0 - prob).ln();
         } else {
             return Err(MetricsError::InvalidInput(
                 format!("For binary classification with 1D arrays, y_true must contain only 0 or 1 values, got {true_val_num}")
@@ -1051,17 +1051,17 @@ where
     let mut counts = Array1::<f64>::zeros(n_bins);
 
     // Bin the probabilities and compute statistics
-    for (true_label_prob) in y_true.iter().zip(y_prob.iter()) {
+    for (true_label, prob) in y_true.iter().zip(y_prob.iter()) {
         // Find bin index
         let bin_idx = bin_edges
             .iter()
             .enumerate()
-            .filter(|(i, &edge)| *i < n_bins && _prob >= &edge && _prob <= &bin_edges[i + 1])
-            .map(|(i_)| i)
+            .filter(|(i, &edge)| *i < n_bins && prob >= &edge && prob <= &bin_edges[i + 1])
+            .map(|(i, _)| i)
             .next()
             .unwrap_or_else(|| {
                 // Handle edge case when _prob is exactly 1.0
-                if (_prob - 1.0).abs() < 1e-10 {
+                if (prob - 1.0).abs() < 1e-10 {
                     n_bins - 1
                 } else {
                     0 // Default to first bin as a fallback
@@ -1069,7 +1069,7 @@ where
             });
 
         // Update bin statistics
-        prob_pred[bin_idx] += _prob;
+        prob_pred[bin_idx] += prob;
         prob_true[bin_idx] += *true_label as f64;
         counts[bin_idx] += 1.0;
     }

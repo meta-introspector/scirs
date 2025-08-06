@@ -135,9 +135,9 @@ fn main() {
 
 /// Count the number of samples in each class
 #[allow(dead_code)]
-fn count_classes(_targets: &Array1<f64>) -> std::collections::HashMap<i64, usize> {
+fn count_classes(targets: &Array1<f64>) -> std::collections::HashMap<i64, usize> {
     let mut counts = std::collections::HashMap::new();
-    for &target in _targets.iter() {
+    for &target in targets.iter() {
         let class = target.round() as i64;
         *counts.entry(class).or_insert(0) += 1;
     }

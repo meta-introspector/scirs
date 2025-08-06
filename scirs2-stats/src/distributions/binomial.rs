@@ -235,7 +235,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// let quant = binom.ppf(0.5).unwrap();
     /// assert_eq!(quant, 5.0);
     /// ```
-    pub fn ppf(&self, p_val: F) -> StatsResult<F> {
+    pub fn ppf(&self, pval: F) -> StatsResult<F> {
         let zero = F::zero();
         let one = F::one();
 
@@ -526,8 +526,8 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     }
 
     // Helper method to check if a value is an integer
-    fn is_integer(_value: F) -> bool {
-        _value == _value.floor()
+    fn is_integer(value: F) -> bool {
+        _value == value.floor()
     }
 
     // Helper method to calculate binomial coefficient n choose k

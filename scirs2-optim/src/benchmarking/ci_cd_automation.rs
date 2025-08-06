@@ -535,7 +535,7 @@ pub enum TriggerEvent {
 
 impl CiCdAutomation {
     /// Create a new CI/CD automation engine
-    pub fn new(_config: CiCdAutomationConfig) -> Result<Self> {
+    pub fn new(config: CiCdAutomationConfig) -> Result<Self> {
         let regression_detector = PerformanceRegressionDetector::new(RegressionConfig::default())?;
 
         let environment = Self::detect_environment()?;
@@ -545,7 +545,7 @@ impl CiCdAutomation {
 
         Ok(Self {
             regression_detector,
-            config: _config,
+            config: config,
             environment,
             test_suite,
             report_generator,
@@ -993,7 +993,7 @@ impl CiCdAutomation {
     }
 
     /// Determine if tests should run based on configuration and context
-    fn should_run_tests(&self, ci_context: &CiCdContext, _info: &GitInfo) -> Result<bool> {
+    fn should_run_tests(&self, ci_context: &CiCdContext, info: &GitInfo) -> Result<bool> {
         if !self.config.enable_automation {
             return Ok(false);
         }
@@ -1023,7 +1023,7 @@ impl CiCdAutomation {
     }
 
     /// Check if a test case should be executed
-    fn should_run_test_case(&self, _test_case: &PerformanceTestCase) -> bool {
+    fn should_run_test_case(&self, _testcase: &PerformanceTestCase) -> bool {
         // Apply test filters here
         true
     }
@@ -1617,7 +1617,7 @@ impl CiCdAutomation {
     }
 
     /// Update baseline
-    async fn update_baseline(&mut self, git_info: &GitInfo) -> Result<()> {
+    async fn update_baseline(&mut self, gitinfo: &GitInfo) -> Result<()> {
         self.regression_detector
             .update_baseline_from_recent(git_info.commit_hash.clone())?;
         // TODO: Store baseline in artifact storage
@@ -1821,7 +1821,7 @@ impl CiCdAutomation {
     }
 
     /// Execute sleep benchmark
-    async fn execute_sleep_benchmark(&self, duration_ms: u64) -> f64 {
+    async fn execute_sleep_benchmark(&self, durationms: u64) -> f64 {
         let start = std::time::Instant::now();
         tokio::time::sleep(tokio::time::Duration::from_millis(duration_ms)).await;
         start.elapsed().as_secs_f64()
@@ -2094,7 +2094,7 @@ pub struct LocalArtifactStorage {
 }
 
 impl LocalArtifactStorage {
-    pub fn new(base_path: PathBuf) -> Self {
+    pub fn new(basepath: PathBuf) -> Self {
         Self { base_path }
     }
 }

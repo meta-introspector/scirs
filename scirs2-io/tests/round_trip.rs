@@ -311,7 +311,7 @@ fn test_matrix_market_parallel_round_trip() {
         read_result
     );
 
-    let (read_matrix, _stats) = read_result.unwrap();
+    let (read_matrix, stats) = read_result.unwrap();
 
     // Verify matrix integrity
     assert_eq!(read_matrix.rows, original_matrix.rows);
@@ -580,7 +580,7 @@ fn test_serialize_round_trip_binary() {
     let file_path = dir.path().join("test.bin");
 
     // Original array
-    let original_array = Array2::fromshape_fn((10, 10), |(i, j)| (i * j) as f64);
+    let original_array = Array2::from_shape_fn((10, 10), |(i, j)| (i * j) as f64);
 
     // Write array as binary
     let write_result =
@@ -676,7 +676,7 @@ fn test_compression_round_trip() {
     let file_path = dir.path().join("compressed.h5");
 
     // Create test data
-    let large_array = Array2::fromshape_fn((100, 100), |(i, j)| (i + j) as f64);
+    let large_array = Array2::from_shape_fn((100, 100), |(i, j)| (i + j) as f64);
 
     // Create compression options
     let mut compression = CompressionOptions::default();

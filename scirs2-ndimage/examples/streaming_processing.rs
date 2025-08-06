@@ -109,7 +109,7 @@ fn process_with_custom_op() {
         }
 
         fn merge_overlap(
-            &self_output: &mut ndarray::ArrayViewMut2<f64>,
+            self_output: &mut ndarray::ArrayViewMut2<f64>,
             _new_chunk: &ArrayView2<f64>,
             _overlap_info: &scirs2,
             _ndimage: streaming::OverlapInfo,

@@ -30,23 +30,23 @@ pub fn extract_entropy_features(
 
 /// Calculate Shannon entropy of a signal
 #[allow(dead_code)]
-pub fn calculate_shannon_entropy(_signal: &[f64]) -> f64 {
-    if _signal.is_empty() {
+pub fn calculate_shannon_entropy(signal: &[f64]) -> f64 {
+    if signal.is_empty() {
         return 0.0;
     }
 
     // Determine range and bin width for histogram
-    let min = _signal.iter().copied().fold(f64::INFINITY, f64::min);
-    let max = _signal.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+    let min = signal.iter().copied().fold(f64::INFINITY, f64::min);
+    let max = signal.iter().copied().fold(f64::NEG_INFINITY, f64::max);
 
     if min == max {
         return 0.0; // Constant _signal has zero entropy
     }
 
     // Use Freedman-Diaconis rule for bin width
-    let n = _signal.len();
+    let n = signal.len();
     let iqr = {
-        let mut sorted = _signal.to_vec();
+        let mut sorted = signal.to_vec();
         sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
         calculate_quantile(&sorted, 0.75) - calculate_quantile(&sorted, 0.25)
     };
@@ -79,12 +79,12 @@ pub fn calculate_shannon_entropy(_signal: &[f64]) -> f64 {
 
 /// Calculate approximate entropy of a signal
 #[allow(dead_code)]
-pub fn calculate_approximate_entropy(_signal: &[f64], m: usize, r: f64) -> f64 {
-    if _signal.is_empty() || m == 0 {
+pub fn calculate_approximate_entropy(signal: &[f64], m: usize, r: f64) -> f64 {
+    if signal.is_empty() || m == 0 {
         return 0.0;
     }
 
-    let n = _signal.len();
+    let n = signal.len();
     if n <= m + 1 {
         return 0.0; // Not enough data points
     }
@@ -107,8 +107,8 @@ pub fn calculate_approximate_entropy(_signal: &[f64], m: usize, r: f64) -> f64 {
 
 /// Helper function for approximate entropy calculation
 #[allow(dead_code)]
-fn calculate_phi(_signal: &[f64], m: usize, tolerance: f64) -> f64 {
-    let n = _signal.len();
+fn calculate_phi(signal: &[f64], m: usize, tolerance: f64) -> f64 {
+    let n = signal.len();
     let mut total = 0.0;
 
     for i in 0..n - m + 1 {
@@ -137,12 +137,12 @@ fn calculate_phi(_signal: &[f64], m: usize, tolerance: f64) -> f64 {
 
 /// Calculate sample entropy of a signal
 #[allow(dead_code)]
-pub fn calculate_sample_entropy(_signal: &[f64], m: usize, r: f64) -> f64 {
-    if _signal.is_empty() || m == 0 {
+pub fn calculate_sample_entropy(signal: &[f64], m: usize, r: f64) -> f64 {
+    if signal.is_empty() || m == 0 {
         return 0.0;
     }
 
-    let n = _signal.len();
+    let n = signal.len();
     if n <= m + 1 {
         return 0.0; // Not enough data points
     }
@@ -169,8 +169,8 @@ pub fn calculate_sample_entropy(_signal: &[f64], m: usize, r: f64) -> f64 {
 
 /// Helper function for sample entropy calculation
 #[allow(dead_code)]
-fn count_matches(_signal: &[f64], m: usize, tolerance: f64) -> f64 {
-    let n = _signal.len();
+fn count_matches(signal: &[f64], m: usize, tolerance: f64) -> f64 {
+    let n = signal.len();
     let mut match_count = 0.0;
 
     for i in 0..n - m {
@@ -196,12 +196,12 @@ fn count_matches(_signal: &[f64], m: usize, tolerance: f64) -> f64 {
 
 /// Calculate permutation entropy of a signal
 #[allow(dead_code)]
-pub fn calculate_permutation_entropy(_signal: &[f64], order: usize) -> f64 {
-    if _signal.is_empty() || order < 2 {
+pub fn calculate_permutation_entropy(signal: &[f64], order: usize) -> f64 {
+    if signal.is_empty() || order < 2 {
         return 0.0;
     }
 
-    let n = _signal.len();
+    let n = signal.len();
     if n < order + 1 {
         return 0.0; // Not enough data points
     }

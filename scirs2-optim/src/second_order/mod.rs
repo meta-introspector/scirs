@@ -123,7 +123,7 @@ pub mod hessian_approximation {
 
         let m = s_history.len();
         if m == 0 {
-            // No _history, return scaled gradient
+            // No history, return scaled gradient
             return Ok(gradient * initial_hessian_scale);
         }
 
@@ -206,12 +206,12 @@ pub mod hessian_approximation {
     }
 
     /// Gauss-Newton Hessian approximation for least squares problems
-    pub fn gauss_newton_approximation<A>(_jacobian: &Array2<A>) -> Result<Array2<A>>
+    pub fn gauss_newton_approximation<A>(jacobian: &Array2<A>) -> Result<Array2<A>>
     where
         A: Float + ScalarOperand + Debug,
     {
         // Gauss-Newton approximation: H ≈ J^T * J
-        let j_transpose = _jacobian.t();
+        let j_transpose = jacobian.t();
         let hessian_approx = j_transpose.dot(_jacobian);
         Ok(hessian_approx)
     }
@@ -226,7 +226,7 @@ pub struct Newton<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug + Send + Sync> Newton<A> {
     /// Create a new Newton optimizer
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(learningrate: A) -> Self {
         Self {
             learning_rate,
             regularization: A::from(1e-6).unwrap(),
@@ -308,7 +308,7 @@ pub struct LBFGS<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> LBFGS<A, D> {
     /// Create a new L-BFGS optimizer
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(learningrate: A) -> Self {
         Self {
             learning_rate,
             max_history: 10,
@@ -320,7 +320,7 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> LBFGS<A, D> {
     }
 
     /// Set maximum history size
-    pub fn with_max_history(mut self, max_history: usize) -> Self {
+    pub fn with_max_history(mut self, maxhistory: usize) -> Self {
         self.max_history = max_history;
         self
     }
@@ -371,7 +371,8 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> SecondOrderOp
     fn step_second_order(
         &mut self,
         params: &Array<A, D>,
-        gradients: &Array<A, D>, _hessian_info: &HessianInfo<A, D>, // L-BFGS maintains its own history
+        gradients: &Array<A, D>,
+        _hessian_info: &HessianInfo<A, D>, // L-BFGS maintains its own history
     ) -> Result<Array<A, D>> {
         self.step(params, gradients)
     }

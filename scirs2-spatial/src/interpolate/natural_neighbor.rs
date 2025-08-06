@@ -113,10 +113,10 @@ impl NaturalNeighborInterpolator {
     /// * If points are not 2D
     /// * If fewer than 3 points are provided
     /// * If the Delaunay triangulation fails
-    pub fn new(_points: &ArrayView2<'_, f64>, values: &ArrayView1<f64>) -> SpatialResult<Self> {
+    pub fn new(points: &ArrayView2<'_, f64>, values: &ArrayView1<f64>) -> SpatialResult<Self> {
         // Check input dimensions
-        let n_points = _points.nrows();
-        let dim = _points.ncols();
+        let n_points = points.nrows();
+        let dim = points.ncols();
 
         if n_points != values.len() {
             return Err(SpatialError::DimensionError(format!(
@@ -128,7 +128,7 @@ impl NaturalNeighborInterpolator {
 
         if dim != 2 {
             return Err(SpatialError::DimensionError(format!(
-                "Natural neighbor interpolation currently only supports 2D _points, got {dim}D"
+                "Natural neighbor interpolation currently only supports 2D points, got {dim}D"
             )));
         }
 
@@ -145,7 +145,7 @@ impl NaturalNeighborInterpolator {
         let voronoi = Voronoi::new(_points, false)?;
 
         Ok(Self {
-            points: _points.to_owned(),
+            points: points.to_owned(),
             values: values.to_owned(),
             delaunay,
             voronoi,
@@ -168,12 +168,12 @@ impl NaturalNeighborInterpolator {
     ///
     /// * If the point dimensions don't match the interpolator
     /// * If the point is outside the convex hull of the input points
-    pub fn interpolate(&self, _point: &ArrayView1<f64>) -> SpatialResult<f64> {
+    pub fn interpolate(&self, point: &ArrayView1<f64>) -> SpatialResult<f64> {
         // Check dimension
-        if _point.len() != self.dim {
+        if point.len() != self.dim {
             return Err(SpatialError::DimensionError(format!(
                 "Query _point has dimension {}, expected {}",
-                _point.len(),
+                point.len(),
                 self.dim
             )));
         }
@@ -212,22 +212,22 @@ impl NaturalNeighborInterpolator {
     /// # Errors
     ///
     /// * If the points dimensions don't match the interpolator
-    pub fn interpolate_many(&self, _points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
+    pub fn interpolate_many(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
         // Check dimensions
-        if _points.ncols() != self.dim {
+        if points.ncols() != self.dim {
             return Err(SpatialError::DimensionError(format!(
                 "Query _points have dimension {}, expected {}",
-                _points.ncols(),
+                points.ncols(),
                 self.dim
             )));
         }
 
-        let n_queries = _points.nrows();
+        let n_queries = points.nrows();
         let mut results = Array1::zeros(n_queries);
 
         // Interpolate each point
         for i in 0..n_queries {
-            let point = _points.row(i);
+            let point = points.row(i);
 
             // Handle _points outside the convex hull by returning NaN
             match self.interpolate(&point) {
@@ -483,7 +483,7 @@ impl NaturalNeighborInterpolator {
     ///
     /// * If the region is empty
     #[allow(dead_code)]
-    fn get_voronoi_vertices(_voronoi: &Voronoi, region: &[i64]) -> SpatialResult<Array2<f64>> {
+    fn get_voronoi_vertices(voronoi: &Voronoi, region: &[i64]) -> SpatialResult<Array2<f64>> {
         if region.is_empty() {
             return Err(SpatialError::ValueError("Empty Voronoi region".to_string()));
         }
@@ -526,12 +526,12 @@ impl NaturalNeighborInterpolator {
     ///
     /// * If the polygon has fewer than 3 vertices
     #[allow(dead_code)]
-    fn polygon_area(_vertices: &Array2<f64>) -> SpatialResult<f64> {
-        let n = _vertices.nrows();
+    fn polygon_area(vertices: &Array2<f64>) -> SpatialResult<f64> {
+        let n = vertices.nrows();
 
         if n < 3 {
             return Err(SpatialError::ValueError(format!(
-                "Polygon must have at least 3 _vertices, got {n}"
+                "Polygon must have at least 3 vertices, got {n}"
             )));
         }
 
@@ -539,7 +539,7 @@ impl NaturalNeighborInterpolator {
 
         for i in 0..n {
             let j = (i + 1) % n;
-            area += _vertices[[i, 0]] * _vertices[[j, 1]] - _vertices[[j, 0]] * _vertices[[i, 1]];
+            area += vertices[[i, 0]] * vertices[[j, 1]] - vertices[[j, 0]] * vertices[[i, 1]];
         }
 
         Ok(area.abs() / 2.0)
@@ -555,10 +555,10 @@ impl NaturalNeighborInterpolator {
     /// # Returns
     ///
     /// Euclidean distance between the points
-    fn euclidean_distance(_p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
+    fn euclidean_distance(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
         let mut sum_sq = 0.0;
         for i in 0.._p1.len().min(p2.len()) {
-            let diff = _p1[i] - p2[i];
+            let diff = p1[i] - p2[i];
             sum_sq += diff * diff;
         }
         sum_sq.sqrt()

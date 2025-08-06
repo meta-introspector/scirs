@@ -48,9 +48,9 @@ pub struct InPlaceSGD<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug> InPlaceSGD<A> {
     /// Create a new in-place SGD optimizer
-    pub fn new(_learning_rate: A) -> Self {
+    pub fn new(_learningrate: A) -> Self {
         Self {
-            learning_rate: _learning_rate,
+            learning_rate: learning_rate,
             momentum: A::zero(),
             weight_decay: A::zero(),
         }
@@ -63,7 +63,7 @@ impl<A: Float + ScalarOperand + Debug> InPlaceSGD<A> {
     }
 
     /// Set weight decay
-    pub fn with_weight_decay(mut self, weight_decay: A) -> Self {
+    pub fn with_weight_decay(mut self, weightdecay: A) -> Self {
         self.weight_decay = weight_decay;
         self
     }
@@ -103,9 +103,9 @@ pub struct InPlaceAdam<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> InPlaceAdam<A, D> {
     /// Create a new in-place Adam optimizer
-    pub fn new(_learning_rate: A) -> Self {
+    pub fn new(_learningrate: A) -> Self {
         Self {
-            learning_rate: _learning_rate,
+            learning_rate: learning_rate,
             beta1: A::from(0.9).unwrap(),
             beta2: A::from(0.999).unwrap(),
             epsilon: A::from(1e-8).unwrap(),
@@ -129,7 +129,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> InPlaceAdam<A, D> {
     }
 
     /// Set weight decay
-    pub fn with_weight_decay(mut self, weight_decay: A) -> Self {
+    pub fn with_weight_decay(mut self, weightdecay: A) -> Self {
         self.weight_decay = weight_decay;
         self
     }
@@ -210,12 +210,12 @@ pub mod utils {
     use super::*;
 
     /// Apply a scalar operation in-place
-    pub fn scale_inplace<A, D>(_array: &mut Array<A, D>, scalar: A)
+    pub fn scale_inplace<A, D>(array: &mut Array<A, D>, scalar: A)
     where
         A: Float + ScalarOperand + MulAssign,
         D: Dimension,
     {
-        _array.map_inplace(|x| *x *= scalar);
+        array.map_inplace(|x| *x *= scalar);
     }
 
     /// Add arrays in-place (a += b)
@@ -237,22 +237,22 @@ pub mod utils {
     }
 
     /// Apply element-wise operation in-place
-    pub fn apply_inplace<A, D, F>(_array: &mut Array<A, D>, f: F)
+    pub fn apply_inplace<A, D, F>(array: &mut Array<A, D>, f: F)
     where
         A: Float + ScalarOperand,
         D: Dimension,
         F: Fn(&mut A),
     {
-        _array.map_inplace(f);
+        array.map_inplace(f);
     }
 
     /// Clip values in-place
-    pub fn clip_inplace<A, D>(_array: &mut Array<A, D>, min: A, max: A)
+    pub fn clip_inplace<A, D>(array: &mut Array<A, D>, min: A, max: A)
     where
         A: Float + ScalarOperand,
         D: Dimension,
     {
-        _array.map_inplace(|x| {
+        array.map_inplace(|x| {
             if *x < min {
                 *x = min;
             } else if *x > max {
@@ -262,14 +262,14 @@ pub mod utils {
     }
 
     /// Normalize array in-place (divide by its norm)
-    pub fn normalize_inplace<A, D>(_array: &mut Array<A, D>)
+    pub fn normalize_inplace<A, D>(array: &mut Array<A, D>)
     where
         A: Float + ScalarOperand + MulAssign,
         D: Dimension,
     {
-        let norm = _array.mapv(|x| x * x).sum().sqrt();
+        let norm = array.mapv(|x| x * x).sum().sqrt();
         if norm > A::zero() {
-            _array.map_inplace(|x| *x *= A::one() / norm);
+            array.map_inplace(|x| *x *= A::one() / norm);
         }
     }
 }
@@ -364,10 +364,8 @@ pub mod fused {
         if let Some(_buf) = momentum_buf {
             if let Some(wd) = weight_decay {
                 // Fused SGD with momentum and weight _decay
-                for ((p, g), buf_val) in params
-                    .iter_mut()
-                    .zip(gradients.iter())
-                    .zip(_buf.iter_mut())
+                for ((p, g), buf_val) in
+                    params.iter_mut().zip(gradients.iter()).zip(_buf.iter_mut())
                 {
                     let g_with_decay = *g + *p * wd;
                     *buf_val = momentum * *buf_val + (A::one() - dampening) * g_with_decay;
@@ -424,7 +422,7 @@ pub mod fused {
             let _norm = norm_sq.sqrt();
 
             if _norm > max_norm_val {
-                let scale = max_norm_val / _norm;
+                let scale = max_norm_val / norm;
                 for g in gradients.iter_mut() {
                     *g = *g * scale;
                 }
@@ -486,9 +484,9 @@ pub mod mixed_precision {
 
     impl LossScaler {
         /// Create a new loss scaler
-        pub fn new(_initial_scale: f32) -> Self {
+        pub fn new(_initialscale: f32) -> Self {
             Self {
-                scale: _initial_scale,
+                scale: initial_scale,
                 growth_factor: 2.0,
                 backoff_factor: 0.5,
                 growth_interval: 2000,
@@ -519,7 +517,7 @@ pub mod mixed_precision {
         }
 
         /// Update scale based on gradient overflow detection
-        pub fn update(&mut self, found_inf: bool) {
+        pub fn update(&mut self, foundinf: bool) {
             self.steps_since_update += 1;
 
             if found_inf {
@@ -595,9 +593,9 @@ pub mod gradient_checkpointing {
 
     impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientCheckpointer<A, D> {
         /// Create a new gradient checkpointer
-        pub fn new(_strategy: CheckpointStrategy) -> Self {
+        pub fn new(strategy: CheckpointStrategy) -> Self {
             Self {
-                strategy: _strategy,
+                strategy: strategy,
                 checkpoints: std::collections::HashMap::new(),
                 memory_tracker: MemoryTracker::new(),
                 current_depth: 0,
@@ -679,7 +677,7 @@ pub mod gradient_checkpointing {
         }
 
         /// Optimize checkpointing strategy based on memory usage
-        pub fn optimize_strategy(&mut self, target_memory_usage: f64) {
+        pub fn optimize_strategy(&mut self, target_memoryusage: f64) {
             let current_usage = self.memory_tracker.usage_ratio();
 
             if current_usage > target_memory_usage {
@@ -888,7 +886,7 @@ pub mod gradient_checkpointing {
 
     impl<A: Float + ScalarOperand + Debug, D: Dimension> AutoCheckpointer<A, D> {
         /// Create a new auto checkpointer
-        pub fn new(_initial_strategy: CheckpointStrategy, target_memory_ratio: f64) -> Self {
+        pub fn new(_initial_strategy: CheckpointStrategy, target_memoryratio: f64) -> Self {
             Self {
                 checkpointer: GradientCheckpointer::new(_initial_strategy),
                 memory_history: VecDeque::with_capacity(100),
@@ -1032,12 +1030,12 @@ pub mod adaptive {
 
     impl MemoryAwareBatchSizer {
         /// Create a new memory-aware batch sizer
-        pub fn new(_initial_batch_size: usize) -> Self {
+        pub fn new(_initial_batchsize: usize) -> Self {
             Self {
-                initial_batch_size: _initial_batch_size,
+                initial_batch_size: initial_batch_size,
                 max_batch_size: _initial_batch_size * 4,
-                min_batch_size: _initial_batch_size.max(1) / 4,
-                current_batch_size: _initial_batch_size,
+                min_batch_size: initial_batch_size.max(1) / 4,
+                current_batch_size: initial_batch_size,
                 memory_threshold: 0.8,
                 adaptation_factor: 1.2,
             }
@@ -1061,7 +1059,7 @@ pub mod adaptive {
         }
 
         /// Adapt batch size based on memory usage
-        pub fn adapt(&mut self, memory_usage_ratio: f64) {
+        pub fn adapt(&mut self, memory_usageratio: f64) {
             if memory_usage_ratio > self.memory_threshold {
                 // Reduce batch size if memory usage is high
                 let new_size = (self.current_batch_size as f64 / self.adaptation_factor) as usize;
@@ -1080,7 +1078,7 @@ pub mod adaptive {
     }
 
     /// Memory usage estimator for arrays
-    pub fn estimate_memory_usage<A, D>(_arrays: &[&Array<A, D>]) -> usize
+    pub fn estimate_memory_usage<A, D>(arrays: &[&Array<A, D>]) -> usize
     where
         A: Sized,
         D: Dimension,

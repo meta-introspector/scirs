@@ -119,11 +119,11 @@ pub struct FeatureSchema {
     /// Feature name
     pub name: String,
     /// Data type
-    pub data_type: DataType,
+    pub datatype: DataType,
     /// Whether the feature is required
     pub required: bool,
     /// Default value if missing
-    pub default_value: Option<FeatureValue>,
+    pub defaultvalue: Option<FeatureValue>,
     /// Feature description
     pub description: Option<String>,
     /// Validation constraints
@@ -243,7 +243,7 @@ impl DataBatch {
     }
 
     /// Extract feature matrix for ML processing
-    pub fn extract_feature_matrix(
+    pub fn extract_featurematrix(
         &self,
         feature_names: &[String],
     ) -> Result<Vec<Vec<f64>>, MLPipelineError> {
@@ -386,7 +386,7 @@ impl FeatureTransformer {
                     self.apply_standard_transform(&mut transformed_sample)?;
                 }
                 TransformType::LogTransform => {
-                    self.apply_log_transform(&mut transformed_sample)?;
+                    self.applylog_transform(&mut transformed_sample)?;
                 }
                 TransformType::PowerTransform { power } => {
                     self.apply_power_transform(&mut transformed_sample, *power)?;
@@ -601,7 +601,7 @@ impl FeatureTransformer {
     }
 
     /// Apply log transformation
-    fn apply_log_transform(&self, sample: &mut DataSample) -> Result<(), MLPipelineError> {
+    fn applylog_transform(&self, sample: &mut DataSample) -> Result<(), MLPipelineError> {
         for feature_name in &self.input_features {
             if let Some(value) = sample.features.get(feature_name).cloned() {
                 if let Some(numeric_value) = value.as_f64() {
@@ -726,7 +726,7 @@ impl ModelPredictor {
     }
 
     /// Load model from serialized data
-    pub fn load_model(&mut self, model_data: Vec<u8>) -> Result<(), MLPipelineError> {
+    pub fn loadmodel(&mut self, modeldata: Vec<u8>) -> Result<(), MLPipelineError> {
         self.model_data = model_data;
         // In a real implementation, this would deserialize the model
         Ok(())
@@ -901,8 +901,8 @@ pub enum ErrorStrategy {
     SkipErrors,
     /// Retry failed operations
     RetryWithBackoff {
-        max_retries: u32,
-        base_delay: Duration,
+        maxretries: u32,
+        basedelay: Duration,
     },
 }
 
@@ -983,7 +983,7 @@ impl MLPipeline {
     }
 
     /// Set dependencies between nodes
-    pub fn set_dependencies(&mut self, node_name: String, dependencies: Vec<String>) {
+    pub fn set_dependencies(&mut self, nodename: String, dependencies: Vec<String>) {
         self.node_dependencies.insert(node_name, dependencies);
     }
 
@@ -1023,16 +1023,16 @@ impl MLPipeline {
                             batch_clone
                         }
                         ErrorStrategy::RetryWithBackoff {
-                            max_retries,
-                            base_delay,
+                            maxretries,
+                            basedelay,
                         } => {
                             let mut retries = 0;
                             loop {
-                                if retries >= *max_retries {
+                                if retries >= *maxretries {
                                     return Err(e);
                                 }
 
-                                std::thread::sleep(*base_delay * 2_u32.pow(retries));
+                                std::thread::sleep(*basedelay * 2_u32.pow(retries));
 
                                 match node.process(batch_clone.clone()) {
                                     Ok(processed_batch) => {
@@ -1106,7 +1106,7 @@ impl MLPipeline {
     }
 
     /// Update node-specific metrics
-    fn update_node_metrics(&self, node_name: &str, processing_time: Duration, batch_size: usize) {
+    fn update_node_metrics(&self, node_name: &str, processing_time: Duration, batchsize: usize) {
         if let Ok(mut metrics) = self.pipeline_metrics.write() {
             let node_metrics = metrics
                 .node_metrics
@@ -1264,7 +1264,7 @@ impl StreamingProcessor {
     }
 
     /// Get processed samples from output buffer
-    pub fn get_samples(&self, max_count: usize) -> Vec<DataSample> {
+    pub fn get_samples(&self, maxcount: usize) -> Vec<DataSample> {
         let mut output = self.output_buffer.lock().unwrap();
         let mut samples = Vec::new();
         let mut _count = 0;
@@ -1292,7 +1292,7 @@ pub mod utils {
     use super::*;
 
     /// Create a simple preprocessing pipeline
-    pub fn with_preprocessing(feature_names: Vec<String>) -> MLPipeline {
+    pub fn with_preprocessing(featurenames: Vec<String>) -> MLPipeline {
         let mut pipeline = MLPipeline::new("preprocessing".to_string(), PipelineConfig::default());
 
         // Add standard scaler
@@ -1330,7 +1330,7 @@ pub mod utils {
     }
 
     /// Create a sample data batch for testing
-    pub fn create_sample_batch(feature_names: &[String], size: usize) -> DataBatch {
+    pub fn create_sample_batch(featurenames: &[String], size: usize) -> DataBatch {
         let mut batch = DataBatch::new();
 
         for i in 0..size {
@@ -1428,7 +1428,7 @@ mod tests {
 
         // Test feature matrix extraction
         let feature_names = vec!["feature1".to_string(), "feature2".to_string()];
-        let matrix = batch.extract_feature_matrix(&feature_names).unwrap();
+        let matrix = batch.extract_featurematrix(&feature_names).unwrap();
         assert_eq!(matrix.len(), 1);
         assert_eq!(matrix[0], vec![1.0, 2.0]);
     }

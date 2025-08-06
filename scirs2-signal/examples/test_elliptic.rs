@@ -41,7 +41,7 @@ fn main() {
 
 /// Format coefficients for display
 #[allow(dead_code)]
-fn format_coeffs(_coeffs: &[f64]) -> String {
+fn format_coeffs(coeffs: &[f64]) -> String {
     _coeffs
         .iter()
         .map(|&c| format!("{:.4}", c))

@@ -94,7 +94,7 @@ impl PyTimeSeries {
 
     /// Create from pandas Series
     #[classmethod]
-    fn from_pandas(_cls: &Bound<'_, PyType>, series: &Bound<'_, PyAny>) -> PyResult<Self> {
+    fn from_pandas(cls: &Bound<'_, PyType>, series: &Bound<'_, PyAny>) -> PyResult<Self> {
         // Extract values from pandas Series
         let values = series.getattr("values")?;
         let values_array: PyReadonlyArray1<f64> = values.extract()?;
@@ -185,9 +185,9 @@ impl PyARIMA {
         seasonal_period: usize,
     ) -> Self {
         let config = ArimaConfig {
-            _p,
-            _d,
-            _q,
+            p,
+            d,
+            q,
             seasonal_p,
             seasonal_d,
             seasonal_q,
@@ -279,7 +279,7 @@ impl PyARIMA {
 #[cfg(feature = "python")]
 #[pyfunction]
 #[allow(dead_code)]
-fn calculate_statistics(_data: &PyTimeSeries) -> PyResult<HashMap<String, f64>> {
+fn calculate_statistics(data: &PyTimeSeries) -> PyResult<HashMap<String, f64>> {
     let stats = calculate_basic_stats(&_data.values)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError_>(format!("{e}")))?;
     Ok(stats)
@@ -288,7 +288,7 @@ fn calculate_statistics(_data: &PyTimeSeries) -> PyResult<HashMap<String, f64>> 
 #[cfg(feature = "python")]
 #[pyfunction]
 #[allow(dead_code)]
-fn check_stationarity(_data: &PyTimeSeries) -> PyResult<bool> {
+fn check_stationarity(data: &PyTimeSeries) -> PyResult<bool> {
     let (_test_stat, p_value) = is_stationary(&_data.values, None)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError_>(format!("{e}")))?;
     // Consider stationary if p-value < 0.05 (5% significance level)

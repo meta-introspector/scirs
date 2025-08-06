@@ -24,10 +24,10 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn print_window_analysis(_window: &[f64], name: &str) {
+fn print_window_analysis(window: &[f64], name: &str) {
     // Print all values
     println!("Values:");
-    for (i, &val) in _window.iter().enumerate() {
+    for (i, &val) in window.iter().enumerate() {
         println!("  [{}]: {:.6}", i, val);
     }
 
@@ -41,7 +41,7 @@ fn print_window_analysis(_window: &[f64], name: &str) {
     println!("\nMaximum value: {:.6} at index {}", max_val, max_idx);
 
     // Calculate expected theoretical values
-    let n = _window.len();
+    let n = window.len();
     match name {
         "Hamming" => {
             // Hamming: w[i] = 0.54 - 0.46 * cos(2π * i / (N-1))

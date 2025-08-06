@@ -175,7 +175,7 @@ where
 /// let significant = result.p_value < 0.05;
 /// ```
 #[allow(dead_code)]
-pub fn chi2_independence<F, I>(_observed: &ArrayView2<I>) -> StatsResult<ChiSquareResult<F>>
+pub fn chi2_independence<F, I>(observed: &ArrayView2<I>) -> StatsResult<ChiSquareResult<F>>
 where
     F: Float
         + std::iter::Sum<F>
@@ -189,15 +189,15 @@ where
     I: PrimInt + NumCast + std::fmt::Display,
 {
     // Check if _observed is empty
-    if _observed.is_empty() {
+    if observed.is_empty() {
         return Err(StatsError::InvalidArgument(
             "Observed frequencies cannot be empty".to_string(),
         ));
     }
 
     // Get dimensions
-    let rows = _observed.shape()[0];
-    let cols = _observed.shape()[1];
+    let rows = observed.shape()[0];
+    let cols = observed.shape()[1];
 
     if rows < 2 || cols < 2 {
         return Err(StatsError::InvalidArgument(
@@ -292,7 +292,7 @@ where
 /// println!("p-value: {}", result.p_value);
 /// ```
 #[allow(dead_code)]
-pub fn chi2_yates<F, I>(_observed: &ArrayView2<I>) -> StatsResult<ChiSquareResult<F>>
+pub fn chi2_yates<F, I>(observed: &ArrayView2<I>) -> StatsResult<ChiSquareResult<F>>
 where
     F: Float
         + std::iter::Sum<F>
@@ -306,8 +306,8 @@ where
     I: PrimInt + NumCast + std::fmt::Display,
 {
     // Check if _observed is a 2x2 table
-    let rows = _observed.shape()[0];
-    let cols = _observed.shape()[1];
+    let rows = observed.shape()[0];
+    let cols = observed.shape()[1];
 
     if rows != 2 || cols != 2 {
         return Err(StatsError::InvalidArgument(

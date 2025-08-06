@@ -567,9 +567,9 @@ pub enum FeatureType {
 
 impl AdvancedPatternDetector {
     /// Create a new advanced pattern detector
-    pub fn new(_config: AdvancedPatternConfig) -> Result<Self> {
+    pub fn new(config: AdvancedPatternConfig) -> Result<Self> {
         Ok(Self {
-            _config: _config.clone(),
+            _config: config.clone(),
             pattern_classifier: PatternClassifier::new(_config.learning_rate)?,
             signal_processor: SignalProcessor::new()?,
             statistical_analyzer: AdvancedStatisticalAnalyzer::new()?,
@@ -579,7 +579,7 @@ impl AdvancedPatternDetector {
     }
 
     /// Detect patterns in memory usage data using advanced algorithms
-    pub fn detect_patterns(&mut self, memory_data: &[f64]) -> Result<Vec<AdvancedMemoryPattern>> {
+    pub fn detect_patterns(&mut self, memorydata: &[f64]) -> Result<Vec<AdvancedMemoryPattern>> {
         if memory_data.len() < self.config.min_pattern_length {
             return Ok(Vec::new());
         }
@@ -899,7 +899,7 @@ impl AdvancedPatternDetector {
     }
 
     /// Get historical mean for pattern type
-    fn get_historical_pattern_mean(&self, pattern_type: &AdvancedPatternType) -> Result<f64> {
+    fn get_historical_pattern_mean(&self, patterntype: &AdvancedPatternType) -> Result<f64> {
         // Simplified implementation - would use actual historical data
         match pattern_type {
             AdvancedPatternType::LinearGrowth { .. } => Ok(0.5),
@@ -913,11 +913,11 @@ impl AdvancedPatternDetector {
 // Implementation stubs for the various components
 
 impl PatternClassifier {
-    fn new(_learning_rate: f64) -> Result<Self> {
+    fn new(_learningrate: f64) -> Result<Self> {
         Ok(Self {
             weights: vec![vec![0.0; 50]; 10], // 10 output classes, 50 input features
             biases: vec![0.0; 10],
-            _learning_rate,
+            learning_rate,
             training_data: Vec::new(),
         })
     }

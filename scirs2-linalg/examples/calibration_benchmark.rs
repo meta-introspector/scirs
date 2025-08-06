@@ -70,11 +70,11 @@ fn main() {
 
 /// Generate a matrix with uniform distribution
 #[allow(dead_code)]
-fn generate_uniform_data(_size: usize) -> Array2<f32> {
+fn generate_uniform_data(size: usize) -> Array2<f32> {
     let mut rng = rand::rng();
     let uniform = Uniform::new(-1.0, 1.0).unwrap();
 
-    let mut data = Array2::zeros((_size, _size));
+    let mut data = Array2::zeros((_size, size));
     for i in 0.._size {
         for j in 0.._size {
             data[[i, j]] = uniform.sample(&mut rng);
@@ -86,11 +86,11 @@ fn generate_uniform_data(_size: usize) -> Array2<f32> {
 
 /// Generate a matrix with normal distribution
 #[allow(dead_code)]
-fn generate_normal_data(_size: usize) -> Array2<f32> {
+fn generate_normal_data(size: usize) -> Array2<f32> {
     let mut rng = rand::rng();
     let normal = Normal::new(0.0, 1.0).unwrap();
 
-    let mut data = Array2::zeros((_size, _size));
+    let mut data = Array2::zeros((_size, size));
     for i in 0.._size {
         for j in 0.._size {
             data[[i, j]] = normal.sample(&mut rng);
@@ -102,11 +102,11 @@ fn generate_normal_data(_size: usize) -> Array2<f32> {
 
 /// Generate a matrix with log-normal distribution
 #[allow(dead_code)]
-fn generate_lognormal_data(_size: usize) -> Array2<f32> {
+fn generate_lognormal_data(size: usize) -> Array2<f32> {
     let mut rng = rand::rng();
     let lognormal = LogNormal::new(0.0, 1.0).unwrap();
 
-    let mut data = Array2::zeros((_size, _size));
+    let mut data = Array2::zeros((_size, size));
     for i in 0.._size {
         for j in 0.._size {
             data[[i, j]] = lognormal.sample(&mut rng);
@@ -118,12 +118,12 @@ fn generate_lognormal_data(_size: usize) -> Array2<f32> {
 
 /// Generate a matrix with bimodal distribution
 #[allow(dead_code)]
-fn generate_bimodal_data(_size: usize) -> Array2<f32> {
+fn generate_bimodal_data(size: usize) -> Array2<f32> {
     let mut rng = rand::rng();
     let normal1 = Normal::new(-2.0, 0.5).unwrap();
     let normal2 = Normal::new(2.0, 0.5).unwrap();
 
-    let mut data = Array2::zeros((_size, _size));
+    let mut data = Array2::zeros((_size, size));
     for i in 0.._size {
         for j in 0.._size {
             // 50% chance of coming from each distribution
@@ -140,10 +140,10 @@ fn generate_bimodal_data(_size: usize) -> Array2<f32> {
 
 /// Generate a matrix with mixed scales in different columns
 #[allow(dead_code)]
-fn generate_mixed_scale_data(_size: usize) -> Array2<f32> {
+fn generate_mixed_scale_data(size: usize) -> Array2<f32> {
     let mut rng = rand::rng();
 
-    let mut data = Array2::zeros((_size, _size));
+    let mut data = Array2::zeros((_size, size));
 
     // Divide the matrix into regions with different scales
     let region_size = _size / 4;
@@ -181,11 +181,11 @@ fn generate_mixed_scale_data(_size: usize) -> Array2<f32> {
 
 /// Generate a matrix with heavy-tailed distribution (Cauchy)
 #[allow(dead_code)]
-fn generate_heavy_tailed_data(_size: usize) -> Array2<f32> {
+fn generate_heavy_tailed_data(size: usize) -> Array2<f32> {
     let mut rng = rand::rng();
     let cauchy = Cauchy::new(0.0, 1.0).unwrap();
 
-    let mut data = Array2::zeros((_size, _size));
+    let mut data = Array2::zeros((_size, size));
     for i in 0.._size {
         for j in 0.._size {
             // The Cauchy distribution can generate extreme outliers
@@ -266,7 +266,7 @@ fn benchmark_methods(
 
 /// Benchmark different bit widths using entropy calibration
 #[allow(dead_code)]
-fn benchmark_bit_widths(_distributions: &[(&str, &Array2<f32>)]) {
+fn benchmark_bit_widths(distributions: &[(&str, &Array2<f32>)]) {
     let bit_widths = [4, 8, 16];
 
     println!(
@@ -322,7 +322,7 @@ fn benchmark_bit_widths(_distributions: &[(&str, &Array2<f32>)]) {
 
 /// Benchmark hardware-friendly quantization formats
 #[allow(dead_code)]
-fn benchmark_hardware_friendly(_distributions: &[(&str, &Array2<f32>)]) {
+fn benchmark_hardware_friendly(distributions: &[(&str, &Array2<f32>)]) {
     // Define hardware-friendly formats to test
     let formats = [
         (8, QuantizationMethod::Symmetric, "Int8 Symmetric"),

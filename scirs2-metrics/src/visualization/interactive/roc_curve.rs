@@ -184,7 +184,7 @@ where
     /// # Returns
     ///
     /// * Self for method chaining
-    pub fn with_show_auc(mut self, show_auc: bool) -> Self {
+    pub fn with_show_auc(mut self, showauc: bool) -> Self {
         self.show_auc = show_auc;
         self
     }
@@ -198,7 +198,7 @@ where
     /// # Returns
     ///
     /// * Self for method chaining
-    pub fn with_show_baseline(mut self, show_baseline: bool) -> Self {
+    pub fn with_show_baseline(mut self, showbaseline: bool) -> Self {
         self.show_baseline = show_baseline;
         self
     }
@@ -226,7 +226,7 @@ where
     /// # Returns
     ///
     /// * Self for method chaining
-    pub fn with_show_metrics(mut self, show_metrics: bool) -> Self {
+    pub fn with_show_metrics(mut self, showmetrics: bool) -> Self {
         self.show_metrics = show_metrics;
         self
     }
@@ -270,9 +270,9 @@ where
     /// * Result containing self for method chaining
     pub fn with_threshold_value(mut self, threshold: f64) -> Result<Self> {
         // Ensure thresholds are computed
-        let (__, thresholds_) = self.compute_roc()?;
+        let (_, _, thresholds_, _) = self.compute_roc()?;
 
-        if thresholds.is_empty() {
+        if thresholds_.is_empty() {
             return Err(MetricsError::InvalidInput(
                 "No thresholds available".to_string(),
             ));
@@ -282,7 +282,7 @@ where
         let mut closest_idx = 0;
         let mut min_diff = f64::INFINITY;
 
-        for (i, &t) in thresholds.iter().enumerate() {
+        for (i, &t) in thresholds_.iter().enumerate() {
             let diff = (t - threshold).abs();
             if diff < min_diff {
                 min_diff = diff;
@@ -361,15 +361,15 @@ where
             ));
         }
 
-        let (__, thresholds_) = self.compute_roc()?;
+        let (_, _, thresholds_, _) = self.compute_roc()?;
 
-        if threshold_idx >= thresholds.len() {
+        if threshold_idx >= thresholds_.len() {
             return Err(MetricsError::InvalidArgument(
                 "Threshold index out of range".to_string(),
             ));
         }
 
-        let threshold = thresholds[threshold_idx];
+        let threshold = thresholds_[threshold_idx];
         let y_true = self.y_true.unwrap();
         let y_score = self.y_score.unwrap();
 
@@ -417,7 +417,7 @@ where
     /// # Returns
     ///
     /// * Result containing a HashMap with metric names and values
-    pub fn calculate_metrics(&self, threshold_idx: usize) -> Result<HashMap<String, f64>> {
+    pub fn calculate_metrics(&self, thresholdidx: usize) -> Result<HashMap<String, f64>> {
         let (tp, fp, tn, fn_) = self.calculate_confusion_matrix(threshold_idx)?;
 
         let mut metrics = HashMap::new();
@@ -459,8 +459,8 @@ where
         metrics.insert("f1_score".to_string(), f1);
 
         // Add threshold value
-        let (__, thresholds_) = self.compute_roc()?;
-        metrics.insert("threshold".to_string(), thresholds[threshold_idx]);
+        let (_, _, thresholds_, _) = self.compute_roc()?;
+        metrics.insert("threshold".to_string(), thresholds_[threshold_idx]);
 
         Ok(metrics)
     }
@@ -471,17 +471,17 @@ where
     ///
     /// * The current threshold index or the middle index if not set
     pub fn get_current_threshold_idx(&self) -> Result<usize> {
-        let (__, thresholds_) = self.compute_roc()?;
+        let (_, _, thresholds_, _) = self.compute_roc()?;
 
-        if thresholds.is_empty() {
+        if thresholds_.is_empty() {
             return Err(MetricsError::InvalidInput(
                 "No thresholds available".to_string(),
             ));
         }
 
         match self.current_threshold_idx {
-            Some(idx) if idx < thresholds.len() => Ok(idx),
-            _ => Ok(thresholds.len() / 2), // Default to middle threshold
+            Some(idx) if idx < thresholds_.len() => Ok(idx),
+            _ => Ok(thresholds_.len() / 2), // Default to middle threshold
         }
     }
 }

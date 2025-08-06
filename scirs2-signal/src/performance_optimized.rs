@@ -10,7 +10,7 @@ use ndarray::s;
 
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2, ArrayView1, Zip};
+use ndarray::{Array1, Array2, ArrayView1, Zip};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -338,7 +338,7 @@ pub struct StreamingFilter {
 
 impl StreamingFilter {
     /// Create new streaming filter
-    pub fn new(b: Array1<f64>, a: Array1<f64>, buffer_size: usize) -> SignalResult<Self> {
+    pub fn new(b: Array1<f64>, a: Array1<f64>, buffersize: usize) -> SignalResult<Self> {
         if a.len() == 0 || a[0] == 0.0 {
             return Err(SignalError::ValueError(
                 "Invalid filter coefficients".to_string(),
@@ -693,6 +693,10 @@ fn next_power_of_two(n: usize) -> usize {
 
 /// Performance benchmarking utilities
 pub mod benchmark {
+    use crate::{SignalResult};
+    use ndarray::Array1;
+    use std::time::Instant;
+
     /// Benchmark result
     #[derive(Debug)]
     pub struct BenchmarkResult {
@@ -721,7 +725,7 @@ pub mod benchmark {
 
         // Optimized convolution
         let start = Instant::now();
-        let result_optimized = simd_convolve_1d(&signal, &kernel, "same")?;
+        let result_optimized = crate::convolve::convolve(&signal, &kernel, "same")?;
         let optimized_time = start.elapsed().as_secs_f64() * 1000.0;
 
         // Compute accuracy
@@ -747,6 +751,7 @@ pub mod benchmark {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_simd_convolution() {

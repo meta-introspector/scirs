@@ -31,7 +31,7 @@ const CHUNK_SIZE: usize = 8192;
 ///
 /// The arithmetic mean
 #[allow(dead_code)]
-pub fn streaming_mean<F, I>(mut data_iter: I, total_count: usize) -> StatsResult<F>
+pub fn streaming_mean<F, I>(mut data_iter: I, totalcount: usize) -> StatsResult<F>
 where
     F: Float + NumCast,
     I: Iterator<Item = F> + std::fmt::Display,
@@ -51,7 +51,7 @@ where
             .fold(F::zero(), |acc, val| acc + val);
 
         sum = sum + chunk_sum;
-        _count += CHUNK_SIZE.min(total_count - _count);
+        _count += CHUNK_SIZE.min(total_count - count);
     }
 
     Ok(sum / F::from(total_count).unwrap())
@@ -109,7 +109,7 @@ where
 /// * `data` - Mutable array to normalize
 /// * `ddof` - Delta degrees of freedom for variance calculation
 #[allow(dead_code)]
-pub fn normalize_inplace<F>(_data: &mut ArrayViewMut1<F>, ddof: usize) -> StatsResult<()>
+pub fn normalize_inplace<F>(data: &mut ArrayViewMut1<F>, ddof: usize) -> StatsResult<()>
 where
     F: Float + NumCast + std::fmt::Display,
 {
@@ -124,7 +124,7 @@ where
     let std_dev = variance.sqrt();
 
     // Normalize in-place
-    for val in _data.iter_mut() {
+    for val in data.iter_mut() {
         *val = (*val - mean) / std_dev;
     }
 
@@ -145,11 +145,11 @@ where
 ///
 /// The computed quantile value
 #[allow(dead_code)]
-pub fn quantile_quickselect<F>(_data: &mut [F], q: F) -> StatsResult<F>
+pub fn quantile_quickselect<F>(data: &mut [F], q: F) -> StatsResult<F>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    if _data.is_empty() {
+    if data.is_empty() {
         return Err(StatsError::InvalidArgument(
             "Cannot compute quantile of empty array".to_string(),
         ));
@@ -159,20 +159,20 @@ where
         return Err(StatsError::domain("Quantile must be between 0 and 1"));
     }
 
-    let n = _data.len();
+    let n = data.len();
     let pos = q * F::from(n - 1).unwrap();
     let k = NumCast::from(pos.floor()).unwrap();
 
     // Use quickselect to find k-th element
     quickselect(_data, k);
 
-    let lower = _data[k];
+    let lower = data[k];
 
     // Handle interpolation if needed
     let frac = pos - pos.floor();
     if frac > F::zero() && k + 1 < n {
-        quickselect(&mut _data[(k + 1)..], 0);
-        let upper = _data[k + 1];
+        quickselect(&mut data[(k + 1)..], 0);
+        let upper = data[k + 1];
         Ok(lower + frac * (upper - lower))
     } else {
         Ok(lower)
@@ -394,12 +394,12 @@ pub struct IncrementalCovariance<F: Float> {
 #[allow(dead_code)]
 impl<F: Float + NumCast + ndarray::ScalarOperand + std::fmt::Display> IncrementalCovariance<F> {
     /// Create a new incremental covariance calculator
-    pub fn new(_n_vars: usize) -> Self {
+    pub fn new(_nvars: usize) -> Self {
         Self {
             n: 0,
             means: ndarray::Array1::zeros(_n_vars),
-            cov_matrix: ndarray::Array2::zeros((_n_vars, _n_vars)),
-            n_vars: _n_vars,
+            cov_matrix: ndarray::Array2::zeros((_n_vars, n_vars)),
+            n_vars: n_vars,
         }
     }
 
@@ -472,7 +472,7 @@ pub struct RollingStats<F: Float> {
 #[allow(dead_code)]
 impl<F: Float + NumCast + std::fmt::Display> RollingStats<F> {
     /// Create a new rolling statistics calculator
-    pub fn new(_window_size: usize) -> StatsResult<Self> {
+    pub fn new(_windowsize: usize) -> StatsResult<Self> {
         if _window_size == 0 {
             return Err(StatsError::InvalidArgument(
                 "Window _size must be positive".to_string(),
@@ -480,7 +480,7 @@ impl<F: Float + NumCast + std::fmt::Display> RollingStats<F> {
         }
 
         Ok(Self {
-            window_size: _window_size,
+            window_size: window_size,
             buffer: vec![F::zero(); _window_size],
             position: 0,
             is_full: false,
@@ -563,14 +563,14 @@ pub struct StreamingHistogram<F: Float> {
 
 impl<F: Float + NumCast + std::fmt::Display> StreamingHistogram<F> {
     /// Create a new streaming histogram
-    pub fn new(_n_bins: usize, min_val: F, max_val: F) -> Self {
+    pub fn new(_n_bins: usize, min_val: F, maxval: F) -> Self {
         let bin_width = (max_val - min_val) / F::from(_n_bins).unwrap();
         let _bins: Vec<F> = (0..=_n_bins)
             .map(|i| min_val + F::from(i).unwrap() * bin_width)
             .collect();
 
         Self {
-            bins: _bins,
+            bins: bins,
             counts: vec![0; _n_bins],
             min_val,
             max_val,
@@ -633,9 +633,9 @@ pub struct OutOfCoreStats<F: Float> {
 #[allow(dead_code)]
 impl<F: Float + NumCast + std::str::FromStr + std::fmt::Display> OutOfCoreStats<F> {
     /// Create a new out-of-core statistics processor
-    pub fn new(_chunk_size: usize) -> Self {
+    pub fn new(_chunksize: usize) -> Self {
         Self {
-            chunk_size: _chunk_size,
+            chunk_size: chunk_size,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -660,7 +660,7 @@ impl<F: Float + NumCast + std::str::FromStr + std::fmt::Display> OutOfCoreStats<
         if has_header {
             reader
                 .read_line(&mut line)
-                .map_err(|e| StatsError::InvalidArgument(format!("Failed to read _header: {e}")))?;
+                .map_err(|e| StatsError::InvalidArgument(format!("Failed to read header: {e}")))?;
             line.clear();
         }
 
@@ -722,7 +722,7 @@ impl<F: Float + NumCast + std::str::FromStr + std::fmt::Display> OutOfCoreStats<
         if has_header {
             reader
                 .read_line(&mut line)
-                .map_err(|e| StatsError::InvalidArgument(format!("Failed to read _header: {e}")))?;
+                .map_err(|e| StatsError::InvalidArgument(format!("Failed to read header: {e}")))?;
             line.clear();
         }
 

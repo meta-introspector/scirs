@@ -1224,7 +1224,7 @@ impl<
     > NeuralArchitectureSearch<T>
 {
     /// Create a new NAS instance
-    pub fn new(_config: NASConfig, search_space: ArchitectureSearchSpace) -> Result<Self> {
+    pub fn new(_config: NASConfig, searchspace: ArchitectureSearchSpace) -> Result<Self> {
         let search_strategy = SearchStrategy::new(_config.search_strategy, &_config)?;
         let evaluator = ArchitectureEvaluator::new(&_config)?;
         let population_manager = PopulationManager::new(&_config)?;
@@ -1235,7 +1235,7 @@ impl<
         let multi_objective_optimizer = MultiObjectiveOptimizer::new(&_config)?;
 
         Ok(Self {
-            config: _config,
+            config: config,
             search_space,
             search_strategy,
             evaluator,
@@ -1499,7 +1499,8 @@ impl<
     }
 
     async fn finalize_search(
-        &mut self, _best_architectures: Vec<ArchitectureCandidate>,
+        &mut self,
+        _best_architectures: Vec<ArchitectureCandidate>,
         total_time: Duration,
     ) -> Result<Vec<ArchitectureCandidate>> {
         // Get final best _architectures
@@ -1907,7 +1908,7 @@ impl<
         Ok((mean, uncertainty))
     }
 
-    fn rbf_kernel_distance(&self, x1: &[T], x2: &[T], length_scale: T) -> T {
+    fn rbf_kernel_distance(&self, x1: &[T], x2: &[T], lengthscale: T) -> T {
         let squared_distance = x1
             .iter()
             .zip(x2.iter())
@@ -2284,7 +2285,8 @@ impl<
     }
 
     fn get_progressive_stage(
-        &self, _progressive_state: &ProgressiveSearchState<T>,
+        &self,
+        _progressive_state: &ProgressiveSearchState<T>,
     ) -> ProgressiveStage {
         let iteration = self.search_history.current_iteration();
         let stage_duration = self.config.max_iterations / 4; // 4 stages
@@ -2640,7 +2642,7 @@ impl<
         Ok(components)
     }
 
-    fn update_progressive_state(&mut self, progressive_state: &mut ProgressiveSearchState<T>) {
+    fn update_progressive_state(&mut self, progressivestate: &mut ProgressiveSearchState<T>) {
         // Update progressive search _state based on current performance
         progressive_state.current_stage_iterations += 1;
 
@@ -2809,7 +2811,7 @@ impl<
         Ok(())
     }
 
-    async fn update_rl_policy(rl_state: &mut RLSearchState<T>) -> Result<()> {
+    async fn update_rl_policy(rlstate: &mut RLSearchState<T>) -> Result<()> {
         if rl_state.reward_history.len() < 2 {
             return Ok(()); // Need at least 2 rewards for policy update
         }
@@ -2841,7 +2843,8 @@ impl<
             rl_state.controller.biases[layer_idx] =
                 rl_state.controller.biases[layer_idx].mapv(|b| {
                     b + gradient_scale
-                        * T::from(scirs2_core::random::Random::seed(42).random_range(-0.1, 0.1)).unwrap()
+                        * T::from(scirs2_core::random::Random::seed(42).gen_range(-0.1..0.1))
+                            .unwrap()
                 });
         }
 
@@ -2860,7 +2863,8 @@ impl<
     }
 
     async fn generate_architecture_with_controller(
-        &self, rl_state: &RLSearchState<T>,
+        &self,
+        rl_state: &RLSearchState<T>,
     ) -> Result<ArchitectureSpec> {
         let mut architecture_decisions = Vec::new();
         let mut current_state = self.encode_current_search_state(rl_state);
@@ -2914,7 +2918,7 @@ impl<
         Ok(architecture_spec)
     }
 
-    fn encode_current_search_state(&self, rl_state: &RLSearchState<T>) -> Vec<T> {
+    fn encode_current_search_state(&self, rlstate: &RLSearchState<T>) -> Vec<T> {
         let mut state_encoding = Vec::new();
 
         // Current iteration progress
@@ -3152,7 +3156,7 @@ impl<
         }
     }
 
-    fn update_state_with_action(&self, current_state: &[T], action: &ArchitectureAction) -> Vec<T> {
+    fn update_state_with_action(&self, currentstate: &[T], action: &ArchitectureAction) -> Vec<T> {
         let mut new_state = current_state.to_vec();
 
         // Update _state based on action taken
@@ -3374,7 +3378,7 @@ impl<
         }
     }
 
-    fn update_differentiable_temperature(&mut self, diff_state: &mut DifferentiableNASState<T>) {
+    fn update_differentiable_temperature(&mut self, diffstate: &mut DifferentiableNASState<T>) {
         // Anneal temperature over time
         let min_temp = T::from(0.1).unwrap();
         let _max_temp = T::from(5.0).unwrap();
@@ -3407,7 +3411,7 @@ impl<
         Ok(parents)
     }
 
-    fn update_pareto_front(&mut self, mo_state: &mut MultiObjectiveState<T>) {
+    fn update_pareto_front(&mut self, mostate: &mut MultiObjectiveState<T>) {
         let all_architectures = self.population_manager.get_all_evaluated_architectures();
 
         // Simple Pareto dominance check
@@ -3568,9 +3572,10 @@ pub struct ArchitectureEvaluator<T: Float> {
 }
 
 impl<T: Float + Default + Clone> ArchitectureEvaluator<T> {
-    pub fn new(_config: &NASConfig) -> Result<Self> {
+    pub fn new(config: &NASConfig) -> Result<Self> {
         Ok(Self {
-            config: _config.clone(), _phantom: std::marker::PhantomData,
+            config: config.clone(),
+            _phantom: std::marker::PhantomData,
         })
     }
 
@@ -3611,9 +3616,10 @@ pub struct PerformancePredictor<T: Float> {
 }
 
 impl<T: Float + Default + Clone> PerformancePredictor<T> {
-    pub fn new(_config: &NASConfig) -> Result<Self> {
+    pub fn new(config: &NASConfig) -> Result<Self> {
         Ok(Self {
-            config: _config.clone(), _phantom: std::marker::PhantomData,
+            config: config.clone(),
+            _phantom: std::marker::PhantomData,
         })
     }
 }
@@ -3624,18 +3630,18 @@ pub struct ResourceManager {
 }
 
 impl ResourceManager {
-    pub fn new(_constraints: &SearchConstraints) -> Result<Self> {
+    pub fn new(constraints: &SearchConstraints) -> Result<Self> {
         Ok(Self {
-            constraints: _constraints.clone(),
+            constraints: constraints.clone(),
         })
     }
 
     #[allow(dead_code)]
-    pub fn check_constraints(&self, _arch: &ArchitectureSpec) -> Result<bool> {
+    pub fn check_constraints(&self, arch: &ArchitectureSpec) -> Result<bool> {
         Ok(true) // Simplified check
     }
 
-    pub fn estimate_resource_usage(&self, _arch: &ArchitectureSpec) -> Result<ResourceUsage> {
+    pub fn estimate_resource_usage(&self, arch: &ArchitectureSpec) -> Result<ResourceUsage> {
         Ok(ResourceUsage::default())
     }
 
@@ -3655,7 +3661,8 @@ pub struct PopulationManager<T: Float> {
     population: Vec<ArchitectureCandidate>,
     elite_population: Vec<ArchitectureCandidate>,
     performance_history: Vec<f64>,
-    diversity_tracker: DiversityTracker, _phantom: std::marker::PhantomData<T>,
+    diversity_tracker: DiversityTracker,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 /// Diversity tracking for population management
@@ -3667,9 +3674,9 @@ pub struct DiversityTracker {
 }
 
 impl<T: Float + Default + Clone> PopulationManager<T> {
-    pub fn new(_config: &NASConfig) -> Result<Self> {
+    pub fn new(config: &NASConfig) -> Result<Self> {
         Ok(Self {
-            config: _config.clone(),
+            config: config.clone(),
             population: Vec::with_capacity(_config.population_size),
             elite_population: Vec::with_capacity(_config.elite_size),
             performance_history: Vec::new(),
@@ -4073,9 +4080,9 @@ pub struct ArchitectureGenerator {
 }
 
 impl ArchitectureGenerator {
-    pub fn new(_search_space: &ArchitectureSearchSpace) -> Result<Self> {
+    pub fn new(_searchspace: &ArchitectureSearchSpace) -> Result<Self> {
         Ok(Self {
-            search_space: _search_space.clone(),
+            search_space: search_space.clone(),
         })
     }
 
@@ -4111,7 +4118,7 @@ impl ArchitectureGenerator {
     }
 
     #[allow(dead_code)]
-    pub fn load_architecture(&self, _description: &str) -> Result<ArchitectureSpec> {
+    pub fn load_architecture(&self, description: &str) -> Result<ArchitectureSpec> {
         // Simplified - would parse from _description
         self.generate_random_architecture()
     }
@@ -4119,7 +4126,8 @@ impl ArchitectureGenerator {
     #[allow(dead_code)]
     pub fn crossover(
         &self,
-        parent1: &ArchitectureSpec, _parent2: &ArchitectureSpec,
+        parent1: &ArchitectureSpec,
+        _parent2: &ArchitectureSpec,
     ) -> Result<ArchitectureSpec> {
         // Simplified crossover - would implement proper genetic operations
         self.generate_random_architecture()
@@ -4137,13 +4145,15 @@ impl ArchitectureGenerator {
 
 /// Search history tracker
 pub struct SearchHistory<T: Float> {
-    entries: Vec<ArchitectureCandidate>, _phantom: std::marker::PhantomData<T>,
+    entries: Vec<ArchitectureCandidate>,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> SearchHistory<T> {
     pub fn new() -> Self {
         Self {
-            entries: Vec::new(), _phantom: std::marker::PhantomData,
+            entries: Vec::new(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -4171,21 +4181,25 @@ impl<T: Float + Default + Clone> SearchHistory<T> {
 
     #[allow(dead_code)]
     pub fn record_iteration(
-        &mut self, _iteration: usize, _population: &PopulationManager<T>,
+        &mut self,
+        _iteration: usize,
+        _population: &PopulationManager<T>,
     ) -> Result<()> {
         Ok(())
     }
 
     #[allow(dead_code)]
     pub fn finalize_search(
-        &mut self, _total_time: Duration, _best: &[ArchitectureCandidate],
+        &mut self,
+        _total_time: Duration,
+        _best: &[ArchitectureCandidate],
     ) -> Result<()> {
         Ok(())
     }
 }
 
 impl<T: Float + Default + Clone> SearchStrategy<T> {
-    pub fn new(strategy_type: SearchStrategyType, config: &NASConfig) -> Result<Self> {
+    pub fn new(strategytype: SearchStrategyType, config: &NASConfig) -> Result<Self> {
         let state = match strategy_type {
             SearchStrategyType::Random => SearchStrategyState::Random(RandomSearchState::default()),
             SearchStrategyType::Evolutionary => {
@@ -4200,7 +4214,7 @@ impl<T: Float + Default + Clone> SearchStrategy<T> {
                         genotypic_diversity: 0.5,
                         phenotypic_diversity: 0.5,
                     },
-            _phantom: std::marker::PhantomData,
+                    _phantom: std::marker::PhantomData,
                 })
             }
             SearchStrategyType::BayesianOptimization => {
@@ -4306,7 +4320,9 @@ impl<T: Float + Default + Clone> SearchStrategy<T> {
 
     #[allow(dead_code)]
     pub fn update_strategy(
-        &mut self, _population: &PopulationManager<T>, _iteration: usize,
+        &mut self,
+        _population: &PopulationManager<T>,
+        _iteration: usize,
     ) -> Result<()> {
         Ok(())
     }
@@ -4319,9 +4335,10 @@ pub struct MultiObjectiveOptimizer<T: Float> {
 }
 
 impl<T: Float + Default + Clone> MultiObjectiveOptimizer<T> {
-    pub fn new(_config: &NASConfig) -> Result<Self> {
+    pub fn new(config: &NASConfig) -> Result<Self> {
         Ok(Self {
-            config: _config.clone(), _phantom: std::marker::PhantomData,
+            config: config.clone(),
+            _phantom: std::marker::PhantomData,
         })
     }
 }

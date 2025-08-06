@@ -5,7 +5,7 @@ use ndarray::s;
 
 use super::BssConfig;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array2, Axis};
+use ndarray::{Array2, Axis};
 use scirs2_linalg::eigh;
 
 #[allow(unused_imports)]
@@ -22,12 +22,12 @@ use scirs2_linalg::eigh;
 ///
 /// * Tuple containing (extracted sources, mixing matrix)
 #[allow(dead_code)]
-pub fn pca(_signals: &Array2<f64>, config: &BssConfig) -> SignalResult<(Array2<f64>, Array2<f64>)> {
-    let (n_signals, n_samples) = _signals.dim();
+pub fn pca(signals: &Array2<f64>, config: &BssConfig) -> SignalResult<(Array2<f64>, Array2<f64>)> {
+    let (n_signals, n_samples) = signals.dim();
 
     // Center the _signals
-    let means = _signals.mean_axis(Axis(1)).unwrap();
-    let mut centered = _signals.clone();
+    let means = signals.mean_axis(Axis(1)).unwrap();
+    let mut centered = signals.clone();
 
     for i in 0..n_signals {
         for j in 0..n_samples {

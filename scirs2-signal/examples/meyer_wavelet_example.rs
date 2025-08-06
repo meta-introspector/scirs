@@ -125,8 +125,8 @@ fn main() {
 
 // Helper function to apply thresholding to coefficients
 #[allow(dead_code)]
-fn apply_threshold(_coeffs: &mut [f64], threshold: f64) {
-    for val in _coeffs.iter_mut() {
+fn apply_threshold(coeffs: &mut [f64], threshold: f64) {
+    for val in coeffs.iter_mut() {
         if val.abs() < threshold {
             *val = 0.0;
         }
@@ -135,7 +135,7 @@ fn apply_threshold(_coeffs: &mut [f64], threshold: f64) {
 
 // Compare the Meyer wavelet with other wavelet families
 #[allow(dead_code)]
-fn compare_wavelets(_signal: &[f64], noisy_signal: &[f64], t: &[f64]) {
+fn compare_wavelets(_signal: &[f64], noisysignal: &[f64], t: &[f64]) {
     // Wavelet families to compare
     let wavelets = vec![
         (Wavelet::Haar, "Haar"),
@@ -149,7 +149,7 @@ fn compare_wavelets(_signal: &[f64], noisy_signal: &[f64], t: &[f64]) {
     let mut plot = Plot::new();
 
     // Add original _signal
-    let original_trace = Scatter::new(t.to_vec(), _signal.to_vec())
+    let original_trace = Scatter::new(t.to_vec(), signal.to_vec())
         .name("Original Signal")
         .mode(Mode::Lines);
     plot.add_trace(original_trace);
@@ -180,7 +180,7 @@ fn compare_wavelets(_signal: &[f64], noisy_signal: &[f64], t: &[f64]) {
             .zip(denoised.iter())
             .map(|(&s, &d)| (s - d).powi(2))
             .sum::<f64>()
-            / _signal.len() as f64;
+            / signal.len() as f64;
 
         println!("{} wavelet MSE: {:.6e}", name, mse);
 

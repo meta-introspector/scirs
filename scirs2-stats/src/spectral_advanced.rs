@@ -402,7 +402,7 @@ where
         + std::fmt::Display,
 {
     /// Create a new advanced spectral analyzer
-    pub fn new(_config: AdvancedSpectralConfig<F>) -> Self {
+    pub fn new(config: AdvancedSpectralConfig<F>) -> Self {
         let cache = SpectralCache {
             windows: HashMap::new(),
             fft_plans: HashMap::new(),
@@ -433,7 +433,7 @@ where
         };
 
         Self {
-            config: _config,
+            config: config,
             cache,
             performance: SpectralPerformanceMetrics {
                 timing: HashMap::new(),
@@ -761,7 +761,7 @@ where
 
     // Helper methods (simplified implementations)
 
-    fn generate_window(&self, window_type: WindowFunction, size: usize) -> StatsResult<Array1<F>> {
+    fn generate_window(&self, windowtype: WindowFunction, size: usize) -> StatsResult<Array1<F>> {
         let mut window = Array1::zeros(size);
         let n_f = F::from(size).unwrap();
 

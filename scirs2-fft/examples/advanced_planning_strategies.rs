@@ -10,8 +10,8 @@ use std::time::{Duration, Instant};
 
 // Helper function to create a test array with an impulse
 #[allow(dead_code)]
-fn create_test_array(_size: usize) -> Array2<Complex64> {
-    let mut array = Array2::zeros((_size, _size).f());
+fn create_test_array(size: usize) -> Array2<Complex64> {
+    let mut array = Array2::zeros((_size, size).f());
     array[[_size / 4, _size / 4]] = Complex64::new(1.0, 0.0);
     array
 }

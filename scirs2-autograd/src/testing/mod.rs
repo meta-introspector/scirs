@@ -64,7 +64,7 @@ impl<F: Float> NumericalStabilityTester<F> {
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: StabilityTestConfig) -> Self {
+    pub fn with_config(config: StabilityTestConfig) -> Self {
         Self {
             _config_phantom: std::marker::PhantomData,
         }
@@ -98,7 +98,7 @@ impl<F: Float> NumericalStabilityTester<F> {
 
     /// Test gradient accuracy using finite differences
     fn test_gradient_accuracy(
-        &self_graph: &Graph<F>,
+        self_graph: &Graph<F>,
     ) -> Result<GradientTestResults, StabilityError> {
         let mut results = GradientTestResults {
             tests_performed: 0,
@@ -146,7 +146,7 @@ impl<F: Float> NumericalStabilityTester<F> {
 
     /// Test numerical conditioning of operations
     fn test_numerical_conditioning(
-        &self_graph: &Graph<F>,
+        self_graph: &Graph<F>,
     ) -> Result<ConditioningTestResults, StabilityError> {
         let mut results = ConditioningTestResults {
             condition_numbers: HashMap::new(),
@@ -196,7 +196,7 @@ impl<F: Float> NumericalStabilityTester<F> {
 
     /// Test stability under input perturbations
     fn test_perturbation_stability(
-        &self_graph: &Graph<F>,
+        self_graph: &Graph<F>,
     ) -> Result<PerturbationTestResults, StabilityError> {
         let mut results = PerturbationTestResults {
             perturbation_tests: Vec::new(),
@@ -227,7 +227,7 @@ impl<F: Float> NumericalStabilityTester<F> {
 
     /// Test for overflow and underflow susceptibility
     fn test_overflow_underflow(
-        &self_graph: &Graph<F>,
+        self_graph: &Graph<F>,
     ) -> Result<OverflowTestResults<F>, StabilityError> {
         let mut results = OverflowTestResults {
             overflow_risks: Vec::new(),
@@ -277,7 +277,7 @@ impl<F: Float> NumericalStabilityTester<F> {
         Ok(vec![1.0001, 1.9999, 3.0001])
     }
 
-    fn compute_gradient_error(&self, analytical: &[f64], finite_diff: &[f64]) -> f64 {
+    fn compute_gradient_error(&self, analytical: &[f64], finitediff: &[f64]) -> f64 {
         analytical
             .iter()
             .zip(finite_diff.iter())
@@ -285,17 +285,17 @@ impl<F: Float> NumericalStabilityTester<F> {
             .fold(0.0, f64::max)
     }
 
-    fn estimate_condition_number(&self_operation: &str) -> Result<f64, StabilityError> {
+    fn estimate_condition_number(selfoperation: &str) -> Result<f64, StabilityError> {
         // Simplified - would compute actual condition number
         Ok(1e6)
     }
 
-    fn measure_perturbation_sensitivity(&self_perturbation: f64) -> Result<f64, StabilityError> {
+    fn measure_perturbation_sensitivity(&selfperturbation: f64) -> Result<f64, StabilityError> {
         // Simplified - would measure actual sensitivity
         Ok(_perturbation * 1.5) // Example: amplification factor of 1.5
     }
 
-    fn assess_overflow_risk(&self_input: F) -> Result<OverflowRiskAssessment, StabilityError> {
+    fn assess_overflow_risk(&selfinput: F) -> Result<OverflowRiskAssessment, StabilityError> {
         Ok(OverflowRiskAssessment {
             risky_operation: "exponential".to_string(),
             overflow_probability: 0.05,

@@ -158,8 +158,8 @@ pub struct FortranFile<R> {
 impl FortranFile<BufReader<File>> {
     /// Open a Fortran unformatted file for reading
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(_path.as_ref())
-            .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
+        let file = File::open(path.as_ref())
+            .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
         let reader = BufReader::new(file);
         Ok(Self {
             reader,
@@ -170,8 +170,8 @@ impl FortranFile<BufReader<File>> {
 
     /// Open a Fortran unformatted file with custom configuration
     pub fn open_with_config<P: AsRef<Path>>(path: P, config: FortranConfig) -> Result<Self> {
-        let file = File::open(_path.as_ref())
-            .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
+        let file = File::open(path.as_ref())
+            .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
         let reader = BufReader::new(file);
         Ok(Self {
             reader,
@@ -184,7 +184,7 @@ impl FortranFile<BufReader<File>> {
 impl FortranFile<BufWriter<File>> {
     /// Create a new Fortran unformatted file for writing
     pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::create(_path.as_ref())
+        let file = File::create(path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         let writer = BufWriter::new(file);
         Ok(Self {
@@ -196,7 +196,7 @@ impl FortranFile<BufWriter<File>> {
 
     /// Create a new Fortran unformatted file with custom configuration
     pub fn create_with_config<P: AsRef<Path>>(path: P, config: FortranConfig) -> Result<Self> {
-        let file = File::create(_path.as_ref())
+        let file = File::create(path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         let writer = BufWriter::new(file);
         Ok(Self {
@@ -672,8 +672,8 @@ pub fn read_fortran_file<P: AsRef<Path>>(path: P) -> Result<Vec<Vec<u8>>> {
 /// Detect the endianness and record marker size of a Fortran file
 #[allow(dead_code)]
 pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, RecordMarkerSize)> {
-    let mut file = File::open(_path.as_ref())
-        .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
+    let mut file = File::open(path.as_ref())
+        .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
 
     // Read first 8 bytes
     let mut buffer = [0u8; 8];

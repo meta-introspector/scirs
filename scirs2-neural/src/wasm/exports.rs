@@ -361,7 +361,7 @@ impl<
     ) -> Self {
         Self {
             model,
-            _config,
+            config,
             web_config,
             metadata,
             output_dir,
@@ -876,7 +876,7 @@ mod tests {
         assert_eq!(config.workers.pool.max_workers, 4);
     fn test_wasm_compiler_creation() {
         let temp_dir = TempDir::new().unwrap();
-        let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+        let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
         let mut model: Sequential<f32> = Sequential::new();
         let dense = Dense::new(10, 1, Some("relu"), &mut rng).unwrap();
         model.add_layer(dense);

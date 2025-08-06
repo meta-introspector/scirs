@@ -8,7 +8,7 @@ pub mod advanced_optimization;
 
 /// Re-export key performance types and functions
 pub use advanced_optimization::{
-    cache_aware_matrix_multiply, prefetch, profiling, simd_ops, AdvancedPerformanceOptimizer,
+    cache_awarematrix_multiply, prefetch, profiling, simd_ops, AdvancedPerformanceOptimizer,
     CacheInfo, OptimizationSettings, PerformanceProfile, PerformanceRecommendation,
     SimdCapabilities, SimdInstructionSet, WorkloadType,
 };

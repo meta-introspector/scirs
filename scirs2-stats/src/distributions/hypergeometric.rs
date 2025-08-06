@@ -93,7 +93,7 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
     /// - if n_population, n_success, or n_draws is 0
     /// - if n_success > n_population
     /// - if n_draws > n_population
-    pub fn new(n_population: usize, n_success: usize, n_draws: usize, loc: F) -> StatsResult<Self> {
+    pub fn new(n_population: usize, n_success: usize, ndraws: usize, loc: F) -> StatsResult<Self> {
         // Check parameter validity
         if n_population == 0 {
             return Err(StatsError::InvalidArgument(
@@ -231,7 +231,7 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
                 }
 
                 let p_success = success_remaining as f64 / population_remaining as f64;
-                if rng.random_range(0.0..1.0) < p_success {
+                if rng.gen_range(0.0..1.0) < p_success {
                     successes += 1;
                     success_remaining -= 1;
                 } else {

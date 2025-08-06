@@ -341,7 +341,7 @@ impl GpuManager {
     }
 
     /// Get device information for a specific device
-    pub fn device_info(&self, device_id: usize) -> Option<&GpuDeviceInfo> {
+    pub fn device_info(&self, deviceid: usize) -> Option<&GpuDeviceInfo> {
         self.devices.get(device_id).map(|d| d.device_info())
     }
 
@@ -401,7 +401,7 @@ impl GpuManager {
     }
 
     /// Select the best device for a specific operation
-    fn select_best_device(&self, candidates: &[usize], _operation: GpuOperation) -> usize {
+    fn select_best_device(&self, candidates: &[usize], operation: GpuOperation) -> usize {
         // Simple heuristic: select device with most memory for now
         // In a full implementation, this would consider performance profiles
         candidates
@@ -544,7 +544,7 @@ pub trait GpuBackend: Send + Sync {
     fn list_devices(&self) -> LinalgResult<Vec<GpuDeviceInfo>>;
 
     /// Create context for specified device
-    fn create_context(&self, device_id: usize) -> LinalgResult<Box<dyn GpuContext>>;
+    fn create_context(&self, deviceid: usize) -> LinalgResult<Box<dyn GpuContext>>;
 
     /// Create context for best available device
     fn create_best_context(&self) -> LinalgResult<Box<dyn GpuContext>> {

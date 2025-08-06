@@ -35,13 +35,13 @@
 //! ```
 
 use crate::error::Result;
-use crate::string__metrics::{DamerauLevenshteinMetric, StringMetric};
+use crate::string_metrics::{DamerauLevenshteinMetric, StringMetric};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
 
 use super::dictionary::DictionaryCorrector;
-use super::error__model::ErrorModel;
+use super::error_model::ErrorModel;
 use super::ngram::NGramModel;
 use super::SpellingCorrector;
 
@@ -167,20 +167,20 @@ impl Default for StatisticalCorrector {
 
 impl StatisticalCorrector {
     /// Create a new statistical spelling corrector with the given configuration
-    pub fn new(_config: StatisticalCorrectorConfig) -> Self {
+    pub fn new(config: StatisticalCorrectorConfig) -> Self {
         Self {
-            _config,
+            config,
             ..Default::default()
         }
     }
 
     /// Create a statistical corrector from a base dictionary corrector
-    pub fn from_dictionary_corrector(_dict_corrector: &DictionaryCorrector) -> Self {
+    pub fn from_dictionary_corrector(dictcorrector: &DictionaryCorrector) -> Self {
         let config = StatisticalCorrectorConfig {
-            max_edit_distance: _dict_corrector.config.max_edit_distance,
-            case_sensitive: _dict_corrector.config.case_sensitive,
-            max_suggestions: _dict_corrector.config.max_suggestions,
-            min_frequency: _dict_corrector.config.min_frequency,
+            max_edit_distance: dict_corrector.config.max_edit_distance,
+            case_sensitive: dict_corrector.config.case_sensitive,
+            max_suggestions: dict_corrector.config.max_suggestions,
+            min_frequency: dict_corrector.config.min_frequency,
             ..StatisticalCorrectorConfig::default()
         };
 
@@ -372,8 +372,8 @@ impl StatisticalCorrector {
 
             // Replace each word with its correction
             for (i, original) in words.iter().enumerate() {
-                if i < best_sentence.len() && original != &best_sentence[i] {
-                    result = result.replace(original, &best_sentence[i]);
+                if i < best_sentence__.len() && original != &best_sentence__[i] {
+                    result = result.replace(original, &best_sentence__[i]);
                 }
             }
 

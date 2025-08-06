@@ -539,12 +539,12 @@ fn validate_butterworth_filter() -> SignalResult<FilterTypeValidation> {
 
 /// Check filter stability by examining poles
 #[allow(dead_code)]
-fn check_filter_stability(_denominator: &[f64]) -> SignalResult<bool> {
+fn check_filter_stability(denominator: &[f64]) -> SignalResult<bool> {
     // For a stable IIR filter, all poles must be inside the unit circle
     // This is a simplified check - in practice would use polynomial root finding
 
     // Check if any coefficient is suspiciously large (indicating instability)
-    let max_coeff = _denominator.iter().map(|x| x.abs()).fold(0.0, f64::max);
+    let max_coeff = denominator.iter().map(|x| x.abs()).fold(0.0, f64::max);
     Ok(max_coeff < 100.0) // Simple heuristic
 }
 
@@ -598,7 +598,7 @@ fn validate_spectral_implementations() -> SignalResult<SpectralValidationResult>
 
 /// Validate Welch method implementation
 #[allow(dead_code)]
-fn validate_welch_method(_signal: &[f64], fs: f64) -> SignalResult<SpectralMethodValidation> {
+fn validate_welch_method(signal: &[f64], fs: f64) -> SignalResult<SpectralMethodValidation> {
     // Compute PSD using our Welch implementation
     let (freqs, psd) = welch(_signal, fs, 256, None, 128)?;
 
@@ -617,7 +617,7 @@ fn validate_welch_method(_signal: &[f64], fs: f64) -> SignalResult<SpectralMetho
 
 /// Validate multitaper method implementation  
 #[allow(dead_code)]
-fn validate_multitaper_method(_signal: &[f64], _fs: f64) -> SignalResult<MultitaperValidation> {
+fn validate_multitaper_method(_signal: &[f64], fs: f64) -> SignalResult<MultitaperValidation> {
     // Basic spectral validation
     let spectral_validation = SpectralMethodValidation {
         psd_error: 1e-10,
@@ -651,7 +651,7 @@ fn validate_multitaper_method(_signal: &[f64], _fs: f64) -> SignalResult<Multita
 
 /// Estimate PSD accuracy relative to theoretical expectations
 #[allow(dead_code)]
-fn estimate_psd_accuracy(_freqs: &[f64], psd: &[f64], _fs: f64) -> SignalResult<f64> {
+fn estimate_psd_accuracy(_freqs: &[f64], psd: &[f64], fs: f64) -> SignalResult<f64> {
     // Find peaks at expected frequencies (50 Hz and 120 Hz)
     let expected_freqs = [50.0, 120.0];
     let mut total_error = 0.0;
@@ -667,7 +667,7 @@ fn estimate_psd_accuracy(_freqs: &[f64], psd: &[f64], _fs: f64) -> SignalResult<
                     .partial_cmp(&(b - expected_freq).abs())
                     .unwrap()
             })
-            .map(|(i_)| i)
+            .map(|(i, _)| i)
             .unwrap_or(0);
 
         // Check if we have a reasonable peak
@@ -691,14 +691,14 @@ fn estimate_psd_accuracy(_freqs: &[f64], psd: &[f64], _fs: f64) -> SignalResult<
 
 /// Estimate frequency accuracy
 #[allow(dead_code)]
-fn estimate_frequency_accuracy(_freqs: &[f64], fs: f64) -> SignalResult<f64> {
+fn estimate_frequency_accuracy(freqs: &[f64], fs: f64) -> SignalResult<f64> {
     // Check frequency spacing
-    if _freqs.len() < 2 {
+    if freqs.len() < 2 {
         return Ok(1.0); // Poor accuracy for short arrays
     }
 
     let expected_df = fs / (2.0 * (_freqs.len() - 1) as f64);
-    let actual_df = _freqs[1] - _freqs[0];
+    let actual_df = freqs[1] - freqs[0];
     let relative_error = (actual_df - expected_df).abs() / expected_df;
 
     Ok(relative_error)
@@ -749,13 +749,13 @@ fn validate_wavelet_implementations() -> SignalResult<WaveletValidationResult> {
 
 /// Validate DWT implementation
 #[allow(dead_code)]
-fn validate_dwt_implementation(_signal: &[f64]) -> SignalResult<DwtValidation> {
+fn validate_dwt_implementation(signal: &[f64]) -> SignalResult<DwtValidation> {
     let wavelet = Wavelet::DB(4);
 
     // Test perfect reconstruction
     let (coeffs_a, coeffs_d) = dwt_decompose(_signal, &wavelet, "symmetric")?;
     let reconstructed =
-        dwt_reconstruct(&coeffs_a, &coeffs_d, &wavelet, _signal.len(), "symmetric")?;
+        dwt_reconstruct(&coeffs_a, &coeffs_d, &wavelet, signal.len(), "symmetric")?;
 
     // Calculate reconstruction error
     let reconstruction_error = _signal
@@ -764,10 +764,10 @@ fn validate_dwt_implementation(_signal: &[f64]) -> SignalResult<DwtValidation> {
         .map(|(orig, recon)| (orig - recon).powi(2))
         .sum::<f64>()
         .sqrt()
-        / _signal.len() as f64;
+        / signal.len() as f64;
 
     // Energy conservation check
-    let original_energy: f64 = _signal.iter().map(|x| x.powi(2)).sum();
+    let original_energy: f64 = signal.iter().map(|x| x.powi(2)).sum();
     let coeffs_energy: f64 = coeffs_a
         .iter()
         .chain(coeffs_d.iter())
@@ -803,7 +803,7 @@ fn validate_sysid_implementations() -> SignalResult<SysIdValidationResult> {
 
     // Generate AR(2) process
     for i in 2..n {
-        let noise = 0.1 * rng.random_range(-1.0..1.0);
+        let noise = 0.1 * rng.gen_range(-1.0..1.0);
         signal[i] = -true_ar_coeffs[1] * signal[i - 1] - true_ar_coeffs[2] * signal[i - 2] + noise;
     }
 
@@ -842,12 +842,12 @@ fn validate_sysid_implementations() -> SignalResult<SysIdValidationResult> {
 
 /// Validate AR parameter estimation
 #[allow(dead_code)]
-fn validate_ar_estimation(_signal: &[f64], true_coeffs: &[f64]) -> SignalResult<ArValidation> {
+fn validate_ar_estimation(_signal: &[f64], truecoeffs: &[f64]) -> SignalResult<ArValidation> {
     let signal_array = Array1::from(_signal.to_vec());
     let order = true_coeffs.len() - 1;
 
     // Test Burg method
-    let (estimated_coeffs__) = estimate_ar(&signal_array, order, ARMethod::Burg)?;
+    let (estimated_coeffs, reflection_coeffs, variance) = estimate_ar(&signal_array, order, ARMethod::Burg)?;
 
     // Calculate accuracy
     let burg_accuracy = calculate_coefficient_accuracy(&estimated_coeffs.to_vec(), true_coeffs);
@@ -864,8 +864,8 @@ fn validate_ar_estimation(_signal: &[f64], true_coeffs: &[f64]) -> SignalResult<
 
 /// Calculate coefficient accuracy
 #[allow(dead_code)]
-fn calculate_coefficient_accuracy(_estimated: &[f64], true_coeffs: &[f64]) -> f64 {
-    if _estimated.len() != true_coeffs.len() {
+fn calculate_coefficient_accuracy(_estimated: &[f64], truecoeffs: &[f64]) -> f64 {
+    if estimated.len() != true_coeffs.len() {
         return 0.0;
     }
 
@@ -874,7 +874,7 @@ fn calculate_coefficient_accuracy(_estimated: &[f64], true_coeffs: &[f64]) -> f6
         .zip(true_coeffs.iter())
         .map(|(est, true_val)| (est - true_val).powi(2))
         .sum::<f64>()
-        / _estimated.len() as f64;
+        / estimated.len() as f64;
 
     // Convert MSE to accuracy percentage
     let accuracy = 1.0 - mse.sqrt();
@@ -982,7 +982,7 @@ fn compute_overall_metrics(
     filter_validation: &FilterValidationResult,
     spectral_validation: &SpectralValidationResult,
     wavelet_validation: &WaveletValidationResult,
-    sysid_validation: &SysIdValidationResult_utilities,
+    sysid_validation: &SysIdValidationResult,
     _validation: &UtilitiesValidationResult,
 ) -> SignalResult<OverallValidationMetrics> {
     // Compute weighted average of all _validation scores
@@ -1079,21 +1079,21 @@ fn compute_overall_metrics(
 
 /// Generate a comprehensive validation report
 #[allow(dead_code)]
-pub fn generate_validation_report(_result: &ComprehensiveSciPyValidationResult) -> String {
+pub fn generate_validation_report(result: &ComprehensiveSciPyValidationResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Comprehensive SciPy Validation Report\n\n");
     report.push_str(&format!(
         "**Overall Accuracy Score:** {:.2}%\n",
-        _result.overall_metrics.overall_accuracy_score
+        result.overall_metrics.overall_accuracy_score
     ));
     report.push_str(&format!(
         "**Pass Rate:** {:.2}%\n",
-        _result.overall_metrics.pass_rate
+        result.overall_metrics.pass_rate
     ));
     report.push_str(&format!(
         "**Critical Failures:** {}\n\n",
-        _result.overall_metrics.critical_failures
+        result.overall_metrics.critical_failures
     ));
 
     // Filter validation summary
@@ -1117,7 +1117,7 @@ pub fn generate_validation_report(_result: &ComprehensiveSciPyValidationResult) 
     report.push_str("## Spectral Analysis Validation\n");
     report.push_str(&format!(
         "- Welch Method PSD Error: {:.2e}\n",
-        _result.spectral_validation.welch_validation.psd_error
+        result.spectral_validation.welch_validation.psd_error
     ));
     report.push_str(&format!(
         "- Peak Detection Accuracy: {:.2}%\n\n",
@@ -1155,14 +1155,14 @@ pub fn generate_validation_report(_result: &ComprehensiveSciPyValidationResult) 
     // Recommendations
     if !_result.overall_metrics.recommendations.is_empty() {
         report.push_str("## Recommendations\n");
-        for (i, rec) in _result.overall_metrics.recommendations.iter().enumerate() {
+        for (i, rec) in result.overall_metrics.recommendations.iter().enumerate() {
             report.push_str(&format!("{}. {}\n", i + 1, rec));
         }
     }
 
     report.push_str(&format!(
         "\n**Report generated:** {}\n",
-        _result.overall_metrics.validation_timestamp
+        result.overall_metrics.validation_timestamp
     ));
 
     report

@@ -18,9 +18,9 @@ pub struct ForwardAD<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> ForwardAD<F> {
     /// Create a new forward AD engine
-    pub fn new(_n_vars: usize) -> Self {
+    pub fn new(n_vars: usize) -> Self {
         ForwardAD {
-            n_vars: _n_vars,
+            n_vars,
             tolerance: F::from(1e-12).unwrap(),
         }
     }
@@ -185,10 +185,10 @@ pub struct ForwardODEJacobian<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> ForwardODEJacobian<F> {
     /// Create a new ODE Jacobian computer
-    pub fn new(_n_states: usize) -> Self {
+    pub fn new(_nstates: usize) -> Self {
         ForwardODEJacobian {
-            _n_states,
-            ad_engine: ForwardAD::new(_n_states),
+            _n_states: _nstates,
+            ad_engine: ForwardAD::new(_nstates),
         }
     }
 
@@ -211,9 +211,9 @@ pub struct VectorizedForwardAD<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> VectorizedForwardAD<F> {
     /// Create a new vectorized forward AD engine
-    pub fn new(_n_vars: usize, n_directions: usize) -> Self {
+    pub fn new(n_vars: usize, n_directions: usize) -> Self {
         VectorizedForwardAD {
-            n_vars: _n_vars,
+            n_vars,
             n_directions,
             tolerance: F::from(1e-12).unwrap(),
         }

@@ -91,10 +91,10 @@ where
     /// // Create a tridiagonal matrix (1 sub, 1 super diagonal)
     /// let band_matrix = BandMatrix::<f64>::new(5, 1, 1);
     /// ```
-    pub fn new(_size: usize, kl: usize, ku: usize) -> Self {
-        let band_data = Array2::zeros((kl + ku + 1, _size));
+    pub fn new(size: usize, kl: usize, ku: usize) -> Self {
+        let band_data = Array2::zeros((kl + ku + 1, size));
         Self {
-            _size,
+            size,
             kl,
             ku,
             band_data,
@@ -108,14 +108,14 @@ where
     /// * `dense` - Dense matrix to extract band from
     /// * `kl` - Number of sub-diagonals to extract
     /// * `ku` - Number of super-diagonals to extract
-    pub fn from_dense(_dense: &ArrayView2<T>, kl: usize, ku: usize) -> InterpolateResult<Self> {
-        if _dense.nrows() != _dense.ncols() {
+    pub fn from_dense(dense: &ArrayView2<T>, kl: usize, ku: usize) -> InterpolateResult<Self> {
+        if dense.nrows() != dense.ncols() {
             return Err(InterpolateError::invalid_input(
                 "matrix must be square".to_string(),
             ));
         }
 
-        let size = _dense.nrows();
+        let size = dense.nrows();
         let mut band_matrix = Self::new(size, kl, ku);
 
         // Extract band elements
@@ -124,7 +124,7 @@ where
                 let diag_offset = j as isize - i as isize;
                 if diag_offset >= -(kl as isize) && diag_offset <= (ku as isize) {
                     let band_row = (ku as isize - diag_offset) as usize;
-                    band_matrix.band_data[[band_row, i]] = _dense[[i, j]];
+                    band_matrix.band_data[[band_row, i]] = dense[[i, j]];
                 }
             }
         }
@@ -319,11 +319,11 @@ where
     T: Float + Copy + Zero + AddAssign,
 {
     /// Create a new empty sparse matrix
-    pub fn new(_nrows: usize, ncols: usize) -> Self {
+    pub fn new(nrows: usize, ncols: usize) -> Self {
         let row_ptrs = vec![0; _nrows + 1];
 
         Self {
-            _nrows,
+            nrows,
             ncols,
             row_ptrs,
             col_indices: Vec::new(),
@@ -334,8 +334,8 @@ where
     /// Create a sparse matrix from a dense matrix
     ///
     /// Only stores non-zero elements based on the given tolerance.
-    pub fn from_dense(_dense: &ArrayView2<T>, tolerance: T) -> Self {
-        let (nrows, ncols) = _dense.dim();
+    pub fn from_dense(dense: &ArrayView2<T>, tolerance: T) -> Self {
+        let (nrows, ncols) = dense.dim();
         let mut row_ptrs = Vec::with_capacity(nrows + 1);
         let mut col_indices = Vec::new();
         let mut data = Vec::new();
@@ -345,7 +345,7 @@ where
         for i in 0..nrows {
             let mut row_nnz = 0;
             for j in 0..ncols {
-                let value = _dense[[i, j]];
+                let value = dense[[i, j]];
                 if value.abs() > tolerance {
                     col_indices.push(j);
                     data.push(value);

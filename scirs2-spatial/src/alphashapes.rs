@@ -52,17 +52,17 @@ impl AlphaShape {
         // and alpha-complex computation
         let points_owned = points.to_owned();
         let n_points = points_owned.nrows();
-        
+
         // For now, create a simple convex hull-like boundary
         let mut edges = Vec::new();
         let mut triangles = Vec::new();
-        
+
         // Simple boundary for demonstration
         if n_points >= 3 {
             for i in 0..n_points {
                 edges.push((i, (i + 1) % n_points));
             }
-            
+
             // Add a single triangle if we have exactly 3 points
             if n_points == 3 {
                 triangles.push((0, 1, 2));
@@ -115,12 +115,12 @@ impl AlphaShape {
                 .map(|(&a, &b)| (a - b).powi(2))
                 .sum::<f64>()
                 .sqrt();
-            
+
             if dist <= tolerance {
                 return true;
             }
         }
-        
+
         false
     }
 
@@ -133,11 +133,11 @@ impl AlphaShape {
         // Simplified implementation
         // In a full implementation, this would compute the actual area/volume
         // based on the triangulation
-        
+
         if self.triangles.is_empty() {
             return 0.0;
         }
-        
+
         // Simple area calculation for triangles in 2D
         if self.points.ncols() == 2 {
             let mut total_area = 0.0;
@@ -145,14 +145,15 @@ impl AlphaShape {
                 let p1 = self.points.row(i);
                 let p2 = self.points.row(j);
                 let p3 = self.points.row(k);
-                
+
                 // Triangle area using cross product
-                let area = 0.5 * ((p2[0] - p1[0]) * (p3[1] - p1[1]) - (p3[0] - p1[0]) * (p2[1] - p1[1])).abs();
+                let area = 0.5
+                    * ((p2[0] - p1[0]) * (p3[1] - p1[1]) - (p3[0] - p1[0]) * (p2[1] - p1[1])).abs();
                 total_area += area;
             }
             return total_area;
         }
-        
+
         // For 3D and higher dimensions, return a placeholder
         1.0
     }
@@ -168,7 +169,7 @@ mod tests {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]];
         let alpha_shape = AlphaShape::new(&points.view(), 1.0);
         assert!(alpha_shape.is_ok());
-        
+
         let shape = alpha_shape.unwrap();
         assert_eq!(shape.num_points(), 3);
         assert_eq!(shape.alpha, 1.0);
@@ -178,11 +179,11 @@ mod tests {
     fn test_alpha_shape_contains() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]];
         let alpha_shape = AlphaShape::new(&points.view(), 0.5).unwrap();
-        
+
         let test_point = array![0.1, 0.1];
         let contains = alpha_shape.contains_point(&test_point.view());
         assert!(contains);
-        
+
         let far_point = array![10.0, 10.0];
         let contains_far = alpha_shape.contains_point(&far_point.view());
         assert!(!contains_far);
@@ -192,7 +193,7 @@ mod tests {
     fn test_alpha_shape_area() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
         let alpha_shape = AlphaShape::new(&points.view(), 1.0).unwrap();
-        
+
         let area = alpha_shape.area();
         assert!(area >= 0.0);
     }

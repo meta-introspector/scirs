@@ -11,7 +11,7 @@ use std::fmt::Debug;
 /// for each parameter based on the historical gradient values.
 /// Formula:
 /// g_sum_t = g_sum_{t-1} + g_t^2
-/// param_t = param_{t-1} - learning_rate * g_t / (sqrt(g_sum_t) + epsilon)
+/// param_t = param_{t-1} - learningrate * g_t / (sqrt(g_sum_t) + epsilon)
 /// # Examples
 /// ```
 /// use ndarray::Array1;
@@ -36,7 +36,7 @@ impl<F: Float + ScalarOperand + Debug> Adagrad<F> {
     ///
     /// # Arguments
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(_learning_rate: F) -> Result<Self> {
+    pub fn new(_learningrate: F) -> Result<Self> {
         let epsilon = F::from(1e-10).ok_or_else(|| {
             NeuralError::InvalidArgument(
                 "Failed to convert 1e-10 to the appropriate floating point type".to_string(),
@@ -52,7 +52,7 @@ impl<F: Float + ScalarOperand + Debug> Adagrad<F> {
     /// Creates a new Adagrad optimizer with the full configuration
     /// * `epsilon` - Small constant for numerical stability
     /// * `weight_decay` - Weight decay factor (L2 regularization)
-    pub fn new_with_config(_learning_rate: F, epsilon: F, weight_decay: F) -> Self {
+    pub fn new_with_config(_learning_rate: F, epsilon: F, weightdecay: F) -> Self {
         Self {
             weight_decay,
         }
@@ -67,7 +67,7 @@ impl<F: Float + ScalarOperand + Debug> Adagrad<F> {
     pub fn get_weight_decay(&self) -> F {
         self.weight_decay
     /// Sets the weight decay parameter
-    pub fn set_weight_decay(&mut self, weight_decay: F) -> &mut Self {
+    pub fn set_weight_decay(&mut self, weightdecay: F) -> &mut Self {
         self.weight_decay = weight_decay;
     /// Resets the internal state of the optimizer
     pub fn reset(&mut self) {

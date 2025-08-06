@@ -148,7 +148,7 @@ impl EnhancedImageProcessor {
     }
 
     /// Set maximum cache size in MB
-    pub fn with_cache_size(mut self, size_mb: usize) -> Self {
+    pub fn with_cache_size(mut self, sizemb: usize) -> Self {
         self.max_cache_size = size_mb;
         self
     }
@@ -194,7 +194,7 @@ impl EnhancedImageProcessor {
         new_height: u32,
         method: InterpolationMethod,
     ) -> Result<ImageData> {
-        let (_height, _width, channels) = image.data.dim();
+        let (_height, width, channels) = image.data.dim();
         let raw_data = image.data.iter().cloned().collect::<Vec<u8>>();
 
         let img_buffer = if channels == 3 {
@@ -487,7 +487,7 @@ impl EnhancedImageProcessor {
 
 // Conversion from our ImageFormat to image crate's ImageFormat
 impl From<ImageFormat> for image::ImageFormat {
-    fn from(_format: ImageFormat) -> Self {
+    fn from(format: ImageFormat) -> Self {
         match _format {
             ImageFormat::PNG => image::ImageFormat::Png,
             ImageFormat::JPEG => image::ImageFormat::Jpeg,
@@ -516,7 +516,7 @@ impl ImagePyramid {
     }
 
     /// Find the best level for a target size
-    pub fn find_best_level(&self, target_width: u32, target_height: u32) -> usize {
+    pub fn find_best_level(&self, target_width: u32, targetheight: u32) -> usize {
         let mut best_level = 0;
         let mut best_diff = u32::MAX;
 
@@ -537,7 +537,7 @@ impl ImagePyramid {
     }
 
     /// Get level that's closest to target size
-    pub fn get_level_for_size(&self, target_width: u32, target_height: u32) -> Option<&ImageData> {
+    pub fn get_level_for_size(&self, target_width: u32, targetheight: u32) -> Option<&ImageData> {
         let level = self.find_best_level(target_width, target_height);
         self.get_level(level)
     }
@@ -546,7 +546,7 @@ impl ImagePyramid {
 /// Convenience functions for enhanced image operations
 /// Create an image pyramid with default configuration
 #[allow(dead_code)]
-pub fn create_image_pyramid(_image: &ImageData) -> Result<ImagePyramid> {
+pub fn create_image_pyramid(image: &ImageData) -> Result<ImagePyramid> {
     let processor = EnhancedImageProcessor::new();
     processor.create_pyramid(_image, PyramidConfig::default())
 }

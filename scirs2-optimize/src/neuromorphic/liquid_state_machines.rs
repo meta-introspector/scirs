@@ -27,10 +27,10 @@ pub struct LiquidStateMachine {
 
 impl LiquidStateMachine {
     /// Create new LSM
-    pub fn new(_input_size: usize, reservoir_size: usize, output_size: usize) -> Self {
+    pub fn new(_input_size: usize, reservoir_size: usize, outputsize: usize) -> Self {
         // Initialize random weights
         let mut reservoir_weights = Array2::zeros((reservoir_size, reservoir_size));
-        let mut input_weights = Array2::zeros((reservoir_size, _input_size));
+        let mut input_weights = Array2::zeros((reservoir_size, input_size));
         let output_weights = Array2::zeros((output_size, reservoir_size));
 
         // Random sparse connectivity for reservoir
@@ -55,7 +55,7 @@ impl LiquidStateMachine {
             output_weights,
             reservoir_state: Array1::zeros(reservoir_size),
             reservoir_size,
-            input_size: _input_size,
+            input_size: input_size,
             output_size,
         }
     }
@@ -141,7 +141,7 @@ where
         // Apply updates
         for i in 0.._params.len() {
             if i < updates.len() {
-                _params[i] += 0.01 * updates[i];
+                params[i] += 0.01 * updates[i];
             }
         }
 

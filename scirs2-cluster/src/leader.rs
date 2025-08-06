@@ -4,7 +4,7 @@
 //! processes data points sequentially, creating clusters on-the-fly.
 
 use crate::error::{ClusteringError, Result};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
 use std::fmt::Debug;
 
@@ -140,7 +140,7 @@ pub struct LeaderClustering<F: Float> {
 
 impl<F: Float + Debug> LeaderClustering<F> {
     /// Create a new Leader clustering instance
-    pub fn new(_threshold: F) -> Result<Self> {
+    pub fn new(threshold: F) -> Result<Self> {
         if _threshold <= F::zero() {
             return Err(ClusteringError::InvalidInput(
                 "Threshold must be positive".to_string(),
@@ -148,7 +148,7 @@ impl<F: Float + Debug> LeaderClustering<F> {
         }
 
         Ok(Self {
-            _threshold,
+            threshold,
             leaders: Vec::new(),
         })
     }
@@ -257,7 +257,7 @@ pub struct LeaderNode<F: Float> {
 
 impl<F: Float + Debug> LeaderTree<F> {
     /// Build a hierarchical leader tree with multiple threshold levels
-    pub fn build_hierarchical(_data: ArrayView2<F>, thresholds: &[F]) -> Result<Self> {
+    pub fn build_hierarchical(data: ArrayView2<F>, thresholds: &[F]) -> Result<Self> {
         if thresholds.is_empty() {
             return Err(ClusteringError::InvalidInput(
                 "At least one threshold is required".to_string(),
@@ -349,7 +349,7 @@ impl<F: Float + Debug> LeaderTree<F> {
         self.roots.iter().map(|root| Self::count_nodes(root)).sum()
     }
 
-    fn count_nodes(_node: &LeaderNode<F>) -> usize {
+    fn count_nodes(node: &LeaderNode<F>) -> usize {
         1 + _node
             .children
             .iter()

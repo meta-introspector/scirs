@@ -217,7 +217,7 @@ pub fn box_structure(shape: &[usize]) -> NdimageResult<Array<bool, IxDyn>> {
 ///
 /// * `Result<Array<bool, IxDyn>>` - Disk structuring element
 #[allow(dead_code)]
-pub fn disk_structure(_radius: f64, dimension: Option<usize>) -> NdimageResult<Array<bool, IxDyn>> {
+pub fn disk_structure(radius: f64, dimension: Option<usize>) -> NdimageResult<Array<bool, IxDyn>> {
     // Validate inputs
     if _radius <= 0.0 {
         return Err(NdimageError::InvalidInput(
@@ -233,7 +233,7 @@ pub fn disk_structure(_radius: f64, dimension: Option<usize>) -> NdimageResult<A
     }
 
     // Create a disk structure by checking if each position is within the _radius
-    let size = (2.0 * _radius).round() as usize;
+    let size = (2.0 * radius).round() as usize;
     if size % 2 == 0 {
         // Make it odd for symmetry
         let size = size + 1;
@@ -256,7 +256,7 @@ pub fn disk_structure(_radius: f64, dimension: Option<usize>) -> NdimageResult<A
             }
         } else {
             // For higher dimensions, still create a simple box for now
-            let size = (2.0 * _radius.ceil() + 1.0) as usize;
+            let size = (2.0 * radius.ceil() + 1.0) as usize;
             let shape = vec![size; dim];
             return box_structure(&shape);
         }
@@ -282,7 +282,7 @@ pub fn disk_structure(_radius: f64, dimension: Option<usize>) -> NdimageResult<A
             }
         } else {
             // For higher dimensions, still create a simple box for now
-            let size = (2.0 * _radius.ceil() + 1.0) as usize;
+            let size = (2.0 * radius.ceil() + 1.0) as usize;
             let shape = vec![size; dim];
             return box_structure(&shape);
         }
@@ -294,7 +294,7 @@ pub fn disk_structure(_radius: f64, dimension: Option<usize>) -> NdimageResult<A
 /// Generate a binary structure for morphological operations (dynamic dimension version)
 ///
 /// Creates a default cross-shaped structure for each rank
-pub(crate) fn generate_binary_structure_dyn(_rank: usize) -> NdimageResult<Array<bool, IxDyn>> {
+pub(crate) fn generate_binary_structure_dyn(rank: usize) -> NdimageResult<Array<bool, IxDyn>> {
     generate_binary_structure(_rank, Connectivity::Face)
 }
 

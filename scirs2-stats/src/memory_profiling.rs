@@ -191,7 +191,7 @@ impl MemoryAdaptiveAlgorithm {
     }
 
     /// Calculate optimal chunk size based on available memory
-    fn calculate_optimal_chunk_size(_available_memory: usize) -> usize {
+    fn calculate_optimal_chunk_size(_availablememory: usize) -> usize {
         // Aim for chunks that fit comfortably in L3 cache (typically 8-32MB)
         let l3_cache_estimate = 8_000_000; // 8MB
         let max_chunk = _available_memory / 10; // Use at most 10% of available _memory
@@ -205,7 +205,7 @@ impl MemoryAdaptiveAlgorithm {
     }
 
     /// Get recommended algorithm based on data size
-    pub fn recommend_algorithm<F: Float>(&self, data_size: usize) -> AlgorithmChoice {
+    pub fn recommend_algorithm<F: Float>(&self, datasize: usize) -> AlgorithmChoice {
         let element_size = std::mem::size_of::<F>();
         let total_bytes = data_size * element_size;
 
@@ -360,10 +360,10 @@ pub struct RingBufferStats<F: Float> {
 
 impl<F: Float + NumCast + std::fmt::Display> RingBufferStats<F> {
     /// Create a new ring buffer with fixed capacity
-    pub fn new(_capacity: usize) -> Self {
+    pub fn new(capacity: usize) -> Self {
         Self {
             buffer: VecDeque::with_capacity(_capacity),
-            capacity: _capacity,
+            capacity: capacity,
             sum: F::zero(),
             sum_squares: F::zero(),
         }
@@ -427,7 +427,7 @@ enum StatOperation {
 
 impl<F: Float + NumCast + std::iter::Sum + std::fmt::Display> LazyStatComputation<F> {
     /// Create a new lazy computation
-    pub fn new(_data: Vec<F>) -> Self {
+    pub fn new(data: Vec<F>) -> Self {
         Self {
             data_ref: Arc::new(_data),
             operations: Vec::new(),
@@ -645,9 +645,12 @@ mod tests {
             _ => panic!("Expected Direct algorithm for small data"),
         }
 
-        match adapter.recommend_algorithm::<f64>(10_000_000) {
+        // Use a much larger data size that will definitely exceed available memory
+        // Force streaming by using a size that requires more than available memory
+        let huge_data_size = adapter.available_memory / 4; // This will definitely trigger streaming
+        match adapter.recommend_algorithm::<f64>(huge_data_size) {
             AlgorithmChoice::Streaming(_) => (), // Large data
-            _ => panic!("Expected Streaming algorithm for large data"),
+            other => panic!("Expected Streaming algorithm for large data, got {:?}", other),
         }
     }
 

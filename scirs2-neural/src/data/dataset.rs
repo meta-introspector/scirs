@@ -93,8 +93,8 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync, D: Dataset<
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync, D: Dataset<F> + Clone>
     TransformedDataset<F, D>
     /// Create a new transformed dataset
-    pub fn new(_dataset: D) -> Self {
-            _dataset,
+    pub fn new(dataset: D) -> Self {
+            dataset,
             feature_transform: None,
             label_transform: None,
 impl<
@@ -113,10 +113,10 @@ pub struct SubsetDataset<
     _phantom: PhantomData<F>,
     SubsetDataset<F, D>
     /// Create a new subset _dataset
-    pub fn new(_dataset: D, indices: Vec<usize>) -> Result<Self> {
+    pub fn new(dataset: D, indices: Vec<usize>) -> Result<Self> {
         // Validate indices
         for &idx in &indices {
-            if idx >= _dataset.len() {
+            if idx >= dataset.len() {
                 return Err(NeuralError::InferenceError(format!(
                     "Index {} out of bounds for dataset with length {}",
                     idx,

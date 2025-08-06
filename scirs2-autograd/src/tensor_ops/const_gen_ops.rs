@@ -1,5 +1,5 @@
-use crate::ndarray__ext::NdArray;
 use crate::ndarray_ext;
+use crate::ndarray_ext::NdArray;
 use crate::op;
 use crate::Float;
 use ndarray;
@@ -116,5 +116,5 @@ impl<T: Float> op::Op<T> for ConvertToTensor<T> {
         Ok(())
     }
 
-    fn grad(&self_: &mut crate::op::GradientContext<T>) {}
+    fn grad(self_: &mut crate::op::GradientContext<T>) {}
 }

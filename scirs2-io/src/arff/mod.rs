@@ -72,15 +72,15 @@ impl ArffValue {
 
 /// Parse attribute definition from ARFF file
 #[allow(dead_code)]
-fn parse_attribute(_line: &str) -> Result<(String, AttributeType)> {
+fn parse_attribute(line: &str) -> Result<(String, AttributeType)> {
     // Expected format: @attribute name type
-    let _line = _line.trim();
+    let _line = line.trim();
     if !_line.starts_with("@attribute") {
         return Err(IoError::FormatError("Invalid attribute format".to_string()));
     }
 
     // Split into parts: @attribute, name, type
-    let parts: Vec<&str> = _line.splitn(3, ' ').collect();
+    let parts: Vec<&str> = line.splitn(3, ' ').collect();
     if parts.len() < 3 {
         return Err(IoError::FormatError("Invalid attribute format".to_string()));
     }
@@ -137,14 +137,14 @@ fn parse_attribute(_line: &str) -> Result<(String, AttributeType)> {
 
 /// Parse an ARFF data line into ArffValue instances
 #[allow(dead_code)]
-fn parse_data_line(_line: &str, attributes: &[(String, AttributeType)]) -> Result<Vec<ArffValue>> {
-    let _line = _line.trim();
-    if _line.is_empty() {
+fn parse_data_line(line: &str, attributes: &[(String, AttributeType)]) -> Result<Vec<ArffValue>> {
+    let _line = line.trim();
+    if line.is_empty() {
         return Err(IoError::FormatError("Empty data _line".to_string()));
     }
 
     let mut values = Vec::new();
-    let parts: Vec<&str> = _line.split(',').collect();
+    let parts: Vec<&str> = line.split(',').collect();
 
     if parts.len() != attributes.len() {
         return Err(IoError::FormatError(format!(
@@ -452,7 +452,7 @@ pub fn get_numeric_matrix(
 /// write_arff(Path::new("weather.arff"), &arff_data).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn write_arff<P: AsRef<Path>>(path: P, arff_data: &ArffData) -> Result<()> {
+pub fn write_arff<P: AsRef<Path>>(path: P, arffdata: &ArffData) -> Result<()> {
     let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 

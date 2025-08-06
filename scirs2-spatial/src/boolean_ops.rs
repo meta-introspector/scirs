@@ -63,17 +63,17 @@ impl Point2D {
     }
 
     #[allow(dead_code)]
-    fn distance_to(&self, _other: &Point2D) -> f64 {
-        ((self.x - _other.x).powi(2) + (self.y - _other.y).powi(2)).sqrt()
+    fn distance_to(&self, other: &Point2D) -> f64 {
+        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()
     }
 
-    fn cross_product(&self, _other: &Point2D) -> f64 {
-        self.x * _other.y - self.y * _other.x
+    fn cross_product(&self, other: &Point2D) -> f64 {
+        self.x * other.y - self.y * other.x
     }
 
     #[allow(dead_code)]
-    fn dot_product(&self, _other: &Point2D) -> f64 {
-        self.x * _other.x + self.y * _other.y
+    fn dot_product(&self, other: &Point2D) -> f64 {
+        self.x * other.x + self.y * other.y
     }
 }
 
@@ -379,7 +379,7 @@ fn find_intersections(
     _poly1: &mut LabeledPolygon,
     poly2: &mut LabeledPolygon,
 ) -> SpatialResult<()> {
-    for (i, edge1) in _poly1.edges.iter_mut().enumerate() {
+    for (i, edge1) in poly1.edges.iter_mut().enumerate() {
         for (j, edge2) in poly2.edges.iter_mut().enumerate() {
             if let Some((intersectionpoint, t1, t2)) =
                 line_segment_intersection(&edge1.start, &edge1.end, &edge2.start, &edge2.end)
@@ -401,7 +401,7 @@ fn find_intersections(
     }
 
     // Sort intersection points along each edge
-    for edge in &mut _poly1.edges {
+    for edge in &mut poly1.edges {
         edge.intersectionpoints
             .sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap_or(Ordering::Equal));
     }
@@ -524,7 +524,7 @@ fn sutherland_hodgman_clip(
 
 /// Check if a point is inside relative to a directed edge
 #[allow(dead_code)]
-fn is_inside(point: &Point2D, edge_start: &Point2D, edge_end: &Point2D) -> bool {
+fn is_inside(point: &Point2D, edge_start: &Point2D, edgeend: &Point2D) -> bool {
     let edge_vector = Point2D::new(edge_end.x - edge_start.x, edge_end.y - edge_start.y);
     let point_vector = Point2D::new(point.x - edge_start.x, point.y - edge_start.y);
     edge_vector.cross_product(&point_vector) >= 0.0
@@ -574,7 +574,7 @@ fn weiler_atherton_difference(
 
 /// Check if two polygons intersect
 #[allow(dead_code)]
-fn polygons_intersect(_poly1: &LabeledPolygon, poly2: &LabeledPolygon) -> bool {
+fn polygons_intersect(poly1: &LabeledPolygon, poly2: &LabeledPolygon) -> bool {
     // Quick check: if any vertex of one polygon is inside the other
     for vertex in &_poly1.vertices {
         if poly2.ispoint_inside(vertex) {
@@ -583,7 +583,7 @@ fn polygons_intersect(_poly1: &LabeledPolygon, poly2: &LabeledPolygon) -> bool {
     }
 
     for vertex in &poly2.vertices {
-        if _poly1.ispoint_inside(vertex) {
+        if poly1.ispoint_inside(vertex) {
             return true;
         }
     }

@@ -144,7 +144,7 @@ impl DeviceManager {
                 "No default device available".to_string(),
             ))
     /// Set default device
-    pub fn set_default_device(&self, device_type: AcceleratorType, device_id: usize) -> Result<()> {
+    pub fn set_default_device(&self, device_type: AcceleratorType, deviceid: usize) -> Result<()> {
         // Verify device exists
         let _ = self.get_device(device_type, device_id)?;
         let mut default = self.default_device.lock().unwrap();
@@ -236,11 +236,11 @@ pub struct MultiDeviceContext {
     distribution_strategy: DistributionStrategy,
 impl MultiDeviceContext {
     /// Create a new multi-device context
-    pub fn new(_devices: Vec<Arc<dyn Accelerator>>, strategy: DistributionStrategy) -> Self {
-            _devices,
+    pub fn new(devices: Vec<Arc<dyn Accelerator>>, strategy: DistributionStrategy) -> Self {
+            devices,
             distribution_strategy: strategy,
     /// Distribute work across _devices
-    pub fn distribute_work<F>(&self, work_items: usize, work_fn: F) -> Result<()>
+    pub fn distribute_work<F>(&self, work_items: usize, workfn: F) -> Result<()>
     where
         F: Fn(usize, &dyn Accelerator) -> Result<()> + Send + Sync,
     {

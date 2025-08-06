@@ -3,19 +3,19 @@
 //! This module provides utilities to check API compatibility and ensure
 //! that code using the library will work with specific versions.
 
-use crate::api_versioning::{global_registry_mut, Version};
+use crate::apiversioning::{global_registry_mut, Version};
 use crate::error::{CoreError, CoreResult, ErrorContext};
 
 /// Check if a specific API is available in the current version
 #[allow(dead_code)]
-pub fn is_api_available(api_name: &str, module: &str) -> bool {
+pub fn is_api_available(apiname: &str, module: &str) -> bool {
     let registry = global_registry_mut();
-    let current_version = current_library_version();
+    let current_version = current_libraryversion();
 
     registry
         .apis_in_version(&current_version)
         .iter()
-        .any(|entry| entry.name == api_name && entry.module == module)
+        .any(|entry| entry.name == apiname && entry.module == module)
 }
 
 /// Check if a set of APIs are all available
@@ -23,9 +23,9 @@ pub fn is_api_available(api_name: &str, module: &str) -> bool {
 pub fn check_apis_available(apis: &[(&str, &str)]) -> CoreResult<()> {
     let mut missing = Vec::new();
 
-    for (api_name, module) in apis {
-        if !is_api_available(api_name, module) {
-            missing.push(format!("{module}::{api_name}"));
+    for (apiname, module) in apis {
+        if !is_api_available(apiname, module) {
+            missing.push(format!("{module}::{apiname}"));
         }
     }
 
@@ -41,10 +41,10 @@ pub fn check_apis_available(apis: &[(&str, &str)]) -> CoreResult<()> {
 
 /// Get the current library version
 #[allow(dead_code)]
-pub fn current_library_version() -> Version {
+pub fn current_libraryversion() -> Version {
     // Read version from Cargo.toml at compile time
-    let version_str = env!("CARGO_PKG_VERSION");
-    Version::parse(version_str).unwrap_or_else(|_| {
+    let versionstr = env!("CARGO_PKG_VERSION");
+    Version::parse(versionstr).unwrap_or_else(|_| {
         // Fallback to hardcoded version if parsing fails
         Version::new(0, 1, 0)
     })
@@ -53,7 +53,7 @@ pub fn current_library_version() -> Version {
 /// Check if the current version is compatible with a required version
 #[allow(dead_code)]
 pub fn is_version_compatible(required: &Version) -> bool {
-    let current = current_library_version();
+    let current = current_libraryversion();
     current.is_compatible_with(required)
 }
 
@@ -91,8 +91,8 @@ impl ApiCompatibilityChecker {
     }
 
     /// Add a required API
-    pub fn require_api(mut self, api_name: impl Into<String>, module: impl Into<String>) -> Self {
-        self.required_apis.push((api_name.into(), module.into()));
+    pub fn require_api(mut self, apiname: impl Into<String>, module: impl Into<String>) -> Self {
+        self.required_apis.push((apiname.into(), module.into()));
         self
     }
 
@@ -110,7 +110,7 @@ impl ApiCompatibilityChecker {
                 return Err(CoreError::ValidationError(ErrorContext::new(format!(
                     "Version {} required, but current version is {}",
                     min_version,
-                    current_library_version()
+                    current_libraryversion()
                 ))));
             }
         }

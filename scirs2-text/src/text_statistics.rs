@@ -7,9 +7,9 @@ use crate::{Result, TextError};
 #[derive(Debug, Clone)]
 pub struct TextStatistics {
     /// Word tokenizer used for word-level metrics
-    word_tokenizer: WordTokenizer,
+    wordtokenizer: WordTokenizer,
     /// Sentence tokenizer used for sentence-level metrics
-    sentence_tokenizer: SentenceTokenizer,
+    sentencetokenizer: SentenceTokenizer,
 }
 
 impl Default for TextStatistics {
@@ -22,15 +22,15 @@ impl TextStatistics {
     /// Create a new TextStatistics analyzer with default tokenizers
     pub fn new() -> Self {
         Self {
-            word_tokenizer: WordTokenizer::new(true), // Use lowercase
-            sentence_tokenizer: SentenceTokenizer::new(),
+            wordtokenizer: WordTokenizer::new(true), // Use lowercase
+            sentencetokenizer: SentenceTokenizer::new(),
         }
     }
 
     /// Create a TextStatistics analyzer with custom tokenizers
     pub fn with_tokenizers(
-        word_tokenizer: WordTokenizer,
-        sentence_tokenizer: SentenceTokenizer,
+        wordtokenizer: WordTokenizer,
+        sentencetokenizer: SentenceTokenizer,
     ) -> Self {
         Self {
             word_tokenizer,

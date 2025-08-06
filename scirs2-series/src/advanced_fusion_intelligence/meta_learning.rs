@@ -180,7 +180,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaOptimizationModel<F> {
     }
 
     /// Optimize model parameters based on performance feedback
-    pub fn optimize_parameters(&mut self, performance_data: &Array1<F>) -> Result<()> {
+    pub fn optimize_parameters(&mut self, performancedata: &Array1<F>) -> Result<()> {
         match self.optimization_strategy {
             OptimizationStrategy::GradientBased => {
                 self.gradient_based_optimization(performance_data)?;
@@ -199,7 +199,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaOptimizationModel<F> {
     }
 
     /// Gradient-based parameter optimization
-    fn gradient_based_optimization(&mut self, performance_data: &Array1<F>) -> Result<()> {
+    fn gradient_based_optimization(&mut self, performancedata: &Array1<F>) -> Result<()> {
         if performance_data.is_empty() {
             return Ok(());
         }
@@ -216,7 +216,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaOptimizationModel<F> {
     }
 
     /// Evolutionary algorithm optimization
-    fn evolutionary_optimization(&mut self, _performance_data: &Array1<F>) -> Result<()> {
+    fn evolutionary_optimization(&mut self, _performancedata: &Array1<F>) -> Result<()> {
         // Simple mutation-based evolution
         for param in &mut self.model_parameters {
             let mutation = F::from_f64(0.01).unwrap() * (F::from_f64(rand::random::<f64>()).unwrap() - F::from_f64(0.5).unwrap());
@@ -226,7 +226,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaOptimizationModel<F> {
     }
 
     /// Bayesian optimization approach
-    fn bayesian_optimization(&mut self, performance_data: &Array1<F>) -> Result<()> {
+    fn bayesian_optimization(&mut self, performancedata: &Array1<F>) -> Result<()> {
         // Simplified Bayesian update
         if performance_data.is_empty() {
             return Ok(());
@@ -249,7 +249,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaOptimizationModel<F> {
     }
 
     /// Reinforcement learning optimization
-    fn reinforcement_learning_optimization(&mut self, performance_data: &Array1<F>) -> Result<()> {
+    fn reinforcement_learning_optimization(&mut self, performancedata: &Array1<F>) -> Result<()> {
         if performance_data.is_empty() {
             return Ok(());
         }
@@ -283,7 +283,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LearningStrategyLibrary<F> {
     }
 
     /// Select best strategy based on performance history
-    pub fn select_best_strategy(&self, task_characteristics: &Array1<F>) -> Option<&LearningStrategy<F>> {
+    pub fn select_best_strategy(&self, taskcharacteristics: &Array1<F>) -> Option<&LearningStrategy<F>> {
         if self.strategies.is_empty() {
             return None;
         }
@@ -294,12 +294,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> LearningStrategyLibrary<F> {
     }
 
     /// Update strategy performance
-    pub fn update_performance(&mut self, strategy_name: &str, performance: F) {
+    pub fn update_performance(&mut self, strategyname: &str, performance: F) {
         self.performance_history.insert(strategy_name.to_string(), performance);
     }
 
     /// Recommend strategy adaptation
-    pub fn recommend_adaptation(&self, current_performance: F) -> Vec<String> {
+    pub fn recommend_adaptation(&self, currentperformance: F) -> Vec<String> {
         let mut recommendations = Vec::new();
         
         let performance_threshold = F::from_f64(0.7).unwrap();
@@ -363,7 +363,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LearningEvaluationSystem<F> {
     }
 
     /// Calculate accuracy metric
-    fn calculate_accuracy(&self, predictions: &Array1<F>, ground_truth: &Array1<F>) -> Result<F> {
+    fn calculate_accuracy(&self, predictions: &Array1<F>, groundtruth: &Array1<F>) -> Result<F> {
         if predictions.len() != ground_truth.len() {
             return Ok(F::zero());
         }
@@ -436,7 +436,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaAdaptationMechanism<F> {
     }
 
     /// Check if adaptation should be triggered
-    pub fn should_adapt(&self, current_metrics: &HashMap<String, F>) -> bool {
+    pub fn should_adapt(&self, currentmetrics: &HashMap<String, F>) -> bool {
         for condition in &self.trigger_conditions {
             if let Some(&metric_value) = current_metrics.get(&condition.metric_name) {
                 let triggered = match condition.comparison {
@@ -458,7 +458,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaAdaptationMechanism<F> {
     }
 
     /// Apply adaptation rules
-    pub fn apply_adaptation(&mut self, current_metrics: &HashMap<String, F>) -> Vec<String> {
+    pub fn apply_adaptation(&mut self, currentmetrics: &HashMap<String, F>) -> Vec<String> {
         let mut applied_actions = Vec::new();
 
         if self.should_adapt(current_metrics) {

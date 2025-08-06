@@ -1290,9 +1290,9 @@ pub enum WidgetType {
 
 impl<T: Float + Send + Sync> EnhancedAuditSystem<T> {
     /// Create new enhanced audit system
-    pub fn new(_config: AuditConfig) -> Self {
+    pub fn new(config: AuditConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             audit_trail: AuditTrail::new(),
             compliance_monitor: ComplianceMonitor::new(),
             verification_engine: FormalVerificationEngine::new(),
@@ -1354,7 +1354,7 @@ impl<T: Float + Send + Sync> EnhancedAuditSystem<T> {
     }
 
     /// Generate cryptographic proof
-    pub fn generate_proof(&self, proof_type: &str, data: &Array1<T>) -> Result<CryptographicProof> {
+    pub fn generate_proof(&self, prooftype: &str, data: &Array1<T>) -> Result<CryptographicProof> {
         self.proof_generator.generate_proof(proof_type, data)
     }
 
@@ -1425,8 +1425,8 @@ impl AuditTrail {
             }
         }
 
-        if let Some(ref _event_type) = criteria.event_type {
-            if !matches!(&event.event_type, _event_type) {
+        if let Some(ref event_type) = criteria.event_type {
+            if !matches!(&event.event_type, event_type) {
                 return false;
             }
         }
@@ -1521,7 +1521,7 @@ impl MerkleTree {
     }
 
     /// Add leaf to tree
-    pub fn add_leaf(&mut self, leaf_hash: Vec<u8>) -> Result<()> {
+    pub fn add_leaf(&mut self, leafhash: Vec<u8>) -> Result<()> {
         self.nodes.push(leaf_hash);
         self.rebuild_tree()?;
         Ok(())
@@ -1745,7 +1745,7 @@ impl<T: Float + Send + Sync> CryptographicProofGenerator<T> {
         }
     }
 
-    pub fn generate_proof(&self, proof_type: &str, data: &Array1<T>) -> Result<CryptographicProof> {
+    pub fn generate_proof(&self, prooftype: &str, data: &Array1<T>) -> Result<CryptographicProof> {
         if let Some(proof_gen) = self.proof_types.get(proof_type) {
             (proof_gen.generate_fn)(data, &self.keys)
         } else {

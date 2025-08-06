@@ -142,8 +142,8 @@ fn generate_sample_data() -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn get_unique_labels(_labels: &ndarray::Array1<usize>) -> Vec<usize> {
-    let mut unique = _labels.to_vec();
+fn get_unique_labels(labels: &ndarray::Array1<usize>) -> Vec<usize> {
+    let mut unique = labels.to_vec();
     unique.sort();
     unique.dedup();
     unique

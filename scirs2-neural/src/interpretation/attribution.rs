@@ -323,7 +323,7 @@ fn compute_numerical_gradient<F>(
     Ok(gradient.mapv(|x| x.abs()))
 /// Enhanced pseudo output computation with more realistic neural network patterns
 #[allow(dead_code)]
-fn compute_enhanced_pseudo_output<F>(_input: &ArrayD<F>) -> F
+fn compute_enhanced_pseudo_output<F>(input: &ArrayD<F>) -> F
     // Multi-layer pseudo neural network computation
     let input_flat = input.as_slice().unwrap_or(&[]);
     let len = input_flat.len();
@@ -336,7 +336,7 @@ fn compute_enhanced_pseudo_output<F>(_input: &ArrayD<F>) -> F
         layer1_sum = layer1_sum + val * weight;
     let layer1_out = layer1_sum.tanh();
     // Layer 2: Non-linear transformation
-    let mean_val = _input.sum() / F::from(len).unwrap();
+    let mean_val = input.sum() / F::from(len).unwrap();
     let variance = {
         let sum_sq_diff = input_flat
             .iter()
@@ -356,7 +356,7 @@ fn compute_enhanced_pseudo_output<F>(_input: &ArrayD<F>) -> F
     (layer1_out * layer1_out) * F::from(0.1).unwrap()
 /// Compute pseudo output value for numerical gradient computation (kept for compatibility)
 #[allow(dead_code)]
-fn compute_pseudo_output_value<F>(_input: &ArrayD<F>) -> F
+fn compute_pseudo_output_value<F>(input: &ArrayD<F>) -> F
     compute_enhanced_pseudo_output(_input)
 /// Improved numerical gradient computation with adaptive step size
 #[allow(dead_code)]
@@ -376,11 +376,11 @@ fn compute_adaptive_numerical_gradient<F>(
             indices[i] = remaining / stride;
             remaining %= stride;
         // Use adaptive step size for this element
-        let element_val = _input.get(&indices[..]).unwrap_or(&F::zero());
+        let element_val = input.get(&indices[..]).unwrap_or(&F::zero());
         let local_epsilon = adaptive_epsilon * (F::one() + element_val.abs());
         // Create perturbed inputs with better numerical stability
-        let mut input_plus = _input.clone();
-        let mut input_minus = _input.clone();
+        let mut input_plus = input.clone();
+        let mut input_minus = input.clone();
         // Apply perturbation
         if let (Some(plus_elem), Some(minus_elem)) = (
             input_plus.get_mut(&indices[..]),
@@ -404,14 +404,14 @@ pub fn compute_integrated_gradients_optimized<F, M>(
     let diff = _input - &baseline_input;
     // Choose integration method based on number of steps and performance requirements
     let integration_result = if config.parallel && num_steps > 20 {
-        compute_integrated_gradients_parallel(model, _input, &baseline_input, &diff, num_steps, target_class, config)
+        compute_integrated_gradients_parallel(model, input, &baseline_input, &diff, num_steps, target_class, config)
         match num_steps {
             1..=10 => {
-                compute_integrated_gradients_gaussian_model(model, _input, &baseline_input, &diff, num_steps, target_class, config)
+                compute_integrated_gradients_gaussian_model(model, input, &baseline_input, &diff, num_steps, target_class, config)
             11..=50 => {
-                compute_integrated_gradients_simpson_model(model, _input, &baseline_input, &diff, num_steps, target_class, config)
+                compute_integrated_gradients_simpson_model(model, input, &baseline_input, &diff, num_steps, target_class, config)
             _ => {
-                compute_integrated_gradients_adaptive_model(model, _input, &baseline_input, &diff, num_steps, target_class, config)
+                compute_integrated_gradients_adaptive_model(model, input, &baseline_input, &diff, num_steps, target_class, config)
     }?;
     Ok(integration_result)
 /// Parallel integrated gradients computation
@@ -657,7 +657,7 @@ pub fn compute_lrp_attribution<F>(
                 Ok(clamped_input * gradient)
 /// Create baseline input based on baseline method
 #[allow(dead_code)]
-pub fn create_baseline<F>(_input: &ArrayD<F>, baseline: &BaselineMethod) -> Result<ArrayD<F>>
+pub fn create_baseline<F>(input: &ArrayD<F>, baseline: &BaselineMethod) -> Result<ArrayD<F>>
     match baseline {
         BaselineMethod::Zero => Ok(Array::zeros(_input.raw_dim())),
         BaselineMethod::Random { seed: _ } => {
@@ -677,7 +677,7 @@ pub fn create_baseline<F>(_input: &ArrayD<F>, baseline: &BaselineMethod) -> Resu
                 ))
 /// Helper function to resize attribution maps
 #[allow(dead_code)]
-fn resize_attribution<F>(_attribution: &ArrayD<F>, target_dim: IxDyn) -> Result<ArrayD<F>>
+fn resize_attribution<F>(_attribution: &ArrayD<F>, targetdim: IxDyn) -> Result<ArrayD<F>>
     // Simplified resize that preserves attribution values
     let mut result = Array::zeros(target_dim.clone());
     // If converting from 2D to 3D, replicate across the first dimension
@@ -691,9 +691,9 @@ fn resize_attribution<F>(_attribution: &ArrayD<F>, target_dim: IxDyn) -> Result<
         let width = target_slice[2];
         // Replicate the 2D _attribution across all channels
         for c in 0..channels {
-            for h in 0..std::cmp::min(height, _attribution.shape()[0]) {
-                for w in 0..std::cmp::min(width, _attribution.shape()[1]) {
-                    result[[c, h, w]] = _attribution[[h, w]];
+            for h in 0..std::cmp::min(height, attribution.shape()[0]) {
+                for w in 0..std::cmp::min(width, attribution.shape()[1]) {
+                    result[[c, h, w]] = attribution[[h, w]];
     } else if attr_ndim == target_ndim {
         // Same dimensions - direct copy with size adjustment
         let attrshape = attribution.shape();

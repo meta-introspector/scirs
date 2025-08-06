@@ -55,19 +55,19 @@ impl<T: Float + NumCast> StableMetrics<T> {
     }
 
     /// Set the maximum value
-    pub fn with_max_value(mut self, max_value: T) -> Self {
+    pub fn with_max_value(mut self, maxvalue: T) -> Self {
         self.max_value = max_value;
         self
     }
 
     /// Set whether to clip values
-    pub fn with_clip_values(mut self, clip_values: bool) -> Self {
+    pub fn with_clip_values(mut self, clipvalues: bool) -> Self {
         self.clip_values = clip_values;
         self
     }
 
     /// Set whether to use log-sum-exp trick
-    pub fn with_logsumexp(mut self, use_logsumexp: bool) -> Self {
+    pub fn with_logsumexp(mut self, uselogsumexp: bool) -> Self {
         self.use_logsumexp = use_logsumexp;
         self
     }
@@ -313,7 +313,7 @@ impl<T: Float + NumCast> StableMetrics<T> {
     /// # Returns
     ///
     /// * The cross-entropy loss
-    pub fn cross_entropy(&self, y_true: &[T], y_pred: &[T]) -> Result<T> {
+    pub fn cross_entropy(&self, y_true: &[T], ypred: &[T]) -> Result<T> {
         if y_true.len() != y_pred.len() {
             return Err(MetricsError::DimensionMismatch(format!(
                 "y_true and y_pred must have the same length, got {} and {}",
@@ -414,7 +414,7 @@ impl<T: Float + NumCast> StableMetrics<T> {
     /// # Returns
     ///
     /// * The Wasserstein distance
-    pub fn wasserstein_distance(&self, u_values: &[T], v_values: &[T]) -> Result<T> {
+    pub fn wasserstein_distance(&self, u_values: &[T], vvalues: &[T]) -> Result<T> {
         if u_values.is_empty() || v_values.is_empty() {
             return Err(MetricsError::InvalidInput(
                 "Input arrays must not be empty".to_string(),

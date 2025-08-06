@@ -677,11 +677,11 @@ fn assign_branch_colors<F: Float>(
 fn create_legend<F: Float>(config: &DendrogramConfig<F>, threshold: F) -> Vec<LegendEntry> {
     vec![
         LegendEntry {
-            color: _config.color_threshold.above_color.clone(),
+            color: config.color_threshold.above_color.clone(),
             description: format!("Distance > {:.3}", threshold.to_f64().unwrap_or(0.0)),
         },
         LegendEntry {
-            color: _config.color_threshold.below_color.clone(),
+            color: config.color_threshold.below_color.clone(),
             description: format!("Distance ≤ {:.3}", threshold.to_f64().unwrap_or(0.0)),
         },
     ]
@@ -701,8 +701,8 @@ fn calculate_auto_threshold<F: Float + FromPrimitive + PartialOrd>(
     }
 
     // Find the threshold that gives us the desired number of _clusters
-    // This is the distance at the (n_samples - _clusters)th merge
-    let merge_index = n_samples - _clusters;
+    // This is the distance at the (n_samples - clusters)th merge
+    let merge_index = n_samples - clusters;
 
     if merge_index < linkage_matrix.shape()[0] {
         Ok(linkage_matrix[[merge_index, 2]])
@@ -762,7 +762,7 @@ fn calculate_plot_bounds<F: Float>(branches: &[Branch<F>], leaves: &[Leaf]) -> (
 
 /// Get color palette for a given color scheme
 #[allow(dead_code)]
-pub fn get_color_palette(_scheme: ColorScheme, n_colors: usize) -> Vec<String> {
+pub fn get_color_palette(_scheme: ColorScheme, ncolors: usize) -> Vec<String> {
     match _scheme {
         ColorScheme::Default => get_default_colors(n_colors),
         ColorScheme::HighContrast => get_high_contrast_colors(n_colors),
@@ -774,7 +774,7 @@ pub fn get_color_palette(_scheme: ColorScheme, n_colors: usize) -> Vec<String> {
 
 /// Default color palette
 #[allow(dead_code)]
-fn get_default_colors(_n_colors: usize) -> Vec<String> {
+fn get_default_colors(_ncolors: usize) -> Vec<String> {
     let base_colors = vec![
         "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f",
         "#bcbd22", "#17becf",
@@ -790,7 +790,7 @@ fn get_default_colors(_n_colors: usize) -> Vec<String> {
 
 /// High contrast color palette
 #[allow(dead_code)]
-fn get_high_contrast_colors(_n_colors: usize) -> Vec<String> {
+fn get_high_contrast_colors(_ncolors: usize) -> Vec<String> {
     let base_colors = vec![
         "#000000", "#FFFFFF", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF",
         "#800000", "#008000",
@@ -806,7 +806,7 @@ fn get_high_contrast_colors(_n_colors: usize) -> Vec<String> {
 
 /// Viridis color palette (approximation)
 #[allow(dead_code)]
-fn get_viridis_colors(_n_colors: usize) -> Vec<String> {
+fn get_viridis_colors(_ncolors: usize) -> Vec<String> {
     let base_colors = vec![
         "#440154", "#482777", "#3f4a8a", "#31678e", "#26838f", "#1f9d8a", "#6cce5a", "#b6de2b",
         "#fee825", "#fff200",
@@ -822,7 +822,7 @@ fn get_viridis_colors(_n_colors: usize) -> Vec<String> {
 
 /// Plasma color palette (approximation)
 #[allow(dead_code)]
-fn get_plasma_colors(_n_colors: usize) -> Vec<String> {
+fn get_plasma_colors(_ncolors: usize) -> Vec<String> {
     let base_colors = vec![
         "#0c0887", "#5c01a6", "#900da4", "#bf3984", "#e16462", "#f89441", "#fdc328", "#f0f921",
         "#fcffa4", "#ffffff",
@@ -838,10 +838,10 @@ fn get_plasma_colors(_n_colors: usize) -> Vec<String> {
 
 /// Grayscale color palette
 #[allow(dead_code)]
-fn get_grayscale_colors(_n_colors: usize) -> Vec<String> {
+fn get_grayscale_colors(_ncolors: usize) -> Vec<String> {
     (0.._n_colors)
         .map(|i| {
-            let intensity = 255 * i / _n_colors.max(1);
+            let intensity = 255 * i / n_colors.max(1);
             format!("#{:02x}{:02x}{:02x}", intensity, intensity, intensity)
         })
         .collect()
@@ -1176,7 +1176,7 @@ pub mod interactive {
         }
 
         /// Get clusters at a specific cut height
-        pub fn get_clusters_at_height(&self_height: F) -> Result<Vec<Vec<usize>>> {
+        pub fn get_clusters_at_height(&selfheight: F) -> Result<Vec<Vec<usize>>> {
             // Simplified cluster extraction - in a full implementation,
             // this would traverse the dendrogram tree
             Ok(vec![vec![0, 1], vec![2, 3]]) // Placeholder
@@ -1276,10 +1276,10 @@ pub mod animation {
 
     impl<F: Float + FromPrimitive> AnimatedDendrogram<F> {
         /// Create a new animated dendrogram
-        pub fn new(_duration: Duration) -> Self {
+        pub fn new(duration: Duration) -> Self {
             Self {
                 keyframes: Vec::new(),
-                _duration,
+                duration,
                 loop_animation: false,
             }
         }
@@ -1533,9 +1533,9 @@ pub mod performance {
 
     impl<F: Float + FromPrimitive + PartialOrd> OptimizedDendrogram<F> {
         /// Create optimized dendrogram from original
-        pub fn new(_plot: DendrogramPlot<F>, config: PerformanceConfig) -> Self {
-            let mut optimized = _plot.clone();
-            let original_count = _plot.branches.len();
+        pub fn new(plot: DendrogramPlot<F>, config: PerformanceConfig) -> Self {
+            let mut optimized = plot.clone();
+            let original_count = plot.branches.len();
 
             // Apply level-of-detail optimization
             if config.enable_lod {
@@ -1562,7 +1562,7 @@ pub mod performance {
             };
 
             Self {
-                original: _plot,
+                original: plot,
                 optimized,
                 config,
                 stats,
@@ -1570,8 +1570,8 @@ pub mod performance {
         }
 
         /// Apply level-of-detail optimization
-        fn apply_lod(_plot: &DendrogramPlot<F>, config: &PerformanceConfig) -> DendrogramPlot<F> {
-            let mut optimized = _plot.clone();
+        fn apply_lod(plot: &DendrogramPlot<F>, config: &PerformanceConfig) -> DendrogramPlot<F> {
+            let mut optimized = plot.clone();
 
             // Remove branches shorter than minimum length
             optimized.branches.retain(|branch| {
@@ -1701,7 +1701,7 @@ pub mod export {
     fn export_to_svg<F: Float + FromPrimitive + Debug>(plot: &DendrogramPlot<F>) -> Result<String> {
         let config = &_plot.config;
         let mut svg = String::new();
-        let (min_x, max_x, min_y, max_y) = _plot.bounds;
+        let (min_x, max_x, min_y, max_y) = plot.bounds;
 
         // Calculate viewport dimensions with padding
         let padding = 50.0;
@@ -1807,8 +1807,8 @@ pub mod export {
             BranchStyle::DashDot => "10,5,3,5",
         };
 
-        for (i, branch) in _plot.branches.iter().enumerate() {
-            let color = if i < _plot.colors.len() {
+        for (i, branch) in plot.branches.iter().enumerate() {
+            let color = if i < plot.colors.len() {
                 &_plot.colors[i]
             } else {
                 "#000000"
@@ -2021,12 +2021,12 @@ pub mod export {
         dot.push_str("  rankdir=TB;\n");
 
         // Add nodes
-        for (i, leaf) in _plot.leaves.iter().enumerate() {
+        for (i, leaf) in plot.leaves.iter().enumerate() {
             dot.push_str(&format!("  leaf_{} [label=\"{}\"];\n", i, leaf.label));
         }
 
         // Add internal nodes and edges (simplified)
-        for (i, branch) in _plot.branches.iter().enumerate() {
+        for (i, branch) in plot.branches.iter().enumerate() {
             dot.push_str(&format!(
                 "  internal_{} [label=\"{:.2}\"];\n",
                 i,
@@ -2131,10 +2131,10 @@ pub mod realtime {
 
     impl<F: Float + FromPrimitive + PartialOrd + Debug + Send + Sync + 'static> RealtimeDendrogram<F> {
         /// Create a new real-time dendrogram
-        pub fn new(_config: RealtimeConfig) -> Self {
+        pub fn new(config: RealtimeConfig) -> Self {
             Self {
                 current_plot: Arc::new(Mutex::new(None)),
-                _config,
+                config,
                 update_callback: None,
                 is_active: Arc::new(Mutex::new(false)),
             }
@@ -2183,7 +2183,7 @@ pub mod realtime {
         }
 
         /// Update the dendrogram with new data
-        pub fn update_plot(&self, new_plot: DendrogramPlot<F>) {
+        pub fn update_plot(&self, newplot: DendrogramPlot<F>) {
             let mut current = self.current_plot.lock().unwrap();
             *current = Some(new_plot);
         }
@@ -2266,10 +2266,10 @@ pub mod realtime {
 
     impl LiveClusteringMonitor {
         /// Create a new live monitoring instance
-        pub fn new(_config: MonitorConfig) -> Self {
+        pub fn new(config: MonitorConfig) -> Self {
             Self {
                 metrics_buffer: Arc::new(Mutex::new(Vec::new())),
-                _config,
+                config,
                 start_time: Instant::now(),
             }
         }
@@ -2308,7 +2308,7 @@ pub mod realtime {
         }
 
         /// Get metrics for a specific metric type over time
-        pub fn get_metric_history(&self, metric_type: MetricType) -> Vec<(f64, f64)> {
+        pub fn get_metric_history(&self, metrictype: MetricType) -> Vec<(f64, f64)> {
             let buffer = self.metrics_buffer.lock().unwrap();
             buffer
                 .iter()

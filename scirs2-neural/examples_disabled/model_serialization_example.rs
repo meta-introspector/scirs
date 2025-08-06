@@ -10,7 +10,7 @@ use std::path::Path;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Model Serialization Example");
     // Initialize random number generator
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // 1. Create a simple neural network model
     let mut model = Sequential::new();
     // Add layers

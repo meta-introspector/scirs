@@ -33,7 +33,7 @@ impl<F: IntegrateFloat + Default> ConfigurationAdapter<F> {
     }
 
     /// Validate configuration constraints
-    pub fn validate_constraints(&self, _strategy: &AdaptationStrategy<F>) -> IntegrateResult<bool> {
+    pub fn validate_constraints(&self, strategy: &AdaptationStrategy<F>) -> IntegrateResult<bool> {
         // Implementation would go here
         Ok(true)
     }

@@ -4,7 +4,7 @@
 //! including dynamic time warping (DTW) distance and other temporal similarity measures.
 //! These algorithms can handle time series of different lengths and temporal alignments.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -170,11 +170,11 @@ where
 ///
 /// Soft DTW distance
 #[allow(dead_code)]
-pub fn soft_dtw_distance<F>(_series1: ArrayView1<F>, series2: ArrayView1<F>, gamma: F) -> Result<F>
+pub fn soft_dtw_distance<F>(series1: ArrayView1<F>, series2: ArrayView1<F>, gamma: F) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + 'static,
 {
-    let n = _series1.len();
+    let n = series1.len();
     let m = series2.len();
 
     if n == 0 || m == 0 {
@@ -255,7 +255,7 @@ where
         ));
     }
 
-    // Initialize medoids randomly (for deterministic results, use first k _series)
+    // Initialize medoids randomly (for deterministic results, use first k series)
     let mut medoids: Array1<usize> = Array1::from_iter(0..k);
     let mut assignments = Array1::zeros(n_series);
 
@@ -597,7 +597,7 @@ where
         let mut new_barycenter = Array1::zeros(series_length);
         let mut weights = Array1::zeros(series_length);
 
-        // For each time _series, find optimal alignment with current barycenter
+        // For each time series, find optimal alignment with current barycenter
         for i in 0..n_series {
             let (aligned_series, alignment_weights) =
                 dtw_align_series(time_series.row(i), barycenter.view())?;

@@ -297,7 +297,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
     }
 
     /// Process input spikes through the network
-    pub fn process_spikes(&mut self, input_spikes: &[Spike]) -> Result<Vec<Spike>> {
+    pub fn process_spikes(&mut self, inputspikes: &[Spike]) -> Result<Vec<Spike>> {
         let mut output_spikes = Vec::new();
 
         // Process each input spike
@@ -620,7 +620,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
     }
 
     /// Propagate spike to next layer with synaptic delays
-    fn propagate_spike(&mut self, layer_idx: usize, neuron_idx: usize) -> Result<()> {
+    fn propagate_spike(&mut self, layer_idx: usize, neuronidx: usize) -> Result<()> {
         if layer_idx >= self.weights.len() {
             return Ok(());
         }
@@ -874,7 +874,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> LiquidStateMachi
         let mut output = Array1::zeros(self.output_dim);
         for i in 0..self.output_dim {
             let mut sum = F::zero();
-            for j in 0..reservoir_state.len().min(self.readout_weights.ncols()) {
+            for j in 0..reservoir_state.len().min(self.readoutweights.ncols()) {
                 sum = sum + self.readout_weights[[i, j]] * reservoir_state[j];
             }
             output[i] = sum;
@@ -884,7 +884,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> LiquidStateMachi
     }
 
     /// Train the readout layer using ridge regression
-    pub fn train_readout(&mut self, training_data: &[(Array1<F>, Array1<F>)]) -> Result<()> {
+    pub fn train_readout(&mut self, trainingdata: &[(Array1<F>, Array1<F>)]) -> Result<()> {
         if training_data.is_empty() {
             return Ok(());
         }
@@ -935,7 +935,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> LiquidStateMachi
             }
 
             // Solve using simplified approach (diagonal approximation)
-            for j in 0..state_dim.min(self.readout_weights.ncols()) {
+            for j in 0..state_dim.min(self.readoutweights.ncols()) {
                 let mut numerator = F::zero();
                 let mut denominator = F::zero();
 
@@ -1404,7 +1404,7 @@ pub enum CalciumPump {
 
 impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
     /// Create new dendritic computation unit
-    pub fn new(_num_segments: usize, tree_topology: TreeTopology) -> Self {
+    pub fn new(_num_segments: usize, treetopology: TreeTopology) -> Self {
         let dendritic_tree = Self::create_dendritic_tree(_num_segments, tree_topology);
         let synaptic_inputs = Vec::new();
         let spine_dynamics = Vec::new();
@@ -1431,7 +1431,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
     }
 
     /// Create dendritic tree structure
-    fn create_dendritic_tree(_num_segments: usize, topology: TreeTopology) -> DendriticTree<F> {
+    fn create_dendritic_tree(_numsegments: usize, topology: TreeTopology) -> DendriticTree<F> {
         let mut _segments = Vec::new();
         let mut connections = Vec::new();
         let mut soma_distances = Array1::zeros(_num_segments);
@@ -1463,7 +1463,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
                 calcium_concentration: F::from(0.0001).unwrap(), // 100 nM
             };
 
-            _segments.push(segment);
+            segments.push(segment);
             soma_distances[i] = F::from(i as f64 * 10.0).unwrap(); // 10 μm per segment
             diameters[i] = F::from(2.0).unwrap() / (F::one() + distance_factor);
             // Tapering diameter
@@ -1505,7 +1505,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
         }
 
         DendriticTree {
-            _segments,
+            segments,
             connections,
             soma_distances,
             diameters,
@@ -1611,7 +1611,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
     }
 
     /// Compute synaptic currents
-    fn compute_synaptic_currents(&self, segment_id: usize) -> crate::error::Result<F> {
+    fn compute_synaptic_currents(&self, segmentid: usize) -> crate::error::Result<F> {
         let mut total_current = F::zero();
 
         for input in &self.synaptic_inputs {
@@ -1627,7 +1627,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
     }
 
     /// Compute axial currents between segments
-    fn compute_axial_currents(&self, segment_id: usize) -> crate::error::Result<F> {
+    fn compute_axial_currents(&self, segmentid: usize) -> crate::error::Result<F> {
         let mut total_current = F::zero();
         let segment_voltage = self.dendritic_tree.segments[segment_id].voltage;
 
@@ -1651,7 +1651,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
     }
 
     /// Update calcium dynamics in dendritic compartments
-    fn update_calcium_dynamics(&mut self, segment_id: usize, dt: F) -> crate::error::Result<()> {
+    fn update_calcium_dynamics(&mut self, segmentid: usize, dt: F) -> crate::error::Result<()> {
         if segment_id >= self.dendritic_tree.segments.len() {
             return Ok(());
         }
@@ -1705,7 +1705,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
     }
 
     /// Compute calcium removal by pumps and buffers
-    fn compute_calcium_removal(&self, segment_id: usize) -> crate::error::Result<F> {
+    fn compute_calcium_removal(&self, segmentid: usize) -> crate::error::Result<F> {
         if segment_id >= self.calcium_dynamics.ca_concentration.len() {
             return Ok(F::zero());
         }
@@ -1844,7 +1844,7 @@ pub struct ShortTermPlasticityParams<F: Float> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> SynapticVesicleDynamics<F> {
     /// Create new synaptic vesicle dynamics
-    pub fn new(_initial_vesicles: usize) -> Self {
+    pub fn new(_initialvesicles: usize) -> Self {
         Self {
             rrp_vesicles: _initial_vesicles / 3,
             recycling_pool: _initial_vesicles / 3,
@@ -2091,12 +2091,12 @@ pub struct PowerManager<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> LoihiStyleNeuromorphicChip<F> {
     /// Create new Loihi-style neuromorphic chip
-    pub fn new(_num_cores: usize, compartments_per_core: usize) -> Self {
+    pub fn new(_num_cores: usize, compartments_percore: usize) -> Self {
         let mut _cores = Vec::new();
 
         for core_id in 0.._num_cores {
             let _core = NeuromorphicCore::new(core_id, compartments_per_core);
-            _cores.push(_core);
+            cores.push(_core);
         }
 
         let inter_core_routing = Array2::zeros((num_cores, num_cores));
@@ -2105,7 +2105,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LoihiStyleNeuromorphicChip<F> {
         let power_manager = PowerManager::new(num_cores);
 
         Self {
-            _cores,
+            cores,
             inter_core_routing,
             spike_router,
             learning_engines,
@@ -2171,11 +2171,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> LoihiStyleNeuromorphicChip<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicCore<F> {
     /// Create new neuromorphic core
-    pub fn new(_core_id: usize, num_compartments: usize) -> Self {
+    pub fn new(_core_id: usize, numcompartments: usize) -> Self {
         let mut _compartments = Vec::new();
 
         for _ in 0..num_compartments {
-            _compartments.push(LoihiCompartment {
+            compartments.push(LoihiCompartment {
                 voltage: F::zero(),
                 current: F::zero(),
                 bias: F::zero(),
@@ -2194,7 +2194,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicCore<F> {
 
         Self {
             core_id,
-            _compartments,
+            compartments,
             synaptic_memory,
             dendrite_accumulators,
             axon_outputs,
@@ -2314,7 +2314,7 @@ impl SpikeRouter {
 
 impl<F: Float + Debug + Clone + FromPrimitive> OnChipLearningEngine<F> {
     /// Create new on-chip learning engine
-    pub fn new(_learning_rule: OnChipLearningRule) -> Self {
+    pub fn new(_learningrule: OnChipLearningRule) -> Self {
         let mut parameters = HashMap::new();
 
         match _learning_rule {
@@ -2372,7 +2372,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> OnChipLearningEngine<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> PowerManager<F> {
     /// Create new power manager
-    pub fn new(_num_cores: usize) -> Self {
+    pub fn new(_numcores: usize) -> Self {
         Self {
             core_power: Array1::from_elem(_num_cores, F::from(0.1).unwrap()), // 0.1W per core
             power_budget: F::from(10.0).unwrap(),                            // 10W total budget

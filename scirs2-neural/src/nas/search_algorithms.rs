@@ -28,7 +28,7 @@ impl RandomSearch {
         Self { seed: None }
     }
     /// Create with a specific seed
-    pub fn with_seed(_seed: u64) -> Self {
+    pub fn with_seed(seed: u64) -> Self {
         Self { seed: Some(_seed) }
 impl SearchAlgorithm for RandomSearch {
         _history: &[SearchResult],
@@ -47,7 +47,7 @@ use rand::rng;
             proposals.push(Arc::new(encoding) as Arc<dyn ArchitectureEncoding>);
         }
         Ok(proposals)
-    fn update(&mut self_results: &[SearchResult]) -> Result<()> {
+    fn update(&mut selfresults: &[SearchResult]) -> Result<()> {
         // Random search doesn't learn from history
         Ok(())
     fn name(&self) -> &str {
@@ -63,9 +63,9 @@ pub struct EvolutionarySearch {
     fitness_scores: Vec<f64>,
 impl EvolutionarySearch {
     /// Create a new evolutionary search algorithm
-    pub fn new(_population_size: usize) -> Self {
+    pub fn new(_populationsize: usize) -> Self {
         Self {
-            _population_size,
+            population_size,
             mutation_rate: 0.1,
             crossover_rate: 0.9,
             tournament_size: 3,
@@ -81,10 +81,10 @@ impl EvolutionarySearch {
         self.crossover_rate = rate;
     /// Tournament selection
     fn tournament_select(&self, rng: &mut impl rand::Rng) -> usize {
-        let mut best_idx = rng.random_range(0..self.population.len());
+        let mut best_idx = rng.gen_range(0..self.population.len());
         let mut best_fitness = self.fitness_scores[best_idx];
         for _ in 1..self.tournament_size {
-            let idx = rng.random_range(0..self.population.len());
+            let idx = rng.gen_range(0..self.population.len());
             if self.fitness_scores[idx] > best_fitness {
                 best_idx = idx;
                 best_fitness = self.fitness_scores[idx];
@@ -237,11 +237,11 @@ impl ReinforcementSearch {
         self.generation_history.push(log_probs);
         Ok(sequence)
     /// Single forward step through controller
-    fn controller_forward_step(&mut self, input_token: usize) -> Result<(usize, f32)> {
+    fn controller_forward_step(&mut self, inputtoken: usize) -> Result<(usize, f32)> {
         // Embedding lookup
         let embedding = network
             .embedding_weights
-            .row(input_token.min(network.embedding_weights.nrows() - 1));
+            .row(input_token.min(network.embeddingweights.nrows() - 1));
         // Concatenate embedding with hidden state
         let mut rnn_input = Array1::zeros(network.embedding_dim + network.hidden_size);
         rnn_input
@@ -463,7 +463,7 @@ impl DifferentiableSearch {
             None => crate::nas::search_space::LayerType::Dense(64),
         Ok(layer_type)
     /// Update architecture parameters using gradient descent
-    fn update_alphas(&mut self, validation_loss: f64) -> Result<()> {
+    fn update_alphas(&mut self, validationloss: f64) -> Result<()> {
         if let Some(ref mut alpha) = self.alpha_normal {
             // Simplified gradient update
             // In practice, would compute actual gradients

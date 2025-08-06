@@ -457,7 +457,7 @@ fn format_number(n: usize) -> String {
 
 /// Demonstrate dataset information display
 #[allow(dead_code)]
-fn show_dataset_info(_name: &str, dataset: &scirs2_datasets::utils::Dataset) {
+fn show_dataset_info(name: &str, dataset: &scirs2_datasets::utils::Dataset) {
     println!("{_name}:");
     println!("  Samples: {}", format_number(dataset.n_samples()));
     println!("  Features: {}", dataset.n_features());

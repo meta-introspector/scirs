@@ -32,7 +32,7 @@ fn main() -> Result<()> {
         colorize("features for", Color::BrightGreen),
         colorize(n_classes.to_string(), Color::BrightYellow),
     // Create a deterministic RNG for reproducibility
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // 1. Confusion Matrix Example
         "\n{}",
         stylize("1. CONFUSION MATRIX VISUALIZATION", Style::Bold)

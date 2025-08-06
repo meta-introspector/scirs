@@ -1,5 +1,5 @@
 use super::*;
-use crate::tensor__ops::*;
+use crate::tensor_ops::*;
 
 pub struct Conv2DTranspose {
     pub pad: usize,
@@ -44,7 +44,7 @@ fn conv2d_transpose_extract_params<F: Float>(
         ));
     }
     let gyshape = gy.shape();
-    let fshape = _w.shape();
+    let fshape = w.shape();
 
     let batch_size = gyshape[0];
     let ych = gyshape[1];
@@ -109,7 +109,7 @@ fn conv2d_transpose_impl<F: Float>(
         kh,
         kw,
     } = conv2d_transpose_extract_params(
-        gy, _w, pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w,
+        gy, w, pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w,
     )?;
 
     // sgemm params
@@ -131,8 +131,8 @@ fn conv2d_transpose_impl<F: Float>(
         }
     }
 
-    if let Some(_w) = _w.as_slice() {
-        w_slice = _w;
+    if let Some(_w) = w.as_slice() {
+        w_slice = w;
     } else {
         copied_w = ndarray_ext::deep_copy(_w);
         unsafe {
@@ -310,7 +310,7 @@ fn conv2d_transpose_filter_grad_impl<F: Float>(
     stride_h: usize,
     stride_w: usize,
 ) -> NdArray<F> {
-    let kshape = _w.shape();
+    let kshape = w.shape();
     let xshape = x.shape();
     let gyshape = gy.shape();
 

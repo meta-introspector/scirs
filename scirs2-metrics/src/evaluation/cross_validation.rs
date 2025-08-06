@@ -103,7 +103,7 @@ pub fn k_fold_cross_validation(
         train_indices.extend_from_slice(&indices[0..current]);
         train_indices.extend_from_slice(&indices[(current + fold_size)..]);
 
-        _folds.push((train_indices, test_indices));
+        folds.push((train_indices, test_indices));
         current += fold_size;
     }
 
@@ -261,12 +261,12 @@ where
         }
     }
 
-    // Allocate samples to _folds, respecting the class distribution
+    // Allocate samples to folds, respecting the class distribution
     let mut _folds = vec![Vec::new(); n_folds];
 
     for indices in class_counts.values() {
         for (i, &idx) in indices.iter().enumerate() {
-            _folds[i % n_folds].push(idx);
+            folds[i % n_folds].push(idx);
         }
     }
 
@@ -274,10 +274,10 @@ where
     let mut splits = Vec::with_capacity(n_folds);
 
     for i in 0..n_folds {
-        let test_indices = _folds[i].clone();
+        let test_indices = folds[i].clone();
 
         let mut train_indices = Vec::with_capacity(n_samples - test_indices.len());
-        for (j, fold) in _folds.iter().enumerate() {
+        for (j, fold) in folds.iter().enumerate() {
             if j != i {
                 train_indices.extend_from_slice(fold);
             }
@@ -386,7 +386,7 @@ pub fn time_series_split(
         let train_indices: Vec<usize> = (train_start..train_end).collect();
         let test_indices: Vec<usize> = (test_start..test_start + test_size).collect();
 
-        _splits.push((train_indices, test_indices));
+        splits.push((train_indices, test_indices));
 
         // Update for next split
         test_end += test_size + gap;
@@ -510,10 +510,10 @@ where
             .iter()
             .enumerate()
             .min_by_key(|&(_, &size)| size)
-            .map(|(idx_)| idx)
+            .map(|(idx, _)| idx)
             .unwrap();
 
-        _folds[fold_idx].extend_from_slice(&indices);
+        folds[fold_idx].extend_from_slice(&indices);
         fold_sizes[fold_idx] += indices.len();
     }
 
@@ -521,11 +521,11 @@ where
     let mut splits = Vec::with_capacity(n_folds);
 
     for i in 0..n_folds {
-        let test_indices = _folds[i].clone();
+        let test_indices = folds[i].clone();
 
         // Combine all other _folds for training
         let mut train_indices = Vec::with_capacity(n_samples - test_indices.len());
-        for (j, fold) in _folds.iter().enumerate() {
+        for (j, fold) in folds.iter().enumerate() {
             if j != i {
                 train_indices.extend_from_slice(fold);
             }
@@ -611,7 +611,7 @@ pub fn nested_cross_validation(
 
     for (outer_fold_idx, (outer_train, outer_test)) in outer_splits.into_iter().enumerate() {
         // Generate a new _seed for inner fold based on the outer fold index
-        let inner_seed = random_seed.map(|_seed| _seed.wrapping_add(outer_fold_idx as u64));
+        let inner_seed = random_seed.map(|_seed| seed.wrapping_add(outer_fold_idx as u64));
 
         // Create inner _folds using only the outer training data
         let n_inner = outer_train.len();

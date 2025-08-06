@@ -177,7 +177,7 @@ impl NetCDFFile {
     /// ```
     pub fn open<P: AsRef<Path>>(path: P, options: Option<NetCDFOptions>) -> Result<Self> {
         let opts = options.unwrap_or_default();
-        let path_str = _path.as_ref().to_string_lossy().to_string();
+        let path_str = path.as_ref().to_string_lossy().to_string();
 
         if opts.mode == "r" && !Path::new(&path_str).exists() {
             return Err(IoError::FileError(format!("File not found: {}", path_str)));
@@ -239,7 +239,7 @@ impl NetCDFFile {
             ..Default::default()
         };
 
-        let path_str = _path.as_ref().to_string_lossy().to_string();
+        let path_str = path.as_ref().to_string_lossy().to_string();
 
         // Create parent directories if they don't exist
         if let Some(parent) = Path::new(&path_str).parent() {
@@ -578,7 +578,7 @@ impl NetCDFFile {
     }
 
     /// Convert data types properly for NetCDF variables using safer casting
-    fn convert_data_type<T>(&self, array_f64: &ArrayD<f64>) -> Result<Vec<T>>
+    fn convert_data_type<T>(&self, arrayf64: &ArrayD<f64>) -> Result<Vec<T>>
     where
         T: Clone + Default + 'static,
     {
@@ -975,7 +975,7 @@ pub fn create_netcdf4_with_data<P: AsRef<Path>>(
 /// ```
 #[allow(dead_code)]
 pub fn read_netcdf<P: AsRef<Path>>(path: P) -> Result<NetCDFFile> {
-    let path_ref = _path.as_ref();
+    let path_ref = path.as_ref();
 
     // Try to open as NetCDF4/HDF5 first, then fall back to Classic
     match NetCDFFile::open(

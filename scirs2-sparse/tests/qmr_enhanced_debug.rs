@@ -16,7 +16,7 @@ fn test_qmr_identity_step_by_step() {
     println!("Initial residual: {:?}", r_initial);
 
     let r_star = r_initial.clone();
-    println!("r_star: {:?}", r_star);
+    println!("rstar: {:?}", r_star);
 
     let rho_initial: f64 = r_initial.iter().zip(&r_star).map(|(a, b)| a * b).sum();
     println!("Initial rho = dot(r, r_star) = {}", rho_initial);

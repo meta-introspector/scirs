@@ -544,10 +544,10 @@ pub trait NeuralOptimizer<A: Float> {
     fn step(&mut self, gradients: &Array1<A>) -> Result<Array1<A>>;
 
     /// Update meta-parameters
-    fn meta_update(&mut self, meta_gradients: &Array1<A>) -> Result<()>;
+    fn meta_update(&mut self, metagradients: &Array1<A>) -> Result<()>;
 
     /// Adapt to new task
-    fn adapt_to_task(&mut self, task_context: &TaskContext<A>) -> Result<()>;
+    fn adapt_to_task(&mut self, taskcontext: &TaskContext<A>) -> Result<()>;
 
     /// Get current state
     fn get_state(&self) -> OptimizerState<A>;
@@ -1141,7 +1141,9 @@ impl<A: Float> AdvancedNeuralOptimizerFactory<A> {
     #[allow(dead_code)]
     #[allow(clippy::too_many_arguments)]
     pub fn auto_select_optimizer(
-        &self, _task_context: &TaskContext<A>, _criteria: &AutoSelectionCriteria<A>,
+        &self,
+        _task_context: &TaskContext<A>,
+        _criteria: &AutoSelectionCriteria<A>,
     ) -> Result<String> {
         // Implementation would use ML-based selection
         // This is a simplified placeholder
@@ -1287,7 +1289,7 @@ where
     }
 
     /// Meta-training step
-    pub fn meta_train_step(&mut self, meta_batch: Vec<MetaTask<A>>) -> Result<A> {
+    pub fn meta_train_step(&mut self, metabatch: Vec<MetaTask<A>>) -> Result<A> {
         let mut total_meta_loss = A::zero();
         let batch_size = A::from(meta_batch.len()).unwrap();
 
@@ -1519,7 +1521,8 @@ where
     }
 
     fn compute_meta_gradients(
-        &self, _meta_batch: &[MetaTask<A>],
+        &self,
+        _meta_batch: &[MetaTask<A>],
     ) -> Result<HashMap<String, Array1<A>>> {
         // Simplified meta-gradient computation
         // In practice, this would compute gradients of the meta-objective
@@ -1539,14 +1542,15 @@ where
     }
 
     fn update_meta_parameters(
-        &mut self, _meta_gradients: &HashMap<String, Array1<A>>,
+        &mut self,
+        _meta_gradients: &HashMap<String, Array1<A>>,
     ) -> Result<()> {
         // Update meta-parameters using meta-optimizer
         // This is simplified - in practice would update all LSTM parameters
         Ok(())
     }
 
-    fn update_metrics(&mut self, gradients: &Array1<A>, updates: &Array1<A>, _lr: A) {
+    fn update_metrics(&mut self, gradients: &Array1<A>, updates: &Array1<A>, lr: A) {
         let grad_norm = gradients.iter().map(|&g| g * g).sum::<A>().sqrt();
         let update_norm = updates.iter().map(|&u| u * u).sum::<A>().sqrt();
 
@@ -1568,7 +1572,7 @@ where
         Ok(Array1::from_vec(array.iter().cloned().collect()))
     }
 
-    fn reshape_array<Dim>(&self, flat_array: &Array1<A>, shape: Dim) -> Result<Array<A, Dim>>
+    fn reshape_array<Dim>(&self, flatarray: &Array1<A>, shape: Dim) -> Result<Array<A, Dim>>
     where
         Dim: Dimension + Clone,
     {
@@ -1677,7 +1681,8 @@ where
     pub fn lstm_step<S, Dim>(
         &mut self,
         parameters: &ArrayBase<S, Dim>,
-        gradients: &ArrayBase<S, Dim>, _loss: Option<A>,
+        gradients: &ArrayBase<S, Dim>,
+        _loss: Option<A>,
     ) -> Result<Array<A, Dim>>
     where
         S: Data<Elem = A>,
@@ -1713,7 +1718,7 @@ pub struct TransferResults<A: Float> {
 // Implementation of initialization functions
 
 impl<A: Float + Default + Clone> LSTMState<A> {
-    fn new(_config: &LearnedOptimizerConfig) -> Result<Self> {
+    fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
         let mut hidden_states = Vec::new();
         let mut cell_states = Vec::new();
 
@@ -1725,8 +1730,11 @@ impl<A: Float + Default + Clone> LSTMState<A> {
         Ok(Self {
             hidden_states,
             cell_states,
-            attention_weights: if _config.use_attention {
-                Some(Array2::zeros((_config.attention_heads, _config.hidden_size)))
+            attention_weights: if config.use_attention {
+                Some(Array2::zeros((
+                    config.attention_heads,
+                    config.hidden_size,
+                )))
             } else {
                 None
             },
@@ -1736,7 +1744,7 @@ impl<A: Float + Default + Clone> LSTMState<A> {
 }
 
 impl<A: Float + Default + Clone> LSTMParameters<A> {
-    fn new(_config: &LearnedOptimizerConfig) -> Result<Self> {
+    fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
         let mut weight_ih = Vec::new();
         let mut weight_hh = Vec::new();
         let mut bias_ih = Vec::new();
@@ -1744,11 +1752,11 @@ impl<A: Float + Default + Clone> LSTMParameters<A> {
 
         for layer in 0.._config.num_layers {
             let input_size = if layer == 0 {
-                _config.input_features
+                config.input_features
             } else {
-                _config.hidden_size
+                config.hidden_size
             };
-            let hidden_size = _config.hidden_size;
+            let hidden_size = config.hidden_size;
 
             // Xavier initialization
             let fan_in = input_size as f64;
@@ -1761,16 +1769,17 @@ impl<A: Float + Default + Clone> LSTMParameters<A> {
             bias_hh.push(Array1::zeros(4 * hidden_size));
         }
 
-        let output_weights = Self::random_array_2d(_config.output_features, _config.hidden_size, 0.1);
+        let output_weights =
+            Self::random_array_2d(_config.output_features, config.hidden_size, 0.1);
         let output_bias = Array1::zeros(_config.output_features);
 
-        let attention_params = if _config.use_attention {
+        let attention_params = if config.use_attention {
             Some(AttentionParameters::new(_config)?)
         } else {
             None
         };
 
-        let lr_params = if _config.learned_lr_schedule {
+        let lr_params = if config.learned_lr_schedule {
             Some(LearningRateParameters::new(_config)?)
         } else {
             None
@@ -1788,16 +1797,17 @@ impl<A: Float + Default + Clone> LSTMParameters<A> {
         })
     }
 
-    fn random_array_2d(_rows: usize, cols: usize, scale: f64) -> Array2<A> {
+    fn random_array_2d(rows: usize, cols: usize, scale: f64) -> Array2<A> {
         // Simplified random initialization
-        Array2::zeros((_rows, cols))
-            .mapv(|_: A| A::from(scale * (scirs2_core::random::rng().gen_range(-0.5f64..0.5f64))).unwrap())
+        Array2::zeros((_rows, cols)).mapv(|_: A| {
+            A::from(scale * (scirs2_core::random::rng().gen_range(-0.5f64..0.5f64))).unwrap()
+        })
     }
 }
 
 impl<A: Float + Default + Clone> AttentionParameters<A> {
-    fn new(_config: &LearnedOptimizerConfig) -> Result<Self> {
-        let hidden_size = _config.hidden_size;
+    fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
+        let hidden_size = config.hidden_size;
         let scale = 0.1;
 
         Ok(Self {
@@ -1813,7 +1823,7 @@ impl<A: Float + Default + Clone> AttentionParameters<A> {
 }
 
 impl<A: Float + Default + Clone> LearningRateParameters<A> {
-    fn new(_config: &LearnedOptimizerConfig) -> Result<Self> {
+    fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
         Ok(Self {
             base_lr: A::from(_config.meta_learning_rate).unwrap(),
             adaptive_factors: Array1::ones(_config.output_features),
@@ -1824,7 +1834,7 @@ impl<A: Float + Default + Clone> LearningRateParameters<A> {
 }
 
 impl<A: Float + Default + Clone> MetaTrainingState<A> {
-    fn new(_config: &LearnedOptimizerConfig) -> Result<Self> {
+    fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
         Ok(Self {
             meta_step: 0,
             meta_gradients: HashMap::new(),
@@ -1880,7 +1890,7 @@ mod tests {
         let state = state.unwrap();
         assert_eq!(state.hidden_states.len(), config.num_layers);
         assert_eq!(state.cell_states.len(), config.num_layers);
-        assert!(state.attention_weights.is_some());
+        assert!(state.attentionweights.is_some());
     }
 
     #[test]

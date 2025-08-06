@@ -380,19 +380,19 @@ where
 
 /// Filters out harmonic periods from a list of candidate periods
 #[allow(dead_code)]
-fn filter_harmonics<F>(_periods: Vec<(usize, F)>, _threshold_factor: f64) -> Vec<(usize, F)>
+fn filter_harmonics<F>(periods: Vec<(usize, F)>, _threshold_factor: f64) -> Vec<(usize, F)>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if _periods.is_empty() {
-        return _periods;
+    if periods.is_empty() {
+        return periods;
     }
 
     let mut filtered = Vec::new();
-    let mut used = vec![false; _periods.len()];
+    let mut used = vec![false; periods.len()];
 
     // Sort by strength (descending)
-    let mut sorted_periods = _periods.clone();
+    let mut sorted_periods = periods.clone();
     sorted_periods.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
     for i in 0..sorted_periods.len() {
@@ -409,7 +409,7 @@ where
             if i != j && !used[j] {
                 let (other_period_) = sorted_periods[j];
 
-                // Check if other_period is a harmonic (multiple or _factor) of period
+                // Check if other_period is a harmonic (multiple or factor) of period
                 if other_period % period == 0 || period % other_period == 0 {
                     used[j] = true;
                 }

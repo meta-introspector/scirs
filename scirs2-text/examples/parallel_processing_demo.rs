@@ -218,7 +218,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn create_testtexts(_size: usize) -> Vec<String> {
+fn create_testtexts(size: usize) -> Vec<String> {
     // Sample text fragments to combine randomly
     let subjects = [
         "Machine learning",

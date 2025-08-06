@@ -345,9 +345,9 @@ impl VisualizationMetadata {
     /// # Arguments
     ///
     /// * `title` - The plot title
-    pub fn new(_title: impl Into<String>) -> Self {
+    pub fn new(title: impl Into<String>) -> Self {
         Self {
-            _title: _title.into(),
+            title: title.into(),
             x_label: "X".to_string(),
             y_label: "Y".to_string(),
             plot_type: PlotType::Line,
@@ -360,7 +360,7 @@ impl VisualizationMetadata {
     /// # Arguments
     ///
     /// * `plot_type` - The plot type
-    pub fn set_plot_type(&mut self, plot_type: PlotType) {
+    pub fn set_plot_type(&mut self, plottype: PlotType) {
         self.plot_type = plot_type;
     }
 
@@ -369,7 +369,7 @@ impl VisualizationMetadata {
     /// # Arguments
     ///
     /// * `x_label` - The x-axis label
-    pub fn set_x_label(&mut self, x_label: impl Into<String>) {
+    pub fn set_x_label(&mut self, xlabel: impl Into<String>) {
         self.x_label = x_label.into();
     }
 
@@ -378,7 +378,7 @@ impl VisualizationMetadata {
     /// # Arguments
     ///
     /// * `y_label` - The y-axis label
-    pub fn set_y_label(&mut self, y_label: impl Into<String>) {
+    pub fn set_y_label(&mut self, ylabel: impl Into<String>) {
         self.y_label = y_label.into();
     }
 
@@ -609,7 +609,7 @@ impl VisualizationOptions {
     /// # Arguments
     ///
     /// * `color_map` - The color map
-    pub fn with_color_map(mut self, color_map: ColorMap) -> Self {
+    pub fn with_color_map(mut self, colormap: ColorMap) -> Self {
         self.color_map = Some(color_map);
         self
     }
@@ -619,7 +619,7 @@ impl VisualizationOptions {
     /// # Arguments
     ///
     /// * `show_grid` - Whether to show grid
-    pub fn with_grid(mut self, show_grid: bool) -> Self {
+    pub fn with_grid(mut self, showgrid: bool) -> Self {
         self.show_grid = show_grid;
         self
     }
@@ -629,7 +629,7 @@ impl VisualizationOptions {
     /// # Arguments
     ///
     /// * `show_legend` - Whether to show legend
-    pub fn with_legend(mut self, show_legend: bool) -> Self {
+    pub fn with_legend(mut self, showlegend: bool) -> Self {
         self.show_legend = show_legend;
         self
     }
@@ -658,7 +658,7 @@ impl VisualizationOptions {
     /// # Arguments
     ///
     /// * `line_width` - The line width
-    pub fn with_line_width(mut self, line_width: f64) -> Self {
+    pub fn with_line_width(mut self, linewidth: f64) -> Self {
         self.line_width = Some(line_width);
         self
     }
@@ -668,7 +668,7 @@ impl VisualizationOptions {
     /// # Arguments
     ///
     /// * `marker_size` - The marker size
-    pub fn with_marker_size(mut self, marker_size: f64) -> Self {
+    pub fn with_marker_size(mut self, markersize: f64) -> Self {
         self.marker_size = Some(marker_size);
         self
     }
@@ -678,7 +678,7 @@ impl VisualizationOptions {
     /// # Arguments
     ///
     /// * `show_colorbar` - Whether to show colorbar
-    pub fn with_colorbar(mut self, show_colorbar: bool) -> Self {
+    pub fn with_colorbar(mut self, showcolorbar: bool) -> Self {
         self.show_colorbar = show_colorbar;
         self
     }
@@ -688,7 +688,7 @@ impl VisualizationOptions {
     /// # Arguments
     ///
     /// * `color_palette` - The color palette name
-    pub fn with_color_palette(mut self, color_palette: impl Into<String>) -> Self {
+    pub fn with_color_palette(mut self, colorpalette: impl Into<String>) -> Self {
         self.color_palette = Some(color_palette.into());
         self
     }

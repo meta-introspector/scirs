@@ -24,8 +24,8 @@ pub struct Complex {
 }
 
 impl Complex {
-    pub fn new(_real: f64, imag: f64) -> Self {
-        Self { real: _real, imag }
+    pub fn new(real: f64, imag: f64) -> Self {
+        Self { real: real, imag }
     }
 
     pub fn magnitude(&self) -> f64 {
@@ -97,7 +97,7 @@ pub struct QuantumState {
 
 impl QuantumState {
     /// Create new quantum state with random superposition
-    pub fn new(_num_params: usize, num_basis_states: usize) -> Self {
+    pub fn new(_num_params: usize, num_basisstates: usize) -> Self {
         let num_qubits = (num_basis_states as f64).log2().ceil() as usize;
         let actual_states = 1 << num_qubits;
 
@@ -122,7 +122,7 @@ impl QuantumState {
         });
 
         // Initialize entanglement matrix
-        let entanglement_matrix = Array2::fromshape_fn((_num_params, _num_params), |(i, j)| {
+        let entanglement_matrix = Array2::fromshape_fn((_num_params, num_params), |(i, j)| {
             if i == j {
                 Complex::new(1.0, 0.0)
             } else {
@@ -173,7 +173,7 @@ impl QuantumState {
     }
 
     /// Apply quantum evolution based on objective function landscape
-    pub fn evolve(&mut self, objective_gradients: &Array1<f64>, dt: f64) -> OptimizeResult<()> {
+    pub fn evolve(&mut self, objectivegradients: &Array1<f64>, dt: f64) -> OptimizeResult<()> {
         self.evolution_time += dt;
 
         // Compute Hamiltonian from objective landscape
@@ -300,7 +300,7 @@ impl QuantumState {
         Ok(())
     }
 
-    fn update_entanglement(&mut self, objective_gradients: &Array1<f64>) -> OptimizeResult<()> {
+    fn update_entanglement(&mut self, objectivegradients: &Array1<f64>) -> OptimizeResult<()> {
         let n_params = self.entanglement_matrix.nrows();
 
         // Update entanglement based on gradient correlations
@@ -325,7 +325,7 @@ impl QuantumState {
     }
 
     /// Apply quantum superposition principle to explore multiple states
-    pub fn create_superposition(&mut self, exploration_radius: f64) -> OptimizeResult<()> {
+    pub fn create_superposition(&mut self, explorationradius: f64) -> OptimizeResult<()> {
         let n_states = self.basis_states.nrows();
         let n_params = self.basis_states.ncols();
 
@@ -412,18 +412,18 @@ pub enum CoolingSchedule {
 }
 
 impl QuantumAnnealingSchedule {
-    pub fn new(_initial_temp: f64, final_temp: f64, schedule: CoolingSchedule) -> Self {
+    pub fn new(_initial_temp: f64, finaltemp: f64, schedule: CoolingSchedule) -> Self {
         Self {
-            initial_temperature: _initial_temp,
+            initial_temperature: initial_temp,
             final_temperature: final_temp,
-            current_temperature: _initial_temp,
+            current_temperature: initial_temp,
             progress: 0.0,
             schedule_type: schedule,
             quantum_fluctuation: 1.0,
         }
     }
 
-    pub fn update(&mut self, iteration: usize, max_nit: usize, energy_change: f64) {
+    pub fn update(&mut self, iteration: usize, max_nit: usize, energychange: f64) {
         self.progress = iteration as f64 / max_nit as f64;
 
         self.current_temperature = match self.schedule_type {
@@ -449,7 +449,7 @@ impl QuantumAnnealingSchedule {
             1.0 - self.progress + 0.1 * (2.0 * PI * self.progress * 10.0).sin();
     }
 
-    pub fn should_accept(&self, energy_delta: f64) -> bool {
+    pub fn should_accept(&self, energydelta: f64) -> bool {
         if energy_delta <= 0.0 {
             true // Always accept improvements
         } else {
@@ -740,7 +740,7 @@ where
     // Create quantum-enhanced _particles
     for _ in 0..num_particles {
         let mut particle_optimizer = QuantumInspiredOptimizer::new(initial_params, max_nit, 8);
-        _particles.push(particle_optimizer);
+        particles.push(particle_optimizer);
     }
 
     let mut global_best_solution = initial_params.to_owned();

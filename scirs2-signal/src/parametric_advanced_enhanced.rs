@@ -14,7 +14,7 @@ use ndarray::s;
 use crate::error::{SignalError, SignalResult};
 use crate::parametric_advanced::compute_eigendecomposition;
 use crate::sysid::{detect_outliers, estimate_robust_scale};
-use ndarray::{ Array1, Array2, ArrayView1};
+use ndarray::{Array1, Array2, ArrayView1};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rand::Rng;
@@ -157,7 +157,7 @@ impl Default for AdvancedEnhancedConfig {
 /// let signal: Array1<f64> = t.mapv(|ti| {
 ///     (2.0 * PI * 5.0 * ti).sin() +
 ///     0.5 * (2.0 * PI * 15.0 * ti).sin() +
-///     0.1 * rng.random_range(-1.0..1.0)
+///     0.1 * rng.gen_range(-1.0..1.0)
 /// });
 ///
 /// let config = AdvancedEnhancedConfig::default();
@@ -224,7 +224,7 @@ where
 
     // Step 1: Initial AR parameter estimation using enhanced Burg method
     let simd_start = std::time::Instant::now();
-    let (initial_ar_coeffs_reflection_coeffs, ar_variance) = if use_advanced_simd {
+    let (initial_ar_coeffs, ar_variance) = if use_advanced_simd {
         enhanced_burg_method_simd(&signal_f64, ar_order, config)?
     } else {
         enhanced_burg_method_standard(&signal_f64, ar_order, config)?
@@ -1049,7 +1049,7 @@ fn enhanced_arma_estimation_sequential(
 
     let mut ar_coeffs = initial_ar_coeffs.clone();
     let mut residuals = compute_ar_residuals(signal, &ar_coeffs)?;
-    let mut noise_variance = residuals.variance();
+    let mut noise_variance = residuals.clone().variance();
 
     let mut convergence_history = Vec::new();
     let mut converged = false;
@@ -1066,7 +1066,7 @@ fn enhanced_arma_estimation_sequential(
 
         // Step 3: Compute residuals and variance
         residuals = compute_arma_residuals(signal, &ar_coeffs, &ma_coeffs)?;
-        noise_variance = residuals.variance();
+        noise_variance = residuals.clone().variance();
 
         // Check convergence
         let variance_change =
@@ -1132,7 +1132,7 @@ fn estimate_ar_given_ma(
 ) -> SignalResult<Array1<f64>> {
     // For simplicity, use least squares method
     // In practice, this would involve more sophisticated estimation
-    crate::parametric::least_squares_method(signal, ar_order).map(|(ar_coeffs__)| ar_coeffs)
+    crate::parametric::least_squares_method(signal, ar_order).map(|(ar_coeffs__)| ar_coeffs__)
 }
 
 /// Estimate MA parameters from residuals
@@ -1165,10 +1165,10 @@ fn estimate_ma_from_residuals(
 
 /// Compute autocorrelation function
 #[allow(dead_code)]
-fn compute_autocorrelation(_signal: &Array1<f64>, max_lag: usize) -> SignalResult<Array1<f64>> {
-    let n = _signal.len();
-    let mean = _signal.mean().unwrap_or(0.0);
-    let variance = _signal.variance();
+fn compute_autocorrelation(_signal: &Array1<f64>, maxlag: usize) -> SignalResult<Array1<f64>> {
+    let n = signal.len();
+    let mean = signal.mean().unwrap_or(0.0);
+    let variance = signal.variance();
 
     if variance < 1e-12 {
         return Ok(Array1::zeros(max_lag + 1));
@@ -1182,7 +1182,7 @@ fn compute_autocorrelation(_signal: &Array1<f64>, max_lag: usize) -> SignalResul
         }
 
         let mut sum = 0.0;
-        let valid_length = n - _lag;
+        let valid_length = n - lag;
 
         for i in 0..valid_length {
             sum += (_signal[i] - mean) * (_signal[i + _lag] - mean);
@@ -1328,9 +1328,9 @@ fn compute_basic_diagnostics(
 
 /// Check if ARMA model is stable (roots inside unit circle)
 #[allow(dead_code)]
-fn check_model_stability(_ar_coeffs: &Array1<f64>, ma_coeffs: &Array1<f64>) -> SignalResult<bool> {
+fn check_model_stability(_ar_coeffs: &Array1<f64>, macoeffs: &Array1<f64>) -> SignalResult<bool> {
     // Check AR polynomial roots
-    let ar_stable = if _ar_coeffs.len() > 1 {
+    let ar_stable = if ar_coeffs.len() > 1 {
         check_polynomial_stability(&_ar_coeffs.slice(s![1..]).to_owned())?
     } else {
         true
@@ -1348,14 +1348,14 @@ fn check_model_stability(_ar_coeffs: &Array1<f64>, ma_coeffs: &Array1<f64>) -> S
 
 /// Check if polynomial roots are inside unit circle
 #[allow(dead_code)]
-fn check_polynomial_stability(_coeffs: &Array1<f64>) -> SignalResult<bool> {
-    if _coeffs.is_empty() {
+fn check_polynomial_stability(coeffs: &Array1<f64>) -> SignalResult<bool> {
+    if coeffs.is_empty() {
         return Ok(true);
     }
 
     // For now, use a simple heuristic - full implementation would compute actual roots
     // Check if sum of absolute coefficients < 1 (sufficient but not necessary condition)
-    let coeff_sum: f64 = _coeffs.iter().map(|x| x.abs()).sum();
+    let coeff_sum: f64 = coeffs.iter().map(|x| x.abs()).sum();
     Ok(coeff_sum < 1.0)
 }
 
@@ -1388,12 +1388,12 @@ fn estimate_condition_number(
 
 /// Compute Ljung-Box test for residual autocorrelation
 #[allow(dead_code)]
-fn compute_ljung_box_test(_residuals: &Array1<f64>, max_lag: usize) -> Option<f64> {
+fn compute_ljung_box_test(_residuals: &Array1<f64>, maxlag: usize) -> Option<f64> {
     // Simplified implementation - full version would use proper statistical test
     let autocorr = compute_autocorrelation(_residuals, max_lag).ok()?;
 
     // Compute test statistic
-    let n = _residuals.len() as f64;
+    let n = residuals.len() as f64;
     let mut test_stat = 0.0;
 
     for _lag in 1..=max_lag.min(autocorr.len() - 1) {
@@ -1409,7 +1409,7 @@ fn compute_ljung_box_test(_residuals: &Array1<f64>, max_lag: usize) -> Option<f6
 
 /// Estimate memory usage in MB
 #[allow(dead_code)]
-fn estimate_memory_usage(n: usize, ar_order: usize, ma_order: usize) -> f64 {
+fn estimate_memory_usage(n: usize, ar_order: usize, maorder: usize) -> f64 {
     let floats_used = n * 4 + ar_order + ma_order + 100; // Rough estimate
     (floats_used * 8) as f64 / (1024.0 * 1024.0) // Convert to MB
 }
@@ -2137,7 +2137,7 @@ fn compute_arma_psd(
 ///
 /// * Frequency vector
 #[allow(dead_code)]
-fn generate_frequency_grid(_n_freqs: usize, fs: f64) -> Vec<f64> {
+fn generate_frequency_grid(_nfreqs: usize, fs: f64) -> Vec<f64> {
     let nyquist = fs / 2.0;
     (0.._n_freqs)
         .map(|i| i as f64 * nyquist / (_n_freqs - 1) as f64)
@@ -2326,10 +2326,10 @@ fn normal_inverse_cdf(p: f64) -> f64 {
 ///
 /// * Vector of eigenvalues
 #[allow(dead_code)]
-fn extract_taper_eigenvalues(_tapers: &Array2<f64>, nw: f64) -> SignalResult<Array1<f64>> {
-    let k = _tapers.nrows();
+fn extract_taper_eigenvalues(tapers: &Array2<f64>, nw: f64) -> SignalResult<Array1<f64>> {
+    let k = tapers.nrows();
 
-    // For DPSS _tapers, eigenvalues are approximately given by
+    // For DPSS tapers, eigenvalues are approximately given by
     // the concentration ratio λ_k ≈ (1 + cos(πk/(2NW+1))) / 2
     let mut eigenvalues = Vec::with_capacity(k);
 
@@ -2445,8 +2445,8 @@ fn esprit_frequency_estimation(
 
 /// TODO: Implement Hankel matrix creation
 #[allow(dead_code)]
-fn create_hankel_matrix(_signal: &[f64], subspace_dimension: usize) -> SignalResult<Array2<f64>> {
-    let n = _signal.len();
+fn create_hankel_matrix(_signal: &[f64], subspacedimension: usize) -> SignalResult<Array2<f64>> {
+    let n = signal.len();
     if n < subspace_dimension {
         return Err(SignalError::ValueError(
             "Signal too short for Hankel matrix".to_string(),
@@ -2460,7 +2460,7 @@ fn create_hankel_matrix(_signal: &[f64], subspace_dimension: usize) -> SignalRes
     for i in 0..rows {
         for j in 0..subspace_dimension {
             if i + j < n {
-                hankel[[i, j]] = _signal[i + j];
+                hankel[[i, j]] = signal[i + j];
             }
         }
     }
@@ -2470,8 +2470,8 @@ fn create_hankel_matrix(_signal: &[f64], subspace_dimension: usize) -> SignalRes
 
 /// TODO: Implement sample covariance computation
 #[allow(dead_code)]
-fn compute_sample_covariance(_data_matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
-    let (rows, cols) = _data_matrix.dim();
+fn compute_sample_covariance(_datamatrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
+    let (rows, cols) = data_matrix.dim();
     let mut covariance = Array2::zeros((cols, cols));
 
     // Simple covariance estimation
@@ -2479,7 +2479,7 @@ fn compute_sample_covariance(_data_matrix: &Array2<f64>) -> SignalResult<Array2<
         for j in 0..cols {
             let mut sum = 0.0;
             for k in 0..rows {
-                sum += _data_matrix[[k, i]] * _data_matrix[[k, j]];
+                sum += data_matrix[[k, i]] * data_matrix[[k, j]];
             }
             covariance[[i, j]] = sum / rows as f64;
         }

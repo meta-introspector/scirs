@@ -78,7 +78,7 @@ pub struct DistributedGpuOptimizer<M: MPIInterface> {
 
 impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     /// Create a new distributed GPU optimizer
-    pub fn new(_mpi: M, config: DistributedGpuConfig) -> ScirsResult<Self> {
+    pub fn new(mpi: M, config: DistributedGpuConfig) -> ScirsResult<Self> {
         let distributed_context =
             DistributedOptimizationContext::new(_mpi, config.distributed_config.clone());
         let gpu_context = GpuOptimizationContext::new(config.gpu_config.clone())?;
@@ -243,7 +243,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
                 fun: best_fitness,
                 success: true,
                 message: "Distributed GPU differential evolution completed".to_string(),
-                _nit: max_nit,
+                nit: max_nit,
                 nfev: total_evaluations,
                 ..OptimizeResults::default()
             },
@@ -493,7 +493,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     }
 
     /// Generate random indices for differential evolution mutation
-    fn generate_random_indices(&self, pop_size: usize) -> ScirsResult<Array2<i32>> {
+    fn generate_random_indices(&self, popsize: usize) -> ScirsResult<Array2<i32>> {
         use rand::Rng;
         let mut rng = rand::rng();
         let mut indices = Array2::zeros((pop_size, 3));
@@ -531,7 +531,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     }
 
     /// Generate j_rand values for crossover
-    fn generate_j_rand(&self, pop_size: usize, dims: usize) -> ScirsResult<Array1<i32>> {
+    fn generate_j_rand(&self, popsize: usize, dims: usize) -> ScirsResult<Array1<i32>> {
         use rand::Rng;
         let mut rng = rand::rng();
         let mut j_rand = Array1::zeros(pop_size);

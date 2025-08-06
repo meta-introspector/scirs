@@ -233,7 +233,7 @@ fn main() {
     println!("{}", column_std);
 
     // Z-score standardization (subtract mean, divide by std)
-    let mut standardized = Array::<f64>::zeros(measurements.raw_dim());
+    let mut standardized = Array2::<f64>::zeros(measurements.raw_dim());
     for i in 0..measurements.shape()[0] {
         for j in 0..measurements.shape()[1] {
             standardized[[i, j]] = (measurements[[i, j]] - column_means[j]) / column_std[j];
@@ -247,7 +247,7 @@ fn main() {
 
     // Calculate correlation matrix (simplified example)
     let n_cols = measurements.shape()[1];
-    let mut corr = Array::<f64>::zeros((n_cols, n_cols));
+    let mut corr = Array2::<f64>::zeros((n_cols, n_cols));
 
     for i in 0..n_cols {
         for j in 0..n_cols {

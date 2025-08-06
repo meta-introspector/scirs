@@ -1,4 +1,4 @@
-use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -231,7 +231,7 @@ pub fn get_bin_seeds<T: Float + Display + FromPrimitive + Send + Sync + 'static>
     // Select only bins with enough points
     let seeds: Vec<Vec<T>> = bin_sizes
         .into_iter()
-        .filter(|(_, _freq)| *_freq >= min_bin_freq)
+        .filter(|(_, freq)| *_freq >= min_bin_freq)
         .map(|(point_)| point.0)
         .collect();
 
@@ -413,9 +413,9 @@ impl<
     > MeanShift<T>
 {
     /// Create a new Mean Shift instance with the given options.
-    pub fn new(_options: MeanShiftOptions<T>) -> Self {
+    pub fn new(options: MeanShiftOptions<T>) -> Self {
         Self {
-            _options,
+            options,
             cluster_centers_: None,
             labels_: None,
             n_iter_: 0,

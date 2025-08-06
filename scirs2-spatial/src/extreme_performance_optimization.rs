@@ -923,9 +923,9 @@ impl ExtremeMemoryAllocator {
 
 impl AdvancedfastDistanceMatrix {
     /// Create new advancedfast distance matrix computer
-    pub fn new(_optimizer: ExtremeOptimizer) -> Self {
+    pub fn new(optimizer: ExtremeOptimizer) -> Self {
         Self {
-            optimizer: _optimizer,
+            optimizer: optimizer,
             vectorized_kernels: VectorizedKernels {
                 avx512_kernels: HashMap::new(),
                 avx2_kernels: HashMap::new(),
@@ -1115,12 +1115,12 @@ impl AdvancedfastDistanceMatrix {
         // Use iterative implementation to avoid stack overflow
         let mut stack = vec![(start_row, start_col, height, width)];
 
-        while let Some((_row, _col, h, w)) = stack.pop() {
+        while let Some((_row, col, h, w)) = stack.pop() {
             // Base case: small enough to fit in cache
             if h <= 32 || w <= 32 {
                 // Apply direct optimization for small blocks
-                for i in _row..(_row + h) {
-                    for j in _col..(_col + w) {
+                for i in row..(_row + h) {
+                    for j in col..(_col + w) {
                         if i < matrix.nrows() && j < matrix.ncols() {
                             // Apply cache-friendly computation pattern
                             std::hint::black_box(&matrix[[i, j]]); // Cache-optimized access
@@ -1136,9 +1136,9 @@ impl AdvancedfastDistanceMatrix {
 
             // Push quadrants in reverse Z-order (so they're processed in correct order)
             stack.push((_row + mid_row, _col + mid_col, h - mid_row, w - mid_col));
-            stack.push((_row + mid_row, _col, h - mid_row, mid_col));
+            stack.push((_row + mid_row, col, h - mid_row, mid_col));
             stack.push((_row, _col + mid_col, mid_row, w - mid_col));
-            stack.push((_row, _col, mid_row, mid_col));
+            stack.push((_row, col, mid_row, mid_col));
         }
 
         Ok(())
@@ -1243,13 +1243,13 @@ impl AdvancedfastDistanceMatrix {
     }
 
     /// Apply branch-free thresholding and normalization operations
-    async fn apply_branch_free_thresholding(_matrix: &mut Array2<f64>) -> SpatialResult<()> {
-        let (rows, cols) = _matrix.dim();
+    async fn apply_branch_free_thresholding(matrix: &mut Array2<f64>) -> SpatialResult<()> {
+        let (rows, cols) = matrix.dim();
 
         // Branch-free operations using arithmetic instead of conditionals
         for i in 0..rows {
             for j in 0..cols {
-                let val = _matrix[[i, j]];
+                let val = matrix[[i, j]];
 
                 // Branch-free clamping: clamp(val, 0.0, 1000.0)
                 let clamped = val.clamp(0.0, 1000.0);
@@ -1261,7 +1261,7 @@ impl AdvancedfastDistanceMatrix {
                     0.0
                 };
 
-                _matrix[[i, j]] = normalized;
+                matrix[[i, j]] = normalized;
             }
         }
 
@@ -1269,11 +1269,11 @@ impl AdvancedfastDistanceMatrix {
     }
 
     /// Apply lock-free optimization
-    async fn apply_lock_free_optimization(&self, _matrix: &mut Array2<f64>) -> SpatialResult<()> {
+    async fn apply_lock_free_optimization(&self, matrix: &mut Array2<f64>) -> SpatialResult<()> {
         use std::sync::atomic::AtomicU64;
         use std::sync::Arc;
 
-        let (rows, cols) = _matrix.dim();
+        let (rows, cols) = matrix.dim();
 
         // Implement lock-free parallel _matrix operations using atomic operations
         // and work-stealing algorithms for maximum scalability
@@ -1306,12 +1306,12 @@ impl AdvancedfastDistanceMatrix {
 
                     if i < rows && j < cols {
                         // Apply lock-free atomic-like operations on floating point values
-                        let current_val = _matrix[[i, j]];
+                        let current_val = matrix[[i, j]];
 
                         // Simulate compare-and-swap optimization
                         let optimized_val =
                             AdvancedfastDistanceMatrix::lock_free_optimize_value(current_val);
-                        _matrix[[i, j]] = optimized_val;
+                        matrix[[i, j]] = optimized_val;
                     }
                 }
 
@@ -1340,9 +1340,9 @@ impl AdvancedfastDistanceMatrix {
     }
 
     /// Lock-free value optimization using atomic-like operations
-    fn lock_free_optimize_value(_value: f64) -> f64 {
+    fn lock_free_optimize_value(value: f64) -> f64 {
         // Apply branchless optimization functions
-        let abs_val = _value.abs();
+        let abs_val = value.abs();
         let sign = if _value >= 0.0 { 1.0 } else { -1.0 };
 
         // Lock-free smoothing function
@@ -1391,9 +1391,9 @@ impl AdvancedfastDistanceMatrix {
 
 impl SelfOptimizingAlgorithm {
     /// Create new self-optimizing algorithm
-    pub fn new(_algorithm_type: &str) -> Self {
+    pub fn new(_algorithmtype: &str) -> Self {
         Self {
-            algorithm_type: _algorithm_type.to_string(),
+            algorithm_type: algorithm_type.to_string(),
             hardware_feedback: false,
             runtime_codegen: false,
             adaptive_memory: false,
@@ -1521,14 +1521,14 @@ impl SelfOptimizingAlgorithm {
     }
 
     /// Generate optimized code
-    async fn generate_optimized_code(&mut self, _data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
-        let _ = _data; // Placeholder
+    async fn generate_optimized_code(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
+        let _ = data; // Placeholder
         Ok(())
     }
 
     /// Optimize memory patterns
-    async fn optimize_memory_patterns(&mut self, _data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
-        let _ = _data; // Placeholder
+    async fn optimize_memory_patterns(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
+        let _ = data; // Placeholder
         Ok(())
     }
 

@@ -96,8 +96,8 @@ struct VariableBlock {
 }
 
 impl AdvancedScaleState {
-    fn new(_x0: Array1<f64>, options: &AdvancedScaleOptions) -> Result<Self, OptimizeError> {
-        let n = _x0.len();
+    fn new(x0: Array1<f64>, options: &AdvancedScaleOptions) -> Result<Self, OptimizeError> {
+        let n = x0.len();
 
         // Determine storage strategy
         let variables = if options.use_disk_storage || n > options.mmap_threshold {
@@ -189,10 +189,10 @@ impl AdvancedScaleState {
     }
 
     /// Update variables (writing to disk if necessary)
-    fn update_variables(&mut self, new_x: &Array1<f64>) -> Result<(), OptimizeError> {
+    fn update_variables(&mut self, newx: &Array1<f64>) -> Result<(), OptimizeError> {
         match &mut self.variables {
             VariableStorage::Memory(_x) => {
-                _x.assign(new_x);
+                x.assign(new_x);
                 Ok(())
             }
             VariableStorage::Disk {
@@ -213,7 +213,7 @@ impl AdvancedScaleState {
                     .as_slice()
                     .unwrap()
                     .iter()
-                    .flat_map(|&_x| _x.to_le_bytes())
+                    .flat_map(|&_x| x.to_le_bytes())
                     .collect();
 
                 file.seek(SeekFrom::Start(0)).map_err(|e| {
@@ -241,7 +241,7 @@ impl Drop for AdvancedScaleState {
 
 /// Create variable blocks for progressive processing
 #[allow(dead_code)]
-fn create_variable_blocks(n: usize, block_size: usize) -> Vec<VariableBlock> {
+fn create_variable_blocks(n: usize, blocksize: usize) -> Vec<VariableBlock> {
     let mut blocks = Vec::new();
     let num_blocks = n.div_ceil(block_size);
 
@@ -252,7 +252,7 @@ fn create_variable_blocks(n: usize, block_size: usize) -> Vec<VariableBlock> {
 
         blocks.push(VariableBlock {
             start_idx,
-            _size,
+            size,
             priority: 1.0, // Initial priority
             last_updated: 0,
         });
@@ -424,7 +424,7 @@ where
 
 /// Update block priorities based on gradient magnitude
 #[allow(dead_code)]
-fn update_block_priorities(_blocks: &mut [VariableBlock], gradient: &CsrArray<f64>) {
+fn update_block_priorities(blocks: &mut [VariableBlock], gradient: &CsrArray<f64>) {
     for block in _blocks {
         // Compute average gradient magnitude in this block
         let mut total_grad_mag = 0.0;

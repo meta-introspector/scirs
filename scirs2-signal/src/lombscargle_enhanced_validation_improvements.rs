@@ -124,7 +124,7 @@ pub fn validate_bootstrap_confidence_intervals(
         let mut bootstrap_time = vec![0.0; n];
 
         for i in 0..n {
-            let idx = rng.random_range(0..n);
+            let idx = rng.gen_range(0..n);
             bootstrap_signal[i] = signal[idx];
             bootstrap_time[i] = time[idx];
         }
@@ -263,10 +263,8 @@ pub fn analyze_numerical_precision(
     };
 
     Ok(PrecisionAnalysisResult {
-        f32,
-        _f64_max_error: max_error,
-        f32,
-        _f64_mean_error: mean_error,
+        f32_f64_max_error: max_error,
+        f32_f64_mean_error: mean_error,
         precision_loss_bits,
         stability_score,
         cancellation_events,
@@ -286,7 +284,7 @@ pub fn analyze_memory_performance(
     for &size in signal_sizes {
         // Generate test signal
         let mut rng = rand::rng();
-        let signal: Vec<f64> = (0..size).map(|_| rng.random_range(-1.0..1.0)).collect();
+        let signal: Vec<f64> = (0..size).map(|_| rng.gen_range(-1.0..1.0)).collect();
         let time: Vec<f64> = (0..size).map(|i| i as f64).collect();
 
         for iter in 0..test_iterations {
@@ -377,7 +375,7 @@ pub fn analyze_statistical_power(
                 .iter()
                 .map(|&t| {
                     signal_amplitude * (2.0 * PI * target_frequency * t).sin()
-                        + noise_std * rng.random_range(-1.0..1.0)
+                        + noise_std * rng.gen_range(-1.0..1.0)
                 })
                 .collect();
 
@@ -428,7 +426,7 @@ pub fn analyze_statistical_power(
     let minimum_effect_size = power_curve
         .iter()
         .find(|(_, power)| *power >= 0.5)
-        .map(|(snr_)| *snr)
+        .map(|(snr, _)| *snr)
         .unwrap_or(0.0);
 
     let calibration_score = 100.0 - (type_i_error_rate + type_ii_error_rate) * 50.0;
@@ -539,8 +537,8 @@ fn compute_bootstrap_coverage(
 }
 
 #[allow(dead_code)]
-fn compute_bootstrap_bias(_bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
-    if _bootstrap_powers.is_empty() {
+fn compute_bootstrap_bias(bootstrappowers: &[Vec<f64>]) -> SignalResult<f64> {
+    if bootstrap_powers.is_empty() {
         return Ok(0.0);
     }
 
@@ -558,8 +556,8 @@ fn compute_bootstrap_bias(_bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn compute_bootstrap_variance(_bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
-    if _bootstrap_powers.is_empty() {
+fn compute_bootstrap_variance(bootstrappowers: &[Vec<f64>]) -> SignalResult<f64> {
+    if bootstrap_powers.is_empty() {
         return Ok(0.0);
     }
 
@@ -578,8 +576,8 @@ fn compute_bootstrap_variance(_bootstrap_powers: &[Vec<f64>]) -> SignalResult<f6
 }
 
 #[allow(dead_code)]
-fn compute_consistency_score(_bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
-    if _bootstrap_powers.len() < 2 {
+fn compute_consistency_score(bootstrappowers: &[Vec<f64>]) -> SignalResult<f64> {
+    if bootstrap_powers.len() < 2 {
         return Ok(0.0);
     }
 
@@ -598,8 +596,8 @@ fn compute_consistency_score(_bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64
 }
 
 #[allow(dead_code)]
-fn compute_percentile_interval(_values: &[f64], confidence_level: f64) -> (f64, f64) {
-    let mut sorted_values = _values.to_vec();
+fn compute_percentile_interval(_values: &[f64], confidencelevel: f64) -> (f64, f64) {
+    let mut sorted_values = values.to_vec();
     sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let alpha = 1.0 - confidence_level;
@@ -610,8 +608,8 @@ fn compute_percentile_interval(_values: &[f64], confidence_level: f64) -> (f64, 
 }
 
 #[allow(dead_code)]
-fn compute_median(_values: &[f64]) -> f64 {
-    let mut sorted_values = _values.to_vec();
+fn compute_median(values: &[f64]) -> f64 {
+    let mut sorted_values = values.to_vec();
     sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let n = sorted_values.len();
@@ -978,7 +976,7 @@ fn benchmark_lombscargle_performance(
 
 /// Analyze memory efficiency
 #[allow(dead_code)]
-fn analyze_memory_efficiency(_signal_length: usize) -> SignalResult<MemoryPerformanceResult> {
+fn analyze_memory_efficiency(_signallength: usize) -> SignalResult<MemoryPerformanceResult> {
     // Estimate memory usage based on signal _length
     let estimated_memory = _signal_length * 16; // Rough estimate: 2 f64 arrays
     let efficiency_score = if estimated_memory < 1_000_000 {
@@ -1000,14 +998,14 @@ fn analyze_memory_efficiency(_signal_length: usize) -> SignalResult<MemoryPerfor
 
 /// Validate SIMD vs scalar consistency
 #[allow(dead_code)]
-fn validate_simd_scalar_consistency(_signal: &[f64], time: &[f64]) -> SignalResult<f64> {
+fn validate_simd_scalar_consistency(signal: &[f64], time: &[f64]) -> SignalResult<f64> {
     // For now, return a high score as we'd need actual SIMD implementation to test
     // In a real implementation, this would compare SIMD-accelerated vs scalar versions
     let consistency_score = 95.0;
 
     // Basic validation that the _signal processing doesn't fail
     match lombscargle(
-        _signal,
+        signal,
         time,
         None,
         Some("standard"),

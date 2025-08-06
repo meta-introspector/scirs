@@ -44,23 +44,23 @@ pub struct GpuError(String);
 
 #[cfg(not(feature = "gpu"))]
 impl GpuError {
-    pub fn new(_msg: &str) -> Self {
+    pub fn new(msg: &str) -> Self {
         Self(_msg.to_string())
     }
 
-    pub fn invalid_buffer(_msg: String) -> Self {
+    pub fn invalid_buffer(msg: String) -> Self {
         Self(_msg)
     }
 
-    pub fn invalid_parameter(_msg: String) -> Self {
+    pub fn invalid_parameter(msg: String) -> Self {
         Self(_msg)
     }
 
-    pub fn kernel_compilation_error(_msg: String) -> Self {
+    pub fn kernel_compilation_error(msg: String) -> Self {
         Self(_msg)
     }
 
-    pub fn other(_msg: String) -> Self {
+    pub fn other(msg: String) -> Self {
         Self(_msg)
     }
 }
@@ -116,7 +116,7 @@ impl<T: Clone + Copy> GpuBuffer<T> {
         self.data.is_empty()
     }
 
-    pub fn copy_from_host(&mut self, host_data: &[T]) -> Result<(), GpuError> {
+    pub fn copy_from_host(&mut self, hostdata: &[T]) -> Result<(), GpuError> {
         if host_data.len() != self.data.len() {
             return Err(GpuError::invalid_parameter(
                 "Host data length does not match buffer length".to_string(),
@@ -157,7 +157,7 @@ pub struct GpuDevice;
 
 #[cfg(feature = "gpu")]
 impl GpuDevice {
-    pub fn get_default(_backend: GpuBackend) -> Result<Self, GpuError> {
+    pub fn get_default(backend: GpuBackend) -> Result<Self, GpuError> {
         let context = GpuContext::new(_backend)?;
         Ok(Self { context })
     }
@@ -281,7 +281,7 @@ impl GpuDevice {
 
 #[cfg(not(feature = "gpu"))]
 impl GpuDevice {
-    pub fn get_default(_backend: GpuBackend) -> Result<Self, GpuError> {
+    pub fn get_default(backend: GpuBackend) -> Result<Self, GpuError> {
         Ok(Self)
     }
 
@@ -436,10 +436,10 @@ pub struct SpMVKernel {
 }
 
 impl SpMVKernel {
-    pub fn new(_device: &GpuDevice, _workgroup_size: [u32; 3]) -> Result<Self, GpuError> {
+    pub fn new(_device: &GpuDevice, _workgroupsize: [u32; 3]) -> Result<Self, GpuError> {
         // Compile GPU kernels for actual hardware acceleration
 
-        match _device.backend() {
+        match device.backend() {
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Cuda => {
                 // Compile CUDA SpMV kernel
@@ -510,7 +510,7 @@ impl SpMVKernel {
                 // Verify kernel compilation succeeded and store handle
                 Ok(Self {
                     kernel_handle: Some(kernel_handle),
-                    backend: _device.backend(),
+                    backend: device.backend(),
                 })
             }
 
@@ -519,7 +519,7 @@ impl SpMVKernel {
                 // GPU-enabled CUDA implementation
                 Ok(Self {
                     kernel_handle: None,
-                    backend: _device.backend(),
+                    backend: device.backend(),
                 })
             }
 
@@ -581,7 +581,7 @@ impl SpMVKernel {
                 // Verify kernel compilation succeeded and store handle
                 Ok(Self {
                     kernel_handle: Some(kernel_handle),
-                    backend: _device.backend(),
+                    backend: device.backend(),
                 })
             }
 
@@ -651,7 +651,7 @@ impl SpMVKernel {
                 // Verify kernel compilation succeeded and store handle
                 Ok(Self {
                     kernel_handle: Some(kernel_handle),
-                    backend: _device.backend(),
+                    backend: device.backend(),
                 })
             }
 
@@ -659,21 +659,21 @@ impl SpMVKernel {
                 // CPU implementation - no kernel handle needed
                 Ok(Self {
                     kernel_handle: None,
-                    backend: _device.backend(),
+                    backend: device.backend(),
                 })
             }
             GpuBackend::Rocm => {
                 // ROCm implementation - no kernel handle needed for fallback
                 Ok(Self {
                     kernel_handle: None,
-                    backend: _device.backend(),
+                    backend: device.backend(),
                 })
             }
             GpuBackend::Wgpu => {
                 // WebGPU implementation - no kernel handle needed for fallback
                 Ok(Self {
                     kernel_handle: None,
-                    backend: _device.backend(),
+                    backend: device.backend(),
                 })
             }
         }
@@ -932,10 +932,10 @@ pub struct SpMSKernel {
 }
 
 impl SpMSKernel {
-    pub fn new(_device: &GpuDevice, _workgroup_size: [u32; 3]) -> Result<Self, GpuError> {
+    pub fn new(_device: &GpuDevice, _workgroupsize: [u32; 3]) -> Result<Self, GpuError> {
         // Compile GPU kernels for advanced sparse operations
 
-        match _device.backend() {
+        match device.backend() {
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Cuda => {
                 // Compile CUDA kernels for sparse matrix-matrix operations
@@ -1047,10 +1047,10 @@ impl SpMSKernel {
                 "#;
 
                 // Attempt to compile CUDA kernels
-                match _device.compile_kernel(cuda_kernel_source, "spmm_csr_kernel") {
+                match device.compile_kernel(cuda_kernel_source, "spmm_csr_kernel") {
                     Ok(kernel_handle) => Ok(Self {
                         kernel_handle: Some(kernel_handle),
-                        backend: _device.backend(),
+                        backend: device.backend(),
                     }),
                     Err(_) => {
                         // Fall back to CPU if CUDA compilation fails
@@ -1066,7 +1066,7 @@ impl SpMSKernel {
                 // GPU-enabled CUDA implementation
                 Ok(Self {
                     kernel_handle: None,
-                    backend: _device.backend(),
+                    backend: device.backend(),
                 })
             }
 
@@ -1156,10 +1156,10 @@ impl SpMSKernel {
                 "#;
 
                 // Attempt to compile OpenCL kernels
-                match _device.compile_kernel(opencl_kernel_source, "spmm_csr_kernel") {
+                match device.compile_kernel(opencl_kernel_source, "spmm_csr_kernel") {
                     Ok(kernel_handle) => Ok(Self {
                         kernel_handle: Some(kernel_handle),
-                        backend: _device.backend(),
+                        backend: device.backend(),
                     }),
                     Err(_) => {
                         // Fall back to CPU if OpenCL compilation fails
@@ -1283,10 +1283,10 @@ impl SpMSKernel {
                 "#;
 
                 // Attempt to compile Metal kernels
-                match _device.compile_kernel(metal_kernel_source, "spmm_csr_kernel") {
+                match device.compile_kernel(metal_kernel_source, "spmm_csr_kernel") {
                     Ok(kernel_handle) => Ok(Self {
                         kernel_handle: Some(kernel_handle),
-                        backend: _device.backend(),
+                        backend: device.backend(),
                     }),
                     Err(_) => {
                         // Fall back to CPU if Metal compilation fails
@@ -1302,21 +1302,21 @@ impl SpMSKernel {
                 // CPU implementation - always succeeds
                 Ok(Self {
                     kernel_handle: None,
-                    backend: _device.backend(),
+                    backend: device.backend(),
                 })
             }
             GpuBackend::Rocm => {
                 // ROCm implementation - no kernel handle needed for fallback
                 Ok(Self {
                     kernel_handle: None,
-                    backend: _device.backend(),
+                    backend: device.backend(),
                 })
             }
             GpuBackend::Wgpu => {
                 // WebGPU implementation - no kernel handle needed for fallback
                 Ok(Self {
                     kernel_handle: None,
-                    backend: _device.backend(),
+                    backend: device.backend(),
                 })
             }
         }
@@ -2252,7 +2252,7 @@ where
 
 /// Check if GPU acceleration should be used
 #[allow(dead_code)]
-fn should_use_gpu(_rows: usize, cols: usize, nnz: usize, options: &GpuOptions) -> bool {
+fn should_use_gpu(rows: usize, cols: usize, nnz: usize, options: &GpuOptions) -> bool {
     // Only use GPU for matrices larger than the threshold
     let matrix_size = std::cmp::max(_rows, cols);
 
@@ -2502,14 +2502,14 @@ where
 
 /// CPU fallback implementation
 #[allow(dead_code)]
-fn cpu_sparse_matvec_fallback<T, S>(_matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+fn cpu_sparse_matvec_fallback<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (rows, cols) = _matrix.shape();
+    let (rows, cols) = matrix.shape();
     let mut result = Array1::zeros(rows);
-    let (row_indices, col_indices, values) = _matrix.find();
+    let (row_indices, col_indices, values) = matrix.find();
 
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         result[i] = result[i] + values[k] * x[j];
@@ -2527,9 +2527,9 @@ pub struct GpuMemoryManager {
 
 impl GpuMemoryManager {
     /// Create a new GPU memory manager
-    pub fn new(_backend: GpuBackend) -> Self {
+    pub fn new(backend: GpuBackend) -> Self {
         Self {
-            backend: _backend,
+            backend: backend,
             allocated_buffers: Vec::new(),
         }
     }
@@ -2547,7 +2547,7 @@ impl GpuMemoryManager {
     }
 
     /// Free GPU memory for a buffer
-    pub fn free_buffer(&mut self, buffer_id: usize) -> Result<(), GpuError> {
+    pub fn free_buffer(&mut self, bufferid: usize) -> Result<(), GpuError> {
         if buffer_id < self.allocated_buffers.len() {
             self.allocated_buffers[buffer_id] = 0;
             Ok(())
@@ -2571,9 +2571,9 @@ pub struct GpuProfiler {
 
 impl GpuProfiler {
     /// Create a new GPU profiler
-    pub fn new(_backend: GpuBackend) -> Self {
+    pub fn new(backend: GpuBackend) -> Self {
         Self {
-            backend: _backend,
+            backend: backend,
             timing_data: Vec::new(),
         }
     }
@@ -2585,7 +2585,7 @@ impl GpuProfiler {
     }
 
     /// Stop timing and record the duration
-    pub fn stop_timer(&mut self, operation: &str, duration_ms: f64) {
+    pub fn stop_timer(&mut self, operation: &str, durationms: f64) {
         if let Some(entry) = self
             .timing_data
             .iter_mut()
@@ -2907,7 +2907,7 @@ pub struct GpuKernelScheduler {
 
 impl GpuKernelScheduler {
     /// Create a new kernel scheduler
-    pub fn new(_backend: GpuBackend) -> Self {
+    pub fn new(backend: GpuBackend) -> Self {
         // In a real implementation, these would be queried from the GPU
         let (available_memory, compute_units, warp_size) = match _backend {
             #[cfg(not(feature = "gpu"))]
@@ -2922,7 +2922,7 @@ impl GpuKernelScheduler {
         };
 
         Self {
-            backend: _backend,
+            backend: backend,
             available_memory,
             compute_units,
             warp_size,
@@ -2930,7 +2930,7 @@ impl GpuKernelScheduler {
     }
 
     /// Calculate optimal workgroup size for a given problem
-    pub fn calculate_optimal_workgroup(&self, _rows: usize, _cols: usize, _nnz: usize) -> [u32; 3] {
+    pub fn calculate_optimal_workgroup(&self, _rows: usize, _cols: usize, nnz: usize) -> [u32; 3] {
         let base_size = self.warp_size as u32;
 
         match self.backend {
@@ -3008,7 +3008,7 @@ pub struct OptimizedGpuOps {
 
 impl OptimizedGpuOps {
     /// Create a new optimized GPU operations handler
-    pub fn new(_backend: GpuBackend) -> Self {
+    pub fn new(backend: GpuBackend) -> Self {
         Self {
             scheduler: GpuKernelScheduler::new(_backend),
             profiler: GpuProfiler::new(_backend),

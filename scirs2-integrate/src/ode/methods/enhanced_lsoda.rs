@@ -87,8 +87,8 @@ impl<F: IntegrateFloat> EnhancedLsodaState<F> {
     }
 
     /// Update tolerance scaling factors
-    fn update_tol_scale(&mut self, _rtol: F, atol: F) {
-        self.tol_scale = calculate_error_weights(&self.y, atol, _rtol);
+    fn update_tol_scale(&mut self, rtol: F, atol: F) {
+        self.tol_scale = calculate_error_weights(&self.y, atol, rtol);
     }
 
     /// Add current state to history
@@ -114,12 +114,12 @@ impl<F: IntegrateFloat> EnhancedLsodaState<F> {
     }
 
     /// Switch method type (between Adams and BDF)
-    fn switch_method(&mut self, _new_method: AdaptiveMethodType) -> IntegrateResult<()> {
+    fn switch_method(&mut self, _newmethod: AdaptiveMethodType) -> IntegrateResult<()> {
         // Let the adaptive state handle the switching logic
-        self.adaptive_state.switch_method(_new_method, self.steps)?;
+        self.adaptive_state.switch_method(_newmethod, self.steps)?;
 
         // Additional state adjustments
-        match _new_method {
+        match _newmethod {
             AdaptiveMethodType::Implicit | AdaptiveMethodType::BDF => {
                 // When switching to BDF, reset Jacobian
                 self.jacobian = None;

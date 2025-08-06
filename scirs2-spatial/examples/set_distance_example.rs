@@ -10,15 +10,15 @@ use scirs2__spatial::set_distance::{
 
 /// Print distance and description
 #[allow(dead_code)]
-fn print_distance(_name: &str, dist: f64, description: &str) {
-    println!("{_name: <25} : {dist:.6}");
+fn print_distance(name: &str, dist: f64, description: &str) {
+    println!("{name: <25} : {dist:.6}");
     println!("{: <25}   {}", "", description);
     println!();
 }
 
 /// Create a nice visual representation of the point sets
 #[allow(dead_code)]
-fn visualize_sets(_set1: &ArrayView2<f64>, set2: &ArrayView2<f64>) {
+fn visualize_sets(set1: &ArrayView2<f64>, set2: &ArrayView2<f64>) {
     let size = 10;
     let mut grid = vec![vec![' '; size]; size];
 
@@ -49,7 +49,7 @@ fn visualize_sets(_set1: &ArrayView2<f64>, set2: &ArrayView2<f64>) {
     }
 
     // Print the grid
-    println!("Visualization (A: _set1, B: set2, X: overlap):");
+    println!("Visualization (A: set1, B: set2, X: overlap):");
     println!("  0123456789");
     println!(" +----------+");
     for (i, row) in grid.iter().enumerate() {

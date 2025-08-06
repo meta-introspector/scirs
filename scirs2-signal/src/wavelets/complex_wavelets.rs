@@ -29,7 +29,7 @@ use std::f64::consts::PI;
 /// let wavelet = morlet(100, 5.0, 1.0).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn morlet(_points: usize, w: f64, s: f64) -> SignalResult<Vec<Complex64>> {
+pub fn morlet(points: usize, w: f64, s: f64) -> SignalResult<Vec<Complex64>> {
     if _points == 0 {
         return Err(SignalError::ValueError(
             "_points must be greater than 0".to_string(),
@@ -179,7 +179,7 @@ pub fn complex_morlet(
 /// let wavelet = paul(100, 4, 1.0).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn paul(_points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex64>> {
+pub fn paul(points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex64>> {
     if _points == 0 {
         return Err(SignalError::ValueError(
             "_points must be greater than 0".to_string(),
@@ -252,7 +252,7 @@ pub fn paul(_points: usize, order: usize, scale: f64) -> SignalResult<Vec<Comple
 /// let wavelet = complex_gaussian(100, 1, 1.0).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn complex_gaussian(_points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex64>> {
+pub fn complex_gaussian(points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex64>> {
     if _points == 0 {
         return Err(SignalError::ValueError(
             "_points must be greater than 0".to_string(),

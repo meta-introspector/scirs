@@ -136,14 +136,14 @@ fn main() {
 
 // Helper function to plot coefficients at a specific level
 #[allow(dead_code)]
-fn plot_coefficients(_coeffs: &[Vec<f64>], level: usize, title: &str) {
+fn plot_coefficients(coeffs: &[Vec<f64>], level: usize, title: &str) {
     let mut plot = Plot::new();
 
     // Create a simple layout with a title
     let layout = Layout::new().title(title);
 
     // Add a trace for each subband
-    for (i, subband) in _coeffs.iter().enumerate() {
+    for (i, subband) in coeffs.iter().enumerate() {
         let x = (0..subband.len()).map(|x| x as f64).collect::<Vec<f64>>();
 
         let trace = Scatter::new(x, subband.clone())

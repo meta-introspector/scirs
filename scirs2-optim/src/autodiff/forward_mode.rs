@@ -111,35 +111,41 @@ enum ForwardOpData<T: Float> {
 
 impl<T: Float + Default + Clone> DualNumber<T> {
     /// Create a new dual number
-    pub fn new(_value: T, tangent: T) -> Self {
-        Self { value: _value, tangent }
+    pub fn new(value: T, tangent: T) -> Self {
+        Self {
+            value: value,
+            tangent,
+        }
     }
 
     /// Create a constant (zero tangent)
-    pub fn constant(_value: T) -> Self {
+    pub fn constant(value: T) -> Self {
         Self::new(_value, T::zero())
     }
 
     /// Create a variable (unit tangent)
-    pub fn variable(_value: T) -> Self {
+    pub fn variable(value: T) -> Self {
         Self::new(_value, T::one())
     }
 }
 
 impl<T: Float + Default + Clone> VectorDual<T> {
     /// Create a new vector dual number
-    pub fn new(_value: Array1<T>, tangent: Array1<T>) -> Self {
-        Self { value: _value, tangent }
+    pub fn new(value: Array1<T>, tangent: Array1<T>) -> Self {
+        Self {
+            value: value,
+            tangent,
+        }
     }
 
     /// Create a constant vector
-    pub fn constant(_value: Array1<T>) -> Self {
+    pub fn constant(value: Array1<T>) -> Self {
         let tangent = Array1::zeros(_value.len());
         Self::new(_value, tangent)
     }
 
     /// Create a variable vector with unit tangent in direction i
-    pub fn variable(_value: Array1<T>, direction: usize) -> Self {
+    pub fn variable(value: Array1<T>, direction: usize) -> Self {
         let mut tangent = Array1::zeros(_value.len());
         if direction < tangent.len() {
             tangent[direction] = T::one();
@@ -454,7 +460,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T>
         Ok(jacobian)
     }
 
-    fn binary_op(&mut self, op_type: ForwardOpType, lhs: usize, rhs: usize) -> Result<usize> {
+    fn binary_op(&mut self, optype: ForwardOpType, lhs: usize, rhs: usize) -> Result<usize> {
         let output_id = self.tape.len();
 
         let op = ForwardOperation {
@@ -472,7 +478,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T>
         Ok(output_id)
     }
 
-    fn unary_op(&mut self, op_type: ForwardOpType, input: usize) -> Result<usize> {
+    fn unary_op(&mut self, optype: ForwardOpType, input: usize) -> Result<usize> {
         let output_id = self.tape.len();
 
         let op = ForwardOperation {

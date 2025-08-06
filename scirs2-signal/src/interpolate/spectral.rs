@@ -38,17 +38,17 @@ use super::core::{find_nearest_valid_index, InterpolationConfig, InterpolationMe
 /// // Result contains bandlimited interpolated values
 /// ```
 #[allow(dead_code)]
-pub fn sinc_interpolate(_signal: &Array1<f64>, cutoff_freq: f64) -> SignalResult<Array1<f64>> {
+pub fn sinc_interpolate(_signal: &Array1<f64>, cutofffreq: f64) -> SignalResult<Array1<f64>> {
     if cutoff_freq <= 0.0 || cutoff_freq > 0.5 {
         return Err(SignalError::ValueError(
             "Cutoff frequency must be in the range (0, 0.5]".to_string(),
         ));
     }
 
-    let n = _signal.len();
+    let n = signal.len();
 
     // Check if input has any missing values
-    let has_missing = _signal.iter().any(|&x| x.is_nan());
+    let has_missing = signal.iter().any(|&x| x.is_nan());
     if !has_missing {
         return Ok(_signal.clone());
     }
@@ -59,7 +59,7 @@ pub fn sinc_interpolate(_signal: &Array1<f64>, cutoff_freq: f64) -> SignalResult
     let mut valid_values = Vec::new();
 
     for i in 0..n {
-        if _signal[i].is_nan() {
+        if signal[i].is_nan() {
             missing_indices.push(i);
         } else {
             valid_indices.push(i);
@@ -74,7 +74,7 @@ pub fn sinc_interpolate(_signal: &Array1<f64>, cutoff_freq: f64) -> SignalResult
     }
 
     // Create result by copying input
-    let mut result = _signal.clone();
+    let mut result = signal.clone();
 
     // For each missing point, compute sinc interpolation
     for &missing_idx in &missing_indices {
@@ -390,6 +390,9 @@ pub fn auto_interpolate(
 }
 
 pub mod resampling {
+    use crate::error::{SignalError, SignalResult};
+    use std::f64::consts::PI;
+
     /// Advanced resampling utilities for signal interpolation and sample rate conversion
     //
     // This module provides high-quality resampling algorithms based on windowed sinc
@@ -495,23 +498,23 @@ pub mod resampling {
     }
 
     /// Creates a windowed sinc kernel for resampling
-    fn create_sinc_kernel(_config: &ResamplingConfig) -> SignalResult<Vec<f64>> {
-        let mut kernel = vec![0.0; _config.kernel_length];
-        let half_length = _config.kernel_length / 2;
+    fn create_sinc_kernel(config: &ResamplingConfig) -> SignalResult<Vec<f64>> {
+        let mut kernel = vec![0.0; config.kernel_length];
+        let half_length = config.kernel_length / 2;
 
         for (i, kernel_val) in kernel.iter_mut().enumerate() {
-            let x = (i as f64 - half_length as f64) / _config.oversampling_factor as f64;
+            let x = (i as f64 - half_length as f64) / config.oversampling_factor as f64;
 
             // Sinc function
             let sinc = if x.abs() < 1e-10 {
                 1.0
             } else {
-                let pi_x = PI * x * _config.cutoff_frequency;
+                let pi_x = PI * x * config.cutoff_frequency;
                 pi_x.sin() / pi_x
             };
 
             // Kaiser window
-            let window = kaiser_window(i, _config.kernel_length, _config.kaiser_beta);
+            let window = kaiser_window(i, config.kernel_length, config.kaiser_beta);
 
             *kernel_val = sinc * window;
         }
@@ -520,11 +523,11 @@ pub mod resampling {
     }
 
     /// Evaluates the sinc kernel at a fractional position
-    fn evaluate_sinc_kernel(_kernel: &[f64], position: f64, _cutoff: f64) -> f64 {
-        let idx = position.round() as i32 + _kernel.len() as i32 / 2;
+    fn evaluate_sinc_kernel(_kernel: &[f64], position: f64, cutoff: f64) -> f64 {
+        let idx = position.round() as i32 + kernel.len() as i32 / 2;
 
-        if idx >= 0 && (idx as usize) < _kernel.len() {
-            _kernel[idx as usize]
+        if idx >= 0 && (idx as usize) < kernel.len() {
+            kernel[idx as usize]
         } else {
             0.0
         }
@@ -566,13 +569,15 @@ pub mod resampling {
 }
 
 pub mod polynomial {
+    use crate::error::{SignalError, SignalResult};
+    use ndarray::{Array1, Array2};
+    use scirs2_linalg::solve;
+
     /// Polynomial interpolation methods and utilities
     ///
     /// This module provides various polynomial interpolation techniques including
     /// Lagrange interpolation, Newton's method, Chebyshev interpolation, and
     /// least-squares polynomial fitting.
-    use ndarray::{Array1, Array2};
-    use scirs2_linalg::solve;
 
     /// Lagrange polynomial interpolation
     ///
@@ -785,6 +790,7 @@ pub mod polynomial {
 /// Unit tests for spectral interpolation methods
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_sinc_interpolate() {
@@ -853,7 +859,7 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, 2.0, f64::NAN, 4.0, 5.0, 6.0, f64::NAN, 8.0]);
         let config = InterpolationConfig::default();
 
-        let (result, _method) = auto_interpolate(&signal, &config, true).unwrap();
+        let (result, method) = auto_interpolate(&signal, &config, true).unwrap();
 
         // All values should be valid
         assert!(result.iter().all(|&x| !x.is_nan()));

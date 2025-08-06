@@ -80,13 +80,13 @@ impl ParallelConfig {
     }
 
     /// Set the number of worker threads
-    pub fn with_workers(mut self, n_workers: usize) -> Self {
+    pub fn with_workers(mut self, nworkers: usize) -> Self {
         self.n_workers = Some(n_workers);
         self
     }
 
     /// Set the chunk size for parallel iterators
-    pub fn with_chunk_size(mut self, chunk_size: usize) -> Self {
+    pub fn with_chunk_size(mut self, chunksize: usize) -> Self {
         self.chunk_size = Some(chunk_size);
         self
     }
@@ -100,9 +100,9 @@ impl ParallelConfig {
     }
 
     /// Get the chunk size to use for a given total size
-    pub fn get_chunk_size(&self, total_size: usize) -> usize {
+    pub fn get_chunk_size(&self, totalsize: usize) -> usize {
         match self.chunk_size {
-            Some(_size) => _size,
+            Some(_size) => size,
             None => {
                 // Choose a reasonable chunk _size based on total _size
                 // This is a heuristic and might need tuning for different workloads
@@ -174,10 +174,10 @@ pub trait ParallelPredict<F: Float> {
 ///
 /// The recommended chunk size
 #[allow(dead_code)]
-pub fn estimate_chunk_size(_total_size: usize, cost_factor: f64, config: &ParallelConfig) -> usize {
+pub fn estimate_chunk_size(_total_size: usize, costfactor: f64, config: &ParallelConfig) -> usize {
     // If chunk _size is explicitly specified, use that
     if let Some(_size) = config.chunk_size {
-        return _size;
+        return size;
     }
 
     // Otherwise, compute a reasonable chunk _size
@@ -221,7 +221,7 @@ pub fn estimate_chunk_size(_total_size: usize, cost_factor: f64, config: &Parall
 ///
 /// Vector of (start, end) index pairs for each partition
 #[allow(dead_code)]
-pub fn create_index_ranges(_total_size: usize, n_parts: usize) -> Vec<(usize, usize)> {
+pub fn create_index_ranges(_total_size: usize, nparts: usize) -> Vec<(usize, usize)> {
     if _total_size == 0 || n_parts == 0 {
         return Vec::new();
     }

@@ -75,7 +75,7 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn validate_rust_syntax(_path: &str) -> Result<(), String> {
+fn validate_rust_syntax(path: &str) -> Result<(), String> {
     // Try to parse the file using rustc --parse-only
     let output = Command::new("rustc")
         .args(&["--edition", "2021", "-Z", "parse-only", _path])
@@ -99,7 +99,7 @@ fn validate_rust_syntax(_path: &str) -> Result<(), String> {
 }
 
 #[allow(dead_code)]
-fn validate_basic_rust_syntax(_path: &str) -> Result<(), String> {
+fn validate_basic_rust_syntax(path: &str) -> Result<(), String> {
     let content = std::fs::read_to_string(_path)
         .map_err(|e| format!("Cannot read file: {}", e))?;
 

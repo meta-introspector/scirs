@@ -85,7 +85,7 @@ pub trait RLAlgorithm: Send + Sync {
         config: &TrainingConfig,
     ) -> Result<TrainingResults>;
     /// Evaluate the algorithm
-    fn evaluate(&self, env: &mut dyn Environment, n_episodes: usize) -> Result<EvaluationResults>;
+    fn evaluate(&self, env: &mut dyn Environment, nepisodes: usize) -> Result<EvaluationResults>;
     /// Save the algorithm
     fn save(&self, path: &str) -> Result<()>;
     /// Load the algorithm
@@ -129,7 +129,7 @@ pub struct OffPolicyAlgorithm<A: RLAgent> {
     prioritized_buffer: Option<PrioritizedReplayBuffer>,
 impl<A: RLAgent + 'static> OffPolicyAlgorithm<A> {
     /// Create a new off-policy algorithm
-    pub fn new(_agent: A, config: &TrainingConfig) -> Self {
+    pub fn new(agent: A, config: &TrainingConfig) -> Self {
         let replay_buffer = if !config.use_prioritized_replay {
             Some(ReplayBuffer::new(config.buffer_size))
         } else {
@@ -169,7 +169,7 @@ impl<A: RLAgent + 'static> OffPolicyAlgorithm<A> {
             Err(crate::error::NeuralError::InvalidArgument(
                 "No replay buffer configured".to_string(),
     /// Update prioritized replay buffer priorities
-    fn update_priorities(&mut self, indices: &[usize], td_errors: &[f32]) -> Result<()> {
+    fn update_priorities(&mut self, indices: &[usize], tderrors: &[f32]) -> Result<()> {
         if let Some(buffer) = &mut self.prioritized_buffer {
             buffer.update_priorities(indices, td_errors)?;
 impl<A: RLAgent + 'static> RLAlgorithm for OffPolicyAlgorithm<A> {
@@ -280,7 +280,7 @@ impl<A: RLAgent + 'static> RLAlgorithm for OffPolicyAlgorithm<A> {
             training_time: start_time.elapsed().as_secs_f64(),
             total_steps,
         })
-    fn evaluate(&self, env: &mut dyn Environment, n_episodes: usize) -> Result<EvaluationResults> {
+    fn evaluate(&self, env: &mut dyn Environment, nepisodes: usize) -> Result<EvaluationResults> {
         let mut rewards = Vec::new();
         let mut lengths = Vec::new();
         for _ in 0..n_episodes {
@@ -438,7 +438,7 @@ impl PPOWrapper {
             value_loss_coef,
         Ok(Self { ppo })
 impl RLAgent for PPOWrapper {
-    fn act(&self, observation: &ArrayView1<f32>, _training: bool) -> Result<Array1<f32>> {
+    fn act(&self, observation: &ArrayView1<f32>, training: bool) -> Result<Array1<f32>> {
         // PPO acts directly on the observation
         self.ppo.act(observation)
         // PPO requires trajectory data, but we'll adapt the batch format
@@ -495,9 +495,9 @@ impl RLAlgorithm for RLAlgorithmImpl {
                 variance.sqrt()
             },
             mean_length: episode_lengths.iter().sum::<usize>() as f32 / episode_lengths.len() as f32,
-    fn save(&self_path: &str) -> Result<()> {
+    fn save(selfpath: &str) -> Result<()> {
         // Simplified - no saving implementation
-    fn load(&mut self_path: &str) -> Result<()> {
+    fn load(&mut selfpath: &str) -> Result<()> {
         // Simplified - no loading implementation
 /// Helper function to create common RL algorithms
 #[allow(dead_code)]

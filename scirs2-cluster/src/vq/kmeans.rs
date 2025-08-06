@@ -1,6 +1,6 @@
 //! K-means clustering implementation
 
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use rand::Rng;
 use std::fmt::Debug;
@@ -266,7 +266,7 @@ where
 
     for _iter in 0..opts.max_iter {
         // Assign samples to nearest centroid
-        let (new_labels, distances) = vq(data, _centroids.view())?;
+        let (new_labels, distances) = vq(data, centroids.view())?;
         labels = new_labels;
 
         // Compute new _centroids
@@ -334,7 +334,7 @@ where
     let mut inertia = F::zero();
     for i in 0..n_samples {
         let cluster = labels[i];
-        let dist = euclidean_distance(data.slice(s![i, ..]), _centroids.slice(s![cluster, ..]));
+        let dist = euclidean_distance(data.slice(s![i, ..]), centroids.slice(s![cluster, ..]));
         inertia = inertia + dist * dist;
     }
 
@@ -402,8 +402,8 @@ pub fn random_init<F>(
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
 {
-    let n_samples = _data.shape()[0];
-    let n_features = _data.shape()[1];
+    let n_samples = data.shape()[0];
+    let n_features = data.shape()[1];
 
     if k == 0 || k > n_samples {
         return Err(ClusteringError::InvalidInput(format!(
@@ -427,7 +427,7 @@ where
     // Copy the selected points to the centroids
     for (i, &idx) in selected_indices.iter().enumerate() {
         for j in 0..n_features {
-            centroids[[i, j]] = _data[[idx, j]];
+            centroids[[i, j]] = data[[idx, j]];
         }
     }
 
@@ -656,7 +656,7 @@ where
             let options = KMeansOptions {
                 max_iter: 100,
                 tol: F::from(1e-4).unwrap(),
-                random_seed: _random_seed,
+                random_seed: random_seed,
                 n_init: 1,
                 init_method: KMeansInit::KMeansPlusPlus,
             };
@@ -753,7 +753,7 @@ where
 
     for _iter in 0..opts.max_iter {
         // Assign samples to nearest centroid
-        let (new_labels_) = vq(data, _centroids.view())?;
+        let (new_labels_) = vq(data, centroids.view())?;
         labels = new_labels;
 
         // Compute new _centroids using weights
@@ -782,7 +782,7 @@ where
                 for j in 0..n_samples {
                     let dist = euclidean_distance(
                         data.slice(s![j, ..]),
-                        _centroids.slice(s![labels[j], ..]),
+                        centroids.slice(s![labels[j], ..]),
                     );
                     if dist > max_dist {
                         max_dist = dist;
@@ -942,7 +942,7 @@ where
 
     for _iter in 0..opts.max_iter {
         // Assign samples to nearest centroid using custom metric
-        let (new_labels, distances) = _vq_with_metric(data, _centroids.view(), metric)?;
+        let (new_labels, distances) = _vq_with_metric(data, centroids.view(), metric)?;
         labels = new_labels;
 
         // Compute new _centroids
@@ -1009,7 +1009,7 @@ where
     let mut inertia = F::zero();
     for i in 0..n_samples {
         let cluster = labels[i];
-        let dist = metric.distance(data.slice(s![i, ..]), _centroids.slice(s![cluster, ..]));
+        let dist = metric.distance(data.slice(s![i, ..]), centroids.slice(s![cluster, ..]));
         inertia = inertia + dist * dist;
     }
 

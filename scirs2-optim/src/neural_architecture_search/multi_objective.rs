@@ -294,12 +294,12 @@ pub struct MOEADOptimizer<T: Float> {
 }
 
 impl<T: Float + Default + Clone> MOEADOptimizer<T> {
-    pub fn new(_config: MultiObjectiveConfig<T>) -> Result<Self> {
+    pub fn new(config: MultiObjectiveConfig<T>) -> Result<Self> {
         let _population_size = 100; // Default population size
         let neighborhood_size = 20; // Default neighborhood size
 
         Ok(Self {
-            config: _config,
+            config: config,
             weight_vectors: Vec::new(),
             population: Vec::new(),
             neighbors: Vec::new(),
@@ -324,12 +324,13 @@ impl<T: Float + Default + Clone> MOEADOptimizer<T> {
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + std::iter::Sum>
     MultiObjectiveOptimizer<T> for MOEADOptimizer<T>
 {
-    fn initialize(&mut self, _config: &MultiObjectiveConfig<T>) -> Result<()> {
+    fn initialize(&mut self, config: &MultiObjectiveConfig<T>) -> Result<()> {
         Ok(())
     }
 
     fn update_pareto_front(
-        &mut self, _new_solutions: &[SearchResult<T>],
+        &mut self,
+        _new_solutions: &[SearchResult<T>],
     ) -> Result<ParetoFront<T>> {
         Ok(self.pareto_front.clone())
     }
@@ -339,7 +340,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
     }
 
     fn select_candidates(
-        &mut self, _population: &[OptimizerArchitecture<T>], _objectives: &[T],
+        &mut self,
+        _population: &[OptimizerArchitecture<T>],
+        _objectives: &[T],
     ) -> Result<Vec<OptimizerArchitecture<T>>> {
         Ok(Vec::new())
     }
@@ -385,8 +388,8 @@ pub struct WeightedSum<T: Float> {
 }
 
 impl<T: Float + Default + Clone> WeightedSum<T> {
-    pub fn new(_objectives: &[ObjectiveConfig<T>]) -> Result<Self> {
-        let weights = _objectives.iter().map(|obj| obj.weight).collect();
+    pub fn new(objectives: &[ObjectiveConfig<T>]) -> Result<Self> {
+        let weights = objectives.iter().map(|obj| obj.weight).collect();
         Ok(Self {
             weights,
             best_solution: None,
@@ -399,12 +402,13 @@ impl<T: Float + Default + Clone> WeightedSum<T> {
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + std::iter::Sum>
     MultiObjectiveOptimizer<T> for WeightedSum<T>
 {
-    fn initialize(&mut self, _config: &MultiObjectiveConfig<T>) -> Result<()> {
+    fn initialize(&mut self, config: &MultiObjectiveConfig<T>) -> Result<()> {
         Ok(())
     }
 
     fn update_pareto_front(
-        &mut self, _new_solutions: &[SearchResult<T>],
+        &mut self,
+        _new_solutions: &[SearchResult<T>],
     ) -> Result<ParetoFront<T>> {
         // Simple placeholder implementation
         Ok(ParetoFront::default())
@@ -415,7 +419,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
     }
 
     fn select_candidates(
-        &mut self, _population: &[OptimizerArchitecture<T>], _objectives: &[T],
+        &mut self,
+        _population: &[OptimizerArchitecture<T>],
+        _objectives: &[T],
     ) -> Result<Vec<OptimizerArchitecture<T>>> {
         // Simple placeholder implementation
         Ok(Vec::new())
@@ -675,14 +681,14 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
     NSGA2<T>
 {
     /// Create new NSGA-II optimizer
-    pub fn new(_population_size: usize, crossover_prob: f64, mutation_prob: f64) -> Self {
+    pub fn new(_population_size: usize, crossover_prob: f64, mutationprob: f64) -> Self {
         Self {
             config: MultiObjectiveConfig::default(),
             population: Vec::new(),
             pareto_front: ParetoFront::new(),
             generation: 0,
             statistics: MultiObjectiveStatistics::default(),
-            population_size: _population_size,
+            population_size: population_size,
             crossover_prob,
             mutation_prob,
             rng: Random::seed(42),
@@ -1179,7 +1185,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
     }
 
     fn select_candidates(
-        &mut self, _population: &[OptimizerArchitecture<T>], _objectives: &[T],
+        &mut self,
+        _population: &[OptimizerArchitecture<T>],
+        _objectives: &[T],
     ) -> Result<Vec<OptimizerArchitecture<T>>> {
         // Generate new candidates through crossover and mutation
         let mut new_population = Vec::new();
@@ -1220,7 +1228,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + std::iter::Sum>
     NSGA2<T>
 {
-    fn tournament_selection(&mut self, tournament_size: usize) -> Result<Individual<T>> {
+    fn tournament_selection(&mut self, tournamentsize: usize) -> Result<Individual<T>> {
         if self.population.is_empty() {
             return Err(OptimError::InvalidConfig("Empty population".to_string()));
         }
@@ -1256,7 +1264,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
         if !parent1.architecture.components.is_empty()
             && !parent2.architecture.components.is_empty()
         {
-            for (key, _value) in &parent1.architecture.components[0].hyperparameters {
+            for (key, value) in &parent1.architecture.components[0].hyperparameters {
                 if self.rng.gen_range(0.0..1.0) < 0.5 {
                     if let Some(parent2_value) =
                         parent2.architecture.components[0].hyperparameters.get(key)
@@ -1281,7 +1289,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
             {
                 if self.rng.gen_range(0.0..1.0) < 0.1 {
                     // 10% mutation rate per parameter
-                    let noise = T::from(self.rng.random_range(-0.05, 0.05)).unwrap(); // ±5% noise
+                    let noise = T::from(self.rng.gen_range(-0.05..0.05)).unwrap(); // ±5% noise
                     *value = *value + noise;
                 }
             }
@@ -1301,7 +1309,8 @@ impl<T: Float + Default> Default for ParetoFront<T> {
 impl<T: Float + Default> ParetoFront<T> {
     fn new() -> Self {
         Self {
-            solutions: Vec::new(), objective_bounds: ObjectiveBounds {
+            solutions: Vec::new(),
+            objective_bounds: ObjectiveBounds {
                 min_values: Vec::new(),
                 max_values: Vec::new(),
                 ideal_point: Vec::new(),

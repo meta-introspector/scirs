@@ -82,11 +82,11 @@ pub struct RocmBackend<A: Float> {
 
 impl<A: Float> RocmBackend<A> {
     /// Create a new ROCm backend
-    pub fn new(_config: RocmConfig) -> Result<Self, GpuOptimError> {
+    pub fn new(config: RocmConfig) -> Result<Self, GpuOptimError> {
         // Create GPU context with ROCm backend
         let gpu_config = GpuOptimizerConfig {
             backend: GpuBackend::Rocm,
-            memory_pool_size: _config.memory_pool_size,
+            memory_pool_size: config.memory_pool_size,
             ..Default::default()
         };
 
@@ -145,10 +145,10 @@ impl<A: Float> RocmBackend<A> {
     }
 
     /// Convert CUDA kernel to HIP kernel name
-    pub fn get_hip_kernel_name(_cuda_kernel_name: &str) -> String {
+    pub fn get_hip_kernel_name(_cuda_kernelname: &str) -> String {
         // ROCm uses HIP which has similar naming to CUDA
         // In practice, kernels would be compiled for HIP
-        _cuda_kernel_name.replace("cuda", "hip")
+        cuda_kernel_name.replace("cuda", "hip")
     }
 
     /// Detect AMD GPU architecture for optimizations
@@ -314,7 +314,7 @@ impl<A: Float> RocmBackend<A> {
     }
 
     /// Estimate compute utilization based on execution time
-    fn estimate_compute_utilization(&self, execution_time_us: f64, data_size: usize) -> f64 {
+    fn estimate_compute_utilization(&self, execution_time_us: f64, datasize: usize) -> f64 {
         let properties = self
             .get_device_properties()
             .unwrap_or_else(|_| RocmDeviceProperties {
@@ -416,11 +416,11 @@ struct RocmBuffer {
 
 impl RocmMemoryPool {
     /// Create a new memory pool
-    pub fn new(_max_size: usize) -> Self {
+    pub fn new(_maxsize: usize) -> Self {
         Self {
             buffers: Vec::new(),
             current_size: 0,
-            _max_size,
+            max_size,
         }
     }
 
@@ -468,7 +468,7 @@ pub mod rocm_utils {
     use super::*;
 
     /// Get optimal wavefront configuration
-    pub fn get_optimal_wavefront_config(n: usize, wavefront_size: usize) -> (usize, usize) {
+    pub fn get_optimal_wavefront_config(n: usize, wavefrontsize: usize) -> (usize, usize) {
         let warps_per_block = 4; // Typical for AMD GPUs
         let threads_per_block = warps_per_block * wavefront_size;
         let blocks = (n + threads_per_block - 1) / threads_per_block;
@@ -483,7 +483,7 @@ pub mod rocm_utils {
     }
 
     /// Get memory access pattern optimization hints
-    pub fn get_memory_access_hints(_data_size: usize) -> MemoryAccessHint {
+    pub fn get_memory_access_hints(_datasize: usize) -> MemoryAccessHint {
         if _data_size < 1024 * 1024 {
             // Small data: prioritize L1 cache
             MemoryAccessHint::L1Preferred

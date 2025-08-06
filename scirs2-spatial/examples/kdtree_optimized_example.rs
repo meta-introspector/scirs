@@ -27,7 +27,7 @@ fn generate_random_points(n: usize, seed: u64) -> Array2<f64> {
 
 /// Benchmark Hausdorff distance computation: direct vs. KD-tree optimized
 #[allow(dead_code)]
-fn benchmark_hausdorff(_n1: usize, n2: usize) {
+fn benchmark_hausdorff(n1: usize, n2: usize) {
     println!("Benchmarking Hausdorff distance computation");
     println!("------------------------------------------");
     println!("Set 1: {_n1} points, Set 2: {n2} points");

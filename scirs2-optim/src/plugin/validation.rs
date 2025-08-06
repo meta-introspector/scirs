@@ -99,7 +99,7 @@ pub struct TestSummary {
 /// Compliance checker trait
 pub trait ComplianceChecker: Debug {
     /// Check plugin compliance
-    fn check_compliance(&self, plugin_info: &PluginInfo) -> ComplianceResult;
+    fn check_compliance(&self, plugininfo: &PluginInfo) -> ComplianceResult;
 
     /// Get checker name
     fn name(&self) -> &str;
@@ -280,9 +280,9 @@ pub struct ThreadSafetyTestSuite<A: Float + std::fmt::Debug> {
 
 impl<A: Float + std::fmt::Debug> ThreadSafetyTestSuite<A> {
     /// Create a new thread safety test suite
-    pub fn new(_config: ValidationConfig) -> Self {
+    pub fn new(config: ValidationConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -337,9 +337,9 @@ pub struct MemoryTestSuite<A: Float + std::fmt::Debug> {
 
 impl<A: Float + std::fmt::Debug> MemoryTestSuite<A> {
     /// Create a new memory test suite
-    pub fn new(_config: ValidationConfig) -> Self {
+    pub fn new(config: ValidationConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -394,9 +394,9 @@ pub struct ConvergenceTestSuite<A: Float + std::fmt::Debug> {
 
 impl<A: Float + std::fmt::Debug> ConvergenceTestSuite<A> {
     /// Create a new convergence test suite
-    pub fn new(_config: ValidationConfig) -> Self {
+    pub fn new(config: ValidationConfig) -> Self {
         Self {
-            config: _config,
+            config: config,
             test_problems: Vec::new(),
         }
     }
@@ -504,7 +504,7 @@ pub struct ThroughputBenchmark<A: Float> {
 
 impl<A: Float> ThroughputBenchmark<A> {
     /// Create a new throughput benchmark
-    pub fn new(problem_size: usize, iterations: usize) -> Self {
+    pub fn new(problemsize: usize, iterations: usize) -> Self {
         Self {
             problem_size,
             iterations,
@@ -556,7 +556,7 @@ pub struct LatencyBenchmark<A: Float> {
 
 impl<A: Float> LatencyBenchmark<A> {
     /// Create a new latency benchmark
-    pub fn new(problem_size: usize) -> Self {
+    pub fn new(problemsize: usize) -> Self {
         Self {
             problem_size,
             _phantom: std::marker::PhantomData,
@@ -607,7 +607,7 @@ pub struct MemoryBenchmark<A: Float> {
 
 impl<A: Float> MemoryBenchmark<A> {
     /// Create a new memory benchmark
-    pub fn new(problem_size: usize) -> Self {
+    pub fn new(problemsize: usize) -> Self {
         Self {
             problem_size,
             _phantom: std::marker::PhantomData,
@@ -651,9 +651,9 @@ impl<A: Float + Debug> PerformanceBenchmark<A> for MemoryBenchmark<A> {
 
 impl<A: Float + Debug + Send + Sync + 'static> PluginValidationFramework<A> {
     /// Create a new validation framework
-    pub fn new(_config: ValidationConfig) -> Self {
+    pub fn new(config: ValidationConfig) -> Self {
         let mut framework = Self {
-            config: _config.clone(),
+            config: config.clone(),
             test_suites: Vec::new(),
             compliance_checkers: Vec::new(),
             benchmarker: PerformanceBenchmarker::new(BenchmarkConfig::default()),
@@ -713,7 +713,7 @@ impl<A: Float + Debug + Send + Sync + 'static> PluginValidationFramework<A> {
     }
 
     /// Add custom test suite
-    pub fn add_test_suite(&mut self, test_suite: Box<dyn ValidationTestSuite<A>>) {
+    pub fn add_test_suite(&mut self, testsuite: Box<dyn ValidationTestSuite<A>>) {
         self.test_suites.push(test_suite);
     }
 
@@ -1091,7 +1091,7 @@ impl Default for ValidationConfig {
 // Placeholder implementations for compliance checkers
 
 impl ComplianceChecker for ApiComplianceChecker {
-    fn check_compliance(&self, _plugin_info: &PluginInfo) -> ComplianceResult {
+    fn check_compliance(&self, _plugininfo: &PluginInfo) -> ComplianceResult {
         ComplianceResult {
             compliant: true,
             violations: Vec::new(),
@@ -1110,7 +1110,7 @@ impl ComplianceChecker for ApiComplianceChecker {
 }
 
 impl ComplianceChecker for SecurityComplianceChecker {
-    fn check_compliance(&self, _plugin_info: &PluginInfo) -> ComplianceResult {
+    fn check_compliance(&self, _plugininfo: &PluginInfo) -> ComplianceResult {
         ComplianceResult {
             compliant: true,
             violations: Vec::new(),
@@ -1129,7 +1129,7 @@ impl ComplianceChecker for SecurityComplianceChecker {
 }
 
 impl ComplianceChecker for PerformanceComplianceChecker {
-    fn check_compliance(&self, _plugin_info: &PluginInfo) -> ComplianceResult {
+    fn check_compliance(&self, _plugininfo: &PluginInfo) -> ComplianceResult {
         ComplianceResult {
             compliant: true,
             violations: Vec::new(),
@@ -1148,7 +1148,7 @@ impl ComplianceChecker for PerformanceComplianceChecker {
 }
 
 impl ComplianceChecker for DocumentationComplianceChecker {
-    fn check_compliance(&self, plugin_info: &PluginInfo) -> ComplianceResult {
+    fn check_compliance(&self, plugininfo: &PluginInfo) -> ComplianceResult {
         let mut violations = Vec::new();
         let mut score = 1.0;
 

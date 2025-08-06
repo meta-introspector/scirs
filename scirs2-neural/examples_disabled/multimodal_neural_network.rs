@@ -98,7 +98,7 @@ impl Conv2D {
 // MaxPooling Layer
 struct MaxPool2D {
 impl MaxPool2D {
-    fn new(_kernel_size: usize, stride: usize) -> Self {
+    fn new(_kernelsize: usize, stride: usize) -> Self {
         MaxPool2D {
         // x: [batch_size, channels, height, width]
         let channels = x.shape()[1];
@@ -153,7 +153,7 @@ struct LSTMCell {
     w_ho: Array2<f32>, // Hidden to output gate
     b_o: Array1<f32>,  // Output gate bias
 impl LSTMCell {
-    fn new(_input_size: usize, hidden_size: usize) -> Self {
+    fn new(_input_size: usize, hiddensize: usize) -> Self {
         let bound = (6.0 / (input_size + hidden_size) as f32).sqrt();
         // Input gate weights
         let mut w_ii = Array2::<f32>::zeros((hidden_size, input_size));
@@ -249,11 +249,11 @@ struct Embedding {
     embedding_dim: usize,
     weight: Array2<f32>,
 impl Embedding {
-    fn new(_vocab_size: usize, embedding_dim: usize) -> Self {
+    fn new(_vocab_size: usize, embeddingdim: usize) -> Self {
         let bound = (3.0 / embedding_dim as f32).sqrt();
         let mut weight = Array2::<f32>::zeros((_vocab_size, embedding_dim));
         Embedding {
-            _vocab_size,
+            vocab_size,
             embedding_dim,
     fn forward(&self, x: &Array2<usize>) -> Array3<f32> {
         // x: [batch_size, seq_len] - Input token IDs
@@ -269,7 +269,7 @@ struct Linear {
     in_features: usize,
     out_features: usize,
 impl Linear {
-    fn new(_in_features: usize, out_features: usize) -> Self {
+    fn new(_in_features: usize, outfeatures: usize) -> Self {
         let bound = (6.0 / (in_features + out_features) as f32).sqrt();
         let mut weight = Array2::<f32>::zeros((out_features, in_features));
         let bias = Array::zeros(out_features);
@@ -494,7 +494,7 @@ fn generate_synthetictext(
     (text_data, word_map)
 // Create labels for the synthetic data
 #[allow(dead_code)]
-fn generate_labels(_num_samples: usize, num_classes: usize) -> (Array2<f32>, Array1<usize>) {
+fn generate_labels(_num_samples: usize, numclasses: usize) -> (Array2<f32>, Array1<usize>) {
     let mut one_hot = Array2::<f32>::zeros((_num_samples, num_classes));
     let mut indices = Array1::<usize>::zeros(_num_samples);
         let class = n % num_classes;
@@ -503,7 +503,7 @@ fn generate_labels(_num_samples: usize, num_classes: usize) -> (Array2<f32>, Arr
     (one_hot, indices)
 // Calculate accuracy
 #[allow(dead_code)]
-fn calculate_accuracy(_predictions: &Array2<f32>, targets: &Array1<usize>) -> f32 {
+fn calculate_accuracy(predictions: &Array2<f32>, targets: &Array1<usize>) -> f32 {
     let _num_samples = predictions.shape()[0];
     let mut correct = 0;
         // Get predicted class (argmax)

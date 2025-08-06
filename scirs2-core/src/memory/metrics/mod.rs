@@ -336,7 +336,7 @@ mod tests {
         assert_eq!(report.total_allocation_count, 3);
 
         // Check component stats
-        let test_comp = report.component_stats.get(TestComponent).unwrap();
+        let test_comp = report.component_stats.get("TestComponent").unwrap();
         assert_eq!(test_comp.current_usage, 2048);
         assert_eq!(test_comp.allocation_count, 2);
 

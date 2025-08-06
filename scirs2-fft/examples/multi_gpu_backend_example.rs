@@ -176,11 +176,11 @@ fn test_performance_comparison() -> FFTResult<()> {
 
 /// Helper function to create and test a buffer
 #[allow(dead_code)]
-fn create_and_test_buffer(_size: usize, backend: GPUBackend) -> FFTResult<std::time::Duration> {
+fn create_and_test_buffer(size: usize, backend: GPUBackend) -> FFTResult<std::time::Duration> {
     let start = Instant::now();
 
     let buffer = BufferDescriptor::new(
-        _size,
+        size,
         std::mem::size_of::<Complex64>(),
         BufferLocation::Device,
         BufferType::Input,

@@ -30,9 +30,9 @@ pub type TrainTestSplitResult<T> = (Vec<Array1<T>>, Vec<Array1<T>>);
 ///
 /// ```
 /// use ndarray::{Array, Ix1};
-/// use scirs2__metrics::evaluation::train_test_split;
+/// use scirs2_metrics::evaluation::train_test_split;
 ///
-/// let x = Array::<f64>::linspace(0., 9., 10).intoshape(Ix1(10)).unwrap();
+/// let x = Array::<f64>::linspace(0., 9., 10).into_shape(Ix1(10)).unwrap();
 /// let y = &x * 2.;
 ///
 /// let (train_arrays, test_arrays) = train_test_split(&[&x, &y], 0.3, Some(42)).unwrap();
@@ -175,7 +175,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__metrics::evaluation::k_fold_cross_validation;
+/// use scirs2_metrics::evaluation::k_fold_cross_validation;
 ///
 /// let splits = k_fold_cross_validation(10, 3, false, None).unwrap();
 /// assert_eq!(splits.len(), 3); // 3 folds
@@ -245,7 +245,7 @@ pub fn k_fold_cross_validation(
         train_indices.extend_from_slice(&indices[0..current]);
         train_indices.extend_from_slice(&indices[(current + fold_size)..]);
 
-        _folds.push((train_indices, test_indices));
+        folds.push((train_indices, test_indices));
         current += fold_size;
     }
 
@@ -268,7 +268,7 @@ pub fn k_fold_cross_validation(
 /// # Examples
 ///
 /// ```
-/// use scirs2__metrics::evaluation::leave_one_out_cv;
+/// use scirs2_metrics::evaluation::leave_one_out_cv;
 ///
 /// let splits = leave_one_out_cv(5).unwrap();
 /// assert_eq!(splits.len(), 5); // 5 splits for 5 samples
@@ -326,7 +326,7 @@ pub fn leave_one_out_cv(n: usize) -> Result<Vec<(Vec<usize>, Vec<usize>)>> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::evaluation::stratified_k_fold;
+/// use scirs2_metrics::evaluation::stratified_k_fold;
 ///
 /// let y = array![0, 0, 0, 1, 1, 1, 2, 2, 2];
 /// let splits = stratified_k_fold(&y, 3, true, Some(42)).unwrap();
@@ -403,12 +403,12 @@ where
         }
     }
 
-    // Allocate samples to _folds, respecting the class distribution
+    // Allocate samples to folds, respecting the class distribution
     let mut _folds = vec![Vec::new(); n_folds];
 
     for indices in class_counts.values() {
         for (i, &idx) in indices.iter().enumerate() {
-            _folds[i % n_folds].push(idx);
+            folds[i % n_folds].push(idx);
         }
     }
 
@@ -416,10 +416,10 @@ where
     let mut splits = Vec::with_capacity(n_folds);
 
     for i in 0..n_folds {
-        let test_indices = _folds[i].clone();
+        let test_indices = folds[i].clone();
 
         let mut train_indices = Vec::with_capacity(n_samples - test_indices.len());
-        for (j, fold) in _folds.iter().enumerate() {
+        for (j, fold) in folds.iter().enumerate() {
             if j != i {
                 train_indices.extend_from_slice(fold);
             }

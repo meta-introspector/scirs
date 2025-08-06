@@ -62,11 +62,11 @@ impl<F: Float> GradientChecker<F> {
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: GradientCheckConfig) -> Self {
+    pub fn with_config(config: GradientCheckConfig) -> Self {
         let finite_diff_computer =
             FiniteDifferenceComputer::with_config(_config.finite_diff_config.clone());
         Self {
-            _config,
+            config,
             finite_diff_computer,
         }
     }
@@ -211,7 +211,7 @@ impl<F: Float> GradientChecker<F> {
 
     /// Check second-order gradients (Hessian)
     fn check_second_order_gradients(
-        &self_input: &Tensor<F>,
+        self_input: &Tensor<F>,
     ) -> Result<SecondOrderCheck, StabilityError> {
         // Simplified implementation - would compute and compare Hessians
         Ok(SecondOrderCheck {
@@ -248,7 +248,7 @@ impl<F: Float> GradientChecker<F> {
     /// Compute analytical gradient at a test point
     #[allow(dead_code)]
     fn compute_analytical_gradient_at_point<'a, Func>(
-        &self_function: &Func,
+        self_function: &Func,
         input: &'a Tensor<'a, F>,
     ) -> Result<Tensor<'a, F>, StabilityError>
     where
@@ -466,16 +466,17 @@ impl<F: Float> VectorFunctionChecker<F> {
     }
 
     /// Check gradients of a vector-valued function (Jacobian)
-    pub fn check_jacobian<Func>(
-        &self_function: Func,
-        _input: &Tensor<F>,
-        _analytical_jacobian: &Array<F, IxDyn>,
-    ) -> Result<JacobianCheckResult<'_, F>, StabilityError>
+    pub fn check_jacobian<'a, Func>(
+        &self,
+        function: Func,
+        input: &'a Tensor<F>,
+        analytical_jacobian: &'a Array<F, IxDyn>,
+    ) -> Result<JacobianCheckResult<'a, F>, StabilityError>
     where
-        Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
+        Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         // Check each output component separately
-        let output_dims = _analytical_jacobian.shape()[0];
+        let output_dims = analytical_jacobian.shape()[0];
         let mut component_results = Vec::new();
 
         for _output_idx in 0..output_dims {
@@ -536,10 +537,11 @@ impl<F: Float> ParameterGradientChecker<F> {
 
     /// Check gradients with respect to model parameters
     pub fn check_parameter_gradients<'a, Func>(
-        &self_loss_function: Func,
+        &self,
+        loss_function: Func,
         parameters: &'a HashMap<String, Tensor<'a, F>>,
         analytical_gradients: &'a HashMap<String, Tensor<'a, F>>,
-    ) -> Result<ParameterCheckResult<'_, F>, StabilityError>
+    ) -> Result<ParameterCheckResult<'a, F>, StabilityError>
     where
         Func:
             for<'b> Fn(&'b HashMap<String, Tensor<'b, F>>) -> Result<Tensor<'b, F>, StabilityError>,

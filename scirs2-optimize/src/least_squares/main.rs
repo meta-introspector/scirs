@@ -239,7 +239,7 @@ where
     };
 
     // Compute initial Jacobian
-    let (mut jac, _jac_evals) = match &jacobian {
+    let (mut jac, jac_evals) = match &jacobian {
         Some(jac_fn) => {
             let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
             njev += 1;
@@ -332,7 +332,7 @@ where
             }
 
             // Compute new Jacobian for next iteration
-            let (new_jac, _jac_evals) = match &jacobian {
+            let (new_jac, jac_evals) = match &jacobian {
                 Some(jac_fn) => {
                     let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
                     njev += 1;
@@ -451,7 +451,7 @@ where
     };
 
     // Compute initial Jacobian
-    let (mut jac, _jac_evals) = match &jacobian {
+    let (mut jac, jac_evals) = match &jacobian {
         Some(jac_fn) => {
             let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
             njev += 1;
@@ -529,7 +529,7 @@ where
             }
 
             // Compute new Jacobian for next iteration
-            let (new_jac, _jac_evals) = match &jacobian {
+            let (new_jac, jac_evals) = match &jacobian {
                 Some(jac_fn) => {
                     let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
                     njev += 1;
@@ -1043,7 +1043,7 @@ mod tests {
         y
     }
 
-    fn jacobian(_x: &[f64], _: &[f64]) -> Array2<f64> {
+    fn jacobian(x: &[f64], _: &[f64]) -> Array2<f64> {
         array![[1.0, 2.0], [1.0, 1.0]]
     }
 

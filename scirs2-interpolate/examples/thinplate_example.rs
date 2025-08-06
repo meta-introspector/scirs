@@ -3,8 +3,8 @@ use scirs2__interpolate::make_thinplate_interpolator;
 
 /// Generate a grid of points in the 2D square [min, max] x [min, max]
 #[allow(dead_code)]
-fn generate_grid(_min: f64, max: f64, resolution: usize) -> Array2<f64> {
-    let step = (max - _min) / (resolution as f64 - 1.0);
+fn generate_grid(min: f64, max: f64, resolution: usize) -> Array2<f64> {
+    let step = (max - min) / (resolution as f64 - 1.0);
     let mut grid = Array2::zeros((resolution * resolution, 2));
 
     for i in 0..resolution {
@@ -22,7 +22,7 @@ fn generate_grid(_min: f64, max: f64, resolution: usize) -> Array2<f64> {
 
 /// Generate scattered data points with an underlying function f(x,y) = x^2 + sin(y)
 #[allow(dead_code)]
-fn generate_scattered_data(_n_points: usize, add_noise: bool) -> (Array2<f64>, Array1<f64>) {
+fn generate_scattered_data(_n_points: usize, addnoise: bool) -> (Array2<f64>, Array1<f64>) {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 
@@ -32,15 +32,15 @@ fn generate_scattered_data(_n_points: usize, add_noise: bool) -> (Array2<f64>, A
     // Generate random (x,y) _points in [-1, 1] x [-1, 1]
     let mut _points = Array2::zeros((n_points, 2));
     for i in 0..n_points {
-        _points[[i, 0]] = 2.0 * rng.random::<f64>() - 1.0; // x in [-1, 1]
-        _points[[i, 1]] = 2.0 * rng.random::<f64>() - 1.0; // y in [-1, 1]
+        points[[i, 0]] = 2.0 * rng.random::<f64>() - 1.0; // x in [-1, 1]
+        points[[i, 1]] = 2.0 * rng.random::<f64>() - 1.0; // y in [-1, 1]
     }
 
     // Compute function values
     let mut values = Array1::zeros(n_points);
     for i in 0..n_points {
-        let x = _points[[i, 0]];
-        let y = _points[[i, 1]];
+        let x = points[[i, 0]];
+        let y = points[[i, 1]];
 
         // Function: f(x,y) = x^2 + sin(y)
         values[i] = f64::powi(x, 2) + f64::sin(y);
@@ -56,13 +56,13 @@ fn generate_scattered_data(_n_points: usize, add_noise: bool) -> (Array2<f64>, A
 
 /// Compute function values for given points: f(x,y) = x^2 + sin(y)
 #[allow(dead_code)]
-fn true_function(_points: &ArrayView2<f64>) -> Array1<f64> {
-    let n_points = _points.nrows();
+fn true_function(points: &ArrayView2<f64>) -> Array1<f64> {
+    let n_points = points.nrows();
     let mut values = Array1::zeros(n_points);
 
     for i in 0..n_points {
-        let x = _points[[i, 0]];
-        let y = _points[[i, 1]];
+        let x = points[[i, 0]];
+        let y = points[[i, 1]];
         values[i] = f64::powi(x, 2) + f64::sin(y);
     }
 
@@ -71,12 +71,12 @@ fn true_function(_points: &ArrayView2<f64>) -> Array1<f64> {
 
 /// Compute mean squared error between prediction and truth
 #[allow(dead_code)]
-fn compute_mse(_pred: &ArrayView1<f64>, truth: &ArrayView1<f64>) -> f64 {
-    let n = _pred.len();
+fn compute_mse(pred: &ArrayView1<f64>, truth: &ArrayView1<f64>) -> f64 {
+    let n = pred.len();
     let mut sum_sq_error = 0.0;
 
     for i in 0..n {
-        let error = _pred[i] - truth[i];
+        let error = pred[i] - truth[i];
         sum_sq_error += error * error;
     }
 

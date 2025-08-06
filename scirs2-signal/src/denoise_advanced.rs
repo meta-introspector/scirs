@@ -165,7 +165,7 @@ fn translation_invariant_denoise(
                 }
 
                 // Denoise shifted signal
-                let (denoised_shifted_) = standard_denoise(&shifted, config, noise_level).unwrap();
+                let (denoised_shifted, _) = standard_denoise(&shifted, config, noise_level).unwrap();
 
                 // Inverse shift
                 let mut result = vec![0.0; n];
@@ -226,7 +226,7 @@ fn bayesian_denoise(
     noise_level: f64,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     // Decompose signal
-    let coeffs_raw = wavedec(signal, config.wavelet, Some(config._level), None)?;
+    let coeffs_raw = wavedec(signal, config.wavelet, Some(config.level), None)?;
     let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
     let mut thresholds = Vec::new();
 
@@ -265,7 +265,7 @@ fn block_threshold_denoise(
     noise_level: f64,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     // Decompose signal
-    let coeffs_raw = wavedec(signal, config.wavelet, Some(config._level), None)?;
+    let coeffs_raw = wavedec(signal, config.wavelet, Some(config.level), None)?;
     let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
     let mut thresholds = Vec::new();
     let mut denoised_coeffs = coeffs.clone();
@@ -278,7 +278,7 @@ fn block_threshold_denoise(
 
         // Scale-dependent threshold
         let base_threshold = noise_level * (2.0 * (signal.len() as f64).ln()).sqrt();
-        let scale_factor = (level_idx + 1) as f64 / config._level as f64;
+        let scale_factor = (level_idx + 1) as f64 / config.level as f64;
         let threshold = base_threshold * (1.0 + 0.5 * scale_factor);
         thresholds.push(threshold);
 
@@ -323,7 +323,7 @@ fn standard_denoise(
     noise_level: f64,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     // Decompose signal
-    let coeffs_raw = wavedec(signal, config.wavelet, Some(config._level), None)?;
+    let coeffs_raw = wavedec(signal, config.wavelet, Some(config.level), None)?;
     let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
     let mut thresholds = Vec::new();
     let mut denoised_coeffs = coeffs.clone();
@@ -336,7 +336,7 @@ fn standard_denoise(
         // Adaptive threshold based on scale
         let threshold = if config.adaptive {
             // Scale-dependent threshold
-            let scale_factor = (level_idx + 1) as f64 / config._level as f64;
+            let scale_factor = (level_idx + 1) as f64 / config.level as f64;
             base_threshold * (1.0 - 0.3 * scale_factor)
         } else {
             base_threshold
@@ -365,7 +365,7 @@ fn standard_denoise(
 
 /// Estimate noise level from signal
 #[allow(dead_code)]
-fn estimate_noise_level(_signal: &[f64], config: &AdvancedDenoiseConfig) -> SignalResult<f64> {
+fn estimate_noise_level(signal: &[f64], config: &AdvancedDenoiseConfig) -> SignalResult<f64> {
     match config.noise_estimation {
         NoiseEstimation::MAD => {
             // Use MAD of finest scale wavelet coefficients
@@ -432,9 +432,9 @@ fn estimate_noise_level(_signal: &[f64], config: &AdvancedDenoiseConfig) -> Sign
 
 /// Estimate signal variance for Bayesian denoising
 #[allow(dead_code)]
-fn estimate_signal_variance(_coeffs: &[f64], noise_level: f64) -> f64 {
-    let n = _coeffs.len() as f64;
-    let empirical_var = _coeffs.iter().map(|&x| x * x).sum::<f64>() / n;
+fn estimate_signal_variance(_coeffs: &[f64], noiselevel: f64) -> f64 {
+    let n = coeffs.len() as f64;
+    let empirical_var = coeffs.iter().map(|&x| x * x).sum::<f64>() / n;
 
     // Estimate signal variance by removing noise contribution
     let noise_var = noise_level * noise_level;
@@ -445,8 +445,8 @@ fn estimate_signal_variance(_coeffs: &[f64], noise_level: f64) -> f64 {
 
 /// Estimate SNR improvement
 #[allow(dead_code)]
-fn estimate_snr_improvement(_original: &[f64], denoised: &[f64]) -> Option<f64> {
-    if _original.len() != denoised.len() {
+fn estimate_snr_improvement(original: &[f64], denoised: &[f64]) -> Option<f64> {
+    if original.len() != denoised.len() {
         return None;
     }
 
@@ -488,6 +488,7 @@ pub fn wavelet_packet_denoise(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[allow(unused_imports)]
     #[test]
     fn test_advanced_denoise_basic() {

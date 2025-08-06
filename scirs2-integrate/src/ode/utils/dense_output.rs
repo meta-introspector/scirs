@@ -143,7 +143,7 @@ impl<F: IntegrateFloat> DenseSolution<F> {
     }
 
     /// Create a dense sequence of solution values for plotting or analysis
-    pub fn dense_output(&self, n_points: usize) -> IntegrateResult<(Vec<F>, Vec<Array1<F>>)> {
+    pub fn dense_output(&self, npoints: usize) -> IntegrateResult<(Vec<F>, Vec<Array1<F>>)> {
         if self.t.is_empty() {
             return Err(IntegrateError::ComputationError(
                 "Empty solution".to_string(),
@@ -152,12 +152,12 @@ impl<F: IntegrateFloat> DenseSolution<F> {
 
         let t_min = *self.t.first().unwrap();
         let t_max = *self.t.last().unwrap();
-        let dt = (t_max - t_min) / F::from_usize(n_points - 1).unwrap();
+        let dt = (t_max - t_min) / F::from_usize(npoints - 1).unwrap();
 
-        let mut times = Vec::with_capacity(n_points);
-        let mut values = Vec::with_capacity(n_points);
+        let mut times = Vec::with_capacity(npoints);
+        let mut values = Vec::with_capacity(npoints);
 
-        for i in 0..n_points {
+        for i in 0..npoints {
             let t = t_min + dt * F::from_usize(i).unwrap();
             times.push(t);
             values.push(self.evaluate(t)?);
@@ -213,8 +213,8 @@ pub struct DOP853Interpolant<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> DOP853Interpolant<F> {
     /// Create a new DOP853 interpolant
-    pub fn new(_t0: F, h: F, y0: Array1<F>, k: Vec<Array1<F>>) -> Self {
-        DOP853Interpolant { t0: _t0, h, y0, k }
+    pub fn new(t0: F, h: F, y0: Array1<F>, k: Vec<Array1<F>>) -> Self {
+        DOP853Interpolant { t0: t0, h, y0, k }
     }
 
     /// Evaluate the interpolant at a specific point within the step
@@ -275,9 +275,9 @@ pub struct RadauInterpolant<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> RadauInterpolant<F> {
     /// Create a new Radau interpolant
-    pub fn new(_t0: F, h: F, y0: Array1<F>, y1: Array1<F>, k: Vec<Array1<F>>) -> Self {
+    pub fn new(t0: F, h: F, y0: Array1<F>, y1: Array1<F>, k: Vec<Array1<F>>) -> Self {
         RadauInterpolant {
-            t0: _t0,
+            t0: t0,
             h,
             y0,
             y1,

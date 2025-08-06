@@ -290,9 +290,9 @@ impl Default for AnnotationStyle {
 
 impl TimeSeriesPlot {
     /// Create a new time series plot
-    pub fn new(_title: &str) -> Self {
+    pub fn new(title: &str) -> Self {
         Self {
-            _title: _title.to_string(),
+            _title: title.to_string(),
             x_label: "Time".to_string(),
             y_label: "Value".to_string(),
             series: Vec::new(),
@@ -302,7 +302,7 @@ impl TimeSeriesPlot {
     }
 
     /// Set axis labels
-    pub fn set_labels(&mut self, x_label: &str, y_label: &str) {
+    pub fn set_labels(&mut self, x_label: &str, ylabel: &str) {
         self.x_label = x_label.to_string();
         self.y_label = y_label.to_string();
     }
@@ -436,7 +436,7 @@ impl TimeSeriesPlot {
     }
 
     /// Highlight change points on the plot
-    pub fn highlight_change_points(&mut self, change_points: &[f64]) {
+    pub fn highlight_change_points(&mut self, changepoints: &[f64]) {
         for &cp in change_points {
             let annotation = Annotation {
                 annotation_type: AnnotationType::VerticalLine,
@@ -914,16 +914,16 @@ impl Default for DashboardLayout {
 
 impl Dashboard {
     /// Create a new dashboard
-    pub fn new(_title: &str) -> Self {
+    pub fn new(title: &str) -> Self {
         Self {
-            _title: _title.to_string(),
+            _title: title.to_string(),
             plots: Vec::new(),
             layout: DashboardLayout::default(),
         }
     }
 
     /// Add a plot to the dashboard
-    pub fn add_plot(&mut self, section_title: &str, plot: TimeSeriesPlot) {
+    pub fn add_plot(&mut self, sectiontitle: &str, plot: TimeSeriesPlot) {
         self.plots.push((section_title.to_string(), plot));
     }
 

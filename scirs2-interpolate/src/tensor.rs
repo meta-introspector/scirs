@@ -51,8 +51,8 @@ impl<F: Float + FromPrimitive + Debug> TensorProductInterpolator<F> {
     ///
     /// println!("Tensor product interpolator created for 2D grid");
     /// ```
-    pub fn new(_coords: Vec<Array1<F>>, method: InterpolationMethod) -> Self {
-        Self { _coords, method }
+    pub fn new(coords: Vec<Array1<F>>, method: InterpolationMethod) -> Self {
+        Self { coords, method }
     }
 
     /// Evaluate the interpolator at multiple points
@@ -67,7 +67,8 @@ impl<F: Float + FromPrimitive + Debug> TensorProductInterpolator<F> {
     /// Interpolated values at the points
     pub fn evaluate(
         &self,
-        points: &ArrayView2<F>, _values: &ndarray::ArrayD<F>,
+        points: &ArrayView2<F>,
+        _values: &ndarray::ArrayD<F>,
     ) -> InterpolateResult<Array1<F>> {
         // This is a placeholder implementation
         // In a full implementation, we would:
@@ -98,8 +99,10 @@ impl<F: Float + FromPrimitive + Debug> TensorProductInterpolator<F> {
 /// Interpolated values at the points
 #[allow(dead_code)]
 pub fn tensor_product_interpolate<F>(
-    _coords: &[Array1<F>], _values: &ndarray::ArrayD<F>,
-    points: &ArrayView2<F>, _method: InterpolationMethod,
+    _coords: &[Array1<F>],
+    _values: &ndarray::ArrayD<F>,
+    points: &ArrayView2<F>,
+    _method: InterpolationMethod,
 ) -> InterpolateResult<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -140,7 +143,7 @@ impl<F: Float + FromPrimitive + Debug> LagrangeTensorInterpolator<F> {
     /// # Returns
     ///
     /// A new `LagrangeTensorInterpolator` object
-    pub fn new(_coords: Vec<Array1<F>>) -> Self {
+    pub fn new(coords: Vec<Array1<F>>) -> Self {
         Self { _coords }
     }
 
@@ -156,7 +159,8 @@ impl<F: Float + FromPrimitive + Debug> LagrangeTensorInterpolator<F> {
     /// Interpolated values at the points
     pub fn evaluate(
         &self,
-        points: &ArrayView2<F>, _values: &ndarray::ArrayD<F>,
+        points: &ArrayView2<F>,
+        _values: &ndarray::ArrayD<F>,
     ) -> InterpolateResult<Array1<F>> {
         // This is a placeholder implementation
         // In a full implementation, we would:
@@ -186,7 +190,8 @@ impl<F: Float + FromPrimitive + Debug> LagrangeTensorInterpolator<F> {
 /// Interpolated values at the points
 #[allow(dead_code)]
 pub fn lagrange_tensor_interpolate<F>(
-    _coords: &[Array1<F>], _values: &ndarray::ArrayD<F>,
+    _coords: &[Array1<F>],
+    _values: &ndarray::ArrayD<F>,
     points: &ArrayView2<F>,
 ) -> InterpolateResult<Array1<F>>
 where

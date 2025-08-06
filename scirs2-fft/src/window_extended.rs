@@ -40,10 +40,10 @@ pub enum ExtendedWindow {
 
 /// Generate an extended window function
 #[allow(dead_code)]
-pub fn get_extended_window(_window: ExtendedWindow, n: usize) -> FFTResult<Array1<f64>> {
+pub fn get_extended_window(window: ExtendedWindow, n: usize) -> FFTResult<Array1<f64>> {
     let mut w = Array1::zeros(n);
 
-    match _window {
+    match window {
         ExtendedWindow::Chebyshev { attenuation_db } => {
             generate_chebyshev_window(&mut w, attenuation_db)?;
         }
@@ -84,16 +84,16 @@ pub fn get_extended_window(_window: ExtendedWindow, n: usize) -> FFTResult<Array
 
 /// Generate Chebyshev window
 #[allow(dead_code)]
-fn generate_chebyshev_window(w: &mut Array1<f64>, attenuation_db: f64) -> FFTResult<()> {
+fn generate_chebyshev_window(w: &mut Array1<f64>, attenuationdb: f64) -> FFTResult<()> {
     let n = w.len();
-    if attenuation_db <= 0.0 {
+    if attenuationdb <= 0.0 {
         return Err(FFTError::ValueError(
             "Attenuation must be positive".to_string(),
         ));
     }
 
     // Simplified Chebyshev window implementation
-    let r = 10.0_f64.powf(attenuation_db / 20.0);
+    let r = 10.0_f64.powf(attenuationdb / 20.0);
     let beta = (r + (r * r - 1.0).sqrt()).ln() / n as f64;
 
     for i in 0..n {
@@ -170,9 +170,9 @@ fn generate_planck_taper_window(w: &mut Array1<f64>, epsilon: f64) -> FFTResult<
 
 /// Generate Dolph-Chebyshev window
 #[allow(dead_code)]
-fn generate_dolph_chebyshev_window(w: &mut Array1<f64>, attenuation_db: f64) -> FFTResult<()> {
+fn generate_dolph_chebyshev_window(w: &mut Array1<f64>, attenuationdb: f64) -> FFTResult<()> {
     // This is similar to Chebyshev but with different normalization
-    generate_chebyshev_window(w, attenuation_db)?;
+    generate_chebyshev_window(w, attenuationdb)?;
 
     // Normalize to unit sum
     let sum: f64 = w.sum();

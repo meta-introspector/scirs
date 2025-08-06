@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("   Success: eig_gen works correctly!");
         }
         Err(e) => {
-            println!("   Error in eig_gen: {}", e);
+            println!("   Error in eiggen: {}", e);
             return Err(e.into());
         }
     }
@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("   Success: eigh_gen works correctly!");
         }
         Err(e) => {
-            println!("   Error in eigh_gen: {}", e);
+            println!("   Error in eighgen: {}", e);
             return Err(e.into());
         }
     }
@@ -53,7 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("   Success: eigvals_gen works correctly!");
         }
         Err(e) => {
-            println!("   Error in eigvals_gen: {}", e);
+            println!("   Error in eigvalsgen: {}", e);
             return Err(e.into());
         }
     }
@@ -65,7 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("   Success: eigvalsh_gen works correctly!");
         }
         Err(e) => {
-            println!("   Error in eigvalsh_gen: {}", e);
+            println!("   Error in eigvalshgen: {}", e);
             return Err(e.into());
         }
     }
@@ -77,7 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match eig_gen(&a_test.view(), &b_identity.view(), None) {
         Ok((gen_eigenvalues_)) => {
-            println!("   Generalized eigenvalues: {:?}", gen_eigenvalues);
+            println!("   Generalized eigenvalues: {:?}", gen_eigenvalues_);
             println!("   Success: Identity matrix case works!");
         }
         Err(e) => {
@@ -88,10 +88,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n======================================================");
     println!("All Generalized Eigenvalue Tests Completed Successfully!");
-    println!("✅ eig_gen: General generalized eigenvalue problem");
-    println!("✅ eigh_gen: Symmetric generalized eigenvalue problem");
-    println!("✅ eigvals_gen: Eigenvalues-only (general)");
-    println!("✅ eigvalsh_gen: Eigenvalues-only (symmetric)");
+    println!("✅ eiggen: General generalized eigenvalue problem");
+    println!("✅ eighgen: Symmetric generalized eigenvalue problem");
+    println!("✅ eigvalsgen: Eigenvalues-only (general)");
+    println!("✅ eigvalshgen: Eigenvalues-only (symmetric)");
     println!("======================================================");
 
     Ok(())

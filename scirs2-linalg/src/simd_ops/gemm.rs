@@ -63,7 +63,8 @@ pub fn simd_gemm_f32(
     a: &ArrayView2<f32>,
     b: &ArrayView2<f32>,
     beta: f32,
-    c: &mut Array2<f32>, _block_sizes: Option<GemmBlockSizes>,
+    c: &mut Array2<f32>,
+    _block_sizes: Option<GemmBlockSizes>,
 ) -> LinalgResult<()> {
     let (m, k1) = a.dim();
     let (k2, n) = b.dim();
@@ -110,7 +111,8 @@ pub fn simd_gemm_f64(
     a: &ArrayView2<f64>,
     b: &ArrayView2<f64>,
     beta: f64,
-    c: &mut Array2<f64>, _block_sizes: Option<GemmBlockSizes>,
+    c: &mut Array2<f64>,
+    _block_sizes: Option<GemmBlockSizes>,
 ) -> LinalgResult<()> {
     let (m, k1) = a.dim();
     let (k2, n) = b.dim();
@@ -429,8 +431,8 @@ mod tests {
         let k = 80;
         let n = 60;
 
-        let a = Array2::fromshape_fn((m, k), |(i, j)| (i + j) as f32 * 0.01);
-        let b = Array2::fromshape_fn((k, n), |(i, j)| (i * 2 + j) as f32 * 0.01);
+        let a = Array2::from_shape_fn((m, k), |(i, j)| (i + j) as f32 * 0.01);
+        let b = Array2::from_shape_fn((k, n), |(i, j)| (i * 2 + j) as f32 * 0.01);
         let mut c = Array2::zeros((m, n));
 
         // Test with custom block sizes

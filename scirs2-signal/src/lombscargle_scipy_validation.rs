@@ -307,14 +307,14 @@ fn validate_single_case(
     // Create irregularly sampled signal with known frequency content
     for i in 0..n {
         let base_time = i as f64 * duration / n as f64;
-        let jitter = rng.random_range(-0.1..0.1) * duration / n as f64;
+        let jitter = rng.gen_range(-0.1..0.1) * duration / n as f64;
         let time = (base_time + jitter).max(0.0).min(duration);
         t.push(time);
 
         // Add signal with multiple frequency components
         let signal_val = (2.0 * PI * test_freq * time).sin()
             + 0.3 * (2.0 * PI * test_freq * 2.0 * time).sin()
-            + 0.1 * rng.random_range(-1.0..1.0); // Add some noise
+            + 0.1 * rng.gen_range(-1.0..1.0); // Add some noise
         signal.push(signal_val);
     }
 
@@ -516,7 +516,7 @@ fn validate_single_normalization_case(
 
 /// Validate edge cases
 #[allow(dead_code)]
-fn validate_edge_cases(_config: &ScipyValidationConfig) -> SignalResult<EdgeCaseValidationResult> {
+fn validate_edge_cases(config: &ScipyValidationConfig) -> SignalResult<EdgeCaseValidationResult> {
     let sparse_sampling = test_sparse_sampling(_config)?;
     let extreme_dynamic_range = test_extreme_dynamic_range(_config)?;
     let short_time_series = test_short_time_series(_config)?;
@@ -540,7 +540,7 @@ fn validate_edge_cases(_config: &ScipyValidationConfig) -> SignalResult<EdgeCase
 
 /// Test sparse sampling edge case
 #[allow(dead_code)]
-fn test_sparse_sampling(_config: &ScipyValidationConfig) -> SignalResult<bool> {
+fn test_sparse_sampling(config: &ScipyValidationConfig) -> SignalResult<bool> {
     // Test with very sparse sampling (10 points over long duration)
     let t: Vec<f64> = vec![0.0, 1.0, 2.5, 4.0, 6.2, 8.1, 10.0, 12.3, 15.0, 20.0];
     let signal: Vec<f64> = t
@@ -570,7 +570,7 @@ fn test_sparse_sampling(_config: &ScipyValidationConfig) -> SignalResult<bool> {
 
 /// Test extreme dynamic range
 #[allow(dead_code)]
-fn test_extreme_dynamic_range(_config: &ScipyValidationConfig) -> SignalResult<bool> {
+fn test_extreme_dynamic_range(config: &ScipyValidationConfig) -> SignalResult<bool> {
     let n = 100;
     let fs = 10.0;
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
@@ -605,7 +605,7 @@ fn test_extreme_dynamic_range(_config: &ScipyValidationConfig) -> SignalResult<b
 
 /// Test short time series
 #[allow(dead_code)]
-fn test_short_time_series(_config: &ScipyValidationConfig) -> SignalResult<bool> {
+fn test_short_time_series(config: &ScipyValidationConfig) -> SignalResult<bool> {
     // Test with minimum viable data (5 points)
     let t: Vec<f64> = vec![0.0, 0.1, 0.2, 0.3, 0.4];
     let signal: Vec<f64> = vec![1.0, -1.0, 1.0, -1.0, 1.0]; // Alternating signal
@@ -628,7 +628,7 @@ fn test_short_time_series(_config: &ScipyValidationConfig) -> SignalResult<bool>
 
 /// Test high frequency resolution
 #[allow(dead_code)]
-fn test_high_frequency_resolution(_config: &ScipyValidationConfig) -> SignalResult<bool> {
+fn test_high_frequency_resolution(config: &ScipyValidationConfig) -> SignalResult<bool> {
     let n = 1000;
     let fs = 100.0;
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
@@ -684,16 +684,16 @@ fn validate_statistical_properties(
 
 /// Estimate false alarm rate
 #[allow(dead_code)]
-fn estimate_false_alarm_rate(_config: &ScipyValidationConfig) -> SignalResult<f64> {
+fn estimate_false_alarm_rate(config: &ScipyValidationConfig) -> SignalResult<f64> {
     let mut false_alarms = 0;
-    let trials = _config.monte_carlo_trials.min(50); // Limit for performance
+    let trials = config.monte_carlo_trials.min(50); // Limit for performance
 
     for _ in 0..trials {
         // Generate pure noise
         let mut rng = rand::rng();
         let n = 100;
         let t: Vec<f64> = (0..n).map(|i| i as f64 / 10.0).collect();
-        let signal: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
+        let signal: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
 
         let freqs: Vec<f64> = Array1::linspace(0.1, 5.0, 50).to_vec();
 
@@ -719,9 +719,9 @@ fn estimate_false_alarm_rate(_config: &ScipyValidationConfig) -> SignalResult<f6
 
 /// Estimate detection power
 #[allow(dead_code)]
-fn estimate_detection_power(_config: &ScipyValidationConfig) -> SignalResult<f64> {
+fn estimate_detection_power(config: &ScipyValidationConfig) -> SignalResult<f64> {
     let mut detections = 0;
-    let trials = _config.monte_carlo_trials.min(50);
+    let trials = config.monte_carlo_trials.min(50);
 
     for _ in 0..trials {
         // Generate signal with known frequency
@@ -732,7 +732,7 @@ fn estimate_detection_power(_config: &ScipyValidationConfig) -> SignalResult<f64
         let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
         let signal: Vec<f64> = t
             .iter()
-            .map(|&time| (2.0 * PI * signal_freq * time).sin() + 0.1 * rng.random_range(-1.0..1.0))
+            .map(|&time| (2.0 * PI * signal_freq * time).sin() + 0.1 * rng.gen_range(-1.0..1.0))
             .collect();
 
         let freqs: Vec<f64> = Array1::linspace(0.1..fs / 2.0, 50).to_vec();
@@ -752,7 +752,7 @@ fn estimate_detection_power(_config: &ScipyValidationConfig) -> SignalResult<f64
                 .iter()
                 .enumerate()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                .map(|(i_)| i)
+                .map(|(i, _)| i)
             {
                 let detected_freq = freq_grid[peak_idx];
                 if (detected_freq - signal_freq).abs() < 0.1 {
@@ -767,7 +767,7 @@ fn estimate_detection_power(_config: &ScipyValidationConfig) -> SignalResult<f64
 
 /// Validate confidence intervals
 #[allow(dead_code)]
-fn validate_confidence_intervals(_config: &ScipyValidationConfig) -> SignalResult<f64> {
+fn validate_confidence_intervals(config: &ScipyValidationConfig) -> SignalResult<f64> {
     // Placeholder implementation for confidence interval validation
     // In practice, this would test bootstrap confidence intervals
     Ok(0.95) // Assume 95% coverage for now
@@ -822,8 +822,8 @@ fn calculate_overall_summary(
 // Helper functions
 
 #[allow(dead_code)]
-fn calculate_error_metrics(_result1: &[f64], result2: &[f64]) -> SignalResult<(f64, f64, f64)> {
-    if _result1.len() != result2.len() {
+fn calculate_error_metrics(result1: &[f64], result2: &[f64]) -> SignalResult<(f64, f64, f64)> {
+    if result1.len() != result2.len() {
         return Err(SignalError::ValueError(
             "Result arrays must have same length".to_string(),
         ));
@@ -832,9 +832,9 @@ fn calculate_error_metrics(_result1: &[f64], result2: &[f64]) -> SignalResult<(f
     let mut max_abs_error = 0.0;
     let mut max_rel_error = 0.0;
     let mut mse_sum = 0.0;
-    let n = _result1.len();
+    let n = result1.len();
 
-    for (i, (&a, &b)) in _result1.iter().zip(result2.iter()).enumerate() {
+    for (i, (&a, &b)) in result1.iter().zip(result2.iter()).enumerate() {
         let abs_error = (a - b).abs();
         let rel_error = if b.abs() > 1e-15 {
             abs_error / b.abs()
@@ -917,12 +917,12 @@ fn calculate_edge_case_stability_score(
 }
 
 #[allow(dead_code)]
-fn find_peaks(_data: &[f64], threshold: f64) -> Vec<usize> {
+fn find_peaks(data: &[f64], threshold: f64) -> Vec<usize> {
     let mut peaks = Vec::new();
-    let n = _data.len();
+    let n = data.len();
 
     for i in 1..n - 1 {
-        if _data[i] > threshold && _data[i] > _data[i - 1] && _data[i] > _data[i + 1] {
+        if data[i] > threshold && data[i] > data[i - 1] && data[i] > data[i + 1] {
             peaks.push(i);
         }
     }
@@ -1171,7 +1171,7 @@ fn test_numerical_conditioning(
 
 /// Test aliasing effects in Lomb-Scargle
 #[allow(dead_code)]
-fn test_aliasing_effects(_config: &ScipyValidationConfig) -> SignalResult<AliasingTestResult> {
+fn test_aliasing_effects(config: &ScipyValidationConfig) -> SignalResult<AliasingTestResult> {
     let mut rng = rand::rng();
 
     // Test 1: Nyquist aliasing detection
@@ -1223,7 +1223,7 @@ fn test_astronomical_scenarios(
 
 /// Test phase coherence preservation
 #[allow(dead_code)]
-fn test_phase_coherence(_config: &ScipyValidationConfig) -> SignalResult<PhaseCoherenceResult> {
+fn test_phase_coherence(config: &ScipyValidationConfig) -> SignalResult<PhaseCoherenceResult> {
     let mut rng = rand::rng();
 
     // Generate complex signal with known phase relationships
@@ -1277,7 +1277,7 @@ fn quantify_uncertainty(
     // Bootstrap resampling
     let mut bootstrap_results = Vec::new();
     for _ in 0..n_bootstrap {
-        let mut _bootstrap_indices: Vec<usize> = (0..n).collect();
+        let mut bootstrap_indices: Vec<usize> = (0..n).collect();
         bootstrap_indices.shuffle(&mut rng);
 
         let boot_times: Vec<f64> = bootstrap_indices.iter().map(|&i| times[i]).collect();
@@ -1300,7 +1300,7 @@ fn quantify_uncertainty(
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(i_)| i)
+            .map(|(i, _)| i)
             .unwrap_or(0);
 
         bootstrap_results.push(freqs[peak_idx]);
@@ -1499,10 +1499,10 @@ pub fn run_comprehensive_validation() -> SignalResult<()> {
 
 /// Estimate condition number of the Lomb-Scargle normal equations
 #[allow(dead_code)]
-fn estimate_condition_number(_times: &[f64], freqs: &[f64]) -> SignalResult<f64> {
+fn estimate_condition_number(times: &[f64], freqs: &[f64]) -> SignalResult<f64> {
     // Simplified condition number estimation
     // In practice, this would compute the condition number of the design matrix
-    let n = _times.len();
+    let n = times.len();
     let m = freqs.len();
 
     if n < 2 || m < 2 {
@@ -1510,7 +1510,7 @@ fn estimate_condition_number(_times: &[f64], freqs: &[f64]) -> SignalResult<f64>
     }
 
     // Estimate based on time sampling irregularity and frequency range
-    let time_span = _times[n - 1] - _times[0];
+    let time_span = times[n - 1] - times[0];
     let max_freq = freqs.iter().cloned().fold(0.0, f64::max);
     let min_freq = freqs.iter().cloned().fold(f64::INFINITY, f64::min);
 
@@ -1523,12 +1523,12 @@ fn estimate_condition_number(_times: &[f64], freqs: &[f64]) -> SignalResult<f64>
 }
 
 #[allow(dead_code)]
-fn estimate_sampling_irregularity(_times: &[f64]) -> f64 {
-    if _times.len() < 3 {
+fn estimate_sampling_irregularity(times: &[f64]) -> f64 {
+    if times.len() < 3 {
         return 1.0;
     }
 
-    let diffs: Vec<f64> = _times.windows(2).map(|w| w[1] - w[0]).collect();
+    let diffs: Vec<f64> = times.windows(2).map(|w| w[1] - w[0]).collect();
     let mean_diff = diffs.iter().sum::<f64>() / diffs.len() as f64;
     let var_diff = diffs.iter().map(|&d| (d - mean_diff).powi(2)).sum::<f64>() / diffs.len() as f64;
 
@@ -1536,7 +1536,7 @@ fn estimate_sampling_irregularity(_times: &[f64]) -> f64 {
 }
 
 #[allow(dead_code)]
-fn test_perturbation_stability(_times: &[f64], values: &[f64], freqs: &[f64]) -> SignalResult<f64> {
+fn test_perturbation_stability(times: &[f64], values: &[f64], freqs: &[f64]) -> SignalResult<f64> {
     // Test stability under small perturbations to the data
     let perturbation_level = 1e-8;
     let mut rng = rand::rng();
@@ -1569,7 +1569,7 @@ fn test_perturbation_stability(_times: &[f64], values: &[f64], freqs: &[f64]) ->
 }
 
 #[allow(dead_code)]
-fn test_gradient_stability(_times: &[f64], values: &[f64], freqs: &[f64]) -> SignalResult<f64> {
+fn test_gradient_stability(times: &[f64], values: &[f64], freqs: &[f64]) -> SignalResult<f64> {
     // Test gradient-based stability measure
     // Simplified implementation
     let h = 1e-8;
@@ -1597,7 +1597,7 @@ fn test_gradient_stability(_times: &[f64], values: &[f64], freqs: &[f64]) -> Sig
 }
 
 #[allow(dead_code)]
-fn test_nyquist_aliasing_detection(_rng: &mut impl Rng) -> SignalResult<f64> {
+fn test_nyquist_aliasing_detection(rng: &mut impl Rng) -> SignalResult<f64> {
     // Test detection of Nyquist aliasing
     let n = 100;
     let fs = 1.0; // Sampling frequency
@@ -1610,7 +1610,7 @@ fn test_nyquist_aliasing_detection(_rng: &mut impl Rng) -> SignalResult<f64> {
 
     let values: Vec<f64> = times
         .iter()
-        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.1 * _rng.random::<f64>())
+        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.1 * rng.random::<f64>())
         .collect();
 
     let freqs: Vec<f64> = (1..=50).map(|i| i as f64 * 0.02).collect();
@@ -1630,7 +1630,7 @@ fn test_nyquist_aliasing_detection(_rng: &mut impl Rng) -> SignalResult<f64> {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap_or(0);
 
     let detected_freq = freqs[peak_idx];
@@ -1640,7 +1640,7 @@ fn test_nyquist_aliasing_detection(_rng: &mut impl Rng) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn test_sub_nyquist_handling(_rng: &mut impl Rng) -> SignalResult<f64> {
+fn test_sub_nyquist_handling(rng: &mut impl Rng) -> SignalResult<f64> {
     // Test handling of frequencies below Nyquist
     let n = 200;
     let fs = 2.0;
@@ -1649,7 +1649,7 @@ fn test_sub_nyquist_handling(_rng: &mut impl Rng) -> SignalResult<f64> {
 
     let values: Vec<f64> = times
         .iter()
-        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.05 * _rng.random::<f64>())
+        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.05 * rng.random::<f64>())
         .collect();
 
     let freqs: Vec<f64> = (1..=100).map(|i| i as f64 * 0.01).collect();
@@ -1668,7 +1668,7 @@ fn test_sub_nyquist_handling(_rng: &mut impl Rng) -> SignalResult<f64> {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap_or(0);
 
     let detected_freq = freqs[peak_idx];
@@ -1678,7 +1678,7 @@ fn test_sub_nyquist_handling(_rng: &mut impl Rng) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn test_false_peak_suppression(_rng: &mut impl Rng) -> SignalResult<f64> {
+fn test_false_peak_suppression(rng: &mut impl Rng) -> SignalResult<f64> {
     // Test ability to suppress false peaks
     let n = 150;
     let times: Vec<f64> = (0..n).map(|i| i as f64 * 0.1).collect();
@@ -1687,7 +1687,7 @@ fn test_false_peak_suppression(_rng: &mut impl Rng) -> SignalResult<f64> {
     // Signal with strong true frequency and weak noise
     let values: Vec<f64> = times
         .iter()
-        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.2 * _rng.random::<f64>())
+        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.2 * rng.random::<f64>())
         .collect();
 
     let freqs: Vec<f64> = (1..=100).map(|i| i as f64 * 0.01).collect();
@@ -1715,7 +1715,7 @@ fn test_false_peak_suppression(_rng: &mut impl Rng) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn test_spectral_leakage_mitigation(_rng: &mut impl Rng) -> SignalResult<f64> {
+fn test_spectral_leakage_mitigation(rng: &mut impl Rng) -> SignalResult<f64> {
     // Test mitigation of spectral leakage
     // Use windowing or other techniques to reduce leakage
     let n = 128;
@@ -1730,7 +1730,7 @@ fn test_spectral_leakage_mitigation(_rng: &mut impl Rng) -> SignalResult<f64> {
         .map(|&t| {
             (2.0 * PI * freq1 * t).sin()
                 + 0.5 * (2.0 * PI * freq2 * t).sin()
-                + 0.1 * _rng.random::<f64>()
+                + 0.1 * rng.random::<f64>()
         })
         .collect();
 
@@ -1754,11 +1754,11 @@ fn test_spectral_leakage_mitigation(_rng: &mut impl Rng) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn test_variable_star_simulation(_rng: &mut impl Rng) -> SignalResult<f64> {
+fn test_variable_star_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
     // Simulate variable star light curve
     let n = 500;
     let observation_times: Vec<f64> = (0..n)
-        .map(|_| _rng.random::<f64>() * 100.0) // Irregular sampling
+        .map(|_| rng.random::<f64>() * 100.0) // Irregular sampling
         .collect();
     let mut times = observation_times;
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -1772,7 +1772,7 @@ fn test_variable_star_simulation(_rng: &mut impl Rng) -> SignalResult<f64> {
         .map(|&t| {
             15.0 + 0.5 * (2.0 * PI * freq * t).sin() +
             0.1 * (2.0 * PI * 2.0 * freq * t).sin() + // Harmonic
-            0.05 * _rng.random::<f64>() // Noise
+            0.05 * rng.random::<f64>() // Noise
         })
         .collect();
 
@@ -1792,7 +1792,7 @@ fn test_variable_star_simulation(_rng: &mut impl Rng) -> SignalResult<f64> {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap_or(0);
 
     let detected_freq = freqs[peak_idx];
@@ -1802,7 +1802,7 @@ fn test_variable_star_simulation(_rng: &mut impl Rng) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn test_exoplanet_transit_simulation(_rng: &mut impl Rng) -> SignalResult<f64> {
+fn test_exoplanet_transit_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
     // Simulate exoplanet transit detection
     let n = 1000;
     let times: Vec<f64> = (0..n).map(|i| i as f64 * 0.01).collect(); // Regular sampling
@@ -1824,7 +1824,7 @@ fn test_exoplanet_transit_simulation(_rng: &mut impl Rng) -> SignalResult<f64> {
             } else {
                 baseline
             };
-            transit_flux + 0.001 * _rng.random::<f64>() // Low noise
+            transit_flux + 0.001 * rng.random::<f64>() // Low noise
         })
         .collect();
 
@@ -1850,7 +1850,7 @@ fn test_exoplanet_transit_simulation(_rng: &mut impl Rng) -> SignalResult<f64> {
                 .partial_cmp(&(f2 - expected_freq).abs())
                 .unwrap()
         })
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap_or(0);
 
     let detection_strength = periodogram[closest_freq_idx];
@@ -1858,11 +1858,11 @@ fn test_exoplanet_transit_simulation(_rng: &mut impl Rng) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn test_rr_lyrae_simulation(_rng: &mut impl Rng) -> SignalResult<f64> {
+fn test_rr_lyrae_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
     // Simulate RR Lyrae star
     let n = 800;
     let times: Vec<f64> = (0..n)
-        .map(|i| i as f64 * 0.015 + _rng.random::<f64>() * 0.005)
+        .map(|i| i as f64 * 0.015 + rng.random::<f64>() * 0.005)
         .collect();
 
     let period = 0.5; // Days (typical RR Lyrae period)
@@ -1880,7 +1880,7 @@ fn test_rr_lyrae_simulation(_rng: &mut impl Rng) -> SignalResult<f64> {
                 0.8 * (-0.5 * (phase - 0.3) / 0.7).exp()
             };
 
-            12.0 + brightness + 0.02 * _rng.random::<f64>()
+            12.0 + brightness + 0.02 * rng.random::<f64>()
         })
         .collect();
 
@@ -1900,7 +1900,7 @@ fn test_rr_lyrae_simulation(_rng: &mut impl Rng) -> SignalResult<f64> {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap_or(0);
 
     let detected_period = 1.0 / freqs[peak_idx];
@@ -1910,7 +1910,7 @@ fn test_rr_lyrae_simulation(_rng: &mut impl Rng) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn test_multi_periodic_source(_rng: &mut impl Rng) -> SignalResult<f64> {
+fn test_multi_periodic_source(rng: &mut impl Rng) -> SignalResult<f64> {
     // Test detection of multiple periods
     let n = 1200;
     let times: Vec<f64> = (0..n).map(|i| i as f64 * 0.02).collect();
@@ -1925,7 +1925,7 @@ fn test_multi_periodic_source(_rng: &mut impl Rng) -> SignalResult<f64> {
             (2.0 * PI * freq1 * t).sin()
                 + 0.7 * (2.0 * PI * freq2 * t).sin()
                 + 0.5 * (2.0 * PI * freq3 * t).sin()
-                + 0.1 * _rng.random::<f64>()
+                + 0.1 * rng.random::<f64>()
         })
         .collect();
 
@@ -1980,9 +1980,9 @@ fn test_phase_preservation(
 }
 
 #[allow(dead_code)]
-fn test_coherence_stability(_times: &[f64], values: &[f64]) -> SignalResult<f64> {
+fn test_coherence_stability(times: &[f64], values: &[f64]) -> SignalResult<f64> {
     // Test stability of coherence over time windows
-    let window_size = _times.len() / 4;
+    let window_size = times.len() / 4;
     let mut coherence_scores = Vec::new();
 
     for start in (0.._times.len()).step_by(window_size / 2) {
@@ -2017,7 +2017,7 @@ fn test_coherence_stability(_times: &[f64], values: &[f64]) -> SignalResult<f64>
 }
 
 #[allow(dead_code)]
-fn test_phase_wrapping(_times: &[f64], values: &[f64]) -> SignalResult<f64> {
+fn test_phase_wrapping(times: &[f64], values: &[f64]) -> SignalResult<f64> {
     // Test handling of phase wrapping
     // Simplified test based on periodogram consistency
     let freqs: Vec<f64> = (1..=100).map(|i| i as f64 * 0.01).collect();
@@ -2031,7 +2031,7 @@ fn test_phase_wrapping(_times: &[f64], values: &[f64]) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn test_min_frequency_separation(_rng: &mut impl Rng) -> SignalResult<f64> {
+fn test_min_frequency_separation(rng: &mut impl Rng) -> SignalResult<f64> {
     // Test minimum resolvable frequency separation
     let separations = vec![0.01, 0.005, 0.002, 0.001];
     let mut resolved_separations = Vec::new();
@@ -2048,7 +2048,7 @@ fn test_min_frequency_separation(_rng: &mut impl Rng) -> SignalResult<f64> {
             .map(|&t| {
                 (2.0 * PI * freq1 * t).sin()
                     + (2.0 * PI * freq2 * t).sin()
-                    + 0.1 * _rng.random::<f64>()
+                    + 0.1 * rng.random::<f64>()
             })
             .collect();
 
@@ -2081,7 +2081,7 @@ fn test_min_frequency_separation(_rng: &mut impl Rng) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn test_resolution_scaling(_rng: &mut impl Rng) -> SignalResult<f64> {
+fn test_resolution_scaling(rng: &mut impl Rng) -> SignalResult<f64> {
     // Test how resolution scales with baseline length
     let baselines = vec![10.0, 20.0, 40.0, 80.0];
     let mut resolution_ratios = Vec::new();
@@ -2093,7 +2093,7 @@ fn test_resolution_scaling(_rng: &mut impl Rng) -> SignalResult<f64> {
         let freq = 0.1;
         let values: Vec<f64> = times
             .iter()
-            .map(|&t| (2.0 * PI * freq * t).sin() + 0.1 * _rng.random::<f64>())
+            .map(|&t| (2.0 * PI * freq * t).sin() + 0.1 * rng.random::<f64>())
             .collect();
 
         let freqs: Vec<f64> = (50..=150).map(|i| i as f64 * 0.002).collect();
@@ -2113,7 +2113,7 @@ fn test_resolution_scaling(_rng: &mut impl Rng) -> SignalResult<f64> {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(i_)| i)
+            .map(|(i, _)| i)
             .unwrap_or(50);
 
         let peak_power = periodogram[peak_idx];
@@ -2142,12 +2142,12 @@ fn test_resolution_scaling(_rng: &mut impl Rng) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn characterize_spectral_window(_rng: &mut impl Rng) -> SignalResult<f64> {
+fn characterize_spectral_window(rng: &mut impl Rng) -> SignalResult<f64> {
     // Characterize the spectral window function
     let n = 200;
 
     // Create irregular sampling pattern
-    let mut times: Vec<f64> = (0..n).map(|_| _rng.random::<f64>() * 50.0).collect();
+    let mut times: Vec<f64> = (0..n).map(|_| rng.random::<f64>() * 50.0).collect();
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     // Delta function in time domain (constant signal)
@@ -2170,7 +2170,7 @@ fn characterize_spectral_window(_rng: &mut impl Rng) -> SignalResult<f64> {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap_or(100);
 
     let main_lobe_power = spectral_window[main_lobe_idx];
@@ -2179,7 +2179,7 @@ fn characterize_spectral_window(_rng: &mut impl Rng) -> SignalResult<f64> {
     let sidelobe_power = spectral_window
         .iter()
         .enumerate()
-        .filter(|(i_)| (*i as i32 - main_lobe_idx as i32).abs() > 10)
+        .filter(|(i_, _)| (*i_ as i32 - main_lobe_idx as i32).abs() > 10)
         .map(|(_, &power)| power)
         .fold(0.0, f64::max);
 
@@ -2191,6 +2191,7 @@ fn characterize_spectral_window(_rng: &mut impl Rng) -> SignalResult<f64> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_basic_validation() {

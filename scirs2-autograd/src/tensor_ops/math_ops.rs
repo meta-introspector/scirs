@@ -1,7 +1,7 @@
-use crate::ndarray__ext::{NdArray, NdArrayView};
+use crate::ndarray_ext::{NdArray, NdArrayView};
 use crate::op;
 use crate::tensor::Tensor;
-use crate::tensor__ops::*;
+use crate::tensor_ops::*;
 use crate::Float;
 use ndarray;
 use ndarray::Zip;
@@ -506,7 +506,7 @@ pub(crate) fn fast_inplace_ln_impl<F: Float>(x: &mut NdArray<F>) {
 }
 
 #[allow(dead_code)]
-pub fn logsumexp_forward<T: Float>(x: &NdArrayView<T>, axis: isize, keep_dims: bool) -> NdArray<T> {
+pub fn logsumexp_forward<T: Float>(x: &NdArrayView<T>, axis: isize, keepdims: bool) -> NdArray<T> {
     let axis = if axis < 0 {
         (x.ndim() as isize + axis) as usize
     } else {

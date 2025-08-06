@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Basic example of mutating a memory-mapped array
 #[cfg(feature = "memory_efficient")]
 #[allow(dead_code)]
-fn basic_mutation_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn basic_mutation_example(tempdir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Basic Mutation Example");
     println!("-------------------------");
 
@@ -124,7 +124,7 @@ fn basic_mutation_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Err
 /// Example of mutating a memory-mapped array using chunk-wise processing
 #[cfg(feature = "memory_efficient")]
 #[allow(dead_code)]
-fn chunked_mutation_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn chunked_mutation_example(tempdir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Chunked Mutation Example");
     println!("---------------------------");
 

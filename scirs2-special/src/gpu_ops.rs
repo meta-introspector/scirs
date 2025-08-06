@@ -20,22 +20,22 @@ use std::time::Instant;
 
 /// Safe slice casting replacement for bytemuck::cast_slice
 #[allow(dead_code)]
-fn cast_slice_to_bytes<T>(_slice: &[T]) -> &[u8] {
+fn cast_slice_to_bytes<T>(slice: &[T]) -> &[u8] {
     // SAFETY: This is safe because:
     // 1. The pointer is derived from a valid _slice
     // 2. The size calculation is correct (len * size_of::<T>())
     // 3. The lifetime is bounded by the input _slice
     unsafe {
         std::slice::from_raw_parts(
-            _slice.as_ptr() as *const u8,
-            _slice.len() * std::mem::size_of::<T>(),
+            slice.as_ptr() as *const u8,
+            slice.len() * std::mem::size_of::<T>(),
         )
     }
 }
 
 /// Safe slice casting replacement for bytemuck::cast_slice (reverse)
 #[allow(dead_code)]
-fn cast_bytes_to_slice<T>(_bytes: &[u8]) -> &[T] {
+fn cast_bytes_to_slice<T>(bytes: &[u8]) -> &[T] {
     assert_eq!(_bytes.len() % std::mem::size_of::<T>(), 0);
     // SAFETY: This is safe because:
     // 1. We assert that the byte length is a multiple of T's size
@@ -44,8 +44,8 @@ fn cast_bytes_to_slice<T>(_bytes: &[u8]) -> &[T] {
     // 4. The lifetime is bounded by the input slice
     unsafe {
         std::slice::from_raw_parts(
-            _bytes.as_ptr() as *const T,
-            _bytes.len() / std::mem::size_of::<T>(),
+            bytes.as_ptr() as *const T,
+            bytes.len() / std::mem::size_of::<T>(),
         )
     }
 }
@@ -57,7 +57,7 @@ use log;
 /// Advanced GPU-accelerated gamma function with intelligent fallback and performance monitoring
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-pub fn gamma_gpu<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+pub fn gamma_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float
         + num_traits::FromPrimitive
@@ -71,7 +71,7 @@ where
     use scirs2_core::gpu::GpuBackend;
 
     // Validate _input dimensions
-    if _input.len() != output.len() {
+    if input.len() != output.len() {
         return Err(SpecialError::ValueError(
             "Input and output arrays must have the same length".to_string(),
         ));
@@ -85,7 +85,7 @@ where
         #[cfg(feature = "gpu")]
         log::debug!(
             "Using CPU fallback for gamma computation (array size: {}, element size: {})",
-            _input.len(),
+            input.len(),
             element_size
         );
         return gamma_cpu_fallback(_input, output);
@@ -106,7 +106,7 @@ where
                     backend_type,
                     execution_time,
                     true,
-                    _input.len() * element_size,
+                    input.len() * element_size,
                 );
                 #[cfg(feature = "gpu")]
                 log::debug!(
@@ -135,7 +135,7 @@ where
                         GpuBackend::Cpu,
                         start_time.elapsed(),
                         false,
-                        _input.len() * element_size,
+                        input.len() * element_size,
                     );
                     #[cfg(feature = "gpu")]
                     log::error!(
@@ -158,11 +158,11 @@ where
 /// GPU-accelerated Bessel J0 function for arrays
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-pub fn j0_gpu<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+pub fn j0_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float + num_traits::FromPrimitive + std::fmt::Debug + Send + Sync + 'static,
 {
-    if _input.len() != output.len() {
+    if input.len() != output.len() {
         return Err(SpecialError::ValueError(
             "Input and output arrays must have the same length".to_string(),
         ));
@@ -179,11 +179,11 @@ where
 /// GPU-accelerated error function (erf) for arrays
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-pub fn erf_gpu<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+pub fn erf_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float + num_traits::FromPrimitive + Send + Sync + 'static,
 {
-    if _input.len() != output.len() {
+    if input.len() != output.len() {
         return Err(SpecialError::ValueError(
             "Input and output arrays must have the same length".to_string(),
         ));
@@ -200,7 +200,7 @@ where
 /// GPU-accelerated digamma function for arrays
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-pub fn digamma_gpu<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+pub fn digamma_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float
         + num_traits::FromPrimitive
@@ -213,7 +213,7 @@ where
         + std::ops::MulAssign
         + std::ops::DivAssign,
 {
-    if _input.len() != output.len() {
+    if input.len() != output.len() {
         return Err(SpecialError::ValueError(
             "Input and output arrays must have the same length".to_string(),
         ));
@@ -230,7 +230,7 @@ where
 /// GPU-accelerated log gamma function for arrays
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-pub fn log_gamma_gpu<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+pub fn log_gamma_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float
         + num_traits::FromPrimitive
@@ -240,7 +240,7 @@ where
         + std::fmt::Debug
         + std::ops::AddAssign,
 {
-    if _input.len() != output.len() {
+    if input.len() != output.len() {
         return Err(SpecialError::ValueError(
             "Input and output arrays must have the same length".to_string(),
         ));
@@ -257,7 +257,7 @@ where
 /// CPU fallback implementation for gamma function
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn gamma_cpu_fallback<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+fn gamma_cpu_fallback<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float
         + num_traits::FromPrimitive
@@ -271,7 +271,7 @@ where
     #[cfg(feature = "parallel")]
     {
         use scirs2_core::parallel_ops::*;
-        if is_parallel_enabled() && _input.len() > 1000 {
+        if is_parallel_enabled() && input.len() > 1000 {
             use scirs2_core::parallel_ops::IntoParallelRefIterator;
             use scirs2_core::parallel_ops::IntoParallelRefMutIterator;
 
@@ -288,7 +288,7 @@ where
     }
 
     // Sequential processing as fallback or for small arrays
-    for (inp, out) in _input.iter().zip(output.iter_mut()) {
+    for (inp, out) in input.iter().zip(output.iter_mut()) {
         *out = gamma(*inp);
     }
 
@@ -298,7 +298,7 @@ where
 /// CPU fallback implementation for Bessel J0 function
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn j0_cpu_fallback<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+fn j0_cpu_fallback<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float + num_traits::FromPrimitive + std::fmt::Debug + Send + Sync,
 {
@@ -306,7 +306,7 @@ where
     #[cfg(feature = "parallel")]
     {
         use scirs2_core::parallel_ops::*;
-        if is_parallel_enabled() && _input.len() > 1000 {
+        if is_parallel_enabled() && input.len() > 1000 {
             use scirs2_core::parallel_ops::IntoParallelRefIterator;
             use scirs2_core::parallel_ops::IntoParallelRefMutIterator;
 
@@ -322,7 +322,7 @@ where
         }
     }
 
-    for (inp, out) in _input.iter().zip(output.iter_mut()) {
+    for (inp, out) in input.iter().zip(output.iter_mut()) {
         *out = j0(*inp);
     }
 
@@ -332,7 +332,7 @@ where
 /// CPU fallback implementation for error function
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn erf_cpu_fallback<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+fn erf_cpu_fallback<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float + num_traits::FromPrimitive + Send + Sync,
 {
@@ -340,7 +340,7 @@ where
     #[cfg(feature = "parallel")]
     {
         use scirs2_core::parallel_ops::*;
-        if is_parallel_enabled() && _input.len() > 1000 {
+        if is_parallel_enabled() && input.len() > 1000 {
             use scirs2_core::parallel_ops::IntoParallelRefIterator;
             use scirs2_core::parallel_ops::IntoParallelRefMutIterator;
 
@@ -356,7 +356,7 @@ where
         }
     }
 
-    for (inp, out) in _input.iter().zip(output.iter_mut()) {
+    for (inp, out) in input.iter().zip(output.iter_mut()) {
         *out = erf(*inp);
     }
 
@@ -1323,7 +1323,7 @@ where
 /// Validate gamma function results with mathematical properties
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn validate_gamma_results<F>(_input: &ArrayView1<F>, output: &ArrayViewMut1<F>) -> SpecialResult<()>
+fn validate_gamma_results<F>(input: &ArrayView1<F>, output: &ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float + std::fmt::Debug + num_traits::FromPrimitive,
 {
@@ -1331,7 +1331,7 @@ where
     let zero = F::zero();
     let one = F::one();
 
-    for (i, (&x, &y)) in _input.iter().zip(output.iter()).enumerate() {
+    for (i, (&x, &y)) in input.iter().zip(output.iter()).enumerate() {
         // Check basic mathematical properties
         if x > zero {
             if !y.is_finite() {
@@ -1369,7 +1369,7 @@ where
         log::warn!(
             "Gamma validation found {} errors out of {} values",
             error_count,
-            _input.len()
+            input.len()
         );
     }
 
@@ -1379,7 +1379,7 @@ where
 /// General GPU computation results validation with enhanced statistics
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn validate_gpu_results<F>(_output: &ArrayViewMut1<F>) -> SpecialResult<()>
+fn validate_gpu_results<F>(output: &ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float + std::fmt::Debug,
 {
@@ -1387,7 +1387,7 @@ where
     let mut inf_count = 0;
     let mut subnormal_count = 0;
 
-    for (i, &val) in _output.iter().enumerate() {
+    for (i, &val) in output.iter().enumerate() {
         if val.is_nan() {
             nan_count += 1;
             if nan_count == 1 {

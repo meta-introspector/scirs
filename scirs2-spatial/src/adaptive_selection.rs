@@ -951,7 +951,7 @@ impl AdaptiveAlgorithmSelector {
 
     /// Estimate data density
     fn estimatedata_density(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
-        let (n_points_, _n_dims) = data.dim();
+        let (n_points_, n_dims) = data.dim();
 
         if n_points_ < 2 {
             return Ok(0.0);

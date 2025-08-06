@@ -1,6 +1,6 @@
 //! Silhouette coefficient for evaluating clustering quality
 
-use ndarray::{Array1, ArrayView1, ArrayView1, ArrayView2};
+use ndarray::{Array1, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 
 use crate::error::{ClusteringError, Result};
@@ -22,11 +22,11 @@ use crate::vq::euclidean_distance;
 ///
 /// * Array of silhouette scores for each sample (n_samples,)
 #[allow(dead_code)]
-pub fn silhouette_samples<F>(_data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<Array1<F>>
+pub fn silhouette_samples<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive,
 {
-    let n_samples = _data.shape()[0];
+    let n_samples = data.shape()[0];
 
     if n_samples != labels.len() {
         return Err(ClusteringError::InvalidInput(
@@ -62,7 +62,7 @@ where
             continue;
         }
 
-        let sample_i = _data.slice(ndarray::s![i, ..]);
+        let sample_i = data.slice(ndarray::s![i, ..]);
 
         // a(i): Mean distance to other samples in the same cluster
         let mut intra_dist_sum = F::zero();
@@ -76,7 +76,7 @@ where
                 // Same cluster - compute intra-cluster distance
                 for j in 0..n_samples {
                     if i != j && labels[j] == label_i {
-                        let sample_j = _data.slice(ndarray::s![j, ..]);
+                        let sample_j = data.slice(ndarray::s![j, ..]);
                         intra_dist_sum = intra_dist_sum + euclidean_distance(sample_i, sample_j);
                         intra_count += 1;
                     }
@@ -88,7 +88,7 @@ where
 
                 for j in 0..n_samples {
                     if labels[j] == cluster_label {
-                        let sample_j = _data.slice(ndarray::s![j, ..]);
+                        let sample_j = data.slice(ndarray::s![j, ..]);
                         cluster_dist_sum =
                             cluster_dist_sum + euclidean_distance(sample_i, sample_j);
                         cluster_count += 1;
@@ -142,7 +142,7 @@ where
 ///
 /// * Mean silhouette score across all samples
 #[allow(dead_code)]
-pub fn silhouette_score<F>(_data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
+pub fn silhouette_score<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive,
 {

@@ -85,8 +85,8 @@ pub fn template_match(
 
 /// Sum of Squared Differences matching
 #[allow(dead_code)]
-fn match_ssd(_img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
-    let (img_width, img_height) = _img.dimensions();
+fn match_ssd(img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
+    let (img_width, img_height) = img.dimensions();
     let (tmpl_width, tmpl_height) = template.dimensions();
 
     if tmpl_width > img_width || tmpl_height > img_height {
@@ -137,7 +137,7 @@ fn match_ssd(_img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
 
 /// Normalized Sum of Squared Differences
 #[allow(dead_code)]
-fn match_normalized_ssd(_img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
+fn match_normalized_ssd(img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
     let ssd_result = match_ssd(_img, template)?;
     let (height, width) = ssd_result.dim();
 
@@ -160,8 +160,8 @@ fn match_normalized_ssd(_img: &GrayImage, template: &GrayImage) -> Result<Array2
 
 /// Cross-correlation matching
 #[allow(dead_code)]
-fn match_cross_correlation(_img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
-    let (img_width, img_height) = _img.dimensions();
+fn match_cross_correlation(img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
+    let (img_width, img_height) = img.dimensions();
     let (tmpl_width, tmpl_height) = template.dimensions();
 
     if tmpl_width > img_width || tmpl_height > img_height {
@@ -207,8 +207,8 @@ fn match_cross_correlation(_img: &GrayImage, template: &GrayImage) -> Result<Arr
 
 /// Normalized Cross-Correlation
 #[allow(dead_code)]
-fn match_ncc(_img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
-    let (img_width, img_height) = _img.dimensions();
+fn match_ncc(img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
+    let (img_width, img_height) = img.dimensions();
     let (tmpl_width, tmpl_height) = template.dimensions();
 
     if tmpl_width > img_width || tmpl_height > img_height {
@@ -284,7 +284,7 @@ fn match_ncc(_img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
 
 /// Correlation coefficient matching
 #[allow(dead_code)]
-fn match_correlation_coeff(_img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
+fn match_correlation_coeff(img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
     match_ncc(_img, template)
 }
 
@@ -315,8 +315,8 @@ fn match_normalized_correlation_coeff(
 ///
 /// * Best match result
 #[allow(dead_code)]
-pub fn find_best_match(_scores: &Array2<f32>, method: MatchMethod) -> MatchResult {
-    let (height, width) = _scores.dim();
+pub fn find_best_match(scores: &Array2<f32>, method: MatchMethod) -> MatchResult {
+    let (height, width) = scores.dim();
     let mut best_score = match method {
         MatchMethod::SumSquaredDiff | MatchMethod::NormalizedSumSquaredDiff => f32::INFINITY,
         _ => f32::NEG_INFINITY,
@@ -326,7 +326,7 @@ pub fn find_best_match(_scores: &Array2<f32>, method: MatchMethod) -> MatchResul
 
     for y in 0..height {
         for x in 0..width {
-            let score = _scores[[y, x]];
+            let score = scores[[y, x]];
             let is_better = match method {
                 MatchMethod::SumSquaredDiff | MatchMethod::NormalizedSumSquaredDiff => {
                     score < best_score
@@ -425,7 +425,7 @@ pub fn draw_match(
     // Draw rectangle around match
     let color = Rgb([0, 255, 0]);
     draw_rectangle(
-        &mut _result,
+        &mut result,
         match_result.x,
         match_result.y,
         tmpl_width,
@@ -438,18 +438,18 @@ pub fn draw_match(
 
 /// Draw rectangle on image
 #[allow(dead_code)]
-fn draw_rectangle(_img: &mut RgbImage, x: u32, y: u32, width: u32, height: u32, color: Rgb<u8>) {
-    let (img_width, img_height) = _img.dimensions();
+fn draw_rectangle(img: &mut RgbImage, x: u32, y: u32, width: u32, height: u32, color: Rgb<u8>) {
+    let (img_width, img_height) = img.dimensions();
 
     // Top and bottom edges
     for dx in 0..width {
         let px = x + dx;
         if px < img_width {
             if y < img_height {
-                _img.put_pixel(px, y, color);
+                img.put_pixel(px, y, color);
             }
             if y + height - 1 < img_height {
-                _img.put_pixel(px, y + height - 1, color);
+                img.put_pixel(px, y + height - 1, color);
             }
         }
     }
@@ -459,10 +459,10 @@ fn draw_rectangle(_img: &mut RgbImage, x: u32, y: u32, width: u32, height: u32, 
         let py = y + dy;
         if py < img_height {
             if x < img_width {
-                _img.put_pixel(x, py, color);
+                img.put_pixel(x, py, color);
             }
             if x + width - 1 < img_width {
-                _img.put_pixel(x + width - 1, py, color);
+                img.put_pixel(x + width - 1, py, color);
             }
         }
     }
@@ -470,13 +470,13 @@ fn draw_rectangle(_img: &mut RgbImage, x: u32, y: u32, width: u32, height: u32, 
 
 /// Convert grayscale image to normalized array
 #[allow(dead_code)]
-fn image_to_array(_img: &GrayImage) -> Array2<f32> {
-    let (width, height) = _img.dimensions();
+fn image_to_array(img: &GrayImage) -> Array2<f32> {
+    let (width, height) = img.dimensions();
     let mut array = Array2::zeros((height as usize, width as usize));
 
     for y in 0..height {
         for x in 0..width {
-            array[[y as usize, x as usize]] = _img.get_pixel(x, y)[0] as f32 / 255.0;
+            array[[y as usize, x as usize]] = img.get_pixel(x, y)[0] as f32 / 255.0;
         }
     }
 

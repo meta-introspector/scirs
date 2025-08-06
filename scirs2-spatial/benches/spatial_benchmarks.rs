@@ -34,7 +34,7 @@ const BENCHMARK_SEED: u64 = 12345;
 
 /// Generate reproducible random points for benchmarking
 #[allow(dead_code)]
-fn generate_points(_n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
+fn generate_points(_npoints: usize, dimensions: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
     Array2::fromshape_fn((_n_points, dimensions), |_| rng.gen_range(-10.0..10.0))
 }
@@ -522,7 +522,7 @@ fn bench_performance_report(c: &mut Criterion) {
         b.iter(|| {
             // Run a representative workload
             let _distances = parallel_pdist(&points.view(), "euclidean").unwrap();
-            let _sum = _distances.sum();
+            let _sum = distances.sum();
             black_box(_sum)
         })
     });

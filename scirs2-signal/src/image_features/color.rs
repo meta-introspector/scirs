@@ -100,11 +100,11 @@ where
     }
 
     // Calculate "colorfulness" - a measure of color variety
-    let rg_diff = Array2::fromshape_fn((height, width), |(i, j)| {
+    let rg_diff = Array2::from_shape_fn((height, width), |(i, j)| {
         (image[[i, j, 0]].into() - image[[i, j, 1]].into()).abs()
     });
 
-    let yb_diff = Array2::fromshape_fn((height, width), |(i, j)| {
+    let yb_diff = Array2::from_shape_fn((height, width), |(i, j)| {
         ((image[[i, j, 0]].into() + image[[i, j, 1]].into()) / 2.0 - image[[i, j, 2]].into()).abs()
     });
 

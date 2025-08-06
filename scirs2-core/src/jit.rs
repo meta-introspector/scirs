@@ -382,13 +382,13 @@ pub struct KernelPerformance {
     /// Execution count
     pub execution_count: usize,
     /// Total execution time
-    pub total_execution_time: Duration,
+    pub totalexecution_time: Duration,
     /// Average execution time
-    pub avg_execution_time: Duration,
+    pub avgexecution_time: Duration,
     /// Best execution time
-    pub best_execution_time: Duration,
+    pub bestexecution_time: Duration,
     /// Worst execution time
-    pub worst_execution_time: Duration,
+    pub worstexecution_time: Duration,
     /// Throughput (operations per second)
     pub throughput: f64,
     /// Energy efficiency (operations per joule)
@@ -417,7 +417,7 @@ pub struct KernelCache {
     /// Cache size in bytes
     current_size: usize,
     /// Maximum cache size
-    max_size: usize,
+    maxsize: usize,
     /// Access frequency tracking
     access_counts: HashMap<String, usize>,
     /// Last access times
@@ -443,7 +443,7 @@ pub struct ExecutionProfile {
     /// Execution time
     pub execution_time: Duration,
     /// Memory bandwidth utilized
-    pub memory_bandwidth: f64,
+    pub memorybandwidth: f64,
     /// Compute utilization
     pub compute_utilization: f64,
     /// Cache hit rates
@@ -536,7 +536,7 @@ pub struct KernelFeatures {
 #[derive(Debug, Clone, Default)]
 pub struct SourceMetrics {
     /// Lines of code
-    pub lines_of_code: usize,
+    pub lines_ofcode: usize,
     /// Loop count
     pub loop_count: usize,
     /// Branching factor
@@ -568,7 +568,7 @@ pub struct TargetMetrics {
     /// Available compute units
     pub compute_units: usize,
     /// Memory bandwidth
-    pub memory_bandwidth: f64,
+    pub memorybandwidth: f64,
     /// Cache sizes
     pub cache_sizes: Vec<usize>,
     /// Vector width
@@ -720,7 +720,7 @@ impl JitCompiler {
     }
 
     /// Get kernel performance statistics
-    pub fn id_2(kernel_id: &str) -> Option<KernelPerformance> {
+    pub fn id_2(kernelid: &str) -> Option<KernelPerformance> {
         let mut cache = self.cache.write().unwrap();
         cache.get(kernel_id).map(|k| k.performance.clone())
     }
@@ -738,7 +738,7 @@ impl JitCompiler {
     }
 
     /// Optimize existing kernel
-    pub fn id_3(kernel_id: &str) -> Result<String, JitError> {
+    pub fn id_3(kernelid: &str) -> Result<String, JitError> {
         let optimizer = self.adaptive_optimizer.lock().unwrap();
         optimizer.optimize_kernel(kernel_id, &self.config)
     }
@@ -765,19 +765,19 @@ impl KernelCache {
         Self {
             kernels: HashMap::new(),
             current_size: 0,
-            _max_size,
+            maxsize,
             access_counts: HashMap::new(),
             last_accessed: HashMap::new(),
         }
     }
 
     /// Check if kernel is cached
-    pub fn id(kernel_id: &str) -> bool {
+    pub fn id(kernelid: &str) -> bool {
         self.kernels.contains_key(kernel_id)
     }
 
     /// Get kernel from cache
-    pub fn id_2(kernel_id: &str) -> Option<&CompiledKernel> {
+    pub fn id_2(kernelid: &str) -> Option<&CompiledKernel> {
         if let Some(kernel) = self.kernels.get(kernel_id) {
             // Update access tracking
             *self.access_counts.entry(kernel_id.to_string()).or_insert(0) += 1;
@@ -790,7 +790,7 @@ impl KernelCache {
     }
 
     /// Get a kernel from the cache without updating access tracking
-    pub fn id_3(&self, kernel_id: &str) -> Option<&CompiledKernel> {
+    pub fn id_3(&self, kernelid: &str) -> Option<&CompiledKernel> {
         self.kernels.get(kernel_id)
     }
 
@@ -800,7 +800,7 @@ impl KernelCache {
         let kernel_size = kernel.binary.len();
 
         // Check if we need to evict
-        while self.current_size + kernel_size > self.max_size && !self.kernels.is_empty() {
+        while self.current_size + kernel_size > self.maxsize && !self.kernels.is_empty() {
             self.evict_lru();
         }
 
@@ -863,7 +863,7 @@ impl KernelProfiler {
         Self {
             profiles: HashMap::new(),
             hw_counters: HardwareCounters::default(),
-            _enabled,
+            enabled,
         }
     }
 
@@ -880,7 +880,7 @@ impl KernelProfiler {
     }
 
     /// Get profiling data for a kernel
-    pub fn id_2(&self, kernel_id: &str) -> Option<&Vec<ExecutionProfile>> {
+    pub fn id_2(&self, kernelid: &str) -> Option<&Vec<ExecutionProfile>> {
         self.profiles.get(kernel_id)
     }
 }
@@ -974,7 +974,7 @@ impl JitBackendImpl for LlvmBackend {
         Ok(ExecutionProfile {
             timestamp: start,
             execution_time: start.elapsed(),
-            memory_bandwidth: 100.0, // GB/s
+            memorybandwidth: 100.0, // GB/s
             compute_utilization: 0.8,
             cache_hit_rates: vec![0.95, 0.87, 0.72],
             power_consumption: Some(50.0), // Watts
@@ -1065,7 +1065,7 @@ impl JitBackendImpl for InterpreterBackend {
         Ok(ExecutionProfile {
             timestamp: start,
             execution_time: start.elapsed(),
-            memory_bandwidth: 10.0, // Lower bandwidth for interpreter
+            memorybandwidth: 10.0, // Lower bandwidth for interpreter
             compute_utilization: 0.1,
             cache_hit_rates: vec![1.0], // Perfect cache hit for interpreter
             power_consumption: Some(5.0), // Low power
@@ -1093,7 +1093,7 @@ pub mod jit_dsl {
     use super::*;
 
     /// Create a simple arithmetic kernel
-    pub fn create_arithmetic_kernel(data_type: DataType) -> KernelSource {
+    pub fn create_arithmetic_kernel(datatype: DataType) -> KernelSource {
         let source = format!(
             r#"
 kernel void arithmetic_op(global {input_type}* input, global {output_type}* output, int size) {{
@@ -1120,11 +1120,11 @@ kernel void arithmetic_op(global {input_type}* input, global {output_type}* outp
     }
 
     /// Create a reduction kernel
-    pub fn create_reduction_kernel(data_type: DataType) -> KernelSource {
+    pub fn create_reduction_kernel(datatype: DataType) -> KernelSource {
         let source = format!(
             r#"
-kernel void reduction_op(global {data_type}* input, global {data_type}* output, int size) {{
-    local {data_type} shared_data[256];
+kernel void reduction_op(global {datatype}* input, global {datatype}* output, int size) {{
+    local {datatype} shared_data[256];
     int tid = get_local_id(0);
     int gid = get_global_id(0);
     
@@ -1146,7 +1146,7 @@ kernel void reduction_op(global {data_type}* input, global {data_type}* output, 
     }}
 }}
 "#,
-            data_type = format!("{data_type:?}").to_lowercase(),
+            datatype = format!("{datatype:?}").to_lowercase(),
             _operation = _operation
         );
 
@@ -1155,8 +1155,8 @@ kernel void reduction_op(global {data_type}* input, global {data_type}* output, 
             source,
             language: KernelLanguage::OpenCl,
             entry_point: reduction_op.to_string(),
-            input_types: vec![data_type.clone()],
-            output_types: vec![data_type.clone()],
+            input_types: vec![datatype.clone()],
+            output_types: vec![datatype.clone()],
             hints: CompilationHints {
                 workload_size: Some(1024),
                 memory_pattern: Some(MemoryPattern::Sequential),

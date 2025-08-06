@@ -195,7 +195,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         let grad_input = Array::zeros(input.dim());
         // Return gradient with respect to input
         Ok(grad_input)
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         // Update all components
         self.self_attn.update(learning_rate)?;
         self.norm1.update(learning_rate)?;
@@ -239,7 +239,7 @@ pub struct TransformerDecoder<F: Float + Debug + Send + Sync + SimdUnifiedOps> {
         // In a complete implementation, this would compute gradients through all layers
         // Update all layers
         for layer in &mut self.layers {
-            layer.update(learning_rate)?;
+            layer.update(learningrate)?;
 #[cfg(test)]
 mod tests {
     use super::*;

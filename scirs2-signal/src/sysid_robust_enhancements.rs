@@ -9,7 +9,7 @@ use crate::error::{SignalError, SignalResult};
 use crate::lti::design::tf;
 use crate::lti::StateSpace;
 use crate::sysid_enhanced::{EnhancedSysIdConfig, ModelValidationMetrics, SystemModel};
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use rand::Rng;
 use scirs2_core::parallel_ops::*;
@@ -178,8 +178,8 @@ pub fn estimate_signal_noise_ratio_advanced(
 
 /// Spectral-based SNR estimation
 #[allow(dead_code)]
-fn estimate_snr_spectral(_input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<f64> {
-    let n = _input.len();
+fn estimate_snr_spectral(input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<f64> {
+    let n = input.len();
     let nfft = next_power_of_2(n);
 
     // Compute cross-spectral density and auto-spectral densities
@@ -214,14 +214,14 @@ fn estimate_snr_spectral(_input: &Array1<f64>, output: &Array1<f64>) -> SignalRe
 
 /// Correlation-based SNR estimation
 #[allow(dead_code)]
-fn estimate_snr_correlation(_input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<f64> {
-    let _n = _input.len();
+fn estimate_snr_correlation(input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<f64> {
+    let _n = input.len();
 
     // Compute normalized cross-correlation
-    let input_mean = _input.mean().unwrap_or(0.0);
+    let input_mean = input.mean().unwrap_or(0.0);
     let output_mean = output.mean().unwrap_or(0.0);
 
-    let _input_centered: Array1<f64> = _input.mapv(|x| x - input_mean);
+    let input_centered: Array1<f64> = input.mapv(|x| x - input_mean);
     let output_centered: Array1<f64> = output.mapv(|x| x - output_mean);
 
     let cross_corr = input_centered.dot(&output_centered);
@@ -241,8 +241,8 @@ fn estimate_snr_correlation(_input: &Array1<f64>, output: &Array1<f64>) -> Signa
 
 /// High-pass residual SNR estimation
 #[allow(dead_code)]
-fn estimate_snr_highpass_residual(_signal: &Array1<f64>) -> SignalResult<f64> {
-    let n = _signal.len();
+fn estimate_snr_highpass_residual(signal: &Array1<f64>) -> SignalResult<f64> {
+    let n = signal.len();
     if n < 3 {
         return Ok(0.0);
     }
@@ -250,10 +250,10 @@ fn estimate_snr_highpass_residual(_signal: &Array1<f64>) -> SignalResult<f64> {
     // Simple high-pass filter (difference operator)
     let mut filtered = Array1::zeros(n - 1);
     for i in 0..n - 1 {
-        filtered[i] = _signal[i + 1] - _signal[i];
+        filtered[i] = signal[i + 1] - signal[i];
     }
 
-    let signal_var = _signal.variance();
+    let signal_var = signal.variance();
     let noise_var = filtered.variance() / 2.0; // Factor of 2 for difference operator
 
     if noise_var < 1e-12 {
@@ -266,9 +266,9 @@ fn estimate_snr_highpass_residual(_signal: &Array1<f64>) -> SignalResult<f64> {
 
 /// Wavelet-based SNR estimation
 #[allow(dead_code)]
-fn estimate_snr_wavelet_denoising(_signal: &Array1<f64>) -> SignalResult<f64> {
+fn estimate_snr_wavelet_denoising(signal: &Array1<f64>) -> SignalResult<f64> {
     // Simple wavelet-like denoising using median filtering
-    let n = _signal.len();
+    let n = signal.len();
     if n < 5 {
         return Ok(0.0);
     }
@@ -280,7 +280,7 @@ fn estimate_snr_wavelet_denoising(_signal: &Array1<f64>) -> SignalResult<f64> {
         let start = i.saturating_sub(window_size / 2);
         let end = (i + window_size / 2 + 1).min(n);
 
-        let mut window: Vec<f64> = _signal.slice(s![start..end]).to_vec();
+        let mut window: Vec<f64> = signal.slice(s![start..end]).to_vec();
         window.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         denoised[i] = window[window.len() / 2]; // Median
@@ -481,7 +481,7 @@ pub fn enhanced_cross_validation(
         let val_output_array = Array1::from_vec(val_output);
 
         // Train model (simplified ARX for CV)
-        let (a_coeffs, b_coeffs_) = estimate_arx_cv(
+        let (a_coeffs, b_coeffs) = estimate_arx_cv(
             &train_input_array,
             &train_output_array,
             config.max_order / 2,
@@ -539,7 +539,7 @@ pub fn enhanced_cross_validation(
 ///
 /// * Stability analysis results
 #[allow(dead_code)]
-pub fn analyze_model_stability(_model: &SystemModel) -> SignalResult<StabilityAnalysis> {
+pub fn analyze_model_stability(model: &SystemModel) -> SignalResult<StabilityAnalysis> {
     match _model {
         SystemModel::ARX { a, .. } | SystemModel::ARMAX { a, .. } => {
             analyze_polynomial_stability(a)
@@ -570,8 +570,8 @@ pub fn analyze_model_stability(_model: &SystemModel) -> SignalResult<StabilityAn
 
 /// Analyze polynomial stability (for discrete-time systems)
 #[allow(dead_code)]
-fn analyze_polynomial_stability(_poly: &Array1<f64>) -> SignalResult<StabilityAnalysis> {
-    let n = _poly.len();
+fn analyze_polynomial_stability(poly: &Array1<f64>) -> SignalResult<StabilityAnalysis> {
+    let n = poly.len();
     if n <= 1 {
         return Ok(StabilityAnalysis {
             poles: Array1::zeros(0),
@@ -642,9 +642,9 @@ fn next_power_of_2(n: usize) -> usize {
 }
 
 #[allow(dead_code)]
-fn compute_fft_padded(_signal: &Array1<f64>, nfft: usize) -> Array1<Complex64> {
+fn compute_fft_padded(signal: &Array1<f64>, nfft: usize) -> Array1<Complex64> {
     let mut padded = Array1::zeros(nfft);
-    let n = _signal.len().min(nfft);
+    let n = signal.len().min(nfft);
     padded.slice_mut(s![..n]).assign(&_signal.slice(s![..n]));
 
     // Simple DFT implementation
@@ -661,14 +661,14 @@ fn compute_fft_padded(_signal: &Array1<f64>, nfft: usize) -> Array1<Complex64> {
 }
 
 #[allow(dead_code)]
-fn estimate_condition_number(_matrix: &Array2<f64>) -> f64 {
+fn estimate_condition_number(matrix: &Array2<f64>) -> f64 {
     // Simplified condition number estimation
-    let n = _matrix.nrows();
+    let n = matrix.nrows();
     let mut max_diag = 0.0;
     let mut min_diag = f64::INFINITY;
 
     for i in 0..n {
-        let val = _matrix[[i, i]].abs();
+        let val = matrix[[i, i]].abs();
         max_diag = max_diag.max(val);
         min_diag = min_diag.min(val);
     }
@@ -743,29 +743,29 @@ fn solve_regularized_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Ar
 }
 
 #[allow(dead_code)]
-fn compute_mad(_data: &[f64]) -> f64 {
-    if _data.is_empty() {
+fn compute_mad(data: &[f64]) -> f64 {
+    if data.is_empty() {
         return 0.0;
     }
 
-    let mut sorted = _data.to_vec();
+    let mut sorted = data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
     let median = sorted[sorted.len() / 2];
 
-    let deviations: Vec<f64> = _data.iter().map(|&x| (x - median).abs()).collect();
+    let deviations: Vec<f64> = data.iter().map(|&x| (x - median).abs()).collect();
     let mut sorted_dev = deviations;
     sorted_dev.sort_by(|a, b| a.partial_cmp(b).unwrap());
     sorted_dev[sorted_dev.len() / 2]
 }
 
 #[allow(dead_code)]
-fn bootstrap_resample(_data: &[f64]) -> Vec<f64> {
-    let n = _data.len();
+fn bootstrap_resample(data: &[f64]) -> Vec<f64> {
+    let n = data.len();
     let mut result = Vec::with_capacity(n);
     let mut rng = rand::rng();
 
     for _ in 0..n {
-        let idx = rng.random_range(0..n);
+        let idx = rng.gen_range(0..n);
         result.push(_data[idx]);
     }
     result
@@ -875,7 +875,7 @@ fn compute_loo_approximation(
 }
 
 #[allow(dead_code)]
-fn analyze_state_space_stability(_ss: &StateSpace) -> SignalResult<StabilityAnalysis> {
+fn analyze_state_space_stability(ss: &StateSpace) -> SignalResult<StabilityAnalysis> {
     // Placeholder for state-space stability analysis
     Ok(StabilityAnalysis {
         poles: Array1::zeros(0),
@@ -888,8 +888,8 @@ fn analyze_state_space_stability(_ss: &StateSpace) -> SignalResult<StabilityAnal
 }
 
 #[allow(dead_code)]
-fn create_companion_matrix(_poly: &Array1<f64>) -> Array2<f64> {
-    let n = _poly.len() - 1;
+fn create_companion_matrix(poly: &Array1<f64>) -> Array2<f64> {
+    let n = poly.len() - 1;
     if n == 0 {
         return Array2::zeros((1, 1));
     }
@@ -897,7 +897,7 @@ fn create_companion_matrix(_poly: &Array1<f64>) -> Array2<f64> {
     let mut companion = Array2::zeros((n, n));
 
     // First row: -a1/a0, -a2/a0, ..., -an/a0
-    let a0 = _poly[0];
+    let a0 = poly[0];
     for j in 0..n {
         companion[[0, j]] = -_poly[j + 1] / a0;
     }
@@ -911,8 +911,8 @@ fn create_companion_matrix(_poly: &Array1<f64>) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn compute_eigenvalues(_matrix: &Array2<f64>) -> SignalResult<Array1<Complex64>> {
-    let n = _matrix.nrows();
+fn compute_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Array1<Complex64>> {
+    let n = matrix.nrows();
     if n == 0 {
         return Ok(Array1::zeros(0));
     }
@@ -923,10 +923,10 @@ fn compute_eigenvalues(_matrix: &Array2<f64>) -> SignalResult<Array1<Complex64>>
     }
 
     if n == 2 {
-        let a = _matrix[[0, 0]];
-        let b = _matrix[[0, 1]];
-        let c = _matrix[[1, 0]];
-        let d = _matrix[[1, 1]];
+        let a = matrix[[0, 0]];
+        let b = matrix[[0, 1]];
+        let c = matrix[[1, 0]];
+        let d = matrix[[1, 1]];
 
         let trace = a + d;
         let det = a * d - b * c;
@@ -954,14 +954,14 @@ fn compute_eigenvalues(_matrix: &Array2<f64>) -> SignalResult<Array1<Complex64>>
     // This is a simplified implementation
     let mut v = Array1::ones(n);
     for _ in 0..50 {
-        v = _matrix.dot(&v);
+        v = matrix.dot(&v);
         let norm = v.norm();
         if norm > 1e-12 {
             v /= norm;
         }
     }
 
-    let lambda = _matrix.dot(&v).dot(&v) / v.dot(&v);
+    let lambda = matrix.dot(&v).dot(&v) / v.dot(&v);
     Ok(Array1::from_vec(vec![Complex64::new(lambda, 0.0)]))
 }
 

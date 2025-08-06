@@ -76,9 +76,9 @@ pub struct StreamBlock {
 
 impl StreamBlock {
     /// Create a new stream block
-    pub fn new(_data: Vec<f64>, channels: usize, sequence: u64) -> Self {
+    pub fn new(data: Vec<f64>, channels: usize, sequence: u64) -> Self {
         Self {
-            _data,
+            data,
             timestamp: Instant::now(),
             sequence,
             channels,
@@ -120,7 +120,7 @@ pub trait RealtimeProcessor: Send + Sync {
     }
 
     /// Initialize processor with configuration
-    fn initialize(&mut self, _config: &RealtimeConfig) -> SignalResult<()> {
+    fn initialize(&mut self, config: &RealtimeConfig) -> SignalResult<()> {
         Ok(())
     }
 
@@ -139,10 +139,10 @@ pub struct CircularBuffer {
 
 impl CircularBuffer {
     /// Create a new circular buffer
-    pub fn new(_capacity: usize) -> Self {
+    pub fn new(capacity: usize) -> Self {
         Self {
             buffer: Arc::new(Mutex::new(VecDeque::with_capacity(_capacity))),
-            _capacity,
+            capacity,
             overrun_count: Arc::new(Mutex::new(0)),
         }
     }
@@ -406,7 +406,7 @@ pub struct LockFreeRingBuffer {
 
 impl LockFreeRingBuffer {
     /// Create new lock-free ring buffer
-    pub fn new(_capacity: usize) -> Self {
+    pub fn new(capacity: usize) -> Self {
         let mut buffer = Vec::with_capacity(_capacity);
         for _ in 0.._capacity {
             buffer.push(std::sync::atomic::AtomicU64::new(0));
@@ -414,7 +414,7 @@ impl LockFreeRingBuffer {
 
         Self {
             buffer,
-            _capacity,
+            capacity,
             write_pos: std::sync::atomic::AtomicUsize::new(0),
             read_pos: std::sync::atomic::AtomicUsize::new(0),
         }
@@ -499,7 +499,7 @@ pub struct GainProcessor {
 }
 
 impl GainProcessor {
-    pub fn new(_gain: f64) -> Self {
+    pub fn new(gain: f64) -> Self {
         Self { _gain }
     }
 }
@@ -521,9 +521,9 @@ pub struct MovingAverageProcessor {
 }
 
 impl MovingAverageProcessor {
-    pub fn new(_window_size: usize) -> Self {
+    pub fn new(_windowsize: usize) -> Self {
         Self {
-            _window_size,
+            window_size,
             history: VecDeque::with_capacity(_window_size),
             sum: 0.0,
         }
@@ -574,9 +574,9 @@ pub struct ZeroLatencyLimiter {
 }
 
 impl ZeroLatencyLimiter {
-    pub fn new(_threshold: f64, _lookahead_ms: f64, attack_ms: f64, release_ms: f64) -> Self {
+    pub fn new(_threshold: f64, _lookahead_ms: f64, attack_ms: f64, releasems: f64) -> Self {
         Self {
-            _threshold,
+            threshold,
             lookahead_samples: 0, // Will be set in initialize
             delay_buffer: VecDeque::new(),
             gain_buffer: VecDeque::new(),
@@ -665,6 +665,7 @@ impl RealtimeProcessor for ZeroLatencyLimiter {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_circular_buffer() {

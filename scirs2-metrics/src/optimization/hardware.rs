@@ -168,9 +168,9 @@ impl SimdDistanceMetrics {
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: HardwareAccelConfig) -> Self {
+    pub fn with_config(config: HardwareAccelConfig) -> Self {
         Self {
-            _config,
+            config,
             capabilities: HardwareCapabilities::detect(),
         }
     }
@@ -353,9 +353,9 @@ impl SimdStatistics {
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: HardwareAccelConfig) -> Self {
+    pub fn with_config(config: HardwareAccelConfig) -> Self {
         Self {
-            _config,
+            config,
             capabilities: HardwareCapabilities::detect(),
         }
     }
@@ -455,9 +455,9 @@ impl HardwareAcceleratedMatrix {
     }
 
     /// Create with custom configuration
-    pub fn with_config(_config: HardwareAccelConfig) -> Self {
+    pub fn with_config(config: HardwareAccelConfig) -> Self {
         Self {
-            _config,
+            config,
             capabilities: HardwareCapabilities::detect(),
         }
     }

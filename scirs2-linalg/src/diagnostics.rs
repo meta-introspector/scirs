@@ -365,15 +365,15 @@ where
 
 /// Create an error with regularization suggestions
 #[allow(dead_code)]
-pub fn regularization_suggestions<F>(_matrix: &ArrayView2<F>, operation: &str) -> LinalgError
+pub fn regularization_suggestions<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgError
 where
     F: Float + NumAssign + std::iter::Sum + fmt::Display + ndarray::ScalarOperand + Send + Sync,
 {
-    let mut diagnostics = analyze_matrix(_matrix);
+    let mut diagnostics = analyze_matrix(matrix);
 
     // Add specific regularization suggestions
     diagnostics.suggestions.push(
-        "Consider adding a small multiple of the identity _matrix (Tikhonov regularization)."
+        "Consider adding a small multiple of the identity matrix (Tikhonov regularization)."
             .to_string(),
     );
     diagnostics
@@ -467,7 +467,8 @@ where
         warnings: Vec::new(),
         recommendations: Vec::new(),
         numerical_rank_estimate: None,
-        effective_condition_number: None, _phantom: std::marker::PhantomData,
+        effective_condition_number: None,
+        _phantom: std::marker::PhantomData,
     };
 
     let diagnostics = analyze_matrix(a);

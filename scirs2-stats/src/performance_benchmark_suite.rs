@@ -1259,7 +1259,7 @@ if data.len() > 10_000 {
                 r#"
 // Kahan summation for improved accuracy
 #[allow(dead_code)]
-fn kahan_sum(_data: &[f64]) -> f64 {
+fn kahan_sum(data: &[f64]) -> f64 {
     let mut sum = 0.0;
     let mut c = 0.0;
     for &value in _data {
@@ -1310,7 +1310,7 @@ fn kahan_sum(_data: &[f64]) -> f64 {
     }
 
     /// Assess scalability characteristics
-    fn assess_scalability(&self, _metrics: &[AdvancedBenchmarkMetrics]) -> ScalabilityAssessment {
+    fn assess_scalability(&self, metrics: &[AdvancedBenchmarkMetrics]) -> ScalabilityAssessment {
         ScalabilityAssessment {
             scaling_efficiency: 0.85, // Average efficiency across data sizes
             memory_efficiency: 0.90,

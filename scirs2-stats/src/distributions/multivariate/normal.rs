@@ -51,13 +51,13 @@ impl MultivariateNormal {
     /// let cov = array![[1.0, 0.5], [0.5, 2.0]];
     /// let mvn = MultivariateNormal::new(mean, cov).unwrap();
     /// ```
-    pub fn new<D1, D2>(_mean: ArrayBase<D1, Ix1>, cov: ArrayBase<D2, Ix2>) -> StatsResult<Self>
+    pub fn new<D1, D2>(mean: ArrayBase<D1, Ix1>, cov: ArrayBase<D2, Ix2>) -> StatsResult<Self>
     where
         D1: Data<Elem = f64>,
         D2: Data<Elem = f64>,
     {
         // Validate dimensions
-        let dim = _mean.len();
+        let dim = mean.len();
         if cov.shape()[0] != dim || cov.shape()[1] != dim {
             return Err(StatsError::DimensionMismatch(format!(
                 "Covariance matrix shape ({:?}) must match _mean vector length ({})",
@@ -67,7 +67,7 @@ impl MultivariateNormal {
         }
 
         // Create owned copies of inputs
-        let _mean = _mean.to_owned();
+        let _mean = mean.to_owned();
         let cov = cov.to_owned();
 
         // Compute Cholesky decomposition (lower triangular L where Σ = L·L^T)
@@ -90,7 +90,7 @@ impl MultivariateNormal {
         })?;
 
         Ok(MultivariateNormal {
-            mean: _mean,
+            mean: mean,
             cov,
             dim,
             cholesky_l,

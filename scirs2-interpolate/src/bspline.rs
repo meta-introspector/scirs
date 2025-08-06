@@ -80,7 +80,7 @@ impl WorkspaceMemoryStats {
     }
 
     /// Update memory usage statistics
-    pub fn update_memory_usage(&mut self, current_bytes: usize) {
+    pub fn update_memory_usage(&mut self, currentbytes: usize) {
         self.current_memory_bytes = current_bytes;
         if current_bytes > self.peak_memory_bytes {
             self.peak_memory_bytes = current_bytes;
@@ -108,7 +108,7 @@ where
     T: Float + FromPrimitive + Clone + Zero,
 {
     /// Create a new workspace with initial capacity
-    pub fn new(_max_degree: usize) -> Self {
+    pub fn new(_maxdegree: usize) -> Self {
         let initial_matrix_size = (_max_degree + 1).max(16); // Reasonable minimum
         Self {
             coeffs: RefCell::new(Array1::zeros(_max_degree + 1)),
@@ -120,7 +120,7 @@ where
     }
 
     /// Create a workspace optimized for large problems
-    pub fn new_large_problem(_max_degree: usize, estimated_matrix_size: usize) -> Self {
+    pub fn new_large_problem(_max_degree: usize, estimated_matrixsize: usize) -> Self {
         let buffer_size = estimated_matrix_size.max(_max_degree + 1);
         Self {
             coeffs: RefCell::new(Array1::zeros(buffer_size)),
@@ -182,7 +182,7 @@ where
     }
 
     /// Get a view of the coefficient buffer (resized if needed)
-    pub fn get_coeff_buffer(&self, min_size: usize) -> std::cell::Ref<Array1<T>> {
+    pub fn get_coeff_buffer(&self, minsize: usize) -> std::cell::Ref<Array1<T>> {
         self.ensure_capacity(min_size.saturating_sub(1));
 
         {
@@ -194,7 +194,7 @@ where
     }
 
     /// Get a mutable view of the coefficient buffer (resized if needed)
-    pub fn get_coeff_buffer_mut(&self, min_size: usize) -> std::cell::RefMut<Array1<T>> {
+    pub fn get_coeff_buffer_mut(&self, minsize: usize) -> std::cell::RefMut<Array1<T>> {
         self.ensure_capacity(min_size.saturating_sub(1));
 
         {
@@ -1644,14 +1644,14 @@ where
 ///
 /// Returns the maximum distance from the main diagonal that contains non-zero elements.
 #[allow(dead_code)]
-fn estimate_bandwidth<T: Float + Zero + FromPrimitive>(_matrix: &ArrayView2<T>) -> usize {
-    let n = _matrix.nrows();
+fn estimate_bandwidth<T: Float + Zero + FromPrimitive>(matrix: &ArrayView2<T>) -> usize {
+    let n = matrix.nrows();
     let mut max_bandwidth = 0;
     let tolerance = T::from_f64(1e-14).unwrap();
 
     for i in 0..n {
         for j in 0..n {
-            if _matrix[[i, j]].abs() > tolerance {
+            if matrix[[i, j]].abs() > tolerance {
                 let bandwidth = if i > j { i - j } else { j - i };
                 max_bandwidth = max_bandwidth.max(bandwidth);
             }
@@ -1959,7 +1959,7 @@ where
     }
 
     /// Evaluate at multiple points with bounds checking (SciPy-compatible)
-    pub fn evaluate_array_checked(&self, x_new: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    pub fn evaluate_array_checked(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         let mut result = Array1::zeros(x_new.len());
         let t_min = self.t[0];
         let t_max = self.t[self.t.len() - 1];
@@ -2047,7 +2047,7 @@ where
         + 'static
         + crate::traits::InterpolationFloat,
 {
-    fn evaluate(&self, query_points: &ArrayView2<T>) -> crate::InterpolateResult<Vec<T>> {
+    fn evaluate(&self, querypoints: &ArrayView2<T>) -> crate::InterpolateResult<Vec<T>> {
         if query_points.ncols() != 1 {
             return Err(crate::InterpolateError::invalid_input(
                 "BSpline only supports 1D interpolation",

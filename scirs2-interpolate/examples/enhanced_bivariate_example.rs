@@ -12,8 +12,8 @@ fn test_function(x: f64, y: f64) -> f64 {
 
 /// Generate a 2D grid of data points
 #[allow(dead_code)]
-fn generate_grid_data(_nx: usize, ny: usize) -> (Array1<f64>, Array1<f64>, Array2<f64>) {
-    let x = Array1::linspace(0.0, 1.0, _nx);
+fn generate_grid_data(nx: usize, ny: usize) -> (Array1<f64>, Array1<f64>, Array2<f64>) {
+    let x = Array1::linspace(0.0, 1.0, nx);
     let y = Array1::linspace(0.0, 1.0, ny);
 
     let mut z = Array2::zeros((_nx, ny));
@@ -29,7 +29,7 @@ fn generate_grid_data(_nx: usize, ny: usize) -> (Array1<f64>, Array1<f64>, Array
 
 /// Generate scattered data points
 #[allow(dead_code)]
-fn generate_scattered_data(_n_points: usize) -> (Array1<f64>, Array1<f64>, Array1<f64>) {
+fn generate_scattered_data(_npoints: usize) -> (Array1<f64>, Array1<f64>, Array1<f64>) {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 
@@ -51,13 +51,13 @@ fn generate_scattered_data(_n_points: usize) -> (Array1<f64>, Array1<f64>, Array
 
 /// Compute mean squared error between predicted and actual values
 #[allow(dead_code)]
-fn compute_mse(_predicted: &Array2<f64>, actual: &Array2<f64>) -> f64 {
+fn compute_mse(predicted: &Array2<f64>, actual: &Array2<f64>) -> f64 {
     let mut sum_sq_error = 0.0;
-    let n = _predicted.len();
+    let n = predicted.len();
 
     for i in 0.._predicted.shape()[0] {
         for j in 0.._predicted.shape()[1] {
-            let error = _predicted[[i, j]] - actual[[i, j]];
+            let error = predicted[[i, j]] - actual[[i, j]];
             sum_sq_error += error * error;
         }
     }

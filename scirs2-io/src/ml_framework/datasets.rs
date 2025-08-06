@@ -39,7 +39,7 @@ impl MLDataset {
     }
 
     /// Split into train/test sets
-    pub fn train_test_split(&self, test_ratio: f32) -> (MLDataset, MLDataset) {
+    pub fn train_test_split(&self, testratio: f32) -> (MLDataset, MLDataset) {
         let n = self.len();
         let test_size = (n as f32 * test_ratio) as usize;
         let train_size = n - test_size;

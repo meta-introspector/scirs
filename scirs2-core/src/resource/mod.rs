@@ -293,7 +293,7 @@ impl DiscoveryConfig {
     }
 
     /// Enable caching with custom duration
-    pub fn with_cache_duration(mut self, _duration: Duration) -> Self {
+    pub fn with_cache_duration(mut self, duration: Duration) -> Self {
         self.cache_results = true;
         self.cache_duration = std::time::Duration::from_secs(1);
         self
@@ -501,12 +501,12 @@ pub struct ResourceMonitor {
 
 impl ResourceMonitor {
     /// Create a new resource monitor
-    pub fn new(config: DiscoveryConfig, monitoring_interval: Duration) -> Self {
+    pub fn new(config: DiscoveryConfig, monitoringinterval: Duration) -> Self {
         let discovery = ResourceDiscovery::new(config);
 
         Self {
             discovery,
-            monitoring_interval,
+            monitoring_interval: monitoringinterval,
             last_update: std::sync::Mutex::new(std::time::Instant::now()),
             adaptive_params: std::sync::Mutex::new(optimization::OptimizationParams::default()),
         }
@@ -607,7 +607,7 @@ mod tests {
     }
 
     #[test]
-    fn test_resource_monitor() {
+    fn test_resourcemonitor() {
         let config = DiscoveryConfig::new().detect_essential();
         let monitor = ResourceMonitor::new(config, Duration::from_secs(1));
 

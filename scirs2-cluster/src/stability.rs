@@ -73,7 +73,7 @@ impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Dis
     BootstrapValidator<F>
 {
     /// Create a new bootstrap validator
-    pub fn new(_config: StabilityConfig) -> Self {
+    pub fn new(config: StabilityConfig) -> Self {
         Self {
             _config_phantom: std::marker::PhantomData,
         }
@@ -280,7 +280,7 @@ pub struct ConsensusClusterer<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug + std::iter::Sum + std::fmt::Display> ConsensusClusterer<F> {
     /// Create a new consensus clusterer
-    pub fn new(_config: StabilityConfig) -> Self {
+    pub fn new(config: StabilityConfig) -> Self {
         Self {
             _config_phantom: std::marker::PhantomData,
         }
@@ -454,7 +454,7 @@ impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Dis
     OptimalKSelector<F>
 {
     /// Create a new optimal k selector
-    pub fn new(_config: StabilityConfig) -> Self {
+    pub fn new(config: StabilityConfig) -> Self {
         Self {
             _config_phantom: std::marker::PhantomData,
         }
@@ -632,9 +632,9 @@ pub mod advanced {
         CrossValidationStability<F>
     {
         /// Create a new cross-validation stability assessor
-        pub fn new(_config: StabilityConfig, n_folds: usize) -> Self {
+        pub fn new(_config: StabilityConfig, nfolds: usize) -> Self {
             Self {
-                _config,
+                config,
                 n_folds_phantom: std::marker::PhantomData,
             }
         }
@@ -788,9 +788,9 @@ pub mod advanced {
         PerturbationStability<F>
     {
         /// Create a new perturbation stability assessor
-        pub fn new(_config: StabilityConfig, perturbation_types: Vec<PerturbationType>) -> Self {
+        pub fn new(_config: StabilityConfig, perturbationtypes: Vec<PerturbationType>) -> Self {
             Self {
-                _config,
+                config,
                 perturbation_types_phantom: std::marker::PhantomData,
             }
         }
@@ -949,9 +949,9 @@ pub mod advanced {
         MultiScaleStability<F>
     {
         /// Create a new multi-scale stability assessor
-        pub fn new(_config: StabilityConfig, scale_factors: Vec<f64>) -> Self {
+        pub fn new(_config: StabilityConfig, scalefactors: Vec<f64>) -> Self {
             Self {
-                _config,
+                config,
                 scale_factors_phantom: std::marker::PhantomData,
             }
         }
@@ -1048,7 +1048,7 @@ pub mod advanced {
 
     impl<F: Float + FromPrimitive + Debug> PredictionStrength<F> {
         /// Create a new prediction strength validator
-        pub fn new(_config: PredictionStrengthConfig) -> Self {
+        pub fn new(config: PredictionStrengthConfig) -> Self {
             Self {
                 _config_phantom: std::marker::PhantomData,
             }
@@ -1236,9 +1236,9 @@ pub mod advanced {
 
     impl<F: Float + FromPrimitive + Debug> JaccardStability<F> {
         /// Create a new Jaccard stability validator
-        pub fn new(_n_bootstrap: usize, subsample_ratio: f64, random_seed: Option<u64>) -> Self {
+        pub fn new(_n_bootstrap: usize, subsample_ratio: f64, randomseed: Option<u64>) -> Self {
             Self {
-                _n_bootstrap,
+                n_bootstrap,
                 subsample_ratio,
                 random_seed_phantom: std::marker::PhantomData,
             }
@@ -1389,7 +1389,7 @@ pub mod advanced {
 
     impl<F: Float + FromPrimitive + Debug> ClusterSpecificStability<F> {
         /// Create a new cluster-specific stability validator
-        pub fn new(_config: StabilityConfig) -> Self {
+        pub fn new(config: StabilityConfig) -> Self {
             Self {
                 _config_phantom: std::marker::PhantomData,
             }
@@ -1471,7 +1471,7 @@ pub mod advanced {
         }
 
         /// Compute stability for a single cluster across bootstrap samples
-        fn compute_cluster_stability(&self, cluster_samples: &[HashSet<usize>]) -> Result<F> {
+        fn compute_cluster_stability(&self, clustersamples: &[HashSet<usize>]) -> Result<F> {
             if cluster_samples.len() < 2 {
                 return Ok(F::zero());
             }
@@ -1624,7 +1624,7 @@ pub mod advanced {
         }
 
         /// Find the range of perturbations with lowest sensitivity
-        fn find_robust_range(&self, sensitivity_profile: &[F]) -> (f64, f64) {
+        fn find_robust_range(&self, sensitivityprofile: &[F]) -> (f64, f64) {
             if sensitivity_profile.is_empty() {
                 return (0.0, 0.0);
             }

@@ -56,16 +56,16 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierCurve<F> {
     /// // Evaluate the curve at parameter t = 0.5 (midpoint)
     /// let point = curve.evaluate(0.5).unwrap();
     /// ```
-    pub fn new(_control_points: &ArrayView2<F>) -> InterpolateResult<Self> {
-        if _control_points.is_empty() {
+    pub fn new(_controlpoints: &ArrayView2<F>) -> InterpolateResult<Self> {
+        if control_points.is_empty() {
             return Err(InterpolateError::invalid_input(
                 "Control _points array cannot be empty".to_string(),
             ));
         }
 
-        let degree = _control_points.shape()[0] - 1;
+        let degree = control_points.shape()[0] - 1;
         Ok(BezierCurve {
-            control_points: _control_points.to_owned(),
+            control_points: control_points.to_owned(),
             degree,
         })
     }
@@ -130,7 +130,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierCurve<F> {
     /// # Returns
     ///
     /// Array of points on the Bezier curve at the given parameter values
-    pub fn evaluate_array(&self, t_values: &ArrayView1<F>) -> InterpolateResult<Array2<F>> {
+    pub fn evaluate_array(&self, tvalues: &ArrayView1<F>) -> InterpolateResult<Array2<F>> {
         let n_points = t_values.len();
         let dim = self.control_points.shape()[1];
         let mut result = Array2::zeros((n_points, dim));
@@ -303,8 +303,8 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierSurface<F> {
     /// // Evaluate the surface at parameters (u,v) = (0.5, 0.5)
     /// let point = surface.evaluate(0.5, 0.5).unwrap();
     /// ```
-    pub fn new(_control_points: &ArrayView2<F>, nu: usize, nv: usize) -> InterpolateResult<Self> {
-        if _control_points.is_empty() {
+    pub fn new(_controlpoints: &ArrayView2<F>, nu: usize, nv: usize) -> InterpolateResult<Self> {
+        if control_points.is_empty() {
             return Err(InterpolateError::invalid_input(
                 "Control _points array cannot be empty".to_string(),
             ));
@@ -316,20 +316,20 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierSurface<F> {
             ));
         }
 
-        if _control_points.shape()[0] != nu * nv {
+        if control_points.shape()[0] != nu * nv {
             return Err(InterpolateError::invalid_input(format!(
                 "Expected {} control _points for a {}x{} grid, got {}",
                 nu * nv,
                 nu,
                 nv,
-                _control_points.shape()[0]
+                control_points.shape()[0]
             )));
         }
 
-        let dim = _control_points.shape()[1];
+        let dim = control_points.shape()[1];
 
         Ok(BezierSurface {
-            control_points: _control_points.to_owned(),
+            control_points: control_points.to_owned(),
             nu,
             nv,
             dim,

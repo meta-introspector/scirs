@@ -30,7 +30,7 @@
 //! use ndarray::Array2;
 //!
 //! // Create a distributed matrix
-//! let matrix = Array2::fromshape_fn((1000, 1000), |(i, j)| (i + j) as f64);
+//! let matrix = Array2::from_shape_fn((1000, 1000), |(i, j)| (i + j) as f64);
 //! let config = DistributedConfig::default().with_num_nodes(4);
 //! let dist_matrix = DistributedMatrix::from_local(matrix, config)?;
 //!
@@ -127,7 +127,7 @@ impl Default for DistributedConfig {
 
 impl DistributedConfig {
     /// Builder methods
-    pub fn with_num_nodes(mut self, num_nodes: usize) -> Self {
+    pub fn with_num_nodes(mut self, numnodes: usize) -> Self {
         self.num_nodes = num_nodes;
         self
     }
@@ -162,7 +162,7 @@ impl DistributedConfig {
         self
     }
     
-    pub fn with_timeout(mut self, timeout_ms: u64) -> Self {
+    pub fn with_timeout(mut self, timeoutms: u64) -> Self {
         self.comm_timeout_ms = timeout_ms;
         self
     }
@@ -172,7 +172,7 @@ impl DistributedConfig {
         self
     }
     
-    pub fn with_memory_limit(mut self, limit_bytes: usize) -> Self {
+    pub fn with_memory_limit(mut self, limitbytes: usize) -> Self {
         self.memory_limit_bytes = Some(limit_bytes);
         self
     }
@@ -182,7 +182,7 @@ impl DistributedConfig {
         self
     }
     
-    pub fn with_mpi_config(mut self, mpi_config: MPIConfig) -> Self {
+    pub fn with_mpi_config(mut self, mpiconfig: MPIConfig) -> Self {
         self.mpi_config = Some(mpi_config);
         self
     }
@@ -292,20 +292,20 @@ impl DistributedStats {
     }
     
     /// Record a communication event
-    pub fn record_communication(&mut self, bytes: usize, time_ms: u64) {
+    pub fn record_communication(&mut self, bytes: usize, timems: u64) {
         self.bytes_transferred += bytes;
         self.comm_time_ms += time_ms;
         self.comm_events += 1;
     }
     
     /// Record computation time
-    pub fn record_computation(&mut self, time_ms: u64) {
+    pub fn record_computation(&mut self, timems: u64) {
         self.compute_time_ms += time_ms;
         self.operations_count += 1;
     }
     
     /// Update memory usage for a node
-    pub fn update_memory_usage(&mut self, node_rank: usize, bytes: usize) {
+    pub fn update_memory_usage(&mut self, noderank: usize, bytes: usize) {
         self.memory_usage_per_node.insert(node_rank, bytes);
     }
     
@@ -1992,14 +1992,14 @@ pub enum RiskLevel {
 
 /// Initialize distributed computing environment
 #[allow(dead_code)]
-pub fn initialize_distributed(_config: DistributedConfig) -> LinalgResult<DistributedContext> {
+pub fn initialize_distributed(config: DistributedConfig) -> LinalgResult<DistributedContext> {
     DistributedContext::new(_config)
 }
 
 /// Shutdown distributed computing environment
 #[allow(dead_code)]
-pub fn finalize_distributed(_context: DistributedContext) -> LinalgResult<DistributedStats> {
-    _context.finalize()
+pub fn finalize_distributed(context: DistributedContext) -> LinalgResult<DistributedStats> {
+    context.finalize()
 }
 
 /// Context for distributed linear algebra operations
@@ -2022,14 +2022,14 @@ pub struct DistributedContext {
 
 impl DistributedContext {
     /// Create new distributed context
-    pub fn new(_config: DistributedConfig) -> LinalgResult<Self> {
+    pub fn new(config: DistributedConfig) -> LinalgResult<Self> {
         let communicator = DistributedCommunicator::new(&_config)?;
         let coordinator = DistributedCoordinator::new(&_config)?;
         let load_balancer = LoadBalancer::new(&_config)?;
         let stats = DistributedStats::new();
         
         Ok(Self {
-            config: _config,
+            config: config,
             communicator,
             coordinator,
             load_balancer,

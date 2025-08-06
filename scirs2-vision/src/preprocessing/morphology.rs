@@ -107,8 +107,8 @@ fn create_structuring_element(shape: StructuringElement) -> Result<Vec<Vec<bool>
 ///
 /// * Result containing the eroded image
 #[allow(dead_code)]
-pub fn erode(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
-    let gray = _img.to_luma8();
+pub fn erode(img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
+    let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
     let kernel = create_structuring_element(kernelshape)?;
 
@@ -169,8 +169,8 @@ pub fn erode(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<Dyn
 ///
 /// * Result containing the dilated image
 #[allow(dead_code)]
-pub fn dilate(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
-    let gray = _img.to_luma8();
+pub fn dilate(img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
+    let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
     let kernel = create_structuring_element(kernelshape)?;
 
@@ -231,7 +231,7 @@ pub fn dilate(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<Dy
 ///
 /// * Result containing the opened image
 #[allow(dead_code)]
-pub fn opening(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
+pub fn opening(img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
     let eroded = erode(_img, kernelshape)?;
     dilate(&eroded, kernelshape)
 }
@@ -247,7 +247,7 @@ pub fn opening(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<D
 ///
 /// * Result containing the closed image
 #[allow(dead_code)]
-pub fn closing(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
+pub fn closing(img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
     let dilated = dilate(_img, kernelshape)?;
     erode(&dilated, kernelshape)
 }
@@ -304,10 +304,10 @@ pub fn morphological_gradient(
 ///
 /// * Result containing the top-hat transformed image
 #[allow(dead_code)]
-pub fn top_hat(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
+pub fn top_hat(img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
     let opened = opening(_img, kernelshape)?;
 
-    let original = _img.to_luma8();
+    let original = img.to_luma8();
     let opened_gray = opened.to_luma8();
     let (width, height) = original.dimensions();
 
@@ -341,10 +341,10 @@ pub fn top_hat(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<D
 ///
 /// * Result containing the black-hat transformed image
 #[allow(dead_code)]
-pub fn black_hat(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
+pub fn black_hat(img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
     let closed = closing(_img, kernelshape)?;
 
-    let original = _img.to_luma8();
+    let original = img.to_luma8();
     let closed_gray = closed.to_luma8();
     let (width, height) = original.dimensions();
 

@@ -78,7 +78,7 @@ fn main() {
     // Training loop with manual backpropagation
     println!("\nTraining with manual backpropagation (10 epochs):");
 
-    let learning_rate = 0.1;
+    let learningrate = 0.1;
     let num_epochs = 10;
 
     for epoch in 0..num_epochs {
@@ -191,10 +191,10 @@ fn main() {
         println!("Epoch {}: loss = {:.4}", epoch + 1, avg_loss);
 
         // Update weights with gradients
-        w1.update_with_gradient(learning_rate);
-        b1.update_with_gradient(learning_rate);
-        w2.update_with_gradient(learning_rate);
-        b2.update_with_gradient(learning_rate);
+        w1.update_with_gradient(learningrate);
+        b1.update_with_gradient(learningrate);
+        w2.update_with_gradient(learningrate);
+        b2.update_with_gradient(learningrate);
 
         // Zero gradients for next epoch
         w1.zero_grad();
@@ -298,7 +298,7 @@ fn main() {
     // Create a data loader
     let batch_size = 4; // Use all samples in one batch for this small example
                         // Not using the data loader in this example as we'll create a new one for each epoch
-    let data_loader = DataLoader::new(Box::new(dataset), batch_size, true, Some(42));
+    let dataloader = DataLoader::new(Box::new(dataset), batch_size, true, Some(42));
 
     println!(
         "Created dataset and data loader with batch size {}",
@@ -347,7 +347,7 @@ fn main() {
     );
 
     // Create loss function
-    let loss_fn = MSELoss::new(Some(mean));
+    let lossfn = MSELoss::new(Some(mean));
 
     // Training loop with automatic backpropagation
     println!("\nTraining with automatic backpropagation (10 epochs):");
@@ -370,7 +370,7 @@ fn main() {
         );
 
         // Get number of batches before iterating
-        let num_batches = loader.num_batches();
+        let numbatches = loader.numbatches();
 
         // Training loop over batches
         for (inputs, targets) in loader {
@@ -391,7 +391,7 @@ fn main() {
                 };
 
                 // Compute loss
-                let loss = match loss_fn.forward(output.as_ref(), target.as_ref()) {
+                let loss = match lossfn.forward(output.as_ref(), target.as_ref()) {
                     Ok(l) => l,
                     Err(e) => {
                         println!("Error computing loss in automatic backprop: {}", e);
@@ -443,7 +443,7 @@ fn main() {
         }
 
         // Print stats
-        let avg_loss = total_loss / num_batches as f64; // Use the stored num_batches
+        let avg_loss = total_loss / numbatches as f64; // Use the stored numbatches
         println!("Epoch {}: loss = {:.4}", epoch + 1, avg_loss);
     }
 
@@ -495,7 +495,7 @@ trait GradientTensorExt {
     fn to_scalar(&self) -> Option<f64>;
 
     /// Update parameter using its gradient
-    fn update_with_learning_rate(&mut self, learning_rate: f64);
+    fn update_with_learningrate(&mut self, learningrate: f64);
 
     /// Zero out the gradient
     fn zero_grad(&mut self);
@@ -535,7 +535,7 @@ impl GradientTensorExt for GradientTensor {
         None
     }
 
-    fn update_with_learning_rate(&mut self, learning_rate: f64) {
+    fn update_with_learningrate(&mut self, learningrate: f64) {
         // In a real implementation, this would:
         // 1. Access both the tensor data and its gradient
         // 2. Update the tensor data using the gradient and learning rate
@@ -555,13 +555,13 @@ impl GradientTensorExt for GradientTensor {
                     let grad_ndarray = grad_array.as_array();
 
                     // Update using gradient descent: w = w - lr * grad
-                    let updated_array = &ndarray - &(grad_ndarray * learning_rate);
+                    let updated_array = &ndarray - &(grad_ndarray * learningrate);
 
                     // In a real implementation, this would update the tensor data
                     // For this example, we'll just log that it would happen
                     println!(
                         "Would update tensor data with gradient using learning _rate {}",
-                        learning_rate
+                        learningrate
                     );
                 }
             }

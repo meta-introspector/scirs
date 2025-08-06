@@ -28,24 +28,24 @@ pub struct UnifiedOptimizationConfig {
     /// Enable distributed optimization
     pub use_distributed: bool,
     /// Distributed optimization settings
-    pub distributed_config: Option<DistributedConfig>,
+    pub distributedconfig: Option<DistributedConfig>,
 
     /// Enable self-tuning parameter adaptation
     pub use_self_tuning: bool,
     /// Self-tuning configuration
-    pub self_tuning_config: Option<SelfTuningConfig>,
+    pub self_tuningconfig: Option<SelfTuningConfig>,
 
     /// Enable GPU acceleration
     pub use_gpu: bool,
     /// GPU acceleration settings
-    pub gpu_config: Option<GpuOptimizationConfig>,
+    pub gpuconfig: Option<GpuOptimizationConfig>,
     /// GPU acceleration configuration
-    pub acceleration_config: Option<AccelerationConfig>,
+    pub accelerationconfig: Option<AccelerationConfig>,
 
     /// Enable optimization visualization
     pub enable_visualization: bool,
     /// Visualization settings
-    pub visualization_config: Option<VisualizationConfig>,
+    pub visualizationconfig: Option<VisualizationConfig>,
 
     /// Output directory for results and visualization
     pub output_directory: Option<String>,
@@ -62,14 +62,14 @@ impl Default for UnifiedOptimizationConfig {
     fn default() -> Self {
         Self {
             use_distributed: false,
-            distributed_config: None,
+            distributedconfig: None,
             use_self_tuning: true,
-            self_tuning_config: Some(SelfTuningConfig::default()),
+            self_tuningconfig: Some(SelfTuningConfig::default()),
             use_gpu: false,
-            gpu_config: None,
-            acceleration_config: None,
+            gpuconfig: None,
+            accelerationconfig: None,
             enable_visualization: true,
-            visualization_config: Some(VisualizationConfig::default()),
+            visualizationconfig: Some(VisualizationConfig::default()),
             output_directory: Some("optimization_output".to_string()),
             max_nit: 1000,
             function_tolerance: 1e-6,
@@ -80,7 +80,7 @@ impl Default for UnifiedOptimizationConfig {
 
 /// Unified optimization pipeline
 pub struct UnifiedOptimizer<M: MPIInterface> {
-    _config: UnifiedOptimizationConfig,
+    config: UnifiedOptimizationConfig,
 
     // Optional components based on configuration
     distributed_context: Option<DistributedOptimizationContext<M>>,
@@ -96,56 +96,56 @@ pub struct UnifiedOptimizer<M: MPIInterface> {
 
 impl<M: MPIInterface> UnifiedOptimizer<M> {
     /// Create a new unified optimizer
-    pub fn new(_config: UnifiedOptimizationConfig, mpi: Option<M>) -> ScirsResult<Self> {
-        let distributed_context = if _config.use_distributed {
-            if let (Some(mpi_interface), Some(dist_config)) = (mpi, &_config.distributed_config) {
+    pub fn new(config: UnifiedOptimizationConfig, mpi: Option<M>) -> ScirsResult<Self> {
+        let distributed_context = if config.use_distributed {
+            if let (Some(mpi_interface), Some(distconfig)) = (mpi, &config.distributedconfig) {
                 Some(DistributedOptimizationContext::new(
                     mpi_interface,
-                    dist_config.clone(),
+                    distconfig.clone(),
                 ))
             } else {
                 return Err(ScirsError::InvalidInput(error_context!(
-                    "MPI interface and distributed _config required for distributed optimization"
+                    "MPI interface and distributed config required for distributed optimization"
                 )));
             }
         } else {
             None
         };
 
-        let self_tuning_optimizer = if _config.use_self_tuning {
-            let tuning_config = _config
-                .self_tuning_config
+        let self_tuning_optimizer = if config.use_self_tuning {
+            let tuningconfig = config
+                .self_tuningconfig
                 .clone()
                 .unwrap_or_else(SelfTuningConfig::default);
-            Some(SelfTuningOptimizer::new(tuning_config))
+            Some(SelfTuningOptimizer::new(tuningconfig))
         } else {
             None
         };
 
-        let (gpu_context, acceleration_manager) = if _config.use_gpu {
-            let gpu_config = _config
-                .gpu_config
+        let (gpu_context, acceleration_manager) = if config.use_gpu {
+            let gpuconfig = config
+                .gpuconfig
                 .clone()
                 .unwrap_or_else(GpuOptimizationConfig::default);
-            let gpu_ctx = GpuOptimizationContext::new(gpu_config)?;
+            let gpu_ctx = GpuOptimizationContext::new(gpuconfig)?;
 
-            let accel_config = _config
-                .acceleration_config
+            let accelconfig = config
+                .accelerationconfig
                 .clone()
                 .unwrap_or_else(AccelerationConfig::default);
-            let accel_mgr = AccelerationManager::new(accel_config);
+            let accel_mgr = AccelerationManager::new(accelconfig);
 
             (Some(gpu_ctx), Some(accel_mgr))
         } else {
             (None, None)
         };
 
-        let (visualizer, trajectory_tracker) = if _config.enable_visualization {
-            let vis_config = _config
-                .visualization_config
+        let (visualizer, trajectory_tracker) = if config.enable_visualization {
+            let visconfig = config
+                .visualizationconfig
                 .clone()
                 .unwrap_or_else(VisualizationConfig::default);
-            let vis = OptimizationVisualizer::with_config(vis_config);
+            let vis = OptimizationVisualizer::withconfig(visconfig);
             let tracker = TrajectoryTracker::new();
             (Some(vis), Some(tracker))
         } else {
@@ -153,7 +153,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
         };
 
         Ok(Self {
-            _config,
+            config,
             distributed_context,
             self_tuning_optimizer,
             gpu_context,
@@ -226,7 +226,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
             }
 
             // Self-tuning parameter adaptation
-            if let Some(ref mut tuner) = self.self_tuning_optimizer {
+            let tuning_params = if let Some(ref mut tuner) = self.self_tuning_optimizer {
                 let improvement = if iteration > 1 {
                     // Compute relative improvement in function value
                     let prev_f = self.previous_function_value.unwrap_or(current_f);
@@ -243,10 +243,18 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
                     tuner.update_parameters(iteration, current_f, Some(grad_norm), improvement)?;
 
                 if params_changed {
-                    // Update algorithm parameters based on self-tuning results
-                    let tuning_params = tuner.get_parameters();
-                    self.apply_tuned_parameters(tuning_params)?;
+                    // Get tuning parameters before we need to borrow self mutably
+                    Some(tuner.get_parameters())
+                } else {
+                    None
                 }
+            } else {
+                None
+            };
+
+            // Apply tuned parameters if available
+            if let Some(params) = tuning_params {
+                self.apply_tuned_parameters(params)?;
             }
 
             // GPU-accelerated computation if enabled
@@ -257,15 +265,19 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
             };
 
             // Distributed evaluation for line search if enabled
-            let step_size = if let Some(ref mut dist_ctx) = self.distributed_context {
+            let step_size = if self.distributed_context.is_some() {
                 let current_x_copy = current_x.clone();
                 let search_direction_copy = search_direction.clone();
-                self.distributed_line_search(
-                    dist_ctx,
-                    &function,
-                    &current_x_copy,
-                    &search_direction_copy,
-                )?
+                if let Some(ref mut dist_ctx) = self.distributed_context {
+                    self.distributed_line_search(
+                        dist_ctx,
+                        &function,
+                        &current_x_copy,
+                        &search_direction_copy,
+                    )?
+                } else {
+                    unreachable!()
+                }
             } else {
                 self.standard_line_search(&function, &current_x, &search_direction)?
             };
@@ -511,7 +523,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
     }
 
     /// Update specific algorithm parameters
-    fn update_algorithm_parameter(&mut self_name: &str, _value: f64) -> ScirsResult<()> {
+    fn update_algorithm_parameter(&mut self_name: &str, value: f64) -> ScirsResult<()> {
         // Update internal algorithm parameters based on self-tuning
         // This would be algorithm-specific
         Ok(())
@@ -582,7 +594,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
         }
 
         // Add GPU performance if available
-        if let Some(ref _accel_mgr) = self.acceleration_manager {
+        if let Some(ref accel_mgr) = self.acceleration_manager {
             report.push_str("\nGPU Acceleration Performance:\n");
             report.push_str("GPU acceleration metrics available\n");
             // Note: Performance reporting requires specific GPU optimizer instance
@@ -678,20 +690,20 @@ pub mod presets {
     use super::*;
 
     /// Create configuration for high-performance distributed optimization
-    pub fn distributed_gpu_config(_num_processes: usize) -> UnifiedOptimizationConfig {
+    pub fn distributed_gpuconfig(_numprocesses: usize) -> UnifiedOptimizationConfig {
         UnifiedOptimizationConfig {
             use_distributed: true,
-            distributed_config: Some(crate::distributed::DistributedConfig {
+            distributedconfig: Some(crate::distributed::DistributedConfig {
                 distribution_strategy: crate::distributed::DistributionStrategy::DataParallel,
                 load_balancing: crate::distributed::LoadBalancingConfig::default(),
                 communication: crate::distributed::CommunicationConfig::default(),
                 fault_tolerance: crate::distributed::FaultToleranceConfig::default(),
             }),
             use_gpu: true,
-            gpu_config: Some(GpuOptimizationConfig::default()),
-            acceleration_config: Some(AccelerationConfig::default()),
+            gpuconfig: Some(GpuOptimizationConfig::default()),
+            accelerationconfig: Some(AccelerationConfig::default()),
             use_self_tuning: true,
-            self_tuning_config: Some(SelfTuningConfig {
+            self_tuningconfig: Some(SelfTuningConfig {
                 adaptation_strategy: AdaptationStrategy::Hybrid,
                 update_frequency: 25,
                 learning_rate: 0.1,
@@ -700,7 +712,7 @@ pub mod presets {
                 exploration_factor: 0.15,
             }),
             enable_visualization: true,
-            visualization_config: Some(VisualizationConfig::default()),
+            visualizationconfig: Some(VisualizationConfig::default()),
             output_directory: Some("distributed_gpu_optimization".to_string()),
             max_nit: 2000,
             function_tolerance: 1e-8,
@@ -709,15 +721,15 @@ pub mod presets {
     }
 
     /// Create configuration for memory-efficient large-scale optimization
-    pub fn large_scale_config() -> UnifiedOptimizationConfig {
+    pub fn large_scaleconfig() -> UnifiedOptimizationConfig {
         UnifiedOptimizationConfig {
             use_distributed: false,
-            distributed_config: None,
+            distributedconfig: None,
             use_gpu: true,
-            gpu_config: Some(GpuOptimizationConfig::default()),
-            acceleration_config: Some(AccelerationConfig::default()),
+            gpuconfig: Some(GpuOptimizationConfig::default()),
+            accelerationconfig: Some(AccelerationConfig::default()),
             use_self_tuning: true,
-            self_tuning_config: Some(SelfTuningConfig {
+            self_tuningconfig: Some(SelfTuningConfig {
                 adaptation_strategy: AdaptationStrategy::PerformanceBased,
                 update_frequency: 50,
                 learning_rate: 0.05,
@@ -726,7 +738,7 @@ pub mod presets {
                 exploration_factor: 0.1,
             }),
             enable_visualization: true,
-            visualization_config: Some(VisualizationConfig::default()),
+            visualizationconfig: Some(VisualizationConfig::default()),
             output_directory: Some("large_scale_optimization".to_string()),
             max_nit: 5000,
             function_tolerance: 1e-6,
@@ -735,15 +747,15 @@ pub mod presets {
     }
 
     /// Create configuration for interactive optimization with real-time visualization
-    pub fn interactive_config() -> UnifiedOptimizationConfig {
+    pub fn interactiveconfig() -> UnifiedOptimizationConfig {
         UnifiedOptimizationConfig {
             use_distributed: false,
-            distributed_config: None,
+            distributedconfig: None,
             use_gpu: false,
-            gpu_config: None,
-            acceleration_config: None,
+            gpuconfig: None,
+            accelerationconfig: None,
             use_self_tuning: true,
-            self_tuning_config: Some(SelfTuningConfig {
+            self_tuningconfig: Some(SelfTuningConfig {
                 adaptation_strategy: AdaptationStrategy::ConvergenceBased,
                 update_frequency: 10,
                 learning_rate: 0.2,
@@ -752,7 +764,7 @@ pub mod presets {
                 exploration_factor: 0.2,
             }),
             enable_visualization: true,
-            visualization_config: Some(VisualizationConfig {
+            visualizationconfig: Some(VisualizationConfig {
                 format: crate::visualization::OutputFormat::Html,
                 width: 1200,
                 height: 800,
@@ -777,22 +789,22 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_unified_config_creation() {
+    fn test_unifiedconfig_creation() {
         let config = UnifiedOptimizationConfig::default();
         assert!(!config.use_distributed);
         assert!(config.use_self_tuning);
         assert!(!config.use_gpu);
-        assert!(_config.enable_visualization);
+        assert!(config.enable_visualization);
     }
 
     #[test]
-    fn test_preset_configs() {
-        let large_scale = presets::large_scale_config();
+    fn test_presetconfigs() {
+        let large_scale = presets::large_scaleconfig();
         assert!(large_scale.use_gpu);
         assert!(large_scale.use_self_tuning);
         assert!(!large_scale.use_distributed);
 
-        let interactive = presets::interactive_config();
+        let interactive = presets::interactiveconfig();
         assert!(!interactive.use_gpu);
         assert!(interactive.use_self_tuning);
         assert!(interactive.enable_visualization);
@@ -812,7 +824,7 @@ mod tests {
     #[test]
     fn test_rosenbrock_optimization() {
         // Test optimization on the Rosenbrock function
-        let config = presets::interactive_config();
+        let config = presets::interactiveconfig();
 
         let rosenbrock = |x: &ArrayView1<f64>| -> f64 {
             let x0 = x[0];

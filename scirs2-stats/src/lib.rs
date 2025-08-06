@@ -501,7 +501,6 @@ pub mod advanced_integration; // High-level workflows integrating multiple advan
 pub mod advanced_parallel_monte_carlo; // Advanced parallel Monte Carlo integration
 pub mod bayesian; // Bayesian statistics
 pub mod contingency; // Contingency table functions
-#[path = "distributions/mod_without_circular.rs"]
 pub mod distributions; // Statistical distributions
 pub mod mcmc; // Markov Chain Monte Carlo methods
 pub mod mstats; // Masked array statistics

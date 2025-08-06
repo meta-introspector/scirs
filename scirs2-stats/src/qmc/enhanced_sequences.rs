@@ -287,7 +287,7 @@ where
     }
 
     /// Generate a chunk of the sequence
-    fn generate_chunk(&self, start_index: usize, chunk_size: usize) -> StatsResult<Array2<F>> {
+    fn generate_chunk(&self, start_index: usize, chunksize: usize) -> StatsResult<Array2<F>> {
         let mut chunk = Array2::zeros((chunk_size, self.dimension));
 
         for i in 0..chunk_size {
@@ -506,7 +506,7 @@ where
 
         // Generate random permutation matrix
         for i in 0..32 {
-            let j = rng.random_range(0..32);
+            let j = rng.gen_range(0..32);
             matrix[[i, j]] = 1;
         }
 

@@ -24,7 +24,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 ///
 /// The mean absolute deviation
 #[allow(dead_code)]
-pub fn mad_simd<F, D>(x: &mut ArrayBase<D, Ix1>, scale: F, nan_policy: &str) -> StatsResult<F>
+pub fn mad_simd<F, D>(x: &mut ArrayBase<D, Ix1>, scale: F, nanpolicy: &str) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
     D: DataMut<Elem = F>,

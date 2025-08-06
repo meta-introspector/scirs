@@ -89,21 +89,21 @@ where
     ///
     /// let tt_tensor = TTTensor::new(vec![core1, core2, core3]).unwrap();
     /// ```
-    pub fn new(_cores: Vec<Array3<F>>) -> LinalgResult<Self> {
-        if _cores.is_empty() {
+    pub fn new(cores: Vec<Array3<F>>) -> LinalgResult<Self> {
+        if cores.is_empty() {
             return Err(LinalgError::ShapeError(
                 "TT tensor must have at least one core".to_string(),
             ));
         }
 
-        let d = _cores.len();
+        let d = cores.len();
         let mut mode_sizes = Vec::with_capacity(d);
         let mut ranks = Vec::with_capacity(d + 1);
 
         // Validate dimensions and extract sizes
-        ranks.push(_cores[0].shape()[0]); // r₀
+        ranks.push(cores[0].shape()[0]); // r₀
 
-        for (k, core) in _cores.iter().enumerate() {
+        for (k, core) in cores.iter().enumerate() {
             let shape = core.shape();
             if shape.len() != 3 {
                 return Err(LinalgError::ShapeError(format!(
@@ -131,7 +131,7 @@ where
         }
 
         Ok(TTTensor {
-            cores: _cores,
+            cores: cores,
             mode_sizes,
             ranks,
             accuracy: F::zero(), // Will be set by decomposition algorithms
@@ -281,7 +281,7 @@ where
     /// # Returns
     ///
     /// * Rounded TT tensor with potentially lower ranks
-    pub fn round(&self, tolerance: F, max_rank: Option<usize>) -> LinalgResult<Self> {
+    pub fn round(&self, tolerance: F, maxrank: Option<usize>) -> LinalgResult<Self> {
         let d = self.ndim();
         if d == 0 {
             return Err(LinalgError::ShapeError(
@@ -328,7 +328,7 @@ where
             }
 
             // Apply maximum _rank constraint
-            if let Some(max_r) = max_rank {
+            if let Some(max_r) = maxrank {
                 trunc_rank = trunc_rank.min(max_r);
             }
 
@@ -598,11 +598,11 @@ where
 
 /// Create a rank-1 TT tensor from a dense tensor (simplified implementation)
 #[allow(dead_code)]
-fn tt_from_dense_simple<F>(_dense: &ndarray::ArrayViewD<F>) -> LinalgResult<TTTensor<F>>
+fn tt_from_dense_simple<F>(dense: &ndarray::ArrayViewD<F>) -> LinalgResult<TTTensor<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
-    let shape = _dense.shape();
+    let shape = dense.shape();
     let d = shape.len();
 
     if d == 0 {
@@ -616,7 +616,7 @@ where
         let n = shape[0];
         let mut core = Array3::zeros((1, n, 1));
         for i in 0..n {
-            core[[0, i, 0]] = _dense[[i]];
+            core[[0, i, 0]] = dense[[i]];
         }
         TTTensor::new(vec![core])
     } else {
@@ -657,7 +657,7 @@ where
         let core_b = &b.cores[k];
 
         let (_ra_left, n_k, ra_right) = core_a.dim();
-        let (rb_left_, _n_k, rb_right) = core_b.dim();
+        let (rb_left_, n_k, rb_right) = core_b.dim();
 
         // Hadamard product ranks are products of input ranks
         let r_left = if k == 0 { 1 } else { a.ranks[k] * b.ranks[k] };
@@ -749,7 +749,7 @@ mod tests {
         });
 
         // Core 2: shape (2, 2, 1) - maps i2 to scalar using rank-2 input
-        let core2 = Array3::from_shape_fn((2, 2, 1), |(r1, i_)| {
+        let core2 = Array3::from_shape_fn((2, 2, 1), |(r1, i_, r2)| {
             if i_ == 0 {
                 // For i2=0: select first element of input vector
                 if r1 == 0 {
@@ -814,7 +814,7 @@ mod tests {
     #[test]
     fn test_tt_frobenius_norm() {
         // Create a simple 1D TT tensor [1, 2]
-        let core1 = Array3::from_shape_fn((1, 2, 1), |(_, i_)| (i_ + 1) as f64);
+        let core1 = Array3::from_shape_fn((1, 2, 1), |(_, i_, _)| (i_ + 1) as f64);
         let tt_tensor = TTTensor::new(vec![core1]).unwrap();
 
         let norm = tt_tensor.frobenius_norm().unwrap();
@@ -835,10 +835,10 @@ mod tests {
     #[test]
     fn test_tt_addition() {
         // Create two simple TT tensors representing 1D vectors [1, 2] and [2, 3]
-        let core1_a = Array3::from_shape_fn((1, 2, 1), |(_, i)| (i + 1) as f64);
+        let core1_a = Array3::from_shape_fn((1, 2, 1), |(_, i, _)| (i + 1) as f64);
         let tt_a = TTTensor::new(vec![core1_a]).unwrap();
 
-        let core1_b = Array3::from_shape_fn((1, 2, 1), |(_, i)| (i + 2) as f64);
+        let core1_b = Array3::from_shape_fn((1, 2, 1), |(_, i, _)| (i + 2) as f64);
         let tt_b = TTTensor::new(vec![core1_b]).unwrap();
 
         let tt_sum = tt_add(&tt_a, &tt_b).unwrap();
@@ -852,10 +852,10 @@ mod tests {
     #[test]
     fn test_tt_hadamard_product() {
         // Create two simple TT tensors
-        let core1_a = Array3::from_shape_fn((1, 2, 1), |(_, i)| (i + 1) as f64);
+        let core1_a = Array3::from_shape_fn((1, 2, 1), |(_, i, _)| (i + 1) as f64);
         let tt_a = TTTensor::new(vec![core1_a]).unwrap();
 
-        let core1_b = Array3::from_shape_fn((1, 2, 1), |(_, i)| (i + 2) as f64);
+        let core1_b = Array3::from_shape_fn((1, 2, 1), |(_, i, _)| (i + 2) as f64);
         let tt_b = TTTensor::new(vec![core1_b]).unwrap();
 
         let tt_product = tt_hadamard(&tt_a, &tt_b).unwrap();
@@ -877,7 +877,7 @@ mod tests {
             (1, 1) => 4.0,
             _ => 0.0,
         });
-        let core2 = Array3::from_shape_fn((2, 2, 1), |(r, j)| match (r, j) {
+        let core2 = Array3::from_shape_fn((2, 2, 1), |(r, j, _)| match (r, j) {
             (0, 0) => 0.5,
             (0, 1) => 1.0,
             (1, 0) => 1.5,
@@ -906,7 +906,7 @@ mod tests {
     #[test]
     fn test_compression_ratio() {
         // Create a simple TT tensor manually and test compression ratio
-        let core1 = Array3::from_shape_fn((1, 2, 1), |(_, i_)| (i_ + 1) as f64);
+        let core1 = Array3::from_shape_fn((1, 2, 1), |(_, i_, _)| (i_ + 1) as f64);
         let tt_tensor = TTTensor::new(vec![core1]).unwrap();
 
         let compression = tt_tensor.compression_ratio();

@@ -235,7 +235,7 @@ pub struct PerformanceSnapshot {
 
 impl ProductionGpuAccelerator {
     /// Initialize the production GPU accelerator
-    pub fn new(_config: ProductionGpuConfig) -> InterpolateResult<Self> {
+    pub fn new(config: ProductionGpuConfig) -> InterpolateResult<Self> {
         let devices = Self::detect_gpu_devices()?;
 
         if devices.is_empty() {
@@ -248,9 +248,9 @@ impl ProductionGpuAccelerator {
 
         // Initialize memory pools for each device
         for device in &devices {
-            if device.is_available && _config.enable_memory_pooling {
+            if device.is_available && config.enable_memory_pooling {
                 let pool_size =
-                    (device.available_memory as f32 * _config.max_memory_fraction) as u64;
+                    (device.available_memory as f32 * config.max_memory_fraction) as u64;
                 let pool = GpuMemoryPool::new(device.id, pool_size)?;
                 memory_pools.insert(device.id, pool);
             }
@@ -270,7 +270,7 @@ impl ProductionGpuAccelerator {
             memory_pools,
             distribution_strategy,
             monitor,
-            _config,
+            config,
         })
     }
 
@@ -306,7 +306,7 @@ impl ProductionGpuAccelerator {
         F: Float + FromPrimitive + Zero + Send + Sync + Debug + 'static,
     {
         let n_queries = query_points.nrows();
-        let n_points = _points.nrows();
+        let n_points = points.nrows();
 
         // Determine optimal execution strategy
         let strategy = self.select_execution_strategy(n_points, n_queries)?;
@@ -371,7 +371,8 @@ impl ProductionGpuAccelerator {
         &mut self,
         points: &ArrayView2<F>,
         values: &ArrayView1<F>,
-        query_points: &ArrayView2<F>, _method: &str,
+        query_points: &ArrayView2<F>,
+        _method: &str,
     ) -> InterpolateResult<Array1<F>>
     where
         F: Float + FromPrimitive + Zero + Debug,
@@ -391,7 +392,7 @@ impl ProductionGpuAccelerator {
 
             // Simulate GPU computation with retry mechanism
             let batch_results = self.execute_with_retry(|| {
-                self.gpu_interpolate_batch(device_id, _points, values, &batch_queries)
+                self.gpu_interpolate_batch(device_id, points, values, &batch_queries)
             })?;
 
             results
@@ -407,7 +408,8 @@ impl ProductionGpuAccelerator {
         &mut self,
         points: &ArrayView2<F>,
         values: &ArrayView1<F>,
-        query_points: &ArrayView2<F>, _method: &str,
+        query_points: &ArrayView2<F>,
+        _method: &str,
     ) -> InterpolateResult<Array1<F>>
     where
         F: Float + FromPrimitive + Zero + Send + Sync + Debug,
@@ -442,7 +444,7 @@ impl ProductionGpuAccelerator {
 
             let chunk_queries = query_points.slice(s![start_idx..end_idx, ..]);
             let chunk_results =
-                self.gpu_interpolate_batch(device_id, _points, values, &chunk_queries)?;
+                self.gpu_interpolate_batch(device_id, points, values, &chunk_queries)?;
 
             results
                 .slice_mut(s![start_idx..end_idx])
@@ -457,7 +459,8 @@ impl ProductionGpuAccelerator {
         &mut self,
         points: &ArrayView2<F>,
         values: &ArrayView1<F>,
-        query_points: &ArrayView2<F>, _method: &str,
+        query_points: &ArrayView2<F>,
+        _method: &str,
     ) -> InterpolateResult<Array1<F>>
     where
         F: Float + FromPrimitive + Zero + Debug,
@@ -475,7 +478,7 @@ impl ProductionGpuAccelerator {
 
             // Stream processing with memory management
             let chunk_results =
-                self.gpu_interpolate_streaming(device_id, _points, values, &chunk_queries)?;
+                self.gpu_interpolate_streaming(device_id, points, values, &chunk_queries)?;
 
             results
                 .slice_mut(s![chunk_start..chunk_end])
@@ -493,7 +496,8 @@ impl ProductionGpuAccelerator {
         &self,
         points: &ArrayView2<F>,
         values: &ArrayView1<F>,
-        query_points: &ArrayView2<F>, _method: &str,
+        query_points: &ArrayView2<F>,
+        _method: &str,
     ) -> InterpolateResult<Array1<F>>
     where
         F: Float + FromPrimitive + Zero + Debug,
@@ -506,7 +510,7 @@ impl ProductionGpuAccelerator {
             let mut min_dist = F::infinity();
             let mut nearest_value = F::zero();
 
-            for (j, point) in _points.axis_iter(Axis(0)).enumerate() {
+            for (j, point) in points.axis_iter(Axis(0)).enumerate() {
                 let dist = query
                     .iter()
                     .zip(point.iter())
@@ -531,7 +535,9 @@ impl ProductionGpuAccelerator {
     /// Execute GPU interpolation for a batch (simulated)
     fn gpu_interpolate_batch<F>(
         &self,
-        device_id: usize, _points: &ArrayView2<F>, _values: &ArrayView1<F>,
+        device_id: usize,
+        _points: &ArrayView2<F>,
+        _values: &ArrayView1<F>,
         query_batch: &ArrayView2<F>,
     ) -> InterpolateResult<Array1<F>>
     where
@@ -555,7 +561,9 @@ impl ProductionGpuAccelerator {
     /// Execute GPU interpolation with streaming (simulated)
     fn gpu_interpolate_streaming<F>(
         &self,
-        device_id: usize, _points: &ArrayView2<F>, _values: &ArrayView1<F>,
+        device_id: usize,
+        _points: &ArrayView2<F>,
+        _values: &ArrayView1<F>,
         query_batch: &ArrayView2<F>,
     ) -> InterpolateResult<Array1<F>>
     where
@@ -717,9 +725,9 @@ pub struct ProductionPerformanceReport {
 
 impl GpuMemoryPool {
     /// Create new memory pool for device
-    fn new(_device_id: usize, size: u64) -> InterpolateResult<Self> {
+    fn new(_deviceid: usize, size: u64) -> InterpolateResult<Self> {
         Ok(Self {
-            _device_id,
+            device_id,
             total_size: size,
             allocated_size: 0,
             free_blocks: vec![MemoryBlock {
@@ -784,7 +792,7 @@ impl GpuMemoryPool {
 
     /// Deallocate memory block
     #[allow(dead_code)]
-    fn deallocate(&mut self, block_id: u64) -> bool {
+    fn deallocate(&mut self, blockid: u64) -> bool {
         if let Some(block) = self.allocated_blocks.remove(&block_id) {
             self.allocated_size -= block.size;
             self.stats.total_deallocations += 1;
@@ -962,9 +970,9 @@ pub mod production_extensions {
 
     impl GpuHealthMonitor {
         /// Create a new health monitor
-        pub fn new(_check_interval: Duration, thresholds: HealthThresholds) -> Self {
+        pub fn new(_checkinterval: Duration, thresholds: HealthThresholds) -> Self {
             Self {
-                _check_interval,
+                check_interval,
                 thresholds,
                 is_active: Arc::new(AtomicBool::new(false)),
                 health_history: Arc::new(Mutex::new(Vec::new())),
@@ -1107,22 +1115,22 @@ pub mod production_extensions {
         }
 
         /// Calculate system-wide memory pressure
-        fn calculate_system_memory_pressure(_devices: &[GpuDevice]) -> f32 {
-            if _devices.is_empty() {
+        fn calculate_system_memory_pressure(devices: &[GpuDevice]) -> f32 {
+            if devices.is_empty() {
                 return 0.0;
             }
 
-            let total_memory: u64 = _devices.iter().map(|d| d.total_memory).sum();
-            let available_memory: u64 = _devices.iter().map(|d| d.available_memory).sum();
+            let total_memory: u64 = devices.iter().map(|d| d.total_memory).sum();
+            let available_memory: u64 = devices.iter().map(|d| d.available_memory).sum();
 
             1.0 - (available_memory as f32 / total_memory as f32)
         }
 
         /// Check for alert conditions
-        fn check_for_alerts(_health_result: &HealthCheckResult, _thresholds: &HealthThresholds) {
+        fn check_for_alerts(_health_result: &HealthCheckResult, thresholds: &HealthThresholds) {
             // Implementation would check for various alert conditions
             // and trigger appropriate alerts
-            match _health_result.status {
+            match health_result.status {
                 HealthStatus::Critical => {
                     // Would trigger critical alerts
                 }
@@ -1160,9 +1168,9 @@ pub mod production_extensions {
 
     impl AdvancedMemoryManager {
         /// Create a new advanced memory manager
-        pub fn new(_fragmentation_threshold: f32, auto_optimize: bool) -> Self {
+        pub fn new(_fragmentation_threshold: f32, autooptimize: bool) -> Self {
             Self {
-                _fragmentation_threshold,
+                fragmentation_threshold,
                 auto_optimize,
                 optimization_stats: MemoryOptimizationStats::default(),
             }
@@ -1306,9 +1314,9 @@ pub mod production_extensions {
 
     impl DynamicLoadBalancer {
         /// Create a new dynamic load balancer
-        pub fn new(_strategy: LoadBalancingStrategy, auto_scaling: bool) -> Self {
+        pub fn new(_strategy: LoadBalancingStrategy, autoscaling: bool) -> Self {
             Self {
-                _strategy,
+                strategy,
                 device_performance_history: HashMap::new(),
                 auto_scaling,
                 _scaling_thresholds: ScalingThresholds::default(),
@@ -1370,10 +1378,10 @@ pub mod production_extensions {
         }
 
         /// Calculate performance score for a device
-        fn calculate_performance_score(_device: &GpuDevice) -> f32 {
+        fn calculate_performance_score(device: &GpuDevice) -> f32 {
             // Simple heuristic: memory capacity / utilization
-            let memory_factor = _device.total_memory as f32 / (1024.0 * 1024.0 * 1024.0); // GB
-            let utilization_penalty = 1.0 - _device.utilization;
+            let memory_factor = device.total_memory as f32 / (1024.0 * 1024.0 * 1024.0); // GB
+            let utilization_penalty = 1.0 - device.utilization;
             memory_factor * utilization_penalty
         }
 
@@ -1400,7 +1408,7 @@ pub mod production_extensions {
         }
 
         /// Record performance data for load balancing decisions
-        pub fn record_performance(&mut self, device_id: usize, data_point: PerformanceDataPoint) {
+        pub fn record_performance(&mut self, device_id: usize, datapoint: PerformanceDataPoint) {
             self.device_performance_history
                 .entry(device_id)
                 .or_insert_with(Vec::new)

@@ -120,7 +120,7 @@ fn main() {
 
 /// Generate random data with clusters
 #[allow(dead_code)]
-fn generate_clustered_data(_n_samples: usize, n_dim: usize) -> Array2<f64> {
+fn generate_clustered_data(_n_samples: usize, ndim: usize) -> Array2<f64> {
     let mut rng = rand::rng();
 
     // Define distributions for two clusters

@@ -36,7 +36,7 @@ pub struct PyError {
 }
 
 impl From<NdimageError> for PyError {
-    fn from(_error: NdimageError) -> Self {
+    fn from(error: NdimageError) -> Self {
         match _error {
             NdimageError::InvalidInput(msg) => PyError {
                 _error_type: "ValueError".to_string(),
@@ -128,7 +128,7 @@ pub mod array_conversion {
     }
 
     /// Validate array compatibility for Python interop
-    pub fn validate_array_compatibility<T>(_info: &PyArrayInfo) -> Result<(), PyError>
+    pub fn validate_array_compatibility<T>(info: &PyArrayInfo) -> Result<(), PyError>
     where
         T: 'static,
     {
@@ -149,16 +149,16 @@ pub mod array_conversion {
             });
         };
 
-        if _info.dtype != expected_dtype {
+        if info.dtype != expected_dtype {
             return Err(PyError {
                 error_type: "TypeError".to_string(),
-                message: format!("Expected dtype '{}', got '{}'", expected_dtype, _info.dtype),
+                message: format!("Expected dtype '{}', got '{}'", expected_dtype, info.dtype),
                 context: None,
             });
         }
 
         // Check for reasonable array sizes
-        let total_elements: usize = _info.shape.iter().product();
+        let total_elements: usize = info.shape.iter().product();
         if total_elements > 1_000_000_000 {
             return Err(PyError {
                 error_type: "MemoryError".to_string(),
@@ -380,7 +380,7 @@ fn median_filter(
         r#"
 #[pymodule]
 #[allow(dead_code)]
-fn scirs2_ndimage(_py: Python, m: &PyModule) -> PyResult<()> {
+fn scirs2_ndimage(py: Python, m: &PyModule) -> PyResult<()> {
     // Filters submodule
     let filters_module = PyModule::new(_py, "filters")?;
     filters_module.add_function(wrap_pyfunction!(gaussian_filter, filters_module)?)?;
@@ -457,7 +457,7 @@ setup(
         .to_string()
     }
 
-    /// Generate __init__.py for Python package
+    /// Generate _init__.py for Python package
     pub fn generate_init_py() -> String {
         r#"
 '"'

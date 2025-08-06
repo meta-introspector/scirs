@@ -128,7 +128,7 @@ mod memory {
         0.0
     }
 
-    pub fn check_memory_limit(_limit_mb: usize) -> bool {
+    pub fn check_memory_limit(_limitmb: usize) -> bool {
         get_current_memory_mb() < _limit_mb as f64
     }
 }
@@ -298,10 +298,10 @@ fn bench_streaming_operations(c: &mut Criterion) {
 
 /// Run comprehensive stress test suite
 #[allow(dead_code)]
-fn run_stress_test_suite(_config: StressTestConfig) -> StressTestResults {
+fn run_stress_test_suite(config: StressTestConfig) -> StressTestResults {
     let start_time = Instant::now();
     let mut results = StressTestResults {
-        _config: _config.clone(),
+        _config: config.clone(),
         graph_generation: Vec::new(),
         algorithm_performance: Vec::new(),
         memory_profile: MemoryProfile {
@@ -442,15 +442,15 @@ fn test_algorithm(
 
 /// Print stress test report
 #[allow(dead_code)]
-fn print_stress_test_report(_results: &StressTestResults) {
+fn print_stress_test_report(results: &StressTestResults) {
     println!("\n========== STRESS TEST REPORT ==========");
     println!(
         "Total runtime: {:.2}s",
-        _results.summary.total_runtime_seconds
+        results.summary.total_runtime_seconds
     );
     println!(
         "Largest graph tested: {} nodes",
-        _results.summary.largest_graph_tested
+        results.summary.largest_graph_tested
     );
 
     println!("\n--- Graph Generation Performance ---");
@@ -485,15 +485,15 @@ fn print_stress_test_report(_results: &StressTestResults) {
     println!("\n--- Memory Profile ---");
     println!(
         "  Peak memory: {:.1}MB",
-        _results.memory_profile.peak_memory_mb
+        results.memory_profile.peak_memory_mb
     );
     println!(
         "  Average memory: {:.1}MB",
-        _results.memory_profile.average_memory_mb
+        results.memory_profile.average_memory_mb
     );
     println!(
         "  Efficiency ratio: {:.2}",
-        _results.memory_profile.memory_efficiency_ratio
+        results.memory_profile.memory_efficiency_ratio
     );
 
     if !_results.summary.failures.is_empty() {
@@ -515,7 +515,7 @@ fn print_stress_test_report(_results: &StressTestResults) {
 
 /// Save results to JSON file
 #[allow(dead_code)]
-fn save_results(_results: &StressTestResults, filename: &str) -> std::io::Result<()> {
+fn save_results(results: &StressTestResults, filename: &str) -> std::io::Result<()> {
     let json = serde_json::to_string_pretty(_results)?;
     std::fs::write(filename, json)?;
     Ok(())

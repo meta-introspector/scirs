@@ -87,7 +87,7 @@ impl ThreadPool {
     }
 
     /// Create a new thread pool with custom configuration
-    pub fn with_config(_config: ThreadPoolConfig) -> Self {
+    pub fn with_config(config: ThreadPoolConfig) -> Self {
         let (sender, receiver) = channel();
         let receiver = Arc::new(Mutex::new(receiver));
 
@@ -103,14 +103,14 @@ impl ThreadPool {
                 id,
                 Arc::clone(&receiver),
                 Arc::clone(&stats),
-                _config.clone(),
+                config.clone(),
             ));
         }
 
         ThreadPool {
             workers,
             sender,
-            _config,
+            config,
             stats,
         }
     }
@@ -185,7 +185,7 @@ impl ThreadPool {
     }
 
     /// Resize the thread pool
-    pub fn resize(&mut self, new_size: usize) -> Result<(), ThreadPoolError> {
+    pub fn resize(&mut self, newsize: usize) -> Result<(), ThreadPoolError> {
         if new_size == 0 {
             return Err(ThreadPoolError::InvalidConfiguration(
                 "Thread pool _size cannot be zero".into(),
@@ -279,12 +279,12 @@ impl Worker {
         }
     }
 
-    fn set_thread_priority(_priority: ThreadPriority) {
+    fn set_thread_priority(priority: ThreadPriority) {
         // Platform-specific thread _priority setting would go here
         // For now, this is a no-op
     }
 
-    fn set_cpu_affinity(_worker_id: usize, _affinity: &CpuAffinity) {
+    fn set_cpu_affinity(_worker_id: usize, affinity: &CpuAffinity) {
         // Platform-specific CPU _affinity setting would go here
         // For now, this is a no-op
     }
@@ -382,9 +382,9 @@ pub struct WorkerStats {
 }
 
 impl WorkerStats {
-    fn new(_worker_id: usize) -> Self {
+    fn new(_workerid: usize) -> Self {
         Self {
-            _worker_id,
+            worker_id,
             tasks_completed: 0,
             total_time: Duration::ZERO,
             queue_size: 0,
@@ -410,9 +410,9 @@ impl ParallelScheduler {
     }
 
     /// Create a scheduler with custom thread pool
-    pub fn with_thread_pool(_thread_pool: Arc<ThreadPool>) -> Self {
+    pub fn with_thread_pool(_threadpool: Arc<ThreadPool>) -> Self {
         Self {
-            _thread_pool,
+            thread_pool,
             config: SchedulerConfig::default(),
         }
     }
@@ -448,7 +448,7 @@ impl ParallelScheduler {
     }
 
     /// Check if an operation should be parallelized
-    fn should_parallelize<F, R>(&self_operation: &F) -> bool
+    fn should_parallelize<F, R>(selfoperation: &F) -> bool
     where
         F: FnOnce() -> R + Send + 'static,
         R: Send + 'static,
@@ -539,7 +539,7 @@ pub fn init_thread_pool() -> Result<(), ThreadPoolError> {
 
 /// Initialize the global thread pool with custom configuration
 #[allow(dead_code)]
-pub fn init_thread_pool_with_config(_config: ThreadPoolConfig) -> Result<(), ThreadPoolError> {
+pub fn init_thread_pool_with_config(config: ThreadPoolConfig) -> Result<(), ThreadPoolError> {
     let mut pool = GLOBAL_THREAD_POOL.lock().unwrap();
     *pool = Some(ThreadPool::with_config(_config));
     Ok(())
@@ -598,9 +598,9 @@ pub fn shutdown_global_thread_pool() -> Result<(), ThreadPoolError> {
 
 /// Set the number of threads for the global thread pool
 #[allow(dead_code)]
-pub fn set_global_thread_count(_count: usize) -> Result<(), ThreadPoolError> {
+pub fn set_global_thread_count(count: usize) -> Result<(), ThreadPoolError> {
     let config = ThreadPoolConfig {
-        num_threads: _count,
+        num_threads: count,
         ..Default::default()
     };
     init_thread_pool_with_config(config)

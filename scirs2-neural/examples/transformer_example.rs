@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // TODO: Implement transformer module and uncomment the following code
     /*
     // Create a seeded RNG for reproducibility
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Create a small transformer configuration for demonstration
     let config = TransformerConfig {
         d_model: 64,                                           // Embedding dimension
@@ -33,12 +33,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         epsilon: 1e-5,   // Small constant for layer normalization
     };
     println!("Creating transformer model with config:");
-    println!("  - d_model: {}", config.d_model);
-    println!("  - n_encoder_layers: {}", config.n_encoder_layers);
-    println!("  - n_decoder_layers: {}", config.n_decoder_layers);
-    println!("  - n_heads: {}", config.n_heads);
-    println!("  - d_ff: {}", config.d_ff);
-    println!("  - max_seq_len: {}", config.max_seq_len);
+    println!("  - dmodel: {}", config.d_model);
+    println!("  - n_encoderlayers: {}", config.n_encoder_layers);
+    println!("  - n_decoderlayers: {}", config.n_decoder_layers);
+    println!("  - nheads: {}", config.n_heads);
+    println!("  - dff: {}", config.d_ff);
+    println!("  - max_seqlen: {}", config.max_seq_len);
     // Create the transformer model
     let transformer = Transformer::<f64>::new(config, &mut rng)?;
     // Create sample inputs

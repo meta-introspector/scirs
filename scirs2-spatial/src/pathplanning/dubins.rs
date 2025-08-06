@@ -68,8 +68,8 @@ impl Pose2D {
     /// # Returns
     ///
     /// * Euclidean distance between positions
-    pub fn distance_to(&self, _other: &Pose2D) -> f64 {
-        ((self.x - _other.x).powi(2) + (self.y - _other.y).powi(2)).sqrt()
+    pub fn distance_to(&self, other: &Pose2D) -> f64 {
+        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()
     }
 
     /// Normalize the angle to [-π, π]
@@ -321,9 +321,9 @@ impl DubinsPlanner {
     ///
     /// let planner = DubinsPlanner::new(1.0);
     /// ```
-    pub fn new(_turning_radius: f64) -> Self {
+    pub fn new(_turningradius: f64) -> Self {
         Self {
-            turning_radius: _turning_radius,
+            turning_radius: turning_radius,
         }
     }
 
@@ -350,7 +350,7 @@ impl DubinsPlanner {
     /// let path = planner.plan(&start, &goal).unwrap();
     /// println!("Path length: {}", path.length());
     /// ```
-    pub fn plan(&self, _start: &Pose2D, goal: &Pose2D) -> SpatialResult<DubinsPath> {
+    pub fn plan(&self, start: &Pose2D, goal: &Pose2D) -> SpatialResult<DubinsPath> {
         if self.turning_radius <= 0.0 {
             return Err(SpatialError::ValueError(
                 "Turning radius must be positive".to_string(),
@@ -358,12 +358,12 @@ impl DubinsPlanner {
         }
 
         // Normalize _start and goal poses
-        let _start = _start.normalize_angle();
+        let _start = start.normalize_angle();
         let goal = goal.normalize_angle();
 
         // Transform to local coordinate system
-        let dx = goal.x - _start.x;
-        let dy = goal.y - _start.y;
+        let dx = goal.x - start.x;
+        let dy = goal.y - start.y;
         let d = (dx * dx + dy * dy).sqrt();
         let theta = (dy).atan2(dx);
 
@@ -387,7 +387,7 @@ impl DubinsPlanner {
                 if path_length < best_length {
                     best_length = path_length;
                     best_path = Some(DubinsPath::new(
-                        _start,
+                        start,
                         goal,
                         self.turning_radius,
                         path_type,
@@ -619,7 +619,7 @@ impl DubinsPlanner {
     }
 
     /// Normalize angle to [-π, π]
-    fn normalize_angle(_angle: f64) -> f64 {
+    fn normalize_angle(angle: f64) -> f64 {
         let mut normalized = _angle % (2.0 * PI);
         if normalized > PI {
             normalized -= 2.0 * PI;

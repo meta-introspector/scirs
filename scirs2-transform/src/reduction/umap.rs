@@ -96,7 +96,7 @@ impl UMAP {
     }
 
     /// Find a and b parameters to approximate the fuzzy set membership function
-    fn find_ab_params(_spread: f64, min_dist: f64) -> (f64, f64) {
+    fn find_ab_params(_spread: f64, mindist: f64) -> (f64, f64) {
         // Binary search to find good values of a and b
         let mut a = 1.0;
         let mut b = 1.0;
@@ -237,7 +237,7 @@ impl UMAP {
     }
 
     /// Initialize the low dimensional embedding
-    fn initialize_embedding(&self, n_samples: usize) -> Array2<f64> {
+    fn initialize_embedding(&self, nsamples: usize) -> Array2<f64> {
         let mut rng = rand::rng();
 
         // Initialize with small random values
@@ -253,9 +253,11 @@ impl UMAP {
 
     /// Optimize the low dimensional embedding
     fn optimize_embedding(
-        &self, embedding: &mut Array2<f64>,
+        &self,
+        embedding: &mut Array2<f64>,
         graph: &Array2<f64>,
-        n_epochs: usize,) {
+        n_epochs: usize,
+    ) {
         let n_samples = embedding.shape()[0];
         let mut rng = rand::rng();
 
@@ -282,7 +284,7 @@ impl UMAP {
             for _ in 0..n_edges {
                 // Sample an edge
                 let edge_idx = rng.gen_range(0..n_edges);
-                let (i..j) = edges[edge_idx];
+                let (i, j) = edges[edge_idx];
 
                 // Compute distance in embedding space
                 let mut dist_sq = 0.0;
@@ -309,7 +311,7 @@ impl UMAP {
                 if k != i && k != j {
                     let mut neg_dist_sq = 0.0;
                     for d in 0..self.n_components {
-                        let diff = embedding[[i..d]] - embedding[[k, d]];
+                        let diff = embedding[[i, d]] - embedding[[k, d]];
                         neg_dist_sq += diff * diff;
                     }
                     let neg_dist = neg_dist_sq.sqrt();
@@ -359,7 +361,7 @@ impl UMAP {
         }
 
         // Store training data for out-of-sample extension
-        let training_data = Array2::fromshape_fn((n_samples, n_features), |(i, j)| {
+        let training_data = Array2::from_shape_fn((n_samples, n_features), |(i, j)| {
             num_traits::cast::<S::Elem, f64>(x[[i, j]]).unwrap_or(0.0)
         });
         self.training_data = Some(training_data);
@@ -448,7 +450,7 @@ impl UMAP {
     }
 
     /// Check if the input data is the same as training data
-    fn is_same_data<S>(&self, x: &ArrayBase<S, Ix2>, training_data: &Array2<f64>) -> bool
+    fn is_same_data<S>(&self, x: &ArrayBase<S, Ix2>, trainingdata: &Array2<f64>) -> bool
     where
         S: Data,
         S::Elem: Float + NumCast,
@@ -478,16 +480,16 @@ impl UMAP {
         let training_data = self.training_data.as_ref().unwrap();
         let training_embedding = self.embedding.as_ref().unwrap();
 
-        let (n_new_samples_) = x.dim();
-        let (n_training_samples_) = training_data.dim();
+        let (n_new_samples_, _) = x.dim();
+        let (n_training_samples_, _) = training_data.dim();
 
         // For each new sample, find k nearest neighbors in training data
-        let mut new_embedding = Array2::zeros((n_new_samples, self.n_components));
+        let mut new_embedding = Array2::zeros((n_new_samples_, self.n_components));
 
-        for i in 0..n_new_samples {
+        for i in 0..n_new_samples_ {
             // Compute distances to all training samples
             let mut distances = Vec::new();
-            for j in 0..n_training_samples {
+            for j in 0..n_training_samples_ {
                 let mut dist_sq = 0.0;
                 for k in 0..x.ncols() {
                     let x_val = num_traits::cast::<S::Elem, f64>(x[[i, k]]).unwrap_or(0.0);
@@ -500,7 +502,7 @@ impl UMAP {
 
             // Sort and take k nearest neighbors
             distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-            let k = self.n_neighbors.min(n_training_samples);
+            let k = self.n_neighbors.min(n_training_samples_);
 
             // Compute weights based on distances (inverse distance weighting)
             let mut total_weight = 0.0;

@@ -115,7 +115,7 @@ pub struct NeuronState {
 
 impl NeuronState {
     /// Create a new neuron state
-    pub fn new(_num_connections: usize) -> Self {
+    pub fn new(_numconnections: usize) -> Self {
         Self {
             potential: 0.0,
             last_spike_time: None,
@@ -126,7 +126,7 @@ impl NeuronState {
     }
 
     /// Check if neuron is in refractory period
-    pub fn is_refractory(&self, current_time: f64, refractory_period: f64) -> bool {
+    pub fn is_refractory(&self, current_time: f64, refractoryperiod: f64) -> bool {
         if let Some(last_spike) = self.last_spike_time {
             current_time - last_spike < refractory_period
         } else {
@@ -175,14 +175,14 @@ pub struct NeuromorphicNetwork {
 
 impl NeuromorphicNetwork {
     /// Create a new neuromorphic network
-    pub fn new(_config: NeuromorphicConfig, num_parameters: usize) -> Self {
+    pub fn new(_config: NeuromorphicConfig, numparameters: usize) -> Self {
         let mut neurons = Vec::with_capacity(_config.num_neurons);
         for _ in 0.._config.num_neurons {
             neurons.push(NeuronState::new(_config.num_neurons));
         }
 
         // Initialize random connectivity
-        let mut connectivity = Array2::zeros((_config.num_neurons, _config.num_neurons));
+        let mut connectivity = Array2::zeros((_config.num_neurons, config.num_neurons));
         for i in 0.._config.num_neurons {
             for j in 0.._config.num_neurons {
                 if i != j {
@@ -193,7 +193,7 @@ impl NeuromorphicNetwork {
         }
 
         Self {
-            config: _config,
+            config: config,
             neurons,
             connectivity,
             current_time: 0.0,
@@ -247,7 +247,7 @@ impl NeuromorphicNetwork {
     }
 
     /// Simulate one time step
-    pub fn simulate_step(&mut self, objective_value: f64) -> Result<()> {
+    pub fn simulate_step(&mut self, objectivevalue: f64) -> Result<()> {
         // Process spike queue for event-driven simulation
         if self.config.event_driven {
             self.process_spike_events()?;
@@ -341,7 +341,7 @@ impl NeuromorphicNetwork {
     }
 
     /// Compute external input for objective-based feedback
-    fn compute_external_input(&self, neuron_id: usize, objective_value: f64) -> f64 {
+    fn compute_external_input(&self, neuron_id: usize, objectivevalue: f64) -> f64 {
         // Simple feedback: better objective values lead to positive input
         let feedback_strength = 0.1;
         let normalized_objective = -objective_value; // Assume minimization
@@ -352,7 +352,7 @@ impl NeuromorphicNetwork {
     }
 
     /// Update connectivity using STDP-like plasticity rules
-    fn update_connectivity(&mut self, objective_value: f64) -> Result<()> {
+    fn update_connectivity(&mut self, objectivevalue: f64) -> Result<()> {
         // Simplified STDP: strengthen connections that led to better performance
         let performance_factor = if self.objective_history.len() > 1 {
             let prev_objective = self.objective_history[self.objective_history.len() - 2];
@@ -418,7 +418,7 @@ pub struct BasicNeuromorphicOptimizer {
 
 impl BasicNeuromorphicOptimizer {
     /// Create a new basic neuromorphic optimizer
-    pub fn new(_config: NeuromorphicConfig, num_parameters: usize) -> Self {
+    pub fn new(_config: NeuromorphicConfig, numparameters: usize) -> Self {
         let network = NeuromorphicNetwork::new(_config, num_parameters);
 
         Self {
@@ -451,8 +451,8 @@ impl NeuromorphicOptimizer for BasicNeuromorphicOptimizer {
 
         for iteration in 0..max_nit {
             // Encode current parameters into network
-            let params_view = self.network.parameters.view();
-            self.network.encode_parameters(&params_view);
+            let params = self.network.parameters.clone();
+            self.network.encode_parameters(&params.view());
 
             // Evaluate objective
             let current_objective = objective(&self.network.parameters.view());

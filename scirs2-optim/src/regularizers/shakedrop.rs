@@ -72,7 +72,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
     /// # Returns
     ///
     /// A ShakeDrop regularizer
-    pub fn new_with_ranges(p: A, alpha_range: (A, A), beta_range: (A, A)) -> Self {
+    pub fn new_with_ranges(p: A, alpharange: (A, A), beta_range: (A, A)) -> Self {
         Self {
             p,
             alpha_range,
@@ -173,7 +173,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
         S: Data<Elem = A>,
         D: Dimension,
     {
-        let (b, _alpha, beta) = gate_params;
+        let (b, alpha, beta) = gate_params;
 
         // During backward pass: grad_x = grad_output * (b + beta - b*beta)
         let factor = b + beta - b * beta;
@@ -184,7 +184,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
 impl<A: Float + FromPrimitive + Debug + ScalarOperand, D: Dimension> Regularizer<A, D>
     for ShakeDrop<A>
 {
-    fn apply(&self, _params: &Array<A, D>, _gradients: &mut Array<A, D>) -> Result<A> {
+    fn apply(&self, _params: &Array<A, D>, gradients: &mut Array<A, D>) -> Result<A> {
         // ShakeDrop is typically applied to activations, not parameters
         // In this implementation, apply() isn't the primary usage pattern
         // Instead, users would call forward() during the forward pass
@@ -196,7 +196,7 @@ impl<A: Float + FromPrimitive + Debug + ScalarOperand, D: Dimension> Regularizer
         ))
     }
 
-    fn penalty(&self, _params: &Array<A, D>) -> Result<A> {
+    fn penalty(&self, params: &Array<A, D>) -> Result<A> {
         // ShakeDrop doesn't add a penalty term to the loss function
         Ok(A::zero())
     }

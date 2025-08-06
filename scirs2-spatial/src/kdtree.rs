@@ -102,21 +102,21 @@ impl<T: Float> Rectangle<T> {
     ///
     /// * If mins and maxes have different lengths
     /// * If any min value is greater than the corresponding max value
-    pub fn new(_mins: Vec<T>, maxes: Vec<T>) -> Self {
+    pub fn new(mins: Vec<T>, maxes: Vec<T>) -> Self {
         assert_eq!(
-            _mins.len(),
+            mins.len(),
             maxes.len(),
             "_mins and maxes must have the same length"
         );
 
         for i in 0.._mins.len() {
             assert!(
-                _mins[i] <= maxes[i],
+                mins[i] <= maxes[i],
                 "min value must be less than or equal to max value"
             );
         }
 
-        Rectangle { mins: _mins, maxes }
+        Rectangle { mins: mins, maxes }
     }
 
     /// Get the minimum coordinates of the rectangle
@@ -167,7 +167,7 @@ impl<T: Float> Rectangle<T> {
     /// # Returns
     ///
     /// * A tuple of (left, right) rectangles
-    pub fn split(&self, _dim: usize, value: T) -> (Self, Self) {
+    pub fn split(&self, dim: usize, value: T) -> (Self, Self) {
         let mut left_maxes = self.maxes.clone();
         left_maxes[_dim] = value;
 
@@ -189,14 +189,14 @@ impl<T: Float> Rectangle<T> {
     /// # Returns
     ///
     /// * true if the rectangle contains the point, false otherwise
-    pub fn contains(&self, _point: &[T]) -> bool {
+    pub fn contains(&self, point: &[T]) -> bool {
         assert_eq!(
-            _point.len(),
+            point.len(),
             self.mins.len(),
             "_point must have the same dimension as the rectangle"
         );
 
-        for (i, &p) in _point.iter().enumerate() {
+        for (i, &p) in point.iter().enumerate() {
             if p < self.mins[i] || p > self.maxes[i] {
                 return false;
             }
@@ -215,7 +215,7 @@ impl<T: Float> Rectangle<T> {
     /// # Returns
     ///
     /// * The minimum distance from the point to any point in the rectangle
-    pub fn min_distance<D: Distance<T>>(&self, _point: &[T], metric: &D) -> T {
+    pub fn min_distance<D: Distance<T>>(&self, point: &[T], metric: &D) -> T {
         metric.min_distance_point_rectangle(_point, &self.mins, &self.maxes)
     }
 }
@@ -269,7 +269,7 @@ impl<T: Float + Send + Sync + 'static> KDTree<T, EuclideanDistance<T>> {
     /// # Returns
     ///
     /// * A new KD-Tree
-    pub fn new(_points: &Array2<T>) -> SpatialResult<Self> {
+    pub fn new(points: &Array2<T>) -> SpatialResult<Self> {
         let metric = EuclideanDistance::new();
         Self::with_metric(_points, metric)
     }
@@ -284,7 +284,7 @@ impl<T: Float + Send + Sync + 'static> KDTree<T, EuclideanDistance<T>> {
     /// # Returns
     ///
     /// * A new KD-Tree
-    pub fn with_leaf_size(_points: &Array2<T>, leaf_size: usize) -> SpatialResult<Self> {
+    pub fn with_leaf_size(_points: &Array2<T>, leafsize: usize) -> SpatialResult<Self> {
         let metric = EuclideanDistance::new();
         Self::with_options(_points, metric, leaf_size)
     }
@@ -301,7 +301,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     /// # Returns
     ///
     /// * A new KD-Tree
-    pub fn with_metric(_points: &Array2<T>, metric: D) -> SpatialResult<Self> {
+    pub fn with_metric(points: &Array2<T>, metric: D) -> SpatialResult<Self> {
         Self::with_options(_points, metric, 16) // Default leaf size is 16
     }
 
@@ -316,9 +316,9 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     /// # Returns
     ///
     /// * A new KD-Tree
-    pub fn with_options(_points: &Array2<T>, metric: D, leaf_size: usize) -> SpatialResult<Self> {
-        let n = _points.nrows();
-        let ndim = _points.ncols();
+    pub fn with_options(_points: &Array2<T>, metric: D, leafsize: usize) -> SpatialResult<Self> {
+        let n = points.nrows();
+        let ndim = points.ncols();
 
         if n == 0 {
             return Err(SpatialError::ValueError("Empty point set".to_string()));
@@ -336,7 +336,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
 
         for i in 0..n {
             for j in 0..ndim {
-                let val = _points[[i, j]];
+                let val = points[[i, j]];
                 if val < mins[j] {
                     mins[j] = val;
                 }
@@ -349,7 +349,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         let bounds = Rectangle::new(mins, maxes);
 
         let mut tree = KDTree {
-            points: _points.clone(),
+            points: points.clone(),
             nodes: Vec::with_capacity(n),
             ndim,
             root: None,
@@ -483,11 +483,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     /// assert_eq!(indices.len(), 2);
     /// assert_eq!(distances.len(), 2);
     /// ```
-    pub fn query(&self, _point: &[T], k: usize) -> SpatialResult<(Vec<usize>, Vec<T>)> {
-        if _point.len() != self.ndim {
+    pub fn query(&self, point: &[T], k: usize) -> SpatialResult<(Vec<usize>, Vec<T>)> {
+        if point.len() != self.ndim {
             return Err(SpatialError::DimensionError(format!(
                 "Query _point dimension ({}) does not match tree dimension ({})",
-                _point.len(),
+                point.len(),
                 self.ndim
             )));
         }
@@ -509,7 +509,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
 
         if let Some(root) = self.root {
             // Search recursively
-            self.query_recursive(root, _point, k, &mut neighbors, &mut max_dist);
+            self.query_recursive(root, point, k, &mut neighbors, &mut max_dist);
 
             // Sort by distance (ascending)
             neighbors.sort_by(|a, b| {
@@ -556,7 +556,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
 
         // Update neighbors if needed
         if neighbors.len() < k {
-            neighbors.push((_dist, _idx));
+            neighbors.push((_dist, idx));
 
             // Sort if we just filled to capacity to establish max-heap
             if neighbors.len() == k {
@@ -568,7 +568,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
             }
         } else if &_dist < max_dist {
             // Replace the worst neighbor with this one
-            neighbors[0] = (_dist, _idx);
+            neighbors[0] = (_dist, idx);
 
             // Re-sort to maintain max-heap property
             neighbors.sort_by(|a, b| {
@@ -632,11 +632,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     /// let (indices, distances) = kdtree.query_radius(&[0.5, 0.5], 0.7).unwrap();
     /// assert_eq!(indices.len(), 4); // All points are within 0.7 units of [0.5, 0.5]
     /// ```
-    pub fn query_radius(&self, _point: &[T], radius: T) -> SpatialResult<(Vec<usize>, Vec<T>)> {
-        if _point.len() != self.ndim {
+    pub fn query_radius(&self, point: &[T], radius: T) -> SpatialResult<(Vec<usize>, Vec<T>)> {
+        if point.len() != self.ndim {
             return Err(SpatialError::DimensionError(format!(
                 "Query _point dimension ({}) does not match tree dimension ({})",
-                _point.len(),
+                point.len(),
                 self.ndim
             )));
         }
@@ -658,7 +658,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
             }
 
             // Search recursively
-            self.query_radius_recursive(root, _point, radius, &mut indices, &mut distances);
+            self.query_radius_recursive(root, point, radius, &mut indices, &mut distances);
 
             // Sort by distance
             if !indices.is_empty() {
@@ -747,11 +747,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     /// let count = kdtree.count_neighbors(&[0.5, 0.5], 0.7).unwrap();
     /// assert_eq!(count, 4); // All points are within 0.7 units of [0.5, 0.5]
     /// ```
-    pub fn count_neighbors(&self, _point: &[T], radius: T) -> SpatialResult<usize> {
-        if _point.len() != self.ndim {
+    pub fn count_neighbors(&self, point: &[T], radius: T) -> SpatialResult<usize> {
+        if point.len() != self.ndim {
             return Err(SpatialError::DimensionError(format!(
                 "Query _point dimension ({}) does not match tree dimension ({})",
-                _point.len(),
+                point.len(),
                 self.ndim
             )));
         }
@@ -772,7 +772,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
             }
 
             // Search recursively
-            self.count_neighbors_recursive(root, _point, radius, &mut count);
+            self.count_neighbors_recursive(root, point, radius, &mut count);
         }
 
         Ok(count)

@@ -86,7 +86,7 @@ impl ModelQuantizer {
 
         for (name, tensor) in &model.weights {
             let quantized = QuantizedTensor::from_float_tensor(tensor, self.bits)?;
-            quantized_weights.insert(name.clone(), quantized);
+            quantizedweights.insert(name.clone(), quantized);
         }
 
         Ok(QuantizedModel {

@@ -89,7 +89,7 @@ impl MemoryPool {
     }
 
     /// Configure the memory pool
-    fn configure(&mut self, max_buffers_per_size: usize, max_pool_memory: usize) {
+    fn configure(&mut self, max_buffers_per_size: usize, max_poolmemory: usize) {
         self.max_buffers_per_size = max_buffers_per_size;
         self.max_pool_memory = max_pool_memory;
     }
@@ -155,7 +155,7 @@ impl MemoryTracker {
         }
     }
 
-    fn record_allocation(&mut self, op_name: &str, size: usize) {
+    fn record_allocation(&mut self, opname: &str, size: usize) {
         if !self.enabled {
             return;
         }
@@ -179,7 +179,7 @@ impl MemoryTracker {
     }
 
     #[allow(dead_code)]
-    fn record_deallocation(&mut self, op_name: &str, size: usize) {
+    fn record_deallocation(&mut self, opname: &str, size: usize) {
         if !self.enabled {
             return;
         }
@@ -254,7 +254,7 @@ pub enum InPlaceOperation {
 }
 
 impl<F: Float> InPlaceOp<F> {
-    pub fn new(_operation: InPlaceOperation) -> Self {
+    pub fn new(operation: InPlaceOperation) -> Self {
         Self {
             _operation_phantom: std::marker::PhantomData,
         }
@@ -448,19 +448,19 @@ impl<F: Float> Op<F> for ViewOp {
 ///
 /// Get a buffer from the memory pool
 #[allow(dead_code)]
-pub fn get_pooled_buffer(_size: usize) -> Vec<u8> {
+pub fn get_pooled_buffer(size: usize) -> Vec<u8> {
     MEMORY_POOL.lock().unwrap().get_buffer(_size)
 }
 
 /// Return a buffer to the memory pool  
 #[allow(dead_code)]
-pub fn return_pooled_buffer(_buffer: Vec<u8>) {
+pub fn return_pooled_buffer(buffer: Vec<u8>) {
     MEMORY_POOL.lock().unwrap().return_buffer(_buffer);
 }
 
 /// Configure the memory pool
 #[allow(dead_code)]
-pub fn configure_memory_pool(_max_buffers_per_size: usize, max_pool_memory: usize) {
+pub fn configure_memory_pool(_max_buffers_per_size: usize, max_poolmemory: usize) {
     MEMORY_POOL
         .lock()
         .unwrap()
@@ -469,7 +469,7 @@ pub fn configure_memory_pool(_max_buffers_per_size: usize, max_pool_memory: usiz
 
 /// Enable or disable the memory pool
 #[allow(dead_code)]
-pub fn set_memory_pool_enabled(_enabled: bool) {
+pub fn set_memory_pool_enabled(enabled: bool) {
     MEMORY_POOL.lock().unwrap().set_enabled(_enabled);
 }
 
@@ -512,7 +512,7 @@ pub fn get_memory_tracking_stats() -> MemoryTrackerStats {
 /// Create a memory-efficient view of a tensor with a new shape
 #[allow(dead_code)]
 pub fn efficient_view<'g, F: Float>(tensor: &Tensor<'g, F>, newshape: &[usize]) -> Tensor<'g, F> {
-    let g = _tensor.graph();
+    let g = tensor.graph();
     Tensor::builder(g)
         .append_input(_tensor, false)
         .build(ViewOp {
@@ -523,7 +523,7 @@ pub fn efficient_view<'g, F: Float>(tensor: &Tensor<'g, F>, newshape: &[usize]) 
 /// Perform in-place addition to reduce memory allocations
 #[allow(dead_code)]
 pub fn inplace_add<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _lhs.graph();
+    let g = lhs.graph();
     Tensor::builder(g)
         .append_input(_lhs, false)
         .append_input(rhs, false)
@@ -533,7 +533,7 @@ pub fn inplace_add<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Te
 /// Perform in-place subtraction to reduce memory allocations
 #[allow(dead_code)]
 pub fn inplace_sub<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _lhs.graph();
+    let g = lhs.graph();
     Tensor::builder(g)
         .append_input(_lhs, false)
         .append_input(rhs, false)
@@ -543,7 +543,7 @@ pub fn inplace_sub<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Te
 /// Perform in-place multiplication to reduce memory allocations
 #[allow(dead_code)]
 pub fn inplace_mul<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _lhs.graph();
+    let g = lhs.graph();
     Tensor::builder(g)
         .append_input(_lhs, false)
         .append_input(rhs, false)
@@ -553,7 +553,7 @@ pub fn inplace_mul<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Te
 /// Perform in-place division to reduce memory allocations
 #[allow(dead_code)]
 pub fn inplace_div<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _lhs.graph();
+    let g = lhs.graph();
     Tensor::builder(g)
         .append_input(_lhs, false)
         .append_input(rhs, false)
@@ -563,7 +563,7 @@ pub fn inplace_div<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Te
 /// Perform in-place negation to reduce memory allocations
 #[allow(dead_code)]
 pub fn inplace_neg<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _tensor.graph();
+    let g = tensor.graph();
     Tensor::builder(g)
         .append_input(_tensor, false)
         .build(InPlaceOp::new(InPlaceOperation::NegAssign))
@@ -572,7 +572,7 @@ pub fn inplace_neg<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 /// Perform in-place absolute value to reduce memory allocations
 #[allow(dead_code)]
 pub fn inplace_abs<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = _tensor.graph();
+    let g = tensor.graph();
     Tensor::builder(g)
         .append_input(_tensor, false)
         .build(InPlaceOp::new(InPlaceOperation::AbsAssign))
@@ -596,7 +596,7 @@ pub fn inplace_scalar_mul<'g, F: Float>(
 pub fn efficient_zeros<'g, F: Float>(shape: &[usize], graph: &'g crate::Graph<F>) -> Tensor<'g, F> {
     // For now, use the standard zeros implementation
     // In a full implementation, this would use the memory pool
-    crate::tensor__ops::zeros(
+    crate::tensor_ops::zeros(
         &crate::tensor_ops::convert_to_tensor(
             ndarray::Array::fromshape_vec(
                 ndarray::IxDyn(&[shape.len()]),
@@ -617,7 +617,7 @@ pub fn efficient_zeros<'g, F: Float>(shape: &[usize], graph: &'g crate::Graph<F>
 pub fn efficient_ones<'g, F: Float>(shape: &[usize], graph: &'g crate::Graph<F>) -> Tensor<'g, F> {
     // For now, use the standard ones implementation
     // In a full implementation, this would use the memory pool
-    crate::tensor__ops::ones(
+    crate::tensor_ops::ones(
         &crate::tensor_ops::convert_to_tensor(
             ndarray::Array::fromshape_vec(
                 ndarray::IxDyn(&[shape.len()]),

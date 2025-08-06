@@ -546,12 +546,12 @@ pub mod decomposition_opt {
 
     impl<F: Float> QRWorkspace<F> {
         /// Create a new workspace for matrices up to the given size
-        pub fn new(_max_rows: usize, max_cols: usize) -> Self {
-            let min_dim = _max_rows.min(max_cols);
+        pub fn new(_max_rows: usize, maxcols: usize) -> Self {
+            let min_dim = _max_rows.min(maxcols);
             Self {
                 tau: Array1::zeros(min_dim),
-                work: Array1::zeros(max_cols * 64), // 64 is a reasonable work size multiplier
-                temp_matrix: Array2::zeros((_max_rows, max_cols)),
+                work: Array1::zeros(maxcols * 64), // 64 is a reasonable work size multiplier
+                temp_matrix: Array2::zeros((_max_rows, maxcols)),
             }
         }
 
@@ -653,11 +653,11 @@ pub mod decomposition_opt {
 
     impl<F: Float> DecompositionMemoryPool<F> {
         /// Create a new memory pool
-        pub fn new(_max_pool_size: usize) -> Self {
+        pub fn new(_max_poolsize: usize) -> Self {
             Self {
                 arrays: Vec::new(),
                 vectors: Vec::new(),
-                max_pool_size: _max_pool_size,
+                max_pool_size: _max_poolsize,
             }
         }
 
@@ -896,7 +896,7 @@ mod tests {
     fn test_large_matrix_blocked() {
         // Test with larger matrix to verify blocking works correctly
         let n = 100;
-        let a = Array2::fromshape_fn((n, n), |(i, j)| (i + j) as f64);
+        let a = Array2::from_shape_fn((n, n), |(i, j)| (i + j) as f64);
         let b = Array2::eye(n);
 
         let config = OptConfig {

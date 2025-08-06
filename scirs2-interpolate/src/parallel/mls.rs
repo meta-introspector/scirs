@@ -120,7 +120,7 @@ where
     /// # Returns
     ///
     /// Self for method chaining
-    pub fn with_max_points(mut self, max_points: usize) -> Self {
+    pub fn with_max_points(mut self, maxpoints: usize) -> Self {
         self.mls = self.mls.with_max_points(max_points);
         self
     }
@@ -301,7 +301,7 @@ where
 
 /// Apply weight function to a normalized distance
 #[allow(dead_code)]
-fn apply_weight<F: Float + FromPrimitive>(r: F, weight_fn: WeightFunction) -> F {
+fn apply_weight<F: Float + FromPrimitive>(r: F, weightfn: WeightFunction) -> F {
     match weight_fn {
         WeightFunction::Gaussian => (-r * r).exp(),
         WeightFunction::WendlandC2 => {

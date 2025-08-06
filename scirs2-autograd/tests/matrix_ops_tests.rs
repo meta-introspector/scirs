@@ -1,5 +1,5 @@
 use ag::ndarray::Array2;
-use ag::ndarray__ext::ArrayRng;
+use ag::ndarray_ext::ArrayRng;
 use ag::tensor_ops as T;
 use scirs2_autograd as ag;
 

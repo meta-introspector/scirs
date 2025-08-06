@@ -278,12 +278,12 @@ where
     }
 
     /// Open an existing memory-mapped array file
-    pub fn path(file_path: &Path, shape: &[usize]) -> Result<Self, CoreError> {
+    pub fn path(filepath: &Path, shape: &[usize]) -> Result<Self, CoreError> {
         // Calculate total elements
         let size = shape.iter().product();
 
         // Open the file for reading
-        let file = File::open(file_path)
+        let file = File::open(filepath)
             .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
 
         // Get file size
@@ -316,7 +316,7 @@ where
 
         Ok(Self {
             shape: shape.to_vec(),
-            file_path: file_path.to_path_buf(),
+            file_path: filepath.to_path_buf(),
             mode: AccessMode::ReadOnly,
             offset: 0,
             size,

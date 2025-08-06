@@ -195,8 +195,8 @@ impl ResourceAwareConfigBuilder {
     }
 
     /// Enable or disable automatic adjustment.
-    pub fn with_auto_adjust(mut self, auto_adjust: bool) -> Self {
-        self.config.auto_adjust = auto_adjust;
+    pub fn with_auto_adjust(mut self, autoadjust: bool) -> Self {
+        self.config.auto_adjust = autoadjust;
         self
     }
 
@@ -264,7 +264,7 @@ impl ResourceMonitor {
         let cpu_usage = self.sys_info.get_cpu_usage();
 
         // Get memory usage
-        let (memory_usage, memory_available) = self.sys_info.get_memory_info();
+        let (memory_usage, memory_available) = self.sys_info.get_memoryinfo();
 
         // Get IO stats
         let (io_ops_per_sec, io_bytes_per_sec) = self.sys_info.get_io_stats();
@@ -330,9 +330,9 @@ impl ResourceMonitor {
     }
 
     /// Get the optimal prefetch count based on current resources.
-    pub fn count(&mut self, base_prefetch_count: usize) -> usize {
+    pub fn count(&mut self, base_prefetchcount: usize) -> usize {
         if !self.config.auto_adjust {
-            return base_prefetch_count;
+            return base_prefetchcount;
         }
 
         // Take a snapshot if needed
@@ -342,7 +342,7 @@ impl ResourceMonitor {
 
         // Check if we have snapshots
         if self.snapshots.is_empty() {
-            return base_prefetch_count;
+            return base_prefetchcount;
         }
 
         // Get the latest snapshot
@@ -359,23 +359,23 @@ impl ResourceMonitor {
             // High pressure, reduce prefetching
             std::cmp::max(
                 self.config.min_prefetch_count,
-                (base_prefetch_count as f64 * 0.5).round() as usize,
+                (base_prefetchcount as f64 * 0.5).round() as usize,
             )
         } else if pressure > 0.6 {
             // Moderate pressure, slightly reduce prefetching
             std::cmp::max(
                 self.config.min_prefetch_count,
-                (base_prefetch_count as f64 * 0.75).round() as usize,
+                (base_prefetchcount as f64 * 0.75).round() as usize,
             )
         } else if pressure < 0.3 {
             // Low pressure, can increase prefetching
             std::cmp::min(
                 self.config.max_prefetch_count,
-                (base_prefetch_count as f64 * 1.5).round() as usize,
+                (base_prefetchcount as f64 * 1.5).round() as usize,
             )
         } else {
             // Normal pressure, use base _count
-            base_prefetch_count
+            base_prefetchcount
         }
     }
 
@@ -401,8 +401,8 @@ impl ResourceMonitor {
     }
 
     /// Get the optimal prefetch count based on current resources.
-    pub fn get_optimal_prefetch_count(&mut self, base_prefetch_count: usize) -> usize {
-        self.count(base_prefetch_count)
+    pub fn get_optimal_prefetch_count(&mut self, base_prefetchcount: usize) -> usize {
+        self.count(base_prefetchcount)
     }
 
     /// Get the latest resource snapshot.
@@ -499,7 +499,7 @@ pub trait SystemInfo {
     fn get_cpu_usage(&self) -> f64;
 
     /// Get memory information (usage, available).
-    fn get_memory_info(&self) -> (u64, u64);
+    fn get_memoryinfo(&self) -> (u64, u64);
 
     /// Get IO statistics (ops/sec, bytes/sec).
     fn get_io_stats(&self) -> (u64, u64);
@@ -550,7 +550,7 @@ impl SystemInfo for DefaultSystemInfo {
         }
     }
 
-    fn get_memory_info(&self) -> (u64, u64) {
+    fn get_memoryinfo(&self) -> (u64, u64) {
         // Try to get memory info if sysinfo is available
         #[cfg(feature = "sysinfo")]
         {
@@ -659,9 +659,9 @@ pub struct PerformanceStats {
 
 impl ResourceAwarePrefetcher {
     /// Create a new resource-aware prefetcher.
-    pub fn config(baseconfig: PrefetchConfig, resource_config: ResourceAwareConfig) -> Self {
+    pub fn config(baseconfig: PrefetchConfig, resourceconfig: ResourceAwareConfig) -> Self {
         Self {
-            monitor: ResourceMonitor::new(resource_config),
+            monitor: ResourceMonitor::new(resourceconfig),
             baseconfig: baseconfig.clone(),
             currentconfig: baseconfig,
             enabled: true,
@@ -738,12 +738,12 @@ impl ResourceAwarePrefetcher {
 
             // Take a snapshot
             let summary = self.monitor.get_resource_summary();
-            if let Ok(mut _stats) = self.performance_stats.lock() {
-                _stats.resource_snapshots.push((Instant::now(), summary));
+            if let Ok(mut stats) = self.performance_stats.lock() {
+                stats.resource_snapshots.push((Instant::now(), summary));
 
                 // Limit the number of snapshots
-                while _stats.resource_snapshots.len() > 10 {
-                    _stats.resource_snapshots.remove(0);
+                while stats.resource_snapshots.len() > 10 {
+                    stats.resource_snapshots.remove(0);
                 }
             }
         }
@@ -755,7 +755,7 @@ impl ResourceAwarePrefetcher {
     }
 
     /// Get the base prefetching configuration.
-    pub fn get_baseconfig(&self) -> PrefetchConfig {
+    pub fn getbaseconfig(&self) -> PrefetchConfig {
         self.baseconfig.clone()
     }
 
@@ -819,10 +819,10 @@ pub struct ResourceAwarePrefetchingConfig {
 #[allow(dead_code)]
 impl ResourceAwarePrefetchingConfig {
     /// Create a new resource-aware prefetching configuration.
-    pub fn config(baseconfig: PrefetchConfig, resource_config: ResourceAwareConfig) -> Self {
+    pub fn config(baseconfig: PrefetchConfig, resourceconfig: ResourceAwareConfig) -> Self {
         Self {
             baseconfig,
-            resourceconfig: resource_config,
+            resourceconfig,
         }
     }
 
@@ -850,7 +850,7 @@ mod tests {
             self.cpu_usage
         }
 
-        fn get_memory_info(&self) -> (u64, u64) {
+        fn get_memoryinfo(&self) -> (u64, u64) {
             (self.memory_used, self.memory_available)
         }
 

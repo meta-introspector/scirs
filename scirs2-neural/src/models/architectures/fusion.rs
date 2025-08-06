@@ -54,12 +54,12 @@ pub struct FeatureAlignment<F: Float + Debug + ScalarOperand + Send + Sync> {
     pub norm: LayerNorm<F>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> FeatureAlignment<F> {
     /// Create a new FeatureAlignment module
-    pub fn new(_input_dim: usize, output_dim: usize, _name: Option<&str>) -> Result<Self> {
+    pub fn new(_input_dim: usize, output_dim: usize, name: Option<&str>) -> Result<Self> {
         let mut rng = rng();
         let projection = Dense::<F>::new(_input_dim, output_dim, None, &mut rng)?;
         let norm = LayerNorm::<F>::new(output_dim, 1e-6, &mut rng)?;
         Ok(Self {
-            _input_dim,
+            input_dim,
             output_dim,
             projection,
             norm,
@@ -86,7 +86,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for FeatureAlignme
         // Backward through Dense projection
         let grad_input = self.projection.backward(input, &grad_proj)?;
         Ok(grad_input)
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         // Update the Dense projection layer
         self.projection.update(learning_rate)?;
         // Update the LayerNorm layer
@@ -117,11 +117,11 @@ pub struct CrossModalAttention<F: Float + Debug + ScalarOperand + Send + Sync> {
     pub scale: F,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> CrossModalAttention<F> {
     /// Create a new CrossModalAttention module
-    pub fn new(_query_dim: usize, key_dim: usize, hidden_dim: usize) -> Result<Self> {
+    pub fn new(_query_dim: usize, key_dim: usize, hiddendim: usize) -> Result<Self> {
         let query_proj = Dense::<F>::new(_query_dim, hidden_dim, None, &mut rng)?;
         let key_proj = Dense::<F>::new(key_dim, hidden_dim, None, &mut rng)?;
         let value_proj = Dense::<F>::new(key_dim, hidden_dim, None, &mut rng)?;
-        let output_proj = Dense::<F>::new(hidden_dim, _query_dim, None, &mut rng)?;
+        let output_proj = Dense::<F>::new(hidden_dim, query_dim, None, &mut rng)?;
         // Scale factor for dot product attention
         let scale = F::from(1.0 / (hidden_dim as f64).sqrt()).unwrap();
             query_proj,
@@ -227,10 +227,10 @@ pub struct FiLMModule<F: Float + Debug + ScalarOperand + Send + Sync> {
     pub beta_proj: Dense<F>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> FiLMModule<F> {
     /// Create a new FiLMModule
-    pub fn new(_feature_dim: usize, cond_dim: usize) -> Result<Self> {
-        let gamma_proj = Dense::<F>::new(cond_dim, _feature_dim, None, &mut rng)?;
-        let beta_proj = Dense::<F>::new(cond_dim, _feature_dim, None, &mut rng)?;
-            _feature_dim,
+    pub fn new(_feature_dim: usize, conddim: usize) -> Result<Self> {
+        let gamma_proj = Dense::<F>::new(cond_dim, feature_dim, None, &mut rng)?;
+        let beta_proj = Dense::<F>::new(cond_dim, feature_dim, None, &mut rng)?;
+            feature_dim,
             cond_dim,
             gamma_proj,
             beta_proj,
@@ -274,7 +274,7 @@ pub struct BilinearFusion<F: Float + Debug + ScalarOperand + Send + Sync> {
     pub low_rank_proj: Dense<F>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> BilinearFusion<F> {
     /// Create a new BilinearFusion module
-    pub fn new(_dim_a: usize, dim_b: usize, output_dim: usize, rank: usize) -> Result<Self> {
+    pub fn new(_dim_a: usize, dim_b: usize, outputdim: usize, rank: usize) -> Result<Self> {
         let proj_a = Dense::<F>::new(dim_a, rank, None, &mut rng)?;
         let proj_b = Dense::<F>::new(dim_b, rank, None, &mut rng)?;
         let low_rank_proj = Dense::<F>::new(rank, output_dim, None, &mut rng)?;
@@ -353,13 +353,13 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Clone for FeatureFusion<F> 
             config: self.config.clone(),
 impl<F: Float + Debug + ScalarOperand + Send + Sync> FeatureFusion<F> {
     /// Create a new FeatureFusion model
-    pub fn new(_config: FeatureFusionConfig) -> Result<Self> {
+    pub fn new(config: FeatureFusionConfig) -> Result<Self> {
         // Create feature aligners
         let mut aligners = Vec::with_capacity(config.input_dims.len());
         for (i, &dim) in config.input_dims.iter().enumerate() {
             aligners.push(FeatureAlignment::<F>::new(
                 dim,
-                _config.hidden_dim,
+                config.hidden_dim,
                 Some(&format!("aligner_{}", i)),
             )?);
         // Create fusion-specific module based on method

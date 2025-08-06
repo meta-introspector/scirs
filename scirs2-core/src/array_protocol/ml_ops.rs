@@ -150,11 +150,11 @@ array_function_dispatch!(
         if implementing_args.is_empty() {
             // Fallback implementation for ndarray types
             // This is a simplified implementation - in practice, convolution is much more complex
-            if let (Some(input_array), Some(filters_array)) = (
+            if let (Some(inputarray), Some(filters_array)) = (
                 input.as_any().downcast_ref::<NdarrayWrapper<f64, Ix4>>(),
                 filters.as_any().downcast_ref::<NdarrayWrapper<f64, Ix4>>(),
             ) {
-                let input = input_array.as_array();
+                let input = inputarray.as_array();
                 let filters = filters_array.as_array();
 
                 // Get dimensions
@@ -266,8 +266,8 @@ array_function_dispatch!(
         let implementing_args = get_implementing_args(&boxed_args);
         if implementing_args.is_empty() {
             // Fallback implementation for ndarray types
-            if let Some(input_array) = input.as_any().downcast_ref::<NdarrayWrapper<f64, Ix4>>() {
-                let input = input_array.as_array();
+            if let Some(inputarray) = input.as_any().downcast_ref::<NdarrayWrapper<f64, Ix4>>() {
+                let input = inputarray.as_array();
 
                 // Get dimensions
                 let batch_size = input.shape()[0];
@@ -383,7 +383,7 @@ array_function_dispatch!(
         if implementing_args.is_empty() {
             // Fallback implementation for ndarray types
             if let (
-                Some(input_array),
+                Some(inputarray),
                 Some(scale_array),
                 Some(offset_array),
                 Some(mean_array),
@@ -397,7 +397,7 @@ array_function_dispatch!(
                     .as_any()
                     .downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
             ) {
-                let input = input_array.as_array();
+                let input = inputarray.as_array();
                 let scale = scale_array.as_array();
                 let offset = offset_array.as_array();
                 let mean = mean_array.as_array();
@@ -610,8 +610,8 @@ array_function_dispatch!(
         let implementing_args = get_implementing_args(&boxed_args);
         if implementing_args.is_empty() {
             // Fallback implementation for ndarray types
-            if let Some(input_array) = input.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
-                let input = input_array.as_array();
+            if let Some(inputarray) = input.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
+                let input = inputarray.as_array();
 
                 if !training {
                     // During inference, just scale the input

@@ -85,33 +85,33 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + scirs2_core::simd_ops::Sim
     CLIPTextEncoder<F>
 {
     /// Create a new CLIPTextEncoder
-    pub fn new(_config: CLIPTextConfig, projection_dim: usize) -> Result<Self> {
+    pub fn new(_config: CLIPTextConfig, projectiondim: usize) -> Result<Self> {
         // Token embedding
         let mut token_embedding = Sequential::new();
         let mut rng = rng();
         token_embedding.add(Dense::<F>::new(
-            _config.vocab_size,
-            _config.hidden_size,
+            config.vocab_size,
+            config.hidden_size,
             None,
             &mut rng,
         )?);
         // Position embedding
         let position_embedding = SinusoidalPositionalEncoding::<F>::new(
-            _config.max_position_embeddings,
+            config.max_position_embeddings,
         )?;
         // Transformer encoder layers
         let mut encoder_layers = Vec::with_capacity(_config.num_layers);
         for _i in 0.._config.num_layers {
             encoder_layers.push(TransformerEncoderLayer::<F>::new(
-                _config.hidden_size,
-                _config.num_heads,
-                _config.intermediate_size,
-                _config.dropout_rate,
-                _config.layer_norm_eps,
+                config.hidden_size,
+                config.num_heads,
+                config.intermediate_size,
+                config.dropout_rate,
+                config.layer_norm_eps,
                 &mut rng,
             )?);
         // Layer normalization
-        let layer_norm = LayerNorm::<F>::new(_config.hidden_size, _config.layer_norm_eps, &mut rng)?;
+        let layer_norm = LayerNorm::<F>::new(_config.hidden_size, config.layer_norm_eps, &mut rng)?;
         // Projection
         let projection = Dense::<F>::new(_config.hidden_size, projection_dim, None, &mut rng)?;
         Ok(Self {
@@ -120,7 +120,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + scirs2_core::simd_ops::Sim
             encoder_layers,
             layer_norm,
             projection,
-            _config,
+            config,
         })
 impl<
         F: Float
@@ -185,7 +185,7 @@ impl<
         // Backward through token embedding
         let grad_input = self.token_embedding.backward(input, &grad)?;
         Ok(grad_input)
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         // Update all components
         // Update token embedding
         self.token_embedding.update(learning_rate)?;
@@ -193,7 +193,7 @@ impl<
         self.position_embedding.update(learning_rate)?;
         // Update all encoder layers
         for layer in &mut self.encoder_layers {
-            layer.update(learning_rate)?;
+            layer.update(learningrate)?;
         // Update layer normalization
         self.layer_norm.update(learning_rate)?;
         // Update projection layer
@@ -223,7 +223,7 @@ pub struct CLIPVisionEncoder<
             + scirs2_core::simd_ops::SimdUnifiedOps,
     > CLIPVisionEncoder<F>
     /// Create a new CLIPVisionEncoder
-    pub fn new(_config: ViTConfig, projection_dim: usize) -> Result<Self> {
+    pub fn new(_config: ViTConfig, projectiondim: usize) -> Result<Self> {
         // Create ViT with a clone of the _config to avoid ownership issues
         let vision_transformer = VisionTransformer::<F>::new(_config.clone())?;
         // Projection layer
@@ -257,19 +257,19 @@ pub struct CLIP<
     pub logit_scale: F,
     > CLIP<F>
     /// Create a new CLIP model
-    pub fn new(_config: CLIPConfig) -> Result<Self> {
+    pub fn new(config: CLIPConfig) -> Result<Self> {
         // Create vision encoder
         let vision_encoder =
-            CLIPVisionEncoder::<F>::new(_config.vision_config.clone(), _config.projection_dim)?;
+            CLIPVisionEncoder::<F>::new(_config.vision_config.clone(), config.projection_dim)?;
         // Create text encoder
         let text_encoder =
-            CLIPTextEncoder::<F>::new(_config.text_config.clone(), _config.projection_dim)?;
+            CLIPTextEncoder::<F>::new(_config.text_config.clone(), config.projection_dim)?;
         // Create classifier if needed
-        let classifier = if _config.include_head {
-            let mut rng_cls = SmallRng::seed_from_u64(42);
+        let classifier = if config.include_head {
+            let mut rng_cls = SmallRng::from_seed([42; 32]);
             Some(Dense::<F>::new(
-                _config.projection_dim,
-                _config.num_classes,
+                config.projection_dim,
+                config.num_classes,
                 None,
                 &mut rng_cls,
             )?)
@@ -308,12 +308,12 @@ pub struct CLIP<
         let logits = compute_similarity(&image_features_norm, text_embeddings, self.logit_scale)?;
         Ok(logits)
     /// Create a CLIP model with default settings
-    pub fn clip_base(_num_classes: usize, include_head: bool) -> Result<Self> {
+    pub fn clip_base(_num_classes: usize, includehead: bool) -> Result<Self> {
         let vision_config = ViTConfig {
             image_size: (224, 224),
             patch_size: (16, 16),
             in_channels: 3,
-            _num_classes,
+            num_classes,
             embed_dim: 768,
             num_heads: 12,
             mlp_dim: 3072,
@@ -326,7 +326,7 @@ pub struct CLIP<
             include_head,
         Self::new(config)
     /// Create a small CLIP model
-    pub fn clip_small(_num_classes: usize, include_head: bool) -> Result<Self> {
+    pub fn clip_small(_num_classes: usize, includehead: bool) -> Result<Self> {
             embed_dim: 512,
             num_layers: 8,
             mlp_dim: 2048,

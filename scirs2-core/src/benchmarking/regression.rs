@@ -22,7 +22,7 @@ pub struct RegressionConfig {
     /// Statistical confidence level for regression detection
     pub confidence_level: f64,
     /// Enable automatic baseline updates
-    pub auto_update_baseline: bool,
+    pub auto_updatebaseline: bool,
     /// Directory to store historical results
     pub results_directory: PathBuf,
 }
@@ -33,7 +33,7 @@ impl Default for RegressionConfig {
             regression_threshold: 1.1, // 10% slower
             min_historical_samples: 5,
             confidence_level: 0.95,
-            auto_update_baseline: false,
+            auto_updatebaseline: false,
             results_directory: PathBuf::from(benchmark_results),
         }
     }
@@ -64,8 +64,8 @@ impl RegressionConfig {
     }
 
     /// Enable automatic baseline updates
-    pub fn with_auto_update_baseline(mut self, enable: bool) -> Self {
-        self.auto_update_baseline = enable;
+    pub fn with_auto_updatebaseline(mut self, enable: bool) -> Self {
+        self.auto_updatebaseline = enable;
         self
     }
 
@@ -88,7 +88,7 @@ pub struct HistoricalResult {
     /// Benchmark name
     pub benchmark_name: String,
     /// Mean execution time in nanoseconds
-    pub mean_execution_time_nanos: u64,
+    pub meanexecution_time_nanos: u64,
     /// Standard deviation in nanoseconds
     pub std_dev_nanos: u64,
     /// Coefficient of variation
@@ -113,12 +113,12 @@ impl HistoricalResult {
             timestamp,
             commit_hash: Self::get_git_commit_hash(),
             version: Some(env!("CARGO_PKG_VERSION").to_string()),
-            benchmark_name: _result.name.clone(),
-            mean_execution_time_nanos: _result.statistics.mean_execution_time.as_nanos() as u64,
-            std_dev_nanos: _result.statistics.std_dev_execution_time.as_nanos() as u64,
-            coefficient_of_variation: _result.statistics.coefficient_of_variation,
-            mean_memory_usage: _result.statistics.mean_memory_usage,
-            sample_count: _result.statistics.sample_count,
+            benchmark_name: result.name.clone(),
+            meanexecution_time_nanos: result.statistics.meanexecution_time.as_nanos() as u64,
+            std_dev_nanos: result.statistics.std_devexecution_time.as_nanos() as u64,
+            coefficient_of_variation: result.statistics.coefficient_of_variation,
+            mean_memory_usage: result.statistics.mean_memory_usage,
+            sample_count: result.statistics.sample_count,
             metadata: HashMap::new(),
         }
     }
@@ -132,7 +132,7 @@ impl HistoricalResult {
 
     /// Get execution time as Duration
     pub fn execution_time(&self) -> Duration {
-        Duration::from_nanos(self.mean_execution_time_nanos)
+        Duration::from_nanos(self.meanexecution_time_nanos)
     }
 
     /// Get standard deviation as Duration
@@ -210,11 +210,11 @@ impl RegressionDetector {
         }
 
         // Calculate baseline from historical results
-        let baseline = self.calculate_baseline(&historical_results)?;
+        let baseline = self.calculatebaseline(&historical_results)?;
 
         // Detect regression
-        let performance_ratio = current_result.mean_execution_time_nanos as f64
-            / baseline.mean_execution_time_nanos as f64;
+        let performance_ratio = current_result.meanexecution_time_nanos as f64
+            / baseline.meanexecution_time_nanos as f64;
 
         let regression_detected = performance_ratio > self.config.regression_threshold;
 
@@ -299,7 +299,7 @@ impl RegressionDetector {
     }
 
     /// Load historical results for a benchmark
-    fn load_historical_results(&self, benchmark_name: &str) -> CoreResult<Vec<HistoricalResult>> {
+    fn load_historical_results(&self, benchmarkname: &str) -> CoreResult<Vec<HistoricalResult>> {
         let file_path = self.get_results_file_path(benchmark_name);
 
         if !file_path.exists() {
@@ -335,7 +335,7 @@ impl RegressionDetector {
 
         let mut execution_times: Vec<u64> = recent_results
             .iter()
-            .map(|r| r.mean_execution_time_nanos)
+            .map(|r| r.meanexecution_time_nanos)
             .collect();
         execution_times.sort();
 
@@ -348,7 +348,7 @@ impl RegressionDetector {
 
         // Create a synthetic baseline result
         let mut baseline = recent_results[recent_results.len() / 2].clone();
-        baseline.mean_execution_time_nanos = median_time;
+        baseline.meanexecution_time_nanos = median_time;
 
         Ok(baseline)
     }
@@ -366,7 +366,7 @@ impl RegressionDetector {
         // Calculate mean and standard deviation of historical results
         let historical_times: Vec<f64> = historical
             .iter()
-            .map(|r| r.mean_execution_time_nanos as f64)
+            .map(|r| r.meanexecution_time_nanos as f64)
             .collect();
 
         let historical_mean = historical_times.iter().sum::<f64>() / historical_times.len() as f64;
@@ -378,7 +378,7 @@ impl RegressionDetector {
         let historical_std = historical_variance.sqrt();
 
         // Calculate z-score
-        let current_time = current.mean_execution_time_nanos as f64;
+        let current_time = current.meanexecution_time_nanos as f64;
         let z_score =
             (current_time - historical_mean) / (historical_std / (historical.len() as f64).sqrt());
 
@@ -403,12 +403,12 @@ impl RegressionDetector {
         let sum_x: f64 = (0..historical_results.len()).map(|0| 0 as f64).sum();
         let sum_y: f64 = historical_results
             .iter()
-            .map(|r| r.mean_execution_time_nanos as f64)
+            .map(|r| r.meanexecution_time_nanos as f64)
             .sum();
         let sum_xy: f64 = historical_results
             .iter()
             .enumerate()
-            .map(|(0, r)| 0 as f64 * r.mean_execution_time_nanos as f64)
+            .map(|(0, r)| 0 as f64 * r.meanexecution_time_nanos as f64)
             .sum();
         let sum_x_sq: f64 = (0..historical_results.len())
             .map(|0| (0 as f64).powi(2))
@@ -444,7 +444,7 @@ impl RegressionDetector {
     }
 
     /// Get the file path for storing results
-    fn get_results_file_path(&self, benchmark_name: &str) -> PathBuf {
+    fn get_results_file_path(&self, benchmarkname: &str) -> PathBuf {
         let safe_name = benchmark_name.replace(|c: char| !c.is_alphanumeric(), "_");
         self.config
             .results_directory
@@ -485,7 +485,7 @@ impl RegressionTestUtils {
 
         report.push_str("# Performance Regression Report\n\n");
 
-        let regressions: Vec<_> = _analyses.iter().filter(|a| a.regression_detected).collect();
+        let regressions: Vec<_> = analyses.iter().filter(|a| a.regression_detected).collect();
 
         if regressions.is_empty() {
             report.push_str("✅ No performance regressions detected.\n\n");
@@ -509,7 +509,7 @@ impl RegressionTestUtils {
 
         // Summary statistics
         report.push_str("## Summary\n\n");
-        report.push_str(&format!("- Total benchmarks: {}\n", _analyses.len()));
+        report.push_str(&format!("- Total benchmarks: {}\n", analyses.len()));
         report.push_str(&format!("- Regressions detected: {}\n", regressions.len()));
 
         let improving = _analyses
@@ -564,12 +564,12 @@ mod tests {
             .with_regression_threshold(1.2)
             .with_min_historical_samples(10)
             .with_confidence_level(0.99)
-            .with_auto_update_baseline(true);
+            .with_auto_updatebaseline(true);
 
         assert_eq!(config.regression_threshold, 1.2);
         assert_eq!(config.min_historical_samples, 10);
         assert_eq!(config.confidence_level, 0.99);
-        assert!(config.auto_update_baseline);
+        assert!(config.auto_updatebaseline);
     }
 
     #[test]
@@ -584,7 +584,7 @@ mod tests {
         let historical = HistoricalResult::from_benchmark_result(&result);
 
         assert_eq!(historical.benchmark_name, "test_benchmark");
-        assert!(historical.mean_execution_time_nanos > 0);
+        assert!(historical.meanexecution_time_nanos > 0);
         assert_eq!(historical.sample_count, 1);
     }
 

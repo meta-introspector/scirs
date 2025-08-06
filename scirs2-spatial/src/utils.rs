@@ -20,7 +20,7 @@ type ScaledPointsResult = SpatialResult<(Array2<f64>, Vec<(f64, f64)>)>;
 ///
 /// * True if points are equal within tolerance
 #[allow(dead_code)]
-pub fn points_equal<T>(_point1: &[T], point2: &[T], tol: Option<T>) -> bool
+pub fn points_equal<T>(point1: &[T], point2: &[T], tol: Option<T>) -> bool
 where
     T: PartialOrd + std::ops::Sub<Output = T> + Copy + num_traits::FromPrimitive,
 {
@@ -40,15 +40,15 @@ where
         },
     };
 
-    if _point1.len() != point2.len() {
+    if point1.len() != point2.len() {
         return false;
     }
 
     for i in 0.._point1.len() {
-        if _point1[i] > point2[i] && _point1[i] - point2[i] > tol {
+        if point1[i] > point2[i] && point1[i] - point2[i] > tol {
             return false;
         }
-        if point2[i] > _point1[i] && point2[i] - _point1[i] > tol {
+        if point2[i] > point1[i] && point2[i] - point1[i] > tol {
             return false;
         }
     }
@@ -66,9 +66,9 @@ where
 ///
 /// * Scaled points and scale factors (min, range)
 #[allow(dead_code)]
-pub fn scale_points(_points: &Array2<f64>) -> ScaledPointsResult {
-    let n = _points.nrows();
-    let d = _points.ncols();
+pub fn scale_points(points: &Array2<f64>) -> ScaledPointsResult {
+    let n = points.nrows();
+    let d = points.ncols();
 
     if n == 0 {
         return Err(SpatialError::ValueError("Empty point set".to_string()));
@@ -80,7 +80,7 @@ pub fn scale_points(_points: &Array2<f64>) -> ScaledPointsResult {
 
     for i in 0..n {
         for j in 0..d {
-            let val = _points[[i, j]];
+            let val = points[[i, j]];
             mins[j] = mins[j].min(val);
             maxs[j] = maxs[j].max(val);
         }
@@ -118,9 +118,9 @@ pub fn scale_points(_points: &Array2<f64>) -> ScaledPointsResult {
 ///
 /// * Unscaled points
 #[allow(dead_code)]
-pub fn unscale_points(_points: &Array2<f64>, ranges: &[(f64, f64)]) -> SpatialResult<Array2<f64>> {
-    let n = _points.nrows();
-    let d = _points.ncols();
+pub fn unscale_points(points: &Array2<f64>, ranges: &[(f64, f64)]) -> SpatialResult<Array2<f64>> {
+    let n = points.nrows();
+    let d = points.ncols();
 
     if d != ranges.len() {
         return Err(SpatialError::DimensionError(format!(
@@ -133,7 +133,7 @@ pub fn unscale_points(_points: &Array2<f64>, ranges: &[(f64, f64)]) -> SpatialRe
     let mut unscaled = Array2::zeros((n, d));
     for i in 0..n {
         for j in 0..d {
-            unscaled[[i, j]] = _points[[i, j]] * ranges[j].1 + ranges[j].0;
+            unscaled[[i, j]] = points[[i, j]] * ranges[j].1 + ranges[j].0;
         }
     }
 

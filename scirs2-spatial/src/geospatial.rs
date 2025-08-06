@@ -75,7 +75,7 @@ pub const EARTH_ECCENTRICITY_SQ: f64 = 2.0 * EARTH_FLATTENING - EARTH_FLATTENING
 /// assert!((radians - std::f64::consts::PI).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn deg_to_rad(_degrees: f64) -> f64 {
+pub fn deg_to_rad(degrees: f64) -> f64 {
     _degrees * PI / 180.0
 }
 
@@ -98,7 +98,7 @@ pub fn deg_to_rad(_degrees: f64) -> f64 {
 /// assert!((degrees - 180.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn rad_to_deg(_radians: f64) -> f64 {
+pub fn rad_to_deg(radians: f64) -> f64 {
     _radians * 180.0 / PI
 }
 
@@ -121,7 +121,7 @@ pub fn rad_to_deg(_radians: f64) -> f64 {
 /// assert!((normalized - std::f64::consts::PI).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn normalize_angle(_angle: f64) -> f64 {
+pub fn normalize_angle(angle: f64) -> f64 {
     let normalized = _angle % (2.0 * PI);
     if normalized < 0.0 {
         normalized + 2.0 * PI
@@ -149,7 +149,7 @@ pub fn normalize_angle(_angle: f64) -> f64 {
 /// assert!((normalized - 90.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn normalize_bearing(_bearing_deg: f64) -> f64 {
+pub fn normalize_bearing(_bearingdeg: f64) -> f64 {
     let normalized = _bearing_deg % 360.0;
     if normalized < 0.0 {
         normalized + 360.0
@@ -184,7 +184,7 @@ pub fn normalize_bearing(_bearing_deg: f64) -> f64 {
 /// println!("Distance: {:.1} km", distance / 1000.0);
 /// ```
 #[allow(dead_code)]
-pub fn haversine_distance(_point1: (f64, f64), point2: (f64, f64)) -> f64 {
+pub fn haversine_distance(point1: (f64, f64), point2: (f64, f64)) -> f64 {
     let (lat1, lon1) = (deg_to_rad(_point1.0), deg_to_rad(_point1.1));
     let (lat2, lon2) = (deg_to_rad(point2.0), deg_to_rad(point2.1));
 
@@ -220,7 +220,7 @@ pub fn haversine_distance(_point1: (f64, f64), point2: (f64, f64)) -> f64 {
 /// println!("Bearing: {:.1}°", bearing.to_degrees());
 /// ```
 #[allow(dead_code)]
-pub fn initial_bearing(_point1: (f64, f64), point2: (f64, f64)) -> f64 {
+pub fn initial_bearing(point1: (f64, f64), point2: (f64, f64)) -> f64 {
     let (lat1, lon1) = (deg_to_rad(_point1.0), deg_to_rad(_point1.1));
     let (lat2, lon2) = (deg_to_rad(point2.0), deg_to_rad(point2.1));
 
@@ -243,8 +243,8 @@ pub fn initial_bearing(_point1: (f64, f64), point2: (f64, f64)) -> f64 {
 ///
 /// * Final bearing in radians
 #[allow(dead_code)]
-pub fn final_bearing(_point1: (f64, f64), point2: (f64, f64)) -> f64 {
-    let reverse_bearing = initial_bearing(point2, _point1);
+pub fn final_bearing(point1: (f64, f64), point2: (f64, f64)) -> f64 {
+    let reverse_bearing = initial_bearing(point2, point1);
     normalize_angle(reverse_bearing + PI)
 }
 
@@ -273,7 +273,7 @@ pub fn final_bearing(_point1: (f64, f64), point2: (f64, f64)) -> f64 {
 /// println!("Destination: ({:.4}, {:.4})", destination.0, destination.1);
 /// ```
 #[allow(dead_code)]
-pub fn destination_point(_start: (f64, f64), distance: f64, bearing: f64) -> (f64, f64) {
+pub fn destination_point(start: (f64, f64), distance: f64, bearing: f64) -> (f64, f64) {
     let (lat1, lon1) = (deg_to_rad(_start.0), deg_to_rad(_start.1));
 
     let angular_distance = distance / EARTH_RADIUS_M;
@@ -300,7 +300,7 @@ pub fn destination_point(_start: (f64, f64), distance: f64, bearing: f64) -> (f6
 ///
 /// * Midpoint as (latitude, longitude) in degrees
 #[allow(dead_code)]
-pub fn midpoint(_point1: (f64, f64), point2: (f64, f64)) -> (f64, f64) {
+pub fn midpoint(point1: (f64, f64), point2: (f64, f64)) -> (f64, f64) {
     let (lat1, lon1) = (deg_to_rad(_point1.0), deg_to_rad(_point1.1));
     let (lat2, lon2) = (deg_to_rad(point2.0), deg_to_rad(point2.1));
 
@@ -385,14 +385,14 @@ pub fn along_track_distance(
 /// This uses the spherical excess method. For very large polygons, more sophisticated
 /// methods may be needed to handle numerical precision issues.
 #[allow(dead_code)]
-pub fn spherical_polygon_area(_polygon: &[(f64, f64)]) -> SpatialResult<f64> {
-    if _polygon.len() < 3 {
+pub fn spherical_polygon_area(polygon: &[(f64, f64)]) -> SpatialResult<f64> {
+    if polygon.len() < 3 {
         return Err(SpatialError::ValueError(
             "Polygon must have at least 3 vertices".to_string(),
         ));
     }
 
-    let n = _polygon.len();
+    let n = polygon.len();
     let mut sum = 0.0;
 
     for i in 0..n {
@@ -418,7 +418,7 @@ pub fn spherical_polygon_area(_polygon: &[(f64, f64)]) -> SpatialResult<f64> {
 ///
 /// * true if point is inside the polygon, false otherwise
 #[allow(dead_code)]
-pub fn point_in_spherical_polygon(_point: (f64, f64), polygon: &[(f64, f64)]) -> bool {
+pub fn point_in_spherical_polygon(point: (f64, f64), polygon: &[(f64, f64)]) -> bool {
     if polygon.len() < 3 {
         return false;
     }
@@ -431,7 +431,7 @@ pub fn point_in_spherical_polygon(_point: (f64, f64), polygon: &[(f64, f64)]) ->
 
     if max_extent < 10.0 {
         // Use planar _point-in-polygon algorithm (ray casting)
-        let (x, y) = _point;
+        let (x, y) = point;
         let mut inside = false;
         let n = polygon.len();
 
@@ -533,7 +533,7 @@ pub fn point_in_spherical_polygon(_point: (f64, f64), polygon: &[(f64, f64)]) ->
 /// This is a simplified UTM conversion. For high-precision applications,
 /// use specialized geospatial libraries like PROJ.
 #[allow(dead_code)]
-pub fn geographic_to_utm(_lat: f64, lon: f64) -> SpatialResult<(f64, f64, i32, char)> {
+pub fn geographic_to_utm(lat: f64, lon: f64) -> SpatialResult<(f64, f64, i32, char)> {
     if !(-80.0..=84.0).contains(&_lat) {
         return Err(SpatialError::ValueError(
             "Latitude must be between -80° and 84° for UTM".to_string(),
@@ -592,7 +592,7 @@ pub fn geographic_to_utm(_lat: f64, lon: f64) -> SpatialResult<(f64, f64, i32, c
 
 /// Get UTM zone letter from latitude
 #[allow(dead_code)]
-fn utm_zone_letter(_lat: f64) -> SpatialResult<char> {
+fn utm_zone_letter(lat: f64) -> SpatialResult<char> {
     let letters = [
         'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
         'W', 'X',
@@ -623,8 +623,8 @@ fn utm_zone_letter(_lat: f64) -> SpatialResult<char> {
 ///
 /// * (x, y) in Web Mercator coordinates (meters)
 #[allow(dead_code)]
-pub fn geographic_to_web_mercator(_lat: f64, lon: f64) -> SpatialResult<(f64, f64)> {
-    if _lat.abs() >= 85.051_128_779_806_59 {
+pub fn geographic_to_web_mercator(lat: f64, lon: f64) -> SpatialResult<(f64, f64)> {
+    if lat.abs() >= 85.051_128_779_806_59 {
         return Err(SpatialError::ValueError(
             "Latitude must be between -85.051° and 85.051° for Web Mercator".to_string(),
         ));
@@ -668,7 +668,7 @@ pub fn web_mercator_to_geographic(x: f64, y: f64) -> (f64, f64) {
 ///
 /// * Distance in meters
 #[allow(dead_code)]
-pub fn vincenty_distance(_point1: (f64, f64), point2: (f64, f64)) -> SpatialResult<f64> {
+pub fn vincenty_distance(point1: (f64, f64), point2: (f64, f64)) -> SpatialResult<f64> {
     let (lat1, lon1) = (deg_to_rad(_point1.0), deg_to_rad(_point1.1));
     let (lat2, lon2) = (deg_to_rad(point2.0), deg_to_rad(point2.1));
 

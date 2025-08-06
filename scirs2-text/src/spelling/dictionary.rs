@@ -306,17 +306,17 @@ impl Default for DictionaryCorrector {
 
 impl DictionaryCorrector {
     /// Create a new dictionary-based spelling corrector with the given configuration
-    pub fn new(_config: DictionaryCorrectorConfig) -> Self {
+    pub fn new(config: DictionaryCorrectorConfig) -> Self {
         Self {
-            _config,
+            config,
             ..Default::default()
         }
     }
 
     /// Create a new dictionary-based spelling corrector with a custom dictionary
-    pub fn with_dictionary(_dictionary: HashMap<String, usize>) -> Self {
+    pub fn with_dictionary(dictionary: HashMap<String, usize>) -> Self {
         Self {
-            _dictionary,
+            dictionary,
             config: DictionaryCorrectorConfig::default(),
             metric: Arc::new(DamerauLevenshteinMetric::new()),
         }
@@ -327,7 +327,7 @@ impl DictionaryCorrector {
         Self {
             dictionary: HashMap::new(),
             config: DictionaryCorrectorConfig::default(),
-            _metric: Arc::new(_metric),
+            _metric: Arc::new(metric),
         }
     }
 
@@ -336,7 +336,7 @@ impl DictionaryCorrector {
     /// The file should contain one word per line, optionally followed by a frequency count.
     /// If no frequency is provided, a default value of 1 is used.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(_path)
+        let file = File::open(path)
             .map_err(|e| TextError::IoError(format!("Failed to open dictionary file: {e}")))?;
 
         let reader = BufReader::new(file);
@@ -481,7 +481,7 @@ impl SpellingCorrector for DictionaryCorrector {
                 let (_, dist_b_) = b;
 
                 // Sort only by distance
-                dist_a.cmp(dist_b)
+                dist_a_.cmp(dist_b_)
             });
         }
 

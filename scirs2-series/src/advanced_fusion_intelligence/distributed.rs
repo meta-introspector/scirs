@@ -428,7 +428,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedTaskScheduler<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> DistributedTask<F> {
     /// Create new distributed task
-    pub fn new(task_id: usize, task_type: TaskType, priority: F) -> Self {
+    pub fn new(task_id: usize, tasktype: TaskType, priority: F) -> Self {
         DistributedTask {
             task_id,
             task_type,
@@ -439,7 +439,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedTask<F> {
     }
 
     /// Update task status
-    pub fn update_status(&mut self, new_status: TaskStatus) {
+    pub fn update_status(&mut self, newstatus: TaskStatus) {
         self.completion_status = new_status;
     }
 
@@ -522,14 +522,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedResourceManager<F> {
     }
 
     /// Allocate task to specific node
-    fn allocate_task_to_node(&mut self, node_id: usize, task_id: usize) -> Result<()> {
+    fn allocate_task_to_node(&mut self, node_id: usize, taskid: usize) -> Result<()> {
         let task_list = self.resource_allocation.entry(node_id).or_insert_with(Vec::new);
         task_list.push(task_id);
         Ok(())
     }
 
     /// Update node utilization after task allocation
-    fn update_node_utilization(&mut self, node_id: usize, task: &DistributedTask<F>) -> Result<()> {
+    fn update_node_utilization(&mut self, nodeid: usize, task: &DistributedTask<F>) -> Result<()> {
         if let Some(node) = self.available_resources.get_mut(&node_id) {
             node.available_memory = node.available_memory - task.resource_requirements.memory_gb;
             
@@ -559,7 +559,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LoadBalancer<F> {
     }
 
     /// Balance load across nodes
-    pub fn balance_load(&mut self, node_loads: &HashMap<usize, F>) -> Result<Vec<(usize, usize)>> {
+    pub fn balance_load(&mut self, nodeloads: &HashMap<usize, F>) -> Result<Vec<(usize, usize)>> {
         let mut rebalancing_actions = Vec::new();
         
         // Find overloaded and underloaded nodes
@@ -588,7 +588,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LoadBalancer<F> {
     }
 
     /// Update load metrics
-    pub fn update_metrics(&mut self, node_id: usize, metrics: LoadMetric<F>) {
+    pub fn update_metrics(&mut self, nodeid: usize, metrics: LoadMetric<F>) {
         // Remove old metrics for this node
         self.load_metrics.retain(|m| m.node_id != node_id);
         // Add new metrics
@@ -652,7 +652,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedIntelligenceCoordinato
     }
 
     /// Simulate task execution
-    fn simulate_task_execution(&mut self, task_id: usize, node_id: usize) -> Result<Array1<F>> {
+    fn simulate_task_execution(&mut self, task_id: usize, nodeid: usize) -> Result<Array1<F>> {
         // Simulate processing delay
         let execution_time = F::from_f64(0.1).unwrap(); // 100ms
         
@@ -691,7 +691,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> CommunicationLayer<F> {
     }
 
     /// Allocate bandwidth to nodes
-    pub fn allocate_bandwidth(&mut self, node_id: usize, bandwidth: F) {
+    pub fn allocate_bandwidth(&mut self, nodeid: usize, bandwidth: F) {
         self.bandwidth_allocation.insert(node_id, bandwidth);
     }
 }
@@ -711,7 +711,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FaultToleranceSystem<F> {
     }
 
     /// Handle node failures
-    pub fn handle_failure(&mut self, failed_node_id: usize) -> Result<RecoveryType> {
+    pub fn handle_failure(&mut self, failed_nodeid: usize) -> Result<RecoveryType> {
         // Select appropriate recovery mechanism
         for mechanism in &self.recovery_mechanisms {
             if mechanism.success_rate > F::from_f64(0.8).unwrap() {
@@ -748,7 +748,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FailureDetection<F> {
     }
 
     /// Detect failures in distributed system
-    pub fn detect_failures(&mut self, node_statuses: &HashMap<usize, bool>) -> Result<Vec<usize>> {
+    pub fn detect_failures(&mut self, nodestatuses: &HashMap<usize, bool>) -> Result<Vec<usize>> {
         let mut failed_nodes = Vec::new();
         
         for (&node_id, &is_responsive) in node_statuses {
@@ -763,7 +763,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FailureDetection<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> RecoveryMechanism<F> {
     /// Create new recovery mechanism
-    pub fn new(mechanism_type: RecoveryType) -> Self {
+    pub fn new(mechanismtype: RecoveryType) -> Self {
         let (recovery_time, success_rate, resource_overhead) = match mechanism_type {
             RecoveryType::Restart => (F::from_f64(10.0).unwrap(), F::from_f64(0.9).unwrap(), F::from_f64(0.1).unwrap()),
             RecoveryType::Failover => (F::from_f64(5.0).unwrap(), F::from_f64(0.95).unwrap(), F::from_f64(0.2).unwrap()),
@@ -781,7 +781,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RecoveryMechanism<F> {
     }
 
     /// Apply recovery mechanism
-    pub fn apply_recovery(&self, failed_tasks: &[usize]) -> Result<bool> {
+    pub fn apply_recovery(&self, failedtasks: &[usize]) -> Result<bool> {
         // Simulate recovery process
         let recovery_success = self.success_rate > F::from_f64(rand::random::<f64>()).unwrap();
         

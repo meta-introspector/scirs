@@ -25,7 +25,7 @@ use ndarray::s;
 #[allow(non_snake_case)]
 #[allow(clippy::needless_range_loop)]
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array1, Array2, Array3, ArrayView1};
+use ndarray::{Array1, Array2, Array3, ArrayView1};
 use num_complex::Complex64;
 use std::f64::consts::PI;
 
@@ -281,7 +281,7 @@ impl PerfectReconstructionFilterBank {
     }
 
     /// Design prototype lowpass filter
-    fn design_prototype_lowpass(_length: usize, num_channels: usize) -> SignalResult<Array1<f64>> {
+    fn design_prototype_lowpass(_length: usize, numchannels: usize) -> SignalResult<Array1<f64>> {
         let mut prototype = Array1::zeros(_length);
         let cutoff = PI / num_channels as f64;
 
@@ -298,7 +298,7 @@ impl PerfectReconstructionFilterBank {
 
             // Apply Kaiser window
             let beta = 8.0; // Kaiser window parameter
-            let window_val = Self::kaiser_window(n, _length, beta);
+            let window_val = Self::kaiser_window(n, length, beta);
 
             prototype[n] = sinc_val * window_val;
         }
@@ -363,7 +363,7 @@ impl PerfectReconstructionFilterBank {
     }
 
     /// Design extended prototype for DFT filter bank
-    fn design_extended_prototype(_length: usize, num_channels: usize) -> SignalResult<Array1<f64>> {
+    fn design_extended_prototype(_length: usize, numchannels: usize) -> SignalResult<Array1<f64>> {
         let mut prototype = Array1::zeros(_length);
         let overlap = _length / num_channels;
 
@@ -929,7 +929,7 @@ impl MultirateConverter {
     }
 
     /// Design anti-aliasing filter
-    fn design_antialiasing_filter(_length: usize, cutoff: f64) -> SignalResult<Array1<f64>> {
+    fn design_antialiasing_filter(length: usize, cutoff: f64) -> SignalResult<Array1<f64>> {
         let mut filter = Array1::zeros(_length);
         let center = (_length - 1) as f64 / 2.0;
 
@@ -1033,6 +1033,7 @@ impl MultirateConverter {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn test_pr_filter_bank_creation() {

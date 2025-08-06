@@ -54,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Basic example of chunked processing
 #[cfg(feature = "memory_efficient")]
 #[allow(dead_code)]
-fn basic_chunk_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn basic_chunk_example(tempdir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Basic Chunk Processing Example");
     println!("--------------------------------");
 
@@ -102,7 +102,7 @@ fn basic_chunk_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>
 /// Example showing how to aggregate data from chunks
 #[cfg(feature = "memory_efficient")]
 #[allow(dead_code)]
-fn aggregate_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn aggregate_example(tempdir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Chunk Aggregation Example");
     println!("---------------------------");
 
@@ -168,7 +168,7 @@ fn aggregate_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> 
 /// Performance comparison between chunked and unchunked processing
 #[cfg(feature = "memory_efficient")]
 #[allow(dead_code)]
-fn performance_comparison(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn performance_comparison(tempdir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Performance Comparison");
     println!("-----------------------");
 

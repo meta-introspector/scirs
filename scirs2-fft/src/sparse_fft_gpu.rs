@@ -73,9 +73,9 @@ pub struct GPUSparseFFT {
 
 impl GPUSparseFFT {
     /// Create a new GPU-accelerated sparse FFT processor with the given configuration
-    pub fn new(_config: GPUSparseFFTConfig) -> Self {
+    pub fn new(config: GPUSparseFFTConfig) -> Self {
         Self {
-            _config,
+            _config: config,
             gpu_initialized: false,
             device_info: None,
         }

@@ -18,9 +18,9 @@ pub struct SparseTrainer {
 }
 impl SparseTrainer {
     /// Create a new sparse trainer
-    pub fn new(_target_sparsity: f32, schedule: SparsitySchedule) -> Self {
+    pub fn new(_targetsparsity: f32, schedule: SparsitySchedule) -> Self {
         Self {
-            _target_sparsity,
+            target_sparsity,
             schedule,
             pruning_method: PruningMethod::Magnitude,
             structured: false,
@@ -181,8 +181,8 @@ pub struct DynamicSparseNetwork {
     connection_history: ConnectionHistory,
 impl DynamicSparseNetwork {
     /// Create a new dynamic sparse network
-    pub fn new(_prune_grow_ratio: f32) -> Self {
-            _prune_grow_ratio,
+    pub fn new(_prune_growratio: f32) -> Self {
+            prune_grow_ratio,
             growth_method: GrowthMethod::Gradient,
             connection_history: ConnectionHistory::new(),
     /// Update connections (prune and grow)
@@ -202,8 +202,8 @@ impl DynamicSparseNetwork {
         num_to_prune: usize,
         let mut active_weights: Vec<(f32, (usize, usize))> = weights
             .filter(|(_, &w)| w != 0.0)
-        active_weights.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-        for i in 0..num_to_prune.min(active_weights.len()) {
+        activeweights.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        for i in 0..num_to_prune.min(activeweights.len()) {
             let (_, (row, col)) = active_weights[i];
     /// Grow connections
     fn grow_connections(
@@ -237,7 +237,7 @@ impl ConnectionHistory {
     fn new() -> Self {
             history: Vec::new(),
             max_history: 100,
-    fn update(&mut self, weights: &ArrayView2<f32>, _step: usize) {
+    fn update(&mut self, weights: &ArrayView2<f32>, step: usize) {
         let active_connections: HashSet<(usize, usize)> = weights
         self.history.push(active_connections);
         if self.history.len() > self.max_history {

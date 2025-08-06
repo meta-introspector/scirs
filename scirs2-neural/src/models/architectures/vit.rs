@@ -91,7 +91,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for TransformerMlp
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
         Ok(grad_output.clone())
-    fn update(&mut self, learning_rate: F) -> Result<()> {
+    fn update(&mut self, learningrate: F) -> Result<()> {
         self.dense1.update(learning_rate)?;
         self.dense2.update(learning_rate)?;
         Ok(())
@@ -127,7 +127,7 @@ impl<
         attention_dropout_rate: F,
     ) -> Result<Self> {
         // Layer normalization for attention
-        let mut ln_rng = rand::rngs::SmallRng::seed_from_u64(42);
+        let mut ln_rng = rand::rngs::SmallRng::from_seed([42; 32]);
         let norm1 = LayerNorm::new(dim, 1e-6, &mut ln_rng)?;
         // Multi-head attention
         // Create config for attention
@@ -138,20 +138,20 @@ impl<
             causal: false,
             scale: None, // Use default scaling
         };
-        let mut attn_rng = rand::rngs::SmallRng::seed_from_u64(42);
+        let mut attn_rng = rand::rngs::SmallRng::from_seed([42; 32]);
         let attention = MultiHeadAttention::new(dim, attn_config, &mut attn_rng)?;
         // Layer normalization for MLP
         let norm2 = LayerNorm::new(dim, 1e-6, &mut ln_rng)?;
         let mlp = TransformerMlp {
             dense1: {
-                let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+                let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
                 Dense::new(dim, mlp_dim, None, &mut rng)?
             },
             dense2: {
                 Dense::new(mlp_dim, dim, None, &mut rng)?
         // Dropouts
         let dropout_rate_f64 = dropout_rate.to_f64().unwrap();
-        let mut dropout_rng = rand::rngs::SmallRng::seed_from_u64(42);
+        let mut dropout_rng = rand::rngs::SmallRng::from_seed([42; 32]);
         let attn_dropout = Dropout::new(dropout_rate_f64, &mut dropout_rng)?;
         let mlp_dropout = Dropout::new(dropout_rate_f64, &mut dropout_rng)?;
         Ok(Self {
@@ -230,43 +230,43 @@ pub struct VisionTransformer<
             config: self.config.clone(),
     > VisionTransformer<F>
     /// Create a new Vision Transformer model
-    pub fn new(_config: ViTConfig) -> Result<Self> {
+    pub fn new(config: ViTConfig) -> Result<Self> {
         // Calculate number of patches
-        let h_patches = _config.image_size.0 / _config.patch_size.0;
-        let w_patches = _config.image_size.1 / _config.patch_size.1;
+        let h_patches = config.image_size.0 / config.patch_size.0;
+        let w_patches = config.image_size.1 / config.patch_size.1;
         let num_patches = h_patches * w_patches;
         // Create patch embedding layer
         let patch_embed = PatchEmbedding::new(
-            _config.image_size,
-            _config.patch_size,
-            _config.in_channels,
-            _config.embed_dim,
+            config.image_size,
+            config.patch_size,
+            config.in_channels,
+            config.embed_dim,
             true,
         )?;
         // Create class token
-        let cls_token = Array::zeros(IxDyn(&[1, 1, _config.embed_dim]));
+        let cls_token = Array::zeros(IxDyn(&[1, 1, config.embed_dim]));
         // Create position embedding (include class token)
-        let pos_embed = Array::zeros(IxDyn(&[1, num_patches + 1, _config.embed_dim]));
+        let pos_embed = Array::zeros(IxDyn(&[1, num_patches + 1, config.embed_dim]));
         // Create dropout
-        let dropout_rate = _config.dropout_rate; // Use directly as f64
+        let dropout_rate = config.dropout_rate; // Use directly as f64
         let dropout = Dropout::new(dropout_rate, &mut dropout_rng)?;
         // Create transformer encoder blocks
         let mut encoder_blocks = Vec::with_capacity(_config.num_layers);
         for _ in 0.._config.num_layers {
             let block = TransformerEncoderBlock::new(
-                _config.embed_dim,
-                _config.num_heads,
-                _config.mlp_dim,
+                config.embed_dim,
+                config.num_heads,
+                config.mlp_dim,
                 F::from(_config.dropout_rate).unwrap(),
                 F::from(_config.attention_dropout_rate).unwrap(),
             )?;
             encoder_blocks.push(block);
         // Layer normalization
-        let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+        let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
         let norm = LayerNorm::new(_config.embed_dim, 1e-6, &mut rng)?;
         // Classification head
         let classifier = Dense::new(
-            _config.num_classes,
+            config.num_classes,
             None, // No activation for final layer
             &mut rng,
             patch_embed,
@@ -276,7 +276,7 @@ pub struct VisionTransformer<
             encoder_blocks,
             norm,
             classifier,
-            _config,
+            config,
     /// Create a ViT-Base model
         let _config = ViTConfig::vit_base(image_size, patch_size, in_channels, num_classes);
         Self::new(_config)

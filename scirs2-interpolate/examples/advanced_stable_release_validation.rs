@@ -291,7 +291,7 @@ fn assess_overall_readiness(
 }
 
 #[allow(dead_code)]
-fn print_validation_summary(_validation: &StableReleaseValidation) {
+fn print_validation_summary(validation: &StableReleaseValidation) {
     println!("\n" + "=".repeat(60));
     println!("🎯 STABLE RELEASE VALIDATION SUMMARY");
     println!("=".repeat(60));
@@ -299,21 +299,21 @@ fn print_validation_summary(_validation: &StableReleaseValidation) {
     println!("\n📊 Scores:");
     println!(
         "   Performance:    {:.1}%",
-        _validation.performance_score * 100.0
+        validation.performance_score * 100.0
     );
     println!(
         "   Stability:      {:.1}%",
-        _validation.stability_score * 100.0
+        validation.stability_score * 100.0
     );
     println!(
         "   Compatibility:  {:.1}%",
-        _validation.compatibility_score * 100.0
+        validation.compatibility_score * 100.0
     );
     println!(
         "   Overall:        {:.1}%",
         (_validation.performance_score
-            + _validation.stability_score
-            + _validation.compatibility_score)
+            + validation.stability_score
+            + validation.compatibility_score)
             / 3.0
             * 100.0
     );
@@ -359,7 +359,7 @@ fn print_validation_summary(_validation: &StableReleaseValidation) {
 
     println!(
         "\n⏱️  Validation completed in {:.2}s",
-        _validation.validation_timestamp.elapsed().as_secs_f64()
+        validation.validation_timestamp.elapsed().as_secs_f64()
     );
 }
 

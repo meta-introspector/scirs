@@ -1215,7 +1215,7 @@ mod tests {
             bio_inspired_attention_saccades(image.view(), &feature_maps, &config).unwrap();
 
         assert_eq!(attention_system.attention_map.dim(), (32, 32));
-        assert!(attention_system.feature_attention_weights.len() > 0);
+        assert!(attention_system.feature_attentionweights.len() > 0);
     }
 
     #[test]
@@ -1282,7 +1282,7 @@ mod tests {
         .unwrap();
 
         assert!(vwm_result.memory_slots.len() > 0);
-        assert!(vwm_result.attention_weights.len() > 0);
+        assert!(vwm_result.attentionweights.len() > 0);
         assert!(vwm_result.maintenance_activity.len() > 0);
     }
 }
@@ -2380,7 +2380,7 @@ fn apply_memory_decay(
 }
 
 #[allow(dead_code)]
-fn compute_circadian_sensitivity(_illumination: f64, circadian_phase: f64) -> NdimageResult<f64> {
+fn compute_circadian_sensitivity(_illumination: f64, circadianphase: f64) -> NdimageResult<f64> {
     // Circadian modulation of visual sensitivity
     let circadian_factor = (circadian_phase * 2.0 * PI).cos() * 0.3 + 0.7;
     let illumination_factor = 1.0 / (1.0 + (-_illumination * 5.0).exp());
@@ -2389,7 +2389,7 @@ fn compute_circadian_sensitivity(_illumination: f64, circadian_phase: f64) -> Nd
 }
 
 #[allow(dead_code)]
-fn compute_melanopsin_response(_illumination: f64, circadian_phase: f64) -> NdimageResult<f64> {
+fn compute_melanopsin_response(_illumination: f64, circadianphase: f64) -> NdimageResult<f64> {
     // Melanopsin response (ipRGCs) - sluggish, sustained response to light
     let melanopsin_sensitivity = 0.1 + 0.3 * (circadian_phase * 2.0 * PI + PI).cos().max(0.0);
     let response = _illumination * melanopsin_sensitivity;
@@ -2411,7 +2411,7 @@ fn apply_melanopsin_contrast_adaptation(
 }
 
 #[allow(dead_code)]
-fn apply_circadian_color_adjustment(_pixel_value: f64, circadian_phase: f64) -> NdimageResult<f64> {
+fn apply_circadian_color_adjustment(_pixel_value: f64, circadianphase: f64) -> NdimageResult<f64> {
     // Simplified color temperature adjustment
     let color_shift = (circadian_phase * 2.0 * PI).sin() * 0.1;
     let adjusted_value = _pixel_value + color_shift;
@@ -2462,12 +2462,12 @@ where
         for x in 0..width {
             let values: Vec<f64> = medium_images
                 .iter()
-                ._map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
+                .map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
                 .collect();
 
             let mean = values.iter().sum::<f64>() / values.len() as f64;
             let variance =
-                values.iter()._map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
+                values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
 
             // Higher variance leads to less adaptation (more sensitive)
             let adaptation_factor = variance * 2.0 + 0.5;
@@ -2493,14 +2493,14 @@ where
         for x in 0..width {
             let values: Vec<f64> = all_images
                 .iter()
-                ._map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
+                .map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
                 .collect();
 
             // Calculate higher-order statistics
             let mean = values.iter().sum::<f64>() / values.len() as f64;
             let skewness = values
                 .iter()
-                ._map(|v| ((v - mean) / (mean + 0.1)).powi(3))
+                .map(|v| ((v - mean) / (mean + 0.1)).powi(3))
                 .sum::<f64>()
                 / values.len() as f64;
 
@@ -2529,7 +2529,7 @@ where
     for image in all_images {
         let global_activity = image
             .iter()
-            ._map(|&x| x.to_f64().unwrap_or(0.0))
+            .map(|&x| x.to_f64().unwrap_or(0.0))
             .sum::<f64>()
             / (height * width) as f64;
         global_activities.push(global_activity);
@@ -2541,7 +2541,7 @@ where
         for x in 0..width {
             let local_mean = all_images
                 .iter()
-                ._map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
+                .map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
                 .sum::<f64>()
                 / all_images.len() as f64;
 

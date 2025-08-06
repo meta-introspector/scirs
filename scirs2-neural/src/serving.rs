@@ -253,7 +253,7 @@ impl<
     > ModelPackager<F>
 {
     /// Create a new model packager
-    pub fn new(_model: Sequential<F>, output_dir: PathBuf) -> Self {
+    pub fn new(_model: Sequential<F>, outputdir: PathBuf) -> Self {
         let metadata = PackageMetadata {
             name: "scirs2_model".to_string(),
             version: "1.0.0".to_string(),
@@ -282,7 +282,7 @@ impl<
             checksum: "".to_string(),
         };
         Self {
-            _model,
+            model,
             metadata,
             output_dir,
             optimization: OptimizationLevel::Basic,
@@ -623,7 +623,7 @@ import numpy as np
 from typing import List, Dict, Any, Optional
 class SciRS2Model:
     '"'SciRS2 neural network model for inference.'"'
-    def __init__(self, model_path: str):
+    def __init__(self, modelpath: str):
         '"'Initialize model from file.
         Args: model, path: Path to the model file
         '"'
@@ -634,7 +634,7 @@ class SciRS2Model:
         '"'Load model from file.'"'
         with open(self.model_path, 'r') as f:
             self._model_data = json.load(f)
-    def predict(self, input_data: np.ndarray) -> np.ndarray:
+    def predict(self, inputdata: np.ndarray) -> np.ndarray:
         '"'Run inference on input data.
             input_data: Input tensor as numpy array
             
@@ -651,7 +651,7 @@ class SciRS2Model:
     def get_output_specs(self) -> List[Dict[str, Any]]:
         '"'Get output tensor specifications.'"'
         return self._model_data.get('output_specs', [])
-def load_model(model_path: str) ->, SciRS2Model:
+def load_model(modelpath: str) ->, SciRS2Model:
     '"'Load a SciRS2 model from file.
     Args: model, path: Path to the model file
     Returns:
@@ -766,7 +766,7 @@ pub struct ServerStats {
     pub active_requests: usize,
     > ModelServer<F>
     /// Create a new model server
-    pub fn new(_model: Sequential<F>, config: ServerConfig) -> Self {
+    pub fn new(model: Sequential<F>, config: ServerConfig) -> Self {
             config,
             stats: ServerStats {
                 total_requests: 0,
@@ -802,7 +802,7 @@ pub struct ServerStats {
     /// Get server statistics
     pub fn get_stats(&self) -> &ServerStats {
         &self.stats
-    fn update_response_time(&mut self, response_time_ms: f64) {
+    fn update_response_time(&mut self, response_timems: f64) {
         let total_responses = self.stats.successful_predictions + self.stats.total_errors;
         if total_responses > 0 {
             self.stats.avg_response_time_ms =
@@ -838,7 +838,7 @@ mod tests {
         assert_eq!(metadata.output_specs.len(), 1);
     fn test_model_packager_creation() {
         let temp_dir = TempDir::new().unwrap();
-        let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
+        let mut rng = rand::rngs::SmallRng::from_seed([42; 32]);
         let mut model: Sequential<f32> = Sequential::new();
         let dense = Dense::new(10, 1, Some("relu"), &mut rng).unwrap();
         model.add_layer(dense);

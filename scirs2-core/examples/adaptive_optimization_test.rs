@@ -17,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create basic optimizer
     let config = OptimizationConfig::default()
         .with_goal(OptimizationGoal::Balanced)
-        .with_learning_rate(0.01);
+        .with_learningrate(0.01);
 
     let mut optimizer = AdaptiveOptimizer::new(config)?;
     println!("✅ Created adaptive optimizer");

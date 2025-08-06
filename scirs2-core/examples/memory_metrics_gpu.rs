@@ -52,10 +52,10 @@ fn main() {
     println!("----------------------------------");
 
     // Create some buffers
-    let buffer_sizes = [1000, 5000, 10000, 50000];
+    let buffersizes = [1000, 5000, 10000, 50000];
     let mut buffers = Vec::new();
 
-    for &size in &buffer_sizes {
+    for &size in &buffersizes {
         let bytes = size * std::mem::size_of::<f32>();
         println!(
             "Creating buffer with {} elements ({})",
@@ -117,7 +117,7 @@ fn main() {
     println!("\nExample 3: Simulating a GPU Computation");
     println!("--------------------------------------");
 
-    simulate_matrix_multiplication(&context);
+    simulatematrix_multiplication(&context);
 
     // Release all remaining buffers
     println!("\nReleasing all remaining buffers");
@@ -132,7 +132,7 @@ fn main() {
 // Simulates a GPU matrix multiplication operation
 #[cfg(all(feature = "memory_management", feature = "gpu"))]
 #[allow(dead_code)]
-fn gpu_operation_example(_context: &TrackedGpuContext) {
+fn gpu_operation_example(context: &TrackedGpuContext) {
     let start = Instant::now();
 
     // Matrix dimensions
@@ -151,19 +151,19 @@ fn gpu_operation_example(_context: &TrackedGpuContext) {
     let b_size = k * n;
     let c_size = m * n;
 
-    let buffer_a = _context.create_buffer::<f32>(a_size);
+    let buffer_a = context.create_buffer::<f32>(a_size);
     println!(
         "  Allocated buffer for matrix A: {}",
         format_bytes(a_size * std::mem::size_of::<f32>())
     );
 
-    let buffer_b = _context.create_buffer::<f32>(b_size);
+    let buffer_b = context.create_buffer::<f32>(b_size);
     println!(
         "  Allocated buffer for matrix B: {}",
         format_bytes(b_size * std::mem::size_of::<f32>())
     );
 
-    let buffer_c = _context.create_buffer::<f32>(c_size);
+    let buffer_c = context.create_buffer::<f32>(c_size);
     println!(
         "  Allocated buffer for matrix C: {}",
         format_bytes(c_size * std::mem::size_of::<f32>())

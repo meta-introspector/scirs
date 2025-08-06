@@ -111,7 +111,7 @@ where
 
 /// Internal implementation for Complex64 input
 #[allow(dead_code)]
-fn _hfft_complex(x: &[Complex64], n: Option<usize>, _norm: Option<&str>) -> FFTResult<Vec<f64>> {
+fn _hfft_complex(x: &[Complex64], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>> {
     let n_fft = n.unwrap_or(x.len());
 
     // Calculate the expected length of the output (real) array
@@ -166,7 +166,7 @@ where
         if std::any::TypeId::of::<T>() == std::any::TypeId::of::<Complex64>() {
             // Create a view with the correct type
             let ptr = x.as_ptr() as *const Complex64;
-            let complex_view = unsafe { ArrayView2::fromshape_ptr(x.dim(), ptr) };
+            let complex_view = unsafe { ArrayView2::from_shape_ptr(x.dim(), ptr) };
 
             return _hfft2_complex(&complex_view, shape, axes, norm);
         }
@@ -306,7 +306,7 @@ where
         if std::any::TypeId::of::<T>() == std::any::TypeId::of::<Complex64>() {
             // Create a view with the correct type
             let ptr = x.as_ptr() as *const Complex64;
-            let complex_view = unsafe { ArrayView::fromshape_ptr(IxDyn(x.shape()), ptr) };
+            let complex_view = unsafe { ArrayView::from_shape_ptr(IxDyn(x.shape()), ptr) };
 
             return _hfftn_complex(&complex_view, shape, axes, norm, overwrite_x, workers);
         }

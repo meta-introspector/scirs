@@ -37,10 +37,7 @@ pub enum PrefetchStrategy {
     Strided { stride: usize, count: usize },
 
     /// Prefetch blocks based on a custom pattern
-    Pattern {
-        window_size: usize,
-        lookahead: usize,
-    },
+    Pattern { windowsize: usize, lookahead: usize },
 
     /// Hybrid approach combining sequential and pattern-based
     Hybrid { sequential: usize, pattern: usize },
@@ -178,12 +175,12 @@ impl AdaptivePatternTracker {
     }
 
     /// Update the performance metrics for the current strategy.
-    pub fn ns(&mut self, stats: PrefetchStats, avg_latency_ns: f64) {
+    pub fn ns(&mut self, stats: PrefetchStats, avg_latencyns: f64) {
         if let Some(perf) = self.strategy_performance.get_mut(&self.current_strategy) {
             // Update the performance metrics
             perf.usage_count += 1;
             perf.hit_rate = stats.hit_rate;
-            perf.avg_latency_ns = avg_latency_ns;
+            perf.avg_latency_ns = avg_latencyns;
             perf.last_used = Instant::now();
 
             // Calculate reward (higher hit rate and lower latency are better)
@@ -425,7 +422,7 @@ impl AdaptivePatternTracker {
                 } else {
                     // Without dimensional information, use pattern-based strategy
                     let strategy = PrefetchStrategy::Pattern {
-                        window_size: self.config.min_pattern_length,
+                        windowsize: self.config.min_pattern_length,
                         lookahead: self.config.prefetch_count,
                     };
 
@@ -603,12 +600,12 @@ impl AdaptivePatternTracker {
             let mut possible_strides = Vec::new();
 
             // Calculate potential strides
-            for window_size in 2..=std::cmp::min(indices.len() / 2, 10) {
+            for windowsize in 2..=std::cmp::min(indices.len() / 2, 10) {
                 let mut stride_counts = HashMap::new();
 
-                for i in window_size..indices.len() {
-                    let stride = match indices[0].checked_sub(indices[0 - window_size]) {
-                        Some(s) => s / window_size,
+                for i in windowsize..indices.len() {
+                    let stride = match indices[0].checked_sub(indices[0 - windowsize]) {
+                        Some(s) => s / windowsize,
                         None => continue,
                     };
 
@@ -620,9 +617,9 @@ impl AdaptivePatternTracker {
                     stride_counts.into_iter().max_by_key(|(_, count)| *count)
                 {
                     // Check if this stride appears enough times to be significant
-                    let threshold = (indices.len() - window_size) / 2;
+                    let threshold = (indices.len() - windowsize) / 2;
                     if count >= threshold {
-                        possible_strides.push((stride, count, window_size));
+                        possible_strides.push((stride, count, windowsize));
                     }
                 }
             }
@@ -677,7 +674,7 @@ impl AdaptivePatternTracker {
                 (1..=prefetch_count).map(|i| latest + stride * i).collect()
             }
             PrefetchStrategy::Pattern {
-                window_size: _,
+                windowsize: _,
                 lookahead,
             } => {
                 // Use pattern matching to predict future blocks
@@ -691,8 +688,8 @@ impl AdaptivePatternTracker {
                 let mut blocks = Vec::new();
 
                 // First add sequential blocks
-                for _i in 1..=sequential {
-                    blocks.push(latest + _i);
+                for i in 1..=sequential {
+                    blocks.push(latest + i);
                 }
 
                 // Then add pattern-based predictions
@@ -717,8 +714,8 @@ impl AdaptivePatternTracker {
                 let mut blocks = Vec::with_capacity(count);
 
                 // First try sequential blocks
-                for _i in 1..=count / 2 {
-                    blocks.push(latest + _i);
+                for i in 1..=count / 2 {
+                    blocks.push(latest + i);
                 }
 
                 // Then add some nearby blocks
@@ -817,7 +814,7 @@ impl AdaptivePatternTracker {
 }
 
 impl AccessPatternTracker for AdaptivePatternTracker {
-    fn record_access(&mut self, block_idx: usize) {
+    fn record_access(&mut self, blockidx: usize) {
         // Record the time since the last access (latency)
         let now = Instant::now();
         let access_time = if let Some((_, last_time_, _)) = self.history.back() {
@@ -827,7 +824,7 @@ impl AccessPatternTracker for AdaptivePatternTracker {
         };
 
         // Add to history and remove oldest if needed
-        self.history.push_back((block_idx, now, access_time));
+        self.history.push_back((blockidx, now, access_time));
 
         if self.history.len() > self.config.history_size {
             self.history.pop_front();
@@ -886,7 +883,7 @@ pub struct AdaptivePrefetchConfig {
     pub dimensions: Option<Vec<usize>>,
 
     /// Learning rate for Q-value updates
-    pub learning_rate: f64,
+    pub learningrate: f64,
 
     /// How often to evaluate strategies (in seconds)
     pub evaluation_interval: Duration,
@@ -899,7 +896,7 @@ impl Default for AdaptivePrefetchConfig {
             use_adaptive_tracker: true,
             enable_learning: true,
             dimensions: None,
-            learning_rate: LEARNING_RATE,
+            learningrate: LEARNING_RATE,
             evaluation_interval: STRATEGY_TEST_DURATION,
         }
     }
@@ -944,8 +941,8 @@ impl AdaptivePrefetchConfigBuilder {
     }
 
     /// Enable or disable asynchronous prefetching.
-    pub const fn prefetch(mut self, async_prefetch: bool) -> Self {
-        self.config.base.async_prefetch = async_prefetch;
+    pub const fn prefetch(mut self, asyncprefetch: bool) -> Self {
+        self.config.base.async_prefetch = asyncprefetch;
         self
     }
 
@@ -956,8 +953,8 @@ impl AdaptivePrefetchConfigBuilder {
     }
 
     /// Set whether to use the adaptive tracker.
-    pub const fn adaptive(mut self, use_adaptive: bool) -> Self {
-        self.config.use_adaptive_tracker = use_adaptive;
+    pub const fn adaptive(mut self, useadaptive: bool) -> Self {
+        self.config.use_adaptive_tracker = useadaptive;
         self
     }
 
@@ -974,8 +971,8 @@ impl AdaptivePrefetchConfigBuilder {
     }
 
     /// Set the learning rate for Q-value updates.
-    pub const fn learning_rate(mut self, rate: f64) -> Self {
-        self.config.learning_rate = rate;
+    pub const fn learningrate(mut self, rate: f64) -> Self {
+        self.config.learningrate = rate;
         self
     }
 
@@ -1168,7 +1165,7 @@ mod tests {
         }
 
         // Get flat indices from history
-        let indices: Vec<usize> = tracker.history.iter().map(|(idx__)| *idx).collect();
+        let indices: Vec<usize> = tracker.history.iter().map(|(idx, _, _)| *idx).collect();
 
         // Check zigzag detection
         let dimensions = vec![5, 5];

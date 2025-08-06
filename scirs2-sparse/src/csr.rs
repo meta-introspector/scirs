@@ -128,7 +128,7 @@ where
             .collect();
         triplets.sort_by_key(|&(r, c_, _)| (r, c_));
 
-        // Create indptr, _indices, and data arrays
+        // Create indptr, indices, and data arrays
         let nnz = triplets.len();
         let mut indptr = vec![0; rows + 1];
         let mut _indices = Vec::with_capacity(nnz);
@@ -146,7 +146,7 @@ where
 
         // Fill _indices and data
         for (_r, c, v) in triplets {
-            _indices.push(c);
+            indices.push(c);
             data_out.push(v);
         }
 
@@ -154,7 +154,7 @@ where
             rows,
             cols,
             indptr,
-            indices: _indices,
+            indices: indices,
             data: data_out,
         })
     }

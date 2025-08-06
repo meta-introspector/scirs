@@ -72,8 +72,8 @@ impl Default for HoughParams {
 /// # }
 /// ```
 #[allow(dead_code)]
-pub fn hough_lines(_edges: &GrayImage, params: &HoughParams) -> Result<Vec<HoughLine>> {
-    let (width, height) = _edges.dimensions();
+pub fn hough_lines(edges: &GrayImage, params: &HoughParams) -> Result<Vec<HoughLine>> {
+    let (width, height) = edges.dimensions();
 
     // Calculate rho range
     let max_rho = ((width * width + height * height) as f32).sqrt();
@@ -86,7 +86,7 @@ pub fn hough_lines(_edges: &GrayImage, params: &HoughParams) -> Result<Vec<Hough
     // Vote in Hough space
     for y in 0..height {
         for x in 0..width {
-            if _edges.get_pixel(x, y)[0] > 0 {
+            if edges.get_pixel(x, y)[0] > 0 {
                 // For each edge point, vote for all possible lines through it
                 for theta_idx in 0..n_theta {
                     let theta = theta_idx as f32 * params.theta_resolution;
@@ -170,12 +170,12 @@ pub struct LineSegment {
 ///
 /// * Result containing detected line segments
 #[allow(dead_code)]
-pub fn hough_lines_p(_edges: &GrayImage, params: &HoughParams) -> Result<Vec<LineSegment>> {
-    let (width, height) = _edges.dimensions();
+pub fn hough_lines_p(edges: &GrayImage, params: &HoughParams) -> Result<Vec<LineSegment>> {
+    let (width, height) = edges.dimensions();
     let mut segments = Vec::new();
 
     // Create a copy of _edges to mark visited pixels
-    let mut edge_map = _edges.clone();
+    let mut edge_map = edges.clone();
 
     // Collect all edge points
     let mut edge_points = Vec::new();
@@ -336,8 +336,8 @@ fn extract_line_segment(
 
 /// Calculate segment length
 #[allow(dead_code)]
-fn segment_length(_segment: &LineSegment) -> f32 {
-    ((_segment.x2 - _segment.x1).powi(2) + (_segment.y2 - _segment.y1).powi(2)).sqrt()
+fn segment_length(segment: &LineSegment) -> f32 {
+    ((_segment.x2 - segment.x1).powi(2) + (_segment.y2 - segment.y1).powi(2)).sqrt()
 }
 
 /// Draw detected lines on an image
@@ -352,8 +352,8 @@ fn segment_length(_segment: &LineSegment) -> f32 {
 ///
 /// * Image with lines drawn
 #[allow(dead_code)]
-pub fn draw_lines(_img: &DynamicImage, lines: &[HoughLine], color: [u8; 3]) -> RgbImage {
-    let mut result = _img.to_rgb8();
+pub fn draw_lines(img: &DynamicImage, lines: &[HoughLine], color: [u8; 3]) -> RgbImage {
+    let mut result = img.to_rgb8();
     let (width, height) = result.dimensions();
 
     for line in lines {
@@ -416,7 +416,7 @@ fn draw_hough_line(
 
 /// Draw a line segment
 #[allow(dead_code)]
-fn draw_line_segment(_img: &mut RgbImage, segment: &LineSegment, color: [u8; 3]) {
+fn draw_line_segment(img: &mut RgbImage, segment: &LineSegment, color: [u8; 3]) {
     let rgb_color = Rgb(color);
 
     // Bresenham's line algorithm
@@ -431,11 +431,11 @@ fn draw_line_segment(_img: &mut RgbImage, segment: &LineSegment, color: [u8; 3])
     let sy = if y0 < y1 { 1 } else { -1 };
     let mut err = dx - dy;
 
-    let (width, height) = _img.dimensions();
+    let (width, height) = img.dimensions();
 
     loop {
         if x0 >= 0 && x0 < width as i32 && y0 >= 0 && y0 < height as i32 {
-            _img.put_pixel(x0 as u32, y0 as u32, rgb_color);
+            img.put_pixel(x0 as u32, y0 as u32, rgb_color);
         }
 
         if x0 == x1 && y0 == y1 {

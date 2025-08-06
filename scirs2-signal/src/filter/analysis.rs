@@ -165,14 +165,14 @@ pub fn analyze_filter(
         .iter()
         .enumerate()
         .filter(|(_, &f)| f <= passband_end)
-        .map(|(i_)| i)
+        .map(|(i_, _)| i_)
         .collect();
 
     let stopband_indices: Vec<usize> = frequencies
         .iter()
         .enumerate()
         .filter(|(_, &f)| f >= stopband_start)
-        .map(|(i_)| i)
+        .map(|(i_, _)| i_)
         .collect();
 
     let passband_ripple = if !passband_indices.is_empty() {
@@ -404,7 +404,7 @@ pub fn find_poles_zeros(b: &[f64], a: &[f64]) -> SignalResult<(Vec<Complex64>, V
 /// println!("Q factor: {:.2}", q);
 /// ```
 #[allow(dead_code)]
-pub fn compute_q_factor(b: &[f64], a: &[f64], num_points: usize) -> SignalResult<f64> {
+pub fn compute_q_factor(b: &[f64], a: &[f64], numpoints: usize) -> SignalResult<f64> {
     let analysis = analyze_filter(b, a, Some(num_points))?;
 
     // Find the peak frequency
@@ -452,16 +452,16 @@ pub fn compute_q_factor(b: &[f64], a: &[f64], num_points: usize) -> SignalResult
 
 /// Find the frequency where magnitude drops to a specific dB level
 #[allow(dead_code)]
-fn find_cutoff_frequency(_frequencies: &[f64], magnitude_db: &[f64], target_db: f64) -> f64 {
+fn find_cutoff_frequency(_frequencies: &[f64], magnitude_db: &[f64], targetdb: f64) -> f64 {
     // Find the index where magnitude first drops below target
     for (i, &mag_db) in magnitude_db.iter().enumerate() {
         if mag_db <= target_db {
             if i == 0 {
-                return _frequencies[0];
+                return frequencies[0];
             }
             // Linear interpolation between points
-            let f1 = _frequencies[i - 1];
-            let f2 = _frequencies[i];
+            let f1 = frequencies[i - 1];
+            let f2 = frequencies[i];
             let m1 = magnitude_db[i - 1];
             let m2 = magnitude_db[i];
 
@@ -473,5 +473,5 @@ fn find_cutoff_frequency(_frequencies: &[f64], magnitude_db: &[f64], target_db: 
             return f1 + t * (f2 - f1);
         }
     }
-    _frequencies[_frequencies.len() - 1]
+    frequencies[_frequencies.len() - 1]
 }

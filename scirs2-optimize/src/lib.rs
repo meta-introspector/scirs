@@ -154,14 +154,14 @@
 //! use scirs2_optimize::least_squares::{robust_least_squares, HuberLoss};
 //!
 //! // Define residual function for linear regression
-//! fn residual(_params: &[f64], data: &[f64]) -> Array1<f64> {
+//! fn residual(params: &[f64], data: &[f64]) -> Array1<f64> {
 //!     let n = data.len() / 2;
 //!     let x_vals = &data[0..n];
 //!     let y_vals = &data[n..];
 //!     
 //!     let mut res = Array1::zeros(n);
 //!     for i in 0..n {
-//!         res[i] = y_vals[i] - (_params[0] + _params[1] * x_vals[i]);
+//!         res[i] = y_vals[i] - (_params[0] + params[1] * x_vals[i]);
 //!     }
 //!     res
 //! }

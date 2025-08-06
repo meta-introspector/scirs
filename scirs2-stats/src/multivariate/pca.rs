@@ -73,7 +73,7 @@ impl PCA {
     }
 
     /// Set the number of components to keep
-    pub fn with_n_components(mut self, n_components: usize) -> Self {
+    pub fn with_n_components(mut self, ncomponents: usize) -> Self {
         self.n_components = Some(n_components);
         self
     }
@@ -221,7 +221,7 @@ impl PCA {
         let explained_variance_ratio = &explained_variance / total_variance;
 
         Ok((
-            _components.t().to_owned(),
+            components.t().to_owned(),
             explained_variance,
             explained_variance_ratio,
             singular_values,
@@ -269,21 +269,21 @@ impl PCA {
 
         for _ in 0..n_iter {
             // QR decomposition
-            let (q_mat, _r) = q.qr().map_err(|e| {
+            let (q_mat, r) = q.qr().map_err(|e| {
                 StatsError::ComputationError(format!("QR decomposition failed: {}", e))
             })?;
             q = q_mat;
 
             // Project back
             let z = data.t().dot(&q);
-            let (q_mat, _r) = z.qr().map_err(|e| {
+            let (q_mat, r) = z.qr().map_err(|e| {
                 StatsError::ComputationError(format!("QR decomposition failed: {}", e))
             })?;
             q = data.dot(&q_mat);
         }
 
         // Final QR decomposition
-        let (q_final, _r) = q.qr().map_err(|e| {
+        let (q_final, r) = q.qr().map_err(|e| {
             StatsError::ComputationError(format!("Final QR decomposition failed: {}", e))
         })?;
 
@@ -309,7 +309,7 @@ impl PCA {
         let explained_variance_ratio = &explained_variance / total_variance;
 
         Ok((
-            _components.t().to_owned(),
+            components.t().to_owned(),
             explained_variance,
             explained_variance_ratio,
             singular_values,
@@ -393,9 +393,9 @@ impl PCA {
 
 /// Compute the optimal number of components using Minka's MLE
 #[allow(dead_code)]
-pub fn mle_components(_data: ArrayView2<f64>, max_components: Option<usize>) -> Result<usize> {
+pub fn mle_components(_data: ArrayView2<f64>, maxcomponents: Option<usize>) -> Result<usize> {
     checkarray_finite(&_data, "_data")?;
-    let (n_samples_, n_features) = _data.dim();
+    let (n_samples_, n_features) = data.dim();
 
     let pca = PCA::new().with_n_components(max_components.unwrap_or(n_features.min(n_samples_)));
     let result = pca.fit(_data)?;
@@ -460,7 +460,7 @@ pub struct IncrementalPCA {
 
 impl IncrementalPCA {
     /// Create a new incremental PCA instance
-    pub fn new(_n_components: usize, batch_size: usize) -> Result<Self> {
+    pub fn new(_n_components: usize, batchsize: usize) -> Result<Self> {
         check_positive(_n_components, "_n_components")?;
         check_positive(batch_size, "batch_size")?;
 

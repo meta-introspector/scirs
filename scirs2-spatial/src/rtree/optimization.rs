@@ -127,7 +127,7 @@ impl<T: Clone> RTree<T> {
             .collect();
 
         // Build the tree recursively
-        rtree.root = rtree.str_build_node(&mut _entries, 0)?;
+        rtree.root = rtree.str_build_node(&mut entries, 0)?;
         rtree.root.is_leaf =
             rtree.root.entries.is_empty() || matches!(rtree.root.entries[0], Entry::Leaf { .. });
 
@@ -141,8 +141,8 @@ impl<T: Clone> RTree<T> {
     }
 
     /// Build a node using the STR algorithm
-    fn str_build_node(&self, _entries: &mut Vec<Entry<T>>, level: usize) -> SpatialResult<Node<T>> {
-        let n = _entries.len();
+    fn str_build_node(&self, entries: &mut Vec<Entry<T>>, level: usize) -> SpatialResult<Node<T>> {
+        let n = entries.len();
 
         if n == 0 {
             return Ok(Node::new(level == 0, level));
@@ -164,7 +164,7 @@ impl<T: Clone> RTree<T> {
 
         // Sort _entries by the first dimension
         let dim = level % self.ndim();
-        _entries.sort_by(|a, b| {
+        entries.sort_by(|a, b| {
             let a_center = (a.mbr().min[dim] + a.mbr().max[dim]) / 2.0;
             let b_center = (b.mbr().min[dim] + b.mbr().max[dim]) / 2.0;
             a_center
@@ -184,11 +184,11 @@ impl<T: Clone> RTree<T> {
                 break;
             }
 
-            let mut slice_entries: Vec<Entry<T>> = _entries[start..end].to_vec();
+            let mut slice_entries: Vec<Entry<T>> = entries[start..end].to_vec();
 
             // Recursively build child nodes
             if level == 0 {
-                // These are leaf _entries, group them into leaf nodes
+                // These are leaf entries, group them into leaf nodes
                 while !slice_entries.is_empty() {
                     let mut node = Node::new(true, 0);
                     let take_count = slice_entries.len().min(self.max_entries);
@@ -214,7 +214,7 @@ impl<T: Clone> RTree<T> {
         }
 
         // Clear the input _entries as they've been moved to children
-        _entries.clear();
+        entries.clear();
 
         // If we have too many children, build another level
         if children.len() > self.max_entries {
@@ -228,10 +228,10 @@ impl<T: Clone> RTree<T> {
 
     /// Calculate the height of the tree
     #[allow(clippy::only_used_in_recursion)]
-    fn calculate_height(&self, _node: &Node<T>) -> usize {
-        if _node.is_leaf {
+    fn calculate_height(&self, node: &Node<T>) -> usize {
+        if node.is_leaf {
             1
-        } else if let Some(Entry::NonLeaf { child, .. }) = _node.entries.first() {
+        } else if let Some(Entry::NonLeaf { child, .. }) = node.entries.first() {
             1 + self.calculate_height(child)
         } else {
             1

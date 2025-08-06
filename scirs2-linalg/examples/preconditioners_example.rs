@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. DIAGONAL (JACOBI) PRECONDITIONER: Simple but Effective");
     println!("--------------------------------------------------------");
 
-    let matrix_diag = Array2::fromshape_fn((4, 4), |(i, j)| {
+    let matrix_diag = Array2::from_shape_fn((4, 4), |(i, j)| {
         if i == j {
             10.0 + i as f64 // Strong diagonal dominance
         } else if (i as i32 - j as i32).abs() == 1 {
@@ -99,7 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. INCOMPLETE LU (ILU) PRECONDITIONER: Advanced Sparse Factorization");
     println!("--------------------------------------------------------------------");
 
-    let matrix_ilu = Array2::fromshape_fn((5, 5), |(i, j)| {
+    let matrix_ilu = Array2::from_shape_fn((5, 5), |(i, j)| {
         if i == j {
             4.0 // Diagonal
         } else if (i as i32 - j as i32).abs() == 1 {
@@ -149,7 +149,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("---------------------------------------------------");
 
     // Create a symmetric positive definite matrix
-    let base_matrix = Array2::fromshape_fn((4, 4), |(i, j)| {
+    let base_matrix = Array2::from_shape_fn((4, 4), |(i, j)| {
         if i == j {
             5.0 // Strong diagonal
         } else if (i as i32 - j as i32).abs() == 1 {
@@ -194,7 +194,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n4. BLOCK JACOBI: Domain Decomposition for Parallel Computing");
     println!("-----------------------------------------------------------");
 
-    let matrix_bj = Array2::fromshape_fn((6, 6), |(i, j)| {
+    let matrix_bj = Array2::from_shape_fn((6, 6), |(i, j)| {
         let block_i = i / 3;
         let block_j = j / 3;
         if block_i == block_j {
@@ -249,7 +249,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n5. POLYNOMIAL PRECONDITIONER: Neumann Series Approximation");
     println!("----------------------------------------------------------");
 
-    let matrix_poly = Array2::fromshape_fn((4, 4), |(i, j)| {
+    let matrix_poly = Array2::from_shape_fn((4, 4), |(i, j)| {
         if i == j {
             2.0 // Well-conditioned for polynomial expansion
         } else if (i as i32 - j as i32).abs() == 1 {
@@ -298,12 +298,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let test_matrices = vec![
         (
             "Well-conditioned diagonal",
-            Array2::fromshape_fn((4, 4), |(i, j)| if i == j { 2.0 } else { 0.0 }),
+            Array2::from_shape_fn((4, 4), |(i, j)| if i == j { 2.0 } else { 0.0 }),
             Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]),
         ),
         (
             "SPD tridiagonal",
-            Array2::fromshape_fn((4, 4), |(i, j)| {
+            Array2::from_shape_fn((4, 4), |(i, j)| {
                 if i == j {
                     4.0
                 } else if (i as i32 - j as i32).abs() == 1 {
@@ -316,7 +316,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ),
         (
             "General sparse pentadiagonal",
-            Array2::fromshape_fn((5, 5), |(i, j)| {
+            Array2::from_shape_fn((5, 5), |(i, j)| {
                 if i == j {
                     5.0
                 } else if (i as i32 - j as i32).abs() <= 2 {
@@ -373,7 +373,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n7. PERFORMANCE ANALYSIS: Optimization Recommendations");
     println!("-----------------------------------------------------");
 
-    let benchmark_matrix = Array2::fromshape_fn((8, 8), |(i, j)| {
+    let benchmark_matrix = Array2::from_shape_fn((8, 8), |(i, j)| {
         if i == j {
             5.0
         } else if (i as i32 - j as i32).abs() == 1 {
@@ -505,8 +505,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Estimate matrix sparsity ratio
 #[allow(dead_code)]
-fn estimate_sparsity(_matrix: &ArrayView2<f64>) -> f64 {
-    let (m, n) = _matrix.dim();
+fn estimate_sparsity(matrix: &ArrayView2<f64>) -> f64 {
+    let (m, n) = matrix.dim();
     let total_elements = m * n;
     let tolerance = 1e-14;
 
@@ -519,8 +519,8 @@ fn estimate_sparsity(_matrix: &ArrayView2<f64>) -> f64 {
 
 /// Check if matrix is symmetric
 #[allow(dead_code)]
-fn check_symmetry(_matrix: &ArrayView2<f64>) -> bool {
-    let (m, n) = _matrix.dim();
+fn check_symmetry(matrix: &ArrayView2<f64>) -> bool {
+    let (m, n) = matrix.dim();
     if m != n {
         return false;
     }
@@ -528,7 +528,7 @@ fn check_symmetry(_matrix: &ArrayView2<f64>) -> bool {
     let tolerance = 1e-12;
     for i in 0..n {
         for j in (i + 1)..n {
-            if (_matrix[[i, j]] - _matrix[[j, i]]).abs() > tolerance {
+            if (_matrix[[i, j]] - matrix[[j, i]]).abs() > tolerance {
                 return false;
             }
         }

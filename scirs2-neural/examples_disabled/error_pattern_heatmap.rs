@@ -6,7 +6,7 @@ use scirs2_neural::utils::evaluation::ConfusionMatrix;
 #[allow(dead_code)]
 fn main() {
     // Create a reproducible random number generator
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Generate synthetic multiclass classification data with specific error patterns
     let num_classes = 5;
     // Create confusion matrix with controlled error patterns

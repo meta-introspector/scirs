@@ -13,7 +13,7 @@ use ndarray::s;
 use crate::error::{SignalError, SignalResult};
 use crate::lti::design::tf;
 use crate::window;
-use ndarray::{ Array1, Array2};
+use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
@@ -206,7 +206,7 @@ impl ShortTimeFft {
         // Use default config if none provided
         let config = config.unwrap_or_default();
         // Validate input parameters
-        if _win.is_empty() {
+        if win.is_empty() {
             return Err(SignalError::ValueError(
                 "Window cannot be empty".to_string(),
             ));
@@ -234,7 +234,7 @@ impl ShortTimeFft {
         let mfft_val = config.mfft.unwrap_or(_win.len());
 
         // Validate mfft
-        if mfft_val < _win.len() {
+        if mfft_val < win.len() {
             return Err(SignalError::ValueError(
                 "FFT length must be at least as large as window length".to_string(),
             ));
@@ -251,7 +251,7 @@ impl ShortTimeFft {
 
         // Convert dual window to Array1 if provided
         let dual_win_array = if let Some(ref dw) = config.dual_win {
-            if dw.len() != _win.len() {
+            if dw.len() != win.len() {
                 return Err(SignalError::ValueError(
                     "Dual window must have the same length as window".to_string(),
                 ));
@@ -262,7 +262,7 @@ impl ShortTimeFft {
         };
 
         // Window length and midpoint
-        let m_num = _win.len();
+        let m_num = win.len();
         let m_num_mid = m_num / 2;
 
         Ok(ShortTimeFft {
@@ -419,7 +419,7 @@ impl ShortTimeFft {
 
         // Create ShortTimeFft
         let instance = Self::new(
-            _win.as_slice().expect("Failed to get slice"),
+            win.as_slice().expect("Failed to get slice"),
             hop,
             fs,
             Some(new_config),
@@ -1221,17 +1221,17 @@ impl ShortTimeFft {
 ///
 /// * Dual window as Array1<f64>
 #[allow(dead_code)]
-fn calc_dual_window_internal(_win: &[f64], hop: usize) -> SignalResult<Array1<f64>> {
-    if hop > _win.len() {
+fn calc_dual_window_internal(win: &[f64], hop: usize) -> SignalResult<Array1<f64>> {
+    if hop > win.len() {
         return Err(SignalError::ValueError(format!(
             "Hop size {} is larger than window length {} => STFT not invertible!",
             hop,
-            _win.len()
+            win.len()
         )));
     }
 
     // Create squared window values
-    let w2: Vec<f64> = _win.iter().map(|&w| w * w).collect();
+    let w2: Vec<f64> = win.iter().map(|&w| w * w).collect();
     let mut dd = w2.clone();
 
     // Calculate sum of shifted windows
@@ -1360,13 +1360,14 @@ pub fn create_cola_window(m: usize, hop: usize) -> SignalResult<Vec<f64>> {
     let rect_win = vec![1.0; m];
 
     // Find closest STFT dual window
-    let (cola_win_) = closest_stft_dual_window(&rect_win, hop, None, true)?;
+    let (cola_win) = closest_stft_dual_window(&rect_win, hop, None, true)?;
 
     Ok(cola_win)
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[allow(unused_imports)]
     #[test]
     fn test_stft_creation() {
@@ -1624,7 +1625,7 @@ impl MemoryEfficientStft {
     }
 
     /// Calculate optimal chunk size based on memory constraints
-    fn calculate_chunk_size(&self, signal_length: usize) -> usize {
+    fn calculate_chunk_size(&self, signallength: usize) -> usize {
         if let Some(chunk_size) = self.config.chunk_size {
             return chunk_size;
         }
@@ -1783,7 +1784,7 @@ impl MemoryEfficientStft {
     }
 
     /// Get memory usage estimate in MB
-    pub fn memory_estimate(&self, signal_length: usize) -> f64 {
+    pub fn memory_estimate(&self, signallength: usize) -> f64 {
         let chunk_size = self.calculate_chunk_size(signal_length);
         let frames_in_chunk = chunk_size / self.stft.hop + 1;
         let memory_per_chunk = if self.config.magnitude_only {
@@ -1856,7 +1857,7 @@ impl MemoryEfficientStft {
         // Process chunks in parallel
         let chunk_results: Result<Vec<_>, _> = chunks
             .par_iter()
-            .map(|(start, end_)| {
+            .map(|(start, end)| {
                 let chunk = &signal[*start..*end];
                 self.stft.stft(chunk)
             })
@@ -1895,7 +1896,7 @@ impl MemoryEfficientStft {
     }
 
     /// Get detailed memory usage information
-    pub fn memory_info(&self, signal_length: usize) -> MemoryInfo {
+    pub fn memory_info(&self, signallength: usize) -> MemoryInfo {
         let chunk_size = self.calculate_chunk_size(signal_length);
         let _window_length = self.stft.win.len();
         let hop_size = self.stft.hop;

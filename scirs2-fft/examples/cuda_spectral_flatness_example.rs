@@ -19,7 +19,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 }
 
 #[allow(dead_code)]
-fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
+fn add_noise(_signal: &[f64], noiselevel: f64) -> Vec<f64> {
     let mut rng = rand::rng();
     _signal
         .iter()

@@ -42,7 +42,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     ///
     /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
     /// ```
-    pub fn new(_mu: F, sigma: F, loc: F) -> StatsResult<Self> {
+    pub fn new(mu: F, sigma: F, loc: F) -> StatsResult<Self> {
         if sigma <= F::zero() {
             return Err(StatsError::DomainError(
                 "Standard deviation must be positive".to_string(),
@@ -52,7 +52,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
         // Create underlying normal distribution
         match Normal::new(_mu, sigma) {
             Ok(norm) => Ok(Lognormal {
-                mu: _mu,
+                mu: mu,
                 sigma,
                 loc,
                 norm,
@@ -315,7 +315,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
 /// let pdf_at_one = lognorm.pdf(1.0);
 /// ```
 #[allow(dead_code)]
-pub fn lognormal<F>(_mu: F, sigma: F, loc: F) -> StatsResult<Lognormal<F>>
+pub fn lognormal<F>(mu: F, sigma: F, loc: F) -> StatsResult<Lognormal<F>>
 where
     F: Float + NumCast + std::fmt::Display,
 {

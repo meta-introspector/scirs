@@ -110,7 +110,7 @@ impl PRMConfig {
     }
 
     /// Set the number of random samples
-    pub fn with_num_samples(mut self, num_samples: usize) -> Self {
+    pub fn with_num_samples(mut self, numsamples: usize) -> Self {
         self.num_samples = num_samples;
         self
     }
@@ -122,7 +122,7 @@ impl PRMConfig {
     }
 
     /// Set the maximum number of connections per node
-    pub fn with_max_connections(mut self, max_connections: usize) -> Self {
+    pub fn with_max_connections(mut self, maxconnections: usize) -> Self {
         self.max_connections = max_connections;
         self
     }
@@ -152,7 +152,7 @@ impl PRMConfig {
     }
 
     /// Enable lazy evaluation for collision checking
-    pub fn with_lazy_evaluation(mut self, lazy_evaluation: bool) -> Self {
+    pub fn with_lazy_evaluation(mut self, lazyevaluation: bool) -> Self {
         self.lazy_evaluation = lazy_evaluation;
         self
     }
@@ -177,18 +177,18 @@ struct PRMNode {
 
 impl PRMNode {
     /// Create a new PRM node
-    fn new(_id: usize, config: Array1<f64>) -> Self {
+    fn new(id: usize, config: Array1<f64>) -> Self {
         PRMNode {
-            id: _id,
+            id: id,
             config,
             neighbors: Vec::new(),
         }
     }
 
     /// Add a neighbor with edge cost
-    fn add_neighbor(&mut self, _neighbor_id: usize, cost: f64) {
+    fn add_neighbor(&mut self, _neighborid: usize, cost: f64) {
         // Check if this neighbor already exists
-        if !self.neighbors.iter().any(|(id_, _)| *id_ == _neighbor_id) {
+        if !self.neighbors.iter().any(|(id_, _)| *id_ == neighbor_id) {
             self.neighbors.push((_neighbor_id, cost));
         }
     }
@@ -299,7 +299,7 @@ impl PRMPlanner {
     }
 
     /// Set the collision checker function
-    pub fn set_collision_checker<F>(&mut self, _checker: Box<F>)
+    pub fn set_collision_checker<F>(&mut self, checker: Box<F>)
     where
         F: Fn(&Array1<f64>) -> bool + 'static,
     {
@@ -321,7 +321,7 @@ impl PRMPlanner {
 
     /// Sample a random configuration near the given target
     #[allow(dead_code)]
-    fn sample_near(&mut self, _target: &Array1<f64>, radius: f64) -> Array1<f64> {
+    fn sample_near(&mut self, target: &Array1<f64>, radius: f64) -> Array1<f64> {
         let mut config = Array1::zeros(self.dimension);
 
         for i in 0..self.dimension {
@@ -334,7 +334,7 @@ impl PRMPlanner {
     }
 
     /// Check if a configuration is collision-free
-    fn is_collision_free(&self, _config: &Array1<f64>) -> bool {
+    fn is_collision_free(&self, config: &Array1<f64>) -> bool {
         match &self.collision_checker {
             Some(checker) => !checker(_config),
             None => true, // If no collision checker is set, assume all configurations are collision-free
@@ -342,7 +342,7 @@ impl PRMPlanner {
     }
 
     /// Check if a path between two configurations is collision-free
-    fn is_path_collision_free(&self, _from: &Array1<f64>, to: &Array1<f64>) -> bool {
+    fn is_path_collision_free(&self, from: &Array1<f64>, to: &Array1<f64>) -> bool {
         // Use a simple discretized check along the path
         // More sophisticated methods like continuous collision checking could be used here
         const NUM_CHECKS: usize = 10;
@@ -353,7 +353,7 @@ impl PRMPlanner {
             // Linear interpolation between _from and to
             let mut point = Array1::zeros(self.dimension);
             for j in 0..self.dimension {
-                point[j] = _from[j] * (1.0 - t) + to[j] * t;
+                point[j] = from[j] * (1.0 - t) + to[j] * t;
             }
 
             if !self.is_collision_free(&point) {
@@ -559,7 +559,7 @@ impl PRMPlanner {
     }
 
     /// Find a path from start to goal using A* search
-    fn astar_search(&self, _start_id: usize, goal_id: usize) -> Option<(Vec<usize>, f64)> {
+    fn astar_search(&self, _start_id: usize, goalid: usize) -> Option<(Vec<usize>, f64)> {
         let mut open_set = BinaryHeap::new();
         let mut closed_set = HashSet::new();
         let mut came_from = HashMap::new();
@@ -576,7 +576,7 @@ impl PRMPlanner {
         .unwrap_or(f64::MAX);
 
         open_set.push(SearchNode {
-            id: _start_id,
+            id: start_id,
             g_cost: 0.0,
             f_cost: h_score,
             _parent: None,
@@ -746,8 +746,8 @@ impl PRM2DPlanner {
 
 /// Check if a point is inside a polygon using the ray casting algorithm
 #[allow(dead_code)]
-fn point_in_polygon(_point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
-    let (x, y) = (_point[0], _point[1]);
+fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
+    let (x, y) = (_point[0], point[1]);
     let mut inside = false;
 
     // Ray casting algorithm determines if the _point is inside the polygon

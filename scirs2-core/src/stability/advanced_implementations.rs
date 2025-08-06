@@ -26,12 +26,12 @@ impl FormalVerificationEngine {
 
     /// Start formal verification for an API contract
     pub fn verify_contract(&self, contract: &ApiContract) -> CoreResult<()> {
-        let task_id = format!("{}-{}", contract.module, contract.api_name);
+        let taskid = format!("{}-{}", contract.module, contract.apiname);
 
         let properties = self.extract_verification_properties(contract);
 
         let task = VerificationTask {
-            api_name: contract.api_name.clone(),
+            apiname: contract.apiname.clone(),
             module: contract.module.clone(),
             properties,
             status: VerificationStatus::InProgress,
@@ -40,7 +40,7 @@ impl FormalVerificationEngine {
 
         {
             let mut tasks = self.verification_tasks.lock().unwrap();
-            tasks.insert(task_id.clone(), task);
+            tasks.insert(taskid.clone(), task);
         }
 
         // Spawn verification thread (simplified for demonstration)
@@ -48,18 +48,18 @@ impl FormalVerificationEngine {
         let results_clone = Arc::clone(&self.results_cache);
 
         thread::spawn(move || {
-            let result = Self::perform_verification(&task_id, &tasks_clone);
+            let result = Self::perform_verification(&taskid, &tasks_clone);
 
             // Store result
             {
                 let mut results = results_clone.write().unwrap();
-                results.insert(task_id.clone(), result);
+                results.insert(taskid.clone(), result);
             }
 
             // Update task status
             {
                 let mut tasks = tasks_clone.lock().unwrap();
-                if let Some(task) = tasks.get_mut(&task_id) {
+                if let Some(task) = tasks.get_mut(&taskid) {
                     task.status = VerificationStatus::Verified;
                 }
             }
@@ -79,7 +79,7 @@ impl FormalVerificationEngine {
                 "execution_time <= {:?}",
                 contract
                     .performance
-                    .max_execution_time
+                    .maxexecution_time
                     .unwrap_or(Duration::from_secs(1))
             ),
             property_type: PropertyType::Safety,
@@ -108,7 +108,7 @@ impl FormalVerificationEngine {
 
     /// Perform actual verification (simplified)
     fn verify_task(
-        task_id: &str,
+        taskid: &str,
         tasks: &Arc<Mutex<HashMap<String, VerificationTask>>>,
     ) -> VerificationResult {
         // In a real implementation, this would use formal verification tools
@@ -121,7 +121,7 @@ impl FormalVerificationEngine {
 
         let task = {
             let tasks_guard = tasks.lock().unwrap();
-            tasks_guard.get(task_id).cloned()
+            tasks_guard.get(taskid).cloned()
         };
 
         if let Some(task) = task {
@@ -144,11 +144,11 @@ impl FormalVerificationEngine {
     }
 
     /// Get verification status for an API
-    pub fn get_verification_status(&self, api_name: &str, module: &str) -> VerificationStatus {
-        let task_id = format!("{module}-{api_name}");
+    pub fn get_verification_status(&self, apiname: &str, module: &str) -> VerificationStatus {
+        let taskid = format!("{module}-{apiname}");
 
         if let Ok(tasks) = self.verification_tasks.lock() {
-            if let Some(task) = tasks.get(&task_id) {
+            if let Some(task) = tasks.get(&taskid) {
                 return task.status;
             }
         }
@@ -166,9 +166,9 @@ impl FormalVerificationEngine {
     }
 
     /// Check if verification is complete for an API
-    pub fn is_verification_complete(&self, api_name: &str, module: &str) -> bool {
+    pub fn is_verification_complete(&self, apiname: &str, module: &str) -> bool {
         matches!(
-            self.get_verification_status(api_name, module),
+            self.get_verification_status(apiname, module),
             VerificationStatus::Verified | VerificationStatus::Failed
         )
     }
@@ -193,7 +193,7 @@ impl FormalVerificationEngine {
 
     /// Perform verification for a specific task
     fn perform_verification(
-        _task_id: &str,
+        _taskid: &str,
         _tasks: &Arc<Mutex<HashMap<String, VerificationTask>>>,
     ) -> VerificationResult {
         // Simplified verification implementation
@@ -223,7 +223,7 @@ impl RuntimeContractValidator {
             })),
             chaos_controller: Arc::new(Mutex::new(ChaosEngineeringController {
                 enabled: false,
-                fault_probability: 0.01,
+                faultprobability: 0.01,
                 active_faults: Vec::new(),
                 fault_history: Vec::new(),
             })),
@@ -234,7 +234,7 @@ impl RuntimeContractValidator {
 
     /// Register a contract for runtime validation
     pub fn register_contract(&self, contract: ApiContract) {
-        let key = format!("{}-{}", contract.module, contract.api_name);
+        let key = format!("{}-{}", contract.module, contract.apiname);
 
         if let Ok(mut contracts) = self.contracts.write() {
             contracts.insert(key, contract);
@@ -244,12 +244,12 @@ impl RuntimeContractValidator {
     /// Validate API call against contract in real-time
     pub fn validate_api_call(
         &self,
-        api_name: &str,
+        apiname: &str,
         module: &str,
         context: &ApiCallContext,
     ) -> CoreResult<()> {
         let start_time = Instant::now();
-        let key = format!("{module}-{api_name}");
+        let key = format!("{module}-{apiname}");
 
         // Update statistics
         {
@@ -259,7 +259,7 @@ impl RuntimeContractValidator {
         }
 
         // Inject chaos if enabled
-        self.maybe_inject_fault(api_name, module)?;
+        self.maybe_inject_fault(apiname, module)?;
 
         // Get contract
         let contract = {
@@ -274,15 +274,15 @@ impl RuntimeContractValidator {
 
         let contract = contract.ok_or_else(|| {
             CoreError::ValidationError(ErrorContext::new(format!(
-                "No contract found for {module}::{api_name}"
+                "No contract found for {module}::{apiname}"
             )))
         })?;
 
         // Validate performance contract
-        if let Some(max_time) = contract.performance.max_execution_time {
+        if let Some(max_time) = contract.performance.maxexecution_time {
             if context.execution_time > max_time {
                 self.report_violation(
-                    api_name,
+                    apiname,
                     module,
                     ContractViolation {
                         violation_type: ViolationType::Performance,
@@ -298,7 +298,7 @@ impl RuntimeContractValidator {
         if let Some(max_memory) = contract.memory.max_memory {
             if context.memory_usage > max_memory {
                 self.report_violation(
-                    api_name,
+                    apiname,
                     module,
                     ContractViolation {
                         violation_type: ViolationType::Memory,
@@ -327,15 +327,15 @@ impl RuntimeContractValidator {
     }
 
     /// Enable chaos engineering
-    pub fn enable_chaos_engineering(&self, fault_probability: f64) {
+    pub fn enable_chaos_engineering(&self, faultprobability: f64) {
         if let Ok(mut controller) = self.chaos_controller.lock() {
             controller.enabled = true;
-            controller.fault_probability = fault_probability.clamp(0.0, 1.0);
+            controller.faultprobability = faultprobability.clamp(0.0, 1.0);
         }
     }
 
     /// Maybe inject a chaos fault
-    fn maybe_inject_fault(&self, api_name: &str, module: &str) -> CoreResult<()> {
+    fn maybe_inject_fault(&self, apiname: &str, module: &str) -> CoreResult<()> {
         if let Ok(mut controller) = self.chaos_controller.lock() {
             if !controller.enabled {
                 return Ok(());
@@ -343,7 +343,7 @@ impl RuntimeContractValidator {
 
             // Generate random number for fault probability
             let mut hasher = DefaultHasher::new();
-            api_name.hash(&mut hasher);
+            apiname.hash(&mut hasher);
             module.hash(&mut hasher);
             SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
@@ -353,7 +353,7 @@ impl RuntimeContractValidator {
 
             let rand_val = (hasher.finish() % 10000) as f64 / 10000.0;
 
-            if rand_val < controller.fault_probability {
+            if rand_val < controller.faultprobability {
                 // Inject a random fault
                 let fault = match rand_val * 4.0 {
                     x if x < 1.0 => ChaosFault::LatencyInjection(Duration::from_millis(100)),
@@ -370,7 +370,7 @@ impl RuntimeContractValidator {
                 // Send monitoring event
                 let event = MonitoringEvent {
                     timestamp: Instant::now(),
-                    api_name: api_name.to_string(),
+                    apiname: apiname.to_string(),
                     module: module.to_string(),
                     event_type: MonitoringEventType::ChaosEngineeringFault(fault.clone()),
                     performance_metrics: RuntimePerformanceMetrics {
@@ -387,8 +387,8 @@ impl RuntimeContractValidator {
 
                 // Actually inject the fault
                 match fault {
-                    ChaosFault::LatencyInjection(_delay) => {
-                        thread::sleep(_delay);
+                    ChaosFault::LatencyInjection(delay) => {
+                        thread::sleep(delay);
                     }
                     ChaosFault::RandomFailure(prob) => {
                         if rand_val < prob {
@@ -408,7 +408,7 @@ impl RuntimeContractValidator {
     /// Report a contract violation
     fn report_violation(
         &self,
-        api_name: &str,
+        apiname: &str,
         module: &str,
         violation: ContractViolation,
     ) -> CoreResult<()> {
@@ -424,7 +424,7 @@ impl RuntimeContractValidator {
         // Send monitoring event
         let event = MonitoringEvent {
             timestamp: Instant::now(),
-            api_name: api_name.to_string(),
+            apiname: apiname.to_string(),
             module: module.to_string(),
             event_type: MonitoringEventType::ContractViolation(violation.clone()),
             performance_metrics: RuntimePerformanceMetrics {
@@ -444,7 +444,7 @@ impl RuntimeContractValidator {
             return Err(CoreError::ValidationError(ErrorContext::new(format!(
                 "Critical contract violation in {}::{}: {} (expected: {}, actual: {})",
                 module,
-                api_name,
+                apiname,
                 match violation.violation_type {
                     ViolationType::Performance => "Performance",
                     ViolationType::Memory => "Memory",
@@ -470,7 +470,7 @@ impl RuntimeContractValidator {
         if let Ok(controller) = self.chaos_controller.lock() {
             Some((
                 controller.enabled,
-                controller.fault_probability,
+                controller.faultprobability,
                 controller.fault_history.len(),
             ))
         } else {
@@ -521,7 +521,7 @@ impl AdvancedPerformanceModeler {
     /// Record a performance measurement
     pub fn record_measurement(
         &self,
-        api_name: &str,
+        apiname: &str,
         input_characteristics: InputCharacteristics,
         performance: PerformanceMetrics,
         system_state: SystemState,
@@ -540,7 +540,7 @@ impl AdvancedPerformanceModeler {
 
         let data_point = PerformanceDataPoint {
             timestamp: Instant::now(),
-            api_name: api_name.to_string(),
+            apiname: apiname.to_string(),
             input_characteristics,
             performance: runtime_performance,
             system_state,
@@ -556,18 +556,18 @@ impl AdvancedPerformanceModeler {
         }
 
         // Trigger model retraining if enough new data
-        self.maybe_retrain_model(api_name);
+        self.maybe_retrain_model(apiname);
     }
 
     /// Predict performance for given input characteristics
     pub fn predict_performance(
         &self,
-        api_name: &str,
+        apiname: &str,
         input_characteristics: InputCharacteristics,
         system_state: &SystemState,
     ) -> Option<RuntimePerformanceMetrics> {
         if let Ok(models) = self.prediction_models.read() {
-            if let Some(model) = models.get(api_name) {
+            if let Some(model) = models.get(apiname) {
                 // Simplified prediction based on input size and model parameters
                 let base_time = Duration::from_nanos(1000);
                 let size_factor = match model.model_type {
@@ -602,11 +602,11 @@ impl AdvancedPerformanceModeler {
     }
 
     /// Maybe retrain model if conditions are met
-    fn maybe_retrain_model(&self, api_name: &str) {
+    fn maybe_retrain_model(&self, apiname: &str) {
         // Check if enough new data points exist
         let should_retrain = {
             if let Ok(history) = self.performance_history.read() {
-                let api_data_points = history.iter().filter(|dp| dp.api_name == api_name).count();
+                let api_data_points = history.iter().filter(|dp| dp.apiname == apiname).count();
                 api_data_points > 100 && (api_data_points % 50 == 0)
             } else {
                 false
@@ -614,20 +614,20 @@ impl AdvancedPerformanceModeler {
         };
 
         if should_retrain {
-            self.train_model(api_name);
+            self.train_model(apiname);
         }
     }
 
     /// Train a performance prediction model
-    fn train_model(&self, api_name: &str) {
+    fn train_model(&self, apiname: &str) {
         // Set training status
         {
             if let Ok(mut status) = self.training_status.lock() {
-                status.insert(api_name.to_string(), TrainingStatus::InProgress);
+                status.insert(apiname.to_string(), TrainingStatus::InProgress);
             }
         }
 
-        let api_name = api_name.to_string();
+        let apiname = apiname.to_string();
         let history_clone = Arc::clone(&self.performance_history);
         let models_clone = Arc::clone(&self.prediction_models);
         let status_clone = Arc::clone(&self.training_status);
@@ -638,7 +638,7 @@ impl AdvancedPerformanceModeler {
                 if let Ok(history) = history_clone.read() {
                     history
                         .iter()
-                        .filter(|dp| dp.api_name == api_name)
+                        .filter(|dp| dp.apiname == apiname)
                         .cloned()
                         .collect::<Vec<_>>()
                 } else {
@@ -649,7 +649,7 @@ impl AdvancedPerformanceModeler {
             if training_data.len() < 10 {
                 // Not enough data
                 if let Ok(mut status) = status_clone.lock() {
-                    status.insert(api_name.clone(), TrainingStatus::Failed);
+                    status.insert(apiname.clone(), TrainingStatus::Failed);
                 }
                 return;
             }
@@ -705,24 +705,24 @@ impl AdvancedPerformanceModeler {
             // Store the trained model
             {
                 if let Ok(mut models) = models_clone.write() {
-                    models.insert(api_name.clone(), model);
+                    models.insert(apiname.clone(), model);
                 }
             }
 
             // Update training status
             {
                 if let Ok(mut status) = status_clone.lock() {
-                    status.insert(api_name, TrainingStatus::Completed);
+                    status.insert(apiname, TrainingStatus::Completed);
                 }
             }
         });
     }
 
     /// Get training status for an API
-    pub fn get_training_status(&self, api_name: &str) -> TrainingStatus {
+    pub fn get_training_status(&self, apiname: &str) -> TrainingStatus {
         if let Ok(status) = self.training_status.lock() {
             status
-                .get(api_name)
+                .get(apiname)
                 .copied()
                 .unwrap_or(TrainingStatus::NotStarted)
         } else {
@@ -731,18 +731,18 @@ impl AdvancedPerformanceModeler {
     }
 
     /// Get model accuracy for an API
-    pub fn get_model_accuracy(&self, api_name: &str) -> Option<f64> {
+    pub fn get_model_accuracy(&self, apiname: &str) -> Option<f64> {
         if let Ok(models) = self.prediction_models.read() {
-            models.get(api_name).map(|model| model.accuracy)
+            models.get(apiname).map(|model| model.accuracy)
         } else {
             None
         }
     }
 
     /// Get number of data points for an API
-    pub fn get_data_point_count(&self, api_name: &str) -> usize {
+    pub fn get_data_point_count(&self, apiname: &str) -> usize {
         if let Ok(history) = self.performance_history.read() {
-            history.iter().filter(|dp| dp.api_name == api_name).count()
+            history.iter().filter(|dp| dp.apiname == apiname).count()
         } else {
             0
         }
@@ -830,29 +830,29 @@ impl ImmutableAuditTrail {
         match &record.data {
             AuditData::ContractRegistration(name) => name.hash(&mut hasher),
             AuditData::ContractValidation {
-                api_name,
+                apiname,
                 module,
                 result,
             } => {
-                api_name.hash(&mut hasher);
+                apiname.hash(&mut hasher);
                 module.hash(&mut hasher);
                 result.hash(&mut hasher);
             }
             AuditData::PerformanceMeasurement {
-                api_name,
+                apiname,
                 module,
                 metrics,
             } => {
-                api_name.hash(&mut hasher);
+                apiname.hash(&mut hasher);
                 module.hash(&mut hasher);
                 metrics.hash(&mut hasher);
             }
             AuditData::ViolationDetection {
-                api_name,
+                apiname,
                 module,
                 violation,
             } => {
-                api_name.hash(&mut hasher);
+                apiname.hash(&mut hasher);
                 module.hash(&mut hasher);
                 violation.hash(&mut hasher);
             }
@@ -934,10 +934,10 @@ impl ImmutableAuditTrail {
 // Helper implementations for public structs
 impl InputCharacteristics {
     /// Create new input characteristics
-    pub fn new(size: usize, data_type: String) -> Self {
+    pub fn new(size: usize, datatype: String) -> Self {
         Self {
             size,
-            data_type,
+            datatype,
             memory_layout: "contiguous".to_string(),
             access_pattern: "sequential".to_string(),
         }
@@ -947,7 +947,7 @@ impl InputCharacteristics {
     pub fn matrix(rows: usize, cols: usize) -> Self {
         Self {
             size: rows * cols,
-            data_type: "f64".to_string(),
+            datatype: "f64".to_string(),
             memory_layout: "row_major".to_string(),
             access_pattern: "matrix".to_string(),
         }
@@ -957,7 +957,7 @@ impl InputCharacteristics {
     pub fn vector(length: usize) -> Self {
         Self {
             size: length,
-            data_type: "f64".to_string(),
+            datatype: "f64".to_string(),
             memory_layout: "contiguous".to_string(),
             access_pattern: "sequential".to_string(),
         }
@@ -1006,7 +1006,7 @@ mod tests {
 
         // Test with a mock contract
         let contract = ApiContract {
-            api_name: "test_api".to_string(),
+            apiname: "test_api".to_string(),
             module: "test_module".to_string(),
             contract_hash: "test_hash".to_string(),
             created_at: SystemTime::now(),
@@ -1016,9 +1016,9 @@ mod tests {
             performance: PerformanceContract {
                 time_complexity: ComplexityBound::Linear,
                 space_complexity: ComplexityBound::Constant,
-                max_execution_time: Some(Duration::from_millis(100)),
+                maxexecution_time: Some(Duration::from_millis(100)),
                 min_throughput: None,
-                memory_bandwidth: None,
+                memorybandwidth: None,
             },
             numerical: NumericalContract {
                 precision: PrecisionGuarantee::MachinePrecision,
@@ -1062,7 +1062,7 @@ mod tests {
 
     #[test]
     fn test_runtime_contract_validator() {
-        let (validator, _receiver) = RuntimeContractValidator::new();
+        let (validator, receiver) = RuntimeContractValidator::new();
 
         let stats = validator.get_statistics().unwrap();
         assert_eq!(stats.total_validations, 0);
@@ -1079,7 +1079,7 @@ mod tests {
         let performance = PerformanceMetrics {
             operation_times: std::collections::HashMap::new(),
             strategy_success_rates: std::collections::HashMap::new(),
-            memory_bandwidth_utilization: 0.8,
+            memorybandwidth_utilization: 0.8,
             cache_hit_rate: 0.8,
             parallel_efficiency: 0.9,
         };

@@ -127,26 +127,26 @@ impl<F: IntegrateFloat + std::fmt::Debug> std::fmt::Debug for RefinementCriteria
 
 impl<F: IntegrateFloat> RefinementCriteria<F> {
     /// Create gradient-based refinement criteria
-    pub fn gradient_based(_threshold: F) -> Self {
+    pub fn gradient_based(threshold: F) -> Self {
         Self::GradientBased {
-            threshold: _threshold,
-            coarsen_threshold: _threshold / F::from(4.0).unwrap(),
+            threshold: threshold,
+            coarsen_threshold: threshold / F::from(4.0).unwrap(),
         }
     }
 
     /// Create curvature-based refinement criteria
-    pub fn curvature_based(_threshold: F) -> Self {
+    pub fn curvature_based(threshold: F) -> Self {
         Self::CurvatureBased {
-            threshold: _threshold,
-            coarsen_threshold: _threshold / F::from(4.0).unwrap(),
+            threshold: threshold,
+            coarsen_threshold: threshold / F::from(4.0).unwrap(),
         }
     }
 
     /// Create error-based refinement criteria
-    pub fn error_based(_threshold: F) -> Self {
+    pub fn error_based(threshold: F) -> Self {
         Self::ErrorBased {
-            threshold: _threshold,
-            coarsen_threshold: _threshold / F::from(16.0).unwrap(),
+            threshold: threshold,
+            coarsen_threshold: threshold / F::from(16.0).unwrap(),
         }
     }
 
@@ -182,45 +182,45 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
     }
 
     /// Compute gradient magnitude at cell (i, j)
-    fn compute_gradient_magnitude(_solution: ArrayView2<F>, i: usize, j: usize) -> F {
-        let (nx, ny) = _solution.dim();
+    fn compute_gradient_magnitude(solution: ArrayView2<F>, i: usize, j: usize) -> F {
+        let (nx, ny) = solution.dim();
 
         // Compute gradients using centered differences where possible
         let grad_x = if i == 0 {
-            _solution[[1, j]] - _solution[[0, j]]
+            solution[[1, j]] - solution[[0, j]]
         } else if i == nx - 1 {
-            _solution[[nx - 1, j]] - _solution[[nx - 2, j]]
+            solution[[nx - 1, j]] - solution[[nx - 2, j]]
         } else {
-            (_solution[[i + 1, j]] - _solution[[i - 1, j]]) / F::from(2.0).unwrap()
+            (solution[[i + 1, j]] - solution[[i - 1, j]]) / F::from(2.0).unwrap()
         };
 
         let grad_y = if j == 0 {
-            _solution[[i, 1]] - _solution[[i, 0]]
+            solution[[i, 1]] - solution[[i, 0]]
         } else if j == ny - 1 {
-            _solution[[i, ny - 1]] - _solution[[i, ny - 2]]
+            solution[[i, ny - 1]] - solution[[i, ny - 2]]
         } else {
-            (_solution[[i, j + 1]] - _solution[[i, j - 1]]) / F::from(2.0).unwrap()
+            (solution[[i, j + 1]] - solution[[i, j - 1]]) / F::from(2.0).unwrap()
         };
 
         (grad_x * grad_x + grad_y * grad_y).sqrt()
     }
 
     /// Compute curvature (second derivative magnitude) at cell (i, j)
-    fn compute_curvature(_solution: ArrayView2<F>, i: usize, j: usize) -> F {
-        let (nx, ny) = _solution.dim();
+    fn compute_curvature(solution: ArrayView2<F>, i: usize, j: usize) -> F {
+        let (nx, ny) = solution.dim();
 
         if i == 0 || i == nx - 1 || j == 0 || j == ny - 1 {
             return F::zero(); // Can't compute curvature at boundaries
         }
 
         // Second derivatives using centered differences
-        let d2_dx2 = _solution[[i + 1, j]] - F::from(2.0).unwrap() * _solution[[i, j]]
-            + _solution[[i - 1, j]];
-        let d2_dy2 = _solution[[i, j + 1]] - F::from(2.0).unwrap() * _solution[[i, j]]
-            + _solution[[i, j - 1]];
+        let d2_dx2 = solution[[i + 1, j]] - F::from(2.0).unwrap() * solution[[i, j]]
+            + solution[[i - 1, j]];
+        let d2_dy2 = solution[[i, j + 1]] - F::from(2.0).unwrap() * solution[[i, j]]
+            + solution[[i, j - 1]];
         let d2_dxdy =
-            (_solution[[i + 1, j + 1]] - _solution[[i + 1, j - 1]] - _solution[[i - 1, j + 1]]
-                + _solution[[i - 1, j - 1]])
+            (solution[[i + 1, j + 1]] - solution[[i + 1, j - 1]] - solution[[i - 1, j + 1]]
+                + solution[[i - 1, j - 1]])
                 / F::from(4.0).unwrap();
 
         // Frobenius norm of Hessian matrix
@@ -237,9 +237,9 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
 
 impl<F: IntegrateFloat> AMRGrid<F> {
     /// Create new AMR grid with initial coarse level
-    pub fn new(_nx: usize, ny: usize, domain_x: [F; 2], domain_y: [F; 2]) -> Self {
+    pub fn new(_nx: usize, ny: usize, domain_x: [F; 2], domainy: [F; 2]) -> Self {
         let dx = (domain_x[1] - domain_x[0]) / F::from(_nx).unwrap();
-        let dy = (domain_y[1] - domain_y[0]) / F::from(ny).unwrap();
+        let dy = (domainy[1] - domainy[0]) / F::from(ny).unwrap();
 
         let coarse_level = GridLevel {
             level: 0,
@@ -255,14 +255,14 @@ impl<F: IntegrateFloat> AMRGrid<F> {
             levels: vec![coarse_level],
             max_level: 5, // Default maximum 5 levels
             min_level: 0,
-            domain: (domain_x, domain_y),
+            domain: (domain_x, domainy),
             solution: HashMap::new(),
         }
     }
 
     /// Set maximum refinement level
-    pub fn set_max_level(&mut self, max_level: usize) {
-        self.max_level = max_level;
+    pub fn set_max_level(&mut self, maxlevel: usize) {
+        self.max_level = maxlevel;
     }
 
     /// Refine grid based on criteria
@@ -564,9 +564,9 @@ pub struct AMRSolver<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> AMRSolver<F> {
     /// Create new AMR solver
-    pub fn new(_grid: AMRGrid<F>, criteria: RefinementCriteria<F>) -> Self {
+    pub fn new(grid: AMRGrid<F>, criteria: RefinementCriteria<F>) -> Self {
         Self {
-            grid: _grid,
+            grid: grid,
             criteria,
             amr_cycles: 0,
             max_amr_cycles: 5,
@@ -574,8 +574,8 @@ impl<F: IntegrateFloat> AMRSolver<F> {
     }
 
     /// Set maximum AMR cycles
-    pub fn set_max_amr_cycles(&mut self, max_cycles: usize) {
-        self.max_amr_cycles = max_cycles;
+    pub fn set_max_amr_cycles(&mut self, maxcycles: usize) {
+        self.max_amr_cycles = maxcycles;
     }
 
     /// Solve PDE with adaptive mesh refinement

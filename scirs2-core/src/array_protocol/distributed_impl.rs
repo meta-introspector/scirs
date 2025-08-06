@@ -94,7 +94,7 @@ where
     pub global_index: Vec<usize>,
 
     /// The node ID that holds this chunk
-    pub node_id: usize,
+    pub nodeid: usize,
 }
 
 /// A distributed array implementation
@@ -179,7 +179,7 @@ where
             chunks.push(ArrayChunk {
                 data: chunk_data,
                 global_index: vec![0],
-                node_id: i % 3, // Simulate distribution across 3 nodes
+                nodeid: i % 3, // Simulate distribution across 3 nodes
             });
         }
 
@@ -244,7 +244,7 @@ where
     ///
     /// Panics if the chunks collection is empty and no initial value can be reduced.
     #[must_use]
-    pub fn map_reduce<F, R, G>(&self, map_fn: F, reduce_fn: G) -> R
+    pub fn map_reduce<F, R, G>(&self, map_fn: F, reducefn: G) -> R
     where
         F: Fn(&ArrayChunk<T, D>) -> R + Send + Sync,
         G: Fn(R, R) -> R + Send + Sync,
@@ -255,7 +255,7 @@ where
 
         // Reduce phase
         // In a real distributed system, this might happen on a single node
-        results.into_iter().reduce(reduce_fn).unwrap()
+        results.into_iter().reduce(reducefn).unwrap()
     }
 }
 
@@ -335,7 +335,7 @@ where
                         new_chunks.push(ArrayChunk {
                             data: result_data,
                             global_index: self_chunk.global_index.clone(),
-                            node_id: self_chunk.node_id,
+                            nodeid: self_chunk.nodeid,
                         });
                     }
 
@@ -369,7 +369,7 @@ where
                         new_chunks.push(ArrayChunk {
                             data: result_data,
                             global_index: self_chunk.global_index.clone(),
-                            node_id: self_chunk.node_id,
+                            nodeid: self_chunk.nodeid,
                         });
                     }
 
@@ -415,7 +415,7 @@ where
                     let chunk = ArrayChunk {
                         data: dummy_array,
                         global_index: vec![0],
-                        node_id: 0,
+                        nodeid: 0,
                     };
 
                     let result =
@@ -448,7 +448,7 @@ where
                 let chunk = ArrayChunk {
                     data: dummy_array,
                     global_index: vec![0],
-                    node_id: 0,
+                    nodeid: 0,
                 };
 
                 let result =
@@ -482,7 +482,7 @@ where
                     let chunk = ArrayChunk {
                         data: dummy_array,
                         global_index: vec![0],
-                        node_id: 0,
+                        nodeid: 0,
                     };
 
                     let result =

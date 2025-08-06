@@ -114,7 +114,7 @@ fn memory_tracking_example() {
     }
 
     {
-        let mem_tracker = scirs2_core::profiling::MemoryTracker::start(allocate_matrix);
+        let mem_tracker = scirs2_core::profiling::MemoryTracker::start(allocatematrix);
         println!("Allocating a matrix...");
 
         // Allocate a matrix (this is an example of what would be tracked)

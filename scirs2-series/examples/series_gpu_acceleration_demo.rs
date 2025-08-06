@@ -358,7 +358,7 @@ fn gpu_feature_extraction_demo() {
 }
 
 #[allow(dead_code)]
-fn generate_pattern_series(_pattern: &str, length: usize, seed: f64) -> Array1<f64> {
+fn generate_pattern_series(pattern: &str, length: usize, seed: f64) -> Array1<f64> {
     let mut series = Array1::zeros(length);
 
     for i in 0..length {

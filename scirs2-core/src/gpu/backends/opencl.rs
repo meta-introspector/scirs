@@ -409,7 +409,7 @@ impl GpuCompilerImpl for OpenCLCompiler {
         }))
     }
 
-    fn compile_typed(&self, name: &str, _type_id: std::any::TypeId) -> Arc<dyn GpuKernelImpl> {
+    fn compile_typed(&self, name: &str, _typeid: std::any::TypeId) -> Arc<dyn GpuKernelImpl> {
         Arc::new(OpenCLKernelHandle {
             kernel_name: name.to_string(),
             compiled_kernels: Arc::clone(&self.context.compiled_kernels),
@@ -459,7 +459,7 @@ impl GpuKernelImpl for OpenCLKernelHandle {
         params.insert(name.to_string(), KernelParam::F64(value));
     }
 
-    fn dispatch_workgroups(&self, work_groups: [u32; 3]) {
+    fn dispatch_workgroups(&self, workgroups: [u32; 3]) {
         #[cfg(feature = "opencl")]
         {
             // Real OpenCL kernel execution
@@ -728,7 +728,7 @@ pub struct PoolStatistics {
 }
 
 impl OpenCLMemoryPool {
-    fn new(total_size: usize) -> Self {
+    fn new(totalsize: usize) -> Self {
         // Define power-of-2 size classes for optimal bucketing
         let size_classes = (0..32)
             .map(|i| 1usize << i)
@@ -750,7 +750,7 @@ impl OpenCLMemoryPool {
     }
 
     /// Get the appropriate size class for a requested size
-    fn get_size_class(&self, requested_size: usize) -> usize {
+    fn get_size_class(&self, requestedsize: usize) -> usize {
         self.size_classes
             .iter()
             .find(|&&class_size| class_size >= requested_size)
@@ -830,7 +830,7 @@ impl OpenCLMemoryPool {
     }
 
     /// Update allocation statistics
-    fn update_allocation_stats(&mut self, size_class: usize, allocated: bool) {
+    fn update_allocation_stats(&mut self, sizeclass: usize, allocated: bool) {
         let stats = self
             .allocation_stats
             .entry(size_class)

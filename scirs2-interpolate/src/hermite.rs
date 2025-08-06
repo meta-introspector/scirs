@@ -321,7 +321,7 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
     /// # Returns
     ///
     /// A `Result` containing the interpolated values at the given points.
-    pub fn evaluate(&self, x_new: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    pub fn evaluate(&self, xnew: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         let n = x_new.len();
         let mut result = Array1::zeros(n);
 
@@ -333,7 +333,7 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
     }
 
     /// Evaluate the Hermite spline at a single point.
-    fn evaluate_single(&self, x_val: T) -> InterpolateResult<T> {
+    fn evaluate_single(&self, xval: T) -> InterpolateResult<T> {
         let n = self.x.len();
 
         // Handle extrapolation
@@ -372,7 +372,7 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
     }
 
     /// Evaluate the spline on a specific segment.
-    fn evaluate_segment(&self, idx: usize, x_val: T) -> InterpolateResult<T> {
+    fn evaluate_segment(&self, idx: usize, xval: T) -> InterpolateResult<T> {
         let dx = x_val - self.x[idx];
 
         // Use the coefficient representation
@@ -425,7 +425,7 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
     }
 
     /// Calculate derivative of the Hermite spline at a single point.
-    fn derivative_single(&self, deriv_order: usize, x_val: T) -> InterpolateResult<T> {
+    fn derivative_single(&self, deriv_order: usize, xval: T) -> InterpolateResult<T> {
         let n = self.x.len();
 
         // Handle derivatives for extrapolation
@@ -464,7 +464,7 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
     }
 
     /// Calculate derivative of the spline on a specific segment.
-    fn derivative_segment(&self, deriv_order: usize, idx: usize, x_val: T) -> InterpolateResult<T> {
+    fn derivative_segment(&self, deriv_order: usize, idx: usize, xval: T) -> InterpolateResult<T> {
         let dx = x_val - self.x[idx];
 
         // Get the polynomial coefficients

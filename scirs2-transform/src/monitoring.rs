@@ -237,12 +237,12 @@ impl TransformationMonitor {
         self.reference_data = Some(data.clone());
 
         if let Some(_names) = feature_names {
-            if _names.len() != data.ncols() {
+            if names.len() != data.ncols() {
                 return Err(TransformError::InvalidInput(
                     "Number of feature _names must match number of columns".to_string(),
                 ));
             }
-            self.feature_names = _names;
+            self.feature_names = names;
         } else {
             self.feature_names = (0..data.ncols())
                 .map(|i| format!("feature_{}", i))
@@ -259,7 +259,7 @@ impl TransformationMonitor {
     }
 
     /// Configure drift detection method for a specific feature
-    pub fn set_drift_method(&mut self, feature_name: &str, method: DriftMethod) -> Result<()> {
+    pub fn set_drift_method(&mut self, featurename: &str, method: DriftMethod) -> Result<()> {
         if !self.feature_names.contains(&feature_name.to_string()) {
             return Err(TransformError::InvalidInput(format!(
                 "Unknown feature _name: {}",
@@ -368,7 +368,7 @@ impl TransformationMonitor {
     }
 
     /// Get drift detection summary
-    pub fn get_drift_summary(&self, lookback_hours: u64) -> Result<HashMap<String, f64>> {
+    pub fn get_drift_summary(&self, lookbackhours: u64) -> Result<HashMap<String, f64>> {
         let cutoff_time = current_timestamp() - (lookback_hours * 3600);
         let mut summary = HashMap::new();
 
@@ -396,7 +396,7 @@ impl TransformationMonitor {
     }
 
     /// Get performance trends
-    pub fn get_performance_trends(&self, lookback_hours: u64) -> Result<HashMap<String, f64>> {
+    pub fn get_performance_trends(&self, lookbackhours: u64) -> Result<HashMap<String, f64>> {
         let cutoff_time = current_timestamp() - (lookback_hours * 3600);
         let recent_metrics: Vec<_> = self
             .performance_history
@@ -688,7 +688,7 @@ impl TransformationMonitor {
         reference: &ArrayView1<f64>,
         new_data: &ArrayView1<f64>,
     ) -> Result<(f64, f64)> {
-        // For continuous _data, we'll bin it first and then apply chi-square test
+        // For continuous data, we'll bin it first and then apply chi-square test
         let n_bins = 10;
 
         // Combine _data to determine common bins
@@ -1107,7 +1107,8 @@ impl EnsembleAnomalyDetector {
 
     /// Detect ensemble anomalies by combining multiple detector results
     pub fn detect_ensemble_anomalies(
-        &self_metrics: &HashMap<String, f64>, _timestamp: u64,
+        self_metrics: &HashMap<String, f64>,
+        _timestamp: u64,
     ) -> Result<Vec<AnomalyRecord>> {
         // Placeholder ensemble detection logic
         // In a full implementation, this would combine results from multiple detectors
@@ -1252,12 +1253,12 @@ impl AdvancedAnomalyDetector {
     }
 
     /// Add a statistical detector for a metric
-    pub fn add_statistical_detector(&mut self, metric_name: String, detector: StatisticalDetector) {
+    pub fn add_statistical_detector(&mut self, metricname: String, detector: StatisticalDetector) {
         self.statistical_detectors.insert(metric_name, detector);
     }
 
     /// Add a machine learning detector for a metric
-    pub fn add_ml_detector(&mut self, metric_name: String, detector: MLAnomalyDetector) {
+    pub fn add_ml_detector(&mut self, metricname: String, detector: MLAnomalyDetector) {
         self.ml_detectors.insert(metric_name, detector);
     }
 
@@ -1324,7 +1325,7 @@ impl AdvancedAnomalyDetector {
     }
 
     /// Get anomaly patterns and insights
-    pub fn get_anomaly_insights(&self, lookback_hours: u64) -> AnomalyInsights {
+    pub fn get_anomaly_insights(&self, lookbackhours: u64) -> AnomalyInsights {
         let cutoff_time = current_timestamp() - (lookback_hours * 3600);
         let recent_anomalies: Vec<_> = self
             .anomaly_history
@@ -1446,9 +1447,9 @@ impl AdvancedAnomalyDetector {
 #[cfg(feature = "monitoring")]
 impl StatisticalDetector {
     /// Create a new statistical detector
-    pub fn new(_z_score_threshold: f64, iqr_multiplier: f64, max_window_size: usize) -> Self {
+    pub fn new(_z_score_threshold: f64, iqr_multiplier: f64, max_windowsize: usize) -> Self {
         StatisticalDetector {
-            _z_score_threshold,
+            z_score_threshold,
             iqr_multiplier,
             modified_z_threshold: _z_score_threshold * 0.6745, // Median-based
             data_window: VecDeque::with_capacity(max_window_size),
@@ -1755,7 +1756,7 @@ impl TimeSeriesAnomalyDetector {
     }
 
     /// Simple change point detection
-    fn detect_change_point(&self_current_value: f64) -> Result<f64> {
+    fn detect_change_point(&self_currentvalue: f64) -> Result<f64> {
         let window_size = self
             .change_point_config
             .window_size

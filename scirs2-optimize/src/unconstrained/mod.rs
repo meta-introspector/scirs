@@ -219,20 +219,20 @@ impl Default for Options {
 // Implement Bounds methods
 impl Bounds {
     /// Create new bounds from arrays
-    pub fn new(_bounds: &[(Option<f64>, Option<f64>)]) -> Self {
-        let (lower, upper): (Vec<_>, Vec<_>) = _bounds.iter().cloned().unzip();
+    pub fn new(bounds: &[(Option<f64>, Option<f64>)]) -> Self {
+        let (lower, upper): (Vec<_>, Vec<_>) = bounds.iter().cloned().unzip();
         Self { lower, upper }
     }
 
     /// Create bounds from vectors
-    pub fn from_vecs(_lb: Vec<Option<f64>>, ub: Vec<Option<f64>>) -> Result<Self, OptimizeError> {
-        if _lb.len() != ub.len() {
+    pub fn from_vecs(lb: Vec<Option<f64>>, ub: Vec<Option<f64>>) -> Result<Self, OptimizeError> {
+        if lb.len() != ub.len() {
             return Err(OptimizeError::ValueError(
                 "Lower and upper bounds must have the same length".to_string(),
             ));
         }
 
-        for (l, u) in _lb.iter().zip(ub.iter()) {
+        for (l, u) in lb.iter().zip(ub.iter()) {
             if let (Some(l_val), Some(u_val)) = (l, u) {
                 if l_val > u_val {
                     return Err(OptimizeError::ValueError(
@@ -243,7 +243,7 @@ impl Bounds {
         }
 
         Ok(Self {
-            lower: _lb,
+            lower: lb,
             upper: ub,
         })
     }

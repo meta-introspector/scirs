@@ -237,7 +237,7 @@ impl<F: Float + NumCast + std::fmt::Display> DiscreteDistribution<F> for Poisson
         self.cdf(x)
     }
 
-    fn ppf(&self, _p: F) -> StatsResult<F> {
+    fn ppf(&self, p: F) -> StatsResult<F> {
         // Poisson does not have a simple inverse CDF formula,
         // so we'd typically need to implement a numerical solution.
         // For now, we'll return an error to indicate this isn't implemented.

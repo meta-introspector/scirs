@@ -113,13 +113,13 @@ where
     /// # Returns
     ///
     /// A new `LinearOperator` instance
-    pub fn new<O>(_dimension: usize, op: O) -> Self
+    pub fn new<O>(dimension: usize, op: O) -> Self
     where
         O: Fn(&ArrayView1<F>) -> Array1<F> + Send + Sync + 'static,
     {
         LinearOperator {
-            dim_rows: _dimension,
-            dim_cols: _dimension,
+            dim_rows: dimension,
+            dim_cols: dimension,
             op: Arc::new(op),
             symmetric: false,
             positive_definite: false,
@@ -137,12 +137,12 @@ where
     /// # Returns
     ///
     /// A new `LinearOperator` instance
-    pub fn new_rectangular<O>(_rows: usize, cols: usize, op: O) -> Self
+    pub fn new_rectangular<O>(rows: usize, cols: usize, op: O) -> Self
     where
         O: Fn(&ArrayView1<F>) -> Array1<F> + Send + Sync + 'static,
     {
         LinearOperator {
-            dim_rows: _rows,
+            dim_rows: rows,
             dim_cols: cols,
             op: Arc::new(op),
             symmetric: false,
@@ -269,12 +269,12 @@ where
 ///
 /// A `LinearOperator` implementing a diagonal matrix
 #[allow(dead_code)]
-pub fn diagonal_operator<F>(_diag: &ArrayView1<F>) -> LinearOperator<F>
+pub fn diagonal_operator<F>(diag: &ArrayView1<F>) -> LinearOperator<F>
 where
     F: Float + NumAssign + Zero + Sum + One + ScalarOperand + Clone + Debug + Send + Sync + 'static,
 {
-    let diag_owned = _diag.to_owned();
-    let n = _diag.len();
+    let diag_owned = diag.to_owned();
+    let n = diag.len();
 
     LinearOperator {
         dim_rows: n,
@@ -288,7 +288,7 @@ where
         }),
         symmetric: true,
         // A diagonal matrix is positive definite if all diagonal elements are positive
-        positive_definite: _diag.iter().all(|&d| d > F::zero()),
+        positive_definite: diag.iter().all(|&d| d > F::zero()),
     }
 }
 
@@ -302,20 +302,20 @@ where
 ///
 /// A `LinearOperator` implementing a block diagonal matrix
 #[allow(dead_code)]
-pub fn block_diagonal_operator<F>(_blocks: Vec<LinearOperator<F>>) -> LinearOperator<F>
+pub fn block_diagonal_operator<F>(blocks: Vec<LinearOperator<F>>) -> LinearOperator<F>
 where
     F: Float + NumAssign + Zero + Sum + One + ScalarOperand + Clone + Debug + Send + Sync + 'static,
 {
     // Calculate dimensions
-    let n_rows: usize = _blocks.iter().map(|b| b.nrows()).sum();
-    let n_cols: usize = _blocks.iter().map(|b| b.ncols()).sum();
+    let n_rows: usize = blocks.iter().map(|b| b.nrows()).sum();
+    let n_cols: usize = blocks.iter().map(|b| b.ncols()).sum();
 
     // Check if all _blocks are symmetric/positive definite
-    let all_symmetric = _blocks.iter().all(|b| b.is_symmetric());
-    let all_positive_definite = all_symmetric && _blocks.iter().all(|b| b.is_positive_definite());
+    let all_symmetric = blocks.iter().all(|b| b.is_symmetric());
+    let all_positive_definite = all_symmetric && blocks.iter().all(|b| b.is_positive_definite());
 
     // Create the operator
-    let blocks_owned = _blocks; // Move ownership
+    let blocks_owned = blocks; // Move ownership
     LinearOperator {
         dim_rows: n_rows,
         dim_cols: n_cols,

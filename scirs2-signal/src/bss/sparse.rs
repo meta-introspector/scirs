@@ -5,7 +5,7 @@ use ndarray::s;
 
 use super::{ica, BssConfig, IcaMethod, NonlinearityFunction};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{ Array2};
+use ndarray::Array2;
 use scirs2_linalg::solve;
 
 #[allow(unused_imports)]

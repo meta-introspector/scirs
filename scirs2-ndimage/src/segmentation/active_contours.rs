@@ -93,21 +93,21 @@ where
 
 /// Compute gradient of an image
 #[allow(dead_code)]
-fn compute_gradient<T>(_image: &ArrayView2<T>) -> NdimageResult<(Array2<f64>, Array2<f64>)>
+fn compute_gradient<T>(image: &ArrayView2<T>) -> NdimageResult<(Array2<f64>, Array2<f64>)>
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
-    let (height, width) = _image.dim();
+    let (height, width) = image.dim();
     let mut gx = Array2::zeros((height, width));
     let mut gy = Array2::zeros((height, width));
 
     // Simple central differences
     for i in 1..height - 1 {
         for j in 1..width - 1 {
-            let dx = _image[[i, j + 1]].to_f64().unwrap_or(0.0)
-                - _image[[i, j - 1]].to_f64().unwrap_or(0.0);
-            let dy = _image[[i + 1, j]].to_f64().unwrap_or(0.0)
-                - _image[[i - 1, j]].to_f64().unwrap_or(0.0);
+            let dx = image[[i, j + 1]].to_f64().unwrap_or(0.0)
+                - image[[i, j - 1]].to_f64().unwrap_or(0.0);
+            let dy = image[[i + 1, j]].to_f64().unwrap_or(0.0)
+                - image[[i - 1, j]].to_f64().unwrap_or(0.0);
 
             gx[[i, j]] = dx / 2.0;
             gy[[i, j]] = dy / 2.0;
@@ -175,7 +175,7 @@ where
 
     // Initialize _contour
     let mut _contour = initial_contour.to_owned();
-    let mut prev_contour = _contour.clone();
+    let mut prev_contour = contour.clone();
 
     // Evolution loop
     for iteration in 0..params.max_iterations {
@@ -188,12 +188,12 @@ where
             let next_idx = if i == num_points - 1 { 0 } else { i + 1 };
 
             // Current point and neighbors
-            let x = _contour[[i, 0]];
-            let y = _contour[[i, 1]];
-            let x_prev = _contour[[prev_idx, 0]];
-            let y_prev = _contour[[prev_idx, 1]];
-            let x_next = _contour[[next_idx, 0]];
-            let y_next = _contour[[next_idx, 1]];
+            let x = contour[[i, 0]];
+            let y = contour[[i, 1]];
+            let x_prev = contour[[prev_idx, 0]];
+            let y_prev = contour[[prev_idx, 1]];
+            let x_next = contour[[next_idx, 0]];
+            let y_next = contour[[next_idx, 1]];
 
             // Internal energy (elasticity)
             let avg_x = (x_prev + x_next) / 2.0;
@@ -248,14 +248,14 @@ where
             };
 
             // Update position
-            _contour[[i, 0]] +=
+            contour[[i, 0]] +=
                 params.time_step * (internal_x + curvature_x + external_x + balloon_x);
-            _contour[[i, 1]] +=
+            contour[[i, 1]] +=
                 params.time_step * (internal_y + curvature_y + external_y + balloon_y);
 
             // Keep within image bounds
-            _contour[[i, 0]] = _contour[[i, 0]].max(0.0).min((image.dim().1 - 1) as f64);
-            _contour[[i, 1]] = _contour[[i, 1]].max(0.0).min((image.dim().0 - 1) as f64);
+            contour[[i, 0]] = contour[[i, 0]].max(0.0).min((image.dim().1 - 1) as f64);
+            contour[[i, 1]] = contour[[i, 1]].max(0.0).min((image.dim().0 - 1) as f64);
         }
 
         // Check convergence
@@ -272,13 +272,13 @@ where
 
 /// Generate initial circular contour
 #[allow(dead_code)]
-pub fn create_circle_contour(_center: (f64, f64), radius: f64, num_points: usize) -> Array2<f64> {
+pub fn create_circle_contour(center: (f64, f64), radius: f64, num_points: usize) -> Array2<f64> {
     let mut contour = Array2::zeros((num_points, 2));
 
     for i in 0..num_points {
         let angle = 2.0 * std::f64::consts::PI * i as f64 / num_points as f64;
-        contour[[i, 0]] = _center.0 + radius * angle.cos();
-        contour[[i, 1]] = _center.1 + radius * angle.sin();
+        contour[[i, 0]] = center.0 + radius * angle.cos();
+        contour[[i, 1]] = center.1 + radius * angle.sin();
     }
 
     contour
@@ -312,14 +312,14 @@ pub fn create_ellipse_contour(
 
 /// Extract contour from segmentation mask
 #[allow(dead_code)]
-pub fn mask_to_contour(_mask: &ArrayView2<bool>) -> Vec<(f64, f64)> {
-    let (height, width) = _mask.dim();
+pub fn mask_to_contour(mask: &ArrayView2<bool>) -> Vec<(f64, f64)> {
+    let (height, width) = mask.dim();
     let mut contour_points = Vec::new();
 
     // Find boundary pixels
     for i in 0..height {
         for j in 0..width {
-            if _mask[[i, j]] {
+            if mask[[i, j]] {
                 // Check if it's a boundary pixel
                 let mut is_boundary = false;
 
@@ -356,13 +356,13 @@ pub fn mask_to_contour(_mask: &ArrayView2<bool>) -> Vec<(f64, f64)> {
 
 /// Order contour points to form a continuous path
 #[allow(dead_code)]
-fn order_contour_points(_points: &mut Vec<(f64, f64)>) {
-    if _points.is_empty() {
+fn order_contour_points(points: &mut Vec<(f64, f64)>) {
+    if points.is_empty() {
         return;
     }
 
     let mut ordered = vec![_points[0]];
-    _points.remove(0);
+    points.remove(0);
 
     while !_points.is_empty() {
         let last = ordered.last().unwrap();
@@ -371,7 +371,7 @@ fn order_contour_points(_points: &mut Vec<(f64, f64)>) {
         let mut min_dist = f64::INFINITY;
         let mut min_idx = 0;
 
-        for (idx, point) in _points.iter().enumerate() {
+        for (idx, point) in points.iter().enumerate() {
             let dist = ((point.0 - last.0).powi(2) + (point.1 - last.1).powi(2)).sqrt();
             if dist < min_dist {
                 min_dist = dist;
@@ -380,7 +380,7 @@ fn order_contour_points(_points: &mut Vec<(f64, f64)>) {
         }
 
         ordered.push(_points[min_idx]);
-        _points.remove(min_idx);
+        points.remove(min_idx);
     }
 
     *_points = ordered;

@@ -39,7 +39,7 @@ impl Sentiment {
     }
 
     /// Convert a numerical score to sentiment
-    pub fn from_score(_score: f64) -> Self {
+    pub fn from_score(score: f64) -> Self {
         if _score > 0.0 {
             Sentiment::Positive
         } else if _score < 0.0 {
@@ -209,7 +209,7 @@ pub struct LexiconSentimentAnalyzer {
 
 impl LexiconSentimentAnalyzer {
     /// Create a new lexicon-based sentiment analyzer
-    pub fn new(_lexicon: SentimentLexicon) -> Self {
+    pub fn new(lexicon: SentimentLexicon) -> Self {
         let negation_words = vec![
             "not".to_string(),
             "no".to_string(),
@@ -224,7 +224,7 @@ impl LexiconSentimentAnalyzer {
         ];
 
         Self {
-            _lexicon,
+            lexicon,
             tokenizer: Box::new(WordTokenizer::default()),
             negation_words,
             negation_window: 3,
@@ -357,7 +357,7 @@ impl Default for SentimentRules {
 
 impl SentimentRules {
     /// Apply rules to modify a sentiment score
-    pub fn apply(&self, tokens: &[String], base_scores: &[f64]) -> Vec<f64> {
+    pub fn apply(&self, tokens: &[String], basescores: &[f64]) -> Vec<f64> {
         let mut modified_scores = base_scores.to_vec();
 
         for (i, score) in modified_scores.iter_mut().enumerate() {
@@ -393,7 +393,7 @@ pub struct RuleBasedSentimentAnalyzer {
 
 impl RuleBasedSentimentAnalyzer {
     /// Create a new rule-based sentiment analyzer
-    pub fn new(_lexicon: SentimentLexicon) -> Self {
+    pub fn new(lexicon: SentimentLexicon) -> Self {
         Self {
             base_analyzer: LexiconSentimentAnalyzer::new(_lexicon),
             rules: SentimentRules::default(),

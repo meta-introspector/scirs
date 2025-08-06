@@ -96,13 +96,13 @@ struct Dropout {
     mask: Option<Array2<f32>>,
 impl Dropout {
     /// Create a new dropout layer
-    fn new(_drop_prob: f32) -> Self {
+    fn new(_dropprob: f32) -> Self {
         assert!(
             (0.0..1.0).contains(&_drop_prob),
             "Dropout probability must be between 0 and 1"
         );
         Self {
-            _drop_prob,
+            drop_prob,
             training: true,
             mask: None,
     /// Set training mode
@@ -126,7 +126,7 @@ impl Dropout {
         let scale = 1.0 / (1.0 - self.drop_prob);
         x * &mask * scale
     /// Backward pass
-    fn backward(&self, grad_output: &Array2<f32>) -> Array2<f32> {
+    fn backward(&self, gradoutput: &Array2<f32>) -> Array2<f32> {
             return grad_output.clone();
         let mask = self
             .mask
@@ -192,7 +192,7 @@ impl Dense {
             RegularizationType::L2(lambda) => {
                 let l2_norm = self.weights.iter().map(|w| w * w).sum::<f32>();
                 0.5 * lambda * l2_norm
-    fn backward(&mut self, grad_output: &Array2<f32>, learning_rate: f32) -> Array2<f32> {
+    fn backward(&mut self, grad_output: &Array2<f32>, learningrate: f32) -> Array2<f32> {
         let input = self
             .input
         let z = self.z.as_ref().expect("Forward pass must be called first");
@@ -232,11 +232,11 @@ struct NeuralNetwork {
     rng: SmallRng,
 impl NeuralNetwork {
     /// Create a new neural network
-    fn new(_loss_fn: LossFunction, seed: u64) -> Self {
+    fn new(_lossfn: LossFunction, seed: u64) -> Self {
             layers: Vec::new(),
             dropout_layers: Vec::new(),
-            _loss_fn,
-            rng: SmallRng::seed_from_u64(seed),
+            loss_fn,
+            rng: SmallRng::from_seed(seed),
     /// Add a dense layer
     fn add_dense(
         &mut self,
@@ -246,7 +246,7 @@ impl NeuralNetwork {
         self.layers.push(layer);
         self
     /// Add a dropout layer
-    fn add_dropout(&mut self, drop_prob: f32) -> &mut Self {
+    fn add_dropout(&mut self, dropprob: f32) -> &mut Self {
         let dropout = Dropout::new(drop_prob);
         self.dropout_layers.push(dropout);
     /// Set training mode for all dropout layers
@@ -274,7 +274,7 @@ impl NeuralNetwork {
             .sum::<f32>();
         data_loss + reg_loss
     /// Backward pass and parameter update
-    fn backward(&mut self, x: &Array2<f32>, y: &Array2<f32>, learning_rate: f32) -> f32 {
+    fn backward(&mut self, x: &Array2<f32>, y: &Array2<f32>, learningrate: f32) -> f32 {
         // Forward pass
         let predictions = self.forward(x);
         // Compute loss
@@ -437,10 +437,10 @@ fn generate_dataset(
     (x, y)
 /// Evaluate binary classification accuracy
 #[allow(dead_code)]
-fn evaluate_accuracy(_predictions: &Array2<f32>, targets: &Array2<f32>) -> f32 {
-    let n_samples = _predictions.shape()[0];
+fn evaluate_accuracy(predictions: &Array2<f32>, targets: &Array2<f32>) -> f32 {
+    let n_samples = predictions.shape()[0];
     let mut correct = 0;
-        let pred = _predictions[[i, 0]] > 0.5;
+        let pred = predictions[[i, 0]] > 0.5;
         let target = targets[[i, 0]] > 0.5;
         if pred == target {
             correct += 1;
@@ -468,9 +468,9 @@ impl ExperimentConfig {
         format!("{}, {}, {}", reg_desc, dropout_desc, early_stopping_desc)
 /// Run an experiment with different regularization methods
 #[allow(dead_code)]
-fn run_experiment(_config: &ExperimentConfig) -> Result<()> {
+fn run_experiment(config: &ExperimentConfig) -> Result<()> {
     // Set up RNG
-    let mut rng = SmallRng::seed_from_u64(42);
+    let mut rng = SmallRng::from_seed([42; 32]);
     // Generate dataset with irrelevant features to demonstrate regularization
     let n_samples = 1000;
     let n_features = 20;

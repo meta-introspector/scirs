@@ -219,7 +219,7 @@ where
         let cost = 0.5 * weighted_res.iter().map(|&r| r * r).sum::<f64>();
 
         // Compute Jacobian
-        let (jac, _jac_evals) = match &jacobian {
+        let (jac, jac_evals) = match &jacobian {
             Some(jac_fn) => {
                 let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
                 njev += 1;
@@ -378,7 +378,7 @@ mod tests {
             res
         }
 
-        fn jacobian(_x: &[f64], data: &[f64]) -> Array2<f64> {
+        fn jacobian(x: &[f64], data: &[f64]) -> Array2<f64> {
             let n = data.len() / 2;
             let t_values = &data[0..n];
 
@@ -409,7 +409,7 @@ mod tests {
     #[test]
     fn test_negative_weights() {
         // Simple test function
-        fn residual(x: &[f64], _data: &[f64]) -> Array1<f64> {
+        fn residual(x: &[f64], data: &[f64]) -> Array1<f64> {
             array![x[0] - 1.0]
         }
 

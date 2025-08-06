@@ -95,8 +95,8 @@ impl ScalableConfig {
     }
 
     /// Set the block size
-    pub fn with_block_size(mut self, block_size: usize) -> Self {
-        self.block_size = block_size;
+    pub fn with_block_size(mut self, blocksize: usize) -> Self {
+        self.block_size = blocksize;
         self
     }
 
@@ -107,8 +107,8 @@ impl ScalableConfig {
     }
 
     /// Set power iterations
-    pub fn with_power_iterations(mut self, power_iterations: usize) -> Self {
-        self.power_iterations = power_iterations;
+    pub fn with_power_iterations(mut self, poweriterations: usize) -> Self {
+        self.power_iterations = poweriterations;
         self
     }
 
@@ -130,8 +130,8 @@ impl ScalableConfig {
 ///
 /// * Aspect ratio classification
 #[allow(dead_code)]
-pub fn classify_aspect_ratio<F>(_matrix: &ArrayView2<F>, threshold: f64) -> AspectRatio {
-    let (m, n) = _matrix.dim();
+pub fn classify_aspect_ratio<F>(matrix: &ArrayView2<F>, threshold: f64) -> AspectRatio {
+    let (m, n) = matrix.dim();
     let ratio = m as f64 / n as f64;
 
     if ratio > threshold {
@@ -164,7 +164,7 @@ pub fn classify_aspect_ratio<F>(_matrix: &ArrayView2<F>, threshold: f64) -> Aspe
 /// use ndarray::Array2;
 /// use scirs2_linalg::scalable::{tsqr, ScalableConfig};
 ///
-/// let tall_matrix = Array2::fromshape_fn((1000, 50), |(i, j)| {
+/// let tall_matrix = Array2::from_shape_fn((1000, 50), |(i, j)| {
 ///     (i as f64 + j as f64).sin()
 /// });
 /// let config = ScalableConfig::default();
@@ -241,7 +241,7 @@ where
     }
 
     // Step 4: Compute QR decomposition of Y
-    let (q, _r) = qr(&y.view(), None)?;
+    let (q, r) = qr(&y.view(), None)?;
 
     // Stage B: Compute the SVD of the smaller matrix B = Q^T * A
     let b = q.t().dot(matrix);
@@ -279,7 +279,7 @@ pub fn lq_decomposition<F>(
 where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
-    let (m, _n) = matrix.dim();
+    let (m, n) = matrix.dim();
 
     // Verify this is a short-and-fat matrix
     if classify_aspect_ratio(matrix, config.aspect_threshold) != AspectRatio::ShortFat {
@@ -325,7 +325,7 @@ where
 /// use scirs2_linalg::scalable::{adaptive_decomposition, ScalableConfig, AspectRatio};
 ///
 /// // Tall matrix - should select TSQR
-/// let tall_matrix = Array2::fromshape_fn((500, 20), |(i, j)| {
+/// let tall_matrix = Array2::from_shape_fn((500, 20), |(i, j)| {
 ///     (i + j + 1) as f64
 /// });
 ///
@@ -509,10 +509,10 @@ fn estimate_qr_complexity(m: usize, n: usize) -> usize {
 }
 
 #[allow(dead_code)]
-fn estimate_memory_usage(m: usize, n: usize, aspect_ratio: &AspectRatio) -> usize {
+fn estimate_memory_usage(m: usize, n: usize, aspectratio: &AspectRatio) -> usize {
     let element_size = std::mem::size_of::<f64>(); // Assume f64
 
-    match aspect_ratio {
+    match aspectratio {
         AspectRatio::TallSkinny => {
             // TSQR: Original matrix + Q blocks + R factors
             (m * n + m * n + n * n) * element_size
@@ -637,7 +637,7 @@ mod tests {
 
     #[test]
     fn test_adaptive_decomposition() {
-        let tall_matrix = Array2::fromshape_fn((100, 5), |(i, j)| (i + j) as f64);
+        let tall_matrix = Array2::from_shape_fn((100, 5), |(i, j)| (i + j) as f64);
         let config = ScalableConfig::default();
 
         let result = adaptive_decomposition(&tall_matrix.view(), &config).unwrap();
@@ -715,8 +715,8 @@ mod tests {
 
     #[test]
     fn test_blocked_matmul() {
-        let a = Array2::fromshape_fn((20, 30), |(i, j)| (i + j) as f64);
-        let b = Array2::fromshape_fn((30, 25), |(i, j)| (i * j) as f64);
+        let a = Array2::from_shape_fn((20, 30), |(i, j)| (i + j) as f64);
+        let b = Array2::from_shape_fn((30, 25), |(i, j)| (i * j) as f64);
 
         let config = ScalableConfig::default().with_block_size(10);
         let result_blocked = blocked_matmul(&a.view(), &b.view(), &config).unwrap();

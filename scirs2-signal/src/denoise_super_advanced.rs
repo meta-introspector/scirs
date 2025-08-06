@@ -336,7 +336,7 @@ impl Default for AdvancedAdvancedDenoisingConfig {
 /// });
 ///
 /// let noisy_signal: Array1<f64> = clean_signal.mapv(|x| {
-///     x + 0.2 * rng.random_range(-1.0..1.0)
+///     x + 0.2 * rng.gen_range(-1.0..1.0)
 /// });
 ///
 /// let config = AdvancedAdvancedDenoisingConfig {
@@ -523,7 +523,7 @@ pub fn advanced_advanced_denoise_batch(
         let chunk_results: Vec<AdvancedAdvancedDenoisingResult> = if config.simd_config.enable_simd
         {
             signal_chunk
-                .par_iter()
+                .iter()
                 .map(|signal| advanced_advanced_denoise(signal, config))
                 .collect::<SignalResult<Vec<_>>>()?
         } else {
@@ -536,7 +536,7 @@ pub fn advanced_advanced_denoise_batch(
         results.extend(chunk_results);
 
         // Report progress
-        if let Some(ref _callback) = progress_callback {
+        if let Some(ref callback) = progress_callback {
             let progress = (chunk_idx + 1) as f64 / (signals.len() / chunk_size) as f64;
             _callback(progress);
         }
@@ -853,18 +853,18 @@ struct SimdOptimizer {
 }
 
 impl SimdOptimizer {
-    fn new(_caps: &PlatformCapabilities, config: &SimdOptimizationConfig) -> Self {
+    fn new(caps: &PlatformCapabilities, config: &SimdOptimizationConfig) -> Self {
         Self {
             speedup_achieved: if config.enable_simd { 2.5 } else { 1.0 },
             capabilities: PlatformCapabilities {
-                simd_available: _caps.simd_available,
-                gpu_available: _caps.gpu_available,
-                cuda_available: _caps.cuda_available,
-                opencl_available: _caps.opencl_available,
-                metal_available: _caps.metal_available,
-                avx2_available: _caps.avx2_available,
-                avx512_available: _caps.avx512_available,
-                neon_available: _caps.neon_available,
+                simd_available: caps.simd_available,
+                gpu_available: caps.gpu_available,
+                cuda_available: caps.cuda_available,
+                opencl_available: caps.opencl_available,
+                metal_available: caps.metal_available,
+                avx2_available: caps.avx2_available,
+                avx512_available: caps.avx512_available,
+                neon_available: caps.neon_available,
             },
         }
     }
@@ -890,7 +890,7 @@ struct MemoryManager {
 }
 
 impl MemoryManager {
-    fn new(_config: &MemoryConfig, signal_length: usize) -> Self {
+    fn new(_config: &MemoryConfig, signallength: usize) -> Self {
         let estimated_usage = (signal_length * 8 * 4) as f64 / (1024.0 * 1024.0); // Rough estimate
         Self {
             peak_usage_mb: estimated_usage,
@@ -905,7 +905,7 @@ impl MemoryManager {
 struct BatchProcessor;
 
 impl BatchProcessor {
-    fn new(_config: &AdvancedAdvancedDenoisingConfig, num_signals: usize) -> Self {
+    fn new(_config: &AdvancedAdvancedDenoisingConfig, numsignals: usize) -> Self {
         Self
     }
 }
@@ -967,7 +967,7 @@ fn analyze_noise_multiscale(
 }
 
 #[allow(dead_code)]
-fn initialize_adaptive_weights(n: usize, noise_model: &AdaptiveNoiseModel) -> Array2<f64> {
+fn initialize_adaptive_weights(n: usize, noisemodel: &AdaptiveNoiseModel) -> Array2<f64> {
     Array2::ones((n, n)) * 0.01
 }
 
@@ -984,7 +984,7 @@ fn update_adaptive_weights(
 }
 
 #[allow(dead_code)]
-fn compute_residual_norm(_old_signal: &Array1<f64>, new_signal: &Array1<f64>) -> f64 {
+fn compute_residual_norm(_old_signal: &Array1<f64>, newsignal: &Array1<f64>) -> f64 {
     (_old_signal - new_signal).mapv(|x| x * x).sum().sqrt()
 }
 
@@ -1034,7 +1034,7 @@ fn compute_denoising_quality_metrics(
         snr_improvement_db,
         mse_reduction: 0.8,
         perceptual_quality: 0.9,
-        _signal_preservation: 0.95,
+        signal_preservation: 0.95,
         artifact_level: 0.05,
         frequency_distortion: 0.02,
         real_time_factor: 1.2,
@@ -1060,18 +1060,18 @@ fn calculate_optimal_chunk_size(
 }
 
 #[allow(dead_code)]
-fn compute_batch_statistics(_results: &[AdvancedAdvancedDenoisingResult]) -> BatchStatistics {
+fn compute_batch_statistics(results: &[AdvancedAdvancedDenoisingResult]) -> BatchStatistics {
     let avg_snr = _results
         .iter()
         .map(|r| r.quality_metrics.snr_improvement_db)
         .sum::<f64>()
-        / _results.len() as f64;
+        / results.len() as f64;
 
     let avg_time = _results
         .iter()
         .map(|r| r.processing_stats.total_time_ms)
         .sum::<f64>()
-        / _results.len() as f64;
+        / results.len() as f64;
 
     BatchStatistics {
         average_snr_improvement: avg_snr,
@@ -1083,7 +1083,7 @@ fn compute_batch_statistics(_results: &[AdvancedAdvancedDenoisingResult]) -> Bat
 
 // Real-time context implementation
 impl RealTimeDenoisingContext {
-    pub fn new(_buffer_size: usize) -> Self {
+    pub fn new(_buffersize: usize) -> Self {
         Self {
             buffer: Array1::zeros(_buffer_size),
             noise_model: AdaptiveNoiseModel {
@@ -1097,7 +1097,7 @@ impl RealTimeDenoisingContext {
         }
     }
 
-    fn update_buffer(&mut self, new_chunk: &Array1<f64>) -> SignalResult<()> {
+    fn update_buffer(&mut self, newchunk: &Array1<f64>) -> SignalResult<()> {
         // Update circular buffer with new data
         Ok(())
     }
@@ -1139,7 +1139,7 @@ impl RealTimeDenoisingContext {
         Ok(self.buffer.clone())
     }
 
-    fn update_quality_metrics(&mut self, denoised: &Array1<f64>, processing_time: f64) {
+    fn update_quality_metrics(&mut self, denoised: &Array1<f64>, processingtime: f64) {
         // Update quality metrics and processing _time history
         self.processing_times.push(processing_time);
         if self.processing_times.len() > 100 {
@@ -1150,6 +1150,7 @@ impl RealTimeDenoisingContext {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[allow(unused_imports)]
     #[test]
     fn test_advanced_advanced_denoise_basic() {
@@ -1161,7 +1162,7 @@ mod tests {
         // Add noise
         let mut rng = rand::rng();
         let noisy_signal: Array1<f64> =
-            clean_signal.mapv(|x| x + 0.1 * rng.random_range(-1.0..1.0));
+            clean_signal.mapv(|x| x + 0.1 * rng.gen_range(-1.0..1.0));
 
         let config = AdvancedAdvancedDenoisingConfig::default();
         let result = advanced_advanced_denoise(&noisy_signal, &config);

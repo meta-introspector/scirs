@@ -127,8 +127,8 @@ fn main() -> SpatialResult<()> {
 
 /// Utility function to print a matrix
 #[allow(dead_code)]
-fn print_matrix(_mat: &ArrayView2<f64>) {
-    for row in _mat.rows() {
+fn print_matrix(mat: &ArrayView2<f64>) {
+    for row in mat.rows() {
         print!("  [");
         for (j, &val) in row.iter().enumerate() {
             if j > 0 {

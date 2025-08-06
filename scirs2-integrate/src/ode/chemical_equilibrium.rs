@@ -152,8 +152,8 @@ impl ThermoData {
     }
 
     /// Calculate heat capacity at given temperature
-    pub fn heat_capacity(&self, _temperature: f64) -> f64 {
-        let t = _temperature;
+    pub fn heat_capacity(&self, temperature: f64) -> f64 {
+        let t = temperature;
         self.cp_coeffs[0]
             + self.cp_coeffs[1] * t
             + self.cp_coeffs[2] * t * t
@@ -161,8 +161,8 @@ impl ThermoData {
     }
 
     /// Calculate enthalpy at given temperature
-    pub fn enthalpy(&self, _temperature: f64) -> f64 {
-        let t = _temperature;
+    pub fn enthalpy(&self, temperature: f64) -> f64 {
+        let t = temperature;
         let t_ref = 298.15; // Standard _temperature
 
         // Integrate heat capacity from reference _temperature
@@ -175,8 +175,8 @@ impl ThermoData {
     }
 
     /// Calculate entropy at given temperature
-    pub fn entropy(&self, _temperature: f64) -> f64 {
-        let t = _temperature;
+    pub fn entropy(&self, temperature: f64) -> f64 {
+        let t = temperature;
         let t_ref = 298.15;
 
         // Integrate Cp/T from reference _temperature
@@ -189,8 +189,8 @@ impl ThermoData {
     }
 
     /// Calculate Gibbs free energy at given temperature
-    pub fn gibbs_free_energy(&self, _temperature: f64) -> f64 {
-        self.enthalpy(_temperature) - _temperature * self.entropy(_temperature) / 1000.0
+    pub fn gibbs_free_energy(&self, temperature: f64) -> f64 {
+        self.enthalpy(temperature) - temperature * self.entropy(temperature) / 1000.0
     }
 }
 
@@ -226,13 +226,13 @@ impl EquilibriumCalculator {
     }
 
     /// Set thermodynamic data for species
-    pub fn set_thermo_data(&mut self, _thermo_data: Vec<ThermoData>) {
-        self.thermo_data = _thermo_data;
+    pub fn set_thermo_data(&mut self, _thermodata: Vec<ThermoData>) {
+        self.thermo_data = _thermodata;
     }
 
     /// Set activity coefficient model
-    pub fn set_activity_model(&mut self, _model: ActivityModel) {
-        self.activity_model = _model;
+    pub fn set_activity_model(&mut self, model: ActivityModel) {
+        self.activity_model = model;
     }
 
     /// Calculate equilibrium composition from initial concentrations
@@ -262,7 +262,7 @@ impl EquilibriumCalculator {
         let k_eq = self.calculate_temperature_corrected_k(&self.equilibrium_constants)?;
 
         // Better initial guess based on problem type
-        let mut _concentrations = self.improved_initial_guess(&initial_concentrations, &k_eq)?;
+        let mut concentrations = self.improved_initial_guess(&initial_concentrations, &k_eq)?;
         let mut iterations = 0;
         let max_iterations = 200; // Increase max iterations for multi-reaction systems
         let tolerance = if num_reactions > 1 { 1e-6 } else { 1e-9 }; // Relaxed tolerance for multi-reaction
@@ -274,11 +274,11 @@ impl EquilibriumCalculator {
 
         loop {
             // Calculate activity coefficients
-            let activity_coefficients = self.calculate_activity_coefficients(&_concentrations)?;
-            let activities = &_concentrations * &activity_coefficients;
+            let activity_coefficients = self.calculate_activity_coefficients(&concentrations)?;
+            let activities = &concentrations * &activity_coefficients;
 
             // Calculate residuals (equilibrium conditions)
-            let residuals = self.calculate_equilibrium_residuals(&_concentrations, &k_eq)?;
+            let residuals = self.calculate_equilibrium_residuals(&concentrations, &k_eq)?;
 
             // Check convergence - use both sum and max residual criteria
             let residual_norm = residuals.iter().map(|x| x.abs()).sum::<f64>();
@@ -291,11 +291,11 @@ impl EquilibriumCalculator {
             if converged || iterations >= max_iterations || stagnation_count > 15 {
                 // Calculate final properties
                 let reaction_extents =
-                    self.calculate_reaction_extents(&initial_concentrations, &_concentrations)?;
-                let delta_g = self.calculate_delta_g(&_concentrations)?;
+                    self.calculate_reaction_extents(&initial_concentrations, &concentrations)?;
+                let delta_g = self.calculate_delta_g(&concentrations)?;
 
                 return Ok(EquilibriumResult {
-                    concentrations: _concentrations,
+                    concentrations: concentrations,
                     activities,
                     activity_coefficients,
                     reaction_extents,
@@ -308,7 +308,7 @@ impl EquilibriumCalculator {
             }
 
             // Newton-Raphson step with improved linear solver
-            let jacobian = self.calculate_jacobian(&_concentrations)?;
+            let jacobian = self.calculate_jacobian(&concentrations)?;
             let delta_c = self.solve_chemical_equilibrium_system(
                 &jacobian,
                 &residuals,
@@ -343,13 +343,13 @@ impl EquilibriumCalculator {
 
             // Update _concentrations with adaptive damping
             for i in 0..num_species {
-                _concentrations[i] = (_concentrations[i] - damping_factor * delta_c[i]).max(1e-12);
+                concentrations[i] = (concentrations[i] - damping_factor * delta_c[i]).max(1e-12);
             }
 
             // Apply element _balance constraints if provided
             if let Some(ref element_matrix) = element_balance {
-                _concentrations = self.apply_element_balance(
-                    &_concentrations,
+                concentrations = self.apply_element_balance(
+                    &concentrations,
                     element_matrix,
                     &initial_concentrations,
                 )?;
@@ -773,17 +773,17 @@ impl EquilibriumCalculator {
         let h_final = h_initial + x;
         let a_final = x;
 
-        let _concentrations = Array1::from_vec(vec![ha_final, h_final, a_final]);
-        let activity_coefficients = self.calculate_activity_coefficients(&_concentrations)?;
-        let activities = &_concentrations * &activity_coefficients;
+        let concentrations = Array1::from_vec(vec![ha_final, h_final, a_final]);
+        let activity_coefficients = self.calculate_activity_coefficients(&concentrations)?;
+        let activities = &concentrations * &activity_coefficients;
 
         // Calculate other properties
         let reaction_extents =
-            self.calculate_reaction_extents(&initial_concentrations, &_concentrations)?;
-        let delta_g = self.calculate_delta_g(&_concentrations)?;
+            self.calculate_reaction_extents(&initial_concentrations, &concentrations)?;
+        let delta_g = self.calculate_delta_g(&concentrations)?;
 
         Ok(EquilibriumResult {
-            concentrations: _concentrations,
+            concentrations,
             activities,
             activity_coefficients,
             reaction_extents,
@@ -830,17 +830,17 @@ impl EquilibriumCalculator {
         let a2_final = alpha2 * total_amino;
         let h_final = h_isoelectric;
 
-        let _concentrations = Array1::from_vec(vec![h2a_final, h_final, ha_final, a2_final]);
-        let activity_coefficients = self.calculate_activity_coefficients(&_concentrations)?;
-        let activities = &_concentrations * &activity_coefficients;
+        let concentrations = Array1::from_vec(vec![h2a_final, h_final, ha_final, a2_final]);
+        let activity_coefficients = self.calculate_activity_coefficients(&concentrations)?;
+        let activities = &concentrations * &activity_coefficients;
 
         // Calculate other properties
         let reaction_extents =
-            self.calculate_reaction_extents(&initial_concentrations, &_concentrations)?;
-        let delta_g = self.calculate_delta_g(&_concentrations)?;
+            self.calculate_reaction_extents(&initial_concentrations, &concentrations)?;
+        let delta_g = self.calculate_delta_g(&concentrations)?;
 
         Ok(EquilibriumResult {
-            concentrations: _concentrations,
+            concentrations,
             activities,
             activity_coefficients,
             reaction_extents,

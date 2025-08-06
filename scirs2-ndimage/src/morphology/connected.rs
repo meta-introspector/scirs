@@ -13,7 +13,7 @@ struct UnionFind {
 }
 
 impl UnionFind {
-    fn new(_size: usize) -> Self {
+    fn new(size: usize) -> Self {
         UnionFind {
             parent: (0.._size).collect(),
             rank: vec![0; _size],
@@ -116,7 +116,7 @@ fn get_neighbors(
 
 /// Generate all possible offsets for corner connectivity
 #[allow(dead_code)]
-fn generate_all_offsets(_ndim: usize) -> Vec<Vec<isize>> {
+fn generate_all_offsets(ndim: usize) -> Vec<Vec<isize>> {
     let mut offsets = Vec::new();
     let total_combinations = 3_usize.pow(_ndim as u32);
 
@@ -141,12 +141,12 @@ fn generate_all_offsets(_ndim: usize) -> Vec<Vec<isize>> {
 
 /// Convert multi-dimensional index to flat index
 #[allow(dead_code)]
-fn ravel_index(_indices: &[usize], shape: &[usize]) -> usize {
+fn ravel_index(indices: &[usize], shape: &[usize]) -> usize {
     let mut flat_index = 0;
     let mut stride = 1;
 
     for i in (0.._indices.len()).rev() {
-        flat_index += _indices[i] * stride;
+        flat_index += indices[i] * stride;
         stride *= shape[i];
     }
 
@@ -155,9 +155,9 @@ fn ravel_index(_indices: &[usize], shape: &[usize]) -> usize {
 
 /// Convert flat index to multi-dimensional index
 #[allow(dead_code)]
-fn unravel_index(_flat_index: usize, shape: &[usize]) -> Vec<usize> {
+fn unravel_index(_flatindex: usize, shape: &[usize]) -> Vec<usize> {
     let mut indices = vec![0; shape.len()];
-    let mut remaining = _flat_index;
+    let mut remaining = flat_index;
 
     for i in (0..shape.len()).rev() {
         let stride: usize = shape[(i + 1)..].iter().product();

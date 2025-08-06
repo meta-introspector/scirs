@@ -39,21 +39,21 @@ pub(crate) fn roll_axis<T: Float>(arg: &mut NdArray<T>, to: ndarray::Axis, from:
     let mut j = from.index();
     if j > i {
         while i != j {
-            _arg.swap_axes(i, j);
+            arg.swap_axes(i, j);
             j -= 1;
         }
     } else {
         while i != j {
-            _arg.swap_axes(i, j);
+            arg.swap_axes(i, j);
             j += 1;
         }
     }
 }
 
 #[inline]
-pub(crate) fn normalize_negative_axis(_axis: isize, ndim: usize) -> usize {
+pub(crate) fn normalize_negative_axis(axis: isize, ndim: usize) -> usize {
     if _axis < 0 {
-        (ndim as isize + _axis) as usize
+        (ndim as isize + axis) as usize
     } else {
         _axis as usize
     }
@@ -61,8 +61,8 @@ pub(crate) fn normalize_negative_axis(_axis: isize, ndim: usize) -> usize {
 
 #[inline]
 pub(crate) fn normalize_negative_axes<T: Float>(axes: &NdArrayView<T>, ndim: usize) -> Vec<usize> {
-    let mut _axes_ret: Vec<usize> = Vec::with_capacity(_axes.len());
-    for &axis in _axes.iter() {
+    let mut axes_ret: Vec<usize> = Vec::with_capacity(axes.len());
+    for &axis in axes.iter() {
         let axis = if axis < T::zero() {
             (T::from(ndim).unwrap() + axis)
                 .to_usize()
@@ -78,7 +78,7 @@ pub(crate) fn normalize_negative_axes<T: Float>(axes: &NdArrayView<T>, ndim: usi
 #[inline]
 pub(crate) fn sparse_to_dense<T: Float>(arr: &NdArrayView<T>) -> Vec<usize> {
     let mut axes: Vec<usize> = vec![];
-    for (i, &a) in _arr.iter().enumerate() {
+    for (i, &a) in arr.iter().enumerate() {
         if a == T::one() {
             axes.push(i);
         }
@@ -88,9 +88,9 @@ pub(crate) fn sparse_to_dense<T: Float>(arr: &NdArrayView<T>) -> Vec<usize> {
 
 #[allow(unused)]
 #[inline]
-pub(crate) fn is_fully_transposed(_strides: &[ndarray::Ixs]) -> bool {
+pub(crate) fn is_fully_transposed(strides: &[ndarray::Ixs]) -> bool {
     let mut ret = true;
-    for w in _strides.windows(2) {
+    for w in strides.windows(2) {
         if w[0] > w[1] {
             ret = false;
             break;
@@ -117,7 +117,7 @@ pub fn ones<T: Float>(shape: &[usize]) -> NdArray<T> {
 #[inline]
 #[allow(dead_code)]
 pub fn constant<T: Float>(value: T, shape: &[usize]) -> NdArray<T> {
-    NdArray::<T>::from_elem(shape_value)
+    NdArray::<T>::from_elem(shape, value)
 }
 
 use rand::{Rng, RngCore, SeedableRng};
@@ -156,7 +156,7 @@ impl<A: Float> ArrayRng<A> {
     }
 
     /// Creates a new random number generator with the specified seed.
-    pub fn from_seed(_seed: u64) -> Self {
+    pub fn from_seed(seed: u64) -> Self {
         let rng = rand::rngs::StdRng::seed_from_u64(_seed);
         Self {
             rng,
@@ -188,7 +188,7 @@ impl<A: Float> ArrayRng<A> {
     /// Creates a normal random array in the specified shape.
     /// Values are drawn from a normal distribution with the specified mean and standard deviation.
     pub fn normal(&mut self, shape: &[usize], mean: f64, std: f64) -> NdArray<A> {
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
         let normal = Normal::new(mean, std).unwrap();
         let len = shape.iter().product();
         let mut data = Vec::with_capacity(len);
@@ -201,7 +201,7 @@ impl<A: Float> ArrayRng<A> {
     /// Creates a uniform random array in the specified shape.
     /// Values are in the range [low, high).
     pub fn uniform(&mut self, shape: &[usize], low: f64, high: f64) -> NdArray<A> {
-        use rand__distr::{Distribution, Uniform};
+        use rand_distr::{Distribution, Uniform};
         let uniform = Uniform::new(low, high).unwrap();
         let len = shape.iter().product();
         let mut data = Vec::with_capacity(len);
@@ -265,7 +265,7 @@ impl<A: Float> ArrayRng<A> {
 
     /// Creates a random array from the bernoulli distribution.
     pub fn bernoulli(&mut self, shape: &[usize], p: f64) -> NdArray<A> {
-        use rand__distr::{Bernoulli, Distribution};
+        use rand_distr::{Bernoulli, Distribution};
         let bernoulli = Bernoulli::new(p).unwrap();
         let len = shape.iter().product();
         let mut data = Vec::with_capacity(len);
@@ -282,7 +282,7 @@ impl<A: Float> ArrayRng<A> {
 
     /// Creates a random array from the exponential distribution.
     pub fn exponential(&mut self, shape: &[usize], lambda: f64) -> NdArray<A> {
-        use rand__distr::{Distribution, Exp};
+        use rand_distr::{Distribution, Exp};
         let exp = Exp::new(lambda).unwrap();
         let len = shape.iter().product();
         let mut data = Vec::with_capacity(len);
@@ -294,7 +294,7 @@ impl<A: Float> ArrayRng<A> {
 
     /// Creates a random array from the log-normal distribution.
     pub fn log_normal(&mut self, shape: &[usize], mean: f64, stddev: f64) -> NdArray<A> {
-        use rand__distr::{Distribution, LogNormal};
+        use rand_distr::{Distribution, LogNormal};
         let log_normal = LogNormal::new(mean, stddev).unwrap();
         let len = shape.iter().product();
         let mut data = Vec::with_capacity(len);
@@ -305,8 +305,8 @@ impl<A: Float> ArrayRng<A> {
     }
 
     /// Creates a random array from the gamma distribution.
-    pub fn gamma(&mut self, shape: &[usize], shape_param: f64, scale: f64) -> NdArray<A> {
-        use rand__distr::{Distribution, Gamma};
+    pub fn gamma(&mut self, shape: &[usize], shapeparam: f64, scale: f64) -> NdArray<A> {
+        use rand_distr::{Distribution, Gamma};
         let gamma = Gamma::new(shape_param, scale).unwrap();
         let len = shape.iter().product();
         let mut data = Vec::with_capacity(len);
@@ -341,21 +341,21 @@ pub fn scalarshape() -> Vec<usize> {
 #[inline]
 #[allow(dead_code)]
 pub fn from_scalar<T: Float>(value: T) -> NdArray<T> {
-    NdArray::<T>::from_elem(ndarray::IxDyn(&[1]), _value)
+    NdArray::<T>::from_elem(ndarray::IxDyn(&[1]), value)
 }
 
 /// Get shape of an ndarray view
 #[inline]
 #[allow(dead_code)]
-pub fn shape_of_view<T>(_view: &NdArrayView<'_, T>) -> Vec<usize> {
-    _view.shape().to_vec()
+pub fn shape_of_view<T>(view: &NdArrayView<'_, T>) -> Vec<usize> {
+    view.shape().to_vec()
 }
 
 /// Get shape of an ndarray
 #[inline]
 #[allow(dead_code)]
-pub fn shape_of<T>(_array: &NdArray<T>) -> Vec<usize> {
-    _array.shape().to_vec()
+pub fn shape_of<T>(array: &NdArray<T>) -> Vec<usize> {
+    array.shape().to_vec()
 }
 
 /// Get default random number generator
@@ -369,7 +369,7 @@ pub fn get_default_rng<A: Float>() -> ArrayRng<A> {
 #[inline]
 #[allow(dead_code)]
 pub fn deep_copy<T: Float + Clone>(array: &NdArrayView<'_, T>) -> NdArray<T> {
-    _array.to_owned()
+    array.to_owned()
 }
 
 /// Select elements from an array along an axis
@@ -463,7 +463,7 @@ pub mod array_gen {
     /// Creates a constant array in the specified shape.
     #[inline]
     pub fn constant<T: Float>(value: T, shape: &[usize]) -> NdArray<T> {
-        NdArray::<T>::from_elem(shape_value)
+        NdArray::<T>::from_elem(shape, value)
     }
 
     /// Generates a random array in the specified shape with values between 0 and 1.
@@ -508,15 +508,15 @@ pub mod array_gen {
             return if num == 0 {
                 NdArray::<T>::zeros(ndarray::IxDyn(&[0]))
             } else {
-                NdArray::<T>::from_elem(ndarray::IxDyn(&[1]), _start)
+                NdArray::<T>::from_elem(ndarray::IxDyn(&[1]), start)
             };
         }
 
-        let step = (end - _start) / T::from(num - 1).unwrap();
+        let step = (end - start) / T::from(num - 1).unwrap();
         let mut data = Vec::with_capacity(num);
 
         for i in 0..num {
-            data.push(_start + step * T::from(i).unwrap());
+            data.push(start + step * T::from(i).unwrap());
         }
 
         NdArray::<T>::fromshape_vec(ndarray::IxDyn(&[num]), data).unwrap()
@@ -524,10 +524,10 @@ pub mod array_gen {
 
     /// Creates an array of evenly spaced values within a given interval.
     pub fn arange<T: Float>(start: T, end: T, step: T) -> NdArray<T> {
-        let size = ((end - _start) / step).to_f64().unwrap().ceil() as usize;
+        let size = ((end - start) / step).to_f64().unwrap().ceil() as usize;
         let mut data = Vec::with_capacity(size);
 
-        let mut current = _start;
+        let mut current = start;
         while current < end {
             data.push(current);
             current += step;

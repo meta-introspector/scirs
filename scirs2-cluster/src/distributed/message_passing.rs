@@ -189,7 +189,7 @@ pub struct SynchronizationBarrier {
 
 impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
     /// Create new message passing coordinator
-    pub fn new(coordinator_id: usize, config: MessagePassingConfig) -> Self {
+    pub fn new(coordinatorid: usize, config: MessagePassingConfig) -> Self {
         let (coordinator_sender, coordinator_receiver) = mpsc::channel();
 
         Self {
@@ -207,7 +207,7 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
     }
 
     /// Register a new worker with the coordinator
-    pub fn register_worker(&mut self, worker_id: usize) -> Receiver<MessageEnvelope<F>> {
+    pub fn register_worker(&mut self, workerid: usize) -> Receiver<MessageEnvelope<F>> {
         let (sender, receiver) = mpsc::channel();
         self.worker_channels.insert(worker_id, sender);
         self.worker_status.insert(worker_id, WorkerStatus::Active);
@@ -348,7 +348,7 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
     }
 
     /// Register worker arrival at synchronization barrier
-    pub fn register_barrier_arrival(&mut self, round: usize, worker_id: usize) -> Result<()> {
+    pub fn register_barrier_arrival(&mut self, round: usize, workerid: usize) -> Result<()> {
         if let Some(barrier) = self.sync_barriers.get_mut(&round) {
             barrier.arrived_participants.insert(worker_id);
             Ok(())
@@ -395,12 +395,12 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
     }
 
     /// Get worker status
-    pub fn get_worker_status(&self, worker_id: usize) -> Option<WorkerStatus> {
+    pub fn get_worker_status(&self, workerid: usize) -> Option<WorkerStatus> {
         self.worker_status.get(&worker_id).copied()
     }
 
     /// Update worker status
-    pub fn update_worker_status(&mut self, worker_id: usize, status: WorkerStatus) {
+    pub fn update_worker_status(&mut self, workerid: usize, status: WorkerStatus) {
         self.worker_status.insert(worker_id, status);
     }
 

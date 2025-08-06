@@ -59,7 +59,7 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn benchmark_filter<F>(_input: &Array2<f64>, name: &str, filter_fn: F)
+fn benchmark_filter<F>(_input: &Array2<f64>, name: &str, filterfn: F)
 where
     F: Fn(&[f64]) -> f64 + Send + Sync + Clone + 'static,
 {
@@ -69,7 +69,7 @@ where
         generic_filter(_input, filter_fn, &[3, 3], Some(BorderMode::Reflect), None).unwrap();
 
     let duration = start.elapsed();
-    let elements = _input.len();
+    let elements = input.len();
     let throughput = elements as f64 / duration.as_secs_f64() / 1_000_000.0; // Million elements per second
 
     println!(
@@ -80,6 +80,6 @@ where
     );
 
     // Verify the result is reasonable
-    assert_eq!(result.shape(), _input.shape());
+    assert_eq!(result.shape(), input.shape());
     assert!(result.iter().all(|&x| x.is_finite()));
 }

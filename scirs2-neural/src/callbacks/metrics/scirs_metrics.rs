@@ -52,7 +52,7 @@ impl<F: Float + Debug + Display + FromPrimitive + Send + Sync + ScalarOperand>
         metrics: Vec<scirs2_metrics::integration::neural::NeuralMetricAdapter<F>>,
     ) -> Option<Self> {
         Some(Self {
-            _metrics,
+            metrics,
             current_predictions: None,
             current_targets: None,
             epoch_results: HashMap::new(),
@@ -130,9 +130,9 @@ impl<F> ScirsMetricsCallback<F> {
     ///
     /// This is a no-op implementation when the metrics_integration feature is not enabled.
     /// To use the full functionality, enable the feature with --features metrics_integration.
-    pub fn new<T>(_metrics: Vec<T>) -> Option<Self> {
+    pub fn new<T>(metrics: Vec<T>) -> Option<Self> {
         eprintln!("Warning: ScirsMetricsCallback requires the 'metrics_integration' feature.");
         eprintln!("To use it, compile with: --features metrics_integration");
         None
     /// Sets verbosity (no-op)
-    pub fn with_verbose(_self_verbose: bool) -> Self {
+    pub fn with_verbose(_selfverbose: bool) -> Self {

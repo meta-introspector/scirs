@@ -106,9 +106,9 @@ fn create_test_datasets() -> Vec<(String, Array2<f64>)> {
 
 /// Create benchmark configuration optimized for each dataset type
 #[allow(dead_code)]
-fn create_benchmark_config(_dataset_name: &str) -> BenchmarkConfig {
+fn create_benchmark_config(_datasetname: &str) -> BenchmarkConfig {
     match _dataset_name {
-        _name if _name.contains("Small") => BenchmarkConfig {
+        _name if name.contains("Small") => BenchmarkConfig {
             warmup_iterations: 10,
             measurement_iterations: 100,
             statistical_significance: 0.01,
@@ -120,7 +120,7 @@ fn create_benchmark_config(_dataset_name: &str) -> BenchmarkConfig {
             cross_platform: true,
             ..Default::default()
         },
-        _name if _name.contains("Large") => BenchmarkConfig {
+        _name if name.contains("Large") => BenchmarkConfig {
             warmup_iterations: 3,
             measurement_iterations: 20,
             statistical_significance: 0.05,
@@ -149,7 +149,7 @@ fn create_benchmark_config(_dataset_name: &str) -> BenchmarkConfig {
 
 /// Display a concise summary of benchmark results
 #[allow(dead_code)]
-fn display_benchmark_summary(_results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults) {
+fn display_benchmark_summary(results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults) {
     println!("   📈 Performance Summary:");
 
     // Find fastest and slowest algorithms
@@ -203,7 +203,7 @@ fn display_benchmark_summary(_results: &scirs2_cluster::advanced_benchmarking::B
     }
 
     // Show regression alerts
-    match _results.regression_alerts.len() {
+    match results.regression_alerts.len() {
         0 => println!("      ✅ No performance regressions detected"),
         1 => println!("      ⚠️  1 performance regression detected"),
         n => println!("      🚨 {n} performance regressions detected"),
@@ -375,8 +375,8 @@ fn analyze_scalability_insights(
 
 /// Analyze regression patterns
 #[allow(dead_code)]
-fn analyze_regression_patterns(_results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults) {
-    if _results.regression_alerts.is_empty() {
+fn analyze_regression_patterns(results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults) {
+    if results.regression_alerts.is_empty() {
         println!(
             "      ✅ Regression Analysis: All algorithms performing within expected parameters"
         );
@@ -402,7 +402,7 @@ fn analyze_regression_patterns(_results: &scirs2_cluster::advanced_benchmarking:
     }
 
     // Show most problematic algorithm
-    if let Some(worst_alert) = _results.regression_alerts.iter().max_by(|a, b| {
+    if let Some(worst_alert) = results.regression_alerts.iter().max_by(|a, b| {
         a.degradation_percent
             .partial_cmp(&b.degradation_percent)
             .unwrap()
@@ -416,7 +416,7 @@ fn analyze_regression_patterns(_results: &scirs2_cluster::advanced_benchmarking:
 
 /// Create dense dataset with well-separated clusters
 #[allow(dead_code)]
-fn create_dense_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_dense_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
     use rand__distr::Normal;
 
@@ -455,7 +455,7 @@ fn create_dense_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
 
 /// Create sparse dataset with noise
 #[allow(dead_code)]
-fn create_sparse_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_sparse_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
 
     let mut rng = StdRng::seed_from_u64(54321);
@@ -477,7 +477,7 @@ fn create_sparse_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
 
 /// Create high-dimensional dataset
 #[allow(dead_code)]
-fn create_high_dim_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_high_dim_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
     use rand__distr::Normal;
 
@@ -508,7 +508,7 @@ fn create_high_dim_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> 
 
 /// Create noisy dataset simulating real-world conditions
 #[allow(dead_code)]
-fn create_noisy_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_noisy_dataset(_n_samples: usize, nfeatures: usize) -> Array2<f64> {
     use rand::prelude::*;
     use rand__distr::Normal;
 

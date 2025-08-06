@@ -38,10 +38,10 @@ impl QuantileTransformer {
     ///
     /// # Returns
     /// * A new QuantileTransformer instance
-    pub fn new(_n_quantiles: usize, output_distribution: &str, clip: bool) -> Result<Self> {
-        if _n_quantiles < 2 {
+    pub fn new(n_quantiles: usize, outputdistribution: &str, clip: bool) -> Result<Self> {
+        if n_quantiles < 2 {
             return Err(TransformError::InvalidInput(
-                "_n_quantiles must be at least 2".to_string(),
+                "n_quantiles must be at least 2".to_string(),
             ));
         }
 
@@ -54,7 +54,8 @@ impl QuantileTransformer {
         Ok(QuantileTransformer {
             n_quantiles,
             output_distribution: output_distribution.to_string(),
-            clip_quantiles: None,
+            clip,
+            quantiles: None,
             references: None,
         })
     }
@@ -106,12 +107,12 @@ impl QuantileTransformer {
         // Generate reference distribution
         let references = if self.output_distribution == "uniform" {
             // Uniform distribution references
-            Array1::fromshape_fn(self.n_quantiles, |i| {
+            Array1::from_shape_fn(self.n_quantiles, |i| {
                 i as f64 / (self.n_quantiles - 1) as f64
             })
         } else {
             // Normal distribution references (using inverse normal CDF approximation)
-            Array1::fromshape_fn(self.n_quantiles, |i| {
+            Array1::from_shape_fn(self.n_quantiles, |i| {
                 let u = i as f64 / (self.n_quantiles - 1) as f64;
                 // Clamp u to avoid extreme values
                 let u_clamped = u.clamp(1e-7, 1.0 - 1e-7);

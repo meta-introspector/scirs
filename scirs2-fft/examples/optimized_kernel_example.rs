@@ -48,8 +48,8 @@ fn main() {
     println!("");
     println!("// Configure kernel parameters");
     println!("let config = KernelConfig {{");
-    println!("    block_size: 256,");
-    println!("    use_mixed_precision: true,");
+    println!("    blocksize: 256,");
+    println!("    use_mixedprecision: true,");
     println!("    ..Default::default()");
     println!("}};");
     println!("");

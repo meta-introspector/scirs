@@ -271,13 +271,13 @@ pub fn watershed_markers(
 
 /// Find local minima in an image
 #[allow(dead_code)]
-fn find_local_minima(_img: &GrayImage, connectivity: u8) -> Vec<(usize, usize)> {
-    let (width, height) = _img.dimensions();
+fn find_local_minima(img: &GrayImage, connectivity: u8) -> Vec<(usize, usize)> {
+    let (width, height) = img.dimensions();
     let mut minima = Vec::new();
 
     for y in 0..height {
         for x in 0..width {
-            let center_val = _img.get_pixel(x, y)[0];
+            let center_val = img.get_pixel(x, y)[0];
             let mut is_minimum = true;
 
             for (dy, dx) in get_neighbors(connectivity) {
@@ -285,7 +285,7 @@ fn find_local_minima(_img: &GrayImage, connectivity: u8) -> Vec<(usize, usize)> 
                 let nx = x as i32 + dx;
 
                 if ny >= 0 && ny < height as i32 && nx >= 0 && nx < width as i32 {
-                    let neighbor_val = _img.get_pixel(nx as u32, ny as u32)[0];
+                    let neighbor_val = img.get_pixel(nx as u32, ny as u32)[0];
                     if neighbor_val < center_val {
                         is_minimum = false;
                         break;
@@ -304,7 +304,7 @@ fn find_local_minima(_img: &GrayImage, connectivity: u8) -> Vec<(usize, usize)> 
 
 /// Get neighbor offsets based on connectivity
 #[allow(dead_code)]
-fn get_neighbors(_connectivity: u8) -> &'static [(i32, i32)] {
+fn get_neighbors(connectivity: u8) -> &'static [(i32, i32)] {
     match _connectivity {
         4 => &[(-1, 0), (0, -1), (0, 1), (1, 0)],
         8 => &[
@@ -363,10 +363,10 @@ pub fn labels_to_color_image(
 
 /// Generate a colormap for labels
 #[allow(dead_code)]
-fn generate_colormap(_labels: &Array2<u32>) -> HashMap<u32, [u8; 3]> {
+fn generate_colormap(labels: &Array2<u32>) -> HashMap<u32, [u8; 3]> {
     use std::collections::HashSet;
 
-    let unique_labels: HashSet<u32> = _labels.iter().cloned().collect();
+    let unique_labels: HashSet<u32> = labels.iter().cloned().collect();
     let mut colormap = HashMap::new();
 
     // Watershed lines are black
@@ -422,8 +422,8 @@ fn hsv_to_rgb(h: f32, s: f32, v: f32) -> (u8, u8, u8) {
 ///
 /// Higher gradients indicate stronger boundaries between regions.
 #[allow(dead_code)]
-pub fn compute_gradient_magnitude(_img: &DynamicImage) -> Result<Array2<f32>> {
-    let gray = _img.to_luma8();
+pub fn compute_gradient_magnitude(img: &DynamicImage) -> Result<Array2<f32>> {
+    let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
     let mut gradient = Array2::zeros((height as usize, width as usize));
 

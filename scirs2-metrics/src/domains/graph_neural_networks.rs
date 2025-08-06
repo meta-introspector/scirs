@@ -1220,7 +1220,8 @@ impl GraphNeuralNetworkMetrics {
     pub fn evaluate_node_classification<F>(
         &mut self,
         y_true: &ArrayView1<i32>,
-        y_pred: &ArrayView1<i32>, _y_proba: Option<&ArrayView2<F>>,
+        y_pred: &ArrayView1<i32>,
+        _y_proba: Option<&ArrayView2<F>>,
         adjacency_matrix: &ArrayView2<i32>,
         node_features: Option<&ArrayView2<F>>,
         sensitive_attributes: Option<&ArrayView1<i32>>,
@@ -1320,7 +1321,8 @@ impl GraphNeuralNetworkMetrics {
     pub fn evaluate_graph_classification<F>(
         &mut self,
         y_true: &ArrayView1<i32>,
-        y_pred: &ArrayView1<i32>, _y_proba: Option<&ArrayView2<F>>,
+        y_pred: &ArrayView1<i32>,
+        _y_proba: Option<&ArrayView2<F>>,
         graph_features: Option<&ArrayView2<F>>,
     ) -> Result<GraphLevelResults>
     where
@@ -1352,7 +1354,8 @@ impl GraphNeuralNetworkMetrics {
     pub fn evaluate_graph_regression<F>(
         &mut self,
         y_true: &ArrayView1<F>,
-        y_pred: &ArrayView1<F>, _graph_features: Option<&ArrayView2<F>>,
+        y_pred: &ArrayView1<F>,
+        _graph_features: Option<&ArrayView2<F>>,
     ) -> Result<GraphLevelResults>
     where
         F: Float + num_traits::NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
@@ -1789,7 +1792,7 @@ impl NodeLevelMetrics {
                 .iter()
                 .enumerate()
                 .filter(|(_, &l)| l == label)
-                .map(|(i_)| i)
+                .map(|(i, _)| i)
                 .collect();
 
             if cluster_indices.len() < 2 {
@@ -1873,7 +1876,8 @@ impl NodeLevelMetrics {
     }
 
     fn calculate_fairness_score(
-        &self, _y_true: &ArrayView1<i32>,
+        &self,
+        _y_true: &ArrayView1<i32>,
         y_pred: &ArrayView1<i32>,
         sensitive_attrs: &ArrayView1<i32>,
     ) -> Result<f64> {
@@ -1886,7 +1890,7 @@ impl NodeLevelMetrics {
                 .iter()
                 .enumerate()
                 .filter(|(_, &attr)| attr == group)
-                .map(|(i_)| i)
+                .map(|(i, _)| i)
                 .collect();
 
             if !group_indices.is_empty() {
@@ -2061,8 +2065,8 @@ impl EdgeLevelMetrics {
         edge_index_true: &[(usize, usize)],
         edge_index_pred: &[(usize, usize)],
     ) -> Result<f64> {
-        let _true_set: HashSet<(usize, usize)> = edge_index_true.iter().cloned().collect();
-        let _pred_set: HashSet<(usize, usize)> = edge_index_pred.iter().cloned().collect();
+        let true_set: HashSet<(usize, usize)> = edge_index_true.iter().cloned().collect();
+        let pred_set: HashSet<(usize, usize)> = edge_index_pred.iter().cloned().collect();
 
         let intersection = true_set.intersection(&pred_set).count();
         let union = true_set.union(&pred_set).count();
@@ -2759,7 +2763,7 @@ impl Default for GraphNeuralNetworkMetrics {
 }
 
 impl GnnEvaluationReport {
-    fn new(_results: &GnnEvaluationResults) -> Self {
+    fn new(results: &GnnEvaluationResults) -> Self {
         Self {
             summary: GnnSummary {
                 overall_score: 0.75,
@@ -2771,7 +2775,7 @@ impl GnnEvaluationReport {
                 ],
                 improvements: vec!["Better graph generation".to_string()],
             },
-            detailed_results: _results.clone(),
+            detailed_results: results.clone(),
             insights: Vec::new(),
             recommendations: Vec::new(),
         }

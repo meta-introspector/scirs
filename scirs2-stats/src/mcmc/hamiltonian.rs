@@ -51,7 +51,7 @@ pub struct HamiltonianMonteCarlo<T: DifferentiableTarget> {
 
 impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
     /// Create a new HMC sampler
-    pub fn new(target: T, initial: Array1<f64>, step_size: f64, n_steps: usize) -> Result<Self> {
+    pub fn new(target: T, initial: Array1<f64>, step_size: f64, nsteps: usize) -> Result<Self> {
         checkarray_finite(&initial, "initial")?;
         check_positive(step_size, "step_size")?;
         check_positive(n_steps, "n_steps")?;
@@ -83,7 +83,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
     }
 
     /// Set custom mass matrix
-    pub fn with_mass_matrix(mut self, mass_matrix: Array2<f64>) -> Result<Self> {
+    pub fn with_mass_matrix(mut self, massmatrix: Array2<f64>) -> Result<Self> {
         checkarray_finite(&mass_matrix, "mass_matrix")?;
 
         if mass_matrix.nrows() != self.position.len() || mass_matrix.ncols() != self.position.len()
@@ -99,7 +99,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
 
         // Compute inverse
         let mass_inv = scirs2_linalg::inv(&mass_matrix.view(), None).map_err(|e| {
-            StatsError::ComputationError(format!("Failed to invert mass _matrix: {}", e))
+            StatsError::ComputationError(format!("Failed to invert mass matrix: {}", e))
         })?;
 
         self.mass_matrix = mass_matrix;
@@ -219,7 +219,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
 
         for i in 0..n_samples_ {
             let sample = self.step(rng)?;
-            _samples.row_mut(i).assign(&sample);
+            samples.row_mut(i).assign(&sample);
         }
 
         Ok(_samples)
@@ -295,7 +295,7 @@ pub struct DualAveragingAdaptation {
 
 impl DualAveragingAdaptation {
     /// Create new dual averaging adaptation
-    pub fn new(target: f64, initial_log_step: f64) -> Self {
+    pub fn new(target: f64, initial_logstep: f64) -> Self {
         Self {
             target,
             gamma: 0.05,
@@ -329,7 +329,7 @@ impl DualAveragingAdaptation {
 
 impl<T: DifferentiableTarget> NoUTurnSampler<T> {
     /// Create new NUTS sampler
-    pub fn new(target: T, initial: Array1<f64>, initial_step_size: f64) -> Result<Self> {
+    pub fn new(target: T, initial: Array1<f64>, initial_stepsize: f64) -> Result<Self> {
         let hmc = HamiltonianMonteCarlo::new(target, initial, initial_step_size, 1)?;
         let step_size_adaptation = DualAveragingAdaptation::new(0.8, initial_step_size.ln());
 
@@ -424,7 +424,7 @@ impl<T: DifferentiableTarget> NoUTurnSampler<T> {
 
         for i in 0..n_samples_ {
             let sample = self.step(rng)?;
-            _samples.row_mut(i).assign(&sample);
+            samples.row_mut(i).assign(&sample);
         }
 
         Ok(_samples)
@@ -522,7 +522,7 @@ pub struct CustomDifferentiableTarget<F, G> {
 
 impl<F, G> CustomDifferentiableTarget<F, G> {
     /// Create new custom target
-    pub fn new(dim: usize, log_density_fn: F, gradient_fn: G) -> Result<Self> {
+    pub fn new(dim: usize, log_density_fn: F, gradientfn: G) -> Result<Self> {
         check_positive(dim, "dim")?;
         Ok(Self {
             log_density_fn,

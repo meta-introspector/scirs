@@ -92,7 +92,7 @@ pub mod helpers {
             eye_data[i * n + i] = F::one();
         }
         let eye = ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::fromshape_vec((n, n), eye_data).unwrap(),
+            ag::ndarray::Array2::from_shape_vec((n, n), eye_data).unwrap(),
             ctx,
         );
 
@@ -111,7 +111,7 @@ pub mod helpers {
             eye_data[i * n + i] = F::one();
         }
         ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::fromshape_vec((n, n), eye_data).unwrap(),
+            ag::ndarray::Array2::from_shape_vec((n, n), eye_data).unwrap(),
             ctx,
         )
     }
@@ -131,15 +131,15 @@ pub mod helpers {
         }
 
         ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::fromshape_vec((n, n), matrix_data).unwrap(),
+            ag::ndarray::Array2::from_shape_vec((n, n), matrix_data).unwrap(),
             ctx,
         )
     }
 
     /// Compute Frobenius norm using available operations
-    pub fn frobenius_norm<'g, F: ag::Float>(_matrix: &ag::Tensor<'g, F>) -> ag::Tensor<'g, F> {
+    pub fn frobenius_norm<'g, F: ag::Float>(matrix: &ag::Tensor<'g, F>) -> ag::Tensor<'g, F> {
         // ||A||_F = sqrt(sum(A .* A))
-        let squared = _matrix * _matrix;
+        let squared = _matrix * matrix;
         let sum_squared = ag::tensor_ops::sum_all(squared);
         ag::tensor_ops::sqrt(sum_squared)
     }
@@ -237,7 +237,7 @@ pub mod helpers {
         }
 
         let mut v = ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::fromshape_vec((n, 1), v_data).unwrap(),
+            ag::ndarray::Array2::from_shape_vec((n, 1), v_data).unwrap(),
             ctx,
         );
 
@@ -276,7 +276,8 @@ pub mod helpers {
     ///
     /// This is a simplified rank estimation - actual rank would require full SVD
     pub fn rank_approximation<'g, F: ag::Float>(
-        _matrix: &ag::Tensor<'g, F>, _tolerance: F,
+        _matrix: &ag::Tensor<'g, F>,
+        _tolerance: F,
         ctx: &'g ag::Context<'g, F>,
     ) -> ag::Tensor<'g, F> {
         // For now, return a constant estimate

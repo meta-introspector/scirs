@@ -161,10 +161,10 @@ pub struct IterativeAnimationRecorder {
 
 impl IterativeAnimationRecorder {
     /// Create a new animation recorder
-    pub fn new(_config: IterativeAnimationConfig) -> Self {
+    pub fn new(config: IterativeAnimationConfig) -> Self {
         Self {
             frames: Vec::new(),
-            _config,
+            config,
             start_time: Instant::now(),
             current_iteration: 0,
             previous_centroids: None,
@@ -331,10 +331,10 @@ pub struct StreamingStats {
 
 impl StreamingVisualizer {
     /// Create a new streaming visualizer
-    pub fn new(_config: StreamingConfig) -> Self {
+    pub fn new(config: StreamingConfig) -> Self {
         Self {
             data_buffer: VecDeque::new(),
-            _config,
+            config,
             last_update: Instant::now(),
             bounds: None,
             streaming_stats: StreamingStats {

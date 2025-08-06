@@ -120,9 +120,9 @@ where
 
 /// Convert flat index to multi-dimensional indices
 #[allow(dead_code)]
-fn unravel_index(_flat_index: usize, shape: &[usize]) -> Vec<usize> {
+fn unravel_index(_flatindex: usize, shape: &[usize]) -> Vec<usize> {
     let mut indices = vec![0; shape.len()];
-    let mut remaining = _flat_index;
+    let mut remaining = flat_index;
 
     for i in (0..shape.len()).rev() {
         let stride: usize = shape[(i + 1)..].iter().product();
@@ -155,7 +155,8 @@ where
 
     match order {
         0 => interpolate_nearest(input, coordinates, mode, cval),
-        1 => interpolate_linear(input, coordinates, mode, cval, _ => interpolate_spline(input, coordinates, order, mode, cval),
+        1 => interpolate_linear(input, coordinates, mode, cval),
+        _ => interpolate_spline(input, coordinates, order, mode, cval),
     }
 }
 
@@ -335,38 +336,38 @@ where
 ///
 /// * `Result<T>` - Value at the given indices
 #[allow(dead_code)]
-pub fn value_at_coordinates<T, D>(_input: &Array<T, D>, indices: &[usize]) -> NdimageResult<T>
+pub fn value_at_coordinates<T, D>(input: &Array<T, D>, indices: &[usize]) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug,
     D: ndarray::Dimension,
 {
     // Validate inputs
-    if _input.ndim() == 0 {
+    if input.ndim() == 0 {
         return Err(NdimageError::InvalidInput(
             "Input array cannot be 0-dimensional".into(),
         ));
     }
 
-    if _input.is_empty() {
+    if input.is_empty() {
         return Err(NdimageError::InvalidInput("Input array is empty".into()));
     }
 
-    if indices.len() != _input.ndim() {
+    if indices.len() != input.ndim() {
         return Err(NdimageError::DimensionError(format!(
             "Indices must have same length as _input dimensions (got {} expected {})",
             indices.len(),
-            _input.ndim()
+            input.ndim()
         )));
     }
 
     // Check that indices are within bounds
     for (i, &idx) in indices.iter().enumerate() {
-        if idx >= _input.shape()[i] {
+        if idx >= input.shape()[i] {
             return Err(NdimageError::InvalidInput(format!(
                 "Index {} is out of bounds for dimension {} of size {}",
                 idx,
                 i,
-                _input.shape()[i]
+                input.shape()[i]
             )));
         }
     }
@@ -377,7 +378,7 @@ where
     let dynamic_indices = IxDyn(indices);
 
     // Access the element at the specified indices
-    match _input.get(dynamic_indices) {
+    match input.get(dynamic_indices) {
         Some(value) => Ok(*value),
         None => Err(NdimageError::InvalidInput(
             "Unable to access array at the specified indices".into(),

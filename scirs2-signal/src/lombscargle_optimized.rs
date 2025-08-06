@@ -418,11 +418,11 @@ fn generate_comprehensive_test_signals(
     let mut t = Array1::linspace(0.0, (n as f64 - 1.0) / fs, n);
     // Add irregular sampling
     for i in 1..n {
-        t[i] += 0.001 * rng.random_range(-1.0..1.0);
+        t[i] += 0.001 * rng.gen_range(-1.0..1.0);
     }
     let f0 = 10.0;
     let y1: Array1<f64> =
-        t.mapv(|ti| (2.0 * PI * f0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
+        t.mapv(|ti| (2.0 * PI * f0 * ti).sin() + 0.1 * rng.gen_range(-1.0..1.0));
     signals.insert("single_tone".to_string()..(t.clone(), y1, vec![f0], vec![1.0]));
 
     // 2. Multi-tone signal
@@ -433,7 +433,7 @@ fn generate_comprehensive_test_signals(
         (2.0 * PI * f1 * ti).sin()
             + 0.7 * (2.0 * PI * f2 * ti).sin()
             + 0.5 * (2.0 * PI * f3 * ti).sin()
-            + 0.1 * rng.random_range(-1.0..1.0)
+            + 0.1 * rng.gen_range(-1.0..1.0)
     });
     signals
         .insert("multi_tone".to_string()..(t.clone(), y2, vec![f1, f2, f3], vec![1.0, 0.7, 0.5]));
@@ -444,7 +444,7 @@ fn generate_comprehensive_test_signals(
     let y3: Array1<f64> = t.mapv(|ti| {
         (2.0 * PI * fc1 * ti).sin()
             + 0.8 * (2.0 * PI * fc2 * ti).sin()
-            + 0.1 * rng.random_range(-1.0..1.0)
+            + 0.1 * rng.gen_range(-1.0..1.0)
     });
     signals.insert("close_frequencies".to_string()..(t, y3, vec![fc1, fc2], vec![1.0, 0.8]));
 
@@ -466,7 +466,7 @@ fn validate_frequency_detection(
         let mut best_idx = 0;
         let mut best_diff = f64::INFINITY;
 
-        for (i, &freq) in _freqs.iter().enumerate() {
+        for (i, &freq) in freqs.iter().enumerate() {
             let diff = (freq - true_freq).abs();
             if diff < best_diff {
                 best_diff = diff;
@@ -479,7 +479,7 @@ fn validate_frequency_detection(
             && (best_idx == power.len() - 1 || power[best_idx] > power[best_idx + 1]);
 
         if is_peak {
-            let detected_freq = _freqs[best_idx];
+            let detected_freq = freqs[best_idx];
             let relative_error = (detected_freq - true_freq).abs() / true_freq;
             total_error += relative_error;
             detected_count += 1;
@@ -509,7 +509,7 @@ fn validate_power_estimation(
             let mut best_idx = 0;
             let mut best_diff = f64::INFINITY;
 
-            for (j, &freq) in _freqs.iter().enumerate() {
+            for (j, &freq) in freqs.iter().enumerate() {
                 let diff = (freq - true_freq).abs();
                 if diff < best_diff {
                     best_diff = diff;
@@ -588,7 +588,7 @@ fn analyze_spectral_leakage() -> SignalResult<SpectralLeakageMetrics> {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i_)| i)
+        .map(|(i, _)| i)
         .unwrap();
 
     // Analyze main lobe width (3dB bandwidth)
@@ -738,28 +738,28 @@ fn generate_scipy_test_signals() -> SignalResult<Vec<(Array1<f64>, Array1<f64>)>
     let n = 100;
     let mut t1 = Array1::linspace(0.0, 10.0, n);
     for i in 1..n {
-        t1[i] += 0.1 * rng.random_range(-1.0..1.0);
+        t1[i] += 0.1 * rng.gen_range(-1.0..1.0);
     }
     t1.as_slice_mut()
         .unwrap()
-        .sort_by(|a..b| a.partial_cmp(b).unwrap());
+        .sort_by(|a, b| a.partial_cmp(b).unwrap());
     let y1: Array1<f64> =
-        t1.mapv(|ti| (2.0 * PI * 1.0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
-    signals.push((t1..y1));
+        t1.mapv(|ti| (2.0 * PI * 1.0 * ti).sin() + 0.1 * rng.gen_range(-1.0..1.0));
+    signals.push((t1, y1));
 
     // Signal 2: Multi-component signal
     let n = 150;
     let mut t2 = Array1::linspace(0.0, 15.0, n);
     for i in 1..n {
-        t2[i] += 0.05 * rng.random_range(-1.0..1.0);
+        t2[i] += 0.05 * rng.gen_range(-1.0..1.0);
     }
     t2.as_slice_mut()
         .unwrap()
-        .sort_by(|a..b| a.partial_cmp(b).unwrap());
+        .sort_by(|a, b| a.partial_cmp(b).unwrap());
     let y2: Array1<f64> = t2.mapv(|ti| {
         (2.0 * PI * 0.5 * ti).sin()
             + 0.7 * (2.0 * PI * 1.5 * ti).sin()
-            + 0.2 * rng.random_range(-1.0..1.0)
+            + 0.2 * rng.gen_range(-1.0..1.0)
     });
     signals.push((t2..y2));
 
@@ -786,7 +786,7 @@ fn simulate_scipy_lombscargle(
     // Add small random perturbations to simulate SciPy differences
     let mut rng = rand::rng();
     for p in power.iter_mut() {
-        *p *= 1.0 + 0.001 * rng.random_range(-1.0..1.0); // 0.1% random variation
+        *p *= 1.0 + 0.001 * rng.gen_range(-1.0..1.0); // 0.1% random variation
     }
 
     Ok((freqs..power))
@@ -801,9 +801,9 @@ fn validate_simd_implementation_complete() -> SignalResult<CompleteSimdValidatio
     let n = 1024;
     let mut rng = rand::rng();
     let t: Array1<f64> =
-        Array1::fromshape_fn(n, |i| i as f64 * 0.01 + 0.001 * rng.random_range(-1.0..1.0));
+        Array1::fromshape_fn(n, |i| i as f64 * 0.01 + 0.001 * rng.gen_range(-1.0..1.0));
     let y: Array1<f64> =
-        t.mapv(|ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
+        t.mapv(|ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.gen_range(-1.0..1.0));
 
     // Compute with scalar implementation
     let start_scalar = Instant::now();
@@ -930,7 +930,7 @@ fn validate_false_alarm_probability() -> SignalResult<FalseAlarmValidation> {
 
     for _ in 0..n_trials {
         let t = Array1::linspace(0.0, 10.0, n_samples);
-        let y: Array1<f64> = Array1::fromshape_fn(n_samples, |_| rng.random_range(-1.0..1.0));
+        let y: Array1<f64> = Array1::fromshape_fn(n_samples, |_| rng.gen_range(-1.0..1.0));
 
         let (_, power) = lombscargle(
             &t,
@@ -965,7 +965,7 @@ fn compare_with_theoretical_psd() -> SignalResult<PsdTheoreticalComparison> {
     let n = 512;
     let mut rng = rand::rng();
     let t = Array1::linspace(0.0, 10.0, n);
-    let white_noise: Array1<f64> = Array1::fromshape_fn(n, |_| rng.random_range(-1.0..1.0));
+    let white_noise: Array1<f64> = Array1::fromshape_fn(n, |_| rng.gen_range(-1.0..1.0));
 
     let (freqs, power) = lombscargle(
         &t,
@@ -1172,16 +1172,16 @@ fn find_peak_near_frequency(
 
 /// Estimate noise floor from power spectrum
 #[allow(dead_code)]
-fn estimate_noise_floor(_power: &Array1<f64>) -> f64 {
+fn estimate_noise_floor(power: &Array1<f64>) -> f64 {
     // Use median as robust noise floor estimate
-    let mut sorted_power = _power.to_vec();
+    let mut sorted_power = power.to_vec();
     sorted_power.sort_by(|a, b| a.partial_cmp(b).unwrap());
     sorted_power[sorted_power.len() / 2]
 }
 
 /// Perform statistical tests on error distribution
 #[allow(dead_code)]
-fn perform_statistical_tests(_errors: &[f64]) -> SignalResult<StatisticalTestResults> {
+fn perform_statistical_tests(errors: &[f64]) -> SignalResult<StatisticalTestResults> {
     // Placeholder implementation of statistical tests
     Ok(StatisticalTestResults {
         kolmogorov_smirnov_pvalue: 0.15,
@@ -1193,21 +1193,21 @@ fn perform_statistical_tests(_errors: &[f64]) -> SignalResult<StatisticalTestRes
 
 /// Generate comprehensive validation report
 #[allow(dead_code)]
-pub fn generate_advanced_lombscargle_report(_result: &AdvancedLombScargleResult) -> String {
+pub fn generate_advanced_lombscargle_report(result: &AdvancedLombScargleResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Advanced Enhanced Lomb-Scargle Validation Report\n\n");
     report.push_str(&format!(
         "🎯 *Overall Quality Score: {:.1}/100**\n\n",
-        _result.quality_score
+        result.quality_score
     ));
 
     // Executive Summary
-    if _result.quality_score >= 95.0 {
+    if result.quality_score >= 95.0 {
         report.push_str("✅ *EXCELLENT** - Implementation exceeds industry standards\n\n");
-    } else if _result.quality_score >= 85.0 {
+    } else if result.quality_score >= 85.0 {
         report.push_str("⚡ *VERY GOOD** - Implementation meets high performance standards\n\n");
-    } else if _result.quality_score >= 75.0 {
+    } else if result.quality_score >= 75.0 {
         report.push_str("⚠️ *GOOD** - Implementation is functional with room for improvement\n\n");
     } else {
         report.push_str("❌ *NEEDS IMPROVEMENT** - Significant issues require attention\n\n");
@@ -1245,33 +1245,33 @@ pub fn generate_advanced_lombscargle_report(_result: &AdvancedLombScargleResult)
     ));
     report.push_str(&format!(
         "- *Spectral Leakage Control**: {:.3}\n",
-        1.0 - _result.accuracy_validation.spectral_leakage.side_lobe_level
+        1.0 - result.accuracy_validation.spectral_leakage.side_lobe_level
     ));
 
     // SciPy Comparison
     report.push_str("\n## 🐍 SciPy Reference Comparison\n\n");
     report.push_str(&format!(
         "- *Correlation with SciPy**: {:.4}\n",
-        _result.scipy_comparison.correlation
+        result.scipy_comparison.correlation
     ));
     report.push_str(&format!(
         "- *Maximum Relative Error**: {:.2e}\n",
-        _result.scipy_comparison.max_relative_error
+        result.scipy_comparison.max_relative_error
     ));
     report.push_str(&format!(
         "- *Mean Relative Error**: {:.2e}\n",
-        _result.scipy_comparison.mean_relative_error
+        result.scipy_comparison.mean_relative_error
     ));
     report.push_str(&format!(
         "- *Peak Detection Agreement**: {:.1}%\n",
-        _result.scipy_comparison.peak_detection_agreement * 100.0
+        result.scipy_comparison.peak_detection_agreement * 100.0
     ));
 
     // SIMD Validation
     report.push_str("\n## ⚡ SIMD Performance & Accuracy\n\n");
     report.push_str(&format!(
         "- *Performance Improvement**: {:.1}x faster\n",
-        _result.simd_validation.performance_improvement
+        result.simd_validation.performance_improvement
     ));
     report.push_str(&format!(
         "- *Accuracy Correlation**: {:.6}\n",
@@ -1300,7 +1300,7 @@ pub fn generate_advanced_lombscargle_report(_result: &AdvancedLombScargleResult)
     report.push_str("\n## 💾 Memory Profiling Results\n\n");
     report.push_str(&format!(
         "- *Peak Memory Usage**: {:.1} MB\n",
-        _result.memory_profiling.peak_memory_mb
+        result.memory_profiling.peak_memory_mb
     ));
     report.push_str(&format!(
         "- *Memory per Sample**: {:.3} KB\n",
@@ -1312,7 +1312,7 @@ pub fn generate_advanced_lombscargle_report(_result: &AdvancedLombScargleResult)
     ));
     report.push_str(&format!(
         "- *Cache Hit Ratio**: {:.1}%\n",
-        _result.memory_profiling.efficiency_metrics.cache_hit_ratio * 100.0
+        result.memory_profiling.efficiency_metrics.cache_hit_ratio * 100.0
     ));
     report.push_str(&format!(
         "- *Allocation Efficiency**: {:.1}%\n",
@@ -1354,7 +1354,7 @@ pub fn generate_advanced_lombscargle_report(_result: &AdvancedLombScargleResult)
 
     // Performance Regression
     report.push_str("\n## ⏱️ Performance Analysis\n\n");
-    if _result.performance_regression.regression_detected {
+    if result.performance_regression.regression_detected {
         report.push_str("❌ *Performance regression detected!**\n");
     } else {
         report.push_str("✅ *No performance regression detected**\n");
@@ -1404,7 +1404,7 @@ pub fn generate_advanced_lombscargle_report(_result: &AdvancedLombScargleResult)
     // Recommendations
     if !_result.recommendations.is_empty() {
         report.push_str("\n## 💡 Optimization Recommendations\n\n");
-        for (i, recommendation) in _result.recommendations.iter().enumerate() {
+        for (i, recommendation) in result.recommendations.iter().enumerate() {
             report.push_str(&format!("{}. {}\n", i + 1, recommendation));
         }
     }

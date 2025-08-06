@@ -58,7 +58,7 @@ pub struct BufferPool<T, D> {
 }
 
 impl<T: Float + FromPrimitive + Debug + Clone, D: Dimension> BufferPool<T, D> {
-    pub fn new(_max_buffers: usize) -> Self {
+    pub fn new(_maxbuffers: usize) -> Self {
         Self {
             _buffers: Vec::new(),
             max_buffers_phantom: PhantomData,
@@ -125,7 +125,7 @@ impl<
         D: Dimension + 'static,
     > MemoryEfficientOp<T, D>
 {
-    pub fn new(_config: MemoryConfig) -> Self {
+    pub fn new(config: MemoryConfig) -> Self {
         Self {
             _config_phantom: PhantomData,
         }
@@ -252,8 +252,8 @@ impl<
         T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
     > ThresholdOp<T>
 {
-    pub fn new(_threshold: T, value: T) -> Self {
-        Self { _threshold, value }
+    pub fn new(threshold: T, value: T) -> Self {
+        Self { threshold, value }
     }
 }
 
@@ -292,12 +292,12 @@ where
 
 /// Zero-copy transpose for 2D arrays
 #[allow(dead_code)]
-pub fn transpose_view<T, S>(_array: &ArrayBase<S, ndarray::Ix2>) -> Array2<T>
+pub fn transpose_view<T, S>(array: &ArrayBase<S, ndarray::Ix2>) -> Array2<T>
 where
     T: Float + Copy,
     S: Data<Elem = T>,
 {
-    _array.t().to_owned()
+    array.t().to_owned()
 }
 
 #[cfg(test)]

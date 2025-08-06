@@ -6,7 +6,6 @@ use std::cell::RefCell;
 use std::fs::{self, File};
 use std::hash::{Hash, Hasher};
 use std::io::{Read, Write};
-use std::path::PathBuf;
 use std::path::{Path, PathBuf};
 
 /// The base directory name for caching datasets
@@ -26,7 +25,7 @@ const CACHE_DIR_ENV: &str = "SCIRS2_CACHE_DIR";
 
 /// Compute SHA256 hash of a file
 #[allow(dead_code)]
-pub fn sha256_hash_file(_path: &Path) -> std::result::Result<String, String> {
+pub fn sha256_hash_file(path: &Path) -> std::result::Result<String, String> {
     use sha2::{Digest, Sha256};
 
     let mut file = File::open(_path).map_err(|e| format!("Failed to open file: {e}"))?;
@@ -111,7 +110,7 @@ fn get_platform_cache_dir() -> Option<PathBuf> {
 
 /// Ensure a directory exists, creating it if necessary
 #[allow(dead_code)]
-fn ensure_directory_exists(_dir: &Path) -> Result<()> {
+fn ensure_directory_exists(dir: &Path) -> Result<()> {
     if !_dir.exists() {
         fs::create_dir_all(_dir).map_err(|e| {
             DatasetsError::CacheError(format!("Failed to create cache directory: {e}"))
@@ -156,7 +155,7 @@ pub fn fetch_data(
 
     // If not in cache, fetch from the URL
     let _entry = match registry_entry {
-        Some(_entry) => _entry,
+        Some(_entry) => entry,
         None => return Err(format!("No registry _entry found for {filename}")),
     };
 
@@ -178,10 +177,10 @@ pub fn fetch_data(
     // Verify the SHA256 hash of the downloaded file if provided
     if !_entry.sha256.is_empty() {
         let computed_hash = sha256_hash_file(&temp_file)?;
-        if computed_hash != _entry.sha256 {
+        if computed_hash != entry.sha256 {
             return Err(format!(
                 "SHA256 hash mismatch for {filename}: expected {}, got {computed_hash}",
-                _entry.sha256
+                entry.sha256
             ));
         }
     }
@@ -206,7 +205,7 @@ pub struct CacheKey {
 
 impl CacheKey {
     /// Create a new cache key from dataset name and configuration
-    pub fn new(_name: &str, config: &crate::real_world::RealWorldConfig) -> Self {
+    pub fn new(name: &str, config: &crate::real_world::RealWorldConfig) -> Self {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 
@@ -218,7 +217,7 @@ impl CacheKey {
         config.random_state.hash(&mut hasher);
 
         Self {
-            _name: _name.to_string(),
+            _name: name.to_string(),
             config_hash: format!("{:x}", hasher.finish()),
         }
     }
@@ -281,7 +280,7 @@ impl Default for DatasetCache {
 
 impl DatasetCache {
     /// Create a new dataset cache with the given cache directory and default memory cache
-    pub fn new(_cache_dir: PathBuf) -> Self {
+    pub fn new(_cachedir: PathBuf) -> Self {
         let mem_cache = RefCell::new(
             CacheBuilder::new()
                 .with_size(DEFAULT_CACHE_SIZE)
@@ -294,7 +293,7 @@ impl DatasetCache {
             .unwrap_or(false);
 
         DatasetCache {
-            _cache_dir,
+            cache_dir,
             mem_cache,
             max_cache_size: DEFAULT_MAX_CACHE_SIZE,
             offline_mode,
@@ -302,7 +301,7 @@ impl DatasetCache {
     }
 
     /// Create a new dataset cache with custom settings
-    pub fn with_config(_cache_dir: PathBuf, cache_size: usize, ttl_seconds: u64) -> Self {
+    pub fn with_config(_cache_dir: PathBuf, cache_size: usize, ttlseconds: u64) -> Self {
         let mem_cache = RefCell::new(
             CacheBuilder::new()
                 .with_size(cache_size)
@@ -315,7 +314,7 @@ impl DatasetCache {
             .unwrap_or(false);
 
         DatasetCache {
-            _cache_dir,
+            cache_dir,
             mem_cache,
             max_cache_size: DEFAULT_MAX_CACHE_SIZE,
             offline_mode,
@@ -466,7 +465,7 @@ impl DatasetCache {
     }
 
     /// Compute a hash for a filename or URL
-    pub fn hash_filename(_name: &str) -> String {
+    pub fn hash_filename(name: &str) -> String {
         let hash = blake3::hash(_name.as_bytes());
         hash.to_hex().to_string()
     }
@@ -500,7 +499,7 @@ impl DatasetCache {
     ///
     /// This method removes the oldest files first until there's enough space
     /// for the new file plus some buffer space.
-    fn cleanup_cache_to_fit(&self, needed_size: u64) -> Result<()> {
+    fn cleanup_cache_to_fit(&self, neededsize: u64) -> Result<()> {
         if self.max_cache_size == 0 {
             return Ok(()); // No _size limit
         }
@@ -558,7 +557,7 @@ impl DatasetCache {
             if let Err(e) = fs::remove_file(&path) {
                 eprintln!("Warning: Failed to remove cache file {path:?}: {e}");
             } else {
-                freed_size += _size;
+                freed_size += size;
             }
         }
 
@@ -576,7 +575,7 @@ impl DatasetCache {
     }
 
     /// Set maximum cache size in bytes (0 for unlimited)
-    pub fn set_max_cache_size(&mut self, max_size: u64) {
+    pub fn set_max_cache_size(&mut self, maxsize: u64) {
         self.max_cache_size = max_size;
     }
 
@@ -641,7 +640,7 @@ impl DatasetCache {
 /// Downloads data from a URL and returns it as bytes, using the cache when possible
 #[cfg(feature = "download")]
 #[allow(dead_code)]
-pub fn download_data(_url: &str, force_download: bool) -> Result<Vec<u8>> {
+pub fn download_data(_url: &str, forcedownload: bool) -> Result<Vec<u8>> {
     let cache = DatasetCache::default();
     let cache_key = DatasetCache::hash_filename(_url);
 
@@ -690,7 +689,7 @@ pub fn download_data(_url: &str, force_download: bool) -> Result<Vec<u8>> {
 ///
 /// * An error indicating that the download feature is not enabled
 #[allow(dead_code)]
-pub fn download_data(_url: &str, _force_download: bool) -> Result<Vec<u8>> {
+pub fn download_data(_url: &str, _forcedownload: bool) -> Result<Vec<u8>> {
     Err(DatasetsError::Other(
         "Download feature is not enabled. Recompile with --features _download".to_string(),
     ))
@@ -711,7 +710,7 @@ impl CacheManager {
     }
 
     /// Create a new cache manager with custom settings
-    pub fn with_config(_cache_dir: PathBuf, cache_size: usize, ttl_seconds: u64) -> Self {
+    pub fn with_config(_cache_dir: PathBuf, cache_size: usize, ttlseconds: u64) -> Self {
         Self {
             cache: DatasetCache::with_config(_cache_dir, cache_size, ttl_seconds),
         }
@@ -821,7 +820,7 @@ impl CacheManager {
     }
 
     /// Set maximum cache size in bytes (0 for unlimited)
-    pub fn set_max_cache_size(&mut self, max_size: u64) {
+    pub fn set_max_cache_size(&mut self, maxsize: u64) {
         self.cache.set_max_cache_size(max_size);
     }
 
@@ -841,7 +840,7 @@ impl CacheManager {
     }
 
     /// Remove old files to free up space
-    pub fn cleanup_old_files(&self, target_size: u64) -> Result<()> {
+    pub fn cleanup_old_files(&self, targetsize: u64) -> Result<()> {
         self.cache.cleanup_cache_to_fit(target_size)
     }
 
@@ -1032,7 +1031,7 @@ impl CacheFileInfo {
 
 /// Format bytes as human-readable string
 #[allow(dead_code)]
-fn format_bytes(_bytes: u64) -> String {
+fn format_bytes(bytes: u64) -> String {
     let size = _bytes as f64;
     if size < 1024.0 {
         format!("{size} B")
@@ -1116,9 +1115,9 @@ pub struct BatchOperations {
 
 impl BatchOperations {
     /// Create a new batch operations manager
-    pub fn new(_cache: CacheManager) -> Self {
+    pub fn new(cache: CacheManager) -> Self {
         Self {
-            _cache,
+            cache,
             parallel: true,
             max_retries: 3,
             retry_delay: std::time::Duration::from_millis(1000),
@@ -1144,7 +1143,7 @@ impl BatchOperations {
 
     /// Download multiple datasets in batch
     #[cfg(feature = "download")]
-    pub fn batch_download(&self, urls_and_names: &[(&str, &str)]) -> BatchResult {
+    pub fn batch_download(&self, urls_andnames: &[(&str, &str)]) -> BatchResult {
         let start_time = std::time::Instant::now();
         let mut result = BatchResult::new();
 
@@ -1159,7 +1158,7 @@ impl BatchOperations {
     }
 
     #[cfg(feature = "download")]
-    fn batch_download_parallel(&self, urls_and_names: &[(&str, &str)], result: &mut BatchResult) {
+    fn batch_download_parallel(&self, urls_andnames: &[(&str, &str)], result: &mut BatchResult) {
         use std::fs::File;
         use std::io::Write;
         use std::sync::{Arc, Mutex};
@@ -1263,7 +1262,7 @@ impl BatchOperations {
     }
 
     #[cfg(feature = "download")]
-    fn batch_download_sequential(&self, urls_and_names: &[(&str, &str)], result: &mut BatchResult) {
+    fn batch_download_sequential(&self, urls_andnames: &[(&str, &str)], result: &mut BatchResult) {
         for &(url, name) in urls_and_names {
             let mut success = false;
             let mut last_error = String::new();
@@ -1298,7 +1297,7 @@ impl BatchOperations {
     }
 
     /// Verify integrity of multiple cached files
-    pub fn batch_verify_integrity(&self, files_and_hashes: &[(&str, &str)]) -> BatchResult {
+    pub fn batch_verify_integrity(&self, files_andhashes: &[(&str, &str)]) -> BatchResult {
         let start_time = std::time::Instant::now();
         let mut result = BatchResult::new();
 
@@ -1583,7 +1582,7 @@ impl BatchOperations {
 
 /// Simple glob pattern matching for filenames
 #[allow(dead_code)]
-fn matches_glob_pattern(_filename: &str, pattern: &str) -> bool {
+fn matches_glob_pattern(filename: &str, pattern: &str) -> bool {
     if pattern == "*" {
         return true;
     }
@@ -1593,7 +1592,7 @@ fn matches_glob_pattern(_filename: &str, pattern: &str) -> bool {
         if parts.len() == 2 {
             let prefix = parts[0];
             let suffix = parts[1];
-            return _filename.starts_with(prefix) && _filename.ends_with(suffix);
+            return filename.starts_with(prefix) && filename.ends_with(suffix);
         }
     }
 

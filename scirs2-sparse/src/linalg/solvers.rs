@@ -237,12 +237,12 @@ where
 
 /// Create a diagonal matrix
 #[allow(dead_code)]
-pub fn diag_matrix<F>(_diag: &[F], n: Option<usize>) -> SparseResult<CsrMatrix<F>>
+pub fn diag_matrix<F>(diag: &[F], n: Option<usize>) -> SparseResult<CsrMatrix<F>>
 where
     F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
 {
     let size = n.unwrap_or(_diag.len());
-    if size < _diag.len() {
+    if size < diag.len() {
         return Err(SparseError::ValueError(
             "Size must be at least as large as diagonal".to_string(),
         ));
@@ -252,7 +252,7 @@ where
     let mut cols = Vec::new();
     let mut data = Vec::new();
 
-    for (i, &val) in _diag.iter().enumerate() {
+    for (i, &val) in diag.iter().enumerate() {
         if val != F::zero() {
             rows.push(i);
             cols.push(i);

@@ -21,9 +21,9 @@ pub struct AdvancedTurbulenceModel {
 
 impl AdvancedTurbulenceModel {
     /// Create new turbulence model
-    pub fn new(model_type: TurbulenceModelType, nx: usize, ny: usize, nz: usize) -> Self {
+    pub fn new(modeltype: TurbulenceModelType, nx: usize, ny: usize, nz: usize) -> Self {
         Self {
-            model_type,
+            model_type: modeltype,
             constants: TurbulenceConstants::default(),
             wall_distance: Array3::ones((nx, ny, nz)),
         }

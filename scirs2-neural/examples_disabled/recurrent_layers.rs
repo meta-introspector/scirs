@@ -11,11 +11,11 @@ trait RecurrentLayer {
     // Forward pass takes input x and returns output
     // For RNNs, x has shape [batch_size, seq_len, input_size]
     // Output has shape [batch_size, seq_len, hidden_size]
-    fn forward(&mut self, x: &Array3<f32>, is_training: bool) -> Array3<f32>;
+    fn forward(&mut self, x: &Array3<f32>, istraining: bool) -> Array3<f32>;
     // Backward pass takes gradient from next layer and returns gradient to previous layer
-    fn backward(&mut self, grad_output: &Array3<f32>) -> Array3<f32>;
+    fn backward(&mut self, gradoutput: &Array3<f32>) -> Array3<f32>;
     // Update parameters with calculated gradients
-    fn update_params(&mut self, learning_rate: f32);
+    fn update_params(&mut self, learningrate: f32);
     // Reset hidden state
     fn reset_state(&mut self);
 }
@@ -41,13 +41,13 @@ struct SimpleRNN {
     inputs: Option<Array3<f32>>, // [batch_size, seq_len, input_size]
     hidden_states: Option<Array3<f32>>, // [batch_size, seq_len+1, hidden_size]
 impl SimpleRNN {
-    fn new(_input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, batchsize: usize) -> Self {
         // Xavier/Glorot initialization for weights
         let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         // Create a random number generator
         let mut rng = rand::rng();
         // Initialize with random values
-        let mut w_ih = Array2::<f32>::zeros((hidden_size, _input_size));
+        let mut w_ih = Array2::<f32>::zeros((hidden_size, input_size));
         let mut w_hh = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_ih.iter_mut() {
             *elem = rng.gen_range(-bound..bound);
@@ -74,11 +74,11 @@ impl SimpleRNN {
     // Activation function and its derivative
     fn tanh(x: &Array2<f32>) -> Array2<f32> {
         x.mapv(|v| v.tanh())
-    fn tanh_derivative(_tanh_output: &Array2<f32>) -> Array2<f32> {
+    fn tanh_derivative(_tanhoutput: &Array2<f32>) -> Array2<f32> {
         // derivative of tanh(x) is 1 - tanh(x)^2
-        _tanh_output.mapv(|v| 1.0 - v * v)
+        tanh_output.mapv(|v| 1.0 - v * v)
 impl RecurrentLayer for SimpleRNN {
-    fn forward(&mut self, x: &Array3<f32>, is_training: bool) -> Array3<f32> {
+    fn forward(&mut self, x: &Array3<f32>, istraining: bool) -> Array3<f32> {
         let batch_size = x.shape()[0];
         let seq_len = x.shape()[1];
         // Initialize hidden state if None
@@ -122,7 +122,7 @@ impl RecurrentLayer for SimpleRNN {
             self.hidden_states = Some(all_hidden_states.clone());
         // Return all hidden states except the initial state
         all_hidden_states.slice(s![.., 1.., ..]).to_owned()
-    fn backward(&mut self, grad_output: &Array3<f32>) -> Array3<f32> {
+    fn backward(&mut self, gradoutput: &Array3<f32>) -> Array3<f32> {
         // Get cached values
         let inputs = self
             .inputs
@@ -173,7 +173,7 @@ impl RecurrentLayer for SimpleRNN {
         self.db_ih = Some(db_ih);
         self.db_hh = Some(db_hh);
         dx
-    fn update_params(&mut self, learning_rate: f32) {
+    fn update_params(&mut self, learningrate: f32) {
         if let Some(dw_ih) = &self.dw_ih {
             self.w_ih = &self.w_ih - &(dw_ih * learning_rate);
         if let Some(dw_hh) = &self.dw_hh {
@@ -281,8 +281,8 @@ impl LSTM {
     // Activation functions and derivatives
     fn sigmoid(x: &Array2<f32>) -> Array2<f32> {
         x.mapv(|v| 1.0 / (1.0 + (-v).exp()))
-    fn sigmoid_derivative(_sigmoid_output: &Array2<f32>) -> Array2<f32> {
-        _sigmoid_output * &(1.0 - _sigmoid_output)
+    fn sigmoid_derivative(_sigmoidoutput: &Array2<f32>) -> Array2<f32> {
+        _sigmoid_output * &(1.0 - sigmoid_output)
         1.0 - tanh_output * tanh_output
 impl RecurrentLayer for LSTM {
         // Initialize states if None

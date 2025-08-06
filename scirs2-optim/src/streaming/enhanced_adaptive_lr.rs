@@ -729,7 +729,7 @@ impl<A: Float + Default + Clone + Send + Sync> EnhancedAdaptiveLRController<A> {
     }
 
     /// Apply meta-learning adjustment to base decision
-    fn apply_meta_adjustment(&self, base_lr: A, meta_adjustment: A) -> A {
+    fn apply_meta_adjustment(&self, base_lr: A, metaadjustment: A) -> A {
         // Combine base decision with meta-learning recommendation
         let alpha = A::from(0.7).unwrap(); // Weight for base decision
         let beta = A::from(0.3).unwrap(); // Weight for meta-learning
@@ -738,7 +738,7 @@ impl<A: Float + Default + Clone + Send + Sync> EnhancedAdaptiveLRController<A> {
     }
 
     /// Evaluate adaptation effectiveness retrospectively
-    pub fn evaluate_adaptation_effectiveness(&mut self, performance_improvement: A) {
+    pub fn evaluate_adaptation_effectiveness(&mut self, performanceimprovement: A) {
         if let Some(last_event) = self.adaptation_history.back_mut() {
             last_event.effectiveness_score = Some(performance_improvement);
 
@@ -778,7 +778,8 @@ impl<A: Float + Default + Clone> MultiSignalAdaptationStrategy<A> {
 
     fn resolve_signals(
         &mut self,
-        signals: Vec<SignalVote<A>>, _step: usize,
+        signals: Vec<SignalVote<A>>,
+        _step: usize,
     ) -> Result<AdaptationDecision<A>> {
         if signals.is_empty() {
             return Ok(AdaptationDecision {
@@ -815,7 +816,7 @@ impl<A: Float + Default + Clone> MultiSignalAdaptationStrategy<A> {
         })
     }
 
-    fn update_signal_reliability(&mut self, signal_type: AdaptationSignalType, effectiveness: A) {
+    fn update_signal_reliability(&mut self, signaltype: AdaptationSignalType, effectiveness: A) {
         let reliability = self
             .signal_reliability
             .entry(signal_type)
@@ -838,7 +839,7 @@ impl<A: Float + Default + Clone> GradientBasedAdapter<A> {
         })
     }
 
-    fn generate_signal(&mut self, gradients: &Array1<A>, _step: usize) -> Result<SignalVote<A>> {
+    fn generate_signal(&mut self, gradients: &Array1<A>, step: usize) -> Result<SignalVote<A>> {
         let magnitude = gradients
             .iter()
             .map(|&g| g * g)
@@ -887,7 +888,9 @@ impl<A: Float + Default + Clone> PerformanceBasedAdapter<A> {
 
     fn generate_signal(
         &mut self,
-        loss: A, metrics: &HashMap<String, A>, _step: usize,
+        loss: A,
+        metrics: &HashMap<String, A>,
+        _step: usize,
     ) -> Result<SignalVote<A>> {
         let loss_history = self
             .metric_history
@@ -937,8 +940,7 @@ impl<A: Float + Default + Clone> DriftAwareAdapter<A> {
         })
     }
 
-    fn generate_signal(&mut self,
-        gradients: &Array1<A>, _step: usize) -> Result<SignalVote<A>> {
+    fn generate_signal(&mut self, gradients: &Array1<A>, step: usize) -> Result<SignalVote<A>> {
         // Simplified drift detection
         Ok(SignalVote {
             signal_type: AdaptationSignalType::ConceptDrift,
@@ -976,8 +978,7 @@ impl<A: Float + Default + Clone> ResourceAwareAdapter<A> {
         })
     }
 
-    fn generate_signal(&mut self,
-        step: usize) -> Result<SignalVote<A>> {
+    fn generate_signal(&mut self, step: usize) -> Result<SignalVote<A>> {
         // Simplified resource-based adaptation
         let memory_pressure = self.memory_tracker.memory_pressure;
 
@@ -1015,8 +1016,7 @@ impl<A: Float + Default + Clone> MetaOptimizer<A> {
         })
     }
 
-    fn meta_optimize(&mut self,
-        decision: &AdaptationDecision<A>, _step: usize) -> Result<A> {
+    fn meta_optimize(&mut self, decision: &AdaptationDecision<A>, step: usize) -> Result<A> {
         // Simplified meta-optimization
         Ok(A::from(0.001).unwrap())
     }

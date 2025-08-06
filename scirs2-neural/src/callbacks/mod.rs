@@ -71,7 +71,7 @@ pub struct FunctionCallback<F: Float + Debug + ScalarOperand + Send + Sync> {
     _phantom: std::marker::PhantomData<F>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> FunctionCallback<F> {
     /// Create a new function callback
-    pub fn new(_func: Box<dyn Fn() -> Result<()> + Send + Sync>) -> Self {
+    pub fn new(func: Box<dyn Fn() -> Result<()> + Send + Sync>) -> Self {
         Self {
             _func_phantom: std::marker::PhantomData,
         }

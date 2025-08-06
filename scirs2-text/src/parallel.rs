@@ -9,6 +9,7 @@ use crate::vectorize::Vectorizer;
 use ndarray::Array2;
 use scirs2_core::parallel_ops::*;
 use std::sync::{Arc, Mutex};
+use num_cpus::get;
 
 /// Parallel tokenizer
 pub struct ParallelTokenizer<T: Tokenizer + Send + Sync> {
@@ -20,15 +21,15 @@ pub struct ParallelTokenizer<T: Tokenizer + Send + Sync> {
 
 impl<T: Tokenizer + Send + Sync> ParallelTokenizer<T> {
     /// Create a new parallel tokenizer
-    pub fn new(_tokenizer: T) -> Self {
+    pub fn new(tokenizer: T) -> Self {
         Self {
-            _tokenizer,
+            tokenizer,
             chunk_size: 1000,
         }
     }
 
     /// Set the chunk size
-    pub fn with_chunk_size(mut self, chunk_size: usize) -> Self {
+    pub fn with_chunk_size(mut self, chunksize: usize) -> Self {
         self.chunk_size = chunk_size;
         self
     }
@@ -86,7 +87,7 @@ pub struct ParallelVectorizer<T: Vectorizer + Send + Sync> {
 
 impl<T: Vectorizer + Send + Sync> ParallelVectorizer<T> {
     /// Create a new parallel vectorizer
-    pub fn new(_vectorizer: T) -> Self {
+    pub fn new(vectorizer: T) -> Self {
         Self {
             _vectorizer: Arc::new(_vectorizer),
             chunk_size: 100,
@@ -94,7 +95,7 @@ impl<T: Vectorizer + Send + Sync> ParallelVectorizer<T> {
     }
 
     /// Set the chunk size
-    pub fn with_chunk_size(mut self, chunk_size: usize) -> Self {
+    pub fn with_chunk_size(mut self, chunksize: usize) -> Self {
         self.chunk_size = chunk_size;
         self
     }
@@ -163,8 +164,7 @@ pub struct ParallelTextProcessor {
 impl Default for ParallelTextProcessor {
     fn default() -> Self {
         Self {
-            num_threads: num,
-            _cpus: get(),
+            num_threads: num_cpus::get(),
         }
     }
 }
@@ -176,7 +176,7 @@ impl ParallelTextProcessor {
     }
 
     /// Set the number of threads
-    pub fn with_threads(mut self, num_threads: usize) -> Self {
+    pub fn with_threads(mut self, numthreads: usize) -> Self {
         self.num_threads = num_threads;
         self
     }
@@ -242,7 +242,7 @@ impl ParallelTextProcessor {
     }
 
     /// Batch process texts with custom chunking
-    pub fn batch_process<F, R>(&self, texts: &[&str], chunk_size: usize, f: F) -> Vec<Vec<R>>
+    pub fn batch_process<F, R>(&self, texts: &[&str], chunksize: usize, f: F) -> Vec<Vec<R>>
     where
         F: Fn(&[&str]) -> Vec<R> + Send + Sync,
         R: Send,
@@ -263,22 +263,22 @@ pub struct ParallelCorpusProcessor {
 
 impl ParallelCorpusProcessor {
     /// Create a new parallel corpus processor
-    pub fn new(_batch_size: usize) -> Self {
+    pub fn new(_batchsize: usize) -> Self {
         Self {
-            _batch_size,
+            batch_size,
             num_threads: None,
             max_memory: None,
         }
     }
 
     /// Set the number of threads
-    pub fn with_threads(mut self, num_threads: usize) -> Self {
+    pub fn with_threads(mut self, numthreads: usize) -> Self {
         self.num_threads = Some(num_threads);
         self
     }
 
     /// Set the maximum memory usage
-    pub fn with_max_memory(mut self, max_memory: usize) -> Self {
+    pub fn with_max_memory(mut self, maxmemory: usize) -> Self {
         self.max_memory = Some(max_memory);
         self
     }
@@ -317,7 +317,7 @@ impl ParallelCorpusProcessor {
             // Sort by index and flatten results
             let mut sorted_results: Vec<_> =
                 indexed_results.into_iter().filter_map(|r| r.ok()).collect();
-            sorted_results.sort_by_key(|(idx_)| *idx);
+            sorted_results.sort_by_key(|(idx_, _)| *idx_);
 
             let mut results_guard = results.lock().unwrap();
             for (_, batch_results) in sorted_results {
@@ -398,7 +398,7 @@ impl ParallelCorpusProcessor {
         // Sort by index and flatten results
         let mut sorted_results: Vec<_> =
             indexed_results.into_iter().filter_map(|r| r.ok()).collect();
-        sorted_results.sort_by_key(|(idx_)| *idx);
+        sorted_results.sort_by_key(|(idx_, _)| *idx_);
 
         let mut final_results = Vec::new();
         for (_, batch_results) in sorted_results {

@@ -11,7 +11,7 @@
 #![allow(dead_code, missing_docs)]
 
 use crate::error::{Result, VisionError};
-use crate::scene__understanding::SceneAnalysisResult;
+use crate::scene_understanding::SceneAnalysisResult;
 use ndarray::{Array1, Array2, Array3, ArrayView3};
 use std::collections::HashMap;
 
@@ -772,7 +772,7 @@ impl ActivityRecognitionEngine {
     }
 
     fn detect_actions(
-        &self_frame: &ArrayView3<f32>,
+        self_frame: &ArrayView3<f32>,
         scene_analysis: &SceneAnalysisResult,
         motion_features: &Array3<f32>,
     ) -> Result<Vec<DetectedActivity>> {
@@ -820,20 +820,23 @@ impl ActivityRecognitionEngine {
 
     fn enhance_with_context(
         &self,
-        activities: &[DetectedActivity], _context: &ContextClassification,
+        activities: &[DetectedActivity],
+        _context: &ContextClassification,
     ) -> Result<Vec<DetectedActivity>> {
         // Apply contextual enhancement
         Ok(activities.to_vec())
     }
 
     fn detect_frame_interactions(
-        &self, _scene_analysis: &SceneAnalysisResult,
+        &self,
+        _scene_analysis: &SceneAnalysisResult,
     ) -> Result<Vec<PersonInteraction>> {
         Ok(Vec::new()) // Placeholder
     }
 
     fn summarize_frame_activities(
-        &self, _scene_analysis: &SceneAnalysisResult,
+        &self,
+        _scene_analysis: &SceneAnalysisResult,
     ) -> Result<ActivitySummary> {
         Ok(ActivitySummary {
             dominant_activity: "static_scene".to_string(),
@@ -846,7 +849,8 @@ impl ActivityRecognitionEngine {
     }
 
     fn build_activity_timeline(
-        &self, _frame_activities: &[ActivityRecognitionResult],
+        &self,
+        _frame_activities: &[ActivityRecognitionResult],
     ) -> Result<ActivityTimeline> {
         Ok(ActivityTimeline {
             segments: Vec::new(),
@@ -856,7 +860,8 @@ impl ActivityRecognitionEngine {
     }
 
     fn summarize_sequence_activities(
-        &self, _frame_activities: &[ActivityRecognitionResult],
+        &self,
+        _frame_activities: &[ActivityRecognitionResult],
     ) -> Result<ActivitySummary> {
         Ok(ActivitySummary {
             dominant_activity: "general_activity".to_string(),
@@ -940,7 +945,7 @@ impl ActivityRecognitionEngine {
         counts
     }
 
-    fn find_dominant_activity(&self, activity_counts: &HashMap<String, usize>) -> String {
+    fn find_dominant_activity(&self, activitycounts: &HashMap<String, usize>) -> String {
         activity_counts
             .iter()
             .max_by_key(|(_, &count)| count)
@@ -948,7 +953,7 @@ impl ActivityRecognitionEngine {
             .unwrap_or_else(|| "unknown".to_string())
     }
 
-    fn predict_activity_transition(&self, current_activity: &str) -> Option<String> {
+    fn predict_activity_transition(&self, currentactivity: &str) -> Option<String> {
         // Simple transition model based on common _activity patterns
         match current_activity {
             "sitting" => Some("standing".to_string()),
@@ -1033,9 +1038,9 @@ pub struct ActivityPrediction {
 
 // Implementation stubs for associated types
 impl ActionDetector {
-    fn new(_name: &str) -> Self {
+    fn new(name: &str) -> Self {
         Self {
-            _name: _name.to_string(),
+            _name: name.to_string(),
             action_types: vec![
                 "walking".to_string(),
                 "sitting".to_string(),
@@ -1218,7 +1223,8 @@ impl ContextAwareActivityClassifier {
     }
 
     fn classify_context(
-        &self, _scene_analysis: &SceneAnalysisResult,
+        &self,
+        _scene_analysis: &SceneAnalysisResult,
     ) -> Result<ContextClassification> {
         Ok(ContextClassification {
             scene_type: "indoor".to_string(),
@@ -1446,7 +1452,8 @@ pub fn monitor_activities_realtime(
 /// Apply temporal smoothing to reduce flickering in real-time recognition
 #[allow(dead_code)]
 fn apply_temporal_smoothing(
-    current_result: ActivityRecognitionResult, _history: &[ActivityRecognitionResult],
+    current_result: ActivityRecognitionResult,
+    _history: &[ActivityRecognitionResult],
 ) -> Result<ActivityRecognitionResult> {
     // Placeholder for temporal smoothing logic
     Ok(current_result)
@@ -1513,8 +1520,8 @@ impl ActivityRecognitionEngine {
 
         for _y in bbox_y..end_y {
             for _x in bbox_x..end_x {
-                let magnitude = motion_features[[_y, _x, 2]];
-                let direction = motion_features[[_y, _x, 3]];
+                let magnitude = motion_features[[_y, x, 2]];
+                let direction = motion_features[[_y, x, 3]];
 
                 sum_velocity += magnitude;
                 sum_magnitude += magnitude;
@@ -1534,7 +1541,7 @@ impl ActivityRecognitionEngine {
         Ok(person_features)
     }
 
-    fn classify_person_activity(&self, person_motion_features: &Array1<f32>) -> (String, f32) {
+    fn classify_person_activity(&self, person_motionfeatures: &Array1<f32>) -> (String, f32) {
         let velocity = person_motion_features[0];
         let magnitude = person_motion_features[1];
         let aspect_ratio = person_motion_features[4];
@@ -1582,18 +1589,18 @@ impl ActivityRecognitionEngine {
         );
 
         for _object in &scene_analysis.objects {
-            if _object.class != "person" {
+            if object.class != "person" {
                 let object_center = (
-                    _object.bbox.0 + _object.bbox.2 / 2.0,
-                    _object.bbox.1 + _object.bbox.3 / 2.0,
+                    object.bbox.0 + object.bbox.2 / 2.0,
+                    object.bbox.1 + object.bbox.3 / 2.0,
                 );
                 let distance = ((person_center.0 - object_center.0).powi(2)
                     + (person_center.1 - object_center.1).powi(2))
                 .sqrt();
 
-                // If person is close to _object, consider it an interaction
+                // If person is close to object, consider it an interaction
                 if distance < 100.0 {
-                    interactions.push(format!("{}:unknown", _object.class));
+                    interactions.push(format!("{}:unknown", object.class));
                 }
             }
         }
@@ -1601,7 +1608,7 @@ impl ActivityRecognitionEngine {
         Ok(interactions)
     }
 
-    fn determine_activity_subtype(&self, person_motion_features: &Array1<f32>) -> Option<String> {
+    fn determine_activity_subtype(&self, person_motionfeatures: &Array1<f32>) -> Option<String> {
         let velocity = person_motion_features[0];
         let magnitude = person_motion_features[1];
 
@@ -1642,7 +1649,7 @@ impl TemporalActivityModeler {
         counts
     }
 
-    fn find_dominant_activity(&self, activity_counts: &HashMap<String, usize>) -> String {
+    fn find_dominant_activity(&self, activitycounts: &HashMap<String, usize>) -> String {
         activity_counts
             .iter()
             .max_by_key(|(_, &count)| count)
@@ -1650,7 +1657,7 @@ impl TemporalActivityModeler {
             .unwrap_or_else(|| "unknown".to_string())
     }
 
-    fn predict_activity_transition(&self, current_activity: &str) -> Option<String> {
+    fn predict_activity_transition(&self, currentactivity: &str) -> Option<String> {
         // Simple transition model based on common _activity patterns
         match current_activity {
             "sitting" => Some("standing".to_string()),

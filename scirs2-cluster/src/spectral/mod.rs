@@ -39,17 +39,17 @@ pub enum AffinityMode {
 ///
 /// * The estimated number of clusters
 #[allow(dead_code)]
-fn eigengap_heuristic<F>(_eigenvalues: &[F], max_clusters: usize) -> usize
+fn eigengap_heuristic<F>(_eigenvalues: &[F], maxclusters: usize) -> usize
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
     // Find the largest eigengap among the first max_clusters _eigenvalues
-    let n = _eigenvalues.len();
+    let n = eigenvalues.len();
     let mut max_gap = F::zero();
     let mut max_gap_idx = 1; // Default to 1 cluster
 
     for i in 0..(max_clusters.min(n - 1)) {
-        let gap = _eigenvalues[i + 1] - _eigenvalues[i];
+        let gap = eigenvalues[i + 1] - eigenvalues[i];
         if gap > max_gap {
             max_gap = gap;
             max_gap_idx = i + 1;
@@ -74,12 +74,12 @@ where
 ///
 /// * The normalized graph Laplacian matrix
 #[allow(dead_code)]
-fn normalized_laplacian<F>(_affinity: &Array2<F>) -> Result<Array2<F>>
+fn normalized_laplacian<F>(affinity: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
-    let n = _affinity.shape()[0];
-    if n != _affinity.shape()[1] {
+    let n = affinity.shape()[0];
+    if n != affinity.shape()[1] {
         return Err(ClusteringError::InvalidInput(
             "Affinity matrix must be square".to_string(),
         ));
@@ -88,7 +88,7 @@ where
     // Calculate row sums (degrees)
     let mut degrees = Array1::zeros(n);
     for i in 0..n {
-        degrees[i] = _affinity.row(i).sum();
+        degrees[i] = affinity.row(i).sum();
     }
 
     // Calculate D^(-1/2)
@@ -109,7 +109,7 @@ where
         for j in 0..n {
             if i == j {
                 // Diagonal elements of identity matrix I minus the normalized _affinity
-                laplacian[[i, j]] = F::one() - _affinity[[i, j]] * d_inv_sqrt[i] * d_inv_sqrt[j];
+                laplacian[[i, j]] = F::one() - affinity[[i, j]] * d_inv_sqrt[i] * d_inv_sqrt[j];
             } else {
                 // Off-diagonal elements are the negative normalized _affinity
                 laplacian[[i, j]] = -_affinity[[i, j]] * d_inv_sqrt[i] * d_inv_sqrt[j];
@@ -131,12 +131,12 @@ where
 ///
 /// * Affinity matrix where each row has at most n_neighbors non-zero entries
 #[allow(dead_code)]
-fn knn_affinity<F>(_data: ArrayView2<F>, n_neighbors: usize) -> Result<Array2<F>>
+fn knn_affinity<F>(_data: ArrayView2<F>, nneighbors: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
-    let n_samples = _data.shape()[0];
-    let n_features = _data.shape()[1];
+    let n_samples = data.shape()[0];
+    let n_features = data.shape()[1];
 
     // Ensure n_neighbors is valid
     if n_neighbors >= n_samples {
@@ -153,7 +153,7 @@ where
         for j in (i + 1)..n_samples {
             let mut dist_sq = F::zero();
             for k in 0..n_features {
-                let diff = _data[[i, k]] - _data[[j, k]];
+                let diff = data[[i, k]] - data[[j, k]];
                 dist_sq = dist_sq + diff * diff;
             }
             let dist = dist_sq.sqrt();
@@ -178,7 +178,7 @@ where
 
         // Select k nearest _neighbors
         for (j_) in distances.iter().take(n_neighbors.min(distances.len())) {
-            // Create binary adjacency matrix (1 for _neighbors, 0 otherwise)
+            // Create binary adjacency matrix (1 for neighbors, 0 otherwise)
             affinity[[i, *j]] = F::one();
             // Make it symmetric
             affinity[[*j, i]] = F::one();
@@ -199,12 +199,12 @@ where
 ///
 /// * Affinity matrix where each element (i,j) is exp(-gamma * ||x_i - x_j||^2)
 #[allow(dead_code)]
-fn rbf_affinity<F>(_data: ArrayView2<F>, gamma: F) -> Result<Array2<F>>
+fn rbf_affinity<F>(data: ArrayView2<F>, gamma: F) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
-    let n_samples = _data.shape()[0];
-    let n_features = _data.shape()[1];
+    let n_samples = data.shape()[0];
+    let n_features = data.shape()[1];
 
     if gamma <= F::zero() {
         return Err(ClusteringError::InvalidInput(
@@ -222,7 +222,7 @@ where
         for j in (i + 1)..n_samples {
             let mut dist_sq = F::zero();
             for k in 0..n_features {
-                let diff = _data[[i, k]] - _data[[j, k]];
+                let diff = data[[i, k]] - data[[j, k]];
                 dist_sq = dist_sq + diff * diff;
             }
 

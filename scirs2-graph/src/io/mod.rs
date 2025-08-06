@@ -70,7 +70,7 @@ pub enum GraphFormat {
 /// * `Ok(Graph)` - The graph read from the file
 /// * `Err(GraphError)` - If there was an error reading the file
 #[allow(dead_code)]
-pub fn read_graph<N, E, P>(_path: P, format: GraphFormat, weighted: bool) -> Result<Graph<N, E>>
+pub fn read_graph<N, E, P>(path: P, format: GraphFormat, weighted: bool) -> Result<Graph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
@@ -98,7 +98,7 @@ where
 /// * `Ok(DiGraph)` - The directed graph read from the file
 /// * `Err(GraphError)` - If there was an error reading the file
 #[allow(dead_code)]
-pub fn read_digraph<N, E, P>(_path: P, format: GraphFormat, weighted: bool) -> Result<DiGraph<N, E>>
+pub fn read_digraph<N, E, P>(path: P, format: GraphFormat, weighted: bool) -> Result<DiGraph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,

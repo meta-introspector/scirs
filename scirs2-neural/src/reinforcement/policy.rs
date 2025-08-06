@@ -206,7 +206,7 @@ pub struct PolicyGradient {
     baseline: Option<Box<dyn Fn(&ArrayView1<f32>) -> f32>>,
 impl PolicyGradient {
     /// Create a new Policy Gradient algorithm
-    pub fn new(_policy: Arc<dyn Policy>, learning_rate: f32, discount_factor: f32) -> Self {
+    pub fn new(_policy: Arc<dyn Policy>, learning_rate: f32, discountfactor: f32) -> Self {
         Self {
             policy,
             learning_rate,

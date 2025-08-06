@@ -269,7 +269,13 @@ impl ElasticDeformation {
     /// # Returns
     ///
     /// * Result containing the elastic deformation
-    pub fn new(_width: u32, height: u32, alpha: f64, sigma: f64, seed: Option<u64>) -> Result<Self> {
+    pub fn new(
+        _width: u32,
+        height: u32,
+        alpha: f64,
+        sigma: f64,
+        seed: Option<u64>,
+    ) -> Result<Self> {
         if _width == 0 || height == 0 {
             return Err(VisionError::InvalidParameter(
                 "Width and height must be positive".to_string(),
@@ -314,7 +320,7 @@ impl ElasticDeformation {
         Ok(Self {
             dx_map,
             dy_map,
-            _width,
+            width,
             height,
         })
     }
@@ -526,8 +532,8 @@ pub fn warp_elastic(
 ///
 /// * The squared distance between the points
 #[allow(dead_code)]
-fn squared_distance(_p1: (f64, f64), p2: (f64, f64)) -> f64 {
-    let (x1, y1) = _p1;
+fn squared_distance(p1: (f64, f64), p2: (f64, f64)) -> f64 {
+    let (x1, y1) = p1;
     let (x2, y2) = p2;
 
     (x2 - x1).powi(2) + (y2 - y1).powi(2)
@@ -544,8 +550,8 @@ fn squared_distance(_p1: (f64, f64), p2: (f64, f64)) -> f64 {
 ///
 /// * Result containing the filtered array
 #[allow(dead_code)]
-fn gaussian_filter(_input: &Array2<f64>, sigma: f64) -> Result<Array2<f64>> {
-    let (height, width) = _input.dim();
+fn gaussian_filter(input: &Array2<f64>, sigma: f64) -> Result<Array2<f64>> {
+    let (height, width) = input.dim();
 
     // Determine kernel size (odd number, approximately 3*sigma on each side)
     let kernel_radius = (3.0 * sigma).ceil() as usize;
@@ -579,7 +585,7 @@ fn gaussian_filter(_input: &Array2<f64>, sigma: f64) -> Result<Array2<f64>> {
 
                 if x_pos >= 0 && x_pos < width as isize {
                     let kernel_value = kernel[k];
-                    sum += _input[[y, x_pos as usize]] * kernel_value;
+                    sum += input[[y, x_pos as usize]] * kernel_value;
                     weight_sum += kernel_value;
                 }
             }
