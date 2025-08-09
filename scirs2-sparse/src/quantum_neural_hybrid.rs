@@ -575,7 +575,7 @@ impl QuantumNeuralHybridProcessor {
     }
 
     fn update_performance_fusion(&mut self, mode: HybridProcessingMode, executiontime: f64) {
-        let performance = 1.0 / (execution_time + 1e-6);
+        let performance = 1.0 / (executiontime + 1e-6);
 
         match mode {
             HybridProcessingMode::PureQuantum | HybridProcessingMode::QuantumDominant => {
@@ -648,7 +648,7 @@ impl QuantumNeuralHybridProcessor {
             strategy_used: mode,
             quantum_contribution: self.performance_fusion.fusion_weights[0],
             neural_contribution: self.performance_fusion.fusion_weights[1],
-            performance_achieved: 1.0 / (execution_time + 1e-6),
+            performance_achieved: 1.0 / (executiontime + 1e-6),
             coherence_at_decision: self.hybrid_state.quantum_coherence,
         };
 

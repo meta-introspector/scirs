@@ -554,7 +554,7 @@ impl WorkloadProfileBuilder {
 
     /// Set workload type
     pub fn with_workload_type(mut self, workloadtype: WorkloadType) -> Self {
-        self.workloadtype = workload_type;
+        self.workload_type = workloadtype;
         self
     }
 
@@ -584,7 +584,7 @@ impl WorkloadProfileBuilder {
     /// Set I/O profile
     pub fn with_io_profile(mut self, intensity: f64, iotype: IOType) -> Self {
         self.io_profile.intensity = intensity.clamp(0.0, 1.0);
-        self.io_profile.iotype = io_type;
+        self.io_profile.io_type = iotype;
         self
     }
 

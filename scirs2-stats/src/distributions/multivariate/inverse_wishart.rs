@@ -147,13 +147,13 @@ impl InverseWishart {
         // Calculate determinant of _x
         let mut x_det = 1.0;
         for i in 0..self.dim {
-            x_det *= x_chol[[i, i]];
+            x_det *= xchol[[i, i]];
         }
         x_det = x_det * x_det; // Square it since det(X) = det(L)^2
 
         // Compute x_inv using its Cholesky decomposition
         let x_inv =
-            compute_inverse_from_cholesky(x_chol).expect("Failed to compute matrix inverse");
+            compute_inverse_from_cholesky(xchol).expect("Failed to compute matrix inverse");
 
         // Calculate trace(Ψ·X^-1)
         let mut trace = 0.0;
@@ -390,7 +390,7 @@ pub fn inverse_wishart<D>(scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<Inve
 where
     D: Data<Elem = f64>,
 {
-    InverseWishart::new(_scale, df)
+    InverseWishart::new(scale, df)
 }
 
 /// Implementation of SampleableDistribution for InverseWishart

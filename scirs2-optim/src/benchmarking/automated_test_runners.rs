@@ -199,7 +199,7 @@ pub struct ResourceManager {
     /// Currently allocated resources
     allocated_resources: Arc<Mutex<HashMap<String, ResourceAllocation>>>,
     /// Resource monitoring enabled
-    monitoring_enabled: bool,
+    _monitoringenabled: bool,
 }
 
 /// Resource allocation for a test execution
@@ -368,7 +368,7 @@ impl AutomatedTestRunner {
     pub fn new(config: AutomatedRunnerConfig) -> Self {
         let platform_matrix = PlatformMatrix::default();
         let execution_queue = Arc::new(Mutex::new(VecDeque::new()));
-        let resource_manager = ResourceManager::new(_config.enable_resource_monitoring);
+        let resource_manager = ResourceManager::new(config.enable_resource_monitoring);
         let results_aggregator = ResultsAggregator::new();
 
         Self {
@@ -707,12 +707,12 @@ impl AutomatedTestRunner {
     /// Setup platform-specific environment
     fn setup_platform_environment(config: &PlatformTestConfig) -> Result<()> {
         // Set environment variables
-        for (key, value) in &_config.environment_variables {
+        for (key, value) in &config.environment_variables {
             std::env::set_var(key, value);
         }
 
         // Run setup commands
-        for command in &_config.setup_commands {
+        for command in &config.setup_commands {
             let output = Command::new("sh")
                 .arg("-c")
                 .arg(command)
@@ -743,7 +743,7 @@ impl AutomatedTestRunner {
     /// Cleanup platform-specific environment
     fn cleanup_platform_environment(config: &PlatformTestConfig) -> Result<()> {
         // Run cleanup commands
-        for command in &_config.cleanup_commands {
+        for command in &config.cleanup_commands {
             let _ = Command::new("sh")
                 .arg("-c")
                 .arg(command)
@@ -1027,7 +1027,7 @@ impl ResourceManager {
                 .unwrap_or(1),
             available_memory: Self::get_available_memory(),
             allocated_resources: Arc::new(Mutex::new(HashMap::new())),
-            monitoring_enabled: monitoring_enabled,
+            _monitoringenabled: _monitoringenabled,
         }
     }
 

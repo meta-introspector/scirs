@@ -257,10 +257,10 @@ where
 {
     /// Create new Gaussian Mixture Model
     pub fn new(_ncomponents: usize, config: GMMConfig) -> StatsResult<Self> {
-        check_positive(_n_components, "_n_components")?;
+        check_positive(_ncomponents, "_n_components")?;
 
         Ok(Self {
-            n_components: n_components,
+            n_components: _ncomponents,
             config,
             parameters: None,
             convergence_history: Vec::new(),
@@ -1749,7 +1749,7 @@ where
     /// Create new Variational GMM
     pub fn new(_maxcomponents: usize, config: VariationalGMMConfig) -> Self {
         Self {
-            max_components: max_components,
+            max_components: _maxcomponents,
             config,
             parameters: None,
             lower_bound_history: Vec::new(),
@@ -2019,10 +2019,10 @@ where
 
     /// Compute effective number of components
     fn compute_effective_components(&self, weightconcentration: &Array1<F>) -> usize {
-        let total: F = weight_concentration.sum();
+        let total: F = weightconcentration.sum();
         let mut effective = 0;
 
-        for &weight in weight_concentration.iter() {
+        for &weight in weightconcentration.iter() {
             let proportion = weight / total;
             if proportion > F::from(0.01).unwrap() {
                 // 1% threshold
@@ -2035,8 +2035,8 @@ where
 
     /// Compute component weights
     fn compute_weights(&self, weightconcentration: &Array1<F>) -> Array1<F> {
-        let total: F = weight_concentration.sum();
-        weight_concentration.mapv(|w| w / total)
+        let total: F = weightconcentration.sum();
+        weightconcentration.mapv(|w| w / total)
     }
 
     /// Compute log weight
@@ -2065,12 +2065,12 @@ where
 
     /// Log-sum-exp for numerical stability
     fn log_sum_exp(&self, logvalues: &Array1<F>) -> F {
-        let max_val = log_values.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
+        let max_val = logvalues.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
         if max_val == F::neg_infinity() {
             return F::neg_infinity();
         }
 
-        let sum: F = log_values.iter().map(|&x| (x - max_val).exp()).sum();
+        let sum: F = logvalues.iter().map(|&x| (x - max_val).exp()).sum();
 
         max_val + sum.ln()
     }

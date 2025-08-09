@@ -103,7 +103,7 @@ impl SystemResources {
     pub fn optimal_chunk_size(&self, elementsize: usize) -> usize {
         // Target 50% of L3 cache
         let target_bytes = (self.l3_cache_kb * 1024) / 2;
-        (target_bytes / element_size).max(1000) // At least 1000 elements
+        (target_bytes / elementsize).max(1000) // At least 1000 elements
     }
 }
 
@@ -114,7 +114,7 @@ pub struct DataCharacteristics {
     /// Number of samples
     pub n_samples: usize,
     /// Number of features
-    pub n_features: usize,
+    pub nfeatures: usize,
     /// Data sparsity (0.0 = dense, 1.0 = all zeros)
     pub sparsity: f64,
     /// Data range (max - min)
@@ -126,15 +126,15 @@ pub struct DataCharacteristics {
     /// Estimated memory footprint in MB
     pub memory_footprint_mb: f64,
     /// Data type size (e.g., 8 for f64)
-    pub element_size: usize,
+    pub elementsize: usize,
 }
 
 impl DataCharacteristics {
     /// Analyze data characteristics from array view
     pub fn analyze(data: &ndarray::ArrayView2<f64>) -> Result<Self> {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples, nfeatures) = data.dim();
 
-        if n_samples == 0 || n_features == 0 {
+        if n_samples == 0 || nfeatures == 0 {
             return Err(TransformError::InvalidInput("Empty _data".to_string()));
         }
 
@@ -199,28 +199,28 @@ impl DataCharacteristics {
         };
 
         let memory_footprint_mb =
-            (n_samples * n_features * std::mem::size_of::<f64>()) as f64 / (1024.0 * 1024.0);
+            (n_samples * nfeatures * std::mem::size_of::<f64>()) as f64 / (1024.0 * 1024.0);
 
         Ok(DataCharacteristics {
             n_samples,
-            n_features,
+            nfeatures,
             sparsity,
             data_range,
             outlier_ratio,
             has_missing,
             memory_footprint_mb,
-            element_size: std::mem::size_of::<f64>(),
+            elementsize: std::mem::size_of::<f64>(),
         })
     }
 
     /// Check if data is considered "large"
     pub fn is_large_dataset(&self) -> bool {
-        self.n_samples > 100_000 || self.n_features > 10_000 || self.memory_footprint_mb > 1000.0
+        self.n_samples > 100_000 || self.nfeatures > 10_000 || self.memory_footprint_mb > 1000.0
     }
 
     /// Check if data is considered "wide" (more features than samples)
     pub fn is_wide_dataset(&self) -> bool {
-        self.n_features > self.n_samples
+        self.nfeatures > self.n_samples
     }
 
     /// Check if data is sparse
@@ -261,15 +261,15 @@ pub struct OptimizationConfig {
 impl OptimizationConfig {
     /// Create optimization config for standardization
     pub fn for_standardization(datachars: &DataCharacteristics, system: &SystemResources) -> Self {
-        let use_robust = data_chars.has_outliers();
-        let use_parallel = data_chars.n_samples > 10_000 && system.cpu_cores > 1;
-        let use_simd = system.has_simd && data_chars.n_features > 100;
-        let use_gpu = system.has_gpu && data_chars.memory_footprint_mb > 100.0;
+        let use_robust = datachars.has_outliers();
+        let use_parallel = datachars.n_samples > 10_000 && system.cpu_cores > 1;
+        let use_simd = system.has_simd && datachars.nfeatures > 100;
+        let use_gpu = system.has_gpu && datachars.memory_footprint_mb > 100.0;
 
-        let processing_strategy = if data_chars.memory_footprint_mb > system.safe_memory_mb() as f64
+        let processing_strategy = if datachars.memory_footprint_mb > system.safe_memory_mb() as f64
         {
             ProcessingStrategy::OutOfCore {
-                chunk_size: system.optimal_chunk_size(data_chars.element_size),
+                chunk_size: system.optimal_chunk_size(datachars.elementsize),
             }
         } else if use_parallel {
             ProcessingStrategy::Parallel
@@ -286,7 +286,7 @@ impl OptimizationConfig {
             use_parallel,
             use_simd,
             use_gpu,
-            chunk_size: system.optimal_chunk_size(data_chars.element_size),
+            chunk_size: system.optimal_chunk_size(datachars.elementsize),
             num_threads: if use_parallel { system.cpu_cores } else { 1 },
             algorithm_params: HashMap::new(),
         }
@@ -294,26 +294,26 @@ impl OptimizationConfig {
 
     /// Create optimization config for PCA
     pub fn for_pca(
-        data_chars: &DataCharacteristics,
+        datachars: &DataCharacteristics,
         system: &SystemResources,
         n_components: usize,
     ) -> Self {
-        let use_randomized = data_chars.is_large_dataset();
-        let use_parallel = data_chars.n_samples > 1_000 && system.cpu_cores > 1;
-        let use_gpu = system.has_gpu && data_chars.memory_footprint_mb > 500.0;
+        let use_randomized = datachars.is_large_dataset();
+        let use_parallel = datachars.n_samples > 1_000 && system.cpu_cores > 1;
+        let use_gpu = system.has_gpu && datachars.memory_footprint_mb > 500.0;
 
         // PCA memory requirements are higher due to covariance matrix
-        let memory_multiplier = if data_chars.n_features > data_chars.n_samples {
+        let memory_multiplier = if datachars.nfeatures > datachars.n_samples {
             3.0
         } else {
             2.0
         };
-        let estimated_memory = data_chars.memory_footprint_mb * memory_multiplier;
+        let estimated_memory = datachars.memory_footprint_mb * memory_multiplier;
 
         let processing_strategy = if estimated_memory > system.safe_memory_mb() as f64 {
             ProcessingStrategy::OutOfCore {
                 chunk_size: (system.safe_memory_mb() * 1024 * 1024)
-                    / (data_chars.n_features * data_chars.element_size),
+                    / (datachars.nfeatures * datachars.elementsize),
             }
         } else if use_parallel {
             ProcessingStrategy::Parallel
@@ -335,7 +335,7 @@ impl OptimizationConfig {
             use_parallel,
             use_simd: system.has_simd,
             use_gpu,
-            chunk_size: system.optimal_chunk_size(data_chars.element_size),
+            chunk_size: system.optimal_chunk_size(datachars.elementsize),
             num_threads: if use_parallel { system.cpu_cores } else { 1 },
             algorithm_params,
         }
@@ -343,16 +343,16 @@ impl OptimizationConfig {
 
     /// Create optimization config for polynomial features
     pub fn for_polynomial_features(
-        data_chars: &DataCharacteristics,
+        datachars: &DataCharacteristics,
         system: &SystemResources,
         degree: usize,
     ) -> Result<Self> {
         // Polynomial features can explode in size
         let estimated_output_features =
-            Self::estimate_polynomial_features(data_chars.n_features, degree)?;
-        let estimated_memory = data_chars.n_samples as f64
+            Self::estimate_polynomial_features(datachars.nfeatures, degree)?;
+        let estimated_memory = datachars.n_samples as f64
             * estimated_output_features as f64
-            * data_chars.element_size as f64
+            * datachars.elementsize as f64
             / (1024.0 * 1024.0);
 
         if estimated_memory > system.memory_mb as f64 * 0.9 {
@@ -362,13 +362,13 @@ impl OptimizationConfig {
             )));
         }
 
-        let use_parallel = data_chars.n_samples > 1_000 && system.cpu_cores > 1;
+        let use_parallel = datachars.n_samples > 1_000 && system.cpu_cores > 1;
         let use_simd = system.has_simd && estimated_output_features > 100;
 
         let processing_strategy = if estimated_memory > system.safe_memory_mb() as f64 {
             ProcessingStrategy::OutOfCore {
                 chunk_size: (system.safe_memory_mb() * 1024 * 1024)
-                    / (estimated_output_features * data_chars.element_size),
+                    / (estimated_output_features * datachars.elementsize),
             }
         } else if use_parallel {
             ProcessingStrategy::Parallel
@@ -392,7 +392,7 @@ impl OptimizationConfig {
             use_parallel,
             use_simd,
             use_gpu: false, // Polynomial features typically don't benefit from GPU
-            chunk_size: system.optimal_chunk_size(data_chars.element_size),
+            chunk_size: system.optimal_chunk_size(datachars.elementsize),
             num_threads: if use_parallel { system.cpu_cores } else { 1 },
             algorithm_params,
         })
@@ -409,10 +409,10 @@ impl OptimizationConfig {
         let mut total_features = 1; // bias term
 
         for d in 1..=degree {
-            // Multinomial coefficient: (n_features + d - 1)! / (d! * (n_features - 1)!)
+            // Multinomial coefficient: (nfeatures + d - 1)! / (d! * (nfeatures - 1)!)
             let mut coeff = 1;
             for i in 0..d {
-                coeff = coeff * (n_features + d - 1 - i) / (i + 1);
+                coeff = coeff * (nfeatures + d - 1 - i) / (i + 1);
 
                 // Check for overflow
                 if coeff > 1_000_000 {
@@ -430,11 +430,11 @@ impl OptimizationConfig {
     /// Get estimated execution time for this configuration
     pub fn estimated_execution_time(
         &self,
-        data_chars: &DataCharacteristics,
+        datachars: &DataCharacteristics,
     ) -> std::time::Duration {
         use std::time::Duration;
 
-        let base_ops = data_chars.n_samples as u64 * data_chars.n_features as u64;
+        let base_ops = datachars.n_samples as u64 * datachars.nfeatures as u64;
 
         let ops_per_second = match self.processing_strategy {
             ProcessingStrategy::Parallel => {
@@ -498,18 +498,18 @@ impl AutoTuner {
     pub fn optimize_for_transformation(
         &self,
         transformation: &str,
-        data_chars: &DataCharacteristics,
+        datachars: &DataCharacteristics,
         params: &HashMap<String, f64>,
     ) -> Result<OptimizationConfig> {
         match transformation {
             "standardization" => Ok(OptimizationConfig::for_standardization(
-                data_chars,
+                datachars,
                 &self.system,
             )),
             "pca" => {
                 let n_components = params.get("n_components").unwrap_or(&5.0) as &f64;
                 Ok(OptimizationConfig::for_pca(
-                    data_chars,
+                    datachars,
                     &self.system,
                     *n_components as usize,
                 ))
@@ -517,7 +517,7 @@ impl AutoTuner {
             "polynomial" => {
                 let degree = params.get("degree").unwrap_or(&2.0) as &f64;
                 OptimizationConfig::for_polynomial_features(
-                    data_chars,
+                    datachars,
                     &self.system,
                     *degree as usize,
                 )
@@ -525,17 +525,17 @@ impl AutoTuner {
             _ => {
                 // Default configuration
                 Ok(OptimizationConfig {
-                    processing_strategy: if data_chars.is_large_dataset() {
+                    processing_strategy: if datachars.is_large_dataset() {
                         ProcessingStrategy::Parallel
                     } else {
                         ProcessingStrategy::Standard
                     },
                     memory_limit_mb: self.system.safe_memory_mb(),
-                    use_robust: data_chars.has_outliers(),
-                    use_parallel: data_chars.n_samples > 10_000,
+                    use_robust: datachars.has_outliers(),
+                    use_parallel: datachars.n_samples > 10_000,
                     use_simd: self.system.has_simd,
-                    use_gpu: self.system.has_gpu && data_chars.memory_footprint_mb > 100.0,
-                    chunk_size: self.system.optimal_chunk_size(data_chars.element_size),
+                    use_gpu: self.system.has_gpu && datachars.memory_footprint_mb > 100.0,
+                    chunk_size: self.system.optimal_chunk_size(datachars.elementsize),
                     num_threads: self.system.cpu_cores,
                     algorithm_params: HashMap::new(),
                 })
@@ -551,7 +551,7 @@ impl AutoTuner {
         execution_time: std::time::Duration,
         memory_used_mb: f64,
         success: bool,
-        data_chars: DataCharacteristics,
+        datachars: DataCharacteristics,
     ) {
         let config_hash = format!("{config:?}"); // Simplified hash
 
@@ -560,7 +560,7 @@ impl AutoTuner {
             execution_time,
             memory_used_mb,
             success,
-            data_characteristics: data_chars,
+            data_characteristics: datachars,
         };
 
         self.performance_history
@@ -583,26 +583,26 @@ impl AutoTuner {
     /// Generate optimization report
     pub fn generate_report(&self, datachars: &DataCharacteristics) -> OptimizationReport {
         let recommendations = vec![
-            self.get_recommendation_for_transformation("standardization", data_chars),
-            self.get_recommendation_for_transformation("pca", data_chars),
-            self.get_recommendation_for_transformation("polynomial", data_chars),
+            self.get_recommendation_for_transformation("standardization", datachars),
+            self.get_recommendation_for_transformation("pca", datachars),
+            self.get_recommendation_for_transformation("polynomial", datachars),
         ];
 
         OptimizationReport {
             system_info: self.system.clone(),
-            data_info: data_chars.clone(),
+            data_info: datachars.clone(),
             recommendations,
-            estimated_total_memory_mb: data_chars.memory_footprint_mb * 2.0, // Conservative estimate
+            estimated_total_memory_mb: datachars.memory_footprint_mb * 2.0, // Conservative estimate
         }
     }
 
     fn get_recommendation_for_transformation(
         &self,
         transformation: &str,
-        data_chars: &DataCharacteristics,
+        datachars: &DataCharacteristics,
     ) -> TransformationRecommendation {
         let config = self
-            .optimize_for_transformation(transformation, data_chars, &HashMap::new())
+            .optimize_for_transformation(transformation, datachars, &HashMap::new())
             .unwrap_or_else(|_| OptimizationConfig {
                 processing_strategy: ProcessingStrategy::Standard,
                 memory_limit_mb: self.system.safe_memory_mb(),
@@ -615,7 +615,7 @@ impl AutoTuner {
                 algorithm_params: HashMap::new(),
             });
 
-        let estimated_time = config.estimated_execution_time(data_chars);
+        let estimated_time = config.estimated_execution_time(datachars);
 
         TransformationRecommendation {
             transformation: transformation.to_string(),
@@ -624,7 +624,7 @@ impl AutoTuner {
             confidence: 0.8, // Placeholder
             reason: format!(
                 "Optimized for {} samples, {} features",
-                data_chars.n_samples, data_chars.n_features
+                datachars.n_samples, datachars.nfeatures
             ),
         }
     }
@@ -671,7 +671,7 @@ impl OptimizationReport {
 
         println!("Data Characteristics:");
         println!("  Samples: {}", self.data_info.n_samples);
-        println!("  Features: {}", self.data_info.n_features);
+        println!("  Features: {}", self.data_info.nfeatures);
         println!(
             "  Memory Footprint: {:.1} MB",
             self.data_info.memory_footprint_mb
@@ -795,7 +795,7 @@ impl AdvancedConfigOptimizer {
     /// ✅ Advanced MODE: Intelligently optimize configuration in real-time
     pub fn advanced_optimize_config(
         &mut self,
-        data_chars: &DataCharacteristics,
+        datachars: &DataCharacteristics,
         transformation_type: &str,
         user_params: &HashMap<String, f64>,
     ) -> Result<OptimizationConfig> {
@@ -803,7 +803,7 @@ impl AdvancedConfigOptimizer {
         self.system_monitor.update_metrics()?;
 
         // Generate state representation for ML models
-        let current_state = self.generate_state_representation(data_chars, &self.system_monitor);
+        let current_state = self.generate_state_representation(datachars, &self.system_monitor);
 
         // Use ML predictor to suggest initial configuration
         let predicted_config = self.config_predictor.predict_optimal_config(
@@ -859,16 +859,16 @@ impl AdvancedConfigOptimizer {
     /// Generate state representation for ML models
     fn generate_state_representation(
         &self,
-        data_chars: &DataCharacteristics,
+        datachars: &DataCharacteristics,
         system_monitor: &SystemMonitor,
     ) -> String {
         format!(
             "samples:{}_features:{}_memory:{:.2}_cpu:{:.2}_sparsity:{:.3}",
-            data_chars.n_samples,
-            data_chars.n_features,
-            data_chars.memory_footprint_mb,
+            datachars.n_samples,
+            datachars.nfeatures,
+            datachars.memory_footprint_mb,
             system_monitor.cpu_load,
-            data_chars.sparsity,
+            datachars.sparsity,
         )
     }
 
@@ -1013,7 +1013,7 @@ impl ConfigurationPredictor {
     pub fn new() -> Self {
         let mut feature_weights = HashMap::new();
         feature_weights.insert("n_samples".to_string(), 0.3);
-        feature_weights.insert("n_features".to_string(), 0.25);
+        feature_weights.insert("nfeatures".to_string(), 0.25);
         feature_weights.insert("memory_footprint".to_string(), 0.2);
         feature_weights.insert("sparsity".to_string(), 0.15);
         feature_weights.insert("cpu_load".to_string(), 0.1);
@@ -1151,7 +1151,7 @@ impl AdaptiveParameterTuner {
             config = self.explore_parameters(config)?;
         } else {
             // Exploit: use best known parameters from Q-table
-            config = self.exploit_best_parameters(config..state)?;
+            config = self.exploit_best_parameters(config, state)?;
         }
 
         Ok(config)
@@ -1244,7 +1244,7 @@ mod tests {
         let chars = DataCharacteristics::analyze(&data.view()).unwrap();
 
         assert_eq!(chars.n_samples, 100);
-        assert_eq!(chars.n_features, 10);
+        assert_eq!(chars.nfeatures, 10);
         assert!(chars.memory_footprint_mb > 0.0);
         assert!(!chars.is_large_dataset());
     }
@@ -1299,13 +1299,13 @@ mod tests {
     fn test_large_dataset_detection() {
         let mut chars = DataCharacteristics {
             n_samples: 200_000,
-            n_features: 1000,
+            nfeatures: 1000,
             sparsity: 0.1,
             data_range: 100.0,
             outlier_ratio: 0.02,
             has_missing: false,
             memory_footprint_mb: 1500.0,
-            element_size: 8,
+            elementsize: 8,
         };
 
         assert!(chars.is_large_dataset());

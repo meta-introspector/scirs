@@ -100,7 +100,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
             )));
         }
 
-        // Verify all _points have the same dimension and check for invalid coordinates
+        // Verify all points have the same dimension and check for invalid coordinates
         for (i, point) in points.iter().enumerate() {
             if point.dimension() != dimension {
                 return Err(SpatialError::ValueError(format!(
@@ -126,11 +126,11 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
             }
         }
 
-        let _points = points.to_vec();
-        let mut indices: Vec<usize> = (0.._points.len()).collect();
+        let points = points.to_vec();
+        let mut indices: Vec<usize> = (0..points.len()).collect();
 
         let leaf_size = 32; // Optimized for cache performance
-        let root = Self::build_tree(&_points, &mut indices, 0, dimension, leaf_size);
+        let root = Self::build_tree(&points, &mut indices, 0, dimension, leaf_size);
 
         Ok(Self {
             root,
@@ -429,9 +429,9 @@ impl GenericDistanceMatrix {
 
         // Use SIMD-optimized computation for larger datasets
         if n > 100 {
-            Self::compute_simd_optimized(_points, metric)
+            Self::compute_simd_optimized(points, metric)
         } else {
-            Self::compute_basic(_points, metric)
+            Self::compute_basic(points, metric)
         }
     }
 
@@ -450,7 +450,7 @@ impl GenericDistanceMatrix {
                 let distance = if i == j {
                     T::zero()
                 } else {
-                    metric.distance(&_points[i], &_points[j])
+                    metric.distance(&points[i], &points[j])
                 };
 
                 matrix[i][j] = distance;
@@ -480,9 +480,9 @@ impl GenericDistanceMatrix {
         if caps.simd_available {
             // SIMD-accelerated distance computation
             for i in 0..n {
-                let point_i = &_points[i];
+                let point_i = &points[i];
 
-                // Process multiple _points simultaneously using SIMD
+                // Process multiple points simultaneously using SIMD
                 let mut j = i + 1;
                 while j < n {
                     let chunk_end = (j + SIMD_CHUNK_SIZE).min(n);
@@ -503,7 +503,7 @@ impl GenericDistanceMatrix {
                         } else {
                             // Fall back to scalar for high-dimensional data
                             for k in j..chunk_end {
-                                let distance = metric.distance(point_i, &_points[k]);
+                                let distance = metric.distance(point_i, &points[k]);
                                 matrix[i][k] = distance;
                                 matrix[k][i] = distance;
                             }
@@ -511,7 +511,7 @@ impl GenericDistanceMatrix {
                     } else {
                         // Handle variable dimension case
                         for k in j..chunk_end {
-                            let distance = metric.distance(point_i, &_points[k]);
+                            let distance = metric.distance(point_i, &points[k]);
                             matrix[i][k] = distance;
                             matrix[k][i] = distance;
                         }
@@ -522,7 +522,7 @@ impl GenericDistanceMatrix {
             }
         } else {
             // Fall back to basic computation
-            return Self::compute_basic(_points, metric);
+            return Self::compute_basic(points, metric);
         }
 
         Ok(matrix)
@@ -624,9 +624,9 @@ impl GenericDistanceMatrix {
 
         // Use memory-efficient computation for large datasets
         if n > 1000 {
-            Self::compute_parallel_memory_efficient(_points, metric)
+            Self::compute_parallel_memory_efficient(points, metric)
         } else {
-            Self::compute_parallel_basic(_points, metric)
+            Self::compute_parallel_basic(points, metric)
         }
     }
 
@@ -640,7 +640,7 @@ impl GenericDistanceMatrix {
         let n = points.len();
         let mut matrix = vec![vec![T::zero(); n]; n];
         let metric = Arc::new(metric);
-        let _points = Arc::new(_points);
+        let points = Arc::new(points);
 
         // Process upper triangle in parallel
         let indices: Vec<(usize, usize)> =
@@ -652,7 +652,7 @@ impl GenericDistanceMatrix {
                 if i == j {
                     T::zero()
                 } else {
-                    metric.distance(&_points[i], &_points[j])
+                    metric.distance(&points[i], &points[j])
                 }
             })
             .collect();
@@ -809,7 +809,7 @@ impl GenericDistanceMatrix {
 
         for i in 0..n {
             for j in (i + 1)..n {
-                distances.push(metric.distance(&_points[i], &_points[j]));
+                distances.push(metric.distance(&points[i], &points[j]));
             }
         }
 
@@ -872,7 +872,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
 
         if self.k > points.len() {
             return Err(SpatialError::ValueError(format!(
-                "k ({}) cannot be larger than the number of _points ({})",
+                "k ({}) cannot be larger than the number of points ({})",
                 self.k,
                 points.len()
             )));
@@ -893,7 +893,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
             ));
         }
 
-        // Validate all _points have same dimension and check for invalid coordinates
+        // Validate all points have same dimension and check for invalid coordinates
         for (i, point) in points.iter().enumerate() {
             if point.dimension() != dimension {
                 return Err(SpatialError::ValueError(format!(
@@ -920,7 +920,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
         }
 
         // Initialize centroids randomly (simple initialization)
-        let mut centroids = self.initialize_centroids(_points, dimension)?;
+        let mut centroids = self.initialize_centroids(points, dimension)?;
         let mut assignments = vec![0; points.len()];
 
         // Pre-allocate arrays for distance computation to avoid repeated allocations
@@ -929,7 +929,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
         for iteration in 0..self.max_iterations {
             let mut changed = false;
 
-            // Assign _points to nearest centroids using chunked processing for better cache performance
+            // Assign points to nearest centroids using chunked processing for better cache performance
             const CHUNK_SIZE: usize = 16; // Further reduced chunk size for faster processing
             let chunks = points.chunks(CHUNK_SIZE);
 
@@ -988,7 +988,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
 
             // Update centroids
             let old_centroids = centroids.clone();
-            centroids = self.update_centroids(_points, &assignments, dimension)?;
+            centroids = self.update_centroids(points, &assignments, dimension)?;
 
             // Check for convergence
             let max_movement = old_centroids
@@ -1107,7 +1107,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
 
     /// Convert a point to generic Point type
     fn point_to_generic(point: &P) -> Point<T> {
-        let coords: Vec<T> = (0.._point.dimension())
+        let coords: Vec<T> = (0..point.dimension())
             .map(|i| point.coordinate(i).unwrap_or(T::zero()))
             .collect();
         Point::new(coords)
@@ -1116,7 +1116,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
     /// SIMD-optimized distance computation to all centroids
     fn compute_distances_simd(&self, point: &P, centroids: &[Point<T>], distances: &mut [T]) {
         let _caps = PlatformCapabilities::detect();
-        let point_generic = GenericKMeans::<T, P>::point_to_generic(_point);
+        let point_generic = GenericKMeans::<T, P>::point_to_generic(point);
 
         // Always use scalar computation for tests to avoid SIMD performance issues
         for (j, centroid) in centroids.iter().enumerate() {
@@ -1224,14 +1224,14 @@ impl GenericConvexHull {
         }
 
         if points.len() < 3 {
-            return Ok(_points.iter().map(|p| Self::to_generic_point(p)).collect());
+            return Ok(points.iter().map(|p| Self::to_generic_point(p)).collect());
         }
 
-        // Verify all _points are 2D
-        for point in _points {
+        // Verify all points are 2D
+        for point in points {
             if point.dimension() != 2 {
                 return Err(SpatialError::ValueError(
-                    "All _points must be 2D for 2D convex hull".to_string(),
+                    "All points must be 2D for 2D convex hull".to_string(),
                 ));
             }
         }
@@ -1257,7 +1257,7 @@ impl GenericConvexHull {
         generic_points.swap(0, start_idx);
         let start_point = generic_points[0].clone();
 
-        // Sort _points by polar angle with respect to start point
+        // Sort points by polar angle with respect to start point
         generic_points[1..].sort_by(|a, b| {
             let angle_a = Self::polar_angle(&start_point, a);
             let angle_b = Self::polar_angle(&start_point, b);
@@ -1285,7 +1285,7 @@ impl GenericConvexHull {
         T: SpatialScalar,
         P: SpatialPoint<T>,
     {
-        let coords: Vec<T> = (0.._point.dimension())
+        let coords: Vec<T> = (0..point.dimension())
             .map(|i| point.coordinate(i).unwrap_or(T::zero()))
             .collect();
         Point::new(coords)
@@ -1314,7 +1314,7 @@ impl GenericConvexHull {
 /// Generic DBSCAN clustering implementation
 pub struct GenericDBSCAN<T: SpatialScalar> {
     eps: T,
-    min_samples: usize,
+    minsamples: usize,
     _phantom: PhantomData<T>,
 }
 
@@ -1323,7 +1323,7 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
     pub fn new(_eps: T, minsamples: usize) -> Self {
         Self {
             eps: eps,
-            min_samples,
+            minsamples,
             _phantom: PhantomData,
         }
     }
@@ -1341,16 +1341,16 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
             });
         }
 
-        if self.min_samples == 0 {
+        if self.minsamples == 0 {
             return Err(SpatialError::ValueError(
-                "min_samples must be greater than 0".to_string(),
+                "minsamples must be greater than 0".to_string(),
             ));
         }
 
-        if self.min_samples > points.len() {
+        if self.minsamples > points.len() {
             return Err(SpatialError::ValueError(format!(
-                "min_samples ({}) cannot be larger than the number of _points ({})",
-                self.min_samples,
+                "minsamples ({}) cannot be larger than the number of points ({})",
+                self.minsamples,
                 points.len()
             )));
         }
@@ -1362,7 +1362,7 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
             )));
         }
 
-        // Validate _points
+        // Validate points
         let dimension = if points.is_empty() {
             0
         } else {
@@ -1398,7 +1398,7 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
         let mut visited = vec![false; n];
         let mut cluster_id = 0;
 
-        // Process _points in chunks for better cache performance and memory management
+        // Process points in chunks for better cache performance and memory management
         const DBSCAN_PROCESS_CHUNK_SIZE: usize = 32; // Reduced chunk size for faster processing
 
         for chunk_start in (0..n).step_by(DBSCAN_PROCESS_CHUNK_SIZE) {
@@ -1411,9 +1411,9 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
                 visited[i] = true;
 
                 // Find neighbors with memory pooling
-                let neighbors = self.find_neighbors(_points, i, metric);
+                let neighbors = self.find_neighbors(points, i, metric);
 
-                if neighbors.len() < self.min_samples {
+                if neighbors.len() < self.minsamples {
                     labels[i] = -1; // Mark as noise
                 } else {
                     self.expand_cluster(
@@ -1430,7 +1430,7 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
                     // Limit maximum number of clusters for memory safety
                     if cluster_id > 10000 {
                         return Err(SpatialError::ValueError(
-                            format!("Too many clusters found: {cluster_id}. Consider adjusting eps or min_samples parameters")
+                            format!("Too many clusters found: {cluster_id}. Consider adjusting eps or minsamples parameters")
                         ));
                     }
                 }
@@ -1451,13 +1451,13 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
     }
 
     /// Find neighbors within eps distance with highly optimized search and memory pooling
-    fn find_neighbors<P, M>(&self, _points: &[P], pointidx: usize, metric: &M) -> Vec<usize>
+    fn find_neighbors<P, M>(&self, points: &[P], pointidx: usize, metric: &M) -> Vec<usize>
     where
         P: SpatialPoint<T>,
         M: DistanceMetric<T, P>,
     {
         let mut neighbors = Vec::with_capacity(32); // Increased capacity for better performance
-        let query_point = &_points[point_idx];
+        let query_point = &points[pointidx];
         let _eps_squared = self.eps * self.eps; // Pre-compute for squared distance comparisons
 
         // Use chunk-based processing for better cache locality
@@ -1468,7 +1468,7 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
             for chunk in points.chunks(NEIGHBOR_CHUNK_SIZE) {
                 let chunk_start = ((chunk.as_ptr() as usize - points.as_ptr() as usize)
                     / std::mem::size_of::<P>())
-                .min(_points.len());
+                .min(points.len());
 
                 for (local_idx, point) in chunk.iter().enumerate() {
                     let global_idx = chunk_start + local_idx;
@@ -1508,7 +1508,7 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
         points: &[P],
         labels: &mut [i32],
         visited: &mut [bool],
-        point_idx: usize,
+        pointidx: usize,
         neighbors: &[usize],
         cluster_id: i32,
         metric: &M,
@@ -1516,7 +1516,7 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
         P: SpatialPoint<T>,
         M: DistanceMetric<T, P>,
     {
-        labels[point_idx] = cluster_id;
+        labels[pointidx] = cluster_id;
 
         // Use bitset for faster membership testing instead of HashSet
         let mut processed = vec![false; points.len()];
@@ -1549,7 +1549,7 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
                     visited[q] = true;
                     let q_neighbors = self.find_neighbors(points, q, metric);
 
-                    if q_neighbors.len() >= self.min_samples {
+                    if q_neighbors.len() >= self.minsamples {
                         // Bulk add new neighbors to seed set with deduplication
                         for &neighbor in &q_neighbors {
                             if neighbor < points.len()
@@ -1588,7 +1588,7 @@ pub struct DBSCANResult {
 
 /// Generic Gaussian Mixture Model clustering
 pub struct GenericGMM<T: SpatialScalar> {
-    n_components: usize,
+    _ncomponents: usize,
     max_iterations: usize,
     tolerance: T,
     reg_covar: T,
@@ -1599,7 +1599,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
     /// Create a new GMM clusterer
     pub fn new(_ncomponents: usize) -> Self {
         Self {
-            n_components: n_components,
+            _ncomponents: _ncomponents,
             max_iterations: 3, // Further reduced for faster testing
             tolerance: T::from_f64(1e-1).unwrap_or(<T as SpatialScalar>::epsilon()), // Much more relaxed tolerance
             reg_covar: T::from_f64(1e-6).unwrap_or(<T as SpatialScalar>::epsilon()),
@@ -1641,26 +1641,26 @@ impl<T: SpatialScalar> GenericGMM<T> {
         let n_features = points[0].dimension();
 
         // Initialize parameters using K-means
-        let kmeans = GenericKMeans::new(self.n_components);
-        let kmeans_result = kmeans.fit(_points)?;
+        let kmeans = GenericKMeans::new(self._ncomponents);
+        let kmeans_result = kmeans.fit(points)?;
 
         // Convert K-means result to GMM initialization
         let mut means = kmeans_result.centroids;
-        let mut weights = vec![T::one() / T::from(self.n_components).unwrap(); self.n_components];
+        let mut weights = vec![T::one() / T::from(self._ncomponents).unwrap(); self._ncomponents];
 
         // Initialize covariances based on data spread
         let mut covariances =
-            vec![vec![vec![T::zero(); n_features]; n_features]; self.n_components];
+            vec![vec![vec![T::zero(); n_features]; n_features]; self._ncomponents];
 
         // Compute initial covariances based on cluster assignments
-        for k in 0..self.n_components {
+        for k in 0..self._ncomponents {
             let cluster_points: Vec<&P> = kmeans_result
                 .assignments
                 .iter()
                 .enumerate()
                 .filter_map(|(i, &cluster)| {
                     if cluster == k {
-                        Some(&_points[i])
+                        Some(&points[i])
                     } else {
                         None
                     }
@@ -1699,7 +1699,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
                     covariances[k][i][i] = covariances[k][i][i] + self.reg_covar;
                 }
             } else {
-                // Default to identity matrix if no _points in cluster
+                // Default to identity matrix if no points in cluster
                 for i in 0..n_features {
                     covariances[k][i][i] = T::one();
                 }
@@ -1708,19 +1708,19 @@ impl<T: SpatialScalar> GenericGMM<T> {
 
         // Simplified EM algorithm (E-step and M-step)
         let mut log_likelihood = T::min_value();
-        let mut responsibilities = vec![vec![T::zero(); self.n_components]; n_samples];
+        let mut responsibilities = vec![vec![T::zero(); self._ncomponents]; n_samples];
 
         for iteration in 0..self.max_iterations {
             // E-step: compute responsibilities using full multivariate Gaussian
             let mut new_log_likelihood = T::zero();
 
             for i in 0..n_samples {
-                let point = Self::point_to_generic(&_points[i]);
-                let mut log_likelihoods = vec![T::min_value(); self.n_components];
+                let point = Self::point_to_generic(&points[i]);
+                let mut log_likelihoods = vec![T::min_value(); self._ncomponents];
                 let mut max_log_likelihood = T::min_value();
 
                 // Compute log probabilities for numerical stability
-                for k in 0..self.n_components {
+                for k in 0..self._ncomponents {
                     let log_weight = weights[k].ln();
                     let log_gaussian = self.compute_log_gaussian_probability(
                         &point,
@@ -1736,7 +1736,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
 
                 // Use log-sum-exp trick for numerical stability
                 let mut sum_exp = T::zero();
-                for k in 0..self.n_components {
+                for k in 0..self._ncomponents {
                     let exp_val = (log_likelihoods[k] - max_log_likelihood).exp();
                     responsibilities[i][k] = exp_val;
                     sum_exp = sum_exp + exp_val;
@@ -1744,7 +1744,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
 
                 // Normalize responsibilities
                 if sum_exp > T::zero() {
-                    for k in 0..self.n_components {
+                    for k in 0..self._ncomponents {
                         responsibilities[i][k] = responsibilities[i][k] / sum_exp;
                     }
                     new_log_likelihood = new_log_likelihood + max_log_likelihood + sum_exp.ln();
@@ -1752,10 +1752,10 @@ impl<T: SpatialScalar> GenericGMM<T> {
             }
 
             // M-step: update parameters (full implementation)
-            let mut nk_values = vec![T::zero(); self.n_components];
+            let mut nk_values = vec![T::zero(); self._ncomponents];
 
             // Update weights and compute effective sample sizes
-            for k in 0..self.n_components {
+            for k in 0..self._ncomponents {
                 let mut nk = T::zero();
                 for i in 0..n_samples {
                     nk = nk + responsibilities[i][k];
@@ -1765,12 +1765,12 @@ impl<T: SpatialScalar> GenericGMM<T> {
             }
 
             // Update means
-            for k in 0..self.n_components {
+            for k in 0..self._ncomponents {
                 if nk_values[k] > T::zero() {
                     let mut new_mean_coords = vec![T::zero(); n_features];
 
                     for i in 0..n_samples {
-                        let point = Self::point_to_generic(&_points[i]);
+                        let point = Self::point_to_generic(&points[i]);
                         for d in 0..n_features {
                             let coord = point.coordinate(d).unwrap_or(T::zero());
                             new_mean_coords[d] =
@@ -1788,7 +1788,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
             }
 
             // Update covariances
-            for k in 0..self.n_components {
+            for k in 0..self._ncomponents {
                 if nk_values[k] > T::one() {
                     let mean_k = &means[k];
 
@@ -1801,7 +1801,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
 
                     // Compute weighted covariance
                     for sample_idx in 0..n_samples {
-                        let point = Self::point_to_generic(&_points[sample_idx]);
+                        let point = Self::point_to_generic(&points[sample_idx]);
                         let resp = responsibilities[sample_idx][k];
 
                         for i in 0..n_features {
@@ -1835,12 +1835,12 @@ impl<T: SpatialScalar> GenericGMM<T> {
             log_likelihood = new_log_likelihood;
         }
 
-        // Assign _points to clusters based on highest responsibility
+        // Assign points to clusters based on highest responsibility
         let mut labels = vec![0; n_samples];
         for i in 0..n_samples {
             let mut max_resp = T::zero();
             let mut best_cluster = 0;
-            for k in 0..self.n_components {
+            for k in 0..self._ncomponents {
                 if responsibilities[i][k] > max_resp {
                     max_resp = responsibilities[i][k];
                     best_cluster = k;
@@ -1864,7 +1864,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
     where
         P: SpatialPoint<T>,
     {
-        let coords: Vec<T> = (0.._point.dimension())
+        let coords: Vec<T> = (0..point.dimension())
             .map(|i| point.coordinate(i).unwrap_or(T::zero()))
             .collect();
         Point::new(coords)
@@ -2080,14 +2080,14 @@ mod tests {
     #[test]
     fn test_dbscan_clustering() {
         // Test DBSCAN creation only to avoid complex algorithm
-        let _points = [Point::new_2d(0.0f64, 0.0)];
+        let points = [Point::new_2d(0.0f64, 0.0)];
 
         let dbscan = GenericDBSCAN::new(1.0f64, 1);
         let _euclidean = EuclideanMetric;
 
         // Just test that it doesn't panic on creation
         assert_eq!(dbscan.eps, 1.0f64);
-        assert_eq!(dbscan.min_samples, 1);
+        assert_eq!(dbscan.minsamples, 1);
 
         // Skip the complex fitting algorithm for faster testing
         let result = DBSCANResult {

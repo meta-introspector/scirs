@@ -361,7 +361,7 @@ pub fn euclidean_distance(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> SpatialRe
 #[derive(Clone)]
 pub struct GridAStarPlanner {
     pub grid: Vec<Vec<bool>>, // true if cell is an obstacle
-    pub diagonals_allowed: bool,
+    pub diagonalsallowed: bool,
 }
 
 impl GridAStarPlanner {
@@ -370,11 +370,11 @@ impl GridAStarPlanner {
     /// # Arguments
     ///
     /// * `grid` - 2D grid where true represents an obstacle
-    /// * `diagonals_allowed` - Whether diagonal movements are allowed
+    /// * `diagonalsallowed` - Whether diagonal movements are allowed
     pub fn new(_grid: Vec<Vec<bool>>, diagonalsallowed: bool) -> Self {
         GridAStarPlanner {
             grid: grid,
-            diagonals_allowed,
+            diagonalsallowed,
         }
     }
 
@@ -400,13 +400,13 @@ impl GridAStarPlanner {
             return false;
         }
 
-        !self.grid[_pos[0] as usize][_pos[1] as usize]
+        !self.grid[pos[0] as usize][pos[1] as usize]
     }
 
     /// Get valid neighbors for a given position
     fn get_neighbors(&self, pos: &[i32; 2]) -> Vec<([i32; 2], f64)> {
         let mut neighbors = Vec::new();
-        let directions = if self.diagonals_allowed {
+        let directions = if self.diagonalsallowed {
             // Include diagonal directions
             vec![
                 [-1, 0],
@@ -424,7 +424,7 @@ impl GridAStarPlanner {
         };
 
         for dir in directions {
-            let neighbor = [_pos[0] + dir[0], pos[1] + dir[1]];
+            let neighbor = [pos[0] + dir[0], pos[1] + dir[1]];
             if self.is_valid(&neighbor) {
                 // Cost is 1.0 for cardinal moves, sqrt(2) for diagonal moves
                 let cost = if dir[0] != 0 && dir[1] != 0 {
@@ -474,7 +474,7 @@ pub struct ContinuousAStarPlanner {
     /// Step size for edge discretization
     pub step_size: f64,
     /// Collision distance threshold
-    pub collision_threshold: f64,
+    pub collisionthreshold: f64,
 }
 
 impl ContinuousAStarPlanner {
@@ -483,14 +483,14 @@ impl ContinuousAStarPlanner {
         ContinuousAStarPlanner {
             obstacles: obstacles,
             step_size,
-            collision_threshold,
+            collisionthreshold,
         }
     }
 
     /// Check if a point is in collision with any obstacle
     pub fn is_in_collision(&self, point: &[f64; 2]) -> bool {
         for obstacle in &self.obstacles {
-            if Self::point_in_polygon(_point, obstacle) {
+            if Self::point_in_polygon(point, obstacle) {
                 return true;
             }
         }
@@ -506,7 +506,7 @@ impl ContinuousAStarPlanner {
         let steps = (distance / self.step_size).ceil() as usize;
 
         if steps == 0 {
-            return self.is_in_collision(_start) || self.is_in_collision(end);
+            return self.is_in_collision(start) || self.is_in_collision(end);
         }
 
         for i in 0..=steps {
@@ -537,7 +537,7 @@ impl ContinuousAStarPlanner {
             let yj = polygon[j][1];
 
             let intersect = ((yi > point[1]) != (yj > point[1]))
-                && (_point[0] < (xj - xi) * (_point[1] - yi) / (yj - yi) + xi);
+                && (point[0] < (xj - xi) * (point[1] - yi) / (yj - yi) + xi);
 
             if intersect {
                 inside = !inside;
@@ -563,7 +563,7 @@ impl ContinuousAStarPlanner {
             let neighbor = [nx, ny];
 
             // Check if the path to the neighbor is collision-free
-            if !self.line_in_collision(_pos, &neighbor) {
+            if !self.line_in_collision(pos, &neighbor) {
                 let cost = radius; // Cost is the distance
                 neighbors.push((neighbor, cost));
             }

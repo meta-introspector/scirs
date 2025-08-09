@@ -239,17 +239,17 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
         let zero = F::zero();
         let one = F::one();
 
-        if p_val < zero || p_val > one {
+        if pval < zero || pval > one {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));
         }
 
         // Special cases
-        if p_val == zero {
+        if pval == zero {
             return Ok(zero);
         }
-        if p_val == one {
+        if pval == one {
             return Ok(F::from(self.n).unwrap());
         }
 
@@ -267,7 +267,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
             let mid_f = F::from(mid).unwrap();
             let cdf_mid = self.cdf(mid_f);
 
-            if cdf_mid < p_val {
+            if cdf_mid < pval {
                 low = mid + 1;
             } else {
                 high = mid;
@@ -527,7 +527,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
 
     // Helper method to check if a value is an integer
     fn is_integer(value: F) -> bool {
-        _value == value.floor()
+        value == value.floor()
     }
 
     // Helper method to calculate binomial coefficient n choose k

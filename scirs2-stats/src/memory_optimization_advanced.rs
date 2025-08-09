@@ -380,13 +380,13 @@ where
     /// Create a cache-optimized matrix with specified layout
     pub fn new(data: Array2<F>, layout: MatrixLayout, cache_linesize: usize) -> Self {
         let optimal_block_size =
-            Self::calculate_optimal_block_size(data.nrows(), data.ncols(), cache_line_size);
+            Self::calculate_optimal_block_size(data.nrows(), data.ncols(), cache_linesize);
 
         let mut matrix = Self {
             data,
             block_size: optimal_block_size,
             memory_layout: layout,
-            cache_line_size,
+            cache_line_size: cache_linesize,
         };
 
         matrix.optimize_layout();
@@ -453,11 +453,11 @@ where
     /// Calculate optimal block size for cache efficiency
     fn calculate_optimal_block_size(_rows: usize, cols: usize, cache_linesize: usize) -> usize {
         let element_size = mem::size_of::<F>();
-        let elements_per_cache_line = cache_line_size / element_size;
+        let elements_per_cache_line = cache_linesize / element_size;
 
         // Find block _size that maximizes cache utilization
         let target_block_elements = (32 * 1024) / element_size; // Target 32KB blocks
-        let max_dimension = rows.max(cols);
+        let max_dimension = _rows.max(cols);
 
         ((target_block_elements as f64).sqrt() as usize)
             .min(max_dimension)
@@ -619,8 +619,8 @@ impl AdaptiveStatsAllocator {
 
     /// Create a specialized memory pool
     pub fn create_memory_pool(&mut self, poolid: &str, size: usize) -> StatsResult<()> {
-        let pool = Arc::new(Mutex::new(MemoryPool::new(pool_id, size)?));
-        self.memory_pools.insert(pool_id.to_string(), pool);
+        let pool = Arc::new(Mutex::new(MemoryPool::new(poolid, size)?));
+        self.memory_pools.insert(poolid.to_string(), pool);
         Ok(())
     }
 
@@ -662,7 +662,7 @@ impl AdaptiveStatsAllocator {
     /// Predict optimal memory pool for allocation
     fn predict_optimal_pool(&self, size: usize, alignment: usize, operationtype: &str) -> String {
         if let Ok(analyzer) = self.allocation_patterns.read() {
-            if let Some(pattern) = analyzer.get_pattern(operation_type) {
+            if let Some(pattern) = analyzer.get_pattern(operationtype) {
                 // Use pattern analysis to select optimal pool
                 if pattern.typical_size <= 1024 {
                     return "temporary_buffers".to_string();
@@ -687,7 +687,7 @@ impl AdaptiveStatsAllocator {
     /// Record allocation event for pattern analysis
     fn record_allocation_event(&self, size: usize, alignment: usize, operationtype: &str) {
         if let Ok(mut analyzer) = self.allocation_patterns.write() {
-            analyzer.record_allocation(size, alignment, operation_type);
+            analyzer.record_allocation(size, alignment, operationtype);
         }
 
         if let Ok(mut stats) = self.global_stats.lock() {
@@ -750,7 +750,7 @@ impl MemoryPool {
         }
 
         Ok(Self {
-            pool_id: pool_id.to_string(),
+            pool_id: poolid.to_string(),
             base_ptr,
             pool_size: size,
             used_size: 0,
@@ -828,7 +828,7 @@ impl AllocationPatternAnalyzer {
             size,
             alignment,
             lifetime: std::time::Duration::from_secs(0), // Will be updated on deallocation
-            operation_type: operation_type.to_string(),
+            operation_type: operationtype.to_string(),
             timestamp: std::time::Instant::now(),
         };
 
@@ -915,7 +915,7 @@ impl AllocationPatternAnalyzer {
     }
 
     fn get_pattern(&self, operationtype: &str) -> Option<&AllocationPattern> {
-        self.pattern_cache.get(operation_type)
+        self.pattern_cache.get(operationtype)
     }
 }
 
@@ -1121,7 +1121,7 @@ impl MemoryOptimizationSuite {
 }
 
 impl CacheManager {
-    fn new(cachesize: usize) -> Self {
+    fn new(cache_size: usize) -> Self {
         Self {
             cache_size,
             cache_entries: HashMap::new(),

@@ -250,7 +250,7 @@ pub fn identity_transform() -> TransformMatrix {
 /// Apply transformation to a point
 #[allow(dead_code)]
 pub fn transform_point(point: Point2D, transform: &TransformMatrix) -> Point2D {
-    let homogeneous = Array1::from(vec![_point.x, point.y, 1.0]);
+    let homogeneous = Array1::from(vec![point.x, point.y, 1.0]);
     let transformed = transform.dot(&homogeneous);
 
     if transformed[2].abs() < 1e-10 {
@@ -266,7 +266,7 @@ pub fn transform_point(point: Point2D, transform: &TransformMatrix) -> Point2D {
 /// Apply transformation to multiple points
 #[allow(dead_code)]
 pub fn transform_points(points: &[Point2D], transform: &TransformMatrix) -> Vec<Point2D> {
-    _points
+    points
         .iter()
         .map(|&p| transform_point(p, transform))
         .collect()
@@ -277,14 +277,14 @@ pub fn transform_points(points: &[Point2D], transform: &TransformMatrix) -> Vec<
 pub fn invert_transform(transform: &TransformMatrix) -> Result<TransformMatrix> {
     // Uses optimized 3x3 matrix inversion for transformation matrices
     // This implementation is sufficient for homogeneous transformation matrices
-    invert_3x3_matrix(_transform)
+    invert_3x3_matrix(transform)
         .map_err(|e| VisionError::OperationError(format!("Failed to invert transformation: {e}")))
 }
 
 /// Compose two transformations (T2 * T1)
 #[allow(dead_code)]
 pub fn compose_transforms(t1: &TransformMatrix, t2: &TransformMatrix) -> TransformMatrix {
-    t2.dot(_t1)
+    t2.dot(t1)
 }
 
 /// Decompose affine transformation into components
@@ -433,7 +433,7 @@ pub fn ransac_estimate_transform(
 fn estimate_rigid_transform(matches: &[PointMatch]) -> Result<TransformMatrix> {
     if matches.len() < 2 {
         return Err(VisionError::InvalidParameter(
-            "Need at least 2 _matches for rigid transformation".to_string(),
+            "Need at least 2 matches for rigid transformation".to_string(),
         ));
     }
 
@@ -454,7 +454,7 @@ fn estimate_rigid_transform(matches: &[PointMatch]) -> Result<TransformMatrix> {
     let mut syx = 0.0;
     let mut syy = 0.0;
 
-    for m in _matches {
+    for m in matches {
         let sx = m.source.x - source_centroid.x;
         let sy = m.source.y - source_centroid.y;
         let tx = m.target.x - target_centroid.x;
@@ -492,7 +492,7 @@ fn estimate_rigid_transform(matches: &[PointMatch]) -> Result<TransformMatrix> {
 fn estimate_similarity_transform(matches: &[PointMatch]) -> Result<TransformMatrix> {
     if matches.len() < 2 {
         return Err(VisionError::InvalidParameter(
-            "Need at least 2 _matches for similarity transformation".to_string(),
+            "Need at least 2 matches for similarity transformation".to_string(),
         ));
     }
 
@@ -514,7 +514,7 @@ fn estimate_similarity_transform(matches: &[PointMatch]) -> Result<TransformMatr
     let mut syy = 0.0;
     let mut source_var = 0.0;
 
-    for m in _matches {
+    for m in matches {
         let sx = m.source.x - source_centroid.x;
         let sy = m.source.y - source_centroid.y;
         let tx = m.target.x - target_centroid.x;
@@ -561,7 +561,7 @@ fn estimate_similarity_transform(matches: &[PointMatch]) -> Result<TransformMatr
 fn estimate_affine_transform(matches: &[PointMatch]) -> Result<TransformMatrix> {
     if matches.len() < 3 {
         return Err(VisionError::InvalidParameter(
-            "Need at least 3 _matches for affine transformation".to_string(),
+            "Need at least 3 matches for affine transformation".to_string(),
         ));
     }
 
@@ -614,7 +614,7 @@ fn normalize_points_homography(points: Vec<Point2D>) -> (Vec<Point2D>, Transform
     // Calculate centroid
     let mut cx = 0.0;
     let mut cy = 0.0;
-    for p in &_points {
+    for p in &points {
         cx += p.x;
         cy += p.y;
     }
@@ -623,7 +623,7 @@ fn normalize_points_homography(points: Vec<Point2D>) -> (Vec<Point2D>, Transform
 
     // Calculate average distance from centroid
     let mut avg_dist = 0.0;
-    for p in &_points {
+    for p in &points {
         let dx = p.x - cx;
         let dy = p.y - cy;
         avg_dist += (dx * dx + dy * dy).sqrt();
@@ -644,9 +644,9 @@ fn normalize_points_homography(points: Vec<Point2D>) -> (Vec<Point2D>, Transform
     t[[0, 2]] = -scale * cx;
     t[[1, 2]] = -scale * cy;
 
-    // Normalize _points
+    // Normalize points
     let mut norm_points = Vec::new();
-    for p in _points {
+    for p in points {
         norm_points.push(Point2D::new(scale * (p.x - cx), scale * (p.y - cy)));
     }
 
@@ -658,13 +658,13 @@ fn normalize_points_homography(points: Vec<Point2D>) -> (Vec<Point2D>, Transform
 fn estimate_homography_transform(matches: &[PointMatch]) -> Result<TransformMatrix> {
     if matches.len() < 4 {
         return Err(VisionError::InvalidParameter(
-            "Need at least 4 _matches for homography transformation".to_string(),
+            "Need at least 4 matches for homography transformation".to_string(),
         ));
     }
 
     // Check if all points are very close to their targets (identity transformation)
     let mut is_identity = true;
-    for m in _matches {
+    for m in matches {
         let dx = m.source.x - m.target.x;
         let dy = m.source.y - m.target.y;
         if dx.abs() > 1e-10 || dy.abs() > 1e-10 {
@@ -682,9 +682,9 @@ fn estimate_homography_transform(matches: &[PointMatch]) -> Result<TransformMatr
 
     // First normalize the points for numerical stability
     let (norm_source, t1) =
-        normalize_points_homography(_matches.iter().map(|m| m.source).collect());
+        normalize_points_homography(matches.iter().map(|m| m.source).collect());
     let (norm_target, t2) =
-        normalize_points_homography(_matches.iter().map(|m| m.target).collect());
+        normalize_points_homography(matches.iter().map(|m| m.target).collect());
 
     // Build the constraint matrix for DLT
     // For each correspondence, we get 2 equations
@@ -780,9 +780,9 @@ fn invert_3x3_matrix(matrix: &TransformMatrix) -> Result<TransformMatrix> {
 
     // Compute determinant
     let det = matrix[[0, 0]]
-        * (_matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
-        - matrix[[0, 1]] * (_matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
-        + matrix[[0, 2]] * (_matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
+        * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
+        - matrix[[0, 1]] * (matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
+        + matrix[[0, 2]] * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
 
     if det.abs() < 1e-10 {
         return Err(VisionError::OperationError(
@@ -792,16 +792,16 @@ fn invert_3x3_matrix(matrix: &TransformMatrix) -> Result<TransformMatrix> {
 
     let mut inv = Array2::zeros((3, 3));
 
-    // Compute adjugate _matrix
-    inv[[0, 0]] = (_matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]]) / det;
-    inv[[0, 1]] = (_matrix[[0, 2]] * matrix[[2, 1]] - matrix[[0, 1]] * matrix[[2, 2]]) / det;
-    inv[[0, 2]] = (_matrix[[0, 1]] * matrix[[1, 2]] - matrix[[0, 2]] * matrix[[1, 1]]) / det;
-    inv[[1, 0]] = (_matrix[[1, 2]] * matrix[[2, 0]] - matrix[[1, 0]] * matrix[[2, 2]]) / det;
-    inv[[1, 1]] = (_matrix[[0, 0]] * matrix[[2, 2]] - matrix[[0, 2]] * matrix[[2, 0]]) / det;
-    inv[[1, 2]] = (_matrix[[0, 2]] * matrix[[1, 0]] - matrix[[0, 0]] * matrix[[1, 2]]) / det;
-    inv[[2, 0]] = (_matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]) / det;
-    inv[[2, 1]] = (_matrix[[0, 1]] * matrix[[2, 0]] - matrix[[0, 0]] * matrix[[2, 1]]) / det;
-    inv[[2, 2]] = (_matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]) / det;
+    // Compute adjugate matrix
+    inv[[0, 0]] = (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]]) / det;
+    inv[[0, 1]] = (matrix[[0, 2]] * matrix[[2, 1]] - matrix[[0, 1]] * matrix[[2, 2]]) / det;
+    inv[[0, 2]] = (matrix[[0, 1]] * matrix[[1, 2]] - matrix[[0, 2]] * matrix[[1, 1]]) / det;
+    inv[[1, 0]] = (matrix[[1, 2]] * matrix[[2, 0]] - matrix[[1, 0]] * matrix[[2, 2]]) / det;
+    inv[[1, 1]] = (matrix[[0, 0]] * matrix[[2, 2]] - matrix[[0, 2]] * matrix[[2, 0]]) / det;
+    inv[[1, 2]] = (matrix[[0, 2]] * matrix[[1, 0]] - matrix[[0, 0]] * matrix[[1, 2]]) / det;
+    inv[[2, 0]] = (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]) / det;
+    inv[[2, 1]] = (matrix[[0, 1]] * matrix[[2, 0]] - matrix[[0, 0]] * matrix[[2, 1]]) / det;
+    inv[[2, 2]] = (matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]) / det;
 
     Ok(inv)
 }

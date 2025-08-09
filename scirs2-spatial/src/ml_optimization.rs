@@ -185,7 +185,7 @@ impl NeuralSpatialOptimizer {
 
     /// Configure network architecture
     pub fn with_network_architecture(mut self, layersizes: impl AsRef<[usize]>) -> Self {
-        let _sizes = layer_sizes.as_ref();
+        let _sizes = layersizes.as_ref();
         self.layers.clear();
 
         for i in 0.._sizes.len() - 1 {
@@ -217,7 +217,7 @@ impl NeuralSpatialOptimizer {
 
     /// Set network architecture in place (for use when already borrowed mutably)
     pub fn set_network_architecture(&mut self, layersizes: impl AsRef<[usize]>) {
-        let _sizes = layer_sizes.as_ref();
+        let _sizes = layersizes.as_ref();
         self.layers.clear();
 
         for i in 0.._sizes.len() - 1 {
@@ -278,8 +278,8 @@ impl NeuralSpatialOptimizer {
         let params = self.decode_clustering_parameters(&output)?;
 
         // Evaluate parameters and update network if we have ground truth
-        if let Some(quality_score) = self.evaluate_clustering_quality(points, &params)? {
-            self.update_network(&features, quality_score)?;
+        if let Some(qualityscore) = self.evaluate_clustering_quality(points, &params)? {
+            self.update_network(&features, qualityscore)?;
         }
 
         Ok(params)
@@ -288,7 +288,7 @@ impl NeuralSpatialOptimizer {
     /// Extract spatial features from data
     fn extract_spatial_features(
         &self,
-        _points: &ArrayView2<'_, f64>,
+        n_points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array1<f64>> {
         let (n_points, n_dims) = points.dim();
         let mut features = Vec::new();
@@ -320,10 +320,10 @@ impl NeuralSpatialOptimizer {
         for i in 0..n_points.min(100) {
             // Sample for efficiency
             for j in (i + 1)..n_points.min(100) {
-                let dist: f64 = _points
+                let dist: f64 = n_points
                     .row(i)
                     .iter()
-                    .zip(_points.row(j).iter())
+                    .zip(n_points.row(j).iter())
                     .map(|(&a, &b)| (a - b).powi(2))
                     .sum::<f64>()
                     .sqrt();
@@ -351,11 +351,11 @@ impl NeuralSpatialOptimizer {
         }
 
         // Density estimation
-        let density = NeuralSpatialOptimizer::estimate_local_density(_points)?;
+        let density = NeuralSpatialOptimizer::estimate_local_density(n_points)?;
         features.push(density);
 
         // Clustering tendency (Hopkins statistic approximation)
-        let hopkins = self.estimate_clustering_tendency(_points)?;
+        let hopkins = self.estimate_clustering_tendency(n_points)?;
         features.push(hopkins);
 
         Ok(Array1::from(features))
@@ -369,7 +369,7 @@ impl NeuralSpatialOptimizer {
             return Ok(0.0);
         }
 
-        // Sample _points for efficiency
+        // Sample n_points for efficiency
         let sample_size = n_points.min(50);
         let mut total_inverse_distance = 0.0;
         let mut count = 0;
@@ -379,10 +379,10 @@ impl NeuralSpatialOptimizer {
 
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = _points
+                    let dist: f64 = n_points
                         .row(i)
                         .iter()
-                        .zip(_points.row(j).iter())
+                        .zip(n_points.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -414,20 +414,20 @@ impl NeuralSpatialOptimizer {
             return Ok(0.5); // Neutral value
         }
 
-        // Sample a subset of _points
+        // Sample a subset of n_points
         let sample_size = n_points.min(20);
         let mut real_distances = Vec::new();
         let mut random_distances = Vec::new();
 
-        // Calculate distances to nearest neighbors for real _points
+        // Calculate distances to nearest neighbors for real n_points
         for i in 0..sample_size {
             let mut min_dist = f64::INFINITY;
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = _points
+                    let dist: f64 = n_points
                         .row(i)
                         .iter()
-                        .zip(_points.row(j).iter())
+                        .zip(n_points.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -437,8 +437,8 @@ impl NeuralSpatialOptimizer {
             real_distances.push(min_dist);
         }
 
-        // Generate random _points and calculate distances
-        let bounds = self.get_data_bounds(_points);
+        // Generate random n_points and calculate distances
+        let bounds = self.get_data_bounds(n_points);
         for _ in 0..sample_size {
             let random_point: Array1<f64> = Array1::from_shape_fn(n_dims, |i| {
                 rand::random::<f64>() * (bounds[i].1 - bounds[i].0) + bounds[i].0
@@ -448,7 +448,7 @@ impl NeuralSpatialOptimizer {
             for j in 0..n_points {
                 let dist: f64 = random_point
                     .iter()
-                    .zip(_points.row(j).iter())
+                    .zip(n_points.row(j).iter())
                     .map(|(&a, &b)| (a - b).powi(2))
                     .sum::<f64>()
                     .sqrt();
@@ -524,7 +524,7 @@ impl NeuralSpatialOptimizer {
 
     /// Decode distance metric from neural output
     fn decode_distance_metric(value: f64) -> DistanceMetric {
-        match (_value * 4.0) as usize {
+        match (value * 4.0) as usize {
             0 => DistanceMetric::Euclidean,
             1 => DistanceMetric::Manhattan,
             2 => DistanceMetric::Cosine,
@@ -549,10 +549,10 @@ impl NeuralSpatialOptimizer {
             self.calculate_calinski_harabasz_score(points, &clustering_result)?;
 
         // Combine metrics into single quality score
-        let quality_score =
+        let qualityscore =
             0.5 * silhouette_score + 0.3 * (1.0 / (1.0 + inertia)) + 0.2 * calinski_harabasz;
 
-        Ok(Some(quality_score))
+        Ok(Some(qualityscore))
     }
 
     /// Run clustering with given parameters
@@ -822,7 +822,7 @@ impl NeuralSpatialOptimizer {
     /// Update neural network based on performance feedback
     fn update_network(&mut self, _input: &Array1<f64>, qualityscore: f64) -> SpatialResult<()> {
         // Store experience for training
-        let target = Array1::from(vec![quality_score; 8]); // Simplified target
+        let target = Array1::from(vec![qualityscore; 8]); // Simplified target
         self.experience_buffer.push_back((_input.clone(), target));
 
         // Limit buffer size
@@ -1122,7 +1122,7 @@ impl ReinforcementLearningSelector {
         };
 
         // Estimate density
-        let density = self.estimate_density(_points)?;
+        let density = self.estimate_density(n_points)?;
         let density_category = if density < 0.3 {
             DensityCategory::Low
         } else if density < 0.7 {
@@ -1132,7 +1132,7 @@ impl ReinforcementLearningSelector {
         };
 
         // Estimate clustering tendency
-        let hopkins = self.estimate_hopkins_statistic(_points)?;
+        let hopkins = self.estimate_hopkins_statistic(n_points)?;
         let clustering_tendency_category = if hopkins < 0.3 {
             ClusteringTendencyCategory::HighlyStructured
         } else if hopkins < 0.7 {
@@ -1166,10 +1166,10 @@ impl ReinforcementLearningSelector {
 
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = _points
+                    let dist: f64 = n_points
                         .row(i)
                         .iter()
-                        .zip(_points.row(j).iter())
+                        .zip(n_points.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -1210,10 +1210,10 @@ impl ReinforcementLearningSelector {
             let mut min_dist = f64::INFINITY;
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = _points
+                    let dist: f64 = n_points
                         .row(i)
                         .iter()
-                        .zip(_points.row(j).iter())
+                        .zip(n_points.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -1224,7 +1224,7 @@ impl ReinforcementLearningSelector {
         }
 
         // Random point distances
-        let bounds = self.get_data_bounds(_points);
+        let bounds = self.get_data_bounds(n_points);
         for _ in 0..sample_size {
             let random_point: Array1<f64> = Array1::from_shape_fn(n_dims, |i| {
                 rand::random::<f64>() * (bounds[i].1 - bounds[i].0) + bounds[i].0
@@ -1234,7 +1234,7 @@ impl ReinforcementLearningSelector {
             for j in 0..n_points {
                 let dist: f64 = random_point
                     .iter()
-                    .zip(_points.row(j).iter())
+                    .zip(n_points.row(j).iter())
                     .map(|(&a, &b)| (a - b).powi(2))
                     .sum::<f64>()
                     .sqrt();
@@ -1325,22 +1325,22 @@ impl ReinforcementLearningSelector {
         let max_next_q = if experience.done {
             0.0
         } else {
-            self.max_q_value_for_state(&_experience.next_state)
+            self.max_q_value_for_state(&experience.next_state)
         };
 
         // Q-learning update rule
         let new_q = current_q
-            + self.learning_rate * (_experience.reward + self.gamma * max_next_q - current_q);
+            + self.learning_rate * (experience.reward + self.gamma * max_next_q - current_q);
 
         self.q_table.insert(state_action, new_q);
 
-        // Store _experience for replay
-        self.experience_buffer.push_back(_experience);
+        // Store experience for replay
+        self.experience_buffer.push_back(experience);
         if self.experience_buffer.len() > 10000 {
             self.experience_buffer.pop_front();
         }
 
-        // Perform _experience replay
+        // Perform experience replay
         if self.experience_buffer.len() >= 32 {
             self.replay_experience()?;
         }

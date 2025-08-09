@@ -34,7 +34,7 @@ struct BallTreeNode<T: Float> {
     start_idx: usize,
 
     /// Index of the end of the points contained in this node
-    end_idx: usize,
+    endidx: usize,
 
     /// Centroid of the points in this node (center of the ball)
     centroid: Vec<T>,
@@ -163,17 +163,17 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
     /// # Arguments
     ///
     /// * `start_idx` - Start index of points for this subtree
-    /// * `end_idx` - End index of points for this subtree
+    /// * `endidx` - End index of points for this subtree
     ///
     /// # Returns
     ///
     /// * `SpatialResult<usize>` - Index of the root node of the subtree
     fn build_subtree(&mut self, _start_idx: usize, endidx: usize) -> SpatialResult<usize> {
-        let n_points = end_idx - start_idx;
+        let n_points = endidx - start_idx;
 
         // Calculate centroid of points in this node
         let mut centroid = vec![T::zero(); self.n_features];
-        for i in start_idx..end_idx {
+        for i in start_idx..endidx {
             let point_idx = self.indices[i];
             let point = self.data.row(point_idx);
 
@@ -188,7 +188,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
 
         // Calculate radius (maximum distance from centroid to any point)
         let mut radius = T::zero();
-        for i in start_idx..end_idx {
+        for i in start_idx..endidx {
             let point_idx = self.indices[i];
             let point = self.data.row(point_idx);
 
@@ -203,7 +203,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         let node_idx = self.nodes.len();
         let node = BallTreeNode {
             start_idx: start_idx,
-            end_idx,
+            endidx,
             centroid,
             radius,
             left_child: None,
@@ -219,13 +219,13 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
 
         // Otherwise, split the points and recursively build subtrees
         // We'll split along the direction of maximum variance
-        self.split_points(node_idx, start_idx, end_idx)?;
+        self.split_points(node_idx, start_idx, endidx)?;
 
         // Recursively build left and right subtrees
         let mid_idx = _start_idx + n_points / 2;
 
         let left_idx = self.build_subtree(_start_idx, mid_idx)?;
-        let right_idx = self.build_subtree(mid_idx, end_idx)?;
+        let right_idx = self.build_subtree(mid_idx, endidx)?;
 
         // Update node with child indices
         self.nodes[node_idx].left_child = Some(left_idx);
@@ -243,7 +243,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
     ///
     /// * `node_idx` - Index of the node to split
     /// * `start_idx` - Start index of points in the node
-    /// * `end_idx` - End index of points in the node
+    /// * `endidx` - End index of points in the node
     ///
     /// # Returns
     ///
@@ -252,14 +252,14 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         &mut self,
         node_idx: usize,
         start_idx: usize,
-        end_idx: usize,
+        endidx: usize,
     ) -> SpatialResult<()> {
         // Find the dimension with the largest variance
         let node = &self.nodes[node_idx];
         let centroid = &node.centroid;
 
         // Calculate distances from centroid to all points
-        let mut distances: Vec<(usize, T)> = (start_idx..end_idx)
+        let mut distances: Vec<(usize, T)> = (start_idx..endidx)
             .map(|i| {
                 let point_idx = self.indices[i];
                 let point = self.data.row(point_idx);
@@ -273,8 +273,8 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
 
         // Reorder indices array based on sorted distances
         // Midpoint is calculated but used implicitly when we reorder the indices
-        let _mid_idx = start_idx + (end_idx - start_idx) / 2;
-        let mut new_indices = Vec::with_capacity(end_idx - start_idx);
+        let _mid_idx = start_idx + (endidx - start_idx) / 2;
+        let mut new_indices = Vec::with_capacity(endidx - start_idx);
 
         for (i_, _) in distances {
             new_indices.push(self.indices[i_]);
@@ -371,7 +371,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
 
         // If this is a leaf node, check all points
         if node.left_child.is_none() {
-            for i in node.start_idx..node.end_idx {
+            for i in node.start_idx..node.endidx {
                 let _idx = self.indices[i];
                 let row_vec = self.data.row(_idx).to_vec();
                 let _dist = self.distance.distance(point, row_vec.as_slice());
@@ -524,7 +524,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
 
         // If this is a leaf node, check all points
         if node.left_child.is_none() {
-            for i in node.start_idx..node.end_idx {
+            for i in node.start_idx..node.endidx {
                 let _idx = self.indices[i];
                 let row_vec = self.data.row(_idx).to_vec();
                 let dist = self.distance.distance(point, row_vec.as_slice());
@@ -610,11 +610,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
 
         // If both are leaf nodes, check all point pairs
         if self_node.left_child.is_none() && other_node.left_child.is_none() {
-            for i in self_node.start_idx..self_node.end_idx {
+            for i in self_node.start_idx..self_node.endidx {
                 let self_idx = self.indices[i];
                 let self_point = self.data.row(self_idx);
 
-                for j in other_node.start_idx..other_node.end_idx {
+                for j in other_node.start_idx..other_node.endidx {
                     let other_idx = other.indices[j];
                     let other_point = other.data.row(other_idx);
 
@@ -636,8 +636,8 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         // Split the node with more points
         if self_node.left_child.is_some()
             && (other_node.left_child.is_none()
-                || (self_node.end_idx - self_node.start_idx)
-                    > (other_node.end_idx - other_node.start_idx))
+                || (self_node.endidx - self_node.start_idx)
+                    > (other_node.endidx - other_node.start_idx))
         {
             let left_idx = match self_node.left_child {
                 Some(_idx) => idx,

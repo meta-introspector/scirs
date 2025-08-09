@@ -200,7 +200,7 @@ where
     T: Float + FromPrimitive,
 {
     let pi = T::from_f64(std::f64::consts::PI).unwrap();
-    _degrees * pi / T::from_f64(180.0).unwrap()
+    degrees * pi / T::from_f64(180.0).unwrap()
 }
 
 /// Cosine of angle in degrees
@@ -932,7 +932,7 @@ pub fn spherical_distance<T>(lat1: T, lon1: T, lat2: T, lon2: T) -> SpecialResul
 where
     T: Float + FromPrimitive + Display + Copy,
 {
-    check_finite(_lat1, "_lat1 value")?;
+    check_finite(lat1, "lat1 value")?;
     check_finite(lon1, "lon1 value")?;
     check_finite(lat2, "lat2 value")?;
     check_finite(lon2, "lon2 value")?;

@@ -132,15 +132,15 @@ impl RigidTransform {
 
         // Check the last row is [0, 0, 0, 1]
         for i in 0..3 {
-            if (_matrix[[3, i]] - 0.0).abs() > 1e-10 {
+            if (matrix[[3, i]] - 0.0).abs() > 1e-10 {
                 return Err(SpatialError::ValueError(
-                    "Last row of _matrix must be [0, 0, 0, 1]".into(),
+                    "Last row of matrix must be [0, 0, 0, 1]".into(),
                 ));
             }
         }
-        if (_matrix[[3, 3]] - 1.0).abs() > 1e-10 {
+        if (matrix[[3, 3]] - 1.0).abs() > 1e-10 {
             return Err(SpatialError::ValueError(
-                "Last row of _matrix must be [0, 0, 0, 1]".into(),
+                "Last row of matrix must be [0, 0, 0, 1]".into(),
             ));
         }
 
@@ -158,7 +158,7 @@ impl RigidTransform {
             translation[i] = matrix[[i, 3]];
         }
 
-        // Create rotation from the extracted _matrix
+        // Create rotation from the extracted matrix
         let rotation = Rotation::from_matrix(&rotation_matrix.view())?;
 
         Ok(RigidTransform {
@@ -281,7 +281,7 @@ impl RigidTransform {
         }
 
         // Apply rotation then translation
-        let rotated = self.rotation.apply(_point)?;
+        let rotated = self.rotation.apply(point)?;
         Ok(rotated + &self.translation)
     }
 
@@ -385,10 +385,10 @@ impl RigidTransform {
     /// ```
     pub fn compose(&self, other: &RigidTransform) -> SpatialResult<RigidTransform> {
         // Compose rotations
-        let rotation = self.rotation.compose(&_other.rotation);
+        let rotation = self.rotation.compose(&other.rotation);
 
         // Compose translations: self.translation + self.rotation * other.translation
-        let rotated_trans = self.rotation.apply(&_other.translation.view())?;
+        let rotated_trans = self.rotation.apply(&other.translation.view())?;
         let translation = &self.translation + &rotated_trans;
 
         Ok(RigidTransform {

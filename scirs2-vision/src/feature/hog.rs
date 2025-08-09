@@ -82,7 +82,7 @@ pub struct HogDescriptor {
 #[allow(dead_code)]
 pub fn compute_hog(img: &DynamicImage, config: &HogConfig) -> Result<HogDescriptor> {
     // Convert to grayscale
-    let array = image_to_array(_img)?;
+    let array = image_to_array(img)?;
     let (height, width) = array.dim();
 
     // Compute gradients
@@ -266,16 +266,16 @@ fn compute_block_features(
 /// Compute Gaussian weights for block cells
 #[allow(dead_code)]
 fn compute_gaussian_weights(_blocksize: usize) -> Vec<f32> {
-    let mut weights = vec![0.0; _block_size * _block_size];
-    let sigma = _block_size as f32 * 0.5;
-    let center = (_block_size - 1) as f32 * 0.5;
+    let mut weights = vec![0.0; _blocksize * _blocksize];
+    let sigma = _blocksize as f32 * 0.5;
+    let center = (_blocksize - 1) as f32 * 0.5;
 
-    for y in 0.._block_size {
-        for x in 0.._block_size {
+    for y in 0.._blocksize {
+        for x in 0.._blocksize {
             let dy = y as f32 - center;
             let dx = x as f32 - center;
             let dist_sq = dx * dx + dy * dy;
-            weights[y * _block_size + x] = (-dist_sq / (2.0 * sigma * sigma)).exp();
+            weights[y * _blocksize + x] = (-dist_sq / (2.0 * sigma * sigma)).exp();
         }
     }
 

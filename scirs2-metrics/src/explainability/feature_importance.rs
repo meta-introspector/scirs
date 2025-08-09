@@ -378,13 +378,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
     // Helper methods
 
     fn permute_column(&self, data: &mut Array2<F>, columnidx: usize) -> Result<()> {
-        if column_idx >= data.ncols() {
+        if columnidx >= data.ncols() {
             return Err(MetricsError::InvalidInput(
                 "Column index out of bounds".to_string(),
             ));
         }
 
-        let mut column_values: Vec<F> = data.column(column_idx).to_vec();
+        let mut column_values: Vec<F> = data.column(columnidx).to_vec();
 
         if self.use_proper_rng {
             // Use Fisher-Yates shuffle for proper randomization
@@ -401,7 +401,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         }
 
         for (i, &value) in column_values.iter().enumerate() {
-            data[[i, column_idx]] = value;
+            data[[i, columnidx]] = value;
         }
 
         Ok(())
@@ -573,16 +573,16 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
     /// Fit linear approximation for LIME
     fn fit_linear_approximation(
         &self,
-        x_samples: &Array2<F>,
+        xsamples: &Array2<F>,
         y_predictions: &Array1<F>,
     ) -> Result<Vec<F>> {
-        let n_features = x_samples.ncols();
+        let n_features = xsamples.ncols();
         let mut weights = vec![F::zero(); n_features];
 
         // Simplified linear regression using normal equations
         // In practice, this would use proper linear algebra
         for feature_idx in 0..n_features {
-            let feature_values: Vec<F> = x_samples.column(feature_idx).to_vec();
+            let feature_values: Vec<F> = xsamples.column(feature_idx).to_vec();
             let correlation =
                 self.compute_correlation_vec(&feature_values, &y_predictions.to_vec())?;
             weights[feature_idx] = correlation;
@@ -618,16 +618,16 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let n_samples = x_samples.nrows();
-        let n_features = x_samples.ncols();
+        let n_samples = xsamples.nrows();
+        let n_features = xsamples.ncols();
         let mut gradients = Array2::zeros((n_samples, n_features));
 
         let epsilon = F::from(1e-6).unwrap();
 
         for sample_idx in 0..n_samples {
             for feature_idx in 0..n_features {
-                let mut x_plus = x_samples.row(sample_idx).to_owned();
-                let mut x_minus = x_samples.row(sample_idx).to_owned();
+                let mut x_plus = xsamples.row(sample_idx).to_owned();
+                let mut x_minus = xsamples.row(sample_idx).to_owned();
 
                 x_plus[feature_idx] = x_plus[feature_idx] + epsilon;
                 x_minus[feature_idx] = x_minus[feature_idx] - epsilon;
@@ -693,7 +693,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
     }
 
     fn drop_column(&self, data: &Array2<F>, columnidx: usize) -> Result<Array2<F>> {
-        if column_idx >= data.ncols() {
+        if columnidx >= data.ncols() {
             return Err(MetricsError::InvalidInput(
                 "Column index out of bounds".to_string(),
             ));
@@ -706,7 +706,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         for i in 0..n_rows {
             let mut result_col = 0;
             for j in 0..data.ncols() {
-                if j != column_idx {
+                if j != columnidx {
                     result[[i, result_col]] = data[[i, j]];
                     result_col += 1;
                 }

@@ -45,7 +45,7 @@ impl QuantileTransformer {
             ));
         }
 
-        if output_distribution != "uniform" && output_distribution != "normal" {
+        if outputdistribution != "uniform" && outputdistribution != "normal" {
             return Err(TransformError::InvalidInput(
                 "output_distribution must be 'uniform' or 'normal'".to_string(),
             ));
@@ -53,7 +53,7 @@ impl QuantileTransformer {
 
         Ok(QuantileTransformer {
             n_quantiles,
-            output_distribution: output_distribution.to_string(),
+            output_distribution: outputdistribution.to_string(),
             clip,
             quantiles: None,
             references: None,

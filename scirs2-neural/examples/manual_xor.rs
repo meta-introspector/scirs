@@ -41,8 +41,8 @@ fn main() -> Result<()> {
         let hidden_grad = output_layer.backward(&hidden_output, &output_grad)?;
         let _input_grad = hidden_layer.backward(&inputs, &hidden_grad)?;
         // Update parameters
-        hidden_layer.update(learningrate)?;
-        output_layer.update(learningrate)?;
+        hidden_layer.update(learning_rate)?;
+        output_layer.update(learning_rate)?;
     }
     // Evaluate the model
     println!("\nEvaluation:");

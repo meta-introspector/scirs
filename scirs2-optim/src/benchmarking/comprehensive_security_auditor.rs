@@ -505,16 +505,16 @@ impl ComprehensiveSecurityAuditor {
     /// Run comprehensive security audit
     pub fn audit_project<P: AsRef<Path>>(
         &mut self,
-        project_path: P,
+        projectpath: P,
     ) -> Result<SecurityAuditResult> {
         let start_time = std::time::Instant::now();
-        let project_path = project_path.as_ref();
+        let projectpath = projectpath.as_ref();
 
         // Update vulnerability database if needed
         self.update_vulnerability_database()?;
 
         // Initialize audit result
-        let mut audit_result = SecurityAuditResult {
+        let mut auditresult = SecurityAuditResult {
             timestamp: SystemTime::now(),
             duration: Duration::from_secs(0),
             security_score: 0.0,
@@ -531,62 +531,62 @@ impl ComprehensiveSecurityAuditor {
 
         // Run dependency scanning
         if self.config.enable_dependency_scanning {
-            audit_result.dependency_results =
-                self.dependency_scanner.scan_dependencies(project_path)?;
+            auditresult.dependency_results =
+                self.dependency_scanner.scan_dependencies(projectpath)?;
         }
 
         // Run static analysis
         if self.config.enable_static_analysis {
-            audit_result.static_analysis_results = self.run_static_analysis(project_path)?;
+            auditresult.static_analysis_results = self.run_static_analysis(projectpath)?;
         }
 
         // Run license compliance check
         if self.config.enable_license_compliance {
-            audit_result.license_compliance_results =
-                self.check_license_compliance(project_path)?;
+            auditresult.license_compliance_results =
+                self.check_license_compliance(projectpath)?;
         }
 
         // Run supply chain analysis
         if self.config.enable_supply_chain_analysis {
-            audit_result.supply_chain_results = self.analyze_supply_chain(project_path)?;
+            auditresult.supply_chain_results = self.analyze_supply_chain(projectpath)?;
         }
 
         // Run secret detection
         if self.config.enable_secret_detection {
-            audit_result.secret_detection_results = self.detect_secrets(project_path)?;
+            auditresult.secret_detection_results = self.detect_secrets(projectpath)?;
         }
 
         // Run configuration security checks
         if self.config.enable_config_security {
-            audit_result.config_security_results = self.check_config_security(project_path)?;
+            auditresult.config_security_results = self.check_config_security(projectpath)?;
         }
 
         // Check policy compliance
-        audit_result.policy_compliance_results =
-            self.policy_enforcer.check_compliance(&audit_result)?;
+        auditresult.policy_compliance_results =
+            self.policy_enforcer.check_compliance(&auditresult)?;
 
         // Generate remediation suggestions
         if self.config.enable_auto_remediation {
-            audit_result.remediation_suggestions =
-                self.generate_remediation_suggestions(&audit_result)?;
+            auditresult.remediation_suggestions =
+                self.generate_remediation_suggestions(&auditresult)?;
         }
 
         // Perform risk assessment
-        audit_result.risk_assessment = self.assess_risk(&audit_result)?;
+        auditresult.risk_assessment = self.assess_risk(&auditresult)?;
 
         // Calculate overall security score
-        audit_result.security_score = self.calculate_security_score(&audit_result);
+        auditresult.security_score = self.calculate_security_score(&auditresult);
 
         // Set audit duration
-        audit_result.duration = start_time.elapsed();
+        auditresult.duration = start_time.elapsed();
 
         // Store in audit history
-        self.audit_history.push(audit_result.clone());
+        self.audit_history.push(auditresult.clone());
 
         // Generate alerts if necessary
-        self.check_alerts(&audit_result)?;
+        self.check_alerts(&auditresult)?;
 
-        Ok(audit_result)
+        Ok(auditresult)
     }
 
     /// Update vulnerability database from external sources
@@ -600,34 +600,34 @@ impl ComprehensiveSecurityAuditor {
     /// Run automated dependency scanning with RustSec Advisory Database
     pub fn scan_dependencies_with_rustsec(
         &mut self,
-        project_path: &Path,
+        projectpath: &Path,
     ) -> Result<DependencyScanResult> {
         let _start_time = std::time::Instant::now();
         let mut vulnerable_dependencies = Vec::new();
         let mut outdated_dependencies = Vec::new();
 
         // Read Cargo.toml to get dependencies
-        let cargo_toml_path = project_path.join("Cargo.toml");
+        let cargo_toml_path = projectpath.join("Cargo.toml");
         if !cargo_toml_path.exists() {
             return Ok(DependencyScanResult::default());
         }
 
-        let cargo_content = std::fs::read_to_string(&cargo_toml_path)?;
+        let cargocontent = std::fs::read_to_string(&cargo_toml_path)?;
 
         // Parse Cargo.toml for dependencies (simplified parsing)
-        let dependencies = self.parse_cargo_dependencies(&cargo_content)?;
+        let dependencies = self.parse_cargo_dependencies(&cargocontent)?;
         let total_dependencies = dependencies.len();
 
         // Check each dependency against RustSec Advisory Database
-        for (dep_name, version) in dependencies {
+        for (depname, version) in dependencies {
             // Simulate vulnerability checking
-            if self.is_vulnerable_dependency(&dep_name, &version) {
+            if self.is_vulnerable_dependency(&depname, &version) {
                 let vulnerability = Vulnerability {
                     id: format!("RUSTSEC-XXXX-XXXX"),
-                    title: format!("Vulnerability in {}", dep_name),
+                    title: format!("Vulnerability in {}", depname),
                     description: format!(
                         "Security vulnerability found in {} version {}",
-                        dep_name, version
+                        depname, version
                     ),
                     severity: SecuritySeverity::High,
                     cvss_score: Some(7.5),
@@ -635,12 +635,12 @@ impl ComprehensiveSecurityAuditor {
                     discovered: None,
                     affected_versions: format!("<= {}", version),
                     patched_versions: vec![format!("> {}", version)],
-                    references: vec![format!("https://rustsec.org/advisories/{}", dep_name)],
+                    references: vec![format!("https://rustsec.org/advisories/{}", depname)],
                     categories: vec![VulnerabilityCategory::Other("General".to_string())],
                 };
 
                 vulnerable_dependencies.push(VulnerableDependency {
-                    name: dep_name.clone(),
+                    name: depname.clone(),
                     current_version: version.clone(),
                     vulnerabilities: vec![vulnerability],
                     affected_versions: format!("<= {}", version),
@@ -651,9 +651,9 @@ impl ComprehensiveSecurityAuditor {
             }
 
             // Check if dependency is outdated
-            if self.is_outdated_dependency(&dep_name, &version) {
+            if self.is_outdated_dependency(&depname, &version) {
                 outdated_dependencies.push(OutdatedDependency {
-                    name: dep_name,
+                    name: depname,
                     current_version: version,
                     latest_version: "latest".to_string(), // Would be fetched from crates.io
                 });
@@ -679,7 +679,7 @@ impl ComprehensiveSecurityAuditor {
         let mut dependencies = Vec::new();
         let mut in_dependencies_section = false;
 
-        for line in cargo_content.lines() {
+        for line in cargocontent.lines() {
             let line = line.trim();
 
             if line == "[dependencies]" {
@@ -695,9 +695,9 @@ impl ComprehensiveSecurityAuditor {
             if in_dependencies_section && line.contains('=') {
                 let parts: Vec<&str> = line.split('=').collect();
                 if parts.len() >= 2 {
-                    let dep_name = parts[0].trim().to_string();
+                    let depname = parts[0].trim().to_string();
                     let version = parts[1].trim().trim_matches('"').to_string();
-                    dependencies.push((dep_name, version));
+                    dependencies.push((depname, version));
                 }
             }
         }
@@ -706,18 +706,18 @@ impl ComprehensiveSecurityAuditor {
     }
 
     /// Check if dependency has known vulnerabilities (simplified check)
-    fn is_vulnerable_dependency(&self, dep_name: &str, version: &str) -> bool {
+    fn is_vulnerable_dependency(&self, depname: &str, version: &str) -> bool {
         // Simulate vulnerability database lookup
         // In real implementation, this would query RustSec Advisory Database
         let known_vulnerable = ["old-time", "chrono", "serde_yaml"];
-        known_vulnerable.contains(&dep_name)
+        known_vulnerable.contains(&depname)
     }
 
     /// Check if dependency is outdated (simplified check)
     fn is_outdated_dependency(&self, depname: &str, version: &str) -> bool {
         // Simulate version checking against crates.io
         // In real implementation, this would query crates.io API
-        version.starts_with("0.") && dep_name.len() > 5
+        version.starts_with("0.") && depname.len() > 5
     }
 
     /// Calculate risk score for dependencies
@@ -740,24 +740,24 @@ impl ComprehensiveSecurityAuditor {
         let mut lines_analyzed = 0;
 
         // Find and scan Rust source files
-        let rust_files = self.find_rust_files(project_path)?;
+        let rust_files = self.find_rust_files(projectpath)?;
 
-        for file_path in rust_files {
-            if self.is_excluded_path(&file_path) {
+        for filepath in rust_files {
+            if self.is_excluded_path(&filepath) {
                 continue;
             }
 
-            let content = std::fs::read_to_string(&file_path)?;
+            let content = std::fs::read_to_string(&filepath)?;
             let file_lines = content.lines().count();
             lines_analyzed += file_lines;
             files_scanned += 1;
 
             // Analyze file for security issues
-            let mut file_issues = self.analyze_file_security(&file_path, &content)?;
+            let mut file_issues = self.analyze_file_security(&filepath, &content)?;
             security_issues.append(&mut file_issues);
 
             // Apply custom security rules
-            let mut custom_issues = self.apply_custom_rules(&file_path, &content)?;
+            let mut custom_issues = self.apply_custom_rules(&filepath, &content)?;
             security_issues.append(&mut custom_issues);
         }
 
@@ -781,7 +781,7 @@ impl ComprehensiveSecurityAuditor {
                     id: format!("unsafe_code_{}", line_num),
                     issue_type: SecurityIssueType::UnsafeCode,
                     severity: SecuritySeverity::Medium,
-                    file: file_path.to_path_buf(),
+                    file: filepath.to_path_buf(),
                     line: line_num + 1,
                     column: Some(line.find("unsafe").unwrap_or(0)),
                     description: "Unsafe code block detected - review for memory safety"
@@ -800,7 +800,7 @@ impl ComprehensiveSecurityAuditor {
                     id: format!("secret_{}", line_num),
                     issue_type: SecurityIssueType::HardcodedSecret,
                     severity: SecuritySeverity::High,
-                    file: file_path.to_path_buf(),
+                    file: filepath.to_path_buf(),
                     line: line_num + 1,
                     column: None,
                     description: "Potential hardcoded secret detected".to_string(),
@@ -818,7 +818,7 @@ impl ComprehensiveSecurityAuditor {
                     id: format!("command_injection_{}", line_num),
                     issue_type: SecurityIssueType::CommandInjection,
                     severity: SecuritySeverity::Medium,
-                    file: file_path.to_path_buf(),
+                    file: filepath.to_path_buf(),
                     line: line_num + 1,
                     column: None,
                     description: "Command execution detected - ensure input validation".to_string(),
@@ -834,7 +834,7 @@ impl ComprehensiveSecurityAuditor {
                     id: format!("weak_crypto_{}", line_num),
                     issue_type: SecurityIssueType::WeakCryptography,
                     severity: SecuritySeverity::High,
-                    file: file_path.to_path_buf(),
+                    file: filepath.to_path_buf(),
                     line: line_num + 1,
                     column: None,
                     description: "Weak cryptographic algorithm detected".to_string(),
@@ -854,7 +854,7 @@ impl ComprehensiveSecurityAuditor {
 
         for rule in &self.config.custom_rules {
             // Check if rule applies to this file type
-            if let Some(extension) = file_path.extension() {
+            if let Some(extension) = filepath.extension() {
                 let ext_str = extension.to_str().unwrap_or("");
                 if !rule.file_types.is_empty() && !rule.file_types.contains(&ext_str.to_string()) {
                     continue;
@@ -868,7 +868,7 @@ impl ComprehensiveSecurityAuditor {
                         id: format!("custom_{}_{}", rule.id, line_num),
                         issue_type: SecurityIssueType::Other(rule.name.clone()),
                         severity: rule.severity,
-                        file: file_path.to_path_buf(),
+                        file: filepath.to_path_buf(),
                         line: line_num + 1,
                         column: None,
                         description: rule.description.clone(),
@@ -954,7 +954,7 @@ impl ComprehensiveSecurityAuditor {
         let mut rust_files = Vec::new();
 
         fn visit_dir(dir: &Path, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
-            for entry in std::fs::read_dir(_dir)? {
+            for entry in std::fs::read_dir(dir)? {
                 let entry = entry?;
                 let _path = entry.path();
 
@@ -975,7 +975,7 @@ impl ComprehensiveSecurityAuditor {
             Ok(())
         }
 
-        visit_dir(project_path, &mut rust_files)?;
+        visit_dir(projectpath, &mut rust_files)?;
         Ok(rust_files)
     }
 
@@ -994,13 +994,13 @@ impl ComprehensiveSecurityAuditor {
         let mut score = 1.0;
 
         // Dependency vulnerabilities penalty
-        let critical_vulns = audit_result
+        let critical_vulns = auditresult
             .dependency_results
             .vulnerable_dependencies
             .iter()
             .filter(|dep| dep.severity == SecuritySeverity::Critical)
             .count();
-        let high_vulns = audit_result
+        let high_vulns = auditresult
             .dependency_results
             .vulnerable_dependencies
             .iter()
@@ -1011,13 +1011,13 @@ impl ComprehensiveSecurityAuditor {
         score -= high_vulns as f64 * 0.1;
 
         // Static analysis issues penalty
-        let critical_issues = audit_result
+        let critical_issues = auditresult
             .static_analysis_results
             .security_issues
             .iter()
             .filter(|issue| issue.severity == SecuritySeverity::Critical)
             .count();
-        let high_issues = audit_result
+        let high_issues = auditresult
             .static_analysis_results
             .security_issues
             .iter()
@@ -1028,13 +1028,13 @@ impl ComprehensiveSecurityAuditor {
         score -= high_issues as f64 * 0.08;
 
         // Secret detection penalty
-        score -= audit_result.secret_detection_results.secrets_found.len() as f64 * 0.1;
+        score -= auditresult.secret_detection_results.secrets_found.len() as f64 * 0.1;
 
         // License compliance penalty
-        score -= audit_result.license_compliance_results.violations.len() as f64 * 0.05;
+        score -= auditresult.license_compliance_results.violations.len() as f64 * 0.05;
 
         // Policy violations penalty
-        let critical_violations = audit_result
+        let critical_violations = auditresult
             .policy_compliance_results
             .violations
             .iter()
@@ -1048,12 +1048,12 @@ impl ComprehensiveSecurityAuditor {
     /// Generate remediation suggestions based on audit findings
     fn generate_remediation_suggestions(
         &self,
-        audit_result: &SecurityAuditResult,
+        auditresult: &SecurityAuditResult,
     ) -> Result<Vec<RemediationSuggestion>> {
         let mut suggestions = Vec::new();
 
         // Suggestions for vulnerable dependencies
-        for vuln_dep in &audit_result.dependency_results.vulnerable_dependencies {
+        for vuln_dep in &auditresult.dependency_results.vulnerable_dependencies {
             if let Some(fixed_version) = &vuln_dep.fixed_version {
                 suggestions.push(RemediationSuggestion {
                     id: format!("dep_update_{}", vuln_dep.name),
@@ -1084,7 +1084,7 @@ impl ComprehensiveSecurityAuditor {
         }
 
         // Suggestions for static analysis issues
-        for issue in &audit_result.static_analysis_results.security_issues {
+        for issue in &auditresult.static_analysis_results.security_issues {
             if let Some(remediation) = &issue.remediation {
                 suggestions.push(RemediationSuggestion {
                     id: format!("static_{}", issue.id),
@@ -1109,7 +1109,7 @@ impl ComprehensiveSecurityAuditor {
         }
 
         // Suggestions for secrets
-        for secret in &audit_result.secret_detection_results.secrets_found {
+        for secret in &auditresult.secret_detection_results.secrets_found {
             suggestions.push(RemediationSuggestion {
                 id: format!("secret_{}", secret.id),
                 title: "Remove hardcoded secret".to_string(),
@@ -1137,7 +1137,7 @@ impl ComprehensiveSecurityAuditor {
         let mut total_risk = 0.0;
 
         // Vulnerability risk
-        let vuln_count = audit_result
+        let vuln_count = auditresult
             .dependency_results
             .vulnerable_dependencies
             .len();
@@ -1154,7 +1154,7 @@ impl ComprehensiveSecurityAuditor {
         }
 
         // Security issues risk
-        let issue_count = audit_result.static_analysis_results.security_issues.len();
+        let issue_count = auditresult.static_analysis_results.security_issues.len();
         if issue_count > 0 {
             let issue_risk = (issue_count as f64 * 0.05).min(0.6);
             risk_factors.push(RiskFactor {
@@ -1168,7 +1168,7 @@ impl ComprehensiveSecurityAuditor {
         }
 
         // Secret exposure risk
-        let secret_count = audit_result.secret_detection_results.secrets_found.len();
+        let secret_count = auditresult.secret_detection_results.secrets_found.len();
         if secret_count > 0 {
             let secret_risk = (secret_count as f64 * 0.2).min(0.9);
             risk_factors.push(RiskFactor {
@@ -1272,7 +1272,7 @@ impl ComprehensiveSecurityAuditor {
         let mut critical_issues = Vec::new();
 
         // Check for critical vulnerabilities
-        for vuln_dep in &audit_result.dependency_results.vulnerable_dependencies {
+        for vuln_dep in &auditresult.dependency_results.vulnerable_dependencies {
             if vuln_dep.severity >= self.config.alert_threshold {
                 critical_issues.push(format!(
                     "Critical vulnerability in {}: {}",
@@ -1287,14 +1287,14 @@ impl ComprehensiveSecurityAuditor {
         }
 
         // Check for critical static analysis issues
-        for issue in &audit_result.static_analysis_results.security_issues {
+        for issue in &auditresult.static_analysis_results.security_issues {
             if issue.severity >= self.config.alert_threshold {
                 critical_issues.push(format!("Critical security issue: {}", issue.description));
             }
         }
 
         // Check for exposed secrets
-        if !audit_result
+        if !auditresult
             .secret_detection_results
             .secrets_found
             .is_empty()
@@ -1336,13 +1336,13 @@ impl ComprehensiveSecurityAuditor {
     /// Generate security report
     pub fn generate_report(&self, auditresult: &SecurityAuditResult) -> Result<String> {
         self.report_generator
-            .generate_report(audit_result, &self.config.report_format)
+            .generate_report(auditresult, &self.config.report_format)
     }
 
     /// Run scheduled security audit
     pub fn run_scheduled_audit(
         &mut self,
-        project_path: &Path,
+        projectpath: &Path,
         schedule: AuditSchedule,
     ) -> Result<()> {
         match schedule {
@@ -1353,15 +1353,15 @@ impl ComprehensiveSecurityAuditor {
                 config.max_audit_time = Duration::from_secs(5 * 60); // 5 minutes
 
                 let temp_auditor = ComprehensiveSecurityAuditor::new(config);
-                let _result = temp_auditor.audit_project_lightweight(project_path)?;
+                let _result = temp_auditor.audit_project_lightweight(projectpath)?;
             }
             AuditSchedule::Weekly => {
                 // Run full audit weekly
-                let _result = self.audit_project(project_path)?;
+                let _result = self.audit_project(projectpath)?;
             }
             AuditSchedule::Monthly => {
                 // Run comprehensive audit with supply chain analysis
-                let _result = self.audit_project(project_path)?;
+                let _result = self.audit_project(projectpath)?;
                 self.generate_monthly_security_report()?;
             }
         }
@@ -1372,25 +1372,25 @@ impl ComprehensiveSecurityAuditor {
     fn audit_project_lightweight(&self, projectpath: &Path) -> Result<SecurityAuditResult> {
         let start_time = std::time::Instant::now();
 
-        let mut audit_result = SecurityAuditResult {
+        let mut auditresult = SecurityAuditResult {
             timestamp: SystemTime::now(),
             duration: Duration::from_secs(0),
             security_score: 0.0,
             dependency_results: DependencyScanResult::default(),
-            static_analysis_results: self.run_static_analysis(project_path)?,
+            static_analysis_results: self.run_static_analysis(projectpath)?,
             license_compliance_results: LicenseComplianceResult::default(),
             supply_chain_results: SupplyChainAnalysisResult::default(),
-            secret_detection_results: self.detect_secrets(project_path)?,
+            secret_detection_results: self.detect_secrets(projectpath)?,
             config_security_results: ConfigSecurityResult::default(),
             policy_compliance_results: PolicyComplianceResult::default(),
             remediation_suggestions: Vec::new(),
             risk_assessment: RiskAssessment::default(),
         };
 
-        audit_result.security_score = self.calculate_security_score(&audit_result);
-        audit_result.duration = start_time.elapsed();
+        auditresult.security_score = self.calculate_security_score(&auditresult);
+        auditresult.duration = start_time.elapsed();
 
-        Ok(audit_result)
+        Ok(auditresult)
     }
 
     /// Generate monthly security report
@@ -1775,24 +1775,24 @@ impl SecurityReportGenerator {
 
     fn generate_report(
         &self,
-        audit_result: &SecurityAuditResult,
+        auditresult: &SecurityAuditResult,
         format: &ReportFormat,
     ) -> Result<String> {
         match format {
-            ReportFormat::Json => Ok(serde_json::to_string_pretty(audit_result)?),
+            ReportFormat::Json => Ok(serde_json::to_string_pretty(auditresult)?),
             ReportFormat::Markdown => {
                 let mut report = String::new();
                 report.push_str("# Security Audit Report\n\n");
-                report.push_str(&format!("**Audit Date:** {:?}\n", audit_result.timestamp));
+                report.push_str(&format!("**Audit Date:** {:?}\n", auditresult.timestamp));
                 report.push_str(&format!(
                     "**Security Score:** {:.2}/1.0\n\n",
-                    audit_result.security_score
+                    auditresult.security_score
                 ));
 
                 report.push_str("## Dependency Vulnerabilities\n");
                 report.push_str(&format!(
                     "Found {} vulnerable dependencies\n\n",
-                    audit_result
+                    auditresult
                         .dependency_results
                         .vulnerable_dependencies
                         .len()
@@ -1801,13 +1801,13 @@ impl SecurityReportGenerator {
                 report.push_str("## Static Analysis Issues\n");
                 report.push_str(&format!(
                     "Found {} security issues\n\n",
-                    audit_result.static_analysis_results.security_issues.len()
+                    auditresult.static_analysis_results.security_issues.len()
                 ));
 
                 report.push_str("## Risk Assessment\n");
                 report.push_str(&format!(
                     "Overall Risk: {:?}\n",
-                    audit_result.risk_assessment.overall_risk
+                    auditresult.risk_assessment.overall_risk
                 ));
 
                 Ok(report)
@@ -1834,7 +1834,7 @@ mod tests {
         let config = SecurityAuditConfig::default();
         let auditor = ComprehensiveSecurityAuditor::new(config);
 
-        let audit_result = SecurityAuditResult {
+        let auditresult = SecurityAuditResult {
             timestamp: SystemTime::now(),
             duration: Duration::from_secs(10),
             security_score: 0.0,
@@ -1849,7 +1849,7 @@ mod tests {
             risk_assessment: RiskAssessment::default(),
         };
 
-        let score = auditor.calculate_security_score(&audit_result);
+        let score = auditor.calculate_security_score(&auditresult);
         assert!(score >= 0.0 && score <= 1.0);
     }
 
@@ -1878,7 +1878,7 @@ mod tests {
         let config = SecurityAuditConfig::default();
         let auditor = ComprehensiveSecurityAuditor::new(config);
 
-        let cargo_content = r#"
+        let cargocontent = r#"
 [dependencies]
 serde = "1.0"
 tokio = { version = "1.0", features = ["full"] }
@@ -1888,7 +1888,7 @@ log = "0.4"
 test-dep = "0.1"
 "#;
 
-        let deps = auditor.parse_cargo_dependencies(cargo_content).unwrap();
+        let deps = auditor.parse_cargo_dependencies(cargocontent).unwrap();
         assert!(deps.len() >= 2);
         assert!(deps.iter().any(|(name_)| name == "serde"));
         assert!(deps.iter().any(|(name_)| name == "log"));

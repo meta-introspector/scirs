@@ -69,16 +69,16 @@ impl Default for FactorAnalysis {
 
 impl FactorAnalysis {
     /// Create a new factor analysis instance
-    pub fn new(_nfactors: usize) -> Result<Self> {
-        check_positive(_n_factors, "_n_factors")?;
+    pub fn new(n_factors: usize) -> Result<Self> {
+        check_positive(n_factors, "n_factors")?;
         Ok(Self {
-            n_factors: n_factors,
+            n_factors,
             ..Default::default()
         })
     }
 
     /// Set maximum iterations
-    pub fn with_max_iter(mut self, maxiter: usize) -> Self {
+    pub fn with_max_iter(mut self, max_iter: usize) -> Self {
         self.max_iter = max_iter;
         self
     }
@@ -104,11 +104,11 @@ impl FactorAnalysis {
     /// Fit the factor analysis model
     pub fn fit(&self, data: ArrayView2<f64>) -> Result<FactorAnalysisResult> {
         checkarray_finite(&data, "data")?;
-        let (n_samples_, n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
 
-        if n_samples_ < 2 {
+        if n_samples < 2 {
             return Err(StatsError::InvalidArgument(
-                "n_samples_ must be at least 2".to_string(),
+                "n_samples must be at least 2".to_string(),
             ));
         }
 
@@ -197,11 +197,11 @@ impl FactorAnalysis {
 
     /// Initialize factor loadings and specific variances
     fn initialize_parameters(&self, data: &Array2<f64>) -> Result<(Array2<f64>, Array1<f64>)> {
-        let (n_samples_, n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
 
         // Initialize using SVD of data
         use ndarray_linalg::SVD;
-        let (_u, s, vt) = data.svd(false, true).map_err(|e| {
+        let (u, s, vt) = data.svd(false, true).map_err(|e| {
             StatsError::ComputationError(format!("SVD initialization failed: {}", e))
         })?;
 
@@ -210,7 +210,7 @@ impl FactorAnalysis {
         // Initial loadings from first k components
         let mut loadings = Array2::zeros((n_features, self.n_factors));
         for i in 0..self.n_factors {
-            let scale = (s[i] / (n_samples_ as f64).sqrt()).max(1e-6);
+            let scale = (s[i] / (n_samples as f64).sqrt()).max(1e-6);
             for j in 0..n_features {
                 loadings[[j, i]] = v[[j, i]] * scale;
             }
@@ -233,7 +233,7 @@ impl FactorAnalysis {
         loadings: &Array2<f64>,
         psi: &Array1<f64>,
     ) -> Result<(Array2<f64>, Array2<f64>)> {
-        let (n_samples_, n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
 
         // Construct precision matrix: Psi^{-1}
         let mut psi_inv = Array2::zeros((n_features, n_features));
@@ -256,10 +256,10 @@ impl FactorAnalysis {
         })?;
 
         // Compute conditional expectations
-        let mut e_h = Array2::zeros((n_samples_, self.n_factors));
+        let mut e_h = Array2::zeros((n_samples, self.n_factors));
         let e_hht = m_inv.clone(); // This is E[h h^T | x]
 
-        for i in 0..n_samples_ {
+        for i in 0..n_samples {
             let x = data.row(i);
             let e_h_i = m_inv.dot(&lt_psi_inv.dot(&x.to_owned()));
             e_h.row_mut(i).assign(&e_h_i);
@@ -275,11 +275,11 @@ impl FactorAnalysis {
         e_h: &Array2<f64>,
         e_hht: &Array2<f64>,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
-        let (n_samples_, n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
 
         // Update loadings: L = (X^T E[H]) (E[H^T H])^{-1}
         let xte_h = data.t().dot(e_h);
-        let sum_e_hht = e_hht * n_samples_ as f64; // Sum over samples
+        let sum_e_hht = e_hht * n_samples as f64; // Sum over samples
 
         let sum_e_hht_inv = scirs2_linalg::inv(&sum_e_hht.view(), None).map_err(|e| {
             StatsError::ComputationError(format!("Failed to invert sum E[HH^T]: {}", e))
@@ -295,18 +295,18 @@ impl FactorAnalysis {
             let l_j = new_loadings.row(j);
 
             let mut sum_var = 0.0;
-            for i in 0..n_samples_ {
+            for i in 0..n_samples {
                 let x_ij = x_j[i];
                 let e_h_i = e_h.row(i);
                 let residual = x_ij - l_j.dot(&e_h_i.to_owned());
                 sum_var += residual * residual;
 
-                // Add E[_h _h^T] term
+                // Add E[h h^T] term
                 let quad_form = l_j.dot(&e_hht.dot(&l_j.to_owned()));
                 sum_var += quad_form;
             }
 
-            new_psi[j] = (sum_var / n_samples_ as f64).max(1e-6); // Ensure positive
+            new_psi[j] = (sum_var / n_samples as f64).max(1e-6); // Ensure positive
         }
 
         Ok((new_loadings, new_psi))
@@ -319,7 +319,7 @@ impl FactorAnalysis {
         loadings: &Array2<f64>,
         psi: &Array1<f64>,
     ) -> Result<f64> {
-        let (n_samples_, n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
 
         // Construct covariance matrix: Sigma = L L^T + Psi
         let ll_t = loadings.dot(&loadings.t());
@@ -348,7 +348,7 @@ impl FactorAnalysis {
         let log_det_term =
             -0.5 * n_features as f64 * (2.0 * std::f64::consts::PI).ln() - 0.5 * det_sigma.ln();
 
-        for i in 0..n_samples_ {
+        for i in 0..n_samples {
             let x = data.row(i);
             let quad_form = x.dot(&sigma_inv.dot(&x.to_owned()));
             log_likelihood += log_det_term - 0.5 * quad_form;
@@ -366,7 +366,7 @@ impl FactorAnalysis {
         let tol = 1e-6;
 
         for _ in 0..max_iter {
-            let _rotation_matrix = Array2::<f64>::eye(n_factors);
+            let rotation_matrix = Array2::<f64>::eye(n_factors);
             let mut converged = true;
 
             // Rotate each pair of factors
@@ -551,7 +551,7 @@ pub mod efa {
             ));
         }
 
-        let (n_samples_, n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
 
         // Compute eigenvalues of real data correlation matrix
         let real_eigenvalues = compute_correlation_eigenvalues(data)?;
@@ -574,13 +574,13 @@ pub mod efa {
 
         for _ in 0..n_simulations {
             // Generate random normal data with same dimensions
-            let mut random_data = Array2::zeros((n_samples_, n_features));
+            let mut random_data = Array2::zeros((n_samples, n_features));
             use rand_distr::{Distribution, Normal};
             let normal = Normal::new(0.0, 1.0).map_err(|e| {
                 StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
             })?;
 
-            for i in 0..n_samples_ {
+            for i in 0..n_samples {
                 for j in 0..n_features {
                     random_data[[i, j]] = normal.sample(&mut rng);
                 }
@@ -615,7 +615,7 @@ pub mod efa {
 
     /// Compute eigenvalues of correlation matrix
     fn compute_correlation_eigenvalues(data: ArrayView2<f64>) -> Result<Array1<f64>> {
-        // Center _data
+        // Center data
         let mean = data.mean_axis(Axis(0)).unwrap();
         let mut centered = data.to_owned();
         for mut row in centered.rows_mut() {
@@ -623,7 +623,7 @@ pub mod efa {
         }
 
         // Compute correlation matrix
-        let cov = centered.t().dot(&centered) / (_data.nrows() - 1) as f64;
+        let cov = centered.t().dot(&centered) / (data.nrows() - 1) as f64;
 
         // Standardize to correlation
         let mut corr = cov.clone();
@@ -655,7 +655,7 @@ pub mod efa {
 
     /// Kaiser-Meyer-Olkin (KMO) measure of sampling adequacy
     pub fn kmo_test(data: ArrayView2<f64>) -> Result<f64> {
-        checkarray_finite(&_data, "_data")?;
+        checkarray_finite(&data, "data")?;
 
         // Compute correlation matrix
         let mean = data.mean_axis(Axis(0)).unwrap();
@@ -664,7 +664,7 @@ pub mod efa {
             row -= &mean;
         }
 
-        let cov = centered.t().dot(&centered) / (_data.nrows() - 1) as f64;
+        let cov = centered.t().dot(&centered) / (data.nrows() - 1) as f64;
         let n = cov.nrows();
 
         // Standardize to correlation
@@ -708,7 +708,7 @@ pub mod efa {
 
     /// Bartlett's test of sphericity
     pub fn bartlett_test(data: ArrayView2<f64>) -> Result<(f64, f64)> {
-        checkarray_finite(&_data, "_data")?;
+        checkarray_finite(&data, "data")?;
         let (n, p) = data.dim();
 
         if n <= p {

@@ -507,7 +507,7 @@ where
 
         for i in 0..n {
             let dx = x[i] - mean_x;
-            let dy = y[i] - mean_y;
+            let dy = y[i] - meany;
             sum_xy = sum_xy + dx * dy;
             sum_x2 = sum_x2 + dx * dx;
             sum_y2 = sum_y2 + dy * dy;
@@ -543,7 +543,7 @@ where
         + std::iter::Sum<F>,
 {
     let computer = AdvancedSimdStatistics::<F>::new();
-    let stats = computer.comprehensive_stats_advanced(_data)?;
+    let stats = computer.comprehensive_stats_advanced(data)?;
     Ok(stats.mean)
 }
 
@@ -563,7 +563,7 @@ where
         + std::iter::Sum<F>,
 {
     let computer = AdvancedSimdStatistics::<F>::new();
-    let stats = computer.comprehensive_stats_advanced(_data)?;
+    let stats = computer.comprehensive_stats_advanced(data)?;
     Ok(stats.std_dev)
 }
 
@@ -583,14 +583,14 @@ where
         + std::iter::Sum<F>,
 {
     let computer = AdvancedSimdStatistics::<F>::new();
-    computer.comprehensive_stats_advanced(_data)
+    computer.comprehensive_stats_advanced(data)
 }
 
 /// Create RNG with optional seed
 #[allow(dead_code)]
 fn create_rng(seed: Option<u64>) -> impl Rng {
     use rand::{rngs::StdRng, SeedableRng};
-    match _seed {
+    match seed {
         Some(s) => StdRng::seed_from_u64(s),
         None => {
             use std::time::{SystemTime, UNIX_EPOCH};

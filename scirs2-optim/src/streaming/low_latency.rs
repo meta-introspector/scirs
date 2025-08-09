@@ -171,7 +171,7 @@ struct FastMemoryPool {
     available_blocks: Arc<Mutex<VecDeque<usize>>>,
 
     /// Block size
-    block_size: usize,
+    blocksize: usize,
 
     /// Total blocks
     total_blocks: usize,
@@ -211,7 +211,7 @@ struct LatencyMonitor {
     latency_samples: VecDeque<Duration>,
 
     /// Maximum samples to keep
-    max_samples: usize,
+    maxsamples: usize,
 
     /// Current percentiles
     p50_latency: Duration,
@@ -237,7 +237,7 @@ struct ApproximationController<A: Float> {
     adaptation_rate: A,
 
     /// Target latency
-    target_latency: Duration,
+    targetlatency: Duration,
 }
 
 /// Performance measurement point
@@ -265,7 +265,7 @@ struct GradientPredictor<A: Float> {
     trend_weights: Option<Array1<A>>,
 
     /// History window size
-    window_size: usize,
+    windowsize: usize,
 
     /// Prediction confidence
     confidence: A,
@@ -286,7 +286,7 @@ where
 {
     /// Create a new low-latency optimizer
     pub fn new(_baseoptimizer: O, config: LowLatencyConfig) -> Result<Self> {
-        let base_optimizer = Arc::new(Mutex::new(_base_optimizer));
+        let base_optimizer = Arc::new(Mutex::new(_baseoptimizer));
 
         let precomputation_engine = if config.enable_precomputation {
             Some(PrecomputationEngine::new(config.precomputation_buffer_size))
@@ -430,19 +430,19 @@ where
 
     /// Estimate accuracy of approximate update
     fn estimate_accuracy(&self, approximate: &Array1<A>, exactgradient: &Array1<A>) -> A {
-        if approximate.len() != exact_gradient.len() {
+        if approximate.len() != exactgradient.len() {
             return A::zero();
         }
 
         // Cosine similarity as accuracy measure
         let dot_product = approximate
             .iter()
-            .zip(exact_gradient.iter())
+            .zip(exactgradient.iter())
             .map(|(&a, &b)| a * b)
             .sum::<A>();
 
         let norm_a = approximate.iter().map(|&x| x * x).sum::<A>().sqrt();
-        let norm_b = exact_gradient.iter().map(|&x| x * x).sum::<A>().sqrt();
+        let norm_b = exactgradient.iter().map(|&x| x * x).sum::<A>().sqrt();
 
         if norm_a == A::zero() || norm_b == A::zero() {
             A::zero()
@@ -499,10 +499,10 @@ where
 impl<A: Float> PrecomputationEngine<A> {
     fn new(_buffersize: usize) -> Self {
         Self {
-            precomputed_updates: VecDeque::with_capacity(_buffer_size),
+            precomputed_updates: VecDeque::with_capacity(_buffersize),
             computation_thread: None,
             gradient_predictor: GradientPredictor::new(10), // 10-step history
-            max_buffer_size: buffer_size,
+            max_buffer_size: _buffersize,
         }
     }
 
@@ -544,12 +544,12 @@ impl<A: Float> LockFreeBuffer<A> {
 
 impl FastMemoryPool {
     fn new(_total_size: usize, blocksize: usize) -> Result<Self> {
-        let total_blocks = _total_size / block_size;
+        let total_blocks = _total_size / blocksize;
         let mut blocks = Vec::with_capacity(total_blocks);
 
         // Pre-allocate all blocks
         for _ in 0..total_blocks {
-            let layout = std::alloc::Layout::from_size_align(block_size, 8)
+            let layout = std::alloc::Layout::from_size_align(blocksize, 8)
                 .map_err(|_| OptimError::InvalidConfig("Invalid memory layout".to_string()))?;
 
             let ptr = unsafe { std::alloc::alloc(layout) };
@@ -566,7 +566,7 @@ impl FastMemoryPool {
         Ok(Self {
             blocks,
             available_blocks,
-            block_size,
+            blocksize,
             total_blocks,
         })
     }
@@ -623,8 +623,8 @@ impl<A: Float> GradientQuantizer<A> {
 impl LatencyMonitor {
     fn new(maxsamples: usize) -> Self {
         Self {
-            latency_samples: VecDeque::with_capacity(max_samples),
-            max_samples,
+            latency_samples: VecDeque::with_capacity(maxsamples),
+            maxsamples,
             p50_latency: Duration::from_micros(0),
             p95_latency: Duration::from_micros(0),
             p99_latency: Duration::from_micros(0),
@@ -635,7 +635,7 @@ impl LatencyMonitor {
 
     fn record_latency(&mut self, latency: Duration) {
         self.latency_samples.push_back(latency);
-        if self.latency_samples.len() > self.max_samples {
+        if self.latency_samples.len() > self.maxsamples {
             self.latency_samples.pop_front();
         }
 
@@ -673,7 +673,7 @@ impl<A: Float> ApproximationController<A> {
             approximation_level: A::zero(),
             performance_history: VecDeque::with_capacity(100),
             adaptation_rate: A::from(0.1).unwrap(),
-            target_latency,
+            targetlatency,
         }
     }
 
@@ -698,7 +698,7 @@ impl<A: Float> ApproximationController<A> {
     }
 
     fn adapt_approximation_level(&mut self, latency: Duration) {
-        let latency_ratio = latency.as_micros() as f64 / self.target_latency.as_micros() as f64;
+        let latency_ratio = latency.as_micros() as f64 / self.targetlatency.as_micros() as f64;
 
         if latency_ratio > 1.1 {
             // Latency too high, increase approximation
@@ -720,9 +720,9 @@ impl<A: Float> ApproximationController<A> {
 impl<A: Float> GradientPredictor<A> {
     fn new(windowsize: usize) -> Self {
         Self {
-            gradient_history: VecDeque::with_capacity(window_size),
+            gradient_history: VecDeque::with_capacity(windowsize),
             trend_weights: None,
-            window_size,
+            windowsize,
             confidence: A::from(0.5).unwrap(),
         }
     }

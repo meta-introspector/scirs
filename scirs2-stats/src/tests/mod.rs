@@ -400,7 +400,7 @@ fn calculate_ks_p_value<F: Float + NumCast>(_ksstat: F, n: F) -> F {
     let n_effective = n;
 
     // Calculate the test statistic
-    let z = _ks_stat * n_effective.sqrt();
+    let z = _ksstat * n_effective.sqrt();
 
     // Approximate p-value calculation
     // Using the formula from Marsaglia et al. (2003)

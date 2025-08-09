@@ -567,7 +567,7 @@ fn compute_orb_descriptors(
 #[allow(dead_code)]
 fn generate_brief_sampling_pattern(_patchsize: usize) -> Vec<((i32, i32), (i32, i32))> {
     let mut pattern = Vec::new();
-    let half_patch = (_patch_size / 2) as i32;
+    let half_patch = (_patchsize / 2) as i32;
     let descriptor_bits = 256;
 
     // Use a deterministic pattern for reproducibility
@@ -811,7 +811,7 @@ fn compute_hamming_distances_simd(desc1: &[u8], descriptors2: &[Vec<u8>]) -> Vec
     const SIMD_CHUNK_SIZE: usize = 8; // Process 8 descriptors at once
 
     for chunk in descriptors2.chunks(SIMD_CHUNK_SIZE) {
-        // Ensure all descriptors in chunk have same length as _desc1
+        // Ensure all descriptors in chunk have same length as desc1
         let valid_chunk: Vec<&Vec<u8>> = chunk
             .iter()
             .filter(|desc2| desc2.len() == desc_len)
@@ -826,7 +826,7 @@ fn compute_hamming_distances_simd(desc1: &[u8], descriptors2: &[Vec<u8>]) -> Vec
         // SIMD Hamming distance computation
         if desc_len >= 32 && valid_chunk.len() >= 4 {
             // Use optimized SIMD path for standard 256-bit descriptors
-            let simd_distances = compute_hamming_simd_optimized(_desc1, &valid_chunk);
+            let simd_distances = compute_hamming_simd_optimized(desc1, &valid_chunk);
             distances.extend(simd_distances);
 
             // Add distances for any remaining descriptors in this chunk
@@ -835,7 +835,7 @@ fn compute_hamming_distances_simd(desc1: &[u8], descriptors2: &[Vec<u8>]) -> Vec
         } else {
             // Fallback to scalar computation for non-standard descriptors
             for desc2 in chunk {
-                distances.push(hamming_distance(_desc1, desc2));
+                distances.push(hamming_distance(desc1, desc2));
             }
         }
     }
@@ -863,8 +863,8 @@ fn compute_hamming_simd_optimized(desc1: &[u8], descriptors: &[&Vec<u8>]) -> Vec
     let mut distances = Vec::with_capacity(descriptors.len());
     let desc_len = desc1.len();
 
-    // Convert _desc1 to SIMD-friendly format
-    let _desc1_u32: Vec<u32> = _desc1
+    // Convert desc1 to SIMD-friendly format
+    let _desc1_u32: Vec<u32> = desc1
         .chunks_exact(4)
         .map(|chunk| u32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]))
         .collect();
@@ -896,7 +896,7 @@ fn compute_hamming_simd_optimized(desc1: &[u8], descriptors: &[&Vec<u8>]) -> Vec
             hamming_dist as f32
         } else {
             // Fallback for non-standard sizes
-            hamming_distance(_desc1, desc2)
+            hamming_distance(desc1, desc2)
         };
 
         distances.push(distance);
@@ -1040,7 +1040,7 @@ fn hamming_distance(desc1: &[u8], desc2: &[u8]) -> f32 {
     let mut distance = 0;
 
     for i in 0..min_len {
-        distance += (_desc1[i] ^ desc2[i]).count_ones();
+        distance += (desc1[i] ^ desc2[i]).count_ones();
     }
 
     distance as f32
@@ -1108,7 +1108,7 @@ fn generate_simple_descriptors(image: &GrayImage, keypoints: &[Keypoint]) -> Res
                 let py = (y + dy) as u32;
 
                 if px < width && py < height {
-                    descriptor.push(_image.get_pixel(px, py)[0]);
+                    descriptor.push(image.get_pixel(px, py)[0]);
                 }
             }
         }
@@ -1172,7 +1172,7 @@ pub fn multi_scale_register(
 /// Build image pyramid
 #[allow(dead_code)]
 fn build_pyramid(image: &DynamicImage, levels: usize) -> Vec<DynamicImage> {
-    let mut pyramid = vec![_image.clone()];
+    let mut pyramid = vec![image.clone()];
 
     for _ in 1..levels {
         let prev = &pyramid[pyramid.len() - 1];
@@ -1262,7 +1262,7 @@ fn compute_ncc(_reference: &GrayImage, template: &GrayImage, offset_x: u32, offs
     // Compute statistics
     for _y in 0..template_height {
         for _x in 0..template_width {
-            let ref_val = reference.get_pixel(offset_x + x, offset_y + y)[0] as f64;
+            let ref_val = reference.get_pixel(offset_x + x, offset_x + y)[0] as f64;
             let template_val = template.get_pixel(_x, y)[0] as f64;
 
             ref_sum += ref_val;

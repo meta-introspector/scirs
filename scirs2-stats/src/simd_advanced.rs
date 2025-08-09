@@ -161,11 +161,11 @@ where
 
     /// Create with custom configuration
     pub fn with_config(config: AdvancedSimdConfig) -> Self {
-        let vector_strategy = Self::select_optimal_vector_strategy(&_config);
-        let memory_pattern = Self::select_optimal_memory_pattern(&_config);
+        let vector_strategy = Self::select_optimal_vector_strategy(&config);
+        let memory_pattern = Self::select_optimal_memory_pattern(&config);
 
         Self {
-            config: config,
+            config,
             vector_strategy,
             memory_pattern,
             _phantom: PhantomData,
@@ -848,7 +848,7 @@ impl CacheAwareVectorProcessor {
 #[allow(dead_code)]
 pub fn advanced_mean_f64(data: &ArrayView1<f64>) -> StatsResult<AdvancedStatsResult<f64>> {
     let processor = AdvancedSimdProcessor::<f64>::new();
-    processor.compute_advanced_statistics(_data)
+    processor.compute_advanced_statistics(data)
 }
 
 /// Computes advanced-high-performance statistics for single-precision floating-point data.
@@ -883,7 +883,7 @@ pub fn advanced_mean_f64(data: &ArrayView1<f64>) -> StatsResult<AdvancedStatsRes
 #[allow(dead_code)]
 pub fn advanced_mean_f32(data: &ArrayView1<f32>) -> StatsResult<AdvancedStatsResult<f32>> {
     let processor = AdvancedSimdProcessor::<f32>::new();
-    processor.compute_advanced_statistics(_data)
+    processor.compute_advanced_statistics(data)
 }
 
 #[cfg(test)]

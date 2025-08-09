@@ -508,7 +508,7 @@ pub fn hermite_prob<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
 /// ```
 #[allow(dead_code)]
 pub fn chebyshev<F: Float + FromPrimitive + Debug>(n: usize, x: F, firstkind: bool) -> F {
-    if first_kind {
+    if firstkind {
         // Chebyshev polynomials of the first _kind T_n(x)
 
         // Special cases

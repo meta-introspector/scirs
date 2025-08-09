@@ -885,7 +885,7 @@ impl PerformanceMLModel {
     #[allow(dead_code)]
     fn new(modeltype: MLModelType) -> Self {
         Self {
-            model_type,
+            model_type: modeltype,
             trained: false,
         }
     }

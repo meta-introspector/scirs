@@ -105,7 +105,7 @@ impl LKTracker {
     /// # Arguments
     ///
     /// * `frame` - New frame to process
-    /// * `new_features` - Optional new features to add
+    /// * `newfeatures` - Optional new features to add
     ///
     /// # Returns
     ///
@@ -127,7 +127,7 @@ impl LKTracker {
     pub fn update(
         &mut self,
         frame: &DynamicImage,
-        new_features: Option<&[(f32, f32)]>,
+        newfeatures: Option<&[(f32, f32)]>,
     ) -> Result<&[TrackedFeature]> {
         let gray_frame = frame.to_luma8();
 
@@ -137,7 +137,7 @@ impl LKTracker {
         }
 
         // Add new _features if provided and we have capacity
-        if let Some(_features) = new_features {
+        if let Some(_features) = newfeatures {
             self.add_new_features(_features);
         }
 
@@ -162,7 +162,7 @@ impl LKTracker {
         // Compute forward flow
         let forward_flow = lucas_kanade_flow(
             &DynamicImage::ImageLuma8(prev_frame.clone()),
-            &DynamicImage::ImageLuma8(curr_frame.clone()),
+            &DynamicImage::ImageLuma8(currframe.clone()),
             Some(&points),
             &self.params.flow_params,
         )?;
@@ -185,7 +185,7 @@ impl LKTracker {
             );
 
             // Check if new position is within bounds
-            let (width, height) = curr_frame.dimensions();
+            let (width, height) = currframe.dimensions();
             if new_position.0 < 0.0
                 || new_position.0 >= width as f32
                 || new_position.1 < 0.0
@@ -200,7 +200,7 @@ impl LKTracker {
             // Backwards flow check for robustness
             if self.params.use_backwards_check {
                 let backwards_flow = lucas_kanade_flow(
-                    &DynamicImage::ImageLuma8(curr_frame.clone()),
+                    &DynamicImage::ImageLuma8(currframe.clone()),
                     &DynamicImage::ImageLuma8(prev_frame.clone()),
                     Some(&[new_position]),
                     &self.params.flow_params,
@@ -253,7 +253,7 @@ impl LKTracker {
             .max_features
             .saturating_sub(self._features.len());
 
-        for &position in new_features.iter().take(remaining_capacity) {
+        for &position in newfeatures.iter().take(remaining_capacity) {
             // Check if this position is too close to existing _features
             let too_close = self._features.iter().any(|f| {
                 let distance = ((f.position.0 - position.0).powi(2)
@@ -344,7 +344,7 @@ impl PyramidTracker {
     pub fn new(levels: usize, params: TrackerParams) -> Self {
         let mut trackers = Vec::new();
 
-        for level in 0.._levels {
+        for level in 0..levels {
             let scale = 2.0_f32.powi(level as i32);
             let mut level_params = params.clone();
 
@@ -368,7 +368,7 @@ impl PyramidTracker {
     pub fn update(
         &mut self,
         frame: &DynamicImage,
-        new_features: Option<&[(f32, f32)]>,
+        newfeatures: Option<&[(f32, f32)]>,
     ) -> Result<Vec<TrackedFeature>> {
         // Build pyramid for current frame
         let gray_frame = frame.to_luma8();
@@ -382,10 +382,10 @@ impl PyramidTracker {
 
             // Scale new _features for this level
             let scaled_features = if level == 0 {
-                new_features.map(|_features| features.to_vec())
+                newfeatures.map(|_features| features.to_vec())
             } else {
                 let scale = 2.0_f32.powi(level as i32);
-                new_features.map(|_features| {
+                newfeatures.map(|_features| {
                     _features
                         .iter()
                         .map(|&(x, y)| (x / scale, y / scale))

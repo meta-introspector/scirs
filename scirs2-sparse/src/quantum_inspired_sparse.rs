@@ -781,14 +781,14 @@ impl QuantumSparseProcessor {
     fn measure_syndrome_strength(&self, logicalqubit: &LogicalQubit) -> f64 {
         let mut syndrome_strength = 0.0;
 
-        for &physical_qubit in &logical_qubit.physical_qubits {
+        for &physical_qubit in &logicalqubit.physical_qubits {
             if physical_qubit < self.quantum_state.coherence_factors.len() {
                 let coherence = self.quantum_state.coherence_factors[physical_qubit];
                 syndrome_strength += (1.0 - coherence).abs();
             }
         }
 
-        syndrome_strength / logical_qubit.physical_qubits.len() as f64
+        syndrome_strength / logicalqubit.physical_qubits.len() as f64
     }
 
     /// Classify the type of quantum error

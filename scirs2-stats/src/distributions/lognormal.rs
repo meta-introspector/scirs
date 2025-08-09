@@ -50,9 +50,9 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
         }
 
         // Create underlying normal distribution
-        match Normal::new(_mu, sigma) {
+        match Normal::new(mu, sigma) {
             Ok(norm) => Ok(Lognormal {
-                mu: mu,
+                mu,
                 sigma,
                 loc,
                 norm,
@@ -319,7 +319,7 @@ pub fn lognormal<F>(mu: F, sigma: F, loc: F) -> StatsResult<Lognormal<F>>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    Lognormal::new(_mu, sigma, loc)
+    Lognormal::new(mu, sigma, loc)
 }
 
 /// Implementation of SampleableDistribution for Lognormal

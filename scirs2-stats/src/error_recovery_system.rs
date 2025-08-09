@@ -501,7 +501,7 @@ impl ErrorRecoverySystem {
     /// Infer computation state
     fn infer_computation_state(&self, error: &StatsError, functionname: &str) -> ComputationState {
         ComputationState {
-            algorithm: function_name.to_string(),
+            algorithm: functionname.to_string(),
             iteration: None,
             convergence_status: None,
             current_tolerance: None,
@@ -782,19 +782,19 @@ impl ErrorRecoverySystem {
         let mut report = String::new();
 
         report.push_str(&format!("# Error Report\n\n"));
-        report.push_str(&format!("**Error:** {}\n\n", enhanced_error.error));
-        report.push_str(&format!("**Severity:** {:?}\n\n", enhanced_error.severity));
+        report.push_str(&format!("**Error:** {}\n\n", enhancederror.error));
+        report.push_str(&format!("**Severity:** {:?}\n\n", enhancederror.severity));
         report.push_str(&format!(
             "**Function:** {}\n",
-            enhanced_error.context.function_name
+            enhancederror.context.function_name
         ));
         report.push_str(&format!(
             "**Module:** {}\n\n",
-            enhanced_error.context.module_path
+            enhancederror.context.module_path
         ));
 
         report.push_str("## Recovery Suggestions\n\n");
-        for (i, suggestion) in enhanced_error.recovery_suggestions.iter().enumerate() {
+        for (i, suggestion) in enhancederror.recovery_suggestions.iter().enumerate() {
             report.push_str(&format!(
                 "{}. **{}** (Confidence: {:.0}%)\n",
                 i + 1,
@@ -804,9 +804,9 @@ impl ErrorRecoverySystem {
             report.push_str(&format!("   - {}\n", suggestion.expected_outcome));
         }
 
-        if !enhanced_error.example_snippets.is_empty() {
+        if !enhancederror.example_snippets.is_empty() {
             report.push_str("\n## Example Code\n\n");
-            for snippet in &enhanced_error.example_snippets {
+            for snippet in &enhancederror.example_snippets {
                 report.push_str(&format!("### {}\n\n", snippet.title));
                 report.push_str(&format!(
                     "```{}\n{}\n```\n\n",
@@ -815,9 +815,9 @@ impl ErrorRecoverySystem {
             }
         }
 
-        if !enhanced_error.documentation_links.is_empty() {
+        if !enhancederror.documentation_links.is_empty() {
             report.push_str("## Documentation\n\n");
-            for link in &enhanced_error.documentation_links {
+            for link in &enhancederror.documentation_links {
                 report.push_str(&format!("- [Documentation]({})\n", link));
             }
         }
@@ -850,7 +850,7 @@ static mut ERROR_RECOVERY_INITIALIZED: bool = false;
 pub fn initialize_error_recovery(config: Option<ErrorRecoveryConfig>) {
     unsafe {
         if !ERROR_RECOVERY_INITIALIZED {
-            GLOBAL_ERROR_RECOVERY = Some(ErrorRecoverySystem::new(_config.unwrap_or_default()));
+            GLOBAL_ERROR_RECOVERY = Some(ErrorRecoverySystem::new(config.unwrap_or_default()));
             ERROR_RECOVERY_INITIALIZED = true;
         }
     }

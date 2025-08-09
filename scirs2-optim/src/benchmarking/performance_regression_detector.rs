@@ -209,7 +209,7 @@ pub struct PerformanceMeasurement {
     /// Timestamp of measurement
     pub timestamp: SystemTime,
     /// Git commit hash or version identifier
-    pub commit_hash: String,
+    pub commithash: String,
     /// Branch name
     pub branch: String,
     /// Build configuration (debug/release)
@@ -292,7 +292,7 @@ pub struct TestConfiguration {
 #[derive(Debug, Clone)]
 pub struct PerformanceTrend {
     /// Metric type
-    pub metric_type: MetricType,
+    pub metrictype: MetricType,
     /// Trend direction (improving/degrading/stable)
     pub direction: TrendDirection,
     /// Trend strength (0.0 to 1.0)
@@ -520,7 +520,7 @@ pub struct Alert {
     /// Affected metrics
     pub affected_metrics: Vec<MetricType>,
     /// Regression results that triggered the alert
-    pub regression_results: Vec<RegressionResult>,
+    pub regressionresults: Vec<RegressionResult>,
     /// Recommended actions
     pub recommended_actions: Vec<String>,
     /// Alert metadata
@@ -530,7 +530,7 @@ pub struct Alert {
 impl PerformanceRegressionDetector {
     /// Create a new performance regression detector
     pub fn new(config: RegressionConfig) -> Result<Self> {
-        let historical_data = PerformanceDatabase::new(_config.max_history_size)?;
+        let historical_data = PerformanceDatabase::new(config.max_history_size)?;
         let statistical_analyzer = StatisticalAnalyzer::new(StatisticalConfig::default());
         let regression_analyzer = RegressionAnalyzer::new(RegressionAnalysisConfig::default());
         let alert_system = AlertSystem::new(AlertConfig::default());
@@ -568,8 +568,8 @@ impl PerformanceRegressionDetector {
 
         let mut all_results = Vec::new();
 
-        for metric_type in &self.config.tracked_metrics {
-            let results = self.detect_metric_regression(metric_type, &latest_measurements)?;
+        for metrictype in &self.config.tracked_metrics {
+            let results = self.detect_metric_regression(metrictype, &latest_measurements)?;
             all_results.extend(results);
         }
 
@@ -591,7 +591,7 @@ impl PerformanceRegressionDetector {
     /// Detect regression for a specific metric
     fn detect_metric_regression(
         &self,
-        metric_type: &MetricType,
+        metrictype: &MetricType,
         measurements: &[PerformanceMeasurement],
     ) -> Result<Vec<RegressionResult>> {
         let mut results = Vec::new();
@@ -599,7 +599,7 @@ impl PerformanceRegressionDetector {
         // Extract metric values
         let values: Vec<f64> = measurements
             .iter()
-            .filter_map(|m| m.metrics.get(metric_type))
+            .filter_map(|m| m.metrics.get(metrictype))
             .map(|mv| mv.value)
             .collect();
 
@@ -608,28 +608,28 @@ impl PerformanceRegressionDetector {
         }
 
         // Get baseline for comparison
-        let baseline = self.get_baseline_for_metric(metric_type)?;
+        let baseline = self.get_baseline_for_metric(metrictype)?;
 
         // Perform statistical tests
-        let statistical_result = self.statistical_analyzer.perform_regression_test(
+        let statisticalresult = self.statistical_analyzer.perform_regression_test(
             &values,
             baseline.as_ref(),
             &self.config.statistical_test,
         )?;
 
-        if statistical_result.is_significant {
+        if statisticalresult.is_significant {
             let regression_result = RegressionResult {
-                metric: metric_type.clone(),
-                severity: self.calculate_severity(&statistical_result),
-                confidence: statistical_result.confidence,
-                p_value: statistical_result.p_value,
-                effect_size: statistical_result.effect_size,
+                metric: metrictype.clone(),
+                severity: self.calculate_severity(&statisticalresult),
+                confidence: statisticalresult.confidence,
+                p_value: statisticalresult.p_value,
+                effect_size: statisticalresult.effect_size,
                 baseline_value: baseline.clone().map(|b| b.value).unwrap_or(0.0),
                 current_value: *values.last().unwrap(),
                 change_percentage: self.calculate_change_percentage(&values, baseline.as_ref()),
-                regression_type: self.classify_regression_type(metric_type, &values),
-                evidence: statistical_result.evidence.clone(),
-                recommendations: self.generate_recommendations(metric_type, &statistical_result),
+                regression_type: self.classify_regression_type(metrictype, &values),
+                evidence: statisticalresult.evidence.clone(),
+                recommendations: self.generate_recommendations(metrictype, &statisticalresult),
             };
 
             results.push(regression_result);
@@ -640,8 +640,8 @@ impl PerformanceRegressionDetector {
 
     /// Calculate regression severity
     fn calculate_severity(&self, statisticalresult: &StatisticalTestResult) -> f64 {
-        let base_severity = 1.0 - statistical_result.p_value;
-        let effect_multiplier = (statistical_result.effect_size / 2.0).min(1.0);
+        let base_severity = 1.0 - statisticalresult.p_value;
+        let effect_multiplier = (statisticalresult.effect_size / 2.0).min(1.0);
         (base_severity * effect_multiplier).clamp(0.0, 1.0)
     }
 
@@ -670,7 +670,7 @@ impl PerformanceRegressionDetector {
     /// Classify the type of regression
     fn classify_regression_type(&self, metrictype: &MetricType, values: &[f64]) -> RegressionType {
         // Simple heuristic classification
-        match metric_type {
+        match metrictype {
             MetricType::MemoryUsage => {
                 if self.is_monotonic_increase(values) {
                     RegressionType::MemoryLeak
@@ -723,12 +723,12 @@ impl PerformanceRegressionDetector {
     /// Generate recommendations for investigation
     fn generate_recommendations(
         &self,
-        metric_type: &MetricType,
-        statistical_result: &StatisticalTestResult,
+        metrictype: &MetricType,
+        statisticalresult: &StatisticalTestResult,
     ) -> Vec<String> {
         let mut recommendations = Vec::new();
 
-        match metric_type {
+        match metrictype {
             MetricType::ExecutionTime => {
                 recommendations
                     .push("Profile the code to identify performance bottlenecks".to_string());
@@ -752,7 +752,7 @@ impl PerformanceRegressionDetector {
             }
         }
 
-        if statistical_result.effect_size > 0.5 {
+        if statisticalresult.effect_size > 0.5 {
             recommendations.push("Consider this a high-priority investigation".to_string());
         }
 
@@ -762,7 +762,7 @@ impl PerformanceRegressionDetector {
     /// Get baseline metric value
     fn get_baseline_for_metric(&self, metrictype: &MetricType) -> Result<Option<MetricValue>> {
         if let Some(baseline) = &self.baseline_metrics {
-            Ok(baseline.metrics.get(metric_type).cloned())
+            Ok(baseline.metrics.get(metrictype).cloned())
         } else {
             Ok(None)
         }
@@ -770,17 +770,17 @@ impl PerformanceRegressionDetector {
 
     /// Update performance trends
     fn update_trends(&mut self) -> Result<()> {
-        for metric_type in &self.config.tracked_metrics.clone() {
+        for metrictype in &self.config.tracked_metrics.clone() {
             let recent_measurements = self.historical_data.get_recent_measurements_for_metric(
-                metric_type,
+                metrictype,
                 50, // Last 50 measurements
             )?;
 
             if recent_measurements.len() >= 10 {
-                let trend = self.calculate_trend(metric_type, &recent_measurements)?;
+                let trend = self.calculate_trend(metrictype, &recent_measurements)?;
                 self.historical_data
                     .trends
-                    .insert(metric_type.clone(), trend);
+                    .insert(metrictype.clone(), trend);
             }
         }
 
@@ -790,7 +790,7 @@ impl PerformanceRegressionDetector {
     /// Calculate performance trend
     fn calculate_trend(
         &self,
-        metric_type: &MetricType,
+        metrictype: &MetricType,
         values: &[f64],
     ) -> Result<PerformanceTrend> {
         let direction = self.determine_trend_direction(values);
@@ -800,7 +800,7 @@ impl PerformanceRegressionDetector {
         let volatility = self.calculate_volatility(values);
 
         Ok(PerformanceTrend {
-            metric_type: metric_type.clone(),
+            metrictype: metrictype.clone(),
             direction,
             strength,
             significance,
@@ -902,7 +902,7 @@ impl PerformanceRegressionDetector {
 
     /// Generate alerts for regressions
     fn generate_alerts(&mut self, regressionresults: &[RegressionResult]) -> Result<()> {
-        for result in regression_results {
+        for result in regressionresults {
             if result.severity >= 0.7 {
                 // High severity threshold
                 let alert = Alert {
@@ -920,7 +920,7 @@ impl PerformanceRegressionDetector {
                         result.confidence * 100.0
                     ),
                     affected_metrics: vec![result.metric.clone()],
-                    regression_results: vec![result.clone()],
+                    regressionresults: vec![result.clone()],
                     recommended_actions: result.recommendations.clone(),
                     metadata: HashMap::new(),
                 };
@@ -963,10 +963,10 @@ impl PerformanceRegressionDetector {
         let mut metrics = HashMap::new();
         let mut confidence_intervals = HashMap::new();
 
-        for metric_type in &self.config.tracked_metrics {
+        for metrictype in &self.config.tracked_metrics {
             let values: Vec<f64> = recent_measurements
                 .iter()
-                .filter_map(|m| m.metrics.get(metric_type))
+                .filter_map(|m| m.metrics.get(metrictype))
                 .map(|mv| mv.value)
                 .collect();
 
@@ -976,7 +976,7 @@ impl PerformanceRegressionDetector {
                 let std_dev = variance.sqrt();
 
                 metrics.insert(
-                    metric_type.clone(),
+                    metrictype.clone(),
                     MetricValue {
                         value: mean,
                         std_dev: Some(std_dev),
@@ -990,7 +990,7 @@ impl PerformanceRegressionDetector {
                 // 95% confidence interval
                 let margin = 1.96 * std_dev / (values.len() as f64).sqrt();
                 confidence_intervals.insert(
-                    metric_type.clone(),
+                    metrictype.clone(),
                     ConfidenceInterval {
                         lower_bound: mean - margin,
                         upper_bound: mean + margin,
@@ -1001,7 +1001,7 @@ impl PerformanceRegressionDetector {
         }
 
         let baseline = BaselineMetrics {
-            version: commit_hash,
+            version: commithash,
             timestamp: SystemTime::now(),
             metrics,
             confidence_intervals,
@@ -1026,10 +1026,10 @@ impl PerformanceRegressionDetector {
         let sample_score = (measurements.len() as f64 / 20.0).min(1.0); // Good if >= 20 samples
 
         let mut consistency_scores = Vec::new();
-        for metric_type in &self.config.tracked_metrics {
+        for metrictype in &self.config.tracked_metrics {
             let values: Vec<f64> = measurements
                 .iter()
-                .filter_map(|m| m.metrics.get(metric_type))
+                .filter_map(|m| m.metrics.get(metrictype))
                 .map(|mv| mv.value)
                 .collect();
 
@@ -1084,7 +1084,7 @@ impl PerformanceRegressionDetector {
             regression_count: latest_results.len(),
             critical_regressions: latest_results.iter().filter(|r| r.severity >= 0.9).count(),
             high_severity_regressions: latest_results.iter().filter(|r| r.severity >= 0.7).count(),
-            regression_results: latest_results.clone(),
+            regressionresults: latest_results.clone(),
             performance_summary: self.generate_performance_summary()?,
             recommendations: self.generate_overall_recommendations(latest_results),
         };
@@ -1097,17 +1097,17 @@ impl PerformanceRegressionDetector {
         let latest_measurements = self.historical_data.get_latest_measurements(5)?;
 
         let mut metric_summaries = HashMap::new();
-        for metric_type in &self.config.tracked_metrics {
+        for metrictype in &self.config.tracked_metrics {
             let values: Vec<f64> = latest_measurements
                 .iter()
-                .filter_map(|m| m.metrics.get(metric_type))
+                .filter_map(|m| m.metrics.get(metrictype))
                 .map(|mv| mv.value)
                 .collect();
 
             if !values.is_empty() {
-                let trend = self.historical_data.trends.get(metric_type);
+                let trend = self.historical_data.trends.get(metrictype);
                 metric_summaries.insert(
-                    metric_type.clone(),
+                    metrictype.clone(),
                     MetricSummary {
                         current_value: *values.last().unwrap(),
                         trend_direction: trend
@@ -1233,7 +1233,7 @@ pub struct CiCdReport {
     pub regression_count: usize,
     pub critical_regressions: usize,
     pub high_severity_regressions: usize,
-    pub regression_results: Vec<RegressionResult>,
+    pub regressionresults: Vec<RegressionResult>,
     pub performance_summary: PerformanceSummary,
     pub recommendations: Vec<String>,
 }
@@ -1287,7 +1287,7 @@ impl std::fmt::Display for MetricType {
 impl PerformanceDatabase {
     fn new(_maxsize: usize) -> Result<Self> {
         Ok(Self {
-            measurements: VecDeque::with_capacity(_max_size),
+            measurements: VecDeque::with_capacity(_maxsize),
             trends: HashMap::new(),
             baselines: HashMap::new(),
             metadata: DatabaseMetadata {
@@ -1320,7 +1320,7 @@ impl PerformanceDatabase {
 
     fn get_recent_measurements_for_metric(
         &self,
-        metric_type: &MetricType,
+        metrictype: &MetricType,
         count: usize,
     ) -> Result<Vec<f64>> {
         Ok(self
@@ -1328,7 +1328,7 @@ impl PerformanceDatabase {
             .iter()
             .rev()
             .take(count)
-            .filter_map(|m| m.metrics.get(metric_type))
+            .filter_map(|m| m.metrics.get(metrictype))
             .map(|mv| mv.value)
             .collect())
     }
@@ -1336,7 +1336,7 @@ impl PerformanceDatabase {
 
 impl StatisticalAnalyzer {
     fn new(config: StatisticalConfig) -> Self {
-        Self { config: _config }
+        Self { config: config }
     }
 
     fn perform_regression_test(
@@ -1446,11 +1446,11 @@ impl AlertSystem {
                 let alert_json = serde_json::to_string_pretty(alert)?;
                 std::fs::write(path, alert_json)?;
             }
-            NotificationChannel::Email(_config) => {
+            NotificationChannel::Email(config) => {
                 // Would implement email sending
                 println!("Email alert sent: {}", alert.title);
             }
-            NotificationChannel::Slack(_config) => {
+            NotificationChannel::Slack(config) => {
                 // Would implement Slack webhook
                 println!("Slack alert sent: {}", alert.title);
             }
@@ -1612,7 +1612,7 @@ mod tests {
 
             measurements.push(PerformanceMeasurement {
                 timestamp: SystemTime::now(),
-                commit_hash: format!("commit_{}", i),
+                commithash: format!("commit_{}", i),
                 branch: "main".to_string(),
                 build_config: "release".to_string(),
                 environment: EnvironmentInfo::default(),
@@ -1630,7 +1630,7 @@ mod tests {
     #[test]
     fn test_regression_type_classification() {
         let config = RegressionConfig::default();
-        let detector = PerformanceRegressionDetector::new(_config).unwrap();
+        let detector = PerformanceRegressionDetector::new(config).unwrap();
 
         // Memory leak pattern (monotonic increase)
         let memory_leak_values = vec![100.0, 105.0, 110.0, 115.0, 120.0];

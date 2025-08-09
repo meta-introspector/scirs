@@ -83,7 +83,7 @@ pub fn point_triangle2d_collision(point: &[f64; 2], triangle: &Triangle2D) -> bo
     let c = 1.0 - a - b;
 
     // Point is inside if all coordinates are within [0, 1]
-    // Using small epsilon for floating-_point precision
+    // Using small epsilon for floating-point precision
     const EPSILON: f64 = 1e-10;
     a >= -EPSILON
         && b >= -EPSILON
@@ -149,7 +149,7 @@ pub fn point_box3d_collision(point: &[f64; 3], box3d: &Box3D) -> bool {
 /// `true` if the point is on the triangle, `false` otherwise
 #[allow(dead_code)]
 pub fn point_triangle3d_collision(point: &[f64; 3], triangle: &Triangle3D) -> bool {
-    // For a 3D triangle, we need to check if the _point is on the plane of the triangle
+    // For a 3D triangle, we need to check if the point is on the plane of the triangle
     // and then check if it's inside the triangle
 
     // First, compute the normal vector of the triangle
@@ -185,18 +185,18 @@ pub fn point_triangle3d_collision(point: &[f64; 3], triangle: &Triangle3D) -> bo
         normal[2] / normal_length,
     ];
 
-    // Distance from _point to the plane of the triangle
-    let dist_to_plane = (_point[0] - triangle.v1[0]) * normalized_normal[0]
-        + (_point[1] - triangle.v1[1]) * normalized_normal[1]
-        + (_point[2] - triangle.v1[2]) * normalized_normal[2];
+    // Distance from point to the plane of the triangle
+    let dist_to_plane = (point[0] - triangle.v1[0]) * normalized_normal[0]
+        + (point[1] - triangle.v1[1]) * normalized_normal[1]
+        + (point[2] - triangle.v1[2]) * normalized_normal[2];
 
-    // Check if the _point is close to the plane (within small epsilon)
+    // Check if the point is close to the plane (within small epsilon)
     const EPSILON: f64 = 1e-6;
     if dist_to_plane.abs() > EPSILON {
         return false; // Point is not on the plane
     }
 
-    // Project the triangle and _point onto a 2D plane for inside/outside test
+    // Project the triangle and point onto a 2D plane for inside/outside test
     // Choose the dimension with the largest normal component to drop
     let max_component = if normalized_normal[0].abs() > normalized_normal[1].abs() {
         if normalized_normal[0].abs() > normalized_normal[2].abs() {
@@ -252,7 +252,7 @@ pub fn point_triangle3d_collision(point: &[f64; 3], triangle: &Triangle3D) -> bo
         }
     }
 
-    // Create a 2D triangle and use the 2D _point-triangle test
+    // Create a 2D triangle and use the 2D point-triangle test
     let triangle2d = Triangle2D {
         v1: p1,
         v2: p2,
@@ -344,10 +344,10 @@ pub fn line2d_line2d_collision(line1: &LineSegment2D, line2: &LineSegment2D) -> 
             && q[1] >= p[1].min(r[1])
     };
 
-    let o1 = orientation(&_line1.start, &_line1.end, &line2.start);
-    let o2 = orientation(&_line1.start, &_line1.end, &line2.end);
-    let o3 = orientation(&line2.start, &line2.end, &_line1.start);
-    let o4 = orientation(&line2.start, &line2.end, &_line1.end);
+    let o1 = orientation(&line1.start, &line1.end, &line2.start);
+    let o2 = orientation(&line1.start, &line1.end, &line2.end);
+    let o3 = orientation(&line2.start, &line2.end, &line1.start);
+    let o4 = orientation(&line2.start, &line2.end, &line1.end);
 
     // General case: Different orientations
     if o1 != o2 && o3 != o4 {
@@ -355,16 +355,16 @@ pub fn line2d_line2d_collision(line1: &LineSegment2D, line2: &LineSegment2D) -> 
     }
 
     // Special cases: collinear points
-    if o1 == 0 && on_segment(&_line1.start, &line2.start, &_line1.end) {
+    if o1 == 0 && on_segment(&line1.start, &line2.start, &line1.end) {
         return true;
     }
-    if o2 == 0 && on_segment(&_line1.start, &line2.end, &_line1.end) {
+    if o2 == 0 && on_segment(&line1.start, &line2.end, &line1.end) {
         return true;
     }
-    if o3 == 0 && on_segment(&line2.start, &_line1.start, &line2.end) {
+    if o3 == 0 && on_segment(&line2.start, &line1.start, &line2.end) {
         return true;
     }
-    if o4 == 0 && on_segment(&line2.start, &_line1.end, &line2.end) {
+    if o4 == 0 && on_segment(&line2.start, &line1.end, &line2.end) {
         return true;
     }
 
@@ -499,12 +499,12 @@ pub fn sphere_sphere_collision(sphere1: &Sphere, sphere2: &Sphere) -> bool {
 /// `true` if the sphere and box intersect, `false` otherwise
 #[allow(dead_code)]
 pub fn sphere_box3d_collision(sphere: &Sphere, box3d: &Box3D) -> bool {
-    // Find the closest point on the box to the _sphere center
+    // Find the closest point on the box to the sphere center
     let closest_x = sphere.center[0].max(box3d.min[0]).min(box3d.max[0]);
     let closest_y = sphere.center[1].max(box3d.min[1]).min(box3d.max[1]);
     let closest_z = sphere.center[2].max(box3d.min[2]).min(box3d.max[2]);
 
-    // Calculate distance from the closest point to the _sphere center
+    // Calculate distance from the closest point to the sphere center
     let dx = sphere.center[0] - closest_x;
     let dy = sphere.center[1] - closest_y;
     let dz = sphere.center[2] - closest_z;
@@ -684,7 +684,7 @@ pub fn line3d_line3d_collision(line1: &LineSegment3D, line2: &LineSegment3D) -> 
 /// `true` if the sphere and triangle intersect, `false` otherwise
 #[allow(dead_code)]
 pub fn sphere_triangle3d_collision(sphere: &Sphere, triangle: &Triangle3D) -> bool {
-    // First, find the closest point on the triangle to the _sphere center
+    // First, find the closest point on the triangle to the sphere center
 
     // Calculate the normal vector of the triangle
     let edge1 = [
@@ -719,17 +719,17 @@ pub fn sphere_triangle3d_collision(sphere: &Sphere, triangle: &Triangle3D) -> bo
         normal[2] / normal_length,
     ];
 
-    // Calculate distance from _sphere center to the plane of the triangle
-    let dist_to_plane = (_sphere.center[0] - triangle.v1[0]) * normalized_normal[0]
-        + (_sphere.center[1] - triangle.v1[1]) * normalized_normal[1]
-        + (_sphere.center[2] - triangle.v1[2]) * normalized_normal[2];
+    // Calculate distance from sphere center to the plane of the triangle
+    let dist_to_plane = (sphere.center[0] - triangle.v1[0]) * normalized_normal[0]
+        + (sphere.center[1] - triangle.v1[1]) * normalized_normal[1]
+        + (sphere.center[2] - triangle.v1[2]) * normalized_normal[2];
 
-    // If the _sphere is too far from the plane, no collision
+    // If the sphere is too far from the plane, no collision
     if dist_to_plane.abs() > sphere.radius {
         return false;
     }
 
-    // Project _sphere center onto the triangle's plane
+    // Project sphere center onto the triangle's plane
     let projected_center = [
         sphere.center[0] - dist_to_plane * normalized_normal[0],
         sphere.center[1] - dist_to_plane * normalized_normal[1],
@@ -740,7 +740,7 @@ pub fn sphere_triangle3d_collision(sphere: &Sphere, triangle: &Triangle3D) -> bo
     let inside_triangle = point_triangle3d_collision(&projected_center, triangle);
 
     if inside_triangle {
-        // If the projected center is inside, we know the _sphere intersects the triangle
+        // If the projected center is inside, we know the sphere intersects the triangle
         return true;
     }
 
@@ -768,7 +768,7 @@ pub fn sphere_triangle3d_collision(sphere: &Sphere, triangle: &Triangle3D) -> bo
             edge.end[2] - edge.start[2],
         ];
 
-        // Calculate vector from start of the edge to the _sphere center
+        // Calculate vector from start of the edge to the sphere center
         let sphere_vec = [
             sphere.center[0] - edge.start[0],
             sphere.center[1] - edge.start[1],
@@ -788,14 +788,14 @@ pub fn sphere_triangle3d_collision(sphere: &Sphere, triangle: &Triangle3D) -> bo
         // Clamp t to the edge
         let t_clamped = t.clamp(0.0, 1.0);
 
-        // Calculate the closest point on the edge to the _sphere center
+        // Calculate the closest point on the edge to the sphere center
         let closest_point = [
             edge.start[0] + t_clamped * edge_vec[0],
             edge.start[1] + t_clamped * edge_vec[1],
             edge.start[2] + t_clamped * edge_vec[2],
         ];
 
-        // Calculate the distance from the closest point to the _sphere center
+        // Calculate the distance from the closest point to the sphere center
         let dx = sphere.center[0] - closest_point[0];
         let dy = sphere.center[1] - closest_point[1];
         let dz = sphere.center[2] - closest_point[2];
@@ -1160,7 +1160,7 @@ impl GJKSimplex {
     }
 
     fn add_point(&mut self, point: [f64; 3]) {
-        self.points.push(_point);
+        self.points.push(point);
     }
 
     fn size(&self) -> usize {
@@ -1168,7 +1168,7 @@ impl GJKSimplex {
     }
 
     fn get_point(&self, index: usize) -> Option<[f64; 3]> {
-        self.points.get(_index).copied()
+        self.points.get(index).copied()
     }
 
     #[allow(dead_code)]
@@ -1264,10 +1264,10 @@ fn handle_triangle_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -
             simplex.set_points(vec![c, a]);
             *direction = cross_product(&cross_product(&ac, &ao), &ac);
         } else {
-            return handle_line_simplex_from_points(_simplex, direction, a, b);
+            return handle_line_simplex_from_points(simplex, direction, a, b);
         }
     } else if dot_product(&cross_product(&ab, &abc), &ao) > 0.0 {
-        return handle_line_simplex_from_points(_simplex, direction, a, b);
+        return handle_line_simplex_from_points(simplex, direction, a, b);
     } else if dot_product(&abc, &ao) > 0.0 {
         // Above triangle
         *direction = abc;
@@ -1322,17 +1322,17 @@ fn handle_tetrahedron_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]
     // Check which face the origin is on the outside of
     if dot_product(&abc, &ao) > 0.0 {
         simplex.set_points(vec![c, b, a]);
-        return handle_triangle_simplex(_simplex, direction);
+        return handle_triangle_simplex(simplex, direction);
     }
 
     if dot_product(&acd, &ao) > 0.0 {
         simplex.set_points(vec![d, c, a]);
-        return handle_triangle_simplex(_simplex, direction);
+        return handle_triangle_simplex(simplex, direction);
     }
 
     if dot_product(&adb, &ao) > 0.0 {
         simplex.set_points(vec![b, d, a]);
-        return handle_triangle_simplex(_simplex, direction);
+        return handle_triangle_simplex(simplex, direction);
     }
 
     // Origin is inside the tetrahedron
@@ -1343,9 +1343,9 @@ fn handle_tetrahedron_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]
 #[allow(dead_code)]
 fn handle_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
     match simplex.size() {
-        2 => handle_line_simplex(_simplex, direction),
-        3 => handle_triangle_simplex(_simplex, direction),
-        4 => handle_tetrahedron_simplex(_simplex, direction),
+        2 => handle_line_simplex(simplex, direction),
+        3 => handle_triangle_simplex(simplex, direction),
+        4 => handle_tetrahedron_simplex(simplex, direction),
         _ => false,
     }
 }
@@ -1434,7 +1434,7 @@ pub fn gjk_collision_detection<T1: GJKShape, T2: GJKShape>(
 /// `true` if the spheres are colliding, `false` otherwise
 #[allow(dead_code)]
 pub fn gjk_sphere_sphere_collision(sphere1: &Sphere, sphere2: &Sphere) -> bool {
-    gjk_collision_detection(_sphere1, sphere2, 64)
+    gjk_collision_detection(sphere1, sphere2, 64)
 }
 
 /// Convenience function for GJK collision detection between two boxes
@@ -1449,7 +1449,7 @@ pub fn gjk_sphere_sphere_collision(sphere1: &Sphere, sphere2: &Sphere) -> bool {
 /// `true` if the boxes are colliding, `false` otherwise
 #[allow(dead_code)]
 pub fn gjk_box_box_collision(box1: &Box3D, box2: &Box3D) -> bool {
-    gjk_collision_detection(_box1, box2, 64)
+    gjk_collision_detection(box1, box2, 64)
 }
 
 /// Convenience function for GJK collision detection between a sphere and a box
@@ -1464,5 +1464,5 @@ pub fn gjk_box_box_collision(box1: &Box3D, box2: &Box3D) -> bool {
 /// `true` if the sphere and box are colliding, `false` otherwise
 #[allow(dead_code)]
 pub fn gjk_sphere_box_collision(sphere: &Sphere, bbox: &Box3D) -> bool {
-    gjk_collision_detection(_sphere, bbox, 64)
+    gjk_collision_detection(sphere, bbox, 64)
 }

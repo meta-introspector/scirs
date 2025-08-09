@@ -107,7 +107,7 @@ pub enum DriftDetectionMethod {
     /// DDM (Drift Detection Method)
     Ddm {
         warning_level: f64,
-        drift_level: f64,
+        driftlevel: f64,
     },
     /// EDDM (Early Drift Detection Method)
     Eddm { alpha: f64, beta: f64 },
@@ -139,7 +139,7 @@ pub enum AnomalyDetectionAlgorithm {
     /// One-Class SVM
     OneClassSvm { nu: f64 },
     /// Local Outlier Factor
-    LocalOutlierFactor { n_neighbors: usize },
+    LocalOutlierFactor { nneighbors: usize },
     /// DBSCAN-based anomaly detection
     Dbscan { eps: f64, min_samples: usize },
     /// Autoencoder-based
@@ -250,7 +250,7 @@ pub struct AdwinDetector<F: Float + std::fmt::Debug> {
 /// Bucket for ADWIN algorithm - optimized for memory efficiency
 #[derive(Debug, Clone)]
 struct Bucket<F: Float + std::fmt::Debug> {
-    max_buckets: usize,
+    _maxbuckets: usize,
     sum: Vec<F>,
     variance: Vec<F>,
     width: Vec<usize>,
@@ -260,22 +260,22 @@ struct Bucket<F: Float + std::fmt::Debug> {
 impl<F: Float + std::fmt::Debug + Send + Sync> Bucket<F> {
     fn new(_maxbuckets: usize) -> Self {
         Self {
-            max_buckets,
-            sum: vec![F::zero(); _max_buckets],
-            variance: vec![F::zero(); _max_buckets],
-            width: vec![0; _max_buckets],
+            _maxbuckets,
+            sum: vec![F::zero(); _maxbuckets],
+            variance: vec![F::zero(); _maxbuckets],
+            width: vec![0; _maxbuckets],
             used_buckets: 0,
         }
     }
 
     /// Add a new bucket with optimized memory management
     fn add_bucket(&mut self, sum: F, variance: F, width: usize) -> Result<()> {
-        if self.used_buckets >= self.max_buckets {
+        if self.used_buckets >= self._maxbuckets {
             // Compress by merging oldest buckets
             self.compress_oldest_buckets();
         }
 
-        if self.used_buckets < self.max_buckets {
+        if self.used_buckets < self._maxbuckets {
             self.sum[self.used_buckets] = sum;
             self.variance[self.used_buckets] = variance;
             self.width[self.used_buckets] = width;
@@ -336,7 +336,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> Bucket<F> {
 #[derive(Debug, Clone)]
 pub struct DdmDetector<F: Float + std::fmt::Debug> {
     warning_level: f64,
-    drift_level: f64,
+    driftlevel: f64,
     min_instances: usize,
     num_errors: usize,
     num_instances: usize,
@@ -428,7 +428,7 @@ pub struct PerformanceSnapshot<F: Float + std::fmt::Debug> {
 #[derive(Debug, Clone)]
 pub struct PerformanceDegradation {
     pub timestamp: Instant,
-    pub metric_name: String,
+    pub metricname: String,
     pub current_value: f64,
     pub baseline_value: f64,
     pub degradation_percentage: f64,
@@ -523,7 +523,7 @@ pub enum EnsembleAggregation {
 /// History buffer for storing past data
 #[derive(Debug, Clone)]
 pub struct HistoryBuffer<F: Float + std::fmt::Debug> {
-    max_size: usize,
+    _maxsize: usize,
     data: VecDeque<DataPoint<F>>,
     timestamps: VecDeque<Instant>,
     metadata: VecDeque<HashMap<String, String>>,
@@ -533,7 +533,7 @@ pub struct HistoryBuffer<F: Float + std::fmt::Debug> {
 #[derive(Debug, Clone)]
 pub struct DataPoint<F: Float + std::fmt::Debug> {
     pub true_value: F,
-    pub predicted_value: F,
+    pub predictedvalue: F,
     pub error: F,
     pub confidence: F,
     pub features: Option<Vec<F>>,
@@ -601,7 +601,7 @@ impl Default for StreamingConfig {
                 DriftDetectionMethod::Adwin { confidence: 0.95 },
                 DriftDetectionMethod::Ddm {
                     warning_level: 2.0,
-                    drift_level: 3.0,
+                    driftlevel: 3.0,
                 },
             ],
             enable_anomaly_detection: true,
@@ -637,9 +637,9 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum + 'static>
                 }
                 DriftDetectionMethod::Ddm {
                     warning_level,
-                    drift_level,
+                    driftlevel,
                 } => {
-                    drift_detectors.push(Box::new(DdmDetector::new(*warning_level, *drift_level)));
+                    drift_detectors.push(Box::new(DdmDetector::new(*warning_level, *driftlevel)));
                 }
                 DriftDetectionMethod::PageHinkley { threshold, alpha } => {
                     drift_detectors.push(Box::new(PageHinkleyDetector::new(*threshold, *alpha)));
@@ -671,13 +671,13 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum + 'static>
     /// Update metrics with new prediction
     pub fn update(&mut self, true_value: F, predictedvalue: F) -> Result<UpdateResult<F>> {
         let start_time = Instant::now();
-        let error = true_value - predicted_value;
+        let error = true_value - predictedvalue;
         let prediction_correct = error.abs() < F::from(1e-6).unwrap();
 
         // Update history buffer
         self.history_buffer.add_data_point(DataPoint {
             true_value,
-            predicted_value,
+            predictedvalue,
             error,
             confidence: F::one(), // Would be computed from model
             features: None,
@@ -726,7 +726,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum + 'static>
         }
 
         // Update ensemble metrics
-        self.metric_ensemble.update(true_value, predicted_value)?;
+        self.metric_ensemble.update(true_value, predictedvalue)?;
 
         let processing_time = start_time.elapsed();
 
@@ -857,7 +857,7 @@ pub struct AnomalySummary<F: Float + std::fmt::Debug> {
 // Real implementation of ADWIN detector for efficient streaming
 impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AdwinDetector<F> {
     fn new(confidence: f64) -> Result<Self> {
-        if !(0.0..=1.0).contains(&_confidence) {
+        if !(0.0..=1.0).contains(&confidence) {
             return Err(MetricsError::InvalidInput(
                 "Confidence must be between 0 and 1".to_string(),
             ));
@@ -881,7 +881,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AdwinDetector<F>
     /// Optimized window management with efficient memory usage
     fn compress_buckets(&mut self) {
         // Implement bucket compression to maintain memory efficiency
-        if self.bucket_number >= self.buckets[0].max_buckets {
+        if self.bucket_number >= self.buckets[0]._maxbuckets {
             // Merge oldest buckets to save memory
             for bucket in &mut self.buckets {
                 if bucket.used_buckets > 1 {
@@ -1100,7 +1100,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> DdmDetector<F> {
     fn new(_warning_level: f64, driftlevel: f64) -> Self {
         Self {
             warning_level,
-            drift_level,
+            driftlevel,
             min_instances: 30,
             num_errors: 0,
             num_instances: 0,
@@ -1137,7 +1137,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDete
             }
 
             let warning_threshold = F::from(self.warning_level).unwrap();
-            let drift_threshold = F::from(self.drift_level).unwrap();
+            let drift_threshold = F::from(self.driftlevel).unwrap();
 
             if p + s > self.p_min + warning_threshold * self.s_min {
                 if p + s > self.p_min + drift_threshold * self.s_min {
@@ -1179,7 +1179,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDete
     fn get_config(&self) -> HashMap<String, f64> {
         let mut config = HashMap::new();
         config.insert("warning_level".to_string(), self.warning_level);
-        config.insert("drift_level".to_string(), self.drift_level);
+        config.insert("driftlevel".to_string(), self.driftlevel);
         config
     }
 
@@ -1292,14 +1292,14 @@ impl<F: Float + std::fmt::Debug + Send + Sync> AdaptiveWindowManager<F> {
     fn new(
         base_size: usize,
         min_size: usize,
-        max_size: usize,
+        _maxsize: usize,
         strategy: WindowAdaptationStrategy,
     ) -> Self {
         Self {
             current_window_size: base_size,
             base_window_size: base_size,
             min_window_size: min_size,
-            max_window_size: max_size,
+            max_window_size: _maxsize,
             adaptation_strategy: strategy,
             performance_history: VecDeque::with_capacity(100), // Limit memory usage
             adaptation_history: VecDeque::with_capacity(50),   // Keep adaptation history bounded
@@ -1658,9 +1658,9 @@ impl<F: Float + std::fmt::Debug + Send + Sync> PerformanceMonitor<F> {
     }
 
     fn check_performance_degradation(&mut self) -> Result<()> {
-        for (metric_name, &current_value) in &self.current_metrics {
-            if let Some(&baseline_value) = self.baseline_metrics.get(metric_name) {
-                if let Some(&threshold) = self.performance_thresholds.get(metric_name) {
+        for (metricname, &current_value) in &self.current_metrics {
+            if let Some(&baseline_value) = self.baseline_metrics.get(metricname) {
+                if let Some(&threshold) = self.performance_thresholds.get(metricname) {
                     let current_f64 = current_value.to_f64().unwrap_or(0.0);
                     let baseline_f64 = baseline_value.to_f64().unwrap_or(0.0);
                     let threshold_f64 = threshold.to_f64().unwrap_or(0.0);
@@ -1685,7 +1685,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> PerformanceMonitor<F> {
 
                         let degradation = PerformanceDegradation {
                             timestamp: Instant::now(),
-                            metric_name: metric_name.clone(),
+                            metricname: metricname.clone(),
                             current_value: current_f64,
                             baseline_value: baseline_f64,
                             degradation_percentage,
@@ -1721,7 +1721,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> PerformanceMonitor<F> {
 
         let values: Vec<f64> = recent_snapshots
             .iter()
-            .map(|snapshot| match metric_name {
+            .map(|snapshot| match metricname {
                 "accuracy" => snapshot.accuracy.to_f64().unwrap_or(0.0),
                 "precision" => snapshot.precision.to_f64().unwrap_or(0.0),
                 "recall" => snapshot.recall.to_f64().unwrap_or(0.0),
@@ -1755,13 +1755,13 @@ impl<F: Float + std::fmt::Debug + Send + Sync> PerformanceMonitor<F> {
 
     /// Update performance thresholds
     pub fn set_threshold(&mut self, metricname: String, threshold: F) {
-        self.performance_thresholds.insert(metric_name, threshold);
+        self.performance_thresholds.insert(metricname, threshold);
     }
 }
 
 impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<F> {
     fn new(algorithm: AnomalyDetectionAlgorithm) -> Result<Self> {
-        let threshold = match &_algorithm {
+        let threshold = match &algorithm {
             AnomalyDetectionAlgorithm::ZScore { threshold } => F::from(*threshold).unwrap(),
             AnomalyDetectionAlgorithm::IsolationForest { contamination: _ } => {
                 F::from(0.5).unwrap()
@@ -1802,8 +1802,8 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<
             AnomalyDetectionAlgorithm::IsolationForest { contamination } => {
                 self.detect_isolation_forest_anomaly(error, *contamination)?
             }
-            AnomalyDetectionAlgorithm::LocalOutlierFactor { n_neighbors } => {
-                self.detect_lof_anomaly(error, *n_neighbors)?
+            AnomalyDetectionAlgorithm::LocalOutlierFactor { nneighbors } => {
+                self.detect_lof_anomaly(error, *nneighbors)?
             }
             _ => {
                 // Default to z-score
@@ -1931,7 +1931,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<
 
     fn detect_lof_anomaly(&self, error: F, nneighbors: usize) -> Result<(bool, F, AnomalyType)> {
         // Simplified LOF implementation
-        if self.history_buffer.len() < n_neighbors * 2 {
+        if self.history_buffer.len() < nneighbors * 2 {
             return Ok((false, F::zero(), AnomalyType::Unknown));
         }
 
@@ -1946,8 +1946,8 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<
         distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
 
         // Get k nearest _neighbors
-        let k_distance = if distances.len() > n_neighbors {
-            distances[n_neighbors].0
+        let k_distance = if distances.len() > nneighbors {
+            distances[nneighbors].0
         } else {
             distances.last().unwrap().0
         };
@@ -2072,7 +2072,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> MetricEnsemble<F> {
 impl<F: Float + std::fmt::Debug + Send + Sync> HistoryBuffer<F> {
     fn new(_maxsize: usize) -> Self {
         Self {
-            max_size,
+            _maxsize,
             data: VecDeque::new(),
             timestamps: VecDeque::new(),
             metadata: VecDeque::new(),
@@ -2080,13 +2080,13 @@ impl<F: Float + std::fmt::Debug + Send + Sync> HistoryBuffer<F> {
     }
 
     fn add_data_point(&mut self, datapoint: DataPoint<F>) {
-        if self.data.len() >= self.max_size {
+        if self.data.len() >= self._maxsize {
             self.data.pop_front();
             self.timestamps.pop_front();
             self.metadata.pop_front();
         }
 
-        self.data.push_back(data_point);
+        self.data.push_back(datapoint);
         self.timestamps.push_back(Instant::now());
         self.metadata.push_back(HashMap::new());
     }
@@ -2243,7 +2243,7 @@ pub struct NetworkConfig {
     /// Batch normalization enabled
     pub batch_norm: bool,
     /// Learning rate for neural networks
-    pub learning_rate: f64,
+    pub _learningrate: f64,
     /// Weight decay for regularization
     pub weight_decay: f64,
 }
@@ -2256,7 +2256,7 @@ impl Default for NetworkConfig {
             activation: ActivationFunction::ReLU,
             dropout_rate: 0.1,
             batch_norm: true,
-            learning_rate: 0.001,
+            _learningrate: 0.001,
             weight_decay: 0.0001,
         }
     }
@@ -2327,7 +2327,7 @@ pub enum OnlineLearningAlgorithm {
     /// Online Passive-Aggressive
     PassiveAggressive { aggressiveness: f64 },
     /// Hedge algorithm
-    Hedge { learning_rate: f64 },
+    Hedge { _learningrate: f64 },
 }
 
 /// Feature extraction configuration
@@ -2472,7 +2472,7 @@ pub struct NeuralParameterOptimizer<F: Float + std::fmt::Debug> {
     /// Training history
     training_history: Vec<TrainingMetrics<F>>,
     /// Current learning rate
-    learning_rate: F,
+    _learningrate: F,
     /// Regularization parameters
     regularization: RegularizationConfig<F>,
 }
@@ -2531,7 +2531,7 @@ pub trait NeuralOptimizer<F: Float + std::fmt::Debug>: std::fmt::Debug {
 /// Adam optimizer implementation
 #[derive(Debug, Clone)]
 pub struct AdamOptimizer<F: Float + std::fmt::Debug> {
-    learning_rate: F,
+    _learningrate: F,
     beta1: F,
     beta2: F,
     epsilon: F,
@@ -2547,7 +2547,7 @@ impl<F: Float + std::fmt::Debug> AdamOptimizer<F> {
     /// Create a new Adam optimizer
     pub fn new(_learningrate: F) -> Result<Self> {
         Ok(Self {
-            learning_rate,
+            _learningrate,
             beta1: F::from(0.9).unwrap(),
             beta2: F::from(0.999).unwrap(),
             epsilon: F::from(1e-8).unwrap(),
@@ -2594,18 +2594,18 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> NeuralOp
             let epsilon_array = Array2::from_elem(v_hat.dim(), self.epsilon);
             let denominator = &v_hat.mapv(|x| x.sqrt()) + &epsilon_array;
             let update = &m_hat / &denominator;
-            *param = &*param - &(&update * self.learning_rate);
+            *param = &*param - &(&update * self._learningrate);
         }
 
         Ok(())
     }
 
     fn get_learning_rate(&self) -> F {
-        self.learning_rate
+        self._learningrate
     }
 
     fn set_learning_rate(&mut self, lr: F) {
-        self.learning_rate = lr;
+        self._learningrate = lr;
     }
 
     fn reset(&mut self) {
@@ -2621,7 +2621,7 @@ pub struct TrainingMetrics<F: Float + std::fmt::Debug> {
     pub epoch: usize,
     pub loss: F,
     pub accuracy: F,
-    pub learning_rate: F,
+    pub _learningrate: F,
     pub gradient_norm: F,
     pub timestamp: Instant,
 }
@@ -2630,7 +2630,7 @@ pub struct TrainingMetrics<F: Float + std::fmt::Debug> {
 #[derive(Debug, Clone)]
 pub struct TrainingRecord<F: Float + std::fmt::Debug> {
     pub loss: F,
-    pub learning_rate: F,
+    pub _learningrate: F,
     pub gradient_norm: F,
     pub timestamp: Instant,
 }
@@ -2946,7 +2946,7 @@ pub trait RewardFunction<F: Float> {
         state: &Array1<F>,
         action: &Array1<F>,
         next_state: &Array1<F>,
-        performance_metrics: &HashMap<String, F>,
+        performancemetrics: &HashMap<String, F>,
     ) -> F;
 
     /// Update reward function parameters
@@ -2990,7 +2990,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
     pub fn new(config: OnlineLearningConfig) -> Result<Self> {
         // Create placeholder implementations for required traits
         struct PlaceholderOptimizer<F: Float> {
-            learning_rate: F,
+            _learningrate: F,
         }
 
         impl<F: Float + std::iter::Sum> OnlineOptimizer<F> for PlaceholderOptimizer<F> {
@@ -3005,7 +3005,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
             }
 
             fn get_learning_rate(&self) -> F {
-                self.learning_rate
+                self._learningrate
             }
 
             fn adapt_to_drift(&mut self, driftmagnitude: F) -> Result<()> {
@@ -3065,7 +3065,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
             feature_buffer: VecDeque::new(),
             target_buffer: VecDeque::new(),
             optimizer: Box::new(PlaceholderOptimizer {
-                learning_rate: F::from(_configadaptation_rate).unwrap(),
+                _learningrate: F::from(_configadaptation_rate).unwrap(),
             }),
             drift_detector: Box::new(PlaceholderDriftDetector {
                 threshold: F::from(_configdrift_adaptation_threshold).unwrap(),
@@ -3154,7 +3154,7 @@ pub trait OnlineOptimizer<F: Float + std::iter::Sum> {
         parameters: &mut Array1<F>,
         features: &Array1<F>,
         target: F,
-        learning_rate: F,
+        _learningrate: F,
     ) -> Result<()>;
 
     /// Get current learning rate
@@ -4069,7 +4069,7 @@ impl<
     pub fn optimize_parameters(
         &mut self,
         current_state: &Array1<F>,
-        performance_metrics: &HashMap<String, F>,
+        performancemetrics: &HashMap<String, F>,
     ) -> Result<HashMap<String, F>> {
         // Extract features from current _state
         let features = self.feature_extractor.extract_features(current_state)?;
@@ -4080,7 +4080,7 @@ impl<
         // Use reinforcement learning for exploration
         let rl_action = self
             .rl_agent
-            .select_action(&features, performance_metrics)?;
+            .select_action(&features, performancemetrics)?;
 
         // Use multi-armed bandit for parameter selection
         let bandit_params = self.parameter_bandit.select_arm(&features)?;
@@ -4094,10 +4094,10 @@ impl<
             self.combine_parameter_predictions(&predicted_params, &rl_params, &bandit_params_map)?;
 
         // Update online learning system
-        self.online_learner.update(&features, performance_metrics)?;
+        self.online_learner.update(&features, performancemetrics)?;
 
         // Adapt learning rate
-        let current_performance = self.compute_overall_performance(performance_metrics);
+        let current_performance = self.compute_overall_performance(performancemetrics);
         self.learning_scheduler
             .adapt_learning_rate(current_performance)?;
 
@@ -4113,9 +4113,9 @@ impl<
     ) -> Result<()> {
         // Update neural parameter optimizer
         let features = self.feature_extractor.extract_features(state)?;
-        let target_performance = self.compute_overall_performance(performance);
+        let targetperformance = self.compute_overall_performance(performance);
         self.parameter_optimizer
-            .train(&features, target_performance)?;
+            .train(&features, targetperformance)?;
 
         // Update reinforcement learning agent
         let reward = self.compute_reward(performance);
@@ -4128,9 +4128,9 @@ impl<
         self.online_learner.update(&features, performance)?;
 
         // Update performance predictor
-        let target_performance = self.compute_overall_performance(performance);
+        let targetperformance = self.compute_overall_performance(performance);
         self.performance_predictor
-            .update(&features, target_performance)?;
+            .update(&features, targetperformance)?;
 
         // Update multi-armed bandit
         // Extract action index from action HashMap (simplified approach)
@@ -4165,18 +4165,18 @@ impl<
     /// Adapt to concept drift
     pub fn adapt_to_drift(&mut self, driftmagnitude: F) -> Result<()> {
         // Adapt neural networks
-        self.parameter_optimizer.adapt_to_drift(drift_magnitude)?;
-        self.performance_predictor.adapt_to_drift(drift_magnitude)?;
+        self.parameter_optimizer.adapt_to_drift(driftmagnitude)?;
+        self.performance_predictor.adapt_to_drift(driftmagnitude)?;
 
         // Adapt RL agent
-        self.rl_agent.adapt_to_drift(drift_magnitude)?;
+        self.rl_agent.adapt_to_drift(driftmagnitude)?;
 
         // Adapt online learning system
-        self.online_learner.adapt_to_drift(drift_magnitude)?;
+        self.online_learner.adapt_to_drift(driftmagnitude)?;
 
         // Reset multi-armed bandit exploration
         self.parameter_bandit
-            .increase_exploration(drift_magnitude)?;
+            .increase_exploration(driftmagnitude)?;
 
         Ok(())
     }
@@ -4202,7 +4202,7 @@ impl<
 
         // Simple conversion - map array elements to parameter names
         let param_names = [
-            "learning_rate",
+            "_learningrate",
             "momentum",
             "weight_decay",
             "dropout_rate",
@@ -4250,7 +4250,7 @@ impl<
         let mut total_performance = F::zero();
         let mut count = 0;
 
-        for &value in performance_metrics.values() {
+        for &value in performancemetrics.values() {
             total_performance = total_performance + value;
             count += 1;
         }
@@ -4264,7 +4264,7 @@ impl<
 
     fn compute_reward(&self, performancemetrics: &HashMap<String, F>) -> F {
         // Compute reward based on performance improvement
-        let current_performance = self.compute_overall_performance(performance_metrics);
+        let current_performance = self.compute_overall_performance(performancemetrics);
         // In a real implementation, this would compare against baseline
         current_performance
     }
@@ -4291,7 +4291,7 @@ impl Default for NeuralAdaptiveConfig {
                 activation: ActivationFunction::ReLU,
                 dropout_rate: 0.1,
                 batch_norm: true,
-                learning_rate: 0.001,
+                _learningrate: 0.001,
                 weight_decay: 0.0001,
             },
             rl_config: RLConfig {
@@ -4387,7 +4387,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand>
                 F::from(network_configlearning_rate).unwrap(),
             )?),
             training_history: Vec::new(),
-            learning_rate: F::from(network_configlearning_rate).unwrap(),
+            _learningrate: F::from(network_configlearning_rate).unwrap(),
             regularization: RegularizationConfig {
                 l1_strength: F::from(0.0001).unwrap(),
                 l2_strength: F::from(0.0001).unwrap(),
@@ -4406,7 +4406,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand>
         // Generate some example parameters based on features
         let feature_sum = features.sum();
         params.insert(
-            "learning_rate".to_string(),
+            "_learningrate".to_string(),
             F::from(0.001).unwrap() * (F::one() + feature_sum * F::from(0.1).unwrap()),
         );
         params.insert(
@@ -4427,7 +4427,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand>
 
         if let Some(latest_metrics) = self.training_history.last() {
             metrics.insert("loss".to_string(), latest_metrics.loss);
-            metrics.insert("learning_rate".to_string(), latest_metrics.learning_rate);
+            metrics.insert("_learningrate".to_string(), latest_metrics._learningrate);
             metrics.insert("gradient_norm".to_string(), latest_metrics.gradient_norm);
         }
 
@@ -4442,14 +4442,14 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand>
     pub fn adapt_to_drift(&mut self, driftmagnitude: F) -> Result<()> {
         // Increase learning rate based on drift _magnitude
         // This is a simple adaptation strategy
-        let adaptation_factor = F::one() + drift_magnitude * F::from(0.1).unwrap();
+        let adaptation_factor = F::one() + driftmagnitude * F::from(0.1).unwrap();
 
         // Add a training record indicating adaptation
         let adaptation_record = TrainingMetrics {
             epoch: 0,
-            loss: drift_magnitude,
+            loss: driftmagnitude,
             accuracy: F::zero(),
-            learning_rate: adaptation_factor,
+            _learningrate: adaptation_factor,
             gradient_norm: F::zero(),
             timestamp: std::time::Instant::now(),
         };
@@ -4469,8 +4469,8 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand>
         // Simple training step placeholder
         let prediction = self.predict(features)?;
         let loss = match prediction.get("loss") {
-            Some(pred_loss) => (*pred_loss - target_performance).abs(),
-            None => target_performance.abs(),
+            Some(pred_loss) => (*pred_loss - targetperformance).abs(),
+            None => targetperformance.abs(),
         };
 
         // Add training record
@@ -4478,7 +4478,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand>
             epoch: 0,
             loss,
             accuracy: F::zero(),
-            learning_rate: self.learning_rate,
+            _learningrate: self._learningrate,
             gradient_norm: F::zero(),
             timestamp: Instant::now(),
         };
@@ -4580,7 +4580,7 @@ mod tests {
         for i in 0..10 {
             buffer.add_data_point(DataPoint {
                 true_value: i as f64,
-                predicted_value: i as f64 + 0.1,
+                predictedvalue: i as f64 + 0.1,
                 error: 0.1,
                 confidence: 0.9,
                 features: None,

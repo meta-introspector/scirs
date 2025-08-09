@@ -241,7 +241,7 @@ pub fn diag_matrix<F>(diag: &[F], n: Option<usize>) -> SparseResult<CsrMatrix<F>
 where
     F: Float + NumAssign + Sum + 'static + std::fmt::Debug,
 {
-    let size = n.unwrap_or(_diag.len());
+    let size = n.unwrap_or(diag.len());
     if size < diag.len() {
         return Err(SparseError::ValueError(
             "Size must be at least as large as diagonal".to_string(),

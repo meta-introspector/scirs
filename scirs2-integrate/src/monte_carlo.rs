@@ -484,7 +484,7 @@ mod tests {
 
     // Helper function to check if result is within expected error margin
     fn is_close_enough(result: f64, expected: f64, epsilon: f64) -> bool {
-        (_result - expected).abs() < epsilon
+        (result - expected).abs() < epsilon
     }
 
     #[test]

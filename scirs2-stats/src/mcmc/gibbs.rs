@@ -120,14 +120,14 @@ impl<C: ConditionalDistribution> GibbsSampler<C> {
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         let dim = self.current.len();
-        let mut _samples = Array2::zeros((n_samples_, dim));
+        let mut samples = Array2::zeros((n_samples_, dim));
 
         for i in 0..n_samples_ {
             let sample = self.step(rng)?;
             samples.row_mut(i).assign(&sample);
         }
 
-        Ok(_samples)
+        Ok(samples)
     }
 
     /// Sample with burn-in period
@@ -158,7 +158,7 @@ impl<C: ConditionalDistribution> GibbsSampler<C> {
         check_positive(thin, "thin")?;
 
         let dim = self.current.len();
-        let mut _samples = Array2::zeros((n_samples_, dim));
+        let mut samples = Array2::zeros((n_samples_, dim));
 
         for i in 0..n_samples_ {
             // Take thin steps but only keep the last one
@@ -168,7 +168,7 @@ impl<C: ConditionalDistribution> GibbsSampler<C> {
             samples.row_mut(i).assign(&self.current);
         }
 
-        Ok(_samples)
+        Ok(samples)
     }
 }
 
@@ -626,13 +626,13 @@ impl<C: ConditionalDistribution> BlockedGibbsSampler<C> {
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         let dim = self.sampler.current.len();
-        let mut _samples = Array2::zeros((n_samples_, dim));
+        let mut samples = Array2::zeros((n_samples_, dim));
 
         for i in 0..n_samples_ {
             let sample = self.step(rng)?;
             samples.row_mut(i).assign(&sample);
         }
 
-        Ok(_samples)
+        Ok(samples)
     }
 }

@@ -46,7 +46,7 @@ impl DictionaryLearning {
     /// * `alpha` - Sparsity controlling parameter
     pub fn new(ncomponents: usize, alpha: f64) -> Self {
         DictionaryLearning {
-            n_components,
+            n_components: ncomponents,
             alpha,
             max_iter: 1000,
             tol: 1e-4,
@@ -60,7 +60,7 @@ impl DictionaryLearning {
 
     /// Set maximum iterations
     pub fn with_max_iter(mut self, maxiter: usize) -> Self {
-        self.max_iter = max_iter;
+        self.max_iter = maxiter;
         self
     }
 
@@ -431,7 +431,7 @@ impl DictionaryLearning {
         }
 
         let dictionary = self.dictionary.as_ref().unwrap();
-        Ok(sparse_codes.dot(dictionary))
+        Ok(sparsecodes.dot(dictionary))
     }
 }
 

@@ -117,7 +117,7 @@ impl LossFunction {
                 // d(CCE)/dŷ = -y/ŷ / n
                 let epsilon = 1e-15;
                 let n = predictions.shape()[0] as f32;
-                Array2::fromshape_fn(predictions.dim(), |(i, j)| {
+                Array2::from_shape_fn(predictions.dim(), |(i, j)| {
                     let y_pred = predictions[(i, j)].max(epsilon).min(1.0 - epsilon);
                     let y_true = targets[(i, j)];
                     if y_true > 0.0 {
@@ -188,7 +188,7 @@ impl Conv2D {
         let std_dev = (2.0 / fan_in as f32).sqrt();
         let dist = Uniform::new_inclusive(-std_dev, std_dev);
         // Initialize weights: [filters, input_channels, kernel_h, kernel_w]
-        let weights = Array4::fromshape_fn(
+        let weights = Array4::from_shape_fn(
             [filters, input_channels, kernel_size.0, kernel_size.1],
             |_| dist.sample(rng),
         );
@@ -206,7 +206,7 @@ impl Conv2D {
             dbiases: None,
             input: None,
             z: None,
-            output: None,
+            _output: None,
         }
     }
     /// Calculate output dimensions based on input and layer parameters
@@ -315,7 +315,7 @@ impl Conv2D {
             .input
             .as_ref()
             .expect("Forward pass must be called first");
-        let outputshape = grad_output.shape();
+        let outputshape = gradoutput.shape();
         let batch_size = outputshape[0];
         let output_height = outputshape[2];
         let output_width = outputshape[3];
@@ -357,7 +357,7 @@ impl Conv2D {
             for b in 0..batch_size {
                 for h in 0..output_height {
                     for w in 0..output_width {
-                        sum += grad_output[[b, f, h, w]];
+                        sum += gradoutput[[b, f, h, w]];
                     }
                 }
             }
@@ -378,7 +378,7 @@ impl Conv2D {
                                     let w = w_in + kw;
                                     if h < padded_input.shape()[2] && w < padded_input.shape()[3] {
                                         sum += padded_input[[b, c, h, w]]
-                                            * grad_output[[b, f, h_out, w_out]];
+                                            * gradoutput[[b, f, h_out, w_out]];
                                     }
                                 }
                             }
@@ -432,7 +432,7 @@ impl Conv2D {
                                         continue;
                                     }
                                     sum += rotated_weights[[f, c, kh, kw]]
-                                        * grad_output[[b, f, h_out, w_out]];
+                                        * gradoutput[[b, f, h_out, w_out]];
                                 }
                             }
                         }
@@ -468,7 +468,7 @@ impl Layer for Conv2D {
         self.z = Some(z.clone());
         // Apply activation function
         let output = self.activation.apply(&z);
-        self.output = Some(output.clone());
+        self._output = Some(output.clone());
         output
     }
     fn backward(&mut self, gradoutput: &Array4<f32>) -> Array4<f32> {
@@ -476,16 +476,16 @@ impl Layer for Conv2D {
         let z = self.z.as_ref().expect("Forward pass must be called first");
         let activation_grad = self.activation.derivative(z);
         // Apply chain rule
-        let grad_z = grad_output * &activation_grad;
+        let grad_z = gradoutput * &activation_grad;
         // Compute gradients for weights, biases, and inputs
         self.convolve_backward(&grad_z)
     }
     fn update_parameters(&mut self, learningrate: f32) {
         if let (Some(dweights), Some(dbiases)) = (&self.dweights, &self.dbiases) {
             // Update weights
-            self.weights = &self.weights - &(dweights * learning_rate);
+            self.weights = &self.weights - &(dweights * learningrate);
             // Update biases
-            self.biases = &self.biases - &(dbiases * learning_rate);
+            self.biases = &self.biases - &(dbiases * learningrate);
             // Clear gradients
             self.dweights = None;
             self.dbiases = None;
@@ -519,9 +519,9 @@ struct MaxPool2D {
 
 impl MaxPool2D {
     /// Create a new MaxPool2D layer
-    fn new(_poolsize: (usize, usize), stride: Option<(usize, usize)>) -> Self {
-        // Default stride is same as pool _size
-        let stride = stride.unwrap_or(_pool_size);
+    fn new(pool_size: (usize, usize), stride: Option<(usize, usize)>) -> Self {
+        // Default stride is same as pool size
+        let stride = stride.unwrap_or(pool_size);
         Self {
             pool_size,
             stride,
@@ -592,7 +592,7 @@ impl Layer for MaxPool2D {
             .as_ref()
             .expect("Forward pass must be called first");
 
-        let outputshape = grad_output.shape();
+        let outputshape = gradoutput.shape();
         let batch_size = outputshape[0];
         let channels = outputshape[1];
         let output_height = outputshape[2];
@@ -611,14 +611,14 @@ impl Layer for MaxPool2D {
                 for h_out in 0..output_height {
                     for w_out in 0..output_width {
                         let (max_h, max_w) = max_indices[[b, c, h_out, w_out]];
-                        dinput[[b, c, max_h, max_w]] += grad_output[[b, c, h_out, w_out]];
+                        dinput[[b, c, max_h, max_w]] += gradoutput[[b, c, h_out, w_out]];
                     }
                 }
             }
         }
         dinput
     }
-    fn update_parameters(&mut self_learningrate: f32) {
+    fn update_parameters(&mut self, _learningrate: f32) {
         // MaxPool has no parameters to update
     }
 
@@ -665,14 +665,14 @@ impl Layer for Flatten {
             .as_ref()
             .expect("Forward pass must be called first");
         // Reshape back to original shape
-        let reshaped = grad_output
+        let reshaped = gradoutput
             .clone()
             .into_shape_with_order(inputshape.clone())
             .unwrap();
         let reshaped_4d: Array4<f32> = reshaped.into_dimensionality().unwrap();
         reshaped_4d
     }
-    fn update_parameters(&mut self_learningrate: f32) {
+    fn update_parameters(&mut self, _learningrate: f32) {
         // Flatten has no parameters to update
     }
 
@@ -708,7 +708,7 @@ impl Dense {
         let std_dev = (2.0 / input_size as f32).sqrt();
         let dist = Uniform::new_inclusive(-std_dev, std_dev);
         // Initialize weights and biases
-        let weights = Array2::fromshape_fn((input_size, output_size), |_| dist.sample(rng));
+        let weights = Array2::from_shape_fn((input_size, output_size), |_| dist.sample(rng));
         let biases = Array1::zeros(output_size);
         Self {
             input_size,
@@ -773,7 +773,7 @@ impl Layer for Dense {
             .clone()
             .into_shape_with_order((batch_size, self.output_size))
             .unwrap();
-        let grad_output_2d = grad_output
+        let grad_output_2d = gradoutput
             .clone()
             .into_shape_with_order((batch_size, self.output_size))
             .unwrap();
@@ -795,9 +795,9 @@ impl Layer for Dense {
     fn update_parameters(&mut self, learningrate: f32) {
         if let (Some(dweights), Some(dbiases)) = (&self.dweights, &self.dbiases) {
             // Update weights
-            self.weights = &self.weights - &(dweights * learning_rate);
+            self.weights = &self.weights - &(dweights * learningrate);
             // Update biases
-            self.biases = &self.biases - &(dbiases * learning_rate);
+            self.biases = &self.biases - &(dbiases * learningrate);
             // Clear gradients
             self.dweights = None;
             self.dbiases = None;
@@ -825,7 +825,7 @@ struct Sequential {
 
 impl Sequential {
     /// Create a new sequential model
-    fn new(_lossfn: LossFunction) -> Self {
+    fn new(loss_fn: LossFunction) -> Self {
         Self {
             layers: Vec::new(),
             loss_fn,
@@ -880,7 +880,7 @@ impl Sequential {
         }
         // Update parameters
         for layer in &mut self.layers {
-            layer.update_parameters(learning_rate);
+            layer.update_parameters(learningrate);
         }
         loss
     }
@@ -992,7 +992,7 @@ fn create_synthetic_dataset(
     let mut class_patterns = Vec::with_capacity(num_classes);
     for _ in 0..num_classes {
         let pattern =
-            Array2::fromshape_fn(
+            Array2::from_shape_fn(
                 image_size,
                 |_| {
                     if rng.gen::<f32>() > 0.7 {

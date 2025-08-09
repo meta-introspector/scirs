@@ -631,9 +631,9 @@ where
                 ..
             } => self.advanced_pca(data, *algorithm, *n_components),
             DimensionalityReductionMethod::ICA {
-                algorithm,
+                _algorithm,
                 n_components,
-                max_iter,
+                _max_iter,
                 tolerance,
             } => self.independent_component_analysis(
                 data,
@@ -685,7 +685,7 @@ where
         let (eigenvalues, eigenvectors) = self.eigen_decomposition_simd(&covariance.view())?;
 
         // Select top _components
-        let _components = eigenvectors
+        let components = eigenvectors
             .slice(ndarray::s![.., 0..actual_components])
             .to_owned();
         let explained_variance = eigenvalues
@@ -758,7 +758,7 @@ where
         let (n_samples_, n_features) = data.dim();
         let actual_components = n_components.min(n_features);
 
-        let _components = Array2::eye(actual_components);
+        let components = Array2::eye(actual_components);
         let mixing_matrix = Array2::eye(actual_components);
         let sources = Array2::zeros((n_samples_, actual_components));
         // Compute column-wise means

@@ -275,14 +275,14 @@ pub fn sphere_box_impulse(
 /// Collision information if a collision occurs, None otherwise
 #[allow(dead_code)]
 pub fn find_sphere_box_collision(sphere: &Sphere, box3d: &Box3D) -> Option<CollisionInfo> {
-    // Find the closest point on the box to the _sphere center
+    // Find the closest point on the box to the sphere center
     let closest_x = sphere.center[0].max(box3d.min[0]).min(box3d.max[0]);
     let closest_y = sphere.center[1].max(box3d.min[1]).min(box3d.max[1]);
     let closest_z = sphere.center[2].max(box3d.min[2]).min(box3d.max[2]);
 
     let closest_point = [closest_x, closest_y, closest_z];
 
-    // Calculate distance from the closest point to the _sphere center
+    // Calculate distance from the closest point to the sphere center
     let dx = sphere.center[0] - closest_point[0];
     let dy = sphere.center[1] - closest_point[1];
     let dz = sphere.center[2] - closest_point[2];
@@ -295,10 +295,10 @@ pub fn find_sphere_box_collision(sphere: &Sphere, box3d: &Box3D) -> Option<Colli
 
     let distance = distance_squared.sqrt();
 
-    // Normal points from the box to the _sphere
+    // Normal points from the box to the sphere
     let normal = if distance < 1e-10 {
         // Sphere center is on the box surface, use the face normal
-        // Determine which face is closest to the _sphere center
+        // Determine which face is closest to the sphere center
         let box_center = [
             (box3d.min[0] + box3d.max[0]) * 0.5,
             (box3d.min[1] + box3d.max[1]) * 0.5,
@@ -309,16 +309,16 @@ pub fn find_sphere_box_collision(sphere: &Sphere, box3d: &Box3D) -> Option<Colli
         let half_height = (box3d.max[1] - box3d.min[1]) * 0.5;
         let half_depth = (box3d.max[2] - box3d.min[2]) * 0.5;
 
-        let dx = (_sphere.center[0] - box_center[0]).abs() / half_width;
-        let dy = (_sphere.center[1] - box_center[1]).abs() / half_height;
-        let dz = (_sphere.center[2] - box_center[2]).abs() / half_depth;
+        let dx = (sphere.center[0] - box_center[0]).abs() / half_width;
+        let dy = (sphere.center[1] - box_center[1]).abs() / half_height;
+        let dz = (sphere.center[2] - box_center[2]).abs() / half_depth;
 
         if dx > dy && dx > dz {
-            [(_sphere.center[0] - box_center[0]).signum(), 0.0, 0.0]
+            [(sphere.center[0] - box_center[0]).signum(), 0.0, 0.0]
         } else if dy > dz {
-            [0.0, (_sphere.center[1] - box_center[1]).signum(), 0.0]
+            [0.0, (sphere.center[1] - box_center[1]).signum(), 0.0]
         } else {
-            [0.0, 0.0, (_sphere.center[2] - box_center[2]).signum()]
+            [0.0, 0.0, (sphere.center[2] - box_center[2]).signum()]
         }
     } else {
         [dx / distance, dy / distance, dz / distance]

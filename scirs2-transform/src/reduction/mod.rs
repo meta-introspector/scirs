@@ -61,7 +61,7 @@ impl PCA {
     /// * A new PCA instance
     pub fn new(ncomponents: usize, center: bool, scale: bool) -> Self {
         PCA {
-            n_components,
+            n_components: ncomponents,
             center,
             scale,
             components: None,
@@ -292,7 +292,7 @@ impl TruncatedSVD {
     /// * A new TruncatedSVD instance
     pub fn new(ncomponents: usize) -> Self {
         TruncatedSVD {
-            n_components,
+            n_components: ncomponents,
             singular_values: None,
             components: None,
             explained_variance_ratio: None,
@@ -481,7 +481,7 @@ impl LDA {
         }
 
         Ok(LDA {
-            n_components,
+            n_components: ncomponents,
             solver: solver.to_string(),
             components: None,
             means: None,

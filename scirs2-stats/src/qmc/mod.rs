@@ -129,16 +129,16 @@ pub struct SobolSequence {
 impl SobolSequence {
     /// Create a new Sobol sequence generator
     pub fn new(dimension: usize, scramble: bool, seed: Option<u64>) -> StatsResult<Self> {
-        if _dimension == 0 || _dimension > 32 {
+        if dimension == 0 || dimension > 32 {
             return Err(StatsError::InvalidArgument(
                 "Dimension must be between 1 and 32".to_string(),
             ));
         }
 
-        let direction_numbers = Self::initialize_direction_numbers(_dimension)?;
+        let direction_numbers = Self::initialize_direction_numbers(dimension)?;
 
         let scramble_matrices = if scramble {
-            Some(Self::generate_scramble_matrices(_dimension, seed)?)
+            Some(Self::generate_scramble_matrices(dimension, seed)?)
         } else {
             None
         };
@@ -194,9 +194,9 @@ impl SobolSequence {
 
     /// Initialize direction numbers for Sobol sequence
     fn initialize_direction_numbers(dimension: usize) -> StatsResult<Vec<Vec<u32>>> {
-        let mut direction_numbers = vec![vec![0u32; 32]; _dimension];
+        let mut direction_numbers = vec![vec![0u32; 32]; dimension];
 
-        // First _dimension uses powers of 2
+        // First dimension uses powers of 2
         for i in 0..32 {
             direction_numbers[0][i] = 1u32 << (31 - i);
         }
@@ -204,7 +204,7 @@ impl SobolSequence {
         // Additional dimensions use primitive polynomials
         // Simplified version - in practice, you'd use tabulated values
         let primitive_polynomials = [
-            (1, vec![]),        // x (_dimension 1, already handled)
+            (1, vec![]),        // x (dimension 1, already handled)
             (2, vec![1]),       // x^2 + x + 1
             (3, vec![1, 3]),    // x^3 + x + 1
             (3, vec![2, 3]),    // x^3 + x^2 + 1
@@ -214,7 +214,7 @@ impl SobolSequence {
             (4, vec![1, 3, 4]), // x^4 + x^3 + x + 1
         ];
 
-        for dim in 1.._dimension {
+        for dim in 1..dimension {
             let poly_idx = (dim - 1) % primitive_polynomials.len();
             let (degree, ref coeffs) = primitive_polynomials[poly_idx];
 
@@ -280,7 +280,7 @@ impl SobolSequence {
         let mut result = 0u32;
 
         for i in 0..32 {
-            let bit = (_value >> (31 - i)) & 1;
+            let bit = (value >> (31 - i)) & 1;
             for j in 0..32 {
                 if matrix[[i, j]] == 1 && bit == 1 {
                     result |= 1u32 << (31 - j);
@@ -305,13 +305,13 @@ pub struct HaltonSequence {
 impl HaltonSequence {
     /// Create a new Halton sequence generator
     pub fn new(dimension: usize, scramble: bool, seed: Option<u64>) -> StatsResult<Self> {
-        if _dimension == 0 {
+        if dimension == 0 {
             return Err(StatsError::InvalidArgument(
                 "Dimension must be at least 1".to_string(),
             ));
         }
 
-        let bases = Self::first_primes(_dimension)?;
+        let bases = Self::first_primes(dimension)?;
 
         let permutations = if scramble {
             Some(Self::generate_permutations(&bases, seed)?)
@@ -382,7 +382,7 @@ impl HaltonSequence {
 
     /// Compute scrambled radical inverse
     fn scrambled_radical_inverse(
-        _index: usize,
+        index: usize,
         base: u32,
         permutation: &[u32],
     ) -> StatsResult<f64> {
@@ -456,9 +456,9 @@ impl HaltonSequence {
             }
         };
 
-        let mut permutations = Vec::with_capacity(_bases.len());
+        let mut permutations = Vec::with_capacity(bases.len());
 
-        for &base in _bases {
+        for &base in bases {
             let mut perm: Vec<u32> = (0..base).collect();
 
             // Fisher-Yates shuffle
@@ -479,7 +479,7 @@ impl HaltonSequence {
 pub fn star_discrepancy(samples: &ArrayView1<Array1<f64>>) -> StatsResult<f64> {
     if samples.is_empty() {
         return Err(StatsError::InvalidArgument(
-            "_samples array cannot be empty".to_string(),
+            "samples array cannot be empty".to_string(),
         ));
     }
 

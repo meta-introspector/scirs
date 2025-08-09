@@ -894,7 +894,7 @@ pub struct CryptographicKeys {
 #[derive(Debug, Clone)]
 pub struct CryptographicProof {
     /// Proof type
-    pub proof_type: String,
+    pub prooftype: String,
 
     /// Proof data
     pub proof_data: Vec<u8>,
@@ -1355,7 +1355,7 @@ impl<T: Float + Send + Sync> EnhancedAuditSystem<T> {
 
     /// Generate cryptographic proof
     pub fn generate_proof(&self, prooftype: &str, data: &Array1<T>) -> Result<CryptographicProof> {
-        self.proof_generator.generate_proof(proof_type, data)
+        self.proof_generator.generate_proof(prooftype, data)
     }
 
     /// Sign audit event
@@ -1522,7 +1522,7 @@ impl MerkleTree {
 
     /// Add leaf to tree
     pub fn add_leaf(&mut self, leafhash: Vec<u8>) -> Result<()> {
-        self.nodes.push(leaf_hash);
+        self.nodes.push(leafhash);
         self.rebuild_tree()?;
         Ok(())
     }
@@ -1746,12 +1746,12 @@ impl<T: Float + Send + Sync> CryptographicProofGenerator<T> {
     }
 
     pub fn generate_proof(&self, prooftype: &str, data: &Array1<T>) -> Result<CryptographicProof> {
-        if let Some(proof_gen) = self.proof_types.get(proof_type) {
+        if let Some(proof_gen) = self.proof_types.get(prooftype) {
             (proof_gen.generate_fn)(data, &self.keys)
         } else {
             Err(OptimError::InvalidConfig(format!(
                 "Unknown proof _type: {}",
-                proof_type
+                prooftype
             )))
         }
     }

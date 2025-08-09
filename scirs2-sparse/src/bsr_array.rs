@@ -53,7 +53,7 @@ where
     /// Number of block rows
     block_rows: usize,
     /// Number of block columns (needed for internal calculations)
-    _block_cols: usize,
+    block_cols: usize,
     /// Data array (blocks stored row by row)
     data: Vec<Vec<Vec<T>>>,
     /// Column indices for each block
@@ -131,7 +131,7 @@ where
         #[allow(clippy::manual_div_ceil)]
         let block_rows = (rows + r - 1) / r; // Ceiling division
         #[allow(clippy::manual_div_ceil)]
-        let _block_cols = (cols + c - 1) / c; // Ceiling division
+        let block_cols = (cols + c - 1) / c; // Ceiling division
 
         // Validate input
         if indptr.len() != block_rows + 1 {
@@ -179,11 +179,11 @@ where
                     "Each index vector must contain exactly one block column index".to_string(),
                 ));
             }
-            if idx_vec[0] >= _block_cols {
+            if idx_vec[0] >= block_cols {
                 return Err(SparseError::ValueError(format!(
                     "index {} out of bounds (max {})",
                     idx_vec[0],
-                    _block_cols - 1
+                    block_cols - 1
                 )));
             }
         }
@@ -224,7 +224,7 @@ where
         #[allow(clippy::manual_div_ceil)]
         let block_rows = (rows + r - 1) / r; // Ceiling division
         #[allow(clippy::manual_div_ceil)]
-        let _block_cols = (cols + c - 1) / c; // Ceiling division
+        let block_cols = (cols + c - 1) / c; // Ceiling division
 
         // Initialize empty BSR array
         let data = Vec::new();
@@ -282,7 +282,7 @@ where
         #[allow(clippy::manual_div_ceil)]
         let block_rows = (rows + r - 1) / r; // Ceiling division
         #[allow(clippy::manual_div_ceil)]
-        let _block_cols = (cols + c - 1) / c; // Ceiling division
+        let block_cols = (cols + c - 1) / c; // Ceiling division
 
         // First, we'll construct a temporary DOK-like representation for the blocks
         let mut block_data = std::collections::HashMap::new();

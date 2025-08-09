@@ -286,7 +286,7 @@ impl<
             .evaluate_actions(&trajectory.observations, &trajectory.actions)?;
 
         let n_epochs = self.config.base_config.n_epochs;
-        let mini_batch_size = self.config.base_config.mini_batch_size;
+        let mini_batch_size = self.config.base_config.mini_batchsize;
 
         for _epoch in 0..n_epochs {
             let mini_batches = trajectory.get_mini_batches(mini_batch_size);

@@ -193,17 +193,17 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
         let zero = F::zero();
         let one = F::one();
 
-        if p_val < zero || p_val > one {
+        if pval < zero || pval > one {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));
         }
 
         // Special cases
-        if p_val <= zero {
+        if pval <= zero {
             return Ok(zero);
         }
-        if p_val >= one {
+        if pval >= one {
             return Ok(F::infinity());
         }
 
@@ -218,7 +218,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
 
         // Calculate the quantile manually to avoid formula issues
         let mut k = zero;
-        while self.cdf(k) < p_val {
+        while self.cdf(k) < pval {
             k = k + one;
         }
 
@@ -439,7 +439,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
 
     // Helper method to check if a value is an integer
     fn is_integer(value: F) -> bool {
-        _value == value.floor()
+        value == value.floor()
     }
 }
 

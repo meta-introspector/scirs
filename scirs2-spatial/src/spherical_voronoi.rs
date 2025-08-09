@@ -482,7 +482,7 @@ impl SphericalVoronoi {
     ///
     /// The index of the nearest generator point and its geodesic distance
     pub fn nearest_generator(&self, point: &ArrayView1<f64>) -> SpatialResult<(usize, f64)> {
-        let distances = self.geodesic_distances_to_generators(_point)?;
+        let distances = self.geodesic_distances_to_generators(point)?;
 
         // Find the minimum distance
         let mut min_dist = f64::MAX;
@@ -699,7 +699,7 @@ impl SphericalVoronoi {
     /// Calculate the spherical distance between two points on a sphere
     fn spherical_distance(p1: &Array1<f64>, p2: &Array1<f64>, radius: f64) -> f64 {
         // Normalize vectors to unit sphere
-        let u1 = _p1 / norm(_p1);
+        let u1 = p1 / norm(p1);
         let u2 = p2 / norm(p2);
 
         // Calculate the dot product, clamped to [-1, 1] to avoid numerical errors
@@ -959,7 +959,7 @@ impl SphericalVoronoi {
 
         // For small matrices, use QR decomposition approach
         if nrows <= 10 && ncols <= 10 {
-            return Self::compute_rank_qr(_matrix, tol);
+            return Self::compute_rank_qr(matrix, tol);
         }
 
         // For larger matrices, use iterative approach with column norms
@@ -992,7 +992,7 @@ impl SphericalVoronoi {
             let pivot_col = remaining_matrix.column(max_col).to_owned();
             let pivot_unit = &pivot_col / max_norm;
 
-            // Update remaining _matrix by removing component in direction of pivot
+            // Update remaining matrix by removing component in direction of pivot
             for j in 0..remaining_matrix.ncols() {
                 if j != max_col {
                     let col = remaining_matrix.column(j).to_owned();

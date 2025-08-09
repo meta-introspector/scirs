@@ -53,7 +53,7 @@ impl StabilityLevel {
     pub fn is_compatible_with(self, other: StabilityLevel) -> bool {
         match (self, other) {
             (StabilityLevel::Stable, StabilityLevel::Stable) => true,
-            (StabilityLevel::Evolving, StabilityLevel::Stable) => false,
+            (StabilityLevel::Evolving, StabilityLevel::Stable) => true,
             (StabilityLevel::Evolving, StabilityLevel::Experimental) => false,
             (StabilityLevel::Experimental, StabilityLevel::Evolving) => true,
             (StabilityLevel::Experimental, StabilityLevel::Experimental) => true,

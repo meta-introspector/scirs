@@ -216,10 +216,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let n_samples = x_test.nrows().min(10); // Limit for computational efficiency
+        let nsamples = x_test.nrows().min(10); // Limit for computational efficiency
         let mut consistency_scores = Vec::new();
 
-        for i in 0..n_samples {
+        for i in 0..nsamples {
             let sample = x_test.row(i);
             let mut local_explanations = Vec::new();
 
@@ -321,10 +321,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let n_samples = x_test.nrows().min(20);
+        let nsamples = x_test.nrows().min(20);
         let mut faithfulness_scores = Vec::new();
 
-        for i in 0..n_samples {
+        for i in 0..nsamples {
             let sample = x_test.row(i);
             let original_prediction = model(&sample.insert_axis(Axis(0)).view());
 
@@ -356,10 +356,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let n_samples = x_test.nrows().min(20);
+        let nsamples = x_test.nrows().min(20);
         let mut completeness_scores = Vec::new();
 
-        for i in 0..n_samples {
+        for i in 0..nsamples {
             let sample = x_test.row(i);
             let original_prediction = model(&sample.insert_axis(Axis(0)).view());
 
@@ -387,13 +387,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     // Helper methods
 
     fn permute_feature(&self, data: &mut Array2<F>, featureindex: usize) -> Result<()> {
-        if feature_index >= data.ncols() {
+        if featureindex >= data.ncols() {
             return Err(MetricsError::InvalidInput(
                 "Feature _index out of bounds".to_string(),
             ));
         }
 
-        let mut feature_values: Vec<F> = data.column(feature_index).to_vec();
+        let mut feature_values: Vec<F> = data.column(featureindex).to_vec();
 
         // Simple shuffle (in practice, would use proper random shuffle)
         for i in (1..feature_values.len()).rev() {
@@ -402,7 +402,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         }
 
         for (i, &value) in feature_values.iter().enumerate() {
-            data[[i, feature_index]] = value;
+            data[[i, featureindex]] = value;
         }
 
         Ok(())
@@ -516,9 +516,9 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
     fn bootstrap_sample_indices(&self, nsamples: usize) -> Result<Vec<usize>> {
         // Simple bootstrap sampling (in practice, would use proper random sampling)
-        let mut indices = Vec::with_capacity(n_samples);
-        for i in 0..n_samples {
-            indices.push(i % n_samples);
+        let mut indices = Vec::with_capacity(nsamples);
+        for i in 0..nsamples {
+            indices.push(i % nsamples);
         }
         Ok(indices)
     }
@@ -541,11 +541,11 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         }
 
         let n_predictions = predictions.len();
-        let n_samples = predictions[0].len();
+        let nsamples = predictions[0].len();
 
         let mut variances = Vec::new();
 
-        for i in 0..n_samples {
+        for i in 0..nsamples {
             let sample_predictions: Vec<F> = predictions.iter().map(|pred| pred[i]).collect();
 
             let mean =
@@ -645,12 +645,12 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         }
 
         let mut importance_scores = HashMap::new();
-        let n_samples = std::cmp::min(1000, self.n_perturbations); // Limit for efficiency
+        let nsamples = std::cmp::min(1000, self.n_perturbations); // Limit for efficiency
 
         // Process each instance separately for local explanations
         for instance in x_test.axis_iter(Axis(0)) {
             let instance_importance =
-                self.compute_lime_for_instance(model, &instance, feature_names, n_samples)?;
+                self.compute_lime_for_instance(model, &instance, feature_names, nsamples)?;
 
             // Aggregate importance scores across instances
             for (feature_name, importance) in instance_importance {
@@ -674,7 +674,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         model: &M,
         instance: &ArrayView1<F>,
         feature_names: &[String],
-        n_samples: usize,
+        nsamples: usize,
     ) -> Result<HashMap<String, F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
@@ -682,7 +682,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         let _n_features = instance.len();
 
         // Generate perturbed _samples around the instance
-        let (perturbed_samples, weights) = self.generate_lime_samples(instance, n_samples)?;
+        let (perturbed_samples, weights) = self.generate_lime_samples(instance, nsamples)?;
 
         // Get model predictions for perturbed _samples
         let predictions = model(&perturbed_samples.view());
@@ -706,11 +706,11 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     fn generate_lime_samples(
         &self,
         instance: &ArrayView1<F>,
-        n_samples: usize,
+        nsamples: usize,
     ) -> Result<(Array2<F>, Array1<F>)> {
         let n_features = instance.len();
-        let mut perturbed_samples = Array2::zeros((n_samples, n_features));
-        let mut weights = Array1::zeros(n_samples);
+        let mut perturbed_samples = Array2::zeros((nsamples, n_features));
+        let mut weights = Array1::zeros(nsamples);
 
         // Calculate feature statistics for perturbation
         let feature_mean = instance.mean().unwrap_or(F::zero());
@@ -723,14 +723,14 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             variance.sqrt()
         };
 
-        for i in 0..n_samples {
+        for i in 0..nsamples {
             let mut perturbed_instance = instance.to_owned();
             let mut distance_sum = F::zero();
 
             // Randomly perturb features
             for j in 0..n_features {
                 // Use simple uniform perturbation around the original value
-                let perturbation_factor = F::from((i + j) as f64 / (n_samples * n_features) as f64)
+                let perturbation_factor = F::from((i + j) as f64 / (nsamples * n_features) as f64)
                     .unwrap()
                     - F::from(0.5).unwrap();
                 let perturbation = perturbation_factor * self.perturbation_strength * feature_std;
@@ -759,10 +759,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         targets: &Array1<F>,
         weights: &Array1<F>,
     ) -> Result<Vec<F>> {
-        let n_samples = samples.nrows();
+        let nsamples = samples.nrows();
         let n_features = samples.ncols();
 
-        if n_samples == 0 || n_features == 0 {
+        if nsamples == 0 || n_features == 0 {
             return Ok(vec![F::zero(); n_features]);
         }
 
@@ -772,7 +772,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         let mut xty = Array1::zeros(n_features);
 
         // Compute X'WX and X'Wy
-        for i in 0..n_samples {
+        for i in 0..nsamples {
             let weight = weights[i];
             let target = targets[i];
 
@@ -955,18 +955,18 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
     /// Compute background mean for SHAP baseline
     fn compute_background_mean(&self, xdata: &Array2<F>) -> Result<Array1<F>> {
-        if x_data.is_empty() {
+        if xdata.is_empty() {
             return Err(MetricsError::InvalidInput(
                 "Empty _data for background computation".to_string(),
             ));
         }
 
-        let n_features = x_data.ncols();
+        let n_features = xdata.ncols();
         let mut background = Array1::zeros(n_features);
 
         for j in 0..n_features {
-            let column_sum: F = x_data.column(j).iter().cloned().sum();
-            background[j] = column_sum / F::from(x_data.nrows()).unwrap();
+            let column_sum: F = xdata.column(j).iter().cloned().sum();
+            background[j] = column_sum / F::from(xdata.nrows()).unwrap();
         }
 
         Ok(background)
@@ -999,13 +999,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         let full_pred = model(&full_input.view())[0];
 
         // For efficiency, use sampling-based approximation
-        let n_samples = std::cmp::min(max_coalitions, 1000);
+        let nsamples = std::cmp::min(max_coalitions, 1000);
 
         for i in 0..n_features {
             let mut marginal_contributions = Vec::new();
 
             // Sample different _coalitions and compute marginal contribution of feature i
-            for sample_idx in 0..n_samples {
+            for sample_idx in 0..nsamples {
                 let coalition = self.generate_random_coalition(n_features, i, sample_idx);
 
                 // Compute prediction with coalition including feature i

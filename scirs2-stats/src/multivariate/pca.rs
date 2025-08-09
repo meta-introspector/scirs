@@ -73,7 +73,7 @@ impl PCA {
     }
 
     /// Set the number of components to keep
-    pub fn with_n_components(mut self, ncomponents: usize) -> Self {
+    pub fn with_n_components(mut self, n_components: usize) -> Self {
         self.n_components = Some(n_components);
         self
     }
@@ -105,10 +105,10 @@ impl PCA {
     /// Fit the PCA model to the data
     pub fn fit(&self, data: ArrayView2<f64>) -> Result<PCAResult> {
         checkarray_finite(&data, "data")?;
-        let (n_samples_, n_features) = data.dim();
-        if n_samples_ < 2 {
+        let (n_samples, n_features) = data.dim();
+        if n_samples < 2 {
             return Err(StatsError::InvalidArgument(
-                "n_samples_ must be at least 2".to_string(),
+                "n_samples must be at least 2".to_string(),
             ));
         }
         if n_features < 1 {
@@ -118,13 +118,13 @@ impl PCA {
         }
 
         // Determine number of components
-        let max_components = n_samples_.min(n_features);
+        let max_components = n_samples.min(n_features);
         let n_components = match self.n_components {
             Some(k) => {
                 check_positive(k, "n_components")?;
                 if k > max_components {
                     return Err(StatsError::InvalidArgument(format!(
-                        "n_components ({}) cannot be larger than min(n_samples_, n_features) = {}",
+                        "n_components ({}) cannot be larger than min(n_samples, n_features) = {}",
                         k, max_components
                     )));
                 }
@@ -164,7 +164,7 @@ impl PCA {
         // Choose solver
         let solver = match self.svd_solver {
             SvdSolver::Auto => {
-                if n_samples_ >= 500 && n_features >= 500 && n_components < max_components / 2 {
+                if n_samples >= 500 && n_features >= 500 && n_components < max_components / 2 {
                     SvdSolver::Randomized
                 } else {
                     SvdSolver::Full
@@ -175,9 +175,9 @@ impl PCA {
 
         // Perform PCA
         let result = match solver {
-            SvdSolver::Full => self.pca_svd(&centered_data, n_components, n_samples_)?,
+            SvdSolver::Full => self.pca_svd(&centered_data, n_components, n_samples)?,
             SvdSolver::Randomized => {
-                self.pca_randomized(&centered_data, n_components, n_samples_)?
+                self.pca_randomized(&centered_data, n_components, n_samples)?
             }
             _ => unreachable!(),
         };
@@ -189,7 +189,7 @@ impl PCA {
             singular_values: result.3,
             mean,
             scale,
-            n_samples_,
+            n_samples_: n_samples,
             n_features,
         })
     }
@@ -199,7 +199,7 @@ impl PCA {
         &self,
         data: &Array2<f64>,
         n_components: usize,
-        n_samples_: usize,
+        n_samples: usize,
     ) -> Result<(Array2<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
         use ndarray_linalg::SVD;
 
@@ -210,11 +210,11 @@ impl PCA {
         let v = vt.unwrap().t().to_owned();
 
         // Extract _components
-        let _components = v.slice(ndarray::s![.., ..n_components]).to_owned();
+        let components = v.slice(ndarray::s![.., ..n_components]).to_owned();
 
         // Compute explained variance
         let singular_values = s.slice(ndarray::s![..n_components]).to_owned();
-        let explained_variance = &singular_values * &singular_values / (n_samples_ - 1) as f64;
+        let explained_variance = &singular_values * &singular_values / (n_samples - 1) as f64;
 
         // Compute explained variance ratio
         let total_variance = explained_variance.sum();
@@ -233,7 +233,7 @@ impl PCA {
         &self,
         data: &Array2<f64>,
         n_components: usize,
-        n_samples_: usize,
+        n_samples: usize,
     ) -> Result<(Array2<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
         use ndarray_linalg::{QR, SVD};
         use rand::{rngs::StdRng, SeedableRng};
@@ -298,11 +298,11 @@ impl PCA {
         let v = vt.unwrap().t().to_owned();
 
         // Extract _components
-        let _components = v.slice(ndarray::s![.., ..n_components]).to_owned();
+        let components = v.slice(ndarray::s![.., ..n_components]).to_owned();
 
         // Compute explained variance
         let singular_values = s.slice(ndarray::s![..n_components]).to_owned();
-        let explained_variance = &singular_values * &singular_values / (n_samples_ - 1) as f64;
+        let explained_variance = &singular_values * &singular_values / (n_samples - 1) as f64;
 
         // Compute explained variance ratio
         let total_variance = explained_variance.sum();
@@ -393,15 +393,15 @@ impl PCA {
 
 /// Compute the optimal number of components using Minka's MLE
 #[allow(dead_code)]
-pub fn mle_components(_data: ArrayView2<f64>, maxcomponents: Option<usize>) -> Result<usize> {
-    checkarray_finite(&_data, "_data")?;
-    let (n_samples_, n_features) = data.dim();
+pub fn mle_components(data: ArrayView2<f64>, maxcomponents: Option<usize>) -> Result<usize> {
+    checkarray_finite(&data, "data")?;
+    let (n_samples, n_features) = data.dim();
 
-    let pca = PCA::new().with_n_components(max_components.unwrap_or(n_features.min(n_samples_)));
-    let result = pca.fit(_data)?;
+    let pca = PCA::new().with_n_components(maxcomponents.unwrap_or(n_features.min(n_samples)));
+    let result = pca.fit(data)?;
 
     let eigenvalues = &result.explained_variance;
-    let n = n_samples_ as f64;
+    let n = n_samples as f64;
     let p = n_features as f64;
 
     // Minka's MLE for PCA
@@ -460,13 +460,13 @@ pub struct IncrementalPCA {
 
 impl IncrementalPCA {
     /// Create a new incremental PCA instance
-    pub fn new(_n_components: usize, batchsize: usize) -> Result<Self> {
-        check_positive(_n_components, "_n_components")?;
+    pub fn new(n_components: usize, batch_size: usize) -> Result<Self> {
+        check_positive(n_components, "n_components")?;
         check_positive(batch_size, "batch_size")?;
 
         Ok(Self {
-            pca: PCA::new().with_n_components(_n_components),
-            batch_size,
+            pca: PCA::new().with_n_components(n_components),
+            batch_size: batch_size,
             mean: None,
             components: None,
             singular_values: None,

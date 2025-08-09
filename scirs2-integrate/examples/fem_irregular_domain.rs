@@ -178,20 +178,20 @@ fn create_lshaped_mesh(divisions: usize) -> TriangularMesh {
     let mut mesh = TriangularMesh::new();
 
     // Calculate step size
-    let h = 1.0 / _divisions as f64;
+    let h = 1.0 / divisions as f64;
 
     // Create nodes for the L-shaped domain
     // We first create a uniform grid, then remove nodes in the upper-right corner
 
     // Node indices (i,j) -> flattened index
     // For bookkeeping during mesh creation
-    let mut node_map = vec![vec![None; _divisions + 1]; _divisions + 1];
+    let mut node_map = vec![vec![None; divisions + 1]; divisions + 1];
     let mut node_count = 0;
 
     // Create nodes
     #[allow(clippy::needless_range_loop)]
-    for j in 0..=_divisions {
-        for i in 0..=_divisions {
+    for j in 0..=divisions {
+        for i in 0..=divisions {
             let x = i as f64 * h;
             let y = j as f64 * h;
 
@@ -208,10 +208,10 @@ fn create_lshaped_mesh(divisions: usize) -> TriangularMesh {
     }
 
     // Create triangular elements
-    for j in 0.._divisions {
-        for i in 0.._divisions {
+    for j in 0..divisions {
+        for i in 0..divisions {
             // Skip cells in the upper-right corner
-            if i >= _divisions / 2 && j >= _divisions / 2 {
+            if i >= divisions / 2 && j >= divisions / 2 {
                 continue;
             }
 
@@ -235,7 +235,7 @@ fn create_lshaped_mesh(divisions: usize) -> TriangularMesh {
     // Create boundary edges
 
     // Bottom edge (y = 0)
-    for i in 0.._divisions {
+    for i in 0..divisions {
         let n1 = node_map[0][i].unwrap();
         let n2 = node_map[0][i + 1].unwrap();
         mesh.boundary_edges.push((n1, n2, Some(1))); // Marker 1 for bottom
@@ -243,34 +243,34 @@ fn create_lshaped_mesh(divisions: usize) -> TriangularMesh {
 
     // Right edges (there are two separated by the corner)
     // Lower portion (x = 1, y <= 0.5)
-    for j in 0.._divisions / 2 {
-        let n1 = node_map[j][_divisions].unwrap();
-        let n2 = node_map[j + 1][_divisions].unwrap();
+    for j in 0..divisions / 2 {
+        let n1 = node_map[j][divisions].unwrap();
+        let n2 = node_map[j + 1][divisions].unwrap();
         mesh.boundary_edges.push((n1, n2, Some(2))); // Marker 2 for right
     }
     // Upper portion (x = 0.5, y > 0.5)
-    for j in _divisions / 2.._divisions {
-        let n1 = node_map[j][_divisions / 2].unwrap();
-        let n2 = node_map[j + 1][_divisions / 2].unwrap();
+    for j in divisions / 2..divisions {
+        let n1 = node_map[j][divisions / 2].unwrap();
+        let n2 = node_map[j + 1][divisions / 2].unwrap();
         mesh.boundary_edges.push((n1, n2, Some(5))); // Marker 5 for inner vertical
     }
 
     // Top edges (there are two separated by the corner)
     // Left portion (y = 1, x <= 0.5)
-    for i in 0.._divisions / 2 {
-        let n1 = node_map[_divisions][i + 1].unwrap();
-        let n2 = node_map[_divisions][i].unwrap();
+    for i in 0..divisions / 2 {
+        let n1 = node_map[divisions][i + 1].unwrap();
+        let n2 = node_map[divisions][i].unwrap();
         mesh.boundary_edges.push((n1, n2, Some(3))); // Marker 3 for top
     }
     // Right portion (y = 0.5, x > 0.5)
-    for i in _divisions / 2.._divisions {
-        let n1 = node_map[_divisions / 2][i + 1].unwrap();
-        let n2 = node_map[_divisions / 2][i].unwrap();
+    for i in divisions / 2..divisions {
+        let n1 = node_map[divisions / 2][i + 1].unwrap();
+        let n2 = node_map[divisions / 2][i].unwrap();
         mesh.boundary_edges.push((n1, n2, Some(6))); // Marker 6 for inner horizontal
     }
 
     // Left edge (x = 0)
-    for j in 0.._divisions {
+    for j in 0..divisions {
         let n1 = node_map[j + 1][0].unwrap();
         let n2 = node_map[j][0].unwrap();
         mesh.boundary_edges.push((n1, n2, Some(4))); // Marker 4 for left

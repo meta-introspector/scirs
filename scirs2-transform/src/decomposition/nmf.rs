@@ -53,7 +53,7 @@ impl NMF {
     /// * `n_components` - Number of components to extract
     pub fn new(ncomponents: usize) -> Self {
         NMF {
-            n_components,
+            n_components: ncomponents,
             init: "random".to_string(),
             solver: "mu".to_string(),
             beta_loss: 2.0, // Frobenius norm
@@ -89,7 +89,7 @@ impl NMF {
 
     /// Set maximum iterations
     pub fn with_max_iter(mut self, maxiter: usize) -> Self {
-        self.max_iter = max_iter;
+        self.max_iter = maxiter;
         self
     }
 
@@ -108,7 +108,7 @@ impl NMF {
     /// Set regularization parameters
     pub fn with_regularization(mut self, alpha: f64, l1ratio: f64) -> Self {
         self.alpha = alpha;
-        self.l1_ratio = l1_ratio;
+        self.l1_ratio = l1ratio;
         self
     }
 

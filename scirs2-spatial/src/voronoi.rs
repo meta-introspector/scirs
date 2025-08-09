@@ -73,7 +73,7 @@ pub struct Voronoi {
 
     /// Furthest site flag
     /// Indicates whether this is a furthest-site Voronoi diagram
-    furthest_site: bool,
+    furthestsite: bool,
 }
 
 impl Voronoi {
@@ -82,7 +82,7 @@ impl Voronoi {
     /// # Arguments
     ///
     /// * `points` - Input points, shape (n_points, n_dim)
-    /// * `furthest_site` - Whether to compute a furthest-site Voronoi diagram
+    /// * `furthestsite` - Whether to compute a furthest-site Voronoi diagram
     ///
     /// # Returns
     ///
@@ -111,7 +111,7 @@ impl Voronoi {
         if ndim == 2 {
             // Handle triangle manually (3 _points in 2D)
             if npoints == 3 {
-                return Self::special_case_triangle(_points, furthest_site);
+                return Self::special_case_triangle(_points, furthestsite);
             }
 
             // Handle square manually (4 _points in 2D)
@@ -128,7 +128,7 @@ impl Voronoi {
                 if ((x0 - x1).abs() < 1e-10 && (y0 - y2).abs() < 1e-10)
                     || ((x0 - x2).abs() < 1e-10 && (y0 - y1).abs() < 1e-10)
                 {
-                    return Self::special_case_square(_points, furthest_site);
+                    return Self::special_case_square(_points, furthestsite);
                 }
             }
         }
@@ -137,14 +137,14 @@ impl Voronoi {
         match Delaunay::new(&_points.to_owned()) {
             Ok(delaunay) => {
                 // Compute the Voronoi diagram from the Delaunay triangulation
-                match Self::from_delaunay(delaunay, furthest_site) {
+                match Self::from_delaunay(delaunay, furthestsite) {
                     Ok(voronoi) => Ok(voronoi),
                     Err(_) => {
                         // If conversion fails, try special cases
                         if ndim == 2 && npoints == 3 {
-                            Self::special_case_triangle(_points, furthest_site)
+                            Self::special_case_triangle(_points, furthestsite)
                         } else if ndim == 2 && npoints == 4 {
-                            Self::special_case_square(_points, furthest_site)
+                            Self::special_case_square(_points, furthestsite)
                         } else {
                             // Add a small perturbation to _points and retry
                             let mut perturbed_points = points.to_owned();
@@ -158,7 +158,7 @@ impl Voronoi {
                             }
 
                             match Delaunay::new(&perturbed_points) {
-                                Ok(delaunay) => Self::from_delaunay(delaunay, furthest_site),
+                                Ok(delaunay) => Self::from_delaunay(delaunay, furthestsite),
                                 Err(e) => Err(SpatialError::ComputationError(format!(
                                     "Voronoi computation failed: {e}"
                                 ))),
@@ -170,9 +170,9 @@ impl Voronoi {
             Err(_) => {
                 // Handle special cases directly
                 if ndim == 2 && npoints == 3 {
-                    Self::special_case_triangle(_points, furthest_site)
+                    Self::special_case_triangle(_points, furthestsite)
                 } else if ndim == 2 && npoints == 4 {
-                    Self::special_case_square(_points, furthest_site)
+                    Self::special_case_square(_points, furthestsite)
                 } else {
                     Err(SpatialError::ComputationError(
                         "Could not compute Voronoi diagram - too few _points or degenerate configuration".to_string()
@@ -185,7 +185,7 @@ impl Voronoi {
     /// Special case handler for a triangle (3 points in 2D)
     fn special_case_triangle(
         points: &ArrayView2<'_, f64>,
-        furthest_site: bool,
+        furthestsite: bool,
     ) -> SpatialResult<Self> {
         let _npoints = 3;
         let _ndim = 2;
@@ -226,7 +226,7 @@ impl Voronoi {
                 ridge_vertices,
                 regions,
                 point_region,
-                furthest_site,
+                furthestsite,
             })
         } else {
             let ux = ((x1 * x1 + y1 * y1) * (y2 - y3)
@@ -255,7 +255,7 @@ impl Voronoi {
                 ridge_vertices,
                 regions,
                 point_region,
-                furthest_site,
+                furthestsite,
             })
         }
     }
@@ -263,7 +263,7 @@ impl Voronoi {
     /// Special case handler for a square/rectangle (4 points in 2D)
     fn special_case_square(
         points: &ArrayView2<'_, f64>,
-        furthest_site: bool,
+        furthestsite: bool,
     ) -> SpatialResult<Self> {
         // For a square, there's a single Voronoi vertex at the center
         let mut center_x = 0.0;
@@ -302,7 +302,7 @@ impl Voronoi {
             ridge_vertices,
             regions,
             point_region,
-            furthest_site,
+            furthestsite,
         })
     }
 
@@ -311,7 +311,7 @@ impl Voronoi {
     /// # Arguments
     ///
     /// * `delaunay` - A Delaunay triangulation
-    /// * `furthest_site` - Whether to compute a furthest-site Voronoi diagram
+    /// * `furthestsite` - Whether to compute a furthest-site Voronoi diagram
     ///
     /// # Returns
     ///
@@ -447,7 +447,7 @@ impl Voronoi {
             ridge_vertices,
             regions,
             point_region,
-            furthest_site,
+            furthestsite,
         })
     }
 
@@ -612,7 +612,7 @@ impl Voronoi {
     ///
     /// * true if this is a furthest-site Voronoi diagram, false otherwise
     pub fn is_furthest_site(&self) -> bool {
-        self.furthest_site
+        self.furthestsite
     }
 }
 
@@ -621,7 +621,7 @@ impl Voronoi {
 /// # Arguments
 ///
 /// * `points` - Input points, shape (n_points, n_dim)
-/// * `furthest_site` - Whether to compute a furthest-site Voronoi diagram (default: false)
+/// * `furthestsite` - Whether to compute a furthest-site Voronoi diagram (default: false)
 ///
 /// # Returns
 ///
@@ -644,7 +644,7 @@ impl Voronoi {
 /// ```
 #[allow(dead_code)]
 pub fn voronoi(_points: &ArrayView2<'_, f64>, furthestsite: bool) -> SpatialResult<Voronoi> {
-    Voronoi::new(_points, furthest_site)
+    Voronoi::new(_points, furthestsite)
 }
 
 #[cfg(test)]
@@ -691,7 +691,7 @@ mod tests {
 
         let vor = Voronoi::new(&points.view(), true).unwrap();
 
-        // Check if furthest_site flag is set
+        // Check if furthestsite flag is set
         assert!(vor.is_furthest_site());
     }
 

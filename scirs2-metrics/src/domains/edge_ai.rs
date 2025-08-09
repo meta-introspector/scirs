@@ -308,22 +308,22 @@ impl EdgeAISuite {
     /// Evaluate federated learning system performance
     pub fn evaluate_federated_learning(
         &self,
-        accuracy_per_round: &[f64],
+        accuracy_perround: &[f64],
         communication_costs: &[f64],
         client_participation: &[f64],
-        data_distributions: &[Vec<f64>],
+        datadistributions: &[Vec<f64>],
     ) -> Result<FederatedLearningMetrics> {
-        if accuracy_per_round.is_empty() || communication_costs.is_empty() {
+        if accuracy_perround.is_empty() || communication_costs.is_empty() {
             return Err(MetricsError::InvalidInput(
                 "Federated learning metrics require non-empty data".to_string(),
             ));
         }
 
         // Find convergence point
-        let convergence_rounds = self.find_convergence_round(accuracy_per_round)?;
+        let convergence_rounds = self.find_convergence_round(accuracy_perround)?;
 
         // Calculate communication efficiency
-        let final_accuracy = accuracy_per_round.last().copied().unwrap_or(0.0);
+        let final_accuracy = accuracy_perround.last().copied().unwrap_or(0.0);
         let total_communication = communication_costs.iter().sum::<f64>();
         let communication_efficiency = if total_communication > 0.0 {
             final_accuracy / total_communication
@@ -343,10 +343,10 @@ impl EdgeAISuite {
         };
 
         // Calculate data heterogeneity
-        let data_heterogeneity = self.calculate_data_heterogeneity(data_distributions)?;
+        let data_heterogeneity = self.calculate_data_heterogeneity(datadistributions)?;
 
         // Byzantine robustness (simplified metric)
-        let byzantine_robustness = self.estimate_byzantine_robustness(accuracy_per_round)?;
+        let byzantine_robustness = self.estimate_byzantine_robustness(accuracy_perround)?;
 
         Ok(FederatedLearningMetrics {
             communication_efficiency,
@@ -575,28 +575,28 @@ impl EdgeAISuite {
     // Helper methods
 
     fn percentile(&self, sorteddata: &[f64], percentile: f64) -> f64 {
-        if sorted_data.is_empty() {
+        if sorteddata.is_empty() {
             return 0.0;
         }
-        let index = (percentile / 100.0 * (sorted_data.len() - 1) as f64) as usize;
-        sorted_data[index.min(sorted_data.len() - 1)]
+        let index = (percentile / 100.0 * (sorteddata.len() - 1) as f64) as usize;
+        sorteddata[index.min(sorteddata.len() - 1)]
     }
 
     fn find_convergence_round(&self, accuracy_perround: &[f64]) -> Result<usize> {
         let threshold = 0.01; // 1% improvement threshold
 
-        for i in 1..accuracy_per_round.len() {
-            let improvement = accuracy_per_round[i] - accuracy_per_round[i - 1];
+        for i in 1..accuracy_perround.len() {
+            let improvement = accuracy_perround[i] - accuracy_perround[i - 1];
             if improvement < threshold {
                 return Ok(i);
             }
         }
 
-        Ok(accuracy_per_round.len())
+        Ok(accuracy_perround.len())
     }
 
     fn calculate_data_heterogeneity(&self, datadistributions: &[Vec<f64>]) -> Result<f64> {
-        if data_distributions.is_empty() {
+        if datadistributions.is_empty() {
             return Ok(0.0);
         }
 
@@ -604,9 +604,9 @@ impl EdgeAISuite {
         let mut total_divergence = 0.0;
         let mut comparisons = 0;
 
-        for i in 0..data_distributions.len() {
-            for j in i + 1..data_distributions.len() {
-                let kl_div = self.kl_divergence(&data_distributions[i], &data_distributions[j])?;
+        for i in 0..datadistributions.len() {
+            for j in i + 1..datadistributions.len() {
+                let kl_div = self.kl_divergence(&datadistributions[i], &datadistributions[j])?;
                 total_divergence += kl_div;
                 comparisons += 1;
             }
@@ -637,17 +637,17 @@ impl EdgeAISuite {
 
     fn estimate_byzantine_robustness(&self, accuracy_perround: &[f64]) -> Result<f64> {
         // Simple robustness estimate based on accuracy stability
-        if accuracy_per_round.len() < 2 {
+        if accuracy_perround.len() < 2 {
             return Ok(1.0);
         }
 
         let mut variance = 0.0;
-        let mean = accuracy_per_round.iter().sum::<f64>() / accuracy_per_round.len() as f64;
+        let mean = accuracy_perround.iter().sum::<f64>() / accuracy_perround.len() as f64;
 
-        for acc in accuracy_per_round {
+        for acc in accuracy_perround {
             variance += (acc - mean).powi(2);
         }
-        variance /= accuracy_per_round.len() as f64;
+        variance /= accuracy_perround.len() as f64;
 
         // Lower variance indicates higher robustness
         Ok(1.0 / (1.0 + variance))

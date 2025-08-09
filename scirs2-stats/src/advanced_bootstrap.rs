@@ -1027,14 +1027,14 @@ where
     fn compute_bias_correction(&self, bootstrap_samples: &Array1<F>, originalstatistic: F) -> F {
         let _count_below = bootstrap_samples
             .iter()
-            .filter(|&&x| x < original_statistic)
+            .filter(|&&x| x < originalstatistic)
             .count();
 
         let _proportion = _count_below as f64 / bootstrap_samples.len() as f64;
 
         // Simplified bias correction
         let bootstrap_mean = self.compute_mean(bootstrap_samples);
-        bootstrap_mean - original_statistic
+        bootstrap_mean - originalstatistic
     }
 
     /// Compute diagnostics

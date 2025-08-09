@@ -448,14 +448,14 @@ impl<
     > HardwareAwareOptimizer<A, D>
 {
     /// Create a new hardware-aware optimizer
-    pub fn new(_platform: HardwarePlatform, initialparameters: Array<A, D>) -> Self {
-        let config = Self::default_config_for_platform(&_platform);
+    pub fn new(platform: HardwarePlatform, initialparameters: Array<A, D>) -> Self {
+        let config = Self::default_config_for_platform(&platform);
         let profiler = PerformanceProfiler::new();
         let resource_monitor = ResourceMonitor::new();
         let adaptive_tuner = AdaptiveTuner::new();
 
         let current_state = OptimizationState {
-            parameters: initial_parameters,
+            parameters: initialparameters,
             gradient_accumulator: None,
             optimizer_state: HashMap::new(),
             step_count: 0,
@@ -793,7 +793,7 @@ impl<
     /// Profile current performance
     pub fn profile_performance(&mut self, computation_time: A, memoryused: usize, energy: A) {
         self.profiler.computation_times.push(computation_time);
-        self.profiler.memory_usage.push(memory_used);
+        self.profiler.memory_usage.push(memoryused);
         self.profiler.energy_consumption.push(energy);
 
         // Calculate throughput (simplified)
@@ -814,19 +814,19 @@ impl<
     pub fn update_resource_monitor(&mut self, memory: usize, cpuutil: A, power: A, temp: A) {
         self.resource_monitor.current_memory = memory;
         self.resource_monitor.peak_memory = self.resource_monitor.peak_memory.max(memory);
-        self.resource_monitor.cpu_utilization = cpu_util;
+        self.resource_monitor.cpu_utilization = cpuutil;
         self.resource_monitor.power_consumption = power;
         self.resource_monitor.temperature = temp;
     }
 
     /// Adaptive tuning based on performance feedback
     pub fn adaptive_tune(&mut self, targetperformance: A) -> Result<()> {
-        self.adaptive_tuner.performance_target = target_performance;
+        self.adaptive_tuner.performance_target = targetperformance;
 
         // Simple adaptive tuning logic
         let current_performance = self.get_average_performance();
 
-        if current_performance < target_performance {
+        if current_performance < targetperformance {
             // Need to improve _performance
             self.tune_for_performance()?;
         } else {
@@ -926,7 +926,7 @@ impl<
 
     /// Create default configuration for platform
     fn default_config_for_platform(platform: &HardwarePlatform) -> HardwareOptimizationConfig<A> {
-        match _platform {
+        match platform {
             HardwarePlatform::CPU { .. } => HardwareOptimizationConfig {
                 batch_size: 64,
                 memory_strategy: MemoryStrategy::Standard,

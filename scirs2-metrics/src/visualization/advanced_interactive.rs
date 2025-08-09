@@ -754,7 +754,7 @@ pub struct EventResponse {
 pub enum ResponseAction {
     /// Update widget data
     UpdateData {
-        widget_id: String,
+        widgetid: String,
         data: Value,
         json: Value,
     },
@@ -1334,7 +1334,7 @@ pub trait RenderingEngine {
     fn render_dashboard(&self, dashboardstate: &DashboardState) -> Result<RenderOutput>;
 
     /// Update widget rendering
-    fn update_widget(&self, widget_id: &str, widgetdata: &WidgetData) -> Result<()>;
+    fn update_widget(&self, widgetid: &str, widgetdata: &WidgetData) -> Result<()>;
 
     /// Handle resize events
     fn handle_resize(&self, newsize: Size) -> Result<()>;
@@ -1432,7 +1432,7 @@ pub struct UpdateSubscription {
     /// Subscription ID
     pub id: String,
     /// Widget ID
-    pub widget_id: String,
+    pub widgetid: String,
     /// Data source ID
     pub data_source_id: String,
     /// Update frequency
@@ -1447,7 +1447,7 @@ impl std::fmt::Debug for UpdateSubscription {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("UpdateSubscription")
             .field("id", &self.id)
-            .field("widget_id", &self.widget_id)
+            .field("widgetid", &self.widgetid)
             .field("data_source_id", &self.data_source_id)
             .field("frequency", &self.frequency)
             .field("last_update", &self.last_update)
@@ -1462,7 +1462,7 @@ pub struct UpdateEvent {
     /// Event ID
     pub id: String,
     /// Widget ID
-    pub widget_id: String,
+    pub widgetid: String,
     /// Data source ID
     pub data_source_id: String,
     /// Updated data
@@ -1566,7 +1566,7 @@ pub struct Annotation {
     /// Annotation position
     pub position: Position,
     /// Associated widget ID
-    pub widget_id: Option<String>,
+    pub widgetid: Option<String>,
     /// Creation timestamp
     pub created_at: SystemTime,
     /// Modification timestamp
@@ -1860,7 +1860,7 @@ impl InteractiveDashboard {
     /// Create new interactive dashboard
     pub fn new(config: DashboardConfig) -> Result<Self> {
         Ok(Self {
-            _config: _configclone(),
+            config: _configclone(),
             widgets: Arc::new(RwLock::new(HashMap::new())),
             data_sources: Arc::new(RwLock::new(HashMap::new())),
             event_system: Arc::new(Mutex::new(EventSystem::new())),
@@ -1872,17 +1872,17 @@ impl InteractiveDashboard {
             collaboration: Arc::new(Mutex::new(CollaborationManager::new(
                 _configcollaboration_configclone(),
             ))),
-            state: Arc::new(RwLock::new(DashboardState::new(_config))),
+            state: Arc::new(RwLock::new(DashboardState::new(config))),
         })
     }
 
     /// Add widget to dashboard
     pub fn add_widget(&self, widget: Box<dyn InteractiveWidget + Send + Sync>) -> Result<()> {
-        let widget_id = widget.get_id().to_string();
+        let widgetid = widget.get_id().to_string();
         let mut widgets = self.widgets.write().map_err(|_| {
             MetricsError::ComputationError("Failed to acquire widget lock".to_string())
         })?;
-        widgets.insert(widget_id, widget);
+        widgets.insert(widgetid, widget);
         Ok(())
     }
 
@@ -1891,17 +1891,17 @@ impl InteractiveDashboard {
         let mut widgets = self.widgets.write().map_err(|_| {
             MetricsError::ComputationError("Failed to acquire widget lock".to_string())
         })?;
-        widgets.remove(widget_id);
+        widgets.remove(widgetid);
         Ok(())
     }
 
     /// Add data source
     pub fn add_data_source(&self, datasource: Box<dyn DataSource + Send + Sync>) -> Result<()> {
-        let source_id = data_source.get_id().to_string();
+        let source_id = datasource.get_id().to_string();
         let mut sources = self.data_sources.write().map_err(|_| {
             MetricsError::ComputationError("Failed to acquire data _source lock".to_string())
         })?;
-        sources.insert(source_id, data_source);
+        sources.insert(source_id, datasource);
         Ok(())
     }
 
@@ -2154,10 +2154,10 @@ impl EventSystem {
     /// Register event handler for specific widget
     pub fn register_handler(
         &mut self,
-        widget_id: String,
+        widgetid: String,
         handler: Box<dyn EventHandler + Send + Sync>,
     ) {
-        self.handlers.insert(widget_id, vec![handler]);
+        self.handlers.insert(widgetid, vec![handler]);
     }
 
     /// Get event history
@@ -2192,10 +2192,10 @@ impl LayoutManager {
 
         // Add widget to layout map
         self.widget_layouts
-            .insert(widget_id.clone(), layout.clone());
+            .insert(widgetid.clone(), layout.clone());
 
         // Apply layout constraints
-        self.apply_constraints(&widget_id, &layout)?;
+        self.apply_constraints(&widgetid, &layout)?;
 
         Ok(())
     }
@@ -2204,9 +2204,9 @@ impl LayoutManager {
     pub fn update_widget_layout(&mut self, widgetid: &str, layout: WidgetLayout) -> Result<()> {
         self.validate_layout(&layout)?;
 
-        if let Some(current_layout) = self.widget_layouts.get_mut(widget_id) {
+        if let Some(current_layout) = self.widget_layouts.get_mut(widgetid) {
             *current_layout = layout.clone();
-            self.apply_constraints(widget_id, &layout)?;
+            self.apply_constraints(widgetid, &layout)?;
         }
 
         Ok(())
@@ -2214,8 +2214,8 @@ impl LayoutManager {
 
     /// Remove widget from layout
     pub fn remove_widget(&mut self, widgetid: &str) -> Result<()> {
-        self.widget_layouts.remove(widget_id);
-        self.remove_widget_constraints(widget_id);
+        self.widget_layouts.remove(widgetid);
+        self.remove_widget_constraints(widgetid);
         Ok(())
     }
 
@@ -2241,20 +2241,20 @@ impl LayoutManager {
 
         if let Some(grid_config) = &self.layout_configgrid_config {
             let cell_width = (viewport.width
-                - (grid_configcolumns + 1) as f64 * grid_configgap as f64)
+                - (grid_configcolumns + 1) as f64 * grid_config as f64)
                 / grid_configcolumns as f64;
             let cell_height = (viewport.height
-                - (grid_configrows + 1) as f64 * grid_configgap as f64)
-                / grid_configrows as f64;
+                - (grid_config + 1) as f64 * grid_config as f64)
+                / grid_config as f64;
 
             let mut current_row = 0;
             let mut current_col = 0;
 
-            for (widget_id, widget_layout) in &self.widget_layouts {
-                let x = current_col as f64 * (cell_width + grid_configgap as f64)
-                    + grid_configgap as f64;
-                let y = current_row as f64 * (cell_height + grid_configgap as f64)
-                    + grid_configgap as f64;
+            for (widgetid, widget_layout) in &self.widget_layouts {
+                let x = current_col as f64 * (cell_width + grid_config as f64)
+                    + grid_config as f64;
+                let y = current_row as f64 * (cell_height + grid_config as f64)
+                    + grid_config as f64;
 
                 let (span_cols, span_rows) = if let Some(grid_pos) = &widget_layout.grid_position {
                     (
@@ -2268,7 +2268,7 @@ impl LayoutManager {
                 let height = cell_height * span_rows as f64;
 
                 positions.insert(
-                    widget_id.clone(),
+                    widgetid.clone(),
                     WidgetPosition {
                         x: x as f32,
                         y: y as f32,
@@ -2298,7 +2298,7 @@ impl LayoutManager {
         let mut current_y = 0u32;
         let mut row_height = 0u32;
 
-        for (widget_id, widget_layout) in &self.widget_layouts {
+        for (widgetid, widget_layout) in &self.widget_layouts {
             let width = if widget_layout.size.width > 0.0 {
                 widget_layout.size.width
             } else {
@@ -2318,7 +2318,7 @@ impl LayoutManager {
             }
 
             positions.insert(
-                widget_id.clone(),
+                widgetid.clone(),
                 WidgetPosition {
                     x: current_x as f32,
                     y: current_y as f32,
@@ -2342,7 +2342,7 @@ impl LayoutManager {
     ) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
 
-        for (widget_id, widget_layout) in &self.widget_layouts {
+        for (widgetid, widget_layout) in &self.widget_layouts {
             let widget_position = WidgetPosition {
                 x: widget_layout.position.x as f32,
                 y: widget_layout.position.y as f32,
@@ -2350,7 +2350,7 @@ impl LayoutManager {
                 height: widget_layout.size.height as f32,
                 z_index: widget_layout.z_index,
             };
-            positions.insert(widget_id.clone(), widget_position);
+            positions.insert(widgetid.clone(), widget_position);
         }
 
         Ok(positions)
@@ -2362,11 +2362,11 @@ impl LayoutManager {
 
         if let Some(grid_config) = &self.layout_configgrid_config {
             let column_width = (viewport.width
-                - (grid_configcolumns + 1) as f64 * grid_configgap as f64)
+                - (grid_configcolumns + 1) as f64 * grid_config as f64)
                 / grid_configcolumns as f64;
             let mut column_heights = vec![0u32; grid_configcolumns as usize];
 
-            for (widget_id, widget_layout) in &self.widget_layouts {
+            for (widgetid, widget_layout) in &self.widget_layouts {
                 // Find shortest column
                 let shortest_column = column_heights
                     .iter()
@@ -2375,8 +2375,8 @@ impl LayoutManager {
                     .map(|(idx, _)| idx)
                     .unwrap_or(0);
 
-                let x = shortest_column as f64 * (column_width + grid_configgap as f64)
-                    + grid_configgap as f64;
+                let x = shortest_column as f64 * (column_width + grid_config as f64)
+                    + grid_config as f64;
                 let y = column_heights[shortest_column];
 
                 let width = column_width;
@@ -2387,7 +2387,7 @@ impl LayoutManager {
                 } as u32;
 
                 positions.insert(
-                    widget_id.clone(),
+                    widgetid.clone(),
                     WidgetPosition {
                         x: x as f32,
                         y: y as f32,
@@ -2397,7 +2397,7 @@ impl LayoutManager {
                     },
                 );
 
-                column_heights[shortest_column] += height + grid_configgap;
+                column_heights[shortest_column] += height + grid_config;
             }
         }
 
@@ -2433,9 +2433,9 @@ impl LayoutManager {
         // Add basic constraint based on position and size
         if layout.position.x >= 0.0 && layout.position.y >= 0.0 {
             self.constraints.push(LayoutConstraint {
-                _id: format!("layout_{}", widget_id),
+                _id: format!("layout_{}", widgetid),
                 constraint_type: ConstraintType::Check,
-                target_widgets: vec![widget_id.to_string()],
+                target_widgets: vec![widgetid.to_string()],
                 parameters: HashMap::from([
                     ("x".to_string(), layout.position.x),
                     ("y".to_string(), layout.position.y),
@@ -2451,7 +2451,7 @@ impl LayoutManager {
     /// Remove widget constraints
     fn remove_widget_constraints(&mut self, widgetid: &str) {
         self.constraints
-            .retain(|constraint| !constraint.target_widgets.contains(&widget_id.to_string()));
+            .retain(|constraint| !constraint.target_widgets.contains(&widgetid.to_string()));
     }
 
     /// Add default responsive rules
@@ -2561,7 +2561,7 @@ impl RenderingEngine for DefaultRenderingEngine {
         );
         html.push_str(&format!(
             "<title>{}</title>\n",
-            dashboard_state.config.title
+            dashboardstate.config.title
         ));
         html.push_str("<style id=\"dashboard-styles\"></style>\n");
         html.push_str("</head>\n<body>\n");
@@ -2569,11 +2569,11 @@ impl RenderingEngine for DefaultRenderingEngine {
         // Dashboard container with responsive grid layout
         html.push_str(&format!(
             "<div id=\"dashboard-container\" data-width=\"{}\" data-height=\"{}\">\n",
-            dashboard_state.config.width, dashboard_state.config.height
+            dashboardstate.config.width, dashboardstate.config.height
         ));
 
         html.push_str("<header class=\"dashboard-header\">\n");
-        html.push_str(&format!("  <h1>{}</h1>\n", dashboard_state.config.title));
+        html.push_str(&format!("  <h1>{}</h1>\n", dashboardstate.config.title));
         html.push_str("  <div class=\"dashboard-controls\">\n");
         html.push_str("    <button id=\"refresh-btn\" class=\"control-btn\">Refresh</button>\n");
         html.push_str("    <button id=\"export-btn\" class=\"control-btn\">Export</button>\n");
@@ -2583,10 +2583,10 @@ impl RenderingEngine for DefaultRenderingEngine {
         html.push_str("<main class=\"dashboard-grid\">\n");
 
         // Render each widget
-        for (widget_id, widget_state) in &dashboard_state.widgets {
+        for (widgetid, widget_state) in &dashboardstate.widgets {
             html.push_str(&format!(
                 "  <div id=\"widget-{}\" class=\"dashboard-widget widget-generic\" data-type=\"generic\">\n",
-                widget_id
+                widgetid
             ));
             html.push_str("    <div class=\"widget-header\">\n");
             html.push_str(&format!(
@@ -2711,7 +2711,7 @@ impl UpdateManager {
 impl CollaborationManager {
     fn new(config: Option<CollaborationConfig>) -> Self {
         Self {
-            _config: _configunwrap_or_else(|| CollaborationConfig {
+            config: _configunwrap_or_else(|| CollaborationConfig {
                 enabled: false,
                 server_endpoint: String::new(),
                 auth_config: AuthConfig {

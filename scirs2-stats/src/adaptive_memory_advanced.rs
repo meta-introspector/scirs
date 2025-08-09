@@ -1099,7 +1099,7 @@ pub struct PredictiveEngine {
 /// Predictive model trait
 pub trait PredictiveModel: Send + Sync {
     fn predict(&self, features: &[f64]) -> f64;
-    fn train(&mut self, trainingdata: &[TrainingExample]) -> Result<(), String>;
+    fn train(&mut self, training_data: &[TrainingExample]) -> Result<(), String>;
     fn get_confidence(&self) -> f64;
     fn get_feature_importance(&self) -> Vec<f64>;
 }
@@ -1365,7 +1365,7 @@ pub struct CompressionEngine {
 pub trait Compressor: Send + Sync {
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>, String>;
     fn decompress(&self, data: &[u8]) -> Result<Vec<u8>, String>;
-    fn compression_ratio(&self, original_size: usize, compressedsize: usize) -> f64;
+    fn compression_ratio(&self, original_size: usize, compressed_size: usize) -> f64;
 }
 
 /// Compression statistics
@@ -1761,16 +1761,16 @@ where
     /// Create with custom configuration
     pub fn with_config(config: AdaptiveMemoryConfig) -> Self {
         let memory_pools = Arc::new(RwLock::new(HashMap::new()));
-        let cache_manager = Arc::new(CacheManager::new(&_config.cache_optimization));
-        let numa_manager = Arc::new(NumaManager::new(&_config.numa_config));
-        let predictive_engine = Arc::new(PredictiveEngine::new(&_config.predictive_config));
-        let pressure_monitor = Arc::new(PressureMonitor::new(&_config.pressure_config));
-        let out_of_core_manager = Arc::new(OutOfCoreManager::new(&_config.out_of_core_config));
-        let gc_manager = Arc::new(GCManager::new(&_config.gc_config));
+        let cache_manager = Arc::new(CacheManager::new(&config.cache_optimization));
+        let numa_manager = Arc::new(NumaManager::new(&config.numa_config));
+        let predictive_engine = Arc::new(PredictiveEngine::new(&config.predictive_config));
+        let pressure_monitor = Arc::new(PressureMonitor::new(&config.pressure_config));
+        let out_of_core_manager = Arc::new(OutOfCoreManager::new(&config.out_of_core_config));
+        let gc_manager = Arc::new(GCManager::new(&config.gc_config));
         let performance_monitor = Arc::new(MemoryPerformanceMonitor::new());
 
         Self {
-            config: config,
+            config,
             memory_pools,
             cache_manager,
             numa_manager,
@@ -1921,19 +1921,19 @@ where
     fn get_or_create_pool(&self, poolsize: usize) -> StatsResult<Arc<MemoryPool>> {
         {
             let pools = self.memory_pools.read().unwrap();
-            if let Some(pool) = pools.get(&pool_size) {
+            if let Some(pool) = pools.get(&poolsize) {
                 return Ok(Arc::clone(pool));
             }
         }
 
         // Create new pool
         let mut pools = self.memory_pools.write().unwrap();
-        if let Some(pool) = pools.get(&pool_size) {
+        if let Some(pool) = pools.get(&poolsize) {
             return Ok(Arc::clone(pool));
         }
 
-        let pool = Arc::new(MemoryPool::new(pool_size, self.config.allocation_strategy));
-        pools.insert(pool_size, Arc::clone(&pool));
+        let pool = Arc::new(MemoryPool::new(poolsize, self.config.allocation_strategy));
+        pools.insert(poolsize, Arc::clone(&pool));
         Ok(pool)
     }
 
@@ -2143,7 +2143,7 @@ pub struct GCResult {
 impl MemoryPool {
     fn new(_chunksize: usize, strategy: AllocationStrategy) -> Self {
         Self {
-            chunk_size: chunk_size,
+            chunk_size: _chunksize,
             available_chunks: Mutex::new(VecDeque::new()),
             allocated_chunks: AtomicUsize::new(0),
             total_chunks: AtomicUsize::new(0),
@@ -2206,7 +2206,7 @@ impl CacheManager {
         Self {
             cache_hierarchy: config.cache_hierarchy.clone(),
             layout_optimizer: LayoutOptimizer::new(),
-            prefetch_engine: PrefetchEngine::new(&_config.prefetch_config),
+            prefetch_engine: PrefetchEngine::new(&config.prefetch_config),
             access_tracker: AccessTracker::new(),
         }
     }
@@ -2288,7 +2288,7 @@ impl NumaManager {
         Self {
             topology: NumaTopology::detect(),
             binding_strategy: config.binding_strategy.clone(),
-            migration_engine: MigrationEngine::new(_config.migration_policy),
+            migration_engine: MigrationEngine::new(config.migration_policy),
             affinity_manager: AffinityManager::new(),
         }
     }
@@ -2384,7 +2384,7 @@ impl PredictiveEngine {
     fn new(config: &PredictiveConfig) -> Self {
         Self {
             models: RwLock::new(HashMap::new()),
-            feature_extractor: FeatureExtractor::new(&_config.feature_config),
+            feature_extractor: FeatureExtractor::new(&config.feature_config),
             training_data: RwLock::new(VecDeque::new()),
             model_performance: RwLock::new(HashMap::new()),
         }
@@ -2417,7 +2417,7 @@ impl PressureMonitor {
             thresholds: config.pressure_thresholds.clone(),
             current_pressure: AtomicU64::new(0),
             pressure_history: RwLock::new(VecDeque::new()),
-            response_engine: ResponseEngine::new(&_config.response_strategies),
+            response_engine: ResponseEngine::new(&config.response_strategies),
         }
     }
 
@@ -2441,9 +2441,9 @@ impl OutOfCoreManager {
     fn new(config: &OutOfCoreConfig) -> Self {
         Self {
             config: config.clone(),
-            chunk_scheduler: ChunkScheduler::new(_config.scheduling_strategy),
-            storage_manager: StorageManager::new(&_config.storage_config),
-            compression_engine: CompressionEngine::new(&_config.compression_config),
+            chunk_scheduler: ChunkScheduler::new(config.scheduling_strategy),
+            storage_manager: StorageManager::new(&config.storage_config),
+            compression_engine: CompressionEngine::new(&config.compression_config),
         }
     }
 
@@ -2494,7 +2494,7 @@ impl StorageManager {
     fn new(config: &StorageConfig) -> Self {
         Self {
             storage_config: config.clone(),
-            file_manager: FileManager::new(_config),
+            file_manager: FileManager::new(config),
             network_manager: None,
         }
     }
@@ -2506,7 +2506,7 @@ impl FileManager {
             storage_path: config.storage_path.clone(),
             naming_strategy: config.naming_strategy,
             file_handles: RwLock::new(HashMap::new()),
-            fs_optimizer: FileSystemOptimizer::new(&_config.fs_optimization),
+            fs_optimizer: FileSystemOptimizer::new(&config.fs_optimization),
         }
     }
 }
@@ -2515,7 +2515,7 @@ impl FileSystemOptimizer {
     fn new(config: &FileSystemConfig) -> Self {
         Self {
             fs_config: config.clone(),
-            io_scheduler: IOSchedulerManager::new(_config.io_scheduler),
+            io_scheduler: IOSchedulerManager::new(config.io_scheduler),
             async_io_pool: None,
         }
     }
@@ -2524,7 +2524,7 @@ impl FileSystemOptimizer {
 impl IOSchedulerManager {
     fn new(_schedulertype: IOScheduler) -> Self {
         Self {
-            scheduler_type: scheduler_type,
+            scheduler_type: _schedulertype,
             queue_depth: 32,
             batch_size: 16,
         }
@@ -2553,9 +2553,9 @@ impl GCManager {
     fn new(config: &GarbageCollectionConfig) -> Self {
         Self {
             config: config.clone(),
-            gc_scheduler: GCScheduler::new(_config),
+            gc_scheduler: GCScheduler::new(config),
             reference_tracker: ReferenceTracker::new(),
-            workload_analyzer: WorkloadAnalyzer::new(&_config.workload_awareness),
+            workload_analyzer: WorkloadAnalyzer::new(&config.workload_awareness),
         }
     }
 
@@ -2756,7 +2756,7 @@ where
         + 'static
         + std::fmt::Display,
 {
-    AdaptiveMemoryManager::with_config(_config)
+    AdaptiveMemoryManager::with_config(config)
 }
 
 #[cfg(test)]
@@ -2803,7 +2803,7 @@ mod tests {
     fn test_config_update() {
         let mut manager = AdaptiveMemoryManager::<f64>::new();
         let mut new_config = AdaptiveMemoryConfig::default();
-        new_config.allocation_strategy = AllocationStrategy::NumaAware;
+        newconfig.allocation_strategy = AllocationStrategy::NumaAware;
 
         manager.update_config(new_config);
         assert!(matches!(

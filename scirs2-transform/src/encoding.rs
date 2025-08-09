@@ -99,7 +99,7 @@ pub struct OneHotEncoder {
     /// Whether to drop one category per feature to avoid collinearity
     drop: Option<String>,
     /// Whether to handle unknown categories
-    handle_unknown: String,
+    handleunknown: String,
     /// Whether to return sparse matrix output
     sparse: bool,
 }
@@ -109,7 +109,7 @@ impl OneHotEncoder {
     ///
     /// # Arguments
     /// * `drop` - Strategy for dropping categories ('first', 'if_binary', or None)
-    /// * `handle_unknown` - How to handle unknown categories ('error' or 'ignore')
+    /// * `handleunknown` - How to handle unknown categories ('error' or 'ignore')
     /// * `sparse` - Whether to return sparse arrays
     ///
     /// # Returns
@@ -123,16 +123,16 @@ impl OneHotEncoder {
             }
         }
 
-        if handle_unknown != "error" && handle_unknown != "ignore" {
+        if handleunknown != "error" && handleunknown != "ignore" {
             return Err(TransformError::InvalidInput(
-                "handle_unknown must be 'error' or 'ignore'".to_string(),
+                "handleunknown must be 'error' or 'ignore'".to_string(),
             ));
         }
 
         Ok(OneHotEncoder {
             categories_: None,
-            drop: drop,
-            handle_unknown: handle_unknown.to_string(),
+            drop: _drop,
+            handleunknown: handleunknown.to_string(),
             sparse,
         })
     }
@@ -289,12 +289,12 @@ impl OneHotEncoder {
                             _ => false,
                         };
 
-                        if !is_dropped_category && self.handle_unknown == "error" {
+                        if !is_dropped_category && self.handleunknown == "error" {
                             return Err(TransformError::InvalidInput(format!(
                                 "Found unknown category {value} in feature {j}"
                             )));
                         }
-                        // If it's a dropped category or handle_unknown == "ignore", we don't add anything (sparse)
+                        // If it's a dropped category or handleunknown == "ignore", we don't add anything (sparse)
                     }
                 }
             }
@@ -325,12 +325,12 @@ impl OneHotEncoder {
                             _ => false,
                         };
 
-                        if !is_dropped_category && self.handle_unknown == "error" {
+                        if !is_dropped_category && self.handleunknown == "error" {
                             return Err(TransformError::InvalidInput(format!(
                                 "Found unknown category {value} in feature {j}"
                             )));
                         }
-                        // If it's a dropped category or handle_unknown == "ignore", we just leave it as 0
+                        // If it's a dropped category or handleunknown == "ignore", we just leave it as 0
                     }
                 }
             }
@@ -396,7 +396,7 @@ impl OneHotEncoder {
     /// Gets the feature names for the transformed output
     ///
     /// # Arguments
-    /// * `input_features` - Names of input features
+    /// * `inputfeatures` - Names of input features
     ///
     /// # Returns
     /// * `Result<Vec<String>>` - Names of output features
@@ -411,7 +411,7 @@ impl OneHotEncoder {
         let mut feature_names = Vec::new();
 
         for (j, feature_categories) in categories.iter().enumerate() {
-            let feature_name = if let Some(names) = input_features {
+            let feature_name = if let Some(names) = inputfeatures {
                 if j < names.len() {
                     names[j].clone()
                 } else {
@@ -451,38 +451,38 @@ pub struct OrdinalEncoder {
     /// Categories for each feature (learned during fit)
     categories_: Option<Vec<Vec<u64>>>,
     /// How to handle unknown categories
-    handle_unknown: String,
+    handleunknown: String,
     /// Value to use for unknown categories
-    unknown_value: Option<f64>,
+    unknownvalue: Option<f64>,
 }
 
 impl OrdinalEncoder {
     /// Creates a new OrdinalEncoder
     ///
     /// # Arguments
-    /// * `handle_unknown` - How to handle unknown categories ('error' or 'use_encoded_value')
-    /// * `unknown_value` - Value to use for unknown categories (when handle_unknown='use_encoded_value')
+    /// * `handleunknown` - How to handle unknown categories ('error' or 'use_encoded_value')
+    /// * `unknownvalue` - Value to use for unknown categories (when handleunknown='use_encoded_value')
     ///
     /// # Returns
     /// * A new OrdinalEncoder instance
-    pub fn new(handle_unknown: &str, unknownvalue: Option<f64>) -> Result<Self> {
-        if handle_unknown != "error" && handle_unknown != "use_encoded_value" {
+    pub fn new(handleunknown: &str, unknownvalue: Option<f64>) -> Result<Self> {
+        if handleunknown != "error" && handleunknown != "use_encoded_value" {
             return Err(TransformError::InvalidInput(
-                "handle_unknown must be 'error' or 'use_encoded_value'".to_string(),
+                "handleunknown must be 'error' or 'use_encoded_value'".to_string(),
             ));
         }
 
-        if handle_unknown == "use_encoded_value" && unknown_value.is_none() {
+        if handleunknown == "use_encoded_value" && unknownvalue.is_none() {
             return Err(TransformError::InvalidInput(
-                "unknown_value must be specified when handle_unknown='use_encoded_value'"
+                "unknownvalue must be specified when handleunknown='use_encoded_value'"
                     .to_string(),
             ));
         }
 
         Ok(OrdinalEncoder {
             categories_: None,
-            handle_unknown: handle_unknown.to_string(),
-            unknown_value,
+            handleunknown: handleunknown.to_string(),
+            unknownvalue,
         })
     }
 
@@ -585,13 +585,13 @@ impl OrdinalEncoder {
 
                 if let Some(&ordinal_value) = category_mappings[j].get(&value) {
                     transformed[[i, j]] = ordinal_value;
-                } else if self.handle_unknown == "error" {
+                } else if self.handleunknown == "error" {
                     return Err(TransformError::InvalidInput(format!(
                         "Found unknown category {value} in feature {j}"
                     )));
                 } else {
-                    // handle_unknown == "use_encoded_value"
-                    transformed[[i, j]] = self.unknown_value.unwrap();
+                    // handleunknown == "use_encoded_value"
+                    transformed[[i, j]] = self.unknownvalue.unwrap();
                 }
             }
         }
@@ -648,7 +648,7 @@ pub struct TargetEncoder {
     /// Smoothing parameter for regularization (higher = more smoothing toward global mean)
     smoothing: f64,
     /// Global statistic to use for smoothing and unknown categories
-    global_stat: f64,
+    globalstat: f64,
     /// Mappings from categories to encoded values for each feature
     encodings_: Option<Vec<HashMap<u64, f64>>>,
     /// Whether the encoder has been fitted
@@ -663,7 +663,7 @@ impl TargetEncoder {
     /// # Arguments
     /// * `strategy` - Encoding strategy ('mean', 'median', 'count', 'sum')
     /// * `smoothing` - Smoothing parameter (0.0 = no smoothing, higher = more smoothing)
-    /// * `global_stat` - Global statistic fallback for unknown categories
+    /// * `globalstat` - Global statistic fallback for unknown categories
     ///
     /// # Returns
     /// * A new TargetEncoder instance
@@ -681,9 +681,9 @@ impl TargetEncoder {
         }
 
         Ok(TargetEncoder {
-            strategy: strategy.to_string(),
+            strategy: _strategy.to_string(),
             smoothing,
-            global_stat,
+            globalstat,
             encodings_: None,
             is_fitted: false,
             global_mean_: 0.0,
@@ -695,7 +695,7 @@ impl TargetEncoder {
         TargetEncoder {
             strategy: "mean".to_string(),
             smoothing,
-            global_stat: 0.0,
+            globalstat: 0.0,
             encodings_: None,
             is_fitted: false,
             global_mean_: 0.0,
@@ -707,7 +707,7 @@ impl TargetEncoder {
         TargetEncoder {
             strategy: "median".to_string(),
             smoothing,
-            global_stat: 0.0,
+            globalstat: 0.0,
             encodings_: None,
             is_fitted: false,
             global_mean_: 0.0,
@@ -858,8 +858,8 @@ impl TargetEncoder {
                     transformed[[i, j]] = encoded_value;
                 } else {
                     // Use global statistic for unknown categories
-                    transformed[[i, j]] = if self.global_stat != 0.0 {
-                        self.global_stat
+                    transformed[[i, j]] = if self.globalstat != 0.0 {
+                        self.globalstat
                     } else {
                         self.global_mean_
                     };
@@ -1072,7 +1072,7 @@ pub struct BinaryEncoder {
     /// Number of binary features per original feature
     n_binary_features_: Option<Vec<usize>>,
     /// Whether to handle unknown categories
-    handle_unknown: String,
+    handleunknown: String,
     /// Whether the encoder has been fitted
     is_fitted: bool,
 }
@@ -1081,28 +1081,28 @@ impl BinaryEncoder {
     /// Creates a new BinaryEncoder
     ///
     /// # Arguments
-    /// * `handle_unknown` - How to handle unknown categories ('error' or 'ignore')
+    /// * `handleunknown` - How to handle unknown categories ('error' or 'ignore')
     ///   - 'error': Raise an error if unknown categories are encountered
     ///   - 'ignore': Encode unknown categories as all zeros
     ///
     /// # Returns
     /// * `Result<BinaryEncoder>` - The new encoder instance
     pub fn new(handleunknown: &str) -> Result<Self> {
-        if handle_unknown != "error" && handle_unknown != "ignore" {
+        if handleunknown != "error" && handleunknown != "ignore" {
             return Err(TransformError::InvalidInput(
-                "handle_unknown must be 'error' or 'ignore'".to_string(),
+                "handleunknown must be 'error' or 'ignore'".to_string(),
             ));
         }
 
         Ok(BinaryEncoder {
             categories_: None,
             n_binary_features_: None,
-            handle_unknown: handle_unknown.to_string(),
+            handleunknown: handleunknown.to_string(),
             is_fitted: false,
         })
     }
 
-    /// Creates a BinaryEncoder with default settings (handle_unknown='error')
+    /// Creates a BinaryEncoder with default settings (handleunknown='error')
     pub fn with_defaults() -> Self {
         Self::new("error").unwrap()
     }
@@ -1148,7 +1148,7 @@ impl BinaryEncoder {
 
             // Calculate number of binary features needed
             let n_cats = unique_categories.len();
-            let n_bits = if n_cats <= 1 {
+            let nbits = if n_cats <= 1 {
                 1
             } else {
                 (n_cats as f64).log2().ceil() as usize
@@ -1157,12 +1157,12 @@ impl BinaryEncoder {
             // Create binary mappings
             let mut category_map = HashMap::new();
             for (idx, &category) in unique_categories.iter().enumerate() {
-                let binary_code = Self::int_to_binary(idx, n_bits);
+                let binary_code = Self::int_to_binary(idx, nbits);
                 category_map.insert(category, binary_code);
             }
 
             categories.push(category_map);
-            n_binary_features.push(n_bits);
+            n_binary_features.push(nbits);
         }
 
         self.categories_ = Some(categories);
@@ -1216,7 +1216,7 @@ impl BinaryEncoder {
         let mut output_col = 0;
         for j in 0..n_features {
             let category_map = &categories[j];
-            let n_bits = n_binary_features[j];
+            let nbits = n_binary_features[j];
 
             for i in 0..n_samples {
                 let category = x_u64[[i, j]];
@@ -1228,7 +1228,7 @@ impl BinaryEncoder {
                     }
                 } else {
                     // Unknown category
-                    match self.handle_unknown.as_str() {
+                    match self.handleunknown.as_str() {
                         "error" => {
                             return Err(TransformError::InvalidInput(format!(
                                 "Unknown category {category} in feature {j}"
@@ -1242,7 +1242,7 @@ impl BinaryEncoder {
                 }
             }
 
-            output_col += n_bits;
+            output_col += nbits;
         }
 
         Ok(result)
@@ -1286,10 +1286,10 @@ impl BinaryEncoder {
 
     /// Converts an integer to binary representation
     fn int_to_binary(_value: usize, nbits: usize) -> Vec<u8> {
-        let mut binary = Vec::with_capacity(n_bits);
-        let mut val = value;
+        let mut binary = Vec::with_capacity(nbits);
+        let mut val = _value;
 
-        for _ in 0..n_bits {
+        for _ in 0..nbits {
             binary.push((val & 1) as u8);
             val >>= 1;
         }
@@ -1311,9 +1311,9 @@ pub struct FrequencyEncoder {
     /// Whether to normalize frequencies to [0, 1]
     normalize: bool,
     /// How to handle unknown categories
-    handle_unknown: String,
-    /// Value to use for unknown categories (when handle_unknown="use_encoded_value")
-    unknown_value: f64,
+    handleunknown: String,
+    /// Value to use for unknown categories (when handleunknown="use_encoded_value")
+    unknownvalue: f64,
     /// Whether the encoder has been fitted
     is_fitted: bool,
 }
@@ -1323,23 +1323,23 @@ impl FrequencyEncoder {
     ///
     /// # Arguments
     /// * `normalize` - Whether to normalize frequencies to [0, 1] range
-    /// * `handle_unknown` - How to handle unknown categories ('error', 'ignore', or 'use_encoded_value')
-    /// * `unknown_value` - Value to use for unknown categories (when handle_unknown="use_encoded_value")
+    /// * `handleunknown` - How to handle unknown categories ('error', 'ignore', or 'use_encoded_value')
+    /// * `unknownvalue` - Value to use for unknown categories (when handleunknown="use_encoded_value")
     ///
     /// # Returns
     /// * `Result<FrequencyEncoder>` - The new encoder instance
-    pub fn new(normalize: bool, handle_unknown: &str, unknownvalue: f64) -> Result<Self> {
-        if !["error", "ignore", "use_encoded_value"].contains(&handle_unknown) {
+    pub fn new(normalize: bool, handleunknown: &str, unknownvalue: f64) -> Result<Self> {
+        if !["error", "ignore", "use_encoded_value"].contains(&handleunknown) {
             return Err(TransformError::InvalidInput(
-                "handle_unknown must be 'error', 'ignore', or 'use_encoded_value'".to_string(),
+                "handleunknown must be 'error', 'ignore', or 'use_encoded_value'".to_string(),
             ));
         }
 
         Ok(FrequencyEncoder {
             frequency_maps_: None,
             normalize,
-            handle_unknown: handle_unknown.to_string(),
-            unknown_value,
+            handleunknown: handleunknown.to_string(),
+            unknownvalue,
             is_fitted: false,
         })
     }
@@ -1453,7 +1453,7 @@ impl FrequencyEncoder {
                     transformed[[i, j]] = frequency;
                 } else {
                     // Handle unknown category
-                    match self.handle_unknown.as_str() {
+                    match self.handleunknown.as_str() {
                         "error" => {
                             return Err(TransformError::InvalidInput(format!(
                                 "Unknown category {category} in feature {j}"
@@ -1463,7 +1463,7 @@ impl FrequencyEncoder {
                             transformed[[i, j]] = 0.0;
                         }
                         "use_encoded_value" => {
-                            transformed[[i, j]] = self.unknown_value;
+                            transformed[[i, j]] = self.unknownvalue;
                         }
                         _ => unreachable!(),
                     }
@@ -1517,9 +1517,9 @@ pub struct WOEEncoder {
     /// Regularization parameter to handle categories with zero events/non-events
     regularization: f64,
     /// How to handle unknown categories
-    handle_unknown: String,
-    /// Value to use for unknown categories (when handle_unknown="use_encoded_value")
-    unknown_value: f64,
+    handleunknown: String,
+    /// Value to use for unknown categories (when handleunknown="use_encoded_value")
+    unknownvalue: f64,
     /// Global WOE value for unknown categories (computed as overall log-odds)
     global_woe_: f64,
     /// Whether the encoder has been fitted
@@ -1531,21 +1531,21 @@ impl WOEEncoder {
     ///
     /// # Arguments
     /// * `regularization` - Small value added to prevent division by zero (default: 0.5)
-    /// * `handle_unknown` - How to handle unknown categories ('error', 'global_woe', or 'use_encoded_value')
-    /// * `unknown_value` - Value to use for unknown categories (when handle_unknown="use_encoded_value")
+    /// * `handleunknown` - How to handle unknown categories ('error', 'global_woe', or 'use_encoded_value')
+    /// * `unknownvalue` - Value to use for unknown categories (when handleunknown="use_encoded_value")
     ///
     /// # Returns
     /// * `Result<WOEEncoder>` - The new encoder instance
-    pub fn new(regularization: f64, handle_unknown: &str, unknownvalue: f64) -> Result<Self> {
+    pub fn new(regularization: f64, handleunknown: &str, unknownvalue: f64) -> Result<Self> {
         if regularization < 0.0 {
             return Err(TransformError::InvalidInput(
                 "regularization must be non-negative".to_string(),
             ));
         }
 
-        if !["error", "global_woe", "use_encoded_value"].contains(&handle_unknown) {
+        if !["error", "global_woe", "use_encoded_value"].contains(&handleunknown) {
             return Err(TransformError::InvalidInput(
-                "handle_unknown must be 'error', 'global_woe', or 'use_encoded_value'".to_string(),
+                "handleunknown must be 'error', 'global_woe', or 'use_encoded_value'".to_string(),
             ));
         }
 
@@ -1553,8 +1553,8 @@ impl WOEEncoder {
             woe_maps_: None,
             information_values_: None,
             regularization,
-            handle_unknown: handle_unknown.to_string(),
-            unknown_value,
+            handleunknown: handleunknown.to_string(),
+            unknownvalue,
             global_woe_: 0.0,
             is_fitted: false,
         })
@@ -1567,7 +1567,7 @@ impl WOEEncoder {
 
     /// Creates a WOEEncoder with custom regularization
     pub fn with_regularization(regularization: f64) -> Result<Self> {
-        Self::new(_regularization, "global_woe", 0.0)
+        Self::new(regularization, "global_woe", 0.0)
     }
 
     /// Fits the WOEEncoder to the input data
@@ -1724,7 +1724,7 @@ impl WOEEncoder {
                     transformed[[i, j]] = woe_value;
                 } else {
                     // Handle unknown category
-                    match self.handle_unknown.as_str() {
+                    match self.handleunknown.as_str() {
                         "error" => {
                             return Err(TransformError::InvalidInput(format!(
                                 "Unknown category {category} in feature {j}"
@@ -1734,7 +1734,7 @@ impl WOEEncoder {
                             transformed[[i, j]] = self.global_woe_;
                         }
                         "use_encoded_value" => {
-                            transformed[[i, j]] = self.unknown_value;
+                            transformed[[i, j]] = self.unknownvalue;
                         }
                         _ => unreachable!(),
                     }
@@ -1916,7 +1916,7 @@ mod tests {
         .unwrap();
 
         // Test error handling
-        let mut encoder = OneHotEncoder::with_defaults(); // with_defaults is handle_unknown="error"
+        let mut encoder = OneHotEncoder::with_defaults(); // with_defaults is handleunknown="error"
         encoder.fit(&train_data).unwrap();
         assert!(encoder.transform(&test_data).is_err());
 
@@ -2077,7 +2077,7 @@ mod tests {
         encoder.fit(&train_x, &train_y).unwrap();
         let encoded = encoder.transform(&test_x).unwrap();
 
-        // Should use global_stat for unknown categories
+        // Should use globalstat for unknown categories
         assert_abs_diff_eq!(encoded[[0, 0]], -1.0, epsilon = 1e-10);
         assert_abs_diff_eq!(encoded[[1, 0]], -1.0, epsilon = 1e-10);
     }
@@ -2089,11 +2089,11 @@ mod tests {
 
         let test_x = Array::fromshape_vec((1, 1), vec![3.0]).unwrap(); // Unknown category
 
-        let mut encoder = TargetEncoder::new("mean", 0.0, 0.0).unwrap(); // global_stat = 0.0
+        let mut encoder = TargetEncoder::new("mean", 0.0, 0.0).unwrap(); // globalstat = 0.0
         encoder.fit(&train_x, &train_y).unwrap();
         let encoded = encoder.transform(&test_x).unwrap();
 
-        // Should use global_mean for unknown categories when global_stat == 0.0
+        // Should use global_mean for unknown categories when globalstat == 0.0
         assert_abs_diff_eq!(encoded[[0, 0]], 2.0, epsilon = 1e-10); // Global mean = 2.0
     }
 
@@ -2414,7 +2414,7 @@ mod tests {
 
     #[test]
     fn test_binary_encoder_validation_errors() {
-        // Invalid handle_unknown parameter
+        // Invalid handleunknown parameter
         assert!(BinaryEncoder::new("invalid").is_err());
 
         // Empty data

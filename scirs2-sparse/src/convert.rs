@@ -338,7 +338,7 @@ where
 
     // Extract all non-zero entries from CSR into COO format triplets
     for i in 0..rows {
-        for j in csr.indptr[i].._csr.indptr[i + 1] {
+        for j in csr.indptr[i]..csr.indptr[i + 1] {
             if j < csr.indices.len() {
                 let col = csr.indices[j];
                 let val = csr.data[j];

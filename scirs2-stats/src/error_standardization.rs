@@ -41,7 +41,7 @@ impl ErrorMessages {
     pub fn empty_array(arrayname: &str) -> StatsError {
         StatsError::invalid_argument(format!(
             "Array '{}' cannot be empty. {}",
-            array_name, "Provide an array with at least one element."
+            arrayname, "Provide an array with at least one element."
         ))
     }
 
@@ -96,7 +96,7 @@ impl ErrorMessages {
     pub fn not_positive_definite(matrixname: &str) -> StatsError {
         StatsError::computation(format!(
             "Matrix '{}' is not positive definite. {}",
-            matrix_name,
+            matrixname,
             "Ensure the matrix is symmetric and all eigenvalues are positive, or use regularization."
         ))
     }
@@ -105,7 +105,7 @@ impl ErrorMessages {
     pub fn singular_matrix(matrixname: &str) -> StatsError {
         StatsError::computation(format!(
             "Matrix '{}' is singular (non-invertible). {}",
-            matrix_name, "Check for linear dependencies in your data or add regularization."
+            matrixname, "Check for linear dependencies in your data or add regularization."
         ))
     }
 
@@ -174,7 +174,7 @@ impl ErrorValidator {
 
     /// Validate probability value
     pub fn validate_probability(value: f64, name: &str) -> StatsResult<()> {
-        if _value < 0.0 || _value > 1.0 {
+        if value < 0.0 || value > 1.0 {
             return Err(ErrorMessages::invalid_probability(name, value));
         }
         if value.is_nan() {
@@ -185,7 +185,7 @@ impl ErrorValidator {
 
     /// Validate positive value
     pub fn validate_positive(value: f64, name: &str) -> StatsResult<()> {
-        if _value <= 0.0 {
+        if value <= 0.0 {
             return Err(ErrorMessages::non_positive_value(name, value));
         }
         if value.is_nan() {
@@ -217,7 +217,7 @@ impl ErrorValidator {
 
     /// Validate minimum sample size
     pub fn validate_sample_size(size: usize, minimum: usize, operation: &str) -> StatsResult<()> {
-        if _size < minimum {
+        if size < minimum {
             return Err(ErrorMessages::insufficient_data(operation, minimum, size));
         }
         Ok(())
@@ -243,7 +243,7 @@ pub struct RecoverySuggestions;
 impl RecoverySuggestions {
     /// Get recovery suggestions for common statistical errors
     pub fn get_suggestions(error: &StatsError) -> Vec<(String, PerformanceImpact)> {
-        match _error {
+        match error {
             StatsError::DimensionMismatch(_) => vec![
                 (
                     "Reshape arrays to have compatible dimensions".to_string(),
@@ -349,7 +349,7 @@ impl RecoverySuggestions {
     pub fn get_context_suggestions(operation: &str) -> HashMap<String, Vec<String>> {
         let mut suggestions = HashMap::new();
 
-        match _operation {
+        match operation {
             "correlation" => {
                 suggestions.insert(
                     "data_preparation".to_string(),
@@ -433,7 +433,7 @@ impl StandardizedErrorReporter {
         }
 
         // Recovery suggestions
-        let suggestions = RecoverySuggestions::get_suggestions(_error);
+        let suggestions = RecoverySuggestions::get_suggestions(error);
         if !suggestions.is_empty() {
             report.push_str("💡 Suggested Solutions:\n");
             for (i, (suggestion, impact)) in suggestions.iter().enumerate() {
@@ -802,7 +802,7 @@ impl InterModuleErrorChecker {
     }
 
     fn extract_error_pattern(error: &StatsError) -> String {
-        match _error {
+        match error {
             StatsError::DimensionMismatch(_) => "dimension_mismatch".to_string(),
             StatsError::InvalidArgument(msg) if msg.contains("empty") => "empty_array".to_string(),
             StatsError::InvalidArgument(msg) if msg.contains("NaN") => "nan_values".to_string(),

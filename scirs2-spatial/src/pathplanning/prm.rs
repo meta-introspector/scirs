@@ -188,8 +188,8 @@ impl PRMNode {
     /// Add a neighbor with edge cost
     fn add_neighbor(&mut self, _neighborid: usize, cost: f64) {
         // Check if this neighbor already exists
-        if !self.neighbors.iter().any(|(id_, _)| *id_ == neighbor_id) {
-            self.neighbors.push((_neighbor_id, cost));
+        if !self.neighbors.iter().any(|(id_, _)| *id_ == _neighborid) {
+            self.neighbors.push((_neighborid, cost));
         }
     }
 }
@@ -303,7 +303,7 @@ impl PRMPlanner {
     where
         F: Fn(&Array1<f64>) -> bool + 'static,
     {
-        self.collision_checker = Some(_checker);
+        self.collision_checker = Some(checker);
     }
 
     /// Sample a random configuration in the configuration space
@@ -325,8 +325,8 @@ impl PRMPlanner {
         let mut config = Array1::zeros(self.dimension);
 
         for i in 0..self.dimension {
-            let lower = (_target[i] - radius).max(self.bounds.0[i]);
-            let upper = (_target[i] + radius).min(self.bounds.1[i]);
+            let lower = (target[i] - radius).max(self.bounds.0[i]);
+            let upper = (target[i] + radius).min(self.bounds.1[i]);
             config[i] = self.rng.gen_range(lower..upper);
         }
 
@@ -336,7 +336,7 @@ impl PRMPlanner {
     /// Check if a configuration is collision-free
     fn is_collision_free(&self, config: &Array1<f64>) -> bool {
         match &self.collision_checker {
-            Some(checker) => !checker(_config),
+            Some(checker) => !checker(config),
             None => true, // If no collision checker is set, assume all configurations are collision-free
         }
     }
@@ -485,10 +485,10 @@ impl PRMPlanner {
 
         // Add start and goal to the roadmap temporarily
         let start_id = self.nodes.len();
-        let goal_id = start_id + 1;
+        let goalid = start_id + 1;
 
         let mut start_node = PRMNode::new(start_id, start.clone());
-        let mut goal_node = PRMNode::new(goal_id, goal.clone());
+        let mut goal_node = PRMNode::new(goalid, goal.clone());
 
         // Connect start and goal to nearby nodes
         for i in 0..self.nodes.len() {
@@ -509,7 +509,7 @@ impl PRMPlanner {
                 && self.is_path_collision_free(goal, &node_config)
             {
                 goal_node.add_neighbor(i, goal_distance);
-                self.nodes[i].add_neighbor(goal_id, goal_distance);
+                self.nodes[i].add_neighbor(goalid, goal_distance);
             }
         }
 
@@ -518,7 +518,7 @@ impl PRMPlanner {
         if start_goal_distance <= self.config.connection_radius
             && self.is_path_collision_free(start, goal)
         {
-            start_node.add_neighbor(goal_id, start_goal_distance);
+            start_node.add_neighbor(goalid, start_goal_distance);
             goal_node.add_neighbor(start_id, start_goal_distance);
         }
 
@@ -527,7 +527,7 @@ impl PRMPlanner {
         self.nodes.push(goal_node);
 
         // Use A* to find the shortest path from start to goal
-        let path = self.astar_search(start_id, goal_id);
+        let path = self.astar_search(start_id, goalid);
 
         // Remove temporary nodes from the roadmap
         self.nodes.pop(); // Remove goal
@@ -545,7 +545,7 @@ impl PRMPlanner {
                 for &id in &node_path {
                     if id == start_id {
                         configs.push(start.clone());
-                    } else if id == goal_id {
+                    } else if id == goalid {
                         configs.push(goal.clone());
                     } else {
                         configs.push(self.nodes[id].config.clone());
@@ -571,7 +571,7 @@ impl PRMPlanner {
         // Use Euclidean distance as the heuristic
         let h_score = euclidean_distance(
             &self.nodes[_start_id].config.view(),
-            &self.nodes[goal_id].config.view(),
+            &self.nodes[goalid].config.view(),
         )
         .unwrap_or(f64::MAX);
 
@@ -584,7 +584,7 @@ impl PRMPlanner {
 
         while let Some(current) = open_set.pop() {
             // Check if we've reached the goal
-            if current.id == goal_id {
+            if current.id == goalid {
                 // Reconstruct the path
                 let mut path = Vec::new();
                 let mut current_id = current.id;
@@ -610,9 +610,9 @@ impl PRMPlanner {
             closed_set.insert(current.id);
 
             // Process neighbors
-            for &(neighbor_id, edge_cost) in &self.nodes[current.id].neighbors {
+            for &(_neighborid, edge_cost) in &self.nodes[current.id].neighbors {
                 // Skip neighbors that have already been processed
-                if closed_set.contains(&neighbor_id) {
+                if closed_set.contains(&_neighborid) {
                     continue;
                 }
 
@@ -620,17 +620,17 @@ impl PRMPlanner {
                 let tentative_g_score = g_scores[&current.id] + edge_cost;
 
                 // Check if this path is better than any previous one
-                if !g_scores.contains_key(&neighbor_id)
-                    || tentative_g_score < g_scores[&neighbor_id]
+                if !g_scores.contains_key(&_neighborid)
+                    || tentative_g_score < g_scores[&_neighborid]
                 {
                     // Record this path
-                    came_from.insert(neighbor_id, current.id);
-                    g_scores.insert(neighbor_id, tentative_g_score);
+                    came_from.insert(_neighborid, current.id);
+                    g_scores.insert(_neighborid, tentative_g_score);
 
                     // Calculate the heuristic (Euclidean distance to goal)
                     let h_score = euclidean_distance(
-                        &self.nodes[neighbor_id].config.view(),
-                        &self.nodes[goal_id].config.view(),
+                        &self.nodes[_neighborid].config.view(),
+                        &self.nodes[goalid].config.view(),
                     )
                     .unwrap_or(f64::MAX);
 
@@ -638,7 +638,7 @@ impl PRMPlanner {
 
                     // Add to the open set
                     open_set.push(SearchNode {
-                        id: neighbor_id,
+                        id: _neighborid,
                         g_cost: tentative_g_score,
                         f_cost: f_score,
                         _parent: Some(current.id),
@@ -747,10 +747,10 @@ impl PRM2DPlanner {
 /// Check if a point is inside a polygon using the ray casting algorithm
 #[allow(dead_code)]
 fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
-    let (x, y) = (_point[0], point[1]);
+    let (x, y) = (point[0], point[1]);
     let mut inside = false;
 
-    // Ray casting algorithm determines if the _point is inside the polygon
+    // Ray casting algorithm determines if the point is inside the polygon
     let n = polygon.len();
     for i in 0..n {
         let (x1, y1) = (polygon[i][0], polygon[i][1]);

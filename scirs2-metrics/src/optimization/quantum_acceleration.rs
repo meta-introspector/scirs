@@ -41,7 +41,7 @@ pub struct QuantumMetricsComputer<F: Float> {
 #[derive(Debug, Clone)]
 pub struct QuantumConfig {
     /// Number of virtual qubits for computation
-    pub num_qubits: usize,
+    pub _numqubits: usize,
     /// Coherence time for quantum states (simulation parameter)
     pub coherence_time: Duration,
     /// Gate fidelity (simulation parameter)
@@ -71,7 +71,7 @@ pub struct VqeParameters {
 #[derive(Debug, Clone)]
 pub struct QuantumProcessor<F: Float> {
     /// Number of qubits
-    num_qubits: usize,
+    _numqubits: usize,
     /// Quantum state vector (2^n complex amplitudes)
     state_vector: Vec<Complex<f64>>,
     /// Quantum gates available
@@ -184,7 +184,7 @@ pub struct SuperpositionManager<F: Float> {
     /// Active superposition states
     active_states: HashMap<String, SuperpositionState<F>>,
     /// Maximum superposition depth
-    max_depth: usize,
+    _maxdepth: usize,
     /// Coherence tracking
     coherence_tracker: CoherenceTracker,
 }
@@ -197,7 +197,7 @@ pub struct SuperpositionState<F: Float> {
     /// Associated classical values
     pub classical_values: Vec<F>,
     /// Creation time for coherence tracking
-    pub creation_time: Instant,
+    pub creationtime: Instant,
     /// State fidelity
     pub fidelity: f64,
 }
@@ -296,7 +296,7 @@ impl<F: Float> Clone for ClassicalFallback<F> {
 impl Default for QuantumConfig {
     fn default() -> Self {
         Self {
-            num_qubits: 20, // Sufficient for most metric computations
+            _numqubits: 20, // Sufficient for most metric computations
             coherence_time: Duration::from_micros(100),
             gate_fidelity: 0.999,
             enable_error_correction: true,
@@ -316,13 +316,13 @@ impl Default for QuantumConfig {
 impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsComputer<F> {
     /// Create new quantum metrics computer
     pub fn new(config: QuantumConfig) -> Result<Self> {
-        let num_qubits = confignum_qubits;
+        let _numqubits = confignum_qubits;
 
         // Initialize quantum processor
-        let quantum_processor = QuantumProcessor::new(num_qubits)?;
+        let quantum_processor = QuantumProcessor::new(_numqubits)?;
 
         // Create entanglement matrix for correlated computations
-        let entanglement_matrix = Self::initialize_entanglement_matrix(num_qubits)?;
+        let entanglement_matrix = Self::initialize_entanglement_matrix(_numqubits)?;
 
         // Initialize superposition manager
         let superposition_manager = SuperpositionManager::new(32); // Max 32 superposition states
@@ -349,7 +349,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
 
     /// Initialize entanglement matrix for quantum correlations
     fn initialize_entanglement_matrix(_numqubits: usize) -> Result<Array2<Complex<f64>>> {
-        let size = 2_usize.pow(_num_qubits as u32);
+        let size = 2_usize.pow(_numqubits as u32);
         let mut matrix = Array2::zeros((size, size));
 
         // Create maximally entangled state patterns
@@ -384,14 +384,14 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         let y_superposition = self.prepare_data_superposition(y, "y_correlation")?;
 
         // Create entangled state for correlation computation
-        let entangled_state =
+        let entangledstate =
             self.create_entangled_correlation_state(&x_superposition, &y_superposition)?;
 
         // Apply quantum Fourier transform for frequency domain analysis
-        self.quantum_processor.apply_qft(self.config.num_qubits)?;
+        self.quantum_processor.apply_qft(self.config._numqubits)?;
 
         // Measure correlation using quantum interference
-        let correlation = self.measure_quantum_correlation(&entangled_state)?;
+        let correlation = self.measure_quantum_correlation(&entangledstate)?;
 
         // Record quantum performance
         let execution_time = start_time.elapsed();
@@ -400,11 +400,11 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
 
         // Verify with classical computation if needed
         if self.config.enable_error_correction {
-            let classical_result = self.classical_fallback.correlation(x, y)?;
-            let error = (correlation - classical_result).abs();
+            let classicalresult = self.classical_fallback.correlation(x, y)?;
+            let error = (correlation - classicalresult).abs();
             if error > F::from(1e-10).unwrap() {
                 // Quantum error detected, apply correction
-                return self.apply_quantum_error_correction(correlation, classical_result);
+                return self.apply_quantum_error_correction(correlation, classicalresult);
             }
         }
 
@@ -480,7 +480,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
     pub fn qaoa_optimize(
         &mut self,
         objective_function: &dyn Fn(&[F]) -> F,
-        num_variables: usize,
+        numvariables: usize,
     ) -> Result<Vec<F>> {
         if !self.config.enable_qaoa {
             return Err(MetricsError::ComputationError(
@@ -489,7 +489,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         }
 
         let p_layers = 10; // QAOA depth
-        let mut best_solution = vec![F::zero(); num_variables];
+        let mut best_solution = vec![F::zero(); numvariables];
         let mut best_objective = F::infinity();
 
         // Initialize QAOA parameters
@@ -499,10 +499,10 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         for iteration in 0..self.config.vqe_parameters.max_iterations {
             // Prepare QAOA quantum state
             let qaoa_state =
-                self.prepare_qaoa_state(&beta_parameters, &gamma_parameters, num_variables)?;
+                self.prepare_qaoa_state(&beta_parameters, &gamma_parameters, numvariables)?;
 
             // Measure quantum state to get candidate solution
-            let candidate_solution = self.measure_qaoa_solution(&qaoa_state, num_variables)?;
+            let candidate_solution = self.measure_qaoa_solution(&qaoa_state, numvariables)?;
 
             // Evaluate objective _function
             let objective_value = objective_function(&candidate_solution);
@@ -517,7 +517,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
                 &mut beta_parameters,
                 &mut gamma_parameters,
                 objective_function,
-                num_variables,
+                numvariables,
             )?;
 
             // Convergence check
@@ -651,7 +651,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         let state = SuperpositionState {
             amplitudes,
             classical_values: data.to_vec(),
-            creation_time: Instant::now(),
+            creationtime: Instant::now(),
             fidelity: 1.0,
         };
 
@@ -666,43 +666,43 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         y_state: &SuperpositionState<F>,
     ) -> Result<Vec<Complex<f64>>> {
         let size = x_state.amplitudes.len().min(y_state.amplitudes.len());
-        let mut entangled_state = Vec::with_capacity(size * size);
+        let mut entangledstate = Vec::with_capacity(size * size);
 
         for i in 0..size {
             for j in 0..size {
                 // Create entangled amplitude based on correlation pattern
                 let entangled_amplitude = x_state.amplitudes[i] * y_state.amplitudes[j].conj();
-                entangled_state.push(entangled_amplitude);
+                entangledstate.push(entangled_amplitude);
             }
         }
 
         // Normalize the entangled _state
-        let norm: f64 = entangled_state
+        let norm: f64 = entangledstate
             .iter()
             .map(|amp| amp.norm_sqr())
             .sum::<f64>()
             .sqrt();
 
         if norm > 0.0 {
-            for amp in &mut entangled_state {
+            for amp in &mut entangledstate {
                 *amp /= norm;
             }
         }
 
-        Ok(entangled_state)
+        Ok(entangledstate)
     }
 
     fn measure_quantum_correlation(&self, entangledstate: &[Complex<f64>]) -> Result<F> {
         // Use quantum interference to compute correlation
         let mut correlation_sum = 0.0;
-        let n = (entangled_state.len() as f64).sqrt() as usize;
+        let n = (entangledstate.len() as f64).sqrt() as usize;
 
         for i in 0..n {
             for j in 0..n {
                 let idx = i * n + j;
-                if idx < entangled_state.len() {
+                if idx < entangledstate.len() {
                     // Measure correlation through quantum amplitude interference
-                    let amplitude = entangled_state[idx];
+                    let amplitude = entangledstate[idx];
                     correlation_sum +=
                         amplitude.re * (i as f64 - n as f64 / 2.0) * (j as f64 - n as f64 / 2.0);
                 }
@@ -716,7 +716,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
 
     fn apply_quantum_error_correction(&self, quantum_result: F, classicalresult: F) -> Result<F> {
         // Simple error correction using majority voting with quantum redundancy
-        let corrected_result = (quantum_result + classical_result) / F::from(2.0).unwrap();
+        let corrected_result = (quantum_result + classicalresult) / F::from(2.0).unwrap();
         Ok(corrected_result)
     }
 
@@ -775,7 +775,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
     fn initialize_vqe_parameters(&self, matrixsize: usize) -> Result<Vec<f64>> {
         use rand::Rng;
         let mut rng = rand::rng();
-        let num_parameters = self.config.vqe_parameters.ansatz_depth * matrix_size;
+        let num_parameters = self.config.vqe_parameters.ansatz_depth * matrixsize;
 
         let parameters = (0..num_parameters)
             .map(|_| rng.gen_range(-PI..PI))
@@ -785,12 +785,12 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
     }
 
     fn prepare_variational_ansatz(&mut self, parameters: &[f64]) -> Result<Vec<Complex<f64>>> {
-        let state_size = 2_usize.pow(self.config.num_qubits as u32);
+        let state_size = 2_usize.pow(self.config._numqubits as u32);
         let ansatz_state = vec![Complex::new(1.0, 0.0); state_size];
 
         // Apply parameterized quantum gates to create ansatz
         for (i, &param) in parameters.iter().enumerate() {
-            let qubit = i % self.config.num_qubits;
+            let qubit = i % self.config._numqubits;
 
             // Apply rotation gates with parameters
             self.quantum_processor.apply_rotation_y(qubit, param)?;
@@ -801,7 +801,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         }
 
         // Apply entangling gates for expressivity
-        for i in 0..(self.config.num_qubits - 1) {
+        for i in 0..(self.config._numqubits - 1) {
             self.quantum_processor.apply_cnot(i, i + 1)?;
         }
 
@@ -900,18 +900,18 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         &mut self,
         beta: &[f64],
         gamma: &[f64],
-        num_variables: usize,
+        numvariables: usize,
     ) -> Result<Vec<Complex<f64>>> {
-        let state_size = 2_usize.pow(num_variables as u32);
+        let state_size = 2_usize.pow(numvariables as u32);
         let mut qaoa_state = vec![Complex::new(1.0 / (state_size as f64).sqrt(), 0.0); state_size];
 
         // Apply QAOA layers alternating between cost and mixer Hamiltonians
         for layer in 0..beta.len().min(gamma.len()) {
             // Apply cost Hamiltonian evolution
-            self.apply_cost_hamiltonian_evolution(&mut qaoa_state, gamma[layer], num_variables)?;
+            self.apply_cost_hamiltonian_evolution(&mut qaoa_state, gamma[layer], numvariables)?;
 
             // Apply mixer Hamiltonian evolution
-            self.apply_mixer_hamiltonian_evolution(&mut qaoa_state, beta[layer], num_variables)?;
+            self.apply_mixer_hamiltonian_evolution(&mut qaoa_state, beta[layer], numvariables)?;
         }
 
         Ok(qaoa_state)
@@ -921,11 +921,11 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         &mut self,
         state: &mut [Complex<f64>],
         gamma: f64,
-        num_variables: usize,
+        numvariables: usize,
     ) -> Result<()> {
         // Apply evolution under cost Hamiltonian
         for i in 0..state.len() {
-            let cost_value = self.evaluate_cost_function_for_state(i, num_variables);
+            let cost_value = self.evaluate_cost_function_for_state(i, numvariables);
             let phase = Complex::new(0.0, -gamma * cost_value);
             state[i] *= phase.exp();
         }
@@ -936,13 +936,13 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         &mut self,
         state: &mut [Complex<f64>],
         beta: f64,
-        num_variables: usize,
+        numvariables: usize,
     ) -> Result<()> {
         // Apply evolution under mixer Hamiltonian (X rotations)
         let mut new_state = vec![Complex::new(0.0, 0.0); state.len()];
 
         for i in 0..state.len() {
-            for qubit in 0..num_variables {
+            for qubit in 0..numvariables {
                 let flipped_state = i ^ (1 << qubit);
                 let amplitude = state[i] * Complex::new((beta / 2.0).cos(), -(beta / 2.0).sin());
                 new_state[flipped_state] += amplitude;
@@ -956,7 +956,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
     fn evaluate_cost_function_for_state(&self, state_index: usize, numvariables: usize) -> f64 {
         // Convert state _index to binary representation and evaluate cost
         let mut cost = 0.0;
-        for i in 0..num_variables {
+        for i in 0..numvariables {
             let bit = (state_index >> i) & 1;
             cost += bit as f64; // Simple cost function - count number of 1s
         }
@@ -966,7 +966,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
     fn measure_qaoa_solution(
         &self,
         state: &[Complex<f64>],
-        num_variables: usize,
+        numvariables: usize,
     ) -> Result<Vec<F>> {
         use rand::Rng;
         let mut rng = rand::rng();
@@ -988,8 +988,8 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         }
 
         // Convert measured state to solution vector
-        let mut solution = vec![F::zero(); num_variables];
-        for i in 0..num_variables {
+        let mut solution = vec![F::zero(); numvariables];
+        for i in 0..numvariables {
             let bit = (measured_state >> i) & 1;
             solution[i] = F::from(bit).unwrap();
         }
@@ -1002,7 +1002,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         beta: &mut [f64],
         gamma: &mut [f64],
         objective_function: &dyn Fn(&[F]) -> F,
-        num_variables: usize,
+        numvariables: usize,
     ) -> Result<()> {
         let learning_rate = 0.1;
         let epsilon = 1e-3;
@@ -1013,13 +1013,13 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
 
             // Compute gradient for beta
             beta[i] = original_beta + epsilon;
-            let state_plus = self.prepare_qaoa_state(beta, gamma, num_variables)?;
-            let solution_plus = self.measure_qaoa_solution(&state_plus, num_variables)?;
+            let state_plus = self.prepare_qaoa_state(beta, gamma, numvariables)?;
+            let solution_plus = self.measure_qaoa_solution(&state_plus, numvariables)?;
             let energy_plus = objective_function(&solution_plus);
 
             beta[i] = original_beta - epsilon;
-            let state_minus = self.prepare_qaoa_state(beta, gamma, num_variables)?;
-            let solution_minus = self.measure_qaoa_solution(&state_minus, num_variables)?;
+            let state_minus = self.prepare_qaoa_state(beta, gamma, numvariables)?;
+            let solution_minus = self.measure_qaoa_solution(&state_minus, numvariables)?;
             let energy_minus = objective_function(&solution_minus);
 
             let gradient = (energy_plus - energy_minus).to_f64().unwrap_or(0.0) / (2.0 * epsilon);
@@ -1034,13 +1034,13 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
             let original_gamma = gamma[i];
 
             gamma[i] = original_gamma + epsilon;
-            let state_plus = self.prepare_qaoa_state(beta, gamma, num_variables)?;
-            let solution_plus = self.measure_qaoa_solution(&state_plus, num_variables)?;
+            let state_plus = self.prepare_qaoa_state(beta, gamma, numvariables)?;
+            let solution_plus = self.measure_qaoa_solution(&state_plus, numvariables)?;
             let energy_plus = objective_function(&solution_plus);
 
             gamma[i] = original_gamma - epsilon;
-            let state_minus = self.prepare_qaoa_state(beta, gamma, num_variables)?;
-            let solution_minus = self.measure_qaoa_solution(&state_minus, num_variables)?;
+            let state_minus = self.prepare_qaoa_state(beta, gamma, numvariables)?;
+            let solution_minus = self.measure_qaoa_solution(&state_minus, numvariables)?;
             let energy_minus = objective_function(&solution_minus);
 
             let gradient = (energy_plus - energy_minus).to_f64().unwrap_or(0.0) / (2.0 * epsilon);
@@ -1134,7 +1134,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         let mut max_prob = 0.0;
         let mut max_index = 0;
 
-        for (i, &amplitude) in final_state.iter().enumerate() {
+        for (i, &amplitude) in finalstate.iter().enumerate() {
             let prob = amplitude.norm_sqr();
             if prob > max_prob {
                 max_prob = prob;
@@ -1143,7 +1143,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         }
 
         // Convert index to binary solution
-        let num_bits = (final_state.len() as f64).log2().ceil() as usize;
+        let num_bits = (finalstate.len() as f64).log2().ceil() as usize;
         for i in 0..num_bits {
             let bit = (max_index >> i) & 1;
             solution.push(F::from(bit).unwrap());
@@ -1272,12 +1272,12 @@ impl QuantumBenchmarkResults {
 
 impl<F: Float> QuantumProcessor<F> {
     fn new(_numqubits: usize) -> Result<Self> {
-        let state_size = 2_usize.pow(_num_qubits as u32);
+        let state_size = 2_usize.pow(_numqubits as u32);
         let mut state_vector = vec![Complex::new(0.0, 0.0); state_size];
         state_vector[0] = Complex::new(1.0, 0.0); // |0...0⟩ state
 
         Ok(Self {
-            num_qubits,
+            _numqubits,
             state_vector,
             gate_set: QuantumGateSet::new(),
             circuit_depth: 0,
@@ -1288,20 +1288,20 @@ impl<F: Float> QuantumProcessor<F> {
 
     fn apply_qft(&mut self, numqubits: usize) -> Result<()> {
         // Apply Quantum Fourier Transform
-        for i in 0..num_qubits {
+        for i in 0.._numqubits {
             self.apply_hadamard(i)?;
-            for j in (i + 1)..num_qubits {
+            for j in (i + 1).._numqubits {
                 let angle = PI / (2_f64.powi((j - i) as i32));
                 self.apply_controlled_phase(j, i, angle)?;
             }
         }
 
         // Reverse qubit order
-        for i in 0..(num_qubits / 2) {
-            self.apply_swap(i, num_qubits - 1 - i)?;
+        for i in 0..(_numqubits / 2) {
+            self.apply_swap(i, _numqubits - 1 - i)?;
         }
 
-        self.circuit_depth += num_qubits * (num_qubits + 1) / 2;
+        self.circuit_depth += _numqubits * (_numqubits + 1) / 2;
         Ok(())
     }
 
@@ -1465,13 +1465,13 @@ impl<F: Float> SuperpositionManager<F> {
     fn new(_maxdepth: usize) -> Self {
         Self {
             active_states: HashMap::new(),
-            max_depth,
+            _maxdepth,
             coherence_tracker: CoherenceTracker::new(),
         }
     }
 
     fn add_state(&mut self, key: String, state: SuperpositionState<F>) {
-        if self.active_states.len() >= self.max_depth {
+        if self.active_states.len() >= self._maxdepth {
             // Remove oldest state
             let oldest_key = self.find_oldest_state();
             if let Some(key) = oldest_key {
@@ -1480,14 +1480,14 @@ impl<F: Float> SuperpositionManager<F> {
         }
 
         self.coherence_tracker
-            .track_state(&key, state.creation_time);
+            .track_state(&key, state.creationtime);
         self.active_states.insert(key, state);
     }
 
     fn find_oldest_state(&self) -> Option<String> {
         self.active_states
             .iter()
-            .min_by_key(|(_, state)| state.creation_time)
+            .min_by_key(|(_, state)| state.creationtime)
             .map(|(key, _)| key.clone())
     }
 }
@@ -1503,10 +1503,10 @@ impl CoherenceTracker {
 
     fn track_state(&mut self, key: &str, creationtime: Instant) {
         self.coherence_times
-            .insert(key.to_string(), creation_time.elapsed());
+            .insert(key.to_string(), creationtime.elapsed());
 
         // Model decoherence
-        let decoherence_rate = self.environment_coupling * creation_time.elapsed().as_secs_f64();
+        let decoherence_rate = self.environment_coupling * creationtime.elapsed().as_secs_f64();
         self.decoherence_rates
             .insert(key.to_string(), decoherence_rate);
     }
@@ -1640,7 +1640,7 @@ mod tests {
     #[test]
     fn test_quantum_config_creation() {
         let config = QuantumConfig::default();
-        assert_eq!(config.num_qubits, 20);
+        assert_eq!(config._numqubits, 20);
         assert!(config.enable_error_correction);
         assert!(config.enable_qaoa);
     }
@@ -1648,7 +1648,7 @@ mod tests {
     #[test]
     fn test_quantum_processor_creation() {
         let processor = QuantumProcessor::<f64>::new(4).unwrap();
-        assert_eq!(processor.num_qubits, 4);
+        assert_eq!(processor._numqubits, 4);
         assert_eq!(processor.state_vector.len(), 16); // 2^4
         assert_eq!(processor.state_vector[0], Complex::new(1.0, 0.0)); // |0000⟩
     }
@@ -1677,7 +1677,7 @@ mod tests {
     fn test_quantum_computer_creation() {
         let config = QuantumConfig::default();
         let computer = QuantumMetricsComputer::<f64>::new(config).unwrap();
-        assert_eq!(computer.config.num_qubits, 20);
+        assert_eq!(computer.config._numqubits, 20);
     }
 
     #[test]
@@ -1697,7 +1697,7 @@ mod tests {
         let state = SuperpositionState {
             amplitudes: vec![Complex::new(1.0, 0.0), Complex::new(0.0, 1.0)],
             classical_values: vec![1.0, 2.0],
-            creation_time: Instant::now(),
+            creationtime: Instant::now(),
             fidelity: 0.99,
         };
 

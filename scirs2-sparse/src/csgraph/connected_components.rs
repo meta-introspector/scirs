@@ -17,7 +17,7 @@ use std::fmt::Debug;
 /// * `graph` - The graph as a sparse matrix
 /// * `directed` - Whether to treat the graph as directed
 /// * `connection` - Type of connectivity for directed graphs ("weak" or "strong")
-/// * `return_labels` - Whether to return component labels for each vertex
+/// * `returnlabels` - Whether to return component labels for each vertex
 ///
 /// # Returns
 ///
@@ -45,7 +45,7 @@ pub fn connected_components<T, S>(
     graph: &S,
     directed: bool,
     connection: &str,
-    return_labels: bool,
+    returnlabels: bool,
 ) -> SparseResult<(usize, Option<Array1<usize>>)>
 where
     T: Float + Debug + Copy + 'static,
@@ -65,12 +65,12 @@ where
 
     if directed {
         match connection_type {
-            ConnectionType::Weak => weakly_connected_components(graph, return_labels),
-            ConnectionType::Strong => strongly_connected_components(graph, return_labels),
+            ConnectionType::Weak => weakly_connected_components(graph, returnlabels),
+            ConnectionType::Strong => strongly_connected_components(graph, returnlabels),
         }
     } else {
         // For undirected graphs, weak and strong connectivity are the same
-        undirected_connected_components(graph, return_labels)
+        undirected_connected_components(graph, returnlabels)
     }
 }
 
@@ -87,17 +87,17 @@ enum ConnectionType {
 #[allow(dead_code)]
 pub fn undirected_connected_components<T, S>(
     graph: &S,
-    return_labels: bool,
+    returnlabels: bool,
 ) -> SparseResult<(usize, Option<Array1<usize>>)>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
-    let adj_list = to_adjacency_list(graph, false)?; // Undirected
+    let adjlist = to_adjacency_list(graph, false)?; // Undirected
 
     let mut visited = vec![false; n];
-    let mut _labels = if return_labels {
+    let mut labels = if returnlabels {
         Some(Array1::zeros(n))
     } else {
         None
@@ -109,7 +109,7 @@ where
         if !visited[start] {
             // Start a new component
             dfs_component(
-                &adj_list,
+                &adjlist,
                 start,
                 &mut visited,
                 component_count,
@@ -126,34 +126,34 @@ where
 #[allow(dead_code)]
 pub fn weakly_connected_components<T, S>(
     graph: &S,
-    return_labels: bool,
+    returnlabels: bool,
 ) -> SparseResult<(usize, Option<Array1<usize>>)>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     // For weak connectivity, we treat the graph as undirected
-    undirected_connected_components(graph, return_labels)
+    undirected_connected_components(graph, returnlabels)
 }
 
 /// Find strongly connected components in a directed graph using Tarjan's algorithm
 #[allow(dead_code)]
 pub fn strongly_connected_components<T, S>(
     graph: &S,
-    return_labels: bool,
+    returnlabels: bool,
 ) -> SparseResult<(usize, Option<Array1<usize>>)>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     let n = num_vertices(graph);
-    let adj_list = to_adjacency_list(graph, true)?; // Directed
+    let adjlist = to_adjacency_list(graph, true)?; // Directed
 
-    let mut tarjan = TarjanSCC::<T>::new(n, return_labels);
+    let mut tarjan = TarjanSCC::<T>::new(n, returnlabels);
 
     for v in 0..n {
         if tarjan.indices[v] == -1 {
-            tarjan.strongconnect(v, &adj_list);
+            tarjan.strongconnect(v, &adjlist);
         }
     }
 
@@ -163,7 +163,7 @@ where
 /// DFS helper for finding a connected component
 #[allow(dead_code)]
 fn dfs_component<T>(
-    adj_list: &[Vec<(usize, T)>],
+    adjlist: &[Vec<(usize, T)>],
     start: usize,
     visited: &mut [bool],
     component_id: usize,
@@ -185,7 +185,7 @@ fn dfs_component<T>(
         }
 
         // Add all unvisited neighbors to the stack
-        for &(neighbor, _) in &adj_list[node] {
+        for &(neighbor, _) in &adjlist[node] {
             if !visited[neighbor] {
                 stack.push(neighbor);
             }
@@ -220,7 +220,7 @@ where
             stack: Vec::new(),
             index: 0,
             component_count: 0,
-            _labels: if return_labels {
+            _labels: if returnlabels {
                 Some(Array1::zeros(n))
             } else {
                 None
@@ -238,10 +238,10 @@ where
         self.on_stack[v] = true;
 
         // Consider successors of v
-        for &(w, _) in &adj_list[v] {
+        for &(w, _) in &adjlist[v] {
             if self.indices[w] == -1 {
                 // Successor w has not yet been visited; recurse on it
-                self.strongconnect(w, adj_list);
+                self.strongconnect(w, adjlist);
                 self.lowlinks[v] = self.lowlinks[v].min(self.lowlinks[w]);
             } else if self.on_stack[w] {
                 // Successor w is in stack S and hence in the current SCC
@@ -299,7 +299,7 @@ where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (n_components_, _) = connected_components(_graph, directed, "strong", false)?;
+    let (n_components_, _) = connected_components(graph, directed, "strong", false)?;
     Ok(n_components_ == 1)
 }
 

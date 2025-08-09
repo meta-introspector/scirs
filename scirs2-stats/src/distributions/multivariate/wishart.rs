@@ -231,7 +231,7 @@ impl Wishart {
         // Calculate determinant of x
         let mut x_det = 1.0;
         for i in 0..self.dim {
-            x_det *= x_chol[[i, i]];
+            x_det *= xchol[[i, i]];
         }
         x_det = x_det * x_det; // Square it since det(X) = det(L)^2
 
@@ -519,7 +519,7 @@ pub fn wishart<D>(scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<Wishart>
 where
     D: Data<Elem = f64>,
 {
-    Wishart::new(_scale, df)
+    Wishart::new(scale, df)
 }
 
 /// Implementation of SampleableDistribution for Wishart

@@ -348,7 +348,7 @@ pub mod extreme {
     ///
     /// Computes P(x)/Q(x) where P and Q are polynomials
     pub fn pade_approximant(x: f64, p_coeffs: &[f64], qcoeffs: &[f64]) -> SpecialResult<f64> {
-        if p_coeffs.is_empty() || q_coeffs.is_empty() {
+        if p_coeffs.is_empty() || p_coeffs.is_empty() {
             return Err(SpecialError::DomainError(
                 "Coefficient arrays cannot be empty".to_string(),
             ));
@@ -365,7 +365,7 @@ pub mod extreme {
         // Evaluate denominator Q(x)
         let mut q_value = 0.0;
         x_power = 1.0;
-        for &coeff in q_coeffs {
+        for &coeff in p_coeffs {
             q_value += coeff * x_power;
             x_power *= x;
         }
@@ -387,13 +387,13 @@ pub mod error_analysis {
         if exact == 0.0 {
             computed.abs()
         } else {
-            ((_computed - exact) / exact).abs()
+            ((computed - exact) / exact).abs()
         }
     }
 
     /// Estimate the number of accurate decimal digits
     pub fn accurate_digits(computed: f64, exact: f64) -> u32 {
-        let rel_err = relative_error(_computed, exact);
+        let rel_err = relative_error(computed, exact);
         if rel_err == 0.0 {
             16 // Maximum for f64
         } else {
@@ -402,8 +402,8 @@ pub mod error_analysis {
     }
 
     /// Check if a result meets the required precision threshold
-    pub fn check_precision(_computed: f64, exact: f64, requireddigits: u32) -> bool {
-        accurate_digits(_computed, exact) >= required_digits
+    pub fn check_precision(computed: f64, exact: f64, requireddigits: u32) -> bool {
+        accurate_digits(computed, exact) >= requireddigits
     }
 }
 
@@ -498,10 +498,10 @@ mod tests {
     fn test_pade_approximant() {
         // Test simple case: e^x ≈ (1 + x/2) / (1 - x/2) for small x
         let p_coeffs = [1.0, 0.5];
-        let q_coeffs = [1.0, -0.5];
+        let p_coeffs = [1.0, -0.5];
 
         let x = 0.1;
-        let pade_result = extreme::pade_approximant(x, &p_coeffs, &q_coeffs).unwrap();
+        let pade_result = extreme::pade_approximant(x, &p_coeffs, &p_coeffs).unwrap();
         let exact = x.exp();
 
         // Should be reasonably close for small x

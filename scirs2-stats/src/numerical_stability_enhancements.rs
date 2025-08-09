@@ -148,17 +148,17 @@ impl AdvancedNumericalStabilityTester {
     /// Create new numerical stability tester
     pub fn new(config: AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            edge_case_generator: Arc::new(RwLock::new(EdgeCaseGenerator::new(&_config))),
-            precision_analyzer: Arc::new(RwLock::new(PrecisionAnalyzer::new(&_config))),
-            invariant_validator: Arc::new(RwLock::new(InvariantValidator::new(&_config))),
-            cancellation_detector: Arc::new(RwLock::new(CancellationDetector::new(&_config))),
-            overflow_monitor: Arc::new(RwLock::new(OverflowMonitor::new(&_config))),
-            condition_analyzer: Arc::new(RwLock::new(ConditionAnalyzer::new(&_config))),
-            convergence_tester: Arc::new(RwLock::new(ConvergenceTester::new(&_config))),
-            monte_carlo_tester: Arc::new(RwLock::new(MonteCarloStabilityTester::new(&_config))),
-            regression_tester: Arc::new(RwLock::new(RegressionTester::new(&_config))),
+            edge_case_generator: Arc::new(RwLock::new(EdgeCaseGenerator::new(&config))),
+            precision_analyzer: Arc::new(RwLock::new(PrecisionAnalyzer::new(&config))),
+            invariant_validator: Arc::new(RwLock::new(InvariantValidator::new(&config))),
+            cancellation_detector: Arc::new(RwLock::new(CancellationDetector::new(&config))),
+            overflow_monitor: Arc::new(RwLock::new(OverflowMonitor::new(&config))),
+            condition_analyzer: Arc::new(RwLock::new(ConditionAnalyzer::new(&config))),
+            convergence_tester: Arc::new(RwLock::new(ConvergenceTester::new(&config))),
+            monte_carlo_tester: Arc::new(RwLock::new(MonteCarloStabilityTester::new(&config))),
+            regression_tester: Arc::new(RwLock::new(RegressionTester::new(&config))),
             stability_history: Arc::new(RwLock::new(VecDeque::with_capacity(1000))),
-            config: config,
+            config,
         }
     }
 
@@ -1087,7 +1087,7 @@ impl CancellationDetector {
     {
         // Simplified cancellation risk assessment
         let val_f64: f64 = NumCast::from(computed_value).unwrap_or(0.0);
-        let max_input: f64 = test_case
+        let max_input: f64 = testcase
             .iter()
             .map(|&x| NumCast::from(x).unwrap_or(0.0f64).abs())
             .fold(0.0, f64::max);
@@ -1417,7 +1417,7 @@ impl MonteCarloStabilityTester {
         let mut rng = rand::rng();
         let perturbation_magnitude = R::from(1e-12).unwrap_or(R::min_positive_value());
 
-        let perturbed_data = test_data.mapv(|x| {
+        let perturbed_data = testdata.mapv(|x| {
             let noise: f64 = (rng.random::<f64>() - 0.5) * 2.0; // Random value in [-1, 1]
             let noise_r = R::from(noise).unwrap_or(R::zero());
             x + perturbation_magnitude * noise_r
@@ -1524,7 +1524,7 @@ pub struct ComprehensiveStabilityResult {
 impl ComprehensiveStabilityResult {
     pub fn new(_functionname: String) -> Self {
         Self {
-            function_name: function_name,
+            function_name: _functionname,
             test_duration: Duration::from_secs(0),
             overall_stability_score: 0.0,
             stability_assessment: StabilityAssessment::Unknown,
@@ -1725,11 +1725,11 @@ impl PrecisionStabilityResult {
 
     pub fn add_precision_test<R>(&mut self, precisionname: String, result: StatsResult<R>) {
         let test_result = PrecisionTestResult {
-            precision_name: precision_name.clone(),
+            precision_name: precisionname.clone(),
             success: result.is_ok(),
             error_message: result.err().map(|e| format!("{:?}", e)),
         };
-        self.precision_tests.insert(precision_name, test_result);
+        self.precision_tests.insert(precisionname, test_result);
     }
 }
 
@@ -2003,7 +2003,7 @@ pub struct RegressionTestResult {
 impl RegressionTestResult {
     pub fn new(_functionname: String) -> Self {
         Self {
-            function_name: function_name,
+            function_name: _functionname,
             current_value: 0.0,
             historical_mean: 0.0,
             deviation: 0.0,
@@ -2212,11 +2212,11 @@ fn generate_stability_test_data(min_val: f64, maxval: f64, size: usize) -> Array
     for i in 0..size {
         // Mix of different value types for comprehensive testing
         match i % 5 {
-            0 => data[i] = rng.gen_range(min_val..max_val), // Random in range
+            0 => data[i] = rng.gen_range(min_val..maxval), // Random in range
             1 => data[i] = min_val,                            // Minimum value
-            2 => data[i] = max_val,                            // Maximum value
-            3 => data[i] = (min_val + max_val) / 2.0,          // Midpoint
-            4 => data[i] = rng.gen_range(min_val..max_val) * 1e-10, // Very small values
+            2 => data[i] = maxval,                            // Maximum value
+            3 => data[i] = (min_val + maxval) / 2.0,          // Midpoint
+            4 => data[i] = rng.gen_range(min_val..maxval) * 1e-10, // Very small values
             _ => unreachable!(),
         }
     }

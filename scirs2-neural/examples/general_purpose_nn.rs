@@ -94,7 +94,7 @@ impl LossFunction {
                 // d(BCE)/dŷ = ((1-y)/(1-ŷ) - y/ŷ)/n
                 let epsilon = 1e-15;
                 let n = predictions.len() as f32;
-                Array2::fromshape_fn(predictions.dim(), |(i, j)| {
+                Array2::from_shape_fn(predictions.dim(), |(i, j)| {
                     let y_pred = predictions[(i, j)].max(epsilon).min(1.0 - epsilon);
                     let y_true = targets[(i, j)];
                     ((1.0 - y_true) / (1.0 - y_pred) - y_true / y_pred) / n
@@ -130,10 +130,10 @@ impl Layer {
         // Xavier/Glorot initialization
         let scale = (1.0 / input_size as f32).sqrt();
         // Initialize weights and biases
-        let weights = Array2::fromshape_fn((input_size, output_size), |_| {
+        let weights = Array2::from_shape_fn((input_size, output_size), |_| {
             rng.gen_range(-scale..scale)
         });
-        let biases = Array2::fromshape_fn((1..output_size), |_| rng.gen_range(-scale..scale));
+        let biases = Array2::from_shape_fn((1, output_size), |_| rng.gen_range(-scale..scale));
         Self {
             weights,
             biases,
@@ -199,7 +199,9 @@ impl NeuralNetwork {
             activations.len(),
             "Number of activations must match number of layers - 1"
         );
-        let mut rng = SmallRng::from_seed(seed);
+        let mut seed_bytes = [0u8; 32];
+        seed_bytes[..8].copy_from_slice(&seed.to_le_bytes());
+        let mut rng = SmallRng::from_seed(seed_bytes);
         let mut layers = Vec::with_capacity(layer_sizes.len() - 1);
         // Create layers
         for i in 0..layer_sizes.len() - 1 {
@@ -236,7 +238,7 @@ impl NeuralNetwork {
         }
         // Backward pass through all layers
         for i in (0..self.layers.len()).rev() {
-            grad = self.layers[i].backward(&inputs[i], &grad, learning_rate);
+            grad = self.layers[i].backward(&inputs[i], &grad, learningrate);
         }
     }
     /// Train the network for a number of epochs
@@ -406,8 +408,8 @@ fn train_regression_network() -> Result<()> {
         .collect();
     let y_data: Vec<f32> = x_data.iter().map(|&x| x.sin()).collect();
     // Reshape data for the network
-    let x = Array2::fromshape_fn((n_samples, 1), |(i_)| x_data[i]);
-    let y = Array2::fromshape_fn((n_samples, 1), |(i_)| y_data[i]);
+    let x = Array2::from_shape_fn((n_samples, 1), |(i_, _)| x_data[i_]);
+    let y = Array2::from_shape_fn((n_samples, 1), |(i_, _)| y_data[i_]);
     println!("\nRegression Problem: y = sin(x)");
     println!("Number of samples: {n_samples}");
     // Create a network with 3 hidden layers
@@ -448,7 +450,7 @@ fn train_regression_network() -> Result<()> {
 fn print_loss_curve(losses: &[f32], width: usize) {
     // Skip the first few values which might be very high
     let start_idx = losses.len().min(10);
-    let relevant_losses = &_losses[start_idx..];
+    let relevant_losses = &losses[start_idx..];
     if relevant_losses.is_empty() {
         println!("Not enough data points for loss curve");
         return;

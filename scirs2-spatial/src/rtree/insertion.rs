@@ -312,16 +312,16 @@ impl<T: Clone> RTree<T> {
 
     /// Split a node that has more than max_entries
     pub(crate) fn split_node(&self, node: &mut Node<T>) -> SpatialResult<(Node<T>, Node<T>)> {
-        // Create two new nodes: the original (which will be replaced) and the split _node
-        let mut node1 = Node::new(_node.is_leaf, node.level);
-        let mut node2 = Node::new(_node.is_leaf, node.level);
+        // Create two new nodes: the original (which will be replaced) and the split node
+        let mut node1 = Node::new(node.is_leaf, node.level);
+        let mut node2 = Node::new(node.is_leaf, node.level);
 
         // Choose two seed entries to initialize the split
-        let (seed1, seed2) = self.choose_split_seeds(_node)?;
+        let (seed1, seed2) = self.choose_split_seeds(node)?;
 
         // Create two groups with the seeds
-        node1.entries.push(_node.entries[seed1].clone());
-        node2.entries.push(_node.entries[seed2].clone());
+        node1.entries.push(node.entries[seed1].clone());
+        node2.entries.push(node.entries[seed2].clone());
 
         // Use a set to track which entries have been assigned
         let mut assigned = HashSet::new();
@@ -338,19 +338,19 @@ impl<T: Clone> RTree<T> {
             let remaining = node.size() - assigned.len();
             if node1.size() + remaining == self.min_entries {
                 // Assign all remaining entries to group 1
-                for i in 0.._node.size() {
+                for i in 0..node.size() {
                     if !assigned.contains(&i) {
-                        node1.entries.push(_node.entries[i].clone());
-                        mbr1 = mbr1.enlarge(_node.entries[i].mbr())?;
+                        node1.entries.push(node.entries[i].clone());
+                        mbr1 = mbr1.enlarge(node.entries[i].mbr())?;
                     }
                 }
                 break;
             } else if node2.size() + remaining == self.min_entries {
                 // Assign all remaining entries to group 2
-                for i in 0.._node.size() {
+                for i in 0..node.size() {
                     if !assigned.contains(&i) {
-                        node2.entries.push(_node.entries[i].clone());
-                        mbr2 = mbr2.enlarge(_node.entries[i].mbr())?;
+                        node2.entries.push(node.entries[i].clone());
+                        mbr2 = mbr2.enlarge(node.entries[i].mbr())?;
                     }
                 }
                 break;
@@ -361,7 +361,7 @@ impl<T: Clone> RTree<T> {
             let mut chosen_index = 0;
             let mut add_to_group1 = true;
 
-            for i in 0.._node.size() {
+            for i in 0..node.size() {
                 if assigned.contains(&i) {
                     continue;
                 }
@@ -382,20 +382,20 @@ impl<T: Clone> RTree<T> {
 
             // Add the chosen entry to the preferred group
             if add_to_group1 {
-                node1.entries.push(_node.entries[chosen_index].clone());
-                mbr1 = mbr1.enlarge(_node.entries[chosen_index].mbr())?;
+                node1.entries.push(node.entries[chosen_index].clone());
+                mbr1 = mbr1.enlarge(node.entries[chosen_index].mbr())?;
             } else {
-                node2.entries.push(_node.entries[chosen_index].clone());
-                mbr2 = mbr2.enlarge(_node.entries[chosen_index].mbr())?;
+                node2.entries.push(node.entries[chosen_index].clone());
+                mbr2 = mbr2.enlarge(node.entries[chosen_index].mbr())?;
             }
 
             assigned.insert(chosen_index);
         }
 
-        // Replace the old _node with the first group
-        *_node = node1;
+        // Replace the old node with the first group
+        *node = node1;
 
-        Ok((_node.clone(), node2))
+        Ok((node.clone(), node2))
     }
 
     /// Choose two entries to be the seeds for node splitting
@@ -405,8 +405,8 @@ impl<T: Clone> RTree<T> {
         let mut seed2 = 0;
 
         // Find the two entries that would waste the most area if put together
-        for i in 0.._node.size() - 1 {
-            for j in i + 1.._node.size() {
+        for i in 0..node.size() - 1 {
+            for j in i + 1..node.size() {
                 let mbr_i = node.entries[i].mbr();
                 let mbr_j = node.entries[j].mbr();
 

@@ -166,7 +166,7 @@ impl GammaBenchmarks {
         println!("Features: {:?}", system_info.feature_flags);
         println!();
 
-        for &array_size in &_config.array_sizes {
+        for &array_size in &config.array_sizes {
             println!("Testing array size: {array_size}");
 
             // Generate test data
@@ -451,11 +451,11 @@ impl GammaBenchmarks {
 
         let total: Duration = times.iter().sum();
         let average = total / times.len() as u32;
-        let min_time = *_times.iter().min().unwrap();
-        let max_time = *_times.iter().max().unwrap();
+        let min_time = *times.iter().min().unwrap();
+        let max_time = *times.iter().max().unwrap();
 
         // Calculate standard deviation
-        let variance: f64 = _times
+        let variance: f64 = times
             .iter()
             .map(|&time| {
                 let diff = time.as_secs_f64() - average.as_secs_f64();

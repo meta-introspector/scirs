@@ -170,20 +170,20 @@ pub fn gaussian_blur(img: &DynamicImage, sigma: f32) -> Result<DynamicImage> {
     }
 
     // Convert to array
-    let array = image_to_array(_img)?;
+    let array = image_to_array(img)?;
     let (height, width) = array.dim();
 
     // Determine kernel size based on sigma (3-sigma rule)
     let kernel_radius = (3.0 * sigma).ceil() as usize;
-    let kernel_size = 2 * kernel_radius + 1;
+    let kernelsize = 2 * kernel_radius + 1;
 
     // Create Gaussian kernel
-    let mut kernel = Array2::zeros((kernel_size, kernel_size));
+    let mut kernel = Array2::zeros((kernelsize, kernelsize));
     let two_sigma_sq = 2.0 * sigma * sigma;
     let mut sum = 0.0;
 
-    for y in 0..kernel_size {
-        for x in 0..kernel_size {
+    for y in 0..kernelsize {
+        for x in 0..kernelsize {
             let dy = (y as isize - kernel_radius as isize) as f32;
             let dx = (x as isize - kernel_radius as isize) as f32;
             let exponent = -(dx * dx + dy * dy) / two_sigma_sq;
@@ -204,13 +204,13 @@ pub fn gaussian_blur(img: &DynamicImage, sigma: f32) -> Result<DynamicImage> {
             let mut sum = 0.0;
             let mut weight_sum = 0.0;
 
-            for ky in 0..kernel_size {
+            for ky in 0..kernelsize {
                 let iy = y as isize + (ky as isize - kernel_radius as isize);
                 if iy < 0 || iy >= height as isize {
                     continue;
                 }
 
-                for kx in 0..kernel_size {
+                for kx in 0..kernelsize {
                     let ix = x as isize + (kx as isize - kernel_radius as isize);
                     if ix < 0 || ix >= width as isize {
                         continue;
@@ -264,7 +264,7 @@ pub fn unsharp_mask(img: &DynamicImage, sigma: f32, amount: f32) -> Result<Dynam
     }
 
     // Apply Gaussian blur
-    let blurred = gaussian_blur(_img, sigma)?;
+    let blurred = gaussian_blur(img, sigma)?;
 
     // Get original as grayscale
     let original = img.to_luma8();
@@ -589,7 +589,7 @@ fn bilateral_filter_color(
 /// # Arguments
 ///
 /// * `img` - Input image
-/// * `kernel_size` - Size of the square kernel (must be a positive odd integer)
+/// * `kernelsize` - Size of the square kernel (must be a positive odd integer)
 ///
 /// # Returns
 ///
@@ -605,9 +605,9 @@ fn bilateral_filter_color(
 /// let filtered = median_filter(&img, 3).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn median_filter(_img: &DynamicImage, kernelsize: u32) -> Result<DynamicImage> {
+pub fn median_filter(img: &DynamicImage, kernelsize: u32) -> Result<DynamicImage> {
     // Parameter validation
-    if kernel_size % 2 == 0 || kernel_size == 0 {
+    if kernelsize % 2 == 0 || kernelsize == 0 {
         return Err(VisionError::InvalidParameter(
             "Kernel _size must be a positive odd number".to_string(),
         ));
@@ -618,7 +618,7 @@ pub fn median_filter(_img: &DynamicImage, kernelsize: u32) -> Result<DynamicImag
     let (width, height) = gray.dimensions();
 
     // Calculate the radius
-    let radius = (kernel_size / 2) as isize;
+    let radius = (kernelsize / 2) as isize;
 
     // Create output image
     let mut result = ImageBuffer::new(width, height);
@@ -627,15 +627,15 @@ pub fn median_filter(_img: &DynamicImage, kernelsize: u32) -> Result<DynamicImag
     for y in 0..height {
         for x in 0..width {
             // Collect pixel values in the neighborhood
-            let mut neighborhood = Vec::with_capacity((kernel_size * kernel_size) as usize);
+            let mut neighborhood = Vec::with_capacity((kernelsize * kernelsize) as usize);
 
-            for ky in 0..kernel_size {
+            for ky in 0..kernelsize {
                 let iy = y as isize + (ky as isize - radius);
                 if iy < 0 || iy >= height as isize {
                     continue;
                 }
 
-                for kx in 0..kernel_size {
+                for kx in 0..kernelsize {
                     let ix = x as isize + (kx as isize - radius);
                     if ix < 0 || ix >= width as isize {
                         continue;
@@ -676,7 +676,7 @@ pub fn median_filter(_img: &DynamicImage, kernelsize: u32) -> Result<DynamicImag
 ///
 /// * `img` - Input image
 /// * `tile_size` - Size of the grid tiles (8x8 is typical)
-/// * `clip_limit` - Threshold for contrast limiting (1.0-4.0 typical, where 1.0 is no clipping)
+/// * `cliplimit` - Threshold for contrast limiting (1.0-4.0 typical, where 1.0 is no clipping)
 ///
 /// # Returns
 ///
@@ -694,14 +694,14 @@ pub fn median_filter(_img: &DynamicImage, kernelsize: u32) -> Result<DynamicImag
 ///
 /// # Errors
 ///
-/// Returns an error if `tile_size` is zero or if `clip_limit` is less than 1.0
+/// Returns an error if `tile_size` is zero or if `cliplimit` is less than 1.0
 ///
 /// # References
 ///
 /// * Zuiderveld, K. (1994). Contrast limited adaptive histogram equalization.
 ///   In Graphics gems IV (pp. 474-485). Academic Press Professional, Inc.
 #[allow(dead_code)]
-pub fn clahe(_img: &DynamicImage, tile_size: u32, cliplimit: f32) -> Result<DynamicImage> {
+pub fn clahe(img: &DynamicImage, tile_size: u32, cliplimit: f32) -> Result<DynamicImage> {
     // Parameter validation
     if tile_size == 0 {
         return Err(VisionError::InvalidParameter(
@@ -709,7 +709,7 @@ pub fn clahe(_img: &DynamicImage, tile_size: u32, cliplimit: f32) -> Result<Dyna
         ));
     }
 
-    if clip_limit < 1.0 {
+    if cliplimit < 1.0 {
         return Err(VisionError::InvalidParameter(
             "Clip _limit must be at least 1.0".to_string(),
         ));
@@ -774,7 +774,7 @@ pub fn clahe(_img: &DynamicImage, tile_size: u32, cliplimit: f32) -> Result<Dyna
             let tile_area = tile_width * tile_height;
 
             // Calculate clip _limit in absolute count
-            let clip_limit_abs = (clip_limit * tile_area as f32 / bins as f32) as u32;
+            let clip_limit_abs = (cliplimit * tile_area as f32 / bins as f32) as u32;
 
             // Count excess
             let mut excess = 0u32;

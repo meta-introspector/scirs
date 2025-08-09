@@ -128,39 +128,39 @@ impl ForecastingMetrics {
     pub fn evaluate_forecast(
         &self,
         y_true: &Array1<f64>,
-        y_pred: &Array1<f64>,
+        ypred: &Array1<f64>,
         y_train: Option<&Array1<f64>>,
     ) -> Result<ForecastingResults> {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::InvalidInput(
                 "True and predicted values must have same length".to_string(),
             ));
         }
 
-        let mae = mean_absolute_error(y_true, y_pred)?;
-        let mse = mean_squared_error(y_true, y_pred)?;
+        let mae = mean_absolute_error(y_true, ypred)?;
+        let mse = mean_squared_error(y_true, ypred)?;
         let rmse = mse.sqrt();
 
         // Calculate MAPE
-        let mape = self.calculate_mape(y_true, y_pred)?;
+        let mape = self.calculate_mape(y_true, ypred)?;
 
         // Calculate SMAPE
-        let smape = self.calculate_smape(y_true, y_pred)?;
+        let smape = self.calculate_smape(y_true, ypred)?;
 
         // Calculate MASE
         let mase = if let Some(_train) = y_train {
-            self.calculate_mase(y_true, y_pred, train)?
+            self.calculate_mase(y_true, ypred, train)?
         } else if let Some(naive) = &self.naive_forecast {
-            self.calculate_mase_with_naive(y_true, y_pred, naive)?
+            self.calculate_mase_with_naive(y_true, ypred, naive)?
         } else {
             0.0 // Can't calculate without reference
         };
 
         // Calculate directional accuracy
-        let directional_accuracy = self.calculate_directional_accuracy(y_true, y_pred, y_train)?;
+        let directional_accuracy = self.calculate_directional_accuracy(y_true, ypred, y_train)?;
 
         // Calculate forecast bias (mean error)
-        let forecast_bias = y_pred
+        let forecast_bias = ypred
             .iter()
             .zip(y_true.iter())
             .map(|(_pred, true_val)| _pred - true_val)
@@ -168,7 +168,7 @@ impl ForecastingMetrics {
             / y_true.len() as f64;
 
         // Calculate Theil's U statistic
-        let theil_u = self.calculate_theil_u(y_true, y_pred, y_train)?;
+        let theil_u = self.calculate_theil_u(y_true, ypred, y_train)?;
 
         Ok(ForecastingResults {
             mae,
@@ -187,7 +187,7 @@ impl ForecastingMetrics {
         let mut sum = 0.0;
         let mut count = 0;
 
-        for (true_val, pred_val) in y_true.iter().zip(y_pred.iter()) {
+        for (true_val, pred_val) in y_true.iter().zip(ypred.iter()) {
             if true_val.abs() > 1e-10 {
                 // Avoid division by zero
                 sum += ((true_val - pred_val) / true_val).abs();
@@ -209,7 +209,7 @@ impl ForecastingMetrics {
         let mut sum = 0.0;
         let mut count = 0;
 
-        for (true_val, pred_val) in y_true.iter().zip(y_pred.iter()) {
+        for (true_val, pred_val) in y_true.iter().zip(ypred.iter()) {
             let denominator = (true_val.abs() + pred_val.abs()) / 2.0;
             if denominator > 1e-10 {
                 sum += (true_val - pred_val).abs() / denominator;
@@ -230,7 +230,7 @@ impl ForecastingMetrics {
     fn calculate_mase(
         &self,
         y_true: &Array1<f64>,
-        y_pred: &Array1<f64>,
+        ypred: &Array1<f64>,
         y_train: &Array1<f64>,
     ) -> Result<f64> {
         if y_train.len() < 2 {
@@ -240,7 +240,7 @@ impl ForecastingMetrics {
         }
 
         // Calculate MAE of forecast
-        let forecast_mae = mean_absolute_error(y_true, y_pred)?;
+        let forecast_mae = mean_absolute_error(y_true, ypred)?;
 
         // Calculate MAE of naive forecast on training data
         let mut naive_errors = Vec::new();
@@ -263,7 +263,7 @@ impl ForecastingMetrics {
     fn calculate_mase_with_naive(
         &self,
         y_true: &Array1<f64>,
-        y_pred: &Array1<f64>,
+        ypred: &Array1<f64>,
         naive: &Array1<f64>,
     ) -> Result<f64> {
         if naive.len() != y_true.len() {
@@ -272,7 +272,7 @@ impl ForecastingMetrics {
             ));
         }
 
-        let forecast_mae = mean_absolute_error(y_true, y_pred)?;
+        let forecast_mae = mean_absolute_error(y_true, ypred)?;
         let naive_mae = mean_absolute_error(y_true, naive)?;
 
         if naive_mae > 1e-10 {
@@ -288,7 +288,7 @@ impl ForecastingMetrics {
     fn calculate_directional_accuracy(
         &self,
         y_true: &Array1<f64>,
-        y_pred: &Array1<f64>,
+        ypred: &Array1<f64>,
         y_train: Option<&Array1<f64>>,
     ) -> Result<f64> {
         if y_true.len() < 2 {
@@ -308,7 +308,7 @@ impl ForecastingMetrics {
         let mut correct = 0;
         for i in 1..y_true.len() {
             let true_direction = y_true[i] > y_true[i - 1];
-            let pred_direction = y_pred[i] > y_pred[i - 1];
+            let pred_direction = ypred[i] > ypred[i - 1];
 
             if true_direction == pred_direction {
                 correct += 1;
@@ -322,10 +322,10 @@ impl ForecastingMetrics {
     fn calculate_theil_u(
         &self,
         y_true: &Array1<f64>,
-        y_pred: &Array1<f64>,
+        ypred: &Array1<f64>,
         y_train: Option<&Array1<f64>>,
     ) -> Result<f64> {
-        let mse_forecast = mean_squared_error(y_true, y_pred)?;
+        let mse_forecast = mean_squared_error(y_true, ypred)?;
 
         // Calculate MSE of naive forecast (no-change forecast)
         let baseline = if let Some(_train) = y_train {
@@ -378,10 +378,10 @@ impl TimeSeriesAnomalyMetrics {
     pub fn evaluate_anomaly_detection(
         &self,
         y_true: &Array1<i32>,          // 1 for anomaly, 0 for normal
-        y_pred: &Array1<i32>,          // 1 for detected anomaly, 0 for normal
-        y_score: Option<&Array1<f64>>, // Anomaly scores for AUC calculation
+        ypred: &Array1<i32>,          // 1 for detected anomaly, 0 for normal
+        yscore: Option<&Array1<f64>>, // Anomaly scores for AUC calculation
     ) -> Result<TimeSeriesAnomalyResults> {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::InvalidInput(
                 "True and predicted labels must have same length".to_string(),
             ));
@@ -393,7 +393,7 @@ impl TimeSeriesAnomalyMetrics {
         let mut tn = 0;
         let mut fn_count = 0;
 
-        for (true_val, pred_val) in y_true.iter().zip(y_pred.iter()) {
+        for (true_val, pred_val) in y_true.iter().zip(ypred.iter()) {
             match (true_val, pred_val) {
                 (1, 1) => tp += 1,
                 (0, 1) => fp += 1,
@@ -438,7 +438,7 @@ impl TimeSeriesAnomalyMetrics {
         };
 
         // Calculate AUC if scores are provided
-        let auc = if let Some(scores) = y_score {
+        let auc = if let Some(scores) = yscore {
             self.calculate_auc(y_true, scores)?
         } else {
             0.0
@@ -446,7 +446,7 @@ impl TimeSeriesAnomalyMetrics {
 
         // Calculate point-adjust metrics
         let (point_adjust_precision, point_adjust_recall) =
-            self.calculate_point_adjust_metrics(y_true, y_pred)?;
+            self.calculate_point_adjust_metrics(y_true, ypred)?;
 
         Ok(TimeSeriesAnomalyResults {
             precision,
@@ -462,12 +462,12 @@ impl TimeSeriesAnomalyMetrics {
 
     /// Calculate AUC for time series anomaly detection
     fn calculate_auc(&self, y_true: &Array1<i32>, yscore: &Array1<f64>) -> Result<f64> {
-        if y_true.len() != y_score.len() {
+        if y_true.len() != yscore.len() {
             return Err(MetricsError::InvalidInput("Length mismatch".to_string()));
         }
 
         // Create pairs of (_score, label) and sort by _score
-        let mut pairs: Vec<(f64, i32)> = y_score
+        let mut pairs: Vec<(f64, i32)> = yscore
             .iter()
             .zip(y_true.iter())
             .map(|(&_score, &label)| (_score, label))
@@ -507,11 +507,11 @@ impl TimeSeriesAnomalyMetrics {
     fn calculate_point_adjust_metrics(
         &self,
         y_true: &Array1<i32>,
-        y_pred: &Array1<i32>,
+        ypred: &Array1<i32>,
     ) -> Result<(f64, f64)> {
         // Find _true anomaly windows
         let true_anomalies = self.find_anomaly_segments(y_true);
-        let pred_anomalies = self.find_anomaly_segments(y_pred);
+        let pred_anomalies = self.find_anomaly_segments(ypred);
 
         // For each _true anomaly, check if any prediction falls within tolerance window
         let mut true_positive_segments = 0;
@@ -599,36 +599,36 @@ impl TrendAnalysisMetrics {
     /// Evaluate trend analysis performance
     pub fn evaluate_trend_analysis(
         &self,
-        time_series: &Array1<f64>,
+        timeseries: &Array1<f64>,
         period: Option<usize>,
     ) -> Result<TrendAnalysisResults> {
-        if time_series.len() < 10 {
+        if timeseries.len() < 10 {
             return Err(MetricsError::InvalidInput(
                 "Time _series too short for trend analysis".to_string(),
             ));
         }
 
         // Calculate trend strength using linear regression
-        let trend_strength = self.calculate_trend_strength(time_series)?;
+        let trend_strength = self.calculate_trend_strength(timeseries)?;
 
         // Calculate seasonality strength
         let seasonality_strength = if let Some(p) = period {
-            self.calculate_seasonality_strength(time_series, p)?
+            self.calculate_seasonality_strength(timeseries, p)?
         } else {
             0.0
         };
 
         // Calculate autocorrelation at lag 1
-        let autocorr_lag1 = self.calculate_autocorrelation(time_series, 1)?;
+        let autocorr_lag1 = self.calculate_autocorrelation(timeseries, 1)?;
 
         // Simplified stationarity test (based on variance of differences)
-        let is_stationary = self.test_stationarity(time_series)?;
+        let is_stationary = self.test_stationarity(timeseries)?;
 
         // Ljung-Box test for autocorrelation
-        let ljung_box_pvalue = self.ljung_box_test(time_series, 10)?;
+        let ljung_box_pvalue = self.ljung_box_test(timeseries, 10)?;
 
         // Augmented Dickey-Fuller test for stationarity
-        let adf_statistic = self.adf_test(time_series)?;
+        let adf_statistic = self.adf_test(timeseries)?;
 
         Ok(TrendAnalysisResults {
             trend_strength,
@@ -642,7 +642,7 @@ impl TrendAnalysisMetrics {
 
     /// Calculate trend strength using correlation with linear trend
     fn calculate_trend_strength(&self, timeseries: &Array1<f64>) -> Result<f64> {
-        let n = time_series.len();
+        let n = timeseries.len();
         if n < 2 {
             return Ok(0.0);
         }
@@ -651,7 +651,7 @@ impl TrendAnalysisMetrics {
         let x: Array1<f64> = Array1::linspace(0.0, (n - 1) as f64, n);
 
         let x_mean = x.mean().unwrap_or(0.0);
-        let y_mean = time_series.mean().unwrap_or(0.0);
+        let y_mean = timeseries.mean().unwrap_or(0.0);
 
         let mut numerator = 0.0;
         let mut x_var = 0.0;
@@ -659,7 +659,7 @@ impl TrendAnalysisMetrics {
 
         for i in 0..n {
             let x_diff = x[i] - x_mean;
-            let y_diff = time_series[i] - y_mean;
+            let y_diff = timeseries[i] - y_mean;
             numerator += x_diff * y_diff;
             x_var += x_diff * x_diff;
             y_var += y_diff * y_diff;
@@ -676,17 +676,17 @@ impl TrendAnalysisMetrics {
     /// Calculate seasonality strength
     fn calculate_seasonality_strength(
         &self,
-        time_series: &Array1<f64>,
+        timeseries: &Array1<f64>,
         period: usize,
     ) -> Result<f64> {
-        if time_series.len() < period * 2 {
+        if timeseries.len() < period * 2 {
             return Ok(0.0);
         }
 
         // Calculate variance of seasonal differences
         let mut seasonal_diffs = Vec::new();
-        for i in period..time_series.len() {
-            seasonal_diffs.push(time_series[i] - time_series[i - period]);
+        for i in period..timeseries.len() {
+            seasonal_diffs.push(timeseries[i] - timeseries[i - period]);
         }
 
         if seasonal_diffs.is_empty() {
@@ -694,7 +694,7 @@ impl TrendAnalysisMetrics {
         }
 
         let seasonal_var = self.calculate_variance(&seasonal_diffs)?;
-        let total_var = self.calculate_variance(&time_series.to_vec())?;
+        let total_var = self.calculate_variance(&timeseries.to_vec())?;
 
         if total_var > 1e-10 {
             Ok(1.0 - seasonal_var / total_var)
@@ -705,13 +705,13 @@ impl TrendAnalysisMetrics {
 
     /// Calculate autocorrelation at given lag
     fn calculate_autocorrelation(&self, timeseries: &Array1<f64>, lag: usize) -> Result<f64> {
-        if time_series.len() <= lag {
+        if timeseries.len() <= lag {
             return Ok(0.0);
         }
 
-        let n = time_series.len() - lag;
-        let x1 = &time_series.slice(s![..n]);
-        let x2 = &time_series.slice(s![lag..]);
+        let n = timeseries.len() - lag;
+        let x1 = &timeseries.slice(s![..n]);
+        let x2 = &timeseries.slice(s![lag..]);
 
         let mean1 = x1.mean().unwrap_or(0.0);
         let mean2 = x2.mean().unwrap_or(0.0);
@@ -737,15 +737,15 @@ impl TrendAnalysisMetrics {
 
     /// Simple stationarity test based on variance stability
     fn test_stationarity(&self, timeseries: &Array1<f64>) -> Result<bool> {
-        let n = time_series.len();
+        let n = timeseries.len();
         if n < 20 {
             return Ok(true); // Too short to determine
         }
 
         // Split into first and second half
         let mid = n / 2;
-        let first_half = time_series.slice(s![..mid]);
-        let second_half = time_series.slice(s![mid..]);
+        let first_half = timeseries.slice(s![..mid]);
+        let second_half = timeseries.slice(s![mid..]);
 
         let var1 = self.calculate_variance(&first_half.to_vec())?;
         let var2 = self.calculate_variance(&second_half.to_vec())?;
@@ -769,7 +769,7 @@ impl TrendAnalysisMetrics {
 
     /// Ljung-Box test for autocorrelation in residuals
     fn ljung_box_test(&self, timeseries: &Array1<f64>, h: usize) -> Result<f64> {
-        let n = time_series.len();
+        let n = timeseries.len();
         if n <= h + 1 {
             return Ok(1.0); // Cannot perform test, return non-significant p-value
         }
@@ -777,7 +777,7 @@ impl TrendAnalysisMetrics {
         // Calculate autocorrelations up to lag h
         let mut lb_statistic = 0.0;
         for k in 1..=h {
-            let autocorr = self.calculate_autocorrelation(time_series, k)?;
+            let autocorr = self.calculate_autocorrelation(timeseries, k)?;
             lb_statistic += autocorr * autocorr / (n - k) as f64;
         }
 
@@ -798,7 +798,7 @@ impl TrendAnalysisMetrics {
 
     /// Augmented Dickey-Fuller test for stationarity
     fn adf_test(&self, timeseries: &Array1<f64>) -> Result<f64> {
-        let n = time_series.len();
+        let n = timeseries.len();
         if n < 4 {
             return Ok(-1.0); // Cannot perform test
         }
@@ -806,13 +806,13 @@ impl TrendAnalysisMetrics {
         // Calculate first differences
         let mut diff_series = Vec::with_capacity(n - 1);
         for i in 1..n {
-            diff_series.push(time_series[i] - time_series[i - 1]);
+            diff_series.push(timeseries[i] - timeseries[i - 1]);
         }
 
         // Calculate lagged values
         let mut y_lag = Vec::with_capacity(n - 2);
         for i in 1..(n - 1) {
-            y_lag.push(time_series[i]);
+            y_lag.push(timeseries[i]);
         }
 
         // Simple ADF regression: Δy_t = α + γy_{t-1} + ε_t
@@ -955,11 +955,11 @@ mod tests {
         let metrics = ForecastingMetrics::new();
 
         let y_true = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let y_pred = Array1::from_vec(vec![1.1, 2.1, 2.9, 4.1, 4.9]);
+        let ypred = Array1::from_vec(vec![1.1, 2.1, 2.9, 4.1, 4.9]);
         let y_train = Array1::from_vec(vec![0.0, 1.0]);
 
         let results = metrics
-            .evaluate_forecast(&y_true, &y_pred, Some(&y_train))
+            .evaluate_forecast(&y_true, &ypred, Some(&y_train))
             .unwrap();
 
         assert!(results.mae >= 0.0);
@@ -974,9 +974,9 @@ mod tests {
         let metrics = ForecastingMetrics::new();
 
         let y_true = Array1::from_vec(vec![100.0, 200.0, 300.0]);
-        let y_pred = Array1::from_vec(vec![110.0, 190.0, 320.0]);
+        let ypred = Array1::from_vec(vec![110.0, 190.0, 320.0]);
 
-        let mape = metrics.calculate_mape(&y_true, &y_pred).unwrap();
+        let mape = metrics.calculate_mape(&y_true, &ypred).unwrap();
 
         // Expected: (10/100 + 10/200 + 20/300) / 3 * 100 = (0.1 + 0.05 + 0.067) / 3 * 100 ≈ 7.22%
         assert!(mape > 6.0 && mape < 8.0);
@@ -987,11 +987,11 @@ mod tests {
         let metrics = TimeSeriesAnomalyMetrics::new();
 
         let y_true = Array1::from_vec(vec![0, 0, 1, 1, 0, 0, 1, 0]);
-        let y_pred = Array1::from_vec(vec![0, 0, 1, 0, 0, 1, 1, 0]);
-        let y_score = Array1::from_vec(vec![0.1, 0.2, 0.9, 0.6, 0.3, 0.8, 0.95, 0.1]);
+        let ypred = Array1::from_vec(vec![0, 0, 1, 0, 0, 1, 1, 0]);
+        let yscore = Array1::from_vec(vec![0.1, 0.2, 0.9, 0.6, 0.3, 0.8, 0.95, 0.1]);
 
         let results = metrics
-            .evaluate_anomaly_detection(&y_true, &y_pred, Some(&y_score))
+            .evaluate_anomaly_detection(&y_true, &ypred, Some(&yscore))
             .unwrap();
 
         assert!(results.precision >= 0.0 && results.precision <= 1.0);

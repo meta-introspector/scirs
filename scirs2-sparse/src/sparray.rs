@@ -235,7 +235,7 @@ where
 {
     /// Create a new SparseArrayBase from a dense ndarray.
     pub fn new(data: Array2<T>) -> Self {
-        Self { data: _data }
+        Self { data: data }
     }
 }
 

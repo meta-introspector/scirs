@@ -232,7 +232,7 @@ pub fn dilate(img: &DynamicImage, kernelshape: StructuringElement) -> Result<Dyn
 /// * Result containing the opened image
 #[allow(dead_code)]
 pub fn opening(img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
-    let eroded = erode(_img, kernelshape)?;
+    let eroded = erode(img, kernelshape)?;
     dilate(&eroded, kernelshape)
 }
 
@@ -248,7 +248,7 @@ pub fn opening(img: &DynamicImage, kernelshape: StructuringElement) -> Result<Dy
 /// * Result containing the closed image
 #[allow(dead_code)]
 pub fn closing(img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
-    let dilated = dilate(_img, kernelshape)?;
+    let dilated = dilate(img, kernelshape)?;
     erode(&dilated, kernelshape)
 }
 
@@ -305,7 +305,7 @@ pub fn morphological_gradient(
 /// * Result containing the top-hat transformed image
 #[allow(dead_code)]
 pub fn top_hat(img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
-    let opened = opening(_img, kernelshape)?;
+    let opened = opening(img, kernelshape)?;
 
     let original = img.to_luma8();
     let opened_gray = opened.to_luma8();
@@ -342,7 +342,7 @@ pub fn top_hat(img: &DynamicImage, kernelshape: StructuringElement) -> Result<Dy
 /// * Result containing the black-hat transformed image
 #[allow(dead_code)]
 pub fn black_hat(img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
-    let closed = closing(_img, kernelshape)?;
+    let closed = closing(img, kernelshape)?;
 
     let original = img.to_luma8();
     let closed_gray = closed.to_luma8();

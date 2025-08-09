@@ -48,7 +48,7 @@ impl ShortestPathMethod {
 /// * `to_vertex` - Target vertex (None for all destinations)
 /// * `method` - Algorithm to use
 /// * `directed` - Whether the graph is directed
-/// * `return_predecessors` - Whether to return predecessor information
+/// * `returnpredecessors` - Whether to return predecessor information
 ///
 /// # Returns
 ///
@@ -81,7 +81,7 @@ pub fn shortest_path<T, S>(
     to_vertex: Option<usize>,
     method: &str,
     directed: bool,
-    return_predecessors: bool,
+    returnpredecessors: bool,
 ) -> SparseResult<(Array2<T>, Option<Array2<isize>>)>
 where
     T: Float + Debug + Copy + 'static,
@@ -94,16 +94,16 @@ where
     match (from_vertex, to_vertex) {
         (None, None) => {
             // All pairs shortest paths
-            all_pairs_shortest_path(graph, method, directed, return_predecessors)
+            all_pairs_shortest_path(graph, method, directed, returnpredecessors)
         }
         (Some(source), None) => {
             // Single source shortest paths
             let (distances_, predecessors) =
-                single_source_shortest_path(graph, source, method, directed, return_predecessors)?;
+                single_source_shortest_path(graph, source, method, directed, returnpredecessors)?;
 
             // Convert to matrix format
             let mut dist_matrix = Array2::from_elem((n, n), T::infinity());
-            let mut pred_matrix = if return_predecessors {
+            let mut pred_matrix = if returnpredecessors {
                 Some(Array2::from_elem((n, n), -1isize))
             } else {
                 None
@@ -111,7 +111,7 @@ where
 
             for i in 0..n {
                 dist_matrix[[source, i]] = distances_[i];
-                if let Some(ref preds) = _predecessors {
+                if let Some(ref preds) = predecessors {
                     if let Some(ref mut pred_mat) = pred_matrix {
                         pred_mat[[source, i]] = preds[i];
                     }
@@ -123,12 +123,12 @@ where
         (Some(source), Some(target)) => {
             // Single pair shortest path
             let (distances_, predecessors) =
-                single_source_shortest_path(graph, source, method, directed, return_predecessors)?;
+                single_source_shortest_path(graph, source, method, directed, returnpredecessors)?;
 
             let dist_matrix = Array2::from_elem((1, 1), distances_[target]);
-            let pred_matrix = if return_predecessors {
+            let pred_matrix = if returnpredecessors {
                 let mut pred_mat = Array2::from_elem((1, 1), -1isize);
-                if let Some(ref preds) = _predecessors {
+                if let Some(ref preds) = predecessors {
                     pred_mat[[0, 0]] = preds[target];
                 }
                 Some(pred_mat)
@@ -151,7 +151,7 @@ pub fn single_source_shortest_path<T, S>(
     source: usize,
     method: ShortestPathMethod,
     directed: bool,
-    return_predecessors: bool,
+    returnpredecessors: bool,
 ) -> SparseResult<(Array1<T>, Option<Array1<isize>>)>
 where
     T: Float + Debug + Copy + 'static,
@@ -180,10 +180,10 @@ where
 
     match actual_method {
         ShortestPathMethod::Dijkstra => {
-            dijkstra_single_source(graph, source, directed, return_predecessors)
+            dijkstra_single_source(graph, source, directed, returnpredecessors)
         }
         ShortestPathMethod::BellmanFord => {
-            bellman_ford_single_source(graph, source, directed, return_predecessors)
+            bellman_ford_single_source(graph, source, directed, returnpredecessors)
         }
         _ => Err(SparseError::ValueError(
             "Method not supported for single source shortest paths".to_string(),
@@ -197,7 +197,7 @@ pub fn all_pairs_shortest_path<T, S>(
     graph: &S,
     method: ShortestPathMethod,
     directed: bool,
-    return_predecessors: bool,
+    returnpredecessors: bool,
 ) -> SparseResult<(Array2<T>, Option<Array2<isize>>)>
 where
     T: Float + Debug + Copy + 'static,
@@ -217,11 +217,11 @@ where
     };
 
     match actual_method {
-        ShortestPathMethod::FloydWarshall => floyd_warshall(graph, directed, return_predecessors),
+        ShortestPathMethod::FloydWarshall => floyd_warshall(graph, directed, returnpredecessors),
         ShortestPathMethod::Dijkstra => {
             // Run Dijkstra from each vertex
             let mut distances = Array2::from_elem((n, n), T::infinity());
-            let mut _predecessors = if return_predecessors {
+            let mut predecessors = if returnpredecessors {
                 Some(Array2::from_elem((n, n), -1isize))
             } else {
                 None
@@ -229,12 +229,12 @@ where
 
             for source in 0..n {
                 let (dist, pred) =
-                    dijkstra_single_source(graph, source, directed, return_predecessors)?;
+                    dijkstra_single_source(graph, source, directed, returnpredecessors)?;
 
                 for target in 0..n {
                     distances[[source, target]] = dist[target];
                     if let Some(ref pred_vec) = pred {
-                        if let Some(ref mut pred_matrix) = _predecessors {
+                        if let Some(ref mut pred_matrix) = predecessors {
                             pred_matrix[[source, target]] = pred_vec[target];
                         }
                     }
@@ -255,7 +255,7 @@ pub fn dijkstra_single_source<T, S>(
     graph: &S,
     source: usize,
     directed: bool,
-    return_predecessors: bool,
+    returnpredecessors: bool,
 ) -> SparseResult<(Array1<T>, Option<Array1<isize>>)>
 where
     T: Float + Debug + Copy + 'static,
@@ -265,7 +265,7 @@ where
     let adj_list = to_adjacency_list(graph, directed)?;
 
     let mut distances = Array1::from_elem(n, T::infinity());
-    let mut _predecessors = if return_predecessors {
+    let mut predecessors = if returnpredecessors {
         Some(Array1::from_elem(n, -1isize))
     } else {
         None
@@ -303,7 +303,7 @@ where
             if new_distance < distances[neighbor] {
                 distances[neighbor] = new_distance;
 
-                if let Some(ref mut preds) = _predecessors {
+                if let Some(ref mut preds) = predecessors {
                     preds[neighbor] = node as isize;
                 }
 
@@ -324,7 +324,7 @@ pub fn bellman_ford_single_source<T, S>(
     graph: &S,
     source: usize,
     directed: bool,
-    return_predecessors: bool,
+    returnpredecessors: bool,
 ) -> SparseResult<(Array1<T>, Option<Array1<isize>>)>
 where
     T: Float + Debug + Copy + 'static,
@@ -334,7 +334,7 @@ where
     let (row_indices, col_indices, values) = graph.find();
 
     let mut distances = Array1::from_elem(n, T::infinity());
-    let mut _predecessors = if return_predecessors {
+    let mut predecessors = if returnpredecessors {
         Some(Array1::from_elem(n, -1isize))
     } else {
         None
@@ -367,7 +367,7 @@ where
                 if new_distance < distances[v] {
                     distances[v] = new_distance;
 
-                    if let Some(ref mut preds) = _predecessors {
+                    if let Some(ref mut preds) = predecessors {
                         preds[v] = u as isize;
                     }
 
@@ -399,7 +399,7 @@ where
 pub fn floyd_warshall<T, S>(
     graph: &S,
     directed: bool,
-    return_predecessors: bool,
+    returnpredecessors: bool,
 ) -> SparseResult<(Array2<T>, Option<Array2<isize>>)>
 where
     T: Float + Debug + Copy + 'static,
@@ -409,7 +409,7 @@ where
 
     // Initialize distance matrix
     let mut distances = Array2::from_elem((n, n), T::infinity());
-    let mut _predecessors = if return_predecessors {
+    let mut predecessors = if returnpredecessors {
         Some(Array2::from_elem((n, n), -1isize))
     } else {
         None
@@ -427,7 +427,7 @@ where
         if !weight.is_zero() {
             distances[[row, col]] = weight;
 
-            if let Some(ref mut preds) = _predecessors {
+            if let Some(ref mut preds) = predecessors {
                 if row != col {
                     preds[[row, col]] = row as isize;
                 }
@@ -437,7 +437,7 @@ where
             if !directed && row != col {
                 distances[[col, row]] = weight;
 
-                if let Some(ref mut preds) = _predecessors {
+                if let Some(ref mut preds) = predecessors {
                     preds[[col, row]] = col as isize;
                 }
             }
@@ -453,7 +453,7 @@ where
                 if through_k < distances[[i, j]] {
                     distances[[i, j]] = through_k;
 
-                    if let Some(ref mut preds) = _predecessors {
+                    if let Some(ref mut preds) = predecessors {
                         preds[[i, j]] = preds[[k, j]];
                     }
                 }
@@ -530,7 +530,7 @@ mod tests {
     }
 
     #[test]
-    fn test_dijkstra_with_predecessors() {
+    fn test_dijkstra_withpredecessors() {
         let graph = create_test_graph();
         let (_distances, predecessors) = dijkstra_single_source(&graph, 0, false, true).unwrap();
         let preds = predecessors.unwrap();

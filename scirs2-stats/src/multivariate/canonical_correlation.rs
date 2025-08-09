@@ -80,7 +80,7 @@ impl CanonicalCorrelationAnalysis {
 
     /// Set number of components to compute
     pub fn with_n_components(mut self, ncomponents: usize) -> Self {
-        self.n_components = Some(n_components);
+        self.n_components = Some(ncomponents);
         self
     }
 
@@ -92,13 +92,13 @@ impl CanonicalCorrelationAnalysis {
 
     /// Set regularization parameter
     pub fn with_reg_param(mut self, regparam: f64) -> Self {
-        self.reg_param = reg_param;
+        self.reg_param = regparam;
         self
     }
 
     /// Set maximum iterations
     pub fn with_max_iter(mut self, maxiter: usize) -> Self {
-        self.max_iter = max_iter;
+        self.max_iter = maxiter;
         self
     }
 
@@ -580,7 +580,7 @@ impl PLSCanonical {
     /// Create new PLS instance
     pub fn new(_ncomponents: usize) -> Self {
         Self {
-            n_components: n_components,
+            n_components: _ncomponents,
             ..Default::default()
         }
     }

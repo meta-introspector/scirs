@@ -113,13 +113,13 @@ where
         ));
     }
 
-    if _low >= high {
+    if low >= high {
         return Err(StatsError::InvalidArgument(
             "Upper bound must be greater than lower bound".to_string(),
         ));
     }
 
-    let distribution = rand_distr::Uniform::new(_low, high).map_err(|e| {
+    let distribution = rand_distr::Uniform::new(low, high).map_err(|e| {
         StatsError::ComputationError(format!("Failed to create uniform distribution: {}", e))
     })?;
     random_sample(size, &distribution, seed)
@@ -160,13 +160,13 @@ pub fn randint(low: i64, high: i64, size: usize, seed: Option<u64>) -> StatsResu
         ));
     }
 
-    if _low >= high {
+    if low >= high {
         return Err(StatsError::InvalidArgument(
             "Upper bound must be greater than lower bound".to_string(),
         ));
     }
 
-    let distribution = rand_distr::Uniform::new_inclusive(_low, high - 1).map_err(|e| {
+    let distribution = rand_distr::Uniform::new_inclusive(low, high - 1).map_err(|e| {
         StatsError::ComputationError(format!("Failed to create uniform distribution: {}", e))
     })?;
     random_sample(size, &distribution, seed)
@@ -201,7 +201,7 @@ pub fn randint(low: i64, high: i64, size: usize, seed: Option<u64>) -> StatsResu
 /// ```
 #[allow(dead_code)]
 pub fn randn(size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
-    if _size == 0 {
+    if size == 0 {
         return Err(StatsError::InvalidArgument(
             "Size must be positive".to_string(),
         ));
@@ -225,8 +225,8 @@ pub fn randn(size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
     };
 
     let distribution = StandardNormal;
-    let mut result = Array1::zeros(_size);
-    for i in 0.._size {
+    let mut result = Array1::zeros(size);
+    for i in 0..size {
         result[i] = distribution.sample(&mut rng);
     }
 

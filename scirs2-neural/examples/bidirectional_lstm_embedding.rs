@@ -13,18 +13,18 @@ struct Embedding {
     weight: Array2<f32>,
 }
 impl Embedding {
-    fn new(_vocab_size: usize, embeddingdim: usize) -> Self {
+    fn new(vocab_size: usize, embedding_dim: usize) -> Self {
         // Xavier/Glorot initialization
-        let bound = (3.0 / embedding_dim as f32).sqrt();
+        let bound = (3.0f32 / embedding_dim as f32).sqrt();
         // Create a random number generator
         let mut rng = SmallRng::from_seed([42; 32]);
         // Initialize with random values
-        let mut weight = Array2::<f32>::zeros((_vocab_size, embedding_dim));
+        let mut weight = Array2::<f32>::zeros((vocab_size, embedding_dim));
         for elem in weight.iter_mut() {
             *elem = rng.gen_range(-bound..bound);
         }
         Embedding {
-            vocab_size: vocab_size,
+            vocab_size,
             embedding_dim,
             weight,
         }
@@ -60,12 +60,12 @@ struct BiLSTM {
     backward_cell: LSTMCell,
 }
 impl BiLSTM {
-    fn new(_input_size: usize, hidden_size: usize, batchsize: usize) -> Self {
+    fn new(input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
         // Create forward and backward LSTM cells
-        let forward_cell = LSTMCell::new(_input_size, hidden_size, batch_size);
-        let backward_cell = LSTMCell::new(_input_size, hidden_size, batch_size);
+        let forward_cell = LSTMCell::new(input_size, hidden_size, batch_size);
+        let backward_cell = LSTMCell::new(input_size, hidden_size, batch_size);
         BiLSTM {
-            input_size: input_size,
+            input_size,
             hidden_size,
             batch_size,
             forward_cell,
@@ -146,8 +146,8 @@ struct LSTMCell {
     c_t: Option<Array2<f32>>, // Current cell state [batch_size, hidden_size]
 }
 impl LSTMCell {
-    fn new(_input_size: usize, hidden_size: usize, _batchsize: usize) -> Self {
-        let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
+    fn new(input_size: usize, hidden_size: usize, _batchsize: usize) -> Self {
+        let bound = (6.0 / (input_size + hidden_size) as f32).sqrt();
         let mut rng = SmallRng::from_seed([42; 32]);
 
         // Input gate weights
@@ -591,8 +591,8 @@ fn tokenizetexts(
 }
 // Convert labels to one-hot encoded vectors
 #[allow(dead_code)]
-fn one_hot_encode(_labels: &[usize], numclasses: usize) -> Array2<f32> {
-    let mut one_hot = Array2::<f32>::zeros((_labels.len(), num_classes));
+fn one_hot_encode(labels: &[usize], num_classes: usize) -> Array2<f32> {
+    let mut one_hot = Array2::<f32>::zeros((labels.len(), num_classes));
     for (i, &label) in labels.iter().enumerate() {
         if label < num_classes {
             one_hot[[i, label]] = 1.0;
@@ -703,7 +703,7 @@ fn train_model(
 }
 // Evaluate the model on test data
 #[allow(dead_code)]
-fn evaluate_model(_model: &mut BiLSTMClassifier, x_test: &Array2<usize>, ytest: &[usize]) {
+fn evaluate_model(model: &mut BiLSTMClassifier, x_test: &Array2<usize>, y_test: &[usize]) {
     let predictions = model.predict(x_test);
     // Calculate accuracy
     let mut correct = 0;
@@ -786,7 +786,7 @@ fn evaluate_model(_model: &mut BiLSTMClassifier, x_test: &Array2<usize>, ytest: 
 }
 // Example predictions
 #[allow(dead_code)]
-fn example_predictions(_model: &mut BiLSTMClassifier, word_toidx: &HashMap<String, usize>) {
+fn example_predictions(model: &mut BiLSTMClassifier, word_to_idx: &HashMap<String, usize>) {
     let examples = [
         "this is a great movie with amazing performances",
         "the movie was okay but nothing really stood out",

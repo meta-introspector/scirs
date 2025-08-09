@@ -45,23 +45,23 @@ pub struct GpuError(String);
 #[cfg(not(feature = "gpu"))]
 impl GpuError {
     pub fn new(msg: &str) -> Self {
-        Self(_msg.to_string())
+        Self(msg.to_string())
     }
 
     pub fn invalid_buffer(msg: String) -> Self {
-        Self(_msg)
+        Self(msg)
     }
 
     pub fn invalid_parameter(msg: String) -> Self {
-        Self(_msg)
+        Self(msg)
     }
 
     pub fn kernel_compilation_error(msg: String) -> Self {
-        Self(_msg)
+        Self(msg)
     }
 
     pub fn other(msg: String) -> Self {
-        Self(_msg)
+        Self(msg)
     }
 }
 
@@ -117,12 +117,12 @@ impl<T: Clone + Copy> GpuBuffer<T> {
     }
 
     pub fn copy_from_host(&mut self, hostdata: &[T]) -> Result<(), GpuError> {
-        if host_data.len() != self.data.len() {
+        if hostdata.len() != self.data.len() {
             return Err(GpuError::invalid_parameter(
                 "Host data length does not match buffer length".to_string(),
             ));
         }
-        self.data.copy_from_slice(host_data);
+        self.data.copy_from_slice(hostdata);
         Ok(())
     }
 }
@@ -158,7 +158,7 @@ pub struct GpuDevice;
 #[cfg(feature = "gpu")]
 impl GpuDevice {
     pub fn get_default(backend: GpuBackend) -> Result<Self, GpuError> {
-        let context = GpuContext::new(_backend)?;
+        let context = GpuContext::new(backend)?;
         Ok(Self { context })
     }
 
@@ -439,7 +439,7 @@ impl SpMVKernel {
     pub fn new(_device: &GpuDevice, _workgroupsize: [u32; 3]) -> Result<Self, GpuError> {
         // Compile GPU kernels for actual hardware acceleration
 
-        match device.backend() {
+        match _device.backend() {
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Cuda => {
                 // Compile CUDA SpMV kernel
@@ -510,7 +510,7 @@ impl SpMVKernel {
                 // Verify kernel compilation succeeded and store handle
                 Ok(Self {
                     kernel_handle: Some(kernel_handle),
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
 
@@ -519,7 +519,7 @@ impl SpMVKernel {
                 // GPU-enabled CUDA implementation
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
 
@@ -581,7 +581,7 @@ impl SpMVKernel {
                 // Verify kernel compilation succeeded and store handle
                 Ok(Self {
                     kernel_handle: Some(kernel_handle),
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
 
@@ -651,7 +651,7 @@ impl SpMVKernel {
                 // Verify kernel compilation succeeded and store handle
                 Ok(Self {
                     kernel_handle: Some(kernel_handle),
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
 
@@ -659,21 +659,21 @@ impl SpMVKernel {
                 // CPU implementation - no kernel handle needed
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
             GpuBackend::Rocm => {
                 // ROCm implementation - no kernel handle needed for fallback
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
             GpuBackend::Wgpu => {
                 // WebGPU implementation - no kernel handle needed for fallback
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
         }
@@ -935,7 +935,7 @@ impl SpMSKernel {
     pub fn new(_device: &GpuDevice, _workgroupsize: [u32; 3]) -> Result<Self, GpuError> {
         // Compile GPU kernels for advanced sparse operations
 
-        match device.backend() {
+        match _device.backend() {
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Cuda => {
                 // Compile CUDA kernels for sparse matrix-matrix operations
@@ -1047,10 +1047,10 @@ impl SpMSKernel {
                 "#;
 
                 // Attempt to compile CUDA kernels
-                match device.compile_kernel(cuda_kernel_source, "spmm_csr_kernel") {
+                match _device.compile_kernel(cuda_kernel_source, "spmm_csr_kernel") {
                     Ok(kernel_handle) => Ok(Self {
                         kernel_handle: Some(kernel_handle),
-                        backend: device.backend(),
+                        backend: _device.backend(),
                     }),
                     Err(_) => {
                         // Fall back to CPU if CUDA compilation fails
@@ -1066,7 +1066,7 @@ impl SpMSKernel {
                 // GPU-enabled CUDA implementation
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
 
@@ -1156,10 +1156,10 @@ impl SpMSKernel {
                 "#;
 
                 // Attempt to compile OpenCL kernels
-                match device.compile_kernel(opencl_kernel_source, "spmm_csr_kernel") {
+                match _device.compile_kernel(opencl_kernel_source, "spmm_csr_kernel") {
                     Ok(kernel_handle) => Ok(Self {
                         kernel_handle: Some(kernel_handle),
-                        backend: device.backend(),
+                        backend: _device.backend(),
                     }),
                     Err(_) => {
                         // Fall back to CPU if OpenCL compilation fails
@@ -1283,10 +1283,10 @@ impl SpMSKernel {
                 "#;
 
                 // Attempt to compile Metal kernels
-                match device.compile_kernel(metal_kernel_source, "spmm_csr_kernel") {
+                match _device.compile_kernel(metal_kernel_source, "spmm_csr_kernel") {
                     Ok(kernel_handle) => Ok(Self {
                         kernel_handle: Some(kernel_handle),
-                        backend: device.backend(),
+                        backend: _device.backend(),
                     }),
                     Err(_) => {
                         // Fall back to CPU if Metal compilation fails
@@ -1302,21 +1302,21 @@ impl SpMSKernel {
                 // CPU implementation - always succeeds
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
             GpuBackend::Rocm => {
                 // ROCm implementation - no kernel handle needed for fallback
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
             GpuBackend::Wgpu => {
                 // WebGPU implementation - no kernel handle needed for fallback
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
         }
@@ -2254,10 +2254,10 @@ where
 #[allow(dead_code)]
 fn should_use_gpu(rows: usize, cols: usize, nnz: usize, options: &GpuOptions) -> bool {
     // Only use GPU for matrices larger than the threshold
-    let matrix_size = std::cmp::max(_rows, cols);
+    let matrix_size = std::cmp::max(rows, cols);
 
     // Consider sparsity as well - very sparse matrices might not benefit from GPU
-    let density = nnz as f64 / (_rows * cols) as f64;
+    let density = nnz as f64 / (rows * cols) as f64;
     let min_density = 0.001; // 0.1% density threshold
 
     matrix_size >= options.min_gpu_size
@@ -2541,15 +2541,15 @@ impl GpuMemoryManager {
     {
         // In a real implementation, this would allocate actual GPU memory
         // For now, we'll simulate by returning a buffer ID
-        let buffer_id = self.allocated_buffers.len();
+        let bufferid = self.allocated_buffers.len();
         self.allocated_buffers.push(size * std::mem::size_of::<T>());
-        Ok(buffer_id)
+        Ok(bufferid)
     }
 
     /// Free GPU memory for a buffer
     pub fn free_buffer(&mut self, bufferid: usize) -> Result<(), GpuError> {
-        if buffer_id < self.allocated_buffers.len() {
-            self.allocated_buffers[buffer_id] = 0;
+        if bufferid < self.allocated_buffers.len() {
+            self.allocated_buffers[bufferid] = 0;
             Ok(())
         } else {
             Err(GpuError::invalid_parameter("Invalid buffer ID".to_string()))
@@ -2591,7 +2591,7 @@ impl GpuProfiler {
             .iter_mut()
             .find(|(name, _)| name == operation)
         {
-            entry.1 = duration_ms;
+            entry.1 = durationms;
         }
     }
 
@@ -2909,7 +2909,7 @@ impl GpuKernelScheduler {
     /// Create a new kernel scheduler
     pub fn new(backend: GpuBackend) -> Self {
         // In a real implementation, these would be queried from the GPU
-        let (available_memory, compute_units, warp_size) = match _backend {
+        let (available_memory, compute_units, warp_size) = match backend {
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Cuda => (8_000_000_000, 108, 32), // Example RTX 3080 specs
             #[cfg(feature = "gpu")]
@@ -2930,16 +2930,16 @@ impl GpuKernelScheduler {
     }
 
     /// Calculate optimal workgroup size for a given problem
-    pub fn calculate_optimal_workgroup(&self, _rows: usize, _cols: usize, nnz: usize) -> [u32; 3] {
+    pub fn calculate_optimal_workgroup(&self, rows: usize, _cols: usize, nnz: usize) -> [u32; 3] {
         let base_size = self.warp_size as u32;
 
         match self.backend {
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Cuda => {
                 // For CUDA, optimize for tensor cores when possible
-                if _rows >= 256 && _cols >= 256 {
+                if rows >= 256 && _cols >= 256 {
                     [32, 32, 1] // Tensor core friendly
-                } else if _nnz > 100_000 {
+                } else if nnz > 100_000 {
                     [base_size, 16, 1] // High parallelism
                 } else {
                     [base_size, 8, 1] // Balanced approach
@@ -2948,9 +2948,9 @@ impl GpuKernelScheduler {
             #[cfg(feature = "gpu")]
             GpuBackend::Cuda => {
                 // For CUDA, optimize for tensor cores when possible
-                if _rows >= 256 && _cols >= 256 {
+                if rows >= 256 && _cols >= 256 {
                     [32, 32, 1] // Tensor core friendly
-                } else if _nnz > 100_000 {
+                } else if nnz > 100_000 {
                     [base_size, 16, 1] // High parallelism
                 } else {
                     [base_size, 8, 1] // Balanced approach
@@ -3010,8 +3010,8 @@ impl OptimizedGpuOps {
     /// Create a new optimized GPU operations handler
     pub fn new(backend: GpuBackend) -> Self {
         Self {
-            scheduler: GpuKernelScheduler::new(_backend),
-            profiler: GpuProfiler::new(_backend),
+            scheduler: GpuKernelScheduler::new(backend),
+            profiler: GpuProfiler::new(backend),
         }
     }
 
@@ -3444,11 +3444,11 @@ mod tests {
         let mut manager = GpuMemoryManager::new(GpuBackend::Cuda);
 
         // Allocate a buffer
-        let buffer_id = manager.allocate_buffer::<f64>(1000).unwrap();
+        let bufferid = manager.allocate_buffer::<f64>(1000).unwrap();
         assert_eq!(manager.total_allocated(), 8000); // 1000 * 8 bytes
 
         // Free the buffer
-        manager.free_buffer(buffer_id).unwrap();
+        manager.free_buffer(bufferid).unwrap();
         assert_eq!(manager.total_allocated(), 0);
     }
 
@@ -3841,7 +3841,7 @@ fn execute_symmetric_spmv_kernel(
 fn execute_spmv_kernel(
     _device: &GpuDevice,
     _kernel: &GpuKernelHandle,
-    _rows: usize,
+    rows: usize,
     _indptr_buffer: &GpuBuffer<u32>,
     _indices_buffer: &GpuBuffer<u32>,
     _data_buffer: &GpuBuffer<f32>,
@@ -3857,7 +3857,7 @@ fn execute_spmv_kernel(
 fn execute_symmetric_spmv_kernel(
     _device: &GpuDevice,
     _kernel: &GpuKernelHandle,
-    _rows: usize,
+    rows: usize,
     _indptr_buffer: &GpuBuffer<u32>,
     _indices_buffer: &GpuBuffer<u32>,
     _data_buffer: &GpuBuffer<f32>,

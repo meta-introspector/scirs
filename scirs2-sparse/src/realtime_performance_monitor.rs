@@ -184,9 +184,9 @@ struct AnomalyDetector {
 #[allow(dead_code)]
 struct AnomalyEvent {
     timestamp: u64,
-    metric_name: String,
+    metricname: String,
     expected_value: f64,
-    actual_value: f64,
+    actualvalue: f64,
     severity: AnomalySeverity,
 }
 
@@ -233,9 +233,9 @@ pub struct Alert {
     pub message: String,
     pub processor_type: ProcessorType,
     pub processor_id: String,
-    pub metric_name: String,
+    pub metricname: String,
     pub threshold_value: f64,
-    pub actual_value: f64,
+    pub actualvalue: f64,
     pub resolved: bool,
 }
 
@@ -263,7 +263,7 @@ enum NotificationChannel {
 #[allow(dead_code)]
 struct AlertRule {
     id: String,
-    metric_name: String,
+    metricname: String,
     condition: AlertCondition,
     threshold: f64,
     severity: AlertSeverity,
@@ -377,7 +377,7 @@ enum ModelType {
 /// Performance forecast
 #[derive(Debug, Clone)]
 pub struct Forecast {
-    pub metric_name: String,
+    pub metricname: String,
     pub predictions: Vec<PredictionPoint>,
     pub confidence_interval: (f64, f64),
     pub model_accuracy: f64,
@@ -425,7 +425,7 @@ impl RealTimePerformanceMonitor {
     /// Create a new real-time performance monitor
     pub fn new(config: PerformanceMonitorConfig) -> Self {
         let performance_history = PerformanceHistory {
-            samples: VecDeque::with_capacity(_config.max_samples),
+            samples: VecDeque::with_capacity(config.max_samples),
             aggregatedmetrics: AggregatedMetrics::default(),
             trend_analysis: TrendAnalysis::new(),
             performance_baselines: HashMap::new(),
@@ -635,9 +635,9 @@ impl RealTimePerformanceMonitor {
     }
 
     /// Get performance forecast
-    pub fn get_forecast(&self, metric_name: &str, horizon: usize) -> Option<Forecast> {
+    pub fn get_forecast(&self, metricname: &str, horizon: usize) -> Option<Forecast> {
         if let Ok(prediction_engine) = self.prediction_engine.lock() {
-            prediction_engine.forecast_cache.get(metric_name).cloned()
+            prediction_engine.forecast_cache.get(metricname).cloned()
         } else {
             None
         }
@@ -842,37 +842,37 @@ impl RealTimePerformanceMonitor {
             let count = history.samples.len() as f64;
 
             // Calculate all metrics first before updating the struct
-            let avg_execution_time = _history
+            let avg_execution_time = history
                 .samples
                 .iter()
                 .map(|s| s.execution_time_ms)
                 .sum::<f64>()
                 / count;
-            let avg_throughput = _history
+            let avg_throughput = history
                 .samples
                 .iter()
                 .map(|s| s.throughput_ops_per_sec)
                 .sum::<f64>()
                 / count;
-            let avg_memory_usage = _history
+            let avg_memory_usage = history
                 .samples
                 .iter()
                 .map(|s| s.memory_usage_mb)
                 .sum::<f64>()
                 / count;
-            let avg_cache_hit_ratio = _history
+            let avg_cache_hit_ratio = history
                 .samples
                 .iter()
                 .map(|s| s.cache_hit_ratio)
                 .sum::<f64>()
                 / count;
             let avg_error_rate = history.samples.iter().map(|s| s.error_rate).sum::<f64>() / count;
-            let peak_throughput = _history
+            let peak_throughput = history
                 .samples
                 .iter()
                 .map(|s| s.throughput_ops_per_sec)
                 .fold(0.0, f64::max);
-            let min_execution_time = _history
+            let min_execution_time = history
                 .samples
                 .iter()
                 .map(|s| s.execution_time_ms)
@@ -936,7 +936,7 @@ impl RealTimePerformanceMonitor {
             history.trend_analysis.efficiency_trend = efficiency_trend;
 
             // Update anomaly detection
-            _history
+            history
                 .trend_analysis
                 .anomaly_detection
                 .update(&efficiency);
@@ -949,14 +949,14 @@ impl RealTimePerformanceMonitor {
         }
 
         let n = data.len() as f64;
-        let x_values: Vec<f64> = (0.._data.len()).map(|i| i as f64).collect();
+        let x_values: Vec<f64> = (0..data.len()).map(|i| i as f64).collect();
 
         let x_mean = x_values.iter().sum::<f64>() / n;
         let y_mean = data.iter().sum::<f64>() / n;
 
         let numerator: f64 = x_values
             .iter()
-            .zip(_data)
+            .zip(data)
             .map(|(x, y)| (x - x_mean) * (y - y_mean))
             .sum();
         let denominator: f64 = x_values.iter().map(|x| (x - x_mean).powi(2)).sum();
@@ -972,14 +972,14 @@ impl RealTimePerformanceMonitor {
         let ss_tot: f64 = data.iter().map(|y| (y - y_mean).powi(2)).sum();
         let ss_res: f64 = x_values
             .iter()
-            .zip(_data)
+            .zip(data)
             .map(|(x, y)| {
                 let predicted = slope * x + intercept;
                 (y - predicted).powi(2)
             })
             .sum();
 
-        let correlation = if ss_tot != 0.0 {
+        let correlation: f64 = if ss_tot != 0.0 {
             1.0 - (ss_res / ss_tot)
         } else {
             0.0
@@ -1018,7 +1018,7 @@ impl RealTimePerformanceMonitor {
                 }
 
                 let metric_value =
-                    Self::get_metric_value(&rule.metric_name, metrics, &systemmetrics);
+                    Self::get_metric_value(&rule.metricname, metrics, &systemmetrics);
                 let should_alert = Self::evaluate_alert_condition(
                     &rule.condition,
                     metric_value,
@@ -1038,11 +1038,11 @@ impl RealTimePerformanceMonitor {
                             timestamp,
                             severity: rule.severity,
                             message: Self::generate_alert_message(rule, metric_value),
-                            processor_type: Self::determine_processor_type(&rule.metric_name),
+                            processor_type: Self::determine_processor_type(&rule.metricname),
                             processor_id: "system".to_string(),
-                            metric_name: rule.metric_name.clone(),
+                            metricname: rule.metricname.clone(),
                             threshold_value: rule.threshold,
-                            actual_value: metric_value,
+                            actualvalue: metric_value,
                             resolved: false,
                         };
 
@@ -1102,7 +1102,7 @@ impl RealTimePerformanceMonitor {
         vec![
             AlertRule {
                 id: "cpu_high".to_string(),
-                metric_name: "cpu_usage".to_string(),
+                metricname: "cpu_usage".to_string(),
                 condition: AlertCondition::GreaterThan,
                 threshold: 0.9,
                 severity: AlertSeverity::Warning,
@@ -1110,7 +1110,7 @@ impl RealTimePerformanceMonitor {
             },
             AlertRule {
                 id: "memory_high".to_string(),
-                metric_name: "memory_usage".to_string(),
+                metricname: "memory_usage".to_string(),
                 condition: AlertCondition::GreaterThan,
                 threshold: 0.95,
                 severity: AlertSeverity::Error,
@@ -1118,7 +1118,7 @@ impl RealTimePerformanceMonitor {
             },
             AlertRule {
                 id: "efficiency_low".to_string(),
-                metric_name: "efficiency_score".to_string(),
+                metricname: "efficiency_score".to_string(),
                 condition: AlertCondition::LessThan,
                 threshold: 0.5,
                 severity: AlertSeverity::Warning,
@@ -1126,7 +1126,7 @@ impl RealTimePerformanceMonitor {
             },
             AlertRule {
                 id: "efficiency_critical".to_string(),
-                metric_name: "efficiency_score".to_string(),
+                metricname: "efficiency_score".to_string(),
                 condition: AlertCondition::LessThan,
                 threshold: 0.3,
                 severity: AlertSeverity::Critical,
@@ -1134,7 +1134,7 @@ impl RealTimePerformanceMonitor {
             },
             AlertRule {
                 id: "gpu_high".to_string(),
-                metric_name: "gpu_usage".to_string(),
+                metricname: "gpu_usage".to_string(),
                 condition: AlertCondition::GreaterThan,
                 threshold: 0.95,
                 severity: AlertSeverity::Warning,
@@ -1142,7 +1142,7 @@ impl RealTimePerformanceMonitor {
             },
             AlertRule {
                 id: "system_load_high".to_string(),
-                metric_name: "system_load".to_string(),
+                metricname: "system_load".to_string(),
                 condition: AlertCondition::GreaterThan,
                 threshold: 8.0,
                 severity: AlertSeverity::Error,
@@ -1150,7 +1150,7 @@ impl RealTimePerformanceMonitor {
             },
             AlertRule {
                 id: "processing_latency_high".to_string(),
-                metric_name: "processing_latency".to_string(),
+                metricname: "processing_latency".to_string(),
                 condition: AlertCondition::GreaterThan,
                 threshold: 1000.0, // milliseconds
                 severity: AlertSeverity::Warning,
@@ -1158,7 +1158,7 @@ impl RealTimePerformanceMonitor {
             },
             AlertRule {
                 id: "error_rate_high".to_string(),
-                metric_name: "error_rate".to_string(),
+                metricname: "error_rate".to_string(),
                 condition: AlertCondition::GreaterThan,
                 threshold: 0.05, // 5% error rate
                 severity: AlertSeverity::Error,
@@ -1168,11 +1168,11 @@ impl RealTimePerformanceMonitor {
     }
 
     fn get_metric_value(
-        metric_name: &str,
+        metricname: &str,
         metrics: &AggregatedMetrics,
         systemmetrics: &SystemMetrics,
     ) -> f64 {
-        match metric_name {
+        match metricname {
             "cpu_usage" => systemmetrics.cpu_usage,
             "memory_usage" => systemmetrics.memory_usage,
             "gpu_usage" => systemmetrics.gpu_usage,
@@ -1228,52 +1228,52 @@ impl RealTimePerformanceMonitor {
     }
 
     fn generate_alert_message(_rule: &AlertRule, actualvalue: f64) -> String {
-        match rule.condition {
+        match _rule.condition {
             AlertCondition::GreaterThan => {
                 format!(
                     "{} is above threshold: {:.3} > {:.3}",
-                    rule.metric_name, actual_value, rule.threshold
+                    _rule.metricname, actualvalue, _rule.threshold
                 )
             }
             AlertCondition::LessThan => {
                 format!(
                     "{} is below threshold: {:.3} < {:.3}",
-                    rule.metric_name, actual_value, rule.threshold
+                    _rule.metricname, actualvalue, _rule.threshold
                 )
             }
             AlertCondition::Equals => {
                 format!(
                     "{} equals threshold: {:.3} = {:.3}",
-                    rule.metric_name, actual_value, rule.threshold
+                    _rule.metricname, actualvalue, _rule.threshold
                 )
             }
             AlertCondition::NotEquals => {
                 format!(
                     "{} does not equal threshold: {:.3} != {:.3}",
-                    rule.metric_name, actual_value, rule.threshold
+                    _rule.metricname, actualvalue, _rule.threshold
                 )
             }
             AlertCondition::PercentageIncrease => {
                 format!(
                     "{} increased by {:.1}% (threshold: {:.1}%)",
-                    rule.metric_name,
-                    actual_value * 100.0,
-                    rule.threshold
+                    _rule.metricname,
+                    actualvalue * 100.0,
+                    _rule.threshold
                 )
             }
             AlertCondition::PercentageDecrease => {
                 format!(
                     "{} decreased by {:.1}% (threshold: {:.1}%)",
-                    rule.metric_name,
-                    actual_value * 100.0,
-                    rule.threshold
+                    _rule.metricname,
+                    actualvalue * 100.0,
+                    _rule.threshold
                 )
             }
         }
     }
 
     fn determine_processor_type(_metricname: &str) -> ProcessorType {
-        match _metric_name {
+        match _metricname {
             "quantum_coherence" | "entanglement_strength" => ProcessorType::QuantumInspired,
             "neural_confidence" | "learning_rate" => ProcessorType::NeuralAdaptive,
             "hybrid_synchronization" => ProcessorType::QuantumNeuralHybrid,
@@ -1283,7 +1283,7 @@ impl RealTimePerformanceMonitor {
 
     fn send_alert_notifications(_alert: &Alert, channels: &[NotificationChannel]) {
         // For now, just log to console - could be extended to support email, webhooks, etc.
-        let severity_str = match alert.severity {
+        let severity_str = match _alert.severity {
             AlertSeverity::Info => "INFO",
             AlertSeverity::Warning => "WARN",
             AlertSeverity::Error => "ERROR",
@@ -1292,7 +1292,7 @@ impl RealTimePerformanceMonitor {
 
         eprintln!(
             "[{}] Advanced Alert: {} - {}",
-            severity_str, alert.id, alert.message
+            severity_str, _alert.id, _alert.message
         );
     }
 
@@ -1332,8 +1332,8 @@ impl RealTimePerformanceMonitor {
                 "cache_hit_rate",
             ];
 
-            for metric_name in metrics {
-                let values: Vec<f64> = Self::extract_metric_values(metric_name, &history.samples);
+            for metricname in metrics {
+                let values: Vec<f64> = Self::extract_metric_values(metricname, &history.samples);
 
                 if values.len() < 5 {
                     continue;
@@ -1362,10 +1362,10 @@ impl RealTimePerformanceMonitor {
                         model_accuracies.iter().sum::<f64>() / model_accuracies.len() as f64;
 
                     let forecast =
-                        Self::create_forecast(metric_name, ensemble_predictions, ensemble_accuracy);
+                        Self::create_forecast(metricname, ensemble_predictions, ensemble_accuracy);
                     prediction_engine
                         .forecast_cache
-                        .insert(metric_name.to_string(), forecast);
+                        .insert(metricname.to_string(), forecast);
 
                     // Update model accuracy based on recent performance
                     Self::update_model_accuracies(&mut prediction_engine.model_accuracy, &values);
@@ -1441,12 +1441,12 @@ impl RealTimePerformanceMonitor {
     }
 
     fn extract_metric_values(
-        _metric_name: &str,
+        _metricname: &str,
         samples: &VecDeque<PerformanceSample>,
     ) -> Vec<f64> {
         samples
             .iter()
-            .map(|s| match _metric_name {
+            .map(|s| match _metricname {
                 "efficiency_score" => {
                     (s.throughput_ops_per_sec * s.cache_hit_ratio) / (s.execution_time_ms + 1.0)
                         * (1.0 - s.error_rate)
@@ -1462,11 +1462,11 @@ impl RealTimePerformanceMonitor {
 
     fn generate_model_predictions(model: &PredictionModel, values: &[f64]) -> Option<Vec<f64>> {
         match model.model_type {
-            ModelType::MovingAverage => Self::moving_average_prediction(_model, values),
-            ModelType::LinearRegression => Self::linear_regression_prediction(_model, values),
-            ModelType::Arima => Self::arima_prediction(_model, values),
-            ModelType::NeuralNetwork => Self::neural_network_prediction(_model, values),
-            ModelType::ExponentialSmoothing => Self::moving_average_prediction(_model, values), // Use moving average as fallback
+            ModelType::MovingAverage => Self::moving_average_prediction(model, values),
+            ModelType::LinearRegression => Self::linear_regression_prediction(model, values),
+            ModelType::Arima => Self::arima_prediction(model, values),
+            ModelType::NeuralNetwork => Self::neural_network_prediction(model, values),
+            ModelType::ExponentialSmoothing => Self::moving_average_prediction(model, values), // Use moving average as fallback
         }
     }
 
@@ -1613,7 +1613,7 @@ impl RealTimePerformanceMonitor {
 
         let mut ensemble = vec![0.0; horizon];
 
-        for (pred_vec, weight) in _predictions {
+        for (pred_vec, weight) in predictions {
             for (i, &value) in pred_vec.iter().enumerate() {
                 if i < ensemble.len() {
                     ensemble[i] += value * weight / total_weight;
@@ -1647,7 +1647,7 @@ impl RealTimePerformanceMonitor {
         let forecast_horizon = prediction_points.len();
 
         Forecast {
-            metric_name: metric_name.to_string(),
+            metricname: metricname.to_string(),
             predictions: prediction_points,
             confidence_interval: (avg - std_dev * 1.96, avg + std_dev * 1.96), // 95% CI
             model_accuracy: accuracy,
@@ -1657,7 +1657,7 @@ impl RealTimePerformanceMonitor {
 
     fn update_model_accuracies(_model_accuracy: &mut HashMap<String, f64>, values: &[f64]) {
         // Simplified _accuracy update - in practice, this would compare predictions with actual _values
-        for (model_name, accuracy) in model_accuracy.iter_mut() {
+        for (model_name, accuracy) in _model_accuracy.iter_mut() {
             match model_name.as_str() {
                 "moving_average" => *accuracy = (*accuracy * 0.9 + 0.75 * 0.1).max(0.1),
                 "linear_regression" => *accuracy = (*accuracy * 0.9 + 0.8 * 0.1).max(0.1),
@@ -2271,9 +2271,9 @@ impl AnomalyDetector {
                     .duration_since(UNIX_EPOCH)
                     .unwrap()
                     .as_secs(),
-                metric_name: "efficiency".to_string(),
+                metricname: "efficiency".to_string(),
                 expected_value: self.moving_average,
-                actual_value: latest,
+                actualvalue: latest,
                 severity,
             };
 

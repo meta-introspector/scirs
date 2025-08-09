@@ -630,7 +630,7 @@ where
     }
 
     /// Compute log-likelihood for MCMC monitoring
-    fn compute_mcmc_log_likelihood(&self, beta: &Array1<F>, noiseprecision: F) -> StatsResult<F> {
+    fn compute_mcmc_log_likelihood(&self, beta: &Array1<F>, noise_precision: F) -> StatsResult<F> {
         let x = &self.design_matrix;
         let y = &self.response;
         let n = x.nrows() as f64;

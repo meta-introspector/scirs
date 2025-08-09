@@ -226,7 +226,7 @@ pub struct Homography {
 impl Homography {
     /// Create a new homography matrix from raw data
     pub fn new(_matrixdata: &[f64; 9]) -> Self {
-        let matrix = Array2::fromshape_vec((3, 3), matrix_data.to_vec()).unwrap();
+        let matrix = Array2::fromshape_vec((3, 3), _matrixdata.to_vec()).unwrap();
         let inverse = match Self::invert_matrix(&matrix) {
             Ok(inv) => inv,
             Err(_) => Array2::eye(3),
@@ -293,11 +293,11 @@ impl Homography {
         }
 
         let det = matrix[[0, 0]]
-            * (_matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
+            * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
             - matrix[[0, 1]]
-                * (_matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
+                * (matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
             + matrix[[0, 2]]
-                * (_matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
+                * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
 
         if det.abs() < 1e-10 {
             return Err(crate::error::VisionError::OperationError(
@@ -308,23 +308,23 @@ impl Homography {
         let mut inverse = Array2::zeros((3, 3));
 
         inverse[[0, 0]] =
-            (_matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]]) / det;
+            (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]]) / det;
         inverse[[0, 1]] =
-            (_matrix[[0, 2]] * matrix[[2, 1]] - matrix[[0, 1]] * matrix[[2, 2]]) / det;
+            (matrix[[0, 2]] * matrix[[2, 1]] - matrix[[0, 1]] * matrix[[2, 2]]) / det;
         inverse[[0, 2]] =
-            (_matrix[[0, 1]] * matrix[[1, 2]] - matrix[[0, 2]] * matrix[[1, 1]]) / det;
+            (matrix[[0, 1]] * matrix[[1, 2]] - matrix[[0, 2]] * matrix[[1, 1]]) / det;
         inverse[[1, 0]] =
-            (_matrix[[1, 2]] * matrix[[2, 0]] - matrix[[1, 0]] * matrix[[2, 2]]) / det;
+            (matrix[[1, 2]] * matrix[[2, 0]] - matrix[[1, 0]] * matrix[[2, 2]]) / det;
         inverse[[1, 1]] =
-            (_matrix[[0, 0]] * matrix[[2, 2]] - matrix[[0, 2]] * matrix[[2, 0]]) / det;
+            (matrix[[0, 0]] * matrix[[2, 2]] - matrix[[0, 2]] * matrix[[2, 0]]) / det;
         inverse[[1, 2]] =
-            (_matrix[[0, 2]] * matrix[[1, 0]] - matrix[[0, 0]] * matrix[[1, 2]]) / det;
+            (matrix[[0, 2]] * matrix[[1, 0]] - matrix[[0, 0]] * matrix[[1, 2]]) / det;
         inverse[[2, 0]] =
-            (_matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]) / det;
+            (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]) / det;
         inverse[[2, 1]] =
-            (_matrix[[0, 1]] * matrix[[2, 0]] - matrix[[0, 0]] * matrix[[2, 1]]) / det;
+            (matrix[[0, 1]] * matrix[[2, 0]] - matrix[[0, 0]] * matrix[[2, 1]]) / det;
         inverse[[2, 2]] =
-            (_matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]) / det;
+            (matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]) / det;
 
         Ok(inverse)
     }
@@ -345,14 +345,14 @@ impl RansacModel for Homography {
     fn estimate(samples: &[Self::DataPoint]) -> Result<Self> {
         if samples.len() < Self::min_samples() {
             return Err(crate::error::VisionError::InvalidParameter(format!(
-                "Not enough _samples: {} < {}",
+                "Not enough samples: {} < {}",
                 samples.len(),
                 Self::min_samples()
             )));
         }
 
         // Construct linear system for homography
-        let mut a = Array2::zeros((_samples.len() * 2, 9));
+        let mut a = Array2::zeros((samples.len() * 2, 9));
 
         for (i, match_point) in samples.iter().enumerate() {
             let (x1, y1) = match_point.point1;
@@ -382,9 +382,9 @@ impl RansacModel for Homography {
         let h = Array1::from_iter(svd.into_iter().skip(8 * 9).take(9));
 
         // Reshape to 3x3 matrix
-        let matrix_data = [h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8]];
+        let _matrixdata = [h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8]];
 
-        let homography = Self::new(&matrix_data);
+        let homography = Self::new(&_matrixdata);
 
         Ok(homography)
     }
@@ -522,7 +522,7 @@ impl RansacModel for TranslationScale {
     fn estimate(samples: &[Self::DataPoint]) -> Result<Self> {
         if samples.len() < Self::min_samples() {
             return Err(crate::error::VisionError::InvalidParameter(format!(
-                "Not enough _samples: {} < {}",
+                "Not enough samples: {} < {}",
                 samples.len(),
                 Self::min_samples()
             )));

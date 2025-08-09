@@ -111,7 +111,7 @@ where
     A: Float + ScalarOperand + Debug,
 {
     let mut global_norm_sq = 0.0;
-    for grad in _gradients {
+    for grad in gradients {
         for val in grad.iter() {
             let val_f64 = val.to_f64().unwrap_or(0.0);
             global_norm_sq += val_f64 * val_f64;

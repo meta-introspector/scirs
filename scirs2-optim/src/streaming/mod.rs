@@ -110,7 +110,7 @@ pub struct StreamingConfig {
     pub distributed_streaming: bool,
 
     /// Stream processing priority
-    pub processing_priority: StreamPriority,
+    pub processingpriority: StreamPriority,
 }
 
 impl Default for StreamingConfig {
@@ -142,7 +142,7 @@ impl Default for StreamingConfig {
             pipeline_parallelism_degree: 2,
             adaptive_resource_allocation: true,
             distributed_streaming: false,
-            processing_priority: StreamPriority::Normal,
+            processingpriority: StreamPriority::Normal,
         }
     }
 }
@@ -176,7 +176,7 @@ where
     O: Optimizer<A, D>,
 {
     /// Base optimizer
-    base_optimizer: O,
+    baseoptimizer: O,
 
     /// Configuration
     config: StreamingConfig,
@@ -483,14 +483,14 @@ where
 
         let pipeline_manager = PipelineExecutionManager::new(
             config.pipeline_parallelism_degree,
-            config.processing_priority,
+            config.processingpriority,
         );
 
         // Save buffer_size before moving config
         let buffer_size = config.buffer_size;
 
         Ok(Self {
-            base_optimizer,
+            baseoptimizer,
             config,
             data_buffer: VecDeque::with_capacity(buffer_size),
             gradient_buffer: None,
@@ -517,8 +517,8 @@ where
         &mut self,
         data_point: StreamingDataPoint<A>,
     ) -> Result<Option<Array1<A>>> {
-        let start_time = Instant::now();
-        self.timing.batch_start = Some(start_time);
+        let starttime = Instant::now();
+        self.timing.batch_start = Some(starttime);
 
         // Add to buffer
         self.data_buffer.push_back(data_point);
@@ -526,13 +526,13 @@ where
 
         // Check if buffer is full or latency budget is approaching
         let should_update = self.data_buffer.len() >= self.config.buffer_size
-            || self.should_force_update(start_time);
+            || self.should_force_update(starttime);
 
         if should_update {
             let result = self.process_buffer()?;
 
             // Update timing metrics
-            let latency = start_time.elapsed();
+            let latency = starttime.elapsed();
             self.update_timing_metrics(latency);
 
             // Check for concept drift
@@ -548,7 +548,7 @@ where
 
     fn should_force_update(&self, starttime: Instant) -> bool {
         if let Some(batch_start) = self.timing.batch_start {
-            let elapsed = start_time.duration_since(batch_start);
+            let elapsed = starttime.duration_since(batch_start);
             elapsed.as_millis() as u64 >= self.config.latency_budget_ms / 2
         } else {
             false
@@ -597,8 +597,8 @@ where
         }
 
         let batch_size = self.data_buffer.len();
-        let feature_dim = self.data_buffer[0].features.len();
-        let mut gradient = Array1::zeros(feature_dim);
+        let featuredim = self.data_buffer[0].features.len();
+        let mut gradient = Array1::zeros(featuredim);
 
         // Simplified gradient computation (would depend on loss function)
         for data_point in &self.data_buffer {
@@ -845,7 +845,7 @@ where
         let gradient_generic = gradient_owned.into_dimensionality::<D>()?;
 
         let result = self
-            .base_optimizer
+            .baseoptimizer
             .step(&params_generic, &gradient_generic)?;
 
         // Convert back to Array1
@@ -1443,8 +1443,8 @@ pub struct PredictiveStreamingEngine<A: Float> {
 impl<A: Float> PredictiveStreamingEngine<A> {
     pub fn new(config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
-            prediction_model: PredictionModel::new(_config.buffer_size)?,
-            historical_buffer: VecDeque::with_capacity(_config.buffer_size * 2),
+            prediction_model: PredictionModel::new(config.buffer_size)?,
+            historical_buffer: VecDeque::with_capacity(config.buffer_size * 2),
             prediction_horizon: 10,
             confidence_threshold: A::from(0.8).unwrap(),
             adaptation_rate: A::from(0.1).unwrap(),
@@ -1476,7 +1476,7 @@ pub struct PredictionModel<A: Float> {
     weights: Array1<A>,
 
     /// Feature dimension
-    feature_dim: usize,
+    featuredim: usize,
 
     /// Model complexity
     model_order: usize,
@@ -1485,8 +1485,8 @@ pub struct PredictionModel<A: Float> {
 impl<A: Float> PredictionModel<A> {
     pub fn new(featuredim: usize) -> Result<Self> {
         Ok(Self {
-            weights: Array1::zeros(feature_dim),
-            feature_dim,
+            weights: Array1::zeros(featuredim),
+            featuredim,
             model_order: 3,
         })
     }
@@ -1545,7 +1545,7 @@ impl<A: Float + std::ops::DivAssign + ndarray::ScalarOperand> StreamFusionOptimi
         Ok(Self {
             fusion_strategy: FusionStrategy::WeightedAverage,
             stream_weights: HashMap::new(),
-            fusion_buffer: VecDeque::with_capacity(_config.buffer_size),
+            fusion_buffer: VecDeque::with_capacity(config.buffer_size),
             consensus_mechanism: ConsensusAlgorithm::MajorityVoting,
         })
     }
@@ -1867,22 +1867,22 @@ pub struct PipelineExecutionManager<A: Float> {
     pipeline_stages: Vec<PipelineStage<A>>,
 
     /// Parallelism degree
-    parallelism_degree: usize,
+    parallelismdegree: usize,
 
     /// Processing priority
-    processing_priority: StreamPriority,
+    processingpriority: StreamPriority,
 
     /// Stage coordination
     stage_coordinator: StageCoordinator,
 }
 
 impl<A: Float> PipelineExecutionManager<A> {
-    pub fn new(parallelism_degree: usize, processingpriority: StreamPriority) -> Self {
+    pub fn new(parallelismdegree: usize, processingpriority: StreamPriority) -> Self {
         Self {
             pipeline_stages: Vec::new(),
-            parallelism_degree,
-            processing_priority,
-            stage_coordinator: StageCoordinator::new(parallelism_degree),
+            parallelismdegree,
+            processingpriority,
+            stage_coordinator: StageCoordinator::new(parallelismdegree),
         }
     }
 
@@ -1913,7 +1913,7 @@ pub struct PipelineStage<A: Float> {
 pub struct StageCoordinator {
     pub coordination_strategy: CoordinationStrategy,
     pub synchronization_barriers: Vec<SyncBarrier>,
-    pub parallelism_degree: usize,
+    pub parallelismdegree: usize,
 }
 
 impl StageCoordinator {
@@ -1921,7 +1921,7 @@ impl StageCoordinator {
         Self {
             coordination_strategy: CoordinationStrategy::DataParallel,
             synchronization_barriers: Vec::new(),
-            parallelism_degree,
+            parallelismdegree,
         }
     }
 }

@@ -693,7 +693,7 @@ pub fn binomial_stable(n: u64, k: u64) -> CoreResult<f64> {
 
         for i in 0..k {
             result *= (n - i) as f64;
-            result /= 1.0;
+            result /= (i + 1) as f64;
         }
 
         Ok(result)

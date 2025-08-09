@@ -395,7 +395,7 @@ impl Widget {
 
     /// Set chart type
     pub fn with_chart_type(mut self, charttype: ChartType) -> Self {
-        self.charttype = chart_type;
+        self.chart_type = charttype;
         self
     }
 

@@ -1230,7 +1230,7 @@ where
         num_samples: usize,
     ) -> StatsResult<Array2<F>> {
         let dimension = bounds.len();
-        let mut _samples = Array2::zeros((num_samples, dimension));
+        let mut samples = Array2::zeros((num_samples, dimension));
 
         // Use quantum-inspired low-discrepancy sequences
         for i in 0..num_samples {
@@ -1242,7 +1242,7 @@ where
             }
         }
 
-        Ok(_samples)
+        Ok(samples)
     }
 
     /// Quantum-inspired quasi-random number generation
@@ -1298,8 +1298,8 @@ where
     /// Estimate quantum speedup factor
     fn estimate_quantum_speedup(&self, dimension: usize, numsamples: usize) -> F {
         // Theoretical quantum speedup for Monte Carlo is quadratic
-        let classical_error = F::from(1.0 / (num_samples as f64).sqrt()).unwrap();
-        let quantum_error = F::from(1.0 / num_samples as f64).unwrap();
+        let classical_error = F::from(1.0 / (numsamples as f64).sqrt()).unwrap();
+        let quantum_error = F::from(1.0 / numsamples as f64).unwrap();
 
         // Account for dimension-dependent effects
         let dimension_factor = F::from((dimension as f64).ln()).unwrap();

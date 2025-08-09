@@ -418,7 +418,7 @@ pub enum ConvolutionMode {
 impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> ConvolutionOperator<F> {
     /// Create a new convolution operator
     #[allow(dead_code)]
-    pub fn new(_kernel: Vec<F>, inputsize: usize, mode: ConvolutionMode) -> Self {
+    pub fn new(kernel: Vec<F>, input_size: usize, mode: ConvolutionMode) -> Self {
         let output_size = match mode {
             ConvolutionMode::Full => input_size + kernel.len() - 1,
             ConvolutionMode::Same => input_size,
@@ -433,7 +433,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Convoluti
 
         Self {
             kernel: kernel,
-            input_size,
+            input_size: input_size,
             output_size,
             mode,
             options: EnhancedOperatorOptions::default(),
@@ -1062,7 +1062,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
         Func: Fn(F) -> F + Send + Sync + 'static,
     {
         Self {
-            function: Box::new(_function),
+            function: Box::new(function),
             size,
             options: EnhancedOperatorOptions::default(),
         }
@@ -1071,7 +1071,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
     /// Create with custom options
     #[allow(dead_code)]
     pub fn with_options<Func>(
-        _function: Func,
+        function: Func,
         size: usize,
         options: EnhancedOperatorOptions,
     ) -> Self
@@ -1079,7 +1079,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
         Func: Fn(F) -> F + Send + Sync + 'static,
     {
         Self {
-            function: Box::new(_function),
+            function: Box::new(function),
             size,
             options,
         }
@@ -1253,7 +1253,7 @@ pub fn enhanced_compose<
 
 /// Create an element-wise function operator
 #[allow(dead_code)]
-pub fn elementwise_function<
+pub fn elementwisefunction<
     F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
     Func: Fn(F) -> F + Send + Sync + 'static,
 >(

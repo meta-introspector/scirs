@@ -467,7 +467,7 @@ where
         }
     }
 
-    fn mean_fixed_chunks<D>(&self, x: &ArrayBase<D, Ix1>, chunksize: usize) -> StatsResult<F>
+    fn mean_fixed_chunks<D>(&self, x: &ArrayBase<D, Ix1>, chunk_size: usize) -> StatsResult<F>
     where
         D: Data<Elem = F> + Sync + Send,
     {

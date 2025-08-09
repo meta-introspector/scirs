@@ -44,7 +44,7 @@ pub fn gamma_correction(img: &DynamicImage, gamma: f32) -> Result<DynamicImage> 
         })
         .collect();
 
-    match _img {
+    match img {
         DynamicImage::ImageLuma8(gray) => {
             let mut result = GrayImage::new(gray.width(), gray.height());
             for (x, y, pixel) in gray.enumerate_pixels() {
@@ -81,14 +81,14 @@ pub fn gamma_correction(img: &DynamicImage, gamma: f32) -> Result<DynamicImage> 
 /// # Arguments
 ///
 /// * `img` - Input image
-/// * `target_brightness` - Target mean brightness (0.0-1.0, typically 0.5)
+/// * `targetbrightness` - Target mean brightness (0.0-1.0, typically 0.5)
 ///
 /// # Returns
 ///
 /// * Result containing the auto gamma-corrected image
 #[allow(dead_code)]
-pub fn auto_gamma_correction(_img: &DynamicImage, targetbrightness: f32) -> Result<DynamicImage> {
-    if target_brightness <= 0.0 || target_brightness >= 1.0 {
+pub fn auto_gamma_correction(img: &DynamicImage, targetbrightness: f32) -> Result<DynamicImage> {
+    if targetbrightness <= 0.0 || targetbrightness >= 1.0 {
         return Err(VisionError::InvalidParameter(
             "Target _brightness must be between 0.0 and 1.0".to_string(),
         ));
@@ -106,18 +106,18 @@ pub fn auto_gamma_correction(_img: &DynamicImage, targetbrightness: f32) -> Resu
 
     // Avoid division by zero or log of zero
     if mean_brightness < 0.001 {
-        return gamma_correction(_img, 0.5); // Apply strong brightening
+        return gamma_correction(img, 0.5); // Apply strong brightening
     }
 
     // Calculate gamma to achieve target _brightness
     // Using: target = current^(1/gamma)
     // Therefore: gamma = log(current) / log(target)
-    let gamma = mean_brightness.ln() / target_brightness.ln();
+    let gamma = mean_brightness.ln() / targetbrightness.ln();
 
     // Clamp gamma to reasonable range
     let gamma = gamma.clamp(0.1, 10.0);
 
-    gamma_correction(_img, gamma)
+    gamma_correction(img, gamma)
 }
 
 /// Apply adaptive gamma correction

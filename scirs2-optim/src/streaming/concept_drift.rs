@@ -44,7 +44,7 @@ pub struct DriftDetectorConfig {
     /// Alpha value for statistical tests
     pub alpha: f64,
     /// Warning threshold (before drift)
-    pub warning_threshold: f64,
+    pub warningthreshold: f64,
     /// Enable ensemble detection
     pub enable_ensemble: bool,
 }
@@ -57,7 +57,7 @@ impl Default for DriftDetectorConfig {
             threshold: 3.0,
             window_size: 100,
             alpha: 0.005,
-            warning_threshold: 2.0,
+            warningthreshold: 2.0,
             enable_ensemble: false,
         }
     }
@@ -129,7 +129,7 @@ pub struct PageHinkleyDetector<A: Float> {
     /// Detection threshold
     threshold: A,
     /// Warning threshold
-    warning_threshold: A,
+    warningthreshold: A,
     /// Sample count
     sample_count: usize,
     /// Last drift time
@@ -143,7 +143,7 @@ impl<A: Float> PageHinkleyDetector<A> {
             sum: A::zero(),
             min_sum: A::zero(),
             threshold,
-            warning_threshold,
+            warningthreshold,
             sample_count: 0,
             last_drift: None,
         }
@@ -169,7 +169,7 @@ impl<A: Float> PageHinkleyDetector<A> {
             self.last_drift = Some(Instant::now());
             self.reset();
             DriftStatus::Drift
-        } else if test_stat > self.warning_threshold {
+        } else if test_stat > self.warningthreshold {
             DriftStatus::Warning
         } else {
             DriftStatus::Stable
@@ -190,7 +190,7 @@ pub struct AdwinDetector<A: Float> {
     /// Window of recent values
     window: VecDeque<A>,
     /// Maximum window size
-    max_window_size: usize,
+    max_windowsize: usize,
     /// Detection confidence level
     delta: A,
     /// Minimum window size for detection
@@ -202,7 +202,7 @@ impl<A: Float + Sum> AdwinDetector<A> {
     pub fn new(delta: A, max_windowsize: usize) -> Self {
         Self {
             window: VecDeque::new(),
-            max_window_size,
+            max_windowsize,
             delta,
             min_window_size: 10,
         }
@@ -213,7 +213,7 @@ impl<A: Float + Sum> AdwinDetector<A> {
         self.window.push_back(value);
 
         // Maintain window size
-        if self.window.len() > self.max_window_size {
+        if self.window.len() > self.max_windowsize {
             self.window.pop_front();
         }
 
@@ -314,7 +314,7 @@ impl<A: Float> DdmDetector<A> {
     /// Update with prediction result
     pub fn update(&mut self, iserror: bool) -> DriftStatus {
         self.sample_count += 1;
-        if is_error {
+        if iserror {
             self.error_count += 1;
         }
 
@@ -386,11 +386,11 @@ impl<A: Float + std::fmt::Debug + Sum> ConceptDriftDetector<A> {
     /// Create a new concept drift detector
     pub fn new(config: DriftDetectorConfig) -> Self {
         let threshold = A::from(config.threshold).unwrap();
-        let warning_threshold = A::from(config.warning_threshold).unwrap();
+        let warningthreshold = A::from(config.warningthreshold).unwrap();
         let delta = A::from(config.alpha).unwrap();
 
         Self {
-            ph_detector: PageHinkleyDetector::new(threshold, warning_threshold),
+            ph_detector: PageHinkleyDetector::new(threshold, warningthreshold),
             adwin_detector: AdwinDetector::new(delta, config.window_size),
             ddm_detector: DdmDetector::new(),
             ensemble_history: VecDeque::with_capacity(10),
@@ -404,7 +404,7 @@ impl<A: Float + std::fmt::Debug + Sum> ConceptDriftDetector<A> {
     pub fn update(&mut self, loss: A, is_predictionerror: bool) -> Result<DriftStatus> {
         let ph_status = self.ph_detector.update(loss);
         let adwin_status = self.adwin_detector.update(loss);
-        let ddm_status = self.ddm_detector.update(is_prediction_error);
+        let ddm_status = self.ddm_detector.update(is_predictionerror);
 
         let final_status = if self.config.enable_ensemble {
             self.ensemble_vote(ph_status, adwin_status, ddm_status)
@@ -567,7 +567,7 @@ impl<A: Float + std::iter::Sum> PerformanceDriftTracker<A> {
 
     fn update(&mut self, performance: A, driftstatus: DriftStatus) {
         self.performance_history
-            .push_back((performance, drift_status, Instant::now()));
+            .push_back((performance, driftstatus, Instant::now()));
 
         // Maintain window size
         if self.performance_history.len() > self.window_size {
@@ -1487,14 +1487,14 @@ mod tests {
 
         // Stable period with low error rate
         for i in 0..50 {
-            let is_error = i % 10 == 0; // 10% error rate
-            detector.update(is_error);
+            let iserror = i % 10 == 0; // 10% error rate
+            detector.update(iserror);
         }
 
         // Period with high error rate
         for i in 0..20 {
-            let is_error = i % 2 == 0; // 50% error rate
-            let status = detector.update(is_error);
+            let iserror = i % 2 == 0; // 50% error rate
+            let status = detector.update(iserror);
             if status == DriftStatus::Drift {
                 break;
             }
@@ -1509,16 +1509,16 @@ mod tests {
         // Simulate stable period
         for i in 0..30 {
             let loss = 0.1 + (i as f64) * 0.001;
-            let is_error = i % 10 == 0;
-            let status = detector.update(loss, is_error).unwrap();
+            let iserror = i % 10 == 0;
+            let status = detector.update(loss, iserror).unwrap();
             assert_ne!(status, DriftStatus::Drift); // Should be stable
         }
 
         // Simulate drift
         for i in 0..20 {
             let loss = 0.5 + (i as f64) * 0.01; // Much higher loss
-            let is_error = i % 2 == 0; // Higher error rate
-            let _status = detector.update(loss, is_error).unwrap();
+            let iserror = i % 2 == 0; // Higher error rate
+            let _status = detector.update(loss, iserror).unwrap();
         }
 
         let stats = detector.get_statistics();

@@ -88,7 +88,7 @@ impl LinearDiscriminantAnalysis {
     }
 
     /// Set number of components to keep
-    pub fn with_n_components(mut self, ncomponents: usize) -> Self {
+    pub fn with_n_components(mut self, n_components: usize) -> Self {
         self.n_components = Some(n_components);
         self
     }
@@ -110,28 +110,28 @@ impl LinearDiscriminantAnalysis {
         let handler = global_error_handler();
         validate_or_error!(finite: x.as_slice().unwrap(), "x", "LDA fit");
 
-        let (n_samples_, n_features) = x.dim();
+        let (n_samples, n_features) = x.dim();
         let n_targets = y.len();
 
-        if n_samples_ != n_targets {
+        if n_samples != n_targets {
             return Err(handler
                 .create_validation_error(
                     ErrorCode::E2001,
                     "LDA fit",
                     "sample_size_mismatch",
-                    format!("x: {}, y: {}", n_samples_, n_targets),
+                    format!("x: {}, y: {}", n_samples, n_targets),
                     "Number of samples in X and y must be equal",
                 )
                 .error);
         }
 
-        if n_samples_ < 2 {
+        if n_samples < 2 {
             return Err(handler
                 .create_validation_error(
                     ErrorCode::E2003,
                     "LDA fit",
-                    "n_samples_",
-                    n_samples_,
+                    "n_samples",
+                    n_samples,
                     "LDA requires at least 2 samples",
                 )
                 .error);
@@ -153,12 +153,12 @@ impl LinearDiscriminantAnalysis {
                 .error);
         }
 
-        if n_features >= n_samples_ && self.solver == LDASolver::Eigen {
+        if n_features >= n_samples && self.solver == LDASolver::Eigen {
             return Err(handler
                 .create_error(
                     ErrorCode::E1001,
                     "LDA fit",
-                    "Use SVD solver when n_features >= n_samples_ for numerical stability",
+                    "Use SVD solver when n_features >= n_samples for numerical stability",
                 )
                 .error);
         }
@@ -227,7 +227,7 @@ impl LinearDiscriminantAnalysis {
         y: ArrayView1<i32>,
         classes: &Array1<i32>,
     ) -> Result<(Array2<f64>, Array1<f64>, Array1<usize>)> {
-        let (n_samples_, n_features) = x.dim();
+        let (n_samples, n_features) = x.dim();
         let n_classes = classes.len();
 
         let mut class_means = Array2::zeros((n_classes, n_features));
@@ -273,7 +273,7 @@ impl LinearDiscriminantAnalysis {
             priors.clone()
         } else {
             // Empirical priors
-            class_counts.mapv(|count| count as f64 / n_samples_ as f64)
+            class_counts.mapv(|count| count as f64 / n_samples as f64)
         };
 
         Ok((class_means, class_priors, class_counts.mapv(|x| x)))
@@ -287,7 +287,7 @@ impl LinearDiscriminantAnalysis {
         classes: &Array1<i32>,
         class_means: &Array2<f64>,
     ) -> Result<(Array2<f64>, Array2<f64>)> {
-        let (_n_samples_, n_features) = x.dim();
+        let (_n_samples, n_features) = x.dim();
         let _n_classes = classes.len();
 
         // Overall mean
@@ -541,12 +541,12 @@ impl LinearDiscriminantAnalysis {
     /// Compute decision function scores
     pub fn decision_function(&self, x: ArrayView2<f64>, result: &LDAResult) -> Result<Array2<f64>> {
         let projected = self.transform(x, result)?;
-        let n_samples_ = projected.nrows();
+        let n_samples = projected.nrows();
         let n_classes = result.classes.len();
 
-        let mut scores = Array2::zeros((n_samples_, n_classes));
+        let mut scores = Array2::zeros((n_samples, n_classes));
 
-        for i in 0..n_samples_ {
+        for i in 0..n_samples {
             let sample = projected.row(i);
             for j in 0..n_classes {
                 let class_mean = result.means.row(j);
@@ -642,7 +642,7 @@ impl QuadraticDiscriminantAnalysis {
     }
 
     /// Set regularization parameter
-    pub fn with_reg_param(mut self, regparam: f64) -> Self {
+    pub fn with_reg_param(mut self, reg_param: f64) -> Self {
         self.reg_param = reg_param;
         self
     }
@@ -658,15 +658,15 @@ impl QuadraticDiscriminantAnalysis {
         let handler = global_error_handler();
         validate_or_error!(finite: x.as_slice().unwrap(), "x", "QDA fit");
 
-        let (n_samples_, n_features) = x.dim();
+        let (n_samples, n_features) = x.dim();
 
-        if n_samples_ != y.len() {
+        if n_samples != y.len() {
             return Err(handler
                 .create_validation_error(
                     ErrorCode::E2001,
                     "QDA fit",
                     "sample_size_mismatch",
-                    format!("x: {}, y: {}", n_samples_, y.len()),
+                    format!("x: {}, y: {}", n_samples, y.len()),
                     "Number of samples in X and y must be equal",
                 )
                 .error);
@@ -758,7 +758,7 @@ impl QuadraticDiscriminantAnalysis {
             }
             priors.clone()
         } else {
-            class_counts.mapv(|count| count as f64 / n_samples_ as f64)
+            class_counts.mapv(|count| count as f64 / n_samples as f64)
         };
 
         Ok(QDAResult {
@@ -816,9 +816,9 @@ impl QuadraticDiscriminantAnalysis {
         }
 
         let covariances = result.covariances.as_ref().unwrap();
-        let n_samples_ = x.nrows();
+        let n_samples = x.nrows();
         let n_classes = result.classes.len();
-        let mut scores = Array2::zeros((n_samples_, n_classes));
+        let mut scores = Array2::zeros((n_samples, n_classes));
 
         for class_idx in 0..n_classes {
             let class_mean = result.means.row(class_idx);
@@ -849,7 +849,7 @@ impl QuadraticDiscriminantAnalysis {
             let log_det_term = -0.5 * det_cov.ln();
             let prior_term = result.priors[class_idx].ln();
 
-            for sample_idx in 0..n_samples_ {
+            for sample_idx in 0..n_samples {
                 let sample = x.row(sample_idx);
                 let diff = &sample - &class_mean;
 

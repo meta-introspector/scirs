@@ -32,8 +32,8 @@ impl Rectangle {
             )));
         }
 
-        // Validate that _min ≤ max in all dimensions
-        for i in 0.._min.len() {
+        // Validate that min ≤ max in all dimensions
+        for i in 0..min.len() {
             if min[i] > max[i] {
                 return Err(SpatialError::ValueError(
                     format!("Min must be less than or equal to max in all dimensions. Dimension {}: {} > {}", 
@@ -184,7 +184,7 @@ impl Rectangle {
             )));
         }
 
-        let intersects = self.intersects(_other)?;
+        let intersects = self.intersects(other)?;
         if !intersects {
             return Err(SpatialError::ValueError(
                 "Rectangles do not intersect".into(),
@@ -243,7 +243,7 @@ impl Rectangle {
     /// The difference between the area of the enlarged rectangle and this rectangle,
     /// or an error if the rectangles have different dimensions
     pub fn enlargement_area(&self, other: &Rectangle) -> SpatialResult<f64> {
-        let enlarged = self.enlarge(_other)?;
+        let enlarged = self.enlarge(other)?;
         Ok(enlarged.area() - self.area())
     }
 
@@ -270,9 +270,9 @@ impl Rectangle {
 
         for i in 0..self.ndim() {
             if point[i] < self.min[i] {
-                distance_sq += (_point[i] - self.min[i]).powi(2);
+                distance_sq += (point[i] - self.min[i]).powi(2);
             } else if point[i] > self.max[i] {
-                distance_sq += (_point[i] - self.max[i]).powi(2);
+                distance_sq += (point[i] - self.max[i]).powi(2);
             }
         }
 
@@ -299,7 +299,7 @@ impl Rectangle {
         }
 
         // If the rectangles intersect, the distance is 0
-        if self.intersects(_other)? {
+        if self.intersects(other)? {
             return Ok(0.0);
         }
 
@@ -307,7 +307,7 @@ impl Rectangle {
 
         for i in 0..self.ndim() {
             if self.max[i] < other.min[i] {
-                distance_sq += (_other.min[i] - self.max[i]).powi(2);
+                distance_sq += (other.min[i] - self.max[i]).powi(2);
             } else if self.min[i] > other.max[i] {
                 distance_sq += (self.min[i] - other.max[i]).powi(2);
             }
@@ -361,7 +361,7 @@ where
     /// Entries stored in this node
     pub entries: Vec<Entry<T>>,
     /// Whether this is a leaf node
-    pub is_leaf: bool,
+    pub _isleaf: bool,
     /// Node level in the tree (0 for leaf nodes, increasing towards the root)
     pub level: usize,
 }
@@ -370,7 +370,7 @@ impl<T: Clone> Default for Node<T> {
     fn default() -> Self {
         Self {
             entries: Vec::new(),
-            is_leaf: true,
+            _isleaf: true,
             level: 0,
         }
     }
@@ -381,7 +381,7 @@ impl<T: Clone> Node<T> {
     pub fn new(_isleaf: bool, level: usize) -> Self {
         Node {
             entries: Vec::new(),
-            is_leaf: is_leaf,
+            _isleaf: _isleaf,
             level,
         }
     }
@@ -496,7 +496,7 @@ where
     /// Minimum number of entries in each node (except the root)
     pub(crate) min_entries: usize,
     /// Maximum number of entries in each node
-    pub(crate) max_entries: usize,
+    pub(crate) maxentries: usize,
     /// Number of data points in the tree
     size: usize,
     /// Height of the tree
@@ -510,7 +510,7 @@ impl<T: Clone> RTree<T> {
     ///
     /// * `ndim` - Number of dimensions
     /// * `min_entries` - Minimum number of entries in each node (except the root)
-    /// * `max_entries` - Maximum number of entries in each node
+    /// * `maxentries` - Maximum number of entries in each node
     ///
     /// # Returns
     ///
@@ -522,15 +522,15 @@ impl<T: Clone> RTree<T> {
             ));
         }
 
-        if min_entries < 1 || min_entries > max_entries / 2 {
+        if min_entries < 1 || min_entries > maxentries / 2 {
             return Err(SpatialError::ValueError(format!(
-                "min_entries must be between 1 and max_entries/2, got: {min_entries}"
+                "min_entries must be between 1 and maxentries/2, got: {min_entries}"
             )));
         }
 
-        if max_entries < 2 {
+        if maxentries < 2 {
             return Err(SpatialError::ValueError(format!(
-                "max_entries must be at least 2, got: {max_entries}"
+                "maxentries must be at least 2, got: {maxentries}"
             )));
         }
 
@@ -538,7 +538,7 @@ impl<T: Clone> RTree<T> {
             root: Node::new(true, 0),
             ndim: ndim,
             min_entries,
-            max_entries,
+            maxentries,
             size: 0,
             height: 1,
         })
@@ -745,7 +745,7 @@ mod tests {
         // Invalid parameters
         assert!(RTree::<usize>::new(0, 2, 5).is_err()); // ndim = 0
         assert!(RTree::<usize>::new(2, 0, 5).is_err()); // min_entries = 0
-        assert!(RTree::<usize>::new(2, 3, 5).is_err()); // min_entries > max_entries/2
-        assert!(RTree::<usize>::new(2, 2, 1).is_err()); // max_entries < 2
+        assert!(RTree::<usize>::new(2, 3, 5).is_err()); // min_entries > maxentries/2
+        assert!(RTree::<usize>::new(2, 2, 1).is_err()); // maxentries < 2
     }
 }

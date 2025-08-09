@@ -241,7 +241,7 @@ impl AdaptivePDESolver {
         let n_cells = active_cells.len();
         let n_species = 2; // u and v
 
-        Array2::fromshape_fn((n_cells, n_species), |(i, j)| active_cells[i].solution[j])
+        Array2::from_shape_fn((n_cells, n_species), |(i, j)| active_cells[i].solution[j])
     }
 
     /// Update mesh cells with new solution

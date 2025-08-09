@@ -77,7 +77,7 @@ pub struct AdaptiveNASConfig<T: Float> {
     pub curriculum_search: bool,
 
     /// Search diversity weight
-    pub diversity_weight: T,
+    pub _diversityweight: T,
 
     /// Exploration vs exploitation balance
     pub exploration_weight: T,
@@ -89,7 +89,7 @@ pub struct AdaptiveNASConfig<T: Float> {
     pub max_complexity: usize,
 
     /// Minimum architecture performance
-    pub min_performance: T,
+    pub _minperformance: T,
 
     /// Enable meta-learning for architecture search
     pub enable_meta_learning: bool,
@@ -419,7 +419,7 @@ pub struct ValidationRules {
 #[derive(Debug)]
 pub struct DiversityMaintainer<T: Float> {
     /// Diversity weight
-    diversity_weight: T,
+    _diversityweight: T,
 
     /// Minimum distance threshold
     min_distance_threshold: T,
@@ -511,7 +511,7 @@ impl ValidationRules {
 impl<T: Float + Send + Sync> DiversityMaintainer<T> {
     fn new(_diversityweight: T) -> Self {
         Self {
-            diversity_weight: diversity_weight,
+            _diversityweight: _diversityweight,
             min_distance_threshold: T::from(0.1).unwrap(),
             diversity_metrics: vec![
                 DiversityMetric::StructuralDistance,
@@ -804,7 +804,7 @@ pub enum AdaptationStrategyType {
 /// Performance monitor for tracking optimization performance
 #[derive(Debug, Clone)]
 pub struct PerformanceMonitor<T: Float> {
-    pub window_size: usize,
+    pub windowsize: usize,
     pub performance_history: VecDeque<T>,
     pub moving_average: T,
     pub trend_direction: TrendDirection,
@@ -962,7 +962,7 @@ pub struct ArchitectureGenerationStrategy<T: Float> {
     pub strategy_type: GenerationStrategyType,
     pub exploration_rate: T,
     pub exploitation_rate: T,
-    pub diversity_weight: T,
+    pub _diversityweight: T,
     pub quality_weight: T,
 }
 
@@ -2146,11 +2146,11 @@ impl<T: Float> Default for AdaptiveNASConfig<T> {
             online_learning: true,
             architecture_transfer: true,
             curriculum_search: false,
-            diversity_weight: T::from(0.2).unwrap(),
+            _diversityweight: T::from(0.2).unwrap(),
             exploration_weight: T::from(0.3).unwrap(),
             prediction_confidence_threshold: T::from(0.8).unwrap(),
             max_complexity: 1_000_000,
-            min_performance: T::from(0.1).unwrap(),
+            _minperformance: T::from(0.1).unwrap(),
             enable_meta_learning: true,
             meta_learning_frequency: 50,
             novelty_weight: T::from(0.1).unwrap(),
@@ -2180,14 +2180,14 @@ impl<
     /// Create new adaptive NAS system
     pub fn new(config: AdaptiveNASConfig<T>) -> Result<Self> {
         Ok(Self {
-            performance_searcher: PerformanceAwareSearcher::new(&_config)?,
+            performance_searcher: PerformanceAwareSearcher::new(&config)?,
             performance_database: ArchitecturePerformanceDatabase::new()?,
-            learning_generator: LearningBasedGenerator::new(&_config)?,
-            multi_objective_optimizer: MultiObjectiveArchitectureOptimizer::new(&_config)?,
-            search_space_manager: DynamicSearchSpaceManager::new(&_config)?,
-            predictor_ensemble: PerformancePredictorEnsemble::new(&_config)?,
-            adaptation_engine: ContinuousAdaptationEngine::new(&_config)?,
-            quality_assessor: ArchitectureQualityAssessor::new(&_config)?,
+            learning_generator: LearningBasedGenerator::new(&config)?,
+            multi_objective_optimizer: MultiObjectiveArchitectureOptimizer::new(&config)?,
+            search_space_manager: DynamicSearchSpaceManager::new(&config)?,
+            predictor_ensemble: PerformancePredictorEnsemble::new(&config)?,
+            adaptation_engine: ContinuousAdaptationEngine::new(&config)?,
+            quality_assessor: ArchitectureQualityAssessor::new(&config)?,
             state_tracker: NASSystemStateTracker::new()?,
             config: config,
         })
@@ -2375,7 +2375,7 @@ pub struct PerformanceAnalyzer<T: Float> {
 #[derive(Debug)]
 pub struct AnalyzerConfig<T: Float> {
     /// Analysis window size
-    pub window_size: usize,
+    pub windowsize: usize,
 
     /// Minimum performance threshold
     pub min_threshold: T,
@@ -2527,10 +2527,10 @@ impl<T: Float + Send + Sync + std::ops::MulAssign + std::fmt::Debug> Performance
     fn new(config: &AdaptiveNASConfig<T>) -> Result<Self> {
         Ok(Self {
             strategy_selector: SearchStrategySelector::new(),
-            guided_search: PerformanceGuidedSearch::new(_config)?,
-            candidate_generator: ArchitectureCandidateGenerator::new(_config)?,
+            guided_search: PerformanceGuidedSearch::new(config)?,
+            candidate_generator: ArchitectureCandidateGenerator::new(config)?,
             search_history: SearchHistory::new(),
-            feedback_processor: PerformanceFeedbackProcessor::new(_config)?,
+            feedback_processor: PerformanceFeedbackProcessor::new(config)?,
         })
     }
 
@@ -3100,7 +3100,7 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
             ],
             component_library: ComponentLibrary::new(),
             validation_rules: ValidationRules::new(),
-            diversity_maintainer: DiversityMaintainer::new(_config.diversity_weight),
+            diversity_maintainer: DiversityMaintainer::new(config._diversityweight),
             generation_history: GenerationHistory::new(),
         })
     }
@@ -3268,15 +3268,15 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
         &self,
         context: &OptimizationTask,
     ) -> Result<ArchitectureCandidate<T>> {
-        let num_layers = scirs2_core::random::rng().gen_range(1..8);
-        let mut layers = Vec::with_capacity(num_layers);
+        let numlayers = scirs2_core::random::rng().gen_range(1..8);
+        let mut layers = Vec::with_capacity(numlayers);
 
-        for i in 0..num_layers {
+        for i in 0..numlayers {
             let layer_type = match context.task_type {
                 TaskType::SequenceModeling => {
                     if i == 0 {
                         LayerType::Embedding
-                    } else if i == num_layers - 1 {
+                    } else if i == numlayers - 1 {
                         LayerType::Linear
                     } else {
                         {
@@ -3289,11 +3289,11 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
                 _ => LayerType::Linear,
             };
 
-            let layer = self.generate_random_layer(layer_type, i, num_layers)?;
+            let layer = self.generate_random_layer(layer_type, i, numlayers)?;
             layers.push(layer);
         }
 
-        let connections = self.generate_sequential_connections(num_layers)?;
+        let connections = self.generate_sequential_connections(numlayers)?;
         let (param_count, flops, memory_req) = self.estimate_architecture_cost(&layers);
 
         Ok(ArchitectureCandidate {
@@ -3363,7 +3363,7 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
                     LayerParameter::Integer(scirs2_core::random::rng().gen_range(64..512)),
                 );
                 parameters.insert(
-                    "num_layers".to_string(),
+                    "numlayers".to_string(),
                     LayerParameter::Integer(scirs2_core::random::rng().gen_range(1..3)),
                 );
                 parameters.insert(
@@ -3440,11 +3440,11 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
     }
 
     fn generate_sequential_connections(&self, numlayers: usize) -> Result<ConnectionTopology> {
-        let mut adjacency_matrix = Array2::from_elem((num_layers, num_layers), false);
+        let mut adjacency_matrix = Array2::from_elem((numlayers, numlayers), false);
         let mut connection_types = HashMap::new();
 
         // Create sequential connections
-        for i in 0..num_layers - 1 {
+        for i in 0..numlayers - 1 {
             adjacency_matrix[[i, i + 1]] = true;
             connection_types.insert((i, i + 1), ConnectionType::Sequential);
         }
@@ -3644,7 +3644,7 @@ impl<T: Float + Send + Sync> SearchHistory<T> {
 
     /// Get recent performance trend
     fn get_recent_trend(&self, windowsize: usize) -> Option<PerformanceTrend<T>> {
-        if self.performance_timeline.len() < window_size {
+        if self.performance_timeline.len() < windowsize {
             return None;
         }
 
@@ -3652,7 +3652,7 @@ impl<T: Float + Send + Sync> SearchHistory<T> {
             .performance_timeline
             .iter()
             .rev()
-            .take(window_size)
+            .take(windowsize)
             .map(|(_, perf)| *perf)
             .collect();
 
@@ -3687,13 +3687,13 @@ impl<T: Float + Send + Sync> SearchHistory<T> {
             strength: T::from(slope.abs()).unwrap(),
             confidence: T::from(0.8).unwrap(),
             time_period: (
-                self.performance_timeline[self.performance_timeline.len() - window_size].0,
+                self.performance_timeline[self.performance_timeline.len() - windowsize].0,
                 self.performance_timeline.last().unwrap().0,
             ),
             metadata: TrendMetadata {
                 algorithm: TrendDetectionAlgorithm::LinearRegression,
                 model: TrendModelType::Linear,
-                data_points: window_size,
+                data_points: windowsize,
                 timestamp: Instant::now(),
             },
         })
@@ -4024,7 +4024,7 @@ impl<T: Float + 'static + Send + Sync + std::iter::Sum + std::cmp::Eq + std::has
             ensemble_weights,
             aggregator: PredictionAggregator::new(),
             uncertainty_estimator: EnsembleUncertaintyEstimator::new(),
-            quality_tracker: PredictorQualityTracker::new(_config.prediction_confidence_threshold),
+            quality_tracker: PredictorQualityTracker::new(config.prediction_confidence_threshold),
         })
     }
 
@@ -4118,8 +4118,8 @@ impl<T: Float + Send + Sync> ContinuousAdaptationEngine<T> {
         };
 
         let performance_monitor = PerformanceMonitor {
-            window_size: config.performance_window,
-            performance_history: VecDeque::with_capacity(_config.performance_window),
+            windowsize: config.performance_window,
+            performance_history: VecDeque::with_capacity(config.performance_window),
             moving_average: T::zero(),
             trend_direction: TrendDirection::Stable,
             variance_threshold: T::from(0.1).unwrap(),
@@ -4193,7 +4193,7 @@ impl<T: Float + Send + Sync + std::cmp::Eq + std::hash::Hash + std::iter::Sum>
         Ok(Self {
             quality_metrics,
             assessment_strategy: QualityAssessmentStrategy::WeightedSum,
-            threshold_manager: QualityThresholdManager::new(_config.min_performance),
+            threshold_manager: QualityThresholdManager::new(config._minperformance),
             trends_analyzer: QualityTrendsAnalyzer::new(),
             assessment_cache: QualityAssessmentCache::new(),
         })
@@ -4704,7 +4704,7 @@ impl<T: Float + Send + Sync> SearchSpaceOptimizer<T> {
                 // space.complexity_limits.max_depth =
                 //     (space.complexity_limits.max_depth as f64 * 1.05) as usize;
 
-                // For now, expand the num_layers range
+                // For now, expand the numlayers range
                 let (min, max) = space.num_layers_range;
                 space.num_layers_range = (min, (max as f64 * 1.05) as usize);
             }
@@ -5051,7 +5051,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> EnsembleUncertaintyEstimator<T> {
 #[derive(Debug)]
 pub struct PredictorQualityTracker<T: Float> {
     predictor_scores: Vec<T>,
-    confidence_threshold: T,
+    _confidencethreshold: T,
     error_history: VecDeque<T>,
 }
 
@@ -5059,7 +5059,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> PredictorQualityTracker<T> {
     fn new(_confidencethreshold: T) -> Self {
         Self {
             predictor_scores: vec![T::one(); 3], // Initialize with 3 predictors
-            confidence_threshold: confidence_threshold,
+            _confidencethreshold: _confidencethreshold,
             error_history: VecDeque::new(),
         }
     }
@@ -5113,7 +5113,7 @@ pub enum QualityAssessmentStrategy {
 
 #[derive(Debug)]
 pub struct QualityThresholdManager<T: Float> {
-    min_performance: T,
+    _minperformance: T,
     min_efficiency: T,
     max_complexity: T,
     adaptive_thresholds: bool,
@@ -5122,7 +5122,7 @@ pub struct QualityThresholdManager<T: Float> {
 impl<T: Float + Send + Sync> QualityThresholdManager<T> {
     fn new(_minperformance: T) -> Self {
         Self {
-            min_performance: min_performance,
+            _minperformance: _minperformance,
             min_efficiency: T::from(0.3).unwrap(),
             max_complexity: T::from(0.8).unwrap(),
             adaptive_thresholds: true,

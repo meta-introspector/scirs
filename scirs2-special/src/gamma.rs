@@ -2081,11 +2081,11 @@ fn enhanced_reflection_sign<F: Float + FromPrimitive>(xf64: f64) -> F {
     // For the reflection formula Γ(x) = π / (sin(πx) * Γ(1-x))
     // The sign depends on both sin(πx) and the parity
 
-    let x_floor = x_f64.floor();
+    let x_floor = xf64.floor();
     let _n = x_floor as i32;
 
     // sin(πx) has the same sign as sin(π(x - floor(x)))
-    let fractional_part = x_f64 - x_floor;
+    let fractional_part = xf64 - x_floor;
 
     if fractional_part == 0.0 {
         // x is an integer, sin(πx) = 0, return NaN indicator

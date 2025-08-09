@@ -1118,7 +1118,7 @@ mod tests {
     }
 
     impl Complex64 {
-        fn real(f64: f64, imag: f64) -> Self {
+        fn new(real: f64, imag: f64) -> Self {
             Self { real, imag }
         }
 

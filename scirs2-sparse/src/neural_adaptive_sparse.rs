@@ -39,7 +39,7 @@ pub struct NeuralAdaptiveConfig {
     /// Neurons per hidden layer
     pub neurons_per_layer: usize,
     /// Learning rate for adaptive optimization
-    pub learning_rate: f64,
+    pub learningrate: f64,
     /// Memory capacity for pattern learning
     pub memory_capacity: usize,
     /// Enable reinforcement learning
@@ -53,11 +53,11 @@ pub struct NeuralAdaptiveConfig {
     /// Exploration rate for RL
     pub exploration_rate: f64,
     /// Discount factor for future rewards
-    pub discount_factor: f64,
+    pub discountfactor: f64,
     /// Experience replay buffer size
     pub replay_buffer_size: usize,
     /// Transformer model dimension
-    pub model_dim: usize,
+    pub modeldim: usize,
     /// Feed-forward network dimension in transformer
     pub ff_dim: usize,
     /// Number of transformer layers
@@ -84,16 +84,16 @@ impl Default for NeuralAdaptiveConfig {
         Self {
             hidden_layers: 3,
             neurons_per_layer: 64,
-            learning_rate: 0.001,
+            learningrate: 0.001,
             memory_capacity: 10000,
             reinforcement_learning: true,
             attention_heads: 8,
             self_attention: true,
             rl_algorithm: RLAlgorithm::DQN,
             exploration_rate: 0.1,
-            discount_factor: 0.99,
+            discountfactor: 0.99,
             replay_buffer_size: 10000,
-            model_dim: 512,
+            modeldim: 512,
             ff_dim: 2048,
             transformer_layers: 6,
         }
@@ -197,7 +197,7 @@ struct RLAgent {
     value_network: Option<NeuralNetwork>,
     algorithm: RLAlgorithm,
     epsilon: f64,
-    learning_rate: f64,
+    learningrate: f64,
 }
 
 /// Experience for reinforcement learning
@@ -272,7 +272,7 @@ struct AccessPattern {
 #[derive(Debug, Clone)]
 struct PerformanceMetrics {
     #[allow(dead_code)]
-    execution_time: f64,
+    executiontime: f64,
     #[allow(dead_code)]
     cache_efficiency: f64,
     #[allow(dead_code)]
@@ -310,8 +310,8 @@ pub enum OptimizationStrategy {
 impl NeuralAdaptiveSparseProcessor {
     /// Create a new neural-adaptive sparse matrix processor
     pub fn new(config: NeuralAdaptiveConfig) -> Self {
-        let neural_network = NeuralNetwork::new(&_config);
-        let pattern_memory = PatternMemory::new(_config.memory_capacity);
+        let neural_network = NeuralNetwork::new(&config);
+        let pattern_memory = PatternMemory::new(config.memory_capacity);
 
         let optimization_strategies = vec![
             OptimizationStrategy::RowWiseCache,
@@ -327,19 +327,19 @@ impl NeuralAdaptiveSparseProcessor {
 
         // Initialize RL agent if enabled
         let rl_agent = if config.reinforcement_learning {
-            Some(RLAgent::new(&_config))
+            Some(RLAgent::new(&config))
         } else {
             None
         };
 
         // Initialize transformer if self-attention is enabled
         let transformer = if config.self_attention {
-            Some(TransformerModel::new(&_config))
+            Some(TransformerModel::new(&config))
         } else {
             None
         };
 
-        let experience_buffer = ExperienceBuffer::new(_config.replay_buffer_size);
+        let experience_buffer = ExperienceBuffer::new(config.replay_buffer_size);
 
         Self {
             config: config.clone(),
@@ -382,13 +382,13 @@ impl NeuralAdaptiveSparseProcessor {
         let result = self.execute_strategy(strategy, rows, cols, indptr, indices, data, x, y);
 
         // Record performance metrics for learning
-        let execution_time = start_time.elapsed().as_secs_f64();
+        let executiontime = start_time.elapsed().as_secs_f64();
         let metrics = PerformanceMetrics {
-            execution_time,
+            executiontime,
             cache_efficiency: self.estimate_cache_efficiency(indptr, indices),
             simd_utilization: self.estimate_simd_utilization(&strategy),
             parallel_efficiency: self.estimate_parallel_efficiency(&strategy, rows),
-            memory_bandwidth: self.estimate_memory_bandwidth(data.len(), execution_time),
+            memory_bandwidth: self.estimate_memory_bandwidth(data.len(), executiontime),
             strategy_used: strategy,
         };
 
@@ -1146,7 +1146,7 @@ impl NeuralAdaptiveSparseProcessor {
         let mut reward = 0.0;
 
         // Reward for low execution time (higher is better)
-        reward += (1.0 / (metrics.execution_time + 1e-6)).ln();
+        reward += (1.0 / (metrics.executiontime + 1e-6)).ln();
 
         // Reward for high cache efficiency
         reward += metrics.cache_efficiency * 2.0;
@@ -1168,25 +1168,25 @@ impl NeuralAdaptiveSparseProcessor {
     fn train_rl_agent(&mut self) {
         if let Some(ref mut rl_agent) = self.rl_agent {
             // Sample batch from experience buffer
-            let batch_size = 32.min(self.experience_buffer.buffer.len());
-            let batch = self.experience_buffer.sample_batch(batch_size);
+            let batchsize = 32.min(self.experience_buffer.buffer.len());
+            let batch = self.experience_buffer.sample_batch(batchsize);
 
             // Train based on algorithm type
             match rl_agent.algorithm {
                 RLAlgorithm::DQN => {
-                    rl_agent.train_dqn(&batch, self.config.discount_factor);
+                    rl_agent.train_dqn(&batch, self.config.discountfactor);
                 }
                 RLAlgorithm::PolicyGradient => {
                     rl_agent.train_policy_gradient(&batch);
                 }
                 RLAlgorithm::ActorCritic => {
-                    rl_agent.train_actor_critic(&batch, self.config.discount_factor);
+                    rl_agent.train_actor_critic(&batch, self.config.discountfactor);
                 }
                 RLAlgorithm::PPO => {
                     rl_agent.train_ppo(&batch);
                 }
                 RLAlgorithm::SAC => {
-                    rl_agent.train_sac(&batch, self.config.discount_factor);
+                    rl_agent.train_sac(&batch, self.config.discountfactor);
                 }
             }
         }
@@ -1259,8 +1259,8 @@ impl NeuralAdaptiveSparseProcessor {
     }
 
     fn estimate_memory_bandwidth(&self, data_size: usize, executiontime: f64) -> f64 {
-        if execution_time > 0.0 {
-            (data_size as f64 * std::mem::size_of::<f64>() as f64) / execution_time / 1e9
+        if executiontime > 0.0 {
+            (data_size as f64 * std::mem::size_of::<f64>() as f64) / executiontime / 1e9
         // GB/s
         } else {
             0.0
@@ -1284,7 +1284,7 @@ impl NeuralAdaptiveSparseProcessor {
             adaptations_count: self.adaptation_counter.load(Ordering::Relaxed),
             pattern_memory_size: self.pattern_memory.matrix_patterns.len(),
             performance_history_size: self.performance_history.len(),
-            learning_rate: self.config.learning_rate,
+            learningrate: self.config.learningrate,
             memory_capacity: self.config.memory_capacity,
             rl_enabled: self.config.reinforcement_learning,
             current_exploration_rate: self.current_exploration_rate,
@@ -1324,15 +1324,15 @@ impl NeuralNetwork {
 
         // Input layer
         let input_layer = NeuralLayer {
-            weights: Self::initialize_weights(_config.neurons_per_layer, input_size, &mut rng),
+            weights: Self::initialize_weights(config.neurons_per_layer, input_size, &mut rng),
             biases: vec![0.0; config.neurons_per_layer],
             activation: ActivationFunction::ReLU,
         };
         layers.push(input_layer);
-        layer_norms.push(LayerNorm::new(_config.neurons_per_layer));
+        layer_norms.push(LayerNorm::new(config.neurons_per_layer));
 
         // Hidden layers with attention mechanisms
-        for _ in 0.._config.hidden_layers {
+        for _ in 0..config.hidden_layers {
             let hidden_layer = NeuralLayer {
                 weights: Self::initialize_weights(
                     config.neurons_per_layer,
@@ -1343,7 +1343,7 @@ impl NeuralNetwork {
                 activation: ActivationFunction::ReLU,
             };
             layers.push(hidden_layer);
-            layer_norms.push(LayerNorm::new(_config.neurons_per_layer));
+            layer_norms.push(LayerNorm::new(config.neurons_per_layer));
 
             // Add attention head for this layer
             attention_heads.push(AttentionHead::new(
@@ -1565,14 +1565,14 @@ impl NeuralNetwork {
             // Update weights
             for (neuron_idx, weights) in layer.weights.iter_mut().enumerate() {
                 for (weight_idx, weight) in weights.iter_mut().enumerate() {
-                    *weight -= learning_rate
+                    *weight -= learningrate
                         * gradients.weight_gradients[layer_idx][neuron_idx][weight_idx];
                 }
             }
 
             // Update biases
             for (bias_idx, bias) in layer.biases.iter_mut().enumerate() {
-                *bias -= learning_rate * gradients.bias_gradients[layer_idx][bias_idx];
+                *bias -= learningrate * gradients.bias_gradients[layer_idx][bias_idx];
             }
         }
     }
@@ -1581,7 +1581,7 @@ impl NeuralNetwork {
     fn train_single(&mut self, input: &[f64], target: &[f64], learningrate: f64) -> f64 {
         let (prediction, cache) = self.forward_with_cache(input);
         let gradients = self.backward(target, &prediction, &cache);
-        self.update_weights(&gradients, learning_rate);
+        self.update_weights(&gradients, learningrate);
 
         // Return loss (MSE)
         prediction
@@ -1630,17 +1630,17 @@ impl PatternMemory {
 
 impl RLAgent {
     fn new(config: &NeuralAdaptiveConfig) -> Self {
-        let q_network = NeuralNetwork::new(_config);
-        let target_network = if matches!(_config.rl_algorithm, RLAlgorithm::DQN) {
-            Some(NeuralNetwork::new(_config))
+        let q_network = NeuralNetwork::new(config);
+        let target_network = if matches!(config.rl_algorithm, RLAlgorithm::DQN) {
+            Some(NeuralNetwork::new(config))
         } else {
             None
         };
 
         let (policy_network, value_network) = match config.rl_algorithm {
             RLAlgorithm::ActorCritic | RLAlgorithm::PPO | RLAlgorithm::SAC => (
-                Some(NeuralNetwork::new(_config)),
-                Some(NeuralNetwork::new(_config)),
+                Some(NeuralNetwork::new(config)),
+                Some(NeuralNetwork::new(config)),
             ),
             _ => (None, None),
         };
@@ -1652,7 +1652,7 @@ impl RLAgent {
             value_network,
             algorithm: config.rl_algorithm,
             epsilon: config.exploration_rate,
-            learning_rate: config.learning_rate,
+            learningrate: config.learningrate,
         }
     }
 
@@ -1662,7 +1662,7 @@ impl RLAgent {
 
     fn train_dqn(&mut self, batch: &[Experience], discountfactor: f64) {
         let mut total_loss = 0.0;
-        let batch_size = batch.len();
+        let batchsize = batch.len();
 
         for experience in batch {
             // Get current Q-values
@@ -1676,7 +1676,7 @@ impl RLAgent {
                     + if experience.done {
                         0.0
                     } else {
-                        discount_factor * max_next_q
+                        discountfactor * max_next_q
                     }
             } else {
                 experience.reward
@@ -1692,7 +1692,7 @@ impl RLAgent {
             // Train the network using backpropagation
             let loss =
                 self.q_network
-                    .train_single(&experience.state, &target_vector, self.learning_rate);
+                    .train_single(&experience.state, &target_vector, self.learningrate);
             total_loss += loss;
         }
 
@@ -1704,8 +1704,8 @@ impl RLAgent {
         }
 
         // Log average loss for monitoring
-        if batch_size > 0 {
-            let _avg_loss = total_loss / batch_size as f64;
+        if batchsize > 0 {
+            let _avg_loss = total_loss / batchsize as f64;
             // Could log this for monitoring purposes
         }
     }
@@ -1751,7 +1751,7 @@ impl RLAgent {
 
                     // Set target for the taken action based on advantage
                     let advantage = return_val - experience.reward; // Simplified advantage
-                    target[action_idx] = action_probs[action_idx] + self.learning_rate * advantage;
+                    target[action_idx] = action_probs[action_idx] + self.learningrate * advantage;
 
                     // Ensure target is a valid probability distribution
                     target[action_idx] = target[action_idx].clamp(0.01, 0.99);
@@ -1760,7 +1760,7 @@ impl RLAgent {
                     let loss = policy_net.train_single(
                         &experience.state,
                         &target,
-                        self.learning_rate * 0.1, // Smaller learning rate for policy
+                        self.learningrate * 0.1, // Smaller learning rate for policy
                     );
                     _total_loss += loss;
                 }
@@ -1770,12 +1770,12 @@ impl RLAgent {
 
     /// Compute discounted returns for policy gradient
     fn compute_returns(_batch: &[Experience], discountfactor: f64) -> Vec<f64> {
-        let mut returns = vec![0.0; batch.len()];
+        let mut returns = vec![0.0; _batch.len()];
         let mut running_return = 0.0;
 
         // Compute returns backwards
-        for (i, experience) in batch.iter().enumerate().rev() {
-            running_return = experience.reward + discount_factor * running_return;
+        for (i, experience) in _batch.iter().enumerate().rev() {
+            running_return = experience.reward + discountfactor * running_return;
             returns[i] = running_return;
 
             if experience.done {
@@ -1820,13 +1820,13 @@ impl RLAgent {
                     0.0
                 };
 
-                let td_target = experience.reward + discount_factor * next_value;
+                let td_target = experience.reward + discountfactor * next_value;
                 let td_error = td_target - current_value;
 
                 // Train critic (value network)
                 let critic_target = vec![td_target];
                 let critic_loss =
-                    value_net.train_single(&experience.state, &critic_target, self.learning_rate);
+                    value_net.train_single(&experience.state, &critic_target, self.learningrate);
                 _total_critic_loss += critic_loss;
 
                 // Actor update: learn policy using advantage
@@ -1840,7 +1840,7 @@ impl RLAgent {
                     let mut policy_target = action_probs.clone();
 
                     // Update action probability based on advantage
-                    let prob_adjustment = self.learning_rate * 0.1 * advantage;
+                    let prob_adjustment = self.learningrate * 0.1 * advantage;
                     policy_target[action_idx] =
                         (action_probs[action_idx] + prob_adjustment).clamp(0.01, 0.99);
 
@@ -1856,7 +1856,7 @@ impl RLAgent {
                     let actor_loss = policy_net.train_single(
                         &experience.state,
                         &policy_target,
-                        self.learning_rate * 0.05, // Smaller learning rate for policy
+                        self.learningrate * 0.05, // Smaller learning rate for policy
                     );
                     _total_actor_loss += actor_loss;
                 }
@@ -1943,7 +1943,7 @@ impl RLAgent {
                     let value_loss = value_net.train_single(
                         &experience.state,
                         &value_target,
-                        self.learning_rate,
+                        self.learningrate,
                     );
                     _total_value_loss += value_loss;
 
@@ -1969,7 +1969,7 @@ impl RLAgent {
 
                         // Convert objective to training target
                         let mut policy_target = current_action_probs.clone();
-                        let target_adjustment = self.learning_rate * 0.01 * policy_objective;
+                        let target_adjustment = self.learningrate * 0.01 * policy_objective;
                         policy_target[action_idx] =
                             (current_prob + target_adjustment).clamp(0.01, 0.99);
 
@@ -1984,7 +1984,7 @@ impl RLAgent {
                         let policy_loss = policy_net.train_single(
                             &experience.state,
                             &policy_target,
-                            self.learning_rate * 0.02,
+                            self.learningrate * 0.02,
                         );
                         _total_policy_loss += policy_loss;
                     }
@@ -2035,7 +2035,7 @@ impl RLAgent {
                     .sum::<f64>();
 
                 let target_q = if !experience.done {
-                    experience.reward + discount_factor * (next_q + entropy_coeff * entropy)
+                    experience.reward + discountfactor * (next_q + entropy_coeff * entropy)
                 } else {
                     experience.reward
                 };
@@ -2043,7 +2043,7 @@ impl RLAgent {
                 // Train Q-network
                 let q_target = vec![target_q];
                 let q_loss =
-                    value_net.train_single(&experience.state, &q_target, self.learning_rate);
+                    value_net.train_single(&experience.state, &q_target, self.learningrate);
                 _total_q_loss += q_loss;
 
                 // Update policy network to maximize Q-value + entropy
@@ -2062,7 +2062,7 @@ impl RLAgent {
 
                 if action_idx < policy_target.len() {
                     // Adjust action probability based on SAC objective
-                    let adjustment = self.learning_rate * 0.01 * policy_objective;
+                    let adjustment = self.learningrate * 0.01 * policy_objective;
                     policy_target[action_idx] =
                         (current_action_probs[action_idx] + adjustment).clamp(0.01, 0.99);
 
@@ -2085,7 +2085,7 @@ impl RLAgent {
                     let policy_loss = policy_net.train_single(
                         &experience.state,
                         &policy_target,
-                        self.learning_rate * 0.01,
+                        self.learningrate * 0.01,
                     );
                     _total_policy_loss += policy_loss;
                 }
@@ -2100,7 +2100,7 @@ impl RLAgent {
 impl ExperienceBuffer {
     fn new(capacity: usize) -> Self {
         Self {
-            buffer: VecDeque::with_capacity(_capacity),
+            buffer: VecDeque::with_capacity(capacity),
             capacity: capacity,
             priority_weights: Vec::new(),
         }
@@ -2131,7 +2131,7 @@ impl ExperienceBuffer {
         }
 
         // Simple random sampling (in practice, prioritized experience replay would be better)
-        for _ in 0..batch_size.min(buffer_size) {
+        for _ in 0..batchsize.min(buffer_size) {
             let idx = rand::rng().gen_range(0..buffer_size);
             if let Some(exp) = self.buffer.get(idx) {
                 batch.push(exp.clone());
@@ -2146,22 +2146,22 @@ impl TransformerModel {
     fn new(config: &NeuralAdaptiveConfig) -> Self {
         let mut encoder_layers = Vec::new();
 
-        for _ in 0.._config.transformer_layers {
-            encoder_layers.push(TransformerEncoderLayer::new(_config));
+        for _ in 0..config.transformer_layers {
+            encoder_layers.push(TransformerEncoderLayer::new(config));
         }
 
         // Initialize positional encoding
         let max_seq_len = 1000;
-        let mut positional_encoding = vec![vec![0.0; config.model_dim]; max_seq_len];
+        let mut positional_encoding = vec![vec![0.0; config.modeldim]; max_seq_len];
 
         for (pos, encoding_row) in positional_encoding.iter_mut().enumerate().take(max_seq_len) {
-            for (i, encoding_value) in encoding_row.iter_mut().enumerate().take(_config.model_dim) {
+            for (i, encoding_value) in encoding_row.iter_mut().enumerate().take(config.modeldim) {
                 if i % 2 == 0 {
                     *encoding_value =
-                        (pos as f64 / 10000.0_f64.powf(i as f64 / config.model_dim as f64)).sin();
+                        (pos as f64 / 10000.0_f64.powf(i as f64 / config.modeldim as f64)).sin();
                 } else {
                     *encoding_value = (pos as f64
-                        / 10000.0_f64.powf((i - 1) as f64 / config.model_dim as f64))
+                        / 10000.0_f64.powf((i - 1) as f64 / config.modeldim as f64))
                     .cos();
                 }
             }
@@ -2170,7 +2170,7 @@ impl TransformerModel {
         Self {
             encoder_layers,
             positional_encoding,
-            embedding_dim: config.model_dim,
+            embedding_dim: config.modeldim,
         }
     }
 
@@ -2199,21 +2199,21 @@ impl TransformerModel {
         // Update attention weights based on performance feedback
         let performance_score =
             metrics.cache_efficiency + metrics.simd_utilization + metrics.parallel_efficiency;
-        let learning_rate = 0.001;
+        let learningrate = 0.001;
 
         // Simple gradient-like update (in practice, this would use proper backpropagation)
         for layer in &mut self.encoder_layers {
-            layer.update_weights(performance_score, learning_rate);
+            layer.update_weights(performance_score, learningrate);
         }
     }
 }
 
 impl TransformerEncoderLayer {
     fn new(config: &NeuralAdaptiveConfig) -> Self {
-        let self_attention = MultiHeadAttention::new(_config);
-        let feed_forward = FeedForwardNetwork::new(_config);
-        let layer_norm1 = LayerNorm::new(_config.model_dim);
-        let layer_norm2 = LayerNorm::new(_config.model_dim);
+        let self_attention = MultiHeadAttention::new(config);
+        let feed_forward = FeedForwardNetwork::new(config);
+        let layer_norm1 = LayerNorm::new(config.modeldim);
+        let layer_norm2 = LayerNorm::new(config.modeldim);
 
         Self {
             self_attention,
@@ -2254,28 +2254,28 @@ impl TransformerEncoderLayer {
         }
 
         // Layer normalization
-        layer_norm.normalize(&result)
+        layernorm.normalize(&result)
     }
 
     fn update_weights(&mut self, performance_score: f64, learningrate: f64) {
         self.self_attention
-            .update_weights(performance_score, learning_rate);
+            .update_weights(performance_score, learningrate);
         self.feed_forward
-            .update_weights(performance_score, learning_rate);
+            .update_weights(performance_score, learningrate);
     }
 }
 
 impl MultiHeadAttention {
     fn new(config: &NeuralAdaptiveConfig) -> Self {
         let num_heads = config.attention_heads;
-        let head_dim = config.model_dim / num_heads;
+        let head_dim = config.modeldim / num_heads;
         let mut heads = Vec::new();
 
         for _ in 0..num_heads {
-            heads.push(AttentionHead::new(head_dim, config.model_dim));
+            heads.push(AttentionHead::new(head_dim, config.modeldim));
         }
 
-        let output_projection = vec![vec![0.1; config.model_dim]; config.model_dim];
+        let output_projection = vec![vec![0.1; config.modeldim]; config.modeldim];
 
         Self {
             heads,
@@ -2319,7 +2319,7 @@ impl MultiHeadAttention {
     }
 
     fn update_weights(&mut self, performance_score: f64, learningrate: f64) {
-        let gradient = performance_score * learning_rate;
+        let gradient = performance_score * learningrate;
 
         // Update attention head weights
         for head in &mut self.heads {
@@ -2338,11 +2338,11 @@ impl MultiHeadAttention {
 impl AttentionHead {
     fn new(_head_dim: usize, modeldim: usize) -> Self {
         Self {
-            query_weights: vec![vec![0.1; model_dim]; _head_dim],
-            key_weights: vec![vec![0.1; model_dim]; _head_dim],
-            value_weights: vec![vec![0.1; model_dim]; _head_dim],
+            query_weights: vec![vec![0.1; modeldim]; _head_dim],
+            key_weights: vec![vec![0.1; modeldim]; _head_dim],
+            value_weights: vec![vec![0.1; modeldim]; _head_dim],
             output_weights: vec![vec![0.1; _head_dim]; _head_dim],
-            head_dim: head_dim,
+            head_dim: _head_dim,
         }
     }
 
@@ -2440,10 +2440,10 @@ impl AttentionHead {
 impl FeedForwardNetwork {
     fn new(config: &NeuralAdaptiveConfig) -> Self {
         Self {
-            layer1: vec![vec![0.1; config.model_dim]; config.ff_dim],
+            layer1: vec![vec![0.1; config.modeldim]; config.ff_dim],
             layer1_bias: vec![0.0; config.ff_dim],
-            layer2: vec![vec![0.1; config.ff_dim]; config.model_dim],
-            layer2_bias: vec![0.0; config.model_dim],
+            layer2: vec![vec![0.1; config.ff_dim]; config.modeldim],
+            layer2_bias: vec![0.0; config.modeldim],
             activation: ActivationFunction::ReLU,
         }
     }
@@ -2487,7 +2487,7 @@ impl FeedForwardNetwork {
     }
 
     fn update_weights(&mut self, performance_score: f64, learningrate: f64) {
-        let gradient = performance_score * learning_rate * 0.01;
+        let gradient = performance_score * learningrate * 0.01;
 
         // Update layer 1 weights and biases
         for row in &mut self.layer1 {
@@ -2516,8 +2516,8 @@ impl FeedForwardNetwork {
 impl LayerNorm {
     fn new(dim: usize) -> Self {
         Self {
-            gamma: vec![1.0; _dim],
-            beta: vec![0.0; _dim],
+            gamma: vec![1.0; dim],
+            beta: vec![0.0; dim],
             eps: 1e-6,
         }
     }
@@ -2557,7 +2557,7 @@ pub struct NeuralProcessorStats {
     pub adaptations_count: usize,
     pub pattern_memory_size: usize,
     pub performance_history_size: usize,
-    pub learning_rate: f64,
+    pub learningrate: f64,
     pub memory_capacity: usize,
     pub rl_enabled: bool,
     pub current_exploration_rate: f64,
@@ -2630,7 +2630,7 @@ mod tests {
 
         assert_eq!(stats.adaptations_count, 0);
         assert_eq!(stats.pattern_memory_size, 0);
-        assert_eq!(stats.learning_rate, 0.001);
+        assert_eq!(stats.learningrate, 0.001);
         assert!(stats.rl_enabled);
         assert!(stats.transformer_enabled);
     }

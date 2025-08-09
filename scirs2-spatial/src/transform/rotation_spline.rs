@@ -139,7 +139,7 @@ impl RotationSpline {
     ///
     /// # Arguments
     ///
-    /// * `interp_type` - The interpolation type ("slerp" or "cubic")
+    /// * `_interptype` - The interpolation type ("slerp" or "cubic")
     ///
     /// # Returns
     ///
@@ -164,7 +164,7 @@ impl RotationSpline {
     /// spline.set_interpolation_type("cubic").unwrap();
     /// ```
     pub fn set_interpolation_type(&mut self, _interptype: &str) -> SpatialResult<()> {
-        match interp_type.to_lowercase().as_str() {
+        match _interptype.to_lowercase().as_str() {
             "slerp" => {
                 self.interpolation_type = "slerp".to_string();
                 self.velocities = None;
@@ -177,7 +177,7 @@ impl RotationSpline {
                 Ok(())
             }
             _ => Err(SpatialError::ValueError(format!(
-                "Invalid interpolation _type: {_interp_type}. Must be 'slerp' or 'cubic'"
+                "Invalid interpolation _type: {_interptype}. Must be 'slerp' or 'cubic'"
             ))),
         }
     }
@@ -268,8 +268,8 @@ impl RotationSpline {
             b[i] = 2.0 * (h_i + h_ip1);
             c[i] = h_ip1;
 
-            let fd_i = (_values[i + 1] - values[i]) / h_i;
-            let fd_ip1 = (_values[i + 2] - values[i + 1]) / h_ip1;
+            let fd_i = (values[i + 1] - values[i]) / h_i;
+            let fd_ip1 = (values[i + 2] - values[i + 1]) / h_ip1;
             d[i] = 6.0 * (fd_ip1 - fd_i);
         }
 
@@ -544,7 +544,7 @@ impl RotationSpline {
     /// # Arguments
     ///
     /// * `key_rots` - The key rotations
-    /// * `key_times` - The times at which these key rotations occur
+    /// * `keytimes` - The times at which these key rotations occur
     ///
     /// # Returns
     ///
@@ -562,12 +562,12 @@ impl RotationSpline {
     ///     Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap(),
     ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
     /// ];
-    /// let key_times = vec![0.0, 1.0, 2.0];
+    /// let keytimes = vec![0.0, 1.0, 2.0];
     ///
-    /// let spline = RotationSpline::from_key_rotations(&key_rots, &key_times).unwrap();
+    /// let spline = RotationSpline::from_key_rotations(&key_rots, &keytimes).unwrap();
     /// ```
     pub fn from_key_rotations(_key_rots: &[Rotation], keytimes: &[f64]) -> SpatialResult<Self> {
-        Self::new(_key_rots, key_times)
+        Self::new(_key_rots, keytimes)
     }
 
     /// Get the current interpolation type

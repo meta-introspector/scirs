@@ -386,7 +386,7 @@ impl Quadtree {
         }
 
         let size = points.nrows();
-        let bounds = BoundingBox2D::from_points(_points)?;
+        let bounds = BoundingBox2D::from_points(points)?;
         let points_owned = points.to_owned();
 
         // Create initial indices (0 to size-1)
@@ -713,7 +713,7 @@ impl Quadtree {
                     ..
                 } => {
                     // If this node's bounds don't overlap the region, skip it
-                    if !bounds.overlaps(_region) {
+                    if !bounds.overlaps(region) {
                         continue;
                     }
 
@@ -731,7 +731,7 @@ impl Quadtree {
                     children, bounds, ..
                 } => {
                     // If this node's bounds don't overlap the region, skip it
-                    if !bounds.overlaps(_region) {
+                    if !bounds.overlaps(region) {
                         continue;
                     }
 
@@ -775,7 +775,7 @@ impl Quadtree {
                     ..
                 } => {
                     // If this node's bounds don't overlap the region, skip it
-                    if !bounds.overlaps(_region) {
+                    if !bounds.overlaps(region) {
                         continue;
                     }
 
@@ -793,7 +793,7 @@ impl Quadtree {
                     children, bounds, ..
                 } => {
                     // If this node's bounds don't overlap the region, skip it
-                    if !bounds.overlaps(_region) {
+                    if !bounds.overlaps(region) {
                         continue;
                     }
 
@@ -818,8 +818,8 @@ impl Quadtree {
     ///
     /// The point coordinates, or None if the index is invalid
     pub fn get_point(&self, index: usize) -> Option<Array1<f64>> {
-        if _index < self.size {
-            Some(self.points.row(_index).to_owned())
+        if index < self.size {
+            Some(self.points.row(index).to_owned())
         } else {
             None
         }
@@ -859,7 +859,7 @@ impl Quadtree {
     /// Helper method to compute the maximum depth
     #[allow(clippy::only_used_in_recursion)]
     fn compute_max_depth(node: Option<&QuadtreeNode>) -> usize {
-        match _node {
+        match node {
             None => 0,
             Some(QuadtreeNode::Leaf { .. }) => 1,
             Some(QuadtreeNode::Internal { children, .. }) => {
@@ -887,7 +887,7 @@ impl Quadtree {
 #[allow(dead_code)]
 fn squared_distance(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
     let mut sum_sq = 0.0;
-    for i in 0.._p1.len().min(p2.len()) {
+    for i in 0..p1.len().min(p2.len()) {
         let diff = p1[i] - p2[i];
         sum_sq += diff * diff;
     }

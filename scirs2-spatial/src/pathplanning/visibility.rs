@@ -150,7 +150,7 @@ impl Edge {
         // Convert to arrays for the polygon module
         let a1 = [self.start.x, self.start.y];
         let a2 = [self.end.x, self.end.y];
-        let b1 = [_p1.x, p1.y];
+        let b1 = [p1.x, p1.y];
         let b2 = [p2.x, p2.y];
 
         segments_intersect(&a1, &a2, &b1, &b2)
@@ -177,28 +177,28 @@ impl VisibilityGraph {
 
     /// Add a vertex to the graph
     pub fn add_vertex(&mut self, vertex: Point2D) {
-        if !self.vertices.contains(&_vertex) {
-            self.vertices.push(_vertex);
-            self.adjacency_list.entry(_vertex).or_default();
+        if !self.vertices.contains(&vertex) {
+            self.vertices.push(vertex);
+            self.adjacency_list.entry(vertex).or_default();
         }
     }
 
     /// Add an edge to the graph
     pub fn add_edge(&mut self, from: Point2D, to: Point2D, weight: f64) {
         // Make sure both vertices exist
-        self.add_vertex(_from);
+        self.add_vertex(from);
         self.add_vertex(to);
 
         // Add the edge
         self.adjacency_list
-            .get_mut(&_from)
+            .get_mut(&from)
             .unwrap()
             .push((to, weight));
     }
 
     /// Get all neighbors of a vertex
     pub fn get_neighbors(&self, vertex: &Point2D) -> Vec<(Point2D, f64)> {
-        match self.adjacency_list.get(_vertex) {
+        match self.adjacency_list.get(vertex) {
             Some(neighbors) => neighbors.clone(),
             None => Vec::new(),
         }
@@ -206,8 +206,8 @@ impl VisibilityGraph {
 
     /// Find the shortest path between two points using A* search
     pub fn find_path(&self, start: Point2D, goal: Point2D) -> Option<Path<[f64; 2]>> {
-        // Make sure _start and goal are in the graph
-        if !self.adjacency_list.contains_key(&_start) || !self.adjacency_list.contains_key(&goal) {
+        // Make sure start and goal are in the graph
+        if !self.adjacency_list.contains_key(&start) || !self.adjacency_list.contains_key(&goal) {
             return None;
         }
 
@@ -219,7 +219,7 @@ impl VisibilityGraph {
         let graph = self.clone();
 
         // Convert Point2D to HashableFloat2D for A* search
-        let start_hashable = HashableFloat2D::from_array(_start.to_array());
+        let start_hashable = HashableFloat2D::from_array(start.to_array());
         let goal_hashable = HashableFloat2D::from_array(goal.to_array());
 
         // Create point to hashable mappings
@@ -264,7 +264,7 @@ impl VisibilityGraph {
 
     /// Check if two points are mutually visible
     fn are_points_visible(&self, p1: &Point2D, p2: &Point2D, obstacles: &[Vec<Point2D>]) -> bool {
-        if _p1 == p2 {
+        if p1 == p2 {
             return true;
         }
 
@@ -274,7 +274,7 @@ impl VisibilityGraph {
             return true;
         }
 
-        let edge = Edge::new(*_p1, *p2);
+        let edge = Edge::new(*p1, *p2);
 
         // First pass: Check if the edge intersects with any obstacle edge
         for obstacle in obstacles {
@@ -299,7 +299,7 @@ impl VisibilityGraph {
             }
 
             // Skip if either point is a vertex of this obstacle
-            if obstacle.contains(_p1) || obstacle.contains(p2) {
+            if obstacle.contains(p1) || obstacle.contains(p2) {
                 continue;
             }
 
@@ -655,8 +655,8 @@ fn segments_intersect(a1: &[f64], a2: &[f64], b1: &[f64], b2: &[f64]) -> bool {
         q[0] >= min_x && q[0] <= max_x && q[1] >= min_y && q[1] <= max_y
     };
 
-    let o1 = orientation(_a1, a2, b1);
-    let o2 = orientation(_a1, a2, b2);
+    let o1 = orientation(a1, a2, b1);
+    let o2 = orientation(a1, a2, b2);
     let o3 = orientation(b1, b2, a1);
     let o4 = orientation(b1, b2, a2);
 
@@ -666,11 +666,11 @@ fn segments_intersect(a1: &[f64], a2: &[f64], b1: &[f64], b2: &[f64]) -> bool {
     }
 
     // Special cases - collinear points that lie on the other segment
-    if o1 == 0 && on_segment(_a1, b1, a2) {
+    if o1 == 0 && on_segment(a1, b1, a2) {
         return true;
     }
 
-    if o2 == 0 && on_segment(_a1, b2, a2) {
+    if o2 == 0 && on_segment(a1, b2, a2) {
         return true;
     }
 

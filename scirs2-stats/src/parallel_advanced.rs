@@ -462,8 +462,8 @@ impl AdvancedParallelConfig {
         use std::time::Instant;
 
         // Allocate test arrays
-        let source = vec![1.0f64; _size / 8]; // _size in bytes / 8 bytes per f64
-        let mut dest = vec![0.0f64; _size / 8];
+        let source = vec![1.0f64; size / 8]; // size in bytes / 8 bytes per f64
+        let mut dest = vec![0.0f64; size / 8];
 
         // Warm up the memory
         for i in 0..source.len().min(1000) {
@@ -483,7 +483,7 @@ impl AdvancedParallelConfig {
         let duration = start.elapsed();
 
         if duration.as_nanos() > 0 {
-            let bytes_transferred = (_size * 4 * 2) as f64; // 4 iterations, read + write
+            let bytes_transferred = (size * 4 * 2) as f64; // 4 iterations, read + write
             let seconds = duration.as_secs_f64();
             let bandwidth_gbps = (bytes_transferred / seconds) / (1024.0 * 1024.0 * 1024.0);
             Some(bandwidth_gbps)
@@ -639,16 +639,16 @@ where
     /// Create with custom configuration
     pub fn with_config(config: AdvancedParallelConfig) -> Self {
         let performance_monitor = Arc::new(PerformanceMonitor::new());
-        let memory_manager = Arc::new(MemoryManager::new(&_config.memory));
+        let memory_manager = Arc::new(MemoryManager::new(&config.memory));
 
         let thread_pool = if config.hardware.cpu_cores > 1 {
-            Some(ThreadPool::new(&_config))
+            Some(ThreadPool::new(&config))
         } else {
             None
         };
 
         let gpu_context = if config.gpu.enable_gpu {
-            GpuContext::new(&_config.gpu).ok()
+            GpuContext::new(&config.gpu).ok()
         } else {
             None
         };
@@ -842,7 +842,7 @@ impl PerformanceMonitor {
 
             // Calculate throughput
             let ops_per_sec = if execution_time.as_secs_f64() > 0.0 {
-                data_size as f64 / execution_time.as_secs_f64()
+                datasize as f64 / execution_time.as_secs_f64()
             } else {
                 0.0
             };
@@ -1013,7 +1013,7 @@ impl MemoryManager {
             allocated_memory: AtomicUsize::new(0),
             peak_memory: AtomicUsize::new(0),
             memory_pools: RwLock::new(HashMap::new()),
-            gc_enabled: AtomicBool::new(_config.enable_gc),
+            gc_enabled: AtomicBool::new(config.enable_gc),
         }
     }
 
@@ -1055,7 +1055,7 @@ impl Worker {
         _shutdown: Arc<AtomicBool>,
     ) -> Self {
         Self {
-            id: id,
+            id: _id,
             thread: None, // Would spawn actual worker thread
             local_queue: VecDeque::new(),
             numa_node: None,

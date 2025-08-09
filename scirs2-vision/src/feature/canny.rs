@@ -81,7 +81,7 @@ fn array_to_binary_image(array: &Array2<bool>) -> Result<GrayImage> {
 fn gaussian_kernel(sigma: f32, size: usize) -> Vec<f32> {
     let mut kernel = vec![0.0; size];
     let center = (size as f32 - 1.0) / 2.0;
-    let s = 2.0 * _sigma * sigma;
+    let s = 2.0 * sigma * sigma;
     let mut sum = 0.0;
 
     for (i, val) in kernel.iter_mut().enumerate() {
@@ -266,17 +266,17 @@ fn compute_gradients(image: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
             // Horizontal gradient (Sobel-X)
-            gx[[y, x]] = -_image[[y - 1, x - 1]]
+            gx[[y, x]] = -image[[y - 1, x - 1]]
                 + image[[y - 1, x + 1]]
                 + -2.0 * image[[y, x - 1]]
                 + 2.0 * image[[y, x + 1]]
-                + -_image[[y + 1, x - 1]]
+                + -image[[y + 1, x - 1]]
                 + image[[y + 1, x + 1]];
 
             // Vertical gradient (Sobel-Y)
-            gy[[y, x]] = -_image[[y - 1, x - 1]]
+            gy[[y, x]] = -image[[y - 1, x - 1]]
                 + -2.0 * image[[y - 1, x]]
-                + -_image[[y - 1, x + 1]]
+                + -image[[y - 1, x + 1]]
                 + image[[y + 1, x - 1]]
                 + 2.0 * image[[y + 1, x]]
                 + image[[y + 1, x + 1]];

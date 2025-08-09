@@ -1067,25 +1067,25 @@ impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::it
     /// Coordinate batch parallelization across the pod
     pub async fn coordinate_batch_execution(
         &mut self,
-        batch_data: BatchData<T>,
+        batchdata: BatchData<T>,
         optimization_step: OptimizationStep<T>,
     ) -> Result<BatchExecutionResult<T>> {
         let start_time = Instant::now();
 
         // Create batch execution
-        let batch_id = self.batch_coordinator.create_batch(batch_data).await?;
+        let batchid = self.batch_coordinator.create_batch(batchdata).await?;
 
         // Schedule resources
-        let resource_allocation = self.resource_scheduler.allocate_resources(batch_id).await?;
+        let resource_allocation = self.resource_scheduler.allocate_resources(batchid).await?;
 
         // Distribute _data across devices
         self.batch_coordinator
-            .distribute_data(batch_id, &resource_allocation)
+            .distribute_data(batchid, &resource_allocation)
             .await?;
 
         // Execute optimization _step on all devices
         let device_results = self
-            .execute_distributed_optimization(batch_id, optimization_step, &resource_allocation)
+            .execute_distributed_optimization(batchid, optimization_step, &resource_allocation)
             .await?;
 
         // Aggregate gradients
@@ -1100,7 +1100,7 @@ impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::it
         // Collect results
         let execution_time = start_time.elapsed();
         let result = BatchExecutionResult {
-            batch_id,
+            batchid,
             aggregated_gradients,
             execution_time,
             device_statistics: device_results.statistics,
@@ -1113,16 +1113,16 @@ impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::it
 
     async fn execute_distributed_optimization(
         &mut self,
-        batch_id: BatchId,
+        batchid: BatchId,
         optimization_step: OptimizationStep<T>,
         resource_allocation: &ResourceAllocation,
     ) -> Result<DistributedExecutionResult<T>> {
         // Execute on all allocated devices concurrently
         let mut device_futures = Vec::new();
 
-        for &device_id in &resource_allocation.devices {
+        for &deviceid in &resource_allocation.devices {
             let device_future =
-                self.execute_on_device(device_id, batch_id, optimization_step.clone());
+                self.execute_on_device(deviceid, batchid, optimization_step.clone());
             device_futures.push(device_future);
         }
 
@@ -1136,9 +1136,9 @@ impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::it
         let mut gradients = HashMap::new();
         let mut statistics = HashMap::new();
 
-        for (device_id, result) in resource_allocation.devices.iter().zip(device_results) {
-            gradients.insert(*device_id, result.gradients);
-            statistics.insert(*device_id, result.statistics);
+        for (deviceid, result) in resource_allocation.devices.iter().zip(device_results) {
+            gradients.insert(*deviceid, result.gradients);
+            statistics.insert(*deviceid, result.statistics);
         }
 
         Ok(DistributedExecutionResult {
@@ -1149,14 +1149,14 @@ impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::it
 
     async fn execute_on_device(
         &self,
-        device_id: DeviceId,
-        batch_id: BatchId,
+        deviceid: DeviceId,
+        batchid: BatchId,
         optimization_step: OptimizationStep<T>,
     ) -> Result<DeviceExecutionResult<T>> {
         // Get batch partition for this device
         let partition = self
             .batch_coordinator
-            .get_partition(batch_id, device_id)
+            .get_partition(batchid, deviceid)
             .map_err(|_| OptimError::ConfigurationError("Failed to get partition".to_string()))?;
 
         // Execute optimization _step on the partition
@@ -1169,15 +1169,15 @@ impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::it
 
         // Collect device statistics
         let statistics = DeviceExecutionStatistics {
-            device_id,
+            deviceid,
             execution_time,
-            memory_usage: self.get_device_memory_usage(device_id),
-            compute_utilization: self.get_device_compute_utilization(device_id),
+            memory_usage: self.get_device_memory_usage(deviceid),
+            compute_utilization: self.get_device_compute_utilization(deviceid),
             communication_volume: 0, // Will be updated by communication manager
         };
 
         Ok(DeviceExecutionResult {
-            device_id,
+            deviceid,
             gradients,
             statistics,
         })
@@ -1222,7 +1222,7 @@ impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::it
             .resource_scheduler
             .active_allocations
             .values()
-            .find(|alloc| alloc.devices.contains(&device_id))
+            .find(|alloc| alloc.devices.contains(&deviceid))
         {
             let base_usage = 0.3; // 30% base system usage
             let elapsed = allocation.allocated_at.elapsed().as_secs_f64();
@@ -1237,7 +1237,7 @@ impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::it
             (base_usage + workload_usage + variation).clamp(0.1, 0.95)
         } else {
             // Device not allocated - just system overhead
-            0.1 + (device_id.0 as f64 * 0.01) % 0.05 // Small per-device variation
+            0.1 + (deviceid.0 as f64 * 0.01) % 0.05 // Small per-device variation
         }
     }
 
@@ -1247,7 +1247,7 @@ impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::it
             .resource_scheduler
             .active_allocations
             .values()
-            .find(|alloc| alloc.devices.contains(&device_id))
+            .find(|alloc| alloc.devices.contains(&deviceid))
         {
             let base_utilization = match self.config.batch_strategy {
                 BatchParallelizationStrategy::DataParallel => 0.85,
@@ -1268,14 +1268,14 @@ impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::it
             };
 
             // Add realistic fluctuation based on device characteristics
-            let device_efficiency = 1.0 - (device_id.0 as f64 * 0.02) % 0.1;
+            let device_efficiency = 1.0 - (deviceid.0 as f64 * 0.02) % 0.1;
             let elapsed = allocation.allocated_at.elapsed().as_secs_f64();
             let thermal_factor = if elapsed > 300.0 { 0.95 } else { 1.0 }; // Thermal throttling simulation
 
             (base_utilization * load_factor * device_efficiency * thermal_factor).clamp(0.1, 0.99)
         } else {
             // Idle device - minimal background processes
-            0.05 + (device_id.0 as f64 * 0.002) % 0.03
+            0.05 + (deviceid.0 as f64 * 0.002) % 0.03
         }
     }
 
@@ -1291,14 +1291,14 @@ impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::it
 /// Optimization step interface
 pub struct OptimizationStep<T: Float> {
     /// Step function
-    pub step_fn:
+    pub stepfn:
         Arc<dyn Fn(BatchPartition<T>) -> Result<Vec<Array<T, ndarray::IxDyn>>> + Send + Sync>,
 }
 
 impl<T: Float> Clone for OptimizationStep<T> {
     fn clone(&self) -> Self {
         Self {
-            step_fn: self.step_fn.clone(),
+            stepfn: self.stepfn.clone(),
         }
     }
 }
@@ -1310,7 +1310,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
         &self,
         partition: BatchPartition<T>,
     ) -> Result<Vec<Array<T, ndarray::IxDyn>>> {
-        (self.step_fn)(partition)
+        (self.stepfn)(partition)
     }
 
     pub fn new<F>(stepfn: F) -> Self
@@ -1318,7 +1318,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
         F: Fn(BatchPartition<T>) -> Result<Vec<Array<T, ndarray::IxDyn>>> + Send + Sync + 'static,
     {
         Self {
-            step_fn: Arc::new(step_fn),
+            stepfn: Arc::new(stepfn),
         }
     }
 }
@@ -1343,7 +1343,7 @@ pub struct ResourceAllocation {
 #[derive(Debug)]
 pub struct BatchExecutionResult<T: Float> {
     /// Batch ID
-    pub batch_id: BatchId,
+    pub batchid: BatchId,
 
     /// Aggregated gradients
     pub aggregated_gradients: Vec<Array<T, ndarray::IxDyn>>,
@@ -1375,7 +1375,7 @@ pub struct DistributedExecutionResult<T: Float> {
 #[derive(Debug)]
 pub struct DeviceExecutionResult<T: Float> {
     /// Device ID
-    pub device_id: DeviceId,
+    pub deviceid: DeviceId,
 
     /// Computed gradients
     pub gradients: Vec<Array<T, ndarray::IxDyn>>,
@@ -1388,7 +1388,7 @@ pub struct DeviceExecutionResult<T: Float> {
 #[derive(Debug, Clone)]
 pub struct DeviceExecutionStatistics {
     /// Device ID
-    pub device_id: DeviceId,
+    pub deviceid: DeviceId,
 
     /// Execution time
     pub execution_time: Duration,
@@ -1599,9 +1599,9 @@ impl<T: Float + Send + Sync> ResourceScheduler<T> {
         let mut device_availability = HashMap::new();
 
         // Initialize device availability for all devices in the pod
-        for device_id in 0..config.num_devices {
+        for deviceid in 0..config.num_devices {
             device_availability.insert(
-                DeviceId(device_id),
+                DeviceId(deviceid),
                 DeviceAvailability {
                     available_memory: 16 * 1024 * 1024 * 1024, // 16GB
                     compute_capacity: 1.0,
@@ -1628,7 +1628,7 @@ impl<T: Float + Send + Sync> ResourceScheduler<T> {
             .device_availability
             .iter()
             .filter(|(_, availability)| availability.current_load < 0.8)
-            .map(|(device_id, _)| *device_id)
+            .map(|(deviceid, _)| *deviceid)
             .collect();
 
         if available_devices.is_empty() {
@@ -1647,11 +1647,11 @@ impl<T: Float + Send + Sync> ResourceScheduler<T> {
         };
 
         let mut memory_allocation = HashMap::new();
-        for &device_id in &devices {
-            memory_allocation.insert(device_id, 1024 * 1024 * 1024); // 1GB per device
+        for &deviceid in &devices {
+            memory_allocation.insert(deviceid, 1024 * 1024 * 1024); // 1GB per device
 
             // Update device load
-            if let Some(availability) = self.device_availability.get_mut(&device_id) {
+            if let Some(availability) = self.device_availability.get_mut(&deviceid) {
                 availability.current_load += 0.25;
             }
         }
@@ -1663,15 +1663,15 @@ impl<T: Float + Send + Sync> ResourceScheduler<T> {
             duration: Duration::from_secs(300), // 5 minutes
         };
 
-        self.active_allocations.insert(batch_id, allocation.clone());
+        self.active_allocations.insert(batchid, allocation.clone());
         Ok(allocation)
     }
 
     pub fn release_resources(&mut self, batchid: BatchId) -> Result<()> {
-        if let Some(allocation) = self.active_allocations.remove(&batch_id) {
+        if let Some(allocation) = self.active_allocations.remove(&batchid) {
             // Release device resources
-            for device_id in allocation.devices {
-                if let Some(availability) = self.device_availability.get_mut(&device_id) {
+            for deviceid in allocation.devices {
+                if let Some(availability) = self.device_availability.get_mut(&deviceid) {
                     availability.current_load = (availability.current_load - 0.25).max(0.0);
                 }
             }
@@ -1693,7 +1693,7 @@ pub struct DeviceAvailability {
 /// Scheduling request
 #[derive(Debug, Clone)]
 pub struct SchedulingRequest {
-    pub batch_id: BatchId,
+    pub batchid: BatchId,
     pub resource_requirements: ResourceRequirements,
     pub priority: BatchPriority,
     pub submitted_at: Instant,
@@ -1724,10 +1724,10 @@ impl LoadBalancer {
             LoadBalancingAlgorithm::LeastLoaded => {
                 let mut devices_with_load: Vec<_> = available_devices
                     .iter()
-                    .filter_map(|&device_id| {
+                    .filter_map(|&deviceid| {
                         device_availability
-                            .get(&device_id)
-                            .map(|availability| (device_id, availability.current_load))
+                            .get(&deviceid)
+                            .map(|availability| (deviceid, availability.current_load))
                     })
                     .collect();
 
@@ -1735,15 +1735,15 @@ impl LoadBalancer {
                 devices_with_load
                     .into_iter()
                     .take(4)
-                    .map(|(device_id, _)| device_id)
+                    .map(|(deviceid, _)| deviceid)
                     .collect()
             }
             LoadBalancingAlgorithm::WeightedRoundRobin => {
                 // Implement weighted round robin based on device capacity
                 let mut weighted_devices: Vec<_> = available_devices
                     .iter()
-                    .filter_map(|&device_id| {
-                        device_availability.get(&device_id).map(|availability| {
+                    .filter_map(|&deviceid| {
+                        device_availability.get(&deviceid).map(|availability| {
                             // Calculate weight based on available capacity
                             let capacity_weight = availability.compute_capacity;
                             let memory_weight = availability.available_memory as f64
@@ -1754,7 +1754,7 @@ impl LoadBalancer {
                             let combined_weight =
                                 (capacity_weight + memory_weight + load_weight + bandwidth_weight)
                                     / 4.0;
-                            (device_id, combined_weight)
+                            (deviceid, combined_weight)
                         })
                     })
                     .collect();
@@ -1771,10 +1771,10 @@ impl LoadBalancer {
                     let mut accumulated_weight = 0.0;
                     let weight_per_device = total_weight / 4.0; // Target 4 _devices
 
-                    for (device_id, weight) in &weighted_devices {
+                    for (deviceid, weight) in &weighted_devices {
                         accumulated_weight += weight;
                         if accumulated_weight >= weight_per_device * (selected.len() + 1) as f64 {
-                            selected.push(*device_id);
+                            selected.push(*deviceid);
                             if selected.len() >= 4 {
                                 break;
                             }
@@ -1783,9 +1783,9 @@ impl LoadBalancer {
 
                     // Fill remaining slots if needed
                     while selected.len() < 4 && selected.len() < weighted_devices.len() {
-                        for (device_id, _) in &weighted_devices {
-                            if !selected.contains(device_id) {
-                                selected.push(*device_id);
+                        for (deviceid, _) in &weighted_devices {
+                            if !selected.contains(deviceid) {
+                                selected.push(*deviceid);
                                 break;
                             }
                         }
@@ -1798,8 +1798,8 @@ impl LoadBalancer {
                 // Implement capacity-based selection prioritizing highest capacity _devices
                 let mut capacity_ranked_devices: Vec<_> = available_devices
                     .iter()
-                    .filter_map(|&device_id| {
-                        device_availability.get(&device_id).map(|availability| {
+                    .filter_map(|&deviceid| {
+                        device_availability.get(&deviceid).map(|availability| {
                             // Calculate comprehensive capacity score
                             let compute_score = availability.compute_capacity;
                             let memory_score = availability.available_memory as f64
@@ -1815,7 +1815,7 @@ impl LoadBalancer {
                                 // 20% weight on communication bandwidth
                             ) * load_efficiency; // Adjusted by current load efficiency
 
-                            (device_id, capacity_score)
+                            (deviceid, capacity_score)
                         })
                     })
                     .collect();
@@ -1828,7 +1828,7 @@ impl LoadBalancer {
                 let selected_devices: Vec<DeviceId> = capacity_ranked_devices
                     .into_iter()
                     .take(4) // Take top 4 highest capacity _devices
-                    .map(|(device_id, _)| device_id)
+                    .map(|(deviceid, _)| deviceid)
                     .collect();
 
                 // If we have fewer than 4 devices, ensure we have at least one
@@ -2093,10 +2093,10 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
     }
 
     pub async fn create_batch(&mut self, batchdata: BatchData<T>) -> Result<BatchId> {
-        let batch_id = BatchId(scirs2_core::random::rng().gen_range(0..u64::MAX));
+        let batchid = BatchId(scirs2_core::random::rng().gen_range(0..u64::MAX));
         let batch_execution = BatchExecution {
-            id: batch_id,
-            data: batch_data,
+            id: batchid,
+            data: batchdata,
             device_assignments: HashMap::new(),
             progress: BatchProgress {
                 total_partitions: 4,
@@ -2109,25 +2109,25 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
             dependencies: Vec::new(),
         };
 
-        self.active_batches.insert(batch_id, batch_execution);
-        Ok(batch_id)
+        self.active_batches.insert(batchid, batch_execution);
+        Ok(batchid)
     }
 
     pub async fn distribute_data(
         &mut self,
-        batch_id: BatchId,
+        batchid: BatchId,
         resource_allocation: &ResourceAllocation,
     ) -> Result<()> {
         // Simplified data distribution
-        if let Some(batch) = self.active_batches.get_mut(&batch_id) {
-            for &device_id in &resource_allocation.devices {
+        if let Some(batch) = self.active_batches.get_mut(&batchid) {
+            for &deviceid in &resource_allocation.devices {
                 let partition = BatchPartition {
                     data: Array::zeros(ndarray::IxDyn(&[10, 10])),
                     indices: vec![0, 1, 2],
                     status: PartitionStatus::Assigned,
-                    device: device_id,
+                    device: deviceid,
                 };
-                batch.device_assignments.insert(device_id, partition);
+                batch.device_assignments.insert(deviceid, partition);
             }
         }
         Ok(())
@@ -2135,11 +2135,11 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
 
     pub fn get_partition(
         &self,
-        batch_id: BatchId,
-        device_id: DeviceId,
+        batchid: BatchId,
+        deviceid: DeviceId,
     ) -> Result<BatchPartition<T>> {
-        if let Some(batch) = self.active_batches.get(&batch_id) {
-            if let Some(partition) = batch.device_assignments.get(&device_id) {
+        if let Some(batch) = self.active_batches.get(&batchid) {
+            if let Some(partition) = batch.device_assignments.get(&deviceid) {
                 return Ok((*partition).clone());
             }
         }

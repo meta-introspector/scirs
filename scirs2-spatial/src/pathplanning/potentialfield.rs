@@ -191,7 +191,7 @@ impl Obstacle for CircularObstacle {
         let dist = diff.iter().map(|x| x.powi(2)).sum::<f64>().sqrt();
 
         if dist <= self.radius || dist > config.influence_radius {
-            return Array1::zeros(_point.len());
+            return Array1::zeros(point.len());
         }
 
         let force_magnitude = config.repulsive_gain * (1.0 / dist - 1.0 / config.influence_radius);
@@ -252,7 +252,7 @@ impl PolygonObstacle {
         for i in 0..n {
             let j = (i + 1) % n;
             let edge_dist =
-                self.distance_point_to_line_segment(_point, &self.vertices[i], &self.vertices[j]);
+                self.distance_point_to_line_segment(point, &self.vertices[i], &self.vertices[j]);
             min_distance = min_distance.min(edge_dist);
         }
 
@@ -311,10 +311,10 @@ impl PolygonObstacle {
         for i in 0..n {
             let j = (i + 1) % n;
             let edge_point =
-                self.closest_point_on_line_segment(_point, &self.vertices[i], &self.vertices[j]);
+                self.closest_point_on_line_segment(point, &self.vertices[i], &self.vertices[j]);
 
             let dist =
-                self.distance_point_to_line_segment(_point, &self.vertices[i], &self.vertices[j]);
+                self.distance_point_to_line_segment(point, &self.vertices[i], &self.vertices[j]);
             if dist < min_distance {
                 min_distance = dist;
                 closest_point = edge_point;
@@ -377,20 +377,20 @@ impl Obstacle for PolygonObstacle {
 
     fn repulsive_force(&self, point: &ArrayView1<f64>, config: &PotentialConfig) -> Array1<f64> {
         if point.len() != 2 || self.vertices.len() < 3 {
-            return Array1::zeros(_point.len()); // Only support 2D polygons
+            return Array1::zeros(point.len()); // Only support 2D polygons
         }
 
-        let distance = self.distance_to_polygon_boundary(_point);
+        let distance = self.distance_to_polygon_boundary(point);
 
-        // No force if _point is too far away or inside the polygon
-        if distance > config.influence_radius || self.is_point_inside(_point) {
-            return Array1::zeros(_point.len());
+        // No force if point is too far away or inside the polygon
+        if distance > config.influence_radius || self.is_point_inside(point) {
+            return Array1::zeros(point.len());
         }
 
-        // Find the closest _point on the polygon boundary
-        let closest_point = self.closest_point_on_boundary(_point);
+        // Find the closest point on the polygon boundary
+        let closest_point = self.closest_point_on_boundary(point);
 
-        // Calculate direction from closest _point to the _point (repulsive direction)
+        // Calculate direction from closest point to the point (repulsive direction)
         let direction_x = point[0] - closest_point[0];
         let direction_y = point[1] - closest_point[1];
         let direction_magnitude = (direction_x * direction_x + direction_y * direction_y).sqrt();
@@ -442,14 +442,14 @@ impl PotentialFieldPlanner {
 
     /// Add a circular obstacle
     pub fn add_circular_obstacle(&mut self, center: [f64; 2], radius: f64) {
-        let center_array = Array1::from_vec(_center.to_vec());
+        let center_array = Array1::from_vec(center.to_vec());
         self.obstacles
             .push(Box::new(CircularObstacle::new(center_array, radius)));
     }
 
     /// Add a polygon obstacle
     pub fn add_polygon_obstacle(&mut self, vertices: Vec<[f64; 2]>) {
-        let vertices_array = _vertices
+        let vertices_array = vertices
             .into_iter()
             .map(|v| Array1::from_vec(v.to_vec()))
             .collect();
@@ -463,7 +463,7 @@ impl PotentialFieldPlanner {
         let dist = diff.iter().map(|x| x.powi(2)).sum::<f64>().sqrt();
         let force_magnitude = self.config.attractive_gain * dist;
         if dist < 1e-6 {
-            Array1::zeros(_point.len())
+            Array1::zeros(point.len())
         } else {
             let unit_vec = &diff / dist;
             unit_vec * force_magnitude
@@ -472,9 +472,9 @@ impl PotentialFieldPlanner {
 
     /// Calculate the total repulsive force from all obstacles
     fn repulsive_force(&self, point: &Array1<f64>) -> Array1<f64> {
-        let mut total_force = Array1::zeros(_point.len());
+        let mut total_force = Array1::zeros(point.len());
         for obstacle in &self.obstacles {
-            let force = obstacle.repulsive_force(&_point.view(), &self.config);
+            let force = obstacle.repulsive_force(&point.view(), &self.config);
             total_force = total_force + force;
         }
         total_force
@@ -482,14 +482,14 @@ impl PotentialFieldPlanner {
 
     /// Calculate the total force (attractive + repulsive) at a point
     fn total_force(&self, point: &Array1<f64>, goal: &Array1<f64>) -> Array1<f64> {
-        let attractive = self.attractive_force(_point, goal);
-        let repulsive = self.repulsive_force(_point);
+        let attractive = self.attractive_force(point, goal);
+        let repulsive = self.repulsive_force(point);
         attractive + repulsive
     }
 
     /// Calculate the distance between two points
     fn distance(p1: &Array1<f64>, p2: &Array1<f64>) -> f64 {
-        let diff = _p1 - p2;
+        let diff = p1 - p2;
         diff.iter().map(|x| x.powi(2)).sum::<f64>().sqrt()
     }
 
@@ -497,7 +497,7 @@ impl PotentialFieldPlanner {
     fn is_collision(&self, point: &Array1<f64>) -> bool {
         for obstacle in &self.obstacles {
             // Use distance to check collision - if distance is very small, consider it inside
-            let dist = obstacle.distance(&_point.view());
+            let dist = obstacle.distance(&point.view());
             if dist < 1e-6 {
                 return true;
             }
@@ -647,7 +647,7 @@ impl PotentialFieldPlanner {
         let num_checks = 20;
         for i in 0..=num_checks {
             let t = i as f64 / num_checks as f64;
-            let point = _start * (1.0 - t) + goal * t;
+            let point = start * (1.0 - t) + goal * t;
             if self.is_collision(&point) {
                 return false;
             }
@@ -760,18 +760,18 @@ impl PotentialField2DPlanner {
     /// Create a new 2D potential field planner
     pub fn new(config: PotentialConfig) -> Self {
         Self {
-            internal_planner: PotentialFieldPlanner::new_2d(_config),
+            internal_planner: PotentialFieldPlanner::new_2d(config),
         }
     }
 
     /// Add a circular obstacle
     pub fn add_circular_obstacle(&mut self, center: [f64; 2], radius: f64) {
-        self.internal_planner.add_circular_obstacle(_center, radius);
+        self.internal_planner.add_circular_obstacle(center, radius);
     }
 
     /// Add a polygon obstacle
     pub fn add_polygon_obstacle(&mut self, vertices: Vec<[f64; 2]>) {
-        self.internal_planner.add_polygon_obstacle(_vertices);
+        self.internal_planner.add_polygon_obstacle(vertices);
     }
 
     /// Find a path from start to goal

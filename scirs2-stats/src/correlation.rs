@@ -194,15 +194,15 @@ where
 /// Helper function to assign ranks to sorted data
 #[allow(dead_code)]
 fn assign_ranks<F: Float>(sorteddata: &[(F, usize)], ranks: &mut [F]) -> StatsResult<()> {
-    let n = sorted_data.len();
+    let n = sorteddata.len();
 
     let mut i = 0;
     while i < n {
-        let current_val = sorted_data[i].0;
+        let current_val = sorteddata[i].0;
         let mut j = i;
 
         // Find the end of the tie group
-        while j < n - 1 && sorted_data[j + 1].0 == current_val {
+        while j < n - 1 && sorteddata[j + 1].0 == current_val {
             j += 1;
         }
 
@@ -210,7 +210,7 @@ fn assign_ranks<F: Float>(sorteddata: &[(F, usize)], ranks: &mut [F]) -> StatsRe
         let avg_rank = F::from((i + j) as f64 / 2.0 + 1.0).unwrap();
 
         // Assign average rank to all tied values
-        for item in sorted_data.iter().take(j + 1).skip(i) {
+        for item in sorteddata.iter().take(j + 1).skip(i) {
             let original_idx = item.1;
             ranks[original_idx] = avg_rank;
         }
@@ -980,11 +980,11 @@ where
     }
 
     // Get dimensions
-    let (n, p) = (_data.shape()[0], data.shape()[1]);
+    let (n, p) = (data.shape()[0], data.shape()[1]);
 
-    // Check that _data is not empty
+    // Check that data is not empty
     if n == 0 || p == 0 {
-        return Err(ErrorMessages::empty_array("_data"));
+        return Err(ErrorMessages::empty_array("data"));
     }
 
     // Initialize correlation matrix

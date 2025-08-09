@@ -22,7 +22,7 @@ impl PatchExtractor {
     /// Create a new patch extractor
     pub fn new(_patchsize: (usize, usize)) -> Self {
         PatchExtractor {
-            patch_size,
+            patch_size: _patchsize,
             max_patches: None,
             random_state: None,
         }
@@ -30,7 +30,7 @@ impl PatchExtractor {
 
     /// Set maximum number of patches to extract
     pub fn with_max_patches(mut self, maxpatches: usize) -> Self {
-        self.max_patches = Some(max_patches);
+        self.max_patches = Some(maxpatches);
         self
     }
 
@@ -161,7 +161,7 @@ impl HOGDescriptor {
     /// Create a new HOG descriptor
     pub fn new(_cellsize: (usize, usize), block_size: (usize, usize), n_bins: usize) -> Self {
         HOGDescriptor {
-            cell_size,
+            cell_size: _cellsize,
             block_size,
             n_bins,
             block_norm: BlockNorm::L2Hys,
@@ -170,7 +170,7 @@ impl HOGDescriptor {
 
     /// Set block normalization method
     pub fn with_block_norm(mut self, blocknorm: BlockNorm) -> Self {
-        self.block_norm = block_norm;
+        self.block_norm = blocknorm;
         self
     }
 
@@ -482,10 +482,10 @@ pub fn rgb_to_grayscale(images: &Array4<f64>) -> Result<Array3<f64>> {
 #[allow(dead_code)]
 pub fn resize_images(_images: &Array4<f64>, newsize: (usize, usize)) -> Result<Array4<f64>> {
     let (n_samples, old_h, old_w, n_channels) = {
-        let shape = images.shape();
+        let shape = _images.shape();
         (shape[0], shape[1], shape[2], shape[3])
     };
-    let (new_h, new_w) = new_size;
+    let (new_h, new_w) = newsize;
 
     let mut resized = Array4::zeros((n_samples, new_h, new_w, n_channels));
 

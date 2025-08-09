@@ -847,14 +847,14 @@ impl NeuralErrorClassifier {
 
     /// Online learning update
     pub fn update_from_feedback(&mut self, features: &[f64], correctclass: usize, success: bool) {
-        self.training_data.push((features.to_vec(), correct_class));
+        self.training_data.push((features.to_vec(), correctclass));
 
         if success {
             // Positive reinforcement - strengthen this prediction
-            self.reinforce_prediction(features, correct_class, 1.0);
+            self.reinforce_prediction(features, correctclass, 1.0);
         } else {
             // Negative reinforcement - weaken this prediction
-            self.reinforce_prediction(features, correct_class, -0.5);
+            self.reinforce_prediction(features, correctclass, -0.5);
         }
 
         // Trim training data to prevent memory overflow
@@ -867,8 +867,8 @@ impl NeuralErrorClassifier {
     fn reinforce_prediction(&mut self, features: &[f64], targetclass: usize, strength: f64) {
         let prediction = self.forward_pass(features);
         let error = strength
-            * (if target_class < prediction.len() {
-                1.0 - prediction[target_class]
+            * (if targetclass < prediction.len() {
+                1.0 - prediction[targetclass]
             } else {
                 1.0
             });
@@ -877,8 +877,8 @@ impl NeuralErrorClassifier {
         let update_magnitude = self.learning_rate * error;
 
         // Update biases
-        if target_class < self.biases.len() {
-            self.biases[target_class] += update_magnitude;
+        if targetclass < self.biases.len() {
+            self.biases[targetclass] += update_magnitude;
         }
 
         // Update some weights (simplified)
@@ -1105,7 +1105,7 @@ impl RecoveryStrategyEnsemble {
 
     pub fn add_generator(&mut self, generator: Box<dyn StrategyGenerator>, initialweight: f64) {
         self.strategy_generators.push(generator);
-        self.generator_weights.push(initial_weight);
+        self.generator_weights.push(initialweight);
     }
 
     /// Generate ensemble strategies with voting
@@ -1186,14 +1186,14 @@ impl RecoveryStrategyEnsemble {
     /// Update generator weights based on performance feedback
     pub fn update_weights(&mut self, generatorname: &str, success: bool) {
         self.performance_history
-            .entry(generator_name.to_string())
+            .entry(generatorname.to_string())
             .or_insert_with(Vec::new)
             .push(success);
 
         // Update weights based on recent performance
         for (i, generator) in self.strategy_generators.iter().enumerate() {
-            if generator.name() == generator_name {
-                if let Some(history) = self.performance_history.get(generator_name) {
+            if generator.name() == generatorname {
+                if let Some(history) = self.performance_history.get(generatorname) {
                     let recent_success_rate = history.iter()
                         .rev()
                         .take(20) // Last 20 outcomes

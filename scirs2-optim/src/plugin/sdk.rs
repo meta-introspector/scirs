@@ -373,12 +373,12 @@ pub struct BenchmarkConfig {
 impl PluginSDK {
     /// Create a plugin template with common functionality
     pub fn create_plugin_template(name: &str) -> PluginTemplate {
-        PluginTemplate::new(_name)
+        PluginTemplate::new(name)
     }
 
     /// Validate plugin configuration schema
     pub fn validate_config_schema(schema: &ConfigSchema) -> Result<()> {
-        for (field_name, field_schema) in &_schema.fields {
+        for (field_name, field_schema) in &schema.fields {
             if field_name.is_empty() {
                 return Err(OptimError::InvalidConfig(
                     "Field name cannot be empty".to_string(),
@@ -507,7 +507,7 @@ pub enum TemplateFileType {
 impl PluginTemplate {
     /// Create a new plugin template
     pub fn new(name: &str) -> Self {
-        let structure = Self::create_default_structure(_name);
+        let structure = Self::create_default_structure(name);
         Self {
             name: name.to_string(),
             structure,
@@ -516,10 +516,10 @@ impl PluginTemplate {
 
     /// Generate template files to directory
     pub fn generate_to_directory(&self, outputdir: &std::path::Path) -> Result<()> {
-        std::fs::create_dir_all(output_dir)?;
+        std::fs::create_dir_all(outputdir)?;
 
         for file in &self.structure.source_files {
-            let file_path = output_dir.join(&file.path);
+            let file_path = outputdir.join(&file.path);
             if let Some(parent) = file_path.parent() {
                 std::fs::create_dir_all(parent)?;
             }
@@ -527,12 +527,12 @@ impl PluginTemplate {
         }
 
         for file in &self.structure.config_files {
-            let file_path = output_dir.join(&file.path);
+            let file_path = outputdir.join(&file.path);
             std::fs::write(&file_path, &file.content)?;
         }
 
         for file in &self.structure.test_files {
-            let file_path = output_dir.join(&file.path);
+            let file_path = outputdir.join(&file.path);
             if let Some(parent) = file_path.parent() {
                 std::fs::create_dir_all(parent)?;
             }
@@ -572,7 +572,7 @@ impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPlugin<A> for 
         Ok(params - &(gradients * self.learning_rate))
     }}
     
-    fn _name(&self) -> &str {{
+    fn name(&self) -> &str {{
         "{}"
     }}
     
@@ -669,12 +669,12 @@ impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPluginFactory<
     }}
 }}
 "#,
-            name, name, name, name, name, name, name, name, name, _name
+            name, name, name, name, name, name, name, name, name, name
         );
 
         let plugin_toml_content = format!(
             r#"[plugin]
-_name = "{}"
+name = "{}"
 version = "0.1.0"
 description = "Custom optimizer plugin"
 author = "Plugin Developer"
@@ -689,7 +689,7 @@ profile = "release"
 [runtime]
 min_rust_version = "1.70.0"
 "#,
-            _name
+            name
         );
 
         let test_content = format!(
@@ -733,7 +733,7 @@ fn test_{}_convergence() {{
             name.to_lowercase(),
             name,
             name.to_lowercase(),
-            _name
+            name
         );
 
         TemplateStructure {
@@ -783,7 +783,7 @@ impl<A: Float + Debug + Send + Sync + 'static> BaseOptimizerPlugin<A> {
         self.metrics.total_steps += 1;
         self.metrics.avg_step_time = (self.metrics.avg_step_time
             * (self.metrics.total_steps - 1) as f64
-            + step_time.as_secs_f64())
+            + steptime.as_secs_f64())
             / self.metrics.total_steps as f64;
         self.metrics.throughput = 1.0 / self.metrics.avg_step_time;
     }

@@ -42,7 +42,7 @@ pub struct QuantumInspiredOptimizer {
     /// Quantum parameter bounds
     bounds: Vec<(f64, f64)>,
     /// Optimization parameters
-    max_iterations: usize,
+    maxiterations: usize,
     /// Quantum collapse probability
     collapse_probability: f64,
     /// Entanglement strength
@@ -57,7 +57,7 @@ impl QuantumInspiredOptimizer {
         dimension: usize,
         population_size: usize,
         bounds: Vec<(f64, f64)>,
-        max_iterations: usize,
+        maxiterations: usize,
     ) -> Result<Self> {
         if bounds.len() != dimension {
             return Err(TransformError::InvalidInput(
@@ -92,7 +92,7 @@ impl QuantumInspiredOptimizer {
             global_best_position: Array1::zeros(dimension),
             global_best_fitness: f64::NEG_INFINITY,
             bounds,
-            max_iterations,
+            maxiterations,
             collapse_probability: 0.1,
             entanglement_strength: 0.3,
             decay_rate: 0.95,
@@ -106,7 +106,7 @@ impl QuantumInspiredOptimizer {
     {
         let mut rng = rand::rng();
 
-        for iteration in 0..self.max_iterations {
+        for iteration in 0..self.maxiterations {
             // Update quantum states and evaluate fitness
             // First, collect quantum positions and fitness values without borrowing conflicts
             let quantum_data: Vec<(Array1<f64>, f64)> = self
@@ -114,7 +114,7 @@ impl QuantumInspiredOptimizer {
                 .iter()
                 .map(|particle| {
                     let quantum_position = self.apply_quantum_superposition(particle)?;
-                    let fitness = objective_function(&quantum_position);
+                    let fitness = objectivefunction(&quantum_position);
                     Ok((quantum_position, fitness))
                 })
                 .collect::<Result<Vec<_>>>()?;
@@ -136,7 +136,7 @@ impl QuantumInspiredOptimizer {
                 }
 
                 // Update quantum phase
-                particle.phase += 0.1 * (iteration as f64 / self.max_iterations as f64);
+                particle.phase += 0.1 * (iteration as f64 / self.maxiterations as f64);
                 if particle.phase > 2.0 * std::f64::consts::PI {
                     particle.phase -= 2.0 * std::f64::consts::PI;
                 }
@@ -240,7 +240,7 @@ impl QuantumInspiredOptimizer {
 
     /// Adapt quantum parameters during optimization
     fn adapt_quantum_parameters(&mut self, iteration: usize) {
-        let progress = iteration as f64 / self.max_iterations as f64;
+        let progress = iteration as f64 / self.maxiterations as f64;
 
         // Adaptive collapse probability (higher early, lower late)
         self.collapse_probability = 0.2 * (1.0 - progress) + 0.05 * progress;
@@ -359,7 +359,7 @@ impl QuantumTransformationOptimizer {
         // Parameter 0: StandardScaler usage probability
         if params[0] > 0.5 {
             configs.push(TransformationConfig {
-                transformation_type: TransformationType::StandardScaler,
+                transformationtype: TransformationType::StandardScaler,
                 parameters: HashMap::new(),
                 expected_performance: params[0],
             });
@@ -370,7 +370,7 @@ impl QuantumTransformationOptimizer {
             let mut power_params = HashMap::new();
             power_params.insert("lambda".to_string(), params[1]);
             configs.push(TransformationConfig {
-                transformation_type: TransformationType::PowerTransformer,
+                transformationtype: TransformationType::PowerTransformer,
                 parameters: power_params,
                 expected_performance: params[1],
             });
@@ -381,7 +381,7 @@ impl QuantumTransformationOptimizer {
             let mut poly_params = HashMap::new();
             poly_params.insert("degree".to_string(), params[2].floor());
             configs.push(TransformationConfig {
-                transformation_type: TransformationType::PolynomialFeatures,
+                transformationtype: TransformationType::PolynomialFeatures,
                 parameters: poly_params,
                 expected_performance: 1.0 / params[2], // Lower degree preferred
             });
@@ -392,7 +392,7 @@ impl QuantumTransformationOptimizer {
             let mut pca_params = HashMap::new();
             pca_params.insert("n_components".to_string(), params[3]);
             configs.push(TransformationConfig {
-                transformation_type: TransformationType::PCA,
+                transformationtype: TransformationType::PCA,
                 parameters: pca_params,
                 expected_performance: params[3],
             });
@@ -449,11 +449,11 @@ impl QuantumTransformationOptimizer {
         .cloned()
         .collect::<HashMap<TransformationType, f64>>();
 
-        let total_efficiency: f64 = _configs
+        let total_efficiency: f64 = configs
             .iter()
             .map(|c| {
                 complexity_weights
-                    .get(&c.transformation_type)
+                    .get(&c.transformationtype)
                     .unwrap_or(&0.5)
             })
             .sum();
@@ -486,11 +486,11 @@ impl QuantumTransformationOptimizer {
         .cloned()
         .collect::<HashMap<TransformationType, f64>>();
 
-        let total_robustness: f64 = _configs
+        let total_robustness: f64 = configs
             .iter()
             .map(|c| {
                 robustness_weights
-                    .get(&c.transformation_type)
+                    .get(&c.transformationtype)
                     .unwrap_or(&0.5)
             })
             .sum();
@@ -512,7 +512,7 @@ impl QuantumTransformationOptimizer {
 /// Quantum-inspired hyperparameter tuning for individual transformations
 pub struct QuantumHyperparameterTuner {
     /// Current transformation type being tuned
-    transformation_type: TransformationType,
+    transformationtype: TransformationType,
     /// Quantum optimizer for parameter search
     optimizer: QuantumInspiredOptimizer,
     /// Parameter bounds
@@ -523,7 +523,7 @@ pub struct QuantumHyperparameterTuner {
 impl QuantumHyperparameterTuner {
     /// Create a new quantum hyperparameter tuner for a specific transformation
     pub fn new_for_transformation(transformationtype: TransformationType) -> Result<Self> {
-        let (parameter_bounds, dimension) = match transformation_type {
+        let (parameter_bounds, dimension) = match transformationtype {
             TransformationType::PowerTransformer => {
                 (vec![(0.1, 2.0), (0.0, 1.0)], 2) // lambda, standardize
             }
@@ -541,7 +541,7 @@ impl QuantumHyperparameterTuner {
         let optimizer = QuantumInspiredOptimizer::new(dimension, 30, parameter_bounds.clone(), 50)?;
 
         Ok(QuantumHyperparameterTuner {
-            transformation_type,
+            transformationtype,
             optimizer,
             parameter_bounds,
         })
@@ -577,11 +577,11 @@ impl QuantumHyperparameterTuner {
         // Define objective function for hyperparameter optimization
         let data_clone = data.to_owned();
         let validation_clone = validation_data.to_owned();
-        let t_type = self.transformation_type.clone();
+        let ttype = self.transformationtype.clone();
 
         let objective = move |params: &Array1<f64>| -> f64 {
             // Create configuration with current parameters
-            let config = Self::params_to_config(&t_type, params);
+            let config = Self::params_to_config(&ttype, params);
 
             // Simulate transformation and compute performance
             let performance = Self::simulate_transformation_performance(
@@ -594,10 +594,10 @@ impl QuantumHyperparameterTuner {
         };
 
         // Run quantum optimization
-        let (optimal_params_) = self.optimizer.optimize(objective)?;
+        let (optimal_params_, _fitness) = self.optimizer.optimize(objective)?;
 
         // Convert optimal parameters to configuration
-        let optimal_config = Self::params_to_config(&self.transformation_type, &optimal_params_);
+        let optimal_config = Self::params_to_config(&self.transformationtype, &optimal_params_);
 
         Ok(optimal_config.parameters)
     }
@@ -606,7 +606,7 @@ impl QuantumHyperparameterTuner {
     fn params_to_config(ttype: &TransformationType, params: &Array1<f64>) -> TransformationConfig {
         let mut parameters = HashMap::new();
 
-        match t_type {
+        match ttype {
             TransformationType::PowerTransformer => {
                 parameters.insert("lambda".to_string(), params[0]);
                 parameters.insert("standardize".to_string(), params[1]);
@@ -625,7 +625,7 @@ impl QuantumHyperparameterTuner {
         }
 
         TransformationConfig {
-            transformation_type: t_type.clone(),
+            transformationtype: ttype.clone(),
             parameters,
             expected_performance: 0.0,
         }
@@ -638,7 +638,7 @@ impl QuantumHyperparameterTuner {
         config: &TransformationConfig,
     ) -> f64 {
         // Simplified performance simulation based on parameter values
-        match config.transformation_type {
+        match config.transformationtype {
             TransformationType::PowerTransformer => {
                 let lambda = config.parameters.get("lambda").unwrap_or(&1.0);
                 // Optimal lambda around 0.5-1.5
@@ -793,30 +793,30 @@ impl AdvancedQuantumOptimizer {
     /// ✅ Advanced MODE: Fast parallel quantum optimization
     pub fn optimize_advanced<F>(
         &mut self,
-        objective_function: F,
-        max_iterations: usize,
+        objectivefunction: F,
+        maxiterations: usize,
     ) -> Result<(Array1<f64>, f64)>
     where
         F: Fn(&Array1<f64>) -> f64 + Sync + Send,
         F: Copy,
     {
         let start_time = std::time::Instant::now();
-        let mut best_fitness_history = Vec::with_capacity(max_iterations);
+        let mut best_fitness_history = Vec::with_capacity(maxiterations);
 
-        for iteration in 0..max_iterations {
+        for iteration in 0..maxiterations {
             let iteration_start = std::time::Instant::now();
 
             // ✅ Advanced OPTIMIZATION: Parallel fitness evaluation
-            let fitness_results = self.evaluate_population_parallel(&objective_function)?;
+            let fitness_results = self.evaluate_population_parallel(&objectivefunction)?;
 
             // ✅ Advanced OPTIMIZATION: SIMD-accelerated position updates
             self.update_positions_simd(&fitness_results)?;
 
             // ✅ Advanced OPTIMIZATION: Adaptive quantum operations
-            self.apply_quantum_operations_adaptive(iteration, max_iterations)?;
+            self.apply_quantum_operations_adaptive(iteration, maxiterations)?;
 
             // ✅ Advanced OPTIMIZATION: Real-time parameter adaptation
-            self.adapt_parameters_realtime(iteration, max_iterations);
+            self.adapt_parameters_realtime(iteration, maxiterations);
 
             // ✅ Advanced OPTIMIZATION: Performance monitoring
             let iteration_time = iteration_start.elapsed().as_secs_f64();
@@ -831,7 +831,7 @@ impl AdvancedQuantumOptimizer {
         }
 
         let total_time = start_time.elapsed().as_secs_f64();
-        self.performance_metrics.convergence_rate = max_iterations as f64 / total_time;
+        self.performance_metrics.convergence_rate = maxiterations as f64 / total_time;
 
         Ok((self.global_best_position.clone(), self.global_best_fitness))
     }
@@ -874,7 +874,7 @@ impl AdvancedQuantumOptimizer {
                             }
                         }
 
-                        let fitness = objective_function(&quantum_position);
+                        let fitness = objectivefunction(&quantum_position);
 
                         // Update personal best
                         if fitness > particle.best_fitness {
@@ -961,9 +961,9 @@ impl AdvancedQuantumOptimizer {
     fn apply_quantum_operations_adaptive(
         &mut self,
         iteration: usize,
-        max_iterations: usize,
+        maxiterations: usize,
     ) -> Result<()> {
-        let progress = iteration as f64 / max_iterations as f64;
+        let progress = iteration as f64 / maxiterations as f64;
 
         // ✅ Advanced OPTIMIZATION: Adaptive quantum collapse
         if rand::rng().gen_range(0.0..1.0) < self.adaptive_params.collapse_probability {
@@ -1103,7 +1103,7 @@ impl AdvancedQuantumOptimizer {
 
     /// ✅ Advanced MODE: Real-time parameter adaptation
     fn adapt_parameters_realtime(&mut self, iteration: usize, maxiterations: usize) {
-        let progress = iteration as f64 / max_iterations as f64;
+        let progress = iteration as f64 / maxiterations as f64;
 
         // ✅ Advanced OPTIMIZATION: Adaptive collapse probability
         self.adaptive_params.collapse_probability = 0.2 * (1.0 - progress) + 0.05 * progress;
@@ -1151,13 +1151,13 @@ impl AdvancedQuantumOptimizer {
 
     /// ✅ Advanced MODE: Convergence detection with multiple criteria
     fn check_convergence(&self, fitnesshistory: &[f64], iteration: usize) -> bool {
-        if fitness_history.len() < 10 {
+        if fitnesshistory.len() < 10 {
             return false;
         }
 
         // ✅ Advanced OPTIMIZATION: Multiple convergence criteria
-        let recent_improvement = fitness_history[fitness_history.len() - 1]
-            - fitness_history[fitness_history.len() - 10];
+        let recent_improvement = fitnesshistory[fitnesshistory.len() - 1]
+            - fitnesshistory[fitnesshistory.len() - 10];
 
         let diversity = self.calculate_population_diversity();
         let convergence_threshold = 1e-6;
@@ -1172,16 +1172,16 @@ impl AdvancedQuantumOptimizer {
     fn update_performance_metrics(&mut self, iteration_time: f64, fitnesshistory: &[f64]) {
         self.performance_metrics.energy_consumption += iteration_time;
 
-        if fitness_history.len() >= 2 {
-            let improvement = fitness_history[fitness_history.len() - 1]
-                - fitness_history[fitness_history.len() - 2];
+        if fitnesshistory.len() >= 2 {
+            let improvement = fitnesshistory[fitnesshistory.len() - 1]
+                - fitnesshistory[fitnesshistory.len() - 2];
             self.performance_metrics.quality_improvement_rate = improvement / iteration_time;
         }
 
         // ✅ Advanced OPTIMIZATION: Quantum efficiency calculation
         let theoretical_max_improvement = 1.0; // Normalized
-        let actual_improvement = if fitness_history.len() >= 10 {
-            fitness_history[fitness_history.len() - 1] - fitness_history[fitness_history.len() - 10]
+        let actual_improvement = if fitnesshistory.len() >= 10 {
+            fitnesshistory[fitnesshistory.len() - 1] - fitnesshistory[fitnesshistory.len() - 10]
         } else {
             0.0
         };
@@ -1202,7 +1202,7 @@ impl AdvancedQuantumOptimizer {
     where
         F: Fn(&Array1<f64>) -> f64 + Sync + Send + Copy,
     {
-        self.optimize_advanced(objective_function, 100)
+        self.optimize_advanced(objectivefunction, 100)
     }
 
     /// ✅ Advanced MODE: Get adaptive parameters state

@@ -54,7 +54,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
     pub fn new(target: T, initial: Array1<f64>, step_size: f64, nsteps: usize) -> Result<Self> {
         checkarray_finite(&initial, "initial")?;
         check_positive(step_size, "step_size")?;
-        check_positive(n_steps, "n_steps")?;
+        check_positive(nsteps, "nsteps")?;
 
         if initial.len() != target.dim() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -74,7 +74,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
             position: initial,
             current_log_density,
             step_size,
-            n_steps,
+            n_steps: nsteps,
             mass_matrix,
             mass_inv,
             n_accepted: 0,
@@ -84,25 +84,25 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
 
     /// Set custom mass matrix
     pub fn with_mass_matrix(mut self, massmatrix: Array2<f64>) -> Result<Self> {
-        checkarray_finite(&mass_matrix, "mass_matrix")?;
+        checkarray_finite(&massmatrix, "massmatrix")?;
 
-        if mass_matrix.nrows() != self.position.len() || mass_matrix.ncols() != self.position.len()
+        if massmatrix.nrows() != self.position.len() || massmatrix.ncols() != self.position.len()
         {
             return Err(StatsError::DimensionMismatch(format!(
-                "mass_matrix shape ({}, {}) must be ({}, {})",
-                mass_matrix.nrows(),
-                mass_matrix.ncols(),
+                "massmatrix shape ({}, {}) must be ({}, {})",
+                massmatrix.nrows(),
+                massmatrix.ncols(),
                 self.position.len(),
                 self.position.len()
             )));
         }
 
         // Compute inverse
-        let mass_inv = scirs2_linalg::inv(&mass_matrix.view(), None).map_err(|e| {
+        let mass_inv = scirs2_linalg::inv(&massmatrix.view(), None).map_err(|e| {
             StatsError::ComputationError(format!("Failed to invert mass matrix: {}", e))
         })?;
 
-        self.mass_matrix = mass_matrix;
+        self.mass_matrix = massmatrix;
         self.mass_inv = mass_inv;
         Ok(self)
     }
@@ -215,14 +215,14 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         let dim = self.position.len();
-        let mut _samples = Array2::zeros((n_samples_, dim));
+        let mut samples = Array2::zeros((n_samples_, dim));
 
         for i in 0..n_samples_ {
             let sample = self.step(rng)?;
             samples.row_mut(i).assign(&sample);
         }
 
-        Ok(_samples)
+        Ok(samples)
     }
 
     /// Sample with burn-in
@@ -302,7 +302,7 @@ impl DualAveragingAdaptation {
             t0: 10.0,
             kappa: 0.75,
             iteration: 0,
-            log_step_avg: initial_log_step,
+            log_step_avg: initial_logstep,
             h_avg: 0.0,
         }
     }
@@ -330,8 +330,8 @@ impl DualAveragingAdaptation {
 impl<T: DifferentiableTarget> NoUTurnSampler<T> {
     /// Create new NUTS sampler
     pub fn new(target: T, initial: Array1<f64>, initial_stepsize: f64) -> Result<Self> {
-        let hmc = HamiltonianMonteCarlo::new(target, initial, initial_step_size, 1)?;
-        let step_size_adaptation = DualAveragingAdaptation::new(0.8, initial_step_size.ln());
+        let hmc = HamiltonianMonteCarlo::new(target, initial, initial_stepsize, 1)?;
+        let step_size_adaptation = DualAveragingAdaptation::new(0.8, initial_stepsize.ln());
 
         Ok(Self {
             hmc,
@@ -420,14 +420,14 @@ impl<T: DifferentiableTarget> NoUTurnSampler<T> {
 
         // Sampling phase
         let dim = self.hmc.position.len();
-        let mut _samples = Array2::zeros((n_samples_, dim));
+        let mut samples = Array2::zeros((n_samples_, dim));
 
         for i in 0..n_samples_ {
             let sample = self.step(rng)?;
             samples.row_mut(i).assign(&sample);
         }
 
-        Ok(_samples)
+        Ok(samples)
     }
 }
 
@@ -526,7 +526,7 @@ impl<F, G> CustomDifferentiableTarget<F, G> {
         check_positive(dim, "dim")?;
         Ok(Self {
             log_density_fn,
-            gradient_fn,
+            gradient_fn: gradientfn,
             dim,
         })
     }

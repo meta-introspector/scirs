@@ -271,10 +271,10 @@ impl OutOfCoreNormalizer {
     where
         I: Iterator<Item = Result<Array2<f64>>>,
     {
-        let mut min = Array1::from_elem(n_features, f64::INFINITY);
-        let mut max = Array1::from_elem(n_features, f64::NEG_INFINITY);
-        let mut sum = Array1::zeros(n_features);
-        let mut sum_sq = Array1::zeros(n_features);
+        let mut min = Array1::from_elem(nfeatures, f64::INFINITY);
+        let mut max = Array1::from_elem(nfeatures, f64::NEG_INFINITY);
+        let mut sum = Array1::zeros(nfeatures);
+        let mut sum_sq = Array1::zeros(nfeatures);
         let mut count = 0;
 
         // First pass: compute min, max, sum, sum_sq
@@ -282,7 +282,7 @@ impl OutOfCoreNormalizer {
             let chunk = chunk_result?;
             count += chunk.shape()[0];
 
-            for j in 0..n_features {
+            for j in 0..nfeatures {
                 let col = chunk.column(j);
                 for &val in col.iter() {
                     min[j] = min[j].min(val);
@@ -303,8 +303,8 @@ impl OutOfCoreNormalizer {
             max,
             mean,
             std,
-            median: Array1::zeros(n_features), // Not used for simple methods
-            iqr: Array1::zeros(n_features),    // Not used for simple methods
+            median: Array1::zeros(nfeatures), // Not used for simple methods
+            iqr: Array1::zeros(nfeatures),    // Not used for simple methods
             count,
         });
 
@@ -319,7 +319,7 @@ impl OutOfCoreNormalizer {
         // Use reservoir sampling to approximate quantiles
         const RESERVOIR_SIZE: usize = 10000; // Sample size for quantile estimation
 
-        let mut reservoirs: Vec<Vec<f64>> = vec![Vec::with_capacity(RESERVOIR_SIZE); n_features];
+        let mut reservoirs: Vec<Vec<f64>> = vec![Vec::with_capacity(RESERVOIR_SIZE); nfeatures];
         let mut count = 0;
         let mut rng = rand::rng();
 
@@ -330,7 +330,7 @@ impl OutOfCoreNormalizer {
             for i in 0..chunk.shape()[0] {
                 count += 1;
 
-                for j in 0..n_features {
+                for j in 0..nfeatures {
                     let val = chunk[[i, j]];
 
                     if reservoirs[j].len() < RESERVOIR_SIZE {
@@ -348,10 +348,10 @@ impl OutOfCoreNormalizer {
         }
 
         // Compute median and IQR from reservoirs
-        let mut median = Array1::zeros(n_features);
-        let mut iqr = Array1::zeros(n_features);
+        let mut median = Array1::zeros(nfeatures);
+        let mut iqr = Array1::zeros(nfeatures);
 
-        for j in 0..n_features {
+        for j in 0..nfeatures {
             if !reservoirs[j].is_empty() {
                 reservoirs[j].sort_by(|a, b| a.partial_cmp(b).unwrap());
                 let len = reservoirs[j].len();
@@ -385,10 +385,10 @@ impl OutOfCoreNormalizer {
         }
 
         self.stats = Some(NormalizationStats {
-            min: Array1::zeros(n_features),  // Not used for robust scaling
-            max: Array1::zeros(n_features),  // Not used for robust scaling
-            mean: Array1::zeros(n_features), // Not used for robust scaling
-            std: Array1::zeros(n_features),  // Not used for robust scaling
+            min: Array1::zeros(nfeatures),  // Not used for robust scaling
+            max: Array1::zeros(nfeatures),  // Not used for robust scaling
+            mean: Array1::zeros(nfeatures), // Not used for robust scaling
+            std: Array1::zeros(nfeatures),  // Not used for robust scaling
             median,
             iqr,
             count,
@@ -405,7 +405,7 @@ impl OutOfCoreTransformer for OutOfCoreNormalizer {
     {
         // Peek at the first chunk to get dimensions
         let mut chunks_iter = chunks.peekable();
-        let n_features = match chunks_iter.peek() {
+        let nfeatures = match chunks_iter.peek() {
             Some(Ok(chunk)) => chunk.shape()[1],
             Some(Err(_)) => return chunks_iter.next().unwrap().map(|_| ()),
             None => {
@@ -420,11 +420,11 @@ impl OutOfCoreTransformer for OutOfCoreNormalizer {
             | NormalizationMethod::MinMaxCustom(_, _)
             | NormalizationMethod::ZScore
             | NormalizationMethod::MaxAbs => {
-                self.compute_simple_stats(chunks_iter, n_features)?;
+                self.compute_simple_stats(chunks_iter, nfeatures)?;
             }
             NormalizationMethod::Robust => {
                 // Robust scaling using approximate quantile estimation
-                self.compute_robust_stats(chunks_iter, n_features)?;
+                self.compute_robust_stats(chunks_iter, nfeatures)?;
             }
             _ => {
                 return Err(TransformError::NotImplemented(
@@ -553,16 +553,16 @@ pub fn csv_chunks<P: AsRef<Path>>(
 struct CsvChunkIterator {
     reader: BufReader<File>,
     chunk_size: usize,
-    skip_header: bool,
+    skipheader: bool,
     header_skipped: bool,
 }
 
 impl CsvChunkIterator {
     fn new(_reader: BufReader<File>, chunk_size: usize, skipheader: bool) -> Self {
         CsvChunkIterator {
-            reader: reader,
+            reader: _reader,
             chunk_size,
-            skip_header,
+            skipheader,
             header_skipped: false,
         }
     }
@@ -584,7 +584,7 @@ impl Iterator for CsvChunkIterator {
             };
 
             // Skip header if needed
-            if self.skip_header && !self.header_skipped {
+            if self.skipheader && !self.header_skipped {
                 self.header_skipped = true;
                 continue;
             }

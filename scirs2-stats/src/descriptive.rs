@@ -818,7 +818,7 @@ where
         + Sync
         + SimdUnifiedOps,
 {
-    moment(x, moment_order, center, None)
+    moment(x, momentorder, center, None)
 }
 
 #[cfg(test)]

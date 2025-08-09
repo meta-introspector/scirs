@@ -60,8 +60,8 @@
 //! // Create a KD-Tree with custom leaf size
 //! let points = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0],
 //!                      [9.0, 10.0], [11.0, 12.0], [13.0, 14.0], [15.0, 16.0]];
-//! let leaf_size = 2; // Default is 16
-//! let kdtree = KDTree::with_leaf_size(&points, leaf_size).unwrap();
+//! let leafsize = 2; // Default is 16
+//! let kdtree = KDTree::with_leaf_size(&points, leafsize).unwrap();
 //! ```
 
 use crate::distance::{Distance, EuclideanDistance};
@@ -106,10 +106,10 @@ impl<T: Float> Rectangle<T> {
         assert_eq!(
             mins.len(),
             maxes.len(),
-            "_mins and maxes must have the same length"
+            "mins and maxes must have the same length"
         );
 
-        for i in 0.._mins.len() {
+        for i in 0..mins.len() {
             assert!(
                 mins[i] <= maxes[i],
                 "min value must be less than or equal to max value"
@@ -169,10 +169,10 @@ impl<T: Float> Rectangle<T> {
     /// * A tuple of (left, right) rectangles
     pub fn split(&self, dim: usize, value: T) -> (Self, Self) {
         let mut left_maxes = self.maxes.clone();
-        left_maxes[_dim] = value;
+        left_maxes[dim] = value;
 
         let mut right_mins = self.mins.clone();
-        right_mins[_dim] = value;
+        right_mins[dim] = value;
 
         let left = Rectangle::new(self.mins.clone(), left_maxes);
         let right = Rectangle::new(right_mins, self.maxes.clone());
@@ -193,7 +193,7 @@ impl<T: Float> Rectangle<T> {
         assert_eq!(
             point.len(),
             self.mins.len(),
-            "_point must have the same dimension as the rectangle"
+            "point must have the same dimension as the rectangle"
         );
 
         for (i, &p) in point.iter().enumerate() {
@@ -216,7 +216,7 @@ impl<T: Float> Rectangle<T> {
     ///
     /// * The minimum distance from the point to any point in the rectangle
     pub fn min_distance<D: Distance<T>>(&self, point: &[T], metric: &D) -> T {
-        metric.min_distance_point_rectangle(_point, &self.mins, &self.maxes)
+        metric.min_distance_point_rectangle(point, &self.mins, &self.maxes)
     }
 }
 
@@ -254,7 +254,7 @@ pub struct KDTree<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> {
     /// The distance metric
     metric: D,
     /// The leaf size (maximum number of points in a leaf node)
-    leaf_size: usize,
+    leafsize: usize,
     /// Minimum bounding rectangle of the entire dataset
     bounds: Rectangle<T>,
 }
@@ -271,7 +271,7 @@ impl<T: Float + Send + Sync + 'static> KDTree<T, EuclideanDistance<T>> {
     /// * A new KD-Tree
     pub fn new(points: &Array2<T>) -> SpatialResult<Self> {
         let metric = EuclideanDistance::new();
-        Self::with_metric(_points, metric)
+        Self::with_metric(points, metric)
     }
 
     /// Create a new KD-Tree with custom leaf size (using Euclidean distance)
@@ -279,14 +279,14 @@ impl<T: Float + Send + Sync + 'static> KDTree<T, EuclideanDistance<T>> {
     /// # Arguments
     ///
     /// * `points` - Array of points, each row is a point
-    /// * `leaf_size` - The maximum number of points in a leaf node
+    /// * `leafsize` - The maximum number of points in a leaf node
     ///
     /// # Returns
     ///
     /// * A new KD-Tree
-    pub fn with_leaf_size(_points: &Array2<T>, leafsize: usize) -> SpatialResult<Self> {
+    pub fn with_leaf_size(points: &Array2<T>, leafsize: usize) -> SpatialResult<Self> {
         let metric = EuclideanDistance::new();
-        Self::with_options(_points, metric, leaf_size)
+        Self::with_options(points, metric, leafsize)
     }
 }
 
@@ -302,7 +302,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     ///
     /// * A new KD-Tree
     pub fn with_metric(points: &Array2<T>, metric: D) -> SpatialResult<Self> {
-        Self::with_options(_points, metric, 16) // Default leaf size is 16
+        Self::with_options(points, metric, 16) // Default leaf size is 16
     }
 
     /// Create a new KD-Tree with custom distance metric and leaf size
@@ -311,12 +311,12 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     ///
     /// * `points` - Array of points, each row is a point
     /// * `metric` - The distance metric to use
-    /// * `leaf_size` - The maximum number of points in a leaf node
+    /// * `leafsize` - The maximum number of points in a leaf node
     ///
     /// # Returns
     ///
     /// * A new KD-Tree
-    pub fn with_options(_points: &Array2<T>, metric: D, leafsize: usize) -> SpatialResult<Self> {
+    pub fn with_options(points: &Array2<T>, metric: D, leafsize: usize) -> SpatialResult<Self> {
         let n = points.nrows();
         let ndim = points.ncols();
 
@@ -324,7 +324,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
             return Err(SpatialError::ValueError("Empty point set".to_string()));
         }
 
-        if leaf_size == 0 {
+        if leafsize == 0 {
             return Err(SpatialError::ValueError(
                 "Leaf _size must be greater than 0".to_string(),
             ));
@@ -354,11 +354,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
             ndim,
             root: None,
             metric,
-            leaf_size,
+            leafsize,
             bounds,
         };
 
-        // Create indices for the _points
+        // Create indices for the points
         let mut indices: Vec<usize> = (0..n).collect();
 
         // Build the tree recursively
@@ -400,10 +400,10 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         // Choose axis based on depth (cycle through axes)
         let axis = depth % self.ndim;
 
-        // If the number of points is less than or equal to leaf_size,
+        // If the number of points is less than or equal to leafsize,
         // just create a leaf node with the median point
         let node_idx;
-        if n <= self.leaf_size {
+        if n <= self.leafsize {
             // Create a leaf node with the median point
             let mid = start + n / 2;
             let idx = indices[mid];
@@ -486,7 +486,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     pub fn query(&self, point: &[T], k: usize) -> SpatialResult<(Vec<usize>, Vec<T>)> {
         if point.len() != self.ndim {
             return Err(SpatialError::DimensionError(format!(
-                "Query _point dimension ({}) does not match tree dimension ({})",
+                "Query point dimension ({}) does not match tree dimension ({})",
                 point.len(),
                 self.ndim
             )));
@@ -501,7 +501,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         }
 
         // Initialize priority queue for k nearest neighbors
-        // We use a max-heap so we can efficiently replace the furthest _point when we find a closer one
+        // We use a max-heap so we can efficiently replace the furthest point when we find a closer one
         let mut neighbors: Vec<(T, usize)> = Vec::with_capacity(k + 1);
 
         // Keep track of the maximum distance in the heap, for early termination
@@ -635,7 +635,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     pub fn query_radius(&self, point: &[T], radius: T) -> SpatialResult<(Vec<usize>, Vec<T>)> {
         if point.len() != self.ndim {
             return Err(SpatialError::DimensionError(format!(
-                "Query _point dimension ({}) does not match tree dimension ({})",
+                "Query point dimension ({}) does not match tree dimension ({})",
                 point.len(),
                 self.ndim
             )));
@@ -652,7 +652,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
 
         if let Some(root) = self.root {
             // If the radius is outside the bounds of the entire dataset, just return an empty result
-            let bounds_dist = self.bounds.min_distance(_point, &self.metric);
+            let bounds_dist = self.bounds.min_distance(point, &self.metric);
             if bounds_dist > radius {
                 return Ok((indices, distances));
             }
@@ -750,7 +750,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     pub fn count_neighbors(&self, point: &[T], radius: T) -> SpatialResult<usize> {
         if point.len() != self.ndim {
             return Err(SpatialError::DimensionError(format!(
-                "Query _point dimension ({}) does not match tree dimension ({})",
+                "Query point dimension ({}) does not match tree dimension ({})",
                 point.len(),
                 self.ndim
             )));
@@ -766,7 +766,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
 
         if let Some(root) = self.root {
             // If the radius is outside the bounds of the entire dataset, just return 0
-            let bounds_dist = self.bounds.min_distance(_point, &self.metric);
+            let bounds_dist = self.bounds.min_distance(point, &self.metric);
             if bounds_dist > radius {
                 return Ok(0);
             }
@@ -853,8 +853,8 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     /// # Returns
     ///
     /// * The leaf size
-    pub fn leaf_size(&self) -> usize {
-        self.leaf_size
+    pub fn leafsize(&self) -> usize {
+        self.leafsize
     }
 
     /// Get the bounds of the KD-Tree
@@ -927,7 +927,7 @@ mod tests {
         assert_eq!(kdtree.shape(), (6, 2));
         assert_eq!(kdtree.npoints(), 6);
         assert_eq!(kdtree.ndim(), 2);
-        assert_eq!(kdtree.leaf_size(), 16);
+        assert_eq!(kdtree.leafsize(), 16);
 
         // Check bounds
         assert_eq!(kdtree.bounds().mins(), &[2.0, 1.0]);
@@ -1173,10 +1173,10 @@ mod tests {
         ]);
 
         // Use a very small leaf size to test that it works
-        let leaf_size = 1;
-        let kdtree = KDTree::with_leaf_size(&points, leaf_size).unwrap();
+        let leafsize = 1;
+        let kdtree = KDTree::with_leaf_size(&points, leafsize).unwrap();
 
-        assert_eq!(kdtree.leaf_size(), 1);
+        assert_eq!(kdtree.leafsize(), 1);
 
         // Query for nearest neighbor to [3.0, 5.0]
         let (indices, distances) = kdtree.query(&[3.0, 5.0], 1).unwrap();

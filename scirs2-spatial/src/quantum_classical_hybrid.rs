@@ -514,15 +514,15 @@ impl HybridSpatialOptimizer {
     /// Extract optimization parameters from quantum state
     fn extract_parameters_from_quantum_state(
         &self,
-        quantum_state: &QuantumState,
+        quantumstate: &QuantumState,
     ) -> SpatialResult<Array1<f64>> {
         let targetdim = self.classical_state.parameters.len();
         let mut parameters = Array1::zeros(targetdim);
 
         // Use quantum _state amplitudes to generate parameters
         for i in 0..targetdim {
-            let amplitude_idx = i % quantum_state.amplitudes.len();
-            let amplitude = quantum_state.amplitudes[amplitude_idx];
+            let amplitude_idx = i % quantumstate.amplitudes.len();
+            let amplitude = quantumstate.amplitudes[amplitude_idx];
 
             // Convert complex amplitude to real parameter
             let real_part = amplitude.re;
@@ -538,19 +538,19 @@ impl HybridSpatialOptimizer {
     /// Calculate quantum variance for convergence assessment
     fn calculate_quantum_variance(quantumstate: &QuantumState) -> f64 {
         let mut variance = 0.0;
-        let mean_amplitude = quantum_state
+        let mean_amplitude = quantumstate
             .amplitudes
             .iter()
             .map(|a| a.norm())
             .sum::<f64>()
-            / quantum_state.amplitudes.len() as f64;
+            / quantumstate.amplitudes.len() as f64;
 
-        for amplitude in &quantum_state.amplitudes {
+        for amplitude in &quantumstate.amplitudes {
             let deviation = amplitude.norm() - mean_amplitude;
             variance += deviation * deviation;
         }
 
-        variance / quantum_state.amplitudes.len() as f64
+        variance / quantumstate.amplitudes.len() as f64
     }
 
     /// Transfer information from quantum to classical component
@@ -714,7 +714,7 @@ pub struct HybridOptimizationResult {
 #[derive(Debug)]
 pub struct HybridClusterer {
     /// Number of clusters
-    num_clusters: usize,
+    _numclusters: usize,
     /// Quantum exploration ratio
     quantum_exploration_ratio: f64,
     /// Classical refinement enabled
@@ -750,12 +750,12 @@ impl HybridClusterer {
     /// Create new hybrid clusterer
     pub fn new(_numclusters: usize) -> Self {
         Self {
-            num_clusters: num_clusters,
+            _numclusters: _numclusters,
             quantum_exploration_ratio: 0.7,
             classical_refinement: true,
             adaptive_switching: true,
             quantum_error_correction: false,
-            quantum_clusterer: QuantumClusterer::new(_num_clusters),
+            quantum_clusterer: QuantumClusterer::new(_numclusters),
             performance_metrics: HybridClusteringMetrics {
                 quantum_time_ms: 0.0,
                 classical_time_ms: 0.0,
@@ -865,8 +865,8 @@ impl HybridClusterer {
             }
 
             // Update step
-            let mut new_centroids = Array2::zeros((self.num_clusters, ndims));
-            let mut cluster_counts = vec![0; self.num_clusters];
+            let mut new_centroids = Array2::zeros((self._numclusters, ndims));
+            let mut cluster_counts = vec![0; self._numclusters];
 
             for (i, point) in points.outer_iter().enumerate() {
                 let cluster = assignments[i];
@@ -878,7 +878,7 @@ impl HybridClusterer {
             }
 
             // Normalize by cluster sizes
-            for i in 0..self.num_clusters {
+            for i in 0..self._numclusters {
                 if cluster_counts[i] > 0 {
                     for j in 0..ndims {
                         new_centroids[[i, j]] /= cluster_counts[i] as f64;
@@ -960,7 +960,7 @@ impl HybridClusterer {
             // Calculate minimum average distance to points in other clusters (b)
             let mut min_inter_cluster_distance = f64::INFINITY;
 
-            for cluster_k in 0..self.num_clusters {
+            for cluster_k in 0..self._numclusters {
                 if cluster_k != cluster_i {
                     let mut inter_cluster_distance = 0.0;
                     let mut inter_cluster_count = 0;

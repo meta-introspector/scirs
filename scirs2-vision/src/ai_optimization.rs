@@ -24,7 +24,7 @@ use std::time::{Duration, Instant};
 /// Reinforcement learning agent for parameter optimization
 #[derive(Debug)]
 pub struct RLParameterOptimizer {
-    /// Q-table for state-action values
+    /// Q-table for state-action_ values
     q_table: HashMap<StateDiscrete, HashMap<ActionDiscrete, f64>>,
     /// Current state
     current_state: StateDiscrete,
@@ -55,7 +55,7 @@ pub struct StateDiscrete {
     pub complexity_bucket: usize,
 }
 
-/// Discrete action representation
+/// Discrete action_ representation
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct ActionDiscrete {
     /// Parameter adjustment type
@@ -126,10 +126,10 @@ impl Default for RLLearningParams {
 /// Experience tuple for replay learning
 #[derive(Debug, Clone)]
 pub struct Experience {
-    /// State before action
+    /// State before action_
     pub state: StateDiscrete,
     /// Action taken
-    pub action: ActionDiscrete,
+    pub action_: ActionDiscrete,
     /// Reward received
     pub reward: f64,
     /// Next state
@@ -179,7 +179,7 @@ impl RLParameterOptimizer {
         }
     }
 
-    /// Create the action space
+    /// Create the action_ space
     fn create_action_space() -> Vec<ActionDiscrete> {
         let mut actions = Vec::new();
 
@@ -238,30 +238,30 @@ impl RLParameterOptimizer {
         states
     }
 
-    /// Select action using epsilon-greedy policy
+    /// Select action_ using epsilon-greedy policy
     pub fn select_action(&mut self, state: &StateDiscrete) -> ActionDiscrete {
         let mut rng = rng();
 
         if rng.random::<f64>() < self.learning_params.epsilon {
-            // Explore: random action
+            // Explore: random action_
             self.action_space
                 .as_slice()
                 .choose(&mut rng)
                 .expect("Action space should not be empty")
                 .clone()
         } else {
-            // Exploit: best known action
+            // Exploit: best known action_
             self.get_best_action(state)
         }
     }
 
-    /// Get the best action for a state
+    /// Get the best action_ for a state
     fn get_best_action(&self, state: &StateDiscrete) -> ActionDiscrete {
         if let Some(action_values) = self.q_table.get(state) {
             action_values
                 .iter()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(action_)| action.clone())
+                .map(|(action_)| action_.clone())
                 .unwrap_or_else(|| self.action_space[0].clone())
         } else {
             self.action_space[0].clone()
@@ -293,7 +293,7 @@ impl RLParameterOptimizer {
             .q_table
             .entry(experience.state.clone())
             .or_default()
-            .entry(experience.action.clone())
+            .entry(experience.action_.clone())
             .or_insert(0.0);
 
         // Update Q-value using Bellman equation
@@ -325,8 +325,8 @@ impl RLParameterOptimizer {
     /// Bucket continuous value into discrete categories
     fn bucket_value(_value: f64, min_val: f64, max_val: f64, numbuckets: usize) -> usize {
         let normalized = (_value - min_val) / (max_val - min_val);
-        let bucket = (normalized * num_buckets as f64).floor() as usize;
-        bucket.min(num_buckets - 1)
+        let bucket = (normalized * numbuckets as f64).floor() as usize;
+        bucket.min(numbuckets - 1)
     }
 
     /// Calculate reward from performance metrics
@@ -348,12 +348,12 @@ impl RLParameterOptimizer {
 
     /// Perform experience replay learning
     pub fn experience_replay(&mut self, batchsize: usize) {
-        if self.experience_buffer.len() < batch_size {
+        if self.experience_buffer.len() < batchsize {
             return;
         }
 
         let mut rng = rng();
-        let sample_indices: Vec<usize> = (0..batch_size)
+        let sample_indices: Vec<usize> = (0..batchsize)
             .map(|_| rng.gen_range(0..self.experience_buffer.len()))
             .collect();
 
@@ -515,12 +515,12 @@ impl NeuralNetworkPredictor {
             .map(|_| (0.._input_size).map(|_| rng.gen_range(-0.5..0.5)).collect())
             .collect();
 
-        let hidden_weights = (0..output_size)
+        let hidden_weights = (0..outputsize)
             .map(|_| (0..hidden_size).map(|_| rng.gen_range(-0.5..0.5)).collect())
             .collect();
 
-        let output_weights = (0..output_size).map(|_| rng.gen_range(-0.5..0.5)).collect();
-        let biases = (0..hidden_size + output_size)
+        let output_weights = (0..outputsize).map(|_| rng.gen_range(-0.5..0.5)).collect();
+        let biases = (0..hidden_size + outputsize)
             .map(|_| rng.gen_range(-0.1..0.1))
             .collect();
 
@@ -611,7 +611,7 @@ fn gamma_function(x: f64) -> f64 {
 #[derive(Debug, Clone)]
 pub struct GAParameters {
     /// Population size
-    pub population_size: usize,
+    pub populationsize: usize,
     /// Mutation rate
     pub mutation_rate: f64,
     /// Crossover rate
@@ -627,7 +627,7 @@ pub struct GAParameters {
 impl Default for GAParameters {
     fn default() -> Self {
         Self {
-            population_size: 50,
+            populationsize: 50,
             mutation_rate: 0.1,
             crossover_rate: 0.8,
             elite_ratio: 0.2,
@@ -656,7 +656,7 @@ impl GeneticPipelineOptimizer {
     /// Create a new advanced genetic optimizer with multi-objective capabilities
     pub fn new(_parameterranges: HashMap<String, (f64, f64)>) -> Self {
         let ga_params = GAParameters::default();
-        let population = Self::initialize_population(&_parameter_ranges, ga_params.population_size);
+        let population = Self::initialize_population(&_parameterranges, ga_params.populationsize);
 
         // Initialize adaptive mutation strategies
         let mut strategy_weights = HashMap::new();
@@ -669,7 +669,7 @@ impl GeneticPipelineOptimizer {
             MutationStrategy::LevyFlight,
             MutationStrategy::SelfAdaptive,
         ] {
-            strategyweights.insert(strategy.clone(), 1.0 / 6.0);
+            strategy_weights.insert(strategy.clone(), 1.0 / 6.0);
             strategy_success_rates.insert(strategy, 0.0);
         }
 
@@ -711,12 +711,12 @@ impl GeneticPipelineOptimizer {
     /// Initialize random population with enhanced genomes
     fn initialize_population(
         parameter_ranges: &HashMap<String, (f64, f64)>,
-        population_size: usize,
+        populationsize: usize,
     ) -> Vec<PipelineGenome> {
-        let mut population = Vec::with_capacity(population_size);
+        let mut population = Vec::with_capacity(populationsize);
         let mut rng = rng();
 
-        for _ in 0..population_size {
+        for _ in 0..populationsize {
             let mut genes = HashMap::new();
 
             for (param_name, &(min_val, max_val)) in parameter_ranges {
@@ -1166,7 +1166,7 @@ impl GeneticPipelineOptimizer {
             .sum();
 
         if total_success > 0.0 {
-            for (strategy, weight) in self.adaptive_strategies.strategyweights.iter_mut() {
+            for (strategy, weight) in self.adaptive_strategies.strategy_weights.iter_mut() {
                 let success_rate = self.adaptive_strategies.strategy_success_rates[strategy];
                 *weight = success_rate / total_success;
             }
@@ -1371,7 +1371,7 @@ impl GeneticPipelineOptimizer {
 #[derive(Debug)]
 pub struct NeuralArchitectureSearch {
     /// Search space definition
-    search_space: ArchitectureSearchSpace,
+    _searchspace: ArchitectureSearchSpace,
     /// Current architectures being evaluated
     candidate_architectures: Vec<ProcessingArchitecture>,
     /// Performance database
@@ -1542,7 +1542,7 @@ pub enum SearchStrategy {
     /// Evolutionary search
     Evolutionary {
         /// Size of the evolutionary population
-        population_size: usize,
+        populationsize: usize,
     },
     /// Reinforcement learning-based
     ReinforcementLearning {
@@ -1571,7 +1571,7 @@ impl NeuralArchitectureSearch {
     /// Create a new NAS instance
     pub fn new(_searchspace: ArchitectureSearchSpace, strategy: SearchStrategy) -> Self {
         Self {
-            search_space,
+            _searchspace,
             candidate_architectures: Vec::new(),
             performance_db: HashMap::new(),
             search_strategy: strategy,
@@ -1582,12 +1582,12 @@ impl NeuralArchitectureSearch {
     /// Generate candidate architectures
     pub fn generate_candidates(&mut self, numcandidates: usize) -> Vec<ProcessingArchitecture> {
         let _candidates = match &self.search_strategy {
-            SearchStrategy::Random => self.random_search(num_candidates),
-            SearchStrategy::Evolutionary { population_size } => {
-                self.evolutionary_search(*population_size)
+            SearchStrategy::Random => self.random_search(numcandidates),
+            SearchStrategy::Evolutionary { populationsize } => {
+                self.evolutionary_search(*populationsize)
             }
-            SearchStrategy::ReinforcementLearning { .. } => self.rl_search(num_candidates),
-            SearchStrategy::BayesianOptimization { .. } => self.bayesian_search(num_candidates),
+            SearchStrategy::ReinforcementLearning { .. } => self.rl_search(numcandidates),
+            SearchStrategy::BayesianOptimization { .. } => self.bayesian_search(numcandidates),
         };
 
         self.candidate_architectures = candidates.clone();
@@ -1599,15 +1599,15 @@ impl NeuralArchitectureSearch {
         let mut _candidates = Vec::new();
         let mut rng = rng();
 
-        for i in 0..num_candidates {
+        for i in 0..numcandidates {
             let depth =
-                rng.gen_range(self.search_space.depth_range.0..=self.search_space.depth_range.1);
+                rng.gen_range(self._searchspace.depth_range.0..=self._searchspace.depth_range.1);
             let mut layers = Vec::new();
             let mut connections = Vec::new();
 
             for _ in 0..depth {
                 let layer_type = self
-                    .search_space
+                    ._searchspace
                     .layer_types
                     .as_slice()
                     .choose(&mut rng)
@@ -1616,7 +1616,7 @@ impl NeuralArchitectureSearch {
                 layers.push(layer_type);
 
                 let connection = self
-                    .search_space
+                    ._searchspace
                     .connections
                     .as_slice()
                     .choose(&mut rng)
@@ -1644,7 +1644,7 @@ impl NeuralArchitectureSearch {
     fn evolutionary_search(&self, populationsize: usize) -> Vec<ProcessingArchitecture> {
         // Initialize with random population if first iteration
         if self.current_iteration == 0 {
-            return self.random_search(population_size);
+            return self.random_search(populationsize);
         }
 
         // Evolve existing population
@@ -1655,23 +1655,23 @@ impl NeuralArchitectureSearch {
         let mut ranked_archs: Vec<_> = self
             .candidate_architectures
             .iter()
-            .filter_map(|arch| {
+            .filter_map(|arch_| {
                 self.performance_db
-                    .get(&arch.id)
-                    .map(|perf| (arch, perf.efficiency_score))
+                    .get(&arch_.id)
+                    .map(|perf| (arch_, perf.efficiency_score))
             })
             .collect();
 
         ranked_archs.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Keep top performers
-        let elite_count = population_size / 4;
+        let elite_count = populationsize / 4;
         for (arch_) in ranked_archs.iter().take(elite_count) {
-            new_population.push((*arch).clone());
+            new_population.push((*arch_).clone());
         }
 
         // Generate offspring through mutation and crossover
-        while new_population.len() < population_size {
+        while new_population.len() < populationsize {
             if ranked_archs.len() >= 2 {
                 let parent1 = ranked_archs
                     .as_slice()
@@ -1700,13 +1700,13 @@ impl NeuralArchitectureSearch {
     /// RL-based architecture search
     fn rl_search(&self, numcandidates: usize) -> Vec<ProcessingArchitecture> {
         // Simplified RL search - would use a controller network in practice
-        self.random_search(num_candidates)
+        self.random_search(numcandidates)
     }
 
     /// Bayesian optimization search
     fn bayesian_search(&self, numcandidates: usize) -> Vec<ProcessingArchitecture> {
         // Simplified Bayesian search - would use Gaussian processes in practice
-        self.random_search(num_candidates)
+        self.random_search(numcandidates)
     }
 
     /// Calculate architecture complexity
@@ -1790,7 +1790,7 @@ impl NeuralArchitectureSearch {
             if rng.random::<f64>() < 0.1 {
                 // 10% mutation rate
                 *layer = self
-                    .search_space
+                    ._searchspace
                     .layer_types
                     .as_slice()
                     .choose(&mut rng)
@@ -1824,11 +1824,11 @@ impl NeuralArchitectureSearch {
         let mut best_arch = None;
         let mut best_score = f64::NEG_INFINITY;
 
-        for arch in &self.candidate_architectures {
-            if let Some(perf) = self.performance_db.get(&arch.id) {
+        for arch_ in &self.candidate_architectures {
+            if let Some(perf) = self.performance_db.get(&arch_.id) {
                 if perf.efficiency_score > best_score {
                     best_score = perf.efficiency_score;
-                    best_arch = Some((arch, perf));
+                    best_arch = Some((arch_, perf));
                 }
             }
         }
@@ -1900,7 +1900,7 @@ pub struct PredictionModel {
     /// Model parameters
     pub parameters: Vec<f64>,
     /// Prediction window (seconds)
-    pub prediction_window: f64,
+    pub _predictionwindow: f64,
     /// Model accuracy
     pub accuracy: f64,
 }
@@ -1953,7 +1953,7 @@ pub struct ScalingState {
     pub allocated_memory: f64,
     /// GPU utilization
     pub gpu_utilization: f64,
-    /// Last scaling action
+    /// Last scaling action_
     pub last_scaling: Instant,
 }
 
@@ -1965,7 +1965,7 @@ impl PredictiveScaler {
             model_params: PredictionModel {
                 model_type: ModelType::LinearRegression,
                 parameters: vec![0.0, 1.0], // Simple linear model
-                prediction_window,
+                _predictionwindow,
                 accuracy: 0.7,
             },
             scaling_predictions: VecDeque::with_capacity(100),
@@ -2053,8 +2053,8 @@ impl PredictiveScaler {
         let current_time = Instant::now();
 
         for horizon in horizons {
-            let predicted_load = self.predict_load(horizon);
-            let predicted_resources = self.load_to_resources(predicted_load);
+            let predictedload = self.predict_load(horizon);
+            let predicted_resources = self.load_to_resources(predictedload);
             let confidence = self.calculate_confidence(horizon);
 
             predictions.push(ScalingPrediction {
@@ -2106,9 +2106,9 @@ impl PredictiveScaler {
     /// Convert load prediction to resource requirements
     fn load_to_resources(&self, predictedload: f64) -> ResourceRequirement {
         ResourceRequirement {
-            cpu_cores: (predicted_load * 8.0).ceil(), // Scale up to 8 cores max
-            memory_mb: 512.0 + predicted_load * 1536.0, // 512MB to 2GB
-            gpu_utilization: (predicted_load * 0.8).min(1.0), // Up to 80% GPU
+            cpu_cores: (predictedload * 8.0).ceil(), // Scale up to 8 cores max
+            memory_mb: 512.0 + predictedload * 1536.0, // 512MB to 2GB
+            gpu_utilization: (predictedload * 0.8).min(1.0), // Up to 80% GPU
         }
     }
 
@@ -2132,7 +2132,7 @@ impl PredictiveScaler {
             if predicted_resources.cpu_cores > current_resources.active_cores as f64 + 1.0 {
                 recommendations.push(ScalingRecommendation {
                     resource_type: ResourceType::CPU,
-                    action: ScalingAction::ScaleUp,
+                    action_: ScalingAction::ScaleUp,
                     magnitude: (predicted_resources.cpu_cores
                         - current_resources.active_cores as f64)
                         as usize,
@@ -2142,7 +2142,7 @@ impl PredictiveScaler {
             } else if predicted_resources.cpu_cores < current_resources.active_cores as f64 - 1.0 {
                 recommendations.push(ScalingRecommendation {
                     resource_type: ResourceType::CPU,
-                    action: ScalingAction::ScaleDown,
+                    action_: ScalingAction::ScaleDown,
                     magnitude: (current_resources.active_cores as f64
                         - predicted_resources.cpu_cores) as usize,
                     confidence: latest_prediction.confidence,
@@ -2154,7 +2154,7 @@ impl PredictiveScaler {
             if predicted_resources.memory_mb > current_resources.allocated_memory * 1.2 {
                 recommendations.push(ScalingRecommendation {
                     resource_type: ResourceType::Memory,
-                    action: ScalingAction::ScaleUp,
+                    action_: ScalingAction::ScaleUp,
                     magnitude: (predicted_resources.memory_mb - current_resources.allocated_memory)
                         as usize,
                     confidence: latest_prediction.confidence,
@@ -2172,8 +2172,8 @@ impl PredictiveScaler {
 pub struct ScalingRecommendation {
     /// Type of resource to scale
     pub resource_type: ResourceType,
-    /// Scaling action
-    pub action: ScalingAction,
+    /// Scaling action_
+    pub action_: ScalingAction,
     /// Magnitude of scaling
     pub magnitude: usize,
     /// Confidence in recommendation
@@ -2215,9 +2215,9 @@ mod tests {
         let mut optimizer = RLParameterOptimizer::new();
 
         let state = StateDiscrete::default();
-        let action = optimizer.select_action(&state);
+        let action_ = optimizer.select_action(&state);
 
-        assert!(optimizer.action_space.contains(&action));
+        assert!(optimizer.action_space.contains(&action_));
     }
 
     #[test]
@@ -2240,7 +2240,7 @@ mod tests {
 
     #[test]
     fn test_neural_architecture_search() {
-        let search_space = ArchitectureSearchSpace {
+        let _searchspace = ArchitectureSearchSpace {
             layer_types: vec![
                 LayerType::Convolution {
                     kernel_size: 3,
@@ -2257,7 +2257,7 @@ mod tests {
             connections: vec![ConnectionType::Sequential],
         };
 
-        let mut nas = NeuralArchitectureSearch::new(search_space, SearchStrategy::Random);
+        let mut nas = NeuralArchitectureSearch::new(_searchspace, SearchStrategy::Random);
 
         let candidates = nas.generate_candidates(5);
         assert_eq!(candidates.len(), 5);

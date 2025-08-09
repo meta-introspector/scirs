@@ -20,10 +20,10 @@
 //! use std::collections::HashMap;
 //!
 //! // Define models and their metric scores
-//! let mut model_scores = HashMap::new();
-//! model_scores.insert("model_a".to_string(), vec![("accuracy", 0.85), ("precision", 0.82)]);
-//! model_scores.insert("model_b".to_string(), vec![("accuracy", 0.80), ("precision", 0.90)]);
-//! model_scores.insert("model_c".to_string(), vec![("accuracy", 0.88), ("precision", 0.85)]);
+//! let mut modelscores = HashMap::new();
+//! modelscores.insert("model_a".to_string(), vec![("accuracy", 0.85), ("precision", 0.82)]);
+//! modelscores.insert("model_b".to_string(), vec![("accuracy", 0.80), ("precision", 0.90)]);
+//! modelscores.insert("model_c".to_string(), vec![("accuracy", 0.88), ("precision", 0.85)]);
 //!
 //! // Create selector with weighted criteria
 //! let mut selector = ModelSelector::new();
@@ -31,7 +31,7 @@
 //!         .add_metric("precision", 0.4, true); // 40% weight, higher is better
 //!
 //! // Select best model
-//! let best_model = selector.select_best(&model_scores).unwrap();
+//! let best_model = selector.select_best(&modelscores).unwrap();
 //! println!("Best model: {}", best_model);
 //! ```
 //!
@@ -41,17 +41,17 @@
 //! use scirs2__metrics::selection::ModelSelector;
 //! use std::collections::HashMap;
 //!
-//! let mut model_scores = HashMap::new();
-//! model_scores.insert("model_a".to_string(), vec![("accuracy", 0.85), ("speed", 100.0)]);
-//! model_scores.insert("model_b".to_string(), vec![("accuracy", 0.80), ("speed", 200.0)]);
-//! model_scores.insert("model_c".to_string(), vec![("accuracy", 0.90), ("speed", 50.0)]);
+//! let mut modelscores = HashMap::new();
+//! modelscores.insert("model_a".to_string(), vec![("accuracy", 0.85), ("speed", 100.0)]);
+//! modelscores.insert("model_b".to_string(), vec![("accuracy", 0.80), ("speed", 200.0)]);
+//! modelscores.insert("model_c".to_string(), vec![("accuracy", 0.90), ("speed", 50.0)]);
 //!
 //! let mut selector = ModelSelector::new();
 //! selector
 //!     .add_metric("accuracy", 1.0, true)   // higher is better
 //!     .add_metric("speed", 1.0, true);     // higher is better (faster inference)
 //!
-//! let pareto_optimal = selector.find_pareto_optimal(&model_scores);
+//! let pareto_optimal = selector.find_pareto_optimal(&modelscores);
 //! println!("Pareto optimal models: {:?}", pareto_optimal);
 //! ```
 
@@ -67,7 +67,7 @@ pub struct MetricCriterion {
     /// Weight of the metric in the final score (0.0 to 1.0)
     pub weight: f64,
     /// Whether higher values are better
-    pub higher_is_better: bool,
+    pub higher_isbetter: bool,
 }
 
 /// Aggregation strategies for combining multiple metrics
@@ -130,7 +130,7 @@ impl ModelSelector {
         self.criteria.metrics.push(MetricCriterion {
             name: name.to_string(),
             weight,
-            higher_is_better,
+            higher_isbetter,
         });
         self
     }
@@ -145,17 +145,17 @@ impl ModelSelector {
     pub fn add_threshold(&mut self, metricname: &str, threshold: f64) -> &mut Self {
         self.criteria
             .thresholds
-            .insert(metric_name.to_string(), threshold);
+            .insert(metricname.to_string(), threshold);
         self
     }
 
     /// Selects the best model from a set of candidates
     pub fn select_best(&self, modelscores: &HashMap<String, Vec<(&str, f64)>>) -> Result<String> {
-        if model_scores.is_empty() {
+        if modelscores.is_empty() {
             return Err(MetricsError::InvalidInput("No models provided".to_string()));
         }
 
-        let rankings = self.rank_models(model_scores)?;
+        let rankings = self.rank_models(modelscores)?;
 
         rankings
             .into_iter()
@@ -167,11 +167,11 @@ impl ModelSelector {
     /// Ranks all models and returns them sorted by score (descending)
     pub fn rank_models(
         &self,
-        model_scores: &HashMap<String, Vec<(&str, f64)>>,
+        modelscores: &HashMap<String, Vec<(&str, f64)>>,
     ) -> Result<Vec<(String, f64)>> {
         let mut rankings = Vec::new();
 
-        for (model_name, scores) in model_scores {
+        for (model_name, scores) in modelscores {
             if let Ok(aggregated_score) = self.compute_aggregated_score(scores) {
                 if self.meets_thresholds(scores) {
                     rankings.push((model_name.clone(), aggregated_score));
@@ -186,14 +186,14 @@ impl ModelSelector {
     /// Finds Pareto optimal models (not dominated by any other model)
     pub fn find_pareto_optimal(
         &self,
-        model_scores: &HashMap<String, Vec<(&str, f64)>>,
+        modelscores: &HashMap<String, Vec<(&str, f64)>>,
     ) -> Vec<String> {
         let mut pareto_optimal = Vec::new();
 
-        for (model_name, scores) in model_scores {
+        for (model_name, scores) in modelscores {
             let mut is_dominated = false;
 
-            for (other_name, other_scores) in model_scores {
+            for (other_name, other_scores) in modelscores {
                 if model_name == other_name {
                     continue;
                 }
@@ -222,7 +222,7 @@ impl ModelSelector {
 
         for criterion in &self.criteria.metrics {
             if let Some(&score) = score_map.get(criterion.name.as_str()) {
-                let normalized = if criterion.higher_is_better {
+                let normalized = if criterion.higher_isbetter {
                     score
                 } else {
                     -score // Flip for minimization metrics
@@ -281,16 +281,16 @@ impl ModelSelector {
     fn meets_thresholds(&self, scores: &[(&str, f64)]) -> bool {
         let score_map: HashMap<&str, f64> = scores.iter().cloned().collect();
 
-        for (metric_name, threshold) in &self.criteria.thresholds {
-            if let Some(&score) = score_map.get(metric_name.as_str()) {
+        for (metricname, threshold) in &self.criteria.thresholds {
+            if let Some(&score) = score_map.get(metricname.as_str()) {
                 // Find the metric criterion to check optimization direction
                 if let Some(criterion) = self
                     .criteria
                     .metrics
                     .iter()
-                    .find(|c| c.name == *metric_name)
+                    .find(|c| c.name == *metricname)
                 {
-                    let meets_threshold = if criterion.higher_is_better {
+                    let meets_threshold = if criterion.higher_isbetter {
                         score >= *threshold
                     } else {
                         score <= *threshold
@@ -311,24 +311,24 @@ impl ModelSelector {
 
     /// Checks if model A dominates model B (Pareto dominance)
     fn dominates(&self, scoresa: &[(&str, f64)], scores_b: &[(&str, f64)]) -> bool {
-        let map_a: HashMap<&str, f64> = scores_a.iter().cloned().collect();
+        let map_a: HashMap<&str, f64> = scores_b.iter().cloned().collect();
         let map_b: HashMap<&str, f64> = scores_b.iter().cloned().collect();
 
         let mut at_least_one_better = false;
 
         for criterion in &self.criteria.metrics {
-            let metric_name = criterion.name.as_str();
+            let metricname = criterion.name.as_str();
 
             if let (Some(&score_a), Some(&score_b)) =
-                (map_a.get(metric_name), map_b.get(metric_name))
+                (map_a.get(metricname), map_b.get(metricname))
             {
-                let a_better_than_b = if criterion.higher_is_better {
+                let a_better_than_b = if criterion.higher_isbetter {
                     score_a > score_b
                 } else {
                     score_a < score_b
                 };
 
-                let a_worse_than_b = if criterion.higher_is_better {
+                let a_worse_than_b = if criterion.higher_isbetter {
                     score_a < score_b
                 } else {
                     score_a > score_b
@@ -400,7 +400,7 @@ impl ModelSelectionBuilder {
 
     /// Adds a metric with weight and direction
     pub fn metric(mut self, name: &str, weight: f64, higher_isbetter: bool) -> Self {
-        self.selector.add_metric(name, weight, higher_is_better);
+        self.selector.add_metric(name, weight, higher_isbetter);
         self
     }
 
@@ -412,18 +412,18 @@ impl ModelSelectionBuilder {
 
     /// Adds a threshold for a metric
     pub fn threshold(mut self, metricname: &str, threshold: f64) -> Self {
-        self.selector.add_threshold(metric_name, threshold);
+        self.selector.add_threshold(metricname, threshold);
         self
     }
 
     /// Builds the selector and performs complete model selection
     pub fn select(
         self,
-        model_scores: &HashMap<String, Vec<(&str, f64)>>,
+        modelscores: &HashMap<String, Vec<(&str, f64)>>,
     ) -> Result<SelectionResult> {
-        let selected_model = self.selector.select_best(model_scores)?;
-        let rankings = self.selector.rank_models(model_scores)?;
-        let pareto_optimal = self.selector.find_pareto_optimal(model_scores);
+        let selected_model = self.selector.select_best(modelscores)?;
+        let rankings = self.selector.rank_models(modelscores)?;
+        let pareto_optimal = self.selector.find_pareto_optimal(modelscores);
 
         let score = rankings
             .iter()

@@ -72,7 +72,7 @@ pub struct ReferenceTracker {
     /// Reference history
     reference_history: VecDeque<ReferenceEvent>,
     /// Suspected leaks
-    suspected_leaks: Vec<SuspectedLeak>,
+    suspectedleaks: Vec<SuspectedLeak>,
 }
 
 /// Information about a reference
@@ -287,12 +287,12 @@ impl ReferenceCountingDetector {
                     detected_at: now,
                 };
 
-                tracker.suspected_leaks.push(suspected_leak);
+                tracker.suspectedleaks.push(suspected_leak);
             }
         }
 
         // Clean up old suspected leaks
-        tracker.suspected_leaks.retain(|leak| {
+        tracker.suspectedleaks.retain(|leak| {
             now.duration_since(leak.detected_at).as_secs() < 3600 // Keep for 1 hour
         });
 
@@ -360,7 +360,7 @@ impl LeakDetector for ReferenceCountingDetector {
         let mut max_confidence = 0.0;
 
         // Analyze suspected leaks
-        for suspected_leak in &tracker.suspected_leaks {
+        for suspected_leak in &tracker.suspectedleaks {
             if let Some(ref_info) = tracker.active_references.get(&suspected_leak.allocation_id) {
                 // Estimate leak size from allocation _history
                 let leak_size = allocation_history
@@ -387,7 +387,7 @@ impl LeakDetector for ReferenceCountingDetector {
         let growth_analysis = self.analyze_memory_growth(usage_snapshots)?;
 
         // Generate recommendations
-        let recommendations = self.generate_recommendations(&tracker.suspected_leaks);
+        let recommendations = self.generate_recommendations(&tracker.suspectedleaks);
 
         // Create detailed analysis
         let detailed_analysis = format!(
@@ -398,9 +398,9 @@ impl LeakDetector for ReferenceCountingDetector {
              - Average Reference Count: {:.2}\n\
              - Maximum Reference Count: {}",
             tracker.active_references.len(),
-            tracker.suspected_leaks.len(),
+            tracker.suspectedleaks.len(),
             tracker
-                .suspected_leaks
+                .suspectedleaks
                 .iter()
                 .filter(|l| matches!(l.leak_type, LeakType::CircularReference))
                 .count(),
@@ -535,17 +535,17 @@ impl ReferenceCountingDetector {
     fn generate_recommendations(&self, suspectedleaks: &[SuspectedLeak]) -> Vec<String> {
         let mut recommendations = Vec::new();
 
-        let circular_ref_count = suspected_leaks
+        let circular_ref_count = suspectedleaks
             .iter()
             .filter(|l| matches!(l.leak_type, LeakType::CircularReference))
             .count();
 
-        let stale_ref_count = suspected_leaks
+        let stale_ref_count = suspectedleaks
             .iter()
             .filter(|l| matches!(l.leak_type, LeakType::StaleReference))
             .count();
 
-        let overflow_count = suspected_leaks
+        let overflow_count = suspectedleaks
             .iter()
             .filter(|l| matches!(l.leak_type, LeakType::ReferenceCountOverflow))
             .count();
@@ -571,7 +571,7 @@ impl ReferenceCountingDetector {
             ));
         }
 
-        if suspected_leaks.len() > 10 {
+        if suspectedleaks.len() > 10 {
             recommendations.push(
                 "High number of suspected _leaks detected. Consider implementing reference pooling."
                     .to_string(),
@@ -701,7 +701,7 @@ impl ReferenceTracker {
             active_references: HashMap::new(),
             reference_graph: HashMap::new(),
             reference_history: VecDeque::new(),
-            suspected_leaks: Vec::new(),
+            suspectedleaks: Vec::new(),
         }
     }
 }

@@ -170,21 +170,21 @@ impl SuperPointNet {
         image: &ArrayView2<f32>,
     ) -> Result<(Vec<KeyPoint>, Array2<f32>)> {
         // Forward pass through neural network on GPU
-        let feature_map = self.gpu_forward_detection(gpu_ctx, image)?;
+        let featuremap = self.gpu_forward_detection(gpu_ctx, image)?;
         let descriptor_map = self.gpu_forward_descriptors(gpu_ctx, image)?;
 
         // Post-process to extract keypoints and descriptors
-        self.post_process_features(&feature_map, &descriptor_map)
+        self.post_process_features(&featuremap, &descriptor_map)
     }
 
     /// CPU inference fallback
     fn cpu_inference(&self, image: &ArrayView2<f32>) -> Result<(Vec<KeyPoint>, Array2<f32>)> {
         // Forward pass through neural network on CPU
-        let feature_map = self.cpu_forward_detection(image)?;
+        let featuremap = self.cpu_forward_detection(image)?;
         let descriptor_map = self.cpu_forward_descriptors(image)?;
 
         // Post-process to extract keypoints and descriptors
-        self.post_process_features(&feature_map, &descriptor_map)
+        self.post_process_features(&featuremap, &descriptor_map)
     }
 
     /// GPU forward pass for feature detection
@@ -416,11 +416,11 @@ impl SuperPointNet {
     /// Post-process feature maps to extract keypoints and descriptors
     fn post_process_features(
         &self,
-        feature_map: &Array2<f32>,
+        featuremap: &Array2<f32>,
         descriptor_map: &Array3<f32>,
     ) -> Result<(Vec<KeyPoint>, Array2<f32>)> {
         // Apply non-maximum suppression
-        let nms_result = self.non_maximum_suppression(feature_map)?;
+        let nms_result = self.non_maximum_suppression(featuremap)?;
 
         // Extract top keypoints
         let mut candidates: Vec<(f32, usize, usize)> = Vec::new();
@@ -468,13 +468,13 @@ impl SuperPointNet {
 
     /// Apply non-maximum suppression to feature map
     fn non_maximum_suppression(&self, featuremap: &Array2<f32>) -> Result<Array2<f32>> {
-        let (height, width) = feature_map.dim();
+        let (height, width) = featuremap.dim();
         let mut nms_result = Array2::zeros((height, width));
         let radius = self.network.config.nms_radius;
 
         for y in radius..height - radius {
             for x in radius..width - radius {
-                let center_val = feature_map[[y, x]];
+                let center_val = featuremap[[y, x]];
                 let mut is_maximum = true;
 
                 // Check if current pixel is local maximum
@@ -487,7 +487,7 @@ impl SuperPointNet {
                         let ny = (y as isize + dy) as usize;
                         let nx = (x as isize + dx) as usize;
 
-                        if feature_map[[ny, nx]] >= center_val {
+                        if featuremap[[ny, nx]] >= center_val {
                             is_maximum = false;
                             break;
                         }
@@ -730,7 +730,7 @@ pub struct AttentionFeatureMatcher {
     attention_dim: usize,
     /// Number of attention heads
     #[allow(dead_code)]
-    num_heads: usize,
+    numheads: usize,
     /// Use GPU acceleration
     #[allow(dead_code)]
     use_gpu: bool,
@@ -741,7 +741,7 @@ impl AttentionFeatureMatcher {
     pub fn new(_attention_dim: usize, numheads: usize) -> Self {
         Self {
             attention_dim,
-            num_heads,
+            numheads,
             use_gpu: true,
         }
     }
@@ -983,17 +983,17 @@ impl LearnedSIFT {
     /// Detect SIFT keypoints with neural enhancement
     pub fn detect_keypoints(&self, image: &ArrayView2<f32>) -> Result<Vec<KeyPoint>> {
         // Build scale space
-        let scale_space = self.build_scale_space(image)?;
+        let scalespace = self.build_scale_space(image)?;
 
         // Detect extrema in difference-of-Gaussians
-        let dog_space = self.compute_dog_space(&scale_space)?;
-        let extrema = self.detect_extrema(&dog_space)?;
+        let dogspace = self.compute_dog_space(&scalespace)?;
+        let extrema = self.detect_extrema(&dogspace)?;
 
         // Refine keypoints with subpixel accuracy
-        let refined_keypoints = self.refine_keypoints(&extrema, &dog_space)?;
+        let refined_keypoints = self.refine_keypoints(&extrema, &dogspace)?;
 
         // Filter edge responses and low contrast points
-        let filtered_keypoints = self.filter_keypoints(&refined_keypoints, &dog_space)?;
+        let filtered_keypoints = self.filter_keypoints(&refined_keypoints, &dogspace)?;
 
         Ok(filtered_keypoints)
     }
@@ -1021,7 +1021,7 @@ impl LearnedSIFT {
 
     /// Build Gaussian scale space
     fn build_scale_space(&self, image: &ArrayView2<f32>) -> Result<Vec<Vec<Array2<f32>>>> {
-        let mut scale_space = Vec::new();
+        let mut scalespace = Vec::new();
         let mut current_image = image.to_owned();
 
         for octave in 0..self.siftconfig.num_octaves {
@@ -1034,7 +1034,7 @@ impl LearnedSIFT {
                 octave_images.push(blurred);
             }
 
-            scale_space.push(octave_images);
+            scalespace.push(octave_images);
 
             // Downsample for next octave
             if octave < self.siftconfig.num_octaves - 1 {
@@ -1042,14 +1042,14 @@ impl LearnedSIFT {
             }
         }
 
-        Ok(scale_space)
+        Ok(scalespace)
     }
 
     /// Compute Difference of Gaussians
     fn compute_dog_space(&self, scalespace: &[Vec<Array2<f32>>]) -> Result<Vec<Vec<Array2<f32>>>> {
-        let mut dog_space = Vec::new();
+        let mut dogspace = Vec::new();
 
-        for octave_images in scale_space {
+        for octave_images in scalespace {
             let mut dog_octave = Vec::new();
 
             for i in 0..octave_images.len() - 1 {
@@ -1057,17 +1057,17 @@ impl LearnedSIFT {
                 dog_octave.push(dog);
             }
 
-            dog_space.push(dog_octave);
+            dogspace.push(dog_octave);
         }
 
-        Ok(dog_space)
+        Ok(dogspace)
     }
 
     /// Detect extrema in DoG space
     fn detect_extrema(&self, dogspace: &[Vec<Array2<f32>>]) -> Result<Vec<KeyPoint>> {
         let mut extrema = Vec::new();
 
-        for (octave, dog_octave) in dog_space.iter().enumerate() {
+        for (octave, dog_octave) in dogspace.iter().enumerate() {
             for (scale, dog_image) in dog_octave
                 .iter()
                 .enumerate()

@@ -189,7 +189,7 @@ where
 {
     pub fn new(_windowsize: usize) -> Self {
         Self {
-            window_size: window_size,
+            window_size: _windowsize,
             _phantom: std::marker::PhantomData,
         }
     }

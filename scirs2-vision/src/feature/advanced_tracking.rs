@@ -44,7 +44,7 @@ pub struct BoundingBox {
     /// Detection confidence score
     pub confidence: f32,
     /// Object class ID
-    pub class_id: i32,
+    pub classid: i32,
 }
 
 impl BoundingBox {
@@ -56,7 +56,7 @@ impl BoundingBox {
             width,
             height,
             confidence,
-            class_id,
+            classid,
         }
     }
 
@@ -121,10 +121,10 @@ impl KalmanFilter {
 
         // Initialize state with bounding box and zero velocities
         let mut state = Array1::zeros(state_dim);
-        state[0] = initial_bbox.x + initial_bbox.width / 2.0; // center x
-        state[1] = initial_bbox.y + initial_bbox.height / 2.0; // center y
-        state[4] = initial_bbox.width;
-        state[5] = initial_bbox.height;
+        state[0] = _initialbbox.x + _initialbbox.width / 2.0; // center x
+        state[1] = _initialbbox.y + _initialbbox.height / 2.0; // center y
+        state[4] = _initialbbox.width;
+        state[5] = _initialbbox.height;
 
         // State transition matrix (constant velocity model)
         let dt = 1.0; // time step
@@ -198,10 +198,10 @@ impl KalmanFilter {
 
         // Innovation covariance: S = H * P * H^T + R
         let temp = self.observation.dot(&self.covariance);
-        let innovation_cov = temp.dot(&self.observation.t()) + &self.measurement_noise;
+        let innovationcov = temp.dot(&self.observation.t()) + &self.measurement_noise;
 
         // Kalman gain: K = P * H^T * S^{-1}
-        let kalman_gain = self.compute_kalman_gain(&innovation_cov)?;
+        let kalman_gain = self.compute_kalman_gain(&innovationcov)?;
 
         // State update: x = x + K * y
         self.state = &self.state + &kalman_gain.dot(&innovation);
@@ -240,7 +240,7 @@ impl KalmanFilter {
     fn compute_kalman_gain(&self, innovationcov: &Array2<f32>) -> Result<Array2<f32>> {
         // Simplified computation for 4x4 matrix inversion
         // In practice, would use proper numerical linear algebra
-        let det = self.compute_determinant_4x4(innovation_cov);
+        let det = self.compute_determinant_4x4(innovationcov);
 
         if det.abs() < 1e-6 {
             return Err(VisionError::OperationError(
@@ -248,7 +248,7 @@ impl KalmanFilter {
             ));
         }
 
-        let inv_innovation_cov = self.invert_4x4_matrix(innovation_cov, det)?;
+        let inv_innovation_cov = self.invert_4x4_matrix(innovationcov, det)?;
         let temp = self.covariance.dot(&self.observation.t());
 
         Ok(temp.dot(&inv_innovation_cov))
@@ -327,10 +327,10 @@ pub enum TrackState {
 impl Track {
     /// Create a new track
     pub fn new(_id: u32, initialdetection: &Detection) -> Self {
-        let kalman_filter = KalmanFilter::new_bbox_tracker(&initial_detection.bbox);
+        let kalman_filter = KalmanFilter::new_bbox_tracker(&initialdetection.bbox);
         let mut features = VecDeque::new();
 
-        if let Some(ref feature) = initial_detection.feature {
+        if let Some(ref feature) = initialdetection.feature {
             features.push_back(feature.clone());
         }
 
@@ -341,9 +341,9 @@ impl Track {
             max_features: 10,
             age: 1,
             time_since_update: 0,
-            confidence: initial_detection.bbox.confidence,
+            confidence: initialdetection.bbox.confidence,
             state: TrackState::Tentative,
-            last_bbox: Some(initial_detection.bbox),
+            last_bbox: Some(initialdetection.bbox),
             created_at: Instant::now(),
         }
     }
@@ -409,7 +409,7 @@ impl Track {
         let mut bbox = self.kalman_filter.get_bbox();
         bbox.confidence = self.confidence;
         if let Some(ref last) = self.last_bbox {
-            bbox.class_id = last.class_id;
+            bbox.classid = last.classid;
         }
         bbox
     }
@@ -624,10 +624,10 @@ impl DeepSORT {
         }
 
         // Compute cost matrix
-        let cost_matrix = self.compute_cost_matrix(detections)?;
+        let costmatrix = self.compute_cost_matrix(detections)?;
 
         // Run Hungarian algorithm for optimal assignment
-        let assignments = self.associator.solve(&cost_matrix)?;
+        let assignments = self.associator.solve(&costmatrix)?;
 
         // Separate matched and unmatched
         let mut matched_pairs = Vec::new();
@@ -639,7 +639,7 @@ impl DeepSORT {
         let mut track_matched = vec![false; self.tracks.len()];
 
         for (track_idx, det_idx) in assignments {
-            if cost_matrix[[track_idx, det_idx]] < self.max_iou_distance {
+            if costmatrix[[track_idx, det_idx]] < self.max_iou_distance {
                 matched_pairs.push((track_idx, det_idx));
                 detection_matched[det_idx] = true;
                 track_matched[track_idx] = true;
@@ -666,7 +666,7 @@ impl DeepSORT {
     fn compute_cost_matrix(&self, detections: &[Detection]) -> Result<Array2<f32>> {
         let num_tracks = self.tracks.len();
         let num_detections = detections.len();
-        let mut cost_matrix = Array2::zeros((num_tracks, num_detections));
+        let mut costmatrix = Array2::zeros((num_tracks, num_detections));
 
         for (i, track) in self.tracks.iter().enumerate() {
             let predicted_bbox = track.get_bbox();
@@ -685,11 +685,11 @@ impl DeepSORT {
 
                 // Combined cost (weighted sum)
                 let cost = 0.7 * iou_distance + 0.3 * appearance_distance;
-                cost_matrix[[i, j]] = cost;
+                costmatrix[[i, j]] = cost;
             }
         }
 
-        Ok(cost_matrix)
+        Ok(costmatrix)
     }
 
     /// Get all active tracks
@@ -714,7 +714,7 @@ impl DeepSORT {
 /// Appearance feature extractor for re-identification
 pub struct AppearanceExtractor {
     /// Feature dimension
-    feature_dim: usize,
+    _featuredim: usize,
     /// GPU context for acceleration
     gpu_context: Option<GpuVisionContext>,
 }
@@ -723,7 +723,7 @@ impl AppearanceExtractor {
     /// Create a new appearance extractor
     pub fn new(_featuredim: usize) -> Self {
         Self {
-            feature_dim,
+            _featuredim,
             gpu_context: GpuVisionContext::new().ok(),
         }
     }
@@ -749,7 +749,7 @@ impl AppearanceExtractor {
     /// Extract synthetic feature for demonstration
     pub fn extract_synthetic_feature(&self, bbox: &BoundingBox) -> Result<Array1<f32>> {
         // Create synthetic feature based on bounding box properties
-        let mut feature = Array1::zeros(self.feature_dim);
+        let mut feature = Array1::zeros(self._featuredim);
 
         // Encode position and size information
         feature[0] = bbox.x / 1000.0; // Normalized position
@@ -758,8 +758,8 @@ impl AppearanceExtractor {
         feature[3] = bbox.height / 1000.0;
 
         // Fill remaining dimensions with derived features
-        for i in 4..self.feature_dim {
-            let angle = (i as f32) * 2.0 * std::f32::consts::PI / self.feature_dim as f32;
+        for i in 4..self._featuredim {
+            let angle = (i as f32) * 2.0 * std::f32::consts::PI / self._featuredim as f32;
             feature[i] = (bbox.x * angle.cos() + bbox.y * angle.sin()) / 1000.0;
         }
 
@@ -870,8 +870,8 @@ impl AppearanceExtractor {
         let total_pixels = height * width;
 
         // Ensure we don't exceed the desired feature dimension
-        let feature_size = self.feature_dim.min(total_pixels);
-        let mut feature = Array1::zeros(self.feature_dim);
+        let feature_size = self._featuredim.min(total_pixels);
+        let mut feature = Array1::zeros(self._featuredim);
 
         // Copy pixel values with subsampling if necessary
         let step = if total_pixels > feature_size {
@@ -912,7 +912,7 @@ impl HungarianAssociation {
 
     /// Solve assignment problem using simplified Hungarian algorithm
     pub fn solve(&self, costmatrix: &Array2<f32>) -> Result<Vec<(usize, usize)>> {
-        let (num_rows, num_cols) = cost_matrix.dim();
+        let (num_rows, num_cols) = costmatrix.dim();
 
         if num_rows == 0 || num_cols == 0 {
             return Ok(Vec::new());
@@ -939,8 +939,8 @@ impl HungarianAssociation {
                     if used_cols[j] {
                         continue;
                     }
-                    if cost_matrix[[i, j]] < min_cost {
-                        min_cost = cost_matrix[[i, j]];
+                    if costmatrix[[i, j]] < min_cost {
+                        min_cost = costmatrix[[i, j]];
                         min_row = i;
                         min_col = j;
                     }
@@ -1002,9 +1002,9 @@ impl TrackingMetrics {
         }
 
         // Compute MOTA and MOTP (simplified)
-        let matches = self.compute_matches(ground_truth, predictions);
+        let matches = self.compute_matches(groundtruth, predictions);
         let num_matches = matches.len();
-        let num_gt = ground_truth.len();
+        let num_gt = groundtruth.len();
 
         let new_mota = if num_gt > 0 {
             num_matches as f32 / num_gt as f32
@@ -1029,15 +1029,15 @@ impl TrackingMetrics {
     /// Compute matches between ground truth and predictions
     fn compute_matches<'a>(
         &self,
-        ground_truth: &'a [BoundingBox],
+        groundtruth: &'a [BoundingBox],
         predictions: &'a [Track],
     ) -> Vec<(&'a BoundingBox, &'a Track)> {
         let mut matches = Vec::new();
-        let mut used_gt = vec![false; ground_truth.len()];
+        let mut used_gt = vec![false; groundtruth.len()];
         let mut used_pred = vec![false; predictions.len()];
 
         // Simple greedy matching based on IoU
-        for (i, gt) in ground_truth.iter().enumerate() {
+        for (i, gt) in groundtruth.iter().enumerate() {
             if used_gt[i] {
                 continue;
             }
@@ -1111,16 +1111,16 @@ mod tests {
 
     #[test]
     fn test_kalman_filter() {
-        let initial_bbox = BoundingBox::new(10.0, 10.0, 20.0, 30.0, 1.0, 0);
-        let mut kalman = KalmanFilter::new_bbox_tracker(&initial_bbox);
+        let _initialbbox = BoundingBox::new(10.0, 10.0, 20.0, 30.0, 1.0, 0);
+        let mut kalman = KalmanFilter::new_bbox_tracker(&_initialbbox);
 
         // Predict next state
         kalman.predict();
         let predicted_bbox = kalman.get_bbox();
 
         // Should be similar to initial position since velocity is zero
-        assert!((predicted_bbox.x - initial_bbox.x).abs() < 5.0);
-        assert!((predicted_bbox.y - initial_bbox.y).abs() < 5.0);
+        assert!((predicted_bbox.x - _initialbbox.x).abs() < 5.0);
+        assert!((predicted_bbox.y - _initialbbox.y).abs() < 5.0);
     }
 
     #[test]
@@ -1175,14 +1175,14 @@ mod tests {
         let associator = HungarianAssociation::new();
 
         // Create a simple 2x2 cost matrix
-        let cost_matrix = ndarray::arr2(&[[0.1, 0.9], [0.8, 0.2]]);
+        let costmatrix = ndarray::arr2(&[[0.1, 0.9], [0.8, 0.2]]);
 
-        let assignments = associator.solve(&cost_matrix).unwrap();
+        let assignments = associator.solve(&costmatrix).unwrap();
         assert!(!assignments.is_empty());
 
         // Should prefer low-cost assignments
         for (row, col) in assignments {
-            assert!(cost_matrix[[row, col]] < 0.5);
+            assert!(costmatrix[[row, col]] < 0.5);
         }
     }
 

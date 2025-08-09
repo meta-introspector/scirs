@@ -483,7 +483,7 @@ pub struct TestExecutionMetadata {
     /// Environment information
     pub environment: EnvironmentInfo,
     /// Git information
-    pub git_info: GitInfo,
+    pub gitinfo: GitInfo,
     /// CI/CD context
     pub ci_context: CiCdContext,
 }
@@ -540,8 +540,8 @@ impl CiCdAutomation {
 
         let environment = Self::detect_environment()?;
         let test_suite = PerformanceTestSuite::new(TestSuiteConfig::default())?;
-        let report_generator = ReportGenerator::new(_config.reporting.clone())?;
-        let artifact_manager = ArtifactManager::new(_config.artifact_storage.clone())?;
+        let report_generator = ReportGenerator::new(config.reporting.clone())?;
+        let artifact_manager = ArtifactManager::new(config.artifact_storage.clone())?;
 
         Ok(Self {
             regression_detector,
@@ -559,10 +559,10 @@ impl CiCdAutomation {
 
         // Detect CI/CD context
         let ci_context = self.detect_ci_context()?;
-        let git_info = self.detect_git_info()?;
+        let gitinfo = self.detect_git_info()?;
 
         // Determine if tests should run
-        if !self.should_run_tests(&ci_context, &git_info)? {
+        if !self.should_run_tests(&ci_context, &gitinfo)? {
             return Ok(CiCdTestResult {
                 status: TestExecutionStatus::Success,
                 measurements: vec![],
@@ -573,7 +573,7 @@ impl CiCdAutomation {
                     end_time: SystemTime::now(),
                     duration: SystemTime::now().duration_since(start_time)?,
                     environment: self.environment.clone(),
-                    git_info,
+                    gitinfo,
                     ci_context,
                 },
             });
@@ -583,7 +583,7 @@ impl CiCdAutomation {
         let measurements = self.execute_performance_tests().await?;
 
         // Load historical baseline if available
-        self.load_baseline_for_branch(&git_info.branch).await?;
+        self.load_baseline_for_branch(&gitinfo.branch).await?;
 
         // Add measurements to regression detector
         for measurement in &measurements {
@@ -610,8 +610,8 @@ impl CiCdAutomation {
             .await?;
 
         // Update baseline if appropriate
-        if self.should_update_baseline(&git_info, &regression_results)? {
-            self.update_baseline(&git_info).await?;
+        if self.should_update_baseline(&gitinfo, &regression_results)? {
+            self.update_baseline(&gitinfo).await?;
         }
 
         let end_time = SystemTime::now();
@@ -627,7 +627,7 @@ impl CiCdAutomation {
                 end_time,
                 duration: end_time.duration_since(start_time)?,
                 environment: self.environment.clone(),
-                git_info,
+                gitinfo,
                 ci_context,
             },
         })
@@ -1063,12 +1063,12 @@ impl CiCdAutomation {
             }
         };
 
-        let git_info = self.detect_git_info()?;
+        let gitinfo = self.detect_git_info()?;
 
         Ok(PerformanceMeasurement {
             timestamp: start_time,
-            commit_hash: git_info.commit_hash,
-            branch: git_info.branch,
+            commit_hash: gitinfo.commit_hash,
+            branch: gitinfo.branch,
             build_config: self.detect_build_config()?,
             environment: self.environment.clone(),
             metrics,
@@ -1333,12 +1333,12 @@ impl CiCdAutomation {
                 self.execute_computation_benchmark(complexity)
             }
             "sleep_benchmark" => {
-                let duration_ms = test_case
+                let durationms = test_case
                     .parameters
-                    .get("duration_ms")
+                    .get("durationms")
                     .and_then(|s| s.parse::<u64>().ok())
                     .unwrap_or(100);
-                self.execute_sleep_benchmark(duration_ms).await
+                self.execute_sleep_benchmark(durationms).await
             }
             _ => {
                 return Err(crate::error::OptimError::ExecutionError(format!(
@@ -1595,7 +1595,7 @@ impl CiCdAutomation {
     /// Check if baseline should be updated
     fn should_update_baseline(
         &self,
-        git_info: &GitInfo,
+        gitinfo: &GitInfo,
         regression_results: &[RegressionResult],
     ) -> Result<bool> {
         // Don't update if there are regressions
@@ -1604,7 +1604,7 @@ impl CiCdAutomation {
         }
 
         // Check if we're on main branch and auto-update is enabled
-        if self.config.baseline_management.auto_update_main && git_info.branch == "main" {
+        if self.config.baseline_management.auto_update_main && gitinfo.branch == "main" {
             return Ok(true);
         }
 
@@ -1619,7 +1619,7 @@ impl CiCdAutomation {
     /// Update baseline
     async fn update_baseline(&mut self, gitinfo: &GitInfo) -> Result<()> {
         self.regression_detector
-            .update_baseline_from_recent(git_info.commit_hash.clone())?;
+            .update_baseline_from_recent(gitinfo.commit_hash.clone())?;
         // TODO: Store baseline in artifact storage
         Ok(())
     }
@@ -1823,7 +1823,7 @@ impl CiCdAutomation {
     /// Execute sleep benchmark
     async fn execute_sleep_benchmark(&self, durationms: u64) -> f64 {
         let start = std::time::Instant::now();
-        tokio::time::sleep(tokio::time::Duration::from_millis(duration_ms)).await;
+        tokio::time::sleep(tokio::time::Duration::from_millis(durationms)).await;
         start.elapsed().as_secs_f64()
     }
 
@@ -2090,18 +2090,18 @@ impl ArtifactManager {
 /// Local filesystem artifact storage
 #[derive(Debug)]
 pub struct LocalArtifactStorage {
-    base_path: PathBuf,
+    basepath: PathBuf,
 }
 
 impl LocalArtifactStorage {
     pub fn new(basepath: PathBuf) -> Self {
-        Self { base_path }
+        Self { basepath }
     }
 }
 
 impl ArtifactStorage for LocalArtifactStorage {
     fn upload(&self, path: &Path, key: &str) -> Result<String> {
-        let dest_path = self.base_path.join(key);
+        let dest_path = self.basepath.join(key);
         if let Some(parent) = dest_path.parent() {
             std::fs::create_dir_all(parent)?;
         }
@@ -2110,13 +2110,13 @@ impl ArtifactStorage for LocalArtifactStorage {
     }
 
     fn download(&self, key: &str, path: &Path) -> Result<()> {
-        let src_path = self.base_path.join(key);
+        let src_path = self.basepath.join(key);
         std::fs::copy(src_path, path)?;
         Ok(())
     }
 
     fn list(&self, prefix: &str) -> Result<Vec<String>> {
-        let prefix_path = self.base_path.join(prefix);
+        let prefix_path = self.basepath.join(prefix);
         let mut files = Vec::new();
 
         if prefix_path.is_dir() {
@@ -2132,7 +2132,7 @@ impl ArtifactStorage for LocalArtifactStorage {
     }
 
     fn delete(&self, key: &str) -> Result<()> {
-        let path = self.base_path.join(key);
+        let path = self.basepath.join(key);
         if path.exists() {
             std::fs::remove_file(path)?;
         }

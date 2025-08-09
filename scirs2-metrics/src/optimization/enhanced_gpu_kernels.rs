@@ -98,7 +98,7 @@ pub struct ComputeKernel {
     pub id: u64,
     pub name: String,
     pub source: String,
-    pub entry_point: String,
+    pub entrypoint: String,
     pub backend_kernel: u64,
     pub local_work_size: [usize; 3],
     pub global_work_size: [usize; 3],
@@ -251,7 +251,7 @@ pub struct BandwidthMeasurement {
     pub timestamp: Instant,
     pub memory_bandwidth: f64,   // GB/s
     pub compute_throughput: f64, // GFLOPS
-    pub kernel_name: String,
+    pub kernelname: String,
 }
 
 /// Automatic kernel optimizer
@@ -269,7 +269,7 @@ pub struct KernelOptimizer {
 #[derive(Debug, Clone)]
 pub struct OptimizationResult {
     pub timestamp: Instant,
-    pub kernel_name: String,
+    pub kernelname: String,
     pub parameters: KernelOptimizationParams,
     pub performance: f64,       // GFLOPS or execution time
     pub energy_efficiency: f64, // GFLOPS/Watt
@@ -613,7 +613,7 @@ pub struct WebGpuBufferInfo {
 pub struct WebGpuPipelineInfo {
     pub pipeline_handle: u64,
     pub shader_module: u64,
-    pub entry_point: String,
+    pub entrypoint: String,
 }
 
 /// Enhanced metrics computation using optimized GPU kernels
@@ -1178,7 +1178,7 @@ fn compute_correlation(@builtin(local_invocation_id) local_id: vec3<u32>,
         use std::hash::{Hash, Hasher};
 
         let mut hasher = DefaultHasher::new();
-        kernel_name.hash(&mut hasher);
+        kernelname.hash(&mut hasher);
         size.hash(&mut hasher);
         hasher.finish()
     }
@@ -1261,7 +1261,7 @@ fn compute_correlation(@builtin(local_invocation_id) local_id: vec3<u32>,
             // Store optimal parameters
             let optimization_result = OptimizationResult {
                 timestamp: Instant::now(),
-                kernel_name: "correlation".to_string(),
+                kernelname: "correlation".to_string(),
                 parameters: best_params,
                 performance: best_performance,
                 energy_efficiency: best_performance / 100.0, // Simplified
@@ -1399,7 +1399,7 @@ impl GpuProfiler {
     fn record_kernel_execution(&mut self, kernelname: &str, duration: Duration) {
         if self.enabled {
             self.execution_times
-                .entry(kernel_name.to_string())
+                .entry(kernelname.to_string())
                 .or_insert_with(Vec::new)
                 .push(duration);
         }
@@ -1408,21 +1408,21 @@ impl GpuProfiler {
     fn get_statistics(&self) -> HashMap<String, f64> {
         let mut stats = HashMap::new();
 
-        for (kernel_name, times) in &self.execution_times {
+        for (kernelname, times) in &self.execution_times {
             let avg_time = times.iter().map(|t| t.as_secs_f64()).sum::<f64>() / times.len() as f64;
-            stats.insert(format!("{}_avg_time", kernel_name), avg_time);
+            stats.insert(format!("{}_avg_time", kernelname), avg_time);
 
             let min_time = times
                 .iter()
                 .map(|t| t.as_secs_f64())
                 .fold(f64::INFINITY, f64::min);
-            stats.insert(format!("{}_min_time", kernel_name), min_time);
+            stats.insert(format!("{}_min_time", kernelname), min_time);
 
             let max_time = times
                 .iter()
                 .map(|t| t.as_secs_f64())
                 .fold(f64::NEG_INFINITY, f64::max);
-            stats.insert(format!("{}_max_time", kernel_name), max_time);
+            stats.insert(format!("{}_max_time", kernelname), max_time);
         }
 
         stats
@@ -1459,8 +1459,8 @@ impl KernelOptimizer {
         }
     }
 
-    fn get_optimal_vector_width(&self, kernel_name: &str, size: usize) -> usize {
-        if let Some(history) = self.optimization_history.get(kernel_name) {
+    fn get_optimal_vector_width(&self, kernelname: &str, size: usize) -> usize {
+        if let Some(history) = self.optimization_history.get(kernelname) {
             if let Some(latest) = history.last() {
                 return latest.parameters.vector_width;
             }
@@ -1468,8 +1468,8 @@ impl KernelOptimizer {
         4 // Default
     }
 
-    fn get_optimal_block_size(&self, kernel_name: &str, size: usize) -> usize {
-        if let Some(history) = self.optimization_history.get(kernel_name) {
+    fn get_optimal_block_size(&self, kernelname: &str, size: usize) -> usize {
+        if let Some(history) = self.optimization_history.get(kernelname) {
             if let Some(latest) = history.last() {
                 return latest.parameters.work_group_size[0];
             }
@@ -1477,8 +1477,8 @@ impl KernelOptimizer {
         256 // Default
     }
 
-    fn get_optimal_unroll_factor(&self, kernel_name: &str, size: usize) -> usize {
-        if let Some(history) = self.optimization_history.get(kernel_name) {
+    fn get_optimal_unroll_factor(&self, kernelname: &str, size: usize) -> usize {
+        if let Some(history) = self.optimization_history.get(kernelname) {
             if let Some(latest) = history.last() {
                 return latest.parameters.unroll_factor;
             }
@@ -1486,8 +1486,8 @@ impl KernelOptimizer {
         4 // Default
     }
 
-    fn get_optimal_work_group_size(&self, kernel_name: &str, size: usize) -> usize {
-        if let Some(history) = self.optimization_history.get(kernel_name) {
+    fn get_optimal_work_group_size(&self, kernelname: &str, size: usize) -> usize {
+        if let Some(history) = self.optimization_history.get(kernelname) {
             if let Some(latest) = history.last() {
                 return latest.parameters.work_group_size[0];
             }
@@ -1613,9 +1613,9 @@ impl GpuBackend for CudaBackend {
         // Simulate kernel compilation
         Ok(ComputeKernel {
             id: rand::random(),
-            name: entry_point.to_string(),
+            name: entrypoint.to_string(),
             source: source.to_string(),
-            entry_point: entry_point.to_string(),
+            entrypoint: entrypoint.to_string(),
             backend_kernel: rand::random(),
             local_work_size: [256, 1, 1],
             global_work_size: [1024, 1, 1],
@@ -1711,9 +1711,9 @@ impl GpuBackend for OpenClBackend {
     fn create_kernel(&self, source: &str, entrypoint: &str) -> Result<ComputeKernel> {
         Ok(ComputeKernel {
             id: rand::random(),
-            name: entry_point.to_string(),
+            name: entrypoint.to_string(),
             source: source.to_string(),
-            entry_point: entry_point.to_string(),
+            entrypoint: entrypoint.to_string(),
             backend_kernel: rand::random(),
             local_work_size: [256, 1, 1],
             global_work_size: [1024, 1, 1],
@@ -1805,9 +1805,9 @@ impl GpuBackend for WebGpuBackend {
     fn create_kernel(&self, source: &str, entrypoint: &str) -> Result<ComputeKernel> {
         Ok(ComputeKernel {
             id: rand::random(),
-            name: entry_point.to_string(),
+            name: entrypoint.to_string(),
             source: source.to_string(),
-            entry_point: entry_point.to_string(),
+            entrypoint: entrypoint.to_string(),
             backend_kernel: rand::random(),
             local_work_size: [64, 1, 1],
             global_work_size: [1024, 1, 1],
@@ -1873,7 +1873,7 @@ mod tests {
             id: 1,
             name: "test_kernel".to_string(),
             source: "test source".to_string(),
-            entry_point: "main".to_string(),
+            entrypoint: "main".to_string(),
             backend_kernel: 100,
             local_work_size: [256, 1, 1],
             global_work_size: [1024, 1, 1],

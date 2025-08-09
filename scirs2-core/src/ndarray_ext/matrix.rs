@@ -397,7 +397,7 @@ where
                 result[[i, j]] = first_row[j - i].clone();
             } else {
                 // Lower triangle from first_col
-                result[[0, j]] = first_col[0 - j].clone();
+                result[[i, j]] = first_col[i - j].clone();
             }
         }
     }

@@ -1030,7 +1030,7 @@ impl SecurityAuditor {
     pub fn run_security_audit(&mut self) -> Result<&SecurityAuditResults> {
         println!("🔒 Starting comprehensive security audit...");
 
-        let start_time = Instant::now();
+        let starttime = Instant::now();
 
         // Run all enabled security analyses
         if self.config.enable_input_validation {
@@ -1064,7 +1064,7 @@ impl SecurityAuditor {
         }
 
         // Generate final results
-        self.generate_final_results(start_time);
+        self.generate_final_results(starttime);
 
         // Generate recommendations if enabled
         if self.config.generate_recommendations {
@@ -1073,7 +1073,7 @@ impl SecurityAuditor {
 
         println!(
             "🔒 Security audit completed in {:.2}s",
-            start_time.elapsed().as_secs_f64()
+            starttime.elapsed().as_secs_f64()
         );
 
         Ok(&self.audit_results)
@@ -1101,7 +1101,7 @@ impl SecurityAuditor {
         &self,
         test: &InputValidationTest,
     ) -> Result<ValidationTestResult> {
-        let start_time = Instant::now();
+        let starttime = Instant::now();
 
         // Generate test payload
         let payload = self.generate_test_payload(&test.payload_generator);
@@ -1109,7 +1109,7 @@ impl SecurityAuditor {
         // Execute test with timeout
         let test_result = self.execute_with_timeout(|| self.test_input_validation(test, &payload));
 
-        let execution_time = start_time.elapsed();
+        let execution_time = starttime.elapsed();
 
         // Analyze result and determine if vulnerability was detected
         let (status, vulnerability, severity) = self.analyze_validation_result(&test_result, test);
@@ -1127,7 +1127,7 @@ impl SecurityAuditor {
 
     /// Generate test payload based on payload type
     fn generate_test_payload(&self, payloadtype: &PayloadType) -> TestPayload {
-        match payload_type {
+        match payloadtype {
             PayloadType::NaNPayload => TestPayload::FloatArray(vec![f64::NAN, 1.0, 2.0]),
             PayloadType::InfinityPayload => {
                 TestPayload::FloatArray(vec![f64::INFINITY, f64::NEG_INFINITY])
@@ -1214,7 +1214,7 @@ impl SecurityAuditor {
 
     /// Simulate optimizer with negative parameters
     fn simulate_optimizer_with_negative_params(&self, learningrate: f64) -> Result<()> {
-        if learning_rate < 0.0 {
+        if learningrate < 0.0 {
             return Err(OptimError::InvalidConfig(
                 "Negative learning _rate not allowed".to_string(),
             ));
@@ -1732,7 +1732,7 @@ impl SecurityAuditor {
 
     /// Generate final audit results
     fn generate_final_results(&mut self, starttime: Instant) {
-        self.audit_results.timestamp = start_time;
+        self.audit_results.timestamp = starttime;
 
         // Calculate overall security score
         self.audit_results.overall_security_score = self.calculate_overall_security_score();
@@ -2304,7 +2304,7 @@ pub enum RiskImpact {
 
 impl RiskImpact {
     fn from_severity(severity: &SeverityLevel) -> Self {
-        match _severity {
+        match severity {
             SeverityLevel::Critical => RiskImpact::High,
             SeverityLevel::High => RiskImpact::High,
             SeverityLevel::Medium => RiskImpact::Medium,

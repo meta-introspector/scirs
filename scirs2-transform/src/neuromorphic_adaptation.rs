@@ -55,7 +55,7 @@ impl SpikingNeuron {
             refractory_period: 2.0,
             refractory_counter: 0.0,
             spike_history: VecDeque::with_capacity(100),
-            synaptic_weights: Array1::from_iter((0.._n_inputs).map(|_| rng.gen_range(-0.5..0.5))),
+            synaptic_weights: Array1::from_iter((0.._ninputs).map(|_| rng.gen_range(-0.5..0.5))),
             learning_rate: 0.01,
             ltp_trace: 0.0,
             ltd_trace: 0.0,
@@ -110,7 +110,7 @@ impl SpikingNeuron {
 
     /// Apply spike-timing dependent plasticity (STDP)
     pub fn apply_stdp(&mut self, pre_spike_times: &[f64], post_spiketime: Option<f64>) {
-        if let Some(post_time) = post_spike_time {
+        if let Some(post_time) = post_spiketime {
             for (i, &pre_time) in pre_spike_times.iter().enumerate() {
                 if i < self.synapticweights.len() {
                     let delta_t = post_time - pre_time;
@@ -178,12 +178,12 @@ impl NeuromorphicAdaptationNetwork {
             .map(|_| SpikingNeuron::new(input_size, 1.5))
             .collect();
 
-        let output_neurons: Vec<SpikingNeuron> = (0..output_size)
+        let output_neurons: Vec<SpikingNeuron> = (0..outputsize)
             .map(|_| SpikingNeuron::new(hidden_size, 2.0))
             .collect();
 
         // Initialize connectivity matrix
-        let total_neurons = input_size + hidden_size + output_size;
+        let total_neurons = input_size + hidden_size + outputsize;
         let mut connectivity = Array2::zeros((total_neurons, total_neurons));
 
         // Connect input to hidden
@@ -215,32 +215,32 @@ impl NeuromorphicAdaptationNetwork {
     /// Process input through neuromorphic network
     pub fn process_input(
         &mut self,
-        meta_features: &DatasetMetaFeatures,
+        metafeatures: &DatasetMetaFeatures,
     ) -> Result<Vec<TransformationConfig>> {
         // Convert meta-_features to spike patterns
-        let input_pattern = self.meta_features_to_spikes(meta_features)?;
+        let inputpattern = self.meta_features_to_spikes(metafeatures)?;
 
         // Simulate network dynamics
-        let output_spikes = self.simulate_network_dynamics(&input_pattern)?;
+        let outputspikes = self.simulate_network_dynamics(&inputpattern)?;
 
         // Convert output spikes to transformation recommendations
-        self.spikes_to_transformations(&output_spikes)
+        self.spikes_to_transformations(&outputspikes)
     }
 
     /// Convert meta-features to spike patterns
     fn meta_features_to_spikes(&self, metafeatures: &DatasetMetaFeatures) -> Result<Array1<f64>> {
         // Normalize meta-_features and convert to spike rates
         let _features = vec![
-            (meta_features.n_samples as f64).ln().max(0.0) / 10.0,
-            (meta_features.n_features as f64).ln().max(0.0) / 10.0,
-            meta_features.sparsity,
-            meta_features.mean_correlation.abs(),
-            meta_features.std_correlation.min(1.0),
-            meta_features.mean_skewness.abs().min(5.0) / 5.0,
-            meta_features.mean_kurtosis.abs().min(5.0) / 5.0,
-            meta_features.missing_ratio,
-            meta_features.variance_ratio.min(1.0),
-            meta_features.outlier_ratio,
+            (metafeatures.n_samples as f64).ln().max(0.0) / 10.0,
+            (metafeatures.n_features as f64).ln().max(0.0) / 10.0,
+            metafeatures.sparsity,
+            metafeatures.mean_correlation.abs(),
+            metafeatures.std_correlation.min(1.0),
+            metafeatures.mean_skewness.abs().min(5.0) / 5.0,
+            metafeatures.mean_kurtosis.abs().min(5.0) / 5.0,
+            metafeatures.missing_ratio,
+            metafeatures.variance_ratio.min(1.0),
+            metafeatures.outlier_ratio,
         ];
 
         if features.len() != self.input_neurons.len() {
@@ -262,7 +262,7 @@ impl NeuromorphicAdaptationNetwork {
         for _step in 0..simulation_steps {
             // Update input neurons
             for (i, neuron) in self.input_neurons.iter_mut().enumerate() {
-                let input = Array1::from_elem(1, input_pattern[i]);
+                let input = Array1::from_elem(1, inputpattern[i]);
                 neuron.update(&input, self.time_step);
             }
 
@@ -305,7 +305,7 @@ impl NeuromorphicAdaptationNetwork {
     /// Convert output spikes to transformation recommendations
     fn spikes_to_transformations(
         &self,
-        output_spikes: &Array1<f64>,
+        outputspikes: &Array1<f64>,
     ) -> Result<Vec<TransformationConfig>> {
         let mut transformations = Vec::new();
         let threshold = 0.3; // Spike rate threshold for recommendation
@@ -323,7 +323,7 @@ impl NeuromorphicAdaptationNetwork {
             TransformationType::TargetEncoder,
         ];
 
-        for (i, &spike_rate) in output_spikes.iter().enumerate() {
+        for (i, &spike_rate) in outputspikes.iter().enumerate() {
             if spike_rate > threshold && i < transformation_types.len() {
                 let mut parameters = HashMap::new();
 
@@ -422,13 +422,13 @@ impl NeuromorphicAdaptationNetwork {
     /// Learn from transformation performance feedback
     pub fn learn_from_feedback(
         &mut self,
-        meta_features: DatasetMetaFeatures,
+        metafeatures: DatasetMetaFeatures,
         transformations: Vec<TransformationConfig>,
         performance: f64,
     ) -> Result<()> {
         // Store in history
         self.transformation_history
-            .push_back((meta_features, transformations, performance));
+            .push_back((metafeatures, transformations, performance));
 
         // Keep history size manageable
         if self.transformation_history.len() > 1000 {
@@ -476,7 +476,7 @@ impl NeuromorphicAdaptationNetwork {
             .iter()
             .rev()
             .take(10)
-            .map(|(__, perf)| *perf)
+            .map(|(_, perf)| *perf)
             .collect();
 
         let avg_performance =
@@ -835,15 +835,15 @@ impl NeuromorphicTransformationSystem {
     /// Process data and recommend transformations using neuromorphic computing
     pub fn recommend_transformations(
         &mut self,
-        meta_features: &DatasetMetaFeatures,
+        metafeatures: &DatasetMetaFeatures,
     ) -> Result<Vec<TransformationConfig>> {
         // Retrieve similar cases from memory
         let similar_episodes = self
             .memory_system
-            .retrieve_similar_episodes(meta_features, 5)?;
+            .retrieve_similar_episodes(metafeatures, 5)?;
 
         // Use adaptation network for current recommendation
-        let mut network_recommendations = self.adaptation_network.process_input(meta_features)?;
+        let mut network_recommendations = self.adaptation_network.process_input(metafeatures)?;
 
         // Integrate memory-based recommendations
         if !similar_episodes.is_empty() {
@@ -861,20 +861,20 @@ impl NeuromorphicTransformationSystem {
     /// Learn from transformation performance feedback
     pub fn learn_from_performance(
         &mut self,
-        meta_features: DatasetMetaFeatures,
+        metafeatures: DatasetMetaFeatures,
         transformations: Vec<TransformationConfig>,
         performance: f64,
     ) -> Result<()> {
         // Store in memory system
         self.memory_system.store_episode(
-            meta_features.clone(),
+            metafeatures.clone(),
             transformations.clone(),
             performance,
         )?;
 
         // Update adaptation network
         self.adaptation_network
-            .learn_from_feedback(meta_features, transformations, performance)?;
+            .learn_from_feedback(metafeatures, transformations, performance)?;
 
         // Trigger adaptive reconfiguration if needed
         if performance < 0.3 {
@@ -1044,13 +1044,13 @@ pub struct AdvancedNeuromorphicMetrics {
 impl AdvancedNeuromorphicProcessor {
     /// ✅ Advanced OPTIMIZATION: Create optimized neuromorphic processor
     pub fn new(_input_size: usize, hidden_size: usize, outputsize: usize) -> Self {
-        let network = NeuromorphicAdaptationNetwork::new(_input_size, hidden_size, output_size);
+        let network = NeuromorphicAdaptationNetwork::new(_input_size, hidden_size, outputsize);
         let batch_size = 64; // Optimal batch _size for SIMD
         let processing_chunks = num_cpus::get().min(8); // Limit for memory efficiency
 
         AdvancedNeuromorphicProcessor {
             network,
-            spike_buffer: Array2::zeros((batch_size, _input_size + hidden_size + output_size)),
+            spike_buffer: Array2::zeros((batch_size, _input_size + hidden_size + outputsize)),
             batch_size,
             processing_chunks,
             performance_metrics: AdvancedNeuromorphicMetrics {
@@ -1061,7 +1061,7 @@ impl AdvancedNeuromorphicProcessor {
                 energy_efficiency: 1.0,
                 real_time_satisfaction: 1.0,
             },
-            adaptive_thresholds: Array1::ones(output_size),
+            adaptive_thresholds: Array1::ones(outputsize),
             memory_pool: Vec::with_capacity(32),
         }
     }
@@ -1080,8 +1080,8 @@ impl AdvancedNeuromorphicProcessor {
         let mut results = Vec::with_capacity(meta_features_batch.len());
 
         // ✅ Advanced OPTIMIZATION: Sequential processing (avoiding borrow checker issues)
-        for meta_features in meta_features_batch {
-            let configs = self.process_single_advanced(meta_features)?;
+        for metafeatures in meta_features_batch {
+            let configs = self.process_single_advanced(metafeatures)?;
             results.push(configs);
         }
 
@@ -1098,38 +1098,38 @@ impl AdvancedNeuromorphicProcessor {
     /// ✅ Advanced MODE: Fast single sample processing
     fn process_single_advanced(
         &mut self,
-        meta_features: &DatasetMetaFeatures,
+        metafeatures: &DatasetMetaFeatures,
     ) -> Result<Vec<TransformationConfig>> {
         // ✅ Advanced OPTIMIZATION: SIMD-optimized feature encoding
-        let input_pattern = self.advanced_feature_encoding(meta_features)?;
+        let inputpattern = self.advanced_feature_encoding(metafeatures)?;
 
         // ✅ Advanced OPTIMIZATION: Memory-efficient network simulation
-        let output_spikes = self.advanced_network_simulation(&input_pattern)?;
+        let outputspikes = self.advanced_network_simulation(&inputpattern)?;
 
         // ✅ Advanced OPTIMIZATION: Adaptive threshold tuning
-        self.adapt_thresholds_realtime(&output_spikes);
+        self.adapt_thresholds_realtime(&outputspikes);
 
         // ✅ Advanced OPTIMIZATION: Fast transformation generation
-        self.advanced_transformation_generation(&output_spikes)
+        self.advanced_transformation_generation(&outputspikes)
     }
 
     /// ✅ Advanced OPTIMIZATION: SIMD-accelerated feature encoding
     fn advanced_feature_encoding(
         &self,
-        meta_features: &DatasetMetaFeatures,
+        metafeatures: &DatasetMetaFeatures,
     ) -> Result<Array1<f64>> {
         // ✅ Advanced MODE: Use SIMD operations for feature normalization
         let raw_features = vec![
-            (meta_features.n_samples as f64).ln().max(0.0),
-            (meta_features.n_features as f64).ln().max(0.0),
-            meta_features.sparsity * 10.0,
-            meta_features.mean_correlation.abs() * 10.0,
-            meta_features.std_correlation * 10.0,
-            meta_features.mean_skewness.abs(),
-            meta_features.mean_kurtosis.abs(),
-            meta_features.missing_ratio * 10.0,
-            meta_features.variance_ratio * 10.0,
-            meta_features.outlier_ratio * 10.0,
+            (metafeatures.n_samples as f64).ln().max(0.0),
+            (metafeatures.n_features as f64).ln().max(0.0),
+            metafeatures.sparsity * 10.0,
+            metafeatures.mean_correlation.abs() * 10.0,
+            metafeatures.std_correlation * 10.0,
+            metafeatures.mean_skewness.abs(),
+            metafeatures.mean_kurtosis.abs(),
+            metafeatures.missing_ratio * 10.0,
+            metafeatures.variance_ratio * 10.0,
+            metafeatures.outlier_ratio * 10.0,
         ];
 
         // ✅ Advanced OPTIMIZATION: SIMD normalization
@@ -1153,14 +1153,14 @@ impl AdvancedNeuromorphicProcessor {
         for _step in 0..simulation_steps {
             // ✅ Advanced MODE: SIMD-accelerated neuron updates
             let input_spikes =
-                self.compute_layer_spikes_simd(&self.network.input_neurons, input_pattern)?;
+                self.compute_layer_spikes_simd(&self.network.input_neurons, inputpattern)?;
             let hidden_spikes =
                 self.compute_layer_spikes_simd(&self.network.hidden_neurons, &input_spikes)?;
-            let output_spikes =
+            let outputspikes =
                 self.compute_layer_spikes_simd(&self.network.output_neurons, &hidden_spikes)?;
 
             // ✅ Advanced OPTIMIZATION: SIMD accumulation
-            output_accumulator = f64::simd_add(&output_accumulator.view(), &output_spikes.view());
+            output_accumulator = f64::simd_add(&output_accumulator.view(), &outputspikes.view());
         }
 
         // ✅ Advanced OPTIMIZATION: SIMD normalization
@@ -1198,14 +1198,14 @@ impl AdvancedNeuromorphicProcessor {
         let target_activity = 0.3; // Target spike rate
         let adaptation_rate = 0.01;
 
-        for i in 0..self.adaptive_thresholds.len().min(output_spikes.len()) {
-            let activity_error = output_spikes[i] - target_activity;
+        for i in 0..self.adaptive_thresholds.len().min(outputspikes.len()) {
+            let activity_error = outputspikes[i] - target_activity;
             self.adaptive_thresholds[i] += adaptation_rate * activity_error;
             self.adaptive_thresholds[i] = self.adaptive_thresholds[i].clamp(0.1, 2.0);
         }
 
         // ✅ Advanced OPTIMIZATION: Update network utilization metric
-        let average_activity = output_spikes.mean().unwrap_or(0.0);
+        let average_activity = outputspikes.mean().unwrap_or(0.0);
         self.performance_metrics.network_utilization =
             (average_activity / target_activity).min(1.0);
     }
@@ -1213,9 +1213,9 @@ impl AdvancedNeuromorphicProcessor {
     /// ✅ Advanced MODE: Fast transformation generation
     fn advanced_transformation_generation(
         &self,
-        output_spikes: &Array1<f64>,
+        outputspikes: &Array1<f64>,
     ) -> Result<Vec<TransformationConfig>> {
-        let mut transformations = Vec::with_capacity(output_spikes.len());
+        let mut transformations = Vec::with_capacity(outputspikes.len());
 
         let transformation_types = [
             TransformationType::StandardScaler,
@@ -1231,7 +1231,7 @@ impl AdvancedNeuromorphicProcessor {
         ];
 
         // ✅ Advanced OPTIMIZATION: Vectorized threshold comparison
-        for (i, &spike_rate) in output_spikes.iter().enumerate() {
+        for (i, &spike_rate) in outputspikes.iter().enumerate() {
             let adjusted_threshold = self.adaptive_thresholds.get(i).copied().unwrap_or(0.3);
 
             if spike_rate > adjusted_threshold && i < transformation_types.len() {
@@ -1341,7 +1341,7 @@ impl AdvancedNeuromorphicProcessor {
     /// ✅ Advanced OPTIMIZATION: Adaptive system tuning based on workload
     pub fn tune_for_workload(&mut self, expected_load: f64, latencyrequirements: f64) {
         // ✅ Advanced MODE: Dynamic batch size adaptation
-        if latency_requirements < 0.01 {
+        if latencyrequirements < 0.01 {
             // Very low latency
             self.batch_size = 1;
             self.processing_chunks = num_cpus::get();
@@ -1365,7 +1365,7 @@ impl AdvancedNeuromorphicProcessor {
     /// ✅ Advanced MODE: Advanced plasticity learning from feedback
     pub fn learn_from_feedback(
         &mut self,
-        meta_features: &DatasetMetaFeatures,
+        metafeatures: &DatasetMetaFeatures,
         applied_configs: &[TransformationConfig],
         performance_score: f64,
     ) -> Result<()> {
@@ -1373,9 +1373,9 @@ impl AdvancedNeuromorphicProcessor {
 
         // ✅ Advanced OPTIMIZATION: Hebbian learning for successful patterns
         if performance_score > 0.8 {
-            self.reinforce_successful_pattern(meta_features, applied_configs)?;
+            self.reinforce_successful_pattern(metafeatures, applied_configs)?;
         } else if performance_score < 0.3 {
-            self.suppress_unsuccessful_pattern(meta_features, applied_configs)?;
+            self.suppress_unsuccessful_pattern(metafeatures, applied_configs)?;
         }
 
         // ✅ Advanced OPTIMIZATION: Update global adaptation rate
@@ -1389,13 +1389,13 @@ impl AdvancedNeuromorphicProcessor {
     /// ✅ Advanced MODE: Reinforce successful transformation patterns
     fn reinforce_successful_pattern(
         &mut self,
-        meta_features: &DatasetMetaFeatures,
+        metafeatures: &DatasetMetaFeatures,
         #[allow(unused_variables)] _configs: &[TransformationConfig],
     ) -> Result<()> {
-        let input_pattern = self.advanced_feature_encoding(meta_features)?;
+        let inputpattern = self.advanced_feature_encoding(metafeatures)?;
 
         // ✅ Advanced OPTIMIZATION: Strengthen connections for successful patterns
-        for (i, &activation) in input_pattern.iter().enumerate() {
+        for (i, &activation) in inputpattern.iter().enumerate() {
             if i < self.network.input_neurons.len() && activation > 0.5 {
                 // Increase synaptic weights proportionally
                 for neuron in &mut self.network.hidden_neurons {
@@ -1413,13 +1413,13 @@ impl AdvancedNeuromorphicProcessor {
     /// ✅ Advanced MODE: Suppress unsuccessful transformation patterns
     fn suppress_unsuccessful_pattern(
         &mut self,
-        meta_features: &DatasetMetaFeatures,
+        metafeatures: &DatasetMetaFeatures,
         #[allow(unused_variables)] _configs: &[TransformationConfig],
     ) -> Result<()> {
-        let input_pattern = self.advanced_feature_encoding(meta_features)?;
+        let inputpattern = self.advanced_feature_encoding(metafeatures)?;
 
         // ✅ Advanced OPTIMIZATION: Weaken connections for unsuccessful patterns
-        for (i, &activation) in input_pattern.iter().enumerate() {
+        for (i, &activation) in inputpattern.iter().enumerate() {
             if i < self.network.input_neurons.len() && activation > 0.5 {
                 // Decrease synaptic weights slightly
                 for neuron in &mut self.network.hidden_neurons {

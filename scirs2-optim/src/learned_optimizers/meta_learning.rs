@@ -1184,15 +1184,15 @@ impl<
 {
     /// Create a new meta-learning framework
     pub fn new(config: MetaLearningConfig) -> Result<Self> {
-        let meta_learner = Self::create_meta_learner(&_config)?;
-        let task_manager = TaskDistributionManager::new(&_config)?;
-        let meta_validator = MetaValidator::new(&_config)?;
-        let adaptation_engine = AdaptationEngine::new(&_config)?;
-        let transfer_manager = TransferLearningManager::new(&_config.transfer_settings)?;
-        let continual_learner = ContinualLearningSystem::new(&_config.continual_settings)?;
-        let multitask_coordinator = MultiTaskCoordinator::new(&_config.multitask_settings)?;
+        let meta_learner = Self::create_meta_learner(&config)?;
+        let task_manager = TaskDistributionManager::new(&config)?;
+        let meta_validator = MetaValidator::new(&config)?;
+        let adaptation_engine = AdaptationEngine::new(&config)?;
+        let transfer_manager = TransferLearningManager::new(&config.transfer_settings)?;
+        let continual_learner = ContinualLearningSystem::new(&config.continual_settings)?;
+        let multitask_coordinator = MultiTaskCoordinator::new(&config.multitask_settings)?;
         let meta_tracker = MetaOptimizationTracker::new();
-        let few_shot_learner = FewShotLearner::new(&_config.few_shot_settings)?;
+        let few_shot_learner = FewShotLearner::new(&config.few_shot_settings)?;
 
         Ok(Self {
             config: config,
@@ -1541,9 +1541,9 @@ impl<
 {
     pub fn new(config: MAMLConfig<T>) -> Result<Self> {
         let inner_optimizer: Box<dyn Optimizer<T, D> + Send + Sync> =
-            Box::new(crate::optimizers::SGD::new(_config.inner_lr));
+            Box::new(crate::optimizers::SGD::new(config.inner_lr));
         let outer_optimizer: Box<dyn Optimizer<T, D> + Send + Sync> =
-            Box::new(crate::optimizers::SGD::new(_config.outer_lr));
+            Box::new(crate::optimizers::SGD::new(config.outer_lr));
         let gradient_engine = GradientComputationEngine::new()?;
         let second_order_engine = if config.second_order {
             Some(SecondOrderGradientEngine::new()?)

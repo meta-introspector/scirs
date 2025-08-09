@@ -39,52 +39,52 @@ pub mod helpers {
 
     /// Create a domain error for a parameter that must be positive
     pub fn positive_required(_paramname: &str, value: impl std::fmt::Display) -> StatsError {
-        StatsError::domain(format!("{_param_name} must be positive (> 0), got {value}"))
+        StatsError::domain(format!("{_paramname} must be positive (> 0), got {value}"))
     }
 
     /// Create a domain error for a parameter that must be non-negative
     pub fn non_negative_required(_paramname: &str, value: impl std::fmt::Display) -> StatsError {
         StatsError::domain(format!(
-            "{_param_name} must be non-negative (>= 0), got {value}"
+            "{_paramname} must be non-negative (>= 0), got {value}"
         ))
     }
 
     /// Create a domain error for a probability parameter
     pub fn probability_range(_paramname: &str, value: impl std::fmt::Display) -> StatsError {
         StatsError::domain(format!(
-            "{_param_name} must be between 0 and 1 (inclusive), got {value}"
+            "{_paramname} must be between 0 and 1 (inclusive), got {value}"
         ))
     }
 
     /// Create a dimension mismatch error for arrays that should have the same length
     pub fn arrays_length_mismatch(len1: usize, len2: usize) -> StatsError {
         StatsError::dimension_mismatch(format!(
-            "Arrays must have the same length, got {_len1} and {len2}"
+            "Arrays must have the same length, got {len1} and {len2}"
         ))
     }
 
     /// Create an invalid argument error for empty arrays
     pub fn array_empty(_arrayname: &str) -> StatsError {
-        StatsError::invalid_argument(format!("{_array_name} cannot be empty"))
+        StatsError::invalid_argument(format!("{_arrayname} cannot be empty"))
     }
 
     /// Create an invalid argument error for insufficient data
     pub fn insufficient_data(required: usize, actual: usize, context: &str) -> StatsError {
         StatsError::invalid_argument(format!(
-            "Insufficient data for {context}: requires at least {_required} samples, got {actual}"
+            "Insufficient data for {context}: requires at least {required} samples, got {actual}"
         ))
     }
 
     /// Create a computation error for numerical issues
     pub fn numerical_error(context: &str) -> StatsError {
         StatsError::computation(format!(
-            "Numerical error in {_context}: check for extreme values or scaling issues"
+            "Numerical error in {context}: check for extreme values or scaling issues"
         ))
     }
 
     /// Create a not implemented error with feature name
     pub fn not_implemented(feature: &str) -> StatsError {
-        StatsError::not_implemented(format!("{_feature} is not yet implemented"))
+        StatsError::not_implemented(format!("{feature} is not yet implemented"))
     }
 }
 
@@ -133,7 +133,7 @@ pub mod validation {
     /// Validate that arrays have the same length
     pub fn ensure_same_length<T, U>(arr1: &[T], arr2: &[U]) -> StatsResult<()> {
         if arr1.len() != arr2.len() {
-            Err(helpers::arrays_length_mismatch(_arr1.len(), arr2.len()))
+            Err(helpers::arrays_length_mismatch(arr1.len(), arr2.len()))
         } else {
             Ok(())
         }
@@ -141,8 +141,8 @@ pub mod validation {
 
     /// Validate that an array is not empty
     pub fn ensure_not_empty<T>(_arr: &[T], arrayname: &str) -> StatsResult<()> {
-        if arr.is_empty() {
-            Err(helpers::array_empty(array_name))
+        if _arr.is_empty() {
+            Err(helpers::array_empty(arrayname))
         } else {
             Ok(())
         }

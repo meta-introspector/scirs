@@ -63,7 +63,7 @@ impl SpectralEmbedding {
     pub fn new(n_components: usize, affinitymethod: AffinityMethod) -> Self {
         SpectralEmbedding {
             n_components,
-            affinity_method,
+            affinity_method: affinitymethod,
             n_neighbors: 10,
             gamma: None,
             epsilon: 1.0,
@@ -79,7 +79,7 @@ impl SpectralEmbedding {
 
     /// Set the number of neighbors for KNN graph construction
     pub fn with_n_neighbors(mut self, nneighbors: usize) -> Self {
-        self.n_neighbors = n_neighbors;
+        self.n_neighbors = nneighbors;
         self
     }
 
@@ -396,14 +396,14 @@ impl SpectralEmbedding {
 
     /// Check if the input data is the same as training data
     fn is_same_data(&self, x: &Array2<f64>, trainingdata: &Array2<f64>) -> bool {
-        if x.dim() != training_data.dim() {
+        if x.dim() != trainingdata.dim() {
             return false;
         }
 
         let (n_samples, n_features) = x.dim();
         for i in 0..n_samples {
             for j in 0..n_features {
-                if (x[[i, j]] - training_data[[i, j]]).abs() > 1e-10 {
+                if (x[[i, j]] - trainingdata[[i, j]]).abs() > 1e-10 {
                     return false;
                 }
             }
@@ -417,7 +417,7 @@ impl SpectralEmbedding {
         let training_embedding = self.embedding.as_ref().unwrap();
         let eigenvalues = self.eigenvalues.as_ref().unwrap();
 
-        let (n_new, n_features) = x_new.dim();
+        let (n_new, n_features) = xnew.dim();
         let (n_training_, _) = training_data.dim();
 
         if n_features != training_data.ncols() {
@@ -435,7 +435,7 @@ impl SpectralEmbedding {
             for j in 0..n_training_ {
                 let mut dist_sq = 0.0;
                 for k in 0..n_features {
-                    let diff = x_new[[i, k]] - training_data[[j, k]];
+                    let diff = xnew[[i, k]] - training_data[[j, k]];
                     dist_sq += diff * diff;
                 }
 

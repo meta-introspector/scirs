@@ -22,7 +22,7 @@ pub struct MemoryTracker {
     /// Peak memory usage observed
     peak_usage: usize,
     /// Memory budget limit
-    memory_limit: usize,
+    _memorylimit: usize,
 }
 
 impl MemoryTracker {
@@ -31,7 +31,7 @@ impl MemoryTracker {
         Self {
             current_usage: 0,
             peak_usage: 0,
-            memory_limit: memory_limit,
+            _memorylimit: _memorylimit,
         }
     }
 
@@ -40,7 +40,7 @@ impl MemoryTracker {
         self.current_usage += size;
         self.peak_usage = self.peak_usage.max(self.current_usage);
 
-        if self.current_usage > self.memory_limit {
+        if self.current_usage > self._memorylimit {
             Err(SparseError::ValueError("Memory limit exceeded".to_string()))
         } else {
             Ok(())
@@ -64,7 +64,7 @@ impl MemoryTracker {
 
     /// Check if allocation would exceed limit
     pub fn can_allocate(&self, size: usize) -> bool {
-        self.current_usage + size <= self.memory_limit
+        self.current_usage + size <= self._memorylimit
     }
 }
 
@@ -117,8 +117,8 @@ where
         // Estimate memory usage for this chunk
         let chunk_memory = current_chunk_size * cols * element_size; // Worst case
 
-        if let Some(_tracker) = memory_tracker.as_ref() {
-            if !_tracker.can_allocate(chunk_memory) {
+        if let Some(tracker) = memory_tracker.as_ref() {
+            if !tracker.can_allocate(chunk_memory) {
                 return Err(SparseError::ValueError(
                     "Insufficient memory for chunk processing".to_string(),
                 ));
@@ -126,7 +126,7 @@ where
         }
 
         // Track memory allocation
-        if let Some(_tracker) = memory_tracker.as_mut() {
+        if let Some(tracker) = memory_tracker.as_mut() {
             tracker.allocate(chunk_memory)?;
         }
 
@@ -148,7 +148,7 @@ where
         }
 
         // Deallocate chunk memory
-        if let Some(_tracker) = memory_tracker.as_mut() {
+        if let Some(tracker) = memory_tracker.as_mut() {
             tracker.deallocate(chunk_memory);
         }
     }
@@ -164,7 +164,7 @@ pub struct OutOfCoreProcessor<T>
 where
     T: Float + Debug + Copy + 'static,
 {
-    memory_limit: usize,
+    _memorylimit: usize,
     #[allow(dead_code)]
     chunk_size: usize,
     temp_storage: VecDeque<Vec<T>>,
@@ -176,10 +176,10 @@ where
 {
     /// Create a new out-of-core processor
     pub fn new(_memorylimit: usize) -> Self {
-        let chunk_size = _memory_limit / (8 * std::mem::size_of::<T>()); // Conservative estimate
+        let chunk_size = _memorylimit / (8 * std::mem::size_of::<T>()); // Conservative estimate
 
         Self {
-            memory_limit: memory_limit,
+            _memorylimit: _memorylimit,
             chunk_size,
             temp_storage: VecDeque::new(),
         }
@@ -203,7 +203,7 @@ where
 
         // Calculate optimal chunk size based on memory limit
         let element_size = std::mem::size_of::<T>();
-        let max_chunk_size = self.memory_limit / (4 * element_size * b_cols); // Conservative estimate
+        let max_chunk_size = self._memorylimit / (4 * element_size * b_cols); // Conservative estimate
         let chunk_size = std::cmp::min(max_chunk_size, a_rows).max(1);
 
         let mut result_rows = Vec::new();
@@ -400,7 +400,7 @@ where
             .iter()
             .map(|v| v.len() * std::mem::size_of::<T>())
             .sum();
-        (current_usage, self.memory_limit)
+        (current_usage, self._memorylimit)
     }
 }
 
@@ -516,7 +516,7 @@ where
 {
     available_buffers: Vec<Vec<T>>,
     allocated_buffers: Vec<Vec<T>>,
-    pool_size_limit: usize,
+    _pool_sizelimit: usize,
 }
 
 impl<T> MemoryPool<T>
@@ -528,7 +528,7 @@ where
         Self {
             available_buffers: Vec::new(),
             allocated_buffers: Vec::new(),
-            pool_size_limit: pool_size_limit,
+            _pool_sizelimit: _pool_sizelimit,
         }
     }
 
@@ -544,7 +544,7 @@ where
 
     /// Return a buffer to the pool
     pub fn deallocate(&mut self, mut buffer: Vec<T>) {
-        if self.available_buffers.len() < self.pool_size_limit {
+        if self.available_buffers.len() < self._pool_sizelimit {
             buffer.clear();
             self.available_buffers.push(buffer);
         }
@@ -602,7 +602,7 @@ impl ChunkedOperations {
             let chunk_memory = current_chunk_size * a_cols * element_size * 2; // For both matrices
 
             if let Some(ref mut tracker) = memory_tracker {
-                if !_tracker.can_allocate(chunk_memory) {
+                if !tracker.can_allocate(chunk_memory) {
                     return Err(SparseError::ValueError(
                         "Insufficient memory for chunked addition".to_string(),
                     ));
@@ -690,7 +690,7 @@ impl ChunkedOperations {
             let chunk_memory = current_chunk_size * cols * element_size;
 
             if let Some(ref mut tracker) = memory_tracker {
-                if !_tracker.can_allocate(chunk_memory) {
+                if !tracker.can_allocate(chunk_memory) {
                     return Err(SparseError::ValueError(
                         "Insufficient memory for chunked scaling".to_string(),
                     ));
@@ -750,7 +750,7 @@ impl ChunkedOperations {
             let chunk_memory = current_chunk_size * cols * element_size;
 
             if let Some(ref mut tracker) = memory_tracker {
-                if !_tracker.can_allocate(chunk_memory) {
+                if !tracker.can_allocate(chunk_memory) {
                     return Err(SparseError::ValueError(
                         "Insufficient memory for format conversion".to_string(),
                     ));
@@ -810,7 +810,7 @@ impl ChunkedOperations {
         let memory_needed = rows * element_size * 4; // Conservative estimate
 
         if let Some(ref mut tracker) = memory_tracker {
-            if !_tracker.can_allocate(memory_needed) {
+            if !tracker.can_allocate(memory_needed) {
                 return Err(SparseError::ValueError(
                     "Insufficient memory for bandwidth reduction".to_string(),
                 ));
@@ -1039,7 +1039,7 @@ mod tests {
     }
 
     #[test]
-    fn test_streaming_memory_limit() {
+    fn test_streamingmemory_limit() {
         let rows = vec![0, 0, 1, 2, 2];
         let cols = vec![0, 2, 1, 0, 2];
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -1149,7 +1149,7 @@ mod tests {
     }
 
     #[test]
-    fn test_chunked_operations_memory_limit() {
+    fn test_chunked_operationsmemory_limit() {
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let data = vec![1.0, 2.0, 3.0];

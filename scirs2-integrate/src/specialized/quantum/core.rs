@@ -223,6 +223,17 @@ impl SchrodingerSolver {
     ) -> Result<Vec<QuantumState>> {
         let mut states = vec![initial_state.clone()];
         let mut current_state = initial_state.clone();
+        
+        // Ensure x and psi have consistent lengths
+        if current_state.x.len() != current_state.psi.len() {
+            // Resize x to match psi if they differ (e.g., due to FFT padding requirements)
+            let n = current_state.psi.len();
+            let x_min = current_state.x[0];
+            let x_max = current_state.x[current_state.x.len() - 1];
+            current_state.x = Array1::linspace(x_min, x_max, n);
+            current_state.dx = (x_max - x_min) / (n - 1) as f64;
+        }
+        
         let n_steps = (t_final / self.dt).ceil() as usize;
 
         match self.method {
@@ -263,10 +274,23 @@ impl SchrodingerSolver {
     fn split_operator_step(&self, state: &mut QuantumState) -> Result<()> {
         use scirs2_fft::{fft, ifft};
 
+        // Ensure x and psi have the same length before proceeding
+        if state.x.len() != state.psi.len() {
+            // This shouldn't happen, but handle it gracefully
+            let n = state.psi.len().min(state.x.len());
+            if state.psi.len() > n {
+                state.psi = state.psi.slice(ndarray::s![..n]).to_owned();
+            }
+            if state.x.len() > n {
+                state.x = state.x.slice(ndarray::s![..n]).to_owned();
+            }
+        }
+
         let n = state.psi.len();
 
         // Potential energy evolution (half step)
         let v = self.potential.evaluate_array(&state.x.view());
+        
         for i in 0..n {
             let phase = -v[i] * self.dt / (2.0 * REDUCED_PLANCK);
             state.psi[i] *= Complex64::new(phase.cos(), phase.sin());
@@ -282,7 +306,7 @@ impl SchrodingerSolver {
         let dk = 2.0 * PI / (n as f64 * state.dx);
         let mut k_values = vec![0.0; n];
         for (i, k_value) in k_values.iter_mut().enumerate().take(n) {
-            if i <= n / 2 {
+            if i < n / 2 {
                 *k_value = i as f64 * dk;
             } else {
                 *k_value = (i as f64 - n as f64) * dk;
@@ -303,7 +327,13 @@ impl SchrodingerSolver {
         })?;
 
         // Update state with evolved wave function
-        state.psi = Array1::from_vec(psi_evolved);
+        // Ensure we preserve the original size (FFT might have padded)
+        let psi_vec = if psi_evolved.len() != n {
+            psi_evolved[..n].to_vec()
+        } else {
+            psi_evolved
+        };
+        state.psi = Array1::from_vec(psi_vec);
 
         // Potential energy evolution (half step)
         for i in 0..n {
@@ -490,16 +520,19 @@ impl SchrodingerSolver {
         let mut hamiltonian = Array2::<f64>::zeros((self.n_points, self.n_points));
 
         // Kinetic energy contribution (second derivative via finite differences)
-        let kinetic_factor = -REDUCED_PLANCK.powi(2) / (2.0 * 1.0 * dx.powi(2)); // mass = 1.0 for simplicity
+        // The kinetic energy operator is -ℏ²/(2m) d²/dx²
+        // Using finite differences: d²ψ/dx² ≈ (ψ[i+1] - 2ψ[i] + ψ[i-1])/dx²
+        // So the matrix elements are: T[i,i] = ℏ²/(m*dx²), T[i,i±1] = -ℏ²/(2m*dx²)
+        let kinetic_factor = REDUCED_PLANCK.powi(2) / (2.0 * 1.0 * dx.powi(2)); // mass = 1.0 for simplicity
 
         // Build tridiagonal kinetic energy matrix
         for i in 0..self.n_points {
             if i > 0 {
-                hamiltonian[[i, i - 1]] = kinetic_factor;
+                hamiltonian[[i, i - 1]] = -kinetic_factor;
             }
-            hamiltonian[[i, i]] = -2.0 * kinetic_factor;
+            hamiltonian[[i, i]] = 2.0 * kinetic_factor;
             if i < self.n_points - 1 {
-                hamiltonian[[i, i + 1]] = kinetic_factor;
+                hamiltonian[[i, i + 1]] = -kinetic_factor;
             }
         }
 
@@ -510,10 +543,14 @@ impl SchrodingerSolver {
         }
 
         // Apply boundary conditions (wave function vanishes at boundaries)
+        // For Dirichlet boundary conditions, we can work with a reduced system
+        // excluding the boundary points, but for simplicity, we'll keep them
+        // and set the first and last rows to enforce ψ(0) = ψ(L) = 0
+        // by making the boundary points have very high energy
         hamiltonian.row_mut(0).fill(0.0);
-        hamiltonian[[0, 0]] = 1e10; // Large value to force eigenfunction to zero
+        hamiltonian[[0, 0]] = 1e6; // Large value to push this state to high energy
         hamiltonian.row_mut(self.n_points - 1).fill(0.0);
-        hamiltonian[[self.n_points - 1, self.n_points - 1]] = 1e10;
+        hamiltonian[[self.n_points - 1, self.n_points - 1]] = 1e6;
 
         // Find eigenvalues and eigenvectors using a simple power iteration method
         // for the lowest n_states eigenpairs
@@ -615,13 +652,36 @@ impl SchrodingerSolver {
         mass: f64,
     ) -> QuantumState {
         let norm = 1.0 / (2.0 * PI * sigma.powi(2)).powf(0.25);
-        let psi = x.mapv(|xi| {
-            let gaussian = norm * (-(xi - x0).powi(2) / (4.0 * sigma.powi(2))).exp();
-            let phase = k0 * xi;
-            Complex64::new(gaussian * phase.cos(), gaussian * phase.sin())
-        });
+        
+        // For FFT efficiency, ensure we use a power of 2 size
+        let original_n = x.len();
+        let fft_n = original_n.next_power_of_two();
+        
+        // Create arrays with appropriate size
+        let (x_final, psi_final) = if fft_n != original_n {
+            // Need to pad to power of 2
+            let x_min = x[0];
+            let x_max = x[original_n - 1];
+            let x_padded = Array1::linspace(x_min, x_max, fft_n);
+            
+            let psi_padded = x_padded.mapv(|xi| {
+                let gaussian = norm * (-(xi - x0).powi(2) / (4.0 * sigma.powi(2))).exp();
+                let phase = k0 * xi;
+                Complex64::new(gaussian * phase.cos(), gaussian * phase.sin())
+            });
+            
+            (x_padded, psi_padded)
+        } else {
+            // Already a power of 2
+            let psi = x.mapv(|xi| {
+                let gaussian = norm * (-(xi - x0).powi(2) / (4.0 * sigma.powi(2))).exp();
+                let phase = k0 * xi;
+                Complex64::new(gaussian * phase.cos(), gaussian * phase.sin())
+            });
+            (x.clone(), psi)
+        };
 
-        let mut state = QuantumState::new(psi, x.clone(), 0.0, mass);
+        let mut state = QuantumState::new(psi_final, x_final, 0.0, mass);
         state.normalize();
         state
     }

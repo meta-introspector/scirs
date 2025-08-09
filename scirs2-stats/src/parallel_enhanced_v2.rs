@@ -305,9 +305,9 @@ fn parallel_sum_slice<F>(slice: &[F], config: &ParallelConfig) -> F
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum + std::fmt::Display,
 {
-    let chunk_size = config.get_chunk_size(_slice.len());
+    let chunk_size = config.get_chunk_size(slice.len());
 
-    par_chunks(_slice, chunk_size)
+    par_chunks(slice, chunk_size)
         .map(|chunk| chunk.iter().fold(F::zero(), |acc, &val| acc + val))
         .reduce(|| F::zero(), |a, b| a + b)
 }
@@ -394,7 +394,7 @@ where
 
     for i in 0..n {
         let dx = x[i] - mean_x;
-        let dy = y[i] - mean_y;
+        let dy = y[i] - meany;
         cov = cov + dx * dy;
         var_x = var_x + dx * dx;
         var_y = var_y + dy * dy;

@@ -323,7 +323,7 @@ pub struct ExperienceReplayBuffer<T: Float> {
     buffer: Vec<Experience<T>>,
 
     /// Maximum buffer size
-    max_size: usize,
+    maxsize: usize,
 
     /// Current position in buffer
     position: usize,
@@ -343,8 +343,8 @@ impl<T: Float + Send + Sync> ExperienceReplayBuffer<T> {
     /// Create a new experience replay buffer
     pub fn new(maxsize: usize, alpha: T, beta: T) -> Self {
         Self {
-            buffer: Vec::with_capacity(max_size),
-            max_size,
+            buffer: Vec::with_capacity(maxsize),
+            maxsize,
             position: 0,
             is_full: false,
             alpha,
@@ -355,24 +355,24 @@ impl<T: Float + Send + Sync> ExperienceReplayBuffer<T> {
 
     /// Add experience to buffer
     pub fn add(&mut self, experience: Experience<T>) {
-        if self.buffer.len() < self.max_size {
+        if self.buffer.len() < self.maxsize {
             self.buffer.push(experience);
         } else {
             self.buffer[self.position] = experience;
             self.is_full = true;
         }
 
-        self.position = (self.position + 1) % self.max_size;
+        self.position = (self.position + 1) % self.maxsize;
     }
 
     /// Sample batch from buffer
     pub fn sample(&self, batchsize: usize) -> Vec<Experience<T>> {
         let available_size = if self.is_full {
-            self.max_size
+            self.maxsize
         } else {
             self.buffer.len()
         };
-        let sample_size = batch_size.min(available_size);
+        let sample_size = batchsize.min(available_size);
 
         let mut samples = Vec::new();
         for _ in 0..sample_size {
@@ -386,7 +386,7 @@ impl<T: Float + Send + Sync> ExperienceReplayBuffer<T> {
     /// Get buffer size
     pub fn len(&self) -> usize {
         if self.is_full {
-            self.max_size
+            self.maxsize
         } else {
             self.buffer.len()
         }
@@ -440,13 +440,13 @@ impl<
 
     /// Update using experience replay
     pub fn update_from_replay(&mut self, batchsize: usize) -> Result<ActorCriticMetrics<T>> {
-        if self.replay_buffer.len() < batch_size {
+        if self.replay_buffer.len() < batchsize {
             return Err(OptimError::InvalidConfig(
                 "Not enough experiences in buffer".to_string(),
             ));
         }
 
-        let experiences = self.replay_buffer.sample(batch_size);
+        let experiences = self.replay_buffer.sample(batchsize);
 
         match self.config.method {
             ActorCriticMethod::SAC => self.update_sac(&experiences),
@@ -492,9 +492,9 @@ impl<
         let mut critic_losses = Vec::new();
         for (_i, critic) in self.critics.iter().enumerate() {
             let q_values = self.compute_q_values(critic, &states, &actions)?;
-            let target_q = self.compute_target_q_sac(&next_states, &rewards, &dones)?;
+            let targetq = self.compute_target_q_sac(&next_states, &rewards, &dones)?;
 
-            let critic_loss = self.compute_critic_loss(&q_values, &target_q)?;
+            let critic_loss = self.compute_critic_loss(&q_values, &targetq)?;
             critic_losses.push(critic_loss);
 
             // Update critic (simplified)
@@ -656,7 +656,7 @@ impl<
             self.sample_actions_from_distribution(&action_dist)?
         };
 
-        let target_q = if let Some(ref target_critics) = self.target_critics {
+        let targetq = if let Some(ref target_critics) = self.target_critics {
             self.compute_q_values(&target_critics[0], &next_states, &target_actions)?
         } else {
             self.compute_q_values(&self.critics[0], &next_states, &target_actions)?
@@ -667,7 +667,7 @@ impl<
         let mut td_targets = Array1::zeros(rewards.len());
         for i in 0..rewards.len() {
             td_targets[i] = rewards[i]
-                + gamma * target_q[i] * T::from(if dones[i] { 0.0 } else { 1.0 }).unwrap();
+                + gamma * targetq[i] * T::from(if dones[i] { 0.0 } else { 1.0 }).unwrap();
         }
 
         let q_values = self.compute_q_values(&self.critics[0], &states, &actions)?;
@@ -822,9 +822,9 @@ impl<
             ));
         }
 
-        let batch_size = experiences.len();
+        let batchsize = experiences.len();
         let state_dim = experiences[0].state.len();
-        let mut states = Array2::zeros((batch_size, state_dim));
+        let mut states = Array2::zeros((batchsize, state_dim));
 
         for (i, exp) in experiences.iter().enumerate() {
             states.row_mut(i).assign(&exp.state);
@@ -834,9 +834,9 @@ impl<
     }
 
     fn extract_actions(&self, experiences: &[Experience<T>]) -> Result<Array2<T>> {
-        let batch_size = experiences.len();
+        let batchsize = experiences.len();
         let action_dim = experiences[0].action.len();
-        let mut actions = Array2::zeros((batch_size, action_dim));
+        let mut actions = Array2::zeros((batchsize, action_dim));
 
         for (i, exp) in experiences.iter().enumerate() {
             actions.row_mut(i).assign(&exp.action);
@@ -851,9 +851,9 @@ impl<
     }
 
     fn extract_next_states(&self, experiences: &[Experience<T>]) -> Result<Array2<T>> {
-        let batch_size = experiences.len();
+        let batchsize = experiences.len();
         let state_dim = experiences[0].next_state.len();
-        let mut next_states = Array2::zeros((batch_size, state_dim));
+        let mut next_states = Array2::zeros((batchsize, state_dim));
 
         for (i, exp) in experiences.iter().enumerate() {
             next_states.row_mut(i).assign(&exp.next_state);
@@ -888,7 +888,7 @@ impl<
     }
 
     fn compute_critic_loss(&self, q_values: &Array1<T>, targetq: &Array1<T>) -> Result<T> {
-        Ok((q_values - target_q)
+        Ok((q_values - targetq)
             .mapv(|x| x * x)
             .mean()
             .unwrap_or(T::zero()))

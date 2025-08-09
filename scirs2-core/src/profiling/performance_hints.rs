@@ -548,7 +548,7 @@ impl PerformanceTracker {
     /// Start tracking performance for a function
     pub fn new(functionname: &str) -> Self {
         Self {
-            functionname: functionname.to_string(),
+            function_name: functionname.to_string(),
             start_time: Instant::now(),
         }
     }

@@ -90,41 +90,41 @@ impl GpuVisionContext {
 
     /// Create a new GPU vision context with a specific backend
     pub fn with_backend(backend: GpuBackend) -> Result<Self> {
-        match GpuContext::new(_backend) {
+        match GpuContext::new(backend) {
             Ok(context) => {
-                eprintln!("Successfully created GPU context with requested backend: {_backend:?}");
-                Ok(Self { context, _backend })
+                eprintln!("Successfully created GPU context with requested backend: {backend:?}");
+                Ok(Self { context, backend })
             }
             Err(error) => {
-                let detailed_error = match _backend {
+                let detailed_error = match backend {
                     GpuBackend::Cuda => {
                         format!(
-                            "CUDA _backend failed: {error}. Ensure NVIDIA drivers are installed and CUDA-capable GPU is available."
+                            "CUDA backend failed: {error}. Ensure NVIDIA drivers are installed and CUDA-capable GPU is available."
                         )
                     }
                     GpuBackend::Metal => {
                         format!(
-                            "Metal _backend failed: {error}. Metal is only available on macOS with compatible hardware."
+                            "Metal backend failed: {error}. Metal is only available on macOS with compatible hardware."
                         )
                     }
                     GpuBackend::OpenCL => {
                         format!(
-                            "OpenCL _backend failed: {error}. Check OpenCL runtime installation and driver support."
+                            "OpenCL backend failed: {error}. Check OpenCL runtime installation and driver support."
                         )
                     }
                     GpuBackend::Wgpu => {
                         format!(
-                            "WebGPU _backend failed: {error}. Check GPU drivers and WebGPU support."
+                            "WebGPU backend failed: {error}. Check GPU drivers and WebGPU support."
                         )
                     }
                     GpuBackend::Cpu => {
                         format!(
-                            "CPU _backend failed: {error}. This should not happen as CPU _backend should always be available."
+                            "CPU backend failed: {error}. This should not happen as CPU backend should always be available."
                         )
                     }
                     GpuBackend::Rocm => {
                         format!(
-                            "ROCm _backend failed: {error}. Check ROCm installation and AMD GPU drivers."
+                            "ROCm backend failed: {error}. Check ROCm installation and AMD GPU drivers."
                         )
                     }
                 };
@@ -608,8 +608,8 @@ pub fn gpu_gaussian_blur(
 /// Generate 1D Gaussian kernel
 #[allow(dead_code)]
 fn generate_gaussian_kernel(size: usize, sigma: f32) -> Vec<f32> {
-    let half = _size / 2;
-    let mut kernel = vec![0.0f32; _size];
+    let half = size / 2;
+    let mut kernel = vec![0.0f32; size];
     let mut sum = 0.0f32;
 
     for (i, kernel_val) in kernel.iter_mut().enumerate() {
@@ -1172,7 +1172,7 @@ impl GpuBenchmark {
     pub fn benchmark_convolution(&self, imagesize: (usize, usize), kernel_size: usize) -> f64 {
         use std::time::Instant;
 
-        let image = Array2::zeros(image_size);
+        let image = Array2::zeros(imagesize);
         let kernel = Array2::ones((kernel_size, kernel_size));
 
         let start = Instant::now();
@@ -1312,8 +1312,8 @@ extern "C" __global__ void batch_conv2d(
     int k_half_h = k_height / 2;
     int k_half_w = k_width / 2;
     float sum = 0.0f;
-    int image_size = height * width;
-    int batch_offset = batch * image_size;
+    int imagesize = height * width;
+    int batch_offset = batch * imagesize;
 
     for (int ky = 0; ky < k_height; ky++) {
         for (int kx = 0; kx < k_width; kx++) {
@@ -1361,8 +1361,8 @@ fn batch_conv2d(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let k_half_h = i32(params.k_height / 2u);
     let k_half_w = i32(params.k_width / 2u);
     var sum = 0.0;
-    let image_size = params.height * params.width;
-    let batch_offset = batch * image_size;
+    let imagesize = params.height * params.width;
+    let batch_offset = batch * imagesize;
 
     for (var ky = 0u; ky < params.k_height; ky = ky + 1u) {
         for (var kx = 0u; kx < params.k_width; kx = kx + 1u) {
@@ -1476,7 +1476,7 @@ impl AsyncGpuProcessor {
             }
             GpuOperation::GaussianBlur(sigma) => gpu_gaussian_blur(&self.context, image, sigma),
             GpuOperation::SobelEdges => {
-                let (__, magnitude) = gpu_sobel_gradients(&self.context, image)?;
+                let (_, magnitude) = gpu_sobel_gradients(&self.context, image)?;
                 Ok(magnitude)
             }
         }
@@ -2316,7 +2316,7 @@ fn fallback_multi_head_attention(
 
         // Softmax
         let mut attention_weights = Array2::zeros(scaled_scores.dim());
-        ndarray::Zip::from(attentionweights.rows_mut())
+        ndarray::Zip::from(attention_weights.rows_mut())
             .and(scaled_scores.rows())
             .for_each(|mut row, score_row| {
                 let max_val = score_row.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
@@ -2330,7 +2330,7 @@ fn fallback_multi_head_attention(
 
         // Apply attention to values: attention_weights @ V
         let head_output = crate::simd_ops::simd_matmul_attention_advanced(
-            &attentionweights.view(),
+            &attention_weights.view(),
             &v_head.view(),
         )?;
 

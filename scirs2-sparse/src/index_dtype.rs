@@ -113,9 +113,9 @@ where
     T: PrimInt + 'static + TryFrom<usize>,
     <T as TryFrom<usize>>::Error: std::fmt::Debug,
 {
-    let mut result = Vec::with_capacity(_arrays.len());
+    let mut result = Vec::with_capacity(arrays.len());
 
-    for array in _arrays {
+    for array in arrays {
         let mut converted = Array1::uninit(array.len());
 
         for (i, &val) in array.iter().enumerate() {

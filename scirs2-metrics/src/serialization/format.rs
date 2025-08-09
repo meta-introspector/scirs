@@ -159,21 +159,21 @@ where
     T: Serialize,
 {
     match format {
-        SerializationFormat::Json => serde_json::to_vec_pretty(_data)
+        SerializationFormat::Json => serde_json::to_vec_pretty(data)
             .map_err(|e| MetricsError::SerializationError(e.to_string())),
         SerializationFormat::Yaml => {
-            let yaml = serde_yaml::to_string(_data)
+            let yaml = serde_yaml::to_string(data)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
             Ok(yaml.into_bytes())
         }
         SerializationFormat::Toml => {
-            let toml = toml::to_string_pretty(_data)
+            let toml = toml::to_string_pretty(data)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
             Ok(toml.into_bytes())
         }
         SerializationFormat::Cbor => {
             let mut bytes = Vec::new();
-            ciborium::ser::into_writer(_data, &mut bytes)
+            ciborium::ser::into_writer(data, &mut bytes)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
             Ok(bytes)
         }
@@ -196,20 +196,20 @@ where
     T: for<'de> Deserialize<'de>,
 {
     match format {
-        SerializationFormat::Json => serde_json::from_slice(_data)
+        SerializationFormat::Json => serde_json::from_slice(data)
             .map_err(|e| MetricsError::SerializationError(e.to_string())),
         SerializationFormat::Yaml => {
-            let yaml_str = std::str::from_utf8(_data)
+            let yaml_str = std::str::from_utf8(data)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
             serde_yaml::from_str(yaml_str)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))
         }
         SerializationFormat::Toml => {
-            let toml_str = std::str::from_utf8(_data)
+            let toml_str = std::str::from_utf8(data)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
             toml::from_str(toml_str).map_err(|e| MetricsError::SerializationError(e.to_string()))
         }
-        SerializationFormat::Cbor => ciborium::de::from_reader(_data)
+        SerializationFormat::Cbor => ciborium::de::from_reader(data)
             .map_err(|e| MetricsError::SerializationError(e.to_string())),
     }
 }
@@ -231,7 +231,7 @@ where
     T: Serialize,
     P: AsRef<Path>,
 {
-    let serialized = serialize(_data, format)?;
+    let serialized = serialize(data, format)?;
 
     let mut file = File::create(path).map_err(|e| MetricsError::IOError(e.to_string()))?;
 
@@ -257,7 +257,7 @@ where
     T: for<'de> Deserialize<'de>,
     P: AsRef<Path>,
 {
-    let mut file = File::open(_path).map_err(|e| MetricsError::IOError(e.to_string()))?;
+    let mut file = File::open(path).map_err(|e| MetricsError::IOError(e.to_string()))?;
 
     let mut data = Vec::new();
     file.read_to_end(&mut data)

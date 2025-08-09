@@ -631,9 +631,9 @@ pub fn validate_config_against_schema(
 #[allow(dead_code)]
 fn validate_field_value(value: &ConfigValue, schema: &FieldSchema) -> Result<()> {
     for constraint in &schema.constraints {
-        match (_value, constraint) {
+        match (value, constraint) {
             (ConfigValue::Float(v), ValidationConstraint::Min(min)) => {
-                if *v < *min {
+                if v < min {
                     return Err(OptimError::InvalidConfig(format!(
                         "Value {} is below minimum {}",
                         v, min
@@ -641,7 +641,7 @@ fn validate_field_value(value: &ConfigValue, schema: &FieldSchema) -> Result<()>
                 }
             }
             (ConfigValue::Float(v), ValidationConstraint::Max(max)) => {
-                if *v > *max {
+                if v > max {
                     return Err(OptimError::InvalidConfig(format!(
                         "Value {} is above maximum {}",
                         v, max
@@ -663,7 +663,7 @@ fn validate_field_value(value: &ConfigValue, schema: &FieldSchema) -> Result<()>
                 }
             }
             (ConfigValue::Float(v), ValidationConstraint::Range(min, max)) => {
-                if *v < *min || *v > *max {
+                if v < min || v > max {
                     return Err(OptimError::InvalidConfig(format!(
                         "Value {} is outside range [{}, {}]",
                         v, min, max

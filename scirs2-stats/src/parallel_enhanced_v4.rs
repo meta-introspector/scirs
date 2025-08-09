@@ -363,8 +363,8 @@ where
     fn calculate_optimal_chunk_size(&self, datalen: usize) -> usize {
         let num_threads = self.config.num_threads.unwrap_or_else(num_cpus::get);
         let ideal_chunks = num_threads * 2; // Allow for load balancing
-        let chunk_size = (data_len / ideal_chunks).max(self.config.min_chunk_size);
-        chunk_size.min(data_len)
+        let chunk_size = (datalen / ideal_chunks).max(self.config.min_chunk_size);
+        chunk_size.min(datalen)
     }
 
     /// Helper: Compute correlation coefficient
@@ -449,7 +449,7 @@ where
         + num_traits::FromPrimitive,
 {
     let processor = EnhancedParallelProcessor::<F>::new();
-    processor.mean_parallel_enhanced(_data)
+    processor.mean_parallel_enhanced(data)
 }
 
 #[allow(dead_code)]
@@ -469,7 +469,7 @@ where
         + num_traits::FromPrimitive,
 {
     let processor = EnhancedParallelProcessor::<F>::new();
-    processor.variance_parallel_enhanced(_data, ddof)
+    processor.variance_parallel_enhanced(data, ddof)
 }
 
 #[allow(dead_code)]
@@ -489,7 +489,7 @@ where
         + num_traits::FromPrimitive,
 {
     let processor = EnhancedParallelProcessor::<F>::new();
-    processor.correlation_matrix_parallel(_matrix)
+    processor.correlation_matrix_parallel(matrix)
 }
 
 #[allow(dead_code)]

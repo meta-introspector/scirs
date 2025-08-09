@@ -90,7 +90,7 @@ impl MultivariateNormal {
         })?;
 
         Ok(MultivariateNormal {
-            mean: mean,
+            mean: _mean,
             cov,
             dim,
             cholesky_l,

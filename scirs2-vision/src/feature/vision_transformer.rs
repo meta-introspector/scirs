@@ -48,8 +48,8 @@ pub struct ViTConfig {
     /// Number of attention heads
     pub num_heads: usize,
     /// Hidden dimension
-    pub hidden_dim: usize,
-    /// MLP dimension (typically 4x hidden_dim)
+    pub hiddendim: usize,
+    /// MLP dimension (typically 4x hiddendim)
     pub mlp_dim: usize,
     /// Dropout rate
     pub dropout_rate: f32,
@@ -66,7 +66,7 @@ impl Default for ViTConfig {
             patch_size: 16,
             num_layers: 12,
             num_heads: 12,
-            hidden_dim: 768,
+            hiddendim: 768,
             mlp_dim: 3072,
             dropout_rate: 0.1,
             use_gpu: true,
@@ -165,28 +165,28 @@ pub struct ClassificationHead {
     /// Bias terms
     bias: Array1<f32>,
     /// Number of classes
-    num_classes: usize,
+    numclasses: usize,
 }
 
 impl VisionTransformer {
     /// Create a new Vision Transformer with the given configuration
     pub fn new(config: ViTConfig) -> Result<Self> {
-        let num_patches = (_config.image_size.0 / config.patch_size)
-            * (_config.image_size.1 / config.patch_size);
+        let num_patches = (config.image_size.0 / config.patch_size)
+            * (config.image_size.1 / config.patch_size);
         let seq_length = num_patches + 1; // +1 for class token
 
         // Initialize components
-        let patch_embedding = PatchEmbedding::new(&_config)?;
-        let pos_embedding = Self::initialize_positional_embeddings(seq_length, config.hidden_dim);
+        let patch_embedding = PatchEmbedding::new(&config)?;
+        let pos_embedding = Self::initialize_positional_embeddings(seq_length, config.hiddendim);
         let cls_token =
-            Array1::fromshape_fn(_config.hidden_dim, |_| rand::random::<f32>() * 0.02 - 0.01);
+            Array1::fromshape_fn(config.hiddendim, |_| rand::random::<f32>() * 0.02 - 0.01);
 
-        let mut layers = Vec::with_capacity(_config.num_layers);
-        for _ in 0.._config.num_layers {
-            layers.push(TransformerLayer::new(&_config)?);
+        let mut layers = Vec::with_capacity(config.num_layers);
+        for _ in 0..config.num_layers {
+            layers.push(TransformerLayer::new(&config)?);
         }
 
-        let layer_norm = LayerNorm::new(_config.hidden_dim);
+        let layer_norm = LayerNorm::new(config.hiddendim);
 
         let gpu_context = if config.use_gpu {
             GpuVisionContext::new().ok()
@@ -208,7 +208,7 @@ impl VisionTransformer {
 
     /// Add classification head for image classification
     pub fn with_classification_head(mut self, numclasses: usize) -> Self {
-        let head = ClassificationHead::new(self.config.hidden_dim, num_classes);
+        let head = ClassificationHead::new(self.config.hiddendim, numclasses);
         self.classification_head = Some(head);
         self
     }
@@ -299,7 +299,7 @@ impl VisionTransformer {
         // Skip class token (index 0) and reshape patch tokens
         let patch_features = features.slice(s![1.., ..]);
         let dense_features = patch_features
-            .toshape((num_patches_h, num_patches_w, self.config.hidden_dim))?
+            .toshape((num_patches_h, num_patches_w, self.config.hiddendim))?
             .to_owned();
 
         Ok(dense_features)
@@ -307,11 +307,11 @@ impl VisionTransformer {
 
     /// Initialize positional embeddings
     fn initialize_positional_embeddings(_seq_length: usize, hiddendim: usize) -> Array2<f32> {
-        let mut pos_emb = Array2::zeros((_seq_length, hidden_dim));
+        let mut pos_emb = Array2::zeros((_seq_length, hiddendim));
 
         for pos in 0.._seq_length {
-            for i in 0..hidden_dim {
-                let angle = pos as f32 / 10000.0_f32.powf(2.0 * (i / 2) as f32 / hidden_dim as f32);
+            for i in 0..hiddendim {
+                let angle = pos as f32 / 10000.0_f32.powf(2.0 * (i / 2) as f32 / hiddendim as f32);
                 if i % 2 == 0 {
                     pos_emb[[pos, i]] = angle.sin();
                 } else {
@@ -328,10 +328,10 @@ impl VisionTransformer {
         &self,
         patch_embeddings: &Array2<f32>,
     ) -> Result<Array2<f32>> {
-        let (num_patches, hidden_dim) = patch_embeddings.dim();
+        let (num_patches, hiddendim) = patch_embeddings.dim();
         let seq_length = num_patches + 1;
 
-        let mut _embeddings = Array2::zeros((seq_length, hidden_dim));
+        let mut _embeddings = Array2::zeros((seq_length, hiddendim));
 
         // Add class token
         embeddings.slice_mut(s![0, ..]).assign(&self.cls_token);
@@ -350,7 +350,7 @@ impl PatchEmbedding {
     /// Create new patch embedding layer
     fn new(config: &ViTConfig) -> Result<Self> {
         let in_channels = 1; // Grayscale
-        let out_channels = config.hidden_dim;
+        let out_channels = config.hiddendim;
         let kernel_size = config.patch_size;
 
         // Initialize convolution weights (out_channels, in_channels, kernel_h, kernel_w)
@@ -390,13 +390,13 @@ impl PatchEmbedding {
     fn cpu_forward(&self, image: &ArrayView2<f32>) -> Result<Array2<f32>> {
         let (img_h, img_w) = image.dim();
         let patch_size = self.convweights.shape()[2];
-        let hidden_dim = self.convweights.shape()[0];
+        let hiddendim = self.convweights.shape()[0];
 
         let num_patches_h = img_h / patch_size;
         let num_patches_w = img_w / patch_size;
         let num_patches = num_patches_h * num_patches_w;
 
-        let mut embeddings = Array2::zeros((num_patches, hidden_dim));
+        let mut embeddings = Array2::zeros((num_patches, hiddendim));
 
         let mut patch_idx = 0;
         for patch_y in 0..num_patches_h {
@@ -447,10 +447,10 @@ impl PatchEmbedding {
 impl TransformerLayer {
     /// Create new transformer layer
     fn new(config: &ViTConfig) -> Result<Self> {
-        let attention = MultiHeadAttention::new(_config)?;
-        let mlp = MLP::new(_config)?;
-        let norm1 = LayerNorm::new(_config.hidden_dim);
-        let norm2 = LayerNorm::new(_config.hidden_dim);
+        let attention = MultiHeadAttention::new(config)?;
+        let mlp = MLP::new(config)?;
+        let norm1 = LayerNorm::new(config.hiddendim);
+        let norm2 = LayerNorm::new(config.hiddendim);
 
         Ok(Self {
             attention,
@@ -486,11 +486,11 @@ impl TransformerLayer {
 impl MultiHeadAttention {
     /// Create new multi-head attention layer
     fn new(config: &ViTConfig) -> Result<Self> {
-        let hidden_dim = config.hidden_dim;
+        let hiddendim = config.hiddendim;
         let num_heads = config.num_heads;
-        let head_dim = hidden_dim / num_heads;
+        let head_dim = hiddendim / num_heads;
 
-        if hidden_dim % num_heads != 0 {
+        if hiddendim % num_heads != 0 {
             return Err(VisionError::InvalidInput(
                 "Hidden dimension must be divisible by number of heads".to_string(),
             ));
@@ -499,16 +499,16 @@ impl MultiHeadAttention {
         let scale = 1.0 / (head_dim as f32).sqrt();
 
         // Initialize projection weights
-        let q_proj = Array2::fromshape_fn((hidden_dim, hidden_dim), |_| {
+        let q_proj = Array2::fromshape_fn((hiddendim, hiddendim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
-        let k_proj = Array2::fromshape_fn((hidden_dim, hidden_dim), |_| {
+        let k_proj = Array2::fromshape_fn((hiddendim, hiddendim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
-        let v_proj = Array2::fromshape_fn((hidden_dim, hidden_dim), |_| {
+        let v_proj = Array2::fromshape_fn((hiddendim, hiddendim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
-        let out_proj = Array2::fromshape_fn((hidden_dim, hidden_dim), |_| {
+        let out_proj = Array2::fromshape_fn((hiddendim, hiddendim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
 
@@ -533,9 +533,9 @@ impl MultiHeadAttention {
         let v = input.dot(&self.v_proj);
 
         // Reshape for multi-head attention
-        let q_heads = self.reshape_for_heads(&q, seq_len)?;
-        let k_heads = self.reshape_for_heads(&k, seq_len)?;
-        let v_heads = self.reshape_for_heads(&v, seq_len)?;
+        let q_heads = self.reshape_for_heads(&q, seqlen)?;
+        let k_heads = self.reshape_for_heads(&k, seqlen)?;
+        let v_heads = self.reshape_for_heads(&v, seqlen)?;
 
         // Compute scaled dot-product attention for each head
         let mut attention_outputs = Vec::new();
@@ -549,7 +549,7 @@ impl MultiHeadAttention {
         }
 
         // Concatenate heads
-        let concatenated = self.concatenate_heads(&attention_outputs, seq_len)?;
+        let concatenated = self.concatenate_heads(&attention_outputs, seqlen)?;
 
         // Apply output projection
         let output = concatenated.dot(&self.out_proj);
@@ -560,9 +560,9 @@ impl MultiHeadAttention {
     /// Reshape input for multi-head attention
     fn reshape_for_heads(&self, input: &Array2<f32>, seqlen: usize) -> Result<Array3<f32>> {
         let reshaped = input
-            .toshape((seq_len, self.num_heads, self.head_dim))?
+            .toshape((seqlen, self.num_heads, self.head_dim))?
             .to_owned();
-        // Transpose to (num_heads, seq_len, head_dim)
+        // Transpose to (num_heads, seqlen, head_dim)
         Ok(reshaped.permuted_axes([1, 0, 2]))
     }
 
@@ -580,7 +580,7 @@ impl MultiHeadAttention {
         let attention_weights = self.softmax(&scores)?;
 
         // Apply attention to values: attention_weights @ V
-        let output = attentionweights.dot(v);
+        let output = attention_weights.dot(v);
 
         Ok(output)
     }
@@ -603,7 +603,7 @@ impl MultiHeadAttention {
 
     /// Concatenate attention heads
     fn concatenate_heads(&self, heads: &[Array2<f32>], seqlen: usize) -> Result<Array2<f32>> {
-        let mut concatenated = Array2::zeros((seq_len, self.num_heads * self.head_dim));
+        let mut concatenated = Array2::zeros((seqlen, self.num_heads * self.head_dim));
 
         for (head_idx, head_output) in heads.iter().enumerate() {
             let start_dim = head_idx * self.head_dim;
@@ -620,17 +620,17 @@ impl MultiHeadAttention {
 impl MLP {
     /// Create new MLP layer
     fn new(config: &ViTConfig) -> Result<Self> {
-        let hidden_dim = config.hidden_dim;
+        let hiddendim = config.hiddendim;
         let mlp_dim = config.mlp_dim;
 
-        let fc1_weights = Array2::fromshape_fn((hidden_dim, mlp_dim), |_| {
+        let fc1_weights = Array2::fromshape_fn((hiddendim, mlp_dim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
         let fc1_bias = Array1::zeros(mlp_dim);
-        let fc2_weights = Array2::fromshape_fn((mlp_dim, hidden_dim), |_| {
+        let fc2_weights = Array2::fromshape_fn((mlp_dim, hiddendim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
-        let fc2_bias = Array1::zeros(hidden_dim);
+        let fc2_bias = Array1::zeros(hiddendim);
 
         Ok(Self {
             fc1_weights,
@@ -691,15 +691,15 @@ impl LayerNorm {
 impl ClassificationHead {
     /// Create new classification head
     fn new(_hidden_dim: usize, numclasses: usize) -> Self {
-        let weights = Array2::fromshape_fn((_hidden_dim, num_classes), |_| {
+        let weights = Array2::fromshape_fn((_hidden_dim, numclasses), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
-        let bias = Array1::zeros(num_classes);
+        let bias = Array1::zeros(numclasses);
 
         Self {
             weights,
             bias,
-            num_classes,
+            numclasses,
         }
     }
 
@@ -785,7 +785,7 @@ impl SwinTransformer {
     pub fn new(config: SwinConfig) -> Result<Self> {
         let mut stages = Vec::new();
 
-        for stage_idx in 0.._config.num_stages {
+        for stage_idx in 0..config.num_stages {
             let stage = SwinStage::new(
                 config.hidden_dims[stage_idx],
                 config.num_layers[stage_idx],
@@ -831,7 +831,7 @@ impl SwinTransformer {
 impl SwinStage {
     /// Create new Swin stage
     fn new(
-        hidden_dim: usize,
+        hiddendim: usize,
         num_layers: usize,
         num_heads: usize,
         window_size: usize,
@@ -845,12 +845,12 @@ impl SwinStage {
             } else {
                 window_size / 2
             };
-            let block = SwinTransformerBlock::new(hidden_dim, num_heads, window_size, shift_size)?;
+            let block = SwinTransformerBlock::new(hiddendim, num_heads, window_size, shift_size)?;
             layers.push(block);
         }
 
         let patch_merging = if use_patch_merging {
-            Some(PatchMerging::new(hidden_dim)?)
+            Some(PatchMerging::new(hiddendim)?)
         } else {
             None
         };
@@ -882,14 +882,14 @@ impl SwinStage {
 impl SwinTransformerBlock {
     /// Create new Swin transformer block
     fn new(
-        hidden_dim: usize,
+        hiddendim: usize,
         num_heads: usize,
         window_size: usize,
         shift_size: usize,
     ) -> Result<Self> {
         // Create a simplified ViT config for the attention mechanism
         let vit_config = ViTConfig {
-            hidden_dim,
+            hiddendim,
             num_heads,
             ..ViTConfig::default()
         };
@@ -900,8 +900,8 @@ impl SwinTransformerBlock {
             window_size,
         };
         let mlp = MLP::new(&vit_config)?;
-        let norm1 = LayerNorm::new(hidden_dim);
-        let norm2 = LayerNorm::new(hidden_dim);
+        let norm1 = LayerNorm::new(hiddendim);
+        let norm2 = LayerNorm::new(hiddendim);
 
         Ok(Self {
             window_attention,
@@ -946,10 +946,10 @@ impl WindowAttention {
 impl PatchMerging {
     /// Create new patch merging layer
     fn new(_hiddendim: usize) -> Result<Self> {
-        let reduction = Array2::fromshape_fn((4 * hidden_dim, 2 * hidden_dim), |_| {
+        let reduction = Array2::fromshape_fn((4 * hiddendim, 2 * hiddendim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
-        let norm = LayerNorm::new(4 * hidden_dim);
+        let norm = LayerNorm::new(4 * hiddendim);
 
         Ok(Self { reduction, norm })
     }
@@ -1050,7 +1050,7 @@ impl TransformerFeatureMatcher {
     pub fn new(config: MatcherConfig) -> Result<Self> {
         // Create a vision transformer for feature encoding
         let vit_config = ViTConfig {
-            hidden_dim: config.feature_dim,
+            hiddendim: config.feature_dim,
             num_heads: config.num_heads,
             num_layers: 6, // Encoder depth
             use_gpu: config.use_gpu,
@@ -1058,7 +1058,7 @@ impl TransformerFeatureMatcher {
         };
 
         let feature_encoder = VisionTransformer::new(vit_config)?;
-        let cross_attention = CrossAttentionMatcher::new(&_config)?;
+        let cross_attention = CrossAttentionMatcher::new(&config)?;
 
         Ok(Self {
             config,
@@ -1110,8 +1110,8 @@ impl CrossAttentionMatcher {
     fn new(config: &MatcherConfig) -> Result<Self> {
         let mut layers = Vec::new();
 
-        for _ in 0.._config.num_layers {
-            let layer = CrossAttentionLayer::new(_config)?;
+        for _ in 0..config.num_layers {
+            let layer = CrossAttentionLayer::new(config)?;
             layers.push(layer);
         }
 
@@ -1163,7 +1163,7 @@ impl CrossAttentionLayer {
     /// Create new cross-attention layer
     fn new(config: &MatcherConfig) -> Result<Self> {
         let vit_config = ViTConfig {
-            hidden_dim: config.feature_dim,
+            hiddendim: config.feature_dim,
             num_heads: config.num_heads,
             ..ViTConfig::default()
         };
@@ -1171,9 +1171,9 @@ impl CrossAttentionLayer {
         let self_attention = MultiHeadAttention::new(&vit_config)?;
         let cross_attention = MultiHeadAttention::new(&vit_config)?;
         let mlp = MLP::new(&vit_config)?;
-        let norm1 = LayerNorm::new(_config.feature_dim);
-        let norm2 = LayerNorm::new(_config.feature_dim);
-        let norm3 = LayerNorm::new(_config.feature_dim);
+        let norm1 = LayerNorm::new(config.feature_dim);
+        let norm2 = LayerNorm::new(config.feature_dim);
+        let norm3 = LayerNorm::new(config.feature_dim);
 
         Ok(Self {
             self_attention,

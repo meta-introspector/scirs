@@ -112,7 +112,7 @@ where
     // Calculate t-values for each coefficient
     _coefficients
         .iter()
-        .zip(std_errors.iter())
+        .zip(stderrors.iter())
         .map(|(&coef, &se)| {
             if se < F::epsilon() {
                 F::from(1e10).unwrap() // Large t-value for small standard error
@@ -298,7 +298,7 @@ pub(crate) fn _calculate_residuals<F>(y: &ArrayView1<F>, ypred: &Array1<F>) -> A
 where
     F: Float + 'static + std::fmt::Display,
 {
-    y.to_owned() - y_pred
+    y.to_owned() - ypred
 }
 
 /// Calculate mean and sum of squares

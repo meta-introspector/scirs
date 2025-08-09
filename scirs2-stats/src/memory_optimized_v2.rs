@@ -308,8 +308,8 @@ impl<F: Float + NumCast + std::fmt::Display> StreamingCovariance<F> {
     pub fn new(nfeatures: usize, pool: Rc<MemoryPool<F>>) -> Self {
         Self {
             n: 0,
-            means: vec![F::zero(); n_features],
-            cov: vec![vec![F::zero(); n_features]; n_features],
+            means: vec![F::zero(); nfeatures],
+            cov: vec![vec![F::zero(); nfeatures]; nfeatures],
             pool,
         }
     }

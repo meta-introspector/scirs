@@ -58,7 +58,7 @@ pub trait ProcessingStage: Send + 'static {
 /// Stream processing pipeline
 pub struct StreamPipeline {
     stages: Vec<Box<dyn ProcessingStage>>,
-    buffer_size: usize,
+    _buffersize: usize,
     num_threads: usize,
     metrics: Arc<Mutex<PipelineMetrics>>,
 }
@@ -89,7 +89,7 @@ impl StreamPipeline {
     pub fn new() -> Self {
         Self {
             stages: Vec::new(),
-            buffer_size: 10,
+            _buffersize: 10,
             num_threads: num_cpus::get(),
             metrics: Arc::new(Mutex::new(PipelineMetrics::default())),
         }
@@ -97,7 +97,7 @@ impl StreamPipeline {
 
     /// Set buffer size for inter-stage communication
     pub fn with_buffer_size(mut self, size: usize) -> Self {
-        self.buffer_size = size;
+        self._buffersize = size;
         self
     }
 
@@ -118,18 +118,18 @@ impl StreamPipeline {
     where
         I: Iterator<Item = Frame> + Send + 'static,
     {
-        let (tx, rx) = bounded(self.buffer_size);
+        let (tx, rx) = bounded(self._buffersize);
         let metrics = Arc::clone(&self.metrics);
 
         // Create pipeline stages with channels
         let mut channels = vec![rx];
 
         for stage in self.stages.drain(..) {
-            let (stage_tx, stage_rx) = bounded(self.buffer_size);
+            let (stage_tx, stage_rx) = bounded(self._buffersize);
             channels.push(stage_rx);
 
             let stage_metrics = Arc::clone(&metrics);
-            let stage_name = stage.name().to_string();
+            let stagename = stage.name().to_string();
             let prev_rx = channels[channels.len() - 2].clone();
 
             // Spawn worker thread for this stage
@@ -161,7 +161,7 @@ impl StreamPipeline {
                             }
                         }
                         Err(e) => {
-                            eprintln!("Stage {stage_name} error: {e}");
+                            eprintln!("Stage {stagename} error: {e}");
                             if let Ok(mut m) = stage_metrics.lock() {
                                 m.dropped_frames += 1;
                             }
@@ -274,7 +274,7 @@ pub struct BlurStage {
 impl BlurStage {
     /// Create a new Gaussian blur processing stage
     pub fn new(sigma: f32) -> Self {
-        Self { _sigma }
+        Self { sigma }
     }
 }
 
@@ -299,7 +299,7 @@ pub struct EdgeDetectionStage {
 impl EdgeDetectionStage {
     /// Create a new edge detection processing stage
     pub fn new(threshold: f32) -> Self {
-        Self { _threshold }
+        Self { threshold }
     }
 }
 
@@ -468,7 +468,7 @@ pub struct SimdHistogramEqualizationStage {
 impl SimdHistogramEqualizationStage {
     /// Create a new SIMD histogram equalization stage
     pub fn new(_numbins: usize) -> Self {
-        Self { _num_bins }
+        Self { _numbins }
     }
 }
 
@@ -488,7 +488,7 @@ impl ProcessingStage for SimdHistogramEqualizationStage {
 pub struct FeatureDetectionStage {
     detector_type: FeatureDetectorType,
     #[allow(dead_code)]
-    max_features: usize,
+    maxfeatures: usize,
 }
 
 /// Types of feature detectors for streaming
@@ -514,7 +514,7 @@ impl FeatureDetectionStage {
     pub fn new(_detector_type: FeatureDetectorType, maxfeatures: usize) -> Self {
         Self {
             detector_type,
-            max_features,
+            maxfeatures,
         }
     }
 }
@@ -584,7 +584,7 @@ impl FeatureDetectionStage {
         // Ixx = Ix * Ix, Iyy = Iy * Iy, Ixy = Ix * Iy
         for y in 0..height {
             let gx_row = grad_x.row(y);
-            let gy_row = grad_y.row(y);
+            let gy_row = grad_x.row(y);
 
             // SIMD element-wise multiplication
             let ixx_row = f32::simd_mul(&gx_row, &gx_row);
@@ -712,7 +712,7 @@ impl FeatureDetectionStage {
                 for &(dx, dy) in &circle_offsets {
                     let mut circle_pixels = Vec::with_capacity(center_array.len());
                     for (i_) in center_array.iter().enumerate() {
-                        let pixel_x = x + i;
+                        let pixel_x = x + i_;
                         let pixel_y = y;
                         let circle_x = pixel_x as i32 + dx;
                         let circle_y = pixel_y as i32 + dy;
@@ -756,9 +756,9 @@ impl FeatureDetectionStage {
                     });
 
                 // Store results
-                for (i, &is_corner) in corner_mask.iter().enumerate() {
-                    if x + i < width - 3 && is_corner > 0.0 {
-                        response[[y, x + i]] = brighter_counts[i].max(darker_counts[i]);
+                for (i_, &is_corner) in corner_mask.iter().enumerate() {
+                    if x + i_ < width - 3 && is_corner > 0.0 {
+                        response[[y, x + i_]] = brighter_counts[i_].max(darker_counts[i_]);
                     }
                 }
 
@@ -877,7 +877,7 @@ impl FeatureDetectionStage {
 /// Frame buffer stage for temporal operations
 pub struct FrameBufferStage {
     buffer: std::collections::VecDeque<Array2<f32>>,
-    buffer_size: usize,
+    _buffersize: usize,
     operation: BufferOperation,
 }
 
@@ -895,8 +895,8 @@ impl FrameBufferStage {
     /// Create a new frame buffer stage
     pub fn new(_buffersize: usize, operation: BufferOperation) -> Self {
         Self {
-            buffer: std::collections::VecDeque::with_capacity(_buffer_size),
-            buffer_size,
+            buffer: std::collections::VecDeque::with_capacity(_buffersize),
+            _buffersize,
             operation,
         }
     }
@@ -906,7 +906,7 @@ impl ProcessingStage for FrameBufferStage {
     fn process(&mut self, mut frame: Frame) -> Result<Frame> {
         // Add current frame to buffer
         self.buffer.push_back(frame.data.clone());
-        if self.buffer.len() > self.buffer_size {
+        if self.buffer.len() > self._buffersize {
             self.buffer.pop_front();
         }
 
@@ -922,7 +922,7 @@ impl ProcessingStage for FrameBufferStage {
                 }
             }
             BufferOperation::BackgroundSubtraction => {
-                if self.buffer.len() >= self.buffer_size {
+                if self.buffer.len() >= self._buffersize {
                     // Use median of buffer as background
                     let mut background = Array2::<f32>::zeros(frame.data.dim());
                     for buffered_frame in &self.buffer {
@@ -984,7 +984,7 @@ pub struct VideoStreamReader {
 impl VideoStreamReader {
     /// Create a video reader from a source
     pub fn from_source(source: VideoSource) -> Result<Self> {
-        match _source {
+        match source {
             VideoSource::ImageSequence(ref path) => {
                 // Read directory and get sorted list of image files
                 let mut files = Vec::new();
@@ -1144,13 +1144,13 @@ impl VideoStreamReader {
 
 /// Batch processing utilities
 pub struct BatchProcessor {
-    batch_size: usize,
+    batchsize: usize,
 }
 
 impl BatchProcessor {
     /// Create a new batch processor with specified batch size
     pub fn new(_batchsize: usize) -> Self {
-        Self { _batch_size }
+        Self { _batchsize }
     }
 
     /// Process frames in batches
@@ -1160,7 +1160,7 @@ impl BatchProcessor {
     {
         let mut results = Vec::new();
 
-        for chunk in frames.chunks(self.batch_size) {
+        for chunk in frames.chunks(self.batchsize) {
             let processed = processor(chunk)?;
             results.extend(processed);
         }
@@ -1258,7 +1258,7 @@ pub struct AdaptivePerformanceMonitor {
 #[derive(Debug, Clone)]
 pub struct StagePerformanceMetrics {
     /// Stage name identifier
-    pub stage_name: String,
+    pub stagename: String,
     /// Processing times for recent frames
     pub processing_times: std::collections::VecDeque<Duration>,
     /// Average processing time
@@ -1303,7 +1303,7 @@ pub struct AutoScalingThreadPoolManager {
     /// Minimum threads per stage
     min_threads: usize,
     /// Maximum threads per stage
-    max_threads: usize,
+    maxthreads: usize,
     /// Scale-up threshold (utilization %)
     scale_up_threshold: f32,
     /// Scale-down threshold (utilization %)
@@ -1314,7 +1314,7 @@ pub struct AutoScalingThreadPoolManager {
 #[derive(Debug, Clone)]
 pub struct ThreadPoolConfig {
     /// Stage name
-    pub stage_name: String,
+    pub stagename: String,
     /// Current thread count
     pub current_threads: usize,
     /// Target thread count
@@ -1388,7 +1388,7 @@ impl AutoScalingThreadPoolManager {
     /// # Arguments
     ///
     /// * `min_threads` - Minimum threads per stage
-    /// * `max_threads` - Maximum threads per stage
+    /// * `maxthreads` - Maximum threads per stage
     ///
     /// # Returns
     ///
@@ -1397,7 +1397,7 @@ impl AutoScalingThreadPoolManager {
         Self {
             thread_pools: std::collections::HashMap::new(),
             min_threads,
-            max_threads,
+            maxthreads,
             scale_up_threshold: 75.0,   // Scale up if >75% utilization
             scale_down_threshold: 25.0, // Scale down if <25% utilization
         }
@@ -1407,22 +1407,22 @@ impl AutoScalingThreadPoolManager {
     ///
     /// # Arguments
     ///
-    /// * `stage_name` - Name of the pipeline stage
-    /// * `initial_threads` - Initial thread count
+    /// * `stagename` - Name of the pipeline stage
+    /// * `initialthreads` - Initial thread count
     ///
     /// # Returns
     ///
     /// * Result indicating success or failure
-    pub fn register_stage(&mut self, stage_name: &str, initialthreads: usize) -> Result<()> {
+    pub fn register_stage(&mut self, stagename: &str, initialthreads: usize) -> Result<()> {
         let config = ThreadPoolConfig {
-            stage_name: stage_name.to_string(),
-            current_threads: initial_threads.clamp(self.min_threads, self.max_threads),
-            target_threads: initial_threads.clamp(self.min_threads, self.max_threads),
+            stagename: stagename.to_string(),
+            current_threads: initialthreads.clamp(self.min_threads, self.maxthreads),
+            target_threads: initialthreads.clamp(self.min_threads, self.maxthreads),
             last_scaled: Instant::now(),
             cooldown_period: Duration::from_secs(5),
         };
 
-        self.thread_pools.insert(stage_name.to_string(), config);
+        self.thread_pools.insert(stagename.to_string(), config);
         Ok(())
     }
 
@@ -1430,7 +1430,7 @@ impl AutoScalingThreadPoolManager {
     ///
     /// # Arguments
     ///
-    /// * `stage_name` - Name of the pipeline stage
+    /// * `stagename` - Name of the pipeline stage
     /// * `metrics` - Performance metrics for the stage
     ///
     /// # Returns
@@ -1438,10 +1438,10 @@ impl AutoScalingThreadPoolManager {
     /// * New thread count for the stage
     pub fn adapt_thread_count(
         &mut self,
-        stage_name: &str,
+        stagename: &str,
         metrics: &StagePerformanceMetrics,
     ) -> usize {
-        if let Some(config) = self.thread_pools.get_mut(stage_name) {
+        if let Some(config) = self.thread_pools.get_mut(stagename) {
             let now = Instant::now();
 
             // Check cooldown period
@@ -1455,7 +1455,7 @@ impl AutoScalingThreadPoolManager {
             // Determine scaling action
             let scale_factor = if utilization > self.scale_up_threshold || bottleneck_score > 0.7 {
                 // Scale up: add threads
-                if config.current_threads < self.max_threads {
+                if config.current_threads < self.maxthreads {
                     let scale_amount =
                         ((utilization - self.scale_up_threshold) / 25.0).ceil() as i32;
                     scale_amount.max(1)
@@ -1477,7 +1477,7 @@ impl AutoScalingThreadPoolManager {
 
             if scale_factor != 0 {
                 let new_thread_count = if scale_factor > 0 {
-                    (config.current_threads + scale_factor as usize).min(self.max_threads)
+                    (config.current_threads + scale_factor as usize).min(self.maxthreads)
                 } else {
                     ((config.current_threads as i32 + scale_factor).max(self.min_threads as i32))
                         as usize
@@ -1494,7 +1494,7 @@ impl AutoScalingThreadPoolManager {
                 };
 
                 eprintln!(
-                    "Scaled {stage_name} from {old_thread_count} to {new_thread_count} threads (utilization: {utilization:.1}%, bottleneck: {bottleneck_score:.2})"
+                    "Scaled {stagename} from {old_thread_count} to {new_thread_count} threads (utilization: {utilization:.1}%, bottleneck: {bottleneck_score:.2})"
                 );
             }
 
@@ -1509,13 +1509,13 @@ impl AutoScalingThreadPoolManager {
     ///
     /// # Arguments
     ///
-    /// * `stage_name` - Name of the pipeline stage
+    /// * `stagename` - Name of the pipeline stage
     ///
     /// # Returns
     ///
     /// * Option containing thread pool configuration
     pub fn get_thread_config(&self, stagename: &str) -> Option<&ThreadPoolConfig> {
-        self.thread_pools.get(stage_name)
+        self.thread_pools.get(stagename)
     }
 
     /// Get total thread count across all stages
@@ -1558,15 +1558,15 @@ impl AdaptivePerformanceMonitor {
     ///
     /// # Arguments
     ///
-    /// * `stage_name` - Name of the pipeline stage
-    /// * `initial_threads` - Initial thread count for the stage
+    /// * `stagename` - Name of the pipeline stage
+    /// * `initialthreads` - Initial thread count for the stage
     ///
     /// # Returns
     ///
     /// * Result indicating success or failure
-    pub fn register_stage(&mut self, stage_name: &str, initialthreads: usize) -> Result<()> {
+    pub fn register_stage(&mut self, stagename: &str, initialthreads: usize) -> Result<()> {
         let metrics = StagePerformanceMetrics {
-            stage_name: stage_name.to_string(),
+            stagename: stagename.to_string(),
             processing_times: std::collections::VecDeque::with_capacity(
                 self.config.monitoring_window,
             ),
@@ -1581,9 +1581,9 @@ impl AdaptivePerformanceMonitor {
             bottleneck_score: 0.0,
         };
 
-        self.stage_metrics.insert(stage_name.to_string(), metrics);
+        self.stage_metrics.insert(stagename.to_string(), metrics);
         self.thread_pool_manager
-            .register_stage(stage_name, initial_threads)?;
+            .register_stage(stagename, initialthreads)?;
 
         Ok(())
     }
@@ -1592,8 +1592,8 @@ impl AdaptivePerformanceMonitor {
     ///
     /// # Arguments
     ///
-    /// * `stage_name` - Name of the pipeline stage
-    /// * `processing_time` - Time taken to process the frame
+    /// * `stagename` - Name of the pipeline stage
+    /// * `processingtime` - Time taken to process the frame
     /// * `queue_depth` - Current queue depth (backlog)
     /// * `memory_usage` - Memory usage in bytes
     ///
@@ -1602,14 +1602,14 @@ impl AdaptivePerformanceMonitor {
     /// * Result indicating success or failure
     pub fn record_stage_performance(
         &mut self,
-        stage_name: &str,
-        processing_time: Duration,
+        stagename: &str,
+        processingtime: Duration,
         queue_depth: usize,
         memory_usage: usize,
     ) -> Result<()> {
-        let bottleneck_score = if let Some(metrics) = self.stage_metrics.get_mut(stage_name) {
+        let bottleneck_score = if let Some(metrics) = self.stage_metrics.get_mut(stagename) {
             // Update processing times
-            metrics.processing_times.push_back(processing_time);
+            metrics.processing_times.push_back(processingtime);
             if metrics.processing_times.len() > self.config.monitoring_window {
                 metrics.processing_times.pop_front();
             }
@@ -1619,8 +1619,8 @@ impl AdaptivePerformanceMonitor {
             metrics.queue_depth = queue_depth;
             metrics.memory_usage = memory_usage;
 
-            if processing_time > metrics.peak_processing_time {
-                metrics.peak_processing_time = processing_time;
+            if processingtime > metrics.peak_processing_time {
+                metrics.peak_processing_time = processingtime;
             }
 
             // Calculate average processing _time
@@ -1631,8 +1631,8 @@ impl AdaptivePerformanceMonitor {
             }
 
             // Calculate thread utilization (simplified estimation)
-            let target_fps = 30.0; // Assume 30 FPS target
-            let required_processing_rate = 1.0 / target_fps;
+            let _targetfps = 30.0; // Assume 30 FPS target
+            let required_processing_rate = 1.0 / _targetfps;
             metrics.thread_utilization =
                 (metrics.avg_processing_time.as_secs_f32() / required_processing_rate * 100.0)
                     .min(100.0);
@@ -1659,7 +1659,7 @@ impl AdaptivePerformanceMonitor {
         );
 
         // Update bottleneck score
-        if let Some(metrics) = self.stage_metrics.get_mut(stage_name) {
+        if let Some(metrics) = self.stage_metrics.get_mut(stagename) {
             metrics.bottleneck_score = bottleneck_value;
         }
 
@@ -1842,7 +1842,7 @@ impl AdaptivePerformanceMonitor {
         self.stage_metrics
             .values()
             .filter(|metrics| metrics.bottleneck_score >= self.config.bottleneck_threshold)
-            .map(|metrics| metrics.stage_name.clone())
+            .map(|metrics| metrics.stagename.clone())
             .collect()
     }
 
@@ -1888,13 +1888,13 @@ impl AdaptivePerformanceMonitor {
     ///
     /// # Arguments
     ///
-    /// * `stage_name` - Name of the pipeline stage
+    /// * `stagename` - Name of the pipeline stage
     ///
     /// # Returns
     ///
     /// * Option containing stage performance metrics
     pub fn get_stage_metrics(&self, stagename: &str) -> Option<&StagePerformanceMetrics> {
-        self.stage_metrics.get(stage_name)
+        self.stage_metrics.get(stagename)
     }
 
     /// Get current system resource usage
@@ -1936,10 +1936,10 @@ impl AdaptivePerformanceMonitor {
         ));
 
         report.push_str("\n--- Stage Performance ---\n");
-        for (stage_name, metrics) in &self.stage_metrics {
+        for (stagename, metrics) in &self.stage_metrics {
             report.push_str(&format!(
                 "{}: {:.1} FPS, {:.1}% utilization, bottleneck score: {:.2}\n",
-                stage_name,
+                stagename,
                 metrics.throughput,
                 metrics.thread_utilization,
                 metrics.bottleneck_score
@@ -1966,7 +1966,7 @@ impl AdaptivePerformanceMonitor {
 /// for maximum throughput in real-time video processing.
 pub struct AdvancedStreamPipeline {
     stages: Vec<Box<dyn ProcessingStage>>,
-    buffer_size: usize,
+    _buffersize: usize,
     #[allow(dead_code)]
     num_threads: usize,
     metrics: Arc<Mutex<PipelineMetrics>>,
@@ -2102,7 +2102,7 @@ impl AdvancedStreamPipeline {
     pub fn new() -> Self {
         Self {
             stages: Vec::new(),
-            buffer_size: 10,
+            _buffersize: 10,
             num_threads: num_cpus::get(),
             metrics: Arc::new(Mutex::new(PipelineMetrics::default())),
             frame_pool: Arc::new(Mutex::new(FramePool::new())),
@@ -2151,7 +2151,7 @@ impl AdvancedStreamPipeline {
     where
         I: Iterator<Item = Frame> + Send + 'static,
     {
-        let (tx, rx) = bounded::<Frame>(self.buffer_size);
+        let (tx, rx) = bounded::<Frame>(self._buffersize);
         let metrics = Arc::clone(&self.metrics);
         let frame_pool = Arc::clone(&self.frame_pool);
         let memory_profiler = Arc::clone(&self.memory_profiler);
@@ -2161,13 +2161,13 @@ impl AdvancedStreamPipeline {
         let mut worker_handles = Vec::new();
 
         for stage in self.stages.drain(..) {
-            let (stage_tx, stage_rx) = bounded(self.buffer_size);
+            let (stage_tx, stage_rx) = bounded(self._buffersize);
             channels.push(stage_rx);
 
             let stage_metrics = Arc::clone(&metrics);
             let _stage_frame_pool = Arc::clone(&frame_pool);
             let stage_memory_profiler = Arc::clone(&memory_profiler);
-            let stage_name = stage.name().to_string();
+            let stagename = stage.name().to_string();
             let prev_rx = channels[channels.len() - 2].clone();
 
             // Spawn optimized worker thread
@@ -2211,7 +2211,7 @@ impl AdvancedStreamPipeline {
                             }
                         }
                         Err(e) => {
-                            eprintln!("Stage {stage_name} error: {e}");
+                            eprintln!("Stage {stagename} error: {e}");
                             if let Ok(mut m) = stage_metrics.try_lock() {
                                 m.dropped_frames += 1;
                             }
@@ -2288,9 +2288,9 @@ impl AdvancedStreamProcessor {
 
     /// Get batch of frames for efficient processing
     pub fn next_batch(&self, batchsize: usize) -> Vec<Frame> {
-        let mut batch = Vec::with_capacity(batch_size);
+        let mut batch = Vec::with_capacity(batchsize);
 
-        for _ in 0..batch_size {
+        for _ in 0..batchsize {
             if let Some(frame) = self.try_next() {
                 batch.push(frame);
             } else {
@@ -2336,7 +2336,7 @@ impl Iterator for AdvancedStreamProcessor {
 
 /// Adaptive quality stage that adjusts processing based on performance
 pub struct AdaptiveQualityStage {
-    target_fps: f32,
+    _targetfps: f32,
     current_quality: f32,
     processing_mode: ProcessingMode,
     performance_history: Vec<Duration>,
@@ -2353,7 +2353,7 @@ impl AdaptiveQualityStage {
     /// Create a new adaptive quality stage with the specified target FPS
     pub fn new(_targetfps: f32) -> Self {
         Self {
-            target_fps,
+            _targetfps,
             current_quality: 1.0,
             processing_mode: ProcessingMode::Balanced,
             performance_history: Vec::new(),
@@ -2361,7 +2361,7 @@ impl AdaptiveQualityStage {
     }
 
     fn adjust_quality(&mut self, processingtime: Duration) {
-        self.performance_history.push(processing_time);
+        self.performance_history.push(processingtime);
 
         // Keep only recent history
         if self.performance_history.len() > 10 {
@@ -2372,7 +2372,7 @@ impl AdaptiveQualityStage {
         let avg_time = self.performance_history.iter().sum::<Duration>()
             / self.performance_history.len() as u32;
 
-        let target_frame_time = Duration::from_secs_f32(1.0 / self.target_fps);
+        let target_frame_time = Duration::from_secs_f32(1.0 / self._targetfps);
 
         if avg_time > target_frame_time {
             // Too slow, reduce quality
@@ -2431,8 +2431,8 @@ impl ProcessingStage for AdaptiveQualityStage {
             }
         };
 
-        let processing_time = start.elapsed();
-        self.adjust_quality(processing_time);
+        let processingtime = start.elapsed();
+        self.adjust_quality(processingtime);
 
         Ok(processed_frame)
     }
@@ -2488,10 +2488,10 @@ mod tests {
     fn test_batch_processor() {
         let processor = BatchProcessor::new(5);
         let frames: Vec<_> = (0..12)
-            .map(|i| Frame {
+            .map(|i_| Frame {
                 data: Array2::zeros((10, 10)),
                 timestamp: Instant::now(),
-                index: i,
+                index: i_,
                 metadata: None,
             })
             .collect();
@@ -2562,11 +2562,11 @@ mod tests {
         let mut buffer_stage = FrameBufferStage::new(5, BufferOperation::TemporalAverage);
 
         // Process several frames
-        for i in 0..10 {
+        for i_ in 0..10 {
             let frame = Frame {
-                data: Array2::from_elem((10, 10), i as f32),
+                data: Array2::from_elem((10, 10), i_ as f32),
                 timestamp: Instant::now(),
-                index: i,
+                index: i_,
                 metadata: None,
             };
 

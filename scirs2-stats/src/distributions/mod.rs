@@ -86,7 +86,7 @@ pub fn norm<F>(loc: F, scale: F) -> StatsResult<Normal<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
-    Normal::new(_loc, scale)
+    Normal::new(loc, scale)
 }
 
 /// Create a uniform distribution with the given parameters.
@@ -117,7 +117,7 @@ pub fn uniform<F>(low: F, high: F) -> StatsResult<Uniform<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
-    Uniform::new(_low, high)
+    Uniform::new(low, high)
 }
 
 /// Create a Student's t distribution with the given parameters.
@@ -154,7 +154,7 @@ where
         + std::fmt::Display
         + 'static,
 {
-    StudentT::new(_df, loc, scale)
+    StudentT::new(df, loc, scale)
 }
 
 /// Create a Chi-square distribution with the given parameters.
@@ -191,7 +191,7 @@ where
         + std::fmt::Display
         + 'static,
 {
-    ChiSquare::new(_df, loc, scale)
+    ChiSquare::new(df, loc, scale)
 }
 
 /// Create an F distribution with the given parameters.
@@ -224,7 +224,7 @@ pub fn f<T>(dfn: T, dfd: T, loc: T, scale: T) -> StatsResult<F<T>>
 where
     T: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
-    F::new(_dfn, dfd, loc, scale)
+    F::new(dfn, dfd, loc, scale)
 }
 
 /// Create a Poisson distribution with the given parameters.
@@ -255,7 +255,7 @@ pub fn poisson<F>(mu: F, loc: F) -> StatsResult<Poisson<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
-    Poisson::new(_mu, loc)
+    Poisson::new(mu, loc)
 }
 
 /// Create a Gamma distribution with the given parameters.
@@ -327,7 +327,7 @@ pub fn beta<F>(alpha: F, beta: F, loc: F, scale: F) -> StatsResult<Beta<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Debug + std::fmt::Display,
 {
-    Beta::new(_alpha, beta, loc, scale)
+    Beta::new(alpha, beta, loc, scale)
 }
 
 /// Create an Exponential distribution with the given parameters.
@@ -358,7 +358,7 @@ pub fn expon<F>(rate: F, loc: F) -> StatsResult<Exponential<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Debug + std::fmt::Display,
 {
-    Exponential::new(_rate, loc)
+    Exponential::new(rate, loc)
 }
 
 /// Create a Lognormal distribution with the given parameters.
@@ -391,7 +391,7 @@ pub fn lognorm<F>(mu: F, sigma: F, loc: F) -> StatsResult<Lognormal<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
-    Lognormal::new(_mu, sigma, loc)
+    Lognormal::new(mu, sigma, loc)
 }
 
 /// Create a Weibull distribution with the given parameters.
@@ -518,7 +518,7 @@ pub fn cauchy<F>(loc: F, scale: F) -> StatsResult<Cauchy<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
-    Cauchy::new(_loc, scale)
+    Cauchy::new(loc, scale)
 }
 
 /// Create a Laplace distribution with the given parameters.
@@ -549,7 +549,7 @@ pub fn laplace<F>(loc: F, scale: F) -> StatsResult<Laplace<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
-    Laplace::new(_loc, scale)
+    Laplace::new(loc, scale)
 }
 
 /// Create a Logistic distribution with the given parameters.
@@ -580,7 +580,7 @@ pub fn logistic<F>(loc: F, scale: F) -> StatsResult<Logistic<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
-    Logistic::new(_loc, scale)
+    Logistic::new(loc, scale)
 }
 
 /// Create a Bernoulli distribution with the given parameter.
@@ -813,7 +813,7 @@ where
         + std::fmt::Display
         + 'static,
 {
-    circular::von_mises(_mu, kappa)
+    circular::von_mises(mu, kappa)
 }
 
 /// Create a wrapped Cauchy distribution with the given parameters.
@@ -848,5 +848,5 @@ where
         + std::fmt::Display
         + 'static,
 {
-    circular::wrapped_cauchy(_mu, gamma)
+    circular::wrapped_cauchy(mu, gamma)
 }

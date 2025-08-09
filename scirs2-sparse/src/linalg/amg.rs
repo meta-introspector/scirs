@@ -131,7 +131,7 @@ where
     /// ```
     pub fn new(matrix: &CsrArray<T>, options: AMGOptions) -> SparseResult<Self> {
         let mut amg = AMGPreconditioner {
-            operators: vec![_matrix.clone()],
+            operators: vec![matrix.clone()],
             prolongations: Vec::new(),
             restrictions: Vec::new(),
             options,
@@ -149,8 +149,8 @@ where
         let mut level = 0;
 
         while level < self.options.max_levels - 1 {
-            let current_matrix = &self.operators[level];
-            let (rows, _) = current_matrix.shape();
+            let currentmatrix = &self.operators[level];
+            let (rows, _) = currentmatrix.shape();
 
             // Stop if matrix is small enough
             if rows <= self.options.max_coarse_size {
@@ -158,16 +158,16 @@ where
             }
 
             // Coarsen the matrix
-            let (coarse_matrix, prolongation, restriction) = self.coarsen_level(current_matrix)?;
+            let (coarsematrix, prolongation, restriction) = self.coarsen_level(currentmatrix)?;
 
             // Check if coarsening was successful
-            let (coarse_rows, _) = coarse_matrix.shape();
+            let (coarse_rows, _) = coarsematrix.shape();
             if coarse_rows >= rows {
                 // Coarsening didn't reduce the problem size significantly
                 break;
             }
 
-            self.operators.push(coarse_matrix);
+            self.operators.push(coarsematrix);
             self.prolongations.push(prolongation);
             self.restrictions.push(restriction);
             self.num_levels += 1;
@@ -219,16 +219,16 @@ where
             .ok_or_else(|| {
                 SparseError::ValueError("Failed to downcast temp to CsrArray".to_string())
             })?;
-        let coarse_matrix_box = temp.dot(&prolongation)?;
-        let coarse_matrix = coarse_matrix_box
+        let coarsematrix_box = temp.dot(&prolongation)?;
+        let coarsematrix = coarsematrix_box
             .as_any()
             .downcast_ref::<CsrArray<T>>()
             .ok_or_else(|| {
-                SparseError::ValueError("Failed to downcast coarse_matrix to CsrArray".to_string())
+                SparseError::ValueError("Failed to downcast coarsematrix to CsrArray".to_string())
             })?
             .clone();
 
-        Ok((coarse_matrix, prolongation, restriction))
+        Ok((coarsematrix, prolongation, restriction))
     }
 
     /// Detect strong connections in the matrix
@@ -731,7 +731,7 @@ where
     let mut result = Array1::zeros(rows);
 
     for i in 0..rows {
-        for j in matrix.get_indptr()[i].._matrix.get_indptr()[i + 1] {
+        for j in matrix.get_indptr()[i]..matrix.get_indptr()[i + 1] {
             let col = matrix.get_indices()[j];
             let val = matrix.get_data()[j];
             result[i] = result[i] + val * x[col];

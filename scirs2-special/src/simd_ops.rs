@@ -73,7 +73,7 @@ pub fn gamma_f64_simd(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
 
     // Handle remaining elements with scalar gamma
     for i in (chunks * chunk_size)..len {
-        output[i] = crate::gamma::gamma(_input[i]);
+        output[i] = crate::gamma::gamma(input[i]);
     }
 
     Ok(output)
@@ -413,7 +413,7 @@ pub fn gamma_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>>
     } else {
         // Use sequential processing for small arrays
         for i in 0..len {
-            output[i] = crate::gamma::gamma(_input[i]);
+            output[i] = crate::gamma::gamma(input[i]);
         }
     }
 
@@ -570,21 +570,21 @@ pub fn adaptive_gamma_processing(input: &ArrayView1<f64>) -> SpecialResult<Array
     #[cfg(feature = "parallel")]
     {
         if len > 10000 {
-            return gamma_f64_parallel(_input);
+            return gamma_f64_parallel(input);
         }
     }
 
     #[cfg(feature = "simd")]
     {
         if len > 1000 {
-            return gamma_f64_simd(_input);
+            return gamma_f64_simd(input);
         }
     }
 
     // Fallback to sequential processing
     let mut output = Array1::zeros(len);
     for i in 0..len {
-        output[i] = crate::gamma::gamma(_input[i]);
+        output[i] = crate::gamma::gamma(input[i]);
     }
     Ok(output)
 }

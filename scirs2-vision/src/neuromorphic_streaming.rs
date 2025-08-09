@@ -118,7 +118,7 @@ impl SpikingNeuron {
     /// Calculate spike rate over recent history
     pub fn spike_rate(&self, timewindow: f64) -> f64 {
         let current_time = self.get_current_time();
-        let cutoff_time = current_time - time_window;
+        let cutoff_time = current_time - timewindow;
 
         let recent_spikes = self
             .spike_times
@@ -126,7 +126,7 @@ impl SpikingNeuron {
             .filter(|&&spike_time| spike_time >= cutoff_time)
             .count();
 
-        recent_spikes as f64 / time_window
+        recent_spikes as f64 / timewindow
     }
 }
 
@@ -189,7 +189,7 @@ impl PlasticSynapse {
     /// Create a new plastic synapse
     pub fn new(_pre_id: usize, post_id: usize, initialweight: f64) -> Self {
         Self {
-            _weight: initial_weight,
+            _weight: initialweight,
             pre_neuron_id: pre_id,
             post_neuron_id: post_id,
             last_pre_spike: None,
@@ -205,7 +205,7 @@ impl PlasticSynapse {
         if let Some(pre_time) = pre_spike_time {
             self.last_pre_spike = Some(pre_time);
         }
-        if let Some(post_time) = post_spike_time {
+        if let Some(post_time) = post_spiketime {
             self.last_post_spike = Some(post_time);
         }
 
@@ -230,7 +230,7 @@ impl PlasticSynapse {
 
     /// Calculate synaptic current
     pub fn calculate_current(&self, prespike: bool) -> f64 {
-        if pre_spike {
+        if prespike {
             self.weight * 10.0 // Scale factor for current injection
         } else {
             0.0
@@ -283,7 +283,7 @@ impl SpikingNeuralNetwork {
         for i in 0..num_neurons {
             let mut connections = Vec::new();
             for j in 0..num_neurons {
-                if i != j && rng.random::<f64>() < connectivity_probability {
+                if i != j && rng.random::<f64>() < connectivityprobability {
                     connections.push(j);
 
                     // Create synapse
@@ -335,8 +335,8 @@ impl SpikingNeuralNetwork {
 
             for synapse in &self.synapses {
                 if synapse.post_neuron_id == i {
-                    let pre_spike = neuron_spike_states[synapse.pre_neuron_id];
-                    synaptic_input += synapse.calculate_current(pre_spike);
+                    let prespike = neuron_spike_states[synapse.pre_neuron_id];
+                    synaptic_input += synapse.calculate_current(prespike);
                 }
             }
 
@@ -366,22 +366,22 @@ impl SpikingNeuralNetwork {
                 None
             };
 
-            let post_spike_time = if spikes[synapse.post_neuron_id] {
+            let post_spiketime = if spikes[synapse.post_neuron_id] {
                 Some(self.current_time)
             } else {
                 None
             };
 
-            synapse.update_weight(pre_spike_time, post_spike_time);
+            synapse.update_weight(pre_spike_time, post_spiketime);
         }
 
         self.current_time += self.dt;
 
         // Return spike rates as output
-        let time_window = 10.0; // ms
+        let timewindow = 10.0; // ms
         let mut output = Array1::zeros(num_neurons);
         for (i, neuron) in self.neurons.iter().enumerate() {
-            output[i] = neuron.spike_rate(time_window);
+            output[i] = neuron.spike_rate(timewindow);
         }
 
         output
@@ -475,7 +475,7 @@ impl Default for EdgePreprocessingParams {
 impl NeuromorphicEdgeDetector {
     /// Create a new neuromorphic edge detector
     pub fn new(_inputsize: usize) -> Self {
-        let network_size = _input_size * 2; // Hidden layer for processing
+        let network_size = _inputsize * 2; // Hidden layer for processing
         let snn = SpikingNeuralNetwork::new(network_size, 0.3);
 
         Self {
@@ -488,11 +488,11 @@ impl NeuromorphicEdgeDetector {
 
     /// Convert image patch to spike train
     fn image_to_spikes(&self, imagepatch: &ArrayView2<f32>) -> Array1<f64> {
-        let (height, width) = image_patch.dim();
+        let (height, width) = imagepatch.dim();
         let mut spike_input = Array1::zeros(height * width);
 
         // Convert pixel intensities to spike rates
-        for (i, &pixel) in image_patch.iter().enumerate() {
+        for (i, &pixel) in imagepatch.iter().enumerate() {
             // Higher intensity = higher spike rate
             let spike_rate = (pixel as f64 * 100.0).max(0.0); // Scale to reasonable spike rate
             spike_input[i] = spike_rate;
@@ -541,7 +541,7 @@ impl NeuromorphicEdgeDetector {
 
     /// Adapt preprocessing parameters based on performance
     fn adapt_parameters(&mut self, performancemetric: f64) {
-        self.processing_history.push_back(performance_metric);
+        self.processing_history.push_back(performancemetric);
 
         if self.processing_history.len() > 10 {
             self.processing_history.pop_front();
@@ -616,7 +616,7 @@ pub struct EventDrivenProcessor {
     /// Sparse event representation
     event_buffer: VecDeque<PixelEvent>,
     /// Event generation threshold
-    event_threshold: f32,
+    _eventthreshold: f32,
     /// Previous frame for temporal differencing
     previous_frame: Option<Array2<f32>>,
     /// Spatial event clustering
@@ -682,7 +682,7 @@ impl EventDrivenProcessor {
     pub fn new(_eventthreshold: f32) -> Self {
         Self {
             event_buffer: VecDeque::with_capacity(10000),
-            event_threshold,
+            _eventthreshold,
             previous_frame: None,
             spatial_clusters: HashMap::new(),
             temporal_window: Duration::from_millis(50),
@@ -701,15 +701,15 @@ impl EventDrivenProcessor {
         let current_time = Instant::now();
 
         if let Some(ref prev_frame) = self.previous_frame {
-            let (height, width) = current_frame.dim();
+            let (height, width) = currentframe.dim();
 
             for y in 0..height {
                 for x in 0..width {
-                    let current_val = current_frame[[y, x]];
+                    let current_val = currentframe[[y, x]];
                     let prev_val = prev_frame[[y, x]];
                     let diff = current_val - prev_val;
 
-                    if diff.abs() > self.event_threshold {
+                    if diff.abs() > self._eventthreshold {
                         let polarity = if diff > 0.0 {
                             EventPolarity::Positive
                         } else {
@@ -728,7 +728,7 @@ impl EventDrivenProcessor {
             }
         }
 
-        self.previous_frame = Some(current_frame.clone());
+        self.previous_frame = Some(currentframe.clone());
         events
     }
 
@@ -789,7 +789,7 @@ impl EventDrivenProcessor {
 
         // Process only active clusters
         for cluster in self.spatial_clusters.values() {
-            if cluster.activity > self.event_threshold {
+            if cluster.activity > self._eventthreshold {
                 // Apply processing to cluster region
                 let cluster_x = cluster.center.0 as usize;
                 let cluster_y = cluster.center.1 as usize;
@@ -824,7 +824,7 @@ impl EventDrivenProcessor {
         let event_count = events.len();
 
         // Calculate sparsity
-        self.efficiency_metrics.sparsity = event_count as f32 / frame_size as f32;
+        self.efficiency_metrics.sparsity = event_count as f32 / framesize as f32;
 
         // Estimate energy consumption (events require less energy than full processing)
         self.efficiency_metrics.energy_consumption = self.efficiency_metrics.sparsity * 0.1;
@@ -833,13 +833,13 @@ impl EventDrivenProcessor {
         self.efficiency_metrics.speedup_factor = 1.0 / self.efficiency_metrics.sparsity.max(0.01);
 
         // Calculate compression ratio
-        self.efficiency_metrics.compression_ratio = frame_size as f32 / event_count.max(1) as f32;
+        self.efficiency_metrics.compression_ratio = framesize as f32 / event_count.max(1) as f32;
     }
 }
 
 impl ProcessingStage for EventDrivenProcessor {
     fn process(&mut self, frame: Frame) -> Result<Frame> {
-        let frame_size = frame.data.len();
+        let framesize = frame.data.len();
 
         // Generate events from temporal differences
         let events = self.generate_events(&frame.data);
@@ -851,7 +851,7 @@ impl ProcessingStage for EventDrivenProcessor {
         let processed_data = self.process_events_sparse(frame.data.dim());
 
         // Update efficiency metrics
-        self.update_efficiency_metrics(&events, frame_size);
+        self.update_efficiency_metrics(&events, framesize);
 
         // Store events in buffer
         for event in events {
@@ -990,7 +990,7 @@ pub struct PerformanceSnapshot {
 impl AdaptiveNeuromorphicPipeline {
     /// Create a new adaptive neuromorphic pipeline
     pub fn new(_inputsize: usize) -> Self {
-        let edge_detector = NeuromorphicEdgeDetector::new(_input_size);
+        let edge_detector = NeuromorphicEdgeDetector::new(_inputsize);
         let event_processor = EventDrivenProcessor::new(0.05);
 
         Self {

@@ -69,7 +69,7 @@ use std::f64::consts::PI;
 #[allow(dead_code)]
 pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult<f64> {
     // Validate input parameters
-    if _h2 < 0.0 || k2 < 0.0 {
+    if h2 < 0.0 || k2 < 0.0 {
         return Err(SpecialError::ValueError(
             "Parameters h² and k² must be non-negative".to_string(),
         ));
@@ -120,8 +120,8 @@ pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult
     };
 
     // Apply correction factors for ellipsoidal geometry with stability checks
-    let h_factor = if _h2 > 0.0 && _h2 < 10.0 {
-        let correction = _h2 * (n as f64 + 0.5) / (2.0 * n as f64 + 1.0);
+    let h_factor = if h2 > 0.0 && h2 < 10.0 {
+        let correction = h2 * (n as f64 + 0.5) / (2.0 * n as f64 + 1.0);
         if correction < 100.0 {
             // Prevent extreme corrections
             1.0 + correction
@@ -196,7 +196,7 @@ pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult
 #[allow(dead_code)]
 pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult<f64> {
     // Validate input parameters
-    if _h2 < 0.0 || k2 < 0.0 {
+    if h2 < 0.0 || k2 < 0.0 {
         return Err(SpecialError::ValueError(
             "Parameters h² and k² must be non-negative".to_string(),
         ));
@@ -217,7 +217,7 @@ pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResu
     // The second kind functions are related to the first kind
     // but with different normalization and asymptotic behavior
 
-    let first_kind = ellip_harm(_h2, k2, n, p, s)?;
+    let first_kind = ellip_harm(h2, k2, n, p, s)?;
 
     // Apply transformation for second kind with numerical stability
     let s_squared = s * s;
@@ -311,7 +311,7 @@ pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResu
 #[allow(dead_code)]
 pub fn ellip_normal(h2: f64, k2: f64, n: usize, p: usize) -> SpecialResult<f64> {
     // Validate input parameters
-    if _h2 < 0.0 || k2 < 0.0 {
+    if h2 < 0.0 || k2 < 0.0 {
         return Err(SpecialError::ValueError(
             "Parameters h² and k² must be non-negative".to_string(),
         ));
@@ -329,8 +329,8 @@ pub fn ellip_normal(h2: f64, k2: f64, n: usize, p: usize) -> SpecialResult<f64> 
         .sqrt();
 
     // Ellipsoidal corrections
-    let h_correction = if _h2 > 0.0 {
-        (1.0 + _h2 * (n as f64 * n as f64 + n as f64 + 0.5) / (2.0 * n as f64 + 1.0)).sqrt()
+    let h_correction = if h2 > 0.0 {
+        (1.0 + h2 * (n as f64 * n as f64 + n as f64 + 0.5) / (2.0 * n as f64 + 1.0)).sqrt()
     } else {
         1.0
     };

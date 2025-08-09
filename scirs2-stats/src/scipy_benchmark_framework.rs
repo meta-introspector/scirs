@@ -72,7 +72,7 @@ pub struct AccuracyComparison {
     /// Mean absolute difference
     pub mean_abs_difference: f64,
     /// Relative error (L2 norm)
-    pub relative_error: f64,
+    pub relativeerror: f64,
     /// Number of values that differ beyond tolerance
     pub outlier_count: usize,
     /// Accuracy grade (A-F scale)
@@ -300,21 +300,21 @@ impl ScipyBenchmarkFramework {
         let scipy_result = scipy_reference(test_data);
 
         let abs_difference = (scirs2_result - scipy_result).abs();
-        let relative_error = if scipy_result.abs() > 1e-15 {
+        let relativeerror = if scipy_result.abs() > 1e-15 {
             abs_difference / scipy_result.abs()
         } else {
             abs_difference
         };
 
         let passes_tolerance = abs_difference <= self.config.absolute_tolerance
-            || relative_error <= self.config.relative_tolerance;
+            || relativeerror <= self.config.relative_tolerance;
 
-        let accuracy_grade = self.grade_accuracy(relative_error);
+        let accuracy_grade = self.grade_accuracy(relativeerror);
 
         Ok(AccuracyComparison {
             max_abs_difference: abs_difference,
             mean_abs_difference: abs_difference,
-            relative_error,
+            relativeerror,
             outlier_count: if passes_tolerance { 0 } else { 1 },
             accuracy_grade,
             passes_tolerance,
@@ -454,13 +454,13 @@ impl ScipyBenchmarkFramework {
 
     /// Grade accuracy based on relative error
     fn grade_accuracy(&self, relativeerror: f64) -> AccuracyGrade {
-        if relative_error < 1e-12 {
+        if relativeerror < 1e-12 {
             AccuracyGrade::A
-        } else if relative_error < 1e-9 {
+        } else if relativeerror < 1e-9 {
             AccuracyGrade::B
-        } else if relative_error < 1e-6 {
+        } else if relativeerror < 1e-6 {
             AccuracyGrade::C
-        } else if relative_error < 1e-3 {
+        } else if relativeerror < 1e-3 {
             AccuracyGrade::D
         } else {
             AccuracyGrade::F
@@ -522,7 +522,7 @@ impl ScipyBenchmarkFramework {
 impl TestDataGenerator {
     /// Create a new test data generator
     pub fn new(config: TestDataConfig) -> Self {
-        Self { config: _config }
+        Self { config }
     }
 
     /// Generate 1D test data

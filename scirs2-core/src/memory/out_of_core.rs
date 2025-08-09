@@ -109,7 +109,7 @@ impl ChunkMetadata {
             id,
             size_bytes,
             shape,
-            file_offset: file_offset,
+            file_offset: fileoffset,
             last_accessed: Instant::now(),
             access_count: 0,
             is_dirty: false,

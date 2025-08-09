@@ -574,7 +574,7 @@ where
 {
     let mut result = Array2::zeros((indices.len(), arr.ncols()));
     for (i, &idx) in indices.iter().enumerate() {
-        result.row_mut(i).assign(&_arr.row(idx));
+        result.row_mut(i).assign(&arr.row(idx));
     }
     result
 }
@@ -603,9 +603,9 @@ where
     match scoring.to_lowercase().as_str() {
         "accuracy" => {
             // For classification: count exact matches
-            let correct = _y_true
+            let correct = y_true
                 .iter()
-                .zip(y_pred.iter())
+                .zip(ypred.iter())
                 .filter(|(t, p)| (*t - *p).abs() < T::from(0.5).unwrap())
                 .count();
             Ok(correct as f64 / y_true.len() as f64)
@@ -614,7 +614,7 @@ where
             // Mean squared error
             let mse = y_true
                 .iter()
-                .zip(y_pred.iter())
+                .zip(ypred.iter())
                 .map(|(t, p)| (*t - *p) * (*t - *p))
                 .fold(T::zero(), |acc, x| acc + x)
                 / T::from(y_true.len()).unwrap();
@@ -624,7 +624,7 @@ where
             // Mean absolute error
             let mae = y_true
                 .iter()
-                .zip(y_pred.iter())
+                .zip(ypred.iter())
                 .map(|(t, p)| (*t - *p).abs())
                 .fold(T::zero(), |acc, x| acc + x)
                 / T::from(y_true.len()).unwrap();
@@ -642,7 +642,7 @@ where
 
             let ss_res = y_true
                 .iter()
-                .zip(y_pred.iter())
+                .zip(ypred.iter())
                 .map(|(&t, &p)| (t - p) * (t - p))
                 .fold(T::zero(), |acc, x| acc + x);
 
@@ -657,7 +657,7 @@ where
             // Default to MSE for unknown metrics
             let mse = y_true
                 .iter()
-                .zip(y_pred.iter())
+                .zip(ypred.iter())
                 .map(|(t, p)| (*t - *p) * (*t - *p))
                 .fold(T::zero(), |acc, x| acc + x)
                 / T::from(y_true.len()).unwrap();

@@ -241,7 +241,7 @@ fn calculate_optimal_dimensions(
             [warp_aligned.min(1024), 1, 1] // Max 1024 threads per block
         }
         GpuBackend::OpenCL => {
-            // Generic OpenCL workgroup _size
+            // Generic OpenCL workgroup size
             [
                 workgroup_size[0].min(256),
                 workgroup_size[1],
@@ -254,7 +254,7 @@ fn calculate_optimal_dimensions(
             [simd_aligned.min(1024), 1, 1]
         }
         GpuBackend::Cpu => {
-            // CPU execution can use any workgroup _size
+            // CPU execution can use any workgroup size
             workgroup_size
         }
         GpuBackend::Rocm => {
@@ -263,7 +263,7 @@ fn calculate_optimal_dimensions(
             [wave_aligned.min(1024), 1, 1]
         }
         GpuBackend::Wgpu => {
-            // WebGPU conservative workgroup _size
+            // WebGPU conservative workgroup size
             [workgroup_size[0].min(256), 1, 1]
         }
     };
@@ -300,12 +300,12 @@ where
     // - Use shared memory for better coalescing
     // - Employ warp-level primitives for efficient reduction
 
-    // Calculate optimal grid _size for CUDA
-    let _warp_size = 32; // Standard CUDA warp _size
+    // Calculate optimal grid size for CUDA
+    let _warp_size = 32; // Standard CUDA warp size
     let block_size = local_size[0].min(1024); // Max threads per block
     let grid_size = rows.div_ceil(block_size);
 
-    // Calculate shared memory _size based on block _size and data type
+    // Calculate shared memory size based on block size and data type
     let shared_memory_size = match config.memory_strategy {
         MemoryStrategy::SharedMemory => std::mem::size_of::<T>() * block_size_,
     };
@@ -363,14 +363,14 @@ where
     // - Use local memory for efficient data sharing
     // - Implement vectorization when possible
 
-    // Query device capabilities for optimal work-group _size
+    // Query device capabilities for optimal work-group size
     let max_work_group_size = device.get_max_work_group_size().unwrap_or(256);
     let optimal_local_size = local_size[0].min(max_work_group_size);
 
-    // Calculate global work _size (must be multiple of local work _size in OpenCL)
+    // Calculate global work size (must be multiple of local work size in OpenCL)
     let aligned_global_size = rows.div_ceil(optimal_local_size) * optimal_local_size;
 
-    // Calculate local memory _size for work-group sharing
+    // Calculate local memory size for work-group sharing
     let local_memory_size = match config.memory_strategy {
         MemoryStrategy::SharedMemory => std::mem::size_of::<T>() * optimal_local_size_,
     };
@@ -426,7 +426,7 @@ where
     // - Leverage unified memory architecture for optimal data access
 
     // Metal threadgroup sizing (optimal for Apple GPU architectures)
-    let simdgroup_size = 32; // Apple GPU simdgroup _size
+    let simdgroup_size = 32; // Apple GPU simdgroup size
     let max_threads_per_group = device.get_max_threads_per_threadgroup().unwrap_or(1024);
     let optimal_threadgroup_size = local_size[0].min(max_threads_per_group);
 
@@ -437,7 +437,7 @@ where
     // Calculate number of threadgroups
     let num_threadgroups = (rows + aligned_threadgroup_size - 1) / aligned_threadgroup_size;
 
-    // Threadgroup memory _size for Metal
+    // Threadgroup memory size for Metal
     let threadgroup_memory_size = match config.memory_strategy {
         MemoryStrategy::SharedMemory => std::mem::size_of::<T>() * aligned_threadgroup_size_,
     };
@@ -838,9 +838,9 @@ pub enum MemoryLayout {
 
 impl GpuMemoryManager {
     pub fn new(backend: GpuBackend) -> Result<Self, GpuError> {
-        let device = GpuDevice::get_default(_backend)?;
+        let device = GpuDevice::get_default(backend)?;
 
-        let alignment_preference = match _backend {
+        let alignment_preference = match backend {
             GpuBackend::Cuda => 128,  // CUDA prefers 128-byte alignment
             GpuBackend::OpenCL => 64, // OpenCL prefers 64-byte alignment
             GpuBackend::Metal => 16,  // Metal prefers 16-byte alignment
@@ -1012,14 +1012,14 @@ impl GpuMemoryManager {
     {
         match (transfer_size_priority) {
             // Large high-_priority transfers: use pinned memory and async transfer
-            (_size, TransferPriority::High | TransferPriority::Critical)
-                if _size > 4 * 1024 * 1024 =>
+            (size, TransferPriority::High | TransferPriority::Critical)
+                if size > 4 * 1024 * 1024 =>
             {
                 // Use pinned host memory for faster transfers
                 self.device.create_buffer(host_data) // Would use cudaHostAlloc in real implementation
             }
             // Medium transfers: use memory coalescing
-            (size_) if _size > 64 * 1024 => self.device.create_buffer(host_data),
+            (size_) if size > 64 * 1024 => self.device.create_buffer(host_data),
             // Small transfers: standard approach
             _ => self.device.create_buffer(host_data),
         }
@@ -1217,12 +1217,12 @@ pub fn optimize_memory_bandwidth(
     access_pattern: AccessPattern,
 ) -> MemoryStrategy {
     match (backend, access_pattern, data_size) {
-        (GpuBackend::Cuda, AccessPattern::Sequential, size) if _size > 1024 * 1024 => {
+        (GpuBackend::Cuda, AccessPattern::Sequential, size) if size > 1024 * 1024 => {
             MemoryStrategy::Coalesced
         }
         (GpuBackend::Cuda, AccessPattern::Random, _) => MemoryStrategy::TextureMemory,
         (GpuBackend::OpenCL, AccessPattern::Blocked, _) => MemoryStrategy::SharedMemory,
-        (GpuBackend::Metal, _, size) if _size > 512 * 1024 => {
+        (GpuBackend::Metal, _, size) if size > 512 * 1024 => {
             MemoryStrategy::SharedMemory // Unified memory architecture
         }
         _ => MemoryStrategy::Standard,
@@ -1413,7 +1413,7 @@ impl GpuPerformanceProfiler {
     /// Profile a GPU operation and collect timing data
     pub fn profile_operation<F, R>(
         &mut self,
-        operation_name: &str,
+        operationname: &str,
         operation: F,
     ) -> Result<R, GpuError>
     where
@@ -1426,7 +1426,7 @@ impl GpuPerformanceProfiler {
         // Store timing data
         let timings = self
             .timing_data
-            .entry(operation_name.to_string())
+            .entry(operationname.to_string())
             .or_default();
         timings.push(elapsed);
 
@@ -1440,7 +1440,7 @@ impl GpuPerformanceProfiler {
 
     /// Get average execution time for an operation
     pub fn get_average_time(&self, operationname: &str) -> Option<f64> {
-        if let Some(timings) = self.timing_data.get(operation_name) {
+        if let Some(timings) = self.timing_data.get(operationname) {
             if !timings.is_empty() {
                 Some(timings.iter().sum::<f64>() / timings.len() as f64)
             } else {
@@ -1547,7 +1547,7 @@ impl GpuPerformanceProfiler {
 
     /// Get detailed performance metrics for a specific operation
     pub fn get_operation_metrics(&self, operationname: &str) -> Option<OperationMetrics> {
-        if let Some(timings) = self.timing_data.get(operation_name) {
+        if let Some(timings) = self.timing_data.get(operationname) {
             if timings.is_empty() {
                 return None;
             }
@@ -1565,7 +1565,7 @@ impl GpuPerformanceProfiler {
             };
 
             Some(OperationMetrics {
-                operation_name: operation_name.to_string(),
+                operationname: operationname.to_string(),
                 call_count: count,
                 total_time,
                 avg_time,
@@ -1596,7 +1596,7 @@ impl GpuPerformanceProfiler {
 /// Detailed metrics for a specific GPU operation
 #[derive(Debug, Clone)]
 pub struct OperationMetrics {
-    pub operation_name: String,
+    pub operationname: String,
     pub call_count: usize,
     pub total_time: f64,
     pub avg_time: f64,

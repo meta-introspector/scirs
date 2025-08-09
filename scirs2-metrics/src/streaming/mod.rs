@@ -24,9 +24,9 @@
 //! let mut metrics = StreamingClassificationMetrics::new();
 //!
 //! // Process data points one at a time
-//! metrics.update(1, 1);  // true_label=1, pred_label=1 (correct)
-//! metrics.update(0, 1);  // true_label=0, pred_label=1 (incorrect)
-//! metrics.update(1, 1);  // true_label=1, pred_label=1 (correct)
+//! metrics.update(1, 1);  // true_label=1, predlabel=1 (correct)
+//! metrics.update(0, 1);  // true_label=0, predlabel=1 (incorrect)
+//! metrics.update(1, 1);  // true_label=1, predlabel=1 (correct)
 //!
 //! println!("Current accuracy: {:.4}", metrics.accuracy());
 //! println!("Total samples processed: {}", metrics.sample_count());
@@ -41,8 +41,8 @@
 //!
 //! for i in 0..150 {
 //!     let true_label = i % 2;
-//!     let pred_label = if i < 75 { i % 2 } else { (i + 1) % 2 }; // Accuracy degrades
-//!     metrics.update(true_label, pred_label);
+//!     let predlabel = if i < 75 { i % 2 } else { (i + 1) % 2 }; // Accuracy degrades
+//!     metrics.update(true_label, predlabel);
 //!     
 //!     if i % 25 == 0 {
 //!         println!("Accuracy at step {}: {:.4}", i, metrics.accuracy());
@@ -96,12 +96,12 @@ impl StreamingClassificationMetrics {
     pub fn update(&mut self, true_label: i32, predlabel: i32) {
         self.total_samples += 1;
 
-        if true_label == pred_label {
+        if true_label == predlabel {
             self.correct_predictions += 1;
         }
 
         // Assuming binary classification (0/1)
-        match (true_label, pred_label) {
+        match (true_label, predlabel) {
             (1, 1) => self.true_positives += 1,
             (0, 1) => self.false_positives += 1,
             (0, 0) => self.true_negatives += 1,
@@ -112,14 +112,14 @@ impl StreamingClassificationMetrics {
 
     /// Updates metrics with multiple predictions at once
     pub fn update_batch(&mut self, true_labels: &[i32], predlabels: &[i32]) -> Result<()> {
-        if true_labels.len() != pred_labels.len() {
+        if true_labels.len() != predlabels.len() {
             return Err(MetricsError::InvalidInput(
                 "True and predicted _labels must have the same length".to_string(),
             ));
         }
 
-        for (&true_label, &pred_label) in true_labels.iter().zip(pred_labels.iter()) {
-            self.update(true_label, pred_label);
+        for (&true_label, &predlabel) in true_labels.iter().zip(predlabels.iter()) {
+            self.update(true_label, predlabel);
         }
 
         Ok(())
@@ -240,7 +240,7 @@ impl<F: Float> StreamingRegressionMetrics<F> {
     pub fn update(&mut self, true_value: F, predvalue: F) {
         self.total_samples += 1;
 
-        let error = true_value - pred_value;
+        let error = true_value - predvalue;
         let abs_error = error.abs();
         let squared_error = error * error;
 
@@ -248,7 +248,7 @@ impl<F: Float> StreamingRegressionMetrics<F> {
         self.sum_absolute_errors = self.sum_absolute_errors + abs_error;
         self.sum_true_values = self.sum_true_values + true_value;
         self.sum_true_squared = self.sum_true_squared + (true_value * true_value);
-        self.sum_pred_values = self.sum_pred_values + pred_value;
+        self.sum_pred_values = self.sum_pred_values + predvalue;
 
         // Update min/max error
         match self.min_error {
@@ -272,14 +272,14 @@ impl<F: Float> StreamingRegressionMetrics<F> {
 
     /// Updates metrics with multiple predictions at once
     pub fn update_batch(&mut self, true_values: &[F], predvalues: &[F]) -> Result<()> {
-        if true_values.len() != pred_values.len() {
+        if true_values.len() != predvalues.len() {
             return Err(MetricsError::InvalidInput(
                 "True and predicted _values must have the same length".to_string(),
             ));
         }
 
-        for (&true_value, &pred_value) in true_values.iter().zip(pred_values.iter()) {
-            self.update(true_value, pred_value);
+        for (&true_value, &predvalue) in true_values.iter().zip(predvalues.iter()) {
+            self.update(true_value, predvalue);
         }
 
         Ok(())
@@ -361,8 +361,8 @@ impl<F: Float> StreamingRegressionMetrics<F> {
 /// Windowed classification metrics using a sliding window
 #[derive(Debug, Clone)]
 pub struct WindowedClassificationMetrics {
-    window_size: usize,
-    predictions: VecDeque<(i32, i32)>, // (true_label, pred_label)
+    _windowsize: usize,
+    predictions: VecDeque<(i32, i32)>, // (true_label, predlabel)
     metrics: StreamingClassificationMetrics,
 }
 
@@ -370,8 +370,8 @@ impl WindowedClassificationMetrics {
     /// Creates a new windowed classification metrics calculator
     pub fn new(_windowsize: usize) -> Self {
         Self {
-            window_size,
-            predictions: VecDeque::with_capacity(_window_size),
+            _windowsize,
+            predictions: VecDeque::with_capacity(_windowsize),
             metrics: StreamingClassificationMetrics::new(),
         }
     }
@@ -379,7 +379,7 @@ impl WindowedClassificationMetrics {
     /// Updates metrics with a new prediction, maintaining the sliding window
     pub fn update(&mut self, true_label: i32, predlabel: i32) {
         // If window is full, remove the oldest prediction
-        if self.predictions.len() >= self.window_size {
+        if self.predictions.len() >= self._windowsize {
             if let Some((old_true, old_pred)) = self.predictions.pop_front() {
                 // Subtract the old prediction from metrics
                 self.subtract_prediction(old_true, old_pred);
@@ -387,8 +387,8 @@ impl WindowedClassificationMetrics {
         }
 
         // Add the new prediction
-        self.predictions.push_back((true_label, pred_label));
-        self.metrics.update(true_label, pred_label);
+        self.predictions.push_back((true_label, predlabel));
+        self.metrics.update(true_label, predlabel);
     }
 
     /// Removes a prediction from the metrics (for sliding window)
@@ -397,11 +397,11 @@ impl WindowedClassificationMetrics {
             self.metrics.total_samples -= 1;
         }
 
-        if true_label == pred_label && self.metrics.correct_predictions > 0 {
+        if true_label == predlabel && self.metrics.correct_predictions > 0 {
             self.metrics.correct_predictions -= 1;
         }
 
-        match (true_label, pred_label) {
+        match (true_label, predlabel) {
             (1, 1) => {
                 if self.metrics.true_positives > 0 {
                     self.metrics.true_positives -= 1;
@@ -433,7 +433,7 @@ impl WindowedClassificationMetrics {
 
     /// Gets the maximum window size
     pub fn max_window_size(&self) -> usize {
-        self.window_size
+        self._windowsize
     }
 
     /// Delegates metric calculations to the underlying streaming metrics
@@ -467,28 +467,28 @@ impl WindowedClassificationMetrics {
 /// Windowed regression metrics using a sliding window
 #[derive(Debug, Clone)]
 pub struct WindowedRegressionMetrics<F: Float> {
-    window_size: usize,
-    predictions: VecDeque<(F, F)>, // (true_value, pred_value)
+    _windowsize: usize,
+    predictions: VecDeque<(F, F)>, // (true_value, predvalue)
 }
 
 impl<F: Float> WindowedRegressionMetrics<F> {
     /// Creates a new windowed regression metrics calculator
     pub fn new(_windowsize: usize) -> Self {
         Self {
-            window_size,
-            predictions: VecDeque::with_capacity(_window_size),
+            _windowsize,
+            predictions: VecDeque::with_capacity(_windowsize),
         }
     }
 
     /// Updates metrics with a new prediction, maintaining the sliding window
     pub fn update(&mut self, true_value: F, predvalue: F) {
         // If window is full, remove the oldest prediction
-        if self.predictions.len() >= self.window_size {
+        if self.predictions.len() >= self._windowsize {
             self.predictions.pop_front();
         }
 
         // Add the new prediction
-        self.predictions.push_back((true_value, pred_value));
+        self.predictions.push_back((true_value, predvalue));
     }
 
     /// Computes MSE over the current window
@@ -536,7 +536,7 @@ impl<F: Float> WindowedRegressionMetrics<F> {
 
     /// Gets the maximum window size
     pub fn max_window_size(&self) -> usize {
-        self.window_size
+        self._windowsize
     }
 
     /// Clears the window
@@ -664,9 +664,9 @@ mod tests {
         let mut metrics = StreamingClassificationMetrics::new();
 
         let true_labels = vec![1, 0, 1, 0];
-        let pred_labels = vec![1, 0, 0, 1];
+        let predlabels = vec![1, 0, 0, 1];
 
-        metrics.update_batch(&true_labels, &pred_labels).unwrap();
+        metrics.update_batch(&true_labels, &predlabels).unwrap();
 
         assert_eq!(metrics.sample_count(), 4);
         assert_eq!(metrics.accuracy(), 0.5); // 2 correct out of 4

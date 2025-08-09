@@ -363,7 +363,7 @@ where
     let (m, n) = matrix.shape();
     let l = k + options.n_oversamples;
 
-    // Generate random _matrix
+    // Generate random matrix
     let mut omega = Array2::zeros((n, l));
     for i in 0..n {
         for j in 0..l {
@@ -377,7 +377,7 @@ where
     let mut y = Array2::zeros((m, l));
     for j in 0..l {
         let omega_col = omega.column(j).to_owned();
-        let y_col = matrix_vector_product(_matrix, &omega_col)?;
+        let y_col = matrix_vector_product(matrix, &omega_col)?;
         for i in 0..m {
             y[[i, j]] = y_col[i];
         }
@@ -389,8 +389,8 @@ where
         let mut y_new = Array2::zeros((m, l));
         for j in 0..l {
             let y_col = y.column(j).to_owned();
-            let at_y_col = matrix_transpose_vector_product(_matrix, &y_col)?;
-            let a_at_y_col = matrix_vector_product(_matrix, &at_y_col)?;
+            let at_y_col = matrix_transpose_vector_product(matrix, &y_col)?;
+            let a_at_y_col = matrix_vector_product(matrix, &at_y_col)?;
             for i in 0..m {
                 y_new[[i, j]] = a_at_y_col[i];
             }
@@ -407,7 +407,7 @@ where
         let q_row = q.row(i).to_owned();
 
         // Compute A^T * q_row (equivalent to q_row^T * A)
-        let b_row = matrix_transpose_vector_product(_matrix, &q_row)?;
+        let b_row = matrix_transpose_vector_product(matrix, &q_row)?;
         for j in 0..n {
             b[[i, j]] = b_row[j];
         }
@@ -464,7 +464,7 @@ where
 {
     // For now, fall back to Lanczos method
     // A full implementation would use deflation and multiple power iterations
-    lanczos_bidiag_svd(_matrix, k, options)
+    lanczos_bidiag_svd(matrix, k, options)
 }
 
 /// Cross-approximation SVD (simplified implementation)

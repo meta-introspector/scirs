@@ -86,7 +86,7 @@ impl<T: Copy> MaskedArray2<T> {
 /// Compute the mean of a masked array
 ///
 /// # Arguments
-/// * `masked_array` - The masked array
+/// * `maskedarray` - The masked array
 /// * `axis` - Axis along which to compute the mean (None for overall mean)
 ///
 /// # Returns
@@ -106,17 +106,17 @@ impl<T: Copy> MaskedArray2<T> {
 /// assert!((mean - 3.0).abs() < 1e-10); // Mean of [1, 2, 4, 5] = 3.0
 /// ```
 #[allow(dead_code)]
-pub fn masked_mean<T>(masked_array: &MaskedArray<T>, axis: Option<usize>) -> StatsResult<f64>
+pub fn masked_mean<T>(maskedarray: &MaskedArray<T>, axis: Option<usize>) -> StatsResult<f64>
 where
     T: Copy + Into<f64>,
 {
-    if !masked_array.has_valid_values() {
+    if !maskedarray.has_valid_values() {
         return Err(StatsError::InvalidArgument(
             "Array has no valid values".to_string(),
         ));
     }
 
-    let valid_values = masked_array.valid_values();
+    let valid_values = maskedarray.valid_values();
     let sum: f64 = valid_values.iter().map(|&x| x.into()).sum();
     Ok(sum / valid_values.len() as f64)
 }
@@ -124,7 +124,7 @@ where
 /// Compute the variance of a masked array
 ///
 /// # Arguments
-/// * `masked_array` - The masked array
+/// * `maskedarray` - The masked array
 /// * `ddof` - Delta degrees of freedom (0 for population variance, 1 for sample variance)
 /// * `axis` - Axis along which to compute the variance (None for overall variance)
 ///
@@ -132,20 +132,20 @@ where
 /// * Variance of valid values
 #[allow(dead_code)]
 pub fn masked_var<T>(
-    masked_array: &MaskedArray<T>,
+    maskedarray: &MaskedArray<T>,
     ddof: usize,
     axis: Option<usize>,
 ) -> StatsResult<f64>
 where
     T: Copy + Into<f64>,
 {
-    if !masked_array.has_valid_values() {
+    if !maskedarray.has_valid_values() {
         return Err(StatsError::InvalidArgument(
             "Array has no valid values".to_string(),
         ));
     }
 
-    let valid_values = masked_array.valid_values();
+    let valid_values = maskedarray.valid_values();
     let n = valid_values.len();
 
     if n <= ddof {
@@ -154,7 +154,7 @@ where
         ));
     }
 
-    let mean = masked_mean(masked_array, axis)?;
+    let mean = masked_mean(maskedarray, axis)?;
     let sum_squared_diff: f64 = valid_values
         .iter()
         .map(|&x| {
@@ -169,7 +169,7 @@ where
 /// Compute the standard deviation of a masked array
 ///
 /// # Arguments
-/// * `masked_array` - The masked array
+/// * `maskedarray` - The masked array
 /// * `ddof` - Delta degrees of freedom (0 for population std, 1 for sample std)
 /// * `axis` - Axis along which to compute the std (None for overall std)
 ///
@@ -177,21 +177,21 @@ where
 /// * Standard deviation of valid values
 #[allow(dead_code)]
 pub fn masked_std<T>(
-    masked_array: &MaskedArray<T>,
+    maskedarray: &MaskedArray<T>,
     ddof: usize,
     axis: Option<usize>,
 ) -> StatsResult<f64>
 where
     T: Copy + Into<f64>,
 {
-    let variance = masked_var(masked_array, ddof, axis)?;
+    let variance = masked_var(maskedarray, ddof, axis)?;
     Ok(variance.sqrt())
 }
 
 /// Compute the median of a masked array
 ///
 /// # Arguments
-/// * `masked_array` - The masked array
+/// * `maskedarray` - The masked array
 ///
 /// # Returns
 /// * Median of valid values
@@ -200,13 +200,13 @@ pub fn masked_median<T>(maskedarray: &MaskedArray<T>) -> StatsResult<f64>
 where
     T: Copy + Into<f64> + PartialOrd,
 {
-    if !masked_array.has_valid_values() {
+    if !maskedarray.has_valid_values() {
         return Err(StatsError::InvalidArgument(
             "Array has no valid values".to_string(),
         ));
     }
 
-    let mut valid_values = masked_array.valid_values();
+    let mut valid_values = maskedarray.valid_values();
     valid_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let n = valid_values.len();
@@ -224,20 +224,20 @@ where
 /// Compute quantiles of a masked array
 ///
 /// # Arguments
-/// * `masked_array` - The masked array
+/// * `maskedarray` - The masked array
 /// * `q` - Quantile or sequence of quantiles to compute (0.0 to 1.0)
 ///
 /// # Returns
 /// * Array of quantiles
 #[allow(dead_code)]
 pub fn masked_quantile<T>(
-    masked_array: &MaskedArray<T>,
+    maskedarray: &MaskedArray<T>,
     q: ArrayView1<f64>,
 ) -> StatsResult<Array1<f64>>
 where
     T: Copy + Into<f64> + PartialOrd,
 {
-    if !masked_array.has_valid_values() {
+    if !maskedarray.has_valid_values() {
         return Err(StatsError::InvalidArgument(
             "Array has no valid values".to_string(),
         ));
@@ -251,7 +251,7 @@ where
         }
     }
 
-    let mut valid_values = masked_array.valid_values();
+    let mut valid_values = maskedarray.valid_values();
     valid_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let n = valid_values.len() as f64;
@@ -507,7 +507,7 @@ where
 /// Compute masked skewness
 ///
 /// # Arguments
-/// * `masked_array` - The masked array
+/// * `maskedarray` - The masked array
 /// * `bias` - If false, use bias-corrected formula
 ///
 /// # Returns
@@ -517,13 +517,13 @@ pub fn masked_skew<T>(maskedarray: &MaskedArray<T>, bias: bool) -> StatsResult<f
 where
     T: Copy + Into<f64>,
 {
-    if !masked_array.has_valid_values() {
+    if !maskedarray.has_valid_values() {
         return Err(StatsError::InvalidArgument(
             "Array has no valid values".to_string(),
         ));
     }
 
-    let valid_values = masked_array.valid_values();
+    let valid_values = maskedarray.valid_values();
     let n = valid_values.len() as f64;
 
     if n < 3.0 {
@@ -532,8 +532,8 @@ where
         ));
     }
 
-    let mean = masked_mean(masked_array, None)?;
-    let std_dev = masked_std(masked_array, 1, None)?;
+    let mean = masked_mean(maskedarray, None)?;
+    let std_dev = masked_std(maskedarray, 1, None)?;
 
     if std_dev == 0.0 {
         return Ok(0.0);
@@ -560,7 +560,7 @@ where
 /// Compute masked kurtosis
 ///
 /// # Arguments
-/// * `masked_array` - The masked array
+/// * `maskedarray` - The masked array
 /// * `fisher` - If true, return Fisher's kurtosis (excess kurtosis)
 /// * `bias` - If false, use bias-corrected formula
 ///
@@ -568,20 +568,20 @@ where
 /// * Kurtosis of valid values
 #[allow(dead_code)]
 pub fn masked_kurtosis<T>(
-    masked_array: &MaskedArray<T>,
+    maskedarray: &MaskedArray<T>,
     fisher: bool,
     bias: bool,
 ) -> StatsResult<f64>
 where
     T: Copy + Into<f64>,
 {
-    if !masked_array.has_valid_values() {
+    if !maskedarray.has_valid_values() {
         return Err(StatsError::InvalidArgument(
             "Array has no valid values".to_string(),
         ));
     }
 
-    let valid_values = masked_array.valid_values();
+    let valid_values = maskedarray.valid_values();
     let n = valid_values.len() as f64;
 
     if n < 4.0 {
@@ -590,8 +590,8 @@ where
         ));
     }
 
-    let mean = masked_mean(masked_array, None)?;
-    let std_dev = masked_std(masked_array, 1, None)?;
+    let mean = masked_mean(maskedarray, None)?;
+    let std_dev = masked_std(maskedarray, 1, None)?;
 
     if std_dev == 0.0 {
         return Err(StatsError::InvalidArgument(
@@ -627,7 +627,7 @@ where
 /// Compute trimmed mean of a masked array
 ///
 /// # Arguments
-/// * `masked_array` - The masked array
+/// * `maskedarray` - The masked array
 /// * `proportiontocut` - Fraction of values to trim from each end (0.0 to 0.5)
 ///
 /// # Returns
@@ -643,13 +643,13 @@ where
         ));
     }
 
-    if !masked_array.has_valid_values() {
+    if !maskedarray.has_valid_values() {
         return Err(StatsError::InvalidArgument(
             "Array has no valid values".to_string(),
         ));
     }
 
-    let mut valid_values = masked_array.valid_values();
+    let mut valid_values = maskedarray.valid_values();
     valid_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let n = valid_values.len();

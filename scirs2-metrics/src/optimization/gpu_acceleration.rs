@@ -137,7 +137,7 @@ impl GpuMetricsComputer {
 
     /// Check if GPU acceleration should be used for given data size
     pub fn should_use_gpu(&self, datasize: usize) -> bool {
-        self.gpu_info.is_some() && data_size >= self.config.min_batch_size
+        self.gpu_info.is_some() && datasize >= self.config.min_batch_size
     }
 
     /// Check if GPU is available
@@ -378,7 +378,7 @@ impl GpuMetricsComputer {
     fn estimate_sm_count(_computecapability: (u32, u32), total_memory_bytes: usize) -> u32 {
         let memory_gb = total_memory_bytes / (1024 * 1024 * 1024);
 
-        match _compute_capability {
+        match _computecapability {
             (8, 6) => match memory_gb {
                 // RTX 30xx series
                 24.. => 84,    // RTX 3090
@@ -423,11 +423,11 @@ impl GpuMetricsComputer {
     /// Compute accuracy on GPU with intelligent fallback
     pub fn gpu_accuracy(&self, y_true: &Array1<i32>, ypred: &Array1<i32>) -> Result<f32> {
         if self.should_use_gpu(y_true.len()) {
-            self.gpu_accuracy_kernel(y_true, y_pred)
+            self.gpu_accuracy_kernel(y_true, ypred)
         } else if self.config.enable_simd_fallback && self.capabilities.simd_available {
-            self.simd_accuracy(y_true, y_pred)
+            self.simd_accuracy(y_true, ypred)
         } else {
-            self.cpu_accuracy(y_true, y_pred)
+            self.cpu_accuracy(y_true, ypred)
         }
     }
 
@@ -437,11 +437,11 @@ impl GpuMetricsComputer {
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
         if self.should_use_gpu(y_true.len()) {
-            self.gpu_mse_kernel(y_true, y_pred)
+            self.gpu_mse_kernel(y_true, ypred)
         } else if self.config.enable_simd_fallback && self.capabilities.simd_available {
-            self.simd_mse(y_true, y_pred)
+            self.simd_mse(y_true, ypred)
         } else {
-            self.cpu_mse(y_true, y_pred)
+            self.cpu_mse(y_true, ypred)
         }
     }
 
@@ -450,13 +450,13 @@ impl GpuMetricsComputer {
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::InvalidInput(
                 "Arrays must have same length".to_string(),
             ));
         }
 
-        let squared_diff = F::simd_sub(&y_true.view(), &y_pred.view());
+        let squared_diff = F::simd_sub(&y_true.view(), &ypred.view());
         let squared = F::simd_mul(&squared_diff.view(), &squared_diff.view());
         let sum = F::simd_sum(&squared.view());
         Ok(sum / F::from(y_true.len()).unwrap())
@@ -464,7 +464,7 @@ impl GpuMetricsComputer {
 
     /// SIMD-accelerated accuracy computation
     pub fn simd_accuracy(&self, y_true: &Array1<i32>, ypred: &Array1<i32>) -> Result<f32> {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::InvalidInput(
                 "Arrays must have same length".to_string(),
             ));
@@ -473,7 +473,7 @@ impl GpuMetricsComputer {
         // For integer comparison, use standard approach as SIMD comparison returns masks
         let correct = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .filter(|(&true_val, &pred_val)| true_val == pred_val)
             .count();
 
@@ -484,10 +484,10 @@ impl GpuMetricsComputer {
     pub fn gpu_confusion_matrix(
         &self,
         y_true: &Array1<i32>,
-        y_pred: &Array1<i32>,
+        ypred: &Array1<i32>,
         num_classes: usize,
     ) -> Result<Array2<i32>> {
-        self.cpu_confusion_matrix(y_true, y_pred, num_classes)
+        self.cpu_confusion_matrix(y_true, ypred, num_classes)
     }
 
     /// GPU-accelerated batch metric computation with comprehensive fallbacks
@@ -657,7 +657,7 @@ impl GpuMetricsComputer {
         // Simulate GPU parallel computation
         let correct = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .filter(|(&true_val, &pred_val)| true_val == pred_val)
             .count();
 
@@ -671,7 +671,7 @@ impl GpuMetricsComputer {
     {
         let diff_squared: F = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum();
 
@@ -685,7 +685,7 @@ impl GpuMetricsComputer {
     {
         let abs_diff: F = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p).abs())
             .sum();
 
@@ -706,7 +706,7 @@ impl GpuMetricsComputer {
 
         let ss_res: F = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum();
 
@@ -724,13 +724,13 @@ impl GpuMetricsComputer {
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::InvalidInput(
                 "Arrays must have same length".to_string(),
             ));
         }
 
-        let diff = F::simd_sub(&y_true.view(), &y_pred.view());
+        let diff = F::simd_sub(&y_true.view(), &ypred.view());
         let abs_diff = F::simd_abs(&diff.view());
         let sum = F::simd_sum(&abs_diff.view());
         Ok(sum / F::from(y_true.len()).unwrap())
@@ -741,7 +741,7 @@ impl GpuMetricsComputer {
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::InvalidInput(
                 "Arrays must have same length".to_string(),
             ));
@@ -758,8 +758,8 @@ impl GpuMetricsComputer {
         let squared_diff_mean = F::simd_mul(&diff_from_mean.view(), &diff_from_mean.view());
         let ss_tot = F::simd_sum(&squared_diff_mean.view());
 
-        // Compute SS_res = sum((y_true - y_pred)²)
-        let residuals = F::simd_sub(&y_true.view(), &y_pred.view());
+        // Compute SS_res = sum((y_true - ypred)²)
+        let residuals = F::simd_sub(&y_true.view(), &ypred.view());
         let squared_residuals = F::simd_mul(&residuals.view(), &residuals.view());
         let ss_res = F::simd_sum(&squared_residuals.view());
 
@@ -773,7 +773,7 @@ impl GpuMetricsComputer {
     // CPU fallback implementations
 
     fn cpu_accuracy(&self, y_true: &Array1<i32>, ypred: &Array1<i32>) -> Result<f32> {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::InvalidInput(
                 "Arrays must have the same length".to_string(),
             ));
@@ -781,7 +781,7 @@ impl GpuMetricsComputer {
 
         let correct = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .filter(|(&true_val, &pred_val)| true_val == pred_val)
             .count();
 
@@ -792,7 +792,7 @@ impl GpuMetricsComputer {
     where
         F: Float + std::iter::Sum,
     {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::InvalidInput(
                 "Arrays must have the same length".to_string(),
             ));
@@ -800,7 +800,7 @@ impl GpuMetricsComputer {
 
         let mse = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&true_val, &pred_val)| (true_val - pred_val) * (true_val - pred_val))
             .sum::<F>()
             / F::from(y_true.len()).unwrap();
@@ -812,7 +812,7 @@ impl GpuMetricsComputer {
     where
         F: Float + std::iter::Sum,
     {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::InvalidInput(
                 "Arrays must have the same length".to_string(),
             ));
@@ -820,7 +820,7 @@ impl GpuMetricsComputer {
 
         let mae = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&true_val, &pred_val)| (true_val - pred_val).abs())
             .sum::<F>()
             / F::from(y_true.len()).unwrap();
@@ -832,7 +832,7 @@ impl GpuMetricsComputer {
     where
         F: Float + std::iter::Sum,
     {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::InvalidInput(
                 "Arrays must have the same length".to_string(),
             ));
@@ -847,7 +847,7 @@ impl GpuMetricsComputer {
 
         let ss_res = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum::<F>();
 
@@ -861,10 +861,10 @@ impl GpuMetricsComputer {
     fn cpu_confusion_matrix(
         &self,
         y_true: &Array1<i32>,
-        y_pred: &Array1<i32>,
+        ypred: &Array1<i32>,
         num_classes: usize,
     ) -> Result<Array2<i32>> {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::InvalidInput(
                 "Arrays must have the same length".to_string(),
             ));
@@ -872,7 +872,7 @@ impl GpuMetricsComputer {
 
         let mut matrix = Array2::zeros((num_classes, num_classes));
 
-        for (&true_class, &pred_class) in y_true.iter().zip(y_pred.iter()) {
+        for (&true_class, &pred_class) in y_true.iter().zip(ypred.iter()) {
             if true_class >= 0
                 && (true_class as usize) < num_classes
                 && pred_class >= 0
@@ -889,7 +889,7 @@ impl GpuMetricsComputer {
     pub fn benchmark_implementations<F>(
         &self,
         y_true: &Array1<F>,
-        y_pred: &Array1<F>,
+        ypred: &Array1<F>,
         iterations: usize,
     ) -> Result<BenchmarkResults>
     where
@@ -900,7 +900,7 @@ impl GpuMetricsComputer {
         // Benchmark scalar implementation
         let start = Instant::now();
         for _ in 0..iterations {
-            let _ = self.cpu_mse(y_true, y_pred)?;
+            let _ = self.cpu_mse(y_true, ypred)?;
         }
         let scalar_time = start.elapsed();
         results.scalar_time = scalar_time;
@@ -909,7 +909,7 @@ impl GpuMetricsComputer {
         if self.capabilities.simd_available {
             let start = Instant::now();
             for _ in 0..iterations {
-                let _ = self.simd_mse(y_true, y_pred)?;
+                let _ = self.simd_mse(y_true, ypred)?;
             }
             let simd_time = start.elapsed();
             results.simd_time = Some(simd_time);
@@ -920,7 +920,7 @@ impl GpuMetricsComputer {
         // Benchmark GPU implementation (if available)
         if self.gpu_info.is_some() {
             let batch = y_true.view().insert_axis(Axis(0));
-            let batch_pred = y_pred.view().insert_axis(Axis(0));
+            let batch_pred = ypred.view().insert_axis(Axis(0));
 
             let start = Instant::now();
             for _ in 0..iterations {
@@ -1100,7 +1100,7 @@ pub struct MemoryPool {
     /// Allocated memory blocks
     allocated_blocks: Vec<MemoryBlock>,
     /// Total pool size
-    total_size: usize,
+    totalsize: usize,
     /// Available size
     available_size: usize,
 }
@@ -1207,7 +1207,7 @@ impl AdvancedGpuOrchestrator {
 
         let mut tasks: Vec<std::thread::JoinHandle<Result<Vec<HashMap<String, F>>>>> = Vec::new();
 
-        for (device_id, (start_idx, end_idx)) in work_distribution {
+        for (deviceid, (start_idx, end_idx)) in work_distribution {
             let y_true_slice = y_true_batch
                 .slice(ndarray::s![start_idx..end_idx, ..])
                 .to_owned();
@@ -1226,10 +1226,10 @@ impl AdvancedGpuOrchestrator {
                 // Simulate GPU computation (in real implementation, this would be actual GPU kernels)
                 let metrics_refs: Vec<&str> = metrics_clone.iter().map(|s| s.as_str()).collect();
                 let result =
-                    Self::compute_on_device(device_id, y_true_slice, y_pred_slice, &metrics_refs);
+                    Self::compute_on_device(deviceid, y_true_slice, y_pred_slice, &metrics_refs);
 
                 let execution_time = start_time.elapsed();
-                performance_monitor.record_execution_time(device_id, execution_time);
+                performance_monitor.record_execution_time(deviceid, execution_time);
 
                 result
             });
@@ -1253,7 +1253,7 @@ impl AdvancedGpuOrchestrator {
     fn compute_on_device<F>(
         _device_id: usize,
         y_true: Array2<F>,
-        y_pred: Array2<F>,
+        ypred: Array2<F>,
         metrics: &[&str],
     ) -> Result<Vec<HashMap<String, F>>>
     where
@@ -1276,14 +1276,14 @@ impl AdvancedGpuOrchestrator {
                 let value = match metric {
                     "mse" => {
                         let y_t = y_true.row(i);
-                        let y_p = y_pred.row(i);
+                        let y_p = ypred.row(i);
                         let diff = &y_t - &y_p;
                         let squared_diff = diff.mapv(|x| x * x);
                         squared_diff.sum() / F::from(y_t.len()).unwrap()
                     }
                     "mae" => {
                         let y_t = y_true.row(i);
-                        let y_p = y_pred.row(i);
+                        let y_p = ypred.row(i);
                         let diff = &y_t - &y_p;
                         let abs_diff = diff.mapv(|x| x.abs());
                         abs_diff.sum() / F::from(y_t.len()).unwrap()
@@ -1433,12 +1433,12 @@ impl MemoryPool {
         Self {
             available_blocks: vec![MemoryBlock {
                 address: 0,
-                size: total_size,
+                size: totalsize,
                 allocated_at: Instant::now(),
             }],
             allocated_blocks: Vec::new(),
-            total_size,
-            available_size: total_size,
+            totalsize,
+            available_size: totalsize,
         }
     }
 }
@@ -1464,11 +1464,11 @@ impl PerformanceMonitor {
         // Store in performance history (simplified)
         println!(
             "GPU Device {}: Execution, time: {:?}, Throughput: {:.2} ops/sec",
-            device_id, duration, throughput
+            deviceid, duration, throughput
         );
 
         // In a real implementation, would update internal metrics storage
-        // self.execution_times.entry(device_id).or_insert_with(Vec::new).push(duration);
+        // self.execution_times.entry(deviceid).or_insert_with(Vec::new).push(duration);
     }
 
     fn get_statistics(&self) -> HashMap<String, f64> {
@@ -1507,7 +1507,7 @@ impl FaultToleranceManager {
 
         // Check 1: Memory availability
         if device.available_memory == 0 {
-            eprintln!("GPU Device {}: No available memory", device_id);
+            eprintln!("GPU Device {}: No available memory", deviceid);
             return Ok(false);
         }
 
@@ -1517,16 +1517,16 @@ impl FaultToleranceManager {
         if memory_usage_ratio > 0.9 {
             eprintln!(
                 "GPU Device {}: Memory usage too high: {:.1}%",
-                device_id,
+                deviceid,
                 memory_usage_ratio * 100.0
             );
             return Ok(false);
         }
 
         // Check 3: Try to execute a simple test kernel (simulated)
-        let test_result = self.execute_health_test_kernel(device_id, device);
+        let test_result = self.execute_health_test_kernel(deviceid, device);
         if !test_result {
-            eprintln!("GPU Device {}: Health test kernel failed", device_id);
+            eprintln!("GPU Device {}: Health test kernel failed", deviceid);
             return Ok(false);
         }
 
@@ -1535,7 +1535,7 @@ impl FaultToleranceManager {
             // Minimum Kepler architecture
             eprintln!(
                 "GPU Device {}: Compute capability too old: {}.{}",
-                device_id, device.compute_capability.0, device.compute_capability.1
+                deviceid, device.compute_capability.0, device.compute_capability.1
             );
             return Ok(false);
         }
@@ -1545,7 +1545,7 @@ impl FaultToleranceManager {
             if let Ok(output) = std::process::Command::new("nvidia-smi")
                 .arg("--query-gpu=temperature.gpu,power.draw,power.limit")
                 .arg("--format=csv,noheader,nounits")
-                .arg(format!("--_id={}", device_id))
+                .arg(format!("--_id={}", deviceid))
                 .output()
             {
                 if output.status.success() {
@@ -1558,7 +1558,7 @@ impl FaultToleranceManager {
                                 if temp > 85 {
                                     eprintln!(
                                         "GPU Device {}: Temperature too high: {}°C",
-                                        device_id, temp
+                                        deviceid, temp
                                     );
                                     return Ok(false);
                                 }
@@ -1570,7 +1570,7 @@ impl FaultToleranceManager {
                             {
                                 if power_draw > power_limit * 0.95 {
                                     eprintln!("GPU Device {}: Power consumption near limit: {:.1}W/{:.1}W", 
-                                             device_id, power_draw, power_limit);
+                                             deviceid, power_draw, power_limit);
                                     // Still return true but warn
                                 }
                             }
@@ -1613,7 +1613,7 @@ impl FaultToleranceManager {
         if !test_passed {
             eprintln!(
                 "GPU Device {}: Health test failed - execution time: {:?}, memory size: {}",
-                device_id, execution_time, test_memory_size
+                deviceid, execution_time, test_memory_size
             );
         }
 
@@ -1676,9 +1676,9 @@ mod tests {
     fn test_cpu_accuracy() {
         let computer = GpuMetricsComputer::new(GpuAccelConfig::default()).unwrap();
         let y_true = array![0, 1, 2, 0, 1, 2];
-        let y_pred = array![0, 2, 1, 0, 0, 2];
+        let ypred = array![0, 2, 1, 0, 0, 2];
 
-        let accuracy = computer.gpu_accuracy(&y_true, &y_pred).unwrap();
+        let accuracy = computer.gpu_accuracy(&y_true, &ypred).unwrap();
         assert!((accuracy - 0.5).abs() < 1e-6);
     }
 
@@ -1686,9 +1686,9 @@ mod tests {
     fn test_cpu_mse() {
         let computer = GpuMetricsComputer::new(GpuAccelConfig::default()).unwrap();
         let y_true = array![1.0, 2.0, 3.0, 4.0];
-        let y_pred = array![1.1, 2.1, 2.9, 4.1];
+        let ypred = array![1.1, 2.1, 2.9, 4.1];
 
-        let mse = computer.gpu_mse(&y_true, &y_pred).unwrap();
+        let mse = computer.gpu_mse(&y_true, &ypred).unwrap();
         assert!(mse > 0.0 && mse < 0.1);
     }
 
@@ -1696,9 +1696,9 @@ mod tests {
     fn test_cpu_confusion_matrix() {
         let computer = GpuMetricsComputer::new(GpuAccelConfig::default()).unwrap();
         let y_true = array![0, 1, 2, 0, 1, 2];
-        let y_pred = array![0, 2, 1, 0, 0, 2];
+        let ypred = array![0, 2, 1, 0, 0, 2];
 
-        let cm = computer.gpu_confusion_matrix(&y_true, &y_pred, 3).unwrap();
+        let cm = computer.gpu_confusion_matrix(&y_true, &ypred, 3).unwrap();
         assert_eq!(cm.shape(), &[3, 3]);
         assert_eq!(cm[[0, 0]], 2);
     }

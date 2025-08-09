@@ -27,7 +27,7 @@ impl GpuSpMV {
 
     /// Create a new GPU SpMV instance with specified backend
     pub fn with_backend(backend: GpuBackend) -> SparseResult<Self> {
-        let device = GpuDevice::get_default(_backend).map_err(|e| {
+        let device = GpuDevice::get_default(backend).map_err(|e| {
             SparseError::ComputationError(format!("Failed to initialize GPU device: {e}"))
         })?;
 

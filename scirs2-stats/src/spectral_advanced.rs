@@ -765,7 +765,7 @@ where
         let mut window = Array1::zeros(size);
         let n_f = F::from(size).unwrap();
 
-        match window_type {
+        match windowtype {
             WindowFunction::Hann => {
                 for i in 0..size {
                     let i_f = F::from(i).unwrap();

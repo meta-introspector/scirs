@@ -41,7 +41,7 @@ pub enum BoundaryMethod {
 ///
 /// * `image` - Input grayscale image
 /// * `transform` - 3x3 transformation matrix
-/// * `output_size` - Output image dimensions (width, height)
+/// * `_outputsize` - Output image dimensions (width, height)
 /// * `interpolation` - Interpolation method
 /// * `boundary` - Boundary handling method
 ///
@@ -52,16 +52,16 @@ pub enum BoundaryMethod {
 pub fn warp_image(
     image: &GrayImage,
     transform: &TransformMatrix,
-    output_size: (u32, u32),
+    _outputsize: (u32, u32),
     interpolation: InterpolationMethod,
     boundary: BoundaryMethod,
 ) -> Result<GrayImage> {
     // Try GPU acceleration first, fallback to CPU if needed
-    match warp_image_gpu(image, transform, output_size, interpolation, boundary) {
+    match warp_image_gpu(image, transform, _outputsize, interpolation, boundary) {
         Ok(result) => Ok(result),
         Err(_) => {
             // Fallback to CPU implementation
-            warp_image_cpu(image, transform, output_size, interpolation, boundary)
+            warp_image_cpu(image, transform, _outputsize, interpolation, boundary)
         }
     }
 }
@@ -78,7 +78,7 @@ pub fn warp_image(
 ///
 /// * `image` - Input grayscale image
 /// * `transform` - 3x3 transformation matrix
-/// * `output_size` - Output image dimensions (width, height)
+/// * `_outputsize` - Output image dimensions (width, height)
 /// * `interpolation` - Interpolation method
 /// * `boundary` - Boundary handling method
 ///
@@ -89,20 +89,20 @@ pub fn warp_image(
 pub fn warp_image_gpu(
     image: &GrayImage,
     transform: &TransformMatrix,
-    output_size: (u32, u32),
+    _outputsize: (u32, u32),
     interpolation: InterpolationMethod,
     boundary: BoundaryMethod,
 ) -> Result<GrayImage> {
     use scirs2_core::gpu::{GpuBackend, GpuContext};
 
-    let (out_width, out_height) = output_size;
+    let (out_width, out_height) = _outputsize;
     let (in_width, in_height) = image.dimensions();
 
     // Check if GPU acceleration is worthwhile (large images benefit more)
     let total_pixels = (out_width * out_height) as usize;
     if total_pixels < 256 * 256 {
         // For small images, CPU is often faster due to GPU overhead
-        return warp_image_cpu(image, transform, output_size, interpolation, boundary);
+        return warp_image_cpu(image, transform, _outputsize, interpolation, boundary);
     }
 
     // Try to get GPU context
@@ -110,7 +110,7 @@ pub fn warp_image_gpu(
         Ok(ctx) => ctx,
         Err(_) => {
             // GPU not available, fallback to CPU
-            return warp_image_cpu(image, transform, output_size, interpolation, boundary);
+            return warp_image_cpu(image, transform, _outputsize, interpolation, boundary);
         }
     };
 
@@ -150,7 +150,7 @@ pub fn warp_image_gpu(
     }
 
     // Return to CPU implementation with proper error context
-    warp_image_cpu(image, transform, output_size, interpolation, boundary)
+    warp_image_cpu(image, transform, _outputsize, interpolation, boundary)
 }
 
 /// CPU fallback for image warping
@@ -159,7 +159,7 @@ pub fn warp_image_gpu(
 ///
 /// * `image` - Input grayscale image
 /// * `transform` - 3x3 transformation matrix
-/// * `output_size` - Output image dimensions (width, height)
+/// * `_outputsize` - Output image dimensions (width, height)
 /// * `interpolation` - Interpolation method
 /// * `boundary` - Boundary handling method
 ///
@@ -170,11 +170,11 @@ pub fn warp_image_gpu(
 fn warp_image_cpu(
     image: &GrayImage,
     transform: &TransformMatrix,
-    output_size: (u32, u32),
+    _outputsize: (u32, u32),
     interpolation: InterpolationMethod,
     boundary: BoundaryMethod,
 ) -> Result<GrayImage> {
-    let (out_width, out_height) = output_size;
+    let (out_width, out_height) = _outputsize;
     let (in_width, in_height) = image.dimensions();
 
     // Create output image
@@ -532,11 +532,11 @@ fn sample_image(
 pub fn warp_rgb_image(
     image: &RgbImage,
     transform: &TransformMatrix,
-    output_size: (u32, u32),
+    _outputsize: (u32, u32),
     interpolation: InterpolationMethod,
     boundary: BoundaryMethod,
 ) -> Result<RgbImage> {
-    let (out_width, out_height) = output_size;
+    let (out_width, out_height) = _outputsize;
     let (in_width, in_height) = image.dimensions();
 
     // Create output image
@@ -763,11 +763,11 @@ fn cubic_kernel(t: f32) -> f32 {
 /// Create a mesh grid for transformation mapping
 #[allow(dead_code)]
 pub fn create_mesh_grid(width: u32, height: u32) -> (Array2<f64>, Array2<f64>) {
-    let mut x_grid = Array2::zeros((height as usize, _width as usize));
-    let mut y_grid = Array2::zeros((height as usize, _width as usize));
+    let mut x_grid = Array2::zeros((height as usize, width as usize));
+    let mut y_grid = Array2::zeros((height as usize, width as usize));
 
     for y in 0..height {
-        for x in 0.._width {
+        for x in 0..width {
             x_grid[[y as usize, x as usize]] = x as f64;
             y_grid[[y as usize, x as usize]] = y as f64;
         }
@@ -781,10 +781,10 @@ pub fn create_mesh_grid(width: u32, height: u32) -> (Array2<f64>, Array2<f64>) {
 pub fn perspective_correct(
     image: &DynamicImage,
     corners: &[Point2D; 4],
-    output_size: (u32, u32),
+    _outputsize: (u32, u32),
 ) -> Result<DynamicImage> {
     // Define target rectangle corners
-    let (width, height) = output_size;
+    let (width, height) = _outputsize;
     let target_corners = [
         Point2D::new(0.0, 0.0),
         Point2D::new(width as f64 - 1.0, 0.0),
@@ -813,7 +813,7 @@ pub fn perspective_correct(
             let warped = warp_image(
                 gray,
                 &transform,
-                output_size,
+                _outputsize,
                 InterpolationMethod::Bilinear,
                 BoundaryMethod::Zero,
             )?;
@@ -823,7 +823,7 @@ pub fn perspective_correct(
             let warped = warp_rgb_image(
                 rgb,
                 &transform,
-                output_size,
+                _outputsize,
                 InterpolationMethod::Bilinear,
                 BoundaryMethod::Zero,
             )?;
@@ -835,7 +835,7 @@ pub fn perspective_correct(
             let warped = warp_rgb_image(
                 &rgb,
                 &transform,
-                output_size,
+                _outputsize,
                 InterpolationMethod::Bilinear,
                 BoundaryMethod::Zero,
             )?;
@@ -854,7 +854,7 @@ pub fn perspective_correct(
 ///
 /// * `left_image` - Left stereo image
 /// * `right_image` - Right stereo image  
-/// * `fundamental_matrix` - Fundamental matrix relating the two images
+/// * `fundamentalmatrix` - Fundamental matrix relating the two images
 ///
 /// # Returns
 ///
@@ -870,7 +870,7 @@ pub fn perspective_correct(
 pub fn rectify_stereo_pair(
     left_image: &DynamicImage,
     right_image: &DynamicImage,
-    fundamental_matrix: &TransformMatrix,
+    fundamentalmatrix: &TransformMatrix,
 ) -> Result<(DynamicImage, DynamicImage)> {
     // Ensure both images have the same dimensions
     let (left_width, left_height) = left_image.dimensions();
@@ -882,15 +882,15 @@ pub fn rectify_stereo_pair(
         ));
     }
 
-    // Compute epipoles from fundamental _matrix
-    let (left_epipole, right_epipole) = compute_epipoles(fundamental_matrix)?;
+    // Compute epipoles from fundamental matrix
+    let (left_epipole, right_epipole) = compute_epipoles(fundamentalmatrix)?;
 
     // Compute rectification transforms
     let (left_transform, right_transform) = compute_rectification_transforms(
         left_epipole,
         right_epipole,
         (left_width, left_height),
-        fundamental_matrix,
+        fundamentalmatrix,
     )?;
 
     // Apply rectification transforms
@@ -924,10 +924,10 @@ pub fn rectify_stereo_pair(
 #[allow(dead_code)]
 fn compute_epipoles(_fundamentalmatrix: &TransformMatrix) -> Result<(Point2D, Point2D)> {
     // Find left epipole (null space of F^T)
-    let left_epipole = find_null_space(&transpose_matrix(_fundamental_matrix))?;
+    let left_epipole = find_null_space(&transpose_matrix(_fundamentalmatrix))?;
 
     // Find right epipole (null space of F)
-    let right_epipole = find_null_space(_fundamental_matrix)?;
+    let right_epipole = find_null_space(_fundamentalmatrix)?;
 
     Ok((left_epipole, right_epipole))
 }
@@ -1013,7 +1013,7 @@ fn compute_rectification_transforms(
     left_epipole: Point2D,
     right_epipole: Point2D,
     image_size: (u32, u32),
-    fundamental_matrix: &TransformMatrix,
+    fundamentalmatrix: &TransformMatrix,
 ) -> Result<(TransformMatrix, TransformMatrix)> {
     let (width, height) = image_size;
     let center_x = width as f64 / 2.0;
@@ -1030,7 +1030,7 @@ fn compute_rectification_transforms(
         (center_x, center_y),
         image_size,
         &left_transform,
-        fundamental_matrix,
+        fundamentalmatrix,
     )?;
 
     Ok((left_transform, right_transform))
@@ -1099,14 +1099,14 @@ fn compute_right_rectification_transform(
     center: (f64, f64),
     image_size: (u32, u32),
     left_transform: &TransformMatrix,
-    fundamental_matrix: &TransformMatrix,
+    fundamentalmatrix: &TransformMatrix,
 ) -> Result<TransformMatrix> {
     // Start with single-image rectification for right image
     let mut right_transform =
         compute_single_rectification_transform(right_epipole, center, image_size)?;
 
     // Adjust the right _transform to ensure epipolar lines match with left image
-    // This involves computing a corrective _transform based on the fundamental _matrix
+    // This involves computing a corrective _transform based on the fundamental matrix
 
     // For simplicity, we use the same approach as left image but with different parameters
     // In a full implementation, this would involve more sophisticated epipolar geometry
@@ -1115,7 +1115,7 @@ fn compute_right_rectification_transform(
     let vertical_adjustment = compute_vertical_alignment(
         left_transform,
         &right_transform,
-        fundamental_matrix,
+        fundamentalmatrix,
         image_size,
     )?;
 
@@ -1129,7 +1129,7 @@ fn compute_right_rectification_transform(
 fn compute_vertical_alignment(
     left_transform: &TransformMatrix_right,
     _transform: &TransformMatrix,
-    fundamental_matrix: &TransformMatrix,
+    fundamentalmatrix: &TransformMatrix,
     image_size: (u32, u32),
 ) -> Result<f64> {
     let (width, height) = image_size;
@@ -1149,8 +1149,8 @@ fn compute_vertical_alignment(
         // Transform point through left rectification
         let left_rectified = transform_point(point, left_transform);
 
-        // Compute corresponding epipolar line in right image using fundamental _matrix
-        let epipolar_line = compute_epipolar_line(left_rectified, fundamental_matrix);
+        // Compute corresponding epipolar line in right image using fundamental matrix
+        let epipolar_line = compute_epipolar_line(left_rectified, fundamentalmatrix);
 
         // The y-coordinate of this line should be the same as the rectified left point
         // Compute the adjustment needed
@@ -1177,7 +1177,7 @@ fn compute_epipolar_line(_point: Point2D, fundamentalmatrix: &TransformMatrix) -
 
     for i in 0..3 {
         for j in 0..3 {
-            line[i] += fundamental_matrix[[i, j]] * p[j];
+            line[i] += fundamentalmatrix[[i, j]] * p[j];
         }
     }
 
@@ -1187,7 +1187,7 @@ fn compute_epipolar_line(_point: Point2D, fundamentalmatrix: &TransformMatrix) -
 /// Compute y-intercept of an epipolar line at a given x coordinate
 #[allow(dead_code)]
 fn compute_epipolar_line_y_intercept(line: &(f64, f64, f64), x: f64) -> f64 {
-    let (a, b, c) = *_line;
+    let (a, b, c) = *line;
 
     if b.abs() > 1e-10 {
         -(a * x + c) / b
@@ -1217,16 +1217,16 @@ fn matrix_multiply(a: &TransformMatrix, b: &TransformMatrix) -> Result<Transform
 pub fn stitch_images(
     images: &[DynamicImage],
     transforms: &[TransformMatrix],
-    output_size: (u32, u32),
+    _outputsize: (u32, u32),
 ) -> Result<DynamicImage> {
     // Use memory-efficient streaming approach for large panoramas
-    let pixel_count = (output_size.0 * output_size.1) as usize;
+    let pixel_count = (_outputsize.0 * _outputsize.1) as usize;
     if pixel_count > 16_777_216 {
         // > 16 megapixels, use streaming approach
-        stitch_images_streaming(images, transforms, output_size)
+        stitch_images_streaming(images, transforms, _outputsize)
     } else {
         // Use traditional approach for smaller images
-        stitch_images_traditional(images, transforms, output_size)
+        stitch_images_traditional(images, transforms, _outputsize)
     }
 }
 
@@ -1242,7 +1242,7 @@ pub fn stitch_images(
 ///
 /// * `images` - Input images to stitch
 /// * `transforms` - Transformation matrices for each image
-/// * `output_size` - Final panorama dimensions (width, height)
+/// * `_outputsize` - Final panorama dimensions (width, height)
 ///
 /// # Returns
 ///
@@ -1251,7 +1251,7 @@ pub fn stitch_images(
 pub fn stitch_images_streaming(
     images: &[DynamicImage],
     transforms: &[TransformMatrix],
-    output_size: (u32, u32),
+    _outputsize: (u32, u32),
 ) -> Result<DynamicImage> {
     if images.len() != transforms.len() {
         return Err(VisionError::InvalidParameter(
@@ -1259,14 +1259,14 @@ pub fn stitch_images_streaming(
         ));
     }
 
-    let (_width_height) = output_size;
+    let (_width_height) = _outputsize;
 
     // Configure tile-based processing parameters
-    let tile_config = TileConfig::for_output_size(output_size);
+    let tile_config = TileConfig::for_output_size(_outputsize);
 
     // Initialize streaming panorama processor
     let mut panorama_processor =
-        StreamingPanoramaProcessor::new(output_size, tile_config, BlendingMode::MultiBandBlending)?;
+        StreamingPanoramaProcessor::new(_outputsize, tile_config, BlendingMode::MultiBandBlending)?;
 
     // Process each image in streaming fashion
     for (image, transform) in images.iter().zip(transforms.iter()) {
@@ -1283,7 +1283,7 @@ pub fn stitch_images_streaming(
 ///
 /// * `images` - Input images to stitch
 /// * `transforms` - Transformation matrices for each image
-/// * `output_size` - Final panorama dimensions (width, height)
+/// * `_outputsize` - Final panorama dimensions (width, height)
 ///
 /// # Returns
 ///
@@ -1292,7 +1292,7 @@ pub fn stitch_images_streaming(
 fn stitch_images_traditional(
     images: &[DynamicImage],
     transforms: &[TransformMatrix],
-    output_size: (u32, u32),
+    _outputsize: (u32, u32),
 ) -> Result<DynamicImage> {
     if images.len() != transforms.len() {
         return Err(VisionError::InvalidParameter(
@@ -1300,7 +1300,7 @@ fn stitch_images_traditional(
         ));
     }
 
-    let (width, height) = output_size;
+    let (width, height) = _outputsize;
     let mut output = RgbImage::new(width, height);
     let mut weight_map = Array2::<f32>::zeros((height as usize, width as usize));
 
@@ -1317,7 +1317,7 @@ fn stitch_images_traditional(
         let warped = warp_rgb_image(
             &rgb_image,
             transform,
-            output_size,
+            _outputsize,
             InterpolationMethod::Bilinear,
             BoundaryMethod::Zero,
         )?;
@@ -1367,13 +1367,13 @@ impl TileConfig {
     ///
     /// # Arguments
     ///
-    /// * `output_size` - Output panorama dimensions
+    /// * `_outputsize` - Output panorama dimensions
     ///
     /// # Returns
     ///
     /// * Optimal tile configuration
     pub fn for_output_size(_outputsize: (u32, u32)) -> Self {
-        let (width, height) = output_size;
+        let (width, height) = _outputsize;
 
         // Target tile _size based on memory constraints (aim for ~64MB per tile)
         let target_tile_pixels = 16_777_216; // 16 megapixels
@@ -1411,7 +1411,7 @@ pub enum BlendingMode {
 
 /// Streaming panorama processor for memory-efficient stitching
 pub struct StreamingPanoramaProcessor {
-    output_size: (u32, u32),
+    _outputsize: (u32, u32),
     tile_config: TileConfig,
     blending_mode: BlendingMode,
     tile_cache: TileCache,
@@ -1423,7 +1423,7 @@ impl StreamingPanoramaProcessor {
     ///
     /// # Arguments
     ///
-    /// * `output_size` - Final panorama dimensions
+    /// * `_outputsize` - Final panorama dimensions
     /// * `tile_config` - Tile processing configuration
     /// * `blending_mode` - Blending algorithm to use
     ///
@@ -1431,14 +1431,14 @@ impl StreamingPanoramaProcessor {
     ///
     /// * Result containing the processor
     pub fn new(
-        output_size: (u32, u32),
+        _outputsize: (u32, u32),
         tile_config: TileConfig,
         blending_mode: BlendingMode,
     ) -> Result<Self> {
         let tile_cache = TileCache::new(&tile_config)?;
 
         Ok(Self {
-            output_size,
+            _outputsize,
             tile_config,
             blending_mode,
             tile_cache,
@@ -1464,9 +1464,9 @@ impl StreamingPanoramaProcessor {
         let rgb_image = image.to_rgb8();
 
         // Process image tile by tile
-        for tile_y in 0..self.tile_config.tile_count.1 {
+        for tile_x in 0..self.tile_config.tile_count.1 {
             for tile_x in 0..self.tile_config.tile_count.0 {
-                self.process_tile_for_image(tile_x, tile_y, &rgb_image, transform)?;
+                self.process_tile_for_image(tile_x, tile_x, &rgb_image, transform)?;
             }
         }
 
@@ -1479,7 +1479,7 @@ impl StreamingPanoramaProcessor {
     /// # Arguments
     ///
     /// * `tile_x` - Tile x coordinate
-    /// * `tile_y` - Tile y coordinate  
+    /// * `tile_x` - Tile y coordinate  
     /// * `image` - Source image
     /// * `transform` - Transformation matrix
     ///
@@ -1489,18 +1489,18 @@ impl StreamingPanoramaProcessor {
     fn process_tile_for_image(
         &mut self,
         tile_x: u32,
-        tile_y: u32,
+        tile_x: u32,
         image: &RgbImage,
         transform: &TransformMatrix,
     ) -> Result<()> {
         // Calculate tile bounds
-        let tile_bounds = self.calculate_tile_bounds(tile_x, tile_y);
+        let tile_bounds = self.calculate_tile_bounds(tile_x, tile_x);
 
         // Warp only the relevant portion of the image for this tile
-        let warped_tile = self.warp_image_for_tile(image, transform, &tile_bounds)?;
+        let warpedtile = self.warp_image_for_tile(image, transform, &tile_bounds)?;
 
         // Blend with existing tile data
-        self.blend_tile(tile_x, tile_y, &warped_tile)?;
+        self.blend_tile(tile_x, tile_x, &warpedtile)?;
 
         Ok(())
     }
@@ -1510,7 +1510,7 @@ impl StreamingPanoramaProcessor {
     /// # Arguments
     ///
     /// * `tile_x` - Tile x coordinate
-    /// * `tile_y` - Tile y coordinate
+    /// * `tile_x` - Tile y coordinate
     ///
     /// # Returns
     ///
@@ -1520,11 +1520,11 @@ impl StreamingPanoramaProcessor {
         let overlap = self.tile_config.overlap;
 
         let start_x = tile_x * tile_width;
-        let start_y = tile_y * tile_height;
+        let start_y = tile_x * tile_height;
 
         // Add overlap, but clamp to image bounds
-        let actual_width = (tile_width + overlap).min(self.output_size.0 - start_x);
-        let actual_height = (tile_height + overlap).min(self.output_size.1 - start_y);
+        let actual_width = (tile_width + overlap).min(self._outputsize.0 - start_x);
+        let actual_height = (tile_height + overlap).min(self._outputsize.1 - start_y);
 
         (start_x, start_y, actual_width, actual_height)
     }
@@ -1546,10 +1546,10 @@ impl StreamingPanoramaProcessor {
         transform: &TransformMatrix,
         tile_bounds: &(u32, u32, u32, u32),
     ) -> Result<RgbImage> {
-        let (tile_x, tile_y, tile_width, tile_height) = *tile_bounds;
+        let (tile_x, tile_x, tile_width, tile_height) = *tile_bounds;
 
         // Create a sub-transformation that maps tile coordinates to image coordinates
-        let tile_transform = self.create_tile_transform(transform, tile_x, tile_y);
+        let tile_transform = self.create_tile_transform(transform, tile_x, tile_x);
 
         // Warp only the tile region
         warp_rgb_image(
@@ -1567,7 +1567,7 @@ impl StreamingPanoramaProcessor {
     ///
     /// * `base_transform` - Base transformation matrix
     /// * `tile_x` - Tile x offset
-    /// * `tile_y` - Tile y offset
+    /// * `tile_x` - Tile y offset
     ///
     /// # Returns
     ///
@@ -1576,12 +1576,12 @@ impl StreamingPanoramaProcessor {
         &self,
         base_transform: &TransformMatrix,
         tile_x: u32,
-        tile_y: u32,
+        tile_x: u32,
     ) -> TransformMatrix {
         // Create translation matrix for tile offset
         let mut tile_offset = identity_transform();
         tile_offset[[0, 2]] = tile_x as f64;
-        tile_offset[[1, 2]] = tile_y as f64;
+        tile_offset[[1, 2]] = tile_x as f64;
 
         // Combine transforms: tile_offset * base_transform
         matrix_multiply(&tile_offset, base_transform).unwrap_or_else(|_| base_transform.clone())
@@ -1592,19 +1592,19 @@ impl StreamingPanoramaProcessor {
     /// # Arguments
     ///
     /// * `tile_x` - Tile x coordinate
-    /// * `tile_y` - Tile y coordinate
-    /// * `warped_tile` - Warped tile image
+    /// * `tile_x` - Tile y coordinate
+    /// * `warpedtile` - Warped tile image
     ///
     /// # Returns
     ///
     /// * Result indicating success or failure
-    fn blend_tile(&mut self, tile_x: u32, tile_y: u32, warpedtile: &RgbImage) -> Result<()> {
+    fn blend_tile(&mut self, tile_x: u32, tile_x: u32, warpedtile: &RgbImage) -> Result<()> {
         match self.blending_mode {
-            BlendingMode::Linear => self.blend_tile_linear(tile_x, tile_y, warped_tile),
+            BlendingMode::Linear => self.blend_tile_linear(tile_x, tile_x, warpedtile),
             BlendingMode::MultiBandBlending => {
-                self.blend_tile_multiband(tile_x, tile_y, warped_tile)
+                self.blend_tile_multiband(tile_x, tile_x, warpedtile)
             }
-            BlendingMode::GraphCutSeaming => self.blend_tile_graphcut(tile_x, tile_y, warped_tile),
+            BlendingMode::GraphCutSeaming => self.blend_tile_graphcut(tile_x, tile_x, warpedtile),
         }
     }
 
@@ -1612,20 +1612,20 @@ impl StreamingPanoramaProcessor {
     fn blend_tile_linear(
         &mut self,
         tile_x: u32,
-        tile_y: u32,
-        warped_tile: &RgbImage,
+        tile_x: u32,
+        warpedtile: &RgbImage,
     ) -> Result<()> {
-        let tile_id = TileId {
+        let tileid = TileId {
             x: tile_x,
-            y: tile_y,
+            y: tile_x,
         };
-        let existing_tile = self.tile_cache.get_or_create_tile(tile_id)?;
+        let existing_tile = self.tile_cache.get_or_create_tile(tileid)?;
 
         // Simple averaging blend
-        let (tile_width, tile_height) = warped_tile.dimensions();
-        for _y in 0..tile_height {
+        let (tile_width, tile_height) = warpedtile.dimensions();
+        for y in 0..tile_height {
             for _x in 0..tile_width {
-                let new_pixel = warped_tile.get_pixel(_x_y);
+                let new_pixel = warpedtile.get_pixel(_x_y);
                 let existing_pixel = existing_tile.get_pixel_mut(_x_y);
 
                 // Check if new pixel has valid data
@@ -1651,24 +1651,24 @@ impl StreamingPanoramaProcessor {
     fn blend_tile_multiband(
         &mut self,
         tile_x: u32,
-        tile_y: u32,
-        warped_tile: &RgbImage,
+        tile_x: u32,
+        warpedtile: &RgbImage,
     ) -> Result<()> {
         // For now, use linear blending as a placeholder
         // In a full implementation, this would use Laplacian pyramids
-        self.blend_tile_linear(tile_x, tile_y, warped_tile)
+        self.blend_tile_linear(tile_x, tile_x, warpedtile)
     }
 
     /// Graph-cut seaming for tile (simplified implementation)
     fn blend_tile_graphcut(
         &mut self,
         tile_x: u32,
-        tile_y: u32,
-        warped_tile: &RgbImage,
+        tile_x: u32,
+        warpedtile: &RgbImage,
     ) -> Result<()> {
         // For now, use linear blending as a placeholder
         // In a full implementation, this would use graph-cut optimization
-        self.blend_tile_linear(tile_x, tile_y, warped_tile)
+        self.blend_tile_linear(tile_x, tile_x, warpedtile)
     }
 
     /// Finalize panorama and return result
@@ -1678,17 +1678,17 @@ impl StreamingPanoramaProcessor {
     /// * Result containing the final panorama
     pub fn finalize(self) -> Result<DynamicImage> {
         // Assemble tiles into final panorama
-        let (width, height) = self.output_size;
+        let (width, height) = self._outputsize;
         let mut output = RgbImage::new(width, height);
 
-        for tile_y in 0..self.tile_config.tile_count.1 {
+        for tile_x in 0..self.tile_config.tile_count.1 {
             for tile_x in 0..self.tile_config.tile_count.0 {
-                let tile_id = TileId {
+                let tileid = TileId {
                     x: tile_x,
-                    y: tile_y,
+                    y: tile_x,
                 };
-                if let Ok(tile) = self.tile_cache.get_tile(tile_id) {
-                    self.copy_tile_to_output(tile, tile_x, tile_y, &mut output)?;
+                if let Ok(tile) = self.tile_cache.get_tile(tileid) {
+                    self.copy_tile_to_output(tile, tile_x, tile_x, &mut output)?;
                 }
             }
         }
@@ -1702,7 +1702,7 @@ impl StreamingPanoramaProcessor {
     ///
     /// * `tile` - Source tile
     /// * `tile_x` - Tile x coordinate
-    /// * `tile_y` - Tile y coordinate
+    /// * `tile_x` - Tile y coordinate
     /// * `output` - Destination output image
     ///
     /// # Returns
@@ -1712,18 +1712,18 @@ impl StreamingPanoramaProcessor {
         &self,
         tile: &RgbImage,
         tile_x: u32,
-        tile_y: u32,
+        tile_x: u32,
         output: &mut RgbImage,
     ) -> Result<()> {
-        let tile_bounds = self.calculate_tile_bounds(tile_x, tile_y);
+        let tile_bounds = self.calculate_tile_bounds(tile_x, tile_x);
         let (start_x, start_y, tile_width, tile_height) = tile_bounds;
 
-        for _y in 0..tile_height {
+        for y in 0..tile_height {
             for _x in 0..tile_width {
                 let output_x = start_x + x;
                 let output_y = start_y + y;
 
-                if output_x < self.output_size.0 && output_y < self.output_size.1 {
+                if output_x < self._outputsize.0 && output_y < self._outputsize.1 {
                     let pixel = tile.get_pixel(_x_y);
                     output.put_pixel(output_x, output_y, *pixel);
                 }
@@ -1770,14 +1770,14 @@ impl TileCache {
     ///
     /// # Arguments
     ///
-    /// * `tile_id` - Tile identifier
+    /// * `tileid` - Tile identifier
     ///
     /// # Returns
     ///
     /// * Result containing mutable reference to the tile
     #[allow(clippy::map_entry)]
     fn get_or_create_tile(&mut self, tileid: TileId) -> Result<&mut RgbImage> {
-        if !self.tiles.contains_key(&tile_id) {
+        if !self.tiles.contains_key(&tileid) {
             // Check memory budget and evict if necessary
             self.ensure_memory_budget()?;
 
@@ -1788,25 +1788,25 @@ impl TileCache {
             let tile_memory = (tile_width * tile_height * 3) as usize;
             self.memory_usage += tile_memory;
 
-            self.tiles.insert(tile_id, tile);
+            self.tiles.insert(tileid, tile);
         }
 
-        Ok(self.tiles.get_mut(&tile_id).unwrap())
+        Ok(self.tiles.get_mut(&tileid).unwrap())
     }
 
     /// Get a tile (read-only)
     ///
     /// # Arguments
     ///
-    /// * `tile_id` - Tile identifier
+    /// * `tileid` - Tile identifier
     ///
     /// # Returns
     ///
     /// * Result containing reference to the tile
     fn get_tile(&self, tileid: TileId) -> Result<&RgbImage> {
         self.tiles
-            .get(&tile_id)
-            .ok_or_else(|| VisionError::OperationError(format!("Tile {tile_id:?} not found")))
+            .get(&tileid)
+            .ok_or_else(|| VisionError::OperationError(format!("Tile {tileid:?} not found")))
     }
 
     /// Ensure memory usage stays within budget
@@ -1819,11 +1819,11 @@ impl TileCache {
         while self.memory_usage > self.config.memory_budget && !self.tiles.is_empty() {
             // Remove the first tile (in a real implementation, we'd use proper LRU)
             if let Some((tile_id_)) = self.tiles.iter().next() {
-                let tile_id = *tile_id;
+                let tileid = *tileid;
                 let (tile_width, tile_height) = self.config.tile_size;
                 let tile_memory = (tile_width * tile_height * 3) as usize;
 
-                self.tiles.remove(&tile_id);
+                self.tiles.remove(&tileid);
                 self.memory_usage = self.memory_usage.saturating_sub(tile_memory);
             } else {
                 break;
@@ -1846,9 +1846,9 @@ fn invert_3x3_matrix(matrix: &TransformMatrix) -> Result<TransformMatrix> {
 
     // Compute determinant
     let det = matrix[[0, 0]]
-        * (_matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
-        - matrix[[0, 1]] * (_matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
-        + matrix[[0, 2]] * (_matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
+        * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
+        - matrix[[0, 1]] * (matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
+        + matrix[[0, 2]] * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
 
     if det.abs() < 1e-10 {
         return Err(VisionError::OperationError(
@@ -1858,16 +1858,16 @@ fn invert_3x3_matrix(matrix: &TransformMatrix) -> Result<TransformMatrix> {
 
     let mut inv = Array2::zeros((3, 3));
 
-    // Compute adjugate _matrix
-    inv[[0, 0]] = (_matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]]) / det;
-    inv[[0, 1]] = (_matrix[[0, 2]] * matrix[[2, 1]] - matrix[[0, 1]] * matrix[[2, 2]]) / det;
-    inv[[0, 2]] = (_matrix[[0, 1]] * matrix[[1, 2]] - matrix[[0, 2]] * matrix[[1, 1]]) / det;
-    inv[[1, 0]] = (_matrix[[1, 2]] * matrix[[2, 0]] - matrix[[1, 0]] * matrix[[2, 2]]) / det;
-    inv[[1, 1]] = (_matrix[[0, 0]] * matrix[[2, 2]] - matrix[[0, 2]] * matrix[[2, 0]]) / det;
-    inv[[1, 2]] = (_matrix[[0, 2]] * matrix[[1, 0]] - matrix[[0, 0]] * matrix[[1, 2]]) / det;
-    inv[[2, 0]] = (_matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]) / det;
-    inv[[2, 1]] = (_matrix[[0, 1]] * matrix[[2, 0]] - matrix[[0, 0]] * matrix[[2, 1]]) / det;
-    inv[[2, 2]] = (_matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]) / det;
+    // Compute adjugate matrix
+    inv[[0, 0]] = (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]]) / det;
+    inv[[0, 1]] = (matrix[[0, 2]] * matrix[[2, 1]] - matrix[[0, 1]] * matrix[[2, 2]]) / det;
+    inv[[0, 2]] = (matrix[[0, 1]] * matrix[[1, 2]] - matrix[[0, 2]] * matrix[[1, 1]]) / det;
+    inv[[1, 0]] = (matrix[[1, 2]] * matrix[[2, 0]] - matrix[[1, 0]] * matrix[[2, 2]]) / det;
+    inv[[1, 1]] = (matrix[[0, 0]] * matrix[[2, 2]] - matrix[[0, 2]] * matrix[[2, 0]]) / det;
+    inv[[1, 2]] = (matrix[[0, 2]] * matrix[[1, 0]] - matrix[[0, 0]] * matrix[[1, 2]]) / det;
+    inv[[2, 0]] = (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]) / det;
+    inv[[2, 1]] = (matrix[[0, 1]] * matrix[[2, 0]] - matrix[[0, 0]] * matrix[[2, 1]]) / det;
+    inv[[2, 2]] = (matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]) / det;
 
     Ok(inv)
 }
@@ -1897,7 +1897,7 @@ pub struct StereoMatchingParams {
     /// Maximum disparity value
     pub max_disparity: i32,
     /// Block size for window-based matching
-    pub block_size: usize,
+    pub blocksize: usize,
     /// Matching cost function
     pub cost_function: MatchingCostFunction,
     /// Enable sub-pixel disparity refinement
@@ -1907,7 +1907,7 @@ pub struct StereoMatchingParams {
     /// Enable Semi-Global Matching
     pub enable_sgm: bool,
     /// Smoothness penalty parameters for SGM
-    pub sgm_params: SgmParams,
+    pub sgmparams: SgmParams,
 }
 
 /// Matching cost functions for stereo correspondence
@@ -1988,12 +1988,12 @@ impl Default for StereoMatchingParams {
         Self {
             min_disparity: 0,
             max_disparity: 64,
-            block_size: 9,
+            blocksize: 9,
             cost_function: MatchingCostFunction::SAD,
             sub_pixel_refinement: true,
             lr_consistency_threshold: 1.0,
             enable_sgm: true,
-            sgm_params: SgmParams::default(),
+            sgmparams: SgmParams::default(),
         }
     }
 }
@@ -2040,7 +2040,7 @@ pub fn compute_depth_map(
         ));
     }
 
-    let _width = left_width as usize;
+    let width = left_width as usize;
     let _height = left_height as usize;
 
     // Convert images to Array2 for processing
@@ -2063,7 +2063,7 @@ pub fn compute_depth_map(
     // Step 2: Cost aggregation (SGM or simple aggregation)
     let agg_start = Instant::now();
     let aggregated_costs = if params.enable_sgm {
-        aggregate_costs_sgm(&cost_volume, &params.sgm_params)?
+        aggregate_costs_sgm(&cost_volume, &params.sgmparams)?
     } else {
         cost_volume // No aggregation for simple block matching
     };
@@ -2079,10 +2079,10 @@ pub fn compute_depth_map(
 
     // Left-right consistency check
     if params.lr_consistency_threshold > 0.0 {
-        let right_disparity = compute_right_disparity(&left_array, &right_array, params)?;
+        let right_disparity_ = compute_right_disparity(&left_array, &right_array, params)?;
         disparity_map = apply_lr_consistency_check(
             &disparity_map,
-            &right_disparity,
+            &right_disparity_,
             params.lr_consistency_threshold,
         );
     }
@@ -2093,7 +2093,7 @@ pub fn compute_depth_map(
     }
 
     // Hole filling and median filtering
-    disparity_map = fill_holes_and_filter(&disparity_map, &params.sgm_params)?;
+    disparity_map = fill_holes_and_filter(&disparity_map, &params.sgmparams)?;
 
     processing_times.post_processing = post_start.elapsed();
     processing_times.total_time = start_time.elapsed();
@@ -2143,7 +2143,7 @@ fn compute_cost_volume(
     let num_disparities = (params.max_disparity - params.min_disparity + 1) as usize;
     let mut cost_volume = Array3::zeros((height, width, num_disparities));
 
-    let half_block = params.block_size / 2;
+    let half_block = params.blocksize / 2;
 
     // SIMD-optimized cost computation
     for d in 0..num_disparities {
@@ -2165,7 +2165,7 @@ fn compute_cost_volume(
                             xi,
                             y,
                             disparity,
-                            params.block_size,
+                            params.blocksize,
                         )?,
                         MatchingCostFunction::SSD => compute_ssd_cost_simd(
                             left_image,
@@ -2173,7 +2173,7 @@ fn compute_cost_volume(
                             xi,
                             y,
                             disparity,
-                            params.block_size,
+                            params.blocksize,
                         )?,
                         MatchingCostFunction::NCC => compute_ncc_cost_simd(
                             left_image,
@@ -2181,7 +2181,7 @@ fn compute_cost_volume(
                             xi,
                             y,
                             disparity,
-                            params.block_size,
+                            params.blocksize,
                         )?,
                         MatchingCostFunction::Census => compute_census_cost_simd(
                             left_image,
@@ -2189,7 +2189,7 @@ fn compute_cost_volume(
                             xi,
                             y,
                             disparity,
-                            params.block_size,
+                            params.blocksize,
                         )?,
                         MatchingCostFunction::MutualInformation => compute_mi_cost_simd(
                             left_image,
@@ -2197,7 +2197,7 @@ fn compute_cost_volume(
                             xi,
                             y,
                             disparity,
-                            params.block_size,
+                            params.blocksize,
                         )?,
                         MatchingCostFunction::Hybrid => compute_hybrid_cost_simd(
                             left_image,
@@ -2205,7 +2205,7 @@ fn compute_cost_volume(
                             xi,
                             y,
                             disparity,
-                            params.block_size,
+                            params.blocksize,
                         )?,
                     };
                     costs.push(cost);
@@ -2230,7 +2230,7 @@ fn compute_cost_volume(
                         x,
                         y,
                         disparity,
-                        params.block_size,
+                        params.blocksize,
                     )?,
                     _ => 0.0, // Simplified for other cost functions
                 };
@@ -2251,11 +2251,11 @@ fn compute_sad_cost_simd(
     x: usize,
     y: usize,
     disparity: i32,
-    block_size: usize,
+    blocksize: usize,
 ) -> Result<f32> {
     use scirs2_core::simd_ops::SimdUnifiedOps;
 
-    let half_block = block_size / 2;
+    let half_block = blocksize / 2;
     let right_x = x as i32 - disparity;
 
     if right_x < half_block as i32 || right_x >= (right_image.dim().1 - half_block) as i32 {
@@ -2300,11 +2300,11 @@ fn compute_ssd_cost_simd(
     x: usize,
     y: usize,
     disparity: i32,
-    block_size: usize,
+    blocksize: usize,
 ) -> Result<f32> {
     use scirs2_core::simd_ops::SimdUnifiedOps;
 
-    let half_block = block_size / 2;
+    let half_block = blocksize / 2;
     let right_x = x as i32 - disparity;
 
     if right_x < half_block as i32 || right_x >= (right_image.dim().1 - half_block) as i32 {
@@ -2347,11 +2347,11 @@ fn compute_ncc_cost_simd(
     x: usize,
     y: usize,
     disparity: i32,
-    block_size: usize,
+    blocksize: usize,
 ) -> Result<f32> {
     use scirs2_core::simd_ops::SimdUnifiedOps;
 
-    let half_block = block_size / 2;
+    let half_block = blocksize / 2;
     let right_x = x as i32 - disparity;
 
     if right_x < half_block as i32 || right_x >= (right_image.dim().1 - half_block) as i32 {
@@ -2412,9 +2412,9 @@ fn compute_census_cost_simd(
     x: usize,
     y: usize,
     disparity: i32,
-    block_size: usize,
+    blocksize: usize,
 ) -> Result<f32> {
-    let half_block = block_size / 2;
+    let half_block = blocksize / 2;
     let right_x = x as i32 - disparity;
 
     if right_x < half_block as i32 || right_x >= (right_image.dim().1 - half_block) as i32 {
@@ -2422,8 +2422,8 @@ fn compute_census_cost_simd(
     }
 
     // Compute Census transform for both blocks
-    let left_census = compute_census_transform(left_image, x, y, block_size);
-    let right_census = compute_census_transform(right_image, right_x as usize, y, block_size);
+    let left_census = compute_census_transform(left_image, x, y, blocksize);
+    let right_census = compute_census_transform(right_image, right_x as usize, y, blocksize);
 
     // Hamming distance between census transforms
     let hamming_distance = (left_census ^ right_census).count_ones() as f32;
@@ -2434,7 +2434,7 @@ fn compute_census_cost_simd(
 /// Compute Census transform for a block
 #[allow(dead_code)]
 fn compute_census_transform(_image: &Array2<f32>, x: usize, y: usize, blocksize: usize) -> u32 {
-    let half_block = block_size / 2;
+    let half_block = blocksize / 2;
     let center_value = image[[y, x]];
     let mut census = 0u32;
     let mut bit_index = 0;
@@ -2466,11 +2466,11 @@ fn compute_mi_cost_simd(
     x: usize,
     y: usize,
     disparity: i32,
-    block_size: usize,
+    blocksize: usize,
 ) -> Result<f32> {
     // For simplicity, use SAD cost as placeholder
     // In a full implementation, this would compute mutual information
-    compute_sad_cost_simd(left_image, right_image, x, y, disparity, block_size)
+    compute_sad_cost_simd(left_image, right_image, x, y, disparity, blocksize)
 }
 
 /// Compute hybrid cost combining multiple cost functions
@@ -2481,11 +2481,11 @@ fn compute_hybrid_cost_simd(
     x: usize,
     y: usize,
     disparity: i32,
-    block_size: usize,
+    blocksize: usize,
 ) -> Result<f32> {
-    let sad_cost = compute_sad_cost_simd(left_image, right_image, x, y, disparity, block_size)?;
+    let sad_cost = compute_sad_cost_simd(left_image, right_image, x, y, disparity, blocksize)?;
     let census_cost =
-        compute_census_cost_simd(left_image, right_image, x, y, disparity, block_size)?;
+        compute_census_cost_simd(left_image, right_image, x, y, disparity, blocksize)?;
 
     // Weighted combination
     Ok(0.7 * sad_cost + 0.3 * census_cost)
@@ -2501,7 +2501,7 @@ fn compute_hybrid_cost_simd(
 /// # Arguments
 ///
 /// * `cost_volume` - Input 3D cost volume
-/// * `sgm_params` - SGM parameters
+/// * `sgmparams` - SGM parameters
 ///
 /// # Returns
 ///
@@ -2512,7 +2512,7 @@ fn aggregate_costs_sgm(_cost_volume: &Array3<f32>, sgmparams: &SgmParams) -> Res
     let mut aggregated_costs = Array3::zeros((height, width, num_disparities));
 
     // Define aggregation directions
-    let directions = if sgm_params.eight_directions {
+    let directions = if sgmparams.eight_directions {
         vec![
             (0, 1),   // Right
             (0, -1),  // Left
@@ -2529,7 +2529,7 @@ fn aggregate_costs_sgm(_cost_volume: &Array3<f32>, sgmparams: &SgmParams) -> Res
 
     // Aggregate costs in each direction
     for &(dy, dx) in &directions {
-        let direction_costs = aggregate_costs_direction(cost_volume, dy, dx, sgm_params)?;
+        let direction_costs = aggregate_costs_direction(cost_volume, dy, dx, sgmparams)?;
 
         // Add to accumulated costs
         for y in 0..height {
@@ -2554,7 +2554,7 @@ fn aggregate_costs_direction(
     cost_volume: &Array3<f32>,
     dy: i32,
     dx: i32,
-    sgm_params: &SgmParams,
+    sgmparams: &SgmParams,
 ) -> Result<Array3<f32>> {
     let (height, width_num_disparities) = cost_volume.dim();
     let mut direction_costs = cost_volume.clone();
@@ -2584,7 +2584,7 @@ fn aggregate_costs_direction(
                             x,
                             prev_y,
                             prev_x,
-                            sgm_params,
+                            sgmparams,
                         );
                     }
                 }
@@ -2613,7 +2613,7 @@ fn aggregate_costs_direction(
                             x,
                             prev_y,
                             prev_x,
-                            sgm_params,
+                            sgmparams,
                         );
                     }
                 }
@@ -2631,7 +2631,7 @@ fn aggregate_costs_direction(
                 for y in 0..height {
                     let prev_x = (x as i32 - dx) as usize;
                     if prev_x < width {
-                        aggregate_pixel_costs(&mut direction_costs, y, x, y, prev_x, sgm_params);
+                        aggregate_pixel_costs(&mut direction_costs, y, x, y, prev_x, sgmparams);
                     }
                 }
             }
@@ -2649,12 +2649,12 @@ fn aggregate_pixel_costs(
     x: usize,
     prev_y: usize,
     prev_x: usize,
-    sgm_params: &SgmParams,
+    sgmparams: &SgmParams,
 ) {
     let num_disparities = direction_costs.dim().2;
 
     for d in 0..num_disparities {
-        let raw_cost = direction_costs[[_y, x, d]];
+        let raw_cost = direction_costs[[y, x, d]];
 
         // Find minimum cost from previous pixel with smoothness penalties
         let mut min_aggregated_cost = f32::INFINITY;
@@ -2665,9 +2665,9 @@ fn aggregate_pixel_costs(
             let smoothness_penalty = if d == prev_d {
                 0.0 // No penalty for same disparity
             } else if (d as i32 - prev_d as i32).abs() == 1 {
-                sgm_params.p1 // Small penalty for small disparity change
+                sgmparams.p1 // Small penalty for small disparity change
             } else {
-                sgm_params.p2 // Large penalty for large disparity change
+                sgmparams.p2 // Large penalty for large disparity change
             };
 
             let aggregated_cost = prev_cost + smoothness_penalty;
@@ -2676,7 +2676,7 @@ fn aggregate_pixel_costs(
             }
         }
 
-        direction_costs[[_y, x, d]] = raw_cost + min_aggregated_cost;
+        direction_costs[[y, x, d]] = raw_cost + min_aggregated_cost;
     }
 }
 
@@ -2740,14 +2740,14 @@ fn compute_right_disparity(
     let (right_disparity_) = compute_disparity_wta(&cost_volume, &right_params)?;
 
     // Negate disparities to convert back to left _image coordinate system
-    Ok(right_disparity.mapv(|d| -d))
+    Ok(right_disparity_.mapv(|d| -d))
 }
 
 /// Apply left-right consistency check
 #[allow(dead_code)]
 fn apply_lr_consistency_check(
     left_disparity: &Array2<f32>,
-    right_disparity: &Array2<f32>,
+    right_disparity_: &Array2<f32>,
     threshold: f32,
 ) -> Array2<f32> {
     let (height, width) = left_disparity.dim();
@@ -2759,7 +2759,7 @@ fn apply_lr_consistency_check(
             let right_x = (x as f32 - left_d).round() as i32;
 
             if right_x >= 0 && right_x < width as i32 {
-                let right_d = right_disparity[[y, right_x as usize]];
+                let right_d = right_disparity_[[y, right_x as usize]];
 
                 if (left_d - right_d).abs() > threshold {
                     consistent_disparity[[y, x]] = f32::NAN; // Mark as invalid
@@ -2811,7 +2811,7 @@ fn apply_subpixel_refinement(
 #[allow(dead_code)]
 fn fill_holes_and_filter(
     disparity_map: &Array2<f32>,
-    sgm_params: &SgmParams,
+    sgmparams: &SgmParams,
 ) -> Result<Array2<f32>> {
     let (height, width) = disparity_map.dim();
     let mut filtered_disparity = disparity_map.clone();
@@ -2859,7 +2859,7 @@ fn fill_holes_and_filter(
     filtered_disparity = apply_median_filter(&filtered_disparity, 3)?;
 
     // Apply speckle filter
-    filtered_disparity = apply_speckle_filter(&filtered_disparity, sgm_params)?;
+    filtered_disparity = apply_speckle_filter(&filtered_disparity, sgmparams)?;
 
     Ok(filtered_disparity)
 }
@@ -2869,7 +2869,7 @@ fn fill_holes_and_filter(
 fn apply_median_filter(_disparity_map: &Array2<f32>, windowsize: usize) -> Result<Array2<f32>> {
     let (height, width) = disparity_map.dim();
     let mut filtered = disparity_map.clone();
-    let half_window = window_size / 2;
+    let half_window = windowsize / 2;
 
     for y in half_window..height - half_window {
         for x in half_window..width - half_window {
@@ -2898,7 +2898,7 @@ fn apply_median_filter(_disparity_map: &Array2<f32>, windowsize: usize) -> Resul
 #[allow(dead_code)]
 fn apply_speckle_filter(
     disparity_map: &Array2<f32>,
-    sgm_params: &SgmParams,
+    sgmparams: &SgmParams,
 ) -> Result<Array2<f32>> {
     let (height, width) = disparity_map.dim();
     let mut filtered = disparity_map.clone();
@@ -2913,17 +2913,17 @@ fn apply_speckle_filter(
                     x,
                     y,
                     disparity_map[[y, x]],
-                    sgm_params.speckle_range,
+                    sgmparams.speckle_range,
                 );
 
-                if region_size < sgm_params.speckle_size {
+                if region_size < sgmparams.speckle_size {
                     // Mark small regions as invalid
                     flood_fill_mark_invalid(
                         &mut filtered,
                         x,
                         y,
                         disparity_map[[y, x]],
-                        sgm_params.speckle_range,
+                        sgmparams.speckle_range,
                     );
                 }
             }
@@ -2948,7 +2948,7 @@ fn flood_fill_region_size(
     let mut region_size = 0;
 
     while let Some((_x, y)) = stack.pop() {
-        if _x >= width || _y >= height || visited[[_y_x]] {
+        if _x >= width || y >= height || visited[[_y_x]] {
             continue;
         }
 
@@ -2967,11 +2967,11 @@ fn flood_fill_region_size(
         if _x < width - 1 {
             stack.push((_x + 1, y));
         }
-        if _y > 0 {
-            stack.push((_x, _y - 1));
+        if y > 0 {
+            stack.push((_x, y - 1));
         }
-        if _y < height - 1 {
-            stack.push((_x, _y + 1));
+        if y < height - 1 {
+            stack.push((_x, y + 1));
         }
     }
 
@@ -2991,7 +2991,7 @@ fn flood_fill_mark_invalid(
     let mut stack = vec![(start_x, start_y)];
 
     while let Some((_x, y)) = stack.pop() {
-        if _x >= width || _y >= height {
+        if _x >= width || y >= height {
             continue;
         }
 
@@ -3009,11 +3009,11 @@ fn flood_fill_mark_invalid(
         if _x < width - 1 {
             stack.push((_x + 1, y));
         }
-        if _y > 0 {
-            stack.push((_x, _y - 1));
+        if y > 0 {
+            stack.push((_x, y - 1));
         }
-        if _y < height - 1 {
-            stack.push((_x, _y + 1));
+        if y < height - 1 {
+            stack.push((_x, y + 1));
         }
     }
 }

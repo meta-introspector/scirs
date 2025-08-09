@@ -20,7 +20,7 @@ pub struct HyperParameter<F: Float + fmt::Debug + fmt::Display + FromPrimitive> 
     /// Minimum value (inclusive)
     min_value: F,
     /// Maximum value (inclusive)
-    max_value: F,
+    maxvalue: F,
     /// Step size for discrete search
     step: Option<F>,
     /// Is the parameter categorical
@@ -36,7 +36,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
             name: name.into(),
             value,
             min_value,
-            max_value,
+            maxvalue,
             step: None,
             is_categorical: false,
             categorical_values: None,
@@ -48,14 +48,14 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
         name: S,
         value: F,
         min_value: F,
-        max_value: F,
+        maxvalue: F,
         step: F,
     ) -> Self {
         Self {
             name: name.into(),
             value,
             min_value,
-            max_value,
+            maxvalue,
             step: Some(step),
             is_categorical: false,
             categorical_values: None,
@@ -80,7 +80,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
             name: name.into(),
             value,
             min_value: F::zero(),
-            max_value: F::from(values.len() - 1).unwrap(),
+            maxvalue: F::from(values.len() - 1).unwrap(),
             step: Some(F::one()),
             is_categorical: true,
             categorical_values: Some(values),
@@ -108,10 +108,10 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
                     )));
                 }
             }
-        } else if value < self.min_value || value > self.max_value {
+        } else if value < self.min_value || value > self.maxvalue {
             return Err(MetricsError::InvalidArgument(format!(
                 "Value {} out of range [{}, {}] for parameter {}",
-                value, self.min_value, self.max_value, self.name
+                value, self.min_value, self.maxvalue, self.name
             )));
         }
 
@@ -129,7 +129,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
             }
         }
 
-        let range = self.max_value - self.min_value;
+        let range = self.maxvalue - self.min_value;
         let mut rng = rand::rng();
         let rand_val = F::from(rng.random::<f64>()).unwrap() * range + self.min_value;
 
@@ -164,16 +164,16 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
                 )));
             }
         } else {
-            if self.min_value > self.max_value {
+            if self.min_value > self.maxvalue {
                 return Err(MetricsError::InvalidArgument(format!(
                     "Min value {} cannot be greater than max value {} for parameter {}",
-                    self.min_value, self.max_value, self.name
+                    self.min_value, self.maxvalue, self.name
                 )));
             }
-            if self.value < self.min_value || self.value > self.max_value {
+            if self.value < self.min_value || self.value > self.maxvalue {
                 return Err(MetricsError::InvalidArgument(format!(
                     "Current value {} is out of range [{}, {}] for parameter {}",
-                    self.value, self.min_value, self.max_value, self.name
+                    self.value, self.min_value, self.maxvalue, self.name
                 )));
             }
             if let Some(step) = self.step {
@@ -190,7 +190,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
 
     /// Get the valid range for this parameter
     pub fn get_range(&self) -> (F, F) {
-        (self.min_value, self.max_value)
+        (self.min_value, self.maxvalue)
     }
 
     /// Get the step size (if discrete)
@@ -372,16 +372,16 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameterTuner<F
         // Check if this is the best _value so far
         let is_best = match (self.best_value, self.mode) {
             (None) => true,
-            (Some(best), OptimizationMode::Maximize) => metric_value > best,
-            (Some(best), OptimizationMode::Minimize) => metric_value < best,
+            (Some(best), OptimizationMode::Maximize) => metricvalue > best,
+            (Some(best), OptimizationMode::Minimize) => metricvalue < best,
         };
 
         // Update history
-        self.history.push((current_params.clone(), metric_value));
+        self.history.push((current_params.clone(), metricvalue));
 
         // Update best if this is the best so far
         if is_best {
-            self.best_value = Some(metric_value);
+            self.best_value = Some(metricvalue);
             self.best_params = current_params;
         }
 

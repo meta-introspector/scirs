@@ -32,7 +32,7 @@ pub struct HDRProcessor {
     /// Exposure values for multi-exposure capture
     exposure_values: Vec<f32>,
     /// Tone mapping method
-    tone_mapping: ToneMappingMethod,
+    tonemapping: ToneMappingMethod,
     /// GPU context for acceleration
     #[allow(dead_code)]
     gpu_context: Option<GpuVisionContext>,
@@ -58,7 +58,7 @@ impl HDRProcessor {
     pub fn new(_exposure_values: Vec<f32>, tonemapping: ToneMappingMethod) -> Self {
         Self {
             exposure_values,
-            tone_mapping,
+            tonemapping,
             gpu_context: GpuVisionContext::new().ok(),
         }
     }
@@ -91,10 +91,10 @@ impl HDRProcessor {
         let response_curve = self.compute_response_curve(images)?;
 
         // Merge exposures with weighted averaging
-        let radiance_map = self.merge_exposures(images, &response_curve)?;
+        let radiancemap = self.merge_exposures(images, &response_curve)?;
 
         // Apply tone mapping
-        self.apply_tone_mapping(&radiance_map)
+        self.apply_tone_mapping(&radiancemap)
     }
 
     /// Compute camera response curve
@@ -120,22 +120,22 @@ impl HDRProcessor {
         response_curve: &Array1<f32>,
     ) -> Result<Array2<f32>> {
         let (height, width) = images[0].dim();
-        let mut radiance_map = Array2::<f32>::zeros((height, width));
+        let mut radiancemap = Array2::<f32>::zeros((height, width));
         let mut weight_sum = Array2::<f32>::zeros((height, width));
 
         for (img, &exposure) in images.iter().zip(&self.exposure_values) {
             for y in 0..height {
                 for x in 0..width {
-                    let pixel_value = img[[y, x]];
-                    let pixel_index = (pixel_value * 255.0).clamp(0.0, 255.0) as usize;
+                    let pixelvalue = img[[y, x]];
+                    let pixel_index = (pixelvalue * 255.0).clamp(0.0, 255.0) as usize;
                     let response = response_curve[pixel_index.min(255)];
 
                     // Weight function (hat function)
-                    let weight = self.compute_pixel_weight(pixel_value);
+                    let weight = self.compute_pixel_weight(pixelvalue);
 
                     if weight > 0.0 {
                         let radiance = (response - response.ln()) / exposure;
-                        radiance_map[[y, x]] += weight * radiance;
+                        radiancemap[[y, x]] += weight * radiance;
                         weight_sum[[y, x]] += weight;
                     }
                 }
@@ -146,18 +146,18 @@ impl HDRProcessor {
         for y in 0..height {
             for x in 0..width {
                 if weight_sum[[y, x]] > 0.0 {
-                    radiance_map[[y, x]] /= weight_sum[[y, x]];
+                    radiancemap[[y, x]] /= weight_sum[[y, x]];
                 }
             }
         }
 
-        Ok(radiance_map)
+        Ok(radiancemap)
     }
 
     /// Compute pixel weight for HDR merging
     fn compute_pixel_weight(&self, pixelvalue: f32) -> f32 {
         // Hat function: higher weight for mid-tones
-        let normalized = pixel_value.clamp(0.0, 1.0);
+        let normalized = pixelvalue.clamp(0.0, 1.0);
         if normalized <= 0.5 {
             2.0 * normalized
         } else {
@@ -167,27 +167,27 @@ impl HDRProcessor {
 
     /// Apply tone mapping to radiance map
     fn apply_tone_mapping(&self, radiancemap: &Array2<f32>) -> Result<Array2<f32>> {
-        match self.tone_mapping {
-            ToneMappingMethod::Reinhard => self.reinhard_tone_mapping(radiance_map),
-            ToneMappingMethod::AdaptiveLog => self.adaptive_log_mapping(radiance_map),
-            ToneMappingMethod::HistogramEq => self.histogram_equalization_mapping(radiance_map),
-            ToneMappingMethod::Drago => self.drago_tone_mapping(radiance_map),
-            ToneMappingMethod::Mantiuk => self.mantiuk_tone_mapping(radiance_map),
+        match self.tonemapping {
+            ToneMappingMethod::Reinhard => self.reinhard_tone_mapping(radiancemap),
+            ToneMappingMethod::AdaptiveLog => self.adaptive_log_mapping(radiancemap),
+            ToneMappingMethod::HistogramEq => self.histogram_equalization_mapping(radiancemap),
+            ToneMappingMethod::Drago => self.drago_tone_mapping(radiancemap),
+            ToneMappingMethod::Mantiuk => self.mantiuk_tone_mapping(radiancemap),
         }
     }
 
     /// Reinhard tone mapping operator
     fn reinhard_tone_mapping(&self, radiancemap: &Array2<f32>) -> Result<Array2<f32>> {
-        let (height, width) = radiance_map.dim();
+        let (height, width) = radiancemap.dim();
         let mut result = Array2::zeros((height, width));
 
         // Compute global luminance statistics
-        let log_average = self.compute_log_average_luminance(radiance_map);
+        let log_average = self.compute_log_average_luminance(radiancemap);
         let key_value = 0.18; // Middle grey key value
 
         for y in 0..height {
             for x in 0..width {
-                let world_luminance = radiance_map[[y, x]];
+                let world_luminance = radiancemap[[y, x]];
                 let scaled_luminance = (key_value / log_average) * world_luminance;
 
                 // Reinhard operator: L_d = L_w / (1 + L_w)
@@ -201,14 +201,14 @@ impl HDRProcessor {
 
     /// Adaptive logarithmic tone mapping
     fn adaptive_log_mapping(&self, radiancemap: &Array2<f32>) -> Result<Array2<f32>> {
-        let (height, width) = radiance_map.dim();
+        let (height, width) = radiancemap.dim();
         let mut result = Array2::zeros((height, width));
 
         // Find min and max luminance
         let mut min_lum = f32::INFINITY;
         let mut max_lum = f32::NEG_INFINITY;
 
-        for &value in radiance_map.iter() {
+        for &value in radiancemap.iter() {
             if value > 0.0 {
                 min_lum = min_lum.min(value);
                 max_lum = max_lum.max(value);
@@ -219,7 +219,7 @@ impl HDRProcessor {
 
         for y in 0..height {
             for x in 0..width {
-                let luminance = radiance_map[[y, x]];
+                let luminance = radiancemap[[y, x]];
                 if luminance > 0.0 {
                     let log_relative = (luminance / min_lum).ln() / log_range;
                     result[[y, x]] = log_relative.clamp(0.0, 1.0);
@@ -232,7 +232,7 @@ impl HDRProcessor {
 
     /// Histogram equalization-based tone mapping
     fn histogram_equalization_mapping(&self, radiancemap: &Array2<f32>) -> Result<Array2<f32>> {
-        let (height, width) = radiance_map.dim();
+        let (height, width) = radiancemap.dim();
         let num_bins = 256;
 
         // Compute histogram
@@ -241,7 +241,7 @@ impl HDRProcessor {
         let mut max_val = f32::NEG_INFINITY;
 
         // Find range
-        for &value in radiance_map.iter() {
+        for &value in radiancemap.iter() {
             min_val = min_val.min(value);
             max_val = max_val.max(value);
         }
@@ -249,10 +249,10 @@ impl HDRProcessor {
         // Build histogram
         let range = max_val - min_val;
         if range <= 0.0 {
-            return Ok(radiance_map.clone());
+            return Ok(radiancemap.clone());
         }
 
-        for &value in radiance_map.iter() {
+        for &value in radiancemap.iter() {
             let bin_index = ((value - min_val) / range * (num_bins - 1) as f32) as usize;
             histogram[bin_index.min(num_bins - 1)] += 1;
         }
@@ -270,7 +270,7 @@ impl HDRProcessor {
 
         for y in 0..height {
             for x in 0..width {
-                let value = radiance_map[[y, x]];
+                let value = radiancemap[[y, x]];
                 let bin_index = ((value - min_val) / range * (num_bins - 1) as f32) as usize;
                 let equalized = cdf[bin_index.min(num_bins - 1)] as f32 / total_pixels as f32;
                 result[[y, x]] = equalized;
@@ -282,17 +282,17 @@ impl HDRProcessor {
 
     /// Drago tone mapping operator
     fn drago_tone_mapping(&self, radiancemap: &Array2<f32>) -> Result<Array2<f32>> {
-        let (height, width) = radiance_map.dim();
+        let (height, width) = radiancemap.dim();
         let mut result = Array2::zeros((height, width));
 
-        let log_average = self.compute_log_average_luminance(radiance_map);
-        let max_luminance = radiance_map.iter().cloned().fold(0.0f32, f32::max);
+        let log_average = self.compute_log_average_luminance(radiancemap);
+        let max_luminance = radiancemap.iter().cloned().fold(0.0f32, f32::max);
 
         let bias = 0.85; // Bias parameter for Drago operator
 
         for y in 0..height {
             for x in 0..width {
-                let luminance = radiance_map[[y, x]];
+                let luminance = radiancemap[[y, x]];
                 if luminance > 0.0 {
                     let adapted_lum = luminance / log_average;
                     let log_adapted = adapted_lum.ln();
@@ -320,7 +320,7 @@ impl HDRProcessor {
         // Simplified version of Mantiuk operator
         // Full implementation would require complex psychophysical modeling
 
-        let (height, width) = radiance_map.dim();
+        let (height, width) = radiancemap.dim();
         let mut result = Array2::zeros((height, width));
 
         // Apply adaptive local contrast enhancement
@@ -343,7 +343,7 @@ impl HDRProcessor {
 
                 for ly in y_start..y_end {
                     for lx in x_start..x_end {
-                        local_sum += radiance_map[[ly, lx]];
+                        local_sum += radiancemap[[ly, lx]];
                         count += 1;
                     }
                 }
@@ -353,13 +353,13 @@ impl HDRProcessor {
                 } else {
                     0.0
                 };
-                let global_average = self.compute_log_average_luminance(radiance_map);
+                let global_average = self.compute_log_average_luminance(radiancemap);
 
                 // Adaptive mapping
                 let adaptation = alpha * local_average + (1.0 - alpha) * global_average;
-                let denominator = adaptation + radiance_map[[y, x]];
+                let denominator = adaptation + radiancemap[[y, x]];
                 let mapped = if denominator > 1e-8 {
-                    radiance_map[[y, x]] / denominator
+                    radiancemap[[y, x]] / denominator
                 } else {
                     0.0
                 };
@@ -377,7 +377,7 @@ impl HDRProcessor {
         let mut log_sum = 0.0;
         let mut count = 0;
 
-        for &value in radiance_map.iter() {
+        for &value in radiancemap.iter() {
             if value > 0.0 {
                 log_sum += (value + delta).ln();
                 count += 1;
@@ -395,7 +395,7 @@ impl HDRProcessor {
 /// Super-resolution processor using deep learning techniques
 pub struct SuperResolutionProcessor {
     /// Upscaling factor
-    scale_factor: usize,
+    scalefactor: usize,
     /// Processing method
     method: SuperResolutionMethod,
     /// GPU context for acceleration
@@ -434,7 +434,7 @@ pub struct SRNetworkWeights {
 impl SuperResolutionProcessor {
     /// Create a new super-resolution processor
     pub fn new(scalefactor: usize, method: SuperResolutionMethod) -> Result<Self> {
-        if !(2..=8).contains(&scale_factor) {
+        if !(2..=8).contains(&scalefactor) {
             return Err(VisionError::InvalidParameter(
                 "Scale _factor must be between 2 and 8".to_string(),
             ));
@@ -444,13 +444,13 @@ impl SuperResolutionProcessor {
             SuperResolutionMethod::SRCNN
             | SuperResolutionMethod::ESRCNN
             | SuperResolutionMethod::RealTimeSR => {
-                Some(Self::create_synthetic_weights(scale_factor)?)
+                Some(Self::create_synthetic_weights(scalefactor)?)
             }
             _ => None,
         };
 
         Ok(Self {
-            scale_factor,
+            scalefactor,
             method,
             gpu_context: GpuVisionContext::new().ok(),
             network_weights,
@@ -470,15 +470,15 @@ impl SuperResolutionProcessor {
     /// Bicubic interpolation upscaling
     fn bicubic_upscale(&self, image: &ArrayView2<f32>) -> Result<Array2<f32>> {
         let (height, width) = image.dim();
-        let new_height = height * self.scale_factor;
-        let new_width = width * self.scale_factor;
+        let new_height = height * self.scalefactor;
+        let new_width = width * self.scalefactor;
 
         let mut result = Array2::zeros((new_height, new_width));
 
         for y in 0..new_height {
             for x in 0..new_width {
-                let src_y = y as f32 / self.scale_factor as f32;
-                let src_x = x as f32 / self.scale_factor as f32;
+                let src_y = y as f32 / self.scalefactor as f32;
+                let src_x = x as f32 / self.scalefactor as f32;
 
                 let interpolated = self.bicubic_interpolate(image, src_x, src_y)?;
                 result[[y, x]] = interpolated;
@@ -504,7 +504,7 @@ impl SuperResolutionProcessor {
                 let sample_y = y_floor + dy;
 
                 // Get pixel value with boundary handling
-                let pixel_value = if sample_x >= 0
+                let pixelvalue = if sample_x >= 0
                     && sample_x < width as isize
                     && sample_y >= 0
                     && sample_y < height as isize
@@ -518,7 +518,7 @@ impl SuperResolutionProcessor {
                 let weight_x = self.bicubic_weight(x - sample_x as f32);
                 let weight_y = self.bicubic_weight(y - sample_y as f32);
 
-                sum += pixel_value * weight_x * weight_y;
+                sum += pixelvalue * weight_x * weight_y;
             }
         }
 
@@ -644,12 +644,12 @@ impl SuperResolutionProcessor {
 
         if horizontal {
             // Horizontal upscaling
-            let new_width = width * self.scale_factor;
+            let new_width = width * self.scalefactor;
             let mut result = Array2::zeros((height, new_width));
 
             for y in 0..height {
                 for x in 0..new_width {
-                    let src_x = x as f32 / self.scale_factor as f32;
+                    let src_x = x as f32 / self.scalefactor as f32;
                     let interpolated = self.linear_interpolate_1d(image, y, src_x)?;
                     result[[y, x]] = interpolated;
                 }
@@ -658,12 +658,12 @@ impl SuperResolutionProcessor {
             Ok(result)
         } else {
             // Vertical upscaling
-            let new_height = height * self.scale_factor;
+            let new_height = height * self.scalefactor;
             let mut result = Array2::zeros((new_height, width));
 
             for y in 0..new_height {
                 for x in 0..width {
-                    let src_y = y as f32 / self.scale_factor as f32;
+                    let src_y = y as f32 / self.scalefactor as f32;
                     let interpolated = self.linear_interpolate_1d_vertical(image, x, src_y)?;
                     result[[y, x]] = interpolated;
                 }
@@ -794,7 +794,7 @@ pub struct AdvancedDenoiser {
     /// Denoising method
     method: DenoisingMethod,
     /// Noise variance estimate
-    noise_variance: f32,
+    noisevariance: f32,
     /// GPU context for acceleration
     #[allow(dead_code)]
     gpu_context: Option<GpuVisionContext>,
@@ -820,7 +820,7 @@ impl AdvancedDenoiser {
     pub fn new(_method: DenoisingMethod, noisevariance: f32) -> Self {
         Self {
             method,
-            noise_variance,
+            noisevariance,
             gpu_context: GpuVisionContext::new().ok(),
         }
     }
@@ -923,9 +923,9 @@ impl AdvancedDenoiser {
         let search_start_x = center_x.saturating_sub(search_window / 2);
         let search_end_x = (center_x + search_window / 2).min(width - block_w);
 
-        for _y in (search_start_y..search_end_y).step_by(2) {
+        for y in (search_start_y..search_end_y).step_by(2) {
             for _x in (search_start_x..search_end_x).step_by(2) {
-                let candidate_block = image.slice(s![_y.._y + block_h, x.._x + block_w]);
+                let candidate_block = image.slice(s![y..y + block_h, x.._x + block_w]);
                 let similarity = self.compute_block_similarity(ref_block, &candidate_block);
 
                 similarities.push((similarity, y, x));
@@ -941,7 +941,7 @@ impl AdvancedDenoiser {
         let mut similar_blocks = Array3::zeros((block_h, block_w, num_blocks));
 
         for (i, &(_, y, x)) in similarities.iter().enumerate() {
-            let _block = image.slice(s![_y.._y + block_h, x.._x + block_w]);
+            let _block = image.slice(s![y..y + block_h, x.._x + block_w]);
             similar_blocks.slice_mut(s![.., .., i]).assign(&_block);
         }
 
@@ -970,7 +970,7 @@ impl AdvancedDenoiser {
 
         for k in 0..num_blocks {
             let block = blocks.slice(s![.., .., k]);
-            let weight = 1.0 / (1.0 + self.noise_variance); // Simple weighting
+            let weight = 1.0 / (1.0 + self.noisevariance); // Simple weighting
 
             for y in 0..height {
                 for x in 0..width {
@@ -999,7 +999,7 @@ impl AdvancedDenoiser {
 
         let patch_size = 7;
         let search_window = 21;
-        let h = self.noise_variance.sqrt() * 0.4; // Filtering parameter
+        let h = self.noisevariance.sqrt() * 0.4; // Filtering parameter
 
         let patch_radius = patch_size / 2;
         let search_radius = search_window / 2;
@@ -1138,7 +1138,7 @@ impl AdvancedDenoiser {
                 local_var /= count as f32;
 
                 // Wiener filter
-                let signal_var = (local_var - self.noise_variance).max(0.0);
+                let signal_var = (local_var - self.noisevariance).max(0.0);
                 let wiener_gain = if local_var > 0.0 {
                     signal_var / local_var
                 } else {
@@ -1345,7 +1345,7 @@ mod tests {
     #[test]
     fn test_tone_mapping_methods() {
         let exposures = vec![0.0];
-        let radiance_map = arr2(&[[0.1, 0.5], [0.8, 1.2]]);
+        let radiancemap = arr2(&[[0.1, 0.5], [0.8, 1.2]]);
 
         for method in [
             ToneMappingMethod::Reinhard,
@@ -1355,7 +1355,7 @@ mod tests {
             ToneMappingMethod::Mantiuk,
         ] {
             let processor = HDRProcessor::new(exposures.clone(), method);
-            let result = processor.apply_tone_mapping(&radiance_map);
+            let result = processor.apply_tone_mapping(&radiancemap);
 
             assert!(result.is_ok());
             let mapped = result.unwrap();

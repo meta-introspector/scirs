@@ -20,7 +20,7 @@ pub type ParamId = String;
 #[derive(Debug, Clone)]
 pub struct ParameterMetadata {
     /// Layer name this parameter belongs to
-    pub layer_name: LayerId,
+    pub layername: LayerId,
     /// Parameter name within the layer
     pub param_name: ParamId,
     /// Parameter shape
@@ -28,7 +28,7 @@ pub struct ParameterMetadata {
     /// Whether parameter requires gradients
     pub requires_grad: bool,
     /// Parameter type (weights, bias, etc.)
-    pub param_type: ParameterType,
+    pub paramtype: ParameterType,
     /// Sharing group for parameter sharing
     pub sharing_group: Option<String>,
     /// Custom tags for architecture-specific optimizations
@@ -87,7 +87,7 @@ pub trait ParameterOptimizer<A: Float, D: Dimension> {
     /// Register a parameter for optimization
     fn register_parameter(
         &mut self,
-        param_id: ParamId,
+        paramid: ParamId,
         parameter: &Array<A, D>,
         metadata: ParameterMetadata,
     ) -> Result<()>;
@@ -190,8 +190,8 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
 
         // Process all pending registrations
         let pending = std::mem::take(&mut self.pending_registrations);
-        for (param_id, metadata) in pending {
-            self.register_parameter_impl(param_id, metadata)?;
+        for (paramid, metadata) in pending {
+            self.register_parameter_impl(paramid, metadata)?;
         }
 
         Ok(())
@@ -199,32 +199,32 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
 
     /// Register a layer architecture
     pub fn register_layer(&mut self, layerid: LayerId, architecture: LayerArchitecture) {
-        self.layer_architectures.insert(layer_id, architecture);
+        self.layer_architectures.insert(layerid, architecture);
     }
 
     /// Set layer-specific optimization rule
     pub fn set_layer_rule(&mut self, layerid: LayerId, rule: LayerOptimizationRule<A>) {
-        self.layer_rules.insert(layer_id, rule);
+        self.layer_rules.insert(layerid, rule);
     }
 
     /// Register a parameter
     pub fn register_parameter(
         &mut self,
-        param_id: ParamId,
+        paramid: ParamId,
         metadata: ParameterMetadata,
     ) -> Result<()> {
         if self.lazy_mode {
-            self.pending_registrations.push((param_id, metadata));
+            self.pending_registrations.push((paramid, metadata));
             Ok(())
         } else {
-            self.register_parameter_impl(param_id, metadata)
+            self.register_parameter_impl(paramid, metadata)
         }
     }
 
     /// Internal parameter registration implementation
     fn register_parameter_impl(
         &mut self,
-        param_id: ParamId,
+        paramid: ParamId,
         metadata: ParameterMetadata,
     ) -> Result<()> {
         // Handle parameter sharing
@@ -232,15 +232,15 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
             self.sharing_groups
                 .entry(sharing_group.clone())
                 .or_default()
-                .push(param_id.clone());
+                .push(paramid.clone());
         }
 
         // Initialize optimizer state for this parameter
         self.optimizer_states
-            .insert(param_id.clone(), HashMap::new());
+            .insert(paramid.clone(), HashMap::new());
 
         // Store parameter metadata
-        self.parameters.insert(param_id, metadata);
+        self.parameters.insert(paramid, metadata);
 
         Ok(())
     }
@@ -249,8 +249,8 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
     pub fn get_effective_learning_rate(&self, paramid: &ParamId) -> A {
         let base_lr = self.global_config.base_learning_rate;
 
-        if let Some(metadata) = self.parameters.get(param_id) {
-            if let Some(rule) = self.layer_rules.get(&metadata.layer_name) {
+        if let Some(metadata) = self.parameters.get(paramid) {
+            if let Some(rule) = self.layer_rules.get(&metadata.layername) {
                 return base_lr * rule.lr_multiplier;
             }
         }
@@ -262,8 +262,8 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
     pub fn get_effective_weight_decay(&self, paramid: &ParamId) -> A {
         let base_decay = self.global_config.weight_decay;
 
-        if let Some(metadata) = self.parameters.get(param_id) {
-            if let Some(rule) = self.layer_rules.get(&metadata.layer_name) {
+        if let Some(metadata) = self.parameters.get(paramid) {
+            if let Some(rule) = self.layer_rules.get(&metadata.layername) {
                 return base_decay * rule.weight_decay_multiplier;
             }
         }
@@ -273,8 +273,8 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
 
     /// Check if parameter is frozen
     pub fn is_parameter_frozen(&self, paramid: &ParamId) -> bool {
-        if let Some(metadata) = self.parameters.get(param_id) {
-            if let Some(rule) = self.layer_rules.get(&metadata.layer_name) {
+        if let Some(metadata) = self.parameters.get(paramid) {
+            if let Some(rule) = self.layer_rules.get(&metadata.layername) {
                 return rule.frozen;
             }
         }
@@ -283,7 +283,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
 
     /// Get parameters in a sharing group
     pub fn get_sharing_group(&self, groupname: &str) -> Option<&[ParamId]> {
-        self.sharing_groups.get(group_name).map(|v| v.as_slice())
+        self.sharing_groups.get(groupname).map(|v| v.as_slice())
     }
 
     /// Get all registered parameters
@@ -293,12 +293,12 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
 
     /// Get layer architecture
     pub fn get_layer_architecture(&self, layerid: &LayerId) -> Option<&LayerArchitecture> {
-        self.layer_architectures.get(layer_id)
+        self.layer_architectures.get(layerid)
     }
 
     /// Get parameter metadata
     pub fn get_parameter_metadata(&self, paramid: &ParamId) -> Option<&ParameterMetadata> {
-        self.parameters.get(param_id)
+        self.parameters.get(paramid)
     }
 
     /// Update global configuration
@@ -308,31 +308,31 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
 
     /// Get optimizer state for parameter
     pub fn get_optimizer_state(&self, paramid: &ParamId) -> Option<&HashMap<String, Array<A, D>>> {
-        self.optimizer_states.get(param_id)
+        self.optimizer_states.get(paramid)
     }
 
     /// Get mutable optimizer state for parameter
     pub fn get_optimizer_state_mut(
         &mut self,
-        param_id: &ParamId,
+        paramid: &ParamId,
     ) -> Option<&mut HashMap<String, Array<A, D>>> {
-        self.optimizer_states.get_mut(param_id)
+        self.optimizer_states.get_mut(paramid)
     }
 
     /// Initialize optimizer state for parameter
     pub fn init_optimizer_state(
         &mut self,
-        param_id: &ParamId,
+        paramid: &ParamId,
         state_name: &str,
         state: Array<A, D>,
     ) -> Result<()> {
-        if let Some(states) = self.optimizer_states.get_mut(param_id) {
+        if let Some(states) = self.optimizer_states.get_mut(paramid) {
             states.insert(state_name.to_string(), state);
             Ok(())
         } else {
             Err(OptimError::InvalidConfig(format!(
                 "Parameter {} not registered",
-                param_id
+                paramid
             )))
         }
     }
@@ -348,8 +348,8 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
     pub fn get_parameters_by_layer(&self, layerid: &LayerId) -> Vec<&ParamId> {
         self.parameters
             .iter()
-            .filter(|(_, metadata)| &metadata.layer_name == layer_id)
-            .map(|(param_id, _)| param_id)
+            .filter(|(_, metadata)| &metadata.layername == layerid)
+            .map(|(paramid, _)| paramid)
             .collect()
     }
 
@@ -357,8 +357,8 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
     pub fn get_parameters_by_type(&self, paramtype: ParameterType) -> Vec<&ParamId> {
         self.parameters
             .iter()
-            .filter(|(_, metadata)| metadata.param_type == param_type)
-            .map(|(param_id, _)| param_id)
+            .filter(|(_, metadata)| metadata.paramtype == paramtype)
+            .map(|(paramid, _)| paramid)
             .collect()
     }
 
@@ -366,10 +366,10 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
     pub fn get_trainable_parameters(&self) -> Vec<&ParamId> {
         self.parameters
             .iter()
-            .filter(|(param_id, metadata)| {
-                metadata.requires_grad && !self.is_parameter_frozen(param_id)
+            .filter(|(paramid, metadata)| {
+                metadata.requires_grad && !self.is_parameter_frozen(paramid)
             })
-            .map(|(param_id, _)| param_id)
+            .map(|(paramid, _)| paramid)
             .collect()
     }
 }
@@ -413,10 +413,10 @@ pub mod forward_backward {
     /// Backward pass hook for gradient processing
     pub trait BackwardHook<A: Float, D: Dimension> {
         /// Called before layer backward pass
-        fn pre_backward(&mut self, layer_id: &LayerId, gradoutputs: &[Array<A, D>]) -> Result<()>;
+        fn pre_backward(&mut self, layerid: &LayerId, gradoutputs: &[Array<A, D>]) -> Result<()>;
 
         /// Called after layer backward pass
-        fn post_backward(&mut self, layer_id: &LayerId, gradinputs: &[Array<A, D>]) -> Result<()>;
+        fn post_backward(&mut self, layerid: &LayerId, gradinputs: &[Array<A, D>]) -> Result<()>;
     }
 
     /// Neural network integration manager
@@ -443,7 +443,7 @@ pub mod forward_backward {
         /// Create a new neural integration manager
         pub fn new(config: OptimizationConfig<A>) -> Self {
             Self {
-                param_manager: ParameterManager::new(_config),
+                param_manager: ParameterManager::new(config),
                 forward_hooks: HashMap::new(),
                 backward_hooks: HashMap::new(),
                 gradient_accumulation: false,
@@ -457,7 +457,7 @@ pub mod forward_backward {
         where
             H: ForwardHook<A, D> + 'static,
         {
-            self.forward_hooks.insert(layer_id, Box::new(hook));
+            self.forward_hooks.insert(layerid, Box::new(hook));
         }
 
         /// Register a backward hook for a layer
@@ -465,7 +465,7 @@ pub mod forward_backward {
         where
             H: BackwardHook<A, D> + 'static,
         {
-            self.backward_hooks.insert(layer_id, Box::new(hook));
+            self.backward_hooks.insert(layerid, Box::new(hook));
         }
 
         /// Enable gradient accumulation
@@ -484,20 +484,20 @@ pub mod forward_backward {
         /// Execute forward pass with hooks
         pub fn forward_pass(
             &mut self,
-            layer_id: &LayerId,
+            layerid: &LayerId,
             inputs: &[Array<A, D>],
         ) -> Result<Vec<Array<A, D>>> {
             // Execute pre-forward hook
-            if let Some(hook) = self.forward_hooks.get_mut(layer_id) {
-                hook.pre_forward(layer_id, inputs)?;
+            if let Some(hook) = self.forward_hooks.get_mut(layerid) {
+                hook.pre_forward(layerid, inputs)?;
             }
 
             // Get layer architecture and parameters
             let layer_arch = self
                 .param_manager
-                .get_layer_architecture(layer_id)
+                .get_layer_architecture(layerid)
                 .ok_or_else(|| {
-                    OptimError::InvalidConfig(format!("Layer {} not registered", layer_id))
+                    OptimError::InvalidConfig(format!("Layer {} not registered", layerid))
                 })?
                 .clone();
 
@@ -505,27 +505,27 @@ pub mod forward_backward {
             let outputs = match layer_arch.layer_type.as_str() {
                 "linear" | "dense" | "fc" => {
                     // Linear layer: output = input @ weight^T + bias
-                    self.compute_linear_forward(layer_id, inputs)?
+                    self.compute_linear_forward(layerid, inputs)?
                 }
                 "conv" | "conv2d" => {
                     // Convolutional layer: simplified computation
-                    self.compute_conv_forward(layer_id, inputs)?
+                    self.compute_conv_forward(layerid, inputs)?
                 }
                 "activation" => {
                     // Activation layer: apply activation function
-                    self.compute_activation_forward(layer_id, inputs, &layer_arch)?
+                    self.compute_activation_forward(layerid, inputs, &layer_arch)?
                 }
                 "normalization" | "batchnorm" | "layernorm" => {
                     // Normalization layer
-                    self.compute_normalization_forward(layer_id, inputs)?
+                    self.compute_normalization_forward(layerid, inputs)?
                 }
                 "dropout" => {
                     // Dropout layer: apply dropout mask
-                    self.compute_dropout_forward(layer_id, inputs, &layer_arch)?
+                    self.compute_dropout_forward(layerid, inputs, &layer_arch)?
                 }
                 "pooling" | "maxpool" | "avgpool" => {
                     // Pooling layer
-                    self.compute_pooling_forward(layer_id, inputs, &layer_arch)?
+                    self.compute_pooling_forward(layerid, inputs, &layer_arch)?
                 }
                 _ => {
                     // Default: pass through for unknown layer types
@@ -534,8 +534,8 @@ pub mod forward_backward {
             };
 
             // Execute post-forward hook
-            if let Some(hook) = self.forward_hooks.get_mut(layer_id) {
-                hook.post_forward(layer_id, &outputs)?;
+            if let Some(hook) = self.forward_hooks.get_mut(layerid) {
+                hook.post_forward(layerid, &outputs)?;
             }
 
             Ok(outputs)
@@ -544,7 +544,7 @@ pub mod forward_backward {
         /// Compute linear layer forward pass
         fn compute_linear_forward(
             &self,
-            layer_id: &LayerId,
+            layerid: &LayerId,
             inputs: &[Array<A, D>],
         ) -> Result<Vec<Array<A, D>>> {
             // For demonstration, we implement a simple pass-through
@@ -556,7 +556,7 @@ pub mod forward_backward {
             }
 
             // Get parameters for this layer
-            let layer_params = self.param_manager.get_parameters_by_layer(layer_id);
+            let layer_params = self.param_manager.get_parameters_by_layer(layerid);
 
             // Simple transformation: scale input by learning rate (as a placeholder)
             let lr =
@@ -685,20 +685,20 @@ pub mod forward_backward {
         /// Execute backward pass with hooks
         pub fn backward_pass(
             &mut self,
-            layer_id: &LayerId,
+            layerid: &LayerId,
             grad_outputs: &[Array<A, D>],
         ) -> Result<Vec<Array<A, D>>> {
             // Execute pre-backward hook
-            if let Some(hook) = self.backward_hooks.get_mut(layer_id) {
-                hook.pre_backward(layer_id, grad_outputs)?;
+            if let Some(hook) = self.backward_hooks.get_mut(layerid) {
+                hook.pre_backward(layerid, grad_outputs)?;
             }
 
             // Get layer architecture
             let layer_arch = self
                 .param_manager
-                .get_layer_architecture(layer_id)
+                .get_layer_architecture(layerid)
                 .ok_or_else(|| {
-                    OptimError::InvalidConfig(format!("Layer {} not registered", layer_id))
+                    OptimError::InvalidConfig(format!("Layer {} not registered", layerid))
                 })?
                 .clone();
 
@@ -706,27 +706,27 @@ pub mod forward_backward {
             let grad_inputs = match layer_arch.layer_type.as_str() {
                 "linear" | "dense" | "fc" => {
                     // Linear layer gradient computation
-                    self.compute_linear_backward(layer_id, grad_outputs)?
+                    self.compute_linear_backward(layerid, grad_outputs)?
                 }
                 "conv" | "conv2d" => {
                     // Convolutional layer gradient computation
-                    self.compute_conv_backward(layer_id, grad_outputs)?
+                    self.compute_conv_backward(layerid, grad_outputs)?
                 }
                 "activation" => {
                     // Activation gradient computation
-                    self.compute_activation_backward(layer_id, grad_outputs, &layer_arch)?
+                    self.compute_activation_backward(layerid, grad_outputs, &layer_arch)?
                 }
                 "normalization" | "batchnorm" | "layernorm" => {
                     // Normalization gradient computation
-                    self.compute_normalization_backward(layer_id, grad_outputs)?
+                    self.compute_normalization_backward(layerid, grad_outputs)?
                 }
                 "dropout" => {
                     // Dropout gradient computation
-                    self.compute_dropout_backward(layer_id, grad_outputs, &layer_arch)?
+                    self.compute_dropout_backward(layerid, grad_outputs, &layer_arch)?
                 }
                 "pooling" | "maxpool" | "avgpool" => {
                     // Pooling gradient computation
-                    self.compute_pooling_backward(layer_id, grad_outputs, &layer_arch)?
+                    self.compute_pooling_backward(layerid, grad_outputs, &layer_arch)?
                 }
                 _ => {
                     // Default: pass through gradients for unknown layer types
@@ -736,15 +736,15 @@ pub mod forward_backward {
 
             // Apply gradient clipping if configured
             let clipped_grads =
-                if let Some(clip_value) = self.param_manager.global_config.gradient_clip {
-                    self.apply_gradient_clipping(grad_inputs, clip_value)?
+                if let Some(clipvalue) = self.param_manager.global_config.gradient_clip {
+                    self.apply_gradient_clipping(grad_inputs, clipvalue)?
                 } else {
                     grad_inputs
                 };
 
             // Execute post-backward hook
-            if let Some(hook) = self.backward_hooks.get_mut(layer_id) {
-                hook.post_backward(layer_id, &clipped_grads)?;
+            if let Some(hook) = self.backward_hooks.get_mut(layerid) {
+                hook.post_backward(layerid, &clipped_grads)?;
             }
 
             Ok(clipped_grads)
@@ -753,7 +753,7 @@ pub mod forward_backward {
         /// Compute linear layer backward pass
         fn compute_linear_backward(
             &mut self,
-            layer_id: &LayerId,
+            layerid: &LayerId,
             grad_outputs: &[Array<A, D>],
         ) -> Result<Vec<Array<A, D>>> {
             if grad_outputs.is_empty() {
@@ -763,14 +763,14 @@ pub mod forward_backward {
             }
 
             // Get parameters for this layer
-            let layer_params = self.param_manager.get_parameters_by_layer(layer_id);
+            let layer_params = self.param_manager.get_parameters_by_layer(layerid);
 
             // Store gradients for weight update
             if self.gradient_accumulation {
                 let mut param_grads = HashMap::new();
-                for (i, param_id) in layer_params.iter().enumerate() {
+                for (i, paramid) in layer_params.iter().enumerate() {
                     if i < grad_outputs.len() {
-                        param_grads.insert((*param_id).clone(), grad_outputs[i].clone());
+                        param_grads.insert((*paramid).clone(), grad_outputs[i].clone());
                     }
                 }
                 self.accumulate_gradients(param_grads)?;
@@ -906,7 +906,7 @@ pub mod forward_backward {
         fn apply_gradient_clipping(
             &self,
             gradients: Vec<Array<A, D>>,
-            clip_value: A,
+            clipvalue: A,
         ) -> Result<Vec<Array<A, D>>> {
             let clipped: Vec<Array<A, D>> = gradients
                 .into_iter()
@@ -914,9 +914,9 @@ pub mod forward_backward {
                     // Compute L2 norm of gradient
                     let norm = grad.mapv(|x| x * x).sum().sqrt();
 
-                    if norm > clip_value {
-                        // Scale gradient to have norm = clip_value
-                        let scale = clip_value / norm;
+                    if norm > clipvalue {
+                        // Scale gradient to have norm = clipvalue
+                        let scale = clipvalue / norm;
                         grad.mapv(|x| x * scale)
                     } else {
                         grad
@@ -940,13 +940,13 @@ pub mod forward_backward {
 
             self.accumulation_count += 1;
 
-            for (param_id, grad) in gradients {
-                if let Some(acc_grad) = self.accumulated_gradients.get_mut(&param_id) {
+            for (paramid, grad) in gradients {
+                if let Some(acc_grad) = self.accumulated_gradients.get_mut(&paramid) {
                     // Add to existing accumulated gradient
                     *acc_grad = acc_grad.clone() + grad;
                 } else {
                     // First gradient for this parameter
-                    self.accumulated_gradients.insert(param_id, grad);
+                    self.accumulated_gradients.insert(paramid, grad);
                 }
             }
 
@@ -1024,7 +1024,7 @@ pub mod architecture_aware {
         /// Create a new architecture-aware optimizer
         pub fn new(config: OptimizationConfig<A>, strategy: ArchitectureStrategy) -> Self {
             Self {
-                param_manager: ParameterManager::new(_config),
+                param_manager: ParameterManager::new(config),
                 strategy,
                 step_count: 0,
             }
@@ -1126,9 +1126,9 @@ pub mod architecture_aware {
             rnn_gradient_clip: Option<f64>,
             weight_type_lr: bool,
         ) -> Result<()> {
-            if let Some(clip_value) = rnn_gradient_clip {
+            if let Some(clipvalue) = rnn_gradient_clip {
                 // Apply RNN-specific gradient clipping
-                self.apply_rnn_gradient_clipping(A::from(clip_value).unwrap())?;
+                self.apply_rnn_gradient_clipping(A::from(clipvalue).unwrap())?;
             }
 
             if weight_type_lr {
@@ -1175,13 +1175,13 @@ pub mod architecture_aware {
                         rule.lr_multiplier = A::from(0.8).unwrap(); // Lower LR for normalization
                     }
 
-                    (metadata.layer_name.clone(), rule)
+                    (metadata.layername.clone(), rule)
                 })
                 .collect();
 
             // Now apply the rules
-            for (layer_name, rule) in layer_rules {
-                self.param_manager.set_layer_rule(layer_name, rule);
+            for (layername, rule) in layer_rules {
+                self.param_manager.set_layer_rule(layername, rule);
             }
             Ok(())
         }
@@ -1189,17 +1189,17 @@ pub mod architecture_aware {
         /// Apply layer-wise learning rate decay
         fn apply_layer_wise_decay(&mut self) -> Result<()> {
             // Extract layer numbers from layer names and apply decay
-            for (layer_id, _) in self.param_manager.layer_architectures.clone() {
-                if let Some(layer_num) = self.extract_layer_number(&layer_id) {
+            for (layerid, _) in self.param_manager.layer_architectures.clone() {
+                if let Some(layer_num) = self.extract_layer_number(&layerid) {
                     let decay_factor = A::from(0.95_f64.powi(layer_num as i32)).unwrap();
                     let mut rule = self
                         .param_manager
                         .layer_rules
-                        .get(&layer_id)
+                        .get(&layerid)
                         .cloned()
                         .unwrap_or_default();
                     rule.lr_multiplier = rule.lr_multiplier * decay_factor;
-                    self.param_manager.set_layer_rule(layer_id, rule);
+                    self.param_manager.set_layer_rule(layerid, rule);
                 }
             }
             Ok(())
@@ -1207,7 +1207,7 @@ pub mod architecture_aware {
 
         /// Apply attention parameter warmup
         fn apply_attention_warmup(&mut self, warmupsteps: usize) -> Result<()> {
-            let warmup_factor = A::from(self.step_count as f64 / warmup_steps as f64).unwrap();
+            let warmup_factor = A::from(self.step_count as f64 / warmupsteps as f64).unwrap();
 
             // Collect attention layers first
             let attention_layers: Vec<LayerId> = self
@@ -1216,7 +1216,7 @@ pub mod architecture_aware {
                 .iter()
                 .filter_map(|(_param_id, metadata)| {
                     if metadata.tags.contains(&"attention".to_string()) {
-                        Some(metadata.layer_name.clone())
+                        Some(metadata.layername.clone())
                     } else {
                         None
                     }
@@ -1224,22 +1224,22 @@ pub mod architecture_aware {
                 .collect();
 
             // Apply warmup to attention layers
-            for layer_name in attention_layers {
+            for layername in attention_layers {
                 let mut rule = self
                     .param_manager
                     .layer_rules
-                    .get(&layer_name)
+                    .get(&layername)
                     .cloned()
                     .unwrap_or_default();
                 rule.lr_multiplier = rule.lr_multiplier * warmup_factor;
-                self.param_manager.set_layer_rule(layer_name, rule);
+                self.param_manager.set_layer_rule(layername, rule);
             }
             Ok(())
         }
 
         /// Set learning rates based on layer type (conv vs fc)
         fn set_layer_type_learning_rates(&mut self) -> Result<()> {
-            for (layer_id, architecture) in self.param_manager.layer_architectures.clone() {
+            for (layerid, architecture) in self.param_manager.layer_architectures.clone() {
                 let mut rule = LayerOptimizationRule::default();
 
                 match architecture.layer_type.as_str() {
@@ -1254,7 +1254,7 @@ pub mod architecture_aware {
                     }
                 }
 
-                self.param_manager.set_layer_rule(layer_id, rule);
+                self.param_manager.set_layer_rule(layerid, rule);
             }
             Ok(())
         }
@@ -1264,7 +1264,7 @@ pub mod architecture_aware {
             // Count total layers
             let total_layers = self.param_manager.layer_architectures.len();
 
-            for (i, (layer_id, _)) in self
+            for (i, (layerid, _)) in self
                 .param_manager
                 .layer_architectures
                 .clone()
@@ -1275,11 +1275,11 @@ pub mod architecture_aware {
                 let mut rule = self
                     .param_manager
                     .layer_rules
-                    .get(layer_id)
+                    .get(layerid)
                     .cloned()
                     .unwrap_or_default();
                 rule.lr_multiplier = rule.lr_multiplier * depth_factor;
-                self.param_manager.set_layer_rule(layer_id.clone(), rule);
+                self.param_manager.set_layer_rule(layerid.clone(), rule);
             }
             Ok(())
         }
@@ -1292,8 +1292,8 @@ pub mod architecture_aware {
                 .get_all_parameters()
                 .iter()
                 .filter_map(|(_param_id, metadata)| {
-                    if metadata.param_type == ParameterType::Normalization {
-                        Some(metadata.layer_name.clone())
+                    if metadata.paramtype == ParameterType::Normalization {
+                        Some(metadata.layername.clone())
                     } else {
                         None
                     }
@@ -1301,17 +1301,17 @@ pub mod architecture_aware {
                 .collect();
 
             // Apply optimization to normalization layers
-            for layer_name in norm_layers {
+            for layername in norm_layers {
                 let mut rule = self
                     .param_manager
                     .layer_rules
-                    .get(&layer_name)
+                    .get(&layername)
                     .cloned()
                     .unwrap_or_default();
                 // Higher learning rate and no weight decay for BN parameters
                 rule.lr_multiplier = A::from(2.0).unwrap();
                 rule.weight_decay_multiplier = A::zero();
-                self.param_manager.set_layer_rule(layer_name, rule);
+                self.param_manager.set_layer_rule(layername, rule);
             }
             Ok(())
         }
@@ -1320,7 +1320,7 @@ pub mod architecture_aware {
         fn apply_rnn_gradient_clipping(&mut self, clipvalue: A) -> Result<()> {
             // This would be implemented in coordination with the gradient processing system
             // For now, we'll store the clip _value in the global config
-            self.param_manager.global_config.gradient_clip = Some(clip_value);
+            self.param_manager.global_config.gradient_clip = Some(clipvalue);
             Ok(())
         }
 
@@ -1340,13 +1340,13 @@ pub mod architecture_aware {
                         rule.lr_multiplier = A::from(1.0).unwrap(); // Standard LR for linear weights
                     }
 
-                    (metadata.layer_name.clone(), rule)
+                    (metadata.layername.clone(), rule)
                 })
                 .collect();
 
             // Apply the rules
-            for (layer_name, rule) in layer_rules {
-                self.param_manager.set_layer_rule(layer_name, rule);
+            for (layername, rule) in layer_rules {
+                self.param_manager.set_layer_rule(layername, rule);
             }
             Ok(())
         }
@@ -1360,7 +1360,7 @@ pub mod architecture_aware {
 
         /// Extract layer number from layer name (e.g., "layer_12" -> 12)
         fn extract_layer_number(&self, layername: &str) -> Option<usize> {
-            layer_name.split('_').next_back()?.parse().ok()
+            layername.split('_').next_back()?.parse().ok()
         }
 
         /// Step the optimizer
@@ -1392,11 +1392,11 @@ mod tests {
         let mut manager = ParameterManager::<f64, ndarray::Ix1>::new(config);
 
         let metadata = ParameterMetadata {
-            layer_name: "layer1".to_string(),
+            layername: "layer1".to_string(),
             param_name: "weight".to_string(),
             shape: vec![10, 5],
             requires_grad: true,
-            param_type: ParameterType::Weight,
+            paramtype: ParameterType::Weight,
             sharing_group: None,
             tags: vec!["dense".to_string()],
         };
@@ -1420,11 +1420,11 @@ mod tests {
         manager.enable_lazy_mode();
 
         let metadata = ParameterMetadata {
-            layer_name: "layer1".to_string(),
+            layername: "layer1".to_string(),
             param_name: "weight".to_string(),
             shape: vec![10, 5],
             requires_grad: true,
-            param_type: ParameterType::Weight,
+            paramtype: ParameterType::Weight,
             sharing_group: None,
             tags: vec![],
         };
@@ -1464,11 +1464,11 @@ mod tests {
         manager.set_layer_rule("layer1".to_string(), rule);
 
         let metadata = ParameterMetadata {
-            layer_name: "layer1".to_string(),
+            layername: "layer1".to_string(),
             param_name: "weight".to_string(),
             shape: vec![10, 5],
             requires_grad: true,
-            param_type: ParameterType::Weight,
+            paramtype: ParameterType::Weight,
             sharing_group: None,
             tags: vec![],
         };
@@ -1492,21 +1492,21 @@ mod tests {
         let mut manager = ParameterManager::<f64, ndarray::Ix1>::new(config);
 
         let metadata1 = ParameterMetadata {
-            layer_name: "layer1".to_string(),
+            layername: "layer1".to_string(),
             param_name: "weight".to_string(),
             shape: vec![10, 5],
             requires_grad: true,
-            param_type: ParameterType::Weight,
+            paramtype: ParameterType::Weight,
             sharing_group: Some("shared_weights".to_string()),
             tags: vec![],
         };
 
         let metadata2 = ParameterMetadata {
-            layer_name: "layer2".to_string(),
+            layername: "layer2".to_string(),
             param_name: "weight".to_string(),
             shape: vec![10, 5],
             requires_grad: true,
-            param_type: ParameterType::Weight,
+            paramtype: ParameterType::Weight,
             sharing_group: Some("shared_weights".to_string()),
             tags: vec![],
         };
@@ -1530,21 +1530,21 @@ mod tests {
         let mut manager = ParameterManager::<f64, ndarray::Ix1>::new(config);
 
         let weight_metadata = ParameterMetadata {
-            layer_name: "layer1".to_string(),
+            layername: "layer1".to_string(),
             param_name: "weight".to_string(),
             shape: vec![10, 5],
             requires_grad: true,
-            param_type: ParameterType::Weight,
+            paramtype: ParameterType::Weight,
             sharing_group: None,
             tags: vec![],
         };
 
         let bias_metadata = ParameterMetadata {
-            layer_name: "layer1".to_string(),
+            layername: "layer1".to_string(),
             param_name: "bias".to_string(),
             shape: vec![5],
             requires_grad: true,
-            param_type: ParameterType::Bias,
+            paramtype: ParameterType::Bias,
             sharing_group: None,
             tags: vec![],
         };
@@ -1602,11 +1602,11 @@ mod tests {
 
         // Register parameters with different tags
         let attention_metadata = ParameterMetadata {
-            layer_name: "layer_0".to_string(),
+            layername: "layer_0".to_string(),
             param_name: "attention_weight".to_string(),
             shape: vec![512, 512],
             requires_grad: true,
-            param_type: ParameterType::Attention,
+            paramtype: ParameterType::Attention,
             sharing_group: None,
             tags: vec!["attention".to_string()],
         };

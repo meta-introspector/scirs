@@ -75,10 +75,10 @@ where
         + std::fmt::Display
         + scirs2_core::simd_ops::SimdUnifiedOps,
 {
-    // Check if there are at least two _groups
+    // Check if there are at least two groups
     if groups.len() < 2 {
         return Err(StatsError::InvalidArgument(
-            "At least two _groups are required for ANOVA".to_string(),
+            "At least two groups are required for ANOVA".to_string(),
         ));
     }
 
@@ -105,7 +105,7 @@ where
     // Calculate the overall mean of all observations
     let mut all_values = Array1::<F>::zeros(n_total);
     let mut index = 0;
-    for group in _groups {
+    for group in groups {
         for &value in group.iter() {
             all_values[index] = value;
             index += 1;
@@ -114,10 +114,10 @@ where
     let grand_mean = mean(&all_values.view())?;
 
     // Calculate means for each group
-    let mut group_means = Vec::with_capacity(_groups.len());
-    let mut group_sizes = Vec::with_capacity(_groups.len());
+    let mut group_means = Vec::with_capacity(groups.len());
+    let mut group_sizes = Vec::with_capacity(groups.len());
 
-    for group in _groups {
+    for group in groups {
         group_means.push(mean(group)?);
         group_sizes.push(group.len());
     }
@@ -229,21 +229,21 @@ where
         + std::fmt::Display
         + scirs2_core::simd_ops::SimdUnifiedOps,
 {
-    // Check if there are at least two _groups
+    // Check if there are at least two groups
     if groups.len() < 2 {
         return Err(StatsError::InvalidArgument(
-            "At least two _groups are required for Tukey's HSD".to_string(),
+            "At least two groups are required for Tukey's HSD".to_string(),
         ));
     }
 
     // Perform one-way ANOVA first to get the mean square error
-    let anova_result = one_way_anova(_groups)?;
+    let anova_result = one_way_anova(groups)?;
 
     // Calculate group means
-    let mut group_means = Vec::with_capacity(_groups.len());
-    let mut group_sizes = Vec::with_capacity(_groups.len());
+    let mut group_means = Vec::with_capacity(groups.len());
+    let mut group_sizes = Vec::with_capacity(groups.len());
 
-    for group in _groups {
+    for group in groups {
         group_means.push(mean(group)?);
         group_sizes.push(F::from(group.len()).unwrap());
     }
@@ -252,15 +252,15 @@ where
     // This is a simplification; in a real implementation, you would use a lookup table or function
     let critical_q = calculate_studentized_range_critical_value(
         alpha,
-        F::from(_groups.len()).unwrap(),
+        F::from(groups.len()).unwrap(),
         F::from(anova_result.df_error).unwrap(),
     )?;
 
     let mut results = Vec::new();
 
-    // Compare each pair of _groups
-    for i in 0.._groups.len() {
-        for j in (i + 1).._groups.len() {
+    // Compare each pair of groups
+    for i in 0..groups.len() {
+        for j in (i + 1)..groups.len() {
             // Calculate mean difference
             let mean_diff = (group_means[i] - group_means[j]).abs();
 
@@ -276,7 +276,7 @@ where
             // Approximation for the studentized range distribution
             let p_value = calculate_studentized_range_p_value(
                 q_stat,
-                F::from(_groups.len()).unwrap(),
+                F::from(groups.len()).unwrap(),
                 F::from(anova_result.df_error).unwrap(),
             );
 

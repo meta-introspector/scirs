@@ -316,11 +316,11 @@ impl ComprehensiveValidationSuite {
     /// Create a new comprehensive validation suite
     pub fn new(config: ValidationSuiteConfig) -> Self {
         Self {
-            benchmark_framework: ScipyBenchmarkFramework::new(_config.benchmark_config.clone()),
+            benchmark_framework: ScipyBenchmarkFramework::new(config.benchmark_config.clone()),
             property_test_suite: ComprehensivePropertyTestSuite::new(
                 config.property_config.clone(),
             ),
-            stability_analyzer: NumericalStabilityAnalyzer::new(_config.stability_config.clone()),
+            stability_analyzer: NumericalStabilityAnalyzer::new(config.stability_config.clone()),
             config: config,
             cached_results: HashMap::new(),
         }

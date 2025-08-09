@@ -486,7 +486,7 @@ impl Normalizer {
     /// # Returns
     /// * A new Normalizer instance
     pub fn new(method: NormalizationMethod, axis: usize) -> Self {
-        let params = match _method {
+        let params = match method {
             NormalizationMethod::MinMax => NormalizerParams::MinMax {
                 min: Array1::zeros(0),
                 max: Array1::zeros(0),

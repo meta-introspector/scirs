@@ -178,10 +178,10 @@ impl OptimizedLinearDiscriminantAnalysis {
     /// Auto-tune performance thresholds based on data characteristics
     fn auto_tune_thresholds(&mut self, datasize: usize) {
         // Simple heuristic-based auto-tuning
-        if data_size > 100_000 {
+        if datasize > 100_000 {
             self.config.simd_threshold = 32;
             self.config.parallel_threshold = 500;
-        } else if data_size > 10_000 {
+        } else if datasize > 10_000 {
             self.config.simd_threshold = 64;
             self.config.parallel_threshold = 1000;
         } else {
@@ -758,7 +758,7 @@ impl PerformanceBenchmark {
         );
         println!("{}", "-".repeat(80));
 
-        for (name, metrics) in _results {
+        for (name, metrics) in results {
             println!(
                 "{:<20} {:>12.2} {:>10.0} {:>15} {:>8} {:>8}",
                 name,

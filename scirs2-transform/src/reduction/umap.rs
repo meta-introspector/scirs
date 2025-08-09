@@ -23,7 +23,7 @@ pub struct UMAP {
     n_components: usize,
     /// Controls how UMAP balances local versus global structure
     #[allow(dead_code)]
-    min_dist: f64,
+    mindist: f64,
     /// Controls how tightly UMAP is allowed to pack points together
     #[allow(dead_code)]
     spread: f64,
@@ -52,24 +52,24 @@ impl UMAP {
     /// # Arguments
     /// * `n_neighbors` - Number of neighbors to consider for local structure (default: 15)
     /// * `n_components` - Number of dimensions in the low dimensional space (default: 2)
-    /// * `min_dist` - Minimum distance between points in low dimensional space (default: 0.1)
+    /// * `mindist` - Minimum distance between points in low dimensional space (default: 0.1)
     /// * `learning_rate` - Learning rate for optimization (default: 1.0)
     /// * `n_epochs` - Number of epochs for optimization (default: 200)
     pub fn new(
         n_neighbors: usize,
         n_components: usize,
-        min_dist: f64,
+        mindist: f64,
         learning_rate: f64,
         n_epochs: usize,
     ) -> Self {
-        // Compute a and b parameters based on min_dist and spread
+        // Compute a and b parameters based on mindist and spread
         let spread = 1.0;
-        let (a, b) = Self::find_ab_params(spread, min_dist);
+        let (a, b) = Self::find_ab_params(spread, mindist);
 
         UMAP {
             n_neighbors,
             n_components,
-            min_dist,
+            mindist,
             spread,
             learning_rate,
             n_epochs,
@@ -101,17 +101,17 @@ impl UMAP {
         let mut a = 1.0;
         let mut b = 1.0;
 
-        // Initial guess based on min_dist and _spread
-        if min_dist > 0.0 {
-            b = min_dist.ln() / (1.0 - min_dist).ln();
+        // Initial guess based on mindist and _spread
+        if mindist > 0.0 {
+            b = mindist.ln() / (1.0 - mindist).ln();
         }
 
         // Refine using Newton's method
         for _ in 0..64 {
-            let val = 1.0 / (1.0 + a * min_dist.powf(2.0 * b));
-            let grad_a = -min_dist.powf(2.0 * b) / (1.0 + a * min_dist.powf(2.0 * b)).powi(2);
-            let grad_b = -2.0 * a * min_dist.powf(2.0 * b) * min_dist.ln()
-                / (1.0 + a * min_dist.powf(2.0 * b)).powi(2);
+            let val = 1.0 / (1.0 + a * mindist.powf(2.0 * b));
+            let grad_a = -mindist.powf(2.0 * b) / (1.0 + a * mindist.powf(2.0 * b)).powi(2);
+            let grad_b = -2.0 * a * mindist.powf(2.0 * b) * mindist.ln()
+                / (1.0 + a * mindist.powf(2.0 * b)).powi(2);
 
             if (val - 0.5).abs() < 1e-5 {
                 break;
@@ -133,12 +133,12 @@ impl UMAP {
         S: Data,
         S::Elem: Float + NumCast,
     {
-        let n_samples = x.shape()[0];
-        let mut distances = Array2::zeros((n_samples, n_samples));
+        let nsamples = x.shape()[0];
+        let mut distances = Array2::zeros((nsamples, nsamples));
 
         // Compute pairwise Euclidean distances
-        for i in 0..n_samples {
-            for j in i + 1..n_samples {
+        for i in 0..nsamples {
+            for j in i + 1..nsamples {
                 let mut dist = 0.0;
                 for k in 0..x.shape()[1] {
                     let diff = num_traits::cast::<S::Elem, f64>(x[[i, k]]).unwrap_or(0.0)
@@ -156,17 +156,17 @@ impl UMAP {
 
     /// Find k nearest neighbors for each point
     fn find_neighbors(&self, distances: &Array2<f64>) -> (Array2<usize>, Array2<f64>) {
-        let n_samples = distances.shape()[0];
+        let nsamples = distances.shape()[0];
         let k = self.n_neighbors;
 
-        let mut indices = Array2::zeros((n_samples, k));
-        let mut neighbor_distances = Array2::zeros((n_samples, k));
+        let mut indices = Array2::zeros((nsamples, k));
+        let mut neighbor_distances = Array2::zeros((nsamples, k));
 
-        for i in 0..n_samples {
+        for i in 0..nsamples {
             // Use a min heap to find k smallest distances
             let mut heap: BinaryHeap<(std::cmp::Reverse<i64>, usize)> = BinaryHeap::new();
 
-            for j in 0..n_samples {
+            for j in 0..nsamples {
                 if i != j {
                     // Convert to fixed point for comparison
                     let dist_fixed = (distances[[i, j]] * 1e9) as i64;
@@ -192,11 +192,11 @@ impl UMAP {
         knn_indices: &Array2<usize>,
         knn_distances: &Array2<f64>,
     ) -> Array2<f64> {
-        let n_samples = knn_indices.shape()[0];
-        let mut graph = Array2::zeros((n_samples, n_samples));
+        let nsamples = knn_indices.shape()[0];
+        let mut graph = Array2::zeros((nsamples, nsamples));
 
         // For each point, compute membership strengths to its neighbors
-        for i in 0..n_samples {
+        for i in 0..nsamples {
             // Find rho (distance to nearest neighbor)
             let rho = knn_distances[[i, 0]];
 
@@ -241,8 +241,8 @@ impl UMAP {
         let mut rng = rand::rng();
 
         // Initialize with small random values
-        let mut embedding = Array2::zeros((n_samples, self.n_components));
-        for i in 0..n_samples {
+        let mut embedding = Array2::zeros((nsamples, self.n_components));
+        for i in 0..nsamples {
             for j in 0..self.n_components {
                 embedding[[i, j]] = rng.gen_range(0.0..1.0) * 10.0 - 5.0;
             }
@@ -258,14 +258,14 @@ impl UMAP {
         graph: &Array2<f64>,
         n_epochs: usize,
     ) {
-        let n_samples = embedding.shape()[0];
+        let nsamples = embedding.shape()[0];
         let mut rng = rand::rng();
 
         // Create edge list from graph
         let mut edges = Vec::new();
         let mut weights = Vec::new();
-        for i in 0..n_samples {
-            for j in 0..n_samples {
+        for i in 0..nsamples {
+            for j in 0..nsamples {
                 if graph[[i, j]] > 0.0 {
                     edges.push((i, j));
                     weights.push(graph[[i, j]]);
@@ -307,7 +307,7 @@ impl UMAP {
                 }
 
                 // Repulsive force - sample a negative edge
-                let k = rng.gen_range(0..n_samples);
+                let k = rng.gen_range(0..nsamples);
                 if k != i && k != j {
                     let mut neg_dist_sq = 0.0;
                     for d in 0..self.n_components {
@@ -336,7 +336,7 @@ impl UMAP {
     /// Fits the UMAP model to the input data
     ///
     /// # Arguments
-    /// * `x` - The input data, shape (n_samples, n_features)
+    /// * `x` - The input data, shape (nsamples, n_features)
     ///
     /// # Returns
     /// * `Result<()>` - Ok if successful, Err otherwise
@@ -345,23 +345,23 @@ impl UMAP {
         S: Data,
         S::Elem: Float + NumCast + Send + Sync,
     {
-        let (n_samples, n_features) = x.dim();
+        let (nsamples, n_features) = x.dim();
 
         // Validate inputs
         check_positive(self.n_neighbors, "n_neighbors")?;
         check_positive(self.n_components, "n_components")?;
         check_positive(self.n_epochs, "n_epochs")?;
-        checkshape(x, &[n_samples, n_features], "x")?;
+        checkshape(x, &[nsamples, n_features], "x")?;
 
-        if n_samples < self.n_neighbors {
+        if nsamples < self.n_neighbors {
             return Err(TransformError::InvalidInput(format!(
-                "n_neighbors={} must be <= n_samples={}",
-                self.n_neighbors, n_samples
+                "n_neighbors={} must be <= nsamples={}",
+                self.n_neighbors, nsamples
             )));
         }
 
         // Store training data for out-of-sample extension
-        let training_data = Array2::from_shape_fn((n_samples, n_features), |(i, j)| {
+        let training_data = Array2::from_shape_fn((nsamples, n_features), |(i, j)| {
             num_traits::cast::<S::Elem, f64>(x[[i, j]]).unwrap_or(0.0)
         });
         self.training_data = Some(training_data);
@@ -377,7 +377,7 @@ impl UMAP {
         self.training_graph = Some(graph.clone());
 
         // Step 4: Initialize low dimensional embedding
-        let mut embedding = self.initialize_embedding(n_samples);
+        let mut embedding = self.initialize_embedding(nsamples);
 
         // Step 5: Optimize the embedding
         self.optimize_embedding(&mut embedding, &graph, self.n_epochs);
@@ -390,10 +390,10 @@ impl UMAP {
     /// Transforms the input data using the fitted UMAP model
     ///
     /// # Arguments
-    /// * `x` - The input data, shape (n_samples, n_features)
+    /// * `x` - The input data, shape (nsamples, n_features)
     ///
     /// # Returns
-    /// * `Result<Array2<f64>>` - The transformed data, shape (n_samples, n_components)
+    /// * `Result<Array2<f64>>` - The transformed data, shape (nsamples, n_components)
     pub fn transform<S>(&self, x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
     where
         S: Data,
@@ -431,10 +431,10 @@ impl UMAP {
     /// Fits the UMAP model to the input data and returns the embedding
     ///
     /// # Arguments
-    /// * `x` - The input data, shape (n_samples, n_features)
+    /// * `x` - The input data, shape (nsamples, n_features)
     ///
     /// # Returns
-    /// * `Result<Array2<f64>>` - The transformed data, shape (n_samples, n_components)
+    /// * `Result<Array2<f64>>` - The transformed data, shape (nsamples, n_components)
     pub fn fit_transform<S>(&mut self, x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
     where
         S: Data,
@@ -455,15 +455,15 @@ impl UMAP {
         S: Data,
         S::Elem: Float + NumCast,
     {
-        if x.dim() != training_data.dim() {
+        if x.dim() != trainingdata.dim() {
             return false;
         }
 
-        let (n_samples, n_features) = x.dim();
-        for i in 0..n_samples {
+        let (nsamples, n_features) = x.dim();
+        for i in 0..nsamples {
             for j in 0..n_features {
                 let x_val = num_traits::cast::<S::Elem, f64>(x[[i, j]]).unwrap_or(0.0);
-                if (x_val - training_data[[i, j]]).abs() > 1e-10 {
+                if (x_val - trainingdata[[i, j]]).abs() > 1e-10 {
                     return false;
                 }
             }

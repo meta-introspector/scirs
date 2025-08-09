@@ -874,7 +874,7 @@ impl AIAlgorithmSelector {
         let mut centroids = Array2::zeros((k, n_dims));
         for i in 0..k {
             let point_idx = (i * n_points_ / k) % n_points_;
-            centroids.row_mut(i).assign(&_data.row(point_idx));
+            centroids.row_mut(i).assign(&data.row(point_idx));
         }
 
         // Calculate within-cluster sum of squares
@@ -925,10 +925,10 @@ impl AIAlgorithmSelector {
 
                 for i in start1..end1 {
                     for j in start2..end2 {
-                        let distance: f64 = _data
+                        let distance: f64 = data
                             .row(i)
                             .iter()
-                            .zip(_data.row(j).iter())
+                            .zip(data.row(j).iter())
                             .map(|(&a, &b)| (a - b).powi(2))
                             .sum::<f64>()
                             .sqrt();
@@ -970,10 +970,10 @@ impl AIAlgorithmSelector {
 
                 for i in start..end {
                     for j in (i + 1)..end {
-                        let distance: f64 = _data
+                        let distance: f64 = data
                             .row(i)
                             .iter()
-                            .zip(_data.row(j).iter())
+                            .zip(data.row(j).iter())
                             .map(|(&a, &b)| (a - b).powi(2))
                             .sum::<f64>()
                             .sqrt();
@@ -1102,7 +1102,7 @@ impl AIAlgorithmSelector {
 
     /// Get algorithms for specific task
     fn get_algorithms_for_task(&self, _tasktype: &str) -> Vec<String> {
-        match _task_type {
+        match _tasktype {
             "clustering" => vec![
                 "kmeans".to_string(),
                 "dbscan".to_string(),

@@ -1026,9 +1026,9 @@ where
 
     /// Make predictions at new input points
     pub fn predict(&self, xtest: &ArrayView2<F>) -> StatsResult<(Array1<F>, Array1<F>)> {
-        checkarray_finite(x_test, "x_test")?;
+        checkarray_finite(xtest, "x_test")?;
 
-        let n_test = x_test.nrows();
+        let n_test = xtest.nrows();
 
         // Simplified prediction using nearest neighbor approach
         let mut mean_pred = Array1::zeros(n_test);
@@ -1037,7 +1037,7 @@ where
         let n_train = self.x_train.nrows();
 
         for i in 0..n_test {
-            let test_point = x_test.row(i);
+            let test_point = xtest.row(i);
             let mut min_dist = F::infinity();
             let mut nearest_y = F::zero();
 
@@ -1095,7 +1095,7 @@ where
         // Initialize priors with appropriate scales based on layer sizes
         let weight_priors = (0..n_layers)
             .map(|i| {
-                let fan_in = F::from(_architecture[i]).unwrap();
+                let fan_in = F::from(architecture[i]).unwrap();
                 let precision = fan_in; // Xavier initialization scale
                 DistributionType::Normal {
                     mean: F::zero(),
@@ -1230,7 +1230,7 @@ where
             * (F::from(2.0 * std::f64::consts::PI).unwrap() * u2).cos();
 
         let std_dev = F::one() / precision.sqrt();
-        Ok(_mean + std_dev * z)
+        Ok(mean + std_dev * z)
     }
 
     /// Make predictions with uncertainty quantification

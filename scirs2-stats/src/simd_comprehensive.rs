@@ -396,23 +396,23 @@ where
 
     /// SIMD-optimized skewness computation
     fn simd_compute_skewness(&self, sum_cube: F, mean: F, stddev: F, n: F) -> StatsResult<F> {
-        if std_dev == F::zero() {
+        if stddev == F::zero() {
             return Ok(F::zero());
         }
 
         let third_moment = sum_cube / n - F::from(3.0).unwrap() * mean * mean * mean;
-        let skewness = third_moment / (std_dev * std_dev * std_dev);
+        let skewness = third_moment / (stddev * stddev * stddev);
         Ok(skewness)
     }
 
     /// SIMD-optimized kurtosis computation
     fn simd_compute_kurtosis(&self, sum_quad: F, mean: F, stddev: F, n: F) -> StatsResult<F> {
-        if std_dev == F::zero() {
+        if stddev == F::zero() {
             return Ok(F::from(3.0).unwrap());
         }
 
         let fourth_moment = sum_quad / n - F::from(4.0).unwrap() * mean * mean * mean * mean;
-        let kurtosis = fourth_moment / (std_dev * std_dev * std_dev * std_dev);
+        let kurtosis = fourth_moment / (stddev * stddev * stddev * stddev);
         Ok(kurtosis)
     }
 
@@ -428,22 +428,22 @@ where
 
     /// SIMD-optimized quartile computation  
     fn simd_compute_quartiles(&self, sorteddata: &Array1<F>) -> StatsResult<(F, F, F)> {
-        let n = sorted_data.len();
+        let n = sorteddata.len();
         if n == 0 {
-            return Err(StatsError::InvalidArgument("Empty _data".to_string()));
+            return Err(StatsError::InvalidArgument("Empty data".to_string()));
         }
 
         let q1_idx = n / 4;
         let median_idx = n / 2;
         let q3_idx = 3 * n / 4;
 
-        let q1 = sorted_data[q1_idx];
+        let q1 = sorteddata[q1_idx];
         let median = if n % 2 == 0 && median_idx > 0 {
-            (sorted_data[median_idx - 1] + sorted_data[median_idx]) / F::from(2.0).unwrap()
+            (sorteddata[median_idx - 1] + sorteddata[median_idx]) / F::from(2.0).unwrap()
         } else {
-            sorted_data[median_idx]
+            sorteddata[median_idx]
         };
-        let q3 = sorted_data[q3_idx.min(n - 1)];
+        let q3 = sorteddata[q3_idx.min(n - 1)];
 
         Ok((q1, median, q3))
     }
@@ -504,11 +504,11 @@ where
     fn simd_trimmed_mean(&self, data: &ArrayView1<F>, trimfraction: F) -> StatsResult<F> {
         let sorted_data = self.simd_sort_array(data)?;
         let n = sorted_data.len();
-        let trim_count = ((F::from(n).unwrap() * trim_fraction).to_usize().unwrap()).min(n / 2);
+        let trim_count = ((F::from(n).unwrap() * trimfraction).to_usize().unwrap()).min(n / 2);
 
         if trim_count * 2 >= n {
             return Err(StatsError::InvalidArgument(
-                "Trim _fraction too large".to_string(),
+                "Trim fraction too large".to_string(),
             ));
         }
 
@@ -520,7 +520,7 @@ where
     fn simd_winsorized_mean(&self, data: &ArrayView1<F>, winsorfraction: F) -> StatsResult<F> {
         let sorted_data = self.simd_sort_array(data)?;
         let n = sorted_data.len();
-        let winsor_count = ((F::from(n).unwrap() * winsor_fraction).to_usize().unwrap()).min(n / 2);
+        let winsor_count = ((F::from(n).unwrap() * winsorfraction).to_usize().unwrap()).min(n / 2);
 
         let mut winsorized = sorted_data.clone();
 
@@ -711,7 +711,7 @@ where
         for i in 0..n_rows {
             let row = data.row(i);
             // Compute standard deviation using SIMD
-            let mean_array = Array1::from_elem(row.len(), row_means[i]);
+            let mean_array = Array1::from_elem(row.len(), rowmeans[i]);
             let diffs = F::simd_sub(&row, &mean_array.view());
             let squared_diffs = F::simd_mul(&diffs.view(), &diffs.view());
             let variance = F::simd_mean(&squared_diffs.view());

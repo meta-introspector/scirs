@@ -14,7 +14,7 @@ use statrs::statistics::Statistics;
 ///
 /// * `img1` - First image (reference)
 /// * `img2` - Second image (distorted)
-/// * `max_value` - Maximum possible pixel value (255 for 8-bit images)
+/// * `maxvalue` - Maximum possible pixel value (255 for 8-bit images)
 ///
 /// # Returns
 ///
@@ -63,7 +63,7 @@ pub fn psnr(_img1: &DynamicImage, img2: &DynamicImage, maxvalue: f32) -> Result<
         // Identical images
         Ok(f32::INFINITY)
     } else {
-        Ok(20.0 * (max_value / mse.sqrt()).log10())
+        Ok(20.0 * (maxvalue / mse.sqrt()).log10())
     }
 }
 
@@ -188,14 +188,14 @@ fn ssim_map(
             ]);
 
             // Compute weighted statistics
-            let sum_weights = window.sum();
+            let sumweights = window.sum();
 
-            let mu1 = weighted_mean(&patch1, window, sum_weights);
-            let mu2 = weighted_mean(&patch2, window, sum_weights);
+            let mu1 = weighted_mean(&patch1, window, sumweights);
+            let mu2 = weighted_mean(&patch2, window, sumweights);
 
-            let sigma1_sq = weighted_variance(&patch1, window, mu1, sum_weights);
-            let sigma2_sq = weighted_variance(&patch2, window, mu2, sum_weights);
-            let sigma12 = weighted_covariance(&patch1, &patch2, window, mu1, mu2, sum_weights);
+            let sigma1_sq = weighted_variance(&patch1, window, mu1, sumweights);
+            let sigma2_sq = weighted_variance(&patch2, window, mu2, sumweights);
+            let sigma12 = weighted_covariance(&patch1, &patch2, window, mu1, mu2, sumweights);
 
             // Compute SSIM
             let numerator = (2.0 * mu1 * mu2 + c1) * (2.0 * sigma12 + c2);
@@ -211,8 +211,8 @@ fn ssim_map(
 /// Create a Gaussian window
 #[allow(dead_code)]
 fn gaussian_window(size: usize, sigma: f32) -> Array2<f32> {
-    let half_size = _size as i32 / 2;
-    let mut window = Array2::zeros((_size, size));
+    let half_size = size as i32 / 2;
+    let mut window = Array2::zeros((size, size));
     let mut sum = 0.0;
 
     for y in -half_size..=half_size {
@@ -235,7 +235,7 @@ fn weighted_mean(_data: &ndarray::ArrayView2<f32>, weights: &Array2<f32>, sumwei
     for ((y, x), &value) in data.indexed_iter() {
         sum += value * weights[[y, x]];
     }
-    sum / sum_weights
+    sum / sumweights
 }
 
 /// Compute weighted variance
@@ -244,13 +244,13 @@ fn weighted_variance(
     data: &ndarray::ArrayView2<f32>,
     weights: &Array2<f32>,
     mean: f32,
-    sum_weights: f32,
+    sumweights: f32,
 ) -> f32 {
     let mut sum = 0.0;
     for ((y, x), &value) in data.indexed_iter() {
         sum += weights[[y, x]] * (value - mean).powi(2);
     }
-    sum / sum_weights
+    sum / sumweights
 }
 
 /// Compute weighted covariance
@@ -261,14 +261,14 @@ fn weighted_covariance(
     weights: &Array2<f32>,
     mean1: f32,
     mean2: f32,
-    sum_weights: f32,
+    sumweights: f32,
 ) -> f32 {
     let mut sum = 0.0;
     for ((y, x), &value1) in data1.indexed_iter() {
         let value2 = data2[[y, x]];
         sum += weights[[y, x]] * (value1 - mean1) * (value2 - mean2);
     }
-    sum / sum_weights
+    sum / sumweights
 }
 
 /// Convert grayscale image to normalized array

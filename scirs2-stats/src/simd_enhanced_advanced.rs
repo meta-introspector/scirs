@@ -210,7 +210,7 @@ where
     // Compute MAD (Median Absolute Deviation)
     let mut deviations = Array1::zeros(n);
     for i in 0..n {
-        deviations[i] = (_data[i] - median).abs();
+        deviations[i] = (data[i] - median).abs();
     }
 
     let mad = if n > 16 {

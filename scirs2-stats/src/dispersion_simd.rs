@@ -36,8 +36,8 @@ where
         ));
     }
 
-    // Handle NaN values according to _policy
-    match nan_policy {
+    // Handle NaN values according to policy
+    match nanpolicy {
         "propagate" => {
             if x.iter().any(|&v| v.is_nan()) {
                 return Ok(F::nan());

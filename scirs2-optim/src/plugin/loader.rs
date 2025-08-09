@@ -203,7 +203,7 @@ pub struct SecurityManager {
 #[derive(Debug)]
 pub struct CryptographicValidator {
     /// Trusted CAs
-    trusted_cas: Vec<TrustedCA>,
+    _trustedcas: Vec<TrustedCA>,
     /// Signature verification configuration
     config: SignatureVerificationConfig,
 }
@@ -226,7 +226,7 @@ pub struct SecurityPolicy {
     /// Cryptographic signature verification
     pub signature_verification: SignatureVerificationConfig,
     /// Trusted certificate authorities
-    pub trusted_cas: Vec<TrustedCA>,
+    pub _trustedcas: Vec<TrustedCA>,
     /// Plugin allowlist (hashes of approved plugins)
     pub plugin_allowlist: Vec<String>,
     /// Enable plugin integrity monitoring
@@ -508,7 +508,7 @@ pub enum ThreatType {
 impl PluginLoader {
     /// Create a new plugin loader
     pub fn new(config: LoaderConfig) -> Self {
-        let security_manager = SecurityManager::new(_config.security_policy.clone());
+        let security_manager = SecurityManager::new(config.security_policy.clone());
         Self {
             config: config,
             security_manager,
@@ -793,7 +793,7 @@ impl PluginLoader {
         &mut self,
         name: &str,
         version: Option<&str>,
-        _config: &PluginConfig,
+        config: &PluginConfig,
     ) -> Result<PluginLoadResult> {
         let start_time = std::time::Instant::now();
         let mut errors = Vec::new();
@@ -894,9 +894,9 @@ impl PluginLoader {
 
         if download_result.success {
             // Verify content-type and size limits
-            if let Some(content_type) = &download_result.content_type {
-                if !self.is_allowed_content_type(content_type) {
-                    errors.push(format!("Unsupported content type: {}", content_type));
+            if let Some(contenttype) = &download_result.contenttype {
+                if !self.is_allowed_content_type(contenttype) {
+                    errors.push(format!("Unsupported content type: {}", contenttype));
                     let _ = std::fs::remove_dir_all(&temp_dir);
                     return Ok(PluginLoadResult::failed_with_errors(errors));
                 }
@@ -1126,7 +1126,7 @@ impl PluginLoader {
         Ok(DownloadResult {
             success: true,
             size: 1024,
-            content_type: Some("application/gzip".to_string()),
+            contenttype: Some("application/gzip".to_string()),
             errors: vec![],
             warnings: vec![],
         })
@@ -1185,7 +1185,7 @@ impl PluginLoader {
             success: true,
             file_path,
             size: 1024,
-            content_type: Some("application/octet-stream".to_string()),
+            contenttype: Some("application/octet-stream".to_string()),
             errors: vec![],
             warnings: vec![],
         })
@@ -1194,7 +1194,7 @@ impl PluginLoader {
     /// Check if content type is allowed
     fn is_allowed_content_type(&self, contenttype: &str) -> bool {
         matches!(
-            content_type,
+            contenttype,
             "application/octet-stream"
                 | "application/x-sharedlib"
                 | "application/gzip"
@@ -1311,7 +1311,7 @@ impl DependencyGraph {
 impl SecurityManager {
     fn new(policy: SecurityPolicy) -> Self {
         let crypto_validator = CryptographicValidator::new(
-            policy.trusted_cas.clone(),
+            policy._trustedcas.clone(),
             policy.signature_verification.clone(),
         );
 
@@ -1516,7 +1516,7 @@ impl PermissionValidator {
 impl CryptographicValidator {
     fn new(_trustedcas: Vec<TrustedCA>, config: SignatureVerificationConfig) -> Self {
         Self {
-            trusted_cas: trusted_cas,
+            _trustedcas: _trustedcas,
             config,
         }
     }
@@ -1611,7 +1611,7 @@ impl CodeScanner {
 
 impl PluginMetadata {
     fn default_for_path(path: &Path) -> Self {
-        let name = _path
+        let name = path
             .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("unknown")
@@ -1679,7 +1679,7 @@ impl Default for SecurityPolicy {
             enable_code_scanning: false,
             sandbox_config: SandboxConfig::default(),
             signature_verification: SignatureVerificationConfig::default(),
-            trusted_cas: Vec::new(),
+            _trustedcas: Vec::new(),
             plugin_allowlist: Vec::new(),
             integrity_monitoring: false,
         }
@@ -1767,7 +1767,7 @@ pub struct HttpDownloadResult {
     pub success: bool,
     pub file_path: PathBuf,
     pub size: usize,
-    pub content_type: Option<String>,
+    pub contenttype: Option<String>,
     pub errors: Vec<String>,
     pub warnings: Vec<String>,
 }
@@ -1777,7 +1777,7 @@ pub struct HttpDownloadResult {
 pub struct DownloadResult {
     pub success: bool,
     pub size: usize,
-    pub content_type: Option<String>,
+    pub contenttype: Option<String>,
     pub errors: Vec<String>,
     pub warnings: Vec<String>,
 }

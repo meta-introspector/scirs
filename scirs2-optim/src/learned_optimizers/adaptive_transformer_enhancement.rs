@@ -897,12 +897,12 @@ impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> 
         &mut self,
         transformer: &mut TransformerOptimizer<T>,
         gradient_history: &[Array1<T>],
-        loss_history: &[T],
+        losshistory: &[T],
     ) -> Result<EnhancementResult<T>> {
         // Analyze optimization landscape
         let landscape_analysis = self
             .landscape_analyzer
-            .analyze(gradient_history, loss_history)?;
+            .analyze(gradient_history, losshistory)?;
 
         // Adapt sequence processing
         let sequence_adaptation = self
@@ -927,7 +927,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> 
             .predict_improvement(&landscape_analysis, &architecture_adaptation)?;
 
         // Calculate convergence metrics
-        let convergence_metrics = self.calculate_convergence_metrics(loss_history);
+        let convergence_metrics = self.calculate_convergence_metrics(losshistory);
 
         Ok(EnhancementResult {
             sequence_adaptation,
@@ -985,7 +985,7 @@ pub struct AttentionOptimization<T: Float> {
     pub attention_patterns: Array3<T>,
 
     /// Sparsity level achieved
-    pub sparsity_level: T,
+    pub sparsitylevel: T,
 
     /// Memory savings
     pub memory_savings: usize,
@@ -1101,11 +1101,11 @@ pub struct EnhancementStatistics<T: Float> {
 impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> {
     pub fn new(config: AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
-            sequence_processor: AdaptiveSequenceProcessor::new(&_config)?,
-            attention_manager: MemoryEfficientAttentionManager::new(&_config)?,
-            architecture_adapter: DynamicArchitectureAdapter::new(&_config)?,
-            landscape_analyzer: OptimizationLandscapeAnalyzer::new(&_config)?,
-            performance_predictor: TransformerPerformancePredictor::new(&_config)?,
+            sequence_processor: AdaptiveSequenceProcessor::new(&config)?,
+            attention_manager: MemoryEfficientAttentionManager::new(&config)?,
+            architecture_adapter: DynamicArchitectureAdapter::new(&config)?,
+            landscape_analyzer: OptimizationLandscapeAnalyzer::new(&config)?,
+            performance_predictor: TransformerPerformancePredictor::new(&config)?,
             adaptive_config: config,
         })
     }
@@ -1115,13 +1115,13 @@ impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> 
         &mut self,
         parameters: &mut Array1<T>,
         gradients: &Array1<T>,
-        loss_history: &[T],
+        losshistory: &[T],
         gradient_history: &[Array1<T>],
     ) -> Result<EnhancementResult<T>> {
         // Analyze the optimization landscape
         let landscape = self
             .landscape_analyzer
-            .analyze(gradient_history, loss_history)?;
+            .analyze(gradient_history, losshistory)?;
 
         // Adapt sequence processing based on landscape
         let sequence_adaptation = self.sequence_processor.adapt_to_landscape(&landscape)?;
@@ -1156,7 +1156,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> 
             attention_optimization,
             architecture_adaptation,
             performance_prediction,
-            convergence_metrics: self.calculate_convergence_metrics(loss_history),
+            convergence_metrics: self.calculate_convergence_metrics(losshistory),
         })
     }
 
@@ -1202,12 +1202,12 @@ impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> 
             T::from(0.9).unwrap() // Slightly lower for odd indices
         };
 
-        Ok(base_lr * base_scale * param_adaptation)
+        Ok(base_lr * basescale * param_adaptation)
     }
 
     /// Calculate convergence metrics
     fn calculate_convergence_metrics(&self, losshistory: &[T]) -> ConvergenceMetrics<T> {
-        if loss_history.len() < 2 {
+        if losshistory.len() < 2 {
             return ConvergenceMetrics {
                 convergence_rate: T::zero(),
                 stability_measure: T::zero(),
@@ -1217,7 +1217,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> 
         }
 
         // Calculate convergence rate
-        let recent_losses = &loss_history[loss_history.len().saturating_sub(10)..];
+        let recent_losses = &losshistory[losshistory.len().saturating_sub(10)..];
         let convergence_rate = if recent_losses.len() >= 2 {
             let initial = recent_losses[0];
             let final_loss = recent_losses[recent_losses.len() - 1];
@@ -1482,7 +1482,7 @@ impl<T: Float + Send + Sync> MemoryEfficientAttentionManager<T> {
         self.generate_attention_patterns(&mut attention_patterns, analysis)?;
 
         // Calculate sparsity level based on landscape
-        let sparsity_level = if complexity > 0.7 {
+        let sparsitylevel = if complexity > 0.7 {
             // High complexity: lower sparsity for more attention
             T::from(0.05).unwrap()
         } else {
@@ -1491,7 +1491,7 @@ impl<T: Float + Send + Sync> MemoryEfficientAttentionManager<T> {
         };
 
         // Apply sparsity mask
-        self.apply_sparsity_mask(&mut attention_patterns, sparsity_level)?;
+        self.apply_sparsity_mask(&mut attention_patterns, sparsitylevel)?;
 
         // Update cache with new patterns
         let pattern_key = format!("pattern_{}_{}", num_heads, seq_len);
@@ -1510,7 +1510,7 @@ impl<T: Float + Send + Sync> MemoryEfficientAttentionManager<T> {
         let memory_savings = original_size.saturating_sub(optimized_size);
 
         // Calculate computational speedup
-        let speedup_from_sparsity = T::one() / sparsity_level;
+        let speedup_from_sparsity = T::one() / sparsitylevel;
         let speedup_from_dimensions = T::from(512.0 * 512.0 / (seq_len * seq_len) as f64).unwrap();
         let computational_speedup =
             (speedup_from_sparsity + speedup_from_dimensions) / T::from(2.0).unwrap();
@@ -1523,7 +1523,7 @@ impl<T: Float + Send + Sync> MemoryEfficientAttentionManager<T> {
 
         Ok(AttentionOptimization {
             attention_patterns,
-            sparsity_level,
+            sparsitylevel,
             memory_savings,
             computational_speedup,
         })
@@ -1591,7 +1591,7 @@ impl<T: Float + Send + Sync> MemoryEfficientAttentionManager<T> {
     }
 
     fn apply_sparsity_mask(&self, patterns: &mut Array3<T>, sparsitylevel: T) -> Result<()> {
-        let sparsity_threshold = sparsity_level.to_f64().unwrap_or(0.1);
+        let sparsity_threshold = sparsitylevel.to_f64().unwrap_or(0.1);
 
         patterns.map_inplace(|x| {
             if x.to_f64().unwrap_or(0.0) < sparsity_threshold {
@@ -1751,9 +1751,9 @@ impl<T: Float + Send + Sync> PredictorNetwork<T> {
         let mut biases = Vec::new();
         let activations = vec![ActivationType::ReLU; architecture.len() - 1];
 
-        for i in 0.._architecture.len() - 1 {
-            let weight = Array2::zeros((_architecture[i + 1], architecture[i]));
-            let bias = Array1::zeros(_architecture[i + 1]);
+        for i in 0..architecture.len() - 1 {
+            let weight = Array2::zeros((architecture[i + 1], architecture[i]));
+            let bias = Array1::zeros(architecture[i + 1]);
             weights.push(weight);
             biases.push(bias);
         }
@@ -1772,7 +1772,7 @@ impl<T: Float + Send + Sync> PerformanceFeatureExtractor<T> {
         Ok(Self {
             feature_dims: dims,
             feature_cache: HashMap::new(),
-            importance_weights: Array1::ones(_dims),
+            importance_weights: Array1::ones(dims),
         })
     }
 }

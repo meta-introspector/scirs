@@ -186,7 +186,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// let quant = bern.ppf(0.8).unwrap();
     /// assert_eq!(quant, 1.0);
     /// ```
-    pub fn ppf(&self, pval: F) -> StatsResult<F> {
+    pub fn ppf(&self, p_val: F) -> StatsResult<F> {
         // Validate probability using core validation function
         let p_val = check_probability(p_val, "Probability value").map_err(StatsError::from)?;
 

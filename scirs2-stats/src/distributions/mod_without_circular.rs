@@ -152,7 +152,7 @@ where
         + 'static
         + std::fmt::Display,
 {
-    StudentT::new(_df, loc, scale)
+    StudentT::new(df, loc, scale)
 }
 
 /// Create a Chi-square distribution with the given parameters.
@@ -189,7 +189,7 @@ where
         + 'static
         + std::fmt::Display,
 {
-    ChiSquare::new(_df, loc, scale)
+    ChiSquare::new(df, loc, scale)
 }
 
 /// Create an F distribution with the given parameters.
@@ -222,7 +222,7 @@ pub fn f<T>(dfn: T, dfd: T, loc: T, scale: T) -> StatsResult<F<T>>
 where
     T: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
-    F::new(_dfn, dfd, loc, scale)
+    F::new(dfn, dfd, loc, scale)
 }
 
 /// Create a Poisson distribution with the given parameters.

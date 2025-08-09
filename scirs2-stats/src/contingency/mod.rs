@@ -382,7 +382,7 @@ where
             // r is the number of rows, and c is the number of columns
 
             // Calculate chi-square statistic
-            let (chi2, _, _, _) = chi2_contingency(_table, false, None)?;
+            let (chi2, _, _, _) = chi2_contingency(table, false, None)?;
 
             // Calculate total sample size
             let total: F = table.iter().copied().sum();

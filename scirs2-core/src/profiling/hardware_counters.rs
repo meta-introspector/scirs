@@ -191,7 +191,7 @@ impl CounterValue {
     /// Create a new counter value
     pub fn new(countertype: CounterType, value: u64) -> Self {
         Self {
-            countertype,
+            counter_type: countertype,
             value,
             timestamp: Instant::now(),
             enabled: true,
@@ -738,7 +738,7 @@ impl HardwareCounterManager {
         let derived_metrics = self.calculate_derived_metrics(&current_values);
 
         PerformanceReport {
-            sessionname: sessionname.to_string(),
+            session_name: sessionname.to_string(),
             timestamp: Instant::now(),
             counter_values: current_values,
             derived_metrics,

@@ -205,11 +205,11 @@ where
         ));
     }
 
-    // Convert _observed integer frequencies to float
+    // Convert observed integer frequencies to float
     let mut obs_float = Array2::<F>::zeros((rows, cols));
     for i in 0..rows {
         for j in 0..cols {
-            obs_float[(i, j)] = F::from(_observed[(i, j)]).unwrap();
+            obs_float[(i, j)] = F::from(observed[(i, j)]).unwrap();
         }
     }
 
@@ -315,11 +315,11 @@ where
         ));
     }
 
-    // Convert _observed integer frequencies to float
+    // Convert observed integer frequencies to float
     let mut obs_float = Array2::<F>::zeros((2, 2));
     for i in 0..2 {
         for j in 0..2 {
-            obs_float[(i, j)] = F::from(_observed[(i, j)]).unwrap();
+            obs_float[(i, j)] = F::from(observed[(i, j)]).unwrap();
         }
     }
 

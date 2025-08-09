@@ -363,7 +363,7 @@ where
     let mut cols = Vec::new();
     let mut values = Vec::new();
 
-    for edge in _edges {
+    for edge in edges {
         // Add both directions for undirected tree
         rows.push(edge.u);
         cols.push(edge.v);
@@ -395,7 +395,7 @@ where
     S1: SparseArray<T>,
     S2: SparseArray<T>,
 {
-    let n = num_vertices(_graph);
+    let n = num_vertices(graph);
     let m = num_vertices(tree);
 
     // Must have same number of vertices

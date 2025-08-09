@@ -139,15 +139,15 @@ where
     pub fn from_coo(matrix: &CooMatrix<T>) -> SparseResult<Self> {
         let (rows, cols) = matrix.shape();
 
-        // Ensure _matrix is square
+        // Ensure matrix is square
         if rows != cols {
             return Err(SparseError::ValueError(
-                "Symmetric _matrix must be square".to_string(),
+                "Symmetric matrix must be square".to_string(),
             ));
         }
 
-        // Check if the _matrix is symmetric
-        if !Self::is_symmetric(_matrix) {
+        // Check if the matrix is symmetric
+        if !Self::is_symmetric(matrix) {
             return Err(SparseError::ValueError(
                 "Matrix must be symmetric to convert to SymCOO format".to_string(),
             ));
@@ -377,7 +377,7 @@ where
     ///
     /// SymCOO array
     pub fn new(matrix: SymCooMatrix<T>) -> Self {
-        Self { inner: _matrix }
+        Self { inner: matrix }
     }
 
     /// Create a SymCOO array from triplets (row, col, value)
@@ -536,7 +536,7 @@ where
         }
 
         // Create a temporary COO matrix to check symmetry
-        let coo_matrix = CooMatrix::new(
+        let coomatrix = CooMatrix::new(
             array.get_data().to_vec(),
             array.get_rows().to_vec(),
             array.get_cols().to_vec(),
@@ -544,7 +544,7 @@ where
         )?;
 
         // Convert to symmetric COO
-        let sym_coo = SymCooMatrix::from_coo(&coo_matrix)?;
+        let sym_coo = SymCooMatrix::from_coo(&coomatrix)?;
 
         Ok(Self { inner: sym_coo })
     }
@@ -687,8 +687,8 @@ mod tests {
         let rows = vec![0, 1, 1, 2, 2];
         let cols = vec![0, 0, 1, 1, 2];
 
-        let sym_matrix = SymCooMatrix::new(data, rows, cols, (3, 3)).unwrap();
-        let sym_array = SymCooArray::new(sym_matrix);
+        let symmatrix = SymCooMatrix::new(data, rows, cols, (3, 3)).unwrap();
+        let sym_array = SymCooArray::new(symmatrix);
 
         assert_eq!(sym_array.inner().shape(), (3, 3));
 

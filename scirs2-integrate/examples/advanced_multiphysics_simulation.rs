@@ -166,11 +166,11 @@ impl MultiPhysicsSimulation {
 
         // 1. Quantum mechanics simulation
         println!("Solving quantum system...");
-        let quantum_results = self.solve_quantum_system(simulation_time)?;
+        let quantum_results = self.solve_quantum_system(simulationtime)?;
 
         // 2. Fluid dynamics simulation
         println!("Solving fluid system...");
-        let fluid_results = self.solve_fluid_system(simulation_time)?;
+        let fluid_results = self.solve_fluid_system(simulationtime)?;
 
         // 3. Financial modeling
         println!("Solving financial system...");
@@ -228,7 +228,7 @@ impl MultiPhysicsSimulation {
         );
 
         // Solve _time evolution
-        let states = solver.solve_time_dependent(&initial_state, simulation_time)?;
+        let states = solver.solve_time_dependent(&initial_state, simulationtime)?;
 
         // Calculate observables over _time
         let mut position_expectation = Vec::new();
@@ -288,7 +288,7 @@ impl MultiPhysicsSimulation {
 
         // Solve fluid system
         let save_interval = 10;
-        let states = solver.solve_2d(initial_state, simulation_time, save_interval)?;
+        let states = solver.solve_2d(initial_state, simulationtime, save_interval)?;
 
         // Calculate flow properties
         let mut kinetic_energy = Vec::new();
@@ -769,8 +769,8 @@ fn main() -> Result<()> {
     simulation.coupling_params.quantum_fluid_coupling = 0.2;
 
     // Run the simulation
-    let simulation_time = 2.0;
-    let results = simulation.run_simulation(simulation_time)?;
+    let simulationtime = 2.0;
+    let results = simulation.run_simulation(simulationtime)?;
 
     // Generate and display report
     let report = results.generate_report();

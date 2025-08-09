@@ -246,13 +246,13 @@ impl GpuDevice {
             GpuBackend::Cuda => {
                 // Optimize for CUDA warp _size (32) and compute capability
                 let warp_size = 32;
-                let optimal = (_problem_size / warp_size).max(1) * warp_size;
+                let optimal = (_problemsize / warp_size).max(1) * warp_size;
                 optimal.min(self.capabilities.max_threads_per_block)
             }
             GpuBackend::Rocm => {
                 // Optimize for AMD wavefront _size (64)
                 let wavefront_size = 64;
-                let optimal = (_problem_size / wavefront_size).max(1) * wavefront_size;
+                let optimal = (_problemsize / wavefront_size).max(1) * wavefront_size;
                 optimal.min(self.capabilities.max_threads_per_block)
             }
             _ => {
@@ -685,25 +685,25 @@ impl GpuDistanceMatrix {
     /// GPU distance matrix computation using CUDA
     async fn compute_cuda(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
         // In a real implementation, this would:
-        // 1. Allocate GPU memory for input _points and output matrix
-        // 2. Transfer _points to GPU memory
+        // 1. Allocate GPU memory for input points and output matrix
+        // 2. Transfer points to GPU memory
         // 3. Launch CUDA kernels to compute distances in parallel
         // 4. Transfer results back to CPU
         // 5. Handle errors and memory cleanup
 
-        self.compute_cpu_fallback(_points).await
+        self.compute_cpu_fallback(points).await
     }
 
     /// GPU distance matrix computation using ROCm
     async fn compute_rocm(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
         // Similar to CUDA but using ROCm/HIP APIs
-        self.compute_cpu_fallback(_points).await
+        self.compute_cpu_fallback(points).await
     }
 
     /// GPU distance matrix computation using Vulkan
     async fn compute_vulkan(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
         // Use Vulkan compute shaders for cross-platform GPU acceleration
-        self.compute_cpu_fallback(_points).await
+        self.compute_cpu_fallback(points).await
     }
 
     /// CPU fallback using optimized SIMD operations
@@ -974,9 +974,9 @@ impl HybridProcessor {
             return ProcessingStrategy::CpuOnly;
         }
 
-        if _dataset_size < self.cpu_threshold {
+        if _datasetsize < self.cpu_threshold {
             ProcessingStrategy::CpuOnly
-        } else if _dataset_size < self.gpu_threshold {
+        } else if _datasetsize < self.gpu_threshold {
             ProcessingStrategy::Hybrid
         } else {
             ProcessingStrategy::GpuOnly
@@ -986,8 +986,8 @@ impl HybridProcessor {
     /// Get optimal batch sizes for hybrid processing
     pub fn optimal_batch_sizes(&self, _totalsize: usize) -> (usize, usize) {
         let gpu_capability = self.gpu_device.capabilities().total_memory / (8 * 1024); // Estimate based on memory
-        let cpu_batch = (_total_size / 4).max(1000); // 25% to CPU
-        let gpu_batch = (_total_size * 3 / 4).min(gpu_capability); // 75% to GPU if memory allows
+        let cpu_batch = (_totalsize / 4).max(1000); // 25% to CPU
+        let gpu_batch = (_totalsize * 3 / 4).min(gpu_capability); // 75% to GPU if memory allows
 
         (cpu_batch, gpu_batch)
     }

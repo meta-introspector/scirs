@@ -78,9 +78,9 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> WrappedCauc
             )));
         }
 
-        // Normalize _mu to [0, 2π]
+        // Normalize mu to [0, 2π]
         let two_pi = F::from(2.0 * PI).unwrap();
-        let normalized_mu = ((_mu % two_pi) + two_pi) % two_pi;
+        let normalized_mu = ((mu % two_pi) + two_pi) % two_pi;
 
         Ok(Self {
             mu: normalized_mu,

@@ -362,7 +362,7 @@ pub use csgraph::{
     strongly_connected_components,
     to_adjacency_list,
     topological_sort,
-    traverse_graph,
+    traversegraph,
     // Connected components
     undirected_connected_components,
     // Graph utilities
@@ -392,7 +392,7 @@ where
         + std::ops::Div<Output = T>
         + 'static,
 {
-    sparray::is_sparse(_obj)
+    sparray::is_sparse(obj)
 }
 
 /// Check if an object is a symmetric sparse array

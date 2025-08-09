@@ -92,7 +92,7 @@ pub struct OptimizationMetric {
     pub target: Option<f64>,
 
     /// Whether higher values are better
-    pub higher_is_better: bool,
+    pub higher_isbetter: bool,
 
     /// Units for display
     pub units: String,
@@ -110,7 +110,7 @@ impl OptimizationMetric {
             timestamps: VecDeque::new(),
             steps: VecDeque::new(),
             target: None,
-            higher_is_better,
+            higher_isbetter,
             units,
             smoothing_window: 10,
         }
@@ -158,22 +158,22 @@ impl OptimizationMetric {
 
     /// Get recent improvement
     pub fn get_recent_improvement(&self, windowsize: usize) -> Option<f64> {
-        if self.values.len() < window_size * 2 {
+        if self.values.len() < windowsize * 2 {
             return None;
         }
 
         let recent_avg: f64 =
-            self.values.iter().rev().take(window_size).sum::<f64>() / window_size as f64;
+            self.values.iter().rev().take(windowsize).sum::<f64>() / windowsize as f64;
         let older_avg: f64 = self
             .values
             .iter()
             .rev()
-            .skip(window_size)
-            .take(window_size)
+            .skip(windowsize)
+            .take(windowsize)
             .sum::<f64>()
-            / window_size as f64;
+            / windowsize as f64;
 
-        Some(if self.higher_is_better {
+        Some(if self.higher_isbetter {
             recent_avg - older_avg
         } else {
             older_avg - recent_avg
@@ -429,14 +429,14 @@ impl OptimizationVisualizer {
         let metric = self
             .metrics
             .entry(name.clone())
-            .or_insert_with(|| OptimizationMetric::new(name, higher_is_better, units));
+            .or_insert_with(|| OptimizationMetric::new(name, higher_isbetter, units));
 
         metric.add_value(value, self.current_step);
     }
 
     /// Set target value for a metric
     pub fn set_target(&mut self, metricname: &str, target: f64) {
-        if let Some(metric) = self.metrics.get_mut(metric_name) {
+        if let Some(metric) = self.metrics.get_mut(metricname) {
             metric.target = Some(target);
         }
     }
@@ -455,14 +455,14 @@ impl OptimizationVisualizer {
 
     /// Create loss curve plot
     pub fn plot_loss_curve(&self, metricname: &str) -> Result<String> {
-        let metric = self.metrics.get(metric_name).ok_or_else(|| {
-            OptimError::InvalidConfig(format!("Metric '{metric_name}' not found"))
+        let metric = self.metrics.get(metricname).ok_or_else(|| {
+            OptimError::InvalidConfig(format!("Metric '{metricname}' not found"))
         })?;
 
         let steps: Vec<f64> = metric.steps.iter().map(|&s| s as f64).collect();
         let values = metric.get_smoothed_values();
 
-        let plot_data = self.create_line_plot(
+        let plotdata = self.create_line_plot(
             &steps,
             &values,
             &format!("{} over Training Steps", metric.name),
@@ -470,7 +470,7 @@ impl OptimizationVisualizer {
             &format!("{} ({})", metric.name, metric.units),
         )?;
 
-        self.save_plot(&plot_data, &format!("{metric_name}_curve"))
+        self.save_plot(&plotdata, &format!("{metricname}_curve"))
     }
 
     /// Create learning rate schedule plot
@@ -479,7 +479,7 @@ impl OptimizationVisualizer {
             let steps: Vec<f64> = lr_metric.steps.iter().map(|&s| s as f64).collect();
             let values: Vec<f64> = lr_metric.values.iter().copied().collect();
 
-            let plot_data = self.create_line_plot(
+            let plotdata = self.create_line_plot(
                 &steps,
                 &values,
                 "Learning Rate Schedule",
@@ -487,7 +487,7 @@ impl OptimizationVisualizer {
                 "Learning Rate",
             )?;
 
-            self.save_plot(&plot_data, "learning_rate_schedule")
+            self.save_plot(&plotdata, "learning_rate_schedule")
         } else {
             Err(OptimError::InvalidConfig(
                 "Learning rate metric not found".to_string(),
@@ -503,35 +503,35 @@ impl OptimizationVisualizer {
             ));
         }
 
-        let mut plot_data = String::new();
+        let mut plotdata = String::new();
 
         // HTML header for interactive plot
         if self.config.interactive_html {
-            plot_data.push_str(&self.create_html_header("Optimizer Comparison")?);
-            plot_data.push_str("<div id='comparison-plot'></div>\n");
-            plot_data.push_str("<script>\n");
-            plot_data.push_str("const traces = [];\n");
+            plotdata.push_str(&self.create_html_header("Optimizer Comparison")?);
+            plotdata.push_str("<div id='comparison-plot'></div>\n");
+            plotdata.push_str("<script>\n");
+            plotdata.push_str("const traces = [];\n");
 
             for comparison in &self.comparisons {
-                if let Some(values) = comparison.metrics.get(metric_name) {
+                if let Some(values) = comparison.metrics.get(metricname) {
                     let x_values: Vec<String> = (0..values.len()).map(|i| i.to_string()).collect();
-                    writeln!(&mut plot_data,
+                    writeln!(&mut plotdata,
                         "traces.push({{x: {:?}, y: {:?}, name: '{}', type: 'scatter', mode: 'lines'}});",
                         x_values, values, comparison.name
                     ).unwrap();
                 }
             }
 
-            plot_data.push_str("Plotly.newPlot('comparison-plot', traces, {\n");
-            plot_data.push_str("  title: 'Optimizer Comparison',\n");
-            plot_data.push_str("  xaxis: {title: 'Training Steps'},\n");
-            writeln!(&mut plot_data, "  yaxis: {{title: '{metric_name}'}}").unwrap();
-            plot_data.push_str("});\n");
-            plot_data.push_str("</script>\n");
-            plot_data.push_str("</body></html>\n");
+            plotdata.push_str("Plotly.newPlot('comparison-plot', traces, {\n");
+            plotdata.push_str("  title: 'Optimizer Comparison',\n");
+            plotdata.push_str("  xaxis: {title: 'Training Steps'},\n");
+            writeln!(&mut plotdata, "  yaxis: {{title: '{metricname}'}}").unwrap();
+            plotdata.push_str("});\n");
+            plotdata.push_str("</script>\n");
+            plotdata.push_str("</body></html>\n");
         }
 
-        self.save_plot(&plot_data, &format!("{metric_name}_comparison"))
+        self.save_plot(&plotdata, &format!("{metricname}_comparison"))
     }
 
     /// Create gradient norm visualization
@@ -540,7 +540,7 @@ impl OptimizationVisualizer {
             let steps: Vec<f64> = grad_metric.steps.iter().map(|&s| s as f64).collect();
             let values: Vec<f64> = grad_metric.values.iter().copied().collect();
 
-            let mut plot_data = self.create_line_plot(
+            let mut plotdata = self.create_line_plot(
                 &steps,
                 &values,
                 "Gradient Norm",
@@ -553,10 +553,10 @@ impl OptimizationVisualizer {
             let min_val = values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
 
             if max_val / min_val > 100.0 {
-                plot_data = plot_data.replace("yaxis: {", "yaxis: {type: 'log', ");
+                plotdata = plotdata.replace("yaxis: {", "yaxis: {type: 'log', ");
             }
 
-            self.save_plot(&plot_data, "gradient_norm")
+            self.save_plot(&plotdata, "gradient_norm")
         } else {
             Err(OptimError::InvalidConfig(
                 "Gradient norm metric not found".to_string(),
@@ -570,7 +570,7 @@ impl OptimizationVisualizer {
             let steps: Vec<f64> = throughput_metric.steps.iter().map(|&s| s as f64).collect();
             let values: Vec<f64> = throughput_metric.values.iter().copied().collect();
 
-            let plot_data = self.create_line_plot(
+            let plotdata = self.create_line_plot(
                 &steps,
                 &values,
                 "Training Throughput",
@@ -578,7 +578,7 @@ impl OptimizationVisualizer {
                 "Samples/Second",
             )?;
 
-            self.save_plot(&plot_data, "throughput")
+            self.save_plot(&plotdata, "throughput")
         } else {
             Err(OptimError::InvalidConfig(
                 "Throughput metric not found".to_string(),
@@ -592,7 +592,7 @@ impl OptimizationVisualizer {
             let steps: Vec<f64> = memory_metric.steps.iter().map(|&s| s as f64).collect();
             let values: Vec<f64> = memory_metric.values.iter().copied().collect();
 
-            let plot_data = self.create_line_plot(
+            let plotdata = self.create_line_plot(
                 &steps,
                 &values,
                 "Memory Usage",
@@ -600,7 +600,7 @@ impl OptimizationVisualizer {
                 "Memory (MB)",
             )?;
 
-            self.save_plot(&plot_data, "memory_usage")
+            self.save_plot(&plotdata, "memory_usage")
         } else {
             Err(OptimError::InvalidConfig(
                 "Memory usage metric not found".to_string(),
@@ -612,7 +612,7 @@ impl OptimizationVisualizer {
     pub fn plot_hyperparameter_sensitivity(
         &self,
         param_name: &str,
-        metric_name: &str,
+        metricname: &str,
     ) -> Result<String> {
         let mut param_values = Vec::new();
         let mut metric_values = Vec::new();
@@ -620,7 +620,7 @@ impl OptimizationVisualizer {
         for comparison in &self.comparisons {
             if let (Some(&param_val), Some(metric_vals)) = (
                 comparison.hyperparameters.get(param_name),
-                comparison.metrics.get(metric_name),
+                comparison.metrics.get(metricname),
             ) {
                 if let Some(&final_metric) = metric_vals.last() {
                     param_values.push(param_val);
@@ -632,21 +632,21 @@ impl OptimizationVisualizer {
         if param_values.is_empty() {
             return Err(OptimError::InvalidConfig(format!(
                 "No data available for hyperparameter '{}' and metric '{}'",
-                param_name, metric_name
+                param_name, metricname
             )));
         }
 
-        let plot_data = self.create_scatter_plot(
+        let plotdata = self.create_scatter_plot(
             &param_values,
             &metric_values,
-            &format!("Sensitivity of {} to {}", metric_name, param_name),
+            &format!("Sensitivity of {} to {}", metricname, param_name),
             param_name,
-            metric_name,
+            metricname,
         )?;
 
         self.save_plot(
-            &plot_data,
-            &format!("sensitivity_{}_{}", param_name, metric_name),
+            &plotdata,
+            &format!("sensitivity_{}_{}", param_name, metricname),
         )
     }
 
@@ -772,15 +772,15 @@ impl OptimizationVisualizer {
         let mut exported_files = Vec::new();
 
         // Export individual metric plots
-        for metric_name in self.metrics.keys() {
-            if let Ok(filename) = self.plot_loss_curve(metric_name) {
+        for metricname in self.metrics.keys() {
+            if let Ok(filename) = self.plot_loss_curve(metricname) {
                 exported_files.push(filename);
             }
         }
 
         // Export comparisons
-        for metric_name in ["loss", "accuracy", "throughput"] {
-            if let Ok(filename) = self.plot_optimizer_comparison(metric_name) {
+        for metricname in ["loss", "accuracy", "throughput"] {
+            if let Ok(filename) = self.plot_optimizer_comparison(metricname) {
                 exported_files.push(filename);
             }
         }
@@ -915,7 +915,7 @@ impl OptimizationVisualizer {
             ))
         })?;
 
-        file.write_all(plot_data.as_bytes()).map_err(|e| {
+        file.write_all(plotdata.as_bytes()).map_err(|e| {
             OptimError::InvalidConfig(format!(
                 "Failed to write to file {}: {}",
                 filepath.display(),
@@ -972,7 +972,7 @@ mod tests {
         metric.add_value(1.0, 0);
         metric.add_value(0.8, 1);
         metric.add_value(0.6, 2);
-        metric.add_value(0.4, 3); // Add 4th value to meet window_size * 2 requirement
+        metric.add_value(0.4, 3); // Add 4th value to meet windowsize * 2 requirement
 
         assert_eq!(metric.values.len(), 4);
         assert_eq!(metric.steps.len(), 4);

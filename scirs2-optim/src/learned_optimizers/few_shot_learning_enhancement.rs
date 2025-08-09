@@ -162,7 +162,7 @@ pub struct Example<T: Float> {
 #[derive(Debug, Clone)]
 pub struct TaskMetadata {
     /// Task identifier
-    pub task_id: String,
+    pub _taskid: String,
 
     /// Task type
     pub task_type: FewShotTaskType,
@@ -488,7 +488,7 @@ pub struct Episode<T: Float> {
     pub id: String,
 
     /// Support set
-    pub support_set: SupportSet<T>,
+    pub supportset: SupportSet<T>,
 
     /// Query set
     pub query_set: Vec<Example<T>>,
@@ -961,7 +961,7 @@ pub struct NoveltyScore<T: Float> {
     timestamp: Instant,
 
     /// Task identifier
-    task_id: String,
+    _taskid: String,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -1071,7 +1071,7 @@ pub struct ConvergenceCriterion<T: Float> {
     threshold: T,
 
     /// Window size
-    window_size: usize,
+    _windowsize: usize,
 
     /// Criterion weight
     weight: T,
@@ -1113,7 +1113,7 @@ pub enum MemoryRetrievalMechanism {
 #[derive(Debug)]
 pub struct AdaptationStrategy<T: Float> {
     /// Strategy type
-    strategy_type: AdaptationStrategyType,
+    _strategytype: AdaptationStrategyType,
 
     /// Strategy parameters
     parameters: HashMap<String, T>,
@@ -1125,7 +1125,7 @@ pub struct AdaptationStrategy<T: Float> {
 #[derive(Debug)]
 pub struct AdaptationRateController<T: Float> {
     /// Base learning rate
-    base_rate: T,
+    _baserate: T,
 
     /// Current learning rate
     current_rate: T,
@@ -1155,7 +1155,7 @@ pub struct AdaptationPerformanceMonitor<T: Float> {
     performance_history: VecDeque<T>,
 
     /// Monitoring window
-    window_size: usize,
+    _windowsize: usize,
 
     /// Performance trends
     trends: PerformanceTrends<T>,
@@ -1167,7 +1167,7 @@ pub struct AdaptationPerformanceMonitor<T: Float> {
 #[derive(Debug)]
 pub struct TaskPerformance<T: Float> {
     /// Task identifier
-    task_id: String,
+    _taskid: String,
 
     /// Performance metrics
     metrics: HashMap<String, T>,
@@ -1321,13 +1321,13 @@ impl<T: Float + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>>
     /// Create new few-shot learning enhancement
     pub fn new(config: FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
-            support_set_manager: SupportSetManager::new(&_config)?,
-            meta_learner: FewShotMetaLearner::new(&_config)?,
-            prototype_network: PrototypeNetwork::new(&_config)?,
-            similarity_matcher: SimilarityMatcher::new(&_config)?,
-            task_analyzer: TaskDistributionAnalyzer::new(&_config)?,
-            adaptation_controller: AdaptationController::new(&_config)?,
-            performance_tracker: FewShotPerformanceTracker::new(&_config)?,
+            support_set_manager: SupportSetManager::new(&config)?,
+            meta_learner: FewShotMetaLearner::new(&config)?,
+            prototype_network: PrototypeNetwork::new(&config)?,
+            similarity_matcher: SimilarityMatcher::new(&config)?,
+            task_analyzer: TaskDistributionAnalyzer::new(&config)?,
+            adaptation_controller: AdaptationController::new(&config)?,
+            performance_tracker: FewShotPerformanceTracker::new(&config)?,
             config: config,
         })
     }
@@ -1335,18 +1335,18 @@ impl<T: Float + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>>
     /// Perform few-shot adaptation to new task
     pub fn adapt_to_task(
         &mut self,
-        support_set: SupportSet<T>,
-        task_id: String,
+        supportset: SupportSet<T>,
+        _taskid: String,
     ) -> Result<AdaptationResult<T>> {
         let start_time = Instant::now();
 
         // Analyze task distribution
-        let _task_analysis = self.task_analyzer.analyze_task(&support_set)?;
+        let _task_analysis = self.task_analyzer.analyze_task(&supportset)?;
 
         // Find similar tasks
         let similar_tasks = self
             .similarity_matcher
-            .find_similar_tasks(&task_id, &support_set)?;
+            .find_similar_tasks(&_taskid, &supportset)?;
 
         // Initialize adaptation from similar tasks
         let initial_params = self.initialize_from_similar_tasks(&similar_tasks)?;
@@ -1354,18 +1354,18 @@ impl<T: Float + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>>
         // Perform rapid adaptation
         let adaptation_result =
             self.adaptation_controller
-                .adapt(&support_set, initial_params, &self.config)?;
+                .adapt(&supportset, initial_params, &self.config)?;
 
         // Update performance tracking
         self.performance_tracker.record_adaptation(
-            &task_id,
+            &_taskid,
             &adaptation_result,
             start_time.elapsed(),
         )?;
 
         // Update support _set manager
         self.support_set_manager
-            .add_support_set(task_id.clone(), support_set)?;
+            .add_support_set(_taskid.clone(), supportset)?;
 
         Ok(adaptation_result)
     }
@@ -1402,8 +1402,8 @@ impl<T: Float + Send + Sync> SupportSetManager<T> {
         })
     }
 
-    fn add_support_set(&mut self, task_id: String, supportset: SupportSet<T>) -> Result<()> {
-        self.support_sets.insert(task_id, support_set);
+    fn add_support_set(&mut self, _taskid: String, supportset: SupportSet<T>) -> Result<()> {
+        self.support_sets.insert(_taskid, supportset);
         Ok(())
     }
 }
@@ -1498,7 +1498,7 @@ impl<T: Float + Send + Sync> AdaptationController<T> {
         &mut self,
         _support_set: &SupportSet<T>,
         _initial_params: HashMap<String, Array1<T>>,
-        _config: &FewShotConfig<T>,
+        config: &FewShotConfig<T>,
     ) -> Result<AdaptationResult<T>> {
         // Simplified implementation
         Ok(AdaptationResult {
@@ -1522,15 +1522,15 @@ impl<T: Float + Send + Sync + std::iter::Sum> FewShotPerformanceTracker<T> {
 
     fn record_adaptation(
         &mut self,
-        task_id: &str,
+        _taskid: &str,
         result: &AdaptationResult<T>,
         _duration: std::time::Duration,
     ) -> Result<()> {
         // Update task-specific performance
         let task_perf = self
             .task_performance
-            .entry(task_id.to_string())
-            .or_insert_with(|| TaskPerformance::new(task_id.to_string()));
+            .entry(_taskid.to_string())
+            .or_insert_with(|| TaskPerformance::new(_taskid.to_string()));
 
         task_perf.update_with_result(result);
 
@@ -1727,7 +1727,7 @@ impl<T: Float + Send + Sync> ConvergenceDetector<T> {
             criteria: vec![ConvergenceCriterion {
                 criterion_type: ConvergenceCriterionType::GradientNorm,
                 threshold: T::from(1e-6).unwrap(),
-                window_size: 10,
+                _windowsize: 10,
                 weight: T::one(),
             }],
             threshold: T::from(1e-6).unwrap(),
@@ -1751,7 +1751,7 @@ impl<T: Float + Send + Sync> EarlyStoppingMechanism<T> {
 impl<T: Float + Send + Sync> AdaptationStrategy<T> {
     fn new(_strategytype: AdaptationStrategyType) -> Self {
         Self {
-            strategy_type: strategy_type,
+            _strategytype: _strategytype,
             parameters: HashMap::new(),
             history: VecDeque::new(),
         }
@@ -1761,8 +1761,8 @@ impl<T: Float + Send + Sync> AdaptationStrategy<T> {
 impl<T: Float + Send + Sync> AdaptationRateController<T> {
     fn new(_baserate: T) -> Self {
         Self {
-            base_rate: base_rate,
-            current_rate: base_rate,
+            _baserate: _baserate,
+            current_rate: _baserate,
             schedule: LearningRateSchedule::Constant,
             adaptive_control: false,
         }
@@ -1783,7 +1783,7 @@ impl<T: Float + Send + Sync> AdaptationPerformanceMonitor<T> {
     fn new(_windowsize: usize) -> Self {
         Self {
             performance_history: VecDeque::new(),
-            window_size: window_size,
+            _windowsize: _windowsize,
             trends: PerformanceTrends::default(),
             alert_thresholds: HashMap::new(),
         }
@@ -1793,7 +1793,7 @@ impl<T: Float + Send + Sync> AdaptationPerformanceMonitor<T> {
 impl<T: Float + Send + Sync> TaskPerformance<T> {
     fn new(_taskid: String) -> Self {
         Self {
-            task_id: task_id,
+            _taskid: _taskid,
             metrics: HashMap::new(),
             history: VecDeque::new(),
             adaptation_stats: AdaptationStatistics::default(),
@@ -1918,11 +1918,11 @@ mod tests {
             augmented: false,
         }];
 
-        let support_set = SupportSet {
+        let supportset = SupportSet {
             examples,
             labels: vec![0],
             task_metadata: TaskMetadata {
-                task_id: "test".to_string(),
+                _taskid: "test".to_string(),
                 task_type: FewShotTaskType::Classification,
                 domain: "test_domain".to_string(),
                 complexity: 0.5,
@@ -1938,7 +1938,7 @@ mod tests {
             timestamp: Instant::now(),
         };
 
-        assert_eq!(support_set.examples.len(), 1);
-        assert_eq!(support_set.labels.len(), 1);
+        assert_eq!(supportset.examples.len(), 1);
+        assert_eq!(supportset.labels.len(), 1);
     }
 }

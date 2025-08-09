@@ -50,7 +50,7 @@ pub struct RLOptimizerConfig<T: Float> {
     pub n_epochs: usize,
 
     /// Mini-batch size for optimization
-    pub mini_batch_size: usize,
+    pub mini_batchsize: usize,
 
     /// Trust region methods configuration
     pub trust_region_config: Option<TrustRegionConfig<T>>,
@@ -93,7 +93,7 @@ impl<T: Float> Default for RLOptimizerConfig<T> {
             value_loss_coeff: T::from(0.5).unwrap(),
             max_grad_norm: T::from(0.5).unwrap(),
             n_epochs: 4,
-            mini_batch_size: 64,
+            mini_batchsize: 64,
             trust_region_config: None,
             use_natural_gradients: false,
             fisher_approximation: FisherApproximationMethod::Diagonal,
@@ -183,7 +183,7 @@ impl<T: Float + Send + Sync + num_traits::FromPrimitive> TrajectoryBatch<T> {
             };
 
             let next_val = if t == batch_size - 1 {
-                next_value
+                nextvalue
             } else {
                 self.values[t + 1]
             };
@@ -215,13 +215,13 @@ impl<T: Float + Send + Sync + num_traits::FromPrimitive> TrajectoryBatch<T> {
     /// Get mini-batches for optimization
     pub fn get_mini_batches(&self, mini_batchsize: usize) -> Vec<TrajectoryBatch<T>> {
         let batch_size = self.observations.nrows();
-        let n_mini_batches = (batch_size + mini_batch_size - 1) / mini_batch_size;
+        let n_mini_batches = (batch_size + mini_batchsize - 1) / mini_batchsize;
 
         let mut mini_batches = Vec::new();
 
         for i in 0..n_mini_batches {
-            let start = i * mini_batch_size;
-            let end = ((i + 1) * mini_batch_size).min(batch_size);
+            let start = i * mini_batchsize;
+            let end = ((i + 1) * mini_batchsize).min(batch_size);
 
             if start >= end {
                 break;
@@ -337,7 +337,7 @@ pub enum DistributionType {
 #[derive(Debug, Clone)]
 pub struct RLScheduler<T: Float> {
     /// Initial learning rate
-    pub initial_lr: T,
+    pub initiallr: T,
 
     /// Current learning rate
     pub current_lr: T,
@@ -381,8 +381,8 @@ impl<T: Float + Send + Sync> RLScheduler<T> {
     /// Create a new learning rate scheduler
     pub fn new(initiallr: T, schedule: ScheduleType) -> Self {
         Self {
-            initial_lr,
-            current_lr: initial_lr,
+            initiallr,
+            current_lr: initiallr,
             decay_factor: T::from(0.99).unwrap(),
             schedule,
             update_count: 0,
@@ -405,7 +405,7 @@ impl<T: Float + Send + Sync> RLScheduler<T> {
                     .copied()
                     .unwrap_or(T::from(10000).unwrap());
                 let progress = T::from(self.update_count).unwrap() / decay_steps;
-                self.current_lr = self.initial_lr * (T::one() - progress).max(T::zero());
+                self.current_lr = self.initiallr * (T::one() - progress).max(T::zero());
             }
             ScheduleType::Exponential => {
                 self.current_lr = self.current_lr * self.decay_factor;
@@ -429,7 +429,7 @@ impl<T: Float + Send + Sync> RLScheduler<T> {
                 let progress = T::from(self.update_count).unwrap() / max_steps;
                 let pi = T::from(std::f64::consts::PI).unwrap();
                 self.current_lr =
-                    self.initial_lr * (T::one() + (pi * progress).cos()) / T::from(2).unwrap();
+                    self.initiallr * (T::one() + (pi * progress).cos()) / T::from(2).unwrap();
             }
             ScheduleType::Adaptive => {
                 // Adaptive scheduling based on performance metrics

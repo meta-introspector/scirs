@@ -100,7 +100,7 @@ fn match_ssd(img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
     let mut result = Array2::zeros((result_height, result_width));
 
     // Convert to arrays for faster access
-    let img_array = image_to_array(_img);
+    let img_array = image_to_array(img);
     let tmpl_array = image_to_array(template);
 
     // Parallel computation
@@ -138,7 +138,7 @@ fn match_ssd(img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
 /// Normalized Sum of Squared Differences
 #[allow(dead_code)]
 fn match_normalized_ssd(img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
-    let ssd_result = match_ssd(_img, template)?;
+    let ssd_result = match_ssd(img, template)?;
     let (height, width) = ssd_result.dim();
 
     // Compute template norm
@@ -173,7 +173,7 @@ fn match_cross_correlation(img: &GrayImage, template: &GrayImage) -> Result<Arra
     let result_width = (img_width - tmpl_width + 1) as usize;
     let result_height = (img_height - tmpl_height + 1) as usize;
 
-    let img_array = image_to_array(_img);
+    let img_array = image_to_array(img);
     let tmpl_array = image_to_array(template);
 
     // Parallel computation
@@ -220,7 +220,7 @@ fn match_ncc(img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
     let result_width = (img_width - tmpl_width + 1) as usize;
     let result_height = (img_height - tmpl_height + 1) as usize;
 
-    let img_array = image_to_array(_img);
+    let img_array = image_to_array(img);
     let tmpl_array = image_to_array(template);
 
     // Compute template mean and norm
@@ -285,7 +285,7 @@ fn match_ncc(img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
 /// Correlation coefficient matching
 #[allow(dead_code)]
 fn match_correlation_coeff(img: &GrayImage, template: &GrayImage) -> Result<Array2<f32>> {
-    match_ncc(_img, template)
+    match_ncc(img, template)
 }
 
 /// Normalized correlation coefficient

@@ -30,8 +30,8 @@ impl<F: Float + std::fmt::Display> CorrelationResult<F> {
     /// Create a new correlation result with coefficient and p-value
     pub fn with_p_value(_coefficient: F, pvalue: F) -> Self {
         Self {
-            coefficient: coefficient,
-            p_value: Some(p_value),
+            coefficient: _coefficient,
+            p_value: Some(pvalue),
         }
     }
 }
@@ -250,8 +250,8 @@ impl<F: Float + std::fmt::Display> TestResult<F> {
     /// Create a basic test result
     pub fn new(_statistic: F, pvalue: F) -> Self {
         Self {
-            statistic: statistic,
-            p_value,
+            statistic: _statistic,
+            p_value: pvalue,
             df: None,
             effect_size: None,
             confidence_interval: None,
@@ -266,7 +266,7 @@ impl<F: Float + std::fmt::Display> TestResult<F> {
 
     /// Add effect size
     pub fn with_effect_size(mut self, effectsize: F) -> Self {
-        self.effect_size = Some(effect_size);
+        self.effect_size = Some(effectsize);
         self
     }
 

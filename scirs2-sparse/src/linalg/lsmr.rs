@@ -55,7 +55,7 @@ pub struct LSMRResult<T> {
     /// Number of iterations performed
     pub iterations: usize,
     /// Final residual norm ||Ax - b||
-    pub residual_norm: T,
+    pub residualnorm: T,
     /// Final solution norm ||x||
     pub solution_norm: T,
     /// Condition number estimate
@@ -161,7 +161,7 @@ where
         return Ok(LSMRResult {
             x,
             iterations: 0,
-            residual_norm: beta,
+            residualnorm: beta,
             solution_norm,
             condition_number: T::one(),
             converged: true,
@@ -330,7 +330,7 @@ where
     // Compute final metrics
     let ax_final = matrix_vector_multiply(matrix, &x.view())?;
     let final_residual = b - &ax_final;
-    let final_residual_norm = l2_norm(&final_residual.view());
+    let final_residualnorm = l2_norm(&final_residual.view());
     let final_solution_norm = l2_norm(&x.view());
 
     // Simple condition number estimate
@@ -338,7 +338,7 @@ where
 
     // Compute standard errors if requested
     let standard_errors = if options.calc_var {
-        Some(compute_standard_errors(matrix, final_residual_norm, n)?)
+        Some(compute_standard_errors(matrix, final_residualnorm, n)?)
     } else {
         None
     };
@@ -346,7 +346,7 @@ where
     Ok(LSMRResult {
         x,
         iterations: iter,
-        residual_norm: final_residual_norm,
+        residualnorm: final_residualnorm,
         solution_norm: final_solution_norm,
         condition_number,
         converged,
@@ -417,7 +417,7 @@ where
 
 /// Compute standard errors (simplified implementation)
 #[allow(dead_code)]
-fn compute_standard_errors<T, S>(_matrix: &S, residualnorm: T, n: usize) -> SparseResult<Array1<T>>
+fn compute_standard_errors<T, S>(matrix: &S, residualnorm: T, n: usize) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
@@ -426,9 +426,9 @@ where
 
     // Simplified standard error computation
     let variance = if m > n {
-        residual_norm * residual_norm / T::from(m - n).unwrap()
+        residualnorm * residualnorm / T::from(m - n).unwrap()
     } else {
-        residual_norm * residual_norm
+        residualnorm * residualnorm
     };
 
     let std_err = variance.sqrt();
@@ -458,9 +458,9 @@ mod tests {
         // Verify solution by computing residual
         let ax = matrix_vector_multiply(&matrix, &result.x.view()).unwrap();
         let residual = &b - &ax;
-        let residual_norm = l2_norm(&residual.view());
+        let residualnorm = l2_norm(&residual.view());
 
-        assert!(residual_norm < 1e-6);
+        assert!(residualnorm < 1e-6);
     }
 
     #[test]
@@ -479,7 +479,7 @@ mod tests {
         assert_eq!(result.x.len(), 2);
 
         // For overdetermined systems, check that we get a reasonable least squares solution
-        assert!(result.residual_norm < 2.0);
+        assert!(result.residualnorm < 2.0);
     }
 
     #[test]

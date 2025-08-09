@@ -190,7 +190,7 @@ where
 {
     // Use _threshold pivoting for backward compatibility
     let options = LUOptions {
-        pivoting: PivotingStrategy::Threshold(pivot_threshold),
+        pivoting: PivotingStrategy::Threshold(pivotthreshold),
         zero_threshold: 1e-14,
         check_singular: true,
     };

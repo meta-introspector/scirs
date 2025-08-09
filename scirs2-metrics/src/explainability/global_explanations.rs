@@ -57,7 +57,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     pub fn global_feature_importance<M>(
         &self,
         model: &M,
-        x_data: &Array2<F>,
+        xdata: &Array2<F>,
         feature_names: &[String],
     ) -> Result<GlobalExplanation<F>>
     where
@@ -65,16 +65,16 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     {
         // Compute feature importance using multiple methods
         let permutation_importance =
-            self.compute_global_permutation_importance(model, x_data, feature_names)?;
+            self.compute_global_permutation_importance(model, xdata, feature_names)?;
         let variance_importance =
-            self.compute_variance_based_importance(model, x_data, feature_names)?;
-        let interaction_effects = self.compute_interaction_effects(model, x_data, feature_names)?;
+            self.compute_variance_based_importance(model, xdata, feature_names)?;
+        let interaction_effects = self.compute_interaction_effects(model, xdata, feature_names)?;
 
         // Compute model complexity metrics
-        let complexity_metrics = self.compute_model_complexity(model, x_data)?;
+        let complexity_metrics = self.compute_model_complexity(model, xdata)?;
 
         // Stability analysis
-        let stability_metrics = self.compute_stability_metrics(model, x_data, feature_names)?;
+        let stability_metrics = self.compute_stability_metrics(model, xdata, feature_names)?;
 
         Ok(GlobalExplanation {
             feature_importance: permutation_importance,
@@ -82,7 +82,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
             interaction_effects,
             complexity_metrics,
             stability_metrics,
-            sample_size: x_data.nrows(),
+            sample_size: xdata.nrows(),
         })
     }
 
@@ -90,20 +90,20 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     pub fn partial_dependence<M>(
         &self,
         model: &M,
-        x_data: &Array2<F>,
-        feature_idx: usize,
+        xdata: &Array2<F>,
+        featureidx: usize,
         n_grid_points: usize,
     ) -> Result<PartialDependencePlot<F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        if feature_idx >= x_data.ncols() {
+        if featureidx >= xdata.ncols() {
             return Err(MetricsError::InvalidInput(
                 "Feature index out of bounds".to_string(),
             ));
         }
 
-        let feature_column = x_data.column(feature_idx);
+        let feature_column = xdata.column(featureidx);
         let min_val = feature_column.iter().cloned().fold(F::infinity(), F::min);
         let max_val = feature_column
             .iter()
@@ -119,9 +119,9 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
             grid_values.push(grid_val);
 
             // Create modified dataset with feature set to grid value
-            let mut x_modified = x_data.clone();
+            let mut x_modified = xdata.clone();
             for j in 0..x_modified.nrows() {
-                x_modified[[j, feature_idx]] = grid_val;
+                x_modified[[j, featureidx]] = grid_val;
             }
 
             let predictions = model(&x_modified.view());
@@ -130,7 +130,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         }
 
         Ok(PartialDependencePlot {
-            feature_idx,
+            featureidx,
             grid_values,
             pd_values,
             ice_curves: None, // Could be computed separately
@@ -141,28 +141,28 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     pub fn ice_curves<M>(
         &self,
         model: &M,
-        x_data: &Array2<F>,
-        feature_idx: usize,
+        xdata: &Array2<F>,
+        featureidx: usize,
         n_grid_points: usize,
         max_instances: Option<usize>,
     ) -> Result<Vec<ICECurve<F>>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        if feature_idx >= x_data.ncols() {
+        if featureidx >= xdata.ncols() {
             return Err(MetricsError::InvalidInput(
                 "Feature index out of bounds".to_string(),
             ));
         }
 
-        let feature_column = x_data.column(feature_idx);
+        let feature_column = xdata.column(featureidx);
         let min_val = feature_column.iter().cloned().fold(F::infinity(), F::min);
         let max_val = feature_column
             .iter()
             .cloned()
             .fold(F::neg_infinity(), F::max);
 
-        let n_instances = max_instances.unwrap_or(x_data.nrows()).min(x_data.nrows());
+        let n_instances = max_instances.unwrap_or(xdata.nrows()).min(xdata.nrows());
         let mut ice_curves = Vec::new();
 
         for instance_idx in 0..n_instances {
@@ -175,8 +175,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
                 grid_values.push(grid_val);
 
                 // Create instance with modified feature value
-                let mut instance = x_data.row(instance_idx).to_owned();
-                instance[feature_idx] = grid_val;
+                let mut instance = xdata.row(instance_idx).to_owned();
+                instance[featureidx] = grid_val;
 
                 let prediction = model(&instance.insert_axis(Axis(0)).view())[0];
                 predictions.push(prediction);
@@ -196,28 +196,28 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     pub fn feature_interactions<M>(
         &self,
         model: &M,
-        x_data: &Array2<F>,
+        xdata: &Array2<F>,
         feature_names: &[String],
         max_interaction_order: usize,
     ) -> Result<InteractionAnalysis<F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let n_features = x_data.ncols();
-        let mut pairwise_interactions = HashMap::new();
+        let n_features = xdata.ncols();
+        let mut pairwiseinteractions = HashMap::new();
         let mut higher_order_interactions = HashMap::new();
 
         // Compute pairwise interactions
         for i in 0..n_features {
             for j in (i + 1)..n_features {
                 let interaction_strength =
-                    self.compute_pairwise_interaction(model, x_data, i, j)?;
+                    self.compute_pairwise_interaction(model, xdata, i, j)?;
                 let pair_name = format!(
                     "{}_{}",
                     feature_names.get(i).unwrap_or(&i.to_string()),
                     feature_names.get(j).unwrap_or(&j.to_string())
                 );
-                pairwise_interactions.insert(pair_name, interaction_strength);
+                pairwiseinteractions.insert(pair_name, interaction_strength);
             }
         }
 
@@ -225,16 +225,16 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         if max_interaction_order > 2 {
             for _order in 3..=max_interaction_order.min(n_features) {
                 let interactions =
-                    self.compute_higher_order_interactions(model, x_data, feature_names, order)?;
+                    self.compute_higher_order_interactions(model, xdata, feature_names, order)?;
                 higher_order_interactions.insert(_order, interactions);
             }
         }
 
         let total_interaction_strength =
-            self.compute_total_interaction_strength(&pairwise_interactions);
+            self.compute_total_interaction_strength(&pairwiseinteractions);
 
         Ok(InteractionAnalysis {
-            pairwise_interactions,
+            pairwiseinteractions,
             higher_order_interactions,
             total_interaction_strength,
         })
@@ -244,13 +244,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     pub fn model_behavior_summary<M>(
         &self,
         model: &M,
-        x_data: &Array2<F>,
+        xdata: &Array2<F>,
         feature_names: &[String],
     ) -> Result<ModelBehaviorSummary<F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let predictions = model(&x_data.view());
+        let predictions = model(&xdata.view());
 
         // Basic prediction statistics
         let mean_prediction = predictions.mean().unwrap_or(F::zero());
@@ -261,13 +261,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         );
 
         // Feature sensitivity analysis
-        let feature_sensitivity = self.compute_feature_sensitivity(model, x_data, feature_names)?;
+        let feature_sensitivity = self.compute_feature_sensitivity(model, xdata, feature_names)?;
 
         // Model linearity assessment
-        let linearity_score = self.assess_model_linearity(model, x_data)?;
+        let linearity_score = self.assess_model_linearity(model, xdata)?;
 
         // Prediction confidence/uncertainty
-        let prediction_uncertainty = self.compute_prediction_uncertainty(model, x_data)?;
+        let prediction_uncertainty = self.compute_prediction_uncertainty(model, xdata)?;
 
         Ok(ModelBehaviorSummary {
             mean_prediction,
@@ -276,7 +276,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
             feature_sensitivity,
             linearity_score,
             prediction_uncertainty,
-            sample_coverage: self.compute_sample_coverage(x_data)?,
+            sample_coverage: self.compute_sample_coverage(xdata)?,
         })
     }
 
@@ -285,23 +285,23 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     fn compute_global_permutation_importance<M>(
         &self,
         model: &M,
-        x_data: &Array2<F>,
+        xdata: &Array2<F>,
         feature_names: &[String],
     ) -> Result<HashMap<String, F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let baseline_predictions = model(&x_data.view());
+        let baseline_predictions = model(&xdata.view());
         let baseline_variance = self.compute_variance(&baseline_predictions)?;
 
         let mut importance_scores = HashMap::new();
 
         for (i, feature_name) in feature_names.iter().enumerate() {
-            if i >= x_data.ncols() {
+            if i >= xdata.ncols() {
                 continue;
             }
 
-            let mut x_permuted = x_data.clone();
+            let mut x_permuted = xdata.clone();
             self.permute_column(&mut x_permuted, i)?;
 
             let permuted_predictions = model(&x_permuted.view());
@@ -317,21 +317,21 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     fn compute_variance_based_importance<M>(
         &self,
         model: &M,
-        x_data: &Array2<F>,
+        xdata: &Array2<F>,
         feature_names: &[String],
     ) -> Result<HashMap<String, F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let total_variance = self.compute_total_variance(model, x_data)?;
+        let total_variance = self.compute_total_variance(model, xdata)?;
         let mut importance_scores = HashMap::new();
 
         for (i, feature_name) in feature_names.iter().enumerate() {
-            if i >= x_data.ncols() {
+            if i >= xdata.ncols() {
                 continue;
             }
 
-            let feature_variance = self.compute_feature_variance(model, x_data, i)?;
+            let feature_variance = self.compute_feature_variance(model, xdata, i)?;
             let importance = feature_variance / total_variance;
             importance_scores.insert(feature_name.clone(), importance);
         }
@@ -342,21 +342,21 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     fn compute_interaction_effects<M>(
         &self,
         model: &M,
-        x_data: &Array2<F>,
+        xdata: &Array2<F>,
         feature_names: &[String],
     ) -> Result<HashMap<String, F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
         let mut interaction_effects = HashMap::new();
-        let n_features = x_data.ncols();
+        let n_features = xdata.ncols();
 
         // Sample a subset for efficiency
-        let _sample_size = self.n_samples.min(x_data.nrows());
+        let _sample_size = self.n_samples.min(xdata.nrows());
 
         for i in 0..n_features {
             for j in (i + 1)..n_features {
-                let interaction = self.compute_pairwise_interaction(model, x_data, i, j)?;
+                let interaction = self.compute_pairwise_interaction(model, xdata, i, j)?;
                 let pair_name = format!(
                     "{}_{}",
                     feature_names.get(i).unwrap_or(&i.to_string()),
@@ -372,18 +372,18 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     fn compute_model_complexity<M>(
         &self,
         model: &M,
-        x_data: &Array2<F>,
+        xdata: &Array2<F>,
     ) -> Result<ModelComplexityMetrics<F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let predictions = model(&x_data.view());
+        let predictions = model(&xdata.view());
 
         // Effective degrees of freedom (simplified approximation)
-        let effective_dof = self.estimate_effective_dof(model, x_data)?;
+        let effective_dof = self.estimate_effective_dof(model, xdata)?;
 
         // Model smoothness (local variation)
-        let smoothness = self.compute_model_smoothness(model, x_data)?;
+        let smoothness = self.compute_model_smoothness(model, xdata)?;
 
         // Prediction diversity
         let prediction_diversity = self.compute_variance(&predictions)?;
@@ -398,7 +398,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     fn compute_stability_metrics<M>(
         &self,
         model: &M,
-        x_data: &Array2<F>,
+        xdata: &Array2<F>,
         feature_names: &[String],
     ) -> Result<StabilityMetrics<F>>
     where
@@ -408,8 +408,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
 
         // Bootstrap sampling for stability
         for _ in 0..self.n_bootstrap {
-            let bootstrap_indices = self.generate_bootstrap_indices(x_data.nrows())?;
-            let bootstrap_data = self.sample_by_indices(x_data, &bootstrap_indices)?;
+            let bootstrap_indices = self.generate_bootstrap_indices(xdata.nrows())?;
+            let bootstrap_data = self.sample_by_indices(xdata, &bootstrap_indices)?;
 
             let importance =
                 self.compute_global_permutation_importance(model, &bootstrap_data, feature_names)?;
@@ -432,7 +432,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     fn compute_pairwise_interaction<M>(
         &self,
         model: &M,
-        x_data: &Array2<F>,
+        xdata: &Array2<F>,
         feature_i: usize,
         feature_j: usize,
     ) -> Result<F>
@@ -440,13 +440,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
         // Simplified interaction computation using partial dependence
-        let sample_size = self.n_samples.min(x_data.nrows());
+        let sample_size = self.n_samples.min(xdata.nrows());
 
         let mut interaction_sum = F::zero();
         let mut count = 0;
 
         for idx in 0..sample_size {
-            let instance = x_data.row(idx);
+            let instance = xdata.row(idx);
 
             // Get baseline prediction
             let baseline = model(&instance.insert_axis(Axis(0)).view())[0];
@@ -458,16 +458,16 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
             let mut modified = instance.to_owned();
 
             // Perturb feature _i
-            modified[feature_i] = val_i + self.get_feature_std(x_data, feature_i)?;
+            modified[feature_i] = val_i + self.get_feature_std(xdata, feature_i)?;
             let pred_i = model(&modified.clone().insert_axis(Axis(0)).view())[0];
 
             // Perturb feature _j
             modified[feature_i] = val_i;
-            modified[feature_j] = val_j + self.get_feature_std(x_data, feature_j)?;
+            modified[feature_j] = val_j + self.get_feature_std(xdata, feature_j)?;
             let pred_j = model(&modified.clone().insert_axis(Axis(0)).view())[0];
 
             // Perturb both features
-            modified[feature_i] = val_i + self.get_feature_std(x_data, feature_i)?;
+            modified[feature_i] = val_i + self.get_feature_std(xdata, feature_i)?;
             let pred_ij = model(&modified.clone().insert_axis(Axis(0)).view())[0];
 
             // Interaction effect
@@ -499,13 +499,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     }
 
     fn compute_total_interaction_strength(&self, pairwiseinteractions: &HashMap<String, F>) -> F {
-        pairwise_interactions.values().cloned().sum()
+        pairwiseinteractions.values().cloned().sum()
     }
 
     fn compute_feature_sensitivity<M>(
         &self,
         model: &M,
-        x_data: &Array2<F>,
+        xdata: &Array2<F>,
         feature_names: &[String],
     ) -> Result<HashMap<String, F>>
     where
@@ -514,11 +514,11 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         let mut sensitivity_scores = HashMap::new();
 
         for (i, feature_name) in feature_names.iter().enumerate() {
-            if i >= x_data.ncols() {
+            if i >= xdata.ncols() {
                 continue;
             }
 
-            let sensitivity = self.compute_single_feature_sensitivity(model, x_data, i)?;
+            let sensitivity = self.compute_single_feature_sensitivity(model, xdata, i)?;
             sensitivity_scores.insert(feature_name.clone(), sensitivity);
         }
 
@@ -528,23 +528,23 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     fn compute_single_feature_sensitivity<M>(
         &self,
         model: &M,
-        x_data: &Array2<F>,
-        feature_idx: usize,
+        xdata: &Array2<F>,
+        featureidx: usize,
     ) -> Result<F>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let feature_std = self.get_feature_std(x_data, feature_idx)?;
-        let sample_size = self.n_samples.min(x_data.nrows());
+        let feature_std = self.get_feature_std(xdata, featureidx)?;
+        let sample_size = self.n_samples.min(xdata.nrows());
 
         let mut sensitivity_sum = F::zero();
 
         for i in 0..sample_size {
-            let instance = x_data.row(i);
+            let instance = xdata.row(i);
             let baseline_pred = model(&instance.insert_axis(Axis(0)).view())[0];
 
             let mut perturbed = instance.to_owned();
-            perturbed[feature_idx] = perturbed[feature_idx] + feature_std;
+            perturbed[featureidx] = perturbed[featureidx] + feature_std;
             let perturbed_pred = model(&perturbed.insert_axis(Axis(0)).view())[0];
 
             sensitivity_sum = sensitivity_sum + (perturbed_pred - baseline_pred).abs();
@@ -558,15 +558,15 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
         // Simplified linearity assessment using second-order differences
-        let _predictions = model(&x_data.view());
+        let _predictions = model(&xdata.view());
         let mut nonlinearity_score = F::zero();
-        let sample_size = self.n_samples.min(x_data.nrows());
+        let sample_size = self.n_samples.min(xdata.nrows());
 
         for i in 0..sample_size {
-            let instance = x_data.row(i);
+            let instance = xdata.row(i);
 
-            for j in 0..x_data.ncols() {
-                let step = self.get_feature_std(x_data, j)? / F::from(10).unwrap();
+            for j in 0..xdata.ncols() {
+                let step = self.get_feature_std(xdata, j)? / F::from(10).unwrap();
 
                 let mut left = instance.to_owned();
                 left[j] = left[j] - step;
@@ -594,20 +594,20 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
         // Simplified uncertainty estimation using prediction variance
-        let predictions = model(&x_data.view());
+        let predictions = model(&xdata.view());
         self.compute_variance(&predictions)
     }
 
     fn compute_sample_coverage(&self, xdata: &Array2<F>) -> Result<F> {
         // Simplified coverage metric based on _data distribution
-        let n_features = x_data.ncols();
+        let n_features = xdata.ncols();
         let mut coverage_score = F::zero();
 
         for j in 0..n_features {
-            let column = x_data.column(j);
+            let column = xdata.column(j);
             let range = column.iter().cloned().fold(F::neg_infinity(), F::max)
                 - column.iter().cloned().fold(F::infinity(), F::min);
-            let std_dev = self.compute_column_std(x_data, j)?;
+            let std_dev = self.compute_column_std(xdata, j)?;
 
             // Normalized range-to-std ratio
             let feature_coverage = if std_dev > F::zero() {
@@ -630,12 +630,12 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         Ok(variance)
     }
 
-    fn get_feature_std(&self, x_data: &Array2<F>, featureidx: usize) -> Result<F> {
-        self.compute_column_std(x_data, feature_idx)
+    fn get_feature_std(&self, xdata: &Array2<F>, featureidx: usize) -> Result<F> {
+        self.compute_column_std(xdata, featureidx)
     }
 
-    fn compute_column_std(&self, x_data: &Array2<F>, colidx: usize) -> Result<F> {
-        let column = x_data.column(col_idx);
+    fn compute_column_std(&self, xdata: &Array2<F>, colidx: usize) -> Result<F> {
+        let column = xdata.column(colidx);
         let mean = column.mean().unwrap_or(F::zero());
         let variance = column.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>()
             / F::from(column.len()).unwrap();
@@ -643,7 +643,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     }
 
     fn permute_column(&self, data: &mut Array2<F>, colidx: usize) -> Result<()> {
-        let mut column_values: Vec<F> = data.column(col_idx).to_vec();
+        let mut column_values: Vec<F> = data.column(colidx).to_vec();
 
         // Simple shuffle
         for i in (1..column_values.len()).rev() {
@@ -652,7 +652,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         }
 
         for (i, &value) in column_values.iter().enumerate() {
-            data[[i, col_idx]] = value;
+            data[[i, colidx]] = value;
         }
 
         Ok(())
@@ -662,30 +662,30 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let predictions = model(&x_data.view());
+        let predictions = model(&xdata.view());
         self.compute_variance(&predictions)
     }
 
     fn compute_feature_variance<M>(
         &self,
         model: &M,
-        x_data: &Array2<F>,
-        feature_idx: usize,
+        xdata: &Array2<F>,
+        featureidx: usize,
     ) -> Result<F>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
         // Compute variance explained by this feature
-        let mut x_baseline = x_data.clone();
-        let feature_mean = x_data.column(feature_idx).mean().unwrap_or(F::zero());
+        let mut x_baseline = xdata.clone();
+        let feature_mean = xdata.column(featureidx).mean().unwrap_or(F::zero());
 
         // Set feature to its mean value
         for i in 0..x_baseline.nrows() {
-            x_baseline[[i, feature_idx]] = feature_mean;
+            x_baseline[[i, featureidx]] = feature_mean;
         }
 
         let baseline_predictions = model(&x_baseline.view());
-        let original_predictions = model(&x_data.view());
+        let original_predictions = model(&xdata.view());
 
         let baseline_variance = self.compute_variance(&baseline_predictions)?;
         let original_variance = self.compute_variance(&original_predictions)?;
@@ -699,18 +699,18 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     {
         // Simplified effective degrees of freedom estimation
         // In practice, this would use more sophisticated methods
-        Ok(F::from(x_data.ncols()).unwrap())
+        Ok(F::from(xdata.ncols()).unwrap())
     }
 
     fn compute_model_smoothness<M>(&self, model: &M, xdata: &Array2<F>) -> Result<F>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let predictions = model(&x_data.view());
+        let predictions = model(&xdata.view());
 
         // Compute local variation as a measure of smoothness
         let mut variation_sum = F::zero();
-        let sample_size = self.n_samples.min(x_data.nrows());
+        let sample_size = self.n_samples.min(xdata.nrows());
 
         for i in 0..(sample_size - 1) {
             let diff = (predictions[i + 1] - predictions[i]).abs();
@@ -889,7 +889,7 @@ pub struct GlobalExplanation<F: Float> {
 #[derive(Debug, Clone)]
 pub struct PartialDependencePlot<F: Float> {
     /// Feature index
-    pub feature_idx: usize,
+    pub featureidx: usize,
     /// Grid values for the feature
     pub grid_values: Vec<F>,
     /// Partial dependence values
@@ -913,7 +913,7 @@ pub struct ICECurve<F: Float> {
 #[derive(Debug, Clone)]
 pub struct InteractionAnalysis<F: Float> {
     /// Pairwise interaction strengths
-    pub pairwise_interactions: HashMap<String, F>,
+    pub pairwiseinteractions: HashMap<String, F>,
     /// Higher-order interactions by order
     pub higher_order_interactions: HashMap<usize, HashMap<String, F>>,
     /// Total interaction strength
@@ -993,13 +993,13 @@ mod tests {
     #[test]
     fn test_partial_dependence() {
         let explainer = GlobalExplainer::<f64>::new().with_seed(42);
-        let x_data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
+        let xdata = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
 
         let pd_plot = explainer
-            .partial_dependence(&mock_model, &x_data, 0, 5)
+            .partial_dependence(&mock_model, &xdata, 0, 5)
             .unwrap();
 
-        assert_eq!(pd_plot.feature_idx, 0);
+        assert_eq!(pd_plot.featureidx, 0);
         assert_eq!(pd_plot.grid_values.len(), 5);
         assert_eq!(pd_plot.pd_values.len(), 5);
     }
@@ -1007,10 +1007,10 @@ mod tests {
     #[test]
     fn test_ice_curves() {
         let explainer = GlobalExplainer::<f64>::new().with_seed(42);
-        let x_data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
+        let xdata = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
 
         let ice_curves = explainer
-            .ice_curves(&mock_model, &x_data, 0, 3, Some(2))
+            .ice_curves(&mock_model, &xdata, 0, 3, Some(2))
             .unwrap();
 
         assert_eq!(ice_curves.len(), 2); // max_instances = 2
@@ -1021,25 +1021,25 @@ mod tests {
     #[test]
     fn test_feature_interactions() {
         let explainer = GlobalExplainer::<f64>::new().with_seed(42);
-        let x_data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
+        let xdata = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
         let feature_names = vec!["f1".to_string(), "f2".to_string()];
 
         let interactions = explainer
-            .feature_interactions(&mock_model, &x_data, &feature_names, 2)
+            .feature_interactions(&mock_model, &xdata, &feature_names, 2)
             .unwrap();
 
-        assert_eq!(interactions.pairwise_interactions.len(), 1); // Only one pair for 2 features
-        assert!(interactions.pairwise_interactions.contains_key("f1_f2"));
+        assert_eq!(interactions.pairwiseinteractions.len(), 1); // Only one pair for 2 features
+        assert!(interactions.pairwiseinteractions.contains_key("f1_f2"));
     }
 
     #[test]
     fn test_model_behavior_summary() {
         let explainer = GlobalExplainer::<f64>::new().with_seed(42);
-        let x_data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
+        let xdata = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
         let feature_names = vec!["f1".to_string(), "f2".to_string()];
 
         let summary = explainer
-            .model_behavior_summary(&mock_model, &x_data, &feature_names)
+            .model_behavior_summary(&mock_model, &xdata, &feature_names)
             .unwrap();
 
         assert!(summary.mean_prediction > 0.0);
@@ -1070,10 +1070,10 @@ mod tests {
     #[test]
     fn test_pairwise_interaction() {
         let explainer = GlobalExplainer::<f64>::new().with_seed(42);
-        let x_data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
+        let xdata = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
 
         let interaction = explainer
-            .compute_pairwise_interaction(&mock_model, &x_data, 0, 1)
+            .compute_pairwise_interaction(&mock_model, &xdata, 0, 1)
             .unwrap();
 
         // Should detect interaction since our mock model has x1*x2 term

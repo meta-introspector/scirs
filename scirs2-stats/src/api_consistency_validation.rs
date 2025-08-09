@@ -1073,19 +1073,19 @@ impl APIConsistencyValidator {
         // Add to module registry
         self.function_registry
             .functions_by_module
-            .entry(function_sig.module.clone())
+            .entry(functionsig.module.clone())
             .or_insert_with(Vec::new)
-            .push(function_sig.clone());
+            .push(functionsig.clone());
 
         // Add to category registry
         self.function_registry
             .functions_by_category
-            .entry(function_sig.category.clone())
+            .entry(functionsig.category.clone())
             .or_insert_with(Vec::new)
-            .push(function_sig.clone());
+            .push(functionsig.clone());
 
         // Update parameter usage statistics
-        for param in &function_sig.parameters {
+        for param in &functionsig.parameters {
             let usage = self
                 .function_registry
                 .parameter_usage
@@ -1100,7 +1100,7 @@ impl APIConsistencyValidator {
 
             usage.usage_count += 1;
             usage.type_signatures.insert(param.param_type.clone());
-            usage.modules.insert(function_sig.module.clone());
+            usage.modules.insert(functionsig.module.clone());
         }
     }
 
@@ -1159,7 +1159,7 @@ impl ParameterUsageAnalysis {
     fn add_usage(&mut self, module: String, function: String, paramtype: String) {
         self.functions.push(format!("{}::{}", module, function));
         self.modules.insert(module);
-        self.type_variations.insert(param_type);
+        self.type_variations.insert(paramtype);
     }
 }
 
@@ -1317,7 +1317,7 @@ mod tests {
     fn test_function_registry() {
         let registry = FunctionRegistry::new();
 
-        let function_sig = FunctionSignature {
+        let functionsig = FunctionSignature {
             name: "mean".to_string(),
             module: "descriptive".to_string(),
             category: FunctionCategory::DescriptiveStats,
@@ -1339,7 +1339,7 @@ mod tests {
         };
 
         let mut validator = APIConsistencyValidator::new(ValidationConfig::default());
-        validator.register_function(function_sig);
+        validator.register_function(functionsig);
 
         assert_eq!(validator.function_registry.functions_by_module.len(), 1);
         assert_eq!(validator.function_registry.functions_by_category.len(), 1);

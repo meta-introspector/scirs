@@ -178,10 +178,10 @@ pub struct RNNController<
 #[derive(Debug, Clone)]
 pub struct RNNControllerConfig {
     /// Hidden size
-    pub hidden_size: usize,
+    pub hiddensize: usize,
 
     /// Number of layers
-    pub num_layers: usize,
+    pub numlayers: usize,
 
     /// RNN type
     pub rnn_type: RNNType,
@@ -278,10 +278,10 @@ pub struct EmbeddingLayer<T: Float> {
     embeddings: Array2<T>,
 
     /// Vocabulary size
-    vocab_size: usize,
+    _vocab_size: usize,
 
     /// Embedding dimension
-    embedding_dim: usize,
+    embeddingdim: usize,
 }
 
 /// Training batch for controller
@@ -350,16 +350,16 @@ pub struct TransformerController<T: Float> {
 #[derive(Debug, Clone)]
 pub struct TransformerConfig {
     /// Model dimension
-    pub model_dim: usize,
+    pub _model_dim: usize,
 
     /// Number of attention heads
-    pub num_heads: usize,
+    pub numheads: usize,
 
     /// Number of layers
-    pub num_layers: usize,
+    pub numlayers: usize,
 
     /// Feed-forward dimension
-    pub ff_dim: usize,
+    pub ffdim: usize,
 
     /// Dropout rate
     pub dropout_rate: f64,
@@ -397,7 +397,7 @@ pub struct TransformerLayer<T: Float> {
 #[derive(Debug, Clone)]
 pub struct MultiHeadAttention<T: Float> {
     /// Number of heads
-    num_heads: usize,
+    numheads: usize,
 
     /// Head dimension
     head_dim: usize,
@@ -454,7 +454,7 @@ pub struct PositionalEncoding<T: Float> {
     max_length: usize,
 
     /// Model dimension
-    model_dim: usize,
+    _model_dim: usize,
 }
 
 /// Random architecture controller (baseline)
@@ -531,10 +531,10 @@ impl<
     > RNNController<T>
 {
     /// Create new RNN controller
-    pub fn new(hidden_size: usize, num_layers: usize, vocabsize: usize) -> Result<Self> {
+    pub fn new(hiddensize: usize, numlayers: usize, _vocab_size: usize) -> Result<Self> {
         let config = RNNControllerConfig {
-            hidden_size,
-            num_layers,
+            hiddensize,
+            numlayers,
             rnn_type: RNNType::LSTM,
             dropout_rate: 0.1,
             learning_rate: 0.001,
@@ -544,16 +544,16 @@ impl<
         };
 
         let mut rnn_layers = Vec::new();
-        for i in 0..num_layers {
-            let input_size = if i == 0 { hidden_size } else { hidden_size };
-            rnn_layers.push(RNNLayer::new(RNNType::LSTM, input_size, hidden_size)?);
+        for i in 0..numlayers {
+            let input_size = if i == 0 { hiddensize } else { hiddensize };
+            rnn_layers.push(RNNLayer::new(RNNType::LSTM, input_size, hiddensize)?);
         }
 
-        let output_layer = OutputLayer::new(hidden_size, vocab_size, ActivationType::Softmax)?;
-        let embedding_layer = EmbeddingLayer::new(vocab_size, hidden_size)?;
+        let output_layer = OutputLayer::new(hiddensize, _vocab_size, ActivationType::Softmax)?;
+        let embedding_layer = EmbeddingLayer::new(_vocab_size, hiddensize)?;
 
-        let hidden_states = vec![Array1::zeros(hidden_size); num_layers];
-        let cell_states = vec![Array1::zeros(hidden_size); num_layers];
+        let hidden_states = vec![Array1::zeros(hiddensize); numlayers];
+        let cell_states = vec![Array1::zeros(hiddensize); numlayers];
 
         Ok(Self {
             config,
@@ -572,9 +572,9 @@ impl<
 
     /// Forward pass through RNN
     fn forward(&mut self, inputsequence: &[usize]) -> Result<Array2<T>> {
-        let seq_len = input_sequence.len();
-        let vocab_size = self.action_space.component_types.len();
-        let mut outputs = Array2::zeros((seq_len, vocab_size));
+        let seq_len = inputsequence.len();
+        let _vocab_size = self.action_space.component_types.len();
+        let mut outputs = Array2::zeros((seq_len, _vocab_size));
 
         // Reset states at beginning of _sequence
         for state in &mut self.hidden_states {
@@ -584,7 +584,7 @@ impl<
             state.fill(T::zero());
         }
 
-        for (t, &input_token) in input_sequence.iter().enumerate() {
+        for (t, &input_token) in inputsequence.iter().enumerate() {
             // Embed input token
             let embedded = self.embedding_layer.forward(input_token)?;
 
@@ -873,12 +873,12 @@ impl<T: Float + Default + Clone + Send + Sync + 'static + ndarray::ScalarOperand
     TransformerController<T>
 {
     /// Create new Transformer controller
-    pub fn new(model_dim: usize, num_heads: usize, numlayers: usize) -> Result<Self> {
+    pub fn new(_model_dim: usize, numheads: usize, numlayers: usize) -> Result<Self> {
         let config = TransformerConfig {
-            model_dim,
-            num_heads,
-            num_layers,
-            ff_dim: model_dim * 4,
+            _model_dim,
+            numheads,
+            numlayers,
+            ffdim: _model_dim * 4,
             dropout_rate: 0.1,
             learning_rate: 0.001,
             temperature: 1.0,
@@ -886,14 +886,14 @@ impl<T: Float + Default + Clone + Send + Sync + 'static + ndarray::ScalarOperand
         };
 
         let mut _layers = Vec::new();
-        for _ in 0..num_layers {
-            layers.push(TransformerLayer::new(model_dim, num_heads, model_dim * 4)?);
+        for _ in 0..numlayers {
+            layers.push(TransformerLayer::new(_model_dim, numheads, _model_dim * 4)?);
         }
 
-        let positional_encoding = PositionalEncoding::new(config.max_sequence_length, model_dim)?;
-        let input_embedding = EmbeddingLayer::new(1000, model_dim)?; // Vocab size placeholder
-        let output_projection = OutputLayer::new(model_dim, 1000, ActivationType::Softmax)?;
-        let layer_norm = LayerNorm::new(model_dim)?;
+        let positional_encoding = PositionalEncoding::new(config.max_sequence_length, _model_dim)?;
+        let input_embedding = EmbeddingLayer::new(1000, _model_dim)?; // Vocab size placeholder
+        let output_projection = OutputLayer::new(_model_dim, 1000, ActivationType::Softmax)?;
+        let layer_norm = LayerNorm::new(_model_dim)?;
 
         Ok(Self {
             config,
@@ -1082,15 +1082,15 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ArchitectureCont
 impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> RNNLayer<T> {
     fn new(layer_type: RNNType, input_size: usize, hiddensize: usize) -> Result<Self> {
         let gate_size = match layer_type {
-            RNNType::LSTM => hidden_size * 4,
-            RNNType::GRU => hidden_size * 3,
-            RNNType::RNN => hidden_size,
+            RNNType::LSTM => hiddensize * 4,
+            RNNType::GRU => hiddensize * 3,
+            RNNType::RNN => hiddensize,
         };
 
         Ok(Self {
             layer_type,
             weight_ih: Array2::zeros((gate_size, input_size)),
-            weight_hh: Array2::zeros((gate_size, hidden_size)),
+            weight_hh: Array2::zeros((gate_size, hiddensize)),
             bias_ih: Array1::zeros(gate_size),
             bias_hh: Array1::zeros(gate_size),
             layer_norm: None,
@@ -1117,24 +1117,24 @@ impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> RNNLayer<T> 
         hidden: &Array1<T>,
         cell: &Array1<T>,
     ) -> Result<(Array1<T>, Array1<T>)> {
-        let hidden_size = hidden.len();
+        let hiddensize = hidden.len();
 
         let gi = self.weight_ih.dot(input) + &self.bias_ih;
         let gh = self.weight_hh.dot(hidden) + &self.bias_hh;
         let combined = gi + gh;
 
         // Split gates
-        let input_gate = Self::sigmoid(&combined.slice(s![0..hidden_size]).to_owned());
+        let input_gate = Self::sigmoid(&combined.slice(s![0..hiddensize]).to_owned());
         let forget_gate =
-            Self::sigmoid(&combined.slice(s![hidden_size..2 * hidden_size]).to_owned());
+            Self::sigmoid(&combined.slice(s![hiddensize..2 * hiddensize]).to_owned());
         let cell_gate = Self::tanh(
             &combined
-                .slice(s![2 * hidden_size..3 * hidden_size])
+                .slice(s![2 * hiddensize..3 * hiddensize])
                 .to_owned(),
         );
         let output_gate = Self::sigmoid(
             &combined
-                .slice(s![3 * hidden_size..4 * hidden_size])
+                .slice(s![3 * hiddensize..4 * hiddensize])
                 .to_owned(),
         );
 
@@ -1145,22 +1145,22 @@ impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> RNNLayer<T> 
     }
 
     fn gru_forward(&self, input: &Array1<T>, hidden: &Array1<T>) -> Result<(Array1<T>, Array1<T>)> {
-        let hidden_size = hidden.len();
+        let hiddensize = hidden.len();
 
         let gi = self.weight_ih.dot(input) + &self.bias_ih;
         let gh = self.weight_hh.dot(hidden) + &self.bias_hh;
 
         let reset_gate = Self::sigmoid(
-            &(gi.slice(s![0..hidden_size]).to_owned() + gh.slice(s![0..hidden_size]).to_owned()),
+            &(gi.slice(s![0..hiddensize]).to_owned() + gh.slice(s![0..hiddensize]).to_owned()),
         );
         let update_gate = Self::sigmoid(
-            &(gi.slice(s![hidden_size..2 * hidden_size]).to_owned()
-                + gh.slice(s![hidden_size..2 * hidden_size]).to_owned()),
+            &(gi.slice(s![hiddensize..2 * hiddensize]).to_owned()
+                + gh.slice(s![hiddensize..2 * hiddensize]).to_owned()),
         );
 
         let new_gate = Self::tanh(
-            &(gi.slice(s![2 * hidden_size..3 * hidden_size]).to_owned()
-                + &reset_gate * &gh.slice(s![2 * hidden_size..3 * hidden_size]).to_owned()),
+            &(gi.slice(s![2 * hiddensize..3 * hiddensize]).to_owned()
+                + &reset_gate * &gh.slice(s![2 * hiddensize..3 * hiddensize]).to_owned()),
         );
 
         let one_minus_update = update_gate.mapv(|x| T::one() - x);
@@ -1189,8 +1189,8 @@ impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> RNNLayer<T> 
 impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> OutputLayer<T> {
     fn new(_input_size: usize, outputsize: usize, activation: ActivationType) -> Result<Self> {
         Ok(Self {
-            weight: Array2::zeros((output_size, input_size)),
-            bias: Array1::zeros(output_size),
+            weight: Array2::zeros((outputsize, input_size)),
+            bias: Array1::zeros(outputsize),
             activation,
         })
     }
@@ -1225,14 +1225,14 @@ impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> OutputLayer<
 impl<T: Float + Default + Clone> EmbeddingLayer<T> {
     fn new(_vocab_size: usize, embeddingdim: usize) -> Result<Self> {
         Ok(Self {
-            embeddings: Array2::zeros((_vocab_size, embedding_dim)),
-            vocab_size: vocab_size,
-            embedding_dim,
+            embeddings: Array2::zeros((_vocab_size, embeddingdim)),
+            _vocab_size: _vocab_size,
+            embeddingdim,
         })
     }
 
     fn forward(&self, token: usize) -> Result<Array1<T>> {
-        if token >= self.vocab_size {
+        if token >= self._vocab_size {
             return Err(OptimError::InvalidConfig(format!(
                 "Token {} out of vocabulary",
                 token
@@ -1244,10 +1244,10 @@ impl<T: Float + Default + Clone> EmbeddingLayer<T> {
 }
 
 impl<T: Float + Default + Clone> TransformerLayer<T> {
-    fn new(_model_dim: usize, num_heads: usize, ffdim: usize) -> Result<Self> {
+    fn new(_model_dim: usize, numheads: usize, ffdim: usize) -> Result<Self> {
         Ok(Self {
-            attention: MultiHeadAttention::new(_model_dim, num_heads)?,
-            feed_forward: FeedForward::new(_model_dim, ff_dim)?,
+            attention: MultiHeadAttention::new(_model_dim, numheads)?,
+            feed_forward: FeedForward::new(_model_dim, ffdim)?,
             norm1: LayerNorm::new(_model_dim)?,
             norm2: LayerNorm::new(_model_dim)?,
             dropout: 0.1,
@@ -1257,15 +1257,15 @@ impl<T: Float + Default + Clone> TransformerLayer<T> {
 
 impl<T: Float + Default + Clone> MultiHeadAttention<T> {
     fn new(_model_dim: usize, numheads: usize) -> Result<Self> {
-        let head_dim = _model_dim / num_heads;
+        let head_dim = _model_dim / numheads;
 
         Ok(Self {
-            num_heads,
+            numheads,
             head_dim,
-            query_proj: Array2::zeros((_model_dim, model_dim)),
-            key_proj: Array2::zeros((_model_dim, model_dim)),
-            value_proj: Array2::zeros((_model_dim, model_dim)),
-            output_proj: Array2::zeros((_model_dim, model_dim)),
+            query_proj: Array2::zeros((_model_dim, _model_dim)),
+            key_proj: Array2::zeros((_model_dim, _model_dim)),
+            value_proj: Array2::zeros((_model_dim, _model_dim)),
+            output_proj: Array2::zeros((_model_dim, _model_dim)),
             dropout: 0.1,
         })
     }
@@ -1274,8 +1274,8 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
 impl<T: Float + Default + Clone> FeedForward<T> {
     fn new(_input_dim: usize, ffdim: usize) -> Result<Self> {
         Ok(Self {
-            linear1: LinearLayer::new(_input_dim, ff_dim)?,
-            linear2: LinearLayer::new(ff_dim, input_dim)?,
+            linear1: LinearLayer::new(_input_dim, ffdim)?,
+            linear2: LinearLayer::new(ffdim, input_dim)?,
             activation: ActivationType::ReLU,
             dropout: 0.1,
         })
@@ -1285,8 +1285,8 @@ impl<T: Float + Default + Clone> FeedForward<T> {
 impl<T: Float + Default + Clone> LinearLayer<T> {
     fn new(_input_dim: usize, outputdim: usize) -> Result<Self> {
         Ok(Self {
-            weight: Array2::zeros((output_dim, input_dim)),
-            bias: Array1::zeros(output_dim),
+            weight: Array2::zeros((outputdim, input_dim)),
+            bias: Array1::zeros(outputdim),
         })
     }
 }
@@ -1294,20 +1294,20 @@ impl<T: Float + Default + Clone> LinearLayer<T> {
 impl<T: Float + Default + Clone> LayerNorm<T> {
     fn new(dim: usize) -> Result<Self> {
         Ok(Self {
-            scale: Array1::ones(_dim),
-            shift: Array1::zeros(_dim),
+            scale: Array1::ones(dim),
+            shift: Array1::zeros(dim),
             eps: T::from(1e-6).unwrap(),
         })
     }
 }
 
 impl<T: Float + Default + Clone> PositionalEncoding<T> {
-    fn new(max_length: usize, modeldim: usize) -> Result<Self> {
-        let mut encoding = Array2::zeros((max_length, model_dim));
+    fn new(max_length: usize, _model_dim: usize) -> Result<Self> {
+        let mut encoding = Array2::zeros((max_length, _model_dim));
 
         for pos in 0..max_length {
-            for i in 0..model_dim / 2 {
-                let angle = pos as f64 / 10000_f64.powf(2.0 * i as f64 / model_dim as f64);
+            for i in 0.._model_dim / 2 {
+                let angle = pos as f64 / 10000_f64.powf(2.0 * i as f64 / _model_dim as f64);
                 encoding[[pos, 2 * i]] = T::from(angle.sin()).unwrap();
                 encoding[[pos, 2 * i + 1]] = T::from(angle.cos()).unwrap();
             }
@@ -1316,7 +1316,7 @@ impl<T: Float + Default + Clone> PositionalEncoding<T> {
         Ok(Self {
             encoding,
             max_length,
-            model_dim,
+            _model_dim,
         })
     }
 }

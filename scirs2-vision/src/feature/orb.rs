@@ -28,7 +28,7 @@ pub struct OrbConfig {
     /// Number of features to detect
     pub num_features: usize,
     /// Scale factor between levels
-    pub scale_factor: f32,
+    pub scalefactor: f32,
     /// Number of pyramid levels
     pub num_levels: usize,
     /// FAST detector threshold
@@ -43,7 +43,7 @@ impl Default for OrbConfig {
     fn default() -> Self {
         Self {
             num_features: 500,
-            scale_factor: 1.2,
+            scalefactor: 1.2,
             num_levels: 8,
             fast_threshold: 20,
             use_harris_detector: true,
@@ -80,7 +80,7 @@ pub fn detect_and_compute_orb(
     let (_height_width) = array.dim();
 
     // Create image pyramid
-    let pyramid = create_pyramid(&array, config.num_levels, config.scale_factor);
+    let pyramid = create_pyramid(&array, config.num_levels, config.scalefactor);
 
     // Detect keypoints at each level
     let mut all_keypoints = Vec::new();
@@ -93,7 +93,7 @@ pub fn detect_and_compute_orb(
         }
 
         // Scale keypoints to original image coordinates
-        let scale = config.scale_factor.powi(level as i32);
+        let scale = config.scalefactor.powi(level as i32);
         for kp in &mut keypoints {
             kp.x *= scale;
             kp.y *= scale;
@@ -142,15 +142,15 @@ fn create_pyramid(_image: &Array2<f32>, num_levels: usize, scalefactor: f32) -> 
         let prev_level = pyramid.last().unwrap();
         let (prev_h, prev_w) = prev_level.dim();
 
-        let new_h = ((prev_h as f32) / scale_factor).round() as usize;
-        let new_w = ((prev_w as f32) / scale_factor).round() as usize;
+        let new_h = ((prev_h as f32) / scalefactor).round() as usize;
+        let new_w = ((prev_w as f32) / scalefactor).round() as usize;
 
         // Simple downsampling - in practice, use proper _image resize
         let mut new_level = Array2::zeros((new_h, new_w));
         for y in 0..new_h {
             for x in 0..new_w {
-                let src_y = ((y as f32) * scale_factor).round() as usize;
-                let src_x = ((x as f32) * scale_factor).round() as usize;
+                let src_y = ((y as f32) * scalefactor).round() as usize;
+                let src_x = ((x as f32) * scalefactor).round() as usize;
 
                 if src_y < prev_h && src_x < prev_w {
                     new_level[[y, x]] = prev_level[[src_y, src_x]];

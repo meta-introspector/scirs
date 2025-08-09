@@ -281,7 +281,7 @@ pub struct VectorKernel {
 #[derive(Debug)]
 pub struct SelfOptimizingAlgorithm {
     /// Algorithm type
-    algorithm_type: String,
+    _algorithmtype: String,
     /// Hardware feedback enabled
     hardware_feedback: bool,
     /// Runtime code generation enabled
@@ -1120,7 +1120,7 @@ impl AdvancedfastDistanceMatrix {
             if h <= 32 || w <= 32 {
                 // Apply direct optimization for small blocks
                 for i in row..(_row + h) {
-                    for j in col..(_col + w) {
+                    for j in col..(col + w) {
                         if i < matrix.nrows() && j < matrix.ncols() {
                             // Apply cache-friendly computation pattern
                             std::hint::black_box(&matrix[[i, j]]); // Cache-optimized access
@@ -1135,9 +1135,9 @@ impl AdvancedfastDistanceMatrix {
             let mid_col = w / 2;
 
             // Push quadrants in reverse Z-order (so they're processed in correct order)
-            stack.push((_row + mid_row, _col + mid_col, h - mid_row, w - mid_col));
+            stack.push((_row + mid_row, col + mid_col, h - mid_row, w - mid_col));
             stack.push((_row + mid_row, col, h - mid_row, mid_col));
-            stack.push((_row, _col + mid_col, mid_row, w - mid_col));
+            stack.push((_row, col + mid_col, mid_row, w - mid_col));
             stack.push((_row, col, mid_row, mid_col));
         }
 
@@ -1275,7 +1275,7 @@ impl AdvancedfastDistanceMatrix {
 
         let (rows, cols) = matrix.dim();
 
-        // Implement lock-free parallel _matrix operations using atomic operations
+        // Implement lock-free parallel matrix operations using atomic operations
         // and work-stealing algorithms for maximum scalability
 
         // Create atomic counters for lock-free coordination
@@ -1299,7 +1299,7 @@ impl AdvancedfastDistanceMatrix {
                 let start_idx = chunk_id * chunk_size;
                 let end_idx = (start_idx + chunk_size).min(rows * cols);
 
-                // Lock-free _matrix element processing
+                // Lock-free matrix element processing
                 for linear_idx in start_idx..end_idx {
                     let i = linear_idx / cols;
                     let j = linear_idx % cols;
@@ -1328,7 +1328,7 @@ impl AdvancedfastDistanceMatrix {
         }
 
         // Apply lock-free memory ordering optimizations
-        self.apply_memory_ordering_optimization(_matrix).await?;
+        self.apply_memory_ordering_optimization(matrix).await?;
 
         // Update performance counters
         self.optimizer
@@ -1343,7 +1343,7 @@ impl AdvancedfastDistanceMatrix {
     fn lock_free_optimize_value(value: f64) -> f64 {
         // Apply branchless optimization functions
         let abs_val = value.abs();
-        let sign = if _value >= 0.0 { 1.0 } else { -1.0 };
+        let sign = if value >= 0.0 { 1.0 } else { -1.0 };
 
         // Lock-free smoothing function
         let smoothed = abs_val / (1.0 + abs_val * 0.01);
@@ -1393,7 +1393,7 @@ impl SelfOptimizingAlgorithm {
     /// Create new self-optimizing algorithm
     pub fn new(_algorithmtype: &str) -> Self {
         Self {
-            algorithm_type: algorithm_type.to_string(),
+            _algorithmtype: _algorithmtype.to_string(),
             hardware_feedback: false,
             runtime_codegen: false,
             adaptive_memory: false,

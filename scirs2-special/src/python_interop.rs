@@ -237,12 +237,12 @@ impl MigrationGuide {
 
     /// Get mapping for a SciPy function
     pub fn get_mapping(&self, scipyfunc: &str) -> Option<&FunctionMapping> {
-        self.mappings.get(scipy_func)
+        self.mappings.get(scipyfunc)
     }
 
     /// Get reverse mapping (SciRS2 to SciPy)
     pub fn get_reverse_mapping(&self, scirs2func: &str) -> Option<&String> {
-        self.reverse_mappings.get(scirs2_func)
+        self.reverse_mappings.get(scirs2func)
     }
 
     /// List all available mappings
@@ -255,7 +255,7 @@ impl MigrationGuide {
         let mut report = String::from("SciPy to SciRS2 Migration Report\n");
         report.push_str("================================\n\n");
 
-        for &func in scipy_functions {
+        for &func in scipyfunctions {
             if let Some(mapping) = self.get_mapping(func) {
                 report.push_str(&format!("## {func}\n"));
                 report.push_str(&format!("SciRS2 equivalent: `{}`\n", mapping.module_path));
@@ -328,12 +328,12 @@ pub mod codegen {
     pub fn generate_rust_equivalent(_scipycode: &str) -> Result<String, String> {
         #[cfg(feature = "python-interop")]
         {
-            generate_rust_equivalent_regex(_scipy_code)
+            generate_rust_equivalent_regex(_scipycode)
         }
 
         #[cfg(not(feature = "python-interop"))]
         {
-            generate_rust_equivalent_simple(scipy_code)
+            generate_rust_equivalent_simple(_scipycode)
         }
     }
 
@@ -355,7 +355,7 @@ pub mod codegen {
         let mut found_functions = Vec::new();
         for (pattern, prefix) in patterns {
             let re = Regex::new(pattern).map_err(|e| e.to_string())?;
-            for cap in re.captures_iter(_scipy_code) {
+            for cap in re.captures_iter(_scipycode) {
                 if let Some(func_match) = cap.get(1) {
                     let funcs = func_match.as_str();
                     for func in funcs.split(',') {
@@ -380,16 +380,16 @@ pub mod codegen {
         }
 
         // Generate _code transformation hints
-        let mut transformed = scipy_code.to_string();
-        for (scipy_func, mapping) in &found_functions {
+        let mut transformed = _scipycode.to_string();
+        for (scipyfunc, mapping) in &found_functions {
             // Add transformation comments
-            code_lines.push(format!("// {} -> {}", scipy_func, mapping.scirs2_name));
+            code_lines.push(format!("// {} -> {}", scipyfunc, mapping.scirs2_name));
 
             // Simple replacement (this is a simplified example)
             transformed =
-                transformed.replace(&format!("scipy.special.{scipy_func}"), &mapping.scirs2_name);
+                transformed.replace(&format!("scipy.special.{scipyfunc}"), &mapping.scirs2_name);
             transformed =
-                transformed.replace(&format!("special.{scipy_func}"), &mapping.scirs2_name);
+                transformed.replace(&format!("special.{scipyfunc}"), &mapping.scirs2_name);
         }
 
         // Add transformation notes
@@ -421,7 +421,7 @@ pub mod codegen {
 
         for func in known_functions {
             let scipy_pattern = format!("scipy.special.{func}");
-            if scipy_code.contains(&scipy_pattern) {
+            if _scipycode.contains(&scipy_pattern) {
                 let full_name = format!("scipy.special.{func}");
                 if let Some(mapping) = guide.get_mapping(&full_name) {
                     let module_path = &mapping.module_path;
@@ -443,16 +443,16 @@ pub mod codegen {
     pub fn generate_imports(_scipyimports: &[&str]) -> String {
         let mut _imports = String::from("// SciRS2 _imports\n");
 
-        for &import in _scipy_imports {
+        for &import in _scipyimports {
             match import {
                 "gamma" | "gammaln" | "beta" => {
-                    imports.push_str("use scirs2_special::gamma::{gamma, gammaln, beta};\n");
+                    _imports.push_str("use scirs2_special::gamma::{gamma, gammaln, beta};\n");
                 }
                 "j0" | "j1" | "jv" => {
-                    imports.push_str("use scirs2_special::bessel::{j0, j1, jv};\n");
+                    _imports.push_str("use scirs2_special::bessel::{j0, j1, jv};\n");
                 }
                 "erf" | "erfc" => {
-                    imports.push_str("use scirs2_special::erf::{erf, erfc};\n");
+                    _imports.push_str("use scirs2_special::erf::{erf, erfc};\n");
                 }
                 _ => {}
             }
@@ -592,8 +592,8 @@ mod tests {
 
     #[test]
     fn test_codegen() {
-        let scipy_code = "result = scipy.special.gamma(x)";
-        let rust_code = codegen::generate_rust_equivalent(scipy_code).unwrap();
+        let _scipycode = "result = scipy.special.gamma(x)";
+        let rust_code = codegen::generate_rust_equivalent(_scipycode).unwrap();
 
         assert!(rust_code.contains("use scirs2_special::gamma"));
     }

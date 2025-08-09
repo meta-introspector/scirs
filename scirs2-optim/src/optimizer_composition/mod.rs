@@ -150,7 +150,7 @@ where
     fn set_learning_rate(&mut self, learningrate: A) {
         // Set the learning _rate for all optimizers
         for optimizer in &mut self.optimizers {
-            optimizer.set_learning_rate(learning_rate);
+            optimizer.set_learning_rate(learningrate);
         }
     }
 }
@@ -164,7 +164,7 @@ where
     /// The parameters in this group
     pub params: Array<A, D>,
     /// The index of the optimizer to use for this group
-    pub optimizer_index: usize,
+    pub optimizerindex: usize,
 }
 
 impl<A, D> ParameterGroup<A, D>
@@ -177,11 +177,11 @@ where
     /// # Arguments
     ///
     /// * `params` - The parameters in this group
-    /// * `optimizer_index` - The index of the optimizer to use for this group
+    /// * `optimizerindex` - The index of the optimizer to use for this group
     pub fn new(_params: Array<A, D>, optimizerindex: usize) -> Self {
         Self {
             params: params,
-            optimizer_index,
+            optimizerindex,
         }
     }
 }
@@ -270,7 +270,7 @@ where
     /// # Arguments
     ///
     /// * `params` - The parameters in this group
-    /// * `optimizer_index` - The index of the optimizer to use for this group
+    /// * `optimizerindex` - The index of the optimizer to use for this group
     ///
     /// # Returns
     ///
@@ -278,20 +278,20 @@ where
     pub fn add_parameter_group(
         &mut self,
         params: Array<A, D>,
-        optimizer_index: usize,
+        optimizerindex: usize,
     ) -> Result<usize> {
         // Check if the optimizer _index is valid
-        if optimizer_index >= self.optimizers.len() {
+        if optimizerindex >= self.optimizers.len() {
             return Err(OptimError::InvalidConfig(format!(
                 "Invalid optimizer _index: {}. Only {} optimizers available.",
-                optimizer_index,
+                optimizerindex,
                 self.optimizers.len()
             )));
         }
 
         let _index = self.parameter_groups.len();
         self.parameter_groups
-            .push(ParameterGroup::new(params, optimizer_index));
+            .push(ParameterGroup::new(params, optimizerindex));
         Ok(_index)
     }
 
@@ -401,19 +401,19 @@ where
 
         // Update each parameter group using its assigned optimizer
         for (i, group) in self.parameter_groups.iter_mut().enumerate() {
-            let optimizer_index = group.optimizer_index;
+            let optimizerindex = group.optimizerindex;
 
             // Check if the optimizer index is valid
-            if optimizer_index >= self.optimizers.len() {
+            if optimizerindex >= self.optimizers.len() {
                 return Err(OptimError::InvalidConfig(format!(
                     "Invalid optimizer index: {}. Only {} optimizers available.",
-                    optimizer_index,
+                    optimizerindex,
                     self.optimizers.len()
                 )));
             }
 
             // Get the optimizer and update the parameters
-            let optimizer = &mut self.optimizers[optimizer_index];
+            let optimizer = &mut self.optimizers[optimizerindex];
             let params = &group.params;
             let gradient = &gradients[i];
 
@@ -455,8 +455,8 @@ where
             .enumerate()
             .map(|(i, params)| {
                 // Use the first optimizer for all if there are more params than optimizers
-                let optimizer_index = i.min(self.optimizers.len() - 1);
-                ParameterGroup::new(params, optimizer_index)
+                let optimizerindex = i.min(self.optimizers.len() - 1);
+                ParameterGroup::new(params, optimizerindex)
             })
             .collect();
 
@@ -479,7 +479,7 @@ where
     fn set_learning_rate(&mut self, learningrate: A) {
         // Set the learning _rate for all optimizers
         for optimizer in &mut self.optimizers {
-            optimizer.set_learning_rate(learning_rate);
+            optimizer.set_learning_rate(learningrate);
         }
     }
 }
@@ -579,8 +579,8 @@ where
 
     fn set_learning_rate(&mut self, learningrate: A) {
         // Set the learning _rate for both optimizers
-        self.inner.set_learning_rate(learning_rate);
-        self.outer.set_learning_rate(learning_rate);
+        self.inner.set_learning_rate(learningrate);
+        self.outer.set_learning_rate(learningrate);
     }
 }
 

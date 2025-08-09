@@ -560,7 +560,7 @@ impl CoxPHModel {
 
     /// Invert Hessian matrix (negative for Newton-Raphson)
     fn invert_hessian(hessian: &Array2<f64>) -> Result<Array2<f64>> {
-        let neg_hessian = -_hessian;
+        let neg_hessian = -hessian;
         scirs2_linalg::inv(&neg_hessian.view(), None)
             .map_err(|e| StatsError::ComputationError(format!("Failed to invert Hessian: {e}")))
     }
@@ -1073,7 +1073,7 @@ impl ExtendedCoxModel {
 
     /// Invert Hessian matrix
     fn invert_hessian(hessian: &Array2<f64>) -> Result<Array2<f64>> {
-        let neg_hessian = -_hessian;
+        let neg_hessian = -hessian;
         scirs2_linalg::inv(&neg_hessian.view(), None)
             .map_err(|e| StatsError::ComputationError(format!("Failed to invert Hessian: {e}")))
     }
@@ -1114,11 +1114,11 @@ impl ExtendedCoxModel {
 
     /// Compute confidence intervals for coefficients
     pub fn coefficient_confidence_intervals(&self, confidencelevel: f64) -> Result<Array2<f64>> {
-        check_probability(confidence_level, "confidence_level")?;
+        check_probability(confidencelevel, "confidence_level")?;
 
         let n_features = self.coefficients.len();
         let mut intervals = Array2::zeros((n_features, 2));
-        let _alpha = (1.0 - confidence_level) / 2.0;
+        let _alpha = (1.0 - confidencelevel) / 2.0;
         let z_critical = 1.96; // Approximate 95% CI
 
         for i in 0..n_features {
@@ -1349,7 +1349,7 @@ impl CompetingRisksModel {
             return 1.0;
         }
 
-        for i in 0.._times.len() {
+        for i in 0..times.len() {
             if times[i] >= t {
                 return probs[i];
             }
@@ -1480,7 +1480,7 @@ impl CompetingRisksModel {
 
     /// Invert Hessian matrix
     fn invert_hessian(hessian: &Array2<f64>) -> Result<Array2<f64>> {
-        let neg_hessian = -_hessian;
+        let neg_hessian = -hessian;
         scirs2_linalg::inv(&neg_hessian.view(), None)
             .map_err(|e| StatsError::ComputationError(format!("Failed to invert Hessian: {e}")))
     }
@@ -1537,7 +1537,7 @@ impl CompetingRisksModel {
             return 0.0;
         }
 
-        for i in 0.._times.len() {
+        for i in 0..times.len() {
             if times[i] >= t {
                 return cif[i];
             }

@@ -175,7 +175,7 @@ where
     F: Float + std::iter::Sum<F> + std::fmt::Display,
 {
     let sum = data.iter().cloned().sum::<F>();
-    sum / F::from(_data.len()).unwrap()
+    sum / F::from(data.len()).unwrap()
 }
 
 // Helper function to calculate the median
@@ -204,18 +204,18 @@ where
     F: Float + Copy + std::fmt::Display,
 {
     if proportion <= F::zero() || proportion >= F::from(0.5).unwrap() {
-        return sorted_data.to_vec();
+        return sorteddata.to_vec();
     }
 
-    let n = sorted_data.len();
+    let n = sorteddata.len();
     let k = (F::from(n).unwrap() * proportion).floor();
     let k_int = k.to_usize().unwrap();
 
     if k_int == 0 {
-        return sorted_data.to_vec();
+        return sorteddata.to_vec();
     }
 
-    sorted_data[k_int..n - k_int].to_vec()
+    sorteddata[k_int..n - k_int].to_vec()
 }
 
 // Helper function: F-distribution survival function (1 - CDF)
@@ -277,7 +277,7 @@ fn beta_continued_fraction(x: f64, a: f64, b: f64, maxiter: usize, eps: f64) -> 
     d = 1.0 / d;
     let mut h = d;
 
-    for m in 1..max_iter {
+    for m in 1..maxiter {
         let m2 = 2 * m;
 
         // Even step
@@ -406,7 +406,7 @@ where
     let k = samples.len();
     if k < 2 {
         return Err(StatsError::InvalidArgument(
-            "At least two _samples are required for Bartlett's test".to_string(),
+            "At least two samples are required for Bartlett's test".to_string(),
         ));
     }
 
@@ -425,7 +425,7 @@ where
     let mut v_i = Vec::with_capacity(k); // Sample variances
     let mut df_i = Vec::with_capacity(k); // Degrees of freedom (n_i - 1)
 
-    for sample in _samples {
+    for sample in samples {
         let n = sample.len();
         if n < 2 {
             return Err(StatsError::InvalidArgument(
@@ -647,5 +647,5 @@ where
         + std::fmt::Display,
 {
     // The Brown-Forsythe test is just Levene's test with center="median"
-    levene(_samples, "median", F::from(0.05).unwrap())
+    levene(samples, "median", F::from(0.05).unwrap())
 }

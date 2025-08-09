@@ -30,7 +30,7 @@ impl Circle {
 
     /// Tests if a point is inside the circle
     pub fn contains_point(&self, point: &[f64; 2]) -> bool {
-        super::narrowphase::point_circle_collision(_point, self)
+        super::narrowphase::point_circle_collision(point, self)
     }
 }
 
@@ -87,7 +87,7 @@ impl Triangle2D {
 
     /// Tests if a point is inside the triangle
     pub fn contains_point(&self, point: &[f64; 2]) -> bool {
-        super::narrowphase::point_triangle2d_collision(_point, self)
+        super::narrowphase::point_triangle2d_collision(point, self)
     }
 
     /// Provides access to the first vertex (alias for v1)
@@ -146,7 +146,7 @@ impl Box2D {
 
     /// Tests if a point is inside the box
     pub fn contains_point(&self, point: &[f64; 2]) -> bool {
-        super::narrowphase::point_box2d_collision(_point, self)
+        super::narrowphase::point_box2d_collision(point, self)
     }
 }
 
@@ -176,7 +176,7 @@ impl Sphere {
 
     /// Tests if a point is inside the sphere
     pub fn contains_point(&self, point: &[f64; 3]) -> bool {
-        super::narrowphase::point_sphere_collision(_point, self)
+        super::narrowphase::point_sphere_collision(point, self)
     }
 }
 
@@ -347,6 +347,6 @@ impl Box3D {
 
     /// Tests if a point is inside the box
     pub fn contains_point(&self, point: &[f64; 3]) -> bool {
-        super::narrowphase::point_box3d_collision(_point, self)
+        super::narrowphase::point_box3d_collision(point, self)
     }
 }

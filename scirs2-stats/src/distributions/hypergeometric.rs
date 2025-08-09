@@ -107,7 +107,7 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
             ));
         }
 
-        if n_draws > n_population {
+        if ndraws > n_population {
             return Err(StatsError::InvalidArgument(
                 "Number of draws cannot exceed population size".to_string(),
             ));
@@ -116,7 +116,7 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
         Ok(Hypergeometric {
             n_population,
             n_success,
-            n_draws,
+            n_draws: ndraws,
             loc,
         })
     }

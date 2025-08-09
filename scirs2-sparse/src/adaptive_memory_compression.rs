@@ -116,7 +116,7 @@ pub struct CompressionStats {
 struct BlockCache {
     cache: HashMap<BlockId, CachedBlock>,
     access_order: VecDeque<BlockId>,
-    max_size: usize,
+    _maxsize: usize,
     current_size: usize,
 }
 
@@ -134,7 +134,7 @@ struct CachedBlock {
 /// Block identifier
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct BlockId {
-    matrix_id: u64,
+    matrixid: u64,
     block_row: usize,
     block_col: usize,
 }
@@ -144,7 +144,7 @@ impl std::fmt::Display for BlockId {
         write!(
             f,
             "{}_{}-{}",
-            self.matrix_id, self.block_row, self.block_col
+            self.matrixid, self.block_row, self.block_col
         )
     }
 }
@@ -153,7 +153,7 @@ impl BlockId {
     /// Convert BlockId to u64 for serialization (using a hash-like approach)
     pub fn to_u64(&self) -> u64 {
         // Simple hash combining the fields
-        self.matrix_id
+        self.matrixid
             .wrapping_mul(1000000)
             .wrapping_add((self.block_row as u64) * 1000)
             .wrapping_add(self.block_col as u64)
@@ -162,12 +162,12 @@ impl BlockId {
     /// Create BlockId from u64 (for deserialization)
     pub fn from_u64(value: u64) -> Self {
         // This is a simplified reverse operation - in practice you'd want a proper bijection
-        let matrix_id = _value / 1000000;
-        let remainder = _value % 1000000;
+        let matrixid = value / 1000000;
+        let remainder = value % 1000000;
         let block_row = (remainder / 1000) as usize;
         let block_col = (remainder % 1000) as usize;
         Self {
-            matrix_id,
+            matrixid,
             block_row,
             block_col,
         }
@@ -201,7 +201,7 @@ struct AccessPattern {
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
 struct AccessEvent {
-    block_id: BlockId,
+    blockid: BlockId,
     timestamp: u64,
     access_type: AccessType,
 }
@@ -240,7 +240,7 @@ struct OutOfCoreManager {
 #[derive(Debug)]
 #[allow(dead_code)]
 struct MemoryMappedFile {
-    file_path: PathBuf,
+    filepath: PathBuf,
     file: File,
     size: usize,
     mapped: bool,
@@ -258,15 +258,15 @@ impl MemoryMappedFile {
             .truncate(true)
             .read(true)
             .write(true)
-            .open(&file_path)
-            .map_err(|e| SparseError::Io(format!("Failed to create file {file_path:?}: {e}")))?;
+            .open(&filepath)
+            .map_err(|e| SparseError::Io(format!("Failed to create file {filepath:?}: {e}")))?;
 
         // Set file size if creating new file
         file.set_len(size as u64)
             .map_err(|e| SparseError::Io(format!("Failed to set file size: {e}")))?;
 
         Ok(Self {
-            file_path,
+            filepath,
             file,
             size,
             mapped: true, // We'll treat buffered I/O as "mapped" for this implementation
@@ -354,7 +354,7 @@ impl MemoryMappedFile {
 impl AdaptiveMemoryCompressor {
     /// Create a new adaptive memory compressor
     pub fn new(config: AdaptiveCompressionConfig) -> SparseResult<Self> {
-        let block_cache = BlockCache::new(_config.cache_size);
+        let block_cache = BlockCache::new(config.cache_size);
         let access_tracker = AccessTracker::default();
 
         // Initialize hierarchical compression levels
@@ -384,7 +384,7 @@ impl AdaptiveMemoryCompressor {
 
         // Initialize out-of-core manager if enabled
         let out_of_core_manager = if config.out_of_core {
-            Some(OutOfCoreManager::new(&_config.temp_directory)?)
+            Some(OutOfCoreManager::new(&config.temp_directory)?)
         } else {
             None
         };
@@ -404,7 +404,7 @@ impl AdaptiveMemoryCompressor {
     #[allow(clippy::too_many_arguments)]
     pub fn compress_matrix<T>(
         &mut self,
-        matrix_id: u64,
+        matrixid: u64,
         rows: usize,
         indptr: &[usize],
         indices: &[usize],
@@ -423,37 +423,37 @@ impl AdaptiveMemoryCompressor {
 
         if usage_ratio < self.config.compression_threshold && !self.config.adaptive_compression {
             // No compression needed
-            return self.create_uncompressed_matrix(matrix_id, rows, indptr, indices, data);
+            return self.create_uncompressed_matrix(matrixid, rows, indptr, indices, data);
         }
 
         let start_time = std::time::Instant::now();
 
         // Determine optimal compression strategy
         let compression_strategy =
-            self.determine_compression_strategy(matrix_id, rows, indptr, indices)?;
+            self.determine_compression_strategy(matrixid, rows, indptr, indices)?;
 
         // Apply compression based on strategy
         let compressed_blocks = match compression_strategy.algorithm {
             CompressionAlgorithm::None => {
-                self.compress_with_none(matrix_id, rows, indptr, indices, data)?
+                self.compress_with_none(matrixid, rows, indptr, indices, data)?
             }
             CompressionAlgorithm::RLE => {
-                self.compress_with_rle(matrix_id, rows, indptr, indices, data)?
+                self.compress_with_rle(matrixid, rows, indptr, indices, data)?
             }
             CompressionAlgorithm::Delta => {
-                self.compress_with_delta(matrix_id, rows, indptr, indices, data)?
+                self.compress_with_delta(matrixid, rows, indptr, indices, data)?
             }
             CompressionAlgorithm::Huffman => {
-                self.compress_with_huffman(matrix_id, rows, indptr, indices, data)?
+                self.compress_with_huffman(matrixid, rows, indptr, indices, data)?
             }
             CompressionAlgorithm::LZ77 => {
-                self.compress_with_lz77(matrix_id, rows, indptr, indices, data)?
+                self.compress_with_lz77(matrixid, rows, indptr, indices, data)?
             }
             CompressionAlgorithm::SparseOptimized => {
-                self.compress_with_sparse_optimized(matrix_id, rows, indptr, indices, data)?
+                self.compress_with_sparse_optimized(matrixid, rows, indptr, indices, data)?
             }
             CompressionAlgorithm::Adaptive => {
-                self.compress_with_adaptive(matrix_id, rows, indptr, indices, data)?
+                self.compress_with_adaptive(matrixid, rows, indptr, indices, data)?
             }
         };
 
@@ -471,7 +471,7 @@ impl AdaptiveMemoryCompressor {
             .fetch_add(compressed_size, Ordering::Relaxed);
 
         Ok(CompressedMatrix {
-            matrix_id,
+            matrixid,
             original_rows: rows,
             original_cols: if !indptr.is_empty() {
                 *indices.iter().max().unwrap_or(&0) + 1
@@ -565,7 +565,7 @@ impl AdaptiveMemoryCompressor {
 
     fn determine_compression_strategy(
         &self,
-        matrix_id: u64,
+        matrixid: u64,
         rows: usize,
         indptr: &[usize],
         indices: &[usize],
@@ -583,7 +583,7 @@ impl AdaptiveMemoryCompressor {
         let pattern_analysis = self.analyze_sparsity_patterns(indptr, indices);
 
         // Check access patterns if available
-        let access_info = self.get_access_pattern_info(matrix_id);
+        let access_info = self.get_access_pattern_info(matrixid);
 
         // Select compression algorithm based on analysis
         let algorithm = if self.config.adaptive_compression {
@@ -712,8 +712,8 @@ impl AdaptiveMemoryCompressor {
         let mut info = AccessPatternInfo::default();
 
         // Aggregate access patterns for this matrix
-        for (block_id, pattern) in &access_tracker.access_patterns {
-            if block_id.matrix_id == matrix_id {
+        for (blockid, pattern) in &access_tracker.access_patterns {
+            if blockid.matrixid == matrixid {
                 info.total_accesses += pattern.access_count;
                 info.avg_temporal_locality += pattern.temporal_locality;
                 info.avg_spatial_locality += pattern.spatial_locality;
@@ -819,7 +819,7 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_none<T>(
         &self,
-        matrix_id: u64,
+        matrixid: u64,
         _rows: usize,
         indptr: &[usize],
         indices: &[usize],
@@ -831,8 +831,8 @@ impl AdaptiveMemoryCompressor {
         // Create uncompressed blocks
         let blocks = vec![
             CompressedBlock {
-                block_id: BlockId {
-                    matrix_id,
+                blockid: BlockId {
+                    matrixid,
                     block_row: 0,
                     block_col: 0,
                 },
@@ -842,8 +842,8 @@ impl AdaptiveMemoryCompressor {
                 compression_level: 0,
             },
             CompressedBlock {
-                block_id: BlockId {
-                    matrix_id,
+                blockid: BlockId {
+                    matrixid,
                     block_row: 0,
                     block_col: 1,
                 },
@@ -853,8 +853,8 @@ impl AdaptiveMemoryCompressor {
                 compression_level: 0,
             },
             CompressedBlock {
-                block_id: BlockId {
-                    matrix_id,
+                blockid: BlockId {
+                    matrixid,
                     block_row: 0,
                     block_col: 2,
                 },
@@ -870,7 +870,7 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_rle<T>(
         &self,
-        matrix_id: u64,
+        matrixid: u64,
         _rows: usize,
         indptr: &[usize],
         indices: &[usize],
@@ -885,8 +885,8 @@ impl AdaptiveMemoryCompressor {
         let compressed_indices = self.apply_rle_compression(indices)?;
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 0,
             },
@@ -897,8 +897,8 @@ impl AdaptiveMemoryCompressor {
         });
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 1,
             },
@@ -909,8 +909,8 @@ impl AdaptiveMemoryCompressor {
         });
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 2,
             },
@@ -925,7 +925,7 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_delta<T>(
         &self,
-        matrix_id: u64,
+        matrixid: u64,
         _rows: usize,
         indptr: &[usize],
         indices: &[usize],
@@ -941,8 +941,8 @@ impl AdaptiveMemoryCompressor {
         let compressed_indices = self.apply_delta_compression(indices)?;
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 0,
             },
@@ -953,8 +953,8 @@ impl AdaptiveMemoryCompressor {
         });
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 1,
             },
@@ -965,8 +965,8 @@ impl AdaptiveMemoryCompressor {
         });
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 2,
             },
@@ -981,7 +981,7 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_huffman<T>(
         &self,
-        matrix_id: u64,
+        matrixid: u64,
         _rows: usize,
         indptr: &[usize],
         indices: &[usize],
@@ -996,8 +996,8 @@ impl AdaptiveMemoryCompressor {
         let compressed_indices = self.apply_huffman_compression(indices)?;
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 0,
             },
@@ -1008,8 +1008,8 @@ impl AdaptiveMemoryCompressor {
         });
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 1,
             },
@@ -1020,8 +1020,8 @@ impl AdaptiveMemoryCompressor {
         });
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 2,
             },
@@ -1036,7 +1036,7 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_lz77<T>(
         &self,
-        matrix_id: u64,
+        matrixid: u64,
         _rows: usize,
         indptr: &[usize],
         indices: &[usize],
@@ -1052,8 +1052,8 @@ impl AdaptiveMemoryCompressor {
         let compressed_indices = self.apply_lz77_compression(indices)?;
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 0,
             },
@@ -1064,8 +1064,8 @@ impl AdaptiveMemoryCompressor {
         });
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 1,
             },
@@ -1076,8 +1076,8 @@ impl AdaptiveMemoryCompressor {
         });
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 2,
             },
@@ -1092,7 +1092,7 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_sparse_optimized<T>(
         &self,
-        matrix_id: u64,
+        matrixid: u64,
         _rows: usize,
         indptr: &[usize],
         indices: &[usize],
@@ -1108,8 +1108,8 @@ impl AdaptiveMemoryCompressor {
         let compressed_indices = self.apply_sparse_optimized_compression(indices)?;
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 0,
             },
@@ -1120,8 +1120,8 @@ impl AdaptiveMemoryCompressor {
         });
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 1,
             },
@@ -1132,8 +1132,8 @@ impl AdaptiveMemoryCompressor {
         });
 
         blocks.push(CompressedBlock {
-            block_id: BlockId {
-                matrix_id,
+            blockid: BlockId {
+                matrixid,
                 block_row: 0,
                 block_col: 2,
             },
@@ -1148,7 +1148,7 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_adaptive<T>(
         &self,
-        matrix_id: u64,
+        matrixid: u64,
         rows: usize,
         indptr: &[usize],
         indices: &[usize],
@@ -1170,13 +1170,13 @@ impl AdaptiveMemoryCompressor {
         for &strategy in &strategies {
             let test_blocks = match strategy {
                 CompressionAlgorithm::RLE => {
-                    self.compress_with_rle(matrix_id, rows, indptr, indices, data)?
+                    self.compress_with_rle(matrixid, rows, indptr, indices, data)?
                 }
                 CompressionAlgorithm::Delta => {
-                    self.compress_with_delta(matrix_id, rows, indptr, indices, data)?
+                    self.compress_with_delta(matrixid, rows, indptr, indices, data)?
                 }
                 CompressionAlgorithm::SparseOptimized => {
-                    self.compress_with_sparse_optimized(matrix_id, rows, indptr, indices, data)?
+                    self.compress_with_sparse_optimized(matrixid, rows, indptr, indices, data)?
                 }
                 _ => continue,
             };
@@ -1914,7 +1914,7 @@ impl AdaptiveMemoryCompressor {
 
     fn create_uncompressed_matrix<T>(
         &self,
-        matrix_id: u64,
+        matrixid: u64,
         rows: usize,
         indptr: &[usize],
         indices: &[usize],
@@ -1923,13 +1923,13 @@ impl AdaptiveMemoryCompressor {
     where
         T: Float + NumAssign + Send + Sync + Copy + std::fmt::Debug,
     {
-        let blocks = self.compress_with_none(matrix_id, rows, indptr, indices, data)?;
+        let blocks = self.compress_with_none(matrixid, rows, indptr, indices, data)?;
         let total_size = std::mem::size_of_val(indptr)
             + std::mem::size_of_val(indices)
             + std::mem::size_of_val(data);
 
         Ok(CompressedMatrix {
-            matrix_id,
+            matrixid,
             original_rows: rows,
             original_cols: if !indptr.is_empty() {
                 *indices.iter().max().unwrap_or(&0) + 1
@@ -2007,7 +2007,7 @@ impl BlockCache {
         Self {
             cache: HashMap::new(),
             access_order: VecDeque::new(),
-            max_size: max_size,
+            _maxsize: _maxsize,
             current_size: 0,
         }
     }
@@ -2015,10 +2015,10 @@ impl BlockCache {
 
 impl OutOfCoreManager {
     fn new(_tempdir: &str) -> SparseResult<Self> {
-        std::fs::create_dir_all(_temp_dir).map_err(SparseError::IoError)?;
+        std::fs::create_dir_all(_tempdir).map_err(SparseError::IoError)?;
 
         Ok(Self {
-            temp_dir: temp_dir.to_string(),
+            temp_dir: _tempdir.to_string(),
             file_counter: AtomicUsize::new(0),
             active_files: HashMap::new(),
             memory_mapped_files: HashMap::new(),
@@ -2029,16 +2029,16 @@ impl OutOfCoreManager {
     #[allow(dead_code)]
     fn write_block_to_disk(&mut self, block: &CompressedBlock) -> SparseResult<String> {
         let file_id = self.file_counter.fetch_add(1, Ordering::Relaxed);
-        let file_name = format!("block_{}_{file_id}.dat", block.block_id);
-        let file_path = Path::new(&self.temp_dir).join(&file_name);
+        let file_name = format!("block_{}_{file_id}.dat", block.blockid);
+        let filepath = Path::new(&self.temp_dir).join(&file_name);
 
         // Create and write to file
-        let mut file = File::create(&file_path)
-            .map_err(|e| SparseError::Io(format!("Failed to create file {file_path:?}: {e}")))?;
+        let mut file = File::create(&filepath)
+            .map_err(|e| SparseError::Io(format!("Failed to create file {filepath:?}: {e}")))?;
 
         // Write block header
         let header = BlockHeader {
-            block_id: block.block_id.clone(),
+            blockid: block.blockid.clone(),
             block_type: block.block_type as u8,
             original_size: block.original_size,
             compressed_size: block.compressed_data.len(),
@@ -2057,7 +2057,7 @@ impl OutOfCoreManager {
 
         // Track the file
         self.active_files
-            .insert(block.block_id.clone(), file_name.clone());
+            .insert(block.blockid.clone(), file_name.clone());
 
         Ok(file_name)
     }
@@ -2065,13 +2065,13 @@ impl OutOfCoreManager {
     /// Read compressed block from disk
     #[allow(dead_code)]
     fn read_block_from_disk(&self, blockid: BlockId) -> SparseResult<CompressedBlock> {
-        let file_name = self.active_files.get(&block_id).ok_or_else(|| {
-            SparseError::BlockNotFound(format!("Block {block_id} not found on disk"))
+        let file_name = self.active_files.get(&blockid).ok_or_else(|| {
+            SparseError::BlockNotFound(format!("Block {blockid} not found on disk"))
         })?;
 
-        let file_path = Path::new(&self.temp_dir).join(file_name);
-        let mut file = File::open(&file_path)
-            .map_err(|e| SparseError::Io(format!("Failed to open file {file_path:?}: {e}")))?;
+        let filepath = Path::new(&self.temp_dir).join(file_name);
+        let mut file = File::open(&filepath)
+            .map_err(|e| SparseError::Io(format!("Failed to open file {filepath:?}: {e}")))?;
 
         // Read block header
         let mut header_bytes = vec![0u8; std::mem::size_of::<BlockHeaderSerialized>()];
@@ -2086,7 +2086,7 @@ impl OutOfCoreManager {
             .map_err(|e| SparseError::Io(format!("Failed to read data: {e}")))?;
 
         Ok(CompressedBlock {
-            block_id: header.block_id,
+            blockid: header.blockid,
             block_type: match header.block_type {
                 0 => BlockType::IndPtr,
                 1 => BlockType::Indices,
@@ -2109,17 +2109,17 @@ impl OutOfCoreManager {
     #[allow(dead_code)]
     fn create_memory_mapped_file(
         &mut self,
-        block_id: BlockId,
+        blockid: BlockId,
         size: usize,
     ) -> SparseResult<String> {
         let file_id = self.file_counter.fetch_add(1, Ordering::Relaxed);
-        let file_name = format!("mmap_{block_id}_{file_id}.dat");
-        let file_path = Path::new(&self.temp_dir).join(&file_name);
+        let file_name = format!("mmap_{blockid}_{file_id}.dat");
+        let filepath = Path::new(&self.temp_dir).join(&file_name);
 
-        let mapped_file = MemoryMappedFile::new(file_path, size)?;
+        let mapped_file = MemoryMappedFile::new(filepath, size)?;
         self.memory_mapped_files
             .insert(file_name.clone(), mapped_file);
-        self.active_files.insert(block_id, file_name.clone());
+        self.active_files.insert(blockid, file_name.clone());
 
         Ok(file_name)
     }
@@ -2166,15 +2166,15 @@ impl OutOfCoreManager {
     /// Remove block from disk
     #[allow(dead_code)]
     fn remove_block(&mut self, blockid: BlockId) -> SparseResult<()> {
-        if let Some(file_name) = self.active_files.remove(&block_id) {
-            let file_path = Path::new(&self.temp_dir).join(&file_name);
+        if let Some(file_name) = self.active_files.remove(&blockid) {
+            let filepath = Path::new(&self.temp_dir).join(&file_name);
 
             // Remove from memory-mapped files if it exists
             self.memory_mapped_files.remove(&file_name);
 
             // Remove file from disk
-            std::fs::remove_file(&file_path).map_err(|e| {
-                SparseError::Io(format!("Failed to remove file {file_path:?}: {e}"))
+            std::fs::remove_file(&filepath).map_err(|e| {
+                SparseError::Io(format!("Failed to remove file {filepath:?}: {e}"))
             })?;
         }
         Ok(())
@@ -2185,8 +2185,8 @@ impl OutOfCoreManager {
     fn get_disk_usage(&self) -> SparseResult<usize> {
         let mut total_size = 0;
         for file_name in self.active_files.values() {
-            let file_path = Path::new(&self.temp_dir).join(file_name);
-            if let Ok(metadata) = std::fs::metadata(&file_path) {
+            let filepath = Path::new(&self.temp_dir).join(file_name);
+            if let Ok(metadata) = std::fs::metadata(&filepath) {
                 total_size += metadata.len() as usize;
             }
         }
@@ -2197,8 +2197,8 @@ impl OutOfCoreManager {
     #[allow(dead_code)]
     fn cleanup(&mut self) -> SparseResult<()> {
         for file_name in self.active_files.values() {
-            let file_path = Path::new(&self.temp_dir).join(file_name);
-            let _ = std::fs::remove_file(&file_path); // Ignore errors during cleanup
+            let filepath = Path::new(&self.temp_dir).join(file_name);
+            let _ = std::fs::remove_file(&filepath); // Ignore errors during cleanup
         }
         self.active_files.clear();
         self.memory_mapped_files.clear();
@@ -2210,7 +2210,7 @@ impl OutOfCoreManager {
 #[derive(Debug)]
 #[allow(dead_code)]
 struct BlockHeader {
-    block_id: BlockId,
+    blockid: BlockId,
     block_type: u8,
     original_size: usize,
     compressed_size: usize,
@@ -2221,7 +2221,7 @@ struct BlockHeader {
 #[repr(C)]
 #[allow(dead_code)]
 struct BlockHeaderSerialized {
-    block_id: u64,
+    blockid: u64,
     block_type: u8,
     original_size: u64,
     compressed_size: u64,
@@ -2233,7 +2233,7 @@ impl BlockHeader {
     #[allow(dead_code)]
     fn serialize(&self) -> Vec<u8> {
         let serialized = BlockHeaderSerialized {
-            block_id: self.block_id.to_u64(),
+            blockid: self.blockid.to_u64(),
             block_type: self.block_type,
             original_size: self.original_size as u64,
             compressed_size: self.compressed_size as u64,
@@ -2261,7 +2261,7 @@ impl BlockHeader {
         };
 
         Ok(BlockHeader {
-            block_id: BlockId::from_u64(serialized.block_id),
+            blockid: BlockId::from_u64(serialized.blockid),
             block_type: serialized.block_type,
             original_size: serialized.original_size as usize,
             compressed_size: serialized.compressed_size as usize,
@@ -2275,7 +2275,7 @@ impl BlockHeader {
 /// Compressed sparse matrix representation
 #[derive(Debug)]
 pub struct CompressedMatrix<T> {
-    pub matrix_id: u64,
+    pub matrixid: u64,
     pub original_rows: usize,
     pub original_cols: usize,
     pub compressed_blocks: Vec<CompressedBlock>,
@@ -2288,7 +2288,7 @@ pub struct CompressedMatrix<T> {
 /// Compressed block of matrix data
 #[derive(Debug, Clone)]
 pub struct CompressedBlock {
-    pub block_id: BlockId,
+    pub blockid: BlockId,
     pub block_type: BlockType,
     pub compressed_data: Vec<u8>,
     pub original_size: usize,
@@ -2392,7 +2392,7 @@ mod tests {
             .compress_matrix(1, 2, &indptr, &indices, &data)
             .unwrap();
 
-        assert_eq!(compressed.matrix_id, 1);
+        assert_eq!(compressed.matrixid, 1);
         assert_eq!(compressed.original_rows, 2);
         assert_eq!(compressed.compressed_blocks.len(), 3);
     }

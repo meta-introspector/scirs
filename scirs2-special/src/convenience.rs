@@ -562,7 +562,7 @@ pub mod finance {
                 break;
             }
 
-            let diff = option_price - price;
+            let diff = option_price - _price;
             if diff.abs() < 1e-8 {
                 return Ok(vol);
             }
@@ -740,7 +740,7 @@ pub mod bioinformatics {
             ));
         }
 
-        let mut fraction = Array1::zeros(_ligand.len());
+        let mut fraction = Array1::zeros(ligand.len());
 
         for (i, &l) in ligand.iter().enumerate() {
             if l < 0.0 {
@@ -796,13 +796,13 @@ pub mod geophysics {
     /// * `vs` - S-wave velocity
     /// * `density` - Rock density
     pub fn acoustic_impedance(vp: f64, density: f64) -> SpecialResult<f64> {
-        if _vp <= 0.0 || density <= 0.0 {
+        if vp <= 0.0 || density <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Velocity and density must be positive".to_string(),
             ));
         }
 
-        Ok(_vp * density)
+        Ok(vp * density)
     }
 
     /// Calculate the Richter magnitude from amplitude
@@ -811,7 +811,7 @@ pub mod geophysics {
     /// * `amplitude` - Maximum amplitude in micrometers
     /// * `distance` - Distance from epicenter in km
     pub fn richter_magnitude(amplitude: f64, distance: f64) -> SpecialResult<f64> {
-        if _amplitude <= 0.0 || distance <= 0.0 {
+        if amplitude <= 0.0 || distance <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Amplitude and distance must be positive".to_string(),
             ));
@@ -819,7 +819,7 @@ pub mod geophysics {
 
         // Empirical attenuation function
         let attenuation = -1.6 * distance.log10() + 3.0;
-        Ok(_amplitude.log10() + attenuation)
+        Ok(amplitude.log10() + attenuation)
     }
 
     /// Calculate atmospheric pressure with altitude (barometric formula)
@@ -833,7 +833,7 @@ pub mod geophysics {
     ) -> SpecialResult<Array1<f64>> {
         if sea_level_pressure <= 0.0 {
             return Err(crate::SpecialError::ValueError(
-                "Sea level _pressure must be positive".to_string(),
+                "Sea level pressure must be positive".to_string(),
             ));
         }
 
@@ -853,7 +853,7 @@ pub mod geophysics {
             }
 
             let temp_ratio = 1.0 - l * h / t0;
-            pressure[i] = sea_level_pressure * temp_ratio.powf(g * m / (r * l));
+            _pressure[i] = sea_level_pressure * temp_ratio.powf(g * m / (r * l));
         }
 
         Ok(_pressure)
@@ -968,7 +968,7 @@ pub mod chemistry {
             ));
         }
 
-        let mut coverage = Array1::zeros(_pressure.len());
+        let mut coverage = Array1::zeros(pressure.len());
 
         for (i, &p) in pressure.iter().enumerate() {
             if p < 0.0 {
@@ -1060,17 +1060,17 @@ pub mod astronomy {
     /// * `radius` - Stellar radius in solar radii
     /// * `temperature` - Effective temperature in Kelvin
     pub fn stellar_luminosity(radius: f64, temperature: f64) -> SpecialResult<f64> {
-        if _radius <= 0.0 || temperature <= 0.0 {
+        if radius <= 0.0 || temperature <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Radius and temperature must be positive".to_string(),
             ));
         }
 
         let sigma = 5.670374419e-8; // Stefan-Boltzmann constant
-        let r_sun = 6.96e8; // Solar _radius in meters
+        let r_sun = 6.96e8; // Solar radius in meters
         let l_sun = 3.828e26; // Solar luminosity in watts
 
-        let area = 4.0 * PI * (_radius * r_sun).powi(2);
+        let area = 4.0 * PI * (radius * r_sun).powi(2);
         let luminosity = area * sigma * temperature.powi(4);
 
         Ok(luminosity / l_sun) // Return in solar luminosities
@@ -1112,17 +1112,17 @@ pub mod astronomy {
     pub fn velocity_to_redshift(velocity: f64, relativistic: bool) -> SpecialResult<f64> {
         let c = 299792458.0; // Speed of light
 
-        if _velocity >= c {
+        if velocity >= c {
             return Err(crate::SpecialError::ValueError(
                 "Velocity cannot exceed speed of light".to_string(),
             ));
         }
 
         if relativistic {
-            let beta = _velocity / c;
+            let beta = velocity / c;
             Ok(((1.0 + beta) / (1.0 - beta)).sqrt() - 1.0)
         } else {
-            Ok(_velocity / c)
+            Ok(velocity / c)
         }
     }
 }

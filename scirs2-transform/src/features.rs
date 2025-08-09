@@ -22,7 +22,7 @@ pub struct PolynomialFeatures {
     /// Whether to include interaction terms only (no powers)
     interaction_only: bool,
     /// Whether to include bias term (constant feature equal to 1)
-    include_bias: bool,
+    includebias: bool,
 }
 
 impl PolynomialFeatures {
@@ -31,7 +31,7 @@ impl PolynomialFeatures {
     /// # Arguments
     /// * `degree` - The degree of the polynomial features to generate
     /// * `interaction_only` - If true, only interaction features are produced (no powers)
-    /// * `include_bias` - If true, include a bias term (constant feature equal to 1)
+    /// * `includebias` - If true, include a bias term (constant feature equal to 1)
     ///
     /// # Returns
     /// * A new PolynomialFeatures instance
@@ -39,44 +39,44 @@ impl PolynomialFeatures {
         PolynomialFeatures {
             degree,
             interaction_only,
-            include_bias,
+            includebias,
         }
     }
 
     /// Calculates the number of output features that will be generated
     ///
     /// # Arguments
-    /// * `n_features` - The number of input features
+    /// * `nfeatures` - The number of input features
     ///
     /// # Returns
     /// * The number of features that will be generated
     pub fn n_output_features(&self, nfeatures: usize) -> usize {
-        if n_features == 0 {
+        if nfeatures == 0 {
             return 0;
         }
 
         if self.interaction_only {
-            let mut n = if self.include_bias { 1 } else { 0 };
-            for d in 1..=self.degree.min(n_features) {
-                // Binomial coefficient (n_features, d)
+            let mut n = if self.includebias { 1 } else { 0 };
+            for d in 1..=self.degree.min(nfeatures) {
+                // Binomial coefficient (nfeatures, d)
                 let mut b = 1;
                 for i in 0..d {
-                    b = b * (n_features - i) / (i + 1);
+                    b = b * (nfeatures - i) / (i + 1);
                 }
                 n += b;
             }
             n
         } else {
             // Number of polynomial _features is equivalent to the number of terms
-            // in a polynomial of degree `degree` in `n_features` variables
-            let n = if self.include_bias { 1 } else { 0 };
+            // in a polynomial of degree `degree` in `nfeatures` variables
+            let n = if self.includebias { 1 } else { 0 };
             n + (0..=self.degree)
-                .skip(if self.include_bias { 1 } else { 0 })
+                .skip(if self.includebias { 1 } else { 0 })
                 .map(|d| {
-                    // Binomial coefficient (n_features + d - 1, d)
+                    // Binomial coefficient (nfeatures + d - 1, d)
                     let mut b = 1;
                     for i in 0..d {
-                        b = b * (n_features + d - 1 - i) / (i + 1);
+                        b = b * (nfeatures + d - 1 - i) / (i + 1);
                     }
                     b
                 })
@@ -122,7 +122,7 @@ impl PolynomialFeatures {
 
         let shape = array_f64.shape();
         let n_samples = shape[0];
-        let n_features = shape[1];
+        let nfeatures = shape[1];
 
         // Additional validation
         if self.degree == 0 {
@@ -139,7 +139,7 @@ impl PolynomialFeatures {
         }
 
         // Check for potential overflow before computing output features
-        let n_output_features = self.n_output_features(n_features);
+        let n_output_features = self.n_output_features(nfeatures);
 
         // Prevent excessive memory usage
         if n_output_features > 100_000 {
@@ -160,11 +160,11 @@ impl PolynomialFeatures {
         let mut result = Array2::zeros((n_samples, n_output_features));
 
         // Generate combinations for each degree
-        let mut powers = vec![0; n_features];
+        let mut powers = vec![0; nfeatures];
         let mut col_idx = 0;
 
         // Add bias term (constant feature equal to 1)
-        if self.include_bias {
+        if self.includebias {
             for i in 0..n_samples {
                 result[[i, col_idx]] = 1.0;
             }
@@ -174,11 +174,11 @@ impl PolynomialFeatures {
         // Add individual features
         // Add individual features
         for i in 0..n_samples {
-            for j in 0..n_features {
+            for j in 0..nfeatures {
                 result[[i, col_idx + j]] = array_f64[[i, j]];
             }
         }
-        col_idx += n_features;
+        col_idx += nfeatures;
 
         // Generate higher-degree features
         if self.degree >= 2 {
@@ -367,7 +367,7 @@ where
 /// * `axis` - The axis along which to compute quantiles (0 for columns, 1 for rows)
 ///
 /// # Returns
-/// * `Result<Array2<f64>>` - Array of quantiles with shape (n_features, n_quantiles) if axis=0,
+/// * `Result<Array2<f64>>` - Array of quantiles with shape (nfeatures, n_quantiles) if axis=0,
 ///   or (n_samples, n_quantiles) if axis=1
 #[allow(dead_code)]
 fn compute_quantiles<S>(
@@ -394,11 +394,11 @@ where
     }
 
     let shape = array_f64.shape();
-    let n_features = if axis == 0 { shape[1] } else { shape[0] };
+    let nfeatures = if axis == 0 { shape[1] } else { shape[0] };
 
-    let mut _quantiles = Array2::zeros((n_features, n_quantiles));
+    let mut quantiles = Array2::zeros((nfeatures, n_quantiles));
 
-    for i in 0..n_features {
+    for i in 0..nfeatures {
         // Extract the data along the given axis
         let data: Vec<f64> = if axis == 0 {
             array_f64.column(i).to_vec()
@@ -417,7 +417,7 @@ where
         }
     }
 
-    Ok(_quantiles)
+    Ok(quantiles)
 }
 
 /// Discretizes features using equal-width bins
@@ -469,25 +469,25 @@ where
 
     let shape = array_f64.shape();
     let n_samples = shape[0];
-    let n_features = shape[1];
+    let nfeatures = shape[1];
 
     let n_output_features = if encode == "onehot" {
         if axis == 0 {
-            n_features * n_bins
+            nfeatures * n_bins
         } else {
             n_samples * n_bins
         }
     } else if axis == 0 {
-        n_features
+        nfeatures
     } else {
         n_samples
     };
 
-    let mut min_values = Array1::zeros(if axis == 0 { n_features } else { n_samples });
-    let mut max_values = Array1::zeros(if axis == 0 { n_features } else { n_samples });
+    let mut min_values = Array1::zeros(if axis == 0 { nfeatures } else { n_samples });
+    let mut max_values = Array1::zeros(if axis == 0 { nfeatures } else { n_samples });
 
     // Compute min and max values along the specified axis
-    for i in 0..(if axis == 0 { n_features } else { n_samples }) {
+    for i in 0..(if axis == 0 { nfeatures } else { n_samples }) {
         let data = if axis == 0 {
             array_f64.column(i)
         } else {
@@ -499,8 +499,8 @@ where
     }
 
     // Create the bin edges
-    let mut bin_edges = Array2::zeros((if axis == 0 { n_features } else { n_samples }, n_bins + 1));
-    for i in 0..(if axis == 0 { n_features } else { n_samples }) {
+    let mut bin_edges = Array2::zeros((if axis == 0 { nfeatures } else { n_samples }, n_bins + 1));
+    for i in 0..(if axis == 0 { nfeatures } else { n_samples }) {
         let min_val = min_values[i];
         let max_val = max_values[i];
         let bin_width = if (max_val - min_val).abs() < EPSILON {
@@ -524,7 +524,7 @@ where
     if encode == "ordinal" {
         // Ordinal encoding: assign each value to its bin index (0 to n_bins - 1)
         for i in 0..n_samples {
-            for j in 0..n_features {
+            for j in 0..nfeatures {
                 let value = array_f64[[i, j]];
                 let feature_idx = if axis == 0 { j } else { i };
 
@@ -541,7 +541,7 @@ where
     } else {
         // One-hot encoding: create a binary feature for each bin
         for i in 0..n_samples {
-            for j in 0..n_features {
+            for j in 0..nfeatures {
                 let value = array_f64[[i, j]];
                 let feature_idx = if axis == 0 { j } else { i };
 
@@ -614,16 +614,16 @@ where
 
     let shape = array_f64.shape();
     let n_samples = shape[0];
-    let n_features = shape[1];
+    let nfeatures = shape[1];
 
     let n_output_features = if encode == "onehot" {
         if axis == 0 {
-            n_features * n_bins
+            nfeatures * n_bins
         } else {
             n_samples * n_bins
         }
     } else if axis == 0 {
-        n_features
+        nfeatures
     } else {
         n_samples
     };
@@ -637,7 +637,7 @@ where
     if encode == "ordinal" {
         // Ordinal encoding: assign each value to its bin index (0 to n_bins - 1)
         for i in 0..n_samples {
-            for j in 0..n_features {
+            for j in 0..nfeatures {
                 let value = array_f64[[i, j]];
                 let feature_idx = if axis == 0 { j } else { i };
 
@@ -654,7 +654,7 @@ where
     } else {
         // One-hot encoding: create a binary feature for each bin
         for i in 0..n_samples {
-            for j in 0..n_features {
+            for j in 0..nfeatures {
                 let value = array_f64[[i, j]];
                 let feature_idx = if axis == 0 { j } else { i };
 
@@ -726,12 +726,12 @@ where
 
     let shape = array_f64.shape();
     let n_samples = shape[0];
-    let n_features = shape[1];
+    let nfeatures = shape[1];
 
-    let mut transformed = Array2::zeros((n_samples, n_features));
+    let mut transformed = Array2::zeros((n_samples, nfeatures));
 
     // For each feature, find the optimal lambda and apply the transformation
-    for j in 0..n_features {
+    for j in 0..nfeatures {
         let feature = array_f64.column(j).to_vec();
 
         // Maximum likelihood estimation of lambda
@@ -771,7 +771,7 @@ where
 
     // Optionally standardize the transformed data
     if standardize {
-        for j in 0..n_features {
+        for j in 0..nfeatures {
             let column_data: Vec<f64> = transformed.column(j).to_vec();
             let mean = column_data.iter().sum::<f64>() / column_data.len() as f64;
             let variance = column_data.iter().map(|x| (x - mean).powi(2)).sum::<f64>()
@@ -794,11 +794,11 @@ where
 fn estimate_optimal_lambda(data: &[f64], method: &str) -> Result<f64> {
     if data.is_empty() {
         return Err(TransformError::InvalidInput(
-            "Empty _data for lambda estimation".to_string(),
+            "Empty data for lambda estimation".to_string(),
         ));
     }
 
-    // Check _data constraints based on transformation method
+    // Check data constraints based on transformation method
     if method == "box-cox" {
         // Box-Cox requires all positive values
         if data.iter().any(|&x| x <= 0.0) {
@@ -816,7 +816,7 @@ fn estimate_optimal_lambda(data: &[f64], method: &str) -> Result<f64> {
 
     // Grid search for optimal lambda
     for &lambda in &lambda_range {
-        let log_likelihood = compute_log_likelihood(_data, lambda, method)?;
+        let log_likelihood = compute_log_likelihood(data, lambda, method)?;
 
         if log_likelihood > best_log_likelihood {
             best_log_likelihood = log_likelihood;
@@ -841,11 +841,11 @@ fn estimate_optimal_lambda(data: &[f64], method: &str) -> Result<f64> {
 #[allow(dead_code)]
 fn compute_log_likelihood(data: &[f64], lambda: f64, method: &str) -> Result<f64> {
     let n = data.len() as f64;
-    let mut transformed_data = Vec::with_capacity(_data.len());
+    let mut transformed_data = Vec::with_capacity(data.len());
     let mut jacobian_sum = 0.0;
 
     // Apply transformation and compute Jacobian
-    for &x in _data {
+    for &x in data {
         let (y, jacobian) = match method {
             "box-cox" => {
                 if x <= 0.0 {
@@ -892,7 +892,7 @@ fn compute_log_likelihood(data: &[f64], lambda: f64, method: &str) -> Result<f64
         jacobian_sum += jacobian;
     }
 
-    // Compute sample variance of transformed _data
+    // Compute sample variance of transformed data
     let mean = transformed_data.iter().sum::<f64>() / n;
     let variance = transformed_data
         .iter()
@@ -1016,9 +1016,9 @@ impl PowerTransformer {
     /// # Returns
     /// * A new PowerTransformer instance
     pub fn new(method: &str, standardize: bool) -> Result<Self> {
-        if _method != "yeo-johnson" && _method != "box-cox" {
+        if method != "yeo-johnson" && method != "box-cox" {
             return Err(TransformError::InvalidInput(
-                "_method must be 'yeo-johnson' or 'box-cox'".to_string(),
+                "method must be 'yeo-johnson' or 'box-cox'".to_string(),
             ));
         }
 
@@ -1063,7 +1063,7 @@ impl PowerTransformer {
     /// This computes the optimal lambda parameters for each feature using maximum likelihood estimation
     ///
     /// # Arguments
-    /// * `x` - The input data, shape (n_samples, n_features)
+    /// * `x` - The input data, shape (n_samples, nfeatures)
     ///
     /// # Returns
     /// * `Result<()>` - Ok if successful, Err otherwise
@@ -1082,9 +1082,9 @@ impl PowerTransformer {
 
         let shape = x_f64.shape();
         let n_samples = shape[0];
-        let n_features = shape[1];
+        let nfeatures = shape[1];
 
-        if n_samples == 0 || n_features == 0 {
+        if n_samples == 0 || nfeatures == 0 {
             return Err(TransformError::InvalidInput("Empty input data".to_string()));
         }
 
@@ -1098,7 +1098,7 @@ impl PowerTransformer {
         }
 
         // Compute optimal lambda for each feature in parallel
-        let lambdas: Vec<f64> = (0..n_features)
+        let lambdas: Vec<f64> = (0..nfeatures)
             .into_par_iter()
             .map(|j| {
                 let feature = x_f64.column(j).to_vec();
@@ -1110,11 +1110,11 @@ impl PowerTransformer {
 
         // If standardization is requested, we need to compute means and stds after transformation
         if self.standardize {
-            let mut means = Array1::zeros(n_features);
-            let mut stds = Array1::zeros(n_features);
+            let mut means = Array1::zeros(nfeatures);
+            let mut stds = Array1::zeros(nfeatures);
 
             // Transform data with optimal lambdas and compute statistics
-            for j in 0..n_features {
+            for j in 0..nfeatures {
                 let lambda = self.lambdas_.as_ref().unwrap()[j];
                 let mut transformed_feature = Array1::zeros(n_samples);
 
@@ -1177,20 +1177,20 @@ impl PowerTransformer {
 
         let shape = x_f64.shape();
         let n_samples = shape[0];
-        let n_features = shape[1];
+        let nfeatures = shape[1];
 
         let lambdas = self.lambdas_.as_ref().unwrap();
 
-        if n_features != lambdas.len() {
+        if nfeatures != lambdas.len() {
             return Err(TransformError::InvalidInput(
                 "Number of features in transform data does not match fitted data".to_string(),
             ));
         }
 
-        let mut transformed = Array2::zeros((n_samples, n_features));
+        let mut transformed = Array2::zeros((n_samples, nfeatures));
 
         // Apply transformation in parallel for each feature
-        let transformed_data: Vec<Vec<f64>> = (0..n_features)
+        let transformed_data: Vec<Vec<f64>> = (0..nfeatures)
             .into_par_iter()
             .map(|j| {
                 let lambda = lambdas[j];
@@ -1209,7 +1209,7 @@ impl PowerTransformer {
             .collect();
 
         // Copy results back to the array
-        for j in 0..n_features {
+        for j in 0..nfeatures {
             for i in 0..n_samples {
                 transformed[[i, j]] = transformed_data[j][i];
             }
@@ -1220,7 +1220,7 @@ impl PowerTransformer {
             let means = self.means_.as_ref().unwrap();
             let stds = self.stds_.as_ref().unwrap();
 
-            for j in 0..n_features {
+            for j in 0..nfeatures {
                 let mean = means[j];
                 let std = stds[j];
 
@@ -1277,11 +1277,11 @@ impl PowerTransformer {
 
         let shape = x_f64.shape();
         let n_samples = shape[0];
-        let n_features = shape[1];
+        let nfeatures = shape[1];
 
         let lambdas = self.lambdas_.as_ref().unwrap();
 
-        if n_features != lambdas.len() {
+        if nfeatures != lambdas.len() {
             return Err(TransformError::InvalidInput(
                 "Number of features in inverse transform data does not match fitted data"
                     .to_string(),
@@ -1295,7 +1295,7 @@ impl PowerTransformer {
             let means = self.means_.as_ref().unwrap();
             let stds = self.stds_.as_ref().unwrap();
 
-            for j in 0..n_features {
+            for j in 0..nfeatures {
                 let mean = means[j];
                 let std = stds[j];
 
@@ -1305,10 +1305,10 @@ impl PowerTransformer {
             }
         }
 
-        let mut original = Array2::zeros((n_samples, n_features));
+        let mut original = Array2::zeros((n_samples, nfeatures));
 
         // Apply inverse transformation in parallel for each feature
-        let original_data: Vec<Vec<f64>> = (0..n_features)
+        let original_data: Vec<Vec<f64>> = (0..nfeatures)
             .into_par_iter()
             .map(|j| {
                 let lambda = lambdas[j];
@@ -1327,7 +1327,7 @@ impl PowerTransformer {
             .collect();
 
         // Copy results back to the array
-        for j in 0..n_features {
+        for j in 0..nfeatures {
             for i in 0..n_samples {
                 original[[i, j]] = original_data[j][i];
             }
@@ -1539,7 +1539,7 @@ mod tests {
     fn test_polynomial_features() {
         let data = Array::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
 
-        // Test with degree=2, interaction_only=false, include_bias=true
+        // Test with degree=2, interaction_only=false, includebias=true
         let poly = PolynomialFeatures::new(2, false, true);
         let transformed = poly.transform(&data).unwrap();
 

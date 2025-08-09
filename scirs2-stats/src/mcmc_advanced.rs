@@ -77,7 +77,7 @@ where
     }
 
     /// Support for discontinuous model spaces (for Reversible Jump)
-    fn model_dimension(&self, modelid: usize) -> usize {
+    fn modeldimension(&self, modelid: usize) -> usize {
         self.dim()
     }
 
@@ -88,8 +88,8 @@ where
 
     /// Support parallel evaluation of multiple points
     fn batch_log_density(&self, xbatch: &Array2<F>) -> Array1<F> {
-        let mut results = Array1::zeros(x_batch.nrows());
-        for (i, x) in x_batch.outer_iter().enumerate() {
+        let mut results = Array1::zeros(xbatch.nrows());
+        for (i, x) in xbatch.outer_iter().enumerate() {
             results[i] = self.log_density(&x.to_owned());
         }
         results
@@ -668,10 +668,10 @@ where
 
     /// Metropolis acceptance decision
     fn accept_proposal(&self, energydiff: F) -> bool {
-        if energy_diff <= F::zero() {
+        if energydiff <= F::zero() {
             true
         } else {
-            let accept_prob = (-energy_diff).exp();
+            let accept_prob = (-energydiff).exp();
             let mut rng = rand::rng();
             let u: f64 = rng.gen_range(0.0..1.0);
             F::from(u).unwrap() < accept_prob
@@ -758,9 +758,9 @@ where
         };
 
         let performance_metrics = PerformanceMetrics {
-            total_time,
+            total_time: totaltime,
             samples_per_second: (self.config.num_samples * self.config.num_chains) as f64
-                / total_time,
+                / totaltime,
             acceptance_rate: 0.65,
             gradient_evaluations: 10000,
             memory_peak_mb: 100.0,
@@ -806,8 +806,8 @@ where
 {
     fn new(dim: usize) -> Self {
         Self {
-            sample_covariance: RwLock::new(Array2::eye(_dim)),
-            sample_mean: RwLock::new(Array1::zeros(_dim)),
+            sample_covariance: RwLock::new(Array2::eye(dim)),
+            sample_mean: RwLock::new(Array1::zeros(dim)),
             num_samples: RwLock::new(0),
             step_size_state: RwLock::new(StepSizeState {
                 log_step_size: F::from(-2.3).unwrap(), // log(0.1)
@@ -817,7 +817,7 @@ where
                 iteration: 0,
             }),
             mass_matrix_state: RwLock::new(MassMatrixState {
-                sample_covariance: Array2::eye(_dim),
+                sample_covariance: Array2::eye(dim),
                 regularization: F::from(1e-6).unwrap(),
                 adaptation_count: 0,
             }),
@@ -831,14 +831,14 @@ where
 {
     fn new(dim: usize) -> Self {
         Self {
-            rhat: RwLock::new(Array1::ones(_dim)),
-            ess: RwLock::new(Array1::zeros(_dim)),
-            split_rhat: RwLock::new(Array1::ones(_dim)),
-            rank_rhat: RwLock::new(Array1::ones(_dim)),
-            mcse: RwLock::new(Array1::zeros(_dim)),
-            autocorrelations: RwLock::new(Array2::zeros((_dim, 100))),
-            geweke_z: RwLock::new(Array1::zeros(_dim)),
-            heidelberger_welch: RwLock::new(vec![true; _dim]),
+            rhat: RwLock::new(Array1::ones(dim)),
+            ess: RwLock::new(Array1::zeros(dim)),
+            split_rhat: RwLock::new(Array1::ones(dim)),
+            rank_rhat: RwLock::new(Array1::ones(dim)),
+            mcse: RwLock::new(Array1::zeros(dim)),
+            autocorrelations: RwLock::new(Array2::zeros((dim, 100))),
+            geweke_z: RwLock::new(Array1::zeros(dim)),
+            heidelberger_welch: RwLock::new(vec![true; dim]),
         }
     }
 }

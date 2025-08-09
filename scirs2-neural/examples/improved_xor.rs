@@ -58,7 +58,7 @@ impl XORNetwork {
 }
 
 #[allow(dead_code)]
-fn custom_update_layer(_layer: &mut Dense<f32>, learningrate: f32) -> Result<()> {
+fn custom_update_layer(layer: &mut Dense<f32>, learningrate: f32) -> Result<()> {
     // Use the ParamLayer trait methods to access weights and gradients
     let params = layer.get_parameters();
     let gradients = layer.get_gradients();
@@ -67,8 +67,8 @@ fn custom_update_layer(_layer: &mut Dense<f32>, learningrate: f32) -> Result<()>
     let dweights = gradients[0].clone();
     let dbiases = gradients[1].clone();
     // Create new arrays with the updated parameters
-    let new_weights = weights - &(dweights * learning_rate);
-    let new_biases = biases - &(dbiases * learning_rate);
+    let new_weights = weights - &(dweights * learningrate);
+    let new_biases = biases - &(dbiases * learningrate);
     // Set the updated parameters
     layer.set_parameters(vec![new_weights, new_biases])?;
     Ok(())

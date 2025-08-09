@@ -485,11 +485,11 @@ where
 {
     match criterion {
         // For AIC and BIC, lower is better
-        StepwiseCriterion::AIC | StepwiseCriterion::BIC => _new_value < old_value,
+        StepwiseCriterion::AIC | StepwiseCriterion::BIC => _new_value < oldvalue,
 
         // For Adj R^2, F, and T, we stored negative values, so lower is better
         StepwiseCriterion::AdjR2 | StepwiseCriterion::F | StepwiseCriterion::T => {
-            _new_value < old_value
+            _new_value < oldvalue
         }
     }
 }

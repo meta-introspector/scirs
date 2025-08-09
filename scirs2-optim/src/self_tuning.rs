@@ -737,9 +737,9 @@ impl<
     /// Check if performance is better
     fn is_better_performance(&self, new_perf: f64, oldperf: f64) -> bool {
         match self.config.target_metric {
-            TargetMetric::Loss | TargetMetric::ConvergenceTime => new_perf < old_perf,
-            TargetMetric::Accuracy | TargetMetric::Throughput => new_perf > old_perf,
-            TargetMetric::Custom => new_perf > old_perf, // Assume higher is better for custom
+            TargetMetric::Loss | TargetMetric::ConvergenceTime => new_perf < oldperf,
+            TargetMetric::Accuracy | TargetMetric::Throughput => new_perf > oldperf,
+            TargetMetric::Custom => new_perf > oldperf, // Assume higher is better for custom
         }
     }
 
@@ -824,7 +824,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> AdamOptimizerWrapper<A, D> 
                 A::from(beta1).unwrap(),
                 A::from(beta2).unwrap(),
                 A::from(eps).unwrap(),
-                A::from(weight_decay).unwrap(),
+                A::from(weightdecay).unwrap(),
             ),
             _phantom: std::marker::PhantomData,
         }
@@ -885,12 +885,12 @@ struct SGDOptimizerWrapper<A: Float + ScalarOperand + Debug, D: Dimension> {
 }
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> SGDOptimizerWrapper<A, D> {
-    fn new(_lr: f64, momentum: f64, weight_decay: f64, nesterov: bool) -> Self {
+    fn new(_lr: f64, momentum: f64, weightdecay: f64, nesterov: bool) -> Self {
         Self {
             inner: crate::optimizers::SGD::new_with_config(
                 A::from(_lr).unwrap(),
                 A::from(momentum).unwrap(),
-                A::from(weight_decay).unwrap(),
+                A::from(weightdecay).unwrap(),
             ),
             _phantom: std::marker::PhantomData,
         }
@@ -958,7 +958,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> AdamWOptimizerWrapper<A, D>
                 A::from(beta1).unwrap(),
                 A::from(beta2).unwrap(),
                 A::from(eps).unwrap(),
-                A::from(weight_decay).unwrap(),
+                A::from(weightdecay).unwrap(),
             ),
             _phantom: std::marker::PhantomData,
         }

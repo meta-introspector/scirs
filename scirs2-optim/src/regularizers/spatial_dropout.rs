@@ -33,7 +33,7 @@ use crate::regularizers::Regularizer;
 #[derive(Debug, Clone)]
 pub struct SpatialDropout<A: Float> {
     /// Probability of dropping a channel/feature map
-    drop_prob: A,
+    dropprob: A,
     /// Dimension along which to drop (default is 1 for channels)
     feature_dim: Axis,
 }
@@ -43,16 +43,16 @@ impl<A: Float + Debug + ScalarOperand> SpatialDropout<A> {
     ///
     /// # Arguments
     ///
-    /// * `drop_prob` - Probability of dropping each feature map (0.0 to 1.0)
+    /// * `dropprob` - Probability of dropping each feature map (0.0 to 1.0)
     pub fn new(dropprob: A) -> Result<Self> {
-        if drop_prob < A::zero() || drop_prob > A::one() {
+        if dropprob < A::zero() || dropprob > A::one() {
             return Err(OptimError::InvalidConfig(
                 "Drop probability must be between 0.0 and 1.0".to_string(),
             ));
         }
 
         Ok(Self {
-            drop_prob,
+            dropprob,
             feature_dim: Axis(1), // Default to channel dimension
         })
     }
@@ -68,11 +68,11 @@ impl<A: Float + Debug + ScalarOperand> SpatialDropout<A> {
     where
         D: Dimension + ndarray::RemoveAxis,
     {
-        if !training || self.drop_prob == A::zero() {
+        if !training || self.dropprob == A::zero() {
             return features.clone();
         }
 
-        let keep_prob = A::one() - self.drop_prob;
+        let keep_prob = A::one() - self.dropprob;
 
         // Get the size of the feature dimension
         let feature_size = features.shape()[self.feature_dim.0];
@@ -124,7 +124,7 @@ impl<A: Float + Debug + ScalarOperand> SpatialDropout<A> {
 #[derive(Debug, Clone)]
 pub struct FeatureDropout<A: Float> {
     /// Probability of dropping each feature
-    drop_prob: A,
+    dropprob: A,
     /// Dimension along which features are located (default is 1)
     feature_dim: Axis,
 }
@@ -134,16 +134,16 @@ impl<A: Float + Debug + ScalarOperand> FeatureDropout<A> {
     ///
     /// # Arguments
     ///
-    /// * `drop_prob` - Probability of dropping each feature (0.0 to 1.0)
+    /// * `dropprob` - Probability of dropping each feature (0.0 to 1.0)
     pub fn new(dropprob: A) -> Result<Self> {
-        if drop_prob < A::zero() || drop_prob > A::one() {
+        if dropprob < A::zero() || dropprob > A::one() {
             return Err(OptimError::InvalidConfig(
                 "Drop probability must be between 0.0 and 1.0".to_string(),
             ));
         }
 
         Ok(Self {
-            drop_prob,
+            dropprob,
             feature_dim: Axis(1), // Default to feature dimension
         })
     }
@@ -159,11 +159,11 @@ impl<A: Float + Debug + ScalarOperand> FeatureDropout<A> {
     where
         D: Dimension + ndarray::RemoveAxis,
     {
-        if !training || self.drop_prob == A::zero() {
+        if !training || self.dropprob == A::zero() {
             return features.clone();
         }
 
-        let keep_prob = A::one() - self.drop_prob;
+        let keep_prob = A::one() - self.dropprob;
 
         // Get the size of the feature dimension
         let feature_size = features.shape()[self.feature_dim.0];
@@ -237,7 +237,7 @@ mod tests {
     fn test_spatial_dropout_creation() {
         // Valid creation
         let sd = SpatialDropout::<f64>::new(0.3).unwrap();
-        assert_eq!(sd.drop_prob, 0.3);
+        assert_eq!(sd.dropprob, 0.3);
 
         // Invalid probabilities
         assert!(SpatialDropout::<f64>::new(-0.1).is_err());
@@ -295,7 +295,7 @@ mod tests {
     fn test_feature_dropout_creation() {
         // Valid creation
         let fd = FeatureDropout::<f64>::new(0.4).unwrap();
-        assert_eq!(fd.drop_prob, 0.4);
+        assert_eq!(fd.dropprob, 0.4);
 
         // Invalid probabilities
         assert!(FeatureDropout::<f64>::new(-0.1).is_err());

@@ -41,7 +41,7 @@ pub trait InPlaceOptimizer<A: Float + ScalarOperand + Debug, D: Dimension> {
 /// Memory-efficient SGD optimizer with in-place updates
 #[derive(Debug, Clone)]
 pub struct InPlaceSGD<A: Float> {
-    learning_rate: A,
+    _learningrate: A,
     momentum: A,
     weight_decay: A,
 }
@@ -50,7 +50,7 @@ impl<A: Float + ScalarOperand + Debug> InPlaceSGD<A> {
     /// Create a new in-place SGD optimizer
     pub fn new(_learningrate: A) -> Self {
         Self {
-            learning_rate: learning_rate,
+            _learningrate: _learningrate,
             momentum: A::zero(),
             weight_decay: A::zero(),
         }
@@ -74,12 +74,12 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> InPlaceOptimizer<A, D> for 
         // Apply weight decay if configured
         if self.weight_decay > A::zero() {
             params.zip_mut_with(gradients, |p, &g| {
-                *p = *p - self.learning_rate * (g + *p * self.weight_decay);
+                *p = *p - self._learningrate * (g + *p * self.weight_decay);
             });
         } else {
             // Simple gradient descent
             params.zip_mut_with(gradients, |p, &g| {
-                *p = *p - self.learning_rate * g;
+                *p = *p - self._learningrate * g;
             });
         }
         Ok(())
@@ -89,7 +89,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> InPlaceOptimizer<A, D> for 
 /// Memory-efficient Adam optimizer with in-place updates
 #[derive(Debug)]
 pub struct InPlaceAdam<A: Float, D: Dimension> {
-    learning_rate: A,
+    _learningrate: A,
     beta1: A,
     beta2: A,
     epsilon: A,
@@ -105,7 +105,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> InPlaceAdam<A, D> {
     /// Create a new in-place Adam optimizer
     pub fn new(_learningrate: A) -> Self {
         Self {
-            learning_rate: learning_rate,
+            _learningrate: _learningrate,
             beta1: A::from(0.9).unwrap(),
             beta2: A::from(0.999).unwrap(),
             epsilon: A::from(1e-8).unwrap(),
@@ -198,7 +198,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> InPlaceOptimizer<A, D> for 
         for ((p, &m_i), &v_i) in params_iter.zip(m_iter).zip(v_iter) {
             let m_hat = m_i / bias1;
             let v_hat = v_i / bias2;
-            *p = *p - self.learning_rate * m_hat / (v_hat.sqrt() + self.epsilon);
+            *p = *p - self._learningrate * m_hat / (v_hat.sqrt() + self.epsilon);
         }
 
         Ok(())
@@ -486,7 +486,7 @@ pub mod mixed_precision {
         /// Create a new loss scaler
         pub fn new(_initialscale: f32) -> Self {
             Self {
-                scale: initial_scale,
+                scale: _initialscale,
                 growth_factor: 2.0,
                 backoff_factor: 0.5,
                 growth_interval: 2000,
@@ -520,7 +520,7 @@ pub mod mixed_precision {
         pub fn update(&mut self, foundinf: bool) {
             self.steps_since_update += 1;
 
-            if found_inf {
+            if foundinf {
                 // Reduce scale if overflow detected
                 self.scale *= self.backoff_factor;
                 self.steps_since_update = 0;
@@ -680,25 +680,25 @@ pub mod gradient_checkpointing {
         pub fn optimize_strategy(&mut self, target_memoryusage: f64) {
             let current_usage = self.memory_tracker.usage_ratio();
 
-            if current_usage > target_memory_usage {
+            if current_usage > target_memoryusage {
                 // Increase checkpointing frequency to reduce memory _usage
                 self.strategy = match &self.strategy {
                     CheckpointStrategy::Uniform { interval } => CheckpointStrategy::Uniform {
                         interval: (interval / 2).max(1),
                     },
                     CheckpointStrategy::MemoryAware { .. } => CheckpointStrategy::MemoryAware {
-                        memory_threshold: target_memory_usage * 0.8,
+                        memory_threshold: target_memoryusage * 0.8,
                     },
                     other => other.clone(),
                 };
-            } else if current_usage < target_memory_usage * 0.5 {
+            } else if current_usage < target_memoryusage * 0.5 {
                 // Decrease checkpointing frequency to improve performance
                 self.strategy = match &self.strategy {
                     CheckpointStrategy::Uniform { interval } => CheckpointStrategy::Uniform {
                         interval: interval * 2,
                     },
                     CheckpointStrategy::MemoryAware { .. } => CheckpointStrategy::MemoryAware {
-                        memory_threshold: target_memory_usage * 1.2,
+                        memory_threshold: target_memoryusage * 1.2,
                     },
                     other => other.clone(),
                 };
@@ -877,7 +877,7 @@ pub mod gradient_checkpointing {
         /// History of memory usage for adaptive optimization
         memory_history: VecDeque<f64>,
         /// Target memory usage ratio
-        target_memory_ratio: f64,
+        target_memoryratio: f64,
         /// Adaptation frequency (steps)
         adaptation_frequency: usize,
         /// Current step count
@@ -890,7 +890,7 @@ pub mod gradient_checkpointing {
             Self {
                 checkpointer: GradientCheckpointer::new(_initial_strategy),
                 memory_history: VecDeque::with_capacity(100),
-                target_memory_ratio: target_memory_ratio.clamp(0.1, 0.9),
+                target_memoryratio: target_memoryratio.clamp(0.1, 0.9),
                 adaptation_frequency: 10,
                 step_count: 0,
             }
@@ -945,10 +945,10 @@ pub mod gradient_checkpointing {
                 / 10.0.min(self.memory_history.len() as f64);
 
             // Optimize strategy if we're significantly off target
-            let deviation = (recent_avg - self.target_memory_ratio).abs();
+            let deviation = (recent_avg - self.target_memoryratio).abs();
             if deviation > 0.1 {
                 self.checkpointer
-                    .optimize_strategy(self.target_memory_ratio);
+                    .optimize_strategy(self.target_memoryratio);
             }
         }
 
@@ -975,7 +975,7 @@ pub mod gradient_checkpointing {
                 current_usage: usage.current_ratio(),
                 peak_usage: usage.peak_ratio(),
                 average_usage: avg_usage,
-                target_usage: self.target_memory_ratio,
+                target_usage: self.target_memoryratio,
                 checkpoints_stored: self.checkpointer.checkpoints.len(),
             }
         }
@@ -1020,7 +1020,7 @@ pub mod adaptive {
     /// Memory-aware batch size adapter
     #[derive(Debug, Clone)]
     pub struct MemoryAwareBatchSizer {
-        initial_batch_size: usize,
+        _initial_batchsize: usize,
         max_batch_size: usize,
         min_batch_size: usize,
         current_batch_size: usize,
@@ -1032,10 +1032,10 @@ pub mod adaptive {
         /// Create a new memory-aware batch sizer
         pub fn new(_initial_batchsize: usize) -> Self {
             Self {
-                initial_batch_size: initial_batch_size,
-                max_batch_size: _initial_batch_size * 4,
-                min_batch_size: initial_batch_size.max(1) / 4,
-                current_batch_size: initial_batch_size,
+                _initial_batchsize: _initial_batchsize,
+                max_batch_size: _initial_batchsize * 4,
+                min_batch_size: _initial_batchsize.max(1) / 4,
+                current_batch_size: _initial_batchsize,
                 memory_threshold: 0.8,
                 adaptation_factor: 1.2,
             }
@@ -1060,11 +1060,11 @@ pub mod adaptive {
 
         /// Adapt batch size based on memory usage
         pub fn adapt(&mut self, memory_usageratio: f64) {
-            if memory_usage_ratio > self.memory_threshold {
+            if memory_usageratio > self.memory_threshold {
                 // Reduce batch size if memory usage is high
                 let new_size = (self.current_batch_size as f64 / self.adaptation_factor) as usize;
                 self.current_batch_size = new_size.max(self.min_batch_size);
-            } else if memory_usage_ratio < self.memory_threshold * 0.7 {
+            } else if memory_usageratio < self.memory_threshold * 0.7 {
                 // Increase batch size if memory usage is low
                 let new_size = (self.current_batch_size as f64 * self.adaptation_factor) as usize;
                 self.current_batch_size = new_size.min(self.max_batch_size);
@@ -1073,7 +1073,7 @@ pub mod adaptive {
 
         /// Reset to initial batch size
         pub fn reset(&mut self) {
-            self.current_batch_size = self.initial_batch_size;
+            self.current_batch_size = self._initial_batchsize;
         }
     }
 
@@ -1083,7 +1083,7 @@ pub mod adaptive {
         A: Sized,
         D: Dimension,
     {
-        _arrays
+        arrays
             .iter()
             .map(|arr| arr.len() * std::mem::size_of::<A>())
             .sum()

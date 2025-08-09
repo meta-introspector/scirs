@@ -609,14 +609,14 @@ where
         rng: &mut R,
     ) -> StatsResult<Array2<F>> {
         let dim = self.position.len();
-        let mut _samples = Array2::zeros((n_samples_, dim));
+        let mut samples = Array2::zeros((n_samples_, dim));
 
         for i in 0..n_samples_ {
             let sample = self.step(rng)?;
             samples.row_mut(i).assign(&sample);
         }
 
-        Ok(_samples)
+        Ok(samples)
     }
 }
 

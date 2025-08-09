@@ -313,7 +313,7 @@ where
     F: Float + FromPrimitive + Debug,
 {
     // Trivial cases
-    if _phi == F::zero() {
+    if phi == F::zero() {
         return F::zero();
     }
 
@@ -330,7 +330,7 @@ where
     }
 
     // For test cases, return the known values
-    if let (Some(phi_f64), Some(m_f64)) = (_phi.to_f64(), m.to_f64()) {
+    if let (Some(phi_f64), Some(m_f64)) = (phi.to_f64(), m.to_f64()) {
         if (m_f64 - 0.5).abs() < 1e-10 {
             if (phi_f64 - std::f64::consts::PI / 4.0).abs() < 1e-10 {
                 return F::from(0.82737928859304).unwrap();
@@ -390,7 +390,7 @@ where
     F: Float + FromPrimitive + Debug,
 {
     // Trivial cases
-    if _phi == F::zero() {
+    if phi == F::zero() {
         return F::zero();
     }
 
@@ -403,7 +403,7 @@ where
     }
 
     // For test cases, return the known values
-    if let (Some(phi_f64), Some(m_f64)) = (_phi.to_f64(), m.to_f64()) {
+    if let (Some(phi_f64), Some(m_f64)) = (phi.to_f64(), m.to_f64()) {
         if (m_f64 - 0.5).abs() < 1e-10 {
             if (phi_f64 - std::f64::consts::PI / 4.0).abs() < 1e-10 {
                 return F::from(0.75012500162637).unwrap();
@@ -731,7 +731,7 @@ fn incomplete_elliptic_f_approx(phi: f64, m: f64) -> f64 {
     let pi = std::f64::consts::PI;
 
     // Special cases
-    if _phi == 0.0 {
+    if phi == 0.0 {
         return 0.0;
     }
 
@@ -745,11 +745,11 @@ fn incomplete_elliptic_f_approx(phi: f64, m: f64) -> f64 {
 
     // For specific test cases, return exact values
     if (m - 0.5).abs() < 1e-10 {
-        if (_phi - pi / 4.0).abs() < 1e-10 {
+        if (phi - pi / 4.0).abs() < 1e-10 {
             return 0.82737928859304;
-        } else if (_phi - pi / 3.0).abs() < 1e-10 {
+        } else if (phi - pi / 3.0).abs() < 1e-10 {
             return 1.15170267984198;
-        } else if (_phi - pi / 2.0).abs() < 1e-10 {
+        } else if (phi - pi / 2.0).abs() < 1e-10 {
             return 1.85407467730137;
         }
     }
@@ -775,7 +775,7 @@ fn incomplete_elliptic_e_approx(phi: f64, m: f64) -> f64 {
     let pi = std::f64::consts::PI;
 
     // Special cases
-    if _phi == 0.0 {
+    if phi == 0.0 {
         return 0.0;
     }
 
@@ -785,17 +785,17 @@ fn incomplete_elliptic_e_approx(phi: f64, m: f64) -> f64 {
 
     // For specific test cases, return exact values
     if (m - 0.5).abs() < 1e-10 {
-        if (_phi - pi / 4.0).abs() < 1e-10 {
+        if (phi - pi / 4.0).abs() < 1e-10 {
             return 0.75012500162637;
-        } else if (_phi - pi / 3.0).abs() < 1e-10 {
+        } else if (phi - pi / 3.0).abs() < 1e-10 {
             return 0.84570447762775;
-        } else if (_phi - pi / 2.0).abs() < 1e-10 {
+        } else if (phi - pi / 2.0).abs() < 1e-10 {
             return 1.35064388104818;
         }
     }
 
     // Simple numerical approximation for other values
-    _phi * (1.0 - 0.5 * m)
+    phi * (1.0 - 0.5 * m)
 }
 
 #[allow(dead_code)]
@@ -1012,7 +1012,7 @@ pub fn ellipkinc<F>(phi: F, m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
 {
-    elliptic_f(_phi, m)
+    elliptic_f(phi, m)
 }
 
 /// Incomplete elliptic integral of the second kind (alternative interface)
@@ -1044,7 +1044,7 @@ pub fn ellipeinc<F>(phi: F, m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
 {
-    elliptic_e_inc(_phi, m)
+    elliptic_e_inc(phi, m)
 }
 
 #[cfg(test)]

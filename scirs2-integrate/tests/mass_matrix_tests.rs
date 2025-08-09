@@ -228,7 +228,8 @@ fn test_mass_matrix_creation() {
     assert!(state_dependent.time_function.is_none());
 
     // Bandwidth specification
-    let banded = MassMatrix::constant(m).with_bandwidth(1, 2);
+    let mut mass_matrix = MassMatrix::constant(m);
+    let banded = mass_matrix.with_bandwidth(1, 2);
     assert!(banded.is_banded);
     assert_eq!(banded.lower_bandwidth, Some(1));
     assert_eq!(banded.upper_bandwidth, Some(2));

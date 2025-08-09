@@ -41,7 +41,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).unwrap();
     /// ```
     pub fn new(df: F, loc: F, scale: F) -> StatsResult<Self> {
-        if _df <= F::zero() {
+        if df <= F::zero() {
             return Err(StatsError::DomainError(
                 "Degrees of freedom must be positive".to_string(),
             ));
@@ -53,11 +53,11 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
         }
 
         // Convert to f64 for rand_distr
-        let df_f64 = <f64 as NumCast>::from(_df).unwrap();
+        let df_f64 = <f64 as NumCast>::from(df).unwrap();
         
         match RandStudentT::new(df_f64) {
             Ok(rand_distr) => Ok(StudentT {
-                df: df,
+                df,
                 loc,
                 scale,
                 rand_distr,

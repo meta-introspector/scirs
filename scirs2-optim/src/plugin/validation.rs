@@ -497,7 +497,7 @@ pub struct DocumentationComplianceChecker;
 /// Throughput benchmark
 #[derive(Debug)]
 pub struct ThroughputBenchmark<A: Float> {
-    problem_size: usize,
+    problemsize: usize,
     iterations: usize,
     _phantom: std::marker::PhantomData<A>,
 }
@@ -506,7 +506,7 @@ impl<A: Float> ThroughputBenchmark<A> {
     /// Create a new throughput benchmark
     pub fn new(problemsize: usize, iterations: usize) -> Self {
         Self {
-            problem_size,
+            problemsize,
             iterations,
             _phantom: std::marker::PhantomData,
         }
@@ -550,7 +550,7 @@ impl<A: Float + Debug> PerformanceBenchmark<A> for ThroughputBenchmark<A> {
 /// Latency benchmark
 #[derive(Debug)]
 pub struct LatencyBenchmark<A: Float> {
-    problem_size: usize,
+    problemsize: usize,
     _phantom: std::marker::PhantomData<A>,
 }
 
@@ -558,7 +558,7 @@ impl<A: Float> LatencyBenchmark<A> {
     /// Create a new latency benchmark
     pub fn new(problemsize: usize) -> Self {
         Self {
-            problem_size,
+            problemsize,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -601,7 +601,7 @@ impl<A: Float + Debug> PerformanceBenchmark<A> for LatencyBenchmark<A> {
 /// Memory efficiency benchmark
 #[derive(Debug)]
 pub struct MemoryBenchmark<A: Float> {
-    problem_size: usize,
+    problemsize: usize,
     _phantom: std::marker::PhantomData<A>,
 }
 
@@ -609,7 +609,7 @@ impl<A: Float> MemoryBenchmark<A> {
     /// Create a new memory benchmark
     pub fn new(problemsize: usize) -> Self {
         Self {
-            problem_size,
+            problemsize,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -676,15 +676,15 @@ impl<A: Float + Debug + Send + Sync + 'static> PluginValidationFramework<A> {
         let mut benchmark_results = Vec::new();
 
         // Run test suites
-        for test_suite in &self.test_suites {
-            let result = test_suite.run_tests(plugin);
+        for testsuite in &self.test_suites {
+            let result = testsuite.run_tests(plugin);
             suite_results.push(result);
         }
 
         // Run compliance checks
-        let plugin_info = plugin.plugin_info();
+        let plugininfo = plugin.plugin_info();
         for checker in &self.compliance_checkers {
-            let result = checker.check_compliance(&plugin_info);
+            let result = checker.check_compliance(&plugininfo);
             compliance_results.push(result);
         }
 
@@ -714,7 +714,7 @@ impl<A: Float + Debug + Send + Sync + 'static> PluginValidationFramework<A> {
 
     /// Add custom test suite
     pub fn add_test_suite(&mut self, testsuite: Box<dyn ValidationTestSuite<A>>) {
-        self.test_suites.push(test_suite);
+        self.test_suites.push(testsuite);
     }
 
     /// Add custom compliance checker
@@ -1152,7 +1152,7 @@ impl ComplianceChecker for DocumentationComplianceChecker {
         let mut violations = Vec::new();
         let mut score = 1.0;
 
-        if plugin_info.description.len() < 10 {
+        if plugininfo.description.len() < 10 {
             violations.push(ComplianceViolation {
                 violation_type: ViolationType::DocumentationViolation,
                 description: "Plugin description is too short".to_string(),
@@ -1162,7 +1162,7 @@ impl ComplianceChecker for DocumentationComplianceChecker {
             score -= 0.2;
         }
 
-        if plugin_info.author.is_empty() {
+        if plugininfo.author.is_empty() {
             violations.push(ComplianceViolation {
                 violation_type: ViolationType::MissingMetadata,
                 description: "Author information is missing".to_string(),

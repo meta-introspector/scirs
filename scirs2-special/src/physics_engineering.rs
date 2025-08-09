@@ -282,13 +282,13 @@ pub mod blackbody {
                 "Temperature must be positive".to_string(),
             ));
         }
-        if _frequency < 0.0 {
+        if frequency < 0.0 {
             return Err(SpecialError::DomainError(
                 "Frequency must be non-negative".to_string(),
             ));
         }
 
-        if _frequency == 0.0 {
+        if frequency == 0.0 {
             return Ok(0.0);
         }
 
@@ -321,7 +321,7 @@ pub mod blackbody {
     /// # Returns
     /// Wavelength of maximum emission in meters
     pub fn wien_displacement(temperature: f64) -> SpecialResult<f64> {
-        if _temperature <= 0.0 {
+        if temperature <= 0.0 {
             return Err(SpecialError::DomainError(
                 "Temperature must be positive".to_string(),
             ));
@@ -341,7 +341,7 @@ pub mod blackbody {
     /// # Returns
     /// Power per unit area in W/m²
     pub fn stefan_boltzmann_law(temperature: f64) -> SpecialResult<f64> {
-        if _temperature < 0.0 {
+        if temperature < 0.0 {
             return Err(SpecialError::DomainError(
                 "Temperature must be non-negative".to_string(),
             ));
@@ -357,7 +357,7 @@ pub mod blackbody {
                 "Temperature must be positive".to_string(),
             ));
         }
-        if _frequency < 0.0 {
+        if frequency < 0.0 {
             return Err(SpecialError::DomainError(
                 "Frequency must be non-negative".to_string(),
             ));
@@ -472,7 +472,7 @@ pub mod acoustics {
     /// * `humidity` - Relative humidity (0-1)
     /// * `pressure` - Atmospheric pressure in Pa (default: 101325)
     pub fn speed_of_sound(temperature: f64, humidity: f64, pressure: f64) -> SpecialResult<f64> {
-        if _temperature < -273.15 {
+        if temperature < -273.15 {
             return Err(SpecialError::DomainError(
                 "Temperature below absolute zero".to_string(),
             ));
@@ -489,7 +489,7 @@ pub mod acoustics {
         }
 
         // Simplified formula (more accurate formulas exist)
-        let t_kelvin = _temperature + 273.15;
+        let t_kelvin = temperature + 273.15;
         let base_speed = 331.3 * (t_kelvin / 273.15).sqrt();
 
         // Humidity correction (approximate)
@@ -504,13 +504,13 @@ pub mod acoustics {
     /// * `pressure` - Sound pressure in Pa
     /// * `reference` - Reference pressure in Pa (default: 20 μPa for air)
     pub fn sound_pressure_level(pressure: f64, reference: f64) -> SpecialResult<f64> {
-        if _pressure <= 0.0 || reference <= 0.0 {
+        if pressure <= 0.0 || reference <= 0.0 {
             return Err(SpecialError::DomainError(
                 "Pressure values must be positive".to_string(),
             ));
         }
 
-        Ok(20.0 * (_pressure / reference).log10())
+        Ok(20.0 * (pressure / reference).log10())
     }
 
     /// A-weighting filter response
@@ -521,13 +521,13 @@ pub mod acoustics {
     /// # Returns
     /// A-weighting response in dB
     pub fn a_weighting(frequency: f64) -> SpecialResult<f64> {
-        if _frequency <= 0.0 {
+        if frequency <= 0.0 {
             return Err(SpecialError::DomainError(
                 "Frequency must be positive".to_string(),
             ));
         }
 
-        let f2 = _frequency * frequency;
+        let f2 = frequency * frequency;
         let f4 = f2 * f2;
 
         let numerator = 12194.0f64.powi(2) * f4;
@@ -646,20 +646,20 @@ pub mod optics {
     ///
     /// # Arguments
     /// * `n_core` - Core refractive index
-    /// * `n_cladding` - Cladding refractive index
+    /// * `ncladding` - Cladding refractive index
     pub fn numerical_aperture(_n_core: f64, ncladding: f64) -> SpecialResult<f64> {
-        if _n_core <= 0.0 || n_cladding <= 0.0 {
+        if _n_core <= 0.0 || ncladding <= 0.0 {
             return Err(SpecialError::DomainError(
                 "Refractive indices must be positive".to_string(),
             ));
         }
-        if _n_core <= n_cladding {
+        if _n_core <= ncladding {
             return Err(SpecialError::DomainError(
                 "Core index must be greater than _cladding index".to_string(),
             ));
         }
 
-        Ok((_n_core * _n_core - n_cladding * n_cladding).sqrt())
+        Ok((_n_core * _n_core - ncladding * ncladding).sqrt())
     }
 
     /// Brewster's angle
@@ -671,7 +671,7 @@ pub mod optics {
     /// # Returns
     /// Brewster's angle in radians
     pub fn brewster_angle(n1: f64, n2: f64) -> SpecialResult<f64> {
-        if _n1 <= 0.0 || n2 <= 0.0 {
+        if n1 <= 0.0 || n2 <= 0.0 {
             return Err(SpecialError::DomainError(
                 "Refractive indices must be positive".to_string(),
             ));
@@ -691,7 +691,7 @@ pub mod thermal {
     /// * `diffusivity` - Thermal diffusivity in m²/s
     /// * `frequency` - Modulation frequency in Hz
     pub fn thermal_diffusion_length(diffusivity: f64, frequency: f64) -> SpecialResult<f64> {
-        if _diffusivity <= 0.0 {
+        if diffusivity <= 0.0 {
             return Err(SpecialError::DomainError(
                 "Diffusivity must be positive".to_string(),
             ));
@@ -702,23 +702,23 @@ pub mod thermal {
             ));
         }
 
-        Ok((_diffusivity / (PI * frequency)).sqrt())
+        Ok((diffusivity / (PI * frequency)).sqrt())
     }
 
     /// Biot number
     ///
     /// # Arguments
     /// * `h` - Heat transfer coefficient in W/(m²·K)
-    /// * `l_c` - Characteristic length in m
+    /// * `lc` - Characteristic length in m
     /// * `k` - Thermal conductivity in W/(m·K)
     pub fn biot_number(h: f64, lc: f64, k: f64) -> SpecialResult<f64> {
-        if h < 0.0 || l_c <= 0.0 || k <= 0.0 {
+        if h < 0.0 || lc <= 0.0 || k <= 0.0 {
             return Err(SpecialError::DomainError(
-                "Parameters must be non-negative (positive for l_c and k)".to_string(),
+                "Parameters must be non-negative (positive for lc and k)".to_string(),
             ));
         }
 
-        Ok(h * l_c / k)
+        Ok(h * lc / k)
     }
 
     /// Nusselt number for natural convection on vertical plate
@@ -726,14 +726,14 @@ pub mod thermal {
     /// # Arguments
     /// * `rayleigh` - Rayleigh number
     pub fn nusselt_vertical_plate(rayleigh: f64) -> SpecialResult<f64> {
-        if _rayleigh < 0.0 {
+        if rayleigh < 0.0 {
             return Err(SpecialError::DomainError(
                 "Rayleigh number must be non-negative".to_string(),
             ));
         }
 
         // Churchill-Chu correlation
-        if _rayleigh < 1e9 {
+        if rayleigh < 1e9 {
             // Laminar flow
             Ok(0.68
                 + 0.67 * rayleigh.powf(0.25)
@@ -785,7 +785,7 @@ pub mod semiconductor {
     /// # Arguments
     /// * `temperature` - Temperature in Kelvin
     pub fn intrinsic_carrier_concentration_si(temperature: f64) -> SpecialResult<f64> {
-        if _temperature <= 0.0 {
+        if temperature <= 0.0 {
             return Err(SpecialError::DomainError(
                 "Temperature must be positive".to_string(),
             ));
@@ -798,9 +798,9 @@ pub mod semiconductor {
         let alpha = 4.73e-4; // eV/K
         let beta = 636.0; // K
 
-        let eg = eg_0 - alpha * _temperature * _temperature / (_temperature + beta);
-        let nc = nc_300 * (_temperature / 300.0).powf(1.5);
-        let nv = nv_300 * (_temperature / 300.0).powf(1.5);
+        let eg = eg_0 - alpha * temperature * temperature / (temperature + beta);
+        let nc = nc_300 * (temperature / 300.0).powf(1.5);
+        let nv = nv_300 * (temperature / 300.0).powf(1.5);
 
         let k_ev = blackbody::BOLTZMANN_CONSTANT / 1.602e-19; // Boltzmann constant in eV/K
         let ni_squared = nc * nv * (-eg / (k_ev * temperature)).exp();
@@ -812,7 +812,7 @@ pub mod semiconductor {
     ///
     /// # Arguments
     /// * `energy` - Energy in eV
-    /// * `fermi_level` - Fermi level in eV
+    /// * `fermilevel` - Fermi level in eV
     /// * `temperature` - Temperature in Kelvin
     pub fn fermi_dirac(_energy: f64, fermilevel: f64, temperature: f64) -> SpecialResult<f64> {
         if temperature < 0.0 {
@@ -823,10 +823,10 @@ pub mod semiconductor {
 
         if temperature == 0.0 {
             // T=0 limit: step function
-            Ok(if _energy < fermi_level { 1.0 } else { 0.0 })
+            Ok(if _energy < fermilevel { 1.0 } else { 0.0 })
         } else {
             let k_ev = blackbody::BOLTZMANN_CONSTANT / 1.602e-19; // eV/K
-            Ok(1.0 / (1.0 + ((_energy - fermi_level) / (k_ev * temperature)).exp()))
+            Ok(1.0 / (1.0 + ((_energy - fermilevel) / (k_ev * temperature)).exp()))
         }
     }
 
@@ -865,9 +865,9 @@ pub mod plasma {
     /// Plasma frequency
     ///
     /// # Arguments
-    /// * `electron_density` - Electron density in m^-3
+    /// * `electrondensity` - Electron density in m^-3
     pub fn plasma_frequency(_electrondensity: f64) -> SpecialResult<f64> {
-        if _electron_density < 0.0 {
+        if _electrondensity < 0.0 {
             return Err(SpecialError::DomainError(
                 "Electron _density must be non-negative".to_string(),
             ));
@@ -878,7 +878,7 @@ pub mod plasma {
         const EPSILON_0: f64 = 8.854e-12; // F/m
 
         Ok(
-            (_electron_density * ELECTRON_CHARGE * ELECTRON_CHARGE / (EPSILON_0 * ELECTRON_MASS))
+            (_electrondensity * ELECTRON_CHARGE * ELECTRON_CHARGE / (EPSILON_0 * ELECTRON_MASS))
                 .sqrt()
                 / (2.0 * PI),
         )
@@ -888,9 +888,9 @@ pub mod plasma {
     ///
     /// # Arguments
     /// * `temperature` - Electron temperature in Kelvin
-    /// * `electron_density` - Electron density in m^-3
-    pub fn debye_length_plasma(_temperature: f64, electrondensity: f64) -> SpecialResult<f64> {
-        if _temperature <= 0.0 || electron_density <= 0.0 {
+    /// * `electrondensity` - Electron density in m^-3
+    pub fn debye_length_plasma(temperature: f64, electrondensity: f64) -> SpecialResult<f64> {
+        if temperature <= 0.0 || electrondensity <= 0.0 {
             return Err(SpecialError::DomainError(
                 "Temperature and _density must be positive".to_string(),
             ));
@@ -901,7 +901,7 @@ pub mod plasma {
         let k = blackbody::BOLTZMANN_CONSTANT;
 
         Ok(
-            (EPSILON_0 * k * _temperature / (electron_density * ELECTRON_CHARGE * ELECTRON_CHARGE))
+            (EPSILON_0 * k * temperature / (electrondensity * ELECTRON_CHARGE * ELECTRON_CHARGE))
                 .sqrt(),
         )
     }
@@ -919,7 +919,7 @@ pub mod plasma {
     ) -> SpecialResult<f64> {
         if particle_mass <= 0.0 {
             return Err(SpecialError::DomainError(
-                "Particle _mass must be positive".to_string(),
+                "Particle mass must be positive".to_string(),
             ));
         }
 
@@ -930,16 +930,16 @@ pub mod plasma {
     ///
     /// # Arguments
     /// * `magnetic_field` - Magnetic field strength in Tesla
-    /// * `mass_density` - Mass density in kg/m³
+    /// * `massdensity` - Mass density in kg/m³
     pub fn alfven_velocity(_magnetic_field: f64, massdensity: f64) -> SpecialResult<f64> {
-        if mass_density <= 0.0 {
+        if massdensity <= 0.0 {
             return Err(SpecialError::DomainError(
                 "Mass _density must be positive".to_string(),
             ));
         }
 
         const MU_0: f64 = 4.0 * PI * 1e-7; // H/m
-        Ok(_magnetic_field / (MU_0 * mass_density).sqrt())
+        Ok(_magnetic_field / (MU_0 * massdensity).sqrt())
     }
 }
 
@@ -952,7 +952,7 @@ pub mod quantum {
     /// # Arguments
     /// * `momentum` - Momentum in kg⋅m/s
     pub fn de_broglie_wavelength(momentum: f64) -> SpecialResult<f64> {
-        if _momentum <= 0.0 {
+        if momentum <= 0.0 {
             return Err(SpecialError::DomainError(
                 "Momentum must be positive".to_string(),
             ));
@@ -966,7 +966,7 @@ pub mod quantum {
     /// # Arguments
     /// * `mass` - Particle mass in kg
     pub fn compton_wavelength(mass: f64) -> SpecialResult<f64> {
-        if _mass <= 0.0 {
+        if mass <= 0.0 {
             return Err(SpecialError::DomainError(
                 "Mass must be positive".to_string(),
             ));
@@ -975,7 +975,7 @@ pub mod quantum {
         let h = blackbody::PLANCK_CONSTANT;
         let c = blackbody::SPEED_OF_LIGHT;
 
-        Ok(h / (_mass * c))
+        Ok(h / (mass * c))
     }
 
     /// Bohr radius for hydrogen-like atoms
@@ -997,15 +997,15 @@ pub mod quantum {
     ///
     /// # Arguments
     /// * `n_initial` - Initial principal quantum number
-    /// * `n_final` - Final principal quantum number
+    /// * `nfinal` - Final principal quantum number
     /// * `z` - Atomic number
     pub fn rydberg_wavelength(_n_initial: u32, nfinal: u32, z: u32) -> SpecialResult<f64> {
-        if _n_initial == 0 || n_final == 0 || z == 0 {
+        if _n_initial == 0 || nfinal == 0 || z == 0 {
             return Err(SpecialError::DomainError(
                 "Quantum numbers and atomic number must be positive".to_string(),
             ));
         }
-        if _n_initial <= n_final {
+        if _n_initial <= nfinal {
             return Err(SpecialError::DomainError(
                 "Initial state must be higher than _final state".to_string(),
             ));
@@ -1015,7 +1015,7 @@ pub mod quantum {
         let z_sq = (z * z) as f64;
         let term = z_sq
             * RYDBERG_CONSTANT
-            * (1.0 / (n_final * n_final) as f64 - 1.0 / (_n_initial * n_initial) as f64);
+            * (1.0 / (nfinal * nfinal) as f64 - 1.0 / (_n_initial * _n_initial) as f64);
 
         Ok(1.0 / term)
     }
@@ -1057,14 +1057,14 @@ pub mod transmission_lines {
     /// * `conductivity` - Electrical conductivity in S/m
     /// * `permeability` - Relative permeability
     pub fn skin_depth(frequency: f64, conductivity: f64, permeability: f64) -> SpecialResult<f64> {
-        if _frequency <= 0.0 || conductivity <= 0.0 || permeability <= 0.0 {
+        if frequency <= 0.0 || conductivity <= 0.0 || permeability <= 0.0 {
             return Err(SpecialError::DomainError(
                 "All parameters must be positive".to_string(),
             ));
         }
 
         const MU_0: f64 = 4.0 * PI * 1e-7; // H/m
-        Ok(1.0 / (PI * _frequency * conductivity * permeability * MU_0).sqrt())
+        Ok(1.0 / (PI * frequency * conductivity * permeability * MU_0).sqrt())
     }
 
     /// Reflection coefficient
@@ -1080,24 +1080,24 @@ pub mod transmission_lines {
         }
 
         let z_0_complex = Complex64::new(z_0, 0.0);
-        Ok((_z_load - z_0_complex) / (_z_load + z_0_complex))
+        Ok((_zload - z_0_complex) / (_zload + z_0_complex))
     }
 
     /// VSWR (Voltage Standing Wave Ratio)
     ///
     /// # Arguments
-    /// * `reflection_coeff` - Magnitude of reflection coefficient
+    /// * `_reflectioncoeff` - Magnitude of reflection coefficient
     pub fn vswr(_reflectioncoeff: f64) -> SpecialResult<f64> {
-        if !(0.0..=1.0).contains(&_reflection_coeff) {
+        if !(0.0..=1.0).contains(&_reflectioncoeff) {
             return Err(SpecialError::DomainError(
                 "Reflection coefficient magnitude must be between 0 and 1".to_string(),
             ));
         }
 
-        if _reflection_coeff == 1.0 {
+        if _reflectioncoeff == 1.0 {
             Ok(f64::INFINITY)
         } else {
-            Ok((1.0 + reflection_coeff) / (1.0 - reflection_coeff))
+            Ok((1.0 + _reflectioncoeff) / (1.0 - _reflectioncoeff))
         }
     }
 }

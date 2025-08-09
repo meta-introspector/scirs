@@ -176,7 +176,7 @@ fn heat_system_f(
     n_x: usize,
     n_y: usize,
 ) -> Array1<f64> {
-    let mut f = Array1::zeros(_x.len());
+    let mut f = Array1::zeros(x.len());
     let dx = 1.0 / (n_x as f64 - 1.0);
     let dy = 1.0 / (n_y as f64 - 1.0);
     let alpha = 0.01; // Thermal diffusivity
@@ -194,13 +194,13 @@ fn heat_system_f(
                 let idx_up = i * n_y + (j + 1);
 
                 // Finite difference approximation of Laplacian
-                let d2x = (_x[idx_left] - 2.0 * x[idx] + x[idx_right]) / (dx * dx);
-                let d2y = (_x[idx_down] - 2.0 * x[idx] + x[idx_up]) / (dy * dy);
+                let d2x = (x[idx_left] - 2.0 * x[idx] + x[idx_right]) / (dx * dx);
+                let d2y = (x[idx_down] - 2.0 * x[idx] + x[idx_up]) / (dy * dy);
 
                 f[idx] = alpha * (d2x + d2y);
             } else if i == 0 {
                 // Left boundary (controlled by algebraic constraints)
-                f[idx] = (_y[j] - x[idx]) / 0.01; // Fast relaxation to algebraic value
+                f[idx] = (y[j] - x[idx]) / 0.01; // Fast relaxation to algebraic value
             } else if i == n_x - 1 {
                 // Right boundary (fixed temperature)
                 f[idx] = (25.0 - x[idx]) / 0.01; // Fixed temperature
@@ -209,7 +209,7 @@ fn heat_system_f(
                 f[idx] = 0.0; // No heat flux
             } else if j == n_y - 1 {
                 // Top boundary (cooling)
-                f[idx] = (-0.1 * (_x[idx] - 20.0)) / 0.01; // Cooling to ambient
+                f[idx] = (-0.1 * (x[idx] - 20.0)) / 0.01; // Cooling to ambient
             }
         }
     }
@@ -245,7 +245,7 @@ fn heat_system_g(
     _n_x: usize,
     n_y: usize,
 ) -> Array1<f64> {
-    let mut g = Array1::zeros(_y.len());
+    let mut g = Array1::zeros(y.len());
 
     // Left boundary constraint: temperature follows a time-varying profile
     for j in 0..n_y {

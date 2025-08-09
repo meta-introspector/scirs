@@ -17,7 +17,7 @@ use statrs::statistics::Statistics;
 #[derive(Debug, Clone)]
 pub struct DataChunker {
     /// Maximum memory usage in MB
-    max_memory_mb: usize,
+    _max_memorymb: usize,
     /// Preferred chunk size in number of samples
     preferred_chunk_size: usize,
     /// Minimum chunk size to maintain efficiency
@@ -28,7 +28,7 @@ impl DataChunker {
     /// Create a new data chunker with memory constraints
     pub fn new(_max_memorymb: usize) -> Self {
         DataChunker {
-            max_memory_mb,
+            _max_memorymb,
             preferred_chunk_size: 10000,
             min_chunk_size: 100,
         }
@@ -37,8 +37,8 @@ impl DataChunker {
     /// Calculate optimal chunk size for given data dimensions
     pub fn calculate_chunk_size(&self, n_samples: usize, nfeatures: usize) -> usize {
         // Estimate memory per sample (8 bytes per f64 element + overhead)
-        let bytes_per_sample = n_features * std::mem::size_of::<f64>() + 64; // 64 bytes overhead
-        let max_samples_in_memory = (self.max_memory_mb * 1024 * 1024) / bytes_per_sample;
+        let bytes_per_sample = nfeatures * std::mem::size_of::<f64>() + 64; // 64 bytes overhead
+        let max_samples_in_memory = (self._max_memorymb * 1024 * 1024) / bytes_per_sample;
 
         max_samples_in_memory
             .min(self.preferred_chunk_size)
@@ -48,7 +48,7 @@ impl DataChunker {
 
     /// Iterator over data chunks
     pub fn chunk_indices(&self, n_samples: usize, nfeatures: usize) -> ChunkIterator {
-        let chunk_size = self.calculate_chunk_size(n_samples, n_features);
+        let chunk_size = self.calculate_chunk_size(n_samples, nfeatures);
         ChunkIterator {
             current: 0,
             total: n_samples,
@@ -91,14 +91,14 @@ impl TypeConverter {
         T: Float + NumCast + Send + Sync,
         S: Data<Elem = T>,
     {
-        check_not_empty(_array, "_array")?;
+        check_not_empty(array, "array")?;
 
         let result = if array.is_standard_layout() {
             // Use parallel processing for large arrays
             if array.len() > 10000 {
-                let mut result = Array2::zeros(_array.raw_dim());
+                let mut result = Array2::zeros(array.raw_dim());
                 Zip::from(&mut result)
-                    .and(_array)
+                    .and(array)
                     .par_for_each(|out, &inp| {
                         *out = num_traits::cast::<T, f64>(inp).unwrap_or(0.0);
                     });
@@ -131,12 +131,12 @@ impl TypeConverter {
 
     /// Convert f32 array to f64 with SIMD optimization
     pub fn f32_to_f64_simd(array: &ArrayView2<f32>) -> Result<Array2<f64>> {
-        check_not_empty(_array, "_array")?;
+        check_not_empty(array, "array")?;
 
         let result = if array.len() > 10000 {
-            let mut result = Array2::zeros(_array.raw_dim());
+            let mut result = Array2::zeros(array.raw_dim());
             Zip::from(&mut result)
-                .and(_array)
+                .and(array)
                 .par_for_each(|out, &inp| {
                     *out = inp as f64;
                 });
@@ -157,7 +157,7 @@ impl TypeConverter {
 
     /// Convert f64 array to f32 with overflow checking
     pub fn f64_to_f32_safe(array: &ArrayView2<f64>) -> Result<Array2<f32>> {
-        check_not_empty(_array, "_array")?;
+        check_not_empty(array, "array")?;
 
         // Check finite values
         for &val in array.iter() {
@@ -168,8 +168,8 @@ impl TypeConverter {
             }
         }
 
-        let mut result = Array2::zeros(_array.raw_dim());
-        for (out, &inp) in result.iter_mut().zip(_array.iter()) {
+        let mut result = Array2::zeros(array.raw_dim());
+        for (out, &inp) in result.iter_mut().zip(array.iter()) {
             if inp.abs() > f32::MAX as f64 {
                 return Err(TransformError::DataValidationError(
                     "Value too large for f32 conversion".to_string(),
@@ -188,7 +188,7 @@ pub struct StatUtils;
 impl StatUtils {
     /// Calculate robust statistics (median, MAD) efficiently
     pub fn robust_stats(data: &ArrayView1<f64>) -> Result<(f64, f64)> {
-        check_not_empty(_data, "_data")?;
+        check_not_empty(data, "data")?;
 
         // Check finite values
         for &val in data.iter() {
@@ -224,7 +224,7 @@ impl StatUtils {
 
     /// Calculate column-wise robust statistics in parallel
     pub fn robust_stats_columns(data: &ArrayView2<f64>) -> Result<(Array1<f64>, Array1<f64>)> {
-        check_not_empty(_data, "_data")?;
+        check_not_empty(data, "data")?;
 
         // Check finite values
         for &val in data.iter() {
@@ -235,12 +235,12 @@ impl StatUtils {
             }
         }
 
-        let n_features = data.ncols();
-        let mut medians = Array1::zeros(n_features);
-        let mut mads = Array1::zeros(n_features);
+        let nfeatures = data.ncols();
+        let mut medians = Array1::zeros(nfeatures);
+        let mut mads = Array1::zeros(nfeatures);
 
         // Use parallel processing for multiple columns
-        let stats: Result<Vec<_>> = (0..n_features)
+        let stats: Result<Vec<_>> = (0..nfeatures)
             .into_par_iter()
             .map(|j| {
                 let col = data.column(j);
@@ -260,7 +260,7 @@ impl StatUtils {
 
     /// Detect outliers using IQR method
     pub fn detect_outliers_iqr(data: &ArrayView1<f64>, factor: f64) -> Result<Vec<bool>> {
-        check_not_empty(_data, "_data")?;
+        check_not_empty(data, "data")?;
 
         // Check finite values
         for &val in data.iter() {
@@ -291,7 +291,7 @@ impl StatUtils {
         let lower_bound = q1 - factor * iqr;
         let upper_bound = q3 + factor * iqr;
 
-        let outliers = _data
+        let outliers = data
             .iter()
             .map(|&x| x < lower_bound || x > upper_bound)
             .collect();
@@ -301,7 +301,7 @@ impl StatUtils {
 
     /// Calculate data quality score
     pub fn data_quality_score(data: &ArrayView2<f64>) -> Result<f64> {
-        check_not_empty(_data, "_data")?;
+        check_not_empty(data, "data")?;
 
         let total_elements = data.len() as f64;
 
@@ -310,10 +310,10 @@ impl StatUtils {
         let finite_ratio = finite_count / total_elements;
 
         // Count unique values per column (diversity score)
-        let n_features = data.ncols();
-        let mut diversity_scores = Vec::with_capacity(n_features);
+        let nfeatures = data.ncols();
+        let mut diversity_scores = Vec::with_capacity(nfeatures);
 
-        for j in 0..n_features {
+        for j in 0..nfeatures {
             let col = data.column(j);
             let mut unique_values = std::collections::HashSet::new();
             for &val in col.iter() {
@@ -350,7 +350,7 @@ pub struct ArrayMemoryPool<T> {
     /// Available arrays by size
     available_arrays: HashMap<(usize, usize), Vec<Array2<T>>>,
     /// Maximum number of arrays to keep per size
-    max_per_size: usize,
+    max_persize: usize,
     /// Total memory limit in bytes
     memory_limit: usize,
     /// Current memory usage
@@ -362,7 +362,7 @@ impl<T: Clone + Default> ArrayMemoryPool<T> {
     pub fn new(_memory_limit_mb: usize, max_persize: usize) -> Self {
         ArrayMemoryPool {
             available_arrays: HashMap::new(),
-            max_per_size,
+            max_persize,
             memory_limit: _memory_limit_mb * 1024 * 1024,
             current_memory: 0,
         }
@@ -399,7 +399,7 @@ impl<T: Clone + Default> ArrayMemoryPool<T> {
         array.fill(T::default());
 
         let arrays = self.available_arrays.entry(size_key).or_default();
-        if arrays.len() < self.max_per_size {
+        if arrays.len() < self.max_persize {
             arrays.push(array);
             self.current_memory += array_size;
         }
@@ -482,7 +482,7 @@ impl ValidationUtils {
             }
         }
 
-        let (n_samples, n_features) = data.dim();
+        let (n_samples, nfeatures) = data.dim();
 
         match transformation {
             "pca" => {
@@ -491,7 +491,7 @@ impl ValidationUtils {
                         "PCA requires at least 2 samples".to_string(),
                     ));
                 }
-                if n_features < 1 {
+                if nfeatures < 1 {
                     return Err(TransformError::InvalidInput(
                         "PCA requires at least 1 feature".to_string(),
                     ));
@@ -499,7 +499,7 @@ impl ValidationUtils {
             }
             "standardization" => {
                 // Check for constant features
-                for j in 0..n_features {
+                for j in 0..nfeatures {
                     let col = data.column(j);
                     let variance = col.variance();
                     if variance < 1e-15 {
@@ -556,17 +556,17 @@ impl PerfUtils {
     /// Estimate computation time based on data size and operation
     pub fn estimate_computation_time(
         n_samples: usize,
-        n_features: usize,
+        nfeatures: usize,
         operation: &str,
     ) -> std::time::Duration {
         use std::time::Duration;
 
         let base_time_ns = match operation {
-            "pca" => (n_samples as u64) * (n_features as u64).pow(2) / 1000, // O(n*m^2)
-            "standardization" => (n_samples as u64) * (n_features as u64) / 100, // O(n*m)
-            "normalization" => (n_samples as u64) * (n_features as u64) / 50, // O(n*m)
-            "polynomial" => (n_samples as u64) * (n_features as u64).pow(3) / 10000, // O(n*m^3)
-            _ => (n_samples as u64) * (n_features as u64) / 100,
+            "pca" => (n_samples as u64) * (nfeatures as u64).pow(2) / 1000, // O(n*m^2)
+            "standardization" => (n_samples as u64) * (nfeatures as u64) / 100, // O(n*m)
+            "normalization" => (n_samples as u64) * (nfeatures as u64) / 50, // O(n*m)
+            "polynomial" => (n_samples as u64) * (nfeatures as u64).pow(3) / 10000, // O(n*m^3)
+            _ => (n_samples as u64) * (nfeatures as u64) / 100,
         };
 
         Duration::from_nanos(base_time_ns.max(1000)) // At least 1 microsecond
@@ -575,20 +575,20 @@ impl PerfUtils {
     /// Choose optimal processing strategy based on data characteristics
     pub fn choose_processing_strategy(
         n_samples: usize,
-        n_features: usize,
+        nfeatures: usize,
         available_memory_mb: usize,
     ) -> ProcessingStrategy {
         let estimated_memory_mb =
-            (n_samples * n_features * std::mem::size_of::<f64>()) / (1024 * 1024);
+            (n_samples * nfeatures * std::mem::size_of::<f64>()) / (1024 * 1024);
 
         if estimated_memory_mb > available_memory_mb {
             ProcessingStrategy::OutOfCore {
                 chunk_size: (available_memory_mb * 1024 * 1024)
-                    / (n_features * std::mem::size_of::<f64>()),
+                    / (nfeatures * std::mem::size_of::<f64>()),
             }
-        } else if n_samples > 10000 && n_features > 100 {
+        } else if n_samples > 10000 && nfeatures > 100 {
             ProcessingStrategy::Parallel
-        } else if n_features > 1000 {
+        } else if nfeatures > 1000 {
             ProcessingStrategy::Simd
         } else {
             ProcessingStrategy::Standard

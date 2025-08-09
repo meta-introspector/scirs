@@ -1,12 +1,12 @@
 //! Advanced Activity Recognition Framework
 //!
-//! This module provides sophisticated activity recognition capabilities including:
+//! This module provides sophisticated activity_ recognition capabilities including:
 //! - Real-time action detection and classification
-//! - Complex activity sequence analysis
+//! - Complex activity_ sequence analysis
 //! - Multi-person interaction recognition
-//! - Context-aware activity understanding
-//! - Temporal activity modeling
-//! - Hierarchical activity decomposition
+//! - Context-aware activity_ understanding
+//! - Temporal activity_ modeling
+//! - Hierarchical activity_ decomposition
 
 #![allow(dead_code, missing_docs)]
 
@@ -15,7 +15,7 @@ use crate::scene_understanding::SceneAnalysisResult;
 use ndarray::{Array1, Array2, Array3, ArrayView3};
 use std::collections::HashMap;
 
-/// Advanced-advanced activity recognition engine with multi-level analysis
+/// Advanced-advanced activity_ recognition engine with multi-level analysis
 pub struct ActivityRecognitionEngine {
     /// Action detection modules
     action_detectors: Vec<ActionDetector>,
@@ -23,11 +23,11 @@ pub struct ActivityRecognitionEngine {
     sequence_analyzer: ActivitySequenceAnalyzer,
     /// Multi-person interaction recognizer
     interaction_recognizer: MultiPersonInteractionRecognizer,
-    /// Context-aware activity classifier
+    /// Context-aware activity_ classifier
     context_classifier: ContextAwareActivityClassifier,
-    /// Temporal activity modeler
+    /// Temporal activity_ modeler
     temporal_modeler: TemporalActivityModeler,
-    /// Hierarchical activity decomposer
+    /// Hierarchical activity_ decomposer
     hierarchical_decomposer: HierarchicalActivityDecomposer,
     /// Activity knowledge base
     knowledge_base: ActivityKnowledgeBase,
@@ -70,24 +70,24 @@ pub struct MultiPersonInteractionRecognizer {
     tracking_params: PersonTrackingParams,
     /// Social distance modeling
     social_distance_model: SocialDistanceModel,
-    /// Group activity recognition
+    /// Group activity_ recognition
     group_recognition: GroupActivityRecognition,
 }
 
-/// Context-aware activity classification
+/// Context-aware activity_ classification
 #[derive(Debug, Clone)]
 pub struct ContextAwareActivityClassifier {
     /// Context features
     context_features: Vec<ContextFeature>,
     /// Environment classifiers
     environment_classifiers: Vec<EnvironmentClassifier>,
-    /// Object-activity associations
+    /// Object-activity_ associations
     object_associations: HashMap<String, Vec<String>>,
-    /// Scene-activity correlations
+    /// Scene-activity_ correlations
     scene_correlations: HashMap<String, ActivityDistribution>,
 }
 
-/// Temporal activity modeling for understanding dynamics
+/// Temporal activity_ modeling for understanding dynamics
 #[derive(Debug, Clone)]
 pub struct TemporalActivityModeler {
     /// Temporal resolution
@@ -100,7 +100,7 @@ pub struct TemporalActivityModeler {
     attention_mechanisms: Vec<TemporalAttention>,
 }
 
-/// Hierarchical activity decomposition
+/// Hierarchical activity_ decomposition
 #[derive(Debug, Clone)]
 pub struct HierarchicalActivityDecomposer {
     /// Activity hierarchy levels
@@ -118,13 +118,13 @@ pub struct ActivityKnowledgeBase {
     activity_definitions: HashMap<String, ActivityDefinition>,
     /// Activity ontology
     ontology: ActivityOntology,
-    /// Common activity patterns
+    /// Common activity_ patterns
     common_patterns: Vec<ActivityPattern>,
-    /// Cultural activity variations
+    /// Cultural activity_ variations
     cultural_variations: HashMap<String, Vec<ActivityVariation>>,
 }
 
-/// Comprehensive activity recognition result
+/// Comprehensive activity_ recognition result
 #[derive(Debug, Clone)]
 pub struct ActivityRecognitionResult {
     /// Detected activities
@@ -133,9 +133,9 @@ pub struct ActivityRecognitionResult {
     pub sequences: Vec<ActivitySequence>,
     /// Person interactions
     pub interactions: Vec<PersonInteraction>,
-    /// Overall scene activity summary
+    /// Overall scene activity_ summary
     pub scene_summary: ActivitySummary,
-    /// Temporal activity timeline
+    /// Temporal activity_ timeline
     pub timeline: ActivityTimeline,
     /// Confidence scores
     pub confidence_scores: ConfidenceScores,
@@ -143,7 +143,7 @@ pub struct ActivityRecognitionResult {
     pub uncertainty: ActivityUncertainty,
 }
 
-/// Detected activity with rich metadata
+/// Detected activity_ with rich metadata
 #[derive(Debug, Clone)]
 pub struct DetectedActivity {
     /// Activity class
@@ -200,10 +200,10 @@ pub struct PersonInteraction {
     pub attributes: HashMap<String, f32>,
 }
 
-/// Overall activity summary for the scene
+/// Overall activity_ summary for the scene
 #[derive(Debug, Clone)]
 pub struct ActivitySummary {
-    /// Dominant activity
+    /// Dominant activity_
     pub dominant_activity: String,
     /// Activity diversity index
     pub diversity_index: f32,
@@ -213,11 +213,11 @@ pub struct ActivitySummary {
     pub social_interaction_level: f32,
     /// Activity complexity score
     pub complexity_score: f32,
-    /// Unusual activity indicators
+    /// Unusual activity_ indicators
     pub anomaly_indicators: Vec<AnomalyIndicator>,
 }
 
-/// Temporal activity timeline
+/// Temporal activity_ timeline
 #[derive(Debug, Clone)]
 pub struct ActivityTimeline {
     /// Timeline segments
@@ -233,7 +233,7 @@ pub struct ActivityTimeline {
 pub struct ConfidenceScores {
     /// Overall recognition confidence
     pub overall: f32,
-    /// Per-activity confidences
+    /// Per-activity_ confidences
     pub per_activity: HashMap<String, f32>,
     /// Temporal segmentation confidence
     pub temporal_segmentation: f32,
@@ -241,7 +241,7 @@ pub struct ConfidenceScores {
     pub spatial_localization: f32,
 }
 
-/// Uncertainty quantification for activity recognition
+/// Uncertainty quantification for activity_ recognition
 #[derive(Debug, Clone)]
 pub struct ActivityUncertainty {
     /// Epistemic uncertainty (model uncertainty)
@@ -256,7 +256,7 @@ pub struct ActivityUncertainty {
     pub confusion_matrix: Array2<f32>,
 }
 
-// Supporting types for activity recognition
+// Supporting types for activity_ recognition
 /// Unique identifier for a person in the scene
 pub type PersonID = String;
 /// Unique identifier for an object in the scene
@@ -280,9 +280,9 @@ pub struct MotionCharacteristics {
 /// Transition between activities
 #[derive(Debug, Clone)]
 pub struct ActivityTransition {
-    /// Source activity name
+    /// Source activity_ name
     pub from_activity: String,
-    /// Target activity name
+    /// Target activity_ name
     pub to_activity: String,
     /// Transition probability
     pub probability: f32,
@@ -303,20 +303,20 @@ pub struct AnomalyIndicator {
     pub temporal_location: f32,
 }
 
-/// Timeline segment representing a period of activity
+/// Timeline segment representing a period of activity_
 #[derive(Debug, Clone)]
 pub struct TimelineSegment {
     /// Start time of the segment
     pub start_time: f32,
     /// End time of the segment
     pub end_time: f32,
-    /// Dominant activity in this segment
+    /// Dominant activity_ in this segment
     pub dominant_activity: String,
     /// Mix of activities and their proportions
     pub activity_mix: HashMap<String, f32>,
 }
 
-/// Flow pattern in activity analysis
+/// Flow pattern in activity_ analysis
 #[derive(Debug, Clone)]
 pub struct FlowPattern {
     /// Type of flow pattern
@@ -552,7 +552,7 @@ impl Default for ActivityRecognitionEngine {
 }
 
 impl ActivityRecognitionEngine {
-    /// Create a new advanced activity recognition engine
+    /// Create a new advanced activity_ recognition engine
     pub fn new() -> Self {
         Self {
             action_detectors: vec![
@@ -685,7 +685,7 @@ impl ActivityRecognitionEngine {
             .analyze_interactions(scene_sequence)
     }
 
-    /// Recognize hierarchical activity structure
+    /// Recognize hierarchical activity_ structure
     pub fn recognize_hierarchical_structure(
         &self,
         activities: &[DetectedActivity],
@@ -707,7 +707,7 @@ impl ActivityRecognitionEngine {
     // Helper methods (real implementations)
     fn extract_motion_features(&self, frame: &ArrayView3<f32>) -> Result<Array3<f32>> {
         let (height, width_channels) = frame.dim();
-        let mut motion_features = Array3::zeros((height, width, 10));
+        let mut motion_features = Array3::zeros((height, width_, 10));
 
         // Extract basic motion features
         // Feature 0-1: Optical flow (x, y components)
@@ -723,7 +723,7 @@ impl ActivityRecognitionEngine {
 
         // Feature 2: Motion magnitude
         for y in 0..height {
-            for x in 0..width {
+            for x in 0..width_ {
                 let fx = motion_features[[y, x, 0]];
                 let fy = motion_features[[y, x, 1]];
                 motion_features[[y, x, 2]] = (fx * fx + fy * fy).sqrt();
@@ -732,7 +732,7 @@ impl ActivityRecognitionEngine {
 
         // Feature 3: Motion direction
         for y in 0..height {
-            for x in 0..width {
+            for x in 0..width_ {
                 let fx = motion_features[[y, x, 0]];
                 let fy = motion_features[[y, x, 1]];
                 motion_features[[y, x, 3]] = fy.atan2(fx);
@@ -742,7 +742,7 @@ impl ActivityRecognitionEngine {
         // Features 4-5: Temporal gradient
         if let Some(ref prev_frame) = self.get_previous_frame() {
             for y in 0..height {
-                for x in 0..width {
+                for x in 0..width_ {
                     let current = frame[[y, x, 0]];
                     let previous = prev_frame[[y, x, 0]];
                     motion_features[[y, x, 4]] = current - previous;
@@ -753,7 +753,7 @@ impl ActivityRecognitionEngine {
 
         // Features 6-9: Spatial gradients and motion boundaries
         for y in 1..height - 1 {
-            for x in 1..width - 1 {
+            for x in 1..width_ - 1 {
                 let mag = motion_features[[y, x, 2]];
                 let mag_left = motion_features[[y, x - 1, 2]];
                 let mag_right = motion_features[[y, x + 1, 2]];
@@ -778,7 +778,7 @@ impl ActivityRecognitionEngine {
     ) -> Result<Vec<DetectedActivity>> {
         let mut activities = Vec::new();
 
-        // Analyze each detected person with real activity recognition
+        // Analyze each detected person with real activity_ recognition
         for (i, object) in scene_analysis.objects.iter().enumerate() {
             if object.class == "person" {
                 // Extract region of interest for the person
@@ -791,7 +791,7 @@ impl ActivityRecognitionEngine {
                     bbox_h as usize,
                 )?;
 
-                // Classify activity based on motion characteristics
+                // Classify activity_ based on motion characteristics
                 let (activity_class, confidence) = self.classify_person_activity(&person_motion);
 
                 // Compute motion characteristics
@@ -800,7 +800,7 @@ impl ActivityRecognitionEngine {
                 // Detect interaction with objects
                 let involved_objects = self.detect_object_interactions(scene_analysis, object)?;
 
-                let activity = DetectedActivity {
+                let activity_ = DetectedActivity {
                     activity_class,
                     subtype: self.determine_activity_subtype(&person_motion),
                     confidence,
@@ -811,7 +811,7 @@ impl ActivityRecognitionEngine {
                     attributes: self.extract_activity_attributes(&person_motion),
                     motion_characteristics: motion_chars,
                 };
-                activities.push(activity);
+                activities.push(activity_);
             }
         }
 
@@ -873,7 +873,7 @@ impl ActivityRecognitionEngine {
         })
     }
 
-    // Additional helper methods for activity analysis
+    // Additional helper methods for activity_ analysis
     fn analyze_person_interaction(
         &self,
         id1: &str,
@@ -939,23 +939,23 @@ impl ActivityRecognitionEngine {
 
     fn count_activity_types(&self, activities: &[DetectedActivity]) -> HashMap<String, usize> {
         let mut counts = HashMap::new();
-        for activity in activities {
-            *counts.entry(activity.activity_class.clone()).or_insert(0) += 1;
+        for activity_ in activities {
+            *counts.entry(activity_.activity_class.clone()).or_insert(0) += 1;
         }
         counts
     }
 
     fn find_dominant_activity(&self, activitycounts: &HashMap<String, usize>) -> String {
-        activity_counts
+        activitycounts
             .iter()
             .max_by_key(|(_, &count)| count)
-            .map(|(activity_)| activity.clone())
+            .map(|(activity_)| activity_.clone())
             .unwrap_or_else(|| "unknown".to_string())
     }
 
     fn predict_activity_transition(&self, currentactivity: &str) -> Option<String> {
         // Simple transition model based on common _activity patterns
-        match current_activity {
+        match currentactivity {
             "sitting" => Some("standing".to_string()),
             "standing" => Some("walking".to_string()),
             "walking" => Some("standing".to_string()),
@@ -971,10 +971,10 @@ impl ActivityRecognitionEngine {
     ) -> HashMap<String, Vec<DetectedActivity>> {
         let mut groups = HashMap::new();
 
-        for activity in activities {
-            let group_key = if activity.motion_characteristics.velocity > 0.5 {
+        for activity_ in activities {
+            let group_key = if activity_.motion_characteristics.velocity > 0.5 {
                 "dynamic_activities".to_string()
-            } else if activity.motion_characteristics.velocity < 0.1 {
+            } else if activity_.motion_characteristics.velocity < 0.1 {
                 "static_activities".to_string()
             } else {
                 "moderate_activities".to_string()
@@ -983,7 +983,7 @@ impl ActivityRecognitionEngine {
             groups
                 .entry(group_key)
                 .or_insert_with(Vec::new)
-                .push(activity.clone());
+                .push(activity_.clone());
         }
 
         groups
@@ -1078,28 +1078,28 @@ impl ActivitySequenceAnalyzer {
             return Ok(sequences);
         }
 
-        // Find activity sequences across frames
+        // Find activity_ sequences across frames
         let mut current_sequence: Option<ActivitySequence> = None;
 
         for frame_result in frame_activities.iter() {
-            for activity in &frame_result._activities {
+            for activity_ in &frame_result._activities {
                 match &mut current_sequence {
                     None => {
                         // Start new sequence
                         current_sequence = Some(ActivitySequence {
                             sequence_id: format!("seq_{}", sequences.len()),
-                            _activities: vec![activity.clone()],
-                            sequence_type: activity.activity_class.clone(),
-                            confidence: activity.confidence,
+                            _activities: vec![activity_.clone()],
+                            sequence_type: activity_.activity_class.clone(),
+                            confidence: activity_.confidence,
                             transitions: Vec::new(),
                             completeness: 0.0,
                         });
                     }
                     Some(ref mut seq) => {
-                        if activity.activity_class == seq.sequence_type {
+                        if activity_.activity_class == seq.sequence_type {
                             // Continue existing sequence
-                            seq._activities.push(activity.clone());
-                            seq.confidence = (seq.confidence + activity.confidence) / 2.0;
+                            seq._activities.push(activity_.clone());
+                            seq.confidence = (seq.confidence + activity_.confidence) / 2.0;
                         } else {
                             // End current sequence and start new one
                             seq.completeness =
@@ -1108,12 +1108,12 @@ impl ActivitySequenceAnalyzer {
 
                             current_sequence = Some(ActivitySequence {
                                 sequence_id: format!("seq_{}", sequences.len()),
-                                _activities: vec![activity.clone()],
-                                sequence_type: activity.activity_class.clone(),
-                                confidence: activity.confidence,
+                                _activities: vec![activity_.clone()],
+                                sequence_type: activity_.activity_class.clone(),
+                                confidence: activity_.confidence,
                                 transitions: vec![ActivityTransition {
                                     from_activity: seq.sequence_type.clone(),
-                                    to_activity: activity.activity_class.clone(),
+                                    to_activity: activity_.activity_class.clone(),
                                     probability: 0.8,
                                     typical_duration: 1.0,
                                 }],
@@ -1260,17 +1260,17 @@ impl TemporalActivityModeler {
             return Ok(predictions);
         }
 
-        // Analyze current activity patterns
-        let activity_counts = self.count_activity_types(current_activities);
-        let dominant_activity = self.find_dominant_activity(&activity_counts);
+        // Analyze current activity_ patterns
+        let activitycounts = self.count_activity_types(current_activities);
+        let dominant_activity = self.find_dominant_activity(&activitycounts);
 
         // Predict based on temporal patterns and transitions
-        for (activity_type, count) in activity_counts {
+        for (activity_type, count) in activitycounts {
             let confidence = (count as f32 / current_activities.len() as f32) * 0.8;
 
-            // Simple prediction based on activity persistence and transitions
+            // Simple prediction based on activity_ persistence and transitions
             let predicted_duration = if activity_type == dominant_activity {
-                prediction_horizon * 0.7 // Dominant activity likely to continue
+                prediction_horizon * 0.7 // Dominant activity_ likely to continue
             } else {
                 prediction_horizon * 0.3 // Other _activities may transition
             };
@@ -1285,8 +1285,8 @@ impl TemporalActivityModeler {
         }
 
         // Add transition predictions
-        for activity in current_activities {
-            if let Some(transition) = self.predict_activity_transition(&activity.activity_class) {
+        for activity_ in current_activities {
+            if let Some(transition) = self.predict_activity_transition(&activity_.activity_class) {
                 predictions.push(ActivityPrediction {
                     predicted_activity: transition,
                     probability: 0.4,
@@ -1348,14 +1348,14 @@ impl HierarchicalActivityDecomposer {
             decomposition_confidence: 0.7,
         };
 
-        // Build activity hierarchy
+        // Build activity_ hierarchy
         let mut node_id = 1;
 
         // Group activities by type and create hierarchy
         let activity_groups = self.group_activities_by_similarity(activities);
 
         for (group_type, group_activities) in activity_groups {
-            // Create composite activity node
+            // Create composite activity_ node
             let composite_node = ActivityNode {
                 node_id: format!("composite_{node_id}"),
                 activity_type: group_type.clone(),
@@ -1377,11 +1377,11 @@ impl HierarchicalActivityDecomposer {
                 relationship_type: "contains".to_string(),
             });
 
-            // Create atomic activity nodes
-            for (i, activity) in group_activities.iter().enumerate() {
+            // Create atomic activity_ nodes
+            for (i, activity_) in group_activities.iter().enumerate() {
                 let atomic_node = ActivityNode {
                     node_id: format!("atomic_{node_id}_{i}"),
-                    activity_type: activity.activity_class.clone(),
+                    activity_type: activity_.activity_class.clone(),
                     level: 2,
                     children: Vec::new(),
                 };
@@ -1416,7 +1416,7 @@ impl ActivityKnowledgeBase {
     }
 }
 
-/// High-level function for comprehensive activity recognition
+/// High-level function for comprehensive activity_ recognition
 #[allow(dead_code)]
 pub fn recognize_activities_comprehensive(
     frames: &[ArrayView3<f32>],
@@ -1431,7 +1431,7 @@ pub fn recognize_activities_comprehensive(
     }
 }
 
-/// Specialized function for real-time activity monitoring
+/// Specialized function for real-time activity_ monitoring
 #[allow(dead_code)]
 pub fn monitor_activities_realtime(
     current_frame: &ArrayView3<f32>,
@@ -1472,11 +1472,11 @@ impl ActivityRecognitionEngine {
         previous_frame: &Array3<f32>,
     ) -> Result<Array3<f32>> {
         let (height, width_) = current_frame.dim();
-        let mut flow = Array3::zeros((height, width, 2));
+        let mut flow = Array3::zeros((height, width_, 2));
 
         // Simple optical flow computation using _frame difference
         for y in 1..height - 1 {
-            for x in 1..width - 1 {
+            for x in 1..width_ - 1 {
                 let current = current_frame[[y, x, 0]];
                 let previous = previous_frame[[y, x, 0]];
 
@@ -1542,11 +1542,11 @@ impl ActivityRecognitionEngine {
     }
 
     fn classify_person_activity(&self, person_motionfeatures: &Array1<f32>) -> (String, f32) {
-        let velocity = person_motion_features[0];
-        let magnitude = person_motion_features[1];
-        let aspect_ratio = person_motion_features[4];
+        let velocity = person_motionfeatures[0];
+        let magnitude = person_motionfeatures[1];
+        let aspect_ratio = person_motionfeatures[4];
 
-        // Simple activity classification based on motion characteristics
+        // Simple activity_ classification based on motion characteristics
         if velocity < 0.1 {
             if aspect_ratio > 0.8 {
                 ("standing".to_string(), 0.8)
@@ -1566,13 +1566,13 @@ impl ActivityRecognitionEngine {
 
     fn compute_motion_characteristics(
         &self,
-        person_motion_features: &Array1<f32>,
+        person_motionfeatures: &Array1<f32>,
     ) -> MotionCharacteristics {
         MotionCharacteristics {
-            velocity: person_motion_features[0],
-            acceleration: person_motion_features[1] - person_motion_features[0], // Simplified
-            direction: person_motion_features[2],
-            smoothness: 1.0 - (person_motion_features[1] - person_motion_features[0]).abs(),
+            velocity: person_motionfeatures[0],
+            acceleration: person_motionfeatures[1] - person_motionfeatures[0], // Simplified
+            direction: person_motionfeatures[2],
+            smoothness: 1.0 - (person_motionfeatures[1] - person_motionfeatures[0]).abs(),
             periodicity: 0.5, // Placeholder
         }
     }
@@ -1609,8 +1609,8 @@ impl ActivityRecognitionEngine {
     }
 
     fn determine_activity_subtype(&self, person_motionfeatures: &Array1<f32>) -> Option<String> {
-        let velocity = person_motion_features[0];
-        let magnitude = person_motion_features[1];
+        let velocity = person_motionfeatures[0];
+        let magnitude = person_motionfeatures[1];
 
         if velocity > 0.8 {
             Some("fast".to_string())
@@ -1625,15 +1625,15 @@ impl ActivityRecognitionEngine {
 
     fn extract_activity_attributes(
         &self,
-        person_motion_features: &Array1<f32>,
+        person_motionfeatures: &Array1<f32>,
     ) -> HashMap<String, f32> {
         let mut attributes = HashMap::new();
 
-        attributes.insert("velocity".to_string(), person_motion_features[0]);
-        attributes.insert("magnitude".to_string(), person_motion_features[1]);
-        attributes.insert("direction".to_string(), person_motion_features[2]);
-        attributes.insert("size".to_string(), person_motion_features[3]);
-        attributes.insert("aspect_ratio".to_string(), person_motion_features[4]);
+        attributes.insert("velocity".to_string(), person_motionfeatures[0]);
+        attributes.insert("magnitude".to_string(), person_motionfeatures[1]);
+        attributes.insert("direction".to_string(), person_motionfeatures[2]);
+        attributes.insert("size".to_string(), person_motionfeatures[3]);
+        attributes.insert("aspect_ratio".to_string(), person_motionfeatures[4]);
 
         attributes
     }
@@ -1643,23 +1643,23 @@ impl ActivityRecognitionEngine {
 impl TemporalActivityModeler {
     fn count_activity_types(&self, activities: &[DetectedActivity]) -> HashMap<String, usize> {
         let mut counts = HashMap::new();
-        for activity in activities {
-            *counts.entry(activity.activity_class.clone()).or_insert(0) += 1;
+        for activity_ in activities {
+            *counts.entry(activity_.activity_class.clone()).or_insert(0) += 1;
         }
         counts
     }
 
     fn find_dominant_activity(&self, activitycounts: &HashMap<String, usize>) -> String {
-        activity_counts
+        activitycounts
             .iter()
             .max_by_key(|(_, &count)| count)
-            .map(|(activity_)| activity.clone())
+            .map(|(activity_)| activity_.clone())
             .unwrap_or_else(|| "unknown".to_string())
     }
 
     fn predict_activity_transition(&self, currentactivity: &str) -> Option<String> {
         // Simple transition model based on common _activity patterns
-        match current_activity {
+        match currentactivity {
             "sitting" => Some("standing".to_string()),
             "standing" => Some("walking".to_string()),
             "walking" => Some("standing".to_string()),
@@ -1677,10 +1677,10 @@ impl HierarchicalActivityDecomposer {
     ) -> HashMap<String, Vec<DetectedActivity>> {
         let mut groups = HashMap::new();
 
-        for activity in activities {
-            let group_key = if activity.motion_characteristics.velocity > 0.5 {
+        for activity_ in activities {
+            let group_key = if activity_.motion_characteristics.velocity > 0.5 {
                 "dynamic_activities".to_string()
-            } else if activity.motion_characteristics.velocity < 0.1 {
+            } else if activity_.motion_characteristics.velocity < 0.1 {
                 "static_activities".to_string()
             } else {
                 "moderate_activities".to_string()
@@ -1689,7 +1689,7 @@ impl HierarchicalActivityDecomposer {
             groups
                 .entry(group_key)
                 .or_insert_with(Vec::new)
-                .push(activity.clone());
+                .push(activity_.clone());
         }
 
         groups

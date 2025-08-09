@@ -572,7 +572,7 @@ pub struct HierarchicalANOVA {
 
 impl HierarchicalANOVA {
     /// Create new hierarchical ANOVA
-    pub fn new(ngroups: usize) -> Result<Self> {
+    pub fn new(n_groups: usize) -> Result<Self> {
         check_positive(n_groups, "n_groups")?;
 
         Ok(Self {
@@ -763,7 +763,7 @@ impl HierarchicalANOVAResults {
     }
 
     /// Compute posterior probability that group i has higher mean than group j
-    pub fn prob_group_higher(&self, group_i: usize, groupj: usize) -> Result<f64> {
+    pub fn prob_group_higher(&self, group_i: usize, group_j: usize) -> Result<f64> {
         if group_i >= self.n_groups || group_j >= self.n_groups {
             return Err(StatsError::InvalidArgument(
                 "Group indices out of bounds".to_string(),

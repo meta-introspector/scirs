@@ -155,7 +155,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
                 }
 
                 // Calculate effect size (Cohen's d)
-                let effect_size = self.cohens_d(values_a.view(), values_b.view())?;
+                let effect_size = self.cohensd(values_a.view(), values_b.view())?;
                 results
                     .effect_sizes
                     .insert(metric_name.clone(), effect_size);
@@ -202,15 +202,15 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
     }
 
     /// Calculate Cohen's d effect size
-    fn cohens_d(&self, group_a: ArrayView1<F>, groupb: ArrayView1<F>) -> Result<F> {
+    fn cohensd(&self, group_a: ArrayView1<F>, groupb: ArrayView1<F>) -> Result<F> {
         let mean_a = group_a.mean().unwrap_or(F::zero());
-        let mean_b = group_b.mean().unwrap_or(F::zero());
+        let mean_b = group_a.mean().unwrap_or(F::zero());
 
         let var_a = self.variance(group_a)?;
-        let var_b = self.variance(group_b)?;
+        let var_b = self.variance(group_a)?;
 
         let n_a = F::from(group_a.len()).unwrap();
-        let n_b = F::from(group_b.len()).unwrap();
+        let n_b = F::from(group_a.len()).unwrap();
 
         // Pooled standard deviation
         let pooled_sd = ((var_a * (n_a - F::one()) + var_b * (n_b - F::one()))
@@ -228,17 +228,17 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
     fn confidence_interval_difference(
         &self,
         group_a: ArrayView1<F>,
-        group_b: ArrayView1<F>,
+        group_a: ArrayView1<F>,
     ) -> Result<(F, F)> {
         let mean_a = group_a.mean().unwrap_or(F::zero());
-        let mean_b = group_b.mean().unwrap_or(F::zero());
+        let mean_b = group_a.mean().unwrap_or(F::zero());
         let diff = mean_a - mean_b;
 
         let var_a = self.variance(group_a)?;
-        let var_b = self.variance(group_b)?;
+        let var_b = self.variance(group_a)?;
 
         let n_a = F::from(group_a.len()).unwrap();
-        let n_b = F::from(group_b.len()).unwrap();
+        let n_b = F::from(group_a.len()).unwrap();
 
         // Standard error of difference
         let se_diff = (var_a / n_a + var_b / n_b).sqrt();
@@ -259,10 +259,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
     fn paired_t_test(
         &self,
         group_a: ArrayView1<F>,
-        group_b: ArrayView1<F>,
+        group_a: ArrayView1<F>,
     ) -> Result<StatisticalTest<F>> {
         let n = group_a.len();
-        if n != group_b.len() {
+        if n != group_a.len() {
             return Err(MetricsError::InvalidInput(
                 "Groups must have equal size for paired t-test".to_string(),
             ));
@@ -277,7 +277,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
         // Calculate differences
         let differences: Vec<F> = group_a
             .iter()
-            .zip(group_b.iter())
+            .zip(group_a.iter())
             .map(|(&_a, &_b)| _a - b)
             .collect();
         let diff_array = Array1::from(differences);
@@ -305,10 +305,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
     fn mann_whitney_u_test(
         &self,
         group_a: ArrayView1<F>,
-        group_b: ArrayView1<F>,
+        group_a: ArrayView1<F>,
     ) -> Result<StatisticalTest<F>> {
         let n_a = group_a.len();
-        let n_b = group_b.len();
+        let n_b = group_a.len();
 
         if n_a == 0 || n_b == 0 {
             return Err(MetricsError::InvalidInput(
@@ -322,7 +322,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
         for &val in group_a.iter() {
             combined.push((val, 0)); // 0 for group A
         }
-        for &val in group_b.iter() {
+        for &val in group_a.iter() {
             combined.push((val, 1)); // 1 for group B
         }
 
@@ -382,17 +382,17 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
     fn bayesian_model_comparison(
         &self,
         group_a: ArrayView1<F>,
-        group_b: ArrayView1<F>,
+        group_a: ArrayView1<F>,
     ) -> Result<BayesianAnalysisResults<F>> {
         // Simplified Bayesian analysis using normal-normal model
         let mean_a = group_a.mean().unwrap_or(F::zero());
-        let mean_b = group_b.mean().unwrap_or(F::zero());
+        let mean_b = group_a.mean().unwrap_or(F::zero());
 
         let var_a = self.variance(group_a)?;
-        let var_b = self.variance(group_b)?;
+        let var_b = self.variance(group_a)?;
 
         let n_a = F::from(group_a.len()).unwrap();
-        let n_b = F::from(group_b.len()).unwrap();
+        let n_b = F::from(group_a.len()).unwrap();
 
         // Posterior parameters for difference
         let posterior_mean = mean_a - mean_b;
@@ -423,9 +423,9 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
     fn power_analysis(
         &self,
         group_a: ArrayView1<F>,
-        group_b: ArrayView1<F>,
+        group_a: ArrayView1<F>,
     ) -> Result<PowerAnalysisResults<F>> {
-        let effect_size = self.cohens_d(group_a, group_b)?;
+        let effect_size = self.cohensd(group_a, group_a)?;
         let n = F::from(group_a.len()).unwrap();
 
         // Calculate actual power
@@ -468,7 +468,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
 
     /// Interpret effect size magnitude
     pub fn interpret_effect_size(&self, cohensd: F) -> EffectSizeMagnitude {
-        let abs_d = cohens_d.abs();
+        let abs_d = cohensd.abs();
 
         if abs_d < F::from(0.2).unwrap() {
             EffectSizeMagnitude::Negligible
@@ -605,7 +605,7 @@ pub fn multi_dimensional_effect_size<F: Float + num_traits::FromPrimitive + std:
 
     for (metric_name, values_a) in metrics_a {
         if let Some(values_b) = metrics_b.get(metric_name) {
-            let effect_size = analyzer.cohens_d(values_a.view(), values_b.view())?;
+            let effect_size = analyzer.cohensd(values_a.view(), values_b.view())?;
             effect_sizes.push(effect_size);
         }
     }
@@ -640,9 +640,9 @@ mod tests {
         let analyzer = AdvancedStatisticalAnalyzer::<f64>::new();
 
         let group_a = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let group_b = array![2.0, 3.0, 4.0, 5.0, 6.0];
+        let group_a = array![2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let effect_size = analyzer.cohens_d(group_a.view(), group_b.view()).unwrap();
+        let effect_size = analyzer.cohensd(group_a.view(), group_a.view()).unwrap();
         // The expected value should be approximately -0.632, not -1.0
         assert!((effect_size - (-0.6324555320336759)).abs() < 1e-10);
     }
@@ -652,10 +652,10 @@ mod tests {
         let analyzer = AdvancedStatisticalAnalyzer::<f64>::new();
 
         let group_a = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let group_b = array![1.1, 2.1, 3.1, 4.1, 5.1];
+        let group_a = array![1.1, 2.1, 3.1, 4.1, 5.1];
 
         let result = analyzer
-            .paired_t_test(group_a.view(), group_b.view())
+            .paired_t_test(group_a.view(), group_a.view())
             .unwrap();
         assert!(result.p_value > 0.0);
         assert!(result.p_value <= 1.0);

@@ -103,16 +103,16 @@ where
     let a = calculate_shapiro_wilk_coefficients(n)?;
 
     // Calculate the mean
-    let mean = sorted_data.iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let mean = sorteddata.iter().cloned().sum::<F>() / F::from(n).unwrap();
 
     // Calculate S^2 (sum of squared deviations from the mean)
-    let s_squared = sorted_data.iter().map(|&x| (x - mean).powi(2)).sum::<F>();
+    let s_squared = sorteddata.iter().map(|&x| (x - mean).powi(2)).sum::<F>();
 
     // Calculate the numerator of the W statistic
     let mut numerator = F::zero();
     for i in 0..n / 2 {
         let coef = F::from(a[i]).unwrap();
-        numerator = numerator + coef * (sorted_data[n - 1 - i] - sorted_data[i]);
+        numerator = numerator + coef * (sorteddata[n - 1 - i] - sorteddata[i]);
     }
 
     // Calculate the W statistic
@@ -402,7 +402,7 @@ where
 
 // Helper function to compute the Anderson-Darling test statistic and p-value
 #[allow(dead_code)]
-fn compute_anderson_darling_statistic<F>(_zdata: &[F], n: usize) -> StatsResult<(F, F)>
+fn compute_anderson_darling_statistic<F>(zdata: &[F], n: usize) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
@@ -411,7 +411,7 @@ where
     // Calculate the cumulative distribution function for each sorted _data point
     let mut s = F::zero();
 
-    for (i, &z) in z_data.iter().enumerate() {
+    for (i, &z) in zdata.iter().enumerate() {
         // Calculate standard normal CDF at z
         let cdf = F::from(approx_normal_cdf(<f64 as NumCast>::from(z).unwrap())).unwrap();
 
@@ -442,7 +442,7 @@ where
 // Calculate the p-value for the Anderson-Darling test
 #[allow(dead_code)]
 fn calculate_anderson_darling_p_value<F: Float + NumCast>(_asquared: F) -> F {
-    let a2 = <f64 as NumCast>::from(_a_squared).unwrap();
+    let a2 = <f64 as NumCast>::from(_asquared).unwrap();
 
     // Use the approximation from D'Agostino and Stephens (1986)
     let p = if a2 <= 0.2 {
@@ -557,8 +557,8 @@ where
 {
     let _n_f = F::from(n).unwrap();
 
-    // Calculations for skewness (_g1)
-    let g1_f64 = <f64 as NumCast>::from(_g1).unwrap();
+    // Calculations for skewness (g1)
+    let g1_f64 = <f64 as NumCast>::from(g1).unwrap();
     let n_f64 = n as f64;
 
     // D'Agostino's calculations for skewness

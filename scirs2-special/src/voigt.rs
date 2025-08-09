@@ -169,7 +169,7 @@ where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
     check_positive(fwhm_gaussian, "fwhm_gaussian")?;
-    check_positive(fwhm_lorentzian, "fwhm_lorentzian")?;
+    check_positive(fwhmlorentzian, "fwhmlorentzian")?;
 
     // Convert FWHM to standard parameters
     let two = T::from_f64(2.0).unwrap();
@@ -177,7 +177,7 @@ where
     let sqrt2ln2 = (two * ln2).sqrt();
 
     let sigma = fwhm_gaussian / (two * sqrt2ln2);
-    let gamma = fwhm_lorentzian / two;
+    let gamma = fwhmlorentzian / two;
 
     voigt_profile(x, sigma, gamma)
 }

@@ -247,7 +247,7 @@ impl RiskManagementMetrics {
     pub fn historical_var<F>(
         &self,
         returns: &Array1<F>,
-        confidence_level: F,
+        confidencelevel: F,
         holding_period: usize,
     ) -> Result<F>
     where
@@ -264,7 +264,7 @@ impl RiskManagementMetrics {
         sorted_returns.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         // Calculate percentile index
-        let alpha = F::one() - confidence_level;
+        let alpha = F::one() - confidencelevel;
         let index = (alpha * F::from(sorted_returns.len()).unwrap()).floor();
         let var_index = index.to_usize().unwrap_or(0);
 
@@ -292,7 +292,7 @@ impl RiskManagementMetrics {
         let mut sorted_returns: Vec<F> = returns.iter().cloned().collect();
         sorted_returns.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
-        let alpha = F::one() - confidence_level;
+        let alpha = F::one() - confidencelevel;
         let cutoff_index = (alpha * F::from(sorted_returns.len()).unwrap())
             .floor()
             .to_usize()
@@ -336,33 +336,33 @@ impl RiskManagementMetrics {
     }
 
     /// Calculate portfolio beta
-    pub fn beta<F>(&self, portfolio_returns: &Array1<F>, marketreturns: &Array1<F>) -> Result<F>
+    pub fn beta<F>(&self, portfolioreturns: &Array1<F>, marketreturns: &Array1<F>) -> Result<F>
     where
         F: Float + num_traits::FromPrimitive + std::iter::Sum,
     {
-        if portfolio_returns.len() != market_returns.len() {
+        if portfolioreturns.len() != marketreturns.len() {
             return Err(MetricsError::InvalidInput(
                 "Portfolio and market _returns must have same length".to_string(),
             ));
         }
 
-        let portfolio_mean = portfolio_returns.iter().cloned().sum::<F>()
-            / F::from(portfolio_returns.len()).unwrap();
+        let portfolio_mean = portfolioreturns.iter().cloned().sum::<F>()
+            / F::from(portfolioreturns.len()).unwrap();
         let market_mean =
-            market_returns.iter().cloned().sum::<F>() / F::from(market_returns.len()).unwrap();
+            marketreturns.iter().cloned().sum::<F>() / F::from(marketreturns.len()).unwrap();
 
-        let covariance = portfolio_returns
+        let covariance = portfolioreturns
             .iter()
-            .zip(market_returns.iter())
+            .zip(marketreturns.iter())
             .map(|(&p, &m)| (p - portfolio_mean) * (m - market_mean))
             .sum::<F>()
-            / F::from(portfolio_returns.len() - 1).unwrap();
+            / F::from(portfolioreturns.len() - 1).unwrap();
 
-        let market_variance = market_returns
+        let market_variance = marketreturns
             .iter()
             .map(|&m| (m - market_mean) * (m - market_mean))
             .sum::<F>()
-            / F::from(market_returns.len() - 1).unwrap();
+            / F::from(marketreturns.len() - 1).unwrap();
 
         if market_variance > F::zero() {
             Ok(covariance / market_variance)
@@ -396,23 +396,23 @@ impl PortfolioMetrics {
     }
 
     /// Calculate Sharpe Ratio
-    pub fn sharpe_ratio<F>(&self, portfolio_returns: &Array1<F>, risk_freerate: F) -> Result<F>
+    pub fn sharpe_ratio<F>(&self, portfolioreturns: &Array1<F>, risk_freerate: F) -> Result<F>
     where
         F: Float + num_traits::FromPrimitive + std::iter::Sum,
     {
-        if portfolio_returns.is_empty() {
+        if portfolioreturns.is_empty() {
             return Ok(F::zero());
         }
 
-        let mean_return = portfolio_returns.iter().cloned().sum::<F>()
-            / F::from(portfolio_returns.len()).unwrap();
-        let excess_return = mean_return - risk_free_rate;
+        let mean_return = portfolioreturns.iter().cloned().sum::<F>()
+            / F::from(portfolioreturns.len()).unwrap();
+        let excess_return = mean_return - risk_freerate;
 
-        let variance = portfolio_returns
+        let variance = portfolioreturns
             .iter()
             .map(|&r| (r - mean_return) * (r - mean_return))
             .sum::<F>()
-            / F::from(portfolio_returns.len() - 1).unwrap();
+            / F::from(portfolioreturns.len() - 1).unwrap();
 
         let volatility = variance.sqrt();
 
@@ -424,23 +424,23 @@ impl PortfolioMetrics {
     }
 
     /// Calculate Sortino Ratio (downside risk-adjusted return)
-    pub fn sortino_ratio<F>(&self, portfolio_returns: &Array1<F>, targetreturn: F) -> Result<F>
+    pub fn sortino_ratio<F>(&self, portfolioreturns: &Array1<F>, targetreturn: F) -> Result<F>
     where
         F: Float + num_traits::FromPrimitive + std::iter::Sum,
     {
-        if portfolio_returns.is_empty() {
+        if portfolioreturns.is_empty() {
             return Ok(F::zero());
         }
 
-        let mean_return = portfolio_returns.iter().cloned().sum::<F>()
-            / F::from(portfolio_returns.len()).unwrap();
-        let excess_return = mean_return - target_return;
+        let mean_return = portfolioreturns.iter().cloned().sum::<F>()
+            / F::from(portfolioreturns.len()).unwrap();
+        let excess_return = mean_return - targetreturn;
 
         // Calculate downside deviation
-        let downside_variance = portfolio_returns
+        let downside_variance = portfolioreturns
             .iter()
             .map(|&r| {
-                let downside_diff = target_return - r;
+                let downside_diff = targetreturn - r;
                 if downside_diff > F::zero() {
                     downside_diff * downside_diff
                 } else {
@@ -448,7 +448,7 @@ impl PortfolioMetrics {
                 }
             })
             .sum::<F>()
-            / F::from(portfolio_returns.len() - 1).unwrap();
+            / F::from(portfolioreturns.len() - 1).unwrap();
 
         let downside_deviation = downside_variance.sqrt();
 
@@ -462,20 +462,20 @@ impl PortfolioMetrics {
     /// Calculate Information Ratio
     pub fn information_ratio<F>(
         &self,
-        portfolio_returns: &Array1<F>,
+        portfolioreturns: &Array1<F>,
         benchmark_returns: &Array1<F>,
     ) -> Result<F>
     where
         F: Float + num_traits::FromPrimitive + std::iter::Sum,
     {
-        if portfolio_returns.len() != benchmark_returns.len() {
+        if portfolioreturns.len() != benchmark_returns.len() {
             return Err(MetricsError::InvalidInput(
                 "Portfolio and benchmark _returns must have same length".to_string(),
             ));
         }
 
         // Calculate active _returns
-        let active_returns: Vec<F> = portfolio_returns
+        let active_returns: Vec<F> = portfolioreturns
             .iter()
             .zip(benchmark_returns.iter())
             .map(|(&p, &b)| p - b)
@@ -506,7 +506,7 @@ impl PortfolioMetrics {
     where
         F: Float + num_traits::FromPrimitive + PartialOrd + std::iter::Sum,
     {
-        let annualized_return = self.annualized_return(portfolio_returns)?;
+        let annualized_return = self.annualized_return(portfolioreturns)?;
 
         let risk_mgmt = RiskManagementMetrics::new();
         let max_drawdown = risk_mgmt.maximum_drawdown(prices)?;
@@ -762,13 +762,13 @@ impl MarketRiskMetrics {
     where
         F: Float + num_traits::FromPrimitive + std::iter::Sum,
     {
-        let (n_periods, n_assets) = returns_matrix.dim();
+        let (n_periods, n_assets) = returnsmatrix.dim();
         let mut correlation_matrix = Array2::zeros((n_assets, n_assets));
 
         // Calculate means for each asset
         let means: Vec<F> = (0..n_assets)
             .map(|i| {
-                returns_matrix.column(i).iter().cloned().sum::<F>() / F::from(n_periods).unwrap()
+                returnsmatrix.column(i).iter().cloned().sum::<F>() / F::from(n_periods).unwrap()
             })
             .collect();
 
@@ -779,8 +779,8 @@ impl MarketRiskMetrics {
                     correlation_matrix[[i, j]] = F::one();
                 } else {
                     let correlation = self.calculate_correlation(
-                        &returns_matrix.column(i),
-                        &returns_matrix.column(j),
+                        &returnsmatrix.column(i),
+                        &returnsmatrix.column(j),
                         means[i],
                         means[j],
                     )?;
@@ -854,13 +854,13 @@ impl TradingStrategyMetrics {
     where
         F: Float + num_traits::FromPrimitive + PartialOrd,
     {
-        if trade_returns.is_empty() {
+        if tradereturns.is_empty() {
             return Ok(F::zero());
         }
 
-        let profitable_trades = trade_returns.iter().filter(|&&ret| ret > F::zero()).count();
+        let profitable_trades = tradereturns.iter().filter(|&&ret| ret > F::zero()).count();
 
-        Ok(F::from(profitable_trades).unwrap() / F::from(trade_returns.len()).unwrap())
+        Ok(F::from(profitable_trades).unwrap() / F::from(tradereturns.len()).unwrap())
     }
 
     /// Calculate profit factor (gross profit / gross loss)
@@ -868,13 +868,13 @@ impl TradingStrategyMetrics {
     where
         F: Float + num_traits::FromPrimitive + PartialOrd + std::iter::Sum,
     {
-        let gross_profit = trade_returns
+        let gross_profit = tradereturns
             .iter()
             .filter(|&&ret| ret > F::zero())
             .cloned()
             .sum::<F>();
 
-        let gross_loss = trade_returns
+        let gross_loss = tradereturns
             .iter()
             .filter(|&&ret| ret < F::zero())
             .cloned()
@@ -895,7 +895,7 @@ impl TradingStrategyMetrics {
     where
         F: Float + num_traits::FromPrimitive + PartialOrd + std::iter::Sum,
     {
-        let total_return = trade_returns.iter().cloned().sum::<F>();
+        let total_return = tradereturns.iter().cloned().sum::<F>();
 
         let risk_mgmt = RiskManagementMetrics::new();
         let max_drawdown = risk_mgmt.maximum_drawdown(prices)?;
@@ -998,8 +998,8 @@ impl RegulatoryMetrics {
     where
         F: Float,
     {
-        if risk_weighted_assets > F::zero() {
-            Ok(tier1_capital / risk_weighted_assets)
+        if risk_weightedassets > F::zero() {
+            Ok(tier1_capital / risk_weightedassets)
         } else {
             Err(MetricsError::InvalidInput(
                 "Risk-weighted _assets must be greater than zero".to_string(),
@@ -1012,8 +1012,8 @@ impl RegulatoryMetrics {
     where
         F: Float,
     {
-        if total_exposure > F::zero() {
-            Ok(tier1_capital / total_exposure)
+        if totalexposure > F::zero() {
+            Ok(tier1_capital / totalexposure)
         } else {
             Err(MetricsError::InvalidInput(
                 "Total _exposure must be greater than zero".to_string(),
@@ -1083,7 +1083,7 @@ impl ESGMetrics {
         F: Float,
     {
         if revenue > F::zero() {
-            Ok(carbon_emissions / revenue)
+            Ok(carbonemissions / revenue)
         } else {
             Err(MetricsError::InvalidInput(
                 "Revenue must be greater than zero".to_string(),
@@ -1121,9 +1121,9 @@ mod tests {
     fn test_sharpe_ratio() {
         let portfolio = PortfolioMetrics::new();
         let returns = array![0.01, 0.02, -0.01, 0.03, 0.0];
-        let risk_free_rate = 0.005;
+        let risk_freerate = 0.005;
 
-        let sharpe = portfolio.sharpe_ratio(&returns, risk_free_rate).unwrap();
+        let sharpe = portfolio.sharpe_ratio(&returns, risk_freerate).unwrap();
         assert!(sharpe.is_finite());
     }
 
@@ -1131,10 +1131,10 @@ mod tests {
     fn test_historical_var() {
         let risk_mgmt = RiskManagementMetrics::new();
         let returns = array![-0.05, -0.02, 0.01, 0.03, -0.01, 0.02, -0.03];
-        let confidence_level = 0.95;
+        let confidencelevel = 0.95;
 
         let var = risk_mgmt
-            .historical_var(&returns, confidence_level, 1)
+            .historical_var(&returns, confidencelevel, 1)
             .unwrap();
         assert!(var >= 0.0);
     }
@@ -1152,9 +1152,9 @@ mod tests {
     #[test]
     fn test_hit_ratio() {
         let trading = TradingStrategyMetrics::new();
-        let trade_returns = array![0.02, -0.01, 0.03, -0.005, 0.01];
+        let tradereturns = array![0.02, -0.01, 0.03, -0.005, 0.01];
 
-        let hit_ratio = trading.hit_ratio(&trade_returns).unwrap();
+        let hit_ratio = trading.hit_ratio(&tradereturns).unwrap();
         assert!((0.0..=1.0).contains(&hit_ratio));
         assert_eq!(hit_ratio, 0.6); // 3 out of 5 profitable trades
     }
@@ -1163,10 +1163,10 @@ mod tests {
     fn test_capital_ratio() {
         let regulatory = RegulatoryMetrics::new();
         let tier1_capital = 100.0;
-        let risk_weighted_assets = 800.0;
+        let risk_weightedassets = 800.0;
 
         let ratio = regulatory
-            .capital_ratio(tier1_capital, risk_weighted_assets)
+            .capital_ratio(tier1_capital, risk_weightedassets)
             .unwrap();
         assert_eq!(ratio, 0.125); // 12.5%
     }

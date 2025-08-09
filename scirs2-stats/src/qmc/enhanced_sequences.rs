@@ -288,9 +288,9 @@ where
 
     /// Generate a chunk of the sequence
     fn generate_chunk(&self, start_index: usize, chunksize: usize) -> StatsResult<Array2<F>> {
-        let mut chunk = Array2::zeros((chunk_size, self.dimension));
+        let mut chunk = Array2::zeros((chunksize, self.dimension));
 
-        for i in 0..chunk_size {
+        for i in 0..chunksize {
             let _index = start_index + i;
             let point = self.compute_point_at_index(_index)?;
             chunk.row_mut(i).assign(&point);

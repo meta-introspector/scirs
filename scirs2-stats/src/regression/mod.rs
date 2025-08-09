@@ -139,16 +139,16 @@ where
         F: std::ops::Mul<Output = F> + std::iter::Sum<F>,
     {
         // Check that the number of features matches
-        if x_new.ncols() != self.coefficients.len() {
+        if xnew.ncols() != self.coefficients.len() {
             return Err(StatsError::DimensionMismatch(format!(
                 "Number of features in x_new ({}) must match the number of coefficients ({})",
-                x_new.ncols(),
+                xnew.ncols(),
                 self.coefficients.len()
             )));
         }
 
         // Calculate predictions
-        let predictions = x_new.dot(&self.coefficients);
+        let predictions = xnew.dot(&self.coefficients);
 
         Ok(predictions)
     }

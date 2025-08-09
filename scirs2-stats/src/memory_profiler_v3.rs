@@ -214,8 +214,8 @@ impl<F: Float + Clone + std::fmt::Display> StatisticsCache<F> {
     pub fn new(_max_entries: usize, maxmemory: usize) -> Self {
         Self {
             cache: HashMap::new(),
-            max_entries: max_entries,
-            max_memory,
+            max_entries: _max_entries,
+            max_memory: maxmemory,
             current_memory: 0,
             profiler: None,
         }
@@ -264,7 +264,7 @@ impl<F: Float + Clone + std::fmt::Display> StatisticsCache<F> {
     /// Evict entries to make room for new ones
     fn maybe_evict(&mut self, neededsize: usize) {
         // Check memory limit
-        while self.current_memory + needed_size > self.max_memory && !self.cache.is_empty() {
+        while self.current_memory + neededsize > self.max_memory && !self.cache.is_empty() {
             self.evict_lru();
         }
 
@@ -351,21 +351,21 @@ impl AdaptiveMemoryManager {
 
         if current_memory > self.memory_threshold_high {
             // High memory usage - use most memory-efficient algorithms
-            if data_size > 1_000_000 {
+            if datasize > 1_000_000 {
                 AlgorithmChoice::Streaming
             } else {
                 AlgorithmChoice::InPlace
             }
         } else if current_memory > self.memory_threshold_low {
             // Medium memory usage - balance speed and memory
-            if data_size > 100_000 {
+            if datasize > 100_000 {
                 AlgorithmChoice::Chunked
             } else {
                 AlgorithmChoice::Standard
             }
         } else {
             // Low memory usage - prioritize speed
-            if data_size > 10_000 {
+            if datasize > 10_000 {
                 AlgorithmChoice::Parallel
             } else {
                 AlgorithmChoice::Standard
@@ -380,7 +380,7 @@ impl AdaptiveMemoryManager {
 
         // Use at most 10% of available memory for chunking
         let max_chunk_memory = available_memory / 10;
-        let max_chunk_elements = max_chunk_memory / element_size;
+        let max_chunk_elements = max_chunk_memory / elementsize;
 
         // Clamp to reasonable bounds
         max_chunk_elements.clamp(1000, data_size / 4)
@@ -409,8 +409,8 @@ where
 {
     pub fn new(profiler: Arc<MemoryProfiler>) -> Self {
         let cache = StatisticsCache::new(1000, 50 * 1024 * 1024) // 50MB cache
-            .with_profiler(_profiler.clone());
-        let adaptive_manager = AdaptiveMemoryManager::new(_profiler.clone());
+            .with_profiler(profiler.clone());
+        let adaptive_manager = AdaptiveMemoryManager::new(profiler.clone());
 
         Self {
             profiler: profiler.clone(),

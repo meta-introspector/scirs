@@ -60,12 +60,12 @@ lazy_static::lazy_static! {
 /// * `f64` - Value of the constant
 #[allow(dead_code)]
 pub fn get_constant(name: &'static str) -> f64 {
-    if let Some(value) = SPECIAL_VALUES.lock().unwrap().get(_name) {
+    if let Some(value) = SPECIAL_VALUES.lock().unwrap().get(name) {
         return *value;
     }
 
     // Compute and cache common mathematical constants
-    let value = match _name {
+    let value = match name {
         "euler_mascheroni" => 0.577_215_664_901_532_9,
         "pi_squared_div_6" => PI * PI / 6.0,
         "pi_squared_div_12" => PI * PI / 12.0,
@@ -74,7 +74,7 @@ pub fn get_constant(name: &'static str) -> f64 {
     };
 
     // Cache the computed value
-    SPECIAL_VALUES.lock().unwrap().insert(_name, value);
+    SPECIAL_VALUES.lock().unwrap().insert(name, value);
     value
 }
 
@@ -270,7 +270,7 @@ pub mod simd {
     pub fn exp_simd(values: &[f64]) -> Vec<f64> {
         // For now, use standard library functions
         // In a full SIMD implementation, this would use platform-specific intrinsics
-        _values
+        values
             .iter()
             .map(|&x| {
                 if x > 700.0 {
@@ -286,7 +286,7 @@ pub mod simd {
 
     /// SIMD-optimized logarithm function for arrays
     pub fn ln_simd(values: &[f64]) -> Vec<f64> {
-        _values
+        values
             .iter()
             .map(|&x| {
                 if x <= 0.0 {
@@ -302,7 +302,7 @@ pub mod simd {
 
     /// SIMD-optimized sine function for arrays
     pub fn sin_simd(values: &[f64]) -> Vec<f64> {
-        _values
+        values
             .iter()
             .map(|&x| {
                 if x.is_infinite() || x.is_nan() {
@@ -318,7 +318,7 @@ pub mod simd {
 
     /// SIMD-optimized cosine function for arrays
     pub fn cos_simd(values: &[f64]) -> Vec<f64> {
-        _values
+        values
             .iter()
             .map(|&x| {
                 if x.is_infinite() || x.is_nan() {

@@ -1005,14 +1005,14 @@ pub fn pbdv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
         ));
     }
 
-    if _vmax == 0 {
+    if vmax == 0 {
         let (d0, d0p) = pbdv(0.0, x)?;
         return Ok((vec![d0], vec![d0p]));
     }
 
     // Initialize arrays to hold function values and derivatives
-    let mut d_values = vec![0.0; _vmax + 1];
-    let mut dp_values = vec![0.0; _vmax + 1];
+    let mut d_values = vec![0.0; vmax + 1];
+    let mut dp_values = vec![0.0; vmax + 1];
 
     // Compute D_0 and D_1 directly
     let (d0, d0p) = pbdv(0.0, x)?;
@@ -1021,13 +1021,13 @@ pub fn pbdv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
     d_values[0] = d0;
     dp_values[0] = d0p;
 
-    if _vmax >= 1 {
+    if vmax >= 1 {
         d_values[1] = d1;
         dp_values[1] = d1p;
     }
 
     // Use recurrence relation to compute higher orders
-    for v in 2..=_vmax {
+    for v in 2..=vmax {
         // Recurrence relation: D_{v+1}(x) = x*D_v(x) - v*D_{v-1}(x)
         d_values[v] = x * d_values[v - 1] - (v as f64 - 1.0) * d_values[v - 2];
         // Derivative recurrence: D'_{v+1}(x) = x*D'_v(x) - v*D'_{v-1}(x) + D_v(x)
@@ -1066,11 +1066,11 @@ pub fn pbvv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
     }
 
     // Initialize arrays to hold function values and derivatives
-    let mut v_values = vec![0.0; _vmax + 1];
-    let mut vp_values = vec![0.0; _vmax + 1];
+    let mut v_values = vec![0.0; vmax + 1];
+    let mut vp_values = vec![0.0; vmax + 1];
 
     // Compute each V_v individually - this can be optimized further
-    for v in 0..=_vmax {
+    for v in 0..=vmax {
         let (v_val, vp_val) = pbvv(v as f64, x)?;
         v_values[v] = v_val;
         vp_values[v] = vp_val;

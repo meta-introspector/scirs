@@ -25,7 +25,7 @@ where
     O: Optimizer<A, D>,
 {
     /// Base optimizer
-    base_optimizer: O,
+    baseoptimizer: O,
 
     /// Streaming configuration
     config: StreamingConfig,
@@ -158,7 +158,7 @@ enum DriftDetectionMethod<A: Float> {
 
     /// Model-based detection
     ModelBased {
-        model_type: ModelType,
+        modeltype: ModelType,
         complexity_threshold: A,
     },
 }
@@ -469,7 +469,7 @@ struct MetaModel<A: Float> {
     parameters: Array1<A>,
 
     /// Model type
-    model_type: MetaModelType,
+    modeltype: MetaModelType,
 
     /// Update strategy
     update_strategy: MetaUpdateStrategy,
@@ -573,7 +573,7 @@ where
         let meta_learner = MetaLearner::new(&config)?;
 
         Ok(Self {
-            base_optimizer,
+            baseoptimizer,
             config,
             lr_controller,
             drift_detector,
@@ -589,13 +589,13 @@ where
     /// Process streaming data with adaptive optimization
     pub fn adaptive_step(
         &mut self,
-        data_point: StreamingDataPoint<A>,
+        datapoint: StreamingDataPoint<A>,
     ) -> Result<AdaptiveStepResult> {
         let step_start = Instant::now();
         self.step_count += 1;
 
         // Add data to adaptive buffer
-        self.adaptive_buffer.add_data_point(data_point.clone())?;
+        self.adaptive_buffer.add_data_point(datapoint.clone())?;
 
         // Check if we should process the buffer
         if !self.should_process_buffer()? {
@@ -706,8 +706,8 @@ where
                 Adaptation::LearningRate { new_rate } => {
                     self.lr_controller.current_lr = *new_rate;
                 }
-                Adaptation::BufferSize { new_size } => {
-                    self.adaptive_buffer.resize(*new_size)?;
+                Adaptation::BufferSize { newsize } => {
+                    self.adaptive_buffer.resize(*newsize)?;
                 }
                 Adaptation::DriftSensitivity { new_sensitivity } => {
                     self.drift_detector.adaptive_threshold = *new_sensitivity;
@@ -742,7 +742,7 @@ where
         let current_params_nd = current_params.into_dimensionality::<D>().unwrap();
         let gradients_nd = gradients.into_dimensionality::<D>().unwrap();
         let updated_params_nd = self
-            .base_optimizer
+            .baseoptimizer
             .step(&current_params_nd, &gradients_nd)?;
         let updated_params = updated_params_nd
             .into_dimensionality::<ndarray::Ix1>()
@@ -765,11 +765,11 @@ where
         };
         let mut gradients = Array1::zeros(feature_dim);
 
-        for data_point in batch {
+        for datapoint in batch {
             // Simplified: assume gradients are feature differences
-            for (i, &feature) in data_point.features.iter().enumerate() {
+            for (i, &feature) in datapoint.features.iter().enumerate() {
                 if i < gradients.len() {
-                    gradients[i] = gradients[i] + feature * data_point.weight;
+                    gradients[i] = gradients[i] + feature * datapoint.weight;
                 }
             }
         }
@@ -790,11 +790,11 @@ where
         let mut total_loss = A::zero();
         let batch_size = A::from(batch.len()).unwrap();
 
-        for data_point in batch {
+        for datapoint in batch {
             // Simplified loss computation
-            let prediction = data_point.features.iter().map(|f| *f).sum::<A>()
-                / A::from(data_point.features.len()).unwrap();
-            if let Some(target) = data_point.target {
+            let prediction = datapoint.features.iter().map(|f| *f).sum::<A>()
+                / A::from(datapoint.features.len()).unwrap();
+            if let Some(target) = datapoint.target {
                 let loss = (prediction - target) * (prediction - target);
                 total_loss = total_loss + loss;
             }
@@ -836,8 +836,8 @@ where
         let mut stds = Array1::zeros(feature_dim);
 
         // Compute means
-        for data_point in batch {
-            for (i, &feature) in data_point.features.iter().enumerate() {
+        for datapoint in batch {
+            for (i, &feature) in datapoint.features.iter().enumerate() {
                 means[i] = means[i] + feature;
             }
         }
@@ -845,8 +845,8 @@ where
         means.mapv_inplace(|m| m / batch_size);
 
         // Compute standard deviations
-        for data_point in batch {
-            for (i, &feature) in data_point.features.iter().enumerate() {
+        for datapoint in batch {
+            for (i, &feature) in datapoint.features.iter().enumerate() {
                 let diff = feature - means[i];
                 stds[i] = stds[i] + diff * diff;
             }
@@ -918,9 +918,9 @@ where
                 Adaptation::LearningRate { new_rate } => {
                     lr_adjustment = *new_rate / self.lr_controller.base_lr;
                 }
-                Adaptation::BufferSize { new_size } => {
+                Adaptation::BufferSize { newsize } => {
                     buffer_adjustment =
-                        (*new_size as i32) - (self.adaptive_buffer.current_size as i32);
+                        (*newsize as i32) - (self.adaptive_buffer.current_size as i32);
                 }
                 Adaptation::DriftSensitivity { new_sensitivity } => {
                     drift_sensitivity_adjustment = *new_sensitivity;
@@ -1021,7 +1021,7 @@ enum Adaptation<A: Float> {
         new_rate: A,
     },
     BufferSize {
-        new_size: usize,
+        newsize: usize,
     },
     DriftSensitivity {
         new_sensitivity: A,
@@ -1399,9 +1399,9 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
         }
 
         // Simple ensemble prediction combining multiple approaches
-        let linear_pred = self.linear_prediction(steps_ahead)?;
-        let exp_pred = self.exponential_prediction(steps_ahead)?;
-        let trend_pred = self.trend_based_prediction(steps_ahead)?;
+        let linear_pred = self.linear_prediction(stepsahead)?;
+        let exp_pred = self.exponential_prediction(stepsahead)?;
+        let trend_pred = self.trend_based_prediction(stepsahead)?;
 
         // Weighted average of predictions
         let w1 = A::from(0.4).unwrap(); // Linear
@@ -1432,7 +1432,7 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
 
         // Simple linear extrapolation
         let recent_slope = values[values.len() - 1] - values[values.len() - 2];
-        let prediction = values[values.len() - 1] + recent_slope * A::from(steps_ahead).unwrap();
+        let prediction = values[values.len() - 1] + recent_slope * A::from(stepsahead).unwrap();
 
         Ok(prediction)
     }
@@ -1469,7 +1469,7 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
             A::zero()
         };
 
-        Ok(smoothed + trend * A::from(steps_ahead).unwrap())
+        Ok(smoothed + trend * A::from(stepsahead).unwrap())
     }
 
     fn trend_based_prediction(&self, stepsahead: usize) -> Result<A> {
@@ -1504,7 +1504,7 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
         }
 
         let avg_change = total_change / A::from(recent_values.len() - 1).unwrap();
-        let prediction = values[values.len() - 1] + avg_change * A::from(steps_ahead).unwrap();
+        let prediction = values[values.len() - 1] + avg_change * A::from(stepsahead).unwrap();
 
         Ok(prediction)
     }
@@ -1698,7 +1698,7 @@ impl<A: Float + Default + Clone> MetricAggregator<A> {
             PerformanceMetric::Custom { value, .. } => value,
         };
 
-        let metric_name = match snapshot.primary_metric {
+        let metricname = match snapshot.primary_metric {
             PerformanceMetric::Loss(_) => "loss",
             PerformanceMetric::Accuracy(_) => "accuracy",
             PerformanceMetric::F1Score(_) => "f1_score",
@@ -1710,7 +1710,7 @@ impl<A: Float + Default + Clone> MetricAggregator<A> {
         // Update running statistics
         let entry = self
             .accumulated_metrics
-            .entry(metric_name.clone())
+            .entry(metricname.clone())
             .or_insert(AccumulatedMetric {
                 count: 0,
                 sum: A::zero(),
@@ -1781,7 +1781,7 @@ impl<A: Float + Default + Clone> MetricAggregator<A> {
     }
 
     fn get_aggregated_summary(&self, metricname: &str) -> Option<MetricSummary<A>> {
-        self.accumulated_metrics.get(metric_name).map(|acc| {
+        self.accumulated_metrics.get(metricname).map(|acc| {
             let mean = acc.sum / A::from(acc.count).unwrap();
             let variance = (acc.sum_squares / A::from(acc.count).unwrap()) - mean * mean;
             let std_dev = variance.sqrt();
@@ -1863,7 +1863,7 @@ impl<A: Float + Default + Clone + Sum> MetaLearner<A> {
                 // Performance degrading, reduce learning rate
                 let current_lr = recent_experiences[0].action.lr_adjustment;
                 let new_lr = current_lr * A::from(0.8).unwrap();
-                return Ok(Some(Adaptation::LearningRate { newrate: new_lr }));
+                return Ok(Some(Adaptation::LearningRate { new_rate: new_lr }));
             }
         }
 
@@ -1881,12 +1881,12 @@ impl<A: Float + Default + Clone + Sum> MetaLearner<A> {
         if data_diversity > A::from(0.8).unwrap() {
             // High diversity, can use smaller buffer
             return Ok(Some(Adaptation::BufferSize {
-                new_size: batch.len().max(16),
+                newsize: batch.len().max(16),
             }));
         } else if data_diversity < A::from(0.3).unwrap() {
             // Low diversity, use larger buffer
             return Ok(Some(Adaptation::BufferSize {
-                new_size: (batch.len() * 2).min(128),
+                newsize: (batch.len() * 2).min(128),
             }));
         }
 
@@ -1985,7 +1985,7 @@ impl<A: Float + Default + Clone> MetaModel<A> {
     fn new(modeltype: MetaModelType) -> Self {
         Self {
             parameters: Array1::zeros(10), // Default parameter size
-            model_type,
+            modeltype,
             update_strategy: MetaUpdateStrategy::OnlineGradientDescent,
             performance_history: VecDeque::with_capacity(100),
         }
@@ -2093,7 +2093,7 @@ struct PerformancePredictor<A: Float> {
 
 #[derive(Debug, Clone)]
 struct PredictionModel<A: Float> {
-    model_type: PredictionModelType,
+    modeltype: PredictionModelType,
     parameters: Array1<A>,
     accuracy: A,
 }
@@ -2181,12 +2181,12 @@ impl TradeoffAnalyzer {
     /// Analyze trade-offs for a given decision
     pub fn analyze_tradeoff(&mut self, performance_gain: f64, resourcecost: f64) -> f64 {
         let weighted_score =
-            performance_gain * self.performance_weight - resource_cost * self.resource_weight;
+            performance_gain * self.performance_weight - resourcecost * self.resource_weight;
 
         let decision = TradeoffDecision {
             timestamp: Instant::now(),
             performance_impact: performance_gain,
-            resource_impact: resource_cost,
+            resource_impact: resourcecost,
             quality_score: weighted_score,
         };
 
@@ -2230,10 +2230,10 @@ impl ResourcePredictor {
         let current = recent_usage[0];
 
         ResourceUsage {
-            cpu_percent: (current.cpu_percent + cpu_trend * horizon_steps as f64)
+            cpu_percent: (current.cpu_percent + cpu_trend * horizonsteps as f64)
                 .max(0.0)
                 .min(100.0),
-            memory_mb: (current.memory_mb + memory_trend * horizon_steps as f64).max(0.0),
+            memory_mb: (current.memory_mb + memory_trend * horizonsteps as f64).max(0.0),
             processing_time_us: current.processing_time_us,
             network_bandwidth: current.network_bandwidth,
         }
@@ -2339,7 +2339,7 @@ impl ResourceManager {
 impl<A: Float + Default + Clone> AdaptiveBuffer<A> {
     fn new(config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
-            buffer: VecDeque::with_capacity(_config.buffer_size * 2),
+            buffer: VecDeque::with_capacity(config.buffer_size * 2),
             current_size: config.buffer_size,
             min_size: config.buffer_size / 2,
             max_size: config.buffer_size * 2,
@@ -2354,7 +2354,7 @@ impl<A: Float + Default + Clone> AdaptiveBuffer<A> {
     }
 
     fn add_data_point(&mut self, datapoint: StreamingDataPoint<A>) -> Result<()> {
-        self.buffer.push_back(data_point);
+        self.buffer.push_back(datapoint);
         if self.buffer.len() > self.max_size {
             self.buffer.pop_front();
         }
@@ -2380,7 +2380,7 @@ impl<A: Float + Default + Clone> AdaptiveBuffer<A> {
     }
 
     fn resize(&mut self, newsize: usize) -> Result<()> {
-        self.current_size = new_size.max(self.min_size).min(self.max_size);
+        self.current_size = newsize.max(self.min_size).min(self.max_size);
         Ok(())
     }
 }

@@ -254,7 +254,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             match i {
                 0 => result_general.n_steps,
                 1 => result_ode.n_steps,
-                2 => result_bdf.n_steps_ => 0,
+                2 => result_bdf.n_steps,
+                _ => 0,
             }
         );
     }

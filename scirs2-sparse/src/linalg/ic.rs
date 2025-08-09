@@ -42,7 +42,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> IC0Preconditioner<F> {
                 let j = matrix.indices[k];
                 if j <= i {
                     l_indices.push(j);
-                    l_data.push(_matrix.data[k]);
+                    l_data.push(matrix.data[k]);
                 }
             }
             l_indptr.push(l_indices.len());

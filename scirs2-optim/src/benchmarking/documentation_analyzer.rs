@@ -674,11 +674,11 @@ impl DocumentationAnalyzer {
                         line_number: line_num + 1,
                         category: category.clone(),
                         visibility: VisibilityLevel::Public,
-                        suggested_template: self.generate_doc_template(&_category),
+                        suggested_template: self.generate_doc_template(&category),
                     };
 
                     undocumented_by_category
-                        .entry(_category)
+                        .entry(category)
                         .or_insert_with(Vec::new)
                         .push(undocumented_item);
                 }
@@ -749,7 +749,7 @@ impl DocumentationAnalyzer {
     /// Check if an item has documentation
     fn has_documentation(&self, lines: &[&str], itemline: usize) -> bool {
         // Look for doc comments before the item
-        for i in (0..item_line).rev() {
+        for i in (0..itemline).rev() {
             let _line = lines[i].trim();
             if line.starts_with("///") || line.starts_with("//!") {
                 return true;
@@ -952,7 +952,7 @@ impl DocumentationAnalyzer {
     fn compile_example(&self, _examplecode: &str) -> bool {
         // Simplified compilation check - in practice would use rustc or a similar tool
         // For now, just check basic syntax
-        !_example_code.is_empty() && !_example_code.contains("syntax_error")
+        !_examplecode.is_empty() && !_examplecode.contains("syntax_error")
     }
 
     /// Calculate example quality metrics

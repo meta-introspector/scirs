@@ -197,13 +197,13 @@ where
     T: Real + Clone,
 {
     let limit = k
-        .unwrap_or(_relevance_scores.len())
-        .min(_relevance_scores.len());
+        .unwrap_or(_relevancescores.len())
+        .min(_relevancescores.len());
 
     // DCG formula: sum(rel_i / log2(i+1)) for i=1..k
     (0..limit)
         .map(|i| {
-            let rel = relevance_scores[i].to_f64().unwrap_or(0.0);
+            let rel = _relevancescores[i].to_f64().unwrap_or(0.0);
             // If relevance is binary (0 or 1), we use the standard formula
             // For graded relevance, we can use the alternative formula: (2^rel - 1) / log2(i+2)
             rel / (((i + 2) as f64).log2())
@@ -330,11 +330,11 @@ where
     T: Real + Clone,
 {
     let zero = T::zero();
-    let k = k.unwrap_or(y_true_sorted.len());
-    let limit = k.min(y_true_sorted.len());
+    let k = k.unwrap_or(y_truesorted.len());
+    let limit = k.min(y_truesorted.len());
 
     // Calculate the total number of relevant items
-    let total_relevant = y_true_sorted.iter().filter(|&&r| r > zero).count();
+    let total_relevant = y_truesorted.iter().filter(|&&r| r > zero).count();
 
     if total_relevant == 0 {
         return 0.0;
@@ -344,7 +344,7 @@ where
     let mut running_sum = 0.0;
 
     for i in 0..limit {
-        let rel = y_true_sorted[i].clone();
+        let rel = y_truesorted[i].clone();
         if rel > zero {
             // Count of relevant items found so far
             running_sum += 1.0;

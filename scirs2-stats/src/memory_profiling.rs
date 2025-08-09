@@ -194,7 +194,7 @@ impl MemoryAdaptiveAlgorithm {
     fn calculate_optimal_chunk_size(_availablememory: usize) -> usize {
         // Aim for chunks that fit comfortably in L3 cache (typically 8-32MB)
         let l3_cache_estimate = 8_000_000; // 8MB
-        let max_chunk = _available_memory / 10; // Use at most 10% of available _memory
+        let max_chunk = _availablememory / 10; // Use at most 10% of available _memory
 
         l3_cache_estimate.min(max_chunk).max(4096)
     }
@@ -207,7 +207,7 @@ impl MemoryAdaptiveAlgorithm {
     /// Get recommended algorithm based on data size
     pub fn recommend_algorithm<F: Float>(&self, datasize: usize) -> AlgorithmChoice {
         let element_size = std::mem::size_of::<F>();
-        let total_bytes = data_size * element_size;
+        let total_bytes = datasize * element_size;
 
         if total_bytes < 1_000_000 {
             // < 1MB
@@ -362,8 +362,8 @@ impl<F: Float + NumCast + std::fmt::Display> RingBufferStats<F> {
     /// Create a new ring buffer with fixed capacity
     pub fn new(capacity: usize) -> Self {
         Self {
-            buffer: VecDeque::with_capacity(_capacity),
-            capacity: capacity,
+            buffer: VecDeque::with_capacity(capacity),
+            capacity,
             sum: F::zero(),
             sum_squares: F::zero(),
         }
@@ -429,7 +429,7 @@ impl<F: Float + NumCast + std::iter::Sum + std::fmt::Display> LazyStatComputatio
     /// Create a new lazy computation
     pub fn new(data: Vec<F>) -> Self {
         Self {
-            data_ref: Arc::new(_data),
+            data_ref: Arc::new(data),
             operations: Vec::new(),
         }
     }

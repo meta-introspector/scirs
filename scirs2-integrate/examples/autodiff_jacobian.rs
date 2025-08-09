@@ -110,10 +110,10 @@ fn main() -> IntegrateResult<()> {
     if results.len() > 1 {
         println!("\nEfficiency comparison (relative to finite difference):");
 
-        let base_time = if let Some((_, time_)) =
-            results.iter().find(|(name__)| *name == "Finite Difference")
+        let base_time = if let Some((_, time_, _)) =
+            results.iter().find(|(name_, _, _)| *name_ == "Finite Difference")
         {
-            *time
+            *time_
         } else {
             results[0].1
         };
@@ -149,20 +149,20 @@ fn solution_diff(res1: &ODEResult<f64>, res2: &ODEResult<f64>) -> f64 {
     // Sample a few points for comparison
     let sample_times = [
         res1.t[0],
-        res1.t[_res1.t.len() / 4],
-        res1.t[_res1.t.len() / 2],
+        res1.t[res1.t.len() / 4],
+        res1.t[res1.t.len() / 2],
         res1.t[3 * res1.t.len() / 4],
-        *_res1.t.last().unwrap(),
+        *res1.t.last().unwrap(),
     ];
 
     for &t in &sample_times {
         // Find closest points in each solution
-        let idx1 = _res1
+        let idx1 = res1
             .t
             .iter()
             .enumerate()
             .min_by(|(_, a), (_, b)| (t - **a).abs().partial_cmp(&(t - **b).abs()).unwrap())
-            .map(|(idx_)| idx)
+            .map(|(idx_)| idx_)
             .unwrap();
 
         let idx2 = res2
@@ -170,11 +170,11 @@ fn solution_diff(res1: &ODEResult<f64>, res2: &ODEResult<f64>) -> f64 {
             .iter()
             .enumerate()
             .min_by(|(_, a), (_, b)| (t - **a).abs().partial_cmp(&(t - **b).abs()).unwrap())
-            .map(|(idx_)| idx)
+            .map(|(idx_)| idx_)
             .unwrap();
 
         // Compute difference
-        let y1 = &_res1.y[idx1];
+        let y1 = &res1.y[idx1];
         let y2 = &res2.y[idx2];
 
         let diff = (0..y1.len())

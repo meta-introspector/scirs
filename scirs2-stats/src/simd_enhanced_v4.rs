@@ -25,7 +25,7 @@ where
         + std::iter::Sum<F>
         + num_traits::FromPrimitive,
 {
-    checkarray_finite(_data, "_data")?;
+    checkarray_finite(data, "data")?;
 
     if data.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -39,22 +39,22 @@ where
     // Single-pass computation with SIMD
     let (sum, sum_sq, min_val, max_val) = if n > 32 {
         // SIMD path for large arrays
-        let sum = F::simd_sum(&_data.view());
-        let sq_data = F::simd_mul(&_data.view(), &_data.view());
+        let sum = F::simd_sum(&data.view());
+        let sq_data = F::simd_mul(&data.view(), &data.view());
         let sum_sq = F::simd_sum(&sq_data.view());
-        let min_val = F::simd_min_element(&_data.view());
-        let max_val = F::simd_max_element(&_data.view());
+        let min_val = F::simd_min_element(&data.view());
+        let max_val = F::simd_max_element(&data.view());
         (sum, sum_sq, min_val, max_val)
     } else {
         // Scalar fallback for small arrays
         let sum = data.iter().fold(F::zero(), |acc, &x| acc + x);
         let sum_sq = data.iter().fold(F::zero(), |acc, &x| acc + x * x);
-        let min_val = _data
+        let min_val = data
             .iter()
-            .fold(_data[0], |acc, &x| if x < acc { x } else { acc });
-        let max_val = _data
+            .fold(data[0], |acc, &x| if x < acc { x } else { acc });
+        let max_val = data
             .iter()
-            .fold(_data[0], |acc, &x| if x > acc { x } else { acc });
+            .fold(data[0], |acc, &x| if x > acc { x } else { acc });
         (sum, sum_sq, min_val, max_val)
     };
 
@@ -72,7 +72,7 @@ where
     let (sum_cubed_dev, sum_fourth_dev) = if n > 32 {
         // SIMD path for moment computation
         let mean_vec = Array1::from_elem(n, mean);
-        let centered = F::simd_sub(&_data.view(), &mean_vec.view());
+        let centered = F::simd_sub(&data.view(), &mean_vec.view());
         let centered_sq = F::simd_mul(&centered.view(), &centered.view());
         let centered_cubed = F::simd_mul(&centered_sq.view(), &centered.view());
         let centered_fourth = F::simd_mul(&centered_sq.view(), &centered_sq.view());
@@ -246,7 +246,7 @@ where
         + std::iter::Sum<F>
         + num_traits::FromPrimitive,
 {
-    checkarray_finite(_data, "_data")?;
+    checkarray_finite(data, "data")?;
 
     let (n_samples_, n_features) = data.dim();
 
@@ -326,7 +326,7 @@ pub fn quantiles_batch_simd<F>(data: &ArrayView1<F>, quantiles: &[f64]) -> Stats
 where
     F: Float + NumCast + SimdUnifiedOps + PartialOrd + Copy + std::fmt::Display + std::iter::Sum<F>,
 {
-    checkarray_finite(_data, "_data")?;
+    checkarray_finite(data, "data")?;
 
     if data.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -390,7 +390,7 @@ where
         + std::iter::Sum<F>
         + num_traits::FromPrimitive,
 {
-    checkarray_finite(_data, "_data")?;
+    checkarray_finite(data, "data")?;
 
     if data.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -441,7 +441,7 @@ where
         + std::fmt::Display
         + num_traits::FromPrimitive,
 {
-    checkarray_finite(_data, "_data")?;
+    checkarray_finite(data, "data")?;
 
     let (n_samples_, n_features) = data.dim();
 
@@ -482,7 +482,7 @@ where
                 // Normalize column
                 if std_dev > F::zero() {
                     for i in 0..n_samples_ {
-                        normalized[(i, j)] = (_data[(i, j)] - mean) / std_dev;
+                        normalized[(i, j)] = (data[(i, j)] - mean) / std_dev;
                     }
                 }
             }
@@ -515,7 +515,7 @@ where
                 // Normalize row
                 if std_dev > F::zero() {
                     for j in 0..n_features {
-                        normalized[(i, j)] = (_data[(i, j)] - mean) / std_dev;
+                        normalized[(i, j)] = (data[(i, j)] - mean) / std_dev;
                     }
                 }
             }
@@ -591,7 +591,7 @@ pub fn robust_statistics_simd<F>(data: &ArrayView1<F>) -> StatsResult<RobustStat
 where
     F: Float + NumCast + SimdUnifiedOps + PartialOrd + Copy + std::fmt::Display,
 {
-    checkarray_finite(_data, "_data")?;
+    checkarray_finite(data, "data")?;
 
     if data.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -623,7 +623,7 @@ where
     if n > 32 {
         // SIMD path for computing absolute deviations
         let median_vec = Array1::from_elem(n, median);
-        let centered = F::simd_sub(&_data.view(), &median_vec.view());
+        let centered = F::simd_sub(&data.view(), &median_vec.view());
         deviations = F::simd_abs(&centered.view());
     } else {
         // Scalar fallback

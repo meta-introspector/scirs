@@ -147,12 +147,12 @@ fn compute_e(averages: &[Array2<f32>], x: usize, y: usize, k: usize) -> f32 {
 
     // Horizontal difference
     if x >= d && x + d < width {
-        e_h = (_averages[k][[y, x + d]] - averages[k][[y, x.saturating_sub(d)]]).abs();
+        e_h = (averages[k][[y, x + d]] - averages[k][[y, x.saturating_sub(d)]]).abs();
     }
 
     // Vertical difference
     if y >= d && y + d < height {
-        e_v = (_averages[k][[y + d, x]] - averages[k][[y.saturating_sub(d), x]]).abs();
+        e_v = (averages[k][[y + d, x]] - averages[k][[y.saturating_sub(d), x]]).abs();
     }
 
     e_h.max(e_v)
@@ -301,8 +301,8 @@ fn compute_line_likeness(img: &GrayImage) -> Result<f32> {
 /// Regularity measures how regular the texture pattern is
 #[allow(dead_code)]
 fn compute_regularity(img: &GrayImage) -> Result<f32> {
-    let coarseness = compute_coarseness(_img)?;
-    let contrast = compute_contrast(_img)?;
+    let coarseness = compute_coarseness(img)?;
+    let contrast = compute_contrast(img)?;
 
     // Simplified regularity based on variance of local features
     let (width, height) = img.dimensions();
@@ -317,7 +317,7 @@ fn compute_regularity(img: &GrayImage) -> Result<f32> {
             for dy in 0..window_size {
                 for dx in 0..window_size {
                     if y + dy < height as usize && x + dx < width as usize {
-                        values.push(_img.get_pixel((x + dx) as u32, (y + dy) as u32)[0] as f32);
+                        values.push(img.get_pixel((x + dx) as u32, (y + dy) as u32)[0] as f32);
                     }
                 }
             }

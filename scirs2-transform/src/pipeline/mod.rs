@@ -380,7 +380,7 @@ fn concatenate_horizontal(arrays: &[Array2<f64>]) -> Result<Array2<f64>> {
     let total_features: usize = arrays.iter().map(|a| a.shape()[1]).sum();
 
     // Verify all _arrays have the same number of samples
-    for arr in _arrays {
+    for arr in arrays {
         if arr.shape()[0] != n_samples {
             return Err(TransformError::InvalidInput(
                 "All _arrays must have the same number of samples".to_string(),
@@ -391,7 +391,7 @@ fn concatenate_horizontal(arrays: &[Array2<f64>]) -> Result<Array2<f64>> {
     let mut result = Array2::zeros((n_samples, total_features));
     let mut col_offset = 0;
 
-    for arr in _arrays {
+    for arr in arrays {
         let n_cols = arr.shape()[1];
         for i in 0..n_samples {
             for j in 0..n_cols {
@@ -408,7 +408,7 @@ fn concatenate_horizontal(arrays: &[Array2<f64>]) -> Result<Array2<f64>> {
 #[allow(dead_code)]
 pub fn make_pipeline(steps: Vec<(&str, Box<dyn Transformer>)>) -> Pipeline {
     let mut pipeline = Pipeline::new();
-    for (name, transformer) in _steps {
+    for (name, transformer) in steps {
         pipeline = pipeline.add_step(name, transformer);
     }
     pipeline

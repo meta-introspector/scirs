@@ -49,7 +49,7 @@ pub struct DescriptorMatch {
 #[derive(Debug, Clone)]
 pub struct BruteForceConfig {
     /// Distance metric to use
-    pub distance_metric: DistanceMetric,
+    pub distancemetric: DistanceMetric,
     /// Maximum distance threshold for valid matches
     pub max_distance: f32,
     /// Apply cross-check validation
@@ -63,7 +63,7 @@ pub struct BruteForceConfig {
 impl Default for BruteForceConfig {
     fn default() -> Self {
         Self {
-            distance_metric: DistanceMetric::Euclidean,
+            distancemetric: DistanceMetric::Euclidean,
             max_distance: 0.7,
             cross_check: true,
             use_ratio_test: true,
@@ -379,7 +379,7 @@ impl BruteForceMatcher {
             ));
         }
 
-        match self.config.distance_metric {
+        match self.config.distancemetric {
             DistanceMetric::Euclidean => {
                 let sum_sq: f32 = desc1
                     .iter()
@@ -665,7 +665,7 @@ fn euclidean_distance(p1: &[f32], p2: &[f32]) -> f32 {
 /// Ratio test matcher implementing Lowe's ratio test
 pub struct RatioTestMatcher {
     ratio_threshold: f32,
-    distance_metric: DistanceMetric,
+    distancemetric: DistanceMetric,
 }
 
 impl RatioTestMatcher {
@@ -673,7 +673,7 @@ impl RatioTestMatcher {
     pub fn new(_ratio_threshold: f32, distancemetric: DistanceMetric) -> Self {
         Self {
             ratio_threshold,
-            distance_metric,
+            distancemetric,
         }
     }
 
@@ -681,7 +681,7 @@ impl RatioTestMatcher {
     pub fn new_default() -> Self {
         Self {
             ratio_threshold: 0.75,
-            distance_metric: DistanceMetric::Euclidean,
+            distancemetric: DistanceMetric::Euclidean,
         }
     }
 
@@ -701,7 +701,7 @@ impl RatioTestMatcher {
         descriptors2: &[Descriptor],
     ) -> Result<Vec<DescriptorMatch>> {
         let bf_config = BruteForceConfig {
-            distance_metric: self.distance_metric,
+            distancemetric: self.distancemetric,
             max_distance: f32::MAX,
             cross_check: false,
             use_ratio_test: true,
@@ -722,7 +722,7 @@ impl CrossCheckMatcher {
     /// Create new cross-check matcher
     pub fn new(_distancemetric: DistanceMetric) -> Self {
         let config = BruteForceConfig {
-            distance_metric,
+            distancemetric,
             max_distance: f32::MAX,
             cross_check: true,
             use_ratio_test: false,
@@ -809,16 +809,16 @@ impl RansacMatcher {
 
             // Extract sample points
             let mut src_points = Vec::new();
-            let mut dst_points = Vec::new();
+            let mut dstpoints = Vec::new();
 
             for &idx in &sample_indices {
                 let m = &matches[idx];
                 src_points.push([keypoints1[m.query_idx].x..keypoints1[m.query_idx].y]);
-                dst_points.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
+                dstpoints.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
             }
 
             // Estimate homography (simplified)
-            if let Ok(homography) = estimate_homography(&src_points, &dst_points) {
+            if let Ok(homography) = estimate_homography(&src_points, &dstpoints) {
                 // Count inliers
                 let mut inliers = Vec::new();
                 for (i, m) in matches.iter().enumerate() {
@@ -880,16 +880,16 @@ impl RansacMatcher {
 
             // Extract sample points
             let mut src_points = Vec::new();
-            let mut dst_points = Vec::new();
+            let mut dstpoints = Vec::new();
 
             for &idx in &sample_indices {
                 let m = &matches[idx];
                 src_points.push([keypoints1[m.query_idx].x..keypoints1[m.query_idx].y]);
-                dst_points.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
+                dstpoints.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
             }
 
             // Estimate fundamental matrix using 8-point algorithm
-            if let Ok(fundamental) = estimate_fundamental_matrix(&src_points, &dst_points) {
+            if let Ok(fundamental) = estimate_fundamental_matrix(&src_points, &dstpoints) {
                 // Count inliers using epipolar constraint
                 let mut inliers = Vec::new();
                 for (i, m) in matches.iter().enumerate() {
@@ -949,17 +949,17 @@ impl RansacMatcher {
 
             // Extract sample points (assuming calibrated cameras with unit focal length)
             let mut src_points = Vec::new();
-            let mut dst_points = Vec::new();
+            let mut dstpoints = Vec::new();
 
             for &idx in &sample_indices {
                 let m = &matches[idx];
                 src_points.push([keypoints1[m.query_idx].x..keypoints1[m.query_idx].y]);
-                dst_points.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
+                dstpoints.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
             }
 
             // Estimate essential matrix (simplified using fundamental matrix for now)
             // In practice, implement proper 5-point algorithm
-            if let Ok(essential) = estimate_essential_matrix(&src_points, &dst_points) {
+            if let Ok(essential) = estimate_essential_matrix(&src_points, &dstpoints) {
                 // Count inliers using epipolar constraint
                 let mut inliers = Vec::new();
                 for (i, m) in matches.iter().enumerate() {
@@ -1019,16 +1019,16 @@ impl RansacMatcher {
 
             // Extract sample points
             let mut src_points = Vec::new();
-            let mut dst_points = Vec::new();
+            let mut dstpoints = Vec::new();
 
             for &idx in &sample_indices {
                 let m = &matches[idx];
                 src_points.push([keypoints1[m.query_idx].x..keypoints1[m.query_idx].y]);
-                dst_points.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
+                dstpoints.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
             }
 
             // Estimate affine transformation (simplified)
-            if let Ok(affine) = estimate_affine(&src_points, &dst_points) {
+            if let Ok(affine) = estimate_affine(&src_points, &dstpoints) {
                 // Count inliers
                 let mut inliers = Vec::new();
                 for (i, m) in matches.iter().enumerate() {
@@ -1058,17 +1058,17 @@ impl RansacMatcher {
 /// Estimate homography matrix from point correspondences using Direct Linear Transform (DLT)
 #[allow(dead_code)]
 fn estimate_homography(src_points: &[[f32; 2]], dstpoints: &[[f32; 2]]) -> Result<Array2<f32>> {
-    if src_points.len() != dst_points.len() || src_points.len() < 4 {
+    if src_points.len() != dstpoints.len() || src_points.len() < 4 {
         return Err(VisionError::InvalidParameter(
             "Need at least 4 point correspondences".to_string(),
         ));
     }
 
-    // Normalize _points for better numerical stability
+    // Normalize points for better numerical stability
     let (src_norm, src_transform) = normalize_points(src_points);
-    let (dst_norm, dst_transform) = normalize_points(dst_points);
+    let (dst_norm, dst_transform) = normalize_points(dstpoints);
 
-    // Build the coefficient matrix using normalized _points
+    // Build the coefficient matrix using normalized points
     let n = src_points.len();
     let mut a = Array2::zeros((2 * n, 9));
 
@@ -1134,7 +1134,7 @@ fn apply_homography(h: &Array2<f32>, point: [f32; 2]) -> [f32; 2] {
 /// Estimate affine transformation from point correspondences using least squares
 #[allow(dead_code)]
 fn estimate_affine(src_points: &[[f32; 2]], dstpoints: &[[f32; 2]]) -> Result<Array2<f32>> {
-    if src_points.len() != dst_points.len() || src_points.len() < 3 {
+    if src_points.len() != dstpoints.len() || src_points.len() < 3 {
         return Err(VisionError::InvalidParameter(
             "Need at least 3 point correspondences".to_string(),
         ));
@@ -1152,7 +1152,7 @@ fn estimate_affine(src_points: &[[f32; 2]], dstpoints: &[[f32; 2]]) -> Result<Ar
 
     for i in 0..n {
         let [x, y] = src_points[i];
-        let [xp, yp] = dst_points[i];
+        let [xp, yp] = dstpoints[i];
 
         // Fill coefficient matrix: [x y 1]
         a_matrix[[i, 0]] = x;
@@ -1199,11 +1199,11 @@ pub mod utils {
 
     /// Convert confidence score to match quality
     pub fn confidence_to_quality(confidence: f32) -> MatchQuality {
-        if _confidence > 0.8 {
+        if confidence > 0.8 {
             MatchQuality::Excellent
-        } else if _confidence > 0.6 {
+        } else if confidence > 0.6 {
             MatchQuality::Good
-        } else if _confidence > 0.4 {
+        } else if confidence > 0.4 {
             MatchQuality::Fair
         } else {
             MatchQuality::Poor
@@ -1331,7 +1331,7 @@ fn normalize_points(points: &[[f32; 2]]) -> (Vec<[f32; 2]>, Array2<f32>) {
     let cy = points.iter().map(|p| p[1]).sum::<f32>() / n;
 
     // Compute average distance from centroid
-    let avg_dist = _points
+    let avg_dist = points
         .iter()
         .map(|p| ((p[0] - cx).powi(2) + (p[1] - cy).powi(2)).sqrt())
         .sum::<f32>()
@@ -1345,7 +1345,7 @@ fn normalize_points(points: &[[f32; 2]]) -> (Vec<[f32; 2]>, Array2<f32>) {
     };
 
     // Apply normalization transformation
-    let normalized: Vec<[f32; 2]> = _points
+    let normalized: Vec<[f32; 2]> = points
         .iter()
         .map(|p| [(p[0] - cx) * scale, (p[1] - cy) * scale])
         .collect();
@@ -1553,17 +1553,17 @@ fn solve_linear_system(a: &Array2<f32>, b: &[f32]) -> Result<Vec<f32>> {
 #[allow(dead_code)]
 fn estimate_fundamental_matrix(
     src_points: &[[f32; 2]],
-    dst_points: &[[f32; 2]],
+    dstpoints: &[[f32; 2]],
 ) -> Result<Array2<f32>> {
-    if src_points.len() != dst_points.len() || src_points.len() < 8 {
+    if src_points.len() != dstpoints.len() || src_points.len() < 8 {
         return Err(VisionError::InvalidParameter(
             "Need at least 8 point correspondences for fundamental matrix".to_string(),
         ));
     }
 
-    // Normalize _points
+    // Normalize points
     let (src_norm, src_transform) = normalize_points(src_points);
-    let (dst_norm, dst_transform) = normalize_points(dst_points);
+    let (dst_norm, dst_transform) = normalize_points(dstpoints);
 
     let n = src_points.len();
     let mut a = Array2::zeros((n, 9));
@@ -1608,11 +1608,11 @@ fn estimate_fundamental_matrix(
 #[allow(dead_code)]
 fn estimate_essential_matrix(
     src_points: &[[f32; 2]],
-    dst_points: &[[f32; 2]],
+    dstpoints: &[[f32; 2]],
 ) -> Result<Array2<f32>> {
     // For calibrated cameras, essential matrix is similar to fundamental matrix
     // In practice, use proper 5-point algorithm with camera calibration
-    estimate_fundamental_matrix(src_points, dst_points)
+    estimate_fundamental_matrix(src_points, dstpoints)
 }
 
 /// Compute epipolar error for a point correspondence
@@ -1722,7 +1722,7 @@ mod tests {
         let vec2 = vec![0.0, 1.0, 1.0, 0.0];
 
         let config = BruteForceConfig {
-            distance_metric: DistanceMetric::Euclidean,
+            distancemetric: DistanceMetric::Euclidean,
             ..Default::default()
         };
         let matcher = BruteForceMatcher::new(config);
@@ -1731,7 +1731,7 @@ mod tests {
         assert!(dist > 0.0);
 
         let config = BruteForceConfig {
-            distance_metric: DistanceMetric::Manhattan,
+            distancemetric: DistanceMetric::Manhattan,
             ..Default::default()
         };
         let matcher = BruteForceMatcher::new(config);
@@ -1759,7 +1759,7 @@ mod tests {
         let desc2 = vec![0b11001100u32];
 
         let config = BruteForceConfig {
-            distance_metric: DistanceMetric::Hamming,
+            distancemetric: DistanceMetric::Hamming,
             ..Default::default()
         };
         let matcher = BruteForceMatcher::new(config);

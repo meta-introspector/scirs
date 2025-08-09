@@ -376,7 +376,7 @@ pub fn polygon_symmetric_difference(
 /// Find intersections between edges of two polygons
 #[allow(dead_code)]
 fn find_intersections(
-    _poly1: &mut LabeledPolygon,
+    poly1: &mut LabeledPolygon,
     poly2: &mut LabeledPolygon,
 ) -> SpatialResult<()> {
     for (i, edge1) in poly1.edges.iter_mut().enumerate() {
@@ -525,7 +525,7 @@ fn sutherland_hodgman_clip(
 /// Check if a point is inside relative to a directed edge
 #[allow(dead_code)]
 fn is_inside(point: &Point2D, edge_start: &Point2D, edgeend: &Point2D) -> bool {
-    let edge_vector = Point2D::new(edge_end.x - edge_start.x, edge_end.y - edge_start.y);
+    let edge_vector = Point2D::new(edgeend.x - edge_start.x, edgeend.y - edge_start.y);
     let point_vector = Point2D::new(point.x - edge_start.x, point.y - edge_start.y);
     edge_vector.cross_product(&point_vector) >= 0.0
 }
@@ -576,7 +576,7 @@ fn weiler_atherton_difference(
 #[allow(dead_code)]
 fn polygons_intersect(poly1: &LabeledPolygon, poly2: &LabeledPolygon) -> bool {
     // Quick check: if any vertex of one polygon is inside the other
-    for vertex in &_poly1.vertices {
+    for vertex in &poly1.vertices {
         if poly2.ispoint_inside(vertex) {
             return true;
         }
@@ -589,7 +589,7 @@ fn polygons_intersect(poly1: &LabeledPolygon, poly2: &LabeledPolygon) -> bool {
     }
 
     // Check for edge intersections
-    for edge1 in &_poly1.edges {
+    for edge1 in &poly1.edges {
         for edge2 in &poly2.edges {
             if line_segment_intersection(&edge1.start, &edge1.end, &edge2.start, &edge2.end)
                 .is_some()
@@ -605,7 +605,7 @@ fn polygons_intersect(poly1: &LabeledPolygon, poly2: &LabeledPolygon) -> bool {
 /// Build intersection graph for Weiler-Atherton algorithm
 #[allow(dead_code)]
 fn build_intersection_graph(
-    _poly1: &LabeledPolygon,
+    poly1: &LabeledPolygon,
     _poly2: &LabeledPolygon,
 ) -> SpatialResult<HashMap<String, Vec<Point2D>>> {
     // This is a simplified implementation

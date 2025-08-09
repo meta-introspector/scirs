@@ -56,7 +56,7 @@ impl MultivariateLognormal {
         D2: Data<Elem = f64>,
     {
         // Create the underlying MultivariateNormal distribution
-        let mvn = MultivariateNormal::new(_mu.to_owned(), sigma.to_owned())?;
+        let mvn = MultivariateNormal::new(mu.to_owned(), sigma.to_owned())?;
 
         // Get the dimension of the distribution
         let dim = mvn.dim();

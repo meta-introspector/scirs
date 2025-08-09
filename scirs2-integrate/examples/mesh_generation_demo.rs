@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         boundary_refinement_iterations: 3,
     };
 
-    let generator = AutoMeshGenerator::new(params);
+    let mut generator = AutoMeshGenerator::new(params);
     let boundary_spec = BoundarySpecification::default();
 
     // Generate mesh for a circle
@@ -32,8 +32,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         radius: 1.0,
     };
 
-    let circle_mesh = generator.generate_mesh(&circle_domain, &boundary_spec)?;
-    let circle_quality = generator.assess_mesh_quality(&circle_mesh);
+    let circle_mesh = generator.generatemesh(&circle_domain, &boundary_spec)?;
+    let circle_quality = generator.assessmesh_quality(&circle_mesh);
 
     println!("Circle mesh generated successfully!");
     println!("  Points: {}", circle_mesh.points.len());
@@ -52,8 +52,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         y_max: 1.0,
     };
 
-    let rect_mesh = generator.generate_mesh(&rect_domain, &boundary_spec)?;
-    let rect_quality = generator.assess_mesh_quality(&rect_mesh);
+    let rect_mesh = generator.generatemesh(&rect_domain, &boundary_spec)?;
+    let rect_quality = generator.assessmesh_quality(&rect_mesh);
 
     println!("Rectangle mesh generated successfully!");
     println!("  Points: {}", rect_mesh.points.len());
@@ -78,8 +78,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         vertices: pentagon_vertices,
     };
 
-    let polygon_mesh = generator.generate_mesh(&polygon_domain, &boundary_spec)?;
-    let polygon_quality = generator.assess_mesh_quality(&polygon_mesh);
+    let polygon_mesh = generator.generatemesh(&polygon_domain, &boundary_spec)?;
+    let polygon_quality = generator.assessmesh_quality(&polygon_mesh);
 
     println!("Pentagon mesh generated successfully!");
     println!("  Points: {}", polygon_mesh.points.len());

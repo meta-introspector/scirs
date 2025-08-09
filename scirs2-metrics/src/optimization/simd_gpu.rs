@@ -228,7 +228,7 @@ impl SimdMetrics {
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::InvalidInput(
                 "Arrays must have same length".to_string(),
             ));
@@ -236,13 +236,13 @@ impl SimdMetrics {
 
         if self.enable_simd && self.capabilities.simd_available {
             // Use SIMD operations
-            let squared_diff = F::simd_sub(y_true, y_pred);
+            let squared_diff = F::simd_sub(y_true, ypred);
             let squared = F::simd_mul(&squared_diff.view(), &squared_diff.view());
             let sum = F::simd_sum(&squared.view());
             Ok(sum / F::from(y_true.len()).unwrap())
         } else {
             // Fallback to scalar implementation
-            self.scalar_mse(y_true, y_pred)
+            self.scalar_mse(y_true, ypred)
         }
     }
 
@@ -251,19 +251,19 @@ impl SimdMetrics {
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::InvalidInput(
                 "Arrays must have same length".to_string(),
             ));
         }
 
         if self.enable_simd && self.capabilities.simd_available {
-            let diff = F::simd_sub(y_true, y_pred);
+            let diff = F::simd_sub(y_true, ypred);
             let abs_diff = F::simd_abs(&diff.view());
             let sum = F::simd_sum(&abs_diff.view());
             Ok(sum / F::from(y_true.len()).unwrap())
         } else {
-            self.scalar_mae(y_true, y_pred)
+            self.scalar_mae(y_true, ypred)
         }
     }
 
@@ -272,7 +272,7 @@ impl SimdMetrics {
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::InvalidInput(
                 "Arrays must have same length".to_string(),
             ));
@@ -290,8 +290,8 @@ impl SimdMetrics {
             let squared_diff_mean = F::simd_mul(&diff_from_mean.view(), &diff_from_mean.view());
             let ss_tot = F::simd_sum(&squared_diff_mean.view());
 
-            // Compute SS_res = sum((y_true - y_pred)²)
-            let residuals = F::simd_sub(y_true, y_pred);
+            // Compute SS_res = sum((y_true - ypred)²)
+            let residuals = F::simd_sub(y_true, ypred);
             let squared_residuals = F::simd_mul(&residuals.view(), &residuals.view());
             let ss_res = F::simd_sum(&squared_residuals.view());
 
@@ -301,7 +301,7 @@ impl SimdMetrics {
                 Ok(F::one() - ss_res / ss_tot)
             }
         } else {
-            self.scalar_r2_score(y_true, y_pred)
+            self.scalar_r2_score(y_true, ypred)
         }
     }
 
@@ -652,7 +652,7 @@ impl SimdMetrics {
         // Simulate GPU parallel reduction
         let diff_squared: F = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum();
 
@@ -666,7 +666,7 @@ impl SimdMetrics {
     {
         let abs_diff: F = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p).abs())
             .sum();
 
@@ -687,7 +687,7 @@ impl SimdMetrics {
 
         let ss_res: F = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum();
 
@@ -789,7 +789,7 @@ impl SimdMetrics {
     {
         let mse = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum::<F>()
             / F::from(y_true.len()).unwrap();
@@ -802,7 +802,7 @@ impl SimdMetrics {
     {
         let mae = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p).abs())
             .sum::<F>()
             / F::from(y_true.len()).unwrap();
@@ -822,7 +822,7 @@ impl SimdMetrics {
 
         let ss_res = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum::<F>();
 
@@ -1002,7 +1002,7 @@ impl SimdMetrics {
     pub fn benchmark_implementations<F>(
         &self,
         y_true: &ArrayView1<F>,
-        y_pred: &ArrayView1<F>,
+        ypred: &ArrayView1<F>,
         iterations: usize,
     ) -> Result<BenchmarkResults>
     where
@@ -1015,7 +1015,7 @@ impl SimdMetrics {
         // Benchmark scalar implementation
         let start = Instant::now();
         for _ in 0..iterations {
-            let _ = self.scalar_mse(y_true, y_pred)?;
+            let _ = self.scalar_mse(y_true, ypred)?;
         }
         let scalar_time = start.elapsed();
         results.scalar_time = scalar_time;
@@ -1024,7 +1024,7 @@ impl SimdMetrics {
         if self.capabilities.simd_available {
             let start = Instant::now();
             for _ in 0..iterations {
-                let _ = self.simd_mse(y_true, y_pred)?;
+                let _ = self.simd_mse(y_true, ypred)?;
             }
             let simd_time = start.elapsed();
             results.simd_time = Some(simd_time);
@@ -1035,7 +1035,7 @@ impl SimdMetrics {
         // Benchmark GPU implementation (if available)
         if self.gpu_info.is_some() {
             let batch = y_true.view().insert_axis(Axis(0));
-            let batch_pred = y_pred.view().insert_axis(Axis(0));
+            let batch_pred = ypred.view().insert_axis(Axis(0));
 
             let start = Instant::now();
             for _ in 0..iterations {
@@ -1112,9 +1112,9 @@ mod tests {
     fn test_simd_mse() {
         let metrics = SimdMetrics::new().unwrap();
         let y_true = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let y_pred = array![1.1, 2.1, 2.9, 4.1, 4.9];
+        let ypred = array![1.1, 2.1, 2.9, 4.1, 4.9];
 
-        let mse = metrics.simd_mse(&y_true.view(), &y_pred.view()).unwrap();
+        let mse = metrics.simd_mse(&y_true.view(), &ypred.view()).unwrap();
         assert!(mse > 0.0);
         assert!(mse < 0.02); // Should be small for close predictions
     }
@@ -1123,9 +1123,9 @@ mod tests {
     fn test_simd_mae() {
         let metrics = SimdMetrics::new().unwrap();
         let y_true = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let y_pred = array![1.1, 2.1, 2.9, 4.1, 4.9];
+        let ypred = array![1.1, 2.1, 2.9, 4.1, 4.9];
 
-        let mae = metrics.simd_mae(&y_true.view(), &y_pred.view()).unwrap();
+        let mae = metrics.simd_mae(&y_true.view(), &ypred.view()).unwrap();
         assert!(mae > 0.0);
         assert!(mae < 0.15);
     }
@@ -1134,10 +1134,10 @@ mod tests {
     fn test_simd_r2_score() {
         let metrics = SimdMetrics::new().unwrap();
         let y_true = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let y_pred = array![1.1, 2.1, 2.9, 4.1, 4.9];
+        let ypred = array![1.1, 2.1, 2.9, 4.1, 4.9];
 
         let r2 = metrics
-            .simd_r2_score(&y_true.view(), &y_pred.view())
+            .simd_r2_score(&y_true.view(), &ypred.view())
             .unwrap();
         assert!(r2 > 0.9); // Should be high for good predictions
         assert!(r2 <= 1.0);
@@ -1176,10 +1176,10 @@ mod tests {
     fn test_benchmark_implementations() {
         let metrics = SimdMetrics::new().unwrap();
         let y_true = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-        let y_pred = array![1.1, 2.1, 2.9, 4.1, 4.9, 6.1, 6.9, 8.1, 8.9, 10.1];
+        let ypred = array![1.1, 2.1, 2.9, 4.1, 4.9, 6.1, 6.9, 8.1, 8.9, 10.1];
 
         let benchmark = metrics
-            .benchmark_implementations(&y_true.view(), &y_pred.view(), 10)
+            .benchmark_implementations(&y_true.view(), &ypred.view(), 10)
             .unwrap();
 
         assert!(benchmark.scalar_time.as_nanos() > 0);

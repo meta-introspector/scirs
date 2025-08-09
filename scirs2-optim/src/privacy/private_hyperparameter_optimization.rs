@@ -25,7 +25,7 @@ pub struct PrivateHyperparameterOptimizer<T: Float> {
     noisy_optimizers: HashMap<String, Box<dyn NoisyOptimizer<T>>>,
 
     /// Hyperparameter space definition
-    parameter_space: ParameterSpace<T>,
+    parameterspace: ParameterSpace<T>,
 
     /// Objective function with privacy guarantees
     private_objective: PrivateObjective<T>,
@@ -236,7 +236,7 @@ pub trait NoisyOptimizer<T: Float>: Send + Sync {
     /// Suggest next hyperparameter configuration with privacy
     fn suggest_next(
         &mut self,
-        parameter_space: &ParameterSpace<T>,
+        parameterspace: &ParameterSpace<T>,
         evaluation_history: &[HPOEvaluation<T>],
         _privacy_budget: &PrivacyBudget,
     ) -> Result<ParameterConfiguration<T>>;
@@ -992,7 +992,7 @@ impl<T: Float + 'static + Send + Sync> PrivateHyperparameterOptimizer<T> {
             config,
             budget_manager,
             noisy_optimizers,
-            parameter_space,
+            parameterspace,
             private_objective: PrivateObjective::new()?,
             search_strategy: SearchStrategy::new(),
             results_aggregator: PrivateResultsAggregator::new()?,
@@ -1030,7 +1030,7 @@ impl<T: Float + 'static + Send + Sync> PrivateHyperparameterOptimizer<T> {
 
             // Suggest next configuration
             let config = if let Some(optimizer) = self.noisy_optimizers.get_mut(optimizer_name) {
-                optimizer.suggest_next(&self.parameter_space, &evaluations, &evaluation_budget)?
+                optimizer.suggest_next(&self.parameterspace, &evaluations, &evaluation_budget)?
             } else {
                 return Err(OptimError::InvalidConfig(
                     "No optimizer available".to_string(),
@@ -1262,13 +1262,13 @@ impl<T: Float + Send + Sync> PrivateRandomSearch<T> {
 impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
     fn suggest_next(
         &mut self,
-        parameter_space: &ParameterSpace<T>,
+        parameterspace: &ParameterSpace<T>,
         _evaluation_history: &[HPOEvaluation<T>],
         _privacy_budget: &PrivacyBudget,
     ) -> Result<ParameterConfiguration<T>> {
         let mut values = HashMap::new();
 
-        for (param_name, param_def) in &parameter_space.parameters {
+        for (param_name, param_def) in &parameterspace.parameters {
             let value = match &param_def.param_type {
                 ParameterType::Continuous => {
                     let min = param_def.bounds.min.unwrap_or(T::zero());
@@ -1356,7 +1356,7 @@ impl<T: Float + Send + Sync> PrivateBayesianOptimization<T> {
 impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateBayesianOptimization<T> {
     fn suggest_next(
         &mut self,
-        parameter_space: &ParameterSpace<T>,
+        parameterspace: &ParameterSpace<T>,
         evaluation_history: &[HPOEvaluation<T>],
         _privacy_budget: &PrivacyBudget,
     ) -> Result<ParameterConfiguration<T>> {
@@ -1365,7 +1365,7 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateBayesianOptimization<T
             let mut rng = scirs2_core::random::Random::seed(42);
             let mut values = HashMap::new();
 
-            for (param_name, param_def) in &parameter_space.parameters {
+            for (param_name, param_def) in &parameterspace.parameters {
                 let value = match &param_def.param_type {
                     ParameterType::Continuous => {
                         let min = param_def.bounds.min.unwrap_or(T::zero());
@@ -1542,10 +1542,10 @@ impl HPOBudgetManager {
     }
 
     pub fn record_evaluation(&mut self, budgetused: &PrivacyBudget, score: f64) -> Result<()> {
-        self.consumed_budget.epsilon_consumed += budget_used.epsilon_remaining;
-        self.consumed_budget.delta_consumed += budget_used.delta_remaining;
-        self.consumed_budget.epsilon_remaining -= budget_used.epsilon_remaining;
-        self.consumed_budget.delta_remaining -= budget_used.delta_remaining;
+        self.consumed_budget.epsilon_consumed += budgetused.epsilon_remaining;
+        self.consumed_budget.delta_consumed += budgetused.delta_remaining;
+        self.consumed_budget.epsilon_remaining -= budgetused.epsilon_remaining;
+        self.consumed_budget.delta_remaining -= budgetused.delta_remaining;
         self.consumed_budget.steps_taken += 1;
 
         self.adaptive_controller.record_performance(score);
@@ -1924,13 +1924,13 @@ mod tests {
             },
         );
 
-        let parameter_space = ParameterSpace {
+        let parameterspace = ParameterSpace {
             parameters,
             constraints: Vec::new(),
             defaultconfig: None,
         };
 
-        assert!(parameter_space.parameters.contains_key("learning_rate"));
+        assert!(parameterspace.parameters.contains_key("learning_rate"));
     }
 
     #[test]

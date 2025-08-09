@@ -24,7 +24,7 @@ where
     O: Optimizer<A, D>,
 {
     /// Base optimizer (SGD, Adam, etc.)
-    base_optimizer: O,
+    baseoptimizer: O,
 
     /// Privacy configuration
     config: DifferentialPrivacyConfig,
@@ -67,7 +67,7 @@ struct AdaptiveClippingState {
     target_quantile: f64,
 
     /// Learning rate for threshold adaptation
-    adaptation_lr: f64,
+    adaptationlr: f64,
 
     /// History of gradient norms
     norm_history: VecDeque<f64>,
@@ -148,7 +148,7 @@ pub struct PrivacyConsumption {
     step: usize,
     epsilon_spent: f64,
     delta_spent: f64,
-    batch_size: usize,
+    batchsize: usize,
     noise_multiplier: f64,
 }
 
@@ -198,7 +198,7 @@ struct NoiseCalibrator<A: Float> {
 pub struct NoiseCalibration<A: Float> {
     step: usize,
     noise_scale: A,
-    gradient_norm: A,
+    gradientnorm: A,
     clipping_threshold: A,
     privacy_cost: A,
 }
@@ -241,9 +241,9 @@ where
         let gradient_stats = GradientStatistics::new();
         let noise_calibrator = NoiseCalibrator::new(&config);
 
-        let batch_size = config.batch_size;
+        let batchsize = config.batch_size;
         Ok(Self {
-            base_optimizer,
+            baseoptimizer,
             config,
             accountant,
             rng,
@@ -252,7 +252,7 @@ where
             gradient_stats,
             noise_calibrator,
             step_count: 0,
-            current_batch_size: batch_size,
+            current_batch_size: batchsize,
             _phantom: std::marker::PhantomData,
         })
     }
@@ -262,10 +262,10 @@ where
         &mut self,
         params: &Array<A, D>,
         gradients: &mut Array<A, D>,
-        batch_size: usize,
+        batchsize: usize,
     ) -> Result<Array<A, D>> {
         self.step_count += 1;
-        self.current_batch_size = batch_size;
+        self.current_batch_size = batchsize;
 
         // Check privacy budget
         if !self.has_privacy_budget()? {
@@ -304,7 +304,7 @@ where
             self.step_count,
             epsilon_spent,
             delta_spent,
-            batch_size,
+            batchsize,
             self.config.noise_multiplier,
         );
 
@@ -325,7 +325,7 @@ where
         );
 
         // Apply base optimizer step
-        let updated_params = self.base_optimizer.step(params, gradients)?;
+        let updated_params = self.baseoptimizer.step(params, gradients)?;
 
         Ok(updated_params)
     }
@@ -370,19 +370,19 @@ where
             adaptation_rate: self
                 .adaptive_clipping
                 .as_ref()
-                .map(|ac| ac.adaptation_lr)
+                .map(|ac| ac.adaptationlr)
                 .unwrap_or(0.0),
         }
     }
 
     /// Set batch size for next iterations
     pub fn set_batch_size(&mut self, batchsize: usize) {
-        self.current_batch_size = batch_size;
+        self.current_batch_size = batchsize;
         // Update moment accountant with new batch _size
         self.accountant = MomentsAccountant::new(
             self.config.noise_multiplier,
             self.config.target_delta,
-            batch_size,
+            batchsize,
             self.config.dataset_size,
         );
     }
@@ -390,15 +390,15 @@ where
     /// Update privacy configuration
     pub fn update_privacy_config(&mut self, newconfig: DifferentialPrivacyConfig) -> Result<()> {
         // Validate that privacy budget doesn't decrease
-        if new_config.target_epsilon < self.config.target_epsilon
-            || new_config.target_delta < self.config.target_delta
+        if newconfig.target_epsilon < self.config.target_epsilon
+            || newconfig.target_delta < self.config.target_delta
         {
             return Err(OptimError::InvalidConfig(
                 "Cannot decrease privacy budget mid-training".to_string(),
             ));
         }
 
-        self.config = new_config;
+        self.config = newconfig;
         self.privacy_budget.target_epsilon = self.config.target_epsilon;
         self.privacy_budget.target_delta = self.config.target_delta;
 
@@ -552,7 +552,7 @@ where
                 .map(|entry| NoiseCalibration {
                     step: entry.step,
                     noise_scale: entry.noise_scale.to_f64().unwrap_or(0.0),
-                    gradient_norm: entry.gradient_norm.to_f64().unwrap_or(0.0),
+                    gradientnorm: entry.gradientnorm.to_f64().unwrap_or(0.0),
                     clipping_threshold: entry.clipping_threshold.to_f64().unwrap_or(0.0),
                     privacy_cost: entry.privacy_cost.to_f64().unwrap_or(0.0),
                 })
@@ -646,7 +646,7 @@ impl AdaptiveClippingState {
         Ok(Self {
             current_threshold: initial_threshold,
             target_quantile: 0.5,
-            adaptation_lr,
+            adaptationlr,
             norm_history: VecDeque::with_capacity(1000),
             update_frequency: 50,
             last_update_step: 0,
@@ -655,18 +655,18 @@ impl AdaptiveClippingState {
     }
 
     fn update_threshold(&mut self, gradientnorm: f64) {
-        self.norm_history.push_back(gradient_norm);
+        self.norm_history.push_back(gradientnorm);
         if self.norm_history.len() > 1000 {
             self.norm_history.pop_front();
         }
 
         // Update quantile estimate
-        self.quantile_estimator.update(gradient_norm);
+        self.quantile_estimator.update(gradientnorm);
 
         // Adapt threshold towards target quantile
         let quantile_estimate = self.quantile_estimator.get_quantile(self.target_quantile);
         let error = quantile_estimate - self.current_threshold;
-        self.current_threshold += self.adaptation_lr * error;
+        self.current_threshold += self.adaptationlr * error;
 
         // Ensure threshold is positive
         self.current_threshold = self.current_threshold.max(1e-6);
@@ -710,14 +710,14 @@ impl P2AlgorithmState {
             values: [0.0; 5],
             desired_positions: [
                 0.0,
-                _quantile / 2.0,
+                quantile / 2.0,
                 quantile,
                 (1.0 + quantile) / 2.0,
                 1.0,
             ],
             increments: [
                 0.0,
-                _quantile / 2.0,
+                quantile / 2.0,
                 quantile,
                 (1.0 + quantile) / 2.0,
                 1.0,
@@ -770,7 +770,7 @@ impl PrivacyBudgetTracker {
         step: usize,
         epsilon_spent: f64,
         delta_spent: f64,
-        batch_size: usize,
+        batchsize: usize,
         noise_multiplier: f64,
     ) {
         self.epsilon_consumed = epsilon_spent;
@@ -780,7 +780,7 @@ impl PrivacyBudgetTracker {
             step,
             epsilon_spent,
             delta_spent,
-            batch_size,
+            batchsize,
             noise_multiplier,
         });
     }
@@ -827,8 +827,8 @@ impl<A: Float + Default + Clone + std::iter::Sum> GradientStatistics<A> {
 impl<A: Float + Default + Clone> NoiseCalibrator<A> {
     fn new(config: &DifferentialPrivacyConfig) -> Self {
         Self {
-            noise_multiplier: A::from(_config.noise_multiplier).unwrap(),
-            base_noise_scale: A::from(_config.noise_multiplier * config.l2_norm_clip).unwrap(),
+            noise_multiplier: A::from(config.noise_multiplier).unwrap(),
+            base_noise_scale: A::from(config.noise_multiplier * config.l2_norm_clip).unwrap(),
             adaptive_scaling: false,
             mechanism: config.noise_mechanism,
             calibration_history: Vec::new(),
@@ -838,7 +838,7 @@ impl<A: Float + Default + Clone> NoiseCalibrator<A> {
     fn update_calibration(
         &mut self,
         step: usize,
-        gradient_norm: A,
+        gradientnorm: A,
         clipping_threshold: A,
         privacy_cost: A,
     ) {
@@ -847,7 +847,7 @@ impl<A: Float + Default + Clone> NoiseCalibrator<A> {
         self.calibration_history.push(NoiseCalibration {
             step,
             noise_scale,
-            gradient_norm,
+            gradientnorm,
             clipping_threshold,
             privacy_cost,
         });
@@ -917,7 +917,7 @@ mod tests {
 
         let state = state.unwrap();
         assert_eq!(state.current_threshold, 1.0);
-        assert_eq!(state.adaptation_lr, 0.1);
+        assert_eq!(state.adaptationlr, 0.1);
     }
 
     #[test]

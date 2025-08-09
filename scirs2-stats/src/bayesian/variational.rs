@@ -36,7 +36,7 @@ pub struct VariationalBayesianRegression {
 
 impl VariationalBayesianRegression {
     /// Create a new variational Bayesian regression model
-    pub fn new(n_features: usize, fitintercept: bool) -> Result<Self> {
+    pub fn new(n_features: usize, fit_intercept: bool) -> Result<Self> {
         check_positive(n_features, "n_features")?;
 
         // Initialize with weakly informative priors
@@ -461,7 +461,7 @@ pub struct VariationalARD {
 
 impl VariationalARD {
     /// Create new Variational ARD model
-    pub fn new(n_features: usize, fitintercept: bool) -> Result<Self> {
+    pub fn new(n_features: usize, fit_intercept: bool) -> Result<Self> {
         check_positive(n_features, "n_features")?;
 
         // Weakly informative priors
@@ -612,7 +612,7 @@ impl VariationalARD {
     }
 
     /// Update variational distribution for τ (noise precision)
-    fn update_tau_ard(&mut self, nsamples_: f64, xtx: &Array2<f64>, yty: f64) -> Result<()> {
+    fn update_tau_ard(&mut self, n_samples_: f64, xtx: &Array2<f64>, yty: f64) -> Result<()> {
         self.shape_tau = self.priorshape_tau + n_samples_ / 2.0;
 
         let mut quadratic_term = 0.0;

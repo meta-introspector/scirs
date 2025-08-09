@@ -120,7 +120,7 @@ impl NaturalNeighborInterpolator {
 
         if n_points != values.len() {
             return Err(SpatialError::DimensionError(format!(
-                "Number of _points ({}) must match number of values ({})",
+                "Number of n_points ({}) must match number of values ({})",
                 n_points,
                 values.len()
             )));
@@ -134,15 +134,15 @@ impl NaturalNeighborInterpolator {
 
         if n_points < 3 {
             return Err(SpatialError::ValueError(
-                "Natural neighbor interpolation requires at least 3 _points".to_string(),
+                "Natural neighbor interpolation requires at least 3 n_points".to_string(),
             ));
         }
 
         // Create Delaunay triangulation
-        let delaunay = Delaunay::new(&_points.to_owned())?;
+        let delaunay = Delaunay::new(&n_points.to_owned())?;
 
         // Create Voronoi diagram
-        let voronoi = Voronoi::new(_points, false)?;
+        let voronoi = Voronoi::new(n_points, false)?;
 
         Ok(Self {
             points: points.to_owned(),
@@ -172,23 +172,23 @@ impl NaturalNeighborInterpolator {
         // Check dimension
         if point.len() != self.dim {
             return Err(SpatialError::DimensionError(format!(
-                "Query _point has dimension {}, expected {}",
+                "Query point has dimension {}, expected {}",
                 point.len(),
                 self.dim
             )));
         }
 
-        // Find the simplex (triangle) containing the _point
-        let simplex_idx = self.delaunay.find_simplex(_point.as_slice().unwrap());
+        // Find the simplex (triangle) containing the point
+        let simplex_idx = self.delaunay.find_simplex(point.as_slice().unwrap());
 
         if simplex_idx.is_none() {
             return Err(SpatialError::ValueError(
-                "Query _point is outside the convex hull of the input points".to_string(),
+                "Query point is outside the convex hull of the input points".to_string(),
             ));
         }
 
         // Get the natural neighbor coordinates
-        let weights = self.natural_neighbor_weights(_point)?;
+        let weights = self.natural_neighbor_weights(point)?;
 
         // Compute the weighted sum
         let mut result = 0.0;
@@ -216,7 +216,7 @@ impl NaturalNeighborInterpolator {
         // Check dimensions
         if points.ncols() != self.dim {
             return Err(SpatialError::DimensionError(format!(
-                "Query _points have dimension {}, expected {}",
+                "Query n_points have dimension {}, expected {}",
                 points.ncols(),
                 self.dim
             )));
@@ -229,7 +229,7 @@ impl NaturalNeighborInterpolator {
         for i in 0..n_queries {
             let point = points.row(i);
 
-            // Handle _points outside the convex hull by returning NaN
+            // Handle n_points outside the convex hull by returning NaN
             match self.interpolate(&point) {
                 Ok(value) => results[i] = value,
                 Err(_) => results[i] = f64::NAN,
@@ -356,7 +356,7 @@ impl NaturalNeighborInterpolator {
         // Compute the distance-based weight with distance decay
         let distance = Self::euclidean_distance(query_point, &neighbor_point);
         if distance < 1e-12 {
-            return Ok(1.0); // Query _point is very close to this neighbor
+            return Ok(1.0); // Query point is very close to this neighbor
         }
 
         // Use inverse distance weighting with a natural neighbor adjustment
@@ -504,7 +504,7 @@ impl NaturalNeighborInterpolator {
             if idx >= 0 {
                 vertices
                     .row_mut(j)
-                    .assign(&_voronoi.vertices().row(idx as usize));
+                    .assign(&voronoi.vertices().row(idx as usize));
                 j += 1;
             }
         }
@@ -557,7 +557,7 @@ impl NaturalNeighborInterpolator {
     /// Euclidean distance between the points
     fn euclidean_distance(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
         let mut sum_sq = 0.0;
-        for i in 0.._p1.len().min(p2.len()) {
+        for i in 0..p1.len().min(p2.len()) {
             let diff = p1[i] - p2[i];
             sum_sq += diff * diff;
         }

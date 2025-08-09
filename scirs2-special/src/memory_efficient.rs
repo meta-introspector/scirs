@@ -74,17 +74,17 @@ where
         let max_elements = self.config.max_chunk_bytes / element_size;
 
         // Don't chunk if array is small
-        if total_elements < self.config.min_array_size {
-            return total_elements;
+        if totalelements < self.config.min_array_size {
+            return totalelements;
         }
 
         // Find a chunk size that divides evenly if possible
-        let ideal_chunk = max_elements.min(total_elements);
+        let ideal_chunk = max_elements.min(totalelements);
 
-        // Try to find a divisor of total_elements close to ideal_chunk
+        // Try to find a divisor of totalelements close to ideal_chunk
         for divisor in 1..=100 {
-            let chunk_size = total_elements / divisor;
-            if chunk_size <= ideal_chunk && total_elements % divisor == 0 {
+            let chunk_size = totalelements / divisor;
+            if chunk_size <= ideal_chunk && totalelements % divisor == 0 {
                 return chunk_size;
             }
         }
@@ -104,10 +104,10 @@ where
             ));
         }
 
-        let total_elements = input.len();
-        let chunk_size = self.calculate_chunk_size(total_elements);
+        let totalelements = input.len();
+        let chunk_size = self.calculate_chunk_size(totalelements);
 
-        if chunk_size == total_elements {
+        if chunk_size == totalelements {
             // Process without chunking
             self.function
                 .apply_chunk(&input.view(), &mut output.view_mut())?;
@@ -129,11 +129,11 @@ where
         output: &mut Array<T, Ix1>,
         chunk_size: usize,
     ) -> SpecialResult<()> {
-        let total_elements = input.len();
+        let totalelements = input.len();
         let mut offset = 0;
 
-        while offset < total_elements {
-            let end = (offset + chunk_size).min(total_elements);
+        while offset < totalelements {
+            let end = (offset + chunk_size).min(totalelements);
             let input_chunk = input.slice(ndarray::s![offset..end]);
             let mut output_chunk = output.slice_mut(ndarray::s![offset..end]);
 
@@ -155,14 +155,14 @@ where
     ) -> SpecialResult<()> {
         use scirs2_core::parallel_ops::*;
 
-        let total_elements = input.len();
-        let num_chunks = (total_elements + chunk_size - 1) / chunk_size;
+        let totalelements = input.len();
+        let num_chunks = (totalelements + chunk_size - 1) / chunk_size;
 
         // Collect chunk boundaries
         let chunks: Vec<(usize, usize)> = (0..num_chunks)
             .map(|i| {
                 let start = i * chunk_size;
-                let end = ((i + 1) * chunk_size).min(total_elements);
+                let end = ((i + 1) * chunk_size).min(totalelements);
                 (start, end)
             })
             .collect();

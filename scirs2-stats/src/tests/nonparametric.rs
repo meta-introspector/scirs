@@ -418,7 +418,7 @@ where
     // Check if there are at least two groups
     if samples.len() < 2 {
         return Err(StatsError::InvalidArgument(
-            "At least two _samples are required for Kruskal-Wallis test".to_string(),
+            "At least two samples are required for Kruskal-Wallis test".to_string(),
         ));
     }
 
@@ -434,7 +434,7 @@ where
 
     // Combine all _samples into a single vector, keeping track of the group
     let mut all_values = Vec::new();
-    let mut group_sizes = Vec::with_capacity(_samples.len());
+    let mut group_sizes = Vec::with_capacity(samples.len());
 
     for (group_idx, sample) in samples.iter().enumerate() {
         group_sizes.push(sample.len());
@@ -516,7 +516,7 @@ where
     }
 
     // Calculate p-value (chi-square distribution with k-1 degrees of freedom)
-    let df = F::from(_samples.len() - 1).unwrap();
+    let df = F::from(samples.len() - 1).unwrap();
     let p_value = chi_square_sf(h, df);
 
     Ok((h, p_value))

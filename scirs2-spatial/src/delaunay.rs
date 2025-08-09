@@ -72,7 +72,7 @@ pub struct Delaunay {
 
     /// The QHull instance (if retained)
     #[allow(dead_code)]
-    _qh: Option<Qh<'static>>,
+    qh: Option<Qh<'static>>,
 
     /// Constraint edges (for constrained Delaunay triangulation)
     /// Each edge is represented as a pair of point indices
@@ -100,7 +100,7 @@ impl Clone for Delaunay {
             npoints: self.npoints,
             simplices: self.simplices.clone(),
             neighbors: self.neighbors.clone(),
-            _qh: None, // We don't clone the Qhull handle
+            qh: None, // We don't clone the Qhull handle
             constraints: self.constraints.clone(),
         }
     }
@@ -158,7 +158,7 @@ impl Delaunay {
                 npoints,
                 simplices,
                 neighbors,
-                _qh: None,
+                qh: None,
                 constraints: Vec::new(),
             });
         }
@@ -186,7 +186,7 @@ impl Delaunay {
                         npoints,
                         simplices,
                         neighbors,
-                        _qh: None,
+                        qh: None,
                         constraints: Vec::new(),
                     });
                 }
@@ -228,7 +228,7 @@ impl Delaunay {
             npoints,
             simplices,
             neighbors,
-            _qh: Some(qh),
+            qh: Some(qh),
             constraints: Vec::new(),
         })
     }
@@ -320,12 +320,12 @@ impl Delaunay {
     /// Insert a single constraint edge into the triangulation
     fn insert_constraint_edge(&mut self, start: usize, end: usize) -> SpatialResult<()> {
         // Check if the edge already exists in the triangulation
-        if self.edge_exists(_start, end) {
+        if self.edge_exists(start, end) {
             return Ok(()); // Edge already exists, nothing to do
         }
 
         // Find all edges that intersect with the constraint edge
-        let intersecting_edges = self.find_intersecting_edges(_start, end)?;
+        let intersecting_edges = self.find_intersecting_edges(start, end)?;
 
         if intersecting_edges.is_empty() {
             // No intersections, but edge doesn't exist - this shouldn't happen in a proper triangulation
@@ -340,7 +340,7 @@ impl Delaunay {
         self.remove_triangles(&affected_triangles);
 
         // Retriangulate the affected region while ensuring the constraint edge is present
-        self.retriangulate_with_constraint(_start, end, &affected_triangles)?;
+        self.retriangulate_with_constraint(start, end, &affected_triangles)?;
 
         Ok(())
     }
@@ -354,7 +354,7 @@ impl Delaunay {
                 for j in (i + 1)..simplex_size {
                     let v1 = simplex[i];
                     let v2 = simplex[j];
-                    if (v1 == _start && v2 == end) || (v1 == end && v2 == start) {
+                    if (v1 == start && v2 == end) || (v1 == end && v2 == start) {
                         return true;
                     }
                 }
@@ -450,8 +450,8 @@ impl Delaunay {
                 && q[1] >= p[1].min(r[1])
         }
 
-        let o1 = orientation(_p1, p2, q1);
-        let o2 = orientation(_p1, p2, q2);
+        let o1 = orientation(p1, p2, q1);
+        let o2 = orientation(p1, p2, q2);
         let o3 = orientation(q1, q2, p1);
         let o4 = orientation(q1, q2, p2);
 
@@ -461,10 +461,10 @@ impl Delaunay {
         }
 
         // Special cases - segments are collinear and overlapping
-        if o1 == 0 && on_segment(_p1, q1, p2) {
+        if o1 == 0 && on_segment(p1, q1, p2) {
             return true;
         }
-        if o2 == 0 && on_segment(_p1, q2, p2) {
+        if o2 == 0 && on_segment(p1, q2, p2) {
             return true;
         }
         if o3 == 0 && on_segment(q1, p1, q2) {
@@ -483,11 +483,11 @@ impl Delaunay {
         // Calculate the closest distance between the two line segments in 3D
         let eps = 1e-6; // Distance threshold for interference
 
-        // Vector from _p1 to p2
+        // Vector from p1 to p2
         let u = [p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]];
         // Vector from q1 to q2
         let v = [q2[0] - q1[0], q2[1] - q1[1], q2[2] - q1[2]];
-        // Vector from _p1 to q1
+        // Vector from p1 to q1
         let w = [q1[0] - p1[0], q1[1] - p1[1], q1[2] - p1[2]];
 
         let u_dot_u = u[0] * u[0] + u[1] * u[1] + u[2] * u[2];
@@ -546,7 +546,7 @@ impl Delaunay {
         let mut triangles = HashSet::new();
 
         for (i, simplex) in self.simplices.iter().enumerate() {
-            for &(e1, e2) in _edges {
+            for &(e1, e2) in edges {
                 if self.triangle_contains_edge(simplex, e1, e2) {
                     triangles.insert(i);
                 }
@@ -572,7 +572,7 @@ impl Delaunay {
     /// Remove triangles from the triangulation
     fn remove_triangles(&mut self, _triangleindices: &[usize]) {
         // Sort _indices in descending order to avoid index shifting issues
-        let mut sorted_indices = triangle_indices.to_vec();
+        let mut sorted_indices = _triangleindices.to_vec();
         sorted_indices.sort_by(|a, b| b.cmp(a));
 
         for &idx in &sorted_indices {
@@ -619,7 +619,7 @@ impl Delaunay {
     fn extract_cavity_vertices(&self, _affectedtriangles: &[usize]) -> Vec<usize> {
         let mut vertices = HashSet::new();
 
-        for &triangle_idx in _affected_triangles {
+        for &triangle_idx in _affectedtriangles {
             if triangle_idx < self.simplices.len() {
                 for &vertex in &self.simplices[triangle_idx] {
                     vertices.insert(vertex);
@@ -756,11 +756,11 @@ impl Delaunay {
 
     /// Check if three points form a valid triangle (not collinear)
     fn points_form_valid_triangle(&self, v1: usize, v2: usize, v3: usize) -> bool {
-        if _v1 >= self.npoints || v2 >= self.npoints || v3 >= self.npoints {
+        if v1 >= self.npoints || v2 >= self.npoints || v3 >= self.npoints {
             return false;
         }
 
-        let p1 = self.points.row(_v1);
+        let p1 = self.points.row(v1);
         let p2 = self.points.row(v2);
         let p3 = self.points.row(v3);
 
@@ -820,7 +820,7 @@ impl Delaunay {
                     None => return None,
                 };
                 // Each vertex corresponds to a point index
-                let indices: Vec<usize> = vertices.iter().filter_map(|v| v.index(_qh)).collect();
+                let indices: Vec<usize> = vertices.iter().filter_map(|v| v.index(qh)).collect();
 
                 // Only keep simplices with the correct number of vertices
                 if indices.len() == ndim + 1 {

@@ -266,7 +266,7 @@ where
 
     if n_vars * n_vars < PARALLEL_THRESHOLD {
         // Use sequential version for small matrices
-        return crate::corrcoef(&_data.view(), "pearson");
+        return crate::corrcoef(&data.view(), "pearson");
     }
 
     let mut corr_matrix = ndarray::Array2::zeros((n_vars, n_vars));
@@ -331,7 +331,7 @@ where
 
     if n_samples_ < PARALLEL_THRESHOLD / data.len() {
         // Sequential bootstrap for small number of _samples
-        let _samples = bootstrap(&data.view(), n_samples_, seed)?;
+        let samples = bootstrap(&data.view(), n_samples_, seed)?;
         let mut results = Array1::zeros(n_samples_);
         for (i, sample) in samples.outer_iter().enumerate() {
             results[i] = statistic(&sample)?;

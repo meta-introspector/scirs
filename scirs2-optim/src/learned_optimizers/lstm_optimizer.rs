@@ -86,7 +86,7 @@ pub struct LSTMLayer<T: Float> {
     cell_state: Array1<T>,
 
     /// Hidden size
-    hidden_size: usize,
+    hiddensize: usize,
 }
 
 /// Output projection for generating parameter updates
@@ -167,24 +167,24 @@ pub struct AttentionMechanism<T: Float> {
     head_size: usize,
 
     /// Attention weights from last forward pass
-    attention_weights: Option<Array2<T>>,
+    attentionweights: Option<Array2<T>>,
 }
 
 impl<T: Float + Default + Clone> AttentionMechanism<T> {
     /// Create a new attention mechanism
     pub fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
-        let hidden_size = config.hidden_size;
+        let hiddensize = config.hiddensize;
         let num_heads = config.attention_heads;
-        let head_size = hidden_size / num_heads;
+        let head_size = hiddensize / num_heads;
 
         Ok(Self {
-            query_proj: Array2::zeros((hidden_size, hidden_size)),
-            key_proj: Array2::zeros((hidden_size, hidden_size)),
-            value_proj: Array2::zeros((hidden_size, hidden_size)),
-            output_proj: Array2::zeros((hidden_size, hidden_size)),
+            query_proj: Array2::zeros((hiddensize, hiddensize)),
+            key_proj: Array2::zeros((hiddensize, hiddensize)),
+            value_proj: Array2::zeros((hiddensize, hiddensize)),
+            output_proj: Array2::zeros((hiddensize, hiddensize)),
             num_heads,
             head_size,
-            attention_weights: None,
+            attentionweights: None,
         })
     }
 
@@ -212,8 +212,8 @@ impl<T: Float + Default + Clone> LayerNormalization<T> {
     /// Create a new layer normalization
     pub fn new(features: usize) -> Result<Self> {
         Ok(Self {
-            gamma: Array1::ones(_features),
-            beta: Array1::zeros(_features),
+            gamma: Array1::ones(features),
+            beta: Array1::zeros(features),
             epsilon: T::from(1e-5).unwrap(),
         })
     }
@@ -244,7 +244,7 @@ pub struct HistoryBuffer<T: Float> {
     update_magnitudes: VecDeque<T>,
 
     /// Maximum history length
-    max_length: usize,
+    _maxlength: usize,
 
     /// Preprocessed features cache
     feature_cache: Option<Array2<T>>,
@@ -910,19 +910,19 @@ impl<
     /// Create a new LSTM optimizer
     pub fn new(config: LearnedOptimizerConfig) -> Result<Self> {
         // Validate configuration
-        Self::validate_config(&_config)?;
+        Self::validate_config(&config)?;
 
         // Initialize LSTM network
-        let lstm_network = LSTMNetwork::new(&_config)?;
+        let lstm_network = LSTMNetwork::new(&config)?;
 
         // Initialize history buffer
-        let history_buffer = HistoryBuffer::new(_config.gradient_history_size);
+        let history_buffer = HistoryBuffer::new(config.gradient_history_size);
 
         // Initialize meta-learner
-        let meta_learner = MetaLearner::new(&_config)?;
+        let meta_learner = MetaLearner::new(&config)?;
 
         // Initialize learning rate controller
-        let lr_controller = AdaptiveLearningRateController::new(&_config)?;
+        let lr_controller = AdaptiveLearningRateController::new(&config)?;
 
         // Initialize state tracker
         let state_tracker = OptimizationStateTracker::new();
@@ -1146,9 +1146,9 @@ impl<
 
         // Update attention statistics if available
         if let Some(ref attention) = self.lstm_network.attention {
-            if let Some(ref attention_weights) = attention.attention_weights {
+            if let Some(ref attentionweights) = attention.attentionweights {
                 self.metrics.attention_stats =
-                    Some(self.compute_attention_stats(attention_weights));
+                    Some(self.compute_attention_stats(attentionweights));
             }
         }
     }
@@ -1178,7 +1178,7 @@ impl<
 
     /// Compute attention statistics
     fn compute_attention_stats(&self, attentionweights: &Array2<T>) -> AttentionStats {
-        let weights: Vec<f64> = attention_weights
+        let weights: Vec<f64> = attentionweights
             .iter()
             .map(|&w| w.to_f64().unwrap_or(0.0))
             .collect();
@@ -1218,13 +1218,13 @@ impl<
     fn estimate_memory_usage(&self) -> f64 {
         // Simplified memory estimation in MB
         let parameter_memory =
-            self.config.hidden_size as f64 * self.config.num_layers as f64 * 8.0 / 1024.0 / 1024.0;
+            self.config.hiddensize as f64 * self.config.num_layers as f64 * 8.0 / 1024.0 / 1024.0;
         let history_memory =
             self.config.gradient_history_size as f64 * self.config.input_features as f64 * 8.0
                 / 1024.0
                 / 1024.0;
         let lstm_state_memory =
-            self.config.hidden_size as f64 * self.config.num_layers as f64 * 2.0 * 8.0
+            self.config.hiddensize as f64 * self.config.num_layers as f64 * 2.0 * 8.0
                 / 1024.0
                 / 1024.0;
 
@@ -1233,7 +1233,7 @@ impl<
 
     /// Validate configuration
     fn validate_config(config: &LearnedOptimizerConfig) -> Result<()> {
-        if config.hidden_size == 0 {
+        if config.hiddensize == 0 {
             return Err(OptimError::InvalidConfig(
                 "Hidden size must be positive".to_string(),
             ));
@@ -1286,33 +1286,33 @@ impl<T: Float + Default + Clone + 'static> LSTMNetwork<T> {
         let mut layers = Vec::new();
 
         // Create LSTM layers
-        for i in 0.._config.num_layers {
+        for i in 0..config.num_layers {
             let input_size = if i == 0 {
                 config.input_features
             } else {
-                config.hidden_size
+                config.hiddensize
             };
-            let layer = LSTMLayer::new(input_size, config.hidden_size)?;
+            let layer = LSTMLayer::new(input_size, config.hiddensize)?;
             layers.push(layer);
         }
 
         // Create output projection
         let output_projection = OutputProjection::new(
-            config.hidden_size,
+            config.hiddensize,
             config.output_features,
             OutputTransform::ScaledTanh { scale: 0.1 },
         )?;
 
         // Create attention mechanism if enabled
         let attention = if config.use_attention {
-            Some(AttentionMechanism::new(_config)?)
+            Some(AttentionMechanism::new(config)?)
         } else {
             None
         };
 
         // Create layer normalization
-        let layer_norms = (0.._config.num_layers)
-            .map(|_| LayerNormalization::new(_config.hidden_size))
+        let layer_norms = (0..config.num_layers)
+            .map(|_| LayerNormalization::new(config.hiddensize))
             .collect::<Result<Vec<_>>>()?;
 
         Ok(Self {
@@ -1371,16 +1371,16 @@ impl<T: Float + Default + Clone + 'static> LSTMLayer<T> {
     /// Create new LSTM layer
     fn new(_input_size: usize, hiddensize: usize) -> Result<Self> {
         // Xavier initialization
-        let scale = (2.0 / (_input_size + hidden_size) as f64).sqrt();
+        let scale = (2.0 / (_input_size + hiddensize) as f64).sqrt();
 
         Ok(Self {
-            weight_ih: Self::xavier_init(4 * hidden_size, input_size, scale),
-            weight_hh: Self::xavier_init(4 * hidden_size, hidden_size, scale),
-            bias_ih: Array1::zeros(4 * hidden_size),
-            bias_hh: Array1::zeros(4 * hidden_size),
-            hidden_state: Array1::zeros(hidden_size),
-            cell_state: Array1::zeros(hidden_size),
-            hidden_size,
+            weight_ih: Self::xavier_init(4 * hiddensize, input_size, scale),
+            weight_hh: Self::xavier_init(4 * hiddensize, hiddensize, scale),
+            bias_ih: Array1::zeros(4 * hiddensize),
+            bias_hh: Array1::zeros(4 * hiddensize),
+            hidden_state: Array1::zeros(hiddensize),
+            cell_state: Array1::zeros(hiddensize),
+            hiddensize,
         })
     }
 
@@ -1392,20 +1392,20 @@ impl<T: Float + Default + Clone + 'static> LSTMLayer<T> {
         let gates = ih_linear + hh_linear;
 
         // Split into gates
-        let input_gate = Self::sigmoid(&gates.slice(s![0..self.hidden_size]).to_owned());
+        let input_gate = Self::sigmoid(&gates.slice(s![0..self.hiddensize]).to_owned());
         let forget_gate = Self::sigmoid(
             &gates
-                .slice(s![self.hidden_size..2 * self.hidden_size])
+                .slice(s![self.hiddensize..2 * self.hiddensize])
                 .to_owned(),
         );
         let cell_gate = Self::tanh(
             &gates
-                .slice(s![2 * self.hidden_size..3 * self.hidden_size])
+                .slice(s![2 * self.hiddensize..3 * self.hiddensize])
                 .to_owned(),
         );
         let output_gate = Self::sigmoid(
             &gates
-                .slice(s![3 * self.hidden_size..4 * self.hidden_size])
+                .slice(s![3 * self.hiddensize..4 * self.hiddensize])
                 .to_owned(),
         );
 
@@ -1420,7 +1420,7 @@ impl<T: Float + Default + Clone + 'static> LSTMLayer<T> {
 
     /// Xavier initialization
     fn xavier_init(rows: usize, cols: usize, scale: f64) -> Array2<T> {
-        Array2::from_shape_fn((_rows, cols), |_| {
+        Array2::from_shape_fn((rows, cols), |_| {
             let val = (scirs2_core::random::rng().gen_range(0.0..1.0) - 0.5) * 2.0 * scale;
             T::from(val).unwrap()
         })
@@ -1441,12 +1441,12 @@ impl<T: Float + Default + Clone> HistoryBuffer<T> {
     /// Create new history buffer
     fn new(_maxlength: usize) -> Self {
         Self {
-            gradients: VecDeque::with_capacity(_max_length),
-            parameters: VecDeque::with_capacity(_max_length),
-            losses: VecDeque::with_capacity(_max_length),
-            learning_rates: VecDeque::with_capacity(_max_length),
-            update_magnitudes: VecDeque::with_capacity(_max_length),
-            max_length: max_length,
+            gradients: VecDeque::with_capacity(_maxlength),
+            parameters: VecDeque::with_capacity(_maxlength),
+            losses: VecDeque::with_capacity(_maxlength),
+            learning_rates: VecDeque::with_capacity(_maxlength),
+            update_magnitudes: VecDeque::with_capacity(_maxlength),
+            _maxlength: _maxlength,
             feature_cache: None,
         }
     }
@@ -1462,13 +1462,13 @@ impl<T: Float + Default + Clone> HistoryBuffer<T> {
         }
 
         // Maintain size limits
-        while self.parameters.len() > self.max_length {
+        while self.parameters.len() > self._maxlength {
             self.parameters.pop_front();
         }
-        while self.gradients.len() > self.max_length {
+        while self.gradients.len() > self._maxlength {
             self.gradients.pop_front();
         }
-        while self.losses.len() > self.max_length {
+        while self.losses.len() > self._maxlength {
             self.losses.pop_front();
         }
 
@@ -1759,9 +1759,9 @@ mod tests {
         assert!(layer.is_ok());
 
         let layer = layer.unwrap();
-        assert_eq!(layer.hidden_size, 20);
-        assert_eq!(layer.weight_ih.shape(), &[80, 10]); // 4 * hidden_size, input_size
-        assert_eq!(layer.weight_hh.shape(), &[80, 20]); // 4 * hidden_size, hidden_size
+        assert_eq!(layer.hiddensize, 20);
+        assert_eq!(layer.weight_ih.shape(), &[80, 10]); // 4 * hiddensize, input_size
+        assert_eq!(layer.weight_hh.shape(), &[80, 20]); // 4 * hiddensize, hiddensize
     }
 
     #[test]
@@ -1783,7 +1783,7 @@ mod tests {
         let mut config = LearnedOptimizerConfig::default();
         assert!(LSTMOptimizer::<f64>::validate_config(&config).is_ok());
 
-        config.hidden_size = 0;
+        config.hiddensize = 0;
         assert!(LSTMOptimizer::<f64>::validate_config(&config).is_err());
     }
 

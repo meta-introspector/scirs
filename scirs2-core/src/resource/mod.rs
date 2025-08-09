@@ -295,7 +295,7 @@ impl DiscoveryConfig {
     /// Enable caching with custom duration
     pub fn with_cache_duration(mut self, duration: Duration) -> Self {
         self.cache_results = true;
-        self.cache_duration = std::time::Duration::from_secs(1);
+        self.cache_duration = duration;
         self
     }
 

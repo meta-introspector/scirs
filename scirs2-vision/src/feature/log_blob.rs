@@ -113,7 +113,7 @@ pub fn log_blob_detect(img: &DynamicImage, config: LogBlobConfig) -> Result<Vec<
 pub fn log_blobs_to_image(blobs: &[LogBlob], width: u32, height: u32) -> Result<GrayImage> {
     let mut img = GrayImage::new(width, height);
 
-    for blob in _blobs {
+    for blob in blobs {
         // Draw a circle around each blob, radius proportional to sigma
         let radius = (blob.sigma * std::f64::consts::SQRT_2) as i32;
         draw_circle(&mut img, blob.x as i32, blob.y as i32, radius);
@@ -127,7 +127,7 @@ pub fn log_blobs_to_image(blobs: &[LogBlob], width: u32, height: u32) -> Result<
 #[allow(dead_code)]
 fn apply_log(img: &Array2<f32>, sigma: f32) -> Result<Array2<f32>> {
     // Apply Gaussian blur
-    let blurred = gaussian_blur(_img, sigma)?;
+    let blurred = gaussian_blur(img, sigma)?;
 
     // Apply Laplacian
     let log_result = apply_laplacian(&blurred)?;
@@ -148,18 +148,18 @@ fn gaussian_blur(img: &Array2<f32>, sigma: f32) -> Result<Array2<f32>> {
     let kernel = gaussian_kernel(kernel_size, sigma);
 
     // Apply separable convolution
-    let temp = convolve_1d_horizontal(_img, &kernel)?;
+    let temp = convolve_1d_horizontal(img, &kernel)?;
     convolve_1d_vertical(&temp, &kernel)
 }
 
 #[allow(dead_code)]
 fn gaussian_kernel(size: usize, sigma: f32) -> Vec<f32> {
-    let mut kernel = vec![0.0; _size];
-    let center = _size / 2;
+    let mut kernel = vec![0.0; size];
+    let center = size / 2;
     let s2 = 2.0 * sigma * sigma;
 
     let mut sum = 0.0;
-    for (i, k) in kernel.iter_mut().enumerate().take(_size) {
+    for (i, k) in kernel.iter_mut().enumerate().take(size) {
         let x = i as i32 - center as i32;
         let val = (-((x * x) as f32) / s2).exp();
         *k = val;
@@ -327,7 +327,7 @@ fn non_max_suppression(mut blobs: Vec<LogBlob>) -> Vec<LogBlob> {
 
 #[allow(dead_code)]
 fn draw_circle(img: &mut GrayImage, cx: i32, cy: i32, radius: i32) {
-    let (width, height) = (_img.width() as i32, img.height() as i32);
+    let (width, height) = (img.width() as i32, img.height() as i32);
 
     for angle in 0..360 {
         let rad = (angle as f32).to_radians();

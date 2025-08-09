@@ -1291,9 +1291,9 @@ where
     /// Meta-training step
     pub fn meta_train_step(&mut self, metabatch: Vec<MetaTask<A>>) -> Result<A> {
         let mut total_meta_loss = A::zero();
-        let batch_size = A::from(meta_batch.len()).unwrap();
+        let batch_size = A::from(metabatch.len()).unwrap();
 
-        for task in &meta_batch {
+        for task in &metabatch {
             let task_loss = self.train_on_task(task)?;
             total_meta_loss = total_meta_loss + task_loss;
         }
@@ -1301,7 +1301,7 @@ where
         let avg_meta_loss = total_meta_loss / batch_size;
 
         // Compute meta-gradients
-        let meta_gradients = self.compute_meta_gradients(&meta_batch)?;
+        let meta_gradients = self.compute_meta_gradients(&metabatch)?;
 
         // Update meta-parameters
         self.update_meta_parameters(&meta_gradients)?;
@@ -1577,7 +1577,7 @@ where
         Dim: Dimension + Clone,
     {
         // Simplified reshape - in practice would handle arbitrary dimensions
-        Array::from_shape_vec(shape, flat_array.to_vec())
+        Array::from_shape_vec(shape, flatarray.to_vec())
             .map_err(|_| OptimError::InvalidConfig("Reshape error".to_string()))
     }
 
@@ -1722,9 +1722,9 @@ impl<A: Float + Default + Clone> LSTMState<A> {
         let mut hidden_states = Vec::new();
         let mut cell_states = Vec::new();
 
-        for _ in 0.._config.num_layers {
-            hidden_states.push(Array1::zeros(_config.hidden_size));
-            cell_states.push(Array1::zeros(_config.hidden_size));
+        for _ in 0..config.num_layers {
+            hidden_states.push(Array1::zeros(config.hidden_size));
+            cell_states.push(Array1::zeros(config.hidden_size));
         }
 
         Ok(Self {
@@ -1750,7 +1750,7 @@ impl<A: Float + Default + Clone> LSTMParameters<A> {
         let mut bias_ih = Vec::new();
         let mut bias_hh = Vec::new();
 
-        for layer in 0.._config.num_layers {
+        for layer in 0..config.num_layers {
             let input_size = if layer == 0 {
                 config.input_features
             } else {
@@ -1770,17 +1770,17 @@ impl<A: Float + Default + Clone> LSTMParameters<A> {
         }
 
         let output_weights =
-            Self::random_array_2d(_config.output_features, config.hidden_size, 0.1);
-        let output_bias = Array1::zeros(_config.output_features);
+            Self::random_array_2d(config.output_features, config.hidden_size, 0.1);
+        let output_bias = Array1::zeros(config.output_features);
 
         let attention_params = if config.use_attention {
-            Some(AttentionParameters::new(_config)?)
+            Some(AttentionParameters::new(config)?)
         } else {
             None
         };
 
         let lr_params = if config.learned_lr_schedule {
-            Some(LearningRateParameters::new(_config)?)
+            Some(LearningRateParameters::new(config)?)
         } else {
             None
         };
@@ -1799,7 +1799,7 @@ impl<A: Float + Default + Clone> LSTMParameters<A> {
 
     fn random_array_2d(rows: usize, cols: usize, scale: f64) -> Array2<A> {
         // Simplified random initialization
-        Array2::zeros((_rows, cols)).mapv(|_: A| {
+        Array2::zeros((rows, cols)).mapv(|_: A| {
             A::from(scale * (scirs2_core::random::rng().gen_range(-0.5f64..0.5f64))).unwrap()
         })
     }
@@ -1815,7 +1815,7 @@ impl<A: Float + Default + Clone> AttentionParameters<A> {
             key_weights: LSTMParameters::random_array_2d(hidden_size, hidden_size, scale),
             value_weights: LSTMParameters::random_array_2d(hidden_size, hidden_size, scale),
             output_weights: LSTMParameters::random_array_2d(hidden_size, hidden_size, scale),
-            head_weights: (0.._config.attention_heads)
+            head_weights: (0..config.attention_heads)
                 .map(|_| LSTMParameters::random_array_2d(hidden_size, hidden_size, scale))
                 .collect(),
         })
@@ -1825,8 +1825,8 @@ impl<A: Float + Default + Clone> AttentionParameters<A> {
 impl<A: Float + Default + Clone> LearningRateParameters<A> {
     fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
         Ok(Self {
-            base_lr: A::from(_config.meta_learning_rate).unwrap(),
-            adaptive_factors: Array1::ones(_config.output_features),
+            base_lr: A::from(config.meta_learning_rate).unwrap(),
+            adaptive_factors: Array1::ones(config.output_features),
             schedule_params: Array1::zeros(4), // Parameters for schedule
             decay_params: Array1::zeros(2),    // Decay parameters
         })

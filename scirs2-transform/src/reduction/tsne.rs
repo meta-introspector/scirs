@@ -119,7 +119,7 @@ impl SpatialTree {
         };
 
         // Build the tree
-        root.build_tree(_embedding)?;
+        root.build_tree(embedding)?;
 
         Ok(SpatialTree::QuadTree(root))
     }
@@ -182,7 +182,7 @@ impl SpatialTree {
         };
 
         // Build the tree
-        root.build_tree(_embedding)?;
+        root.build_tree(embedding)?;
 
         Ok(SpatialTree::OctTree(root))
     }
@@ -719,7 +719,7 @@ impl OctTreeNode {
                 for child in children.iter() {
                     child.compute_forces_recursive_oct(
                         point,
-                        point_idx,
+                        _point_idx,
                         angle,
                         degrees_of_freedom,
                         force,
@@ -813,7 +813,7 @@ impl TSNE {
 
     /// Sets the number of components in the embedded space
     pub fn with_n_components(mut self, ncomponents: usize) -> Self {
-        self.n_components = n_components;
+        self.n_components = ncomponents;
         self
     }
 
@@ -825,31 +825,31 @@ impl TSNE {
 
     /// Sets the early exaggeration factor
     pub fn with_early_exaggeration(mut self, earlyexaggeration: f64) -> Self {
-        self.early_exaggeration = early_exaggeration;
+        self.early_exaggeration = earlyexaggeration;
         self
     }
 
     /// Sets the learning rate for gradient descent
     pub fn with_learning_rate(mut self, learningrate: f64) -> Self {
-        self.learning_rate = learning_rate;
+        self.learning_rate = learningrate;
         self
     }
 
     /// Sets the maximum number of iterations
     pub fn with_max_iter(mut self, maxiter: usize) -> Self {
-        self.max_iter = max_iter;
+        self.max_iter = maxiter;
         self
     }
 
     /// Sets the number of iterations without progress before early stopping
     pub fn with_n_iter_without_progress(mut self, n_iter_withoutprogress: usize) -> Self {
-        self.n_iter_without_progress = n_iter_without_progress;
+        self.n_iter_without_progress = n_iter_withoutprogress;
         self
     }
 
     /// Sets the minimum gradient norm for convergence
     pub fn with_min_grad_norm(mut self, min_gradnorm: f64) -> Self {
-        self.min_grad_norm = min_grad_norm;
+        self.min_grad_norm = min_gradnorm;
         self
     }
 
@@ -888,7 +888,7 @@ impl TSNE {
     /// * n_jobs = 1: Use single-core (disable multicore)
     /// * n_jobs > 1: Use specific number of cores
     pub fn with_n_jobs(mut self, njobs: i32) -> Self {
-        self.n_jobs = n_jobs;
+        self.n_jobs = njobs;
         self
     }
 
@@ -900,7 +900,7 @@ impl TSNE {
 
     /// Sets the random state for reproducibility
     pub fn with_random_state(mut self, randomstate: u64) -> Self {
-        self.random_state = Some(random_state);
+        self.random_state = Some(randomstate);
         self
     }
 
@@ -1380,7 +1380,7 @@ impl TSNE {
         let degrees_of_freedom = (n_components - 1).max(1) as f64;
 
         // Initialize variables for optimization
-        let mut _embedding = initial_embedding;
+        let mut embedding = initial_embedding;
         let mut update = Array2::zeros((n_samples, n_components));
         let mut gains = Array2::ones((n_samples, n_components));
         let mut error = f64::INFINITY;
@@ -1403,9 +1403,9 @@ impl TSNE {
         for i in 0..exploration_n_iter {
             // Compute gradient and error for early exaggeration phase
             let (curr_error, grad) = if self.method == "barnes_hut" {
-                self.compute_gradient_barnes_hut(&_embedding, &p_early, degrees_of_freedom)?
+                self.compute_gradient_barnes_hut(&embedding, &p_early, degrees_of_freedom)?
             } else {
-                self.compute_gradient_exact(&_embedding, &p_early, degrees_of_freedom)?
+                self.compute_gradient_exact(&embedding, &p_early, degrees_of_freedom)?
             };
 
             // Perform gradient update with momentum and gains
@@ -1456,9 +1456,9 @@ impl TSNE {
         for i in iter + 1..self.max_iter {
             // Compute gradient and error for normal phase
             let (curr_error, grad) = if self.method == "barnes_hut" {
-                self.compute_gradient_barnes_hut(&_embedding, &p, degrees_of_freedom)?
+                self.compute_gradient_barnes_hut(&embedding, &p, degrees_of_freedom)?
             } else {
-                self.compute_gradient_exact(&_embedding, &p, degrees_of_freedom)?
+                self.compute_gradient_exact(&embedding, &p, degrees_of_freedom)?
             };
             error = curr_error;
 
@@ -1510,7 +1510,7 @@ impl TSNE {
             );
         }
 
-        Ok((_embedding, error, iter + 1))
+        Ok((embedding, error, iter + 1))
     }
 
     /// Compute gradient and error for exact t-SNE with optional multicore support

@@ -72,7 +72,7 @@ impl AdaptiveMemoryManager {
 
         // Use at most 80% of available memory for chunk processing
         let max_chunk_memory = available_memory * 4 / 5;
-        let max_chunk_elements = max_chunk_memory / element_size;
+        let max_chunk_elements = max_chunk_memory / elementsize;
 
         // Prefer power-of-2 sizes for cache efficiency
         let optimal_size = max_chunk_elements
@@ -480,7 +480,7 @@ where
     }
 
     // Simplified eigendecomposition (would use proper SVD in production)
-    let (_components, explained_variance) =
+    let (components, explained_variance) =
         compute_eigendecomposition(&running_cov.view(), n_components)?;
 
     // Record memory usage
@@ -659,7 +659,7 @@ where
 {
     fn new(quantile: f64) -> Self {
         let mut estimator = Self {
-            quantile: quantile,
+            quantile,
             markers: [F::zero(); 5],
             positions: [1.0, 2.0, 3.0, 4.0, 5.0],
             desired_positions: [
@@ -671,7 +671,7 @@ where
             ],
             increment: [
                 0.0,
-                _quantile / 2.0,
+                quantile / 2.0,
                 quantile,
                 (1.0 + quantile) / 2.0,
                 1.0,
@@ -1207,7 +1207,7 @@ where
     let batch_size = manager.get_optimal_chunk_size(n_obs, std::mem::size_of::<F>() * n_vars);
 
     // Initialize _components with random orthogonal matrix
-    let mut _components = Array2::<F>::zeros((n_vars, n_components));
+    let mut components = Array2::<F>::zeros((n_vars, n_components));
     for i in 0..n_components {
         components[[i % n_vars, i]] = F::one();
     }

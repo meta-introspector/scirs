@@ -121,7 +121,7 @@ pub struct DistancePool {
 impl DistancePool {
     /// Create a new distance computation pool
     pub fn new(capacity: usize) -> Self {
-        Self::with_config(_capacity, MemoryPoolConfig::default())
+        Self::with_config(capacity, MemoryPoolConfig::default())
     }
 
     /// Create a pool with custom configuration
@@ -134,10 +134,10 @@ impl DistancePool {
 
         Self {
             config,
-            distance_buffers: Mutex::new(VecDeque::with_capacity(_capacity)),
-            index_buffers: Mutex::new(VecDeque::with_capacity(_capacity)),
-            matrix_buffers: Mutex::new(VecDeque::with_capacity(_capacity / 4)), // Matrices are larger
-            large_buffers: Mutex::new(VecDeque::with_capacity(_capacity / 10)), // Large objects are rarer
+            distance_buffers: Mutex::new(VecDeque::with_capacity(capacity)),
+            index_buffers: Mutex::new(VecDeque::with_capacity(capacity)),
+            matrix_buffers: Mutex::new(VecDeque::with_capacity(capacity / 4)), // Matrices are larger
+            large_buffers: Mutex::new(VecDeque::with_capacity(capacity / 10)), // Large objects are rarer
             stats: PoolStatistics::new(),
             memory_usage: std::sync::atomic::AtomicUsize::new(0),
             numa_node: std::sync::atomic::AtomicI32::new(numa_node),
@@ -147,7 +147,7 @@ impl DistancePool {
     /// Get a cache-aligned distance buffer
     pub fn get_distance_buffer(&self, size: usize) -> DistanceBuffer {
         // Check if this is a large object
-        let buffer_size_bytes = _size * std::mem::size_of::<f64>();
+        let buffer_size_bytes = size * std::mem::size_of::<f64>();
         let is_large = buffer_size_bytes > self.config.large_object_threshold;
 
         // Check memory usage limit
@@ -157,13 +157,13 @@ impl DistancePool {
         }
 
         let buffer = if is_large {
-            self.get_large_buffer(_size)
+            self.get_large_buffer(size)
         } else {
             let mut buffers = self.distance_buffers.lock().unwrap();
 
-            // Try to reuse an existing buffer of appropriate _size
+            // Try to reuse an existing buffer of appropriate size
             for i in 0..buffers.len() {
-                if buffers[i].len() >= _size && buffers[i].len() <= _size * 2 {
+                if buffers[i].len() >= size && buffers[i].len() <= size * 2 {
                     let buffer = buffers.remove(i).unwrap();
                     self.stats.record_hit();
                     return DistanceBuffer::new(buffer, self);
@@ -172,7 +172,7 @@ impl DistancePool {
 
             // Create new aligned buffer
             self.stats.record_miss();
-            self.create_aligned_buffer(_size)
+            self.create_aligned_buffer(size)
         };
 
         // Track memory usage
@@ -186,9 +186,9 @@ impl DistancePool {
     fn get_large_buffer(&self, size: usize) -> Box<[f64]> {
         let mut buffers = self.large_buffers.lock().unwrap();
 
-        // For large buffers, be more strict about _size matching
+        // For large buffers, be more strict about size matching
         for i in 0..buffers.len() {
-            if buffers[i].len() == _size {
+            if buffers[i].len() == size {
                 let buffer = buffers.remove(i).unwrap();
                 self.stats.record_hit();
                 return buffer;
@@ -198,9 +198,9 @@ impl DistancePool {
         // Create new large buffer with NUMA awareness
         self.stats.record_miss();
         if self.config.numa_aware {
-            self.create_numa_aligned_buffer(_size)
+            self.create_numa_aligned_buffer(size)
         } else {
-            self.create_aligned_buffer(_size)
+            self.create_aligned_buffer(size)
         }
     }
 
@@ -210,7 +210,7 @@ impl DistancePool {
 
         // Try to reuse existing buffer
         for i in 0..buffers.len() {
-            if buffers[i].len() >= _size && buffers[i].len() <= _size * 2 {
+            if buffers[i].len() >= size && buffers[i].len() <= size * 2 {
                 let buffer = buffers.remove(i).unwrap();
                 self.stats.record_hit();
                 return IndexBuffer::new(buffer, self);
@@ -219,7 +219,7 @@ impl DistancePool {
 
         // Create new buffer
         self.stats.record_miss();
-        let new_buffer = vec![0usize; _size].into_boxed_slice();
+        let new_buffer = vec![0usize; size].into_boxed_slice();
         IndexBuffer::new(new_buffer, self)
     }
 
@@ -230,10 +230,10 @@ impl DistancePool {
         // Try to reuse existing matrix
         for i in 0..buffers.len() {
             let (r, c) = buffers[i].dim();
-            if r >= _rows && c >= cols && r <= _rows * 2 && c <= cols * 2 {
+            if r >= rows && c >= cols && r <= rows * 2 && c <= cols * 2 {
                 let mut matrix = buffers.remove(i).unwrap();
                 // Resize to exact dimensions needed
-                matrix = matrix.slice_mut(s![.._rows, ..cols]).to_owned();
+                matrix = matrix.slice_mut(s![..rows, ..cols]).to_owned();
                 self.stats.record_hit();
                 return MatrixBuffer::new(matrix, self);
             }
@@ -241,14 +241,14 @@ impl DistancePool {
 
         // Create new matrix
         self.stats.record_miss();
-        let matrix = Array2::zeros((_rows, cols));
+        let matrix = Array2::zeros((rows, cols));
         MatrixBuffer::new(matrix, self)
     }
 
     /// Create cache-aligned buffer for optimal SIMD performance
     fn create_aligned_buffer(&self, size: usize) -> Box<[f64]> {
         let layout = Layout::from_size_align(
-            _size * std::mem::size_of::<f64>(),
+            size * std::mem::size_of::<f64>(),
             self.config.cache_line_size,
         )
         .unwrap();
@@ -276,7 +276,7 @@ impl DistancePool {
         #[cfg(target_os = "linux")]
         {
             if self.config.numa_aware && numa_node >= 0 {
-                match Self::allocate_on_numa_node_linux(_size, numa_node as u32) {
+                match Self::allocate_on_numa_node_linux(size, numa_node as u32) {
                     Ok(buffer) => {
                         if self.config.enable_memory_warming {
                             Self::warm_memory(&buffer);
@@ -293,7 +293,7 @@ impl DistancePool {
         #[cfg(target_os = "windows")]
         {
             if self.config.numa_aware && numa_node >= 0 {
-                match Self::allocate_on_numa_node_windows(_size, numa_node as u32) {
+                match Self::allocate_on_numa_node_windows(size, numa_node as u32) {
                     Ok(buffer) => {
                         if self.config.enable_memory_warming {
                             Self::warm_memory(&buffer);
@@ -308,7 +308,7 @@ impl DistancePool {
         }
 
         // Fallback to regular aligned allocation
-        let buffer = self.create_aligned_buffer(_size);
+        let buffer = self.create_aligned_buffer(size);
 
         // Warm memory to encourage allocation on current NUMA node
         if self.config.enable_memory_warming {
@@ -422,10 +422,10 @@ impl DistancePool {
         let page_size = 4096; // Typical page size
         let elements_per_page = page_size / std::mem::size_of::<f64>();
 
-        for i in (0.._buffer.len()).step_by(elements_per_page) {
+        for i in (0..buffer.len()).step_by(elements_per_page) {
             // Volatile read to prevent optimization
             unsafe {
-                std::ptr::read_volatile(&_buffer[i]);
+                std::ptr::read_volatile(&buffer[i]);
             }
         }
     }
@@ -538,17 +538,17 @@ impl DistancePool {
                 let name = entry.file_name();
                 if let Some(name_str) = name.to_str() {
                     if let Some(stripped) = name_str.strip_prefix("node") {
-                        if let Ok(node_id) = stripped.parse::<u32>() {
+                        if let Ok(_nodeid) = stripped.parse::<u32>() {
                             // Read memory info for this node
                             let meminfo_path =
                                 format!("/sys/devices/system/node/{name_str}/meminfo");
                             if let Ok(meminfo) = fs::read_to_string(&meminfo_path) {
                                 if let Some(total_kb) = Self::parse_meminfo_total(&meminfo) {
                                     topology.nodes.push(NumaNode {
-                                        id: node_id,
+                                        id: _nodeid,
                                         total_memory_bytes: total_kb * 1024,
                                         available_memory_bytes: total_kb * 1024, // Approximation
-                                        cpu_count: Self::get_node_cpu_count(node_id).unwrap_or(1),
+                                        cpu_count: Self::get_node_cpu_count(_nodeid).unwrap_or(1),
                                     });
                                 }
                             }
@@ -680,20 +680,20 @@ impl DistancePool {
         let buffer_size_bytes = buffer.len() * std::mem::size_of::<f64>();
         let is_large = buffer_size_bytes > self.config.large_object_threshold;
 
-        // Update memory usage when _buffer is returned
+        // Update memory usage when buffer is returned
         self.memory_usage
             .fetch_sub(buffer_size_bytes, std::sync::atomic::Ordering::Relaxed);
 
         if is_large {
             let mut buffers = self.large_buffers.lock().unwrap();
             if buffers.len() < self.config.max_pool_size / 10 {
-                buffers.push_back(_buffer);
+                buffers.push_back(buffer);
             }
             // Otherwise let it drop and deallocate
         } else {
             let mut buffers = self.distance_buffers.lock().unwrap();
             if buffers.len() < self.config.max_pool_size {
-                buffers.push_back(_buffer);
+                buffers.push_back(buffer);
             }
             // Otherwise let it drop and deallocate
         }
@@ -703,7 +703,7 @@ impl DistancePool {
     fn return_index_buffer(&self, buffer: Box<[usize]>) {
         let mut buffers = self.index_buffers.lock().unwrap();
         if buffers.len() < self.config.max_pool_size {
-            buffers.push_back(_buffer);
+            buffers.push_back(buffer);
         }
     }
 
@@ -712,7 +712,7 @@ impl DistancePool {
         let mut buffers = self.matrix_buffers.lock().unwrap();
         if buffers.len() < self.config.max_pool_size / 4 {
             // Keep fewer matrices
-            buffers.push_back(_matrix);
+            buffers.push_back(matrix);
         }
     }
 
@@ -773,7 +773,7 @@ pub struct DistanceBuffer<'a> {
 impl<'a> DistanceBuffer<'a> {
     fn new(buffer: Box<[f64]>, pool: &'a DistancePool) -> Self {
         Self {
-            buffer: Some(_buffer),
+            buffer: Some(buffer),
             pool,
         }
     }
@@ -821,7 +821,7 @@ pub struct IndexBuffer<'a> {
 impl<'a> IndexBuffer<'a> {
     fn new(buffer: Box<[usize]>, pool: &'a DistancePool) -> Self {
         Self {
-            buffer: Some(_buffer),
+            buffer: Some(buffer),
             pool,
         }
     }
@@ -864,7 +864,7 @@ pub struct MatrixBuffer<'a> {
 impl<'a> MatrixBuffer<'a> {
     fn new(matrix: Array2<f64>, pool: &'a DistancePool) -> Self {
         Self {
-            matrix: Some(_matrix),
+            matrix: Some(matrix),
             pool,
         }
     }
@@ -881,7 +881,7 @@ impl<'a> MatrixBuffer<'a> {
 
     /// Fill the matrix with a value
     pub fn fill(&mut self, value: f64) {
-        self.matrix.as_mut().unwrap().fill(_value);
+        self.matrix.as_mut().unwrap().fill(value);
     }
 }
 
@@ -919,12 +919,12 @@ impl ClusteringArena {
 
     /// Allocate a temporary vector in the arena
     pub fn alloc_temp_vec<T: Default + Clone>(&self, size: usize) -> ArenaVec<T> {
-        let layout = Layout::array::<T>(_size).unwrap();
+        let layout = Layout::array::<T>(size).unwrap();
         let ptr = self.allocate_raw(layout);
 
         unsafe {
             // Initialize elements
-            for i in 0.._size {
+            for i in 0..size {
                 std::ptr::write(ptr.as_ptr().add(i) as *mut T, T::default());
             }
 
@@ -936,7 +936,7 @@ impl ClusteringArena {
     fn allocate_raw(&self, layout: Layout) -> NonNull<u8> {
         let mut current = self.current_block.lock().unwrap();
 
-        if current.is_none() || !current.as_ref().unwrap().can_allocate(_layout) {
+        if current.is_none() || !current.as_ref().unwrap().can_allocate(layout) {
             // Need a new block
             if let Some(old_block) = current.take() {
                 self.full_blocks.lock().unwrap().push(old_block);
@@ -944,7 +944,7 @@ impl ClusteringArena {
             *current = Some(ArenaBlock::new(self.config.arena_block_size));
         }
 
-        current.as_mut().unwrap().allocate(_layout)
+        current.as_mut().unwrap().allocate(layout)
     }
 
     /// Reset the arena, keeping allocated blocks for reuse
@@ -1006,15 +1006,15 @@ impl ArenaBlock {
     }
 
     fn can_allocate(&self, layout: Layout) -> bool {
-        let aligned_offset = (self.offset + layout.align() - 1) & !(_layout.align() - 1);
+        let aligned_offset = (self.offset + layout.align() - 1) & !(layout.align() - 1);
         aligned_offset + layout.size() <= self.size
     }
 
     fn allocate(&mut self, layout: Layout) -> NonNull<u8> {
-        assert!(self.can_allocate(_layout));
+        assert!(self.can_allocate(layout));
 
         // Align the offset
-        self.offset = (self.offset + layout.align() - 1) & !(_layout.align() - 1);
+        self.offset = (self.offset + layout.align() - 1) & !(layout.align() - 1);
 
         let ptr = unsafe { NonNull::new_unchecked(self.memory.as_ptr().add(self.offset)) };
         self.offset += layout.size();
@@ -1300,12 +1300,12 @@ impl NumaTopology {
 
     /// Check if a specific NUMA node exists
     pub fn has_node(&self, _nodeid: u32) -> bool {
-        self.nodes.iter().any(|node| node.id == node_id)
+        self.nodes.iter().any(|node| node.id == _nodeid)
     }
 
     /// Get memory information for a specific node
     pub fn get_node_info(&self, _nodeid: u32) -> Option<&NumaNode> {
-        self.nodes.iter().find(|node| node.id == node_id)
+        self.nodes.iter().find(|node| node.id == _nodeid)
     }
 }
 
@@ -1335,7 +1335,7 @@ pub fn create_numa_optimized_pool(capacity: usize) -> DistancePool {
         ..Default::default()
     };
 
-    DistancePool::with_config(_capacity, config)
+    DistancePool::with_config(capacity, config)
 }
 
 /// Get NUMA topology information
@@ -1533,7 +1533,7 @@ mod tests {
         let pool = global_distance_pool();
         let arena = global_clustering_arena();
 
-        let _buffer = pool.get_distance_buffer(10);
+        let buffer = pool.get_distance_buffer(10);
         let _vec = arena.alloc_temp_vec::<f64>(10);
 
         // Should not panic

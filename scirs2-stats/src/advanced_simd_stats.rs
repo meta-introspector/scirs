@@ -490,7 +490,7 @@ impl AdvancedSimdOptimizer {
     pub fn new(config: AdvancedSimdConfig) -> Self {
         let hardware_profile = Self::detect_hardware_profile();
         let algorithm_selector = Self::build_algorithm_selector(&hardware_profile);
-        let memory_manager = Self::create_memory_manager(&_config, &hardware_profile);
+        let memory_manager = Self::create_memory_manager(&config, &hardware_profile);
 
         Self {
             config: config,
@@ -938,7 +938,7 @@ impl AdvancedSimdOptimizer {
 
     /// Categorize data size for caching
     fn categorize_size(size: usize) -> SizeBucket {
-        match _size {
+        match size {
             s if s < 64 => SizeBucket::Tiny,
             s if s < 1024 => SizeBucket::Small,
             s if s < 65536 => SizeBucket::Medium,
@@ -949,7 +949,7 @@ impl AdvancedSimdOptimizer {
 
     /// Categorize matrix size
     fn categorize_matrix_size(_totalelements: usize) -> SizeBucket {
-        Self::categorize_size(_total_elements)
+        Self::categorize_size(_totalelements)
     }
 
     /// Get cached performance profile
@@ -1627,7 +1627,7 @@ impl Default for AdvancedSimdConfig {
 pub fn create_advanced_simd_optimizer(
     _config: Option<AdvancedSimdConfig>,
 ) -> AdvancedSimdOptimizer {
-    let _config = config.unwrap_or_default();
+    let _config = _config.unwrap_or_default();
     AdvancedSimdOptimizer::new(_config)
 }
 

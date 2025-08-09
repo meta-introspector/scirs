@@ -220,7 +220,7 @@ fn multi_resolution_register(
 /// Build image pyramid by downsampling
 #[allow(dead_code)]
 fn build_image_pyramid(image: &GrayImage, levels: usize) -> Vec<GrayImage> {
-    let mut pyramid = vec![_image.clone()];
+    let mut pyramid = vec![image.clone()];
 
     for _ in 1..levels {
         let prev = &pyramid[pyramid.len() - 1];
@@ -382,7 +382,7 @@ fn compute_ssd(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
 /// Compute Mean Squared Error
 #[allow(dead_code)]
 fn compute_mse(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
-    compute_ssd(_image1, image2) // MSE is the same as average SSD
+    compute_ssd(image1, image2) // MSE is the same as average SSD
 }
 
 /// Compute Normalized Cross-Correlation
@@ -464,15 +464,15 @@ fn compute_cross_correlation(image1: &GrayImage, image2: &GrayImage) -> Result<f
 /// Compute Mutual Information
 #[allow(dead_code)]
 fn compute_mutual_information(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
-    let joint_hist = compute_joint_histogram(_image1, image2, 256);
-    let (hist1, hist2) = compute_marginal_histograms(&joint_hist);
+    let _jointhist = compute_joint_histogram(image1, image2, 256);
+    let (hist1, hist2) = compute_marginal_histograms(&_jointhist);
 
     let mut mi = 0.0;
-    let total = joint_hist.sum();
+    let total = _jointhist.sum();
 
     for i in 0..256 {
         for j in 0..256 {
-            let p_xy = joint_hist[[i, j]] / total;
+            let p_xy = _jointhist[[i, j]] / total;
             let p_x = hist1[i] / total;
             let p_y = hist2[j] / total;
 
@@ -488,10 +488,10 @@ fn compute_mutual_information(image1: &GrayImage, image2: &GrayImage) -> Result<
 /// Compute Normalized Mutual Information
 #[allow(dead_code)]
 fn compute_normalized_mutual_information(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
-    let joint_hist = compute_joint_histogram(_image1, image2, 256);
-    let (hist1, hist2) = compute_marginal_histograms(&joint_hist);
+    let _jointhist = compute_joint_histogram(image1, image2, 256);
+    let (hist1, hist2) = compute_marginal_histograms(&_jointhist);
 
-    let total = joint_hist.sum();
+    let total = _jointhist.sum();
 
     // Compute entropies
     let mut h1 = 0.0;
@@ -510,7 +510,7 @@ fn compute_normalized_mutual_information(image1: &GrayImage, image2: &GrayImage)
         }
 
         for j in 0..256 {
-            let p_xy = joint_hist[[i, j]] / total;
+            let p_xy = _jointhist[[i, j]] / total;
             if p_xy > 1e-10 {
                 h12 -= p_xy * p_xy.ln();
             }
@@ -544,14 +544,14 @@ fn compute_joint_histogram(image1: &GrayImage, image2: &GrayImage, bins: usize) 
 /// Compute marginal histograms from joint histogram
 #[allow(dead_code)]
 fn compute_marginal_histograms(_jointhist: &Array2<f64>) -> (Array1<f64>, Array1<f64>) {
-    let (bins1, bins2) = joint_hist.dim();
+    let (bins1, bins2) = _jointhist.dim();
     let mut hist1 = Array1::zeros(bins1);
     let mut hist2 = Array1::zeros(bins2);
 
     for i in 0..bins1 {
         for j in 0..bins2 {
-            hist1[i] += joint_hist[[i, j]];
-            hist2[j] += joint_hist[[i, j]];
+            hist1[i] += _jointhist[[i, j]];
+            hist2[j] += _jointhist[[i, j]];
         }
     }
 

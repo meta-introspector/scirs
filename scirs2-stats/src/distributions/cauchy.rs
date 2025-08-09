@@ -364,7 +364,7 @@ pub fn cauchy<F>(loc: F, scale: F) -> StatsResult<Cauchy<F>>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    Cauchy::new(_loc, scale)
+    Cauchy::new(loc, scale)
 }
 
 /// Implementation of SampleableDistribution for Cauchy

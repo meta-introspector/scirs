@@ -46,12 +46,12 @@ pub struct HamiltonianMonteCarlo {
 
 impl HamiltonianMonteCarlo {
     /// Create a new HMC sampler
-    pub fn new(_step_size: f64, nsteps: usize) -> Result<Self> {
-        check_positive(_step_size, "_step_size")?;
+    pub fn new(step_size: f64, n_steps: usize) -> Result<Self> {
+        check_positive(step_size, "step_size")?;
         check_positive(n_steps, "n_steps")?;
 
         Ok(Self {
-            step_size: step_size,
+            step_size,
             n_steps,
             mass_matrix: None,
             seed: None,
@@ -62,7 +62,7 @@ impl HamiltonianMonteCarlo {
     }
 
     /// Set mass matrix
-    pub fn with_mass_matrix(mut self, massmatrix: Array2<f64>) -> Result<Self> {
+    pub fn with_mass_matrix(mut self, mass_matrix: Array2<f64>) -> Result<Self> {
         checkarray_finite(&mass_matrix, "mass_matrix")?;
         self.mass_matrix = Some(mass_matrix);
         Ok(self)
@@ -123,10 +123,10 @@ impl HamiltonianMonteCarlo {
 
         for i in 0..n_samples_ {
             // Generate momentum
-            let momentum = self.sample_momentum(&mass_matrix, &mut rng)?;
+            let momentum = self.samplemomentum(&mass_matrix, &mut rng)?;
 
             // Hamiltonian dynamics
-            let (proposed_state, proposed_momentum, proposed_log_prob) = self
+            let (proposed_state, proposedmomentum, proposed_log_prob) = self
                 .leapfrog_integration(
                     &current_state,
                     &momentum,
@@ -139,7 +139,7 @@ impl HamiltonianMonteCarlo {
             let current_energy =
                 -current_log_prob + 0.5 * self.kinetic_energy(&momentum, &mass_matrix_inv)?;
             let proposed_energy = -proposed_log_prob
-                + 0.5 * self.kinetic_energy(&proposed_momentum, &mass_matrix_inv)?;
+                + 0.5 * self.kinetic_energy(&proposedmomentum, &mass_matrix_inv)?;
 
             let accept_prob = (-proposed_energy + current_energy).exp().min(1.0);
             let accept = rng.random::<f64>() < accept_prob;
@@ -174,7 +174,7 @@ impl HamiltonianMonteCarlo {
     }
 
     /// Sample momentum from multivariate normal
-    fn sample_momentum<R: Rng>(
+    fn samplemomentum<R: Rng>(
         &self,
         mass_matrix: &Array2<f64>,
         rng: &mut R,
@@ -188,12 +188,12 @@ impl HamiltonianMonteCarlo {
         }
 
         // Transform by Cholesky factor of mass _matrix (simplified)
-        let scaled_momentum = mass_matrix.dot(&momentum);
-        Ok(scaled_momentum)
+        let scaledmomentum = mass_matrix.dot(&momentum);
+        Ok(scaledmomentum)
     }
 
     /// Compute kinetic energy
-    fn kinetic_energy(&self, momentum: &Array1<f64>, mass_matrixinv: &Array2<f64>) -> Result<f64> {
+    fn kinetic_energy(&self, momentum: &Array1<f64>, mass_matrix_inv: &Array2<f64>) -> Result<f64> {
         let kinetic = 0.5 * momentum.dot(&mass_matrix_inv.dot(momentum));
         Ok(kinetic)
     }
@@ -202,17 +202,17 @@ impl HamiltonianMonteCarlo {
     fn leapfrog_integration<D: LogDensity>(
         &self,
         initial_position: &Array1<f64>,
-        initial_momentum: &Array1<f64>,
+        initialmomentum: &Array1<f64>,
         target: &D,
         mass_matrix_inv: &Array2<f64>,
         step_size: f64,
     ) -> Result<(Array1<f64>, Array1<f64>, f64)> {
         let mut _position = initial_position.clone();
-        let mut _momentum = initial_momentum.clone();
+        let mut momentum = initialmomentum.clone();
 
-        // Half step for _momentum
+        // Half step for momentum
         if let Some(grad) = target.gradient(&_position.view())? {
-            _momentum = &_momentum + &(step_size * 0.5 * &grad);
+            momentum = &momentum + &(step_size * 0.5 * &grad);
         } else {
             return Err(StatsError::ComputationError(
                 "Gradient required for HMC but not available".to_string(),
@@ -222,21 +222,21 @@ impl HamiltonianMonteCarlo {
         // Full steps
         for _ in 0..self.n_steps {
             // Full step for _position
-            _position = &_position + &(step_size * &mass_matrix_inv.dot(&_momentum));
+            _position = &_position + &(step_size * &mass_matrix_inv.dot(&momentum));
 
-            // Full step for _momentum (except last)
+            // Full step for momentum (except last)
             if let Some(grad) = target.gradient(&_position.view())? {
-                _momentum = &_momentum + &(step_size * &grad);
+                momentum = &momentum + &(step_size * &grad);
             }
         }
 
-        // Final half step for _momentum
+        // Final half step for momentum
         if let Some(grad) = target.gradient(&_position.view())? {
-            _momentum = &_momentum + &(step_size * 0.5 * &grad);
+            momentum = &momentum + &(step_size * 0.5 * &grad);
         }
 
-        // Negate _momentum for reversibility
-        _momentum = -_momentum;
+        // Negate momentum for reversibility
+        momentum = -momentum;
 
         let final_log_prob = target.log_density(&_position.view())?;
 
@@ -244,7 +244,7 @@ impl HamiltonianMonteCarlo {
     }
 
     /// Invert mass matrix (simplified)
-    fn invert_mass_matrix(&self, massmatrix: &Array2<f64>) -> Result<Array2<f64>> {
+    fn invert_mass_matrix(&self, mass_matrix: &Array2<f64>) -> Result<Array2<f64>> {
         // Simplified inversion - in practice use proper _matrix inversion
         if mass_matrix.is_square() {
             // For now, assume diagonal mass _matrix
@@ -339,7 +339,7 @@ impl NoUTurnSampler {
     }
 
     /// Set initial step size
-    pub fn with_step_size(mut self, stepsize: f64) -> Self {
+    pub fn with_step_size(mut self, step_size: f64) -> Self {
         self.initial_step_size = step_size;
         self
     }
@@ -379,7 +379,7 @@ impl NoUTurnSampler {
 
         for i in 0..n_samples_ {
             // Sample momentum
-            let momentum = self.sample_momentum(ndim, &mut rng);
+            let momentum = self.samplemomentum(ndim, &mut rng);
 
             // Build tree and sample
             let (new_state, new_log_prob, tree_size) =
@@ -419,7 +419,7 @@ impl NoUTurnSampler {
     }
 
     /// Sample momentum from standard normal
-    fn sample_momentum<R: Rng>(&self, ndim: usize, rng: &mut R) -> Array1<f64> {
+    fn samplemomentum<R: Rng>(&self, ndim: usize, rng: &mut R) -> Array1<f64> {
         let mut momentum = Array1::zeros(ndim);
         for i in 0..ndim {
             // Simplified normal sampling using Box-Muller
@@ -676,7 +676,7 @@ pub struct ParallelTempering {
 
 impl ParallelTempering {
     /// Create a new parallel tempering sampler
-    pub fn new(temperatures: Array1<f64>, stepsize: f64) -> Result<Self> {
+    pub fn new(temperatures: Array1<f64>, step_size: f64) -> Result<Self> {
         checkarray_finite(&temperatures, "temperatures")?;
         check_positive(step_size, "step_size")?;
 

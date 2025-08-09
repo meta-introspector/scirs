@@ -203,7 +203,7 @@ impl<F> ZeroOperator<F> {
     #[allow(dead_code)]
     pub fn new(rows: usize, cols: usize) -> Self {
         Self {
-            shape: (_rows, cols),
+            shape: (rows, cols),
             _phantom: PhantomData,
         }
     }
@@ -283,7 +283,7 @@ impl<F: Float + NumAssign + Sum + 'static + Debug> LinearOperator<F>
         let mut result = vec![F::zero(); self.matrix.rows()];
         for (row, result_elem) in result.iter_mut().enumerate().take(self.matrix.rows()) {
             let row_range = self.matrix.row_range(row);
-            let row_indices = &self.matrix.col_indices()[row_range.clone()];
+            let row_indices = &self.matrix.colindices()[row_range.clone()];
             let row_data = &self.matrix.data[row_range];
 
             let mut sum = F::zero();
@@ -550,7 +550,7 @@ pub struct InverseOperator<F> {
 impl<F: Float> InverseOperator<F> {
     /// Create a new inverse operator with a custom solver function
     #[allow(dead_code)]
-    pub fn new<S>(_original: Box<dyn LinearOperator<F>>, solverfn: S) -> SparseResult<Self>
+    pub fn new<S>(original: Box<dyn LinearOperator<F>>, solver_fn: S) -> SparseResult<Self>
     where
         S: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
     {
@@ -642,7 +642,7 @@ pub struct AdjointOperator<F> {
 impl<F: Float + NumAssign> AdjointOperator<F> {
     /// Create a new adjoint operator
     pub fn new(original: Box<dyn LinearOperator<F>>) -> SparseResult<Self> {
-        if !_original.has_adjoint() {
+        if !original.has_adjoint() {
             return Err(SparseError::OperationNotSupported(
                 "Original operator does not support adjoint operations".to_string(),
             ));
@@ -780,13 +780,13 @@ impl<F: Float + NumAssign> ChainOperator<F> {
     pub fn new(operators: Vec<Box<dyn LinearOperator<F>>>) -> SparseResult<Self> {
         if operators.is_empty() {
             return Err(SparseError::ValueError(
-                "Cannot create chain with no _operators".to_string(),
+                "Cannot create chain with no operators".to_string(),
             ));
         }
 
         // Check dimension compatibility
         #[allow(clippy::needless_range_loop)]
-        for i in 0.._operators.len() - 1 {
+        for i in 0..operators.len() - 1 {
             let (_, a_cols) = operators[i].shape();
             let (b_rows, _) = operators[i + 1].shape();
             if a_cols != b_rows {

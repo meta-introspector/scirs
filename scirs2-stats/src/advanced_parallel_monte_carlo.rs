@@ -212,7 +212,7 @@ where
         + std::fmt::Display,
 {
     /// Create new advanced parallel Monte Carlo integrator
-    pub fn new(config: MonteCarloConfig, variancereduction: VarianceReductionConfig) -> Self {
+    pub fn new(config: MonteCarloConfig, variance_reduction: VarianceReductionConfig) -> Self {
         let adaptive_state = Arc::new(Mutex::new(AdaptiveState {
             n_samples_: 0,
             running_mean: F::zero(),
@@ -474,7 +474,7 @@ where
     }
 
     /// Compute integration volume
-    fn compute_integration_volume(&self, lower_bounds: &Array1<F>, upperbounds: &Array1<F>) -> F {
+    fn compute_integration_volume(&self, lower_bounds: &Array1<F>, upper_bounds: &Array1<F>) -> F {
         upper_bounds
             .iter()
             .zip(lower_bounds.iter())
@@ -483,7 +483,7 @@ where
     }
 
     /// Update running estimate
-    fn update_estimate(&self, new_values: Array1<F>, totalsamples: usize) -> StatsResult<F> {
+    fn update_estimate(&self, new_values: Array1<F>, total_samples: usize) -> StatsResult<F> {
         let mut state = self.adaptive_state.lock().unwrap();
 
         let batch_mean = new_values.mean().unwrap();
@@ -525,7 +525,7 @@ where
     }
 
     /// Estimate current error
-    fn estimate_error(&self, nsamples_: usize) -> StatsResult<F> {
+    fn estimate_error(&self, n_samples_: usize) -> StatsResult<F> {
         let state = self.adaptive_state.lock().unwrap();
         if n_samples_ <= 1 {
             return Ok(F::infinity());
@@ -596,7 +596,7 @@ where
     }
 
     /// Get z-score for confidence level
-    fn get_z_score(&self, confidencelevel: f64) -> f64 {
+    fn get_z_score(&self, confidence_level: f64) -> f64 {
         // Simplified z-score lookup
         match confidence_level {
             x if x >= 0.99 => 2.576,
@@ -667,9 +667,9 @@ pub struct TestFunction {
 impl TestFunction {
     pub fn new(dimension: usize) -> Self {
         Self {
-            dimension: dimension,
-            lower_bounds: Array1::zeros(_dimension),
-            upper_bounds: Array1::ones(_dimension),
+            dimension,
+            lower_bounds: Array1::zeros(dimension),
+            upper_bounds: Array1::ones(dimension),
         }
     }
 }

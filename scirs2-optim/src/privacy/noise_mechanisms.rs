@@ -78,21 +78,21 @@ pub struct LaplaceMechanism<T: Float> {
 /// Exponential mechanism for discrete optimization
 pub struct ExponentialMechanism<T: Float> {
     rng: scirs2_core::random::Random<rand::prelude::StdRng>,
-    quality_function: Box<dyn Fn(&T) -> T + Send + Sync>,
+    _qualityfunction: Box<dyn Fn(&T) -> T + Send + Sync>,
     _phantom: PhantomData<T>,
 }
 
 /// Truncated noise mechanism for bounded sensitivity
 pub struct TruncatedNoiseMechanism<T: Float> {
-    base_mechanism: Box<dyn NoiseMechanism<T> + Send>,
-    truncation_bound: T,
+    basemechanism: Box<dyn NoiseMechanism<T> + Send>,
+    truncationbound: T,
     _phantom: PhantomData<T>,
 }
 
 /// Tree aggregation mechanism for hierarchical noise
 pub struct TreeAggregationMechanism<T: Float> {
     tree_height: usize,
-    base_mechanism: Box<dyn NoiseMechanism<T> + Send>,
+    basemechanism: Box<dyn NoiseMechanism<T> + Send>,
     _phantom: PhantomData<T>,
 }
 
@@ -102,7 +102,7 @@ pub struct SparseVectorMechanism<T: Float> {
     budget_fraction: T,
     queries_answered: usize,
     max_queries: usize,
-    base_mechanism: Box<dyn NoiseMechanism<T> + Send>,
+    basemechanism: Box<dyn NoiseMechanism<T> + Send>,
     _phantom: PhantomData<T>,
 }
 
@@ -174,7 +174,7 @@ where
 
         // Standard Gaussian mechanism: σ = √(2 ln(1.25/δ)) * Δ / ε
         let ln_term = (T::one() + T::from(0.25).unwrap() / delta).ln();
-        let sigma = (T::from(2.0).unwrap() * ln_term).sqrt() * _sensitivity / epsilon;
+        let sigma = (T::from(2.0).unwrap() * ln_term).sqrt() * sensitivity / epsilon;
 
         Ok(sigma)
     }
@@ -288,7 +288,7 @@ where
         }
 
         // Laplace mechanism: b = Δ / ε
-        Ok(_sensitivity / epsilon)
+        Ok(sensitivity / epsilon)
     }
 
     /// Generic noise addition implementation
@@ -387,7 +387,7 @@ where
     pub fn new(_qualityfunction: Box<dyn Fn(&T) -> T + Send + Sync>) -> Self {
         Self {
             rng: scirs2_core::random::Random::seed(44), // Use seeded RNG for thread safety
-            quality_function: quality_function,
+            _qualityfunction: _qualityfunction,
             _phantom: PhantomData,
         }
     }
@@ -403,7 +403,7 @@ where
         // Compute quality scores
         let scores: Vec<T> = candidates
             .iter()
-            .map(|x| (self.quality_function)(x))
+            .map(|x| (self._qualityfunction)(x))
             .collect();
 
         // Compute exponential weights
@@ -441,8 +441,8 @@ where
     /// Create a new truncated noise mechanism
     pub fn new(_base_mechanism: Box<dyn NoiseMechanism<T> + Send>, truncationbound: T) -> Self {
         Self {
-            base_mechanism: base_mechanism,
-            truncation_bound,
+            basemechanism: basemechanism,
+            truncationbound,
             _phantom: PhantomData,
         }
     }
@@ -460,11 +460,11 @@ where
         delta: Option<T>,
     ) -> Result<()> {
         // Apply base mechanism first
-        self.base_mechanism
+        self.basemechanism
             .add_noise_1d(data, sensitivity, epsilon, delta)?;
 
         // Truncate to bounds
-        data.mapv_inplace(|x| x.max(-self.truncation_bound).min(self.truncation_bound));
+        data.mapv_inplace(|x| x.max(-self.truncationbound).min(self.truncationbound));
 
         Ok(())
     }
@@ -477,11 +477,11 @@ where
         delta: Option<T>,
     ) -> Result<()> {
         // Apply base mechanism first
-        self.base_mechanism
+        self.basemechanism
             .add_noise_2d(data, sensitivity, epsilon, delta)?;
 
         // Truncate to bounds
-        data.mapv_inplace(|x| x.max(-self.truncation_bound).min(self.truncation_bound));
+        data.mapv_inplace(|x| x.max(-self.truncationbound).min(self.truncationbound));
 
         Ok(())
     }
@@ -494,11 +494,11 @@ where
         delta: Option<T>,
     ) -> Result<()> {
         // Apply base mechanism first
-        self.base_mechanism
+        self.basemechanism
             .add_noise_3d(data, sensitivity, epsilon, delta)?;
 
         // Truncate to bounds
-        data.mapv_inplace(|x| x.max(-self.truncation_bound).min(self.truncation_bound));
+        data.mapv_inplace(|x| x.max(-self.truncationbound).min(self.truncationbound));
 
         Ok(())
     }
@@ -508,11 +508,11 @@ where
     }
 
     fn supports_delta(&self) -> bool {
-        self.base_mechanism.supports_delta()
+        self.basemechanism.supports_delta()
     }
 
     fn get_parameters(&self) -> NoiseParameters<T> {
-        let mut params = self.base_mechanism.get_parameters();
+        let mut params = self.basemechanism.get_parameters();
         params.mechanism_type = format!("Truncated_{}", params.mechanism_type);
         params
     }
@@ -526,7 +526,7 @@ where
     pub fn new(_tree_height: usize, basemechanism: Box<dyn NoiseMechanism<T> + Send>) -> Self {
         Self {
             tree_height: tree_height,
-            base_mechanism,
+            basemechanism,
             _phantom: PhantomData,
         }
     }
@@ -557,7 +557,7 @@ where
             // Pair up values and add noise to sums
             for chunk in current_level.chunks(2) {
                 let mut sum = Array1::from_vec(vec![chunk.iter().cloned().sum()]);
-                self.base_mechanism
+                self.basemechanism
                     .add_noise_1d(&mut sum, sensitivity, level_epsilon, delta)?;
                 next_level.push(sum[0]);
             }
@@ -578,14 +578,14 @@ where
         threshold: T,
         budget_fraction: T,
         max_queries: usize,
-        base_mechanism: Box<dyn NoiseMechanism<T> + Send>,
+        basemechanism: Box<dyn NoiseMechanism<T> + Send>,
     ) -> Self {
         Self {
             threshold,
             budget_fraction,
             queries_answered: 0,
             max_queries,
-            base_mechanism,
+            basemechanism,
             _phantom: PhantomData,
         }
     }
@@ -605,7 +605,7 @@ where
         // Add noise to threshold
         let threshold_epsilon = epsilon * self.budget_fraction;
         let mut noisy_threshold = Array1::from_vec(vec![self.threshold]);
-        self.base_mechanism.add_noise_1d(
+        self.basemechanism.add_noise_1d(
             &mut noisy_threshold,
             sensitivity,
             threshold_epsilon,
@@ -618,7 +618,7 @@ where
             // Add noise to actual _result
             let result_epsilon = epsilon * (T::one() - self.budget_fraction);
             let mut noisy_result = Array1::from_vec(vec![query_result]);
-            self.base_mechanism.add_noise_1d(
+            self.basemechanism.add_noise_1d(
                 &mut noisy_result,
                 sensitivity,
                 result_epsilon,
@@ -705,7 +705,7 @@ where
         S: DataMut<Elem = T>,
         D: Dimension,
     {
-        let _sensitivity = actual_sensitivity.unwrap_or(self.l2_sensitivity);
+        let sensitivity = actual_sensitivity.unwrap_or(self.l2_sensitivity);
 
         // Adaptive scaling based on data characteristics
         if self.adaptive_scaling {
@@ -713,7 +713,7 @@ where
             self.scaling_factor = data_scale / sensitivity;
         }
 
-        let adjusted_sensitivity = _sensitivity * self.scaling_factor;
+        let adjusted_sensitivity = sensitivity * self.scaling_factor;
         let mut mechanism = self.select_mechanism();
 
         let start_time = std::time::Instant::now();

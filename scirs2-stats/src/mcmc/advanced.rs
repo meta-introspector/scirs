@@ -36,7 +36,7 @@ impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P>
     /// Create a new multiple-try Metropolis sampler
     pub fn new(target: T, proposal: P, initial: Array1<f64>, ntries: usize) -> Result<Self> {
         checkarray_finite(&initial, "initial")?;
-        check_positive(n_tries, "n_tries")?;
+        check_positive(ntries, "n_tries")?;
 
         if initial.len() != target.dim() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -53,7 +53,7 @@ impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P>
             proposal,
             current: initial,
             current_log_density,
-            n_tries,
+            n_tries: ntries,
             n_accepted: 0,
             n_steps: 0,
         })
@@ -137,14 +137,14 @@ impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P>
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         let dim = self.current.len();
-        let mut _samples = Array2::zeros((n_samples_, dim));
+        let mut samples = Array2::zeros((n_samples_, dim));
 
         for i in 0..n_samples_ {
             let sample = self.step(rng)?;
             samples.row_mut(i).assign(&sample);
         }
 
-        Ok(_samples)
+        Ok(samples)
     }
 
     /// Get acceptance rate
@@ -310,7 +310,7 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         let dim = self.states[0].len();
-        let mut _samples = Array2::zeros((n_samples_, dim));
+        let mut samples = Array2::zeros((n_samples_, dim));
 
         for i in 0..n_samples_ {
             self.step(rng)?;
@@ -332,7 +332,7 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
             samples.row_mut(i).assign(&self.states[coldest_idx]);
         }
 
-        Ok(_samples)
+        Ok(samples)
     }
 
     /// Get acceptance rates for moves
@@ -383,7 +383,7 @@ impl<T: TargetDistribution> SliceSampler<T> {
     /// Create a new slice sampler
     pub fn new(target: T, initial: Array1<f64>, stepsize: f64) -> Result<Self> {
         checkarray_finite(&initial, "initial")?;
-        check_positive(step_size, "step_size")?;
+        check_positive(stepsize, "stepsize")?;
 
         if initial.len() != target.dim() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -399,7 +399,7 @@ impl<T: TargetDistribution> SliceSampler<T> {
             target,
             current: initial,
             current_log_density,
-            step_size,
+            step_size: stepsize,
             max_doublings: 20,
             n_accepted: 0,
             n_proposed: 0,
@@ -495,14 +495,14 @@ impl<T: TargetDistribution> SliceSampler<T> {
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         let dim = self.current.len();
-        let mut _samples = Array2::zeros((n_samples_, dim));
+        let mut samples = Array2::zeros((n_samples_, dim));
 
         for i in 0..n_samples_ {
             let sample = self.step(rng)?;
             samples.row_mut(i).assign(&sample);
         }
 
-        Ok(_samples)
+        Ok(samples)
     }
 
     /// Get acceptance rate (always 1.0 for slice sampling)
@@ -537,8 +537,8 @@ pub struct EnsembleSampler<T: TargetDistribution + Clone + Send + Sync> {
 impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
     /// Create a new ensemble sampler
     pub fn new(target: T, initialwalkers: Array2<f64>, scale: Option<f64>) -> Result<Self> {
-        checkarray_finite(&initial_walkers, "initial_walkers")?;
-        let (n_walkers, dim) = initial_walkers.dim();
+        checkarray_finite(&initialwalkers, "initial_walkers")?;
+        let (n_walkers, dim) = initialwalkers.dim();
         let scale = scale.unwrap_or(2.0);
 
         if n_walkers < 2 * dim {
@@ -554,13 +554,13 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
         // Compute initial log densities
         let mut log_densities = Array1::zeros(n_walkers);
         for i in 0..n_walkers {
-            let walker = initial_walkers.row(i);
+            let walker = initialwalkers.row(i);
             log_densities[i] = target.log_density(&walker.to_owned());
         }
 
         Ok(Self {
             target: Arc::new(target),
-            walkers: initial_walkers,
+            walkers: initialwalkers,
             log_densities,
             n_walkers,
             dim,
@@ -634,7 +634,7 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         let total_samples = n_samples_ * self.n_walkers;
-        let mut _samples = Array2::zeros((total_samples, self.dim));
+        let mut samples = Array2::zeros((total_samples, self.dim));
 
         for i in 0..n_samples_ {
             self.step(rng)?;
@@ -646,7 +646,7 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
             }
         }
 
-        Ok(_samples)
+        Ok(samples)
     }
 
     /// Get acceptance rates for all walkers

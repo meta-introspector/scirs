@@ -15,15 +15,15 @@ pub mod properties {
     pub fn test_gamma_properties(values: &[f64]) -> Vec<String> {
         let mut errors = Vec::new();
 
-        for &x in _values {
+        for &x in values {
             if x > 0.0 && x < 100.0 {
-                // Test Γ(x+1) = x * Γ(x) - skip very small _values that have numerical issues
+                // Test Γ(x+1) = x * Γ(x) - skip very small values that have numerical issues
                 if x > 1e-12 {
                     let gamma_x = crate::gamma::gamma(x);
                     let gamma_x_plus_1 = crate::gamma::gamma(x + 1.0);
                     let expected = x * gamma_x;
 
-                    // Allow larger tolerance for small _values and large _values
+                    // Allow larger tolerance for small values and large values
                     let tolerance = if x < 1e-6 {
                         1e-1
                     } else if x > 50.0 {
@@ -43,7 +43,7 @@ pub mod properties {
                     }
                 }
 
-                // Test reflection formula for x < 1, but avoid very small _values that have numerical issues
+                // Test reflection formula for x < 1, but avoid very small values that have numerical issues
                 if x < 1.0 && x > 1e-6 {
                     let gamma_x = crate::gamma::gamma(x);
                     let gamma_1_minus_x = crate::gamma::gamma(1.0 - x);
@@ -72,7 +72,7 @@ pub mod properties {
     pub fn test_bessel_properties(values: &[f64]) -> Vec<String> {
         let mut errors = Vec::new();
 
-        for &x in _values {
+        for &x in values {
             if x > 0.0 && x < 50.0 {
                 // Test J₀(0) = 1
                 if x.abs() < 1e-10 {
@@ -102,7 +102,7 @@ pub mod properties {
     pub fn test_erf_properties(values: &[f64]) -> Vec<String> {
         let mut errors = Vec::new();
 
-        for &x in _values {
+        for &x in values {
             // Test erf(-x) = -erf(x) (odd function)
             let erf_x = crate::erf::erf(x);
             let erf_neg_x = crate::erf::erf(-x);
@@ -173,7 +173,7 @@ pub mod properties {
     pub fn test_statistical_properties(values: &[f64]) -> Vec<String> {
         let mut errors = Vec::new();
 
-        for &x in _values {
+        for &x in values {
             // Test logistic function properties
             let logistic_x = crate::statistical::logistic(x);
 

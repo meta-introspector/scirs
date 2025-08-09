@@ -36,14 +36,14 @@ mod duration_serde {
     where
         S: Serializer,
     {
-        serializer.serialize_u64(_duration.as_millis() as u64)
+        serializer.serialize_u64(duration.as_millis() as u64)
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Duration, D::Error>
     where
         D: Deserializer<'de>,
     {
-        let millis = u64::deserialize(_deserializer)?;
+        let millis = u64::deserialize(deserializer)?;
         Ok(Duration::from_millis(millis))
     }
 }
@@ -778,7 +778,7 @@ pub trait ConsensusManager {
 
 /// Raft consensus implementation
 pub struct RaftConsensus {
-    node_id: String,
+    _nodeid: String,
     current_term: u64,
     voted_for: Option<String>,
     log: Vec<LogEntry>,
@@ -829,12 +829,12 @@ pub enum Command {
         metrics: Vec<String>,
     },
     AddNode {
-        node_id: String,
+        _nodeid: String,
         address: String,
         capabilities: Vec<String>,
     },
     RemoveNode {
-        node_id: String,
+        _nodeid: String,
     },
     UpdateConfiguration {
         config: AdvancedClusterConfig,
@@ -907,7 +907,7 @@ pub enum TaskType {
         target_shard: String,
     },
     HealthCheck {
-        node_id: String,
+        _nodeid: String,
     },
     Rebalancing {
         strategy: String,
@@ -930,8 +930,8 @@ impl std::fmt::Display for TaskType {
             } => {
                 write!(f, "DataMigration({} -> {})", source_shard, target_shard)
             }
-            TaskType::HealthCheck { node_id } => {
-                write!(f, "HealthCheck({})", node_id)
+            TaskType::HealthCheck { _nodeid } => {
+                write!(f, "HealthCheck({})", _nodeid)
             }
             TaskType::Rebalancing { strategy } => {
                 write!(f, "Rebalancing({})", strategy)
@@ -1034,7 +1034,7 @@ pub struct RecoveryAction {
 #[derive(Debug, Clone)]
 pub enum RecoveryActionDetails {
     RestartNode {
-        node_id: String,
+        _nodeid: String,
         restart_count: usize,
     },
     MigrateData {
@@ -1043,7 +1043,7 @@ pub enum RecoveryActionDetails {
         data_shards: Vec<String>,
     },
     ReplaceNode {
-        failed_node: String,
+        failednode: String,
         replacement_node: String,
     },
     RebalanceCluster {
@@ -1068,7 +1068,7 @@ pub enum AlertSeverity {
 /// Health monitor for nodes
 #[derive(Debug, Clone)]
 pub struct HealthMonitor {
-    pub node_id: String,
+    pub _nodeid: String,
     pub last_heartbeat: Instant,
     pub consecutive_failures: usize,
     pub health_score: f64,
@@ -1226,7 +1226,7 @@ pub struct ClusterState {
 /// Extended node information
 #[derive(Debug, Clone)]
 pub struct NodeInfo {
-    pub node_id: String,
+    pub _nodeid: String,
     pub address: String,
     pub status: NodeStatus,
     pub capabilities: Vec<String>,
@@ -1427,7 +1427,7 @@ pub enum AllocationStrategy {
 /// Resource reservation
 #[derive(Debug, Clone)]
 pub struct ResourceReservation {
-    pub node_id: String,
+    pub _nodeid: String,
     pub task_id: String,
     pub resources: ResourceRequirements,
     pub reserved_at: Instant,
@@ -1483,7 +1483,7 @@ impl Default for AlertThresholds {
 impl Default for HealthMonitor {
     fn default() -> Self {
         Self {
-            node_id: String::new(),
+            _nodeid: String::new(),
             last_heartbeat: Instant::now(),
             consecutive_failures: 0,
             health_score: 1.0,
@@ -1725,7 +1725,7 @@ impl AdvancedDistributedCoordinator {
 
         for shard_idx in 0..shard_count {
             let start_idx = shard_idx * samples_per_shard;
-            let end_idx = if shard_idx == shard_count - 1 {
+            let endidx = if shard_idx == shard_count - 1 {
                 total_samples
             } else {
                 (shard_idx + 1) * samples_per_shard
@@ -1736,12 +1736,12 @@ impl AdvancedDistributedCoordinator {
                 shard_id: shard_id.clone(),
                 data_range: DataRange::Index {
                     start_index: start_idx,
-                    end_index: end_idx,
+                    end_index: endidx,
                 },
                 replicas: vec![format!("node_{}", shard_idx % 3)], // Simple replication
                 primary_replica: format!("node_{}", shard_idx % 3),
                 version: 1,
-                checksum: self.compute_shard_checksum(start_idx, end_idx)?,
+                checksum: self.compute_shard_checksum(start_idx, endidx)?,
             };
 
             shards.push(shard);
@@ -2008,7 +2008,7 @@ impl AdvancedDistributedCoordinator {
     /// Compute checksum for data shard
     fn compute_shard_checksum(&self, start_idx: usize, endidx: usize) -> Result<String> {
         // Simple checksum based on range (in real implementation, would hash actual data)
-        let checksum = format!("{:x}", (start_idx ^ end_idx) as u64);
+        let checksum = format!("{:x}", (start_idx ^ endidx) as u64);
         Ok(checksum)
     }
 
@@ -2025,7 +2025,7 @@ impl AdvancedDistributedCoordinator {
 impl RaftConsensus {
     fn new(_nodeid: String, config: ConsensusConfig) -> Result<Self> {
         Ok(Self {
-            node_id,
+            _nodeid,
             current_term: 0,
             voted_for: None,
             log: Vec::new(),
@@ -2043,7 +2043,7 @@ impl RaftConsensus {
     fn start_election(&mut self) -> Result<()> {
         self.current_term += 1;
         self.state = NodeState::Candidate;
-        self.voted_for = Some(self.node_id.clone());
+        self.voted_for = Some(self._nodeid.clone());
 
         // Reset peer states
         for peer in self.peers.values_mut() {
@@ -2102,11 +2102,11 @@ impl RaftConsensus {
                 // Mark task as committed
                 println!("Applied metrics computation task: {}", task_id);
             }
-            Command::AddNode { node_id, .. } => {
-                println!("Applied add node: {}", node_id);
+            Command::AddNode { _nodeid, .. } => {
+                println!("Applied add node: {}", _nodeid);
             }
-            Command::RemoveNode { node_id } => {
-                println!("Applied remove node: {}", node_id);
+            Command::RemoveNode { _nodeid } => {
+                println!("Applied remove node: {}", _nodeid);
             }
             Command::UpdateConfiguration { .. } => {
                 println!("Applied configuration update");
@@ -2164,10 +2164,10 @@ impl ConsensusManager for RaftConsensus {
 
     fn get_consensus_state(&self) -> ConsensusState {
         let mut node_states = HashMap::new();
-        node_states.insert(self.node_id.clone(), self.state.clone());
+        node_states.insert(self._nodeid.clone(), self.state.clone());
 
-        for node_id in &self.peers {
-            node_states.insert(node_id.clone(), NodeState::Follower);
+        for _nodeid in &self.peers {
+            node_states.insert(_nodeid.clone(), NodeState::Follower);
         }
 
         ConsensusState {
@@ -2181,11 +2181,11 @@ impl ConsensusManager for RaftConsensus {
 
     fn handle_node_failure(&mut self, nodeid: &str) -> Result<()> {
         // Remove failed node from peers
-        if self.peers.remove(node_id).is_some() {
-            println!("Removed failed node from peers: {}", node_id);
+        if self.peers.remove(_nodeid).is_some() {
+            println!("Removed failed node from peers: {}", _nodeid);
 
             // If we lost the leader, start election
-            if self.leader_id.as_ref() == Some(&node_id.to_string()) {
+            if self.leader_id.as_ref() == Some(&_nodeid.to_string()) {
                 self.leader_id = None;
                 if self.state == NodeState::Follower {
                     self.start_election()?;
@@ -2202,10 +2202,10 @@ impl ConsensusManager for RaftConsensus {
         // In a simplified implementation, become leader if we're the only candidate
         if self.peers.is_empty() || self.state == NodeState::Candidate {
             self.state = NodeState::Leader;
-            self.leader_id = Some(self.node_id.clone());
+            self.leader_id = Some(self._nodeid.clone());
             println!(
                 "Node {} elected as leader for term {}",
-                self.node_id, self.current_term
+                self._nodeid, self.current_term
             );
         }
 
@@ -2221,7 +2221,7 @@ impl ConsensusManager for RaftConsensus {
 /// Implements the three-phase protocol: pre-prepare, prepare, and commit.
 pub struct PbftConsensus {
     /// Node identifier
-    node_id: String,
+    _nodeid: String,
     /// Current view number
     view_number: u64,
     /// Sequence number for ordering requests
@@ -2229,7 +2229,7 @@ pub struct PbftConsensus {
     /// Primary node for current view
     primary_node: Option<String>,
     /// List of all nodes in the network
-    node_list: Vec<String>,
+    nodelist: Vec<String>,
     /// Maximum number of faulty nodes
     max_faulty_nodes: usize,
     /// Request log for ordering
@@ -2334,8 +2334,8 @@ pub enum PbftNodeState {
 
 impl PbftConsensus {
     /// Create new PBFT consensus instance
-    pub fn new(node_id: String, nodelist: Vec<String>) -> Result<Self> {
-        let total_nodes = node_list.len();
+    pub fn new(_nodeid: String, nodelist: Vec<String>) -> Result<Self> {
+        let total_nodes = nodelist.len();
         if total_nodes < 4 {
             return Err(MetricsError::ComputationError(
                 "PBFT requires at least 4 nodes".to_string(),
@@ -2343,14 +2343,14 @@ impl PbftConsensus {
         }
 
         let max_faulty_nodes = (total_nodes - 1) / 3;
-        let primary_node = node_list.first().cloned();
+        let primary_node = nodelist.first().cloned();
 
         Ok(Self {
-            node_id,
+            _nodeid,
             view_number: 0,
             sequence_number: 1,
             primary_node,
-            node_list,
+            nodelist,
             max_faulty_nodes,
             request_log: HashMap::new(),
             pre_prepare_messages: HashMap::new(),
@@ -2388,32 +2388,32 @@ impl PbftConsensus {
 
     /// Send pre-prepare message
     fn send_pre_prepare(&mut self, sequencenumber: u64, request: PbftRequest) -> Result<()> {
-        let pre_prepare = PrePrepareMessage {
+        let preprepare = PrePrepareMessage {
             view_number: self.view_number,
             sequence_number,
             request,
-            sender: self.node_id.clone(),
+            sender: self._nodeid.clone(),
             timestamp: SystemTime::now(),
         };
 
         self.pre_prepare_messages
-            .insert(sequence_number, pre_prepare.clone());
+            .insert(sequence_number, preprepare.clone());
         self.phase_status
             .insert(sequence_number, PbftPhase::PrePrepare);
 
         // In a real implementation, broadcast to all nodes
         // For now, simulate immediate prepare phase
-        self.handle_pre_prepare(pre_prepare)?;
+        self.handle_pre_prepare(preprepare)?;
 
         Ok(())
     }
 
     /// Handle incoming pre-prepare message
     pub fn handle_pre_prepare(&mut self, preprepare: PrePrepareMessage) -> Result<()> {
-        let seq_num = pre_prepare.sequence_number;
+        let seq_num = preprepare.sequence_number;
 
         // Validate pre-_prepare message
-        if pre_prepare.view_number != self.view_number {
+        if preprepare.view_number != self.view_number {
             return Err(MetricsError::ComputationError(
                 "Invalid view number in pre-_prepare".to_string(),
             ));
@@ -2421,11 +2421,11 @@ impl PbftConsensus {
 
         // Store pre-_prepare and send _prepare message
         self.pre_prepare_messages
-            .insert(seq_num, pre_prepare.clone());
+            .insert(seq_num, preprepare.clone());
         self.phase_status.insert(seq_num, PbftPhase::Prepare);
 
         // Send _prepare message
-        self.send_prepare(seq_num, &pre_prepare.request)?;
+        self.send_prepare(seq_num, &preprepare.request)?;
 
         Ok(())
     }
@@ -2436,7 +2436,7 @@ impl PbftConsensus {
             view_number: self.view_number,
             sequence_number,
             request_digest: self.compute_request_digest(request),
-            sender: self.node_id.clone(),
+            sender: self._nodeid.clone(),
             timestamp: SystemTime::now(),
         };
 
@@ -2472,12 +2472,12 @@ impl PbftConsensus {
 
     /// Send commit message
     fn send_commit(&mut self, sequencenumber: u64) -> Result<()> {
-        if let Some(pre_prepare) = self.pre_prepare_messages.get(&sequence_number) {
+        if let Some(preprepare) = self.pre_prepare_messages.get(&sequence_number) {
             let commit = CommitMessage {
                 view_number: self.view_number,
                 sequence_number,
-                request_digest: self.compute_request_digest(&pre_prepare.request),
-                sender: self.node_id.clone(),
+                request_digest: self.compute_request_digest(&preprepare.request),
+                sender: self._nodeid.clone(),
                 timestamp: SystemTime::now(),
             };
 
@@ -2541,7 +2541,7 @@ impl PbftConsensus {
 
         let view_change = ViewChangeMessage {
             new_view_number: new_view,
-            sender: self.node_id.clone(),
+            sender: self._nodeid.clone(),
             last_sequence_number: self.sequence_number - 1,
             checkpoint_proof: Vec::new(), // Simplified
             timestamp: SystemTime::now(),
@@ -2557,7 +2557,7 @@ impl PbftConsensus {
 
     /// Check if this node is the primary
     fn is_primary(&self) -> bool {
-        self.primary_node.as_ref() == Some(&self.node_id)
+        self.primary_node.as_ref() == Some(&self._nodeid)
     }
 
     /// Compute digest of a request
@@ -2572,15 +2572,15 @@ impl PbftConsensus {
     /// Handle node failure
     pub fn handle_node_failure(&mut self, failednode: &str) -> Result<()> {
         // Remove failed _node from _node list
-        self.node_list.retain(|_node| _node != failed_node);
+        self.nodelist.retain(|_node| _node != failednode);
 
         // If primary failed, start view change
-        if self.primary_node.as_ref() == Some(&failed_node.to_string()) {
+        if self.primary_node.as_ref() == Some(&failednode.to_string()) {
             self.start_view_change()?;
         }
 
         // Update max faulty nodes calculation
-        self.max_faulty_nodes = (self.node_list.len() - 1) / 3;
+        self.max_faulty_nodes = (self.nodelist.len() - 1) / 3;
 
         Ok(())
     }
@@ -2602,8 +2602,8 @@ impl ConsensusManager for PbftConsensus {
 
     fn get_consensus_state(&self) -> ConsensusState {
         let mut node_states = HashMap::new();
-        for node in &self.node_list {
-            let state = if node == &self.node_id {
+        for node in &self.nodelist {
+            let state = if node == &self._nodeid {
                 match self.node_state {
                     PbftNodeState::Normal => NodeState::Leader, // Simplified
                     PbftNodeState::ViewChange => NodeState::Follower,
@@ -2626,7 +2626,7 @@ impl ConsensusManager for PbftConsensus {
     }
 
     fn handle_node_failure(&mut self, nodeid: &str) -> Result<()> {
-        self.handle_node_failure(node_id)
+        self.handle_node_failure(_nodeid)
     }
 
     fn elect_leader(&mut self) -> Result<String> {
@@ -2634,8 +2634,8 @@ impl ConsensusManager for PbftConsensus {
         self.start_view_change()?;
 
         // Select new primary (next node in the list)
-        let current_view_index = self.view_number as usize % self.node_list.len();
-        self.primary_node = self.node_list.get(current_view_index).cloned();
+        let current_view_index = self.view_number as usize % self.nodelist.len();
+        self.primary_node = self.nodelist.get(current_view_index).cloned();
         self.view_number += 1;
         self.node_state = PbftNodeState::Normal;
 
@@ -2650,7 +2650,7 @@ impl ConsensusManager for PbftConsensus {
 /// Implements a simplified PoS consensus where validators are selected based on their stake.
 pub struct ProofOfStakeConsensus {
     /// Node identifier
-    node_id: String,
+    _nodeid: String,
     /// Current epoch
     current_epoch: u64,
     /// Validator information
@@ -2670,7 +2670,7 @@ pub struct ProofOfStakeConsensus {
     /// Randomness seed for validator selection
     randomness_seed: u64,
     /// Minimum stake required to be a validator
-    min_stake: u64,
+    minstake: u64,
     /// Epoch duration
     epoch_duration: Duration,
     /// Last epoch timestamp
@@ -2680,7 +2680,7 @@ pub struct ProofOfStakeConsensus {
 /// Validator information in PoS
 #[derive(Debug, Clone)]
 pub struct ValidatorInfo {
-    pub node_id: String,
+    pub _nodeid: String,
     pub stake: u64,
     pub is_active: bool,
     pub last_block_proposed: Option<u64>,
@@ -2743,8 +2743,8 @@ pub enum SlashingType {
 
 impl ProofOfStakeConsensus {
     /// Create new PoS consensus instance
-    pub fn new(node_id: String, stake: u64, minstake: u64) -> Result<Self> {
-        if stake < min_stake {
+    pub fn new(_nodeid: String, stake: u64, minstake: u64) -> Result<Self> {
+        if stake < minstake {
             return Err(MetricsError::ComputationError(
                 "Insufficient stake to participate".to_string(),
             ));
@@ -2752,9 +2752,9 @@ impl ProofOfStakeConsensus {
 
         let mut validators = HashMap::new();
         validators.insert(
-            node_id.clone(),
+            _nodeid.clone(),
             ValidatorInfo {
-                node_id: node_id.clone(),
+                _nodeid: _nodeid.clone(),
                 stake,
                 is_active: true,
                 last_block_proposed: None,
@@ -2764,7 +2764,7 @@ impl ProofOfStakeConsensus {
         );
 
         Ok(Self {
-            node_id,
+            _nodeid,
             current_epoch: 0,
             validators,
             stake,
@@ -2777,7 +2777,7 @@ impl ProofOfStakeConsensus {
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_nanos() as u64,
-            min_stake,
+            minstake,
             epoch_duration: Duration::from_secs(60), // 1 minute epochs
             last_epoch: Instant::now(),
         })
@@ -2809,7 +2809,7 @@ impl ProofOfStakeConsensus {
         let active_validators: Vec<_> = self
             .validators
             .values()
-            .filter(|v| v.is_active && v.stake >= self.min_stake)
+            .filter(|v| v.is_active && v.stake >= self.minstake)
             .collect();
 
         if active_validators.is_empty() {
@@ -2824,26 +2824,26 @@ impl ProofOfStakeConsensus {
 
         for validator in &active_validators {
             if random_point < validator.stake {
-                self.current_validator = Some(validator.node_id.clone());
+                self.current_validator = Some(validator._nodeid.clone());
                 // Update randomness for next selection
                 self.randomness_seed = self
                     .randomness_seed
                     .wrapping_mul(1103515245)
                     .wrapping_add(12345);
-                return Ok(validator.node_id.clone());
+                return Ok(validator._nodeid.clone());
             }
             random_point -= validator.stake;
         }
 
         // Fallback to first validator
-        let first_validator = active_validators[0].node_id.clone();
+        let first_validator = active_validators[0]._nodeid.clone();
         self.current_validator = Some(first_validator.clone());
         Ok(first_validator)
     }
 
     /// Propose a new block (if selected as validator)
     pub fn propose_block(&mut self, transactions: Vec<Transaction>) -> Result<Block> {
-        if self.current_validator.as_ref() != Some(&self.node_id) {
+        if self.current_validator.as_ref() != Some(&self._nodeid) {
             return Err(MetricsError::ComputationError(
                 "Not selected as validator for this epoch".to_string(),
             ));
@@ -2857,16 +2857,16 @@ impl ProofOfStakeConsensus {
         };
 
         let stake_proof = StakeProof {
-            validator_id: self.node_id.clone(),
+            validator_id: self._nodeid.clone(),
             stake_amount: self.stake,
             randomness: self.randomness_seed,
-            signature: format!("sig_{}_{}", self.node_id, block_number),
+            signature: format!("sig_{}_{}", self._nodeid, block_number),
         };
 
         let block = Block {
             block_number,
             epoch: self.current_epoch,
-            proposer: self.node_id.clone(),
+            proposer: self._nodeid.clone(),
             transactions,
             previous_hash: previous_hash.clone(),
             block_hash: format!("block_{}_{}", block_number, previous_hash),
@@ -2878,7 +2878,7 @@ impl ProofOfStakeConsensus {
         self.blockchain.push(block.clone());
 
         // Update validator info
-        if let Some(validator) = self.validators.get_mut(&self.node_id) {
+        if let Some(validator) = self.validators.get_mut(&self._nodeid) {
             validator.last_block_proposed = Some(block_number);
             validator.reputation_score = (validator.reputation_score * 0.9 + 0.1).min(1.0);
         }
@@ -2895,7 +2895,7 @@ impl ProofOfStakeConsensus {
 
         // Check if proposer has sufficient stake
         if let Some(validator) = self.validators.get(&block.proposer) {
-            if validator.stake < self.min_stake || !validator.is_active {
+            if validator.stake < self.minstake || !validator.is_active {
                 return Ok(false);
             }
         } else {
@@ -2924,14 +2924,14 @@ impl ProofOfStakeConsensus {
 
     /// Add a new validator to the network
     pub fn add_validator(&mut self, nodeid: String, stake: u64) -> Result<()> {
-        if stake < self.min_stake {
+        if stake < self.minstake {
             return Err(MetricsError::ComputationError(
                 "Insufficient stake".to_string(),
             ));
         }
 
         let validator = ValidatorInfo {
-            node_id: node_id.clone(),
+            _nodeid: _nodeid.clone(),
             stake,
             is_active: true,
             last_block_proposed: None,
@@ -2939,18 +2939,18 @@ impl ProofOfStakeConsensus {
             reputation_score: 1.0,
         };
 
-        self.validators.insert(node_id, validator);
+        self.validators.insert(_nodeid, validator);
         self.total_stake += stake;
 
         Ok(())
     }
 
     /// Slash a validator for misbehavior
-    pub fn slash_validator(&mut self, node_id: &str, slashtype: SlashingType) -> Result<()> {
-        if let Some(validator) = self.validators.get_mut(node_id) {
+    pub fn slash_validator(&mut self, _nodeid: &str, slashtype: SlashingType) -> Result<()> {
+        if let Some(validator) = self.validators.get_mut(_nodeid) {
             // Find appropriate slashing condition
             if let Some(condition) = self.slashing_conditions.iter().find(|c| {
-                std::mem::discriminant(&c.condition_type) == std::mem::discriminant(&slash_type)
+                std::mem::discriminant(&c.condition_type) == std::mem::discriminant(&slashtype)
             }) {
                 let penalty = (validator.stake as f64 * condition.penalty_percentage) as u64;
                 validator.stake = validator.stake.saturating_sub(penalty);
@@ -2958,13 +2958,13 @@ impl ProofOfStakeConsensus {
                 validator.reputation_score *= 0.5; // Reduce reputation
 
                 // Remove from active validators if stake too low
-                if validator.stake < self.min_stake {
+                if validator.stake < self.minstake {
                     validator.is_active = false;
                 }
 
                 self.total_stake = self.total_stake.saturating_sub(penalty);
 
-                println!("Slashed validator {} with penalty {}", node_id, penalty);
+                println!("Slashed validator {} with penalty {}", _nodeid, penalty);
             }
         }
 
@@ -3025,7 +3025,7 @@ impl ConsensusManager for ProofOfStakeConsensus {
         self.pending_transactions.push_back(transaction);
 
         // If we're the selected validator, propose a block
-        if self.current_validator.as_ref() == Some(&self.node_id) {
+        if self.current_validator.as_ref() == Some(&self._nodeid) {
             let transactions: Vec<_> = self.pending_transactions.drain(..).collect();
             self.propose_block(transactions)?;
         }
@@ -3035,9 +3035,9 @@ impl ConsensusManager for ProofOfStakeConsensus {
 
     fn get_consensus_state(&self) -> ConsensusState {
         let mut node_states = HashMap::new();
-        for (node_id, validator) in &self.validators {
+        for (_nodeid, validator) in &self.validators {
             let state = if validator.is_active {
-                if self.current_validator.as_ref() == Some(node_id) {
+                if self.current_validator.as_ref() == Some(_nodeid) {
                     NodeState::Leader
                 } else {
                     NodeState::Follower
@@ -3045,7 +3045,7 @@ impl ConsensusManager for ProofOfStakeConsensus {
             } else {
                 NodeState::Follower
             };
-            node_states.insert(node_id.clone(), state);
+            node_states.insert(_nodeid.clone(), state);
         }
 
         ConsensusState {
@@ -3058,13 +3058,13 @@ impl ConsensusManager for ProofOfStakeConsensus {
     }
 
     fn handle_node_failure(&mut self, nodeid: &str) -> Result<()> {
-        if let Some(validator) = self.validators.get_mut(node_id) {
+        if let Some(validator) = self.validators.get_mut(_nodeid) {
             validator.is_active = false;
             self.total_stake = self.total_stake.saturating_sub(validator.stake);
         }
 
         // If the failed node was the current validator, select a new one
-        if self.current_validator.as_ref() == Some(&node_id.to_string()) {
+        if self.current_validator.as_ref() == Some(&_nodeid.to_string()) {
             self.select_validator()?;
         }
 
@@ -3082,9 +3082,9 @@ impl ConsensusManager for ProofOfStakeConsensus {
 /// Suitable for non-Byzantine environments with crash failures only.
 pub struct SimpleMajorityConsensus {
     /// Node identifier
-    node_id: String,
+    _nodeid: String,
     /// List of all nodes
-    node_list: Vec<String>,
+    nodelist: Vec<String>,
     /// Current proposal being voted on
     current_proposal: Option<ConsensusProposal>,
     /// Votes received for current proposal
@@ -3153,15 +3153,15 @@ pub enum ConsensusResult {
 
 impl SimpleMajorityConsensus {
     /// Create new simple majority consensus instance
-    pub fn new(node_id: String, nodelist: Vec<String>) -> Result<Self> {
+    pub fn new(_nodeid: String, nodelist: Vec<String>) -> Result<Self> {
         let mut node_states = HashMap::new();
-        for node in &node_list {
+        for node in &nodelist {
             node_states.insert(node.clone(), NodeHealthStatus::Healthy);
         }
 
         Ok(Self {
-            node_id,
-            node_list,
+            _nodeid,
+            nodelist,
             current_proposal: None,
             votes: HashMap::new(),
             consensus_history: VecDeque::new(),
@@ -3183,7 +3183,7 @@ impl SimpleMajorityConsensus {
 
         let proposal_id = format!(
             "proposal_{}_{}",
-            self.node_id,
+            self._nodeid,
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
@@ -3192,7 +3192,7 @@ impl SimpleMajorityConsensus {
 
         let proposal = ConsensusProposal {
             proposal_id: proposal_id.clone(),
-            proposer: self.node_id.clone(),
+            proposer: self._nodeid.clone(),
             content: format!("Execute task: {}", task.task_id),
             task,
             timestamp: SystemTime::now(),
@@ -3230,21 +3230,21 @@ impl SimpleMajorityConsensus {
         }
 
         // Check if this node hasn't already voted
-        if self.votes.contains_key(&self.node_id) {
+        if self.votes.contains_key(&self._nodeid) {
             return Err(MetricsError::ComputationError(
                 "Node has already voted on this proposal".to_string(),
             ));
         }
 
         let vote = Vote {
-            voter: self.node_id.clone(),
+            voter: self._nodeid.clone(),
             proposal_id: proposal_id.to_string(),
             decision,
             timestamp: SystemTime::now(),
             reason,
         };
 
-        self.votes.insert(self.node_id.clone(), vote);
+        self.votes.insert(self._nodeid.clone(), vote);
 
         // Check if consensus is reached
         self.check_consensus()?;
@@ -3268,7 +3268,7 @@ impl SimpleMajorityConsensus {
         }
 
         // Check if voter is in the node list
-        if !self.node_list.contains(&vote.voter) {
+        if !self.nodelist.contains(&vote.voter) {
             return Err(MetricsError::ComputationError(
                 "Vote from unknown node".to_string(),
             ));
@@ -3292,7 +3292,7 @@ impl SimpleMajorityConsensus {
     /// Check if consensus has been reached
     fn check_consensus(&mut self) -> Result<()> {
         let healthy_nodes: Vec<_> = self
-            .node_list
+            .nodelist
             .iter()
             .filter(|node| self.node_states.get(*node) == Some(&NodeHealthStatus::Healthy))
             .collect();
@@ -3376,7 +3376,7 @@ impl SimpleMajorityConsensus {
 
     /// Update node health status
     pub fn update_node_health(&mut self, nodeid: &str, status: NodeHealthStatus) {
-        self.node_states.insert(node_id.to_string(), status);
+        self.node_states.insert(_nodeid.to_string(), status);
     }
 
     /// Get consensus statistics
@@ -3426,7 +3426,7 @@ impl ConsensusManager for SimpleMajorityConsensus {
 
     fn get_consensus_state(&self) -> ConsensusState {
         let mut node_states = HashMap::new();
-        for node in &self.node_list {
+        for node in &self.nodelist {
             let state = match self.node_states.get(node) {
                 Some(NodeHealthStatus::Healthy) => {
                     if let Some(ref proposal) = self.current_proposal {
@@ -3458,16 +3458,16 @@ impl ConsensusManager for SimpleMajorityConsensus {
                 .filter(|d| d.decision == ConsensusResult::Accepted)
                 .count(),
             node_states,
-            quorum_size: ((self.node_list.len() as f64) * self.majority_threshold).ceil() as usize,
+            quorum_size: ((self.nodelist.len() as f64) * self.majority_threshold).ceil() as usize,
         }
     }
 
     fn handle_node_failure(&mut self, nodeid: &str) -> Result<()> {
-        self.update_node_health(node_id, NodeHealthStatus::Failed);
+        self.update_node_health(_nodeid, NodeHealthStatus::Failed);
 
         // If the failed node was the proposer, abort current proposal
         if let Some(ref proposal) = self.current_proposal {
-            if proposal.proposer == node_id {
+            if proposal.proposer == _nodeid {
                 self.finalize_consensus(ConsensusResult::Timeout, 0, 0, 0)?;
             }
         }
@@ -3478,7 +3478,7 @@ impl ConsensusManager for SimpleMajorityConsensus {
     fn elect_leader(&mut self) -> Result<String> {
         // In simple majority, any healthy node can be a leader (proposer)
         let healthy_nodes: Vec<_> = self
-            .node_list
+            .nodelist
             .iter()
             .filter(|node| self.node_states.get(*node) == Some(&NodeHealthStatus::Healthy))
             .cloned()
@@ -3547,10 +3547,10 @@ impl ShardManager {
         let mut min_distance = u64::MAX;
 
         for (&mapped_hash, shard_id) in &self.shard_map {
-            let distance = if data_hash > mapped_hash {
-                data_hash - mapped_hash
+            let distance = if datahash > mapped_hash {
+                datahash - mapped_hash
             } else {
-                mapped_hash - data_hash
+                mapped_hash - datahash
             };
 
             if distance < min_distance {
@@ -3616,20 +3616,20 @@ impl FaultRecoveryManager {
     fn detect_failures(&mut self, clusternodes: &[String]) -> Result<Vec<String>> {
         let mut newly_failed = Vec::new();
 
-        for node_id in cluster_nodes {
-            if self.is_node_failed(node_id)? && !self.failed_nodes.contains(node_id) {
-                self.failed_nodes.insert(node_id.clone());
-                newly_failed.push(node_id.clone());
+        for _nodeid in clusternodes {
+            if self.is_node_failed(_nodeid)? && !self.failed_nodes.contains(_nodeid) {
+                self.failed_nodes.insert(_nodeid.clone());
+                newly_failed.push(_nodeid.clone());
 
                 // Schedule recovery action
                 let recovery_action = RecoveryAction {
                     action_id: format!(
                         "recovery_{}_{}",
-                        node_id,
+                        _nodeid,
                         Instant::now().elapsed().as_millis()
                     ),
                     action_type: RecoveryActionType::NodeFailover,
-                    target_node: node_id.clone(),
+                    target_node: _nodeid.clone(),
                     scheduled_time: Instant::now(),
                     max_retries: 3,
                     current_retry: 0,
@@ -3645,7 +3645,7 @@ impl FaultRecoveryManager {
     /// Check if a node has failed
     fn is_node_failed(&self, nodeid: &str) -> Result<bool> {
         // Simulate failure detection
-        if let Some(monitor) = self.health_monitors.get(node_id) {
+        if let Some(monitor) = self.health_monitors.get(_nodeid) {
             let last_heartbeat_age = monitor.last_heartbeat.elapsed();
             Ok(last_heartbeat_age > Duration::from_secs(30))
         } else {
@@ -3706,12 +3706,12 @@ impl FaultRecoveryManager {
 
     /// Add health monitor for node
     fn add_health_monitor(&mut self, nodeid: String, monitor: HealthMonitor) {
-        self.health_monitors.insert(node_id, monitor);
+        self.health_monitors.insert(_nodeid, monitor);
     }
 
     /// Update node health status
     fn update_node_health(&mut self, nodeid: &str, status: NodeHealthStatus) -> Result<()> {
-        if let Some(monitor) = self.health_monitors.get_mut(node_id) {
+        if let Some(monitor) = self.health_monitors.get_mut(_nodeid) {
             monitor.last_heartbeat = Instant::now();
             monitor.status = status;
             monitor.consecutive_failures = 0;
@@ -3747,9 +3747,9 @@ impl AutoScalingManager {
 
         if scale_up_needed && self.current_nodes < 10 {
             // Max nodes limit
-            let nodes_to_add = (self.current_nodes + 1).min(10) - self.current_nodes;
+            let nodes_toadd = (self.current_nodes + 1).min(10) - self.current_nodes;
             Ok(ScalingDecision {
-                action: ScalingAction::ScaleUp(nodes_to_add),
+                action: ScalingAction::ScaleUp(nodes_toadd),
                 target_nodes: (self.current_nodes + 1).min(10),
                 reason: format!(
                     "High load detected: current={:.2}, predicted={:.2}",
@@ -3758,9 +3758,9 @@ impl AutoScalingManager {
                 confidence: 0.9,
             })
         } else if scale_down_needed {
-            let nodes_to_remove = self.current_nodes - (self.current_nodes - 1);
+            let nodes_toremove = self.current_nodes - (self.current_nodes - 1);
             Ok(ScalingDecision {
-                action: ScalingAction::ScaleDown(nodes_to_remove),
+                action: ScalingAction::ScaleDown(nodes_toremove),
                 target_nodes: self.current_nodes - 1,
                 reason: format!(
                     "Low load detected: current={:.2}, predicted={:.2}",
@@ -3828,19 +3828,19 @@ impl AutoScalingManager {
     /// Execute scaling decision
     fn execute_scaling(&mut self, decision: ScalingDecision) -> Result<()> {
         match decision.action {
-            ScalingAction::ScaleUp(nodes_to_add) => {
+            ScalingAction::ScaleUp(nodes_toadd) => {
                 println!(
                     "Scaling up from {} to {} nodes",
                     self.current_nodes, decision.target_nodes
                 );
-                self.schedule_scale_up_operation(nodes_to_add)?;
+                self.schedule_scale_up_operation(nodes_toadd)?;
             }
-            ScalingAction::ScaleDown(nodes_to_remove) => {
+            ScalingAction::ScaleDown(nodes_toremove) => {
                 println!(
                     "Scaling down from {} to {} nodes",
                     self.current_nodes, decision.target_nodes
                 );
-                self.schedule_scale_down_operation(nodes_to_remove)?;
+                self.schedule_scale_down_operation(nodes_toremove)?;
             }
             ScalingAction::NoAction => {
                 // No action needed
@@ -3876,7 +3876,7 @@ impl AutoScalingManager {
 
     /// Schedule scale up operations
     fn schedule_scale_up_operation(&mut self, nodes_toadd: usize) -> Result<()> {
-        for i in 0..nodes_to_add {
+        for i in 0..nodes_toadd {
             let operation = ScalingOperation {
                 operation_id: format!(
                     "scale_up_{}_{}",
@@ -3890,13 +3890,13 @@ impl AutoScalingManager {
             };
             self.pending_operations.push_back(operation);
         }
-        self.target_nodes += nodes_to_add;
+        self.target_nodes += nodes_toadd;
         Ok(())
     }
 
     /// Schedule scale down operations
     fn schedule_scale_down_operation(&mut self, nodes_toremove: usize) -> Result<()> {
-        for i in 0..nodes_to_remove {
+        for i in 0..nodes_toremove {
             let node_to_remove = self.current_nodes - 1 - i;
             let operation = ScalingOperation {
                 operation_id: format!(
@@ -3911,7 +3911,7 @@ impl AutoScalingManager {
             };
             self.pending_operations.push_back(operation);
         }
-        self.target_nodes -= nodes_to_remove;
+        self.target_nodes -= nodes_toremove;
         Ok(())
     }
 
@@ -4064,7 +4064,7 @@ pub struct DistributedClusterOrchestrator {
 #[derive(Debug, Clone)]
 pub struct ClusterNode {
     /// Node identifier
-    pub node_id: String,
+    pub _nodeid: String,
     /// Network address
     pub address: SocketAddr,
     /// Node capabilities and resources
@@ -4100,7 +4100,7 @@ pub struct DataReplicationManager {
     /// Replication strategy
     replication_strategy: ReplicationStrategy,
     /// Data shards mapping
-    shard_map: HashMap<String, Vec<String>>, // shard_id -> node_ids
+    shard_map: HashMap<String, Vec<String>>, // shard_id -> nodeids
     /// Consistency level settings
     consistency_level: ConsistencyLevel,
     /// Conflict resolution strategy
@@ -4441,7 +4441,7 @@ impl DistributedClusterOrchestrator {
                     .nodes
                     .iter()
                     .take(count)
-                    .map(|node| node.node_id.clone())
+                    .map(|node| node._nodeid.clone())
                     .collect();
                 self.decommission_nodes(node_ids_to_remove)?;
             }
@@ -4456,7 +4456,7 @@ impl DistributedClusterOrchestrator {
                         .nodes
                         .iter()
                         .take(diff)
-                        .map(|node| node.node_id.clone())
+                        .map(|node| node._nodeid.clone())
                         .collect();
                     self.decommission_nodes(node_ids_to_remove)?;
                 }
@@ -4487,9 +4487,9 @@ impl DistributedClusterOrchestrator {
         for node in &nodes_to_check {
             let health = self.check_node_health(node)?;
             if health.status != HealthStatus::Healthy {
-                unhealthy_nodes.push(node.node_id.clone());
+                unhealthy_nodes.push(node._nodeid.clone());
             }
-            node_health.push((node.node_id.clone(), health));
+            node_health.push((node._nodeid.clone(), health));
         }
 
         // Check service mesh health
@@ -4568,7 +4568,7 @@ impl DistributedClusterOrchestrator {
         for (idx, node) in nodes.iter().enumerate() {
             partitions.push(DataPartition {
                 partition_id: format!("partition_{}_{}", job.job_id, idx),
-                node_id: node.node_id.clone(),
+                _nodeid: node._nodeid.clone(),
                 data_range: (idx * 100, (idx + 1) * 100), // Simplified partitioning
                 estimated_size: 1024 * 1024,              // 1MB per partition
             });
@@ -4588,7 +4588,7 @@ impl DistributedClusterOrchestrator {
             let task = ExecutionTask {
                 task_id: format!("task_{}_{}", job.job_id, partition.partition_id),
                 job_id: job.job_id.clone(),
-                node_id: partition.node_id.clone(),
+                _nodeid: partition._nodeid.clone(),
                 partition,
                 status: TaskStatus::Pending,
                 start_time: None,
@@ -4662,7 +4662,7 @@ impl DistributedClusterOrchestrator {
                 error_rate: 0.0,                          // Default error rate
                 throughput: 0.0,                          // Default throughput
             };
-            node_metrics.insert(node.node_id.clone(), node_metric);
+            node_metrics.insert(node._nodeid.clone(), node_metric);
         }
 
         let global_load = self
@@ -4688,7 +4688,7 @@ impl DistributedClusterOrchestrator {
         // Placeholder for node provisioning logic
         for i in 0..count {
             let new_node = ClusterNode {
-                node_id: format!("auto_node_{}", i),
+                _nodeid: format!("auto_node_{}", i),
                 address: "127.0.0.1:8080".parse().unwrap(),
                 capabilities: NodeCapabilities::default(),
                 workload: NodeWorkload::default(),
@@ -4703,7 +4703,7 @@ impl DistributedClusterOrchestrator {
 
     fn decommission_nodes(&mut self, nodeids: Vec<String>) -> Result<()> {
         // Placeholder for node decommissioning logic
-        self.nodes.retain(|node| !node_ids.contains(&node.node_id));
+        self.nodes.retain(|node| !nodeids.contains(&node._nodeid));
         Ok(())
     }
 
@@ -4739,7 +4739,7 @@ pub enum DataDistributionStrategy {
 #[derive(Debug, Clone)]
 pub struct DataPartition {
     pub partition_id: String,
-    pub node_id: String,
+    pub _nodeid: String,
     pub data_range: (usize, usize),
     pub estimated_size: usize,
 }
@@ -4748,7 +4748,7 @@ pub struct DataPartition {
 pub struct ExecutionTask {
     pub task_id: String,
     pub job_id: String,
-    pub node_id: String,
+    pub _nodeid: String,
     pub partition: DataPartition,
     pub status: TaskStatus,
     pub start_time: Option<SystemTime>,
@@ -4913,7 +4913,7 @@ impl ServiceMesh {
     fn register_node(&mut self, node: &ClusterNode) -> Result<()> {
         // Register node with service discovery
         self.service_discovery
-            .register(&node.node_id, &node.address)?;
+            .register(&node._nodeid, &node.address)?;
         Ok(())
     }
 
@@ -4935,7 +4935,7 @@ impl GlobalStateManager {
 
     fn add_node(&mut self, node: &ClusterNode) -> Result<()> {
         // Add node to cluster metadata
-        self.cluster_metadata.nodes.push(node.node_id.clone());
+        self.cluster_metadata.nodes.push(node._nodeid.clone());
         Ok(())
     }
 }

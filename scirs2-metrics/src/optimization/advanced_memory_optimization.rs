@@ -42,7 +42,7 @@ pub struct MemoryBlock {
     /// Last access time for LRU
     pub last_accessed: Instant,
     /// Block type and purpose
-    pub block_type: BlockType,
+    pub blocktype: BlockType,
     /// Reference count for shared usage
     pub ref_count: usize,
 }
@@ -188,7 +188,7 @@ pub struct AllocationRecord {
     /// Allocation size
     pub size: usize,
     /// Block type
-    pub block_type: BlockType,
+    pub blocktype: BlockType,
     /// Timestamp
     pub timestamp: Instant,
     /// Duration until deallocation
@@ -201,7 +201,7 @@ pub struct PredictedAllocation {
     /// Predicted size
     pub size: usize,
     /// Predicted type
-    pub block_type: BlockType,
+    pub blocktype: BlockType,
     /// Confidence score (0.0 to 1.0)
     pub confidence: f64,
     /// Expected time until allocation
@@ -304,7 +304,7 @@ impl AdvancedMemoryPool {
         // Check if prefetcher has a suitable block ready
         if let Some(block) = self
             .prefetcher
-            .get_predicted_block(aligned_size, &block_type)?
+            .get_predicted_block(aligned_size, &blocktype)?
         {
             self.record_allocation(&block)?;
             return Ok(block);
@@ -312,14 +312,14 @@ impl AdvancedMemoryPool {
 
         // Perform allocation based on strategy
         let block = match &self.strategy {
-            AllocationStrategy::FirstFit => self.allocate_first_fit(aligned_size, block_type)?,
-            AllocationStrategy::BestFit => self.allocate_best_fit(aligned_size, block_type)?,
-            AllocationStrategy::WorstFit => self.allocate_worst_fit(aligned_size, block_type)?,
+            AllocationStrategy::FirstFit => self.allocate_first_fit(aligned_size, blocktype)?,
+            AllocationStrategy::BestFit => self.allocate_best_fit(aligned_size, blocktype)?,
+            AllocationStrategy::WorstFit => self.allocate_worst_fit(aligned_size, blocktype)?,
             AllocationStrategy::BuddySystem => {
-                self.allocate_buddy_system(aligned_size, block_type)?
+                self.allocate_buddy_system(aligned_size, blocktype)?
             }
             AllocationStrategy::Adaptive(strategy) => {
-                self.allocate_adaptive(aligned_size, block_type, strategy)?
+                self.allocate_adaptive(aligned_size, blocktype, strategy)?
             }
         };
 
@@ -414,7 +414,7 @@ impl AdvancedMemoryPool {
         for (block_size, blocks) in free_blocks.iter_mut() {
             if *block_size >= size {
                 if let Some(mut block) = blocks.pop_front() {
-                    block.block_type = block_type;
+                    block.blocktype = blocktype;
                     block.last_accessed = Instant::now();
 
                     // Split block if significantly larger
@@ -424,7 +424,7 @@ impl AdvancedMemoryPool {
                             size: *block_size - size,
                             device_ptr: block.device_ptr + size,
                             last_accessed: Instant::now(),
-                            block_type: BlockType::IntermediateBuffer,
+                            blocktype: BlockType::IntermediateBuffer,
                             ref_count: 0,
                         };
 
@@ -438,7 +438,7 @@ impl AdvancedMemoryPool {
         }
 
         // No suitable block found, allocate new
-        self.allocate_new_block(size, block_type)
+        self.allocate_new_block(size, blocktype)
     }
 
     fn allocate_best_fit(&self, size: usize, blocktype: BlockType) -> Result<MemoryBlock> {
@@ -460,7 +460,7 @@ impl AdvancedMemoryPool {
         if let Some((block_size, _)) = best_fit {
             if let Some(blocks) = free_blocks.get_mut(&block_size) {
                 if let Some(mut block) = blocks.pop_front() {
-                    block.block_type = block_type;
+                    block.blocktype = blocktype;
                     block.last_accessed = Instant::now();
 
                     // Handle block splitting for best fit
@@ -472,7 +472,7 @@ impl AdvancedMemoryPool {
                                 size: remaining_size,
                                 device_ptr: block.device_ptr + size,
                                 last_accessed: Instant::now(),
-                                block_type: BlockType::IntermediateBuffer,
+                                blocktype: BlockType::IntermediateBuffer,
                                 ref_count: 0,
                             };
 
@@ -489,24 +489,24 @@ impl AdvancedMemoryPool {
             }
         }
 
-        self.allocate_new_block(size, block_type)
+        self.allocate_new_block(size, blocktype)
     }
 
     fn allocate_worst_fit(&self, size: usize, blocktype: BlockType) -> Result<MemoryBlock> {
         // Simplified implementation - find largest available block
-        self.allocate_new_block(size, block_type)
+        self.allocate_new_block(size, blocktype)
     }
 
     fn allocate_buddy_system(&self, size: usize, blocktype: BlockType) -> Result<MemoryBlock> {
         // Find next power of 2 >= size for buddy system
         let buddy_size = size.next_power_of_two();
-        self.allocate_new_block(buddy_size, block_type)
+        self.allocate_new_block(buddy_size, blocktype)
     }
 
     fn allocate_adaptive(
         &self,
         size: usize,
-        block_type: BlockType,
+        blocktype: BlockType,
         _strategy: &AdaptiveStrategy,
     ) -> Result<MemoryBlock> {
         // Analyze current performance metrics
@@ -526,10 +526,10 @@ impl AdvancedMemoryPool {
         drop(stats);
 
         match chosen_strategy {
-            AllocationStrategy::FirstFit => self.allocate_first_fit(size, block_type),
-            AllocationStrategy::BestFit => self.allocate_best_fit(size, block_type),
-            AllocationStrategy::BuddySystem => self.allocate_buddy_system(size, block_type),
-            _ => self.allocate_new_block(size, block_type),
+            AllocationStrategy::FirstFit => self.allocate_first_fit(size, blocktype),
+            AllocationStrategy::BestFit => self.allocate_best_fit(size, blocktype),
+            AllocationStrategy::BuddySystem => self.allocate_buddy_system(size, blocktype),
+            _ => self.allocate_new_block(size, blocktype),
         }
     }
 
@@ -542,7 +542,7 @@ impl AdvancedMemoryPool {
             size,
             device_ptr,
             last_accessed: Instant::now(),
-            block_type,
+            blocktype,
             ref_count: 1,
         };
 
@@ -706,7 +706,7 @@ impl MemoryPrefetcher {
     fn get_predicted_block(
         &self,
         size: usize,
-        block_type: &BlockType,
+        blocktype: &BlockType,
     ) -> Result<Option<MemoryBlock>> {
         // Check if we have a predicted block ready
         // Implementation would check predictions and return suitable block
@@ -727,7 +727,7 @@ pub enum OptimizationType {
 #[derive(Debug, Clone)]
 pub struct AllocationRequest {
     pub size: usize,
-    pub block_type: BlockType,
+    pub blocktype: BlockType,
     pub lifetime: Duration,
 }
 
@@ -766,7 +766,7 @@ mod tests {
 
         let block = pool.allocate(1024, BlockType::InputData).unwrap();
         assert_eq!(block.size, 1024);
-        assert_eq!(block.block_type, BlockType::InputData);
+        assert_eq!(block.blocktype, BlockType::InputData);
 
         let stats = pool.get_stats();
         assert_eq!(stats.allocation_count, 1);
@@ -806,12 +806,12 @@ mod tests {
         let workload = vec![
             AllocationRequest {
                 size: 1024,
-                block_type: BlockType::InputData,
+                blocktype: BlockType::InputData,
                 lifetime: Duration::from_millis(100),
             },
             AllocationRequest {
                 size: 2048,
-                block_type: BlockType::OutputData,
+                blocktype: BlockType::OutputData,
                 lifetime: Duration::from_millis(200),
             },
         ];

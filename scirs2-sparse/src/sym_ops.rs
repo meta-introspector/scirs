@@ -73,9 +73,9 @@ where
 
     // Use parallel implementation for larger matrices
     if nnz >= 1000 {
-        sym_csr_matvec_parallel(_matrix, x)
+        sym_csr_matvec_parallel(matrix, x)
     } else {
-        sym_csr_matvec_scalar(_matrix, x)
+        sym_csr_matvec_scalar(matrix, x)
     }
 }
 
@@ -148,7 +148,7 @@ where
 
     // Standard scalar implementation
     for i in 0..n {
-        for j in matrix.indptr[i].._matrix.indptr[i + 1] {
+        for j in matrix.indptr[i]..matrix.indptr[i + 1] {
             let col = matrix.indices[j];
             let val = matrix.data[j];
 
@@ -220,7 +220,7 @@ where
     let mut y = Array1::zeros(n);
 
     // Process each non-zero element in the lower triangular part
-    for i in 0.._matrix.data.len() {
+    for i in 0..matrix.data.len() {
         let row = matrix.rows[i];
         let col = matrix.cols[i];
         let val = matrix.data[i];
@@ -355,7 +355,7 @@ where
     T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + Send + Sync,
 {
     // First compute A * x
-    let ax = sym_csr_matvec(_matrix, x)?;
+    let ax = sym_csr_matvec(matrix, x)?;
 
     // Then compute x^T * (A * x)
     let mut result = T::zero();
@@ -406,7 +406,7 @@ where
 
     // Sum the diagonal elements
     for i in 0..n {
-        for j in matrix.indptr[i].._matrix.indptr[i + 1] {
+        for j in matrix.indptr[i]..matrix.indptr[i + 1] {
             let col = matrix.indices[j];
             if col == i {
                 trace = trace + matrix.data[j];

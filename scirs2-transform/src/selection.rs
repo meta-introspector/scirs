@@ -279,7 +279,7 @@ where
         RecursiveFeatureElimination {
             n_features_to_select,
             step: 1,
-            importance_func,
+            importance_func: importancefunc,
             selected_features_: None,
             ranking_: None,
             scores_: None,
@@ -468,7 +468,7 @@ impl MutualInfoSelector {
 
     /// Set number of neighbors for KNN estimation
     pub fn with_n_neighbors(mut self, nneighbors: usize) -> Self {
-        self.n_neighbors = n_neighbors;
+        self.n_neighbors = nneighbors;
         self
     }
 

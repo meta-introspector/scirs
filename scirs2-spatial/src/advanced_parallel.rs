@@ -207,9 +207,9 @@ impl NumaTopology {
 
     #[allow(clippy::needless_range_loop)]
     fn create_default_distance_matrix(_numnodes: usize) -> Vec<Vec<u32>> {
-        let mut matrix = vec![vec![0; _num_nodes]; _num_nodes];
-        for i in 0.._num_nodes {
-            for j in 0.._num_nodes {
+        let mut matrix = vec![vec![0; _numnodes]; _numnodes];
+        for i in 0.._numnodes {
+            for j in 0.._numnodes {
                 if i == j {
                     matrix[i][j] = 10; // Local access cost
                 } else {
@@ -222,8 +222,8 @@ impl NumaTopology {
 
     /// Get optimal thread count for NUMA node
     pub fn optimal_threads_per_node(&self, node: usize) -> usize {
-        if _node < self.cores_per_node.len() {
-            self.cores_per_node[_node]
+        if node < self.cores_per_node.len() {
+            self.cores_per_node[node]
         } else {
             self.cores_per_node.first().copied().unwrap_or(1)
         }
@@ -231,7 +231,7 @@ impl NumaTopology {
 
     /// Get memory capacity for NUMA node
     pub fn memory_capacity(&self, node: usize) -> usize {
-        self.memory_per_node.get(_node).copied().unwrap_or(0)
+        self.memory_per_node.get(node).copied().unwrap_or(0)
     }
 }
 
@@ -487,7 +487,7 @@ impl WorkStealingPool {
     fn assign_thread_to_numa_node(_threadid: usize, topology: &NumaTopology) -> usize {
         let mut thread_count = 0;
         for (node_id, &cores) in topology.cores_per_node.iter().enumerate() {
-            if _thread_id < thread_count + cores {
+            if _threadid < thread_count + cores {
                 return node_id;
             }
             thread_count += cores;
@@ -567,12 +567,12 @@ impl WorkStealingPool {
                 }
             }
             ThreadAffinityStrategy::NumaAware => {
-                // Set affinity to NUMA _node
+                // Set affinity to NUMA node
                 #[cfg(target_os = "linux")]
                 {
                     if let Err(e) = Self::set_numa_affinity_linux(numa_node) {
                         eprintln!(
-                            "Warning: Failed to set NUMA affinity for _node {numa_node}: {e}"
+                            "Warning: Failed to set NUMA affinity for node {numa_node}: {e}"
                         );
                     }
                 }
@@ -580,7 +580,7 @@ impl WorkStealingPool {
                 {
                     if let Err(e) = Self::set_numa_affinity_windows(numa_node) {
                         eprintln!(
-                            "Warning: Failed to set NUMA affinity for _node {}: {}",
+                            "Warning: Failed to set NUMA affinity for node {}: {}",
                             numa_node, e
                         );
                     }
@@ -639,10 +639,10 @@ impl WorkStealingPool {
     fn set_numa_affinity_linux(_numanode: usize) -> Result<(), Box<dyn std::error::Error>> {
         use std::fs;
 
-        // Read the CPU list for this NUMA _node
-        let cpulist_path = format!("/sys/devices/system/_node/_node{_numa_node}/cpulist");
+        // Read the CPU list for this NUMA node
+        let cpulist_path = format!("/sys/devices/system/node/node{_numa_node}/cpulist");
         let cpulist = fs::read_to_string(&cpulist_path)
-            .map_err(|_| format!("Failed to read NUMA _node {numa_node} CPU list"))?;
+            .map_err(|_| format!("Failed to read NUMA node {numa_node} CPU list"))?;
 
         unsafe {
             let mut cpu_set: libc::cpu_set_t = std::mem::zeroed();
@@ -710,7 +710,7 @@ impl WorkStealingPool {
     fn get_work_item(
         local_queue: &Arc<Mutex<VecDeque<WorkItem>>>,
         global_queue: &Arc<Mutex<VecDeque<WorkItem>>>,
-        _config: &WorkStealingConfig,
+        config: &WorkStealingConfig,
     ) -> Option<WorkItem> {
         // Try local _queue first
         if let Ok(mut queue) = local_queue.try_lock() {
@@ -731,10 +731,10 @@ impl WorkStealingPool {
 
     /// Attempt to steal work from other workers
     fn attempt_work_stealing(
-        _thread_id: usize,
+        _threadid: usize,
         _queue: &Arc<Mutex<VecDeque<WorkItem>>>,
         _global_queue: &Arc<Mutex<VecDeque<WorkItem>>>,
-        _config: &WorkStealingConfig,
+        config: &WorkStealingConfig,
     ) {
         // Work stealing implementation would go here
         // This would attempt to steal work from other workers' local queues
@@ -744,19 +744,19 @@ impl WorkStealingPool {
     fn process_work_item(item: WorkItem, context: &WorkContext) {
         match item.work_type {
             WorkType::DistanceMatrix => {
-                Self::process_distance_matrix_chunk(_item.start, item.end, context);
+                Self::process_distance_matrix_chunk(item.start, item.end, context);
             }
             WorkType::KMeansClustering => {
-                Self::process_kmeans_chunk(_item.start, item.end, context);
+                Self::process_kmeans_chunk(item.start, item.end, context);
             }
             WorkType::KDTreeBuild => {
-                Self::process_kdtree_chunk(_item.start, item.end, context);
+                Self::process_kdtree_chunk(item.start, item.end, context);
             }
             WorkType::NearestNeighbor => {
-                Self::process_nn_chunk(_item.start, item.end, context);
+                Self::process_nn_chunk(item.start, item.end, context);
             }
             WorkType::Custom(_name) => {
-                Self::process_custom_chunk(_item.start, item.end, context);
+                Self::process_custom_chunk(item.start, item.end, context);
             }
         }
     }
@@ -771,8 +771,8 @@ impl WorkStealingPool {
             let n_points = points.nrows();
 
             // Convert linear indices to (i, j) pairs for distance matrix
-            for linear_idx in start..end {
-                let (i, j) = Self::linear_to_matrix_indices(linear_idx, n_points);
+            for _linearidx in start..end {
+                let (i, j) = Self::linear_to_matrix_indices(_linearidx, n_points);
 
                 if i < j && i < n_points && j < n_points {
                     let point_i = points.row(i);
@@ -801,7 +801,7 @@ impl WorkStealingPool {
             let centroids = &kmeans_context.centroids;
             let k = centroids.nrows();
 
-            // Process point assignments for range [_start, end)
+            // Process point assignments for range [start, end)
             for point_idx in start..end {
                 if point_idx < points.nrows() {
                     let point = points.row(point_idx);
@@ -841,7 +841,7 @@ impl WorkStealingPool {
             let depth = kdtree_context.depth;
 
             // Process subset of points for tree construction
-            let chunk_indices: Vec<usize> = indices[_start..end.min(indices.len())].to_vec();
+            let chunk_indices: Vec<usize> = indices[start..end.min(indices.len())].to_vec();
 
             if !chunk_indices.is_empty() {
                 // Build local subtree for this chunk
@@ -853,7 +853,7 @@ impl WorkStealingPool {
                 );
 
                 // Send result back
-                kdtree_context.result_sender.send((_start, local_tree)).ok();
+                kdtree_context.result_sender.send((start, local_tree)).ok();
             }
         }
     }
@@ -866,7 +866,7 @@ impl WorkStealingPool {
             let data_points = &nn_context.data_points;
             let k = nn_context.k;
 
-            // Process query points in range [_start, end)
+            // Process query points in range [start, end)
             for query_idx in start..end {
                 if query_idx < query_points.nrows() {
                     let query = query_points.row(query_idx);
@@ -903,14 +903,14 @@ impl WorkStealingPool {
     fn process_custom_chunk(start: usize, end: usize, context: &WorkContext) {
         if let Some(custom_context) = &context.custom_context {
             // Call user-provided processing function
-            (custom_context.process_fn)(_start, end, &custom_context.user_data);
+            (custom_context.process_fn)(start, end, &custom_context.user_data);
         }
     }
 
     /// Helper function to convert linear index to matrix indices
     fn linear_to_matrix_indices(_linearidx: usize, n: usize) -> (usize, usize) {
         // For upper triangular matrix: convert linear index to (i, j) where i < j
-        let mut k = linear_idx;
+        let mut k = _linearidx;
         let mut i = 0;
 
         while k >= n - i - 1 {
@@ -972,11 +972,11 @@ impl WorkStealingPool {
 
     /// Submit work to the pool
     pub fn submit_work(&self, _workitems: Vec<WorkItem>) -> SpatialResult<()> {
-        self.total_work.store(_work_items.len(), Ordering::Relaxed);
+        self.total_work.store(_workitems.len(), Ordering::Relaxed);
         self.completed_work.store(0, Ordering::Relaxed);
 
         let mut global_queue = self.global_queue.lock().unwrap();
-        for item in _work_items {
+        for item in _workitems {
             global_queue.push_back(item);
         }
         drop(global_queue);
@@ -1208,7 +1208,7 @@ pub fn initialize_global_pool(config: WorkStealingConfig) -> SpatialResult<()> {
     let mut pool_guard = pool_mutex.lock().unwrap();
 
     if pool_guard.is_none() {
-        *pool_guard = Some(WorkStealingPool::new(_config)?);
+        *pool_guard = Some(WorkStealingPool::new(config)?);
     }
 
     Ok(())
@@ -1375,9 +1375,9 @@ mod tests {
         let n = 4;
         let expected_pairs = [(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)];
 
-        for (linear_idx, expected) in expected_pairs.iter().enumerate() {
-            let result = WorkStealingPool::linear_to_matrix_indices(linear_idx, n);
-            assert_eq!(result, *expected, "Failed for linear index {linear_idx}");
+        for (_linearidx, expected) in expected_pairs.iter().enumerate() {
+            let result = WorkStealingPool::linear_to_matrix_indices(_linearidx, n);
+            assert_eq!(result, *expected, "Failed for linear index {_linearidx}");
         }
     }
 

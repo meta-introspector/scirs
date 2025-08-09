@@ -205,13 +205,13 @@ where
         ));
     }
 
-    if moment_order == 0 {
+    if momentorder == 0 {
         return Ok(F::one()); // 0th moment is always 1
     }
 
     let n = x.len();
     let n_f = F::from(n).unwrap();
-    let _order_f = F::from(moment_order as f64).unwrap();
+    let _order_f = F::from(momentorder as f64).unwrap();
     let optimizer = AutoOptimizer::new();
 
     if center {
@@ -223,18 +223,18 @@ where
         };
 
         let moment_sum = if optimizer.should_use_simd(n) {
-            compute_central_moment_simd(x, mean, moment_order)
+            compute_central_moment_simd(x, mean, momentorder)
         } else {
-            compute_central_moment_scalar(x, mean, moment_order)
+            compute_central_moment_scalar(x, mean, momentorder)
         };
 
         Ok(moment_sum / n_f)
     } else {
         // Raw moment calculation
         let moment_sum = if optimizer.should_use_simd(n) {
-            compute_raw_moment_simd(x, moment_order)
+            compute_raw_moment_simd(x, momentorder)
         } else {
-            compute_raw_moment_scalar(x, moment_order)
+            compute_raw_moment_scalar(x, momentorder)
         };
 
         Ok(moment_sum / n_f)

@@ -39,14 +39,14 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// let unif = Uniform::new(0.0f64, 1.0).unwrap();
     /// ```
     pub fn new(low: F, high: F) -> StatsResult<Self> {
-        if _low >= high {
+        if low >= high {
             return Err(StatsError::DomainError(
                 "Lower bound must be less than upper bound".to_string(),
             ));
         }
 
         // Convert to f64 for rand_distr
-        let low_f64 = <f64 as NumCast>::from(_low).unwrap();
+        let low_f64 = <f64 as NumCast>::from(low).unwrap();
         let high_f64 = <f64 as NumCast>::from(high).unwrap();
 
         match RandUniform::new_inclusive(low_f64, high_f64) {

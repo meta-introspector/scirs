@@ -149,7 +149,7 @@ where
     /// # Returns
     /// A new `DokArray` containing non-zero elements from the input array
     pub fn from_array(array: &Array2<T>) -> Self {
-        let shape = (_array.shape()[0], array.shape()[1]);
+        let shape = (array.shape()[0], array.shape()[1]);
         let mut dok = Self::new(shape);
 
         for ((i, j), &value) in array.indexed_iter() {

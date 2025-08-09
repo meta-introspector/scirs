@@ -21,7 +21,7 @@ pub struct ErrorContext {
 
 impl ErrorContext {
     /// Create a new error context
-    pub fn new(_functionname: impl Into<String>, operation: impl Into<String>) -> Self {
+    pub fn new(function_name: impl Into<String>, operation: impl Into<String>) -> Self {
         Self {
             function_name: function_name.into(),
             operation: operation.into(),

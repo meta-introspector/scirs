@@ -139,7 +139,7 @@ pub struct KFACLayerState<T: Float> {
     pub damping_g: T,
 
     /// Layer information
-    pub layer_info: LayerInfo,
+    pub layerinfo: LayerInfo,
 
     /// Precomputed Kronecker factors for bias
     pub bias_correction: Option<Array1<T>>,
@@ -225,9 +225,9 @@ impl<
 
     /// Register a layer with the optimizer
     pub fn register_layer(&mut self, layerinfo: LayerInfo) -> Result<()> {
-        let input_size = layer_info.input_dim + if layer_info.has_bias { 1 } else { 0 };
-        let output_size = layer_info.output_dim;
-        let layer_name = layer_info.name.clone();
+        let input_size = layerinfo.input_dim + if layerinfo.has_bias { 1 } else { 0 };
+        let output_size = layerinfo.output_dim;
+        let layername = layerinfo.name.clone();
 
         let state = KFACLayerState {
             a_cov: Array2::eye(input_size),
@@ -239,26 +239,26 @@ impl<
             last_inv_update: 0,
             damping_a: self.config.damping,
             damping_g: self.config.damping,
-            layer_info,
+            layerinfo,
             bias_correction: None,
             running_mean_a: None,
             running_mean_g: None,
         };
 
-        self.layer_states.insert(layer_name, state);
+        self.layer_states.insert(layername, state);
         Ok(())
     }
 
     /// Update covariance matrices with new activations and gradients
     pub fn update_covariance_matrices(
         &mut self,
-        layer_name: &str,
+        layername: &str,
         activations: &Array2<T>,
         gradients: &Array2<T>,
     ) -> Result<()> {
         let should_update = {
-            let state = self.layer_states.get(layer_name).ok_or_else(|| {
-                OptimError::InvalidConfig(format!("Layer {} not found", layer_name))
+            let state = self.layer_states.get(layername).ok_or_else(|| {
+                OptimError::InvalidConfig(format!("Layer {} not found", layername))
             })?;
             // Allow initial update when step_count is 0 and last_cov_update is 0
             self.step_count == 0 && state.last_cov_update == 0
@@ -269,8 +269,8 @@ impl<
             let stat_decay = self.config.stat_decay;
             let step_count = self.step_count;
 
-            let state = self.layer_states.get_mut(layer_name).ok_or_else(|| {
-                OptimError::InvalidConfig(format!("Layer {} not found", layer_name))
+            let state = self.layer_states.get_mut(layername).ok_or_else(|| {
+                OptimError::InvalidConfig(format!("Layer {} not found", layername))
             })?;
 
             Self::update_input_covariance_static(state, activations, stat_decay)?;
@@ -291,7 +291,7 @@ impl<
         let batch_size = T::from(activations.nrows()).unwrap();
 
         // Add bias term if needed
-        let augmented_activations = if state.layer_info.has_bias {
+        let augmented_activations = if state.layerinfo.has_bias {
             let mut aug = Array2::ones((activations.nrows(), activations.ncols() + 1));
             aug.slice_mut(s![.., ..activations.ncols()])
                 .assign(activations);
@@ -347,8 +347,8 @@ impl<
     /// Update inverse covariance matrices
     pub fn update_inverse_matrices(&mut self, layername: &str) -> Result<()> {
         let should_update = {
-            let state = self.layer_states.get(layer_name).ok_or_else(|| {
-                OptimError::InvalidConfig(format!("Layer {} not found", layer_name))
+            let state = self.layer_states.get(layername).ok_or_else(|| {
+                OptimError::InvalidConfig(format!("Layer {} not found", layername))
             })?;
             self.step_count - state.last_inv_update >= self.config.inv_update_freq
         };
@@ -357,16 +357,16 @@ impl<
             let step_count = self.step_count;
 
             // Do the computation that needs mutable self borrow first
-            let layer_exists = self.layer_states.contains_key(layer_name);
+            let layer_exists = self.layer_states.contains_key(layername);
             if !layer_exists {
                 return Err(OptimError::InvalidConfig(format!(
                     "Layer {} not found",
-                    layer_name
+                    layername
                 )));
             }
 
             // Now we can safely get mutable access to the layer state
-            if let Some(state) = self.layer_states.get_mut(layer_name) {
+            if let Some(state) = self.layer_states.get_mut(layername) {
                 // Extract needed config before the method call
                 let config = self.config.clone();
                 Self::compute_inverse_covariance_static(state, &config)?;
@@ -721,8 +721,8 @@ impl<
     pub fn apply_update(&mut self, layername: &str, gradients: &Array2<T>) -> Result<Array2<T>> {
         let state = self
             .layer_states
-            .get(layer_name)
-            .ok_or_else(|| OptimError::InvalidConfig(format!("Layer {} not found", layer_name)))?;
+            .get(layername)
+            .ok_or_else(|| OptimError::InvalidConfig(format!("Layer {} not found", layername)))?;
 
         // Ensure inverse matrices are computed
         if state.a_cov_inv.is_none() || state.g_cov_inv.is_none() {
@@ -752,7 +752,7 @@ impl<
     /// Perform a complete K-FAC optimization step
     pub fn step(
         &mut self,
-        layer_name: &str,
+        layername: &str,
         parameters: &Array2<T>,
         gradients: &Array2<T>,
         activations: &Array2<T>,
@@ -777,13 +777,13 @@ impl<
         }
 
         // Update covariance matrices
-        self.update_covariance_matrices(layer_name, activations, gradients)?;
+        self.update_covariance_matrices(layername, activations, gradients)?;
 
         // Update inverse matrices if needed
-        self.update_inverse_matrices(layer_name)?;
+        self.update_inverse_matrices(layername)?;
 
         // Apply K-FAC update
-        let update = self.apply_update(layer_name, gradients)?;
+        let update = self.apply_update(layername, gradients)?;
 
         // Update parameters
         let new_parameters = parameters - &update;
@@ -800,8 +800,8 @@ impl<
     pub fn reset(&mut self) {
         for state in self.layer_states.values_mut() {
             let input_size =
-                state.layer_info.input_dim + if state.layer_info.has_bias { 1 } else { 0 };
-            let output_size = state.layer_info.output_dim;
+                state.layerinfo.input_dim + if state.layerinfo.has_bias { 1 } else { 0 };
+            let output_size = state.layerinfo.output_dim;
 
             state.a_cov = Array2::eye(input_size);
             state.g_cov = Array2::eye(output_size);
@@ -843,10 +843,10 @@ impl<
 
             // Running means
             if state.running_mean_a.is_some() {
-                total_memory += state.layer_info.input_dim * std::mem::size_of::<T>();
+                total_memory += state.layerinfo.input_dim * std::mem::size_of::<T>();
             }
             if state.running_mean_g.is_some() {
-                total_memory += state.layer_info.output_dim * std::mem::size_of::<T>();
+                total_memory += state.layerinfo.output_dim * std::mem::size_of::<T>();
             }
         }
 
@@ -855,20 +855,20 @@ impl<
 
     /// Get layer state information
     pub fn get_layer_state(&self, layername: &str) -> Option<&KFACLayerState<T>> {
-        self.layer_states.get(layer_name)
+        self.layer_states.get(layername)
     }
 
     /// Set custom damping for a specific layer
     pub fn set_layer_damping(
         &mut self,
-        layer_name: &str,
+        layername: &str,
         damping_a: T,
         damping_g: T,
     ) -> Result<()> {
         let state = self
             .layer_states
-            .get_mut(layer_name)
-            .ok_or_else(|| OptimError::InvalidConfig(format!("Layer {} not found", layer_name)))?;
+            .get_mut(layername)
+            .ok_or_else(|| OptimError::InvalidConfig(format!("Layer {} not found", layername)))?;
 
         state.damping_a = damping_a;
         state.damping_g = damping_g;
@@ -1175,7 +1175,7 @@ pub mod natural_gradients {
         // Add small regularization to diagonal for numerical stability
         let mut regularized = matrix.clone();
         let reg_value = T::from(1e-8).unwrap();
-        for i in 0.._matrix.nrows() {
+        for i in 0..matrix.nrows() {
             regularized[[i, i]] = regularized[[i, i]] + reg_value;
         }
 
@@ -1196,7 +1196,7 @@ pub mod natural_gradients {
         let n = matrix.nrows();
         let mut augmented = Array2::zeros((n, 2 * n));
 
-        // Create augmented _matrix [A | I]
+        // Create augmented matrix [A | I]
         for i in 0..n {
             for j in 0..n {
                 augmented[[i, j]] = matrix[[i, j]];
@@ -1247,7 +1247,7 @@ pub mod natural_gradients {
             }
         }
 
-        // Extract inverse from right half of augmented _matrix
+        // Extract inverse from right half of augmented matrix
         let mut inverse = Array2::zeros((n, n));
         for i in 0..n {
             for j in 0..n {
@@ -1329,7 +1329,7 @@ pub mod advanced_kfac {
         pub num_workers: usize,
 
         /// Current worker rank
-        pub worker_rank: usize,
+        pub workerrank: usize,
 
         /// Communication pattern for gradient averaging
         pub comm_pattern: CommunicationPattern,
@@ -1344,7 +1344,7 @@ pub mod advanced_kfac {
         pub hierarchical_comm: bool,
 
         /// Block size for block-wise K-FAC
-        pub block_size: usize,
+        pub blocksize: usize,
 
         /// Enable overlap computation and communication
         pub overlap_comm_compute: bool,
@@ -1402,7 +1402,7 @@ pub mod advanced_kfac {
         blocks: HashMap<String, Vec<BlockState<T>>>,
 
         /// Block size configuration
-        block_size: usize,
+        blocksize: usize,
 
         /// Overlap factor for block boundaries
         overlap_factor: f64,
@@ -2427,7 +2427,7 @@ pub mod advanced_kfac {
 
         /// Initialize Fisher information matrix with parameter dimensions
         pub fn initialize_fisher(&mut self, paramdims: &[usize]) -> Result<()> {
-            let total_params: usize = param_dims.iter().sum();
+            let total_params: usize = paramdims.iter().sum();
 
             self.fisher_matrix = if let Some(rank) = Some(100) {
                 // Default max rank
@@ -2449,7 +2449,7 @@ pub mod advanced_kfac {
         /// Update Fisher information matrix using gradient samples
         pub fn update_fisher_information(
             &mut self,
-            gradient_samples: &[Array1<T>],
+            gradientsamples: &[Array1<T>],
             loss_samples: Option<&[T]>,
         ) -> Result<()> {
             if self.step_count % self.config.fisher_update_freq != 0 {
@@ -2459,9 +2459,9 @@ pub mod advanced_kfac {
             let start_time = std::time::Instant::now();
 
             if self.config.use_empirical_fisher {
-                self.update_empirical_fisher(gradient_samples)?;
+                self.update_empirical_fisher(gradientsamples)?;
             } else {
-                self.update_true_fisher(gradient_samples, loss_samples)?;
+                self.update_true_fisher(gradientsamples, loss_samples)?;
             }
 
             self.metrics.fisher_update_time_us = start_time.elapsed().as_micros() as u64;
@@ -2471,18 +2471,18 @@ pub mod advanced_kfac {
         }
 
         fn update_empirical_fisher(&mut self, gradientsamples: &[Array1<T>]) -> Result<()> {
-            if gradient_samples.is_empty() {
+            if gradientsamples.is_empty() {
                 return Ok(());
             }
 
-            let n_samples = T::from(gradient_samples.len()).unwrap();
+            let n_samples = T::from(gradientsamples.len()).unwrap();
 
             match &mut self.fisher_matrix {
                 FisherInformation::Full(ref mut fisher) => {
                     // F = (1/n) * sum(g_i * g_i^T)
                     fisher.fill(T::zero());
 
-                    for grad in gradient_samples {
+                    for grad in gradientsamples {
                         // Outer product: g * g^T
                         for i in 0..grad.len() {
                             for j in 0..grad.len() {
@@ -2504,7 +2504,7 @@ pub mod advanced_kfac {
                     // Diagonal approximation: F_ii = (1/n) * sum(g_i^2)
                     diag.fill(T::zero());
 
-                    for grad in gradient_samples {
+                    for grad in gradientsamples {
                         for i in 0..grad.len() {
                             diag[i] = diag[i] + grad[i] * grad[i];
                         }
@@ -2518,7 +2518,7 @@ pub mod advanced_kfac {
                     ref mut s,
                 } => {
                     // Low-rank approximation using randomized SVD
-                    Self::update_low_rank_fisher(gradient_samples, u, s)?;
+                    Self::update_low_rank_fisher(gradientsamples, u, s)?;
                 }
 
                 _ => {
@@ -2533,7 +2533,7 @@ pub mod advanced_kfac {
 
         fn update_true_fisher(
             &mut self,
-            gradient_samples: &[Array1<T>],
+            gradientsamples: &[Array1<T>],
             loss_samples: Option<&[T]>,
         ) -> Result<()> {
             // True Fisher information requires second derivatives
@@ -2541,27 +2541,27 @@ pub mod advanced_kfac {
             if loss_samples.is_some() {
                 // Could implement true Fisher using loss function Hessian
                 // For now, fall back to empirical Fisher
-                self.update_empirical_fisher(gradient_samples)
+                self.update_empirical_fisher(gradientsamples)
             } else {
-                self.update_empirical_fisher(gradient_samples)
+                self.update_empirical_fisher(gradientsamples)
             }
         }
 
         fn update_low_rank_fisher(
-            gradient_samples: &[Array1<T>],
+            gradientsamples: &[Array1<T>],
             u: &mut Array2<T>,
             s: &mut Array1<T>,
         ) -> Result<()> {
-            if gradient_samples.is_empty() {
+            if gradientsamples.is_empty() {
                 return Ok(());
             }
 
             // Create gradient matrix: G = [g_1, g_2, ..., g_n]
-            let n_samples = gradient_samples.len();
-            let param_dim = gradient_samples[0].len();
+            let n_samples = gradientsamples.len();
+            let param_dim = gradientsamples[0].len();
             let mut grad_matrix = Array2::zeros((param_dim, n_samples));
 
-            for (j, grad) in gradient_samples.iter().enumerate() {
+            for (j, grad) in gradientsamples.iter().enumerate() {
                 for i in 0..param_dim {
                     grad_matrix[[i, j]] = grad[i];
                 }
@@ -2924,14 +2924,14 @@ pub mod advanced_kfac {
     #[derive(Debug)]
     pub struct LocalCommunicationBackend {
         num_workers: usize,
-        worker_rank: usize,
+        workerrank: usize,
     }
 
     impl LocalCommunicationBackend {
         pub fn new(num_workers: usize, workerrank: usize) -> Self {
             Self {
                 num_workers,
-                worker_rank,
+                workerrank,
             }
         }
     }
@@ -2948,7 +2948,7 @@ pub mod advanced_kfac {
 
         fn broadcast(&self, data: &mut [f32], root: usize) -> Result<()> {
             // No-op for single node
-            if root != self.worker_rank {
+            if root != self.workerrank {
                 // In real implementation, would receive data from root
                 for value in data.iter_mut() {
                     *value = 0.0; // Placeholder
@@ -2958,21 +2958,21 @@ pub mod advanced_kfac {
         }
 
         fn gather(&self, send_data: &[f32], recvdata: &mut [f32], root: usize) -> Result<()> {
-            if self.worker_rank == root {
+            if self.workerrank == root {
                 // Copy own _data to beginning of receive buffer
                 let chunk_size = send_data.len();
-                recv_data[..chunk_size].copy_from_slice(send_data);
+                recvdata[..chunk_size].copy_from_slice(send_data);
                 // In real implementation, would receive from other workers
             }
             Ok(())
         }
 
         fn scatter(&self, send_data: &[f32], recvdata: &mut [f32], root: usize) -> Result<()> {
-            if self.worker_rank == root {
+            if self.workerrank == root {
                 // Send _data to self (copy chunk for this worker)
-                let chunk_size = recv_data.len();
-                let start = self.worker_rank * chunk_size;
-                recv_data.copy_from_slice(&send_data[start..start + chunk_size]);
+                let chunk_size = recvdata.len();
+                let start = self.workerrank * chunk_size;
+                recvdata.copy_from_slice(&send_data[start..start + chunk_size]);
             }
             Ok(())
         }
@@ -3001,16 +3001,16 @@ pub mod advanced_kfac {
         ) -> Result<Self> {
             let base_kfac = KFAC::new(_base_config);
             let local_backend =
-                LocalCommunicationBackend::new(dist_config.num_workers, dist_config.worker_rank);
+                LocalCommunicationBackend::new(dist_config.num_workers, dist_config.workerrank);
             let comm_backend: Option<Arc<dyn CommunicationBackend>> =
                 Some(Arc::new(local_backend) as Arc<dyn CommunicationBackend>);
 
-            let block_size = dist_config.block_size;
+            let blocksize = dist_config.blocksize;
             Ok(Self {
                 base_kfac,
                 dist_config,
                 comm_backend,
-                block_decomposition: BlockDecomposition::new(block_size),
+                block_decomposition: BlockDecomposition::new(blocksize),
                 gpu_acceleration: None,
                 conditioning: AdvancedConditioning::new(),
                 momentum_state: SecondOrderMomentum::new(MomentumConfig::default()),
@@ -3019,12 +3019,12 @@ pub mod advanced_kfac {
 
         pub fn step_distributed(
             &mut self,
-            layer_name: &str,
+            layername: &str,
             local_gradients: &Array2<T>,
             _local_activations: &Array2<T>,
         ) -> Result<Array2<T>> {
             // 1. Compute local K-FAC updates
-            let local_update = self.base_kfac.apply_update(layer_name, local_gradients)?;
+            let local_update = self.base_kfac.apply_update(layername, local_gradients)?;
 
             // 2. All-reduce _gradients across workers
             if let Some(ref comm) = self.comm_backend {
@@ -3041,9 +3041,9 @@ pub mod advanced_kfac {
             }
 
             // 3. Apply block-wise decomposition if enabled
-            if self.dist_config.block_size > 0 {
+            if self.dist_config.blocksize > 0 {
                 self.block_decomposition
-                    .apply_block_update(layer_name, &local_update)
+                    .apply_block_update(layername, &local_update)
             } else {
                 Ok(local_update)
             }
@@ -3057,7 +3057,7 @@ pub mod advanced_kfac {
         pub fn new(blocksize: usize) -> Self {
             Self {
                 blocks: HashMap::new(),
-                block_size,
+                blocksize,
                 overlap_factor: 0.1,
                 scheduling: BlockScheduling::Sequential,
             }
@@ -3069,7 +3069,7 @@ pub mod advanced_kfac {
             update: &Array2<T>,
         ) -> Result<Array2<T>> {
             // Simple block-wise application (in practice would be more sophisticated)
-            if self.block_size >= update.nrows() && self.block_size >= update.ncols() {
+            if self.blocksize >= update.nrows() && self.blocksize >= update.ncols() {
                 // No blocking needed
                 return Ok(update.clone());
             }
@@ -3077,15 +3077,15 @@ pub mod advanced_kfac {
             let mut result = update.clone();
 
             // Apply blocks sequentially
-            let num_row_blocks = (update.nrows() + self.block_size - 1) / self.block_size;
-            let num_col_blocks = (update.ncols() + self.block_size - 1) / self.block_size;
+            let num_row_blocks = (update.nrows() + self.blocksize - 1) / self.blocksize;
+            let num_col_blocks = (update.ncols() + self.blocksize - 1) / self.blocksize;
 
             for i in 0..num_row_blocks {
                 for j in 0..num_col_blocks {
-                    let row_start = i * self.block_size;
-                    let row_end = ((i + 1) * self.block_size).min(update.nrows());
-                    let col_start = j * self.block_size;
-                    let col_end = ((j + 1) * self.block_size).min(update.ncols());
+                    let row_start = i * self.blocksize;
+                    let row_end = ((i + 1) * self.blocksize).min(update.nrows());
+                    let col_start = j * self.blocksize;
+                    let col_end = ((j + 1) * self.blocksize).min(update.ncols());
 
                     // Process block
                     let mut block =
@@ -3112,21 +3112,21 @@ pub mod advanced_kfac {
 
         pub fn monitor_layer(&mut self, layername: &str, matrix: &Array2<T>) -> Result<()> {
             // Initialize trackers if not present
-            if !self.eigenvalue_trackers.contains_key(layer_name) {
+            if !self.eigenvalue_trackers.contains_key(layername) {
                 self.eigenvalue_trackers.insert(
-                    layer_name.to_string(),
+                    layername.to_string(),
                     EigenvalueTracker::new(matrix.nrows()),
                 );
             }
 
-            if !self.condition_monitors.contains_key(layer_name) {
+            if !self.condition_monitors.contains_key(layername) {
                 self.condition_monitors
-                    .insert(layer_name.to_string(), ConditionMonitor::new());
+                    .insert(layername.to_string(), ConditionMonitor::new());
             }
 
             // Update monitoring
-            let tracker = self.eigenvalue_trackers.get_mut(layer_name).unwrap();
-            let monitor = self.condition_monitors.get_mut(layer_name).unwrap();
+            let tracker = self.eigenvalue_trackers.get_mut(layername).unwrap();
+            let monitor = self.condition_monitors.get_mut(layername).unwrap();
 
             tracker.update(matrix)?;
             monitor.update(matrix)?;
@@ -3141,7 +3141,7 @@ pub mod advanced_kfac {
                 eigenvalue_history: VecDeque::with_capacity(100),
                 spectral_radius: VecDeque::with_capacity(100),
                 decay_rates: None,
-                power_iteration_state: PowerIterationState::new(_size),
+                power_iteration_state: PowerIterationState::new(size),
                 lanczos_state: None,
             }
         }
@@ -3178,7 +3178,7 @@ pub mod advanced_kfac {
     impl<T: Float + Send + Sync + std::iter::Sum + ndarray::ScalarOperand> PowerIterationState<T> {
         pub fn new(size: usize) -> Self {
             Self {
-                vector: Array1::ones(_size),
+                vector: Array1::ones(size),
                 value: T::one(),
                 iterations: 0,
                 tolerance: T::from(1e-8).unwrap(),
@@ -3543,18 +3543,18 @@ pub mod advanced_kfac {
         /// Compute natural gradient update using K-FAC approximation
         pub fn natural_gradient_step(
             &mut self,
-            layer_name: &str,
+            layername: &str,
             parameters: &Array2<T>,
             gradients: &Array2<T>,
             activations: &Array2<T>,
             loss: Option<T>,
         ) -> Result<Array2<T>> {
             // Regular K-FAC step
-            let kfac_update = self.step(layer_name, parameters, gradients, activations, loss)?;
+            let kfac_update = self.step(layername, parameters, gradients, activations, loss)?;
 
             // Apply natural gradient scaling based on Fisher information
-            let state = self.layer_states.get(layer_name).ok_or_else(|| {
-                OptimError::InvalidConfig(format!("Layer {} not found", layer_name))
+            let state = self.layer_states.get(layername).ok_or_else(|| {
+                OptimError::InvalidConfig(format!("Layer {} not found", layername))
             })?;
 
             if let (Some(a_inv), Some(g_inv)) = (&state.a_cov_inv, &state.g_cov_inv) {
@@ -3596,7 +3596,7 @@ mod tests {
     fn test_layer_registration() {
         let mut kfac = KFAC::<f64>::new(KFACConfig::default());
 
-        let layer_info = LayerInfo {
+        let layerinfo = LayerInfo {
             name: "dense1".to_string(),
             input_dim: 10,
             output_dim: 5,
@@ -3604,7 +3604,7 @@ mod tests {
             has_bias: true,
         };
 
-        assert!(kfac.register_layer(layer_info).is_ok());
+        assert!(kfac.register_layer(layerinfo).is_ok());
         assert_eq!(kfac.layer_states.len(), 1);
 
         let state = kfac.get_layer_state("dense1").unwrap();
@@ -3619,7 +3619,7 @@ mod tests {
             ..Default::default()
         });
 
-        let layer_info = LayerInfo {
+        let layerinfo = LayerInfo {
             name: "test_layer".to_string(),
             input_dim: 3,
             output_dim: 2,
@@ -3627,7 +3627,7 @@ mod tests {
             has_bias: false,
         };
 
-        kfac.register_layer(layer_info).unwrap();
+        kfac.register_layer(layerinfo).unwrap();
 
         let activations =
             Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
@@ -3660,7 +3660,7 @@ mod tests {
     fn test_memory_estimation() {
         let mut kfac = KFAC::<f64>::new(KFACConfig::default());
 
-        let layer_info = LayerInfo {
+        let layerinfo = LayerInfo {
             name: "test".to_string(),
             input_dim: 100,
             output_dim: 50,
@@ -3668,7 +3668,7 @@ mod tests {
             has_bias: true,
         };
 
-        kfac.register_layer(layer_info).unwrap();
+        kfac.register_layer(layerinfo).unwrap();
 
         let memory = kfac.estimate_memory_usage();
         assert!(memory > 0);

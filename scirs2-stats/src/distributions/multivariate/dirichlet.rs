@@ -356,7 +356,7 @@ pub fn dirichlet<D>(alpha: &ArrayBase<D, Ix1>) -> StatsResult<Dirichlet>
 where
     D: Data<Elem = f64>,
 {
-    Dirichlet::new(_alpha.to_owned())
+    Dirichlet::new(alpha.to_owned())
 }
 
 /// Implementation of SampleableDistribution for Dirichlet

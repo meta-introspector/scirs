@@ -505,7 +505,7 @@ impl ComprehensivePropertyTestSuite {
     /// Create a new comprehensive test suite
     pub fn new(config: PropertyTestConfig) -> Self {
         Self {
-            validator: PropertyBasedValidator::new(_config),
+            validator: PropertyBasedValidator::new(config),
         }
     }
 
@@ -528,7 +528,7 @@ impl ComprehensivePropertyTestSuite {
     pub fn test_function(&mut self, functionname: &str) -> StatsResult<Vec<PropertyTestResult>> {
         let mut results = Vec::new();
 
-        match function_name {
+        match functionname {
             "mean" => {
                 results.push(self.validator.test_property(MeanTranslationInvariance)?);
             }
@@ -555,7 +555,7 @@ impl ComprehensivePropertyTestSuite {
             _ => {
                 return Err(StatsError::InvalidInput(format!(
                     "Unknown function: {}",
-                    function_name
+                    functionname
                 )));
             }
         }

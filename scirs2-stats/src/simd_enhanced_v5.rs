@@ -101,19 +101,19 @@ impl<F: Zero + Clone> RollingStatsResult<F> {
 
         for stat in statistics {
             match stat {
-                RollingStatistic::Mean => result.means = Some(Array1::zeros(n_windows)),
-                RollingStatistic::Variance => result.variances = Some(Array1::zeros(n_windows)),
-                RollingStatistic::Min => result.mins = Some(Array1::zeros(n_windows)),
-                RollingStatistic::Max => result.maxs = Some(Array1::zeros(n_windows)),
-                RollingStatistic::Median => result.medians = Some(Array1::zeros(n_windows)),
-                RollingStatistic::Skewness => result.skewness = Some(Array1::zeros(n_windows)),
-                RollingStatistic::Kurtosis => result.kurtosis = Some(Array1::zeros(n_windows)),
-                RollingStatistic::Range => result.ranges = Some(Array1::zeros(n_windows)),
+                RollingStatistic::Mean => result.means = Some(Array1::zeros(nwindows)),
+                RollingStatistic::Variance => result.variances = Some(Array1::zeros(nwindows)),
+                RollingStatistic::Min => result.mins = Some(Array1::zeros(nwindows)),
+                RollingStatistic::Max => result.maxs = Some(Array1::zeros(nwindows)),
+                RollingStatistic::Median => result.medians = Some(Array1::zeros(nwindows)),
+                RollingStatistic::Skewness => result.skewness = Some(Array1::zeros(nwindows)),
+                RollingStatistic::Kurtosis => result.kurtosis = Some(Array1::zeros(nwindows)),
+                RollingStatistic::Range => result.ranges = Some(Array1::zeros(nwindows)),
                 RollingStatistic::StandardDeviation => {
-                    result.std_devs = Some(Array1::zeros(n_windows))
+                    result.std_devs = Some(Array1::zeros(nwindows))
                 }
                 RollingStatistic::MeanAbsoluteDeviation => {
-                    result.mad = Some(Array1::zeros(n_windows))
+                    result.mad = Some(Array1::zeros(nwindows))
                 }
             }
         }
@@ -719,7 +719,7 @@ impl<F: Zero + Clone> MatrixStatsResult<F> {
         };
 
         for operation in operations {
-            Self::allocate_for_operation(&mut result, operation, n_cols);
+            Self::allocate_for_operation(&mut result, operation, ncols);
         }
 
         result
@@ -742,7 +742,7 @@ impl<F: Zero + Clone> MatrixStatsResult<F> {
         };
 
         for operation in operations {
-            Self::allocate_for_operation(&mut result, operation, n_rows);
+            Self::allocate_for_operation(&mut result, operation, nrows);
         }
 
         result
@@ -764,7 +764,7 @@ impl<F: Zero + Clone> MatrixStatsResult<F> {
             frobenius_norm: None,
         };
 
-        for operation in _operations {
+        for operation in operations {
             Self::allocate_for_operation(&mut result, operation, 1);
         }
 
@@ -938,17 +938,17 @@ where
     match statistic {
         BootstrapStatistic::Mean => {
             if use_simd {
-                F::simd_sum(_data) / n_f
+                F::simd_sum(data) / n_f
             } else {
                 data.iter().copied().sum::<F>() / n_f
             }
         }
         BootstrapStatistic::StandardDeviation => {
             let variance = if use_simd {
-                let sum = F::simd_sum(_data);
+                let sum = F::simd_sum(data);
                 let mean = sum / n_f;
                 let mean_vec = Array1::from_elem(n, mean);
-                let centered = F::simd_sub(_data, &mean_vec.view());
+                let centered = F::simd_sub(data, &mean_vec.view());
                 let squared = F::simd_mul(&centered.view(), &centered.view());
                 let sum_sq = F::simd_sum(&squared.view());
                 if n > 1 {
@@ -969,10 +969,10 @@ where
         }
         BootstrapStatistic::Variance => {
             if use_simd {
-                let sum = F::simd_sum(_data);
+                let sum = F::simd_sum(data);
                 let mean = sum / n_f;
                 let mean_vec = Array1::from_elem(n, mean);
-                let centered = F::simd_sub(_data, &mean_vec.view());
+                let centered = F::simd_sub(data, &mean_vec.view());
                 let squared = F::simd_mul(&centered.view(), &centered.view());
                 let sum_sq = F::simd_sum(&squared.view());
                 if n > 1 {
@@ -992,27 +992,27 @@ where
         }
         BootstrapStatistic::Min => {
             if use_simd {
-                F::simd_min_element(&_data.view())
+                F::simd_min_element(&data.view())
             } else {
-                data.iter().copied().fold(_data[0], F::min)
+                data.iter().copied().fold(data[0], F::min)
             }
         }
         BootstrapStatistic::Max => {
             if use_simd {
-                F::simd_max_element(&_data.view())
+                F::simd_max_element(&data.view())
             } else {
-                data.iter().copied().fold(_data[0], F::max)
+                data.iter().copied().fold(data[0], F::max)
             }
         }
         BootstrapStatistic::Range => {
             let (min_val, max_val) = if use_simd {
                 (
-                    F::simd_min_element(&_data.view()),
-                    F::simd_max_element(&_data.view()),
+                    F::simd_min_element(&data.view()),
+                    F::simd_max_element(&data.view()),
                 )
             } else {
-                let min_val = data.iter().copied().fold(_data[0], F::min);
-                let max_val = data.iter().copied().fold(_data[0], F::max);
+                let min_val = data.iter().copied().fold(data[0], F::min);
+                let max_val = data.iter().copied().fold(data[0], F::max);
                 (min_val, max_val)
             };
             max_val - min_val
@@ -1070,7 +1070,7 @@ where
         }
         BootstrapStatistic::Skewness => {
             let sum = if use_simd {
-                F::simd_sum(_data)
+                F::simd_sum(data)
             } else {
                 data.iter().copied().sum::<F>()
             };
@@ -1078,7 +1078,7 @@ where
 
             let (variance, skew_sum) = if use_simd {
                 let mean_vec = Array1::from_elem(n, mean);
-                let centered = F::simd_sub(_data, &mean_vec.view());
+                let centered = F::simd_sub(data, &mean_vec.view());
                 let squared = F::simd_mul(&centered.view(), &centered.view());
                 let cubed = F::simd_mul(&squared.view(), &centered.view());
                 let variance = F::simd_sum(&squared.view()) / F::from(n - 1).unwrap();
@@ -1106,7 +1106,7 @@ where
         }
         BootstrapStatistic::Kurtosis => {
             let sum = if use_simd {
-                F::simd_sum(_data)
+                F::simd_sum(data)
             } else {
                 data.iter().copied().sum::<F>()
             };
@@ -1114,7 +1114,7 @@ where
 
             let (variance, kurt_sum) = if use_simd {
                 let mean_vec = Array1::from_elem(n, mean);
-                let centered = F::simd_sub(_data, &mean_vec.view());
+                let centered = F::simd_sub(data, &mean_vec.view());
                 let squared = F::simd_mul(&centered.view(), &centered.view());
                 let fourth = F::simd_mul(&squared.view(), &squared.view());
                 let variance = F::simd_sum(&squared.view()) / F::from(n - 1).unwrap();

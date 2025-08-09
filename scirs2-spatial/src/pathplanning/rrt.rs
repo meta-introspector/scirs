@@ -183,7 +183,7 @@ impl RRTPlanner {
     /// Sample a random point with goal bias
     fn sample_with_goal_bias(&mut self, goal: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
         if self.rng.gen_range(0.0..1.0) < self.config.goal_bias {
-            Ok(_goal.to_owned())
+            Ok(goal.to_owned())
         } else {
             self.sample_random_point()
         }
@@ -201,9 +201,9 @@ impl RRTPlanner {
         Ok(indices_[0])
     }
 
-    /// Compute a new point that is step_size distance from nearest toward random_point
+    /// Compute a new point that is step_size distance from nearest toward randompoint
     fn steer(&self, _nearest: &ArrayView1<f64>, randompoint: &ArrayView1<f64>) -> Array1<f64> {
-        let mut direction = random_point - nearest;
+        let mut direction = randompoint - nearest;
         let norm = direction.iter().map(|&x| x * x).sum::<f64>().sqrt();
 
         if norm < 1e-10 {
@@ -221,7 +221,7 @@ impl RRTPlanner {
     /// Check if there is a valid path between two points
     fn is_valid_connection(&self, from: &ArrayView1<f64>, to: &ArrayView1<f64>) -> bool {
         if let Some(ref collision_checker) = self.collision_checker {
-            !collision_checker(&_from.to_owned(), &to.to_owned())
+            !collision_checker(&from.to_owned(), &to.to_owned())
         } else {
             true // No collision checker provided, assume valid
         }
@@ -274,7 +274,7 @@ impl RRTPlanner {
 
         for _ in 0..self.config.max_iterations {
             // Sample random point with goal bias
-            let random_point = self.sample_with_goal_bias(&goal)?;
+            let randompoint = self.sample_with_goal_bias(&goal)?;
 
             // Build KDTree for nearest neighbor search
             let points: Vec<_> = nodes.iter().map(|node| node.position.clone()).collect();
@@ -287,14 +287,14 @@ impl RRTPlanner {
                 .expect("Failed to build KDTree");
 
             // Find nearest node
-            let nearest_idx = self.find_nearest_node(&random_point.view(), &nodes, &kdtree)?;
+            let nearest_idx = self.find_nearest_node(&randompoint.view(), &nodes, &kdtree)?;
 
             // Create temporary copies to avoid borrowing conflicts
             let nearest_position = nodes[nearest_idx].position.clone();
             let nearest_cost = nodes[nearest_idx].cost;
 
             // Steer toward random point
-            let new_point = self.steer(&nearest_position.view(), &random_point.view());
+            let new_point = self.steer(&nearest_position.view(), &randompoint.view());
 
             // Check if the connection is valid
             if self.is_valid_connection(&nearest_position.view(), &new_point.view()) {
@@ -334,7 +334,7 @@ impl RRTPlanner {
         }];
 
         // Goal node index, if found
-        let mut goal_idx: Option<usize> = None;
+        let mut goalidx: Option<usize> = None;
         let neighborhood_radius = self
             .config
             .neighborhood_radius
@@ -342,7 +342,7 @@ impl RRTPlanner {
 
         for _ in 0..self.config.max_iterations {
             // Sample random point with goal bias
-            let random_point = self.sample_with_goal_bias(&goal)?;
+            let randompoint = self.sample_with_goal_bias(&goal)?;
 
             // Build KDTree for nearest neighbor search
             let points: Vec<_> = nodes.iter().map(|node| node.position.clone()).collect();
@@ -355,13 +355,13 @@ impl RRTPlanner {
                 .expect("Failed to build KDTree");
 
             // Find nearest node
-            let nearest_idx = self.find_nearest_node(&random_point.view(), &nodes, &kdtree)?;
+            let nearest_idx = self.find_nearest_node(&randompoint.view(), &nodes, &kdtree)?;
 
             // Create temporary copies to avoid borrowing conflicts
             let nearest_position = nodes[nearest_idx].position.clone();
 
             // Steer toward random point
-            let new_point = self.steer(&nearest_position.view(), &random_point.view());
+            let new_point = self.steer(&nearest_position.view(), &randompoint.view());
 
             // Check if the connection is valid
             if self.is_valid_connection(&nearest_position.view(), &new_point.view()) {
@@ -392,19 +392,19 @@ impl RRTPlanner {
                 if dist_to_goal <= goal_threshold {
                     // Update goal index if we found a better path
                     let new_cost = nodes[new_node_idx].cost + dist_to_goal;
-                    if let Some(idx) = goal_idx {
+                    if let Some(idx) = goalidx {
                         if new_cost < nodes[idx].cost {
-                            goal_idx = Some(new_node_idx);
+                            goalidx = Some(new_node_idx);
                         }
                     } else {
-                        goal_idx = Some(new_node_idx);
+                        goalidx = Some(new_node_idx);
                     }
                 }
             }
         }
 
         // Extract the path if goal was reached
-        if let Some(idx) = goal_idx {
+        if let Some(idx) = goalidx {
             Ok(Some(RRTPlanner::extract_path(&nodes, idx)))
         } else {
             Ok(None)
@@ -430,8 +430,8 @@ impl RRTPlanner {
             .expect("KDTree query failed");
 
         // Check each nearby node as a potential parent
-        for (_idx, &node_idx) in near_indices.iter().enumerate() {
-            let node = &nodes[node_idx];
+        for (_idx, &nodeidx) in near_indices.iter().enumerate() {
+            let node = &nodes[nodeidx];
             let dist = near_distances[_idx];
 
             // Calculate the cost if we came through this node
@@ -441,7 +441,7 @@ impl RRTPlanner {
             if cost_from_start < best_cost
                 && self.is_valid_connection(&node.position.view(), &new_point.view())
             {
-                best_parent_idx = node_idx;
+                best_parent_idx = nodeidx;
                 best_cost = cost_from_start;
             }
         }
@@ -470,9 +470,9 @@ impl RRTPlanner {
             .expect("KDTree query failed");
 
         // Check if we can improve the path to any nearby node by going through the new node
-        for (_idx, &node_idx) in near_indices.iter().enumerate() {
+        for (_idx, &nodeidx) in near_indices.iter().enumerate() {
             // Skip the node itself
-            if node_idx == new_node_idx {
+            if nodeidx == new_node_idx {
                 continue;
             }
 
@@ -480,17 +480,17 @@ impl RRTPlanner {
             let cost_through_new = new_cost + dist;
 
             // Create temporary copy of the position to avoid borrowing conflicts
-            let node_position = nodes[node_idx].position.clone();
+            let node_position = nodes[nodeidx].position.clone();
 
             // If the path through the new node is better, rewire
-            if cost_through_new < nodes[node_idx].cost
+            if cost_through_new < nodes[nodeidx].cost
                 && self.is_valid_connection(&new_point.view(), &node_position.view())
             {
-                nodes[node_idx].parent = Some(new_node_idx);
-                nodes[node_idx].cost = cost_through_new;
+                nodes[nodeidx].parent = Some(new_node_idx);
+                nodes[nodeidx].cost = cost_through_new;
 
                 // Recursively update costs in the subtree
-                RRTPlanner::update_subtree_costs(nodes, node_idx);
+                RRTPlanner::update_subtree_costs(nodes, nodeidx);
             }
         }
     }
@@ -502,15 +502,15 @@ impl RRTPlanner {
         let children: Vec<usize> = _nodes
             .iter()
             .enumerate()
-            .filter(|(_, node)| node.parent == Some(node_idx))
+            .filter(|(_, node)| node.parent == Some(nodeidx))
             .map(|(idx, _)| idx)
             .collect();
 
         // Update each child's cost and recursively update its subtree
         for &child_idx in &children {
             // Create temporary copies to avoid borrowing conflicts
-            let parent_cost = nodes[node_idx].cost;
-            let parent_position = nodes[node_idx].position.clone();
+            let parent_cost = nodes[nodeidx].cost;
+            let parent_position = nodes[nodeidx].position.clone();
             let child_position = nodes[child_idx].position.clone();
 
             let edge_cost = euclidean_distance(&parent_position.view(), &child_position.view());
@@ -560,7 +560,7 @@ impl RRTPlanner {
             } else {
                 start.to_owned()
             };
-            let random_point = self.sample_with_goal_bias(&target.view())?;
+            let randompoint = self.sample_with_goal_bias(&target.view())?;
 
             // Build KDTree for tree A
             let points_a: Vec<_> = tree_a.iter().map(|node| node.position.clone()).collect();
@@ -573,14 +573,14 @@ impl RRTPlanner {
                 .expect("Failed to build KDTree");
 
             // Find nearest node in tree A
-            let nearest_idx_a = self.find_nearest_node(&random_point.view(), tree_a, &kdtree_a)?;
+            let nearest_idx_a = self.find_nearest_node(&randompoint.view(), tree_a, &kdtree_a)?;
 
             // Create temporary copy to avoid borrowing conflicts
             let nearest_position = tree_a[nearest_idx_a].position.clone();
             let nearest_cost = tree_a[nearest_idx_a].cost;
 
             // Steer from nearest in A toward random point
-            let new_point = self.steer(&nearest_position.view(), &random_point.view());
+            let new_point = self.steer(&nearest_position.view(), &randompoint.view());
 
             // Check if the connection is valid
             if self.is_valid_connection(&nearest_position.view(), &new_point.view()) {
@@ -628,9 +628,9 @@ impl RRTPlanner {
         }
 
         // Extract the path if trees were connected
-        if let Some((start_idx, goal_idx)) = connection {
+        if let Some((start_idx, goalidx)) = connection {
             let path =
-                self.extract_bidirectional_path(&start_tree, &goal_tree, start_idx, goal_idx);
+                self.extract_bidirectional_path(&start_tree, &goal_tree, start_idx, goalidx);
             Ok(Some(path))
         } else {
             Ok(None)
@@ -643,7 +643,7 @@ impl RRTPlanner {
         start_tree: &[RRTNode],
         goal_tree: &[RRTNode],
         start_idx: usize,
-        goal_idx: usize,
+        goalidx: usize,
     ) -> Path<Array1<f64>> {
         // Extract path from start to connection point
         let mut forward_path = Vec::new();
@@ -656,7 +656,7 @@ impl RRTPlanner {
 
         // Extract path from goal to connection point
         let mut backward_path = Vec::new();
-        let mut current_idx = Some(goal_idx);
+        let mut current_idx = Some(goalidx);
         while let Some(_idx) = current_idx {
             backward_path.push(goal_tree[_idx].position.clone());
             current_idx = goal_tree[_idx].parent;
@@ -679,8 +679,8 @@ impl RRTPlanner {
     /// Extract the path from the RRT tree
     fn extract_path(_nodes: &[RRTNode], goalidx: usize) -> Path<Array1<f64>> {
         let mut path = Vec::new();
-        let mut current_idx = Some(goal_idx);
-        let cost = nodes[goal_idx].cost;
+        let mut current_idx = Some(goalidx);
+        let cost = nodes[goalidx].cost;
 
         while let Some(_idx) = current_idx {
             path.push(_nodes[_idx].position.clone());
@@ -840,7 +840,7 @@ impl RRT2DPlanner {
             let yj = polygon[j][1];
 
             let intersect = ((yi > point[1]) != (yj > point[1]))
-                && (_point[0] < (xj - xi) * (_point[1] - yi) / (yj - yi) + xi);
+                && (point[0] < (xj - xi) * (point[1] - yi) / (yj - yi) + xi);
 
             if intersect {
                 inside = !inside;

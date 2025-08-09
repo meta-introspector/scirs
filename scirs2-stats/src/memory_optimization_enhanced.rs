@@ -479,7 +479,7 @@ impl EnhancedMemoryOptimizer {
     }
 
     /// Memory-aware algorithm selection for specific operations
-    pub fn select_algorithm<F>(&self, operation: &str, datasize: usize) -> String
+    pub fn select_algorithm<F>(&self, operation: &str, data_size: usize) -> String
     where
         F: Float + NumCast + std::fmt::Display,
     {
@@ -518,7 +518,7 @@ impl EnhancedMemoryOptimizer {
         Ok(())
     }
 
-    fn calculate_memory_pressure(&self, currentusage: usize) -> MemoryPressure {
+    fn calculate_memory_pressure(&self, current_usage: usize) -> MemoryPressure {
         let usage_ratio = current_usage as f64 / self.config.memory_limit as f64;
         let thresholds = &self.config.pressure_thresholds;
 
@@ -642,9 +642,9 @@ impl EnhancedMemoryOptimizer {
         0.15 // Placeholder
     }
 
-    fn optimal_chunk_size(&self, datasize: usize) -> usize {
-        // Calculate optimal chunk _size based on cache characteristics
-        (32 * 1024).min(data_size / 4) // 32KB or 1/4 of data _size
+    fn optimal_chunk_size(&self, data_size: usize) -> usize {
+        // Calculate optimal chunk size based on cache characteristics
+        (32 * 1024).min(data_size / 4) // 32KB or 1/4 of data size
     }
 
     fn estimate_bandwidth_utilization(&self) -> f64 {

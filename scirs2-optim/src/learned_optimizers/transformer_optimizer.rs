@@ -53,10 +53,10 @@ pub struct TransformerOptimizerConfig {
     pub base_config: LearnedOptimizerConfig,
 
     /// Model dimension (d_model)
-    pub model_dim: usize,
+    pub modeldim: usize,
 
     /// Number of attention heads
-    pub num_heads: usize,
+    pub numheads: usize,
 
     /// Feed-forward network dimension
     pub ff_dim: usize,
@@ -177,7 +177,7 @@ pub struct InputEmbedding<T: Float> {
     input_dim: usize,
 
     /// Model dimension
-    model_dim: usize,
+    modeldim: usize,
 }
 
 /// Single transformer layer
@@ -218,13 +218,13 @@ pub struct MultiHeadAttention<T: Float> {
     wo: Array2<T>,
 
     /// Number of attention heads
-    num_heads: usize,
+    numheads: usize,
 
     /// Head dimension
     head_dim: usize,
 
     /// Model dimension
-    model_dim: usize,
+    modeldim: usize,
 
     /// Attention optimization strategy
     optimization: AttentionOptimization,
@@ -233,7 +233,7 @@ pub struct MultiHeadAttention<T: Float> {
     relative_bias: Option<RelativePositionBias<T>>,
 
     /// Attention scores from last forward pass
-    attention_scores: Option<Array3<T>>,
+    attentionscores: Option<Array3<T>>,
 
     /// Attention weights from last forward pass
     attention_weights: Option<Array3<T>>,
@@ -265,7 +265,7 @@ pub struct RoPEEmbeddings<T: Float> {
     sin_cached: Array2<T>,
 
     /// Maximum sequence length
-    max_seq_len: usize,
+    max_seqlen: usize,
 
     /// Dimension
     dim: usize,
@@ -380,10 +380,10 @@ pub struct PositionalEncoder<T: Float> {
     cached_encodings: Option<Array2<T>>,
 
     /// Maximum sequence length
-    max_seq_len: usize,
+    max_seqlen: usize,
 
     /// Model dimension
-    model_dim: usize,
+    modeldim: usize,
 
     /// Learned position embeddings (if applicable)
     position_embeddings: Option<Array2<T>>,
@@ -414,7 +414,7 @@ pub struct SequenceBuffer<T: Float> {
     attention_masks: VecDeque<Array1<bool>>,
 
     /// Maximum sequence length
-    max_length: usize,
+    maxlength: usize,
 
     /// Current sequence length
     current_length: usize,
@@ -1883,7 +1883,7 @@ pub struct RelationNetwork<T: Float> {
 
     /// Input/output dimensions
     input_dim: usize,
-    output_dim: usize,
+    outputdim: usize,
 }
 
 /// Composition rule
@@ -2689,16 +2689,16 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
         let encoded_input = self.position_encoder.encode(&sequence_input)?;
 
         // Forward pass through Transformer
-        let transformer_output = self.transformer_network.forward(&encoded_input)?;
+        let transformeroutput = self.transformer_network.forward(&encoded_input)?;
 
         // Predict optimization strategy
         let strategy = self
             .strategy_predictor
-            .predict_strategy(&transformer_output)?;
+            .predict_strategy(&transformeroutput)?;
 
         // Generate parameter updates based on strategy
         let updates =
-            self.generate_strategic_updates(&transformer_output, &flat_gradients, strategy)?;
+            self.generate_strategic_updates(&transformeroutput, &flat_gradients, strategy)?;
 
         // Apply updates
         let updated_flat = &flat_params - &updates;
@@ -2737,7 +2737,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
     pub fn continual_update(&mut self, newtask: &TaskInfo<T>) -> Result<ContinualUpdateResult<T>> {
         self.meta_learner
             .continual_learning
-            .update(new_task, &mut self.transformer_network)
+            .update(newtask, &mut self.transformer_network)
     }
 
     /// Get current performance metrics
@@ -2753,7 +2753,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
     /// Prepare sequence input for Transformer
     fn prepare_sequence_input(&self) -> Result<Array2<T>> {
         let sequence_len = self.sequence_buffer.current_length;
-        let feature_dim = self.config.model_dim;
+        let feature_dim = self.config.modeldim;
 
         let mut sequence = Array2::zeros((sequence_len, feature_dim));
 
@@ -2794,7 +2794,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
         }
 
         // Pad to model dimension
-        features.resize(self.config.model_dim, T::zero());
+        features.resize(self.config.modeldim, T::zero());
 
         Ok(Array1::from_vec(features))
     }
@@ -2802,12 +2802,12 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
     /// Generate strategic updates based on predicted strategy
     fn generate_strategic_updates(
         &self,
-        transformer_output: &Array2<T>,
+        transformeroutput: &Array2<T>,
         gradients: &Array1<T>,
         strategy: OptimizationStrategy,
     ) -> Result<Array1<T>> {
         // Get the last _output from the sequence
-        let last_output = transformer_output.slice(s![-1, ..]).to_owned();
+        let last_output = transformeroutput.slice(s![-1, ..]).to_owned();
 
         // Apply strategy-specific transformations
         let strategic_direction = match strategy {
@@ -2864,8 +2864,8 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
         strategy: OptimizationStrategy,
     ) {
         // Update attention statistics
-        if let Some(attention_scores) = self.get_last_attention_scores() {
-            self.metrics.attention_stats = self.compute_attention_statistics(&attention_scores);
+        if let Some(attentionscores) = self.get_last_attention_scores() {
+            self.metrics.attention_stats = self.compute_attention_statistics(&attentionscores);
         }
 
         // Update strategy prediction accuracy
@@ -2882,7 +2882,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
     fn get_last_attention_scores(&self) -> Option<Array3<T>> {
         // Get attention scores from the last layer
         if let Some(last_layer) = self.transformer_network.layers.last() {
-            last_layer.self_attention.attention_scores.clone()
+            last_layer.self_attention.attentionscores.clone()
         } else {
             None
         }
@@ -2891,9 +2891,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
     /// Compute attention statistics
     fn compute_attention_statistics(&self, attentionscores: &Array3<T>) -> AttentionStatistics {
         // Simplified attention statistics computation
-        let entropy = self.compute_attention_entropy(attention_scores);
+        let entropy = self.compute_attention_entropy(attentionscores);
         let concentration = 1.0 / (1.0 + entropy);
-        let specialization = self.compute_head_specialization(attention_scores);
+        let specialization = self.compute_head_specialization(attentionscores);
 
         AttentionStatistics {
             avg_attention_entropy: entropy,
@@ -2910,9 +2910,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
         let mut total_entropy = 0.0;
         let mut count = 0;
 
-        for head in 0..attention_scores.shape()[0] {
-            for seq in 0..attention_scores.shape()[1] {
-                let weights = attention_scores.slice(s![head, seq, ..]);
+        for head in 0..attentionscores.shape()[0] {
+            for seq in 0..attentionscores.shape()[1] {
+                let weights = attentionscores.slice(s![head, seq, ..]);
                 let entropy = weights
                     .iter()
                     .map(|&w| {
@@ -2940,17 +2940,17 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
     /// Compute head specialization
     fn compute_head_specialization(&self, attentionscores: &Array3<T>) -> f64 {
         // Simplified head specialization measure
-        let num_heads = attention_scores.shape()[0];
-        if num_heads <= 1 {
+        let numheads = attentionscores.shape()[0];
+        if numheads <= 1 {
             return 1.0;
         }
 
         let mut specialization_sum = 0.0;
 
-        for i in 0..num_heads {
-            for j in i + 1..num_heads {
-                let head_i = attention_scores.slice(s![i, .., ..]);
-                let head_j = attention_scores.slice(s![j, .., ..]);
+        for i in 0..numheads {
+            for j in i + 1..numheads {
+                let head_i = attentionscores.slice(s![i, .., ..]);
+                let head_j = attentionscores.slice(s![j, .., ..]);
 
                 // Compute correlation (simplified)
                 let correlation = self.compute_correlation(&head_i, &head_j);
@@ -2958,7 +2958,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
             }
         }
 
-        let num_pairs = (num_heads * (num_heads - 1)) / 2;
+        let num_pairs = (numheads * (numheads - 1)) / 2;
         if num_pairs > 0 {
             specialization_sum / num_pairs as f64
         } else {
@@ -3029,12 +3029,12 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
     fn estimate_memory_usage(&self) -> f64 {
         // Simplified memory estimation in MB
         let model_memory =
-            self.config.model_dim as f64 * self.config.num_layers as f64 * 8.0 / 1024.0 / 1024.0;
+            self.config.modeldim as f64 * self.config.num_layers as f64 * 8.0 / 1024.0 / 1024.0;
         let sequence_memory =
-            self.config.max_sequence_length as f64 * self.config.model_dim as f64 * 8.0
+            self.config.max_sequence_length as f64 * self.config.modeldim as f64 * 8.0
                 / 1024.0
                 / 1024.0;
-        let attention_memory = self.config.num_heads as f64
+        let attention_memory = self.config.numheads as f64
             * self.config.max_sequence_length as f64
             * self.config.max_sequence_length as f64
             * 8.0
@@ -3046,19 +3046,19 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
 
     /// Validate configuration
     fn validate_config(config: &TransformerOptimizerConfig) -> Result<()> {
-        if config.model_dim == 0 {
+        if config.modeldim == 0 {
             return Err(OptimError::InvalidConfig(
                 "Model dimension must be positive".to_string(),
             ));
         }
 
-        if config.num_heads == 0 {
+        if config.numheads == 0 {
             return Err(OptimError::InvalidConfig(
                 "Number of heads must be positive".to_string(),
             ));
         }
 
-        if config.model_dim % config.num_heads != 0 {
+        if config.modeldim % config.numheads != 0 {
             return Err(OptimError::InvalidConfig(
                 "Model dimension must be divisible by number of heads".to_string(),
             ));
@@ -3105,23 +3105,23 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerNetwork<T> {
         let mut rng = scirs2_core::random::rng();
 
         // Initialize input embedding
-        let input_embedding = InputEmbedding::new(_config.model_dim, config.model_dim);
+        let input_embedding = InputEmbedding::new(config.modeldim, config.modeldim);
 
         // Initialize transformer layers
-        let mut layers = Vec::with_capacity(_config.num_layers);
-        for _ in 0.._config.num_layers {
-            layers.push(TransformerLayer::new(_config, &mut rng)?);
+        let mut layers = Vec::with_capacity(config.num_layers);
+        for _ in 0..config.num_layers {
+            layers.push(TransformerLayer::new(config, &mut rng)?);
         }
 
         // Initialize output projection
         let output_projection =
-            OutputProjectionLayer::new(_config.model_dim, config.model_dim, &mut rng);
+            OutputProjectionLayer::new(config.modeldim, config.modeldim, &mut rng);
 
         // Initialize output layer norm
-        let output_layer_norm = LayerNorm::new(_config.model_dim);
+        let output_layer_norm = LayerNorm::new(config.modeldim);
 
         // Initialize position encoder
-        let position_encoder = PositionalEncoder::new_internal(_config)?;
+        let position_encoder = PositionalEncoder::new_internal(config)?;
 
         Ok(Self {
             input_embedding,
@@ -3160,13 +3160,13 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerNetwork<T> {
 impl<T: Float + Default + Clone> SequenceBuffer<T> {
     fn new(maxlength: usize) -> Self {
         Self {
-            gradient_sequences: VecDeque::with_capacity(max_length),
-            parameter_sequences: VecDeque::with_capacity(max_length),
-            loss_sequences: VecDeque::with_capacity(max_length),
-            lr_sequences: VecDeque::with_capacity(max_length),
-            update_sequences: VecDeque::with_capacity(max_length),
-            attention_masks: VecDeque::with_capacity(max_length),
-            max_length,
+            gradient_sequences: VecDeque::with_capacity(maxlength),
+            parameter_sequences: VecDeque::with_capacity(maxlength),
+            loss_sequences: VecDeque::with_capacity(maxlength),
+            lr_sequences: VecDeque::with_capacity(maxlength),
+            update_sequences: VecDeque::with_capacity(maxlength),
+            attention_masks: VecDeque::with_capacity(maxlength),
+            maxlength,
             current_length: 0,
             features_cache: None,
         }
@@ -3181,13 +3181,13 @@ impl<T: Float + Default + Clone> SequenceBuffer<T> {
         }
 
         // Maintain max length
-        while self.parameter_sequences.len() > self.max_length {
+        while self.parameter_sequences.len() > self.maxlength {
             self.parameter_sequences.pop_front();
         }
-        while self.gradient_sequences.len() > self.max_length {
+        while self.gradient_sequences.len() > self.maxlength {
             self.gradient_sequences.pop_front();
         }
-        while self.loss_sequences.len() > self.max_length {
+        while self.loss_sequences.len() > self.maxlength {
             self.loss_sequences.pop_front();
         }
 
@@ -3212,24 +3212,24 @@ impl<T: Float + Default + Clone> SequenceBuffer<T> {
 impl<T: Float + Default + Clone + std::iter::Sum> TransformerMetaLearner<T> {
     fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
         // Initialize meta-transformer (optional for higher-level meta-learning)
-        let meta_transformer = if config.model_dim >= 256 {
+        let meta_transformer = if config.modeldim >= 256 {
             // Only create meta-transformer for larger models
             let mut meta_config = config.clone();
             meta_config.num_layers = 2; // Smaller meta-transformer
-            meta_config.model_dim = config.model_dim / 2;
+            meta_config.modeldim = config.modeldim / 2;
             Some(TransformerNetwork::new(&meta_config)?)
         } else {
             None
         };
 
         // Initialize domain adapter
-        let domain_adapter = DomainAdapter::new(_config)?;
+        let domain_adapter = DomainAdapter::new(config)?;
 
         // Initialize few-shot learner
-        let few_shot_learner = FewShotLearner::new(_config)?;
+        let few_shot_learner = FewShotLearner::new(config)?;
 
         // Initialize continual learning state
-        let continual_learning = ContinualLearningState::new(_config)?;
+        let continual_learning = ContinualLearningState::new(config)?;
 
         Ok(Self {
             strategy: MetaOptimizationStrategy::MAML, // Default to MAML
@@ -3786,8 +3786,8 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
     }
 
     fn new_internal(config: &TransformerOptimizerConfig) -> Result<Self> {
-        let max_seq_len = config.max_sequence_length;
-        let model_dim = config.model_dim;
+        let max_seqlen = config.max_sequence_length;
+        let modeldim = config.modeldim;
 
         let mut cached_encodings = None;
         let mut position_embeddings = None;
@@ -3796,12 +3796,12 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
         match config.pos_encoding_type {
             PositionalEncodingType::Sinusoidal => {
                 // Precompute sinusoidal encodings
-                let mut encodings = Array2::zeros((max_seq_len, model_dim));
+                let mut encodings = Array2::zeros((max_seqlen, modeldim));
 
-                for pos in 0..max_seq_len {
-                    for i in 0..model_dim {
+                for pos in 0..max_seqlen {
+                    for i in 0..modeldim {
                         let angle = T::from(pos).unwrap()
-                            / T::from(10000.0_f64.powf(2.0 * (i as f64) / model_dim as f64))
+                            / T::from(10000.0_f64.powf(2.0 * (i as f64) / modeldim as f64))
                                 .unwrap();
 
                         if i % 2 == 0 {
@@ -3816,10 +3816,10 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
             PositionalEncodingType::Learned => {
                 // Initialize learnable position embeddings
                 let mut rng = scirs2_core::random::rng();
-                let mut embeddings = Array2::zeros((max_seq_len, model_dim));
+                let mut embeddings = Array2::zeros((max_seqlen, modeldim));
 
                 // Xavier initialization
-                let bound = (6.0 / (max_seq_len + model_dim) as f64).sqrt();
+                let bound = (6.0 / (max_seqlen + modeldim) as f64).sqrt();
                 for elem in embeddings.iter_mut() {
                     *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
                 }
@@ -3827,24 +3827,24 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
             }
             PositionalEncodingType::ALiBi => {
                 // Initialize ALiBi slopes
-                let num_heads = config.num_heads;
-                let mut slopes = Array1::zeros(num_heads);
+                let numheads = config.numheads;
+                let mut slopes = Array1::zeros(numheads);
 
-                for h in 0..num_heads {
+                for h in 0..numheads {
                     let slope =
-                        T::from(2.0_f64.powf(-8.0 * (h + 1) as f64 / num_heads as f64)).unwrap();
+                        T::from(2.0_f64.powf(-8.0 * (h + 1) as f64 / numheads as f64)).unwrap();
                     slopes[h] = slope;
                 }
                 alibi_slopes = Some(slopes);
             }
             _ => {
                 // Default to sinusoidal for other types
-                let mut encodings = Array2::zeros((max_seq_len, model_dim));
+                let mut encodings = Array2::zeros((max_seqlen, modeldim));
 
-                for pos in 0..max_seq_len {
-                    for i in 0..model_dim {
+                for pos in 0..max_seqlen {
+                    for i in 0..modeldim {
                         let angle = T::from(pos).unwrap()
-                            / T::from(10000.0_f64.powf(2.0 * (i as f64) / model_dim as f64))
+                            / T::from(10000.0_f64.powf(2.0 * (i as f64) / modeldim as f64))
                                 .unwrap();
 
                         if i % 2 == 0 {
@@ -3861,27 +3861,27 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
         Ok(Self {
             encoding_type: config.pos_encoding_type,
             cached_encodings,
-            max_seq_len,
-            model_dim,
+            max_seqlen,
+            modeldim,
             position_embeddings,
             alibi_slopes,
         })
     }
 
     fn encode_internal(&self, input: &Array2<T>) -> Result<Array2<T>> {
-        let (seq_len, model_dim) = input.dim();
+        let (seq_len, modeldim) = input.dim();
 
-        if seq_len > self.max_seq_len {
+        if seq_len > self.max_seqlen {
             return Err(OptimError::InvalidConfig(format!(
                 "Sequence length {} exceeds maximum {}",
-                seq_len, self.max_seq_len
+                seq_len, self.max_seqlen
             )));
         }
 
-        if model_dim != self.model_dim {
+        if modeldim != self.modeldim {
             return Err(OptimError::InvalidConfig(format!(
                 "Model dimension {} doesn't match expected {}",
-                model_dim, self.model_dim
+                modeldim, self.modeldim
             )));
         }
 
@@ -3926,7 +3926,7 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
         let _rng = scirs2_core::random::rng();
 
         // Initialize strategy prediction network
-        let prediction_network = StrategyNetwork::new(_config)?;
+        let prediction_network = StrategyNetwork::new(config)?;
 
         // Define available optimization strategies
         let strategies = vec![
@@ -3964,14 +3964,14 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
     }
 
     fn predict_strategy(&mut self, transformeroutput: &Array2<T>) -> Result<OptimizationStrategy> {
-        let (seq_len, _) = transformer_output.dim();
+        let (seq_len, _) = transformeroutput.dim();
 
         if seq_len == 0 {
             return Ok(OptimizationStrategy::Adaptive);
         }
 
         // Use the last _output from the sequence for strategy prediction
-        let last_output = transformer_output.slice(s![-1, ..]).to_owned();
+        let last_output = transformeroutput.slice(s![-1, ..]).to_owned();
 
         // Forward pass through strategy prediction network
         let strategy_scores = self.prediction_network.forward(&last_output)?;
@@ -4076,8 +4076,8 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
 
 impl<T: Float + Default + Clone> StrategyNetwork<T> {
     fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
-        let input_dim = config.model_dim;
-        let hidden_dim = config.model_dim / 2;
+        let input_dim = config.modeldim;
+        let hidden_dim = config.modeldim / 2;
         let num_strategies = 7; // Number of optimization strategies
 
         let mut rng = scirs2_core::random::rng();
@@ -4104,7 +4104,7 @@ impl<T: Float + Default + Clone> StrategyNetwork<T> {
         }
 
         // Initialize strategy embeddings
-        let embedding_dim = config.model_dim / 4;
+        let embedding_dim = config.modeldim / 4;
         let mut strategy_embeddings = Array2::zeros((num_strategies, embedding_dim));
         let bound_embed = (6.0 / (num_strategies + embedding_dim) as f64).sqrt();
         for elem in strategy_embeddings.iter_mut() {
@@ -4160,10 +4160,10 @@ impl<T: Float + Default + Clone> StrategyNetwork<T> {
         }
 
         // Output layer
-        let output_dim = self.output_layer.shape()[1];
-        let mut output = Array1::zeros(output_dim);
+        let outputdim = self.output_layer.shape()[1];
+        let mut output = Array1::zeros(outputdim);
 
-        for j in 0..output_dim {
+        for j in 0..outputdim {
             let mut sum = T::zero();
             for i in 0..x.len() {
                 sum = sum + x[i] * self.output_layer[[i, j]];
@@ -4216,11 +4216,11 @@ pub struct StrategyPerformanceUpdate<T: Float> {
 // Implementation of supporting components
 impl<T: Float + Default + Clone> InputEmbedding<T> {
     fn new(input_dim: usize, modeldim: usize) -> Self {
-        let mut weights = Array2::zeros((input_dim, model_dim));
+        let mut weights = Array2::zeros((input_dim, modeldim));
         let mut rng = scirs2_core::random::rng();
 
         // Xavier initialization
-        let bound = (6.0 / (input_dim + model_dim) as f64).sqrt();
+        let bound = (6.0 / (input_dim + modeldim) as f64).sqrt();
         for elem in weights.iter_mut() {
             *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
         }
@@ -4228,7 +4228,7 @@ impl<T: Float + Default + Clone> InputEmbedding<T> {
         Self {
             weights,
             input_dim,
-            model_dim,
+            modeldim,
         }
     }
 
@@ -4243,10 +4243,10 @@ impl<T: Float + Default + Clone> InputEmbedding<T> {
         }
 
         // Linear transformation: input @ weights
-        let mut output = Array2::zeros((seq_len, self.model_dim));
+        let mut output = Array2::zeros((seq_len, self.modeldim));
 
         for i in 0..seq_len {
-            for j in 0..self.model_dim {
+            for j in 0..self.modeldim {
                 let mut sum = T::zero();
                 for k in 0..self.input_dim {
                     sum = sum + input[[i, k]] * self.weights[[k, j]];
@@ -4260,28 +4260,28 @@ impl<T: Float + Default + Clone> InputEmbedding<T> {
 }
 
 impl<T: Float + Default + Clone + std::iter::Sum> TransformerLayer<T> {
-    fn new(_config: &TransformerOptimizerConfig, rng: &mut impl Rng) -> Result<Self> {
-        let self_attention = MultiHeadAttention::new(_config)?;
+    fn new(config: &TransformerOptimizerConfig, rng: &mut impl Rng) -> Result<Self> {
+        let self_attention = MultiHeadAttention::new(config)?;
         let cross_attention = if config.cross_attention {
-            Some(MultiHeadAttention::new(_config)?)
+            Some(MultiHeadAttention::new(config)?)
         } else {
             None
         };
 
-        let feed_forward = FeedForwardNetwork::new(_config)?;
+        let feed_forward = FeedForwardNetwork::new(config)?;
 
-        let ln1 = LayerNorm::new(_config.model_dim);
-        let ln2 = LayerNorm::new(_config.model_dim);
+        let ln1 = LayerNorm::new(config.modeldim);
+        let ln2 = LayerNorm::new(config.modeldim);
         let ln3 = if config.cross_attention {
-            Some(LayerNorm::new(_config.model_dim))
+            Some(LayerNorm::new(config.modeldim))
         } else {
             None
         };
 
-        let dropout1 = DropoutLayer::new(_config.attention_dropout);
-        let dropout2 = DropoutLayer::new(_config.ff_dropout);
+        let dropout1 = DropoutLayer::new(config.attention_dropout);
+        let dropout2 = DropoutLayer::new(config.ff_dropout);
         let dropout3 = if config.cross_attention {
-            Some(DropoutLayer::new(_config.attention_dropout))
+            Some(DropoutLayer::new(config.attention_dropout))
         } else {
             None
         };
@@ -4360,11 +4360,11 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerLayer<T> {
 
 impl<T: Float + Default + Clone> MultiHeadAttention<T> {
     fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
-        let model_dim = config.model_dim;
-        let num_heads = config.num_heads;
-        let head_dim = model_dim / num_heads;
+        let modeldim = config.modeldim;
+        let numheads = config.numheads;
+        let head_dim = modeldim / numheads;
 
-        if model_dim % num_heads != 0 {
+        if modeldim % numheads != 0 {
             return Err(OptimError::InvalidConfig(
                 "Model dimension must be divisible by number of heads".to_string(),
             ));
@@ -4373,12 +4373,12 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         let mut rng = scirs2_core::random::rng();
 
         // Initialize projection weights
-        let bound = (6.0 / (2 * model_dim) as f64).sqrt();
+        let bound = (6.0 / (2 * modeldim) as f64).sqrt();
 
-        let mut wq = Array2::zeros((model_dim, model_dim));
-        let mut wk = Array2::zeros((model_dim, model_dim));
-        let mut wv = Array2::zeros((model_dim, model_dim));
-        let mut wo = Array2::zeros((model_dim, model_dim));
+        let mut wq = Array2::zeros((modeldim, modeldim));
+        let mut wk = Array2::zeros((modeldim, modeldim));
+        let mut wv = Array2::zeros((modeldim, modeldim));
+        let mut wo = Array2::zeros((modeldim, modeldim));
 
         for elem in wq.iter_mut() {
             *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
@@ -4396,14 +4396,14 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         let relative_bias = if config.relative_position_bias {
             Some(RelativePositionBias::new(
                 config.max_sequence_length,
-                num_heads,
+                numheads,
             )?)
         } else {
             None
         };
 
         let rope_embeddings = if config.use_rope {
-            Some(RoPEEmbeddings::new(_config.max_sequence_length, head_dim)?)
+            Some(RoPEEmbeddings::new(config.max_sequence_length, head_dim)?)
         } else {
             None
         };
@@ -4413,12 +4413,12 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
             wk,
             wv,
             wo,
-            num_heads,
+            numheads,
             head_dim,
-            model_dim,
+            modeldim,
             optimization: config.attention_optimization,
             relative_bias,
-            attention_scores: None,
+            attentionscores: None,
             attention_weights: None,
             rope_embeddings,
         })
@@ -4430,12 +4430,12 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         key: &Array2<T>,
         value: &Array2<T>,
     ) -> Result<Array2<T>> {
-        let (_seq_len, model_dim) = query.dim();
+        let (_seq_len, modeldim) = query.dim();
 
-        if model_dim != self.model_dim {
+        if modeldim != self.modeldim {
             return Err(OptimError::InvalidConfig(format!(
                 "Model dimension {} doesn't match expected {}",
-                model_dim, self.model_dim
+                modeldim, self.modeldim
             )));
         }
 
@@ -4485,15 +4485,15 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
     }
 
     fn reshape_for_heads(&self, input: &Array2<T>) -> Result<Array3<T>> {
-        let (seq_len, model_dim) = input.dim();
+        let (seq_len, modeldim) = input.dim();
 
-        if model_dim != self.model_dim {
+        if modeldim != self.modeldim {
             return Err(OptimError::InvalidConfig("Dimension mismatch".to_string()));
         }
 
-        let mut output = Array3::zeros((self.num_heads, seq_len, self.head_dim));
+        let mut output = Array3::zeros((self.numheads, seq_len, self.head_dim));
 
-        for h in 0..self.num_heads {
+        for h in 0..self.numheads {
             for s in 0..seq_len {
                 for d in 0..self.head_dim {
                     let input_idx = h * self.head_dim + d;
@@ -4506,15 +4506,15 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
     }
 
     fn reshape_from_heads(&self, input: &Array3<T>) -> Result<Array2<T>> {
-        let (num_heads, seq_len, head_dim) = input.dim();
+        let (numheads, seq_len, head_dim) = input.dim();
 
-        if num_heads != self.num_heads || head_dim != self.head_dim {
+        if numheads != self.numheads || head_dim != self.head_dim {
             return Err(OptimError::InvalidConfig("Dimension mismatch".to_string()));
         }
 
-        let mut output = Array2::zeros((seq_len, self.model_dim));
+        let mut output = Array2::zeros((seq_len, self.modeldim));
 
-        for h in 0..num_heads {
+        for h in 0..numheads {
             for s in 0..seq_len {
                 for d in 0..head_dim {
                     let output_idx = h * head_dim + d;
@@ -4532,13 +4532,13 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         k: &Array3<T>,
         v: &Array3<T>,
     ) -> Result<Array3<T>> {
-        let (num_heads, seq_len, head_dim) = q.dim();
-        let mut output = Array3::zeros((num_heads, seq_len, head_dim));
+        let (numheads, seq_len, head_dim) = q.dim();
+        let mut output = Array3::zeros((numheads, seq_len, head_dim));
 
         // Scaling factor
         let scale = T::from(1.0 / (head_dim as f64).sqrt()).unwrap();
 
-        for h in 0..num_heads {
+        for h in 0..numheads {
             // Compute attention scores for this head
             let mut scores = Array2::zeros((seq_len, seq_len));
 
@@ -4568,8 +4568,8 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         }
 
         // Store attention scores for analysis
-        self.attention_scores = Some(Array3::zeros((num_heads, seq_len, seq_len)));
-        self.attention_weights = Some(Array3::zeros((num_heads, seq_len, seq_len)));
+        self.attentionscores = Some(Array3::zeros((numheads, seq_len, seq_len)));
+        self.attention_weights = Some(Array3::zeros((numheads, seq_len, seq_len)));
 
         Ok(output)
     }
@@ -4607,16 +4607,16 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
 
 impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
     fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
-        let model_dim = config.model_dim;
+        let modeldim = config.modeldim;
         let ff_dim = config.ff_dim;
         let mut rng = scirs2_core::random::rng();
 
         // Initialize weights with Xavier initialization
-        let bound1 = (6.0 / (model_dim + ff_dim) as f64).sqrt();
-        let bound2 = (6.0 / (ff_dim + model_dim) as f64).sqrt();
+        let bound1 = (6.0 / (modeldim + ff_dim) as f64).sqrt();
+        let bound2 = (6.0 / (ff_dim + modeldim) as f64).sqrt();
 
-        let mut linear1 = Array2::zeros((model_dim, ff_dim));
-        let mut linear2 = Array2::zeros((ff_dim, model_dim));
+        let mut linear1 = Array2::zeros((modeldim, ff_dim));
+        let mut linear2 = Array2::zeros((ff_dim, modeldim));
 
         for elem in linear1.iter_mut() {
             *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound1).unwrap();
@@ -4626,7 +4626,7 @@ impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
         }
 
         let bias1 = Array1::zeros(ff_dim);
-        let bias2 = Array1::zeros(model_dim);
+        let bias2 = Array1::zeros(modeldim);
 
         Ok(Self {
             linear1,
@@ -4634,7 +4634,7 @@ impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
             linear2,
             bias2,
             activation: ActivationFunction::GELU,
-            dropout: DropoutLayer::new(_config.ff_dropout),
+            dropout: DropoutLayer::new(config.ff_dropout),
         })
     }
 
@@ -4773,15 +4773,15 @@ impl<T: Float + Default + Clone + std::iter::Sum> LayerNorm<T> {
 
 impl<T: Float + Default + Clone> OutputProjectionLayer<T> {
     fn new(_input_dim: usize, outputdim: usize, rng: &mut impl Rng) -> Self {
-        let mut weights = Array2::zeros((_input_dim, output_dim));
+        let mut weights = Array2::zeros((_input_dim, outputdim));
 
         // Xavier initialization
-        let bound = (6.0 / (_input_dim + output_dim) as f64).sqrt();
+        let bound = (6.0 / (_input_dim + outputdim) as f64).sqrt();
         for elem in weights.iter_mut() {
             *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
         }
 
-        let bias = Array1::zeros(output_dim);
+        let bias = Array1::zeros(outputdim);
 
         Self {
             weights,
@@ -4856,7 +4856,7 @@ impl DropoutLayer {
 impl<T: Float + Default + Clone> RelativePositionBias<T> {
     fn new(max_distance: usize, numheads: usize) -> Result<Self> {
         let bias_table_size = 2 * max_distance - 1;
-        let mut bias_table = Array2::zeros((bias_table_size, num_heads));
+        let mut bias_table = Array2::zeros((bias_table_size, numheads));
         let mut rng = scirs2_core::random::rng();
 
         let bound = 0.1;
@@ -4874,10 +4874,10 @@ impl<T: Float + Default + Clone> RelativePositionBias<T> {
 
 impl<T: Float + Default + Clone> RoPEEmbeddings<T> {
     fn new(max_seqlen: usize, dim: usize) -> Result<Self> {
-        let mut cos_cached = Array2::zeros((max_seq_len, dim));
-        let mut sin_cached = Array2::zeros((max_seq_len, dim));
+        let mut cos_cached = Array2::zeros((max_seqlen, dim));
+        let mut sin_cached = Array2::zeros((max_seqlen, dim));
 
-        for pos in 0..max_seq_len {
+        for pos in 0..max_seqlen {
             for i in 0..dim / 2 {
                 let theta = T::from(pos).unwrap()
                     / T::from(10000.0_f64.powf(2.0 * (i as f64) / dim as f64)).unwrap();
@@ -4892,7 +4892,7 @@ impl<T: Float + Default + Clone> RoPEEmbeddings<T> {
         Ok(Self {
             cos_cached,
             sin_cached,
-            max_seq_len,
+            max_seqlen,
             dim,
         })
     }
@@ -4939,8 +4939,8 @@ impl Default for TransformerOptimizerConfig {
     fn default() -> Self {
         Self {
             base_config: LearnedOptimizerConfig::default(),
-            model_dim: 512,
-            num_heads: 8,
+            modeldim: 512,
+            numheads: 8,
             ff_dim: 2048,
             num_layers: 6,
             max_sequence_length: 256,
@@ -5182,8 +5182,8 @@ mod tests {
     #[test]
     fn test_transformer_optimizer_config_default() {
         let config = TransformerOptimizerConfig::default();
-        assert_eq!(config.model_dim, 512);
-        assert_eq!(config.num_heads, 8);
+        assert_eq!(config.modeldim, 512);
+        assert_eq!(config.numheads, 8);
         assert_eq!(config.num_layers, 6);
         assert_eq!(config.max_sequence_length, 256);
     }
@@ -5193,14 +5193,14 @@ mod tests {
         let mut config = TransformerOptimizerConfig::default();
         assert!(TransformerOptimizer::<f64>::validate_config(&config).is_ok());
 
-        config.model_dim = 0;
+        config.modeldim = 0;
         assert!(TransformerOptimizer::<f64>::validate_config(&config).is_err());
 
-        config.model_dim = 512;
-        config.num_heads = 0;
+        config.modeldim = 512;
+        config.numheads = 0;
         assert!(TransformerOptimizer::<f64>::validate_config(&config).is_err());
 
-        config.num_heads = 7; // Not divisible by model_dim
+        config.numheads = 7; // Not divisible by modeldim
         assert!(TransformerOptimizer::<f64>::validate_config(&config).is_err());
     }
 
@@ -5218,7 +5218,7 @@ mod tests {
         buffer.update(&params, &grads, Some(0.3));
         buffer.update(&params, &grads, Some(0.2));
 
-        assert_eq!(buffer.current_length, 3); // Should not exceed max_length
+        assert_eq!(buffer.current_length, 3); // Should not exceed maxlength
     }
 
     #[test]

@@ -341,7 +341,7 @@ pub trait MetaLearningStrategy<T: Float>: Send + Sync + std::fmt::Debug {
     /// Execute meta-learning step
     fn meta_step(
         &mut self,
-        meta_task: &MetaTask<T>,
+        metatask: &MetaTask<T>,
         optimizers: &mut HashMap<String, Box<dyn AdvancedOptimizer<T>>>,
     ) -> Result<MetaLearningResult<T>>;
 
@@ -1139,7 +1139,7 @@ impl<
         let result = AdvancedResult {
             optimized_parameters: optimization_results.updated_parameters.clone(),
             performance_score: optimization_results.performance_score,
-            ensemble_results: optimization_results.individual_results.clone(),
+            ensemble_results: optimization_results.individualresults.clone(),
             landscape_analysis: landscape_features,
             adaptation_events: optimization_results.adaptation_events.clone(),
             resource_usage: optimization_results.resource_usage.clone(),
@@ -1177,7 +1177,7 @@ impl<
     fn register_default_optimizers(&mut self) -> Result<()> {
         // Create advanced optimizer wrappers for existing optimizers
         let lstm_config = LearnedOptimizerConfig::default();
-        let lstm_optimizer: LSTMOptimizer<T, ndarray::Ix1> = LSTMOptimizer::new(
+        let lstmoptimizer: LSTMOptimizer<T, ndarray::Ix1> = LSTMOptimizer::new(
             lstm_config,
             Box::new(crate::optimizers::SGD::new(T::from(0.001).unwrap())),
         )?;
@@ -1185,7 +1185,7 @@ impl<
         // Register as advanced optimizer
         self.optimizer_ensemble.register_optimizer(
             "lstm_advanced".to_string(),
-            Box::new(AdvancedLSTMWrapper::new(lstm_optimizer)),
+            Box::new(AdvancedLSTMWrapper::new(lstmoptimizer)),
         )?;
 
         // Add more optimizers...
@@ -2162,7 +2162,7 @@ impl<
         Ok(EnsembleOptimizationResults {
             updated_parameters: Array1::zeros(10), // Placeholder
             performance_score: T::from(0.85).unwrap(),
-            individual_results: HashMap::new(),
+            individualresults: HashMap::new(),
             adaptation_events: Vec::new(),
             resource_usage: ResourceUtilization {
                 cpu_utilization: T::from(0.7).unwrap(),
@@ -2205,8 +2205,8 @@ impl<
         let meta_tasks = self.generate_adaptive_meta_tasks(context, results)?;
 
         // 4. Execute meta-learning strategies on meta-tasks
-        for meta_task in &meta_tasks {
-            self.execute_meta_learning_step(meta_task)?;
+        for metatask in &meta_tasks {
+            self.execute_meta_learning_step(metatask)?;
         }
 
         // 5. Perform cross-task knowledge transfer
@@ -2332,7 +2332,7 @@ impl<
     /// Execute meta-learning step for a given meta-task
     fn execute_meta_learning_step(&mut self, metatask: &MetaTask<T>) -> Result<()> {
         // Select best strategy for this meta-_task
-        let best_strategy_idx = self.select_best_strategy_for_task(meta_task)?;
+        let best_strategy_idx = self.select_best_strategy_for_task(metatask)?;
 
         if let Some(strategy) = self
             .meta_learning_orchestrator
@@ -2340,7 +2340,7 @@ impl<
             .get_mut(best_strategy_idx)
         {
             // Execute meta-learning step
-            let result = strategy.meta_step(meta_task, &mut self.optimizer_ensemble.optimizers)?;
+            let result = strategy.meta_step(metatask, &mut self.optimizer_ensemble.optimizers)?;
 
             // Update strategy performance based on result
             self.update_strategy_performance(best_strategy_idx, &result)?;
@@ -2442,7 +2442,7 @@ impl<
         results: &EnsembleOptimizationResults<T>,
     ) -> Result<T> {
         // Estimate how well knowledge transfers between tasks
-        let ensemble_diversity = self.compute_ensemble_diversity(&results.individual_results)?;
+        let ensemble_diversity = self.compute_ensemble_diversity(&results.individualresults)?;
 
         // Higher diversity suggests better transfer
         Ok(ensemble_diversity)
@@ -2567,7 +2567,7 @@ impl<
         }
 
         // Simple selection based on _task type
-        match meta_task._task_type {
+        match metatask._task_type {
             MetaTaskType::Classification | MetaTaskType::Regression => {
                 // Prefer MAML for supervised tasks
                 for (i, strategy) in self
@@ -2633,11 +2633,11 @@ impl<
     }
 
     fn compute_ensemble_diversity(&self, individualresults: &HashMap<String, T>) -> Result<T> {
-        if individual_results.len() <= 1 {
+        if individualresults.len() <= 1 {
             return Ok(T::zero());
         }
 
-        let scores: Vec<T> = individual_results.values().copied().collect();
+        let scores: Vec<T> = individualresults.values().copied().collect();
         let mean = scores.iter().sum::<T>() / T::from(scores.len()).unwrap();
 
         let variance = scores
@@ -2708,7 +2708,7 @@ impl<
 
         // Identify which optimizers performed well
         let mut recommended_optimizers = Vec::new();
-        for (optimizer_name, score) in &results.individual_results {
+        for (optimizer_name, score) in &results.individualresults {
             if *score > T::from(0.7).unwrap() {
                 recommended_optimizers.push(optimizer_name.clone());
             }
@@ -2902,7 +2902,7 @@ impl<
         let snapshot = PerformanceSnapshot {
             timestamp: SystemTime::now(),
             overall_score: results.performance_score,
-            optimizer_scores: results.individual_results.clone(),
+            optimizer_scores: results.individualresults.clone(),
             resource_efficiency: T::from(0.8).unwrap(),
             adaptation_effectiveness: T::from(0.9).unwrap(),
             convergence_rate: T::from(0.05).unwrap(),
@@ -2952,7 +2952,7 @@ pub struct AdvancedResult<T: Float> {
 pub struct EnsembleOptimizationResults<T: Float> {
     pub updated_parameters: Array1<T>,
     pub performance_score: T,
-    pub individual_results: HashMap<String, T>,
+    pub individualresults: HashMap<String, T>,
     pub adaptation_events: Vec<AdaptationEvent<T>>,
     pub resource_usage: ResourceUtilization<T>,
 }
@@ -3305,7 +3305,7 @@ pub struct AdvancedLSTMWrapper<
         + std::iter::Sum<T>
         + for<'a> std::iter::Sum<&'a T>,
 > {
-    lstm_optimizer: LSTMOptimizer<T, ndarray::Ix1>,
+    lstmoptimizer: LSTMOptimizer<T, ndarray::Ix1>,
     capabilities: OptimizerCapabilities,
     performance_score: T,
 }
@@ -3353,7 +3353,7 @@ impl<
         };
 
         Self {
-            lstm_optimizer,
+            lstmoptimizer,
             capabilities,
             performance_score: T::from(0.8).unwrap(),
         }
@@ -3381,7 +3381,7 @@ impl<
         _context: &OptimizationContext<T>,
     ) -> Result<Array1<T>> {
         // Use the LSTM optimizer's lstm_step method
-        self.lstm_optimizer.lstm_step(parameters, gradients, None)
+        self.lstmoptimizer.lstm_step(parameters, gradients, None)
     }
 
     fn adapt_to_landscape(&mut self, _landscapefeatures: &LandscapeFeatures<T>) -> Result<()> {
@@ -3399,7 +3399,7 @@ impl<
 
     fn clone_optimizer(&self) -> Box<dyn AdvancedOptimizer<T>> {
         // Simplified clone
-        Box::new(AdvancedLSTMWrapper::new(self.lstm_optimizer.clone()))
+        Box::new(AdvancedLSTMWrapper::new(self.lstmoptimizer.clone()))
     }
 }
 
@@ -4064,7 +4064,7 @@ pub enum EvidenceLevel {
 
 impl From<EvidenceLevel> for EvidenceQuality {
     fn from(level: EvidenceLevel) -> Self {
-        match _level {
+        match level {
             EvidenceLevel::Theoretical => EvidenceQuality::Medium,
             EvidenceLevel::Empirical => EvidenceQuality::High,
             EvidenceLevel::Industrial => EvidenceQuality::High,

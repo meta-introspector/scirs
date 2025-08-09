@@ -695,7 +695,7 @@ pub enum OperationType {
 
 impl OperationType {
     fn from_descriptive(_descop: DescriptiveOperation) -> Self {
-        match _desc_op {
+        match _descop {
             DescriptiveOperation::Mean => OperationType::Mean,
             DescriptiveOperation::Variance(_) => OperationType::Variance,
             DescriptiveOperation::StdDev(_) => OperationType::Variance,
@@ -864,7 +864,7 @@ impl PerformanceMonitor {
     fn record_execution(&mut self, duration: Duration, operationcount: usize) {
         self.executions.push(ExecutionMetrics {
             duration,
-            operation_count,
+            operation_count: operationcount,
             timestamp: Instant::now(),
         });
     }
@@ -904,7 +904,7 @@ pub fn stats_with<F>(config: FluentStatsConfig) -> FluentStats<F>
 where
     F: Float + NumCast + Send + Sync + 'static + std::fmt::Display,
 {
-    FluentStats::with_config(_config)
+    FluentStats::with_config(config)
 }
 
 /// Quick descriptive statistics with fluent API

@@ -874,8 +874,8 @@ fn douglas_peucker_recursive<T: Float>(
 /// Calculate the perpendicular distance from a point to a line segment
 #[allow(dead_code)]
 fn perpendicular_distance<T: Float>(point: &[T; 2], line_start: &[T; 2], lineend: &[T; 2]) -> T {
-    let dx = line_end[0] - line_start[0];
-    let dy = line_end[1] - line_start[1];
+    let dx = lineend[0] - line_start[0];
+    let dy = lineend[1] - line_start[1];
 
     // If the line segment is actually a point, return distance to that point
     if dx.is_zero() && dy.is_zero() {
@@ -1028,8 +1028,8 @@ fn triangle_area<T: Float>(p1: &[T; 2], p2: &[T; 2], p3: &[T; 2]) -> T {
 #[allow(dead_code)]
 fn find_previous_active(current: usize, active: &[bool], n: usize) -> Option<usize> {
     for i in 1..n {
-        let idx = (_current + n - i) % n;
-        if active[idx] && idx != _current {
+        let idx = (current + n - i) % n;
+        if active[idx] && idx != current {
             return Some(idx);
         }
     }
@@ -1040,8 +1040,8 @@ fn find_previous_active(current: usize, active: &[bool], n: usize) -> Option<usi
 #[allow(dead_code)]
 fn find_next_active(current: usize, active: &[bool], n: usize) -> Option<usize> {
     for i in 1..n {
-        let idx = (_current + i) % n;
-        if active[idx] && idx != _current {
+        let idx = (current + i) % n;
+        if active[idx] && idx != current {
             return Some(idx);
         }
     }

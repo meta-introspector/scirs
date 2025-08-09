@@ -157,25 +157,25 @@ impl Error for OptimError {}
 /// From implementations for common error types
 impl From<std::time::SystemTimeError> for OptimError {
     fn from(error: std::time::SystemTimeError) -> Self {
-        OptimError::Other(format!("System time error: {_error}"))
+        OptimError::Other(format!("System time error: {error}"))
     }
 }
 
 impl From<ndarray::ShapeError> for OptimError {
     fn from(error: ndarray::ShapeError) -> Self {
-        OptimError::DimensionMismatch(format!("Shape error: {_error}"))
+        OptimError::DimensionMismatch(format!("Shape error: {error}"))
     }
 }
 
 impl From<serde_json::Error> for OptimError {
     fn from(error: serde_json::Error) -> Self {
-        OptimError::Other(format!("Serde JSON error: {_error}"))
+        OptimError::Other(format!("Serde JSON error: {error}"))
     }
 }
 
 impl From<std::io::Error> for OptimError {
     fn from(error: std::io::Error) -> Self {
-        OptimError::Other(format!("IO error: {_error}"))
+        OptimError::Other(format!("IO error: {error}"))
     }
 }
 

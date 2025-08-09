@@ -25,12 +25,12 @@ pub enum ParameterConstraint<A: Float> {
     /// Constrain L2 norm to a maximum value
     L2NormConstraint {
         /// Maximum allowed L2 norm
-        max_norm: A,
+        maxnorm: A,
     },
     /// Constrain L1 norm to a maximum value
     L1NormConstraint {
         /// Maximum allowed L1 norm
-        max_norm: A,
+        maxnorm: A,
     },
     /// Ensure all values are non-negative
     NonNegative,
@@ -46,17 +46,17 @@ pub enum ParameterConstraint<A: Float> {
     /// Constrain symmetric matrices to be positive definite
     PositiveDefinite {
         /// Minimum eigenvalue to ensure positive definiteness
-        min_eigenvalue: A,
+        mineigenvalue: A,
     },
     /// Spectral norm constraint (maximum singular value)
     SpectralNorm {
         /// Maximum allowed spectral norm
-        max_norm: A,
+        maxnorm: A,
     },
     /// Nuclear norm constraint (sum of singular values)
     NuclearNorm {
         /// Maximum allowed nuclear norm
-        max_norm: A,
+        maxnorm: A,
     },
     /// Custom constraint function
     Custom {
@@ -83,17 +83,17 @@ impl<A: Float> ParameterConstraint<A> {
                     }
                 });
             }
-            ParameterConstraint::L2NormConstraint { max_norm } => {
+            ParameterConstraint::L2NormConstraint { maxnorm } => {
                 let norm = params.mapv(|x| x * x).sum().sqrt();
-                if norm > *max_norm {
-                    let scale = *max_norm / norm;
+                if norm > *maxnorm {
+                    let scale = *maxnorm / norm;
                     params.mapv_inplace(|x| x * scale);
                 }
             }
-            ParameterConstraint::L1NormConstraint { max_norm } => {
+            ParameterConstraint::L1NormConstraint { maxnorm } => {
                 let norm = params.mapv(|x| x.abs()).sum();
-                if norm > *max_norm {
-                    let scale = *max_norm / norm;
+                if norm > *maxnorm {
+                    let scale = *maxnorm / norm;
                     params.mapv_inplace(|x| x * scale);
                 }
             }
@@ -139,28 +139,28 @@ impl<A: Float> ParameterConstraint<A> {
                     ));
                 }
             }
-            ParameterConstraint::PositiveDefinite { min_eigenvalue: _ } => {
+            ParameterConstraint::PositiveDefinite { mineigenvalue: _ } => {
                 // Positive definite constraint requires eigenvalue computation
                 return Err(OptimError::InvalidConfig(
                     "Positive definite constraint requires specialized eigenvalue operations"
                         .to_string(),
                 ));
             }
-            ParameterConstraint::SpectralNorm { max_norm } => {
+            ParameterConstraint::SpectralNorm { maxnorm } => {
                 // Spectral norm constraint requires SVD computation
                 // For now, approximate with Frobenius norm
                 let frobenius_norm = params.mapv(|x| x * x).sum().sqrt();
-                if frobenius_norm > *max_norm {
-                    let scale = *max_norm / frobenius_norm;
+                if frobenius_norm > *maxnorm {
+                    let scale = *maxnorm / frobenius_norm;
                     params.mapv_inplace(|x| x * scale);
                 }
             }
-            ParameterConstraint::NuclearNorm { max_norm } => {
+            ParameterConstraint::NuclearNorm { maxnorm } => {
                 // Nuclear norm constraint requires SVD computation
                 // For now, approximate with L1 norm
                 let l1_norm = params.mapv(|x| x.abs()).sum();
-                if l1_norm > *max_norm {
-                    let scale = *max_norm / l1_norm;
+                if l1_norm > *maxnorm {
+                    let scale = *maxnorm / l1_norm;
                     params.mapv_inplace(|x| x * scale);
                 }
             }
@@ -247,14 +247,14 @@ impl<A: Float> ParameterGroupConfig<A> {
     /// Add L2 norm constraint
     pub fn with_l2_norm_constraint(mut self, maxnorm: A) -> Self {
         self.constraints
-            .push(ParameterConstraint::L2NormConstraint { max_norm });
+            .push(ParameterConstraint::L2NormConstraint { maxnorm });
         self
     }
 
     /// Add L1 norm constraint
     pub fn with_l1_norm_constraint(mut self, maxnorm: A) -> Self {
         self.constraints
-            .push(ParameterConstraint::L1NormConstraint { max_norm });
+            .push(ParameterConstraint::L1NormConstraint { maxnorm });
         self
     }
 
@@ -286,21 +286,21 @@ impl<A: Float> ParameterGroupConfig<A> {
     /// Add positive definite constraint for symmetric matrices
     pub fn with_positive_definite(mut self, mineigenvalue: A) -> Self {
         self.constraints
-            .push(ParameterConstraint::PositiveDefinite { min_eigenvalue });
+            .push(ParameterConstraint::PositiveDefinite { mineigenvalue });
         self
     }
 
     /// Add spectral norm constraint
     pub fn with_spectral_norm(mut self, maxnorm: A) -> Self {
         self.constraints
-            .push(ParameterConstraint::SpectralNorm { max_norm });
+            .push(ParameterConstraint::SpectralNorm { maxnorm });
         self
     }
 
     /// Add nuclear norm constraint
     pub fn with_nuclear_norm(mut self, maxnorm: A) -> Self {
         self.constraints
-            .push(ParameterConstraint::NuclearNorm { max_norm });
+            .push(ParameterConstraint::NuclearNorm { maxnorm });
         self
     }
 
@@ -533,7 +533,7 @@ pub mod checkpointing {
         /// Timestamp when checkpoint was created
         pub timestamp: String,
         /// Version of the optimizer
-        pub optimizer_version: String,
+        pub optimizerversion: String,
         /// Custom metadata
         pub custom: HashMap<String, String>,
     }
@@ -551,7 +551,7 @@ pub mod checkpointing {
 
             Self {
                 timestamp,
-                optimizer_version,
+                optimizerversion,
                 custom: HashMap::new(),
             }
         }
@@ -599,7 +599,7 @@ pub mod checkpointing {
             writeln!(
                 writer,
                 "# Optimizer Version: {}",
-                checkpoint.metadata.optimizer_version
+                checkpoint.metadata.optimizerversion
             )
             .map_err(|e| OptimError::InvalidConfig(format!("Failed to write version: {e}")))?;
             writeln!(writer, "# Step: {}", checkpoint.step)
@@ -794,7 +794,7 @@ pub mod checkpointing {
 
             // Read header
             let mut step = 0;
-            let mut optimizer_version = String::new();
+            let mut optimizerversion = String::new();
             let mut timestamp = String::new();
 
             while let Some(Ok(line)) = lines.next() {
@@ -803,7 +803,7 @@ pub mod checkpointing {
                         OptimError::InvalidConfig("Invalid step format".to_string())
                     })?;
                 } else if line.starts_with("# Optimizer Version: ") {
-                    optimizer_version =
+                    optimizerversion =
                         line.trim_start_matches("# Optimizer Version: ").to_string();
                 } else if line.starts_with("# Timestamp: ") {
                     timestamp = line.trim_start_matches("# Timestamp: ").to_string();
@@ -1090,7 +1090,7 @@ pub mod checkpointing {
             }
 
             // Create checkpoint metadata
-            let mut metadata = CheckpointMetadata::new(optimizer_version);
+            let mut metadata = CheckpointMetadata::new(optimizerversion);
             metadata.timestamp = timestamp;
             metadata.custom = custom_metadata;
 
@@ -1115,7 +1115,7 @@ pub mod checkpointing {
     #[derive(Debug)]
     pub struct CheckpointManager<A: Float, D: Dimension> {
         checkpoints: HashMap<String, OptimizerCheckpoint<A, D>>,
-        max_checkpoints: usize,
+        _maxcheckpoints: usize,
         checkpoint_keys: Vec<String>, // To maintain order for LRU eviction
     }
 
@@ -1124,7 +1124,7 @@ pub mod checkpointing {
         pub fn new() -> Self {
             Self {
                 checkpoints: HashMap::new(),
-                max_checkpoints: 10,
+                _maxcheckpoints: 10,
                 checkpoint_keys: Vec::new(),
             }
         }
@@ -1133,7 +1133,7 @@ pub mod checkpointing {
         pub fn with_max_checkpoints(_maxcheckpoints: usize) -> Self {
             Self {
                 checkpoints: HashMap::new(),
-                max_checkpoints: max_checkpoints,
+                _maxcheckpoints: _maxcheckpoints,
                 checkpoint_keys: Vec::new(),
             }
         }
@@ -1147,7 +1147,7 @@ pub mod checkpointing {
             }
 
             // If we're at capacity, remove oldest checkpoint
-            if self.checkpoints.len() >= self.max_checkpoints {
+            if self.checkpoints.len() >= self._maxcheckpoints {
                 if let Some(oldest_key) = self.checkpoint_keys.first().cloned() {
                     self.checkpoints.remove(&oldest_key);
                     self.checkpoint_keys.retain(|k| k != &oldest_key);
@@ -1207,7 +1207,7 @@ pub mod checkpointing {
             step: usize,
             groups: &[ParameterGroup<A, D>],
             global_state: HashMap<String, String>,
-            optimizer_version: String,
+            optimizerversion: String,
         ) -> OptimizerCheckpoint<A, D> {
             let group_checkpoints = groups
                 .iter()
@@ -1223,7 +1223,7 @@ pub mod checkpointing {
                 step,
                 groups: group_checkpoints,
                 global_state,
-                metadata: CheckpointMetadata::new(optimizer_version),
+                metadata: CheckpointMetadata::new(optimizerversion),
             }
         }
 
@@ -1347,7 +1347,7 @@ mod tests {
 
         // Test L2 norm constraint
         let mut params = Array1::from_vec(vec![3.0, 4.0]); // norm = 5
-        let l2_constraint = ParameterConstraint::L2NormConstraint { max_norm: 2.0 };
+        let l2_constraint = ParameterConstraint::L2NormConstraint { maxnorm: 2.0 };
         l2_constraint.apply(&mut params).unwrap();
         let new_norm = params.mapv(|x| x * x).sum().sqrt();
         assert_relative_eq!(new_norm, 2.0, epsilon = 1e-6);
@@ -1458,7 +1458,7 @@ mod tests {
 
         // Test spectral norm constraint (approximated with Frobenius norm)
         let mut params = Array1::from_vec(vec![3.0, 4.0]); // Frobenius norm = 5
-        let spectral_constraint = ParameterConstraint::SpectralNorm { max_norm: 2.0 };
+        let spectral_constraint = ParameterConstraint::SpectralNorm { maxnorm: 2.0 };
         spectral_constraint.apply(&mut params).unwrap();
 
         let new_norm = params.mapv(|x| x * x).sum().sqrt();
@@ -1471,7 +1471,7 @@ mod tests {
 
         // Test nuclear norm constraint (approximated with L1 norm)
         let mut params = Array1::from_vec(vec![3.0, -4.0, 2.0]); // L1 norm = 9
-        let nuclear_constraint = ParameterConstraint::NuclearNorm { max_norm: 3.0 };
+        let nuclear_constraint = ParameterConstraint::NuclearNorm { maxnorm: 3.0 };
         nuclear_constraint.apply(&mut params).unwrap();
 
         let new_l1_norm = params.mapv(|x| x.abs()).sum();
@@ -1494,7 +1494,7 @@ mod tests {
         // Test that positive definite constraint returns appropriate error
         let mut params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let pd_constraint = ParameterConstraint::PositiveDefinite {
-            min_eigenvalue: 0.01,
+            mineigenvalue: 0.01,
         };
         let result = pd_constraint.apply(&mut params);
 
@@ -1521,8 +1521,8 @@ mod tests {
         }
 
         match &config.constraints[1] {
-            ParameterConstraint::SpectralNorm { max_norm } => {
-                assert_eq!(*max_norm, 2.0);
+            ParameterConstraint::SpectralNorm { maxnorm } => {
+                assert_eq!(*maxnorm, 2.0);
             }
             _ => panic!("Expected SpectralNorm constraint"),
         }

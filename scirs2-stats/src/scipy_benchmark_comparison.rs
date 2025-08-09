@@ -589,7 +589,7 @@ impl ScipyBenchmarkComparison {
     /// Create new SciPy comparison framework
     pub fn new(config: ScipyComparisonConfig) -> StatsResult<Self> {
         // Create temporary directory
-        fs::create_dir_all(&_config.temp_dir).map_err(|e| {
+        fs::create_dir_all(&config.temp_dir).map_err(|e| {
             StatsError::ComputationError(format!("Failed to create temp directory: {}", e))
         })?;
 

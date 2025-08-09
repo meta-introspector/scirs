@@ -556,9 +556,9 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     /// Create a new regression tester
     pub fn new(config: RegressionConfig) -> Result<Self> {
         // Ensure baseline directory exists
-        fs::create_dir_all(&_config.baseline_dir)?;
+        fs::create_dir_all(&config.baseline_dir)?;
 
-        let performance_db = PerformanceDatabase::load(&_config.baseline_dir)
+        let performance_db = PerformanceDatabase::load(&config.baseline_dir)
             .unwrap_or_else(|_| PerformanceDatabase::new());
 
         let mut tester = Self {
@@ -2297,7 +2297,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> PerformanceDataba
 
     /// Load database from disk
     pub fn load(_basedir: &Path) -> Result<Self> {
-        let db_path = base_dir.join("performance_db.json");
+        let db_path = _basedir.join("performance_db.json");
         if db_path.exists() {
             let data = fs::read_to_string(&db_path)?;
             let db = serde_json::from_str(&data)?;
@@ -2309,8 +2309,8 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> PerformanceDataba
 
     /// Save database to disk
     pub fn save(&self, basedir: &Path) -> Result<()> {
-        fs::create_dir_all(base_dir)?;
-        let db_path = base_dir.join("performance_db.json");
+        fs::create_dir_all(_basedir)?;
+        let db_path = _basedir.join("performance_db.json");
         let data = serde_json::to_string_pretty(self)?;
         fs::write(&db_path, data)?;
         Ok(())

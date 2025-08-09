@@ -148,15 +148,15 @@ where
     pub fn from_csr(matrix: &CsrMatrix<T>) -> SparseResult<Self> {
         let (rows, cols) = matrix.shape();
 
-        // Ensure _matrix is square
+        // Ensure matrix is square
         if rows != cols {
             return Err(SparseError::ValueError(
-                "Symmetric _matrix must be square".to_string(),
+                "Symmetric matrix must be square".to_string(),
             ));
         }
 
-        // Check if the _matrix is symmetric
-        if !Self::is_symmetric(_matrix) {
+        // Check if the matrix is symmetric
+        if !Self::is_symmetric(matrix) {
             return Err(SparseError::ValueError(
                 "Matrix must be symmetric to convert to SymCSR format".to_string(),
             ));
@@ -168,12 +168,12 @@ where
         let mut indptr = vec![0];
 
         for i in 0..rows {
-            for j in matrix.indptr[i].._matrix.indptr[i + 1] {
+            for j in matrix.indptr[i]..matrix.indptr[i + 1] {
                 let col = matrix.indices[j];
 
                 // Only include elements in lower triangular part (including diagonal)
                 if col <= i {
-                    data.push(_matrix.data[j]);
+                    data.push(matrix.data[j]);
                     indices.push(col);
                 }
             }
@@ -208,7 +208,7 @@ where
 
         // Compare each element (i,j) with (j,i)
         for i in 0..rows {
-            for j_ptr in matrix.indptr[i].._matrix.indptr[i + 1] {
+            for j_ptr in matrix.indptr[i]..matrix.indptr[i + 1] {
                 let j = matrix.indices[j_ptr];
                 let val = matrix.data[j_ptr];
 
@@ -392,7 +392,7 @@ where
     ///
     /// SymCSR array
     pub fn new(matrix: SymCsrMatrix<T>) -> Self {
-        Self { inner: _matrix }
+        Self { inner: matrix }
     }
 
     /// Create a SymCSR array from a regular CSR array
@@ -416,7 +416,7 @@ where
         }
 
         // Create a temporary CSR matrix to check symmetry
-        let csr_matrix = CsrMatrix::new(
+        let csrmatrix = CsrMatrix::new(
             array.get_data().to_vec(),
             array.get_indptr().to_vec(),
             array.get_indices().to_vec(),
@@ -424,7 +424,7 @@ where
         )?;
 
         // Convert to symmetric CSR
-        let sym_csr = SymCsrMatrix::from_csr(&csr_matrix)?;
+        let sym_csr = SymCsrMatrix::from_csr(&csrmatrix)?;
 
         Ok(Self { inner: sym_csr })
     }
@@ -570,8 +570,8 @@ mod tests {
         let indices = vec![0, 0, 1, 1, 2];
         let indptr = vec![0, 1, 3, 5];
 
-        let sym_matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).unwrap();
-        let sym_array = SymCsrArray::new(sym_matrix);
+        let symmatrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).unwrap();
+        let sym_array = SymCsrArray::new(symmatrix);
 
         assert_eq!(sym_array.inner().shape(), (3, 3));
 

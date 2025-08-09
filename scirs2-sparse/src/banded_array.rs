@@ -40,7 +40,7 @@ where
 {
     /// Create a new banded array
     pub fn new(
-        _data: Array2<T>,
+        data: Array2<T>,
         kl: usize,
         ku: usize,
         shape: (usize, usize),

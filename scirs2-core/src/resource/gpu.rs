@@ -247,6 +247,9 @@ impl GpuInfo {
 
     /// Create GpuInfo from PCI IDs
     pub fn create_from_pci_ids(vendor_id: &str, device_id: &str) -> Self {
+        // Strip 0x prefix if present
+        let vendor_id = vendor_id.strip_prefix("0x").unwrap_or(vendor_id);
+        
         let vendor = match vendor_id {
             "10de" => GpuVendor::Nvidia,
             "1002" => GpuVendor::Amd,
@@ -254,10 +257,19 @@ impl GpuInfo {
             _ => GpuVendor::Unknown,
         };
 
+        // Create appropriate name based on vendor
+        let name = match vendor {
+            GpuVendor::Nvidia => format!("NVIDIA GPU {}", device_id),
+            GpuVendor::Amd => format!("AMD GPU {}", device_id),
+            GpuVendor::Intel => format!("Intel GPU {}", device_id),
+            GpuVendor::Apple => format!("Apple GPU {}", device_id),
+            GpuVendor::Unknown => format!("Unknown GPU {}", device_id),
+        };
+
         // Default GPU info based on vendor
         // In a real implementation, this would look up specific device info
         Self {
-            name: format!("GPU {}", device_id),
+            name,
             vendor,
             memory_total: 8 * 1024 * 1024 * 1024, // 8GB default
             memory_available: 8 * 1024 * 1024 * 1024,

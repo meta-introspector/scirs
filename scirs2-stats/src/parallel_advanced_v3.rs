@@ -221,7 +221,7 @@ where
 {
     pub fn new(_kfolds: usize, config: AdvancedParallelConfig) -> Self {
         Self {
-            k_folds: k_folds,
+            k_folds: _kfolds,
             config,
             _phantom: std::marker::PhantomData,
         }
@@ -343,7 +343,7 @@ where
 {
     pub fn new(_nsimulations: usize, config: AdvancedParallelConfig) -> Self {
         Self {
-            n_simulations: n_simulations,
+            n_simulations: _nsimulations,
             config,
             _phantom: std::marker::PhantomData,
         }

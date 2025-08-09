@@ -86,7 +86,7 @@ fn bilateral_filter_gray(img: &GrayImage, params: &BilateralParams) -> Result<Gr
     let pixels: Vec<_> = (0..height)
         .into_par_iter()
         .flat_map(|y| {
-            let spatial_weights = spatialweights.clone();
+            let spatial_weights = spatial_weights.clone();
             (0..width)
                 .into_par_iter()
                 .map(move |x| {
@@ -127,7 +127,7 @@ fn bilateral_filter_rgb(img: &RgbImage, params: &BilateralParams) -> Result<RgbI
     let pixels: Vec<_> = (0..height)
         .into_par_iter()
         .flat_map(|y| {
-            let spatial_weights = spatialweights.clone();
+            let spatial_weights = spatial_weights.clone();
             (0..width)
                 .into_par_iter()
                 .map(move |x| {
@@ -157,14 +157,14 @@ fn bilateral_filter_rgb(img: &RgbImage, params: &BilateralParams) -> Result<RgbI
 /// Compute spatial weights for the filter kernel
 #[allow(dead_code)]
 fn compute_spatial_weights(radius: usize, sigma: f32) -> Vec<Vec<f32>> {
-    let size = 2 * _radius + 1;
+    let size = 2 * radius + 1;
     let mut weights = vec![vec![0.0; size]; size];
     let sigma2 = sigma * sigma;
 
     for (dy, row) in weights.iter_mut().enumerate() {
         for (dx, weight) in row.iter_mut().enumerate() {
-            let y = dy as f32 - _radius as f32;
-            let x = dx as f32 - _radius as f32;
+            let y = dy as f32 - radius as f32;
+            let x = dx as f32 - radius as f32;
             let dist2 = x * x + y * y;
             *weight = (-dist2 / (2.0 * sigma2)).exp();
         }
@@ -190,7 +190,7 @@ fn apply_bilateral_pixel_gray(
     let mut weighted_sum = 0.0f32;
     let mut weight_sum = 0.0f32;
 
-    for (dy, spatial_row) in spatialweights.iter().enumerate() {
+    for (dy, spatial_row) in spatial_weights.iter().enumerate() {
         for (dx, &spatial_weight) in spatial_row.iter().enumerate() {
             let x = cx as i32 + dx as i32 - radius as i32;
             let y = cy as i32 + dy as i32 - radius as i32;
@@ -236,7 +236,7 @@ fn apply_bilateral_pixel_rgb(
     let mut weighted_sum = [0.0f32; 3];
     let mut weight_sum = 0.0f32;
 
-    for (dy, spatial_row) in spatialweights.iter().enumerate() {
+    for (dy, spatial_row) in spatial_weights.iter().enumerate() {
         for (dx, &spatial_weight) in spatial_row.iter().enumerate() {
             let x = cx as i32 + dx as i32 - radius as i32;
             let y = cy as i32 + dy as i32 - radius as i32;
@@ -318,7 +318,7 @@ pub fn joint_bilateral_filter(
             let mut weighted_sum = 0.0f32;
             let mut weight_sum = 0.0f32;
 
-            for (dy, spatial_row) in spatialweights.iter().enumerate() {
+            for (dy, spatial_row) in spatial_weights.iter().enumerate() {
                 for (dx, &spatial_weight) in spatial_row.iter().enumerate() {
                     let x = cx as i32 + dx as i32 - radius as i32;
                     let y = cy as i32 + dy as i32 - radius as i32;

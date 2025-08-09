@@ -257,13 +257,13 @@ fn gaussian_blur_3d(img: &Array3<f32>, sigma: f32) -> Result<Array3<f32>> {
 /// Create 1D Gaussian kernel
 #[allow(dead_code)]
 fn create_gaussian_kernel(size: usize, sigma: f32) -> Vec<f32> {
-    let mut kernel = vec![0.0; _size];
-    let center = _size / 2;
+    let mut kernel = vec![0.0; size];
+    let center = size / 2;
     let s = 2.0 * sigma * sigma;
 
     let mut sum = 0.0;
 
-    for (i, kernel_item) in kernel.iter_mut().enumerate().take(_size) {
+    for (i, kernel_item) in kernel.iter_mut().enumerate().take(size) {
         let x = i as f32 - center as f32;
         *kernel_item = (-x * x / s).exp();
         sum += *kernel_item;
@@ -345,9 +345,9 @@ pub fn adaptive_retinex(_img: &DynamicImage, adaptationlevel: f32) -> Result<Dyn
     let image_size = ((width * height) as f32).sqrt();
 
     let sigmas = vec![
-        image_size * 0.01 * adaptation_level,
-        image_size * 0.05 * adaptation_level,
-        image_size * 0.1 * adaptation_level,
+        image_size * 0.01 * adaptationlevel,
+        image_size * 0.05 * adaptationlevel,
+        image_size * 0.1 * adaptationlevel,
     ];
 
     multi_scale_retinex(_img, &sigmas, None)

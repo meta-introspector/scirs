@@ -44,7 +44,7 @@ impl LaplacianType {
 /// * `graph` - The graph as a sparse matrix
 /// * `normed` - Whether to compute the normalized Laplacian
 /// * `return_diag` - Whether to return the diagonal degree matrix
-/// * `use_out_degree` - For directed graphs, whether to use out-degree (default) or in-degree
+/// * `use_outdegree` - For directed graphs, whether to use out-degree (default) or in-degree
 ///
 /// # Returns
 ///
@@ -72,7 +72,7 @@ pub fn laplacian<T, S>(
     graph: &S,
     normed: bool,
     return_diag: bool,
-    use_out_degree: bool,
+    use_outdegree: bool,
 ) -> SparseResult<(CsrArray<T>, Option<Array1<T>>)>
 where
     T: Float + Debug + Copy + 'static,
@@ -86,7 +86,7 @@ where
         LaplacianType::Standard
     };
 
-    compute_laplacian_matrix(graph, laplacian_type, return_diag, use_out_degree)
+    compute_laplacian_matrix(graph, laplacian_type, return_diag, use_outdegree)
 }
 
 /// Compute a specific type of Laplacian matrix
@@ -96,7 +96,7 @@ where
 /// * `graph` - The graph as a sparse matrix
 /// * `laplacian_type` - Type of Laplacian to compute
 /// * `return_diag` - Whether to return the diagonal degree matrix
-/// * `use_out_degree` - For directed graphs, whether to use out-degree
+/// * `use_outdegree` - For directed graphs, whether to use out-degree
 ///
 /// # Returns
 ///
@@ -106,7 +106,7 @@ pub fn compute_laplacian_matrix<T, S>(
     graph: &S,
     laplacian_type: LaplacianType,
     return_diag: bool,
-    use_out_degree: bool,
+    use_outdegree: bool,
 ) -> SparseResult<(CsrArray<T>, Option<Array1<T>>)>
 where
     T: Float + Debug + Copy + 'static,
@@ -115,7 +115,7 @@ where
     let n = num_vertices(graph);
 
     // Compute degrees
-    let degrees = if use_out_degree {
+    let degrees = if use_outdegree {
         compute_out_degrees(graph)?
     } else {
         compute_in_degrees(graph)?
@@ -148,7 +148,7 @@ where
         ),
     }
     .map(|laplacian| {
-        let _diag = if return_diag { Some(degrees) } else { None };
+        let diag = if return_diag { Some(degrees) } else { None };
         (laplacian, diag)
     })
 }
@@ -160,7 +160,7 @@ where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let n = num_vertices(_graph);
+    let n = num_vertices(graph);
     let mut degrees = Array1::zeros(n);
 
     let (row_indices, _, values) = graph.find();
@@ -179,7 +179,7 @@ where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let n = num_vertices(_graph);
+    let n = num_vertices(graph);
     let mut degrees = Array1::zeros(n);
 
     let (_, col_indices, values) = graph.find();
@@ -344,7 +344,7 @@ where
 /// # Arguments
 ///
 /// * `graph` - The graph as a sparse matrix
-/// * `use_out_degree` - Whether to use out-degree (true) or in-degree (false)
+/// * `use_outdegree` - Whether to use out-degree (true) or in-degree (false)
 ///
 /// # Returns
 ///
@@ -364,15 +364,15 @@ where
 /// let degrees = degree_matrix(&graph, true).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn degree_matrix<T, S>(_graph: &S, use_outdegree: bool) -> SparseResult<Array1<T>>
+pub fn degree_matrix<T, S>(graph: &S, use_outdegree: bool) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    if use_out_degree {
-        compute_out_degrees(_graph)
+    if use_outdegree {
+        compute_out_degrees(graph)
     } else {
-        compute_in_degrees(_graph)
+        compute_in_degrees(graph)
     }
 }
 
@@ -411,7 +411,7 @@ where
     use crate::linalg::{lanczos, LanczosOptions};
     use crate::sym_csr::SymCsrMatrix;
 
-    validate_graph(_graph, false)?; // Ensure it's a valid undirected _graph
+    validate_graph(graph, false)?; // Ensure it's a valid undirected graph
 
     // Compute the Laplacian matrix
     let (laplacian_, _) = compute_laplacian_matrix(
@@ -462,7 +462,7 @@ where
         max_iter: 1000,
         max_subspace_size: (rows / 4).clamp(10, 50), // Reasonable subspace size
         tol: 1e-12,
-        num_eigenvalues: 3.min(rows), // Find 3 smallest eigenvalues (or fewer if matrix is small)
+        numeigenvalues: 3.min(rows), // Find 3 smallest eigenvalues (or fewer if matrix is small)
         compute_eigenvectors: false,  // We only need eigenvalues
     };
 

@@ -308,22 +308,22 @@ impl<T: Float + NumCast> StableMetrics<T> {
     /// # Arguments
     ///
     /// * `y_true` - True probabilities
-    /// * `y_pred` - Predicted probabilities
+    /// * `ypred` - Predicted probabilities
     ///
     /// # Returns
     ///
     /// * The cross-entropy loss
     pub fn cross_entropy(&self, y_true: &[T], ypred: &[T]) -> Result<T> {
-        if y_true.len() != y_pred.len() {
+        if y_true.len() != ypred.len() {
             return Err(MetricsError::DimensionMismatch(format!(
-                "y_true and y_pred must have the same length, got {} and {}",
+                "y_true and ypred must have the same length, got {} and {}",
                 y_true.len(),
-                y_pred.len()
+                ypred.len()
             )));
         }
 
         let mut loss = T::zero();
-        for (p, q) in y_true.iter().zip(y_pred.iter()) {
+        for (p, q) in y_true.iter().zip(ypred.iter()) {
             // Skip if _true probability is zero (0 * log(q) = 0)
             if *p > T::zero() {
                 // Clip predicted probability to avoid log(0)
@@ -409,13 +409,13 @@ impl<T: Float + NumCast> StableMetrics<T> {
     /// # Arguments
     ///
     /// * `u_values` - First distribution sample values
-    /// * `v_values` - Second distribution sample values
+    /// * `u_values` - Second distribution sample values
     ///
     /// # Returns
     ///
     /// * The Wasserstein distance
     pub fn wasserstein_distance(&self, u_values: &[T], vvalues: &[T]) -> Result<T> {
-        if u_values.is_empty() || v_values.is_empty() {
+        if u_values.is_empty() || u_values.is_empty() {
             return Err(MetricsError::InvalidInput(
                 "Input arrays must not be empty".to_string(),
             ));
@@ -423,7 +423,7 @@ impl<T: Float + NumCast> StableMetrics<T> {
 
         // Sort the _values
         let mut u_sorted = u_values.to_vec();
-        let mut v_sorted = v_values.to_vec();
+        let mut v_sorted = u_values.to_vec();
 
         u_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         v_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
@@ -725,11 +725,11 @@ mod tests {
 
         // Test standard case
         let y_true = vec![0.0, 1.0, 0.0];
-        let y_pred = vec![0.1, 0.8, 0.1];
+        let ypred = vec![0.1, 0.8, 0.1];
 
-        // Expected: -sum(y_true * log(y_pred)) = -1.0 * log(0.8) = -log(0.8)
+        // Expected: -sum(y_true * log(ypred)) = -1.0 * log(0.8) = -log(0.8)
         let expected = -0.8f64.ln();
-        let ce = stable.cross_entropy(&y_true, &y_pred).unwrap();
+        let ce = stable.cross_entropy(&y_true, &ypred).unwrap();
         assert_abs_diff_eq!(ce, expected, epsilon = 1e-10);
 
         // Test with zero in prediction

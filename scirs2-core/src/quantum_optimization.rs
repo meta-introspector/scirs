@@ -1222,7 +1222,7 @@ mod tests {
 
     #[test]
     fn test_quantum_state_creation() {
-        let state = QuantumState::new_uniform(4);
+        let state = QuantumState::dimensions(4);
         assert_eq!(state.amplitudes.len(), 4);
         assert_eq!(state.phases.len(), 4);
 
@@ -1233,7 +1233,7 @@ mod tests {
 
     #[test]
     fn test_quantum_measurement() {
-        let mut state = QuantumState::new_uniform(4);
+        let mut state = QuantumState::dimensions(4);
         let measurement = state.measure();
         assert!(measurement < 4);
 

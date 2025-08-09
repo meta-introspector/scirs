@@ -72,7 +72,7 @@ where
             .iter()
             .zip(event_observed.iter())
             .enumerate()
-            .map(|(i, (&duration, &_observed))| (duration, observed, i))
+            .map(|(i, (&duration, &observed))| (duration, observed, i))
             .collect();
 
         data.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
@@ -204,7 +204,7 @@ where
 
         for i in 0..survival.len() {
             if survival[i] <= median_threshold {
-                return Some(_times[i]);
+                return Some(times[i]);
             }
         }
 
@@ -221,7 +221,7 @@ where
         let mut prev_time = F::zero();
         let mut prev_survival = F::one();
 
-        for i in 0.._times.len() {
+        for i in 0..times.len() {
             let time_diff = times[i] - prev_time;
             area = area + prev_survival * time_diff;
 

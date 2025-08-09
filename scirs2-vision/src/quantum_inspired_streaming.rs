@@ -75,12 +75,12 @@ impl QuantumProcessingState {
         let mut stage_amplitudes = HashMap::new();
 
         // Initialize amplitudes in superposition
-        for stage_name in _stage_names {
-            let amplitude = QuantumAmplitude::new(1.0 / (_stage_names.len() as f64).sqrt(), 0.0);
-            stage_amplitudes.insert(stage_name.clone(), amplitude);
+        for stagename in _stagenames {
+            let amplitude = QuantumAmplitude::new(1.0 / (_stagenames.len() as f64).sqrt(), 0.0);
+            stage_amplitudes.insert(stagename.clone(), amplitude);
         }
 
-        let n_stages = stage_names.len();
+        let n_stages = _stagenames.len();
         let entanglement_matrix = Array2::zeros((n_stages, n_stages));
 
         Self {
@@ -107,9 +107,9 @@ impl QuantumProcessingState {
             .map(|(idx, name)| (name.clone(), idx))
             .collect();
 
-        for (stage_name, amplitude) in &mut self.stage_amplitudes {
-            if let Some(&energy) = hamiltonian.stage_energies.get(stage_name) {
-                let phase_change = -energy * time_step;
+        for (stagename, amplitude) in &mut self.stage_amplitudes {
+            if let Some(&energy) = hamiltonian.stage_energies.get(stagename) {
+                let phase_change = -energy * timestep;
 
                 // Apply rotation in complex plane with entanglement corrections
                 let cos_phase = phase_change.cos();
@@ -120,22 +120,22 @@ impl QuantumProcessingState {
                 let mut entanglement_imaginary = 0.0;
 
                 for (other_stage, other_amplitude) in &original_amplitudes {
-                    if other_stage != stage_name {
+                    if other_stage != stagename {
                         // Get entanglement strength from the matrix
-                        let stage_idx = stage_indices.get(stage_name);
+                        let stage_idx = stage_indices.get(stagename);
                         let other_idx = stage_indices.get(other_stage);
 
                         if let (Some(&i), Some(&j)) = (stage_idx, other_idx) {
                             if i < self.entanglement_matrix.nrows()
                                 && j < self.entanglement_matrix.ncols()
                             {
-                                let entanglement_strength = self.entanglement_matrix[[i, j]];
+                                let entanglementstrength = self.entanglement_matrix[[i, j]];
 
                                 // Apply entanglement coupling
                                 entanglement_real +=
-                                    entanglement_strength * other_amplitude.real * time_step;
+                                    entanglementstrength * other_amplitude.real * timestep;
                                 entanglement_imaginary +=
-                                    entanglement_strength * other_amplitude.imaginary * time_step;
+                                    entanglementstrength * other_amplitude.imaginary * timestep;
                             }
                         }
                     }
@@ -152,13 +152,13 @@ impl QuantumProcessingState {
                 amplitude.imaginary = new_imaginary;
 
                 // Apply decoherence effects
-                let decoherence_factor = (-time_step * 0.01).exp(); // Small decoherence
+                let decoherence_factor = (-timestep * 0.01).exp(); // Small decoherence
                 amplitude.real *= decoherence_factor;
                 amplitude.imaginary *= decoherence_factor;
             }
         }
 
-        self.global_phase += time_step;
+        self.global_phase += timestep;
 
         // Update entanglement matrix based on quantum correlations
         self.update_entanglement_matrix();
@@ -169,14 +169,14 @@ impl QuantumProcessingState {
         self.stage_amplitudes
             .keys()
             .enumerate()
-            .find(|(_, name)| name.as_str() == stage_name)
+            .find(|(_, name)| name.as_str() == stagename)
             .map(|(index_)| index)
     }
 
     /// Update entanglement matrix based on current quantum correlations
     fn update_entanglement_matrix(&mut self) {
-        let stage_names: Vec<String> = self.stage_amplitudes.keys().cloned().collect();
-        let n_stages = stage_names.len();
+        let _stagenames: Vec<String> = self.stage_amplitudes.keys().cloned().collect();
+        let n_stages = _stagenames.len();
 
         for i in 0..n_stages {
             for j in 0..n_stages {
@@ -184,8 +184,8 @@ impl QuantumProcessingState {
                     && i < self.entanglement_matrix.nrows()
                     && j < self.entanglement_matrix.ncols()
                 {
-                    let stage_i = &stage_names[i];
-                    let stage_j = &stage_names[j];
+                    let stage_i = &_stagenames[i];
+                    let stage_j = &_stagenames[j];
 
                     if let (Some(amp_i), Some(amp_j)) = (
                         self.stage_amplitudes.get(stage_i),
@@ -285,13 +285,13 @@ impl QuantumProcessingState {
         let mut optimal_stage = String::new();
         let mut stage_priorities = HashMap::new();
 
-        for (stage_name, amplitude) in &self.stage_amplitudes {
+        for (stagename, amplitude) in &self.stage_amplitudes {
             let probability = amplitude.probability();
-            stage_priorities.insert(stage_name.clone(), probability);
+            stage_priorities.insert(stagename.clone(), probability);
 
             if probability > max_probability {
                 max_probability = probability;
-                optimal_stage = stage_name.clone();
+                optimal_stage = stagename.clone();
             }
         }
 
@@ -322,12 +322,12 @@ impl QuantumHamiltonian {
 
         // Initialize with random energies representing computational costs
         let mut rng = rand::rng();
-        for stage_name in _stage_names {
-            stage_energies.insert(stage_name.clone(), rng.gen_range(0.1..2.0));
-            external_fields.insert(stage_name.clone()..0.0);
+        for stagename in _stagenames {
+            stage_energies.insert(stagename.clone(), rng.gen_range(0.1..2.0));
+            external_fields.insert(stagename.clone()..0.0);
         }
 
-        let n_stages = stage_names.len();
+        let n_stages = _stagenames.len();
         let coupling_matrix = Array2::zeros((n_stages, n_stages));
 
         Self {
@@ -339,8 +339,8 @@ impl QuantumHamiltonian {
 
     /// Update energies based on performance metrics
     pub fn update_energies(&mut self, performancemetrics: &HashMap<String, f64>) {
-        for (stage_name, &performance) in performance_metrics {
-            if let Some(energy) = self.stage_energies.get_mut(stage_name) {
+        for (stagename, &performance) in performancemetrics {
+            if let Some(energy) = self.stage_energies.get_mut(stagename) {
                 // Higher performance = lower energy (more favorable)
                 *energy = 2.0 - performance.min(2.0);
             }
@@ -367,11 +367,11 @@ pub struct QuantumStreamProcessor {
     /// System Hamiltonian
     hamiltonian: QuantumHamiltonian,
     /// Processing stages
-    stage_names: Vec<String>,
+    _stagenames: Vec<String>,
     /// Performance history for adaptive optimization
     performance_history: HashMap<String, Vec<f64>>,
     /// Quantum evolution time step
-    time_step: f64,
+    timestep: f64,
     /// Last measurement time
     last_measurement: Instant,
 }
@@ -379,16 +379,16 @@ pub struct QuantumStreamProcessor {
 impl QuantumStreamProcessor {
     /// Create a new quantum stream processor
     pub fn new(_stagenames: Vec<String>) -> Self {
-        let quantum_state = QuantumProcessingState::new(&_stage_names);
-        let hamiltonian = QuantumHamiltonian::new(&_stage_names);
+        let quantum_state = QuantumProcessingState::new(&_stagenames);
+        let hamiltonian = QuantumHamiltonian::new(&_stagenames);
         let performance_history = HashMap::new();
 
         Self {
             quantum_state,
             hamiltonian,
-            stage_names,
+            _stagenames,
             performance_history,
-            time_step: 0.01,
+            timestep: 0.01,
             last_measurement: Instant::now(),
         }
     }
@@ -398,7 +398,7 @@ impl QuantumStreamProcessor {
         // Evolve quantum state
         let elapsed = self.last_measurement.elapsed().as_secs_f64();
         self.quantum_state
-            .evolve(elapsed * self.time_step, &self.hamiltonian);
+            .evolve(elapsed * self.timestep, &self.hamiltonian);
 
         // Measure quantum state for processing decision
         let decision = self.quantum_state.measure();
@@ -437,7 +437,7 @@ impl QuantumStreamProcessor {
                 ];
 
                 let mut interference_value = 0.0;
-                for (pixel, weight) in neighbors.iter().zip(interferenceweights.iter()) {
+                for (pixel, weight) in neighbors.iter().zip(interference_weights.iter()) {
                     // Apply quantum phase based on pixel position
                     let phase = (x as f64 * 0.1 + y as f64 * 0.1) * self.quantum_state.global_phase;
                     let quantum_factor = (phase.cos() + 1.0) * 0.5; // Normalize to [0,1]
@@ -459,12 +459,12 @@ impl QuantumStreamProcessor {
     /// Update performance metrics for adaptive optimization
     pub fn update_performance(&mut self, stagename: &str, performance: f64) {
         self.performance_history
-            .entry(stage_name.to_string())
+            .entry(stagename.to_string())
             .or_default()
             .push(performance);
 
         // Keep only recent history
-        if let Some(history) = self.performance_history.get_mut(stage_name) {
+        if let Some(history) = self.performance_history.get_mut(stagename) {
             if history.len() > 100 {
                 history.remove(0);
             }
@@ -518,12 +518,12 @@ pub struct QuantumAnnealingStage {
 impl QuantumAnnealingStage {
     /// Create a new quantum annealing stage
     pub fn new(_initialparameters: HashMap<String, f64>) -> Self {
-        let best_parameters = initial_parameters.clone();
+        let best_parameters = _initialparameters.clone();
 
         Self {
             temperature: 100.0,
             cooling_rate: 0.99,
-            _parameters: initial_parameters,
+            _parameters: _initialparameters,
             best_parameters,
             best_cost: f64::INFINITY,
             step_counter: 0,
@@ -621,7 +621,7 @@ pub struct QuantumEntanglementStage {
     /// Feature correlation matrix
     correlation_matrix: Array2<f64>,
     /// Entanglement strength
-    entanglement_strength: f64,
+    entanglementstrength: f64,
     /// Feature history for correlation analysis
     feature_history: Vec<Array1<f64>>,
     /// Maximum history size
@@ -633,7 +633,7 @@ impl QuantumEntanglementStage {
     pub fn new(_feature_dimension: usize, entanglementstrength: f64) -> Self {
         Self {
             correlation_matrix: Array2::eye(_feature_dimension),
-            entanglement_strength,
+            entanglementstrength,
             feature_history: Vec::new(),
             max_history: 50,
         }
@@ -738,7 +738,7 @@ impl QuantumEntanglementStage {
 
                         // Quantum entanglement-inspired correlation
                         let entanglement_factor =
-                            (self.entanglement_strength * (feature_i * feature_j).abs()).exp();
+                            (self.entanglementstrength * (feature_i * feature_j).abs()).exp();
 
                         correlation += feature_i * feature_j * entanglement_factor;
                     }
@@ -782,7 +782,7 @@ impl QuantumEntanglementStage {
                     / enhanced_features.len() as f64;
 
                 let enhancement =
-                    1.0 + self.entanglement_strength * spatial_weight * feature_weight;
+                    1.0 + self.entanglementstrength * spatial_weight * feature_weight;
                 let enhanced_pixel = (pixel_value * enhancement).clamp(0.0, 1.0);
 
                 enhanced_data[[y, x]] = enhanced_pixel as f32;
@@ -841,7 +841,7 @@ impl QuantumSuperpositionStage {
         let mut rng = rand::rng();
 
         // Create multiple processing _variants
-        for i in 0.._num_variants {
+        for i in 0.._numvariants {
             let variant = ProcessingVariant {
                 name: format!("Variant_{i}"),
                 sigma: rng.gen_range(0.5..2.0),
@@ -850,12 +850,12 @@ impl QuantumSuperpositionStage {
             };
 
             processing_variants.push(variant);
-            superpositionweights.push(1.0 / (num_variants as f64).sqrt());
+            superposition_weights.push(1.0 / (_numvariants as f64).sqrt());
         }
 
         // Create interference pattern
-        let interference_pattern = Array1::fromshape_fn(num_variants, |i| {
-            (i as f64 * std::f64::consts::PI / num_variants as f64).cos()
+        let interference_pattern = Array1::fromshape_fn(_numvariants, |i| {
+            (i as f64 * std::f64::consts::PI / _numvariants as f64).cos()
         });
 
         Self {
@@ -918,18 +918,18 @@ impl QuantumSuperpositionStage {
 
     /// Update superposition weights based on performance
     pub fn update_weights(&mut self, performancemetrics: &[f64]) {
-        if performance_metrics.len() == self.superpositionweights.len() {
+        if performancemetrics.len() == self.superposition_weights.len() {
             // Quantum-inspired weight update
-            let total_performance: f64 = performance_metrics.iter().sum();
+            let total_performance: f64 = performancemetrics.iter().sum();
 
             if total_performance > 0.0 {
-                for (i, &performance) in performance_metrics.iter().enumerate() {
+                for (i, &performance) in performancemetrics.iter().enumerate() {
                     // Higher performance gets higher weight
                     self.superposition_weights[i] = (performance / total_performance).sqrt();
                 }
 
                 // Renormalize weights
-                let weight_sum: f64 = self.superpositionweights.iter().map(|w| w * w).sum();
+                let weight_sum: f64 = self.superposition_weights.iter().map(|w| w * w).sum();
                 let norm_factor = weight_sum.sqrt();
 
                 if norm_factor > 0.0 {
@@ -959,7 +959,7 @@ pub struct QuantumAdaptiveStreamPipeline {
     /// Current processing stages
     stages: Vec<Box<dyn ProcessingStage>>,
     /// Performance metrics
-    performance_metrics: Arc<Mutex<HashMap<String, f64>>>,
+    performancemetrics: Arc<Mutex<HashMap<String, f64>>>,
     /// Adaptation counter
     adaptation_counter: usize,
 }
@@ -967,12 +967,12 @@ pub struct QuantumAdaptiveStreamPipeline {
 impl QuantumAdaptiveStreamPipeline {
     /// Create a new quantum adaptive streaming pipeline
     pub fn new(_stagenames: Vec<String>) -> Self {
-        let quantum_processor = QuantumStreamProcessor::new(_stage_names);
+        let quantum_processor = QuantumStreamProcessor::new(_stagenames);
 
         Self {
             quantum_processor,
             stages: Vec::new(),
-            performance_metrics: Arc::new(Mutex::new(HashMap::new())),
+            performancemetrics: Arc::new(Mutex::new(HashMap::new())),
             adaptation_counter: 0,
         }
     }
@@ -992,11 +992,11 @@ impl QuantumAdaptiveStreamPipeline {
         let mut current_frame = enhanced_frame;
 
         for stage in &mut self.stages {
-            let stage_name = stage.name().to_string();
+            let stagename = stage.name().to_string();
             let start_time = Instant::now();
 
             // Check if this stage should be prioritized
-            let priority = decision.stage_priorities.get(&stage_name).unwrap_or(&1.0);
+            let priority = decision.stage_priorities.get(&stagename).unwrap_or(&1.0);
 
             if *priority > 0.5 {
                 current_frame = stage.process(current_frame)?;
@@ -1005,13 +1005,13 @@ impl QuantumAdaptiveStreamPipeline {
                 let performance = 1.0 / (1.0 + processing_time); // Higher performance for faster processing
 
                 // Update performance metrics
-                if let Ok(mut metrics) = self.performance_metrics.lock() {
-                    metrics.insert(stage_name.clone(), performance);
+                if let Ok(mut metrics) = self.performancemetrics.lock() {
+                    metrics.insert(stagename.clone(), performance);
                 }
 
                 // Update quantum processor
                 self.quantum_processor
-                    .update_performance(&stage_name, performance);
+                    .update_performance(&stagename, performance);
             }
         }
 
@@ -1021,7 +1021,7 @@ impl QuantumAdaptiveStreamPipeline {
 
     /// Get quantum optimization metrics
     pub fn get_quantum_metrics(&self) -> HashMap<String, f64> {
-        self.performance_metrics
+        self.performancemetrics
             .lock()
             .expect("Mutex should not be poisoned")
             .clone()
@@ -1043,10 +1043,10 @@ mod tests {
 
     #[test]
     fn test_quantum_processing_state() {
-        let stage_names = vec!["stage1".to_string(), "stage2".to_string()];
-        let mut state = QuantumProcessingState::new(&stage_names);
+        let _stagenames = vec!["stage1".to_string(), "stage2".to_string()];
+        let mut state = QuantumProcessingState::new(&_stagenames);
 
-        let hamiltonian = QuantumHamiltonian::new(&stage_names);
+        let hamiltonian = QuantumHamiltonian::new(&_stagenames);
         state.evolve(0.1, &hamiltonian);
 
         let decision = state.measure();
@@ -1107,14 +1107,14 @@ mod tests {
         assert!(result.is_ok());
 
         // Test weight update
-        let performance_metrics = vec![0.8, 0.6, 0.9, 0.7];
-        superposition_stage.update_weights(&performance_metrics);
+        let performancemetrics = vec![0.8, 0.6, 0.9, 0.7];
+        superposition_stage.update_weights(&performancemetrics);
     }
 
     #[test]
     fn test_quantum_stream_processor() {
-        let stage_names = vec!["blur".to_string(), "edge".to_string()];
-        let mut processor = QuantumStreamProcessor::new(stage_names);
+        let _stagenames = vec!["blur".to_string(), "edge".to_string()];
+        let mut processor = QuantumStreamProcessor::new(_stagenames);
 
         let frame = Frame {
             data: Array2::fromshape_fn((8, 8), |(y, x)| (x + y) as f32 / 16.0),

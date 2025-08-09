@@ -952,7 +952,7 @@ impl<A: Clone + Copy + 'static + Send + Sync, T> TrackedArray<A, T> {
     pub fn new(array: T, datasetid: DatasetId) -> Self {
         Self {
             array,
-            datasetid,
+            dataset_id: datasetid,
             phantom: std::marker::PhantomData,
         }
     }
@@ -1141,7 +1141,7 @@ mod tests {
     impl MockPrefetcher {
         fn new(datasetid: DatasetId) -> Self {
             Self {
-                dataset_id,
+                dataset_id: datasetid,
                 prefetched_indices: Arc::new(Mutex::new(Vec::new())),
                 prefetched_all: Arc::new(Mutex::new(false)),
             }

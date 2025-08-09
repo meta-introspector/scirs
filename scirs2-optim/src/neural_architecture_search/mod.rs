@@ -147,7 +147,7 @@ pub struct SearchSpaceConfig {
 #[derive(Debug, Clone)]
 pub struct OptimizerComponentConfig {
     /// Component type
-    pub component_type: ComponentType,
+    pub componenttype: ComponentType,
 
     /// Hyperparameter search ranges
     pub hyperparameter_ranges: HashMap<String, ParameterRange>,
@@ -947,7 +947,7 @@ pub struct SearchResult<T: Float> {
     pub generation: usize,
 
     /// Search time (seconds)
-    pub search_time: f64,
+    pub _searchtime: f64,
 
     /// Resource usage
     pub resource_usage: ResourceUsage<T>,
@@ -1069,7 +1069,7 @@ impl<T: Float> Default for NASConfig<T> {
 
         // Add basic optimizer components
         component_configs.push(OptimizerComponentConfig {
-            component_type: ComponentType::SGD,
+            componenttype: ComponentType::SGD,
             hyperparameter_ranges: {
                 let mut ranges = HashMap::new();
                 ranges.insert(
@@ -1089,7 +1089,7 @@ impl<T: Float> Default for NASConfig<T> {
         });
 
         component_configs.push(OptimizerComponentConfig {
-            component_type: ComponentType::Adam,
+            componenttype: ComponentType::Adam,
             hyperparameter_ranges: {
                 let mut ranges = HashMap::new();
                 ranges.insert(
@@ -1265,36 +1265,36 @@ impl<
     /// Create a new Neural Architecture Search engine
     pub fn new(config: NASConfig<T>) -> Result<Self> {
         // Initialize search strategy
-        let search_strategy = Self::create_search_strategy(&_config)?;
+        let search_strategy = Self::create_search_strategy(&config)?;
 
         // Initialize evaluator
-        let evaluator = PerformanceEvaluator::new(_config.evaluation_config.clone())?;
+        let evaluator = PerformanceEvaluator::new(config.evaluation_config.clone())?;
 
         // Initialize multi-objective optimizer if needed
         let multi_objective_optimizer = if config.multi_objective_config.objectives.len() > 1 {
             Some(Self::create_multi_objective_optimizer(
-                &_config.multi_objective_config,
+                &config.multi_objective_config,
             )?)
         } else {
             None
         };
 
         // Initialize architecture controller
-        let architecture_controller = Self::create_architecture_controller(&_config)?;
+        let architecture_controller = Self::create_architecture_controller(&config)?;
 
         // Initialize progressive search if enabled
         let progressive_search = if config.progressive_search {
-            Some(ProgressiveNAS::new(&_config)?)
+            Some(ProgressiveNAS::new(&config)?)
         } else {
             None
         };
 
         // Initialize resource monitor
-        let resource_monitor = ResourceMonitor::new(_config.resource_constraints.clone());
+        let resource_monitor = ResourceMonitor::new(config.resource_constraints.clone());
 
         // Initialize performance predictor if enabled
         let performance_predictor = if config.enable_performance_prediction {
-            Some(PerformancePredictor::new(&_config.evaluation_config)?)
+            Some(PerformancePredictor::new(&config.evaluation_config)?)
         } else {
             None
         };
@@ -1349,8 +1349,8 @@ impl<
         }
 
         // Finalize search results
-        let search_time = start_time.elapsed();
-        self.finalize_search(search_time)
+        let _searchtime = start_time.elapsed();
+        self.finalize_search(_searchtime)
     }
 
     /// Initialize the search process
@@ -1435,7 +1435,7 @@ impl<
                 architecture,
                 evaluation_results: evaluation_result,
                 generation: self.current_generation,
-                search_time: eval_time.as_secs_f64(),
+                _searchtime: eval_time.as_secs_f64(),
                 resource_usage,
                 encoding,
             };
@@ -1611,7 +1611,7 @@ impl<
 
         let mut distance = 0.0;
         for (comp1, comp2) in arch1.components.iter().zip(arch2.components.iter()) {
-            if comp1.component_type != comp2.component_type {
+            if comp1.componenttype != comp2.componenttype {
                 distance += 1.0;
             } else {
                 // Compare hyperparameters
@@ -1791,7 +1791,7 @@ impl<
         let mut _model_params = 0;
 
         for component in &architecture.components {
-            match component.component_type {
+            match component.componenttype {
                 ComponentType::LSTMOptimizer => {
                     let hidden_size = component
                         .hyperparameters
@@ -1837,7 +1837,7 @@ impl<
     }
 
     fn component_type_to_u8(&self, componenttype: &ComponentType) -> u8 {
-        match component_type {
+        match componenttype {
             ComponentType::SGD => 0,
             ComponentType::Adam => 1,
             ComponentType::AdaGrad => 2,
@@ -1878,7 +1878,7 @@ impl<
     }
 
     fn connection_type_to_u8(&self, connectiontype: &ConnectionType) -> u8 {
-        match connection_type {
+        match connectiontype {
             ConnectionType::Sequential => 0,
             ConnectionType::Parallel => 1,
             ConnectionType::Skip => 2,
@@ -1904,7 +1904,7 @@ impl<
             ArchitectureEncodingStrategy::Direct => {
                 // Direct encoding: serialize component types and hyperparameters
                 for component in &architecture.components {
-                    encoded_data.push(self.component_type_to_u8(&component.component_type));
+                    encoded_data.push(self.component_type_to_u8(&component.componenttype));
                     for (_param_name, param_value) in &component.hyperparameters {
                         let bytes = param_value.to_f64().unwrap_or(0.0).to_le_bytes();
                         encoded_data.extend_from_slice(&bytes);
@@ -1916,12 +1916,12 @@ impl<
                 // Graph-based encoding: encode connectivity structure
                 encoded_data.push(architecture.components.len() as u8);
                 for component in &architecture.components {
-                    encoded_data.push(self.component_type_to_u8(&component.component_type));
+                    encoded_data.push(self.component_type_to_u8(&component.componenttype));
                 }
                 for connection in &architecture.connections {
                     encoded_data.push(connection.from as u8);
                     encoded_data.push(connection.to as u8);
-                    encoded_data.push(self.connection_type_to_u8(&connection.connection_type));
+                    encoded_data.push(self.connection_type_to_u8(&connection.connectiontype));
                 }
                 metadata.insert("encoding_method".to_string(), "graph".to_string());
             }
@@ -1934,7 +1934,7 @@ impl<
             _ => {
                 // Default to direct encoding
                 for component in &architecture.components {
-                    encoded_data.push(self.component_type_to_u8(&component.component_type));
+                    encoded_data.push(self.component_type_to_u8(&component.componenttype));
                 }
                 metadata.insert("encoding_method".to_string(), "simple".to_string());
             }
@@ -2056,7 +2056,7 @@ impl<
             best_architectures: self.best_architectures.clone(),
             pareto_front: self.pareto_front.clone(),
             search_statistics: self.search_statistics.clone(),
-            total_search_time: search_time,
+            total_search_time: _searchtime,
             resource_usage_summary: ResourceUsage {
                 memory_gb: T::from(10.0).unwrap(),
                 cpu_time_seconds: T::from(3600.0).unwrap(),
@@ -2157,7 +2157,7 @@ pub fn create_example_architectures<T: Float>() -> Vec<OptimizerArchitecture<T>>
         // Simple SGD architecture
         OptimizerArchitecture {
             components: vec![OptimizerComponent {
-                component_type: ComponentType::SGD,
+                componenttype: ComponentType::SGD,
                 hyperparameters: {
                     let mut params = HashMap::new();
                     params.insert("learning_rate".to_string(), T::from(0.01).unwrap());
@@ -2172,7 +2172,7 @@ pub fn create_example_architectures<T: Float>() -> Vec<OptimizerArchitecture<T>>
         // Adam with cosine schedule
         OptimizerArchitecture {
             components: vec![OptimizerComponent {
-                component_type: ComponentType::Adam,
+                componenttype: ComponentType::Adam,
                 hyperparameters: {
                     let mut params = HashMap::new();
                     params.insert("learning_rate".to_string(), T::from(0.001).unwrap());

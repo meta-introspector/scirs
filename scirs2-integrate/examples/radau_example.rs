@@ -66,7 +66,7 @@ fn main() {
                         let b_diff = (**b - t).abs();
                         a_diff.partial_cmp(&b_diff).unwrap()
                     })
-                    .map(|(i_)| i)
+                    .map(|(i_)| i_)
                     .unwrap()
             });
 

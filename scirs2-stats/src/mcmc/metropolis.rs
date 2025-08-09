@@ -37,8 +37,8 @@ pub struct RandomWalkProposal {
 impl RandomWalkProposal {
     /// Create a new random walk proposal
     pub fn new(stepsize: f64) -> Result<Self> {
-        check_positive(step_size, "step_size")?;
-        Ok(Self { step_size })
+        check_positive(stepsize, "stepsize")?;
+        Ok(Self { step_size: stepsize })
     }
 }
 
@@ -115,14 +115,14 @@ impl<T: TargetDistribution, P: ProposalDistribution> MetropolisHastings<T, P> {
     /// Sample multiple states from the distribution
     pub fn sample<R: rand::Rng + ?Sized>(&mut self, nsamples_: usize, rng: &mut R) -> Array2<f64> {
         let dim = self.current.len();
-        let mut _samples = Array2::zeros((n_samples_, dim));
+        let mut samples = Array2::zeros((nsamples_, dim));
 
-        for i in 0..n_samples_ {
+        for i in 0..nsamples_ {
             let sample = self.step(rng);
             samples.row_mut(i).assign(&sample);
         }
 
-        _samples
+        samples
     }
 
     /// Sample with thinning to reduce autocorrelation
@@ -135,7 +135,7 @@ impl<T: TargetDistribution, P: ProposalDistribution> MetropolisHastings<T, P> {
         check_positive(thin, "thin")?;
 
         let dim = self.current.len();
-        let mut _samples = Array2::zeros((n_samples_, dim));
+        let mut samples = Array2::zeros((n_samples_, dim));
 
         for i in 0..n_samples_ {
             // Take thin steps but only keep the last one
@@ -145,7 +145,7 @@ impl<T: TargetDistribution, P: ProposalDistribution> MetropolisHastings<T, P> {
             samples.row_mut(i).assign(&self.current);
         }
 
-        Ok(_samples)
+        Ok(samples)
     }
 
     /// Get the acceptance rate
@@ -222,9 +222,9 @@ impl<T: TargetDistribution> AdaptiveMetropolisHastings<T> {
 
     /// Run adaptation phase
     pub fn adapt<R: rand::Rng + ?Sized>(&mut self, nsteps: usize, rng: &mut R) -> Result<()> {
-        check_positive(n_steps, "n_steps")?;
+        check_positive(nsteps, "n_steps")?;
 
-        for _ in 0..n_steps {
+        for _ in 0..nsteps {
             self.step(rng);
         }
 
@@ -314,7 +314,7 @@ impl<F> CustomTarget<F> {
     pub fn new(dim: usize, log_densityfn: F) -> Result<Self> {
         check_positive(dim, "dim")?;
         Ok(Self {
-            log_density_fn,
+            log_density_fn: log_densityfn,
             dim,
         })
     }

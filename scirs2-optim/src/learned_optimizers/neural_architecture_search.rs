@@ -22,7 +22,7 @@ pub struct NeuralArchitectureSearch<T: Float> {
     config: NASConfig,
 
     /// Architecture search space
-    search_space: ArchitectureSearchSpace,
+    searchspace: ArchitectureSearchSpace,
 
     /// Search strategy
     search_strategy: SearchStrategy<T>,
@@ -696,7 +696,7 @@ pub enum StatisticalTest {
 /// Search strategy implementation
 pub struct SearchStrategy<T: Float> {
     /// Strategy type
-    strategy_type: SearchStrategyType,
+    strategytype: SearchStrategyType,
 
     /// Random number generator
     #[allow(dead_code)]
@@ -715,7 +715,7 @@ pub struct SearchStrategy<T: Float> {
 impl<T: Float + std::fmt::Debug> std::fmt::Debug for SearchStrategy<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SearchStrategy")
-            .field("strategy_type", &self.strategy_type)
+            .field("strategytype", &self.strategytype)
             .field("state", &self.state)
             .field("optimization_history", &self.optimization_history)
             .field("best_architectures", &self.best_architectures)
@@ -839,7 +839,7 @@ pub enum AcquisitionFunction {
 #[derive(Debug, Clone)]
 pub struct BayesianHyperparameters {
     /// Length scale
-    pub length_scale: f64,
+    pub lengthscale: f64,
 
     /// Noise variance
     pub noise_variance: f64,
@@ -1103,7 +1103,7 @@ pub struct StateTransition<T: Float> {
     pub previous_state: StateRepresentation<T>,
 
     /// Current state
-    pub current_state: StateRepresentation<T>,
+    pub currentstate: StateRepresentation<T>,
 
     /// Transition probability
     pub probability: T,
@@ -1224,19 +1224,19 @@ impl<
     > NeuralArchitectureSearch<T>
 {
     /// Create a new NAS instance
-    pub fn new(_config: NASConfig, searchspace: ArchitectureSearchSpace) -> Result<Self> {
-        let search_strategy = SearchStrategy::new(_config.search_strategy, &_config)?;
-        let evaluator = ArchitectureEvaluator::new(&_config)?;
-        let population_manager = PopulationManager::new(&_config)?;
-        let performance_predictor = PerformancePredictor::new(&_config)?;
-        let architecture_generator = ArchitectureGenerator::new(&search_space)?;
+    pub fn new(config: NASConfig, searchspace: ArchitectureSearchSpace) -> Result<Self> {
+        let search_strategy = SearchStrategy::new(config.search_strategy, &config)?;
+        let evaluator = ArchitectureEvaluator::new(&config)?;
+        let population_manager = PopulationManager::new(&config)?;
+        let performance_predictor = PerformancePredictor::new(&config)?;
+        let architecture_generator = ArchitectureGenerator::new(&searchspace)?;
         let search_history = SearchHistory::new();
-        let resource_manager = ResourceManager::new(&_config.constraints)?;
-        let multi_objective_optimizer = MultiObjectiveOptimizer::new(&_config)?;
+        let resource_manager = ResourceManager::new(&config.constraints)?;
+        let multi_objective_optimizer = MultiObjectiveOptimizer::new(&config)?;
 
         Ok(Self {
             config: config,
-            search_space,
+            searchspace,
             search_strategy,
             evaluator,
             population_manager,
@@ -1689,12 +1689,12 @@ impl<
                 self.compute_dataset_statistics(&model.training_data);
 
             // Update GP parameters
-            if let Some(length_scale) = model.parameters.get_mut("length_scale") {
-                *length_scale = T::from(0.5).unwrap(); // Adaptive length scale
+            if let Some(lengthscale) = model.parameters.get_mut("lengthscale") {
+                *lengthscale = T::from(0.5).unwrap(); // Adaptive length scale
             } else {
                 model
                     .parameters
-                    .insert("length_scale".to_string(), T::from(0.5).unwrap());
+                    .insert("lengthscale".to_string(), T::from(0.5).unwrap());
             }
 
             if let Some(signal_var) = model.parameters.get_mut("signal_variance") {
@@ -1859,9 +1859,9 @@ impl<
         features: &[T],
     ) -> Result<(T, T)> {
         // Simplified GP prediction - would use proper GP implementation
-        let length_scale = model
+        let lengthscale = model
             .parameters
-            .get("length_scale")
+            .get("lengthscale")
             .copied()
             .unwrap_or_else(|| T::from(0.5).unwrap());
         let signal_var = model
@@ -1884,7 +1884,7 @@ impl<
         let mut targets = Vec::new();
 
         for (train_x, train_y) in &model.training_data {
-            let distance = self.rbf_kernel_distance(features, train_x, length_scale);
+            let distance = self.rbf_kernel_distance(features, train_x, lengthscale);
             kernel_values.push(distance);
             targets.push(*train_y);
         }
@@ -1915,7 +1915,7 @@ impl<
             .map(|(a, b)| (*a - *b) * (*a - *b))
             .sum::<T>();
 
-        (-squared_distance / (T::from(2.0).unwrap() * length_scale * length_scale)).exp()
+        (-squared_distance / (T::from(2.0).unwrap() * lengthscale * lengthscale)).exp()
     }
 
     async fn rf_predict_with_uncertainty(
@@ -2070,12 +2070,12 @@ impl<
             self.update_rl_policy_wrapper().await?;
 
             // Generate architectures using the learned policy
-            if let SearchStrategyState::ReinforcementLearning(ref rl_state) =
+            if let SearchStrategyState::ReinforcementLearning(ref rlstate) =
                 &self.search_strategy.state
             {
                 for i in 0..generation_batch_size {
                     let architecture_spec = self
-                        .generate_architecture_with_controller(&rl_state)
+                        .generate_architecture_with_controller(&rlstate)
                         .await?;
 
                     let candidate = ArchitectureCandidate {
@@ -2110,7 +2110,7 @@ impl<
         let mut new_architectures = Vec::new();
         let generation_batch_size = 4;
 
-        if let SearchStrategyState::Differentiable(ref mut diff_state) =
+        if let SearchStrategyState::Differentiable(ref mut diffstate) =
             &mut self.search_strategy.state
         {
             // Generate architectures using continuous relaxation
@@ -2176,9 +2176,9 @@ impl<
             }
 
             // Update temperature for Gumbel softmax manually to avoid borrow checker issues
-            diff_state.temperature = diff_state.temperature * T::from(0.99).unwrap(); // Decay temperature
-            if diff_state.temperature < T::from(0.1).unwrap() {
-                diff_state.temperature = T::from(0.1).unwrap(); // Minimum temperature
+            diffstate.temperature = diffstate.temperature * T::from(0.99).unwrap(); // Decay temperature
+            if diffstate.temperature < T::from(0.1).unwrap() {
+                diffstate.temperature = T::from(0.1).unwrap(); // Minimum temperature
             }
         } else {
             // Fallback to random if not in Differentiable state
@@ -2192,10 +2192,10 @@ impl<
         let mut new_architectures = Vec::new();
         let generation_batch_size = 6;
 
-        if let SearchStrategyState::Progressive(ref progressive_state) = &self.search_strategy.state
+        if let SearchStrategyState::Progressive(ref progressivestate) = &self.search_strategy.state
         {
             // Progressive growth based on current stage
-            let _current_stage = self.get_progressive_stage(&progressive_state);
+            let _current_stage = self.get_progressive_stage(&progressivestate);
 
             for i in 0..generation_batch_size {
                 // Create a simplified progressive architecture to avoid borrow checker issues
@@ -2268,13 +2268,13 @@ impl<
         }
 
         // Update progressive state separately to avoid borrow checker issues
-        if let SearchStrategyState::Progressive(ref mut progressive_state) =
+        if let SearchStrategyState::Progressive(ref mut progressivestate) =
             &mut self.search_strategy.state
         {
             // Simple manual update instead of calling method to avoid double borrow
-            progressive_state.current_stage_iterations += 1;
-            if progressive_state.current_stage_iterations > 10 {
-                progressive_state.current_stage_iterations = 10;
+            progressivestate.current_stage_iterations += 1;
+            if progressivestate.current_stage_iterations > 10 {
+                progressivestate.current_stage_iterations = 10;
             }
         } else {
             // Fallback to random if not in Progressive state
@@ -2302,7 +2302,7 @@ impl<
     async fn generate_progressive_architecture(
         &self,
         stage: ProgressiveStage,
-        progressive_state: &ProgressiveSearchState<T>,
+        progressivestate: &ProgressiveSearchState<T>,
     ) -> Result<ArchitectureSpec> {
         let (min_layers, max_layers, base_width) = match stage {
             ProgressiveStage::Minimal => (1, 2, 32),
@@ -2644,16 +2644,16 @@ impl<
 
     fn update_progressive_state(&mut self, progressivestate: &mut ProgressiveSearchState<T>) {
         // Update progressive search _state based on current performance
-        progressive_state.current_stage_iterations += 1;
+        progressivestate.current_stage_iterations += 1;
 
         // Check if we should advance to next stage
         let stage_duration = self.config.max_iterations / 4;
-        if progressive_state.current_stage_iterations >= stage_duration {
-            progressive_state.current_stage_iterations = 0;
-            progressive_state
+        if progressivestate.current_stage_iterations >= stage_duration {
+            progressivestate.current_stage_iterations = 0;
+            progressivestate
                 .stage_performance_history
-                .push(progressive_state.current_stage_best_performance);
-            progressive_state.current_stage_best_performance = T::zero();
+                .push(progressivestate.current_stage_best_performance);
+            progressivestate.current_stage_best_performance = T::zero();
         }
 
         // Update best performance for current stage
@@ -2665,8 +2665,8 @@ impl<
         {
             let performance =
                 T::from(best_arch.performance.optimization_performance).unwrap_or_else(T::zero);
-            if performance > progressive_state.current_stage_best_performance {
-                progressive_state.current_stage_best_performance = performance;
+            if performance > progressivestate.current_stage_best_performance {
+                progressivestate.current_stage_best_performance = performance;
             }
         }
     }
@@ -2678,10 +2678,10 @@ impl<
         let generation_batch_size = 6;
 
         // Collect parent architectures first (separate scope for borrowing)
-        let parent_architectures = if let SearchStrategyState::MultiObjective(ref mo_state) =
+        let parent_architectures = if let SearchStrategyState::MultiObjective(ref mostate) =
             &self.search_strategy.state
         {
-            self.select_pareto_parents(mo_state)?
+            self.select_pareto_parents(mostate)?
         } else {
             Vec::new()
         };
@@ -2732,15 +2732,15 @@ impl<
         }
 
         // Update Pareto front and hypervolume after generating architectures
-        if let SearchStrategyState::MultiObjective(ref mo_state) = &self.search_strategy.state {
+        if let SearchStrategyState::MultiObjective(ref mostate) = &self.search_strategy.state {
             // Clone the state to avoid borrow checker issues
-            let mut cloned_state = (*mo_state).clone();
+            let mut cloned_state = (*mostate).clone();
             self.update_pareto_front(&mut cloned_state);
             // Copy back the updated state
-            if let SearchStrategyState::MultiObjective(ref mut mo_state) =
+            if let SearchStrategyState::MultiObjective(ref mut mostate) =
                 &mut self.search_strategy.state
             {
-                *mo_state = cloned_state;
+                *mostate = cloned_state;
             }
         }
 
@@ -2803,45 +2803,45 @@ impl<
 
     // RL helper functions
     async fn update_rl_policy_wrapper(&mut self) -> Result<()> {
-        if let SearchStrategyState::ReinforcementLearning(ref mut rl_state) =
+        if let SearchStrategyState::ReinforcementLearning(ref mut rlstate) =
             &mut self.search_strategy.state
         {
-            Self::update_rl_policy(rl_state).await?;
+            Self::update_rl_policy(rlstate).await?;
         }
         Ok(())
     }
 
     async fn update_rl_policy(rlstate: &mut RLSearchState<T>) -> Result<()> {
-        if rl_state.reward_history.len() < 2 {
+        if rlstate.reward_history.len() < 2 {
             return Ok(()); // Need at least 2 rewards for policy update
         }
 
-        let recent_rewards: Vec<f64> = rl_state.reward_history.iter().cloned().collect();
+        let recent_rewards: Vec<f64> = rlstate.reward_history.iter().cloned().collect();
         let baseline_reward = recent_rewards.iter().sum::<f64>() / recent_rewards.len() as f64;
 
         // Compute policy gradients (simplified REINFORCE algorithm)
-        let learning_rate = rl_state
+        let learning_rate = rlstate
             .policy_parameters
             .learning_rate
             .to_f64()
             .unwrap_or(0.001);
 
         // Update controller weights based on reward signal
-        for layer_idx in 0..rl_state.controller.weights.len() {
+        for layer_idx in 0..rlstate.controller.weights.len() {
             let gradient_scale =
                 T::from(learning_rate * (recent_rewards.last().unwrap() - baseline_reward))
                     .unwrap();
 
             // Apply gradient to weights (simplified update)
-            rl_state.controller.weights[layer_idx] =
-                rl_state.controller.weights[layer_idx].mapv(|w| {
+            rlstate.controller.weights[layer_idx] =
+                rlstate.controller.weights[layer_idx].mapv(|w| {
                     w + gradient_scale
                         * T::from(scirs2_core::random::rng().gen_range(-0.1..0.1)).unwrap()
                 });
 
             // Update biases
-            rl_state.controller.biases[layer_idx] =
-                rl_state.controller.biases[layer_idx].mapv(|b| {
+            rlstate.controller.biases[layer_idx] =
+                rlstate.controller.biases[layer_idx].mapv(|b| {
                     b + gradient_scale
                         * T::from(scirs2_core::random::Random::seed(42).gen_range(-0.1..0.1))
                             .unwrap()
@@ -2850,13 +2850,13 @@ impl<
 
         // Update exploration rate (epsilon decay)
         let decay_factor = T::from(0.995).unwrap();
-        rl_state.policy_parameters.exploration_rate =
-            rl_state.policy_parameters.exploration_rate * decay_factor;
+        rlstate.policy_parameters.exploration_rate =
+            rlstate.policy_parameters.exploration_rate * decay_factor;
 
         // Ensure minimum exploration
         let min_exploration = T::from(0.05).unwrap();
-        if rl_state.policy_parameters.exploration_rate < min_exploration {
-            rl_state.policy_parameters.exploration_rate = min_exploration;
+        if rlstate.policy_parameters.exploration_rate < min_exploration {
+            rlstate.policy_parameters.exploration_rate = min_exploration;
         }
 
         Ok(())
@@ -2864,10 +2864,10 @@ impl<
 
     async fn generate_architecture_with_controller(
         &self,
-        rl_state: &RLSearchState<T>,
+        rlstate: &RLSearchState<T>,
     ) -> Result<ArchitectureSpec> {
         let mut architecture_decisions = Vec::new();
-        let mut current_state = self.encode_current_search_state(rl_state);
+        let mut currentstate = self.encode_current_search_state(rlstate);
 
         // Sequential decision making for architecture components
         let max_layers = 10;
@@ -2876,8 +2876,8 @@ impl<
         for layer_idx in 0..max_layers {
             // Get action from controller
             let action_probabilities =
-                self.forward_controller(&rl_state.controller, &current_state)?;
-            let action = self.sample_action_from_probabilities(&action_probabilities, rl_state)?;
+                self.forward_controller(&rlstate.controller, &currentstate)?;
+            let action = self.sample_action_from_probabilities(&action_probabilities, rlstate)?;
 
             // Convert action to layer specification
             if let Some(layer_spec) = self.action_to_layer_spec(&action, layer_idx)? {
@@ -2885,7 +2885,7 @@ impl<
                 architecture_decisions.push(action.clone());
 
                 // Update _state for next decision
-                current_state = self.update_state_with_action(&current_state, &action);
+                currentstate = self.update_state_with_action(&currentstate, &action);
             } else {
                 // Stop generating layers
                 break;
@@ -2926,16 +2926,16 @@ impl<
             .push(T::from(self.search_history.current_iteration()).unwrap_or_else(T::zero));
 
         // Recent performance statistics
-        if let Some(&last_reward) = rl_state.reward_history.back() {
+        if let Some(&last_reward) = rlstate.reward_history.back() {
             state_encoding.push(T::from(last_reward).unwrap_or_else(T::zero));
         } else {
             state_encoding.push(T::zero());
         }
 
         // Average recent rewards
-        if !rl_state.reward_history.is_empty() {
+        if !rlstate.reward_history.is_empty() {
             let avg_reward =
-                rl_state.reward_history.iter().sum::<f64>() / rl_state.reward_history.len() as f64;
+                rlstate.reward_history.iter().sum::<f64>() / rlstate.reward_history.len() as f64;
             state_encoding.push(T::from(avg_reward).unwrap_or_else(T::zero));
         } else {
             state_encoding.push(T::zero());
@@ -2949,7 +2949,7 @@ impl<
         state_encoding.push(T::from(0.7).unwrap()); // Placeholder for diversity metric
 
         // Exploration/exploitation balance
-        state_encoding.push(rl_state.policy_parameters.exploration_rate);
+        state_encoding.push(rlstate.policy_parameters.exploration_rate);
 
         // Search progress indicators
         state_encoding.push(
@@ -3011,9 +3011,9 @@ impl<
     fn sample_action_from_probabilities(
         &self,
         probabilities: &[T],
-        rl_state: &RLSearchState<T>,
+        rlstate: &RLSearchState<T>,
     ) -> Result<ArchitectureAction> {
-        let exploration_rate = rl_state
+        let exploration_rate = rlstate
             .policy_parameters
             .exploration_rate
             .to_f64()
@@ -3082,22 +3082,22 @@ impl<
     }
 
     fn sample_random_layer_type(&self) -> LayerType {
-        let layer_types = &self.search_space.layer_types;
+        let layer_types = &self.searchspace.layer_types;
         layer_types[scirs2_core::random::rng().gen_range(0..layer_types.len())]
     }
 
     fn sample_random_hidden_size(&self) -> usize {
-        let hidden_sizes = &self.search_space.hidden_sizes;
+        let hidden_sizes = &self.searchspace.hidden_sizes;
         hidden_sizes[scirs2_core::random::rng().gen_range(0..hidden_sizes.len())]
     }
 
     fn sample_random_activation(&self) -> ActivationType {
-        let activations = &self.search_space.activation_functions;
+        let activations = &self.searchspace.activation_functions;
         activations[scirs2_core::random::rng().gen_range(0..activations.len())]
     }
 
     fn sample_random_connection(&self) -> ConnectionPattern {
-        let connections = &self.search_space.connection_patterns;
+        let connections = &self.searchspace.connection_patterns;
         connections[scirs2_core::random::rng().gen_range(0..connections.len())]
     }
 
@@ -3157,7 +3157,7 @@ impl<
     }
 
     fn update_state_with_action(&self, currentstate: &[T], action: &ArchitectureAction) -> Vec<T> {
-        let mut new_state = current_state.to_vec();
+        let mut new_state = currentstate.to_vec();
 
         // Update _state based on action taken
         match action {
@@ -3278,7 +3278,7 @@ impl<
     // Helper methods for differentiable NAS
     async fn sample_from_continuous_space(
         &mut self,
-        diff_state: &mut DifferentiableNASState<T>,
+        diffstate: &mut DifferentiableNASState<T>,
     ) -> Result<ArchitectureSpec> {
         // Use Gumbel softmax to sample discrete architectures from continuous space
         let mut layers: Vec<LayerSpec> = Vec::new();
@@ -3286,7 +3286,7 @@ impl<
 
         for i in 0..num_layers {
             // Sample layer type using continuous relaxation
-            let layer_weights = diff_state
+            let layer_weights = diffstate
                 .architecture_weights
                 .entry(format!("layer_{}_type", i))
                 .or_insert_with(|| {
@@ -3298,7 +3298,7 @@ impl<
                 });
 
             let layer_type = self
-                .gumbel_softmax_sample(layer_weights.as_slice().unwrap(), diff_state.temperature)?;
+                .gumbel_softmax_sample(layer_weights.as_slice().unwrap(), diffstate.temperature)?;
 
             // Sample dimensions
             let input_dim = if i == 0 {
@@ -3384,15 +3384,15 @@ impl<
         let _max_temp = T::from(5.0).unwrap();
         let decay_rate = T::from(0.99).unwrap();
 
-        diff_state.temperature = (diff_state.temperature * decay_rate).max(min_temp);
+        diffstate.temperature = (diffstate.temperature * decay_rate).max(min_temp);
     }
 
     // Helper methods for multi-objective optimization
     fn select_pareto_parents(
         &self,
-        mo_state: &MultiObjectiveState<T>,
+        mostate: &MultiObjectiveState<T>,
     ) -> Result<Vec<ArchitectureCandidate>> {
-        if mo_state.pareto_front.is_empty() {
+        if mostate.pareto_front.is_empty() {
             // If no Pareto front yet, select from general population
             return self.population_manager.select_parents(2);
         }
@@ -3402,9 +3402,9 @@ impl<
         let mut rng = scirs2_core::random::rng();
 
         for _ in 0..2 {
-            if !mo_state.pareto_front.is_empty() {
-                let idx = rng.gen_range(0..mo_state.pareto_front.len());
-                parents.push(mo_state.pareto_front[idx].clone());
+            if !mostate.pareto_front.is_empty() {
+                let idx = rng.gen_range(0..mostate.pareto_front.len());
+                parents.push(mostate.pareto_front[idx].clone());
             }
         }
 
@@ -3432,11 +3432,11 @@ impl<
             }
         }
 
-        mo_state.pareto_front = pareto_front;
+        mostate.pareto_front = pareto_front;
 
         // Update hypervolume
-        mo_state.hypervolume =
-            self.calculate_hypervolume(&mo_state.pareto_front, &mo_state.reference_point);
+        mostate.hypervolume =
+            self.calculate_hypervolume(&mostate.pareto_front, &mostate.reference_point);
     }
 
     fn dominates(&self, perf1: &PerformanceMetrics, perf2: &PerformanceMetrics) -> bool {
@@ -3677,8 +3677,8 @@ impl<T: Float + Default + Clone> PopulationManager<T> {
     pub fn new(config: &NASConfig) -> Result<Self> {
         Ok(Self {
             config: config.clone(),
-            population: Vec::with_capacity(_config.population_size),
-            elite_population: Vec::with_capacity(_config.elite_size),
+            population: Vec::with_capacity(config.population_size),
+            elite_population: Vec::with_capacity(config.elite_size),
             performance_history: Vec::new(),
             diversity_tracker: DiversityTracker {
                 structural_hashes: HashSet::new(),
@@ -4076,13 +4076,13 @@ impl<T: Float + Default + Clone> PopulationManager<T> {
 
 /// Architecture generator for creating new architectures  
 pub struct ArchitectureGenerator {
-    search_space: ArchitectureSearchSpace,
+    searchspace: ArchitectureSearchSpace,
 }
 
 impl ArchitectureGenerator {
     pub fn new(_searchspace: &ArchitectureSearchSpace) -> Result<Self> {
         Ok(Self {
-            search_space: search_space.clone(),
+            searchspace: searchspace.clone(),
         })
     }
 
@@ -4200,7 +4200,7 @@ impl<T: Float + Default + Clone> SearchHistory<T> {
 
 impl<T: Float + Default + Clone> SearchStrategy<T> {
     pub fn new(strategytype: SearchStrategyType, config: &NASConfig) -> Result<Self> {
-        let state = match strategy_type {
+        let state = match strategytype {
             SearchStrategyType::Random => SearchStrategyState::Random(RandomSearchState::default()),
             SearchStrategyType::Evolutionary => {
                 SearchStrategyState::Evolutionary(EvolutionarySearchState {
@@ -4228,7 +4228,7 @@ impl<T: Float + Default + Clone> SearchStrategy<T> {
                     acquisition_function: AcquisitionFunction::ExpectedImprovement,
                     observations: Vec::new(),
                     hyperparameters: BayesianHyperparameters {
-                        length_scale: 0.5,
+                        lengthscale: 0.5,
                         noise_variance: 0.1,
                         signal_variance: 1.0,
                         kernel_parameters: HashMap::new(),
@@ -4310,7 +4310,7 @@ impl<T: Float + Default + Clone> SearchStrategy<T> {
         };
 
         Ok(Self {
-            strategy_type,
+            strategytype,
             rng: Box::new(Random::seed(42)),
             state,
             optimization_history: Vec::new(),
@@ -4400,7 +4400,7 @@ mod tests {
 
     #[test]
     fn test_architecture_search_space() {
-        let search_space = ArchitectureSearchSpace {
+        let searchspace = ArchitectureSearchSpace {
             layer_types: vec![LayerType::LSTM, LayerType::Transformer, LayerType::Linear],
             hidden_sizes: vec![128, 256, 512],
             num_layers_range: (1, 10),
@@ -4420,8 +4420,8 @@ mod tests {
             skip_connections: vec![SkipConnectionType::Residual, SkipConnectionType::Dense],
         };
 
-        assert_eq!(search_space.layer_types.len(), 3);
-        assert_eq!(search_space.hidden_sizes.len(), 3);
-        assert_eq!(search_space.num_layers_range, (1, 10));
+        assert_eq!(searchspace.layer_types.len(), 3);
+        assert_eq!(searchspace.hidden_sizes.len(), 3);
+        assert_eq!(searchspace.num_layers_range, (1, 10));
     }
 }

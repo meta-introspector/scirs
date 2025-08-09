@@ -22,7 +22,7 @@ pub struct HigherOrderEngine<T: Float> {
     reverse_engine: ReverseModeEngine<T>,
 
     /// Maximum derivative order to compute
-    max_order: usize,
+    _maxorder: usize,
 
     /// Use mixed-mode for Hessian computation
     mixed_mode: bool,
@@ -195,7 +195,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
         Self {
             forward_engine: ForwardModeEngine::new(),
             reverse_engine: ReverseModeEngine::new(),
-            max_order: max_order,
+            _maxorder: _maxorder,
             mixed_mode: true,
             derivative_cache: HashMap::new(),
             finite_diff_eps: T::from(1e-5).unwrap(),
@@ -212,7 +212,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
         Self {
             forward_engine: ForwardModeEngine::new(),
             reverse_engine: ReverseModeEngine::new(),
-            max_order: config.max_order,
+            _maxorder: config._maxorder,
             mixed_mode: config.mixed_mode,
             derivative_cache: HashMap::new(),
             finite_diff_eps: config.finite_diff_eps,
@@ -508,7 +508,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     /// Get higher-order derivative statistics
     pub fn get_derivative_stats(&self) -> HigherOrderStats {
         HigherOrderStats {
-            max_order: self.max_order,
+            _maxorder: self._maxorder,
             cache_size: self.derivative_cache.len(),
             mixed_mode_enabled: self.mixed_mode,
             memory_usage_estimate: self.estimate_memory_usage(),
@@ -951,13 +951,13 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     /// Decide whether to use parallel computation
     #[allow(dead_code)]
     fn should_use_parallel(&self, problemsize: usize) -> bool {
-        self.parallel_computation && problem_size >= 50
+        self.parallel_computation && problemsize >= 50
     }
 
     /// Decide whether to use sparse computations
     #[allow(dead_code)]
     fn should_use_sparse(&self, problemsize: usize, config: &HessianConfig) -> bool {
-        self.adaptive_sparsity && config.sparse && problem_size >= 100
+        self.adaptive_sparsity && config.sparse && problemsize >= 100
     }
 
     /// Select optimal HVP mode based on problem characteristics
@@ -966,7 +966,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
             return HvpMode::ForwardOverReverse;
         }
 
-        match problem_size {
+        match problemsize {
             0..=10 => HvpMode::FiniteDifference,
             11..=100 => HvpMode::ForwardOverReverse,
             _ => HvpMode::ReverseOverForward,
@@ -1290,7 +1290,7 @@ pub struct DerivativeVerification<T: Float> {
 /// Higher-order differentiation statistics
 #[derive(Debug, Clone)]
 pub struct HigherOrderStats {
-    pub max_order: usize,
+    pub _maxorder: usize,
     pub cache_size: usize,
     pub mixed_mode_enabled: bool,
     pub memory_usage_estimate: usize,
@@ -1304,7 +1304,7 @@ pub struct HigherOrderStats {
 /// Advanced configuration for higher-order engine
 #[derive(Debug, Clone)]
 pub struct HigherOrderConfig<T: Float> {
-    pub max_order: usize,
+    pub _maxorder: usize,
     pub mixed_mode: bool,
     pub finite_diff_eps: T,
     pub parallel_computation: bool,
@@ -1317,7 +1317,7 @@ pub struct HigherOrderConfig<T: Float> {
 impl<T: Float + Default> Default for HigherOrderConfig<T> {
     fn default() -> Self {
         Self {
-            max_order: 3,
+            _maxorder: 3,
             mixed_mode: true,
             finite_diff_eps: T::from(1e-5).unwrap(),
             parallel_computation: true,
@@ -1356,7 +1356,7 @@ pub struct ComputationProfiler<T: Float> {
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
 struct ComputationTiming {
-    problem_size: usize,
+    problemsize: usize,
     duration_us: u64,
     parallel: bool,
     sparse: bool,
@@ -1393,7 +1393,7 @@ impl<T: Float + Default + Clone> ComputationProfiler<T> {
         sparse: bool,
     ) {
         self.hessian_timings.push(ComputationTiming {
-            problem_size: size,
+            problemsize: size,
             duration_us: duration.as_micros() as u64,
             parallel,
             sparse,
@@ -1466,7 +1466,7 @@ mod tests {
     #[test]
     fn test_higher_order_engine_creation() {
         let engine = HigherOrderEngine::<f64>::new(3);
-        assert_eq!(engine.max_order, 3);
+        assert_eq!(engine._maxorder, 3);
         assert!(engine.mixed_mode);
     }
 

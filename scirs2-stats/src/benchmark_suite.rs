@@ -589,10 +589,10 @@ impl BenchmarkSuite {
     /// Detect algorithm configuration used
     fn detect_algorithm_config(&self, function_name: &str, datasize: usize) -> AlgorithmConfig {
         let simd_enabled = function_name.contains("simd")
-            || (data_size > 64
+            || (datasize > 64
                 && scirs2_core::simd_ops::PlatformCapabilities::detect().simd_available);
         let parallel_enabled =
-            function_name.contains("parallel") || (data_size > 10000 && num_threads() > 1);
+            function_name.contains("parallel") || (datasize > 10000 && num_threads() > 1);
 
         AlgorithmConfig {
             simd_enabled,

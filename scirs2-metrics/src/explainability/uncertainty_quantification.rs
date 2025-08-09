@@ -68,7 +68,7 @@ pub struct LcgRng {
 
 impl LcgRng {
     pub fn new(seed: u64) -> Self {
-        Self { state: _seed }
+        Self { state: seed }
     }
 }
 
@@ -172,8 +172,8 @@ pub struct ChaChaRng {
 impl ChaChaRng {
     pub fn new(seed: u64) -> Self {
         let mut state = [0u32; 16];
-        state[0] = _seed as u32;
-        state[1] = (_seed >> 32) as u32;
+        state[0] = seed as u32;
+        state[1] = (seed >> 32) as u32;
         Self { state, counter: 0 }
     }
 }
@@ -257,7 +257,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
     /// Set conformal calibration parameters
     pub fn with_conformal_calibration(mut self, nsamples: usize) -> Self {
-        self.n_conformal_calibration = n_samples;
+        self.n_conformal_calibration = nsamples;
         self
     }
 
@@ -268,9 +268,9 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     }
 
     /// Set MCMC parameters
-    pub fn with_mcmc(mut self, n_samples: usize, burnin: usize) -> Self {
-        self.n_mcmc_samples = n_samples;
-        self.mcmc_burn_in = burn_in;
+    pub fn with_mcmc(mut self, nsamples: usize, burnin: usize) -> Self {
+        self.n_mcmc_samples = nsamples;
+        self.mcmc_burn_in = burnin;
         self
     }
 
@@ -292,7 +292,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         model: &M,
         x_calibration: &Array2<F>,
         y_calibration: &Array1<F>,
-        x_test: &Array2<F>,
+        xtest: &Array2<F>,
         alpha: F,
     ) -> Result<ConformalPrediction<F>>
     where
@@ -308,7 +308,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             self.compute_adaptive_quantile(&nonconformity_scores, alpha, x_calibration)?;
 
         // Make predictions on _test set
-        let test_predictions = model(&x_test.view());
+        let test_predictions = model(&xtest.view());
 
         // Compute prediction sets with local adaptation
         let mut prediction_sets = Vec::new();
@@ -317,7 +317,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
             // Local conformity adjustment based on input similarity
             let local_adjustment = self.compute_local_conformity_adjustment(
-                &x_test.row(i),
+                &xtest.row(i),
                 x_calibration,
                 &nonconformity_scores,
             )?;
@@ -348,7 +348,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         // Compute conditional coverage by difficulty
         let conditional_coverage = self.compute_conditional_coverage_analysis(
             &prediction_sets,
-            x_test,
+            xtest,
             &cal_predictions,
             y_calibration,
         )?;
@@ -367,9 +367,9 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         &self,
         model: &M,
         variational_parameters: &P,
-        x_data: &Array2<F>,
+        xdata: &Array2<F>,
         y_data: &Array1<F>,
-        x_test: &Array2<F>,
+        xtest: &Array2<F>,
     ) -> Result<VariationalUncertainty<F>>
     where
         M: Fn(&ArrayView2<F>, &VariationalParams<F>) -> (Array1<F>, Array1<F>), // Returns (mean, variance)
@@ -381,19 +381,19 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
         // Variational inference with multiple samples
         for _ in 0..self.n_mcmc_samples {
-            let var_params = variational_parameters();
+            let varparams = variational_parameters();
 
             // Forward pass with variational _parameters
-            let (mean_pred, var_pred) = model(&x_test.view(), &var_params);
+            let (mean_pred, var_pred) = model(&xtest.view(), &varparams);
 
             // Compute KL divergence between posterior and prior
-            let kl_div = self.compute_kl_divergence_gaussian(&var_params)?;
+            let kl_div = self.compute_kl_divergence_gaussian(&varparams)?;
 
             // Compute ELBO (Evidence Lower BOund)
             let log_likelihood = self.compute_variational_log_likelihood(
                 &mean_pred,
                 &var_pred,
-                &x_data.view(),
+                &xdata.view(),
                 y_data,
             )?;
             let elbo = log_likelihood - kl_div;
@@ -404,13 +404,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         }
 
         // Aggregate results
-        let n_samples = x_test.nrows();
-        let mut ensemble_mean = Array1::zeros(n_samples);
-        let mut epistemic_uncertainty = Array1::zeros(n_samples);
-        let mut aleatoric_uncertainty = Array1::zeros(n_samples);
+        let nsamples = xtest.nrows();
+        let mut ensemble_mean = Array1::zeros(nsamples);
+        let mut epistemic_uncertainty = Array1::zeros(nsamples);
+        let mut aleatoric_uncertainty = Array1::zeros(nsamples);
 
         // Compute ensemble statistics
-        for i in 0..n_samples {
+        for i in 0..nsamples {
             let sample_means: Vec<F> = posterior_samples.iter().map(|(mean, _)| mean[i]).collect();
             let sample_vars: Vec<F> = posterior_samples.iter().map(|(_, var)| var[i]).collect();
 
@@ -462,7 +462,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     pub fn compute_multiscale_uncertainty<M>(
         &self,
         models: &[M], // Models at different scales/resolutions
-        x_test: &Array2<F>,
+        xtest: &Array2<F>,
         scales: &[F],
     ) -> Result<MultiscaleUncertainty<F>>
     where
@@ -479,7 +479,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
         // Compute predictions at each scale
         for (i, model) in models.iter().enumerate() {
-            let predictions = model(&x_test.view());
+            let predictions = model(&xtest.view());
 
             // Estimate uncertainty at this scale using local variation
             let scale_uncertainty = self.compute_scale_uncertainty(&predictions, scales[i])?;
@@ -518,9 +518,9 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         &self,
         model: &M,
         prior_sampler: &P,
-        x_data: &Array2<F>,
+        xdata: &Array2<F>,
         y_data: &Array1<F>,
-        x_test: &Array2<F>,
+        xtest: &Array2<F>,
     ) -> Result<BayesianUncertainty<F>>
     where
         M: Fn(&ArrayView2<F>, &[F]) -> Array1<F>, // Model takes parameters
@@ -529,7 +529,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         let mut samples = Vec::new();
         let mut current_params = prior_sampler();
         let mut current_loglik =
-            self.compute_log_likelihood(model, &current_params, x_data, y_data)?;
+            self.compute_log_likelihood(model, &current_params, xdata, y_data)?;
 
         let mut accepted = 0;
         let step_size = F::from(0.01).unwrap();
@@ -545,7 +545,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
             // Compute likelihood of proposed parameters
             let proposed_loglik =
-                self.compute_log_likelihood(model, &proposed_params, x_data, y_data)?;
+                self.compute_log_likelihood(model, &proposed_params, xdata, y_data)?;
 
             // Acceptance probability
             let log_alpha = proposed_loglik - current_loglik;
@@ -565,10 +565,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         }
 
         // Compute posterior predictions
-        let mut posterior_predictions = Array2::zeros((samples.len(), x_test.nrows()));
+        let mut posterior_predictions = Array2::zeros((samples.len(), xtest.nrows()));
         for (i, params) in samples.iter().enumerate() {
-            let predictions = model(&x_test.view(), params);
-            for j in 0..x_test.nrows() {
+            let predictions = model(&xtest.view(), params);
+            for j in 0..xtest.nrows() {
                 posterior_predictions[[i, j]] = predictions[j];
             }
         }
@@ -578,10 +578,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         let posterior_variance = posterior_predictions.var_axis(Axis(0), F::zero());
 
         // Compute credible intervals
-        let mut credible_intervals = Array2::zeros((x_test.nrows(), 2));
+        let mut credible_intervals = Array2::zeros((xtest.nrows(), 2));
         let alpha = F::from(0.05).unwrap(); // 95% credible interval
 
-        for i in 0..x_test.nrows() {
+        for i in 0..xtest.nrows() {
             let mut column_samples: Vec<F> = posterior_predictions.column(i).to_vec();
             column_samples.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
@@ -622,33 +622,33 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     pub fn compute_uncertainty<M>(
         &self,
         model: &M,
-        x_test: &Array2<F>,
+        xtest: &Array2<F>,
         y_test: Option<&Array1<F>>,
     ) -> Result<UncertaintyAnalysis<F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
         // Epistemic uncertainty via Monte Carlo dropout
-        let epistemic_uncertainty = self.compute_epistemic_uncertainty(model, x_test)?;
+        let epistemic_uncertainty = self.compute_epistemic_uncertainty(model, xtest)?;
 
         // Aleatoric uncertainty estimation
-        let aleatoric_uncertainty = self.compute_aleatoric_uncertainty(model, x_test)?;
+        let aleatoric_uncertainty = self.compute_aleatoric_uncertainty(model, xtest)?;
 
         // Prediction intervals
-        let prediction_intervals = self.compute_prediction_intervals(model, x_test)?;
+        let prediction_intervals = self.compute_prediction_intervals(model, xtest)?;
 
         // Calibration metrics (if labels available)
         let calibration_metrics = if let Some(y_true) = y_test {
-            Some(self.compute_calibration_metrics(model, x_test, y_true)?)
+            Some(self.compute_calibration_metrics(model, xtest, y_true)?)
         } else {
             None
         };
 
         // Confidence estimation
-        let confidence_scores = self.compute_confidence_scores(model, x_test)?;
+        let confidence_scores = self.compute_confidence_scores(model, xtest)?;
 
         // Out-of-distribution detection
-        let ood_scores = self.compute_ood_scores(model, x_test)?;
+        let ood_scores = self.compute_ood_scores(model, xtest)?;
 
         Ok(UncertaintyAnalysis {
             epistemic_uncertainty,
@@ -657,7 +657,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             calibration_metrics,
             confidence_scores,
             ood_scores,
-            sample_size: x_test.nrows(),
+            sample_size: xtest.nrows(),
         })
     }
 
@@ -665,25 +665,25 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     fn compute_epistemic_uncertainty<M>(
         &self,
         model: &M,
-        x_test: &Array2<F>,
+        xtest: &Array2<F>,
     ) -> Result<EpistemicUncertainty<F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let mut mc_predictions = Vec::new();
+        let mut mcpredictions = Vec::new();
 
         // Simulate model uncertainty with Monte Carlo sampling
         for _ in 0..self.n_mc_samples {
             // In practice, this would involve dropout or other stochastic elements
-            let predictions = model(&x_test.view());
-            mc_predictions.push(predictions);
+            let predictions = model(&xtest.view());
+            mcpredictions.push(predictions);
         }
 
         // Compute statistics across MC samples
-        let mean_predictions = self.compute_mc_mean(&mc_predictions)?;
-        let prediction_variance = self.compute_mc_variance(&mc_predictions, &mean_predictions)?;
-        let prediction_entropy = self.compute_prediction_entropy(&mc_predictions)?;
-        let mutual_information = self.compute_mutual_information(&mc_predictions)?;
+        let mean_predictions = self.compute_mc_mean(&mcpredictions)?;
+        let prediction_variance = self.compute_mc_variance(&mcpredictions, &mean_predictions)?;
+        let prediction_entropy = self.compute_prediction_entropy(&mcpredictions)?;
+        let mutual_information = self.compute_mutual_information(&mcpredictions)?;
 
         Ok(EpistemicUncertainty {
             mean_predictions,
@@ -698,32 +698,32 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     fn compute_aleatoric_uncertainty<M>(
         &self,
         model: &M,
-        x_test: &Array2<F>,
+        xtest: &Array2<F>,
     ) -> Result<AleatoricUncertainty<F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
         // Estimate aleatoric uncertainty using input perturbations
         let mut perturbed_predictions = Vec::new();
-        let noise_std = F::from(0.01).unwrap(); // Small noise for input perturbation
+        let noisestd = F::from(0.01).unwrap(); // Small noise for input perturbation
 
         for _ in 0..50 {
-            let mut x_perturbed = x_test.clone();
-            self.add_input_noise(&mut x_perturbed, noise_std)?;
+            let mut x_perturbed = xtest.clone();
+            self.add_input_noise(&mut x_perturbed, noisestd)?;
 
             let predictions = model(&x_perturbed.view());
             perturbed_predictions.push(predictions);
         }
 
-        let baseline_predictions = model(&x_test.view());
+        let baseline_predictions = model(&xtest.view());
         let input_sensitivity =
             self.compute_input_sensitivity(&perturbed_predictions, &baseline_predictions)?;
-        let data_uncertainty = self.estimate_data_uncertainty(x_test)?;
+        let data_uncertainty = self.estimate_data_uncertainty(xtest)?;
 
         Ok(AleatoricUncertainty {
             input_sensitivity,
             data_uncertainty,
-            noise_level: noise_std,
+            noise_level: noisestd,
         })
     }
 
@@ -731,7 +731,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     fn compute_prediction_intervals<M>(
         &self,
         model: &M,
-        x_test: &Array2<F>,
+        xtest: &Array2<F>,
     ) -> Result<PredictionIntervals<F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
@@ -741,8 +741,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
         for _ in 0..self.n_bootstrap {
             // Bootstrap sample (with replacement)
-            let bootstrap_indices = self.generate_bootstrap_indices(x_test.nrows())?;
-            let x_bootstrap = self.sample_by_indices(x_test, &bootstrap_indices)?;
+            let bootstrap_indices = self.generate_bootstrap_indices(xtest.nrows())?;
+            let x_bootstrap = self.sample_by_indices(xtest, &bootstrap_indices)?;
 
             let predictions = model(&x_bootstrap.view());
             bootstrap_predictions.push(predictions);
@@ -771,13 +771,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     fn compute_calibration_metrics<M>(
         &self,
         model: &M,
-        x_test: &Array2<F>,
+        xtest: &Array2<F>,
         y_test: &Array1<F>,
     ) -> Result<CalibrationMetrics<F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let predictions = model(&x_test.view());
+        let predictions = model(&xtest.view());
 
         // Expected Calibration Error (ECE)
         let ece = self.compute_expected_calibration_error(&predictions, y_test)?;
@@ -803,12 +803,12 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     fn compute_confidence_scores<M>(
         &self,
         model: &M,
-        x_test: &Array2<F>,
+        xtest: &Array2<F>,
     ) -> Result<ConfidenceScores<F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let predictions = model(&x_test.view());
+        let predictions = model(&xtest.view());
 
         // Max probability as confidence (for classification-like problems)
         let max_confidence = predictions.iter().cloned().fold(F::neg_infinity(), F::max);
@@ -817,10 +817,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         let entropy_uncertainty = self.compute_entropy_uncertainty(&predictions)?;
 
         // Distance-based confidence
-        let distance_confidence = self.compute_distance_based_confidence(x_test)?;
+        let distance_confidence = self.compute_distance_based_confidence(xtest)?;
 
         // Ensemble-based confidence (simplified)
-        let ensemble_confidence = self.compute_ensemble_confidence(model, x_test)?;
+        let ensemble_confidence = self.compute_ensemble_confidence(model, xtest)?;
 
         Ok(ConfidenceScores {
             max_confidence,
@@ -836,16 +836,16 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
         // Mahalanobis distance-based OOD detection
-        let mahalanobis_scores = self.compute_mahalanobis_scores(x_test)?;
+        let mahalanobis_scores = self.compute_mahalanobis_scores(xtest)?;
 
         // Energy-based OOD detection
-        let energy_scores = self.compute_energy_scores(model, x_test)?;
+        let energy_scores = self.compute_energy_scores(model, xtest)?;
 
         // Reconstruction error (if applicable)
-        let reconstruction_errors = self.compute_reconstruction_errors(x_test)?;
+        let reconstruction_errors = self.compute_reconstruction_errors(xtest)?;
 
         // Density-based scores
-        let density_scores = self.compute_density_scores(x_test)?;
+        let density_scores = self.compute_density_scores(xtest)?;
 
         Ok(OODScores {
             mahalanobis_scores,
@@ -858,42 +858,42 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     // Helper methods
 
     fn compute_mc_mean(&self, mcpredictions: &[Array1<F>]) -> Result<Array1<F>> {
-        if mc_predictions.is_empty() {
+        if mcpredictions.is_empty() {
             return Err(MetricsError::InvalidInput(
                 "No MC _predictions provided".to_string(),
             ));
         }
 
-        let n_samples = mc_predictions[0].len();
-        let mut mean_pred = Array1::zeros(n_samples);
+        let nsamples = mcpredictions[0].len();
+        let mut mean_pred = Array1::zeros(nsamples);
 
-        for _predictions in mc_predictions {
+        for _predictions in mcpredictions {
             mean_pred = mean_pred + predictions;
         }
 
-        mean_pred = mean_pred / F::from(mc_predictions.len()).unwrap();
+        mean_pred = mean_pred / F::from(mcpredictions.len()).unwrap();
         Ok(mean_pred)
     }
 
     fn compute_mc_variance(
         &self,
-        mc_predictions: &[Array1<F>],
+        mcpredictions: &[Array1<F>],
         mean_pred: &Array1<F>,
     ) -> Result<Array1<F>> {
-        let n_samples = mean_pred.len();
-        let mut variance = Array1::zeros(n_samples);
+        let nsamples = mean_pred.len();
+        let mut variance = Array1::zeros(nsamples);
 
-        for _predictions in mc_predictions {
+        for _predictions in mcpredictions {
             let diff = _predictions - mean_pred;
             variance = variance + &(&diff * &diff);
         }
 
-        variance = variance / F::from(mc_predictions.len()).unwrap();
+        variance = variance / F::from(mcpredictions.len()).unwrap();
         Ok(variance)
     }
 
     fn compute_prediction_entropy(&self, mcpredictions: &[Array1<F>]) -> Result<Array1<F>> {
-        let mean_pred = self.compute_mc_mean(mc_predictions)?;
+        let mean_pred = self.compute_mc_mean(mcpredictions)?;
         let mut entropy = Array1::zeros(mean_pred.len());
 
         for (i, &mean_val) in mean_pred.iter().enumerate() {
@@ -909,8 +909,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
     fn compute_mutual_information(&self, mcpredictions: &[Array1<F>]) -> Result<F> {
         // Simplified mutual information calculation
-        let mean_pred = self.compute_mc_mean(mc_predictions)?;
-        let variance = self.compute_mc_variance(mc_predictions, &mean_pred)?;
+        let mean_pred = self.compute_mc_mean(mcpredictions)?;
+        let variance = self.compute_mc_variance(mcpredictions, &mean_pred)?;
 
         let avg_variance = variance.mean().unwrap_or(F::zero());
         let avg_entropy = mean_pred
@@ -928,9 +928,9 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         Ok(avg_entropy - avg_variance)
     }
 
-    fn add_input_noise(&self, x_data: &mut Array2<F>, noisestd: F) -> Result<()> {
-        for value in x_data.iter_mut() {
-            let noise = self.generate_gaussian_noise()? * noise_std;
+    fn add_input_noise(&self, xdata: &mut Array2<F>, noisestd: F) -> Result<()> {
+        for value in xdata.iter_mut() {
+            let noise = self.generate_gaussian_noise()? * noisestd;
             *value = *value + noise;
         }
         Ok(())
@@ -966,15 +966,15 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
     fn estimate_data_uncertainty(&self, xtest: &Array2<F>) -> Result<Array1<F>> {
         // Simplified data uncertainty based on local density
-        let mut uncertainty = Array1::zeros(x_test.nrows());
+        let mut uncertainty = Array1::zeros(xtest.nrows());
 
-        for i in 0..x_test.nrows() {
+        for i in 0..xtest.nrows() {
             let mut min_distance = F::infinity();
 
-            for j in 0..x_test.nrows() {
+            for j in 0..xtest.nrows() {
                 if i != j {
                     let distance =
-                        self.compute_euclidean_distance(&x_test.row(i), &x_test.row(j))?;
+                        self.compute_euclidean_distance(&xtest.row(i), &xtest.row(j))?;
                     min_distance = min_distance.min(distance);
                 }
             }
@@ -999,9 +999,9 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     }
 
     fn generate_bootstrap_indices(&self, nsamples: usize) -> Result<Vec<usize>> {
-        let mut indices = Vec::with_capacity(n_samples);
-        for i in 0..n_samples {
-            let idx = (self.random_seed.unwrap_or(0) as usize + i) % n_samples;
+        let mut indices = Vec::with_capacity(nsamples);
+        for i in 0..nsamples {
+            let idx = (self.random_seed.unwrap_or(0) as usize + i) % nsamples;
             indices.push(idx);
         }
         Ok(indices)
@@ -1030,10 +1030,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             ));
         }
 
-        let n_samples = bootstrap_preds[0].len();
-        let mut result = Array1::zeros(n_samples);
+        let nsamples = bootstrap_preds[0].len();
+        let mut result = Array1::zeros(nsamples);
 
-        for i in 0..n_samples {
+        for i in 0..nsamples {
             let mut values: Vec<F> = bootstrap_preds.iter().map(|pred| pred[i]).collect();
             values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
@@ -1182,15 +1182,15 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     }
 
     fn compute_distance_based_confidence(&self, xtest: &Array2<F>) -> Result<Array1<F>> {
-        let mut confidence = Array1::zeros(x_test.nrows());
+        let mut confidence = Array1::zeros(xtest.nrows());
 
-        for i in 0..x_test.nrows() {
+        for i in 0..xtest.nrows() {
             let mut min_distance = F::infinity();
 
-            for j in 0..x_test.nrows() {
+            for j in 0..xtest.nrows() {
                 if i != j {
                     let distance =
-                        self.compute_euclidean_distance(&x_test.row(i), &x_test.row(j))?;
+                        self.compute_euclidean_distance(&xtest.row(i), &xtest.row(j))?;
                     min_distance = min_distance.min(distance);
                 }
             }
@@ -1209,7 +1209,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         let mut ensemble_predictions = Vec::new();
 
         for _ in 0..10 {
-            let predictions = model(&x_test.view());
+            let predictions = model(&xtest.view());
             ensemble_predictions.push(predictions);
         }
 
@@ -1223,11 +1223,11 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
     fn compute_mahalanobis_scores(&self, xtest: &Array2<F>) -> Result<Array1<F>> {
         // Simplified Mahalanobis distance computation
-        let mean = x_test.mean_axis(Axis(0)).unwrap();
-        let mut scores = Array1::zeros(x_test.nrows());
+        let mean = xtest.mean_axis(Axis(0)).unwrap();
+        let mut scores = Array1::zeros(xtest.nrows());
 
-        for i in 0..x_test.nrows() {
-            let diff = &x_test.row(i) - &mean;
+        for i in 0..xtest.nrows() {
+            let diff = &xtest.row(i) - &mean;
             let score = diff.iter().map(|&x| x * x).sum::<F>().sqrt();
             scores[i] = score;
         }
@@ -1239,7 +1239,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        let predictions = model(&x_test.view());
+        let predictions = model(&xtest.view());
 
         // Energy score based on prediction magnitude
         let energy_scores = predictions.mapv(|pred| -pred.ln());
@@ -1248,10 +1248,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
     fn compute_reconstruction_errors(&self, xtest: &Array2<F>) -> Result<Array1<F>> {
         // Simplified reconstruction error (assuming identity reconstruction)
-        let mut errors = Array1::zeros(x_test.nrows());
+        let mut errors = Array1::zeros(xtest.nrows());
 
-        for i in 0..x_test.nrows() {
-            let reconstruction_error = x_test.row(i).iter().map(|&x| x * x).sum::<F>().sqrt();
+        for i in 0..xtest.nrows() {
+            let reconstruction_error = xtest.row(i).iter().map(|&x| x * x).sum::<F>().sqrt();
             errors[i] = reconstruction_error;
         }
 
@@ -1260,16 +1260,16 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
     fn compute_density_scores(&self, xtest: &Array2<F>) -> Result<Array1<F>> {
         // Simplified density estimation using k-nearest neighbors
-        let mut density_scores = Array1::zeros(x_test.nrows());
+        let mut density_scores = Array1::zeros(xtest.nrows());
         let k = 5; // Number of nearest neighbors
 
-        for i in 0..x_test.nrows() {
+        for i in 0..xtest.nrows() {
             let mut distances = Vec::new();
 
-            for j in 0..x_test.nrows() {
+            for j in 0..xtest.nrows() {
                 if i != j {
                     let distance =
-                        self.compute_euclidean_distance(&x_test.row(i), &x_test.row(j))?;
+                        self.compute_euclidean_distance(&xtest.row(i), &xtest.row(j))?;
                     distances.push(distance);
                 }
             }
@@ -1329,13 +1329,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         &self,
         model: &M,
         params: &[F],
-        x_data: &Array2<F>,
+        xdata: &Array2<F>,
         y_data: &Array1<F>,
     ) -> Result<F>
     where
         M: Fn(&ArrayView2<F>, &[F]) -> Array1<F>,
     {
-        let predictions = model(&x_data.view(), params);
+        let predictions = model(&xdata.view(), params);
         let mut log_likelihood = F::zero();
         let sigma = F::from(0.1).unwrap(); // Noise parameter
 
@@ -1472,13 +1472,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         nonconformity_scores: &Array1<F>,
         quantile: F,
     ) -> Result<CoverageAnalysis<F>> {
-        let n_samples = predictions.len();
+        let nsamples = predictions.len();
         let mut covered = 0;
         let mut set_sizes = Vec::new();
         let mut difficulties = Vec::new();
 
         // Compute coverage and difficulty analysis
-        for i in 0..n_samples {
+        for i in 0..nsamples {
             let pred = predictions[i];
             let lower = pred - quantile;
             let upper = pred + quantile;
@@ -1493,7 +1493,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             difficulties.push(nonconformity_scores[i]);
         }
 
-        let overall_coverage = F::from(covered).unwrap() / F::from(n_samples).unwrap();
+        let overall_coverage = F::from(covered).unwrap() / F::from(nsamples).unwrap();
         let average_set_size =
             set_sizes.iter().cloned().sum::<F>() / F::from(set_sizes.len()).unwrap();
 
@@ -1504,11 +1504,11 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         sorted_difficulties
             .sort_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        let bin_size = n_samples / n_bins;
+        let bin_size = nsamples / n_bins;
         for bin in 0..n_bins {
             let start = bin * bin_size;
             let end = if bin == n_bins - 1 {
-                n_samples
+                nsamples
             } else {
                 (bin + 1) * bin_size
             };
@@ -1649,20 +1649,20 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     /// Estimate data complexity for adaptive methods
     fn estimate_data_complexity(&self, xdata: &Array2<F>) -> Result<F> {
         // Estimate complexity using intrinsic dimensionality and local variation
-        let n_samples = x_data.nrows();
-        let n_features = x_data.ncols();
+        let nsamples = xdata.nrows();
+        let n_features = xdata.ncols();
 
-        if n_samples < 2 {
+        if nsamples < 2 {
             return Ok(F::zero());
         }
 
         // Compute pairwise distances and estimate intrinsic dimensionality
         let mut distances = Vec::new();
-        let sample_size = 100.min(n_samples); // Sample for efficiency
+        let sample_size = 100.min(nsamples); // Sample for efficiency
 
         for i in 0..sample_size {
             for j in (i + 1)..sample_size {
-                let distance = self.compute_euclidean_distance(&x_data.row(i), &x_data.row(j))?;
+                let distance = self.compute_euclidean_distance(&xdata.row(i), &xdata.row(j))?;
                 distances.push(distance);
             }
         }
@@ -1688,10 +1688,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         let mut kl_div = F::zero();
 
         // KL divergence for weights: KL(q(w)||p(w)) where p(w) ~ N(0, I)
-        for (&mean, &log_var) in var_params
+        for (&mean, &log_var) in varparams
             .weight_means
             .iter()
-            .zip(var_params.weight_log_vars.iter())
+            .zip(varparams.weight_log_vars.iter())
         {
             let var = log_var.exp();
             // KL(N(μ,σ²)||N(0,1)) = 0.5 * (σ² + μ² - 1 - log(σ²))
@@ -1699,10 +1699,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         }
 
         // KL divergence for biases
-        for (&mean, &log_var) in var_params
+        for (&mean, &log_var) in varparams
             .bias_means
             .iter()
-            .zip(var_params.bias_log_vars.iter())
+            .zip(varparams.bias_log_vars.iter())
         {
             let var = log_var.exp();
             kl_div = kl_div + F::from(0.5).unwrap() * (var + mean * mean - F::one() - log_var);
@@ -1802,10 +1802,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         predictions: &[Array1<F>],
         weights: &Array1<F>,
     ) -> Result<Array1<F>> {
-        let n_samples = predictions[0].len();
-        let mut fused = Array1::zeros(n_samples);
+        let nsamples = predictions[0].len();
+        let mut fused = Array1::zeros(nsamples);
 
-        for i in 0..n_samples {
+        for i in 0..nsamples {
             let mut weighted_sum = F::zero();
             for (j, pred) in predictions.iter().enumerate() {
                 weighted_sum = weighted_sum + weights[j] * pred[i];
@@ -1818,11 +1818,11 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
     /// Compute cross-scale consistency
     fn compute_cross_scale_consistency(&self, predictions: &[Array1<F>]) -> Result<Array1<F>> {
-        let n_samples = predictions[0].len();
+        let nsamples = predictions[0].len();
         let n_scales = predictions.len();
-        let mut consistency = Array1::zeros(n_samples);
+        let mut consistency = Array1::zeros(nsamples);
 
-        for i in 0..n_samples {
+        for i in 0..nsamples {
             let sample_preds: Vec<F> = predictions.iter().map(|pred| pred[i]).collect();
             let mean = sample_preds.iter().cloned().sum::<F>() / F::from(n_scales).unwrap();
             let variance = sample_preds
@@ -1845,14 +1845,14 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         uncertainties: &[Array1<F>],
         weights: &Array1<F>,
     ) -> Result<UncertaintyDecomposition<F>> {
-        let n_samples = predictions[0].len();
+        let nsamples = predictions[0].len();
         let n_scales = predictions.len();
 
-        let mut within_scale = Array1::zeros(n_samples);
-        let mut between_scale = Array1::zeros(n_samples);
+        let mut within_scale = Array1::zeros(nsamples);
+        let mut between_scale = Array1::zeros(nsamples);
         let mut scale_contributions = vec![F::zero(); n_scales];
 
-        for i in 0..n_samples {
+        for i in 0..nsamples {
             // Within-scale uncertainty (weighted average of individual uncertainties)
             let mut weighted_within = F::zero();
             for j in 0..n_scales {
@@ -2068,7 +2068,7 @@ pub struct BayesianUncertainty<F: Float> {
     /// Posterior variance
     pub posterior_variance: Array1<F>,
     /// Credible intervals
-    pub credible_intervals: Array2<F>, // [n_samples, 2] for lower/upper bounds
+    pub credible_intervals: Array2<F>, // [nsamples, 2] for lower/upper bounds
     /// Model evidence (marginal likelihood)
     pub model_evidence: F,
     /// MCMC effective sample size
@@ -2096,7 +2096,7 @@ pub struct TemperatureScaling<F: Float> {
 #[derive(Debug, Clone)]
 pub struct DeepEnsembleUncertainty<F: Float> {
     /// Individual model predictions
-    pub individual_predictions: Array2<F>, // [n_models, n_samples]
+    pub individual_predictions: Array2<F>, // [n_models, nsamples]
     /// Ensemble mean
     pub ensemble_mean: Array1<F>,
     /// Ensemble variance
@@ -2360,10 +2360,10 @@ mod tests {
             .with_mc_samples(10)
             .with_seed(42);
 
-        let x_test = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
+        let xtest = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
 
         let epistemic = quantifier
-            .compute_epistemic_uncertainty(&mock_model, &x_test)
+            .compute_epistemic_uncertainty(&mock_model, &xtest)
             .unwrap();
 
         assert_eq!(epistemic.mean_predictions.len(), 3);
@@ -2378,10 +2378,10 @@ mod tests {
             .with_confidence_level(0.95)
             .with_seed(42);
 
-        let x_test = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
+        let xtest = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
 
         let intervals = quantifier
-            .compute_prediction_intervals(&mock_model, &x_test)
+            .compute_prediction_intervals(&mock_model, &xtest)
             .unwrap();
 
         assert_eq!(intervals.lower_bound.len(), 3);
@@ -2413,9 +2413,9 @@ mod tests {
     #[test]
     fn test_ood_scores() {
         let quantifier = UncertaintyQuantifier::<f64>::new().with_seed(42);
-        let x_test = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
+        let xtest = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
 
-        let ood_scores = quantifier.compute_ood_scores(&mock_model, &x_test).unwrap();
+        let ood_scores = quantifier.compute_ood_scores(&mock_model, &xtest).unwrap();
 
         assert_eq!(ood_scores.mahalanobis_scores.len(), 3);
         assert_eq!(ood_scores.energy_scores.len(), 3);
@@ -2467,11 +2467,11 @@ mod tests {
             .with_bootstrap(5)
             .with_seed(42);
 
-        let x_test = array![[1.0, 2.0], [3.0, 4.0]];
+        let xtest = array![[1.0, 2.0], [3.0, 4.0]];
         let y_test = array![0.0, 1.0];
 
         let analysis = quantifier
-            .compute_uncertainty(&mock_model, &x_test, Some(&y_test))
+            .compute_uncertainty(&mock_model, &xtest, Some(&y_test))
             .unwrap();
 
         assert_eq!(analysis.sample_size, 2);

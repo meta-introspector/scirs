@@ -44,7 +44,7 @@ impl LLE {
     pub fn new(n_neighbors: usize, ncomponents: usize) -> Self {
         LLE {
             n_neighbors,
-            n_components,
+            n_components: ncomponents,
             reg: 1e-3,
             method: "standard".to_string(),
             embedding: None,
@@ -342,14 +342,14 @@ impl LLE {
 
     /// Check if the input data is the same as training data
     fn is_same_data(&self, x: &Array2<f64>, trainingdata: &Array2<f64>) -> bool {
-        if x.dim() != training_data.dim() {
+        if x.dim() != trainingdata.dim() {
             return false;
         }
 
         let (n_samples, n_features) = x.dim();
         for i in 0..n_samples {
             for j in 0..n_features {
-                if (x[[i, j]] - training_data[[i, j]]).abs() > 1e-10 {
+                if (x[[i, j]] - trainingdata[[i, j]]).abs() > 1e-10 {
                     return false;
                 }
             }
@@ -362,7 +362,7 @@ impl LLE {
         let training_data = self.training_data.as_ref().unwrap();
         let training_embedding = self.embedding.as_ref().unwrap();
 
-        let (n_new, n_features) = x_new.dim();
+        let (n_new, n_features) = xnew.dim();
         let (_n_training_, _) = training_data.dim();
 
         if n_features != training_data.ncols() {
@@ -379,7 +379,7 @@ impl LLE {
         // and use these weights to compute its embedding coordinates
         for i in 0..n_new {
             let new_coords =
-                self.compute_new_point_embedding(&x_new.row(i), training_data, training_embedding)?;
+                self.compute_new_point_embedding(&xnew.row(i), training_data, training_embedding)?;
 
             for j in 0..self.n_components {
                 new_embedding[[i, j]] = new_coords[j];

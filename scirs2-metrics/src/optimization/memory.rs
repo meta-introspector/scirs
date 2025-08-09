@@ -415,7 +415,7 @@ pub struct ArenaAllocator {
     /// List of all arenas
     arenas: Vec<Arc<Mutex<Arena>>>,
     /// Default arena size
-    default_arena_size: usize,
+    _default_arenasize: usize,
     /// Arena statistics
     arena_stats: ArenaStats,
 }
@@ -546,7 +546,7 @@ pub trait CustomAllocator: Send + Sync + std::fmt::Debug {
         &self,
         ptr: NonNull<u8>,
         old_size: usize,
-        new_size: usize,
+        newsize: usize,
         alignment: usize,
     ) -> Result<NonNull<u8>>;
 
@@ -868,11 +868,11 @@ impl ZeroCopyMemoryManager {
 
 impl MemoryPool {
     /// Create a new memory pool
-    pub fn new(_block_size: usize, alignment: usize, initialcapacity: usize) -> Self {
+    pub fn new(_blocksize: usize, alignment: usize, initialcapacity: usize) -> Self {
         Self {
             block_size,
             alignment,
-            free_blocks: Arc::new(Mutex::new(Vec::with_capacity(initial_capacity))),
+            free_blocks: Arc::new(Mutex::new(Vec::with_capacity(initialcapacity))),
             _capacity: AtomicUsize::new(0),
             allocated_count: AtomicUsize::new(0),
             pool_stats: PoolStatistics::new(),
@@ -945,9 +945,9 @@ impl MemoryPool {
         // Simple exponential moving average
         let current_avg = self.pool_stats.avg_allocation_time.load(Ordering::Relaxed);
         let new_avg = if current_avg == 0 {
-            new_time
+            newtime
         } else {
-            (current_avg * 7 + new_time) / 8 // 7/8 weight to old, 1/8 to new
+            (current_avg * 7 + newtime) / 8 // 7/8 weight to old, 1/8 to new
         };
         self.pool_stats
             .avg_allocation_time
@@ -995,12 +995,12 @@ impl SimdAlignedAllocator {
 impl ArenaAllocator {
     /// Create a new arena allocator
     pub fn new(_default_arenasize: usize) -> Result<Self> {
-        let initial_arena = Arc::new(Mutex::new(Arena::new(_default_arena_size)?));
+        let initial_arena = Arc::new(Mutex::new(Arena::new(_default_arenasize)?));
 
         Ok(Self {
             current_arena: initial_arena.clone(),
             arenas: vec![initial_arena],
-            default_arena_size,
+            _default_arenasize,
             arena_stats: ArenaStats::new(),
         })
     }
@@ -1015,7 +1015,7 @@ impl ArenaAllocator {
             // Current arena is full, create a new one
             drop(arena);
 
-            let new_arena_size = self.default_arena_size.max(size * 2);
+            let new_arena_size = self._default_arenasize.max(size * 2);
             let new_arena = Arc::new(Mutex::new(Arena::new(new_arena_size)?));
             self.arenas.push(new_arena.clone());
 
@@ -1044,7 +1044,7 @@ impl ArenaAllocator {
 impl Arena {
     /// Create a new arena
     pub fn new(size: usize) -> Result<Self> {
-        let layout = Layout::from_size_align(_size, 64) // 64-byte alignment for cache lines
+        let layout = Layout::from_size_align(size, 64) // 64-byte alignment for cache lines
             .map_err(|_| MetricsError::MemoryError("Invalid arena layout".to_string()))?;
 
         let ptr = unsafe { alloc(layout) };
@@ -1168,12 +1168,12 @@ impl CustomAllocator for SystemAllocator {
         &self,
         ptr: NonNull<u8>,
         old_size: usize,
-        new_size: usize,
+        newsize: usize,
         alignment: usize,
     ) -> Result<NonNull<u8>> {
-        let new_ptr = self.allocate(new_size, alignment)?;
+        let new_ptr = self.allocate(newsize, alignment)?;
         unsafe {
-            std::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), old_size.min(new_size));
+            std::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), old_size.min(newsize));
         }
         self.deallocate(ptr, old_size, alignment);
         Ok(new_ptr)
@@ -1195,7 +1195,7 @@ pub struct PoolAllocator {
 
 impl PoolAllocator {
     pub fn new(_blocksize: usize) -> Self {
-        Self { _block_size }
+        Self { _blocksize }
     }
 }
 
@@ -1229,18 +1229,18 @@ impl CustomAllocator for PoolAllocator {
         &self,
         ptr: NonNull<u8>,
         old_size: usize,
-        new_size: usize,
+        newsize: usize,
         alignment: usize,
     ) -> Result<NonNull<u8>> {
-        if new_size <= self.block_size {
+        if newsize <= self.block_size {
             Ok(ptr) // No need to reallocate
         } else {
-            let new_ptr = self.allocate(new_size, alignment)?;
+            let new_ptr = self.allocate(newsize, alignment)?;
             unsafe {
                 std::ptr::copy_nonoverlapping(
                     ptr.as_ptr(),
                     new_ptr.as_ptr(),
-                    old_size.min(new_size),
+                    old_size.min(newsize),
                 );
             }
             self.deallocate(ptr, old_size, alignment);
@@ -1293,12 +1293,12 @@ impl CustomAllocator for SimdAllocatorWrapper {
         &self,
         ptr: NonNull<u8>,
         old_size: usize,
-        new_size: usize,
+        newsize: usize,
         alignment: usize,
     ) -> Result<NonNull<u8>> {
-        let new_ptr = self.allocate(new_size, alignment)?;
+        let new_ptr = self.allocate(newsize, alignment)?;
         unsafe {
-            std::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), old_size.min(new_size));
+            std::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), old_size.min(newsize));
         }
         self.deallocate(ptr, old_size, alignment);
         Ok(new_ptr)
@@ -1347,12 +1347,12 @@ impl CustomAllocator for ArenaAllocatorWrapper {
         &self,
         ptr: NonNull<u8>,
         old_size: usize,
-        new_size: usize,
+        newsize: usize,
         alignment: usize,
     ) -> Result<NonNull<u8>> {
-        let new_ptr = self.allocate(new_size, alignment)?;
+        let new_ptr = self.allocate(newsize, alignment)?;
         unsafe {
-            std::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), old_size.min(new_size));
+            std::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), old_size.min(newsize));
         }
         self.deallocate(ptr, old_size, alignment);
         Ok(new_ptr)
@@ -1516,21 +1516,21 @@ impl<T> ZeroCopyBuffer<T> {
 
     /// Resize the buffer (zero-copy when shrinking)
     pub fn resize(&mut self, newsize: usize) -> Result<()> {
-        if new_size <= self.capacity {
-            self.length = new_size;
+        if newsize <= self.capacity {
+            self.length = newsize;
             Ok(())
         } else {
             // Need to reallocate
             let new_ptr = self.allocator.reallocate(
                 self.data.cast::<u8>(),
-                self.layout._size(),
-                new_size * size_of::<T>(),
+                self.layout.size(),
+                newsize * size_of::<T>(),
                 self.layout.align(),
             )?;
 
             self.data = new_ptr.cast::<T>();
-            self.capacity = new_size;
-            self.length = new_size;
+            self.capacity = newsize;
+            self.length = newsize;
             Ok(())
         }
     }

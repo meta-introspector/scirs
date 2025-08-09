@@ -21,7 +21,7 @@ pub mod cuda_kernels {
     pub const MSE_KERNEL: &str = r#"
     extern "C" __global__ void mse_kernel(
         const float* y_true, 
-        const float* y_pred, 
+        const float* ypred, 
         float* result, 
         int n
     ) {
@@ -32,7 +32,7 @@ pub mod cuda_kernels {
         
         float sum = 0.0f;
         for (int i = idx; i < n; i += stride) {
-            float diff = y_true[i] - y_pred[i];
+            float diff = y_true[i] - ypred[i];
             sum += diff * diff;
         }
         
@@ -56,7 +56,7 @@ pub mod cuda_kernels {
     pub const MAE_KERNEL: &str = r#"
     extern "C" __global__ void mae_kernel(
         const float* y_true, 
-        const float* y_pred, 
+        const float* ypred, 
         float* result, 
         int n
     ) {
@@ -67,7 +67,7 @@ pub mod cuda_kernels {
         
         float sum = 0.0f;
         for (int i = idx; i < n; i += stride) {
-            sum += fabsf(y_true[i] - y_pred[i]);
+            sum += fabsf(y_true[i] - ypred[i]);
         }
         
         sdata[threadIdx.x] = sum;
@@ -89,7 +89,7 @@ pub mod cuda_kernels {
     pub const R2_KERNEL: &str = r#"
     extern "C" __global__ void r2_kernel(
         const float* y_true, 
-        const float* y_pred, 
+        const float* ypred, 
         float* ss_res, 
         float* ss_tot, 
         float mean_true, 
@@ -105,7 +105,7 @@ pub mod cuda_kernels {
         float tot_sum = 0.0f;
         
         for (int i = idx; i < n; i += stride) {
-            float diff_pred = y_true[i] - y_pred[i];
+            float diff_pred = y_true[i] - ypred[i];
             float diff_mean = y_true[i] - mean_true;
             res_sum += diff_pred * diff_pred;
             tot_sum += diff_mean * diff_mean;
@@ -146,7 +146,7 @@ pub mod opencl_kernels {
         
         float sum = 0.0f;
         for (int i = gid; i < n; i += get_global_size(0)) {
-            float diff = y_true[i] - y_pred[i];
+            float diff = y_true[i] - ypred[i];
             sum += diff * diff;
         }
         
@@ -179,7 +179,7 @@ pub mod opencl_kernels {
         
         float sum = 0.0f;
         for (int i = gid; i < n; i += get_global_size(0)) {
-            sum += fabs(y_true[i] - y_pred[i]);
+            sum += fabs(y_true[i] - ypred[i]);
         }
         
         sdata[lid] = sum;
@@ -206,7 +206,7 @@ pub mod metal_kernels {
     using namespace metal;
     
     kernel void mse_kernel(device const float* y_true [[buffer(0)]],
-                          device const float* y_pred [[buffer(1)]],
+                          device const float* ypred [[buffer(1)]],
                           device float* result [[buffer(2)]],
                           constant uint& n [[buffer(3)]],
                           threadgroup float* shared_data [[threadgroup(0)]],
@@ -216,7 +216,7 @@ pub mod metal_kernels {
         
         float sum = 0.0;
         for (uint i = gid; i < n; i += local_size) {
-            float diff = y_true[i] - y_pred[i];
+            float diff = y_true[i] - ypred[i];
             sum += diff * diff;
         }
         
@@ -242,7 +242,7 @@ pub mod metal_kernels {
     using namespace metal;
     
     kernel void mae_kernel(device const float* y_true [[buffer(0)]],
-                          device const float* y_pred [[buffer(1)]],
+                          device const float* ypred [[buffer(1)]],
                           device float* result [[buffer(2)]],
                           constant uint& n [[buffer(3)]],
                           threadgroup float* shared_data [[threadgroup(0)]],
@@ -252,7 +252,7 @@ pub mod metal_kernels {
         
         float sum = 0.0;
         for (uint i = gid; i < n; i += local_size) {
-            sum += abs(y_true[i] - y_pred[i]);
+            sum += abs(y_true[i] - ypred[i]);
         }
         
         shared_data[tid] = sum;
@@ -284,7 +284,7 @@ pub mod vulkan_kernels {
     };
     
     layout(set = 0, binding = 1, std430) restrict readonly buffer YPredBuffer {
-        float y_pred[];
+        float ypred[];
     };
     
     layout(set = 0, binding = 2, std430) restrict writeonly buffer ResultBuffer {
@@ -304,7 +304,7 @@ pub mod vulkan_kernels {
         
         float sum = 0.0;
         for (uint i = gid; i < n; i += local_size * gl_NumWorkGroups.x) {
-            float diff = y_true[i] - y_pred[i];
+            float diff = y_true[i] - ypred[i];
             sum += diff * diff;
         }
         
@@ -335,7 +335,7 @@ pub mod vulkan_kernels {
     };
     
     layout(set = 0, binding = 1, std430) restrict readonly buffer YPredBuffer {
-        float y_pred[];
+        float ypred[];
     };
     
     layout(set = 0, binding = 2, std430) restrict writeonly buffer ResultBuffer {
@@ -355,7 +355,7 @@ pub mod vulkan_kernels {
         
         float sum = 0.0;
         for (uint i = gid; i < n; i += local_size * gl_NumWorkGroups.x) {
-            sum += abs(y_true[i] - y_pred[i]);
+            sum += abs(y_true[i] - ypred[i]);
         }
         
         shared_data[tid] = sum;
@@ -411,7 +411,7 @@ pub trait GpuRuntime {
 /// CUDA runtime implementation
 #[derive(Debug)]
 pub struct CudaRuntime {
-    device_id: i32,
+    _deviceid: i32,
     context: Option<usize>,
     compiled_kernels: HashMap<String, usize>,
 }
@@ -419,7 +419,7 @@ pub struct CudaRuntime {
 impl CudaRuntime {
     pub fn new(_deviceid: i32) -> Self {
         Self {
-            device_id,
+            _deviceid,
             context: None,
             compiled_kernels: HashMap::new(),
         }
@@ -435,7 +435,7 @@ impl GpuRuntime for CudaRuntime {
 
     fn compile_kernel(&self, source: &str, kernelname: &str) -> Result<usize> {
         // In real implementation, would use nvrtc to compile CUDA source
-        let kernel_id = source.len() + kernel_name.len(); // Simple hash
+        let kernel_id = source.len() + kernelname.len(); // Simple hash
         Ok(kernel_id)
     }
 
@@ -480,7 +480,7 @@ impl GpuRuntime for CudaRuntime {
 #[derive(Debug)]
 pub struct OpenClRuntime {
     platform_id: usize,
-    device_id: usize,
+    _deviceid: usize,
     context: Option<usize>,
     command_queue: Option<usize>,
     compiled_programs: HashMap<String, usize>,
@@ -490,7 +490,7 @@ impl OpenClRuntime {
     pub fn new(_platform_id: usize, deviceid: usize) -> Self {
         Self {
             platform_id,
-            device_id,
+            _deviceid,
             context: None,
             command_queue: None,
             compiled_programs: HashMap::new(),
@@ -500,7 +500,7 @@ impl OpenClRuntime {
 
 /// Metal runtime implementation for macOS
 pub struct MetalRuntime {
-    device_id: usize,
+    _deviceid: usize,
     command_queue: Option<usize>,
     compiled_pipelines: HashMap<String, usize>,
 }
@@ -508,7 +508,7 @@ pub struct MetalRuntime {
 impl MetalRuntime {
     pub fn new(_deviceid: usize) -> Self {
         Self {
-            device_id,
+            _deviceid,
             command_queue: None,
             compiled_pipelines: HashMap::new(),
         }
@@ -524,7 +524,7 @@ impl GpuRuntime for MetalRuntime {
 
     fn compile_kernel(&self, source: &str, kernelname: &str) -> Result<usize> {
         // Would use Metal shader compiler
-        let pipeline_id = source.len() + kernel_name.len() + 2000;
+        let pipeline_id = source.len() + kernelname.len() + 2000;
         Ok(pipeline_id)
     }
 
@@ -567,7 +567,7 @@ impl GpuRuntime for MetalRuntime {
 
 /// Vulkan runtime implementation for cross-platform compute
 pub struct VulkanRuntime {
-    device_id: usize,
+    _deviceid: usize,
     command_pool: Option<usize>,
     descriptor_pool: Option<usize>,
     compiled_shaders: HashMap<String, usize>,
@@ -576,7 +576,7 @@ pub struct VulkanRuntime {
 impl VulkanRuntime {
     pub fn new(_deviceid: usize) -> Self {
         Self {
-            device_id,
+            _deviceid,
             command_pool: None,
             descriptor_pool: None,
             compiled_shaders: HashMap::new(),
@@ -594,7 +594,7 @@ impl GpuRuntime for VulkanRuntime {
 
     fn compile_kernel(&self, source: &str, kernelname: &str) -> Result<usize> {
         // Would compile SPIR-V shader module
-        let shader_id = source.len() + kernel_name.len() + 3000;
+        let shader_id = source.len() + kernelname.len() + 3000;
         Ok(shader_id)
     }
 
@@ -645,7 +645,7 @@ impl GpuRuntime for OpenClRuntime {
 
     fn compile_kernel(&self, source: &str, kernelname: &str) -> Result<usize> {
         // Would use clCreateProgramWithSource and clBuildProgram
-        let program_id = source.len() + kernel_name.len() + 1000;
+        let program_id = source.len() + kernelname.len() + 1000;
         Ok(program_id)
     }
 
@@ -690,7 +690,7 @@ impl GpuRuntime for OpenClRuntime {
 #[derive(Debug)]
 pub struct CudaContext {
     /// Device ID
-    pub device_id: i32,
+    pub _deviceid: i32,
     /// Context handle (would be actual CUDA context in real implementation)
     pub context_handle: usize,
     /// Stream handles for asynchronous operations
@@ -758,7 +758,7 @@ pub struct OpenClContext {
     /// Platform ID
     pub platform_id: usize,
     /// Device ID
-    pub device_id: usize,
+    pub _deviceid: usize,
     /// Context handle
     pub context_handle: usize,
     /// Command queue
@@ -1130,7 +1130,7 @@ impl AdvancedGpuComputer {
         cuda_runtime.initialize()?;
 
         Ok(CudaContext {
-            device_id: 0,
+            _deviceid: 0,
             context_handle: 12345, // Mock context handle
             streams,
             memory_pool,
@@ -1171,7 +1171,7 @@ impl AdvancedGpuComputer {
 
         Ok(OpenClContext {
             platform_id: 1,
-            device_id: 1,
+            _deviceid: 1,
             context_handle: 23456, // Mock context handle
             command_queue: 34567,  // Mock command queue
             program_cache: Arc::new(Mutex::new(HashMap::new())),
@@ -1360,10 +1360,10 @@ impl AdvancedGpuComputer {
     {
         let start_time = Instant::now();
         let _batch_size = y_true_batch.nrows();
-        let data_size = y_true_batch.len();
+        let datasize = y_true_batch.len();
 
         // Determine optimal computation strategy
-        let compute_strategy = self.determine_compute_strategy(data_size)?;
+        let compute_strategy = self.determine_compute_strategy(datasize)?;
 
         let (results, kernel_metrics, transfer_metrics) = match compute_strategy {
             ComputeStrategy::Cuda => {
@@ -1394,7 +1394,7 @@ impl AdvancedGpuComputer {
         };
 
         let execution_time = start_time.elapsed();
-        let memory_used = data_size * std::mem::size_of::<F>();
+        let memory_used = datasize * std::mem::size_of::<F>();
 
         // Update performance statistics
         self.update_performance_stats(execution_time, memory_used, &kernel_metrics);
@@ -1411,7 +1411,7 @@ impl AdvancedGpuComputer {
     /// Determine optimal compute strategy
     fn determine_compute_strategy(&self, datasize: usize) -> Result<ComputeStrategy> {
         // Check if data _size meets minimum requirements for GPU acceleration
-        if data_size < self.config.batch_settings.min_batch_size {
+        if datasize < self.config.batch_settings.min_batch_size {
             return Ok(ComputeStrategy::Fallback);
         }
 
@@ -1670,7 +1670,7 @@ impl AdvancedGpuComputer {
     fn cuda_mse_kernel<F>(
         &self,
         y_true: &ArrayView1<F>,
-        y_pred: &ArrayView1<F>,
+        ypred: &ArrayView1<F>,
         _config: &KernelConfig,
     ) -> Result<F>
     where
@@ -1679,7 +1679,7 @@ impl AdvancedGpuComputer {
         // Optimized CUDA MSE kernel simulation
         let mse = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum::<F>()
             / F::from(y_true.len()).unwrap();
@@ -1689,7 +1689,7 @@ impl AdvancedGpuComputer {
     fn cuda_mae_kernel<F>(
         &self,
         y_true: &ArrayView1<F>,
-        y_pred: &ArrayView1<F>,
+        ypred: &ArrayView1<F>,
         _config: &KernelConfig,
     ) -> Result<F>
     where
@@ -1697,7 +1697,7 @@ impl AdvancedGpuComputer {
     {
         let mae = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p).abs())
             .sum::<F>()
             / F::from(y_true.len()).unwrap();
@@ -1707,7 +1707,7 @@ impl AdvancedGpuComputer {
     fn cuda_r2_kernel<F>(
         &self,
         y_true: &ArrayView1<F>,
-        y_pred: &ArrayView1<F>,
+        ypred: &ArrayView1<F>,
         _config: &KernelConfig,
     ) -> Result<F>
     where
@@ -1722,7 +1722,7 @@ impl AdvancedGpuComputer {
 
         let ss_res = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum::<F>();
 
@@ -1771,21 +1771,21 @@ impl AdvancedGpuComputer {
     where
         F: Float + std::iter::Sum,
     {
-        self.cuda_mse_kernel(y_true, y_pred, &KernelConfig::default())
+        self.cuda_mse_kernel(y_true, ypred, &KernelConfig::default())
     }
 
     fn opencl_mae_kernel<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
-        self.cuda_mae_kernel(y_true, y_pred, &KernelConfig::default())
+        self.cuda_mae_kernel(y_true, ypred, &KernelConfig::default())
     }
 
     fn opencl_r2_kernel<F>(&self, y_true: &ArrayView1<F>, ypred: &ArrayView1<F>) -> Result<F>
     where
         F: Float + std::iter::Sum,
     {
-        self.cuda_r2_kernel(y_true, y_pred, &KernelConfig::default())
+        self.cuda_r2_kernel(y_true, ypred, &KernelConfig::default())
     }
 
     fn opencl_correlation_kernel<F>(&self, x: &ArrayView1<F>, y: &ArrayView1<F>) -> Result<F>
@@ -1801,14 +1801,14 @@ impl AdvancedGpuComputer {
         F: Float + SimdUnifiedOps + std::iter::Sum,
     {
         if self.capabilities.simd_available {
-            let diff = F::simd_sub(y_true, y_pred);
+            let diff = F::simd_sub(y_true, ypred);
             let squared = F::simd_mul(&diff.view(), &diff.view());
             let sum = F::simd_sum(&squared.view());
             Ok(sum / F::from(y_true.len()).unwrap())
         } else {
             let mse = y_true
                 .iter()
-                .zip(y_pred.iter())
+                .zip(ypred.iter())
                 .map(|(&t, &p)| (t - p) * (t - p))
                 .sum::<F>()
                 / F::from(y_true.len()).unwrap();
@@ -1821,14 +1821,14 @@ impl AdvancedGpuComputer {
         F: Float + SimdUnifiedOps + std::iter::Sum,
     {
         if self.capabilities.simd_available {
-            let diff = F::simd_sub(y_true, y_pred);
+            let diff = F::simd_sub(y_true, ypred);
             let abs_diff = F::simd_abs(&diff.view());
             let sum = F::simd_sum(&abs_diff.view());
             Ok(sum / F::from(y_true.len()).unwrap())
         } else {
             let mae = y_true
                 .iter()
-                .zip(y_pred.iter())
+                .zip(ypred.iter())
                 .map(|(&t, &p)| (t - p).abs())
                 .sum::<F>()
                 / F::from(y_true.len()).unwrap();
@@ -1848,7 +1848,7 @@ impl AdvancedGpuComputer {
             let squared_diff_mean = F::simd_mul(&diff_from_mean.view(), &diff_from_mean.view());
             let ss_tot = F::simd_sum(&squared_diff_mean.view());
 
-            let residuals = F::simd_sub(y_true, y_pred);
+            let residuals = F::simd_sub(y_true, ypred);
             let squared_residuals = F::simd_mul(&residuals.view(), &residuals.view());
             let ss_res = F::simd_sum(&squared_residuals.view());
 
@@ -1858,7 +1858,7 @@ impl AdvancedGpuComputer {
                 Ok(F::one() - ss_res / ss_tot)
             }
         } else {
-            self.cuda_r2_kernel(y_true, y_pred, &KernelConfig::default())
+            self.cuda_r2_kernel(y_true, ypred, &KernelConfig::default())
         }
     }
 
@@ -1900,7 +1900,7 @@ impl AdvancedGpuComputer {
     /// Estimate FLOPS for performance metrics
     fn estimate_flops(&self, batch_size: usize, feature_size: usize, nummetrics: usize) -> f64 {
         // Rough estimate of floating point operations
-        let ops_per_sample = feature_size * num_metrics * 4; // 4 ops per metric on average
+        let ops_per_sample = feature_size * nummetrics * 4; // 4 ops per metric on average
         (batch_size * ops_per_sample) as f64
     }
 
@@ -1990,9 +1990,9 @@ impl AdvancedGpuComputer {
         F: Float + NumCast,
     {
         if let Some(cuda_ctx) = &self.cuda_context {
-            self.execute_cuda_mse(cuda_ctx, y_true, y_pred)
+            self.execute_cuda_mse(cuda_ctx, y_true, ypred)
         } else if let Some(opencl_ctx) = &self.opencl_context {
-            self.execute_opencl_mse(opencl_ctx, y_true, y_pred)
+            self.execute_opencl_mse(opencl_ctx, y_true, ypred)
         } else {
             Err(MetricsError::ComputationError(
                 "No GPU context available".to_string(),
@@ -2005,7 +2005,7 @@ impl AdvancedGpuComputer {
         &self,
         cuda_ctx: &CudaContext,
         y_true: &Array1<F>,
-        y_pred: &Array1<F>,
+        ypred: &Array1<F>,
     ) -> Result<F>
     where
         F: Float + NumCast,
@@ -2027,7 +2027,7 @@ impl AdvancedGpuComputer {
             .iter()
             .map(|&x| NumCast::from(x).unwrap_or(0.0))
             .collect();
-        let y_pred_f32: Vec<f32> = y_pred
+        let y_pred_f32: Vec<f32> = ypred
             .iter()
             .map(|&x| NumCast::from(x).unwrap_or(0.0))
             .collect();
@@ -2073,7 +2073,7 @@ impl AdvancedGpuComputer {
         &self,
         opencl_ctx: &OpenClContext,
         y_true: &Array1<F>,
-        y_pred: &Array1<F>,
+        ypred: &Array1<F>,
     ) -> Result<F>
     where
         F: Float + NumCast,
@@ -2095,7 +2095,7 @@ impl AdvancedGpuComputer {
             .iter()
             .map(|&x| NumCast::from(x).unwrap_or(0.0))
             .collect();
-        let y_pred_f32: Vec<f32> = y_pred
+        let y_pred_f32: Vec<f32> = ypred
             .iter()
             .map(|&x| NumCast::from(x).unwrap_or(0.0))
             .collect();
@@ -2181,7 +2181,7 @@ impl AdvancedGpuComputer {
         // For brevity, falling back to CPU computation here
         let mae = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p).abs())
             .sum::<F>()
             / F::from(y_true.len()).unwrap();
@@ -2204,7 +2204,7 @@ impl AdvancedGpuComputer {
 
         let ss_res = y_true
             .iter()
-            .zip(y_pred.iter())
+            .zip(ypred.iter())
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum::<F>();
 

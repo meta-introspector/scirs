@@ -144,9 +144,9 @@ where
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<&PCAResult<F>> {
         checkarray_finite(data, "data")?;
 
-        let (n_samples_, n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
 
-        if n_samples_ == 0 || n_features == 0 {
+        if n_samples == 0 || n_features == 0 {
             return Err(StatsError::InvalidArgument(
                 "Data cannot be empty".to_string(),
             ));
@@ -156,13 +156,13 @@ where
         let n_components = self
             .config
             .n_components
-            .unwrap_or_else(|| n_features.min(n_samples_));
+            .unwrap_or_else(|| n_features.min(n_samples));
 
-        if n_components > n_features.min(n_samples_) {
+        if n_components > n_features.min(n_samples) {
             return Err(StatsError::InvalidArgument(format!(
-                "n_components ({}) cannot exceed min(n_samples_, n_features) ({})",
+                "n_components ({}) cannot exceed min(n_samples, n_features) ({})",
                 n_components,
-                n_features.min(n_samples_)
+                n_features.min(n_samples)
             )));
         }
 
@@ -264,22 +264,22 @@ where
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
-        let (n_samples_, n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
 
         // Convert to f64 for numerical stability
         let data_f64 = data.mapv(|x| x.to_f64().unwrap());
 
         // Compute SVD
-        let (_u, s, vt) = scirs2_linalg::svd(&data_f64.view(), true, None)
+        let (u, s, vt) = scirs2_linalg::svd(&data_f64.view(), true, None)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
 
-        // Extract _components and singular values
+        // Extract components and singular values
         let singular_values = s.slice(ndarray::s![..n_components]).to_owned();
-        let _components = vt.slice(ndarray::s![..n_components, ..]).to_owned();
+        let components = vt.slice(ndarray::s![..n_components, ..]).to_owned();
 
         // Compute explained variance
-        let total_variance_f64 = s.mapv(|x| x * x).sum() / (n_samples_ - 1) as f64;
-        let explained_variance_f64 = singular_values.mapv(|x| x * x / (n_samples_ - 1) as f64);
+        let total_variance_f64 = s.mapv(|x| x * x).sum() / (n_samples - 1) as f64;
+        let explained_variance_f64 = singular_values.mapv(|x| x * x / (n_samples - 1) as f64);
         let explained_variance_ratio_f64 = &explained_variance_f64 / total_variance_f64;
 
         // Compute cumulative variance ratio
@@ -321,11 +321,11 @@ where
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
-        let (n_samples_, n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
 
         // Compute covariance matrix
         let data_f64 = data.mapv(|x| x.to_f64().unwrap());
-        let cov_matrix = data_f64.t().dot(&data_f64) / (n_samples_ - 1) as f64;
+        let cov_matrix = data_f64.t().dot(&data_f64) / (n_samples - 1) as f64;
 
         // Compute eigendecomposition
         let (eigenvalues, eigenvectors) =
@@ -345,7 +345,7 @@ where
         // Extract top n_components
         let selected_eigenvalues: Vec<f64> = eigen_pairs[..n_components]
             .iter()
-            .map(|(val_, _)| *val_)
+            .map(|(val, _)| *val)
             .collect();
         let mut selected_eigenvectors = Array2::zeros((data.ncols(), n_components));
 
@@ -354,7 +354,7 @@ where
         }
 
         // Transpose to get _components as rows
-        let _components = selected_eigenvectors.t().to_owned();
+        let components = selected_eigenvectors.t().to_owned();
 
         // Compute explained variance metrics
         let total_variance_f64 = eigenvalues.sum();
@@ -502,7 +502,7 @@ where
     }
 
     /// Inverse transform from principal component space
-    pub fn inverse_transform(&self, transformeddata: &ArrayView2<F>) -> StatsResult<Array2<F>> {
+    pub fn inverse_transform(&self, transformed_data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         let results = self.results.as_ref().ok_or_else(|| {
             StatsError::InvalidArgument("PCA must be fitted before inverse_transform".to_string())
         })?;
@@ -511,7 +511,7 @@ where
 
         if transformed_data.ncols() != results.n_components {
             return Err(StatsError::DimensionMismatch(format!(
-                "Transformed _data columns ({}) must match n_components ({})",
+                "Transformed data columns ({}) must match n_components ({})",
                 transformed_data.ncols(),
                 results.n_components
             )));
@@ -639,11 +639,11 @@ where
         + ScalarOperand,
 {
     /// Create new factor analysis
-    pub fn new(_nfactors: usize, config: FactorAnalysisConfig) -> StatsResult<Self> {
-        check_positive(_n_factors, "_n_factors")?;
+    pub fn new(n_factors: usize, config: FactorAnalysisConfig) -> StatsResult<Self> {
+        check_positive(n_factors, "n_factors")?;
 
         Ok(Self {
-            n_factors: n_factors,
+            n_factors,
             config,
             results: None,
             _phantom: PhantomData,
@@ -654,7 +654,7 @@ where
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<&FactorAnalysisResult<F>> {
         checkarray_finite(data, "data")?;
 
-        let (_n_samples_, n_features) = data.dim();
+        let (_n_samples, n_features) = data.dim();
 
         if self.n_factors >= n_features {
             return Err(StatsError::InvalidArgument(format!(
@@ -757,7 +757,7 @@ where
     }
 
     /// Get initial factor loadings using PCA
-    fn initial_loadings(&self, corrmatrix: &Array2<F>) -> StatsResult<Array2<F>> {
+    fn initial_loadings(&self, corr_matrix: &Array2<F>) -> StatsResult<Array2<F>> {
         // Convert to f64 for numerical computation
         let corr_f64 = corr_matrix.mapv(|x| x.to_f64().unwrap());
 

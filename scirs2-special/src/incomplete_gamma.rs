@@ -289,7 +289,7 @@ where
     // Use asymptotic series for large a
     // This is a simplified implementation
     let log_x = x.ln();
-    let log_result = a * log_x - x - log_gamma_a;
+    let log_result = a * log_x - x - log_gammaa;
 
     // Add correction terms for better accuracy
     let mut sum = T::one();

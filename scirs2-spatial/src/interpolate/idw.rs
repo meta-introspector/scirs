@@ -147,7 +147,7 @@ impl IDWInterpolator {
         // Check dimension
         if point.len() != self.dim {
             return Err(SpatialError::DimensionError(format!(
-                "Query _point has dimension {}, expected {}",
+                "Query point has dimension {}, expected {}",
                 point.len(),
                 self.dim
             )));
@@ -165,7 +165,7 @@ impl IDWInterpolator {
         let (indices, distances) = match self.n_neighbors {
             Some(k) => {
                 // Use k nearest neighbors
-                self.kdtree.query(_point.as_slice().unwrap(), k)?
+                self.kdtree.query(point.as_slice().unwrap(), k)?
             }
             None => {
                 // Use all points
@@ -267,9 +267,9 @@ impl IDWInterpolator {
     ///
     /// * If power is negative
     pub fn set_power(&mut self, power: f64) -> SpatialResult<()> {
-        if _power < 0.0 {
+        if power < 0.0 {
             return Err(SpatialError::ValueError(format!(
-                "Power parameter must be non-negative, got {_power}"
+                "Power parameter must be non-negative, got {power}"
             )));
         }
 
@@ -287,7 +287,7 @@ impl IDWInterpolator {
     ///
     /// * If n_neighbors is 0 or greater than n_points
     pub fn set_n_neighbors(&mut self, _nneighbors: Option<usize>) -> SpatialResult<()> {
-        if let Some(k) = _n_neighbors {
+        if let Some(k) = _nneighbors {
             if k == 0 {
                 return Err(SpatialError::ValueError(
                     "Number of _neighbors must be positive".to_string(),
@@ -316,7 +316,7 @@ impl IDWInterpolator {
     ///
     /// True if the points are considered the same
     fn is_same_point(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> bool {
-        Self::squared_distance(_p1, p2) < 1e-10
+        Self::squared_distance(p1, p2) < 1e-10
     }
 
     /// Compute the squared Euclidean distance between two points
@@ -331,7 +331,7 @@ impl IDWInterpolator {
     /// Squared Euclidean distance between the points
     fn squared_distance(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
         let mut sum_sq = 0.0;
-        for i in 0.._p1.len().min(p2.len()) {
+        for i in 0..p1.len().min(p2.len()) {
             let diff = p1[i] - p2[i];
             sum_sq += diff * diff;
         }

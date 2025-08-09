@@ -14,8 +14,8 @@ pub fn check_positive<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy + Zero,
 {
-    validation::check_positive(_value, name)
-        .map_err(|_| SpecialError::DomainError(format!("{name} must be positive, got {_value}")))
+    validation::check_positive(value, name)
+        .map_err(|_| SpecialError::DomainError(format!("{name} must be positive, got {value}")))
 }
 
 /// Check if a value is non-negative (>= 0)
@@ -24,8 +24,8 @@ pub fn check_non_negative<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy + Zero,
 {
-    validation::check_non_negative(_value, name).map_err(|_| {
-        SpecialError::DomainError(format!("{name} must be non-negative, got {_value}"))
+    validation::check_non_negative(value, name).map_err(|_| {
+        SpecialError::DomainError(format!("{name} must be non-negative, got {value}"))
     })
 }
 
@@ -35,8 +35,8 @@ pub fn check_finite<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy,
 {
-    validation::check_finite(_value, name)
-        .map_err(|_| SpecialError::DomainError(format!("{name} must be finite, got {_value}")))
+    validation::check_finite(value, name)
+        .map_err(|_| SpecialError::DomainError(format!("{name} must be finite, got {value}")))
 }
 
 /// Check if a value is within bounds (inclusive)
@@ -45,8 +45,8 @@ pub fn check_in_bounds<T>(value: T, min: T, max: T, name: &str) -> SpecialResult
 where
     T: PartialOrd + std::fmt::Display + Copy,
 {
-    validation::check_in_bounds(_value, min, max, name).map_err(|_| {
-        SpecialError::DomainError(format!("{name} must be in [{min}, {max}], got {_value}"))
+    validation::check_in_bounds(value, min, max, name).map_err(|_| {
+        SpecialError::DomainError(format!("{name} must be in [{min}, {max}], got {value}"))
     })
 }
 
@@ -56,8 +56,8 @@ pub fn check_probability<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy,
 {
-    validation::check_probability(_value, name)
-        .map_err(|_| SpecialError::DomainError(format!("{name} must be in [0, 1], got {_value}")))
+    validation::check_probability(value, name)
+        .map_err(|_| SpecialError::DomainError(format!("{name} must be in [0, 1], got {value}")))
 }
 
 /// Check if all values in an array are finite
@@ -68,7 +68,7 @@ where
     D: Dimension,
     S::Elem: Float + std::fmt::Display,
 {
-    validation::checkarray_finite(_array, name)
+    validation::checkarray_finite(array, name)
         .map_err(|_| SpecialError::DomainError(format!("{name} must contain only finite values")))
 }
 
@@ -79,7 +79,7 @@ where
     S: ndarray::Data,
     D: Dimension,
 {
-    validation::check_not_empty(_array, name)
+    validation::check_not_empty(array, name)
         .map_err(|_| SpecialError::ValueError(format!("{name} cannot be empty")))
 }
 
@@ -144,9 +144,9 @@ pub fn check_order_m(l: i32, m: i32) -> SpecialResult<i32> {
 /// Check convergence parameters
 #[allow(dead_code)]
 pub fn check_convergence_params(_maxiter: usize, tolerance: f64) -> SpecialResult<()> {
-    if _max_iter == 0 {
+    if _maxiter == 0 {
         return Err(SpecialError::ValueError(
-            "_max_iter must be > 0".to_string(),
+            "_maxiter must be > 0".to_string(),
         ));
     }
     check_positive(tolerance, "tolerance")?;
@@ -157,14 +157,14 @@ pub fn check_convergence_params(_maxiter: usize, tolerance: f64) -> SpecialResul
 #[allow(dead_code)]
 pub fn convergence_error(function: &str, iterations: usize) -> SpecialError {
     SpecialError::ConvergenceError(format!(
-        "{_function} did not converge after {iterations} iterations"
+        "{function} did not converge after {iterations} iterations"
     ))
 }
 
 /// Helper to convert not implemented features to NotImplementedError
 #[allow(dead_code)]
 pub fn not_implemented(feature: &str) -> SpecialError {
-    SpecialError::NotImplementedError(format!("{_feature} is not yet implemented"))
+    SpecialError::NotImplementedError(format!("{feature} is not yet implemented"))
 }
 
 #[cfg(test)]

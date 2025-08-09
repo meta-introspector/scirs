@@ -98,7 +98,7 @@ pub fn coulomb_phase_shift(l: f64, eta: f64) -> SpecialResult<f64> {
 /// Compute the Coulomb phase shift for L=0
 #[allow(dead_code)]
 fn coulomb_phase_shift_l0(eta: f64) -> SpecialResult<f64> {
-    if _eta == 0.0 {
+    if eta == 0.0 {
         return Ok(0.0);
     }
 
@@ -108,13 +108,13 @@ fn coulomb_phase_shift_l0(eta: f64) -> SpecialResult<f64> {
         // where γ is Euler's constant and ψ is the digamma function
 
         let euler_gamma = 0.5772156649015329;
-        let mut sigma = _eta * (euler_gamma + (2.0 * eta.abs()).ln());
+        let mut sigma = eta * (euler_gamma + (2.0 * eta.abs()).ln());
 
         // Add series terms for digamma function
         // ψ(1+ix) = -γ + ix * ∑_{n=1}^∞ (-1)^{n-1} * ζ(n+1) * (ix)^n / (n+1)
         // For the imaginary part, we need the odd terms
 
-        let eta2 = _eta * eta;
+        let eta2 = eta * eta;
         let mut eta_power = eta;
 
         // Series terms (first few terms are usually sufficient)
@@ -148,13 +148,13 @@ fn coulomb_phase_shift_l0(eta: f64) -> SpecialResult<f64> {
     // For larger η, use asymptotic expansion
     // σ_0(η) ≈ η * [ln(2η) - 1] + π/2 * sign(η) for |η| >> 1
     if eta.abs() > 10.0 {
-        let asymptotic = _eta * ((2.0 * eta.abs()).ln() - 1.0) + PI / 2.0 * eta.signum();
+        let asymptotic = eta * ((2.0 * eta.abs()).ln() - 1.0) + PI / 2.0 * eta.signum();
         return Ok(asymptotic);
     }
 
     // For intermediate values, use more accurate method combining series and asymptotic forms
     // Use the relation σ_0(η) = arg Γ(1 + iη) computed via Stirling's approximation
-    coulomb_phase_shift_intermediate(_eta)
+    coulomb_phase_shift_intermediate(eta)
 }
 
 /// Compute the Coulomb phase shift for intermediate η values using improved methods
@@ -191,7 +191,7 @@ fn coulomb_phase_shift_intermediate(eta: f64) -> SpecialResult<f64> {
 
     // Method 3: Series correction for better accuracy near integer values
     let eta_int_part = eta.round();
-    let eta_frac = _eta - eta_int_part;
+    let eta_frac = eta - eta_int_part;
 
     if eta_frac.abs() < 0.1 {
         // Near integer values, use series expansion around the integer
@@ -200,10 +200,10 @@ fn coulomb_phase_shift_intermediate(eta: f64) -> SpecialResult<f64> {
         Ok(combined_result)
     } else {
         // For other intermediate values, use improved asymptotic approximation
-        let improved_asymptotic = coulomb_phase_shift_improved_asymptotic(_eta)?;
+        let improved_asymptotic = coulomb_phase_shift_improved_asymptotic(eta)?;
 
         // Weighted combination for smooth transition
-        let weight = ((_eta.abs() - 1.0) / 9.0).clamp(0.0, 1.0);
+        let weight = ((eta.abs() - 1.0) / 9.0).clamp(0.0, 1.0);
         let combined = weight * improved_asymptotic + (1.0 - weight) * reflection_correction;
         Ok(combined)
     }
@@ -211,7 +211,7 @@ fn coulomb_phase_shift_intermediate(eta: f64) -> SpecialResult<f64> {
 
 /// Series correction for Coulomb phase shift near integer values
 #[allow(dead_code)]
-fn coulomb_phase_shift_near_integer(_eta_int: f64, etafrac: f64) -> SpecialResult<f64> {
+fn coulomb_phase_shift_near_integer(eta_int: f64, eta_frac: f64) -> SpecialResult<f64> {
     // Use Taylor expansion around integer values
     // σ_0(n + δ) ≈ σ_0(n) + σ_0'(n) * δ + σ_0''(n) * δ²/2 + ...
 
@@ -220,25 +220,25 @@ fn coulomb_phase_shift_near_integer(_eta_int: f64, etafrac: f64) -> SpecialResul
     }
 
     // For integer values, σ_0(n) has a known form
-    let base_value = if _eta_int == 0.0 {
+    let base_value = if eta_int == 0.0 {
         0.0
     } else {
         // Use the digamma function for the derivative
         use crate::gamma::complex::digamma_complex;
-        let base_z = Complex64::new(_eta_int + 1.0, 0.0);
+        let base_z = Complex64::new(eta_int + 1.0, 0.0);
         let digamma_base = digamma_complex(base_z);
         digamma_base.im * eta_int.signum()
     };
 
     // First derivative term
-    let derivative_z = Complex64::new(_eta_int + 1.0, 0.0);
+    let derivative_z = Complex64::new(eta_int + 1.0, 0.0);
     use crate::gamma::complex::digamma_complex;
     let digamma_deriv = digamma_complex(derivative_z);
     let first_order = digamma_deriv.im * eta_frac;
 
     // Second derivative approximation (trigamma function)
     let trigamma_approx = if eta_int.abs() > 0.5 {
-        PI * PI / (6.0 * _eta_int * eta_int)
+        PI * PI / (6.0 * eta_int * eta_int)
     } else {
         PI * PI / 6.0 // ζ(2) for small values
     };
@@ -257,7 +257,7 @@ fn coulomb_phase_shift_improved_asymptotic(eta: f64) -> SpecialResult<f64> {
     let eta_abs = eta.abs();
 
     // Main asymptotic term
-    let main_term = _eta * ((2.0 * eta_abs).ln() - 1.0 + euler_gamma);
+    let main_term = eta * ((2.0 * eta_abs).ln() - 1.0 + euler_gamma);
 
     // First-order correction: π²/(12η)
     let first_correction = PI * PI / (12.0 * eta);

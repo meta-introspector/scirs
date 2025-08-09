@@ -226,7 +226,7 @@ where
 
     let zero = T::zero();
 
-    // Count positive predictions in each _group
+    // Count positive predictions in each group
     let mut protected_group_positive = 0;
     let mut protected_group_total = 0;
     let mut unprotected_group_positive = 0;
@@ -251,11 +251,11 @@ where
     // Check if there are members in both groups
     if protected_group_total == 0 || unprotected_group_total == 0 {
         return Err(MetricsError::InvalidInput(
-            "Each _group must have at least one member".to_string(),
+            "Each group must have at least one member".to_string(),
         ));
     }
 
-    // Calculate positive prediction rates for each _group
+    // Calculate positive prediction rates for each group
     let protected_rate = protected_group_positive as f64 / protected_group_total as f64;
     let unprotected_rate = unprotected_group_positive as f64 / unprotected_group_total as f64;
 
@@ -323,7 +323,7 @@ where
 
     let zero = T::zero();
 
-    // Count positive predictions in each _group
+    // Count positive predictions in each group
     let mut protected_group_positive = 0;
     let mut protected_group_total = 0;
     let mut unprotected_group_positive = 0;
@@ -348,11 +348,11 @@ where
     // Check if there are members in both groups
     if protected_group_total == 0 || unprotected_group_total == 0 {
         return Err(MetricsError::InvalidInput(
-            "Each _group must have at least one member".to_string(),
+            "Each group must have at least one member".to_string(),
         ));
     }
 
-    // Calculate positive prediction rates for each _group
+    // Calculate positive prediction rates for each group
     let protected_rate = protected_group_positive as f64 / protected_group_total as f64;
     let unprotected_rate = unprotected_group_positive as f64 / unprotected_group_total as f64;
 
@@ -432,7 +432,7 @@ where
 
     let zero = T::zero();
 
-    // Initialize counters for each _group and outcome
+    // Initialize counters for each group and outcome
     let mut protected_true_positives = 0;
     let mut protected_false_positives = 0;
     let mut protected_true_negatives = 0;
@@ -443,37 +443,37 @@ where
     let mut unprotected_true_negatives = 0;
     let mut unprotected_false_negatives = 0;
 
-    // Calculate confusion matrix values for each _group
+    // Calculate confusion matrix values for each group
     for ((truth, pred), group) in y_true.iter().zip(y_pred.iter()).zip(protected_group.iter()) {
-        if _group > &zero {
-            // Protected _group
+        if group > &zero {
+            // Protected group
             if truth > &zero {
                 // Positive class
-                if _pred > &zero {
+                if pred > &zero {
                     protected_true_positives += 1;
                 } else {
                     protected_false_negatives += 1;
                 }
             } else {
                 // Negative class
-                if _pred > &zero {
+                if pred > &zero {
                     protected_false_positives += 1;
                 } else {
                     protected_true_negatives += 1;
                 }
             }
         } else {
-            // Unprotected _group
+            // Unprotected group
             if truth > &zero {
                 // Positive class
-                if _pred > &zero {
+                if pred > &zero {
                     unprotected_true_positives += 1;
                 } else {
                     unprotected_false_negatives += 1;
                 }
             } else {
                 // Negative class
-                if _pred > &zero {
+                if pred > &zero {
                     unprotected_false_positives += 1;
                 } else {
                     unprotected_true_negatives += 1;
@@ -482,8 +482,8 @@ where
         }
     }
 
-    // Calculate _true positive rates (TPR) and false positive rates (FPR) for each _group
-    // Handle cases where a _group might not have any positives or negatives
+    // Calculate _true positive rates (TPR) and false positive rates (FPR) for each group
+    // Handle cases where a group might not have any positives or negatives
     let protected_tpr = if protected_true_positives + protected_false_negatives > 0 {
         protected_true_positives as f64
             / (protected_true_positives + protected_false_negatives) as f64
@@ -583,26 +583,26 @@ where
 
     let zero = T::zero();
 
-    // Initialize counters for _true positives and false negatives in each _group
+    // Initialize counters for _true positives and false negatives in each group
     let mut protected_true_positives = 0;
     let mut protected_false_negatives = 0;
     let mut unprotected_true_positives = 0;
     let mut unprotected_false_negatives = 0;
 
-    // Count _true positives and false negatives for each _group
+    // Count _true positives and false negatives for each group
     for ((truth, pred), group) in y_true.iter().zip(y_pred.iter()).zip(protected_group.iter()) {
         if truth > &zero {
             // Only consider cases where _true label is positive
-            if _group > &zero {
-                // Protected _group
-                if _pred > &zero {
+            if group > &zero {
+                // Protected group
+                if pred > &zero {
                     protected_true_positives += 1;
                 } else {
                     protected_false_negatives += 1;
                 }
             } else {
-                // Unprotected _group
-                if _pred > &zero {
+                // Unprotected group
+                if pred > &zero {
                     unprotected_true_positives += 1;
                 } else {
                     unprotected_false_negatives += 1;
@@ -611,14 +611,14 @@ where
         }
     }
 
-    // Calculate _true positive rates for each _group
+    // Calculate _true positive rates for each group
     let protected_tpr = if protected_true_positives + protected_false_negatives > 0 {
         protected_true_positives as f64
             / (protected_true_positives + protected_false_negatives) as f64
     } else {
-        // If there are no positive examples in the protected _group
+        // If there are no positive examples in the protected group
         return Err(MetricsError::InvalidInput(
-            "No positive examples in protected _group".to_string(),
+            "No positive examples in protected group".to_string(),
         ));
     };
 
@@ -626,9 +626,9 @@ where
         unprotected_true_positives as f64
             / (unprotected_true_positives + unprotected_false_negatives) as f64
     } else {
-        // If there are no positive examples in the unprotected _group
+        // If there are no positive examples in the unprotected group
         return Err(MetricsError::InvalidInput(
-            "No positive examples in unprotected _group".to_string(),
+            "No positive examples in unprotected group".to_string(),
         ));
     };
 

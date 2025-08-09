@@ -33,8 +33,8 @@ where
     /// # Arguments
     ///
     /// * `data` - Vector of non-zero values
-    /// * `row_indices` - Vector of row indices for each non-zero value
-    /// * `col_indices` - Vector of column indices for each non-zero value
+    /// * `rowindices` - Vector of row indices for each non-zero value
+    /// * `colindices` - Vector of column indices for each non-zero value
     /// * `shape` - Tuple containing the matrix dimensions (rows, cols)
     ///
     /// # Returns
@@ -56,28 +56,28 @@ where
     /// ```
     pub fn new(
         data: Vec<T>,
-        row_indices: Vec<usize>,
-        col_indices: Vec<usize>,
+        rowindices: Vec<usize>,
+        colindices: Vec<usize>,
         shape: (usize, usize),
     ) -> SparseResult<Self> {
         // Validate input data
-        if data.len() != row_indices.len() || data.len() != col_indices.len() {
+        if data.len() != rowindices.len() || data.len() != colindices.len() {
             return Err(SparseError::DimensionMismatch {
                 expected: data.len(),
-                found: std::cmp::min(row_indices.len(), col_indices.len()),
+                found: std::cmp::min(rowindices.len(), colindices.len()),
             });
         }
 
         let (rows, cols) = shape;
 
-        // Check _indices are within bounds
-        if row_indices.iter().any(|&i| i >= rows) {
+        // Check indices are within bounds
+        if rowindices.iter().any(|&i| i >= rows) {
             return Err(SparseError::ValueError(
                 "Row index out of bounds".to_string(),
             ));
         }
 
-        if col_indices.iter().any(|&i| i >= cols) {
+        if colindices.iter().any(|&i| i >= cols) {
             return Err(SparseError::ValueError(
                 "Column index out of bounds".to_string(),
             ));
@@ -85,9 +85,9 @@ where
 
         // Convert triplet format to CSC
         // First, sort by column, then by row
-        let mut triplets: Vec<(usize, usize, T)> = col_indices
+        let mut triplets: Vec<(usize, usize, T)> = colindices
             .into_iter()
-            .zip(row_indices)
+            .zip(rowindices)
             .zip(data)
             .map(|((c, r), v)| (c, r, v))
             .collect();
@@ -96,7 +96,7 @@ where
         // Create indptr, indices, and data arrays
         let nnz = triplets.len();
         let mut indptr = vec![0; cols + 1];
-        let mut _indices = Vec::with_capacity(nnz);
+        let mut indices = Vec::with_capacity(nnz);
         let mut data_out = Vec::with_capacity(nnz);
 
         // Count elements per column to build indptr
@@ -109,7 +109,7 @@ where
             indptr[i] += indptr[i - 1];
         }
 
-        // Fill _indices and data
+        // Fill indices and data
         for (_, r, v) in triplets {
             indices.push(r);
             data_out.push(v);
@@ -205,7 +205,7 @@ where
     /// # Arguments
     ///
     /// * `values` - Values
-    /// * `row_indices` - Row indices
+    /// * `rowindices` - Row indices
     /// * `col_ptrs` - Column pointers
     /// * `shape` - Shape of the matrix (rows, cols)
     ///
@@ -214,11 +214,11 @@ where
     /// * Result containing the CSC matrix
     pub fn from_csc_data(
         values: Vec<T>,
-        row_indices: Vec<usize>,
+        rowindices: Vec<usize>,
         col_ptrs: Vec<usize>,
         shape: (usize, usize),
     ) -> SparseResult<Self> {
-        Self::from_raw_csc(values, col_ptrs, row_indices, shape)
+        Self::from_raw_csc(values, col_ptrs, rowindices, shape)
     }
 
     pub fn empty(shape: (usize, usize)) -> Self {
@@ -269,7 +269,7 @@ where
     }
 
     /// Get row indices array
-    pub fn row_indices(&self) -> &[usize] {
+    pub fn rowindices(&self) -> &[usize] {
         &self.indices
     }
 

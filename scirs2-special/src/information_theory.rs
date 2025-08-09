@@ -262,21 +262,21 @@ pub fn huber<T>(delta: T, r: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display,
 {
-    check_finite(_delta, "_delta value")?;
+    check_finite(delta, "delta value")?;
     check_finite(r, "r value")?;
 
-    if _delta <= T::zero() {
+    if delta <= T::zero() {
         return Err(SpecialError::DomainError(
-            "huber: _delta must be positive".to_string(),
+            "huber: delta must be positive".to_string(),
         ));
     }
 
     let abs_r = r.abs();
 
-    if abs_r <= _delta {
+    if abs_r <= delta {
         Ok(r * r / T::from_f64(2.0).unwrap())
     } else {
-        Ok(_delta * abs_r - _delta * _delta / T::from_f64(2.0).unwrap())
+        Ok(delta * abs_r - delta * delta / T::from_f64(2.0).unwrap())
     }
 }
 
@@ -296,19 +296,19 @@ pub fn pseudo_huber<T>(delta: T, r: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display,
 {
-    check_finite(_delta, "_delta value")?;
+    check_finite(delta, "delta value")?;
     check_finite(r, "r value")?;
 
-    if _delta <= T::zero() {
+    if delta <= T::zero() {
         return Err(SpecialError::DomainError(
-            "pseudo_huber: _delta must be positive".to_string(),
+            "pseudo_huber: delta must be positive".to_string(),
         ));
     }
 
-    let r_over_delta = r / delta;
-    let delta_squared = _delta * delta;
+    let r_overdelta = r / delta;
+    let delta_squared = delta * delta;
 
-    Ok(delta_squared * ((T::one() + r_over_delta * r_over_delta).sqrt() - T::one()))
+    Ok(delta_squared * ((T::one() + r_overdelta * r_overdelta).sqrt() - T::one()))
 }
 
 /// Apply entropy function to array

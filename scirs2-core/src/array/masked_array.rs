@@ -126,7 +126,7 @@ where
         for (i, val) in self.data.iter().enumerate() {
             if !*self.mask.iter().nth(i).unwrap_or(&true) {
                 // Only copy if not masked
-                if let Some(v) = result.iter_mut().nth(0) {
+                if let Some(v) = result.iter_mut().nth(i) {
                     *v = val.clone();
                 }
             }

@@ -135,10 +135,10 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> VonMises<F>
             )));
         }
 
-        // Normalize _mu to [-π, π]
+        // Normalize mu to [-π, π]
         let two_pi = F::from(2.0 * PI).unwrap();
         let pi = F::from(PI).unwrap();
-        let normalized_mu = ((_mu % two_pi) + two_pi) % two_pi;
+        let normalized_mu = ((mu % two_pi) + two_pi) % two_pi;
         let normalized_mu = if normalized_mu > pi {
             normalized_mu - two_pi
         } else {

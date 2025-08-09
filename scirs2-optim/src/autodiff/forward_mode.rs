@@ -48,7 +48,7 @@ pub struct ForwardModeEngine<T: Float> {
 #[derive(Debug, Clone)]
 struct ForwardOperation<T: Float> {
     /// Operation type
-    op_type: ForwardOpType,
+    optype: ForwardOpType,
 
     /// Input variable indices
     inputs: Vec<usize>,
@@ -120,12 +120,12 @@ impl<T: Float + Default + Clone> DualNumber<T> {
 
     /// Create a constant (zero tangent)
     pub fn constant(value: T) -> Self {
-        Self::new(_value, T::zero())
+        Self::new(value, T::zero())
     }
 
     /// Create a variable (unit tangent)
     pub fn variable(value: T) -> Self {
-        Self::new(_value, T::one())
+        Self::new(value, T::one())
     }
 }
 
@@ -140,17 +140,17 @@ impl<T: Float + Default + Clone> VectorDual<T> {
 
     /// Create a constant vector
     pub fn constant(value: Array1<T>) -> Self {
-        let tangent = Array1::zeros(_value.len());
-        Self::new(_value, tangent)
+        let tangent = Array1::zeros(value.len());
+        Self::new(value, tangent)
     }
 
     /// Create a variable vector with unit tangent in direction i
     pub fn variable(value: Array1<T>, direction: usize) -> Self {
-        let mut tangent = Array1::zeros(_value.len());
+        let mut tangent = Array1::zeros(value.len());
         if direction < tangent.len() {
             tangent[direction] = T::one();
         }
-        Self::new(_value, tangent)
+        Self::new(value, tangent)
     }
 }
 
@@ -180,7 +180,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T>
         let var_id = self.tape.len();
 
         let op = ForwardOperation {
-            op_type: ForwardOpType::Variable,
+            optype: ForwardOpType::Variable,
             inputs: Vec::new(),
             output: var_id,
             metadata: ForwardOpMetadata {
@@ -200,7 +200,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T>
         let const_id = self.tape.len();
 
         let op = ForwardOperation {
-            op_type: ForwardOpType::Constant,
+            optype: ForwardOpType::Constant,
             inputs: Vec::new(),
             output: const_id,
             metadata: ForwardOpMetadata {
@@ -239,7 +239,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T>
         let output_id = self.tape.len();
 
         let op = ForwardOperation {
-            op_type: ForwardOpType::Power,
+            optype: ForwardOpType::Power,
             inputs: vec![base],
             output: output_id,
             metadata: ForwardOpMetadata {
@@ -293,7 +293,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T>
         let output_id = self.tape.len();
 
         let op = ForwardOperation {
-            op_type: ForwardOpType::MatMul,
+            optype: ForwardOpType::MatMul,
             inputs: vec![lhs, rhs],
             output: output_id,
             metadata: ForwardOpMetadata {
@@ -321,7 +321,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T>
         let output_id = self.tape.len();
 
         let op = ForwardOperation {
-            op_type: ForwardOpType::Sum,
+            optype: ForwardOpType::Sum,
             inputs: vec![input],
             output: output_id,
             metadata: ForwardOpMetadata {
@@ -340,7 +340,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T>
         let output_id = self.tape.len();
 
         let op = ForwardOperation {
-            op_type: ForwardOpType::Mean,
+            optype: ForwardOpType::Mean,
             inputs: vec![input],
             output: output_id,
             metadata: ForwardOpMetadata {
@@ -369,7 +369,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T>
 
         // Initialize with input values
         for op in &self.tape {
-            match op.op_type {
+            match op.optype {
                 ForwardOpType::Variable => {
                     // Find corresponding input value
                     let var_name = self
@@ -464,7 +464,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T>
         let output_id = self.tape.len();
 
         let op = ForwardOperation {
-            op_type,
+            optype,
             inputs: vec![lhs, rhs],
             output: output_id,
             metadata: ForwardOpMetadata {
@@ -482,7 +482,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T>
         let output_id = self.tape.len();
 
         let op = ForwardOperation {
-            op_type,
+            optype,
             inputs: vec![input],
             output: output_id,
             metadata: ForwardOpMetadata {
@@ -501,7 +501,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T>
         op: &ForwardOperation<T>,
         values: &[VectorDual<T>],
     ) -> Result<VectorDual<T>> {
-        match op.op_type {
+        match op.optype {
             ForwardOpType::Add => {
                 let lhs = &values[op.inputs[0]];
                 let rhs = &values[op.inputs[1]];

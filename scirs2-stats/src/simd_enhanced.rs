@@ -545,7 +545,7 @@ where
     fn update_performance_stats(&self, algorithm: &str, execution_timens: u64) {
         if let Ok(mut stats) = self.performance_stats.write() {
             stats.total_operations += 1;
-            stats.total_time_ns += execution_time_ns;
+            stats.total_time_ns += execution_timens;
             *stats
                 .algorithm_usage
                 .entry(algorithm.to_string())
@@ -820,11 +820,11 @@ where
 
     /// Auto-tuning for SIMD parameters based on runtime characteristics
     pub fn auto_tune_parameters(&mut self, sampledata: &ArrayView1<F>) -> StatsResult<()> {
-        let _data_size = sample_data.len();
+        let _data_size = sampledata.len();
 
         // Benchmark different vectorization levels
         let start = std::time::Instant::now();
-        let _ = self.cache_aware_mean(sample_data)?;
+        let _ = self.cache_aware_mean(sampledata)?;
         let conservative_time = start.elapsed();
 
         // Update configuration based on performance

@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 use regex;
 
 /// Maximum number of dimensions allowed for arrays
-const MAX_DIMENSIONS: usize = 32;
+const MAX_DIMENSIONS: usize = 5;
 
 /// Validation severity levels for different environments
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

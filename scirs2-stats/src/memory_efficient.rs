@@ -36,7 +36,7 @@ where
     F: Float + NumCast,
     I: Iterator<Item = F> + std::fmt::Display,
 {
-    if total_count == 0 {
+    if totalcount == 0 {
         return Err(ErrorMessages::empty_array("dataset"));
     }
 
@@ -44,17 +44,17 @@ where
     let mut _count = 0;
 
     // Process in chunks to maintain precision
-    while _count < total_count {
+    while _count < totalcount {
         let chunk_sum = data_iter
             .by_ref()
             .take(CHUNK_SIZE)
             .fold(F::zero(), |acc, val| acc + val);
 
         sum = sum + chunk_sum;
-        _count += CHUNK_SIZE.min(total_count - count);
+        _count += CHUNK_SIZE.min(totalcount - _count);
     }
 
-    Ok(sum / F::from(total_count).unwrap())
+    Ok(sum / F::from(totalcount).unwrap())
 }
 
 /// Welford's online algorithm for variance computation
@@ -113,7 +113,7 @@ pub fn normalize_inplace<F>(data: &mut ArrayViewMut1<F>, ddof: usize) -> StatsRe
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    let (mean, variance) = welford_variance(&_data.to_owned(), ddof)?;
+    let (mean, variance) = welford_variance(&data.to_owned(), ddof)?;
 
     if variance <= F::epsilon() {
         return Err(StatsError::InvalidArgument(
@@ -164,7 +164,7 @@ where
     let k = NumCast::from(pos.floor()).unwrap();
 
     // Use quickselect to find k-th element
-    quickselect(_data, k);
+    quickselect(data, k);
 
     let lower = data[k];
 
@@ -397,9 +397,9 @@ impl<F: Float + NumCast + ndarray::ScalarOperand + std::fmt::Display> Incrementa
     pub fn new(_nvars: usize) -> Self {
         Self {
             n: 0,
-            means: ndarray::Array1::zeros(_n_vars),
-            cov_matrix: ndarray::Array2::zeros((_n_vars, n_vars)),
-            n_vars: n_vars,
+            means: ndarray::Array1::zeros(_nvars),
+            cov_matrix: ndarray::Array2::zeros((_nvars, _nvars)),
+            n_vars: _nvars,
         }
     }
 
@@ -473,15 +473,15 @@ pub struct RollingStats<F: Float> {
 impl<F: Float + NumCast + std::fmt::Display> RollingStats<F> {
     /// Create a new rolling statistics calculator
     pub fn new(_windowsize: usize) -> StatsResult<Self> {
-        if _window_size == 0 {
+        if _windowsize == 0 {
             return Err(StatsError::InvalidArgument(
                 "Window _size must be positive".to_string(),
             ));
         }
 
         Ok(Self {
-            window_size: window_size,
-            buffer: vec![F::zero(); _window_size],
+            window_size: _windowsize,
+            buffer: vec![F::zero(); _windowsize],
             position: 0,
             is_full: false,
             sum: F::zero(),
@@ -564,8 +564,8 @@ pub struct StreamingHistogram<F: Float> {
 impl<F: Float + NumCast + std::fmt::Display> StreamingHistogram<F> {
     /// Create a new streaming histogram
     pub fn new(_n_bins: usize, min_val: F, maxval: F) -> Self {
-        let bin_width = (max_val - min_val) / F::from(_n_bins).unwrap();
-        let _bins: Vec<F> = (0..=_n_bins)
+        let bin_width = (maxval - min_val) / F::from(_n_bins).unwrap();
+        let bins: Vec<F> = (0..=_n_bins)
             .map(|i| min_val + F::from(i).unwrap() * bin_width)
             .collect();
 
@@ -573,7 +573,7 @@ impl<F: Float + NumCast + std::fmt::Display> StreamingHistogram<F> {
             bins: bins,
             counts: vec![0; _n_bins],
             min_val,
-            max_val,
+            max_val: maxval,
             total_count: 0,
         }
     }
@@ -635,7 +635,7 @@ impl<F: Float + NumCast + std::str::FromStr + std::fmt::Display> OutOfCoreStats<
     /// Create a new out-of-core statistics processor
     pub fn new(_chunksize: usize) -> Self {
         Self {
-            chunk_size: chunk_size,
+            chunk_size: _chunksize,
             _phantom: std::marker::PhantomData,
         }
     }

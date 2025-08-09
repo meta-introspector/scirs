@@ -33,7 +33,7 @@ impl FourierFeatures {
     /// * `n_components` - Number of frequency components to extract
     pub fn new(ncomponents: usize) -> Self {
         FourierFeatures {
-            n_components,
+            n_components: ncomponents,
             include_phase: false,
             normalize: true,
             sampling_freq: None,
@@ -160,7 +160,7 @@ impl LagFeatures {
 
     /// Create with a range of lags
     pub fn with_range(start: usize, end: usize) -> Self {
-        let lags = (_start..=end).collect();
+        let lags = (start..=end).collect();
         LagFeatures {
             lags,
             drop_na: true,
@@ -169,7 +169,7 @@ impl LagFeatures {
 
     /// Set whether to drop NaN values
     pub fn with_drop_na(mut self, dropna: bool) -> Self {
-        self.drop_na = drop_na;
+        self.drop_na = dropna;
         self
     }
 
@@ -560,7 +560,7 @@ impl TimeSeriesFeatures {
     pub fn with_fourier(mut self, n_components: usize, includephase: bool) -> Self {
         self.use_fourier = true;
         let mut fourier = FourierFeatures::new(n_components);
-        if include_phase {
+        if includephase {
             fourier = fourier.with_phase();
         }
         self.fourier_config = Some(fourier);

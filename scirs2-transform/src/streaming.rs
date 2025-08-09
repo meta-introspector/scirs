@@ -35,20 +35,20 @@ pub struct StreamingStandardScaler {
     /// Whether to center the data
     with_mean: bool,
     /// Whether to scale to unit variance
-    with_std: bool,
+    withstd: bool,
     /// Epsilon for numerical stability
     epsilon: f64,
 }
 
 impl StreamingStandardScaler {
     /// Create a new streaming standard scaler
-    pub fn new(_n_features: usize, with_mean: bool, withstd: bool) -> Self {
+    pub fn new(_nfeatures: usize, with_mean: bool, withstd: bool) -> Self {
         StreamingStandardScaler {
-            mean: Array1::zeros(_n_features),
-            variance: Array1::zeros(_n_features),
+            mean: Array1::zeros(_nfeatures),
+            variance: Array1::zeros(_nfeatures),
             n_samples: 0,
             with_mean,
-            with_std,
+            withstd,
             epsilon: 1e-8,
         }
     }
@@ -56,18 +56,18 @@ impl StreamingStandardScaler {
     /// Update statistics using Welford's online algorithm
     fn update_statistics(&mut self, x: &Array2<f64>) {
         let batch_size = x.shape()[0];
-        let n_features = x.shape()[1];
+        let nfeatures = x.shape()[1];
 
         for i in 0..batch_size {
             self.n_samples += 1;
             let n = self.n_samples as f64;
 
-            for j in 0..n_features {
+            for j in 0..nfeatures {
                 let value = x[[i, j]];
                 let delta = value - self.mean[j];
                 self.mean[j] += delta / n;
 
-                if self.with_std {
+                if self.withstd {
                     let delta2 = value - self.mean[j];
                     self.variance[j] += delta * delta2;
                 }
@@ -119,7 +119,7 @@ impl StreamingTransformer for StreamingStandardScaler {
             }
         }
 
-        if self.with_std {
+        if self.withstd {
             let std = self.get_std();
             for i in 0..result.shape()[0] {
                 for j in 0..result.shape()[1] {
@@ -149,18 +149,18 @@ pub struct StreamingMinMaxScaler {
     /// Maximum values for each feature
     max: Array1<f64>,
     /// Target range
-    feature_range: (f64, f64),
+    featurerange: (f64, f64),
     /// Number of samples seen
     n_samples: usize,
 }
 
 impl StreamingMinMaxScaler {
     /// Create a new streaming min-max scaler
-    pub fn new(_n_features: usize, featurerange: (f64, f64)) -> Self {
+    pub fn new(_nfeatures: usize, featurerange: (f64, f64)) -> Self {
         StreamingMinMaxScaler {
-            min: Array1::from_elem(_n_features, f64::INFINITY),
-            max: Array1::from_elem(_n_features, f64::NEG_INFINITY),
-            feature_range,
+            min: Array1::from_elem(_nfeatures, f64::INFINITY),
+            max: Array1::from_elem(_nfeatures, f64::NEG_INFINITY),
+            featurerange,
             n_samples: 0,
         }
     }
@@ -202,7 +202,7 @@ impl StreamingTransformer for StreamingMinMaxScaler {
         }
 
         let mut result = Array2::zeros((x.nrows(), x.ncols()));
-        let (min_val, max_val) = self.feature_range;
+        let (min_val, max_val) = self.featurerange;
         let scale = max_val - min_val;
 
         for i in 0..x.shape()[0] {
@@ -237,7 +237,7 @@ pub struct StreamingQuantileTracker {
     /// P² algorithm state for each feature and quantile
     p2_states: Vec<Vec<P2State>>,
     /// Number of features
-    n_features: usize,
+    nfeatures: usize,
 }
 
 /// P² algorithm state for a single quantile
@@ -372,8 +372,8 @@ impl StreamingQuantileTracker {
             }
         }
 
-        let mut p2_states = Vec::with_capacity(n_features);
-        for _ in 0..n_features {
+        let mut p2_states = Vec::with_capacity(nfeatures);
+        for _ in 0..nfeatures {
             let feature_states: Vec<P2State> = quantiles.iter().map(|&q| P2State::new(q)).collect();
             p2_states.push(feature_states);
         }
@@ -381,16 +381,16 @@ impl StreamingQuantileTracker {
         Ok(StreamingQuantileTracker {
             quantiles,
             p2_states,
-            n_features,
+            nfeatures,
         })
     }
 
     /// Update quantile estimates with new data
     pub fn update(&mut self, x: &Array2<f64>) -> Result<()> {
-        if x.shape()[1] != self.n_features {
+        if x.shape()[1] != self.nfeatures {
             return Err(TransformError::InvalidInput(format!(
                 "Expected {} features, got {}",
-                self.n_features,
+                self.nfeatures,
                 x.shape()[1]
             )));
         }
@@ -409,9 +409,9 @@ impl StreamingQuantileTracker {
 
     /// Get current quantile estimates
     pub fn get_quantiles(&self) -> Array2<f64> {
-        let mut result = Array2::zeros((self.n_features, self.quantiles.len()));
+        let mut result = Array2::zeros((self.nfeatures, self.quantiles.len()));
 
-        for j in 0..self.n_features {
+        for j in 0..self.nfeatures {
             for k in 0..self.quantiles.len() {
                 result[[j, k]] = self.p2_states[j][k].quantile();
             }
@@ -428,7 +428,7 @@ pub struct WindowedStreamingTransformer<T: StreamingTransformer> {
     /// Sliding window of recent data
     window: VecDeque<Array2<f64>>,
     /// Maximum window size
-    window_size: usize,
+    windowsize: usize,
     /// Current number of samples in window
     current_size: usize,
 }
@@ -437,9 +437,9 @@ impl<T: StreamingTransformer> WindowedStreamingTransformer<T> {
     /// Create a new windowed streaming transformer
     pub fn new(_transformer: T, windowsize: usize) -> Self {
         WindowedStreamingTransformer {
-            transformer: transformer,
-            window: VecDeque::with_capacity(window_size),
-            window_size,
+            transformer: _transformer,
+            window: VecDeque::with_capacity(windowsize),
+            windowsize,
             current_size: 0,
         }
     }
@@ -451,7 +451,7 @@ impl<T: StreamingTransformer> WindowedStreamingTransformer<T> {
         self.current_size += x.shape()[0];
 
         // Remove old data if window is full
-        while self.current_size > self.window_size && !self.window.is_empty() {
+        while self.current_size > self.windowsize && !self.window.is_empty() {
             if let Some(old_data) = self.window.pop_front() {
                 self.current_size -= old_data.shape()[0];
             }
@@ -483,7 +483,7 @@ pub struct StreamingPCA {
     /// Number of components to keep
     n_components: usize,
     /// Number of features
-    n_features: usize,
+    nfeatures: usize,
     /// Number of samples seen
     n_samples: usize,
     /// Forgetting factor for incremental updates (0 < alpha <= 1)
@@ -497,14 +497,14 @@ pub struct StreamingPCA {
 impl StreamingPCA {
     /// Create a new streaming PCA
     pub fn new(
-        n_features: usize,
+        nfeatures: usize,
         n_components: usize,
         alpha: f64,
         min_samples: usize,
     ) -> Result<Self> {
-        if n_components > n_features {
+        if n_components > nfeatures {
             return Err(TransformError::InvalidInput(
-                "n_components cannot be larger than n_features".to_string(),
+                "n_components cannot be larger than nfeatures".to_string(),
             ));
         }
         if alpha <= 0.0 || alpha > 1.0 {
@@ -514,24 +514,24 @@ impl StreamingPCA {
         }
 
         Ok(StreamingPCA {
-            mean: Array1::zeros(n_features),
+            mean: Array1::zeros(nfeatures),
             components: None,
             explained_variance: None,
             n_components,
-            n_features,
+            nfeatures,
             n_samples: 0,
             alpha,
             min_samples,
-            cov_matrix: Array2::zeros((n_features, n_features)),
+            cov_matrix: Array2::zeros((nfeatures, nfeatures)),
         })
     }
 
     /// Update PCA with new batch of data
     pub fn update(&mut self, x: &Array2<f64>) -> Result<()> {
-        if x.shape()[1] != self.n_features {
+        if x.shape()[1] != self.nfeatures {
             return Err(TransformError::InvalidInput(format!(
                 "Expected {} features, got {}",
-                self.n_features,
+                self.nfeatures,
                 x.shape()[1]
             )));
         }
@@ -584,7 +584,7 @@ impl StreamingPCA {
         eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
         // Take top n_components
-        let mut components = Array2::zeros((self.n_components, self.n_features));
+        let mut components = Array2::zeros((self.n_components, self.nfeatures));
         let mut explained_var = Array1::zeros(self.n_components);
 
         for (i, (eigenval, eigenvec)) in eigen_pairs.iter().take(self.n_components).enumerate() {
@@ -600,10 +600,10 @@ impl StreamingPCA {
     /// Transform data using current PCA
     pub fn transform(&self, x: &Array2<f64>) -> Result<Array2<f64>> {
         if let Some(ref components) = self.components {
-            if x.shape()[1] != self.n_features {
+            if x.shape()[1] != self.nfeatures {
                 return Err(TransformError::InvalidInput(format!(
                     "Expected {} features, got {}",
-                    self.n_features,
+                    self.nfeatures,
                     x.shape()[1]
                 )));
             }
@@ -654,7 +654,7 @@ pub struct StreamingOutlierDetector {
     /// Number of samples seen
     n_samples: usize,
     /// Number of features
-    n_features: usize,
+    nfeatures: usize,
     /// Threshold for outlier detection (standard deviations)
     threshold: f64,
     /// Method for outlier detection
@@ -674,12 +674,12 @@ pub enum OutlierMethod {
 
 impl StreamingOutlierDetector {
     /// Create a new streaming outlier detector
-    pub fn new(_nfeatures: usize, threshold: f64, method: OutlierMethod) -> Self {
+    pub fn new(nfeatures: usize, threshold: f64, method: OutlierMethod) -> Self {
         StreamingOutlierDetector {
-            means: Array1::zeros(_n_features),
-            variances: Array1::zeros(_n_features),
+            means: Array1::zeros(nfeatures),
+            variances: Array1::zeros(nfeatures),
             n_samples: 0,
-            n_features: n_features,
+            nfeatures,
             threshold,
             method,
         }
@@ -687,10 +687,10 @@ impl StreamingOutlierDetector {
 
     /// Update statistics with new data
     pub fn update(&mut self, x: &Array2<f64>) -> Result<()> {
-        if x.shape()[1] != self.n_features {
+        if x.shape()[1] != self.nfeatures {
             return Err(TransformError::InvalidInput(format!(
                 "Expected {} features, got {}",
-                self.n_features,
+                self.nfeatures,
                 x.shape()[1]
             )));
         }
@@ -713,10 +713,10 @@ impl StreamingOutlierDetector {
 
     /// Detect outliers in new data
     pub fn detect_outliers(&self, x: &Array2<f64>) -> Result<Array1<bool>> {
-        if x.shape()[1] != self.n_features {
+        if x.shape()[1] != self.nfeatures {
             return Err(TransformError::InvalidInput(format!(
                 "Expected {} features, got {}",
-                self.n_features,
+                self.nfeatures,
                 x.shape()[1]
             )));
         }
@@ -778,7 +778,7 @@ impl StreamingOutlierDetector {
 
     fn get_standard_deviations(&self) -> Array1<f64> {
         if self.n_samples <= 1 {
-            Array1::ones(self.n_features)
+            Array1::ones(self.nfeatures)
         } else {
             self.variances
                 .mapv(|v| (v / (self.n_samples - 1) as f64).sqrt().max(1e-8))
@@ -797,7 +797,7 @@ impl StreamingOutlierDetector {
             let mut min_split_distance = f64::INFINITY;
 
             // Find the most isolating dimension
-            for j in 0..self.n_features {
+            for j in 0..self.nfeatures {
                 let std_dev = (self.variances[j] / (self.n_samples - 1) as f64).sqrt();
                 if std_dev > 1e-8 {
                     // Distance from mean normalized by standard deviation
@@ -818,7 +818,7 @@ impl StreamingOutlierDetector {
             path_length += 1.0;
 
             // Adjust sample position for next iteration (simulating tree traversal)
-            for j in 0..self.n_features {
+            for j in 0..self.nfeatures {
                 let adjustment = (current_sample[j] - self.means[j]) * 0.1;
                 current_sample[j] -= adjustment;
             }
@@ -839,10 +839,10 @@ impl StreamingOutlierDetector {
 
     /// Get anomaly scores for samples
     pub fn anomaly_scores(&self, x: &Array2<f64>) -> Result<Array1<f64>> {
-        if x.shape()[1] != self.n_features {
+        if x.shape()[1] != self.nfeatures {
             return Err(TransformError::InvalidInput(format!(
                 "Expected {} features, got {}",
-                self.n_features,
+                self.nfeatures,
                 x.shape()[1]
             )));
         }
@@ -862,7 +862,7 @@ impl StreamingOutlierDetector {
                     score += z_score;
                 }
             }
-            scores[i] = score / self.n_features as f64;
+            scores[i] = score / self.nfeatures as f64;
         }
 
         Ok(scores)
@@ -887,36 +887,36 @@ pub struct StreamingFeatureSelector {
     /// Number of samples seen
     n_samples: usize,
     /// Number of features
-    n_features: usize,
+    nfeatures: usize,
     /// Variance threshold for feature selection
     variance_threshold: f64,
     /// Correlation threshold for removing highly correlated features
-    correlation_threshold: f64,
+    correlationthreshold: f64,
     /// Selected feature indices
     selected_features: Option<Vec<usize>>,
 }
 
 impl StreamingFeatureSelector {
     /// Create a new streaming feature selector
-    pub fn new(_n_features: usize, variance_threshold: f64, correlationthreshold: f64) -> Self {
+    pub fn new(nfeatures: usize, variance_threshold: f64, correlationthreshold: f64) -> Self {
         StreamingFeatureSelector {
-            variances: Array1::zeros(_n_features),
-            means: Array1::zeros(_n_features),
-            correlations: Array2::zeros((_n_features, n_features)),
+            variances: Array1::zeros(nfeatures),
+            means: Array1::zeros(nfeatures),
+            correlations: Array2::zeros((nfeatures, nfeatures)),
             n_samples: 0,
-            n_features: n_features,
+            nfeatures,
             variance_threshold,
-            correlation_threshold,
+            correlationthreshold,
             selected_features: None,
         }
     }
 
     /// Update statistics with new data
     pub fn update(&mut self, x: &Array2<f64>) -> Result<()> {
-        if x.shape()[1] != self.n_features {
+        if x.shape()[1] != self.nfeatures {
             return Err(TransformError::InvalidInput(format!(
                 "Expected {} features, got {}",
-                self.n_features,
+                self.nfeatures,
                 x.shape()[1]
             )));
         }
@@ -936,8 +936,8 @@ impl StreamingFeatureSelector {
 
             // Update correlations (simplified running correlation)
             if self.n_samples > 1 {
-                for i in 0..self.n_features {
-                    for j in (i + 1)..self.n_features {
+                for i in 0..self.nfeatures {
+                    for j in (i + 1)..self.nfeatures {
                         let val_i = sample[i] - self.means[i];
                         let val_j = sample[j] - self.means[j];
                         let covar_update = val_i * val_j / (n - 1.0);
@@ -962,7 +962,7 @@ impl StreamingFeatureSelector {
         let current_variances = self.get_current_variances();
 
         // First pass: select features based on variance threshold
-        for i in 0..self.n_features {
+        for i in 0..self.nfeatures {
             if current_variances[i] > self.variance_threshold {
                 selected.push(i);
             }
@@ -976,7 +976,7 @@ impl StreamingFeatureSelector {
             for &j in &final_selected {
                 if i != j {
                     let corr = self.get_correlation(i, j, &current_variances);
-                    if corr.abs() > self.correlation_threshold {
+                    if corr.abs() > self.correlationthreshold {
                         // Keep feature with higher variance
                         if current_variances[i] <= current_variances[j] {
                             should_include = false;
@@ -996,7 +996,7 @@ impl StreamingFeatureSelector {
 
     fn get_current_variances(&self) -> Array1<f64> {
         if self.n_samples <= 1 {
-            Array1::zeros(self.n_features)
+            Array1::zeros(self.nfeatures)
         } else {
             self.variances.mapv(|v| v / (self.n_samples - 1) as f64)
         }
@@ -1017,10 +1017,10 @@ impl StreamingFeatureSelector {
     /// Transform data by selecting features
     pub fn transform(&self, x: &Array2<f64>) -> Result<Array2<f64>> {
         if let Some(ref selected) = self.selected_features {
-            if x.shape()[1] != self.n_features {
+            if x.shape()[1] != self.nfeatures {
                 return Err(TransformError::InvalidInput(format!(
                     "Expected {} features, got {}",
-                    self.n_features,
+                    self.nfeatures,
                     x.shape()[1]
                 )));
             }
@@ -1053,7 +1053,7 @@ impl StreamingFeatureSelector {
     pub fn n_features_selected(&self) -> usize {
         self.selected_features
             .as_ref()
-            .map_or(self.n_features, |s| s.len())
+            .map_or(self.nfeatures, |s| s.len())
     }
 
     /// Reset selector to initial state

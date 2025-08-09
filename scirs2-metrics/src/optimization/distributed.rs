@@ -83,7 +83,7 @@ pub struct DistributedConfig {
     /// Network protocol to use
     pub network_protocol: NetworkProtocol,
     /// Authentication settings
-    pub auth_config: Option<AuthConfig>,
+    pub _authconfig: Option<AuthConfig>,
     /// Enable async operations
     pub enable_async: bool,
     /// Connection pool size per worker
@@ -109,7 +109,7 @@ impl Default for DistributedConfig {
             replication_factor: 1,
             load_balancing: LoadBalancingStrategy::RoundRobin,
             network_protocol: NetworkProtocol::Http,
-            auth_config: None,
+            _authconfig: None,
             enable_async: true,
             connection_pool_size: 10,
             circuit_breaker_enabled: true,
@@ -217,7 +217,7 @@ pub enum DistributedMessage {
         task_id: String,
         chunk_id: usize,
         results: HashMap<String, f64>,
-        sample_count: usize,
+        samplecount: usize,
     },
     /// Health check request
     HealthCheck,
@@ -354,7 +354,7 @@ pub struct WorkerMetrics {
 pub struct CircuitBreaker {
     pub state: CircuitBreakerState,
     pub failure_count: usize,
-    pub failure_threshold: usize,
+    pub _failurethreshold: usize,
     pub timeout: Duration,
     pub last_failure_time: Option<Instant>,
     pub success_count: usize,
@@ -373,7 +373,7 @@ pub enum CircuitBreakerState {
 #[derive(Debug, Clone)]
 pub struct ConnectionPool {
     pub available_connections: usize,
-    pub max_connections: usize,
+    pub _maxconnections: usize,
     pub active_connections: usize,
     pub created_at: Instant,
     pub last_cleanup: Instant,
@@ -382,8 +382,8 @@ pub struct ConnectionPool {
 impl ConnectionPool {
     pub fn new(_maxconnections: usize) -> Self {
         Self {
-            available_connections: max_connections,
-            max_connections,
+            available_connections: _maxconnections,
+            _maxconnections,
             active_connections: 0,
             created_at: Instant::now(),
             last_cleanup: Instant::now(),
@@ -414,7 +414,7 @@ pub struct Alert {
     pub message: String,
     pub severity: AlertSeverity,
     pub timestamp: Instant,
-    pub worker_id: Option<String>,
+    pub workerid: Option<String>,
 }
 
 /// Alert types
@@ -451,7 +451,7 @@ pub struct AuthToken {
     pub token: String,
     pub expires_at: SystemTime,
     pub permissions: Vec<Permission>,
-    pub worker_id: String,
+    pub workerid: String,
 }
 
 /// Permission types
@@ -545,7 +545,7 @@ impl DistributedMetricsCoordinator {
     /// Create network client based on protocol
     fn create_network_client(
         protocol: &NetworkProtocol,
-        auth_config: &Option<AuthConfig>,
+        _authconfig: &Option<AuthConfig>,
     ) -> Result<Arc<dyn NetworkClient + Send + Sync>> {
         match protocol {
             NetworkProtocol::Http | NetworkProtocol::Http2 => {
@@ -939,7 +939,7 @@ impl DistributedMetricsCoordinator {
                 )?;
 
                 // Update worker metrics before moving chunk_result
-                self.update_worker_performance(&selected_worker, chunk_result.sample_count);
+                self.update_worker_performance(&selected_worker, chunk_result.samplecount);
                 results.push(chunk_result);
             }
         }
@@ -992,14 +992,14 @@ impl DistributedMetricsCoordinator {
                     if let DistributedMessage::MetricsResult {
                         chunk_id,
                         results,
-                        sample_count,
+                        samplecount,
                         ..
                     } = response
                     {
                         Ok(ChunkResult {
                             chunk_id,
                             metrics: results,
-                            sample_count,
+                            samplecount,
                         })
                     } else {
                         Err(MetricsError::ComputationError(
@@ -1041,7 +1041,7 @@ impl DistributedMetricsCoordinator {
                     ChunkResult {
                         chunk_id: i,
                         metrics: std::collections::HashMap::new(),
-                        sample_count: 0,
+                        samplecount: 0,
                     }
                 });
 
@@ -1091,7 +1091,7 @@ impl DistributedMetricsCoordinator {
     fn check_circuit_breaker(&self, workerid: &str) -> Result<bool> {
         let circuit_breakers = self.circuit_breakers.read().unwrap();
 
-        if let Some(cb) = circuit_breakers.get(worker_id) {
+        if let Some(cb) = circuit_breakers.get(workerid) {
             match cb.state {
                 CircuitBreakerState::Closed => Ok(true),
                 CircuitBreakerState::Open => {
@@ -1101,7 +1101,7 @@ impl DistributedMetricsCoordinator {
                             // Transition to half-open
                             drop(circuit_breakers);
                             self.set_circuit_breaker_state(
-                                worker_id,
+                                workerid,
                                 CircuitBreakerState::HalfOpen,
                             )?;
                             Ok(true)
@@ -1126,7 +1126,7 @@ impl DistributedMetricsCoordinator {
     fn set_circuit_breaker_state(&self, workerid: &str, state: CircuitBreakerState) -> Result<()> {
         let mut circuit_breakers = self.circuit_breakers.write().unwrap();
 
-        if let Some(cb) = circuit_breakers.get_mut(worker_id) {
+        if let Some(cb) = circuit_breakers.get_mut(workerid) {
             let is_closed = state == CircuitBreakerState::Closed;
             cb.state = state;
             if is_closed {
@@ -1141,7 +1141,7 @@ impl DistributedMetricsCoordinator {
     /// Send task with retry logic
     fn send_task_with_retry(
         &self,
-        worker_id: &str,
+        workerid: &str,
         message: DistributedMessage,
         y_true_chunk: &[f64],
         y_pred_chunk: &[f64],
@@ -1150,27 +1150,27 @@ impl DistributedMetricsCoordinator {
         let mut retries = 0;
 
         while retries < self.config.max_retries {
-            match self.network_client.send_request_sync(worker_id, &message) {
+            match self.network_client.send_request_sync(workerid, &message) {
                 Ok(response) => {
                     if let DistributedMessage::MetricsResult {
                         chunk_id,
                         results,
-                        sample_count,
+                        samplecount,
                         ..
                     } = response
                     {
                         // Success - update circuit breaker
-                        self.record_success(worker_id)?;
+                        self.record_success(workerid)?;
                         return Ok(ChunkResult {
                             chunk_id,
                             metrics: results,
-                            sample_count,
+                            samplecount,
                         });
                     }
                 }
                 Err(_e) => {
                     retries += 1;
-                    self.record_failure(worker_id)?;
+                    self.record_failure(workerid)?;
 
                     if retries >= self.config.max_retries {
                         // Fallback to local computation
@@ -1189,7 +1189,7 @@ impl DistributedMetricsCoordinator {
                                 y_pred_chunk,
                                 metric_names,
                             )?,
-                            sample_count: y_true_chunk.len(),
+                            samplecount: y_true_chunk.len(),
                         });
                     }
 
@@ -1209,7 +1209,7 @@ impl DistributedMetricsCoordinator {
         let mut circuit_breakers = self.circuit_breakers.write().unwrap();
 
         let cb = circuit_breakers
-            .entry(worker_id.to_string())
+            .entry(workerid.to_string())
             .or_insert_with(|| {
                 CircuitBreaker::new(
                     self.config.circuit_breaker_threshold,
@@ -1233,7 +1233,7 @@ impl DistributedMetricsCoordinator {
         let mut circuit_breakers = self.circuit_breakers.write().unwrap();
 
         let cb = circuit_breakers
-            .entry(worker_id.to_string())
+            .entry(workerid.to_string())
             .or_insert_with(|| {
                 CircuitBreaker::new(
                     self.config.circuit_breaker_threshold,
@@ -1244,7 +1244,7 @@ impl DistributedMetricsCoordinator {
         cb.failure_count += 1;
         cb.last_failure_time = Some(Instant::now());
 
-        if cb.failure_count >= cb.failure_threshold {
+        if cb.failure_count >= cb._failurethreshold {
             cb.state = CircuitBreakerState::Open;
         }
 
@@ -1369,7 +1369,7 @@ impl DistributedMetricsCoordinator {
                 .filter_map(|r| r.metrics.get(&metric_name).copied())
                 .collect();
 
-            let sample_counts: Vec<usize> = chunk_results.iter().map(|r| r.sample_count).collect();
+            let sample_counts: Vec<usize> = chunk_results.iter().map(|r| r.samplecount).collect();
 
             if !values.is_empty() {
                 let aggregated_value = match strategy {
@@ -1412,14 +1412,14 @@ impl DistributedMetricsCoordinator {
         &self,
         task_id: &str,
         execution_time: Duration,
-        sample_count: usize,
+        samplecount: usize,
     ) {
         if let Ok(mut monitor) = self.performance_monitor.lock() {
-            let throughput = sample_count as f64 / execution_time.as_secs_f64();
+            let throughput = samplecount as f64 / execution_time.as_secs_f64();
 
             monitor.record_metric("execution_time", execution_time.as_secs_f64(), task_id);
             monitor.record_metric("throughput", throughput, task_id);
-            monitor.record_metric("sample_count", sample_count as f64, task_id);
+            monitor.record_metric("samplecount", samplecount as f64, task_id);
 
             // Check for performance alerts
             if execution_time > Duration::from_secs(60) {
@@ -1428,7 +1428,7 @@ impl DistributedMetricsCoordinator {
                     message: format!("Task {} took {} seconds", task_id, execution_time.as_secs()),
                     severity: AlertSeverity::Warning,
                     timestamp: Instant::now(),
-                    worker_id: None,
+                    workerid: None,
                 });
             }
         }
@@ -1453,18 +1453,18 @@ impl DistributedMetricsCoordinator {
     }
 
     /// Update worker performance metrics
-    fn update_worker_performance(&self, worker_id: &str, samplecount: usize) {
+    fn update_worker_performance(&self, workerid: &str, samplecount: usize) {
         if let Ok(mut load_balancer) = self.load_balancer.lock() {
             let metrics = WorkerMetrics {
                 response_time: Duration::from_millis(100), // Would be measured
-                throughput: sample_count as f64,
+                throughput: samplecount as f64,
                 error_rate: 0.0,
                 cpu_usage: 0.5,
                 memory_usage: 0.3,
                 queue_length: 0,
             };
 
-            load_balancer.update_worker_metrics(worker_id, &metrics);
+            load_balancer.update_worker_metrics(workerid, &metrics);
         }
     }
 
@@ -1527,7 +1527,7 @@ impl DistributedMetricsCoordinator {
         // Initialize connection pool
         let connection_pool = ConnectionPool {
             available_connections: self.config.connection_pool_size,
-            max_connections: self.config.connection_pool_size,
+            _maxconnections: self.config.connection_pool_size,
             active_connections: 0,
             created_at: Instant::now(),
             last_cleanup: Instant::now(),
@@ -1646,7 +1646,7 @@ impl DistributedMetricsCoordinator {
 struct ChunkResult {
     chunk_id: usize,
     metrics: HashMap<String, f64>,
-    sample_count: usize,
+    samplecount: usize,
 }
 
 /// Enhanced cluster status
@@ -1691,7 +1691,7 @@ impl DistributedMetricsBuilder {
 
     /// Set worker timeout
     pub fn with_timeout(mut self, timeoutms: u64) -> Self {
-        self.config.worker_timeout_ms = timeout_ms;
+        self.config.worker_timeout_ms = timeoutms;
         self
     }
 
@@ -1721,7 +1721,7 @@ impl DistributedMetricsBuilder {
 
     /// Set authentication config
     pub fn with_auth(mut self, auth: AuthConfig) -> Self {
-        self.config.auth_config = Some(auth);
+        self.config._authconfig = Some(auth);
         self
     }
 
@@ -1818,24 +1818,24 @@ impl LoadBalancer for LeastConnectionsBalancer {
         let mut min_connections = usize::MAX;
         let mut selected_worker = None;
 
-        for worker_id in workers.keys() {
-            let connections = *self.connection_counts.get(worker_id).unwrap_or(&0);
+        for workerid in workers.keys() {
+            let connections = *self.connection_counts.get(workerid).unwrap_or(&0);
             if connections < min_connections {
                 min_connections = connections;
-                selected_worker = Some(worker_id.clone());
+                selected_worker = Some(workerid.clone());
             }
         }
 
-        if let Some(ref worker_id) = selected_worker {
-            *self.connection_counts.entry(worker_id.clone()).or_insert(0) += 1;
+        if let Some(ref workerid) = selected_worker {
+            *self.connection_counts.entry(workerid.clone()).or_insert(0) += 1;
         }
 
         selected_worker
     }
 
-    fn update_worker_metrics(&mut self, worker_id: &str, metrics: &WorkerMetrics) {
+    fn update_worker_metrics(&mut self, workerid: &str, metrics: &WorkerMetrics) {
         // Decrease connection count when task completes
-        if let Some(count) = self.connection_counts.get_mut(worker_id) {
+        if let Some(count) = self.connection_counts.get_mut(workerid) {
             if *count > 0 {
                 *count -= 1;
             }
@@ -1875,24 +1875,24 @@ impl LoadBalancer for WeightedRoundRobinBalancer {
         let mut max_weight = f64::NEG_INFINITY;
         let mut selected_worker = None;
 
-        for worker_id in workers.keys() {
-            let weight = *self.weights.get(worker_id).unwrap_or(&1.0);
+        for workerid in workers.keys() {
+            let weight = *self.weights.get(workerid).unwrap_or(&1.0);
             let current_weight = self
                 .current_weights
-                .entry(worker_id.clone())
+                .entry(workerid.clone())
                 .or_insert(weight);
 
             *current_weight += weight;
 
             if *current_weight > max_weight {
                 max_weight = *current_weight;
-                selected_worker = Some(worker_id.clone());
+                selected_worker = Some(workerid.clone());
             }
         }
 
-        if let Some(ref worker_id) = selected_worker {
+        if let Some(ref workerid) = selected_worker {
             let total_weight: f64 = self.weights.values().sum();
-            if let Some(current) = self.currentweights.get_mut(worker_id) {
+            if let Some(current) = self.currentweights.get_mut(workerid) {
                 *current -= total_weight;
             }
         }
@@ -1944,11 +1944,11 @@ impl LoadBalancer for LoadBasedBalancer {
         let mut min_load = f64::INFINITY;
         let mut selected_worker = None;
 
-        for (worker_id, worker) in workers {
+        for (workerid, worker) in workers {
             let load_score = self.calculate_load_score(worker);
             if load_score < min_load {
                 min_load = load_score;
-                selected_worker = Some(worker_id.clone());
+                selected_worker = Some(workerid.clone());
             }
         }
 
@@ -1959,7 +1959,7 @@ impl LoadBalancer for LoadBasedBalancer {
         let load_score = metrics.cpu_usage * 0.4
             + metrics.memory_usage * 0.4
             + (metrics.queue_length as f64 / 100.0) * 0.2;
-        self.worker_loads.insert(worker_id.to_string(), load_score);
+        self.worker_loads.insert(workerid.to_string(), load_score);
     }
 
     fn get_strategy(&self) -> LoadBalancingStrategy {
@@ -1993,15 +1993,15 @@ impl LoadBalancer for LatencyBasedBalancer {
         let mut min_latency = Duration::from_secs(u64::MAX);
         let mut selected_worker = None;
 
-        for (worker_id, worker) in workers {
+        for (workerid, worker) in workers {
             let latency = self
                 .response_times
-                .get(worker_id)
+                .get(workerid)
                 .unwrap_or(&worker.status.response_time);
 
             if *latency < min_latency {
                 min_latency = *latency;
-                selected_worker = Some(worker_id.clone());
+                selected_worker = Some(workerid.clone());
             }
         }
 
@@ -2010,7 +2010,7 @@ impl LoadBalancer for LatencyBasedBalancer {
 
     fn update_worker_metrics(&mut self, workerid: &str, metrics: &WorkerMetrics) {
         self.response_times
-            .insert(worker_id.to_string(), metrics.response_time);
+            .insert(workerid.to_string(), metrics.response_time);
     }
 
     fn get_strategy(&self) -> LoadBalancingStrategy {
@@ -2025,7 +2025,7 @@ impl CircuitBreaker {
         Self {
             state: CircuitBreakerState::Closed,
             failure_count: 0,
-            failure_threshold,
+            _failurethreshold,
             timeout,
             last_failure_time: None,
             success_count: 0,
@@ -2111,7 +2111,7 @@ impl SecurityManager {
         let mut limiters = self.rate_limiters.write().unwrap();
 
         let limiter = limiters
-            .entry(worker_id.to_string())
+            .entry(workerid.to_string())
             .or_insert_with(|| RateLimiter {
                 requests_per_second: 100.0,
                 bucket_size: 100,
@@ -2139,12 +2139,12 @@ impl SecurityManager {
     pub fn remove_worker(&self, workerid: &str) -> Result<()> {
         {
             let mut tokens = self.auth_tokens.write().unwrap();
-            tokens.retain(|_, token| token.worker_id != worker_id);
+            tokens.retain(|_, token| token.workerid != workerid);
         }
 
         {
             let mut limiters = self.rate_limiters.write().unwrap();
-            limiters.remove(worker_id);
+            limiters.remove(workerid);
         }
 
         Ok(())
@@ -2155,7 +2155,7 @@ impl SecurityManager {
 
 /// HTTP client implementation with connection pooling and error handling
 pub struct HttpClient {
-    auth_config: Option<AuthConfig>,
+    _authconfig: Option<AuthConfig>,
     connection_pool: Arc<Mutex<HttpConnectionPool>>,
     timeout: Duration,
     retry_policy: RetryPolicy,
@@ -2166,7 +2166,7 @@ pub struct HttpClient {
 pub struct HttpConnectionPool {
     connections: HashMap<String, Vec<HttpConnection>>,
     max_connections_per_host: usize,
-    max_idle_timeout: Duration,
+    max_idletimeout: Duration,
 }
 
 /// Individual HTTP connection
@@ -2205,7 +2205,7 @@ impl HttpConnectionPool {
         Self {
             connections: HashMap::new(),
             max_connections_per_host,
-            max_idle_timeout,
+            max_idletimeout,
         }
     }
 
@@ -2219,7 +2219,7 @@ impl HttpConnectionPool {
 
         if let Some(connections) = self.connections.get_mut(&key) {
             // Remove expired connections
-            connections.retain(|conn| conn.last_used.elapsed() < self.max_idle_timeout);
+            connections.retain(|conn| conn.last_used.elapsed() < self.max_idletimeout);
 
             // Return an available connection
             if let Some(mut conn) = connections.pop() {
@@ -2255,7 +2255,7 @@ impl HttpConnectionPool {
 
     pub fn cleanup_expired(&mut self) {
         for connections in self.connections.values_mut() {
-            connections.retain(|conn| conn.last_used.elapsed() < self.max_idle_timeout);
+            connections.retain(|conn| conn.last_used.elapsed() < self.max_idletimeout);
         }
         self.connections
             .retain(|_, connections| !connections.is_empty());
@@ -2265,7 +2265,7 @@ impl HttpConnectionPool {
 impl HttpClient {
     pub fn new(_authconfig: Option<AuthConfig>) -> Result<Self> {
         Ok(Self {
-            auth_config,
+            _authconfig,
             connection_pool: Arc::new(Mutex::new(HttpConnectionPool::new(
                 10,
                 Duration::from_secs(60),
@@ -2344,7 +2344,7 @@ impl HttpClient {
         request.push_str("Connection: keep-alive\r\n");
 
         // Add authentication headers
-        if let Some(auth) = &self.auth_config {
+        if let Some(auth) = &self._authconfig {
             match &auth.auth_method {
                 AuthMethod::ApiKey => {
                     if let Some(token) = &auth.token {
@@ -2521,7 +2521,7 @@ impl HttpClient {
         );
 
         // Add authentication headers if configured
-        if let Some(auth) = &self.auth_config {
+        if let Some(auth) = &self._authconfig {
             match &auth.auth_method {
                 AuthMethod::Basic => {
                     if let (Some(username), Some(password)) = (&auth.username, &auth.password) {
@@ -2659,7 +2659,7 @@ impl HttpClient {
                 }
 
                 // Parse sample count
-                let sample_count = if let Some(count_start) = response_body.find("\"sample_count\"")
+                let samplecount = if let Some(count_start) = response_body.find("\"samplecount\"")
                 {
                     if let Some(colon_pos) = response_body[count_start..].find(':') {
                         let after_colon = &response_body[count_start + colon_pos + 1..];
@@ -2681,7 +2681,7 @@ impl HttpClient {
                     task_id: task_id.clone(),
                     chunk_id: *chunk_id,
                     results,
-                    sample_count,
+                    samplecount,
                 })
             }
             DistributedMessage::HealthCheck => {
@@ -2728,7 +2728,7 @@ impl HttpClient {
 
     /// Parse a specific field from JSON string (simple implementation)
     fn parse_json_field(_json: &str, fieldname: &str) -> Option<f64> {
-        let pattern = format!("\"{}\"", field_name);
+        let pattern = format!("\"{}\"", fieldname);
         if let Some(field_start) = json.find(&pattern) {
             if let Some(colon_pos) = json[field_start..].find(':') {
                 let after_colon = &_json[field_start + colon_pos + 1..];
@@ -2757,7 +2757,7 @@ impl NetworkClient for HttpClient {
         let message = message.clone();
 
         let timeout = self.timeout;
-        let auth_config = self.auth_configclone();
+        let _authconfig = self.auth_configclone();
 
         Box::pin(async move {
             // Convert message to JSON for HTTP request
@@ -2793,7 +2793,7 @@ impl NetworkClient for HttpClient {
             let result = thread::spawn(move || {
                 // Create a temporary HTTP client for this request
                 let temp_client = HttpClient {
-                    auth_config,
+                    _authconfig,
                     connection_pool: Arc::new(Mutex::new(HttpConnectionPool::new(
                         10,
                         Duration::from_secs(300),
@@ -2938,7 +2938,7 @@ impl HttpClient {
                     task_id: task_id.clone(),
                     chunk_id: *chunk_id,
                     results,
-                    sample_count: y_true.len(),
+                    samplecount: y_true.len(),
                 })
             }
             DistributedMessage::HealthCheck => Ok(DistributedMessage::HealthCheckResponse {
@@ -2988,12 +2988,12 @@ impl HttpClient {
 
 /// gRPC client implementation (simplified)
 pub struct GrpcClient {
-    auth_config: Option<AuthConfig>,
+    _authconfig: Option<AuthConfig>,
 }
 
 impl GrpcClient {
     pub fn new(_authconfig: Option<AuthConfig>) -> Result<Self> {
-        Ok(Self { _auth_config })
+        Ok(Self { _authconfig })
     }
 }
 
@@ -3083,12 +3083,12 @@ impl NetworkClient for GrpcClient {
 
 /// TCP client implementation (simplified)
 pub struct TcpClient {
-    auth_config: Option<AuthConfig>,
+    _authconfig: Option<AuthConfig>,
 }
 
 impl TcpClient {
     pub fn new(_authconfig: Option<AuthConfig>) -> Result<Self> {
-        Ok(Self { _auth_config })
+        Ok(Self { _authconfig })
     }
 }
 
@@ -3178,12 +3178,12 @@ impl NetworkClient for TcpClient {
 
 /// WebSocket client implementation (simplified)
 pub struct WebSocketClient {
-    auth_config: Option<AuthConfig>,
+    _authconfig: Option<AuthConfig>,
 }
 
 impl WebSocketClient {
     pub fn new(_authconfig: Option<AuthConfig>) -> Result<Self> {
-        Ok(Self { _auth_config })
+        Ok(Self { _authconfig })
     }
 }
 
@@ -3269,12 +3269,12 @@ impl NetworkClient for WebSocketClient {
 
 /// UDP client implementation (simplified)
 pub struct UdpClient {
-    auth_config: Option<AuthConfig>,
+    _authconfig: Option<AuthConfig>,
 }
 
 impl UdpClient {
     pub fn new(_authconfig: Option<AuthConfig>) -> Result<Self> {
-        Ok(Self { _auth_config })
+        Ok(Self { _authconfig })
     }
 }
 

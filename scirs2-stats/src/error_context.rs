@@ -278,7 +278,7 @@ pub mod data_validation {
     where
         T: Float + Display,
     {
-        if data.is_empty() && !allow_empty {
+        if _data.is_empty() && !allow_empty {
             return Err(EnhancedError::new(
                 StatsError::invalid_argument("Empty _data array"),
                 format!("Empty input _data for {}", context),
@@ -292,8 +292,8 @@ pub mod data_validation {
         }
 
         // Check for NaN or infinite values
-        let nan_count = data.iter().filter(|&&x| x.is_nan()).count();
-        let inf_count = data.iter().filter(|&&x| x.is_infinite()).count();
+        let nan_count = _data.iter().filter(|&&x| x.is_nan()).count();
+        let inf_count = _data.iter().filter(|&&x| x.is_infinite()).count();
 
         if nan_count > 0 {
             return Err(EnhancedError::new(

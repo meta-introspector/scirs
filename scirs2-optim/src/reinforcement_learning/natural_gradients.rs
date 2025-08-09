@@ -119,7 +119,7 @@ pub struct NaturalPolicyGradient<T: Float, P: PolicyNetwork<T>> {
     update_count: usize,
 
     /// Parameter dimension
-    param_dim: usize,
+    paramdim: usize,
 }
 
 /// Kronecker factorization components
@@ -176,7 +176,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
     /// Create a new natural policy gradient optimizer
     pub fn new(_config: NaturalGradientConfig<T>, policy: P, paramdim: usize) -> Self {
         let fisher_accumulator = FisherAccumulator {
-            fisher_sum: Array2::zeros((param_dim, param_dim)),
+            fisher_sum: Array2::zeros((paramdim, paramdim)),
             sample_count: 0,
             gradient_history: Vec::new(),
             max_history_size: 1000,
@@ -191,7 +191,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
         };
 
         Self {
-            config,
+            _config: config,
             policy,
             fisher_matrix: None,
             fisher_diagonal: None,
@@ -199,7 +199,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
             empirical_fisher_accumulator: fisher_accumulator,
             natural_grad_state,
             update_count: 0,
-            param_dim,
+            paramdim,
         }
     }
 
@@ -215,13 +215,13 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
         }
 
         // Compute natural gradients
-        let natural_gradients = self.compute_natural_gradients(&gradients)?;
+        let naturalgradients = self.compute_natural_gradients(&gradients)?;
 
         // Apply natural gradient update
-        self.apply_natural_gradient_update(&natural_gradients)?;
+        self.apply_natural_gradient_update(&naturalgradients)?;
 
         // Update state
-        self.natural_grad_state.prev_natural_grad = Some(natural_gradients);
+        self.natural_grad_state.prev_natural_grad = Some(naturalgradients);
         self.update_count += 1;
 
         // Compute metrics
@@ -283,7 +283,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
 
     /// Update diagonal Fisher approximation
     fn update_diagonal_fisher(&mut self, trajectory: &TrajectoryBatch<T>) -> Result<()> {
-        let mut diagonal = Array1::zeros(self.param_dim);
+        let mut diagonal = Array1::zeros(self.paramdim);
         let batch_size = trajectory.observations.nrows();
 
         for i in 0..batch_size {
@@ -382,9 +382,9 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
 
         // Apply momentum if previous natural _gradients exist
         let update = if let Some(ref prev_ng) = self.natural_grad_state.prev_natural_grad {
-            natural_gradients + &(prev_ng * self.natural_grad_state.momentum)
+            naturalgradients + &(prev_ng * self.natural_grad_state.momentum)
         } else {
-            natural_gradients.clone()
+            naturalgradients.clone()
         };
 
         // Apply trust region constraint
@@ -423,14 +423,14 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
     ) -> Result<Array1<T>> {
         // Placeholder for computing gradients of log probability
         // This would typically involve backpropagation through the policy network
-        Ok(Array1::zeros(self.param_dim))
+        Ok(Array1::zeros(self.paramdim))
     }
 
     /// Add gradient to empirical Fisher accumulator
     fn add_to_empirical_fisher(&mut self, gradient: &Array1<T>) -> Result<()> {
         // Add outer product of gradient to Fisher sum
-        for i in 0..self.param_dim {
-            for j in 0..self.param_dim {
+        for i in 0..self.paramdim {
+            for j in 0..self.paramdim {
                 self.empirical_fisher_accumulator.fisher_sum[[i, j]] += gradient[i] * gradient[j];
             }
         }
@@ -462,7 +462,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
 
         // Add damping for numerical stability
         let mut damped_fisher = fisher;
-        for i in 0..self.param_dim {
+        for i in 0..self.paramdim {
             damped_fisher[[i, i]] += self._config.damping;
         }
 

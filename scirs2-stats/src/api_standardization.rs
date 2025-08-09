@@ -474,9 +474,9 @@ where
 
     /// Compute percentiles (25th, 50th, 75th)
     fn compute_percentiles(&self, sorteddata: &[F]) -> StatsResult<[F; 3]> {
-        let n = sorted_data.len();
+        let n = sorteddata.len();
         if n == 0 {
-            return Err(StatsError::InvalidArgument("Empty _data".to_string()));
+            return Err(StatsError::InvalidArgument("Empty data".to_string()));
         }
 
         let p25_idx = (n as f64 * 0.25) as usize;
@@ -484,9 +484,9 @@ where
         let p75_idx = (n as f64 * 0.75) as usize;
 
         Ok([
-            sorted_data[p25_idx.min(n - 1)],
-            sorted_data[p50_idx.min(n - 1)],
-            sorted_data[p75_idx.min(n - 1)],
+            sorteddata[p25_idx.min(n - 1)],
+            sorteddata[p50_idx.min(n - 1)],
+            sorteddata[p75_idx.min(n - 1)],
         ])
     }
 
@@ -506,7 +506,7 @@ where
     /// Estimate memory usage
     fn estimate_memory_usage(&self, samplesize: usize) -> Option<usize> {
         if self.config.include_metadata {
-            Some(sample_size * std::mem::size_of::<F>() * 2) // Rough estimate
+            Some(samplesize * std::mem::size_of::<F>() * 2) // Rough estimate
         } else {
             None
         }
@@ -1627,7 +1627,7 @@ impl ValidationReport {
     /// Create new validation report
     pub fn new(_functionname: String) -> Self {
         Self {
-            function_name: function_name,
+            function_name: _functionname,
             results: HashMap::new(),
             overall_status: ValidationStatus::Passed,
             summary: ValidationSummary {
@@ -1675,7 +1675,7 @@ impl ValidationReport {
             }
         }
 
-        self.results.insert(rule_id, result);
+        self.results.insert(ruleid, result);
     }
 
     /// Generate human-readable report

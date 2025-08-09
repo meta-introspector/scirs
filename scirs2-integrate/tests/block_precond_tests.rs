@@ -56,14 +56,14 @@ fn create_test_matrix(
 
 // Test helper: Create a right-hand side vector
 #[allow(dead_code)]
-fn create_rhs(_n_x: usize, ny: usize) -> Array1<f64> {
-    let mut rhs = Array1::zeros(_n_x + n_y);
+fn create_rhs(n_x: usize, ny: usize) -> Array1<f64> {
+    let mut rhs = Array1::zeros(n_x + ny);
 
     // Fill with representative values
-    for i in 0.._n_x {
+    for i in 0..n_x {
         rhs[i] = (i as f64 + 1.0).sin();
     }
-    for i in 0..n_y {
+    for i in 0..ny {
         rhs[n_x + i] = (i as f64 + 1.0).cos();
     }
 
@@ -148,7 +148,7 @@ where
     };
 
     // Compute initial residual: r = P⁻¹(b - Ax)
-    let r0 = if x._iter().all(|&v| v == 0.0) {
+    let r0 = if x.iter().all(|&v| v == 0.0) {
         // If x is zero, r = P⁻¹b
         b_precond.clone()
     } else {
@@ -161,7 +161,7 @@ where
         }
     };
 
-    let r0_norm = r0._iter().fold(0.0, |acc, &v| acc + v * v).sqrt();
+    let r0_norm = r0.iter().fold(0.0, |acc, &v| acc + v * v).sqrt();
 
     // Initial check for convergence or zero RHS
     if r0_norm <= tol {
@@ -200,14 +200,14 @@ where
 
         // Modified Gram-Schmidt orthogonalization
         for i in 0..=j {
-            h[i][j] = v[i]._iter().zip(w._iter()).map(|(&a, &b)| a * b).sum();
+            h[i][j] = v[i].iter().zip(w.iter()).map(|(&a, &b)| a * b).sum();
             for k in 0..n {
                 w[k] -= h[i][j] * v[i][k];
             }
         }
 
         // Compute the norm of the new vector
-        let w_norm = w._iter().fold(0.0, |acc, &val| acc + val * val).sqrt();
+        let w_norm = w.iter().fold(0.0, |acc, &val| acc + val * val).sqrt();
         h[j + 1][j] = w_norm;
 
         // Check for breakdown

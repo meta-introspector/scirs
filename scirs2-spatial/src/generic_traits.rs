@@ -54,7 +54,7 @@ pub trait SpatialScalar:
 
     /// Convert from f64 (used for constants and literals)
     fn from_f64(value: f64) -> Option<Self> {
-        NumCast::from(_value)
+        NumCast::from(value)
     }
 
     /// Convert to f64 for interoperability
@@ -268,7 +268,7 @@ pub trait SpatialPoint<T: SpatialScalar> {
 
     /// Calculate Euclidean distance to another point
     fn distance_to(&self, other: &Self) -> T {
-        self.squared_distance_to(_other).sqrt()
+        self.squared_distance_to(other).sqrt()
     }
 
     /// Calculate Manhattan distance to another point
@@ -352,7 +352,7 @@ pub trait DistanceMetric<T: SpatialScalar, P: SpatialPoint<T>> {
     fn distance(&self, p1: &P, p2: &P) -> T;
 
     /// Calculate squared distance (if applicable, for efficiency)
-    fn squared_distance(&self, _p1: &P, p2: &P) -> Option<T> {
+    fn squared_distance(&self, p1: &P, p2: &P) -> Option<T> {
         None
     }
 
@@ -375,7 +375,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T>> DistanceMetric<T, P> for EuclideanMet
     }
 
     fn squared_distance(&self, p1: &P, p2: &P) -> Option<T> {
-        Some(_p1.squared_distance_to(p2))
+        Some(p1.squared_distance_to(p2))
     }
 
     fn name(&self) -> &'static str {
@@ -431,7 +431,7 @@ impl<T: SpatialScalar> SpatialPoint<T> for Vec<T> {
     }
 
     fn coordinate(&self, index: usize) -> Option<T> {
-        self.get(_index).copied()
+        self.get(index).copied()
     }
 
     fn as_slice(&self) -> Option<&[T]> {
@@ -450,7 +450,7 @@ impl<T: SpatialScalar> SpatialPoint<T> for &[T] {
     }
 
     fn coordinate(&self, index: usize) -> Option<T> {
-        self.get(_index).copied()
+        self.get(index).copied()
     }
 
     fn as_slice(&self) -> Option<&[T]> {
@@ -474,7 +474,7 @@ impl<T: SpatialScalar, const N: usize> SpatialPoint<T> for [T; N] {
     }
 
     fn coordinate(&self, index: usize) -> Option<T> {
-        self.get(_index).copied()
+        self.get(index).copied()
     }
 
     fn as_slice(&self) -> Option<&[T]> {
@@ -499,13 +499,13 @@ pub struct Point<T: SpatialScalar> {
 impl<T: SpatialScalar> Point<T> {
     /// Create a new point from coordinates
     pub fn new(coords: Vec<T>) -> Self {
-        Self { coords: _coords }
+        Self { coords: coords }
     }
 
     /// Create a point with the given dimension filled with zeros
     pub fn zeros(dim: usize) -> Self {
         Self {
-            coords: vec![T::zero(); _dim],
+            coords: vec![T::zero(); dim],
         }
     }
 
@@ -540,7 +540,7 @@ impl<T: SpatialScalar> Point<T> {
         let coords: Vec<T> = self
             .coords
             .iter()
-            .zip(_other.coords.iter())
+            .zip(other.coords.iter())
             .map(|(&a, &b)| a + b)
             .collect();
 
@@ -556,7 +556,7 @@ impl<T: SpatialScalar> Point<T> {
         let coords: Vec<T> = self
             .coords
             .iter()
-            .zip(_other.coords.iter())
+            .zip(other.coords.iter())
             .map(|(&a, &b)| a - b)
             .collect();
 
@@ -576,7 +576,7 @@ impl<T: SpatialScalar> Point<T> {
         }
 
         // Try SIMD-optimized calculation
-        if let Ok(simd_result) = T::simd_dot_product(&self.coords, &_other.coords) {
+        if let Ok(simd_result) = T::simd_dot_product(&self.coords, &other.coords) {
             return Some(simd_result);
         }
 
@@ -584,7 +584,7 @@ impl<T: SpatialScalar> Point<T> {
         let dot_product = self
             .coords
             .iter()
-            .zip(_other.coords.iter())
+            .zip(other.coords.iter())
             .map(|(&a, &b)| a * b)
             .fold(T::zero(), |acc, x| acc + x);
 
@@ -617,7 +617,7 @@ impl<T: SpatialScalar> SpatialPoint<T> for Point<T> {
     }
 
     fn coordinate(&self, index: usize) -> Option<T> {
-        self.coords.get(_index).copied()
+        self.coords.get(index).copied()
     }
 
     fn as_slice(&self) -> Option<&[T]> {
@@ -625,7 +625,7 @@ impl<T: SpatialScalar> SpatialPoint<T> for Point<T> {
     }
 
     fn from_coords(coords: &[T]) -> Self {
-        Point::new(_coords.to_vec())
+        Point::new(coords.to_vec())
     }
 }
 
@@ -646,7 +646,7 @@ pub mod utils {
 
         for i in 0..n {
             for j in (i + 1)..n {
-                if let (Some(p1), Some(p2)) = (_points.get_point(i), points.get_point(j)) {
+                if let (Some(p1), Some(p2)) = (points.get_point(i), points.get_point(j)) {
                     distances.push(metric.distance(&p1, &p2));
                 }
             }
@@ -694,14 +694,14 @@ pub mod utils {
         A: SpatialArray<T, P>,
     {
         if points.len() < 3 {
-            return _points
+            return points
                 .iter_points()
                 .map(|p| Point::from_coords(p.as_slice().unwrap_or(&[])))
                 .collect();
         }
 
         // Simple implementation - in practice, you'd use more sophisticated algorithms
-        let mut hull_points: Vec<Point<T>> = _points
+        let mut hull_points: Vec<Point<T>> = points
             .iter_points()
             .map(|p| Point::from_coords(p.as_slice().unwrap_or(&[])))
             .collect();
@@ -732,7 +732,7 @@ pub mod ndarray_integration {
         }
 
         fn coordinate(&self, index: usize) -> Option<T> {
-            self.get(_index).copied()
+            self.get(index).copied()
         }
 
         fn as_slice(&self) -> Option<&[T]> {
@@ -755,7 +755,7 @@ pub mod ndarray_integration {
         }
 
         fn coordinate(&self, index: usize) -> Option<T> {
-            self.get(_index).copied()
+            self.get(index).copied()
         }
 
         fn as_slice(&self) -> Option<&[T]> {
@@ -763,7 +763,7 @@ pub mod ndarray_integration {
         }
 
         fn from_coords(coords: &[T]) -> Self {
-            Array1::from(_coords.to_vec())
+            Array1::from(coords.to_vec())
         }
     }
 
@@ -774,7 +774,7 @@ pub mod ndarray_integration {
 
     impl<'a, T: SpatialScalar> NdArray2Wrapper<'a, T> {
         pub fn new(array: ArrayView2<'a, T>) -> Self {
-            Self { array: _array }
+            Self { array: array }
         }
     }
 
@@ -792,8 +792,8 @@ pub mod ndarray_integration {
         }
 
         fn get_point(&self, index: usize) -> Option<Array1<T>> {
-            if _index < self.len() {
-                Some(self.array.row(_index).to_owned())
+            if index < self.len() {
+                Some(self.array.row(index).to_owned())
             } else {
                 None
             }

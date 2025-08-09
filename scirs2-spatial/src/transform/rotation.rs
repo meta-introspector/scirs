@@ -147,7 +147,7 @@ impl Rotation {
         }
 
         // Normalize the quaternion
-        let norm = (_quat.iter().map(|&x| x * x).sum::<f64>()).sqrt();
+        let norm = (quat.iter().map(|&x| x * x).sum::<f64>()).sqrt();
 
         if norm < 1e-10 {
             return Err(SpatialError::ComputationError(
@@ -194,13 +194,13 @@ impl Rotation {
             )));
         }
 
-        // Check if the _matrix is approximately orthogonal
+        // Check if the matrix is approximately orthogonal
         let det = matrix[[0, 0]]
-            * (_matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
+            * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
             - matrix[[0, 1]]
-                * (_matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
+                * (matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
             + matrix[[0, 2]]
-                * (_matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
+                * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
 
         if (det - 1.0).abs() > 1e-6 {
             return Err(SpatialError::ValueError(format!(
@@ -208,7 +208,7 @@ impl Rotation {
             )));
         }
 
-        // Convert rotation _matrix to quaternion using method from:
+        // Convert rotation matrix to quaternion using method from:
         // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
 
         let mut quat = Array1::zeros(4);
@@ -399,7 +399,7 @@ impl Rotation {
 
         // Compute the angle (magnitude of the rotation vector)
         let angle =
-            (_rotvec[0] * rotvec[0] + rotvec[1] * rotvec[1] + rotvec[2] * rotvec[2]).sqrt();
+            (rotvec[0] * rotvec[0] + rotvec[1] * rotvec[1] + rotvec[2] * rotvec[2]).sqrt();
 
         let mut quat = Array1::zeros(4);
 
@@ -494,7 +494,7 @@ impl Rotation {
     /// // Should be approximately [PI/2, 0, 0]
     /// ```
     pub fn as_euler(&self, convention: &str) -> SpatialResult<Array1<f64>> {
-        let conv = EulerConvention::from_str(_convention)?;
+        let conv = EulerConvention::from_str(convention)?;
         let matrix = self.as_matrix();
 
         let mut angles = Array1::zeros(3);
@@ -757,7 +757,7 @@ impl Rotation {
 
         // Convert to matrix and apply
         let matrix = self.as_matrix();
-        Ok(matrix.dot(_vec))
+        Ok(matrix.dot(vec))
     }
 
     /// Apply the rotation to multiple vectors
@@ -792,7 +792,7 @@ impl Rotation {
         }
 
         let matrix = self.as_matrix();
-        Ok(_vecs.dot(&matrix.t()))
+        Ok(vecs.dot(&matrix.t()))
     }
 
     /// Combine this rotation with another (apply the other rotation after this one)
@@ -999,7 +999,7 @@ impl Rotation {
     /// ```
     pub fn angular_distance(&self, other: &Rotation) -> f64 {
         let q1 = &self.quat;
-        let q2 = &_other.quat;
+        let q2 = &other.quat;
 
         // Compute dot product
         let dot = (q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2] + q1[3] * q2[3]).abs();

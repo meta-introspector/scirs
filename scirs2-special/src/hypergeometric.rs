@@ -392,7 +392,7 @@ where
     let mut term = F::one();
     let tolerance = F::from(1e-15).unwrap();
 
-    for k in 1..max_terms {
+    for k in 1..maxterms {
         let k_f = F::from(k).unwrap();
         term = term * z / (k_f * (v + k_f - F::one()));
         sum += term;

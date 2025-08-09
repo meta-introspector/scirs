@@ -25,7 +25,7 @@ where
     let optimizer = AutoOptimizer::new();
 
     while left < right {
-        let pivot_idx = partition_simd(_arr, left, right, &optimizer);
+        let pivot_idx = partition_simd(arr, left, right, &optimizer);
 
         if k == pivot_idx {
             return arr[k];
@@ -47,7 +47,7 @@ where
 {
     // Choose pivot using median-of-three
     let mid = left + (right - left) / 2;
-    let pivot = median_of_three(_arr[left], arr[mid], arr[right]);
+    let pivot = median_of_three(arr[left], arr[mid], arr[right]);
 
     let mut i = left;
     let mut j = right;

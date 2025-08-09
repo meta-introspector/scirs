@@ -261,7 +261,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
 
     /// Compute gradients using reverse-mode AD
     pub fn backward(&mut self, outputid: usize) -> Result<Vec<T>> {
-        if output_id >= self.graph.len() {
+        if outputid >= self.graph.len() {
             return Err(OptimError::InvalidConfig(
                 "Invalid output node ID".to_string(),
             ));
@@ -269,7 +269,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
 
         // Initialize gradient of output
         let mut gradients = vec![T::zero(); self.graph.len()];
-        gradients[output_id] = T::one();
+        gradients[outputid] = T::one();
 
         // Reverse pass through the tape
         for entry in self.tape.iter().rev() {
@@ -289,12 +289,12 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
     /// Compute Hessian matrix
     pub fn compute_hessian(&mut self, outputid: usize) -> Result<Array2<T>> {
         match self.config.hessian_approximation {
-            HessianApproximation::Exact => self.compute_exact_hessian(output_id),
+            HessianApproximation::Exact => self.compute_exact_hessian(outputid),
             HessianApproximation::BFGS => self.compute_bfgs_hessian(),
             HessianApproximation::LBFGS => self.compute_lbfgs_hessian(),
-            HessianApproximation::Diagonal => self.compute_diagonal_hessian(output_id),
-            HessianApproximation::GaussNewton => self.compute_hessian(output_id),
-            HessianApproximation::Fisher => self.compute_diagonal_hessian(output_id),
+            HessianApproximation::Diagonal => self.compute_diagonal_hessian(outputid),
+            HessianApproximation::GaussNewton => self.compute_hessian(outputid),
+            HessianApproximation::Fisher => self.compute_diagonal_hessian(outputid),
         }
     }
 
@@ -305,7 +305,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
         // Compute second derivatives using forward-over-reverse mode
         for i in 0..n_vars {
             for j in i..n_vars {
-                let second_deriv = self.compute_second_derivative(output_id, i, j)?;
+                let second_deriv = self.compute_second_derivative(outputid, i, j)?;
                 hessian[[i, j]] = second_deriv;
                 hessian[[j, i]] = second_deriv; // Hessian is symmetric
             }
@@ -316,13 +316,13 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
 
     fn compute_second_derivative(
         &mut self,
-        output_id: usize,
+        outputid: usize,
         var1: usize,
         var2: usize,
     ) -> Result<T> {
         // Enhanced second derivative computation with checkpointing
         if self.config.gradient_checkpointing {
-            return self.compute_second_derivative_checkpointed(output_id, var1, var2);
+            return self.compute_second_derivative_checkpointed(outputid, var1, var2);
         }
 
         let eps = T::from(1e-8).unwrap();
@@ -334,20 +334,20 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
         // f(x+h, y+h)
         self.graph[var1].value = original_val1 + eps;
         self.graph[var2].value = original_val2 + eps;
-        let f_pp = self.evaluate_node(output_id)?;
+        let f_pp = self.evaluate_node(outputid)?;
 
         // f(x+h, y-h)
         self.graph[var2].value = original_val2 - eps;
-        let f_pm = self.evaluate_node(output_id)?;
+        let f_pm = self.evaluate_node(outputid)?;
 
         // f(x-h, y+h)
         self.graph[var1].value = original_val1 - eps;
         self.graph[var2].value = original_val2 + eps;
-        let f_mp = self.evaluate_node(output_id)?;
+        let f_mp = self.evaluate_node(outputid)?;
 
         // f(x-h, y-h)
         self.graph[var2].value = original_val2 - eps;
-        let f_mm = self.evaluate_node(output_id)?;
+        let f_mm = self.evaluate_node(outputid)?;
 
         // Restore original values
         self.graph[var1].value = original_val1;
@@ -362,7 +362,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
     /// Memory-efficient second derivative computation with checkpointing
     fn compute_second_derivative_checkpointed(
         &mut self,
-        output_id: usize,
+        outputid: usize,
         var1: usize,
         var2: usize,
     ) -> Result<T> {
@@ -393,7 +393,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
                 self.graph[var1].value = checkpoint.values[var1] + point_values.0;
                 self.graph[var2].value = checkpoint.values[var2] + point_values.1;
 
-                let result = self.evaluate_node(output_id)?;
+                let result = self.evaluate_node(outputid)?;
                 results.push(result);
             }
         }
@@ -414,11 +414,11 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
     }
 
     fn evaluate_node(&self, nodeid: usize) -> Result<T> {
-        if node_id >= self.graph.len() {
+        if nodeid >= self.graph.len() {
             return Err(OptimError::InvalidConfig("Invalid node ID".to_string()));
         }
 
-        Ok(self.graph[node_id].value)
+        Ok(self.graph[nodeid].value)
     }
 
     fn compute_bfgs_hessian(&self) -> Result<Array2<T>> {
@@ -466,7 +466,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
 
         // Compute only diagonal elements (much faster)
         for i in 0..n_vars {
-            let second_deriv = self.compute_second_derivative(output_id, i, i)?;
+            let second_deriv = self.compute_second_derivative(outputid, i, i)?;
             hessian[[i, i]] = second_deriv;
         }
 
@@ -722,14 +722,14 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
             jvp_values[entry.output] = output_tangent;
         }
 
-        Ok(vec![jvp_values[output_id]])
+        Ok(vec![jvp_values[outputid]])
     }
 
     /// Compute candle-compatible vector-Jacobian product
     pub fn compute_vjp(&mut self, outputid: usize, cotangent: T) -> Result<Vec<T>> {
         // Reverse-mode AD for computing VJP
         let mut vjp_values = vec![T::zero(); self.graph.len()];
-        vjp_values[output_id] = cotangent;
+        vjp_values[outputid] = cotangent;
 
         // Reverse pass through computation graph
         for entry in self.tape.iter().rev() {
@@ -760,7 +760,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
         output_value: T,
         local_grads: &[T],
     ) -> usize {
-        let output_id = self.graph.len();
+        let outputid = self.graph.len();
 
         // Create output node
         let output_node = ADNode {
@@ -769,7 +769,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
             hessian: None,
             operation: Operation::Custom(op_name.to_string()),
             parents: inputs.to_vec(),
-            id: output_id,
+            id: outputid,
         };
 
         self.graph.push(output_node);
@@ -778,13 +778,13 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
         let tape_entry = TapeEntry {
             operation: Operation::Custom(op_name.to_string()),
             inputs: inputs.to_vec(),
-            output: output_id,
+            output: outputid,
             local_gradients: local_grads.to_vec(),
         };
 
         self.tape.push(tape_entry);
 
-        output_id
+        outputid
     }
 
     /// Optimize computation graph for candle operations
@@ -847,9 +847,9 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
         }
 
         // Mark all nodes reachable from variables
-        while let Some(node_id) = stack.pop() {
+        while let Some(nodeid) = stack.pop() {
             for entry in &self.tape {
-                if entry.inputs.contains(&node_id) && !reachable[entry.output] {
+                if entry.inputs.contains(&nodeid) && !reachable[entry.output] {
                     reachable[entry.output] = true;
                     stack.push(entry.output);
                 }

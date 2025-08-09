@@ -336,7 +336,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             || {
                 use ndarray::Array2;
 
-                let a_matrix = Array2::fromshape_fn((n, n), |(i, j)| {
+                let a_matrix = Array2::from_shape_fn((n, n), |(i, j)| {
                     if i == j {
                         -1.0 // diagonal
                     } else if i.abs_diff(j) == 1 {

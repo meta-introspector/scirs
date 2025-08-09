@@ -198,7 +198,7 @@ enum SavedValues<T: Float> {
 #[derive(Debug, Clone)]
 pub struct GradientContext<T: Float> {
     /// Variables requiring gradients
-    pub requires_grad: HashMap<usize, bool>,
+    pub requiresgrad: HashMap<usize, bool>,
 
     /// Gradient accumulation mode
     pub accumulate: bool,
@@ -216,7 +216,7 @@ pub struct GradientContext<T: Float> {
 impl<T: Float + Default + Clone> Default for GradientContext<T> {
     fn default() -> Self {
         Self {
-            requires_grad: HashMap::new(),
+            requiresgrad: HashMap::new(),
             accumulate: true,
             retain_graph: false,
             create_graph: false,
@@ -262,13 +262,13 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
 
     /// Create a variable with gradient tracking
     pub fn create_variable(&mut self, name: &str, value: Array1<T>, requiresgrad: bool) -> usize {
-        let var_id = self.tape.len();
+        let varid = self.tape.len();
 
         if self.recording {
             let op = ReverseOperation {
                 op_type: ReverseOpType::Variable,
                 inputs: Vec::new(),
-                output: var_id,
+                output: varid,
                 backward_fn: BackwardFunction::Identity,
                 saved_values: SavedValues::Tensor(value.clone()),
             };
@@ -276,18 +276,18 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
             self.tape.push(op);
         }
 
-        self.variables.insert(name.to_string(), var_id);
+        self.variables.insert(name.to_string(), varid);
 
         // Initialize gradient storage
-        if var_id >= self.gradients.len() {
-            self.gradients.resize(var_id + 1, None);
+        if varid >= self.gradients.len() {
+            self.gradients.resize(varid + 1, None);
         }
 
-        if requires_grad {
-            self.gradients[var_id] = Some(Array1::zeros(value.len()));
+        if requiresgrad {
+            self.gradients[varid] = Some(Array1::zeros(value.len()));
         }
 
-        var_id
+        varid
     }
 
     /// Create a constant (no gradient tracking)
@@ -330,13 +330,13 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
         let lhs_val = self.get_value(lhs)?;
         let rhs_val = self.get_value(rhs)?;
 
-        let output_id = self.tape.len();
+        let outputid = self.tape.len();
 
         if self.recording {
             let op = ReverseOperation {
                 op_type: ReverseOpType::Multiply,
                 inputs: vec![lhs, rhs],
-                output: output_id,
+                output: outputid,
                 backward_fn: BackwardFunction::MultiplyBackward,
                 saved_values: SavedValues::TensorPair(lhs_val, rhs_val),
             };
@@ -344,7 +344,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
             self.tape.push(op);
         }
 
-        Ok(output_id)
+        Ok(outputid)
     }
 
     /// Division operation
@@ -352,13 +352,13 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
         let lhs_val = self.get_value(lhs)?;
         let rhs_val = self.get_value(rhs)?;
 
-        let output_id = self.tape.len();
+        let outputid = self.tape.len();
 
         if self.recording {
             let op = ReverseOperation {
                 op_type: ReverseOpType::Divide,
                 inputs: vec![lhs, rhs],
-                output: output_id,
+                output: outputid,
                 backward_fn: BackwardFunction::DivideBackward,
                 saved_values: SavedValues::TensorPair(lhs_val, rhs_val),
             };
@@ -366,20 +366,20 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
             self.tape.push(op);
         }
 
-        Ok(output_id)
+        Ok(outputid)
     }
 
     /// Power operation
     pub fn power(&mut self, base: usize, exponent: T) -> Result<usize> {
         let base_val = self.get_value(base)?;
 
-        let output_id = self.tape.len();
+        let outputid = self.tape.len();
 
         if self.recording {
             let op = ReverseOperation {
                 op_type: ReverseOpType::Power,
                 inputs: vec![base],
-                output: output_id,
+                output: outputid,
                 backward_fn: BackwardFunction::PowerBackward { exponent },
                 saved_values: SavedValues::Tensor(base_val),
             };
@@ -387,7 +387,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
             self.tape.push(op);
         }
 
-        Ok(output_id)
+        Ok(outputid)
     }
 
     /// Exponential function
@@ -471,13 +471,13 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
         let lhs_val = self.get_value(lhs)?;
         let rhs_val = self.get_value(rhs)?;
 
-        let output_id = self.tape.len();
+        let outputid = self.tape.len();
 
         if self.recording {
             let op = ReverseOperation {
                 op_type: ReverseOpType::MatMul,
                 inputs: vec![lhs, rhs],
-                output: output_id,
+                output: outputid,
                 backward_fn: BackwardFunction::MatMulBackward {
                     transpose_lhs: false,
                     transpose_rhs: false,
@@ -488,7 +488,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
             self.tape.push(op);
         }
 
-        Ok(output_id)
+        Ok(outputid)
     }
 
     /// Dot product
@@ -506,13 +506,13 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
         let input_val = self.get_value(input)?;
         let inputshape = input_val.shape().to_vec();
 
-        let output_id = self.tape.len();
+        let outputid = self.tape.len();
 
         if self.recording {
             let op = ReverseOperation {
                 op_type: ReverseOpType::Sum,
                 inputs: vec![input],
-                output: output_id,
+                output: outputid,
                 backward_fn: BackwardFunction::ReductionBackward {
                     reduction_type: ReductionType::Sum,
                     inputshape,
@@ -524,7 +524,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
             self.tape.push(op);
         }
 
-        Ok(output_id)
+        Ok(outputid)
     }
 
     /// Mean reduction
@@ -532,13 +532,13 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
         let input_val = self.get_value(input)?;
         let inputshape = input_val.shape().to_vec();
 
-        let output_id = self.tape.len();
+        let outputid = self.tape.len();
 
         if self.recording {
             let op = ReverseOperation {
                 op_type: ReverseOpType::Mean,
                 inputs: vec![input],
-                output: output_id,
+                output: outputid,
                 backward_fn: BackwardFunction::ReductionBackward {
                     reduction_type: ReductionType::Mean,
                     inputshape,
@@ -550,7 +550,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
             self.tape.push(op);
         }
 
-        Ok(output_id)
+        Ok(outputid)
     }
 
     /// L2 norm
@@ -558,13 +558,13 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
         let input_val = self.get_value(input)?;
         let inputshape = input_val.shape().to_vec();
 
-        let output_id = self.tape.len();
+        let outputid = self.tape.len();
 
         if self.recording {
             let op = ReverseOperation {
                 op_type: ReverseOpType::Norm,
                 inputs: vec![input],
-                output: output_id,
+                output: outputid,
                 backward_fn: BackwardFunction::ReductionBackward {
                     reduction_type: ReductionType::Norm,
                     inputshape,
@@ -576,7 +576,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
             self.tape.push(op);
         }
 
-        Ok(output_id)
+        Ok(outputid)
     }
 
     /// Reshape operation
@@ -584,13 +584,13 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
         let input_val = self.get_value(input)?;
         let originalshape = input_val.shape().to_vec();
 
-        let output_id = self.tape.len();
+        let outputid = self.tape.len();
 
         if self.recording {
             let op = ReverseOperation {
                 op_type: ReverseOpType::Reshape,
                 inputs: vec![input],
-                output: output_id,
+                output: outputid,
                 backward_fn: BackwardFunction::ReshapeBackward { originalshape },
                 saved_values: SavedValues::Shape(newshape.to_vec()),
             };
@@ -598,18 +598,18 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
             self.tape.push(op);
         }
 
-        Ok(output_id)
+        Ok(outputid)
     }
 
     /// Backward pass - compute gradients
     pub fn backward(&mut self, outputid: usize, gradient: Option<Array1<T>>) -> Result<()> {
         // Initialize output gradient
-        if output_id >= self.gradients.len() {
-            self.gradients.resize(output_id + 1, None);
+        if outputid >= self.gradients.len() {
+            self.gradients.resize(outputid + 1, None);
         }
 
         let output_grad = gradient.unwrap_or_else(|| Array1::ones(1));
-        self.gradients[output_id] = Some(output_grad);
+        self.gradients[outputid] = Some(output_grad);
 
         // Reverse pass through the tape
         for op in self.tape.iter().rev() {
@@ -638,13 +638,13 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
 
     /// Get gradient for a variable
     pub fn get_gradient(&self, varid: usize) -> Option<&Array1<T>> {
-        self.gradients.get(var_id)?.as_ref()
+        self.gradients.get(varid)?.as_ref()
     }
 
     /// Get gradient by variable name
     pub fn get_gradient_by_name(&self, name: &str) -> Option<&Array1<T>> {
-        let var_id = *self.variables.get(name)?;
-        self.get_gradient(var_id)
+        let varid = *self.variables.get(name)?;
+        self.get_gradient(varid)
     }
 
     /// Zero all gradients
@@ -661,8 +661,8 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
     pub fn get_all_gradients(&self) -> HashMap<String, Array1<T>> {
         let mut result = HashMap::new();
 
-        for (name, &var_id) in &self.variables {
-            if let Some(grad) = self.get_gradient(var_id) {
+        for (name, &varid) in &self.variables {
+            if let Some(grad) = self.get_gradient(varid) {
                 result.insert(name.clone(), grad.clone());
             }
         }
@@ -677,13 +677,13 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
         rhs: usize,
         backward_fn: BackwardFunction<T>,
     ) -> Result<usize> {
-        let output_id = self.tape.len();
+        let outputid = self.tape.len();
 
         if self.recording {
             let op = ReverseOperation {
                 op_type,
                 inputs: vec![lhs, rhs],
-                output: output_id,
+                output: outputid,
                 backward_fn,
                 saved_values: SavedValues::None,
             };
@@ -691,7 +691,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
             self.tape.push(op);
         }
 
-        Ok(output_id)
+        Ok(outputid)
     }
 
     fn unary_op(
@@ -702,13 +702,13 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
     ) -> Result<usize> {
         let input_val = self.get_value(input)?;
 
-        let output_id = self.tape.len();
+        let outputid = self.tape.len();
 
         if self.recording {
             let op = ReverseOperation {
                 op_type,
                 inputs: vec![input],
-                output: output_id,
+                output: outputid,
                 backward_fn,
                 saved_values: SavedValues::Tensor(input_val),
             };
@@ -716,15 +716,15 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
             self.tape.push(op);
         }
 
-        Ok(output_id)
+        Ok(outputid)
     }
 
     fn get_value(&self, varid: usize) -> Result<Array1<T>> {
-        if var_id >= self.tape.len() {
+        if varid >= self.tape.len() {
             return Err(OptimError::InvalidConfig("Invalid variable ID".to_string()));
         }
 
-        match &self.tape[var_id].saved_values {
+        match &self.tape[varid].saved_values {
             SavedValues::Tensor(tensor) => Ok(tensor.clone()),
             _ => {
                 // For operations, we'd need to compute the forward value

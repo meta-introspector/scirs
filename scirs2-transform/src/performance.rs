@@ -23,7 +23,7 @@ pub struct EnhancedStandardScaler {
     /// Processing strategy
     strategy: ProcessingStrategy,
     /// Memory limit in MB
-    memory_limit_mb: usize,
+    memory_limitmb: usize,
 }
 
 impl EnhancedStandardScaler {
@@ -34,7 +34,7 @@ impl EnhancedStandardScaler {
             stds: None,
             robust,
             strategy: ProcessingStrategy::Standard,
-            memory_limit_mb,
+            memory_limitmb,
         }
     }
 
@@ -55,10 +55,10 @@ impl EnhancedStandardScaler {
 
         // Choose optimal processing strategy
         self.strategy =
-            PerfUtils::choose_processing_strategy(n_samples, n_features, self.memory_limit_mb);
+            PerfUtils::choose_processing_strategy(n_samples, n_features, self.memory_limitmb);
 
         match &self.strategy {
-            ProcessingStrategy::OutOfCore { chunk_size } => self.fit_out_of_core(x, *chunk_size),
+            ProcessingStrategy::OutOfCore { chunksize } => self.fit_out_of_core(x, *chunksize),
             ProcessingStrategy::Parallel => self.fit_parallel(x),
             ProcessingStrategy::Simd => self.fit_simd(x),
             ProcessingStrategy::Standard => self.fit_standard(x),
@@ -68,7 +68,7 @@ impl EnhancedStandardScaler {
     /// Fit using out-of-core processing
     fn fit_out_of_core(&mut self, x: &ArrayView2<f64>, _chunksize: usize) -> Result<()> {
         let (n_samples, n_features) = x.dim();
-        let chunker = DataChunker::new(self.memory_limit_mb);
+        let chunker = DataChunker::new(self.memory_limitmb);
 
         if self.robust {
             // For robust statistics, we need to collect all data
@@ -204,7 +204,7 @@ impl EnhancedStandardScaler {
     fn fit_robust_out_of_core(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         // For robust statistics, we need to process each column separately
         let (_, n_features) = x.dim();
-        let chunker = DataChunker::new(self.memory_limit_mb);
+        let chunker = DataChunker::new(self.memory_limitmb);
 
         let mut medians = Array1::zeros(n_features);
         let mut mads = Array1::zeros(n_features);
@@ -264,8 +264,8 @@ impl EnhancedStandardScaler {
         }
 
         match &self.strategy {
-            ProcessingStrategy::OutOfCore { chunk_size } => {
-                self.transform_out_of_core(x, means, stds, *chunk_size)
+            ProcessingStrategy::OutOfCore { chunksize } => {
+                self.transform_out_of_core(x, means, stds, *chunksize)
             }
             ProcessingStrategy::Parallel => self.transform_parallel(x, means, stds),
             ProcessingStrategy::Simd => self.transform_simd(x, means, stds),
@@ -284,7 +284,7 @@ impl EnhancedStandardScaler {
         let (n_samples, n_features) = x.dim();
         let mut result = Array2::zeros((n_samples, n_features));
 
-        let chunker = DataChunker::new(self.memory_limit_mb);
+        let chunker = DataChunker::new(self.memory_limitmb);
 
         for (start_idx, end_idx) in chunker.chunk_indices(n_samples, n_features) {
             let chunk = x.slice(ndarray::s![start_idx..end_idx, ..]);
@@ -387,7 +387,7 @@ pub struct EnhancedPCA {
     /// Processing strategy
     strategy: ProcessingStrategy,
     /// Memory limit in MB
-    memory_limit_mb: usize,
+    memory_limitmb: usize,
     /// Whether to use randomized SVD for large datasets
     use_randomized: bool,
 }
@@ -404,7 +404,7 @@ impl EnhancedPCA {
             explained_variance_ratio: None,
             mean: None,
             strategy: ProcessingStrategy::Standard,
-            memory_limit_mb,
+            memory_limitmb,
             use_randomized: false,
         })
     }
@@ -438,7 +438,7 @@ impl EnhancedPCA {
 
         // Choose optimal processing strategy
         self.strategy =
-            PerfUtils::choose_processing_strategy(n_samples, n_features, self.memory_limit_mb);
+            PerfUtils::choose_processing_strategy(n_samples, n_features, self.memory_limitmb);
 
         // For very large datasets, use randomized SVD
         if n_samples > 50000 && n_features > 1000 {
@@ -446,8 +446,8 @@ impl EnhancedPCA {
         }
 
         match &self.strategy {
-            ProcessingStrategy::OutOfCore { chunk_size } => {
-                self.fit_incremental_pca(x, *chunk_size)
+            ProcessingStrategy::OutOfCore { chunksize } => {
+                self.fit_incremental_pca(x, *chunksize)
             }
             _ => {
                 if self.use_randomized {
@@ -462,7 +462,7 @@ impl EnhancedPCA {
     /// Fit using incremental PCA for out-of-core processing
     fn fit_incremental_pca(&mut self, x: &ArrayView2<f64>, chunksize: usize) -> Result<()> {
         let (n_samples, n_features) = x.dim();
-        let chunker = DataChunker::new(self.memory_limit_mb);
+        let chunker = DataChunker::new(self.memory_limitmb);
 
         // Initialize running statistics
         let mut running_mean = Array1::<f64>::zeros(n_features);
@@ -473,11 +473,11 @@ impl EnhancedPCA {
         for (start_idx, end_idx) in chunker.chunk_indices(n_samples, n_features) {
             let chunk = x.slice(ndarray::s![start_idx..end_idx, ..]);
             let chunk_mean = chunk.mean_axis(Axis(0)).unwrap();
-            let chunk_size = end_idx - start_idx;
+            let chunksize = end_idx - start_idx;
 
             // Update running mean
-            let total_samples = n_samples_seen + chunk_size;
-            running_mean = (running_mean * n_samples_seen as f64 + chunk_mean * chunk_size as f64)
+            let total_samples = n_samples_seen + chunksize;
+            running_mean = (running_mean * n_samples_seen as f64 + chunk_mean * chunksize as f64)
                 / total_samples as f64;
             n_samples_seen = total_samples;
         }
@@ -490,7 +490,7 @@ impl EnhancedPCA {
 
         // ✅ Advanced MODE: Proper streaming incremental PCA implementation
         // This implements true incremental SVD without loading all data into memory
-        self.fit_streaming_incremental_pca(x, &running_mean, chunk_size)
+        self.fit_streaming_incremental_pca(x, &running_mean, chunksize)
     }
 
     /// ✅ Advanced MODE: True streaming incremental PCA implementation
@@ -503,7 +503,7 @@ impl EnhancedPCA {
         _chunk_size: usize,
     ) -> Result<()> {
         let (n_samples, n_features) = x.dim();
-        let chunker = DataChunker::new(self.memory_limit_mb);
+        let chunker = DataChunker::new(self.memory_limitmb);
 
         // Initialize incremental SVD state
         let mut u = Array2::zeros((0, self.n_components)); // Will grow incrementally
@@ -1762,7 +1762,7 @@ impl AdvancedMemoryPool {
                 self.memory_stats.total_transform_time_ns / self.memory_stats.transform_count;
             if avg_time_per_transform > 0 {
                 self.memory_stats.throughput_samples_per_sec =
-                    (samples_processed as f64) / (avg_time_per_transform as f64 / 1_000_000_000.0);
+                    (samplesprocessed as f64) / (avg_time_per_transform as f64 / 1_000_000_000.0);
             }
         }
 
@@ -2008,7 +2008,7 @@ impl AdvancedPCA {
 
         // Initialize covariance matrix accumulator
         let mut cov_acc = Array2::zeros((n_features, n_features));
-        let mut samples_processed = 0;
+        let mut samplesprocessed = 0;
 
         // Process data in blocks
         for start_idx in (0..n_samples).step_by(block_size) {
@@ -2019,11 +2019,11 @@ impl AdvancedPCA {
             // Accumulate covariance contribution from this block
             let block_cov = block_centered.t().dot(&block_centered);
             cov_acc = cov_acc + block_cov;
-            samples_processed += end_idx - start_idx;
+            samplesprocessed += end_idx - start_idx;
         }
 
         // Normalize covariance matrix
-        cov_acc = cov_acc / (samples_processed - 1) as f64;
+        cov_acc = cov_acc / (samplesprocessed - 1) as f64;
 
         // Compute eigendecomposition using power iteration for efficiency
         let (eigenvals, eigenvecs) = self.compute_top_eigenpairs(&cov_acc, self.n_components)?;
@@ -2887,8 +2887,8 @@ impl AdvancedMemoryPool {
     /// Create a new memory pool with specified limits
     pub fn new(_max_matrices: usize, max_vectors: usize, initialcapacity: usize) -> Self {
         let mut pool = AdvancedMemoryPool {
-            matrix_pools: std::collections::HashMap::with_capacity(initial_capacity),
-            vector_pools: std::collections::HashMap::with_capacity(initial_capacity),
+            matrix_pools: std::collections::HashMap::with_capacity(initialcapacity),
+            vector_pools: std::collections::HashMap::with_capacity(initialcapacity),
             max_matrices_per_size: max_matrices,
             max_vectors_per_size: max_vectors,
             stats: PoolStats {
@@ -3058,7 +3058,7 @@ impl AdvancedMemoryPool {
                 self.stats.total_transform_time_ns / self.stats.transform_count;
             if avg_time_per_transform > 0 {
                 self.stats.throughput_samples_per_sec =
-                    (samples_processed as f64) / (avg_time_per_transform as f64 / 1_000_000_000.0);
+                    (samplesprocessed as f64) / (avg_time_per_transform as f64 / 1_000_000_000.0);
             }
         }
 

@@ -37,7 +37,8 @@ fn hardware_detection_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", "=".repeat(50));
 
     // Detect hardware characteristics
-    let hardware = HardwareDetector::detect();
+    let detector = HardwareDetector;
+    let hardware = detector.detect();
 
     println!("Hardware Information:");
     println!("CPU Model: {}", hardware.cpu_model);
@@ -87,7 +88,8 @@ fn algorithm_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚙️  Algorithm-Specific Auto-Tuning");
     println!("{}", "=".repeat(50));
 
-    let hardware = HardwareDetector::detect();
+    let detector = HardwareDetector;
+    let hardware = detector.detect();
     let tuner = AutoTuner::new(hardware.clone());
 
     // Test different problem sizes
@@ -97,7 +99,7 @@ fn algorithm_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", "─".repeat(70));
 
     for &size in &problem_sizes {
-        let profile = tuner.tune_for_problem_size(size);
+        let profile = tuner.tune_for_problemsize(size);
 
         println!(
             "{:10}      {:3}      {:6}      {:6}     {:3}    {:7} MB",
@@ -142,7 +144,8 @@ fn benchmark_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Benchmark-Based Tuning");
     println!("{}", "=".repeat(50));
 
-    let hardware = HardwareDetector::detect();
+    let detector = HardwareDetector;
+    let hardware = detector.detect();
     let mut tuner = AutoTuner::new(hardware);
 
     // Define a simple benchmark function for matrix-vector multiplication
@@ -163,7 +166,7 @@ fn benchmark_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Tuning matrix-vector multiplication for 1000×1000 matrices...");
 
-    let base_profile = tuner.tune_for_problem_size(1000 * 1000);
+    let base_profile = tuner.tune_for_problemsize(1000 * 1000);
     let base_time = benchmark_fn(&base_profile);
 
     println!("Base configuration: {base_time:.2?}");
@@ -191,13 +194,14 @@ fn memory_optimization_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧠 Memory-Aware Optimization");
     println!("{}", "=".repeat(50));
 
-    let hardware = HardwareDetector::detect();
+    let detector = HardwareDetector;
+    let hardware = detector.detect();
 
     // Demonstrate memory pool optimization
     println!("Memory Pool Optimization:");
 
-    let small_profile = AutoTuner::new(hardware.clone()).tune_for_problem_size(1000);
-    let large_profile = AutoTuner::new(hardware.clone()).tune_for_problem_size(1000000);
+    let small_profile = AutoTuner::new(hardware.clone()).tune_for_problemsize(1000);
+    let large_profile = AutoTuner::new(hardware.clone()).tune_for_problemsize(1000000);
 
     println!(
         "Small problem (1K): Pool size = {:.1} MB",

@@ -43,7 +43,7 @@ pub enum AdaptiveMethod {
 /// * Result containing a binary image
 #[allow(dead_code)]
 pub fn threshold_binary(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
-    let array = image_to_array(_img)?;
+    let array = image_to_array(img)?;
     let (height, width) = array.dim();
 
     let mut binary = ImageBuffer::new(width as u32, height as u32);
@@ -123,7 +123,7 @@ pub fn otsu_threshold(img: &DynamicImage) -> Result<(GrayImage, f32)> {
 
     // Create binary image using the computed threshold
     let threshold_f32 = threshold as f32 / 255.0;
-    let binary = threshold_binary(_img, threshold_f32)?;
+    let binary = threshold_binary(img, threshold_f32)?;
 
     Ok((binary, threshold_f32))
 }
@@ -340,8 +340,8 @@ fn find(labels: &[u16], x: u16) -> u16 {
 
 #[allow(dead_code)]
 fn union(labels: &mut [u16], x: u16, y: u16) {
-    let root_x = find(_labels, x);
-    let root_y = find(_labels, y);
+    let root_x = find(labels, x);
+    let root_y = find(labels, y);
     if root_x <= root_y {
         labels[root_y as usize] = root_x;
     } else {
