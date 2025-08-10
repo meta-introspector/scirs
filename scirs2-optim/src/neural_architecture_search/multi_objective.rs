@@ -681,7 +681,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
     NSGA2<T>
 {
     /// Create new NSGA-II optimizer
-    pub fn new(_population_size: usize, crossover_prob: f64, mutationprob: f64) -> Self {
+    pub fn new(population_size: usize, crossover_prob: f64, mutation_prob: f64) -> Self {
         Self {
             config: MultiObjectiveConfig::default(),
             population: Vec::new(),
@@ -1235,7 +1235,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
 
         let mut best_idx = self.rng.gen_range(0..self.population.len());
 
-        for _ in 1..tournament_size {
+        for _ in 1..tournamentsize {
             let idx = self.rng.gen_range(0..self.population.len());
 
             // Compare based on rank and crowding distance

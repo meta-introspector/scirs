@@ -747,7 +747,7 @@ impl MultiGpuCommunicator {
     }
 
     /// Broadcast parameters from master to all devices
-    pub fn broadcast_parameters(&mut self, param_names: &[&str], masterrank: i32) -> Result<()> {
+    pub fn broadcast_parameters(&mut self, param_names: &[&str], master_rank: i32) -> Result<()> {
         let start_time = Instant::now();
 
         match self.backend {
@@ -883,15 +883,15 @@ impl MultiGpuCommunicator {
         Ok(DeviceMemoryStats::default())
     }
 
-    fn probe_device_connection(_device_a: i32, deviceb: i32) -> Result<(bool, f64, f64)> {
-        // In _a real implementation, would probe actual device connectivity
+    fn probe_device_connection(_device_a: i32, device_b: i32) -> Result<(bool, f64, f64)> {
+        // In a real implementation, would probe actual device connectivity
         Ok((true, 1e9, 1.0)) // 1 GB/s bandwidth, 1 μs latency
     }
 
     fn is_fully_connected(matrix: &[Vec<bool>]) -> bool {
-        for i in 0.._matrix.len() {
-            for j in 0.._matrix.len() {
-                if i != j && !_matrix[i][j] {
+        for i in 0..matrix.len() {
+            for j in 0..matrix.len() {
+                if i != j && !matrix[i][j] {
                     return false;
                 }
             }

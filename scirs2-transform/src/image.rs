@@ -480,9 +480,9 @@ pub fn rgb_to_grayscale(images: &Array4<f64>) -> Result<Array3<f64>> {
 
 /// Resize images using bilinear interpolation
 #[allow(dead_code)]
-pub fn resize_images(_images: &Array4<f64>, newsize: (usize, usize)) -> Result<Array4<f64>> {
+pub fn resize_images(images: &Array4<f64>, newsize: (usize, usize)) -> Result<Array4<f64>> {
     let (n_samples, old_h, old_w, n_channels) = {
-        let shape = _images.shape();
+        let shape = images.shape();
         (shape[0], shape[1], shape[2], shape[3])
     };
     let (new_h, new_w) = newsize;

@@ -334,7 +334,7 @@ where
     let n_samples = alllabels[0].len();
 
     // Check that all clusterings have the same number of samples
-    for _labels in alllabels.iter().skip(1) {
+    for labels in alllabels.iter().skip(1) {
         if labels.len() != n_samples {
             return Err(MetricsError::InvalidInput(
                 "All clusterings must have the same number of samples".to_string(),
@@ -351,7 +351,7 @@ where
     // Use a 2D array to store consensus values
     let mut consensus_values = vec![vec![0.0; n_samples]; n_samples];
 
-    for _labels in alllabels {
+    for labels in alllabels {
         for i in 0..n_samples {
             for j in i..n_samples {
                 let label_i = labels.iter().nth(i).unwrap();

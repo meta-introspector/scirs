@@ -370,7 +370,7 @@ impl QuantumTransformationOptimizer {
             let mut power_params = HashMap::new();
             power_params.insert("lambda".to_string(), params[1]);
             configs.push(TransformationConfig {
-                transformationtype: TransformationType::PowerTransformer,
+                transformation_type: TransformationType::PowerTransformer,
                 parameters: power_params,
                 expected_performance: params[1],
             });
@@ -381,7 +381,7 @@ impl QuantumTransformationOptimizer {
             let mut poly_params = HashMap::new();
             poly_params.insert("degree".to_string(), params[2].floor());
             configs.push(TransformationConfig {
-                transformationtype: TransformationType::PolynomialFeatures,
+                transformation_type: TransformationType::PolynomialFeatures,
                 parameters: poly_params,
                 expected_performance: 1.0 / params[2], // Lower degree preferred
             });
@@ -392,7 +392,7 @@ impl QuantumTransformationOptimizer {
             let mut pca_params = HashMap::new();
             pca_params.insert("n_components".to_string(), params[3]);
             configs.push(TransformationConfig {
-                transformationtype: TransformationType::PCA,
+                transformation_type: TransformationType::PCA,
                 parameters: pca_params,
                 expected_performance: params[3],
             });
@@ -453,7 +453,7 @@ impl QuantumTransformationOptimizer {
             .iter()
             .map(|c| {
                 complexity_weights
-                    .get(&c.transformationtype)
+                    .get(&c.transformation_type)
                     .unwrap_or(&0.5)
             })
             .sum();
@@ -490,7 +490,7 @@ impl QuantumTransformationOptimizer {
             .iter()
             .map(|c| {
                 robustness_weights
-                    .get(&c.transformationtype)
+                    .get(&c.transformation_type)
                     .unwrap_or(&0.5)
             })
             .sum();
@@ -625,7 +625,7 @@ impl QuantumHyperparameterTuner {
         }
 
         TransformationConfig {
-            transformationtype: ttype.clone(),
+            transformation_type: ttype.clone(),
             parameters,
             expected_performance: 0.0,
         }
@@ -638,7 +638,7 @@ impl QuantumHyperparameterTuner {
         config: &TransformationConfig,
     ) -> f64 {
         // Simplified performance simulation based on parameter values
-        match config.transformationtype {
+        match config.transformation_type {
             TransformationType::PowerTransformer => {
                 let lambda = config.parameters.get("lambda").unwrap_or(&1.0);
                 // Optimal lambda around 0.5-1.5

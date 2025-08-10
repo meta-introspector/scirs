@@ -135,7 +135,7 @@ impl BayesianModelComparison {
 
     /// Set number of samples for integration
     pub fn with_num_samples(mut self, numsamples: usize) -> Self {
-        self.num_samples = num_samples;
+        self.num_samples = numsamples;
         self
     }
 
@@ -206,13 +206,13 @@ impl BayesianModelComparison {
         }
 
         // Calculate log(_prior * likelihood) for each sample
-        let log_posterior: Array1<f64> = if let Some(_prior) = logprior {
+        let log_posterior: Array1<f64> = if let Some(prior) = logprior {
             if prior.len() != log_likelihood.len() {
                 return Err(MetricsError::InvalidInput(
                     "Prior and _likelihood arrays must have same length".to_string(),
                 ));
             }
-            log_likelihood + _prior
+            log_likelihood + prior
         } else {
             log_likelihood.clone()
         };
@@ -274,12 +274,7 @@ impl BayesianModelComparison {
                 self.compute_marginal_log_likelihood(log_likelihood, logprior)?
             } else {
                 // Compute importance-weighted expectation at temperature β
-                self.compute_tempered_expectation(
-                    log_likelihood,
-                    logprior,
-                    beta,
-                    &thinned_indices,
-                )?
+                self.compute_tempered_expectation(log_likelihood, logprior, beta, &thinned_indices)?
             };
 
             mean_log_likelihoods.push(mean_log_like);
@@ -1042,7 +1037,7 @@ impl BayesianInformationCriteria {
 
     /// Set number of samples for calculations
     pub fn with_num_samples(mut self, numsamples: usize) -> Self {
-        self.num_samples = num_samples;
+        self.num_samples = numsamples;
         self
     }
 
@@ -1231,13 +1226,13 @@ impl PosteriorPredictiveCheck {
 
     /// Set test statistic type
     pub fn with_test_statistic(mut self, teststatistic: TestStatisticType) -> Self {
-        self.test_statistic = test_statistic;
+        self.test_statistic = teststatistic;
         self
     }
 
     /// Set number of posterior predictive samples
     pub fn with_num_samples(mut self, numsamples: usize) -> Self {
-        self.num_samples = num_samples;
+        self.num_samples = numsamples;
         self
     }
 
@@ -1370,7 +1365,7 @@ impl CredibleIntervalCalculator {
 
     /// Set null hypothesis value for testing
     pub fn with_null_value(mut self, nullvalue: f64) -> Self {
-        self.null_value = Some(null_value);
+        self.null_value = Some(nullvalue);
         self
     }
 
@@ -1500,7 +1495,7 @@ impl BayesianModelAveraging {
     /// Perform Bayesian model averaging
     pub fn average_models(
         &self,
-        predictions: &Array2<f64>,  // Shape: (n_models, n_observations)
+        predictions: &Array2<f64>, // Shape: (n_models, n_observations)
         modelscores: &Array1<f64>, // Model comparison scores
     ) -> Result<BayesianModelAveragingResults> {
         let (n_models, n_obs) = predictions.dim();

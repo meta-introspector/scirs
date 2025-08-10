@@ -82,7 +82,7 @@ impl MetricCollection {
         let now = Utc::now();
 
         MetricCollection {
-            _name: name.to_string(),
+            name: name.to_string(),
             description: description.map(|s| s.to_string()),
             metrics: Vec::new(),
             created_at: now,

@@ -1860,17 +1860,17 @@ impl InteractiveDashboard {
     /// Create new interactive dashboard
     pub fn new(config: DashboardConfig) -> Result<Self> {
         Ok(Self {
-            config: _configclone(),
+            config: config.clone(),
             widgets: Arc::new(RwLock::new(HashMap::new())),
             data_sources: Arc::new(RwLock::new(HashMap::new())),
             event_system: Arc::new(Mutex::new(EventSystem::new())),
-            layout_manager: Arc::new(Mutex::new(LayoutManager::new(_configlayout.clone()))),
+            layout_manager: Arc::new(Mutex::new(LayoutManager::new(config.layout.clone()))),
             renderer: Arc::new(Mutex::new(Box::new(DefaultRenderingEngine::new()))),
-            update_manager: Arc::new(Mutex::new(UpdateManager::new(
-                _configrealtime_configclone(),
-            ))),
+            update_manager: Arc::new(Mutex::new(
+                UpdateManager::new(config.realtime_config.clone()),
+            )),
             collaboration: Arc::new(Mutex::new(CollaborationManager::new(
-                _configcollaboration_configclone(),
+                config.collaboration_config.clone(),
             ))),
             state: Arc::new(RwLock::new(DashboardState::new(config))),
         })
@@ -2099,7 +2099,7 @@ impl EventSystem {
         if let Some(filter_config) = event.data.get("filter") {
             response
                 .state_changes
-                .insert("active_filter".to_string(), filter_configclone());
+                .insert("active_filter".to_string(), filter_config.clone());
         }
 
         Ok(())
@@ -2174,7 +2174,7 @@ impl EventSystem {
 impl LayoutManager {
     fn new(config: LayoutConfig) -> Self {
         let mut manager = Self {
-            layout_config: _configclone(),
+            layout_config: config.clone(),
             widget_layouts: HashMap::new(),
             constraints: Vec::new(),
             responsive_rules: Vec::new(),
@@ -2191,8 +2191,7 @@ impl LayoutManager {
         self.validate_layout(&layout)?;
 
         // Add widget to layout map
-        self.widget_layouts
-            .insert(widgetid.clone(), layout.clone());
+        self.widget_layouts.insert(widgetid.clone(), layout.clone());
 
         // Apply layout constraints
         self.apply_constraints(&widgetid, &layout)?;
@@ -2221,7 +2220,7 @@ impl LayoutManager {
 
     /// Calculate layout for given viewport size
     pub fn calculate_layout(&self, viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
-        let mut positions = match self.layout_configlayout_type {
+        let mut positions = match self.layout_config.layout_type {
             LayoutType::Grid => self.calculate_grid_layout(&viewport)?,
             LayoutType::Flex => self.calculate_flex_layout(&viewport)?,
             LayoutType::Absolute => self.calculate_absolute_layout(&viewport)?,
@@ -2239,22 +2238,20 @@ impl LayoutManager {
     fn calculate_grid_layout(&self, viewport: &Size) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
 
-        if let Some(grid_config) = &self.layout_configgrid_config {
+        if let Some(grid_config) = &self.layout_config.grid_config {
             let cell_width = (viewport.width
-                - (grid_configcolumns + 1) as f64 * grid_config as f64)
-                / grid_configcolumns as f64;
-            let cell_height = (viewport.height
-                - (grid_config + 1) as f64 * grid_config as f64)
-                / grid_config as f64;
+                - (grid_config.columns + 1) as f64 * grid_config.gap as f64)
+                / grid_config.columns as f64;
+            let cell_height = (viewport.height - (grid_config.rows + 1) as f64 * grid_config.gap as f64)
+                / grid_config.rows as f64;
 
             let mut current_row = 0;
             let mut current_col = 0;
 
             for (widgetid, widget_layout) in &self.widget_layouts {
-                let x = current_col as f64 * (cell_width + grid_config as f64)
-                    + grid_config as f64;
-                let y = current_row as f64 * (cell_height + grid_config as f64)
-                    + grid_config as f64;
+                let x = current_col as f64 * (cell_width + grid_config.gap as f64) + grid_config.gap as f64;
+                let y =
+                    current_row as f64 * (cell_height + grid_config.gap as f64) + grid_config.gap as f64;
 
                 let (span_cols, span_rows) = if let Some(grid_pos) = &widget_layout.grid_position {
                     (
@@ -2280,7 +2277,7 @@ impl LayoutManager {
 
                 // Move to next position
                 current_col += span_cols;
-                if current_col >= grid_configcolumns {
+                if current_col >= grid_config.columns {
                     current_col = 0;
                     current_row += 1;
                 }
@@ -2313,7 +2310,7 @@ impl LayoutManager {
             // Check if widget fits in current row
             if current_x + width > viewport.width as u32 {
                 current_x = 0;
-                current_y += row_height + self.layout_configspacing.widget_spacing;
+                current_y += row_height + self.layout_config.spacing.widget_spacing;
                 row_height = 0;
             }
 
@@ -2328,7 +2325,7 @@ impl LayoutManager {
                 },
             );
 
-            current_x += width + self.layout_configspacing.widget_spacing;
+            current_x += width + self.layout_config.spacing.widget_spacing;
             row_height = row_height.max(height);
         }
 
@@ -2360,11 +2357,11 @@ impl LayoutManager {
     fn calculate_masonry_layout(&self, viewport: &Size) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
 
-        if let Some(grid_config) = &self.layout_configgrid_config {
+        if let Some(grid_config) = &self.layout_config.grid_config {
             let column_width = (viewport.width
-                - (grid_configcolumns + 1) as f64 * grid_config as f64)
-                / grid_configcolumns as f64;
-            let mut column_heights = vec![0u32; grid_configcolumns as usize];
+                - (grid_config.columns + 1) as f64 * grid_config.gap as f64)
+                / grid_config.columns as f64;
+            let mut column_heights = vec![0u32; grid_config.columns as usize];
 
             for (widgetid, widget_layout) in &self.widget_layouts {
                 // Find shortest column
@@ -2375,8 +2372,8 @@ impl LayoutManager {
                     .map(|(idx, _)| idx)
                     .unwrap_or(0);
 
-                let x = shortest_column as f64 * (column_width + grid_config as f64)
-                    + grid_config as f64;
+                let x = shortest_column as f64 * (column_width + grid_config.gap as f64)
+                    + grid_config.gap as f64;
                 let y = column_heights[shortest_column];
 
                 let width = column_width;
@@ -2397,7 +2394,7 @@ impl LayoutManager {
                     },
                 );
 
-                column_heights[shortest_column] += height + grid_config;
+                column_heights[shortest_column] += height + grid_config.gap;
             }
         }
 
@@ -2433,7 +2430,7 @@ impl LayoutManager {
         // Add basic constraint based on position and size
         if layout.position.x >= 0.0 && layout.position.y >= 0.0 {
             self.constraints.push(LayoutConstraint {
-                _id: format!("layout_{}", widgetid),
+                id: format!("layout_{}", widgetid),
                 constraint_type: ConstraintType::Check,
                 target_widgets: vec![widgetid.to_string()],
                 parameters: HashMap::from([
@@ -2559,10 +2556,7 @@ impl RenderingEngine for DefaultRenderingEngine {
         html.push_str(
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
         );
-        html.push_str(&format!(
-            "<title>{}</title>\n",
-            dashboardstate.config.title
-        ));
+        html.push_str(&format!("<title>{}</title>\n", dashboardstate.config.title));
         html.push_str("<style id=\"dashboard-styles\"></style>\n");
         html.push_str("</head>\n<body>\n");
 
@@ -2711,7 +2705,7 @@ impl UpdateManager {
 impl CollaborationManager {
     fn new(config: Option<CollaborationConfig>) -> Self {
         Self {
-            config: _configunwrap_or_else(|| CollaborationConfig {
+            config: config.unwrap_or_else(|| CollaborationConfig {
                 enabled: false,
                 server_endpoint: String::new(),
                 auth_config: AuthConfig {

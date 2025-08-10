@@ -56,7 +56,7 @@ impl CRS {
     /// Create CRS from EPSG code
     pub fn from_epsg(code: u32) -> Self {
         Self {
-            epsg_code: Some(_code),
+            epsg_code: Some(code),
             wkt: None,
             proj4: None,
         }
@@ -66,7 +66,7 @@ impl CRS {
     pub fn from_wkt(wkt: String) -> Self {
         Self {
             epsg_code: None,
-            wkt: Some(_wkt),
+            wkt: Some(wkt),
             proj4: None,
         }
     }
@@ -91,7 +91,7 @@ pub struct GeoTransform {
 
 impl GeoTransform {
     /// Create a simple north-up transform
-    pub fn new(x_origin: f64, y_origin: f64, pixel_width: f64, pixelheight: f64) -> Self {
+    pub fn new(x_origin: f64, y_origin: f64, pixel_width: f64, pixel_height: f64) -> Self {
         Self {
             x_origin,
             y_origin,
@@ -103,14 +103,14 @@ impl GeoTransform {
     }
 
     /// Transform pixel coordinates to geographic coordinates
-    pub fn pixel_to_geo(&self, pixel_x: f64, pixely: f64) -> (f64, f64) {
+    pub fn pixel_to_geo(&self, pixel_x: f64, pixel_y: f64) -> (f64, f64) {
         let geo_x = self.x_origin + pixel_x * self.pixel_width + pixel_y * self.x_rotation;
         let geo_y = self.y_origin + pixel_x * self.y_rotation + pixel_y * self.pixel_height;
         (geo_x, geo_y)
     }
 
     /// Transform geographic coordinates to pixel coordinates
-    pub fn geo_to_pixel(&self, geo_x: f64, geoy: f64) -> (f64, f64) {
+    pub fn geo_to_pixel(&self, geo_x: f64, geo_y: f64) -> (f64, f64) {
         let det = self.pixel_width * self.pixel_height - self.x_rotation * self.y_rotation;
         if det.abs() < 1e-10 {
             return (0.0, 0.0); // Singular transform
@@ -165,10 +165,10 @@ impl GeoTiff {
         file.read_exact(&mut buffer)?;
 
         // Check for basic TIFF magic bytes (II for little-endian, MM for big-endian)
-        let is_valid_tiff = (buffer[0] == 0x49 && buffer[1] == 0x49) || // II
+        let isvalid_tiff = (buffer[0] == 0x49 && buffer[1] == 0x49) || // II
                            (buffer[0] == 0x4D && buffer[1] == 0x4D); // MM
 
-        if !is_valid_tiff {
+        if !isvalid_tiff {
             return Err(IoError::FormatError("Not a valid TIFF file".to_string()));
         }
 
@@ -268,7 +268,7 @@ impl GeoTiff {
                         .collect()
                 };
 
-                Array2::fromshape_vec((self.height as usize, self.width as usize), data)
+                Array2::from_shape_vec((self.height as usize, self.width as usize), data)
                     .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
             }
             Err(_) => {
@@ -279,7 +279,7 @@ impl GeoTiff {
                         T::from_f32(val as f32)
                     })
                     .collect();
-                Array2::fromshape_vec((self.height as usize, self.width as usize), data)
+                Array2::from_shape_vec((self.height as usize, self.width as usize), data)
                     .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
             }
         }
@@ -309,7 +309,7 @@ impl GeoTiff {
 
         // Simplified implementation
         let data = vec![T::zero(); (width * height) as usize];
-        Array2::fromshape_vec((height as usize, width as usize), data)
+        Array2::from_shape_vec((height as usize, width as usize), data)
             .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
     }
 
@@ -340,7 +340,7 @@ impl GeoTiffNumeric for u8 {
     }
 
     fn from_f32(val: f32) -> Self {
-        (_val * 255.0).clamp(0.0, 255.0) as u8
+        (val * 255.0).clamp(0.0, 255.0) as u8
     }
 }
 
@@ -350,7 +350,7 @@ impl GeoTiffNumeric for i8 {
     }
 
     fn from_f32(val: f32) -> Self {
-        (_val * 127.0).clamp(-128.0, 127.0) as i8
+        (val * 127.0).clamp(-128.0, 127.0) as i8
     }
 }
 
@@ -360,7 +360,7 @@ impl GeoTiffNumeric for u16 {
     }
 
     fn from_f32(val: f32) -> Self {
-        (_val * 65535.0).clamp(0.0, 65535.0) as u16
+        (val * 65535.0).clamp(0.0, 65535.0) as u16
     }
 }
 
@@ -370,7 +370,7 @@ impl GeoTiffNumeric for i16 {
     }
 
     fn from_f32(val: f32) -> Self {
-        (_val * 32767.0).clamp(-32768.0, 32767.0) as i16
+        (val * 32767.0).clamp(-32768.0, 32767.0) as i16
     }
 }
 
@@ -380,7 +380,7 @@ impl GeoTiffNumeric for u32 {
     }
 
     fn from_f32(val: f32) -> Self {
-        (_val * 4294967295.0).clamp(0.0, 4294967295.0) as u32
+        (val * 4294967295.0).clamp(0.0, 4294967295.0) as u32
     }
 }
 
@@ -390,7 +390,7 @@ impl GeoTiffNumeric for i32 {
     }
 
     fn from_f32(val: f32) -> Self {
-        (_val * 2147483647.0).clamp(-2147483648.0, 2147483647.0) as i32
+        (val * 2147483647.0).clamp(-2147483648.0, 2147483647.0) as i32
     }
 }
 
@@ -400,7 +400,7 @@ impl GeoTiffNumeric for f32 {
     }
 
     fn from_f32(val: f32) -> Self {
-        _val
+        val
     }
 }
 
@@ -410,7 +410,7 @@ impl GeoTiffNumeric for f64 {
     }
 
     fn from_f32(val: f32) -> Self {
-        _val as f64
+        val as f64
     }
 }
 
@@ -631,7 +631,7 @@ impl Shapefile {
         // Add a sample feature indicating successful file validation
         let mut attributes = HashMap::new();
         attributes.insert(
-            "file_validated".to_string(),
+            "filevalidated".to_string(),
             AttributeValue::String("true".to_string()),
         );
         attributes.insert(
@@ -729,8 +729,8 @@ impl GeoJson {
     }
 
     /// Convert from Shapefile features
-    pub fn from_features(features: Vec<Feature>, crs: Option<CRS>) -> Self {
-        let geojson_features = _features
+    pub fn fromfeatures(features: Vec<Feature>, crs: Option<CRS>) -> Self {
+        let geojsonfeatures = features
             .into_iter()
             .map(|f| GeoJsonFeature {
                 r#type: "Feature".to_string(),
@@ -739,14 +739,14 @@ impl GeoJson {
                     .attributes
                     .into_iter()
                     .map(|(k, v)| {
-                        let json_value = match v {
+                        let jsonvalue = match v {
                             AttributeValue::Integer(i) => serde_json::json!(i),
                             AttributeValue::Float(f) => serde_json::json!(f),
                             AttributeValue::String(s) => serde_json::json!(s),
                             AttributeValue::Boolean(b) => serde_json::json!(b),
                             AttributeValue::Date(d) => serde_json::json!(d),
                         };
-                        (k, json_value)
+                        (k, jsonvalue)
                     })
                     .collect(),
             })
@@ -754,13 +754,13 @@ impl GeoJson {
 
         Self {
             r#type: "FeatureCollection".to_string(),
-            features: geojson_features,
+            features: geojsonfeatures,
             crs,
         }
     }
 
     fn geometry_to_geojson(geom: &Geometry) -> GeoJsonGeometry {
-        match _geom {
+        match geom {
             Geometry::Point { x, y } => GeoJsonGeometry {
                 r#type: "Point".to_string(),
                 coordinates: serde_json::json!([x, y]),
@@ -820,7 +820,7 @@ impl KMLDocument {
     /// Create a new KML document
     pub fn new(name: impl Into<String>) -> Self {
         Self {
-            name: Some(_name.into()),
+            name: Some(name.into()),
             description: None,
             features: Vec::new(),
             folders: Vec::new(),
@@ -906,7 +906,7 @@ impl KMLDocument {
         }
 
         // Write geometry
-        self.write_geometry(file, &feature.geometry, indent + 2)?;
+        self.writegeometry(file, &feature.geometry, indent + 2)?;
 
         writeln!(file, "{indent_str}  </Placemark>")
             .map_err(|e| IoError::FileError(e.to_string()))?;
@@ -954,7 +954,7 @@ impl KMLDocument {
         Ok(())
     }
 
-    fn write_geometry(&self, file: &mut File, geometry: &Geometry, indent: usize) -> Result<()> {
+    fn writegeometry(&self, file: &mut File, geometry: &Geometry, indent: usize) -> Result<()> {
         use std::io::Write;
 
         let indent_str = "  ".repeat(indent);
@@ -1108,8 +1108,8 @@ pub mod geo_utils {
     }
 
     /// Check if a point is inside a polygon
-    pub fn point_in_polygon(point: &(f64, f64), polygon: &[(f64, f64)]) -> bool {
-        let (x, y) = *_point;
+    pub fn point_inpolygon(point: &(f64, f64), polygon: &[(f64, f64)]) -> bool {
+        let (x, y) = *point;
         let mut inside = false;
         let n = polygon.len();
 
@@ -1158,7 +1158,7 @@ pub mod geo_utils {
             return None;
         }
 
-        let area = polygon_area(_polygon);
+        let area = polygon_area(polygon);
         if area == 0.0 {
             return None;
         }
@@ -1203,7 +1203,7 @@ mod tests {
     }
 
     #[test]
-    fn test_geometry_bbox() {
+    fn testgeometry_bbox() {
         let point = Geometry::Point { x: 10.0, y: 20.0 };
         assert_eq!(point.bbox(), Some((10.0, 20.0, 10.0, 20.0)));
 

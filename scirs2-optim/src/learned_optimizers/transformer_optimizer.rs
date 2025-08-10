@@ -4305,7 +4305,7 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerLayer<T> {
 
         // Self-attention with residual connection
         let residual = x.clone();
-        if pre_layer_norm {
+        if pre_layernorm {
             x = self.ln1.forward(&x)?;
         }
 
@@ -4313,14 +4313,14 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerLayer<T> {
         x = self.dropout1.forward(&x)?;
         x = x + &residual;
 
-        if !pre_layer_norm {
+        if !pre_layernorm {
             x = self.ln1.forward(&x)?;
         }
 
         // Cross-attention (if enabled)
         if let Some(ref mut cross_attn) = self.cross_attention {
             let residual = x.clone();
-            if pre_layer_norm {
+            if pre_layernorm {
                 if let Some(ref ln3) = self.ln3 {
                     x = ln3.forward(&x)?;
                 }
@@ -4333,7 +4333,7 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerLayer<T> {
             }
             x = x + &residual;
 
-            if !pre_layer_norm {
+            if !pre_layernorm {
                 if let Some(ref ln3) = self.ln3 {
                     x = ln3.forward(&x)?;
                 }
@@ -4342,7 +4342,7 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerLayer<T> {
 
         // Feed-forward with residual connection
         let residual = x.clone();
-        if pre_layer_norm {
+        if pre_layernorm {
             x = self.ln2.forward(&x)?;
         }
 
@@ -4350,7 +4350,7 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerLayer<T> {
         x = self.dropout2.forward(&x)?;
         x = x + &residual;
 
-        if !pre_layer_norm {
+        if !pre_layernorm {
             x = self.ln2.forward(&x)?;
         }
 

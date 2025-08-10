@@ -318,7 +318,7 @@ pub fn validate_file_format<P: AsRef<Path>>(
         return Ok(FormatValidationResult {
             valid: false,
             format: format.as_str().to_string(),
-            file_path: path.to_string_lossy().to_string(),
+            file_path: _path.to_string_lossy().to_string(),
             details: Some("File does not have the correct format signature".to_string()),
         });
     }
@@ -334,7 +334,7 @@ pub fn validate_file_format<P: AsRef<Path>>(
             Ok(FormatValidationResult {
                 valid: true,
                 format: format.as_str().to_string(),
-                file_path: path.to_string_lossy().to_string(),
+                file_path: _path.to_string_lossy().to_string(),
                 details: None,
             })
         }
@@ -360,7 +360,7 @@ fn validate_csv_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
         return Ok(FormatValidationResult {
             valid: false,
             format: "CSV".to_string(),
-            file_path: path.to_string_lossy().to_string(),
+            file_path: _path.to_string_lossy().to_string(),
             details: Some("File is empty".to_string()),
         });
     }
@@ -377,7 +377,7 @@ fn validate_csv_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
             return Ok(FormatValidationResult {
                 valid: false,
                 format: "CSV".to_string(),
-                file_path: path.to_string_lossy().to_string(),
+                file_path: _path.to_string_lossy().to_string(),
                 details: Some("File has no content".to_string()),
             });
         }
@@ -404,7 +404,7 @@ fn validate_csv_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
         Ok(FormatValidationResult {
             valid: true,
             format: "CSV".to_string(),
-            file_path: path.to_string_lossy().to_string(),
+            file_path: _path.to_string_lossy().to_string(),
             details: Some(format!(
                 "CSV file with {} fields per line",
                 first_field_count
@@ -437,7 +437,7 @@ fn validate_csv_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
         Ok(FormatValidationResult {
             valid: false,
             format: "CSV".to_string(),
-            file_path: path.to_string_lossy().to_string(),
+            file_path: _path.to_string_lossy().to_string(),
             details: Some(format!(
                 "Inconsistent field counts. First line has {} fields. {}",
                 first_field_count, inconsistent_report
@@ -486,13 +486,13 @@ fn validate_json_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResul
         Ok(_) => Ok(FormatValidationResult {
             valid: true,
             format: "JSON".to_string(),
-            file_path: path.to_string_lossy().to_string(),
+            file_path: _path.to_string_lossy().to_string(),
             details: Some("Valid JSON structure".to_string()),
         }),
         Err(e) => Ok(FormatValidationResult {
             valid: false,
             format: "JSON".to_string(),
-            file_path: path.to_string_lossy().to_string(),
+            file_path: _path.to_string_lossy().to_string(),
             details: Some(format!("Invalid JSON: {}", e)),
         }),
     }
@@ -543,7 +543,7 @@ fn validate_arff_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResul
         Ok(FormatValidationResult {
             valid: true,
             format: "ARFF".to_string(),
-            file_path: path.to_string_lossy().to_string(),
+            file_path: _path.to_string_lossy().to_string(),
             details: Some(format!(
                 "Valid ARFF file with {} attributes",
                 attribute_count
@@ -553,7 +553,7 @@ fn validate_arff_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResul
         Ok(FormatValidationResult {
             valid: false,
             format: "ARFF".to_string(),
-            file_path: path.to_string_lossy().to_string(),
+            file_path: _path.to_string_lossy().to_string(),
             details: Some(details.join(", ")),
         })
     }
@@ -576,7 +576,7 @@ fn validate_wav_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
         return Ok(FormatValidationResult {
             valid: false,
             format: "WAV".to_string(),
-            file_path: path.to_string_lossy().to_string(),
+            file_path: _path.to_string_lossy().to_string(),
             details: Some(format!("Failed to read WAV header: {}", e)),
         });
     }
@@ -586,7 +586,7 @@ fn validate_wav_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
         return Ok(FormatValidationResult {
             valid: false,
             format: "WAV".to_string(),
-            file_path: path.to_string_lossy().to_string(),
+            file_path: _path.to_string_lossy().to_string(),
             details: Some("Missing RIFF header".to_string()),
         });
     }
@@ -596,7 +596,7 @@ fn validate_wav_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
         return Ok(FormatValidationResult {
             valid: false,
             format: "WAV".to_string(),
-            file_path: path.to_string_lossy().to_string(),
+            file_path: _path.to_string_lossy().to_string(),
             details: Some("Missing WAVE format identifier".to_string()),
         });
     }
@@ -606,7 +606,7 @@ fn validate_wav_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
         return Ok(FormatValidationResult {
             valid: false,
             format: "WAV".to_string(),
-            file_path: path.to_string_lossy().to_string(),
+            file_path: _path.to_string_lossy().to_string(),
             details: Some("Missing fmt chunk".to_string()),
         });
     }
@@ -623,7 +623,7 @@ fn validate_wav_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
     Ok(FormatValidationResult {
         valid: true,
         format: "WAV".to_string(),
-        file_path: path.to_string_lossy().to_string(),
+        file_path: _path.to_string_lossy().to_string(),
         details: Some(format!(
             "Valid WAV file: {} channels, {}Hz, {}-bit, {}",
             channels,

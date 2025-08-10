@@ -32,9 +32,9 @@ pub struct RMSpropGpu<A: Float + ScalarOperand + Debug> {
 
 impl<A: Float + ScalarOperand + Debug> RMSpropGpu<A> {
     /// Create a new GPU-accelerated RMSprop optimizer
-    pub fn new(_learningrate: A) -> Self {
+    pub fn new(learning_rate: A) -> Self {
         Self {
-            cpu_optimizer: RMSprop::new(_learning_rate),
+            cpu_optimizer: RMSprop::new(learning_rate),
             gpu_memory: None,
             kernel_handle: None,
             on_gpu: false,

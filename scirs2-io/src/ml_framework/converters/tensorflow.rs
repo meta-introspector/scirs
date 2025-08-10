@@ -99,7 +99,7 @@ impl MLFrameworkConverter for TensorFlowConverter {
                             .filter_map(|v| v.as_f64().map(|f| f as f32))
                             .collect();
 
-                        if let Ok(array) = ArrayD::fromshape_vec(IxDyn(&shape_vec), data_vec) {
+                        if let Ok(array) = ArrayD::from_shape_vec(IxDyn(&shape_vec), data_vec) {
                             model.weights.insert(
                                 name.to_string(),
                                 MLTensor::new(array, Some(name.to_string())),
@@ -160,7 +160,7 @@ impl MLFrameworkConverter for TensorFlowConverter {
                 vec![0.0; shape.iter().product()]
             };
 
-            let array = ArrayD::fromshape_vec(IxDyn(&shape), data)
+            let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
                 .map_err(|e| IoError::Other(e.to_string()))?;
 
             return Ok(MLTensor::new(array, None));

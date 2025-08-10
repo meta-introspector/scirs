@@ -411,7 +411,7 @@ impl NetCDFFile {
             // Convert to requested type with proper type handling
             let data: Vec<T> = self.convert_data_type(&array_f64)?;
 
-            return Array::fromshape_vec(array_f64.shape(), data)
+            return Array::from_shape_vec(array_f64.shape(), data)
                 .map_err(|e| IoError::FormatError(format!("Failed to create array: {}", e)));
         }
 
@@ -419,7 +419,7 @@ impl NetCDFFile {
         let total_size = shape.iter().product();
         let data = vec![T::default(); total_size];
 
-        Array::fromshape_vec(shape, data)
+        Array::from_shape_vec(shape, data)
             .map_err(|e| IoError::FormatError(format!("Failed to create array: {}", e)))
     }
 

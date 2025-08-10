@@ -467,7 +467,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         let mut rng_state = seed;
 
         for i in 0..n_features {
-            if i != target_feature {
+            if i != targetfeature {
                 rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
                 coalition[i] = (rng_state % 2) == 0;
             }
@@ -547,7 +547,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         n_samples: usize,
     ) -> Result<Array2<F>> {
         let n_features = x_instance.len();
-        let mut _samples = Array2::zeros((n_samples, n_features));
+        let mut samples = Array2::zeros((n_samples, n_features));
 
         let seed = self.random_seed.unwrap_or(42);
         let mut rng_state = seed;
@@ -567,7 +567,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
             }
         }
 
-        Ok(_samples)
+        Ok(samples)
     }
 
     /// Fit linear approximation for LIME
@@ -825,7 +825,7 @@ where
     };
 
     // Gain-based importance (if tree _splits provided)
-    let gain_importance = if let Some(_splits) = tree_splits {
+    let gain_importance = if let Some(splits) = tree_splits {
         Some(calculator.gain_importance(model, x_test, feature_names, splits)?)
     } else {
         None

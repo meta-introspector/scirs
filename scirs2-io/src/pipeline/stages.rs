@@ -416,7 +416,7 @@ pub struct CacheStage {
 }
 
 impl CacheStage {
-    pub fn new(_cache_key: &str, cachedir: impl AsRef<Path>) -> Self {
+    pub fn new(cache_key: &str, cache_dir: impl AsRef<Path>) -> Self {
         Self {
             cache_key: cache_key.to_string(),
             cache_dir: cache_dir.as_ref().to_path_buf(),
@@ -572,7 +572,7 @@ pub struct RetryErrorHandler {
 }
 
 impl RetryErrorHandler {
-    pub fn new(_maxretries: usize) -> Self {
+    pub fn new(max_retries: usize) -> Self {
         Self {
             max_retries: max_retries,
             retry_delay: Duration::from_secs(1),
@@ -637,7 +637,7 @@ pub struct FallbackErrorHandler<T: Any + Send + Sync + Clone + 'static> {
 }
 
 impl<T: Any + Send + Sync + Clone + 'static> FallbackErrorHandler<T> {
-    pub fn new(_fallbackvalue: T) -> Self {
+    pub fn new(fallback_value: T) -> Self {
         Self {
             fallback_value: fallback_value,
         }

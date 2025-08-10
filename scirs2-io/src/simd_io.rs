@@ -871,13 +871,13 @@ impl AdvancedSimdProcessor {
     }
 
     /// Calculate optimal chunk size based on vector width and cache hierarchy
-    fn calculate_optimal_chunk_size(_vectorwidth: usize) -> usize {
+    fn calculate_optimal_chunk_size(vector_width: usize) -> usize {
         // Target L1 cache size (32KB typical) with some headroom
         let target_size = 24 * 1024;
         let chunk_size = target_size / vector_width;
 
         // Ensure alignment to vector boundaries
-        (chunk_size / vector_width) * _vector_width
+        (chunk_size / vector_width) * vector_width
     }
 
     /// Optimized SIMD data type conversion with auto-vectorization

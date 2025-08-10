@@ -240,7 +240,7 @@ impl EdgeAISuite {
     /// Create with custom configuration
     pub fn with_config(config: EdgeAIConfig) -> Self {
         Self {
-            config: config,
+            config,
             baselines: EdgeBaselines::default(),
         }
     }
@@ -278,17 +278,17 @@ impl EdgeAISuite {
         ];
 
         // Calculate _throughput
-        let _throughput = 1000.0 / avg_latency; // inferences per second
+        let throughput = 1000.0 / avg_latency; // inferences per second
 
         // Calculate power metrics
         let avg_power = power_consumption.iter().sum::<f64>() / power_consumption.len() as f64;
-        let energy_efficiency = _throughput / avg_power; // inferences per watt per second
+        let energy_efficiency = throughput / avg_power; // inferences per watt per second
 
         // Calculate memory _usage
         let memory_usage_avg = memory_usage.iter().sum::<f64>() / memory_usage.len() as f64;
 
         // Estimate CPU utilization based on _throughput vs target
-        let cpu_utilization = (_throughput / target_throughput as f64 * 100.0).min(100.0);
+        let cpu_utilization = (throughput / target_throughput as f64 * 100.0).min(100.0);
 
         // Model size estimation (simplified)
         let model_size = memory_usage_avg * 0.6; // Assume 60% of memory is model

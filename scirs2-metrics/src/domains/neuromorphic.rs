@@ -1079,7 +1079,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
             realtime_adapter,
             advanced_memory,
             consciousness_module,
-            config: config,
+            config,
         })
     }
 
@@ -1302,8 +1302,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
 
         for (_, spikes) in &result.spike_history {
             for &neuronid in spikes {
-                if neuronid >= output_start
-                    && neuronid < output_start + self.config.output_neurons
+                if neuronid >= output_start && neuronid < output_start + self.config.output_neurons
                 {
                     let output_idx = neuronid - output_start;
                     spike_counts[output_idx] = spike_counts[output_idx] + F::one();
@@ -1446,8 +1445,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
 
         for (_, spikes) in &result.spike_history {
             for &neuronid in spikes {
-                if neuronid >= output_start
-                    && neuronid < output_start + self.config.output_neurons
+                if neuronid >= output_start && neuronid < output_start + self.config.output_neurons
                 {
                     let output_idx = neuronid - output_start;
                     predictions[output_idx] = predictions[output_idx] + F::one();
@@ -1550,11 +1548,11 @@ pub struct SimulationResult<F: Float> {
 
 impl NetworkTopology {
     fn create_layered_topology(config: &NeuromorphicConfig) -> Result<Self> {
-        let mut layer_sizes = vec![_configinput_neurons];
-        for _ in 0.._confighidden_layers {
-            layer_sizes.push(_configneurons_per_layer);
+        let mut layer_sizes = vec![config.input_neurons];
+        for _ in 0..config.hidden_layers {
+            layer_sizes.push(config.neurons_per_layer);
         }
-        layer_sizes.push(_configoutput_neurons);
+        layer_sizes.push(config.output_neurons);
 
         let connection_patterns = vec![ConnectionPattern::FullyConnected; layer_sizes.len() - 1];
         let recurrent_connections = Vec::new();
@@ -1598,8 +1596,8 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SynapticPlasticityManage
         };
 
         let learning_scheduler = LearningRateScheduler {
-            base_rate: F::from(_configlearning_rate).unwrap(),
-            current_rate: F::from(_configlearning_rate).unwrap(),
+            base_rate: F::from(config.learning_rate).unwrap(),
+            current_rate: F::from(config.learning_rate).unwrap(),
             policy: SchedulingPolicy::Constant,
             performance_metrics: VecDeque::new(),
         };
@@ -1875,8 +1873,7 @@ impl<F: Float> SpikingNeuralNetwork<F> {
         let mut local_neuron_idx = None;
 
         for (layer_idx, layer) in self.layers.iter().enumerate() {
-            if neuronid >= global_neuron_idx && neuronid < global_neuron_idx + layer.neurons.len()
-            {
+            if neuronid >= global_neuron_idx && neuronid < global_neuron_idx + layer.neurons.len() {
                 target_layer = Some(layer_idx);
                 local_neuron_idx = Some(neuronid - global_neuron_idx);
                 break;
@@ -2662,7 +2659,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> AdaptiveLearningControll
 
         let strategies = vec![
             AdaptationStrategy::GradientBased {
-                learning_rate: F::from(_configlearning_rate).unwrap(),
+                learning_rate: F::from(config.learning_rate).unwrap(),
             },
             AdaptationStrategy::Evolutionary {
                 population_size: 20,
@@ -2832,15 +2829,15 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SpikePatternRecognizer<F
         let pattern_templates = vec![
             SpikePattern {
                 name: "synchronous_burst".to_string(),
-                spatial_pattern: (0.._configoutput_neurons).collect(),
+                spatial_pattern: (0..config.output_neurons).collect(),
                 temporal_pattern: vec![Duration::from_millis(0), Duration::from_millis(1)],
                 strength: F::from(0.8).unwrap(),
                 tolerance: F::from(0.1).unwrap(),
             },
             SpikePattern {
                 name: "sequential_activation".to_string(),
-                spatial_pattern: (0.._configoutput_neurons).collect(),
-                temporal_pattern: (0.._configoutput_neurons)
+                spatial_pattern: (0..config.output_neurons).collect(),
+                temporal_pattern: (0..config.output_neurons)
                     .map(|i| Duration::from_millis(i as u64 * 5))
                     .collect(),
                 strength: F::from(0.6).unwrap(),
@@ -3686,12 +3683,12 @@ pub struct SensoryMemoryBuffer<F: Float> {
 
 impl<F: Float + Send + Sync + ndarray::ScalarOperand> SensoryMemoryBuffer<F> {
     /// Create new sensory memory buffer
-    pub fn new(_capacity: usize, decayrate: F) -> Self {
+    pub fn new(capacity: usize, decayrate: F) -> Self {
         Self {
             capacity,
-            data: VecDeque::with_capacity(_capacity),
+            data: VecDeque::with_capacity(capacity),
             decayrate,
-            timestamps: VecDeque::with_capacity(_capacity),
+            timestamps: VecDeque::with_capacity(capacity),
         }
     }
 
@@ -3751,7 +3748,7 @@ pub struct ShortTermMemoryWithChunking<F: Float> {
 
 impl<F: Float + Send + Sync + std::iter::Sum> ShortTermMemoryWithChunking<F> {
     /// Create new short-term memory with chunking
-    pub fn new(_max_chunk_size: usize, max_chunks: usize, similaritythreshold: F) -> Self {
+    pub fn new(max_chunk_size: usize, max_chunks: usize, similaritythreshold: F) -> Self {
         Self {
             _chunks: HashMap::new(),
             access_counts: HashMap::new(),

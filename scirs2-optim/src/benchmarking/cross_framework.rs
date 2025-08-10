@@ -293,7 +293,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         let python_scripts = PythonScriptTemplates::new();
 
         // Create temporary directory
-        std::fs::create_dir_all(&_config.temp_dir).map_err(|e| {
+        std::fs::create_dir_all(&config.temp_dir).map_err(|e| {
             OptimError::InvalidConfig(format!("Failed to create temp directory: {}", e))
         })?;
 
@@ -306,7 +306,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
     }
 
     /// Add a test function to the benchmark suite
-    pub fn add_test_function(&mut self, testfunction: TestFunction<A>) {
+    pub fn add_test_function(&mut self, test_function: TestFunction<A>) {
         self.test_functions.push(test_function);
     }
 

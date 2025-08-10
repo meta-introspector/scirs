@@ -110,15 +110,15 @@ impl CompressionAlgorithm {
 
 /// Convert a compression level (0-9) to the appropriate internal level for each algorithm
 #[allow(dead_code)]
-fn normalize_compression_level(
-    _level: Option<u32>,
+fn normalize__level(
+    level: Option<u32>,
     algorithm: CompressionAlgorithm,
 ) -> Result<u32> {
-    let _level = level.unwrap_or(6); // Default compression _level
+    let _level = level.unwrap_or(6); // Default compression level
 
     if _level > 9 {
         return Err(IoError::CompressionError(format!(
-            "Compression _level must be between 0 and 9, got {_level}"
+            "Compression level must be between 0 and 9, got {_level}"
         )));
     }
 
@@ -158,7 +158,7 @@ pub fn compress_data(
     algorithm: CompressionAlgorithm,
     level: Option<u32>,
 ) -> Result<Vec<u8>> {
-    let normalized_level = normalize_compression_level(level, algorithm)?;
+    let normalized_level = normalize__level(level, algorithm)?;
 
     match algorithm {
         CompressionAlgorithm::Gzip => {
@@ -310,7 +310,7 @@ pub fn compress_file<P: AsRef<Path>>(
 ) -> Result<String> {
     // Read input file
     let mut input_data = Vec::new();
-    File::open(inputpath.as_ref())
+    File::open(input_path.as_ref())
         .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?
         .read_to_end(&mut input_data)
         .map_err(|e| IoError::FileError(format!("Failed to read input file: {e}")))?;
@@ -320,10 +320,10 @@ pub fn compress_file<P: AsRef<Path>>(
 
     // Determine output _path
     let output_path_string = match output_path {
-        Some(_path) => path.as_ref().to_string_lossy().to_string(),
+        Some(path) => path.as_ref().to_string_lossy().to_string(),
         None => {
             // Generate output _path by appending algorithm extension
-            let mut path_buf = inputpath.as_ref().to_path_buf();
+            let mut path_buf = input_path.as_ref().to_path_buf();
             let ext = algorithm.extension();
 
             // Get the file name as a string
@@ -388,7 +388,7 @@ pub fn decompress_file<P: AsRef<Path>>(
 
     // Read input file
     let mut input_data = Vec::new();
-    File::open(inputpath.as_ref())
+    File::open(input_path.as_ref())
         .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?
         .read_to_end(&mut input_data)
         .map_err(|e| IoError::FileError(format!("Failed to read input file: {e}")))?;
@@ -398,10 +398,10 @@ pub fn decompress_file<P: AsRef<Path>>(
 
     // Determine output _path
     let output_path_string = match output_path {
-        Some(_path) => path.as_ref().to_string_lossy().to_string(),
+        Some(path) => path.as_ref().to_string_lossy().to_string(),
         None => {
             // Generate output _path by removing algorithm extension
-            let path_str = inputpath.as_ref().to_string_lossy().to_string();
+            let path_str = input_path.as_ref().to_string_lossy().to_string();
             let ext = algorithm.extension();
 
             if path_str.ends_with(&format!(".{ext}")) {
@@ -473,7 +473,7 @@ pub struct CompressionInfo {
 /// Get information about a specific compression algorithm
 #[allow(dead_code)]
 pub fn algorithm_info(algorithm: CompressionAlgorithm) -> CompressionInfo {
-    match _algorithm {
+    match algorithm {
         CompressionAlgorithm::Gzip => CompressionInfo {
             name: "GZIP".to_string(),
             description: "General-purpose compression _algorithm with good balance of speed and compression ratio".to_string(),
@@ -787,7 +787,7 @@ static GLOBAL_HANDLER: std::sync::OnceLock<TransparentFileHandler> = std::sync::
 /// Initialize the global transparent file handler
 #[allow(dead_code)]
 pub fn init_global_handler(handler: TransparentFileHandler) {
-    let _ = GLOBAL_HANDLER.set(_handler);
+    let _ = GLOBAL_HANDLER.set(handler);
 }
 
 /// Get a reference to the global transparent file handler
@@ -799,13 +799,13 @@ pub fn global_handler() -> &'static TransparentFileHandler {
 /// Convenient function to read a file with automatic decompression using global handler
 #[allow(dead_code)]
 pub fn read_file_transparent<P: AsRef<Path>>(path: P) -> Result<Vec<u8>> {
-    global_handler().read_file(_path)
+    global_handler().read_file(path)
 }
 
 /// Convenient function to write a file with automatic compression using global handler
 #[allow(dead_code)]
 pub fn write_file_transparent<P: AsRef<Path>>(path: P, data: &[u8]) -> Result<()> {
-    global_handler().write_file(_path, data)
+    global_handler().write_file(path, data)
 }
 
 /// Convenient function to copy a file with transparent compression/decompression using global handler
@@ -820,7 +820,7 @@ pub fn copy_file_transparent<P: AsRef<Path>, Q: AsRef<Path>>(
 /// Convenient function to get file compression info using global handler
 #[allow(dead_code)]
 pub fn file_info_transparent<P: AsRef<Path>>(path: P) -> Result<FileCompressionInfo> {
-    global_handler().file_info(_path)
+    global_handler().file_info(path)
 }
 
 //
@@ -829,22 +829,22 @@ pub fn file_info_transparent<P: AsRef<Path>>(path: P) -> Result<FileCompressionI
 
 /// Compress floating-point data using specialized techniques
 #[allow(dead_code)]
-fn compress_fpzip(_data: &[u8], level: u32) -> Result<Vec<u8>> {
+fn compress_fpzip(data: &[u8], level: u32) -> Result<Vec<u8>> {
     // Simple implementation: magic header + floating-point optimized compression
     let mut result = Vec::with_capacity(FPZIP_MAGIC.len() + data.len());
 
     // Add magic header
     result.extend_from_slice(FPZIP_MAGIC);
 
-    // For now, use a simple approach: if _data length is divisible by 4 or 8,
-    // assume it's floating-point _data and apply bit manipulation optimizations
+    // For now, use a simple approach: if data length is divisible by 4 or 8,
+    // assume it's floating-point data and apply bit manipulation optimizations
     if data.len() % 8 == 0 {
-        // Assume f64 _data - apply bit manipulation to reduce entropy
+        // Assume f64 data - apply bit manipulation to reduce entropy
         let float_data =
-            unsafe { std::slice::from_raw_parts(_data.as_ptr() as *const f64, data.len() / 8) };
+            unsafe { std::slice::from_raw_parts(data.as_ptr() as *const f64, data.len() / 8) };
 
         // XOR consecutive values to reduce entropy (delta-like encoding for floats)
-        let mut encoded_data = Vec::with_capacity(_data.len());
+        let mut encoded_data = Vec::with_capacity(data.len());
         if !float_data.is_empty() {
             // Store first value as-is
             encoded_data.extend_from_slice(&float_data[0].to_le_bytes());
@@ -858,15 +858,15 @@ fn compress_fpzip(_data: &[u8], level: u32) -> Result<Vec<u8>> {
             }
         }
 
-        // Compress the XOR'd _data with LZ4
+        // Compress the XOR'd data with LZ4
         let compressed = compress_data(&encoded_data, CompressionAlgorithm::Lz4, Some(6))?;
         result.extend_from_slice(&compressed);
     } else if data.len() % 4 == 0 {
-        // Assume f32 _data - apply similar technique
+        // Assume f32 data - apply similar technique
         let float_data =
-            unsafe { std::slice::from_raw_parts(_data.as_ptr() as *const f32, data.len() / 4) };
+            unsafe { std::slice::from_raw_parts(data.as_ptr() as *const f32, data.len() / 4) };
 
-        let mut encoded_data = Vec::with_capacity(_data.len());
+        let mut encoded_data = Vec::with_capacity(data.len());
         if !float_data.is_empty() {
             encoded_data.extend_from_slice(&float_data[0].to_le_bytes());
 
@@ -882,7 +882,7 @@ fn compress_fpzip(_data: &[u8], level: u32) -> Result<Vec<u8>> {
         result.extend_from_slice(&compressed);
     } else {
         // Not aligned to float boundaries, use regular compression
-        let compressed = compress_data(_data, CompressionAlgorithm::Zstd, Some(6))?;
+        let compressed = compress_data(data, CompressionAlgorithm::Zstd, Some(6))?;
         result.extend_from_slice(&compressed);
     }
 
@@ -892,20 +892,20 @@ fn compress_fpzip(_data: &[u8], level: u32) -> Result<Vec<u8>> {
 /// Decompress floating-point data
 #[allow(dead_code)]
 fn decompress_fpzip(data: &[u8]) -> Result<Vec<u8>> {
-    if !_data.starts_with(FPZIP_MAGIC) {
+    if !data.starts_with(FPZIP_MAGIC) {
         return Err(IoError::DecompressionError(
             "Invalid FPZip magic bytes".to_string(),
         ));
     }
 
-    let compressed_data = &_data[FPZIP_MAGIC.len()..];
+    let compressed_data = &data[FPZIP_MAGIC.len()..];
 
-    // Decompress the inner _data
+    // Decompress the inner data
     let decompressed = decompress_data(compressed_data, CompressionAlgorithm::Lz4)?;
 
     // Check if we need to reverse the XOR encoding
     if decompressed.len() % 8 == 0 {
-        // f64 _data
+        // f64 data
         let mut float_data = unsafe {
             std::slice::from_raw_parts(decompressed.as_ptr() as *const u64, decompressed.len() / 8)
         }
@@ -923,7 +923,7 @@ fn decompress_fpzip(data: &[u8]) -> Result<Vec<u8>> {
         .to_vec();
         Ok(result)
     } else if decompressed.len() % 4 == 0 {
-        // f32 _data
+        // f32 data
         let mut float_data = unsafe {
             std::slice::from_raw_parts(decompressed.as_ptr() as *const u32, decompressed.len() / 4)
         }
@@ -954,18 +954,18 @@ fn compress_delta_lz4(data: &[u8], level: u32) -> Result<Vec<u8>> {
 
     if data.len() < 8 {
         // Too small for delta encoding, use regular LZ4
-        let compressed = compress_data(_data, CompressionAlgorithm::Lz4, Some(level))?;
+        let compressed = compress_data(data, CompressionAlgorithm::Lz4, Some(level))?;
         result.extend_from_slice(&compressed);
         return Ok(result);
     }
 
     // Try to detect _data type and apply appropriate delta encoding
-    let mut delta_encoded = Vec::with_capacity(_data.len());
+    let mut delta_encoded = Vec::with_capacity(data.len());
 
     if data.len() % 8 == 0 {
         // Assume i64 or f64 time series
         let values =
-            unsafe { std::slice::from_raw_parts(_data.as_ptr() as *const i64, data.len() / 8) };
+            unsafe { std::slice::from_raw_parts(data.as_ptr() as *const i64, data.len() / 8) };
 
         // Store first value
         delta_encoded.extend_from_slice(&values[0].to_le_bytes());
@@ -978,7 +978,7 @@ fn compress_delta_lz4(data: &[u8], level: u32) -> Result<Vec<u8>> {
     } else if data.len() % 4 == 0 {
         // Assume i32 or f32 time series
         let values =
-            unsafe { std::slice::from_raw_parts(_data.as_ptr() as *const i32, data.len() / 4) };
+            unsafe { std::slice::from_raw_parts(data.as_ptr() as *const i32, data.len() / 4) };
 
         delta_encoded.extend_from_slice(&values[0].to_le_bytes());
 
@@ -988,14 +988,14 @@ fn compress_delta_lz4(data: &[u8], level: u32) -> Result<Vec<u8>> {
         }
     } else {
         // Byte-level delta encoding
-        delta_encoded.push(_data[0]);
-        for i in 1.._data.len() {
-            let delta = data[i].wrapping_sub(_data[i - 1]);
+        delta_encoded.push(data[0]);
+        for i in 1..data.len() {
+            let delta = data[i].wrapping_sub(data[i - 1]);
             delta_encoded.push(delta);
         }
     }
 
-    // Compress the delta-encoded _data
+    // Compress the delta-encoded data
     let compressed = compress_data(&delta_encoded, CompressionAlgorithm::Lz4, Some(level))?;
     result.extend_from_slice(&compressed);
 
@@ -1005,15 +1005,15 @@ fn compress_delta_lz4(data: &[u8], level: u32) -> Result<Vec<u8>> {
 /// Decompress delta-encoded time series data
 #[allow(dead_code)]
 fn decompress_delta_lz4(data: &[u8]) -> Result<Vec<u8>> {
-    if !_data.starts_with(DELTA_LZ4_MAGIC) {
+    if !data.starts_with(DELTA_LZ4_MAGIC) {
         return Err(IoError::DecompressionError(
             "Invalid Delta-LZ4 magic bytes".to_string(),
         ));
     }
 
-    let compressed_data = &_data[DELTA_LZ4_MAGIC.len()..];
+    let compressed_data = &data[DELTA_LZ4_MAGIC.len()..];
 
-    // Decompress the delta-encoded _data
+    // Decompress the delta-encoded data
     let delta_data = decompress_data(compressed_data, CompressionAlgorithm::Lz4)?;
 
     if delta_data.len() < 8 {
@@ -1022,7 +1022,7 @@ fn decompress_delta_lz4(data: &[u8]) -> Result<Vec<u8>> {
 
     // Reverse delta encoding
     if delta_data.len() % 8 == 0 {
-        // i64/f64 _data
+        // i64/f64 data
         let mut values = unsafe {
             std::slice::from_raw_parts(delta_data.as_ptr() as *const i64, delta_data.len() / 8)
         }
@@ -1038,7 +1038,7 @@ fn decompress_delta_lz4(data: &[u8]) -> Result<Vec<u8>> {
                 .to_vec();
         Ok(result)
     } else if delta_data.len() % 4 == 0 {
-        // i32/f32 _data
+        // i32/f32 data
         let mut values = unsafe {
             std::slice::from_raw_parts(delta_data.as_ptr() as *const i32, delta_data.len() / 4)
         }
@@ -1343,7 +1343,7 @@ pub fn compress_file_parallel<P: AsRef<Path>>(
 ) -> Result<(String, ParallelCompressionStats)> {
     // Read input file
     let mut input_data = Vec::new();
-    File::open(inputpath.as_ref())
+    File::open(input_path.as_ref())
         .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?
         .read_to_end(&mut input_data)
         .map_err(|e| IoError::FileError(format!("Failed to read input file: {e}")))?;
@@ -1353,9 +1353,9 @@ pub fn compress_file_parallel<P: AsRef<Path>>(
 
     // Determine output _path
     let output_path_string = match output_path {
-        Some(_path) => path.as_ref().to_string_lossy().to_string(),
+        Some(path) => path.as_ref().to_string_lossy().to_string(),
         None => {
-            let mut path_buf = inputpath.as_ref().to_path_buf();
+            let mut path_buf = input_path.as_ref().to_path_buf();
             let ext = algorithm.extension();
             let file_name = path_buf
                 .file_name()
@@ -1405,7 +1405,7 @@ pub fn decompress_file_parallel<P: AsRef<Path>>(
 
     // Read input file
     let mut input_data = Vec::new();
-    File::open(inputpath.as_ref())
+    File::open(input_path.as_ref())
         .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?
         .read_to_end(&mut input_data)
         .map_err(|e| IoError::FileError(format!("Failed to read input file: {e}")))?;
@@ -1415,9 +1415,9 @@ pub fn decompress_file_parallel<P: AsRef<Path>>(
 
     // Determine output _path
     let output_path_string = match output_path {
-        Some(_path) => path.as_ref().to_string_lossy().to_string(),
+        Some(path) => path.as_ref().to_string_lossy().to_string(),
         None => {
-            let path_str = inputpath.as_ref().to_string_lossy().to_string();
+            let path_str = input_path.as_ref().to_string_lossy().to_string();
             let ext = algorithm.extension();
 
             if path_str.ends_with(&format!(".{ext}")) {

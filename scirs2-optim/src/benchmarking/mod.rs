@@ -1303,7 +1303,7 @@ pub mod visualization {
         /// Add an optimizer to track
         pub fn add_optimizer(&mut self, name: String, maxhistory: usize) {
             self.visualizers
-                .insert(name, OptimizerStateVisualizer::new(_maxhistory));
+                .insert(name, OptimizerStateVisualizer::new(maxhistory));
         }
 
         /// Record a step for a specific optimizer

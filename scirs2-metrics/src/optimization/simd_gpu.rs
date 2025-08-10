@@ -740,7 +740,7 @@ impl SimdMetrics {
         use scirs2_core::parallel_ops::*;
 
         let batch_size = y_true_batch.nrows();
-        let chunk_size = self.parallel_configmin_chunk_size;
+        let chunk_size = self.parallel_config.min_chunk_size;
 
         // Process in parallel chunks
         let results: Result<Vec<_>> = (0..batch_size)

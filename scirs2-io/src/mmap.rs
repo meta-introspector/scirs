@@ -400,7 +400,7 @@ where
             )));
         }
 
-        ArrayView::fromshape(IxDyn(shape), data_slice)
+        ArrayView::from_shape(IxDyn(shape), data_slice)
             .map_err(|e| IoError::FormatError(format!("Failed to create array view: {}", e)))
     }
 
@@ -526,7 +526,7 @@ where
 
         let data_slice = self.as_slice_mut()?;
 
-        ArrayViewMut::fromshape(IxDyn(shape), data_slice)
+        ArrayViewMut::from_shape(IxDyn(shape), data_slice)
             .map_err(|e| IoError::FormatError(format!("Failed to create array view: {}", e)))
     }
 

@@ -286,7 +286,7 @@ impl EnhancedHDF5File {
                 let f64_array = if array.len() > 0 {
                     let shape = array.shape().to_vec();
                     let data: Vec<f64> = array.iter().map(|x| x.clone().into()).collect();
-                    ArrayD::fromshape_vec(IxDyn(&shape), data)
+                    ArrayD::from_shape_vec(IxDyn(&shape), data)
                         .map_err(|e| IoError::FormatError(e.to_string()))?
                 } else {
                     ArrayD::zeros(IxDyn(array.shape()))
@@ -542,7 +542,7 @@ impl EnhancedHDF5File {
                 .read_raw()
                 .map_err(|e| IoError::FormatError(format!("Failed to read dataset: {e}")))?;
             let ndarrayshape = IxDyn(&shape);
-            return ArrayD::fromshape_vec(ndarrayshape, data)
+            return ArrayD::from_shape_vec(ndarrayshape, data)
                 .map_err(|e| IoError::FormatError(e.to_string()));
         }
 
@@ -605,7 +605,7 @@ impl EnhancedHDF5File {
         }
 
         let ndarrayshape = IxDyn(&shape);
-        ArrayD::fromshape_vec(ndarrayshape, full_data)
+        ArrayD::from_shape_vec(ndarrayshape, full_data)
             .map_err(|e| IoError::FormatError(e.to_string()))
     }
 
@@ -766,7 +766,6 @@ mod tests {
 // Advanced HDF5 Enhancements
 //
 
-use rand::seq::SliceRandom;
 use std::collections::BTreeMap;
 
 /// Scientific metadata attribute types
@@ -870,7 +869,7 @@ impl ScientificMetadata {
     /// Add scale factor and offset
     pub fn with_scaling(mut self, scale_factor: f64, addoffset: f64) -> Self {
         self.scale_factor = Some(scale_factor);
-        self.add_offset = Some(add_offset);
+        self.add_offset = Some(addoffset);
         self
     }
 
@@ -939,7 +938,7 @@ impl HDF5PerformanceMonitor {
         self.timings
             .entry(operation.to_string())
             .or_default()
-            .push(duration_ms);
+            .push(durationms);
     }
 
     /// Record data transfer
@@ -947,8 +946,8 @@ impl HDF5PerformanceMonitor {
         self.transfer_stats.bytes_read += bytes;
         self.transfer_stats.read_operations += 1;
 
-        if duration_ms > 0.0 {
-            let speed = bytes as f64 / (duration_ms / 1000.0);
+        if durationms > 0.0 {
+            let speed = bytes as f64 / (durationms / 1000.0);
             let total_ops = self.transfer_stats.read_operations as f64;
             self.transfer_stats.avg_read_speed =
                 (self.transfer_stats.avg_read_speed * (total_ops - 1.0) + speed) / total_ops;
@@ -960,8 +959,8 @@ impl HDF5PerformanceMonitor {
         self.transfer_stats.bytes_written += bytes;
         self.transfer_stats.write_operations += 1;
 
-        if duration_ms > 0.0 {
-            let speed = bytes as f64 / (duration_ms / 1000.0);
+        if durationms > 0.0 {
+            let speed = bytes as f64 / (durationms / 1000.0);
             let total_ops = self.transfer_stats.write_operations as f64;
             self.transfer_stats.avg_write_speed =
                 (self.transfer_stats.avg_write_speed * (total_ops - 1.0) + speed) / total_ops;
@@ -1264,7 +1263,7 @@ impl OptimizedHDF5File {
     /// Get scientific metadata for a dataset
     pub fn get_scientific_metadata(&self, datasetpath: &str) -> Option<ScientificMetadata> {
         let cache = self.metadata_cache.read().unwrap();
-        cache.get(dataset_path).cloned()
+        cache.get(datasetpath).cloned()
     }
 
     /// Get performance report
@@ -1302,7 +1301,7 @@ impl OptimizedHDF5File {
 
         {
             let mut monitor = self.performance_monitor.lock().unwrap();
-            monitor.record_timing(operation_name, duration);
+            monitor.record_timing(operationname, duration);
         }
 
         Ok(result)

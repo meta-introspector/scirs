@@ -888,7 +888,8 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
     }
 
     fn orthogonalize_ansatz(
-        &mut self, parameters: &mut [f64],
+        &mut self,
+        parameters: &mut [f64],
         _previous_eigenvalues: &[F],
     ) -> Result<()> {
         // Implement Gram-Schmidt orthogonalization for finding excited states
@@ -963,11 +964,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         cost
     }
 
-    fn measure_qaoa_solution(
-        &self,
-        state: &[Complex<f64>],
-        numvariables: usize,
-    ) -> Result<Vec<F>> {
+    fn measure_qaoa_solution(&self, state: &[Complex<f64>], numvariables: usize) -> Result<Vec<F>> {
         use rand::Rng;
         let mut rng = rand::rng();
 
@@ -1479,8 +1476,7 @@ impl<F: Float> SuperpositionManager<F> {
             }
         }
 
-        self.coherence_tracker
-            .track_state(&key, state.creationtime);
+        self.coherence_tracker.track_state(&key, state.creationtime);
         self.active_states.insert(key, state);
     }
 

@@ -47,7 +47,7 @@ pub struct StreamingExecutor {
 }
 
 impl StreamingExecutor {
-    pub fn new(_chunksize: usize) -> Self {
+    pub fn new(chunk_size: usize) -> Self {
         Self {
             chunk_size: chunk_size,
         }
@@ -121,7 +121,7 @@ pub struct CachedExecutor {
 }
 
 impl CachedExecutor {
-    pub fn new(_cachedir: impl AsRef<Path>) -> Self {
+    pub fn new(cache_dir: impl AsRef<Path>) -> Self {
         Self {
             cache_dir: cache_dir.as_ref().to_path_buf(),
         }
@@ -182,7 +182,7 @@ pub struct DistributedExecutor {
 }
 
 impl DistributedExecutor {
-    pub fn new(_numworkers: usize) -> Self {
+    pub fn new(num_workers: usize) -> Self {
         Self {
             num_workers: num_workers,
         }
@@ -226,7 +226,7 @@ pub struct CheckpointedExecutor {
 }
 
 impl CheckpointedExecutor {
-    pub fn new(_checkpointdir: impl AsRef<Path>, interval: usize) -> Self {
+    pub fn new(checkpoint_dir: impl AsRef<Path>, interval: usize) -> Self {
         Self {
             checkpoint_dir: checkpoint_dir.as_ref().to_path_buf(),
             checkpoint_interval: interval,
@@ -271,8 +271,8 @@ impl ExecutorFactory {
     }
 
     /// Create a streaming executor
-    pub fn streaming(_chunksize: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
-        Box::new(StreamingExecutor::new(_chunk_size))
+    pub fn streaming(chunk_size: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
+        Box::new(StreamingExecutor::new(chunk_size))
     }
 
     /// Create an async executor
@@ -282,13 +282,13 @@ impl ExecutorFactory {
     }
 
     /// Create a cached executor
-    pub fn cached(_cachedir: impl AsRef<Path>) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
-        Box::new(CachedExecutor::new(_cache_dir))
+    pub fn cached(cache_dir: impl AsRef<Path>) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
+        Box::new(CachedExecutor::new(cache_dir))
     }
 
     /// Create a distributed executor
-    pub fn distributed(_numworkers: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
-        Box::new(DistributedExecutor::new(_num_workers))
+    pub fn distributed(num_workers: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
+        Box::new(DistributedExecutor::new(num_workers))
     }
 
     /// Create a checkpointed executor
@@ -335,7 +335,7 @@ pub struct BackpressureStreamingExecutor {
 }
 
 impl BackpressureStreamingExecutor {
-    pub fn new(_chunk_size: usize, max_pendingchunks: usize) -> Self {
+    pub fn new(chunk_size: usize, max_pending_chunks: usize) -> Self {
         Self {
             chunk_size: chunk_size,
             max_pending_chunks,
@@ -483,7 +483,7 @@ pub struct RetryExecutor<E> {
 }
 
 impl<E> RetryExecutor<E> {
-    pub fn new(_inner: E, maxretries: usize) -> Self {
+    pub fn new(inner: E, max_retries: usize) -> Self {
         Self {
             inner: inner,
             max_retries,
@@ -551,7 +551,7 @@ pub enum Event {
 }
 
 impl EventDrivenExecutor {
-    pub fn new(_eventreceiver: Receiver<Event>) -> Self {
+    pub fn new(event_receiver: Receiver<Event>) -> Self {
         Self {
             event_receiver: event_receiver,
         }
@@ -597,7 +597,7 @@ pub struct ParallelStageExecutor {
 }
 
 impl ParallelStageExecutor {
-    pub fn new(_maxparallelism: usize) -> Self {
+    pub fn new(max_parallelism: usize) -> Self {
         Self {
             max_parallelism: max_parallelism,
         }

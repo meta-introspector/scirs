@@ -53,13 +53,13 @@ impl<A: Float> OptimizerConfig<A> {
 
     /// Set weight decay
     pub fn weight_decay(mut self, weightdecay: A) -> Self {
-        self.weight_decay = weight_decay;
+        self.weight_decay = weightdecay;
         self
     }
 
     /// Set gradient clipping
     pub fn grad_clip(mut self, gradclip: A) -> Self {
-        self.grad_clip = Some(grad_clip);
+        self.grad_clip = Some(gradclip);
         self
     }
 
@@ -135,8 +135,8 @@ impl<A: Float + ScalarOperand, D: Dimension> Parameter<A, D> {
                 .map(|x| (*x) * (*x))
                 .fold(A::zero(), |acc, x| acc + x)
                 .sqrt();
-            if _norm > max_norm {
-                let scale = max_norm / norm;
+            if _norm > maxnorm {
+                let scale = maxnorm / _norm;
                 grad.mapv_inplace(|x| x * scale);
             }
         }

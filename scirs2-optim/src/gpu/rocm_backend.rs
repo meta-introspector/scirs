@@ -145,7 +145,7 @@ impl<A: Float> RocmBackend<A> {
     }
 
     /// Convert CUDA kernel to HIP kernel name
-    pub fn get_hip_kernel_name(_cuda_kernelname: &str) -> String {
+    pub fn get_hip_kernel_name(cuda_kernel_name: &str) -> String {
         // ROCm uses HIP which has similar naming to CUDA
         // In practice, kernels would be compiled for HIP
         cuda_kernel_name.replace("cuda", "hip")
@@ -416,7 +416,7 @@ struct RocmBuffer {
 
 impl RocmMemoryPool {
     /// Create a new memory pool
-    pub fn new(_maxsize: usize) -> Self {
+    pub fn new(max_size: usize) -> Self {
         Self {
             buffers: Vec::new(),
             current_size: 0,
@@ -483,8 +483,8 @@ pub mod rocm_utils {
     }
 
     /// Get memory access pattern optimization hints
-    pub fn get_memory_access_hints(_datasize: usize) -> MemoryAccessHint {
-        if _data_size < 1024 * 1024 {
+    pub fn get_memory_access_hints(data_size: usize) -> MemoryAccessHint {
+        if data_size < 1024 * 1024 {
             // Small data: prioritize L1 cache
             MemoryAccessHint::L1Preferred
         } else if data_size < 32 * 1024 * 1024 {

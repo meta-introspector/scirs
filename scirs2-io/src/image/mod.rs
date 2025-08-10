@@ -217,7 +217,7 @@ pub fn load_image<P: AsRef<Path>>(path: P) -> Result<ImageData> {
     let raw_data = rgb_img.into_raw();
 
     // Convert to ndarray
-    let data = Array3::fromshape_vec((height as usize, width as usize, 3), raw_data)
+    let data = Array3::from_shape_vec((height as usize, width as usize, 3), raw_data)
         .map_err(|e| IoError::FormatError(e.to_string()))?;
 
     // Try to read EXIF metadata
@@ -326,7 +326,7 @@ pub fn convert_image<P1: AsRef<Path>, P2: AsRef<Path>>(
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn resize_image(_image_data: &ImageData, new_width: u32, newheight: u32) -> Result<ImageData> {
+pub fn resize_image(image_data: &ImageData, new_width: u32, new_height: u32) -> Result<ImageData> {
     let (_height, width_, _) = image_data.data.dim();
     let raw_data = image_data.data.iter().cloned().collect::<Vec<u8>>();
 
@@ -340,7 +340,7 @@ pub fn resize_image(_image_data: &ImageData, new_width: u32, newheight: u32) -> 
     let resized_raw = rgb_img.into_raw();
 
     let resized_data =
-        Array3::fromshape_vec((new_height as usize, new_width as usize, 3), resized_raw)
+        Array3::from_shape_vec((new_height as usize, new_width as usize, 3), resized_raw)
             .map_err(|e| IoError::FormatError(e.to_string()))?;
 
     let mut new_metadata = image_data.metadata.clone();
@@ -451,7 +451,7 @@ pub fn load_animation<P: AsRef<Path>>(path: P) -> Result<AnimationData> {
             raw_data
         };
 
-        let data = Array3::fromshape_vec((height as usize, width as usize, 3), rgb_data)
+        let data = Array3::from_shape_vec((height as usize, width as usize, 3), rgb_data)
             .map_err(|e| IoError::FormatError(e.to_string()))?;
 
         let metadata = ImageMetadata {
@@ -840,13 +840,13 @@ pub fn find_images<P: AsRef<Path>>(
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn batch_process_images<P1, P2, F>(_input_dir: P1, outputdir: P2, processor: F) -> Result<()>
+pub fn batch_process_images<P1, P2, F>(input_dir: P1, output_dir: P2, processor: F) -> Result<()>
 where
     P1: AsRef<Path>,
     P2: AsRef<Path>,
     F: Fn(&ImageData) -> Result<ImageData>,
 {
-    let _input_dir = input_dir.as_ref();
+    let input_dir = input_dir.as_ref();
     let output_dir = output_dir.as_ref();
 
     // Create output directory if it doesn't exist

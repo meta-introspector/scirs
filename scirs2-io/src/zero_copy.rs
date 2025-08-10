@@ -63,7 +63,7 @@ where
         let ptr = self.mmap.as_ptr() as *const T;
         let slice = unsafe { slice::from_raw_parts(ptr, self.shape.iter().product()) };
 
-        ArrayView::fromshape(IxDyn(&self.shape), slice).expect("Shape mismatch in zero-copy view")
+        ArrayView::from_shape(IxDyn(&self.shape), slice).expect("Shape mismatch in zero-copy view")
     }
 
     /// Get a slice view of the data
@@ -118,7 +118,7 @@ where
         let ptr = self.mmap.as_mut_ptr() as *mut T;
         let slice = unsafe { slice::from_raw_parts_mut(ptr, self.shape.iter().product()) };
 
-        ArrayViewMut::fromshape(IxDyn(&self.shape), slice)
+        ArrayViewMut::from_shape(IxDyn(&self.shape), slice)
             .expect("Shape mismatch in zero-copy view")
     }
 
@@ -409,7 +409,7 @@ pub mod simd_zero_copy {
 
     impl SimdZeroCopyOpsF32 {
         /// Perform element-wise addition on memory-mapped arrays
-        pub fn add_mmap(_a_mmap: &Mmap, bmmap: &Mmap, shape: &[usize]) -> Result<Array1<f32>> {
+        pub fn add_mmap(a_mmap: &Mmap, b_mmap: &Mmap, shape: &[usize]) -> Result<Array1<f32>> {
             if a_mmap.len() != b_mmap.len() {
                 return Err(IoError::Other(
                     "Memory maps must have same size".to_string(),
@@ -427,8 +427,8 @@ pub mod simd_zero_copy {
             let a_slice = unsafe { slice::from_raw_parts(_a_mmap.as_ptr() as *const f32, count) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f32, count) };
 
-            let a_view = ArrayView1::fromshape(count, a_slice).unwrap();
-            let b_view = ArrayView1::fromshape(count, b_slice).unwrap();
+            let a_view = ArrayView1::from_shape(count, a_slice).unwrap();
+            let b_view = ArrayView1::from_shape(count, b_slice).unwrap();
 
             // Simple addition implementation for testing to avoid hangs
             let result: Array1<f32> = a_view
@@ -450,7 +450,7 @@ pub mod simd_zero_copy {
 
             let slice = unsafe { slice::from_raw_parts(_mmap.as_ptr() as *const f32, count) };
 
-            let view = ArrayView1::fromshape(count, slice).unwrap();
+            let view = ArrayView1::from_shape(count, slice).unwrap();
 
             // Simple scalar multiplication for testing to avoid hangs
             let result: Array1<f32> = view.iter().map(|&x| x * scalar).collect();
@@ -458,18 +458,18 @@ pub mod simd_zero_copy {
         }
 
         /// Compute dot product directly from memory-mapped arrays
-        pub fn dot_mmap(_a_mmap: &Mmap, bmmap: &Mmap, len: usize) -> Result<f32> {
+        pub fn dot_mmap(a_mmap: &Mmap, b_mmap: &Mmap, len: usize) -> Result<f32> {
             let expected_bytes = len * mem::size_of::<f32>();
 
             if a_mmap.len() < expected_bytes || b_mmap.len() < expected_bytes {
                 return Err(IoError::Other("Memory maps too small".to_string()));
             }
 
-            let a_slice = unsafe { slice::from_raw_parts(_a_mmap.as_ptr() as *const f32, len) };
+            let a_slice = unsafe { slice::from_raw_parts(a_mmap.as_ptr() as *const f32, len) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f32, len) };
 
-            let a_view = ArrayView1::fromshape(len, a_slice).unwrap();
-            let b_view = ArrayView1::fromshape(len, b_slice).unwrap();
+            let a_view = ArrayView1::from_shape(len, a_slice).unwrap();
+            let b_view = ArrayView1::from_shape(len, b_slice).unwrap();
 
             // Simple dot product for testing to avoid hangs
             let result: f32 = a_view.iter().zip(b_view.iter()).map(|(&a, &b)| a * b).sum();
@@ -482,7 +482,7 @@ pub mod simd_zero_copy {
 
     impl SimdZeroCopyOpsF64 {
         /// Perform element-wise addition on memory-mapped arrays
-        pub fn add_mmap(_a_mmap: &Mmap, bmmap: &Mmap, shape: &[usize]) -> Result<Array1<f64>> {
+        pub fn add_mmap(a_mmap: &Mmap, b_mmap: &Mmap, shape: &[usize]) -> Result<Array1<f64>> {
             if a_mmap.len() != b_mmap.len() {
                 return Err(IoError::Other(
                     "Memory maps must have same size".to_string(),
@@ -500,8 +500,8 @@ pub mod simd_zero_copy {
             let a_slice = unsafe { slice::from_raw_parts(_a_mmap.as_ptr() as *const f64, count) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f64, count) };
 
-            let a_view = ArrayView1::fromshape(count, a_slice).unwrap();
-            let b_view = ArrayView1::fromshape(count, b_slice).unwrap();
+            let a_view = ArrayView1::from_shape(count, a_slice).unwrap();
+            let b_view = ArrayView1::from_shape(count, b_slice).unwrap();
 
             // Simple addition implementation for testing to avoid hangs
             let result: Array1<f64> = a_view
@@ -543,8 +543,8 @@ pub mod simd_zero_copy {
             let a_slice = unsafe { slice::from_raw_parts(a_mmap.as_ptr() as *const f64, m * k1) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f64, k2 * n) };
 
-            let a_view = ArrayView2::fromshape((m, k1), a_slice).unwrap();
-            let b_view = ArrayView2::fromshape((k2, n), b_slice).unwrap();
+            let a_view = ArrayView2::from_shape((m, k1), a_slice).unwrap();
+            let b_view = ArrayView2::from_shape((k2, n), b_slice).unwrap();
 
             let mut c = Array2::<f64>::zeros((m, n));
 
@@ -615,7 +615,7 @@ pub enum MemoryAdvice {
 
 impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
     /// Create a new async zero-copy processor with NUMA awareness
-    pub fn new<P: AsRef<Path>>(path: P, chunksize: usize, config: AsyncConfig) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, chunk_size: usize, config: AsyncConfig) -> Result<Self> {
         let reader = ZeroCopyReader::new(_path)?;
         let numa_node = Self::detect_optimal_numa_node();
 
@@ -907,7 +907,7 @@ pub struct ZeroCopyStreamProcessor<T> {
 
 impl<T: Copy + 'static> ZeroCopyStreamProcessor<T> {
     /// Create a new streaming processor
-    pub fn new<P: AsRef<Path>>(path: P, chunksize: usize) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, chunk_size: usize) -> Result<Self> {
         let reader = ZeroCopyReader::new(_path)?;
         Ok(Self {
             reader,
@@ -994,7 +994,7 @@ fn apply_memory_advice_static(
 
 /// Static function for configuring NUMA policy without borrowing self
 #[allow(dead_code)]
-fn configure_numa_policy_static(_numa_node: usize, memorypolicy: NumaMemoryPolicy) -> Result<()> {
+fn configure_numa_policy_static(numa_node: usize, memory_policy: NumaMemoryPolicy) -> Result<()> {
     #[cfg(target_os = "linux")]
     {
         match memory_policy {

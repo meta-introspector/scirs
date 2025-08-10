@@ -366,7 +366,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> CurriculumManager<A, D> {
             .fold(A::zero(), |acc, &w| acc + w);
 
         for (i, &sampleid) in sampleids.iter().enumerate() {
-            let _weight = A::max(min_w, unnormalized_weights[i] / sum_weights);
+            let weight = A::max(min_w, unnormalized_weights[i] / sum_weights);
             self.sample_weights.insert(sampleid, weight);
         }
 
@@ -401,7 +401,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> CurriculumManager<A, D> {
             .fold(A::zero(), |acc, &w| acc + w);
 
         for (i, &sampleid) in sampleids.iter().enumerate() {
-            let _weight = A::max(min_w, unnormalized_weights[i] / sum_weights);
+            let weight = A::max(min_w, unnormalized_weights[i] / sum_weights);
             self.sample_weights.insert(sampleid, weight);
         }
 
@@ -436,7 +436,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> CurriculumManager<A, D> {
             .fold(A::zero(), |acc, &w| acc + w);
 
         for (i, &sampleid) in sampleids.iter().enumerate() {
-            let _weight = A::max(min_w, unnormalized_weights[i] / sum_weights);
+            let weight = A::max(min_w, unnormalized_weights[i] / sum_weights);
             self.sample_weights.insert(sampleid, weight);
         }
 
@@ -688,7 +688,7 @@ pub struct AdaptiveCurriculum<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> AdaptiveCurriculum<A, D> {
     /// Create a new adaptive curriculum
-    pub fn new(_curricula: Vec<CurriculumManager<A, D>>, switchthreshold: A) -> Self {
+    pub fn new(curricula: Vec<CurriculumManager<A, D>>, switchthreshold: A) -> Self {
         let num_curricula = curricula.len();
         Self {
             curricula: curricula,

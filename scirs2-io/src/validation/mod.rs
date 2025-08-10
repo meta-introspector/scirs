@@ -505,7 +505,7 @@ pub struct FormatValidator {
 
 impl FormatValidator {
     /// Create a new format validator
-    pub fn new<F>(_formatname: &str, validator: F) -> Self
+    pub fn new<F>(format_name: &str, validator: F) -> Self
     where
         F: Fn(&[u8]) -> bool + Send + Sync + 'static,
     {
@@ -727,12 +727,12 @@ where
 ///
 /// Result indicating if the verification passed
 #[allow(dead_code)]
-pub fn verify_checksum_file<P, Q>(_data_path: P, checksumpath: Q) -> Result<bool>
+pub fn verify_checksum_file<P, Q>(data_path: P, checksum_path: Q) -> Result<bool>
 where
     P: AsRef<Path>,
     Q: AsRef<Path>,
 {
-    let _data_path = datapath.as_ref();
+    let data_path = data_path.as_ref();
 
     // Read checksum file
     let mut checksum_file = File::open(checksum_path)
@@ -1190,7 +1190,7 @@ pub struct SchemaDefinition {
 
 impl SchemaDefinition {
     /// Create a new schema definition
-    pub fn new(_datatype: SchemaDataType) -> Self {
+    pub fn new(data_type: SchemaDataType) -> Self {
         Self {
             data_type: data_type,
             constraints: Vec::new(),
@@ -1266,7 +1266,7 @@ pub struct SchemaValidationResult {
 
 impl SchemaValidationResult {
     /// Create a successful validation result
-    pub fn success(_fields_validated: usize, validation_timems: f64) -> Self {
+    pub fn success(fields_validated: usize, validation_time_ms: f64) -> Self {
         Self {
             valid: true,
             errors: Vec::new(),
@@ -1764,13 +1764,13 @@ pub mod schema_helpers {
     }
 
     /// Create an array schema
-    pub fn array(_elementschema: SchemaDefinition) -> SchemaDefinition {
-        SchemaDefinition::new(SchemaDataType::Array(Box::new(_element_schema)))
+    pub fn array(element_schema: SchemaDefinition) -> SchemaDefinition {
+        SchemaDefinition::new(SchemaDataType::Array(Box::new(element_schema)))
     }
 
     /// Create an object schema
     pub fn object(properties: HashMap<String, SchemaDefinition>) -> SchemaDefinition {
-        SchemaDefinition::new(SchemaDataType::Object(_properties))
+        SchemaDefinition::new(SchemaDataType::Object(properties))
     }
 
     /// Create a union schema
@@ -1806,8 +1806,8 @@ pub mod schema_helpers {
 
 /// Build schemas from JSON Schema format
 #[allow(dead_code)]
-pub fn schema_from_json_schema(_jsonschema: &serde_json::Value) -> Result<SchemaDefinition> {
-    let object = _json_schema
+pub fn schema_from_json_schema(json_schema: &serde_json::Value) -> Result<SchemaDefinition> {
+    let object = json_schema
         .as_object()
         .ok_or_else(|| IoError::ValidationError("Schema must be an object".to_string()))?;
 

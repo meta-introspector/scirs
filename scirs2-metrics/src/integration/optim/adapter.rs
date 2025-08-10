@@ -102,7 +102,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> MetricOptimizer<F> {
     /// Add a value for an additional metric to track
     pub fn add_additional_value(&mut self, metricname: &str, value: F) {
         self.additional_metrics
-            .entry(metric_name.to_string())
+            .entry(metricname.to_string())
             .or_default()
             .push(value);
     }
@@ -110,7 +110,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> MetricOptimizer<F> {
     /// Get the history of an additional metric
     pub fn additional_metric_history(&self, metricname: &str) -> Option<&[F]> {
         self.additional_metrics
-            .get(metric_name)
+            .get(metricname)
             .map(|v| v.as_slice())
     }
 

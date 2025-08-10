@@ -83,7 +83,7 @@ where
     let compressed_data = compress_data(&flat_data, algorithm, Some(level))?;
 
     // Create _metadata
-    let _metadata = CompressedArrayMetadata {
+    let metadata = CompressedArrayMetadata {
         shape: array.shape().to_vec(),
         dtype: std::any::type_name::<A>().to_string(),
         element_size: std::mem::size_of::<A>(),
@@ -130,7 +130,7 @@ where
     D: Dimension + for<'de> Deserialize<'de>,
 {
     // Read the compressed file
-    let mut file = File::open(_path)
+    let mut file = File::open(path)
         .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?;
 
     let mut serialized = Vec::new();
@@ -368,7 +368,7 @@ where
     }
 
     // Construct the full array from all elements
-    let array = ArrayBase::fromshape_vec(IxDyn(&metadata.shape), all_elements)
+    let array = ArrayBase::from_shape_vec(IxDyn(&metadata.shape), all_elements)
         .map_err(|e| IoError::DeserializationError(e.to_string()))?;
 
     Ok((array, metadata))
@@ -676,6 +676,6 @@ where
     };
 
     // Create array from the decompressed data without additional copying
-    ndarray::Array::fromshape_vec(IxDyn(&compressed.metadata.shape), decompressed_data)
+    ndarray::Array::from_shape_vec(IxDyn(&compressed.metadata.shape), decompressed_data)
         .map_err(|e| IoError::DeserializationError(e.to_string()))
 }

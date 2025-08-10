@@ -146,7 +146,7 @@ where
     f64: From<A> + From<B>,
 {
     // Compute ROC curve
-    let (fpr, tpr_thresholds) = crate::classification::curves::roc_curve(&y_true, &y_score)
+    let (fpr, tpr, _thresholds) = crate::classification::curves::roc_curve(&y_true, &y_score)
         .map_err(|e| Box::new(e) as Box<dyn Error>)?;
 
     // Calculate AUC - simplified version
@@ -154,7 +154,7 @@ where
         let n = fpr.len();
         let mut area = 0.0;
         for i in 1..n {
-            area += (fpr[i] - fpr[i - 1]) * (tpr_thresholds[i] + tpr_thresholds[i - 1]) / 2.0;
+            area += (fpr[i] - fpr[i - 1]) * (tpr[i] + tpr[i - 1]) / 2.0;
         }
         area
     };

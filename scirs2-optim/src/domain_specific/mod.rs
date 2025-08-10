@@ -245,7 +245,7 @@ pub enum RegularizationApproach<A: Float> {
 impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A> {
     /// Create a new domain-specific selector
     pub fn new(strategy: DomainStrategy) -> Self {
-        let config = Self::default_config_for_strategy(&_strategy);
+        let config = Self::default_config_for_strategy(&strategy);
 
         Self {
             strategy: strategy,
@@ -710,7 +710,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
     }
 
     /// Helper methods for domain-specific optimizations
-    fn estimate_resolution_factor(&self, problemchars: &ProblemCharacteristics) -> f64 {
+    fn estimate_resolution_factor(&self, problem_chars: &ProblemCharacteristics) -> f64 {
         let resolution = problem_chars.input_dim as f64;
 
         if resolution > 1_000_000.0 {
@@ -763,7 +763,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
     /// Create default configuration for a strategy
     fn default_config_for_strategy(strategy: &DomainStrategy) -> DomainConfig<A> {
-        match _strategy {
+        match strategy {
             DomainStrategy::ComputerVision { .. } => DomainConfig {
                 base_learning_rate: A::from(0.001).unwrap(),
                 recommended_batch_sizes: vec![32, 64, 128],

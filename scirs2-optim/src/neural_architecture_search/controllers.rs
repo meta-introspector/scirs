@@ -729,14 +729,14 @@ impl<
     > ArchitectureController<T> for RNNController<T>
 {
     fn initialize(&mut self, searchspace: &SearchSpaceConfig) -> Result<()> {
-        self.search_space = Some(search_space.clone());
+        self.search_space = Some(searchspace.clone());
 
         // Initialize action _space from search _space
         self.action_space = ActionSpace {
-            component_types: search_space
+            component_types: searchspace
                 .optimizer_components
                 .iter()
-                .map(|c| c.component_type.clone())
+                .map(|c| c.componenttype.clone())
                 .collect(),
             connection_types: vec!["sequential".to_string(), "parallel".to_string()],
             hyperparameter_ranges: HashMap::new(),
@@ -885,7 +885,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static + ndarray::ScalarOperand
             max_sequence_length: 50,
         };
 
-        let mut _layers = Vec::new();
+        let mut layers = Vec::new();
         for _ in 0..numlayers {
             layers.push(TransformerLayer::new(_model_dim, numheads, _model_dim * 4)?);
         }
@@ -897,7 +897,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static + ndarray::ScalarOperand
 
         Ok(Self {
             config,
-            layers: layers,
+            layers,
             positional_encoding,
             input_embedding,
             output_projection,
@@ -913,7 +913,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ArchitectureCont
     for TransformerController<T>
 {
     fn initialize(&mut self, searchspace: &SearchSpaceConfig) -> Result<()> {
-        self.search_space = Some(search_space.clone());
+        self.search_space = Some(searchspace.clone());
         self.generation_count = 0;
         Ok(())
     }
@@ -988,11 +988,11 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ArchitectureCont
     for RandomController<T>
 {
     fn initialize(&mut self, searchspace: &SearchSpaceConfig) -> Result<()> {
-        self.search_space = Some(search_space.clone());
-        self.component_types = search_space
+        self.search_space = Some(searchspace.clone());
+        self.component_types = searchspace
             .optimizer_components
             .iter()
-            .map(|c| c.component_type.clone())
+            .map(|c| c.componenttype.clone())
             .collect();
         self.generation_count = 0;
         Ok(())
@@ -1187,7 +1187,7 @@ impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> RNNLayer<T> 
 }
 
 impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> OutputLayer<T> {
-    fn new(_input_size: usize, outputsize: usize, activation: ActivationType) -> Result<Self> {
+    fn new(input_size: usize, outputsize: usize, activation: ActivationType) -> Result<Self> {
         Ok(Self {
             weight: Array2::zeros((outputsize, input_size)),
             bias: Array1::zeros(outputsize),
@@ -1272,9 +1272,9 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
 }
 
 impl<T: Float + Default + Clone> FeedForward<T> {
-    fn new(_input_dim: usize, ffdim: usize) -> Result<Self> {
+    fn new(input_dim: usize, ffdim: usize) -> Result<Self> {
         Ok(Self {
-            linear1: LinearLayer::new(_input_dim, ffdim)?,
+            linear1: LinearLayer::new(input_dim, ffdim)?,
             linear2: LinearLayer::new(ffdim, input_dim)?,
             activation: ActivationType::ReLU,
             dropout: 0.1,
@@ -1283,7 +1283,7 @@ impl<T: Float + Default + Clone> FeedForward<T> {
 }
 
 impl<T: Float + Default + Clone> LinearLayer<T> {
-    fn new(_input_dim: usize, outputdim: usize) -> Result<Self> {
+    fn new(input_dim: usize, outputdim: usize) -> Result<Self> {
         Ok(Self {
             weight: Array2::zeros((outputdim, input_dim)),
             bias: Array1::zeros(outputdim),

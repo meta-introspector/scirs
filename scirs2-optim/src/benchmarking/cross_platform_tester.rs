@@ -1179,7 +1179,7 @@ impl CrossPlatformTester {
     }
 
     /// Suggest workaround for issue
-    fn suggest_workaround(&self, issuetype: &CompatibilityIssueType) -> Option<String> {
+    fn suggest_workaround(&self, issue_type: &CompatibilityIssueType) -> Option<String> {
         match issue_type {
             CompatibilityIssueType::NumericalPrecision => {
                 Some("Adjust precision tolerances for platform-specific behavior".to_string())

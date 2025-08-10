@@ -791,10 +791,10 @@ impl EnhancedMemoryMonitor {
     }
 
     /// Execute one monitoring cycle
-    fn monitoring_cycle(_leakdetector: &Arc<Mutex<MemoryLeakDetector>>) -> Result<()> {
-        let mut _detector = _leak_detector
+    fn monitoring_cycle(leak_detector: &Arc<Mutex<MemoryLeakDetector>>) -> Result<()> {
+        let mut detector = leak_detector
             .lock()
-            .map_err(|_| OptimError::LockError("Failed to acquire _detector lock".to_string()))?;
+            .map_err(|_| OptimError::LockError("Failed to acquire detector lock".to_string()))?;
 
         // Take memory snapshot
         let _snapshot = detector.take_snapshot()?;
@@ -1287,7 +1287,7 @@ impl AdvancedAlertSystem {
         Ok(Self {
             config: config.clone(),
             alert_history: VecDeque::new(),
-            rate_limiter: RateLimiter::new(_config),
+            rate_limiter: RateLimiter::new(config),
             templates: HashMap::new(),
         })
     }

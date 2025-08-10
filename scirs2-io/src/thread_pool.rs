@@ -418,11 +418,11 @@ pub fn global_thread_pool() -> &'static ThreadPool {
 
 /// Execute a task on the global thread pool
 #[allow(dead_code)]
-pub fn execute<F>(_worktype: WorkType, task: F) -> Result<()>
+pub fn execute<F>(work_type: WorkType, task: F) -> Result<()>
 where
     F: FnOnce() -> Result<()> + Send + 'static,
 {
-    global_thread_pool().submit(_work_type, task)
+    global_thread_pool().submit(work_type, task)
 }
 
 /// Utility function to determine optimal thread pool configuration based on system

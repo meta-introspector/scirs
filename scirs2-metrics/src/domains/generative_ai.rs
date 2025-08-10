@@ -1542,7 +1542,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Multim
     /// Set retrieval parameters
     pub fn with_retrieval(mut self, candidates: usize, kvalues: Vec<usize>) -> Self {
         self.n_retrieval_candidates = candidates;
-        self.retrieval_k_values = k_values;
+        self.retrieval_k_values = kvalues;
         self
     }
 

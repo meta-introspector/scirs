@@ -543,7 +543,7 @@ impl ThresholdAnalyzer {
     pub fn get_metric_values(&mut self, metricname: &str) -> Result<Vec<f64>> {
         let metrics = self.calculate_metrics()?;
 
-        let values = match metric_name {
+        let values = match metricname {
             "threshold" => metrics.iter().map(|m| m.threshold).collect(),
             "tpr" | "recall" | "sensitivity" => metrics.iter().map(|m| m.tpr).collect(),
             "fpr" => metrics.iter().map(|m| m.fpr).collect(),
@@ -558,7 +558,7 @@ impl ThresholdAnalyzer {
             "balanced_accuracy" => metrics.iter().map(|m| m.balanced_accuracy).collect(),
             _ => {
                 return Err(MetricsError::InvalidArgument(format!(
-                    "Unknown metric: {metric_name}"
+                    "Unknown metric: {metricname}"
                 )))
             }
         };

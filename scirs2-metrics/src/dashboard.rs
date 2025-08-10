@@ -127,7 +127,7 @@ impl MetricDataPoint {
 
     /// Create a new metric data point with metadata
     pub fn with_metadata(name: String, value: f64, metadata: HashMap<String, String>) -> Self {
-        let mut point = Self::new(_name, value);
+        let mut point = Self::new(name, value);
         point.metadata = metadata;
         point
     }
@@ -147,7 +147,7 @@ impl DashboardData {
     pub fn new(config: DashboardConfig) -> Self {
         Self {
             data_points: Arc::new(Mutex::new(Vec::new())),
-            config: config,
+            config,
         }
     }
 
@@ -261,9 +261,9 @@ pub struct InteractiveDashboard {
 impl InteractiveDashboard {
     /// Create new interactive dashboard
     pub fn new(config: DashboardConfig) -> Self {
-        let data = DashboardData::new(_configclone());
+        let data = DashboardData::new(config.clone());
 
-        Self { data, _config }
+        Self { data, config }
     }
 }
 

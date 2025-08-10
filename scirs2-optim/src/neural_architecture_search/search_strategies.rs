@@ -368,7 +368,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
             }
 
             components.push(OptimizerComponent {
-                component_type: component_config.component_type.clone(),
+                component_type: component_config.componenttype.clone(),
                 hyperparameters,
                 connections: Vec::new(),
             });
@@ -515,7 +515,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
             for (param_name, param_range) in searchspace
                 .optimizer_components
                 .iter()
-                .find(|c| c.component_type == component.component_type)
+                .find(|c| c.componenttype == component.component_type)
                 .map(|c| &c.hyperparameter_ranges)
                 .unwrap_or(&HashMap::new())
             {
@@ -824,7 +824,7 @@ impl<T: Float + Default + Clone> ReinforcementLearningSearch<T> {
 
         Ok(OptimizerArchitecture {
             components: vec![OptimizerComponent {
-                component_type: component_config.component_type.clone(),
+                component_type: component_config.componenttype.clone(),
                 hyperparameters,
                 connections: Vec::new(),
             }],
@@ -1409,7 +1409,7 @@ impl<T: Float + Default> GaussianProcess<T> {
 }
 
 impl<T: Float + Default> AcquisitionFunction<T> {
-    fn new(_function_type: AcquisitionType, explorationweight: T) -> Self {
+    fn new(function_type: AcquisitionType, explorationweight: T) -> Self {
         Self {
             function_type: function_type,
             explorationweight,
@@ -1731,7 +1731,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum> PredictorNetwork<T> 
 }
 
 impl<T: Float + Default + Clone + 'static> PredictorLayer<T> {
-    fn new(_input_size: usize, outputsize: usize) -> Self {
+    fn new(input_size: usize, outputsize: usize) -> Self {
         Self {
             weights: Array2::zeros((outputsize, input_size)),
             bias: Array1::zeros(outputsize),
@@ -1811,10 +1811,10 @@ impl<T: Float + Default + Clone> ArchitectureEncoder<T> {
 }
 
 impl<T: Float + Default + Clone> SearchOptimizer<T> {
-    fn new(_optimizer_type: SearchOptimizerType, learningrate: T) -> Self {
+    fn new(optimizer_type: SearchOptimizerType, learningrate: T) -> Self {
         Self {
             optimizer_type: optimizer_type,
-            _learningrate,
+            _learningrate: learningrate,
             momentum: T::from(0.9).unwrap(),
             parameters: HashMap::new(),
         }

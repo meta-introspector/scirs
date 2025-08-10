@@ -254,7 +254,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> LocalExplainer<F> {
 
     fn generate_gaussian_noise(&self, sample_idx: usize, featureidx: usize) -> Result<F> {
         // Simplified Gaussian noise generation using Box-Muller transform
-        let seed = self.random_seed.unwrap_or(0) + sample_idx as u64 + feature_idx as u64;
+        let seed = self.random_seed.unwrap_or(0) + sample_idx as u64 + featureidx as u64;
         let u1 = F::from((seed % 1000) as f64 / 1000.0).unwrap();
         let u2 = F::from(((seed / 1000) % 1000) as f64 / 1000.0).unwrap();
 
@@ -334,11 +334,11 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> LocalExplainer<F> {
         let mut coalition = Vec::new();
 
         // Simple coalition sampling (in practice, would use proper random sampling)
-        let seed = self.random_seed.unwrap_or(0) + target_feature as u64;
+        let seed = self.random_seed.unwrap_or(0) + targetfeature as u64;
         let coalition_size = (seed % n_features as u64) as usize;
 
         for i in 0..coalition_size {
-            if i != target_feature {
+            if i != targetfeature {
                 coalition.push(i);
             }
         }

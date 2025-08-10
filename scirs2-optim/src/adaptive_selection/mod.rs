@@ -180,7 +180,7 @@ pub struct SelectionNetwork<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> SelectionNetwork<A> {
     /// Create a new selection network
-    pub fn new(_input_size: usize, hidden_size: usize, numoptimizers: usize) -> Self {
+    pub fn new(input_size: usize, hidden_size: usize, num_optimizers: usize) -> Self {
         let mut rng = scirs2_core::random::rng();
 
         let input_weights = Array2::from_shape_fn((hidden_size, input_size), |_| {
@@ -413,12 +413,12 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
         _evaluation_steps: usize,
     ) -> Result<OptimizerType> {
         // Select top _candidates based on historical performance
-        let mut _candidates = self.available_optimizers.clone();
-        candidates.truncate(num_candidates.min(_candidates.len()));
+        let mut candidates = self.available_optimizers.clone();
+        candidates.truncate(num_candidates.min(candidates.len()));
 
         // For simplicity, return the first candidate
         // In practice, you would evaluate each for evaluation_steps
-        Ok(_candidates[0])
+        Ok(candidates[0])
     }
 
     /// Bandit-based selection with epsilon-greedy strategy
@@ -560,7 +560,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
     }
 
     /// Train the selection network if using learning-based strategy
-    pub fn train_selection_network(&mut self, learningrate: A, epochs: usize) -> Result<()> {
+    pub fn train_selection_network(&mut self, learning_rate: A, epochs: usize) -> Result<()> {
         if self.problem_optimizer_map.is_empty() {
             return Ok(()); // No data to train on
         }

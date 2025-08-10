@@ -547,11 +547,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         max_dist: &mut T,
     ) {
         let node = &self.nodes[node_idx];
-        let _idx = node.idx;
+        let idx = node.idx;
         let axis = node.axis;
 
         // Calculate distance to current point
-        let node_point = self.points.row(_idx).to_vec();
+        let node_point = self.points.row(idx).to_vec();
         let _dist = self.metric.distance(&node_point, point);
 
         // Update neighbors if needed
@@ -686,16 +686,16 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         distances: &mut Vec<T>,
     ) {
         let node = &self.nodes[node_idx];
-        let _idx = node.idx;
+        let idx = node.idx;
         let axis = node.axis;
 
         // Calculate distance to current point
-        let node_point = self.points.row(_idx).to_vec();
+        let node_point = self.points.row(idx).to_vec();
         let dist = self.metric.distance(&node_point, point);
 
         // If point is within radius, add it to results
         if dist <= radius {
-            indices.push(_idx);
+            indices.push(idx);
             distances.push(dist);
         }
 
@@ -787,11 +787,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         count: &mut usize,
     ) {
         let node = &self.nodes[node_idx];
-        let _idx = node.idx;
+        let idx = node.idx;
         let axis = node.axis;
 
         // Calculate distance to current point
-        let node_point = self.points.row(_idx).to_vec();
+        let node_point = self.points.row(idx).to_vec();
         let dist = self.metric.distance(&node_point, point);
 
         // If point is within radius, increment count

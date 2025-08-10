@@ -142,14 +142,14 @@ impl NeuralIoNetwork {
         let attended_input = self.apply_attention(input);
 
         // Input to hidden layer with enhanced activation
-        let hidden_input = self.inputweights.dot(&attended_input) + &self.input_bias;
+        let hidden_input = self.input_weights.dot(&attended_input) + &self.input_bias;
         let hidden_output = hidden_input.mapv(Self::gelu); // Using GELU instead of ReLU
 
         // Apply layer normalization
         let hidden_normalized = self.layer_normalize(&hidden_output);
 
         // Hidden to hidden (skip connection with enhanced residual)
-        let hidden_input2 = self.hiddenweights.dot(&hidden_normalized) + &self.hidden_bias;
+        let hidden_input2 = self.hidden_weights.dot(&hidden_normalized) + &self.hidden_bias;
         let hidden_output2 = hidden_input2.mapv(Self::swish); // Using Swish activation
 
         // Enhanced residual connection with gating
@@ -157,7 +157,7 @@ impl NeuralIoNetwork {
         let gated_residual = &gate * &hidden_output2 + &(1.0 - &gate) * &hidden_normalized;
 
         // Hidden to output layer with advanced activation
-        let output = self.outputweights.dot(&gated_residual) + &self.output_bias;
+        let output = self.output_weights.dot(&gated_residual) + &self.output_bias;
         let final_output = output.mapv(Self::tanh); // Using tanh for bounded output
 
         Ok(final_output)
@@ -240,11 +240,11 @@ impl NeuralIoNetwork {
         let attended_input = self.apply_attention(input);
 
         // Forward pass intermediate values (needed for backprop)
-        let hidden_input = self.inputweights.dot(&attended_input) + &self.input_bias;
+        let hidden_input = self.input_weights.dot(&attended_input) + &self.input_bias;
         let hidden_output = hidden_input.mapv(Self::gelu);
         let hidden_normalized = self.layer_normalize(&hidden_output);
 
-        let hidden_input2 = self.hiddenweights.dot(&hidden_normalized) + &self.hidden_bias;
+        let hidden_input2 = self.hidden_weights.dot(&hidden_normalized) + &self.hidden_bias;
         let hidden_output2 = hidden_input2.mapv(Self::swish);
 
         // Compute gradients using backpropagation
@@ -253,24 +253,24 @@ impl NeuralIoNetwork {
         // Output layer weight gradients
         let _output_weight_grad = output_bias_grad
             .view()
-            .toshape((output_bias_grad.len(), 1))
+            .to_shape((output_bias_grad.len(), 1))
             .unwrap()
             .dot(
                 &hidden_output2
                     .view()
-                    .toshape((1, hidden_output2.len()))
+                    .to_shape((1, hidden_output2.len()))
                     .unwrap(),
             );
 
         // Hidden layer gradients (simplified for efficiency)
-        let hidden_error = self.outputweights.t().dot(&output_bias_grad);
+        let hidden_error = self.output_weights.t().dot(&output_bias_grad);
         let mut hidden_bias_grad = hidden_error.clone();
         for val in hidden_bias_grad.iter_mut() {
             *val *= Self::gelu_derivative(*val);
         }
 
         // Input layer gradients (simplified)
-        let input_error = self.hiddenweights.t().dot(&hidden_bias_grad);
+        let input_error = self.hidden_weights.t().dot(&hidden_bias_grad);
         let mut input_bias_grad = input_error.clone();
         for val in input_bias_grad.iter_mut() {
             *val *= Self::gelu_derivative(*val);
@@ -279,12 +279,12 @@ impl NeuralIoNetwork {
         // Input weight gradients
         let _input_weight_grad = input_bias_grad
             .view()
-            .toshape((input_bias_grad.len(), 1))
+            .to_shape((input_bias_grad.len(), 1))
             .unwrap()
             .dot(
                 &attended_input
                     .view()
-                    .toshape((1, attended_input.len()))
+                    .to_shape((1, attended_input.len()))
                     .unwrap(),
             );
 
@@ -339,7 +339,7 @@ impl NeuralIoNetwork {
             0.9 * &self.attention_weights + 0.1 * self.learning_rate * &attention_grad;
 
         // Normalize attention weights
-        let sum = self.attentionweights.sum();
+        let sum = self.attention_weights.sum();
         if sum > 0.0 {
             self.attention_weights /= sum;
         }
@@ -964,7 +964,7 @@ impl EnsembleNeuralNetwork {
         hidden_size: usize,
         output_size: usize,
     ) -> Self {
-        let _networks = (0..num_networks)
+        let networks = (0..num_networks)
             .map(|_| NeuralIoNetwork::new(input_size, hidden_size, output_size))
             .collect();
 
@@ -997,7 +997,7 @@ impl EnsembleNeuralNetwork {
     }
 
     /// Update ensemble weights based on individual network performance
-    pub fn update_ensemble_weights(&mut self, individualerrors: &[f32]) {
+    pub fn update_ensemble_weights(&mut self, individual_errors: &[f32]) {
         // Update performance tracking
         for (i, &error) in individual_errors.iter().enumerate() {
             self.network_performance[i] =
@@ -1031,7 +1031,7 @@ impl EnsembleNeuralNetwork {
     pub fn get_ensemble_stats(&self) -> EnsembleStats {
         EnsembleStats {
             num_networks: self.networks.len(),
-            ensemble_weights: self.ensembleweights.clone(),
+            ensemble_weights: self.ensemble_weights.clone(),
             network_performance: self.network_performance.clone(),
             weight_entropy: -self
                 .ensemble_weights

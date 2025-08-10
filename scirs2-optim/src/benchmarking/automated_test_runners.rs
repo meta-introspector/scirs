@@ -596,15 +596,15 @@ impl AutomatedTestRunner {
         loop {
             // Get next execution
             let mut execution = {
-                let mut _queue = match execution_queue.lock() {
-                    Ok(_queue) => queue,
+                let mut queue = match execution_queue.lock() {
+                    Ok(queue) => queue,
                     Err(_) => {
                         eprintln!("Worker {} failed to acquire _queue lock", worker_id);
                         break;
                     }
                 };
 
-                match _queue
+                match queue
                     .iter_mut()
                     .find(|e| e.status == ExecutionStatus::Queued)
                 {
@@ -630,7 +630,7 @@ impl AutomatedTestRunner {
 
             // Update execution status
             {
-                let mut _queue = execution_queue.lock().unwrap();
+                let mut queue = execution_queue.lock().unwrap();
                 if let Some(exec) = queue.iter_mut().find(|e| e.id == execution.id) {
                     exec.end_time = Some(Instant::now());
                     exec.resource_usage = execution.resource_usage.clone();

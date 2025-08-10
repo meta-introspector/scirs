@@ -137,7 +137,7 @@ where
     P2: AsRef<Path>,
 {
     // Read the input file
-    let data = deserialize_from_file::<T>(input_path, from_format)?;
+    let data = deserialize_from_file::<T, P1>(input_path, from_format)?;
 
     // Convert and write to the output file
     serialize_to_file(&data, output_path, to_format)

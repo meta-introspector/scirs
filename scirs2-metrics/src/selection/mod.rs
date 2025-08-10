@@ -198,7 +198,7 @@ impl ModelSelector {
                     continue;
                 }
 
-                if self.dominates(other_scores) {
+                if self.dominates(scores, other_scores) {
                     is_dominated = true;
                     break;
                 }
@@ -284,11 +284,8 @@ impl ModelSelector {
         for (metricname, threshold) in &self.criteria.thresholds {
             if let Some(&score) = score_map.get(metricname.as_str()) {
                 // Find the metric criterion to check optimization direction
-                if let Some(criterion) = self
-                    .criteria
-                    .metrics
-                    .iter()
-                    .find(|c| c.name == *metricname)
+                if let Some(criterion) =
+                    self.criteria.metrics.iter().find(|c| c.name == *metricname)
                 {
                     let meets_threshold = if criterion.higher_isbetter {
                         score >= *threshold
@@ -319,8 +316,7 @@ impl ModelSelector {
         for criterion in &self.criteria.metrics {
             let metricname = criterion.name.as_str();
 
-            if let (Some(&score_a), Some(&score_b)) =
-                (map_a.get(metricname), map_b.get(metricname))
+            if let (Some(&score_a), Some(&score_b)) = (map_a.get(metricname), map_b.get(metricname))
             {
                 let a_better_than_b = if criterion.higher_isbetter {
                     score_a > score_b

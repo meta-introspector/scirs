@@ -945,7 +945,7 @@ pub fn visvalingam_whyatt_simplify<T: Float + std::fmt::Debug>(
 
     // Calculate initial areas for all vertices
     for i in 0..n {
-        let _area = calculate_triangle_area(polygon, i, &active);
+        let area = calculate_triangle_area(polygon, i, &active);
         vertices.push((i, area));
     }
 
@@ -955,7 +955,7 @@ pub fn visvalingam_whyatt_simplify<T: Float + std::fmt::Debug>(
     // Remove vertices with areas smaller than threshold
     let removal_candidates: Vec<usize> = vertices
         .iter()
-        .filter(|(_, area)| *_area < min_area)
+        .filter(|(_, area)| *area < min_area)
         .map(|(idx_, _)| *idx_)
         .collect();
 

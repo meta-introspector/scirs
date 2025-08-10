@@ -1611,7 +1611,7 @@ impl<
 
         let mut distance = 0.0;
         for (comp1, comp2) in arch1.components.iter().zip(arch2.components.iter()) {
-            if comp1.componenttype != comp2.componenttype {
+            if comp1.component_type != comp2.component_type {
                 distance += 1.0;
             } else {
                 // Compare hyperparameters
@@ -1791,7 +1791,7 @@ impl<
         let mut _model_params = 0;
 
         for component in &architecture.components {
-            match component.componenttype {
+            match component.component_type {
                 ComponentType::LSTMOptimizer => {
                     let hidden_size = component
                         .hyperparameters
@@ -1904,7 +1904,7 @@ impl<
             ArchitectureEncodingStrategy::Direct => {
                 // Direct encoding: serialize component types and hyperparameters
                 for component in &architecture.components {
-                    encoded_data.push(self.component_type_to_u8(&component.componenttype));
+                    encoded_data.push(self.component_type_to_u8(&component.component_type));
                     for (_param_name, param_value) in &component.hyperparameters {
                         let bytes = param_value.to_f64().unwrap_or(0.0).to_le_bytes();
                         encoded_data.extend_from_slice(&bytes);
@@ -1916,12 +1916,12 @@ impl<
                 // Graph-based encoding: encode connectivity structure
                 encoded_data.push(architecture.components.len() as u8);
                 for component in &architecture.components {
-                    encoded_data.push(self.component_type_to_u8(&component.componenttype));
+                    encoded_data.push(self.component_type_to_u8(&component.component_type));
                 }
                 for connection in &architecture.connections {
                     encoded_data.push(connection.from as u8);
                     encoded_data.push(connection.to as u8);
-                    encoded_data.push(self.connection_type_to_u8(&connection.connectiontype));
+                    encoded_data.push(self.connection_type_to_u8(&connection.connection_type));
                 }
                 metadata.insert("encoding_method".to_string(), "graph".to_string());
             }
@@ -1934,7 +1934,7 @@ impl<
             _ => {
                 // Default to direct encoding
                 for component in &architecture.components {
-                    encoded_data.push(self.component_type_to_u8(&component.componenttype));
+                    encoded_data.push(self.component_type_to_u8(&component.component_type));
                 }
                 metadata.insert("encoding_method".to_string(), "simple".to_string());
             }
@@ -2157,7 +2157,7 @@ pub fn create_example_architectures<T: Float>() -> Vec<OptimizerArchitecture<T>>
         // Simple SGD architecture
         OptimizerArchitecture {
             components: vec![OptimizerComponent {
-                componenttype: ComponentType::SGD,
+                component_type: ComponentType::SGD,
                 hyperparameters: {
                     let mut params = HashMap::new();
                     params.insert("learning_rate".to_string(), T::from(0.01).unwrap());
@@ -2172,7 +2172,7 @@ pub fn create_example_architectures<T: Float>() -> Vec<OptimizerArchitecture<T>>
         // Adam with cosine schedule
         OptimizerArchitecture {
             components: vec![OptimizerComponent {
-                componenttype: ComponentType::Adam,
+                component_type: ComponentType::Adam,
                 hyperparameters: {
                     let mut params = HashMap::new();
                     params.insert("learning_rate".to_string(), T::from(0.001).unwrap());

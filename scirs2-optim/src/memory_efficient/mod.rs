@@ -64,7 +64,7 @@ impl<A: Float + ScalarOperand + Debug> InPlaceSGD<A> {
 
     /// Set weight decay
     pub fn with_weight_decay(mut self, weightdecay: A) -> Self {
-        self.weight_decay = weight_decay;
+        self.weight_decay = weightdecay;
         self
     }
 }
@@ -130,7 +130,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> InPlaceAdam<A, D> {
 
     /// Set weight decay
     pub fn with_weight_decay(mut self, weightdecay: A) -> Self {
-        self.weight_decay = weight_decay;
+        self.weight_decay = weightdecay;
         self
     }
 
@@ -422,7 +422,7 @@ pub mod fused {
             let _norm = norm_sq.sqrt();
 
             if _norm > max_norm_val {
-                let scale = max_norm_val / norm;
+                let scale = max_norm_val / _norm;
                 for g in gradients.iter_mut() {
                     *g = *g * scale;
                 }

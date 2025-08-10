@@ -104,11 +104,7 @@ impl EvaluationReport {
 
             // Store result
             self.results.insert(
-                (
-                    modelname.to_string(),
-                    datasetname.to_string(),
-                    metricname,
-                ),
+                (modelname.to_string(), datasetname.to_string(), metricname),
                 value,
             );
         }
@@ -127,12 +123,7 @@ impl EvaluationReport {
     /// # Returns
     ///
     /// * Option containing the metric value if it exists
-    pub fn get_result(
-        &self,
-        modelname: &str,
-        datasetname: &str,
-        metricname: &str,
-    ) -> Option<f64> {
+    pub fn get_result(&self, modelname: &str, datasetname: &str, metricname: &str) -> Option<f64> {
         self.results
             .get(&(
                 modelname.to_string(),

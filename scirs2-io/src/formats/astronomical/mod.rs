@@ -16,7 +16,7 @@
 //!
 //! // Read FITS file
 //! let fits = FitsFile::open("hubble_image.fits")?;
-//! let header = fits.primary_header();
+//! let header = fits.primaryheader();
 //! let image: Array2<f32> = fits.read_image()?;
 //!
 //! // Access header values
@@ -24,8 +24,8 @@
 //! let telescope = header.get_string("TELESCOP")?;
 //!
 //! // Read FITS table
-//! let table_hdu = fits.get_hdu(1)?;
-//! let table_reader = FitsTableReader::new(table_hdu.clone())?;
+//! let tablehdu = fits.gethdu(1)?;
+//! let table_reader = FitsTableReader::new(tablehdu.clone())?;
 //! let column_data = table_reader.read_column("FLUX")?;
 //! # Ok::<(), scirs2_io::error::IoError>(())
 //! ```
@@ -244,8 +244,8 @@ impl FitsDataType {
     }
 
     /// From BITPIX value
-    pub fn from_bitpix(bitpix: i32) -> Result<Self> {
-        match _bitpix {
+    pub fn frombitpix(bitpix: i32) -> Result<Self> {
+        match bitpix {
             8 => Ok(FitsDataType::UInt8),
             16 => Ok(FitsDataType::Int16),
             32 => Ok(FitsDataType::Int32),
@@ -253,7 +253,7 @@ impl FitsDataType {
             -32 => Ok(FitsDataType::Float32),
             -64 => Ok(FitsDataType::Float64),
             _ => Err(IoError::ParseError(format!(
-                "Invalid BITPIX value: {_bitpix}"
+                "Invalid BITPIX value: {bitpix}"
             ))),
         }
     }
@@ -275,7 +275,7 @@ impl FitsFile {
                 .map_err(|e| IoError::ParseError(format!("Failed to seek: {e}")))?;
 
             // Read header
-            let header = Self::read_header(&mut file)?;
+            let header = Self::readheader(&mut file)?;
 
             // Determine HDU type
             let hdu_type = if hdus.is_empty() {
@@ -336,7 +336,7 @@ impl FitsFile {
     }
 
     /// Read a header from the current file position
-    fn read_header<R: Read>(reader: &mut R) -> Result<FitsHeader> {
+    fn readheader<R: Read>(reader: &mut R) -> Result<FitsHeader> {
         let mut header = FitsHeader::new();
         let mut card_buf = [0u8; 80];
 
@@ -345,10 +345,10 @@ impl FitsFile {
                 .read_exact(&mut card_buf)
                 .map_err(|e| IoError::ParseError(format!("Failed to read header card: {e}")))?;
 
-            let card_str = String::from_utf8_lossy(&card_buf);
+            let cardstr = String::from_utf8_lossy(&card_buf);
 
             // Parse card
-            if let Some(card) = Self::parse_header_card(&card_str) {
+            if let Some(card) = Self::parseheader_card(&cardstr) {
                 if card.keyword == "END" {
                     break;
                 }
@@ -360,19 +360,19 @@ impl FitsFile {
     }
 
     /// Parse a single header card
-    fn parse_header_card(cardstr: &str) -> Option<HeaderCard> {
-        if card_str.len() < 8 {
+    fn parseheader_card(cardstr: &str) -> Option<HeaderCard> {
+        if cardstr.len() < 8 {
             return None;
         }
 
-        let keyword = card_str[0..8].trim().to_string();
+        let keyword = cardstr[0..8].trim().to_string();
 
         if keyword.is_empty() || keyword == "COMMENT" || keyword == "HISTORY" {
             // Comment cards
             return Some(HeaderCard {
                 keyword,
                 value: CardValue::None,
-                comment: Some(card_str[8..].trim().to_string()),
+                comment: Some(cardstr[8..].trim().to_string()),
             });
         }
 
@@ -385,14 +385,14 @@ impl FitsFile {
         }
 
         // Look for = at position 8
-        if card_str.len() > 9 && &card_str[8..9] == "=" {
-            let value_comment = &card_str[10..];
+        if cardstr.len() > 9 && &cardstr[8..9] == "=" {
+            let value_comment = &cardstr[10..];
 
             // Parse value and comment
             if let Some(slash_pos) = value_comment.find('/') {
-                let value_str = value_comment[..slash_pos].trim();
+                let valuestr = value_comment[..slash_pos].trim();
                 let comment = value_comment[slash_pos + 1..].trim().to_string();
-                let value = Self::parse_card_value(value_str);
+                let value = Self::parse_card_value(valuestr);
 
                 Some(HeaderCard {
                     keyword,
@@ -416,30 +416,30 @@ impl FitsFile {
     /// Parse a card value
     fn parse_card_value(valuestr: &str) -> CardValue {
         // Boolean
-        if value_str == "T" {
+        if valuestr == "T" {
             return CardValue::Boolean(true);
         }
-        if value_str == "F" {
+        if valuestr == "F" {
             return CardValue::Boolean(false);
         }
 
         // String (quoted)
-        if value_str.starts_with('\'') && value_str.ends_with('\'') {
-            let s = value_str[1..value_str.len() - 1].trim().to_string();
+        if valuestr.starts_with('\'') && valuestr.ends_with('\'') {
+            let s = valuestr[1..valuestr.len() - 1].trim().to_string();
             return CardValue::String(s);
         }
 
         // Try parsing as number
-        if let Ok(i) = value_str.parse::<i64>() {
+        if let Ok(i) = valuestr.parse::<i64>() {
             return CardValue::Integer(i);
         }
 
-        if let Ok(f) = value_str.parse::<f64>() {
+        if let Ok(f) = valuestr.parse::<f64>() {
             return CardValue::Float(f);
         }
 
         // Default to string
-        CardValue::String(value_str.to_string())
+        CardValue::String(valuestr.to_string())
     }
 
     /// Calculate data size from header
@@ -472,7 +472,7 @@ impl FitsFile {
     }
 
     /// Get primary header
-    pub fn primary_header(&self) -> &FitsHeader {
+    pub fn primaryheader(&self) -> &FitsHeader {
         &self.hdus[0].header
     }
 
@@ -482,7 +482,7 @@ impl FitsFile {
     }
 
     /// Get HDU by index
-    pub fn get_hdu(&self, index: usize) -> Result<&HDU> {
+    pub fn gethdu(&self, index: usize) -> Result<&HDU> {
         self.hdus
             .get(index)
             .ok_or_else(|| IoError::ParseError(format!("HDU index {index} out of range")))
@@ -490,16 +490,16 @@ impl FitsFile {
 
     /// Read primary image as 2D array
     pub fn read_image<T: FitsNumeric>(&self) -> Result<Array2<T>> {
-        self.read_hdu_image(0)
+        self.readhdu_image(0)
     }
 
     /// Read image from specific HDU
-    pub fn read_hdu_image<T: FitsNumeric>(&self, hduindex: usize) -> Result<Array2<T>> {
-        let hdu = self.get_hdu(hdu_index)?;
+    pub fn readhdu_image<T: FitsNumeric>(&self, hduindex: usize) -> Result<Array2<T>> {
+        let hdu = self.gethdu(hduindex)?;
 
         if hdu.hdu_type != HDUType::Primary && hdu.hdu_type != HDUType::Image {
             return Err(IoError::ParseError(format!(
-                "HDU {hdu_index} is not an image"
+                "HDU {hduindex} is not an image"
             )));
         }
 
@@ -522,17 +522,17 @@ impl FitsFile {
             .map_err(|e| IoError::ParseError(format!("Failed to seek to data: {e}")))?;
 
         // Read data based on BITPIX
-        let data_type = FitsDataType::from_bitpix(bitpix as i32)?;
+        let datatype = FitsDataType::frombitpix(bitpix as i32)?;
         let mut values = Vec::with_capacity(naxis1 * naxis2);
 
         // FITS uses Fortran order (column-major), but we'll convert to row-major
         for _ in 0..(naxis1 * naxis2) {
-            let value = T::read_fits(&mut file, data_type)?;
+            let value = T::read_fits(&mut file, datatype)?;
             values.push(value);
         }
 
         // Reshape from FITS order to ndarray order
-        let array = Array2::fromshape_vec((naxis2, naxis1), values)
+        let array = Array2::from_shape_vec((naxis2, naxis1), values)
             .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))?;
 
         Ok(array.t().to_owned())
@@ -540,7 +540,7 @@ impl FitsFile {
 
     /// Get image dimensions
     pub fn image_dimensions(&self, hduindex: usize) -> Result<Vec<usize>> {
-        let hdu = self.get_hdu(hdu_index)?;
+        let hdu = self.gethdu(hduindex)?;
         let naxis = hdu.header.get_i64("NAXIS")? as usize;
 
         let mut dims = Vec::with_capacity(naxis);
@@ -562,7 +562,7 @@ pub trait FitsNumeric: Default + Clone {
 
 impl FitsNumeric for f32 {
     fn read_fits<R: Read>(reader: &mut R, datatype: FitsDataType) -> Result<Self> {
-        match data_type {
+        match datatype {
             FitsDataType::Float32 => reader
                 .read_f32::<BigEndian>()
                 .map_err(|e| IoError::ParseError(format!("Failed to read f32: {e}"))),
@@ -579,18 +579,18 @@ impl FitsNumeric for f32 {
                 .map(|v| v as f32)
                 .map_err(|e| IoError::ParseError(format!("Failed to read i32: {e}"))),
             _ => Err(IoError::ParseError(format!(
-                "Unsupported conversion from {data_type:?} to f32"
+                "Unsupported conversion from {datatype:?} to f32"
             ))),
         }
     }
 
     fn write_fits<W: Write>(&self, writer: &mut W, datatype: FitsDataType) -> Result<()> {
-        match data_type {
+        match datatype {
             FitsDataType::Float32 => writer
                 .write_f32::<BigEndian>(*self)
                 .map_err(|e| IoError::FileError(format!("Failed to write f32: {e}"))),
             _ => Err(IoError::FileError(format!(
-                "Unsupported conversion from f32 to {data_type:?}"
+                "Unsupported conversion from f32 to {datatype:?}"
             ))),
         }
     }
@@ -598,7 +598,7 @@ impl FitsNumeric for f32 {
 
 impl FitsNumeric for f64 {
     fn read_fits<R: Read>(reader: &mut R, datatype: FitsDataType) -> Result<Self> {
-        match data_type {
+        match datatype {
             FitsDataType::Float64 => reader
                 .read_f64::<BigEndian>()
                 .map_err(|e| IoError::ParseError(format!("Failed to read f64: {e}"))),
@@ -611,18 +611,18 @@ impl FitsNumeric for f64 {
                 .map(|v| v as f64)
                 .map_err(|e| IoError::ParseError(format!("Failed to read i32: {e}"))),
             _ => Err(IoError::ParseError(format!(
-                "Unsupported conversion from {data_type:?} to f64"
+                "Unsupported conversion from {datatype:?} to f64"
             ))),
         }
     }
 
     fn write_fits<W: Write>(&self, writer: &mut W, datatype: FitsDataType) -> Result<()> {
-        match data_type {
+        match datatype {
             FitsDataType::Float64 => writer
                 .write_f64::<BigEndian>(*self)
                 .map_err(|e| IoError::FileError(format!("Failed to write f64: {e}"))),
             _ => Err(IoError::FileError(format!(
-                "Unsupported conversion from f64 to {data_type:?}"
+                "Unsupported conversion from f64 to {datatype:?}"
             ))),
         }
     }
@@ -631,7 +631,7 @@ impl FitsNumeric for f64 {
 /// FITS file writer
 pub struct FitsWriter {
     writer: BufWriter<File>,
-    current_hdu: usize,
+    currenthdu: usize,
 }
 
 impl FitsWriter {
@@ -642,7 +642,7 @@ impl FitsWriter {
 
         Ok(Self {
             writer: BufWriter::new(file),
-            current_hdu: 0,
+            currenthdu: 0,
         })
     }
 
@@ -650,7 +650,7 @@ impl FitsWriter {
     pub fn write_image_2d<T: FitsNumeric>(
         &mut self,
         data: &Array2<T>,
-        data_type: FitsDataType,
+        datatype: FitsDataType,
     ) -> Result<()> {
         let mut header = FitsHeader::new();
 
@@ -663,7 +663,7 @@ impl FitsWriter {
 
         header.add_card(HeaderCard {
             keyword: "BITPIX".to_string(),
-            value: CardValue::Integer(data_type.bitpix() as i64),
+            value: CardValue::Integer(datatype.bitpix() as i64),
             comment: Some("Number of bits per pixel".to_string()),
         });
 
@@ -687,17 +687,17 @@ impl FitsWriter {
         });
 
         // Write header
-        self.write_header(&header)?;
+        self.writeheader(&header)?;
 
         // Write data in FITS order (column-major)
         for col in 0..cols {
             for row in 0..rows {
-                data[[row, col]].write_fits(&mut self.writer, data_type)?;
+                data[[row, col]].write_fits(&mut self.writer, datatype)?;
             }
         }
 
         // Pad to 2880-byte boundary
-        let data_bytes = rows * cols * data_type.byte_size();
+        let data_bytes = rows * cols * datatype.byte_size();
         let padding = (2880 - (data_bytes % 2880)) % 2880;
         if padding > 0 {
             let pad_bytes = vec![0u8; padding];
@@ -706,20 +706,20 @@ impl FitsWriter {
                 .map_err(|e| IoError::FileError(format!("Failed to write padding: {e}")))?;
         }
 
-        self.current_hdu += 1;
+        self.currenthdu += 1;
 
         Ok(())
     }
 
     /// Write a header
-    fn write_header(&mut self, header: &FitsHeader) -> Result<()> {
+    fn writeheader(&mut self, header: &FitsHeader) -> Result<()> {
         // Write header cards
         for card in &header.cards {
-            self.write_header_card(card)?;
+            self.writeheader_card(card)?;
         }
 
         // Write END card
-        self.write_header_card(&HeaderCard {
+        self.writeheader_card(&HeaderCard {
             keyword: "END".to_string(),
             value: CardValue::None,
             comment: None,
@@ -743,25 +743,25 @@ impl FitsWriter {
     }
 
     /// Write a single header card
-    fn write_header_card(&mut self, card: &HeaderCard) -> Result<()> {
-        let mut card_str = String::with_capacity(80);
+    fn writeheader_card(&mut self, card: &HeaderCard) -> Result<()> {
+        let mut cardstr = String::with_capacity(80);
 
         // Keyword (8 characters, left-justified)
-        card_str.push_str(&format!("{:<8}", card.keyword));
+        cardstr.push_str(&format!("{:<8}", card.keyword));
 
         // Value
         match &card.value {
             CardValue::Boolean(b) => {
-                card_str.push_str(&format!("= {:>20}", if *b { "T" } else { "F" }));
+                cardstr.push_str(&format!("= {:>20}", if *b { "T" } else { "F" }));
             }
             CardValue::Integer(i) => {
-                card_str.push_str(&format!("= {i:>20}"));
+                cardstr.push_str(&format!("= {i:>20}"));
             }
             CardValue::Float(f) => {
-                card_str.push_str(&format!("= {f:>20.10E}"));
+                cardstr.push_str(&format!("= {f:>20.10E}"));
             }
             CardValue::String(s) => {
-                card_str.push_str(&format!("= '{s:<18}'"));
+                cardstr.push_str(&format!("= '{s:<18}'"));
             }
             CardValue::None => {
                 // No equals sign for comment cards
@@ -771,22 +771,22 @@ impl FitsWriter {
 
         // Comment
         if let Some(comment) = &card.comment {
-            if card_str.len() < 31 {
-                card_str.push_str(&" ".repeat(31 - card_str.len()));
+            if cardstr.len() < 31 {
+                cardstr.push_str(&" ".repeat(31 - cardstr.len()));
             }
-            card_str.push_str(" / ");
-            card_str.push_str(comment);
+            cardstr.push_str(" / ");
+            cardstr.push_str(comment);
         }
 
         // Pad to 80 characters
-        match card_str.len().cmp(&80) {
-            std::cmp::Ordering::Less => card_str.push_str(&" ".repeat(80 - card_str.len())),
-            std::cmp::Ordering::Greater => card_str.truncate(80),
+        match cardstr.len().cmp(&80) {
+            std::cmp::Ordering::Less => cardstr.push_str(&" ".repeat(80 - cardstr.len())),
+            std::cmp::Ordering::Greater => cardstr.truncate(80),
             std::cmp::Ordering::Equal => {}
         }
 
         self.writer
-            .write_all(card_str.as_bytes())
+            .write_all(cardstr.as_bytes())
             .map_err(|e| IoError::FileError(format!("Failed to write header card: {e}")))
     }
 
@@ -884,13 +884,13 @@ impl VOTable {
 
     /// Get column data
     pub fn get_column_data(&self, columnindex: usize) -> Result<Vec<&VOTableValue>> {
-        if column_index >= self.columns.len() {
+        if columnindex >= self.columns.len() {
             return Err(IoError::ParseError(format!(
-                "Column _index {column_index} out of range"
+                "Column _index {columnindex} out of range"
             )));
         }
 
-        Ok(self.data.iter().map(|row| &row[column_index]).collect())
+        Ok(self.data.iter().map(|row| &row[columnindex]).collect())
     }
 
     /// Read VOTable from XML file (simplified)
@@ -1002,7 +1002,7 @@ pub struct GeoTransform {
     /// Pixel scale in longitude direction (degrees per pixel)
     pub lon_scale: f64,
     /// Pixel scale in latitude direction (degrees per pixel)
-    pub lat_scale: f64,
+    pub latscale: f64,
 }
 
 impl GeoTransform {
@@ -1012,21 +1012,21 @@ impl GeoTransform {
             ref_lon,
             ref_lat,
             lon_scale,
-            lat_scale,
+            latscale,
         }
     }
 
     /// Convert pixel coordinates to celestial coordinates
     pub fn pixel_to_geo(&self, px: f64, py: f64) -> (f64, f64) {
         let lon = self.ref_lon + px * self.lon_scale;
-        let lat = self.ref_lat + py * self.lat_scale;
+        let lat = self.ref_lat + py * self.latscale;
         (lon, lat)
     }
 
     /// Convert celestial coordinates to pixel coordinates
     pub fn geo_to_pixel(&self, lon: f64, lat: f64) -> (f64, f64) {
         let px = (lon - self.ref_lon) / self.lon_scale;
-        let py = (lat - self.ref_lat) / self.lat_scale;
+        let py = (lat - self.ref_lat) / self.latscale;
         (px, py)
     }
 
@@ -1036,7 +1036,7 @@ impl GeoTransform {
             ref_lon: wcs.crval1,
             ref_lat: wcs.crval2,
             lon_scale: wcs.cdelt1,
-            lat_scale: wcs.cdelt2,
+            latscale: wcs.cdelt2,
         }
     }
 }
@@ -1066,7 +1066,7 @@ pub struct WCSTransform {
 
 impl WCSTransform {
     /// Create WCS transform from FITS header
-    pub fn from_fits_header(header: &FitsHeader) -> Result<Self> {
+    pub fn from_fitsheader(header: &FitsHeader) -> Result<Self> {
         Ok(Self {
             crval1: header.get_f64("CRVAL1").unwrap_or(0.0),
             crval2: header.get_f64("CRVAL2").unwrap_or(0.0),
@@ -1075,10 +1075,10 @@ impl WCSTransform {
             cdelt1: header.get_f64("CDELT1").unwrap_or(1.0),
             cdelt2: header.get_f64("CDELT2").unwrap_or(1.0),
             cd_matrix: None, // Could be extracted from CD1_1, CD1_2, etc.
-            ctype1: _header
+            ctype1: header
                 .get_string("CTYPE1")
                 .unwrap_or("RA---TAN".to_string()),
-            ctype2: _header
+            ctype2: header
                 .get_string("CTYPE2")
                 .unwrap_or("DEC--TAN".to_string()),
         })
@@ -1117,7 +1117,7 @@ impl FitsTableReader {
     /// Create a new table reader
     pub fn new(hdu: HDU) -> Result<Self> {
         match hdu.hdu_type {
-            HDUType::AsciiTable | HDUType::BinaryTable => Ok(Self { hdu: _hdu }),
+            HDUType::AsciiTable | HDUType::BinaryTable => Ok(Self { hdu: hdu }),
             _ => Err(IoError::ParseError("HDU is not a table".to_string())),
         }
     }
@@ -1128,7 +1128,7 @@ impl FitsTableReader {
         let mut values = Vec::new();
 
         // Mock some data based on column _name
-        match column_name {
+        match columnname {
             "FLUX" => {
                 for i in 0..100 {
                     values.push(VOTableValue::Float(1000.0 + i as f64 * 10.0));
@@ -1146,7 +1146,7 @@ impl FitsTableReader {
             }
             _ => {
                 return Err(IoError::ParseError(format!(
-                    "Column '{column_name}' not found"
+                    "Column '{columnname}' not found"
                 )));
             }
         }
@@ -1155,7 +1155,7 @@ impl FitsTableReader {
     }
 
     /// Get column names
-    pub fn get_column_names(&self) -> Result<Vec<String>> {
+    pub fn get_columnnames(&self) -> Result<Vec<String>> {
         // Would parse from FITS header keywords TTYPE1, TTYPE2, etc.
         Ok(vec![
             "FLUX".to_string(),
@@ -1176,7 +1176,7 @@ mod tests {
     use tempfile::NamedTempFile;
 
     #[test]
-    fn test_fits_header() {
+    fn test_fitsheader() {
         let mut header = FitsHeader::new();
 
         header.add_card(HeaderCard {

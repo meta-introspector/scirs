@@ -487,10 +487,10 @@ pub struct OpenClRuntime {
 }
 
 impl OpenClRuntime {
-    pub fn new(_platform_id: usize, deviceid: usize) -> Self {
+    pub fn new(platform_id: usize, deviceid: usize) -> Self {
         Self {
             platform_id,
-            _deviceid,
+            _deviceid: deviceid,
             context: None,
             command_queue: None,
             compiled_programs: HashMap::new(),

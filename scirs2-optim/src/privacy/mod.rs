@@ -453,7 +453,7 @@ where
         Ok(())
     }
 
-    fn update_adaptive_clipping(&mut self, state: &mut AdaptiveClippingState, currentnorm: f64) {
+    fn update_adaptive_clipping(&mut self, state: &mut AdaptiveClippingState, current_norm: f64) {
         // Use exponential moving average to track gradient _norm quantiles
         let alpha = self.config.adaptive_clip_lr;
 

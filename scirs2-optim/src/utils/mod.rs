@@ -101,7 +101,7 @@ where
 
     // If _norm exceeds max_norm, scale gradients
     if _norm > max_norm {
-        let scale = max_norm / norm;
+        let scale = max_norm / _norm;
         for grad in gradients.iter_mut() {
             *grad = *grad * scale;
         }
@@ -141,14 +141,14 @@ where
 {
     // Calculate mean
     let sum = gradients.iter().fold(A::zero(), |acc, &x| acc + x);
-    let mean = sum / A::from(_gradients.len()).unwrap_or(A::one());
+    let mean = sum / A::from(gradients.len()).unwrap_or(A::one());
 
     // Subtract mean from each element
     for grad in gradients.iter_mut() {
         *grad = *grad - mean;
     }
 
-    _gradients
+    gradients
 }
 
 /// Zero out small gradient values
@@ -186,5 +186,5 @@ where
         }
     }
 
-    _gradients
+    gradients
 }

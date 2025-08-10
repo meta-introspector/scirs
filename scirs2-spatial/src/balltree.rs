@@ -168,7 +168,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
     /// # Returns
     ///
     /// * `SpatialResult<usize>` - Index of the root node of the subtree
-    fn build_subtree(&mut self, _start_idx: usize, endidx: usize) -> SpatialResult<usize> {
+    fn build_subtree(&mut self, start_idx: usize, endidx: usize) -> SpatialResult<usize> {
         let n_points = endidx - start_idx;
 
         // Calculate centroid of points in this node
@@ -222,9 +222,9 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         self.split_points(node_idx, start_idx, endidx)?;
 
         // Recursively build left and right subtrees
-        let mid_idx = _start_idx + n_points / 2;
+        let mid_idx = start_idx + n_points / 2;
 
-        let left_idx = self.build_subtree(_start_idx, mid_idx)?;
+        let left_idx = self.build_subtree(start_idx, mid_idx)?;
         let right_idx = self.build_subtree(mid_idx, endidx)?;
 
         // Update node with child indices
@@ -372,8 +372,8 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         // If this is a leaf node, check all points
         if node.left_child.is_none() {
             for i in node.start_idx..node.endidx {
-                let _idx = self.indices[i];
-                let row_vec = self.data.row(_idx).to_vec();
+                let idx = self.indices[i];
+                let row_vec = self.data.row(idx).to_vec();
                 let _dist = self.distance.distance(point, row_vec.as_slice());
 
                 if _dist < *max_dist || nearest.len() < k {
@@ -415,11 +415,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         // Determine which child to search first (closest to the query point)
         // Get child indices - we know they exist because this is not a leaf node
         let left_idx = match node.left_child {
-            Some(_idx) => idx,
+            Some(idx) => idx,
             None => return, // Should not happen if tree is properly built
         };
         let right_idx = match node.right_child {
-            Some(_idx) => idx,
+            Some(idx) => idx,
             None => return, // Should not happen if tree is properly built
         };
 
@@ -539,11 +539,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
 
         // Otherwise, recursively search child nodes
         let left_idx = match node.left_child {
-            Some(_idx) => idx,
+            Some(idx) => idx,
             None => return, // Should not happen if tree is properly built
         };
         let right_idx = match node.right_child {
-            Some(_idx) => idx,
+            Some(idx) => idx,
             None => return, // Should not happen if tree is properly built
         };
 
@@ -640,11 +640,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
                     > (other_node.endidx - other_node.start_idx))
         {
             let left_idx = match self_node.left_child {
-                Some(_idx) => idx,
+                Some(idx) => idx,
                 None => return, // Should not happen
             };
             let right_idx = match self_node.right_child {
-                Some(_idx) => idx,
+                Some(idx) => idx,
                 None => return, // Should not happen
             };
 
@@ -652,11 +652,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
             self.query_radius_tree_recursive(right_idx, other, other_node_idx, radius, pairs);
         } else if other_node.left_child.is_some() {
             let left_idx = match other_node.left_child {
-                Some(_idx) => idx,
+                Some(idx) => idx,
                 None => return, // Should not happen
             };
             let right_idx = match other_node.right_child {
-                Some(_idx) => idx,
+                Some(idx) => idx,
                 None => return, // Should not happen
             };
 

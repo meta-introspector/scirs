@@ -173,7 +173,7 @@ pub struct AttentionMechanism<T: Float> {
 impl<T: Float + Default + Clone> AttentionMechanism<T> {
     /// Create a new attention mechanism
     pub fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
-        let hiddensize = config.hiddensize;
+        let hiddensize = config.hidden_size;
         let num_heads = config.attention_heads;
         let head_size = hiddensize / num_heads;
 
@@ -1218,13 +1218,13 @@ impl<
     fn estimate_memory_usage(&self) -> f64 {
         // Simplified memory estimation in MB
         let parameter_memory =
-            self.config.hiddensize as f64 * self.config.num_layers as f64 * 8.0 / 1024.0 / 1024.0;
+            self.config.hidden_size as f64 * self.config.num_layers as f64 * 8.0 / 1024.0 / 1024.0;
         let history_memory =
             self.config.gradient_history_size as f64 * self.config.input_features as f64 * 8.0
                 / 1024.0
                 / 1024.0;
         let lstm_state_memory =
-            self.config.hiddensize as f64 * self.config.num_layers as f64 * 2.0 * 8.0
+            self.config.hidden_size as f64 * self.config.num_layers as f64 * 2.0 * 8.0
                 / 1024.0
                 / 1024.0;
 
@@ -1233,7 +1233,7 @@ impl<
 
     /// Validate configuration
     fn validate_config(config: &LearnedOptimizerConfig) -> Result<()> {
-        if config.hiddensize == 0 {
+        if config.hidden_size == 0 {
             return Err(OptimError::InvalidConfig(
                 "Hidden size must be positive".to_string(),
             ));
@@ -1290,15 +1290,15 @@ impl<T: Float + Default + Clone + 'static> LSTMNetwork<T> {
             let input_size = if i == 0 {
                 config.input_features
             } else {
-                config.hiddensize
+                config.hidden_size
             };
-            let layer = LSTMLayer::new(input_size, config.hiddensize)?;
+            let layer = LSTMLayer::new(input_size, config.hidden_size)?;
             layers.push(layer);
         }
 
         // Create output projection
         let output_projection = OutputProjection::new(
-            config.hiddensize,
+            config.hidden_size,
             config.output_features,
             OutputTransform::ScaledTanh { scale: 0.1 },
         )?;
@@ -1312,7 +1312,7 @@ impl<T: Float + Default + Clone + 'static> LSTMNetwork<T> {
 
         // Create layer normalization
         let layer_norms = (0..config.num_layers)
-            .map(|_| LayerNormalization::new(config.hiddensize))
+            .map(|_| LayerNormalization::new(config.hidden_size))
             .collect::<Result<Vec<_>>>()?;
 
         Ok(Self {
@@ -1374,7 +1374,7 @@ impl<T: Float + Default + Clone + 'static> LSTMLayer<T> {
         let scale = (2.0 / (_input_size + hiddensize) as f64).sqrt();
 
         Ok(Self {
-            weight_ih: Self::xavier_init(4 * hiddensize, input_size, scale),
+            weight_ih: Self::xavier_init(4 * hiddensize, _input_size, scale),
             weight_hh: Self::xavier_init(4 * hiddensize, hiddensize, scale),
             bias_ih: Array1::zeros(4 * hiddensize),
             bias_hh: Array1::zeros(4 * hiddensize),
@@ -1783,7 +1783,7 @@ mod tests {
         let mut config = LearnedOptimizerConfig::default();
         assert!(LSTMOptimizer::<f64>::validate_config(&config).is_ok());
 
-        config.hiddensize = 0;
+        config.hidden_size = 0;
         assert!(LSTMOptimizer::<f64>::validate_config(&config).is_err());
     }
 

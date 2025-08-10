@@ -676,8 +676,8 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
             point_plus[i] = point_plus[i] + eps;
             point_minus[i] = point_minus[i] - eps;
 
-            let loss_plus = _function(&point_plus);
-            let loss_minus = _function(&point_minus);
+            let loss_plus = function(&point_plus);
+            let loss_minus = function(&point_minus);
 
             gradient[i] = (loss_plus - loss_minus) / (T::from(2.0).unwrap() * eps);
         }

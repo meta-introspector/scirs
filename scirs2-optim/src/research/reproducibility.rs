@@ -395,7 +395,7 @@ impl ReproducibilityManager {
     }
     
     /// Generate reproducibility report for experiment
-    pub fn generate_report(&mut self, experiment_id: &str, environmentid: &str) -> Result<String> {
+    pub fn generate_report(&mut self, experiment_id: &str, environment_id: &str) -> Result<String> {
         let environment = self.environments.get(environment_id)
             .ok_or_else(|| OptimError::InvalidConfig("Environment snapshot not found".to_string()))?;
         

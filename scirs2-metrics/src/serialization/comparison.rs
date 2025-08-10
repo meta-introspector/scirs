@@ -313,12 +313,12 @@ where
     F: Fn(&MetricResult) -> bool,
 {
     let mut filtered = MetricCollection::new(
-        &format!("{} (filtered)", collection.name),
-        collection.description.as_deref(),
+        &format!("{} (filtered)", _collection.name),
+        _collection.description.as_deref(),
     );
 
     for metric in &_collection.metrics {
-        if filter_fn(metric) {
+        if filterfn(metric) {
             filtered.add_metric(metric.clone());
         }
     }

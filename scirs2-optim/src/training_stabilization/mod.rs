@@ -59,7 +59,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> WeightAverager<A, D> {
             weight_history: VecDeque::new(),
             step_count: 0,
             method,
-            max_history,
+            max_history: maxhistory,
             initialized: false,
             ema_decay,
         }
@@ -264,7 +264,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> PolyakAverager<A, D> {
             averager: WeightAverager::new(method, 1), // Only need current state for EMA
             initial_decay,
             final_decay,
-            decay_steps,
+            decay_steps: decaysteps,
         }
     }
 

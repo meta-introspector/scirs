@@ -346,8 +346,8 @@ impl RiskManagementMetrics {
             ));
         }
 
-        let portfolio_mean = portfolioreturns.iter().cloned().sum::<F>()
-            / F::from(portfolioreturns.len()).unwrap();
+        let portfolio_mean =
+            portfolioreturns.iter().cloned().sum::<F>() / F::from(portfolioreturns.len()).unwrap();
         let market_mean =
             marketreturns.iter().cloned().sum::<F>() / F::from(marketreturns.len()).unwrap();
 
@@ -404,8 +404,8 @@ impl PortfolioMetrics {
             return Ok(F::zero());
         }
 
-        let mean_return = portfolioreturns.iter().cloned().sum::<F>()
-            / F::from(portfolioreturns.len()).unwrap();
+        let mean_return =
+            portfolioreturns.iter().cloned().sum::<F>() / F::from(portfolioreturns.len()).unwrap();
         let excess_return = mean_return - risk_freerate;
 
         let variance = portfolioreturns
@@ -432,8 +432,8 @@ impl PortfolioMetrics {
             return Ok(F::zero());
         }
 
-        let mean_return = portfolioreturns.iter().cloned().sum::<F>()
-            / F::from(portfolioreturns.len()).unwrap();
+        let mean_return =
+            portfolioreturns.iter().cloned().sum::<F>() / F::from(portfolioreturns.len()).unwrap();
         let excess_return = mean_return - targetreturn;
 
         // Calculate downside deviation

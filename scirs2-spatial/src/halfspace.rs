@@ -794,7 +794,7 @@ impl HalfspaceIntersection {
 
     /// Check if a polytope is bounded by examining vertices
     fn check_boundedness(
-        _vertices: &Array2<f64>,
+        vertices: &Array2<f64>,
         halfspaces: &[Halfspace],
     ) -> SpatialResult<bool> {
         if vertices.nrows() == 0 {
@@ -802,7 +802,7 @@ impl HalfspaceIntersection {
         }
 
         // Simple check: if all coordinates are finite and within reasonable bounds
-        let max_coord = _vertices
+        let max_coord = vertices
             .iter()
             .map(|&x| x.abs())
             .fold(0.0f64, |acc, x| acc.max(x));

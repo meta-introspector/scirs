@@ -112,7 +112,7 @@ impl SpikingNeuron {
     pub fn apply_stdp(&mut self, pre_spike_times: &[f64], post_spiketime: Option<f64>) {
         if let Some(post_time) = post_spiketime {
             for (i, &pre_time) in pre_spike_times.iter().enumerate() {
-                if i < self.synapticweights.len() {
+                if i < self.synaptic_weights.len() {
                     let delta_t = post_time - pre_time;
 
                     // STDP learning rule
@@ -1399,7 +1399,7 @@ impl AdvancedNeuromorphicProcessor {
             if i < self.network.input_neurons.len() && activation > 0.5 {
                 // Increase synaptic weights proportionally
                 for neuron in &mut self.network.hidden_neurons {
-                    if i < neuron.synapticweights.len() {
+                    if i < neuron.synaptic_weights.len() {
                         neuron.synaptic_weights[i] *= 1.02;
                         neuron.synaptic_weights[i] = neuron.synaptic_weights[i].min(1.0);
                     }
@@ -1423,7 +1423,7 @@ impl AdvancedNeuromorphicProcessor {
             if i < self.network.input_neurons.len() && activation > 0.5 {
                 // Decrease synaptic weights slightly
                 for neuron in &mut self.network.hidden_neurons {
-                    if i < neuron.synapticweights.len() {
+                    if i < neuron.synaptic_weights.len() {
                         neuron.synaptic_weights[i] *= 0.98;
                         neuron.synaptic_weights[i] = neuron.synaptic_weights[i].max(-1.0);
                     }

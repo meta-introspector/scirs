@@ -1674,14 +1674,14 @@ pub mod gpu_memory {
 
     impl GpuMemoryPool {
         /// Create a new GPU memory pool
-        pub fn new(_device: GpuDevice, max_poolsize: usize) -> Self {
+        pub fn new(device: GpuDevice, max_pool_size: usize) -> Self {
             let config = PoolConfig {
                 max_pool_size,
                 ..PoolConfig::default()
             };
 
             Self {
-                advanced_pool: AdvancedGpuMemoryPool::new(_device, config),
+                advanced_pool: AdvancedGpuMemoryPool::new(device, config),
             }
         }
 

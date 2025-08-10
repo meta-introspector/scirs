@@ -214,7 +214,7 @@ impl DetectionMetrics {
     /// Calculate Area Under Precision-Recall Curve
     fn calculate_auc_pr(&self, y_true: &Array1<f64>, yscore: &Array1<f64>) -> Result<f64> {
         // Create _score-label pairs and sort by _score (descending)
-        let mut pairs: Vec<(f64, f64)> = y_score
+        let mut pairs: Vec<(f64, f64)> = yscore
             .iter()
             .zip(y_true.iter())
             .map(|(&_score, &label)| (_score, label))
@@ -830,7 +830,7 @@ impl TimeSeriesAnomalyMetrics {
 
             // Check for detections in this range
             for i in true_start..=true_end {
-                if y_pred[i] == 1 && !range_detected {
+                if ypred[i] == 1 && !range_detected {
                     // First detection in this range
                     let detection_position = i;
                     let range_middle = (true_start + true_end) / 2;
@@ -841,8 +841,8 @@ impl TimeSeriesAnomalyMetrics {
                             self.nabweights.true_positive + self.nabweights.early_detection_bonus;
                     } else {
                         // Late detection penalty
-                        score += self.nabweights.true_positive
-                            + self.nabweights.late_detection_penalty;
+                        score +=
+                            self.nabweights.true_positive + self.nabweights.late_detection_penalty;
                     }
                     range_detected = true;
                     // Additional detections in same range don't add score
@@ -856,7 +856,7 @@ impl TimeSeriesAnomalyMetrics {
         }
 
         // Count false positives (detections outside _true anomaly ranges)
-        for (i, &pred_val) in y_pred.iter().enumerate() {
+        for (i, &pred_val) in ypred.iter().enumerate() {
             if pred_val == 1 && y_true[i] == 0 {
                 score += self.nabweights.false_positive;
             }

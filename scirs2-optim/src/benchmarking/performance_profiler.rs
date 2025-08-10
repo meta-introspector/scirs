@@ -480,7 +480,7 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
     }
 
     /// Complete a profiling step
-    pub fn complete_step(&mut self, stepprofiler: StepProfiler<A>) -> Result<()> {
+    pub fn complete_step(&mut self, step_profiler: StepProfiler<A>) -> Result<()> {
         let step_timing = step_profiler.finalize()?;
 
         // Update metrics
@@ -540,7 +540,7 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
     /// Update computational efficiency metrics
     fn update_efficiency_metrics(&mut self, steptiming: &StepTiming) -> Result<()> {
         // Estimate FLOPS for this step
-        let estimated_flops = self.estimate_flops(step_timing);
+        let estimated_flops = self.estimate_flops(steptiming);
         self.efficiency_analyzer
             .flops_history
             .push_back(estimated_flops);
@@ -943,7 +943,7 @@ pub struct StepProfiler<A: Float> {
 impl<A: Float> StepProfiler<A> {
     fn new(_stepnumber: usize, config: &ProfilerConfig) -> Self {
         Self {
-            step_number: step_number,
+            step_number: _stepnumber,
             start_time: Instant::now(),
             gradient_start: None,
             gradient_duration: None,

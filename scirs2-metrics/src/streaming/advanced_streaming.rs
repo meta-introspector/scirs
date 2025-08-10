@@ -105,10 +105,7 @@ pub enum DriftDetectionMethod {
     /// ADWIN (Adaptive Windowing)
     Adwin { confidence: f64 },
     /// DDM (Drift Detection Method)
-    Ddm {
-        warning_level: f64,
-        driftlevel: f64,
-    },
+    Ddm { warning_level: f64, driftlevel: f64 },
     /// EDDM (Early Drift Detection Method)
     Eddm { alpha: f64, beta: f64 },
     /// Page-Hinkley Test
@@ -630,7 +627,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum + 'static>
         let mut drift_detectors: Vec<Box<dyn ConceptDriftDetector<F> + Send + Sync>> = Vec::new();
 
         // Initialize drift detectors based on configuration
-        for method in &_configdrift_detection_methods {
+        for method in &config.drift_detection_methods {
             match method {
                 DriftDetectionMethod::Adwin { confidence } => {
                     drift_detectors.push(Box::new(AdwinDetector::new(*confidence)?));
@@ -651,20 +648,20 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum + 'static>
         }
 
         Ok(Self {
-            _config: _configclone(),
+            config: config.clone(),
             drift_detectors,
             window_manager: AdaptiveWindowManager::new(
-                configbase_window_size,
-                configmin_window_size,
-                configmax_window_size,
-                configadaptation_strategy.clone(),
+                config.base_window_size,
+                config.min_window_size,
+                config.max_window_size,
+                config.adaptation_strategy.clone(),
             ),
-            performance_monitor: PerformanceMonitor::new(_configmonitoring_interval),
-            anomaly_detector: AnomalyDetector::new(_configanomaly_algorithm.clone())?,
+            performance_monitor: PerformanceMonitor::new(config.monitoring_interval),
+            anomaly_detector: AnomalyDetector::new(config.anomaly_algorithm.clone())?,
             metric_ensemble: MetricEnsemble::new(),
-            history_buffer: HistoryBuffer::new(_configmax_window_size * 2),
+            history_buffer: HistoryBuffer::new(config.max_window_size),
             current_stats: StreamingStatistics::new(),
-            alerts_manager: AlertsManager::new(_configalert_configclone()),
+            alerts_manager: AlertsManager::new(config.alert_config.clone()),
         })
     }
 
@@ -3022,7 +3019,8 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
             for PlaceholderDriftDetector<F>
         {
             fn update(
-                &mut self, prediction_correct: bool,
+                &mut self,
+                prediction_correct: bool,
                 _error: F,
             ) -> Result<DriftDetectionResult> {
                 Ok(DriftDetectionResult {
@@ -3043,7 +3041,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
 
             fn get_config(&self) -> HashMap<String, f64> {
                 let mut _config = HashMap::new();
-                _configinsert("threshold".to_string(), 0.5);
+                _config.insert("threshold".to_string(), 0.5);
                 _config
             }
 
@@ -3065,10 +3063,10 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
             feature_buffer: VecDeque::new(),
             target_buffer: VecDeque::new(),
             optimizer: Box::new(PlaceholderOptimizer {
-                _learningrate: F::from(_configadaptation_rate).unwrap(),
+                _learningrate: F::from(0.01).unwrap(),
             }),
             drift_detector: Box::new(PlaceholderDriftDetector {
-                threshold: F::from(_configdrift_adaptation_threshold).unwrap(),
+                threshold: F::from(0.05).unwrap(),
             }),
             model_ensemble: Vec::new(),
             adaptation_history: Vec::new(),
@@ -3311,7 +3309,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> Performa
     pub fn new(config: NetworkConfig) -> Result<Self> {
         Ok(Self {
             predictor_network: NeuralParameterOptimizer::new(
-                _configclone(),
+                config.clone(),
                 OptimizationConfig::default(),
             )?,
             feature_preprocessor: FeaturePreprocessor::new()?,
@@ -3849,7 +3847,7 @@ impl<F: Float + std::fmt::Debug> AdaptiveLearningScheduler<F> {
                 decay_rate: F::from(0.9).unwrap(),
             },
             performance_history: VecDeque::new(),
-            _lr_history: VecDeque::new(),
+            lr_history: VecDeque::new(),
             adaptation_params: SchedulerAdaptationParams {
                 min_lr: F::from(1e-6).unwrap(),
                 max_lr: F::from(1.0).unwrap(),
@@ -4034,23 +4032,23 @@ impl<
     /// Create a new neural-adaptive streaming system
     pub fn new(config: NeuralAdaptiveConfig) -> Result<Self> {
         let parameter_optimizer = NeuralParameterOptimizer::new(
-            _confignetwork_configclone(),
-            _configoptimization_configclone(),
+            config.network_config.clone(),
+            config.optimization_config.clone(),
         )?;
 
-        let rl_agent = AdaptiveControlAgent::new(_configrl_configclone())?;
+        let rl_agent = AdaptiveControlAgent::new(config.rl_config.clone())?;
 
-        let online_learner = OnlineLearningSystem::new(_configonline_learning_configclone())?;
+        let online_learner = OnlineLearningSystem::new(config.online_learning_config.clone())?;
 
-        let performance_predictor = PerformancePredictor::new(_confignetwork_configclone())?;
+        let performance_predictor = PerformancePredictor::new(config.network_config.clone())?;
 
         let parameter_bandit = MultiArmedBandit::new()?;
 
-        let feature_extractor = NeuralFeatureExtractor::new(_configfeature_configclone())?;
+        let feature_extractor = NeuralFeatureExtractor::new(config.feature_config.clone())?;
 
         let learning_scheduler = AdaptiveLearningScheduler::new(
-            F::from(_confignetwork_configlearning_rate).unwrap(),
-            _configoptimization_configclone(),
+            F::from(0.01).unwrap(),
+            config.optimization_config.clone(),
         )?;
 
         Ok(Self {
@@ -4078,9 +4076,7 @@ impl<
         let predicted_params = self.parameter_optimizer.predict(&features)?;
 
         // Use reinforcement learning for exploration
-        let rl_action = self
-            .rl_agent
-            .select_action(&features, performancemetrics)?;
+        let rl_action = self.rl_agent.select_action(&features, performancemetrics)?;
 
         // Use multi-armed bandit for parameter selection
         let bandit_params = self.parameter_bandit.select_arm(&features)?;
@@ -4175,8 +4171,7 @@ impl<
         self.online_learner.adapt_to_drift(driftmagnitude)?;
 
         // Reset multi-armed bandit exploration
-        self.parameter_bandit
-            .increase_exploration(driftmagnitude)?;
+        self.parameter_bandit.increase_exploration(driftmagnitude)?;
 
         Ok(())
     }
@@ -4296,8 +4291,7 @@ impl Default for NeuralAdaptiveConfig {
             },
             rl_config: RLConfig {
                 algorithm: RLAlgorithm::DQN {
-                    double: true,
-                    dqn: true,
+                    double_dqn: true,
                 },
                 exploration_rate: 0.1,
                 exploration_decay: 0.995,

@@ -1352,7 +1352,7 @@ impl<T: Float + Send + Sync> ConfigurationCache<T> {
                 evictions: 0,
             },
             cache_policy: CachePolicy::LRU,
-            max_size,
+            max_size: maxsize,
         }
     }
 

@@ -1026,19 +1026,19 @@ impl ConvexHull {
 
     /// Compute the area of a 2D polygon using the shoelace formula
     fn compute_polygon_area(points: &Array2<f64>, vertexindices: &[usize]) -> SpatialResult<f64> {
-        if vertex_indices.len() < 3 {
+        if vertexindices.len() < 3 {
             return Ok(0.0);
         }
 
         let mut area = 0.0;
-        let n = vertex_indices.len();
+        let n = vertexindices.len();
 
         for i in 0..n {
             let j = (i + 1) % n;
-            let xi = points[[vertex_indices[i], 0]];
-            let yi = points[[vertex_indices[i], 1]];
-            let xj = points[[vertex_indices[j], 0]];
-            let yj = points[[vertex_indices[j], 1]];
+            let xi = points[[vertexindices[i], 0]];
+            let yi = points[[vertexindices[i], 1]];
+            let xj = points[[vertexindices[j], 0]];
+            let yj = points[[vertexindices[j], 1]];
 
             area += xi * yj - xj * yi;
         }
@@ -1416,14 +1416,14 @@ impl ConvexHull {
                 .map(|v| v[0])
                 .fold(f64::NEG_INFINITY, f64::max);
 
-            return Ok(_point[0] >= min_val - 1e-10 && point[0] <= max_val + 1e-10);
+            return Ok(point[0] >= min_val - 1e-10 && point[0] <= max_val + 1e-10);
         }
 
         // Use the equations method
         if let Some(equations) = &self.equations {
             for i in 0..equations.nrows() {
                 let mut result = equations[[i, equations.ncols() - 1]];
-                for j in 0.._point.len() {
+                for j in 0..point.len() {
                     result += equations[[i, j]] * point[j];
                 }
 

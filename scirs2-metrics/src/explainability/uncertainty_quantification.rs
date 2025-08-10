@@ -98,9 +98,7 @@ pub struct XorshiftRng {
 
 impl XorshiftRng {
     pub fn new(seed: u64) -> Self {
-        Self {
-            state: seed.max(1),
-        } // Ensure non-zero state
+        Self { state: seed.max(1) } // Ensure non-zero state
     }
 }
 
@@ -251,7 +249,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
     /// Set random number generator type
     pub fn with_rng_type(mut self, rngtype: RandomNumberGenerator) -> Self {
-        self.rng_type = rng_type;
+        self.rng_type = rngtype;
         self
     }
 
@@ -867,7 +865,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         let nsamples = mcpredictions[0].len();
         let mut mean_pred = Array1::zeros(nsamples);
 
-        for _predictions in mcpredictions {
+        for predictions in mcpredictions {
             mean_pred = mean_pred + predictions;
         }
 
@@ -973,8 +971,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
             for j in 0..xtest.nrows() {
                 if i != j {
-                    let distance =
-                        self.compute_euclidean_distance(&xtest.row(i), &xtest.row(j))?;
+                    let distance = self.compute_euclidean_distance(&xtest.row(i), &xtest.row(j))?;
                     min_distance = min_distance.min(distance);
                 }
             }
@@ -1189,8 +1186,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
             for j in 0..xtest.nrows() {
                 if i != j {
-                    let distance =
-                        self.compute_euclidean_distance(&xtest.row(i), &xtest.row(j))?;
+                    let distance = self.compute_euclidean_distance(&xtest.row(i), &xtest.row(j))?;
                     min_distance = min_distance.min(distance);
                 }
             }
@@ -1268,8 +1264,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
             for j in 0..xtest.nrows() {
                 if i != j {
-                    let distance =
-                        self.compute_euclidean_distance(&xtest.row(i), &xtest.row(j))?;
+                    let distance = self.compute_euclidean_distance(&xtest.row(i), &xtest.row(j))?;
                     distances.push(distance);
                 }
             }

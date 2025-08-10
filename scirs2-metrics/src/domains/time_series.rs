@@ -120,7 +120,7 @@ impl ForecastingMetrics {
 
     /// Set naive forecast for MASE calculation (typically last known value)
     pub fn with_naive_forecast(mut self, naiveforecast: Array1<f64>) -> Self {
-        self.naive_forecast = Some(naive_forecast);
+        self.naive_forecast = Some(naiveforecast);
         self
     }
 
@@ -148,7 +148,7 @@ impl ForecastingMetrics {
         let smape = self.calculate_smape(y_true, ypred)?;
 
         // Calculate MASE
-        let mase = if let Some(_train) = y_train {
+        let mase = if let Some(train) = y_train {
             self.calculate_mase(y_true, ypred, train)?
         } else if let Some(naive) = &self.naive_forecast {
             self.calculate_mase_with_naive(y_true, ypred, naive)?
@@ -295,9 +295,9 @@ impl ForecastingMetrics {
             return Ok(0.0);
         }
 
-        let _baseline = if let Some(_train) = y_train {
-            if !_train.is_empty() {
-                train[_train.len() - 1]
+        let _baseline = if let Some(train) = y_train {
+            if !train.is_empty() {
+                train[train.len() - 1]
             } else {
                 y_true[0]
             }
@@ -328,9 +328,9 @@ impl ForecastingMetrics {
         let mse_forecast = mean_squared_error(y_true, ypred)?;
 
         // Calculate MSE of naive forecast (no-change forecast)
-        let baseline = if let Some(_train) = y_train {
-            if !_train.is_empty() {
-                train[_train.len() - 1]
+        let baseline = if let Some(train) = y_train {
+            if !train.is_empty() {
+                train[train.len() - 1]
             } else {
                 y_true[0]
             }
@@ -377,7 +377,7 @@ impl TimeSeriesAnomalyMetrics {
     /// Evaluate anomaly detection performance
     pub fn evaluate_anomaly_detection(
         &self,
-        y_true: &Array1<i32>,          // 1 for anomaly, 0 for normal
+        y_true: &Array1<i32>,         // 1 for anomaly, 0 for normal
         ypred: &Array1<i32>,          // 1 for detected anomaly, 0 for normal
         yscore: Option<&Array1<f64>>, // Anomaly scores for AUC calculation
     ) -> Result<TimeSeriesAnomalyResults> {

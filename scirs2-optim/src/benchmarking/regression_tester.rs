@@ -2309,8 +2309,8 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> PerformanceDataba
 
     /// Save database to disk
     pub fn save(&self, basedir: &Path) -> Result<()> {
-        fs::create_dir_all(_basedir)?;
-        let db_path = _basedir.join("performance_db.json");
+        fs::create_dir_all(basedir)?;
+        let db_path = basedir.join("performance_db.json");
         let data = serde_json::to_string_pretty(self)?;
         fs::write(&db_path, data)?;
         Ok(())

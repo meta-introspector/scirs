@@ -308,7 +308,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::Byte(array))
     }
@@ -325,7 +325,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::Int(array))
     }
@@ -342,7 +342,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::Long(array))
     }
@@ -359,7 +359,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::Float(array))
     }
@@ -376,7 +376,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::Double(array))
     }
@@ -395,7 +395,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::Complex(array))
     }
@@ -414,7 +414,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::DoubleComplex(array))
     }
@@ -431,7 +431,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::UInt(array))
     }
@@ -448,7 +448,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::ULong(array))
     }
@@ -465,7 +465,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::Long64(array))
     }
@@ -482,7 +482,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::ULong64(array))
     }

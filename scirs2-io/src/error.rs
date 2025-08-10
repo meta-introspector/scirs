@@ -110,7 +110,7 @@ impl Clone for IoError {
 
 impl From<std::io::Error> for IoError {
     fn from(err: std::io::Error) -> Self {
-        IoError::Io(_err)
+        IoError::Io(err)
     }
 }
 

@@ -69,7 +69,7 @@ pub struct DatabaseConfig {
 
 impl DatabaseConfig {
     /// Create a new database configuration
-    pub fn new(_dbtype: DatabaseType, database: impl Into<String>) -> Self {
+    pub fn new(db_type: DatabaseType, database: impl Into<String>) -> Self {
         Self {
             db_type: db_type,
             host: None,
@@ -361,7 +361,7 @@ impl ResultSet {
             }
         }
 
-        Array2::fromshape_vec((self.row_count(), self.column_count()), data)
+        Array2::from_shape_vec((self.row_count(), self.column_count()), data)
             .map_err(|e| IoError::Other(e.to_string()))
     }
 
@@ -2171,7 +2171,7 @@ pub struct ConnectionPool {
 }
 
 impl ConnectionPool {
-    pub fn new(_config: DatabaseConfig, maxconnections: usize) -> Self {
+    pub fn new(config: DatabaseConfig, max_connections: usize) -> Self {
         Self {
             db_type: config.db_type,
             config: config,
@@ -2558,7 +2558,7 @@ pub mod cdc {
 
     impl CDCPublisher {
         pub fn new(sender: mpsc::Sender<ChangeEvent>) -> Self {
-            Self { sender: _sender }
+            Self { sender: sender }
         }
 
         /// Publish change event
@@ -2612,8 +2612,8 @@ pub mod replication {
 
     impl ReplicatedConnection {
         pub fn new(config: ReplicationConfig) -> Result<Self> {
-            let master = DatabaseConnector::connect(&_config.master)?;
-            let replicas: Result<Vec<_>> = _config
+            let master = DatabaseConnector::connect(&config.master)?;
+            let replicas: Result<Vec<_>> = config
                 .replicas
                 .iter()
                 .map(|cfg| DatabaseConnector::connect(cfg))
@@ -2720,7 +2720,7 @@ pub mod advanced_query {
         /// Analyze query performance
         pub fn analyze(query: &QueryBuilder, conn: &dyn DatabaseConnection) -> Result<QueryStats> {
             let start = std::time::Instant::now();
-            let result = conn.query(_query)?;
+            let result = conn.query(query)?;
             let execution_time = start.elapsed();
 
             Ok(QueryStats {

@@ -306,7 +306,7 @@ impl<I, O> Pipeline<I, O> {
     }
 
     /// Execute the pipeline with progress tracking
-    pub fn execute_with_progress<F>(&self, input: I, progresscallback: F) -> Result<O>
+    pub fn execute_with_progress<F>(&self, input: I, progress_callback: F) -> Result<O>
     where
         I: 'static + Send + Sync,
         O: 'static + Send + Sync,

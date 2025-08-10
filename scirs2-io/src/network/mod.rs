@@ -118,14 +118,14 @@ impl NetworkClient {
     }
 
     /// Set cache directory for downloaded files
-    pub fn with_cache_dir<P: AsRef<Path>>(mut self, cachedir: P) -> Self {
+    pub fn with_cache_dir<P: AsRef<Path>>(mut self, cache_dir: P) -> Self {
         self.config.cache_dir = Some(cache_dir.as_ref().to_string_lossy().to_string());
         self
     }
 
     /// Download a file from URL to local path
     #[cfg(feature = "reqwest")]
-    pub async fn download<P: AsRef<Path>>(&self, url: &str, localpath: P) -> Result<()> {
+    pub async fn download<P: AsRef<Path>>(&self, url: &str, local_path: P) -> Result<()> {
         if let Some(_client) = &self.http_client {
             // Create HttpClient with current config and use it for download
             let mut http_client = http::HttpClient::new(self.config.clone());

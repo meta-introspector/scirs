@@ -76,7 +76,7 @@ where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    validategraph(graph, directed)?;
+    validate_graph(graph, directed)?;
     let n = num_vertices(graph);
 
     if start >= n {

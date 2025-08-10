@@ -262,7 +262,7 @@ impl NetCDFFile {
             .collect();
         
         // Create ndarray from data and shape
-        let array = Array::fromshape_vec(IxDyn(&shape), data)
+        let array = Array::from_shape_vec(IxDyn(&shape), data)
             .map_err(|e| IOError::ConversionError(format!("Failed to reshape variable data: {}", e)))?;
         
         Ok(array)
@@ -516,7 +516,7 @@ mod tests {
         nc.create_variable("temperature", NetCDFDataType::Float, &["x", "y"]).unwrap();
         
         // Write data
-        let data = Array2::fromshape_vec((3, 2), vec![20.0f32, 21.0, 22.0, 23.0, 24.0, 25.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![20.0f32, 21.0, 22.0, 23.0, 24.0, 25.0]).unwrap();
         nc.write_variable("temperature", &data).unwrap();
         
         // Add attributes

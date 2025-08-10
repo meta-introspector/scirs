@@ -397,7 +397,7 @@ impl OrdinaryKriging {
         // Build covariance vector between new _location and data points
         let mut cov_vector = Array1::zeros(self.n_points + 1);
         for i in 0..self.n_points {
-            let dist = OrdinaryKriging::distance(_location, &self.points.row(i).to_vec());
+            let dist = OrdinaryKriging::distance(location, &self.points.row(i).to_vec());
             cov_vector[i] = self.variogram.sill() - self.variogram.evaluate(dist);
         }
         cov_vector[self.n_points] = 1.0; // Lagrange multiplier for unbiasedness constraint
@@ -743,7 +743,7 @@ impl SimpleKriging {
         // Build covariance vector
         let mut cov_vector = Array1::zeros(self.n_points);
         for i in 0..self.n_points {
-            let dist = OrdinaryKriging::distance(_location, &self.points.row(i).to_vec());
+            let dist = OrdinaryKriging::distance(location, &self.points.row(i).to_vec());
             cov_vector[i] = self.variogram.sill() - self.variogram.evaluate(dist);
         }
 

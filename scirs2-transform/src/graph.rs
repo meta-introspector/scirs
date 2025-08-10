@@ -44,7 +44,7 @@ impl SpectralEmbedding {
 
     /// Set the type of Laplacian to use
     pub fn with_laplacian_type(mut self, laplaciantype: LaplacianType) -> Self {
-        self.laplacian_type = laplacian_type;
+        self.laplacian_type = laplaciantype;
         self
     }
 

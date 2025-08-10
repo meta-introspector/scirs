@@ -1067,7 +1067,7 @@ impl CiCdAutomation {
 
         Ok(PerformanceMeasurement {
             timestamp: start_time,
-            commit_hash: gitinfo.commit_hash,
+            commithash: gitinfo.commit_hash,
             branch: gitinfo.branch,
             build_config: self.detect_build_config()?,
             environment: self.environment.clone(),

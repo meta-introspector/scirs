@@ -51,7 +51,7 @@ use crate::error::{IoError, Result};
 #[cfg(feature = "async")]
 use futures::{SinkExt, Stream, StreamExt};
 use ndarray::{Array1, Array2, ArrayD, ArrayView1, IxDyn};
-use rand::rng;
+use rand::Rng;
 use scirs2_core::numeric::ScientificNumber;
 use serde_json;
 use std::collections::VecDeque;
@@ -1217,7 +1217,7 @@ impl StreamConnection for MqttConnection {
         }
 
         // Simulate realistic MQTT message with proper JSON structure
-        let mut rng = rng();
+        let mut rng = rand::thread_rng();
         let sensor_data = serde_json::json!({
             "client_id": self.client_id,
             "topic": self.topic,

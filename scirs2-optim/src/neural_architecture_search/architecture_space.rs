@@ -621,7 +621,7 @@ impl ArchitectureValidator {
     /// Create new validator with search space
     pub fn new(_searchspace: SearchSpace) -> Self {
         Self {
-            search_space: search_space,
+            search_space: _searchspace,
         }
     }
 

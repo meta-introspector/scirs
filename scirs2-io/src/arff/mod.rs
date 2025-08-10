@@ -237,7 +237,7 @@ fn parse_data_line(line: &str, attributes: &[(String, AttributeType)]) -> Result
 /// ```
 #[allow(dead_code)]
 pub fn read_arff<P: AsRef<Path>>(path: P) -> Result<ArffData> {
-    let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
     let mut relation = String::new();
@@ -443,7 +443,7 @@ pub fn get_numeric_matrix(
 ///         ])),
 ///         ("temperature".to_string(), AttributeType::Numeric),
 ///     ],
-///     data: Array2::fromshape_vec((2, 2), vec![
+///     data: Array2::from_shape_vec((2, 2), vec![
 ///         ArffValue::Nominal("sunny".to_string()), ArffValue::Numeric(85.0),
 ///         ArffValue::Nominal("overcast".to_string()), ArffValue::Numeric(72.0),
 ///     ]).unwrap(),
@@ -452,8 +452,8 @@ pub fn get_numeric_matrix(
 /// write_arff(Path::new("weather.arff"), &arff_data).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn write_arff<P: AsRef<Path>>(path: P, arffdata: &ArffData) -> Result<()> {
-    let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
+pub fn write_arff<P: AsRef<Path>>(path: P, arff_data: &ArffData) -> Result<()> {
+    let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
     // Write relation
@@ -552,7 +552,7 @@ pub fn write_arff<P: AsRef<Path>>(path: P, arffdata: &ArffData) -> Result<()> {
 /// use std::path::Path;
 ///
 /// // Create a simple matrix
-/// let matrix = Array2::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+/// let matrix = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
 /// let attribute_names = vec!["attr1".to_string(), "attr2".to_string()];
 ///
 /// let arff_data = numeric_matrix_to_arff("simple_data", &attribute_names, &matrix);

@@ -229,7 +229,7 @@ impl<A: Float + ScalarOperand + Debug> HyperparameterPredictor<A> {
     /// Create a new hyperparameter predictor
     pub fn new(_input_size: usize, hidden_size: usize, outputsize: usize) -> Self {
         // Initialize with small random weights
-        let input_weights = Array2::from_shape_fn((hidden_size, input_size), |_| {
+        let input_weights = Array2::from_shape_fn((hidden_size, _input_size), |_| {
             A::from(0.01).unwrap()
                 * (A::from(rand::random::<f64>()).unwrap() - A::from(0.5).unwrap())
         });
@@ -698,7 +698,7 @@ impl<A: Float> SGDMetaOptimizer<A> {
     /// Create a new SGD meta-optimizer
     pub fn new(_meta_params: Array1<A>, metalr: A) -> Self {
         Self {
-            meta_params: meta_params,
+            meta_params: _meta_params,
             metalr,
         }
     }

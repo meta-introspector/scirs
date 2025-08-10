@@ -168,7 +168,7 @@ where
 /// # Arguments
 ///
 /// * `signal` - Clean signal reference
-/// * `signal_plus_noise` - Signal with noise
+/// * `signal_plusnoise` - Signal with noise
 ///
 /// # Returns
 ///
@@ -183,7 +183,7 @@ where
 /// // Create a clean signal
 /// let clean = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
 ///
-/// // Add noise to create signal_plus_noise
+/// // Add noise to create signal_plusnoise
 /// let mut rng = rand::rng();
 /// let noisy: Vec<f64> = clean.iter()
 ///     .map(|&x| x + rng.gen_range(-0.1f64..0.1f64))
@@ -193,27 +193,27 @@ where
 /// let snr_db = snr(&clean, &noisy).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn snr<T, U>(_signal: &[T], signal_plusnoise: &[U]) -> SignalResult<f64>
+pub fn snr<T, U>(signal: &[T], signal_plusnoise: &[U]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if signal.is_empty() || signal_plus_noise.is_empty() {
+    if signal.is_empty() || signal_plusnoise.is_empty() {
         return Err(SignalError::ValueError(
             "Input signals are empty".to_string(),
         ));
     }
 
-    if signal.len() != signal_plus_noise.len() {
+    if signal.len() != signal_plusnoise.len() {
         return Err(SignalError::DimensionMismatch(format!(
             "Signal lengths do not match: {} vs {}",
             signal.len(),
-            signal_plus_noise.len()
+            signal_plusnoise.len()
         )));
     }
 
     // Convert to f64 for internal processing
-    let signal_f64: Vec<f64> = _signal
+    let signal_f64: Vec<f64> = signal
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -222,7 +222,7 @@ where
         })
         .collect::<SignalResult<Vec<_>>>()?;
 
-    let signal_plus_noise_f64: Vec<f64> = signal_plus_noise
+    let signal_plusnoise_f64: Vec<f64> = signal_plusnoise
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<U, f64>(val).ok_or_else(|| {
@@ -231,10 +231,10 @@ where
         })
         .collect::<SignalResult<Vec<_>>>()?;
 
-    // Calculate _noise by subtracting _signal from signal_plus_noise
-    let _noise: Vec<f64> = signal_f64
+    // Calculate _noise by subtracting _signal from signal_plusnoise
+    let noise: Vec<f64> = signal_f64
         .iter()
-        .zip(signal_plus_noise_f64.iter())
+        .zip(signal_plusnoise_f64.iter())
         .map(|(&s, &spn)| spn - s)
         .collect();
 
@@ -298,7 +298,7 @@ pub fn thd<T>(_signal: &[T], fs: f64, f0: f64, nharmonics: Option<usize>) -> Sig
 where
     T: Float + NumCast + Debug,
 {
-    if signal.is_empty() {
+    if _signal.is_empty() {
         return Err(SignalError::ValueError(
             "Input _signal is empty".to_string(),
         ));
@@ -319,7 +319,7 @@ where
     }
 
     // Get number of _harmonics or use default
-    let n_harmonics = n_harmonics.unwrap_or(5);
+    let n_harmonics = nharmonics.unwrap_or(5);
 
     // Convert to f64 for internal processing
     let signal_f64: Vec<f64> = _signal

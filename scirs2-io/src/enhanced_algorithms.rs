@@ -9,7 +9,7 @@
 
 use crate::error::{IoError, Result};
 use ndarray::{Array1, Array2};
-use rand::{rng, Rng};
+use rand::Rng;
 use statrs::statistics::Statistics;
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
@@ -142,7 +142,7 @@ impl AdvancedPatternRecognizer {
         padded_features.extend(pad_features(global_features, max_features));
 
         // Convert to 2D array (4 scales x max_features)
-        let feature_array = Array2::fromshape_vec((4, max_features), padded_features)
+        let feature_array = Array2::from_shape_vec((4, max_features), padded_features)
             .map_err(|e| IoError::Other(format!("Feature extraction error: {e}")))?;
 
         Ok(feature_array)
@@ -187,7 +187,7 @@ impl AdvancedPatternRecognizer {
     }
 
     /// Extract local structure features with specified window size
-    fn extract_local_structure_features(&self, data: &[u8], windowsize: usize) -> Vec<f32> {
+    fn extract_local_structure_features(&self, data: &[u8], window_size: usize) -> Vec<f32> {
         let mut features = Vec::new();
 
         if data.len() < window_size {
@@ -390,7 +390,7 @@ impl AdvancedPatternRecognizer {
     }
 
     /// Check if pattern is novel
-    fn is_novel_pattern(&self, patterntype: &str, score: f32) -> bool {
+    fn is_novel_pattern(&self, pattern_type: &str, score: f32) -> bool {
         if let Some(metadata) = self.pattern_database.get(pattern_type) {
             score > metadata.max_score * 1.1 // 10% improvement threshold
         } else {
@@ -625,14 +625,14 @@ struct PatternNetwork {
 
 impl PatternNetwork {
     fn new(
-        _pattern_type: &str,
+        pattern_type: &str,
         input_size: usize,
         hidden_size: usize,
         _output_size: usize,
     ) -> Self {
         // Xavier initialization for weights
         let scale = (2.0 / (input_size + hidden_size) as f32).sqrt();
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let weights = Array2::from_shape_fn((hidden_size, input_size), |_| {
             (rng.random::<f32>() - 0.5) * 2.0 * scale
         });
@@ -977,7 +977,7 @@ mod tests {
     #[test]
     fn test_pattern_network() {
         let mut network = PatternNetwork::new("test", 10, 5, 3);
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let features = Array2::from_shape_fn((2, 5), |_| rng.random::<f32>());
 
         let score = network.analyze(&features).unwrap();

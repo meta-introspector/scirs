@@ -436,12 +436,12 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     fn read_chunk_from_disk(&self, chunkid: usize) -> Result<Vec<T>> {
         if let Some(ref mmap) = self.mmap {
             let chunk_size = self.metadata.chunkshape.iter().product::<usize>();
-            let offset = Self::metadata_size() + chunk_id * chunk_size * self.metadata.element_size;
+            let offset = Self::metadata_size() + chunkid * chunk_size * self.metadata.element_size;
 
             if let Some(compression) = self.metadata.compression {
                 // Handle compressed chunks
-                let compressed_size = self.metadata.chunk_sizes[chunk_id];
-                let compressed_offset = self.metadata.chunk_offsets[chunk_id];
+                let compressed_size = self.metadata.chunk_sizes[chunkid];
+                let compressed_offset = self.metadata.chunk_offsets[chunkid];
 
                 if compressed_size == 0 {
                     // Chunk hasn't been written yet, return zeros
@@ -517,13 +517,13 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             // For compressed data, we need to update the metadata
             // This is a simplified implementation - in reality, we'd need to handle
             // dynamic file size changes and update chunk offsets
-            let offset = if self.metadata.chunk_offsets[chunk_id] == 0 {
+            let offset = if self.metadata.chunk_offsets[chunkid] == 0 {
                 // New chunk, append to end of file
                 file.seek(SeekFrom::End(0))
                     .map_err(|e| IoError::FileError(format!("Failed to seek to end: {}", e)))?
             } else {
                 // Existing chunk, use existing offset
-                self.metadata.chunk_offsets[chunk_id]
+                self.metadata.chunk_offsets[chunkid]
             };
 
             file.seek(SeekFrom::Start(offset))
@@ -535,7 +535,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         } else {
             // Uncompressed data
             let chunk_size = self.metadata.chunkshape.iter().product::<usize>();
-            let offset = Self::metadata_size() + chunk_id * chunk_size * self.metadata.element_size;
+            let offset = Self::metadata_size() + chunkid * chunk_size * self.metadata.element_size;
 
             file.seek(SeekFrom::Start(offset as u64))
                 .map_err(|e| IoError::FileError(format!("Failed to seek: {}", e)))?;
@@ -589,7 +589,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Process array in chunks
-    pub fn process_chunks<F, R>(&self, chunksize: usize, processor: F) -> Result<Vec<R>>
+    pub fn process_chunks<F, R>(&self, chunk_size: usize, processor: F) -> Result<Vec<R>>
     where
         F: Fn(ArrayView<T, IxDyn>) -> Result<R>,
         R: Send,
@@ -602,7 +602,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             let chunk_data = self.get_chunk(chunk_id)?;
             let chunkshape = self.get_chunkshape(chunk_id);
 
-            let array_view = ArrayView::fromshape(chunkshape, &chunk_data)
+            let array_view = ArrayView::from_shape(chunkshape, &chunk_data)
                 .map_err(|e| IoError::ParseError(format!("Failed to create array view: {}", e)))?;
 
             let result = processor(array_view)?;
@@ -616,7 +616,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     fn get_chunkshape(&self, chunkid: usize) -> IxDyn {
         // Calculate chunk coordinates
         let mut chunk_coords = Vec::with_capacity(self.metadata.shape.len());
-        let mut temp_id = chunk_id;
+        let mut temp_id = chunkid;
 
         let chunks_per_dim: Vec<_> = self
             .metadata
@@ -1055,8 +1055,8 @@ pub struct OutOfCoreSorter<T> {
 
 impl<T: ScientificNumber + Ord + Clone> OutOfCoreSorter<T> {
     /// Create a new out-of-core sorter
-    pub fn new(_temp_dir: PathBuf, chunksize: usize) -> Result<Self> {
-        std::fs::create_dir_all(&_temp_dir)
+    pub fn new(temp_dir: PathBuf, chunk_size: usize) -> Result<Self> {
+        std::fs::create_dir_all(&temp_dir)
             .map_err(|e| IoError::FileError(format!("Failed to create temp dir: {}", e)))?;
 
         Ok(Self {

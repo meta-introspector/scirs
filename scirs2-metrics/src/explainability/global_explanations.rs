@@ -210,8 +210,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         // Compute pairwise interactions
         for i in 0..n_features {
             for j in (i + 1)..n_features {
-                let interaction_strength =
-                    self.compute_pairwise_interaction(model, xdata, i, j)?;
+                let interaction_strength = self.compute_pairwise_interaction(model, xdata, i, j)?;
                 let pair_name = format!(
                     "{}_{}",
                     feature_names.get(i).unwrap_or(&i.to_string()),
@@ -225,7 +224,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         if max_interaction_order > 2 {
             for _order in 3..=max_interaction_order.min(n_features) {
                 let interactions =
-                    self.compute_higher_order_interactions(model, xdata, feature_names, order)?;
+                    self.compute_higher_order_interactions(model, xdata, feature_names, _order)?;
                 higher_order_interactions.insert(_order, interactions);
             }
         }
@@ -722,9 +721,9 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     }
 
     fn generate_bootstrap_indices(&self, nsamples: usize) -> Result<Vec<usize>> {
-        let mut indices = Vec::with_capacity(n_samples);
-        for i in 0..n_samples {
-            let idx = (self.random_seed.unwrap_or(0) as usize + i) % n_samples;
+        let mut indices = Vec::with_capacity(nsamples);
+        for i in 0..nsamples {
+            let idx = (self.random_seed.unwrap_or(0) as usize + i) % nsamples;
             indices.push(idx);
         }
         Ok(indices)

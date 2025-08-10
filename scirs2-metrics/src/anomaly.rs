@@ -419,7 +419,7 @@ where
             current_rank += count_at_current_score as f64;
             count_at_current_score = 1;
             pos_at_current_score = if label > 0.0 { 1 } else { 0 };
-            prev_score = score;
+            prev_score = _score;
         }
     }
 

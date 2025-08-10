@@ -140,7 +140,7 @@ impl DistributedReader {
     }
 
     /// Set number of workers
-    pub fn num_workers(mut self, numworkers: usize) -> Self {
+    pub fn num_workers(mut self, num_workers: usize) -> Self {
         self.num_workers = num_workers;
         self
     }
@@ -573,7 +573,7 @@ impl DistributedArray {
         self.partitions.push(ArrayPartition {
             data,
             global_offset: offset,
-            node_id,
+            node_id: nodeid,
         });
     }
 
@@ -586,7 +586,7 @@ impl DistributedArray {
     pub fn get_local_partition(&self, nodeid: usize) -> Option<&Array2<f64>> {
         self.partitions
             .iter()
-            .find(|p| p.node_id == node_id)
+            .find(|p| p.node_id == nodeid)
             .map(|p| &p.data)
     }
 

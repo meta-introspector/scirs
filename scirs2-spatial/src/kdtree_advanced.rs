@@ -110,7 +110,7 @@ impl KDTreeConfig {
 
     /// Set leaf size
     pub fn with_leaf_size(mut self, leafsize: usize) -> Self {
-        self.leaf_size = leaf_size;
+        self.leaf_size = leafsize;
         self
     }
 
@@ -717,7 +717,7 @@ impl AdvancedKDTree {
 
     // Helper methods for statistics calculation
     fn calculate_depth(_nodes: &[AdvancedKDNode], rootindex: Option<usize>) -> usize {
-        if let Some(root) = root_index {
+        if let Some(root) = rootindex {
             Self::calculate_depth_recursive(_nodes, root, 0)
         } else {
             0
@@ -758,7 +758,7 @@ impl AdvancedKDTree {
     fn calculate_memory_usage(nodes: &[AdvancedKDNode], points: &Array2<f64>) -> usize {
         let _node_size = std::mem::size_of::<AdvancedKDNode>();
         let point_size = points.len() * std::mem::size_of::<f64>();
-        std::mem::size_of_val(_nodes) + point_size
+        std::mem::size_of_val(nodes) + point_size
     }
 
     fn estimate_cache_misses(nodes: &[AdvancedKDNode], config: &KDTreeConfig) -> usize {

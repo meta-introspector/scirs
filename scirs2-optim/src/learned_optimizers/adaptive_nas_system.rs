@@ -2574,7 +2574,7 @@ impl<T: Float + Send + Sync + std::ops::MulAssign + std::fmt::Debug> Performance
 
             // Filter candidate through generator
             if self.candidate_generator.validate_candidate(&candidate)? {
-                candidates.push(candidate);
+                _candidates.push(candidate);
             }
         }
 

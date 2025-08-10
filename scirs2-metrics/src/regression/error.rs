@@ -100,8 +100,8 @@ where
         // SIMD-optimized computation - convert to 1D views for SIMD _ops
         let y_true_view = y_true.view();
         let y_pred_view = y_pred.view();
-        let y_true_reshaped = y_true_view.toshape(y_true.len()).unwrap();
-        let y_pred_reshaped = y_pred_view.toshape(y_pred.len()).unwrap();
+        let y_true_reshaped = y_true_view.to_shape(y_true.len()).unwrap();
+        let y_pred_reshaped = y_pred_view.to_shape(y_pred.len()).unwrap();
         let y_true_1d = y_true_reshaped.view();
         let y_pred_1d = y_pred_reshaped.view();
         let diff = F::simd_sub(&y_true_1d, &y_pred_1d);
@@ -211,8 +211,8 @@ where
         // SIMD-optimized computation for 1D arrays
         let y_true_view = y_true.view();
         let y_pred_view = y_pred.view();
-        let y_true_reshaped = y_true_view.toshape(y_true.len()).unwrap();
-        let y_pred_reshaped = y_pred_view.toshape(y_pred.len()).unwrap();
+        let y_true_reshaped = y_true_view.to_shape(y_true.len()).unwrap();
+        let y_pred_reshaped = y_pred_view.to_shape(y_pred.len()).unwrap();
         let y_true_1d = y_true_reshaped.view();
         let y_pred_1d = y_pred_reshaped.view();
         let diff = F::simd_sub(&y_true_1d, &y_pred_1d);

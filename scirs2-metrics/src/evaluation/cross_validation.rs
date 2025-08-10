@@ -91,7 +91,7 @@ pub fn k_fold_cross_validation(
         .collect::<Vec<_>>();
 
     let mut current = 0;
-    let mut _folds = Vec::with_capacity(n_folds);
+    let mut folds = Vec::with_capacity(n_folds);
 
     // Create _folds
     for fold_size in fold_sizes {
@@ -107,7 +107,7 @@ pub fn k_fold_cross_validation(
         current += fold_size;
     }
 
-    Ok(_folds)
+    Ok(folds)
 }
 
 /// Leave-one-out cross-validation (LOOCV)
@@ -262,7 +262,7 @@ where
     }
 
     // Allocate samples to folds, respecting the class distribution
-    let mut _folds = vec![Vec::new(); n_folds];
+    let mut folds = vec![Vec::new(); n_folds];
 
     for indices in class_counts.values() {
         for (i, &idx) in indices.iter().enumerate() {
@@ -357,7 +357,7 @@ pub fn time_series_split(
         ));
     }
 
-    let mut _splits = Vec::with_capacity(n_splits);
+    let mut splits = Vec::with_capacity(n_splits);
 
     // Calculate the _size needed for all _splits
     let size_needed = (n_splits - 1) * (test_size + gap) + test_size;
@@ -392,7 +392,7 @@ pub fn time_series_split(
         test_end += test_size + gap;
     }
 
-    Ok(_splits)
+    Ok(splits)
 }
 
 /// Grouped K-fold cross-validator
@@ -494,7 +494,7 @@ where
     let groups_list: Vec<Vec<usize>> = group_indices.values().cloned().collect();
 
     // Assign groups to _folds using a greedy approach to balance fold sizes
-    let mut _folds: Vec<Vec<usize>> = vec![Vec::new(); n_folds];
+    let mut folds: Vec<Vec<usize>> = vec![Vec::new(); n_folds];
     let mut fold_sizes = vec![0; n_folds];
 
     // Sort groups by size (largest first) for better balancing
@@ -611,7 +611,7 @@ pub fn nested_cross_validation(
 
     for (outer_fold_idx, (outer_train, outer_test)) in outer_splits.into_iter().enumerate() {
         // Generate a new _seed for inner fold based on the outer fold index
-        let inner_seed = random_seed.map(|_seed| seed.wrapping_add(outer_fold_idx as u64));
+        let inner_seed = random_seed.map(|seed| seed.wrapping_add(outer_fold_idx as u64));
 
         // Create inner _folds using only the outer training data
         let n_inner = outer_train.len();

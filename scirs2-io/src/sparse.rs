@@ -22,7 +22,7 @@
 //! use ndarray::Array2;
 //!
 //! // Create a sparse matrix from a dense array
-//! let dense = Array2::fromshape_vec((3, 3), vec![
+//! let dense = Array2::from_shape_vec((3, 3), vec![
 //!     1.0, 0.0, 2.0,
 //!     0.0, 3.0, 0.0,
 //!     4.0, 0.0, 5.0
@@ -493,10 +493,10 @@ impl SparseMatrix<f64> {
     }
 
     /// Create from Matrix Market format
-    fn from_matrix_market(_mmmatrix: &MMSparseMatrix<f64>) -> Self {
-        let mut sparse = Self::new(_mm_matrix.rows, mm_matrix.cols);
+    fn from_matrix_market(mm_matrix: &MMSparseMatrix<f64>) -> Self {
+        let mut sparse = Self::new(mm_matrix.rows, mm_matrix.cols);
 
-        for entry in &_mm_matrix.entries {
+        for entry in &mm_matrix.entries {
             sparse.push(entry.row, entry.col, entry.value).unwrap();
         }
 

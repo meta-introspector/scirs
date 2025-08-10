@@ -4082,7 +4082,7 @@ pub struct ArchitectureGenerator {
 impl ArchitectureGenerator {
     pub fn new(_searchspace: &ArchitectureSearchSpace) -> Result<Self> {
         Ok(Self {
-            searchspace: searchspace.clone(),
+            searchspace: _searchspace.clone(),
         })
     }
 

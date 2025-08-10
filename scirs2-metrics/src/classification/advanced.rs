@@ -715,7 +715,7 @@ where
 
             // Only consider classes that are truly present (true_val > 0)
             if true_val > 0.0 {
-                let _prob = y_prob
+                let prob = y_prob
                     .get((i, j))
                     .ok_or_else(|| {
                         MetricsError::InvalidInput(
@@ -781,7 +781,7 @@ where
             MetricsError::InvalidInput("Index out of bounds accessing y_prob".to_string())
         })?;
 
-        let _prob = y_pred_i.max(eps).min(1.0 - eps);
+        let prob = y_pred_i.max(eps).min(1.0 - eps);
 
         let true_val_num: usize = if let Some(val) = NumCast::from(y_i.clone()) {
             val

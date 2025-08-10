@@ -53,7 +53,7 @@ where
     }
 
     /// Enable caching
-    pub fn with_cache(mut self, cachedir: impl AsRef<Path>) -> Self {
+    pub fn with_cache(mut self, cache_dir: impl AsRef<Path>) -> Self {
         self.config.enable_cache = true;
         self.config.cache_dir = Some(cache_dir.as_ref().to_path_buf());
         self

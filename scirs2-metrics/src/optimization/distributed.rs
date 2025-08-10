@@ -495,14 +495,14 @@ impl DistributedMetricsCoordinator {
         let workers = Arc::new(RwLock::new(HashMap::new()));
 
         // Create load balancer based on strategy
-        let load_balancer = Self::create_load_balancer(&_configload_balancing)?;
+        let load_balancer = Self::create_load_balancer(&config.load_balancing)?;
 
         // Create network client based on protocol
         let network_client =
-            Self::create_network_client(&_confignetwork_protocol, &_configauth_config)?;
+            Self::create_network_client(&config.network_protocol, &config.auth_config)?;
 
         let coordinator = Self {
-            _config: _configclone(),
+            _config: config.clone(),
             workers,
             task_counter: Arc::new(RwLock::new(0)),
             load_balancer: Arc::new(Mutex::new(load_balancer)),
@@ -517,7 +517,7 @@ impl DistributedMetricsCoordinator {
         coordinator.initialize_workers()?;
 
         // Start background monitoring if enabled
-        if _configenable_monitoring {
+        if config.enable_monitoring {
             coordinator.start_monitoring();
         }
 
@@ -2204,7 +2204,7 @@ impl HttpConnectionPool {
     pub fn new(_max_connections_per_host: usize, max_idletimeout: Duration) -> Self {
         Self {
             connections: HashMap::new(),
-            max_connections_per_host,
+            max_connections_per_host: _max_connections_per_host,
             max_idletimeout,
         }
     }
@@ -2659,8 +2659,7 @@ impl HttpClient {
                 }
 
                 // Parse sample count
-                let samplecount = if let Some(count_start) = response_body.find("\"samplecount\"")
-                {
+                let samplecount = if let Some(count_start) = response_body.find("\"samplecount\"") {
                     if let Some(colon_pos) = response_body[count_start..].find(':') {
                         let after_colon = &response_body[count_start + colon_pos + 1..];
                         if let Some(comma_pos) = after_colon.find(',') {
@@ -2727,11 +2726,11 @@ impl HttpClient {
     }
 
     /// Parse a specific field from JSON string (simple implementation)
-    fn parse_json_field(_json: &str, fieldname: &str) -> Option<f64> {
+    fn parse_json_field(json: &str, fieldname: &str) -> Option<f64> {
         let pattern = format!("\"{}\"", fieldname);
         if let Some(field_start) = json.find(&pattern) {
             if let Some(colon_pos) = json[field_start..].find(':') {
-                let after_colon = &_json[field_start + colon_pos + 1..];
+                let after_colon = &json[field_start + colon_pos + 1..];
                 let end_pos = after_colon
                     .find(',')
                     .or_else(|| after_colon.find('}'))

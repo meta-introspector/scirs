@@ -694,7 +694,7 @@ pub mod tasks {
     }
 
     impl TaskBuilder {
-        pub fn new(_id: impl Into<String>, name: impl Into<String>, tasktype: TaskType) -> Self {
+        pub fn new(id: impl Into<String>, name: impl Into<String>, task_type: TaskType) -> Self {
             Self {
                 task: Task {
                     id: id.into(),
@@ -785,11 +785,11 @@ pub mod templates {
     }
 
     /// Create a batch processing workflow
-    pub fn batch_processing(_name: impl Into<String>, _batchsize: usize) -> WorkflowBuilder {
-        let _name = name.into();
+    pub fn batch_processing(name: impl Into<String>, _batch_size: usize) -> WorkflowBuilder {
+        let name = name.into();
         let id = format!("batch_{}", Utc::now().timestamp());
 
-        WorkflowBuilder::new(&id, &_name)
+        WorkflowBuilder::new(&id, &name)
             .description("Batch processing workflow template")
             .configure(|config| {
                 config.max_parallel_tasks = 8;
@@ -1041,7 +1041,7 @@ pub mod engines {
     }
 
     impl AirflowAdapter {
-        pub fn new(_apiurl: impl Into<String>) -> Self {
+        pub fn new(api_url: impl Into<String>) -> Self {
             Self {
                 api_url: api_url.into(),
                 auth_token: None,
@@ -1131,7 +1131,7 @@ pub mod engines {
     }
 
     impl PrefectAdapter {
-        pub fn new(_apiurl: impl Into<String>, project: impl Into<String>) -> Self {
+        pub fn new(api_url: impl Into<String>, project: impl Into<String>) -> Self {
             Self {
                 api_url: api_url.into(),
                 project_name: project.into(),
@@ -1846,7 +1846,7 @@ pub mod distributed {
     }
 
     impl DistributedExecutor {
-        pub fn new(_coordinatorurl: impl Into<String>) -> Self {
+        pub fn new(coordinator_url: impl Into<String>) -> Self {
             Self {
                 coordinator_url: coordinator_url.into(),
                 worker_pool: WorkerPool {

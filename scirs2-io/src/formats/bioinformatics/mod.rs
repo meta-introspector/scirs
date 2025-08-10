@@ -595,7 +595,7 @@ impl FastqWriter {
 
 /// Count sequences in a FASTA file
 #[allow(dead_code)]
-pub fn count_fasta_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
+pub fn count_fastasequences<P: AsRef<Path>>(path: P) -> Result<usize> {
     let file = File::open(path.as_ref())
         .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
     let reader = BufReader::new(file);
@@ -611,7 +611,7 @@ pub fn count_fasta_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
 
 /// Count sequences in a FASTQ file
 #[allow(dead_code)]
-pub fn count_fastq_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
+pub fn count_fastqsequences<P: AsRef<Path>>(path: P) -> Result<usize> {
     let file = File::open(path.as_ref())
         .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
     let reader = BufReader::new(file);
@@ -637,7 +637,7 @@ pub mod analysis {
             return 0.0;
         }
 
-        let gc_count = _sequence
+        let gc_count = sequence
             .chars()
             .filter(|&c| c == 'G' || c == 'C' || c == 'g' || c == 'c')
             .count();
@@ -660,7 +660,7 @@ pub mod analysis {
 
     /// Reverse complement of a DNA sequence
     pub fn reverse_complement(sequence: &str) -> String {
-        _sequence
+        sequence
             .chars()
             .rev()
             .map(|c| match c.to_ascii_uppercase() {
@@ -679,7 +679,7 @@ pub mod analysis {
     pub fn translate_dna(sequence: &str) -> String {
         let codon_table = get_standard_genetic_code();
 
-        _sequence
+        sequence
             .chars()
             .collect::<Vec<_>>()
             .chunks(3)
@@ -774,7 +774,7 @@ pub mod analysis {
     }
 
     /// Find open reading frames (ORFs) in a DNA sequence
-    pub fn find_orfs(_sequence: &str, minlength: usize) -> Vec<Orf> {
+    pub fn find_orfs(sequence: &str, minlength: usize) -> Vec<Orf> {
         let mut orfs = Vec::new();
         let seq_upper = sequence.to_uppercase();
 
@@ -798,9 +798,9 @@ pub mod analysis {
                 // Stop codon
                 if matches!(codon_str.as_str(), "TAA" | "TAG" | "TGA") {
                     if let Some(start) = start_pos {
-                        let _length = frame + pos * 3 + 3 - start;
-                        if _length >= min_length {
-                            let orf_seq = &_sequence[start..start + _length];
+                        let length = frame + pos * 3 + 3 - start;
+                        if length >= minlength {
+                            let orf_seq = &sequence[start..start + length];
                             orfs.push(Orf {
                                 start_pos: start,
                                 end_pos: start + length,
@@ -841,19 +841,19 @@ pub mod analysis {
         }
 
         let lengths: Vec<usize> = records.iter().map(|r| r.len()).collect();
-        let total_length: usize = lengths.iter().sum();
-        let min_length = *lengths.iter().min().unwrap();
-        let max_length = *lengths.iter().max().unwrap();
-        let mean_length = total_length as f64 / records.len() as f64;
+        let totallength: usize = lengths.iter().sum();
+        let minlength = *lengths.iter().min().unwrap();
+        let maxlength = *lengths.iter().max().unwrap();
+        let meanlength = totallength as f64 / records.len() as f64;
 
         // Calculate N50
-        let mut sorted_lengths = lengths.clone();
-        sorted_lengths.sort_by(|a, b| b.cmp(a)); // Sort in descending order
+        let mut sortedlengths = lengths.clone();
+        sortedlengths.sort_by(|a, b| b.cmp(a)); // Sort in descending order
         let mut cumulative = 0;
-        let half_total = total_length / 2;
+        let half_total = totallength / 2;
         let mut n50 = 0;
 
-        for length in sorted_lengths {
+        for length in sortedlengths {
             cumulative += length;
             if cumulative >= half_total {
                 n50 = length;
@@ -862,7 +862,7 @@ pub mod analysis {
         }
 
         // Calculate overall GC content
-        let total_gc: usize = _records
+        let total_gc: usize = records
             .iter()
             .map(|r| {
                 r.sequence()
@@ -871,14 +871,14 @@ pub mod analysis {
                     .count()
             })
             .sum();
-        let gc_content = total_gc as f64 / total_length as f64;
+        let gc_content = total_gc as f64 / totallength as f64;
 
         SequenceStats {
-            num_sequences: records.len(),
-            total_length,
-            min_length,
-            max_length,
-            mean_length,
+            numsequences: records.len(),
+            totallength,
+            minlength,
+            maxlength,
+            meanlength,
             n50,
             gc_content,
         }
@@ -887,11 +887,11 @@ pub mod analysis {
     /// Sequence statistics
     #[derive(Debug, Clone, PartialEq)]
     pub struct SequenceStats {
-        pub num_sequences: usize,
-        pub total_length: usize,
-        pub min_length: usize,
-        pub max_length: usize,
-        pub mean_length: f64,
+        pub numsequences: usize,
+        pub totallength: usize,
+        pub minlength: usize,
+        pub maxlength: usize,
+        pub meanlength: f64,
         pub n50: usize,
         pub gc_content: f64,
     }
@@ -899,11 +899,11 @@ pub mod analysis {
     impl Default for SequenceStats {
         fn default() -> Self {
             Self {
-                num_sequences: 0,
-                total_length: 0,
-                min_length: 0,
-                max_length: 0,
-                mean_length: 0.0,
+                numsequences: 0,
+                totallength: 0,
+                minlength: 0,
+                maxlength: 0,
+                meanlength: 0.0,
                 n50: 0,
                 gc_content: 0.0,
             }
@@ -919,7 +919,7 @@ pub mod analysis {
         let mut all_scores = Vec::new();
         let mut position_scores: HashMap<usize, Vec<u8>> = HashMap::new();
 
-        for record in _records {
+        for record in records {
             let scores = record.quality_scores(encoding);
             all_scores.extend_from_slice(&scores);
 
@@ -1052,7 +1052,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sequence_counting() -> Result<()> {
+    fn testsequence_counting() -> Result<()> {
         let fasta_file = NamedTempFile::new().unwrap();
         let fastq_file = NamedTempFile::new().unwrap();
 
@@ -1078,8 +1078,8 @@ mod tests {
             writer.flush()?;
         }
 
-        assert_eq!(count_fasta_sequences(fasta_file.path())?, 5);
-        assert_eq!(count_fastq_sequences(fastq_file.path())?, 3);
+        assert_eq!(count_fastasequences(fasta_file.path())?, 5);
+        assert_eq!(count_fastqsequences(fastq_file.path())?, 3);
 
         Ok(())
     }

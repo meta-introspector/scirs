@@ -27,7 +27,7 @@ pub fn python_dict_to_tensor(dict: &serde_json::Value) -> Result<MLTensor> {
         .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
     let array =
-        ArrayD::fromshape_vec(IxDyn(&shape), data).map_err(|e| IoError::Other(e.to_string()))?;
+        ArrayD::from_shape_vec(IxDyn(&shape), data).map_err(|e| IoError::Other(e.to_string()))?;
 
     let mut tensor = MLTensor::new(array, None);
 

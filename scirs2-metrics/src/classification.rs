@@ -822,8 +822,8 @@ where
     let mut last_true_positive = 0;
     let mut last_score = f64::INFINITY;
 
-    for (_score, label) in scores_and_labels {
-        if _score != last_score {
+    for (score, label) in scores_and_labels {
+        if score != last_score {
             // Add the area of the trapezoid
             auc += (false_positive - last_false_positive) as f64
                 * (true_positive + last_true_positive) as f64

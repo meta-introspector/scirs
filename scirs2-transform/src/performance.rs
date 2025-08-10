@@ -28,7 +28,7 @@ pub struct EnhancedStandardScaler {
 
 impl EnhancedStandardScaler {
     /// Create a new enhanced standard scaler
-    pub fn new(_robust: bool, memory_limitmb: usize) -> Self {
+    pub fn new(robust: bool, memory_limitmb: usize) -> Self {
         EnhancedStandardScaler {
             means: None,
             stds: None,
@@ -394,8 +394,8 @@ pub struct EnhancedPCA {
 
 impl EnhancedPCA {
     /// Create a new enhanced PCA
-    pub fn new(_n_components: usize, center: bool, memory_limitmb: usize) -> Result<Self> {
-        check_positive(_n_components, "_n_components")?;
+    pub fn new(n_components: usize, center: bool, memory_limitmb: usize) -> Result<Self> {
+        check_positive(n_components, "n_components")?;
 
         Ok(EnhancedPCA {
             n_components,
@@ -411,7 +411,7 @@ impl EnhancedPCA {
 
     /// Enable randomized SVD for large datasets
     pub fn with_randomized_svd(mut self, userandomized: bool) -> Self {
-        self.use_randomized = use_randomized;
+        self.use_randomized = userandomized;
         self
     }
 
@@ -2885,7 +2885,7 @@ pub struct PoolStats {
 
 impl AdvancedMemoryPool {
     /// Create a new memory pool with specified limits
-    pub fn new(_max_matrices: usize, max_vectors: usize, initialcapacity: usize) -> Self {
+    pub fn new(max_matrices: usize, max_vectors: usize, initialcapacity: usize) -> Self {
         let mut pool = AdvancedMemoryPool {
             matrix_pools: std::collections::HashMap::with_capacity(initialcapacity),
             vector_pools: std::collections::HashMap::with_capacity(initialcapacity),

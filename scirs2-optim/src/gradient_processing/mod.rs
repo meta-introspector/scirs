@@ -202,7 +202,7 @@ where
 
     // If _norm exceeds maxnorm, scale gradients
     if _norm > maxnorm {
-        let scale = maxnorm / norm;
+        let scale = maxnorm / _norm;
         gradients.mapv_inplace(|x| x * scale);
     }
 
@@ -298,7 +298,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientAccumulator<A, D> {
         Self {
             accumulated_gradients: None,
             num_accumulated: 0,
-            accumulation_steps: accumulation_steps,
+            accumulation_steps: _accumulation_steps,
             averagegradients,
         }
     }
@@ -399,7 +399,7 @@ where
     if param_norm > A::zero() && grad_norm > A::zero() {
         let _ratio = grad_norm / param_norm;
         if _ratio > max_ratio {
-            let scale = max_ratio / ratio;
+            let scale = max_ratio / _ratio;
             gradients.mapv_inplace(|x| x * scale);
         }
     }

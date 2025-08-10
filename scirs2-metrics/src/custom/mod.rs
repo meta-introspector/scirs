@@ -308,7 +308,7 @@ impl<F: Float> CustomMetricResults<F> {
     /// Creates a new results container
     pub fn new(_metrictype: &str) -> Self {
         Self {
-            metric_type: metric_type.to_string(),
+            metric_type: _metrictype.to_string(),
             results: Vec::new(),
         }
     }
@@ -318,7 +318,7 @@ impl<F: Float> CustomMetricResults<F> {
         self.results.push(CustomMetricResult {
             name: name.to_string(),
             value,
-            higher_is_better,
+            higher_is_better: higher_isbetter,
         });
     }
 

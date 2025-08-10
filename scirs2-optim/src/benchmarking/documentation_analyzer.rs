@@ -714,31 +714,31 @@ impl DocumentationAnalyzer {
             return None;
         }
 
-        let _line = lines[start_line].trim();
+        let line = lines[start_line].trim();
 
         // Simple parsing for demonstration - in practice would use syn crate
         if line.starts_with("pub fn ") {
-            if let Some(name) = self.extract_function_name(_line) {
+            if let Some(name) = self.extract_function_name(line) {
                 return Some((name, ItemCategory::Function, start_line));
             }
         } else if line.starts_with("pub struct ") {
-            if let Some(name) = self.extract_struct_name(_line) {
+            if let Some(name) = self.extract_struct_name(line) {
                 return Some((name, ItemCategory::Struct, start_line));
             }
         } else if line.starts_with("pub enum ") {
-            if let Some(name) = self.extract_enum_name(_line) {
+            if let Some(name) = self.extract_enum_name(line) {
                 return Some((name, ItemCategory::Enum, start_line));
             }
         } else if line.starts_with("pub trait ") {
-            if let Some(name) = self.extract_trait_name(_line) {
+            if let Some(name) = self.extract_trait_name(line) {
                 return Some((name, ItemCategory::Trait, start_line));
             }
         } else if line.starts_with("pub mod ") {
-            if let Some(name) = self.extract_module_name(_line) {
+            if let Some(name) = self.extract_module_name(line) {
                 return Some((name, ItemCategory::Module, start_line));
             }
         } else if line.starts_with("pub const ") {
-            if let Some(name) = self.extract_const_name(_line) {
+            if let Some(name) = self.extract_const_name(line) {
                 return Some((name, ItemCategory::Constant, start_line));
             }
         }
@@ -750,10 +750,10 @@ impl DocumentationAnalyzer {
     fn has_documentation(&self, lines: &[&str], itemline: usize) -> bool {
         // Look for doc comments before the item
         for i in (0..itemline).rev() {
-            let _line = lines[i].trim();
+            let line = lines[i].trim();
             if line.starts_with("///") || line.starts_with("//!") {
                 return true;
-            } else if !_line.is_empty() && !_line.starts_with("//") {
+            } else if !line.is_empty() && !line.starts_with("//") {
                 break;
             }
         }
@@ -936,7 +936,7 @@ impl DocumentationAnalyzer {
             100.0
         };
 
-        let _coverage = ExampleCoverage {
+        let coverage = ExampleCoverage {
             functions_with_examples,
             total_functions,
             coverage_percentage,

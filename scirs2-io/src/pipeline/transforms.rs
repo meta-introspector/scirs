@@ -166,7 +166,7 @@ impl DataTransformer for ReshapeTransform {
 
             // Convert to 1D, then reshape
             let flat: Vec<f64> = array.into_iter().collect();
-            let reshaped = Array2::fromshape_vec((self.newshape[0], self.newshape[1]), flat)
+            let reshaped = Array2::from_shape_vec((self.newshape[0], self.newshape[1]), flat)
                 .map_err(|e| IoError::Other(e.to_string()))?;
 
             Ok(Box::new(reshaped) as Box<dyn Any + Send + Sync>)
@@ -449,7 +449,7 @@ impl DataTransformer for OutlierTransform {
                     let n_cols = filtered[0].len();
                     let flat: Vec<f64> = filtered.into_iter().flatten().collect();
 
-                    let result = Array2::fromshape_vec((n_rows, n_cols), flat)
+                    let result = Array2::from_shape_vec((n_rows, n_cols), flat)
                         .map_err(|e| IoError::Other(e.to_string()))?;
 
                     Ok(Box::new(result) as Box<dyn Any + Send + Sync>)
@@ -487,7 +487,7 @@ impl DataTransformer for OutlierTransform {
                     let n_cols = filtered_rows[0].len();
                     let flat: Vec<f64> = filtered_rows.into_iter().flatten().collect();
 
-                    let result = Array2::fromshape_vec((n_rows, n_cols), flat)
+                    let result = Array2::from_shape_vec((n_rows, n_cols), flat)
                         .map_err(|e| IoError::Other(e.to_string()))?;
 
                     Ok(Box::new(result) as Box<dyn Any + Send + Sync>)

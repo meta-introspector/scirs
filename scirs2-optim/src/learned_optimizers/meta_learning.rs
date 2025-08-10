@@ -1821,7 +1821,7 @@ impl<T: Float + Default + Clone> AdaptationEngine<T> {
     ) -> Result<TaskAdaptationResult<T>> {
         // Placeholder adaptation implementation
         Ok(TaskAdaptationResult {
-            adapted_parameters: meta_parameters.clone(),
+            adapted_parameters: _meta_parameters.clone(),
             adaptation_trajectory: Vec::new(),
             final_loss: T::from(0.1).unwrap_or_default(),
             metrics: TaskAdaptationMetrics {

@@ -560,7 +560,7 @@ pub mod rest {
         shape: Vec<usize>,
         name: Option<String>,
     ) -> Result<MLTensor> {
-        let array = ArrayD::fromshape_vec(IxDyn(&shape), data)
+        let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
             .map_err(|e| IoError::Other(e.to_string()))?;
         Ok(MLTensor::new(array, name))
     }
@@ -631,7 +631,7 @@ pub mod grpc {
             })
             .collect();
 
-        let array = ArrayD::fromshape_vec(IxDyn(&shape), float_data)
+        let array = ArrayD::from_shape_vec(IxDyn(&shape), float_data)
             .map_err(|e| IoError::Other(e.to_string()))?;
 
         Ok(MLTensor::new(array, Some(grpc_tensor.name.clone())))

@@ -797,7 +797,7 @@ impl HDF5File {
                 } else {
                     // For multidimensional arrays, we need to reshape the data
                     let array_data =
-                        ndarray::Array::fromshape_vec(ndarray::IxDyn(&shape), flat_data).map_err(
+                        ndarray::Array::from_shape_vec(ndarray::IxDyn(&shape), flat_data).map_err(
                             |e| IoError::FormatError(format!("Failed to reshape data: {e}")),
                         )?;
 
@@ -861,7 +861,7 @@ impl HDF5File {
                     })?;
 
                     let shape = IxDyn(&dataset.shape);
-                    return ArrayD::fromshape_vec(shape, data)
+                    return ArrayD::from_shape_vec(shape, data)
                         .map_err(|e| IoError::FormatError(e.to_string()));
                 }
             }
@@ -871,13 +871,13 @@ impl HDF5File {
         match &dataset.data {
             DataArray::Float(data) => {
                 let shape = IxDyn(&dataset.shape);
-                ArrayD::fromshape_vec(shape, data.clone())
+                ArrayD::from_shape_vec(shape, data.clone())
                     .map_err(|e| IoError::FormatError(e.to_string()))
             }
             DataArray::Integer(data) => {
                 let float_data: Vec<f64> = data.iter().map(|&x| x as f64).collect();
                 let shape = IxDyn(&dataset.shape);
-                ArrayD::fromshape_vec(shape, float_data)
+                ArrayD::from_shape_vec(shape, float_data)
                     .map_err(|e| IoError::FormatError(e.to_string()))
             }
             _ => Err(IoError::FormatError(
@@ -967,12 +967,12 @@ impl HDF5File {
     #[allow(clippy::only_used_in_recursion)]
     fn collect_datasets(&self, group: &Group, prefix: String, datasets: &mut Vec<String>) {
         for dataset_name in group.dataset_names() {
-            let full_path = if prefix.is_empty() {
+            let fullpath = if prefix.is_empty() {
                 dataset_name.to_string()
             } else {
                 format!("{prefix}/{dataset_name}")
             };
-            datasets.push(full_path);
+            datasets.push(fullpath);
         }
 
         for (group_name, subgroup) in &group.groups {
@@ -989,13 +989,13 @@ impl HDF5File {
     #[allow(clippy::only_used_in_recursion)]
     fn collect_groups(&self, group: &Group, prefix: String, groups: &mut Vec<String>) {
         for (group_name, subgroup) in &group.groups {
-            let full_path = if prefix.is_empty() {
+            let fullpath = if prefix.is_empty() {
                 group_name.clone()
             } else {
                 format!("{prefix}/{group_name}")
             };
-            groups.push(full_path.clone());
-            self.collect_groups(subgroup, full_path, groups);
+            groups.push(fullpath.clone());
+            self.collect_groups(subgroup, fullpath, groups);
         }
     }
 
@@ -1055,7 +1055,7 @@ impl HDF5File {
 /// ```
 #[allow(dead_code)]
 pub fn read_hdf5<P: AsRef<Path>>(path: P) -> Result<Group> {
-    let file = HDF5File::open(_path, FileMode::ReadOnly)?;
+    let file = HDF5File::open(path, FileMode::ReadOnly)?;
     Ok(file.root)
 }
 
@@ -1080,10 +1080,10 @@ pub fn read_hdf5<P: AsRef<Path>>(path: P) -> Result<Group> {
 /// ```
 #[allow(dead_code)]
 pub fn write_hdf5<P: AsRef<Path>>(path: P, datasets: HashMap<String, ArrayD<f64>>) -> Result<()> {
-    let mut file = HDF5File::create(_path)?;
+    let mut file = HDF5File::create(path)?;
 
-    for (dataset_path, array) in datasets {
-        file.create_dataset_from_array(&dataset_path, &array, None)?;
+    for (datasetpath, array) in datasets {
+        file.create_dataset_from_array(&datasetpath, &array, None)?;
     }
 
     file.write()?;
@@ -1124,7 +1124,7 @@ where
     P: AsRef<Path>,
     F: FnOnce(&mut HDF5File) -> Result<()>,
 {
-    let mut file = HDF5File::create(_path)?;
+    let mut file = HDF5File::create(path)?;
     builder(&mut file)?;
     file.write()?;
     file.close()?;

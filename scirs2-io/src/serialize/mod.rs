@@ -49,7 +49,7 @@ pub enum SerializationFormat {
 /// use ndarray::{Array2, IxDyn};
 /// use scirs2_io::serialize::{serialize_array, SerializationFormat};
 ///
-/// let array = Array2::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+/// let array = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 /// let array_dyn = array.into_dyn();
 ///
 /// // Binary serialization (compact)
@@ -151,7 +151,7 @@ where
     };
 
     // Convert back to ndarray
-    let array = Array::fromshape_vec(IxDyn(&serialized.metadata.shape), serialized.data)
+    let array = Array::from_shape_vec(IxDyn(&serialized.metadata.shape), serialized.data)
         .map_err(|e| IoError::FormatError(format!("Failed to reconstruct array: {}", e)))?;
 
     Ok(array)
@@ -199,7 +199,7 @@ pub struct SerializedArray<A> {
 /// use scirs2_io::serialize::{serialize_array_with_metadata, SerializationFormat};
 /// use std::collections::HashMap;
 ///
-/// let array = Array2::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+/// let array = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 /// let array_dyn = array.into_dyn();
 ///
 /// // Create custom metadata
@@ -320,7 +320,7 @@ where
     let data = serialized.data;
 
     // Create ndarray
-    let array = Array::fromshape_vec(IxDyn(&shape), data)
+    let array = Array::from_shape_vec(IxDyn(&shape), data)
         .map_err(|e| IoError::FormatError(format!("Invalid shape: {:?}", e)))?;
 
     Ok((array, serialized.metadata.metadata))

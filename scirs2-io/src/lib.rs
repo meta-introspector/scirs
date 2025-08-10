@@ -341,7 +341,7 @@ pub mod simd_io;
 /// use ndarray::Array2;
 ///
 /// // Create a sparse matrix from a dense array
-/// let dense = Array2::fromshape_vec((3, 3), vec![
+/// let dense = Array2::from_shape_vec((3, 3), vec![
 ///     1.0_f64, 0.0_f64, 2.0_f64,
 ///     0.0_f64, 3.0_f64, 0.0_f64,
 ///     4.0_f64, 0.0_f64, 5.0_f64

@@ -294,7 +294,7 @@ impl ImageClassificationMetrics {
 
     /// Set top-k values to calculate
     pub fn with_top_k(mut self, topk: Vec<usize>) -> Self {
-        self.top_k = top_k;
+        self.top_k = topk;
         self
     }
 
@@ -392,7 +392,7 @@ impl ImageClassificationMetrics {
                 .row(i)
                 .iter()
                 .enumerate()
-                .map(|(idx, &_prob)| (idx, prob))
+                .map(|(idx, &prob)| (idx, prob))
                 .collect();
 
             probs_with_idx
@@ -432,7 +432,7 @@ impl SegmentationMetrics {
 
     /// Set index to ignore in calculations (e.g., background class)
     pub fn with_ignore_index(mut self, ignoreindex: i32) -> Self {
-        self.ignore_index = Some(ignore_index);
+        self.ignore_index = Some(ignoreindex);
         self
     }
 

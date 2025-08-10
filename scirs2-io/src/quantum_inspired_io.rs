@@ -202,9 +202,9 @@ pub struct QuantumAnnealingOptimizer {
 
 impl QuantumAnnealingOptimizer {
     /// Create a new quantum annealing optimizer
-    pub fn new(_problemsize: usize) -> Self {
-        let problem_hamiltonian = Self::create_problem_hamiltonian(_problem_size);
-        let mixing_hamiltonian = Self::create_mixing_hamiltonian(_problem_size);
+    pub fn new(problem_size: usize) -> Self {
+        let problem_hamiltonian = Self::create_problem_hamiltonian(problem_size);
+        let mixing_hamiltonian = Self::create_mixing_hamiltonian(problem_size);
         let annealing_schedule = Self::create_annealing_schedule(100);
 
         Self {
@@ -355,9 +355,9 @@ pub struct QuantumParallelProcessor {
 
 impl QuantumParallelProcessor {
     /// Create a new quantum parallel processor
-    pub fn new(_processingdimensions: usize) -> Self {
+    pub fn new(processing_dimensions: usize) -> Self {
         Self {
-            quantum_state: Arc::new(RwLock::new(QuantumState::new(_processing_dimensions))),
+            quantum_state: Arc::new(RwLock::new(QuantumState::new(processing_dimensions))),
             optimizer: Arc::new(RwLock::new(QuantumAnnealingOptimizer::new(
                 processing_dimensions,
             ))),

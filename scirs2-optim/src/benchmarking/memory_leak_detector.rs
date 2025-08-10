@@ -477,7 +477,7 @@ impl MemoryLeakDetector {
     }
 
     /// Record a deallocation event
-    pub fn record_deallocation(&mut self, allocationid: usize) -> Result<()> {
+    pub fn record_deallocation(&mut self, allocation_id: usize) -> Result<()> {
         self.allocation_tracker.record_deallocation(allocation_id)?;
         Ok(())
     }
@@ -721,7 +721,7 @@ impl AllocationTracker {
     }
 
     /// Record a deallocation
-    pub fn record_deallocation(&mut self, allocationid: usize) -> Result<()> {
+    pub fn record_deallocation(&mut self, allocation_id: usize) -> Result<()> {
         if let Some(info) = self.active_allocations.remove(&allocation_id) {
             self.total_deallocations.fetch_add(1, Ordering::Relaxed);
             self.current_memory_usage

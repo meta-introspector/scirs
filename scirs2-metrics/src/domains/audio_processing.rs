@@ -1426,14 +1426,14 @@ impl AudioClassificationMetrics {
     where
         F: Float,
     {
-        if y_true.len() != y_scores.len() {
+        if y_true.len() != yscores.len() {
             return Err(MetricsError::InvalidInput(
                 "Mismatched array lengths".to_string(),
             ));
         }
 
         // Sort by _scores in descending order
-        let mut data: Vec<(F, i32)> = y_scores
+        let mut data: Vec<(F, i32)> = yscores
             .iter()
             .zip(y_true.iter())
             .map(|(&s, &t)| (s, t))

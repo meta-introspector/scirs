@@ -53,7 +53,7 @@ pub struct ParameterAverager<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
     /// Create a new parameter averager
-    pub fn new(_strategy: AveragingStrategy, numnodes: usize) -> Self {
+    pub fn new(strategy: AveragingStrategy, numnodes: usize) -> Self {
         Self {
             averaged_params: Vec::new(),
             strategy: strategy,

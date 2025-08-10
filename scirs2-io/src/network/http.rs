@@ -462,8 +462,8 @@ pub fn format_file_size(bytes: u64) -> String {
 
 /// Format download speed in human-readable format
 #[allow(dead_code)]
-pub fn format_speed(_bytes_persecond: f64) -> String {
-    format!("{}/s", format_file_size(_bytes_per_second as u64))
+pub fn format_speed(bytes_per_second: f64) -> String {
+    format!("{}/s", format_file_size(bytes_per_second as u64))
 }
 
 #[cfg(test)]

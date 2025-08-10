@@ -778,7 +778,7 @@ pub trait ConsensusManager {
 
 /// Raft consensus implementation
 pub struct RaftConsensus {
-    _nodeid: String,
+    nodeid: String,
     current_term: u64,
     voted_for: Option<String>,
     log: Vec<LogEntry>,
@@ -829,12 +829,12 @@ pub enum Command {
         metrics: Vec<String>,
     },
     AddNode {
-        _nodeid: String,
+        nodeid: String,
         address: String,
         capabilities: Vec<String>,
     },
     RemoveNode {
-        _nodeid: String,
+        nodeid: String,
     },
     UpdateConfiguration {
         config: AdvancedClusterConfig,
@@ -907,7 +907,7 @@ pub enum TaskType {
         target_shard: String,
     },
     HealthCheck {
-        _nodeid: String,
+        nodeid: String,
     },
     Rebalancing {
         strategy: String,
@@ -930,8 +930,8 @@ impl std::fmt::Display for TaskType {
             } => {
                 write!(f, "DataMigration({} -> {})", source_shard, target_shard)
             }
-            TaskType::HealthCheck { _nodeid } => {
-                write!(f, "HealthCheck({})", _nodeid)
+            TaskType::HealthCheck { nodeid } => {
+                write!(f, "HealthCheck({})", nodeid)
             }
             TaskType::Rebalancing { strategy } => {
                 write!(f, "Rebalancing({})", strategy)
@@ -1034,7 +1034,7 @@ pub struct RecoveryAction {
 #[derive(Debug, Clone)]
 pub enum RecoveryActionDetails {
     RestartNode {
-        _nodeid: String,
+        nodeid: String,
         restart_count: usize,
     },
     MigrateData {
@@ -1068,7 +1068,7 @@ pub enum AlertSeverity {
 /// Health monitor for nodes
 #[derive(Debug, Clone)]
 pub struct HealthMonitor {
-    pub _nodeid: String,
+    pub nodeid: String,
     pub last_heartbeat: Instant,
     pub consecutive_failures: usize,
     pub health_score: f64,
@@ -1226,7 +1226,7 @@ pub struct ClusterState {
 /// Extended node information
 #[derive(Debug, Clone)]
 pub struct NodeInfo {
-    pub _nodeid: String,
+    pub nodeid: String,
     pub address: String,
     pub status: NodeStatus,
     pub capabilities: Vec<String>,
@@ -1427,7 +1427,7 @@ pub enum AllocationStrategy {
 /// Resource reservation
 #[derive(Debug, Clone)]
 pub struct ResourceReservation {
-    pub _nodeid: String,
+    pub nodeid: String,
     pub task_id: String,
     pub resources: ResourceRequirements,
     pub reserved_at: Instant,
@@ -1483,7 +1483,7 @@ impl Default for AlertThresholds {
 impl Default for HealthMonitor {
     fn default() -> Self {
         Self {
-            _nodeid: String::new(),
+            nodeid: String::new(),
             last_heartbeat: Instant::now(),
             consecutive_failures: 0,
             health_score: 1.0,
@@ -1604,10 +1604,10 @@ impl AdvancedDistributedCoordinator {
     /// Create new advanced distributed coordinator
     pub fn new(config: AdvancedClusterConfig) -> Result<Self> {
         let consensus: Box<dyn ConsensusManager + Send + Sync> =
-            match _configconsensus_configalgorithm {
+            match config.consensus_config.algorithm {
                 ConsensusAlgorithm::Raft => Box::new(RaftConsensus::new(
                     "coordinator".to_string(),
-                    _configconsensus_configclone(),
+                    config.consensus_config.clone(),
                 )?),
                 ConsensusAlgorithm::Pbft => Box::new(PbftConsensus::new(
                     "coordinator".to_string(),
@@ -1649,19 +1649,17 @@ impl AdvancedDistributedCoordinator {
             };
 
         Ok(Self {
-            _config: _configclone(),
+            _config: config.clone(),
             consensus: Arc::new(Mutex::new(consensus)),
-            shard_manager: Arc::new(Mutex::new(ShardManager::new(
-                _configsharding_configclone(),
-            ))),
+            shard_manager: Arc::new(Mutex::new(ShardManager::new(config.sharding_config.clone()))),
             fault_manager: Arc::new(Mutex::new(FaultRecoveryManager::new(
-                configfault_tolerance.clone(),
+                config.fault_tolerance.clone(),
             ))),
             scaling_manager: Arc::new(Mutex::new(AutoScalingManager::new(
-                configauto_scaling.clone(),
+                config.auto_scaling.clone(),
             ))),
             optimizer: Arc::new(Mutex::new(PerformanceOptimizer::new(
-                _configoptimization_configclone(),
+                config.optimization_config.clone(),
             ))),
             cluster_state: Arc::new(RwLock::new(ClusterState::new())),
             scheduler: Arc::new(Mutex::new(TaskScheduler::new())),
@@ -2023,9 +2021,9 @@ impl AdvancedDistributedCoordinator {
 
 // Implementation stubs for required structures
 impl RaftConsensus {
-    fn new(_nodeid: String, config: ConsensusConfig) -> Result<Self> {
+    fn new(nodeid: String, config: ConsensusConfig) -> Result<Self> {
         Ok(Self {
-            _nodeid,
+            nodeid,
             current_term: 0,
             voted_for: None,
             log: Vec::new(),
@@ -2080,8 +2078,8 @@ impl RaftConsensus {
 
     /// Commit log entries
     fn commit_entries(&mut self, commitindex: usize) -> Result<()> {
-        if commit_index > self.commit_index {
-            self.commit_index = commit_index.min(self.log.len());
+        if commitindex > self.commit_index {
+            self.commit_index = commitindex.min(self.log.len());
 
             // Apply committed entries
             while self.last_applied < self.commit_index {
@@ -2102,11 +2100,11 @@ impl RaftConsensus {
                 // Mark task as committed
                 println!("Applied metrics computation task: {}", task_id);
             }
-            Command::AddNode { _nodeid, .. } => {
-                println!("Applied add node: {}", _nodeid);
+            Command::AddNode { nodeid, .. } => {
+                println!("Applied add node: {}", nodeid);
             }
-            Command::RemoveNode { _nodeid } => {
-                println!("Applied remove node: {}", _nodeid);
+            Command::RemoveNode { nodeid } => {
+                println!("Applied remove node: {}", nodeid);
             }
             Command::UpdateConfiguration { .. } => {
                 println!("Applied configuration update");
@@ -2166,8 +2164,8 @@ impl ConsensusManager for RaftConsensus {
         let mut node_states = HashMap::new();
         node_states.insert(self._nodeid.clone(), self.state.clone());
 
-        for _nodeid in &self.peers {
-            node_states.insert(_nodeid.clone(), NodeState::Follower);
+        for nodeid in &self.peers {
+            node_states.insert(nodeid.clone(), NodeState::Follower);
         }
 
         ConsensusState {
@@ -2181,11 +2179,11 @@ impl ConsensusManager for RaftConsensus {
 
     fn handle_node_failure(&mut self, nodeid: &str) -> Result<()> {
         // Remove failed node from peers
-        if self.peers.remove(_nodeid).is_some() {
-            println!("Removed failed node from peers: {}", _nodeid);
+        if self.peers.remove(nodeid).is_some() {
+            println!("Removed failed node from peers: {}", nodeid);
 
             // If we lost the leader, start election
-            if self.leader_id.as_ref() == Some(&_nodeid.to_string()) {
+            if self.leader_id.as_ref() == Some(&nodeid.to_string()) {
                 self.leader_id = None;
                 if self.state == NodeState::Follower {
                     self.start_election()?;
@@ -2221,11 +2219,11 @@ impl ConsensusManager for RaftConsensus {
 /// Implements the three-phase protocol: pre-prepare, prepare, and commit.
 pub struct PbftConsensus {
     /// Node identifier
-    _nodeid: String,
+    nodeid: String,
     /// Current view number
     view_number: u64,
     /// Sequence number for ordering requests
-    sequence_number: u64,
+    sequencenumber: u64,
     /// Primary node for current view
     primary_node: Option<String>,
     /// List of all nodes in the network
@@ -2261,14 +2259,14 @@ pub struct PbftRequest {
     pub client_id: String,
     pub operation: String,
     pub timestamp: SystemTime,
-    pub sequence_number: u64,
+    pub sequencenumber: u64,
 }
 
 /// Pre-prepare message in PBFT protocol
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrePrepareMessage {
     pub view_number: u64,
-    pub sequence_number: u64,
+    pub sequencenumber: u64,
     pub request: PbftRequest,
     pub sender: String,
     pub timestamp: SystemTime,
@@ -2278,7 +2276,7 @@ pub struct PrePrepareMessage {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrepareMessage {
     pub view_number: u64,
-    pub sequence_number: u64,
+    pub sequencenumber: u64,
     pub request_digest: String,
     pub sender: String,
     pub timestamp: SystemTime,
@@ -2288,7 +2286,7 @@ pub struct PrepareMessage {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommitMessage {
     pub view_number: u64,
-    pub sequence_number: u64,
+    pub sequencenumber: u64,
     pub request_digest: String,
     pub sender: String,
     pub timestamp: SystemTime,
@@ -2299,7 +2297,7 @@ pub struct CommitMessage {
 pub struct ViewChangeMessage {
     pub new_view_number: u64,
     pub sender: String,
-    pub last_sequence_number: u64,
+    pub last_sequencenumber: u64,
     pub checkpoint_proof: Vec<String>,
     pub timestamp: SystemTime,
 }
@@ -2334,7 +2332,7 @@ pub enum PbftNodeState {
 
 impl PbftConsensus {
     /// Create new PBFT consensus instance
-    pub fn new(_nodeid: String, nodelist: Vec<String>) -> Result<Self> {
+    pub fn new(nodeid: String, nodelist: Vec<String>) -> Result<Self> {
         let total_nodes = nodelist.len();
         if total_nodes < 4 {
             return Err(MetricsError::ComputationError(
@@ -2346,9 +2344,9 @@ impl PbftConsensus {
         let primary_node = nodelist.first().cloned();
 
         Ok(Self {
-            _nodeid,
+            nodeid,
             view_number: 0,
-            sequence_number: 1,
+            sequencenumber: 1,
             primary_node,
             nodelist,
             max_faulty_nodes,
@@ -2373,8 +2371,8 @@ impl PbftConsensus {
             ));
         }
 
-        let seq_num = self.sequence_number;
-        self.sequence_number += 1;
+        let seq_num = self.sequencenumber;
+        self.sequencenumber += 1;
 
         // Store request
         self.request_log.insert(seq_num, request.clone());
@@ -2390,16 +2388,16 @@ impl PbftConsensus {
     fn send_pre_prepare(&mut self, sequencenumber: u64, request: PbftRequest) -> Result<()> {
         let preprepare = PrePrepareMessage {
             view_number: self.view_number,
-            sequence_number,
+            sequencenumber: sequencenumber,
             request,
             sender: self._nodeid.clone(),
             timestamp: SystemTime::now(),
         };
 
         self.pre_prepare_messages
-            .insert(sequence_number, preprepare.clone());
+            .insert(sequencenumber, preprepare.clone());
         self.phase_status
-            .insert(sequence_number, PbftPhase::PrePrepare);
+            .insert(sequencenumber, PbftPhase::PrePrepare);
 
         // In a real implementation, broadcast to all nodes
         // For now, simulate immediate prepare phase
@@ -2410,7 +2408,7 @@ impl PbftConsensus {
 
     /// Handle incoming pre-prepare message
     pub fn handle_pre_prepare(&mut self, preprepare: PrePrepareMessage) -> Result<()> {
-        let seq_num = preprepare.sequence_number;
+        let seq_num = preprepare.sequencenumber;
 
         // Validate pre-_prepare message
         if preprepare.view_number != self.view_number {
@@ -2434,7 +2432,7 @@ impl PbftConsensus {
     fn send_prepare(&mut self, sequencenumber: u64, request: &PbftRequest) -> Result<()> {
         let prepare = PrepareMessage {
             view_number: self.view_number,
-            sequence_number,
+            sequencenumber: sequencenumber,
             request_digest: self.compute_request_digest(request),
             sender: self._nodeid.clone(),
             timestamp: SystemTime::now(),
@@ -2442,12 +2440,12 @@ impl PbftConsensus {
 
         // Add own prepare message
         self.prepare_messages
-            .entry(sequence_number)
+            .entry(sequencenumber)
             .or_insert_with(Vec::new)
             .push(prepare.clone());
 
         // Check if we have enough prepare messages
-        self.check_prepare_threshold(sequence_number)?;
+        self.check_prepare_threshold(sequencenumber)?;
 
         Ok(())
     }
@@ -2456,7 +2454,7 @@ impl PbftConsensus {
     fn check_prepare_threshold(&mut self, sequencenumber: u64) -> Result<()> {
         let prepare_count = self
             .prepare_messages
-            .get(&sequence_number)
+            .get(&sequencenumber)
             .map(|msgs| msgs.len())
             .unwrap_or(0);
 
@@ -2464,7 +2462,7 @@ impl PbftConsensus {
         let required_prepares = 2 * self.max_faulty_nodes;
 
         if prepare_count >= required_prepares {
-            self.send_commit(sequence_number)?;
+            self.send_commit(sequencenumber)?;
         }
 
         Ok(())
@@ -2472,10 +2470,10 @@ impl PbftConsensus {
 
     /// Send commit message
     fn send_commit(&mut self, sequencenumber: u64) -> Result<()> {
-        if let Some(preprepare) = self.pre_prepare_messages.get(&sequence_number) {
+        if let Some(preprepare) = self.pre_prepare_messages.get(&sequencenumber) {
             let commit = CommitMessage {
                 view_number: self.view_number,
-                sequence_number,
+                sequencenumber,
                 request_digest: self.compute_request_digest(&preprepare.request),
                 sender: self._nodeid.clone(),
                 timestamp: SystemTime::now(),
@@ -2483,14 +2481,14 @@ impl PbftConsensus {
 
             // Add own commit message
             self.commit_messages
-                .entry(sequence_number)
+                .entry(sequencenumber)
                 .or_insert_with(Vec::new)
                 .push(commit.clone());
 
-            self.phase_status.insert(sequence_number, PbftPhase::Commit);
+            self.phase_status.insert(sequencenumber, PbftPhase::Commit);
 
             // Check if we can execute
-            self.check_commit_threshold(sequence_number)?;
+            self.check_commit_threshold(sequencenumber)?;
         }
 
         Ok(())
@@ -2500,7 +2498,7 @@ impl PbftConsensus {
     fn check_commit_threshold(&mut self, sequencenumber: u64) -> Result<()> {
         let commit_count = self
             .commit_messages
-            .get(&sequence_number)
+            .get(&sequencenumber)
             .map(|msgs| msgs.len())
             .unwrap_or(0);
 
@@ -2508,7 +2506,7 @@ impl PbftConsensus {
         let required_commits = 2 * self.max_faulty_nodes + 1;
 
         if commit_count >= required_commits {
-            self.execute_request(sequence_number)?;
+            self.execute_request(sequencenumber)?;
         }
 
         Ok(())
@@ -2516,19 +2514,19 @@ impl PbftConsensus {
 
     /// Execute the request
     fn execute_request(&mut self, sequencenumber: u64) -> Result<()> {
-        if self.executed_requests.contains(&sequence_number) {
+        if self.executed_requests.contains(&sequencenumber) {
             return Ok(()); // Already executed
         }
 
-        self.executed_requests.insert(sequence_number);
+        self.executed_requests.insert(sequencenumber);
         self.phase_status
-            .insert(sequence_number, PbftPhase::Executed);
+            .insert(sequencenumber, PbftPhase::Executed);
         self.last_activity = Instant::now();
 
         // In a real implementation, execute the actual operation
         println!(
             "PBFT: Executed request with sequence _number {}",
-            sequence_number
+            sequencenumber
         );
 
         Ok(())
@@ -2542,7 +2540,7 @@ impl PbftConsensus {
         let view_change = ViewChangeMessage {
             new_view_number: new_view,
             sender: self._nodeid.clone(),
-            last_sequence_number: self.sequence_number - 1,
+            last_sequencenumber: self.sequencenumber - 1,
             checkpoint_proof: Vec::new(), // Simplified
             timestamp: SystemTime::now(),
         };
@@ -2565,7 +2563,7 @@ impl PbftConsensus {
         // Simplified digest computation
         format!(
             "{}-{}-{}",
-            request.request_id, request.client_id, request.sequence_number
+            request.request_id, request.client_id, request.sequencenumber
         )
     }
 
@@ -2593,7 +2591,7 @@ impl ConsensusManager for PbftConsensus {
             client_id: "metrics_coordinator".to_string(),
             operation: format!("execute, _task:{}", task.task_type.to_string()),
             timestamp: SystemTime::now(),
-            sequence_number: self.sequence_number,
+            sequencenumber: self.sequencenumber,
         };
 
         self.process_request(request)?;
@@ -2608,7 +2606,7 @@ impl ConsensusManager for PbftConsensus {
                     PbftNodeState::Normal => NodeState::Leader, // Simplified
                     PbftNodeState::ViewChange => NodeState::Follower,
                     PbftNodeState::Suspected => NodeState::Follower, // Suspected nodes are demoted
-                    PbftNodeState::Faulty => NodeState::Follower, // Faulty nodes are demoted
+                    PbftNodeState::Faulty => NodeState::Follower,    // Faulty nodes are demoted
                 }
             } else {
                 NodeState::Follower
@@ -2626,7 +2624,7 @@ impl ConsensusManager for PbftConsensus {
     }
 
     fn handle_node_failure(&mut self, nodeid: &str) -> Result<()> {
-        self.handle_node_failure(_nodeid)
+        self.handle_node_failure(nodeid)
     }
 
     fn elect_leader(&mut self) -> Result<String> {
@@ -2650,7 +2648,7 @@ impl ConsensusManager for PbftConsensus {
 /// Implements a simplified PoS consensus where validators are selected based on their stake.
 pub struct ProofOfStakeConsensus {
     /// Node identifier
-    _nodeid: String,
+    nodeid: String,
     /// Current epoch
     current_epoch: u64,
     /// Validator information
@@ -2680,7 +2678,7 @@ pub struct ProofOfStakeConsensus {
 /// Validator information in PoS
 #[derive(Debug, Clone)]
 pub struct ValidatorInfo {
-    pub _nodeid: String,
+    pub nodeid: String,
     pub stake: u64,
     pub is_active: bool,
     pub last_block_proposed: Option<u64>,
@@ -2743,7 +2741,7 @@ pub enum SlashingType {
 
 impl ProofOfStakeConsensus {
     /// Create new PoS consensus instance
-    pub fn new(_nodeid: String, stake: u64, minstake: u64) -> Result<Self> {
+    pub fn new(nodeid: String, stake: u64, minstake: u64) -> Result<Self> {
         if stake < minstake {
             return Err(MetricsError::ComputationError(
                 "Insufficient stake to participate".to_string(),
@@ -2752,9 +2750,9 @@ impl ProofOfStakeConsensus {
 
         let mut validators = HashMap::new();
         validators.insert(
-            _nodeid.clone(),
+            nodeid.clone(),
             ValidatorInfo {
-                _nodeid: _nodeid.clone(),
+                nodeid: nodeid.clone(),
                 stake,
                 is_active: true,
                 last_block_proposed: None,
@@ -2764,7 +2762,7 @@ impl ProofOfStakeConsensus {
         );
 
         Ok(Self {
-            _nodeid,
+            nodeid,
             current_epoch: 0,
             validators,
             stake,
@@ -2931,7 +2929,7 @@ impl ProofOfStakeConsensus {
         }
 
         let validator = ValidatorInfo {
-            _nodeid: _nodeid.clone(),
+            nodeid: nodeid.clone(),
             stake,
             is_active: true,
             last_block_proposed: None,
@@ -2939,15 +2937,15 @@ impl ProofOfStakeConsensus {
             reputation_score: 1.0,
         };
 
-        self.validators.insert(_nodeid, validator);
+        self.validators.insert(nodeid, validator);
         self.total_stake += stake;
 
         Ok(())
     }
 
     /// Slash a validator for misbehavior
-    pub fn slash_validator(&mut self, _nodeid: &str, slashtype: SlashingType) -> Result<()> {
-        if let Some(validator) = self.validators.get_mut(_nodeid) {
+    pub fn slash_validator(&mut self, nodeid: &str, slashtype: SlashingType) -> Result<()> {
+        if let Some(validator) = self.validators.get_mut(nodeid) {
             // Find appropriate slashing condition
             if let Some(condition) = self.slashing_conditions.iter().find(|c| {
                 std::mem::discriminant(&c.condition_type) == std::mem::discriminant(&slashtype)
@@ -2964,7 +2962,7 @@ impl ProofOfStakeConsensus {
 
                 self.total_stake = self.total_stake.saturating_sub(penalty);
 
-                println!("Slashed validator {} with penalty {}", _nodeid, penalty);
+                println!("Slashed validator {} with penalty {}", nodeid, penalty);
             }
         }
 
@@ -3035,9 +3033,9 @@ impl ConsensusManager for ProofOfStakeConsensus {
 
     fn get_consensus_state(&self) -> ConsensusState {
         let mut node_states = HashMap::new();
-        for (_nodeid, validator) in &self.validators {
+        for (nodeid, validator) in &self.validators {
             let state = if validator.is_active {
-                if self.current_validator.as_ref() == Some(_nodeid) {
+                if self.current_validator.as_ref() == Some(nodeid) {
                     NodeState::Leader
                 } else {
                     NodeState::Follower
@@ -3045,7 +3043,7 @@ impl ConsensusManager for ProofOfStakeConsensus {
             } else {
                 NodeState::Follower
             };
-            node_states.insert(_nodeid.clone(), state);
+            node_states.insert(nodeid.clone(), state);
         }
 
         ConsensusState {
@@ -3058,7 +3056,7 @@ impl ConsensusManager for ProofOfStakeConsensus {
     }
 
     fn handle_node_failure(&mut self, nodeid: &str) -> Result<()> {
-        if let Some(validator) = self.validators.get_mut(_nodeid) {
+        if let Some(validator) = self.validators.get_mut(nodeid) {
             validator.is_active = false;
             self.total_stake = self.total_stake.saturating_sub(validator.stake);
         }
@@ -3082,7 +3080,7 @@ impl ConsensusManager for ProofOfStakeConsensus {
 /// Suitable for non-Byzantine environments with crash failures only.
 pub struct SimpleMajorityConsensus {
     /// Node identifier
-    _nodeid: String,
+    nodeid: String,
     /// List of all nodes
     nodelist: Vec<String>,
     /// Current proposal being voted on
@@ -3153,14 +3151,14 @@ pub enum ConsensusResult {
 
 impl SimpleMajorityConsensus {
     /// Create new simple majority consensus instance
-    pub fn new(_nodeid: String, nodelist: Vec<String>) -> Result<Self> {
+    pub fn new(nodeid: String, nodelist: Vec<String>) -> Result<Self> {
         let mut node_states = HashMap::new();
         for node in &nodelist {
             node_states.insert(node.clone(), NodeHealthStatus::Healthy);
         }
 
         Ok(Self {
-            _nodeid,
+            nodeid,
             nodelist,
             current_proposal: None,
             votes: HashMap::new(),
@@ -3376,7 +3374,7 @@ impl SimpleMajorityConsensus {
 
     /// Update node health status
     pub fn update_node_health(&mut self, nodeid: &str, status: NodeHealthStatus) {
-        self.node_states.insert(_nodeid.to_string(), status);
+        self.node_states.insert(nodeid.to_string(), status);
     }
 
     /// Get consensus statistics
@@ -3463,11 +3461,11 @@ impl ConsensusManager for SimpleMajorityConsensus {
     }
 
     fn handle_node_failure(&mut self, nodeid: &str) -> Result<()> {
-        self.update_node_health(_nodeid, NodeHealthStatus::Failed);
+        self.update_node_health(nodeid, NodeHealthStatus::Failed);
 
         // If the failed node was the proposer, abort current proposal
         if let Some(ref proposal) = self.current_proposal {
-            if proposal.proposer == _nodeid {
+            if proposal.proposer == nodeid {
                 self.finalize_consensus(ConsensusResult::Timeout, 0, 0, 0)?;
             }
         }
@@ -3616,20 +3614,20 @@ impl FaultRecoveryManager {
     fn detect_failures(&mut self, clusternodes: &[String]) -> Result<Vec<String>> {
         let mut newly_failed = Vec::new();
 
-        for _nodeid in clusternodes {
-            if self.is_node_failed(_nodeid)? && !self.failed_nodes.contains(_nodeid) {
-                self.failed_nodes.insert(_nodeid.clone());
-                newly_failed.push(_nodeid.clone());
+        for nodeid in clusternodes {
+            if self.is_node_failed(nodeid)? && !self.failed_nodes.contains(nodeid) {
+                self.failed_nodes.insert(nodeid.clone());
+                newly_failed.push(nodeid.clone());
 
                 // Schedule recovery action
                 let recovery_action = RecoveryAction {
                     action_id: format!(
                         "recovery_{}_{}",
-                        _nodeid,
+                        nodeid,
                         Instant::now().elapsed().as_millis()
                     ),
                     action_type: RecoveryActionType::NodeFailover,
-                    target_node: _nodeid.clone(),
+                    target_node: nodeid.clone(),
                     scheduled_time: Instant::now(),
                     max_retries: 3,
                     current_retry: 0,
@@ -3645,7 +3643,7 @@ impl FaultRecoveryManager {
     /// Check if a node has failed
     fn is_node_failed(&self, nodeid: &str) -> Result<bool> {
         // Simulate failure detection
-        if let Some(monitor) = self.health_monitors.get(_nodeid) {
+        if let Some(monitor) = self.health_monitors.get(nodeid) {
             let last_heartbeat_age = monitor.last_heartbeat.elapsed();
             Ok(last_heartbeat_age > Duration::from_secs(30))
         } else {
@@ -3706,12 +3704,12 @@ impl FaultRecoveryManager {
 
     /// Add health monitor for node
     fn add_health_monitor(&mut self, nodeid: String, monitor: HealthMonitor) {
-        self.health_monitors.insert(_nodeid, monitor);
+        self.health_monitors.insert(nodeid, monitor);
     }
 
     /// Update node health status
     fn update_node_health(&mut self, nodeid: &str, status: NodeHealthStatus) -> Result<()> {
-        if let Some(monitor) = self.health_monitors.get_mut(_nodeid) {
+        if let Some(monitor) = self.health_monitors.get_mut(nodeid) {
             monitor.last_heartbeat = Instant::now();
             monitor.status = status;
             monitor.consecutive_failures = 0;
@@ -4064,7 +4062,7 @@ pub struct DistributedClusterOrchestrator {
 #[derive(Debug, Clone)]
 pub struct ClusterNode {
     /// Node identifier
-    pub _nodeid: String,
+    pub nodeid: String,
     /// Network address
     pub address: SocketAddr,
     /// Node capabilities and resources
@@ -4568,7 +4566,7 @@ impl DistributedClusterOrchestrator {
         for (idx, node) in nodes.iter().enumerate() {
             partitions.push(DataPartition {
                 partition_id: format!("partition_{}_{}", job.job_id, idx),
-                _nodeid: node._nodeid.clone(),
+                nodeid: node._nodeid.clone(),
                 data_range: (idx * 100, (idx + 1) * 100), // Simplified partitioning
                 estimated_size: 1024 * 1024,              // 1MB per partition
             });
@@ -4588,7 +4586,7 @@ impl DistributedClusterOrchestrator {
             let task = ExecutionTask {
                 task_id: format!("task_{}_{}", job.job_id, partition.partition_id),
                 job_id: job.job_id.clone(),
-                _nodeid: partition._nodeid.clone(),
+                nodeid: partition._nodeid.clone(),
                 partition,
                 status: TaskStatus::Pending,
                 start_time: None,
@@ -4688,7 +4686,7 @@ impl DistributedClusterOrchestrator {
         // Placeholder for node provisioning logic
         for i in 0..count {
             let new_node = ClusterNode {
-                _nodeid: format!("auto_node_{}", i),
+                nodeid: format!("auto_node_{}", i),
                 address: "127.0.0.1:8080".parse().unwrap(),
                 capabilities: NodeCapabilities::default(),
                 workload: NodeWorkload::default(),
@@ -4739,7 +4737,7 @@ pub enum DataDistributionStrategy {
 #[derive(Debug, Clone)]
 pub struct DataPartition {
     pub partition_id: String,
-    pub _nodeid: String,
+    pub nodeid: String,
     pub data_range: (usize, usize),
     pub estimated_size: usize,
 }
@@ -4748,7 +4746,7 @@ pub struct DataPartition {
 pub struct ExecutionTask {
     pub task_id: String,
     pub job_id: String,
-    pub _nodeid: String,
+    pub nodeid: String,
     pub partition: DataPartition,
     pub status: TaskStatus,
     pub start_time: Option<SystemTime>,

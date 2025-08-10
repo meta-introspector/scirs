@@ -731,7 +731,7 @@ impl MatV73Features {
         // Create an empty dataset with the specified shape
         let total_elements: usize = shape.iter().product();
         let zeros = vec![0.0f64; total_elements];
-        let array = ArrayD::fromshape_vec(IxDyn(shape), zeros)
+        let array = ArrayD::from_shape_vec(IxDyn(shape), zeros)
             .map_err(|e| IoError::Other(e.to_string()))?;
 
         file.create_dataset_from_array(name, &array, Some(options))?;
@@ -899,11 +899,11 @@ impl MatV73Sparse {
         let (row_indices, col_ptrs, values) = (csc.row_indices, csc.col_ptrs, csc.values);
 
         // Write components
-        let row_array = ArrayD::fromshape_vec(vec![row_indices.len()], row_indices)
+        let row_array = ArrayD::from_shape_vec(vec![row_indices.len()], row_indices)
             .map_err(|e| IoError::Other(e.to_string()))?;
-        let col_array = ArrayD::fromshape_vec(vec![col_ptrs.len()], col_ptrs)
+        let col_array = ArrayD::from_shape_vec(vec![col_ptrs.len()], col_ptrs)
             .map_err(|e| IoError::Other(e.to_string()))?;
-        let data_array = ArrayD::fromshape_vec(vec![values.len()], values)
+        let data_array = ArrayD::from_shape_vec(vec![values.len()], values)
             .map_err(|e| IoError::Other(e.to_string()))?;
 
         file.create_dataset_from_array(&row_path, &row_array, None)?;

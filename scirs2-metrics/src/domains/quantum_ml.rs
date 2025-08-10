@@ -673,7 +673,7 @@ impl QuantumMLSuite {
     fn estimate_speedup(&self, quantum_results: &[f64], classicalresults: &[f64]) -> Result<f64> {
         // Simple performance ratio estimation
         let quantum_avg = quantum_results.iter().sum::<f64>() / quantum_results.len() as f64;
-        let classical_avg = classical_results.iter().sum::<f64>() / classical_results.len() as f64;
+        let classical_avg = classicalresults.iter().sum::<f64>() / classicalresults.len() as f64;
 
         if quantum_avg == 0.0 {
             Ok(1.0)

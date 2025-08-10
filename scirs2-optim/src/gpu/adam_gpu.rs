@@ -32,9 +32,9 @@ pub struct AdamGpu<A: Float + ScalarOperand + Debug> {
 
 impl<A: Float + ScalarOperand + Debug> AdamGpu<A> {
     /// Create a new GPU-accelerated Adam optimizer
-    pub fn new(_learningrate: A) -> Self {
+    pub fn new(learning_rate: A) -> Self {
         Self {
-            cpu_optimizer: Adam::new(_learning_rate),
+            cpu_optimizer: Adam::new(learning_rate),
             gpu_memory: None,
             kernel_handle: None,
             on_gpu: false,

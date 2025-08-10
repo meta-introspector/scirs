@@ -934,7 +934,7 @@ where
 /// assert!((dist_matrix[(1, 1)] - 1.0f64).abs() < 1e-6);
 /// ```
 #[allow(dead_code)]
-pub fn cdist<T, F>(_x_a: &Array2<T>, xb: &Array2<T>, metric: F) -> SpatialResult<Array2<T>>
+pub fn cdist<T, F>(x_a: &Array2<T>, xb: &Array2<T>, metric: F) -> SpatialResult<Array2<T>>
 where
     T: Float + std::fmt::Debug,
     F: Fn(&[T], &[T]) -> T,

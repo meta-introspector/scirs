@@ -164,7 +164,7 @@ where
             let y_pred = self.y_pred.unwrap();
 
             // Calculate confusion matrix
-            let cm = confusion_matrix(y_true, y_pred, None)?;
+            let (cm, _labels) = confusion_matrix(y_true, y_pred, None)?;
 
             // Normalize if requested
             if self.normalize {

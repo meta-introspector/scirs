@@ -956,7 +956,7 @@ impl ComprehensiveSecurityAuditor {
         fn visit_dir(dir: &Path, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
             for entry in std::fs::read_dir(dir)? {
                 let entry = entry?;
-                let _path = entry.path();
+                let path = entry.path();
 
                 if path.is_dir() {
                     // Skip common non-source directories
@@ -965,10 +965,10 @@ impl ComprehensiveSecurityAuditor {
                             continue;
                         }
                     }
-                    visit_dir(&_path, files)?;
+                    visit_dir(&path, files)?;
                 } else if let Some(extension) = path.extension() {
                     if extension == "rs" {
-                        files.push(_path);
+                        files.push(path);
                     }
                 }
             }

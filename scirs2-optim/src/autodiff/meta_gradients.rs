@@ -1441,10 +1441,10 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
 /// Checkpoint manager implementation
 impl<T: Float + Default + Clone> CheckpointManager<T> {
     /// Create a new checkpoint manager
-    pub fn new(_max_checkpoints: usize, memorythreshold: usize) -> Self {
+    pub fn new(max_checkpoints: usize, memory_threshold: usize) -> Self {
         Self {
             checkpoints: HashMap::new(),
-            max_checkpoints: max_checkpoints,
+            max_checkpoints,
             memory_threshold,
             current_memory: 0,
             policy: CheckpointPolicy::MemoryThreshold,
@@ -1506,7 +1506,7 @@ impl<T: Float + Default + Clone> CheckpointManager<T> {
     }
 
     /// Check if checkpointing is needed
-    pub fn should_checkpoint(&self, currentstep: usize) -> bool {
+    pub fn should_checkpoint(&self, current_step: usize) -> bool {
         match self.policy {
             CheckpointPolicy::FixedInterval { interval } => current_step % interval == 0,
             CheckpointPolicy::MemoryThreshold => self.current_memory > self.memory_threshold,

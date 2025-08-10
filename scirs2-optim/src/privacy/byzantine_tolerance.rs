@@ -818,7 +818,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> ByzantineTolerantAggregato
     }
 
     /// Calculate confidence score for aggregation
-    fn calculate_confidence_score(&self, honestparticipants: &HashMap<String, Array1<T>>) -> f64 {
+    fn calculate_confidence_score(&self, honest_participants: &HashMap<String, Array1<T>>) -> f64 {
         let honest_count = honest_participants.len() as f64;
         let total_expected = (self.config.min_participants + self.config.max_byzantine) as f64;
 

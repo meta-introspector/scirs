@@ -421,7 +421,7 @@ impl std::fmt::Display for DataValue {
 /// Automatically detect column types from data
 #[allow(dead_code)]
 pub fn detect_column_types(data: &Array2<String>) -> Vec<ColumnType> {
-    let (rows, cols) = (_data.shape()[0], data.shape()[1]);
+    let (rows, cols) = (data.shape()[0], data.shape()[1]);
 
     // Default to String if we can't determine type
     if rows == 0 {
@@ -874,12 +874,12 @@ pub fn read_csv_typed<P: AsRef<Path>>(
         return Ok((headers, Vec::new()));
     }
 
-    // Determine column _types if not provided
-    let _types = match col_types {
-        Some(_types) => {
+    // Determine column types if not provided
+    let col_types_vec = match col_types {
+        Some(types) => {
             if types.len() != string_data.shape()[1] {
                 return Err(IoError::FormatError(format!(
-                    "Number of column _types ({}) does not match data width ({})",
+                    "Number of column types ({}) does not match data width ({})",
                     types.len(),
                     string_data.shape()[1]
                 )));
@@ -898,7 +898,7 @@ pub fn read_csv_typed<P: AsRef<Path>>(
         let mut row = Vec::with_capacity(string_data.shape()[1]);
 
         for j in 0..string_data.shape()[1] {
-            let value = convert_value(&string_data[[i, j]], types[j], &missing_opts)?;
+            let value = convert_value(&string_data[[i, j]], col_types_vec[j], &missing_opts)?;
             row.push(value);
         }
 
@@ -1309,7 +1309,7 @@ impl<R: BufRead> StreamingCsvReader<R> {
             reader.read_headers()?;
         }
 
-        Ok(_reader)
+        Ok(reader)
     }
 
     /// Read the header row
@@ -1712,12 +1712,12 @@ pub struct ColumnStats {
 
 impl ColumnStats {
     /// Create column statistics from a vector of values
-    fn from_values(_values: &[f64], non_numericcount: usize) -> Self {
+    fn from_values(values: &[f64], non_numericcount: usize) -> Self {
         if values.is_empty() {
             return Self {
                 column_index: 0,
-                total_count: non_numeric_count,
-                non_numeric_count,
+                total_count: non_numericcount,
+                non_numeric_count: non_numericcount,
                 min_value: None,
                 max_value: None,
                 mean_value: None,
@@ -1735,8 +1735,8 @@ impl ColumnStats {
 
         Self {
             column_index: 0,
-            total_count: values.len() + non_numeric_count,
-            non_numeric_count,
+            total_count: values.len() + non_numericcount,
+            non_numeric_count: non_numericcount,
             min_value: Some(min_val),
             max_value: Some(max_val),
             mean_value: Some(mean),

@@ -117,7 +117,7 @@ impl TextGenerationMetrics {
 
     /// Set maximum n-gram for BLEU calculation
     pub fn with_max_ngram(mut self, maxngram: usize) -> Self {
-        self.max_ngram = max_ngram;
+        self.max_ngram = maxngram;
         self
     }
 

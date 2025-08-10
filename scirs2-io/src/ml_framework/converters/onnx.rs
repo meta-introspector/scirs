@@ -104,7 +104,7 @@ impl MLFrameworkConverter for ONNXConverter {
                                 vec![0.0f32; total_elements]
                             };
 
-                            if let Ok(array) = ArrayD::fromshape_vec(IxDyn(&shape_vec), data) {
+                            if let Ok(array) = ArrayD::from_shape_vec(IxDyn(&shape_vec), data) {
                                 model.weights.insert(
                                     name.to_string(),
                                     MLTensor::new(array, Some(name.to_string())),
@@ -148,7 +148,7 @@ impl MLFrameworkConverter for ONNXConverter {
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
 
-        let array = ArrayD::fromshape_vec(IxDyn(&shape), data)
+        let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
             .map_err(|e| IoError::Other(e.to_string()))?;
 
         Ok(MLTensor::new(array, name))

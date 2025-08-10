@@ -362,7 +362,7 @@ impl<R: Read + Seek> FortranFile<R> {
         }
 
         // Convert from Fortran column-major to row-major
-        Array2::fromshape_vec((rows, cols).f(), values)
+        Array2::from_shape_vec((rows, cols).f(), values)
             .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
     }
 
@@ -398,7 +398,7 @@ impl<R: Read + Seek> FortranFile<R> {
         }
 
         // Convert from Fortran column-major to row-major
-        Array3::fromshape_vec((dim1, dim2, dim3).f(), values)
+        Array3::from_shape_vec((dim1, dim2, dim3).f(), values)
             .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
     }
 
@@ -655,7 +655,7 @@ impl<W: Write> FortranFile<W> {
 /// Read a complete Fortran unformatted file into memory
 #[allow(dead_code)]
 pub fn read_fortran_file<P: AsRef<Path>>(path: P) -> Result<Vec<Vec<u8>>> {
-    let mut file = FortranFile::open(_path)?;
+    let mut file = FortranFile::open(path)?;
     let mut records = Vec::new();
 
     loop {
@@ -811,7 +811,7 @@ mod tests {
         let temp_file = NamedTempFile::new().unwrap();
         let path = temp_file.path();
 
-        let array = Array2::fromshape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+        let array = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
             .map_err(|e| IoError::ParseError(format!("Shape error: {e}")))?;
 
         // Write array
